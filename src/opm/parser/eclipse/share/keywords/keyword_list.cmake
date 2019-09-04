@@ -13,19 +13,6 @@
 #W             WHAT
 #ECONT         Terminates with two /
 #COALNUM       matrix structure
-#COMPDATM      alias for COMPDATL
-#COMPINJK      undef default
-#COMPRP        strange defaults
-#COMPRPL       strange defaults
-#COMPVE        default: negative
-#COMPVEL       default: negative
-#CSKIN         strange default
-#DEPTHTAB      different unit in table
-#DIFFCOAL      default for item3 same as value for item 1
-#DIFFMR-       no support for character '-' in kw. 
-#DIFFMTH-      no support for character '-' in kw. 
-#DIFFMX-       no support for character '-' in kw. 
-#DIFFMY-       no support for character '-' in kw. 
 #DYNAMICR      records of records
 
 
@@ -94,16 +81,21 @@ set( keywords
      000_Eclipse100/C/COLLAPSE
      000_Eclipse100/C/COLUMNS
      000_Eclipse100/C/COMPDAT
-     000_Eclipse100/C/COMPDATL
+     000_Eclipse100/C/COMPDATX
      000_Eclipse100/C/COMPFLSH
      000_Eclipse100/C/COMPIMB
+     000_Eclipse100/C/COMPINJK
      000_Eclipse100/C/COMPLMPL
      000_Eclipse100/C/COMPLUMP
      000_Eclipse100/C/COMPOFF
      000_Eclipse100/C/COMPORD
      000_Eclipse100/C/COMPRIV
+     000_Eclipse100/C/COMPRP
+     000_Eclipse100/C/COMPRPL
      000_Eclipse100/C/COMPSEGL
      000_Eclipse100/C/COMPSEGS
+     000_Eclipse100/C/COMPVE
+     000_Eclipse100/C/COMPVEL
      000_Eclipse100/C/CONNECTION_PROBE
      000_Eclipse100/C/COORD
      000_Eclipse100/C/COORDSYS
@@ -112,6 +104,7 @@ set( keywords
      000_Eclipse100/C/COPYREG
      000_Eclipse100/C/CPR
      000_Eclipse100/C/CRITPERM
+     000_Eclipse100/C/CSKIN
      000_Eclipse100/D/DATE
      000_Eclipse100/D/DATES
      000_Eclipse100/D/DATUM
@@ -122,9 +115,12 @@ set( keywords
      000_Eclipse100/D/DELAYACT
      000_Eclipse100/D/DENSITY
      000_Eclipse100/D/DEPTH
+     000_Eclipse100/D/DEPTHTAB
      000_Eclipse100/D/DEPTHZ
      000_Eclipse100/D/DIAGDISP
+     000_Eclipse100/D/DIFF
      000_Eclipse100/D/DIFFC
+     000_Eclipse100/D/DIFFCOAL
      000_Eclipse100/D/DIFFDP
      000_Eclipse100/D/DIFFMMF
      000_Eclipse100/D/DIFFMR
