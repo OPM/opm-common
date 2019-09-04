@@ -57,11 +57,15 @@ namespace Opm {
                        const ParseContext&,
                        ErrorGuard& errors) const;
 
+        Deck parseFile(const std::string&,
+                       const ParseContext&);
+
         Deck parseFile(const std::string& datafile);
 
         Deck parseString(const std::string &data,
                          const ParseContext&,
                          ErrorGuard& errors) const;
+        Deck parseString(const std::string &data, const ParseContext& ) const;
         Deck parseString(const std::string &data) const;
 
         Deck parseStream(std::unique_ptr<std::istream>&& inputStream , const ParseContext& parseContext, ErrorGuard& errors) const;
