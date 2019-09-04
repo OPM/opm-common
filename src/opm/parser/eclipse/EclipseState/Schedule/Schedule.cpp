@@ -123,6 +123,7 @@ namespace {
         udq_active(this->m_timeMap, std::make_shared<UDQActive>()),
         guide_rate_model(this->m_timeMap, std::make_shared<GuideRateModel>()),
         global_whistctl_mode(this->m_timeMap, WellProducer::CMODE_UNDEFINED),
+        m_actions(this->m_timeMap, std::make_shared<Action::Actions>()),
         rft_config(this->m_timeMap),
         m_nupcol(this->m_timeMap, 3)
     {
@@ -429,7 +430,7 @@ namespace {
                         parseContext.handleError( ParseContext::ACTIONX_ILLEGAL_KEYWORD, msg, errors);
                     }
                 }
-                this->m_actions.add(action);
+                this->addACTIONX(action, currentStep);
             } else
                 this->handleKeyword(currentStep, section, keywordIdx, keyword, parseContext, errors, grid, eclipseProperties, unit_system, rftProperties);
 
@@ -451,6 +452,13 @@ namespace {
         }
 
         checkUnhandledKeywords(section);
+    }
+
+
+    void Schedule::addACTIONX(const Action::ActionX& action, std::size_t currentStep) {
+        auto new_actions = std::make_shared<Action::Actions>( this->actions(currentStep) );
+        new_actions->add(action);
+        this->m_actions.update(currentStep, new_actions);
     }
 
 
@@ -2560,8 +2568,9 @@ void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, c
     }
 
 
-    const Action::Actions& Schedule::actions() const {
-        return this->m_actions;
+    const Action::Actions& Schedule::actions(std::size_t timeStep) const {
+        const auto& ptr = this->m_actions.get(timeStep);
+        return *ptr;
     }
 
 

@@ -60,6 +60,10 @@ namespace Opm {
         return m_lineNumber;
     }
 
+    std::pair<std::string, std::size_t> DeckKeyword::location() const {
+        return std::make_pair( this->getFileName(), this->getLineNumber() );
+    }
+
     void DeckKeyword::setDataKeyword(bool isDataKeyword_) {
         m_isDataKeyword = isDataKeyword_;
     }

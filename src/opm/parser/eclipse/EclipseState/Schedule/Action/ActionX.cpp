@@ -17,12 +17,14 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <sstream>
 #include <unordered_set>
 
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionX.hpp>
 
 #include "ActionValue.hpp"
+#include "ActionParser.hpp"
 
 namespace Opm {
 namespace Action {
@@ -57,8 +59,39 @@ ActionX::ActionX(const DeckKeyword& kw, std::time_t start_time) :
     std::vector<std::string> tokens;
     for (size_t record_index = 1; record_index < kw.size(); record_index++) {
         const auto& record = kw.getRecord(record_index);
-        for (const auto& token : record.getItem("CONDITION").getData<std::string>())
+        const auto& cond_tokens = record.getItem("CONDITION").getData<std::string>();
+        Condition cond(cond_tokens[0]);
+
+        for (const auto& token : cond_tokens) {
             tokens.push_back(token);
+            cond.add_token(token);
+
+            {
+                auto token_type = Parser::get_type(token);
+                if (token_type == TokenType::op_eq)
+                    cond.cmp = Condition::Comparator::EQUAL;
+
+                if (token_type == TokenType::op_gt)
+                    cond.cmp = Condition::Comparator::GREATER;
+
+                if (token_type == TokenType::op_lt)
+                    cond.cmp = Condition::Comparator::LESS;
+            }
+        }
+
+        {
+            auto token_type = Parser::get_type(cond_tokens.back());
+            if (token_type == TokenType::op_and)
+                cond.logic = Condition::Logical::AND;
+            else if (token_type == TokenType::op_or)
+                cond.logic = Condition::Logical::OR;
+        }
+
+        if (cond.cmp == Condition::Comparator::INVALID) {
+            const auto& location = kw.location();
+            throw std::invalid_argument("Could not determine comparison type for ACTIONX keyword at " + location.first + ":" + std::to_string(location.second));
+        }
+        this->m_conditions.push_back(std::move(cond));
     }
     this->condition = Action::AST(tokens);
 }
@@ -108,6 +141,40 @@ std::vector<DeckKeyword>::const_iterator ActionX::begin() const {
 
 std::vector<DeckKeyword>::const_iterator ActionX::end() const {
     return this->keywords.end();
+}
+
+
+std::vector<std::string> ActionX::keyword_strings() const {
+    std::vector<std::string> keyword_strings;
+    std::string keyword_string;
+    {
+        std::stringstream ss;
+
+        for (const auto& kw : this->keywords)
+            ss << kw;
+
+        keyword_string = ss.str();
+    }
+
+    std::size_t offset = 0;
+    while (true) {
+        auto eol_pos = keyword_string.find('\n', offset);
+        if (eol_pos == std::string::npos)
+            break;
+
+        if (eol_pos > offset)
+            keyword_strings.push_back(keyword_string.substr(offset, eol_pos - offset));
+
+        offset = eol_pos + 1;
+    }
+    keyword_strings.push_back("ENDACTIO");
+
+    return keyword_strings;
+}
+
+
+const std::vector<Condition>& ActionX::conditions() const {
+    return this->m_conditions;
 }
 
 }

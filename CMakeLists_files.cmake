@@ -532,6 +532,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Schedule/Action/Actdims.hpp
        opm/parser/eclipse/EclipseState/Schedule/Action/Actions.hpp
        opm/parser/eclipse/EclipseState/Schedule/Action/ActionX.hpp
+       opm/parser/eclipse/EclipseState/Schedule/Action/Condition.hpp
        opm/parser/eclipse/EclipseState/Schedule/ArrayDimChecker.hpp
        opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp
        opm/parser/eclipse/EclipseState/Schedule/VFPInjTable.hpp

@@ -28,6 +28,9 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionAST.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionResult.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/Condition.hpp>
+
+
 
 namespace Opm {
 class DeckKeyword;
@@ -76,6 +79,13 @@ public:
     std::vector<DeckKeyword>::const_iterator begin() const;
     std::vector<DeckKeyword>::const_iterator end() const;
     static bool valid_keyword(const std::string& keyword);
+
+    /*
+      The conditions() and keyword_strings() methods, and their underlying data
+      members are only present to support writing formatted restart files.
+    */
+    const std::vector<Condition>& conditions() const;
+    std::vector<std::string> keyword_strings() const;
 private:
     std::string m_name;
     size_t m_max_run = 0;
@@ -84,6 +94,7 @@ private:
 
     std::vector<DeckKeyword> keywords;
     Action::AST condition;
+    std::vector<Condition> m_conditions;
     mutable size_t run_count = 0;
     mutable std::time_t last_run = 0;
 };

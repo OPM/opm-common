@@ -595,3 +595,124 @@ BOOST_AUTO_TEST_CASE(TestFieldAND) {
         BOOST_CHECK_EQUAL(wells[0], "OP3");
     }
 }
+
+BOOST_AUTO_TEST_CASE(SCAN2) {
+    const auto deck_string = std::string{ R"(
+SCHEDULE
+
+TSTEP
+10 /
+
+ACTIONX
+   'B' /
+   WWCT 'OPX'     > 0.75    AND /   -- The spaces will/should be normalized in Condition::expression()
+   FPR < 100 /
+/
+
+WELSPECS
+  'W1'  'OP'  1 1 3.33  'OIL' 7*/
+/
+
+ENDACTIO
+
+TSTEP
+   10 /
+
+
+ACTIONX
+   'A' /
+   WOPR 'OPX'  = 1000 /
+/
+
+ENDACTIO
+
+ACTIONX
+   'B' /
+   FWCT < 0.50 /
+/
+
+
+
+ENDACTIO
+
+TSTEP
+10 /
+
+)"};
+
+    Opm::Parser parser;
+    auto deck = parser.parseString(deck_string);
+    EclipseGrid grid1(10,10,10);
+    TableManager table ( deck );
+    Eclipse3DProperties eclipseProperties ( deck , table, grid1);
+    Runspec runspec (deck);
+    Schedule sched(deck, grid1, eclipseProperties, runspec);
+    const auto& actions0 = sched.actions(0);
+    BOOST_CHECK_EQUAL(actions0.size(), 0);
+
+    const auto& actions1 = sched.actions(1);
+    BOOST_CHECK_EQUAL(actions1.size(), 1);
+
+
+    const auto& act1 = actions1.get("B");
+    const auto& strings = act1.keyword_strings();
+    BOOST_CHECK_EQUAL(strings.size(), 4);
+    BOOST_CHECK_EQUAL(strings.back(), "ENDACTIO");
+
+
+    std::string rdeck_string = "";
+    for (std::size_t i = 0; i < strings.size(); i++)
+        rdeck_string += strings[i] + "\n";
+
+    auto deck2 = parser.parseString(rdeck_string);
+    BOOST_CHECK(deck2.getKeyword("WELSPECS") == deck.getKeyword("WELSPECS"));
+
+
+    const auto& conditions = act1.conditions();
+    BOOST_CHECK_EQUAL(conditions.size() , 2);
+
+    const auto& cond0 = conditions[0];
+    BOOST_CHECK_EQUAL(cond0.expression, "WWCT 'OPX' > 0.75 AND");
+    BOOST_CHECK_EQUAL(cond0.quantity, "WWCT");
+    BOOST_CHECK(cond0.cmp == Action::Condition::Comparator::GREATER);
+    BOOST_CHECK(cond0.logic == Action::Condition::Logical::AND);
+
+    const auto& cond1 = conditions[1];
+    BOOST_CHECK_EQUAL(cond1.expression, "FPR < 100");
+    BOOST_CHECK_EQUAL(cond1.quantity, "FPR");
+    BOOST_CHECK(cond1.cmp == Action::Condition::Comparator::LESS);
+    BOOST_CHECK(cond1.logic == Action::Condition::Logical::END);
+
+    /*****************************************************************/
+
+    const auto& actions2 = sched.actions(2);
+    BOOST_CHECK_EQUAL(actions2.size(), 2);
+
+    const auto& actB = actions2.get("B");
+    const auto& condB = actB.conditions();
+    BOOST_CHECK_EQUAL(condB.size() , 1);
+    BOOST_CHECK_EQUAL(condB[0].expression, "FWCT < 0.50");
+    BOOST_CHECK_EQUAL(condB[0].quantity, "FWCT");
+    BOOST_CHECK(condB[0].cmp == Action::Condition::Comparator::LESS);
+    BOOST_CHECK(condB[0].logic == Action::Condition::Logical::END);
+
+    const auto& actA = actions2.get("A");
+    const auto& condA = actA.conditions();
+    BOOST_CHECK_EQUAL(condA.size() , 1);
+    BOOST_CHECK_EQUAL(condA[0].expression, "WOPR 'OPX' = 1000");
+    BOOST_CHECK_EQUAL(condA[0].quantity, "WOPR");
+    BOOST_CHECK(condA[0].cmp == Action::Condition::Comparator::EQUAL);
+    BOOST_CHECK(condA[0].logic == Action::Condition::Logical::END);
+
+    std::size_t index = 0;
+    for (const auto& act : actions2) {
+        if (index == 0)
+            BOOST_CHECK_EQUAL("B", act.name());
+
+        if (index == 1)
+            BOOST_CHECK_EQUAL("A", act.name());
+        index++;
+    }
+}
+
+
