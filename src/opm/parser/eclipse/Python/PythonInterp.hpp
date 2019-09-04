@@ -37,7 +37,7 @@ namespace Opm {
 
 #ifdef EMBEDDED_PYTHON
 
-class PythonInterp {
+class __attribute__ ((visibility("hidden"))) PythonInterp {
 public:
     bool exec(const std::string& python_code);
     explicit operator bool() const { return true; }

@@ -112,6 +112,9 @@ macro (sources_hook)
     # Append generated sources
     list(APPEND opm-common_SOURCES ${PROJECT_BINARY_DIR}/ParserKeywords.cpp)
   endif()
+  set_source_files_properties(src/opm/parser/eclipse/Python/Python.cpp
+                              src/opm/parser/eclipse/Python/PythonInterp.cpp
+                              PROPERTIES COMPILE_FLAGS -Wno-shadow)
 endmacro (sources_hook)
 
 macro (fortran_hook)
