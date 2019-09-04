@@ -240,6 +240,7 @@ if (OPM_ENABLE_PYTHON)
                      python/cxx/eclipse_state.cpp
                      python/cxx/group.cpp
                      python/cxx/group_tree.cpp
+                     python/cxx/parsecontext.cpp
                      python/cxx/parser.cpp
                      python/cxx/schedule.cpp
                      python/cxx/common.cpp
@@ -260,7 +261,7 @@ if (OPM_ENABLE_PYTHON)
   add_custom_target(opmcommon_python ALL DEPENDS python/python/opm/libopmcommon_python.so)
   add_dependencies(opmcommon_python opmcommon)
 
-  install( CODE "execute_process(COMMAND mkdir -p ${CMAKE_INSTALL_PREFIX}/${PYTHON_INSTALL_PREFIX}  )" )  
+  install( CODE "execute_process(COMMAND mkdir -p ${CMAKE_INSTALL_PREFIX}/${PYTHON_INSTALL_PREFIX}  )" )
   install( CODE "execute_process(COMMAND python python/setup.py build_ext --dry-run install --prefix=${CMAKE_INSTALL_PREFIX}  )" )
 
   add_test(NAME python_tests
