@@ -196,23 +196,83 @@ inline bool getline( string_view& input, string_view& line ) {
  * everything after (terminating) slashes. Manually copying into the string for
  * performance.
  */
-inline std::string clean( const std::string& str ) {
+inline std::string fast_clean( const std::string& str ) {
     std::string dst;
     dst.resize( str.size() );
 
     string_view input( str ), line;
     auto dsti = dst.begin();
-    while( getline( input, line ) ) {
-        line = trim( strip_comments(line));
+    while( true ) {
 
-        std::copy( line.begin(), line.end(), dsti );
-        dsti += std::distance( line.begin(), line.end() );
-        *dsti++ = '\n';
+        if ( getline( input, line ) ) {
+            line = trim( strip_comments(line));
+
+            std::copy( line.begin(), line.end(), dsti );
+            dsti += std::distance( line.begin(), line.end() );
+            *dsti++ = '\n';
+        } else
+            break;
     }
 
     dst.resize( std::distance( dst.begin(), dsti ) );
     return dst;
 }
+
+inline std::string clean( const std::vector<std::pair<std::string, std::string>>& code_keywords, const std::string& str ) {
+    auto count = std::count_if(code_keywords.begin(), code_keywords.end(), [&str](const std::pair<std::string, std::string>& code_pair)
+                                                                  {
+                                                                     return str.find(code_pair.first) != std::string::npos;
+                                                                   });
+
+    if (count == 0)
+        return fast_clean(str);
+    else {
+        std::string dst;
+        dst.resize( str.size() );
+
+        string_view input( str ), line;
+        auto dsti = dst.begin();
+        while( true ) {
+            for (const auto& code_pair : code_keywords) {
+                const auto& keyword = code_pair.first;
+
+                if (input.starts_with(keyword)) {
+                    std::string end_string = code_pair.second;
+                    auto end_pos = input.find(end_string);
+                    if (end_pos == std::string::npos) {
+                        std::copy(input.begin(), input.end(), dsti);
+                        dsti += std::distance( input.begin(), input.end() );
+                        input = string_view(input.end(), input.end());
+                        break;
+                    } else {
+                        end_pos += end_string.size();
+                        std::copy(input.begin(), input.begin() + end_pos, dsti);
+                        dsti += end_pos;
+                        *dsti++ = '\n';
+                        input = string_view(input.begin() + end_pos + 1, input.end());
+                        break;
+                    }
+                }
+            }
+
+            if ( getline( input, line ) ) {
+                line = trim( strip_comments(line));
+
+                std::copy( line.begin(), line.end(), dsti );
+                dsti += std::distance( line.begin(), line.end() );
+                *dsti++ = '\n';
+            } else
+                break;
+        }
+
+        dst.resize( std::distance( dst.begin(), dsti ) );
+        return dst;
+    }
+}
+
+
+
+
 
 inline std::string make_deck_name(const string_view& str) {
     auto first_sep = std::find_if( str.begin(), str.end(), RawConsts::is_separator() );
@@ -237,7 +297,6 @@ inline bool isTerminatedRecordString(const string_view& line) {
 }
 
 }
-
 
 struct file {
     file( boost::filesystem::path p, const std::string& in ) :
@@ -266,8 +325,8 @@ void InputStack::push( std::string&& input, boost::filesystem::path p ) {
 
 class ParserState {
     public:
-        ParserState( const ParseContext&, ErrorGuard& );
-        ParserState( const ParseContext&, ErrorGuard&, boost::filesystem::path );
+        ParserState( const std::vector<std::pair<std::string,std::string>>&, const ParseContext&, ErrorGuard& );
+        ParserState( const std::vector<std::pair<std::string,std::string>>&, const ParseContext&, ErrorGuard&, boost::filesystem::path );
 
         void loadString( const std::string& );
         void loadFile( const boost::filesystem::path& );
@@ -286,11 +345,11 @@ class ParserState {
         void closeFile();
 
     private:
+        const std::vector<std::pair<std::string, std::string>> code_keywords;
         InputStack input_stack;
 
         std::map< std::string, std::string > pathMap;
         boost::filesystem::path rootPath;
-
     public:
         ParserKeywordSizeEnum lastSizeType = SLASH_TERMINATED;
         std::string lastKeyWord;
@@ -300,7 +359,6 @@ class ParserState {
         ErrorGuard& errors;
         bool unknown_keyword = false;
 };
-
 
 const boost::filesystem::path& ParserState::current_path() const {
     return this->input_stack.top().path;
@@ -329,6 +387,7 @@ string_view ParserState::getline() {
 }
 
 
+
 void ParserState::ungetline(const string_view& line) {
     auto& file_view = this->input_stack.top().input;
     if (line.end() + 1 != file_view.begin())
@@ -345,14 +404,19 @@ void ParserState::closeFile() {
     this->input_stack.pop();
 }
 
-ParserState::ParserState(const ParseContext& __parseContext, ErrorGuard& errors_arg) :
+ParserState::ParserState(const std::vector<std::pair<std::string, std::string>>& code_keywords_arg,
+                         const ParseContext& __parseContext,
+                         ErrorGuard& errors_arg) :
+    code_keywords(code_keywords_arg),
     parseContext( __parseContext ),
     errors( errors_arg )
 {}
 
-ParserState::ParserState( const ParseContext& context,
+ParserState::ParserState( const std::vector<std::pair<std::string, std::string>>& code_keywords_arg,
+                          const ParseContext& context,
                           ErrorGuard& errors_arg,
                           boost::filesystem::path p ) :
+    code_keywords(code_keywords_arg),
     rootPath( boost::filesystem::canonical( p ).parent_path() ),
     parseContext( context ),
     errors( errors_arg )
@@ -361,7 +425,7 @@ ParserState::ParserState( const ParseContext& context,
 }
 
 void ParserState::loadString(const std::string& input) {
-    this->input_stack.push( str::clean( input + "\n" ) );
+    this->input_stack.push( str::clean( this->code_keywords, input + "\n" ) );
 }
 
 void ParserState::loadFile(const boost::filesystem::path& inputFile) {
@@ -406,7 +470,7 @@ void ParserState::loadFile(const boost::filesystem::path& inputFile) {
         throw std::runtime_error( "Error when reading input file '"
                                 + inputFileCanonical.string() + "'" );
 
-    this->input_stack.push( str::clean( buffer ), inputFileCanonical );
+    this->input_stack.push( str::clean( this->code_keywords, buffer ), inputFileCanonical );
 }
 
 /*
@@ -505,14 +569,18 @@ RawKeyword * newRawKeyword(const ParserKeyword& parserKeyword, const std::string
                                rawSizeType);
     }
 
-    if( parserKeyword.hasFixedSize() )
+    if( parserKeyword.hasFixedSize() ) {
+        auto size_type = Raw::FIXED;
+        if (parserKeyword.isCodeKeyword())
+            size_type = Raw::CODE;
+
         return new RawKeyword( keywordString,
                                parserState.current_path().string(),
                                parserState.line(),
                                raw_string_keyword,
-                               Raw::FIXED,
+                               size_type,
                                parserKeyword.getFixedSize());
-
+    }
 
     const auto& keyword_size = parserKeyword.getKeywordSize();
     const auto& deck = parserState.deck;
@@ -625,11 +693,26 @@ std::unique_ptr<RawKeyword> tryParseKeyword( ParserState& parserState, const Par
                 }
             } else {
                 /* We are looking at some random gibberish?! */
-                if (!parserState.unknown_keyword) {
+                if (!parserState.unknown_keyword)
                     parserState.handleRandomText( line );
-                }
             }
         } else {
+            if (rawKeyword->getSizeType() == Raw::CODE) {
+                const auto& parserKeyword = parser.getParserKeywordFromDeckName(rawKeyword->getKeywordName());
+                auto end_pos = line.find(parserKeyword.codeEnd());
+                if (end_pos != std::string::npos) {
+                    string_view line_content = { line.begin(), line.begin() + end_pos};
+                    record_buffer = str::update_record_buffer( record_buffer, line_content );
+
+                    RawRecord record(record_buffer, true);
+                    rawKeyword->addRecord(record);
+                    return rawKeyword;
+                } else
+                    record_buffer = str::update_record_buffer( record_buffer.begin(), line );
+
+                continue;
+            }
+
             if (rawKeyword->getSizeType() == Raw::UNKNOWN) {
                 /*
                   When we are spinning through a keyword of size type UNKNOWN it
@@ -655,7 +738,6 @@ std::unique_ptr<RawKeyword> tryParseKeyword( ParserState& parserState, const Par
 
             line = str::del_after_slash(line, rawKeyword->rawStringKeyword());
             record_buffer = str::update_record_buffer(record_buffer, line);
-
             if (is_title) {
                 if (record_buffer.empty()) {
                     RawRecord record("opm/flow simulation");
@@ -681,17 +763,26 @@ std::unique_ptr<RawKeyword> tryParseKeyword( ParserState& parserState, const Par
 
                 record_buffer = str::emptystr;
             }
-
         }
-
     }
 
     if (rawKeyword) {
         if (rawKeyword->getSizeType() == Raw::UNKNOWN)
             rawKeyword->terminateKeyword();
 
-        if (!rawKeyword->isFinished())
+        if (!rawKeyword->isFinished()) {
+            /*
+              It is not necessary to explicitly terminate code keywords, in that
+              case they will load all the content until EOF is reached.
+            */
+            if (rawKeyword->getSizeType() == Raw::CODE) {
+                RawRecord record(string_view{ record_buffer.begin(), record_buffer.end() + 1}, true);
+                rawKeyword->addRecord(record);
+                return rawKeyword;
+            }
+
             throw std::invalid_argument("Keyword " + rawKeyword->getKeywordName() + " is not properly terminated");
+        }
     }
 
     return rawKeyword;
@@ -842,7 +933,7 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
     }
 
     Deck Parser::parseFile(const std::string &dataFileName, const ParseContext& parseContext, ErrorGuard& errors) const {
-    ParserState parserState( parseContext, errors, dataFileName );
+        ParserState parserState( this->codeKeywords(), parseContext, errors, dataFileName );
         parseState( parserState, *this );
         applyUnitsToDeck( parserState.deck );
 
@@ -858,7 +949,7 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
 
 
     Deck Parser::parseString(const std::string &data, const ParseContext& parseContext, ErrorGuard& errors) const {
-        ParserState parserState( parseContext, errors );
+        ParserState parserState( this->codeKeywords(), parseContext, errors );
         parserState.loadString( data );
 
         parseState( parserState, *this );
@@ -932,6 +1023,8 @@ void Parser::addParserKeyword( std::unique_ptr< const ParserKeyword >&& parserKe
         m_wildCardKeywords[ name ] = ptr;
     }
 
+    if (ptr->isCodeKeyword())
+        this->code_keywords.emplace_back( ptr->getName(), ptr->codeEnd() );
 }
 
 
@@ -1013,6 +1106,10 @@ std::vector<std::string> Parser::getAllDeckNames () const {
                 }
             }
         }
+    }
+
+    const std::vector<std::pair<std::string,std::string>> Parser::codeKeywords() const {
+        return this->code_keywords;
     }
 
 

@@ -220,6 +220,8 @@ void ParserItem::setInputType(ParserItem::itype input_type_arg) {
     else if (input_type == itype::UDA)
         this->setDataType( UDAValue(0) );
 
+    else if (input_type == itype::CODE)
+        this->setDataType( std::string() );
     else
         throw std::invalid_argument("BUG: input type not recognized in setInputType()");
 }

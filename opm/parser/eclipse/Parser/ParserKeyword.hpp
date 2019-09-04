@@ -113,6 +113,8 @@ namespace Opm {
         bool hasMultipleDeckNames() const;
         void clearDeckNames();
         void addDeckName( const std::string& deckName );
+        void setCodeEnd(const std::string& end);
+        const std::string& codeEnd() const;
         DeckNameSet::const_iterator deckNamesBegin() const;
         DeckNameSet::const_iterator deckNamesEnd() const;
 
@@ -127,6 +129,7 @@ namespace Opm {
         const KeywordSize& getKeywordSize() const;
         bool isDataKeyword() const;
         bool rawStringKeyword() const;
+        bool isCodeKeyword() const;
 
         std::string createDeclaration(const std::string& indent) const;
         std::string createDecl() const;
@@ -149,11 +152,13 @@ namespace Opm {
         bool m_isTableCollection;
         std::string m_Description;
         bool raw_string_keyword = false;
+        std::string code_end;
 
         static bool validNameStart(const string_view& name);
         void initDeckNames( const Json::JsonObject& jsonConfig );
         void initSectionNames( const Json::JsonObject& jsonConfig );
         void initMatchRegex( const Json::JsonObject& jsonObject );
+        void initCode( const Json::JsonObject& jsonConfig );
         void initData( const Json::JsonObject& jsonConfig );
         void initSize( const Json::JsonObject& jsonConfig );
         void initSizeKeyword(const Json::JsonObject& sizeObject);
