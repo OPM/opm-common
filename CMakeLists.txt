@@ -240,6 +240,7 @@ if (OPM_ENABLE_PYTHON)
                      python/cxx/eclipse_state.cpp
                      python/cxx/group.cpp
                      python/cxx/group_tree.cpp
+                     python/cxx/parsecontext.cpp
                      python/cxx/parser.cpp
                      python/cxx/schedule.cpp
                      python/cxx/common.cpp
@@ -260,7 +261,7 @@ if (OPM_ENABLE_PYTHON)
   add_custom_target(opmcommon_python ALL DEPENDS python/python/opm/libopmcommon_python.so)
   add_dependencies(opmcommon_python opmcommon)
 
-  install( CODE "execute_process(COMMAND mkdir -p ${CMAKE_INSTALL_PREFIX}/${PYTHON_INSTALL_PREFIX}  )" )  
+  install( CODE "execute_process(COMMAND mkdir -p ${CMAKE_INSTALL_PREFIX}/${PYTHON_INSTALL_PREFIX}  )" )
   install( CODE "execute_process(COMMAND python python/setup.py build_ext --dry-run install --prefix=${CMAKE_INSTALL_PREFIX}  )" )
 
   add_test(NAME python_tests
@@ -270,6 +271,18 @@ if (OPM_ENABLE_PYTHON)
 
   set_target_properties(opmcommon PROPERTIES POSITION_INDEPENDENT_CODE ON)
   set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_BINARY_DIR}/python/python)
+
+  configure_file(python/setup-build.sh.in tmp/setup-build.sh)
+  file( COPY ${PROJECT_BINARY_DIR}/tmp/setup-build.sh
+        DESTINATION ${PROJECT_BINARY_DIR}
+        FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE )
+
+  configure_file(python/setup-test.sh.in tmp/setup-test.sh)
+  file( COPY ${PROJECT_BINARY_DIR}/tmp/setup-test.sh
+        DESTINATION ${PROJECT_BINARY_DIR}
+        FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE )
+
+  configure_file(python/enable-python.sh.in enable-python.sh)
 endif()
 
 

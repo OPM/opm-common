@@ -3,6 +3,7 @@
 
 
 PYBIND11_MODULE(libopmcommon_python, module) {
+    opmcommon_python::export_ParseContext(module);
     opmcommon_python::export_Parser(module);
     opmcommon_python::export_Deck(module);
     opmcommon_python::export_DeckKeyword(module);
