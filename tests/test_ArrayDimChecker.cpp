@@ -190,6 +190,147 @@ END
 
         return Opm::Parser{}.parseString(input);
     }
+
+    Opm::Deck simCaseNodeGroupSizeFailure()
+    {
+        const auto input = std::string{ R"(RUNSPEC
+TITLE
+  'Check Well Dimensions' /
+
+DIMENS
+  20 20 15 /
+
+OIL
+WATER
+
+METRIC
+
+EQLDIMS
+-- Defaulted
+/
+
+TABDIMS
+-- Defaulted
+/
+
+WELLDIMS
+-- NWMAX   NCMAX   NGMAX    NWGMAX (too small)
+   2       20      16       4
+/
+
+-- ====================================================================
+GRID
+
+SPECGRID
+  20 20 15 1 F /
+
+DXV
+  20*100.0 /
+
+DYV
+  20*100.0 /
+
+DZV
+  15*0.1 /
+
+DEPTHZ
+  441*2000 /
+
+PORO
+  6000*0.3 /
+
+PERMX
+  6000*100.0 /
+
+COPY
+  'PERMX' 'PERMY' /
+  'PERMX' 'PERMZ' /
+/
+
+MULTIPLY
+  'PERMZ' 0.1 /
+/
+
+-- ====================================================================
+PROPS
+
+SWOF
+  0 0 1 0
+  1 1 0 0 /
+
+PVDO
+    1 1.0  0.5
+  800 0.99 0.51 /
+
+PVTW
+  300 0.99 1.0e-6 0.25 0 /
+
+DENSITY
+  850.0 1014.0 1.05 /
+
+-- ====================================================================
+SOLUTION
+
+EQUIL
+  2000 300 2010 0.0 2000 10 /
+
+-- ====================================================================
+SUMMARY
+ALL
+
+-- ====================================================================
+SCHEDULE
+
+RPTRST
+  BASIC=5 FREQ=6 /
+
+GRUPTREE
+  'G1'      'FIELD' /
+  'PLAT1'   'G1'    /
+  'PLAT2'   'G1'    /
+  'I-NORTH' 'PLAT1' /
+  'P-NORTH' 'PLAT1' /
+  'O-WEST'  'PLAT2' /
+  'I-SOUTH' 'PLAT2' /
+  'P-EAST'  'PLAT2' /
+  'G2'      'FIELD' /
+  'PLAT3'   'G2'    /
+  'I-2'     'PLAT3' /
+  'I-21'    'PLAT3' /
+  'I-22'    'PLAT3' /
+  'I-23'    'PLAT3' /
+  'I-24'    'PLAT3' /
+  'I-25'    'PLAT3' /
+/
+
+WELSPECS
+  'I-N-1' 'I-NORTH'  1  1  2000.15 'WATER' /
+  'P-N-0' 'P-NORTH'  1 10  2000.15 'OIL'   /
+/
+
+COMPDAT
+  'I-N-1' 0 0  2 10 'OPEN' 1* 1* 1.0 /
+  'P-N-0' 0 0  2  3 'OPEN' 1* 1* 1.0 /
+/
+
+WCONPROD
+-- Well    O/S    Mode  ORAT  WRAT  GRAT  LRAT  RESV  BHP
+  'P-N-*' 'OPEN' 'LRAT' 1*    1*    1*    5E3   1*    100 /
+/
+
+WCONINJE
+-- Well    Type     O/S     Mode   RATE  RESV  BHP
+  'I-N-*' 'WATER'  'OPEN'  'RATE'  25E3  1*    500 /
+/
+
+TSTEP
+100*30 /
+
+END
+)" };
+
+        return Opm::Parser{}.parseString(input);
+    }
 }
 
 struct CaseObjects
@@ -264,6 +405,17 @@ BOOST_AUTO_TEST_CASE(MaxGroupSize)
     BOOST_CHECK_EQUAL(Opm::maxGroupSize(cse.sched, 1), 10);
 }
 
+BOOST_AUTO_TEST_CASE(ManyChildGroups)
+{
+    auto cse = CaseObjects {
+        simCaseNodeGroupSizeFailure(),
+        Opm::ParseContext{}
+    };
+
+    // 6 Child groups of 'PLAT3'
+    BOOST_CHECK_EQUAL(Opm::maxGroupSize(cse.sched, 1), 6);
+}
+
 BOOST_AUTO_TEST_CASE(WellDims)
 {
     Opm::ParseContext parseContext;
@@ -296,5 +448,37 @@ BOOST_AUTO_TEST_CASE(WellDims)
     }
 }
 
+BOOST_AUTO_TEST_CASE(WellDims_ManyChildGroups)
+{
+    Opm::ParseContext parseContext;
+    setWellDimsContext(Opm::InputError::THROW_EXCEPTION, parseContext);
+
+    auto cse = CaseObjects{ simCaseNodeGroupSizeFailure(),  parseContext};
+
+    // There should be no failures in basic input layer
+    BOOST_CHECK(!cse.guard);
+
+    // There *should* be errors from dimension checking
+    BOOST_CHECK_THROW( Opm::checkConsistentArrayDimensions(cse.es  , cse.sched,
+                                                           parseContext, cse.guard),
+                       std::invalid_argument);
+
+    setWellDimsContext(Opm::InputError::DELAYED_EXIT1, parseContext);
+    Opm::checkConsistentArrayDimensions(cse.es  , cse.sched,
+                                        parseContext, cse.guard);
+
+    // There *should* be errors from dimension checking
+    BOOST_CHECK(cse.guard);
+
+    // Verify that we get expected output from ErrorGuard::dump()
+    boost::test_tools::output_test_stream output{"expect-wdims.chldg.err.out", true};
+    {
+        RedirectCERR stream(output.rdbuf());
+
+        cse.guard.dump();
+
+        BOOST_CHECK(output.match_pattern());
+    }
+}
 
 BOOST_AUTO_TEST_SUITE_END()
