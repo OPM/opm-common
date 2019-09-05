@@ -58,9 +58,9 @@ namespace Opm {
                        ErrorGuard& errors) const;
 
         Deck parseFile(const std::string&,
-                       const ParseContext&);
+                       const ParseContext&) const;
 
-        Deck parseFile(const std::string& datafile);
+        Deck parseFile(const std::string& datafile) const;
 
         Deck parseString(const std::string &data,
                          const ParseContext&,

@@ -941,12 +941,12 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
     }
 
     Deck Parser::parseFile(const std::string& dataFileName,
-                           const ParseContext& parseContext) {
+                           const ParseContext& parseContext) const {
         ErrorGuard errors;
         return this->parseFile(dataFileName, parseContext, errors);
     }
 
-    Deck Parser::parseFile(const std::string& dataFileName) {
+    Deck Parser::parseFile(const std::string& dataFileName) const {
         ErrorGuard errors;
         return this->parseFile(dataFileName, ParseContext(), errors);
     }
