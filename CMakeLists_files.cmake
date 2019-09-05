@@ -318,6 +318,7 @@ list (APPEND TEST_DATA_FILES
 )
 if(ENABLE_ECL_OUTPUT)
   list (APPEND TEST_DATA_FILES
+          tests/expect-wdims.chldg.err.out
           tests/expect-wdims.err.out
           tests/FIRST_SIM.DATA
           tests/FIRST_SIM_THPRES.DATA
