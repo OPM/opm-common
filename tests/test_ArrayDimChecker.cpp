@@ -244,6 +244,17 @@ RedirectCERR::~RedirectCERR()
 
 BOOST_AUTO_TEST_SUITE(WellDimensions)
 
+namespace {
+    void setWellDimsContext(const Opm::InputError::Action action,
+                            Opm::ParseContext&            ctxt)
+    {
+        ctxt.update(Opm::ParseContext::RUNSPEC_NUMWELLS_TOO_LARGE,       action);
+        ctxt.update(Opm::ParseContext::RUNSPEC_CONNS_PER_WELL_TOO_LARGE, action);
+        ctxt.update(Opm::ParseContext::RUNSPEC_NUMGROUPS_TOO_LARGE,      action);
+        ctxt.update(Opm::ParseContext::RUNSPEC_GROUPSIZE_TOO_LARGE,      action);
+    }
+}
+
 BOOST_AUTO_TEST_CASE(MaxGroupSize)
 {
     Opm::ParseContext parseContext;
@@ -256,10 +267,7 @@ BOOST_AUTO_TEST_CASE(MaxGroupSize)
 BOOST_AUTO_TEST_CASE(WellDims)
 {
     Opm::ParseContext parseContext;
-    parseContext.update(Opm::ParseContext::RUNSPEC_NUMWELLS_TOO_LARGE, Opm::InputError::THROW_EXCEPTION);
-    parseContext.update(Opm::ParseContext::RUNSPEC_CONNS_PER_WELL_TOO_LARGE, Opm::InputError::THROW_EXCEPTION);
-    parseContext.update(Opm::ParseContext::RUNSPEC_NUMGROUPS_TOO_LARGE, Opm::InputError::THROW_EXCEPTION);
-    parseContext.update(Opm::ParseContext::RUNSPEC_GROUPSIZE_TOO_LARGE, Opm::InputError::THROW_EXCEPTION);
+    setWellDimsContext(Opm::InputError::THROW_EXCEPTION, parseContext);
 
     auto cse = CaseObjects{ simCaseWellDims(),  parseContext};
 
@@ -270,10 +278,7 @@ BOOST_AUTO_TEST_CASE(WellDims)
                                                            parseContext, cse.guard),
                        std::invalid_argument);
 
-    parseContext.update(Opm::ParseContext::RUNSPEC_NUMWELLS_TOO_LARGE, Opm::InputError::DELAYED_EXIT1);
-    parseContext.update(Opm::ParseContext::RUNSPEC_CONNS_PER_WELL_TOO_LARGE, Opm::InputError::DELAYED_EXIT1);
-    parseContext.update(Opm::ParseContext::RUNSPEC_NUMGROUPS_TOO_LARGE, Opm::InputError::DELAYED_EXIT1);
-    parseContext.update(Opm::ParseContext::RUNSPEC_GROUPSIZE_TOO_LARGE, Opm::InputError::DELAYED_EXIT1);
+    setWellDimsContext(Opm::InputError::DELAYED_EXIT1, parseContext);
     Opm::checkConsistentArrayDimensions(cse.es  , cse.sched,
                                         parseContext, cse.guard);
 
