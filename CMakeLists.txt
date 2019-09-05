@@ -270,6 +270,18 @@ if (OPM_ENABLE_PYTHON)
 
   set_target_properties(opmcommon PROPERTIES POSITION_INDEPENDENT_CODE ON)
   set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_BINARY_DIR}/python/python)
+
+  configure_file(python/setup-build.sh.in tmp/setup-build.sh)
+  file( COPY ${PROJECT_BINARY_DIR}/tmp/setup-build.sh
+        DESTINATION ${PROJECT_BINARY_DIR}
+        FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE )
+
+  configure_file(python/setup-test.sh.in tmp/setup-test.sh)
+  file( COPY ${PROJECT_BINARY_DIR}/tmp/setup-test.sh
+        DESTINATION ${PROJECT_BINARY_DIR}
+        FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE )
+
+  configure_file(python/enable-python.sh.in enable-python.sh)
 endif()
 
 
