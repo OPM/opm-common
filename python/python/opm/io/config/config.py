@@ -9,8 +9,3 @@ class SummaryConfig(object):
     def __repr__(self):
         return 'SummaryConfig()'
 
-
-@delegate(lib.EclipseConfig)
-class EclipseConfig(object):
-    def __repr__(self):
-        return 'EclipseConfig()'
