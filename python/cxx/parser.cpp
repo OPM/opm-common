@@ -1,5 +1,9 @@
+#include <string>
+#include <exception>
+
 #include <opm/json/JsonObject.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <pybind11/stl.h>
 
@@ -42,6 +46,9 @@ namespace {
         const Json::JsonObject keyword(json_string);
         parser->addParserKeyword(keyword);
     }
+
+    
+
 }
 
 void opmcommon_python::export_Parser(py::module& module) {
@@ -50,6 +57,10 @@ void opmcommon_python::export_Parser(py::module& module) {
     module.def( "parse_string", parse_string);
     module.def( "create_deck", &create_deck );
     module.def( "create_deck_string", &create_deck_string);
+
+
+    py::class_<ParserKeyword>(module, "ParserKeyword")
+        .def_property_readonly("name", &ParserKeyword::getName);
 
 
     py::class_<SunbeamState>(module, "SunbeamState")
@@ -65,5 +76,8 @@ void opmcommon_python::export_Parser(py::module& module) {
         .def("parse"       , py::overload_cast<const std::string&, const ParseContext&>(&Parser::parseFile, py::const_))
         .def("parse_string", py::overload_cast<const std::string&>(&Parser::parseString, py::const_))
         .def("parse_string", py::overload_cast<const std::string&, const ParseContext&>(&Parser::parseString, py::const_))
-        .def("add_keyword", add_keyword);
+        .def("add_keyword", add_keyword)
+        .def("__getitem__", &Parser::getKeyword, ref_internal);
+
+
 }

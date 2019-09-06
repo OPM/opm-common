@@ -4,6 +4,8 @@ import sys
 
 from opm.io.parser import Parser
 from opm.io.parser import ParseContext
+from opm.io.parser import ParserKeyword
+
 
 class TestParser(unittest.TestCase):
 
@@ -30,6 +32,17 @@ FIPNUM
 1 1 2 3 /
 """
 
+    MANUALDATA = """
+START             -- 0
+10 MAI 2007 /
+RUNSPEC
+
+DIMENS
+2 2 1 /
+
+FIELD
+"""
+
     def setUp(self):
         self.spe3fn = 'tests/spe3/SPE3CASE1.DATA'
         self.norne_fname = os.path.abspath('examples/data/norne/NORNE_ATW2013.DATA')
@@ -45,6 +58,15 @@ FIPNUM
             string = f.read()
         deck = parser.parse_string(string)
         deck = parser.parse_string(string, context)
+
+    def test_pyinput(self):
+        parser = Parser()
+        deck = parser.parse_string(self.MANUALDATA)
+        with self.assertRaises(ValueError):
+            kw = parser["NOT_A_VALID_KEYWORD"]
+
+        kw = parser["FIELD"]
+        assert(kw.name == "FIELD")
 
 
 if __name__ == "__main__":
