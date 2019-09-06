@@ -483,12 +483,18 @@ set( keywords
      000_Eclipse100/W/WELOPEN
      000_Eclipse100/W/WELOPENL
      000_Eclipse100/W/WELPI
+     000_Eclipse100/W/WELPRI
      000_Eclipse100/W/WELSEGS
+     000_Eclipse100/W/WELSOMIN
      000_Eclipse100/W/WSEGSICD
      000_Eclipse100/W/WELSPECL
      000_Eclipse100/W/WELSPECS
      000_Eclipse100/W/WELTARG
      000_Eclipse100/W/WFOAM
+     000_Eclipse100/W/WFRICSEG
+     000_Eclipse100/W/WFRICSGL
+     000_Eclipse100/W/WFRICTN
+     000_Eclipse100/W/WFRICTNL
      000_Eclipse100/W/WGASPROD
      000_Eclipse100/W/WGRUPCON
      000_Eclipse100/W/WHISTCTL
