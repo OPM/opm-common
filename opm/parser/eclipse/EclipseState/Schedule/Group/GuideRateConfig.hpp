@@ -35,13 +35,13 @@ public:
 
 struct Well {
     double guide_rate;
-    Well2::GuideRateTarget phase;
+    Well2::GuideRateTarget target;
     double scaling_factor;
 };
 
 struct Group {
     double guide_rate;
-    Group2::GuideRateTarget phase;
+    Group2::GuideRateTarget target;
 };
 
     const GuideRateModel& model() const;

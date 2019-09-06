@@ -41,7 +41,7 @@ void GuideRateConfig::update_well(const Well2& well) {
     if (well.isAvailableForGroupControl()) {
         auto& well_node = this->wells[well.name()];
         well_node.guide_rate = well.getGuideRate();
-        well_node.phase = well.getGuideRatePhase();
+        well_node.target= well.getGuideRatePhase();
         well_node.scaling_factor = well.getGuideRateScalingFactor();
     } else
         this->wells.erase(well.name());
@@ -64,7 +64,7 @@ void GuideRateConfig::update_group(const Group2& group) {
 
     auto& group_node = this->groups[group.name()];
     group_node.guide_rate = properties.guide_rate;
-    group_node.phase = guide_target;
+    group_node.target = guide_target;
 }
 
 const GuideRateConfig::Group& GuideRateConfig::group(const std::string& group) const {

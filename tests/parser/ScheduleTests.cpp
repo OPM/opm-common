@@ -48,6 +48,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellProductionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GuideRateConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Group/GuideRate.hpp>
 
 using namespace Opm;
 
@@ -3459,10 +3460,10 @@ DATES             -- 4
     {
         const auto& grc = schedule.guideRateConfig(0);
         const auto& w1_node = grc.well("W1");
-        BOOST_CHECK(w1_node.phase == Well2::GuideRateTarget::OIL);
+        BOOST_CHECK(w1_node.target == Well2::GuideRateTarget::OIL);
 
         const auto& w2_node = grc.well("W2");
-        BOOST_CHECK(w2_node.phase == Well2::GuideRateTarget::GAS);
+        BOOST_CHECK(w2_node.target == Well2::GuideRateTarget::GAS);
 
         BOOST_CHECK(!grc.has_group("G1"));
         BOOST_CHECK(grc.has_group("G2"));
@@ -3470,7 +3471,7 @@ DATES             -- 4
     {
         const auto& grc = schedule.guideRateConfig(2);
         const auto& w1_node = grc.well("W1");
-        BOOST_CHECK(w1_node.phase == Well2::GuideRateTarget::WAT);
+        BOOST_CHECK(w1_node.target == Well2::GuideRateTarget::WAT);
         BOOST_CHECK_EQUAL(w1_node.guide_rate, 0.75);
 
         BOOST_CHECK(grc.has_well("W1"));
@@ -3480,4 +3481,13 @@ DATES             -- 4
         BOOST_CHECK(grc.has_group("G1"));
         BOOST_CHECK(!grc.has_group("G2"));
     }
+
+    GuideRate gr(schedule);
+
+    double oil_pot = 1;
+    double gas_pot = 1;
+    double wat_pot = 1;
+    BOOST_CHECK_THROW(gr.update("XYZ",1, 1.0, oil_pot, gas_pot, wat_pot), std::out_of_range);
 }
+
+

@@ -35,6 +35,7 @@
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/C.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/G.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/L.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/V.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/W.hpp>
 
@@ -337,6 +338,9 @@ namespace {
 
         else if (keyword.name() == "GUIDERAT")
             handleGUIDERAT(keyword, currentStep);
+
+        else if (keyword.name() == "LINCOM")
+            handleLINCOM(keyword, currentStep);
 
         else if (keyword.name() == "TUNING")
             handleTUNING(keyword, currentStep);
@@ -1608,6 +1612,21 @@ namespace {
         auto new_config = std::make_shared<GuideRateConfig>( this->guideRateConfig(currentStep) );
         if (new_config->update_model(new_model))
             this->guide_rate_config.update( currentStep, new_config );
+    }
+
+
+    void Schedule::handleLINCOM( const DeckKeyword& keyword, size_t currentStep) {
+        const auto& record = keyword.getRecord(0);
+        auto alpha = record.getItem<ParserKeywords::LINCOM::ALPHA>().get<UDAValue>(0);
+        auto beta  = record.getItem<ParserKeywords::LINCOM::BETA>().get<UDAValue>(0);
+        auto gamma = record.getItem<ParserKeywords::LINCOM::GAMMA>().get<UDAValue>(0);
+        auto new_config = std::make_shared<GuideRateConfig>( this->guideRateConfig(currentStep) );
+        auto new_model = new_config->model();
+
+        if (new_model.updateLINCOM(alpha, beta, gamma)) {
+            new_config->update_model(new_model);
+            this->guide_rate_config.update( currentStep, new_config );
+        }
     }
 
 

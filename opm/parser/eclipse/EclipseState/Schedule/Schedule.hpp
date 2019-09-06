@@ -281,6 +281,7 @@ namespace Opm
         void handleGCONPROD( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
         void handleGEFAC( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
         void handleGUIDERAT( const DeckKeyword& keyword, size_t currentStep);
+        void handleLINCOM( const DeckKeyword& keyword, size_t currentStep);
         void handleWEFAC( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
         void handleTUNING( const DeckKeyword& keyword, size_t currentStep);
         void handleNUPCOL( const DeckKeyword& keyword, size_t currentStep);

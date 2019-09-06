@@ -20,6 +20,7 @@
 #include <cmath>
 #include <string>
 
+#include <opm/parser/eclipse/Parser/ParserKeywords/L.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GuideRateModel.hpp>
 
 namespace Opm {
@@ -36,17 +37,20 @@ GuideRateModel::GuideRateModel(double time_interval_arg,
                                double damping_factor_arg,
                                bool use_free_gas_arg) :
     time_interval(time_interval_arg),
-    target(target_arg),
+    m_target(target_arg),
     A(A_arg),
     B(B_arg),
     C(C_arg),
     D(D_arg),
     E(E_arg),
     F(F_arg),
-    allow_increase(allow_increase_arg),
-    damping_factor(damping_factor_arg),
+    allow_increase_(allow_increase_arg),
+    damping_factor_(damping_factor_arg),
     use_free_gas(use_free_gas_arg),
-    default_model(false)
+    default_model(false),
+    alpha(UDAValue(ParserKeywords::LINCOM::ALPHA::defaultValue)),
+    beta(UDAValue(ParserKeywords::LINCOM::BETA::defaultValue)),
+    gamma(UDAValue(ParserKeywords::LINCOM::GAMMA::defaultValue))
 {
     if (this->A > 3 || this->A < -3)
         throw std::invalid_argument("Invalid value for A must be in interval [-3,3]");
@@ -59,17 +63,51 @@ GuideRateModel::GuideRateModel(double time_interval_arg,
 
     if (this->F > 3 || this->F < -3)
         throw std::invalid_argument("Invalid value for F must be in interval [-3,3]");
+
+    if (this->m_target == Target::COMB)
+        throw std::logic_error("Sorry - the 'COMB' mode is not supported");
 }
 
 
-double GuideRateModel::update_delay() const {
-    return this->time_interval;
-}
 
 
-double GuideRateModel::eval(double pot, double R1, double R2) const {
+double GuideRateModel::eval(double oil_pot, double gas_pot, double wat_pot) const {
     if (this->default_model)
         throw std::invalid_argument("The default GuideRateModel can not be evaluated - must enter GUIDERAT information explicitly.");
+
+    double pot;
+    double R1;
+    double R2;
+
+    switch (this->m_target) {
+    case Target::OIL:
+        pot = oil_pot;
+        R1 = wat_pot / oil_pot;
+        R2 = gas_pot / oil_pot;
+        break;
+
+    case Target::LIQ:
+        pot = oil_pot + wat_pot;;
+        R1 = oil_pot / (oil_pot + wat_pot);
+        R2 = wat_pot / (oil_pot + wat_pot);
+        break;
+
+    case Target::GAS:
+        pot = gas_pot;
+        R1 = wat_pot / gas_pot;
+        R2 = oil_pot / gas_pot;
+        break;
+
+    case Target::COMB:
+        throw std::logic_error("Not implemented - don't have a clue?");
+
+    case Target::RES:
+        throw std::logic_error("Not implemented - don't have a clue?");
+
+    default:
+        throw std::logic_error("Hmmm - should not be here?");
+    }
+
 
     double denom = this->B + this->C*std::pow(R1, this->D) + this->E*std::pow(R2, this->F);
     /*
@@ -85,20 +123,37 @@ double GuideRateModel::eval(double pot, double R1, double R2) const {
 
 bool GuideRateModel::operator==(const GuideRateModel& other) const {
     return (this->time_interval == other.time_interval) &&
-        (this->target == other.target) &&
+        (this->m_target == other.m_target) &&
         (this->A == other.A) &&
         (this->B == other.B) &&
         (this->C == other.C) &&
         (this->D == other.D) &&
         (this->E == other.E) &&
         (this->F == other.F) &&
-        (this->allow_increase == other.allow_increase) &&
-        (this->damping_factor == other.damping_factor) &&
+        (this->allow_increase_ == other.allow_increase_) &&
+        (this->damping_factor_ == other.damping_factor_) &&
         (this->use_free_gas == other.use_free_gas);
 }
 
 bool GuideRateModel::operator!=(const GuideRateModel& other) const {
     return !(*this == other);
+}
+
+
+double GuideRateModel::update_delay() const {
+    return this->time_interval;
+}
+
+double GuideRateModel::damping_factor() const {
+    return this->damping_factor_;
+}
+
+bool GuideRateModel::allow_increase() const {
+    return this->allow_increase_;
+}
+
+GuideRateModel::Target GuideRateModel::target() const {
+    return this->m_target;
 }
 
 
@@ -123,5 +178,27 @@ GuideRateModel::Target GuideRateModel::TargetFromString(const std::string& s) {
 
     throw std::invalid_argument("Could not convert: " + s + " to a valid Target enum value");
 }
+
+
+/*
+  The COMB target - which requires parameters from the LINCOM keyword, is not
+  supported. There are at least two pieces of missing functionality:
+
+    1. The parameters in the LINCOM come with unit specified by the LCUNIT
+       keyword; seemingly decoupled from the unit system in the rest of deck.
+       This functionality is not supported.
+
+    2. The values in the LINCOM kewyords are UDA values, have not yet integrated
+       the necessary SummaryState into this.
+*/
+
+bool GuideRateModel::updateLINCOM(const UDAValue& , const UDAValue& , const UDAValue& ) {
+    if (this->m_target == Target::COMB)
+        throw std::logic_error("The LINCOM keyword is not supported - at all!");
+
+    return true;
+}
+
+
 
 }
