@@ -9,6 +9,12 @@
 # you are therefore encouraged to go to the opm-simulators repository and update
 # the file: opm/autodiff/MissingFeatures.cpp
 
+#Some keywords are found to be of 'special' structure:
+#W             WHAT
+#ECONT         Terminates with two /
+#COALNUM       matrix structure
+#DYNAMICR      records of records
+
 
 set( keywords
      000_Eclipse100/A/ACTDIMS
@@ -75,16 +81,21 @@ set( keywords
      000_Eclipse100/C/COLLAPSE
      000_Eclipse100/C/COLUMNS
      000_Eclipse100/C/COMPDAT
-     000_Eclipse100/C/COMPDATL
+     000_Eclipse100/C/COMPDATX
      000_Eclipse100/C/COMPFLSH
      000_Eclipse100/C/COMPIMB
+     000_Eclipse100/C/COMPINJK
      000_Eclipse100/C/COMPLMPL
      000_Eclipse100/C/COMPLUMP
      000_Eclipse100/C/COMPOFF
      000_Eclipse100/C/COMPORD
      000_Eclipse100/C/COMPRIV
+     000_Eclipse100/C/COMPRP
+     000_Eclipse100/C/COMPRPL
      000_Eclipse100/C/COMPSEGL
      000_Eclipse100/C/COMPSEGS
+     000_Eclipse100/C/COMPVE
+     000_Eclipse100/C/COMPVEL
      000_Eclipse100/C/CONNECTION_PROBE
      000_Eclipse100/C/COORD
      000_Eclipse100/C/COORDSYS
@@ -93,6 +104,7 @@ set( keywords
      000_Eclipse100/C/COPYREG
      000_Eclipse100/C/CPR
      000_Eclipse100/C/CRITPERM
+     000_Eclipse100/C/CSKIN
      000_Eclipse100/D/DATE
      000_Eclipse100/D/DATES
      000_Eclipse100/D/DATUM
@@ -103,9 +115,12 @@ set( keywords
      000_Eclipse100/D/DELAYACT
      000_Eclipse100/D/DENSITY
      000_Eclipse100/D/DEPTH
+     000_Eclipse100/D/DEPTHTAB
      000_Eclipse100/D/DEPTHZ
      000_Eclipse100/D/DIAGDISP
+     000_Eclipse100/D/DIFF
      000_Eclipse100/D/DIFFC
+     000_Eclipse100/D/DIFFCOAL
      000_Eclipse100/D/DIFFDP
      000_Eclipse100/D/DIFFMMF
      000_Eclipse100/D/DIFFMR
@@ -113,22 +128,45 @@ set( keywords
      000_Eclipse100/D/DIFFMX
      000_Eclipse100/D/DIFFMY
      000_Eclipse100/D/DIFFMZ
+     000_Eclipse100/D/DIFFR
+     000_Eclipse100/D/DIFFTHT
+     000_Eclipse100/D/DIFFUSE
+     000_Eclipse100/D/DIFFX
+     000_Eclipse100/D/DIFFY
+     000_Eclipse100/D/DIFFZ
      000_Eclipse100/D/DIMENS
+     000_Eclipse100/D/DIMPES
+     000_Eclipse100/D/DIMPLICT
      000_Eclipse100/D/DISGAS
+     000_Eclipse100/D/DISPDIMS
+     000_Eclipse100/D/DISPERSE
+     000_Eclipse100/D/DOMAINS
+     000_Eclipse100/D/DPGRID
+     000_Eclipse100/D/DPKRMOD
+     000_Eclipse100/D/DPNUM
      000_Eclipse100/D/DR
+     000_Eclipse100/D/DRILPRI
      000_Eclipse100/D/DRSDT
      000_Eclipse100/D/DRSDTR
      000_Eclipse100/D/DRV
      000_Eclipse100/D/DRVDT
      000_Eclipse100/D/DRVDTR
+     000_Eclipse100/D/DSPDEINT
      000_Eclipse100/D/DTHETA
      000_Eclipse100/D/DTHETAV
+     000_Eclipse100/D/DUALPERM
+     000_Eclipse100/D/DUALPORO
      000_Eclipse100/D/DUMPFLUX
+     000_Eclipse100/D/DUMPCUPL
+     000_Eclipse100/D/DYNRDIMS
      000_Eclipse100/D/DX
      000_Eclipse100/D/DXV
      000_Eclipse100/D/DY
      000_Eclipse100/D/DYV
      000_Eclipse100/D/DZ
+     000_Eclipse100/D/DZMATRIX
+     000_Eclipse100/D/DZMTRX
+     000_Eclipse100/D/DZMTRXV
      000_Eclipse100/E/ECHO
      000_Eclipse100/E/EDIT
      000_Eclipse100/E/EDITNNC
