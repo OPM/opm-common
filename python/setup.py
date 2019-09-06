@@ -26,7 +26,10 @@ args = parser.parse_args()
 if args.prefix:
    python_version = 'python' + str(sys.version_info.major) + '.' + str(sys.version_info.minor)
    pkg_path_root = os.path.join(args.prefix, 'lib', python_version, 'site-packages')
-   os.environ['PYTHONPATH'] += ':' + pkg_path_root
+   if 'PYTHONPATH' in os.environ:
+       os.environ['PYTHONPATH'] += ':' + pkg_path_root
+   else:
+       os.environ['PYTHONPATH'] = pkg_path_root
 
 setupdir = os.path.dirname(__file__)
 if setupdir != '':
