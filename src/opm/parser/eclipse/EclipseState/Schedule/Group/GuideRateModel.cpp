@@ -18,6 +18,7 @@
 */
 #include <stdexcept>
 #include <cmath>
+#include <string>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GuideRateModel.hpp>
 
