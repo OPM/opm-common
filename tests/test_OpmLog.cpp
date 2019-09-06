@@ -61,6 +61,7 @@ BOOST_AUTO_TEST_CASE(Test_Logger) {
     std::ostringstream log_stream;
     std::shared_ptr<CounterLog> counter = std::make_shared<CounterLog>();
     std::shared_ptr<StreamLog> streamLog = std::make_shared<StreamLog>( log_stream , Log::MessageType::Warning );
+    BOOST_CHECK_THROW( StreamLog( "/non/existing/directory/logfile", Log::MessageType::Warning ) , std::runtime_error );
     BOOST_CHECK_EQUAL( false , logger.hasBackend("NO"));
 
     logger.addBackend("COUNTER" , counter);

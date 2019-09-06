@@ -29,6 +29,9 @@ StreamLog::StreamLog(const std::string& logFile , int64_t messageMask, bool appe
     } else {
         m_ofstream.open( logFile.c_str() ,  std::ofstream::out );
     }
+    if (!m_ofstream) {
+        throw std::runtime_error("Failed opening file " + logFile + " for StreamLog.");
+    }
     m_streamOwner = true;
     m_ostream = &m_ofstream;
 }
@@ -44,7 +47,7 @@ StreamLog::StreamLog(std::ostream& os , int64_t messageMask) : LogBackend(messag
 void StreamLog::close() {
     if (m_streamOwner && m_ofstream.is_open()) {
         m_ofstream.close();
-        m_ostream = NULL;
+        m_ostream = nullptr;
     }
 }
 
