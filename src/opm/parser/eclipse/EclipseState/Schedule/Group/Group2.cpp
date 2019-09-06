@@ -478,6 +478,8 @@ Group2::GuideRateTarget Group2::GuideRateTargetFromString( const std::string& st
         return GuideRateTarget::POTN;
     else if (stringValue == "FORM")
         return GuideRateTarget::FORM;
+    else if (stringValue == " ")
+        return GuideRateTarget::NO_GUIDE_RATE;
     else
         return GuideRateTarget::NO_GUIDE_RATE;
 }

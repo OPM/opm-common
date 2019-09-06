@@ -30,7 +30,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Events.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/Group2.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GTNode.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Group/GuideRateModel.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Group/GuideRateConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
 #include <opm/parser/eclipse/EclipseState/Util/OrderedMap.hpp>
@@ -195,7 +195,7 @@ namespace Opm
         const Tuning& getTuning() const;
         const MessageLimits& getMessageLimits() const;
         void invalidNamePattern (const std::string& namePattern, const ParseContext& parseContext, ErrorGuard& errors, const DeckKeyword& keyword) const;
-        const GuideRateModel& guideRateModel(size_t timeStep) const;
+        const GuideRateConfig& guideRateConfig(size_t timeStep) const;
 
         const RFTConfig& rftConfig() const;
         const Events& getEvents() const;
@@ -232,7 +232,7 @@ namespace Opm
         DynamicState<std::shared_ptr<WListManager>> wlist_manager;
         DynamicState<std::shared_ptr<UDQConfig>> udq_config;
         DynamicState<std::shared_ptr<UDQActive>> udq_active;
-        DynamicState<std::shared_ptr<GuideRateModel>> guide_rate_model;
+        DynamicState<std::shared_ptr<GuideRateConfig>> guide_rate_config;
         DynamicState<Well2::ProducerCMode> global_whistctl_mode;
         DynamicState<std::shared_ptr<Action::Actions>> m_actions;
         RFTConfig rft_config;

@@ -47,6 +47,7 @@
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellProductionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Group/GuideRateConfig.hpp>
 
 using namespace Opm;
 
@@ -3368,5 +3369,115 @@ BOOST_AUTO_TEST_CASE(nupcol) {
         BOOST_CHECK_EQUAL(schedule.getNupcol(0),3);
         BOOST_CHECK_EQUAL(schedule.getNupcol(1),4);
         BOOST_CHECK_EQUAL(schedule.getNupcol(2),10);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(TESTGuideRateConfig) {
+    Opm::Parser parser;
+    std::string input = R"(
+START             -- 0
+10 MAI 2007 /
+SCHEDULE
+WELSPECS
+     'W1'    'G1'   1 2  3.33       'OIL'  7*/
+     'W2'    'G2'   1 3  3.33       'OIL'  3*  YES /
+     'W3'    'G3'   1 4  3.92       'OIL'  3*  NO /
+/
+
+COMPDAT
+ 'W1'  1  1   1   1 'OPEN' 1*    1.168   0.311   107.872 1*  1*  'Z'  21.925 /
+ 'W2'  1  1   2   2 'OPEN' 1*    1.168   0.311   107.872 1*  1*  'Z'  21.925 /
+ 'W3'  1  1   3   3 'OPEN' 1*    1.168   0.311   107.872 1*  1*  'Z'  21.925 /
+/
+
+WCONPROD
+     'W1'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
+/
+
+WGRUPCON
+    'W1' 'YES'   0.50 'OIL' /
+    'W2' 'YES'   0.50 'GAS' /
+/
+
+GCONPROD
+ 'G1' 'ORAT' 1000 /
+ 'G2' 'ORAT' 1000 5* 0.25 'OIL' /
+/
+
+
+DATES             -- 1
+ 10  JUN 2007 /
+/
+
+WCONHIST
+     'W1'      'OPEN'      'ORAT'      1.000      0.000      0.000  5* /
+/
+
+WGRUPCON
+    'W1' 'YES'   0.75 'WAT' /
+    'W2' 'NO' /
+/
+
+GCONPROD
+ 'G2' 'ORAT' 1000 /
+ 'G1' 'ORAT' 1000 6* 'FORM' /
+/
+
+DATES             -- 2
+ 10  JUL 2007 /
+/
+
+
+WCONPROD
+     'W1'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
+/
+
+
+DATES             -- 3
+ 10  AUG 2007 /
+/
+
+
+DATES             -- 4
+ 10  SEP 2007 /
+/
+
+
+DATES             -- 4
+ 10  NOV 2007 /
+/
+
+     )";
+
+    auto deck = parser.parseString(input);
+    EclipseGrid grid(10,10,10);
+    TableManager table ( deck );
+    Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    Runspec runspec (deck);
+    Schedule schedule( deck, grid, eclipseProperties,runspec);
+
+    {
+        const auto& grc = schedule.guideRateConfig(0);
+        const auto& w1_node = grc.well("W1");
+        BOOST_CHECK(w1_node.phase == Well2::GuideRateTarget::OIL);
+
+        const auto& w2_node = grc.well("W2");
+        BOOST_CHECK(w2_node.phase == Well2::GuideRateTarget::GAS);
+
+        BOOST_CHECK(!grc.has_group("G1"));
+        BOOST_CHECK(grc.has_group("G2"));
+    }
+    {
+        const auto& grc = schedule.guideRateConfig(2);
+        const auto& w1_node = grc.well("W1");
+        BOOST_CHECK(w1_node.phase == Well2::GuideRateTarget::WAT);
+        BOOST_CHECK_EQUAL(w1_node.guide_rate, 0.75);
+
+        BOOST_CHECK(grc.has_well("W1"));
+        BOOST_CHECK(!grc.has_well("W2"));
+        BOOST_CHECK_THROW( grc.well("W2"), std::out_of_range);
+
+        BOOST_CHECK(grc.has_group("G1"));
+        BOOST_CHECK(!grc.has_group("G2"));
     }
 }

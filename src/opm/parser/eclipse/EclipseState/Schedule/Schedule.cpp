@@ -120,7 +120,7 @@ namespace {
         wlist_manager( this->m_timeMap, std::make_shared<WListManager>()),
         udq_config(this->m_timeMap, std::make_shared<UDQConfig>(deck)),
         udq_active(this->m_timeMap, std::make_shared<UDQActive>()),
-        guide_rate_model(this->m_timeMap, std::make_shared<GuideRateModel>()),
+        guide_rate_config(this->m_timeMap, std::make_shared<GuideRateConfig>()),
         global_whistctl_mode(this->m_timeMap, Well2::ProducerCMode::CMODE_UNDEFINED),
         m_actions(this->m_timeMap, std::make_shared<Action::Actions>()),
         rft_config(this->m_timeMap),
@@ -1556,8 +1556,13 @@ namespace {
                     if (!record.getItem("RESERVOIR_FLUID_TARGET").defaultApplied(0))
                         production.production_controls += static_cast<int>(Group2::ProductionCMode::RESV);
 
-                    if (group_ptr->updateProduction(production))
+                    if (group_ptr->updateProduction(production)) {
+                        auto new_config = std::make_shared<GuideRateConfig>( this->guideRateConfig(currentStep) );
+                        new_config->update_group(*group_ptr);
+                        this->guide_rate_config.update( currentStep, std::move(new_config) );
+
                         this->updateGroup(std::move(group_ptr), currentStep);
+                    }
                 }
             }
         }
@@ -1599,10 +1604,10 @@ namespace {
         double damping_factor = record.getItem<ParserKeywords::GUIDERAT::DAMPING_FACTOR>().get<double>(0);
         bool use_free_gas = DeckItem::to_bool( record.getItem<ParserKeywords::GUIDERAT::USE_FREE_GAS>().getTrimmedString(0));
 
-        auto new_model = std::make_shared<GuideRateModel>(min_calc_delay, phase, A, B, C, D, E, F, allow_increase, damping_factor, use_free_gas);
-        const auto& current_model = this->guide_rate_model.get(currentStep);
-        if (*current_model != *new_model)
-            this->guide_rate_model.update( currentStep, new_model );
+        GuideRateModel new_model = GuideRateModel(min_calc_delay, phase, A, B, C, D, E, F, allow_increase, damping_factor, use_free_gas);
+        auto new_config = std::make_shared<GuideRateConfig>( this->guideRateConfig(currentStep) );
+        if (new_config->update_model(new_model))
+            this->guide_rate_config.update( currentStep, new_config );
     }
 
 
@@ -1848,7 +1853,7 @@ namespace {
         for( const auto& record : keyword ) {
             const auto well_names = this->wellNames(record.getItem("WELL").getTrimmedString(0), currentStep);
             for (const auto& well_name : well_names) {
-              bool availableForGroupControl = DeckItem::to_bool(record.getItem("GROUP_CONTROLLED").getTrimmedString(0));
+                bool availableForGroupControl = DeckItem::to_bool(record.getItem("GROUP_CONTROLLED").getTrimmedString(0));
                 double guide_rate = record.getItem("GUIDE_RATE").get< double >(0);
                 double scaling_factor = record.getItem("SCALING_FACTOR").get< double >(0);
                 auto phase = Well2::GuideRateTarget::UNDEFINED;
@@ -1860,8 +1865,13 @@ namespace {
                 {
                     auto& dynamic_state = this->wells_static.at(well_name);
                     auto well_ptr = std::make_shared<Well2>( *dynamic_state[currentStep] );
-                    if (well_ptr->updateWellGuideRate(availableForGroupControl, guide_rate, phase, scaling_factor))
+                    if (well_ptr->updateWellGuideRate(availableForGroupControl, guide_rate, phase, scaling_factor)) {
                         this->updateWell(well_ptr, currentStep);
+
+                        auto new_config = std::make_shared<GuideRateConfig>( this->guideRateConfig(currentStep) );
+                        new_config->update_well(*well_ptr);
+                        this->guide_rate_config.update( currentStep, std::move(new_config) );
+                    }
                 }
             }
         }
@@ -2538,10 +2548,8 @@ void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, c
         return *ptr;
     }
 
-    const GuideRateModel& Schedule::guideRateModel(size_t timeStep) const {
-        const auto& ptr = this->guide_rate_model.get(timeStep);
-        if (ptr == nullptr)
-            throw std::runtime_error("Tried to dereference invalid GuideRateModel - internal error in opm/flow");
+    const GuideRateConfig& Schedule::guideRateConfig(size_t timeStep) const {
+        const auto& ptr = this->guide_rate_config.get(timeStep);
         return *ptr;
     }
 
