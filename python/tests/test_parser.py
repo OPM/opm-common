@@ -4,7 +4,7 @@ import sys
 
 from opm.io.parser import Parser
 from opm.io.parser import ParseContext
-from opm.io.parser import ParserKW
+from opm.io.parser import ParserKeyword
 
 
 class TestParser(unittest.TestCase):
@@ -66,7 +66,7 @@ FIELD
             kw = parser["NOT_A_VALID_KEYWORD"]
 
         kw = parser["FIELD"]
-        assert(kw.Name == "FIELD")
+        assert(kw.name == "FIELD")
 
 
 if __name__ == "__main__":

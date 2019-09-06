@@ -60,7 +60,7 @@ void opmcommon_python::export_Parser(py::module& module) {
 
 
     py::class_<ParserKeyword>(module, "ParserKeyword")
-        .def_property_readonly("Name", &ParserKeyword::getName);
+        .def_property_readonly("name", &ParserKeyword::getName);
 
 
     py::class_<SunbeamState>(module, "SunbeamState")
