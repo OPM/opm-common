@@ -1,6 +1,5 @@
 import unittest
 import opm.io
-from  opm.io.parser import EclipseConfig
 
 class TestState(unittest.TestCase):
     FAULTS_DECK = """
