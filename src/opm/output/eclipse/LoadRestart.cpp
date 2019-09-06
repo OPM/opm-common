@@ -693,109 +693,7 @@ namespace {
         }
     }
 
-    void checkWellVectorSizes(const std::vector<int>&                   opm_iwel,
-                              const std::vector<double>&                opm_xwel,
-                              const std::vector<Opm::data::Rates::opt>& phases,
-                              const std::vector<Opm::Well2>&            sched_wells)
-    {
-        const auto expected_xwel_size =
-            std::accumulate(sched_wells.begin(), sched_wells.end(),
-                            std::size_t(0),
-                [&phases](const std::size_t acc, const Opm::Well2& w)
-                -> std::size_t
-            {
-                return acc
-                    + 2 + phases.size()
-                    + (w.getConnections().size()
-                        * (phases.size() + Opm::data::Connection::restart_size));
-            });
 
-        if (opm_xwel.size() != expected_xwel_size) {
-            throw std::runtime_error {
-                "Mismatch between OPM_XWEL and deck; "
-                "OPM_XWEL size was " + std::to_string(opm_xwel.size()) +
-                ", expected " + std::to_string(expected_xwel_size)
-            };
-        }
-
-        if (opm_iwel.size() != sched_wells.size()) {
-            throw std::runtime_error {
-                "Mismatch between OPM_IWEL and deck; "
-                "OPM_IWEL size was " + std::to_string(opm_iwel.size()) +
-                ", expected " + std::to_string(sched_wells.size())
-            };
-        }
-    }
-
-    Opm::data::Wells
-    restore_wells_opm(const ::Opm::EclipseState& es,
-                      const ::Opm::EclipseGrid&  grid,
-                      const ::Opm::Schedule&     schedule,
-                      RestartFileView&           rst_view)
-    {
-        if (! (rst_view.hasKeyword<int>   ("OPM_IWEL") &&
-               rst_view.hasKeyword<double>("OPM_XWEL")))
-        {
-            return {};
-        }
-
-        const auto& opm_iwel = rst_view.getKeyword<int>   ("OPM_IWEL");
-        const auto& opm_xwel = rst_view.getKeyword<double>("OPM_XWEL");
-
-        using rt = Opm::data::Rates::opt;
-
-        const auto& sched_wells = schedule.getWells2(rst_view.simStep());
-        std::vector<rt> phases;
-        {
-            const auto& phase = es.runspec().phases();
-
-            if (phase.active(Opm::Phase::WATER)) { phases.push_back(rt::wat); }
-            if (phase.active(Opm::Phase::OIL))   { phases.push_back(rt::oil); }
-            if (phase.active(Opm::Phase::GAS))   { phases.push_back(rt::gas); }
-        }
-
-        checkWellVectorSizes(opm_iwel, opm_xwel, phases, sched_wells);
-
-        Opm::data::Wells wells;
-        auto opm_xwel_data = opm_xwel.begin();
-        auto opm_iwel_data = opm_iwel.begin();
-
-        for (const auto& sched_well : sched_wells) {
-            auto& well = wells[ sched_well.name() ];
-
-            well.bhp         = *opm_xwel_data;  ++opm_xwel_data;
-            well.temperature = *opm_xwel_data;  ++opm_xwel_data;
-            well.control     = *opm_iwel_data;  ++opm_iwel_data;
-
-            for (const auto& phase : phases) {
-                well.rates.set(phase, *opm_xwel_data);
-                ++opm_xwel_data;
-            }
-
-            for (const auto& sc : sched_well.getConnections()) {
-                const auto i = sc.getI(), j = sc.getJ(), k = sc.getK();
-
-                if (!grid.cellActive(i, j, k) || sc.state() == Opm::Connection::State::SHUT) {
-                    opm_xwel_data += Opm::data::Connection::restart_size + phases.size();
-                    continue;
-                }
-
-                well.connections.emplace_back();
-                auto& connection = well.connections.back();
-
-                connection.index          = grid.getGlobalIndex(i, j, k);
-                connection.pressure       = *opm_xwel_data;  ++opm_xwel_data;
-                connection.reservoir_rate = *opm_xwel_data;  ++opm_xwel_data;
-
-                for (const auto& phase : phases) {
-                    connection.rates.set(phase, *opm_xwel_data);
-                    ++opm_xwel_data;
-                }
-            }
-        }
-
-        return wells;
-    }
 
     std::map<
         std::tuple<int, int, int>,
@@ -1223,10 +1121,7 @@ namespace Opm { namespace RestartIO  {
 
         xr.convertToSI(es.getUnits());
 
-        auto xw = rst_view->hasKeyword<double>("OPM_XWEL")
-            ? restore_wells_opm(es, grid, schedule, *rst_view)
-            : restore_wells_ecl(es, grid, schedule,  rst_view);
-
+        auto xw = restore_wells_ecl(es, grid, schedule,  rst_view);
         auto rst_value = RestartValue{ std::move(xr), std::move(xw) };
 
         if (! extra_keys.empty()) {
