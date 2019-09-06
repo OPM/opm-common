@@ -4,7 +4,6 @@ from os.path import isfile
 from opm import libopmcommon_python as lib
 from .sunbeam import delegate
 from ..schedule import Schedule
-from ..config import EclipseConfig
 
 @delegate(lib.EclipseState)
 class EclipseState(object):
@@ -16,9 +15,6 @@ class EclipseState(object):
 
     def grid(self):
         return EclipseGrid(self._grid())
-
-    def cfg(self):
-        return EclipseConfig(self._cfg())
 
     @property
     def table(self):

@@ -73,19 +73,6 @@ SATNUM
         self.assertEqual(g, grid.globalIndex(i,j,k))
         self.assertEqual((i,j,k), grid.getIJK(g))
 
-    def test_config(self):
-        cfg = self.state.cfg()
-        self.assertTrue('EclipseConfig' in repr(cfg))
-
-        init = cfg.init()
-        self.assertTrue(init.hasEquil())
-        self.assertFalse(init.restartRequested())
-        self.assertEqual(0, init.getRestartStep())
-
-        rst = cfg.restart()
-        self.assertFalse(rst.getWriteRestartFile(0))
-        self.assertEqual(7, rst.getFirstRestartStep())
-
     def test_summary(self):
         smry = self.spe3.summary_config
         self.assertTrue('SummaryConfig' in repr(smry))
