@@ -38,6 +38,8 @@ enum class Comparator {
     EQUAL,
     GREATER,
     LESS,
+    GREATER_EQUAL,
+    LESS_EQUAL,
     INVALID
 };
 

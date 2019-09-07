@@ -628,7 +628,7 @@ ENDACTIO
 
 ACTIONX
    'B' /
-   FWCT < 0.50 /
+   FWCT <= 0.50 /
 /
 
 
@@ -691,9 +691,9 @@ TSTEP
     const auto& actB = actions2.get("B");
     const auto& condB = actB.conditions();
     BOOST_CHECK_EQUAL(condB.size() , 1);
-    BOOST_CHECK_EQUAL(condB[0].expression, "FWCT < 0.50");
+    BOOST_CHECK_EQUAL(condB[0].expression, "FWCT <= 0.50");
     BOOST_CHECK_EQUAL(condB[0].quantity, "FWCT");
-    BOOST_CHECK(condB[0].cmp == Action::Condition::Comparator::LESS);
+    BOOST_CHECK(condB[0].cmp == Action::Condition::Comparator::LESS_EQUAL);
     BOOST_CHECK(condB[0].logic == Action::Condition::Logical::END);
 
     const auto& actA = actions2.get("A");
