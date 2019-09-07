@@ -35,15 +35,11 @@ bool Actions::empty() const {
 
 
 void Actions::add(const ActionX& action) {
-    printf("Adding: %s\n", action.name().c_str());
     auto iter = std::find_if( this->actions.begin(), this->actions.end(), [&action](const ActionX& arg) { return arg.name() == action.name(); });
-    if (iter == this->actions.end()) {
-        printf("push_back\n");
+    if (iter == this->actions.end())
         this->actions.push_back(action);
-    } else {
-        printf("update\n");
+    else
         *iter = action;
-    }
 }
 
 
