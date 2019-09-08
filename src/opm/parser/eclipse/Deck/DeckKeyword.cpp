@@ -17,28 +17,40 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
+
 #include <opm/parser/eclipse/Deck/DeckOutput.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 
+
 namespace Opm {
 
-    DeckKeyword::DeckKeyword(const std::string& keywordName) :
-        m_keywordName(keywordName),
+DeckKeyword::DeckKeyword(const std::string& keyword) :
+        m_keywordName(keyword),
         m_lineNumber(-1),
-        m_knownKeyword(true),
         m_isDataKeyword(false),
-        m_slashTerminated(true)
+        m_slashTerminated(true),
+        parser_keyword(nullptr)
     {
     }
 
-    DeckKeyword::DeckKeyword(const std::string& keywordName, bool knownKeyword) :
+    DeckKeyword::DeckKeyword(const ParserKeyword * parserKeyword) :
+        m_keywordName(parserKeyword->getName()),
+        m_lineNumber(-1),
+        m_isDataKeyword(false),
+        m_slashTerminated(true),
+        parser_keyword(parserKeyword)
+    {
+    }
+
+    DeckKeyword::DeckKeyword(const ParserKeyword * parserKeyword, const std::string& keywordName) :
         m_keywordName(keywordName),
         m_lineNumber(-1),
-        m_knownKeyword(knownKeyword),
         m_isDataKeyword(false),
-        m_slashTerminated(true)
+        m_slashTerminated(true),
+        parser_keyword(parserKeyword)
     {
     }
 
@@ -72,6 +84,12 @@ namespace Opm {
         return m_isDataKeyword;
     }
 
+    const ParserKeyword& DeckKeyword::parserKeyword() const {
+        if (this->parser_keyword)
+            return *this->parser_keyword;
+
+        throw std::logic_error("INTERNAL ERROR: The " + this->m_keywordName + " deck keyword has been instantiated without ParserKeyword information.");
+    }
 
     const std::string& DeckKeyword::name() const {
         return m_keywordName;
@@ -82,10 +100,13 @@ namespace Opm {
     }
 
     bool DeckKeyword::isKnown() const {
-        return m_knownKeyword;
+        return (this->parser_keyword != nullptr);
     }
 
     void DeckKeyword::addRecord(DeckRecord&& record) {
+        if (!this->parser_keyword)
+            throw std::logic_error("INTERNAL ERROR: The " + this->m_keywordName + " deck keyword has been instantiated without ParserKeyword information - can not add data");
+
         this->m_recordList.push_back( std::move( record ) );
     }
 
