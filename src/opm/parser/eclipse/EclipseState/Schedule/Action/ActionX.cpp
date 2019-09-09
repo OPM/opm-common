@@ -76,6 +76,12 @@ ActionX::ActionX(const DeckKeyword& kw, std::time_t start_time) :
 
                 if (token_type == TokenType::op_lt)
                     cond.cmp = Condition::Comparator::LESS;
+
+                if (token_type == TokenType::op_le)
+                    cond.cmp = Condition::Comparator::LESS_EQUAL;
+
+                if (token_type == TokenType::op_ge)
+                    cond.cmp = Condition::Comparator::GREATER_EQUAL;
             }
         }
 
