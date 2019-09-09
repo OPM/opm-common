@@ -551,27 +551,12 @@ BOOST_AUTO_TEST_CASE(name_nameSetInConstructor_nameReturned) {
 BOOST_AUTO_TEST_CASE(size_noRecords_returnszero) {
     DeckKeyword deckKeyword( "KW" );
     BOOST_CHECK_EQUAL(0U, deckKeyword.size());
+    BOOST_CHECK_THROW(deckKeyword.getRecord(0), std::out_of_range);
 }
 
-
-BOOST_AUTO_TEST_CASE(addRecord_onerecord_recordadded) {
-    DeckKeyword deckKeyword( "KW" );
-    deckKeyword.addRecord( DeckRecord() );
-    BOOST_CHECK_EQUAL(1U, deckKeyword.size());
-    for (auto iter = deckKeyword.begin(); iter != deckKeyword.end(); ++iter) {
-        //
-    }
-
-}
-
-BOOST_AUTO_TEST_CASE(getRecord_outofrange_exceptionthrown) {
-    DeckKeyword deckKeyword( "KW" );
-    deckKeyword.addRecord(DeckRecord());
-    BOOST_CHECK_THROW(deckKeyword.getRecord(1), std::out_of_range);
-}
 
 BOOST_AUTO_TEST_CASE(setUnknown_wasknown_nowunknown) {
-    DeckKeyword deckKeyword( "KW", false );
+    DeckKeyword deckKeyword( "KW" );
     BOOST_CHECK(!deckKeyword.isKnown());
 }
 

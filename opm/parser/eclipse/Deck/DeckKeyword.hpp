@@ -28,15 +28,16 @@
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 
 namespace Opm {
-    class ParserKeyword;
     class DeckOutput;
+    class ParserKeyword;
 
     class DeckKeyword {
     public:
         typedef std::vector< DeckRecord >::const_iterator const_iterator;
 
+        explicit DeckKeyword(const ParserKeyword * parserKeyword);
         explicit DeckKeyword(const std::string& keywordName);
-        DeckKeyword(const std::string& keywordName, bool knownKeyword);
+        DeckKeyword(const ParserKeyword * parserKeyword, const std::string& keywordName);
 
         const std::string& name() const;
         void setFixedSize();
@@ -59,6 +60,7 @@ namespace Opm {
         const std::vector<double>& getRawDoubleData() const;
         const std::vector<double>& getSIDoubleData() const;
         const std::vector<std::string>& getStringData() const;
+        const ParserKeyword& parserKeyword() const;
         size_t getDataSize() const;
         void write( DeckOutput& output ) const;
         void write_data( DeckOutput& output ) const;
@@ -86,9 +88,9 @@ namespace Opm {
         int m_lineNumber;
 
         std::vector< DeckRecord > m_recordList;
-        bool m_knownKeyword;
         bool m_isDataKeyword;
         bool m_slashTerminated;
+        const ParserKeyword * parser_keyword;
     };
 }
 
