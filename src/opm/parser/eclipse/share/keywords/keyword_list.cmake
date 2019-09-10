@@ -174,9 +174,11 @@ set( keywords
      000_Eclipse100/E/EDITNNC
      000_Eclipse100/E/EDITNNCR
      000_Eclipse100/E/EHYSTR
+     000_Eclipse100/E/EHYSTRR
      000_Eclipse100/E/END
      000_Eclipse100/E/ENDACTIO
      000_Eclipse100/E/ENDBOX
+     000_Eclipse100/E/ENDDYN
      000_Eclipse100/E/ENDINC
      000_Eclipse100/E/ENDFIN
      000_Eclipse100/E/ENDNUM
@@ -184,14 +186,22 @@ set( keywords
      000_Eclipse100/E/ENDSCALE
      000_Eclipse100/E/ENDSKIP
      000_Eclipse100/E/ENKRVD
+     000_Eclipse100/E/ENPCVD
      000_Eclipse100/E/ENPTVD
+     000_Eclipse100/E/ENSPCVD
+     000_Eclipse100/E/EPSDBGS
+     000_Eclipse100/E/EPSDEBUG
      000_Eclipse100/E/EQLDIMS
      000_Eclipse100/E/EQLNUM
      000_Eclipse100/E/EQLOPTS
+     000_Eclipse100/E/EQLZCORN
      000_Eclipse100/E/EQUALREG
      000_Eclipse100/E/EQUALS
      000_Eclipse100/E/EQUIL
+     000_Eclipse100/E/ESSNODE
+     000_Eclipse100/E/EXCAVATE
      000_Eclipse100/E/EXCEL
+     000_Eclipse100/E/EXTFIN
      000_Eclipse100/E/EXTRAPMS
      000_Eclipse100/F/FAULTDIM
      000_Eclipse100/F/FAULTS
