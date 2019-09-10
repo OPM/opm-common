@@ -167,9 +167,12 @@ set( keywords
      000_Eclipse100/D/DZMATRIX
      000_Eclipse100/D/DZMTRX
      000_Eclipse100/D/DZMTRXV
+     000_Eclipse100/D/DZNET
      000_Eclipse100/E/ECHO
+     000_Eclipse100/E/ECLMC
      000_Eclipse100/E/EDIT
      000_Eclipse100/E/EDITNNC
+     000_Eclipse100/E/EDITNNCR
      000_Eclipse100/E/EHYSTR
      000_Eclipse100/E/END
      000_Eclipse100/E/ENDACTIO
