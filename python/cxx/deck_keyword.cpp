@@ -1,5 +1,7 @@
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
+#include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
+
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
@@ -58,6 +60,7 @@ struct DeckRecordIterator
 
 void python::common::export_DeckKeyword(py::module& module) {
     py::class_< DeckKeyword >( module, "DeckKeyword")
+        .def(py::init<const ParserKeyword& >())
         .def( "__repr__", &DeckKeyword::name )
         .def( "__str__", &str<DeckKeyword> )
         .def("__iter__",  [] (const DeckKeyword &keyword) { return py::make_iterator(keyword.begin(), keyword.end()); }, py::keep_alive<0,1>())
