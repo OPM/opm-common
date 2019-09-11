@@ -5,6 +5,8 @@ import sys
 from opm.io.parser import Parser
 from opm.io.parser import ParseContext
 
+from opm.io.deck import DeckKeyword
+
 
 class TestParser(unittest.TestCase):
 
@@ -31,16 +33,6 @@ FIPNUM
 1 1 2 3 /
 """
 
-    MANUALDATA = """
-START             -- 0
-10 MAI 2007 /
-RUNSPEC
-
-DIMENS
-2 2 1 /
-
-FIELD
-"""
 
     def setUp(self):
         self.spe3fn = 'tests/spe3/SPE3CASE1.DATA'
@@ -58,14 +50,16 @@ FIELD
         deck = parser.parse_string(string)
         deck = parser.parse_string(string, context)
 
-    def test_pyinput(self):
+    def test_create_deck_kw(self):
         parser = Parser()
-        deck = parser.parse_string(self.MANUALDATA)
         with self.assertRaises(ValueError):
             kw = parser["NOT_A_VALID_KEYWORD"]
 
         kw = parser["FIELD"]
         assert(kw.name == "FIELD")
+
+        dkw = DeckKeyword(kw)
+        assert(dkw.name == "FIELD")
 
 
 if __name__ == "__main__":

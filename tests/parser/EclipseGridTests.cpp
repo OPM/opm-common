@@ -51,9 +51,9 @@
 BOOST_AUTO_TEST_CASE(CreateMissingDIMENS_throws) {
     Opm::Deck deck;
     Opm::Parser parser;
-    deck.addKeyword( Opm::DeckKeyword( &parser.getKeyword("RUNSPEC" )));
-    deck.addKeyword( Opm::DeckKeyword( &parser.getKeyword("GRID" )));
-    deck.addKeyword( Opm::DeckKeyword( &parser.getKeyword("EDIT" )));
+    deck.addKeyword( Opm::DeckKeyword( parser.getKeyword("RUNSPEC" )));
+    deck.addKeyword( Opm::DeckKeyword( parser.getKeyword("GRID" )));
+    deck.addKeyword( Opm::DeckKeyword( parser.getKeyword("EDIT" )));
 
     BOOST_CHECK_THROW(Opm::EclipseGrid{ deck } , std::invalid_argument);
 }

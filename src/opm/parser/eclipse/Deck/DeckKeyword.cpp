@@ -27,8 +27,8 @@
 
 namespace Opm {
 
-    DeckKeyword::DeckKeyword(const ParserKeyword * parserKeyword) :
-        m_keywordName(parserKeyword->getName()),
+    DeckKeyword::DeckKeyword(const ParserKeyword& parserKeyword) :
+        m_keywordName(parserKeyword.getName()),
         m_lineNumber(-1),
         m_isDataKeyword(false),
         m_slashTerminated(true),
@@ -36,7 +36,7 @@ namespace Opm {
     {
     }
 
-    DeckKeyword::DeckKeyword(const ParserKeyword * parserKeyword, const std::string& keywordName) :
+    DeckKeyword::DeckKeyword(const ParserKeyword& parserKeyword, const std::string& keywordName) :
         m_keywordName(keywordName),
         m_lineNumber(-1),
         m_isDataKeyword(false),
@@ -76,10 +76,7 @@ namespace Opm {
     }
 
     const ParserKeyword& DeckKeyword::parserKeyword() const {
-        if (this->parser_keyword)
-            return *this->parser_keyword;
-
-        throw std::logic_error("INTERNAL ERROR: The " + this->m_keywordName + " deck keyword has been instantiated without ParserKeyword information.");
+        return this->parser_keyword;
     }
 
     const std::string& DeckKeyword::name() const {
@@ -92,9 +89,6 @@ namespace Opm {
 
 
     void DeckKeyword::addRecord(DeckRecord&& record) {
-        if (!this->parser_keyword)
-            throw std::logic_error("INTERNAL ERROR: The " + this->m_keywordName + " deck keyword has been instantiated without ParserKeyword information - can not add data");
-
         this->m_recordList.push_back( std::move( record ) );
     }
 

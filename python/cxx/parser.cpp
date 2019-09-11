@@ -47,8 +47,6 @@ namespace {
         parser->addParserKeyword(keyword);
     }
 
-
-
 }
 
 void python::common::export_Parser(py::module& module) {
