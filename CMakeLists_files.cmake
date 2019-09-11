@@ -46,6 +46,8 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/Deck/DeckOutput.cpp
     src/opm/parser/eclipse/Deck/Section.cpp
     src/opm/parser/eclipse/Deck/UDAValue.cpp
+    src/opm/parser/eclipse/Python/Python.cpp
+    src/opm/parser/eclipse/Python/PythonInterp.cpp
     src/opm/parser/eclipse/EclipseState/AquiferCT.cpp
     src/opm/parser/eclipse/EclipseState/Aquifetp.cpp
     src/opm/parser/eclipse/EclipseState/Aquancon.cpp
@@ -234,6 +236,7 @@ if(ENABLE_ECL_INPUT)
     tests/parser/DynamicVectorTests.cpp
     tests/parser/Eclipse3DPropertiesTests.cpp
     tests/parser/EclipseGridTests.cpp
+    tests/parser/EmbeddedPython.cpp
     tests/parser/EqualRegTests.cpp
     tests/parser/EventTests.cpp
     tests/parser/FaceDirTests.cpp
@@ -591,7 +594,8 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/Deck/DeckOutput.hpp
        opm/parser/eclipse/Deck/DeckKeyword.hpp
        opm/parser/eclipse/Deck/DeckRecord.hpp
-       opm/parser/eclipse/Deck/UDAValue.hpp)
+       opm/parser/eclipse/Deck/UDAValue.hpp
+       opm/parser/eclipse/Python/Python.hpp)
 endif()
 if(ENABLE_ECL_OUTPUT)
   list(APPEND PUBLIC_HEADER_FILES

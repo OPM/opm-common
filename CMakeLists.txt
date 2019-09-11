@@ -9,6 +9,8 @@ option(ENABLE_ECL_INPUT "Enable eclipse input support?" ON)
 option(ENABLE_ECL_OUTPUT "Enable eclipse output support?" ON)
 option(ENABLE_MOCKSIM "Build the mock simulator for io testing" ON)
 option(OPM_ENABLE_PYTHON "Enable python bindings?" OFF)
+option(OPM_ENABLE_EMBEDDED_PYTHON "Enable python bindings?" OFF)
+
 
 # Output implies input
 if(ENABLE_ECL_OUTPUT)
@@ -110,6 +112,9 @@ macro (sources_hook)
     # Append generated sources
     list(APPEND opm-common_SOURCES ${PROJECT_BINARY_DIR}/ParserKeywords.cpp)
   endif()
+  set_source_files_properties(src/opm/parser/eclipse/Python/Python.cpp
+                              src/opm/parser/eclipse/Python/PythonInterp.cpp
+                              PROPERTIES COMPILE_FLAGS -Wno-shadow)
 endmacro (sources_hook)
 
 macro (fortran_hook)
@@ -211,7 +216,8 @@ install(DIRECTORY cmake DESTINATION share/opm)
 install(FILES etc/opm_bash_completion.sh.in DESTINATION share/opm/etc)
 
 if (OPM_ENABLE_PYTHON)
-
+  # -------------------------------------------------------------------------
+  # 1: Wrap C++ functionality in Python
   find_package(PythonInterp REQUIRED)
   include(FindPythonInterp)
 
@@ -272,6 +278,9 @@ if (OPM_ENABLE_PYTHON)
   set_target_properties(opmcommon PROPERTIES POSITION_INDEPENDENT_CODE ON)
   set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_BINARY_DIR}/python/python)
 
+  # -------------------------------------------------------------------------
+  # Let cmake configure some small shell scripts which can be used to simplify
+  # building and testing of the Python extensions.
   configure_file(python/setup-build.sh.in tmp/setup-build.sh)
   file( COPY ${PROJECT_BINARY_DIR}/tmp/setup-build.sh
         DESTINATION ${PROJECT_BINARY_DIR}
@@ -283,6 +292,14 @@ if (OPM_ENABLE_PYTHON)
         FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE )
 
   configure_file(python/enable-python.sh.in enable-python.sh)
+
+  # -------------------------------------------------------------------------
+  # 2: Embed the Python interpreter for keywords like PYACTION and PYINPUT
+  if (OPM_ENABLE_EMBEDDED_PYTHON)
+    add_subdirectory(python/pybind11)
+    target_include_directories(opmcommon PRIVATE "python/pybind11/include;${PYTHON_INCLUDE_DIRS}")
+    target_link_libraries(opmcommon PUBLIC ${PYTHON_LIBRARY})
+
+    add_definitions(-DEMBEDDED_PYTHON)
+  endif()
 endif()
-
-
