@@ -12,7 +12,7 @@ from __future__ import absolute_import
 from .libopmcommon_python import action
 
 from .libopmcommon_python import Parser, ParseContext, ParserKeyword
-from .libopmcommon_python import EclipseConfig, EclipseGrid
+from .libopmcommon_python import EclipseConfig, EclipseGrid, Eclipse3DProperties
 
 #from .schedule            import Well, Connection, Schedule
 #from .config     import EclipseConfig
