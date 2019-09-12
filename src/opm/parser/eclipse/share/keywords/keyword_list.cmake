@@ -16,6 +16,7 @@
 #DYNAMICR      records of records
 #FIP           prefix to a possible user-defined longer keyword.
 #              e.g. FIPXAREA or FIPYAREA
+#FOAMFCN       records of records
 
 
 set( keywords
