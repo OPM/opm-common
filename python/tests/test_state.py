@@ -109,7 +109,7 @@ SATNUM
         with self.assertRaises(KeyError):
             self.state.table[tab, 'NO'](1)
 
-
+    """
     def test_faults(self):
         self.assertEquals([], self.state.faultNames())
         self.assertEquals({}, self.state.faults())
@@ -119,6 +119,7 @@ SATNUM
         f2 = faultdeck.faultFaces('F2')
         self.assertTrue((4,0,0,'X-') in f2)
         self.assertFalse((3,0,0,'X-') in f2)
+    """
 
     def test_jfunc(self):
         # jf["FLAG"]         = WATER; # set in deck

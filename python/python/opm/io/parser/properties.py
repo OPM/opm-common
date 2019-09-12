@@ -14,13 +14,6 @@ class EclipseState(object):
     def table(self):
         return Tables(self._tables())
 
-    def faults(self):
-        """Returns a map from fault names to list of (i,j,k,D) where D ~ 'X+'"""
-        fs = {}
-        for fn in self.faultNames():
-            fs[fn] = self.faultFaces(fn)
-        return fs
-
 
 @delegate(lib.Tables)
 class Tables(object):
