@@ -204,8 +204,10 @@ set( keywords
      000_Eclipse100/E/EXTFIN
      000_Eclipse100/E/EXTHOST
      000_Eclipse100/E/EXTRAPMS
+     000_Eclipse100/E/EXTREPGL
      000_Eclipse100/F/FAULTDIM
      000_Eclipse100/F/FAULTS
+     000_Eclipse100/F/FBHPDEF
      000_Eclipse100/F/FIELD
      000_Eclipse100/F/FIELD_PROBE
      000_Eclipse100/F/FILEUNIT
