@@ -14,6 +14,8 @@
 #ECONT         Terminates with two /
 #COALNUM       matrix structure
 #DYNAMICR      records of records
+#FIP           prefix to a possible user-defined longer keyword.
+#              e.g. FIPXAREA or FIPYAREA
 
 
 set( keywords
@@ -208,13 +210,13 @@ set( keywords
      000_Eclipse100/F/FAULTDIM
      000_Eclipse100/F/FAULTS
      000_Eclipse100/F/FBHPDEF
+     000_Eclipse100/F/FHERCHBL
      000_Eclipse100/F/FIELD
      000_Eclipse100/F/FIELD_PROBE
      000_Eclipse100/F/FILEUNIT
      000_Eclipse100/F/FILLEPS
      000_Eclipse100/F/FIPOWG
      000_Eclipse100/F/FIP_PROBE
-     000_Eclipse100/F/FHERCHBL
      000_Eclipse100/F/FLUXNUM
      000_Eclipse100/F/FLUXTYPE
      000_Eclipse100/F/FMTIN
