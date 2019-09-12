@@ -1,1 +1,1 @@
-from opm._common import EclipseConfig
+from opm._common import EclipseConfig, EclipseGrid
