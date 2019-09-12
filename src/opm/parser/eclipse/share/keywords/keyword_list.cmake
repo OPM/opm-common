@@ -228,6 +228,8 @@ set( keywords
      000_Eclipse100/F/FMWSET
      000_Eclipse100/F/FOAM
      000_Eclipse100/F/FOAMADS
+     000_Eclipse100/F/FOAMDCYO
+     000_Eclipse100/F/FOAMDCYW
      000_Eclipse100/F/FOAMFSC
      000_Eclipse100/F/FOAMMOB
      000_Eclipse100/F/FOAMOPTS
