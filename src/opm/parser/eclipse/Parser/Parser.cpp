@@ -852,10 +852,7 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
                 throw std::invalid_argument(msg);
             }
         } else {
-            DeckKeyword deckKeyword( rawKeyword->getKeywordName() );
-            const std::string msg = "The keyword " + rawKeyword->getKeywordName() + " is not recognized";
-            deckKeyword.setLocation( rawKeyword->getLocation() );
-            parserState.deck.addKeyword( std::move( deckKeyword ) );
+            const std::string msg = "The keyword " + rawKeyword->getKeywordName() + " is not recognized - ignored";
             OpmLog::warning(Log::fileMessage(parserState.current_path().string(), parserState.line(), msg));
         }
     }
