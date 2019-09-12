@@ -214,6 +214,7 @@ set( keywords
      000_Eclipse100/F/FILLEPS
      000_Eclipse100/F/FIPOWG
      000_Eclipse100/F/FIP_PROBE
+     000_Eclipse100/F/FHERCHBL
      000_Eclipse100/F/FLUXNUM
      000_Eclipse100/F/FLUXTYPE
      000_Eclipse100/F/FMTIN
