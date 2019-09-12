@@ -26,6 +26,8 @@
 #include <boost/test/unit_test.hpp>
 
 #include <opm/parser/eclipse/Python/Python.hpp>
+#include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Deck/Deck.hpp>
 
 #ifndef EMBEDDED_PYTHON
 
@@ -41,6 +43,14 @@ BOOST_AUTO_TEST_CASE(INSTANTIATE) {
     Opm::Python python;
     BOOST_CHECK(python);
     BOOST_CHECK_NO_THROW(python.exec("print('Hello world')"));
+
+    Opm::Parser parser;
+    Opm::Deck deck;
+    std::string python_code = R"(
+print('Parser: {}'.format(context.parser))
+print('Deck: {}'.format(context.deck))
+)";
+    BOOST_CHECK_NO_THROW( python.exec(python_code, parser, deck));
 }
 
 #endif

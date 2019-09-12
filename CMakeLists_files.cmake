@@ -1,5 +1,5 @@
 # This file sets up five lists:
-#	MAIN_SOURCE_FILES     List of compilation units which will be included in
+#	MAIN_SOURCE_FILES     List of compilation units  which will be included in
 #	                      the library. If it isn't on this list, it won't be
 #	                      part of the library. Please try to keep it sorted to
 #	                      maintain sanity.
@@ -47,7 +47,6 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/Deck/Section.cpp
     src/opm/parser/eclipse/Deck/UDAValue.cpp
     src/opm/parser/eclipse/Python/Python.cpp
-    src/opm/parser/eclipse/Python/PythonInterp.cpp
     src/opm/parser/eclipse/EclipseState/AquiferCT.cpp
     src/opm/parser/eclipse/EclipseState/Aquifetp.cpp
     src/opm/parser/eclipse/EclipseState/Aquancon.cpp
@@ -168,6 +167,32 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/Utility/Functional.cpp
     src/opm/parser/eclipse/Utility/Stringview.cpp
   )
+
+  if (OPM_ENABLE_EMBEDDED_PYTHON)
+    list( APPEND PYTHON_SOURCE_FILES
+          src/opm/parser/eclipse/Python/PythonInterp.cpp
+          python/cxx/connection.cpp
+          python/cxx/deck.cpp
+          python/cxx/deck_keyword.cpp
+          python/cxx/eclipse_3d_properties.cpp
+          python/cxx/eclipse_config.cpp
+          python/cxx/eclipse_grid.cpp
+          python/cxx/eclipse_state.cpp
+          python/cxx/group.cpp
+          python/cxx/parsecontext.cpp
+          python/cxx/parser.cpp
+          python/cxx/schedule.cpp
+          python/cxx/export.cpp
+          python/cxx/common_state.cpp
+          python/cxx/table_manager.cpp
+          python/cxx/well.cpp
+          python/cxx/log.cpp
+          )
+    set_source_files_properties(${PYTHON_SOURCE_FILES} PROPERTIES COMPILE_FLAGS -Wno-shadow)
+    list( APPEND MAIN_SOURCE_FILES ${PYTHON_SOURCE_FILES})
+  endif()
+
+
 
   if(NOT cjson_FOUND)
     list(APPEND MAIN_SOURCE_FILES external/cjson/cJSON.c)

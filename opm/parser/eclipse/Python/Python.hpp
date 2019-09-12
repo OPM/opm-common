@@ -26,7 +26,8 @@
 
 namespace Opm {
 class PythonInterp;
-
+class Parser;
+class Deck;
 
 
 /*
@@ -53,7 +54,8 @@ class PythonInterp;
 class Python {
 public:
     Python();
-    bool exec(const std::string& python_code);
+    bool exec(const std::string& python_code) const;
+    bool exec(const std::string& python_code, const Parser& parser, Deck& deck) const;
     explicit operator bool() const;
 private:
     std::shared_ptr<PythonInterp> interp;

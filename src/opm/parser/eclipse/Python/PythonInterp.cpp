@@ -17,19 +17,36 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "PythonInterp.hpp"
 
 #ifdef EMBEDDED_PYTHON
-
 #include <pybind11/embed.h>
-namespace py = pybind11;
+#include <pybind11/pybind11.h>
 
+#include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Parser/Parser.hpp>
+
+#include "python/cxx/export.hpp"
+#include "PythonInterp.hpp"
+
+namespace py = pybind11;
 namespace Opm {
+
+PYBIND11_EMBEDDED_MODULE(context, module) {
+    python::common::export_all(module);
+}
+
+
+bool PythonInterp::exec(const std::string& python_code, const Parser& parser, Deck& deck) {
+    auto context = py::module::import("context");
+    context.attr("deck") = &deck;
+    context.attr("parser") = &parser;
+    py::exec(python_code, py::globals(), py::dict(py::arg("context") = context));
+    return true;
+}
 
 
 bool PythonInterp::exec(const std::string& python_code) {
-    py::object scope = py::module::import("__main__").attr("__dict__");
-    py::exec(python_code, scope);
+    py::exec(python_code, py::globals());
     return true;
 }
 

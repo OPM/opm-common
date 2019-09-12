@@ -36,10 +36,14 @@ namespace py = pybind11;
 namespace Opm {
 
 #ifdef EMBEDDED_PYTHON
+class Parser;
+class Deck;
+
 
 class __attribute__ ((visibility("hidden"))) PythonInterp {
 public:
     bool exec(const std::string& python_code);
+    bool exec(const std::string& python_code, const Parser& parser, Deck& deck);
     explicit operator bool() const { return true; }
 private:
     py::scoped_interpreter guard = {};
@@ -53,6 +57,10 @@ public:
     bool exec(const std::string&) {
         return this->fail();
     };
+
+    bool exec(const std::string& python_code, const Parser& parser, Deck& deck) {
+        return this->fail();
+    }
 
     explicit operator bool() const { return false; }
 private:
