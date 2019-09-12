@@ -202,6 +202,7 @@ set( keywords
      000_Eclipse100/E/EXCAVATE
      000_Eclipse100/E/EXCEL
      000_Eclipse100/E/EXTFIN
+     000_Eclipse100/E/EXTHOST
      000_Eclipse100/E/EXTRAPMS
      000_Eclipse100/F/FAULTDIM
      000_Eclipse100/F/FAULTS
