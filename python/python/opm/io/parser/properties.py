@@ -13,9 +13,6 @@ class EclipseState(object):
     def props(self):
         return Eclipse3DProperties(self._props())
 
-    def grid(self):
-        return EclipseGrid(self._grid())
-
     @property
     def table(self):
         return Tables(self._tables())
@@ -62,39 +59,6 @@ class Tables(object):
         def t_eval(x, tab_idx = 0):
             return self._eval(x, tab_name, col_name, tab_idx)
         return t_eval
-
-
-
-@delegate(lib.EclipseGrid)
-class EclipseGrid(object):
-
-    def getNX(self):
-        return self._getXYZ()[0]
-    def getNY(self):
-        return self._getXYZ()[1]
-    def getNZ(self):
-        return self._getXYZ()[2]
-
-    def getCellVolume(self, global_idx=None, i_idx=None, j_idx=None, k_idx=None):
-        if global_idx is not None:
-            if set([i_idx, j_idx, k_idx]) != set([None]):
-                raise ValueError('Specify exactly one of global and all three i,j,k.')
-            return self._cellVolume1G(global_idx)
-        if None in [i_idx, j_idx, k_idx]:
-            raise ValueError('If not global_idx, need all three of i_idx, j_idx, and k_idx.')
-        return self._cellVolume3(i_idx, j_idx, k_idx)
-
-    def eclGrid(self):
-        return self._ecl_grid_ptr()
-
-    def __repr__(self):
-        x,y,z = self._getXYZ()
-        g = self.cartesianSize()
-        na = self.nactive()
-        cnt = '(%d, %d, %d)' % (x,y,z)
-        if na != g:
-            cnt += ', active = %s' % na
-        return 'EclipseGrid(%s)' % cnt
 
 
 @delegate(lib.SunbeamState)

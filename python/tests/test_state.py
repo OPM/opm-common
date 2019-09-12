@@ -61,6 +61,7 @@ SATNUM
     def test_state_nnc(self):
         self.assertFalse(self.state.has_input_nnc())
 
+    """
     def test_grid(self):
         grid = self.state.grid()
         self.assertTrue('EclipseGrid' in repr(grid))
@@ -72,6 +73,7 @@ SATNUM
         g,i,j,k = 295,7,5,3
         self.assertEqual(g, grid.globalIndex(i,j,k))
         self.assertEqual((i,j,k), grid.getIJK(g))
+    """
 
     def test_summary(self):
         smry = self.spe3.summary_config
