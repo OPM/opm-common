@@ -303,6 +303,7 @@ set( keywords
      000_Eclipse100/N/NEWTRAN
      000_Eclipse100/N/NEXTSTEP
      000_Eclipse100/N/NNC
+     000_Eclipse100/N/NNEWTF
      000_Eclipse100/N/NOCASC
      000_Eclipse100/N/NODEPROP
      000_Eclipse100/N/NOECHO
