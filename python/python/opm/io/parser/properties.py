@@ -10,9 +10,6 @@ class EclipseState(object):
     def __repr__(self):
         return 'EclipseState(title = "%s")' % self.title
 
-    def props(self):
-        return Eclipse3DProperties(self._props())
-
     @property
     def table(self):
         return Tables(self._tables())
@@ -23,13 +20,6 @@ class EclipseState(object):
         for fn in self.faultNames():
             fs[fn] = self.faultFaces(fn)
         return fs
-
-
-@delegate(lib.Eclipse3DProperties)
-class Eclipse3DProperties(object):
-
-    def __repr__(self):
-        return 'Eclipse3DProperties()'
 
 
 @delegate(lib.Tables)
