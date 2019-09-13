@@ -101,5 +101,17 @@ SATNUM
         with self.assertRaises(KeyError):
             self.state.tables().evaluate(tab, 0, 'NO', 1)
 
+    def test_faults(self):
+        self.assertEquals([], self.state.faultNames())
+        #self.assertEquals({}, self.state.faults())
+        parser = Parser()
+        faultdeck = parser.parse_string(self.FAULTS_DECK)
+        faultstate = EclipseState(faultdeck)
+        self.assertEqual(['F1', 'F2'], faultstate.faultNames())
+        # 'F2'  5  5  1  4   1  4  'X-' / \n"
+        f2 = faultstate.faultFaces('F2')
+        self.assertTrue((4,0,0,'X-') in f2)
+        self.assertFalse((3,0,0,'X-') in f2)
+
 
         

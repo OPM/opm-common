@@ -60,17 +60,6 @@ SATNUM
         self.assertTrue('SummaryConfig' in repr(smry))
         self.assertTrue('WOPR' in smry) # hasKeyword
         self.assertFalse('NONO' in smry) # hasKeyword
-
-    
-    def test_faults(self):
-        self.assertEquals([], self.state.faultNames())
-        self.assertEquals({}, self.state.faults())
-        faultdeck = opm.io.parse_string(self.FAULTS_DECK).state
-        self.assertEqual(['F1', 'F2'], faultdeck.faultNames())
-        # 'F2'  5  5  1  4   1  4  'X-' / \n"
-        f2 = faultdeck.faultFaces('F2')
-        self.assertTrue((4,0,0,'X-') in f2)
-        self.assertFalse((3,0,0,'X-') in f2)
     
 
     def test_jfunc(self):
