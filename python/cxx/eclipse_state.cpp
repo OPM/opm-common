@@ -93,7 +93,7 @@ void python::common::export_EclipseState(py::module& module) {
         .def(py::init<const Deck&>())
         .def_property_readonly( "title", &EclipseState::getTitle )
         .def( "_props",         &EclipseState::get3DProperties, ref_internal)
-        .def( "grid",          &EclipseState::getInputGrid, ref_internal)
+        .def( "grid",           &EclipseState::getInputGrid, ref_internal)
         .def( "_cfg",           &EclipseState::cfg, ref_internal)
         .def( "_tables",        &EclipseState::getTableManager, ref_internal)
         .def( "has_input_nnc",  &EclipseState::hasInputNNC )

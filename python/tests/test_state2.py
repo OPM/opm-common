@@ -76,5 +76,12 @@ SATNUM
         self.assertEqual(g, grid.globalIndex(i,j,k))
         self.assertEqual((i,j,k), grid.getIJK(g))
 
+    def test_simulation(self):
+        sim = self.state.simulation()
+        self.assertFalse(sim.hasThresholdPressure())
+        self.assertFalse(sim.useCPR())
+        self.assertTrue(sim.hasDISGAS())
+        self.assertTrue(sim.hasVAPOIL())
+
 
         

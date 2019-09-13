@@ -62,14 +62,6 @@ SATNUM
         self.assertFalse('NONO' in smry) # hasKeyword
 
     
-    def test_simulation(self):
-        sim = self.state.simulation()
-        self.assertFalse(sim.hasThresholdPressure())
-        self.assertFalse(sim.useCPR())
-        self.assertTrue(sim.hasDISGAS())
-        self.assertTrue(sim.hasVAPOIL())
-
-    
     def test_tables(self):
         tables = self.state.table
         self.assertTrue('SGOF' in tables)
