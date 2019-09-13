@@ -10,39 +10,6 @@ class EclipseState(object):
     def __repr__(self):
         return 'EclipseState(title = "%s")' % self.title
 
-    @property
-    def table(self):
-        return Tables(self._tables())
-
-
-@delegate(lib.Tables)
-class Tables(object):
-
-    def __repr__(self):
-        return 'Tables()'
-
-    def _eval(self, x, table, col_name, tab_idx = 0):
-        return self._evaluate(table, tab_idx, col_name, x)
-
-    def __getitem__(self, tab_name):
-        col_name = None
-        if isinstance(tab_name, tuple):
-            tab_name, col_name = tab_name
-
-        tab_name = tab_name.upper()
-        if not tab_name in self:
-            raise ValueError('Table "%s" not in deck.' % tab_name)
-
-        if col_name is None:
-            def t_eval(col_name, x, tab_idx = 0):
-                return self._eval(x, tab_name, col_name.upper(), tab_idx)
-            return t_eval
-
-        col_name = col_name.upper()
-        def t_eval(x, tab_idx = 0):
-            return self._eval(x, tab_name, col_name, tab_idx)
-        return t_eval
-
 
 @delegate(lib.SunbeamState)
 class SunbeamState(object):

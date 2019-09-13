@@ -88,6 +88,7 @@ SATNUM
         self.assertTrue(sim.hasDISGAS())
         self.assertTrue(sim.hasVAPOIL())
 
+    """
     def test_tables(self):
         tables = self.state.table
         self.assertTrue('SGOF' in tables)
@@ -109,7 +110,7 @@ SATNUM
         with self.assertRaises(KeyError):
             self.state.table[tab, 'NO'](1)
 
-    """
+    
     def test_faults(self):
         self.assertEquals([], self.state.faultNames())
         self.assertEquals({}, self.state.faults())
