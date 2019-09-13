@@ -95,7 +95,7 @@ void python::common::export_EclipseState(py::module& module) {
         .def( "_props",         &EclipseState::get3DProperties, ref_internal)
         .def( "grid",           &EclipseState::getInputGrid, ref_internal)
         .def( "_cfg",           &EclipseState::cfg, ref_internal)
-        .def( "_tables",        &EclipseState::getTableManager, ref_internal)
+        .def( "tables",         &EclipseState::getTableManager, ref_internal)
         .def( "has_input_nnc",  &EclipseState::hasInputNNC )
         .def( "simulation",     &EclipseState::getSimulationConfig, ref_internal)
         .def( "input_nnc",      &getNNC )

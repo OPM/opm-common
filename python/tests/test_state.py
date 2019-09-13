@@ -62,28 +62,6 @@ SATNUM
         self.assertFalse('NONO' in smry) # hasKeyword
 
     
-    def test_tables(self):
-        tables = self.state.table
-        self.assertTrue('SGOF' in tables)
-        self.assertTrue('SWOF' in tables)
-        self.assertFalse('SOF' in tables)
-
-        ct = self.cp_state.table
-        self.assertFalse('SGOF' in ct)
-        self.assertTrue('SWOF' in ct)
-
-        tab = 'SWOF'
-        col = 'KRW'
-        self.assertAlmostEqual(0.1345, self.state.table[tab](col, 0.5))
-        self.assertAlmostEqual(0.39,   self.state.table[tab](col, 0.72))
-
-        self.assertAlmostEqual(0.1345, self.state.table[tab, col](0.5))
-        self.assertAlmostEqual(0.39,   self.state.table[tab, col](0.72))
-
-        with self.assertRaises(KeyError):
-            self.state.table[tab, 'NO'](1)
-
-    
     def test_faults(self):
         self.assertEquals([], self.state.faultNames())
         self.assertEquals({}, self.state.faults())

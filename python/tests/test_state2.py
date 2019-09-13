@@ -83,5 +83,23 @@ SATNUM
         self.assertTrue(sim.hasDISGAS())
         self.assertTrue(sim.hasVAPOIL())
 
+    def test_tables(self):
+        tables = self.state.tables()
+        self.assertTrue('SGOF' in tables)
+        self.assertTrue('SWOF' in tables)
+        self.assertFalse('SOF' in tables)
+
+        ct = self.cp_state.tables()
+        self.assertFalse('SGOF' in ct)
+        self.assertTrue('SWOF' in ct)
+
+        tab = 'SWOF'
+        col = 'KRW'
+        self.assertAlmostEqual(0.1345, self.state.tables().evaluate(tab, 0, col, 0.5))
+        self.assertAlmostEqual(0.39,   self.state.tables().evaluate(tab, 0, col, 0.72))
+
+        with self.assertRaises(KeyError):
+            self.state.tables().evaluate(tab, 0, 'NO', 1)
+
 
         
