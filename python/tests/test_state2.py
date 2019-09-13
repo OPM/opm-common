@@ -2,7 +2,7 @@ import unittest
 
 from opm.io.parser import Parser
 
-from opm.io.ecl_state import EclipseConfig, EclipseGrid, Eclipse3DProperties, Tables, EclipseState
+from opm.io.ecl_state import EclipseState
 
 
 class TestState2(unittest.TestCase):

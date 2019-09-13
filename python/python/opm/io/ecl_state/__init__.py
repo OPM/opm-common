@@ -1,1 +1,1 @@
-from opm._common import EclipseConfig, EclipseGrid, Eclipse3DProperties, Tables, EclipseState
+from opm._common import EclipseState
