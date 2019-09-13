@@ -14,6 +14,9 @@
 #ECONT         Terminates with two /
 #COALNUM       matrix structure
 #DYNAMICR      records of records
+#FIP           prefix to a possible user-defined longer keyword.
+#              e.g. FIPXAREA or FIPYAREA
+#FOAMFCN       records of records
 
 
 set( keywords
@@ -202,22 +205,32 @@ set( keywords
      000_Eclipse100/E/EXCAVATE
      000_Eclipse100/E/EXCEL
      000_Eclipse100/E/EXTFIN
+     000_Eclipse100/E/EXTHOST
      000_Eclipse100/E/EXTRAPMS
+     000_Eclipse100/E/EXTREPGL
      000_Eclipse100/F/FAULTDIM
      000_Eclipse100/F/FAULTS
+     000_Eclipse100/F/FBHPDEF
+     000_Eclipse100/F/FHERCHBL
      000_Eclipse100/F/FIELD
      000_Eclipse100/F/FIELD_PROBE
      000_Eclipse100/F/FILEUNIT
      000_Eclipse100/F/FILLEPS
+     000_Eclipse100/F/FIPNUM
      000_Eclipse100/F/FIPOWG
+     000_Eclipse100/F/FIPSEP
      000_Eclipse100/F/FIP_PROBE
      000_Eclipse100/F/FLUXNUM
+     000_Eclipse100/F/FLUXREG
      000_Eclipse100/F/FLUXTYPE
+     000_Eclipse100/F/FMTHMD
      000_Eclipse100/F/FMTIN
      000_Eclipse100/F/FMTOUT
      000_Eclipse100/F/FMWSET
      000_Eclipse100/F/FOAM
      000_Eclipse100/F/FOAMADS
+     000_Eclipse100/F/FOAMDCYO
+     000_Eclipse100/F/FOAMDCYW
      000_Eclipse100/F/FOAMFSC
      000_Eclipse100/F/FOAMMOB
      000_Eclipse100/F/FOAMOPTS
@@ -300,6 +313,7 @@ set( keywords
      000_Eclipse100/N/NEWTRAN
      000_Eclipse100/N/NEXTSTEP
      000_Eclipse100/N/NNC
+     000_Eclipse100/N/NNEWTF
      000_Eclipse100/N/NOCASC
      000_Eclipse100/N/NODEPROP
      000_Eclipse100/N/NOECHO
