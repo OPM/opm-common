@@ -1,3 +1,5 @@
+#include <opm/parser/eclipse/Deck/Deck.hpp>
+
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FaultCollection.hpp>
 
@@ -88,6 +90,7 @@ namespace {
 void python::common::export_EclipseState(py::module& module) {
 
     py::class_< EclipseState >( module, "EclipseState" )
+        .def(py::init<const Deck&>())
         .def_property_readonly( "title", &EclipseState::getTitle )
         .def( "_props",         &EclipseState::get3DProperties, ref_internal)
         .def( "_grid",          &EclipseState::getInputGrid, ref_internal)
