@@ -54,10 +54,6 @@ SATNUM
         cls.state = cls.spe3.state
         cls.cp_state = cpa.state
 
-    def test_repr_title(self):
-        self.assertTrue('EclipseState' in repr(self.state))
-        self.assertEqual('SPE 3 - CASE 1', self.state.title)
-
     def test_state_nnc(self):
         self.assertFalse(self.state.has_input_nnc())
 

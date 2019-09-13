@@ -52,16 +52,15 @@ SATNUM
 """
 
     @classmethod
-    def setUpClass(cls):
-        
-        #cls.spe3 = opm.io.parse('tests/spe3/SPE3CASE1.DATA')
-        #cpa = opm.io.parse('tests/data/CORNERPOINT_ACTNUM.DATA')
-        #cls.state = cls.spe3.state
-        #cls.cp_state = cpa.state
-        
+    def setUpClass(cls):      
         parser = Parser()
-        cls.deck_spe3 = parser.parse_string('tests/spe3/SPE3CASE1.DATA')
-        cls.deck_cpa  = parser.parse_string('tests/data/CORNERPOINT_ACTNUM.DATA')
+        cls.deck_spe3 = parser.parse('tests/spe3/SPE3CASE1.DATA')
+        cls.deck_cpa  = parser.parse('tests/data/CORNERPOINT_ACTNUM.DATA')
         cls.state    = EclipseState(cls.deck_spe3)
         cls.cp_state = EclipseState(cls.deck_cpa)
+
+    def test_repr_title(self):
+        self.assertEqual('SPE 3 - CASE 1', self.state.title)
+
+
         
