@@ -4,7 +4,7 @@
 #include <opm/parser/eclipse/EclipseState/Grid/Fault.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FaceDir.hpp>
 
-#include "common.hpp"
+#include "export.hpp"
 
 
 namespace {

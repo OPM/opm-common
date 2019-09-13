@@ -1,6 +1,6 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Connection.hpp>
 
-#include "common.hpp"
+#include "export.hpp"
 
 namespace {
 

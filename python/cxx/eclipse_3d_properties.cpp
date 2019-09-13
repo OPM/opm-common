@@ -1,7 +1,7 @@
 #include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
 #include <pybind11/stl.h>
 
-#include "common.hpp"
+#include "export.hpp"
 #include "converters.hpp"
 
 namespace {

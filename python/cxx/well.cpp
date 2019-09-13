@@ -1,6 +1,6 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Well2.hpp>
 #include <pybind11/stl.h>
-#include "common.hpp"
+#include "export.hpp"
 
 
 namespace {

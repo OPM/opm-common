@@ -65,7 +65,7 @@ ext_modules = [
                 'cxx/common_state.cpp',
                 'cxx/table_manager.cpp',
                 'cxx/well.cpp',
-                'cxx/common.cpp'
+                'cxx/export.cpp'
         ],
         libraries=['opmcommon', 'boost_filesystem', 'boost_regex', 'ecl'],
         language='c++',

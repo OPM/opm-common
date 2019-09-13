@@ -5,7 +5,7 @@
 #include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
 
-#include "common.hpp"
+#include "export.hpp"
 
 
 void python::common::export_EclipseConfig(py::module& module)

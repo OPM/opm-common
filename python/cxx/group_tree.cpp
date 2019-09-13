@@ -1,7 +1,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GTNode.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 
-#include "common.hpp"
+#include "export.hpp"
 #include "converters.hpp"
 
 namespace {
