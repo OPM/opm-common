@@ -103,7 +103,6 @@ SATNUM
 
     def test_faults(self):
         self.assertEquals([], self.state.faultNames())
-        #self.assertEquals({}, self.state.faults())
         parser = Parser()
         faultdeck = parser.parse_string(self.FAULTS_DECK)
         faultstate = EclipseState(faultdeck)
@@ -113,5 +112,52 @@ SATNUM
         self.assertTrue((4,0,0,'X-') in f2)
         self.assertFalse((3,0,0,'X-') in f2)
 
+    def test_jfunc(self):
+        # jf["FLAG"]         = WATER; # set in deck
+        # jf["DIRECTION"]    = XY;    # default
+        # jf["ALPHA_FACTOR"] = 0.5    # default
+        # jf["BETA_FACTOR"]  = 0.5    # default
+        # jf["OIL_WATER"]    = 21.0   # set in deck
+        # jf["GAS_OIL"]      = -1.0   # N/A
 
+        parser = Parser()
+        deck = parser.parse('tests/data/JFUNC.DATA')
+        js = EclipseState(deck)
+        self.assertEqual('JFUNC TEST', js.title)
+        jf = js.jfunc()
+        print(jf)
+        self.assertEqual(jf['FLAG'], 'WATER')
+        self.assertEqual(jf['DIRECTION'], 'XY')
+        self.assertFalse('GAS_OIL' in jf)
+        self.assertTrue('OIL_WATER' in jf)
+        self.assertEqual(jf['OIL_WATER'], 21.0)
+        self.assertEqual(jf["ALPHA_FACTOR"], 0.5) # default
+        self.assertEqual(jf["BETA_FACTOR"],  0.5) # default
+
+        jfunc_gas = """
+DIMENS
+ 10 10 10 /
+GRID
+DX
+1000*0.25 /
+DY
+1000*0.25 /
+DZ
+1000*0.25 /
+TOPS
+100*0.25 /
+JFUNC
+  GAS * 13.0 0.6 0.7 Z /
+PROPS\nREGIONS
+"""
+        deck2 = parser.parse_string(jfunc_gas)
+        js_gas = EclipseState(deck2)
+        jf = js_gas.jfunc()
+        self.assertEqual(jf['FLAG'], 'GAS')
+        self.assertEqual(jf['DIRECTION'], 'Z')
+        self.assertTrue('GAS_OIL' in jf)
+        self.assertFalse('OIL_WATER' in jf)
+        self.assertEqual(jf['GAS_OIL'], 13.0)
+        self.assertEqual(jf["ALPHA_FACTOR"], 0.6) # default
+        self.assertEqual(jf["BETA_FACTOR"],  0.7) # default
         
