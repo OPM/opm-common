@@ -33,7 +33,7 @@ namespace {
 
 }
 
-void opmcommon_python::export_Well(py::module& module) {
+void python::common::export_Well(py::module& module) {
 
     py::class_< Well2 >( module, "Well")
         .def_property_readonly( "name", &Well2::name )

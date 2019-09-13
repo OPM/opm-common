@@ -15,7 +15,7 @@ std::string direction( const Connection& c ) {
 }
 
 
-void opmcommon_python::export_Connection(py::module& module) {
+void python::common::export_Connection(py::module& module) {
 
   py::class_< Connection >( module, "Connection")
     .def_property_readonly("direction",            &direction )

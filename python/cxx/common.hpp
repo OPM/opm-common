@@ -11,8 +11,10 @@ const py::return_value_policy ref_internal = py::return_value_policy::reference_
 const py::return_value_policy python_owner = py::return_value_policy::take_ownership;
 const py::return_value_policy move         = py::return_value_policy::move;
 
-namespace opmcommon_python {
+namespace python {
+namespace common {
 
+  void export_all(py::module& module);
   void export_Connection(py::module& module);
   void export_Deck(py::module& module);
   void export_DeckKeyword(py::module& module);
@@ -27,6 +29,8 @@ namespace opmcommon_python {
   void export_Schedule(py::module& module);
   void export_TableManager(py::module& module);
   void export_Well(py::module& module);
+
+}
 }
 
 #endif //SUNBEAM_HPP

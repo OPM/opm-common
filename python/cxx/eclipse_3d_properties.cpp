@@ -35,7 +35,7 @@ namespace {
 
 }
 
-void opmcommon_python::export_Eclipse3DProperties(py::module& module) {
+void python::common::export_Eclipse3DProperties(py::module& module) {
 
   py::class_< Eclipse3DProperties >( module, "Eclipse3DProperties") 
     .def( "getRegions",   &regions )

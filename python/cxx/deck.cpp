@@ -37,7 +37,7 @@ namespace {
 
 }
 
-void opmcommon_python::export_Deck(py::module &module) {
+void python::common::export_Deck(py::module &module) {
 
     py::class_< Deck >(module, "Deck")
         .def( "__len__", &size )

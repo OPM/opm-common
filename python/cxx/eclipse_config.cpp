@@ -8,7 +8,7 @@
 #include "common.hpp"
 
 
-void opmcommon_python::export_EclipseConfig(py::module& module)
+void python::common::export_EclipseConfig(py::module& module)
 {
     py::class_< EclipseConfig >( module, "EclipseConfig" )
       .def( "init",            &EclipseConfig::init, ref_internal)

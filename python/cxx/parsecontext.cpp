@@ -12,7 +12,7 @@ namespace {
 
 }
 
-void opmcommon_python::export_ParseContext(py::module& module) {
+void python::common::export_ParseContext(py::module& module) {
 
     py::class_< ParseContext >(module, "ParseContext" )
         .def(py::init<>())

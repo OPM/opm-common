@@ -15,7 +15,7 @@ namespace {
     }
 }
 
-void opmcommon_python::export_GroupTree(py::module& module) {
+void python::common::export_GroupTree(py::module& module) {
 
   py::class_<GTNode>(module, "GroupTree")
 

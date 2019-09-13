@@ -2,20 +2,24 @@
 #include "common.hpp"
 
 
-PYBIND11_MODULE(libopmcommon_python, module) {
-    opmcommon_python::export_ParseContext(module);
-    opmcommon_python::export_Parser(module);
-    opmcommon_python::export_Deck(module);
-    opmcommon_python::export_DeckKeyword(module);
-    opmcommon_python::export_Schedule(module);
-    opmcommon_python::export_Well(module);
-    opmcommon_python::export_Group(module);
-    opmcommon_python::export_GroupTree(module);
-    opmcommon_python::export_Connection(module);
-    opmcommon_python::export_EclipseConfig(module);
-    opmcommon_python::export_Eclipse3DProperties(module);
-    opmcommon_python::export_EclipseState(module);
-    opmcommon_python::export_TableManager(module);
-    opmcommon_python::export_EclipseGrid(module);
+
+void python::common::export_all(py::module& module) {
+    export_ParseContext(module);
+    export_Parser(module);
+    export_Deck(module);
+    export_DeckKeyword(module);
+    export_Schedule(module);
+    export_Well(module);
+    export_Group(module);
+    export_GroupTree(module);
+    export_Connection(module);
+    export_EclipseConfig(module);
+    export_Eclipse3DProperties(module);
+    export_EclipseState(module);
+    export_TableManager(module);
+    export_EclipseGrid(module);
 }
 
+PYBIND11_MODULE(libopmcommon_python, module) {
+    python::common::export_all(module);
+}

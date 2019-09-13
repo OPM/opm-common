@@ -51,7 +51,7 @@ namespace {
 
 }
 
-void opmcommon_python::export_Parser(py::module& module) {
+void python::common::export_Parser(py::module& module) {
 
     module.def( "parse", parse_file );
     module.def( "parse_string", parse_string);
