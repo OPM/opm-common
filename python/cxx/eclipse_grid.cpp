@@ -52,8 +52,8 @@ void python::common::export_EclipseGrid(py::module& module) {
         .def_property_readonly( "cartesianSize",  &getCartesianSize )
         .def( "globalIndex",    &getGlobalIndex )
         .def( "getIJK",         &getIJK )
-        .def( "_cellVolume1G",  &cellVolume1G)
-        .def( "_cellVolume3",   &cellVolume3)
+        .def( "getCellVolume",  &cellVolume1G)
+        .def( "getCellVolume",   &cellVolume3)
       ;
 
 }
