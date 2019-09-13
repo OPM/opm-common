@@ -49,7 +49,6 @@ enum class Comparator {
     std::string cmp_string() const;
 
 
-    std::string expression;
     std::string quantity;
     Logical logic = Logical::END;
     Comparator cmp = Comparator::INVALID;

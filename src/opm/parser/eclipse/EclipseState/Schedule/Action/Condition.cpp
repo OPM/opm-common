@@ -25,9 +25,6 @@ namespace Opm {
 namespace Action {
 
 void Condition::add_token(const std::string& token) {
-    if (!this->expression.empty())
-        this->expression += " ";
-    this->expression += token;
 }
 
 

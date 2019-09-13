@@ -672,13 +672,11 @@ TSTEP
     BOOST_CHECK_EQUAL(conditions.size() , 2);
 
     const auto& cond0 = conditions[0];
-    BOOST_CHECK_EQUAL(cond0.expression, "WWCT 'OPX' > 0.75 AND");
     BOOST_CHECK_EQUAL(cond0.quantity, "WWCT");
     BOOST_CHECK(cond0.cmp == Action::Condition::Comparator::GREATER);
     BOOST_CHECK(cond0.logic == Action::Condition::Logical::AND);
 
     const auto& cond1 = conditions[1];
-    BOOST_CHECK_EQUAL(cond1.expression, "FPR < 100");
     BOOST_CHECK_EQUAL(cond1.quantity, "FPR");
     BOOST_CHECK(cond1.cmp == Action::Condition::Comparator::LESS);
     BOOST_CHECK(cond1.logic == Action::Condition::Logical::END);
@@ -691,7 +689,6 @@ TSTEP
     const auto& actB = actions2.get("B");
     const auto& condB = actB.conditions();
     BOOST_CHECK_EQUAL(condB.size() , 1);
-    BOOST_CHECK_EQUAL(condB[0].expression, "FWCT <= 0.50");
     BOOST_CHECK_EQUAL(condB[0].quantity, "FWCT");
     BOOST_CHECK(condB[0].cmp == Action::Condition::Comparator::LESS_EQUAL);
     BOOST_CHECK(condB[0].logic == Action::Condition::Logical::END);
@@ -700,7 +697,6 @@ TSTEP
     const auto& actA = actions2.get("A");
     const auto& condA = actA.conditions();
     BOOST_CHECK_EQUAL(condA.size() , 1);
-    BOOST_CHECK_EQUAL(condA[0].expression, "WOPR 'OPX' = 1000");
     BOOST_CHECK_EQUAL(condA[0].quantity, "WOPR");
     BOOST_CHECK(condA[0].cmp == Action::Condition::Comparator::EQUAL);
     BOOST_CHECK(condA[0].logic == Action::Condition::Logical::END);
