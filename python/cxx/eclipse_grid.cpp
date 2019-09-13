@@ -45,9 +45,9 @@ void python::common::export_EclipseGrid(py::module& module) {
 
     py::class_< EclipseGrid >( module, "EclipseGrid")
         .def( "_getXYZ",        &getXYZ )
-        .def_property_readonly("NX", &EclipseGrid::getNX)
-        .def_property_readonly("NY", &EclipseGrid::getNY)
-        .def_property_readonly("NZ", &EclipseGrid::getNZ)
+        .def_property_readonly("nx", &EclipseGrid::getNX)
+        .def_property_readonly("ny", &EclipseGrid::getNY)
+        .def_property_readonly("nz", &EclipseGrid::getNZ)
         .def_property_readonly( "nactive",        &getNumActive )
         .def_property_readonly( "cartesianSize",  &getCartesianSize )
         .def( "globalIndex",    &getGlobalIndex )

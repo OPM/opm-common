@@ -67,9 +67,9 @@ SATNUM
 
     def test_grid(self):
         grid = self.state.grid()
-        self.assertEqual(9, grid.NX)
-        self.assertEqual(9, grid.NY)
-        self.assertEqual(4, grid.NZ)
+        self.assertEqual(9, grid.nx)
+        self.assertEqual(9, grid.ny)
+        self.assertEqual(4, grid.nz)
         self.assertEqual(9*9*4, grid.nactive)
         self.assertEqual(9*9*4, grid.cartesianSize)
         g,i,j,k = 295,7,5,3
