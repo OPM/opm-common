@@ -9,10 +9,6 @@ from ..schedule import Schedule
 @delegate(lib.SunbeamState)
 class SunbeamState(object):
 
-    @property
-    def state(self):
-        return self._state()
-
 
     @property
     def schedule(self):

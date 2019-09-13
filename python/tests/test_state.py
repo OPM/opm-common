@@ -46,7 +46,7 @@ SATNUM
 1000*2 /
 \
 """
-
+    """
     @classmethod
     def setUpClass(cls):
         cls.spe3 = opm.io.parse('tests/spe3/SPE3CASE1.DATA')
@@ -61,7 +61,7 @@ SATNUM
     def test_state_nnc(self):
         self.assertFalse(self.state.has_input_nnc())
 
-    """
+    
     def test_grid(self):
         grid = self.state.grid()
         self.assertTrue('EclipseGrid' in repr(grid))
@@ -73,7 +73,7 @@ SATNUM
         g,i,j,k = 295,7,5,3
         self.assertEqual(g, grid.globalIndex(i,j,k))
         self.assertEqual((i,j,k), grid.getIJK(g))
-    """
+    
 
     def test_summary(self):
         smry = self.spe3.summary_config
@@ -81,6 +81,7 @@ SATNUM
         self.assertTrue('WOPR' in smry) # hasKeyword
         self.assertFalse('NONO' in smry) # hasKeyword
 
+    
     def test_simulation(self):
         sim = self.state.simulation()
         self.assertFalse(sim.hasThresholdPressure())
@@ -88,7 +89,7 @@ SATNUM
         self.assertTrue(sim.hasDISGAS())
         self.assertTrue(sim.hasVAPOIL())
 
-    """
+    
     def test_tables(self):
         tables = self.state.table
         self.assertTrue('SGOF' in tables)
@@ -120,7 +121,7 @@ SATNUM
         f2 = faultdeck.faultFaces('F2')
         self.assertTrue((4,0,0,'X-') in f2)
         self.assertFalse((3,0,0,'X-') in f2)
-    """
+    
 
     def test_jfunc(self):
         # jf["FLAG"]         = WATER; # set in deck
@@ -142,7 +143,7 @@ SATNUM
         self.assertEqual(jf["ALPHA_FACTOR"], 0.5) # default
         self.assertEqual(jf["BETA_FACTOR"],  0.5) # default
 
-        jfunc_gas = """RUNSPEC
+        jfunc_gas = ###RUNSPEC
 DIMENS
  10 10 10 /
 GRID
@@ -157,7 +158,7 @@ TOPS
 JFUNC
   GAS * 13.0 0.6 0.7 Z /
 PROPS\nREGIONS
-"""
+###
         js_gas = opm.io.parse_string(jfunc_gas).state
         jf = js_gas.jfunc()
         self.assertEqual(jf['FLAG'], 'GAS')
@@ -167,6 +168,7 @@ PROPS\nREGIONS
         self.assertEqual(jf['GAS_OIL'], 13.0)
         self.assertEqual(jf["ALPHA_FACTOR"], 0.6) # default
         self.assertEqual(jf["BETA_FACTOR"],  0.7) # default
+    """
 
 if __name__ == "__main__":
     unittest.main()
