@@ -62,5 +62,8 @@ SATNUM
     def test_repr_title(self):
         self.assertEqual('SPE 3 - CASE 1', self.state.title)
 
+    def test_state_nnc(self):
+        self.assertFalse(self.state.has_input_nnc())
+
 
         

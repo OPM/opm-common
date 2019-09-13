@@ -54,9 +54,6 @@ SATNUM
         cls.state = cls.spe3.state
         cls.cp_state = cpa.state
 
-    def test_state_nnc(self):
-        self.assertFalse(self.state.has_input_nnc())
-
     
     def test_grid(self):
         grid = self.state.grid()
