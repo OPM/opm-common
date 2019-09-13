@@ -695,6 +695,7 @@ TSTEP
     BOOST_CHECK_EQUAL(condB[0].quantity, "FWCT");
     BOOST_CHECK(condB[0].cmp == Action::Condition::Comparator::LESS_EQUAL);
     BOOST_CHECK(condB[0].logic == Action::Condition::Logical::END);
+    BOOST_CHECK_EQUAL(condB[0].cmp_string(), "<=");
 
     const auto& actA = actions2.get("A");
     const auto& condA = actA.conditions();
@@ -703,6 +704,7 @@ TSTEP
     BOOST_CHECK_EQUAL(condA[0].quantity, "WOPR");
     BOOST_CHECK(condA[0].cmp == Action::Condition::Comparator::EQUAL);
     BOOST_CHECK(condA[0].logic == Action::Condition::Logical::END);
+    BOOST_CHECK_EQUAL(condA[0].cmp_string() , "=");
 
     std::size_t index = 0;
     for (const auto& act : actions2) {

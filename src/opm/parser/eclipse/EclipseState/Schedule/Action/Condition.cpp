@@ -17,46 +17,42 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef ACTIONX_CONDITION_HPP
-#define ACTIONX_CONDITION_HPP
-
 #include <string>
+
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/Condition.hpp>
 
 namespace Opm {
 namespace Action {
 
-class Condition {
-public:
-
-enum class Logical {
-    AND,
-    OR,
-    END
-};
-
-enum class Comparator {
-    EQUAL,
-    GREATER,
-    LESS,
-    GREATER_EQUAL,
-    LESS_EQUAL,
-    INVALID
-};
-
-
-    void add_token(const std::string& token);
-    Condition(const std::string& quant);
-    std::string cmp_string() const;
-
-
-    std::string expression;
-    std::string quantity;
-    Logical logic = Logical::END;
-    Comparator cmp = Comparator::INVALID;
-};
-
-
-}
+void Condition::add_token(const std::string& token) {
+    if (!this->expression.empty())
+        this->expression += " ";
+    this->expression += token;
 }
 
-#endif
+
+
+Condition::Condition(const std::string& quant) :
+    quantity(quant)
+{}
+
+
+
+std::string Condition::cmp_string() const {
+    if (this->cmp == Comparator::EQUAL)
+        return "=";
+
+    if (this->cmp == Comparator::GREATER)
+        return ">";
+
+    if (this->cmp == Comparator::LESS)
+        return "<";
+
+    if (this->cmp == Comparator::LESS_EQUAL)
+        return "<=";
+
+    if (this->cmp == Comparator::GREATER_EQUAL)
+        return ">=";
+}
+}
+}
