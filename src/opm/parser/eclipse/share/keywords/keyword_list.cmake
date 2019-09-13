@@ -576,13 +576,18 @@ set( keywords
      000_Eclipse100/W/WLISTARG
      000_Eclipse100/W/WLISTNAM
      000_Eclipse100/W/WNETCTRL
+     000_Eclipse100/W/WNETDP
      000_Eclipse100/W/WORKLIM
      000_Eclipse100/W/WORKTHP
      000_Eclipse100/W/WPAVE
      000_Eclipse100/W/WPAVEDEP
      000_Eclipse100/W/WPIMULT
+     000_Eclipse100/W/WPIMULTL
      000_Eclipse100/W/WPITAB
+     000_Eclipse100/W/WPLUG
      000_Eclipse100/W/WPOLYMER
+     000_Eclipse100/W/WPOLYRED
+     000_Eclipse100/W/WPOTCALC
      000_Eclipse100/W/WRFT
      000_Eclipse100/W/WRFTPLT
      000_Eclipse100/W/WSEGDIMS
