@@ -4,7 +4,7 @@
 #include <opm/parser/eclipse/EclipseState/Grid/Fault.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FaceDir.hpp>
 
-#include "common.hpp"
+#include "export.hpp"
 
 
 namespace {
@@ -41,7 +41,7 @@ namespace {
 
 }
 
-void opmcommon_python::export_EclipseGrid(py::module& module) {
+void python::common::export_EclipseGrid(py::module& module) {
 
     py::class_< EclipseGrid >( module, "EclipseGrid")
         .def( "_getXYZ",        &getXYZ )

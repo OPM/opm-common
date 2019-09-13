@@ -249,8 +249,8 @@ if (OPM_ENABLE_PYTHON)
                      python/cxx/parsecontext.cpp
                      python/cxx/parser.cpp
                      python/cxx/schedule.cpp
-                     python/cxx/common.cpp
-                     python/cxx/common.hpp
+                     python/cxx/export.cpp
+                     python/cxx/export.hpp
                      python/cxx/common_state.cpp
                      python/cxx/common_state.hpp
                      python/cxx/table_manager.cpp

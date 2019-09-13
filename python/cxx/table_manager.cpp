@@ -1,6 +1,6 @@
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 
-#include "common.hpp"
+#include "export.hpp"
 
 
 namespace {
@@ -16,7 +16,7 @@ namespace {
 
 }
 
-void opmcommon_python::export_TableManager(py::module& module) {
+void python::common::export_TableManager(py::module& module) {
 
   py::class_< TableManager >( module, "Tables")
     .def( "__contains__",   &TableManager::hasTables )

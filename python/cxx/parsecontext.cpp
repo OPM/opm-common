@@ -3,7 +3,7 @@
 #include <pybind11/stl.h>
 
 #include "common_state.hpp"
-#include "common.hpp"
+#include "export.hpp"
 
 
 namespace {
@@ -12,7 +12,7 @@ namespace {
 
 }
 
-void opmcommon_python::export_ParseContext(py::module& module) {
+void python::common::export_ParseContext(py::module& module) {
 
     py::class_< ParseContext >(module, "ParseContext" )
         .def(py::init<>())

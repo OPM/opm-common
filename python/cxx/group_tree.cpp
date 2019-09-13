@@ -1,7 +1,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GTNode.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 
-#include "common.hpp"
+#include "export.hpp"
 #include "converters.hpp"
 
 namespace {
@@ -15,7 +15,7 @@ namespace {
     }
 }
 
-void opmcommon_python::export_GroupTree(py::module& module) {
+void python::common::export_GroupTree(py::module& module) {
 
   py::class_<GTNode>(module, "GroupTree")
 
