@@ -60,44 +60,11 @@ ActionX::ActionX(const DeckKeyword& kw, std::time_t start_time) :
     for (size_t record_index = 1; record_index < kw.size(); record_index++) {
         const auto& record = kw.getRecord(record_index);
         const auto& cond_tokens = record.getItem("CONDITION").getData<std::string>();
-        Condition cond(cond_tokens[0]);
 
-        for (const auto& token : cond_tokens) {
+        for (const auto& token : cond_tokens)
             tokens.push_back(token);
-            cond.add_token(token);
 
-            {
-                auto token_type = Parser::get_type(token);
-                if (token_type == TokenType::op_eq)
-                    cond.cmp = Condition::Comparator::EQUAL;
-
-                if (token_type == TokenType::op_gt)
-                    cond.cmp = Condition::Comparator::GREATER;
-
-                if (token_type == TokenType::op_lt)
-                    cond.cmp = Condition::Comparator::LESS;
-
-                if (token_type == TokenType::op_le)
-                    cond.cmp = Condition::Comparator::LESS_EQUAL;
-
-                if (token_type == TokenType::op_ge)
-                    cond.cmp = Condition::Comparator::GREATER_EQUAL;
-            }
-        }
-
-        {
-            auto token_type = Parser::get_type(cond_tokens.back());
-            if (token_type == TokenType::op_and)
-                cond.logic = Condition::Logical::AND;
-            else if (token_type == TokenType::op_or)
-                cond.logic = Condition::Logical::OR;
-        }
-
-        if (cond.cmp == Condition::Comparator::INVALID) {
-            const auto& location = kw.location();
-            throw std::invalid_argument("Could not determine comparison type for ACTIONX keyword at " + location.first + ":" + std::to_string(location.second));
-        }
-        this->m_conditions.push_back(std::move(cond));
+        this->m_conditions.emplace_back(cond_tokens, kw.location());
     }
     this->condition = Action::AST(tokens);
 }

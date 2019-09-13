@@ -19,37 +19,113 @@
 
 #include <string>
 
+#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/Condition.hpp>
+
+#include "ActionValue.hpp"
+#include "ActionParser.hpp"
+
 
 namespace Opm {
 namespace Action {
 
-void Condition::add_token(const std::string& token) {
+
+namespace {
+
+Condition::Comparator comparator(TokenType tt) {
+    if (tt == TokenType::op_eq)
+        return Condition::Comparator::EQUAL;
+
+    if (tt == TokenType::op_gt)
+        return Condition::Comparator::GREATER;
+
+    if (tt == TokenType::op_lt)
+        return Condition::Comparator::LESS;
+
+    if (tt == TokenType::op_le)
+        return Condition::Comparator::LESS_EQUAL;
+
+    if (tt == TokenType::op_ge)
+        return Condition::Comparator::GREATER_EQUAL;
+
+    return Condition::Comparator::INVALID;
 }
 
 
-
-Condition::Condition(const std::string& quant) :
-    quantity(quant)
-{}
-
-
-
-std::string Condition::cmp_string() const {
-    if (this->cmp == Comparator::EQUAL)
+std::string cmp2string(Condition::Comparator cmp) {
+    if (cmp == Condition::Comparator::EQUAL)
         return "=";
 
-    if (this->cmp == Comparator::GREATER)
+    if (cmp == Condition::Comparator::GREATER)
         return ">";
 
-    if (this->cmp == Comparator::LESS)
+    if (cmp == Condition::Comparator::LESS)
         return "<";
 
-    if (this->cmp == Comparator::LESS_EQUAL)
+    if (cmp == Condition::Comparator::LESS_EQUAL)
         return "<=";
 
-    if (this->cmp == Comparator::GREATER_EQUAL)
+    if (cmp == Condition::Comparator::GREATER_EQUAL)
         return ">=";
+
+    throw std::logic_error("Bug in opm/flow - should not be here");
 }
+
+std::string strip_quotes(const std::string& s) {
+    if (s[0] == '\'')
+        return s.substr(1, s.size() - 2);
+    else
+        return s;
+}
+
+}
+
+void Quantity::add_arg(const std::string& arg) {
+    this->args.push_back(strip_quotes(arg));
+}
+
+Condition::Condition(const std::vector<std::string>& tokens, const std::pair<std::string, std::size_t>& location) {
+    this->lhs = Quantity(tokens[0]);
+    std::size_t token_index = 1;
+
+    while (true) {
+        if (token_index >= tokens.size())
+            break;
+
+        auto comp = comparator( Parser::get_type(tokens[token_index]) );
+        if (comp == Comparator::INVALID) {
+            this->lhs.add_arg(tokens[token_index]);
+            token_index += 1;
+        } else {
+            this->cmp = comp;
+            this->cmp_string = cmp2string(this->cmp);
+            token_index += 1;
+            break;
+        }
+    }
+
+    if (token_index >= tokens.size())
+        throw std::invalid_argument("Could not determine right hand side / comparator for ACTIONX keyword at " + location.first + ":" + std::to_string(location.second));
+
+    this->rhs = Quantity(tokens[token_index]);
+    token_index++;
+
+    while (true) {
+        if (token_index >= tokens.size())
+            break;
+
+        auto token_type = Parser::get_type(tokens[token_index]);
+        if (token_type == TokenType::op_and)
+            this->logic = Condition::Logical::AND;
+        else if (token_type == TokenType::op_or)
+            this->logic = Condition::Logical::OR;
+        else
+            this->rhs.add_arg(tokens[token_index]);
+
+        token_index++;
+    }
+}
+
+
 }
 }
