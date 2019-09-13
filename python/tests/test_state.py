@@ -53,19 +53,6 @@ SATNUM
         cpa = opm.io.parse('tests/data/CORNERPOINT_ACTNUM.DATA')
         cls.state = cls.spe3.state
         cls.cp_state = cpa.state
-
-    
-    def test_grid(self):
-        grid = self.state.grid()
-        self.assertTrue('EclipseGrid' in repr(grid))
-        self.assertEqual(9, grid.getNX())
-        self.assertEqual(9, grid.getNY())
-        self.assertEqual(4, grid.getNZ())
-        self.assertEqual(9*9*4, grid.nactive())
-        self.assertEqual(9*9*4, grid.cartesianSize())
-        g,i,j,k = 295,7,5,3
-        self.assertEqual(g, grid.globalIndex(i,j,k))
-        self.assertEqual((i,j,k), grid.getIJK(g))
     
 
     def test_summary(self):

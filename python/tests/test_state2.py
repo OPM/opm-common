@@ -65,5 +65,16 @@ SATNUM
     def test_state_nnc(self):
         self.assertFalse(self.state.has_input_nnc())
 
+    def test_grid(self):
+        grid = self.state.grid()
+        self.assertEqual(9, grid.NX)
+        self.assertEqual(9, grid.NY)
+        self.assertEqual(4, grid.NZ)
+        self.assertEqual(9*9*4, grid.nactive)
+        self.assertEqual(9*9*4, grid.cartesianSize)
+        g,i,j,k = 295,7,5,3
+        self.assertEqual(g, grid.globalIndex(i,j,k))
+        self.assertEqual((i,j,k), grid.getIJK(g))
+
 
         
