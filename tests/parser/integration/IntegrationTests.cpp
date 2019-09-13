@@ -40,15 +40,15 @@ inline std::string pathprefix() {
 
 namespace {
 
-std::unique_ptr< ParserKeyword > createFixedSized(const std::string& kw , size_t size) {
-    std::unique_ptr< ParserKeyword > pkw( new ParserKeyword( kw ) );
-    pkw->setFixedSize( size );
+ParserKeyword createFixedSized(const std::string& kw , size_t size) {
+    ParserKeyword pkw(kw);
+    pkw.setFixedSize( size );
     return pkw;
 }
 
-std::unique_ptr< ParserKeyword > createDynamicSized(const std::string& kw) {
-    std::unique_ptr< ParserKeyword > pkw( new ParserKeyword( kw ) );
-    pkw->setSizeType(SLASH_TERMINATED);
+ParserKeyword createDynamicSized(const std::string& kw) {
+    ParserKeyword  pkw( kw );
+    pkw.setSizeType(SLASH_TERMINATED);
     return pkw;
 }
 
@@ -59,7 +59,7 @@ Parser createWWCTParser() {
     ParserItem item("WELL", ParserItem::itype::STRING);
     item.setSizeType(ParserItem::item_size::ALL);
     record.addItem(item);
-    parserKeyword->addRecord( record );
+    parserKeyword.addRecord( record );
 
     auto summaryKeyword = createFixedSized("SUMMARY" , (size_t) 0);
 
@@ -147,7 +147,7 @@ static Parser createBPRParser() {
         bprRecord.addItem( ParserItem("I", ParserItem::itype::INT) );
         bprRecord.addItem( ParserItem("J", ParserItem::itype::INT) );
         bprRecord.addItem( ParserItem("K", ParserItem::itype::INT) );
-        parserKeyword->addRecord( bprRecord );
+        parserKeyword.addRecord( bprRecord );
     }
     auto summaryKeyword = createFixedSized("SUMMARY" , (size_t) 0);
     Parser parser;
