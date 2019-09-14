@@ -1,3 +1,5 @@
+#include <tuple>
+
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Well2.hpp>
 #include <pybind11/stl.h>
 #include "export.hpp"
@@ -23,13 +25,9 @@ namespace {
         }
     }
 
-    int    (Well2::*headI)() const = &Well2::getHeadI;
-    int    (Well2::*headJ)() const = &Well2::getHeadI;
-    double (Well2::*refD)()  const = &Well2::getRefDepth;
-
-    int    (Well2::*headI_at)() const = &Well2::getHeadI;
-    int    (Well2::*headJ_at)() const = &Well2::getHeadI;
-    double (Well2::*refD_at)()  const = &Well2::getRefDepth;
+    std::tuple<int, int, double> get_pos( const Well2& w ) {
+        return std::make_tuple(w.getHeadI(), w.getHeadJ(), w.getRefDepth());
+    }
 
 }
 
@@ -38,12 +36,7 @@ void python::common::export_Well(py::module& module) {
     py::class_< Well2 >( module, "Well")
         .def_property_readonly( "name", &Well2::name )
         .def_property_readonly( "preferred_phase", &preferred_phase )
-        .def( "I",               headI )
-        .def( "I",               headI_at )
-        .def( "J",               headJ )
-        .def( "J",               headJ_at )
-        .def( "ref",             refD )
-        .def( "ref",             refD_at )
+        .def( "pos",             &get_pos )
         .def( "status",          &status )
         .def( "isdefined",       &Well2::hasBeenDefined )
         .def( "isinjector",      &Well2::isInjector )
@@ -51,6 +44,6 @@ void python::common::export_Well(py::module& module) {
         .def( "group",           &Well2::groupName )
         .def( "guide_rate",      &Well2::getGuideRate )
         .def( "available_gctrl", &Well2::isAvailableForGroupControl )
-        .def( "_connections",    &connections );
+        .def( "connections",     &connections );
 
 }
