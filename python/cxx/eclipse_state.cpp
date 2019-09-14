@@ -1,3 +1,5 @@
+#include <opm/parser/eclipse/Deck/Deck.hpp>
+
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FaultCollection.hpp>
 
@@ -88,11 +90,12 @@ namespace {
 void python::common::export_EclipseState(py::module& module) {
 
     py::class_< EclipseState >( module, "EclipseState" )
+        .def(py::init<const Deck&>())
         .def_property_readonly( "title", &EclipseState::getTitle )
-        .def( "_props",         &EclipseState::get3DProperties, ref_internal)
-        .def( "_grid",          &EclipseState::getInputGrid, ref_internal)
-        .def( "_cfg",           &EclipseState::cfg, ref_internal)
-        .def( "_tables",        &EclipseState::getTableManager, ref_internal)
+        .def( "props",          &EclipseState::get3DProperties, ref_internal)
+        .def( "grid",           &EclipseState::getInputGrid, ref_internal)
+        .def( "config",         &EclipseState::cfg, ref_internal)
+        .def( "tables",         &EclipseState::getTableManager, ref_internal)
         .def( "has_input_nnc",  &EclipseState::hasInputNNC )
         .def( "simulation",     &EclipseState::getSimulationConfig, ref_internal)
         .def( "input_nnc",      &getNNC )
