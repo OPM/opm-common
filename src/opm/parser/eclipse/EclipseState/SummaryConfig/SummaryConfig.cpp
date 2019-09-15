@@ -87,7 +87,7 @@ namespace {
 
     const Deck PERFORMA_keywords = {
         "SUMMARY",
-        "TCPU", "ELAPSED","NEWTON","NLINERS","NLINSMIN", "NLINSMAX","MLINEARS",
+        "TCPU", "ELAPSED","NEWTON","NLINEARS","NLINSMIN", "NLINSMAX","MLINEARS",
         "MSUMLINS","MSUMNEWT","TIMESTEP","TCPUTS","TCPUDAY","STEPTYPE","TELAPLIN"
     };
 
