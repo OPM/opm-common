@@ -46,14 +46,8 @@
 namespace Opm {
 
 namespace {
-    /*
-      Small dummy decks which contain a list of keywords; observe that
-      these dummy decks will be used as proper decks and MUST START
-      WITH SUMMARY.
-    */
 
-    const Deck ALL_keywords = {
-        "SUMMARY",
+    const std::vector<std::string> ALL_keywords = {
         "FAQR",  "FAQRG", "FAQT", "FAQTG", "FGIP", "FGIPG", "FGIPL",
         "FGIR",  "FGIT",  "FGOR", "FGPR",  "FGPT", "FOIP",  "FOIPG",
         "FOIPL", "FOIR",  "FOIT", "FOPR",  "FOPT", "FPR",   "FVIR",
@@ -70,23 +64,20 @@ namespace {
         "AAQR",  "AAQRG", "AAQT", "AAQTG"
     };
 
-    const Deck GMWSET_keywords = {
-        "SUMMARY",
+    const std::vector<std::string> GMWSET_keywords = {
         "GMCTG", "GMWPT", "GMWPR", "GMWPA", "GMWPU", "GMWPG", "GMWPO", "GMWPS",
         "GMWPV", "GMWPP", "GMWPL", "GMWIT", "GMWIN", "GMWIA", "GMWIU", "GMWIG",
         "GMWIS", "GMWIV", "GMWIP", "GMWDR", "GMWDT", "GMWWO", "GMWWT"
     };
 
-    const Deck FMWSET_keywords = {
-        "SUMMARY",
+    const std::vector<std::string> FMWSET_keywords = {
         "FMCTF", "FMWPT", "FMWPR", "FMWPA", "FMWPU", "FMWPF", "FMWPO", "FMWPS",
         "FMWPV", "FMWPP", "FMWPL", "FMWIT", "FMWIN", "FMWIA", "FMWIU", "FMWIF",
         "FMWIS", "FMWIV", "FMWIP", "FMWDR", "FMWDT", "FMWWO", "FMWWT"
     };
 
 
-    const Deck PERFORMA_keywords = {
-        "SUMMARY",
+    const std::vector<std::string> PERFORMA_keywords = {
         "TCPU", "ELAPSED","NEWTON","NLINEARS","NLINSMIN", "NLINSMAX","MLINEARS",
         "MSUMLINS","MSUMNEWT","TIMESTEP","TCPUTS","TCPUDAY","STEPTYPE","TELAPLIN"
     };
@@ -144,22 +135,31 @@ void handleMissingGroup( const ParseContext& parseContext , ErrorGuard& errors, 
     parseContext.handleError( ParseContext::SUMMARY_UNKNOWN_GROUP , msg, errors );
 }
 
+
+
+inline void keywordW( SummaryConfig::keyword_list& list,
+                      const std::string& keyword,
+                      const Schedule& schedule) {
+    for (const auto& wname : schedule.wellNames())
+        list.push_back( SummaryConfig::keyword_type( keyword,  wname));
+}
+
+
 inline void keywordW( SummaryConfig::keyword_list& list,
                       const ParseContext& parseContext,
                       ErrorGuard& errors,
                       const DeckKeyword& keyword,
                       const Schedule& schedule ) {
-
     /*
       Here is a two step check whether this keyword should be discarded as not
       supported:
 
-        1. Well keywords ending with 'L' represent completions, they are not
-           supported.
+      1. Well keywords ending with 'L' represent completions, they are not
+      supported.
 
-        2. If the keyword is a UDQ keyword there is no convention enforced to
-           the last character, and in that case it is treated as a normal well
-           keyword anyways.
+      2. If the keyword is a UDQ keyword there is no convention enforced to
+      the last character, and in that case it is treated as a normal well
+      keyword anyways.
     */
     if (keyword.name().back() == 'L') {
         if (!is_udq(keyword.name())) {
@@ -182,7 +182,17 @@ inline void keywordW( SummaryConfig::keyword_list& list,
     } else
         for (const auto& wname : schedule.wellNames())
             list.push_back( SummaryConfig::keyword_type( keyword.name(),  wname));
-  }
+}
+
+inline void keywordG( SummaryConfig::keyword_list& list,
+                      const std::string& keyword,
+                      const Schedule& schedule ) {
+
+    for( const auto& group : schedule.groupNames() ) {
+        if( group == "FIELD" ) continue;
+        list.push_back( SummaryConfig::keyword_type(keyword, group ));
+    }
+}
 
 
 inline void keywordG( SummaryConfig::keyword_list& list,
@@ -211,6 +221,11 @@ inline void keywordG( SummaryConfig::keyword_list& list,
         else
             handleMissingGroup( parseContext, errors, keyword.name(), group );
     }
+}
+
+inline void keywordF( SummaryConfig::keyword_list& list,
+                      const std::string& keyword ) {
+    list.push_back( SummaryConfig::keyword_type( keyword ));
 }
 
 inline void keywordF( SummaryConfig::keyword_list& list,
@@ -291,6 +306,13 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
         list.push_back( SummaryConfig::keyword_type( keyword.name() ));
 }
 
+
+inline void keywordMISC( SummaryConfig::keyword_list& list,
+                         const std::string& keyword)
+{
+    if (meta_keywords.count( keyword ) == 0)
+        list.push_back( SummaryConfig::keyword_type( keyword ));
+}
 
   inline void keywordC( SummaryConfig::keyword_list& list,
                         const ParseContext& parseContext,
@@ -565,6 +587,36 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
     }
 }
 
+
+inline void handleKW( SummaryConfig::keyword_list& list,
+                      const std::string& keyword,
+                      const Schedule& schedule,
+                      const ParseContext& parseContext,
+                      ErrorGuard& errors) {
+
+
+    if (is_udq(keyword))
+        throw std::logic_error("UDQ keywords not handleded when expanding alias list");
+
+    const auto var_type = ecl_smspec_identify_var_type( keyword.c_str() );
+    switch( var_type ) {
+        case ECL_SMSPEC_WELL_VAR: return keywordW( list, keyword, schedule );
+        case ECL_SMSPEC_GROUP_VAR: return keywordG( list, keyword, schedule );
+        case ECL_SMSPEC_FIELD_VAR: return keywordF( list, keyword );
+        case ECL_SMSPEC_MISC_VAR: return keywordMISC( list, keyword );
+        case ECL_SMSPEC_AQUIFER_VAR:
+            {
+                std::string msg = "Summary keywords of type: " + std::string(ecl_smspec_get_var_type_name( var_type )) + " is not supported. Keyword: " + keyword + " is ignored";
+                parseContext.handleError(ParseContext::SUMMARY_UNHANDLED_KEYWORD, msg, errors);
+                return;
+            }
+
+        default:
+            throw std::logic_error("Keyword type: " + std::string(ecl_smspec_get_var_type_name(var_type)) + " is not supported. Internal error handling: " + keyword);
+    }
+}
+
+
   inline void uniq( SummaryConfig::keyword_list& vec ) {
     const auto lt = []( const SummaryConfig::keyword_type& lhs,
                         const SummaryConfig::keyword_type& rhs ) {
@@ -600,25 +652,43 @@ SummaryConfig::SummaryConfig( const Deck& deck,
         handleKW( this->keywords, kw, schedule, tables, parseContext, errors, dims);
     }
 
-    if( section.hasKeyword( "ALL" ) )
-        this->merge( { ALL_keywords, schedule, tables, parseContext, errors, dims} );
+    if( section.hasKeyword( "ALL" ) ) {
+        for (const auto& kw : ALL_keywords) {
+            if (!this->hasKeyword(kw))
+                handleKW(this->keywords, kw, schedule, parseContext, errors);
+        }
+    }
 
-    if( section.hasKeyword( "GMWSET" ) )
-        this->merge( { GMWSET_keywords, schedule, tables, parseContext, errors, dims} );
+    if( section.hasKeyword( "GMWSET" ) ) {
+        for (const auto& kw : GMWSET_keywords) {
+            if (!this->hasKeyword(kw))
+                handleKW(this->keywords, kw, schedule, parseContext, errors);
+        }
+    }
 
-    if( section.hasKeyword( "FMWSET" ) )
-        this->merge( { FMWSET_keywords, schedule, tables, parseContext, errors, dims} );
+    if( section.hasKeyword( "FMWSET" ) ) {
+        for (const auto& kw : FMWSET_keywords) {
+            if (!this->hasKeyword(kw))
+                handleKW(this->keywords, kw, schedule, parseContext, errors);
+        }
+    }
 
-    if (section.hasKeyword( "PERFORMA" ) )
-        this->merge( { PERFORMA_keywords, schedule, tables, parseContext, errors, dims} );
+    if( section.hasKeyword( "PERFORMA" ) ) {
+        for (const auto& kw : PERFORMA_keywords) {
+            if (!this->hasKeyword(kw))
+                handleKW(this->keywords, kw, schedule, parseContext, errors);
+        }
+    }
 
     uniq( this->keywords );
     for (const auto& kw: this->keywords) {
         this->short_keywords.insert( kw.keyword() );
         this->summary_keywords.insert( kw.gen_key() );
     }
-
 }
+
+
+
 
 SummaryConfig::SummaryConfig( const Deck& deck,
                               const Schedule& schedule,

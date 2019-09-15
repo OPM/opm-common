@@ -353,7 +353,8 @@ static Deck createDeckRFTConfig() {
 }
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckMissingReturnsDefaults) {
     Deck deck;
-    deck.addKeyword( DeckKeyword( "SCHEDULE" ) );
+    Parser parser;
+    deck.addKeyword( DeckKeyword( &parser.getKeyword("SCHEDULE" )));
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
@@ -484,11 +485,12 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithStart) {
 }
 
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithSCHEDULENoThrow) {
+    Parser parser;
     Deck deck;
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
-    deck.addKeyword( DeckKeyword( "SCHEDULE" ) );
+    deck.addKeyword( DeckKeyword( &parser.getKeyword("SCHEDULE" )));
     Runspec runspec (deck);
 
     BOOST_CHECK_NO_THROW( Schedule( deck, grid , eclipseProperties, runspec));

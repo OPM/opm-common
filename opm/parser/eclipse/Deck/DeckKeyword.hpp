@@ -36,7 +36,6 @@ namespace Opm {
         typedef std::vector< DeckRecord >::const_iterator const_iterator;
 
         explicit DeckKeyword(const ParserKeyword * parserKeyword);
-        explicit DeckKeyword(const std::string& keywordName);
         DeckKeyword(const ParserKeyword * parserKeyword, const std::string& keywordName);
 
         const std::string& name() const;
@@ -53,7 +52,6 @@ namespace Opm {
         DeckRecord& getRecord(size_t index);
         const DeckRecord& getDataRecord() const;
         void setDataKeyword(bool isDataKeyword = true);
-        bool isKnown() const;
         bool isDataKeyword() const;
 
         const std::vector<int>& getIntData() const;

@@ -27,15 +27,6 @@
 
 namespace Opm {
 
-DeckKeyword::DeckKeyword(const std::string& keyword) :
-        m_keywordName(keyword),
-        m_lineNumber(-1),
-        m_isDataKeyword(false),
-        m_slashTerminated(true),
-        parser_keyword(nullptr)
-    {
-    }
-
     DeckKeyword::DeckKeyword(const ParserKeyword * parserKeyword) :
         m_keywordName(parserKeyword->getName()),
         m_lineNumber(-1),
@@ -99,9 +90,6 @@ DeckKeyword::DeckKeyword(const std::string& keyword) :
         return m_recordList.size();
     }
 
-    bool DeckKeyword::isKnown() const {
-        return (this->parser_keyword != nullptr);
-    }
 
     void DeckKeyword::addRecord(DeckRecord&& record) {
         if (!this->parser_keyword)
