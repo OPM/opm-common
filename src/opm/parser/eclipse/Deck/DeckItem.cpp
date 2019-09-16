@@ -71,8 +71,6 @@ const std::vector< UDAValue >& DeckItem::value_ref< UDAValue >() const {
 }
 
 
-DeckItem::DeckItem( const std::string& nm ) : item_name( nm ) {}
-
 DeckItem::DeckItem( const std::string& nm, int, size_t hint ) :
     type( get_type< int >() ),
     item_name( nm )
