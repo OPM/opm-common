@@ -36,9 +36,11 @@ namespace Opm {
     public:
         DeckItem() = default;
         DeckItem( const std::string&, int);
-        DeckItem( const std::string&, double);
         DeckItem( const std::string&, std::string);
-        DeckItem( const std::string&, UDAValue);
+        DeckItem( const std::string&, double) = delete;
+        DeckItem( const std::string&, UDAValue) = delete;
+        DeckItem( const std::string&, UDAValue, const std::vector<Dimension>& active_dim, const std::vector<Dimension>& default_dim);
+        DeckItem( const std::string&, double, const std::vector<Dimension>& active_dim, const std::vector<Dimension>& default_dim);
 
         const std::string& name() const;
 
@@ -58,8 +60,10 @@ namespace Opm {
         size_t size() const;
         size_t out_size() const;
 
-        //template< typename T > T& get( size_t ) ;
-        template< typename T > T get( size_t ) const;
+        template<typename T>
+        T get( size_t index ) const;
+
+
         double getSIDouble( size_t ) const;
         std::string getTrimmedString( size_t ) const;
 
@@ -81,9 +85,6 @@ namespace Opm {
         // trying to access the data of a "dummy default item" will raise an exception
         void push_backDummyDefault();
 
-        void push_backDimension( const Dimension& /* activeDimension */,
-                                 const Dimension& /* defaultDimension */);
-
         type_tag getType() const;
 
         void write(DeckOutput& writer) const;
@@ -97,7 +98,6 @@ namespace Opm {
           account, i.e. two items will compare differently if one is
           defaulted and the other has the default value explicitly
           set. The default behaviour is cmp_default == false -
-          i.e. only the actual values in the items will be compared,
           itrespective of whether they have been set explicitly or
           have been defaulted.
         */
@@ -120,13 +120,15 @@ namespace Opm {
 
         std::string item_name;
         std::vector< bool > defaulted;
-        std::vector< Dimension > dimensions;
         /*
           To save space we mutate the dval object in place when asking for SI
           data; the current state of of the dval member is tracked with the
           raw_data bool member.
         */
         mutable bool raw_data = true;
+        std::vector< Dimension > active_dimensions;
+        std::vector< Dimension > default_dimensions;
+
         template< typename T > std::vector< T >& value_ref();
         template< typename T > const std::vector< T >& value_ref() const;
         template< typename T > void push( T );

@@ -154,10 +154,11 @@ namespace Opm {
 
             std::vector< DeckKeyword > keywordList;
             UnitSystem defaultUnits;
-            UnitSystem activeUnits;
+            std::unique_ptr<UnitSystem> activeUnits;
 
             std::string m_dataFile;
             std::string input_path;
+            mutable std::size_t unit_system_access_count = 0;
     };
 }
 #endif  /* DECK_HPP */

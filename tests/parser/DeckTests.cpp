@@ -25,6 +25,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/Deck/DeckOutput.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
@@ -42,6 +43,11 @@ BOOST_AUTO_TEST_CASE(hasKeyword_empty_returnFalse) {
     Deck deck;
     BOOST_CHECK_EQUAL(false, deck.hasKeyword("Bjarne"));
     BOOST_CHECK_THROW( deck.getKeyword("Bjarne") , std::invalid_argument);
+}
+
+std::pair<std::vector<Dimension>, std::vector<Dimension>> make_dims() {
+    UnitSystem metric(UnitSystem::UnitType::UNIT_TYPE_METRIC);
+    return std::make_pair<std::vector<Dimension>, std::vector<Dimension>>({metric.getDimension("Length")}, {metric.getDimension("Length")});
 }
 
 
@@ -215,7 +221,10 @@ BOOST_AUTO_TEST_CASE(PushBackMultipleString) {
 }
 
 BOOST_AUTO_TEST_CASE(GetDoubleAtIndex_NoData_ExceptionThrown) {
-    DeckItem deckDoubleItem( "TEST", double() );
+    auto dims = make_dims();
+    DeckItem deckDoubleItem( "TEST", double(), dims.first, dims.second );
+    printf("Current type: %s \n",tag_name(deckDoubleItem.getType()).c_str());
+    BOOST_CHECK(deckDoubleItem.getType() == type_tag::fdouble);
 
     BOOST_CHECK_THROW(deckDoubleItem.get< double >(0), std::out_of_range);
     deckDoubleItem.push_back(1.89);
@@ -224,7 +233,8 @@ BOOST_AUTO_TEST_CASE(GetDoubleAtIndex_NoData_ExceptionThrown) {
 
 
 BOOST_AUTO_TEST_CASE(sizeDouble_correct) {
-    DeckItem deckDoubleItem( "TEST", double() );
+    auto dims = make_dims();
+    DeckItem deckDoubleItem( "TEST", double(), dims.first, dims.second);
 
     BOOST_CHECK_EQUAL( 0U , deckDoubleItem.size());
     deckDoubleItem.push_back( 100.0 );
@@ -238,7 +248,8 @@ BOOST_AUTO_TEST_CASE(sizeDouble_correct) {
 
 
 BOOST_AUTO_TEST_CASE(SetInDeck) {
-    DeckItem deckDoubleItem( "TEST", double() );
+    auto dims = make_dims();
+    DeckItem deckDoubleItem( "TEST", double(), dims.first, dims.second);
     BOOST_CHECK( deckDoubleItem.size() == 0 );
 
     deckDoubleItem.push_backDefault( 1.0 );
@@ -255,7 +266,8 @@ BOOST_AUTO_TEST_CASE(SetInDeck) {
 }
 
 BOOST_AUTO_TEST_CASE(DummyDefaultsDouble) {
-    DeckItem deckDoubleItem( "TEST", double() );
+    auto dims = make_dims();
+    DeckItem deckDoubleItem( "TEST", double(), dims.first, dims.second);
     BOOST_CHECK_EQUAL(deckDoubleItem.size(), 0);
 
     deckDoubleItem.push_backDummyDefault();
@@ -265,33 +277,17 @@ BOOST_AUTO_TEST_CASE(DummyDefaultsDouble) {
 }
 
 BOOST_AUTO_TEST_CASE(PushBackMultipleDouble) {
-    DeckItem item( "HEI", double() );
+    auto dims = make_dims();
+    DeckItem item( "HEI", double() , dims.first, dims.second);
     item.push_back(10.22 , 100 );
     BOOST_CHECK_EQUAL( 100U , item.size() );
     for (size_t i=0; i < 100; i++)
         BOOST_CHECK_EQUAL(10.22 , item.get< double >(i));
 }
 
-BOOST_AUTO_TEST_CASE(PushBackDimension) {
-    DeckItem item( "HEI", double() );
-    Dimension activeDimension{ "Length" , 100 };
-    Dimension defaultDimension{ "Length" , 10 };
-
-    item.push_back(1.234);
-    item.push_backDimension( activeDimension , defaultDimension);
-
-    item.push_backDefault(5.678);
-    item.push_backDimension( activeDimension , defaultDimension);
-}
-
-BOOST_AUTO_TEST_CASE(PushBackDimensionInvalidType) {
-    DeckItem item( "HEI", int() );
-    Dimension dim{ "Length" , 100 };
-    BOOST_CHECK_THROW( item.push_backDimension( dim , dim ) , std::logic_error );
-}
 
 BOOST_AUTO_TEST_CASE(GetSIWithoutDimensionThrows) {
-    DeckItem item( "HEI", double() );
+    DeckItem item( "HEI", double() , {},{});
     item.push_back(10.22 , 100 );
 
     BOOST_CHECK_THROW( item.getSIDouble(0) , std::invalid_argument );
@@ -299,41 +295,34 @@ BOOST_AUTO_TEST_CASE(GetSIWithoutDimensionThrows) {
 }
 
 BOOST_AUTO_TEST_CASE(GetSISingleDimensionCorrect) {
-    DeckItem item( "HEI", double() );
     Dimension dim{ "Length" , 100 };
+    DeckItem item( "HEI", double(), { dim }, { dim } );
 
     item.push_back(1.0 , 100 );
-    item.push_backDimension( dim , dim );
 
     BOOST_CHECK_EQUAL( 1.0   , item.get< double >(0) );
     BOOST_CHECK_EQUAL( 100 , item.getSIDouble(0) );
 }
 
 BOOST_AUTO_TEST_CASE(GetSISingleDefault) {
-    DeckItem item( "HEI", double() );
     Dimension dim{ "Length" , 1 };
     Dimension defaultDim{ "Length" , 100 };
+    DeckItem item( "HEI", double() , {dim}, {defaultDim});
 
     item.push_backDefault( 1.0 );
-    item.push_backDimension( dim , defaultDim );
-
     BOOST_CHECK_EQUAL( 1   , item.get< double >(0) );
     BOOST_CHECK_EQUAL( 100 , item.getSIDouble(0) );
 }
 
 BOOST_AUTO_TEST_CASE(GetSIMultipleDim) {
-    DeckItem item( "HEI", double() );
     Dimension dim1{ "Length" , 2 };
     Dimension dim2{ "Length" , 4 };
     Dimension dim3{ "Length" , 8 };
     Dimension dim4{ "Length" ,16 };
     Dimension defaultDim{ "Length" , 100 };
+    DeckItem item( "HEI", double(), {dim1, dim2, dim3, dim4}, {defaultDim, defaultDim, defaultDim, defaultDim} );
 
     item.push_back( 1.0, 16 );
-    item.push_backDimension( dim1 , defaultDim );
-    item.push_backDimension( dim2 , defaultDim );
-    item.push_backDimension( dim3 , defaultDim );
-    item.push_backDimension( dim4 , defaultDim );
 
     for (size_t i=0; i < 16; i+= 4) {
         BOOST_CHECK_EQUAL( 2   , item.getSIDouble(i) );
@@ -495,10 +484,11 @@ BOOST_AUTO_TEST_CASE(StringsWithSpaceOK) {
     RawRecord rawRecord( " ' VALUE ' " );
     ParseContext parseContext;
     ErrorGuard errors;
+    UnitSystem active_unitsystem(UnitSystem::UnitType::UNIT_TYPE_LAB);
     record1.addItem( itemString );
 
 
-    const auto deckRecord = record1.parse( parseContext, errors , rawRecord, "KEYWORD", "filename" );
+    const auto deckRecord = record1.parse( parseContext, errors , rawRecord, active_unitsystem, active_unitsystem, "KEYWORD", "filename" );
     BOOST_CHECK_EQUAL(" VALUE " , deckRecord.getItem(0).get< std::string >(0));
 }
 
@@ -625,10 +615,10 @@ BOOST_AUTO_TEST_CASE(DeckItemWriteString) {
 
 
 BOOST_AUTO_TEST_CASE(RecordWrite) {
-
+    auto dims = make_dims();
     DeckRecord deckRecord;
     DeckItem item1("TEST1", int());
-    DeckItem item2("TEST2", double());
+    DeckItem item2("TEST2", double(), dims.first, dims.second);
     DeckItem item3("TEST3", std::string());
 
     item1.push_back( 123 );
@@ -647,11 +637,12 @@ BOOST_AUTO_TEST_CASE(RecordWrite) {
 
 
 BOOST_AUTO_TEST_CASE(DeckItemEqual) {
+    auto dims = make_dims();
     DeckItem item1("TEST1" , int());
     DeckItem item2("TEST2" , int());
-    DeckItem item3("TEST1" , double());
+    DeckItem item3("TEST1" , double(), dims.first, dims.second);
     DeckItem item4("TEST1" , int());
-    DeckItem item5("TEST1" , double());
+    DeckItem item5("TEST1" , double(), dims.first, dims.second);
 
     BOOST_CHECK( item1 != item2 );
     BOOST_CHECK( item1 != item3 );

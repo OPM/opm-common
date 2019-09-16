@@ -33,6 +33,7 @@ namespace Json {
 
 namespace Opm {
 
+    class UnitSystem;
     class RawRecord;
 
 
@@ -92,7 +93,7 @@ namespace Opm {
         bool operator==( const ParserItem& ) const;
         bool operator!=( const ParserItem& ) const;
 
-        DeckItem scan( RawRecord& rawRecord ) const;
+        DeckItem scan( RawRecord& rawRecord, UnitSystem& active_unitsystem, UnitSystem& default_unitsystem) const;
 
         std::string size_literal() const;
         const std::string className() const;

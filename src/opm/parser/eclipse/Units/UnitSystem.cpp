@@ -1024,7 +1024,13 @@ namespace {
         auto iter = this->m_dimensions.find(dimension);
         if (iter == this->m_dimensions.end())
             throw std::out_of_range("The dimension: '" + dimension + "' was not recognized");
+        this->m_use_count++;
         return iter->second;
+    }
+
+
+    std::size_t UnitSystem::use_count() const {
+        return this->m_use_count;
     }
 
 

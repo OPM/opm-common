@@ -29,11 +29,13 @@
 #include <opm/parser/eclipse/Parser/ParserItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserEnums.hpp>
 #include <opm/parser/eclipse/Deck/UDAValue.hpp>
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 #include "raw/RawRecord.hpp"
 #include "raw/StarToken.hpp"
 
 namespace Opm {
+class UnitSystem;
 
 namespace {
 
@@ -465,8 +467,7 @@ std::string ParserItem::createCode(const std::string& indent) const {
 namespace {
 
 template< typename T >
-DeckItem scan_item( const ParserItem& p, RawRecord& record ) {
-    DeckItem item( p.name(), T());
+void scan_item( DeckItem& item, const ParserItem& p, RawRecord& record ) {
     bool parse_raw = p.parseRaw();
 
     if( p.sizeType() == ParserItem::item_size::ALL ) {
@@ -475,7 +476,7 @@ DeckItem scan_item( const ParserItem& p, RawRecord& record ) {
                 auto token = record.pop_front();
                 item.push_back( token.string() );
             }
-            return item;
+            return;
         }
 
         while( record.size() > 0 ) {
@@ -501,7 +502,7 @@ DeckItem scan_item( const ParserItem& p, RawRecord& record ) {
                 item.push_backDefault( value );
         }
 
-        return item;
+        return;
     }
 
     if( record.size() == 0 ) {
@@ -515,12 +516,12 @@ DeckItem scan_item( const ParserItem& p, RawRecord& record ) {
             item.push_backDummyDefault();
         }
 
-        return item;
+        return;
     }
 
     if (parse_raw) {
         item.push_back( record.pop_front().string());
-        return item;
+        return;
     }
 
     // The '*' should be interpreted as a repetition indicator, but it must
@@ -530,7 +531,7 @@ DeckItem scan_item( const ParserItem& p, RawRecord& record ) {
     std::string valueString;
     if( !isStarToken(token, countString, valueString) ) {
         item.push_back( readValueToken<T>( token) );
-        return item;
+        return;
     }
 
     StarToken st(token, countString, valueString);
@@ -554,7 +555,7 @@ DeckItem scan_item( const ParserItem& p, RawRecord& record ) {
                     : string_view{ token.begin() + value_start, token.end() };
     record.prepend( st.count() - 1, rep );
 
-    return item;
+    return;
 }
 
 }
@@ -563,18 +564,52 @@ DeckItem scan_item( const ParserItem& p, RawRecord& record ) {
 /// Scans the records data according to the ParserItems definition.
 /// returns a DeckItem object.
 /// NOTE: data are popped from the records deque!
-DeckItem ParserItem::scan( RawRecord& record ) const {
+DeckItem ParserItem::scan( RawRecord& record, UnitSystem& active_unitsystem, UnitSystem& default_unitsystem) const {
     switch( this->data_type ) {
-        case type_tag::integer:
-            return scan_item< int >( *this, record );
-        case type_tag::fdouble:
-            return scan_item< double >( *this, record );
-        case type_tag::string:
-            return scan_item< std::string >( *this, record );
-        case type_tag::uda:
-            return scan_item<UDAValue>(*this, record);
-        default:
-            throw std::logic_error( "ParserItem::scan: Fatal error; should not be reachable" );
+    case type_tag::integer:
+        {
+            DeckItem item( this->name(), int());
+            scan_item< int >( item, *this, record );
+            return item;
+        }
+        break;
+    case type_tag::fdouble:
+        {
+            std::vector<Dimension> active_dimensions;
+            std::vector<Dimension> default_dimensions;
+            for (const auto& dim_string : this->m_dimensions) {
+                active_dimensions.push_back( active_unitsystem.getNewDimension(dim_string) );
+                default_dimensions.push_back( default_unitsystem.getNewDimension(dim_string) );
+            }
+
+            DeckItem item(this->name(), double(), active_dimensions, default_dimensions);
+            scan_item< double >( item, *this, record );
+            return item;
+        }
+        break;
+    case type_tag::string:
+        {
+            DeckItem item(this->name(), std::string());
+            scan_item< std::string >( item, *this, record );
+            return item;
+        }
+        break;
+    case type_tag::uda:
+        {
+            std::vector<Dimension> active_dimensions;
+            std::vector<Dimension> default_dimensions;
+            for (const auto& dim_string : this->m_dimensions) {
+                active_dimensions.push_back( active_unitsystem.getNewDimension(dim_string) );
+                default_dimensions.push_back( default_unitsystem.getNewDimension(dim_string) );
+            }
+
+            DeckItem item(this->name(), UDAValue(), active_dimensions, default_dimensions);
+            scan_item<UDAValue>(item, *this, record);
+            return item;
+        }
+        break;
+    default:
+        throw std::logic_error( "ParserItem::scan: Fatal error; should not be reachable" );
     }
 }
 

@@ -1114,9 +1114,10 @@ BOOST_AUTO_TEST_CASE(UDA_VALUE) {
 BOOST_AUTO_TEST_CASE(UDA_VALUE_DIM) {
     UDAValue value0(1);
     Dimension dim("DUMMY", 10);
+    UDAValue value1(value0, dim);
+
     BOOST_CHECK_EQUAL( value0.get<double>(), 1);
-    value0.set_dim( dim );
-    BOOST_CHECK_EQUAL( value0.get<double>(), 10);
+    BOOST_CHECK_EQUAL( value1.get<double>(), 10);
 }
 
 

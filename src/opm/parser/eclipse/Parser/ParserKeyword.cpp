@@ -502,6 +502,8 @@ void set_dimensions( ParserItem& item,
     DeckKeyword ParserKeyword::parse(const ParseContext& parseContext,
                                      ErrorGuard& errors,
                                      RawKeyword& rawKeyword,
+                                     UnitSystem& active_unitsystem,
+                                     UnitSystem& default_unitsystem,
                                      const std::string& filename) const {
         if( !rawKeyword.isFinished() )
             throw std::invalid_argument("Tried to create a deck keyword from an incomplete raw keyword " + rawKeyword.getKeywordName());
@@ -515,7 +517,7 @@ void set_dimensions( ParserItem& item,
             if( m_records.size() == 0 && rawRecord.size() > 0 )
                 throw std::invalid_argument("Missing item information " + rawKeyword.getKeywordName());
 
-            keyword.addRecord( this->getRecord( record_nr ).parse( parseContext, errors, rawRecord, rawKeyword.getKeywordName(), filename ) );
+            keyword.addRecord( this->getRecord( record_nr ).parse( parseContext, errors, rawRecord, active_unitsystem, default_unitsystem, rawKeyword.getKeywordName(), filename ) );
             record_nr++;
         }
 
@@ -718,6 +720,7 @@ void set_dimensions( ParserItem& item,
     }
 
 
+#if 0
     void ParserKeyword::applyUnitsToDeck( Deck& deck, DeckKeyword& deckKeyword) const {
         for (size_t index = 0; index < deckKeyword.size(); index++) {
             const auto& parserRecord = this->getRecord( index );
@@ -725,6 +728,7 @@ void set_dimensions( ParserItem& item,
             parserRecord.applyUnitsToDeck( deck, deckRecord );
         }
     }
+#endif
 
     bool ParserKeyword::operator==( const ParserKeyword& rhs ) const {
         // compare the deck names. we don't care about the ordering of the strings.

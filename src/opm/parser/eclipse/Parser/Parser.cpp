@@ -836,7 +836,12 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
                 OpmLog::info(ss.str());
             }
             try {
-                parserState.deck.addKeyword( parserKeyword.parse( parserState.parseContext, parserState.errors, *rawKeyword, filename ) );
+                parserState.deck.addKeyword( parserKeyword.parse( parserState.parseContext,
+                                                                  parserState.errors,
+                                                                  *rawKeyword,
+                                                                  parserState.deck.getActiveUnitSystem(),
+                                                                  parserState.deck.getDefaultUnitSystem(),
+                                                                  filename ) );
             } catch (const std::exception& exc) {
                 /*
                   This catch-all of parsing errors is to be able to write a good
@@ -931,7 +936,6 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
     Deck Parser::parseFile(const std::string &dataFileName, const ParseContext& parseContext, ErrorGuard& errors) const {
         ParserState parserState( this->codeKeywords(), parseContext, errors, dataFileName );
         parseState( parserState, *this );
-        applyUnitsToDeck( parserState.deck );
 
         return std::move( parserState.deck );
     }
@@ -953,10 +957,7 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
     Deck Parser::parseString(const std::string &data, const ParseContext& parseContext, ErrorGuard& errors) const {
         ParserState parserState( this->codeKeywords(), parseContext, errors );
         parserState.loadString( data );
-
         parseState( parserState, *this );
-        applyUnitsToDeck( parserState.deck );
-
         return std::move( parserState.deck );
     }
 
@@ -1118,18 +1119,8 @@ std::vector<std::string> Parser::getAllDeckNames () const {
     }
 
 
+#if 0
     void Parser::applyUnitsToDeck(Deck& deck) const {
-        /*
-         * If multiple unit systems are requested, metric is preferred over
-         * lab, and field over metric, for as long as we have no easy way of
-         * figuring out which was requested last.
-         */
-        if( deck.hasKeyword( "LAB" ) )
-            deck.selectActiveUnitSystem( UnitSystem::UnitType::UNIT_TYPE_LAB );
-        if( deck.hasKeyword( "FIELD" ) )
-            deck.selectActiveUnitSystem( UnitSystem::UnitType::UNIT_TYPE_FIELD );
-        if( deck.hasKeyword( "METRIC" ) )
-            deck.selectActiveUnitSystem( UnitSystem::UnitType::UNIT_TYPE_METRIC );
 
         for( auto& deckKeyword : deck ) {
 
@@ -1141,6 +1132,8 @@ std::vector<std::string> Parser::getAllDeckNames () const {
             parserKeyword.applyUnitsToDeck(deck , deckKeyword);
         }
     }
+#endif
+
 
     static bool isSectionDelimiter( const DeckKeyword& keyword ) {
         const auto& name = keyword.name();
