@@ -90,19 +90,19 @@ namespace {
 
     bool ParserRecord::hasDimension() const {
         return std::any_of( this->begin(), this->end(),
-                    []( const ParserItem& x ) { return x.hasDimension(); } );
+                            []( const ParserItem& x ) { return x.dimensions().size() > 0; } );
     }
 
 
 
     void ParserRecord::applyUnitsToDeck( Deck& deck, DeckRecord& deckRecord ) const {
         for( const auto& parser_item : *this ) {
-            if( !parser_item.hasDimension() ) continue;
+            if( parser_item.dimensions().empty() ) continue;
 
             auto& deckItem = deckRecord.getItem( parser_item.name() );
-            for (size_t idim = 0; idim < parser_item.numDimensions(); idim++) {
-                auto activeDimension  = deck.getActiveUnitSystem().getNewDimension( parser_item.getDimension(idim) );
-                auto defaultDimension = deck.getDefaultUnitSystem().getNewDimension( parser_item.getDimension(idim) );
+            for (const auto& dim : parser_item.dimensions()) {
+                auto activeDimension  = deck.getActiveUnitSystem().getNewDimension(dim);
+                auto defaultDimension = deck.getDefaultUnitSystem().getNewDimension(dim);
                 deckItem.push_backDimension( activeDimension , defaultDimension );
             }
 
@@ -116,9 +116,9 @@ namespace {
             if (parser_item.dataType() == type_tag::uda && deckItem.size() > 0) {
                 auto uda = deckItem.get<UDAValue>(0);
                 if (deckItem.defaultApplied(0))
-                    uda.set_dim( deck.getDefaultUnitSystem().getNewDimension( parser_item.getDimension(0)));
+                    uda.set_dim( deck.getDefaultUnitSystem().getNewDimension( parser_item.dimensions().front()));
                 else
-                    uda.set_dim( deck.getActiveUnitSystem().getNewDimension( parser_item.getDimension(0)));
+                    uda.set_dim( deck.getActiveUnitSystem().getNewDimension( parser_item.dimensions().front()));
             }
         }
     }

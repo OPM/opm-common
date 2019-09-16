@@ -252,31 +252,22 @@ const T& ParserItem::getDefault() const {
     return this->value_ref< T >();
 }
 
-bool ParserItem::hasDimension() const {
-    return !this->dimensions.empty();
-}
 
-size_t ParserItem::numDimensions() const {
-    return this->dimensions.size();
-}
-
-const std::string& ParserItem::getDimension( size_t index ) const {
-    if( this->data_type == type_tag::fdouble || this->data_type == type_tag::uda)
-        return this->dimensions.at( index );
-    throw std::invalid_argument("Item is not double / UDA .");
+const std::vector<std::string>& ParserItem::dimensions() const {
+    return this->m_dimensions;
 }
 
 void ParserItem::push_backDimension( const std::string& dim ) {
     if (!(this->input_type == ParserItem::itype::DOUBLE || this->input_type == ParserItem::itype::UDA))
         throw std::invalid_argument( "Invalid type, does not have dimension." );
 
-    if( this->sizeType() == item_size::SINGLE && this->dimensions.size() > 0 ) {
+    if( this->sizeType() == item_size::SINGLE && this->m_dimensions.size() > 0 ) {
         throw std::invalid_argument(
             "Internal error: "
             "cannot add more than one dimension to an item of size 1" );
     }
 
-    this->dimensions.push_back( dim );
+    this->m_dimensions.push_back( dim );
 }
 
     const std::string& ParserItem::name() const {
@@ -364,10 +355,10 @@ bool ParserItem::operator==( const ParserItem& rhs ) const {
         }
     }
     if( this->data_type != type_tag::fdouble ) return true;
-    return this->dimensions.size() == rhs.dimensions.size()
-        && std::equal( this->dimensions.begin(),
-                       this->dimensions.end(),
-                       rhs.dimensions.begin() );
+    return this->m_dimensions.size() == rhs.m_dimensions.size()
+        && std::equal( this->m_dimensions.begin(),
+                       this->m_dimensions.end(),
+                       rhs.m_dimensions.begin() );
 }
 
 bool ParserItem::operator!=( const ParserItem& rhs ) const {
@@ -462,8 +453,8 @@ std::string ParserItem::createCode(const std::string& indent) const {
         stream << " );" << '\n';
     }
 
-    for (size_t idim=0; idim < this->numDimensions(); idim++)
-        stream << indent <<"item.push_backDimension(\"" << this->getDimension( idim ) << "\");" << '\n';
+    for (const auto& dim : this->m_dimensions)
+        stream << indent <<"item.push_backDimension(\"" << dim << "\");" << '\n';
 
     if (this->m_description.size() > 0)
         stream << indent << "item.setDescription(\"" << this->m_description << "\");" << '\n';
@@ -677,12 +668,12 @@ std::ostream& operator<<( std::ostream& stream, const ParserItem& item ) {
         stream << " ";
     }
 
-    if( !item.hasDimension() )
+    if( item.dimensions().empty() )
         stream << "dimensions: none";
     else {
         stream << "dimensions: [ ";
-        for( size_t i = 0; i < item.numDimensions(); ++i )
-            stream << "'" << item.getDimension( i ) << "' ";
+        for (const auto& dim : item.dimensions())
+            stream << "'" << dim << "' ";
         stream << "]";
     }
 

@@ -911,15 +911,14 @@ BOOST_AUTO_TEST_CASE(ParserDefaultHasDimensionReturnsFalse) {
     ParserItem stringItem(std::string("SOMESTRING"), STRING);
     ParserItem doubleItem(std::string("SOMEDOUBLE"), DOUBLE);
 
-    BOOST_CHECK( !intItem.hasDimension() );
-    BOOST_CHECK( !stringItem.hasDimension() );
-    BOOST_CHECK( !doubleItem.hasDimension() );
+    BOOST_CHECK( intItem.dimensions().empty() );
+    BOOST_CHECK( stringItem.dimensions().empty() );
+    BOOST_CHECK( doubleItem.dimensions().empty() );
 }
 
 BOOST_AUTO_TEST_CASE(ParserIntItemGetDimensionThrows) {
     ParserItem intItem(std::string("SOMEINT"), INT);
 
-    BOOST_CHECK_THROW( intItem.getDimension(0) , std::invalid_argument );
     BOOST_CHECK_THROW( intItem.push_backDimension("Length") , std::invalid_argument );
 }
 
@@ -936,9 +935,9 @@ BOOST_AUTO_TEST_CASE(ParserDoubleItemAddMultipleDimensionToSIngleSizeThrows) {
 BOOST_AUTO_TEST_CASE(ParserDoubleItemWithDimensionHasReturnsCorrect) {
     ParserItem doubleItem("SOMEDOUBLE", DOUBLE);
 
-    BOOST_CHECK( !doubleItem.hasDimension() );
+    BOOST_CHECK( doubleItem.dimensions().empty() );
     doubleItem.push_backDimension("Length*Length");
-    BOOST_CHECK( doubleItem.hasDimension() );
+    BOOST_CHECK( !doubleItem.dimensions().empty() );
 }
 
 BOOST_AUTO_TEST_CASE(ParserDoubleItemGetDimension) {
@@ -946,18 +945,17 @@ BOOST_AUTO_TEST_CASE(ParserDoubleItemGetDimension) {
     doubleItem.setSizeType( ParserItem::item_size::ALL );
     doubleItem.setDefault(0.0);
 
-    BOOST_CHECK_THROW( doubleItem.getDimension( 10 ) , std::out_of_range );
-    BOOST_CHECK_THROW( doubleItem.getDimension(  0 ) , std::out_of_range );
-
     doubleItem.push_backDimension("Length");
     doubleItem.push_backDimension("Length*Length");
     doubleItem.push_backDimension("Length*Length*Length");
 
-    BOOST_CHECK_EQUAL( "Length" , doubleItem.getDimension(0));
-    BOOST_CHECK_EQUAL( "Length*Length" , doubleItem.getDimension(1));
-    BOOST_CHECK_EQUAL( "Length*Length*Length" , doubleItem.getDimension(2));
-    BOOST_CHECK_THROW( doubleItem.getDimension( 3 ) , std::out_of_range );
+    const auto& dimensions = doubleItem.dimensions();
+    BOOST_CHECK_EQUAL( "Length" , dimensions[0]);
+    BOOST_CHECK_EQUAL( "Length*Length" ,dimensions[1]);
+    BOOST_CHECK_EQUAL( "Length*Length*Length" , dimensions[2]);
+    BOOST_CHECK_EQUAL(3, dimensions.size());
 }
+
 
 BOOST_AUTO_TEST_CASE(DefaultConstructor_NoParams_NoThrow) {
     BOOST_CHECK_NO_THROW(ParserRecord record);
@@ -1645,15 +1643,15 @@ BOOST_AUTO_TEST_CASE(ParseKeywordHasDimensionCorrect) {
     record.addItem( item1 );
     parserKeyword.addRecord( record );
     BOOST_CHECK( !parserKeyword.hasDimension() );
-    BOOST_CHECK_EQUAL( 0U , item1.numDimensions() );
+    BOOST_CHECK_EQUAL( 0U , item1.dimensions().size() );
 
-    item2.push_backDimension("Length*Length/Time");
+    item2.push_backDimension("Length");
     record.addItem( item2 );
 
     auto parserKeyword2 = createDynamicSized("JA");
     parserKeyword2.addRecord( record );
     BOOST_CHECK( parserKeyword2.hasDimension() );
-    BOOST_CHECK_EQUAL( 1U , item2.numDimensions() );
+    BOOST_CHECK_EQUAL( 1U , item2.dimensions().size() );
 }
 
 BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_withDimension) {
@@ -1668,8 +1666,7 @@ BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_withDimension) {
     BOOST_CHECK_EQUAL( 100U , parserKeyword.getFixedSize() );
 
     BOOST_CHECK( parserKeyword.hasDimension() );
-    BOOST_CHECK( item.hasDimension() );
-    BOOST_CHECK_EQUAL( 1U , item.numDimensions() );
+    BOOST_CHECK_EQUAL( 1U , item.dimensions().size() );
 }
 
 BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_withDimensionList) {
@@ -1683,8 +1680,7 @@ BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_withDimensionList) {
     BOOST_CHECK_EQUAL( 100U , parserKeyword.getFixedSize() );
 
     BOOST_CHECK( parserKeyword.hasDimension() );
-    BOOST_CHECK( item.hasDimension() );
-    BOOST_CHECK_EQUAL( 3U , item.numDimensions() );
+    BOOST_CHECK_EQUAL( 3U , item.dimensions().size() );
 }
 
 

@@ -73,9 +73,7 @@ namespace Opm {
         explicit ParserItem( const Json::JsonObject& jsonConfig );
 
         void push_backDimension( const std::string& );
-        const std::string& getDimension(size_t index) const;
-        bool hasDimension() const;
-        size_t numDimensions() const;
+        const std::vector<std::string>& dimensions() const;
         const std::string& name() const;
         item_size sizeType() const;
         type_tag dataType() const;
@@ -108,7 +106,7 @@ namespace Opm {
         int ival;
         std::string sval;
         UDAValue uval;
-        std::vector< std::string > dimensions;
+        std::vector< std::string > m_dimensions;
 
         std::string m_name;
         item_size m_sizeType = item_size::SINGLE;
