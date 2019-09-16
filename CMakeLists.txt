@@ -245,6 +245,7 @@ if (OPM_ENABLE_PYTHON)
                      python/cxx/eclipse_grid.cpp
                      python/cxx/eclipse_state.cpp
                      python/cxx/group.cpp
+                     python/cxx/log.cpp
                      python/cxx/parsecontext.cpp
                      python/cxx/parser.cpp
                      python/cxx/schedule.cpp
