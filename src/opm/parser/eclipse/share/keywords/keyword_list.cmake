@@ -588,8 +588,14 @@ set( keywords
      000_Eclipse100/W/WPOLYMER
      000_Eclipse100/W/WPOLYRED
      000_Eclipse100/W/WPOTCALC
+     000_Eclipse100/W/WREGROUP
      000_Eclipse100/W/WRFT
      000_Eclipse100/W/WRFTPLT
+     000_Eclipse100/W/WSALT
+     000_Eclipse100/W/WSCCLEAN
+     000_Eclipse100/W/WSCCLENL
+     000_Eclipse100/W/WSCTAB
+     000_Eclipse100/W/WSEGAICD
      000_Eclipse100/W/WSEGDIMS
      000_Eclipse100/W/WSEGITER
      000_Eclipse100/W/WSEGVALV
