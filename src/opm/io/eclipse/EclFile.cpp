@@ -380,18 +380,10 @@ std::vector<std::string> readFormattedCharArray(const std::string& file_str, con
     arr.reserve(size);
 
     long int p1=fromPos;
-    long int p2=0;
 
     for (int i=0; i< size; i++) {
         p1 = file_str.find_first_of('\'',p1);
-        p2 = file_str.find_first_of('\'', p1+1);
-
-        std::string value = file_str.substr(p1 + 1, p2 - p1 - 1);
-
-        if (value.size() != 8) {
-            std::string message="Reading formatted char array, all strings should have 8 characters";
-            OPM_THROW(std::runtime_error, message);
-        }
+        std::string value = file_str.substr(p1 + 1, 8);
 
         if (value == "        ") {
             arr.push_back("");
@@ -399,7 +391,7 @@ std::vector<std::string> readFormattedCharArray(const std::string& file_str, con
             arr.push_back(Opm::EclIO::trimr(value));
         }
 
-        p1 = p2+1;
+        p1 = p1+10;
     }
 
     return arr;

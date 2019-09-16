@@ -67,7 +67,6 @@ bool operator==(const std::vector<T> & t1, const std::vector<T> & t2)
     return std::equal(t1.begin(), t1.end(), t2.begin(), t2.end());
 }
 
-
 BOOST_AUTO_TEST_CASE(TestEclFile_BINARY) {
 
     std::string testFile="ECLFILE.INIT";
@@ -305,4 +304,31 @@ BOOST_AUTO_TEST_CASE(TestEcl_getList) {
     if (remove(testFile.c_str())==-1) {
         std::cout << " > Warning! temporary file was not deleted" << std::endl;
     };
+}
+
+
+BOOST_AUTO_TEST_CASE(TestEcl_Write_CHAR) {
+
+    std::string testFile="TEST.FDAT";
+    std::vector<std::string> refStrList = {"This", "is", "a test.", "", "charact", "er >'<", "can be", "part of", "a string"};
+
+    {
+        EclOutput eclTest(testFile, true);
+        eclTest.write("TEST",refStrList);
+    }
+    
+    {
+        EclFile file1(testFile);
+        std::vector<std::string> strList=file1.get<std::string>("TEST");
+        
+        for (size_t n = 0; n < refStrList.size(); n++) {
+            BOOST_CHECK(refStrList[n] == strList[n]);
+        }
+    }
+
+    if (remove(testFile.c_str())==-1) {
+        std::cout << " > Warning! temporary file was not deleted" << std::endl;
+    };
+    
+    
 }
