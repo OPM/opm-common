@@ -71,36 +71,28 @@ const std::vector< UDAValue >& DeckItem::value_ref< UDAValue >() const {
 }
 
 
-DeckItem::DeckItem( const std::string& nm, int, size_t hint ) :
+DeckItem::DeckItem( const std::string& nm, int) :
     type( get_type< int >() ),
     item_name( nm )
 {
-    this->ival.reserve( hint );
-    this->defaulted.reserve( hint );
 }
 
-DeckItem::DeckItem( const std::string& nm, double, size_t hint ) :
+DeckItem::DeckItem( const std::string& nm, double) :
     type( get_type< double >() ),
     item_name( nm )
 {
-    this->dval.reserve( hint );
-    this->defaulted.reserve( hint );
 }
 
-DeckItem::DeckItem( const std::string& nm, UDAValue , size_t hint ) :
+DeckItem::DeckItem( const std::string& nm, UDAValue) :
     type( get_type< UDAValue >() ),
     item_name( nm )
 {
-  this->uval.reserve( hint );
-  this->defaulted.reserve( hint );
 }
 
-DeckItem::DeckItem( const std::string& nm, std::string, size_t hint ) :
+DeckItem::DeckItem( const std::string& nm, std::string) :
     type( get_type< std::string >() ),
     item_name( nm )
 {
-    this->sval.reserve( hint );
-    this->defaulted.reserve( hint );
 }
 
 const std::string& DeckItem::name() const {

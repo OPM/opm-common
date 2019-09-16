@@ -475,7 +475,7 @@ namespace {
 
 template< typename T >
 DeckItem scan_item( const ParserItem& p, RawRecord& record ) {
-    DeckItem item( p.name(), T(), record.size() );
+    DeckItem item( p.name(), T());
     bool parse_raw = p.parseRaw();
 
     if( p.sizeType() == ParserItem::item_size::ALL ) {

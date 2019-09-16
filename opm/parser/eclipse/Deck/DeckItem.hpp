@@ -35,10 +35,10 @@ namespace Opm {
     class DeckItem {
     public:
         DeckItem() = default;
-        DeckItem( const std::string&, int, size_t size_hint = 8 );
-        DeckItem( const std::string&, double, size_t size_hint = 8 );
-        DeckItem( const std::string&, std::string, size_t size_hint = 8 );
-        DeckItem( const std::string&, UDAValue, size_t size_hint = 8 );
+        DeckItem( const std::string&, int);
+        DeckItem( const std::string&, double);
+        DeckItem( const std::string&, std::string);
+        DeckItem( const std::string&, UDAValue);
 
         const std::string& name() const;
 
