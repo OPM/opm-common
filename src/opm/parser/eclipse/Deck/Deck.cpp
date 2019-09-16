@@ -156,14 +156,6 @@ namespace Opm {
             this->activeUnits = UnitSystem::newMETRIC();
     }
 
-    Deck::Deck( std::initializer_list< DeckKeyword > ilist ) :
-        Deck( std::vector< DeckKeyword >( ilist ) )
-    {}
-
-    Deck::Deck( std::initializer_list< std::string > ilist ) :
-        Deck( std::vector< DeckKeyword >( ilist.begin(), ilist.end() ) )
-    {}
-
     Deck::Deck( const Deck& d ) :
         DeckView( d.begin(), d.begin() ),
         keywordList( d.keywordList ),

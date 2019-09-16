@@ -35,33 +35,35 @@ using namespace Opm;
 
 BOOST_AUTO_TEST_CASE(SectionTest) {
     Deck deck;
-    deck.addKeyword( DeckKeyword("TEST0") );
-    deck.addKeyword( DeckKeyword("RUNSPEC") );
-    deck.addKeyword( DeckKeyword("TEST1") );
-    deck.addKeyword( DeckKeyword("GRID") );
-    deck.addKeyword( DeckKeyword("TEST2") );
-    deck.addKeyword( DeckKeyword("SCHEDULE") );
-    deck.addKeyword( DeckKeyword("TEST3") );
+    Parser parser;
+    deck.addKeyword( DeckKeyword(&parser.getKeyword("START")));
+    deck.addKeyword( DeckKeyword(&parser.getKeyword("RUNSPEC")));
+    deck.addKeyword( DeckKeyword(&parser.getKeyword("WELLDIMS")));
+    deck.addKeyword( DeckKeyword(&parser.getKeyword("GRID")));
+    deck.addKeyword( DeckKeyword(&parser.getKeyword("PORO")));
+    deck.addKeyword( DeckKeyword(&parser.getKeyword("SCHEDULE")));
+    deck.addKeyword( DeckKeyword(&parser.getKeyword("WELSPECS")));
 
     Section runspecSection(deck, "RUNSPEC");
     Section gridSection(deck, "GRID");
-    BOOST_CHECK(runspecSection.hasKeyword("TEST1"));
-    BOOST_CHECK(gridSection.hasKeyword("TEST2"));
+    BOOST_CHECK(runspecSection.hasKeyword("WELLDIMS"));
+    BOOST_CHECK(gridSection.hasKeyword("PORO"));
 
-    BOOST_CHECK(!runspecSection.hasKeyword("TEST0"));
-    BOOST_CHECK(!gridSection.hasKeyword("TEST0"));
-    BOOST_CHECK(!runspecSection.hasKeyword("TEST3"));
-    BOOST_CHECK(!gridSection.hasKeyword("TEST3"));
-    BOOST_CHECK(!runspecSection.hasKeyword("TEST2"));
-    BOOST_CHECK(!gridSection.hasKeyword("TEST1"));
+    BOOST_CHECK(!runspecSection.hasKeyword("START"));
+    BOOST_CHECK(!gridSection.hasKeyword("START"));
+    BOOST_CHECK(!runspecSection.hasKeyword("WELSPECS"));
+    BOOST_CHECK(!gridSection.hasKeyword("WELSPECS"));
+    BOOST_CHECK(!runspecSection.hasKeyword("PORO"));
+    BOOST_CHECK(!gridSection.hasKeyword("WELLDIMS"));
 }
 
 BOOST_AUTO_TEST_CASE(IteratorTest) {
     Deck deck;
-    deck.addKeyword( DeckKeyword( "RUNSPEC" ) );
-    deck.addKeyword( DeckKeyword("TEST2") );
-    deck.addKeyword( DeckKeyword( "TEST3" ) );
-    deck.addKeyword( DeckKeyword( "GRID" ) );
+    Parser parser;
+    deck.addKeyword( DeckKeyword(&parser.getKeyword("RUNSPEC")));
+    deck.addKeyword( DeckKeyword(&parser.getKeyword("WELLDIMS")));
+    deck.addKeyword( DeckKeyword(&parser.getKeyword("TABDIMS")));
+    deck.addKeyword( DeckKeyword(&parser.getKeyword("GRID")));
     Section section(deck, "RUNSPEC");
 
     int numberOfItems = 0;
@@ -70,7 +72,7 @@ BOOST_AUTO_TEST_CASE(IteratorTest) {
         numberOfItems++;
     }
 
-    // the keywords expected here are RUNSPEC, TEST2 and TEST3...
+    // the keywords expected here are RUNSPEC, WELLDIMS and TABDIMS
     BOOST_CHECK_EQUAL(3, numberOfItems);
 }
 
@@ -81,26 +83,28 @@ BOOST_AUTO_TEST_CASE(RUNSPECSection_EmptyDeck) {
 
 BOOST_AUTO_TEST_CASE(RUNSPECSection_ReadSimpleDeck) {
     Deck deck;
-    deck.addKeyword( DeckKeyword( "TEST1") );
-    deck.addKeyword( DeckKeyword( "RUNSPEC") );
-    deck.addKeyword( DeckKeyword( "TEST2") );
-    deck.addKeyword( DeckKeyword( "TEST3") );
-    deck.addKeyword( DeckKeyword( "GRID") );
-    deck.addKeyword( DeckKeyword( "TEST4") );
+    Parser parser;
+    deck.addKeyword( DeckKeyword(&parser.getKeyword( "START")));
+    deck.addKeyword( DeckKeyword(&parser.getKeyword( "RUNSPEC")));
+    deck.addKeyword( DeckKeyword(&parser.getKeyword( "WELLDIMS")));
+    deck.addKeyword( DeckKeyword(&parser.getKeyword( "TABDIMS")));
+    deck.addKeyword( DeckKeyword(&parser.getKeyword( "GRID")));
+    deck.addKeyword( DeckKeyword(&parser.getKeyword( "PORO")));
 
     RUNSPECSection section(deck);
-    BOOST_CHECK(!section.hasKeyword("TEST1"));
+    BOOST_CHECK(!section.hasKeyword("START"));
     BOOST_CHECK(section.hasKeyword("RUNSPEC"));
-    BOOST_CHECK(section.hasKeyword("TEST2"));
-    BOOST_CHECK(section.hasKeyword("TEST3"));
+    BOOST_CHECK(section.hasKeyword("WELLDIMS"));
+    BOOST_CHECK(section.hasKeyword("TABDIMS"));
     BOOST_CHECK(!section.hasKeyword("GRID"));
-    BOOST_CHECK(!section.hasKeyword("TEST4"));
+    BOOST_CHECK(!section.hasKeyword("PORO"));
 }
 
 BOOST_AUTO_TEST_CASE(RUNSPECSection_ReadSmallestPossibleDeck) {
     Deck deck;
-    deck.addKeyword( DeckKeyword( "RUNSPEC" ) );
-    deck.addKeyword( DeckKeyword( "GRID") );
+    Parser parser;
+    deck.addKeyword( DeckKeyword(&parser.getKeyword( "RUNSPEC" )));
+    deck.addKeyword( DeckKeyword(&parser.getKeyword( "GRID")));
     RUNSPECSection section(deck);
     BOOST_CHECK_EQUAL(true, section.hasKeyword("RUNSPEC"));
     BOOST_CHECK_EQUAL(false, section.hasKeyword("GRID"));
@@ -108,8 +112,9 @@ BOOST_AUTO_TEST_CASE(RUNSPECSection_ReadSmallestPossibleDeck) {
 
 BOOST_AUTO_TEST_CASE(GRIDSection_TerminatedByEDITKeyword) {
     Deck deck;
-    deck.addKeyword( DeckKeyword( "GRID" ) );
-    deck.addKeyword( DeckKeyword( "EDIT" ) );
+    Parser parser;
+    deck.addKeyword( DeckKeyword(&parser.getKeyword( "GRID" )));
+    deck.addKeyword( DeckKeyword(&parser.getKeyword( "EDIT" )));
     GRIDSection section(deck);
     BOOST_CHECK_EQUAL(true, section.hasKeyword("GRID"));
     BOOST_CHECK_EQUAL(false, section.hasKeyword("EDIT"));
@@ -117,8 +122,9 @@ BOOST_AUTO_TEST_CASE(GRIDSection_TerminatedByEDITKeyword) {
 
 BOOST_AUTO_TEST_CASE(GRIDSection_TerminatedByPROPSKeyword) {
     Deck deck;
-    deck.addKeyword( DeckKeyword( "GRID" ) );
-    deck.addKeyword( DeckKeyword( "PROPS" ) );
+    Parser parser;
+    deck.addKeyword( DeckKeyword(&parser.getKeyword( "GRID" )));
+    deck.addKeyword( DeckKeyword(&parser.getKeyword( "PROPS" )));
     GRIDSection section(deck);
     BOOST_CHECK_EQUAL(true, section.hasKeyword("GRID"));
     BOOST_CHECK_EQUAL(false, section.hasKeyword("PROPS"));
@@ -126,8 +132,9 @@ BOOST_AUTO_TEST_CASE(GRIDSection_TerminatedByPROPSKeyword) {
 
 BOOST_AUTO_TEST_CASE(EDITSection_TerminatedByPROPSKeyword) {
     Deck deck;
-    deck.addKeyword( DeckKeyword( "EDIT" ) );
-    deck.addKeyword( DeckKeyword( "PROPS" ) );
+    Parser parser;
+    deck.addKeyword( DeckKeyword(&parser.getKeyword( "EDIT" )));
+    deck.addKeyword( DeckKeyword(&parser.getKeyword( "PROPS" )));
     EDITSection section(deck);
     BOOST_CHECK_EQUAL(true, section.hasKeyword("EDIT"));
     BOOST_CHECK_EQUAL(false, section.hasKeyword("PROPS"));
@@ -135,8 +142,9 @@ BOOST_AUTO_TEST_CASE(EDITSection_TerminatedByPROPSKeyword) {
 
 BOOST_AUTO_TEST_CASE(PROPSSection_TerminatedByREGIONSKeyword) {
     Deck deck;
-    deck.addKeyword( DeckKeyword( "PROPS" ) );
-    deck.addKeyword( DeckKeyword( "REGIONS" ) );
+    Parser parser;
+    deck.addKeyword( DeckKeyword(&parser.getKeyword( "PROPS" )));
+    deck.addKeyword( DeckKeyword(&parser.getKeyword( "REGIONS" )));
     PROPSSection section(deck);
     BOOST_CHECK_EQUAL(true, section.hasKeyword("PROPS"));
     BOOST_CHECK_EQUAL(false, section.hasKeyword("REGIONS"));
@@ -144,9 +152,9 @@ BOOST_AUTO_TEST_CASE(PROPSSection_TerminatedByREGIONSKeyword) {
 
 BOOST_AUTO_TEST_CASE(PROPSSection_TerminatedBySOLUTIONKeyword) {
     Deck deck;
-
-    deck.addKeyword( DeckKeyword( "PROPS" ) );
-    deck.addKeyword( DeckKeyword( "SOLUTION" ) );
+    Parser parser;
+    deck.addKeyword( DeckKeyword(&parser.getKeyword( "PROPS" )));
+    deck.addKeyword( DeckKeyword(&parser.getKeyword( "SOLUTION" )));
 
     PROPSSection section(deck);
     BOOST_CHECK_EQUAL(true, section.hasKeyword("PROPS"));
@@ -155,9 +163,9 @@ BOOST_AUTO_TEST_CASE(PROPSSection_TerminatedBySOLUTIONKeyword) {
 
 BOOST_AUTO_TEST_CASE(REGIONSSection_TerminatedBySOLUTIONKeyword) {
     Deck deck;
-
-    deck.addKeyword( DeckKeyword( "REGIONS" ) );
-    deck.addKeyword( DeckKeyword( "SOLUTION" ) );
+    Parser parser;
+    deck.addKeyword( DeckKeyword(&parser.getKeyword( "REGIONS" )));
+    deck.addKeyword( DeckKeyword(&parser.getKeyword( "SOLUTION" )));
 
     REGIONSSection section(deck);
     BOOST_CHECK_EQUAL(true, section.hasKeyword("REGIONS"));
@@ -166,9 +174,9 @@ BOOST_AUTO_TEST_CASE(REGIONSSection_TerminatedBySOLUTIONKeyword) {
 
 BOOST_AUTO_TEST_CASE(SOLUTIONSection_TerminatedBySUMMARYKeyword) {
     Deck deck;
-
-    deck.addKeyword( DeckKeyword( "SOLUTION" ) );
-    deck.addKeyword( DeckKeyword( "SUMMARY" ) );
+    Parser parser;
+    deck.addKeyword( DeckKeyword(&parser.getKeyword( "SOLUTION" )));
+    deck.addKeyword( DeckKeyword(&parser.getKeyword( "SUMMARY" )));
 
     SOLUTIONSection section(deck);
     BOOST_CHECK_EQUAL(true, section.hasKeyword("SOLUTION"));
@@ -177,9 +185,9 @@ BOOST_AUTO_TEST_CASE(SOLUTIONSection_TerminatedBySUMMARYKeyword) {
 
 BOOST_AUTO_TEST_CASE(SOLUTIONSection_TerminatedBySCHEDULEKeyword) {
     Deck deck;
-
-    deck.addKeyword( DeckKeyword( "SOLUTION" ) );
-    deck.addKeyword( DeckKeyword( "SCHEDULE" ) );
+    Parser parser;
+    deck.addKeyword( DeckKeyword(&parser.getKeyword( "SOLUTION" )));
+    deck.addKeyword( DeckKeyword(&parser.getKeyword( "SCHEDULE" )));
 
     SOLUTIONSection section(deck);
     BOOST_CHECK_EQUAL(true, section.hasKeyword("SOLUTION"));
@@ -188,18 +196,18 @@ BOOST_AUTO_TEST_CASE(SOLUTIONSection_TerminatedBySCHEDULEKeyword) {
 
 BOOST_AUTO_TEST_CASE(SCHEDULESection_NotTerminated) {
     Deck deck;
-
-    deck.addKeyword( DeckKeyword( "SCHEDULE" ) );
-    deck.addKeyword( DeckKeyword( "TEST1" ) );
-    deck.addKeyword( DeckKeyword( "TEST2" ) );
-    deck.addKeyword( DeckKeyword( "TEST3" ) );
-    deck.addKeyword( DeckKeyword( "TEST4" ) );
+    Parser parser;
+    deck.addKeyword( DeckKeyword(&parser.getKeyword( "SCHEDULE")));
+    deck.addKeyword( DeckKeyword(&parser.getKeyword( "WELSPECS" ) ));
+    deck.addKeyword( DeckKeyword(&parser.getKeyword( "COMPDAT" ) ));
+    deck.addKeyword( DeckKeyword(&parser.getKeyword( "WCONHIST" ) ));
+    deck.addKeyword( DeckKeyword(&parser.getKeyword( "WCONPROD" ) ));
 
     SCHEDULESection section(deck);
     BOOST_CHECK_EQUAL(true, section.hasKeyword("SCHEDULE"));
-    BOOST_CHECK_EQUAL(true, section.hasKeyword("TEST1"));
-    BOOST_CHECK_EQUAL(true, section.hasKeyword("TEST2"));
-    BOOST_CHECK_EQUAL(true, section.hasKeyword("TEST3"));
+    BOOST_CHECK_EQUAL(true, section.hasKeyword("WELSPECS"));
+    BOOST_CHECK_EQUAL(true, section.hasKeyword("COMPDAT"));
+    BOOST_CHECK_EQUAL(true, section.hasKeyword("WCONHIST"));
 
     BOOST_CHECK( Section::hasSCHEDULE(deck ));
     BOOST_CHECK( !Section::hasREGIONS(deck ));

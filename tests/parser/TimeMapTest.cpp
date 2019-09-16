@@ -162,7 +162,7 @@ BOOST_AUTO_TEST_CASE( timeFromEclipseInputRecord ) {
     Opm::DeckRecord  startRecord;
     Opm::DeckItem dayItem( "DAY", int() );
     Opm::DeckItem monthItem( "MONTH", std::string() );
-    Opm::DeckItem yearItem("YEAR", int() );
+    Opm::DeckItem yearItem("YEAR", int());
     Opm::DeckItem timeItem("TIME", std::string() );
 
     dayItem.push_back( 10 );
@@ -181,16 +181,18 @@ BOOST_AUTO_TEST_CASE( timeFromEclipseInputRecord ) {
 
 
 BOOST_AUTO_TEST_CASE( addDATESFromWrongKeywordThrows ) {
+    Opm::Parser parser;
     Opm::TimeMap timeMap(startDateJan1st2010);
-    Opm::DeckKeyword deckKeyword("NOTDATES");
+    Opm::DeckKeyword deckKeyword(std::addressof(parser.getKeyword("GRID")));
     BOOST_CHECK_THROW( timeMap.addFromDATESKeyword( deckKeyword ) , std::invalid_argument );
 }
 
 
 
 BOOST_AUTO_TEST_CASE( addTSTEPFromWrongKeywordThrows ) {
+    Opm::Parser parser;
     Opm::TimeMap timeMap(startDateJan1st2010);
-    Opm::DeckKeyword deckKeyword("NOTTSTEP");
+    Opm::DeckKeyword deckKeyword(&parser.getKeyword("GRID"));
     BOOST_CHECK_THROW( timeMap.addFromTSTEPKeyword( deckKeyword ) , std::invalid_argument );
 }
 
