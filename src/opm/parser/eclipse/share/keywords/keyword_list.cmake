@@ -281,9 +281,11 @@ set( keywords
      000_Eclipse100/I/ISWU
      000_Eclipse100/J/JFUNC
      000_Eclipse100/L/LAB
+     000_Eclipse100/L/LCUNIT
      000_Eclipse100/L/LGR
      000_Eclipse100/L/LICENSES
      000_Eclipse100/L/LIFTOPT
+     000_Eclipse100/L/LINCOM
      000_Eclipse100/M/MAPAXES
      000_Eclipse100/M/MAPUNITS
      000_Eclipse100/M/MAXVALUE

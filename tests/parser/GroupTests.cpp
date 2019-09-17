@@ -33,6 +33,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/Group2.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GuideRateModel.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Group/GuideRate.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellProductionProperties.hpp>
@@ -299,9 +300,81 @@ BOOST_AUTO_TEST_CASE(createDeckWithGCONPROD) {
 
 BOOST_AUTO_TEST_CASE(TESTGuideRateModel) {
     Opm::GuideRateModel grc_default;
-    BOOST_CHECK_THROW(Opm::GuideRateModel(0.0,GuideRateModel::Target::NONE, -5,0,0,0,0,0,true,1,true), std::invalid_argument);
+    BOOST_CHECK_THROW(Opm::GuideRateModel(0.0,GuideRateModel::Target::OIL, -5,0,0,0,0,0,true,1,true), std::invalid_argument);
     BOOST_CHECK_THROW(grc_default.eval(1,0.50,0.50), std::invalid_argument);
 
-    Opm::GuideRateModel grc_delay(10, GuideRateModel::Target::NONE, 1,1,0,0,0,0,true,1,true);
+    Opm::GuideRateModel grc_delay(10, GuideRateModel::Target::OIL, 1,1,0,0,0,0,true,1,true);
     BOOST_CHECK_NO_THROW(grc_delay.eval(1.0, 0.5, 0.5));
+}
+
+BOOST_AUTO_TEST_CASE(TESTGuideRateLINCOM) {
+    Parser parser;
+    std::string input = R"(
+        START             -- 0
+        31 AUG 1993 /
+        SCHEDULE
+
+        GRUPTREE
+           'G1'  'FIELD' /
+           'G2'  'FIELD' /
+        /
+
+        GCONPROD
+            'G1' 'ORAT' 10000 3* 'CON' /
+            'G2' 'RESV' 10000 3* 'CON' /
+        /
+
+        GUIDERAT
+             1*  'COMB'  1.0 1.0 /
+
+        LINCOM
+             1  2  'WWCT:OPX' /
+
+        )";
+
+    auto deck = parser.parseString(input);
+    EclipseGrid grid(10,10,10);
+    TableManager table ( deck );
+    Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    Runspec runspec (deck );
+
+    /* The 'COMB' target mode is not supported */
+    BOOST_CHECK_THROW(Opm::Schedule schedule(deck, grid, eclipseProperties, runspec), std::logic_error);
+}
+
+BOOST_AUTO_TEST_CASE(TESTGuideRate) {
+    Parser parser;
+    std::string input = R"(
+        START             -- 0
+        31 AUG 1993 /
+        SCHEDULE
+
+        GRUPTREE
+           'G1'  'FIELD' /
+           'G2'  'FIELD' /
+        /
+
+        GCONPROD
+            'G1' 'ORAT' 10000 3* 'CON' /
+            'G2' 'RESV' 10000 3* 'CON' /
+        /
+
+        GUIDERAT
+             1*  'OIL'  1.0 1.0 /
+
+        LINCOM
+             1  2  'WWCT:OPX' /
+
+        TSTEP
+           1 1 1 1 1 1 1 1 1 1 1 /
+        )";
+
+    auto deck = parser.parseString(input);
+    EclipseGrid grid(10,10,10);
+    TableManager table ( deck );
+    Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    Runspec runspec (deck );
+    Schedule schedule(deck, grid, eclipseProperties, runspec);
+
+    GuideRate gr(schedule);
 }

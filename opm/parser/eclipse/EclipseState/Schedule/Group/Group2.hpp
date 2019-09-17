@@ -189,6 +189,8 @@ struct ProductionControls {
     bool wellgroup() const;
     ProductionControls productionControls(const SummaryState& st) const;
     InjectionControls injectionControls(const SummaryState& st) const;
+    const GroupProductionProperties& productionProperties() const;
+    const GroupInjectionProperties& injectionProperties() const;
     ProductionCMode production_cmode() const;
     InjectionCMode injection_cmode() const;
     Phase injection_phase() const;
@@ -197,8 +199,6 @@ struct ProductionControls {
 private:
     bool hasType(GroupType gtype) const;
     void addType(GroupType new_gtype);
-    const GroupProductionProperties& productionProperties() const;
-    const GroupInjectionProperties& injectionProperties() const;
 
     std::string m_name;
     std::size_t m_insert_index;
