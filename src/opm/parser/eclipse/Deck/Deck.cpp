@@ -108,15 +108,12 @@ namespace Opm {
         return this->keywordMap.find( keyword )->second;
     }
 
-    DeckView::DeckView( const_iterator first_arg, const_iterator last_arg ) :
-        first( first_arg ), last( last_arg )
+    DeckView::DeckView( const_iterator first_arg, const_iterator last_arg)
     {
-        size_t index = 0;
-        for( const auto& kw : *this )
-            this->keywordMap[ kw.name() ].push_back( index++ );
+        this->init(first_arg, last_arg);
     }
 
-    void DeckView::reinit( const_iterator first_arg, const_iterator last_arg ) {
+    void DeckView::init( const_iterator first_arg, const_iterator last_arg ) {
         this->first = first_arg;
         this->last = last_arg;
 
@@ -131,39 +128,35 @@ namespace Opm {
         DeckView( limits.first, limits.second )
     {}
 
-    Deck::Deck() : Deck( std::vector< DeckKeyword >() ) {}
+    Deck::Deck() :
+        Deck( std::vector<DeckKeyword>() )
+    {}
 
-    Deck::Deck( std::vector< DeckKeyword >&& x ) :
-        DeckView( x.begin(), x.end() ),
-        keywordList( std::move( x ) ),
+
+    /*
+      This constructor should be ssen as a technical implemtation detail of the
+      default constructor, and not something which should be invoked directly.
+      The point is that the derived class DeckView contains iterators to the
+      keywordList member in the base class - this represents some ordering
+      challenges in the construction phase.
+    */
+    Deck::Deck( std::vector<DeckKeyword>&& x) :
+        DeckView(x.begin(), x.end()),
+        keywordList(std::move(x)),
         defaultUnits( UnitSystem::newMETRIC() ),
-        activeUnits( UnitSystem::newMETRIC() ),
-        m_dataFile(""),
-        input_path("")
+        activeUnits( UnitSystem::newMETRIC() )
     {
-        /*
-         * If multiple unit systems are requested, metric is preferred over
-         * lab, and field over metric, for as long as we have no easy way of
-         * figuring out which was requested last.
-         */
-        if( this->hasKeyword( "PVT-M" ) )
-            this->activeUnits = UnitSystem::newPVT_M();
-        if( this->hasKeyword( "LAB" ) )
-            this->activeUnits = UnitSystem::newLAB();
-        if( this->hasKeyword( "FIELD" ) )
-            this->activeUnits = UnitSystem::newFIELD();
-        if( this->hasKeyword( "METRIC" ) )
-            this->activeUnits = UnitSystem::newMETRIC();
     }
 
     Deck::Deck( const Deck& d ) :
-        DeckView( d.begin(), d.begin() ),
+        DeckView(d.begin(), d.end()),
         keywordList( d.keywordList ),
         defaultUnits( d.defaultUnits ),
         activeUnits( d.activeUnits ),
         m_dataFile( d.m_dataFile ),
-        input_path( d.input_path ) {
-        this->reinit(this->keywordList.begin(), this->keywordList.end());
+        input_path( d.input_path )
+    {
+        this->init(this->keywordList.begin(), this->keywordList.end());
     }
 
     void Deck::addKeyword( DeckKeyword&& keyword ) {
