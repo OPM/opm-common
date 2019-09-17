@@ -138,6 +138,7 @@ namespace Opm {
             const UnitSystem& getActiveUnitSystem() const;
             UnitSystem& getActiveUnitSystem();
             UnitSystem& getDefaultUnitSystem();
+            void selectActiveUnitSystem( UnitSystem::UnitType unit_type );
 
             const std::string& getInputPath() const;
             const std::string& getDataFile() const;

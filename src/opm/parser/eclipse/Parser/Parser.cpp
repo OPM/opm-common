@@ -1125,11 +1125,11 @@ std::vector<std::string> Parser::getAllDeckNames () const {
          * figuring out which was requested last.
          */
         if( deck.hasKeyword( "LAB" ) )
-            deck.getActiveUnitSystem() = UnitSystem::newLAB();
+            deck.selectActiveUnitSystem( UnitSystem::UnitType::UNIT_TYPE_LAB );
         if( deck.hasKeyword( "FIELD" ) )
-            deck.getActiveUnitSystem() = UnitSystem::newFIELD();
+            deck.selectActiveUnitSystem( UnitSystem::UnitType::UNIT_TYPE_FIELD );
         if( deck.hasKeyword( "METRIC" ) )
-            deck.getActiveUnitSystem() = UnitSystem::newMETRIC();
+            deck.selectActiveUnitSystem( UnitSystem::UnitType::UNIT_TYPE_METRIC );
 
         for( auto& deckKeyword : deck ) {
 

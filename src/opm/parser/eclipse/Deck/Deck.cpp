@@ -190,6 +190,11 @@ namespace Opm {
         return this->activeUnits;
     }
 
+    void Deck::selectActiveUnitSystem(UnitSystem::UnitType unit_type) {
+        this->activeUnits = UnitSystem(unit_type);
+    }
+
+
     const UnitSystem& Deck::getActiveUnitSystem() const {
         return this->activeUnits;
     }
