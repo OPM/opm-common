@@ -36,15 +36,16 @@ if setupdir != '':
   os.chdir( setupdir )
 
 try:
-  subprocess.call(["c++", "--version"])
-  subprocess.call(['ccache', '--version'])
-  os.environ['CC'] = 'ccache c++'
+    subprocess.call(['ccache', '--version'])
+    cc = os.environ.get("CC", "c++")
+    os.environ['CC'] = 'ccache {}'.format(cc)
+    print("Using 'ccache {}' as compiler".format(cc))
 except OSError as e:
-  print('\nNOTE: please install ccache for faster compilation of python bindings.\n')
+    print('\nNOTE: please install ccache for faster compilation of python bindings.\n')
 
 if 'build' in sys.argv:
-  if not 'build_ext' in sys.argv:
-    raise TypeError("Missing option 'build_ext'.")
+    if not 'build_ext' in sys.argv:
+        raise TypeError("Missing option 'build_ext'.")
 
 ext_modules = [
     Extension(
