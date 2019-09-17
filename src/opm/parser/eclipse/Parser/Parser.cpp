@@ -19,7 +19,6 @@
 
 #include <cctype>
 #include <fstream>
-#include <memory>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
@@ -997,10 +996,7 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
         return bool( matchingKeyword( name ) );
     }
 
-void Parser::addParserKeyword( std::unique_ptr< const ParserKeyword >&& parserKeyword) {
-    string_view name( parserKeyword->getName() );
-    auto* ptr = parserKeyword.get();
-
+void Parser::addParserKeyword( ParserKeyword&& parserKeyword ) {
     /* Store the keywords in the keyword storage. They aren't free'd until the
      * parser gets destroyed, even if there is no reasonable way to reach them
      * (effectively making them leak). This is not a big problem because:
@@ -1019,6 +1015,8 @@ void Parser::addParserKeyword( std::unique_ptr< const ParserKeyword >&& parserKe
      */
 
     this->keyword_storage.push_back( std::move( parserKeyword ) );
+    const ParserKeyword * ptr = std::addressof(this->keyword_storage.back());
+    string_view name( ptr->getName() );
 
     for (auto nameIt = ptr->deckNamesBegin();
             nameIt != ptr->deckNamesEnd();
@@ -1027,9 +1025,8 @@ void Parser::addParserKeyword( std::unique_ptr< const ParserKeyword >&& parserKe
         m_deckParserKeywords[ *nameIt ] = ptr;
     }
 
-    if (ptr->hasMatchRegex()) {
+    if (ptr->hasMatchRegex())
         m_wildCardKeywords[ name ] = ptr;
-    }
 
     if (ptr->isCodeKeyword())
         this->code_keywords.emplace_back( ptr->getName(), ptr->codeEnd() );
@@ -1037,7 +1034,7 @@ void Parser::addParserKeyword( std::unique_ptr< const ParserKeyword >&& parserKe
 
 
 void Parser::addParserKeyword(const Json::JsonObject& jsonKeyword) {
-    addParserKeyword( std::unique_ptr< ParserKeyword >( new ParserKeyword( jsonKeyword ) ) );
+    addParserKeyword( ParserKeyword( jsonKeyword ) );
 }
 
 bool Parser::hasKeyword( const std::string& name ) const {
@@ -1078,7 +1075,7 @@ std::vector<std::string> Parser::getAllDeckNames () const {
         if (jsonKeywords.is_array()) {
             for (size_t index = 0; index < jsonKeywords.size(); index++) {
                 Json::JsonObject jsonKeyword = jsonKeywords.get_array_item(index);
-                addParserKeyword( std::unique_ptr< ParserKeyword >( new ParserKeyword( jsonKeyword ) ) );
+                addParserKeyword( ParserKeyword( jsonKeyword ) );
             }
         } else
             throw std::invalid_argument("Input JSON object is not an array");
@@ -1088,7 +1085,7 @@ std::vector<std::string> Parser::getAllDeckNames () const {
 
         try {
             Json::JsonObject jsonKeyword(configFile);
-            addParserKeyword( std::unique_ptr< ParserKeyword >( new ParserKeyword( jsonKeyword ) ) );
+            addParserKeyword( ParserKeyword( jsonKeyword ) );
             return true;
         }
         catch (...) {
