@@ -27,7 +27,7 @@ GuideRate::GuideRate(const Schedule& schedule_arg) :
 {}
 
 
-double GuideRate::get(const std::string& wgname, size_t report_step) const {
+double GuideRate::get(const std::string& wgname) const {
     const auto& value = this->values.at(wgname);
     return value.value;
 }
@@ -43,7 +43,7 @@ double GuideRate::update(const std::string& wgname, size_t report_step, double s
     } else
         throw std::out_of_range("No such well/group: ");
 
-    return this->get(wgname, report_step);
+    return this->get(wgname);
 }
 
 
@@ -110,11 +110,7 @@ void GuideRate::well_update(const std::string& wgname, size_t report_step, doubl
 }
 
 double GuideRate::eval_form(const GuideRateModel& model, double oil_pot, double gas_pot, double wat_pot, const GuideRateValue * prev) const {
-    double pot = 0;
-    double R1 = 0.5;
-    double R2 = 0.5;
-
-    double new_guide_rate = model.eval(pot, R1, R2);
+    double new_guide_rate = model.eval(oil_pot, gas_pot, wat_pot);
     if (!prev)
         return new_guide_rate;
 

@@ -32,7 +32,7 @@ class GuideRate {
 
 struct GuideRateValue {
     GuideRateValue() = default;
-    GuideRateValue(std::time_t t, double v):
+    GuideRateValue(double t, double v):
         sim_time(t),
         value(v)
     {}
@@ -46,7 +46,7 @@ struct GuideRateValue {
         return !(*this == other);
     }
 
-    std::time_t sim_time;
+    double sim_time;
     double value;
 };
 
@@ -57,7 +57,7 @@ public:
 private:
     void well_update(const std::string& wgname, size_t report_step, double sim_time, double oil_pot, double gas_pot, double wat_pot);
     void group_update(const std::string& wgname, size_t report_step, double sim_time, double oil_pot, double gas_pot, double wat_pot);
-    double get(const std::string& wgname, size_t report_step) const;
+    double get(const std::string& wgname) const;
     double eval_form(const GuideRateModel& model, double oil_pot, double gas_pot, double wat_pot, const GuideRateValue * prev) const;
     double eval_group_pot() const;
     double eval_group_resvinj() const;
