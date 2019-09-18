@@ -149,30 +149,43 @@ int main(int argc, char **argv) {
         return 0;
     }
 
+    std::map<std::string, std::string> to_formatted = {{".EGRID", ".FEGRID"}, {".INIT", ".FINIT"}, {".SMSPEC", ".FSMSPEC"}, 
+        {".UNSMRY", ".FUNSMRY"}, {".UNRST", ".FUNRST"}, {".RFT", ".FRFT"}};
 
+    std::map<std::string, std::string> to_binary = {{".FEGRID", ".EGRID"}, {".FINIT", ".INIT"}, {".FSMSPEC", ".SMSPEC"}, 
+        {".FUNSMRY", ".UNSMRY"}, {".FUNRST", ".UNRST"}, {".FRFT", ".RFT"}};
+        
     if (formattedOutput) {
-        if (extension.substr(1,1)=="X"){
+        
+        auto search = to_formatted.find(extension);
+    
+        if (search != to_formatted.end()){
+            resFile = rootN + search->second;     
+        } else if (extension.substr(1,1)=="X"){
             resFile = rootN + ".F" + extension.substr(2);
         } else if (extension.substr(1,1)=="S"){
             resFile = rootN + ".A" + extension.substr(2);
         } else {
-            resFile = rootN + ".F" + extension.substr(1);
+            std::cout << "\n!ERROR, unknown file type for input file '" << rootN + extension << "'\n" << std::endl;
+            exit(1);
         }
-        
     } else {
-        if (extension.substr(1,1)=="F"){
+        
+        auto search = to_binary.find(extension);
+
+        if (search != to_binary.end()){
+            resFile = rootN + search->second;     
+        } else if (extension.substr(1,1)=="F"){
             resFile = rootN + ".X" + extension.substr(2);
         } else if (extension.substr(1,1)=="A"){
             resFile = rootN + ".S" + extension.substr(2);
         } else {
-            resFile = rootN + "." + extension.substr(2);
+            std::cout << "\n!ERROR, unknown file type for input file '" << rootN + extension << "'\n" << std::endl;
+            exit(1);
         }
     }
 
     std::cout << "\033[1;31m" << "\nconverting  " << argv[argOffset] << " -> " << resFile << "\033[0m\n" << std::endl;
-
-    auto end1 = std::chrono::system_clock::now();
-    std::chrono::duration<double> elapsed_seconds1 = end1 - start;
 
     EclOutput outFile(resFile, formattedOutput);
 
@@ -204,12 +217,10 @@ int main(int argc, char **argv) {
         writeArrayList(arrayList, file1, outFile);
     }
 
+    auto end = std::chrono::system_clock::now();
+    std::chrono::duration<double> elapsed_seconds = end-start;
 
-    auto end2 = std::chrono::system_clock::now();
-    std::chrono::duration<double> elapsed_seconds2 = end2-end1;
-
-    std::cout << "\ntime to load from file : " << argv[argOffset] << ": " << elapsed_seconds1.count() << " seconds" << std::endl;
-    std::cout << "time to write to file  : " << resFile << ": " << elapsed_seconds2.count() << " seconds\n" << std::endl;
+    std::cout << "runtime  : " << argv[argOffset] << ": " << elapsed_seconds.count() << " seconds\n" << std::endl;
 
     return 0;
 }
