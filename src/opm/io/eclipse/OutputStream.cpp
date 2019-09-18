@@ -59,6 +59,11 @@ namespace {
 
             return ext.str();
         }
+
+        std::string rft(const bool formatted)
+        {
+            return formatted ? "FRFT" : "RFT";
+        }
     } // namespace FileExtension
 
     namespace Open
@@ -128,6 +133,31 @@ namespace {
                 };
             }
         } // namespace Restart
+
+        namespace Rft
+        {
+            std::unique_ptr<Opm::EclIO::EclOutput>
+            writeNew(const std::string& filename,
+                     const bool         isFmt)
+            {
+                return std::unique_ptr<Opm::EclIO::EclOutput> {
+                    new Opm::EclIO::EclOutput {
+                        filename, isFmt, std::ios_base::out
+                    }
+                };
+            }
+
+            std::unique_ptr<Opm::EclIO::EclOutput>
+            writeExisting(const std::string& filename,
+                          const bool         isFmt)
+            {
+                return std::unique_ptr<Opm::EclIO::EclOutput> {
+                    new Opm::EclIO::EclOutput {
+                        filename, isFmt, std::ios_base::app
+                    }
+                };
+            }
+        } // namespace Rft
     } // namespace Open
 } // Anonymous namespace
 
@@ -396,6 +426,84 @@ namespace Opm { namespace EclIO { namespace OutputStream {
 
 }}}
 
+// =====================================================================
+
+Opm::EclIO::OutputStream::RFT::
+RFT(const ResultSet&    rset,
+    const Formatted&    fmt,
+    const OpenExisting& existing)
+{
+    const auto fname = outputFileName(rset, FileExtension::rft(fmt.set));
+
+    this->open(fname, fmt.set, existing.set);
+}
+
+Opm::EclIO::OutputStream::RFT::~RFT()
+{}
+
+Opm::EclIO::OutputStream::RFT::RFT(RFT&& rhs)
+    : stream_{ std::move(rhs.stream_) }
+{}
+
+Opm::EclIO::OutputStream::RFT&
+Opm::EclIO::OutputStream::RFT::operator=(RFT&& rhs)
+{
+    this->stream_ = std::move(rhs.stream_);
+
+    return *this;
+}
+
+void
+Opm::EclIO::OutputStream::RFT::
+write(const std::string& kw, const std::vector<int>& data)
+{
+    this->writeImpl(kw, data);
+}
+
+void
+Opm::EclIO::OutputStream::RFT::
+write(const std::string& kw, const std::vector<float>& data)
+{
+    this->writeImpl(kw, data);
+}
+
+void
+Opm::EclIO::OutputStream::RFT::
+write(const std::string&                        kw,
+      const std::vector<PaddedOutputString<8>>& data)
+{
+    this->writeImpl(kw, data);
+}
+
+void
+Opm::EclIO::OutputStream::RFT::
+open(const std::string& fname,
+     const bool         formatted,
+     const bool         existing)
+{
+    this->stream_ = existing
+        ? Open::Rft::writeExisting(fname, formatted)
+        : Open::Rft::writeNew     (fname, formatted);
+}
+
+Opm::EclIO::EclOutput&
+Opm::EclIO::OutputStream::RFT::stream()
+{
+    return *this->stream_;
+}
+
+namespace Opm { namespace EclIO { namespace OutputStream {
+
+    template <typename T>
+    void RFT::writeImpl(const std::string&    kw,
+                        const std::vector<T>& data)
+    {
+        this->stream().write(kw, data);
+    }
+
+}}} // namespace Opm::EclIO::OutputStream
+
+// =====================================================================
 
 std::string
 Opm::EclIO::OutputStream::outputFileName(const ResultSet&   rsetDescriptor,

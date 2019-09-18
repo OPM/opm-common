@@ -276,6 +276,87 @@ namespace Opm { namespace EclIO { namespace OutputStream {
                        const std::vector<T>& data);
     };
 
+    /// File manager for RFT output streams
+    class RFT
+    {
+    public:
+        struct OpenExisting { bool set; };
+
+        /// Constructor.
+        ///
+        /// Opens file stream for writing.
+        ///
+        /// \param[in] rset Output directory and base name of output stream.
+        ///
+        /// \param[in] fmt Whether or not to create formatted output files.
+        ///
+        /// \param[in] existing Whether or not to open an existing output file.
+        explicit RFT(const ResultSet&    rset,
+                     const Formatted&    fmt,
+                     const OpenExisting& existing);
+
+        ~RFT();
+
+        RFT(const RFT& rhs) = delete;
+        RFT(RFT&& rhs);
+
+        RFT& operator=(const RFT& rhs) = delete;
+        RFT& operator=(RFT&& rhs);
+
+        /// Write integer data to underlying output stream.
+        ///
+        /// \param[in] kw Name of output vector (keyword).
+        ///
+        /// \param[in] data Output values.
+        void write(const std::string&      kw,
+                   const std::vector<int>& data);
+
+        /// Write single precision floating point data to underlying
+        /// output stream.
+        ///
+        /// \param[in] kw Name of output vector (keyword).
+        ///
+        /// \param[in] data Output values.
+        void write(const std::string&        kw,
+                   const std::vector<float>& data);
+
+        /// Write padded character data (8 characters per string)
+        /// to underlying output stream.
+        ///
+        /// \param[in] kw Name of output vector (keyword).
+        ///
+        /// \param[in] data Output values.
+        void write(const std::string&                        kw,
+                   const std::vector<PaddedOutputString<8>>& data);
+
+    private:
+        /// Init file output stream.
+        std::unique_ptr<EclOutput> stream_;
+
+        /// Open output stream.
+        ///
+        /// Writes to \c stream_.
+        ///
+        /// \param[in] fname Filename of new output stream.
+        ///
+        /// \param[in] formatted Whether or not to create a
+        ///    formatted output file.
+        ///
+        /// \param[in] existing Whether or not to open an
+        ///    existing output file (mode ios_base::app).
+        void open(const std::string& fname,
+                  const bool         formatted,
+                  const bool         existing);
+
+        /// Access writable output stream.
+        EclOutput& stream();
+
+        /// Implementation function for public \c write overload set.
+        template <typename T>
+        void writeImpl(const std::string&    kw,
+                       const std::vector<T>& data);
+    };
+
     /// Derive filename corresponding to output stream of particular result
     /// set, with user-specified file extension.
     ///
