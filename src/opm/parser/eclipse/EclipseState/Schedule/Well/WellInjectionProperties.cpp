@@ -247,13 +247,13 @@ namespace Opm {
     }
 
 
-Well2::InjectionControls Well2::WellInjectionProperties::controls(const UnitSystem& unit_system, const SummaryState& st, double udq_default) const {
+Well2::InjectionControls Well2::WellInjectionProperties::controls(const UnitSystem& unit_sys, const SummaryState& st, double udq_def) const {
         InjectionControls controls(this->injectionControls);
 
-        controls.surface_rate = UDA::eval_well_uda_rate(this->surfaceInjectionRate, this->name, st, udq_default, this->injectorType, unit_system);
-        controls.reservoir_rate = UDA::eval_well_uda(this->reservoirInjectionRate, this->name, st, udq_default);
-        controls.bhp_limit = UDA::eval_well_uda(this->BHPLimit, this->name, st, udq_default);
-        controls.thp_limit = UDA::eval_well_uda(this->THPLimit, this->name, st, udq_default);
+        controls.surface_rate = UDA::eval_well_uda_rate(this->surfaceInjectionRate, this->name, st, udq_def, this->injectorType, unit_sys);
+        controls.reservoir_rate = UDA::eval_well_uda(this->reservoirInjectionRate, this->name, st, udq_def);
+        controls.bhp_limit = UDA::eval_well_uda(this->BHPLimit, this->name, st, udq_def);
+        controls.thp_limit = UDA::eval_well_uda(this->THPLimit, this->name, st, udq_def);
 
         controls.temperature = this->temperature;
         controls.injector_type = this->injectorType;
