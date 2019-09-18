@@ -7,6 +7,7 @@ namespace Action {
 
 namespace {
 
+#if 0
 inline std::string tokenString(TokenType op) {
     switch (op) {
 
@@ -44,6 +45,7 @@ inline std::string tokenString(TokenType op) {
         return "????";
     }
 }
+#endif
 
 bool eval_cmp_scalar(double lhs, TokenType op, double rhs) {
     switch (op) {

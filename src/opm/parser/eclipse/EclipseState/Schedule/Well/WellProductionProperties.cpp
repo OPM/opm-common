@@ -274,16 +274,16 @@ bool Well2::WellProductionProperties::effectiveHistoryProductionControl(const We
     }
 
 
-    Well2::ProductionControls Well2::WellProductionProperties::controls(const SummaryState& st, double udq_undefined) const {
+    Well2::ProductionControls Well2::WellProductionProperties::controls(const SummaryState& st, double udq_undef) const {
         Well2::ProductionControls controls(this->m_productionControls);
 
-        controls.oil_rate = UDA::eval_well_uda(this->OilRate, this->name, st, udq_undefined);
-        controls.water_rate = UDA::eval_well_uda(this->WaterRate, this->name, st, udq_undefined);
-        controls.gas_rate = UDA::eval_well_uda(this->GasRate, this->name, st, udq_undefined);
-        controls.liquid_rate = UDA::eval_well_uda(this->LiquidRate, this->name, st, udq_undefined);
-        controls.resv_rate = UDA::eval_well_uda(this->ResVRate, this->name, st, udq_undefined);
-        controls.bhp_limit = UDA::eval_well_uda(this->BHPLimit, this->name, st, udq_undefined);
-        controls.thp_limit= UDA::eval_well_uda(this->THPLimit, this->name, st, udq_undefined);
+        controls.oil_rate = UDA::eval_well_uda(this->OilRate, this->name, st, udq_undef);
+        controls.water_rate = UDA::eval_well_uda(this->WaterRate, this->name, st, udq_undef);
+        controls.gas_rate = UDA::eval_well_uda(this->GasRate, this->name, st, udq_undef);
+        controls.liquid_rate = UDA::eval_well_uda(this->LiquidRate, this->name, st, udq_undef);
+        controls.resv_rate = UDA::eval_well_uda(this->ResVRate, this->name, st, udq_undef);
+        controls.bhp_limit = UDA::eval_well_uda(this->BHPLimit, this->name, st, udq_undef);
+        controls.thp_limit= UDA::eval_well_uda(this->THPLimit, this->name, st, udq_undef);
 
         controls.bhp_history = this->BHPH;
         controls.thp_history = this->THPH;

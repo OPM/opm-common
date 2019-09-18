@@ -24,8 +24,7 @@
 
 namespace Opm {
 
-    UDQContext::UDQContext(const UDQParams& params_arg, const UDQFunctionTable& udqft_arg, const SummaryState& summary_state_arg) :
-        params(params_arg),
+    UDQContext::UDQContext(const UDQFunctionTable& udqft_arg, const SummaryState& summary_state_arg) :
         udqft(udqft_arg),
         summary_state(summary_state_arg)
     {
