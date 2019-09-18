@@ -17,6 +17,7 @@
 #FIP           prefix to a possible user-defined longer keyword.
 #              e.g. FIPXAREA or FIPYAREA
 #FOAMFCN       records of records
+#GCONPRI       Eclipse300 specific items
 
 
 set( keywords
@@ -231,13 +232,36 @@ set( keywords
      000_Eclipse100/F/FOAMADS
      000_Eclipse100/F/FOAMDCYO
      000_Eclipse100/F/FOAMDCYW
+     000_Eclipse100/F/FOAMFCN
+     000_Eclipse100/F/FOAMFRM
      000_Eclipse100/F/FOAMFSC
+     000_Eclipse100/F/FOAMFSO
+     000_Eclipse100/F/FOAMFST
+     000_Eclipse100/F/FOAMFSW
      000_Eclipse100/F/FOAMMOB
+     000_Eclipse100/F/FOAMMOBP
+     000_Eclipse100/F/FOAMMOBS
      000_Eclipse100/F/FOAMOPTS
      000_Eclipse100/F/FOAMROCK
+     000_Eclipse100/F/FORMFEED
      000_Eclipse100/F/FRICTION
      000_Eclipse100/F/FULLIMP
      000_Eclipse100/G/GAS
+     000_Eclipse100/G/GASBEGIN
+     000_Eclipse100/G/GASCONC
+     000_Eclipse100/G/GASEND
+     000_Eclipse100/G/GASFCOMP
+     000_Eclipse100/G/GASFDECR
+     000_Eclipse100/G/GASFDELC
+     000_Eclipse100/G/GASFIELD
+     000_Eclipse100/G/GASFTARG
+     000_Eclipse100/G/GASMONTH
+     000_Eclipse100/G/GASPERIO
+     000_Eclipse100/G/GASSATC
+     000_Eclipse100/G/GASYEAR
+     000_Eclipse100/G/GCALECON
+     000_Eclipse100/G/GCONCAL
+     000_Eclipse100/G/GCONENG
      000_Eclipse100/G/GCONINJE
      000_Eclipse100/G/GCONPROD
      000_Eclipse100/G/GCONSALE
