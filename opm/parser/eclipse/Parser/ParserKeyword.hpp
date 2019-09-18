@@ -23,7 +23,7 @@
 #include <string>
 #include <set>
 
-#include <boost/regex.hpp>
+#include <regex>
 
 #include <opm/parser/eclipse/Parser/ParserEnums.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
@@ -148,7 +148,7 @@ namespace Opm {
         DeckNameSet m_deckNames;
         DeckNameSet m_validSectionNames;
         std::string m_matchRegexString;
-        boost::regex m_matchRegex;
+        std::regex m_matchRegex;
         std::vector< ParserRecord > m_records;
         enum ParserKeywordSizeEnum m_keywordSizeType;
         size_t m_fixedSize;

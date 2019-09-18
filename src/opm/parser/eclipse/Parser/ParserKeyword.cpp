@@ -639,7 +639,7 @@ void set_dimensions( ParserItem& item,
 
     void ParserKeyword::setMatchRegex(const std::string& deckNameRegexp) {
         try {
-            m_matchRegex = boost::regex(deckNameRegexp);
+            m_matchRegex = std::regex(deckNameRegexp);
             m_matchRegexString = deckNameRegexp;
         }
         catch (const std::exception &e) {
@@ -659,7 +659,7 @@ void set_dimensions( ParserItem& item,
             return true;
 
         else if (hasMatchRegex())
-            return boost::regex_match( name.begin(), name.end(), m_matchRegex);
+            return std::regex_match( name.begin(), name.end(), m_matchRegex);
 
         return false;
     }
