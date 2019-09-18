@@ -596,6 +596,42 @@ BOOST_AUTO_TEST_CASE(TestFieldAND) {
     }
 }
 
+
+BOOST_AUTO_TEST_CASE(Conditions) {
+    auto location = std::make_pair<std::string, std::size_t>("FILE", 0);
+
+    // Missing comparator
+    BOOST_CHECK_THROW(Action::Condition cond({"WWCT", "OPX"}, location), std::invalid_argument);
+
+    // Missing right hand side
+    BOOST_CHECK_THROW(Action::Condition cond({"WWCT", "OPX", ">"}, location), std::invalid_argument);
+
+    Action::Condition cond({"WWCT", "OPX", ">", "0.75",  "AND"}, location);
+    BOOST_CHECK(cond.cmp == Action::Condition::Comparator::GREATER);
+    BOOST_CHECK(cond.cmp_string == ">" );
+    BOOST_CHECK_EQUAL(cond.lhs.quantity, "WWCT");
+    BOOST_CHECK_EQUAL(cond.lhs.args.size(), 1);
+    BOOST_CHECK_EQUAL(cond.lhs.args[0], "OPX");
+
+    BOOST_CHECK_EQUAL(cond.rhs.quantity, "0.75");
+    BOOST_CHECK_EQUAL(cond.rhs.args.size(), 0);
+    BOOST_CHECK(cond.logic == Action::Condition::Logical::AND);
+
+    Action::Condition cond2({"WWCT", "OPX", "<=", "WSOPR", "OPX", "235"}, location);
+    BOOST_CHECK(cond2.cmp == Action::Condition::Comparator::LESS_EQUAL);
+    BOOST_CHECK(cond2.cmp_string == "<=" );
+    BOOST_CHECK_EQUAL(cond2.lhs.quantity, "WWCT");
+    BOOST_CHECK_EQUAL(cond2.lhs.args.size(), 1);
+    BOOST_CHECK_EQUAL(cond2.lhs.args[0], "OPX");
+
+    BOOST_CHECK_EQUAL(cond2.rhs.quantity, "WSOPR");
+    BOOST_CHECK_EQUAL(cond2.rhs.args.size(), 2);
+    BOOST_CHECK_EQUAL(cond2.rhs.args[0], "OPX");
+    BOOST_CHECK_EQUAL(cond2.rhs.args[1], "235");
+    BOOST_CHECK(cond2.logic == Action::Condition::Logical::END);
+}
+
+
 BOOST_AUTO_TEST_CASE(SCAN2) {
     const auto deck_string = std::string{ R"(
 SCHEDULE
@@ -605,7 +641,7 @@ TSTEP
 
 ACTIONX
    'B' /
-   WWCT 'OPX'     > 0.75    AND /   -- The spaces will/should be normalized in Condition::expression()
+   WWCT 'OPX'     > 0.75    AND /
    FPR < 100 /
 /
 
@@ -672,14 +708,16 @@ TSTEP
     BOOST_CHECK_EQUAL(conditions.size() , 2);
 
     const auto& cond0 = conditions[0];
-    BOOST_CHECK_EQUAL(cond0.expression, "WWCT 'OPX' > 0.75 AND");
-    BOOST_CHECK_EQUAL(cond0.quantity, "WWCT");
+    BOOST_CHECK_EQUAL(cond0.lhs.quantity, "WWCT");
     BOOST_CHECK(cond0.cmp == Action::Condition::Comparator::GREATER);
     BOOST_CHECK(cond0.logic == Action::Condition::Logical::AND);
+    BOOST_CHECK_EQUAL(cond0.lhs.args.size(), 1);
+    BOOST_CHECK_EQUAL(cond0.lhs.args[0], "OPX");
+    BOOST_CHECK_EQUAL(cond0.rhs.args.size(), 0);
+    BOOST_CHECK_EQUAL(cond0.rhs.quantity, "0.75");
 
     const auto& cond1 = conditions[1];
-    BOOST_CHECK_EQUAL(cond1.expression, "FPR < 100");
-    BOOST_CHECK_EQUAL(cond1.quantity, "FPR");
+    BOOST_CHECK_EQUAL(cond1.lhs.quantity, "FPR");
     BOOST_CHECK(cond1.cmp == Action::Condition::Comparator::LESS);
     BOOST_CHECK(cond1.logic == Action::Condition::Logical::END);
 
@@ -691,18 +729,18 @@ TSTEP
     const auto& actB = actions2.get("B");
     const auto& condB = actB.conditions();
     BOOST_CHECK_EQUAL(condB.size() , 1);
-    BOOST_CHECK_EQUAL(condB[0].expression, "FWCT <= 0.50");
-    BOOST_CHECK_EQUAL(condB[0].quantity, "FWCT");
+    BOOST_CHECK_EQUAL(condB[0].lhs.quantity, "FWCT");
     BOOST_CHECK(condB[0].cmp == Action::Condition::Comparator::LESS_EQUAL);
     BOOST_CHECK(condB[0].logic == Action::Condition::Logical::END);
+    BOOST_CHECK_EQUAL(condB[0].cmp_string, "<=");
 
     const auto& actA = actions2.get("A");
     const auto& condA = actA.conditions();
     BOOST_CHECK_EQUAL(condA.size() , 1);
-    BOOST_CHECK_EQUAL(condA[0].expression, "WOPR 'OPX' = 1000");
-    BOOST_CHECK_EQUAL(condA[0].quantity, "WOPR");
+    BOOST_CHECK_EQUAL(condA[0].lhs.quantity, "WOPR");
     BOOST_CHECK(condA[0].cmp == Action::Condition::Comparator::EQUAL);
     BOOST_CHECK(condA[0].logic == Action::Condition::Logical::END);
+    BOOST_CHECK_EQUAL(condA[0].cmp_string , "=");
 
     std::size_t index = 0;
     for (const auto& act : actions2) {

@@ -88,6 +88,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Schedule/Action/ActionParser.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Action/ActionValue.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Action/ASTNode.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/Action/Condition.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/ArrayDimChecker.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Events.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Group/Group2.cpp

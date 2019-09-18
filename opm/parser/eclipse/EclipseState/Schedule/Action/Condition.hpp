@@ -21,9 +21,27 @@
 #define ACTIONX_CONDITION_HPP
 
 #include <string>
+#include <vector>
 
 namespace Opm {
+
 namespace Action {
+
+
+class Quantity {
+public:
+    Quantity() = default;
+
+    Quantity(const std::string& arg) :
+        quantity(arg)
+    {}
+
+    void add_arg(const std::string& arg);
+    std::string quantity;
+    std::vector<std::string> args;
+};
+
+
 
 class Condition {
 public:
@@ -44,21 +62,14 @@ enum class Comparator {
 };
 
 
-    void add_token(const std::string& token) {
-        if (!this->expression.empty())
-            this->expression += " ";
-        this->expression += token;
-    }
-
-    Condition(const std::string& quant) :
-        quantity(quant)
-    {}
+    Condition(const std::vector<std::string>& tokens, const std::pair<std::string, std::size_t>& location);
 
 
-    std::string expression;
-    std::string quantity;
+    Quantity lhs;
+    Quantity rhs;
     Logical logic = Logical::END;
     Comparator cmp = Comparator::INVALID;
+    std::string cmp_string;
 };
 
 
