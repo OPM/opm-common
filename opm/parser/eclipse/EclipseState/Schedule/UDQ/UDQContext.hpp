@@ -34,7 +34,7 @@ namespace Opm {
 
     class UDQContext{
     public:
-        UDQContext(const UDQParams& params, const UDQFunctionTable& udqft, const SummaryState& summary_state);
+        UDQContext(const UDQFunctionTable& udqft, const SummaryState& summary_state);
         double get(const std::string& key) const;
         bool has_well_var(const std::string& well, const std::string& var) const;
         double get_well_var(const std::string& well, const std::string& var) const;
@@ -45,7 +45,6 @@ namespace Opm {
         std::vector<std::string> wells() const;
         std::vector<std::string> groups() const;
     private:
-        const UDQParams& params;
         const UDQFunctionTable& udqft;
         const SummaryState& summary_state;
         std::unordered_map<std::string, double> values;
