@@ -1,0 +1,6 @@
+{"name" : "GASFDELC" , "sections" : ["SCHEDULE"], "size" : 1,
+"items" :
+   [
+        {"name" : "VALUE", "value_type" : "INT"}
+   ]
+}
