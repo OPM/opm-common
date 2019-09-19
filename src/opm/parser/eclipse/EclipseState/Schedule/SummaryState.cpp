@@ -19,6 +19,7 @@
 
 #include <unordered_map>
 #include <cstring>
+#include <ctime>
 #include <iostream>
 #include <iomanip>
 
@@ -55,11 +56,22 @@ namespace {
     SummaryState::SummaryState(std::chrono::system_clock::time_point sim_start_arg):
         sim_start(sim_start_arg)
     {
+        this->update_elapsed(0);
     }
 
 
     void SummaryState::update_elapsed(double delta) {
         this->elapsed += delta;
+        std::time_t sim_time = std::chrono::system_clock::to_time_t( this->sim_start + std::chrono::microseconds(static_cast<std::size_t>(1000000*delta)));
+        struct tm ts;
+        gmtime_r(&sim_time, &ts);
+        int year = ts.tm_year + 1900;
+        int month = ts.tm_mon;
+        int day = ts.tm_mday;
+
+        this->update("YEAR", year);
+        this->update("MNTH", month);
+        this->update("DAY", day);
     }
 
 
