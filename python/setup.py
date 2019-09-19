@@ -81,15 +81,15 @@ setup(
     packages=[
                 'opm',
                 'opm.io',
+                'opm.io.config',
+                'opm.io.deck',
+                'opm.io.ecl_state',
                 'opm.io.parser',
                 'opm.io.schedule',
-                'opm.io.config',
                 'opm.tools'
             ],
     ext_modules=ext_modules,
-    package_data={
-        '': ['cxx/libopmcommon_python.so']
-    },
+    package_data={'opm': ['libopmcommon_python.so']},
     include_package_data=True,
     license='Open Source',
     zip_safe=False,
