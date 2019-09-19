@@ -21,6 +21,7 @@
 #define SUMMARY_STATE_H
 
 #include <string>
+#include <chrono>
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
@@ -66,6 +67,7 @@ namespace Opm{
 class SummaryState {
 public:
     typedef std::unordered_map<std::string, double>::const_iterator const_iterator;
+    explicit SummaryState(std::chrono::system_clock::time_point sim_start_arg);
 
     /*
       The set() function has to be retained temporarily to support updating of
@@ -99,6 +101,7 @@ public:
     std::size_t num_wells() const;
     std::size_t size() const;
 private:
+    std::chrono::system_clock::time_point sim_start;
     double elapsed = 0;
     std::unordered_map<std::string,double> values;
 

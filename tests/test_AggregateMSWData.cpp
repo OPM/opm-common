@@ -496,7 +496,7 @@ END
 
         Opm::SummaryState sim_state()
     {
-        auto state = Opm::SummaryState{};
+        auto state = Opm::SummaryState{std::chrono::system_clock::now()};
 
 	state.update("SPR:PROD:1",   235.);
 	state.update("SPR:PROD:2",   237.);

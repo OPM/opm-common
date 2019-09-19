@@ -154,7 +154,6 @@ namespace {
 
         int wellVFPTab(const Opm::Well2& well, const Opm::SummaryState& st)
         {
-            Opm::SummaryState summaryState;
             if (well.isInjector()) {
                 return well.injectionControls(st).vfp_table_number;
             }

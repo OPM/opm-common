@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(MIX_SCALAR) {
     UDQFunctionTable udqft;
     UDQParams udqp;
     UDQDefine def_add(udqp, "WU", {"WOPR", "+", "1"});
-    SummaryState st;
+    SummaryState st(std::chrono::system_clock::now());
     UDQContext context(udqft, st);
 
     st.update_well_var("P1", "WOPR", 1);
@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(UDQFieldSetTest) {
     UDQFunctionTable udqft(udqp);
     UDQDefine def_fxxx(udqp, "FU_SCALAR", {"123"});
     UDQDefine def_fopr(udqp, "FUOPR", {"SUM", "(", "WOPR", ")"});
-    SummaryState st;
+    SummaryState st(std::chrono::system_clock::now());
     UDQContext context(udqft, st);
 
     st.update_well_var("P1", "WOPR", 1.0);
@@ -149,7 +149,7 @@ BOOST_AUTO_TEST_CASE(UDQ_GROUP_TEST) {
         UDQParams udqp;
         UDQFunctionTable udqft(udqp);
         UDQDefine def_fopr(udqp, "FUOPR", {"SUM", "(", "GOPR", ")"});
-        SummaryState st;
+        SummaryState st(std::chrono::system_clock::now());
         UDQContext context(udqft, st);
 
         st.update_group_var("G1", "GOPR", 1.0);
@@ -170,7 +170,7 @@ BOOST_AUTO_TEST_CASE(UDQ_DEFINETEST) {
     UDQFunctionTable udqft(udqp);
     {
         UDQDefine def(udqp, "WUBHP", {"WBHP"});
-        SummaryState st;
+        SummaryState st(std::chrono::system_clock::now());
         UDQContext context(udqft, st);
 
         st.update_well_var("W1", "WBHP", 11);
@@ -184,7 +184,7 @@ BOOST_AUTO_TEST_CASE(UDQ_DEFINETEST) {
     }
     {
         UDQDefine def(udqp, "WUBHP", {"WBHP" , "'P*'"});
-        SummaryState st;
+        SummaryState st(std::chrono::system_clock::now());
         UDQContext context(udqft, st);
 
 
@@ -201,7 +201,7 @@ BOOST_AUTO_TEST_CASE(UDQ_DEFINETEST) {
     }
     {
         UDQDefine def(udqp, "WUBHP", {"NINT" , "(", "WBHP", ")"});
-        SummaryState st;
+        SummaryState st(std::chrono::system_clock::now());
         UDQContext context(udqft, st);
         st.update_well_var("P1", "WBHP", 4);
         st.update_well_var("P2", "WBHP", 3);
@@ -437,7 +437,7 @@ ASSIGN WU2 8.0 /
 
 
 BOOST_AUTO_TEST_CASE(UDQ_CONTEXT) {
-    SummaryState st;
+    SummaryState st(std::chrono::system_clock::now());
     UDQFunctionTable func_table;
     UDQParams udqp;
     UDQContext ctx(func_table, st);
@@ -846,7 +846,7 @@ BOOST_AUTO_TEST_CASE(UDQ_POW_TEST) {
     UDQParams udqp;
     UDQDefine def_pow1(udqp, "WU", {"WOPR", "+", "WWPR", "*", "WGOR", "^", "WWIR"});
     UDQDefine def_pow2(udqp, "WU", {"(", "WOPR", "+", "WWPR", ")", "^", "(", "WOPR", "+" , "WGOR", "*", "WWIR", "-", "WOPT", ")"});
-    SummaryState st;
+    SummaryState st(std::chrono::system_clock::now());
     UDQContext context(udqft, st);
 
     st.update_well_var("P1", "WOPR", 1);
@@ -865,7 +865,7 @@ BOOST_AUTO_TEST_CASE(UDQ_CMP_TEST) {
     UDQFunctionTable udqft;
     UDQParams udqp;
     UDQDefine def_cmp(udqp, "WU", {"WOPR", ">", "WWPR", "+", "WGOR", "*", "WWIR"});
-    SummaryState st;
+    SummaryState st(std::chrono::system_clock::now());
     UDQContext context(udqft, st);
 
     st.update_well_var("P1", "WOPR",  0);
@@ -892,7 +892,7 @@ BOOST_AUTO_TEST_CASE(UDQ_CMP_TEST) {
 BOOST_AUTO_TEST_CASE(UDQ_SCALAR_SET) {
     UDQParams udqp;
     UDQFunctionTable udqft;
-    SummaryState st;
+    SummaryState st(std::chrono::system_clock::now());
     UDQContext context(udqft, st);
 
     st.update_well_var("P1", "WOPR", 1);
@@ -963,7 +963,7 @@ BOOST_AUTO_TEST_CASE(UDQ_BASIC_MATH_TEST) {
     UDQDefine def_div(udqp, "WU2OPR", {"WOPR", "/", "WOPR"});
     UDQDefine def_muladd(udqp , "WUX", {"WOPR", "+", "WOPR", "*", "WOPR"});
     UDQDefine def_wuwct(udqp , "WUWCT", {"WWPR", "/", "(", "WOPR", "+", "WWPR", ")"});
-    SummaryState st;
+    SummaryState st(std::chrono::system_clock::now());
     UDQContext context(udqft, st);
 
     st.update_well_var("P1", "WOPR", 1);
@@ -1023,7 +1023,7 @@ BOOST_AUTO_TEST_CASE(DECK_TEST) {
     UDQParams udqp;
     UDQFunctionTable udqft(udqp);
     UDQDefine def(udqp, "WUOPRL", {"(", "WOPR", "OP1", "-", "150", ")", "*", "0.90"});
-    SummaryState st;
+    SummaryState st(std::chrono::system_clock::now());
     UDQContext context(udqft, st);
 
     st.update_well_var("OP1", "WOPR", 300);
@@ -1055,7 +1055,7 @@ BOOST_AUTO_TEST_CASE(UDQ_PARSE_ERROR) {
     parseContext.update(ParseContext::UDQ_PARSE_ERROR, InputError::IGNORE);
     {
         UDQDefine def1(udqp, "WUBHP", tokens, parseContext, errors);
-        SummaryState st;
+        SummaryState st(std::chrono::system_clock::now());
         UDQFunctionTable udqft(udqp);
         UDQContext context(udqft, st);
         st.update_well_var("P1", "WBHP", 1);
@@ -1079,7 +1079,7 @@ BOOST_AUTO_TEST_CASE(UDQ_TYPE_ERROR) {
         UDQDefine def1(udqp, "FUBHP", tokens1, parseContext, errors);
         UDQDefine def2(udqp, "WUBHP", tokens2, parseContext, errors);
 
-        SummaryState st;
+        SummaryState st(std::chrono::system_clock::now());
         UDQFunctionTable udqft(udqp);
         UDQContext context(udqft, st);
         st.update_well_var("P1", "WBHP", 1);

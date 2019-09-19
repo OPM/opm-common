@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(CreateGroup_SetInjectorProducer_CorrectStatusSet) {
 
 BOOST_AUTO_TEST_CASE(ControlModeOK) {
     Opm::Group2 group("G1" , 1, 0, 0, UnitSystem::newMETRIC());
-    Opm::SummaryState st;
+    Opm::SummaryState st(std::chrono::system_clock::now());
     const auto& inj = group.injectionControls(st);
     BOOST_CHECK( Opm::Group2::InjectionCMode::NONE == inj.cmode);
 }
@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(ControlModeOK) {
 
 BOOST_AUTO_TEST_CASE(GroupChangePhaseSameTimeThrows) {
     Opm::Group2 group("G1" , 1, 0, 0, UnitSystem::newMETRIC());
-    Opm::SummaryState st;
+    Opm::SummaryState st(std::chrono::system_clock::now());
     const auto& inj = group.injectionControls(st);
     BOOST_CHECK_EQUAL( Opm::Phase::WATER , inj.phase); // Default phase - assumed WATER
 }
@@ -285,7 +285,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithGCONPROD) {
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck );
     Opm::Schedule schedule(deck,  grid, eclipseProperties, runspec);
-    SummaryState st;
+    SummaryState st(std::chrono::system_clock::now());
 
     const auto& group1 = schedule.getGroup2("G1", 0);
     const auto& group2 = schedule.getGroup2("G2", 0);

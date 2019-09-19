@@ -524,7 +524,7 @@ BOOST_AUTO_TEST_CASE(TestMatchingWells2) {
 
 BOOST_AUTO_TEST_CASE(TestMatchingWells_AND) {
     Action::AST ast({"WOPR", "*", ">", "1.0", "AND", "WWCT", "*", "<", "0.50"});
-    SummaryState st;
+    SummaryState st(std::chrono::system_clock::now());
 
     st.update_well_var("OPX", "WOPR", 0);
     st.update_well_var("OPY", "WOPR", 0.50);
@@ -546,7 +546,7 @@ BOOST_AUTO_TEST_CASE(TestMatchingWells_AND) {
 
 BOOST_AUTO_TEST_CASE(TestMatchingWells_OR) {
     Action::AST ast({"WOPR", "*", ">", "1.0", "OR", "WWCT", "*", "<", "0.50"});
-    SummaryState st;
+    SummaryState st(std::chrono::system_clock::now());
 
     st.update_well_var("OPX", "WOPR", 0);
     st.update_well_var("OPY", "WOPR", 0.50);
@@ -571,7 +571,7 @@ BOOST_AUTO_TEST_CASE(TestMatchingWells_OR) {
 
 BOOST_AUTO_TEST_CASE(TestFieldAND) {
     Action::AST ast({"FMWPR", ">=", "4", "AND", "WUPR3", "OP*", "=", "1"});
-    SummaryState st;
+    SummaryState st(std::chrono::system_clock::now());
     Action::Context context(st);
 
     st.update_well_var("OP1", "WUPR3", 3);

@@ -205,7 +205,7 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
 
         BOOST_CHECK( sched.getWell2("W_1", 9).isInjector());
         {
-            SummaryState st;
+            SummaryState st(std::chrono::system_clock::now());
             const auto controls = sched.getWell2("W_1", 9).injectionControls(st);
             BOOST_CHECK_CLOSE(20000/Metric::Time ,  controls.surface_rate  , 0.001);
             BOOST_CHECK_CLOSE(200000/Metric::Time , controls.reservoir_rate, 0.001);
@@ -224,7 +224,7 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
         BOOST_CHECK( Well2::Status::SHUT == sched.getWell2("W_1", 13).getStatus( ));
         BOOST_CHECK( Well2::Status::OPEN == sched.getWell2("W_1", 14).getStatus( ));
         {
-            SummaryState st;
+            SummaryState st(std::chrono::system_clock::now());
             const auto controls = sched.getWell2("W_1", 12).injectionControls(st);
             BOOST_CHECK(  controls.hasControl(Well2::InjectorCMode::RATE ));
             BOOST_CHECK( !controls.hasControl(Well2::InjectorCMode::RESV));
@@ -333,7 +333,7 @@ BOOST_AUTO_TEST_CASE( WellTestGroups ) {
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck);
     Schedule sched(deck,  grid , eclipseProperties, runspec);
-    SummaryState st;
+    SummaryState st(std::chrono::system_clock::now());
 
     BOOST_CHECK_EQUAL( 3U , sched.numGroups() );
     BOOST_CHECK( sched.hasGroup( "INJ" ));

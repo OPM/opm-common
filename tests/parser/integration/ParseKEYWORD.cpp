@@ -1396,7 +1396,7 @@ BOOST_AUTO_TEST_CASE( WCONINJE ) {
     Eclipse3DProperties eclipseProperties( deck , table, grid );
     Runspec runspec (deck);
     Schedule sched( deck, grid, eclipseProperties, runspec);
-    SummaryState st;
+    SummaryState st(std::chrono::system_clock::now());
 
     BOOST_CHECK_EQUAL(5U, sched.numWells());
     BOOST_CHECK(sched.hasWell("PROD1"));

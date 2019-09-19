@@ -51,6 +51,13 @@ namespace {
     }
 
 }
+
+    SummaryState::SummaryState(std::chrono::system_clock::time_point sim_start_arg):
+        sim_start(sim_start_arg)
+    {
+    }
+
+
     void SummaryState::update_elapsed(double delta) {
         this->elapsed += delta;
     }

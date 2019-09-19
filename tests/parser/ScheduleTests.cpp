@@ -1193,7 +1193,7 @@ BOOST_AUTO_TEST_CASE(createDeckModifyMultipleGCONPROD) {
         Eclipse3DProperties eclipseProperties ( deck , table, grid);
         Runspec runspec (deck);
         Opm::Schedule schedule(deck,  grid, eclipseProperties, runspec);
-        Opm::SummaryState st;
+        Opm::SummaryState st(std::chrono::system_clock::now());
 
         Opm::UnitSystem unitSystem = deck.getActiveUnitSystem();
         double siFactorL = unitSystem.parse("LiquidSurfaceVolume/Time").getSIScaling();

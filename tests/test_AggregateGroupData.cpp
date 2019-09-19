@@ -430,7 +430,7 @@ END
 
     Opm::SummaryState sim_state()
     {
-        auto state = Opm::SummaryState{};
+        auto state = Opm::SummaryState{std::chrono::system_clock::now()};
 
         state.update("GOPR:GRP1",   235.);
         state.update("GGPR:GRP1",   100237.);

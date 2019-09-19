@@ -759,7 +759,7 @@ BOOST_AUTO_TEST_CASE(CMODE_DEFAULT) {
 BOOST_AUTO_TEST_CASE(WELL_CONTROLS) {
     Opm::Well2 well("WELL", "GROUP", 0, 0, 0, 0, 1000, Opm::Phase::OIL, Opm::Well2::ProducerCMode::CMODE_UNDEFINED, Opm::Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0);
     Opm::Well2::WellProductionProperties prod("OP1");
-    Opm::SummaryState st;
+    Opm::SummaryState st(std::chrono::system_clock::now());
     well.productionControls(st);
 
     // Use a scalar FIELD variable - that should work; although it is a bit weird.
