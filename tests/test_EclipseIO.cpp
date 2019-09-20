@@ -292,7 +292,7 @@ BOOST_AUTO_TEST_CASE(EclipseIOIntegration) {
         auto& eclGrid = es.getInputGrid();
         Schedule schedule(deck, eclGrid, es.get3DProperties(), es.runspec());
         SummaryConfig summary_config( deck, schedule, es.getTableManager( ));
-        SummaryState st;
+        SummaryState st(std::chrono::system_clock::now());
         es.getIOConfig().setBaseName( "FOO" );
 
         EclipseIO eclWriter( es, eclGrid , schedule, summary_config);

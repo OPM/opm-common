@@ -216,7 +216,7 @@ TSTEP            -- 8
 
     Opm::SummaryState sim_state()
     {
-        auto state = Opm::SummaryState{};
+        auto state = Opm::SummaryState{std::chrono::system_clock::now()};
 
         state.update("WOPR:OP_1" ,    1.0);
         state.update("WWPR:OP_1" ,    2.0);

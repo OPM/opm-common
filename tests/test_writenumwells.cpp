@@ -151,7 +151,7 @@ BOOST_AUTO_TEST_CASE(EclipseWriteRestartWellInfo) {
     const auto num_cells = grid.getCartesianSize();
     EclipseIO eclipseWriter( es,  grid , schedule, summary_config);
     int countTimeStep = schedule.getTimeMap().numTimesteps();
-    SummaryState st;
+    SummaryState st(std::chrono::system_clock::now());
 
     data::Solution solution;
     solution.insert( "PRESSURE",UnitSystem::measure::pressure , std::vector< double >( num_cells, 1 ) , data::TargetType::RESTART_SOLUTION);

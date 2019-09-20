@@ -271,7 +271,7 @@ BOOST_AUTO_TEST_CASE(test_RFT)
         const auto start_time = schedule.posixStartTime();
         const auto step_time  = timeStamp(::Opm::EclIO::ERft::RftDate{ 2008, 10, 10 });
 
-        SummaryState st;
+        SummaryState st(std::chrono::system_clock::now());
 
         data::Rates r1, r2;
         r1.set( data::Rates::opt::wat, 4.11 );
@@ -385,7 +385,7 @@ BOOST_AUTO_TEST_CASE(test_RFT2)
 
         Schedule schedule(deck, eclipseState);
         SummaryConfig summary_config( deck, schedule, eclipseState.getTableManager( ));
-        SummaryState st;
+        SummaryState st(std::chrono::system_clock::now());
 
         const auto  start_time = schedule.posixStartTime();
         const auto& time_map   = schedule.getTimeMap( );

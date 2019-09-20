@@ -349,7 +349,7 @@ data::Solution mkSolution( int numCells ) {
 
 Opm::SummaryState sim_state()
 {
-    auto state = Opm::SummaryState{};
+    auto state = Opm::SummaryState{std::chrono::system_clock::now()};
 
     state.update("WOPR:OP_1" ,    1.0);
     state.update("WWPR:OP_1" ,    2.0);
@@ -546,7 +546,7 @@ BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData) {
 
     Setup setup("FIRST_SIM.DATA");
     EclipseIO eclWriter( setup.es, setup.grid, setup.schedule, setup.summary_config);
-    SummaryState st;
+    SummaryState st(std::chrono::system_clock::now());
     auto state1 = first_sim( setup.es , eclWriter , st, false );
     auto state2 = second_sim( eclWriter , st , keys );
     compare(state1, state2 , keys);
@@ -680,7 +680,7 @@ BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData_double) {
     test_work_area_copy_file( test_area, "FIRST_SIM.DATA");
     Setup setup("FIRST_SIM.DATA");
     EclipseIO eclWriter( setup.es, setup.grid, setup.schedule, setup.summary_config);
-    SummaryState st;
+    SummaryState st(std::chrono::system_clock::now());
 
     auto state1 = first_sim( setup.es , eclWriter , st, true);
     auto state2 = second_sim( eclWriter ,st, solution_keys );
@@ -698,7 +698,7 @@ BOOST_AUTO_TEST_CASE(WriteWrongSOlutionSize) {
         auto num_cells = setup.grid.getNumActive( ) + 1;
         auto cells = mkSolution( num_cells );
         auto wells = mkWells();
-        Opm::SummaryState sumState;
+        Opm::SummaryState sumState(std::chrono::system_clock::now());
 
         const auto seqnum = 1;
         auto rstFile = OS::Restart {
@@ -751,7 +751,7 @@ BOOST_AUTO_TEST_CASE(ExtraData_content) {
         const auto& units = setup.es.getUnits();
         {
             RestartValue restart_value(cells, wells);
-            SummaryState st;
+            SummaryState st(std::chrono::system_clock::now());
             const auto sumState = sim_state();
 
             restart_value.addExtra("EXTRA", UnitSystem::measure::pressure, {10,1,2,3});
@@ -947,7 +947,7 @@ BOOST_AUTO_TEST_CASE(Restore_Cumulatives)
                         setup.es, setup.grid, setup.schedule, sumState);
     }
 
-    SummaryState rstSumState;
+    SummaryState rstSumState(std::chrono::system_clock::now());
     RestartIO::load(OS::outputFileName(rset, "UNRST"), seqnum, rstSumState,
                     /* solution_keys = */ {
                                            RestartKey("SWAT", UnitSystem::measure::identity),

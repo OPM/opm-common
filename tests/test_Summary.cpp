@@ -27,6 +27,7 @@
 #include <exception>
 #include <stdexcept>
 #include <unordered_map>
+#include <ctime>
 
 #include <ert/ecl/ecl_sum.h>
 #include <ert/ecl/smspec_node.h>
@@ -311,7 +312,7 @@ BOOST_AUTO_TEST_CASE(well_keywords) {
     util_make_path( "PATH" );
     cfg.name = "PATH/CASE";
 
-    SummaryState st;
+    SummaryState st(std::chrono::system_clock::now());
 
     out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule , cfg.name );
     writer.eval(st, 0, 0*day, cfg.es, cfg.schedule, cfg.wells, {});
@@ -528,7 +529,7 @@ BOOST_AUTO_TEST_CASE(udq_keywords) {
     setup cfg( "test_summary_udq" );
 
     out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule , cfg.name );
-    SummaryState st;
+    SummaryState st(std::chrono::system_clock::now());
     writer.eval( st, 0, 0 * day, cfg.es, cfg.schedule, cfg.wells , {});
     writer.add_timestep( st, 0);
     writer.eval( st, 1, 1 * day, cfg.es, cfg.schedule, cfg.wells , {});
@@ -550,7 +551,7 @@ BOOST_AUTO_TEST_CASE(group_keywords) {
     setup cfg( "test_summary_group" );
 
     out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule, cfg.name );
-    SummaryState st;
+    SummaryState st(std::chrono::system_clock::now());
     writer.eval( st, 0, 0 * day, cfg.es, cfg.schedule, cfg.wells ,  {});
     writer.add_timestep( st, 0);
 
@@ -694,7 +695,7 @@ BOOST_AUTO_TEST_CASE(group_group) {
     setup cfg( "test_summary_group_group" , "group_group.DATA");
 
     out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule, cfg.name );
-    SummaryState st;
+    SummaryState st(std::chrono::system_clock::now());
     writer.eval( st, 0, 0 * day, cfg.es, cfg.schedule, cfg.wells , {});
     writer.add_timestep( st, 0);
     writer.eval( st, 1, 1 * day, cfg.es, cfg.schedule, cfg.wells , {});
@@ -750,7 +751,7 @@ BOOST_AUTO_TEST_CASE(completion_kewords) {
     setup cfg( "test_summary_completion" );
 
     out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule, cfg.name );
-    SummaryState st;
+    SummaryState st(std::chrono::system_clock::now());
     writer.eval( st, 0, 0 * day, cfg.es, cfg.schedule, cfg.wells ,  {});
     writer.add_timestep( st, 0);
     writer.eval( st, 1, 1 * day, cfg.es, cfg.schedule, cfg.wells ,  {});
@@ -812,7 +813,7 @@ BOOST_AUTO_TEST_CASE(field_keywords) {
     setup cfg( "test_summary_field" );
 
     out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule, cfg.name );
-    SummaryState st;
+    SummaryState st(std::chrono::system_clock::now());
     writer.eval( st, 0, 0 * day, cfg.es, cfg.schedule, cfg.wells ,  {});
     writer.add_timestep( st, 0);
     writer.eval( st, 1, 1 * day, cfg.es, cfg.schedule, cfg.wells ,  {});
@@ -941,7 +942,7 @@ BOOST_AUTO_TEST_CASE(report_steps_time) {
     setup cfg( "test_summary_report_steps_time" );
 
     out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule, cfg.name );
-    SummaryState st;
+    SummaryState st(std::chrono::system_clock::now());
     writer.eval( st, 1, 2 *  day, cfg.es, cfg.schedule, cfg.wells ,  {});
     writer.add_timestep( st, 1);
     writer.eval( st, 1, 5 *  day, cfg.es, cfg.schedule, cfg.wells ,  {});
@@ -967,7 +968,7 @@ BOOST_AUTO_TEST_CASE(skip_unknown_var) {
     setup cfg( "test_summary_skip_unknown_var" );
 
     out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule, cfg.name );
-    SummaryState st;
+    SummaryState st(std::chrono::system_clock::now());
     writer.eval( st, 1, 2 *  day, cfg.es,  cfg.schedule, cfg.wells ,  {});
     writer.add_timestep( st, 1);
     writer.eval( st, 1, 5 *  day, cfg.es,  cfg.schedule, cfg.wells ,  {});
@@ -1078,7 +1079,7 @@ BOOST_AUTO_TEST_CASE(region_vars) {
 
     {
         out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule, cfg.name );
-        SummaryState st;
+        SummaryState st(std::chrono::system_clock::now());
         writer.eval( st, 1, 2 *  day, cfg.es, cfg.schedule, cfg.wells,  {}, region_values);
         writer.add_timestep( st, 1);
         writer.eval( st, 1, 5 *  day, cfg.es, cfg.schedule, cfg.wells,  {}, region_values);
@@ -1129,7 +1130,7 @@ BOOST_AUTO_TEST_CASE(region_production) {
 
     {
         out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule, cfg.name );
-        SummaryState st;
+        SummaryState st(std::chrono::system_clock::now());
         writer.eval( st, 0, 0 * day, cfg.es, cfg.schedule, cfg.wells ,  {});
         writer.add_timestep( st, 0);
         writer.eval( st, 1, 1 * day, cfg.es, cfg.schedule, cfg.wells ,  {});
@@ -1161,7 +1162,7 @@ BOOST_AUTO_TEST_CASE(region_injection) {
     setup cfg( "region_injection" );
 
     out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule, cfg.name );
-    SummaryState st;
+    SummaryState st(std::chrono::system_clock::now());
     writer.eval( st, 0, 0 * day, cfg.es, cfg.schedule, cfg.wells ,  {});
     writer.add_timestep( st, 0);
     writer.eval( st, 1, 1 * day, cfg.es, cfg.schedule, cfg.wells ,  {});
@@ -1217,7 +1218,7 @@ BOOST_AUTO_TEST_CASE(BLOCK_VARIABLES) {
     block_values[std::make_pair("BOVIS", 1)] = 33.0;
 
     out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule, cfg.name );
-    SummaryState st;
+    SummaryState st(std::chrono::system_clock::now());
     writer.eval( st, 0, 0 * day, cfg.es, cfg.schedule, cfg.wells ,  {},{}, block_values);
     writer.add_timestep( st, 0);
     writer.eval( st, 1, 1 * day, cfg.es, cfg.schedule, cfg.wells ,  {},{}, block_values);
@@ -1314,7 +1315,7 @@ BOOST_AUTO_TEST_CASE(MISC) {
     setup cfg( "test_misc");
 
     out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule , cfg.name );
-    SummaryState st;
+    SummaryState st(std::chrono::system_clock::now());
     writer.eval( st, 0, 0 * day, cfg.es, cfg.schedule, cfg.wells ,  {});
     writer.add_timestep( st, 0);
     writer.eval( st, 1, 1 * day, cfg.es, cfg.schedule, cfg.wells ,  {});
@@ -1334,7 +1335,7 @@ BOOST_AUTO_TEST_CASE(EXTRA) {
 
     {
         out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule , cfg.name );
-        SummaryState st;
+        SummaryState st(std::chrono::system_clock::now());
         writer.eval( st, 0, 0 * day, cfg.es, cfg.schedule, cfg.wells ,  { {"TCPU" , 0 }});
         writer.add_timestep( st, 0);
         writer.eval( st, 1, 1 * day, cfg.es, cfg.schedule, cfg.wells ,  { {"TCPU" , 1 }});
@@ -1432,7 +1433,7 @@ BOOST_AUTO_TEST_CASE(efficiency_factor) {
         setup cfg( "test_efficiency_factor", "SUMMARY_EFF_FAC.DATA" );
 
         out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule, cfg.name );
-        SummaryState st;
+        SummaryState st(std::chrono::system_clock::now());
         writer.eval( st, 0, 0 * day, cfg.es, cfg.schedule, cfg.wells, {});
         writer.add_timestep( st, 0);
         writer.eval( st, 1, 1 * day, cfg.es, cfg.schedule, cfg.wells, {});
@@ -1504,7 +1505,7 @@ BOOST_AUTO_TEST_CASE(efficiency_factor) {
 
 
 BOOST_AUTO_TEST_CASE(Test_SummaryState) {
-    Opm::SummaryState st;
+    Opm::SummaryState st(std::chrono::system_clock::now());
     st.update("WWCT:OP_2", 100);
     BOOST_CHECK_CLOSE(st.get("WWCT:OP_2"), 100, 1e-5);
     BOOST_CHECK_THROW(st.get("NO_SUCH_KEY"), std::out_of_range);
@@ -1550,7 +1551,7 @@ BOOST_AUTO_TEST_CASE(Test_SummaryState) {
     BOOST_CHECK_EQUAL(std::count(all_wells.begin(), all_wells.end(), "OP2"), 1);
     BOOST_CHECK_EQUAL(std::count(all_wells.begin(), all_wells.end(), "OP3"), 1);
 
-    BOOST_CHECK_EQUAL(st.size(), 8);
+    BOOST_CHECK_EQUAL(st.size(), 11); // Size = 8 + 3 - where the the three are DAY, MNTH and YEAR
 
     // The well 'OP_2' which was indirectly added with the
     // st.update("WWCT:OP_2", 100) call is *not* counted as a well!
@@ -1569,7 +1570,7 @@ namespace {
             config.schedule, "Ignore.This"
         };
 
-      SummaryState st;
+      SummaryState st(std::chrono::system_clock::now());
       smry.eval(st, 0, 0*day, config.es, config.schedule, config.wells, {});
       smry.add_timestep(st, 0);
       smry.eval(st, 1, 1*day, config.es, config.schedule, config.wells, {});
@@ -2565,7 +2566,7 @@ BOOST_AUTO_TEST_CASE(Write_Read)
         config.es, config.config, config.grid, config.schedule
     };
 
-    SummaryState st;
+    SummaryState st(std::chrono::system_clock::now());
     writer.eval(st, 0, 0*day, config.es, config.schedule, config.wells, {});
     writer.add_timestep(st, 0);
     writer.eval(st, 1, 1*day, config.es, config.schedule, config.wells, {});
@@ -3061,7 +3062,7 @@ BOOST_AUTO_TEST_SUITE(Reset_Cumulative_Vectors)
 
 
 BOOST_AUTO_TEST_CASE(SummaryState_TOTAL) {
-    SummaryState st;
+    SummaryState st(std::chrono::system_clock::now());
     st.update("FOPR", 100);
     BOOST_CHECK_EQUAL(st.get("FOPR"), 100);
     st.update("FOPR", 100);
@@ -3162,7 +3163,7 @@ bool equal(const SummaryState& st1 , const SummaryState& st2) {
 
 
 void test_serialize(const SummaryState& st) {
-    SummaryState st2;
+    SummaryState st2(std::chrono::system_clock::now());
     auto serial = st.serialize();
     st2.deserialize(serial);
     BOOST_CHECK( equal(st, st2));
@@ -3175,7 +3176,7 @@ void test_serialize(const SummaryState& st) {
 
 
 BOOST_AUTO_TEST_CASE(serialize_sumary_state) {
-    SummaryState st;
+    SummaryState st(std::chrono::system_clock::now());
     test_serialize(st);
 
     st.update_elapsed(1000);
@@ -3199,6 +3200,32 @@ BOOST_AUTO_TEST_CASE(serialize_sumary_state) {
     st.update_group_var("G2", "GGOR", 0.67);
     test_serialize(st);
 
+}
+
+
+BOOST_AUTO_TEST_CASE(SummaryState__TIME) {
+    struct tm ts;
+    ts.tm_year = 100;
+    ts.tm_mon = 1;
+    ts.tm_mday = 1;
+    ts.tm_hour = 0;
+    ts.tm_min = 0;
+    ts.tm_sec = 0;
+    auto start_time = timegm(&ts);
+    SummaryState st(std::chrono::system_clock::from_time_t(start_time));
+    BOOST_CHECK_EQUAL(st.get("YEAR"), 2000);
+    BOOST_CHECK_EQUAL(st.get("DAY"), 1);
+    BOOST_CHECK_EQUAL(st.get("MNTH"), 1);
+
+    // Next day
+    st.update_elapsed(100000);
+    BOOST_CHECK_EQUAL(st.get("YEAR"), 2000);
+    BOOST_CHECK_EQUAL(st.get("DAY"), 2);
+    BOOST_CHECK_EQUAL(st.get("MNTH"), 1);
+
+    // Well into 2001
+    st.update_elapsed(400 * 86400);
+    BOOST_CHECK_EQUAL(st.get("YEAR"), 2001);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -1269,7 +1269,7 @@ Summary::Summary( const EclipseState& st,
      * entry.
      */
     std::set< std::string > unsupported_keywords;
-
+    SummaryState summary_state(std::chrono::system_clock::from_time_t(schedule.getStartTime()));
     for( const auto& node : sum ) {
         ecl_smspec_type * smspec = ecl_sum_get_smspec(this->ecl_sum.get());
         std::string keyword = node.keyword();
@@ -1318,13 +1318,13 @@ Summary::Summary( const EclipseState& st,
             const auto handle = funs_pair->second;
             const std::vector< Well2 > dummy_wells;
 
-            const fn_args no_args { dummy_wells, // Wells from Schedule object
-                                    0,           // Duration of time step
-                                    0,           // Simulation step
+            const fn_args no_args { dummy_wells,   // Wells from Schedule object
+                                    0,             // Duration of time step
+                                    0,             // Simulation step
                                     node.num(),
-                                    {},          // SummaryState
-                                    {},          // Well results - data::Wells
-                                    {},          // Region <-> cell mappings.
+                                    summary_state, // SummaryState
+                                    {},            // Well results - data::Wells
+                                    {},            // Region <-> cell mappings.
                                     this->grid,
                                     {}};
 
