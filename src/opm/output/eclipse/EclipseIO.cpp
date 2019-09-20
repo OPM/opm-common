@@ -39,128 +39,24 @@
 #include <opm/output/eclipse/RestartIO.hpp>
 #include <opm/output/eclipse/Summary.hpp>
 #include <opm/output/eclipse/WriteInit.hpp>
+#include <opm/output/eclipse/WriteRFT.hpp>
 
 #include <opm/io/eclipse/OutputStream.hpp>
 
+#include <algorithm>
 #include <cstdlib>
+#include <cctype>
 #include <memory>     // unique_ptr
 #include <unordered_map>
 #include <utility>    // move
 
-#include <ert/ecl/EclKW.hpp>
 #include <ert/ecl/EclFilename.hpp>
-
-#include <ert/ecl/ecl_kw_magic.h>
-#include <ert/ecl/ecl_kw.h>
-#include <ert/ecl/ecl_init_file.h>
-#include <ert/ecl/ecl_file.h>
-#include <ert/ecl/ecl_grid.h>
-#include <ert/ecl/ecl_rft_file.h>
-#include <ert/ecl/ecl_rst_file.h>
-#include <ert/ecl_well/well_const.h>
-#include <ert/ecl/ecl_rsthead.h>
+#include <ert/ecl/ecl_util.hpp>
 #include <ert/util/util.h>
-#include <ert/ecl/fortio.h>
-
-#define OPM_XWEL      "OPM_XWEL"
-#define OPM_IWEL      "OPM_IWEL"
 
 // namespace start here since we don't want the ERT headers in it
 namespace Opm {
 namespace {
-
-class RFT {
-    public:
-    RFT( const std::string&  output_dir,
-         const std::string&  basename,
-         bool format );
-
-        void writeTimeStep( const Schedule& schedule,
-                            const EclipseGrid& grid,
-                            std::size_t report_step,
-                            time_t current_time,
-                            double days,
-                            const UnitSystem& units,
-                            data::Wells wellData);
-    private:
-        std::string filename;
-        bool fmt_file;
-};
-
-
-    RFT::RFT( const std::string& output_dir,
-              const std::string& basename,
-              bool format ) :
-        filename( ERT::EclFilename( output_dir, basename, ECL_RFT_FILE, format ) ),
-        fmt_file( format )
-{}
-
-
-void RFT::writeTimeStep( const Schedule& schedule,
-                         const EclipseGrid& grid,
-                         std::size_t report_step,
-                         time_t current_time,
-                         double days,
-                         const UnitSystem& units,
-                         data::Wells wellDatas) {
-    using rft = ERT::ert_unique_ptr< ecl_rft_node_type, ecl_rft_node_free >;
-    const auto& rft_config = schedule.rftConfig();
-    auto well_names = schedule.wellNames(report_step);
-    if (!rft_config.active(report_step))
-        return;
-
-    fortio_type * fortio;
-
-    if (report_step > rft_config.firstRFTOutput())
-        fortio = fortio_open_append( filename.c_str() , fmt_file , ECL_ENDIAN_FLIP );
-    else
-        fortio = fortio_open_writer( filename.c_str() , fmt_file , ECL_ENDIAN_FLIP );
-
-    for ( const auto& well_name : well_names ) {
-
-        if (!(rft_config.rft(well_name, report_step) || rft_config.plt(well_name, report_step)))
-            continue;
-
-        rft rft_node(ecl_rft_node_alloc_new( well_name.c_str(), "RFT", current_time, days ));
-        const auto& wellData = wellDatas.at(well_name);
-
-        if (wellData.connections.empty())
-            continue;
-
-        const auto& well = schedule.getWell2(well_name, report_step);
-        for( const auto& connection : well.getConnections() ) {
-
-            const size_t i = size_t( connection.getI() );
-            const size_t j = size_t( connection.getJ() );
-            const size_t k = size_t( connection.getK() );
-
-            if( !grid.cellActive( i, j, k ) ) continue;
-
-            const auto index = grid.getGlobalIndex( i, j, k );
-            const double depth = grid.getCellDepth( i, j, k );
-
-            const auto& connectionData = std::find_if( wellData.connections.begin(),
-                                                   wellData.connections.end(),
-                                                   [=]( const data::Connection& c ) {
-                                                        return c.index == index;
-                                                   } );
-
-
-            const double press = units.from_si(UnitSystem::measure::pressure,connectionData->cell_pressure);
-            const double satwat = units.from_si(UnitSystem::measure::identity, connectionData->cell_saturation_water);
-            const double satgas = units.from_si(UnitSystem::measure::identity, connectionData->cell_saturation_gas);
-
-            auto* cell = ecl_rft_cell_alloc_RFT(
-                            i, j, k, depth, press, satwat, satgas );
-
-            ecl_rft_node_append_cell( rft_node.get(), cell );
-        }
-
-        ecl_rft_node_fwrite( rft_node.get(), fortio, units.getEclType() );
-    }
-
-    fortio_fclose( fortio );
-}
 
 inline std::string uppercase( std::string x ) {
     std::transform( x.begin(), x.end(), x.begin(),
@@ -183,7 +79,6 @@ class EclipseIO::Impl {
         std::string outputDir;
         std::string baseName;
         out::Summary summary;
-        RFT rft;
         bool output_enabled;
 };
 
@@ -197,7 +92,6 @@ EclipseIO::Impl::Impl( const EclipseState& eclipseState,
     , outputDir( eclipseState.getIOConfig().getOutputDir() )
     , baseName( uppercase( eclipseState.getIOConfig().getBaseName() ) )
     , summary( eclipseState, summary_config, grid , schedule )
-    , rft( outputDir.c_str(), baseName.c_str(), es.getIOConfig().getFMTOUT() )
     , output_enabled( eclipseState.getIOConfig().getOutputEnabled() )
 {}
 
@@ -259,19 +153,14 @@ void EclipseIO::writeTimeStep(const SummaryState& st,
                               RestartValue value,
                               const bool write_double)
  {
-
-    if( !this->impl->output_enabled )
+    if (! this->impl->output_enabled) {
         return;
-
+    }
 
     const auto& es = this->impl->es;
     const auto& grid = this->impl->grid;
     const auto& schedule = this->impl->schedule;
-    const auto& units = es.getUnits();
-    const auto& ioConfig = es.getIOConfig();
-    const auto& restart = es.cfg().restart();
-
-
+    const auto& ioConfig = es.cfg().io();
 
     /*
       Summary data is written unconditionally for every timestep except for the
@@ -288,7 +177,7 @@ void EclipseIO::writeTimeStep(const SummaryState& st,
       but there is an unsupported option to the RPTSCHED keyword which
       will request restart output from every timestep.
     */
-    if(!isSubstep && restart.getWriteRestartFile(report_step))
+    if(!isSubstep && es.cfg().restart().getWriteRestartFile(report_step))
     {
         EclIO::OutputStream::Restart rstFile {
             EclIO::OutputStream::ResultSet { this->impl->outputDir,
@@ -298,25 +187,28 @@ void EclipseIO::writeTimeStep(const SummaryState& st,
             EclIO::OutputStream::Unified   { ioConfig.getUNIFOUT() }
         };
 
-        RestartIO::save(rstFile, report_step, secs_elapsed, value, es, grid, schedule,
-                        st, write_double);
+        RestartIO::save(rstFile, report_step, secs_elapsed, value,
+                        es, grid, schedule, st, write_double);
     }
 
+    // RFT file is not written for substeps
+    if (! isSubstep) {
+        // Open existing RFT file if report step is after first RFT event.
+        const auto openExisting = EclIO::OutputStream::RFT::OpenExisting {
+            static_cast<std::size_t>(report_step)
+            > schedule.rftConfig().firstRFTOutput()
+        };
 
-    /*
-      RFT files are not written for substep.
-    */
-    if( isSubstep )
-        return;
+        EclIO::OutputStream::RFT rftFile {
+            EclIO::OutputStream::ResultSet { this->impl->outputDir,
+                                             this->impl->baseName },
+            EclIO::OutputStream::Formatted { ioConfig.getFMTOUT() },
+            openExisting
+        };
 
-    this->impl->rft.writeTimeStep( schedule,
-                                   grid,
-                                   report_step,
-                                   secs_elapsed + this->impl->schedule.posixStartTime(),
-                                   units.from_si( UnitSystem::measure::time, secs_elapsed ),
-                                   units,
-                                   value.wells );
-
+        RftIO::write(report_step, secs_elapsed, es.getUnits(),
+                     grid, schedule, value.wells, rftFile);
+    }
  }
 
 
