@@ -2369,6 +2369,15 @@ void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, c
         return groups.count(groupName) > 0;
     }
 
+    bool Schedule::hasGroup(const std::string& groupName, std::size_t timeStep) const {
+        if (timeStep >= this->size())
+            return false;
+
+        auto grpMap = this->groups.find(groupName);
+
+        return (grpMap != this->groups.end())
+            && grpMap->second.at(timeStep);
+    }
 
     void Schedule::addGroupToGroup( const std::string& parent_group, const Group2& child_group, size_t timeStep) {
         // Add to new parent

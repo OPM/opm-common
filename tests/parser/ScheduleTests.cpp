@@ -526,6 +526,85 @@ BOOST_AUTO_TEST_CASE(EmptyScheduleHasFIELDGroup) {
     BOOST_CHECK_THROW( schedule.getGroup2("GROUP", 0) , std::invalid_argument );
 }
 
+BOOST_AUTO_TEST_CASE(HasGroup_At_Time) {
+    const auto input = std::string { R"(
+RUNSPEC
+DIMENS
+  5 5 5 /
+OIL
+WATER
+TABDIMS
+/
+WELLDIMS
+  2  10  3  2 /
+GRID
+DXV
+  5*100 /
+DYV
+  5*100 /
+DZV
+  5*5 /
+TOPS
+  25*2500 /
+PERMX
+  125*500 /
+COPY
+  'PERMX' 'PERMY' /
+  'PERMX' 'PERMZ' /
+/
+MULTIPLY
+  'PERMZ' 0.1 /
+/
+PROPS
+SWOF
+0 0 1 0
+1 1 0 0 /
+SCHEDULE
+WELSPECS
+-- Group 'P' exists from the first report step
+  'P1' 'P' 1 1  2502.5  'OIL' /
+/
+WCONPROD
+  'P1' 'OPEN' 'ORAT'  123.4  4*  50.0 /
+/
+TSTEP
+  10 20 30 40 /
+WELSPECS
+-- Group 'I' does not exist before now (report step 4, zero-based = 3)
+  'I1' 'I' 5 5 2522.5 'WATER' /
+/
+WCONINJE
+  'I1' 'WATER'  'OPEN'  'RATE'  200  1*  450.0 /
+/
+TSTEP
+  50 50 /
+END
+)"
+    };
+
+    const auto deck = ::Opm::Parser{}.parseString(input);
+    const auto es = ::Opm::EclipseState{deck};
+    const auto sched = ::Opm::Schedule{ deck, es };
+
+    BOOST_CHECK_MESSAGE(sched.hasGroup("P"), R"(Group "P" Must Exist)");
+    BOOST_CHECK_MESSAGE(sched.hasGroup("I"), R"(Group "I" Must Exist)");
+
+    BOOST_CHECK_MESSAGE(  sched.hasGroup("P", 3), R"(Group "P" Must Exist at Report Step 3)");
+    BOOST_CHECK_MESSAGE(! sched.hasGroup("I", 3), R"(Group "I" Must NOT Exist at Report Step 3)");
+    BOOST_CHECK_MESSAGE(  sched.hasGroup("I", 4), R"(Group "I" Must Exist at Report Step 4)");
+
+    BOOST_CHECK_MESSAGE(sched.hasGroup("P", 6), R"(Group "P" Must Exist At Last Report Step)");
+    BOOST_CHECK_MESSAGE(sched.hasGroup("I", 6), R"(Group "I" Must Exist At Last Report Step)");
+
+    BOOST_CHECK_MESSAGE(! sched.hasGroup("P", 7), R"(Group "P" Must NOT Exist Immediately After Last Report Step)");
+    BOOST_CHECK_MESSAGE(! sched.hasGroup("I", 7), R"(Group "I" Must NOT Exist Immediately After Last Report Step)");
+
+    BOOST_CHECK_MESSAGE(! sched.hasGroup("P", 1729), R"(Group "P" Must NOT Exist Long After Last Report Step)");
+    BOOST_CHECK_MESSAGE(! sched.hasGroup("I", 1729), R"(Group "I" Must NOT Exist Long After Last Report Step)");
+
+    BOOST_CHECK_THROW(const auto& grp = sched.getGroup2("I", 3), std::invalid_argument);
+}
+
 BOOST_AUTO_TEST_CASE(WellsIterator_Empty_EmptyVectorReturned) {
     EclipseGrid grid(10,10,10);
     auto deck = createDeck();
