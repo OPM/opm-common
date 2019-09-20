@@ -149,7 +149,7 @@ UDAValue& DeckItem::get( size_t index ) {
 */
 
 template< typename T >
-const T& DeckItem::get( size_t index ) const {
+T DeckItem::get( size_t index ) const {
     return this->value_ref< T >().at( index );
 }
 
@@ -492,10 +492,10 @@ bool DeckItem::to_bool(std::string string_value) {
  * updated with changes in DeckItem so that code is emitted.
  */
 
-template const int& DeckItem::get< int >( size_t ) const;
-template const double& DeckItem::get< double >( size_t ) const;
-template const std::string& DeckItem::get< std::string >( size_t ) const;
-template const UDAValue& DeckItem::get< UDAValue >( size_t ) const;
+template int DeckItem::get< int >( size_t ) const;
+template double DeckItem::get< double >( size_t ) const;
+template std::string DeckItem::get< std::string >( size_t ) const;
+template UDAValue DeckItem::get< UDAValue >( size_t ) const;
 
 template const std::vector< int >& DeckItem::getData< int >() const;
 template const std::vector< double >& DeckItem::getData< double >() const;

@@ -61,7 +61,7 @@ namespace Opm {
         size_t out_size() const;
 
         //template< typename T > T& get( size_t ) ;
-        template< typename T > const T& get( size_t ) const;
+        template< typename T > T get( size_t ) const;
         double getSIDouble( size_t ) const;
         std::string getTrimmedString( size_t ) const;
 
