@@ -10,7 +10,6 @@ void python::common::export_all(py::module& module) {
     export_Schedule(module);
     export_Well(module);
     export_Group(module);
-    export_GroupTree(module);
     export_Connection(module);
     export_EclipseConfig(module);
     export_Eclipse3DProperties(module);
