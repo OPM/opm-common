@@ -1,17 +1,13 @@
 #ifndef OPM_EQUIL_HPP
 #define OPM_EQUIL_HPP
 
+#include <cstddef>
 #include <vector>
 
 namespace Opm {
-
     class DeckKeyword;
-    class DeckRecord;
-
     class EquilRecord {
         public:
-            explicit EquilRecord( const DeckRecord& );
-
             double datumDepth() const;
             double datumDepthPressure() const;
             double waterOilContactDepth() const;
@@ -23,7 +19,9 @@ namespace Opm {
             bool wetGasInitConstantRv() const;
             int initializationTargetAccuracy() const;
 
+            EquilRecord( double datum_depth_arg, double datum_depth_pc_arg, double woc_depth, double woc_pc, double goc_depth, double goc_pc, bool live_oil_init, bool wet_gas_init, int target_accuracy);
         private:
+
             double datum_depth;
             double datum_depth_ps;
             double water_oil_contact_depth;
