@@ -4,7 +4,6 @@ import sys
 
 from opm.io.parser import Parser
 from opm.io.parser import ParseContext
-from opm.io.parser import ParserKeyword
 
 
 class TestParser(unittest.TestCase):
