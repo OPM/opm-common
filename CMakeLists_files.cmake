@@ -208,6 +208,8 @@ if(ENABLE_ECL_OUTPUT)
           src/opm/io/eclipse/ERst.cpp
           src/opm/io/eclipse/ESmry.cpp
           src/opm/io/eclipse/OutputStream.cpp
+          src/opm/output/eclipse/Summary/BlockParameter.cpp
+          src/opm/output/eclipse/Summary/SummaryParameter.cpp
           src/opm/output/eclipse/AggregateConnectionData.cpp
           src/opm/output/eclipse/AggregateGroupData.cpp
           src/opm/output/eclipse/AggregateMSWData.cpp
@@ -338,6 +340,7 @@ if(ENABLE_ECL_OUTPUT)
           tests/test_RFT.cpp
           tests/test_Solution.cpp
           tests/test_Summary.cpp
+          tests/test_SummaryParameter.cpp
           tests/test_Tables.cpp
           tests/test_Wells.cpp
           tests/test_WindowedArray.cpp
@@ -643,6 +646,8 @@ if(ENABLE_ECL_OUTPUT)
         opm/output/data/Cells.hpp
         opm/output/data/Solution.hpp
         opm/output/data/Wells.hpp
+        opm/output/eclipse/Summary/BlockParameter.hpp
+        opm/output/eclipse/Summary/SummaryParameter.hpp
         opm/output/eclipse/VectorItems/connection.hpp
         opm/output/eclipse/VectorItems/group.hpp
         opm/output/eclipse/VectorItems/intehead.hpp
