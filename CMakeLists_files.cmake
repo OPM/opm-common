@@ -211,6 +211,7 @@ if(ENABLE_ECL_OUTPUT)
           src/opm/output/eclipse/Summary/BlockParameter.cpp
           src/opm/output/eclipse/Summary/EvaluateQuantity.cpp
           src/opm/output/eclipse/Summary/SummaryParameter.cpp
+          src/opm/output/eclipse/Summary/WellParameter.cpp
           src/opm/output/eclipse/AggregateConnectionData.cpp
           src/opm/output/eclipse/AggregateGroupData.cpp
           src/opm/output/eclipse/AggregateMSWData.cpp
@@ -650,6 +651,7 @@ if(ENABLE_ECL_OUTPUT)
         opm/output/eclipse/Summary/BlockParameter.hpp
         opm/output/eclipse/Summary/EvaluateQuantity.hpp
         opm/output/eclipse/Summary/SummaryParameter.hpp
+        opm/output/eclipse/Summary/WellParameter.hpp
         opm/output/eclipse/VectorItems/connection.hpp
         opm/output/eclipse/VectorItems/group.hpp
         opm/output/eclipse/VectorItems/intehead.hpp
