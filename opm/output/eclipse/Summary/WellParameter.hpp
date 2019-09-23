@@ -142,6 +142,79 @@ namespace Opm {
 
         void validateCore() const;
     };
+
+    class WellAggregateRegionParameter : public SummaryParameter
+    {
+    public:
+        struct Keyword    { std::string value; };
+        struct UnitString { std::string value; };
+
+        enum class Type { Rate, Total };
+
+        explicit WellAggregateRegionParameter(const int                 regionID,
+                                              Keyword                   keyword,
+                                              const Type                type,
+                                              UnitString                unit,
+                                              SummaryHelpers::Evaluator eval);
+
+        const WellAggregateRegionParameter& validate() const &;
+        WellAggregateRegionParameter validate() &&;
+
+        virtual void update(const std::size_t       reportStep,
+                            const double            stepSize,
+                            const InputData&        input,
+                            const SimulatorResults& simRes,
+                            SummaryState&           st) const override;
+
+        virtual std::string summaryKey() const override
+        {
+            return this->sumKey_;
+        }
+
+        virtual std::string keyword() const override
+        {
+            return this->keyword_;
+        }
+
+        virtual int num() const override
+        {
+            return this->regionID_;
+        }
+
+        virtual std::string unit(const UnitSystem& /* usys */) const override
+        {
+            return this->unit_;
+        }
+
+    private:
+        std::string keyword_;
+        std::string unit_;
+        int         regionID_;
+        Type        type_;
+
+        SummaryHelpers::Evaluator evalParam_;
+
+        /// Unique summary state lookup key associating
+        /// parameter keyword with particular well (name).
+        std::string sumKey_;
+
+        bool isRate() const
+        {
+            return this->is(Type::Rate);
+        }
+
+        bool isTotal() const
+        {
+            return this->is(Type::Total);
+        }
+
+        bool is(const Type t) const
+        {
+            return this->type_ == t;
+        }
+
+        void validateCore() const;
+    };
 } // namespace Opm
 
 #endif // OPM_SUMMARY_WELLPARAMETER_HPP

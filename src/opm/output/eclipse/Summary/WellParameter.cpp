@@ -37,17 +37,106 @@
 #include <cstddef>
 #include <functional>
 #include <initializer_list>
+#include <iterator>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
 
 namespace {
-    std::size_t simStep(const std::size_t reportStep)
+    class RegionWells
     {
-        const auto one = std::size_t{ 1 };
+    public:
+        using RegConn = std::pair<std::string, std::size_t>;
+        using ConnCollection = std::vector<RegConn>;
 
-        return std::max(reportStep, one) - one;
+        explicit RegionWells(const Opm::Schedule& sched,
+                             const std::size_t    sim_step)
+            : sched_   (sched)
+            , sim_step_(sim_step)
+        {}
+
+        std::vector<std::string>
+        uniqueWells(const ConnCollection& regConns)
+        {
+            this->indices_.clear();
+            this->regConns_ = &regConns;
+
+            if (! regConns.empty()) {
+                this->extractKnownWells();
+                this->extractUniqueWells();
+            }
+
+            return this->getUniqueWells();
+        }
+
+    private:
+        using Index = ConnCollection::size_type;
+
+        const Opm::Schedule& sched_;
+        std::size_t          sim_step_;
+
+        const ConnCollection* regConns_{nullptr};
+        std::vector<Index> indices_{};
+
+        void extractKnownWells();
+        void extractUniqueWells();
+
+        std::vector<std::string> getUniqueWells() const;
+    };
+
+    void RegionWells::extractKnownWells()
+    {
+        auto ix = Index{0};
+
+        for (const auto& regConn : *this->regConns_) {
+            if (this->sched_.hasWell(regConn.first, this->sim_step_)) {
+                this->indices_.push_back(ix);
+            }
+
+            ++ix;
+        }
+    }
+
+    void RegionWells::extractUniqueWells()
+    {
+        const auto& rc = *this->regConns_;
+
+        // Possibly stable_sort() here.
+        std::sort(this->indices_.begin(), this->indices_.end(),
+            [&rc](const Index i1, const Index i2) -> bool
+        {
+            return rc[i1].first < rc[i2].first;
+        });
+
+        auto u = std::unique(this->indices_.begin(), this->indices_.end(),
+            [&rc](const Index i1, const Index i2) -> bool
+        {
+            return rc[i1].first == rc[i2].first;
+        });
+
+        if (u != this->indices_.end()) {
+            this->indices_.erase(u + 1, this->indices_.end());
+        }
+    }
+
+    std::vector<std::string>
+    RegionWells::getUniqueWells() const
+    {
+        auto wells = std::vector<std::string>{};
+
+        if (this->indices_.empty()) {
+            return wells;
+        }
+
+        wells.reserve(this->indices_.size());
+
+        for (const auto& index : this->indices_) {
+            wells.push_back((*this->regConns_)[index].first);
+        }
+
+        return wells;
     }
 
     struct EfficiencyFactor
@@ -76,6 +165,34 @@ namespace {
 
             prnt = grp.parent();
         }
+    }
+
+    std::size_t simStep(const std::size_t reportStep)
+    {
+        const auto one = std::size_t{ 1 };
+
+        return std::max(reportStep, one) - one;
+    }
+
+    std::vector<std::string>
+    regionWells(const Opm::out::RegionCache& region_cache,
+                const int                    regionID,
+                const Opm::Schedule&         sched,
+                const std::size_t            sim_step)
+    {
+        RegionWells rw { sched, sim_step };
+
+        return rw.uniqueWells(region_cache.connections(regionID));
+    }
+
+    std::string makeRegionKey(const std::string& keyword, const int regionID)
+    {
+        std::ostringstream key;
+
+        // ROPT:17
+        key << keyword << ':' << regionID;
+
+        return key.str();
     }
 }
 
@@ -244,6 +361,83 @@ void Opm::WellParameter::validateCore() const
     if (! this->isValidParamType()) {
         throw std::invalid_argument {
             "Well parameter must be pressure or flow type"
+        };
+    }
+}
+
+// =====================================================================
+
+Opm::WellAggregateRegionParameter::
+WellAggregateRegionParameter(const int                 regionID,
+                             Keyword                   keyword,
+                             const Type                type,
+                             UnitString                unit,
+                             SummaryHelpers::Evaluator eval)
+    : keyword_  { std::move(keyword.value) }
+    , unit_     { std::move(unit.value) }
+    , regionID_ (regionID)
+    , type_     (type)
+    , evalParam_{ std::move(eval) }
+    , sumKey_   (makeRegionKey(keyword_, regionID_))
+{}
+
+const Opm::WellAggregateRegionParameter&
+Opm::WellAggregateRegionParameter::validate() const &
+{
+    this->validateCore();
+    return *this;
+}
+
+Opm::WellAggregateRegionParameter
+Opm::WellAggregateRegionParameter::validate() &&
+{
+    this->validateCore();
+    return *this;
+}
+
+void
+Opm::WellAggregateRegionParameter::
+update(const std::size_t       reportStep,
+       const double            stepSize,
+       const InputData&        input,
+       const SimulatorResults& simRes,
+       SummaryState&           st) const
+{
+    const auto sim_step = simStep(reportStep);
+    const auto wells    = regionWells(input.reg, this->regionID_,
+                                      input.sched, sim_step);
+
+    if (wells.empty()) {
+        return;
+    }
+
+    auto efac = EfficiencyFactor{};
+    if (this->isTotal()) {
+        for (const auto& well : wells) {
+            efac.calculateCumulative(well, input.sched, sim_step);
+        }
+    }
+
+    const SummaryHelpers::EvaluationArguments args {
+        wells, stepSize, sim_step, this->regionID_,
+        simRes.wellSol,
+        input.reg, input.sched, input.grid,
+        st,
+        std::move(efac.fact)
+    };
+
+    const auto& usys = input.es.getUnits();
+    const auto  prm  = this->evalParam_(args);
+
+    st.update(this->sumKey_, usys.from_si(prm.unit, prm.value));
+}
+
+void Opm::WellAggregateRegionParameter::validateCore() const
+{
+    if (! (this->isRate() || this->isTotal())) {
+        throw std::invalid_argument {
+            "Well-dependent region parameter must be "
+            "flow rate or cumulative total"
         };
     }
 }

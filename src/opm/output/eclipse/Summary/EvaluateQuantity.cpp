@@ -772,6 +772,8 @@ namespace {
                     }
                 }
 
+                if (! injection) { sum = -sum; }
+
                 return { sum, unitOfMeasure(unitType{}) };
             }
         };
@@ -949,6 +951,7 @@ namespace {
         void initWellSpecificParameters();
         void initGroupSpecificParameters();
         void initConnectionParameters();
+        void initRegionParameters();
         void initSegmentParameters();
         void initFlowParameters(const char prefix);
     };
@@ -964,6 +967,7 @@ namespace {
         this->initGroupSpecificParameters();
 
         this->initConnectionParameters();
+        this->initRegionParameters();
         this->initSegmentParameters();
     }
 
@@ -1034,6 +1038,35 @@ namespace {
 
     void EvaluatorTable::initConnectionParameters()
     {}
+
+    void EvaluatorTable::initRegionParameters()
+    {
+        using namespace BaseOperations;
+        using r = Opm::data::Rates::opt;
+
+        const auto inj  = true;
+        const auto prod = !inj;
+
+        const auto OIR = RegionRate<r::oil, inj>{};
+        const auto GIR = RegionRate<r::gas, inj>{};
+        const auto WIR = RegionRate<r::wat, inj>{};
+
+        const auto OPR = RegionRate<r::oil, prod>{};
+        const auto GPR = RegionRate<r::gas, prod>{};
+        const auto WPR = RegionRate<r::wat, prod>{};
+
+        this->funcTable_.insert({
+            // ------------ Injection --------------------
+            VT{ "RWIR", WIR },  VT{ "RWIT", cumulative(WIR) },
+            VT{ "ROIR", OIR },  VT{ "ROIT", cumulative(OIR) },
+            VT{ "RGIR", GIR },  VT{ "RGIT", cumulative(GIR) },
+
+            // ------------ Production --------------------
+            VT{ "RWPR", WPR },  VT{ "RWPT", cumulative(WPR) },
+            VT{ "ROPR", OPR },  VT{ "ROPT", cumulative(OPR) },
+            VT{ "RGPR", GPR },  VT{ "RGPT", cumulative(GPR) },
+        });
+    }
 
     void EvaluatorTable::initSegmentParameters()
     {

@@ -24,6 +24,7 @@
 #include <opm/output/eclipse/Summary/BlockParameter.hpp>
 #include <opm/output/eclipse/Summary/EvaluateQuantity.hpp>
 #include <opm/output/eclipse/Summary/GroupParameter.hpp>
+#include <opm/output/eclipse/Summary/RegionParameter.hpp>
 #include <opm/output/eclipse/Summary/SegmentParameter.hpp>
 #include <opm/output/eclipse/Summary/SummaryParameter.hpp>
 #include <opm/output/eclipse/Summary/WellParameter.hpp>
@@ -37,6 +38,7 @@
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 
+#include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
@@ -388,13 +390,13 @@ namespace {
             "GWPI", "GWPP",
             "GWPR", "GWPRH", "GWPT", "GWPTH",
             "GWVIR", "GWVIT", "GWVPR", "GWVPT",
-#if 0
+
             // ---------------------------------------------------------
             // Region quantities
-            "RGIR",
-            "RGIT", "RGPR", "RGPT", "ROIR", "ROIT", "ROPR", "ROPT", "RWIR", "RWIT", "RWPR",
-            "RWPT",
-#endif
+            "RGIR", "RGIT", "RGPR", "RGPT",
+            "ROIR", "ROIT", "ROPR", "ROPT",
+            "RWIR", "RWIT", "RWPR", "RWPT",
+
             // ---------------------------------------------------------
             // Segment quantities
             "SGFR", "SOFR", "SPR", "SWFR",
@@ -7411,6 +7413,928 @@ BOOST_AUTO_TEST_CASE(FOPT)
 BOOST_AUTO_TEST_SUITE_END() // Efficiency_Factors
 
 BOOST_AUTO_TEST_SUITE_END() // Field_Parameters
+
+// =====================================================================
+
+BOOST_AUTO_TEST_SUITE(Region_Parameters)
+
+namespace {
+    Opm::data::Connection W_1_c1()
+    {
+        using r = Opm::data::Rates::opt;
+        auto xc = Opm::data::Connection{};
+
+        xc.index = 0;
+
+        // Negative rate signs for producers
+        xc.rates.set(r::oil, - 10.0e3*sm3_pr_day());
+        xc.rates.set(r::gas, -100.0e3*sm3_pr_day());
+        xc.rates.set(r::wat, - 50.0e3*sm3_pr_day());
+
+        xc.rates.set(r::dissolved_gas, -82.15e3*sm3_pr_day());
+        xc.rates.set(r::vaporized_oil, -1000.0*sm3_pr_day());
+
+        xc.rates.set(r::reservoir_oil  , -30.0e3*rm3_pr_day());
+        xc.rates.set(r::reservoir_gas  , - 4.0e3*rm3_pr_day());
+        xc.rates.set(r::reservoir_water, -49.0e3*rm3_pr_day());
+
+        xc.pressure = 123.4*Opm::unit::barsa;
+        xc.reservoir_rate = -83.0e3*rm3_pr_day();
+
+        xc.cell_pressure = 179.85*Opm::unit::barsa;
+        xc.cell_saturation_water = 0.45;
+        xc.cell_saturation_gas = 0.23;
+
+        return xc;
+    }
+
+    Opm::data::Well W_1()
+    {
+        auto xw = Opm::data::Well{};
+
+        xw.connections.push_back(W_1_c1());
+
+        return xw;
+    }
+
+    Opm::data::Connection W_2_c1()
+    {
+        using r = Opm::data::Rates::opt;
+        auto xc = Opm::data::Connection{};
+
+        xc.index = 1;
+
+        // Negative rate signs for injectors
+        xc.rates.set(r::oil, -23.0e3*sm3_pr_day());
+        xc.rates.set(r::gas, - 5.0e3*sm3_pr_day());
+        xc.rates.set(r::wat, - 7.0e3*sm3_pr_day());
+
+        xc.rates.set(r::dissolved_gas, -2.15e3*sm3_pr_day());
+        xc.rates.set(r::vaporized_oil, -312.3*sm3_pr_day());
+
+        xc.rates.set(r::reservoir_oil  , -20.0e3*rm3_pr_day());
+        xc.rates.set(r::reservoir_gas  , - 1.0e3*rm3_pr_day());
+        xc.rates.set(r::reservoir_water, - 3.5e3*rm3_pr_day());
+
+        xc.pressure = 135.79*Opm::unit::barsa;
+        xc.reservoir_rate = -24.5e3*rm3_pr_day();
+
+        xc.cell_pressure = 185.23*Opm::unit::barsa;
+        xc.cell_saturation_water = 0.38;
+        xc.cell_saturation_gas = 0.20;
+
+        return xc;
+    }
+
+    Opm::data::Connection W_2_c2()
+    {
+        using r = Opm::data::Rates::opt;
+        auto xc = Opm::data::Connection{};
+
+        xc.index = 101;
+
+        // Negative rate signs for injectors
+        xc.rates.set(r::oil, -27.0e3*sm3_pr_day());
+        xc.rates.set(r::gas, -15.0e3*sm3_pr_day());
+        xc.rates.set(r::wat, - 3.0e3*sm3_pr_day());
+
+        xc.rates.set(r::dissolved_gas, -3.0e3*sm3_pr_day());
+        xc.rates.set(r::vaporized_oil, -342.0*sm3_pr_day());
+
+        xc.rates.set(r::reservoir_oil  , -20.0e3*rm3_pr_day());
+        xc.rates.set(r::reservoir_gas  , - 5.0e3*rm3_pr_day());
+        xc.rates.set(r::reservoir_water, - 6.0e3*rm3_pr_day());
+
+        xc.pressure = 130.0*Opm::unit::barsa;
+        xc.reservoir_rate = -31.0e3*rm3_pr_day();
+
+        xc.cell_pressure = 184.0*Opm::unit::barsa;
+        xc.cell_saturation_water = 0.33;
+        xc.cell_saturation_gas = 0.23;
+
+        return xc;
+    }
+
+    Opm::data::Well W_2()
+    {
+        auto xw = Opm::data::Well{};
+
+        xw.connections.push_back(W_2_c1());
+        xw.connections.push_back(W_2_c2());
+
+        return xw;
+    }
+
+    Opm::data::Connection W_3_c1()
+    {
+        using r = Opm::data::Rates::opt;
+        auto xc = Opm::data::Connection{};
+
+        xc.index = 2;
+
+        // Positive rate signs for injectors
+        xc.rates.set(r::oil,  25.0e3*sm3_pr_day());
+        xc.rates.set(r::gas,  80.0e3*sm3_pr_day());
+        xc.rates.set(r::wat, 100.0e3*sm3_pr_day());
+
+        xc.rates.set(r::dissolved_gas, 45.0e3*sm3_pr_day());
+        xc.rates.set(r::vaporized_oil, 750.0*sm3_pr_day());
+
+        xc.rates.set(r::reservoir_oil  , 22.0e3*rm3_pr_day());
+        xc.rates.set(r::reservoir_gas  , 63.0e3*rm3_pr_day());
+        xc.rates.set(r::reservoir_water, 92.8e3*rm3_pr_day());
+
+        xc.pressure = 198.1*Opm::unit::barsa;
+
+        return xc;
+    }
+
+    Opm::data::Well W_3()
+    {
+        auto xw = Opm::data::Well{};
+
+        xw.connections.push_back(W_3_c1());
+
+        return xw;
+    }
+
+    Opm::data::WellRates wellResults()
+    {
+        auto xw = Opm::data::WellRates{};
+
+        xw["W_1"] = W_1();
+        xw["W_2"] = W_2();
+        xw["W_3"] = W_3();
+
+        return xw;
+    }
+
+    std::map<std::string, double> singleResults()
+    {
+        return {};
+    }
+
+    std::vector<double> RPR()
+    {
+        return {
+            120.0*Opm::unit::barsa,
+            125.0*Opm::unit::barsa,
+            127.0*Opm::unit::barsa,
+            130.0*Opm::unit::barsa,
+            133.0*Opm::unit::barsa,
+            137.0*Opm::unit::barsa,
+            140.0*Opm::unit::barsa,
+            145.0*Opm::unit::barsa,
+            150.0*Opm::unit::barsa,
+            160.0*Opm::unit::barsa,
+        };
+    }
+
+    std::vector<double> ROIP()
+    {
+        return {
+            10.0*Opm::unit::cubic(Opm::unit::meter),
+            11.0*Opm::unit::cubic(Opm::unit::meter),
+            12.0*Opm::unit::cubic(Opm::unit::meter),
+            15.0*Opm::unit::cubic(Opm::unit::meter),
+            17.0*Opm::unit::cubic(Opm::unit::meter),
+            13.0*Opm::unit::cubic(Opm::unit::meter),
+            18.0*Opm::unit::cubic(Opm::unit::meter),
+             5.0*Opm::unit::cubic(Opm::unit::meter),
+            14.0*Opm::unit::cubic(Opm::unit::meter),
+             8.0*Opm::unit::cubic(Opm::unit::meter),
+        };
+    }
+
+    std::vector<double> ROIPL()
+    {
+        return {
+             8.0*Opm::unit::cubic(Opm::unit::meter),
+            10.5*Opm::unit::cubic(Opm::unit::meter),
+            12.0*Opm::unit::cubic(Opm::unit::meter),
+             5.0*Opm::unit::cubic(Opm::unit::meter),
+            12.0*Opm::unit::cubic(Opm::unit::meter),
+            10.0*Opm::unit::cubic(Opm::unit::meter),
+            17.9*Opm::unit::cubic(Opm::unit::meter),
+             3.5*Opm::unit::cubic(Opm::unit::meter),
+            10.0*Opm::unit::cubic(Opm::unit::meter),
+             6.0*Opm::unit::cubic(Opm::unit::meter),
+        };
+    }
+
+    std::vector<double> ROIPG()
+    {
+        return {
+             2.0*Opm::unit::cubic(Opm::unit::meter),
+             0.5*Opm::unit::cubic(Opm::unit::meter),
+             0.0*Opm::unit::cubic(Opm::unit::meter),
+            10.0*Opm::unit::cubic(Opm::unit::meter),
+             5.0*Opm::unit::cubic(Opm::unit::meter),
+             3.0*Opm::unit::cubic(Opm::unit::meter),
+             0.1*Opm::unit::cubic(Opm::unit::meter),
+             1.5*Opm::unit::cubic(Opm::unit::meter),
+             4.0*Opm::unit::cubic(Opm::unit::meter),
+             2.0*Opm::unit::cubic(Opm::unit::meter),
+        };
+    }
+
+    std::vector<double> RGIP()
+    {
+        return {
+            10.0e3*Opm::unit::cubic(Opm::unit::meter),
+            11.0e3*Opm::unit::cubic(Opm::unit::meter),
+            12.0e3*Opm::unit::cubic(Opm::unit::meter),
+            15.0e3*Opm::unit::cubic(Opm::unit::meter),
+            17.0e3*Opm::unit::cubic(Opm::unit::meter),
+            13.0e3*Opm::unit::cubic(Opm::unit::meter),
+            18.0e3*Opm::unit::cubic(Opm::unit::meter),
+             5.0e3*Opm::unit::cubic(Opm::unit::meter),
+            14.0e3*Opm::unit::cubic(Opm::unit::meter),
+             8.0e3*Opm::unit::cubic(Opm::unit::meter),
+        };
+    }
+
+    std::vector<double> RGIPL()
+    {
+        return {
+             8.0e3*Opm::unit::cubic(Opm::unit::meter),
+            10.5e3*Opm::unit::cubic(Opm::unit::meter),
+            12.0e3*Opm::unit::cubic(Opm::unit::meter),
+             5.0e3*Opm::unit::cubic(Opm::unit::meter),
+            12.0e3*Opm::unit::cubic(Opm::unit::meter),
+            10.0e3*Opm::unit::cubic(Opm::unit::meter),
+            17.9e3*Opm::unit::cubic(Opm::unit::meter),
+             3.5e3*Opm::unit::cubic(Opm::unit::meter),
+            10.0e3*Opm::unit::cubic(Opm::unit::meter),
+             6.0e3*Opm::unit::cubic(Opm::unit::meter),
+        };
+    }
+
+    std::vector<double> RGIPG()
+    {
+        return {
+             2.0e3*Opm::unit::cubic(Opm::unit::meter),
+             0.5e3*Opm::unit::cubic(Opm::unit::meter),
+             0.0e3*Opm::unit::cubic(Opm::unit::meter),
+            10.0e3*Opm::unit::cubic(Opm::unit::meter),
+             5.0e3*Opm::unit::cubic(Opm::unit::meter),
+             3.0e3*Opm::unit::cubic(Opm::unit::meter),
+             0.1e3*Opm::unit::cubic(Opm::unit::meter),
+             1.5e3*Opm::unit::cubic(Opm::unit::meter),
+             4.0e3*Opm::unit::cubic(Opm::unit::meter),
+             2.0e3*Opm::unit::cubic(Opm::unit::meter),
+        };
+    }
+
+    std::vector<double> RWIP()
+    {
+        return {
+            2.0*Opm::unit::cubic(Opm::unit::meter),
+            2.1*Opm::unit::cubic(Opm::unit::meter),
+            2.2*Opm::unit::cubic(Opm::unit::meter),
+            2.3*Opm::unit::cubic(Opm::unit::meter),
+            2.4*Opm::unit::cubic(Opm::unit::meter),
+            2.5*Opm::unit::cubic(Opm::unit::meter),
+            2.6*Opm::unit::cubic(Opm::unit::meter),
+            2.7*Opm::unit::cubic(Opm::unit::meter),
+            2.8*Opm::unit::cubic(Opm::unit::meter),
+            2.9*Opm::unit::cubic(Opm::unit::meter),
+        };
+    }
+
+    std::map<std::string, std::vector<double>> regionResults()
+    {
+        using VT = std::map<std::string, std::vector<double>>::value_type;
+
+        return {
+            VT{ "RPR" , RPR()  },
+            VT{ "ROIP", ROIP() },  VT{ "ROIPL", ROIPL() },  VT{ "ROIPG", ROIPG() },
+            VT{ "RGIP", RGIP() },  VT{ "RGIPL", RGIPL() },  VT{ "RGIPG", RGIPG() },
+            VT{ "RWIP", RWIP() },
+        };
+    }
+
+    std::map<std::pair<std::string, int>, double> blockResults()
+    {
+        return {};
+    }
+} // Anonymous
+
+BOOST_AUTO_TEST_CASE(Direct_Value_Assignment)
+{
+    const auto cse    = Setup{ "summary_deck.DATA" };
+    const auto rcache = ::Opm::out::RegionCache {
+        cse.es.get3DProperties(), cse.es.getInputGrid(), cse.sched
+    };
+
+    const auto input = ::Opm::SummaryParameter::InputData {
+        cse.es, cse.sched, cse.es.getInputGrid(), rcache
+    };
+
+    auto rpr_10   = std::unique_ptr<Opm::SummaryParameter>{};
+    auto roip_0   = std::unique_ptr<Opm::SummaryParameter>{};
+    auto roip_7   = std::unique_ptr<Opm::SummaryParameter>{};
+    auto roipl_3  = std::unique_ptr<Opm::SummaryParameter>{};
+    auto roipl_11 = std::unique_ptr<Opm::SummaryParameter>{};
+    auto roipg_5  = std::unique_ptr<Opm::SummaryParameter>{};
+    auto rgip_1   = std::unique_ptr<Opm::SummaryParameter>{};
+    auto rgipl_8  = std::unique_ptr<Opm::SummaryParameter>{};
+    auto rgipg_2  = std::unique_ptr<Opm::SummaryParameter>{};
+    auto rwip_9   = std::unique_ptr<Opm::SummaryParameter>{};
+    {
+        auto prm = ::Opm::RegionParameter {
+            10,
+            Opm::RegionParameter::Keyword { "RPR" },
+            Opm::UnitSystem::measure::pressure
+        };
+
+        rpr_10.reset(new Opm::RegionParameter { std::move(prm) });
+    }
+    {
+        auto prm = ::Opm::RegionParameter {
+            0,
+            Opm::RegionParameter::Keyword { "ROIP" },
+            Opm::UnitSystem::measure::liquid_surface_volume
+        };
+
+        roip_0.reset(new Opm::RegionParameter { std::move(prm) });
+    }
+    {
+        auto prm = ::Opm::RegionParameter {
+            7,
+            Opm::RegionParameter::Keyword { "ROIP" },
+            Opm::UnitSystem::measure::liquid_surface_volume
+        };
+
+        roip_7.reset(new Opm::RegionParameter { std::move(prm) });
+    }
+    {
+        auto prm = ::Opm::RegionParameter {
+            3,
+            Opm::RegionParameter::Keyword { "ROIPL" },
+            Opm::UnitSystem::measure::liquid_surface_volume
+        };
+
+        roipl_3.reset(new Opm::RegionParameter { std::move(prm) });
+    }
+    {
+        auto prm = ::Opm::RegionParameter {
+            11,
+            Opm::RegionParameter::Keyword { "ROIPL" },
+            Opm::UnitSystem::measure::liquid_surface_volume
+        };
+
+        roipl_11.reset(new Opm::RegionParameter { std::move(prm) });
+    }
+    {
+        auto prm = ::Opm::RegionParameter {
+            5,
+            Opm::RegionParameter::Keyword { "ROIPG" },
+            Opm::UnitSystem::measure::liquid_surface_volume
+        };
+
+        roipg_5.reset(new Opm::RegionParameter { std::move(prm) });
+    }
+    {
+        auto prm = ::Opm::RegionParameter {
+            1,
+            Opm::RegionParameter::Keyword { "RGIP" },
+            Opm::UnitSystem::measure::gas_surface_volume
+        };
+
+        rgip_1.reset(new Opm::RegionParameter { std::move(prm) });
+    }
+    {
+        auto prm = ::Opm::RegionParameter {
+            8,
+            Opm::RegionParameter::Keyword { "RGIPL" },
+            Opm::UnitSystem::measure::liquid_surface_volume
+        };
+
+        rgipl_8.reset(new Opm::RegionParameter { std::move(prm) });
+    }
+    {
+        auto prm = ::Opm::RegionParameter {
+            2,
+            Opm::RegionParameter::Keyword { "RGIPG" },
+            Opm::UnitSystem::measure::gas_surface_volume
+        };
+
+        rgipg_2.reset(new Opm::RegionParameter { std::move(prm) });
+    }
+    {
+        auto prm = ::Opm::RegionParameter {
+            9,
+            Opm::RegionParameter::Keyword { "RWIP" },
+            Opm::UnitSystem::measure::gas_surface_volume
+        };
+
+        rwip_9.reset(new Opm::RegionParameter { std::move(prm) });
+    }
+
+    BOOST_CHECK_EQUAL(rpr_10->unit(cse.es.getUnits()), "BARSA");
+    BOOST_CHECK_EQUAL(rpr_10->keyword(), "RPR");
+    BOOST_CHECK_EQUAL(rpr_10->name(), ":+:+:+:+");
+    BOOST_CHECK_EQUAL(rpr_10->num(), 10);
+    BOOST_CHECK_EQUAL(rpr_10->summaryKey(), "RPR:10");
+
+    BOOST_CHECK_EQUAL(roip_0->unit(cse.es.getUnits()), "SM3");
+    BOOST_CHECK_EQUAL(roip_0->keyword(), "ROIP");
+    BOOST_CHECK_EQUAL(roip_0->name(), ":+:+:+:+");
+    BOOST_CHECK_EQUAL(roip_0->num(), 0);
+    BOOST_CHECK_EQUAL(roip_0->summaryKey(), "ROIP:0");
+
+    BOOST_CHECK_EQUAL(roipl_3->unit(cse.es.getUnits()), "SM3");
+    BOOST_CHECK_EQUAL(roipl_3->keyword(), "ROIPL");
+    BOOST_CHECK_EQUAL(roipl_3->name(), ":+:+:+:+");
+    BOOST_CHECK_EQUAL(roipl_3->num(), 3);
+    BOOST_CHECK_EQUAL(roipl_3->summaryKey(), "ROIPL:3");
+
+    BOOST_CHECK_EQUAL(roipg_5->unit(cse.es.getUnits()), "SM3");
+    BOOST_CHECK_EQUAL(roipg_5->keyword(), "ROIPG");
+    BOOST_CHECK_EQUAL(roipg_5->name(), ":+:+:+:+");
+    BOOST_CHECK_EQUAL(roipg_5->num(), 5);
+    BOOST_CHECK_EQUAL(roipg_5->summaryKey(), "ROIPG:5");
+
+    BOOST_CHECK_EQUAL(rgip_1->unit(cse.es.getUnits()), "SM3");
+    BOOST_CHECK_EQUAL(rgip_1->keyword(), "RGIP");
+    BOOST_CHECK_EQUAL(rgip_1->name(), ":+:+:+:+");
+    BOOST_CHECK_EQUAL(rgip_1->num(), 1);
+    BOOST_CHECK_EQUAL(rgip_1->summaryKey(), "RGIP:1");
+
+    BOOST_CHECK_EQUAL(rgipl_8->unit(cse.es.getUnits()), "SM3");
+    BOOST_CHECK_EQUAL(rgipl_8->keyword(), "RGIPL");
+    BOOST_CHECK_EQUAL(rgipl_8->name(), ":+:+:+:+");
+    BOOST_CHECK_EQUAL(rgipl_8->num(), 8);
+    BOOST_CHECK_EQUAL(rgipl_8->summaryKey(), "RGIPL:8");
+
+    BOOST_CHECK_EQUAL(rgipg_2->unit(cse.es.getUnits()), "SM3");
+    BOOST_CHECK_EQUAL(rgipg_2->keyword(), "RGIPG");
+    BOOST_CHECK_EQUAL(rgipg_2->name(), ":+:+:+:+");
+    BOOST_CHECK_EQUAL(rgipg_2->num(), 2);
+    BOOST_CHECK_EQUAL(rgipg_2->summaryKey(), "RGIPG:2");
+
+    BOOST_CHECK_EQUAL(rwip_9->unit(cse.es.getUnits()), "SM3");
+    BOOST_CHECK_EQUAL(rwip_9->keyword(), "RWIP");
+    BOOST_CHECK_EQUAL(rwip_9->name(), ":+:+:+:+");
+    BOOST_CHECK_EQUAL(rwip_9->num(), 9);
+    BOOST_CHECK_EQUAL(rwip_9->summaryKey(), "RWIP:9");
+
+    const auto& xw = wellResults();
+    const auto& xs = singleResults();
+    const auto& xr = regionResults();
+    const auto& xb = blockResults();
+
+    const auto simRes = ::Opm::SummaryParameter::SimulatorResults {
+        xw, xs, xr, xb
+    };
+
+    auto st = ::Opm::SummaryState{ std::chrono::system_clock::now() };
+    rpr_10  ->update(1, cse.sched.seconds(1), input, simRes, st);
+    roip_0  ->update(1, cse.sched.seconds(1), input, simRes, st);
+    roip_7  ->update(1, cse.sched.seconds(1), input, simRes, st);
+    roipl_3 ->update(1, cse.sched.seconds(1), input, simRes, st);
+    roipl_11->update(1, cse.sched.seconds(1), input, simRes, st);
+    roipg_5 ->update(1, cse.sched.seconds(1), input, simRes, st);
+    rgip_1  ->update(1, cse.sched.seconds(1), input, simRes, st);
+    rgipl_8 ->update(1, cse.sched.seconds(1), input, simRes, st);
+    rgipg_2 ->update(1, cse.sched.seconds(1), input, simRes, st);
+    rwip_9  ->update(1, cse.sched.seconds(1), input, simRes, st);
+
+    BOOST_CHECK_MESSAGE(  st.has(rpr_10  ->summaryKey()), "Summary state must NOT have RPR:10");
+    BOOST_CHECK_MESSAGE(! st.has(roip_0  ->summaryKey()), "Summary state must NOT have ROIP:0");
+    BOOST_CHECK_MESSAGE(  st.has(roip_7  ->summaryKey()), "Summary state must have ROIP:7");
+    BOOST_CHECK_MESSAGE(  st.has(roipl_3 ->summaryKey()), "Summary state must have ROIPL:3");
+    BOOST_CHECK_MESSAGE(! st.has(roipl_11->summaryKey()), "Summary state must NOT have ROIPL:11");
+    BOOST_CHECK_MESSAGE(  st.has(roipg_5 ->summaryKey()), "Summary state must have ROIPG:5");
+    BOOST_CHECK_MESSAGE(  st.has(rgip_1  ->summaryKey()), "Summary state must have RGIP:1");
+    BOOST_CHECK_MESSAGE(  st.has(rgipl_8 ->summaryKey()), "Summary state must have RGIPL:8");
+    BOOST_CHECK_MESSAGE(  st.has(rgipg_2 ->summaryKey()), "Summary state must have RGIPG:2");
+    BOOST_CHECK_MESSAGE(  st.has(rwip_9  ->summaryKey()), "Summary state must have RWIP:9");
+
+    BOOST_CHECK_CLOSE(st.get("RPR:10"), 160.0, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get("ROIP:7"), 18.0, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get("ROIPL:3"), 12.0, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get("ROIPG:5"), 5.0, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get("RGIP:1"), 10.0e3, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get("RGIPL:8"), 3.5e3, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get("RGIPG:2"), 0.5e3, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get("RWIP:9"), 2.8, 1.0e-10);
+}
+
+BOOST_AUTO_TEST_CASE(Region_Well_Flow)
+{
+    using Type = Opm::WellAggregateRegionParameter::Type;
+
+    {
+        auto eval = Opm::SummaryHelpers::getParameterEvaluator("ROPT");
+        auto prm = ::Opm::WellAggregateRegionParameter {
+            1,
+            Opm::WellAggregateRegionParameter::Keyword    { "ROPT" },
+            Opm::WellAggregateRegionParameter::Type       { static_cast<Type>(314) },
+            Opm::WellAggregateRegionParameter::UnitString { "SM3" },
+            *eval
+        };
+
+        BOOST_CHECK_THROW(prm.validate(), std::invalid_argument);
+    }
+
+    const auto cse    = Setup{ "summary_deck.DATA" };
+    const auto rcache = ::Opm::out::RegionCache {
+        cse.es.get3DProperties(), cse.es.getInputGrid(), cse.sched
+    };
+
+    const auto input = ::Opm::SummaryParameter::InputData {
+        cse.es, cse.sched, cse.es.getInputGrid(), rcache
+    };
+
+    auto rgir   = std::unique_ptr<Opm::SummaryParameter>{};
+    auto rgit   = std::unique_ptr<Opm::SummaryParameter>{};
+    auto rgpr_1 = std::unique_ptr<Opm::SummaryParameter>{};
+    auto rgpt_1 = std::unique_ptr<Opm::SummaryParameter>{};
+    auto rgpr_2 = std::unique_ptr<Opm::SummaryParameter>{};
+    auto rgpt_2 = std::unique_ptr<Opm::SummaryParameter>{};
+    auto roir   = std::unique_ptr<Opm::SummaryParameter>{};
+    auto roit   = std::unique_ptr<Opm::SummaryParameter>{};
+    auto ropr_1 = std::unique_ptr<Opm::SummaryParameter>{};
+    auto ropt_1 = std::unique_ptr<Opm::SummaryParameter>{};
+    auto ropr_2 = std::unique_ptr<Opm::SummaryParameter>{};
+    auto ropt_2 = std::unique_ptr<Opm::SummaryParameter>{};
+    auto rwir   = std::unique_ptr<Opm::SummaryParameter>{};
+    auto rwit   = std::unique_ptr<Opm::SummaryParameter>{};
+    auto rwpr_1 = std::unique_ptr<Opm::SummaryParameter>{};
+    auto rwpt_1 = std::unique_ptr<Opm::SummaryParameter>{};
+    auto rwpr_2 = std::unique_ptr<Opm::SummaryParameter>{};
+    auto rwpt_2 = std::unique_ptr<Opm::SummaryParameter>{};
+
+    // ----------- GAS --------------
+    {
+        auto eval = Opm::SummaryHelpers::getParameterEvaluator("RGIR");
+
+        auto prm = ::Opm::WellAggregateRegionParameter {
+            1,
+            Opm::WellAggregateRegionParameter::Keyword    { "RGIR" },
+            Opm::WellAggregateRegionParameter::Type       { Type::Rate },
+            Opm::WellAggregateRegionParameter::UnitString { "SM3/DAY" },
+            *eval
+        }.validate();
+
+        rgir.reset(new Opm::WellAggregateRegionParameter { std::move(prm) });
+    }
+    {
+        auto eval = Opm::SummaryHelpers::getParameterEvaluator("RGIT");
+
+        auto prm = ::Opm::WellAggregateRegionParameter {
+            1,
+            Opm::WellAggregateRegionParameter::Keyword    { "RGIT" },
+            Opm::WellAggregateRegionParameter::Type       { Type::Total },
+            Opm::WellAggregateRegionParameter::UnitString { "SM3" },
+            *eval
+        }.validate();
+
+        rgit.reset(new Opm::WellAggregateRegionParameter { std::move(prm) });
+    }
+    {
+        auto eval = Opm::SummaryHelpers::getParameterEvaluator("RGPR");
+
+        auto prm = ::Opm::WellAggregateRegionParameter {
+            1,
+            Opm::WellAggregateRegionParameter::Keyword    { "RGPR" },
+            Opm::WellAggregateRegionParameter::Type       { Type::Rate },
+            Opm::WellAggregateRegionParameter::UnitString { "SM3/DAY" },
+            *eval
+        }.validate();
+
+        rgpr_1.reset(new Opm::WellAggregateRegionParameter { std::move(prm) });
+    }
+    {
+        auto eval = Opm::SummaryHelpers::getParameterEvaluator("RGPT");
+
+        auto prm = ::Opm::WellAggregateRegionParameter {
+            1,
+            Opm::WellAggregateRegionParameter::Keyword    { "RGPT" },
+            Opm::WellAggregateRegionParameter::Type       { Type::Total },
+            Opm::WellAggregateRegionParameter::UnitString { "SM3" },
+            *eval
+        }.validate();
+
+        rgpt_1.reset(new Opm::WellAggregateRegionParameter { std::move(prm) });
+    }
+    {
+        auto eval = Opm::SummaryHelpers::getParameterEvaluator("RGPR");
+
+        auto prm = ::Opm::WellAggregateRegionParameter {
+            2,
+            Opm::WellAggregateRegionParameter::Keyword    { "RGPR" },
+            Opm::WellAggregateRegionParameter::Type       { Type::Rate },
+            Opm::WellAggregateRegionParameter::UnitString { "SM3/DAY" },
+            *eval
+        }.validate();
+
+        rgpr_2.reset(new Opm::WellAggregateRegionParameter { std::move(prm) });
+    }
+    {
+        auto eval = Opm::SummaryHelpers::getParameterEvaluator("RGPT");
+
+        auto prm = ::Opm::WellAggregateRegionParameter {
+            2,
+            Opm::WellAggregateRegionParameter::Keyword    { "RGPT" },
+            Opm::WellAggregateRegionParameter::Type       { Type::Total },
+            Opm::WellAggregateRegionParameter::UnitString { "SM3" },
+            *eval
+        }.validate();
+
+        rgpt_2.reset(new Opm::WellAggregateRegionParameter { std::move(prm) });
+    }
+
+    // ----------- OIL --------------
+    {
+        auto eval = Opm::SummaryHelpers::getParameterEvaluator("ROIR");
+
+        auto prm = ::Opm::WellAggregateRegionParameter {
+            1,
+            Opm::WellAggregateRegionParameter::Keyword    { "ROIR" },
+            Opm::WellAggregateRegionParameter::Type       { Type::Rate },
+            Opm::WellAggregateRegionParameter::UnitString { "SM3/DAY" },
+            *eval
+        }.validate();
+
+        roir.reset(new Opm::WellAggregateRegionParameter { std::move(prm) });
+    }
+    {
+        auto eval = Opm::SummaryHelpers::getParameterEvaluator("ROIT");
+
+        auto prm = ::Opm::WellAggregateRegionParameter {
+            1,
+            Opm::WellAggregateRegionParameter::Keyword    { "ROIT" },
+            Opm::WellAggregateRegionParameter::Type       { Type::Total },
+            Opm::WellAggregateRegionParameter::UnitString { "SM3" },
+            *eval
+        }.validate();
+
+        roit.reset(new Opm::WellAggregateRegionParameter { std::move(prm) });
+    }
+    {
+        auto eval = Opm::SummaryHelpers::getParameterEvaluator("ROPR");
+
+        auto prm = ::Opm::WellAggregateRegionParameter {
+            1,
+            Opm::WellAggregateRegionParameter::Keyword    { "ROPR" },
+            Opm::WellAggregateRegionParameter::Type       { Type::Rate },
+            Opm::WellAggregateRegionParameter::UnitString { "SM3/DAY" },
+            *eval
+        }.validate();
+
+        ropr_1.reset(new Opm::WellAggregateRegionParameter { std::move(prm) });
+    }
+    {
+        auto eval = Opm::SummaryHelpers::getParameterEvaluator("ROPT");
+
+        auto prm = ::Opm::WellAggregateRegionParameter {
+            1,
+            Opm::WellAggregateRegionParameter::Keyword    { "ROPT" },
+            Opm::WellAggregateRegionParameter::Type       { Type::Total },
+            Opm::WellAggregateRegionParameter::UnitString { "SM3" },
+            *eval
+        }.validate();
+
+        ropt_1.reset(new Opm::WellAggregateRegionParameter { std::move(prm) });
+    }
+    {
+        auto eval = Opm::SummaryHelpers::getParameterEvaluator("ROPR");
+
+        auto prm = ::Opm::WellAggregateRegionParameter {
+            2,
+            Opm::WellAggregateRegionParameter::Keyword    { "ROPR" },
+            Opm::WellAggregateRegionParameter::Type       { Type::Rate },
+            Opm::WellAggregateRegionParameter::UnitString { "SM3/DAY" },
+            *eval
+        }.validate();
+
+        ropr_2.reset(new Opm::WellAggregateRegionParameter { std::move(prm) });
+    }
+    {
+        auto eval = Opm::SummaryHelpers::getParameterEvaluator("ROPT");
+
+        auto prm = ::Opm::WellAggregateRegionParameter {
+            2,
+            Opm::WellAggregateRegionParameter::Keyword    { "ROPT" },
+            Opm::WellAggregateRegionParameter::Type       { Type::Total },
+            Opm::WellAggregateRegionParameter::UnitString { "SM3" },
+            *eval
+        }.validate();
+
+        ropt_2.reset(new Opm::WellAggregateRegionParameter { std::move(prm) });
+    }
+
+    // ----------- WATER ------------
+    {
+        auto eval = Opm::SummaryHelpers::getParameterEvaluator("RWIR");
+
+        auto prm = ::Opm::WellAggregateRegionParameter {
+            1,
+            Opm::WellAggregateRegionParameter::Keyword    { "RWIR" },
+            Opm::WellAggregateRegionParameter::Type       { Type::Rate },
+            Opm::WellAggregateRegionParameter::UnitString { "SM3/DAY" },
+            *eval
+        }.validate();
+
+        rwir.reset(new Opm::WellAggregateRegionParameter { std::move(prm) });
+    }
+    {
+        auto eval = Opm::SummaryHelpers::getParameterEvaluator("RWIT");
+
+        auto prm = ::Opm::WellAggregateRegionParameter {
+            1,
+            Opm::WellAggregateRegionParameter::Keyword    { "RWIT" },
+            Opm::WellAggregateRegionParameter::Type       { Type::Total },
+            Opm::WellAggregateRegionParameter::UnitString { "SM3" },
+            *eval
+        }.validate();
+
+        rwit.reset(new Opm::WellAggregateRegionParameter { std::move(prm) });
+    }
+    {
+        auto eval = Opm::SummaryHelpers::getParameterEvaluator("RWPR");
+
+        auto prm = ::Opm::WellAggregateRegionParameter {
+            1,
+            Opm::WellAggregateRegionParameter::Keyword    { "RWPR" },
+            Opm::WellAggregateRegionParameter::Type       { Type::Rate },
+            Opm::WellAggregateRegionParameter::UnitString { "SM3/DAY" },
+            *eval
+        }.validate();
+
+        rwpr_1.reset(new Opm::WellAggregateRegionParameter { std::move(prm) });
+    }
+    {
+        auto eval = Opm::SummaryHelpers::getParameterEvaluator("RWPT");
+
+        auto prm = ::Opm::WellAggregateRegionParameter {
+            1,
+            Opm::WellAggregateRegionParameter::Keyword    { "RWPT" },
+            Opm::WellAggregateRegionParameter::Type       { Type::Total },
+            Opm::WellAggregateRegionParameter::UnitString { "SM3" },
+            *eval
+        }.validate();
+
+        rwpt_1.reset(new Opm::WellAggregateRegionParameter { std::move(prm) });
+    }
+    {
+        auto eval = Opm::SummaryHelpers::getParameterEvaluator("RWPR");
+
+        auto prm = ::Opm::WellAggregateRegionParameter {
+            2,
+            Opm::WellAggregateRegionParameter::Keyword    { "RWPR" },
+            Opm::WellAggregateRegionParameter::Type       { Type::Rate },
+            Opm::WellAggregateRegionParameter::UnitString { "SM3/DAY" },
+            *eval
+        }.validate();
+
+        rwpr_2.reset(new Opm::WellAggregateRegionParameter { std::move(prm) });
+    }
+    {
+        auto eval = Opm::SummaryHelpers::getParameterEvaluator("RWPT");
+
+        auto prm = ::Opm::WellAggregateRegionParameter {
+            2,
+            Opm::WellAggregateRegionParameter::Keyword    { "RWPT" },
+            Opm::WellAggregateRegionParameter::Type       { Type::Total },
+            Opm::WellAggregateRegionParameter::UnitString { "SM3" },
+            *eval
+        }.validate();
+
+        rwpt_2.reset(new Opm::WellAggregateRegionParameter { std::move(prm) });
+    }
+
+    BOOST_CHECK_EQUAL(rgir  ->summaryKey(), "RGIR:1");
+    BOOST_CHECK_EQUAL(rgit  ->summaryKey(), "RGIT:1");
+    BOOST_CHECK_EQUAL(rgpr_1->summaryKey(), "RGPR:1");
+    BOOST_CHECK_EQUAL(rgpt_1->summaryKey(), "RGPT:1");
+    BOOST_CHECK_EQUAL(rgpr_2->summaryKey(), "RGPR:2");
+    BOOST_CHECK_EQUAL(rgpt_2->summaryKey(), "RGPT:2");
+
+    BOOST_CHECK_EQUAL(roir  ->summaryKey(), "ROIR:1");
+    BOOST_CHECK_EQUAL(roit  ->summaryKey(), "ROIT:1");
+    BOOST_CHECK_EQUAL(ropr_1->summaryKey(), "ROPR:1");
+    BOOST_CHECK_EQUAL(ropt_1->summaryKey(), "ROPT:1");
+    BOOST_CHECK_EQUAL(ropr_2->summaryKey(), "ROPR:2");
+    BOOST_CHECK_EQUAL(ropt_2->summaryKey(), "ROPT:2");
+
+    BOOST_CHECK_EQUAL(rwir  ->summaryKey(), "RWIR:1");
+    BOOST_CHECK_EQUAL(rwit  ->summaryKey(), "RWIT:1");
+    BOOST_CHECK_EQUAL(rwpr_1->summaryKey(), "RWPR:1");
+    BOOST_CHECK_EQUAL(rwpt_1->summaryKey(), "RWPT:1");
+    BOOST_CHECK_EQUAL(rwpr_2->summaryKey(), "RWPR:2");
+    BOOST_CHECK_EQUAL(rwpt_2->summaryKey(), "RWPT:2");
+
+    const auto& xw = wellResults();
+    const auto& xs = singleResults();
+    const auto& xr = regionResults();
+    const auto& xb = blockResults();
+
+    const auto simRes = ::Opm::SummaryParameter::SimulatorResults {
+        xw, xs, xr, xb
+    };
+
+    auto st = ::Opm::SummaryState{ std::chrono::system_clock::now() };
+    {
+        const auto dt = cse.sched.seconds(2) - cse.sched.seconds(1);
+        rgir  ->update(2, dt, input, simRes, st);
+        rgit  ->update(2, dt, input, simRes, st);
+        rgpr_1->update(2, dt, input, simRes, st);
+        rgpt_1->update(2, dt, input, simRes, st);
+        rgpr_2->update(2, dt, input, simRes, st);
+        rgpt_2->update(2, dt, input, simRes, st);
+
+        roir  ->update(2, dt, input, simRes, st);
+        roit  ->update(2, dt, input, simRes, st);
+        ropr_1->update(2, dt, input, simRes, st);
+        ropt_1->update(2, dt, input, simRes, st);
+        ropr_2->update(2, dt, input, simRes, st);
+        ropt_2->update(2, dt, input, simRes, st);
+
+        rwir  ->update(2, dt, input, simRes, st);
+        rwit  ->update(2, dt, input, simRes, st);
+        rwpr_1->update(2, dt, input, simRes, st);
+        rwpt_1->update(2, dt, input, simRes, st);
+        rwpr_2->update(2, dt, input, simRes, st);
+        rwpt_2->update(2, dt, input, simRes, st);
+    }
+
+    BOOST_CHECK_MESSAGE(!st.has("RGIR:2"), "Summary state must NOT have RGIR:2");
+
+    BOOST_CHECK_MESSAGE(st.has(rgir  ->summaryKey()), "Summary state must have RGIR:1");
+    BOOST_CHECK_MESSAGE(st.has(rgit  ->summaryKey()), "Summary state must have RGIT:1");
+    BOOST_CHECK_MESSAGE(st.has(rgpr_1->summaryKey()), "Summary state must have RGPR:1");
+    BOOST_CHECK_MESSAGE(st.has(rgpt_1->summaryKey()), "Summary state must have RGPT:1");
+    BOOST_CHECK_MESSAGE(st.has(rgpr_2->summaryKey()), "Summary state must have RGPR:2");
+    BOOST_CHECK_MESSAGE(st.has(rgpt_2->summaryKey()), "Summary state must have RGPT:2");
+
+    BOOST_CHECK_MESSAGE(st.has(roir  ->summaryKey()), "Summary state must have ROIR:1");
+    BOOST_CHECK_MESSAGE(st.has(roit  ->summaryKey()), "Summary state must have ROIT:1");
+    BOOST_CHECK_MESSAGE(st.has(ropr_1->summaryKey()), "Summary state must have ROPR:1");
+    BOOST_CHECK_MESSAGE(st.has(ropt_1->summaryKey()), "Summary state must have ROPT:1");
+    BOOST_CHECK_MESSAGE(st.has(ropr_2->summaryKey()), "Summary state must have ROPR:2");
+    BOOST_CHECK_MESSAGE(st.has(ropt_2->summaryKey()), "Summary state must have ROPT:2");
+
+    BOOST_CHECK_MESSAGE(st.has(rwir  ->summaryKey()), "Summary state must have RWIR:1");
+    BOOST_CHECK_MESSAGE(st.has(rwit  ->summaryKey()), "Summary state must have RWIT:1");
+    BOOST_CHECK_MESSAGE(st.has(rwpr_1->summaryKey()), "Summary state must have RWPR:1");
+    BOOST_CHECK_MESSAGE(st.has(rwpt_1->summaryKey()), "Summary state must have RWPT:1");
+    BOOST_CHECK_MESSAGE(st.has(rwpr_2->summaryKey()), "Summary state must have RWPR:2");
+    BOOST_CHECK_MESSAGE(st.has(rwpt_2->summaryKey()), "Summary state must have RWPT:2");
+
+    // Constant rates for each of 10 days.
+    BOOST_CHECK_CLOSE(st.get("RGIR:1"),  80.0e3, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get("RGIT:1"), 800.0e3, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get("RGPR:1"), 100.0e3 + 5.0e3, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get("RGPT:1"),   1.05e6, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get("RGPR:2"),  15.0e3, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get("RGPT:2"), 150.0e3, 1.0e-10);
+
+    BOOST_CHECK_CLOSE(st.get("ROIR:1"),  25.0e3, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get("ROIT:1"), 250.0e3, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get("ROPR:1"),  10.0e3 + 23.0e3, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get("ROPT:1"), 330.0e3, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get("ROPR:2"),  27.0e3, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get("ROPT:2"), 270.0e3, 1.0e-10);
+
+    BOOST_CHECK_CLOSE(st.get("RWIR:1"), 100.0e3, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get("RWIT:1"),   1.0e6, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get("RWPR:1"),  50.0e3 + 7.0e3, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get("RWPT:1"), 570.0e3, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get("RWPR:2"),   3.0e3, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get("RWPT:2"),  30.0e3, 1.0e-10);
+
+    {
+        const auto dt = cse.sched.seconds(3) - cse.sched.seconds(2);
+        rgit  ->update(3, dt, input, simRes, st);
+        rgpt_1->update(3, dt, input, simRes, st);
+        rgpt_2->update(3, dt, input, simRes, st);
+
+        roit  ->update(3, dt, input, simRes, st);
+        ropt_1->update(3, dt, input, simRes, st);
+        ropt_2->update(3, dt, input, simRes, st);
+
+        rwit  ->update(3, dt, input, simRes, st);
+        rwpt_1->update(3, dt, input, simRes, st);
+        rwpt_2->update(3, dt, input, simRes, st);
+    }
+    BOOST_CHECK_CLOSE(st.get("RGIT:1"),   1.6e6, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get("RGPT:1"),   2.1e6, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get("RGPT:2"), 300.0e3, 1.0e-10);
+
+    BOOST_CHECK_CLOSE(st.get("ROIT:1"), 500.0e3, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get("ROPT:1"), 660.0e3, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get("ROPT:2"), 540.0e3, 1.0e-10);
+
+    BOOST_CHECK_CLOSE(st.get("RWIT:1"),   2.0e6, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get("RWPT:1"),   1.14e6, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get("RWPT:2"),  60.0e3, 1.0e-10);
+}
+
+BOOST_AUTO_TEST_SUITE_END() // Region_Parameters
 
 // =====================================================================
 
