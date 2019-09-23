@@ -199,10 +199,8 @@ namespace Opm {
             stream << "        const auto& parserRecord = jsonKeyword.getRecord(0);" << std::endl;
             stream << "        for (size_t i=0; i < parserRecord.size(); i++){" << std::endl;
             stream << "            const auto& item = parserRecord.get( i );" << std::endl;
-            stream << "            for (size_t j=0; j < item.numDimensions(); j++) {" << std::endl;
-            stream << "                const std::string& dimString = item.getDimension(j);" << std::endl;
-            stream << "                BOOST_CHECK_NO_THROW( unitSystem.getNewDimension( dimString ));" << std::endl;
-            stream << "             }" << std::endl;
+            stream << "            for (const auto& dim : item.dimensions())" << std::endl;
+            stream << "                BOOST_CHECK_NO_THROW( unitSystem.getNewDimension( dim ));" << std::endl;
             stream << "        }" << std::endl;
             stream << "    }" << std::endl;
             stream << endTest(  );

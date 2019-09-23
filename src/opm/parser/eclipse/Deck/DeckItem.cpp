@@ -71,38 +71,28 @@ const std::vector< UDAValue >& DeckItem::value_ref< UDAValue >() const {
 }
 
 
-DeckItem::DeckItem( const std::string& nm ) : item_name( nm ) {}
-
-DeckItem::DeckItem( const std::string& nm, int, size_t hint ) :
+DeckItem::DeckItem( const std::string& nm, int) :
     type( get_type< int >() ),
     item_name( nm )
 {
-    this->ival.reserve( hint );
-    this->defaulted.reserve( hint );
 }
 
-DeckItem::DeckItem( const std::string& nm, double, size_t hint ) :
+DeckItem::DeckItem( const std::string& nm, double) :
     type( get_type< double >() ),
     item_name( nm )
 {
-    this->dval.reserve( hint );
-    this->defaulted.reserve( hint );
 }
 
-DeckItem::DeckItem( const std::string& nm, UDAValue , size_t hint ) :
+DeckItem::DeckItem( const std::string& nm, UDAValue) :
     type( get_type< UDAValue >() ),
     item_name( nm )
 {
-  this->uval.reserve( hint );
-  this->defaulted.reserve( hint );
 }
 
-DeckItem::DeckItem( const std::string& nm, std::string, size_t hint ) :
+DeckItem::DeckItem( const std::string& nm, std::string) :
     type( get_type< std::string >() ),
     item_name( nm )
 {
-    this->sval.reserve( hint );
-    this->defaulted.reserve( hint );
 }
 
 const std::string& DeckItem::name() const {
@@ -149,7 +139,7 @@ UDAValue& DeckItem::get( size_t index ) {
 */
 
 template< typename T >
-const T& DeckItem::get( size_t index ) const {
+T DeckItem::get( size_t index ) const {
     return this->value_ref< T >().at( index );
 }
 
@@ -492,10 +482,10 @@ bool DeckItem::to_bool(std::string string_value) {
  * updated with changes in DeckItem so that code is emitted.
  */
 
-template const int& DeckItem::get< int >( size_t ) const;
-template const double& DeckItem::get< double >( size_t ) const;
-template const std::string& DeckItem::get< std::string >( size_t ) const;
-template const UDAValue& DeckItem::get< UDAValue >( size_t ) const;
+template int DeckItem::get< int >( size_t ) const;
+template double DeckItem::get< double >( size_t ) const;
+template std::string DeckItem::get< std::string >( size_t ) const;
+template UDAValue DeckItem::get< UDAValue >( size_t ) const;
 
 template const std::vector< int >& DeckItem::getData< int >() const;
 template const std::vector< double >& DeckItem::getData< double >() const;

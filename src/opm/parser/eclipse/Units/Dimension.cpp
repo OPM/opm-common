@@ -26,7 +26,7 @@
 namespace Opm {
 
     Dimension::Dimension() :
-      m_name("Unit")
+        m_name("Dimensionless")
     {
         this->m_SIfactor = 1.0;
         this->m_SIoffset = 0.0;
