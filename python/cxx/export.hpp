@@ -22,7 +22,6 @@ void export_EclipseConfig(py::module& module);
 void export_EclipseGrid(py::module& module);
 void export_EclipseState(py::module& module);
 void export_Group(py::module& module);
-void export_GroupTree(py::module& module);
 void export_ParseContext(py::module& module);
 void export_Parser(py::module& module);
 void export_Schedule(py::module& module);

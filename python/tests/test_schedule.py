@@ -1,16 +1,22 @@
 import unittest
 import datetime as dt
 
-import opm.io.schedule
-from opm.io import parse
+from opm.io.parser import Parser
+from opm.io.ecl_state import EclipseState
+from opm.io.schedule import Schedule
+    
 
 class TestSchedule(unittest.TestCase):
 
+    
     @classmethod
     def setUpClass(cls):
-        cls.sch = parse('tests/spe3/SPE3CASE1.DATA').schedule
+        deck  = Parser().parse('tests/spe3/SPE3CASE1.DATA')
+        state = EclipseState(deck)
+        cls.sch = Schedule( deck, state )
 
     def testWells(self):
+        self.assertTrue( isinstance( self.sch.get_wells(0), list) )
         self.assertEqual(2, len(self.sch.get_wells(0)))
 
         with self.assertRaises(KeyError):
@@ -32,20 +38,21 @@ class TestSchedule(unittest.TestCase):
         self.assertEqual(dt.datetime(2016, 1, 1), timesteps[7])
 
     def testGroups(self):
-        g1 = self.sch.group(0)['G1'].wells
-        self.assertEqual(2, len(g1))
 
-        def head(xs): return next(iter(xs))
+        G1 = self.sch.group( 'G1', 0 )
+        self.assertTrue(G1.name == 'G1')
+        self.assertTrue(G1.num_wells == 2)
 
-        inje = head(filter(opm.io.schedule.Well.injector(), g1))
-        prod = head(filter(opm.io.schedule.Well.producer(), g1))
+        names = G1.well_names
 
-        self.assertEqual(self.sch.get_well('INJ', 0).isinjector(),  inje.isinjector())
-        self.assertEqual(self.sch.get_well('PROD', 0).isproducer(), prod.isproducer())
+        self.assertEqual(2, len(names))
 
-        with self.assertRaises(KeyError):
-            self.sch.group(0)['foo']
+        self.assertTrue(self.sch.get_well('INJ', 0).isinjector())
+        self.assertTrue(self.sch.get_well('PROD', 0).isproducer())
 
+        with self.assertRaises(ValueError):
+            self.sch.group('foo', 0)
+        
 
 if __name__ == "__main__":
     unittest.main()
