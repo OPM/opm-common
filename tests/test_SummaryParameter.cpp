@@ -24,6 +24,7 @@
 #include <opm/output/eclipse/Summary/BlockParameter.hpp>
 #include <opm/output/eclipse/Summary/EvaluateQuantity.hpp>
 #include <opm/output/eclipse/Summary/GroupParameter.hpp>
+#include <opm/output/eclipse/Summary/SegmentParameter.hpp>
 #include <opm/output/eclipse/Summary/SummaryParameter.hpp>
 #include <opm/output/eclipse/Summary/WellParameter.hpp>
 
@@ -7410,3 +7411,752 @@ BOOST_AUTO_TEST_CASE(FOPT)
 BOOST_AUTO_TEST_SUITE_END() // Efficiency_Factors
 
 BOOST_AUTO_TEST_SUITE_END() // Field_Parameters
+
+// =====================================================================
+
+BOOST_AUTO_TEST_SUITE(Segment_Parameters)
+
+namespace {
+    Opm::data::Segment PROD01_seg_1()
+    {
+        using r = Opm::data::Rates::opt;
+        auto x = Opm::data::Segment{};
+
+        x.rates.set(r::oil, - 5.0e3*sm3_pr_day());
+        x.rates.set(r::gas, -25.0e3*sm3_pr_day());
+        x.rates.set(r::wat, - 3.0e3*sm3_pr_day());
+
+        x.pressure  = 123.4*Opm::unit::barsa;
+        x.segNumber = std::size_t{1};
+
+        return x;
+    }
+
+    Opm::data::Segment PROD01_seg_2()
+    {
+        using r = Opm::data::Rates::opt;
+        auto x = Opm::data::Segment{};
+
+        x.rates.set(r::oil, - 3.0e3*sm3_pr_day());
+        x.rates.set(r::gas, -20.0e3*sm3_pr_day());
+        x.rates.set(r::wat, - 0.5e3*sm3_pr_day());
+
+        x.pressure  = 128.256*Opm::unit::barsa;
+        x.segNumber = std::size_t{2};
+
+        return x;
+    }
+
+    Opm::data::Segment PROD01_seg_3()
+    {
+        using r = Opm::data::Rates::opt;
+        auto x = Opm::data::Segment{};
+
+        x.rates.set(r::oil, -2.0e3*sm3_pr_day());
+        x.rates.set(r::gas, -5.0e3*sm3_pr_day());
+        x.rates.set(r::wat, -4.5e3*sm3_pr_day());
+
+        x.pressure  = 150.75*Opm::unit::barsa;
+        x.segNumber = std::size_t{3};
+
+        return x;
+    }
+
+    Opm::data::Well PROD01()
+    {
+        auto xw = Opm::data::Well{};
+
+        xw.segments[1] = PROD01_seg_1();
+        xw.segments[2] = PROD01_seg_2();
+        xw.segments[3] = PROD01_seg_3();
+
+        return xw;
+    }
+
+    Opm::data::Segment PROD01_seg_1_inj()
+    {
+        using r = Opm::data::Rates::opt;
+        auto x = Opm::data::Segment{};
+
+        x.rates.set(r::oil,  5.0e3*sm3_pr_day());
+        x.rates.set(r::gas, 25.0e3*sm3_pr_day());
+        x.rates.set(r::wat,  3.0e3*sm3_pr_day());
+
+        x.pressure  = 345.67*Opm::unit::barsa;
+        x.segNumber = std::size_t{1};
+
+        return x;
+    }
+
+    Opm::data::Segment PROD01_seg_2_inj()
+    {
+        using r = Opm::data::Rates::opt;
+        auto x = Opm::data::Segment{};
+
+        x.rates.set(r::oil,  3.0e3*sm3_pr_day());
+        x.rates.set(r::gas, 20.0e3*sm3_pr_day());
+        x.rates.set(r::wat,  0.5e3*sm3_pr_day());
+
+        x.pressure  = 256.512*Opm::unit::barsa;
+        x.segNumber = std::size_t{2};
+
+        return x;
+    }
+
+    Opm::data::Segment PROD01_seg_3_inj()
+    {
+        using r = Opm::data::Rates::opt;
+        auto x = Opm::data::Segment{};
+
+        x.rates.set(r::oil, 2.0e3*sm3_pr_day());
+        x.rates.set(r::gas, 5.0e3*sm3_pr_day());
+        x.rates.set(r::wat, 4.5e3*sm3_pr_day());
+
+        x.pressure  = 298.76*Opm::unit::barsa;
+        x.segNumber = std::size_t{3};
+
+        return x;
+    }
+
+    Opm::data::Well PROD01_as_injector()
+    {
+        auto xw = Opm::data::Well{};
+
+        xw.segments[1] = PROD01_seg_1_inj();
+        xw.segments[2] = PROD01_seg_2_inj();
+        xw.segments[3] = PROD01_seg_3_inj();
+
+        return xw;
+    }
+
+    Opm::data::Well INJE01()
+    {
+        // Not a multisegment well
+        return {};
+    }
+
+    Opm::data::WellRates wellResults()
+    {
+        auto xw = Opm::data::WellRates{};
+
+        xw["PROD01"] = PROD01();
+        xw["INJE01"] = INJE01();
+
+        return xw;
+    }
+
+    Opm::data::WellRates wellResults_switch_type()
+    {
+        auto xw = Opm::data::WellRates{};
+
+        xw["PROD01"] = PROD01_as_injector();
+        xw["INJE01"] = INJE01();
+
+        return xw;
+    }
+
+    std::map<std::string, double> singleResults()
+    {
+        return {};
+    }
+
+    std::map<std::string, std::vector<double>> regionResults()
+    {
+        return {};
+    }
+
+    std::map<std::pair<std::string, int>, double> blockResults()
+    {
+        return {};
+    }
+} // Anonymous
+
+BOOST_AUTO_TEST_CASE(Invalid_Type)
+{
+    using Type = Opm::SegmentParameter::Type;
+
+    auto eval = ::Opm::SummaryHelpers::getParameterEvaluator("SOFR");
+
+    auto prm = ::Opm::SegmentParameter {
+        Opm::SegmentParameter::WellName   { "PROD01" },
+        1,
+        Opm::SegmentParameter::Keyword    { "SOFR" },
+        Opm::SegmentParameter::UnitString { "SM3/DAY" },
+        Opm::SegmentParameter::Type       { static_cast<Type>(2718) },
+        *eval
+    };
+
+    BOOST_CHECK_THROW(prm.validate(), std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(SxR)
+{
+    using Type = Opm::SegmentParameter::Type;
+    const auto cse    = Setup{ "SOFR_TEST.DATA" };
+    const auto rcache = ::Opm::out::RegionCache{};
+
+    const auto input = ::Opm::SummaryParameter::InputData {
+        cse.es, cse.sched, cse.es.getInputGrid(), rcache
+    };
+
+    auto sofr_inje01_s1 = std::unique_ptr<Opm::SummaryParameter>{};
+    {
+        auto eval = ::Opm::SummaryHelpers::getParameterEvaluator("SOFR");
+
+        auto prm = ::Opm::SegmentParameter {
+            Opm::SegmentParameter::WellName   { "INJE01" },
+            1,
+            Opm::SegmentParameter::Keyword    { "SOFR" },
+            Opm::SegmentParameter::UnitString { "SM3/DAY" },
+            Opm::SegmentParameter::Type       { Type::Rate },
+            *eval
+        }.validate();
+
+        sofr_inje01_s1.reset(new Opm::SegmentParameter { std::move(prm) });
+    }
+
+    auto sofr_prod01_s1 = std::unique_ptr<Opm::SummaryParameter>{};
+    auto sofr_prod01_s2 = std::unique_ptr<Opm::SummaryParameter>{};
+    auto sofr_prod01_s3 = std::unique_ptr<Opm::SummaryParameter>{};
+    auto sgfr_prod01_s1 = std::unique_ptr<Opm::SummaryParameter>{};
+    auto sgfr_prod01_s2 = std::unique_ptr<Opm::SummaryParameter>{};
+    auto sgfr_prod01_s3 = std::unique_ptr<Opm::SummaryParameter>{};
+    auto swfr_prod01_s1 = std::unique_ptr<Opm::SummaryParameter>{};
+    auto swfr_prod01_s2 = std::unique_ptr<Opm::SummaryParameter>{};
+    auto swfr_prod01_s3 = std::unique_ptr<Opm::SummaryParameter>{};
+    auto spr_prod01_s1  = std::unique_ptr<Opm::SummaryParameter>{};
+    auto spr_prod01_s2  = std::unique_ptr<Opm::SummaryParameter>{};
+    auto spr_prod01_s3  = std::unique_ptr<Opm::SummaryParameter>{};
+    {
+        auto eval = ::Opm::SummaryHelpers::getParameterEvaluator("SOFR");
+
+        auto prm = ::Opm::SegmentParameter {
+            Opm::SegmentParameter::WellName   { "PROD01" },
+            1,
+            Opm::SegmentParameter::Keyword    { "SOFR" },
+            Opm::SegmentParameter::UnitString { "SM3/DAY" },
+            Opm::SegmentParameter::Type       { Type::Rate },
+            *eval
+        }.validate();
+
+        sofr_prod01_s1.reset(new Opm::SegmentParameter { std::move(prm) });
+    }
+    {
+        auto eval = ::Opm::SummaryHelpers::getParameterEvaluator("SOFR");
+
+        auto prm = ::Opm::SegmentParameter {
+            Opm::SegmentParameter::WellName   { "PROD01" },
+            2,
+            Opm::SegmentParameter::Keyword    { "SOFR" },
+            Opm::SegmentParameter::UnitString { "SM3/DAY" },
+            Opm::SegmentParameter::Type       { Type::Rate },
+            *eval
+        }.validate();
+
+        sofr_prod01_s2.reset(new Opm::SegmentParameter { std::move(prm) });
+    }
+    {
+        auto eval = ::Opm::SummaryHelpers::getParameterEvaluator("SOFR");
+
+        auto prm = ::Opm::SegmentParameter {
+            Opm::SegmentParameter::WellName   { "PROD01" },
+            3,
+            Opm::SegmentParameter::Keyword    { "SOFR" },
+            Opm::SegmentParameter::UnitString { "SM3/DAY" },
+            Opm::SegmentParameter::Type       { Type::Rate },
+            *eval
+        }.validate();
+
+        sofr_prod01_s3.reset(new Opm::SegmentParameter { std::move(prm) });
+    }
+    {
+        auto eval = ::Opm::SummaryHelpers::getParameterEvaluator("SGFR");
+
+        auto prm = ::Opm::SegmentParameter {
+            Opm::SegmentParameter::WellName   { "PROD01" },
+            1,
+            Opm::SegmentParameter::Keyword    { "SGFR" },
+            Opm::SegmentParameter::UnitString { "SM3/DAY" },
+            Opm::SegmentParameter::Type       { Type::Rate },
+            *eval
+        }.validate();
+
+        sgfr_prod01_s1.reset(new Opm::SegmentParameter { std::move(prm) });
+    }
+    {
+        auto eval = ::Opm::SummaryHelpers::getParameterEvaluator("SGFR");
+
+        auto prm = ::Opm::SegmentParameter {
+            Opm::SegmentParameter::WellName   { "PROD01" },
+            2,
+            Opm::SegmentParameter::Keyword    { "SGFR" },
+            Opm::SegmentParameter::UnitString { "SM3/DAY" },
+            Opm::SegmentParameter::Type       { Type::Rate },
+            *eval
+        }.validate();
+
+        sgfr_prod01_s2.reset(new Opm::SegmentParameter { std::move(prm) });
+    }
+    {
+        auto eval = ::Opm::SummaryHelpers::getParameterEvaluator("SGFR");
+
+        auto prm = ::Opm::SegmentParameter {
+            Opm::SegmentParameter::WellName   { "PROD01" },
+            3,
+            Opm::SegmentParameter::Keyword    { "SGFR" },
+            Opm::SegmentParameter::UnitString { "SM3/DAY" },
+            Opm::SegmentParameter::Type       { Type::Rate },
+            *eval
+        }.validate();
+
+        sgfr_prod01_s3.reset(new Opm::SegmentParameter { std::move(prm) });
+    }
+    {
+        auto eval = ::Opm::SummaryHelpers::getParameterEvaluator("SWFR");
+
+        auto prm = ::Opm::SegmentParameter {
+            Opm::SegmentParameter::WellName   { "PROD01" },
+            1,
+            Opm::SegmentParameter::Keyword    { "SWFR" },
+            Opm::SegmentParameter::UnitString { "SM3/DAY" },
+            Opm::SegmentParameter::Type       { Type::Rate },
+            *eval
+        }.validate();
+
+        swfr_prod01_s1.reset(new Opm::SegmentParameter { std::move(prm) });
+    }
+    {
+        auto eval = ::Opm::SummaryHelpers::getParameterEvaluator("SWFR");
+
+        auto prm = ::Opm::SegmentParameter {
+            Opm::SegmentParameter::WellName   { "PROD01" },
+            2,
+            Opm::SegmentParameter::Keyword    { "SWFR" },
+            Opm::SegmentParameter::UnitString { "SM3/DAY" },
+            Opm::SegmentParameter::Type       { Type::Rate },
+            *eval
+        }.validate();
+
+        swfr_prod01_s2.reset(new Opm::SegmentParameter { std::move(prm) });
+    }
+    {
+        auto eval = ::Opm::SummaryHelpers::getParameterEvaluator("SWFR");
+
+        auto prm = ::Opm::SegmentParameter {
+            Opm::SegmentParameter::WellName   { "PROD01" },
+            3,
+            Opm::SegmentParameter::Keyword    { "SWFR" },
+            Opm::SegmentParameter::UnitString { "SM3/DAY" },
+            Opm::SegmentParameter::Type       { Type::Rate },
+            *eval
+        }.validate();
+
+        swfr_prod01_s3.reset(new Opm::SegmentParameter { std::move(prm) });
+    }
+    {
+        auto eval = ::Opm::SummaryHelpers::getParameterEvaluator("SPR");
+
+        auto prm = ::Opm::SegmentParameter {
+            Opm::SegmentParameter::WellName   { "PROD01" },
+            1,
+            Opm::SegmentParameter::Keyword    { "SPR" },
+            Opm::SegmentParameter::UnitString { "SM3/DAY" },
+            Opm::SegmentParameter::Type       { Type::Pressure },
+            *eval
+        }.validate();
+
+        spr_prod01_s1.reset(new Opm::SegmentParameter { std::move(prm) });
+    }
+    {
+        auto eval = ::Opm::SummaryHelpers::getParameterEvaluator("SPR");
+
+        auto prm = ::Opm::SegmentParameter {
+            Opm::SegmentParameter::WellName   { "PROD01" },
+            2,
+            Opm::SegmentParameter::Keyword    { "SPR" },
+            Opm::SegmentParameter::UnitString { "SM3/DAY" },
+            Opm::SegmentParameter::Type       { Type::Pressure },
+            *eval
+        }.validate();
+
+        spr_prod01_s2.reset(new Opm::SegmentParameter { std::move(prm) });
+    }
+    {
+        auto eval = ::Opm::SummaryHelpers::getParameterEvaluator("SPR");
+
+        auto prm = ::Opm::SegmentParameter {
+            Opm::SegmentParameter::WellName   { "PROD01" },
+            3,
+            Opm::SegmentParameter::Keyword    { "SPR" },
+            Opm::SegmentParameter::UnitString { "SM3/DAY" },
+            Opm::SegmentParameter::Type       { Type::Pressure },
+            *eval
+        }.validate();
+
+        spr_prod01_s3.reset(new Opm::SegmentParameter { std::move(prm) });
+    }
+
+    const auto& xw = wellResults();
+    const auto& xs = singleResults();
+    const auto& xr = regionResults();
+    const auto& xb = blockResults();
+
+    const auto simRes = ::Opm::SummaryParameter::SimulatorResults {
+        xw, xs, xr, xb
+    };
+
+    auto st = ::Opm::SummaryState{ std::chrono::system_clock::now() };
+
+    const auto dt = cse.sched.seconds(2) - cse.sched.seconds(1);
+    sofr_inje01_s1->update(2, dt, input, simRes, st);
+    sofr_prod01_s1->update(2, dt, input, simRes, st);
+    sofr_prod01_s2->update(2, dt, input, simRes, st);
+    sofr_prod01_s3->update(2, dt, input, simRes, st);
+    sgfr_prod01_s1->update(2, dt, input, simRes, st);
+    sgfr_prod01_s2->update(2, dt, input, simRes, st);
+    sgfr_prod01_s3->update(2, dt, input, simRes, st);
+    swfr_prod01_s1->update(2, dt, input, simRes, st);
+    swfr_prod01_s2->update(2, dt, input, simRes, st);
+    swfr_prod01_s3->update(2, dt, input, simRes, st);
+    spr_prod01_s1 ->update(2, dt, input, simRes, st);
+    spr_prod01_s2 ->update(2, dt, input, simRes, st);
+    spr_prod01_s3 ->update(2, dt, input, simRes, st);
+
+    BOOST_CHECK_EQUAL(sofr_inje01_s1->summaryKey(), "SOFR:INJE01:1");
+    BOOST_CHECK(! st.has(sofr_inje01_s1->summaryKey())); // INJE01 not an MSW
+
+    BOOST_CHECK_EQUAL(sofr_prod01_s1->summaryKey(), "SOFR:PROD01:1");
+    BOOST_CHECK_EQUAL(sofr_prod01_s2->summaryKey(), "SOFR:PROD01:2");
+    BOOST_CHECK_EQUAL(sofr_prod01_s3->summaryKey(), "SOFR:PROD01:3");
+    BOOST_CHECK_EQUAL(sgfr_prod01_s1->summaryKey(), "SGFR:PROD01:1");
+    BOOST_CHECK_EQUAL(sgfr_prod01_s2->summaryKey(), "SGFR:PROD01:2");
+    BOOST_CHECK_EQUAL(sgfr_prod01_s3->summaryKey(), "SGFR:PROD01:3");
+    BOOST_CHECK_EQUAL(swfr_prod01_s1->summaryKey(), "SWFR:PROD01:1");
+    BOOST_CHECK_EQUAL(swfr_prod01_s2->summaryKey(), "SWFR:PROD01:2");
+    BOOST_CHECK_EQUAL(swfr_prod01_s3->summaryKey(), "SWFR:PROD01:3");
+    BOOST_CHECK_EQUAL(spr_prod01_s1 ->summaryKey(), "SPR:PROD01:1");
+    BOOST_CHECK_EQUAL(spr_prod01_s2 ->summaryKey(), "SPR:PROD01:2");
+    BOOST_CHECK_EQUAL(spr_prod01_s3 ->summaryKey(), "SPR:PROD01:3");
+
+    BOOST_CHECK_MESSAGE(st.has(sofr_prod01_s1->summaryKey()), "SOFR Must Exist for PROD01/1");
+    BOOST_CHECK_MESSAGE(st.has(sofr_prod01_s2->summaryKey()), "SOFR Must Exist for PROD01/2");
+    BOOST_CHECK_MESSAGE(st.has(sofr_prod01_s3->summaryKey()), "SOFR Must Exist for PROD01/3");
+
+    BOOST_CHECK_MESSAGE(st.has(sgfr_prod01_s1->summaryKey()), "SGFR Must Exist for PROD01/1");
+    BOOST_CHECK_MESSAGE(st.has(sgfr_prod01_s2->summaryKey()), "SGFR Must Exist for PROD01/2");
+    BOOST_CHECK_MESSAGE(st.has(sgfr_prod01_s3->summaryKey()), "SGFR Must Exist for PROD01/3");
+
+    BOOST_CHECK_MESSAGE(st.has(swfr_prod01_s1->summaryKey()), "SWFR Must Exist for PROD01/1");
+    BOOST_CHECK_MESSAGE(st.has(swfr_prod01_s2->summaryKey()), "SWFR Must Exist for PROD01/2");
+    BOOST_CHECK_MESSAGE(st.has(swfr_prod01_s3->summaryKey()), "SWFR Must Exist for PROD01/3");
+
+    BOOST_CHECK_MESSAGE(st.has(spr_prod01_s1 ->summaryKey()), "SPR Must Exist for PROD01/1");
+    BOOST_CHECK_MESSAGE(st.has(spr_prod01_s2 ->summaryKey()), "SPR Must Exist for PROD01/2");
+    BOOST_CHECK_MESSAGE(st.has(spr_prod01_s3 ->summaryKey()), "SPR Must Exist for PROD01/3");
+
+    BOOST_CHECK_MESSAGE(! st.has("SOFR:PROD01:10"),
+                        "SOFR Must NOT Exist for Segment 10 in PROD01");
+
+    BOOST_CHECK_CLOSE(st.get("SOFR:PROD01:1"), 5.0e3, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get("SOFR:PROD01:2"), 3.0e3, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get("SOFR:PROD01:3"), 2.0e3, 1.0e-10);
+
+    BOOST_CHECK_CLOSE(st.get("SGFR:PROD01:1"), 25.0e3, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get("SGFR:PROD01:2"), 20.0e3, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get("SGFR:PROD01:3"),  5.0e3, 1.0e-10);
+
+    BOOST_CHECK_CLOSE(st.get("SWFR:PROD01:1"), 3.0e3, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get("SWFR:PROD01:2"), 0.5e3, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get("SWFR:PROD01:3"), 4.5e3, 1.0e-10);
+
+    BOOST_CHECK_CLOSE(st.get("SPR:PROD01:1"), 123.4, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get("SPR:PROD01:2"), 128.256, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get("SPR:PROD01:3"), 150.75, 1.0e-10);
+}
+
+BOOST_AUTO_TEST_CASE(SxR_PROD01_As_Injector)
+{
+    using Type = Opm::SegmentParameter::Type;
+    const auto cse    = Setup{ "SOFR_TEST.DATA" };
+    const auto rcache = ::Opm::out::RegionCache{};
+
+    const auto input = ::Opm::SummaryParameter::InputData {
+        cse.es, cse.sched, cse.es.getInputGrid(), rcache
+    };
+
+    auto sofr_inje01_s1 = std::unique_ptr<Opm::SummaryParameter>{};
+    {
+        auto eval = ::Opm::SummaryHelpers::getParameterEvaluator("SOFR");
+
+        auto prm = ::Opm::SegmentParameter {
+            Opm::SegmentParameter::WellName   { "INJE01" },
+            1,
+            Opm::SegmentParameter::Keyword    { "SOFR" },
+            Opm::SegmentParameter::UnitString { "SM3/DAY" },
+            Opm::SegmentParameter::Type       { Type::Rate },
+            *eval
+        }.validate();
+
+        sofr_inje01_s1.reset(new Opm::SegmentParameter { std::move(prm) });
+    }
+
+    auto sofr_prod01_s1 = std::unique_ptr<Opm::SummaryParameter>{};
+    auto sofr_prod01_s2 = std::unique_ptr<Opm::SummaryParameter>{};
+    auto sofr_prod01_s3 = std::unique_ptr<Opm::SummaryParameter>{};
+    auto sgfr_prod01_s1 = std::unique_ptr<Opm::SummaryParameter>{};
+    auto sgfr_prod01_s2 = std::unique_ptr<Opm::SummaryParameter>{};
+    auto sgfr_prod01_s3 = std::unique_ptr<Opm::SummaryParameter>{};
+    auto swfr_prod01_s1 = std::unique_ptr<Opm::SummaryParameter>{};
+    auto swfr_prod01_s2 = std::unique_ptr<Opm::SummaryParameter>{};
+    auto swfr_prod01_s3 = std::unique_ptr<Opm::SummaryParameter>{};
+    auto spr_prod01_s1  = std::unique_ptr<Opm::SummaryParameter>{};
+    auto spr_prod01_s2  = std::unique_ptr<Opm::SummaryParameter>{};
+    auto spr_prod01_s3  = std::unique_ptr<Opm::SummaryParameter>{};
+    {
+        auto eval = ::Opm::SummaryHelpers::getParameterEvaluator("SOFR");
+
+        auto prm = ::Opm::SegmentParameter {
+            Opm::SegmentParameter::WellName   { "PROD01" },
+            1,
+            Opm::SegmentParameter::Keyword    { "SOFR" },
+            Opm::SegmentParameter::UnitString { "SM3/DAY" },
+            Opm::SegmentParameter::Type       { Type::Rate },
+            *eval
+        }.validate();
+
+        sofr_prod01_s1.reset(new Opm::SegmentParameter { std::move(prm) });
+    }
+    {
+        auto eval = ::Opm::SummaryHelpers::getParameterEvaluator("SOFR");
+
+        auto prm = ::Opm::SegmentParameter {
+            Opm::SegmentParameter::WellName   { "PROD01" },
+            2,
+            Opm::SegmentParameter::Keyword    { "SOFR" },
+            Opm::SegmentParameter::UnitString { "SM3/DAY" },
+            Opm::SegmentParameter::Type       { Type::Rate },
+            *eval
+        }.validate();
+
+        sofr_prod01_s2.reset(new Opm::SegmentParameter { std::move(prm) });
+    }
+    {
+        auto eval = ::Opm::SummaryHelpers::getParameterEvaluator("SOFR");
+
+        auto prm = ::Opm::SegmentParameter {
+            Opm::SegmentParameter::WellName   { "PROD01" },
+            3,
+            Opm::SegmentParameter::Keyword    { "SOFR" },
+            Opm::SegmentParameter::UnitString { "SM3/DAY" },
+            Opm::SegmentParameter::Type       { Type::Rate },
+            *eval
+        }.validate();
+
+        sofr_prod01_s3.reset(new Opm::SegmentParameter { std::move(prm) });
+    }
+    {
+        auto eval = ::Opm::SummaryHelpers::getParameterEvaluator("SGFR");
+
+        auto prm = ::Opm::SegmentParameter {
+            Opm::SegmentParameter::WellName   { "PROD01" },
+            1,
+            Opm::SegmentParameter::Keyword    { "SGFR" },
+            Opm::SegmentParameter::UnitString { "SM3/DAY" },
+            Opm::SegmentParameter::Type       { Type::Rate },
+            *eval
+        }.validate();
+
+        sgfr_prod01_s1.reset(new Opm::SegmentParameter { std::move(prm) });
+    }
+    {
+        auto eval = ::Opm::SummaryHelpers::getParameterEvaluator("SGFR");
+
+        auto prm = ::Opm::SegmentParameter {
+            Opm::SegmentParameter::WellName   { "PROD01" },
+            2,
+            Opm::SegmentParameter::Keyword    { "SGFR" },
+            Opm::SegmentParameter::UnitString { "SM3/DAY" },
+            Opm::SegmentParameter::Type       { Type::Rate },
+            *eval
+        }.validate();
+
+        sgfr_prod01_s2.reset(new Opm::SegmentParameter { std::move(prm) });
+    }
+    {
+        auto eval = ::Opm::SummaryHelpers::getParameterEvaluator("SGFR");
+
+        auto prm = ::Opm::SegmentParameter {
+            Opm::SegmentParameter::WellName   { "PROD01" },
+            3,
+            Opm::SegmentParameter::Keyword    { "SGFR" },
+            Opm::SegmentParameter::UnitString { "SM3/DAY" },
+            Opm::SegmentParameter::Type       { Type::Rate },
+            *eval
+        }.validate();
+
+        sgfr_prod01_s3.reset(new Opm::SegmentParameter { std::move(prm) });
+    }
+    {
+        auto eval = ::Opm::SummaryHelpers::getParameterEvaluator("SWFR");
+
+        auto prm = ::Opm::SegmentParameter {
+            Opm::SegmentParameter::WellName   { "PROD01" },
+            1,
+            Opm::SegmentParameter::Keyword    { "SWFR" },
+            Opm::SegmentParameter::UnitString { "SM3/DAY" },
+            Opm::SegmentParameter::Type       { Type::Rate },
+            *eval
+        }.validate();
+
+        swfr_prod01_s1.reset(new Opm::SegmentParameter { std::move(prm) });
+    }
+    {
+        auto eval = ::Opm::SummaryHelpers::getParameterEvaluator("SWFR");
+
+        auto prm = ::Opm::SegmentParameter {
+            Opm::SegmentParameter::WellName   { "PROD01" },
+            2,
+            Opm::SegmentParameter::Keyword    { "SWFR" },
+            Opm::SegmentParameter::UnitString { "SM3/DAY" },
+            Opm::SegmentParameter::Type       { Type::Rate },
+            *eval
+        }.validate();
+
+        swfr_prod01_s2.reset(new Opm::SegmentParameter { std::move(prm) });
+    }
+    {
+        auto eval = ::Opm::SummaryHelpers::getParameterEvaluator("SWFR");
+
+        auto prm = ::Opm::SegmentParameter {
+            Opm::SegmentParameter::WellName   { "PROD01" },
+            3,
+            Opm::SegmentParameter::Keyword    { "SWFR" },
+            Opm::SegmentParameter::UnitString { "SM3/DAY" },
+            Opm::SegmentParameter::Type       { Type::Rate },
+            *eval
+        }.validate();
+
+        swfr_prod01_s3.reset(new Opm::SegmentParameter { std::move(prm) });
+    }
+    {
+        auto eval = ::Opm::SummaryHelpers::getParameterEvaluator("SPR");
+
+        auto prm = ::Opm::SegmentParameter {
+            Opm::SegmentParameter::WellName   { "PROD01" },
+            1,
+            Opm::SegmentParameter::Keyword    { "SPR" },
+            Opm::SegmentParameter::UnitString { "SM3/DAY" },
+            Opm::SegmentParameter::Type       { Type::Pressure },
+            *eval
+        }.validate();
+
+        spr_prod01_s1.reset(new Opm::SegmentParameter { std::move(prm) });
+    }
+    {
+        auto eval = ::Opm::SummaryHelpers::getParameterEvaluator("SPR");
+
+        auto prm = ::Opm::SegmentParameter {
+            Opm::SegmentParameter::WellName   { "PROD01" },
+            2,
+            Opm::SegmentParameter::Keyword    { "SPR" },
+            Opm::SegmentParameter::UnitString { "SM3/DAY" },
+            Opm::SegmentParameter::Type       { Type::Pressure },
+            *eval
+        }.validate();
+
+        spr_prod01_s2.reset(new Opm::SegmentParameter { std::move(prm) });
+    }
+    {
+        auto eval = ::Opm::SummaryHelpers::getParameterEvaluator("SPR");
+
+        auto prm = ::Opm::SegmentParameter {
+            Opm::SegmentParameter::WellName   { "PROD01" },
+            3,
+            Opm::SegmentParameter::Keyword    { "SPR" },
+            Opm::SegmentParameter::UnitString { "SM3/DAY" },
+            Opm::SegmentParameter::Type       { Type::Pressure },
+            *eval
+        }.validate();
+
+        spr_prod01_s3.reset(new Opm::SegmentParameter { std::move(prm) });
+    }
+
+    const auto& xw = wellResults_switch_type();
+    const auto& xs = singleResults();
+    const auto& xr = regionResults();
+    const auto& xb = blockResults();
+
+    const auto simRes = ::Opm::SummaryParameter::SimulatorResults {
+        xw, xs, xr, xb
+    };
+
+    auto st = ::Opm::SummaryState{ std::chrono::system_clock::now() };
+
+    const auto dt = cse.sched.seconds(2) - cse.sched.seconds(1);
+    sofr_inje01_s1->update(2, dt, input, simRes, st);
+    sofr_prod01_s1->update(2, dt, input, simRes, st);
+    sofr_prod01_s2->update(2, dt, input, simRes, st);
+    sofr_prod01_s3->update(2, dt, input, simRes, st);
+    sgfr_prod01_s1->update(2, dt, input, simRes, st);
+    sgfr_prod01_s2->update(2, dt, input, simRes, st);
+    sgfr_prod01_s3->update(2, dt, input, simRes, st);
+    swfr_prod01_s1->update(2, dt, input, simRes, st);
+    swfr_prod01_s2->update(2, dt, input, simRes, st);
+    swfr_prod01_s3->update(2, dt, input, simRes, st);
+    spr_prod01_s1 ->update(2, dt, input, simRes, st);
+    spr_prod01_s2 ->update(2, dt, input, simRes, st);
+    spr_prod01_s3 ->update(2, dt, input, simRes, st);
+
+    BOOST_CHECK_EQUAL(sofr_inje01_s1->summaryKey(), "SOFR:INJE01:1");
+    BOOST_CHECK(! st.has(sofr_inje01_s1->summaryKey())); // INJE01 not an MSW
+
+    BOOST_CHECK_EQUAL(sofr_prod01_s1->summaryKey(), "SOFR:PROD01:1");
+    BOOST_CHECK_EQUAL(sofr_prod01_s2->summaryKey(), "SOFR:PROD01:2");
+    BOOST_CHECK_EQUAL(sofr_prod01_s3->summaryKey(), "SOFR:PROD01:3");
+    BOOST_CHECK_EQUAL(sgfr_prod01_s1->summaryKey(), "SGFR:PROD01:1");
+    BOOST_CHECK_EQUAL(sgfr_prod01_s2->summaryKey(), "SGFR:PROD01:2");
+    BOOST_CHECK_EQUAL(sgfr_prod01_s3->summaryKey(), "SGFR:PROD01:3");
+    BOOST_CHECK_EQUAL(swfr_prod01_s1->summaryKey(), "SWFR:PROD01:1");
+    BOOST_CHECK_EQUAL(swfr_prod01_s2->summaryKey(), "SWFR:PROD01:2");
+    BOOST_CHECK_EQUAL(swfr_prod01_s3->summaryKey(), "SWFR:PROD01:3");
+    BOOST_CHECK_EQUAL(spr_prod01_s1 ->summaryKey(), "SPR:PROD01:1");
+    BOOST_CHECK_EQUAL(spr_prod01_s2 ->summaryKey(), "SPR:PROD01:2");
+    BOOST_CHECK_EQUAL(spr_prod01_s3 ->summaryKey(), "SPR:PROD01:3");
+
+    BOOST_CHECK_MESSAGE(st.has(sofr_prod01_s1->summaryKey()), "SOFR Must Exist for PROD01/1");
+    BOOST_CHECK_MESSAGE(st.has(sofr_prod01_s2->summaryKey()), "SOFR Must Exist for PROD01/2");
+    BOOST_CHECK_MESSAGE(st.has(sofr_prod01_s3->summaryKey()), "SOFR Must Exist for PROD01/3");
+
+    BOOST_CHECK_MESSAGE(st.has(sgfr_prod01_s1->summaryKey()), "SGFR Must Exist for PROD01/1");
+    BOOST_CHECK_MESSAGE(st.has(sgfr_prod01_s2->summaryKey()), "SGFR Must Exist for PROD01/2");
+    BOOST_CHECK_MESSAGE(st.has(sgfr_prod01_s3->summaryKey()), "SGFR Must Exist for PROD01/3");
+
+    BOOST_CHECK_MESSAGE(st.has(swfr_prod01_s1->summaryKey()), "SWFR Must Exist for PROD01/1");
+    BOOST_CHECK_MESSAGE(st.has(swfr_prod01_s2->summaryKey()), "SWFR Must Exist for PROD01/2");
+    BOOST_CHECK_MESSAGE(st.has(swfr_prod01_s3->summaryKey()), "SWFR Must Exist for PROD01/3");
+
+    BOOST_CHECK_MESSAGE(st.has(spr_prod01_s1 ->summaryKey()), "SPR Must Exist for PROD01/1");
+    BOOST_CHECK_MESSAGE(st.has(spr_prod01_s2 ->summaryKey()), "SPR Must Exist for PROD01/2");
+    BOOST_CHECK_MESSAGE(st.has(spr_prod01_s3 ->summaryKey()), "SPR Must Exist for PROD01/3");
+
+    BOOST_CHECK_MESSAGE(! st.has("SOFR:PROD01:10"),
+                        "SOFR Must NOT Exist for Segment 10 in PROD01");
+
+    BOOST_CHECK_CLOSE(st.get("SOFR:PROD01:1"), -5.0e3, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get("SOFR:PROD01:2"), -3.0e3, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get("SOFR:PROD01:3"), -2.0e3, 1.0e-10);
+
+    BOOST_CHECK_CLOSE(st.get("SGFR:PROD01:1"), -25.0e3, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get("SGFR:PROD01:2"), -20.0e3, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get("SGFR:PROD01:3"), - 5.0e3, 1.0e-10);
+
+    BOOST_CHECK_CLOSE(st.get("SWFR:PROD01:1"), -3.0e3, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get("SWFR:PROD01:2"), -0.5e3, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get("SWFR:PROD01:3"), -4.5e3, 1.0e-10);
+
+    BOOST_CHECK_CLOSE(st.get("SPR:PROD01:1"), 345.67, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get("SPR:PROD01:2"), 256.512, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get("SPR:PROD01:3"), 298.76, 1.0e-10);
+}
+
+BOOST_AUTO_TEST_SUITE_END() // Segment_Parameters
