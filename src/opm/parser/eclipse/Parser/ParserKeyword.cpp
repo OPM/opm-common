@@ -506,7 +506,7 @@ void set_dimensions( ParserItem& item,
         if( !rawKeyword.isFinished() )
             throw std::invalid_argument("Tried to create a deck keyword from an incomplete raw keyword " + rawKeyword.getKeywordName());
 
-        DeckKeyword keyword( this, rawKeyword.getKeywordName() );
+        DeckKeyword keyword( *this, rawKeyword.getKeywordName() );
         keyword.setLocation( rawKeyword.getLocation( ) );
         keyword.setDataKeyword( isDataKeyword() );
 
