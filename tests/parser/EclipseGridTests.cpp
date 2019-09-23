@@ -2198,7 +2198,7 @@ BOOST_AUTO_TEST_CASE(TESTCP_ACTNUM_UPDATE) {
     auto deck = parser.parseString( deckData) ;
 
     std::vector<int> actInDeck = {0, 1, 1, 1, 0, 1};
-    std::vector<int> newAct = {1, 0, 0, 0, 1};
+    std::vector<int> newAct = {1, 0, 0, 0, 1, 0};
 
     Opm::EclipseGrid grid1( deck);
     Opm::EclipseGrid grid2( deck, newAct.data());
