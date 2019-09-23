@@ -26,9 +26,9 @@
 #include <opm/parser/eclipse/EclipseState/Grid/MinpvMode.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/PinchMode.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridDims.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
 
-#include <ert/ecl/ecl_grid.h>
-#include <ert/util/ert_unique_ptr.hpp>
+#include <opm/io/eclipse/EclFile.hpp>
 
 #include <array>
 #include <memory>
@@ -59,10 +59,10 @@ namespace Opm {
           These constructors will make a copy of the src grid, with
           zcorn and or actnum have been adjustments.
         */
-        EclipseGrid(const EclipseGrid& src, const double* zcorn , const std::vector<int>& actnum);
-        EclipseGrid(const EclipseGrid& src, const std::vector<double>& zcorn , const std::vector<int>& actnum);
+        EclipseGrid(const EclipseGrid& src) = default;
         EclipseGrid(const EclipseGrid& src, const std::vector<int>& actnum);
-
+        EclipseGrid(const EclipseGrid& src, const double* zcorn, const std::vector<int>& actnum);
+       
         EclipseGrid(size_t nx, size_t ny, size_t nz,
                     double dx = 1.0, double dy = 1.0, double dz = 1.0);
 
@@ -77,7 +77,6 @@ namespace Opm {
         /// explicitly.  If a null pointer is passed, every cell is active.
         EclipseGrid(const Deck& deck, const int * actnum = nullptr);
 
-
         static bool hasGDFILE(const Deck& deck);
         static bool hasCylindricalKeywords(const Deck& deck);
         static bool hasCornerPointKeywords(const Deck&);
@@ -88,8 +87,7 @@ namespace Opm {
         size_t activeIndex(size_t i, size_t j, size_t k) const;
         size_t activeIndex(size_t globalIndex) const;
 
-        void save(const std::string& filename, UnitSystem::UnitType output_units) const;
-        void addNNC(const NNC& nnc);
+        void save(const std::string& filename, bool formatted, const Opm::NNC& nnc, const Opm::UnitSystem& units) const;
         /*
           Observe that the there is a getGlobalIndex(i,j,k)
           implementation in the base class. This method - translating
@@ -105,6 +103,7 @@ namespace Opm {
           applied in the 'THETA' direction; this will only apply if
           the theta keywords entered sum up to exactly 360 degrees!
         */
+        
         bool circle( ) const;
         bool isPinchActive( ) const;
         double getPinchThresholdThickness( ) const;
@@ -113,7 +112,6 @@ namespace Opm {
 
         MinpvMode::ModeEnum getMinpvMode() const;
         const std::vector<double>& getMinpvVector( ) const;
-
 
         /*
           Will return a vector of nactive elements. The method will
@@ -127,6 +125,7 @@ namespace Opm {
 
              ??? : Exception.
         */
+
         template<typename T>
         std::vector<T> compressedVector(const std::vector<T>& input_vector) const {
             if( input_vector.size() == this->getNumActive() ) {
@@ -151,13 +150,13 @@ namespace Opm {
         /// Will return a vector a length num_active; where the value
         /// of each element is the corresponding global index.
         const std::vector<int>& getActiveMap() const;
-        std::array<double, 3> getCellCenter(size_t i,size_t j, size_t k) const;
-        std::array<double, 3> getCellCenter(size_t globalIndex) const;
+        const std::array<double, 3>& getCellCenter(size_t i,size_t j, size_t k) const;
+        const std::array<double, 3>& getCellCenter(size_t globalIndex) const;
         std::array<double, 3> getCornerPos(size_t i,size_t j, size_t k, size_t corner_index) const;
         double getCellVolume(size_t globalIndex) const;
         double getCellVolume(size_t i , size_t j , size_t k) const;
-        double getCellThicknes(size_t globalIndex) const;
-        double getCellThicknes(size_t i , size_t j , size_t k) const;
+        double getCellThickness(size_t globalIndex) const;
+        double getCellThickness(size_t i , size_t j , size_t k) const;
         std::array<double, 3> getCellDims(size_t i,size_t j, size_t k) const;
         std::array<double, 3> getCellDims(size_t globalIndex) const;
         bool cellActive( size_t globalIndex ) const;
@@ -166,19 +165,28 @@ namespace Opm {
         double getCellDepth(size_t globalIndex) const;
         ZcornMapper zcornMapper() const;
 
+        const std::vector<double>& getCOORD() const;
+        const std::vector<double>& getZCORN() const;
+        const std::vector<int>& getACTNUM( ) const;
+        const std::vector<double>& getMAPAXES() const;
+        const std::string& getMAPUNITS() const { return m_mapunits; } ;
+        
         /*
-          The exportZCORN method will adjust the z coordinates to ensure that cells do not
-          overlap. The return value is the number of points which have been adjusted.
+          The fixupZCORN method is run as part of constructiong the grid. This will adjust the 
+          z-coordinates to ensure that cells do not overlap. The return value is the number of 
+          points which have been adjusted. The number of zcorn nodes that has ben fixed is 
+          stored in private member zcorn_fixed. 
         */
-        size_t exportZCORN( std::vector<double>& zcorn) const;
+        
+        size_t fixupZCORN();
+        size_t getZcornFixed() { return zcorn_fixed; };
+        
+        // resetACTNUM with no arguments will make all cells in the grid active. 
+       
+        void resetACTNUM();
+        void resetACTNUM( const std::vector<int>& actnum);
 
-
-        void exportMAPAXES( std::vector<double>& mapaxes) const;
-        void exportCOORD( std::vector<double>& coord) const;
-        void exportACTNUM( std::vector<int>& actnum) const;
-        void resetACTNUM( const int * actnum);
         bool equal(const EclipseGrid& other) const;
-        const ecl_grid_type * c_ptr() const;
 
     private:
         std::vector<double> m_minpvVector;
@@ -186,25 +194,35 @@ namespace Opm {
         Value<double> m_pinch;
         PinchMode::ModeEnum m_pinchoutMode;
         PinchMode::ModeEnum m_multzMode;
-        mutable std::vector<double> volume_cache;
+
         mutable std::vector< int > activeMap;
         bool m_circle = false;
-        /*
-          The internal class grid_ptr is a a std::unique_ptr with
-          special copy semantics. The purpose of implementing this is
-          that the EclipseGrid class can now use the default
-          implementation for the copy and move constructors.
-        */
-        using ert_ptr = ERT::ert_unique_ptr<ecl_grid_type , ecl_grid_free>;
-        class grid_ptr : public ert_ptr {
-        public:
-            using ert_ptr::unique_ptr;
-            grid_ptr() = default;
-            grid_ptr(grid_ptr&&) = default;
-            grid_ptr(const grid_ptr& src) :
-                ert_ptr( ecl_grid_alloc_copy( src.get() ) ) {}
-        };
-        grid_ptr m_grid;
+
+        size_t zcorn_fixed = 0;
+        bool m_useActnumFromGdfile = false;
+        
+        // Input grid data.
+        std::vector<double> m_zcorn;
+        std::vector<double> m_coord;
+        std::vector<double> m_mapaxes;
+        std::vector<int> m_actnum;
+        std::string m_mapunits;
+
+        // Mapping to/from active cells.
+        int m_nactive;
+        std::vector<int> m_active_to_global;
+        std::vector<int> m_global_to_active;
+
+        // Geometry data.
+        std::vector<double> m_volume;
+        std::vector<double> m_depth;
+        std::vector<double> m_dx;
+        std::vector<double> m_dy;
+        std::vector<double> m_dz;
+        std::vector<std::array<double, 3>> m_cellCenter; 
+
+        void initGridFromEGridFile(Opm::EclIO::EclFile& egridfile, std::string fileName);
+        
         void initBinaryGrid(const Deck& deck);
 
         void initCornerPointGrid(const std::array<int,3>& dims ,
@@ -212,6 +230,8 @@ namespace Opm {
                                  const std::vector<double>& zcorn ,
                                  const int * actnum,
                                  const double * mapaxes);
+
+        bool keywInputBeforeGdfile(const Deck& deck, const std::string keyword) const;
 
         void initCylindricalGrid(       const std::array<int, 3>&, const Deck&);
         void initCartesianGrid(         const std::array<int, 3>&, const Deck&);
@@ -229,6 +249,20 @@ namespace Opm {
         static std::vector<double> createDVector(const std::array<int, 3>& dims, size_t dim, const std::string& DKey,
                 const std::string& DVKey, const Deck&);
         static void scatterDim(const std::array<int, 3>& dims , size_t dim , const std::vector<double>& DV , std::vector<double>& D);
+
+        
+        std::vector<double> makeCoordDxDyDzTops(const std::array<int, 3>& dims, const std::vector<double>& dx, const std::vector<double>& dy, const std::vector<double>& dz, const std::vector<double>& tops) const;
+        std::vector<double> makeZcornDzTops(const std::array<int, 3>& dims, const std::vector<double>& dz, const std::vector<double>& tops) const ;
+        std::vector<double> makeZcornDzvDepthz(const std::array<int, 3>& dims, const std::vector<double>& dzv, const std::vector<double>& depthz) const; 
+        std::vector<double> makeCoordDxvDyvDzvDepthz(const std::array<int, 3>& dims, const std::vector<double>& dxv, const std::vector<double>& dyv, const std::vector<double>& dzv, const std::vector<double>& depthz) const;
+
+        double sumIdir(int j, int k, int i1, const std::array<int, 3>& dims, const std::vector<double>& dx) const;
+        double sumJdir(int i, int k, int j1, const std::array<int, 3>& dims, const std::vector<double>& dy) const;
+        double sumKdir(int i, int j, const std::array<int, 3>& dims, const std::vector<double>& dz) const;
+
+        void calculateGeometryData();
+        
+        void getCellCorners(const std::array<int, 3>& ijk, const std::array<int, 3>& dims, std::array<double,8>& X, std::array<double,8>& Y, std::array<double,8>& Z) const;
    };
 
     class CoordMapper {

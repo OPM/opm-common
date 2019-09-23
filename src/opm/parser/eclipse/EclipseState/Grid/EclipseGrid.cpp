@@ -19,6 +19,7 @@
 
 #define _USE_MATH_DEFINES
 #include <cmath>
+#include <numeric>
 
 #include <iostream>
 #include <tuple>
@@ -26,6 +27,9 @@
 
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/utility/numeric/calculateCellVol.hpp>
+
+#include <opm/io/eclipse/EclFile.hpp>
+#include <opm/io/eclipse/EclOutput.hpp>
 
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
@@ -50,151 +54,254 @@
 
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
-#include <ert/ecl/ecl_grid.hpp>
 
 namespace Opm {
 
 
-    EclipseGrid::EclipseGrid(std::array<int, 3>& dims ,
-			     const std::vector<double>& coord ,
-			     const std::vector<double>& zcorn ,
-			     const int * actnum,
-			     const double * mapaxes)
-	: GridDims(dims),
-	  m_minpvMode(MinpvMode::ModeEnum::Inactive),
-	  m_pinch("PINCH"),
-	  m_pinchoutMode(PinchMode::ModeEnum::TOPBOT),
-	  m_multzMode(PinchMode::ModeEnum::TOP),
-          volume_cache(dims[0] * dims[1] * dims[2], -1.0)
-    {
-        initCornerPointGrid( dims, coord , zcorn , actnum , mapaxes );
+EclipseGrid::EclipseGrid(std::array<int, 3>& dims ,
+                         const std::vector<double>& coord ,
+                         const std::vector<double>& zcorn ,
+                         const int * actnum,
+                         const double * mapaxes)
+    : GridDims(dims),
+      m_minpvMode(MinpvMode::ModeEnum::Inactive),
+      m_pinch("PINCH"),
+      m_pinchoutMode(PinchMode::ModeEnum::TOPBOT),
+      m_multzMode(PinchMode::ModeEnum::TOP)
+{
+    initCornerPointGrid( dims, coord , zcorn , actnum , mapaxes );
+}
+
+/**
+   Will create an EclipseGrid instance based on an existing
+   GRID/EGRID file.
+*/
+
+
+EclipseGrid::EclipseGrid(const std::string& fileName )
+    : GridDims(),
+      m_minpvMode(MinpvMode::ModeEnum::Inactive),
+      m_pinch("PINCH"),
+      m_pinchoutMode(PinchMode::ModeEnum::TOPBOT),
+      m_multzMode(PinchMode::ModeEnum::TOP)
+{
+
+    Opm::EclIO::EclFile egridfile(fileName);
+    
+    m_useActnumFromGdfile=true;
+
+    initGridFromEGridFile(egridfile, fileName);
+    
+    resetACTNUM(m_actnum);
+    
+    calculateGeometryData();
+    
+}
+
+
+EclipseGrid::EclipseGrid(size_t nx, size_t ny , size_t nz,
+                         double dx, double dy, double dz)
+    : GridDims(nx, ny, nz),
+      m_minpvMode(MinpvMode::ModeEnum::Inactive),
+      m_pinch("PINCH"),
+      m_pinchoutMode(PinchMode::ModeEnum::TOPBOT),
+      m_multzMode(PinchMode::ModeEnum::TOP)
+{
+
+    m_coord.reserve((nx+1)*(ny+1)*6);
+
+    for (size_t j = 0; j < (ny+1); j++) {
+        for (size_t i = 0; i < (nx+1); i++) {
+            m_coord.push_back(i*dx);
+            m_coord.push_back(j*dy);
+            m_coord.push_back(0.0);
+            m_coord.push_back(i*dx);
+            m_coord.push_back(j*dy);
+            m_coord.push_back(nz*dz);
+        }
     }
 
+    m_zcorn.assign(nx*ny*nz*8, 0);
 
+    for (size_t k = 0; k < nz ; k++) {
+        for (size_t j = 0; j < ny ; j++) {
+            for (size_t i = 0; i < nx ; i++) {
 
-    /**
-       Will create an EclipseGrid instance based on an existing
-       GRID/EGRID file.
-    */
-    EclipseGrid::EclipseGrid(const std::string& filename )
-        : GridDims(),
-          m_minpvMode(MinpvMode::ModeEnum::Inactive),
-          m_pinch("PINCH"),
-          m_pinchoutMode(PinchMode::ModeEnum::TOPBOT),
-          m_multzMode(PinchMode::ModeEnum::TOP)
-    {
-        ecl_grid_type * new_ptr = ecl_grid_load_case__( filename.c_str() , false );
-        if (new_ptr)
-            m_grid.reset( new_ptr );
-        else
-            throw std::invalid_argument("Could not load grid from binary file: " + filename);
+                // top face of cell
+                int zind = i*2 + j*nx*4 + k*nx*ny*8;
 
-        m_nx = ecl_grid_get_nx( c_ptr() );
-        m_ny = ecl_grid_get_ny( c_ptr() );
-        m_nz = ecl_grid_get_nz( c_ptr() );
+                double zt = k*dz;
+                double zb = (k+1)*dz;
 
-        volume_cache.resize(m_nx * m_ny * m_nz, -1.0);
-    }
+                m_zcorn[zind] = zt;
+                m_zcorn[zind + 1] = zt;
 
+                zind = zind + nx*2;
 
-    EclipseGrid::EclipseGrid(size_t nx, size_t ny , size_t nz,
-                             double dx, double dy, double dz)
-        : GridDims(nx, ny, nz),
-          m_minpvMode(MinpvMode::ModeEnum::Inactive),
-          m_pinch("PINCH"),
-          m_pinchoutMode(PinchMode::ModeEnum::TOPBOT),
-          m_multzMode(PinchMode::ModeEnum::TOP),
-          volume_cache(nx * ny * nz, -1.0),
-          m_grid( ecl_grid_alloc_rectangular(nx, ny, nz, dx, dy, dz, NULL) )
-    {
-    }
+                m_zcorn[zind] = zt;
+                m_zcorn[zind + 1] = zt;
 
-    EclipseGrid::EclipseGrid(const EclipseGrid& src, const double* zcorn , const std::vector<int>& actnum)
-        : GridDims(src.getNX(), src.getNY(), src.getNZ()),
-          m_minpvVector( src.m_minpvVector ),
-          m_minpvMode( src.m_minpvMode ),
-          m_pinch( src.m_pinch ),
-          m_pinchoutMode( src.m_pinchoutMode ),
-          m_multzMode( src.m_multzMode ),
-          volume_cache(src.volume_cache.size(), -1.0)
-    {
-        const int * actnum_data = (actnum.empty()) ? nullptr : actnum.data();
-        m_grid.reset( ecl_grid_alloc_processed_copy( src.c_ptr(), zcorn , actnum_data ));
-    }
+                // bottom face of cell
+                zind = i*2 + j*nx*4 + k*nx*ny*8 + nx*ny*4;
 
+                m_zcorn[zind] = zb;
+                m_zcorn[zind + 1] = zb;
 
-    EclipseGrid::EclipseGrid(const EclipseGrid& src, const std::vector<double>& zcorn , const std::vector<int>& actnum)
-        : EclipseGrid( src , (zcorn.empty()) ? nullptr : zcorn.data(), actnum )
-    { }
+                zind = zind + nx*2;
 
-
-    EclipseGrid::EclipseGrid(const EclipseGrid& src, const std::vector<int>& actnum)
-        : EclipseGrid( src , nullptr , actnum )
-    {  }
-
-
-
-    /*
-      This is the main EclipseGrid constructor, it will inspect the
-      input Deck for grid keywords, either the corner point keywords
-      COORD and ZCORN, or the various rectangular keywords like DX,DY
-      and DZ.
-
-      Actnum is treated specially:
-
-        1. If an actnum pointer is passed in that should be a pointer
-           to 0 and 1 values which will be used as actnum mask.
-
-        2. If the actnum pointer is not present the constructor will
-           look in the deck for an actnum keyword, and use that if it
-           is found. This is a best effort which will work in many
-           cases, but if the ACTNUM keyword is manipulated in the deck
-           those manipulations will be silently lost; if the ACTNUM
-           keyword has size different from nx*ny*nz it will also be
-           silently ignored.
-
-      With a mutable EclipseGrid instance you can later call the
-      EclipseGrid::resetACTNUM() method when you have complete actnum
-      information. The EclipseState based construction of EclipseGrid
-      is a two-pass operation, which guarantees that actnum is handled
-      correctly.
-    */
-
-
-
-
-    EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
-        : GridDims(deck),
-          m_minpvMode(MinpvMode::ModeEnum::Inactive),
-          m_pinch("PINCH"),
-          m_pinchoutMode(PinchMode::ModeEnum::TOPBOT),
-          m_multzMode(PinchMode::ModeEnum::TOP),
-          volume_cache(m_nx * m_ny * m_nz, -1.0)
-    {
-
-        const std::array<int, 3> dims = getNXYZ();
-        initGrid(dims, deck);
-
-        if (actnum != nullptr)
-            resetACTNUM(actnum);
-        else {
-            if (deck.hasKeyword<ParserKeywords::ACTNUM>()) {
-                const auto& actnumData = deck.getKeyword<ParserKeywords::ACTNUM>().getIntData();
-                if (actnumData.size() == getCartesianSize())
-                    resetACTNUM( actnumData.data());
-                else {
-                    const std::string msg = "The ACTNUM keyword has " + std::to_string( actnumData.size() ) + " elements - expected : " + std::to_string( getCartesianSize()) + " - ignored.";
-                    OpmLog::warning(msg);
-                }
+                m_zcorn[zind] = zb;
+                m_zcorn[zind + 1] = zb;
             }
         }
     }
+
+    resetACTNUM();
+    calculateGeometryData();
+}
+
+EclipseGrid::EclipseGrid(const EclipseGrid& src, const double* zcorn, const std::vector<int>& actnum)
+    : EclipseGrid(src)
+{
+
+    if (zcorn != nullptr) {
+        std::array<int, 3> dims = getNXYZ();
+
+        size_t sizeZcorn = dims[0]*dims[1]*dims[2]*8;
+
+        for (size_t n=0; n < sizeZcorn; n++) {
+            m_zcorn[n] = zcorn[n];
+        }
+
+        ZcornMapper mapper( getNX(), getNY(), getNZ());
+        zcorn_fixed = mapper.fixupZCORN( m_zcorn );
+        
+        calculateGeometryData();
+    }
+
+    resetACTNUM(actnum);
+}
+
+EclipseGrid::EclipseGrid(const EclipseGrid& src, const std::vector<int>& actnum)
+        : EclipseGrid( src , nullptr , actnum )
+{ }
+
+/*
+  This is the main EclipseGrid constructor, it will inspect the
+  input Deck for grid keywords, either the corner point keywords
+  COORD and ZCORN, or the various rectangular keywords like DX,DY
+  and DZ.
+
+  Actnum is treated specially:
+
+    1. If an actnum pointer is passed in that should be a pointer
+       to 0 and 1 values which will be used as actnum mask.
+
+    2. If the actnum pointer is not present the constructor will
+       look in the deck for an actnum keyword, and use that if it
+       is found. This is a best effort which will work in many
+       cases, but if the ACTNUM keyword is manipulated in the deck
+       those manipulations will be silently lost; if the ACTNUM
+       keyword has size different from nx*ny*nz it will also be
+       silently ignored.
+
+  With a mutable EclipseGrid instance you can later call the
+  EclipseGrid::resetACTNUM() method when you have complete actnum
+  information. The EclipseState based construction of EclipseGrid
+  is a two-pass operation, which guarantees that actnum is handled
+  correctly.
+*/
+
+
+
+EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
+    : GridDims(deck),
+      m_minpvMode(MinpvMode::ModeEnum::Inactive),
+      m_pinch("PINCH"),
+      m_pinchoutMode(PinchMode::ModeEnum::TOPBOT),
+      m_multzMode(PinchMode::ModeEnum::TOP)
+{
+
+    if (deck.hasKeyword("GDFILE")){
+        
+        if (deck.hasKeyword("COORD")){
+            throw std::invalid_argument("COORD can't be used together with GDFILE");
+        }
+
+        if (deck.hasKeyword("ZCORN")){
+            throw std::invalid_argument("ZCORN can't be used together with GDFILE");
+        }
+        
+        if (deck.hasKeyword("ACTNUM")){ 
+            if (keywInputBeforeGdfile(deck, "ACTNUM"))  {
+                m_useActnumFromGdfile = true;
+            }
+        } else {
+            m_useActnumFromGdfile = true;
+        }
+
+    }
+        
+
+    const std::array<int, 3> dims = getNXYZ();
+
+    initGrid(dims, deck);
+       
+    if (deck.hasKeyword("MAPUNITS")){
+       if ((m_mapunits =="") || ( !keywInputBeforeGdfile(deck, "MAPUNITS"))) {
+            const auto& record = deck.getKeyword<ParserKeywords::MAPUNITS>( ).getStringData();
+            m_mapunits = record[0];
+       } 
+    }
+
+    if (deck.hasKeyword("MAPAXES")){
+       if ((m_mapaxes.size() == 0) || ( !keywInputBeforeGdfile(deck, "MAPAXES"))) {
+          const Opm::DeckKeyword& mapaxesKeyword = deck.getKeyword<ParserKeywords::MAPAXES>();
+          m_mapaxes.resize(6);
+          for (size_t n=0; n < 6; n++){
+             m_mapaxes[n] = mapaxesKeyword.getRecord(0).getItem(n).get<double>(0);
+          }
+       } 
+    }
+    
+    if (actnum != nullptr) {
+        
+        size_t nCells = dims[0]*dims[1]*dims[2];
+        std::vector<int> actnumVector(actnum, actnum + nCells);
+
+        resetACTNUM( actnumVector);
+    } else {
+        
+        if (m_useActnumFromGdfile){
+            // actnum already reset in initBinaryGrid
+        } else if (deck.hasKeyword<ParserKeywords::ACTNUM>()) {
+
+            const auto& actnumData = deck.getKeyword<ParserKeywords::ACTNUM>().getIntData();
+
+            if (actnumData.size() == getCartesianSize()) {
+                resetACTNUM( actnumData);
+            } else {
+                const std::string msg = "The ACTNUM keyword has " + std::to_string( actnumData.size() ) + " elements - expected : " + std::to_string( getCartesianSize()) + " - ignored.";
+                OpmLog::warning(msg);
+
+                resetACTNUM( );
+            }
+
+        } else {
+
+            resetACTNUM();
+        }
+    }
+    
+    calculateGeometryData();
+}
+
 
     bool EclipseGrid::circle( ) const{
         return this->m_circle;
     }
 
     void EclipseGrid::initGrid( const std::array<int, 3>& dims, const Deck& deck) {
+
         if (deck.hasKeyword<ParserKeywords::RADIAL>()) {
             initCylindricalGrid( dims, deck );
         } else {
@@ -238,7 +345,6 @@ namespace Opm {
             m_minpvMode = MinpvMode::ModeEnum::EclSTD;
         }
 
-
         if (deck.hasKeyword<ParserKeywords::MINPVFIL>()) {
             const auto& record = deck.getKeyword<ParserKeywords::MINPVFIL>( ).getRecord(0);
             const auto& item = record.getItem<ParserKeywords::MINPVFIL::VALUE>( );
@@ -246,29 +352,138 @@ namespace Opm {
             m_minpvMode = MinpvMode::ModeEnum::OpmFIL;
         }
     }
+    
+    void EclipseGrid::initGridFromEGridFile(Opm::EclIO::EclFile& egridfile, std::string fileName){
 
+        if (!egridfile.hasKey("GRIDHEAD")) {
+            throw std::invalid_argument("file: " + fileName + " is not a valid egrid file, GRIDHEAD not found");
+        }
 
+        if (!egridfile.hasKey("COORD")) {
+            throw std::invalid_argument("file: " + fileName + " is not a valid egrid file, COORD not found");
+        }
+
+        if (!egridfile.hasKey("ZCORN")) {
+            throw std::invalid_argument("file: " + fileName + " is not a valid egrid file, ZCORN not found");
+        }
+
+        if (!egridfile.hasKey("GRIDUNIT")) {
+            throw std::invalid_argument("file: " + fileName + " is not a valid egrid file, ZCORN not found");
+        }
+
+        const std::vector<std::string>& gridunit = egridfile.get<std::string>("GRIDUNIT");
+        
+        const std::vector<int>& gridhead = egridfile.get<int>("GRIDHEAD");
+        const std::array<int, 3> dims = {gridhead[1], gridhead[2], gridhead[3]};
+
+        m_nx=dims[0];
+        m_ny=dims[1];
+        m_nz=dims[2];
+
+        const std::vector<float>& coord_f = egridfile.get<float>("COORD");
+        const std::vector<float>& zcorn_f = egridfile.get<float>("ZCORN");
+
+        m_coord.assign(coord_f.begin(), coord_f.end());
+        m_zcorn.assign(zcorn_f.begin(), zcorn_f.end());
+
+        if (gridunit[0] != "METRES") {
+
+            const auto length = ::Opm::UnitSystem::measure::length; 
+            
+            if (gridunit[0] == "FEET"){
+                Opm::UnitSystem units(Opm::UnitSystem::UnitType::UNIT_TYPE_FIELD );
+                units.to_si(length, m_coord);
+                units.to_si(length, m_zcorn);
+            } else if (gridunit[0] == "CM"){
+                Opm::UnitSystem units(Opm::UnitSystem::UnitType::UNIT_TYPE_LAB );
+                units.to_si(length, m_coord);
+                units.to_si(length, m_zcorn);
+            } else {
+                std::string message = "gridunit '" + gridunit[0] + "' doesn't correspong to a valid unit system";
+                throw std::invalid_argument(message);
+            }
+        }
+        
+        if ((egridfile.hasKey("ACTNUM")) && (m_useActnumFromGdfile)) {
+            const std::vector<int>& actnum  = egridfile.get<int>("ACTNUM");
+            resetACTNUM( actnum );
+        } 
+
+        if (egridfile.hasKey("MAPAXES")) {
+            const std::vector<float>& mapaxes_f = egridfile.get<float>("MAPAXES");
+            m_mapaxes.assign(mapaxes_f.begin(), mapaxes_f.end());
+        }
+
+        if (egridfile.hasKey("MAPUNITS")) {
+            const std::vector<std::string>& mapunits = egridfile.get<std::string>("MAPUNITS");
+            m_mapunits=mapunits[0];
+        }
+    
+        ZcornMapper mapper( getNX(), getNY(), getNZ());
+        zcorn_fixed = mapper.fixupZCORN( m_zcorn );
+    }
+
+    bool EclipseGrid::keywInputBeforeGdfile(const Deck& deck, const std::string keyword) const {
+
+        std::vector<std::string> keywordList; 
+        keywordList.reserve(deck.size());
+        
+        for (size_t n=0;n<deck.size();n++){
+            DeckKeyword kw = deck.getKeyword( n );
+            keywordList.push_back(kw.name());
+        }
+        
+        int indKeyw = -1;
+        int indGdfile = -1;
+        
+        for (size_t i = 0; i < keywordList.size(); i++){
+            if (keywordList[i]=="GDFILE"){
+                indGdfile=i;
+            }
+
+            if (keywordList[i]==keyword){
+                indKeyw=i;
+            }
+        }
+
+        if (indGdfile == -1) {
+            throw std::runtime_error("keyword GDFILE not found in deck ");
+        }
+
+        if (indKeyw == -1) {
+            throw std::runtime_error("keyword " + keyword + " not found in deck ");
+        }
+        
+        return indKeyw < indGdfile;
+    }
+
+    
     size_t EclipseGrid::activeIndex(size_t i, size_t j, size_t k) const {
+
         return activeIndex( getGlobalIndex( i,j,k ));
     }
 
     size_t EclipseGrid::activeIndex(size_t globalIndex) const {
-        int active_index = ecl_grid_get_active_index1( m_grid.get() , globalIndex );
-        if (active_index < 0)
+
+        if (m_global_to_active[ globalIndex] == -1) {
             throw std::invalid_argument("Input argument does not correspond to an active cell");
-        return static_cast<size_t>( active_index );
+        }
+
+        return m_global_to_active[ globalIndex];
     }
 
     /**
        Observe: the input argument is assumed to be in the space
        [0,num_active).
     */
+    
     size_t EclipseGrid::getGlobalIndex(size_t active_index) const {
-        int global_index = ecl_grid_get_global_index1A( m_grid.get() , active_index );
-        return static_cast<size_t>(global_index);
+        
+        return m_active_to_global.at(active_index);
     }
 
     size_t EclipseGrid::getGlobalIndex(size_t i, size_t j, size_t k) const {
+
         return GridDims::getGlobalIndex(i,j,k);
     }
 
@@ -297,30 +512,30 @@ namespace Opm {
         return m_minpvVector;
     }
 
-
     void EclipseGrid::initBinaryGrid(const Deck& deck) {
+
         const DeckKeyword& gdfile_kw = deck.getKeyword("GDFILE");
         const std::string& gdfile_arg = gdfile_kw.getRecord(0).getItem("filename").get<std::string>(0);
         std::string filename = deck.makeDeckPath(gdfile_arg);
 
-        ecl_grid_type * grid_ptr_loc = ecl_grid_load_case__( filename.c_str(), false);
-        if (grid_ptr_loc)
-            this->m_grid.reset( grid_ptr_loc );
-        else
-            throw std::invalid_argument("Failed to load grid from: " + filename);
+        Opm::EclIO::EclFile egridfile(filename);
+
+        initGridFromEGridFile(egridfile, filename);
     }
 
     void EclipseGrid::initCartesianGrid(const std::array<int, 3>& dims , const Deck& deck) {
-        if (hasDVDEPTHZKeywords( deck ))
+
+        if (hasDVDEPTHZKeywords( deck )) {
             initDVDEPTHZGrid( dims , deck );
-        else if (hasDTOPSKeywords(deck))
+        } else if (hasDTOPSKeywords(deck)) {
             initDTOPSGrid( dims ,deck );
-        else
+        } else {
             throw std::invalid_argument("Tried to initialize cartesian grid without all required keywords");
+        }
     }
 
-
     void EclipseGrid::initDVDEPTHZGrid(const std::array<int, 3>& dims, const Deck& deck) {
+
         const std::vector<double>& DXV = deck.getKeyword<ParserKeywords::DXV>().getSIDoubleData();
         const std::vector<double>& DYV = deck.getKeyword<ParserKeywords::DYV>().getSIDoubleData();
         const std::vector<double>& DZV = deck.getKeyword<ParserKeywords::DZV>().getSIDoubleData();
@@ -331,18 +546,435 @@ namespace Opm {
         assertVectorSize( DYV    , static_cast<size_t>( dims[1] ) , "DYV");
         assertVectorSize( DZV    , static_cast<size_t>( dims[2] ) , "DZV");
 
-        m_grid.reset( ecl_grid_alloc_dxv_dyv_dzv_depthz( dims[0] , dims[1] , dims[2] , DXV.data() , DYV.data() , DZV.data() , DEPTHZ.data() , nullptr ) );
+        m_coord = makeCoordDxvDyvDzvDepthz(dims, DXV, DYV, DZV, DEPTHZ);
+        m_zcorn = makeZcornDzvDepthz(dims, DZV, DEPTHZ);
+
+        ZcornMapper mapper( getNX(), getNY(), getNZ());
+        zcorn_fixed = mapper.fixupZCORN( m_zcorn );
     }
 
-
     void EclipseGrid::initDTOPSGrid(const std::array<int, 3>& dims , const Deck& deck) {
+
         std::vector<double> DX = createDVector( dims , 0 , "DX" , "DXV" , deck);
         std::vector<double> DY = createDVector( dims , 1 , "DY" , "DYV" , deck);
         std::vector<double> DZ = createDVector( dims , 2 , "DZ" , "DZV" , deck);
         std::vector<double> TOPS = createTOPSVector( dims , DZ , deck );
-        m_grid.reset( ecl_grid_alloc_dx_dy_dz_tops( dims[0] , dims[1] , dims[2] , DX.data() , DY.data() , DZ.data() , TOPS.data() , nullptr ) );
+
+        m_coord = makeCoordDxDyDzTops(dims, DX, DY, DZ, TOPS);
+        m_zcorn = makeZcornDzTops(dims, DZ, TOPS);
+
+        ZcornMapper mapper( getNX(), getNY(), getNZ());
+        zcorn_fixed = mapper.fixupZCORN( m_zcorn );
     }
 
+    void EclipseGrid::calculateGeometryData() {
+
+        const std::array<int, 3> dims = getNXYZ();
+        int nCells = getCartesianSize();
+
+        std::array<double,8> X = {0.0};
+        std::array<double,8> Y = {0.0};
+        std::array<double,8> Z = {0.0};
+
+        m_volume.clear();
+        m_cellCenter.clear();
+        m_dx.clear();
+        m_dy.clear();
+        m_dz.clear();
+        m_depth.clear();
+
+        m_volume.resize(nCells);
+        m_cellCenter.resize(nCells);
+        m_dx.resize(nCells);
+        m_dy.resize(nCells);
+        m_dz.resize(nCells);
+        m_depth.resize(nCells);
+
+        std::array<int, 3> ijk;
+        size_t n = 0;
+        
+        for (size_t k = 0; k< getNZ(); k++) {
+            for (size_t j = 0; j< getNY(); j++) {
+                for (size_t i = 0; i< getNX(); i++) {
+
+                    ijk[0] = i;
+                    ijk[1] = j;
+                    ijk[2] = k;
+
+                    getCellCorners(ijk, dims, X, Y, Z );
+
+                    m_volume[n] = calculateCellVol(X, Y, Z);
+
+                    std::array<double, 3> center;
+
+                    center[0]=std::accumulate(X.begin(), X.end(), 0.0) / 8.0;
+                    center[1]=std::accumulate(Y.begin(), Y.end(), 0.0) / 8.0;
+                    center[2]=std::accumulate(Z.begin(), Z.end(), 0.0) / 8.0;
+
+                    m_cellCenter[n] = center;
+
+                    // calculate dx
+
+                    double x2 = (X[1]+X[3]+X[5]+X[7])/4.0;
+                    double y2 = (Y[1]+Y[3]+Y[5]+Y[7])/4.0;
+
+                    double x1 = (X[0]+X[2]+X[4]+X[6])/4.0;
+                    double y1 = (Y[0]+Y[2]+Y[4]+Y[6])/4.0;
+
+                    double dx = sqrt(pow((x2-x1), 2.0) + pow((y2-y1), 2.0) );
+
+                    // calculate dy
+
+                    x2 = (X[2]+X[3]+X[6]+X[7])/4.0;
+                    y2 = (Y[2]+Y[3]+Y[6]+Y[7])/4.0;
+
+                    x1 = (X[0]+X[1]+X[4]+X[5])/4.0;
+                    y1 = (Y[0]+Y[1]+Y[4]+Y[5])/4.0;
+
+                    double dy = sqrt(pow((x2-x1), 2.0) + pow((y2-y1), 2.0));
+
+                    // calculate dz
+
+                    double z2 = (Z[4]+Z[5]+Z[6]+Z[7])/4.0;
+                    double z1 = (Z[0]+Z[1]+Z[2]+Z[3])/4.0;
+
+                    double dz = z2-z1;
+
+                    m_dx[n] = dx;
+                    m_dy[n] = dy;
+                    m_dz[n] = dz;
+
+                    m_depth[n] =  (z2 + z1) / 2.0;
+
+                    n++;
+                }
+            }
+        }
+    }
+    
+    void EclipseGrid::getCellCorners(const std::array<int, 3>& ijk, const std::array<int, 3>& dims,
+                                     std::array<double,8>& X,
+                                     std::array<double,8>& Y,
+                                     std::array<double,8>& Z) const
+    {
+
+        std::array<int, 8> zind;
+        std::array<int, 4> pind;
+
+        // calculate indices for grid pillars in COORD arrray
+        const size_t p_offset = ijk[1]*(dims[0]+1)*6 + ijk[0]*6;
+        
+        pind[0] = p_offset;
+        pind[1] = p_offset + 6;
+        pind[2] = p_offset + (dims[0]+1)*6;
+        pind[3] = pind[2] + 6;
+
+        // get depths from zcorn array in ZCORN array
+        const size_t z_offset = ijk[2]*dims[0]*dims[1]*8 + ijk[1]*dims[0]*4 + ijk[0]*2;
+
+        zind[0] = z_offset;
+        zind[1] = z_offset + 1;
+        zind[2] = z_offset + dims[0]*2;
+        zind[3] = zind[2] + 1;
+
+        for (int n = 0; n < 4; n++) 
+            zind[n+4] = zind[n] + dims[0]*dims[1]*4;
+        
+        
+        for (int n = 0; n< 8; n++) 
+            Z[n] = m_zcorn[zind[n]];
+        
+
+        for (int  n=0; n<4; n++) {
+            double xt = m_coord[pind[n]];
+            double yt = m_coord[pind[n] + 1];
+            double zt = m_coord[pind[n] + 2];
+
+            double xb = m_coord[pind[n] + 3];
+            double yb = m_coord[pind[n] + 4];
+            double zb = m_coord[pind[n]+5];
+
+            X[n] = xt + (xb-xt) / (zt-zb) * (zt - Z[n]);
+            X[n+4] = xt + (xb-xt) / (zt-zb) * (zt-Z[n+4]);
+
+            Y[n] = yt+(yb-yt)/(zt-zb)*(zt-Z[n]);
+            Y[n+4] = yt+(yb-yt)/(zt-zb)*(zt-Z[n+4]);
+        }
+    }
+
+    std::vector<double> EclipseGrid::makeCoordDxvDyvDzvDepthz(const std::array<int, 3>& dims, const std::vector<double>& dxv, const std::vector<double>& dyv, const std::vector<double>& dzv, const std::vector<double>& depthz) const {
+
+        std::vector<double> coord;
+        coord.reserve((dims[0]+1)*(dims[1]+1)*6);
+
+        std::vector<double> x(dims[0] + 1, 0.0);
+        std::partial_sum(dxv.begin(), dxv.end(), x.begin() + 1);        
+
+        std::vector<double> y(dims[1] + 1, 0.0);
+        std::partial_sum(dyv.begin(), dyv.end(), y.begin() + 1);        
+
+        std::vector<double> z(dims[2] + 1, 0.0);
+        std::partial_sum(dzv.begin(), dzv.end(), z.begin() + 1);        
+
+        
+        for (int j = 0; j < dims[1] + 1; j++) {
+            for (int i = 0; i<dims[0] + 1; i++) {
+
+                const double x0 = x[i];
+                const double y0 = y[j];
+
+                size_t ind = i+j*(dims[0]+1);
+
+                double zb = depthz[ind] + z[dims[2]];
+
+                coord.push_back(x0);
+                coord.push_back(y0);
+                coord.push_back(depthz[ind]);
+                coord.push_back(x0);
+                coord.push_back(y0);
+                coord.push_back(zb);
+            }
+        }
+
+        return coord;
+    }
+
+    std::vector<double> EclipseGrid::makeZcornDzvDepthz(const std::array<int, 3>& dims, const std::vector<double>& dzv, const std::vector<double>& depthz) const {
+
+        std::vector<double> zcorn;
+        size_t sizeZcorn = dims[0]*dims[1]*dims[2]*8;
+
+        zcorn.assign (sizeZcorn, 0.0);
+
+        std::vector<double> z(dims[2] + 1, 0.0);
+        std::partial_sum(dzv.begin(), dzv.end(), z.begin() + 1);        
+
+        
+        for (int k = 0; k < dims[2]; k++) {
+            for (int j = 0; j < dims[1]; j++) {
+                for (int i = 0; i < dims[0]; i++) {
+
+                    const double z0 = z[k];
+
+                    // top face of cell
+                    int zind = i*2 + j*dims[0]*4 + k*dims[0]*dims[1]*8;
+
+                    zcorn[zind] = depthz[i+j*(dims[0]+1)] + z0;
+                    zcorn[zind + 1] = depthz[i+j*(dims[0]+1) +1 ] + z0;
+
+                    zind = zind + dims[0]*2;
+
+                    zcorn[zind] = depthz[i+(j+1)*(dims[0]+1)] + z0;
+                    zcorn[zind + 1] = depthz[i+(j+1)*(dims[0]+1) + 1] + z0;
+
+                    // bottom face of cell
+                    zind = i*2 + j*dims[0]*4 + k*dims[0]*dims[1]*8 + dims[0]*dims[1]*4;
+
+                    zcorn[zind] = depthz[i+j*(dims[0]+1)] + z0 + dzv[k];
+                    zcorn[zind + 1] = depthz[i+j*(dims[0]+1) +1 ] + z0 + dzv[k];
+
+                    zind = zind + dims[0]*2;
+
+                    zcorn[zind] = depthz[i+(j+1)*(dims[0]+1)] + z0 + dzv[k];
+                    zcorn[zind + 1] = depthz[i+(j+1)*(dims[0]+1) + 1] + z0 + dzv[k];
+                }
+            }
+        }
+
+        return zcorn;
+    }
+
+    std::vector<double> EclipseGrid::makeCoordDxDyDzTops(const std::array<int, 3>& dims , const std::vector<double>& dx, const std::vector<double>& dy, const std::vector<double>& dz, const std::vector<double>& tops) const {
+
+        std::vector<double> coord;
+        coord.reserve((dims[0]+1)*(dims[1]+1)*6);
+        
+        for (int j = 0; j < dims[1]; j++) {
+
+            double y0 = 0;
+            double zt = tops[0];
+            double zb = zt + sumKdir(0, 0, dims, dz);
+
+            if (j == 0) {
+                double x0 = 0.0;
+
+                coord.push_back(x0);
+                coord.push_back(y0);
+                coord.push_back(zt);
+                coord.push_back(x0);
+                coord.push_back(y0);
+                coord.push_back(zb);
+
+                for (int i = 0; i < dims[0]; i++) {
+
+                    size_t ind = i+j*dims[0]+1;
+
+                    if (i == (dims[0]-1)) {
+                        ind=ind-1;
+                    }
+
+                    zt = tops[ind];
+                    zb = zt + sumKdir(i, j, dims, dz);
+
+                    double xt = x0 + dx[i+j*dims[0]];
+                    double xb = sumIdir(i, j, dims[2]-1, dims, dx);
+
+                    coord.push_back(xt);
+                    coord.push_back(y0);
+                    coord.push_back(zt);
+                    coord.push_back(xb);
+                    coord.push_back(y0);
+                    coord.push_back(zb);
+
+                    x0=xt;
+                }
+            }
+
+            int ind = (j+1)*dims[0];
+
+            if (j == (dims[1]-1) ) {
+                ind = j*dims[0];
+            }
+
+            double x0 = 0.0;
+
+            double yt = sumJdir(0, j, 0, dims, dy);
+            double yb = sumJdir(0, j, dims[2]-1, dims, dy);
+
+            zt = tops[ind];
+            zb = zt + sumKdir(0, j, dims, dz);
+
+            coord.push_back(x0);
+            coord.push_back(yt);
+            coord.push_back(zt);
+            coord.push_back(x0);
+            coord.push_back(yb);
+            coord.push_back(zb);
+
+            for (int i=0; i < dims[0]; i++) {
+
+                ind = i+(j+1)*dims[0]+1;
+
+                if (j == (dims[1]-1) ) {
+                    ind = i+j*dims[0]+1;
+                }
+
+                if (i == (dims[0] - 1) ) {
+                    ind=ind-1;
+                }
+
+                zt = tops[ind];
+                zb = zt + sumKdir(i, j, dims, dz);
+
+                double xt=-999;
+                double xb=-999;
+
+                if (j == (dims[1]-1) ) {
+                    xt = sumIdir(i, j, 0, dims, dx);
+                    xb = sumIdir(i, j, dims[2]-1, dims, dx);
+                } else {
+                    xt = sumIdir(i, j+1, 0, dims, dx);
+                    xb = sumIdir(i, j+1, dims[2]-1, dims, dx);
+                }
+
+                if (i == (dims[0] - 1) ) {
+                    yt = sumJdir(i, j, 0, dims, dy);
+                    yb = sumJdir(i, j, dims[2]-1, dims, dy);
+                } else {
+                    yt = sumJdir(i+1, j, 0, dims, dy);
+                    yb = sumJdir(i+1, j, dims[2]-1, dims, dy);
+                }
+
+                coord.push_back(xt);
+                coord.push_back(yt);
+                coord.push_back(zt);
+                coord.push_back(xb);
+                coord.push_back(yb);
+                coord.push_back(zb);
+
+                x0 = xt;
+            }
+        }
+
+        return coord;
+    };
+
+    std::vector<double> EclipseGrid::makeZcornDzTops(const std::array<int, 3>& dims, const std::vector<double>& dz, const std::vector<double>& tops) const {
+
+        std::vector<double> zcorn;
+        size_t sizeZcorn = dims[0]*dims[1]*dims[2]*8;
+
+        zcorn.assign (sizeZcorn, 0.0);
+
+        for (int j = 0; j < dims[1]; j++) {
+            for (int i = 0; i < dims[0]; i++) {
+                int ind = i + j*dims[0];
+                double z = tops[ind];
+
+                for (int k = 0; k < dims[2]; k++) {
+
+                    // top face of cell
+                    int zind = i*2 + j*dims[0]*4 + k*dims[0]*dims[1]*8;
+
+                    zcorn[zind] = z;
+                    zcorn[zind + 1] = z;
+
+                    zind = zind + dims[0]*2;
+
+                    zcorn[zind] = z;
+                    zcorn[zind + 1] = z;
+
+                    z = z + dz[i + j*dims[0] + k*dims[0]*dims[1]];
+
+                    // bottom face of cell
+                    zind = i*2 + j*dims[0]*4 + k*dims[0]*dims[1]*8 + dims[0]*dims[1]*4;
+
+                    zcorn[zind] = z;
+                    zcorn[zind + 1] = z;
+
+                    zind = zind + dims[0]*2;
+
+                    zcorn[zind] = z;
+                    zcorn[zind + 1] = z;
+                }
+            }
+        }
+
+        return zcorn;
+    };
+
+    double EclipseGrid::sumIdir(int i1, int j, int k, const std::array<int, 3>& dims, const std::vector<double>& dx) const {
+
+        double sum = 0.0;
+
+        for (int i = 0; i <= i1; i++) {
+            sum = sum + dx[i + j*dims[0] + k*dims[0]*dims[1]];
+        }
+
+        return sum;
+    }
+
+    double EclipseGrid::sumJdir(int i, int j1, int k, const std::array<int, 3>& dims, const std::vector<double>& dy) const {
+
+        double sum = 0.0;
+
+        for (int j = 0; j <= j1; j++) {
+            sum=sum + dy[i + j*dims[0] + k*dims[0]*dims[1]];
+        }
+
+        return sum;
+    }
+
+    double EclipseGrid::sumKdir(int i, int j, const std::array<int, 3>& dims, const std::vector<double>& dz) const {
+
+        double sum = 0.0;
+
+        for (int k = 0; k < dims[2]; k++) {
+            sum = sum + dz[i + j*dims[0] + k*dims[0]*dims[1]];
+        }
+
+        return sum;
+    }
 
     /*
       Limited implementaton - requires keywords: DRV, DTHETAV, DZV and TOPS.
@@ -470,25 +1102,36 @@ namespace Opm {
                                           const std::vector<double>& zcorn ,
                                           const int * actnum,
                                           const double * mapaxes)
+
+
     {
-        float * mapaxes_float = nullptr;
-        if (mapaxes) {
-            mapaxes_float = new float[6];
-            for (size_t i=0; i < 6; i++)
-                mapaxes_float[i] = mapaxes[i];
+        size_t nCells=dims[0]*dims[1]*dims[2];
+
+        m_coord = coord;
+        m_zcorn = zcorn;
+
+        ZcornMapper mapper( getNX(), getNY(), getNZ());
+        zcorn_fixed = mapper.fixupZCORN( m_zcorn );
+        
+        m_actnum.clear();
+        
+        if (actnum != nullptr){
+            m_actnum.resize(nCells);
+            
+            for (size_t n = 0; n < nCells; n++){
+                m_actnum[n] = actnum[n];
+            }
+            
+        } else {
+            m_actnum.assign(nCells, 1);    
         }
 
-        m_grid.reset( ecl::ecl_grid_alloc_GRDECL_data(dims[0] ,
-                                                      dims[1] ,
-                                                      dims[2] ,
-                                                      zcorn.data() ,
-                                                      coord.data() ,
-                                                      actnum ,
-                                                      false,  // We do not apply the MAPAXES transformations
-                                                      mapaxes_float) );
-
-        if (mapaxes)
-            delete[] mapaxes_float;
+        if (mapaxes != nullptr){
+            m_mapaxes.resize(6);
+            for (size_t n = 0; n < 6; n++){
+                m_mapaxes[n] = mapaxes[n];
+            }
+        }
     }
 
     void EclipseGrid::initCornerPointGrid(const std::array<int,3>& dims, const Deck& deck) {
@@ -496,25 +1139,22 @@ namespace Opm {
         {
             const auto& ZCORNKeyWord = deck.getKeyword<ParserKeywords::ZCORN>();
             const auto& COORDKeyWord = deck.getKeyword<ParserKeywords::COORD>();
+
             const std::vector<double>& zcorn = ZCORNKeyWord.getSIDoubleData();
             const std::vector<double>& coord = COORDKeyWord.getSIDoubleData();
-            double * mapaxes = nullptr;
-
-            if (deck.hasKeyword<ParserKeywords::MAPAXES>()) {
-                const auto& mapaxesKeyword = deck.getKeyword<ParserKeywords::MAPAXES>();
-                const auto& record = mapaxesKeyword.getRecord(0);
-                mapaxes = new double[6];
-                for (size_t i = 0; i < 6; i++) {
-                    mapaxes[i] = record.getItem( i ).getSIDouble( 0 );
-                }
-            }
-            initCornerPointGrid( dims, coord , zcorn , nullptr , mapaxes );
-            if (mapaxes)
-                delete[] mapaxes;
+  
+            int * actnum = nullptr;
+            
+            if (deck.hasKeyword<ParserKeywords::ACTNUM>()) {
+                const auto& actnumKeyword = deck.getKeyword<ParserKeywords::ACTNUM>();
+                std::vector<int> actnumVector = actnumKeyword.getIntData();
+                
+                actnum=actnumVector.data();
+             }
+            
+            initCornerPointGrid( dims, coord , zcorn, actnum, nullptr );
         }
     }
-
-
 
     bool EclipseGrid::hasCornerPointKeywords(const Deck& deck) {
         if (deck.hasKeyword<ParserKeywords::ZCORN>() && deck.hasKeyword<ParserKeywords::COORD>())
@@ -598,8 +1238,6 @@ namespace Opm {
         else
             return false;
     }
-
-
 
     void EclipseGrid::assertVectorSize(const std::vector<double>& vector , size_t expectedSize , const std::string& vectorName) {
         if (vector.size() != expectedSize)
@@ -722,22 +1360,45 @@ namespace Opm {
         }
     }
 
-    const ecl_grid_type * EclipseGrid::c_ptr() const {
-        return m_grid.get();
-    }
-
-
     bool EclipseGrid::equal(const EclipseGrid& other) const {
-        bool status = (m_pinch.equal( other.m_pinch ) && (ecl_grid_compare( c_ptr() , other.c_ptr() , true , false , false )) && (m_minpvMode == other.getMinpvMode()));
-        if(m_minpvMode!=MinpvMode::ModeEnum::Inactive){
+
+        //double reltol = 1.0e-6;
+
+        if (m_coord.size() != other.m_coord.size()) 
+            return false;
+
+        if (m_zcorn.size() != other.m_zcorn.size()) 
+            return false;
+
+        if (m_actnum.size() != other.m_actnum.size()) 
+            return false;
+
+        if (m_mapaxes.size() != other.m_mapaxes.size()) 
+            return false;
+        
+        if (m_actnum != other.m_actnum)
+            return false;
+
+        if (m_coord != other.m_coord)
+            return false;
+
+        if (m_zcorn != other.m_zcorn)
+            return false;
+
+        if (m_mapaxes != other.m_mapaxes)
+            return false;
+
+        bool status = (m_pinch.equal( other.m_pinch )  && (m_minpvMode == other.getMinpvMode()));
+
+        if(m_minpvMode!=MinpvMode::ModeEnum::Inactive) {
             status = status && (m_minpvVector == other.getMinpvVector());
         }
+
         return status;
     }
 
-
     size_t EclipseGrid::getNumActive( ) const {
-        return static_cast<size_t>(ecl_grid_get_nactive( c_ptr() ));
+        return m_nactive;
     }
 
     bool EclipseGrid::allActive( ) const {
@@ -746,205 +1407,317 @@ namespace Opm {
 
     bool EclipseGrid::cellActive( size_t globalIndex ) const {
         assertGlobalIndex( globalIndex );
-        return ecl_grid_cell_active1( c_ptr() , static_cast<int>(globalIndex));
+
+        return m_actnum[globalIndex]>0;
     }
 
     bool EclipseGrid::cellActive( size_t i , size_t j , size_t k ) const {
         assertIJK(i,j,k);
-        return ecl_grid_cell_active3( c_ptr() , static_cast<int>(i),static_cast<int>(j),static_cast<int>(k));
+
+        size_t globalIndex = getGlobalIndex(i,j,k);
+
+        return m_actnum[globalIndex]>0;
     }
 
 
     double EclipseGrid::getCellVolume(size_t globalIndex) const {
-        assertGlobalIndex( globalIndex );
-        if (volume_cache[globalIndex] < 0.0) {
-            // Calculate cell volume and put it in the cache.
-            std::vector<double> x(8,0);
-            std::vector<double> y(8,0);
-            std::vector<double> z(8,0);
-            for (int i=0; i < 8; i++) {
-                ecl_grid_get_cell_corner_xyz1(c_ptr(), static_cast<int>(globalIndex), i, &x[i], &y[i], &z[i]);
-            }
-            volume_cache[globalIndex] = calculateCellVol(x,y,z);
-        }
-        return volume_cache[globalIndex];
-    }
 
+        assertGlobalIndex( globalIndex );
+
+        return m_volume[globalIndex];
+    }
 
     double EclipseGrid::getCellVolume(size_t i , size_t j , size_t k) const {
+
         assertIJK(i,j,k);
-        return getCellVolume(getGlobalIndex(i, j, k));
+
+        size_t globalIndex = getGlobalIndex( i,j,k );
+
+        return getCellVolume(globalIndex);
     }
 
-    double EclipseGrid::getCellThicknes(size_t i , size_t j , size_t k) const {
+    double EclipseGrid::getCellThickness(size_t i , size_t j , size_t k) const {
         assertIJK(i,j,k);
-        return ecl_grid_get_cell_thickness3( c_ptr() , static_cast<int>(i),static_cast<int>(j),static_cast<int>(k));
+
+        const std::array<int, 3> dims = getNXYZ();
+        size_t globalIndex = i + j*dims[0] + k*dims[0]*dims[1];
+
+        return getCellThickness(globalIndex);
     }
 
-    double EclipseGrid::getCellThicknes(size_t globalIndex) const {
+    double EclipseGrid::getCellThickness(size_t globalIndex) const {
         assertGlobalIndex( globalIndex );
-        return ecl_grid_get_cell_thickness1( c_ptr() , static_cast<int>(globalIndex));
-    }
 
+        return m_dz[globalIndex];
+    }
 
     std::array<double, 3> EclipseGrid::getCellDims(size_t globalIndex) const {
         assertGlobalIndex( globalIndex );
-        {
-            double dx = ecl_grid_get_cell_dx1( c_ptr() , globalIndex);
-            double dy = ecl_grid_get_cell_dy1( c_ptr() , globalIndex);
-            double dz = ecl_grid_get_cell_thickness1( c_ptr() , globalIndex);
 
-            return std::array<double,3>{ {dx , dy , dz }};
-        }
+        return std::array<double,3> {{m_dx[globalIndex] , m_dy[globalIndex] , m_dz[globalIndex] }};
     }
 
     std::array<double, 3> EclipseGrid::getCellDims(size_t i , size_t j , size_t k) const {
         assertIJK(i,j,k);
         {
             size_t globalIndex = getGlobalIndex( i,j,k );
-            double dx = ecl_grid_get_cell_dx1( c_ptr() , globalIndex);
-            double dy = ecl_grid_get_cell_dy1( c_ptr() , globalIndex);
-            double dz = ecl_grid_get_cell_thickness1( c_ptr() , globalIndex);
 
-            return std::array<double,3>{ {dx , dy , dz }};
+            return getCellDims(globalIndex);
         }
     }
 
-    std::array<double, 3> EclipseGrid::getCellCenter(size_t globalIndex) const {
+    const std::array<double, 3>& EclipseGrid::getCellCenter(size_t globalIndex) const {
         assertGlobalIndex( globalIndex );
-        {
-            double x,y,z;
-            ecl_grid_get_xyz1( c_ptr() , static_cast<int>(globalIndex) , &x , &y , &z);
-            return std::array<double, 3>{{x,y,z}};
-        }
+         
+        return m_cellCenter[globalIndex];
+    }
+
+    const std::array<double, 3>& EclipseGrid::getCellCenter(size_t i,size_t j, size_t k) const {
+        assertIJK(i,j,k);
+
+        const std::array<int, 3> dims = getNXYZ();
+
+        size_t globalIndex = i + j*dims[0] + k*dims[0]*dims[1];
+
+        return getCellCenter(globalIndex);
     }
 
     /*
       This is the numbering of the corners in the cell.
 
-                                        j
+       bottom                           j
          6---7                        /|\
          |   |                         |
          4---5                         |
                                        |
-                                       o---------->  i
+       top                             o---------->  i
          2---3
          |   |
          0---1
 
      */
 
-
     std::array<double, 3> EclipseGrid::getCornerPos(size_t i,size_t j, size_t k, size_t corner_index) const {
         assertIJK(i,j,k);
         if (corner_index >= 8)
             throw std::invalid_argument("Invalid corner position");
         {
-            double x,y,z;
-            ecl_grid_get_cell_corner_xyz3( c_ptr() ,
-                                           static_cast<int>(i),
-                                           static_cast<int>(j),
-                                           static_cast<int>(k),
-                                           static_cast<int>(corner_index),
-                                           &x , &y , &z);
-            return std::array<double, 3>{{x,y,z}};
-        }
-    }
+            const std::array<int, 3> dims = getNXYZ();
 
+            std::array<double,8> X = {0.0};
+            std::array<double,8> Y = {0.0};
+            std::array<double,8> Z = {0.0};
 
-    std::array<double, 3> EclipseGrid::getCellCenter(size_t i,size_t j, size_t k) const {
-        assertIJK(i,j,k);
-        {
-            double x,y,z;
-            ecl_grid_get_xyz3( c_ptr() , static_cast<int>(i),static_cast<int>(j),static_cast<int>(k), &x , &y , &z);
-            return std::array<double, 3>{{x,y,z}};
+            std::array<int, 3> ijk;
+
+            ijk[0] = i;
+            ijk[1] = j;
+            ijk[2] = k;
+
+            getCellCorners(ijk, dims, X, Y, Z );
+
+            return std::array<double, 3> {{X[corner_index], Y[corner_index], Z[corner_index]}};
         }
     }
 
     double EclipseGrid::getCellDepth(size_t globalIndex) const {
         assertGlobalIndex( globalIndex );
-        return ecl_grid_get_cdepth1( c_ptr() , static_cast<int>(globalIndex));
+
+        return m_depth[globalIndex];
     }
 
-
-    double EclipseGrid::getCellDepth(size_t i,size_t j, size_t k) const {
+    double EclipseGrid::getCellDepth(size_t i, size_t j, size_t k) const {
         assertIJK(i,j,k);
-        return ecl_grid_get_cdepth3( c_ptr() , static_cast<int>(i),static_cast<int>(j),static_cast<int>(k));
+
+        size_t globalIndex = getGlobalIndex( i,j,k );
+
+        return getCellDepth(globalIndex);
     }
 
+    const std::vector<int>& EclipseGrid::getACTNUM( ) const {
 
-
-    void EclipseGrid::exportACTNUM( std::vector<int>& actnum) const {
-        size_t volume = getNX() * getNY() * getNZ();
-        if (getNumActive() == volume)
-            actnum.resize(0);
-        else {
-            actnum.resize( volume );
-            ecl_grid_init_actnum_data( c_ptr() , actnum.data() );
-        }
+        return m_actnum;
     }
 
-    void EclipseGrid::exportMAPAXES( std::vector<double>& mapaxes) const {
-        if (ecl_grid_use_mapaxes( c_ptr())) {
-            mapaxes.resize(6);
-            ecl_grid_init_mapaxes_data_double( c_ptr() , mapaxes.data() );
-        } else {
-            mapaxes.resize(0);
-        }
+    const std::vector<double>& EclipseGrid::getMAPAXES( ) const {
+
+        return m_mapaxes;
     }
 
-    void EclipseGrid::exportCOORD( std::vector<double>& coord) const {
-        coord.resize( ecl_grid_get_coord_size( c_ptr() ));
-        ecl_grid_init_coord_data_double( c_ptr() , coord.data() );
+    const std::vector<double>& EclipseGrid::getCOORD() const {
+
+        return m_coord;
     }
 
-    size_t EclipseGrid::exportZCORN( std::vector<double>& zcorn) const {
+    size_t EclipseGrid::fixupZCORN() {
+
         ZcornMapper mapper( getNX(), getNY(), getNZ());
 
-        zcorn.resize( ecl_grid_get_zcorn_size( c_ptr() ));
-        ecl_grid_init_zcorn_data_double( c_ptr() , zcorn.data() );
-
-        return mapper.fixupZCORN( zcorn );
+        return mapper.fixupZCORN( m_zcorn );
     }
 
+    const std::vector<double>& EclipseGrid::getZCORN( ) const {
 
-    void EclipseGrid::addNNC(const NNC& nnc) {
-        int idx = 0;
-        auto* ecl_grid = const_cast< ecl_grid_type* >( this->c_ptr() );
-        for (const NNCdata& n : nnc.nncdata())
-            ecl_grid_add_self_nnc( ecl_grid, n.cell1, n.cell2, idx++);
+        return m_zcorn;
     }
 
+    void EclipseGrid::save(const std::string& filename, bool formatted, const Opm::NNC& nnc, const Opm::UnitSystem& units) const {
 
-    void EclipseGrid::save(const std::string& filename, UnitSystem::UnitType output_units) const {
-        auto* ecl_grid = const_cast< ecl_grid_type* >( this->c_ptr() );
-        ecl_grid_fwrite_EGRID2(ecl_grid, filename.c_str(), UnitSystem::ecl_units(output_units));
-    }
+        Opm::UnitSystem::UnitType unitSystemType = units.getType();
+        const auto length = ::Opm::UnitSystem::measure::length;
 
+        const std::array<int, 3> dims = getNXYZ();
 
-
-    const std::vector<int>& EclipseGrid::getActiveMap() const {
-        if( !this->activeMap.empty() ) return this->activeMap;
-
-        this->activeMap.resize( this->getNumActive() );
-        const auto size = int(this->getCartesianSize());
-
-        for( int global_index = 0; global_index < size; global_index++) {
-            // Using the low level C function to get the active index, because the C++
-            // version will throw for inactive cells.
-            int active_index = ecl_grid_get_active_index1( m_grid.get() , global_index );
-            if (active_index >= 0)
-                this->activeMap[ active_index ] = global_index;
+        // Preparing vectors to be saved
+        
+        // create coord vector of floats with input units, converted from SI
+        std::vector<float> coord_f;
+        coord_f.resize(m_coord.size());
+        
+        for (size_t n=0; n< m_coord.size(); n++){
+            coord_f[n] = static_cast<double>(units.from_si(length, m_coord[n]));
+        }
+        
+        // create zcorn vector of floats with input units, converted from SI
+        std::vector<float> zcorn_f;
+        zcorn_f.resize(m_zcorn.size());
+        
+        for (size_t n=0; n< m_zcorn.size(); n++){
+            zcorn_f[n] = static_cast<double>(units.from_si(length, m_zcorn[n]));
         }
 
-        return this->activeMap;
+        std::vector<float> mapaxes_f; 
+
+        std::vector<int> filehead(100,0);
+        filehead[0] = 3;                     // version number
+        filehead[1] = 2007;                  // release year
+        filehead[6] = 1;                     // corner point grid
+
+        std::vector<int> gridhead(100,0);
+        gridhead[0] = 1;                    // corner point grid
+        gridhead[1] = dims[0];              // nI
+        gridhead[2] = dims[1];              // nJ
+        gridhead[3] = dims[2];              // nK
+        gridhead[24] = 1;                   // corner point grid
+
+        std::vector<int> nnchead(10, 0);
+        std::vector<int> nnc1;
+        std::vector<int> nnc2;
+
+        for (const NNCdata& n : nnc.nncdata() ) {
+            nnc1.push_back(n.cell1 + 1);
+            nnc2.push_back(n.cell2 + 1);
+        }
+
+        nnchead[0] = nnc1.size();
+
+        std::vector<std::string> gridunits;
+        
+        switch (unitSystemType) {
+        case Opm::UnitSystem::UnitType::UNIT_TYPE_METRIC:
+            gridunits.push_back("METRES");
+            break;
+        case Opm::UnitSystem::UnitType::UNIT_TYPE_FIELD:
+            gridunits.push_back("FEET");
+            break;
+        case Opm::UnitSystem::UnitType::UNIT_TYPE_LAB:
+            gridunits.push_back("CM");
+            break;
+        default:
+            OPM_THROW(std::runtime_error, "Unit system not supported when writing to EGRID file");
+            break;
+        }
+
+        gridunits.push_back("");
+
+        // map units is not dependent on deck units. A user may specify FIELD units for the model
+        // and metric units for the MAPAXES keyword (MAPUNITS)
+
+        std::vector<std::string> mapunits;
+
+        if ((m_mapunits.size() > 0) && (m_mapaxes.size() > 0)) {
+            mapunits.push_back(m_mapunits);
+        }
+
+        if (m_mapaxes.size() > 0){
+            for (double dv :  m_mapaxes){
+                mapaxes_f.push_back(static_cast<float>(dv));    
+            }
+        }
+
+        std::vector<int> endgrid = {};
+
+        // Writing vectors to egrid file
+
+        Opm::EclIO::EclOutput egridfile(filename, formatted);
+        egridfile.write("FILEHEAD", filehead);
+
+        if (mapunits.size() > 0) {
+            egridfile.write("MAPUNITS", mapunits);
+        }
+
+        if (mapaxes_f.size() > 0){
+            egridfile.write("MAPAXES", mapaxes_f);
+        }
+
+        egridfile.write("GRIDUNIT", gridunits);
+        egridfile.write("GRIDHEAD", gridhead);
+
+        egridfile.write("COORD", coord_f);
+        egridfile.write("ZCORN", zcorn_f);
+
+        egridfile.write("ACTNUM", m_actnum);
+        egridfile.write("ENDGRID", endgrid);
+
+        if (nnc1.size() > 0){
+            egridfile.write("NNCHEAD", nnchead);
+            egridfile.write("NNC1", nnc1);
+            egridfile.write("NNC2", nnc2);
+        }
     }
 
-    void EclipseGrid::resetACTNUM( const int * actnum) {
-        ecl_grid_reset_actnum( m_grid.get() , actnum );
-        /* re-build the active map cache */
-        this->activeMap.clear();
-        this->getActiveMap();
+    const std::vector<int>& EclipseGrid::getActiveMap() const {
+
+        return m_active_to_global;
+    }
+
+    void EclipseGrid::resetACTNUM() {
+
+        const std::array<int, 3> dims = getNXYZ();
+        m_nactive = dims[0]*dims[1]*dims[2];
+
+        std::vector<int> all_active(m_nactive, 1);
+
+        m_actnum.clear();
+        m_actnum = all_active;
+
+        m_global_to_active = all_active;
+        std::iota(m_global_to_active.begin(), m_global_to_active.end(), 0);
+
+        m_active_to_global = m_global_to_active;
+    }
+
+    void EclipseGrid::resetACTNUM( const std::vector<int>& actnum) {
+
+        if (actnum.size() != getCartesianSize()) {
+            throw std::runtime_error("resetACTNUM(): actnum vector size differs from logical cartesian size of grid.");
+        }
+
+        m_actnum = actnum;
+        m_global_to_active.clear();
+        m_active_to_global.clear();
+        m_global_to_active.reserve(actnum.size());
+        m_nactive = 0;
+
+        for (size_t n = 0; n < actnum.size() ; n++) {
+            if (actnum[n] > 0) {
+                m_global_to_active.push_back(m_nactive);
+                m_active_to_global.push_back(n);
+                ++m_nactive;
+            } else {
+                m_global_to_active.push_back(-1);
+            }
+        }
     }
 
     ZcornMapper EclipseGrid::zcornMapper() const {
@@ -1015,9 +1788,7 @@ namespace Opm {
         return true;
     }
 
-
-
-
+    
     size_t ZcornMapper::fixupZCORN( std::vector<double>& zcorn) {
         int sign = zcorn[ this->index(0,0,0,0) ] <= zcorn[this->index(0,0, this->dims[2] - 1,4)] ? 1 : -1;
         size_t cells_adjusted = 0;
@@ -1037,7 +1808,6 @@ namespace Opm {
                             }
                         }
 
-
                         /* Cell internal */
                         {
                             size_t index1 = this->index(i,j,k,c);
@@ -1052,13 +1822,11 @@ namespace Opm {
         return cells_adjusted;
     }
 
-
     CoordMapper::CoordMapper(size_t nx_, size_t ny_) :
         nx(nx_),
         ny(ny_)
     {
     }
-
 
     size_t CoordMapper::size() const {
         return (this->nx + 1) * (this->ny + 1) * 6;
@@ -1081,5 +1849,6 @@ namespace Opm {
         return 6*( i + j*(this->nx + 1) ) +  layer * 3 + dim;
     }
 }
+
 
 

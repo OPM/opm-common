@@ -316,7 +316,7 @@ if(ENABLE_ECL_OUTPUT)
           tests/test_Tables.cpp
           tests/test_Wells.cpp
           tests/test_WindowedArray.cpp
-          tests/test_writenumwells.cpp
+          tests/test_restartwellinfo.cpp
       )
 endif()
 

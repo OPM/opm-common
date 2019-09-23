@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(TestEclFile_BINARY) {
 
     // check that exception is thrown when input file doesn't exist
 
-    BOOST_CHECK_THROW(EclFile file1("DUMMY.DAT") , std::runtime_error );
+    BOOST_CHECK_THROW(EclFile file1("DUMMY.DAT") , std::invalid_argument );
 
     EclFile file1(testFile);
 

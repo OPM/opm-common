@@ -2960,7 +2960,6 @@ BOOST_AUTO_TEST_CASE(FilterCompletions2) {
 
 
 
-
 BOOST_AUTO_TEST_CASE(VFPINJ_TEST) {
     const char *deckData = "\
 START\n \

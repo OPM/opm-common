@@ -18,6 +18,7 @@
 
 #include <opm/io/eclipse/EclFile.hpp>
 #include <opm/io/eclipse/EclUtil.hpp>
+#include <opm/common/ErrorMacros.hpp>
 
 #include <algorithm>
 #include <array>
@@ -28,24 +29,18 @@
 #include <iterator>
 #include <sstream>
 #include <string>
-
-#include <opm/common/ErrorMacros.hpp>
-
-#include <iostream>
-
-//#include <algorithm>
-//#include <iostream>
-//#include <list>
 #include <numeric>
-//#include <random>
-//#include <vector>
-
 
 
 // anonymous namespace for EclFile
 
 namespace {
 
+bool fileExists(const std::string& filename){
+
+    std::ifstream fileH(filename.c_str());
+    return fileH.good();   
+}
 
 bool isFormatted(const std::string& filename)
 {
@@ -471,6 +466,11 @@ namespace Opm { namespace EclIO {
 
 EclFile::EclFile(const std::string& filename) : inputFilename(filename)
 {
+    if (!fileExists(filename)){
+        std::string message="Could not open EclFile: " + filename;
+        OPM_THROW(std::invalid_argument, message);
+    }
+
     std::fstream fileH;
 
     formatted = isFormatted(filename);

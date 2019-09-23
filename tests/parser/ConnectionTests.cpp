@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE(ActiveCompletions) {
 
     std::vector<int> actnum(grid.getCartesianSize(), 1);
     actnum[0] = 0;
-    grid.resetACTNUM( actnum.data() );
+    grid.resetACTNUM( actnum);
 
     Opm::WellConnections active_completions(completions, grid);
     BOOST_CHECK_EQUAL( active_completions.size() , 2);
