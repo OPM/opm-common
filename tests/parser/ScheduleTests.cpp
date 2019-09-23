@@ -602,7 +602,7 @@ END
     BOOST_CHECK_MESSAGE(! sched.hasGroup("P", 1729), R"(Group "P" Must NOT Exist Long After Last Report Step)");
     BOOST_CHECK_MESSAGE(! sched.hasGroup("I", 1729), R"(Group "I" Must NOT Exist Long After Last Report Step)");
 
-    BOOST_CHECK_THROW(const auto& grp = sched.getGroup2("I", 3), std::invalid_argument);
+    BOOST_CHECK_THROW(sched.getGroup2("I", 3), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(WellsIterator_Empty_EmptyVectorReturned) {
