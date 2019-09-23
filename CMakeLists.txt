@@ -113,7 +113,6 @@ macro (sources_hook)
     list(APPEND opm-common_SOURCES ${PROJECT_BINARY_DIR}/ParserKeywords.cpp)
   endif()
   set_source_files_properties(src/opm/parser/eclipse/Python/Python.cpp
-                              src/opm/parser/eclipse/Python/PythonInterp.cpp
                               PROPERTIES COMPILE_FLAGS -Wno-shadow)
 endmacro (sources_hook)
 
@@ -236,7 +235,8 @@ if (OPM_ENABLE_PYTHON)
   string(REPLACE ";" ":" _setup_lib_dirs "${_opmcommon_lib_dirs}")
 
   add_custom_command(OUTPUT python/python/opm/libopmcommon_python.so
-                     DEPENDS python/cxx/connection.cpp
+                     DEPENDS
+                     python/cxx/connection.cpp
                      python/cxx/converters.hpp
                      python/cxx/deck.cpp
                      python/cxx/deck_keyword.cpp

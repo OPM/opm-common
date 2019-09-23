@@ -29,10 +29,18 @@ Python::Python():
 }
 
 
-bool Python::exec(const std::string& python_code) {
+bool Python::exec(const std::string& python_code) const {
     this->interp->exec(python_code);
     return true;
 }
+
+
+
+bool Python::exec(const std::string& python_code, const Parser& parser, Deck& deck) const {
+    this->interp->exec(python_code, parser, deck);
+    return true;
+}
+
 
 
 Python::operator bool() const {
@@ -41,5 +49,6 @@ Python::operator bool() const {
     else
         return false;
 }
+
 
 }
