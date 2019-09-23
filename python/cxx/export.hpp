@@ -27,6 +27,7 @@ void export_Parser(py::module& module);
 void export_Schedule(py::module& module);
 void export_TableManager(py::module& module);
 void export_Well(py::module& module);
+void export_Log(py::module& module);
 }
 
 #endif //SUNBEAM_HPP

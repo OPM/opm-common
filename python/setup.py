@@ -59,6 +59,7 @@ ext_modules = [
                 'cxx/eclipse_grid.cpp',
                 'cxx/eclipse_state.cpp',
                 'cxx/group.cpp',
+                'cxx/log.cpp',
                 'cxx/parsecontext.cpp',
                 'cxx/parser.cpp',
                 'cxx/schedule.cpp',
