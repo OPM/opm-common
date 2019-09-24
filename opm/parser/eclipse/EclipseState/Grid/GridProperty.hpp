@@ -24,6 +24,8 @@
 #include <utility>
 #include <vector>
 
+#include <opm/parser/eclipse/EclipseState/Util/CompressedVector.hpp>
+
 /*
   This class implemenents a class representing properties which are
   define over an ECLIPSE grid, i.e. with one value for each logical
@@ -153,9 +155,9 @@ public:
     void iset(size_t i , size_t j , size_t k , T value);
 
 
-    const std::vector<bool>& wasDefaulted() const;
-    const std::vector<T>& getData() const;
-    std::vector<T>& getData();
+    std::vector<bool> wasDefaulted() const;
+    std::vector<T> getData() const;
+    void assignData(const std::vector<T>& data);
 
     bool containsNaN() const;
     const std::string& getDimensionString() const;
@@ -315,8 +317,8 @@ private:
 
     size_t m_nx, m_ny, m_nz;
     SupportedKeywordInfo m_kwInfo;
-    std::vector<T> m_data;
-    std::vector<bool> m_defaulted;
+    CompressedVector<T> m_data;
+    CompressedVector<bool> m_defaulted;
     bool m_hasRunPostProcessor = false;
     bool assigned = false;
 };

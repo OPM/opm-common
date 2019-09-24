@@ -630,9 +630,8 @@ namespace Opm {
         if( !this->hasDeckIntGridProperty( keyword ) ) return {};
 
         const auto& property = this->getIntGridProperty( keyword );
-
-        std::set< int > regions( property.getData().begin(),
-                                 property.getData().end() );
+        auto data = property.getData();
+        std::set< int > regions( data.begin(), data.end() );
 
         return { regions.begin(), regions.end() };
     }

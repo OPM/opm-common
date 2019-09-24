@@ -517,13 +517,15 @@ namespace Opm {
                     result_prop.runPostProcessor();
             }
 
-            std::vector<T>& targetData= result_prop.getData();
+            std::vector<T> targetData = result_prop.getData();
             const std::vector<T>& srcData = getKeyword( srcArray ).getData();
             operate_fptr func = operations.at( operation );
 
             setKeywordBox(record, boxManager);
             for (auto index : boxManager.getActiveBox())
                 targetData[index] = func( targetData[index] , srcData[index] , alpha, beta );
+
+            result_prop.assignData(targetData);
         }
     }
 
@@ -548,7 +550,7 @@ namespace Opm {
                     result_prop.runPostProcessor();
             }
 
-            std::vector<T>& result_data = result_prop.getData();
+            std::vector<T> result_data = result_prop.getData();
             const std::vector<T>& parameter_data = getKeyword( parameter_array ).getData();
             operate_fptr func = operations.at( operation );
             std::vector<bool> mask;
@@ -558,6 +560,8 @@ namespace Opm {
                 if (mask[index])
                     result_data[index] = func(result_data[index], parameter_data[index], alpha, beta);
             }
+
+            result_prop.assignData(result_data);
         }
     }
 
