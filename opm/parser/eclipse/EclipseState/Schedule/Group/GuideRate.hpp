@@ -25,16 +25,21 @@
 #include <ctime>
 #include <unordered_map>
 
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well2.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Group/Group2.hpp>
+
 namespace Opm {
 
 class Schedule;
 class GuideRate {
+private:
 
 struct GuideRateValue {
     GuideRateValue() = default;
-    GuideRateValue(double t, double v):
+    GuideRateValue(double t, double v, GuideRateModel::Target tg):
         sim_time(t),
-        value(v)
+        value(v),
+        target(tg)
     {}
 
     bool operator==(const GuideRateValue& other) const {
@@ -46,23 +51,43 @@ struct GuideRateValue {
         return !(*this == other);
     }
 
+    double eval(GuideRateModel::Target target_arg) const;
+
     double sim_time;
     double value;
+    GuideRateModel::Target target;
 };
 
+struct Potential {
+    Potential() = default;
+    Potential(double op, double gp, double wp) :
+        oil_pot(op),
+        gas_pot(gp),
+        wat_pot(wp)
+    {}
+
+
+    double eval(GuideRateModel::Target target) const;
+
+    double oil_pot;
+    double gas_pot;
+    double wat_pot;
+};
 
 public:
     GuideRate(const Schedule& schedule);
-    double update(const std::string& wgname, size_t report_step, double sim_time, double oil_pot, double gas_pot, double wat_pot);
+    void   compute(const std::string& wgname, size_t report_step, double sim_time, double oil_pot, double gas_pot, double wat_pot);
+    double get(const std::string& well, Well2::GuideRateTarget target) const;
+    double get(const std::string& group, Group2::GuideRateTarget target) const;
 private:
-    void well_update(const std::string& wgname, size_t report_step, double sim_time, double oil_pot, double gas_pot, double wat_pot);
-    void group_update(const std::string& wgname, size_t report_step, double sim_time, double oil_pot, double gas_pot, double wat_pot);
-    double get(const std::string& wgname) const;
+    void well_compute(const std::string& wgname, size_t report_step, double sim_time, double oil_pot, double gas_pot, double wat_pot);
+    void group_compute(const std::string& wgname, size_t report_step, double sim_time, double oil_pot, double gas_pot, double wat_pot);
     double eval_form(const GuideRateModel& model, double oil_pot, double gas_pot, double wat_pot, const GuideRateValue * prev) const;
     double eval_group_pot() const;
     double eval_group_resvinj() const;
 
     std::unordered_map<std::string,GuideRateValue> values;
+    std::unordered_map<std::string,Potential> potentials;
     const Schedule& schedule;
 };
 

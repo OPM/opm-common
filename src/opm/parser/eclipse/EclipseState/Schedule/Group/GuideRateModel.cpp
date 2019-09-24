@@ -200,5 +200,29 @@ bool GuideRateModel::updateLINCOM(const UDAValue& , const UDAValue& , const UDAV
 }
 
 
+GuideRateModel::Target GuideRateModel::convert_target(Well2::GuideRateTarget well_target) {
+    if (well_target == Well2::GuideRateTarget::OIL)
+        return Target::OIL;
 
+    if (well_target == Well2::GuideRateTarget::GAS)
+        return Target::GAS;
+
+    if (well_target == Well2::GuideRateTarget::LIQ)
+        return Target::LIQ;
+
+    throw std::logic_error("Can not convert this .... ");
+}
+
+GuideRateModel::Target GuideRateModel::convert_target(Group2::GuideRateTarget group_target) {
+    if (group_target == Group2::GuideRateTarget::OIL)
+        return Target::OIL;
+
+    if (group_target == Group2::GuideRateTarget::GAS)
+        return Target::GAS;
+
+    if (group_target == Group2::GuideRateTarget::LIQ)
+        return Target::LIQ;
+
+    throw std::logic_error("Can not convert this .... ");
+}
 }
