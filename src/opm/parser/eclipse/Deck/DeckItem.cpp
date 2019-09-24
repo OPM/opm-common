@@ -425,15 +425,20 @@ bool DeckItem::equal(const DeckItem& other, bool cmp_default, bool cmp_numeric) 
         break;
     case type_tag::fdouble:
         if (cmp_numeric) {
-            const std::vector<double>& this_data = this->dval;
-            const std::vector<double>& other_data = other.dval;
+            const auto& this_data = this->getData<double>();
+            const auto& other_data = other.getData<double>();
             for (size_t i=0; i < this_data.size(); i++) {
                 if (!double_equal( this_data[i] , other_data[i], rel_eps, abs_eps))
                     return false;
             }
         } else {
-            if (this->dval != other.dval)
-                return false;
+            if (this->raw_data == other.raw_data)
+                return (this->dval == other.dval);
+            else {
+                const auto& this_data = this->getData<double>();
+                const auto& other_data = other.getData<double>();
+                return (this_data == other_data);
+            }
         }
         break;
     default:
