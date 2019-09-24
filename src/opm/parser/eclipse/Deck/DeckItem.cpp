@@ -241,10 +241,26 @@ double DeckItem::getSIDouble( size_t index ) const {
     return this->getSIDoubleData().at( index );
 }
 
+template<>
+const std::vector<double>& DeckItem::getData() const {
+    auto& data = (const_cast<DeckItem*>(this))->value_ref< double >();
+    if (this->raw_data)
+        return data;
+
+    const auto dim_size = dimensions.size();
+    for( size_t index = 0; index < data.size(); index++ ) {
+        const auto dimIndex = index % dim_size;
+        data[ index ] = this->dimensions[ dimIndex ].convertSiToRaw( data[ index ] );
+    }
+    this->raw_data = true;
+    return data;
+}
+
 const std::vector< double >& DeckItem::getSIDoubleData() const {
-    const auto& raw = this->value_ref< double >();
-    // we already converted this item to SI?
-    if( !this->SIdata.empty() ) return this->SIdata;
+    auto& data = (const_cast<DeckItem*>(this))->value_ref< double >();
+    if (!this->raw_data)
+        return data;
+
 
     if( this->dimensions.empty() )
         throw std::invalid_argument("No dimension has been set for item'"
@@ -256,17 +272,16 @@ const std::vector< double >& DeckItem::getSIDoubleData() const {
      * SI units, so externally the object still behaves as const
      */
     const auto dim_size = dimensions.size();
-    const auto sz = raw.size();
-    this->SIdata.resize( sz );
-
-    for( size_t index = 0; index < sz; index++ ) {
+    for( size_t index = 0; index < data.size(); index++ ) {
         const auto dimIndex = index % dim_size;
-        this->SIdata[ index ] = this->dimensions[ dimIndex ]
-                                .convertRawToSi( raw[ index ] );
+        data[ index ] = this->dimensions[ dimIndex ].convertRawToSi( data[ index ] );
     }
-
-    return this->SIdata;
+    this->raw_data = false;
+    return data;
 }
+
+
+
 
 void DeckItem::push_backDimension( const Dimension& active,
                                    const Dimension& def ) {
