@@ -440,6 +440,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Util/Value.hpp
        opm/parser/eclipse/EclipseState/Util/IOrderSet.hpp
        opm/parser/eclipse/EclipseState/Util/OrderedMap.hpp
+       opm/parser/eclipse/EclipseState/Util/CompressedVector.hpp
        opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp
        opm/parser/eclipse/EclipseState/Edit/EDITNNC.hpp
        opm/parser/eclipse/EclipseState/Grid/GridDims.hpp

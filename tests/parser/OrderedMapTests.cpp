@@ -25,6 +25,7 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
+#include <opm/parser/eclipse/EclipseState/Util/CompressedVector.hpp>
 #include <opm/parser/eclipse/EclipseState/Util/OrderedMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Util/IOrderSet.hpp>
 
@@ -170,3 +171,23 @@ BOOST_AUTO_TEST_CASE(test_IOrderSet) {
     BOOST_CHECK_EQUAL(iset3[0], "BBB");
 }
 
+
+
+
+BOOST_AUTO_TEST_CASE(CompVectorTest) {
+    Opm::CompressedVector<int> v(1000);
+    BOOST_CHECK_EQUAL(v.size(), 1000);
+    std::vector<int> small(10,0);
+    std::vector<int> expected(1000,0);
+    auto data = v.data();
+    BOOST_CHECK(data == expected);
+    BOOST_CHECK_THROW(v.assign(small), std::invalid_argument);
+
+
+    std::vector<int> new_v(1000);
+    for (int i=0; i < 10; i++)
+        std::fill_n(new_v.begin() + i*100, 100, i + 1);
+    v.assign(new_v);
+    auto new_data = v.data();
+    BOOST_CHECK(new_data == new_v);
+}
