@@ -104,9 +104,11 @@ BOOST_AUTO_TEST_CASE(GetPOROTOPBased) {
 
     BOOST_CHECK_EQUAL(1000U , poro.getCartesianSize() );
     BOOST_CHECK_EQUAL(1000U , permx.getCartesianSize() );
+    const auto& poro_data  = poro.getData();
+    const auto& permx_data = permx.getData();
     for (size_t i=0; i < poro.getCartesianSize(); i++) {
-        BOOST_CHECK_EQUAL( 0.10 , poro.iget(i) );
-        BOOST_CHECK_EQUAL( 0.25 * Metric::Permeability , permx.iget(i) );
+        BOOST_CHECK_EQUAL( 0.10 , poro_data[i]);
+        BOOST_CHECK_EQUAL( 0.25 * Metric::Permeability , permx_data[i]);
     }
 }
 
@@ -278,12 +280,10 @@ BOOST_AUTO_TEST_CASE(GetProperty) {
     EclipseState state(deck);
 
     const auto& satNUM = state.get3DProperties().getIntGridProperty( "SATNUM" );
-
+    const auto& satnum_data = satNUM.getData();
     BOOST_CHECK_EQUAL(1000U , satNUM.getCartesianSize() );
     for (size_t i=0; i < satNUM.getCartesianSize(); i++)
-        BOOST_CHECK_EQUAL( 2 , satNUM.iget(i) );
-
-    BOOST_CHECK_THROW( satNUM.iget(100000) , std::out_of_range );
+        BOOST_CHECK_EQUAL( 2 , satnum_data[i]);
 }
 
 BOOST_AUTO_TEST_CASE(GetTransMult) {

@@ -67,7 +67,8 @@ namespace Opm {
 
     double TransMult::getMultiplier__(size_t globalIndex,  FaceDir::DirEnum faceDir) const {
         if (hasDirectionProperty( faceDir )) {
-            return m_trans.at(faceDir).iget( globalIndex );
+            const auto& data = m_trans.at(faceDir).getData();
+            return data[globalIndex];
         } else
             return 1.0;
     }

@@ -224,9 +224,10 @@ namespace Opm {
         for (auto iter = m_searchMap.begin(); iter != m_searchMap.end(); iter++) {
             const Opm::GridProperty<int>& region = m_e3DProps.getIntGridProperty( (*iter).first );
             const MULTREGTSearchMap& map = (*iter).second;
+            const auto& region_data = region.getData();
 
-            int regionId1 = region.iget(globalIndex1);
-            int regionId2 = region.iget(globalIndex2);
+            int regionId1 = region_data[globalIndex1];
+            int regionId2 = region_data[globalIndex2];
 
             std::pair<int,int> pair{ regionId1, regionId2 };
             if (map.count(pair) != 1 || !(map.at(pair)->directions & faceDir)) {

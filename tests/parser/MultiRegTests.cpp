@@ -234,13 +234,13 @@ BOOST_AUTO_TEST_CASE(IntSetCorrectly) {
     Opm::EclipseGrid eg(deck);
     Opm::Eclipse3DProperties props(deck, tm, eg);
 
-    const auto& property = props.getIntGridProperty("SATNUM");
+    const auto& property_data = props.getIntGridProperty("SATNUM").getData();
     for (size_t j = 0; j < 5; j++)
         for (size_t i = 0; i < 5; i++) {
             if (i < 2)
-                BOOST_CHECK_EQUAL(11, property.iget(i, j, 0));
+                BOOST_CHECK_EQUAL(11, property_data[eg.getGlobalIndex(i,j,0)]);
             else
-                BOOST_CHECK_EQUAL(40, property.iget(i, j, 0));
+                BOOST_CHECK_EQUAL(40, property_data[eg.getGlobalIndex(i,j,0)]);
         }
 }
 
@@ -251,12 +251,12 @@ BOOST_AUTO_TEST_CASE(Test_OPERATER) {
     Opm::EclipseGrid eg(deck);
     Opm::Eclipse3DProperties props(deck, tm, eg);
 
-    const auto& porv  = props.getDoubleGridProperty("PORV");
-    const auto& permx = props.getDoubleGridProperty("PERMX");
-    const auto& permy = props.getDoubleGridProperty("PERMY");
+    const auto& porv_data  = props.getDoubleGridProperty("PORV").getData();
+    const auto& permx_data = props.getDoubleGridProperty("PERMX").getData();
+    const auto& permy_data = props.getDoubleGridProperty("PERMY").getData();
 
-    BOOST_CHECK_EQUAL( porv.iget(0,0,0), 0.50 );
-    BOOST_CHECK_EQUAL( permx.iget(0) / permy.iget(0), 0.50 );
-    BOOST_CHECK_EQUAL( permx.iget(1), permy.iget(1));
+    BOOST_CHECK_EQUAL( porv_data[0], 0.50 );
+    BOOST_CHECK_EQUAL( permx_data[0] / permy_data[0], 0.50 );
+    BOOST_CHECK_EQUAL( permx_data[1], permy_data[1]);
 }
 

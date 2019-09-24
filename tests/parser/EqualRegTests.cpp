@@ -234,13 +234,14 @@ BOOST_AUTO_TEST_CASE(IntSetCorrectly) {
     Opm::TableManager tm(deck);
     Opm::EclipseGrid eg(deck);
     Opm::Eclipse3DProperties props(deck, tm, eg);
-    auto& property = props.getIntGridProperty("SATNUM");
+    const auto& property = props.getIntGridProperty("SATNUM").getData();
     for (size_t j = 0; j < 5; j++)
         for (size_t i = 0; i < 5; i++) {
+            std::size_t g = eg.getGlobalIndex(i,j,0);
             if (i < 2)
-                BOOST_CHECK_EQUAL(11, property.iget(i, j, 0));
+                BOOST_CHECK_EQUAL(11, property[g]);
             else
-                BOOST_CHECK_EQUAL(20, property.iget(i, j, 0));
+                BOOST_CHECK_EQUAL(20, property[g]);
         }
 }
 
@@ -249,11 +250,11 @@ BOOST_AUTO_TEST_CASE(UnitAppliedCorrectly) {
     Opm::TableManager tm(deck);
     Opm::EclipseGrid eg(deck);
     Opm::Eclipse3DProperties props(deck, tm, eg);
-    const auto& permx = props.getDoubleGridProperty("PERMX");
-    const auto& permy = props.getDoubleGridProperty("PERMY");
-    const auto& permz = props.getDoubleGridProperty("PERMZ");
+    const auto& permx = props.getDoubleGridProperty("PERMX").getData();
+    const auto& permy = props.getDoubleGridProperty("PERMY").getData();
+    const auto& permz = props.getDoubleGridProperty("PERMZ").getData();
     for (size_t g = 0; g < 25; g++) {
-        BOOST_CHECK_EQUAL(permz.iget(g), permx.iget(g));
-        BOOST_CHECK_EQUAL(permy.iget(g), permx.iget(g));
+        BOOST_CHECK_EQUAL(permz[g], permx[g]);
+        BOOST_CHECK_EQUAL(permy[g], permx[g]);
     }
 }

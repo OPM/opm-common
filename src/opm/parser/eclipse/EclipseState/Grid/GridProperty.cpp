@@ -166,6 +166,7 @@ void set_element(const std::size_t i,
         return m_nx;
     }
 
+
     template< typename T >
     size_t GridProperty< T >::getNY() const {
         return m_ny;
@@ -179,35 +180,6 @@ void set_element(const std::size_t i,
     template< typename T >
     bool GridProperty<T>::deckAssigned() const {
         return this->assigned;
-    }
-
-    template< typename T >
-    T GridProperty< T >::iget( size_t index ) const {
-        auto data = this->m_data.data();
-        return data.at(index);
-    }
-
-    template< typename T >
-    T GridProperty< T >::iget(size_t i , size_t j , size_t k) const {
-        size_t g = i + j*m_nx + k*m_nx*m_ny;
-        return iget(g);
-    }
-
-    template< typename T >
-    void GridProperty< T >::iset(size_t index, T value) {
-        auto data = this->m_data.data();
-        auto defaulted = this->m_defaulted.data();
-
-        set_element(index, data, defaulted, value);
-
-        this->m_data.assign(data);
-        this->m_defaulted.assign(defaulted);
-    }
-
-    template< typename T >
-    void GridProperty< T >::iset(size_t i , size_t j , size_t k , T value) {
-        size_t g = i + j*m_nx + k*m_nx*m_ny;
-        iset(g,value);
     }
 
     template< typename T >

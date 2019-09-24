@@ -149,11 +149,11 @@ public:
     size_t getNZ() const;
 
 
-    T iget(size_t index) const;
+    /*T iget(size_t index) const;
     T iget(size_t i , size_t j , size_t k) const;
     void iset(size_t index, T value);
     void iset(size_t i , size_t j , size_t k , T value);
-
+    */
 
     std::vector<bool> wasDefaulted() const;
     std::vector<T> getData() const;
@@ -310,11 +310,12 @@ public:
 
 private:
     const DeckItem& getDeckItem( const DeckKeyword& );
-    void setDataPoint(size_t sourceIdx, size_t targetIdx, const DeckItem& deckItem);
-    void setElement(const typename std::vector<T>::size_type i,
-                    const T                                  value,
-                    const bool                               defaulted = false);
-
+    /*
+      void setDataPoint(size_t sourceIdx, size_t targetIdx, const DeckItem& deckItem);
+      void setElement(const typename std::vector<T>::size_type i,
+      const T                                  value,
+      const bool                               defaulted = false);
+    */
     size_t m_nx, m_ny, m_nz;
     SupportedKeywordInfo m_kwInfo;
     CompressedVector<T> m_data;

@@ -218,13 +218,14 @@ BOOST_AUTO_TEST_CASE(IntSetCorrectly) {
     Opm::TableManager tm(deck);
     Opm::EclipseGrid eg(deck);
     Opm::Eclipse3DProperties props(deck, tm, eg);
-    auto& property = props.getIntGridProperty("FLUXNUM");
+    const auto& property = props.getIntGridProperty("FLUXNUM").getData();
 
     for (size_t j = 0; j < 5; j++)
         for (size_t i = 0; i < 5; i++) {
+            std::size_t g = eg.getGlobalIndex(i,j,0);
             if (i < 2)
-                BOOST_CHECK_EQUAL( 10 , property.iget(i,j,0));
+                BOOST_CHECK_EQUAL( 10 , property[g]);
             else
-                BOOST_CHECK_EQUAL( 3 , property.iget(i,j,0));
+                BOOST_CHECK_EQUAL( 3 , property[g]);
         }
 }

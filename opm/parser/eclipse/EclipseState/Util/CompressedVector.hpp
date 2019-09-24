@@ -49,6 +49,7 @@ public:
 
 
     void assign(const std::vector<T>& v) {
+        printf("Starting assign ..... \n");
         if(v.size() != this->data_size)
             throw std::invalid_argument("Size mismatch");
 
@@ -71,6 +72,8 @@ public:
             }
             sz += 1;
         }
+
+        printf("Done %ld/%ld\n", this->extent_data.size(), v.size());
     }
 
 
