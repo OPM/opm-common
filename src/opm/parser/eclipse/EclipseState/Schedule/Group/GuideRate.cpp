@@ -57,6 +57,9 @@ void GuideRate::group_update(const std::string& wgname, size_t report_step, doub
     if (iter != this->values.end()) {
         const auto& grv = iter->second;
         if (group.target == Group2::GuideRateTarget::FORM) {
+            if (!config.has_model())
+                throw std::logic_error("When specifying GUIDERATE target FORM you must enter a guiderate model with the GUIDERAT keyword");
+
             auto time_diff = sim_time - grv.sim_time;
             if (config.model().update_delay() > time_diff)
                 return;
@@ -73,6 +76,9 @@ void GuideRate::group_update(const std::string& wgname, size_t report_step, doub
         guide_rate = this->eval_group_resvinj();
 
     if (group.target == Group2::GuideRateTarget::FORM) {
+        if (!config.has_model())
+            throw std::logic_error("When specifying GUIDERATE target FORM you must enter a guiderate model with the GUIDERAT keyword");
+
         if (iter != this->values.end())
             guide_rate = this->eval_form(config.model(),  oil_pot,  gas_pot,  wat_pot, nullptr);
         else
@@ -100,6 +106,9 @@ void GuideRate::well_update(const std::string& wgname, size_t report_step, doubl
         }
 
         double guide_rate;
+        if (!config.has_model())
+            throw std::logic_error("When specifying GUIDERATE target FORM you must enter a guiderate model with the GUIDERAT keyword");
+
         if (iter == this->values.end())
             guide_rate = this->eval_form(config.model(),  oil_pot,  gas_pot,  wat_pot, nullptr);
         else

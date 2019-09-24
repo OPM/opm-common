@@ -25,13 +25,23 @@ namespace Opm {
 
 
 const GuideRateModel& GuideRateConfig::model() const {
-    return this->m_model;
+    if (this->m_model)
+        return *this->m_model;
+    else
+        throw std::logic_error("Tried to dereference empty GuideRateModel");
 }
 
 
+bool GuideRateConfig::has_model() const {
+    if (this->m_model)
+        return true;
+    else
+        return false;
+}
+
 bool GuideRateConfig::update_model(const GuideRateModel& new_model) {
-    if (this->m_model != new_model) {
-        this->m_model = new_model;
+    if (!this->m_model || *(this->m_model) != new_model) {
+        this->m_model.reset( new GuideRateModel(new_model) );
         return true;
     }
     return false;

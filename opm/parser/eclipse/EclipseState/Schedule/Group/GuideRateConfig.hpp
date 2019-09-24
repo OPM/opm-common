@@ -22,6 +22,7 @@
 
 #include <string>
 #include <unordered_map>
+#include <memory>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GuideRateModel.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/Group2.hpp>
@@ -45,6 +46,7 @@ struct Group {
 };
 
     const GuideRateModel& model() const;
+    bool has_model() const;
     bool update_model(const GuideRateModel& model);
     void update_well(const Well2& well);
     void update_group(const Group2& group);
@@ -53,7 +55,7 @@ struct Group {
     bool has_well(const std::string& well) const;
     bool has_group(const std::string& group) const;
 private:
-    GuideRateModel m_model;
+    std::shared_ptr<GuideRateModel> m_model;
     std::unordered_map<std::string, Well> wells;
     std::unordered_map<std::string, Group> groups;
 };
