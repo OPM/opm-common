@@ -211,6 +211,7 @@ if(ENABLE_ECL_OUTPUT)
           src/opm/output/eclipse/Summary/BlockParameter.cpp
           src/opm/output/eclipse/Summary/ConnectionParameter.cpp
           src/opm/output/eclipse/Summary/EvaluateQuantity.cpp
+          src/opm/output/eclipse/Summary/GlobalProcessParameter.cpp
           src/opm/output/eclipse/Summary/GroupParameter.cpp
           src/opm/output/eclipse/Summary/RegionParameter.cpp
           src/opm/output/eclipse/Summary/SegmentParameter.cpp
@@ -655,6 +656,7 @@ if(ENABLE_ECL_OUTPUT)
         opm/output/eclipse/Summary/BlockParameter.hpp
         opm/output/eclipse/Summary/ConnectionParameter.hpp
         opm/output/eclipse/Summary/EvaluateQuantity.hpp
+        opm/output/eclipse/Summary/GlobalProcessParameter.hpp
         opm/output/eclipse/Summary/GroupParameter.hpp
         opm/output/eclipse/Summary/RegionParameter.hpp
         opm/output/eclipse/Summary/SegmentParameter.hpp

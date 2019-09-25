@@ -24,6 +24,7 @@
 #include <opm/output/eclipse/Summary/BlockParameter.hpp>
 #include <opm/output/eclipse/Summary/ConnectionParameter.hpp>
 #include <opm/output/eclipse/Summary/EvaluateQuantity.hpp>
+#include <opm/output/eclipse/Summary/GlobalProcessParameter.hpp>
 #include <opm/output/eclipse/Summary/GroupParameter.hpp>
 #include <opm/output/eclipse/Summary/RegionParameter.hpp>
 #include <opm/output/eclipse/Summary/SegmentParameter.hpp>
@@ -329,6 +330,228 @@ BOOST_AUTO_TEST_CASE(Gas_Viscosity)
 BOOST_AUTO_TEST_SUITE_END() // Values
 
 BOOST_AUTO_TEST_SUITE_END() // Block_Parameters
+
+// =====================================================================
+
+BOOST_AUTO_TEST_SUITE(Global_Process_Parameters)
+
+namespace {
+    Opm::data::WellRates wellResults()
+    {
+        return Opm::data::WellRates{};
+    }
+
+    std::map<std::string, double> singleResults()
+    {
+        using VT = std::map<std::string, double>::value_type;
+
+        return {
+            VT{ "X", 1.23 },
+            VT{ "TCPU", 45.67 },
+            VT{ "NEWTON", 3.0 },
+            VT{ "TIMESTEP", 216000.0 }, // 60 hours (2.5 days)
+            VT{ "FOIP", 1.23e8 },
+            VT{ "FPR", 128.256*Opm::unit::barsa },
+        };
+    }
+
+    std::map<std::string, std::vector<double>> regionResults()
+    {
+        return {};
+    }
+
+    std::map<std::pair<std::string, int>, double> blockResults()
+    {
+        return {};
+    }
+} // Anonymous
+
+BOOST_AUTO_TEST_CASE(Unit_Support)
+{
+    auto time = std::unique_ptr<Opm::SummaryParameter>{};
+    auto id   = std::unique_ptr<Opm::SummaryParameter>{};
+    auto liq  = std::unique_ptr<Opm::SummaryParameter>{};
+    auto gas  = std::unique_ptr<Opm::SummaryParameter>{};
+    auto pres = std::unique_ptr<Opm::SummaryParameter>{};
+    {
+        auto prm = Opm::GlobalProcessParameter {
+            Opm::GlobalProcessParameter::Keyword { "TIME" },
+            Opm::UnitSystem::measure::time
+        };
+
+        time.reset(new Opm::GlobalProcessParameter{ std::move(prm) });
+    }
+    {
+        auto prm = Opm::GlobalProcessParameter {
+            Opm::GlobalProcessParameter::Keyword { "ID" },
+            Opm::UnitSystem::measure::identity
+        };
+
+        id.reset(new Opm::GlobalProcessParameter{ std::move(prm) });
+    }
+    {
+        auto prm = Opm::GlobalProcessParameter {
+            Opm::GlobalProcessParameter::Keyword { "LIQ" },
+            Opm::UnitSystem::measure::liquid_surface_volume
+        };
+
+        liq.reset(new Opm::GlobalProcessParameter{ std::move(prm) });
+    }
+    {
+        auto prm = Opm::GlobalProcessParameter {
+            Opm::GlobalProcessParameter::Keyword { "GAS" },
+            Opm::UnitSystem::measure::gas_surface_volume
+        };
+
+        gas.reset(new Opm::GlobalProcessParameter{ std::move(prm) });
+    }
+    {
+        auto prm = Opm::GlobalProcessParameter {
+            Opm::GlobalProcessParameter::Keyword { "PRES" },
+            Opm::UnitSystem::measure::pressure
+        };
+
+        pres.reset(new Opm::GlobalProcessParameter{ std::move(prm) });
+    }
+
+    const auto metric = Opm::UnitSystem::newMETRIC();
+    const auto field  = Opm::UnitSystem::newFIELD();
+    const auto lab    = Opm::UnitSystem::newLAB();
+    const auto pvt_m  = Opm::UnitSystem::newPVT_M();
+
+    BOOST_CHECK_EQUAL(time->summaryKey(), "TIME");
+    BOOST_CHECK_EQUAL(time->name(), ":+:+:+:+");
+    BOOST_CHECK_EQUAL(time->num(), 0);
+    BOOST_CHECK_EQUAL(time->unit(metric), "DAY");
+    BOOST_CHECK_EQUAL(time->unit(field), "DAY");
+    BOOST_CHECK_EQUAL(time->unit(lab), "HR");
+    BOOST_CHECK_EQUAL(time->unit(pvt_m), "DAY");
+
+    BOOST_CHECK_EQUAL(id->summaryKey(), "ID");
+    BOOST_CHECK_EQUAL(id->name(), ":+:+:+:+");
+    BOOST_CHECK_EQUAL(id->num(), 0);
+    BOOST_CHECK_EQUAL(id->unit(metric), "");
+    BOOST_CHECK_EQUAL(id->unit(field), "");
+    BOOST_CHECK_EQUAL(id->unit(lab), "");
+    BOOST_CHECK_EQUAL(id->unit(pvt_m), "");
+
+    BOOST_CHECK_EQUAL(liq->summaryKey(), "LIQ");
+    BOOST_CHECK_EQUAL(liq->name(), ":+:+:+:+");
+    BOOST_CHECK_EQUAL(liq->num(), 0);
+    BOOST_CHECK_EQUAL(liq->unit(metric), "SM3");
+    BOOST_CHECK_EQUAL(liq->unit(field), "STB");
+    BOOST_CHECK_EQUAL(liq->unit(lab), "SCC");
+    BOOST_CHECK_EQUAL(liq->unit(pvt_m), "SM3");
+
+    BOOST_CHECK_EQUAL(gas->summaryKey(), "GAS");
+    BOOST_CHECK_EQUAL(gas->name(), ":+:+:+:+");
+    BOOST_CHECK_EQUAL(gas->num(), 0);
+    BOOST_CHECK_EQUAL(gas->unit(metric), "SM3");
+    BOOST_CHECK_EQUAL(gas->unit(field), "MSCF");
+    BOOST_CHECK_EQUAL(gas->unit(lab), "SCC");
+    BOOST_CHECK_EQUAL(gas->unit(pvt_m), "SM3");
+
+    BOOST_CHECK_EQUAL(pres->summaryKey(), "PRES");
+    BOOST_CHECK_EQUAL(pres->name(), ":+:+:+:+");
+    BOOST_CHECK_EQUAL(pres->num(), 0);
+    BOOST_CHECK_EQUAL(pres->unit(metric), "BARSA");
+    BOOST_CHECK_EQUAL(pres->unit(field), "PSIA");
+    BOOST_CHECK_EQUAL(pres->unit(lab), "ATM");
+    BOOST_CHECK_EQUAL(pres->unit(pvt_m), "ATM");
+}
+
+BOOST_AUTO_TEST_CASE(Values)
+{
+    const auto cse    = Setup{ "summary_deck.DATA" };
+    const auto rcache = ::Opm::out::RegionCache{};
+
+    const auto input = ::Opm::SummaryParameter::InputData {
+        cse.es, cse.sched, cse.es.getInputGrid(), rcache
+    };
+
+    auto x      = std::unique_ptr<Opm::SummaryParameter>{};
+    auto tcpu   = std::unique_ptr<Opm::SummaryParameter>{};
+    auto newton = std::unique_ptr<Opm::SummaryParameter>{};
+    auto tstep  = std::unique_ptr<Opm::SummaryParameter>{};
+    auto foip   = std::unique_ptr<Opm::SummaryParameter>{};
+    auto fpr    = std::unique_ptr<Opm::SummaryParameter>{};
+    {
+        auto prm = Opm::GlobalProcessParameter {
+            Opm::GlobalProcessParameter::Keyword { "X" },
+            Opm::UnitSystem::measure::identity
+        };
+
+        x.reset(new Opm::GlobalProcessParameter{ std::move(prm) });
+    }
+    {
+        auto prm = Opm::GlobalProcessParameter {
+            Opm::GlobalProcessParameter::Keyword { "TCPU" },
+            Opm::UnitSystem::measure::identity
+        };
+
+        tcpu.reset(new Opm::GlobalProcessParameter{ std::move(prm) });
+    }
+    {
+        auto prm = Opm::GlobalProcessParameter {
+            Opm::GlobalProcessParameter::Keyword { "NEWTON" },
+            Opm::UnitSystem::measure::identity
+        };
+
+        newton.reset(new Opm::GlobalProcessParameter{ std::move(prm) });
+    }
+    {
+        auto prm = Opm::GlobalProcessParameter {
+            Opm::GlobalProcessParameter::Keyword { "TIMESTEP" },
+            Opm::UnitSystem::measure::time
+        };
+
+        tstep.reset(new Opm::GlobalProcessParameter{ std::move(prm) });
+    }
+    {
+        auto prm = Opm::GlobalProcessParameter {
+            Opm::GlobalProcessParameter::Keyword { "FOIP" },
+            Opm::UnitSystem::measure::liquid_surface_volume
+        };
+
+        foip.reset(new Opm::GlobalProcessParameter{ std::move(prm) });
+    }
+    {
+        auto prm = Opm::GlobalProcessParameter {
+            Opm::GlobalProcessParameter::Keyword { "FPR" },
+            Opm::UnitSystem::measure::pressure
+        };
+
+        fpr.reset(new Opm::GlobalProcessParameter{ std::move(prm) });
+    }
+
+    const auto& xw = wellResults();
+    const auto& xs = singleResults();
+    const auto& xr = regionResults();
+    const auto& xb = blockResults();
+
+    const auto simRes = ::Opm::SummaryParameter::SimulatorResults {
+        xw, xs, xr, xb
+    };
+
+    auto st = ::Opm::SummaryState{ std::chrono::system_clock::now() };
+
+    const auto dt = 1.23e4; // != 216,000.0
+    x     ->update(2, dt, input, simRes, st);
+    tcpu  ->update(2, dt, input, simRes, st);
+    newton->update(2, dt, input, simRes, st);
+    tstep ->update(2, dt, input, simRes, st);
+    foip  ->update(2, dt, input, simRes, st);
+    fpr   ->update(2, dt, input, simRes, st);
+
+    BOOST_CHECK_CLOSE(st.get("X"), 1.23, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get("TCPU"), 45.67, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get("NEWTON"), 3.0, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get("TIMESTEP"), 2.5, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get("FOIP"), 1.23e8, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get("FPR"), 128.256, 1.0e-10);
+}
+
+BOOST_AUTO_TEST_SUITE_END() // Global_Process_Parameters
 
 // =====================================================================
 
