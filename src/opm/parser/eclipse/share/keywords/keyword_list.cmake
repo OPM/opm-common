@@ -18,7 +18,9 @@
 #              e.g. FIPXAREA or FIPYAREA
 #FOAMFCN       records of records
 #GCONPRI       Eclipse300 specific items
-
+#GCUTBACT      records of records
+#GECONT        records of records
+#GIALL         records of tables
 
 set( keywords
      000_Eclipse100/A/ACTDIMS
@@ -266,21 +268,46 @@ set( keywords
      000_Eclipse100/G/GCONPROD
      000_Eclipse100/G/GCONSALE
      000_Eclipse100/G/GCONSUMP
+     000_Eclipse100/G/GCONTOL
+     000_Eclipse100/G/GCUTBACK
+     000_Eclipse100/G/GCVD
+     000_Eclipse100/G/GDCQ
+     000_Eclipse100/G/GDCQECON
      000_Eclipse100/G/GDFILE
+     000_Eclipse100/G/GDIMS
      000_Eclipse100/G/GDORIENT
+     000_Eclipse100/G/GDRILPOT
      000_Eclipse100/G/GECON
      000_Eclipse100/G/GEFAC
+     000_Eclipse100/G/GETGLOB
+     000_Eclipse100/G/GI
+     000_Eclipse100/G/GIMODEL
+     000_Eclipse100/G/GINODE
+     000_Eclipse100/G/GLIFTLIM
      000_Eclipse100/G/GLIFTOPT
      000_Eclipse100/G/GMWSET
+     000_Eclipse100/G/GNETDP
      000_Eclipse100/G/GNETINJE
+     000_Eclipse100/G/GNETPUMP
      000_Eclipse100/G/GPMAINT
+     000_Eclipse100/G/GRADGRUP
+     000_Eclipse100/G/GRADRESV
+     000_Eclipse100/G/GRADRFT
+     000_Eclipse100/G/GRADWELL
+     000_Eclipse100/G/GRAVCONS
+     000_Eclipse100/G/GRAVDR
+     000_Eclipse100/G/GRAVDRB
+     000_Eclipse100/G/GRAVDRM
      000_Eclipse100/G/GRAVITY
+     000_Eclipse100/G/GRDREACH
      000_Eclipse100/G/GRID
      000_Eclipse100/G/GRIDFILE
      000_Eclipse100/G/GRIDOPTS
      000_Eclipse100/G/GRIDUNIT
      000_Eclipse100/G/GROUP_PROBE
+     000_Eclipse100/G/GRUPMAST
      000_Eclipse100/G/GRUPNET
+     000_Eclipse100/G/GRUPRIG
      000_Eclipse100/G/GRUPTREE
      000_Eclipse100/G/GSATPROD
      000_Eclipse100/G/GUIDERAT
