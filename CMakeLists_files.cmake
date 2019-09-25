@@ -209,6 +209,7 @@ if(ENABLE_ECL_OUTPUT)
           src/opm/io/eclipse/ESmry.cpp
           src/opm/io/eclipse/OutputStream.cpp
           src/opm/output/eclipse/Summary/BlockParameter.cpp
+          src/opm/output/eclipse/Summary/ConnectionParameter.cpp
           src/opm/output/eclipse/Summary/EvaluateQuantity.cpp
           src/opm/output/eclipse/Summary/GroupParameter.cpp
           src/opm/output/eclipse/Summary/RegionParameter.cpp
@@ -652,6 +653,7 @@ if(ENABLE_ECL_OUTPUT)
         opm/output/data/Solution.hpp
         opm/output/data/Wells.hpp
         opm/output/eclipse/Summary/BlockParameter.hpp
+        opm/output/eclipse/Summary/ConnectionParameter.hpp
         opm/output/eclipse/Summary/EvaluateQuantity.hpp
         opm/output/eclipse/Summary/GroupParameter.hpp
         opm/output/eclipse/Summary/RegionParameter.hpp

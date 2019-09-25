@@ -25,6 +25,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/Group2.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/Connection.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Well2.hpp>
 
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
@@ -396,6 +397,80 @@ namespace Opm { namespace SummaryHelpers {
 
 namespace {
 
+    template <class ConnOp>
+    Opm::SummaryHelpers::SummaryQuantity
+    connectionResultQuantity(const Opm::SummaryHelpers::EvaluationArguments& args,
+                             Opm::SummaryHelpers::SummaryQuantity            retval,
+                             ConnOp&&                                        connOp)
+    {
+        if (args.schedule_wells.empty()) {
+            return retval;
+        }
+
+        const auto& wname = args.schedule_wells.front();
+
+        auto xwPos = args.well_sol.find(wname);
+        if (xwPos == args.well_sol.end()) {
+            return retval;
+        }
+
+        const auto& xcon = xwPos->second.connections;
+
+        assert (args.num > 0);
+        const auto cellIx = static_cast<std::size_t>(args.num) - 1;
+        auto conn = std::find_if(xcon.begin(), xcon.end(),
+            [cellIx](const Opm::data::Connection& c) -> bool
+        {
+            return c.index == cellIx;
+        });
+
+        if (conn == xcon.end()) {
+            return retval;
+        }
+
+        // Connection found.  Invoke callback to calculate value.
+        connOp(*conn, wname, retval);
+
+        return retval;
+    }
+
+    template <class ConnOp>
+    Opm::SummaryHelpers::SummaryQuantity
+    connectionStaticQuantity(const Opm::SummaryHelpers::EvaluationArguments& args,
+                             Opm::SummaryHelpers::SummaryQuantity            retval,
+                             ConnOp&&                                        connOp)
+    {
+        if (args.schedule_wells.empty()) {
+            return retval;
+        }
+
+        const auto& wname = args.schedule_wells.front();
+        if (! args.sched.hasWell(wname, args.sim_step)) {
+            return retval;
+        }
+
+        const auto& wcon = args.sched.getWell2(wname, args.sim_step)
+            .getConnections();
+
+        const auto cellID = static_cast<std::size_t>(args.num) - 1;
+
+        auto connPos = std::find_if(wcon.begin(), wcon.end(),
+            [&args, cellID](const Opm::Connection& conn)
+        {
+            return cellID == args.grid
+                .getGlobalIndex(conn.getI(), conn.getJ(), conn.getK());
+        });
+
+        if (connPos == wcon.end()) {
+            return retval;
+        }
+
+        // Connection found.  Invoke callback to calculate value.
+        connOp(*connPos, wname, retval);
+
+        return retval;
+    }
+
     double
     efac(const std::vector<std::pair<std::string,double>>& eff_factors,
          const std::string&                                name)
@@ -482,40 +557,35 @@ namespace {
             SH::SummaryQuantity
             operator()(const SH::EvaluationArguments& args) const
             {
-                const auto unit = unitOfMeasure(unitType{});
-                const auto zero = SH::SummaryQuantity { 0.0, unit };
-
-                if (args.schedule_wells.empty()) {
-                    return zero;
-                }
-
-                const auto& wname = args.schedule_wells.front();
-
-                auto xwPos = args.well_sol.find(wname);
-                if (xwPos == args.well_sol.end()) {
-                    return zero;
-                }
-
-                const auto& xcon = xwPos->second.connections;
-
-                assert (args.num > 0);
-                const auto cellIx = static_cast<std::size_t>(args.num) - 1;
-                auto conn = std::find_if(xcon.begin(), xcon.end(),
-                    [cellIx](const Opm::data::Connection& c) -> bool
+                return connectionResultQuantity(args,
+                    { 0.0, unitOfMeasure(unitType{}) },
+                    [&args](const Opm::data::Connection& xcon,
+                            const std::string&           wname,
+                            SH::SummaryQuantity&         retval) -> void
                 {
-                    return c.index == cellIx;
+                    const auto v =
+                        flowRate<phase, polymer>(xcon.rates, args, wname);
+
+                    if ((v > 0.0) == injection) {
+                        retval.value = injection ? v : -v;
+                    }
                 });
+            }
+        };
 
-                if (conn == xcon.end()) {
-                    return zero;
-                }
-
-                const auto v =
-                    flowRate<phase, polymer>(conn->rates, args, wname);
-
-                if ((v > 0.0) != injection) { return zero; }
-
-                return { injection ? v : -v, unit };
+        struct ConnTrans
+        {
+            SH::SummaryQuantity
+            operator()(const SH::EvaluationArguments& args) const
+            {
+                return connectionStaticQuantity(args,
+                    { 0.0, Opm::UnitSystem::measure::transmissibility },
+                    [](const Opm::Connection& conn,
+                       const std::string&  /* wname */,
+                       SH::SummaryQuantity&   retval) -> void
+                {
+                    retval.value = conn.CF() * conn.wellPi();
+                });
             }
         };
 
@@ -1037,7 +1107,46 @@ namespace {
     }
 
     void EvaluatorTable::initConnectionParameters()
-    {}
+    {
+        using namespace BaseOperations;
+        using r = Opm::data::Rates::opt;
+
+        const auto inj  = true;
+        const auto prod = !inj;
+        const auto poly = true;
+
+        const auto CIR = ConnRate<r::wat    , inj, poly>{};
+        const auto GIR = ConnRate<r::gas    , inj      >{};
+        const auto OIR = ConnRate<r::oil    , inj      >{};
+        const auto NIR = ConnRate<r::solvent, inj      >{};
+        const auto WIR = ConnRate<r::wat    , inj      >{};
+
+        const auto GPR = ConnRate<r::gas    , prod>{};
+        const auto OPR = ConnRate<r::oil    , prod>{};
+        const auto NPR = ConnRate<r::solvent, prod>{};
+        const auto WPR = ConnRate<r::wat    , prod>{};
+
+        this->funcTable_.insert({
+            // ------------ Injection --------------------
+            VT{ "CCIR", CIR },  VT{ "CCIT", cumulative(CIR) },
+            VT{ "CGIR", GIR },  VT{ "CGIT", cumulative(GIR) },
+            VT{ "COIR", OIR },  VT{ "COIT", cumulative(OIR) },
+            VT{ "CNIR", NIR },  VT{ "CNIT", cumulative(NIR) },
+            VT{ "CWIR", WIR },  VT{ "CWIT", cumulative(WIR) },
+
+            // ------------ Production -------------------
+            VT{ "CGPR", GPR },  VT{ "CGPT", cumulative(GPR) },
+            VT{ "COPR", OPR },  VT{ "COPT", cumulative(OPR) },
+            VT{ "CNPR", NPR },  VT{ "CNPT", cumulative(NPR) },
+            VT{ "CWPR", WPR },  VT{ "CWPT", cumulative(WPR) },
+
+            // ------------ Free flow rate ---------------
+            VT{ "CNFR", subtract(NPR, NIR) }, // Prod <=> positive
+
+            // ------------ Ancillary quantities ---------
+            VT{ "CTFAC", ConnTrans{} },
+        });
+    }
 
     void EvaluatorTable::initRegionParameters()
     {

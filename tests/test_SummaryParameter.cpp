@@ -22,6 +22,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <opm/output/eclipse/Summary/BlockParameter.hpp>
+#include <opm/output/eclipse/Summary/ConnectionParameter.hpp>
 #include <opm/output/eclipse/Summary/EvaluateQuantity.hpp>
 #include <opm/output/eclipse/Summary/GroupParameter.hpp>
 #include <opm/output/eclipse/Summary/RegionParameter.hpp>
@@ -337,12 +338,16 @@ namespace {
     std::vector<std::string> supportedVectors()
     {
         return {
-#if 0
             // ---------------------------------------------------------
             // Connection quantities
-            "CCIR", "CCIT", "CGIR", "CGIT", "CGPR", "CGPT", "CNFR", "CNIT",
-            "CNPT", "COPR", "COPT", "CTFAC", "CWIR", "CWIT", "CWPR", "CWPT",
-#endif
+            "CCIR", "CCIT",
+            "CGIR", "CGIT", "CGPR", "CGPT",
+            "CNFR",
+            "CNIR", "CNIT", "CNPR", "CNPT",
+            "COIR", "COIT", "COPR", "COPT",
+            "CTFAC",
+            "CWIR", "CWIT", "CWPR", "CWPT",
+
             // ---------------------------------------------------------
             // Field quantities
             "FCIR", "FCIT",
@@ -448,6 +453,852 @@ BOOST_AUTO_TEST_CASE(WBHP)
 }
 
 BOOST_AUTO_TEST_SUITE_END() // FunctionHandlerTable
+
+// =====================================================================
+
+BOOST_AUTO_TEST_SUITE(Connection_Parameters)
+
+namespace {
+    Opm::data::Connection W_1_c1()
+    {
+        using r = Opm::data::Rates::opt;
+        auto xc = Opm::data::Connection{};
+
+        xc.index = 0;
+
+        // Negative rate signs for producers
+        xc.rates.set(r::oil, - 10.0e3*sm3_pr_day());
+        xc.rates.set(r::gas, -100.0e3*sm3_pr_day());
+        xc.rates.set(r::wat, - 50.0e3*sm3_pr_day());
+
+        xc.rates.set(r::dissolved_gas, -82.15e3*sm3_pr_day());
+        xc.rates.set(r::vaporized_oil, -1000.0*sm3_pr_day());
+
+        xc.rates.set(r::polymer, -256.512*sm3_pr_day());
+        xc.rates.set(r::solvent, - 12.03*sm3_pr_day());
+
+        xc.rates.set(r::reservoir_oil  , -30.0e3*rm3_pr_day());
+        xc.rates.set(r::reservoir_gas  , - 4.0e3*rm3_pr_day());
+        xc.rates.set(r::reservoir_water, -49.0e3*rm3_pr_day());
+
+        xc.pressure = 123.4*Opm::unit::barsa;
+        xc.reservoir_rate = -83.0e3*rm3_pr_day();
+
+        xc.cell_pressure = 179.85*Opm::unit::barsa;
+        xc.cell_saturation_water = 0.45;
+        xc.cell_saturation_gas = 0.23;
+
+        return xc;
+    }
+
+    Opm::data::Well W_1()
+    {
+        auto xw = Opm::data::Well{};
+
+        xw.connections.push_back(W_1_c1());
+
+        return xw;
+    }
+
+    Opm::data::Connection W_2_c1()
+    {
+        using r = Opm::data::Rates::opt;
+        auto xc = Opm::data::Connection{};
+
+        xc.index = 1;
+
+        // Positive rate signs for injectors
+        xc.rates.set(r::oil, 23.0e3*sm3_pr_day());
+        xc.rates.set(r::gas,  5.0e3*sm3_pr_day());
+        xc.rates.set(r::wat,  7.0e3*sm3_pr_day());
+
+        xc.rates.set(r::dissolved_gas, 2.15e3*sm3_pr_day());
+        xc.rates.set(r::vaporized_oil, 312.3*sm3_pr_day());
+
+        xc.rates.set(r::polymer, 128.256*sm3_pr_day());
+        xc.rates.set(r::solvent,  25.75*sm3_pr_day());
+
+        xc.rates.set(r::reservoir_oil  , 20.0e3*rm3_pr_day());
+        xc.rates.set(r::reservoir_gas  ,  1.0e3*rm3_pr_day());
+        xc.rates.set(r::reservoir_water,  3.5e3*rm3_pr_day());
+
+        xc.pressure = 135.79*Opm::unit::barsa;
+        xc.reservoir_rate = 24.5e3*rm3_pr_day();
+
+        xc.cell_pressure = 185.23*Opm::unit::barsa;
+        xc.cell_saturation_water = 0.38;
+        xc.cell_saturation_gas = 0.20;
+
+        return xc;
+    }
+
+    Opm::data::Connection W_2_c2()
+    {
+        using r = Opm::data::Rates::opt;
+        auto xc = Opm::data::Connection{};
+
+        xc.index = 101;
+
+        // Positive rate signs for injectors
+        xc.rates.set(r::oil, 27.0e3*sm3_pr_day());
+        xc.rates.set(r::gas, 15.0e3*sm3_pr_day());
+        xc.rates.set(r::wat,  3.0e3*sm3_pr_day());
+
+        xc.rates.set(r::dissolved_gas, 3.0e3*sm3_pr_day());
+        xc.rates.set(r::vaporized_oil, 342.0*sm3_pr_day());
+
+        xc.rates.set(r::reservoir_oil  , 20.0e3*rm3_pr_day());
+        xc.rates.set(r::reservoir_gas  ,  5.0e3*rm3_pr_day());
+        xc.rates.set(r::reservoir_water,  6.0e3*rm3_pr_day());
+
+        xc.pressure = 130.0*Opm::unit::barsa;
+        xc.reservoir_rate = 31.0e3*rm3_pr_day();
+
+        xc.cell_pressure = 184.0*Opm::unit::barsa;
+        xc.cell_saturation_water = 0.33;
+        xc.cell_saturation_gas = 0.23;
+
+        return xc;
+    }
+
+    Opm::data::Well W_2()
+    {
+        auto xw = Opm::data::Well{};
+
+        xw.connections.push_back(W_2_c1());
+        xw.connections.push_back(W_2_c2());
+
+        return xw;
+    }
+
+    Opm::data::Connection W_3_c1()
+    {
+        using r = Opm::data::Rates::opt;
+        auto xc = Opm::data::Connection{};
+
+        xc.index = 2;
+
+        // Positive rate signs for injectors
+        xc.rates.set(r::oil,   7.05e3*sm3_pr_day());
+        xc.rates.set(r::gas,  80.0e3*sm3_pr_day());
+        xc.rates.set(r::wat, 100.0e3*sm3_pr_day());
+
+        xc.rates.set(r::dissolved_gas, 45.0e3*sm3_pr_day());
+        xc.rates.set(r::vaporized_oil, 750.0*sm3_pr_day());
+
+        xc.rates.set(r::polymer, 128.256*sm3_pr_day());
+        xc.rates.set(r::solvent,  25.75*sm3_pr_day());
+
+        xc.rates.set(r::reservoir_oil  , 22.0e3*rm3_pr_day());
+        xc.rates.set(r::reservoir_gas  , 63.0e3*rm3_pr_day());
+        xc.rates.set(r::reservoir_water, 92.8e3*rm3_pr_day());
+
+        xc.pressure = 198.1*Opm::unit::barsa;
+
+        return xc;
+    }
+
+    Opm::data::Well W_3()
+    {
+        auto xw = Opm::data::Well{};
+
+        xw.connections.push_back(W_3_c1());
+
+        return xw;
+    }
+
+    Opm::data::WellRates wellResults()
+    {
+        auto xw = Opm::data::WellRates{};
+
+        xw["W_1"] = W_1();
+        xw["W_2"] = W_2();
+        xw["W_3"] = W_3();
+
+        return xw;
+    }
+
+    std::map<std::string, double> singleResults()
+    {
+        return {};
+    }
+
+    std::map<std::string, std::vector<double>> regionResults()
+    {
+        return {};
+    }
+
+    std::map<std::pair<std::string, int>, double> blockResults()
+    {
+        return {};
+    }
+} // Anonymous
+
+BOOST_AUTO_TEST_CASE(Failure_Cases)
+{
+    const auto cse      = Setup{ "summary_deck.DATA" };
+    const auto rcache   = ::Opm::out::RegionCache{};
+    const auto stepSize = 86400.0;
+    const auto sim_step = std::size_t{ 3 };
+    const auto cellID   = 1234;
+    const auto efac     = std::vector<std::pair<std::string, double>>{};
+    const auto st       = ::Opm::SummaryState{ std::chrono::system_clock::now() };
+
+    auto copt  = Opm::SummaryHelpers::getParameterEvaluator("COPT");
+    auto ctfac = Opm::SummaryHelpers::getParameterEvaluator("CTFAC");
+    {
+        const auto wells = std::vector<std::string>{};
+        const auto wellSol = wellResults();
+
+        const Opm::SummaryHelpers::EvaluationArguments args {
+            wells, stepSize, sim_step, cellID,
+            wellSol, rcache, cse.sched, cse.es.getInputGrid(),
+            st, efac
+        };
+
+        const auto res = (*copt)(args);
+        BOOST_CHECK_CLOSE(res.value, 0.0, 1.0e-10);  // No wells
+        BOOST_CHECK_MESSAGE(res.unit == Opm::UnitSystem::measure::liquid_surface_volume,
+            "Expected COPT Unit of Measure must be Liquid Surface Volume");
+    }
+
+    {
+        const auto wells = std::vector<std::string>{ "W_1" };
+        const auto wellSol = Opm::data::WellRates{};
+
+        const Opm::SummaryHelpers::EvaluationArguments args {
+            wells, stepSize, sim_step, cellID,
+            wellSol, rcache, cse.sched, cse.es.getInputGrid(),
+            st, efac
+        };
+
+        const auto res = (*copt)(args);
+        BOOST_CHECK_CLOSE(res.value, 0.0, 1.0e-10);  // No well results
+    }
+
+    {
+        const auto wells = std::vector<std::string>{ "W_1" };
+        const auto wellSol = wellResults();
+
+        const Opm::SummaryHelpers::EvaluationArguments args {
+            wells, stepSize, sim_step, cellID,
+            wellSol, rcache, cse.sched, cse.es.getInputGrid(),
+            st, efac
+        };
+
+        const auto res = (*copt)(args);
+        // Connection results not available for 'cellID'
+        BOOST_CHECK_CLOSE(res.value, 0.0, 1.0e-10);
+    }
+
+    {
+        const auto wells = std::vector<std::string>{};
+        const auto wellSol = wellResults();
+
+        const Opm::SummaryHelpers::EvaluationArguments args {
+            wells, stepSize, sim_step, cellID,
+            wellSol, rcache, cse.sched, cse.es.getInputGrid(),
+            st, efac
+        };
+
+        const auto res = (*ctfac)(args);
+        BOOST_CHECK_CLOSE(res.value, 0.0, 1.0e-10);  // No wells
+        BOOST_CHECK_MESSAGE(res.unit == Opm::UnitSystem::measure::transmissibility,
+            "Expected COPT Unit of Measure must be Liquid Surface Volume");
+    }
+
+    {
+        const auto wells = std::vector<std::string>{ "W_1" };
+        const auto wellSol = Opm::data::WellRates{};
+
+        const Opm::SummaryHelpers::EvaluationArguments args {
+            wells, stepSize, sim_step, cellID,
+            wellSol, rcache, cse.sched, cse.es.getInputGrid(),
+            st, efac
+        };
+
+        const auto res = (*ctfac)(args);
+        BOOST_CHECK_CLOSE(res.value, 0.0, 1.0e-10);  // No well results
+    }
+
+    {
+        const auto wells = std::vector<std::string>{ "W_1" };
+        const auto wellSol = wellResults();
+
+        const Opm::SummaryHelpers::EvaluationArguments args {
+            wells, stepSize, sim_step, cellID,
+            wellSol, rcache, cse.sched, cse.es.getInputGrid(),
+            st, efac
+        };
+
+        const auto res = (*ctfac)(args);
+        // Connection results not available for 'cellID'
+        BOOST_CHECK_CLOSE(res.value, 0.0, 1.0e-10);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(CTFAC_With_WPIMULT)
+{
+    const auto cse    = Setup{ "summary_deck.DATA" };
+    const auto rcache = ::Opm::out::RegionCache{};
+
+    const auto input = ::Opm::SummaryParameter::InputData {
+        cse.es, cse.sched, cse.es.getInputGrid(), rcache
+    };
+
+    auto ctfac_w1_1   = std::unique_ptr<Opm::SummaryParameter>{};
+    auto ctfac_w2_2   = std::unique_ptr<Opm::SummaryParameter>{};
+    auto ctfac_w2_102 = std::unique_ptr<Opm::SummaryParameter>{};
+    auto ctfac_w3_3   = std::unique_ptr<Opm::SummaryParameter>{};
+    {
+        auto eval = Opm::SummaryHelpers::getParameterEvaluator("CTFAC");
+        const auto cellID = 1;  // One-based indexing
+
+        auto prm = Opm::ConnectionParameter {
+            Opm::ConnectionParameter::WellName   { "W_1" },
+            Opm::ConnectionParameter::Keyword    { "CTFAC" },
+            cellID,
+            Opm::ConnectionParameter::UnitString { "CPRB/D/P" },
+            *eval
+        };
+
+        ctfac_w1_1.reset(new Opm::ConnectionParameter { std::move(prm) });
+    }
+    {
+        auto eval = Opm::SummaryHelpers::getParameterEvaluator("CTFAC");
+        const auto cellID = 2;  // One-based indexing
+
+        auto prm = Opm::ConnectionParameter {
+            Opm::ConnectionParameter::WellName   { "W_2" },
+            Opm::ConnectionParameter::Keyword    { "CTFAC" },
+            cellID,
+            Opm::ConnectionParameter::UnitString { "CPRB/D/P" },
+            *eval
+        };
+
+        ctfac_w2_2.reset(new Opm::ConnectionParameter { std::move(prm) });
+    }
+    {
+        auto eval = Opm::SummaryHelpers::getParameterEvaluator("CTFAC");
+        const auto cellID = 102;  // One-based indexing
+
+        auto prm = Opm::ConnectionParameter {
+            Opm::ConnectionParameter::WellName   { "W_2" },
+            Opm::ConnectionParameter::Keyword    { "CTFAC" },
+            cellID,
+            Opm::ConnectionParameter::UnitString { "CPRB/D/P" },
+            *eval
+        };
+
+        ctfac_w2_102.reset(new Opm::ConnectionParameter { std::move(prm) });
+    }
+    {
+        auto eval = Opm::SummaryHelpers::getParameterEvaluator("CTFAC");
+        const auto cellID = 3;  // One-based indexing
+
+        auto prm = Opm::ConnectionParameter {
+            Opm::ConnectionParameter::WellName   { "W_3" },
+            Opm::ConnectionParameter::Keyword    { "CTFAC" },
+            cellID,
+            Opm::ConnectionParameter::UnitString { "CPRB/D/P" },
+            *eval
+        };
+
+        ctfac_w3_3.reset(new Opm::ConnectionParameter { std::move(prm) });
+    }
+
+    BOOST_CHECK_EQUAL(ctfac_w1_1->keyword(), "CTFAC");
+    BOOST_CHECK_EQUAL(ctfac_w1_1->name(), "W_1");
+    BOOST_CHECK_EQUAL(ctfac_w1_1->num(), 1);
+    BOOST_CHECK_EQUAL(ctfac_w1_1->summaryKey(), "CTFAC:W_1:1");
+
+    BOOST_CHECK_EQUAL(ctfac_w2_2->keyword(), "CTFAC");
+    BOOST_CHECK_EQUAL(ctfac_w2_2->name(), "W_2");
+    BOOST_CHECK_EQUAL(ctfac_w2_2->num(), 2);
+    BOOST_CHECK_EQUAL(ctfac_w2_2->summaryKey(), "CTFAC:W_2:2");
+
+    BOOST_CHECK_EQUAL(ctfac_w2_102->keyword(), "CTFAC");
+    BOOST_CHECK_EQUAL(ctfac_w2_102->name(), "W_2");
+    BOOST_CHECK_EQUAL(ctfac_w2_102->num(), 102);
+    BOOST_CHECK_EQUAL(ctfac_w2_102->summaryKey(), "CTFAC:W_2:102");
+
+    BOOST_CHECK_EQUAL(ctfac_w3_3->keyword(), "CTFAC");
+    BOOST_CHECK_EQUAL(ctfac_w3_3->name(), "W_3");
+    BOOST_CHECK_EQUAL(ctfac_w3_3->num(), 3);
+    BOOST_CHECK_EQUAL(ctfac_w3_3->summaryKey(), "CTFAC:W_3:3");
+
+    const auto& xw = wellResults();
+    const auto& xs = singleResults();
+    const auto& xr = regionResults();
+    const auto& xb = blockResults();
+
+    const auto simRes = ::Opm::SummaryParameter::SimulatorResults {
+        xw, xs, xr, xb
+    };
+
+    auto st = ::Opm::SummaryState{ std::chrono::system_clock::now() };
+
+    {
+        const auto dt = cse.sched.seconds(2) - cse.sched.seconds(1);
+
+        ctfac_w1_1  ->update(2, dt, input, simRes, st);
+        ctfac_w2_2  ->update(2, dt, input, simRes, st);
+        ctfac_w2_102->update(2, dt, input, simRes, st);
+        ctfac_w3_3  ->update(2, dt, input, simRes, st);
+
+        BOOST_CHECK_MESSAGE(st.has(ctfac_w1_1  ->summaryKey()), "Summary State Must have CTFAC:W_1:1");
+        BOOST_CHECK_MESSAGE(st.has(ctfac_w2_2  ->summaryKey()), "Summary State Must have CTFAC:W_2:2");
+        BOOST_CHECK_MESSAGE(st.has(ctfac_w2_102->summaryKey()), "Summary State Must have CTFAC:W_2:102");
+        BOOST_CHECK_MESSAGE(st.has(ctfac_w3_3  ->summaryKey()), "Summary State Must have CTFAC:W_3:3");
+
+        BOOST_CHECK_CLOSE(st.get("CTFAC:W_1:1"), 100.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(st.get("CTFAC:W_2:2"), 2.1430731232778339, 1.0e-10);
+        BOOST_CHECK_CLOSE(st.get("CTFAC:W_2:102"), 2.6788414040972923, 1.0e-10);
+        BOOST_CHECK_CLOSE(st.get("CTFAC:W_3:3"), 2.7855057460037767, 1.0e-10);
+    }
+
+    {
+        const auto dt = cse.sched.seconds(3) - cse.sched.seconds(2);
+
+        ctfac_w1_1->update(3, dt, input, simRes, st);
+
+        // Affected by WPIMULT (factor = 0.5)
+        BOOST_CHECK_CLOSE(st.get("CTFAC:W_1:1"), 50.0, 1.0e-10);
+    }
+
+    {
+        const auto dt = cse.sched.seconds(4) - cse.sched.seconds(3);
+
+        ctfac_w1_1->update(4, dt, input, simRes, st);
+
+        // Affected by WPIMULT (second application of factor = 0.5)
+        BOOST_CHECK_CLOSE(st.get("CTFAC:W_1:1"), 25.0, 1.0e-10);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Connection_Flow)
+{
+    const auto cse    = Setup{ "summary_deck.DATA" };
+    const auto rcache = ::Opm::out::RegionCache{};
+
+    const auto input = ::Opm::SummaryParameter::InputData {
+        cse.es, cse.sched, cse.es.getInputGrid(), rcache
+    };
+
+    auto ccir = std::unique_ptr<Opm::SummaryParameter>{};
+    auto ccit = std::unique_ptr<Opm::SummaryParameter>{};
+    auto cgir = std::unique_ptr<Opm::SummaryParameter>{};
+    auto cgit = std::unique_ptr<Opm::SummaryParameter>{};
+    auto coir = std::unique_ptr<Opm::SummaryParameter>{};
+    auto coit = std::unique_ptr<Opm::SummaryParameter>{};
+    auto cnir = std::unique_ptr<Opm::SummaryParameter>{};
+    auto cnit = std::unique_ptr<Opm::SummaryParameter>{};
+    auto cwir = std::unique_ptr<Opm::SummaryParameter>{};
+    auto cwit = std::unique_ptr<Opm::SummaryParameter>{};
+
+    auto cgpr = std::unique_ptr<Opm::SummaryParameter>{};
+    auto cgpt = std::unique_ptr<Opm::SummaryParameter>{};
+    auto copr = std::unique_ptr<Opm::SummaryParameter>{};
+    auto copt = std::unique_ptr<Opm::SummaryParameter>{};
+    auto cnpr = std::unique_ptr<Opm::SummaryParameter>{};
+    auto cnpt = std::unique_ptr<Opm::SummaryParameter>{};
+    auto cwpr = std::unique_ptr<Opm::SummaryParameter>{};
+    auto cwpt = std::unique_ptr<Opm::SummaryParameter>{};
+
+    auto cnfr_1 = std::unique_ptr<Opm::SummaryParameter>{};
+    auto cnfr_2 = std::unique_ptr<Opm::SummaryParameter>{};
+
+    {
+        auto eval = Opm::SummaryHelpers::getParameterEvaluator("CCIR");
+        const auto cellID = 3;  // One-based indexing
+
+        auto prm = Opm::ConnectionParameter {
+            Opm::ConnectionParameter::WellName   { "W_3" },
+            Opm::ConnectionParameter::Keyword    { "CCIR" },
+            cellID,
+            Opm::ConnectionParameter::UnitString { "KG/DAY" },
+            *eval
+        };
+
+        ccir.reset(new Opm::ConnectionParameter { std::move(prm) });
+    }
+    {
+        auto eval = Opm::SummaryHelpers::getParameterEvaluator("CCIT");
+        const auto cellID = 3;  // One-based indexing
+
+        auto prm = Opm::ConnectionParameter {
+            Opm::ConnectionParameter::WellName   { "W_3" },
+            Opm::ConnectionParameter::Keyword    { "CCIT" },
+            cellID,
+            Opm::ConnectionParameter::UnitString { "KG" },
+            *eval
+        };
+
+        ccit.reset(new Opm::ConnectionParameter { std::move(prm) });
+    }
+    {
+        auto eval = Opm::SummaryHelpers::getParameterEvaluator("CGIR");
+        const auto cellID = 2;  // One-based indexing
+
+        auto prm = Opm::ConnectionParameter {
+            Opm::ConnectionParameter::WellName   { "W_2" },
+            Opm::ConnectionParameter::Keyword    { "CGIR" },
+            cellID,
+            Opm::ConnectionParameter::UnitString { "SM3/DAY" },
+            *eval
+        };
+
+        cgir.reset(new Opm::ConnectionParameter { std::move(prm) });
+    }
+    {
+        auto eval = Opm::SummaryHelpers::getParameterEvaluator("CGIT");
+        const auto cellID = 2;  // One-based indexing
+
+        auto prm = Opm::ConnectionParameter {
+            Opm::ConnectionParameter::WellName   { "W_2" },
+            Opm::ConnectionParameter::Keyword    { "CGIT" },
+            cellID,
+            Opm::ConnectionParameter::UnitString { "SM3" },
+            *eval
+        };
+
+        cgit.reset(new Opm::ConnectionParameter { std::move(prm) });
+    }
+    {
+        auto eval = Opm::SummaryHelpers::getParameterEvaluator("COIR");
+        const auto cellID = 2;  // One-based indexing
+
+        auto prm = Opm::ConnectionParameter {
+            Opm::ConnectionParameter::WellName   { "W_2" },
+            Opm::ConnectionParameter::Keyword    { "COIR" },
+            cellID,
+            Opm::ConnectionParameter::UnitString { "SM3/DAY" },
+            *eval
+        };
+
+        coir.reset(new Opm::ConnectionParameter { std::move(prm) });
+    }
+    {
+        auto eval = Opm::SummaryHelpers::getParameterEvaluator("COIT");
+        const auto cellID = 2;  // One-based indexing
+
+        auto prm = Opm::ConnectionParameter {
+            Opm::ConnectionParameter::WellName   { "W_2" },
+            Opm::ConnectionParameter::Keyword    { "COIT" },
+            cellID,
+            Opm::ConnectionParameter::UnitString { "SM3" },
+            *eval
+        };
+
+        coit.reset(new Opm::ConnectionParameter { std::move(prm) });
+    }
+    {
+        auto eval = Opm::SummaryHelpers::getParameterEvaluator("CNIR");
+        const auto cellID = 2;  // One-based indexing
+
+        auto prm = Opm::ConnectionParameter {
+            Opm::ConnectionParameter::WellName   { "W_2" },
+            Opm::ConnectionParameter::Keyword    { "CNIR" },
+            cellID,
+            Opm::ConnectionParameter::UnitString { "SM3/DAY" },
+            *eval
+        };
+
+        cnir.reset(new Opm::ConnectionParameter { std::move(prm) });
+    }
+    {
+        auto eval = Opm::SummaryHelpers::getParameterEvaluator("CNIT");
+        const auto cellID = 2;  // One-based indexing
+
+        auto prm = Opm::ConnectionParameter {
+            Opm::ConnectionParameter::WellName   { "W_2" },
+            Opm::ConnectionParameter::Keyword    { "CNIT" },
+            cellID,
+            Opm::ConnectionParameter::UnitString { "SM3" },
+            *eval
+        };
+
+        cnit.reset(new Opm::ConnectionParameter { std::move(prm) });
+    }
+    {
+        auto eval = Opm::SummaryHelpers::getParameterEvaluator("CWIR");
+        const auto cellID = 2;  // One-based indexing
+
+        auto prm = Opm::ConnectionParameter {
+            Opm::ConnectionParameter::WellName   { "W_2" },
+            Opm::ConnectionParameter::Keyword    { "CWIR" },
+            cellID,
+            Opm::ConnectionParameter::UnitString { "SM3/DAY" },
+            *eval
+        };
+
+        cwir.reset(new Opm::ConnectionParameter { std::move(prm) });
+    }
+    {
+        auto eval = Opm::SummaryHelpers::getParameterEvaluator("CWIT");
+        const auto cellID = 2;  // One-based indexing
+
+        auto prm = Opm::ConnectionParameter {
+            Opm::ConnectionParameter::WellName   { "W_2" },
+            Opm::ConnectionParameter::Keyword    { "CWIT" },
+            cellID,
+            Opm::ConnectionParameter::UnitString { "SM3" },
+            *eval
+        };
+
+        cwit.reset(new Opm::ConnectionParameter { std::move(prm) });
+    }
+
+    {
+        auto eval = Opm::SummaryHelpers::getParameterEvaluator("CGPR");
+        const auto cellID = 1;  // One-based indexing
+
+        auto prm = Opm::ConnectionParameter {
+            Opm::ConnectionParameter::WellName   { "W_1" },
+            Opm::ConnectionParameter::Keyword    { "CGPR" },
+            cellID,
+            Opm::ConnectionParameter::UnitString { "SM3/DAY" },
+            *eval
+        };
+
+        cgpr.reset(new Opm::ConnectionParameter { std::move(prm) });
+    }
+    {
+        auto eval = Opm::SummaryHelpers::getParameterEvaluator("CGPT");
+        const auto cellID = 1;  // One-based indexing
+
+        auto prm = Opm::ConnectionParameter {
+            Opm::ConnectionParameter::WellName   { "W_1" },
+            Opm::ConnectionParameter::Keyword    { "CGPT" },
+            cellID,
+            Opm::ConnectionParameter::UnitString { "SM3" },
+            *eval
+        };
+
+        cgpt.reset(new Opm::ConnectionParameter { std::move(prm) });
+    }
+    {
+        auto eval = Opm::SummaryHelpers::getParameterEvaluator("COPR");
+        const auto cellID = 1;  // One-based indexing
+
+        auto prm = Opm::ConnectionParameter {
+            Opm::ConnectionParameter::WellName   { "W_1" },
+            Opm::ConnectionParameter::Keyword    { "COPR" },
+            cellID,
+            Opm::ConnectionParameter::UnitString { "SM3/DAY" },
+            *eval
+        };
+
+        copr.reset(new Opm::ConnectionParameter { std::move(prm) });
+    }
+    {
+        auto eval = Opm::SummaryHelpers::getParameterEvaluator("COPT");
+        const auto cellID = 1;  // One-based indexing
+
+        auto prm = Opm::ConnectionParameter {
+            Opm::ConnectionParameter::WellName   { "W_1" },
+            Opm::ConnectionParameter::Keyword    { "COPT" },
+            cellID,
+            Opm::ConnectionParameter::UnitString { "SM3" },
+            *eval
+        };
+
+        copt.reset(new Opm::ConnectionParameter { std::move(prm) });
+    }
+    {
+        auto eval = Opm::SummaryHelpers::getParameterEvaluator("CNPR");
+        const auto cellID = 1;  // One-based indexing
+
+        auto prm = Opm::ConnectionParameter {
+            Opm::ConnectionParameter::WellName   { "W_1" },
+            Opm::ConnectionParameter::Keyword    { "CNPR" },
+            cellID,
+            Opm::ConnectionParameter::UnitString { "SM3/DAY" },
+            *eval
+        };
+
+        cnpr.reset(new Opm::ConnectionParameter { std::move(prm) });
+    }
+    {
+        auto eval = Opm::SummaryHelpers::getParameterEvaluator("CNPT");
+        const auto cellID = 1;  // One-based indexing
+
+        auto prm = Opm::ConnectionParameter {
+            Opm::ConnectionParameter::WellName   { "W_1" },
+            Opm::ConnectionParameter::Keyword    { "CNPT" },
+            cellID,
+            Opm::ConnectionParameter::UnitString { "SM3" },
+            *eval
+        };
+
+        cnpt.reset(new Opm::ConnectionParameter { std::move(prm) });
+    }
+    {
+        auto eval = Opm::SummaryHelpers::getParameterEvaluator("CWPR");
+        const auto cellID = 1;  // One-based indexing
+
+        auto prm = Opm::ConnectionParameter {
+            Opm::ConnectionParameter::WellName   { "W_1" },
+            Opm::ConnectionParameter::Keyword    { "CWPR" },
+            cellID,
+            Opm::ConnectionParameter::UnitString { "SM3/DAY" },
+            *eval
+        };
+
+        cwpr.reset(new Opm::ConnectionParameter { std::move(prm) });
+    }
+    {
+        auto eval = Opm::SummaryHelpers::getParameterEvaluator("CWPT");
+        const auto cellID = 1;  // One-based indexing
+
+        auto prm = Opm::ConnectionParameter {
+            Opm::ConnectionParameter::WellName   { "W_1" },
+            Opm::ConnectionParameter::Keyword    { "CWPT" },
+            cellID,
+            Opm::ConnectionParameter::UnitString { "SM3" },
+            *eval
+        };
+
+        cwpt.reset(new Opm::ConnectionParameter { std::move(prm) });
+    }
+
+    {
+        auto eval = Opm::SummaryHelpers::getParameterEvaluator("CNFR");
+        const auto cellID = 1;  // One-based indexing
+
+        auto prm = Opm::ConnectionParameter {
+            Opm::ConnectionParameter::WellName   { "W_1" },
+            Opm::ConnectionParameter::Keyword    { "CNFR" },
+            cellID,
+            Opm::ConnectionParameter::UnitString { "SM3/DAY" },
+            *eval
+        };
+
+        cnfr_1.reset(new Opm::ConnectionParameter { std::move(prm) });
+    }
+    {
+        auto eval = Opm::SummaryHelpers::getParameterEvaluator("CNFR");
+        const auto cellID = 2;  // One-based indexing
+
+        auto prm = Opm::ConnectionParameter {
+            Opm::ConnectionParameter::WellName   { "W_2" },
+            Opm::ConnectionParameter::Keyword    { "CNFR" },
+            cellID,
+            Opm::ConnectionParameter::UnitString { "SM3/DAY" },
+            *eval
+        };
+
+        cnfr_2.reset(new Opm::ConnectionParameter { std::move(prm) });
+    }
+
+    BOOST_CHECK_EQUAL(ccir->summaryKey(), "CCIR:W_3:3");
+    BOOST_CHECK_EQUAL(ccit->summaryKey(), "CCIT:W_3:3");
+    BOOST_CHECK_EQUAL(cgir->summaryKey(), "CGIR:W_2:2");
+    BOOST_CHECK_EQUAL(cgit->summaryKey(), "CGIT:W_2:2");
+    BOOST_CHECK_EQUAL(cnir->summaryKey(), "CNIR:W_2:2");
+    BOOST_CHECK_EQUAL(cnit->summaryKey(), "CNIT:W_2:2");
+    BOOST_CHECK_EQUAL(coir->summaryKey(), "COIR:W_2:2");
+    BOOST_CHECK_EQUAL(coit->summaryKey(), "COIT:W_2:2");
+    BOOST_CHECK_EQUAL(cwir->summaryKey(), "CWIR:W_2:2");
+    BOOST_CHECK_EQUAL(cwit->summaryKey(), "CWIT:W_2:2");
+
+    BOOST_CHECK_EQUAL(cgpr->summaryKey(), "CGPR:W_1:1");
+    BOOST_CHECK_EQUAL(cgpt->summaryKey(), "CGPT:W_1:1");
+    BOOST_CHECK_EQUAL(cnpr->summaryKey(), "CNPR:W_1:1");
+    BOOST_CHECK_EQUAL(cnpt->summaryKey(), "CNPT:W_1:1");
+    BOOST_CHECK_EQUAL(copr->summaryKey(), "COPR:W_1:1");
+    BOOST_CHECK_EQUAL(copt->summaryKey(), "COPT:W_1:1");
+    BOOST_CHECK_EQUAL(cwpr->summaryKey(), "CWPR:W_1:1");
+    BOOST_CHECK_EQUAL(cwpt->summaryKey(), "CWPT:W_1:1");
+
+    BOOST_CHECK_EQUAL(cnfr_1->summaryKey(), "CNFR:W_1:1");
+    BOOST_CHECK_EQUAL(cnfr_2->summaryKey(), "CNFR:W_2:2");
+
+    const auto& xw = wellResults();
+    const auto& xs = singleResults();
+    const auto& xr = regionResults();
+    const auto& xb = blockResults();
+
+    const auto simRes = ::Opm::SummaryParameter::SimulatorResults {
+        xw, xs, xr, xb
+    };
+
+    auto st = ::Opm::SummaryState{ std::chrono::system_clock::now() };
+
+    {
+        const auto dt = cse.sched.seconds(2) - cse.sched.seconds(1);
+        ccir->update(2, dt, input, simRes, st);
+        ccit->update(2, dt, input, simRes, st);
+        cgir->update(2, dt, input, simRes, st);
+        cgit->update(2, dt, input, simRes, st);
+        coir->update(2, dt, input, simRes, st);
+        coit->update(2, dt, input, simRes, st);
+        cnir->update(2, dt, input, simRes, st);
+        cnit->update(2, dt, input, simRes, st);
+        cwir->update(2, dt, input, simRes, st);
+        cwit->update(2, dt, input, simRes, st);
+
+        cgpr->update(2, dt, input, simRes, st);
+        cgpt->update(2, dt, input, simRes, st);
+        copr->update(2, dt, input, simRes, st);
+        copt->update(2, dt, input, simRes, st);
+        cnpr->update(2, dt, input, simRes, st);
+        cnpt->update(2, dt, input, simRes, st);
+        cwpr->update(2, dt, input, simRes, st);
+        cwpt->update(2, dt, input, simRes, st);
+
+        cnfr_1->update(2, dt, input, simRes, st);
+        cnfr_2->update(2, dt, input, simRes, st);
+    }
+
+    BOOST_CHECK_MESSAGE(st.has(ccir->summaryKey()), "Summary State Must Have CCIR:W_3:3");
+    BOOST_CHECK_MESSAGE(st.has(ccit->summaryKey()), "Summary State Must Have CCIT:W_3:3");
+    BOOST_CHECK_MESSAGE(st.has(cgir->summaryKey()), "Summary State Must Have CGIR:W_2:2");
+    BOOST_CHECK_MESSAGE(st.has(cgit->summaryKey()), "Summary State Must Have CGIT:W_2:2");
+    BOOST_CHECK_MESSAGE(st.has(cnir->summaryKey()), "Summary State Must Have CNIR:W_2:2");
+    BOOST_CHECK_MESSAGE(st.has(cnit->summaryKey()), "Summary State Must Have CNIT:W_2:2");
+    BOOST_CHECK_MESSAGE(st.has(coir->summaryKey()), "Summary State Must Have COIR:W_2:2");
+    BOOST_CHECK_MESSAGE(st.has(coit->summaryKey()), "Summary State Must Have COIT:W_2:2");
+    BOOST_CHECK_MESSAGE(st.has(cwir->summaryKey()), "Summary State Must Have CWIR:W_2:2");
+    BOOST_CHECK_MESSAGE(st.has(cwit->summaryKey()), "Summary State Must Have CWIT:W_2:2");
+
+    BOOST_CHECK_MESSAGE(st.has(cgpr->summaryKey()), "Summary State Must Have CGPR:W_1:1");
+    BOOST_CHECK_MESSAGE(st.has(cgpt->summaryKey()), "Summary State Must Have CGPT:W_1:1");
+    BOOST_CHECK_MESSAGE(st.has(cnpr->summaryKey()), "Summary State Must Have CNPR:W_1:1");
+    BOOST_CHECK_MESSAGE(st.has(cnpt->summaryKey()), "Summary State Must Have CNPT:W_1:1");
+    BOOST_CHECK_MESSAGE(st.has(copr->summaryKey()), "Summary State Must Have COPR:W_1:1");
+    BOOST_CHECK_MESSAGE(st.has(copt->summaryKey()), "Summary State Must Have COPT:W_1:1");
+    BOOST_CHECK_MESSAGE(st.has(cwpr->summaryKey()), "Summary State Must Have CWPR:W_1:1");
+    BOOST_CHECK_MESSAGE(st.has(cwpt->summaryKey()), "Summary State Must Have CWPT:W_1:1");
+
+    BOOST_CHECK_MESSAGE(st.has(cnfr_1->summaryKey()), "Summary State Must Have CNFR:W_1:1");
+    BOOST_CHECK_MESSAGE(st.has(cnfr_2->summaryKey()), "Summary State Must Have CNFR:W_2:2");
+
+    BOOST_CHECK_CLOSE(st.get(ccir->summaryKey()),  250.0e3, 1.0e-10);  // Polymer concentration 2.5kg/sm3
+    BOOST_CHECK_CLOSE(st.get(ccit->summaryKey()), 2.5e6, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get(cgir->summaryKey()),  5.0e3, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get(cgit->summaryKey()), 50.0e3, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get(cnir->summaryKey()),  25.75, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get(cnit->summaryKey()), 257.5, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get(coir->summaryKey()),  23.0e3, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get(coit->summaryKey()), 230.0e3, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get(cwir->summaryKey()),  7.0e3, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get(cwit->summaryKey()), 70.0e3, 1.0e-10);
+
+    BOOST_CHECK_CLOSE(st.get(cgpr->summaryKey()), 100.0e3, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get(cgpt->summaryKey()),   1.0e6, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get(cnpr->summaryKey()),  12.03, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get(cnpt->summaryKey()), 120.3, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get(copr->summaryKey()),  10.0e3, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get(copt->summaryKey()), 100.0e3, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get(cwpr->summaryKey()),  50.0e3, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get(cwpt->summaryKey()), 500.0e3, 1.0e-10);
+
+    BOOST_CHECK_CLOSE(st.get(cnfr_1->summaryKey()),  12.03, 1.0e-10);
+    BOOST_CHECK_CLOSE(st.get(cnfr_2->summaryKey()), -25.75, 1.0e-10);
+}
+
+BOOST_AUTO_TEST_SUITE_END() // Connection_Parameters
 
 // =====================================================================
 
