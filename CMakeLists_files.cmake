@@ -46,6 +46,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/Deck/DeckOutput.cpp
     src/opm/parser/eclipse/Deck/Section.cpp
     src/opm/parser/eclipse/Deck/UDAValue.cpp
+    src/opm/parser/eclipse/Deck/DeckValue.cpp
     src/opm/parser/eclipse/Python/Python.cpp
     src/opm/parser/eclipse/EclipseState/AquiferCT.cpp
     src/opm/parser/eclipse/EclipseState/Aquifetp.cpp
@@ -260,6 +261,7 @@ if(ENABLE_ECL_INPUT)
     tests/parser/ConnectionTests.cpp
     tests/parser/COMPSEGUnits.cpp
     tests/parser/CopyRegTests.cpp
+    tests/parser/DeckValueTests.cpp
     tests/parser/DeckTests.cpp
     tests/parser/DynamicStateTests.cpp
     tests/parser/DynamicVectorTests.cpp
@@ -626,6 +628,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/Deck/DeckKeyword.hpp
        opm/parser/eclipse/Deck/DeckRecord.hpp
        opm/parser/eclipse/Deck/UDAValue.hpp
+       opm/parser/eclipse/Deck/DeckValue.hpp
        opm/parser/eclipse/Python/Python.hpp)
 endif()
 if(ENABLE_ECL_OUTPUT)
