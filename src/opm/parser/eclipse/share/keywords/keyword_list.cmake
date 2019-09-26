@@ -21,6 +21,7 @@
 #GCUTBACT      records of records
 #GECONT        records of records
 #GIALL         records of tables
+#UDT
 
 set( keywords
      000_Eclipse100/A/ACTDIMS
@@ -553,8 +554,15 @@ set( keywords
      000_Eclipse100/U/UDQ
      000_Eclipse100/U/UDQDIMS
      000_Eclipse100/U/UDQPARAM
+     000_Eclipse100/U/UDTDIMS
+     000_Eclipse100/U/UNCODHMD
      000_Eclipse100/U/UNIFIN
      000_Eclipse100/U/UNIFOUT
+     000_Eclipse100/U/UNIFOUTS
+     000_Eclipse100/U/UNIFSAVE
+     000_Eclipse100/U/USECUPL
+     000_Eclipse100/U/USEFLUX
+     000_Eclipse100/U/USENOFLO
      000_Eclipse100/V/VAPOIL
      000_Eclipse100/V/VAPPARS
      000_Eclipse100/V/VDFLOW
