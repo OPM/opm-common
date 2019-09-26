@@ -22,6 +22,8 @@
 
 #include <string>
 
+namespace Opm {
+
 class DeckValue {
 
     public:
@@ -53,7 +55,7 @@ class DeckValue {
 
 };
 
-
+}
 
 
 #endif

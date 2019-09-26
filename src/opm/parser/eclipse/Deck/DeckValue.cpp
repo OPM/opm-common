@@ -21,6 +21,7 @@
 
 #include <opm/parser/eclipse/Deck/DeckValue.hpp>
 
+namespace Opm {
 
 DeckValue::DeckValue():
     DeckValue(0)
@@ -104,5 +105,7 @@ void DeckValue::reset(const std::string& value) {
   this->is_int = false;
   this->is_double = false;
   this->string_value = value;
+}
+
 }
 

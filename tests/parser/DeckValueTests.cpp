@@ -4,7 +4,14 @@
 #define BOOST_TEST_MODULE DeckValueTests
 #include <boost/test/unit_test.hpp>
 
+#include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/A.hpp>
+
 #include <opm/parser/eclipse/Deck/DeckValue.hpp>
+#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
+
+using namespace Opm;
 
 BOOST_AUTO_TEST_CASE(DeckValueTest) {
 
