@@ -557,11 +557,26 @@ set( keywords
      000_Eclipse100/U/UNIFOUT
      000_Eclipse100/V/VAPOIL
      000_Eclipse100/V/VAPPARS
+     000_Eclipse100/V/VDFLOW
+     000_Eclipse100/V/VDFLOWR
+     000_Eclipse100/V/VE
+     000_Eclipse100/V/VEDEBUG
+     000_Eclipse100/V/VEFIN
+     000_Eclipse100/V/VEFRAC
+     000_Eclipse100/V/VEFRACP
+     000_Eclipse100/V/VEFRACPV
+     000_Eclipse100/V/VEFRACV
+     000_Eclipse100/V/VFPCHK
      000_Eclipse100/V/VFPIDIMS
      000_Eclipse100/V/VFPINJ
      000_Eclipse100/V/VFPPDIMS
      000_Eclipse100/V/VFPPROD
+     000_Eclipse100/V/VFPTABL
+     000_Eclipse100/V/VISAGE
+     000_Eclipse100/V/VISCD
      000_Eclipse100/V/VISCREF
+     000_Eclipse100/V/VISDATES
+     000_Eclipse100/V/VISOPTS
      000_Eclipse100/W/WAGHYSTR
      000_Eclipse100/W/WAITBAL
      000_Eclipse100/W/WALKALIN
