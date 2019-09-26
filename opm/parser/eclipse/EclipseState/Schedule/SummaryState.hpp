@@ -27,8 +27,6 @@
 #include <unordered_set>
 #include <iosfwd>
 
-#include <ert/ecl/smspec_node.hpp>
-
 namespace Opm{
 
 
@@ -80,7 +78,6 @@ public:
     bool has_group_var(const std::string& group, const std::string& var) const;
 
     void update(const std::string& key, double value);
-    void update(const ecl::smspec_node& node, double value);
     void update_well_var(const std::string& well, const std::string& var, double value);
     void update_group_var(const std::string& group, const std::string& var, double value);
     void update_elapsed(double delta);

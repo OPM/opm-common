@@ -176,6 +176,22 @@ namespace {
  * the compiler writes a lot of this code for us.
  */
 
+namespace {
+    void update(const ecl::smspec_node& node, const double value, Opm::SummaryState& st)
+    {
+        if (node.get_var_type() == ECL_SMSPEC_WELL_VAR)
+            st.update_well_var(node.get_wgname(),
+                               node.get_keyword(),
+                               value);
+        else if (node.get_var_type() == ECL_SMSPEC_GROUP_VAR)
+            st.update_group_var(node.get_wgname(),
+                                node.get_keyword(),
+                                value);
+        else
+            st.update(node.get_gen_key1(), value);
+    }
+} // Anonymous
+
 namespace Opm {
 
 namespace {
@@ -1529,7 +1545,7 @@ void Summary::eval( SummaryState& st,
             unit_applied_val = es.getUnits().from_si( val.unit, val.value );
         }
 
-        st.update(*f.first, unit_applied_val);
+        update(*f.first, unit_applied_val, st);
     }
 
     for( const auto& value_pair : single_values ) {
@@ -1539,7 +1555,7 @@ void Summary::eval( SummaryState& st,
             const auto unit = single_values_units.at( key );
             double si_value = value_pair.second;
             double output_value = es.getUnits().from_si(unit , si_value );
-            st.update(*node_pair->second, output_value);
+            update(*node_pair->second, output_value, st);
         }
     }
 
@@ -1554,7 +1570,7 @@ void Summary::eval( SummaryState& st,
                 assert (smspec_node_get_num( nodeptr ) - 1 == static_cast<int>(reg));
                 double si_value = value_pair.second[reg];
                 double output_value = es.getUnits().from_si(unit , si_value );
-                st.update(*nodeptr, output_value);
+                update(*nodeptr, output_value, st);
             }
         }
     }
@@ -1567,7 +1583,7 @@ void Summary::eval( SummaryState& st,
             const auto unit = block_units.at( key.first );
             double si_value = value_pair.second;
             double output_value = es.getUnits().from_si(unit , si_value );
-            st.update(*nodeptr, output_value);
+            update(*nodeptr, output_value, st);
         }
     }
     eval_udq(schedule, sim_step, st);
