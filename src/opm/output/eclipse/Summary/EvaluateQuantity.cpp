@@ -251,18 +251,21 @@ namespace {
 
         const auto time  = UnitTag<M::time>{};
         const auto other = lhs == M::time ? rhs : lhs;
-        switch (other) {
-            case M::liquid_surface_rate:
-                return UnitTag<M::liquid_surface_rate>{} * time;
 
-            case M::gas_surface_rate:
-                return UnitTag<M::gas_surface_rate>{} * time;
+        if (other == M::liquid_surface_rate) {
+            return UnitTag<M::liquid_surface_rate>{} * time;
+        }
 
-            case M::rate:
-                return UnitTag<M::rate>{} * time;
+        if (other == M::gas_surface_rate) {
+            return UnitTag<M::gas_surface_rate>{} * time;
+        }
 
-            case M::mass_rate:
-                return UnitTag<M::mass_rate>{} * time;
+        if (other == M::rate) {
+            return UnitTag<M::rate>{} * time;
+        }
+
+        if (other == M::mass_rate) {
+            return UnitTag<M::mass_rate>{} * time;
         }
 
         throw std::invalid_argument {

@@ -343,12 +343,11 @@ Opm::WellParameter::setFlag(const Flag                  f,
 
 std::string Opm::WellParameter::flagName(const Flag f) const
 {
-    switch (f) {
-    case Flag::Rate:  return "Rate";
-    case Flag::Total: return "Total";
-    case Flag::BHP:   return "BHP";
-    case Flag::THP:   return "THP";
-    }
+    if (f == Flag::Rate)  { return "Rate"; }
+    if (f == Flag::Ratio) { return "Ratio"; }
+    if (f == Flag::Total) { return "Total"; }
+    if (f == Flag::BHP)   { return "BHP"; }
+    if (f == Flag::THP)   { return "THP"; }
 
     throw std::invalid_argument {
         "Unkown Flag Value: " +
