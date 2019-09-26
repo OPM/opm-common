@@ -41,12 +41,12 @@ if(ENABLE_ECL_INPUT)
     src/opm/json/JsonObject.cpp
     src/opm/parser/eclipse/Deck/Deck.cpp
     src/opm/parser/eclipse/Deck/DeckItem.cpp
+    src/opm/parser/eclipse/Deck/DeckValue.cpp
     src/opm/parser/eclipse/Deck/DeckKeyword.cpp
     src/opm/parser/eclipse/Deck/DeckRecord.cpp
     src/opm/parser/eclipse/Deck/DeckOutput.cpp
     src/opm/parser/eclipse/Deck/Section.cpp
     src/opm/parser/eclipse/Deck/UDAValue.cpp
-    src/opm/parser/eclipse/Deck/DeckValue.cpp
     src/opm/parser/eclipse/Python/Python.cpp
     src/opm/parser/eclipse/EclipseState/AquiferCT.cpp
     src/opm/parser/eclipse/EclipseState/Aquifetp.cpp
@@ -625,10 +625,10 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/Deck/Deck.hpp
        opm/parser/eclipse/Deck/Section.hpp
        opm/parser/eclipse/Deck/DeckOutput.hpp
+       opm/parser/eclipse/Deck/DeckValue.hpp
        opm/parser/eclipse/Deck/DeckKeyword.hpp
        opm/parser/eclipse/Deck/DeckRecord.hpp
        opm/parser/eclipse/Deck/UDAValue.hpp
-       opm/parser/eclipse/Deck/DeckValue.hpp
        opm/parser/eclipse/Python/Python.hpp)
 endif()
 if(ENABLE_ECL_OUTPUT)

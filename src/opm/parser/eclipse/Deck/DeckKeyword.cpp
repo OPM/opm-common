@@ -16,6 +16,9 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
+#include <iostream>
+
+#include <opm/parser/eclipse/Utility/Typetools.hpp>
 
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 
@@ -45,6 +48,66 @@ namespace Opm {
     {
     }
 
+    namespace {
+    template< typename T > 
+    void add_deckvalue( const std::string& kw_name, DeckRecord& currentDeckRecord, const ParserItem& parser_item, const std::vector<DeckValue>& current_record, size_t j) {
+
+         DeckItem item(parser_item.name(), T());
+         if (j >= current_record.size() || current_record[j].is_default()) {
+              if (parser_item.hasDefault())
+                  item.push_back( parser_item.getDefault<T>() );
+              else
+                  item.push_backDummyDefault();
+         }
+         else if (current_record[j].is_compatible<T>())
+             item.push_back( current_record[j].get<T>() );
+         else
+              throw std::invalid_argument("For input to DeckKeyword '" + kw_name + 
+                                          ", item '" + parser_item.name() +
+                                          "': wrong type.");  
+         currentDeckRecord.addItem( std::move(item) ); 
+    }
+    }
+
+
+    DeckKeyword::DeckKeyword(const ParserKeyword& parserKeyword,  const std::vector<std::vector<DeckValue>>& record_list) :
+        DeckKeyword(parserKeyword)
+    {
+        if (parserKeyword.hasFixedSize() && (record_list.size() != parserKeyword.getFixedSize()))
+             throw std::invalid_argument("Wrong number of records added to constructor for deckkeyword '" + name() + "'.");
+        
+        for (size_t i = 0; i < record_list.size(); i++) {
+             
+             ParserRecord parser_record = parserKeyword.getRecord(i);
+             const std::vector<DeckValue>& current_record = record_list[i];
+             DeckRecord currentDeckRecord;        
+
+             for (size_t j = 0; j < parser_record.size(); j++) {
+                   
+                  const ParserItem& parser_item = parser_record.get(j);            
+
+                  switch( parser_item.dataType() ) {
+                    
+                      case type_tag::integer: 
+                          add_deckvalue<int>( name(), currentDeckRecord, parser_item, current_record, j);
+                          break;
+                      case type_tag::fdouble: 
+                          add_deckvalue<double>( name(), currentDeckRecord, parser_item, current_record, j);
+                          break;
+                      case type_tag::string:  
+                          add_deckvalue<std::string>( name(), currentDeckRecord, parser_item, current_record, j);
+                          break;
+
+                      default: throw std::invalid_argument("For input to DeckKeyword '" + name() + ": unsupported type. (only support for string, double and int.)");
+                  }
+             }
+
+             addRecord( std::move(currentDeckRecord) );
+
+        }
+
+       
+    }
 
     void DeckKeyword::setFixedSize() {
         m_slashTerminated = false;

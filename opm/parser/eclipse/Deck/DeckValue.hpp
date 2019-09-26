@@ -22,6 +22,8 @@
 
 #include <string>
 
+#include <opm/parser/eclipse/Utility/Typetools.hpp>
+
 namespace Opm {
 
 class DeckValue {
@@ -31,18 +33,19 @@ class DeckValue {
         explicit DeckValue(int);
         explicit DeckValue(double);
         explicit DeckValue(const std::string&);
+        
+        bool is_default() const;
 
         template<typename T>
         T get() const;
 
         template<typename T>
-        bool is() const;
+        bool is_compatible() const;
 
     private:
 
-        enum class DeckValueEnum {INT, DOUBLE, STRING};
-
-        DeckValueEnum value_enum;
+        bool default_value;
+        type_tag value_enum;
         int int_value;
         double double_value;
         std::string string_value;    

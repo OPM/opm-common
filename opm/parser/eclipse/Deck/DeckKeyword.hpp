@@ -26,6 +26,7 @@
 #include <utility>
 
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
+#include <opm/parser/eclipse/Deck/DeckValue.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 
 namespace Opm {
@@ -37,7 +38,10 @@ namespace Opm {
         typedef std::vector< DeckRecord >::const_iterator const_iterator;
 
         explicit DeckKeyword(const ParserKeyword& parserKeyword);
+
         DeckKeyword(const ParserKeyword& parserKeyword, const std::string& keywordName);
+
+        DeckKeyword(const ParserKeyword& parserKeyword, const std::vector<std::vector<DeckValue>>& record_list);
 
         const std::string& name() const;
         void setFixedSize();
