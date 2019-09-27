@@ -391,26 +391,11 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
     }
 
 
-    int maxNumWellSegments(const std::size_t last_timestep,
+    int maxNumWellSegments(const std::size_t /* last_timestep */,
                            const Well2&       well)
     {
-        auto numSeg = 0;
-
-        for (auto step  = 0*last_timestep;
-                  step <=   last_timestep; ++step)
-        {
-            if (! well.isMultiSegment())
-                continue;
-
-            const auto nseg =
-                well.getSegments().size();
-
-            if (nseg > numSeg) {
-                numSeg = nseg;
-            }
-        }
-
-        return numSeg;
+        return well.isMultiSegment()
+            ? well.getSegments().size() : 0;
     }
 
     void makeSegmentNodes(const std::size_t               last_timestep,
