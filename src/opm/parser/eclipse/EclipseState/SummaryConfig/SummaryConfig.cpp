@@ -113,8 +113,18 @@ namespace {
          {"SGAS" , {"BSGAS"}}
     };
 
+    bool is_udq_blacklist(const std::string& keyword) {
+        return (keyword == "SUMTHIN") || (keyword == "RUNSUM");
+    }
+
     bool is_udq(const std::string& keyword) {
-        return (keyword.size() > 1 && keyword[1] == 'U' && keyword != "SUMTHIN");
+        // Does 'keyword' match one of the patterns
+        //   AU*, BU*, CU*, FU*, GU*, RU*, SU*, or WU*?
+        using sz_t = std::string::size_type;
+        return (keyword.size() > sz_t{1})
+            && (keyword[1] == 'U')
+            && !is_udq_blacklist(keyword)
+            && (keyword.find_first_of("WGFCRBSA") == sz_t{0});
     }
 
 
