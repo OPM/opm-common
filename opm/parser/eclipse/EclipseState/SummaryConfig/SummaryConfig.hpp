@@ -21,10 +21,10 @@
 #define OPM_SUMMARY_CONFIG_HPP
 
 #include <array>
-#include <vector>
+#include <limits>
 #include <set>
-
-#include <ert/ecl/smspec_node.hpp>
+#include <string>
+#include <vector>
 
 namespace Opm {
 
@@ -36,63 +36,65 @@ namespace Opm {
 
     class SummaryNode {
     public:
-        SummaryNode(const std::string& keyword) :
-            ecl_node(0, keyword.c_str(), "UNIT", 0.0)
-        {}
+        enum class Category {
+            Well, Group, Field,
+            Region, Block,
+            Connection, Segment,
+            Miscellaneous,
+        };
 
+        enum class Type {
+            Rate, Total, Ratio, Pressure, Count,
+            Undefined,
+        };
 
-        SummaryNode(const std::string& keyword, const std::string& wgname) :
-            ecl_node(0, keyword.c_str(), wgname.c_str(), "UNIT", 0.0, ":")
-        {}
+        explicit SummaryNode(std::string keyword, const Category cat);
 
-        SummaryNode(const std::string& keyword, const std::string& wgname, int num) :
-            ecl_node(0, keyword.c_str(), wgname.c_str(), num, "UNIT", 0.0, ":")
-        {}
+        SummaryNode& parameterType(const Type type);
+        SummaryNode& namedEntity(std::string name);
+        SummaryNode& number(const int num);
+        SummaryNode& isUserDefined(const bool userDefined);
 
-        SummaryNode(const std::string& keyword, int num) :
-            ecl_node(0, keyword.c_str(), num, "UNIT", 0, ":")
-        {}
+        const std::string& keyword() const { return this->keyword_; }
+        Category category() const { return this->category_; }
+        Type type() const { return this->type_; }
+        const std::string& namedEntity() const { return this->name_; }
+        int number() const { return this->number_; }
+        bool isUserDefined() const { return this->userDefined_; }
 
-        SummaryNode(const std::string& keyword, int num, const int grid_dims[3]) :
-            ecl_node(0, keyword.c_str(), num, "UNIT", grid_dims, 0, ":")
-        {}
-
-        SummaryNode(const std::string& keyword, const std::string& wgname, int num, const int grid_dims[3]) :
-            ecl_node(0, keyword.c_str(), wgname.c_str(), num, "UNIT", grid_dims, 0, ":")
-        {}
-
-        std::string wgname() const {
-            const char * c_ptr = this->ecl_node.get_wgname();
-            if (c_ptr)
-                return std::string(c_ptr);
-            else
-                return "";
-        }
-
-        std::string keyword() const {
-            return this->ecl_node.get_keyword();
-        }
-
-        std::string gen_key() const {
-            return this->ecl_node.get_gen_key1();
-        }
-
-        int num() const {
-            return this->ecl_node.get_num();
-        }
-
-        ecl_smspec_var_type type() const {
-            return this->ecl_node.get_var_type();
-        }
-
-        int cmp(const SummaryNode& other) const {
-            return this->ecl_node.cmp( other.ecl_node );
-        }
+        std::string uniqueNodeKey() const;
 
     private:
-        ecl::smspec_node ecl_node;
+        std::string keyword_;
+        Category    category_;
+        Type        type_{ Type::Undefined };
+        std::string name_{};
+        int         number_{std::numeric_limits<int>::min()};
+        bool        userDefined_{false};
     };
 
+    bool operator==(const SummaryNode& lhs, const SummaryNode& rhs);
+    bool operator<(const SummaryNode& lhs, const SummaryNode& rhs);
+
+    inline bool operator!=(const SummaryNode& lhs, const SummaryNode& rhs)
+    {
+        return ! (lhs == rhs);
+    }
+
+    inline bool operator<=(const SummaryNode& lhs, const SummaryNode& rhs)
+    {
+        return ! (rhs < lhs);
+    }
+
+    inline bool operator>(const SummaryNode& lhs, const SummaryNode& rhs)
+    {
+        return rhs < lhs;
+    }
+
+    inline bool operator>=(const SummaryNode& lhs, const SummaryNode& rhs)
+    {
+        return ! (lhs < rhs);
+    }
 
     class Deck;
     class TableManager;

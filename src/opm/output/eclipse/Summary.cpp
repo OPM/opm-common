@@ -1177,11 +1177,6 @@ bool need_wells(ecl_smspec_var_type var_type, const std::string& keyword) {
 }
 
 
-
-bool is_udq(const std::string& keyword) {
-    return (keyword.size() > 1 && keyword[1] == 'U');
-}
-
 void eval_udq(const Schedule& schedule, std::size_t sim_step, SummaryState& st)
 {
     const UDQConfig& udq = schedule.getUDQConfig(sim_step);
@@ -1257,6 +1252,8 @@ Summary::Summary( const EclipseState& st,
     handlers( new keyword_handlers() )
 {
 
+    using Cat = SummaryNode::Category;
+
     const auto& udq = schedule.getUDQConfig(schedule.size() - 1);
     const auto& init_config = st.getInitConfig();
     const char * restart_case = nullptr;
@@ -1302,30 +1299,30 @@ Summary::Summary( const EclipseState& st,
           add_timestep.
         */
         if (single_value_pair != single_values_units.end()) {
-            auto node_type = node.type();
-            if ((node_type != ECL_SMSPEC_FIELD_VAR) && (node_type != ECL_SMSPEC_MISC_VAR)) {
+            auto node_type = node.category();
+            if ((node_type != Cat::Field) && (node_type != Cat::Miscellaneous)) {
                 continue;
             }
             auto* nodeptr = ecl_smspec_add_node( smspec, keyword.c_str(), st.getUnits().name( single_value_pair->second ), 0);
             this->handlers->single_value_nodes.emplace( keyword, nodeptr );
         } else if (region_pair != region_units.end()) {
-            auto* nodeptr = ecl_smspec_add_node( smspec, keyword.c_str(), node.num(), st.getUnits().name( region_pair->second ), 0);
-            this->handlers->region_nodes.emplace( std::make_pair(keyword, node.num()), nodeptr );
+            auto* nodeptr = ecl_smspec_add_node( smspec, keyword.c_str(), node.number(), st.getUnits().name( region_pair->second ), 0);
+            this->handlers->region_nodes.emplace( std::make_pair(keyword, node.number()), nodeptr );
         } else if (block_pair != block_units.end()) {
-            if (node.type() != ECL_SMSPEC_BLOCK_VAR)
+            if (node.category() != Cat::Block)
                 continue;
 
-            int global_index = node.num() - 1;
+            int global_index = node.number() - 1;
             if (!this->grid.cellActive(global_index))
                 continue;
 
-            auto* nodeptr = ecl_smspec_add_node( smspec, keyword.c_str(), node.num(), st.getUnits().name( block_pair->second ), 0 );
-            this->handlers->block_nodes.emplace( std::make_pair(keyword, node.num()), nodeptr );
+            auto* nodeptr = ecl_smspec_add_node( smspec, keyword.c_str(), node.number(), st.getUnits().name( block_pair->second ), 0 );
+            this->handlers->block_nodes.emplace( std::make_pair(keyword, node.number()), nodeptr );
         } else if (funs_pair != funs.end()) {
-            auto node_type = node.type();
+            auto node_type = node.category();
 
-            if ((node_type == ECL_SMSPEC_COMPLETION_VAR) || (node_type == ECL_SMSPEC_BLOCK_VAR)) {
-                int global_index = node.num() - 1;
+            if ((node_type == Cat::Connection) || (node_type == Cat::Block)) {
+                int global_index = node.number() - 1;
                 if (!this->grid.cellActive(global_index))
                     continue;
             }
@@ -1337,7 +1334,7 @@ Summary::Summary( const EclipseState& st,
             const fn_args no_args { dummy_wells,   // Wells from Schedule object
                                     0,             // Duration of time step
                                     0,             // Simulation step
-                                    node.num(),
+                                    node.number(),
                                     summary_state, // SummaryState
                                     {},            // Well results - data::Wells
                                     {},            // Region <-> cell mappings.
@@ -1346,16 +1343,16 @@ Summary::Summary( const EclipseState& st,
 
             const auto val = handle( no_args );
 
-            auto * nodeptr = ecl_smspec_add_node( smspec, keyword.c_str(), node.wgname().c_str(), node.num(), st.getUnits().name( val.unit ), 0 );
+            auto * nodeptr = ecl_smspec_add_node( smspec, keyword.c_str(), node.namedEntity().c_str(), std::max(node.number(), 0), st.getUnits().name( val.unit ), 0 );
             this->handlers->handlers.emplace_back( nodeptr, handle );
-        } else if (is_udq(keyword)) {
+        } else if (node.isUserDefined()) {
             std::string udq_unit = "?????";
             const auto& udq_params = st.runspec().udqParams();
 
             if (udq.has_unit(keyword))
                 udq_unit = udq.unit(keyword);
 
-            ecl_smspec_add_node(smspec, keyword.c_str(), node.wgname().c_str(), node.num(), udq_unit.c_str(), udq_params.undefinedValue());
+            ecl_smspec_add_node(smspec, keyword.c_str(), node.namedEntity().c_str(), std::max(node.number(), 0), udq_unit.c_str(), udq_params.undefinedValue());
         } else
             unsupported_keywords.insert(keyword);
     }
