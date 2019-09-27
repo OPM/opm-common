@@ -3109,6 +3109,45 @@ BOOST_AUTO_TEST_CASE(Solvent)
     BOOST_CHECK_CLOSE(st.get("WNPT:OP_1"), 4.7639517e6, 1.0e-10);
 }
 
+BOOST_AUTO_TEST_CASE(UserDefined_Parameter)
+{
+    const auto cse    = Setup{ "FIRST_SIM.DATA" };
+    const auto rcache = ::Opm::out::RegionCache{};
+
+    const auto input = ::Opm::SummaryParameter::InputData {
+        cse.es, cse.sched, cse.es.getInputGrid(), rcache
+    };
+
+    auto eval = ::Opm::SummaryHelpers::Evaluator{};
+    const bool isUserDefined = true;
+
+    auto prm = ::Opm::WellParameter {
+        Opm::WellParameter::WellName   { "OP_1" },
+        Opm::WellParameter::Keyword    { "WUDP" },
+        Opm::WellParameter::UnitString { "BARSA" },
+        eval, isUserDefined
+    }.validate();
+
+    auto sprm = std::unique_ptr<Opm::SummaryParameter> {
+        new Opm::WellParameter { std::move(prm) }
+    };
+
+    const auto& xw = wellResults();
+    const auto& xs = singleResults();
+    const auto& xr = regionResults();
+    const auto& xb = blockResults();
+
+    const auto simRes = ::Opm::SummaryParameter::SimulatorResults {
+        xw, xs, xr, xb
+    };
+
+    auto st = ::Opm::SummaryState{ std::chrono::system_clock::now() };
+
+    sprm->update(1, cse.sched.seconds(1), input, simRes, st);
+
+    BOOST_CHECK_MESSAGE(! st.has(sprm->summaryKey()), "Summary state must NOT have UDQ parameter");
+}
+
 BOOST_AUTO_TEST_SUITE_END() // Dynamic_Simulator_Values
 
 // ---------------------------------------------------------------------

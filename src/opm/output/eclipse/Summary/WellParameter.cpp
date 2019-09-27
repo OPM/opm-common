@@ -199,12 +199,14 @@ namespace {
 Opm::WellParameter::WellParameter(WellName                  wellname,
                                   Keyword                   keyword,
                                   UnitString                unit,
-                                  SummaryHelpers::Evaluator eval)
-    : wellname_ (std::move(wellname.value))
-    , keyword_  (std::move(keyword.value))
-    , unit_     (std::move(unit.value))
-    , evalParam_(std::move(eval))
-    , sumKey_   (keyword_ + ':' + wellname_)
+                                  SummaryHelpers::Evaluator eval,
+                                  const bool                is_udq)
+    : wellname_     (std::move(wellname.value))
+    , keyword_      (std::move(keyword.value))
+    , unit_         (std::move(unit.value))
+    , isUserDefined_(is_udq)
+    , evalParam_    (std::move(eval))
+    , sumKey_       (keyword_ + ':' + wellname_)
 {}
 
 Opm::WellParameter&
@@ -293,6 +295,11 @@ Opm::WellParameter::update(const std::size_t       reportStep,
                            const SimulatorResults& simRes,
                            SummaryState&           st) const
 {
+    if (this->isUserDefined_) {
+        // Defer to separate calculation
+        return;
+    }
+
     const auto sim_step = simStep(reportStep);
 
     if (! input.sched.hasWell(this->wellname_, sim_step)) {

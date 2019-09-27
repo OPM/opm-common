@@ -45,7 +45,8 @@ namespace Opm {
         explicit WellParameter(WellName                  wellname,
                                Keyword                   keyword,
                                UnitString                unit,
-                               SummaryHelpers::Evaluator eval);
+                               SummaryHelpers::Evaluator eval,
+                               const bool                is_udq = false);
 
         WellParameter& flowType(const FlowType type);
         WellParameter& pressure(const Pressure type);
@@ -98,6 +99,7 @@ namespace Opm {
         std::string wellname_;
         std::string keyword_;
         std::string unit_;
+        bool        isUserDefined_;
 
         SummaryHelpers::Evaluator evalParam_;
 
@@ -135,7 +137,7 @@ namespace Opm {
 
         bool isValidParamType() const
         {
-            return this->typeFlags_.any();
+            return this->isUserDefined_ || this->typeFlags_.any();
         }
 
         std::string flagName(const Flag f) const;
