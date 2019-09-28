@@ -44,8 +44,8 @@ public:
     std::array<int, 3> ijk_from_active_index(int actInd) const;
     std::array<int, 3> ijk_from_global_index(int globInd) const;
 
-    void getCellCorners(int globindex, std::vector<double>& X, std::vector<double>& Y, std::vector<double>& Z) const;
-    void getCellCorners(const std::array<int, 3>& ijk, std::vector<double>& X, std::vector<double>& Y, std::vector<double>& Z) const;
+    void getCellCorners(int globindex, std::array<double,8>& X, std::array<double,8>& Y, std::array<double,8>& Z) const;
+    void getCellCorners(const std::array<int, 3>& ijk, std::array<double,8>& X, std::array<double,8>& Y, std::array<double,8>& Z) const;
 
     int activeCells() const { return nactive; }
     int totalNumberOfCells() const { return nijk[0] * nijk[1] * nijk[2]; }
