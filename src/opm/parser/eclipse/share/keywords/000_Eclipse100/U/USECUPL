@@ -1,0 +1,3 @@
+{"name" : "USECUPL", "sections" : ["SCHEDULE"], "items" : [
+  {"name" : "BASE", "value_type" : "STRING"},
+  {"name" : "FMT", "value_type" : "STRING"}]}

@@ -21,6 +21,7 @@
 #GCUTBACT      records of records
 #GECONT        records of records
 #GIALL         records of tables
+#UDT
 
 set( keywords
      000_Eclipse100/A/ACTDIMS
@@ -530,17 +531,29 @@ set( keywords
      000_Eclipse100/T/TABDIMS
      000_Eclipse100/T/TBLK
      000_Eclipse100/T/TEMP
+     000_Eclipse100/T/TEMPNODE
+     000_Eclipse100/T/TEMPTVD
      000_Eclipse100/T/THCONR
      000_Eclipse100/T/THERMAL
      000_Eclipse100/T/THPRES
      000_Eclipse100/T/THPRESFT
+     000_Eclipse100/T/TIGHTEN
+     000_Eclipse100/T/TIGHTENP
+     000_Eclipse100/T/TIME
      000_Eclipse100/T/TITLE
      000_Eclipse100/T/TLMIXPAR
      000_Eclipse100/T/TNUM
      000_Eclipse100/T/TOLCRIT
      000_Eclipse100/T/TOPS
+     000_Eclipse100/T/TPAMEPS
+     000_Eclipse100/T/TPAMEPSS
      000_Eclipse100/T/TRACER
+     000_Eclipse100/T/TRACERKM
+     000_Eclipse100/T/TRACERKP
      000_Eclipse100/T/TRACERS
+     000_Eclipse100/T/TRACTVD
+     000_Eclipse100/T/TRANX
+     000_Eclipse100/T/TRACITVD
      000_Eclipse100/T/TRANX
      000_Eclipse100/T/TRANY
      000_Eclipse100/T/TRANZ
@@ -553,15 +566,37 @@ set( keywords
      000_Eclipse100/U/UDQ
      000_Eclipse100/U/UDQDIMS
      000_Eclipse100/U/UDQPARAM
+     000_Eclipse100/U/UDTDIMS
+     000_Eclipse100/U/UNCODHMD
      000_Eclipse100/U/UNIFIN
      000_Eclipse100/U/UNIFOUT
+     000_Eclipse100/U/UNIFOUTS
+     000_Eclipse100/U/UNIFSAVE
+     000_Eclipse100/U/USECUPL
+     000_Eclipse100/U/USEFLUX
+     000_Eclipse100/U/USENOFLO
      000_Eclipse100/V/VAPOIL
      000_Eclipse100/V/VAPPARS
+     000_Eclipse100/V/VDFLOW
+     000_Eclipse100/V/VDFLOWR
+     000_Eclipse100/V/VE
+     000_Eclipse100/V/VEDEBUG
+     000_Eclipse100/V/VEFIN
+     000_Eclipse100/V/VEFRAC
+     000_Eclipse100/V/VEFRACP
+     000_Eclipse100/V/VEFRACPV
+     000_Eclipse100/V/VEFRACV
+     000_Eclipse100/V/VFPCHK
      000_Eclipse100/V/VFPIDIMS
      000_Eclipse100/V/VFPINJ
      000_Eclipse100/V/VFPPDIMS
      000_Eclipse100/V/VFPPROD
+     000_Eclipse100/V/VFPTABL
+     000_Eclipse100/V/VISAGE
+     000_Eclipse100/V/VISCD
      000_Eclipse100/V/VISCREF
+     000_Eclipse100/V/VISDATES
+     000_Eclipse100/V/VISOPTS
      000_Eclipse100/W/WAGHYSTR
      000_Eclipse100/W/WAITBAL
      000_Eclipse100/W/WALKALIN
