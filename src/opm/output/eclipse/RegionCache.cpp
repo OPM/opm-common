@@ -31,7 +31,7 @@ namespace Opm {
 namespace out {
 
 RegionCache::RegionCache(const Eclipse3DProperties& properties, const EclipseGrid& grid, const Schedule& schedule) {
-    const auto& fipnum = properties.getIntGridProperty("FIPNUM");
+    const auto& fipnum_data = properties.getIntGridProperty("FIPNUM").getData();
 
     const auto& wells = schedule.getWells2atEnd();
     for (const auto& well : wells) {
@@ -40,7 +40,7 @@ RegionCache::RegionCache(const Eclipse3DProperties& properties, const EclipseGri
             size_t global_index = grid.getGlobalIndex( c.getI() , c.getJ() , c.getK());
             if (grid.cellActive( global_index )) {
                 size_t active_index = grid.activeIndex( global_index );
-                int region_id =fipnum.iget( global_index );
+                int region_id = fipnum_data[global_index];
                 auto& well_index_list = this->connection_map[ region_id ];
                 well_index_list.push_back( { well.name() , active_index } );
             }

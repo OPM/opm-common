@@ -78,15 +78,15 @@ namespace Opm {
             if ( doubleGridProperties->hasKeyword("PORO") ) {
                 const auto& poro = doubleGridProperties->getKeyword("PORO");
                 const auto& ntg =  doubleGridProperties->getKeyword("NTG");
-
                 const auto& poroData = poro.getData();
+                const auto& ntg_data = ntg.getData();
                 for (size_t globalIndex = 0; globalIndex < poro.getCartesianSize(); globalIndex++) {
                     if (!std::isfinite(values[globalIndex])) {
                         double cell_poro = poroData[globalIndex];
                         if (std::isnan(cell_poro))
                             throw std::logic_error("Some cells neither specify the PORV keyword nor PORO");
 
-                        double cell_ntg = ntg.iget(globalIndex);
+                        double cell_ntg = ntg_data[globalIndex];
                         double cell_volume = eclipseGrid->getCellVolume(globalIndex);
                         values[globalIndex] = cell_poro * cell_volume * cell_ntg;
                     }
@@ -630,9 +630,8 @@ namespace Opm {
         if( !this->hasDeckIntGridProperty( keyword ) ) return {};
 
         const auto& property = this->getIntGridProperty( keyword );
-
-        std::set< int > regions( property.getData().begin(),
-                                 property.getData().end() );
+        auto data = property.getData();
+        std::set< int > regions( data.begin(), data.end() );
 
         return { regions.begin(), regions.end() };
     }

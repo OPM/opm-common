@@ -1,18 +1,18 @@
 /*
   Copyright 2015 IRIS
-  
+
   This file is part of the Open Porous Media project (OPM).
-  
+
   OPM is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation, either version 3 of the License, or
   (at your option) any later version.
-  
+
   OPM is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
@@ -36,8 +36,8 @@ using namespace Opm;
 inline void check_property(const Eclipse3DProperties& props1,
                            const Eclipse3DProperties& props2,
                            const std::string& propertyName) {
-    auto& data1 = props1.getDoubleGridProperty(propertyName).getData();
-    auto& data2 = props2.getDoubleGridProperty(propertyName).getData();
+    auto data1 = props1.getDoubleGridProperty(propertyName).getData();
+    auto data2 = props2.getDoubleGridProperty(propertyName).getData();
 
     BOOST_CHECK_CLOSE(data1[0], data2[0], 1e-12);
 }

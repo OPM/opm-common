@@ -209,7 +209,7 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
         int K2 = record.getItem("K2").get< int >(0) - 1;
         Connection::State state = Connection::StateFromString( record.getItem("STATE").getTrimmedString(0) );
 
-        const auto& satnum = eclipseProperties.getIntGridProperty("SATNUM");
+        const auto& satnum_data = eclipseProperties.getIntGridProperty("SATNUM").getData();
         int satTableId = -1;
         bool defaultSatTable = true;
         const auto& CFItem = record.getItem("CONNECTION_TRANSMISSIBILITY_FACTOR");
@@ -242,7 +242,7 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
             double Kh = -1;
 
             if (defaultSatTable)
-                satTableId = satnum.iget(grid.getGlobalIndex(I,J,k));
+                satTableId = satnum_data[grid.getGlobalIndex(I,J,k)];
 
             auto same_ijk = [&]( const Connection& c ) {
                 return c.sameCoordinate( I,J,k );

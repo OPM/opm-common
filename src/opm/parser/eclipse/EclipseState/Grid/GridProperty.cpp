@@ -160,27 +160,6 @@ namespace Opm {
         return this->assigned;
     }
 
-    template< typename T >
-    T GridProperty< T >::iget( size_t index ) const {
-        return this->m_data.at( index );
-    }
-
-    template< typename T >
-    T GridProperty< T >::iget(size_t i , size_t j , size_t k) const {
-        size_t g = i + j*m_nx + k*m_nx*m_ny;
-        return iget(g);
-    }
-
-    template< typename T >
-    void GridProperty< T >::iset(size_t index, T value) {
-        this->setElement(index, value);
-    }
-
-    template< typename T >
-    void GridProperty< T >::iset(size_t i , size_t j , size_t k , T value) {
-        size_t g = i + j*m_nx + k*m_nx*m_ny;
-        iset(g,value);
-    }
 
     template< typename T >
     const std::vector< bool >& GridProperty< T >::wasDefaulted() const {
@@ -192,10 +171,14 @@ namespace Opm {
         return m_data;
     }
 
+    template< typename T >
+    void GridProperty< T >::assignData(std::vector<T>&& data) {
+        this->m_data = std::move(data);
+    }
 
     template< typename T >
-    std::vector< T >& GridProperty< T >::getData() {
-        return m_data;
+    void GridProperty< T >::assignData(const std::vector<T>& data) {
+        this->m_data = data;
     }
 
     template< typename T >
