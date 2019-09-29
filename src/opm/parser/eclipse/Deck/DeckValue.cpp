@@ -89,23 +89,5 @@ bool DeckValue::is_numeric() const {
     return (is_int or is_double);
 }
 
-void DeckValue::reset(int value) {
-  this->is_int = true;
-  this->is_double = false;
-  this->int_value = value;
-}
-
-void DeckValue::reset(double value) {
-  this->is_int = false;
-  this->is_double = true;
-  this->double_value = value;
-}
-
-void DeckValue::reset(const std::string& value) {
-  this->is_int = false;
-  this->is_double = false;
-  this->string_value = value;
-}
-
 }
 

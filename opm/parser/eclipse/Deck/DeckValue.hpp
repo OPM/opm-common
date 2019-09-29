@@ -38,11 +38,6 @@ class DeckValue {
         template<typename T>
         bool is() const;
 
-        void reset(int value);
-        void reset(double value);
-        void reset(const std::string& value);
-
-
     private:
 
         bool is_numeric() const;

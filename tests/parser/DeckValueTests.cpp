@@ -21,20 +21,7 @@ BOOST_AUTO_TEST_CASE(DeckValueTest) {
     BOOST_CHECK(!value0.is<std::string>());
     BOOST_CHECK_EQUAL( value0.get<int>(), 0);
     BOOST_CHECK_THROW( value0.get<std::string>(), std::invalid_argument);
-    value0.reset( 10 );
-    BOOST_CHECK_EQUAL( value0.get<int>(), 10);
-    BOOST_CHECK_THROW( value0.get<std::string>(), std::invalid_argument);
     BOOST_CHECK_THROW( value0.get<double>(), std::invalid_argument);
-
-    value0.reset( "STRING" );
-    BOOST_CHECK_EQUAL( value0.get<std::string>(), std::string("STRING"));
-    BOOST_CHECK_THROW( value0.get<int>(), std::invalid_argument);
-    BOOST_CHECK_THROW( value0.get<double>(), std::invalid_argument);
-    
-    value0.reset( 2.5 );
-    BOOST_CHECK_EQUAL( value0.get<double>(), 2.5);    
-    BOOST_CHECK_THROW( value0.get<std::string>(), std::invalid_argument);
-    BOOST_CHECK_THROW( value0.get<int>(), std::invalid_argument);
 
     DeckValue value1(10);
     BOOST_CHECK(value1.is<int>());
