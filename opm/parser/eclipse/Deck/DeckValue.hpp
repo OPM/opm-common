@@ -28,9 +28,9 @@ class DeckValue {
 
     public:
         DeckValue();
-        DeckValue(int);
-        DeckValue(double);
-        DeckValue(const std::string&);
+        explicit DeckValue(int);
+        explicit DeckValue(double);
+        explicit DeckValue(const std::string&);
 
         template<typename T>
         T get() const;
