@@ -18,6 +18,7 @@
 */
 
 #include <stdexcept>
+#include <iostream>
 
 #include <opm/parser/eclipse/Deck/DeckValue.hpp>
 
@@ -28,42 +29,39 @@ DeckValue::DeckValue():
 {}
 
 DeckValue::DeckValue(int value):
-    is_int(true),
-    is_double(false),
+    value_enum(DECK_VALUE_INT),
     int_value(value)
 {}
 
 DeckValue::DeckValue(double value):
-    is_int(false),
-    is_double(true),
+    value_enum(DECK_VALUE_DOUBLE),
     double_value(value)
 {}
 
 DeckValue::DeckValue(const std::string& value):
-    is_int(false),
-    is_double(false),
+    value_enum(DECK_VALUE_STRING),
     string_value(value)
 {}
 
 template<>
 int DeckValue::get() const {
-    if (!is_int)
-        throw std::invalid_argument("DeckValue does not hold an integer value");
+    if (value_enum == DECK_VALUE_INT)
+        return this->int_value;
 
-    return this->int_value;
+    throw std::invalid_argument("DeckValue does not hold an integer value");
 }
 
 template<>
 double DeckValue::get() const {
-    if (!is_double)
-        throw std::invalid_argument("DeckValue does not hold a double value");
-
-    return this->double_value;
+    if (value_enum == DECK_VALUE_DOUBLE)
+        return this->double_value;
+        
+    throw std::invalid_argument("DeckValue does not hold a double value");
 }
 
 template<>
 std::string DeckValue::get() const {
-    if (!is_numeric())
+    if (value_enum == DECK_VALUE_STRING)
         return this->string_value;
 
     throw std::invalid_argument("DeckValue does not hold a string value");
@@ -71,23 +69,20 @@ std::string DeckValue::get() const {
 
 template<>
 bool DeckValue::is<int>() const {
-    return is_int;
+    return (value_enum == DECK_VALUE_INT);
 }
 
 template<>
 bool DeckValue::is<double>() const {
-    return is_double;
+    return (value_enum == DECK_VALUE_DOUBLE);
 }
 
 
 template<>
 bool DeckValue::is<std::string>() const {
-    return !is_numeric();
+    return (value_enum == DECK_VALUE_STRING);
 }
 
-bool DeckValue::is_numeric() const {
-    return (is_int or is_double);
-}
 
 }
 

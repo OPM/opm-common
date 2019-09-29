@@ -40,10 +40,13 @@ class DeckValue {
 
     private:
 
-        bool is_numeric() const;
+        enum DeckValueEnum {
+            DECK_VALUE_INT, 
+            DECK_VALUE_DOUBLE, 
+            DECK_VALUE_STRING
+        };
 
-        bool is_int;
-        bool is_double;
+        DeckValueEnum value_enum;
         int int_value;
         double double_value;
         std::string string_value;    
