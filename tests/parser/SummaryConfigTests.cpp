@@ -112,7 +112,7 @@ static Deck createDeck( const std::string& summary ) {
 static std::vector< std::string > sorted_names( const SummaryConfig& summary ) {
     std::vector< std::string > ret;
     for( const auto& x : summary ) {
-        auto wgname = x.wgname();
+        auto wgname = x.namedEntity();
         if(wgname.size())
             ret.push_back( wgname );
     }
@@ -133,7 +133,7 @@ static std::vector< std::string > sorted_keywords( const SummaryConfig& summary 
 static std::vector< std::string > sorted_key_names( const SummaryConfig& summary ) {
     std::vector< std::string > ret;
     for( const auto& x : summary ) {
-        ret.push_back( x.gen_key() );
+        ret.push_back( x.uniqueNodeKey() );
     }
 
     std::sort( ret.begin(), ret.end() );
@@ -657,13 +657,13 @@ BOOST_AUTO_TEST_CASE( summary_require3DField ) {
 
     {
         const auto input = "BSGAS\n"
-            "3 3 6 /\n"
-            "4 3 6 /\n"
+            "3 3 6 /\n"  // 523
+            "4 3 6 /\n"  // 524
             "/";
 
         const auto summary = createSummary( input );
         BOOST_CHECK( summary.require3DField( "SGAS"));
-        BOOST_CHECK( summary.hasSummaryKey( "BSGAS:3,3,6" ) );
+        BOOST_CHECK( summary.hasSummaryKey( "BSGAS:523" ) );
     }
 
 
@@ -761,8 +761,10 @@ BOOST_AUTO_TEST_CASE(Summary_Segment)
 
         BOOST_REQUIRE(sofr != summary.end());
 
-        BOOST_CHECK_EQUAL(sofr->type(), ecl_smspec_var_type::ECL_SMSPEC_SEGMENT_VAR);
-        BOOST_CHECK_EQUAL(sofr->wgname(), "PROD01");
+        BOOST_CHECK_MESSAGE(sofr->category() == SummaryNode::Category::Segment,
+            R"("SOFR" keyword category must be "Segment")"
+        );
+        BOOST_CHECK_EQUAL(sofr->namedEntity(), "PROD01");
     }
 
     BOOST_CHECK(deck.hasKeyword("SGFR"));

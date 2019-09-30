@@ -87,24 +87,6 @@ namespace {
             this->values[key] = value;
     }
 
-    void SummaryState::update(const ecl::smspec_node& node, double value) {
-        if (node.get_var_type() == ECL_SMSPEC_WELL_VAR)
-            this->update_well_var(node.get_wgname(),
-                                  node.get_keyword(),
-                                  value);
-        else if (node.get_var_type() == ECL_SMSPEC_GROUP_VAR)
-            this->update_group_var(node.get_wgname(),
-                                   node.get_keyword(),
-                                   value);
-        else {
-            const std::string& key = node.get_gen_key1();
-            if (node.is_total())
-                this->values[key] += value;
-            else
-                this->values[key] = value;
-        }
-    }
-
 
     void SummaryState::update_group_var(const std::string& group, const std::string& var, double value) {
         std::string key = var + ":" + group;

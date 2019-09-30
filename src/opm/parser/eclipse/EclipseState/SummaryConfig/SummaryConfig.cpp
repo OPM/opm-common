@@ -19,8 +19,7 @@
 #include <iostream>
 #include <algorithm>
 #include <array>
-
-#include <ert/ecl/ecl_smspec.hpp>
+#include <stdexcept>
 
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 
@@ -113,10 +112,115 @@ namespace {
          {"SGAS" , {"BSGAS"}}
     };
 
-    bool is_udq(const std::string& keyword) {
-        return (keyword.size() > 1 && keyword[1] == 'U' && keyword != "SUMTHIN");
+    bool is_special(const std::string& keyword) {
+        using set = std::unordered_set<std::string>;
+        static const auto specialkw = set {
+            "NEWTON", "NAIMFRAC", "NLINEARS", "NLINSMIN", "NLINSMAX",
+            "ELAPSED", "MAXDPR", "MAXDSO", "MAXDSG", "MAXDSW", "STEPTYPE",
+            "WNEWTON",
+        };
+
+        return specialkw.count(keyword) > set::size_type{0};
     }
 
+    bool is_udq_blacklist(const std::string& keyword) {
+        return (keyword == "SUMTHIN") || (keyword == "RUNSUM");
+    }
+
+    bool is_udq(const std::string& keyword) {
+        // Does 'keyword' match one of the patterns
+        //   AU*, BU*, CU*, FU*, GU*, RU*, SU*, or WU*?
+        using sz_t = std::string::size_type;
+        return (keyword.size() > sz_t{1})
+            && (keyword[1] == 'U')
+            && !is_udq_blacklist(keyword)
+            && (keyword.find_first_of("WGFCRBSA") == sz_t{0});
+    }
+
+    bool is_pressure(const std::string& keyword) {
+        using set = std::unordered_set<std::string>;
+        static const auto presskw = set {
+            "BHP", "BHPH", "THP", "THPH", "PR"
+        };
+
+        return presskw.count(&keyword[1]) > set::size_type{0};
+    }
+
+    bool is_rate(const std::string& keyword) {
+        using set = std::unordered_set<std::string>;
+        static const auto ratekw = set {
+            "OPR", "GPR", "WPR", "LPR", "NPR", "VPR",
+            "OPRH", "GPRH", "WPRH", "LPRH",
+            "OVPR", "GVPR", "WVPR",
+            "OPRS", "GPRS", "OPRF", "GPRF",
+
+            "OIR", "GIR", "WIR", "LIR", "NIR", "VIR",
+            "OIRH", "GIRH", "WIRH",
+            "OVIR", "GVIR", "WVIR",
+
+            "OPI", "OPP", "GPI", "GPP", "WPI", "WPP",
+        };
+
+        return ratekw.count(&keyword[1]) > set::size_type{0};
+    }
+
+    bool is_ratio(const std::string& keyword) {
+        using set = std::unordered_set<std::string>;
+        static const auto ratiokw = set {
+            "GLR", "GOR", "WCT",
+            "GLRH", "GORH", "WCTH",
+        };
+
+        return ratiokw.count(&keyword[1]) > set::size_type{0};
+    }
+
+    bool is_total(const std::string& keyword) {
+        using set = std::unordered_set<std::string>;
+        static const auto totalkw = set {
+            "OPT", "GPT", "WPT", "LPT", "NPT",
+            "VPT", "OVPT", "GVPT", "WVPT",
+            "WPTH", "OPTH", "GPTH", "LPTH",
+            "GPTS", "OPTS", "GPTF", "OPTF",
+
+            "WIT", "OIT", "GIT", "LIT", "NIT", "CIT", "VIT",
+            "WITH", "OITH", "GITH", "WVIT", "OVIT", "GVIT",
+        };
+
+        return totalkw.count(&keyword[1]) > set::size_type{0};
+    }
+
+    bool is_count(const std::string& keyword) {
+        using set = std::unordered_set<std::string>;
+        static const auto countkw = set {
+            "MWIN", "MWIT", "MWPR", "MWPT"
+        };
+
+        return countkw.count(keyword) > set::size_type{0};
+    }
+
+    bool is_region_to_region(const std::string& keyword) {
+        using sz_t = std::string::size_type;
+        if ((keyword.size() == sz_t{3}) && keyword[2] == 'F') return true;
+        if ((keyword == "RNLF") || (keyword == "RORFR")) return true;
+        if ((keyword.size() >= sz_t{4}) && ((keyword[2] == 'F') && ((keyword[3] == 'T') || (keyword[3] == 'R')))) return true;
+        if ((keyword.size() >= sz_t{5}) && ((keyword[3] == 'F') && ((keyword[4] == 'T') || (keyword[4] == 'R')))) return true;
+
+        return false;
+    }
+
+    bool is_aquifer(const std::string& keyword) {
+        return keyword[0] == 'A';
+    }
+
+    SummaryNode::Type parseKeywordType(const std::string& keyword) {
+        if (is_rate(keyword)) return SummaryNode::Type::Rate;
+        if (is_total(keyword)) return SummaryNode::Type::Total;
+        if (is_ratio(keyword)) return SummaryNode::Type::Ratio;
+        if (is_pressure(keyword)) return SummaryNode::Type::Pressure;
+        if (is_count(keyword)) return SummaryNode::Type::Count;
+
+        return SummaryNode::Type::Undefined;
+    }
 
 void handleMissingWell( const ParseContext& parseContext, ErrorGuard& errors, const std::string& keyword, const std::string& well) {
     std::string msg = std::string("Error in keyword:") + keyword + std::string(" No such well: ") + well;
@@ -136,12 +240,23 @@ void handleMissingGroup( const ParseContext& parseContext , ErrorGuard& errors, 
 }
 
 
+inline void keywordW( SummaryConfig::keyword_list& list,
+                      const std::vector<std::string>& well_names,
+                      SummaryNode baseWellParam) {
+    for (const auto& wname : well_names)
+        list.push_back( baseWellParam.namedEntity(wname) );
+}
 
 inline void keywordW( SummaryConfig::keyword_list& list,
                       const std::string& keyword,
                       const Schedule& schedule) {
-    for (const auto& wname : schedule.wellNames())
-        list.push_back( SummaryConfig::keyword_type( keyword,  wname));
+    auto param = SummaryNode {
+        keyword, SummaryNode::Category::Well
+    }
+    .parameterType( parseKeywordType(keyword) )
+    .isUserDefined( is_udq(keyword) );
+
+    keywordW( list, schedule.wellNames(), param );
 }
 
 
@@ -169,6 +284,12 @@ inline void keywordW( SummaryConfig::keyword_list& list,
         }
     }
 
+    auto param = SummaryNode {
+        keyword.name(), SummaryNode::Category::Well
+    }
+    .parameterType( parseKeywordType(keyword.name()) )
+    .isUserDefined( is_udq(keyword.name()) );
+
     if (keyword.size() && keyword.getDataRecord().getDataItem().hasValue(0)) {
         for( const std::string& pattern : keyword.getStringData()) {
           auto well_names = schedule.wellNames( pattern, schedule.size() - 1 );
@@ -176,21 +297,24 @@ inline void keywordW( SummaryConfig::keyword_list& list,
             if( well_names.empty() )
                 handleMissingWell( parseContext, errors, keyword.name(), pattern );
 
-            for( const auto& well_name : well_names)
-                list.push_back( SummaryConfig::keyword_type( keyword.name(), well_name ));
+            keywordW( list, well_names, param );
         }
     } else
-        for (const auto& wname : schedule.wellNames())
-            list.push_back( SummaryConfig::keyword_type( keyword.name(),  wname));
+        keywordW( list, schedule.wellNames(), param );
 }
 
 inline void keywordG( SummaryConfig::keyword_list& list,
                       const std::string& keyword,
                       const Schedule& schedule ) {
+    auto param = SummaryNode {
+        keyword, SummaryNode::Category::Group
+    }
+    .parameterType( parseKeywordType(keyword) )
+    .isUserDefined( is_udq(keyword) );
 
     for( const auto& group : schedule.groupNames() ) {
         if( group == "FIELD" ) continue;
-        list.push_back( SummaryConfig::keyword_type(keyword, group ));
+        list.push_back( param.namedEntity(group) );
     }
 }
 
@@ -203,12 +327,18 @@ inline void keywordG( SummaryConfig::keyword_list& list,
 
     if( keyword.name() == "GMWSET" ) return;
 
+    auto param = SummaryNode {
+        keyword.name(), SummaryNode::Category::Group
+    }
+    .parameterType( parseKeywordType(keyword.name()) )
+    .isUserDefined( is_udq(keyword.name()) );
+
     if( keyword.size() == 0 ||
         !keyword.getDataRecord().getDataItem().hasValue( 0 ) ) {
 
         for( const auto& group : schedule.groupNames() ) {
             if( group == "FIELD" ) continue;
-            list.push_back( SummaryConfig::keyword_type(keyword.name(), group ));
+            list.push_back( param.namedEntity(group) );
         }
         return;
     }
@@ -217,7 +347,7 @@ inline void keywordG( SummaryConfig::keyword_list& list,
 
     for( const std::string& group : item.getData< std::string >() ) {
         if( schedule.hasGroup( group ) )
-            list.push_back( SummaryConfig::keyword_type(keyword.name(), group ));
+            list.push_back( param.namedEntity(group) );
         else
             handleMissingGroup( parseContext, errors, keyword.name(), group );
     }
@@ -225,13 +355,19 @@ inline void keywordG( SummaryConfig::keyword_list& list,
 
 inline void keywordF( SummaryConfig::keyword_list& list,
                       const std::string& keyword ) {
-    list.push_back( SummaryConfig::keyword_type( keyword ));
+    auto param = SummaryNode {
+        keyword, SummaryNode::Category::Field
+    }
+    .parameterType( parseKeywordType(keyword) )
+    .isUserDefined( is_udq(keyword) );
+
+    list.push_back( std::move(param) );
 }
 
 inline void keywordF( SummaryConfig::keyword_list& list,
                       const DeckKeyword& keyword ) {
     if( keyword.name() == "FMWSET" ) return;
-    list.push_back( SummaryConfig::keyword_type( keyword.name() ));
+    keywordF( list, keyword.name() );
 }
 
 inline std::array< int, 3 > getijk( const DeckRecord& record,
@@ -251,10 +387,16 @@ inline std::array< int, 3 > getijk( const Connection& completion ) {
 inline void keywordB( SummaryConfig::keyword_list& list,
                       const DeckKeyword& keyword,
                       const GridDims& dims) {
+    auto param = SummaryNode {
+        keyword.name(), SummaryNode::Category::Block
+    }
+    .parameterType( parseKeywordType(keyword.name()) )
+    .isUserDefined( is_udq(keyword.name()) );
+
   for( const auto& record : keyword ) {
       auto ijk = getijk( record );
       int global_index = 1 + dims.getGlobalIndex(ijk[0], ijk[1], ijk[2]);
-      list.push_back( SummaryConfig::keyword_type( keyword.name(), global_index, dims.getNXYZ().data() ));
+      list.push_back( param.number(global_index) );
   }
 }
 
@@ -270,7 +412,9 @@ inline void keywordR2R( SummaryConfig::keyword_list& /* list */,
 
   inline void keywordR( SummaryConfig::keyword_list& list,
                       const DeckKeyword& keyword,
-                      const TableManager& tables) {
+                      const TableManager& tables,
+                      const ParseContext& parseContext,
+                        ErrorGuard& errors ) {
 
     /* RUNSUM is not a region keyword but a directive for how to format and
      * print output. Unfortunately its *recognised* as a region keyword
@@ -278,6 +422,11 @@ inline void keywordR2R( SummaryConfig::keyword_list& /* list */,
      */
     if( keyword.name() == "RUNSUM" ) return;
     if( keyword.name() == "RPTONLY" ) return;
+
+    if( is_region_to_region(keyword.name()) ) {
+        keywordR2R( list, parseContext, errors, keyword );
+        return;
+    }
 
     const size_t numfip = tables.numFIPRegions( );
     const auto& item = keyword.getDataRecord().getDataItem();
@@ -290,9 +439,15 @@ inline void keywordR2R( SummaryConfig::keyword_list& /* list */,
             regions.push_back( region );
     }
 
+    // Don't (currently) need parameter type for region keywords
+    auto param = SummaryNode {
+        keyword.name(), SummaryNode::Category::Region
+    }
+    .isUserDefined( is_udq(keyword.name()) );
+
     for( const int region : regions ) {
         if (region >= 1 && region <= static_cast<int>(numfip))
-            list.push_back( SummaryConfig::keyword_type( keyword.name(), region ));
+            list.push_back( param.number( region ) );
         else
             throw std::invalid_argument("Illegal region value: " + std::to_string( region ));
     }
@@ -300,18 +455,17 @@ inline void keywordR2R( SummaryConfig::keyword_list& /* list */,
 
 
 inline void keywordMISC( SummaryConfig::keyword_list& list,
-                           const DeckKeyword& keyword)
+                           const std::string& keyword)
 {
-    if (meta_keywords.count( keyword.name() ) == 0)
-        list.push_back( SummaryConfig::keyword_type( keyword.name() ));
+    if (meta_keywords.count( keyword ) == 0)
+        list.emplace_back( keyword, SummaryNode::Category::Miscellaneous );
 }
 
 
 inline void keywordMISC( SummaryConfig::keyword_list& list,
-                         const std::string& keyword)
+                         const DeckKeyword& keyword)
 {
-    if (meta_keywords.count( keyword ) == 0)
-        list.push_back( SummaryConfig::keyword_type( keyword ));
+    keywordMISC( list, keyword.name() );
 }
 
   inline void keywordC( SummaryConfig::keyword_list& list,
@@ -321,7 +475,11 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
                         const Schedule& schedule,
                         const GridDims& dims) {
 
-    const auto& keywordstring = keyword.name();
+    auto param = SummaryNode {
+        keyword.name(), SummaryNode::Category::Connection
+    }
+    .isUserDefined( is_udq(keyword.name()) );
+
     for( const auto& record : keyword ) {
 
         const auto& wellitem = record.getItem( 0 );
@@ -329,11 +487,13 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
         const auto well_names = wellitem.defaultApplied( 0 )
                               ? schedule.wellNames()
                               : schedule.wellNames( wellitem.getTrimmedString( 0 ) );
+        const auto ijk_defaulted = record.getItem( 1 ).defaultApplied( 0 );
 
         if( well_names.empty() )
             handleMissingWell( parseContext, errors, keyword.name(), wellitem.getTrimmedString( 0 ) );
 
         for(const auto& name : well_names) {
+            param.namedEntity(name);
             const auto& well = schedule.getWell2atEnd(name);
             /*
              * we don't want to add completions that don't exist, so we iterate
@@ -341,20 +501,11 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
              * defaulted or not
              */
             for( const auto& connection : well.getConnections() ) {
-                /* block coordinates defaulted */
                 auto cijk = getijk( connection );
+                int global_index = 1 + dims.getGlobalIndex(cijk[0], cijk[1], cijk[2]);
 
-                if( record.getItem( 1 ).defaultApplied( 0 ) ) {
-                    int global_index = 1 + dims.getGlobalIndex(cijk[0], cijk[1], cijk[2]);
-                    list.push_back( SummaryConfig::keyword_type( keywordstring, name.c_str(), global_index, dims.getNXYZ().data()));
-                } else {
-                    /* block coordinates specified */
-                    auto recijk = getijk( record, 1 );
-                    if( std::equal( recijk.begin(), recijk.end(), cijk.begin() ) ) {
-                        int global_index = 1 + dims.getGlobalIndex(recijk[0], recijk[1], recijk[2]);
-                        list.push_back(SummaryConfig::keyword_type( keywordstring, name.c_str(), global_index, dims.getNXYZ().data()));
-                    }
-                }
+                if( ijk_defaulted || ( cijk == getijk(record, 1) ) )
+                    list.push_back( param.number(global_index) );
             }
         }
     }
@@ -381,26 +532,11 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
     }
 
 
-    int maxNumWellSegments(const std::size_t last_timestep,
+    int maxNumWellSegments(const std::size_t /* last_timestep */,
                            const Well2&       well)
     {
-        auto numSeg = 0;
-
-        for (auto step  = 0*last_timestep;
-                  step <=   last_timestep; ++step)
-        {
-            if (! well.isMultiSegment())
-                continue;
-
-            const auto nseg =
-                well.getSegments().size();
-
-            if (nseg > numSeg) {
-                numSeg = nseg;
-            }
-        }
-
-        return numSeg;
+        return well.isMultiSegment()
+            ? well.getSegments().size() : 0;
     }
 
     void makeSegmentNodes(const std::size_t               last_timestep,
@@ -409,35 +545,28 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
                           const Well2&                    well,
                           SummaryConfig::keyword_list&    list)
     {
-        // Modifies 'list' in place.
-        auto makeNode = [&keyword, &list]
-            (const std::string& well_name, const int segNumber)
-        {
-            list.push_back(SummaryConfig::keyword_type( keyword.name(), well_name, segNumber ));
-        };
-
         if (!well.isMultiSegment())
             // Not an MSW.  Don't create summary vectors for segments.
             return;
 
-        const auto& wname = well.name();
+        auto param = SummaryNode {
+            keyword.name(), SummaryNode::Category::Segment
+        }
+        .namedEntity( well.name() )
+        .isUserDefined( is_udq(keyword.name()) );
+
         if (segID < 1) {
             // Segment number defaulted.  Allocate a summary
             // vector for each segment.
             const auto nSeg = maxNumWellSegments(last_timestep, well);
 
-            for (auto segNumber = 0*nSeg;
-                 segNumber <   nSeg; ++segNumber)
-                {
-                    // One-based segment number.
-                    makeNode(wname, segNumber + 1);
-                }
+            for (auto segNumber = 0*nSeg; segNumber < nSeg; ++segNumber)
+                list.push_back( param.number(segNumber + 1) );
         }
-        else {
+        else
             // Segment number specified.  Allocate single
             // summary vector for that segment number.
-            makeNode(wname, segID);
-        }
+            list.push_back( param.number(segID) );
     }
 
     void keywordSNoRecords(const std::size_t            last_timestep,
@@ -545,16 +674,51 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
         }
     }
 
-  inline void handleKW( SummaryConfig::keyword_list& list,
-                        const DeckKeyword& keyword,
-                        const Schedule& schedule,
-                        const TableManager& tables,
-                        const ParseContext& parseContext,
-                        ErrorGuard& errors,
-                        const GridDims& dims) {
-    const auto var_type = ecl_smspec_identify_var_type( keyword.name().c_str() );
-    const auto& name = keyword.name();
-    if (is_udq(name)) {
+    SummaryNode::Category parseKeywordCategory(const std::string& keyword) {
+        using Cat = SummaryNode::Category;
+
+        if (is_special(keyword)) { return Cat::Miscellaneous; }
+
+        switch (keyword[0]) {
+            case 'W': return Cat::Well;
+            case 'G': return Cat::Group;
+            case 'F': return Cat::Field;
+            case 'C': return Cat::Connection;
+            case 'R': return Cat::Region;
+            case 'B': return Cat::Block;
+            case 'S': return Cat::Segment;
+        }
+
+        // TCPU, MLINEARS, NEWTON, &c
+        return Cat::Miscellaneous;
+    }
+
+    std::string to_string(const SummaryNode::Category cat) {
+        switch( cat ) {
+            case SummaryNode::Category::Well: return "Well";
+            case SummaryNode::Category::Group: return "Group";
+            case SummaryNode::Category::Field: return "Field";
+            case SummaryNode::Category::Region: return "Region";
+            case SummaryNode::Category::Block: return "Block";
+            case SummaryNode::Category::Connection: return "Connection";
+            case SummaryNode::Category::Segment: return "Segment";
+            case SummaryNode::Category::Miscellaneous: return "Miscellaneous";
+        }
+
+        throw std::invalid_argument {
+            "Unhandled Summary Parameter Category '"
+            + std::to_string(static_cast<int>(cat)) + '\''
+        };
+    }
+
+    void check_udq( const std::string& name,
+                    const Schedule& schedule,
+                    const ParseContext& parseContext,
+                    ErrorGuard& errors ) {
+        if (! is_udq(name))
+            // Nothing to do
+            return;
+
         const auto& udq = schedule.getUDQConfig(schedule.size() - 1);
 
         if (!udq.has_keyword(name)) {
@@ -569,19 +733,31 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
         }
     }
 
-    switch( var_type ) {
-        case ECL_SMSPEC_WELL_VAR: return keywordW( list, parseContext, errors, keyword, schedule );
-        case ECL_SMSPEC_GROUP_VAR: return keywordG( list, parseContext, errors, keyword, schedule );
-        case ECL_SMSPEC_FIELD_VAR: return keywordF( list, keyword );
-        case ECL_SMSPEC_BLOCK_VAR: return keywordB( list, keyword, dims );
-        case ECL_SMSPEC_REGION_VAR: return keywordR( list, keyword, tables );
-        case ECL_SMSPEC_REGION_2_REGION_VAR: return keywordR2R(list, parseContext, errors, keyword);
-        case ECL_SMSPEC_COMPLETION_VAR: return keywordC( list, parseContext, errors, keyword, schedule, dims);
-        case ECL_SMSPEC_SEGMENT_VAR: return keywordS( list, parseContext, errors, keyword, schedule );
-        case ECL_SMSPEC_MISC_VAR: return keywordMISC( list, keyword );
+  inline void handleKW( SummaryConfig::keyword_list& list,
+                        const DeckKeyword& keyword,
+                        const Schedule& schedule,
+                        const TableManager& tables,
+                        const ParseContext& parseContext,
+                        ErrorGuard& errors,
+                        const GridDims& dims) {
+    using Cat = SummaryNode::Category;
+
+    const auto& name = keyword.name();
+    check_udq( name, schedule, parseContext, errors );
+
+    const auto cat = parseKeywordCategory( name );
+    switch( cat ) {
+        case Cat::Well: return keywordW( list, parseContext, errors, keyword, schedule );
+        case Cat::Group: return keywordG( list, parseContext, errors, keyword, schedule );
+        case Cat::Field: return keywordF( list, keyword );
+        case Cat::Block: return keywordB( list, keyword, dims );
+        case Cat::Region: return keywordR( list, keyword, tables, parseContext, errors );
+        case Cat::Connection: return keywordC( list, parseContext, errors, keyword, schedule, dims);
+        case Cat::Segment: return keywordS( list, parseContext, errors, keyword, schedule );
+        case Cat::Miscellaneous: return keywordMISC( list, keyword );
 
         default:
-            std::string msg = "Summary keywords of type: " + std::string(ecl_smspec_get_var_type_name( var_type )) + " is not supported. Keyword: " + keyword.name() + " is ignored";
+            std::string msg = "Summary keywords of type: " + to_string( cat ) + " is not supported. Keyword: " + name + " is ignored";
             parseContext.handleError(ParseContext::SUMMARY_UNHANDLED_KEYWORD, msg, errors);
             return;
     }
@@ -598,41 +774,169 @@ inline void handleKW( SummaryConfig::keyword_list& list,
     if (is_udq(keyword))
         throw std::logic_error("UDQ keywords not handleded when expanding alias list");
 
-    const auto var_type = ecl_smspec_identify_var_type( keyword.c_str() );
-    switch( var_type ) {
-        case ECL_SMSPEC_WELL_VAR: return keywordW( list, keyword, schedule );
-        case ECL_SMSPEC_GROUP_VAR: return keywordG( list, keyword, schedule );
-        case ECL_SMSPEC_FIELD_VAR: return keywordF( list, keyword );
-        case ECL_SMSPEC_MISC_VAR: return keywordMISC( list, keyword );
-        case ECL_SMSPEC_AQUIFER_VAR:
-            {
-                std::string msg = "Summary keywords of type: " + std::string(ecl_smspec_get_var_type_name( var_type )) + " is not supported. Keyword: " + keyword + " is ignored";
-                parseContext.handleError(ParseContext::SUMMARY_UNHANDLED_KEYWORD, msg, errors);
-                return;
-            }
+    if (is_aquifer( keyword )) {
+        std::string msg = "Summary keywords of type: Aquifer is not supported. Keyword: " + keyword + " is ignored";
+        parseContext.handleError(ParseContext::SUMMARY_UNHANDLED_KEYWORD, msg, errors);
+        return;
+    }
+
+    using Cat = SummaryNode::Category;
+    const auto cat = parseKeywordCategory( keyword );
+
+    switch( cat ) {
+        case Cat::Well: return keywordW( list, keyword, schedule );
+        case Cat::Group: return keywordG( list, keyword, schedule );
+        case Cat::Field: return keywordF( list, keyword );
+        case Cat::Miscellaneous: return keywordMISC( list, keyword );
 
         default:
-            throw std::logic_error("Keyword type: " + std::string(ecl_smspec_get_var_type_name(var_type)) + " is not supported. Internal error handling: " + keyword);
+            throw std::logic_error("Keyword type: " + to_string( cat ) + " is not supported in alias lists. Internal error handling: " + keyword);
     }
 }
 
 
   inline void uniq( SummaryConfig::keyword_list& vec ) {
-    const auto lt = []( const SummaryConfig::keyword_type& lhs,
-                        const SummaryConfig::keyword_type& rhs ) {
-        return lhs.cmp(rhs) < 0;
-    };
-
-    const auto eq = []( const SummaryConfig::keyword_type& lhs,
-                        const SummaryConfig::keyword_type& rhs ) {
-        return lhs.cmp(rhs) == 0;
-    };
-
-    std::sort( vec.begin(), vec.end(), lt );
-    auto logical_end = std::unique( vec.begin(), vec.end(), eq );
+    std::sort( vec.begin(), vec.end() );
+    auto logical_end = std::unique( vec.begin(), vec.end() );
     vec.erase( logical_end, vec.end() );
   }
 }
+
+// =====================================================================
+
+SummaryNode::SummaryNode(std::string keyword, const Category cat) :
+    keyword_(std::move(keyword)),
+    category_(cat)
+{}
+
+SummaryNode& SummaryNode::parameterType(const Type type)
+{
+    this->type_ = type;
+    return *this;
+}
+
+SummaryNode& SummaryNode::namedEntity(std::string name)
+{
+    this->name_ = std::move(name);
+    return *this;
+}
+
+SummaryNode& SummaryNode::number(const int num)
+{
+    this->number_ = num;
+    return *this;
+}
+
+SummaryNode& SummaryNode::isUserDefined(const bool userDefined)
+{
+    this->userDefined_ = userDefined;
+    return *this;
+}
+
+std::string SummaryNode::uniqueNodeKey() const
+{
+    switch (this->category()) {
+    case SummaryNode::Category::Well: // fall-through
+    case SummaryNode::Category::Group:
+        return this->keyword() + ':' + this->namedEntity();
+
+    case SummaryNode::Category::Field: // fall-through
+    case SummaryNode::Category::Miscellaneous:
+        return this->keyword();
+
+    case SummaryNode::Category::Region: // fall-through
+    case SummaryNode::Category::Block:
+        return this->keyword() + ':' + std::to_string(this->number());
+
+    case SummaryNode::Category::Connection: // fall-through
+    case SummaryNode::Category::Segment:
+        return this->keyword() + ':' + this->namedEntity() + ':' + std::to_string(this->number());
+    }
+
+    throw std::invalid_argument {
+        "Unhandled Summary Parameter Category '"
+        + to_string(this->category()) + '\''
+    };
+}
+
+bool operator==(const SummaryNode& lhs, const SummaryNode& rhs)
+{
+    if (lhs.keyword() != rhs.keyword()) return false;
+
+    assert (lhs.category() == rhs.category());
+
+    switch( lhs.category() ) {
+        case SummaryNode::Category::Field: // fall-through
+        case SummaryNode::Category::Miscellaneous:
+            // Fully identified by keyword
+            return true;
+
+        case SummaryNode::Category::Well:  // fall-through
+        case SummaryNode::Category::Group:
+            // Equal if associated to same named entity
+            return lhs.namedEntity() == rhs.namedEntity();
+
+        case SummaryNode::Category::Region:  // fall-through
+        case SummaryNode::Category::Block:
+            // Equal if associated to same numeric entity
+            return lhs.number() == rhs.number();
+
+        case SummaryNode::Category::Connection:  // fall-through
+        case SummaryNode::Category::Segment:
+            // Equal if associated to same numeric
+            // sub-entity of same named entity
+            return (lhs.namedEntity() == rhs.namedEntity())
+                && (lhs.number()      == rhs.number());
+    }
+
+    return false;
+}
+
+bool operator<(const SummaryNode& lhs, const SummaryNode& rhs)
+{
+    if (lhs.keyword() < rhs.keyword()) return true;
+    if (rhs.keyword() < lhs.keyword()) return false;
+
+    // If we get here, the keyword are equal.
+
+    switch( lhs.category() ) {
+        case SummaryNode::Category::Field:  // fall-through
+        case SummaryNode::Category::Miscellaneous:
+            // Fully identified by keyword.
+            // Return false for equal keywords.
+            return false;
+
+        case SummaryNode::Category::Well:  // fall-through
+        case SummaryNode::Category::Group:
+            // Ordering determined by namedEntityd entity
+            return lhs.namedEntity() < rhs.namedEntity();
+
+        case SummaryNode::Category::Region:  // fall-through
+        case SummaryNode::Category::Block:
+            // Ordering determined by numeric entity
+            return lhs.number() < rhs.number();
+
+        case SummaryNode::Category::Connection:  // fall-through
+        case SummaryNode::Category::Segment:
+        {
+            // Ordering determined by pair of namedEntity and numeric ID.
+            //
+            // Would ideally implement this in terms of operator< for
+            // std::tuple<std::string,int>, with objects generated by std::tie().
+            const auto& lnm = lhs.namedEntity();
+            const auto& rnm = rhs.namedEntity();
+
+            return ( lnm <  rnm)
+                || ((lnm == rnm) && (lhs.number() < rhs.number()));
+        }
+    }
+
+    throw std::invalid_argument {
+        "Unhandled Summary Parameter Category '" + to_string(lhs.category()) + '\''
+    };
+}
+
+// =====================================================================
 
 SummaryConfig::SummaryConfig( const Deck& deck,
                               const Schedule& schedule,
@@ -683,7 +987,7 @@ SummaryConfig::SummaryConfig( const Deck& deck,
     uniq( this->keywords );
     for (const auto& kw: this->keywords) {
         this->short_keywords.insert( kw.keyword() );
-        this->summary_keywords.insert( kw.gen_key() );
+        this->summary_keywords.insert( kw.uniqueNodeKey() );
     }
 }
 
