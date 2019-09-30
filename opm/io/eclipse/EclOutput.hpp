@@ -29,6 +29,7 @@
 
 namespace Opm { namespace EclIO { namespace OutputStream {
     class Restart;
+    class SummarySpecification;
 }}}
 
 namespace Opm { namespace EclIO {
@@ -73,6 +74,7 @@ public:
     void message(const std::string& msg);
 
     friend class OutputStream::Restart;
+    friend class OutputStream::SummarySpecification;
 
 private:
     void writeBinaryHeader(const std::string& arrName, int size, eclArrType arrType);

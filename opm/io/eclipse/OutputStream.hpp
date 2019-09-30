@@ -22,6 +22,8 @@
 
 #include <opm/io/eclipse/PaddedOutputString.hpp>
 
+#include <array>
+#include <chrono>
 #include <ios>
 #include <memory>
 #include <string>
@@ -355,6 +357,75 @@ namespace Opm { namespace EclIO { namespace OutputStream {
         template <typename T>
         void writeImpl(const std::string&    kw,
                        const std::vector<T>& data);
+    };
+
+    class SummarySpecification
+    {
+    public:
+        using StartTime = std::chrono::system_clock::time_point;
+
+        enum class UnitConvention
+        {
+            Metric = 1,
+            Field  = 2,
+            Lab    = 3,
+            Pvt_M  = 4,
+        };
+
+        struct RestartSpecification
+        {
+            std::string root;
+            int step;
+        };
+
+        class Parameters
+        {
+        public:
+            void add(const std::string& keyword,
+                     const std::string& wgname,
+                     const int          num,
+                     const std::string& unit);
+
+            friend class SummarySpecification;
+
+        private:
+            std::vector<PaddedOutputString<8>> keywords{};
+            std::vector<PaddedOutputString<8>> wgnames{};
+            std::vector<int>                   nums{};
+            std::vector<PaddedOutputString<8>> units{};
+        };
+
+        explicit SummarySpecification(const ResultSet&            rset,
+                                      const Formatted&            fmt,
+                                      const UnitConvention        uconv,
+                                      const std::array<int,3>&    cartDims,
+                                      const RestartSpecification& restart,
+                                      const StartTime             start);
+
+        ~SummarySpecification();
+
+        SummarySpecification(const SummarySpecification& rhs) = delete;
+        SummarySpecification(SummarySpecification&& rhs);
+
+        SummarySpecification& operator=(const SummarySpecification& rhs) = delete;
+        SummarySpecification& operator=(SummarySpecification&& rhs);
+
+        void write(const Parameters& params);
+
+    private:
+        int unit_;
+        int restartStep_;
+        std::array<int,3> cartDims_;
+        StartTime startDate_;
+        std::vector<PaddedOutputString<8>> restart_;
+
+        /// Summary specification (SMSPEC) file output stream.
+        std::unique_ptr<EclOutput> stream_;
+
+        void rewindStream();
+        void flushStream();
+
+        EclOutput& stream();
     };
 
     /// Derive filename corresponding to output stream of particular result
