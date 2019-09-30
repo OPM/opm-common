@@ -59,7 +59,7 @@ if (CXX_COMPAT_GCC)
   set_default_option (CXX _opt_rel "-O3" "(^|\ )-O")
 
   # use these options for debug builds - no optimizations
-  add_options (ALL_LANGUAGES "${_prof_DEBUG}" ${_opt_dbg} "-DDEBUG")
+  add_options (ALL_LANGUAGES "${_prof_DEBUG}" ${_opt_dbg} "-DDEBUGBUILD")
 
   # use these options for release builds - full optimization
   add_options (ALL_LANGUAGES "${_prof_RELEASE}" ${_opt_rel} ${_opt_flags})
