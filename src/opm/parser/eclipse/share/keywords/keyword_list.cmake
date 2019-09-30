@@ -684,8 +684,23 @@ set( keywords
      000_Eclipse100/W/WSCCLENL
      000_Eclipse100/W/WSCTAB
      000_Eclipse100/W/WSEGAICD
+     000_Eclipse100/W/WSEGDFIN
+     000_Eclipse100/W/WSEGDFMD
+     000_Eclipse100/W/WSEGDFPA
      000_Eclipse100/W/WSEGDIMS
+     000_Eclipse100/W/WSEGEXSS
+     000_Eclipse100/W/WSEGFLIM
+     000_Eclipse100/W/WSEGFMOD
+     000_Eclipse100/W/WSEGINIT
      000_Eclipse100/W/WSEGITER
+     000_Eclipse100/W/WSEGLABY
+     000_Eclipse100/W/WSEGLINK
+     000_Eclipse100/W/WSEGMULT
+     000_Eclipse100/W/WSEGPROP
+     000_Eclipse100/W/WSEGSEP
+     000_Eclipse100/W/WSEGSICD
+     000_Eclipse100/W/WSEGSOLV
+     000_Eclipse100/W/WSEGTABL
      000_Eclipse100/W/WSEGVALV
      000_Eclipse100/W/WSOLVENT
      000_Eclipse100/W/WTEMP
