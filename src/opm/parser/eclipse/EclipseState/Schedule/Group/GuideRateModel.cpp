@@ -68,32 +68,52 @@ GuideRateModel::GuideRateModel(double time_interval_arg,
         throw std::logic_error("Sorry - the 'COMB' mode is not supported");
 }
 
+double GuideRateModel::pot(double oil_pot, double gas_pot, double wat_pot) const {
+    switch (this->m_target) {
+    case Target::OIL:
+        return oil_pot;
 
+    case Target::LIQ:
+        return oil_pot + wat_pot;
+
+    case Target::GAS:
+        return gas_pot;
+
+    case Target::COMB:
+        throw std::logic_error("Not implemented - don't have a clue?");
+
+    case Target::RES:
+        throw std::logic_error("Not implemented - don't have a clue?");
+
+    default:
+        throw std::logic_error("Hmmm - should not be here?");
+    }
+}
 
 
 double GuideRateModel::eval(double oil_pot, double gas_pot, double wat_pot) const {
     if (this->default_model)
         throw std::invalid_argument("The default GuideRateModel can not be evaluated - must enter GUIDERAT information explicitly.");
 
-    double pot;
+    double pot = this->pot(oil_pot, gas_pot, wat_pot);
+    if (pot == 0)
+        return 0;
+
+
     double R1;
     double R2;
-
     switch (this->m_target) {
     case Target::OIL:
-        pot = oil_pot;
         R1 = wat_pot / oil_pot;
         R2 = gas_pot / oil_pot;
         break;
 
     case Target::LIQ:
-        pot = oil_pot + wat_pot;;
         R1 = oil_pot / (oil_pot + wat_pot);
         R2 = wat_pot / (oil_pot + wat_pot);
         break;
 
     case Target::GAS:
-        pot = gas_pot;
         R1 = wat_pot / gas_pot;
         R2 = oil_pot / gas_pot;
         break;

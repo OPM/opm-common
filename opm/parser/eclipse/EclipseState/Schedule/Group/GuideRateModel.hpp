@@ -66,6 +66,7 @@ public:
     static Target convert_target(Group2::GuideRateTarget group_target);
     static Target convert_target(Well2::GuideRateTarget well_target);
 private:
+    double pot(double oil_pot, double gas_pot, double wat_pot) const;
     /*
       Unfortunately the default values will give a GuideRateModel which can not
       be evaluated, due to a division by zero problem.
