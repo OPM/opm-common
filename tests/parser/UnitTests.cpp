@@ -83,20 +83,6 @@ BOOST_AUTO_TEST_CASE(UnitSystemGetNewOK) {
 }
 
 
-BOOST_AUTO_TEST_CASE(UnitSystemFromECL_TYPE) {
-    UnitSystem system(ECL_METRIC_UNITS);
-    system.addDimension("Length" , 10 );
-    system.addDimension("Time" , 100);
-
-    BOOST_CHECK( !system.hasDimension("Length*Length/Time"));
-    Dimension comp = system.getNewDimension( "Length*Length/Time" );
-    BOOST_CHECK( system.hasDimension("Length*Length/Time"));
-    BOOST_CHECK_EQUAL(1 , comp.getSIScaling());
-}
-
-
-
-
 BOOST_AUTO_TEST_CASE(UnitSystemAddDimensions) {
     UnitSystem system(UnitSystem::UnitType::UNIT_TYPE_METRIC);
     system.addDimension("Length" , 1 );
@@ -153,8 +139,6 @@ BOOST_AUTO_TEST_CASE(CreateMetricSystem) {
     BOOST_CHECK_EQUAL( Metric::Time         , system.getDimension("Time").getSIScaling() );
     BOOST_CHECK_EQUAL( Metric::Permeability , system.getDimension("Permeability").getSIScaling() );
     BOOST_CHECK_EQUAL( Metric::Pressure     , system.getDimension("Pressure").getSIScaling() );
-
-    BOOST_CHECK_EQUAL( system.getEclType( ) , ECL_METRIC_UNITS );
 }
 
 
@@ -168,8 +152,6 @@ BOOST_AUTO_TEST_CASE(CreateFieldSystem) {
     BOOST_CHECK_EQUAL( Field::Time         , system.getDimension("Time").getSIScaling() );
     BOOST_CHECK_EQUAL( Field::Permeability , system.getDimension("Permeability").getSIScaling() );
     BOOST_CHECK_EQUAL( Field::Pressure     , system.getDimension("Pressure").getSIScaling() );
-
-    BOOST_CHECK_EQUAL( system.getEclType( ) , ECL_FIELD_UNITS );
 }
 
 
@@ -185,7 +167,6 @@ BOOST_AUTO_TEST_CASE(CreateInputSystem) {
     BOOST_CHECK_EQUAL( 1.0, system.getDimension("Permeability").getSIScaling() );
     BOOST_CHECK_EQUAL( 1.0, system.getDimension("Pressure").getSIScaling() );
 
-    BOOST_CHECK_THROW( system.getEclType( ), std::runtime_error );
     BOOST_CHECK_EQUAL( static_cast<long int>(system.getType( )) , static_cast<long int>(UnitSystem::UnitType::UNIT_TYPE_INPUT) );
 }
 
@@ -306,7 +287,6 @@ BOOST_AUTO_TEST_CASE(METRIC_UNITS)
     auto metric = UnitSystem::newMETRIC();
 
     BOOST_CHECK( metric.getType() == Opm::UnitSystem::UnitType::UNIT_TYPE_METRIC );
-    BOOST_CHECK( metric.getEclType() == ECL_METRIC_UNITS );
 
     // ----------------------------------------------------------------
     // METRIC -> SI
@@ -382,7 +362,6 @@ BOOST_AUTO_TEST_CASE(FIELD_UNITS)
     auto field = UnitSystem::newFIELD();
 
     BOOST_CHECK( field.getType() == Opm::UnitSystem::UnitType::UNIT_TYPE_FIELD );
-    BOOST_CHECK( field.getEclType() == ECL_FIELD_UNITS );
 
     // ----------------------------------------------------------------
     // FIELD -> SI
@@ -456,7 +435,6 @@ BOOST_AUTO_TEST_CASE(LAB_UNITS)
     auto lab = UnitSystem::newLAB();
 
     BOOST_CHECK( lab.getType() == Opm::UnitSystem::UnitType::UNIT_TYPE_LAB );
-    BOOST_CHECK( lab.getEclType() == ECL_LAB_UNITS );
 
     // ----------------------------------------------------------------
     // LAB -> SI
@@ -530,7 +508,6 @@ BOOST_AUTO_TEST_CASE(PVT_M_UNITS)
     auto pvt_m = UnitSystem::newPVT_M();
 
     BOOST_CHECK( pvt_m.getType() == Opm::UnitSystem::UnitType::UNIT_TYPE_PVT_M );
-    BOOST_CHECK( pvt_m.getEclType() == ECL_PVT_M_UNITS );
 
     // ----------------------------------------------------------------
     // PVT-M -> SI

@@ -25,8 +25,6 @@
 #include <vector>
 #include <memory>
 
-#include <ert/ecl/ecl_util.h>
-
 #include <opm/parser/eclipse/Units/Dimension.hpp>
 
 namespace Opm {
@@ -77,11 +75,9 @@ namespace Opm {
 
         explicit UnitSystem(UnitType unit = UnitType::UNIT_TYPE_METRIC);
         explicit UnitSystem(const std::string& deck_name);
-        explicit UnitSystem(ert_ecl_unit_enum ecl_type);
 
         const std::string& getName() const;
         UnitType getType() const;
-        ert_ecl_unit_enum getEclType( ) const;
 
         void addDimension(const std::string& dimension, double SIfactor, double SIoffset = 0.0);
         void addDimension( Dimension );
@@ -103,7 +99,6 @@ namespace Opm {
         std::string deck_name() const;
 
         static bool valid_name(const std::string& deck_name);
-        static ert_ecl_unit_enum ecl_units(UnitType opm_unit);
         static UnitSystem newMETRIC();
         static UnitSystem newFIELD();
         static UnitSystem newLAB();

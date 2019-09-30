@@ -26,6 +26,8 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellProductionProperties.hpp>
 
+#include <ert/util/util.h>
+
 namespace Opm {
 
 namespace {

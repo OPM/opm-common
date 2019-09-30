@@ -35,6 +35,8 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 
+#include <ert/util/util.h>
+
 const std::time_t startDateJan1st2010 = Opm::TimeMap::mkdate(2010, 1, 1);
 
 Opm::DeckRecord createDeckRecord(int day, const std::string &month, int year, const std::string &time = "00:00:00.000");
