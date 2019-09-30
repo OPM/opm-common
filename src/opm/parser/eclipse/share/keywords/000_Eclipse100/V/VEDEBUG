@@ -5,6 +5,6 @@
     {"name" : "J2", "value_type" : "INT"},
     {"name" : "K1", "value_type" : "INT"},
     {"name" : "K2", "value_type" : "INT"},
-    {"name" : "DEBUG", "value_type" : "INT", "default" : 0},
+    {"name" : "DEBUG_LEVEL", "value_type" : "INT", "default" : 0},
     {"name" : "LGR", "value_type" : "STRING", "default" : " "}]}
 
