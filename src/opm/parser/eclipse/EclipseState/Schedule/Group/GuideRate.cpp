@@ -24,7 +24,7 @@ namespace Opm {
 
 double GuideRate::GuideRateValue::eval(GuideRateModel::Target target_arg) const
 {
-    if (target == this->target)
+    if (target_arg == this->target)
         return this->value;
     else
         throw std::logic_error("Don't know how to convert .... ");
