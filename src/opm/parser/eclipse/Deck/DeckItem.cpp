@@ -361,8 +361,11 @@ void DeckItem::write(DeckOutput& stream) const {
         this->write_vector( stream, this->ival );
         break;
     case type_tag::fdouble:
-        this->write_vector( stream,  this->dval );
-        break;
+        {
+            const auto& data = this->getData<double>();
+            this->write_vector( stream,  data );
+            break;
+        }
     case type_tag::string:
         this->write_vector( stream,  this->sval );
         break;
