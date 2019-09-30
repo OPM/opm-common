@@ -407,8 +407,13 @@ void ECLRegressionTest::gridCompare()
 
         std::cout << "X, Y and Z coordinates " << " ... ";
 
-        std::vector<double> X1(8,0.0), Y1(8,0.0) , Z1(8,0.0);
-        std::vector<double> X2(8,0.0), Y2(8,0.0), Z2(8,0.0);
+        std::array<double,8> X1 = {0.0};
+        std::array<double,8> Y1 = {0.0};
+        std::array<double,8> Z1 = {0.0};
+
+        std::array<double,8> X2 = {0.0};
+        std::array<double,8> Y2 = {0.0};
+        std::array<double,8> Z2 = {0.0};
 
         for (int k = 0; k < dim1[2]; k++) {
             for (int j = 0; j < dim1[1]; j++) {

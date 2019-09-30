@@ -127,21 +127,13 @@ std::array<int, 3> EGrid::ijk_from_global_index(int globInd) const
 
 
 void EGrid::getCellCorners(const std::array<int, 3>& ijk,
-                           std::vector<double>& X,
-                           std::vector<double>& Y,
-                           std::vector<double>& Z) const
+                           std::array<double,8>& X,
+                           std::array<double,8>& Y,
+                           std::array<double,8>& Z) const
 {
     std::vector<int> zind;
     std::vector<int> pind;
 
-    if (X.size() < 8 || Y.size() < 8 || Z.size() < 8) {
-        OPM_THROW(std::invalid_argument,
-                  "In routine cellConrner. X, Y and Z should be a vector of size 8");
-    }
-
-    if (ijk[0] < 0 || ijk[0] >= nijk[0] || ijk[1] < 0 || ijk[1] >= nijk[1] || ijk[2] < 0 || ijk[2] >= nijk[2]) {
-        OPM_THROW(std::invalid_argument, "i, j and/or k out of range");
-    }
 
    // calculate indices for grid pillars in COORD arrray
    pind.push_back(ijk[1]*(nijk[0]+1)*6 + ijk[0]*6);
@@ -181,8 +173,8 @@ void EGrid::getCellCorners(const std::array<int, 3>& ijk,
 }
 
 
-void EGrid::getCellCorners(int globindex, std::vector<double>& X,
-                           std::vector<double>& Y, std::vector<double>& Z) const
+void EGrid::getCellCorners(int globindex, std::array<double,8>& X,
+                           std::array<double,8>& Y, std::array<double,8>& Z) const
 {
     return getCellCorners(ijk_from_global_index(globindex),X,Y,Z);
 }
