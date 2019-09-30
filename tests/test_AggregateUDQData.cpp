@@ -72,7 +72,7 @@ namespace {
 
     Opm::SummaryState sum_state()
     {
-        auto state = Opm::SummaryState{};
+        auto state = Opm::SummaryState{std::chrono::system_clock::now()};
         state.update_well_var("PROD1", "WUOPRL", 210.);
         state.update_well_var("PROD2", "WUOPRL", 211.);
         state.update_well_var("WINJ1", "WUOPRL", 212.);
