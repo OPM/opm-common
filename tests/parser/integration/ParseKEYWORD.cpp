@@ -697,10 +697,8 @@ BOOST_AUTO_TEST_CASE( PORO_PERMX ) {
     BOOST_CHECK_EQUAL( 0.251224369 , poro[1]);
     BOOST_CHECK_EQUAL( 0.155628711 , poro[439]);
 
-    const std::vector<double>& permx = kw2.getSIDoubleData();
-    const std::vector<double>& permxRAW = kw2.getRawDoubleData();
+    const auto& permx = kw2.getSIDoubleData();
     BOOST_CHECK_EQUAL( 1000U , permx.size() );
-    BOOST_CHECK_EQUAL( 1000U , permxRAW.size() );
 
     BOOST_CHECK_CLOSE( Metric::Permeability * 1 , permx[0] , 0.001);
     BOOST_CHECK_CLOSE( Metric::Permeability * 2 , permx[1] , 0.001);

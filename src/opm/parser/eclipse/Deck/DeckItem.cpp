@@ -241,10 +241,26 @@ double DeckItem::getSIDouble( size_t index ) const {
     return this->getSIDoubleData().at( index );
 }
 
+template<>
+const std::vector<double>& DeckItem::getData() const {
+    auto& data = (const_cast<DeckItem*>(this))->value_ref< double >();
+    if (this->raw_data)
+        return data;
+
+    const auto dim_size = dimensions.size();
+    for( size_t index = 0; index < data.size(); index++ ) {
+        const auto dimIndex = index % dim_size;
+        data[ index ] = this->dimensions[ dimIndex ].convertSiToRaw( data[ index ] );
+    }
+    this->raw_data = true;
+    return data;
+}
+
 const std::vector< double >& DeckItem::getSIDoubleData() const {
-    const auto& raw = this->value_ref< double >();
-    // we already converted this item to SI?
-    if( !this->SIdata.empty() ) return this->SIdata;
+    auto& data = (const_cast<DeckItem*>(this))->value_ref< double >();
+    if (!this->raw_data)
+        return data;
+
 
     if( this->dimensions.empty() )
         throw std::invalid_argument("No dimension has been set for item'"
@@ -256,17 +272,16 @@ const std::vector< double >& DeckItem::getSIDoubleData() const {
      * SI units, so externally the object still behaves as const
      */
     const auto dim_size = dimensions.size();
-    const auto sz = raw.size();
-    this->SIdata.resize( sz );
-
-    for( size_t index = 0; index < sz; index++ ) {
+    for( size_t index = 0; index < data.size(); index++ ) {
         const auto dimIndex = index % dim_size;
-        this->SIdata[ index ] = this->dimensions[ dimIndex ]
-                                .convertRawToSi( raw[ index ] );
+        data[ index ] = this->dimensions[ dimIndex ].convertRawToSi( data[ index ] );
     }
-
-    return this->SIdata;
+    this->raw_data = false;
+    return data;
 }
+
+
+
 
 void DeckItem::push_backDimension( const Dimension& active,
                                    const Dimension& def ) {
@@ -346,8 +361,11 @@ void DeckItem::write(DeckOutput& stream) const {
         this->write_vector( stream, this->ival );
         break;
     case type_tag::fdouble:
-        this->write_vector( stream,  this->dval );
-        break;
+        {
+            const auto& data = this->getData<double>();
+            this->write_vector( stream,  data );
+            break;
+        }
     case type_tag::string:
         this->write_vector( stream,  this->sval );
         break;
@@ -410,15 +428,20 @@ bool DeckItem::equal(const DeckItem& other, bool cmp_default, bool cmp_numeric) 
         break;
     case type_tag::fdouble:
         if (cmp_numeric) {
-            const std::vector<double>& this_data = this->dval;
-            const std::vector<double>& other_data = other.dval;
+            const auto& this_data = this->getData<double>();
+            const auto& other_data = other.getData<double>();
             for (size_t i=0; i < this_data.size(); i++) {
                 if (!double_equal( this_data[i] , other_data[i], rel_eps, abs_eps))
                     return false;
             }
         } else {
-            if (this->dval != other.dval)
-                return false;
+            if (this->raw_data == other.raw_data)
+                return (this->dval == other.dval);
+            else {
+                const auto& this_data = this->getData<double>();
+                const auto& other_data = other.getData<double>();
+                return (this_data == other_data);
+            }
         }
         break;
     default:

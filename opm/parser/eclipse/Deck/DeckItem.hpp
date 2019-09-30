@@ -121,8 +121,12 @@ namespace Opm {
         std::string item_name;
         std::vector< bool > defaulted;
         std::vector< Dimension > dimensions;
-        mutable std::vector< double > SIdata;
-
+        /*
+          To save space we mutate the dval object in place when asking for SI
+          data; the current state of of the dval member is tracked with the
+          raw_data bool member.
+        */
+        mutable bool raw_data = true;
         template< typename T > std::vector< T >& value_ref();
         template< typename T > const std::vector< T >& value_ref() const;
         template< typename T > void push( T );
