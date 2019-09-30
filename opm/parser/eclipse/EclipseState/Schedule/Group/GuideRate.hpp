@@ -67,7 +67,9 @@ struct Potential {
     {}
 
 
-    double eval(GuideRateModel::Target target) const;
+    double eval(Group2::GuideRateTarget target) const;
+    double eval(Well2::GuideRateTarget target) const;
+
 
     double oil_pot;
     double gas_pot;

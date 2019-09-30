@@ -30,15 +30,34 @@ double GuideRate::GuideRateValue::eval(GuideRateModel::Target target_arg) const
         throw std::logic_error("Don't know how to convert .... ");
 }
 
-double GuideRate::Potential::eval(GuideRateModel::Target target) const {
-    if (target == GuideRateModel::Target::OIL)
+double GuideRate::Potential::eval(Well2::GuideRateTarget target) const {
+    if (target == Well2::GuideRateTarget::OIL)
         return this->oil_pot;
 
-    if (target == GuideRateModel::Target::GAS)
+    if (target == Well2::GuideRateTarget::GAS)
         return this->gas_pot;
 
-    if (target == GuideRateModel::Target::LIQ)
+    if (target == Well2::GuideRateTarget::LIQ)
         return this->oil_pot + this->wat_pot;
+
+    if (target == Well2::GuideRateTarget::WAT)
+        return this->wat_pot;
+
+    throw std::logic_error("Don't know how to convert .... ");
+}
+
+double GuideRate::Potential::eval(Group2::GuideRateTarget target) const {
+    if (target == Group2::GuideRateTarget::OIL)
+        return this->oil_pot;
+
+    if (target == Group2::GuideRateTarget::GAS)
+        return this->gas_pot;
+
+    if (target == Group2::GuideRateTarget::LIQ)
+        return this->oil_pot + this->wat_pot;
+
+    if (target == Group2::GuideRateTarget::WAT)
+        return this->wat_pot;
 
     throw std::logic_error("Don't know how to convert .... ");
 }
@@ -52,20 +71,26 @@ GuideRate::GuideRate(const Schedule& schedule_arg) :
 
 double GuideRate::get(const std::string& well, Well2::GuideRateTarget target) const {
     const auto iter = this->values.find(well);
-    auto model_target = GuideRateModel::convert_target(target);
     if (iter != this->values.end()) {
         const auto& value = iter->second;
+        auto model_target = GuideRateModel::convert_target(target);
         return value.eval(model_target);
     } else {
         const auto& pot = this->potentials.at(well);
-        return pot.eval(model_target);
+        return pot.eval(target);
     }
 }
 
 double GuideRate::get(const std::string& group, Group2::GuideRateTarget target) const {
-    const auto& value = this->values.at(group);
-    auto model_target = GuideRateModel::convert_target(target);
-    return value.eval(model_target);
+    const auto iter = this->values.find(group);
+     if (iter != this->values.end()) {
+        auto model_target = GuideRateModel::convert_target(target);
+        const auto& value = this->values.at(group);
+        return value.eval(model_target);
+    } else {
+        const auto& pot = this->potentials.at(group);
+        return pot.eval(target);
+    }
 }
 
 
@@ -75,7 +100,7 @@ void GuideRate::compute(const std::string& wgname, size_t report_step, double si
 
     if (config.has_group(wgname))
         this->group_compute(wgname, report_step, sim_time, oil_pot, gas_pot, wat_pot);
-    else if (config.has_well(wgname))
+    else
         this->well_compute(wgname, report_step, sim_time, oil_pot, gas_pot, wat_pot);
 
 }
@@ -84,52 +109,71 @@ void GuideRate::compute(const std::string& wgname, size_t report_step, double si
 void GuideRate::group_compute(const std::string& wgname, size_t report_step, double sim_time, double oil_pot, double gas_pot, double wat_pot) {
     const auto& config = this->schedule.guideRateConfig(report_step);
     const auto& group = config.group(wgname);
-    auto iter = this->values.find(wgname);
 
-    // If the FORM mode is used we check if the last computation is recent enough;
-    // then we just return.
-    if (iter != this->values.end()) {
-        const auto& grv = iter->second;
+    if (group.guide_rate > 0) {
+        auto model_target = GuideRateModel::convert_target(group.target);
+        this->values[wgname] = GuideRateValue( sim_time, group.guide_rate, model_target );
+    } else {
+        auto iter = this->values.find(wgname);
+
+        // If the FORM mode is used we check if the last computation is recent enough;
+        // then we just return.
+        if (iter != this->values.end()) {
+            const auto& grv = iter->second;
+            if (group.target == Group2::GuideRateTarget::FORM) {
+                if (!config.has_model())
+                    throw std::logic_error("When specifying GUIDERATE target FORM you must enter a guiderate model with the GUIDERAT keyword");
+
+                auto time_diff = sim_time - grv.sim_time;
+                if (config.model().update_delay() > time_diff)
+                    return;
+            }
+        }
+
+
+        if (group.target == Group2::GuideRateTarget::INJV)
+            throw std::logic_error("Group guide rate mode: INJV not implemented");
+
+        if (group.target == Group2::GuideRateTarget::POTN)
+            throw std::logic_error("Group guide rate mode: POTN not implemented");
+
         if (group.target == Group2::GuideRateTarget::FORM) {
+            double guide_rate;
             if (!config.has_model())
                 throw std::logic_error("When specifying GUIDERATE target FORM you must enter a guiderate model with the GUIDERAT keyword");
 
-            auto time_diff = sim_time - grv.sim_time;
-            if (config.model().update_delay() > time_diff)
-                return;
+            if (iter != this->values.end())
+                guide_rate = this->eval_form(config.model(),  oil_pot,  gas_pot,  wat_pot, std::addressof(iter->second));
+            else
+                guide_rate = this->eval_form(config.model(),  oil_pot,  gas_pot,  wat_pot, nullptr);
+
+            this->values[wgname] = GuideRateValue{sim_time, guide_rate, config.model().target()};
         }
-    }
-
-
-    if (group.target == Group2::GuideRateTarget::INJV)
-        throw std::logic_error("Group guide rate mode: INJV not implemented");
-
-    if (group.target == Group2::GuideRateTarget::POTN)
-        throw std::logic_error("Group guide rate mode: POTN not implemented");
-
-    if (group.target == Group2::GuideRateTarget::FORM) {
-        double guide_rate;
-        if (!config.has_model())
-            throw std::logic_error("When specifying GUIDERATE target FORM you must enter a guiderate model with the GUIDERAT keyword");
-
-        if (iter != this->values.end())
-            guide_rate = this->eval_form(config.model(),  oil_pot,  gas_pot,  wat_pot, nullptr);
-        else
-            guide_rate = this->eval_form(config.model(),  oil_pot,  gas_pot,  wat_pot, std::addressof(iter->second));
-
-        this->values[wgname] = GuideRateValue{sim_time, guide_rate, config.model().target()};
     }
 }
 
 
 void GuideRate::well_compute(const std::string& wgname, size_t report_step, double sim_time, double oil_pot, double gas_pot, double wat_pot) {
     const auto& config = this->schedule.guideRateConfig(report_step);
-    const auto& well = config.well(wgname);
 
-    if (well.guide_rate > 0) {
-        auto model_target = GuideRateModel::convert_target(well.target);
-        this->values[wgname] = GuideRateValue( sim_time, well.guide_rate, model_target );
-    } else {
+    // guide rates spesified with WGRUPCON
+    if (config.has_well(wgname)) {
+        const auto& well = config.well(wgname);
+        if (well.guide_rate > 0) {
+            auto model_target = GuideRateModel::convert_target(well.target);
+            this->values[wgname] = GuideRateValue( sim_time, well.guide_rate, model_target );
+        }
+    } else if (config.has_model()) { // GUIDERAT
+        // only look for wells not groups
+        if (!this->schedule.hasWell(wgname, report_step))
+            return;
+
+        const auto& well = this->schedule.getWell2(wgname, report_step);
+
+        // GUIDERAT does not apply to injectors
+        if (well.isInjector())
+            return;
+
         auto iter = this->values.find(wgname);
 
         if (iter != this->values.end()) {
@@ -140,9 +184,6 @@ void GuideRate::well_compute(const std::string& wgname, size_t report_step, doub
         }
 
         double guide_rate;
-        if (!config.has_model())
-            throw std::logic_error("When specifying GUIDERATE target FORM you must enter a guiderate model with the GUIDERAT keyword");
-
         if (iter == this->values.end())
             guide_rate = this->eval_form(config.model(),  oil_pot,  gas_pot,  wat_pot, nullptr);
         else
@@ -150,6 +191,7 @@ void GuideRate::well_compute(const std::string& wgname, size_t report_step, doub
 
         this->values[wgname] = GuideRateValue{sim_time, guide_rate, config.model().target()};
     }
+    // If neither WGRUPCON nor GUIDERAT is spesified potentials are used
 }
 
 double GuideRate::eval_form(const GuideRateModel& model, double oil_pot, double gas_pot, double wat_pot, const GuideRateValue * prev) const {

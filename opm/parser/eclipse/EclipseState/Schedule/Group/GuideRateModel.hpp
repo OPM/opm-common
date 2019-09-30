@@ -33,9 +33,10 @@ public:
         OIL = 0,
         LIQ = 1,
         GAS = 2,
-        RES = 3,
-        COMB = 4,
-        NONE = 5
+        WAT = 3,
+        RES = 4,
+        COMB = 5,
+        NONE = 6
     };
 
     static Target TargetFromString(const std::string& s);
