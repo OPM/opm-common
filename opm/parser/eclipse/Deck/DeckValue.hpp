@@ -40,11 +40,7 @@ class DeckValue {
 
     private:
 
-        enum DeckValueEnum {
-            DECK_VALUE_INT, 
-            DECK_VALUE_DOUBLE, 
-            DECK_VALUE_STRING
-        };
+        enum class DeckValueEnum {INT, DOUBLE, STRING};
 
         DeckValueEnum value_enum;
         int int_value;

@@ -29,23 +29,23 @@ DeckValue::DeckValue():
 {}
 
 DeckValue::DeckValue(int value):
-    value_enum(DECK_VALUE_INT),
+    value_enum(DeckValueEnum::INT),
     int_value(value)
 {}
 
 DeckValue::DeckValue(double value):
-    value_enum(DECK_VALUE_DOUBLE),
+    value_enum(DeckValueEnum::DOUBLE),
     double_value(value)
 {}
 
 DeckValue::DeckValue(const std::string& value):
-    value_enum(DECK_VALUE_STRING),
+    value_enum(DeckValueEnum::STRING),
     string_value(value)
 {}
 
 template<>
 int DeckValue::get() const {
-    if (value_enum == DECK_VALUE_INT)
+    if (value_enum == DeckValueEnum::INT)
         return this->int_value;
 
     throw std::invalid_argument("DeckValue does not hold an integer value");
@@ -53,7 +53,7 @@ int DeckValue::get() const {
 
 template<>
 double DeckValue::get() const {
-    if (value_enum == DECK_VALUE_DOUBLE)
+    if (value_enum == DeckValueEnum::DOUBLE)
         return this->double_value;
         
     throw std::invalid_argument("DeckValue does not hold a double value");
@@ -61,7 +61,7 @@ double DeckValue::get() const {
 
 template<>
 std::string DeckValue::get() const {
-    if (value_enum == DECK_VALUE_STRING)
+    if (value_enum == DeckValueEnum::STRING)
         return this->string_value;
 
     throw std::invalid_argument("DeckValue does not hold a string value");
@@ -69,18 +69,18 @@ std::string DeckValue::get() const {
 
 template<>
 bool DeckValue::is<int>() const {
-    return (value_enum == DECK_VALUE_INT);
+    return (value_enum == DeckValueEnum::INT);
 }
 
 template<>
 bool DeckValue::is<double>() const {
-    return (value_enum == DECK_VALUE_DOUBLE);
+    return (value_enum == DeckValueEnum::DOUBLE);
 }
 
 
 template<>
 bool DeckValue::is<std::string>() const {
-    return (value_enum == DECK_VALUE_STRING);
+    return (value_enum == DeckValueEnum::STRING);
 }
 
 
