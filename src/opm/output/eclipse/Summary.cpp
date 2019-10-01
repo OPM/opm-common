@@ -1357,7 +1357,7 @@ Summary::Summary( const EclipseState& st,
             unsupported_keywords.insert(keyword);
     }
     for ( const auto& keyword : unsupported_keywords ) {
-        Opm::OpmLog::info("Keyword " + std::string(keyword) + " is unhandled");
+        Opm::OpmLog::info("Summary keyword " + std::string(keyword) + " is unhandled");
     }
 
     // Guarantee existence of certain summary vectors (mostly rates and
