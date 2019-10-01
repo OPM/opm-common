@@ -2483,32 +2483,6 @@ void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, c
     }
 
 
-    void Schedule::filterConnections(const EclipseGrid& grid) {
-        for (auto& dynamic_pair : this->wells_static) {
-            auto& dynamic_state = dynamic_pair.second;
-            for (auto& well_pair : dynamic_state.unique()) {
-                if (well_pair.second)
-                    well_pair.second->filterConnections(grid);
-            }
-        }
-
-        for (auto& dynamic_pair : this->wells_static) {
-            auto& dynamic_state = dynamic_pair.second;
-            for (auto& well_pair : dynamic_state.unique()) {
-                if (well_pair.second)
-                    well_pair.second->filterConnections(grid);
-            }
-        }
-
-        for (auto& dynamic_pair : this->wells_static) {
-            auto& dynamic_state = dynamic_pair.second;
-            for (auto& well_pair : dynamic_state.unique()) {
-                if (well_pair.second)
-                    well_pair.second->filterConnections(grid);
-            }
-        }
-    }
-
     const VFPProdTable& Schedule::getVFPProdTable(int table_id, size_t timeStep) const {
         const auto pair = vfpprod_tables.find(table_id);
         if (pair == vfpprod_tables.end())

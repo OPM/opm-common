@@ -621,11 +621,6 @@ bool Well2::handleWELSEGS(const DeckKeyword& keyword) {
         return false;
 }
 
-void Well2::filterConnections(const EclipseGrid& grid) {
-    this->connections->filter(grid);
-}
-
-
 std::size_t Well2::firstTimeStep() const {
     return this->init_step;
 }

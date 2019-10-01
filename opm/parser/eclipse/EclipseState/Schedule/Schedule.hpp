@@ -212,7 +212,6 @@ namespace Opm
           Will remove all completions which are connected to cell which is not
           active. Will scan through all wells and all timesteps.
         */
-        void filterConnections(const EclipseGrid& grid);
         size_t size() const;
 
         void applyAction(size_t reportStep, const Action::ActionX& action, const Action::Result& result);

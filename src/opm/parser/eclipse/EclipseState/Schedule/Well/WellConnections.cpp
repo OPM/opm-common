@@ -465,12 +465,4 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
         return !( *this == rhs );
     }
 
-
-    void WellConnections::filter(const EclipseGrid& grid) {
-        auto new_end = std::remove_if(m_connections.begin(),
-                                      m_connections.end(),
-                                      [&grid](const Connection& c) { return !grid.cellActive(c.getI(), c.getJ(), c.getK()); });
-        this->num_removed += std::distance(new_end, m_connections.end());
-        m_connections.erase(new_end, m_connections.end());
-    }
 }

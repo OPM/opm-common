@@ -278,39 +278,6 @@ static Deck createDeckWithWellsOrderedGRUPTREE() {
     return parser.parseString(input);
 }
 
-static Deck createDeckWithWellsAndCompletionData() {
-    Opm::Parser parser;
-    std::string input =
-      "START             -- 0 \n"
-      "1 NOV 1979 / \n"
-      "SCHEDULE\n"
-      "DATES             -- 1\n"
-      " 1 DES 1979/ \n"
-      "/\n"
-      "WELSPECS\n"
-      "    'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
-      "    'OP_2'       'OP'   8   8 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
-      "    'OP_3'       'OP'   7   7 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
-      "/\n"
-      "COMPDAT\n"
-      " 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-      " 'OP_1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / \n"
-      " 'OP_2'  8  8   1   3 'OPEN' 1*    1.168   0.311   107.872 1*  1*  'Y'  21.925 / \n"
-      " 'OP_2'  8  7   3   3 'OPEN' 1*   15.071   0.311  1391.859 1*  1*  'Y'  21.920 / \n"
-      " 'OP_2'  8  7   3   6 'OPEN' 1*    6.242   0.311   576.458 1*  1*  'Y'  21.915 / \n"
-      " 'OP_3'  7  7   1   1 'OPEN' 1*   27.412   0.311  2445.337 1*  1*  'Y'  18.521 / \n"
-      " 'OP_3'  7  7   2   2 'OPEN' 1*   55.195   0.311  4923.842 1*  1*  'Y'  18.524 / \n"
-      "/\n"
-      "DATES             -- 2,3\n"
-      " 10  JUL 2007 / \n"
-      " 10  AUG 2007 / \n"
-      "/\n"
-      "COMPDAT\n" // with defaulted I and J
-      " 'OP_1'  0  *   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-      "/\n";
-
-    return parser.parseString(input);
-}
 
 static Deck createDeckRFTConfig() {
     Opm::Parser parser;
@@ -2921,35 +2888,6 @@ BOOST_AUTO_TEST_CASE(historic_BHP_and_THP) {
             const auto& wtest_config = schedule.wtestConfig(1);
             BOOST_CHECK_EQUAL(wtest_config.size(), 0);
         }
-    }
-}
-
-BOOST_AUTO_TEST_CASE(FilterCompletions2) {
-    EclipseGrid grid1(10,10,10);
-    std::vector<int> actnum(1000,1);
-    auto deck = createDeckWithWellsAndCompletionData();
-    TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid1);
-    Runspec runspec (deck);
-    Schedule schedule(deck, grid1 , eclipseProperties, runspec);
-    {
-        const auto& c1_1 = schedule.getWell2("OP_1", 1).getConnections();
-        const auto& c1_3 = schedule.getWell2("OP_1", 3).getConnections();
-        BOOST_CHECK_EQUAL(2, c1_1.size());
-        BOOST_CHECK_EQUAL(9, c1_3.size());
-    }
-    actnum[grid1.getGlobalIndex(8,8,1)] = 0;
-    {
-        EclipseGrid grid2(grid1, actnum);
-        schedule.filterConnections(grid2);
-
-        const auto& c1_1 = schedule.getWell2("OP_1", 1).getConnections();
-        const auto& c1_3 = schedule.getWell2("OP_1", 3).getConnections();
-        BOOST_CHECK_EQUAL(1, c1_1.size());
-        BOOST_CHECK_EQUAL(8, c1_3.size());
-
-        BOOST_CHECK_EQUAL(2, c1_1.inputSize());
-        BOOST_CHECK_EQUAL(9, c1_3.inputSize());
     }
 }
 
