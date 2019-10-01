@@ -21,6 +21,8 @@
 #define GUIDE_RATE_MODEL_HPP
 
 #include <opm/parser/eclipse/Deck/UDAValue.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Group/Group2.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well2.hpp>
 
 namespace Opm {
 
@@ -31,9 +33,10 @@ public:
         OIL = 0,
         LIQ = 1,
         GAS = 2,
-        RES = 3,
-        COMB = 4,
-        NONE = 5
+        WAT = 3,
+        RES = 4,
+        COMB = 5,
+        NONE = 6
     };
 
     static Target TargetFromString(const std::string& s);
@@ -59,7 +62,11 @@ public:
     bool operator==(const GuideRateModel& other) const;
     bool operator!=(const GuideRateModel& other) const;
     Target target() const;
+
+    static Target convert_target(Group2::GuideRateTarget group_target);
+    static Target convert_target(Well2::GuideRateTarget well_target);
 private:
+    double pot(double oil_pot, double gas_pot, double wat_pot) const;
     /*
       Unfortunately the default values will give a GuideRateModel which can not
       be evaluated, due to a division by zero problem.

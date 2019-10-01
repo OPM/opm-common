@@ -89,13 +89,14 @@ enum class GuideRateTarget {
     WAT = 1,
     GAS = 2,
     LIQ = 3,
-    COMB = 4,
-    WGA =  5,
-    CVAL = 6,
-    INJV = 7,
-    POTN = 8,
-    FORM = 9,
-    NO_GUIDE_RATE = 10
+    RES = 4,
+    COMB = 5,
+    WGA =  6,
+    CVAL = 7,
+    INJV = 8,
+    POTN = 9,
+    FORM = 10,
+    NO_GUIDE_RATE = 11
 };
 static GuideRateTarget GuideRateTargetFromString( const std::string& stringValue );
 

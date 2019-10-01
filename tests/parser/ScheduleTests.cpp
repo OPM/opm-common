@@ -3565,7 +3565,8 @@ DATES             -- 4
     double oil_pot = 1;
     double gas_pot = 1;
     double wat_pot = 1;
-    BOOST_CHECK_THROW(gr.update("XYZ",1, 1.0, oil_pot, gas_pot, wat_pot), std::out_of_range);
+
+    gr.compute("XYZ",1, 1.0, oil_pot, gas_pot, wat_pot);
 }
 
 

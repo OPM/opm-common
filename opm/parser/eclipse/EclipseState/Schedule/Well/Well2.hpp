@@ -157,7 +157,7 @@ public:
         double scale_factor;
     };
 
-    
+
     struct InjectionControls {
     public:
         InjectionControls(int controls_arg) :
