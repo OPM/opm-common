@@ -957,17 +957,6 @@ namespace {
 
     namespace {
 
-        UnitSystem::UnitType fromEclType(ert_ecl_unit_enum unit_type) {
-            switch ( unit_type ) {
-            case(ECL_METRIC_UNITS): return UnitSystem::UnitType::UNIT_TYPE_METRIC;
-            case(ECL_FIELD_UNITS):  return UnitSystem::UnitType::UNIT_TYPE_FIELD;
-            case(ECL_LAB_UNITS):    return UnitSystem::UnitType::UNIT_TYPE_LAB;
-            case(ECL_PVT_M_UNITS):  return UnitSystem::UnitType::UNIT_TYPE_PVT_M;
-            default:
-                throw std::runtime_error("What has happened here?");
-            }
-        }
-
         UnitSystem::UnitType fromDeckName(const std::string& deck_name) {
             if (deck_name == "FIELD")
                 return UnitSystem::UnitType::UNIT_TYPE_FIELD;
@@ -1012,11 +1001,6 @@ namespace {
         }
     }
 
-    UnitSystem::UnitSystem(const ert_ecl_unit_enum unit_type)
-        : UnitSystem( fromEclType( unit_type ))
-    {
-    }
-
 
     UnitSystem::UnitSystem(const std::string& deck_name) :
         UnitSystem( fromDeckName(deck_name) )
@@ -1059,25 +1043,6 @@ namespace {
     UnitSystem::UnitType UnitSystem::getType() const {
         return m_unittype;
     }
-
-
-    ert_ecl_unit_enum UnitSystem::ecl_units(UnitSystem::UnitType opm_type) {
-        switch ( opm_type ) {
-        case UnitType::UNIT_TYPE_METRIC: return ECL_METRIC_UNITS;
-        case UnitType::UNIT_TYPE_FIELD:  return ECL_FIELD_UNITS;
-        case UnitType::UNIT_TYPE_LAB:    return ECL_LAB_UNITS;
-        case UnitType::UNIT_TYPE_PVT_M:  return ECL_PVT_M_UNITS;
-        case UnitType::UNIT_TYPE_INPUT:  throw std::runtime_error("UNIT_TYPE_INPUT has no counterpart in the ert_ecl_unit_enum type.");
-        default:
-            throw std::runtime_error("What has happened here?");
-        }
-    }
-
-
-    ert_ecl_unit_enum UnitSystem::getEclType() const {
-        return UnitSystem::ecl_units( this->m_unittype );
-    }
-
 
 
     Dimension UnitSystem::parseFactor(const std::string& dimension) const {
