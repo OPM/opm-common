@@ -25,48 +25,22 @@
 
 #include <opm/output/eclipse/Tables.hpp>
 
-#include <boost/date_time/posix_time/posix_time.hpp>
-
 #include <cstddef>
 #include <exception>
-#include <fstream>
 #include <initializer_list>
 #include <stdexcept>
 #include <vector>
 
 #include <ert/ecl/ecl_kw_magic.h>
-#include <ert/ecl/ecl_sum.h>
-#include <ert/ecl/ecl_file.h>
-#include <ert/util/util.h>
-#include <ert/util/test_work_area.h>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/Units/UnitSystem.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
-using namespace Opm;
 
-
-struct setup {
-    Deck deck;
-    EclipseState es;
-    test_work_area_type * ta;
-
-    setup( const std::string& path) :
-        deck( Parser().parseFile( path) ),
-        es( deck ),
-        ta( test_work_area_alloc( "test_tables"))
-    {
-    }
-
-    ~setup() {
-        test_work_area_free(this->ta);
-    }
-
-};
 
 namespace {
     template <class Collection1, class Collection2>
@@ -1181,104 +1155,6 @@ END
         } // ThreePhase
     } // SPE9
 }
-
-BOOST_AUTO_TEST_SUITE (FileWrite_PVT)
-
-BOOST_AUTO_TEST_CASE(Test_PVTX) {
-    setup cfg( "table_deck.DATA");
-    Tables tables( cfg.es.getUnits() );
-
-    tables.addPVTO( cfg.es.getTableManager().getPvtoTables() );
-    tables.addPVTG( cfg.es.getTableManager().getPvtgTables() );
-    tables.addPVTW( cfg.es.getTableManager().getPvtwTable() );
-    tables.addDensity( cfg.es.getTableManager().getDensityTable( ) );
-    {
-        ERT::FortIO f("TEST.INIT" , std::fstream::out);
-        fwrite(tables, f);
-    }
-
-
-    {
-        ecl_file_type * f = ecl_file_open("TEST.INIT" , 0 );
-        const ecl_kw_type * tabdims = ecl_file_iget_named_kw( f , "TABDIMS" , 0 );
-        const ecl_kw_type * tab = ecl_file_iget_named_kw( f , "TAB" , 0 );
-
-        BOOST_CHECK_EQUAL( ecl_kw_get_size( tab ) , ecl_kw_iget_int( tabdims , TABDIMS_TAB_SIZE_ITEM ));
-        /* PVTO */
-        {
-            int offset = ecl_kw_iget_int( tabdims , TABDIMS_IBPVTO_OFFSET_ITEM ) - 1;
-            int rs_offset = ecl_kw_iget_int( tabdims , TABDIMS_JBPVTO_OFFSET_ITEM ) - 1;
-            int column_stride = ecl_kw_iget_int( tabdims , TABDIMS_NRPVTO_ITEM ) * ecl_kw_iget_int( tabdims , TABDIMS_NPPVTO_ITEM ) * ecl_kw_iget_int( tabdims , TABDIMS_NTPVTO_ITEM );
-
-            BOOST_CHECK_EQUAL( 2, ecl_kw_iget_int( tabdims , TABDIMS_NRPVTO_ITEM ) );
-            BOOST_CHECK_EQUAL( 5, ecl_kw_iget_int( tabdims , TABDIMS_NPPVTO_ITEM ) );
-            BOOST_CHECK_EQUAL( 1, ecl_kw_iget_int( tabdims , TABDIMS_NTPVTO_ITEM ) );
-
-            BOOST_CHECK_CLOSE(50.0            , ecl_kw_iget_double( tab , offset ), 1e-6 );
-            BOOST_CHECK_CLOSE(1.0 / 1.10615   , ecl_kw_iget_double( tab , offset + column_stride), 1e-6 );
-            BOOST_CHECK_CLOSE(1.18 / 1.10615  , ecl_kw_iget_double( tab , offset + 2*column_stride ), 1e-6 );
-
-            BOOST_CHECK_CLOSE(150.0            , ecl_kw_iget_double( tab , 4 + offset ), 1e-6 );
-            BOOST_CHECK_CLOSE(1.0 / 1.08984    , ecl_kw_iget_double( tab , 4 + offset + column_stride), 1e-6 );
-            BOOST_CHECK_CLOSE(1.453 / 1.08984  , ecl_kw_iget_double( tab , 4 + offset + 2*column_stride ), 1e-6 );
-
-            BOOST_CHECK_CLOSE(20.59            , ecl_kw_iget_double( tab , rs_offset ), 1e-6 );
-            BOOST_CHECK_CLOSE(28.19            , ecl_kw_iget_double( tab , rs_offset + 1), 1e-6 );
-        }
-
-
-        /* PVTG */
-        {
-            int offset = ecl_kw_iget_int( tabdims , TABDIMS_IBPVTG_OFFSET_ITEM ) - 1;
-            int pg_offset = ecl_kw_iget_int( tabdims , TABDIMS_JBPVTG_OFFSET_ITEM ) - 1;
-            int column_stride = ecl_kw_iget_int( tabdims , TABDIMS_NRPVTG_ITEM ) * ecl_kw_iget_int( tabdims , TABDIMS_NPPVTG_ITEM ) * ecl_kw_iget_int( tabdims , TABDIMS_NTPVTG_ITEM );
-
-            BOOST_CHECK_EQUAL( 2, ecl_kw_iget_int( tabdims , TABDIMS_NRPVTG_ITEM ) );
-            BOOST_CHECK_EQUAL( 3, ecl_kw_iget_int( tabdims , TABDIMS_NPPVTG_ITEM ) );
-            BOOST_CHECK_EQUAL( 1, ecl_kw_iget_int( tabdims , TABDIMS_NTPVTG_ITEM ) );
-
-            BOOST_CHECK_CLOSE(0.00002448  , ecl_kw_iget_double( tab , offset ), 1e-6 );
-            BOOST_CHECK_CLOSE(0.061895    , ecl_kw_iget_double( tab , offset + column_stride), 1e-6 );
-            BOOST_CHECK_CLOSE(0.01299     , ecl_kw_iget_double( tab , offset + 2*column_stride ), 1e-6 );
-
-            BOOST_CHECK_CLOSE(20.0        , ecl_kw_iget_double( tab , pg_offset ), 1e-6 );
-            BOOST_CHECK_CLOSE(40.0        , ecl_kw_iget_double( tab , pg_offset + 1), 1e-6 );
-        }
-
-
-        /* PVTW */
-        {
-            int offset = ecl_kw_iget_int( tabdims , TABDIMS_IBPVTW_OFFSET_ITEM ) - 1;
-            int column_stride = ecl_kw_iget_int( tabdims , TABDIMS_NTPVTW_ITEM );
-            BOOST_CHECK( ecl_kw_get_size( tab ) >= (offset + column_stride * 5 ));
-
-            BOOST_CHECK_CLOSE( 247.7 , ecl_kw_iget_double( tab , offset ) , 1e-6 );
-            BOOST_CHECK_CLOSE( 1.0 / 1.03665 , ecl_kw_iget_double( tab , offset + column_stride), 1e-6);
-            BOOST_CHECK_CLOSE( 0.41726E-04 , ecl_kw_iget_double( tab , offset + 2 * column_stride), 1e-6);
-            BOOST_CHECK_CLOSE( 1.03665 / 0.29120 , ecl_kw_iget_double( tab , offset + 3 * column_stride), 1e-6);
-
-            // For the last column - WATER_VISCOSIBILITY - there is
-            // clearly a transform involved; not really clear which
-            // transform this is. This column is therefor not tested.
-
-            // BOOST_CHECK_CLOSE( f(0.99835E-04) , ecl_kw_iget_double( tab , offset + 4 * column_stride), 1e-6);
-        }
-
-        // Density
-        {
-            int offset = ecl_kw_iget_int( tabdims , TABDIMS_IBDENS_OFFSET_ITEM ) - 1;
-            int column_stride = ecl_kw_iget_int( tabdims , TABDIMS_NTDENS_ITEM );
-            BOOST_CHECK( ecl_kw_get_size( tab ) >= (offset + column_stride * 3 ));
-            BOOST_CHECK_CLOSE( 859.5 , ecl_kw_iget_double( tab , offset )     , 1e-6 );
-            BOOST_CHECK_CLOSE( 1033  , ecl_kw_iget_double( tab , offset + 1 ) , 1e-6 );
-            BOOST_CHECK_CLOSE( 0.854 , ecl_kw_iget_double( tab , offset + 2)  , 1e-6 );
-        }
-
-        ecl_file_close( f );
-    }
-}
-
-BOOST_AUTO_TEST_SUITE_END ()
 
 // #####################################################################
 
