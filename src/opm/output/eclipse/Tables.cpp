@@ -21,8 +21,6 @@
 
 #include <opm/output/eclipse/Tables.hpp>
 
-#include <ert/ecl/ecl_kw_magic.h>
-
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/FlatTable.hpp> // PVTW, PVCDO
@@ -40,6 +38,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/TableContainer.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
+#include <opm/output/eclipse/VectorItems/tabdims.hpp>
 #include <opm/output/eclipse/LinearisedOutputTable.hpp>
 
 #include <algorithm>
@@ -51,7 +50,10 @@
 #include <utility>
 #include <vector>
 
+using Ix = ::Opm::RestartIO::Helpers::VectorItems::TabDims::index;
+
 namespace {
+
     /// Convenience type alias for a callable entity that extracts the
     /// independent and primary dependent variates of a single property
     /// function table into a linearised output table.  Calling the function
@@ -1960,7 +1962,7 @@ namespace Opm {
 
     Tables::Tables(const UnitSystem& units0)
         : units    (units0)
-        , m_tabdims(TABDIMS_SIZE, 0)
+        , m_tabdims(Ix::TabDimsNumElems, 0)
     {
         // Initialize subset of base pointers and dimensions to 1 to honour
         // requirements of TABDIMS protocol.  The magic constant 59 is
@@ -1975,7 +1977,7 @@ namespace Opm {
 
         this->data.insert(this->data.end(), new_data.begin(), new_data.end());
 
-        this->m_tabdims[ TABDIMS_TAB_SIZE_ITEM ] = this->data.size();
+        this->m_tabdims[ Ix::TabSize ] = this->data.size();
     }
 
     void Tables::addDensity( const DensityTable& density)
@@ -1985,14 +1987,14 @@ namespace Opm {
             const size_t num_columns = density[0].size;
             std::vector<double> densityData( density.size() * num_columns , default_value);
 
-            this->m_tabdims[ TABDIMS_NTDENS_ITEM ] = density.size();
+            this->m_tabdims[Ix::DensityNumTables] = density.size();
             for (size_t table_num = 0; table_num < density.size(); table_num++) {
                 const auto& record = density[table_num];
                 densityData[ table_num * num_columns ]    = this->units.from_si( UnitSystem::measure::density , record.oil);
                 densityData[ table_num * num_columns + 1] = this->units.from_si( UnitSystem::measure::density , record.water);
                 densityData[ table_num * num_columns + 2] = this->units.from_si( UnitSystem::measure::density , record.gas);
             }
-            this->addData( TABDIMS_IBDENS_OFFSET_ITEM , densityData );
+            this->addData(Ix::DensityTableStart, densityData );
         }
     }
 
@@ -2062,9 +2064,9 @@ namespace Opm {
             const auto sgfn =
                 SatFunc::Gas::fromSGOF(nssfun, this->units, tables);
 
-            this->addData(TABDIMS_IBSGFN_OFFSET_ITEM, sgfn);
-            this->m_tabdims[TABDIMS_NSSGFN_ITEM] = nssfun;
-            this->m_tabdims[TABDIMS_NTSGFN_ITEM] = tables.size();
+            this->addData(Ix::SgfnTableStart, sgfn);
+            this->m_tabdims[Ix::SgfnNumSatNodes] = nssfun;
+            this->m_tabdims[Ix::SgfnNumTables]   = tables.size();
         }
 
         if (oil) {
@@ -2074,9 +2076,9 @@ namespace Opm {
                 const auto sofn =
                     SatFunc::Oil::TwoPhase::fromSGOF(nssfun, tables);
 
-                this->addData(TABDIMS_IBSOFN_OFFSET_ITEM, sofn);
-                this->m_tabdims[TABDIMS_NSSOFN_ITEM] = nssfun;
-                this->m_tabdims[TABDIMS_NTSOFN_ITEM] = tables.size();
+                this->addData(Ix::SofnTableStart, sofn);
+                this->m_tabdims[Ix::SofnNumSatNodes] = nssfun;
+                this->m_tabdims[Ix::SofnNumTables]   = tables.size();
             }
             else if (wat && !gas) { // 2p O/W System
                 const auto& tables = tabMgr.getSwofTables();
@@ -2084,9 +2086,9 @@ namespace Opm {
                 const auto sofn =
                     SatFunc::Oil::TwoPhase::fromSWOF(nssfun, tables);
 
-                this->addData(TABDIMS_IBSOFN_OFFSET_ITEM, sofn);
-                this->m_tabdims[TABDIMS_NSSOFN_ITEM] = nssfun;
-                this->m_tabdims[TABDIMS_NTSOFN_ITEM] = tables.size();
+                this->addData(Ix::SofnTableStart, sofn);
+                this->m_tabdims[Ix::SofnNumSatNodes] = nssfun;
+                this->m_tabdims[Ix::SofnNumTables]   = tables.size();
             }
             else {              // 3p G/O/W System
                 const auto& sgof = tabMgr.getSgofTables();
@@ -2099,9 +2101,9 @@ namespace Opm {
                 const auto sofn = SatFunc::Oil::ThreePhase::
                     fromSGOFandSWOF(numRows, sgof, swof);
 
-                this->addData(TABDIMS_IBSOFN_OFFSET_ITEM, sofn);
-                this->m_tabdims[TABDIMS_NSSOFN_ITEM] = numRows;
-                this->m_tabdims[TABDIMS_NTSOFN_ITEM] = sgof.size();
+                this->addData(Ix::SofnTableStart, sofn);
+                this->m_tabdims[Ix::SofnNumSatNodes] = numRows;
+                this->m_tabdims[Ix::SofnNumTables]   = sgof.size();
             }
         }
 
@@ -2111,9 +2113,9 @@ namespace Opm {
             const auto swfn =
                 SatFunc::Water::fromSWOF(nssfun, this->units, tables);
 
-            this->addData(TABDIMS_IBSWFN_OFFSET_ITEM, swfn);
-            this->m_tabdims[TABDIMS_NSSWFN_ITEM] = nssfun;
-            this->m_tabdims[TABDIMS_NTSWFN_ITEM] = tables.size();
+            this->addData(Ix::SwfnTableStart, swfn);
+            this->m_tabdims[Ix::SwfnNumSatNodes] = nssfun;
+            this->m_tabdims[Ix::SwfnNumTables]   = tables.size();
         }
     }
 
@@ -2132,9 +2134,9 @@ namespace Opm {
             const auto sgfn =
                 SatFunc::Gas::fromSGFN(nssfun, this->units, tables);
 
-            this->addData(TABDIMS_IBSGFN_OFFSET_ITEM, sgfn);
-            this->m_tabdims[TABDIMS_NSSGFN_ITEM] = nssfun;
-            this->m_tabdims[TABDIMS_NTSGFN_ITEM] = tables.size();
+            this->addData(Ix::SgfnTableStart, sgfn);
+            this->m_tabdims[Ix::SgfnNumSatNodes] = nssfun;
+            this->m_tabdims[Ix::SgfnNumTables]   = tables.size();
         }
 
         if (oil) {
@@ -2144,9 +2146,9 @@ namespace Opm {
                 const auto sofn =
                     SatFunc::Oil::TwoPhase::fromSOF2(nssfun, tables);
 
-                this->addData(TABDIMS_IBSOFN_OFFSET_ITEM, sofn);
-                this->m_tabdims[TABDIMS_NSSOFN_ITEM] = nssfun;
-                this->m_tabdims[TABDIMS_NTSOFN_ITEM] = tables.size();
+                this->addData(Ix::SofnTableStart, sofn);
+                this->m_tabdims[Ix::SofnNumSatNodes] = nssfun;
+                this->m_tabdims[Ix::SofnNumTables]   = tables.size();
             }
             else {              // 3p G/O/W System
                 const auto& tables = tabMgr.getSof3Tables();
@@ -2154,9 +2156,9 @@ namespace Opm {
                 const auto sofn =
                     SatFunc::Oil::ThreePhase::fromSOF3(nssfun, tables);
 
-                this->addData(TABDIMS_IBSOFN_OFFSET_ITEM, sofn);
-                this->m_tabdims[TABDIMS_NSSOFN_ITEM] = nssfun;
-                this->m_tabdims[TABDIMS_NTSOFN_ITEM] = tables.size();
+                this->addData(Ix::SofnTableStart, sofn);
+                this->m_tabdims[Ix::SofnNumSatNodes] = nssfun;
+                this->m_tabdims[Ix::SofnNumTables]   = tables.size();
             }
         }
 
@@ -2166,9 +2168,9 @@ namespace Opm {
             const auto swfn =
                 SatFunc::Water::fromSWFN(nssfun, this->units, tables);
 
-            this->addData(TABDIMS_IBSWFN_OFFSET_ITEM, swfn);
-            this->m_tabdims[TABDIMS_NSSWFN_ITEM] = nssfun;
-            this->m_tabdims[TABDIMS_NTSWFN_ITEM] = tables.size();
+            this->addData(Ix::SwfnTableStart, swfn);
+            this->m_tabdims[Ix::SwfnNumSatNodes] = nssfun;
+            this->m_tabdims[Ix::SwfnNumTables]   = tables.size();
         }
     }
 
@@ -2203,12 +2205,12 @@ namespace Opm {
             const auto pressData = PVTFunc::Gas::
                 pressureNodes(numPrimary, this->units, pvtg);
 
-            this->addData(TABDIMS_IBPVTG_OFFSET_ITEM, tableData);
-            this->addData(TABDIMS_JBPVTG_OFFSET_ITEM, pressData);
+            this->addData(Ix::PvtgMainStart, tableData);
+            this->addData(Ix::PvtgPressStart, pressData);
 
-            this->m_tabdims[TABDIMS_NPPVTG_ITEM] = numPrimary;
-            this->m_tabdims[TABDIMS_NRPVTG_ITEM] = numCompNodes;
-            this->m_tabdims[TABDIMS_NTPVTG_ITEM] = pvtg.size();
+            this->m_tabdims[Ix::NumPvtgPressNodes] = numPrimary;
+            this->m_tabdims[Ix::NumPvtgCompNodes]  = numCompNodes;
+            this->m_tabdims[Ix::NumPvtgTables]     = pvtg.size();
         }
         else {
             // Dry gas, pressure dependent compressibility.
@@ -2219,9 +2221,9 @@ namespace Opm {
 
             const auto tableData = PVTFunc::Gas::fromPVDG(numRows, this->units, pvdg);
 
-            this->addData(TABDIMS_IBPVTG_OFFSET_ITEM, tableData);
-            this->m_tabdims[TABDIMS_NPPVTG_ITEM] = numRows;
-            this->m_tabdims[TABDIMS_NTPVTG_ITEM] = pvdg.size();
+            this->addData(Ix::PvtgMainStart, tableData);
+            this->m_tabdims[Ix::NumPvtgPressNodes] = numRows;
+            this->m_tabdims[Ix::NumPvtgTables]     = pvdg.size();
         }
     }
 
@@ -2257,12 +2259,12 @@ namespace Opm {
             const auto rsData = PVTFunc::Oil::
                 compositionNodes(numCompNodes, this->units, pvto);
 
-            this->addData(TABDIMS_IBPVTO_OFFSET_ITEM, tableData);
-            this->addData(TABDIMS_JBPVTO_OFFSET_ITEM, rsData);
+            this->addData(Ix::PvtoMainStart, tableData);
+            this->addData(Ix::PvtoCompStart, rsData);
 
-            this->m_tabdims[TABDIMS_NPPVTO_ITEM] = numRows;
-            this->m_tabdims[TABDIMS_NRPVTO_ITEM] = numCompNodes;
-            this->m_tabdims[TABDIMS_NTPVTO_ITEM] = pvto.size();
+            this->m_tabdims[Ix::NumPvtoPressNodes] = numRows;
+            this->m_tabdims[Ix::NumPvtoCompNodes]  = numCompNodes;
+            this->m_tabdims[Ix::NumPvtoTables]     = pvto.size();
         }
         else if (hasPVDO) {
             // Dead oil, pressure dependent compressibility.
@@ -2273,9 +2275,9 @@ namespace Opm {
 
             const auto tableData = PVTFunc::Oil::fromPVDO(numRows, this->units, pvdo);
 
-            this->addData(TABDIMS_IBPVTO_OFFSET_ITEM, tableData);
-            this->m_tabdims[TABDIMS_NPPVTO_ITEM] = numRows;
-            this->m_tabdims[TABDIMS_NTPVTO_ITEM] = pvdo.size();
+            this->addData(Ix::PvtoMainStart, tableData);
+            this->m_tabdims[Ix::NumPvtoPressNodes] = numRows;
+            this->m_tabdims[Ix::NumPvtoTables]     = pvdo.size();
         }
         else {
             // Dead oil, constant compressibility.
@@ -2285,9 +2287,9 @@ namespace Opm {
 
             const auto tableData = PVTFunc::Oil::fromPVCDO(numRows, this->units, pvcdo);
 
-            this->addData(TABDIMS_IBPVTO_OFFSET_ITEM, tableData);
-            this->m_tabdims[TABDIMS_NPPVTO_ITEM] = numRows;
-            this->m_tabdims[TABDIMS_NTPVTO_ITEM] = pvcdo.size();
+            this->addData(Ix::PvtoMainStart, tableData);
+            this->m_tabdims[Ix::NumPvtoPressNodes] = numRows;
+            this->m_tabdims[Ix::NumPvtoTables]     = pvcdo.size();
         }
     }
 
@@ -2303,7 +2305,7 @@ namespace Opm {
 
         const auto tableData = PVTFunc::Water::fromPVTW(this->units, pvtw);
 
-        this->addData(TABDIMS_IBPVTW_OFFSET_ITEM, tableData);
-        this->m_tabdims[TABDIMS_NTPVTW_ITEM] = pvtw.size();
+        this->addData(Ix::PvtwStart, tableData);
+        this->m_tabdims[Ix::NumPvtwTables] = pvtw.size();
     }
 }

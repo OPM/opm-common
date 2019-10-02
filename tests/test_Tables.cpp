@@ -31,8 +31,6 @@
 #include <stdexcept>
 #include <vector>
 
-#include <ert/ecl/ecl_kw_magic.h>
-
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
@@ -40,7 +38,9 @@
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
+#include <opm/output/eclipse/VectorItems/tabdims.hpp>
 
+using Ix = ::Opm::RestartIO::Helpers::VectorItems::TabDims::index;
 
 namespace {
     template <class Collection1, class Collection2>
@@ -1172,9 +1172,9 @@ BOOST_AUTO_TEST_CASE (Oil_Water_Family_One)
 
     // SOFN
     {
-        const auto ibsofn = tabdims[ TABDIMS_IBSOFN_OFFSET_ITEM ] - 1;
-        const auto nssofn = tabdims[ TABDIMS_NSSOFN_ITEM ];
-        const auto ntsofn = tabdims[ TABDIMS_NTSOFN_ITEM ];
+        const auto ibsofn = tabdims[ Ix::SofnTableStart ] - 1;
+        const auto nssofn = tabdims[ Ix::SofnNumSatNodes ];
+        const auto ntsofn = tabdims[ Ix::SofnNumTables ];
         const auto ncol   = 3;
 
         const auto sofn = std::vector<double> {
@@ -1190,9 +1190,9 @@ BOOST_AUTO_TEST_CASE (Oil_Water_Family_One)
 
     // SWFN
     {
-        const auto ibswfn = tabdims[ TABDIMS_IBSWFN_OFFSET_ITEM ] - 1;
-        const auto nsswfn = tabdims[ TABDIMS_NSSWFN_ITEM ];
-        const auto ntswfn = tabdims[ TABDIMS_NTSWFN_ITEM ];
+        const auto ibswfn = tabdims[ Ix::SwfnTableStart ] - 1;
+        const auto nsswfn = tabdims[ Ix::SwfnNumSatNodes ];
+        const auto ntswfn = tabdims[ Ix::SwfnNumTables ];
         const auto ncol   = 5;
 
         const auto swfn = std::vector<double> {
@@ -1219,9 +1219,9 @@ BOOST_AUTO_TEST_CASE (Oil_Water_Family_Two)
 
     // SOFN
     {
-        const auto ibsofn = tabdims[ TABDIMS_IBSOFN_OFFSET_ITEM ] - 1;
-        const auto nssofn = tabdims[ TABDIMS_NSSOFN_ITEM ];
-        const auto ntsofn = tabdims[ TABDIMS_NTSOFN_ITEM ];
+        const auto ibsofn = tabdims[ Ix::SofnTableStart ] - 1;
+        const auto nssofn = tabdims[ Ix::SofnNumSatNodes ];
+        const auto ntsofn = tabdims[ Ix::SofnNumTables ];
         const auto ncol   = 3;
 
         const auto sofn = std::vector<double> {
@@ -1237,9 +1237,9 @@ BOOST_AUTO_TEST_CASE (Oil_Water_Family_Two)
 
     // SWFN
     {
-        const auto ibswfn = tabdims[ TABDIMS_IBSWFN_OFFSET_ITEM ] - 1;
-        const auto nsswfn = tabdims[ TABDIMS_NSSWFN_ITEM ];
-        const auto ntswfn = tabdims[ TABDIMS_NTSWFN_ITEM ];
+        const auto ibswfn = tabdims[ Ix::SwfnTableStart ] - 1;
+        const auto nsswfn = tabdims[ Ix::SwfnNumSatNodes ];
+        const auto ntswfn = tabdims[ Ix::SwfnNumTables ];
         const auto ncol   = 5;
 
         const auto swfn = std::vector<double> {
@@ -1266,9 +1266,9 @@ BOOST_AUTO_TEST_CASE (Gas_Oil_Familiy_One)
 
     // SGFN
     {
-        const auto ibsgfn = tabdims[ TABDIMS_IBSGFN_OFFSET_ITEM ] - 1;
-        const auto nssgfn = tabdims[ TABDIMS_NSSGFN_ITEM ];
-        const auto ntsgfn = tabdims[ TABDIMS_NTSGFN_ITEM ];
+        const auto ibsgfn = tabdims[ Ix::SgfnTableStart ] - 1;
+        const auto nssgfn = tabdims[ Ix::SgfnNumSatNodes ];
+        const auto ntsgfn = tabdims[ Ix::SgfnNumTables ];
         const auto ncol   = 5;
 
         const auto sgfn = std::vector<double> {
@@ -1284,9 +1284,9 @@ BOOST_AUTO_TEST_CASE (Gas_Oil_Familiy_One)
 
     // SOFN
     {
-        const auto ibsofn = tabdims[ TABDIMS_IBSOFN_OFFSET_ITEM ] - 1;
-        const auto nssofn = tabdims[ TABDIMS_NSSOFN_ITEM ];
-        const auto ntsofn = tabdims[ TABDIMS_NTSOFN_ITEM ];
+        const auto ibsofn = tabdims[ Ix::SofnTableStart ] - 1;
+        const auto nssofn = tabdims[ Ix::SofnNumSatNodes ];
+        const auto ntsofn = tabdims[ Ix::SofnNumTables ];
         const auto ncol   = 3;
 
         const auto sofn = std::vector<double> {
@@ -1313,9 +1313,9 @@ BOOST_AUTO_TEST_CASE (Gas_Oil_Familiy_Two)
 
     // SGFN
     {
-        const auto ibsgfn = tabdims[ TABDIMS_IBSGFN_OFFSET_ITEM ] - 1;
-        const auto nssgfn = tabdims[ TABDIMS_NSSGFN_ITEM ];
-        const auto ntsgfn = tabdims[ TABDIMS_NTSGFN_ITEM ];
+        const auto ibsgfn = tabdims[ Ix::SgfnTableStart ] - 1;
+        const auto nssgfn = tabdims[ Ix::SgfnNumSatNodes ];
+        const auto ntsgfn = tabdims[ Ix::SgfnNumTables ];
         const auto ncol   = 5;
 
         const auto sgfn = std::vector<double> {
@@ -1331,9 +1331,9 @@ BOOST_AUTO_TEST_CASE (Gas_Oil_Familiy_Two)
 
     // SOFN
     {
-        const auto ibsofn = tabdims[ TABDIMS_IBSOFN_OFFSET_ITEM ] - 1;
-        const auto nssofn = tabdims[ TABDIMS_NSSOFN_ITEM ];
-        const auto ntsofn = tabdims[ TABDIMS_NTSOFN_ITEM ];
+        const auto ibsofn = tabdims[ Ix::SofnTableStart ] - 1;
+        const auto nssofn = tabdims[ Ix::SofnNumSatNodes ];
+        const auto ntsofn = tabdims[ Ix::SofnNumTables ];
         const auto ncol   = 3;
 
         const auto sofn = std::vector<double> {
@@ -1366,9 +1366,9 @@ BOOST_AUTO_TEST_CASE (Serialize_Family_One)
 
     // SGFN
     {
-        const auto ibsgfn = tabdims[ TABDIMS_IBSGFN_OFFSET_ITEM ] - 1;
-        const auto nssgfn = tabdims[ TABDIMS_NSSGFN_ITEM ];
-        const auto ntsgfn = tabdims[ TABDIMS_NTSGFN_ITEM ];
+        const auto ibsgfn = tabdims[ Ix::SgfnTableStart ] - 1;
+        const auto nssgfn = tabdims[ Ix::SgfnNumSatNodes ];
+        const auto ntsgfn = tabdims[ Ix::SgfnNumTables ];
         const auto ncol   = 5;
 
         const auto sgfn = std::vector<double> {
@@ -1384,9 +1384,9 @@ BOOST_AUTO_TEST_CASE (Serialize_Family_One)
 
     // SOFN
     {
-        const auto ibsofn = tabdims[ TABDIMS_IBSOFN_OFFSET_ITEM ] - 1;
-        const auto nssofn = tabdims[ TABDIMS_NSSOFN_ITEM ];
-        const auto ntsofn = tabdims[ TABDIMS_NTSOFN_ITEM ];
+        const auto ibsofn = tabdims[ Ix::SofnTableStart ] - 1;
+        const auto nssofn = tabdims[ Ix::SofnNumSatNodes ];
+        const auto ntsofn = tabdims[ Ix::SofnNumTables ];
         const auto ncol   = 5;
 
         const auto sofn = std::vector<double> {
@@ -1402,9 +1402,9 @@ BOOST_AUTO_TEST_CASE (Serialize_Family_One)
 
     // SWFN
     {
-        const auto ibswfn = tabdims[ TABDIMS_IBSWFN_OFFSET_ITEM ] - 1;
-        const auto nsswfn = tabdims[ TABDIMS_NSSWFN_ITEM ];
-        const auto ntswfn = tabdims[ TABDIMS_NTSWFN_ITEM ];
+        const auto ibswfn = tabdims[ Ix::SwfnTableStart ] - 1;
+        const auto nsswfn = tabdims[ Ix::SwfnNumSatNodes ];
+        const auto ntswfn = tabdims[ Ix::SwfnNumTables ];
         const auto ncol   = 5;
 
         const auto swfn = std::vector<double> {
@@ -1431,9 +1431,9 @@ BOOST_AUTO_TEST_CASE (Serialize_Family_Two)
 
     // SGFN
     {
-        const auto ibsgfn = tabdims[ TABDIMS_IBSGFN_OFFSET_ITEM ] - 1;
-        const auto nssgfn = tabdims[ TABDIMS_NSSGFN_ITEM ];
-        const auto ntsgfn = tabdims[ TABDIMS_NTSGFN_ITEM ];
+        const auto ibsgfn = tabdims[ Ix::SgfnTableStart ] - 1;
+        const auto nssgfn = tabdims[ Ix::SgfnNumSatNodes ];
+        const auto ntsgfn = tabdims[ Ix::SgfnNumTables ];
         const auto ncol   = 5;
 
         const auto sgfn = std::vector<double> {
@@ -1449,9 +1449,9 @@ BOOST_AUTO_TEST_CASE (Serialize_Family_Two)
 
     // SOFN
     {
-        const auto ibsofn = tabdims[ TABDIMS_IBSOFN_OFFSET_ITEM ] - 1;
-        const auto nssofn = tabdims[ TABDIMS_NSSOFN_ITEM ];
-        const auto ntsofn = tabdims[ TABDIMS_NTSOFN_ITEM ];
+        const auto ibsofn = tabdims[ Ix::SofnTableStart ] - 1;
+        const auto nssofn = tabdims[ Ix::SofnNumSatNodes ];
+        const auto ntsofn = tabdims[ Ix::SofnNumTables ];
         const auto ncol   = 5;
 
         const auto sofn = std::vector<double> {
@@ -1467,9 +1467,9 @@ BOOST_AUTO_TEST_CASE (Serialize_Family_Two)
 
     // SWFN
     {
-        const auto ibswfn = tabdims[ TABDIMS_IBSWFN_OFFSET_ITEM ] - 1;
-        const auto nsswfn = tabdims[ TABDIMS_NSSWFN_ITEM ];
-        const auto ntswfn = tabdims[ TABDIMS_NTSWFN_ITEM ];
+        const auto ibswfn = tabdims[ Ix::SwfnTableStart ] - 1;
+        const auto nsswfn = tabdims[ Ix::SwfnNumSatNodes ];
+        const auto ntswfn = tabdims[ Ix::SwfnNumTables ];
         const auto ncol   = 5;
 
         const auto swfn = std::vector<double> {
@@ -1589,14 +1589,14 @@ PVDG
     const auto& tabdims = tables.tabdims();
     const auto& tab     = tables.tab();
 
-    const auto ibpvtg = tabdims[ TABDIMS_IBPVTG_OFFSET_ITEM ] - 1;
-    const auto nppvtg = tabdims[ TABDIMS_NPPVTG_ITEM ];
-    const auto ntpvtg = tabdims[ TABDIMS_NTPVTG_ITEM ];
+    const auto ibpvtg = tabdims[ Ix::PvtgMainStart ] - 1;
+    const auto nppvtg = tabdims[ Ix::NumPvtgPressNodes ];
+    const auto ntpvtg = tabdims[ Ix::NumPvtgTables ];
     const auto ncol   = 5;
 
     // Pg table defaulted
-    BOOST_CHECK_EQUAL(tabdims[TABDIMS_JBPVTG_OFFSET_ITEM], 1);
-    BOOST_CHECK_EQUAL(tabdims[TABDIMS_NRPVTG_ITEM], 1);
+    BOOST_CHECK_EQUAL(tabdims[Ix::PvtgPressStart], 1);
+    BOOST_CHECK_EQUAL(tabdims[Ix::NumPvtgCompNodes], 1);
 
     BOOST_CHECK_EQUAL(nppvtg, 16);
     BOOST_CHECK_EQUAL(ntpvtg,  2);
@@ -1712,14 +1712,14 @@ PVDG
     const auto& tabdims = tables.tabdims();
     const auto& tab     = tables.tab();
 
-    const auto ibpvtg = tabdims[ TABDIMS_IBPVTG_OFFSET_ITEM ] - 1;
-    const auto nppvtg = tabdims[ TABDIMS_NPPVTG_ITEM ];
-    const auto ntpvtg = tabdims[ TABDIMS_NTPVTG_ITEM ];
+    const auto ibpvtg = tabdims[ Ix::PvtgMainStart ] - 1;
+    const auto nppvtg = tabdims[ Ix::NumPvtgPressNodes ];
+    const auto ntpvtg = tabdims[ Ix::NumPvtgTables ];
     const auto ncol   = 5;
 
     // Pg table defaulted
-    BOOST_CHECK_EQUAL(tabdims[TABDIMS_JBPVTG_OFFSET_ITEM], 1);
-    BOOST_CHECK_EQUAL(tabdims[TABDIMS_NRPVTG_ITEM], 1);
+    BOOST_CHECK_EQUAL(tabdims[Ix::PvtgPressStart], 1);
+    BOOST_CHECK_EQUAL(tabdims[Ix::NumPvtgCompNodes], 1);
 
     BOOST_CHECK_EQUAL(nppvtg, 14); // Table 2
     BOOST_CHECK_EQUAL(ntpvtg,  2);
@@ -1825,11 +1825,11 @@ PVTG
     const auto& tabdims = tables.tabdims();
     const auto& tab     = tables.tab();
 
-    const auto ibpvtg = tabdims[ TABDIMS_IBPVTG_OFFSET_ITEM ] - 1;
-    const auto jbpvtg = tabdims[ TABDIMS_JBPVTG_OFFSET_ITEM ] - 1;
-    const auto nppvtg = tabdims[ TABDIMS_NPPVTG_ITEM ];
-    const auto nrpvtg = tabdims[ TABDIMS_NRPVTG_ITEM ];
-    const auto ntpvtg = tabdims[ TABDIMS_NTPVTG_ITEM ];
+    const auto ibpvtg = tabdims[ Ix::PvtgMainStart ] - 1;
+    const auto jbpvtg = tabdims[ Ix::PvtgPressStart ] - 1;
+    const auto nppvtg = tabdims[ Ix::NumPvtgPressNodes ];
+    const auto nrpvtg = tabdims[ Ix::NumPvtgCompNodes ];
+    const auto ntpvtg = tabdims[ Ix::NumPvtgTables ];
     const auto ncol   = 5;
 
     BOOST_CHECK_EQUAL(nppvtg, 7);
@@ -1976,11 +1976,11 @@ PVTG
     const auto& tabdims = tables.tabdims();
     const auto& tab     = tables.tab();
 
-    const auto ibpvtg = tabdims[ TABDIMS_IBPVTG_OFFSET_ITEM ] - 1;
-    const auto jbpvtg = tabdims[ TABDIMS_JBPVTG_OFFSET_ITEM ] - 1;
-    const auto nppvtg = tabdims[ TABDIMS_NPPVTG_ITEM ];
-    const auto nrpvtg = tabdims[ TABDIMS_NRPVTG_ITEM ];
-    const auto ntpvtg = tabdims[ TABDIMS_NTPVTG_ITEM ];
+    const auto ibpvtg = tabdims[ Ix::PvtgMainStart ] - 1;
+    const auto jbpvtg = tabdims[ Ix::PvtgPressStart ] - 1;
+    const auto nppvtg = tabdims[ Ix::NumPvtgPressNodes ];
+    const auto nrpvtg = tabdims[ Ix::NumPvtgCompNodes ];
+    const auto ntpvtg = tabdims[ Ix::NumPvtgTables ];
     const auto ncol   = 5;
 
     BOOST_CHECK_EQUAL(nppvtg, 7);
@@ -2122,11 +2122,11 @@ PVTG
     const auto& tabdims = tables.tabdims();
     const auto& tab     = tables.tab();
 
-    const auto ibpvtg = tabdims[ TABDIMS_IBPVTG_OFFSET_ITEM ] - 1;
-    const auto jbpvtg = tabdims[ TABDIMS_JBPVTG_OFFSET_ITEM ] - 1;
-    const auto nppvtg = tabdims[ TABDIMS_NPPVTG_ITEM ];
-    const auto nrpvtg = tabdims[ TABDIMS_NRPVTG_ITEM ];
-    const auto ntpvtg = tabdims[ TABDIMS_NTPVTG_ITEM ];
+    const auto ibpvtg = tabdims[ Ix::PvtgMainStart ] - 1;
+    const auto jbpvtg = tabdims[ Ix::PvtgPressStart ] - 1;
+    const auto nppvtg = tabdims[ Ix::NumPvtgPressNodes ];
+    const auto nrpvtg = tabdims[ Ix::NumPvtgCompNodes ];
+    const auto ntpvtg = tabdims[ Ix::NumPvtgTables ];
     const auto ncol   = 5;
 
     BOOST_CHECK_EQUAL(nppvtg, 5); // Table 1
@@ -2260,14 +2260,14 @@ PVCDO
     const auto& tabdims = tables.tabdims();
     const auto& tab     = tables.tab();
 
-    const auto ibpvto = tabdims[ TABDIMS_IBPVTO_OFFSET_ITEM ] - 1;
-    const auto nppvto = tabdims[ TABDIMS_NPPVTO_ITEM ];
-    const auto ntpvto = tabdims[ TABDIMS_NTPVTO_ITEM ];
+    const auto ibpvto = tabdims[ Ix::PvtoMainStart ] - 1;
+    const auto nppvto = tabdims[ Ix::NumPvtoPressNodes ];
+    const auto ntpvto = tabdims[ Ix::NumPvtoTables ];
     const auto ncol   = 5;
 
     // Rs table defaulted
-    BOOST_CHECK_EQUAL(tabdims[TABDIMS_JBPVTO_OFFSET_ITEM], 1);
-    BOOST_CHECK_EQUAL(tabdims[TABDIMS_NRPVTO_ITEM], 1);
+    BOOST_CHECK_EQUAL(tabdims[Ix::PvtoCompStart], 1);
+    BOOST_CHECK_EQUAL(tabdims[Ix::NumPvtoCompNodes], 1);
 
     BOOST_CHECK_EQUAL(nppvto, 4);
     BOOST_CHECK_EQUAL(ntpvto, 2);
@@ -2345,14 +2345,14 @@ PVDO
     const auto& tabdims = tables.tabdims();
     const auto& tab     = tables.tab();
 
-    const auto ibpvto = tabdims[ TABDIMS_IBPVTO_OFFSET_ITEM ] - 1;
-    const auto nppvto = tabdims[ TABDIMS_NPPVTO_ITEM ];
-    const auto ntpvto = tabdims[ TABDIMS_NTPVTO_ITEM ];
+    const auto ibpvto = tabdims[ Ix::PvtoMainStart ] - 1;
+    const auto nppvto = tabdims[ Ix::NumPvtoPressNodes ];
+    const auto ntpvto = tabdims[ Ix::NumPvtoTables ];
     const auto ncol   = 5;
 
     // Rs table defaulted
-    BOOST_CHECK_EQUAL(tabdims[TABDIMS_JBPVTO_OFFSET_ITEM], 1);
-    BOOST_CHECK_EQUAL(tabdims[TABDIMS_NRPVTO_ITEM], 1);
+    BOOST_CHECK_EQUAL(tabdims[Ix::PvtoCompStart], 1);
+    BOOST_CHECK_EQUAL(tabdims[Ix::NumPvtoCompNodes], 1);
 
     BOOST_CHECK_EQUAL(nppvto, 8);
     BOOST_CHECK_EQUAL(ntpvto, 2);
@@ -2442,14 +2442,14 @@ PVDO
     const auto& tabdims = tables.tabdims();
     const auto& tab     = tables.tab();
 
-    const auto ibpvto = tabdims[ TABDIMS_IBPVTO_OFFSET_ITEM ] - 1;
-    const auto nppvto = tabdims[ TABDIMS_NPPVTO_ITEM ];
-    const auto ntpvto = tabdims[ TABDIMS_NTPVTO_ITEM ];
+    const auto ibpvto = tabdims[ Ix::PvtoMainStart ] - 1;
+    const auto nppvto = tabdims[ Ix::NumPvtoPressNodes ];
+    const auto ntpvto = tabdims[ Ix::NumPvtoTables ];
     const auto ncol   = 5;
 
     // Rs table defaulted
-    BOOST_CHECK_EQUAL(tabdims[TABDIMS_JBPVTO_OFFSET_ITEM], 1);
-    BOOST_CHECK_EQUAL(tabdims[TABDIMS_NRPVTO_ITEM], 1);
+    BOOST_CHECK_EQUAL(tabdims[Ix::PvtoCompStart], 1);
+    BOOST_CHECK_EQUAL(tabdims[Ix::NumPvtoCompNodes], 1);
 
     BOOST_CHECK_EQUAL(nppvto, 10); // Table 1
     BOOST_CHECK_EQUAL(ntpvto,  2);
@@ -2541,11 +2541,11 @@ PVTO
     const auto& tabdims = tables.tabdims();
     const auto& tab     = tables.tab();
 
-    const auto ibpvto = tabdims[ TABDIMS_IBPVTO_OFFSET_ITEM ] - 1;
-    const auto jbpvto = tabdims[ TABDIMS_JBPVTO_OFFSET_ITEM ] - 1;
-    const auto nppvto = tabdims[ TABDIMS_NPPVTO_ITEM ];
-    const auto nrpvto = tabdims[ TABDIMS_NRPVTO_ITEM ];
-    const auto ntpvto = tabdims[ TABDIMS_NTPVTO_ITEM ];
+    const auto ibpvto = tabdims[ Ix::PvtoMainStart ] - 1;
+    const auto jbpvto = tabdims[ Ix::PvtoCompStart ] - 1;
+    const auto nppvto = tabdims[ Ix::NumPvtoPressNodes ];
+    const auto nrpvto = tabdims[ Ix::NumPvtoCompNodes ];
+    const auto ntpvto = tabdims[ Ix::NumPvtoTables ];
     const auto ncol   = 5;
 
     BOOST_CHECK_EQUAL(nppvto, 4);
@@ -2690,11 +2690,11 @@ PVTO
     const auto& tabdims = tables.tabdims();
     const auto& tab     = tables.tab();
 
-    const auto ibpvto = tabdims[ TABDIMS_IBPVTO_OFFSET_ITEM ] - 1;
-    const auto jbpvto = tabdims[ TABDIMS_JBPVTO_OFFSET_ITEM ] - 1;
-    const auto nppvto = tabdims[ TABDIMS_NPPVTO_ITEM ];
-    const auto nrpvto = tabdims[ TABDIMS_NRPVTO_ITEM ];
-    const auto ntpvto = tabdims[ TABDIMS_NTPVTO_ITEM ];
+    const auto ibpvto = tabdims[ Ix::PvtoMainStart ] - 1;
+    const auto jbpvto = tabdims[ Ix::PvtoCompStart ] - 1;
+    const auto nppvto = tabdims[ Ix::NumPvtoPressNodes ];
+    const auto nrpvto = tabdims[ Ix::NumPvtoCompNodes ];
+    const auto ntpvto = tabdims[ Ix::NumPvtoTables ];
     const auto ncol   = 5;
 
     BOOST_CHECK_EQUAL(nppvto, 5);
@@ -2848,11 +2848,11 @@ PVTO
     const auto& tabdims = tables.tabdims();
     const auto& tab     = tables.tab();
 
-    const auto ibpvto = tabdims[ TABDIMS_IBPVTO_OFFSET_ITEM ] - 1;
-    const auto jbpvto = tabdims[ TABDIMS_JBPVTO_OFFSET_ITEM ] - 1;
-    const auto nppvto = tabdims[ TABDIMS_NPPVTO_ITEM ];
-    const auto nrpvto = tabdims[ TABDIMS_NRPVTO_ITEM ];
-    const auto ntpvto = tabdims[ TABDIMS_NTPVTO_ITEM ];
+    const auto ibpvto = tabdims[ Ix::PvtoMainStart ] - 1;
+    const auto jbpvto = tabdims[ Ix::PvtoCompStart ] - 1;
+    const auto nppvto = tabdims[ Ix::NumPvtoPressNodes ];
+    const auto nrpvto = tabdims[ Ix::NumPvtoCompNodes ];
+    const auto ntpvto = tabdims[ Ix::NumPvtoTables ];
     const auto ncol   = 5;
 
     // Verify declared TABDIMS from input
@@ -2999,8 +2999,8 @@ PVTW
     const auto& tabdims = tables.tabdims();
     const auto& tab     = tables.tab();
 
-    const auto ibpvtw = tabdims[ TABDIMS_IBPVTW_OFFSET_ITEM ] - 1;
-    const auto ntpvtw = tabdims[ TABDIMS_NTPVTW_ITEM ];
+    const auto ibpvtw = tabdims[ Ix::PvtwStart ] - 1;
+    const auto ntpvtw = tabdims[ Ix::NumPvtwTables ];
     const auto ncol   = 5;
 
     BOOST_CHECK_EQUAL(ntpvtw, 2);
