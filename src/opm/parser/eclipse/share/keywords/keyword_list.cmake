@@ -309,9 +309,36 @@ set( keywords
      000_Eclipse100/G/GRUPMAST
      000_Eclipse100/G/GRUPNET
      000_Eclipse100/G/GRUPRIG
+     000_Eclipse100/G/GRUPSLAV
+     000_Eclipse100/G/GRUPTARG
      000_Eclipse100/G/GRUPTREE
+     000_Eclipse100/G/GSATINJE
      000_Eclipse100/G/GSATPROD
+     000_Eclipse100/G/GSEPCOND
+     000_Eclipse100/G/GSSCPTST
+     000_Eclipse100/G/GSWINGF
+     000_Eclipse100/G/GTADD
+     000_Eclipse100/G/GTMULT
+     000_Eclipse100/G/GUIDECAL
      000_Eclipse100/G/GUIDERAT
+     000_Eclipse100/G/GUPFREQ
+     000_Eclipse100/G/GWRTWCV
+     000_Eclipse100/H/HALFTRAN
+     000_Eclipse100/H/HAxxxxxx
+     000_Eclipse100/H/HBNUM
+     000_Eclipse100/H/HDISP
+     000_Eclipse100/H/HMAQUCT
+     000_Eclipse100/H/HMAQUFET
+     000_Eclipse100/H/HMAQUNUM
+     000_Eclipse100/H/HMDIMS
+     000_Eclipse100/H/HMFAULTS
+     000_Eclipse100/H/HMMLAQUN
+     000_Eclipse100/H/HMMLCTAQ
+     000_Eclipse100/H/HMMLFTAQ
+     000_Eclipse100/H/HMMLTWCN
+     000_Eclipse100/H/HMMULTxx
+     000_Eclipse100/H/HMMULTFT
+     000_Eclipse100/H/HMPROPS
      000_Eclipse100/I/IMBNUM
      000_Eclipse100/I/IMKRVD
      000_Eclipse100/I/IMPES
