@@ -703,9 +703,17 @@ set( keywords
      000_Eclipse100/W/WSEGTABL
      000_Eclipse100/W/WSEGVALV
      000_Eclipse100/W/WSOLVENT
+     000_Eclipse100/W/WSURFACT
+     000_Eclipse100/W/WTADD
      000_Eclipse100/W/WTEMP
+     000_Eclipse100/W/WTEMPQ
      000_Eclipse100/W/WTEST
+     000_Eclipse100/W/WTHPMAX
+     000_Eclipse100/W/WTMULT
      000_Eclipse100/W/WTRACER
+     000_Eclipse100/W/WVFPDP
+     000_Eclipse100/W/WVFPEXP
+     000_Eclipse100/W/WWPAVE
      000_Eclipse100/Z/ZCORN
      000_Eclipse100/Z/ZIPPY2
      000_Eclipse100/Z/ZIPP2OFF
