@@ -832,7 +832,7 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
                 const auto& location = rawKeyword->getLocation();
                 ss << std::setw(5) << parserState.deck.size()
                    << " Reading " << std::setw(8) << std::left << rawKeyword->getKeywordName()
-                   << " from: " << location.first << ":" << std::to_string(location.second);
+                   << " in file " << location.first << ", line " << std::to_string(location.second);
                 OpmLog::info(ss.str());
             }
             try {
