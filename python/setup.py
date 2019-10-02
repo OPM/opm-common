@@ -68,7 +68,7 @@ ext_modules = [
                 'cxx/well.cpp',
                 'cxx/export.cpp'
         ],
-        libraries=['opmcommon', 'boost_filesystem', 'boost_regex', 'ecl'],
+        libraries=['opmcommon', 'boost_filesystem', 'boost_regex', 'ecl', 'z'],
         language='c++',
         undef_macros=["NDEBUG"],
         include_dirs=["pybind11/include"]
