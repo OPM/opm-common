@@ -31,6 +31,8 @@
 #include <opm/io/eclipse/EclIOdata.hpp>
 
 #include <algorithm>
+#include <chrono>
+#include <ctime>
 #include <iterator>
 #include <ostream>
 #include <string>
@@ -1730,3 +1732,692 @@ BOOST_AUTO_TEST_CASE(Formatted_Existing)
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Class_RFT
+
+// ==========================================================================
+
+BOOST_AUTO_TEST_SUITE(Class_SummarySpecification)
+
+namespace {
+    std::time_t advance(const std::time_t tp, const double sec)
+    {
+        using namespace std::chrono;
+
+        using TP      = time_point<system_clock>;
+        using DoubSec = duration<double, seconds::period>;
+
+        const auto t = system_clock::from_time_t(tp) +
+            duration_cast<TP::duration>(DoubSec(sec));
+
+        return system_clock::to_time_t(t);
+    }
+
+    std::time_t makeUTCTime(const std::tm& timePoint)
+    {
+        auto       tp    =  timePoint; // Mutable copy.
+        const auto ltime =  std::mktime(&tp);
+        auto       tmval = *std::gmtime(&ltime); // Mutable.
+
+        // offset =  ltime - tmval
+        //        == #seconds by which 'ltime' is AHEAD of tmval.
+        const auto offset =
+            std::difftime(ltime, std::mktime(&tmval));
+
+        // Advance 'ltime' by 'offset' so that std::gmtime(return value) will
+        // have the same broken-down elements as 'tp'.
+        return advance(ltime, offset);
+    }
+
+    std::string noWGName()
+    {
+        return ":+:+:+:+";
+    }
+
+    int noNum() { return 0; }
+
+    Opm::EclIO::OutputStream::SummarySpecification::StartTime
+    start(const int year, const int month, const int day,
+          const int hour, const int minute, const int second)
+    {
+        using std::chrono::system_clock;
+
+        auto timepoint = std::tm {};
+
+        timepoint.tm_sec  = second;
+        timepoint.tm_min  = minute;
+        timepoint.tm_hour = hour;
+        timepoint.tm_mday = day;
+        timepoint.tm_mon  = month - 1;
+        timepoint.tm_year = year - 1900;
+
+        return system_clock::from_time_t(makeUTCTime(timepoint));
+    }
+
+    Opm::EclIO::OutputStream::SummarySpecification::RestartSpecification
+    noRestart()
+    {
+        return { "", -1 };
+    }
+
+    Opm::EclIO::OutputStream::SummarySpecification::RestartSpecification
+    restartedSimulation()
+    {
+        //       28 characters = 3x8 + 4
+        return { "BASE-RUN-WITH-LONG-CASE-NAME", 123 };
+    }
+
+    Opm::EclIO::OutputStream::SummarySpecification::RestartSpecification
+    restartedSimulationTooLongBasename()
+    {
+        return { std::string(73, 'X'), 123 };
+    }
+
+    Opm::EclIO::OutputStream::SummarySpecification::Parameters
+    summaryParameters()
+    {
+        auto prm = Opm::EclIO::OutputStream::
+            SummarySpecification::Parameters{};
+
+        prm.add("TIME", noWGName(), noNum(), "DAYS");
+        prm.add("WBHP", "PROD01", noNum(), "BARSA");
+        prm.add("GGOR", "N-PROD", noNum(), "SM3/SM3");
+        prm.add("BGSAT", noWGName(), 523, "");
+
+        return prm;
+    }
+} // Anonymous
+
+BOOST_AUTO_TEST_CASE(Unformatted_Base)
+{
+    using SMSpec = ::Opm::EclIO::OutputStream::SummarySpecification;
+
+    const auto rset = RSet("CASE");
+    const auto fmt  = ::Opm::EclIO::OutputStream::Formatted{ false };
+    const auto cartDims = std::array<int,3>{ 46, 112, 22 }; // Norne dimensions
+
+    {
+        using UConv = SMSpec::UnitConvention;
+
+        // Invalid unit convention
+        const auto uconv = static_cast<UConv>(1729);
+
+        BOOST_CHECK_THROW(SMSpec(rset, fmt, uconv, cartDims, noRestart(),
+                                 start(2019, 10, 1, 12, 34, 56)),
+                          std::invalid_argument);
+    }
+
+    // ========================= METRIC =======================
+    {
+        const auto uconv = SMSpec::UnitConvention::Metric;
+
+        auto smspec = SMSpec {
+            rset, fmt, uconv, cartDims, noRestart(),
+            start(2019, 10, 1, 12, 34, 56)
+        };
+
+        smspec.write(summaryParameters());
+    }
+
+    {
+        const auto fname = ::Opm::EclIO::OutputStream::
+            outputFileName(rset, "SMSPEC");
+
+        auto smspec = ::Opm::EclIO::EclFile{fname};
+
+        BOOST_CHECK_MESSAGE(! smspec.hasKey("RESTART"), "SMSPEC File must NOT have 'RESTART'");
+
+        {
+            const auto vectors        = smspec.getList();
+            const auto expect_vectors = std::vector<Opm::EclIO::EclFile::EclEntry>{
+                Opm::EclIO::EclFile::EclEntry{"INTEHEAD", Opm::EclIO::eclArrType::INTE, 2},
+                Opm::EclIO::EclFile::EclEntry{"DIMENS", Opm::EclIO::eclArrType::INTE, 6},
+                Opm::EclIO::EclFile::EclEntry{"KEYWORDS", Opm::EclIO::eclArrType::CHAR, 4},
+                Opm::EclIO::EclFile::EclEntry{"WGNAMES", Opm::EclIO::eclArrType::CHAR, 4},
+                Opm::EclIO::EclFile::EclEntry{"NUMS", Opm::EclIO::eclArrType::INTE, 4},
+                Opm::EclIO::EclFile::EclEntry{"UNITS", Opm::EclIO::eclArrType::CHAR, 4},
+                Opm::EclIO::EclFile::EclEntry{"STARTDAT", Opm::EclIO::eclArrType::INTE, 6},
+            };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(vectors.begin(), vectors.end(),
+                                          expect_vectors.begin(),
+                                          expect_vectors.end());
+        }
+
+        smspec.loadData();
+
+        {
+            const auto& Ih = smspec.get<int>("INTEHEAD");
+            const auto  expect = std::vector<int>{ 1, 100 };
+            BOOST_CHECK_EQUAL_COLLECTIONS(Ih.begin(), Ih.end(),
+                                          expect.begin(),
+                                          expect.end());
+        }
+
+        {
+            const auto& D = smspec.get<int>("DIMENS");
+            const auto  expect = std::vector<int> {
+                4, 46, 112, 22, 0, -1
+            };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(D.begin(), D.end(),
+                                          expect.begin(), expect.end());
+        }
+
+        {
+            const auto& K = smspec.get<std::string>("KEYWORDS");
+            const auto  expect = std::vector<std::string> {
+                "TIME", "WBHP", "GGOR", "BGSAT"
+            };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(K.begin(), K.end(),
+                                          expect.begin(), expect.end());
+        }
+
+        {
+            const auto& W = smspec.get<std::string>("WGNAMES");
+            const auto  expect = std::vector<std::string> {
+                ":+:+:+:+", "PROD01", "N-PROD", ":+:+:+:+"
+            };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(W.begin(), W.end(),
+                                          expect.begin(), expect.end());
+        }
+
+        {
+            const auto& N = smspec.get<int>("NUMS");
+            const auto  expect = std::vector<int> { 0, 0, 0, 523 };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(N.begin(), N.end(),
+                                          expect.begin(), expect.end());
+        }
+
+        {
+            const auto& U = smspec.get<std::string>("UNITS");
+            const auto  expect = std::vector<std::string> {
+                "DAYS", "BARSA", "SM3/SM3", ""
+            };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(U.begin(), U.end(),
+                                          expect.begin(), expect.end());
+        }
+
+        {
+            const auto& S = smspec.get<int>("STARTDAT");
+            const auto  expect = std::vector<int> {
+                1, 10, 2019, 12, 34,
+                56 * 1000 * 1000
+            };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(S.begin(), S.end(),
+                                          expect.begin(), expect.end());
+        }
+    }
+
+    // ========================= FIELD =======================
+    {
+        const auto uconv = SMSpec::UnitConvention::Field;
+
+        auto smspec = SMSpec {
+            rset, fmt, uconv, cartDims, noRestart(),
+            start(1970, 1, 1, 0, 0, 0)
+        };
+
+        smspec.write(summaryParameters());
+    }
+
+    {
+        const auto fname = ::Opm::EclIO::OutputStream::
+            outputFileName(rset, "SMSPEC");
+
+        auto smspec = ::Opm::EclIO::EclFile{fname};
+
+        {
+            const auto vectors        = smspec.getList();
+            const auto expect_vectors = std::vector<Opm::EclIO::EclFile::EclEntry>{
+                Opm::EclIO::EclFile::EclEntry{"INTEHEAD", Opm::EclIO::eclArrType::INTE, 2},
+                Opm::EclIO::EclFile::EclEntry{"DIMENS", Opm::EclIO::eclArrType::INTE, 6},
+                Opm::EclIO::EclFile::EclEntry{"KEYWORDS", Opm::EclIO::eclArrType::CHAR, 4},
+                Opm::EclIO::EclFile::EclEntry{"WGNAMES", Opm::EclIO::eclArrType::CHAR, 4},
+                Opm::EclIO::EclFile::EclEntry{"NUMS", Opm::EclIO::eclArrType::INTE, 4},
+                Opm::EclIO::EclFile::EclEntry{"UNITS", Opm::EclIO::eclArrType::CHAR, 4},
+                Opm::EclIO::EclFile::EclEntry{"STARTDAT", Opm::EclIO::eclArrType::INTE, 6},
+            };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(vectors.begin(), vectors.end(),
+                                          expect_vectors.begin(),
+                                          expect_vectors.end());
+        }
+
+        smspec.loadData();
+
+        {
+            const auto& Ih = smspec.get<int>("INTEHEAD");
+            const auto  expect = std::vector<int>{ 2, 100 };
+            BOOST_CHECK_EQUAL_COLLECTIONS(Ih.begin(), Ih.end(),
+                                          expect.begin(),
+                                          expect.end());
+        }
+
+        {
+            const auto& D = smspec.get<int>("DIMENS");
+            const auto  expect = std::vector<int> {
+                4, 46, 112, 22, 0, -1
+            };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(D.begin(), D.end(),
+                                          expect.begin(), expect.end());
+        }
+
+        {
+            const auto& K = smspec.get<std::string>("KEYWORDS");
+            const auto  expect = std::vector<std::string> {
+                "TIME", "WBHP", "GGOR", "BGSAT"
+            };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(K.begin(), K.end(),
+                                          expect.begin(), expect.end());
+        }
+
+        {
+            const auto& W = smspec.get<std::string>("WGNAMES");
+            const auto  expect = std::vector<std::string> {
+                ":+:+:+:+", "PROD01", "N-PROD", ":+:+:+:+"
+            };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(W.begin(), W.end(),
+                                          expect.begin(), expect.end());
+        }
+
+        {
+            const auto& N = smspec.get<int>("NUMS");
+            const auto  expect = std::vector<int> { 0, 0, 0, 523 };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(N.begin(), N.end(),
+                                          expect.begin(), expect.end());
+        }
+
+        {
+            const auto& U = smspec.get<std::string>("UNITS");
+            const auto  expect = std::vector<std::string> {
+                //       (!)      (!)
+                "DAYS", "BARSA", "SM3/SM3", ""
+            };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(U.begin(), U.end(),
+                                          expect.begin(), expect.end());
+        }
+
+        {
+            const auto& S = smspec.get<int>("STARTDAT");
+            const auto  expect = std::vector<int> {
+                1, 1, 1970, 0, 0, 0
+            };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(S.begin(), S.end(),
+                                          expect.begin(), expect.end());
+        }
+    }
+
+    // ========================= LAB =======================
+    {
+        const auto uconv = SMSpec::UnitConvention::Lab;
+
+        auto smspec = SMSpec {
+            rset, fmt, uconv, cartDims, noRestart(),
+            start(2018, 12, 24, 17, 0, 0)
+        };
+
+        smspec.write(summaryParameters());
+    }
+
+    {
+        const auto fname = ::Opm::EclIO::OutputStream::
+            outputFileName(rset, "SMSPEC");
+
+        auto smspec = ::Opm::EclIO::EclFile{fname};
+
+        {
+            const auto vectors        = smspec.getList();
+            const auto expect_vectors = std::vector<Opm::EclIO::EclFile::EclEntry>{
+                Opm::EclIO::EclFile::EclEntry{"INTEHEAD", Opm::EclIO::eclArrType::INTE, 2},
+                Opm::EclIO::EclFile::EclEntry{"DIMENS", Opm::EclIO::eclArrType::INTE, 6},
+                Opm::EclIO::EclFile::EclEntry{"KEYWORDS", Opm::EclIO::eclArrType::CHAR, 4},
+                Opm::EclIO::EclFile::EclEntry{"WGNAMES", Opm::EclIO::eclArrType::CHAR, 4},
+                Opm::EclIO::EclFile::EclEntry{"NUMS", Opm::EclIO::eclArrType::INTE, 4},
+                Opm::EclIO::EclFile::EclEntry{"UNITS", Opm::EclIO::eclArrType::CHAR, 4},
+                Opm::EclIO::EclFile::EclEntry{"STARTDAT", Opm::EclIO::eclArrType::INTE, 6},
+            };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(vectors.begin(), vectors.end(),
+                                          expect_vectors.begin(),
+                                          expect_vectors.end());
+        }
+
+        smspec.loadData();
+
+        {
+            const auto& Ih = smspec.get<int>("INTEHEAD");
+            const auto  expect = std::vector<int>{ 3, 100 };
+            BOOST_CHECK_EQUAL_COLLECTIONS(Ih.begin(), Ih.end(),
+                                          expect.begin(),
+                                          expect.end());
+        }
+
+        {
+            const auto& D = smspec.get<int>("DIMENS");
+            const auto  expect = std::vector<int> {
+                4, 46, 112, 22, 0, -1
+            };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(D.begin(), D.end(),
+                                          expect.begin(), expect.end());
+        }
+
+        {
+            const auto& K = smspec.get<std::string>("KEYWORDS");
+            const auto  expect = std::vector<std::string> {
+                "TIME", "WBHP", "GGOR", "BGSAT"
+            };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(K.begin(), K.end(),
+                                          expect.begin(), expect.end());
+        }
+
+        {
+            const auto& W = smspec.get<std::string>("WGNAMES");
+            const auto  expect = std::vector<std::string> {
+                ":+:+:+:+", "PROD01", "N-PROD", ":+:+:+:+"
+            };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(W.begin(), W.end(),
+                                          expect.begin(), expect.end());
+        }
+
+        {
+            const auto& N = smspec.get<int>("NUMS");
+            const auto  expect = std::vector<int> { 0, 0, 0, 523 };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(N.begin(), N.end(),
+                                          expect.begin(), expect.end());
+        }
+
+        {
+            const auto& U = smspec.get<std::string>("UNITS");
+            const auto  expect = std::vector<std::string> {
+                //       (!)      (!)
+                "DAYS", "BARSA", "SM3/SM3", ""
+            };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(U.begin(), U.end(),
+                                          expect.begin(), expect.end());
+        }
+
+        {
+            const auto& S = smspec.get<int>("STARTDAT");
+            const auto  expect = std::vector<int> {
+                24, 12, 2018, 17, 0, 0
+            };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(S.begin(), S.end(),
+                                          expect.begin(), expect.end());
+        }
+    }
+
+    // ========================= PVT-M =======================
+    {
+        const auto uconv = SMSpec::UnitConvention::Pvt_M;
+
+        auto smspec = SMSpec {
+            rset, fmt, uconv, cartDims, noRestart(),
+            start(1983, 1, 1, 1, 2, 3)
+        };
+
+        smspec.write(summaryParameters());
+    }
+
+    {
+        const auto fname = ::Opm::EclIO::OutputStream::
+            outputFileName(rset, "SMSPEC");
+
+        auto smspec = ::Opm::EclIO::EclFile{fname};
+
+        {
+            const auto vectors        = smspec.getList();
+            const auto expect_vectors = std::vector<Opm::EclIO::EclFile::EclEntry>{
+                Opm::EclIO::EclFile::EclEntry{"INTEHEAD", Opm::EclIO::eclArrType::INTE, 2},
+                Opm::EclIO::EclFile::EclEntry{"DIMENS", Opm::EclIO::eclArrType::INTE, 6},
+                Opm::EclIO::EclFile::EclEntry{"KEYWORDS", Opm::EclIO::eclArrType::CHAR, 4},
+                Opm::EclIO::EclFile::EclEntry{"WGNAMES", Opm::EclIO::eclArrType::CHAR, 4},
+                Opm::EclIO::EclFile::EclEntry{"NUMS", Opm::EclIO::eclArrType::INTE, 4},
+                Opm::EclIO::EclFile::EclEntry{"UNITS", Opm::EclIO::eclArrType::CHAR, 4},
+                Opm::EclIO::EclFile::EclEntry{"STARTDAT", Opm::EclIO::eclArrType::INTE, 6},
+            };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(vectors.begin(), vectors.end(),
+                                          expect_vectors.begin(),
+                                          expect_vectors.end());
+        }
+
+        smspec.loadData();
+
+        {
+            const auto& Ih = smspec.get<int>("INTEHEAD");
+            const auto  expect = std::vector<int>{ 4, 100 };
+            BOOST_CHECK_EQUAL_COLLECTIONS(Ih.begin(), Ih.end(),
+                                          expect.begin(),
+                                          expect.end());
+        }
+
+        {
+            const auto& D = smspec.get<int>("DIMENS");
+            const auto  expect = std::vector<int> {
+                4, 46, 112, 22, 0, -1
+            };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(D.begin(), D.end(),
+                                          expect.begin(), expect.end());
+        }
+
+        {
+            const auto& K = smspec.get<std::string>("KEYWORDS");
+            const auto  expect = std::vector<std::string> {
+                "TIME", "WBHP", "GGOR", "BGSAT"
+            };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(K.begin(), K.end(),
+                                          expect.begin(), expect.end());
+        }
+
+        {
+            const auto& W = smspec.get<std::string>("WGNAMES");
+            const auto  expect = std::vector<std::string> {
+                ":+:+:+:+", "PROD01", "N-PROD", ":+:+:+:+"
+            };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(W.begin(), W.end(),
+                                          expect.begin(), expect.end());
+        }
+
+        {
+            const auto& N = smspec.get<int>("NUMS");
+            const auto  expect = std::vector<int> { 0, 0, 0, 523 };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(N.begin(), N.end(),
+                                          expect.begin(), expect.end());
+        }
+
+        {
+            const auto& U = smspec.get<std::string>("UNITS");
+            const auto  expect = std::vector<std::string> {
+                //       (!)      (!)
+                "DAYS", "BARSA", "SM3/SM3", ""
+            };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(U.begin(), U.end(),
+                                          expect.begin(), expect.end());
+        }
+
+        {
+            const auto& S = smspec.get<int>("STARTDAT");
+            const auto  expect = std::vector<int> {
+                1, 1, 1983, 1, 2, 3 * 1000 * 1000
+            };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(S.begin(), S.end(),
+                                          expect.begin(), expect.end());
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Formatted_Restarted)
+{
+    using SMSpec = ::Opm::EclIO::OutputStream::SummarySpecification;
+
+    const auto rset = RSet("CASE");
+    const auto fmt  = ::Opm::EclIO::OutputStream::Formatted{ true };
+    const auto cartDims = std::array<int,3>{ 46, 112, 22 }; // Norne dimensions
+
+    // === Restart root name too long =========================
+    {
+        using UConv = SMSpec::UnitConvention;
+
+        auto smspec = SMSpec {
+            rset, fmt, UConv::Pvt_M, cartDims,
+            restartedSimulationTooLongBasename(),
+            start(2019, 10, 1, 12, 34, 56)
+        };
+
+        // Should *NOT* write RESTART vector (name too long).
+        smspec.write(summaryParameters());
+    }
+
+    {
+        const auto fname = ::Opm::EclIO::OutputStream::
+            outputFileName(rset, "FSMSPEC");
+
+        auto smspec = ::Opm::EclIO::EclFile{fname};
+
+        BOOST_CHECK_MESSAGE(! smspec.hasKey("RESTART"),
+                            "SMSPEC file must NOT have RESTART "
+                            "data if root name is too long");
+    }
+
+    // ========================= METRIC =======================
+    {
+        const auto uconv = SMSpec::UnitConvention::Metric;
+
+        auto smspec = SMSpec {
+            rset, fmt, uconv, cartDims, restartedSimulation(),
+            start(2019, 10, 1, 12, 34, 56)
+        };
+
+        smspec.write(summaryParameters());
+    }
+
+    {
+        const auto fname = ::Opm::EclIO::OutputStream::
+            outputFileName(rset, "FSMSPEC");
+
+        auto smspec = ::Opm::EclIO::EclFile{fname};
+
+        {
+            const auto vectors        = smspec.getList();
+            const auto expect_vectors = std::vector<Opm::EclIO::EclFile::EclEntry>{
+                Opm::EclIO::EclFile::EclEntry{"INTEHEAD", Opm::EclIO::eclArrType::INTE, 2},
+                Opm::EclIO::EclFile::EclEntry{"RESTART", Opm::EclIO::eclArrType::CHAR, 9},
+                Opm::EclIO::EclFile::EclEntry{"DIMENS", Opm::EclIO::eclArrType::INTE, 6},
+                Opm::EclIO::EclFile::EclEntry{"KEYWORDS", Opm::EclIO::eclArrType::CHAR, 4},
+                Opm::EclIO::EclFile::EclEntry{"WGNAMES", Opm::EclIO::eclArrType::CHAR, 4},
+                Opm::EclIO::EclFile::EclEntry{"NUMS", Opm::EclIO::eclArrType::INTE, 4},
+                Opm::EclIO::EclFile::EclEntry{"UNITS", Opm::EclIO::eclArrType::CHAR, 4},
+                Opm::EclIO::EclFile::EclEntry{"STARTDAT", Opm::EclIO::eclArrType::INTE, 6},
+            };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(vectors.begin(), vectors.end(),
+                                          expect_vectors.begin(),
+                                          expect_vectors.end());
+        }
+
+        smspec.loadData();
+
+        {
+            const auto& Ih = smspec.get<int>("INTEHEAD");
+            const auto  expect = std::vector<int>{ 1, 100 };
+            BOOST_CHECK_EQUAL_COLLECTIONS(Ih.begin(), Ih.end(),
+                                          expect.begin(),
+                                          expect.end());
+        }
+
+        {
+            const auto& R = smspec.get<std::string>("RESTART");
+            const auto  expect = std::vector<std::string> {
+                "BASE-RUN", "-WITH-LO", "NG-CASE-",  // 0 .. 2
+                "NAME"    , ""        , ""        ,  // 3 .. 5
+                ""        , ""        , ""        ,  // 6 .. 8
+            };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(R.begin(), R.end(),
+                                          expect.begin(), expect.end());
+        }
+
+        {
+            const auto& D = smspec.get<int>("DIMENS");
+            const auto  expect = std::vector<int> {
+                4, 46, 112, 22, 0, 123
+            };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(D.begin(), D.end(),
+                                          expect.begin(), expect.end());
+        }
+
+        {
+            const auto& K = smspec.get<std::string>("KEYWORDS");
+            const auto  expect = std::vector<std::string> {
+                "TIME", "WBHP", "GGOR", "BGSAT"
+            };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(K.begin(), K.end(),
+                                          expect.begin(), expect.end());
+        }
+
+        {
+            const auto& W = smspec.get<std::string>("WGNAMES");
+            const auto  expect = std::vector<std::string> {
+                ":+:+:+:+", "PROD01", "N-PROD", ":+:+:+:+"
+            };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(W.begin(), W.end(),
+                                          expect.begin(), expect.end());
+        }
+
+        {
+            const auto& N = smspec.get<int>("NUMS");
+            const auto  expect = std::vector<int> { 0, 0, 0, 523 };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(N.begin(), N.end(),
+                                          expect.begin(), expect.end());
+        }
+
+        {
+            const auto& U = smspec.get<std::string>("UNITS");
+            const auto  expect = std::vector<std::string> {
+                "DAYS", "BARSA", "SM3/SM3", ""
+            };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(U.begin(), U.end(),
+                                          expect.begin(), expect.end());
+        }
+
+        {
+            const auto& S = smspec.get<int>("STARTDAT");
+            const auto  expect = std::vector<int> {
+                1, 10, 2019, 12, 34,
+                56 * 1000 * 1000
+            };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(S.begin(), S.end(),
+                                          expect.begin(), expect.end());
+        }
+    }
+}
+
+BOOST_AUTO_TEST_SUITE_END() // Class_SummarySpecification

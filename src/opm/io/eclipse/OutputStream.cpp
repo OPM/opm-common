@@ -19,9 +19,14 @@
 
 #include <opm/io/eclipse/OutputStream.hpp>
 
+#include <opm/common/OpmLog/OpmLog.hpp>
+
 #include <opm/io/eclipse/EclOutput.hpp>
 #include <opm/io/eclipse/ERst.hpp>
 
+#include <algorithm>
+#include <chrono>
+#include <ctime>
 #include <exception>
 #include <fstream>
 #include <iomanip>
@@ -31,6 +36,7 @@
 #include <stdexcept>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include <boost/filesystem.hpp>
 
@@ -63,6 +69,11 @@ namespace {
         std::string rft(const bool formatted)
         {
             return formatted ? "FRFT" : "RFT";
+        }
+
+        std::string smspec(const bool formatted)
+        {
+            return formatted ? "FSMSPEC" : "SMSPEC";
         }
     } // namespace FileExtension
 
@@ -158,6 +169,20 @@ namespace {
                 };
             }
         } // namespace Rft
+
+        namespace Smspec
+        {
+            std::unique_ptr<Opm::EclIO::EclOutput>
+            write(const std::string& filename,
+                  const bool         isFmt)
+            {
+                return std::unique_ptr<Opm::EclIO::EclOutput> {
+                    new Opm::EclIO::EclOutput {
+                        filename, isFmt, std::ios_base::out
+                    }
+                };
+            }
+        } // namespace Smspec
     } // namespace Open
 } // Anonymous namespace
 
@@ -502,6 +527,232 @@ namespace Opm { namespace EclIO { namespace OutputStream {
     }
 
 }}} // namespace Opm::EclIO::OutputStream
+
+// =====================================================================
+
+namespace Opm { namespace EclIO { namespace OutputStream {
+
+namespace {
+    bool validUnitConvention(const SummarySpecification::UnitConvention uconv)
+    {
+        using UConv = SummarySpecification::UnitConvention;
+
+        return (uconv == UConv::Metric)
+            || (uconv == UConv::Field)
+            || (uconv == UConv::Lab)
+            || (uconv == UConv::Pvt_M);
+    }
+
+    int unitConvention(const SummarySpecification::UnitConvention uconv)
+    {
+        const auto unit = static_cast<int>(uconv);
+
+        if (! validUnitConvention(uconv)) {
+            throw std::invalid_argument {
+                "Invalid Unit Convention: " +
+                std::to_string(unit)
+            };
+        }
+
+        return unit;
+    }
+
+    int makeRestartStep(const SummarySpecification::RestartSpecification& restart)
+    {
+        return (restart.step >= 0) ? restart.step : -1;
+    }
+
+    std::vector<PaddedOutputString<8>>
+    restartRoot(const SummarySpecification::RestartSpecification& restart)
+    {
+        const auto substrLength    = std::size_t{8};
+        const auto maxSubstrings   = std::size_t{9};
+        const auto maxStringLength = maxSubstrings * substrLength;
+
+        auto ret = std::vector<PaddedOutputString<substrLength>>{};
+
+        if (restart.root.empty()) {
+            return ret;
+        }
+
+        if (restart.root.size() > maxStringLength) {
+            const auto msg = "Restart root name of size "
+                + std::to_string(restart.root.size())
+                + " exceeds "
+                + std::to_string(maxStringLength)
+                + " character limit (Ignored)";
+
+            Opm::OpmLog::warning(msg);
+
+            return ret;
+        }
+
+        ret.resize(maxSubstrings);
+
+        auto remain = restart.root.size();
+
+        auto i = decltype(ret.size()){0};
+        auto p = decltype(remain){0};
+        while (remain > decltype(remain){0}) {
+            const auto nchar = std::min(remain, substrLength);
+            ret[i++] = restart.root.substr(p, nchar);
+
+            remain -= nchar;
+            p      += nchar;
+        }
+
+        return ret;
+    }
+
+    int microSeconds(const int sec)
+    {
+        using std::chrono::microseconds;
+        using std::chrono::seconds;
+
+        const auto us = microseconds(seconds(sec));
+
+        return static_cast<int>(us.count());
+    }
+
+    std::vector<int>
+    makeStartDate(const SummarySpecification::StartTime start)
+    {
+        const auto timepoint = std::chrono::system_clock::to_time_t(start);
+        const auto tm = *std::gmtime(&timepoint);
+
+        // { Day, Month, Year, Hour, Minute, Seconds }
+
+        return {
+            // 1..31    1..12
+            tm.tm_mday, tm.tm_mon + 1,
+
+            tm.tm_year + 1900,
+
+            // 0..23    0..59
+            tm.tm_hour, tm.tm_min,
+
+            // 0..59,999,999
+            microSeconds(std::min(tm.tm_sec, 59))
+        };
+    }
+
+    std::vector<int>
+    makeDimens(const int                 nparam,
+               const std::array<int, 3>& cartDims,
+               const int                 istart)
+    {
+        return { nparam, cartDims[0], cartDims[1], cartDims[2], 0, istart };
+    }
+} // Anonymous
+
+}}} // namespace Opm::EclIO::OutputStream
+
+void
+Opm::EclIO::OutputStream::SummarySpecification::
+Parameters::add(const std::string& keyword,
+                const std::string& wgname,
+                const int          num,
+                const std::string& unit)
+{
+    this->keywords.emplace_back(keyword);
+    this->wgnames .emplace_back(wgname);
+    this->nums    .push_back   (num);
+    this->units   .emplace_back(unit);
+}
+
+Opm::EclIO::OutputStream::SummarySpecification::
+SummarySpecification(const ResultSet&            rset,
+                     const Formatted&            fmt,
+                     const UnitConvention        uconv,
+                     const std::array<int,3>&    cartDims,
+                     const RestartSpecification& restart,
+                     const StartTime             start)
+    : unit_       (unitConvention(uconv))
+    , restartStep_(makeRestartStep(restart))
+    , cartDims_   (cartDims)
+    , startDate_  (start)
+    , restart_    (restartRoot(restart))
+{
+    const auto fname = outputFileName(rset, FileExtension::smspec(fmt.set));
+
+    this->stream_ = Open::Smspec::write(fname, fmt.set);
+}
+
+Opm::EclIO::OutputStream::SummarySpecification::~SummarySpecification()
+{}
+
+Opm::EclIO::OutputStream::SummarySpecification::
+SummarySpecification(SummarySpecification && rhs)
+    : unit_       (rhs.unit_)
+    , restartStep_(rhs.restartStep_)
+    , cartDims_   (std::move(rhs.cartDims_))
+    , startDate_  (std::move(rhs.startDate_))
+    , restart_    (rhs.restart_)
+    , stream_     (std::move(rhs.stream_))
+{}
+
+Opm::EclIO::OutputStream::SummarySpecification&
+Opm::EclIO::OutputStream::SummarySpecification::
+operator=(SummarySpecification&& rhs)
+{
+    this->unit_        = rhs.unit_;
+    this->restartStep_ = rhs.restartStep_;
+
+    this->cartDims_  = std::move(rhs.cartDims_);
+    this->startDate_ = std::move(rhs.startDate_);
+    this->restart_   = rhs.restart_;
+    this->stream_    = std::move(rhs.stream_);
+
+    return *this;
+}
+
+void
+Opm::EclIO::OutputStream::
+SummarySpecification::write(const Parameters& params)
+{
+    this->rewindStream();
+
+    auto& smspec = this->stream();
+
+    // Pretend to be ECLIPSE 100
+    smspec.write("INTEHEAD", std::vector<int>{ this->unit_, 100 });
+
+    if (! this->restart_.empty())
+        smspec.write("RESTART", this->restart_);
+
+    smspec.write("DIMENS",
+                 makeDimens(static_cast<int>(params.keywords.size()),
+                            this->cartDims_, this->restartStep_));
+
+    smspec.write("KEYWORDS", params.keywords);
+    smspec.write("WGNAMES",  params.wgnames);
+    smspec.write("NUMS",     params.nums);
+    smspec.write("UNITS",    params.units);
+
+    smspec.write("STARTDAT", makeStartDate(this->startDate_));
+
+    this->flushStream();
+}
+
+void Opm::EclIO::OutputStream::SummarySpecification::rewindStream()
+{
+    // Benefits from EclOutput friendship
+    const auto position = std::ofstream::pos_type{0};
+
+    this->stream().ofileH.seekp(position, std::ios_base::beg);
+}
+
+void Opm::EclIO::OutputStream::SummarySpecification::flushStream()
+{
+    // Benefits from EclOutput friendship
+    this->stream().ofileH.flush();
+}
+
+Opm::EclIO::EclOutput&
+Opm::EclIO::OutputStream::SummarySpecification::stream()
+{
+    return *this->stream_;
+}
 
 // =====================================================================
 
