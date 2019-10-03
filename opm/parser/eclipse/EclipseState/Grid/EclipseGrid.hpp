@@ -62,7 +62,7 @@ namespace Opm {
         EclipseGrid(const EclipseGrid& src) = default;
         EclipseGrid(const EclipseGrid& src, const std::vector<int>& actnum);
         EclipseGrid(const EclipseGrid& src, const double* zcorn, const std::vector<int>& actnum);
-       
+
         EclipseGrid(size_t nx, size_t ny, size_t nz,
                     double dx = 1.0, double dy = 1.0, double dz = 1.0);
 
@@ -103,7 +103,7 @@ namespace Opm {
           applied in the 'THETA' direction; this will only apply if
           the theta keywords entered sum up to exactly 360 degrees!
         */
-        
+
         bool circle( ) const;
         bool isPinchActive( ) const;
         double getPinchThresholdThickness( ) const;
@@ -170,19 +170,19 @@ namespace Opm {
         const std::vector<int>& getACTNUM( ) const;
         const std::vector<double>& getMAPAXES() const;
         const std::string& getMAPUNITS() const { return m_mapunits; } ;
-        
+
         /*
-          The fixupZCORN method is run as part of constructiong the grid. This will adjust the 
-          z-coordinates to ensure that cells do not overlap. The return value is the number of 
-          points which have been adjusted. The number of zcorn nodes that has ben fixed is 
-          stored in private member zcorn_fixed. 
+          The fixupZCORN method is run as part of constructiong the grid. This will adjust the
+          z-coordinates to ensure that cells do not overlap. The return value is the number of
+          points which have been adjusted. The number of zcorn nodes that has ben fixed is
+          stored in private member zcorn_fixed.
         */
-        
+
         size_t fixupZCORN();
         size_t getZcornFixed() { return zcorn_fixed; };
-        
-        // resetACTNUM with no arguments will make all cells in the grid active. 
-       
+
+        // resetACTNUM with no arguments will make all cells in the grid active.
+
         void resetACTNUM();
         void resetACTNUM( const std::vector<int>& actnum);
 
@@ -200,7 +200,7 @@ namespace Opm {
 
         size_t zcorn_fixed = 0;
         bool m_useActnumFromGdfile = false;
-        
+
         // Input grid data.
         std::vector<double> m_zcorn;
         std::vector<double> m_coord;
@@ -219,10 +219,10 @@ namespace Opm {
         std::vector<double> m_dx;
         std::vector<double> m_dy;
         std::vector<double> m_dz;
-        std::vector<std::array<double, 3>> m_cellCenter; 
+        std::vector<std::array<double, 3>> m_cellCenter;
 
         void initGridFromEGridFile(Opm::EclIO::EclFile& egridfile, std::string fileName);
-        
+
         void initBinaryGrid(const Deck& deck);
 
         void initCornerPointGrid(const std::array<int,3>& dims ,
@@ -250,10 +250,10 @@ namespace Opm {
                 const std::string& DVKey, const Deck&);
         static void scatterDim(const std::array<int, 3>& dims , size_t dim , const std::vector<double>& DV , std::vector<double>& D);
 
-        
+
         std::vector<double> makeCoordDxDyDzTops(const std::array<int, 3>& dims, const std::vector<double>& dx, const std::vector<double>& dy, const std::vector<double>& dz, const std::vector<double>& tops) const;
         std::vector<double> makeZcornDzTops(const std::array<int, 3>& dims, const std::vector<double>& dz, const std::vector<double>& tops) const ;
-        std::vector<double> makeZcornDzvDepthz(const std::array<int, 3>& dims, const std::vector<double>& dzv, const std::vector<double>& depthz) const; 
+        std::vector<double> makeZcornDzvDepthz(const std::array<int, 3>& dims, const std::vector<double>& dzv, const std::vector<double>& depthz) const;
         std::vector<double> makeCoordDxvDyvDzvDepthz(const std::array<int, 3>& dims, const std::vector<double>& dxv, const std::vector<double>& dyv, const std::vector<double>& dzv, const std::vector<double>& depthz) const;
 
         double sumIdir(int j, int k, int i1, const std::array<int, 3>& dims, const std::vector<double>& dx) const;
@@ -261,7 +261,7 @@ namespace Opm {
         double sumKdir(int i, int j, const std::array<int, 3>& dims, const std::vector<double>& dz) const;
 
         void calculateGeometryData();
-        
+
         void getCellCorners(const std::array<int, 3>& ijk, const std::array<int, 3>& dims, std::array<double,8>& X, std::array<double,8>& Y, std::array<double,8>& Z) const;
    };
 
