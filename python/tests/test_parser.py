@@ -55,11 +55,51 @@ FIPNUM
         with self.assertRaises(ValueError):
             kw = parser["NOT_A_VALID_KEYWORD"]
 
-        kw = parser["FIELD"]
-        assert(kw.name == "FIELD")
+        field = parser["FIELD"]
+        assert(field.name == "FIELD")
 
-        dkw = DeckKeyword(kw)
-        assert(dkw.name == "FIELD")
+        dkw_field = DeckKeyword(field)
+        assert(dkw_field.name == "FIELD")
+
+        DeckKeyword(parser["AQUCWFAC"], [[]])
+
+        with self.assertRaises(TypeError):
+            dkw_wrong =  DeckKeyword(parser["AQUCWFAC"], [22.2, 0.25])
+
+        dkw_aqannc = DeckKeyword(parser["AQANNC"], [[12, 1, 2, 3, 0.89], [13, 4, 5, 6, 0.625]])
+        assert( len(dkw_aqannc[0]) == 5 )
+        assert( dkw_aqannc[0][2][0] == 2 )
+        assert( dkw_aqannc[1][1][0] == 4 )
+        assert( dkw_aqannc[1][4][0] == 0.625 )
+
+        dkw_aqantrc = DeckKeyword(parser["AQANTRC"], [[12, "ABC", 8]])
+        assert( dkw_aqantrc[0][1][0] == "ABC" )
+        assert( dkw_aqantrc[0][2][0] == 8.0 )
+
+        dkw1 = DeckKeyword(parser["AQUCWFAC"], [["*", 0.25]])
+        assert( dkw1[0][0][0] == 0.0 )
+        assert( dkw1[0][1][0] == 0.25 )
+
+        dkw2 = DeckKeyword(parser["AQUCWFAC"], [[0.25, "*"]])
+        assert( dkw2[0][0][0] == 0.25 )
+        assert( dkw2[0][1][0] == 1.0 )
+
+        dkw3 = DeckKeyword(parser["AQUCWFAC"], [[0.50]])
+        assert( dkw3[0][0][0] == 0.50 )
+        assert( dkw3[0][1][0] == 1.0 )
+
+        dkw4 = DeckKeyword(parser["CBMOPTS"], [["3*", "A", "B", "C", "2*", 0.375]])
+        assert( dkw4[0][0][0] == "TIMEDEP" )
+        assert( dkw4[0][2][0] == "NOKRMIX" )
+        assert( dkw4[0][3][0] == "A" )
+        assert( dkw4[0][6][0] == "PMPVK" )
+        assert( dkw4[0][8][0] == 0.375 )
+
+        with self.assertRaises(TypeError):
+            DeckKeyword(parser["CBMOPTS"], [["3*", "A", "B", "C", "R2*", 0.77]])
+
+
+        
 
 
 if __name__ == "__main__":
