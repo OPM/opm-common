@@ -24,44 +24,32 @@
 
 namespace Opm {
 
-    BoxManager::BoxManager(int nx , int ny , int nz) :
-        m_globalBox( nx, ny, nz )
+    BoxManager::BoxManager(const EclipseGrid& grid_arg) :
+        grid( grid_arg ),
+        m_globalBox( std::unique_ptr<Box>( new Box(grid_arg) ))
     {}
 
-    const Box& BoxManager::getGlobalBox() const {
-        return m_globalBox;
-    }
-
-
-    const Box& BoxManager::getInputBox() const {
-        return m_inputBox;
-    }
-
-
-    const Box& BoxManager::getKeywordBox() const {
-        return m_keywordBox;
-    }
 
     const Box& BoxManager::getActiveBox() const {
         if (m_keywordBox)
-            return m_keywordBox;
+            return *m_keywordBox;
 
         if (m_inputBox)
-            return m_inputBox;
+            return *m_inputBox;
 
-        return m_globalBox;
+        return *m_globalBox;
     }
 
 
     void BoxManager::setInputBox( int i1,int i2 , int j1 , int j2 , int k1 , int k2) {
-        this->m_inputBox = Box( this->m_globalBox, i1, i2, j1, j2, k1, k2 );
+        this->m_inputBox.reset(new Box( this->grid, i1, i2, j1, j2, k1, k2 ));
     }
 
     void BoxManager::endInputBox() {
         if(m_keywordBox)
             throw std::invalid_argument("Hmmm - this seems like an internal error - the SECTION is terminated with an active keyword box");
 
-        m_inputBox = Box{};
+        m_inputBox.reset( 0 );
     }
 
     void BoxManager::endSection() {
@@ -69,11 +57,11 @@ namespace Opm {
     }
 
     void BoxManager::setKeywordBox( int i1,int i2 , int j1 , int j2 , int k1 , int k2) {
-        this->m_keywordBox = Box( this->m_globalBox, i1, i2, j1, j2, k1, k2 );
+        this->m_keywordBox.reset( new Box( this->grid, i1, i2, j1, j2, k1, k2 ));
     }
 
     void BoxManager::endKeyword() {
-        this->m_keywordBox = Box{};
+        this->m_keywordBox.reset( 0 );
     }
 
 }

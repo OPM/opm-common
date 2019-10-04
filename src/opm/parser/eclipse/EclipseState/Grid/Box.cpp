@@ -20,6 +20,7 @@
 #include <stdexcept>
 
 #include <opm/parser/eclipse/EclipseState/Grid/Box.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
 namespace {
 
@@ -39,19 +40,12 @@ namespace {
 
 namespace Opm {
 
-    Box::Box(int nx , int ny , int nz) {
-        if (nx <= 0)
-            throw std::invalid_argument("The input nx value is invalid");
-
-        if (ny <= 0)
-            throw std::invalid_argument("The input ny value is invalid");
-
-        if (nz <= 0)
-            throw std::invalid_argument("The input nz value is invalid");
-
-        m_dims[0] = (size_t) nx;
-        m_dims[1] = (size_t) ny;
-        m_dims[2] = (size_t) nz;
+    Box::Box(const EclipseGrid& grid_arg) :
+        grid(grid_arg)
+    {
+        m_dims[0] = grid_arg.getNX();
+        m_dims[1] = grid_arg.getNY();
+        m_dims[2] = grid_arg.getNZ();
 
         m_offset[0] = 0;
         m_offset[1] = 0;
@@ -66,7 +60,13 @@ namespace Opm {
     }
 
 
-    Box::Box(int nx, int ny, int nz, int i1 , int i2 , int j1 , int j2 , int k1 , int k2) {
+    Box::Box(const EclipseGrid& grid_arg, int i1 , int i2 , int j1 , int j2 , int k1 , int k2) :
+        grid(grid_arg)
+    {
+        std::size_t nx = grid_arg.getNX();
+        std::size_t ny = grid_arg.getNY();
+        std::size_t nz = grid_arg.getNZ();
+
         assert_dims(nx , i1 , i2);
         assert_dims(ny , j1 , j2);
         assert_dims(nz , k1 , k2);
@@ -92,11 +92,6 @@ namespace Opm {
     }
 
 
-    Box::Box(const Box& globalBox , int i1 , int i2 , int j1 , int j2 , int k1 , int k2) :
-        Box(globalBox.getDim(0), globalBox.getDim(1), globalBox.getDim(2), i1,i2,j1,j2,k1,k2)
-    { }
-
-
 
     size_t Box::size() const {
         return m_dims[0] * m_dims[1] * m_dims[2];
@@ -117,26 +112,20 @@ namespace Opm {
 
 
 
-    std::vector<size_t>::const_iterator Box::begin() const {
-        return m_indexList.begin();
-    }
-
-    std::vector<size_t>::const_iterator Box::end() const {
-        return m_indexList.end();
-    }
-
-
     const std::vector<size_t>& Box::getIndexList() const {
-        return m_indexList;
+        return global_index_list;
+    }
+
+    const std::vector<Box::index_pair>& Box::index_list() const {
+        return m_index_list;
     }
 
 
     void Box::initIndexList() {
-        m_indexList.resize( size() );
+        global_index_list.clear();
+        m_index_list.clear();
 
         size_t ii,ij,ik;
-        size_t l = 0;
-
         for (ik=0; ik < m_dims[2]; ik++) {
             size_t k = ik + m_offset[2];
             for (ij=0; ij < m_dims[1]; ij++) {
@@ -145,8 +134,9 @@ namespace Opm {
                     size_t i = ii + m_offset[0];
                     size_t g = i * m_stride[0] + j*m_stride[1] + k*m_stride[2];
 
-                    m_indexList[l] = g;
-                    l++;
+                    global_index_list.push_back(g);
+                    if (this->grid.cellActive(g))
+                        m_index_list.push_back({g,this->grid.activeIndex(g)});
                 }
             }
         }
@@ -171,10 +161,6 @@ namespace Opm {
         }
 
         return true;
-    }
-
-    Box::operator bool() const {
-        return this->size() != 0;
     }
 
 

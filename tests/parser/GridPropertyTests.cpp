@@ -160,9 +160,9 @@ BOOST_AUTO_TEST_CASE(copy) {
     SupportedKeywordInfo keywordInfo2("P2", 9, "1");
     Opm::GridProperty<int> prop1(4, 4, 2, keywordInfo1);
     Opm::GridProperty<int> prop2(4, 4, 2, keywordInfo2);
-
-    Opm::Box global(4, 4, 2);
-    Opm::Box layer0(global, 0, 3, 0, 3, 0, 0);
+    Opm::EclipseGrid grid(4,4,2);
+    Opm::Box global(grid);
+    Opm::Box layer0(grid, 0, 3, 0, 3, 0, 0);
 
     prop2.copyFrom(prop1, layer0);
 
@@ -184,8 +184,9 @@ BOOST_AUTO_TEST_CASE(SCALE) {
     Opm::GridProperty<int> prop1( 4, 4, 2, keywordInfo1 );
     Opm::GridProperty<int> prop2( 4, 4, 2, keywordInfo2 );
 
-    Opm::Box global( 4, 4, 2 );
-    Opm::Box layer0( global, 0, 3, 0, 3, 0, 0 );
+    Opm::EclipseGrid grid(4,4,2);
+    Opm::Box global(grid);
+    Opm::Box layer0(grid, 0, 3, 0, 3, 0, 0);
 
     prop2.copyFrom( prop1, layer0 );
     prop2.scale( 2, global );
@@ -205,8 +206,9 @@ BOOST_AUTO_TEST_CASE(SET) {
     SupportedKeywordInfo keywordInfo( "P1", 1, "1" );
     Opm::GridProperty<int> prop( 4, 4, 2, keywordInfo );
 
-    Opm::Box global( 4, 4, 2 );
-    Opm::Box layer0( global, 0, 3, 0, 3, 0, 0 );
+    Opm::EclipseGrid grid(4,4,2);
+    Opm::Box global(grid);
+    Opm::Box layer0(grid, 0, 3, 0, 3, 0, 0);
 
     prop.setScalar( 2, global );
     prop.setScalar( 4, layer0 );
@@ -227,8 +229,9 @@ BOOST_AUTO_TEST_CASE(ADD) {
     Opm::GridProperty<int> prop1( 4, 4, 2, keywordInfo1 );
     Opm::GridProperty<int> prop2( 4, 4, 2, keywordInfo2 );
 
-    Opm::Box global( 4, 4, 2 );
-    Opm::Box layer0( global, 0, 3, 0, 3, 0, 0 );
+    Opm::EclipseGrid grid(4,4,2);
+    Opm::Box global(grid);
+    Opm::Box layer0(grid, 0, 3, 0, 3, 0, 0);
 
     prop2.copyFrom( prop1, layer0 );
     prop2.add( 2, global );

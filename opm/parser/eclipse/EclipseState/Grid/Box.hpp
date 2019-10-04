@@ -25,22 +25,23 @@
 #include <cstddef>
 
 namespace Opm {
-
+    class EclipseGrid;
     class Box {
     public:
-        Box() = default;
-        Box(int nx , int ny , int nz);
-        Box(const Box& globalBox , int i1 , int i2 , int j1 , int j2 , int k1 , int k2); // Zero offset coordinates.
-        Box(int nx, int ny, int nz, int i1 , int i2 , int j1 , int j2 , int k1 , int k2);
+
+        struct index_pair {
+            std::size_t global;
+            std::size_t active;
+        };
+
+        Box(const EclipseGrid& grid);
+        Box(const EclipseGrid& grid , int i1 , int i2 , int j1 , int j2 , int k1 , int k2);
         size_t size() const;
         bool   isGlobal() const;
         size_t getDim(size_t idim) const;
+        const std::vector<index_pair>& index_list() const;
         const std::vector<size_t>& getIndexList() const;
         bool equal(const Box& other) const;
-
-        explicit operator bool() const;
-        std::vector<size_t>::const_iterator begin() const;
-        std::vector<size_t>::const_iterator end() const;
 
 
         int I1() const;
@@ -52,12 +53,14 @@ namespace Opm {
 
     private:
         void initIndexList();
+        const EclipseGrid& grid;
         size_t m_dims[3] = { 0, 0, 0 };
         size_t m_offset[3];
         size_t m_stride[3];
 
         bool   m_isGlobal;
-        std::vector<size_t> m_indexList;
+        std::vector<size_t> global_index_list;
+        std::vector<index_pair> m_index_list;
 
         int lower(int dim) const;
         int upper(int dim) const;

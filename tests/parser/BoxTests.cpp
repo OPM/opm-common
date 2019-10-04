@@ -31,11 +31,8 @@
 #include <opm/parser/eclipse/EclipseState/Grid/BoxManager.hpp>
 
 BOOST_AUTO_TEST_CASE(CreateBox) {
-    BOOST_CHECK_THROW( new Opm::Box(-1,0,0) , std::invalid_argument);
-    BOOST_CHECK_THROW( new Opm::Box(10,0,10) , std::invalid_argument);
-    BOOST_CHECK_THROW( new Opm::Box(10,10,-1) , std::invalid_argument);
-
-    Opm::Box box(4,3,2);
+    Opm::EclipseGrid grid(4,3,2);
+    Opm::Box box(grid);
     BOOST_CHECK_EQUAL( 24U , box.size() );
     BOOST_CHECK( box.isGlobal() );
     BOOST_CHECK_EQUAL( 4 , box.getDim(0) );
@@ -58,29 +55,24 @@ BOOST_AUTO_TEST_CASE(CreateBox) {
                 }
             }
         }
-
-        i = 0;
-        for (auto index : box) {
-            BOOST_CHECK_EQUAL( index , indexList[i]);
-            i++;
-        }
     }
 }
 
 
 
 BOOST_AUTO_TEST_CASE(CreateSubBox) {
-    Opm::Box globalBox( 10,10,10 );
+    Opm::EclipseGrid grid(10,10,10);
+    Opm::Box globalBox(grid);
 
-    BOOST_CHECK_THROW( new Opm::Box( globalBox , -1 , 9 , 1 , 8 , 1, 8)  , std::invalid_argument);   //  Negative throw
-    BOOST_CHECK_THROW( new Opm::Box( globalBox ,  1 , 19 , 1 , 8 , 1, 8) , std::invalid_argument);   //  Bigger than global: throw
-    BOOST_CHECK_THROW( new Opm::Box( globalBox ,  9 , 1  , 1 , 8 , 1, 8) , std::invalid_argument);   //  Inverted order: throw
+    BOOST_CHECK_THROW( new Opm::Box( grid , -1 , 9 , 1 , 8 , 1, 8)  , std::invalid_argument);   //  Negative throw
+    BOOST_CHECK_THROW( new Opm::Box( grid ,  1 , 19 , 1 , 8 , 1, 8) , std::invalid_argument);   //  Bigger than global: throw
+    BOOST_CHECK_THROW( new Opm::Box( grid ,  9 , 1  , 1 , 8 , 1, 8) , std::invalid_argument);   //  Inverted order: throw
 
-    Opm::Box subBox1(globalBox , 0,9,0,9,0,9);
+    Opm::Box subBox1(grid, 0,9,0,9,0,9);
     BOOST_CHECK( subBox1.isGlobal());
 
 
-    Opm::Box subBox2(globalBox , 1,3,1,4,1,5);
+    Opm::Box subBox2(grid, 1,3,1,4,1,5);
     BOOST_CHECK( !subBox2.isGlobal());
     BOOST_CHECK_EQUAL( 60U , subBox2.size() );
 
@@ -102,14 +94,17 @@ BOOST_AUTO_TEST_CASE(CreateSubBox) {
 
 
 BOOST_AUTO_TEST_CASE(BoxEqual) {
-    Opm::Box globalBox1( 10,10,10 );
-    Opm::Box globalBox2( 10,10,10 );
-    Opm::Box globalBox3( 10,10,11 );
+    Opm::EclipseGrid grid1(10,10,10);
+    Opm::EclipseGrid grid3(10,10,11);
+    Opm::EclipseGrid grid4(20,20,20);
+    Opm::Box globalBox1( grid1 );
+    Opm::Box globalBox2( grid1 );
+    Opm::Box globalBox3( grid3 );
 
-    Opm::Box globalBox4( 20,20,20 );
-    Opm::Box subBox1( globalBox1 , 0 , 9 , 0 , 9 , 0, 9);
-    Opm::Box subBox4( globalBox4 , 0 , 9 , 0 , 9 , 0, 9);
-    Opm::Box subBox5( globalBox4 , 10 , 19 , 10 , 19 , 10, 19);
+    Opm::Box globalBox4(grid4);
+    Opm::Box subBox1( grid1 , 0 , 9 , 0 , 9 , 0, 9);
+    Opm::Box subBox4( grid4 , 0 , 9 , 0 , 9 , 0, 9);
+    Opm::Box subBox5( grid4 , 10 , 19 , 10 , 19 , 10, 19);
 
     BOOST_CHECK( globalBox1.equal( globalBox2 ));
     BOOST_CHECK( !globalBox1.equal( globalBox3 ));
@@ -120,45 +115,43 @@ BOOST_AUTO_TEST_CASE(BoxEqual) {
 }
 
 BOOST_AUTO_TEST_CASE(CreateBoxManager) {
-    Opm::BoxManager boxManager(10,10,10);
-    Opm::Box box(10,10,10);
+    Opm::EclipseGrid grid(10,10,10);
+    Opm::BoxManager boxManager(grid);
+    Opm::Box box(grid);
 
-    BOOST_CHECK( box.equal( boxManager.getGlobalBox()) );
     BOOST_CHECK( box.equal( boxManager.getActiveBox()) );
-    BOOST_CHECK( !boxManager.getInputBox() );
-    BOOST_CHECK( !boxManager.getKeywordBox() );
 }
 
 
 
 
 BOOST_AUTO_TEST_CASE(TestInputBox) {
-    Opm::BoxManager boxManager(10,10,10);
-    Opm::Box inputBox( boxManager.getGlobalBox(), 0,4,0,4,0,4);
+    Opm::EclipseGrid grid(10,10,10);
+    Opm::BoxManager boxManager(grid);
+    Opm::Box inputBox( grid, 0,4,0,4,0,4);
+    Opm::Box globalBox( grid );
 
     boxManager.setInputBox( 0,4,0,4,0,4 );
-    BOOST_CHECK( inputBox.equal( boxManager.getInputBox()) );
     BOOST_CHECK( inputBox.equal( boxManager.getActiveBox()) );
-
-
     boxManager.endSection();
-    BOOST_CHECK( !boxManager.getInputBox() );
-    BOOST_CHECK( boxManager.getActiveBox().equal( boxManager.getGlobalBox()));
+    BOOST_CHECK( boxManager.getActiveBox().equal(globalBox));
 }
 
 
 
 
 BOOST_AUTO_TEST_CASE(TestKeywordBox) {
-    Opm::BoxManager boxManager(10,10,10);
-    Opm::Box inputBox( boxManager.getGlobalBox() , 0,4,0,4,0,4);
-    Opm::Box keywordBox( boxManager.getGlobalBox() , 0,2,0,2,0,2);
+    Opm::EclipseGrid grid(10,10,10);
+    Opm::BoxManager boxManager(grid);
+    Opm::Box inputBox( grid, 0,4,0,4,0,4);
+    Opm::Box keywordBox( grid, 0,2,0,2,0,2);
+    Opm::Box globalBox( grid );
 
 
     boxManager.setInputBox( 0,4,0,4,0,4 );
+    BOOST_CHECK( inputBox.equal( boxManager.getActiveBox()) );
+
     boxManager.setKeywordBox( 0,2,0,2,0,2 );
-    BOOST_CHECK( inputBox.equal( boxManager.getInputBox()) );
-    BOOST_CHECK( keywordBox.equal( boxManager.getKeywordBox()) );
     BOOST_CHECK( keywordBox.equal( boxManager.getActiveBox()) );
 
     // Must end keyword first
@@ -166,11 +159,9 @@ BOOST_AUTO_TEST_CASE(TestKeywordBox) {
 
     boxManager.endKeyword();
     BOOST_CHECK( inputBox.equal( boxManager.getActiveBox()) );
-    BOOST_CHECK( !boxManager.getKeywordBox() );
 
     boxManager.endSection();
-    BOOST_CHECK( !boxManager.getInputBox() );
-    BOOST_CHECK( boxManager.getActiveBox().equal( boxManager.getGlobalBox()));
+    BOOST_CHECK( boxManager.getActiveBox().equal(globalBox));
 }
 
 
@@ -178,14 +169,26 @@ BOOST_AUTO_TEST_CASE(BoxNineArg) {
     const size_t nx = 10;
     const size_t ny = 7;
     const size_t nz = 6;
-    BOOST_CHECK_NO_THROW( Opm::Box(nx,ny,nz,0,7,0,5,1,2) );
-
-    // Invalid x dimension
-    BOOST_CHECK_THROW( Opm::Box(0,ny,nz,0,0,1,1,2,2), std::invalid_argument);
+    Opm::EclipseGrid grid(nx,ny,nz);
+    BOOST_CHECK_NO_THROW( Opm::Box(grid,0,7,0,5,1,2) );
 
     // J2 < J1
-    BOOST_CHECK_THROW( Opm::Box(nx,ny,nz,1,1,4,3,2,2), std::invalid_argument);
+    BOOST_CHECK_THROW( Opm::Box(grid,1,1,4,3,2,2), std::invalid_argument);
 
     // K2 >= Nz
-    BOOST_CHECK_THROW( Opm::Box(nx,ny,nz,1,1,2,2,3,nz), std::invalid_argument);
+    BOOST_CHECK_THROW( Opm::Box(grid,1,1,2,2,3,nz), std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(TestKeywordBox2) {
+    Opm::EclipseGrid grid(10,10,10);
+    std::vector<int> actnum(grid.getCartesianSize(), 1);
+    actnum[0] = 0;
+    grid.resetACTNUM(actnum);
+
+    Opm::BoxManager boxManager(grid);
+    const auto& box = boxManager.getActiveBox();
+
+    for (const auto& p : box.index_list())
+        BOOST_CHECK_EQUAL(p.active + 1, p.global);
+    BOOST_CHECK_EQUAL(box.index_list().size() + 1, grid.getCartesianSize());
 }

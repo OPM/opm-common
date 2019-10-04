@@ -522,7 +522,7 @@ namespace Opm {
             operate_fptr func = operations.at( operation );
 
             setKeywordBox(record, boxManager);
-            for (auto index : boxManager.getActiveBox())
+            for (auto index : boxManager.getActiveBox().getIndexList())
                 targetData[index] = func( targetData[index] , srcData[index] , alpha, beta );
         }
     }
