@@ -14,6 +14,6 @@ rm -f python/opm/libopmcommon_python.so
 
 export CC=@CMAKE_CXX_COMPILER@
 
-python setup.py build build_ext --build-lib=python/opm \
+@PYTHON_EXECUTABLE@ setup.py build build_ext --build-lib=python/opm \
 --library-dirs=@_setup_lib_dirs@ \
 --include-dirs=@_setup_include_dirs@

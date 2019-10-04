@@ -256,7 +256,7 @@ if (OPM_ENABLE_PYTHON)
                      python/cxx/table_manager.cpp
                      python/cxx/well.cpp
                      COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/python/ ${CMAKE_BINARY_DIR}/python
-                     COMMAND python ${CMAKE_BINARY_DIR}/python/setup.py
+                     COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_BINARY_DIR}/python/setup.py
                                                       build
                                                       build_ext
                                                       --build-lib=${CMAKE_BINARY_DIR}/python/python/opm
@@ -268,11 +268,11 @@ if (OPM_ENABLE_PYTHON)
   add_dependencies(opmcommon_python opmcommon)
 
   install( CODE "execute_process(COMMAND mkdir -p ${CMAKE_INSTALL_PREFIX}/${PYTHON_INSTALL_PREFIX}  )" )
-  install( CODE "execute_process(COMMAND python python/setup.py build_ext --dry-run install --prefix=${CMAKE_INSTALL_PREFIX}  )" )
+  install( CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} python/setup.py build_ext --dry-run install --prefix=${CMAKE_INSTALL_PREFIX}  )" )
 
   add_test(NAME python_tests
             WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/python
-            COMMAND python setup.py build_ext --dry-run --build-lib ${CMAKE_BINARY_DIR}/python/python/opm test
+            COMMAND ${PYTHON_EXECUTABLE} setup.py build_ext --dry-run --build-lib ${CMAKE_BINARY_DIR}/python/python/opm test
            )
 
   set_target_properties(opmcommon PROPERTIES POSITION_INDEPENDENT_CODE ON)
