@@ -85,6 +85,8 @@ namespace Opm {
              for (size_t j = 0; j < parser_record.size(); j++) {
                    
                   const ParserItem& parser_item = parser_record.get(j);            
+                  if (parser_item.sizeType() == ParserItem::item_size::ALL)
+                      throw std::invalid_argument("constructor  DeckKeyword::DeckKeyword(const ParserKeyword&,  const std::vector<std::vector<DeckValue>>&) does not handle sizetype ALL.");
 
                   switch( parser_item.dataType() ) {
                     
