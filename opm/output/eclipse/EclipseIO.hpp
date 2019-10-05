@@ -23,10 +23,9 @@
 #define OPM_ECLIPSE_WRITER_HPP
 
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
-#include <array>
-#include <memory>
 
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
@@ -35,13 +34,16 @@
 #include <opm/output/data/Solution.hpp>
 #include <opm/output/data/Wells.hpp>
 #include <opm/output/eclipse/RestartValue.hpp>
-#include <opm/output/eclipse/Summary.hpp>
+
+namespace Opm { namespace out {
+    class Summary;
+}} // namespace Opm::out
 
 namespace Opm {
 
 class EclipseState;
-class SummaryConfig;
 class Schedule;
+class SummaryConfig;
 class SummaryState;
 
 /*!
