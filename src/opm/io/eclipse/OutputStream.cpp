@@ -744,8 +744,7 @@ void Opm::EclIO::OutputStream::SummarySpecification::rewindStream()
 
 void Opm::EclIO::OutputStream::SummarySpecification::flushStream()
 {
-    // Benefits from EclOutput friendship
-    this->stream().ofileH.flush();
+    this->stream().flushStream();
 }
 
 Opm::EclIO::EclOutput&

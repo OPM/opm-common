@@ -86,6 +86,10 @@ void EclOutput::message(const std::string& msg)
     this->write(msg, std::vector<char>{});
 }
 
+void EclOutput::flushStream()
+{
+    this->ofileH.flush();
+}
 
 void EclOutput::writeBinaryHeader(const std::string&arrName, int size, eclArrType arrType)
 {
