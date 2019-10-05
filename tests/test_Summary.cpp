@@ -31,6 +31,7 @@
 
 #include <ert/ecl/ecl_sum.h>
 #include <ert/ecl/smspec_node.h>
+#include <ert/util/ert_unique_ptr.hpp>
 #include <ert/util/util.h>
 #include <ert/util/test_work_area.h>
 
