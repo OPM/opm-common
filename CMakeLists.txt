@@ -273,13 +273,14 @@ if (OPM_ENABLE_PYTHON)
   # preferred to use standard setup.py install, but the setup.py based solution
   # refuses to install to a location which the current python executable can not
   # load from, and the use of eggs in the setup.py based installation makes
-  # debugging and fauly seeking very difficult.
+  # debugging quite difficult.
   #
   # Since the installation of Python code is nonstandard it is protected by an
-  # extra cmake switch, OPM_INSTALL_PYTHON. If you prefer you can still use the
-  # setup.py based installation method.
+  # extra cmake switch, OPM_INSTALL_PYTHON. If you prefer you can still invoke
+  # setup.py install manually - optionally with the generated script
+  # setup-install.sh - and completely bypass cmake in the installation phase.
   if (OPM_INSTALL_PYTHON)
-    install( CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} python/python/opm ${CMAKE_INSTALL_PREFIX})")
+    install( CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_BINARY_DIR}/python/install.py ${CMAKE_BINARY_DIR}/python/python/opm ${CMAKE_INSTALL_PREFIX}/${PYTHON_INSTALL_PREFIX})")
   endif()
 
   add_test(NAME python_tests
