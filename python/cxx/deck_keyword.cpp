@@ -60,29 +60,15 @@ struct DeckRecordIterator
 };
 
 
-bool is_number(const std::string& s)
-{
-    return !s.empty() && std::find_if(s.begin(), 
-        s.end(), [](char c) { return !std::isdigit(c); }) == s.end();
-}
-
-
 void push_string_as_deck_value(std::vector<DeckValue>& record, const std::string str) {
 
-    int max_indx = str.length() - 1;
-    if (str[max_indx] == '*') {
+    if (str.back() == '*') {
         int it;
 
-        if (max_indx == 0)
+        if (str.length() == 1)
             it = 1;
-        else {
-            std::string substr = str.substr(0, max_indx);
-            if (is_number(substr)) {
-                it = std::stoi(substr);
-            }
-            else
-                throw py::type_error("DeckKeyword: string values ending in '*' can only be preceeded by a number.");
-        }
+        else
+            it = stod( str.substr(0, str.length() - 1) );
 
         for (int i = 0; i < it; i++)
             record.push_back( DeckValue() );
@@ -111,22 +97,26 @@ void python::common::export_DeckKeyword(py::module& module) {
                       try {
                           int val_int = value_obj.cast<int>();
                           value_record.push_back( DeckValue(val_int) );
+                          continue;
                       }
-                      catch (std::exception e_int) {
-                          try {
-                              double val_double = value_obj.cast<double>();
-                              value_record.push_back( DeckValue(val_double) );
-                          }
-                          catch(std::exception e_double) {
-                               try {
-                                   std::string val_string = value_obj.cast<std::string>();                                      
-                                   push_string_as_deck_value(value_record, val_string);
-                               }
-                               catch(std::exception e_string) {
-                                    throw py::type_error("DeckKeyword: tried to add unkown type to record.");
-                               }
-                          }                          
+                      catch (std::exception e_int) {}
+
+                      try {
+                           double val_double = value_obj.cast<double>();
+                           value_record.push_back( DeckValue(val_double) );
+                           continue;
                       }
+                      catch (std::exception e_double) {}
+
+                      try {
+                           std::string val_string = value_obj.cast<std::string>();                                      
+                           push_string_as_deck_value(value_record, val_string);
+                           continue;
+                      }
+                      catch (std::exception e_string) {}
+
+                      throw py::type_error("DeckKeyword: tried to add unkown type to record.");
+             
                  }
                  value_record_list.push_back( value_record );
              }
