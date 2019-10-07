@@ -27,10 +27,12 @@
 #include <exception>
 #include <stdexcept>
 #include <unordered_map>
+#include <cctype>
 #include <ctime>
 
 #include <ert/ecl/ecl_sum.h>
 #include <ert/ecl/smspec_node.h>
+#include <ert/util/ert_unique_ptr.hpp>
 #include <ert/util/util.h>
 #include <ert/util/test_work_area.h>
 
@@ -55,6 +57,16 @@ namespace {
     double sm3_pr_day()
     {
        return unit::cubic(unit::meter) / unit::day;
+    }
+
+    std::string toupper(std::string input)
+    {
+        for (auto& c : input) {
+            const auto uc = std::toupper(static_cast<unsigned char>(c));
+            c = static_cast<std::string::value_type>(uc);
+        }
+
+        return input;
     }
 } // Anonymous
 
@@ -267,14 +279,14 @@ struct setup {
 
     /*-----------------------------------------------------------------*/
 
-    setup( const std::string& fname , const char* path = "summary_deck.DATA") :
+    setup(std::string fname, const std::string& path = "summary_deck.DATA") :
         deck( Parser().parseFile( path) ),
         es( deck ),
         grid( es.getInputGrid() ),
         schedule( deck, grid, es.get3DProperties(), es.runspec()),
         config( deck, schedule, es.getTableManager()),
         wells( result_wells() ),
-        name( fname ),
+        name( toupper(std::move(fname)) ),
         ta( test_work_area_alloc("summary_test"))
     {
     }

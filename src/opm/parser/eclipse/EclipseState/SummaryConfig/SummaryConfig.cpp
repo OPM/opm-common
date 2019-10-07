@@ -478,6 +478,7 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
     auto param = SummaryNode {
         keyword.name(), SummaryNode::Category::Connection
     }
+    .parameterType( parseKeywordType( keyword.name()) )
     .isUserDefined( is_udq(keyword.name()) );
 
     for( const auto& record : keyword ) {

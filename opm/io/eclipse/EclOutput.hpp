@@ -72,6 +72,7 @@ public:
     }
 
     void message(const std::string& msg);
+    void flushStream();
 
     friend class OutputStream::Restart;
     friend class OutputStream::SummarySpecification;
