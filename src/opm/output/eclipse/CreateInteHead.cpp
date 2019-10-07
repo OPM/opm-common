@@ -292,7 +292,7 @@ createInteHead(const EclipseState& es,
         .regionDimensions   (getRegDims(tdim, rdim))
         .ngroups            ({ ngmax })
         .variousParam       (201702, 100)  // Output should be compatible with Eclipse 100, 2017.02 version.
-        .udqParam_1         (getRandSeedPar(rspec))
+        //.udqParam_1         (getRandSeedPar(rspec))
         ;
 
     return ih.data();

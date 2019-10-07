@@ -501,7 +501,7 @@ Opm::RestartIO::InteHEAD::wellTableDimensions(const WellTableDim& wtdim)
 
     this->data_[NGMAXZ] = wtdim.maxGroupInField + 1;
     
-    this->data_[NWMAXZ] = wtdim.maxWellsInField;
+    //this->data_[NWMAXZ] = wtdim.maxWellsInField;
 
     return *this;
 }
