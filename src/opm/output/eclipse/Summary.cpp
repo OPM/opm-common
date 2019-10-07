@@ -166,7 +166,6 @@ namespace {
     {
         return std::unique_ptr<ecl::smspec_node>(new ecl::smspec_node(0, segRes.vector.c_str(), segRes.well.c_str(), static_cast<int>(segRes.segNumber), "UNIT", 0.0f, ":"));
     }
-} // namespace Anonymous
 
 /*
  * This class takes simulator state and parser-provided information and
@@ -176,7 +175,6 @@ namespace {
  * the compiler writes a lot of this code for us.
  */
 
-namespace {
     void update(const ecl::smspec_node& node, const double value, Opm::SummaryState& st)
     {
         if (node.get_var_type() == ECL_SMSPEC_WELL_VAR)
@@ -190,14 +188,9 @@ namespace {
         else
             st.update(node.get_gen_key1(), value);
     }
-} // Anonymous
 
-namespace Opm {
-
-namespace {
-
-using rt = data::Rates::opt;
-using measure = UnitSystem::measure;
+using rt = Opm::data::Rates::opt;
+using measure = Opm::UnitSystem::measure;
 constexpr const bool injector = true;
 constexpr const bool producer = false;
 constexpr const bool polymer = true;
@@ -257,7 +250,7 @@ measure mul_unit( measure lhs, measure rhs ) {
 
 struct quantity {
     double value;
-    UnitSystem::measure unit;
+    Opm::UnitSystem::measure unit;
 
     quantity operator+( const quantity& rhs ) const {
         assert( this->unit == rhs.unit );
@@ -303,14 +296,14 @@ struct quantity {
  * is the index of the block in question. wells is simulation data.
  */
 struct fn_args {
-    const std::vector<Well2>& schedule_wells;
+    const std::vector<Opm::Well2>& schedule_wells;
     double duration;
     const int sim_step;
     int  num;
-    const SummaryState& st;
-    const data::Wells& wells;
-    const out::RegionCache& regionCache;
-    const EclipseGrid& grid;
+    const Opm::SummaryState& st;
+    const Opm::data::Wells& wells;
+    const Opm::out::RegionCache& regionCache;
+    const Opm::EclipseGrid& grid;
     const std::vector< std::pair< std::string, double > > eff_factors;
 };
 
@@ -321,13 +314,13 @@ struct fn_args {
  */
 template< rt > constexpr
 measure rate_unit() { return measure::liquid_surface_rate; }
-template< Phase > constexpr
+template< Opm::Phase > constexpr
 measure rate_unit() { return measure::liquid_surface_rate; }
 
 template<> constexpr
 measure rate_unit< rt::gas >() { return measure::gas_surface_rate; }
 template<> constexpr
-measure rate_unit< Phase::GAS >() { return measure::gas_surface_rate; }
+measure rate_unit< Opm::Phase::GAS >() { return measure::gas_surface_rate; }
 
 template<> constexpr
 measure rate_unit< rt::solvent >() { return measure::gas_surface_rate; }
@@ -397,7 +390,7 @@ inline quantity rate( const fn_args& args ) {
 template< bool injection >
 inline quantity flowing( const fn_args& args ) {
     const auto& wells = args.wells;
-    auto pred = [&wells]( const Well2& w ) {
+    auto pred = [&wells]( const Opm::Well2& w ) {
         const auto& name = w.name();
         return w.isInjector( ) == injection
             && wells.count( name ) > 0
@@ -427,7 +420,7 @@ inline quantity crate( const fn_args& args ) {
     const auto& well_data = args.wells.at( name );
     const auto& completion = std::find_if( well_data.connections.begin(),
                                            well_data.connections.end(),
-                                           [=]( const data::Connection& c ) {
+                                           [=]( const Opm::data::Connection& c ) {
                                                 return c.index == global_index;
                                            } );
 
@@ -555,7 +548,7 @@ inline quantity thp( const fn_args& args ) {
 inline quantity bhp_history( const fn_args& args ) {
     if( args.schedule_wells.empty() ) return { 0.0, measure::pressure };
 
-    const Well2& sched_well = args.schedule_wells.front();
+    const Opm::Well2& sched_well = args.schedule_wells.front();
 
     double bhp_hist;
     if ( sched_well.isProducer(  ) )
@@ -569,7 +562,7 @@ inline quantity bhp_history( const fn_args& args ) {
 inline quantity thp_history( const fn_args& args ) {
     if( args.schedule_wells.empty() ) return { 0.0, measure::pressure };
 
-    const Well2& sched_well = args.schedule_wells.front();
+    const Opm::Well2& sched_well = args.schedule_wells.front();
 
     double thp_hist;
     if ( sched_well.isProducer() )
@@ -580,7 +573,7 @@ inline quantity thp_history( const fn_args& args ) {
     return { thp_hist, measure::pressure };
 }
 
-template< Phase phase >
+template< Opm::Phase phase >
 inline quantity production_history( const fn_args& args ) {
     /*
      * For well data, looking up historical rates (both for production and
@@ -600,7 +593,7 @@ inline quantity production_history( const fn_args& args ) {
     return { sum, rate_unit< phase >() };
 }
 
-template< Phase phase >
+template< Opm::Phase phase >
 inline quantity injection_history( const fn_args& args ) {
 
     double sum = 0.0;
@@ -616,7 +609,7 @@ inline quantity injection_history( const fn_args& args ) {
 inline quantity res_vol_production_target( const fn_args& args ) {
 
     double sum = 0.0;
-    for( const Well2& sched_well : args.schedule_wells )
+    for( const Opm::Well2& sched_well : args.schedule_wells )
         if (sched_well.getProductionProperties().predictionMode)
             sum += sched_well.getProductionProperties().ResVRate.get<double>();
 
@@ -814,60 +807,60 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "GOPI", potential_rate< rt::well_potential_oil , false, true>},
     { "GGPI", potential_rate< rt::well_potential_gas , false, true>},
 
-    { "WWPRH", production_history< Phase::WATER > },
-    { "WOPRH", production_history< Phase::OIL > },
-    { "WGPRH", production_history< Phase::GAS > },
-    { "WLPRH", sum( production_history< Phase::WATER >,
-                    production_history< Phase::OIL > ) },
+    { "WWPRH", production_history< Opm::Phase::WATER > },
+    { "WOPRH", production_history< Opm::Phase::OIL > },
+    { "WGPRH", production_history< Opm::Phase::GAS > },
+    { "WLPRH", sum( production_history< Opm::Phase::WATER >,
+                    production_history< Opm::Phase::OIL > ) },
 
-    { "WWPTH", mul( production_history< Phase::WATER >, duration ) },
-    { "WOPTH", mul( production_history< Phase::OIL >, duration ) },
-    { "WGPTH", mul( production_history< Phase::GAS >, duration ) },
-    { "WLPTH", mul( sum( production_history< Phase::WATER >,
-                         production_history< Phase::OIL > ),
+    { "WWPTH", mul( production_history< Opm::Phase::WATER >, duration ) },
+    { "WOPTH", mul( production_history< Opm::Phase::OIL >, duration ) },
+    { "WGPTH", mul( production_history< Opm::Phase::GAS >, duration ) },
+    { "WLPTH", mul( sum( production_history< Opm::Phase::WATER >,
+                         production_history< Opm::Phase::OIL > ),
                     duration ) },
 
-    { "WWIRH", injection_history< Phase::WATER > },
-    { "WOIRH", injection_history< Phase::OIL > },
-    { "WGIRH", injection_history< Phase::GAS > },
-    { "WWITH", mul( injection_history< Phase::WATER >, duration ) },
-    { "WOITH", mul( injection_history< Phase::OIL >, duration ) },
-    { "WGITH", mul( injection_history< Phase::GAS >, duration ) },
+    { "WWIRH", injection_history< Opm::Phase::WATER > },
+    { "WOIRH", injection_history< Opm::Phase::OIL > },
+    { "WGIRH", injection_history< Opm::Phase::GAS > },
+    { "WWITH", mul( injection_history< Opm::Phase::WATER >, duration ) },
+    { "WOITH", mul( injection_history< Opm::Phase::OIL >, duration ) },
+    { "WGITH", mul( injection_history< Opm::Phase::GAS >, duration ) },
 
     /* From our point of view, injectors don't have water cuts and div/sum will return 0.0 */
-    { "WWCTH", div( production_history< Phase::WATER >,
-                    sum( production_history< Phase::WATER >,
-                         production_history< Phase::OIL > ) ) },
+    { "WWCTH", div( production_history< Opm::Phase::WATER >,
+                    sum( production_history< Opm::Phase::WATER >,
+                         production_history< Opm::Phase::OIL > ) ) },
 
     /* We do not support mixed injections, and gas/oil is undefined when oil is
      * zero (i.e. pure gas injector), so always output 0 if this is an injector
      */
-    { "WGORH", div( production_history< Phase::GAS >,
-                    production_history< Phase::OIL > ) },
-    { "WGLRH", div( production_history< Phase::GAS >,
-                    sum( production_history< Phase::WATER >,
-                         production_history< Phase::OIL > ) ) },
+    { "WGORH", div( production_history< Opm::Phase::GAS >,
+                    production_history< Opm::Phase::OIL > ) },
+    { "WGLRH", div( production_history< Opm::Phase::GAS >,
+                    sum( production_history< Opm::Phase::WATER >,
+                         production_history< Opm::Phase::OIL > ) ) },
 
     { "WTHPH", thp_history },
     { "WBHPH", bhp_history },
 
-    { "GWPRH", production_history< Phase::WATER > },
-    { "GOPRH", production_history< Phase::OIL > },
-    { "GGPRH", production_history< Phase::GAS > },
-    { "GLPRH", sum( production_history< Phase::WATER >,
-                    production_history< Phase::OIL > ) },
-    { "GWIRH", injection_history< Phase::WATER > },
-    { "GOIRH", injection_history< Phase::OIL > },
-    { "GGIRH", injection_history< Phase::GAS > },
-    { "GGORH", div( production_history< Phase::GAS >,
-                    production_history< Phase::OIL > ) },
-    { "GWCTH", div( production_history< Phase::WATER >,
-                    sum( production_history< Phase::WATER >,
-                         production_history< Phase::OIL > ) ) },
+    { "GWPRH", production_history< Opm::Phase::WATER > },
+    { "GOPRH", production_history< Opm::Phase::OIL > },
+    { "GGPRH", production_history< Opm::Phase::GAS > },
+    { "GLPRH", sum( production_history< Opm::Phase::WATER >,
+                    production_history< Opm::Phase::OIL > ) },
+    { "GWIRH", injection_history< Opm::Phase::WATER > },
+    { "GOIRH", injection_history< Opm::Phase::OIL > },
+    { "GGIRH", injection_history< Opm::Phase::GAS > },
+    { "GGORH", div( production_history< Opm::Phase::GAS >,
+                    production_history< Opm::Phase::OIL > ) },
+    { "GWCTH", div( production_history< Opm::Phase::WATER >,
+                    sum( production_history< Opm::Phase::WATER >,
+                         production_history< Opm::Phase::OIL > ) ) },
 
-    { "GWPTH", mul( production_history< Phase::WATER >, duration ) },
-    { "GOPTH", mul( production_history< Phase::OIL >, duration ) },
-    { "GGPTH", mul( production_history< Phase::GAS >, duration ) },
+    { "GWPTH", mul( production_history< Opm::Phase::WATER >, duration ) },
+    { "GOPTH", mul( production_history< Opm::Phase::OIL >, duration ) },
+    { "GGPTH", mul( production_history< Opm::Phase::GAS >, duration ) },
     { "GGPRF", sub( rate < rt::gas, producer >, rate< rt::dissolved_gas, producer > )},
     { "GGPRS", rate< rt::dissolved_gas, producer> },
     { "GGPTF", mul( sub( rate < rt::gas, producer >, rate< rt::dissolved_gas, producer > ),
@@ -876,14 +869,14 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "GGLR",  div( rate< rt::gas, producer >,
                     sum( rate< rt::wat, producer >,
                          rate< rt::oil, producer > ) ) },
-    { "GGLRH", div( production_history< Phase::GAS >,
-                    sum( production_history< Phase::WATER >,
-                         production_history< Phase::OIL > ) ) },
-    { "GLPTH", mul( sum( production_history< Phase::WATER >,
-                         production_history< Phase::OIL > ),
+    { "GGLRH", div( production_history< Opm::Phase::GAS >,
+                    sum( production_history< Opm::Phase::WATER >,
+                         production_history< Opm::Phase::OIL > ) ) },
+    { "GLPTH", mul( sum( production_history< Opm::Phase::WATER >,
+                         production_history< Opm::Phase::OIL > ),
                     duration ) },
-    { "GWITH", mul( injection_history< Phase::WATER >, duration ) },
-    { "GGITH", mul( injection_history< Phase::GAS >, duration ) },
+    { "GWITH", mul( injection_history< Opm::Phase::WATER >, duration ) },
+    { "GGITH", mul( injection_history< Opm::Phase::GAS >, duration ) },
     { "GMWIN", flowing< injector > },
     { "GMWPR", flowing< producer > },
 
@@ -962,38 +955,38 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "FGPI", potential_rate< rt::well_potential_gas , false, true>},
 
 
-    { "FWPRH", production_history< Phase::WATER > },
-    { "FOPRH", production_history< Phase::OIL > },
-    { "FGPRH", production_history< Phase::GAS > },
-    { "FLPRH", sum( production_history< Phase::WATER >,
-                    production_history< Phase::OIL > ) },
-    { "FWPTH", mul( production_history< Phase::WATER >, duration ) },
-    { "FOPTH", mul( production_history< Phase::OIL >, duration ) },
-    { "FGPTH", mul( production_history< Phase::GAS >, duration ) },
-    { "FLPTH", mul( sum( production_history< Phase::WATER >,
-                         production_history< Phase::OIL > ),
+    { "FWPRH", production_history< Opm::Phase::WATER > },
+    { "FOPRH", production_history< Opm::Phase::OIL > },
+    { "FGPRH", production_history< Opm::Phase::GAS > },
+    { "FLPRH", sum( production_history< Opm::Phase::WATER >,
+                    production_history< Opm::Phase::OIL > ) },
+    { "FWPTH", mul( production_history< Opm::Phase::WATER >, duration ) },
+    { "FOPTH", mul( production_history< Opm::Phase::OIL >, duration ) },
+    { "FGPTH", mul( production_history< Opm::Phase::GAS >, duration ) },
+    { "FLPTH", mul( sum( production_history< Opm::Phase::WATER >,
+                         production_history< Opm::Phase::OIL > ),
                     duration ) },
 
-    { "FWIRH", injection_history< Phase::WATER > },
-    { "FOIRH", injection_history< Phase::OIL > },
-    { "FGIRH", injection_history< Phase::GAS > },
-    { "FWITH", mul( injection_history< Phase::WATER >, duration ) },
-    { "FOITH", mul( injection_history< Phase::OIL >, duration ) },
-    { "FGITH", mul( injection_history< Phase::GAS >, duration ) },
+    { "FWIRH", injection_history< Opm::Phase::WATER > },
+    { "FOIRH", injection_history< Opm::Phase::OIL > },
+    { "FGIRH", injection_history< Opm::Phase::GAS > },
+    { "FWITH", mul( injection_history< Opm::Phase::WATER >, duration ) },
+    { "FOITH", mul( injection_history< Opm::Phase::OIL >, duration ) },
+    { "FGITH", mul( injection_history< Opm::Phase::GAS >, duration ) },
 
     { "FWCT", div( rate< rt::wat, producer >,
                    sum( rate< rt::wat, producer >, rate< rt::oil, producer > ) ) },
     { "FGOR", div( rate< rt::gas, producer >, rate< rt::oil, producer > ) },
     { "FGLR", div( rate< rt::gas, producer >,
                    sum( rate< rt::wat, producer >, rate< rt::oil, producer > ) ) },
-    { "FWCTH", div( production_history< Phase::WATER >,
-                    sum( production_history< Phase::WATER >,
-                         production_history< Phase::OIL > ) ) },
-    { "FGORH", div( production_history< Phase::GAS >,
-                    production_history< Phase::OIL > ) },
-    { "FGLRH", div( production_history< Phase::GAS >,
-                    sum( production_history< Phase::WATER >,
-                         production_history< Phase::OIL > ) ) },
+    { "FWCTH", div( production_history< Opm::Phase::WATER >,
+                    sum( production_history< Opm::Phase::WATER >,
+                         production_history< Opm::Phase::OIL > ) ) },
+    { "FGORH", div( production_history< Opm::Phase::GAS >,
+                    production_history< Opm::Phase::OIL > ) },
+    { "FGLRH", div( production_history< Opm::Phase::GAS >,
+                    sum( production_history< Opm::Phase::WATER >,
+                         production_history< Opm::Phase::OIL > ) ) },
     { "FMWIN", flowing< injector > },
     { "FMWPR", flowing< producer > },
     { "FVPRT", res_vol_production_target },
@@ -1031,71 +1024,71 @@ static const std::unordered_map< std::string, ofun > funs = {
 };
 
 
-static const std::unordered_map< std::string, UnitSystem::measure> single_values_units = {
-  {"TCPU"     , UnitSystem::measure::identity },
-  {"ELAPSED"  , UnitSystem::measure::identity },
-  {"NEWTON"   , UnitSystem::measure::identity },
-  {"NLINERS"  , UnitSystem::measure::identity },
-  {"NLINSMIN" , UnitSystem::measure::identity },
-  {"NLINSMAX" , UnitSystem::measure::identity },
-  {"MLINEARS" , UnitSystem::measure::identity },
-  {"MSUMLINS" , UnitSystem::measure::identity },
-  {"MSUMNEWT" , UnitSystem::measure::identity },
-  {"TCPUTS"   , UnitSystem::measure::identity },
-  {"TIMESTEP" , UnitSystem::measure::time },
-  {"TCPUDAY"  , UnitSystem::measure::time },
-  {"STEPTYPE" , UnitSystem::measure::identity },
-  {"TELAPLIN" , UnitSystem::measure::time },
-  {"FWIP"     , UnitSystem::measure::liquid_surface_volume },
-  {"FOIP"     , UnitSystem::measure::liquid_surface_volume },
-  {"FGIP"     , UnitSystem::measure::gas_surface_volume },
-  {"FOIPL"    , UnitSystem::measure::liquid_surface_volume },
-  {"FOIPG"    , UnitSystem::measure::liquid_surface_volume },
-  {"FGIPL"    , UnitSystem::measure::gas_surface_volume },
-  {"FGIPG"    , UnitSystem::measure::gas_surface_volume },
-  {"FPR"      , UnitSystem::measure::pressure },
+static const std::unordered_map< std::string, Opm::UnitSystem::measure> single_values_units = {
+  {"TCPU"     , Opm::UnitSystem::measure::identity },
+  {"ELAPSED"  , Opm::UnitSystem::measure::identity },
+  {"NEWTON"   , Opm::UnitSystem::measure::identity },
+  {"NLINERS"  , Opm::UnitSystem::measure::identity },
+  {"NLINSMIN" , Opm::UnitSystem::measure::identity },
+  {"NLINSMAX" , Opm::UnitSystem::measure::identity },
+  {"MLINEARS" , Opm::UnitSystem::measure::identity },
+  {"MSUMLINS" , Opm::UnitSystem::measure::identity },
+  {"MSUMNEWT" , Opm::UnitSystem::measure::identity },
+  {"TCPUTS"   , Opm::UnitSystem::measure::identity },
+  {"TIMESTEP" , Opm::UnitSystem::measure::time },
+  {"TCPUDAY"  , Opm::UnitSystem::measure::time },
+  {"STEPTYPE" , Opm::UnitSystem::measure::identity },
+  {"TELAPLIN" , Opm::UnitSystem::measure::time },
+  {"FWIP"     , Opm::UnitSystem::measure::liquid_surface_volume },
+  {"FOIP"     , Opm::UnitSystem::measure::liquid_surface_volume },
+  {"FGIP"     , Opm::UnitSystem::measure::gas_surface_volume },
+  {"FOIPL"    , Opm::UnitSystem::measure::liquid_surface_volume },
+  {"FOIPG"    , Opm::UnitSystem::measure::liquid_surface_volume },
+  {"FGIPL"    , Opm::UnitSystem::measure::gas_surface_volume },
+  {"FGIPG"    , Opm::UnitSystem::measure::gas_surface_volume },
+  {"FPR"      , Opm::UnitSystem::measure::pressure },
 
 };
 
-static const std::unordered_map< std::string, UnitSystem::measure> region_units = {
-  {"RPR"      , UnitSystem::measure::pressure},
-  {"ROIP"     , UnitSystem::measure::liquid_surface_volume },
-  {"ROIPL"    , UnitSystem::measure::liquid_surface_volume },
-  {"ROIPG"    , UnitSystem::measure::liquid_surface_volume },
-  {"RGIP"     , UnitSystem::measure::gas_surface_volume },
-  {"RGIPL"    , UnitSystem::measure::gas_surface_volume },
-  {"RGIPG"    , UnitSystem::measure::gas_surface_volume },
-  {"RWIP"     , UnitSystem::measure::liquid_surface_volume }
+static const std::unordered_map< std::string, Opm::UnitSystem::measure> region_units = {
+  {"RPR"      , Opm::UnitSystem::measure::pressure},
+  {"ROIP"     , Opm::UnitSystem::measure::liquid_surface_volume },
+  {"ROIPL"    , Opm::UnitSystem::measure::liquid_surface_volume },
+  {"ROIPG"    , Opm::UnitSystem::measure::liquid_surface_volume },
+  {"RGIP"     , Opm::UnitSystem::measure::gas_surface_volume },
+  {"RGIPL"    , Opm::UnitSystem::measure::gas_surface_volume },
+  {"RGIPG"    , Opm::UnitSystem::measure::gas_surface_volume },
+  {"RWIP"     , Opm::UnitSystem::measure::liquid_surface_volume }
 };
 
-static const std::unordered_map< std::string, UnitSystem::measure> block_units = {
-  {"BPR"        , UnitSystem::measure::pressure},
-  {"BPRESSUR"   , UnitSystem::measure::pressure},
-  {"BSWAT"      , UnitSystem::measure::identity},
-  {"BWSAT"      , UnitSystem::measure::identity},
-  {"BSGAS"      , UnitSystem::measure::identity},
-  {"BGSAT"      , UnitSystem::measure::identity},
-  {"BOSAT"      , UnitSystem::measure::identity},
-  {"BWKR"      , UnitSystem::measure::identity},
-  {"BOKR"      , UnitSystem::measure::identity},
-  {"BKRO"      , UnitSystem::measure::identity},
-  {"BGKR"      , UnitSystem::measure::identity},
-  {"BKRG"      , UnitSystem::measure::identity},
-  {"BKRW"      , UnitSystem::measure::identity},
-  {"BWPC"      , UnitSystem::measure::pressure},
-  {"BGPC"      , UnitSystem::measure::pressure},
-  {"BVWAT"      , UnitSystem::measure::viscosity},
-  {"BWVIS"      , UnitSystem::measure::viscosity}, 
-  {"BVGAS"      , UnitSystem::measure::viscosity},
-  {"BGVIS"      , UnitSystem::measure::viscosity}, 
-  {"BVOIL"      , UnitSystem::measure::viscosity},
-  {"BOVIS"      , UnitSystem::measure::viscosity}, 
+static const std::unordered_map< std::string, Opm::UnitSystem::measure> block_units = {
+  {"BPR"        , Opm::UnitSystem::measure::pressure},
+  {"BPRESSUR"   , Opm::UnitSystem::measure::pressure},
+  {"BSWAT"      , Opm::UnitSystem::measure::identity},
+  {"BWSAT"      , Opm::UnitSystem::measure::identity},
+  {"BSGAS"      , Opm::UnitSystem::measure::identity},
+  {"BGSAT"      , Opm::UnitSystem::measure::identity},
+  {"BOSAT"      , Opm::UnitSystem::measure::identity},
+  {"BWKR"      , Opm::UnitSystem::measure::identity},
+  {"BOKR"      , Opm::UnitSystem::measure::identity},
+  {"BKRO"      , Opm::UnitSystem::measure::identity},
+  {"BGKR"      , Opm::UnitSystem::measure::identity},
+  {"BKRG"      , Opm::UnitSystem::measure::identity},
+  {"BKRW"      , Opm::UnitSystem::measure::identity},
+  {"BWPC"      , Opm::UnitSystem::measure::pressure},
+  {"BGPC"      , Opm::UnitSystem::measure::pressure},
+  {"BVWAT"      , Opm::UnitSystem::measure::viscosity},
+  {"BWVIS"      , Opm::UnitSystem::measure::viscosity},
+  {"BVGAS"      , Opm::UnitSystem::measure::viscosity},
+  {"BGVIS"      , Opm::UnitSystem::measure::viscosity},
+  {"BVOIL"      , Opm::UnitSystem::measure::viscosity},
+  {"BOVIS"      , Opm::UnitSystem::measure::viscosity},
 };
 
-inline std::vector<Well2> find_wells( const Schedule& schedule,
-                                      const ecl::smspec_node* node,
-                                      const int sim_step,
-                                      const out::RegionCache& regionCache ) {
+inline std::vector<Opm::Well2> find_wells( const Opm::Schedule& schedule,
+                                           const ecl::smspec_node* node,
+                                           const int sim_step,
+                                           const Opm::out::RegionCache& regionCache ) {
 
     const auto* name = smspec_node_get_wgname( node );
     const auto type = smspec_node_get_var_type( node );
@@ -1121,7 +1114,7 @@ inline std::vector<Well2> find_wells( const Schedule& schedule,
         return schedule.getWells2(sim_step);
 
     if( type == ECL_SMSPEC_REGION_VAR ) {
-        std::vector<Well2> wells;
+        std::vector<Opm::Well2> wells;
 
         const auto region = smspec_node_get_num( node );
 
@@ -1131,7 +1124,7 @@ inline std::vector<Well2> find_wells( const Schedule& schedule,
                 const auto& well = schedule.getWell2( w_name, sim_step );
 
                 const auto& it = std::find_if( wells.begin(), wells.end(),
-                                               [&] ( const Well2& elem )
+                                               [&] ( const Opm::Well2& elem )
                                                { return elem.name() == well.name(); });
                 if ( it == wells.end() )
                     wells.push_back( schedule.getWell2( w_name, sim_step ));
@@ -1177,8 +1170,10 @@ bool need_wells(ecl_smspec_var_type var_type, const std::string& keyword) {
 }
 
 
-void eval_udq(const Schedule& schedule, std::size_t sim_step, SummaryState& st)
+void eval_udq(const Opm::Schedule& schedule, std::size_t sim_step, Opm::SummaryState& st)
 {
+    using namespace Opm;
+
     const UDQConfig& udq = schedule.getUDQConfig(sim_step);
     const auto& func_table = udq.function_table();
     UDQContext context(func_table, st);
@@ -1210,8 +1205,67 @@ void eval_udq(const Schedule& schedule, std::size_t sim_step, SummaryState& st)
             st.update(def.keyword(), field_udq[0].value());
     }
 }
+
+/*
+ * The well efficiency factor will not impact the well rate itself, but is
+ * rather applied for accumulated values.The WEFAC can be considered to shut
+ * and open the well for short intervals within the same timestep, and the well
+ * is therefore solved at full speed.
+ *
+ * Groups are treated similarly as wells. The group's GEFAC is not applied for
+ * rates, only for accumulated volumes. When GEFAC is set for a group, it is
+ * considered that all wells are taken down simultaneously, and GEFAC is
+ * therefore not applied to the group's rate. However, any efficiency factors
+ * applied to the group's wells or sub-groups must be included.
+ *
+ * Regions and fields will have the well and group efficiency applied for both
+ * rates and accumulated values.
+ *
+ */
+std::vector< std::pair< std::string, double > >
+well_efficiency_factors( const ecl::smspec_node* node,
+                         const Opm::Schedule& schedule,
+                         const std::vector<Opm::Well2>& schedule_wells,
+                         const int sim_step ) {
+    std::vector< std::pair< std::string, double > > efac;
+
+    auto var_type = node->get_var_type();
+    if(    var_type != ECL_SMSPEC_GROUP_VAR
+        && var_type != ECL_SMSPEC_FIELD_VAR
+        && var_type != ECL_SMSPEC_REGION_VAR
+           && !node->is_total()) {
+        return efac;
+    }
+
+    const bool is_group = (var_type == ECL_SMSPEC_GROUP_VAR);
+    const bool is_rate = !node->is_total();
+
+    for( const auto& well : schedule_wells ) {
+        if (!well.hasBeenDefined(sim_step))
+            continue;
+
+        double eff_factor = well.getEfficiencyFactor();
+        const auto* group_ptr = std::addressof(schedule.getGroup2(well.groupName(), sim_step));
+
+        while(true){
+            if((   is_group
+                && is_rate
+                && group_ptr->name() == node->get_wgname() ))
+                break;
+            eff_factor *= group_ptr->getGroupEfficiencyFactor();
+
+            if (group_ptr->name() == "FIELD")
+                break;
+            group_ptr = std::addressof( schedule.getGroup2( group_ptr->parent(), sim_step ) );
+        }
+        efac.emplace_back( well.name(), eff_factor );
+    }
+
+    return efac;
+}
 }
 
+namespace Opm {
 namespace out {
 
 class Summary::keyword_handlers {
@@ -1410,64 +1464,6 @@ Summary::Summary( const EclipseState& st,
             hndlrs.emplace_back(rvec.back().get(), func->second);
         }
     }
-}
-
-/*
- * The well efficiency factor will not impact the well rate itself, but is
- * rather applied for accumulated values.The WEFAC can be considered to shut
- * and open the well for short intervals within the same timestep, and the well
- * is therefore solved at full speed.
- *
- * Groups are treated similarly as wells. The group's GEFAC is not applied for
- * rates, only for accumulated volumes. When GEFAC is set for a group, it is
- * considered that all wells are taken down simultaneously, and GEFAC is
- * therefore not applied to the group's rate. However, any efficiency factors
- * applied to the group's wells or sub-groups must be included.
- *
- * Regions and fields will have the well and group efficiency applied for both
- * rates and accumulated values.
- *
- */
-std::vector< std::pair< std::string, double > >
-well_efficiency_factors( const ecl::smspec_node* node,
-                         const Schedule& schedule,
-                         const std::vector<Well2>& schedule_wells,
-                         const int sim_step ) {
-    std::vector< std::pair< std::string, double > > efac;
-
-    auto var_type = node->get_var_type();
-    if(    var_type != ECL_SMSPEC_GROUP_VAR
-        && var_type != ECL_SMSPEC_FIELD_VAR
-        && var_type != ECL_SMSPEC_REGION_VAR
-           && !node->is_total()) {
-        return efac;
-    }
-
-    const bool is_group = (var_type == ECL_SMSPEC_GROUP_VAR);
-    const bool is_rate = !node->is_total();
-
-    for( const auto& well : schedule_wells ) {
-        if (!well.hasBeenDefined(sim_step))
-            continue;
-
-        double eff_factor = well.getEfficiencyFactor();
-        const auto* group_ptr = std::addressof(schedule.getGroup2(well.groupName(), sim_step));
-
-        while(true){
-            if((   is_group
-                && is_rate
-                && group_ptr->name() == node->get_wgname() ))
-                break;
-            eff_factor *= group_ptr->getGroupEfficiencyFactor();
-
-            if (group_ptr->name() == "FIELD")
-                break;
-            group_ptr = std::addressof( schedule.getGroup2( group_ptr->parent(), sim_step ) );
-        }
-        efac.emplace_back( well.name(), eff_factor );
-    }
-
-    return efac;
 }
 
 void Summary::eval( SummaryState& st,
