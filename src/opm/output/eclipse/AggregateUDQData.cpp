@@ -233,9 +233,10 @@ namespace {
         {
             using WV = Opm::RestartIO::Helpers::WindowedArray<double>;
             int nwin = std::max(udqDims[9], 1);
+            int nitPrWin = std::max(udqDims[8], 1);
             return WV {
                 WV::NumWindows{ static_cast<std::size_t>(nwin) },
-                WV::WindowSize{ static_cast<std::size_t>(udqDims[8]) }
+                WV::WindowSize{ static_cast<std::size_t>(nitPrWin) }
             };
         }
 
@@ -480,7 +481,7 @@ captureDeclaredUDQData(const Opm::Schedule&                 sched,
             auto i_igph = this->iGPH_[index];
             iGph::staticContrib(igph[index], i_igph);
         }
-        
+#if 0        
     std::size_t i_wudq = 0;
     const auto& wnames = sched.wellNames(simStep);
     const auto nwmax = nwmaxz(inteHead);
@@ -492,7 +493,7 @@ captureDeclaredUDQData(const Opm::Schedule&                 sched,
             i_wudq++;
         }
     }
-
+#endif 
     std::size_t i_gudq = 0;
     const auto curGroups = currentGroups(sched, simStep, inteHead);
     const auto ngmax = ngmaxz(inteHead);
@@ -504,7 +505,7 @@ captureDeclaredUDQData(const Opm::Schedule&                 sched,
             i_gudq++;
         }
     }
-    
+   
     std::size_t i_fudq = 0;
     for (const auto& udq_input : udqCfg.input()) {
         if (udq_input.var_type() ==  UDQVarType::FIELD_VAR) {
@@ -514,6 +515,6 @@ captureDeclaredUDQData(const Opm::Schedule&                 sched,
             i_fudq++;
         }
     }
-    
+   
 }
 
