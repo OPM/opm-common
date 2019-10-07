@@ -98,7 +98,15 @@ FIPNUM
         with self.assertRaises(TypeError):
             DeckKeyword(parser["CBMOPTS"], [["3*", "A", "B", "C", "R2*", 0.77]])
 
+        with self.assertRaises(TypeError):
+            DeckKeyword(parser["CBMOPTS"], [["3*", "A", "B", "C", "2.2*", 0.77]])
 
+        dkw5 = DeckKeyword(parser["AQUCWFAC"], [["2*5.5"]])
+        assert( dkw5[0][0][0] == 5.5 )
+        assert( dkw5[0][1][0] == 5.5 )
+
+        with self.assertRaises(ValueError):
+            raise DeckKeyword(parser["AQANTRC"], [["1*2.2", "ABC", 8]])
         
 
 

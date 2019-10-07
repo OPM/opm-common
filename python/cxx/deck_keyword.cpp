@@ -60,23 +60,46 @@ struct DeckRecordIterator
 };
 
 
+bool is_int(const std::string& s)
+{
+    return !s.empty() && std::find_if(s.begin(), 
+        s.end(), [](char c) { return !std::isdigit(c); }) == s.end();
+}
+
+
 void push_string_as_deck_value(std::vector<DeckValue>& record, const std::string str) {
 
-    if (str.back() == '*') {
-        int it;
+    std::size_t star_pos = str.find('*');
+    if (star_pos != std::string::npos) {
+        int multiplier = 1;
+        
+        std::string mult_str = str.substr(0, star_pos);
 
-        if (str.length() == 1)
-            it = 1;
-        else
-            it = stod( str.substr(0, str.length() - 1) );
+        if (mult_str.length() > 0) {
+            if (is_int(mult_str))
+                multiplier = std::stoi( mult_str );
+            else
+                throw py::type_error();
+        }
 
-        for (int i = 0; i < it; i++)
-            record.push_back( DeckValue() );
+        std::string value_str = str.substr(star_pos + 1, str.length());
+        DeckValue value;
+
+        if (value_str.length() > 0) {
+            if (is_int(value_str))
+                value = DeckValue( stoi(value_str) );
+            else
+                value = DeckValue( stod(value_str) );
+        }
+
+        for (int i = 0; i < multiplier; i++)
+            record.push_back( value );
+      
     }
     else
         record.push_back( DeckValue(str) );
-}
 
+}
 
 }
 
