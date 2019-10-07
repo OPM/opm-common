@@ -186,14 +186,14 @@ namespace {
         };
     }
     
-    Opm::RestartIO::InteHEAD::UdqParam
+    /*Opm::RestartIO::InteHEAD::UdqParam
     getRandSeedPar(const ::Opm::Runspec& rspec)
     { 
         const auto& udq_par = rspec.udqParams();
         const auto r_seed = udq_par.rand_seed();
         
         return { r_seed};
-    }
+    }*/
     
     Opm::RestartIO::InteHEAD::WellSegDims
     getWellSegDims(const ::Opm::Runspec&  rspec,
