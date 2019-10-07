@@ -1205,6 +1205,64 @@ void eval_udq(const Opm::Schedule& schedule, std::size_t sim_step, Opm::SummaryS
             st.update(def.keyword(), field_udq[0].value());
     }
 }
+
+/*
+ * The well efficiency factor will not impact the well rate itself, but is
+ * rather applied for accumulated values.The WEFAC can be considered to shut
+ * and open the well for short intervals within the same timestep, and the well
+ * is therefore solved at full speed.
+ *
+ * Groups are treated similarly as wells. The group's GEFAC is not applied for
+ * rates, only for accumulated volumes. When GEFAC is set for a group, it is
+ * considered that all wells are taken down simultaneously, and GEFAC is
+ * therefore not applied to the group's rate. However, any efficiency factors
+ * applied to the group's wells or sub-groups must be included.
+ *
+ * Regions and fields will have the well and group efficiency applied for both
+ * rates and accumulated values.
+ *
+ */
+std::vector< std::pair< std::string, double > >
+well_efficiency_factors( const ecl::smspec_node* node,
+                         const Opm::Schedule& schedule,
+                         const std::vector<Opm::Well2>& schedule_wells,
+                         const int sim_step ) {
+    std::vector< std::pair< std::string, double > > efac;
+
+    auto var_type = node->get_var_type();
+    if(    var_type != ECL_SMSPEC_GROUP_VAR
+        && var_type != ECL_SMSPEC_FIELD_VAR
+        && var_type != ECL_SMSPEC_REGION_VAR
+           && !node->is_total()) {
+        return efac;
+    }
+
+    const bool is_group = (var_type == ECL_SMSPEC_GROUP_VAR);
+    const bool is_rate = !node->is_total();
+
+    for( const auto& well : schedule_wells ) {
+        if (!well.hasBeenDefined(sim_step))
+            continue;
+
+        double eff_factor = well.getEfficiencyFactor();
+        const auto* group_ptr = std::addressof(schedule.getGroup2(well.groupName(), sim_step));
+
+        while(true){
+            if((   is_group
+                && is_rate
+                && group_ptr->name() == node->get_wgname() ))
+                break;
+            eff_factor *= group_ptr->getGroupEfficiencyFactor();
+
+            if (group_ptr->name() == "FIELD")
+                break;
+            group_ptr = std::addressof( schedule.getGroup2( group_ptr->parent(), sim_step ) );
+        }
+        efac.emplace_back( well.name(), eff_factor );
+    }
+
+    return efac;
+}
 }
 
 namespace Opm {
@@ -1406,64 +1464,6 @@ Summary::Summary( const EclipseState& st,
             hndlrs.emplace_back(rvec.back().get(), func->second);
         }
     }
-}
-
-/*
- * The well efficiency factor will not impact the well rate itself, but is
- * rather applied for accumulated values.The WEFAC can be considered to shut
- * and open the well for short intervals within the same timestep, and the well
- * is therefore solved at full speed.
- *
- * Groups are treated similarly as wells. The group's GEFAC is not applied for
- * rates, only for accumulated volumes. When GEFAC is set for a group, it is
- * considered that all wells are taken down simultaneously, and GEFAC is
- * therefore not applied to the group's rate. However, any efficiency factors
- * applied to the group's wells or sub-groups must be included.
- *
- * Regions and fields will have the well and group efficiency applied for both
- * rates and accumulated values.
- *
- */
-std::vector< std::pair< std::string, double > >
-well_efficiency_factors( const ecl::smspec_node* node,
-                         const Schedule& schedule,
-                         const std::vector<Well2>& schedule_wells,
-                         const int sim_step ) {
-    std::vector< std::pair< std::string, double > > efac;
-
-    auto var_type = node->get_var_type();
-    if(    var_type != ECL_SMSPEC_GROUP_VAR
-        && var_type != ECL_SMSPEC_FIELD_VAR
-        && var_type != ECL_SMSPEC_REGION_VAR
-           && !node->is_total()) {
-        return efac;
-    }
-
-    const bool is_group = (var_type == ECL_SMSPEC_GROUP_VAR);
-    const bool is_rate = !node->is_total();
-
-    for( const auto& well : schedule_wells ) {
-        if (!well.hasBeenDefined(sim_step))
-            continue;
-
-        double eff_factor = well.getEfficiencyFactor();
-        const auto* group_ptr = std::addressof(schedule.getGroup2(well.groupName(), sim_step));
-
-        while(true){
-            if((   is_group
-                && is_rate
-                && group_ptr->name() == node->get_wgname() ))
-                break;
-            eff_factor *= group_ptr->getGroupEfficiencyFactor();
-
-            if (group_ptr->name() == "FIELD")
-                break;
-            group_ptr = std::addressof( schedule.getGroup2( group_ptr->parent(), sim_step ) );
-        }
-        efac.emplace_back( well.name(), eff_factor );
-    }
-
-    return efac;
 }
 
 void Summary::eval( SummaryState& st,
