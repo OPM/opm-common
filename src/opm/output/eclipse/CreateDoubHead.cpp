@@ -82,14 +82,14 @@ createDoubHead(const EclipseState& es,
                const double        nextTimeStep)
 {
     const auto& usys  = es.getDeckUnitSystem();
-    //const auto& rspec  = es.runspec();
+    const auto& rspec  = es.runspec();
     const auto  tconv = getTimeConv(usys);
 
     auto dh = DoubHEAD{}
         .tuningParameters(sched.getTuning(), lookup_step, tconv)
         .timeStamp       (computeTimeStamp(sched, simTime))
         .drsdt           (sched, lookup_step, tconv)
-        //.udq_param(getUDQParam(rspec))
+        //.udq_param(rspec.udqParams())
         ;
 
     if (nextTimeStep > 0.0) {

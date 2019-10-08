@@ -26,8 +26,9 @@
 //#include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 
-
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQInput.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQInput.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQActive.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQDefine.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQAssign.hpp>
@@ -53,6 +54,12 @@ namespace {
     {
         return inteHead[20];
     }
+    
+        // maximum number of wells
+    std::size_t nwmaxz(const std::vector<int>& inteHead)
+    {
+        return inteHead[163];
+    }
 
 
     namespace iUdq {
@@ -61,8 +68,9 @@ namespace {
         allocate(const std::vector<int>& udqDims)
         {
             using WV = Opm::RestartIO::Helpers::WindowedArray<int>;
+            int nwin = std::max(udqDims[0], 1);
             return WV {
-                WV::NumWindows{ static_cast<std::size_t>(udqDims[0]) },
+                WV::NumWindows{ static_cast<std::size_t>(nwin) },
                 WV::WindowSize{ static_cast<std::size_t>(udqDims[1]) }
             };
         }
@@ -88,9 +96,10 @@ namespace {
         allocate(const std::vector<int>& udqDims)
         {
             using WV = Opm::RestartIO::Helpers::WindowedArray<int>;
+            int nwin = std::max(udqDims[2], 1);
             return WV {
-                WV::NumWindows{ static_cast<std::size_t>(udqDims[2]) },
-                    WV::WindowSize{ static_cast<std::size_t>(udqDims[3]) }
+                WV::NumWindows{ static_cast<std::size_t>(nwin) },
+                WV::WindowSize{ static_cast<std::size_t>(udqDims[3]) }
             };
         }
 
@@ -117,11 +126,10 @@ namespace {
         allocate(const std::vector<int>& udqDims)
         {
             using WV = Opm::RestartIO::Helpers::WindowedArray<
-                Opm::EclIO::PaddedOutputString<8>
-            >;
-
+                Opm::EclIO::PaddedOutputString<8>>;
+            int nwin = std::max(udqDims[0], 1);
             return WV {
-                WV::NumWindows{ static_cast<std::size_t>(udqDims[0]) },
+                WV::NumWindows{ static_cast<std::size_t>(nwin) },
                 WV::WindowSize{ static_cast<std::size_t>(udqDims[4]) }
             };
         }
@@ -143,11 +151,10 @@ namespace {
         allocate(const std::vector<int>& udqDims)
         {
             using WV = Opm::RestartIO::Helpers::WindowedArray<
-                Opm::EclIO::PaddedOutputString<8>
-            >;
-
+                Opm::EclIO::PaddedOutputString<8>>;
+            int nwin = std::max(udqDims[0], 1);
             return WV {
-                WV::NumWindows{ static_cast<std::size_t>(udqDims[0]) },
+                WV::NumWindows{ static_cast<std::size_t>(nwin) },
                 WV::WindowSize{ static_cast<std::size_t>(udqDims[5]) }
             };
         }
@@ -204,8 +211,9 @@ namespace {
         allocate(const std::vector<int>& udqDims)
         {
             using WV = Opm::RestartIO::Helpers::WindowedArray<int>;
+            int nwin = std::max(udqDims[7], 1);
             return WV {
-                WV::NumWindows{ static_cast<std::size_t>(udqDims[7]) },
+                WV::NumWindows{ static_cast<std::size_t>(nwin) },
                 WV::WindowSize{ static_cast<std::size_t>(1) }
             };
         }
@@ -218,7 +226,105 @@ namespace {
         }
     } // iUap
 
+    namespace dUdw {
+
+        Opm::RestartIO::Helpers::WindowedArray<double>
+        allocate(const std::vector<int>& udqDims)
+        {
+            using WV = Opm::RestartIO::Helpers::WindowedArray<double>;
+            int nwin = std::max(udqDims[9], 1);
+            int nitPrWin = std::max(udqDims[8], 1);
+            return WV {
+                WV::NumWindows{ static_cast<std::size_t>(nwin) },
+                WV::WindowSize{ static_cast<std::size_t>(nitPrWin) }
+            };
+        }
+
+        template <class DUDWArray>
+        void staticContrib(const Opm::SummaryState& st,
+                           const std::vector<std::string>& wnames,
+                           const std::string udq,
+                           const std::size_t nwmaxz,
+                           DUDWArray&   dUdw)
+        {
+            //initialize array to the default value for the array
+            for (std::size_t ind = 0; ind < nwmaxz; ind++) {
+                dUdw[ind] = -0.3E+21;
+            }
+            for (std::size_t ind = 0; ind < wnames.size(); ind++) {
+                if (st.has_well_var(wnames[ind], udq)) {
+                    dUdw[ind] = st.get_well_var(wnames[ind], udq);        
+                }
+            }
+        }
+    } // dUdw
+
+        namespace dUdg {
+
+        Opm::RestartIO::Helpers::WindowedArray<double>
+        allocate(const std::vector<int>& udqDims)
+        {
+            using WV = Opm::RestartIO::Helpers::WindowedArray<double>;
+            int nwin = std::max(udqDims[11], 1);
+            return WV {
+                WV::NumWindows{ static_cast<std::size_t>(nwin) },
+                WV::WindowSize{ static_cast<std::size_t>(udqDims[10]) }
+            };
+        }
+
+        template <class DUDGArray>
+        void staticContrib(const Opm::SummaryState& st,
+                           const std::vector<const Opm::Group2*> groups,
+                           const std::string udq,
+                           const std::size_t ngmaxz,
+                           DUDGArray&   dUdg)
+        {
+            //initialize array to the default value for the array
+            for (std::size_t ind = 0; ind < groups.size(); ind++) {
+                if ((groups[ind] == nullptr) || (ind == ngmaxz-1)) {
+                    dUdg[ind] = -0.3E+21;
+                }
+                else {
+                    if (st.has_group_var((*groups[ind]).name(), udq)) {                        
+                        dUdg[ind] = st.get_group_var((*groups[ind]).name(), udq); 
+                    }
+                    else {
+                        dUdg[ind] = -0.3E+21; 
+                    }
+                }
+            }
+        }
+    } // dUdg
+
+        namespace dUdf {
+
+        Opm::RestartIO::Helpers::WindowedArray<double>
+        allocate(const std::vector<int>& udqDims)
+        {
+            using WV = Opm::RestartIO::Helpers::WindowedArray<double>;
+            int nwin = std::max(udqDims[12], 1);
+            return WV {
+                WV::NumWindows{ static_cast<std::size_t>(nwin) },
+                WV::WindowSize{ static_cast<std::size_t>(1) }
+            };
+        }
+
+        template <class DUDFArray>
+        void staticContrib(const Opm::SummaryState& st,
+                           const std::string udq,
+                           DUDFArray&   dUdf)
+        {
+            //set value for group name "FIELD"
+            if (st.has(udq)) {    
+                dUdf[0] = st.get(udq); 
+            }
+            else {
+                dUdf[0] = -0.3E+21; 
+            }
+        }
+    } // dUdf    
 }
+
 
 // =====================================================================
 
@@ -244,23 +350,41 @@ std::pair<bool, int > findInVector(const std::vector<T>  & vecOfElements, const 
     return result;
 }
 
+// Make ordered list of current groups
+const std::vector<const Opm::Group2*> currentGroups(const Opm::Schedule& sched,
+                                                    const std::size_t simStep,
+                                                    const std::vector<int>& inteHead )
+{
+    std::vector<const Opm::Group2*> curGroups(ngmaxz(inteHead), nullptr);
+    for (const auto& group_name : sched.groupNames(simStep)) {
+        const auto& group = sched.getGroup2(group_name, simStep);
+        
+        //The FIELD group is the first group according to the insert_index()
+        //In the Eclipse compatible restart file, the FILED group is put at the end of the list of groups (ngmaxz(inteHead)-1)
+        int ind = (group.name() == "FIELD")
+            ? ngmaxz(inteHead)-1 : group.insert_index()-1;
+        curGroups[ind] = std::addressof(group);
+
+    }   
+    return curGroups;
+}
+
 const std::vector<int> Opm::RestartIO::Helpers::igphData::ig_phase(const Opm::Schedule& sched,
                                                                    const std::size_t simStep,
-                                                                   const std::vector<int>& inteHead
-                                                                  )
+                                                                   const std::vector<int>& inteHead )
 {
+    const auto curGroups = currentGroups(sched, simStep, inteHead);
     std::vector<int> inj_phase(ngmaxz(inteHead), 0);
-
-    for (const auto& gname : sched.groupNames(simStep)) {
-        const auto& group = sched.getGroup2(gname, simStep);
-        if (group.isInjectionGroup()) {
-            //auto phase = group.getInjectionPhase();
-            auto phase = Opm::Phase::OIL;
-            if ( phase == Opm::Phase::OIL   ) inj_phase[group.insert_index()] = 1;
-            if ( phase == Opm::Phase::WATER ) inj_phase[group.insert_index()] = 2;
-            if ( phase == Opm::Phase::GAS   ) inj_phase[group.insert_index()] = 3;
+    for (std::size_t ind = 0; ind < curGroups.size(); ind++) {
+        if (curGroups[ind] != nullptr) {
+            const auto& group = *curGroups[ind];
+            if (group.isInjectionGroup()) {
+                const auto& phase = group.injection_phase();
+                if ( phase == Opm::Phase::OIL   ) inj_phase[group.insert_index()] = 1;
+                if ( phase == Opm::Phase::WATER ) inj_phase[group.insert_index()] = 2;
+                if ( phase == Opm::Phase::GAS   ) inj_phase[group.insert_index()] = 3;
+            }
         }
-        
     }
     return inj_phase;
 }
@@ -293,9 +417,7 @@ const std::vector<int> iuap_data(const Opm::Schedule& sched,
 
     return wg_no;
 }
-
-
-
+            
 Opm::RestartIO::Helpers::AggregateUDQData::
 AggregateUDQData(const std::vector<int>& udqDims)
     : iUDQ_ (iUdq::allocate(udqDims)),
@@ -303,7 +425,10 @@ AggregateUDQData(const std::vector<int>& udqDims)
       zUDN_ (zUdn::allocate(udqDims)),
       zUDL_ (zUdl::allocate(udqDims)),
       iGPH_ (iGph::allocate(udqDims)),
-      iUAP_ (iUap::allocate(udqDims))
+      iUAP_ (iUap::allocate(udqDims)),
+      dUDW_ (dUdw::allocate(udqDims)),
+      dUDG_ (dUdg::allocate(udqDims)),
+      dUDF_ (dUdf::allocate(udqDims))
 {}
 
 // ---------------------------------------------------------------------
@@ -312,9 +437,10 @@ void
 Opm::RestartIO::Helpers::AggregateUDQData::
 captureDeclaredUDQData(const Opm::Schedule&                 sched,
                        const std::size_t                    simStep,
+                       const Opm::SummaryState&             st,
                        const std::vector<int>&              inteHead)
 {
-    auto udqCfg = sched.getUDQConfig(simStep);
+    const auto& udqCfg = sched.getUDQConfig(simStep);
     for (const auto& udq_input : udqCfg.input()) {
         auto udq_index = udq_input.index.insert_index;
         {
@@ -355,6 +481,40 @@ captureDeclaredUDQData(const Opm::Schedule&                 sched,
             auto i_igph = this->iGPH_[index];
             iGph::staticContrib(igph[index], i_igph);
         }
-        
+#if 0        
+    std::size_t i_wudq = 0;
+    const auto& wnames = sched.wellNames(simStep);
+    const auto nwmax = nwmaxz(inteHead);
+    for (const auto& udq_input : udqCfg.input()) {
+        if (udq_input.var_type() ==  UDQVarType::WELL_VAR) {
+            const std::string& udq = udq_input.keyword();
+            auto i_dudw = this->dUDW_[i_wudq];
+            dUdw::staticContrib(st, wnames, udq, nwmax, i_dudw);
+            i_wudq++;
+        }
+    }
+#endif 
+    std::size_t i_gudq = 0;
+    const auto curGroups = currentGroups(sched, simStep, inteHead);
+    const auto ngmax = ngmaxz(inteHead);
+    for (const auto& udq_input : udqCfg.input()) {
+        if (udq_input.var_type() ==  UDQVarType::GROUP_VAR) {
+            const std::string& udq = udq_input.keyword();
+            auto i_dudg = this->dUDG_[i_gudq];
+            dUdg::staticContrib(st, curGroups, udq, ngmax, i_dudg);
+            i_gudq++;
+        }
+    }
+   
+    std::size_t i_fudq = 0;
+    for (const auto& udq_input : udqCfg.input()) {
+        if (udq_input.var_type() ==  UDQVarType::FIELD_VAR) {
+            const std::string& udq = udq_input.keyword();
+            auto i_dudf = this->dUDF_[i_fudq];
+            dUdf::staticContrib(st, udq, i_dudf);
+            i_fudq++;
+        }
+    }
+   
 }
 

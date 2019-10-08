@@ -52,6 +52,10 @@ const std::string& UDQInput::keyword() const {
     return this->m_keyword;
 }
 
+const UDQVarType& UDQInput::var_type() const {
+    return this->m_var_type;
+}
+
 template<>
 bool UDQInput::is<UDQAssign>() const {
     if (this->assign)

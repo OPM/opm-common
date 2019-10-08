@@ -58,9 +58,9 @@ namespace Opm { namespace RestartIO {
 
         DoubHEAD& drsdt(const Schedule&   sched,
                         const std::size_t lookup_step,
-			const double      cnvT);
+                        const double      cnvT);
 	
-	DoubHEAD& udq_param(const UDQParams& udqPar);
+        DoubHEAD& udq_param(const UDQParams& udqPar);
 
         const std::vector<double>& data() const
         {

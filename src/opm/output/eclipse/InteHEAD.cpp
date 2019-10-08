@@ -182,7 +182,7 @@ enum index : std::vector<int>::size_type {
   ih_160       =      160       ,              //       0       0
   ih_161       =      161       ,              //       0       0
   NGCAUS       =      162       ,              //       0       0              NGCAUS = maximum number of aquifer connections actually used.
-  ih_163       =      163       ,              //       0       0
+  NWMAXZ       =      VI::intehead::NWMAXZ,    //       0       0
   ih_164       =      164       ,              //       0       0
   ih_165       =      165       ,              //       0       0
   ih_166       =      166       ,              //       0       0
@@ -500,6 +500,8 @@ Opm::RestartIO::InteHEAD::wellTableDimensions(const WellTableDim& wtdim)
                                    wtdim.maxGroupInField);
 
     this->data_[NGMAXZ] = wtdim.maxGroupInField + 1;
+    
+    //this->data_[NWMAXZ] = wtdim.maxWellsInField;
 
     return *this;
 }

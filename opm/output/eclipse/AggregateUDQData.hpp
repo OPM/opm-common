@@ -50,15 +50,15 @@ public:
     const std::vector<int> ig_phase(const Opm::Schedule& sched, const std::size_t simStep, const std::vector<int>& inteHead);
 };
 
-
 class AggregateUDQData
 {
 public:
     explicit AggregateUDQData(const std::vector<int>& udqDims);
 
-    void captureDeclaredUDQData(const Opm::Schedule&	sched,
-                                const std::size_t     simStep,
-                                const std::vector<int>& ih);
+void captureDeclaredUDQData(const Opm::Schedule&                 sched,
+                       const std::size_t                    simStep,
+                       const Opm::SummaryState&             st,
+                       const std::vector<int>&              inteHead);
 
     const std::vector<int>& getIUDQ() const
     {
@@ -89,18 +89,21 @@ public:
     {
         return this->iUAP_.data();
     }
-#if 0
+
     const std::vector<double>& getDUDW() const
     {
         return this->dUDW_.data();
     }
-
+    
+        const std::vector<double>& getDUDG() const
+    {
+        return this->dUDG_.data();
+    }
+    
     const std::vector<double>& getDUDF() const
     {
         return this->dUDF_.data();
     }
-#endif
-
 
 private:
     /// Aggregate 'IUDQ' array (Integer) for all UDQ data  (3 integers pr UDQ)
@@ -121,13 +124,15 @@ private:
 
     /// Aggregate 'IUAP' array (ICharArrayNullTermnteger) for all UDQ data  (1 integer pr UDQ constraint used)
     WindowedArray<int> iUAP_;
-#if 0
+
     /// Aggregate 'DUDW' array (Double Precision) for all UDQ data. (Dimension = max no wells * noOfUDQ's)
     WindowedArray<double> dUDW_;
-
+    
+    /// Aggregate 'DUDG' array (Double Precision) for all UDQ data. (Dimension = (max no groups + 1) * noOfUDQ's)
+    WindowedArray<double> dUDG_;
+    
     /// Aggregate 'DUDF' array (Double Precision) for all UDQ data.  (Dimension = Number of FU - UDQ's, with value equal to the actual constraint)
     WindowedArray<double> dUDF_;
-#endif
 
 
 };

@@ -1,18 +1,14 @@
 /*
 Copyright 2018 Statoil ASA.
-
   This file is part of the Open Porous Media project (OPM).
-
   OPM is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation, either version 3 of the License, or
   (at your option) any later version.
-
   OPM is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
@@ -223,13 +219,10 @@ BOOST_AUTO_TEST_CASE(UDQ_DEFINETEST) {
 BOOST_AUTO_TEST_CASE(KEYWORDS) {
     const std::string input = R"(
 RUNSPEC
-
 UDQDIMS
    10* 'N'/
-
 UDQPARAM
   3* 0.25 /
-
 )";
     Parser parser;
 
@@ -281,15 +274,11 @@ BOOST_AUTO_TEST_CASE(ENUM_CONVERSION) {
 BOOST_AUTO_TEST_CASE(UDQ_KEWYORDS) {
     const std::string input = R"(
 RUNSPEC
-
 UDQDIMS
    10* 'Y'/
-
 UDQPARAM
   3* 0.25 /
-
 SCHEDULE
-
 UDQ
   ASSIGN WUBHP 0.0 /
   UNITS  WUBHP 'BARSA' /
@@ -297,11 +286,9 @@ UDQ
   ASSIGN WUXUNIT 0.0 /
   DEFINE FUOPR  AVEG(WOPR)/
 /
-
 DATES
   10 'JAN' 2010 /
 /
-
 UDQ
   ASSIGN WUBHP 0.0 /
   DEFINE FUOPR  AVEG(WOPR)/
@@ -342,25 +329,19 @@ UDQ
 BOOST_AUTO_TEST_CASE(UDQ_CHANGE_UNITS_ILLEGAL) {
   const std::string input = R"(
 RUNSPEC
-
 UDQDIMS
    10* 'Y'/
-
 UDQPARAM
   3* 0.25 /
-
 SCHEDULE
-
 UDQ
   ASSIGN WUBHP 0.0 /
   UNITS  WUBHP 'BARSA' /
   DEFINE FUOPR  AVEG(WOPR) + 1/
 /
-
 DATES
   10 'JAN' 2010 /
 /
-
 UDQ
   ASSIGN WUBHP 0.0 /
   DEFINE FUOPR  AVEG(WOPR) + 1/
@@ -380,8 +361,6 @@ BOOST_AUTO_TEST_CASE(UDQ_DEFINE_WITH_SLASH) {
 UDQ
  DEFINE WUWCT WWPR / ( WWPR + WOPR ) /
 /
-
-
 )";
     Parser parser;
     auto deck = parser.parseString(input);
@@ -398,21 +377,15 @@ UDQ
 BOOST_AUTO_TEST_CASE(UDQ_ASSIGN_DATA) {
     const std::string input = R"(
 RUNSPEC
-
 UDQDIMS
    10* 'Y'/
-
 UDQPARAM
   3* 0.25 /
-
 SCHEDULE
-
 UDQ
 ASSIGN WU1 P12 4.0 /
 ASSIGN WU2 8.0 /
 /
-
-
 )";
     const auto schedule = make_schedule(input);
     const auto& udq = schedule.getUDQConfig(0);
@@ -1150,7 +1123,6 @@ BOOST_AUTO_TEST_CASE(UDA_VALUE_DIM) {
 BOOST_AUTO_TEST_CASE(UDQ_INPUT_BASIC) {
     std::string deck_string = R"(
 SCHEDULE
-
 UDQ
     ASSIGN WUBHP1 11 /
     ASSIGN WUOPR  20 /
@@ -1163,12 +1135,10 @@ UDQ
     UNITS  FUOPR 'SM3/DAY' /
     UNITS  FUXXX 'SM3/DAY' /
 /
-
 UDQ
     ASSIGN WUBHPX P2 12 /
     DEFINE FUOPRX SUM(WOPR) /
 /
-
 )";
     auto schedule = make_schedule(deck_string);
     const auto& udq = schedule.getUDQConfig(0);
@@ -1206,7 +1176,6 @@ UDQ
 BOOST_AUTO_TEST_CASE(UDQ_INPUT_OVERWRITE) {
     std::string deck_string = R"(
 SCHEDULE
-
 UDQ
     ASSIGN WUBHP1 11 /
     ASSIGN WUOPR  20 /
@@ -1218,12 +1187,10 @@ UDQ
     DEFINE FUOPR SUM(WOPR) /
     UNITS  FUOPR 'SM3/DAY' /
 /
-
 UDQ
     DEFINE WUBHP1 SUM(WOPR) /
     DEFINE FUOPR MAX(WOPR) /
 /
-
 )";
     auto schedule = make_schedule(deck_string);
     const auto& udq = schedule.getUDQConfig(0);
@@ -1338,38 +1305,26 @@ UNITS  WULPRL SM3/DAY /
 UNITS  WUOPRU SM3/DAY /
 UNITS  WULPRU SM3/DAY /
 /
-
 WCONPROD
   'PROD1'     'OPEN'  'GRUP' WUOPRU  1*  1*  WULPRU 1* 60.0   / single wells
 /
-
-
 WCONPROD
   'PROD2'     'OPEN'  'GRUP' WUOPRU  1*  1*  WULPRU 1* 60.0   / single wells
  /
-
 WCONINJE
  'WINJ1' 'WAT' 'OPEN' 'BHP'  1*  1200  3500  1*  /
  'WINJ2' 'WAT' 'OPEN' 'BHP'  1*    800  3500  1*  /
 /
-
 TSTEP
  5 /
-
 WCONPROD
   'PROD2'     'OPEN'  'GRUP' WUXO 1*  1*  WUXL 1* 60.0   / single wells
 /
-
 TSTEP
  5 /
-
 WCONPROD
   'PROD1'     'OPEN'  'GRUP' 100 1*  1*  100 1* 60.0   / single wells
 /
-
-
-
-
 )";
     auto schedule = make_udq_schedule(udq_string);
 

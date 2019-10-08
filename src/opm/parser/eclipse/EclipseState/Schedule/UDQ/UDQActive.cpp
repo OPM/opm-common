@@ -140,7 +140,7 @@ const std::vector<UDQActive::Record>& UDQActive::get_iuad() const {
             }
         }
     }
-
+    
     return this->output_data;
 }
 
@@ -171,7 +171,7 @@ std::vector<UDQActive::InputRecord> UDQActive::get_iuap() const {
 UDQActive::Record UDQActive::operator[](std::size_t index) const {
     const auto& output_record = this->get_iuad()[index];
     return output_record;
-}
+}   
 
 
 }
