@@ -1,7 +1,10 @@
 import unittest
+import json
 import opm
 import opm.io
 import os.path
+
+from opm.io.parser import Parser, ParseContext
 
 class TestParse(unittest.TestCase):
 
@@ -61,14 +64,20 @@ FIPNUM
     def test_parser_fail_without_extension(self):
         error_recovery = [("PARSE_RANDOM_SLASH", opm.io.action.ignore)]
         with self.assertRaises(ValueError):
-            opm.io.load_deck_string(self.DECK_ADDITIONAL_KEYWORDS,
-                                        recovery=error_recovery )
+            parse_context = ParseContext(error_recovery)
+            deck = Parser().parse_string(self.DECK_ADDITIONAL_KEYWORDS, parse_context)
+
 
     def test_parser_extension(self):
         error_recovery = [("PARSE_RANDOM_SLASH", opm.io.action.ignore)]
-        deck = opm.io.load_deck_string(self.DECK_ADDITIONAL_KEYWORDS,
-                                           keywords=self.KEYWORDS,
-                                           recovery=error_recovery )
+
+        parse_context = ParseContext(error_recovery)
+        parser = Parser()
+        for kw in self.KEYWORDS:
+            parser.add_keyword(json.dumps(kw))
+
+        deck = parser.parse_string(self.DECK_ADDITIONAL_KEYWORDS, parse_context)
+
         self.assertIn( 'TESTKEY0', deck )
         self.assertIn( 'TESTKEY1', deck )
         self.assertIn( 'TESTKEY2', deck )
