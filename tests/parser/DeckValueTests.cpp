@@ -1,5 +1,21 @@
+/*
+  Copyright 2019 Equinor ASA.
 
+  This file is part of the Open Porous Media project (OPM).
 
+  OPM is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  OPM is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with OPM.  If not, see <http://www.gnu.org/licenses/>.
+*/
 
 #define BOOST_TEST_MODULE DeckValueTests
 
@@ -57,16 +73,16 @@ BOOST_AUTO_TEST_CASE(DeckValueTest) {
 
 
 BOOST_AUTO_TEST_CASE(DeckKeywordConstructor) {
-    
+
     Parser parser;
 
     const ParserKeyword& big_model = parser.getKeyword("BIGMODEL");
     BOOST_CHECK_THROW( DeckKeyword( big_model, {{DeckValue("WORD_A")}} ), std::invalid_argument );
 
     const ParserKeyword& box = parser.getKeyword("BOX");
-    std::vector< DeckValue > record1 = {DeckValue(1), DeckValue(2), DeckValue(3), DeckValue(4), DeckValue(5), DeckValue(6)}; 
+    std::vector< DeckValue > record1 = {DeckValue(1), DeckValue(2), DeckValue(3), DeckValue(4), DeckValue(5), DeckValue(6)};
     BOOST_CHECK_NO_THROW( DeckKeyword( box, {record1} ) );
-    //BOOST_CHECK_THROW( DeckKeyword( box, {record1, record1} ) , std::invalid_argument);
+    BOOST_CHECK_THROW( DeckKeyword( box, {{ record1, record1 }}), std::invalid_argument );
 
     const ParserKeyword& addreg = parser.getKeyword("ADDREG");
 
@@ -104,5 +120,5 @@ BOOST_AUTO_TEST_CASE(DeckKeywordConstructor) {
     //check that int can substitute double
     BOOST_CHECK_NO_THROW( DeckKeyword(addreg, {{DeckValue("WORD_A"), DeckValue(5), DeckValue(77)}}   ) );
 
-    
+
 }
