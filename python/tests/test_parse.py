@@ -3,6 +3,9 @@ import opm.io
 import os.path
 import sys
 
+from opm.io.parser import Parser, ParseContext
+from opm.io.ecl_state import EclipseState
+
 class TestParse(unittest.TestCase):
 
     REGIONDATA = """
@@ -32,31 +35,36 @@ FIPNUM
         self.spe3fn = 'tests/spe3/SPE3CASE1.DATA'
         self.norne_fname = os.path.abspath('examples/data/norne/NORNE_ATW2013.DATA')
 
-    """
     def test_parse(self):
-        spe3 = opm.io.parse(self.spe3fn)
-        self.assertEqual('SPE 3 - CASE 1', spe3.state.title)
-    """
+        deck = Parser().parse(self.spe3fn)
+        state = EclipseState(deck)
+        self.assertEqual('SPE 3 - CASE 1', state.title)
 
     def test_parse_with_recovery(self):
         recovery = [("PARSE_RANDOM_SLASH", opm.io.action.ignore)]
-        spe3 = opm.io.parse(self.spe3fn, recovery=recovery)
+        parse_context = ParseContext( recovery )
+        deck = Parser().parse(self.spe3fn, parse_context)
+        state = EclipseState(deck)
 
     def test_parse_with_multiple_recoveries(self):
         recoveries = [ ("PARSE_RANDOM_SLASH", opm.io.action.ignore),
                        ("FOO", opm.io.action.warn),
                        ("PARSE_RANDOM_TEXT", opm.io.action.throw) ]
 
-        spe3 = opm.io.parse(self.spe3fn, recovery=recoveries)
+        parse_context = ParseContext(recoveries)
+        deck = Parser().parse(self.spe3fn, parse_context)
+        state = EclipseState(deck)
 
     def test_throw_on_invalid_recovery(self):
         recoveries = [ ("PARSE_RANDOM_SLASH", 3.14 ) ]
 
         with self.assertRaises(TypeError):
-            opm.io.parse(self.spe3fn, recovery=recoveries)
+            parse_context = ParseContext(recoveries)
+            deck = Parser().parse(self.spe3fn, parse_context)
 
         with self.assertRaises(TypeError):
-            opm.io.parse(self.spe3fn, recovery="PARSE_RANDOM_SLASH")
+            parse_context = ParseContext("PARSE_RANDOM_SLASH")
+            deck = Parser().parse(self.spe3fn, parse_context)
 
     def test_data(self):
         pass
@@ -64,14 +72,13 @@ FIPNUM
         #self.assertEqual([3,3,1,2], regtest.props()['OPERNUM'])
 
     def test_parse_norne(self):
-         state = opm.io.parse(self.norne_fname, recovery=[('PARSE_RANDOM_SLASH', opm.io.action.ignore)])
-         """
-         es = state.state
+         parse_context = ParseContext( [('PARSE_RANDOM_SLASH', opm.io.action.ignore)] )
+         deck = Parser().parse(self.norne_fname, parse_context)
+         es = EclipseState( deck )
          
-         self.assertEqual(46, es.grid().getNX())
-         self.assertEqual(112, es.grid().getNY())
-         self.assertEqual(22, es.grid().getNZ())
-         """
+         self.assertEqual(46, es.grid().nx)
+         self.assertEqual(112, es.grid().ny)
+         self.assertEqual(22, es.grid().nz)
 
 if __name__ == "__main__":
     unittest.main()
