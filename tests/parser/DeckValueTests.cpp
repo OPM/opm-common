@@ -57,14 +57,14 @@ BOOST_AUTO_TEST_CASE(DeckValueTest) {
 
 
 BOOST_AUTO_TEST_CASE(DeckKeywordConstructor) {
-    
+
     Parser parser;
 
     const ParserKeyword& big_model = parser.getKeyword("BIGMODEL");
     BOOST_CHECK_THROW( DeckKeyword( big_model, {{DeckValue("WORD_A")}} ), std::invalid_argument );
 
     const ParserKeyword& box = parser.getKeyword("BOX");
-    std::vector< DeckValue > record1 = {DeckValue(1), DeckValue(2), DeckValue(3), DeckValue(4), DeckValue(5), DeckValue(6)}; 
+    std::vector< DeckValue > record1 = {DeckValue(1), DeckValue(2), DeckValue(3), DeckValue(4), DeckValue(5), DeckValue(6)};
     BOOST_CHECK_NO_THROW( DeckKeyword( box, {record1} ) );
     //BOOST_CHECK_THROW( DeckKeyword( box, {record1, record1} ) , std::invalid_argument);
 
@@ -104,5 +104,5 @@ BOOST_AUTO_TEST_CASE(DeckKeywordConstructor) {
     //check that int can substitute double
     BOOST_CHECK_NO_THROW( DeckKeyword(addreg, {{DeckValue("WORD_A"), DeckValue(5), DeckValue(77)}}   ) );
 
-    
+
 }
