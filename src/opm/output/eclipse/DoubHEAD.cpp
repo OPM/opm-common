@@ -486,8 +486,10 @@ Opm::RestartIO::DoubHEAD::DoubHEAD()
 
     this->data_[Index::dh_210] = 0.0;
     this->data_[Index::dh_211] = 0.0;
-    this->data_[UdqPar_2]      = 1.0E+20;
-    this->data_[UdqPar_3]      = 0.0;
+    /*
+      this->data_[UdqPar_2]      = 1.0E+20;
+      this->data_[UdqPar_3]      = 0.0;
+    */
     this->data_[UdqPar_4]      = 1.0e-4;
     this->data_[Index::dh_215] = -2.0e+20;
     this->data_[Index::dh_217] = 0.0;
