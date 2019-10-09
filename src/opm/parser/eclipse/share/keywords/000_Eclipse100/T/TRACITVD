@@ -5,4 +5,3 @@
  {"name" : "FLUX_LIMITER", "value_type" : "INT", "default" : 1},
  {"name" : "BOTH_TIMESTEP", "value_type" : "STRING", "default" : "YES"}]}
 
-
