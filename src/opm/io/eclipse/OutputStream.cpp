@@ -43,27 +43,37 @@
 namespace {
     namespace FileExtension
     {
+        std::string separate(const int   rptStep,
+                             const bool  formatted,
+                             const char* fmt_prefix,
+                             const char* unfmt_prefix)
+        {
+            std::ostringstream ext;
+
+            const int cycle = 10 * 1000;
+            const int p_ix  = rptStep / cycle;
+            const int n     = rptStep % cycle;
+
+            ext << (formatted ? fmt_prefix[p_ix] : unfmt_prefix[p_ix])
+                << std::setw(4) << std::setfill('0') << n;
+
+            return ext.str();
+        }
+
         std::string init(const bool formatted)
         {
             return formatted ? "FINIT" : "INIT";
         }
 
-        std::string
-        restart(const int  rptStep,
-                const bool formatted,
-                const bool unified)
+        std::string restart(const int  rptStep,
+                            const bool formatted,
+                            const bool unified)
         {
             if (unified) {
                 return formatted ? "FUNRST" : "UNRST";
             }
 
-            std::ostringstream ext;
-
-            ext << (formatted ? 'F' : 'X')
-                << std::setw(4) << std::setfill('0')
-                << rptStep;
-
-            return ext.str();
+            return separate(rptStep, formatted, "FGH", "XYZ");
         }
 
         std::string rft(const bool formatted)
