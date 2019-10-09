@@ -428,6 +428,12 @@ namespace Opm { namespace EclIO { namespace OutputStream {
         EclOutput& stream();
     };
 
+    std::unique_ptr<EclOutput>
+    createSummaryFile(const ResultSet& rset,
+                      const int        seqnum,
+                      const Formatted& fmt,
+                      const Unified&   unif);
+
     /// Derive filename corresponding to output stream of particular result
     /// set, with user-specified file extension.
     ///

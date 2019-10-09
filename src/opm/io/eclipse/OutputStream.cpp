@@ -85,6 +85,17 @@ namespace {
         {
             return formatted ? "FSMSPEC" : "SMSPEC";
         }
+
+        std::string summary(const int  rptStep,
+                            const bool formatted,
+                            const bool unified)
+        {
+            if (unified) {
+                return formatted ? "FUNSMRY" : "UNSMRY";
+            }
+
+            return separate(rptStep, formatted, "ABC", "STU");
+        }
     } // namespace FileExtension
 
     namespace Open
@@ -761,6 +772,24 @@ Opm::EclIO::EclOutput&
 Opm::EclIO::OutputStream::SummarySpecification::stream()
 {
     return *this->stream_;
+}
+
+// =====================================================================
+
+std::unique_ptr<Opm::EclIO::EclOutput>
+Opm::EclIO::OutputStream::createSummaryFile(const ResultSet& rset,
+                                            const int        seqnum,
+                                            const Formatted& fmt,
+                                            const Unified&   unif)
+{
+    const auto ext = FileExtension::summary(seqnum, fmt.set, unif.set);
+
+    return std::unique_ptr<Opm::EclIO::EclOutput> {
+        new Opm::EclIO::EclOutput {
+            outputFileName(rset, ext),
+            fmt.set, std::ios_base::out
+        }
+    };
 }
 
 // =====================================================================
