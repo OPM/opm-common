@@ -593,6 +593,7 @@ namespace {
         auto ret = std::vector<PaddedOutputString<substrLength>>{};
 
         if (restart.root.empty()) {
+            ret.resize(maxSubstrings);
             return ret;
         }
 
@@ -605,6 +606,7 @@ namespace {
 
             Opm::OpmLog::warning(msg);
 
+            ret.resize(maxSubstrings);
             return ret;
         }
 
@@ -738,7 +740,7 @@ SummarySpecification::write(const Parameters& params)
     // Pretend to be ECLIPSE 100
     smspec.write("INTEHEAD", std::vector<int>{ this->unit_, 100 });
 
-    if (! this->restart_.empty())
+    // if (! this->restart_.empty())
         smspec.write("RESTART", this->restart_);
 
     smspec.write("DIMENS",
