@@ -31,8 +31,9 @@
 #include <set>
 #include <stdexcept>
 
-#include <opm/io/eclipse/EclFile.hpp>
+#include <boost/filesystem.hpp> 
 
+#include <opm/io/eclipse/EclFile.hpp>
 /*
 
      KEYWORDS       WGNAMES        NUMS              |   PARAM index   Corresponding ERT key
@@ -57,46 +58,40 @@ namespace Opm { namespace EclIO {
 
 ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
 {
-    std::string rootN;
-    bool formatted=false;
+
+    boost::filesystem::path inputFileName(filename);
+    boost::filesystem::path rootName = inputFileName.parent_path() / inputFileName.stem();
     
-    char buff[PATH_MAX];
+    // if root name (without any extension) given as first argument in constructor, binary will then be assumed
+    if (inputFileName.extension()==""){
+        inputFileName+=".SMSPEC";
+    }
     
-    if (getcwd( buff, PATH_MAX )==NULL){
-        throw std::invalid_argument("failed when trying to get current working directory");
+    std::vector<bool> formattedVect;
+    
+    if ((inputFileName.extension()!=".SMSPEC") && (inputFileName.extension()!=".FSMSPEC")){
+        throw std::invalid_argument("Inptut file should have extension .SMSPEC or .FSMSPEC");
     }
 
-    std::string currentWorkingDir(buff);
+    bool formatted = inputFileName.extension()==".SMSPEC" ? false : true;
+    formattedVect.push_back(formatted);
+    
+    boost::filesystem::path path = boost::filesystem::current_path();;
 
-    std::string smspec_filen;
+    updatePathAndRootName(path, rootName);
+    
+    boost::filesystem::path smspec_file = path / rootName;
+    smspec_file += inputFileName.extension();
 
-    if (filename.substr(filename.length() - 7, 7) == ".SMSPEC") {
-        rootN = filename.substr(0,filename.length() -7);
-    } else if (filename.substr(filename.length() -8, 8) == ".FSMSPEC") {
-        rootN=filename.substr(0,filename.length() -8);
-        formatted = true;
-    } else {
-        rootN = filename;
-    }
-
-    path = currentWorkingDir;
-    updatePathAndRootName(path, rootN);
-
-    if (formatted) {
-        smspec_filen = path + "/" + rootN + ".FSMSPEC";
-    } else {
-        smspec_filen = path + "/" + rootN + ".SMSPEC";
-    }
-
-    std::string rstRootN = "";
-    std::string pathRstFile = path;
+    boost::filesystem::path rstRootN;
+    boost::filesystem::path pathRstFile = path; 
+    
     std::set<std::string> keywList;
     std::vector<std::pair<std::string,int>> smryArray;
 
     // Read data from the summary into local data members.
     {
-
-        EclFile smspec1(smspec_filen);
+        EclFile smspec1(smspec_file.string());
 
         smspec1.loadData();   // loading all data
 
@@ -117,20 +112,31 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
                 keywList.insert(str1);
             }
         }
-
+        
         getRstString(restartArray, pathRstFile, rstRootN);
-
-        smryArray.push_back({smspec_filen, dimens[5]});
+        
+        smryArray.push_back({smspec_file.string(), dimens[5]});
     }
 
     // checking if this is a restart run. Supporting nested restarts (restart, from restart, ...)
     // std::set keywList is storing keywords from all runs involved
     
-    while ((rstRootN != "") && (loadBaseRunData)) {
- 
-        std::string rstFile=pathRstFile+"/"+rstRootN+".SMSPEC";
-
-        EclFile smspec_rst(rstFile);
+    while ((rstRootN.string() != "") && (loadBaseRunData)) {
+        
+        boost::filesystem::path rstFile = pathRstFile / rstRootN;
+        rstFile += ".SMSPEC";
+        
+        bool baseRunFmt = false;
+        
+        // if unformatted file not exists, check for formatted file
+        if (!boost::filesystem::exists(rstFile)){
+            rstFile = pathRstFile / rstRootN;
+            rstFile += ".FSMSPEC";
+            
+            baseRunFmt = true;
+        }
+        
+        EclFile smspec_rst(rstFile.string());
         smspec_rst.loadData();
 
         std::vector<int> dimens = smspec_rst.get<int>("DIMENS");
@@ -146,11 +152,13 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
             }
         }
 
-        smryArray.push_back({rstFile,dimens[5]});
+        smryArray.push_back({rstFile.string(),dimens[5]});
+        
+        formattedVect.push_back(baseRunFmt);
 
         getRstString(restartArray, pathRstFile, rstRootN);
     }
-
+    
     int nFiles = static_cast<int>(smryArray.size());
     
     // arrayInd should hold indices for each vector and runs
@@ -163,7 +171,8 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
     }
     
     int n = nFiles - 1;
-    
+
+
     while (n >= 0){
 
         auto smry = smryArray[n];
@@ -181,7 +190,7 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
         std::vector<std::string> wgnames = smspec.get<std::string>("WGNAMES");
         std::vector<int> nums = smspec.get<int>("NUMS");
 
-	std::vector<int> tmpVect(keywords.size(), -1);
+ 	    std::vector<int> tmpVect(keywords.size(), -1);
         arrayInd[n]=tmpVect;
 
         std::set<std::string>::iterator it;
@@ -220,41 +229,85 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
             toReportStepNumber = std::numeric_limits<int>::max();
         }
 
-        std::string smspecFile = std::get<0>(smryArray[n]);
-        std::string unsmryFile = smspecFile.substr(0, smspecFile.size() - 6) + "UNSMRY";
+        boost::filesystem::path smspecFile(std::get<0>(smryArray[n]));
+        rootName = smspecFile.parent_path() / smspecFile.stem();
 
-        EclFile unsmry(unsmryFile);
-        unsmry.loadData();
+        
+        // check if multiple or unified result files should be used 
+        // to import data, no information in smspec file regarding this
+        // if both unified and non-unified files exists, will use most recent based on 
+        // time stamp
 
-        std::vector<EclFile::EclEntry> list1 = unsmry.getList();
+        boost::filesystem::path unsmryFile = rootName; 
+        
+        formattedVect[n] ? unsmryFile += ".FUNSMRY" : unsmryFile += ".UNSMRY";
 
-        // 2 or 3 arrays pr time step.
-        //   If timestep is a report step:  MINISTEP, PARAMS and SEQHDR
-        //   else : MINISTEP and PARAMS
+        bool use_unified = boost::filesystem::exists(unsmryFile.string());
 
-        // if summary file starts with a SEQHDR, this will be ignored
+        std::vector<std::string> multFileList = checkForMultipleResultFiles(rootName, formattedVect[n]);
 
-        int i = 0;
+        std::vector<std::string> resultsFileList;
+        
+        if ((!use_unified) && (multFileList.size()==0)){
+            throw std::runtime_error("neigther unified or non-unified result files found");
+        } else if ((use_unified) && (multFileList.size()>0)){
+            auto time_multiple = boost::filesystem::last_write_time(multFileList.back());
+            auto time_unified = boost::filesystem::last_write_time(unsmryFile);
+            
+            if (time_multiple > time_unified){
+                resultsFileList=multFileList;
+            } else {
+                resultsFileList.push_back(unsmryFile.string());
+            }
+            
+        } else if (use_unified){
+            resultsFileList.push_back(unsmryFile.string());
+        } else {
+            resultsFileList=multFileList;
+        }
+        
+        // make array list with reference to source files (unifed or non unified)
+        
+        std::vector<std::tuple<std::string, std::string, int>> arraySourceList;
 
-        if (std::get<0>(list1[0]) == "SEQHDR") {
-            i = 1;
+        for (std::string fileName : resultsFileList){
+            EclFile unsmry(fileName);
+                
+            std::vector<EclFile::EclEntry> arrayList = unsmry.getList();
+
+            for (size_t nn = 0; nn < arrayList.size(); nn++){
+                std::tuple<std::string, std::string, int> t1 = std::make_tuple(std::get<0>(arrayList[nn]), fileName, static_cast<int>(nn));
+                arraySourceList.push_back(t1);
+            }
         }
 
-        while  (i < static_cast<int>(list1.size())){
+        // loop through arrays and extract symmary data from result files, arrays PARAMS
+        //
+        //    2 or 3 arrays pr time step.
+        //       If timestep is a report step:  MINISTEP, PARAMS and SEQHDR
+        //       else : MINISTEP and PARAMS
+        
+        
+        size_t i = std::get<0>(arraySourceList[0]) == "SEQHDR" ? 1 : 0 ;
 
-            if (std::get<0>(list1[i]) != "MINISTEP"){
-                std::string message="Reading summary file, expecting keyword MINISTEP, found '" + std::get<0>(list1[i]) + "'";
+        while  (i < arraySourceList.size()){
+            
+            if (std::get<0>(arraySourceList[i]) != "MINISTEP"){
+                std::string message="Reading summary file, expecting keyword MINISTEP, found '" + std::get<0>(arraySourceList[i]) + "'";
                 throw std::invalid_argument(message);
             }
 
+            if (std::get<0>(arraySourceList[i+1]) != "PARAMS") {
+                std::string message="Reading summary file, expecting keyword PARAMS, found '" + std::get<0>(arraySourceList[i]) + "'";
+                throw std::invalid_argument(message);
+            }
+            
             i++;
 
-            if (std::get<0>(list1[i]) != "PARAMS") {
-                std::string message="Reading summary file, expecting keyword PARAMS, found '" + std::get<0>(list1[i]) + "'";
-                throw std::invalid_argument(message);
-            }
-
-            std::vector<float> tmpData = unsmry.get<float>(i);
+            EclFile resfile(std::get<1>(arraySourceList[i]));
+            int m = std::get<2>(arraySourceList[i]);
+            
+            std::vector<float> tmpData = resfile.get<float>(m);
 
             time = tmpData[0];
 
@@ -265,8 +318,8 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
 
             i++;
 
-            if (i < static_cast<int>(list1.size())){
-                if (std::get<0>(list1[i]) == "SEQHDR") {
+            if (i < arraySourceList.size()){
+                if (std::get<0>(arraySourceList[i]) == "SEQHDR") {
                     i++;
                     reportStepNumber++;
                     seqTime.push_back(time);
@@ -293,7 +346,7 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
             }
             
             if (reportStepNumber >= toReportStepNumber) {
-                i = static_cast<int>(list1.size());
+                i = arraySourceList.size();
             }
 
             step++;
@@ -312,32 +365,49 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
 }
 
 
-void ESmry::getRstString(const std::vector<std::string>& restartArray, std::string& pathRst, std::string& rootN) const {
+std::vector<std::string> ESmry::checkForMultipleResultFiles(const boost::filesystem::path& rootN, bool formatted) const {
+    
+    std::vector<std::string> fileList;
+    std::string pathRootN = rootN.parent_path().string();
 
-    rootN = "";
+    std::string fileFilter = formatted ? rootN.stem().string()+".A" : rootN.stem().string()+".S"; 
 
-    for (auto str : restartArray) {
-        rootN = rootN + str;
+    for (boost::filesystem::directory_iterator itr(pathRootN); itr!=boost::filesystem::directory_iterator(); ++itr)
+    {
+        std::string file = itr->path().filename().string();
+        
+        if ((file.find(fileFilter) != std::string::npos) && (file.find("SMSPEC") == std::string::npos)) {
+            fileList.push_back(pathRootN + "/" + file);
+        }
     }
 
+    std::sort(fileList.begin(), fileList.end());
+    
+    return fileList;
+}
+
+void ESmry::getRstString(const std::vector<std::string>& restartArray, boost::filesystem::path& pathRst, boost::filesystem::path& rootN) const {
+
+    std::string rootNameStr="";
+    
+    for (auto str : restartArray) {
+        rootNameStr = rootNameStr + str;
+    }
+
+    rootN = boost::filesystem::path(rootNameStr);
+    
     updatePathAndRootName(pathRst, rootN);
 }
 
-void ESmry::updatePathAndRootName(std::string& dir, std::string& rootN) const {
+void ESmry::updatePathAndRootName(boost::filesystem::path& dir, boost::filesystem::path& rootN) const {
 
-    if (rootN.substr(0,2) == "./") {
-        rootN = rootN.substr(2, rootN.size() - 2);
-    }
+    if (rootN.parent_path().is_absolute()){
+        dir = rootN.parent_path();
+    } else {
+        dir = dir / rootN.parent_path();
+    }        
 
-    if (rootN.substr(0,1) == "/") {
-        int p = rootN.find_last_of("/");
-        dir = rootN.substr(0, p);
-        rootN = rootN.substr(p + 1, rootN.size() - p - 1);
-    } else if (rootN.find_first_of("/") != std::string::npos) {
-        int p = rootN.find_last_of("/");
-        dir = dir + "/" + rootN.substr(0, p);
-        rootN = rootN.substr(p + 1, rootN.size() - p - 1);
-    };
+    rootN = rootN.stem();
 }
 
 bool ESmry::hasKey(const std::string &key) const
