@@ -21,14 +21,17 @@
 
 #include <string>
 #include <vector>
+#include <boost/filesystem.hpp> 
 
 namespace Opm { namespace EclIO {
 
 class ESmry
 {
 public:
-    explicit ESmry(const std::string& filename, bool loadBaseRunData=false);   // filename (smspec file) or file root name
 
+    // input is smspec (or fsmspec file)     
+    explicit ESmry(const std::string& filename, bool loadBaseRunData=false);
+    
     int numberOfVectors() const { return nVect; }
 
     bool hasKey(const std::string& key) const;
@@ -43,7 +46,6 @@ public:
 
 private:
     int nVect, nI, nJ, nK;
-    std::string path="";
 
     void ijk_from_global_index(int glob, int &i, int &j, int &k) const;
     std::vector<std::vector<float>> param;
@@ -51,9 +53,14 @@ private:
 
     std::vector<int> seqIndex;
     std::vector<float> seqTime;
+    
+    std::vector<std::string> checkForMultipleResultFiles(const boost::filesystem::path& rootN, bool formatted) const;
+    
+    void getRstString(const std::vector<std::string>& restartArray, 
+                      boost::filesystem::path& pathRst, 
+                      boost::filesystem::path& rootN) const;    
 
-    void getRstString(const std::vector<std::string> &restartArray, std::string &path, std::string &rootN) const;
-    void updatePathAndRootName(std::string &path, std::string &rootN) const;
+    void updatePathAndRootName(boost::filesystem::path& dir, boost::filesystem::path& rootN) const;
 
     std::string makeKeyString(const std::string& keyword, const std::string& wgname, int num) const;
 };

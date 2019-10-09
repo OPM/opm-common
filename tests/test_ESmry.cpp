@@ -144,7 +144,6 @@ std::vector<float> getFrom(const std::vector<float> &ref_vect,int from){
     return vect;
 }
 
-
 BOOST_AUTO_TEST_CASE(TestESmry_1) {
 
     std::vector <float> time_ref, wgpr_prod_ref, wbhp_prod_ref, wbhp_inj_ref, fgor_ref, bpr_111_ref, bpr_10103_ref;
@@ -351,6 +350,7 @@ BOOST_AUTO_TEST_CASE(TestESmry_4) {
     BOOST_CHECK_EQUAL(smryVect_rstep==time_ref, true);
 
 }
+
 
 
 
