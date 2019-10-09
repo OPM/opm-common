@@ -339,13 +339,51 @@ set( keywords
      000_Eclipse100/H/HMMULTxx
      000_Eclipse100/H/HMMULTFT
      000_Eclipse100/H/HMPROPS
+     000_Eclipse100/H/HMROCK
+     000_Eclipse100/H/HMROCKT
+     000_Eclipse100/H/HMRREF
+     000_Eclipse100/H/HMWELCON
+     000_Eclipse100/H/HMWPIMLT
+     000_Eclipse100/H/HMxxxxxx
+     000_Eclipse100/H/HRFIN
+     000_Eclipse100/H/HWKRO
+     000_Eclipse100/H/HWKRORG
+     000_Eclipse100/H/HWKRORW
+     000_Eclipse100/H/HWKRW
+     000_Eclipse100/H/HWKRWR
+     000_Eclipse100/H/HWPCW
+     000_Eclipse100/H/HWSNUM
+     000_Eclipse100/H/HWSOGCR
+     000_Eclipse100/H/HWSOWCR
+     000_Eclipse100/H/HWSWCR
+     000_Eclipse100/H/HWSWL
+     000_Eclipse100/H/HWSWLPC
+     000_Eclipse100/H/HWSWU
+     000_Eclipse100/H/HXFIN
+     000_Eclipse100/H/HYDRHEAD
+     000_Eclipse100/H/HYFIN
+     000_Eclipse100/H/HYMOBGDR
+     000_Eclipse100/H/HYST
+     000_Eclipse100/H/HYSTCHCK
+     000_Eclipse100/H/HZFIN
+     000_Eclipse100/I/IHOST
      000_Eclipse100/I/IMBNUM
+     000_Eclipse100/I/IMBNUMMF
      000_Eclipse100/I/IMKRVD
+     000_Eclipse100/I/IMPCVD
      000_Eclipse100/I/IMPES
+     000_Eclipse100/I/IMPLICIT
+     000_Eclipse100/I/IMPORT
      000_Eclipse100/I/IMPTVD
+     000_Eclipse100/I/IMSPCVD
      000_Eclipse100/I/INCLUDE
      000_Eclipse100/I/INIT
      000_Eclipse100/I/INRAD
+     000_Eclipse100/I/INSPEC
+     000_Eclipse100/I/INTPC
+     000_Eclipse100/I/IONROCK
+     000_Eclipse100/I/IONXROCK
+     000_Eclipse100/I/IONXSURF
      000_Eclipse100/I/IPCG
      000_Eclipse100/I/IPCW
      000_Eclipse100/I/ISGCR

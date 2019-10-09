@@ -1,0 +1,5 @@
+{"name" : "IHOST" , "sections" : ["GRID"], "items" : [
+        {"name" : "LGR" , "value_type" : "STRING"},
+        {"name" : "PROCESS" , "value_type" : "INT", "default" : 0}
+
+]}
