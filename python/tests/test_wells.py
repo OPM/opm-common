@@ -120,10 +120,9 @@ class TestWells(unittest.TestCase):
         num_steps = len( self.sch.timesteps )
         w0 = self.sch.get_wells(num_steps - 1)[0]
         c0,c1 = w0.connections()
-        """
+        
         self.assertEqual((6,6,2), c0.pos)
         self.assertEqual((6,6,3), c1.pos)
-        """
 
 
 if __name__ == "__main__":

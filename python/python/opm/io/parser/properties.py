@@ -12,7 +12,3 @@ class SunbeamState(object):
     def deck(self):
         return self._deck()
 
-    @property
-    def summary_config(self):
-        return self._summary_config()
-

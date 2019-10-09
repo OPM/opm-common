@@ -1,12 +1,24 @@
 import unittest
-import opm.io
+
+from opm.io.parser import Parser
+from opm.io.ecl_state import EclipseState
+from opm.io.schedule import Schedule
+
+
+def flowing(connection):
+  return connection.state == 'OPEN'
+
+def closed(connection):
+  return connection.state == 'SHUT'
+
 
 class TestWells(unittest.TestCase):
 
-    """
     @classmethod
     def setUpClass(cls):
-        cls.sch = opm.io.parse('tests/spe3/SPE3CASE1.DATA').schedule 
+        deck = Parser().parse('tests/spe3/SPE3CASE1.DATA')
+        cls.state = EclipseState(deck)
+        cls.sch = Schedule(deck, cls.state)
         cls.timesteps = cls.sch.timesteps
 
     def test_connection_pos(self):
@@ -19,7 +31,7 @@ class TestWells(unittest.TestCase):
         self.assertEqual(p01, (6,6,3))
         self.assertEqual(p10, (0,0,0))
         self.assertEqual(p11, (0,0,1))
-
+    
     def test_connection_state(self):
         for timestep,_ in enumerate(self.timesteps):
             for well in self.sch.get_wells(timestep):
@@ -27,8 +39,6 @@ class TestWells(unittest.TestCase):
                     self.assertEqual("OPEN", connection.state)
 
     def test_filters(self):
-        flowing = opm.io.schedule.Connection.flowing()
-        closed = opm.io.schedule.Connection.closed()
         connections = self.sch.get_wells(0)[0].connections()
         self.assertEqual(len(list(filter(flowing, connections))), 2)
         self.assertEqual(len(list(filter(closed, connections))), 0)
@@ -44,7 +54,7 @@ class TestWells(unittest.TestCase):
             for well in self.sch.get_wells(timestep):
                 for connection in well.connections():
                     self.assertFalse(connection.attached_to_segment)
-    """
+
 
 if __name__ == "__main__":
     unittest.main()
