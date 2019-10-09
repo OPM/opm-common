@@ -137,7 +137,7 @@ namespace {
         {
             using M = ::Opm::UnitSystem::measure;
 
-            welletc[etcIx::Time]      = centre(std::string{usys.name(M::time)} + 'S');
+            welletc[etcIx::Time]      = centre(usys.name(M::time));
             welletc[etcIx::Depth]     = centre(usys.name(M::length));
             welletc[etcIx::Pressure]  = centre(usys.name(M::pressure));
             welletc[etcIx::LiqRate]   = centre(usys.name(M::liquid_surface_rate));
