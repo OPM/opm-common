@@ -5,8 +5,7 @@ try:
 except ImportError:
     from io import StringIO
 
-
-from opm.io.parser import load_deck, load_deck_string
+from opm.io.parser import Parser
 
 # This is from the TimeMap.cpp implementation in opm
 ecl_month = {"JAN" : 1,
@@ -213,11 +212,11 @@ class TimeVector(object):
         self._add_dates_block(ts)
         start_dt = datetime.datetime(start_date.year, start_date.month, start_date.day)
         if base_file:
-            deck = load_deck(base_file)
+            deck = Parser().parse(base_file)
             self._add_deck(deck, start_dt)
 
         if base_string:
-            deck = load_deck_string(base_string)
+            deck = Parser().parse_string(base_string)
             self._add_deck(deck, start_dt)
 
 
@@ -328,7 +327,7 @@ class TimeVector(object):
             tv.load("well.sch", date = datetime.datetime(2017, 4, 1))
 
         """
-        deck = load_deck(filename)
+        deck = Parser().parse(filename)
         self._add_deck(deck, date)
 
 
@@ -336,7 +335,7 @@ class TimeVector(object):
         """
         Like load() - but load from a string literal instead of file.
         """
-        deck = load_deck_string(deck_string)
+        deck = Parser().parse_string(deck_string)
         self._add_deck(deck, date)
 
 
