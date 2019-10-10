@@ -3,7 +3,6 @@ import os.path
 import json
 
 from opm import libopmcommon_python as lib
-from .properties import SunbeamState
 
 
 def _init_parse(recovery, keywords):
