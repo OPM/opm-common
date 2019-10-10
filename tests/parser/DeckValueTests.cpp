@@ -122,3 +122,46 @@ BOOST_AUTO_TEST_CASE(DeckKeywordConstructor) {
 
 
 }
+
+
+BOOST_AUTO_TEST_CASE(DeckKeywordVectorInt) {
+    
+   Parser parser;
+   const ParserKeyword& hbnum = parser.getKeyword("HBNUM");
+   const ParserKeyword& box = parser.getKeyword("BOX");
+
+   std::vector<int> data = {0, 1, 2, 3, 4, 5, 6, 7, 8};
+   BOOST_CHECK_THROW( DeckKeyword(box, data), std::invalid_argument );
+   DeckKeyword hbnum_kw(hbnum, data);
+   BOOST_CHECK(hbnum_kw.isDataKeyword());
+   BOOST_CHECK_EQUAL(hbnum_kw.getDataSize(), 9);
+   BOOST_CHECK( hbnum_kw.getIntData() == data );   
+
+   std::vector<double> data_double = {1.1, 2.2};
+   BOOST_CHECK_THROW(DeckKeyword(hbnum, data_double), std::invalid_argument);
+}
+
+
+BOOST_AUTO_TEST_CASE(DeckKeywordVectorDouble) {
+    
+   Parser parser;
+   const ParserKeyword& poro = parser.getKeyword("PORO");
+   const ParserKeyword& box = parser.getKeyword("BOX");
+
+   std::vector<double> data = {1.1, 2.2, 3.3};
+   BOOST_CHECK_THROW(DeckKeyword(box, data), std::invalid_argument);
+   DeckKeyword poro_kw(poro, data);
+   BOOST_CHECK(poro_kw.isDataKeyword());
+   BOOST_CHECK_EQUAL(poro_kw.getDataSize(), 3);
+   BOOST_CHECK( poro_kw.getRawDoubleData() == data );
+
+   std::vector<int> data_int = {1, 2};
+   poro_kw = DeckKeyword(poro, data_int);
+   std::vector<double> raw_int = {1.0, 2.0};
+   BOOST_CHECK( poro_kw.getRawDoubleData() == raw_int );
+}
+
+
+
+
+

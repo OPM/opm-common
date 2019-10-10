@@ -111,6 +111,61 @@ namespace Opm {
        
     }
 
+
+    DeckKeyword::DeckKeyword(const ParserKeyword& parserKeyword, const std::vector<int>& data) :
+        DeckKeyword(parserKeyword)
+    {
+        if (!parserKeyword.isDataKeyword())
+            throw std::invalid_argument("Deckkeyword '" + name() + "' is not a data keyword.");
+
+        const ParserRecord& parser_record = parserKeyword.getRecord(0);
+        const ParserItem& parser_item = parser_record.get(0); 
+
+        setDataKeyword();
+        DeckItem item;
+        if (parser_item.dataType() == type_tag::fdouble) {
+            item = DeckItem(parser_item.name(), double());
+            for (double val : data)
+                item.push_back(val);
+        }
+        else if (parser_item.dataType() == type_tag::integer) {
+            item = DeckItem(parser_item.name(), int());
+            for (int val : data)
+                item.push_back(val);
+        }
+        else
+            throw std::invalid_argument("Input to DeckKeyword '" + name() + "': cannot be std::vector<int>.");
+
+        DeckRecord deck_record;
+        deck_record.addItem( std::move(item) );
+        addRecord( std::move(deck_record) );
+    }
+
+
+    DeckKeyword::DeckKeyword(const ParserKeyword& parserKeyword, const std::vector<double>& data) : 
+        DeckKeyword(parserKeyword)
+    {
+        if (!parserKeyword.isDataKeyword())
+            throw std::invalid_argument("Deckkeyword '" + name() + "' is not a data keyword.");
+
+        const ParserRecord& parser_record = parserKeyword.getRecord(0);
+        const ParserItem& parser_item = parser_record.get(0); 
+
+        setDataKeyword();
+        if (parser_item.dataType() != type_tag::fdouble)
+            throw std::invalid_argument("Input to DeckKeyword '" + name() + "': cannot be std::vector<double>.");
+
+        DeckItem item(parser_item.name(), double());
+        for (double val : data)
+            item.push_back(val);
+
+        DeckRecord deck_record;
+        deck_record.addItem( std::move(item) );
+        addRecord( std::move(deck_record) );
+    }
+
+
+
     void DeckKeyword::setFixedSize() {
         m_slashTerminated = false;
     }
