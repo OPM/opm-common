@@ -22,6 +22,7 @@
 #GECONT        records of records
 #GIALL         records of tables
 #UDT
+#STOG, STOW, STWG    records of records
 
 set( keywords
      000_Eclipse100/A/ACTDIMS
@@ -540,17 +541,31 @@ set( keywords
      000_Eclipse100/R/RUNSUM
      000_Eclipse100/R/RV
      000_Eclipse100/R/RVVD
+     000_Eclipse100/S/SALT
+     000_Eclipse100/S/SALTNODE
+     000_Eclipse100/S/SALTREST
+     000_Eclipse100/S/SALTVD
      000_Eclipse100/S/SATNUM
      000_Eclipse100/S/SATOPTS
      000_Eclipse100/S/SAVE
      000_Eclipse100/S/SCALECRS
+     000_Eclipse100/S/SCALELIM
+     000_Eclipse100/S/SCDATAB
+     000_Eclipse100/S/SCDETAB
+     000_Eclipse100/S/SCDPDIMS
+     000_Eclipse100/S/SCDPTAB
+     000_Eclipse100/S/SCDPTRAC
      000_Eclipse100/S/SCHEDULE
+     000_Eclipse100/S/SCVD
      000_Eclipse100/S/SDENSITY
      000_Eclipse100/S/SEGMENT_PROBE
      000_Eclipse100/S/SEPARATE
+     000_Eclipse100/S/SEPVALS
+     000_Eclipse100/S/SFOAM
      000_Eclipse100/S/SGAS
      000_Eclipse100/S/SGCR
      000_Eclipse100/S/SGCWMIS
+     000_Eclipse100/S/SGF32D
      000_Eclipse100/S/SGFN
      000_Eclipse100/S/SGL
      000_Eclipse100/S/SGLPC
@@ -558,18 +573,41 @@ set( keywords
      000_Eclipse100/S/SGU
      000_Eclipse100/S/SGWFN
      000_Eclipse100/S/SHRATE
+     000_Eclipse100/S/SIGMA
+     000_Eclipse100/S/SIGMAGDV
+     000_Eclipse100/S/SIGMATH
+     000_Eclipse100/S/SIGMAV
+     000_Eclipse100/S/SIMULATE
      000_Eclipse100/S/SKIP
      000_Eclipse100/S/SKIP100
      000_Eclipse100/S/SKIP300
      000_Eclipse100/S/SKIPREST
+     000_Eclipse100/S/SKRO
+     000_Eclipse100/S/SKRORG
+     000_Eclipse100/S/SKRORW
+     000_Eclipse100/S/SKRW
+     000_Eclipse100/S/SKRWR
+     000_Eclipse100/S/SLAVES
      000_Eclipse100/S/SLGOF
      000_Eclipse100/S/SMRYDIMS
+     000_Eclipse100/S/SMULTX
+     000_Eclipse100/S/SMULTY
+     000_Eclipse100/S/SMULTZ
+     000_Eclipse100/S/SOCRS
      000_Eclipse100/S/SOF2
      000_Eclipse100/S/SOF3
+     000_Eclipse100/S/SOF32D
      000_Eclipse100/S/SOGCR
      000_Eclipse100/S/SOIL
      000_Eclipse100/S/SOLUTION
+     000_Eclipse100/S/SOLVCONC
+     000_Eclipse100/S/SOLVDIMS
+     000_Eclipse100/S/SOLVDIRS
      000_Eclipse100/S/SOLVENT
+     000_Eclipse100/S/SOLVFRAC
+     000_Eclipse100/S/SOLVNUM
+     000_Eclipse100/S/SOMGAS
+     000_Eclipse100/S/SOMWAT
      000_Eclipse100/S/SORWMIS
      000_Eclipse100/S/SOWCR
      000_Eclipse100/S/SPECGRID
@@ -577,7 +615,14 @@ set( keywords
      000_Eclipse100/S/SPECROCK
      000_Eclipse100/S/SPOLY
      000_Eclipse100/S/SSFN
+     000_Eclipse100/S/SSGCR
+     000_Eclipse100/S/SSGL
+     000_Eclipse100/S/SSOGCR
      000_Eclipse100/S/SSOL
+     000_Eclipse100/S/SSOWCR
+     000_Eclipse100/S/SSWCR
+     000_Eclipse100/S/SSWL
+     000_Eclipse100/S/SSWU
      000_Eclipse100/S/START
      000_Eclipse100/S/STONE
      000_Eclipse100/S/STONE1
@@ -585,10 +630,26 @@ set( keywords
      000_Eclipse100/S/STONE2
      000_Eclipse100/S/SUMMARY
      000_Eclipse100/S/SUMTHIN
+     000_Eclipse100/S/SURF
+     000_Eclipse100/S/SURFACT
+     000_Eclipse100/S/SURFACTW
+     000_Eclipse100/S/SURFADDW
+     000_Eclipse100/S/SURFADS
+     000_Eclipse100/S/SURFCAPD
+     000_Eclipse100/S/SURFESAL
+     000_Eclipse100/S/SURFNUM
+     000_Eclipse100/S/SURFOPTS
+     000_Eclipse100/S/SURFROCK
+     000_Eclipse100/S/SURFST
+     000_Eclipse100/S/SURFSTES
+     000_Eclipse100/S/SURFVISC
+     000_Eclipse100/S/SURFWNUM
      000_Eclipse100/S/SWAT
      000_Eclipse100/S/SWATINIT
      000_Eclipse100/S/SWCR
+     000_Eclipse100/S/SWF32D
      000_Eclipse100/S/SWFN
+     000_Eclipse100/S/SWINGFAC
      000_Eclipse100/S/SWL
      000_Eclipse100/S/SWLPC
      000_Eclipse100/S/SWOF

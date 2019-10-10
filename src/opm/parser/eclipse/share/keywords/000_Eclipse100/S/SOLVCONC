@@ -1,0 +1,3 @@
+{"name" : "SOLVCONC",
+ "sections" : ["GRID"],
+ "data" : {"value_type" : "DOUBLE", "dimension" : "GasSurfaceVolume/Length*Length*Length"}}
