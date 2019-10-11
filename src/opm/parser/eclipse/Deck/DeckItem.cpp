@@ -258,10 +258,11 @@ const std::vector<double>& DeckItem::getData() const {
     if (this->raw_data)
         return data;
 
-    const auto dim_size = dimensions.size();
+    const auto dim_size = this->active_dimensions.size();
     for( size_t index = 0; index < data.size(); index++ ) {
         const auto dimIndex = index % dim_size;
-        data[ index ] = this->dimensions[ dimIndex ].convertSiToRaw( data[ index ] );
+        const auto& dim = this->defaulted[index] ? this->default_dimensions[dimIndex] : this->active_dimensions[dimIndex];
+        data[ index ] = dim.convertSiToRaw( data[ index ] );
     }
     this->raw_data = true;
     return data;
@@ -284,13 +285,11 @@ const std::vector< double >& DeckItem::getSIDoubleData() const {
      */
 
     const auto dim_size = this->active_dimensions.size();
-    const auto sz = raw.size();
-    this->SIdata.resize( sz );
+    const auto sz = data.size();
     for( size_t index = 0; index < sz; index++ ) {
         const auto dimIndex = index % dim_size;
         const auto& dim = this->defaulted[index] ? this->default_dimensions[dimIndex] : this->active_dimensions[dimIndex];
-        this->SIdata[ index ] = dim.convertRawToSi( raw[ index ] );
-
+        data[ index ] = dim.convertRawToSi( data[ index ] );
     }
     this->raw_data = false;
     return data;
