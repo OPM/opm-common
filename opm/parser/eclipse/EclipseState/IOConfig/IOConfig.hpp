@@ -20,7 +20,7 @@
 #ifndef OPM_IO_CONFIG_HPP
 #define OPM_IO_CONFIG_HPP
 
-#include <boost/date_time/gregorian/gregorian_types.hpp>
+#include <string>
 
 namespace Opm {
 
