@@ -17,11 +17,7 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
-
 #define BOOST_TEST_MODULE InitConfigTests
-#include <sys/stat.h>
-#include <sys/types.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -31,7 +27,7 @@
 #include <opm/parser/eclipse/EclipseState/InitConfig/InitConfig.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
 
-#include <ert/util/test_work_area.hpp>
+#include <tests/WorkArea.cpp>
 
 using namespace Opm;
 
@@ -188,8 +184,10 @@ BOOST_AUTO_TEST_CASE( EquilOperations ) {
 }
 
 BOOST_AUTO_TEST_CASE(RestartCWD) {
-    test_work_area_type * work_area = test_work_area_alloc("restart_cwd");
-    mkdir("simulation", 0777);
+    WorkArea output_area;
+
+    output_area.makeSubDir("simulation");
+
     {
         std::fstream fs;
         fs.open ("simulation/CASE.DATA", std::fstream::out);
@@ -229,8 +227,6 @@ BOOST_AUTO_TEST_CASE(RestartCWD) {
       Opm::InitConfig init_config(deck);
       BOOST_CHECK_EQUAL(init_config.getRestartRootName(), "/abs/path/BASE");
     }
-
-    test_work_area_free(work_area);
 }
 
 // --------------------------------------------------------------------

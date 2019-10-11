@@ -17,16 +17,14 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdexcept>
-#include <iostream>
-
 #define BOOST_TEST_MODULE ACTIONX_SIM
 
 #include <boost/test/unit_test.hpp>
 
-#include <ert/util/test_work_area.h>
-#include <ert/ecl/ecl_sum.hpp>
+#include <opm/msim/msim.hpp>
 
+#include <stdexcept>
+#include <iostream>
 
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
@@ -40,13 +38,15 @@
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
 
+#include <opm/io/eclipse/ESmry.hpp>
+
 #include <opm/output/eclipse/EclipseIO.hpp>
 
-#include <opm/msim/msim.hpp>
+#include <tests/WorkArea.cpp>
 
 using namespace Opm;
 
-
+namespace {
 
 struct test_data {
     Deck deck;
@@ -118,6 +118,33 @@ double inj_wir_INJ(const EclipseState& , const Schedule& sched, const SummarySta
         return -99;
 }
 
+bool ecl_sum_has_general_var(const EclIO::ESmry& smry, const std::string& var)
+{
+    return smry.hasKey(var);
+}
+
+float ecl_sum_get_general_var(const EclIO::ESmry& smry, const int timeIdx, const std::string& var)
+{
+    return smry.get(var)[timeIdx];
+}
+
+int ecl_sum_get_data_length(const EclIO::ESmry& smry)
+{
+    return static_cast<int>(smry.get("TIME").size());
+}
+
+int ecl_sum_get_last_report_step(const EclIO::ESmry& smry)
+{
+    return static_cast<int>(smry.get_at_rstep("TIME").size());
+}
+
+int ecl_sum_iget_report_end(const EclIO::ESmry& smry, const int reportStep)
+{
+    return smry.timestepIdxAtReportstepStart(reportStep + 1) - 1;
+}
+}
+
+
 /*
   The deck tested here has a UDQ DEFINE statement which sorts the wells after
   oil production rate, and then subsequently closes the well with lowest OPR
@@ -130,7 +157,7 @@ BOOST_AUTO_TEST_CASE(UDQ_SORTA_EXAMPLE) {
     test_data td( actionx );
     msim sim(td.state);
     {
-        test_work_area_type * work_area = test_work_area_alloc("test_msim");
+        WorkArea work_area("test_msim");
         EclipseIO io(td.state, td.state.getInputGrid(), td.schedule, td.summary_config);
 
         sim.well_rate("P1", data::Rates::opt::oil, prod_opr);
@@ -151,8 +178,6 @@ BOOST_AUTO_TEST_CASE(UDQ_SORTA_EXAMPLE) {
             BOOST_CHECK(w1.getStatus() == Well2::Status::OPEN );
             BOOST_CHECK(w4.getStatus() == Well2::Status::SHUT );
         }
-
-        test_work_area_free(work_area);
     }
 }
 
@@ -163,7 +188,7 @@ BOOST_AUTO_TEST_CASE(WELL_CLOSE_EXAMPLE) {
     test_data td( actionx1 );
     msim sim(td.state);
     {
-        test_work_area_type * work_area = test_work_area_alloc("test_msim");
+        WorkArea work_area("test_msim");
         EclipseIO io(td.state, td.state.getInputGrid(), td.schedule, td.summary_config);
 
         sim.well_rate("P1", data::Rates::opt::oil, prod_opr);
@@ -208,8 +233,6 @@ BOOST_AUTO_TEST_CASE(WELL_CLOSE_EXAMPLE) {
             BOOST_CHECK(w4_10.getStatus() == Well2::Status::OPEN );
             BOOST_CHECK(w4_11.getStatus() == Well2::Status::SHUT );
         }
-
-        test_work_area_free(work_area);
     }
 }
 
@@ -219,7 +242,7 @@ BOOST_AUTO_TEST_CASE(UDQ_ASSIGN) {
     test_data td( actionx1 );
     msim sim(td.state);
     {
-        test_work_area_type * work_area = test_work_area_alloc("test_msim");
+        WorkArea work_area("test_msim");
         EclipseIO io(td.state, td.state.getInputGrid(), td.schedule, td.summary_config);
 
         sim.well_rate("P1", data::Rates::opt::oil, prod_opr);
@@ -236,14 +259,16 @@ BOOST_AUTO_TEST_CASE(UDQ_ASSIGN) {
 
         const auto& base_name = td.state.getIOConfig().getBaseName();
 
-        ecl_sum_type * ecl_sum = ecl_sum_fread_alloc_case( base_name.c_str(), ":");
+        const EclIO::ESmry ecl_sum(base_name + ".SMSPEC");
         BOOST_CHECK( ecl_sum_has_general_var(ecl_sum, "WUBHP:P1") );
         BOOST_CHECK( ecl_sum_has_general_var(ecl_sum, "WUBHP:P2") );
         BOOST_CHECK( ecl_sum_has_general_var(ecl_sum, "WUOPRL:P3") );
         BOOST_CHECK( ecl_sum_has_general_var(ecl_sum, "WUOPRL:P4") );
 
+#if 0
         BOOST_CHECK_EQUAL( ecl_sum_get_unit(ecl_sum, "WUBHP:P1"), "BARSA");
         BOOST_CHECK_EQUAL( ecl_sum_get_unit(ecl_sum, "WUOPRL:P1"), "SM3/DAY");
+#endif
 
         BOOST_CHECK_EQUAL( ecl_sum_get_general_var(ecl_sum, 1, "WUBHP:P1"), 11);
         BOOST_CHECK_EQUAL( ecl_sum_get_general_var(ecl_sum, 1, "WUBHP:P2"), 12);
@@ -254,9 +279,6 @@ BOOST_AUTO_TEST_CASE(UDQ_ASSIGN) {
         BOOST_CHECK_EQUAL( ecl_sum_get_general_var(ecl_sum, 1, "WUOPRL:P2"), 20);
         BOOST_CHECK_EQUAL( ecl_sum_get_general_var(ecl_sum, 1, "WUOPRL:P3"), 20);
         BOOST_CHECK_EQUAL( ecl_sum_get_general_var(ecl_sum, 1, "WUOPRL:P4"), 20);
-        ecl_sum_free( ecl_sum );
-
-        test_work_area_free(work_area);
     }
 }
 
@@ -266,7 +288,7 @@ BOOST_AUTO_TEST_CASE(UDQ_WUWCT) {
     test_data td( actionx1 );
     msim sim(td.state);
     {
-        test_work_area_type * work_area = test_work_area_alloc("test_msim");
+        WorkArea work_area("test_msim");
         EclipseIO io(td.state, td.state.getInputGrid(), td.schedule, td.summary_config);
 
         sim.well_rate("P1", data::Rates::opt::oil, prod_opr);
@@ -282,7 +304,7 @@ BOOST_AUTO_TEST_CASE(UDQ_WUWCT) {
         sim.run(td.schedule, io, false);
 
         const auto& base_name = td.state.getIOConfig().getBaseName();
-        ecl_sum_type * ecl_sum = ecl_sum_fread_alloc_case( base_name.c_str(), ":");
+        const EclIO::ESmry ecl_sum(base_name + ".SMSPEC");
 
         for (int step = 0; step < ecl_sum_get_data_length(ecl_sum); step++) {
             double wopr_sum = 0;
@@ -300,9 +322,6 @@ BOOST_AUTO_TEST_CASE(UDQ_WUWCT) {
                                ecl_sum_get_general_var(ecl_sum, step, "FUOPR"));
             BOOST_CHECK_EQUAL( wopr_sum, ecl_sum_get_general_var(ecl_sum, step, "FOPR"));
         }
-
-
-        test_work_area_free(work_area);
     }
 }
 
@@ -319,15 +338,16 @@ BOOST_AUTO_TEST_CASE(UDA) {
     sim.well_rate("P4", data::Rates::opt::wat, prod_wpr_P4);
     sim.well_rate("INJ", data::Rates::opt::wat, inj_wir_INJ);
     {
-        ecl::util::TestArea ta("uda_sim");
+        WorkArea work_area("uda_sim");
 
         sim.run(td.schedule, io, true);
 
         const auto& base_name = td.state.getIOConfig().getBaseName();
-        ecl_sum_type * ecl_sum = ecl_sum_fread_alloc_case( base_name.c_str(), ":");
+        const EclIO::ESmry ecl_sum(base_name + ".SMSPEC");
 
         // Should only get at report steps
-        for (int report_step = 2; report_step < ecl_sum_get_last_report_step(ecl_sum); report_step++) {
+        const auto last_report = ecl_sum_get_last_report_step(ecl_sum);
+        for (int report_step = 2; report_step < last_report; report_step++) {
             double wwpr_sum = 0;
             {
                 int prev_tstep = ecl_sum_iget_report_end(ecl_sum, report_step - 1);
@@ -338,7 +358,5 @@ BOOST_AUTO_TEST_CASE(UDA) {
             }
             BOOST_CHECK_CLOSE( 0.90 * wwpr_sum, ecl_sum_get_general_var(ecl_sum, ecl_sum_iget_report_end(ecl_sum, report_step), "WWIR:INJ"), 1e-3);
         }
-
-        ecl_sum_free( ecl_sum );
     }
 }
