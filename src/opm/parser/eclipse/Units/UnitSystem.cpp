@@ -150,7 +150,7 @@ namespace {
     static constexpr const char* metric_names[] = {
         "",
         "M",
-        "DAY",
+        "DAYS",
         "KG/M3",
         "BARSA",
         "K",
@@ -292,7 +292,7 @@ namespace {
     static constexpr const char* field_names[] = {
         "",
         "FT",
-        "DAY",
+        "DAYS",
         "LB/FT3",
         "PSIA",
         "R",
@@ -434,7 +434,7 @@ namespace {
     static constexpr const char* lab_names[] = {
         "",
         "CM",
-        "HR",
+        "HRS",
         "G/CC",
         "ATM",
         "K",
@@ -576,7 +576,7 @@ namespace {
     static constexpr const char* pvt_m_names[] = {
         "",
         "M",
-        "DAY",
+        "DAYS",
         "KG/M3",
         "ATM",
         "K",

@@ -43,27 +43,37 @@
 namespace {
     namespace FileExtension
     {
+        std::string separate(const int   rptStep,
+                             const bool  formatted,
+                             const char* fmt_prefix,
+                             const char* unfmt_prefix)
+        {
+            std::ostringstream ext;
+
+            const int cycle = 10 * 1000;
+            const int p_ix  = rptStep / cycle;
+            const int n     = rptStep % cycle;
+
+            ext << (formatted ? fmt_prefix[p_ix] : unfmt_prefix[p_ix])
+                << std::setw(4) << std::setfill('0') << n;
+
+            return ext.str();
+        }
+
         std::string init(const bool formatted)
         {
             return formatted ? "FINIT" : "INIT";
         }
 
-        std::string
-        restart(const int  rptStep,
-                const bool formatted,
-                const bool unified)
+        std::string restart(const int  rptStep,
+                            const bool formatted,
+                            const bool unified)
         {
             if (unified) {
                 return formatted ? "FUNRST" : "UNRST";
             }
 
-            std::ostringstream ext;
-
-            ext << (formatted ? 'F' : 'X')
-                << std::setw(4) << std::setfill('0')
-                << rptStep;
-
-            return ext.str();
+            return separate(rptStep, formatted, "FGH", "XYZ");
         }
 
         std::string rft(const bool formatted)
@@ -74,6 +84,17 @@ namespace {
         std::string smspec(const bool formatted)
         {
             return formatted ? "FSMSPEC" : "SMSPEC";
+        }
+
+        std::string summary(const int  rptStep,
+                            const bool formatted,
+                            const bool unified)
+        {
+            if (unified) {
+                return formatted ? "FUNSMRY" : "UNSMRY";
+            }
+
+            return separate(rptStep, formatted, "ABC", "STU");
         }
     } // namespace FileExtension
 
@@ -751,6 +772,24 @@ Opm::EclIO::EclOutput&
 Opm::EclIO::OutputStream::SummarySpecification::stream()
 {
     return *this->stream_;
+}
+
+// =====================================================================
+
+std::unique_ptr<Opm::EclIO::EclOutput>
+Opm::EclIO::OutputStream::createSummaryFile(const ResultSet& rset,
+                                            const int        seqnum,
+                                            const Formatted& fmt,
+                                            const Unified&   unif)
+{
+    const auto ext = FileExtension::summary(seqnum, fmt.set, unif.set);
+
+    return std::unique_ptr<Opm::EclIO::EclOutput> {
+        new Opm::EclIO::EclOutput {
+            outputFileName(rset, ext),
+            fmt.set, std::ios_base::out
+        }
+    };
 }
 
 // =====================================================================
