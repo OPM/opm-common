@@ -69,10 +69,16 @@ namespace Opm {
 
     void KeywordLoader::loadKeyword(boost::filesystem::path& path) {
         std::shared_ptr<Json::JsonObject> jsonConfig = std::make_shared<Json::JsonObject>( path );
-        std::shared_ptr<ParserKeyword> parserKeyword = std::make_shared<ParserKeyword>(*jsonConfig);
-        {
+        try {
+            std::shared_ptr<ParserKeyword> parserKeyword = std::make_shared<ParserKeyword>(*jsonConfig);
             boost::filesystem::path abs_path = boost::filesystem::absolute( path );
             addKeyword( parserKeyword , abs_path.generic_string() );
+        } catch (const std::exception& exc) {
+            std::cerr << std::endl;
+            std::cerr << "Failed to create parserkeyword from: " << path.string() << std::endl;
+            std::cerr << exc.what() << std::endl;
+            std::cerr << std::endl;
+            throw;
         }
     }
 
