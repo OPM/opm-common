@@ -25,6 +25,7 @@
 #include <memory>
 
 #include <opm/parser/eclipse/EclipseState/Grid/Box.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
 /*
   This class implements a simple book keeping system for the current
@@ -53,7 +54,7 @@ namespace Opm {
 
     class BoxManager {
     public:
-        BoxManager(int nx , int ny , int nz);
+        BoxManager(const EclipseGrid& grid);
 
         void setInputBox( int i1,int i2 , int j1 , int j2 , int k1 , int k2);
         void setKeywordBox( int i1,int i2 , int j1 , int j2 , int k1 , int k2);
@@ -63,14 +64,12 @@ namespace Opm {
         void endKeyword();
 
         const Box& getActiveBox() const;
-        const Box& getGlobalBox() const;
-        const Box& getInputBox() const;
-        const Box& getKeywordBox() const;
 
     private:
-        Box m_globalBox;
-        Box m_inputBox;
-        Box m_keywordBox;
+        const EclipseGrid& grid;
+        std::unique_ptr<Box> m_globalBox;
+        std::unique_ptr<Box> m_inputBox;
+        std::unique_ptr<Box> m_keywordBox;
     };
 }
 

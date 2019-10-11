@@ -766,10 +766,7 @@ namespace Opm {
 
     void Eclipse3DProperties::scanSection(const Section& section,
                                           const EclipseGrid& eclipseGrid) {
-        BoxManager boxManager(eclipseGrid.getNX(),
-                              eclipseGrid.getNY(),
-                              eclipseGrid.getNZ());
-
+        BoxManager boxManager(eclipseGrid);
         for( const auto& deckKeyword : section ) {
 
             if (supportsGridProperty(deckKeyword.name()) )
