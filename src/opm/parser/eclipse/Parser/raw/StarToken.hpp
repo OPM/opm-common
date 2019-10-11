@@ -20,10 +20,10 @@
 #ifndef STAR_TOKEN_HPP
 #define STAR_TOKEN_HPP
 
+#include <cctype>
 #include <string>
 
 #include <opm/parser/eclipse/Utility/Stringview.hpp>
-#include <ert/util/ssize_t.h>
 
 namespace Opm {
     bool isStarToken(const string_view& token,
@@ -49,7 +49,7 @@ public:
         init_(token);
     }
 
-    size_t count() const {
+    std::size_t count() const {
         return m_count;
     }
 
@@ -78,7 +78,7 @@ private:
     // must be set before calling this method.
     void init_(const string_view& token);
 
-    ssize_t m_count;
+    std::size_t m_count;
     std::string m_countString;
     std::string m_valueString;
 };

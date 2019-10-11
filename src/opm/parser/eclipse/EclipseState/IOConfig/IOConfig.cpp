@@ -17,9 +17,10 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
+#include <iomanip>
 #include <iostream>
 #include <iterator>
+#include <sstream>
 
 #include <boost/lexical_cast.hpp>
 #include <boost/filesystem.hpp>
@@ -31,9 +32,6 @@
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
-
-#include <ert/ecl/EclFilename.hpp>
-
 
 namespace Opm {
 
@@ -190,9 +188,28 @@ namespace Opm {
     std::string IOConfig::getRestartFileName(const std::string& restart_base, int report_step, bool output) const {
         bool unified  = output ? getUNIFOUT() : getUNIFIN();
         bool fmt_file = output ? getFMTOUT()  : getFMTIN();
-        ecl_file_enum file_type = (unified) ? ECL_UNIFIED_RESTART_FILE : ECL_RESTART_FILE;
 
-        return ERT::EclFilename( restart_base , file_type , report_step , fmt_file );
+        auto ext = std::string{};
+        if (unified) {
+            ext = fmt_file ? "FUNRST" : "UNRST";
+        }
+        else {
+            std::ostringstream os;
+
+            const char* fmt_prefix   = "FGH";
+            const char* unfmt_prefix = "XYZ";
+
+            const int cycle = 10 * 1000;
+            const int p_ix  = report_step / cycle;
+            const int n     = report_step % cycle;
+
+            os << (fmt_file ? fmt_prefix[p_ix] : unfmt_prefix[p_ix])
+               << std::setw(4) << std::setfill('0') << n;
+
+            ext = os.str();
+        }
+
+        return restart_base + '.' + ext;
     }
 
 

@@ -21,7 +21,8 @@
 #include <iostream>
 
 #include <boost/algorithm/string.hpp>
-#include <ert/util/util.h>
+
+#include <fnmatch.h>
 
 #include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
 #include <opm/parser/eclipse/Parser/InputErrorAction.hpp>
@@ -266,7 +267,7 @@ namespace Opm {
         const char * c_pattern = pattern.c_str();
         for (const auto& pair : m_errorContexts) {
             const std::string& key = pair.first;
-            if (util_fnmatch( c_pattern , key.c_str()) == 0)
+            if (fnmatch( c_pattern , key.c_str() , 0 ) == 0)
                 updateKey( key , action );
          }
     }
