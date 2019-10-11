@@ -236,6 +236,7 @@ if (OPM_ENABLE_PYTHON)
 
   add_custom_command(OUTPUT python/python/opm/libopmcommon_python.so
                      DEPENDS
+                     python/cxx/unit_system.cpp
                      python/cxx/connection.cpp
                      python/cxx/converters.hpp
                      python/cxx/deck.cpp

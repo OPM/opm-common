@@ -51,6 +51,7 @@ ext_modules = [
     Extension(
         'libopmcommon_python',
         [
+                'cxx/unit_system.cpp',
                 'cxx/connection.cpp',
                 'cxx/deck.cpp',
                 'cxx/deck_keyword.cpp',
