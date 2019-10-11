@@ -39,6 +39,8 @@ public:
 
     const std::vector<std::string>& keywordList() const { return keyword; }
 
+    int timestepIdxAtReportstepStart(const int reportStep) const;
+
 private:
     int nVect, nI, nJ, nK;
     std::string path="";

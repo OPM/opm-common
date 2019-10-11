@@ -18,6 +18,7 @@
 
 #include <opm/io/eclipse/ESmry.hpp>
 
+#include <exception>
 #include <string>
 #include <string.h>
 #include <sstream>
@@ -28,6 +29,7 @@
 #include <limits>
 #include <limits.h>
 #include <set>
+#include <stdexcept>
 
 #include <opm/io/eclipse/EclFile.hpp>
 
@@ -440,6 +442,20 @@ std::vector<float> ESmry::get_at_rstep(const std::string& name) const
     }
     
     return rstep_vector;
+}
+
+int ESmry::timestepIdxAtReportstepStart(const int reportStep) const
+{
+    const auto nReport = static_cast<int>(seqIndex.size());
+
+    if ((reportStep < 1) || (reportStep > nReport)) {
+        throw std::invalid_argument {
+            "Report step " + std::to_string(reportStep)
+            + " outside valid range 1 .. " + std::to_string(nReport)
+        };
+    }
+
+    return seqIndex[reportStep - 1];
 }
 
 }} // namespace Opm::ecl
