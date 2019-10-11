@@ -17,6 +17,7 @@ from .libopmcommon_python import DeckKeyword
 from .libopmcommon_python import EclipseState
 from .libopmcommon_python import Schedule
 from .libopmcommon_python import OpmLog
+from .libopmcommon_python import SummaryConfig
 
 
 #from .schedule            import Well, Connection, Schedule

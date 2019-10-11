@@ -57,8 +57,8 @@ FIPNUM
         self.norne_fname = os.path.abspath('../../examples/data/norne/NORNE_ATW2013.DATA')
 
     def test_IOError(self):
-        with self.assertRaises(IOError):
-            opm.io.load_deck("file/not/found")
+        with self.assertRaises(Exception):
+            Parser().parse("file/not/found")
 
 
     def test_parser_fail_without_extension(self):

@@ -81,7 +81,6 @@ setup(
     packages=[
                 'opm',
                 'opm.io',
-                'opm.io.config',
                 'opm.io.deck',
                 'opm.io.ecl_state',
                 'opm.io.parser',

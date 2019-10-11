@@ -1,5 +1,6 @@
 import unittest
-from opm.io import load_deck_string
+
+from opm.io.parser import Parser
 
 class TestParse(unittest.TestCase):
 
@@ -27,7 +28,7 @@ FIPNUM
 """
 
     def setUp(self):
-        self.deck = load_deck_string(self.DECK_STRING)
+        self.deck = Parser().parse_string(self.DECK_STRING)
 
     def test_deck_in(self):
         map(lambda kw: self.assertIn(kw, self.deck), [
@@ -49,7 +50,7 @@ FIPNUM
             str(self.deck['DX']).split()
         )
         self.assertEqual(
-            str(load_deck_string('RUNSPEC\n\nDX\n4*0.5 /')).split(),
+            str(  Parser().parse_string('RUNSPEC\n\nDX\n4*0.5 /')  ).split(),
             'RUNSPEC DX 0.5 0.5 0.5 0.5 /'.split()
         )
 
