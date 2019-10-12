@@ -845,8 +845,8 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
                 */
                 const auto& location = rawKeyword->getLocation();
                 std::string msg = "\nFailed to parse keyword: " + rawKeyword->getKeywordName() + "\n" +
-                                  "Starting at location: " + location.first + "(" +  std::to_string(location.second) + ")\n\n" +
-                                  "Inner exception: " + exc.what() + "\n";
+                                  "In file " + location.first + ", line " +  std::to_string(location.second) + "\n\n" +
+                                  "Error message: " + exc.what() + "\n";
 
                 throw std::invalid_argument(msg);
             }
