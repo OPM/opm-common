@@ -157,22 +157,23 @@ BOOST_AUTO_TEST_CASE(WellTableDimensions)
 {
     const auto numWells        = 17;
     const auto maxPerf         = 29;
-    const auto maxWellInGroup  =  3;
+    const auto maxWellsInGroup  =  3;
     const auto maxGroupInField = 14;
-    const auto maxWellInField  = 20;
+    const auto maxWellsInField = 25;
 
     const auto ih = Opm::RestartIO::InteHEAD{}
         .wellTableDimensions({
-            numWells, maxPerf, maxWellInGroup, maxGroupInField, maxWellInField
+            numWells, maxPerf, maxWellsInGroup, maxGroupInField, maxWellsInField
         });
 
     const auto& v = ih.data();
-    const auto nwgmax = std::max(maxWellInGroup, maxGroupInField);
+    const auto nwgmax = std::max(maxWellsInGroup, maxGroupInField);
 
     BOOST_CHECK_EQUAL(v[VI::intehead::NWELLS], numWells);
     BOOST_CHECK_EQUAL(v[VI::intehead::NCWMAX], maxPerf);
     BOOST_CHECK_EQUAL(v[VI::intehead::NWGMAX], nwgmax);
     BOOST_CHECK_EQUAL(v[VI::intehead::NGMAXZ], maxGroupInField + 1);
+    BOOST_CHECK_EQUAL(v[VI::intehead::NWMAXZ], maxWellsInField);
 }
 
 BOOST_AUTO_TEST_CASE(CalendarDate)

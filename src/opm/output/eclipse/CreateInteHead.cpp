@@ -190,7 +190,7 @@ namespace {
     }
     
 
-    Opm::RestartIO::InteHEAD::UdqParam
+    /*Opm::RestartIO::InteHEAD::UdqParam
     getUdqParam(const ::Opm::Runspec& rspec, const ::Opm::UDQConfig& udqcfg )
     { 
         const auto& udq_par = rspec.udqParams();
@@ -209,7 +209,7 @@ namespace {
         const auto max_characters_per_line = rspec.actdims().max_characters();
         
         return { static_cast<int>(no_act), max_lines_pr_action, static_cast<int>(max_cond_per_action), static_cast<int>(max_characters_per_line)};
-    }
+    }*/
     
     Opm::RestartIO::InteHEAD::WellSegDims
     getWellSegDims(const ::Opm::Runspec&  rspec,
@@ -280,8 +280,8 @@ createInteHead(const EclipseState& es,
 {
     const auto  nwgmax = maxGroupSize(sched, lookup_step);
     const auto  ngmax  = numGroupsInField(sched, lookup_step);
-    const auto& udqCfg = sched.getUDQConfig(lookup_step);
-    const auto& acts   = sched.actions(lookup_step);
+    //const auto& udqCfg = sched.getUDQConfig(lookup_step);
+    //const auto& acts   = sched.actions(lookup_step);
     const auto& rspec  = es.runspec();
     const auto& tdim   = es.getTableManager();
     const auto& rdim   = tdim.getRegdims();
