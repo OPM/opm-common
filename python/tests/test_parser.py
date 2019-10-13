@@ -43,7 +43,7 @@ FIPNUM
         deck = parser.parse(self.spe3fn)
         active_unit_system = deck.active_unit_system()
         default_unit_system = deck.default_unit_system()
-        self.assertEqual(active_unit_system.type, "Field")
+        self.assertEqual(active_unit_system.name, "Field")
 
         context = ParseContext()
         deck = parser.parse(self.spe3fn, context)
