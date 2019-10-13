@@ -189,7 +189,6 @@ namespace {
         };
     }
     
-
     /*Opm::RestartIO::InteHEAD::UdqParam
     getUdqParam(const ::Opm::Runspec& rspec, const ::Opm::UDQConfig& udqcfg )
     { 
