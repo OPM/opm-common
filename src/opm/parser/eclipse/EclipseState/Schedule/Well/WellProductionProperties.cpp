@@ -63,7 +63,7 @@ namespace Opm {
             throw std::invalid_argument(msg);
         }
 
-        auto cmode = ProducerCMode::CMODE_UNDEFINED;
+        ProducerCMode cmode;
 
         if (effectiveHistoryProductionControl(this->whistctl_cmode) )
             cmode = this->whistctl_cmode;

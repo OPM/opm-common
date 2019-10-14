@@ -82,7 +82,6 @@ createDoubHead(const EclipseState& es,
                const double        nextTimeStep)
 {
     const auto& usys  = es.getDeckUnitSystem();
-    const auto& rspec  = es.runspec();
     const auto  tconv = getTimeConv(usys);
 
     auto dh = DoubHEAD{}

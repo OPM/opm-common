@@ -875,7 +875,7 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
                 zb = zt + sumKdir(i, j, dims, dz);
 
                 double xt=-999;
-                double xb=-999;
+                double xb;
 
                 if (j == (dims[1]-1) ) {
                     xt = sumIdir(i, j, 0, dims, dx);
@@ -899,8 +899,6 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
                 coord.push_back(xb);
                 coord.push_back(yb);
                 coord.push_back(zb);
-
-                x0 = xt;
             }
         }
 

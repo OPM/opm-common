@@ -55,12 +55,6 @@ namespace {
         return inteHead[20];
     }
     
-        // maximum number of wells
-    std::size_t nwmaxz(const std::vector<int>& inteHead)
-    {
-        return inteHead[163];
-    }
-
 
     namespace iUdq {
 

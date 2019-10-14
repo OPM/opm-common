@@ -20,6 +20,7 @@
 #include <cassert>
 #include <cmath>
 #include <opm/common/utility/numeric/calculateCellVol.hpp>
+#include <opm/common/ErrorMacros.hpp>
 
 /* 
     Cell volume calculation based on following publication:
@@ -87,26 +88,18 @@ double perm123sign(int i1, int i2, int i3){
    
    if ((i1 ==1 ) && (i2==2) && (i3 == 3)){
       temp = 1.0;
-   }
-
-   if ((i1 == 1) && (i2==3) && (i3 == 2)){
+   } else if ((i1 == 1) && (i2==3) && (i3 == 2)){
       temp = -1.0;
-   }
-   
-   if ((i1 == 2) && (i2 == 1) && (i3 == 3)){
+   } else if ((i1 == 2) && (i2 == 1) && (i3 == 3)){
       temp = -1.0;
-   }
-   
-   if ((i1 == 2) && (i2 == 3) && (i3 == 1)){
+   } else if ((i1 == 2) && (i2 == 3) && (i3 == 1)){
       temp = 1.0;
-   }
-   
-   if ((i1 == 3) && (i2 == 1) && (i3 == 2)){
+   } else if ((i1 == 3) && (i2 == 1) && (i3 == 2)){
       temp = 1.0;
-   }
-   
-   if ((i1 == 3) && (i2 == 2) && (i3 == 1)){
+   } else if ((i1 == 3) && (i2 == 2) && (i3 == 1)){
       temp = -1.0;
+   } else {
+     OPM_THROW(std::logic_error, "Wrong indices in perm123sign");
    }
    
    return temp;
