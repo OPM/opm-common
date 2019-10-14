@@ -391,18 +391,37 @@ set( keywords
      000_Eclipse100/I/ISGLPC
      000_Eclipse100/I/ISGU
      000_Eclipse100/I/ISOGCR
+     000_Eclipse100/I/ISOLNUM
      000_Eclipse100/I/ISOWCR
      000_Eclipse100/I/ISWCR
      000_Eclipse100/I/ISWL
      000_Eclipse100/I/ISWLPC
      000_Eclipse100/I/ISWU
      000_Eclipse100/J/JFUNC
+     000_Eclipse100/J/JFUNCR
+     000_Eclipse100/K/KRNUM
+     000_Eclipse100/K/KRNUMMF
      000_Eclipse100/L/LAB
+     000_Eclipse100/L/LANGMPL
+     000_Eclipse100/L/LANGMUIR
+     000_Eclipse100/L/LANGSOLV
      000_Eclipse100/L/LCUNIT
      000_Eclipse100/L/LGR
+     000_Eclipse100/L/LGRCOPY
+     000_Eclipse100/L/LGRFREE
+     000_Eclipse100/L/LGRLOCK
+     000_Eclipse100/L/LGROFF
+     000_Eclipse100/L/LGRON
      000_Eclipse100/L/LICENSES
      000_Eclipse100/L/LIFTOPT
      000_Eclipse100/L/LINCOM
+     000_Eclipse100/L/LINKPERM
+     000_Eclipse100/L/LKRO
+     000_Eclipse100/L/LKRORG
+     000_Eclipse100/L/LKRORW
+     000_Eclipse100/L/LKRW
+     000_Eclipse100/L/LKRWR
+     000_Eclipse100/L/LOAD
      000_Eclipse100/M/MAPAXES
      000_Eclipse100/M/MAPUNITS
      000_Eclipse100/M/MAXVALUE
