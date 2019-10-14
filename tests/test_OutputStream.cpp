@@ -1863,12 +1863,13 @@ BOOST_AUTO_TEST_CASE(Unformatted_Base)
 
         auto smspec = ::Opm::EclIO::EclFile{fname};
 
-        BOOST_CHECK_MESSAGE(! smspec.hasKey("RESTART"), "SMSPEC File must NOT have 'RESTART'");
+        //BOOST_CHECK_MESSAGE(! smspec.hasKey("RESTART"), "SMSPEC File must NOT have 'RESTART'");
 
         {
             const auto vectors        = smspec.getList();
             const auto expect_vectors = std::vector<Opm::EclIO::EclFile::EclEntry>{
                 Opm::EclIO::EclFile::EclEntry{"INTEHEAD", Opm::EclIO::eclArrType::INTE, 2},
+                Opm::EclIO::EclFile::EclEntry{"RESTART", Opm::EclIO::eclArrType::CHAR, 9},
                 Opm::EclIO::EclFile::EclEntry{"DIMENS", Opm::EclIO::eclArrType::INTE, 6},
                 Opm::EclIO::EclFile::EclEntry{"KEYWORDS", Opm::EclIO::eclArrType::CHAR, 4},
                 Opm::EclIO::EclFile::EclEntry{"WGNAMES", Opm::EclIO::eclArrType::CHAR, 4},
@@ -1974,6 +1975,7 @@ BOOST_AUTO_TEST_CASE(Unformatted_Base)
             const auto vectors        = smspec.getList();
             const auto expect_vectors = std::vector<Opm::EclIO::EclFile::EclEntry>{
                 Opm::EclIO::EclFile::EclEntry{"INTEHEAD", Opm::EclIO::eclArrType::INTE, 2},
+                Opm::EclIO::EclFile::EclEntry{"RESTART", Opm::EclIO::eclArrType::CHAR, 9},
                 Opm::EclIO::EclFile::EclEntry{"DIMENS", Opm::EclIO::eclArrType::INTE, 6},
                 Opm::EclIO::EclFile::EclEntry{"KEYWORDS", Opm::EclIO::eclArrType::CHAR, 4},
                 Opm::EclIO::EclFile::EclEntry{"WGNAMES", Opm::EclIO::eclArrType::CHAR, 4},
@@ -2079,6 +2081,7 @@ BOOST_AUTO_TEST_CASE(Unformatted_Base)
             const auto vectors        = smspec.getList();
             const auto expect_vectors = std::vector<Opm::EclIO::EclFile::EclEntry>{
                 Opm::EclIO::EclFile::EclEntry{"INTEHEAD", Opm::EclIO::eclArrType::INTE, 2},
+                Opm::EclIO::EclFile::EclEntry{"RESTART", Opm::EclIO::eclArrType::CHAR, 9},
                 Opm::EclIO::EclFile::EclEntry{"DIMENS", Opm::EclIO::eclArrType::INTE, 6},
                 Opm::EclIO::EclFile::EclEntry{"KEYWORDS", Opm::EclIO::eclArrType::CHAR, 4},
                 Opm::EclIO::EclFile::EclEntry{"WGNAMES", Opm::EclIO::eclArrType::CHAR, 4},
@@ -2184,6 +2187,7 @@ BOOST_AUTO_TEST_CASE(Unformatted_Base)
             const auto vectors        = smspec.getList();
             const auto expect_vectors = std::vector<Opm::EclIO::EclFile::EclEntry>{
                 Opm::EclIO::EclFile::EclEntry{"INTEHEAD", Opm::EclIO::eclArrType::INTE, 2},
+                Opm::EclIO::EclFile::EclEntry{"RESTART", Opm::EclIO::eclArrType::CHAR, 9},
                 Opm::EclIO::EclFile::EclEntry{"DIMENS", Opm::EclIO::eclArrType::INTE, 6},
                 Opm::EclIO::EclFile::EclEntry{"KEYWORDS", Opm::EclIO::eclArrType::CHAR, 4},
                 Opm::EclIO::EclFile::EclEntry{"WGNAMES", Opm::EclIO::eclArrType::CHAR, 4},
@@ -2296,9 +2300,11 @@ BOOST_AUTO_TEST_CASE(Formatted_Restarted)
 
         auto smspec = ::Opm::EclIO::EclFile{fname};
 
+#if 0
         BOOST_CHECK_MESSAGE(! smspec.hasKey("RESTART"),
                             "SMSPEC file must NOT have RESTART "
                             "data if root name is too long");
+#endif
     }
 
     // ========================= METRIC =======================

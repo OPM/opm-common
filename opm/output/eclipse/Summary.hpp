@@ -21,66 +21,58 @@
 #define OPM_OUTPUT_SUMMARY_HPP
 
 #include <map>
+#include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
-#include <ert/ecl/ecl_sum.h>
-#include <ert/util/ert_unique_ptr.hpp>
-
-#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
-
-#include <opm/output/data/Wells.hpp>
-#include <opm/output/eclipse/RegionCache.hpp>
-
 namespace Opm {
-
+    class EclipseGrid;
     class EclipseState;
     class Schedule;
     class SummaryConfig;
-    class EclipseGrid;
-    class Schedule;
+    class SummaryState;
+} // namespace Opm
 
-namespace out {
+namespace Opm { namespace data {
+    class WellRates;
+}} // namespace Opm::data
+
+namespace Opm { namespace out {
 
 class Summary {
 public:
-    Summary( const EclipseState&, const SummaryConfig&, const EclipseGrid&, const Schedule& );
-    Summary( const EclipseState&, const SummaryConfig&, const EclipseGrid&, const Schedule&, const std::string& );
-    Summary( const EclipseState&, const SummaryConfig&, const EclipseGrid&, const Schedule&, const char* basename );
+    using GlobalProcessParameters = std::map<std::string, double>;
+    using RegionParameters = std::map<std::string, std::vector<double>>;
+    using BlockValues = std::map<std::pair<std::string, int>, double>;
 
-    void add_timestep(const SummaryState& st,
-                      int report_step);
-
-
-    void eval(SummaryState& summary_state,
-              int report_step,
-              double secs_elapsed,
-              const EclipseState& es,
-              const Schedule& schedule,
-              const data::Wells&,
-              const std::map<std::string, double>& single_values,
-              const std::map<std::string, std::vector<double>>& region_values = {},
-              const std::map<std::pair<std::string, int>, double>& block_values = {}) const;
-
-
+    Summary(const EclipseState&  es,
+            const SummaryConfig& sumcfg,
+            const EclipseGrid&   grid,
+            const Schedule&      sched,
+            const std::string&   basename = "");
 
     ~Summary();
+
+    void add_timestep(const SummaryState& st, const int report_step);
+
+    void eval(SummaryState&                  summary_state,
+              const int                      report_step,
+              const double                   secs_elapsed,
+              const EclipseState&            es,
+              const Schedule&                schedule,
+              const data::WellRates&         well_solution,
+              const GlobalProcessParameters& single_values,
+              const RegionParameters&        region_values = {},
+              const BlockValues&             block_values  = {}) const;
+
     void write() const;
 
 private:
-    void internal_store(const SummaryState& summary_state, int report_step);
-
-
-    class keyword_handlers;
-
-    const EclipseGrid& grid;
-    out::RegionCache regionCache;
-    ERT::ert_unique_ptr< ecl_sum_type, ecl_sum_free > ecl_sum;
-    std::unique_ptr< keyword_handlers > handlers;
+    class SummaryImplementation;
+    std::unique_ptr<SummaryImplementation> pImpl_;
 };
 
-}
-}
+}} // namespace Opm::out
 
 #endif //OPM_OUTPUT_SUMMARY_HPP
