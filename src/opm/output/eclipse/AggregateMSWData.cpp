@@ -126,7 +126,7 @@ namespace {
         segIndCB.push_back(segIndex);
         int newSInd = segIndex;
         const auto& origBranchNo = segSet[segIndex].branchNumber();
-        bool endOrigBranch = true;
+        bool endOrigBranch;
         // loop down branch to find all segments in branch and number from "toe" to "heel"
         while (newSInd < segSet.size()) {
             endOrigBranch = true;
