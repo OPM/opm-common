@@ -899,8 +899,6 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
                 coord.push_back(xb);
                 coord.push_back(yb);
                 coord.push_back(zb);
-
-                x0 = xt;
             }
         }
 
