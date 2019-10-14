@@ -511,7 +511,6 @@ template std::string DeckItem::get< std::string >( size_t ) const;
 template UDAValue DeckItem::get< UDAValue >( size_t ) const;
 
 template const std::vector< int >& DeckItem::getData< int >() const;
-template const std::vector< double >& DeckItem::getData< double >() const;
 template const std::vector< UDAValue >& DeckItem::getData< UDAValue >() const;
 template const std::vector< std::string >& DeckItem::getData< std::string >() const;
 }
