@@ -21,7 +21,7 @@
 #include <stdexcept>
 #include <vector>
 
-#include <ert/ecl/ecl_grid_dims.hpp>
+#include <opm/io/eclipse/EGrid.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
@@ -140,15 +140,11 @@ namespace Opm {
     void GridDims::binary_init(const Deck& deck) {
         const DeckKeyword& gdfile_kw = deck.getKeyword("GDFILE");
         const std::string& gdfile_arg = gdfile_kw.getRecord(0).getItem("filename").get<std::string>(0);
-        std::string filename = deck.makeDeckPath(gdfile_arg);
-        ecl_grid_dims_type * grid_dims = ecl_grid_dims_alloc( filename.c_str(), nullptr );
-        if (grid_dims) {
-            const auto& dims = ecl_grid_dims_iget_dims(grid_dims, 0);
-            m_nx = dims->nx;
-            m_ny = dims->ny;
-            m_nz = dims->nz;
-        } else
-            throw std::invalid_argument("Could not determine grid dimensions from: " + filename);
+        const EclIO::EGrid egrid( deck.makeDeckPath(gdfile_arg) );
+        const auto& dimens = egrid.dimension();
+        m_nx = dimens[0];
+        m_ny = dimens[1];
+        m_nz = dimens[2];
     }
 
 }

@@ -21,8 +21,6 @@ along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <boost/test/unit_test.hpp>
 
-#include <ert/ecl/ecl_util.h>
-
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
@@ -60,6 +58,10 @@ BOOST_AUTO_TEST_CASE(TwoPhase) {
     BOOST_CHECK( !phases.active( Phase::GAS ) );
     BOOST_CHECK(  phases.active( Phase::WATER ) );
     BOOST_CHECK( !phases.active( Phase::POLYMW ) );
+
+    const auto ECL_OIL_PHASE = 1 << 0;
+    const auto ECL_WATER_PHASE = 1 << 2;
+
     BOOST_CHECK_EQUAL( ECL_OIL_PHASE + ECL_WATER_PHASE , runspec.eclPhaseMask( ));
 }
 

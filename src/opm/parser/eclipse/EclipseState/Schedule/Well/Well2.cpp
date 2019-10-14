@@ -26,7 +26,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellProductionProperties.hpp>
 
-#include <ert/util/util.h>
+#include <fnmatch.h>
 
 namespace Opm {
 
@@ -728,7 +728,7 @@ double Well2::injection_rate(const SummaryState& st, Phase phase_arg) const {
 
 bool Well2::wellNameInWellNamePattern(const std::string& wellName, const std::string& wellNamePattern) {
     bool wellNameInPattern = false;
-    if (util_fnmatch( wellNamePattern.c_str() , wellName.c_str()) == 0) {
+    if (fnmatch( wellNamePattern.c_str() , wellName.c_str() , 0 ) == 0) {
         wellNameInPattern = true;
     }
     return wellNameInPattern;

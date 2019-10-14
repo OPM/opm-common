@@ -143,13 +143,14 @@ namespace Opm {
             m_count = 1;
         }
         else {
-            m_count = std::stoi( m_countString );
+            const auto cnt = std::stoi( m_countString );
 
-            if (m_count == 0)
+            if (cnt < 1)
                 // TODO: decorate the deck with a warning instead?
                 throw std::invalid_argument("Specifing zero repetitions is not allowed. Token: \'" + token + "\'.");
+
+            m_count = static_cast<std::size_t>(cnt);
         }
     }
 
 }
-
