@@ -34,7 +34,9 @@ namespace Opm {
 
         std::string key;
         UnitSystem::measure dim;
-        bool required;
+        bool required = false;
+
+        RestartKey() = default;
 
         RestartKey( const std::string& _key, UnitSystem::measure _dim)
             : key(_key),
