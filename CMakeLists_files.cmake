@@ -172,6 +172,7 @@ if(ENABLE_ECL_INPUT)
   if (OPM_ENABLE_EMBEDDED_PYTHON)
     list( APPEND PYTHON_SOURCE_FILES
           src/opm/parser/eclipse/Python/PythonInterp.cpp
+          python/cxx/unit_system.cpp
           python/cxx/connection.cpp
           python/cxx/deck.cpp
           python/cxx/deck_keyword.cpp
