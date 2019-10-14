@@ -1,0 +1,4 @@
+{"name" : "SCALELIM", "sections" : ["PROPS"],
+ "size" : {"keyword" : "ENDSCALE", "item" : "NTENDP"},
+ "items" : [
+ {"name" : "SAT_LIMIT", "value_type" : "DOUBLE", "default" : 0.0}]}
