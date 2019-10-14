@@ -150,7 +150,7 @@ NOECHO
 -- ----------------------------------------------------
 --Include simulation grid
 INCLUDE
-  'include/test_3x5x4.grdecl' /
+  'include_grid_3x5x4.grdecl' /
 
 
 
@@ -208,17 +208,17 @@ PROPS
 -- ***************************************************
 
 INCLUDE
- 'include/sgof.txt' /
+ 'include_sgof.txt' /
 
 
 INCLUDE
- 'include/swof.txt' /
+ 'include_swof.txt' /
 
 -- ---------------------------------------------------
 
 -- Include PVT data
 INCLUDE
-  'include/example_pvt.txt' /
+  'include_example_pvt.txt' /
 
 
 
@@ -300,7 +300,7 @@ SUMMARY
 -- **************************************************************************************
 
 INCLUDE
- 'include/example_summary.txt' /
+ 'include_example_summary.txt' /
 
 
 FMWIN
