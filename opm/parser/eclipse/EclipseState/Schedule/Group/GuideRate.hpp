@@ -51,8 +51,6 @@ struct GuideRateValue {
         return !(*this == other);
     }
 
-    double eval(GuideRateModel::Target target_arg) const;
-
     double sim_time;
     double value;
     GuideRateModel::Target target;

@@ -22,14 +22,6 @@
 
 namespace Opm {
 
-double GuideRate::GuideRateValue::eval(GuideRateModel::Target target_arg) const
-{
-    if (target_arg == this->target)
-        return this->value;
-    else
-        throw std::logic_error("Don't know how to convert .... ");
-}
-
 double GuideRate::Potential::eval(Well2::GuideRateTarget target) const {
     if (target == Well2::GuideRateTarget::OIL)
         return this->oil_pot;
@@ -74,7 +66,14 @@ double GuideRate::get(const std::string& well, Well2::GuideRateTarget target) co
     if (iter != this->values.end()) {
         const auto& value = iter->second;
         auto model_target = GuideRateModel::convert_target(target);
-        return value.eval(model_target);
+        if (value.target == model_target)
+            return value.value;
+        else {
+            const auto& pot = this->potentials.at(well);
+            return value.value * GuideRateModel::pot(model_target, pot.oil_pot, pot.gas_pot, pot.wat_pot) /
+                    std::max(1e-12, GuideRateModel::pot(value.target, pot.oil_pot, pot.gas_pot, pot.wat_pot));
+
+        }
     } else {
         const auto& pot = this->potentials.at(well);
         return pot.eval(target);
@@ -86,7 +85,14 @@ double GuideRate::get(const std::string& group, Group2::GuideRateTarget target) 
      if (iter != this->values.end()) {
         auto model_target = GuideRateModel::convert_target(target);
         const auto& value = this->values.at(group);
-        return value.eval(model_target);
+        if (value.target == model_target)
+            return value.value;
+        else {
+            const auto& pot = this->potentials.at(group);
+            return value.value * GuideRateModel::pot(model_target, pot.oil_pot, pot.gas_pot, pot.wat_pot) /
+                    std::max(1e-12, GuideRateModel::pot(value.target, pot.oil_pot, pot.gas_pot, pot.wat_pot));
+
+        }
     } else {
         const auto& pot = this->potentials.at(group);
         return pot.eval(target);
