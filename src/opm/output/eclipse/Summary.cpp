@@ -1,4 +1,5 @@
 /*
+  Copyright 2019 Equinor ASA.
   Copyright 2016 Statoil ASA.
 
   This file is part of the Open Porous Media project (OPM).
@@ -17,120 +18,182 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <algorithm>
-#include <exception>
-#include <initializer_list>
-#include <iterator>
-#include <numeric>
-#include <stdexcept>
-#include <string>
-#include <unordered_map>
-
-#include <ert/ecl/smspec_node.hpp>
-#include <ert/ecl/ecl_smspec.hpp>
-#include <ert/ecl/ecl_kw_magic.h>
+#include <opm/output/eclipse/Summary.hpp>
 
 #include <opm/common/OpmLog/OpmLog.hpp>
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQContext.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/Group2.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
-#include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
-#include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
-
-#include <opm/output/eclipse/Summary.hpp>
-#include <opm/output/eclipse/RegionCache.hpp>
-
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQContext.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellProductionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp>
+#include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
+
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
+#include <opm/parser/eclipse/Units/Units.hpp>
+
+#include <opm/io/eclipse/EclOutput.hpp>
+#include <opm/io/eclipse/OutputStream.hpp>
+
+#include <opm/output/data/Wells.hpp>
+#include <opm/output/eclipse/RegionCache.hpp>
+
+#include <algorithm>
+#include <array>
+#include <cassert>
+#include <chrono>
+#include <cstddef>
+#include <cctype>
+#include <ctime>
+#include <exception>
+#include <functional>
+#include <initializer_list>
+#include <iterator>
+#include <memory>
+#include <numeric>
+#include <stdexcept>
+#include <string>
+#include <unordered_map>
+#include <utility>
+#include <vector>
 
 namespace {
-    struct SegmentResultDescriptor
+    struct ParamCTorArgs
     {
-        std::string vector;
-        std::string well;
-        std::size_t segNumber;
+        std::string kw;
+        Opm::SummaryNode::Type type;
     };
 
-    std::vector<std::string> requiredRestartVectors()
+    std::vector<ParamCTorArgs> requiredRestartVectors()
     {
+        using Type = ::Opm::SummaryNode::Type;
+
         return {
-            "OPR", "WPR", "GPR", "VPR",
-            "OPT", "WPT", "GPT", "VPT",
-            "WIR", "GIR",
-            "WIT", "GIT",
-            "WCT", "GOR",
-            "OPTH", "WPTH", "GPTH",
-            "WITH", "GITH",
-            "OPP", "WPP", "GPP",
-            "OPI", "WPI", "GPI"
+            // Production
+            ParamCTorArgs{ "OPR" , Type::Rate },
+            ParamCTorArgs{ "WPR" , Type::Rate },
+            ParamCTorArgs{ "GPR" , Type::Rate },
+            ParamCTorArgs{ "VPR" , Type::Rate },
+            ParamCTorArgs{ "OPP" , Type::Rate },
+            ParamCTorArgs{ "WPP" , Type::Rate },
+            ParamCTorArgs{ "GPP" , Type::Rate },
+            ParamCTorArgs{ "OPT" , Type::Total },
+            ParamCTorArgs{ "WPT" , Type::Total },
+            ParamCTorArgs{ "GPT" , Type::Total },
+            ParamCTorArgs{ "VPT" , Type::Total },
+            ParamCTorArgs{ "OPTH", Type::Total },
+            ParamCTorArgs{ "WPTH", Type::Total },
+            ParamCTorArgs{ "GPTH", Type::Total },
+
+            // Flow rate ratios (production)
+            ParamCTorArgs{ "WCT" , Type::Ratio },
+            ParamCTorArgs{ "GOR" , Type::Ratio },
+
+            // injection
+            ParamCTorArgs{ "WIR" , Type::Rate },
+            ParamCTorArgs{ "GIR" , Type::Rate },
+            ParamCTorArgs{ "OPI" , Type::Rate },
+            ParamCTorArgs{ "WPI" , Type::Rate },
+            ParamCTorArgs{ "GPI" , Type::Rate },
+            ParamCTorArgs{ "WIT" , Type::Total },
+            ParamCTorArgs{ "GIT" , Type::Total },
+            ParamCTorArgs{ "WITH", Type::Total },
+            ParamCTorArgs{ "GITH", Type::Total },
         };
     }
 
-    std::vector<std::pair<std::string, std::string>>
+    std::vector<Opm::SummaryNode>
     requiredRestartVectors(const ::Opm::Schedule& sched)
     {
-        auto entities = std::vector<std::pair<std::string, std::string>>{};
+        auto entities = std::vector<Opm::SummaryNode>{};
+
+        using SN = ::Opm::SummaryNode;
 
         const auto& vectors = requiredRestartVectors();
 
         auto makeEntities = [&vectors, &entities]
-            (const char cat, const std::string& name)
+            (const char         kwpref,
+             const SN::Category cat,
+             const std::string& name) -> void
         {
             for (const auto& vector : vectors) {
-                entities.emplace_back(cat + vector, name);
+                entities.emplace_back(kwpref + vector.kw, cat);
+
+                entities.back().namedEntity(name)
+                .parameterType(vector.type);
             }
         };
 
         for (const auto& well_name : sched.wellNames()) {
-            makeEntities('W', well_name);
+            makeEntities('W', SN::Category::Well, well_name);
 
-            entities.emplace_back("WBHP" , well_name);
-            entities.emplace_back("WGVIR", well_name);
-            entities.emplace_back("WWVIR", well_name);
+            entities.emplace_back("WBHP", SN::Category::Well);
+            entities.back().namedEntity(well_name)
+            .parameterType(SN::Type::Pressure);
+
+            entities.emplace_back("WGVIR", SN::Category::Well);
+            entities.back().namedEntity(well_name)
+            .parameterType(SN::Type::Rate);
+
+            entities.emplace_back("WWVIR", SN::Category::Well);
+            entities.back().namedEntity(well_name)
+            .parameterType(SN::Type::Rate);
         }
 
         for (const auto& grp_name : sched.groupNames()) {
             if (grp_name != "FIELD")
-                makeEntities('G', grp_name);
+                makeEntities('G', SN::Category::Group, grp_name);
         }
 
-        makeEntities('F', "FIELD");
+        makeEntities('F', SN::Category::Field, "FIELD");
 
         return entities;
     }
 
-    std::vector<SegmentResultDescriptor>
+    std::vector<Opm::SummaryNode>
     requiredSegmentVectors(const ::Opm::Schedule& sched)
     {
-        using SRD = SegmentResultDescriptor;
-        auto ret  = std::vector<SRD>{};
+        using SN = Opm::SummaryNode;
+        auto ret = std::vector<SN>{};
+
+        auto sofr = SN{ "SOFR", SN::Category::Segment }
+            .parameterType(SN::Type::Rate);
+
+        auto sgfr = SN{ "SGFR", SN::Category::Segment }
+            .parameterType(SN::Type::Rate);
+
+        auto swfr = SN{ "SWFR", SN::Category::Segment }
+            .parameterType(SN::Type::Rate);
+
+        auto spr = SN{ "SPR", SN::Category::Segment }
+            .parameterType(SN::Type::Pressure);
 
         auto makeVectors =
-            [&ret](const std::string& well,
-                   const std::size_t  segNumber) -> void
+            [&](const std::string& well,
+                const int          segNumber) -> void
         {
-            ret.push_back(SRD{"SOFR", well, segNumber});
-            ret.push_back(SRD{"SGFR", well, segNumber});
-            ret.push_back(SRD{"SWFR", well, segNumber});
-            ret.push_back(SRD{"SPR" , well, segNumber});
+            ret.push_back(sofr.namedEntity(well).number(segNumber));
+            ret.push_back(sgfr.namedEntity(well).number(segNumber));
+            ret.push_back(swfr.namedEntity(well).number(segNumber));
+            ret.push_back(spr .namedEntity(well).number(segNumber));
         };
 
-        for (const auto& well : sched.getWells2atEnd()) {
+        for (const auto& wname : sched.wellNames()) {
+            const auto& well = sched.getWell2atEnd(wname);
+
             if (! well.isMultiSegment()) {
                 // Don't allocate MS summary vectors for non-MS wells.
                 continue;
             }
 
-            const auto& wname = well.name();
-            const auto  nSeg  =
-                well.getSegments().size();
+            const auto nSeg = well.getSegments().size();
 
             for (auto segID = 0*nSeg; segID < nSeg; ++segID) {
                 makeVectors(wname, segID + 1); // One-based
@@ -138,33 +201,6 @@ namespace {
         }
 
         return ret;
-    }
-
-    std::string genKey(const std::string& vector,
-                       const std::string& entity)
-    {
-        return (entity == "FIELD")
-             ? vector
-             : vector + ':' + entity;
-    }
-
-    std::string genKey(const SegmentResultDescriptor& segRes)
-    {
-        return segRes.vector + ':' + segRes.well +
-            ':' + std::to_string(segRes.segNumber);
-    }
-
-    std::unique_ptr<ecl::smspec_node>
-    makeRestartVectorSMSPEC(const std::string& vector,
-                            const std::string& entity)
-    {
-        return std::unique_ptr<ecl::smspec_node>( new ecl::smspec_node(0, vector.c_str(), entity.c_str(), "UNIT", 0.0f, ":"));
-    }
-
-    std::unique_ptr<ecl::smspec_node>
-    makeRestartVectorSMSPEC(const SegmentResultDescriptor& segRes)
-    {
-        return std::unique_ptr<ecl::smspec_node>(new ecl::smspec_node(0, segRes.vector.c_str(), segRes.well.c_str(), static_cast<int>(segRes.segNumber), "UNIT", 0.0f, ":"));
     }
 
 /*
@@ -175,19 +211,6 @@ namespace {
  * the compiler writes a lot of this code for us.
  */
 
-    void update(const ecl::smspec_node& node, const double value, Opm::SummaryState& st)
-    {
-        if (node.get_var_type() == ECL_SMSPEC_WELL_VAR)
-            st.update_well_var(node.get_wgname(),
-                               node.get_keyword(),
-                               value);
-        else if (node.get_var_type() == ECL_SMSPEC_GROUP_VAR)
-            st.update_group_var(node.get_wgname(),
-                                node.get_keyword(),
-                                value);
-        else
-            st.update(node.get_gen_key1(), value);
-    }
 
 using rt = Opm::data::Rates::opt;
 using measure = Opm::UnitSystem::measure;
@@ -616,24 +639,6 @@ inline quantity res_vol_production_target( const fn_args& args ) {
     return { sum, measure::rate };
 }
 
-/*
- * A small DSL, really poor man's function composition, to avoid massive
- * repetition when declaring the handlers for each individual keyword. bin_op
- * and its aliases will apply the pair of functions F and G that all take const
- * fn_args& and return quantity, making them composable.
- */
-template< typename F, typename G, typename Op >
-struct bin_op {
-    bin_op( F fn, G gn = {} ) : f( fn ), g( gn ) {}
-    quantity operator()( const fn_args& args ) const {
-        return Op()( f( args ), g( args ) );
-    }
-
-    private:
-        F f;
-        G g;
-};
-
 inline quantity duration( const fn_args& args ) {
     return { args.duration, measure::time };
 }
@@ -683,6 +688,24 @@ inline quantity potential_rate( const fn_args& args ) {
 
     return { sum, rate_unit< phase >() };
 }
+
+/*
+ * A small DSL, really poor man's function composition, to avoid massive
+ * repetition when declaring the handlers for each individual keyword. bin_op
+ * and its aliases will apply the pair of functions F and G that all take const
+ * fn_args& and return quantity, making them composable.
+ */
+template< typename F, typename G, typename Op >
+struct bin_op {
+    bin_op( F fn, G gn = {} ) : f( fn ), g( gn ) {}
+    quantity operator()( const fn_args& args ) const {
+        return Op()( f( args ), g( args ) );
+    }
+
+    private:
+        F f;
+        G g;
+};
 
 template< typename F, typename G >
 auto mul( F f, G g ) -> bin_op< F, G, std::multiplies< quantity > >
@@ -1086,17 +1109,18 @@ static const std::unordered_map< std::string, Opm::UnitSystem::measure> block_un
 };
 
 inline std::vector<Opm::Well2> find_wells( const Opm::Schedule& schedule,
-                                           const ecl::smspec_node* node,
+                                           const Opm::SummaryNode& node,
                                            const int sim_step,
                                            const Opm::out::RegionCache& regionCache ) {
 
-    const auto* name = smspec_node_get_wgname( node );
-    const auto type = smspec_node_get_var_type( node );
+    const auto cat = node.category();
 
-    if ((type == ECL_SMSPEC_WELL_VAR) ||
-        (type == ECL_SMSPEC_COMPLETION_VAR) ||
-        (type == ECL_SMSPEC_SEGMENT_VAR))
+    if ((cat == Opm::SummaryNode::Category::Well) ||
+        (cat == Opm::SummaryNode::Category::Connection) ||
+        (cat == Opm::SummaryNode::Category::Segment))
     {
+        const auto& name = node.namedEntity();
+
         if (schedule.hasWell(name, sim_step)) {
             const auto& well = schedule.getWell2( name, sim_step );
             return { well };
@@ -1104,19 +1128,21 @@ inline std::vector<Opm::Well2> find_wells( const Opm::Schedule& schedule,
             return {};
     }
 
-    if( type == ECL_SMSPEC_GROUP_VAR ) {
+    if( cat == Opm::SummaryNode::Category::Group ) {
+        const auto& name = node.namedEntity();
+
         if( !schedule.hasGroup( name ) ) return {};
 
         return schedule.getChildWells2( name, sim_step);
     }
 
-    if( type == ECL_SMSPEC_FIELD_VAR )
+    if( cat == Opm::SummaryNode::Category::Field )
         return schedule.getWells2(sim_step);
 
-    if( type == ECL_SMSPEC_REGION_VAR ) {
+    if( cat == Opm::SummaryNode::Category::Region ) {
         std::vector<Opm::Well2> wells;
 
-        const auto region = smspec_node_get_num( node );
+        const auto region = node.number();
 
         for ( const auto& connection : regionCache.connections( region ) ){
             const auto& w_name = connection.first;
@@ -1127,7 +1153,7 @@ inline std::vector<Opm::Well2> find_wells( const Opm::Schedule& schedule,
                                                [&] ( const Opm::Well2& elem )
                                                { return elem.name() == well.name(); });
                 if ( it == wells.end() )
-                    wells.push_back( schedule.getWell2( w_name, sim_step ));
+                    wells.push_back( well );
             }
         }
 
@@ -1138,21 +1164,21 @@ inline std::vector<Opm::Well2> find_wells( const Opm::Schedule& schedule,
 }
 
 
-bool need_wells(ecl_smspec_var_type var_type, const std::string& keyword) {
+bool need_wells(Opm::SummaryNode::Category cat, const std::string& keyword) {
     static const std::set<std::string> region_keywords{"ROIR", "RGIR", "RWIR", "ROPR", "RGPR", "RWPR", "ROIT", "RWIT", "RGIT", "ROPT", "RGPT", "RWPT"};
-    if (var_type == ECL_SMSPEC_WELL_VAR)
+    if (cat == Opm::SummaryNode::Category::Well)
         return true;
 
-    if (var_type == ECL_SMSPEC_GROUP_VAR)
+    if (cat == Opm::SummaryNode::Category::Group)
         return true;
 
-    if (var_type == ECL_SMSPEC_FIELD_VAR)
+    if (cat == Opm::SummaryNode::Category::Field)
         return true;
 
-    if (var_type == ECL_SMSPEC_COMPLETION_VAR)
+    if (cat == Opm::SummaryNode::Category::Connection)
         return true;
 
-    if (var_type == ECL_SMSPEC_SEGMENT_VAR)
+    if (cat == Opm::SummaryNode::Category::Segment)
         return true;
 
     /*
@@ -1161,14 +1187,13 @@ bool need_wells(ecl_smspec_var_type var_type, const std::string& keyword) {
       region and consequently the list of defined wells is required, other
       region keywords like 'ROIP' do not require well information.
     */
-    if (var_type == ECL_SMSPEC_REGION_VAR) {
+    if (cat == Opm::SummaryNode::Category::Region) {
         if (region_keywords.count(keyword) > 0)
             return true;
     }
 
     return false;
 }
-
 
 void eval_udq(const Opm::Schedule& schedule, std::size_t sim_step, Opm::SummaryState& st)
 {
@@ -1206,6 +1231,18 @@ void eval_udq(const Opm::Schedule& schedule, std::size_t sim_step, Opm::SummaryS
     }
 }
 
+void updateValue(const Opm::SummaryNode& node, const double value, Opm::SummaryState& st)
+{
+    if (node.category() == Opm::SummaryNode::Category::Well)
+        st.update_well_var(node.namedEntity(), node.keyword(), value);
+
+    else if (node.category() == Opm::SummaryNode::Category::Group)
+        st.update_group_var(node.namedEntity(), node.keyword(), value);
+
+    else
+        st.update(node.uniqueNodeKey(), value);
+}
+
 /*
  * The well efficiency factor will not impact the well rate itself, but is
  * rather applied for accumulated values.The WEFAC can be considered to shut
@@ -1222,23 +1259,37 @@ void eval_udq(const Opm::Schedule& schedule, std::size_t sim_step, Opm::SummaryS
  * rates and accumulated values.
  *
  */
-std::vector< std::pair< std::string, double > >
-well_efficiency_factors( const ecl::smspec_node* node,
-                         const Opm::Schedule& schedule,
-                         const std::vector<Opm::Well2>& schedule_wells,
-                         const int sim_step ) {
-    std::vector< std::pair< std::string, double > > efac;
+struct EfficiencyFactor
+{
+    using Factor  = std::pair<std::string, double>;
+    using FacColl = std::vector<Factor>;
 
-    auto var_type = node->get_var_type();
-    if(    var_type != ECL_SMSPEC_GROUP_VAR
-        && var_type != ECL_SMSPEC_FIELD_VAR
-        && var_type != ECL_SMSPEC_REGION_VAR
-           && !node->is_total()) {
-        return efac;
-    }
+    FacColl factors{};
 
-    const bool is_group = (var_type == ECL_SMSPEC_GROUP_VAR);
-    const bool is_rate = !node->is_total();
+    void setFactors(const Opm::SummaryNode&        node,
+                    const Opm::Schedule&           schedule,
+                    const std::vector<Opm::Well2>& schedule_wells,
+                    const int                      sim_step);
+};
+
+void EfficiencyFactor::setFactors(const Opm::SummaryNode&        node,
+                                  const Opm::Schedule&           schedule,
+                                  const std::vector<Opm::Well2>& schedule_wells,
+                                  const int                      sim_step)
+{
+    this->factors.clear();
+
+    if (schedule_wells.empty()) { return; }
+
+    const auto cat = node.category();
+    if(    cat != Opm::SummaryNode::Category::Group
+        && cat != Opm::SummaryNode::Category::Field
+        && cat != Opm::SummaryNode::Category::Region
+           && (node.type() != Opm::SummaryNode::Type::Total))
+        return;
+
+    const bool is_group = (cat == Opm::SummaryNode::Category::Group);
+    const bool is_rate = (node.type() != Opm::SummaryNode::Type::Total);
 
     for( const auto& well : schedule_wells ) {
         if (!well.hasBeenDefined(sim_step))
@@ -1250,7 +1301,7 @@ well_efficiency_factors( const ecl::smspec_node* node,
         while(true){
             if((   is_group
                 && is_rate
-                && group_ptr->name() == node->get_wgname() ))
+                && group_ptr->name() == node.namedEntity() ))
                 break;
             eff_factor *= group_ptr->getGroupEfficiencyFactor();
 
@@ -1258,238 +1309,1056 @@ well_efficiency_factors( const ecl::smspec_node* node,
                 break;
             group_ptr = std::addressof( schedule.getGroup2( group_ptr->parent(), sim_step ) );
         }
-        efac.emplace_back( well.name(), eff_factor );
+
+        this->factors.emplace_back( well.name(), eff_factor );
+    }
+}
+
+namespace Evaluator {
+    struct InputData
+    {
+        const Opm::EclipseState& es;
+        const Opm::Schedule& sched;
+        const Opm::EclipseGrid& grid;
+        const Opm::out::RegionCache& reg;
+    };
+
+    struct SimulatorResults
+    {
+        const Opm::data::WellRates& wellSol;
+        const std::map<std::string, double>& single;
+        const std::map<std::string, std::vector<double>>& region;
+        const std::map<std::pair<std::string, int>, double>& block;
+    };
+
+    class Base
+    {
+    public:
+        virtual ~Base() {}
+
+        virtual void update(const std::size_t       sim_step,
+                            const double            stepSize,
+                            const InputData&        input,
+                            const SimulatorResults& simRes,
+                            Opm::SummaryState&      st) const = 0;
+    };
+
+    class FunctionRelation : public Base
+    {
+    public:
+        explicit FunctionRelation(Opm::SummaryNode node, ofun fcn)
+            : node_(std::move(node))
+            , fcn_ (std::move(fcn))
+        {}
+
+        void update(const std::size_t       sim_step,
+                    const double            stepSize,
+                    const InputData&        input,
+                    const SimulatorResults& simRes,
+                    Opm::SummaryState&      st) const override
+        {
+            const auto get_wells =
+                need_wells(this->node_.category(), this->node_.keyword());
+
+            const auto wells = get_wells
+                ? find_wells(input.sched, this->node_,
+                             static_cast<int>(sim_step), input.reg)
+                : std::vector<Opm::Well2>{};
+
+            if (get_wells && wells.empty())
+                // Parameter depends on well information, but no active
+                // wells apply at this sim_step.  Nothing to do.
+                return;
+
+            EfficiencyFactor efac{};
+            efac.setFactors(this->node_, input.sched, wells, sim_step);
+
+            const fn_args args {
+                wells, stepSize, static_cast<int>(sim_step),
+                std::max(0, this->node_.number()),
+                st, simRes.wellSol, input.reg, input.grid,
+                std::move(efac.factors)
+            };
+
+            const auto& usys = input.es.getUnits();
+            const auto  prm  = this->fcn_(args);
+
+            updateValue(this->node_, usys.from_si(prm.unit, prm.value), st);
+        }
+
+    private:
+        Opm::SummaryNode node_;
+        ofun             fcn_;
+    };
+
+    class BlockValue : public Base
+    {
+    public:
+        explicit BlockValue(Opm::SummaryNode               node,
+                            const Opm::UnitSystem::measure m)
+            : node_(std::move(node))
+            , m_   (m)
+        {}
+
+        void update(const std::size_t    /* sim_step */,
+                    const double         /* stepSize */,
+                    const InputData&        input,
+                    const SimulatorResults& simRes,
+                    Opm::SummaryState&      st) const override
+        {
+            auto xPos = simRes.block.find(this->lookupKey());
+            if (xPos == simRes.block.end()) {
+                return;
+            }
+
+            const auto& usys = input.es.getUnits();
+            updateValue(this->node_, usys.from_si(this->m_, xPos->second), st);
+        }
+
+    private:
+        Opm::SummaryNode node_;
+        Opm::UnitSystem::measure m_;
+
+        Opm::out::Summary::BlockValues::key_type lookupKey() const
+        {
+            return { this->node_.keyword(), this->node_.number() };
+        }
+    };
+
+    class RegionValue : public Base
+    {
+    public:
+        explicit RegionValue(Opm::SummaryNode               node,
+                             const Opm::UnitSystem::measure m)
+            : node_(std::move(node))
+            , m_   (m)
+        {}
+
+        void update(const std::size_t    /* sim_step */,
+                    const double         /* stepSize */,
+                    const InputData&        input,
+                    const SimulatorResults& simRes,
+                    Opm::SummaryState&      st) const override
+        {
+            if (this->node_.number() < 0)
+                return;
+
+            auto xPos = simRes.region.find(this->node_.keyword());
+            if (xPos == simRes.region.end())
+                return;
+
+            const auto ix = this->index();
+            if (ix >= xPos->second.size())
+                return;
+
+            const auto  val  = xPos->second[ix];
+            const auto& usys = input.es.getUnits();
+
+            updateValue(this->node_, usys.from_si(this->m_, val), st);
+        }
+
+    private:
+        Opm::SummaryNode node_;
+        Opm::UnitSystem::measure m_;
+
+        std::vector<double>::size_type index() const
+        {
+            return this->node_.number() - 1;
+        }
+    };
+
+    class GlobalProcessValue : public Base
+    {
+    public:
+        explicit GlobalProcessValue(Opm::SummaryNode               node,
+                                    const Opm::UnitSystem::measure m)
+            : node_(std::move(node))
+            , m_   (m)
+        {}
+
+        void update(const std::size_t    /* sim_step */,
+                    const double         /* stepSize */,
+                    const InputData&        input,
+                    const SimulatorResults& simRes,
+                    Opm::SummaryState&      st) const override
+        {
+            auto xPos = simRes.single.find(this->node_.keyword());
+            if (xPos == simRes.single.end())
+                return;
+
+            const auto  val  = xPos->second;
+            const auto& usys = input.es.getUnits();
+
+            updateValue(this->node_, usys.from_si(this->m_, val), st);
+        }
+
+    private:
+        Opm::SummaryNode node_;
+        Opm::UnitSystem::measure m_;
+    };
+
+    class UserDefinedValue : public Base
+    {
+    public:
+        void update(const std::size_t       /* sim_step */,
+                    const double            /* stepSize */,
+                    const InputData&        /* input */,
+                    const SimulatorResults& /* simRes */,
+                    Opm::SummaryState&      /* st */) const override
+        {
+            // No-op
+        }
+    };
+
+    class Time : public Base
+    {
+    public:
+        explicit Time(std::string saveKey)
+            : saveKey_(std::move(saveKey))
+        {}
+
+        void update(const std::size_t       /* sim_step */,
+                    const double               stepSize,
+                    const InputData&           input,
+                    const SimulatorResults& /* simRes */,
+                    Opm::SummaryState&         st) const override
+        {
+            const auto& usys = input.es.getUnits();
+
+            const auto m   = ::Opm::UnitSystem::measure::time;
+            const auto val = st.get_elapsed() + stepSize;
+
+            st.update(this->saveKey_, usys.from_si(m, val));
+        }
+
+    private:
+        std::string saveKey_;
+    };
+
+    class Years : public Base
+    {
+    public:
+        explicit Years(std::string saveKey)
+            : saveKey_(std::move(saveKey))
+        {}
+
+        void update(const std::size_t       /* sim_step */,
+                    const double               stepSize,
+                    const InputData&        /* input */,
+                    const SimulatorResults& /* simRes */,
+                    Opm::SummaryState&         st) const override
+        {
+            using namespace ::Opm::unit;
+
+            const auto val = st.get_elapsed() + stepSize;
+
+            st.update(this->saveKey_, convert::to(val, year));
+        }
+
+    private:
+        std::string saveKey_;
+    };
+
+    class Factory
+    {
+    public:
+        struct Descriptor
+        {
+            std::string uniquekey{};
+            std::string unit{};
+            std::unique_ptr<Base> evaluator{};
+        };
+
+        explicit Factory(const Opm::EclipseState& es,
+                         const Opm::EclipseGrid&  grid,
+                         const Opm::SummaryState& st,
+                         const Opm::UDQConfig&    udq)
+            : es_(es), grid_(grid), st_(st), udq_(udq)
+        {}
+
+        ~Factory() = default;
+
+        Factory(const Factory&) = delete;
+        Factory(Factory&&) = delete;
+        Factory& operator=(const Factory&) = delete;
+        Factory& operator=(Factory&&) = delete;
+
+        Descriptor create(const Opm::SummaryNode&);
+
+    private:
+        const Opm::EclipseState& es_;
+        const Opm::EclipseGrid&  grid_;
+        const Opm::SummaryState& st_;
+        const Opm::UDQConfig&    udq_;
+
+        const Opm::SummaryNode* node_;
+
+        Opm::UnitSystem::measure paramUnit_;
+        ofun paramFunction_;
+
+        Descriptor functionRelation();
+        Descriptor blockValue();
+        Descriptor regionValue();
+        Descriptor globalProcessValue();
+        Descriptor userDefinedValue();
+        Descriptor unknownParameter();
+
+        bool isBlockValue();
+        bool isRegionValue();
+        bool isGlobalProcessValue();
+        bool isFunctionRelation();
+        bool isUserDefined();
+
+        std::string functionUnitString() const;
+        std::string directUnitString() const;
+        std::string userDefinedUnit() const;
+    };
+
+    Factory::Descriptor Factory::create(const Opm::SummaryNode& node)
+    {
+        this->node_ = &node;
+
+        if (this->isUserDefined())
+            return this->userDefinedValue();
+
+        if (this->isBlockValue())
+            return this->blockValue();
+
+        if (this->isRegionValue())
+            return this->regionValue();
+
+        if (this->isGlobalProcessValue())
+            return this->globalProcessValue();
+
+        if (this->isFunctionRelation())
+            return this->functionRelation();
+
+        return this->unknownParameter();
     }
 
-    return efac;
+    Factory::Descriptor Factory::functionRelation()
+    {
+        auto desc = this->unknownParameter();
+
+        desc.unit = this->functionUnitString();
+        desc.evaluator.reset(new FunctionRelation {
+            *this->node_, std::move(this->paramFunction_)
+        });
+
+        return desc;
+    }
+
+    Factory::Descriptor Factory::blockValue()
+    {
+        auto desc = this->unknownParameter();
+
+        desc.unit = this->directUnitString();
+        desc.evaluator.reset(new BlockValue {
+            *this->node_, this->paramUnit_
+        });
+
+        return desc;
+    }
+
+    Factory::Descriptor Factory::regionValue()
+    {
+        auto desc = this->unknownParameter();
+
+        desc.unit = this->directUnitString();
+        desc.evaluator.reset(new RegionValue {
+            *this->node_, this->paramUnit_
+        });
+
+        return desc;
+    }
+
+    Factory::Descriptor Factory::globalProcessValue()
+    {
+        auto desc = this->unknownParameter();
+
+        desc.unit = this->directUnitString();
+        desc.evaluator.reset(new GlobalProcessValue {
+            *this->node_, this->paramUnit_
+        });
+
+        return desc;
+    }
+
+    Factory::Descriptor Factory::userDefinedValue()
+    {
+        auto desc = this->unknownParameter();
+
+        desc.unit = this->userDefinedUnit();
+        desc.evaluator.reset(new UserDefinedValue {});
+
+        return desc;
+    }
+
+    Factory::Descriptor Factory::unknownParameter()
+    {
+        auto desc = Descriptor{};
+
+        desc.uniquekey = this->node_->uniqueNodeKey();
+
+        return desc;
+    }
+
+    bool Factory::isBlockValue()
+    {
+        auto pos = block_units.find(this->node_->keyword());
+        if (pos == block_units.end())
+            return false;
+
+        if (! this->grid_.cellActive(this->node_->number() - 1))
+            // 'node_' is a block value, but it is configured in a
+            // deactivated cell.  Don't create an evaluation function.
+            return false;
+
+        // 'node_' represents a block value in an active cell.
+        // Capture unit of measure and return true.
+        this->paramUnit_ = pos->second;
+        return true;
+    }
+
+    bool Factory::isRegionValue()
+    {
+        auto pos = region_units.find(this->node_->keyword());
+        if (pos == region_units.end())
+            return false;
+
+        // 'node_' represents a region value.  Capture unit
+        // of measure and return true.
+        this->paramUnit_ = pos->second;
+        return true;
+    }
+
+    bool Factory::isGlobalProcessValue()
+    {
+        auto pos = single_values_units.find(this->node_->keyword());
+        if (pos == single_values_units.end())
+            return false;
+
+        // 'node_' represents a single value (i.e., global process)
+        // value.  Capture unit of measure and return true.
+        this->paramUnit_ = pos->second;
+        return true;
+    }
+
+    bool Factory::isFunctionRelation()
+    {
+        auto pos = funs.find(this->node_->keyword());
+        if (pos == funs.end())
+            return false;
+
+        // 'node_' represents a functional relation.
+        // Capture evaluation function and return true.
+        this->paramFunction_ = pos->second;
+        return true;
+    }
+
+    bool Factory::isUserDefined()
+    {
+        return this->node_->isUserDefined();
+    }
+
+    std::string Factory::functionUnitString() const
+    {
+        const auto reg = Opm::out::RegionCache{};
+
+        const fn_args args {
+            {}, 0.0, 0, std::max(0, this->node_->number()),
+            this->st_, {}, reg, this->grid_,
+            {}
+        };
+
+        const auto prm = this->paramFunction_(args);
+
+        return this->es_.getUnits().name(prm.unit);
+    }
+
+    std::string Factory::directUnitString() const
+    {
+        return this->es_.getUnits().name(this->paramUnit_);
+    }
+
+    std::string Factory::userDefinedUnit() const
+    {
+        const auto& kw = this->node_->keyword();
+
+        return this->udq_.has_unit(kw)
+            ?  this->udq_.unit(kw) : "?????";
+    }
+} // namespace Evaluator
+
+void reportUnsupportedKeywords(std::vector<std::string> keywords)
+{
+    std::sort(keywords.begin(), keywords.end());
+    auto uend = std::unique(keywords.begin(), keywords.end());
+
+    for (auto kw = keywords.begin(); kw != uend; ++kw)
+        ::Opm::OpmLog::info("Summary keyword '" + *kw + "' is unhandled");
 }
+
+std::string makeWGName(std::string name)
+{
+    // Use default WGNAME if 'name' is empty or consists
+    // exlusively of white-space (space and tab) characters.
+    //
+    // Use 'name' itself otherwise.
+
+    const auto use_dflt = name.empty() ||
+        (name.find_first_not_of(" \t") == std::string::npos);
+
+    return use_dflt ? std::string(":+:+:+:+") : std::move(name);
 }
 
-namespace Opm {
-namespace out {
+class SummaryOutputParameters
+{
+public:
+    using EvalPtr = std::unique_ptr<Evaluator::Base>;
+    using SMSpecPrm = Opm::EclIO::OutputStream::
+        SummarySpecification::Parameters;
 
-class Summary::keyword_handlers {
-    public:
-        using fn = ofun;
-        std::vector< std::pair< const ecl::smspec_node*, fn > > handlers;
-        std::map< std::string, const ecl::smspec_node* > single_value_nodes;
-        std::map< std::pair <std::string, int>, const ecl::smspec_node* > region_nodes;
-        std::map< std::pair <std::string, int>, const ecl::smspec_node* > block_nodes;
+    SummaryOutputParameters() = default;
+    ~SummaryOutputParameters() = default;
 
-        // Memory management for restart-related summary vectors
-        // that are not requested in SUMMARY section.
-        std::vector<std::unique_ptr<ecl::smspec_node>> rstvec_backing_store;
+    SummaryOutputParameters(const SummaryOutputParameters& rhs) = delete;
+    SummaryOutputParameters(SummaryOutputParameters&& rhs) = default;
+
+    SummaryOutputParameters&
+    operator=(const SummaryOutputParameters& rhs) = delete;
+
+    SummaryOutputParameters&
+    operator=(SummaryOutputParameters&& rhs) = default;
+
+    void makeParameter(std::string keyword,
+                       std::string name,
+                       const int   num,
+                       std::string unit,
+                       EvalPtr     evaluator)
+    {
+        this->smspec_.add(std::move(keyword), std::move(name),
+                          std::max (num, 0), std::move(unit));
+
+        this->evaluators_.push_back(std::move(evaluator));
+    }
+
+    const SMSpecPrm& summarySpecification() const
+    {
+        return this->smspec_;
+    }
+
+    const std::vector<EvalPtr>& getEvaluators() const
+    {
+        return this->evaluators_;
+    }
+
+private:
+    SMSpecPrm smspec_{};
+    std::vector<EvalPtr> evaluators_{};
 };
 
-Summary::Summary( const EclipseState& st,
-                  const SummaryConfig& sum ,
-                  const EclipseGrid& grid_arg,
-                  const Schedule& schedule) :
-    Summary( st, sum, grid_arg, schedule, st.getIOConfig().fullBasePath().c_str() )
-{}
-
-Summary::Summary( const EclipseState& st,
-                  const SummaryConfig& sum,
-                  const EclipseGrid& grid_arg,
-                  const Schedule& schedule,
-                  const std::string& basename ) :
-    Summary( st, sum, grid_arg, schedule, basename.c_str() )
-{}
-
-Summary::Summary( const EclipseState& st,
-                  const SummaryConfig& sum,
-                  const EclipseGrid& grid_arg,
-                  const Schedule& schedule,
-                  const char* basename ) :
-    grid( grid_arg ),
-    regionCache( st.get3DProperties( ) , grid_arg, schedule ),
-    handlers( new keyword_handlers() )
+class SMSpecStreamDeferredCreation
 {
+private:
+    using Spec = ::Opm::EclIO::OutputStream::SummarySpecification;
 
-    using Cat = SummaryNode::Category;
+public:
+    using ResultSet = ::Opm::EclIO::OutputStream::ResultSet;
+    using Formatted = ::Opm::EclIO::OutputStream::Formatted;
 
-    const auto& udq = schedule.getUDQConfig(schedule.size() - 1);
-    const auto& init_config = st.getInitConfig();
-    const char * restart_case = nullptr;
-    int restart_step = -1;
+    explicit SMSpecStreamDeferredCreation(const Opm::InitConfig&          initcfg,
+                                          const Opm::EclipseGrid&         grid,
+                                          const std::time_t               start,
+                                          const Opm::UnitSystem::UnitType utype);
 
-    if (init_config.restartRequested( )) {
-        if (init_config.getRestartRootName().size() <= ECL_STRING8_LENGTH * SUMMARY_RESTART_SIZE) {
-            restart_case = init_config.getRestartRootName().c_str();
-            restart_step = init_config.getRestartStep();
-        } else
-            OpmLog::warning("Restart case too long - not embedded in SMSPEC file");
-    }
-    ecl_sum.reset( ecl_sum_alloc_restart_writer2(basename,
-                                                 restart_case,
-                                                 restart_step,
-                                                 st.getIOConfig().getFMTOUT(),
-                                                 st.getIOConfig().getUNIFOUT(),
-                                                 ":",
-                                                 schedule.posixStartTime(),
-                                                 true,
-                                                 st.getInputGrid().getNX(),
-                                                 st.getInputGrid().getNY(),
-                                                 st.getInputGrid().getNZ()));
-
-    /* register all keywords handlers and pair with the newly-registered ert
-     * entry.
-     */
-    std::set< std::string > unsupported_keywords;
-    SummaryState summary_state(std::chrono::system_clock::from_time_t(schedule.getStartTime()));
-    for( const auto& node : sum ) {
-        ecl_smspec_type * smspec = ecl_sum_get_smspec(this->ecl_sum.get());
-        std::string keyword = node.keyword();
-
-        const auto single_value_pair = single_values_units.find( keyword );
-        const auto funs_pair = funs.find( keyword );
-        const auto region_pair = region_units.find( keyword );
-        const auto block_pair = block_units.find( keyword );
-
-        /*
-          All summary values of the type ECL_SMSPEC_MISC_VAR
-          and ECL_SMSPEC_FIELD_VAR must be passed explicitly
-          in the misc_values map when calling
-          add_timestep.
-        */
-        if (single_value_pair != single_values_units.end()) {
-            auto node_type = node.category();
-            if ((node_type != Cat::Field) && (node_type != Cat::Miscellaneous)) {
-                continue;
-            }
-            auto* nodeptr = ecl_smspec_add_node( smspec, keyword.c_str(), st.getUnits().name( single_value_pair->second ), 0);
-            this->handlers->single_value_nodes.emplace( keyword, nodeptr );
-        } else if (region_pair != region_units.end()) {
-            auto* nodeptr = ecl_smspec_add_node( smspec, keyword.c_str(), node.number(), st.getUnits().name( region_pair->second ), 0);
-            this->handlers->region_nodes.emplace( std::make_pair(keyword, node.number()), nodeptr );
-        } else if (block_pair != block_units.end()) {
-            if (node.category() != Cat::Block)
-                continue;
-
-            int global_index = node.number() - 1;
-            if (!this->grid.cellActive(global_index))
-                continue;
-
-            auto* nodeptr = ecl_smspec_add_node( smspec, keyword.c_str(), node.number(), st.getUnits().name( block_pair->second ), 0 );
-            this->handlers->block_nodes.emplace( std::make_pair(keyword, node.number()), nodeptr );
-        } else if (funs_pair != funs.end()) {
-            auto node_type = node.category();
-
-            if ((node_type == Cat::Connection) || (node_type == Cat::Block)) {
-                int global_index = node.number() - 1;
-                if (!this->grid.cellActive(global_index))
-                    continue;
-            }
-
-            /* get unit strings by calling each function with dummy input */
-            const auto handle = funs_pair->second;
-            const std::vector< Well2 > dummy_wells;
-
-            const fn_args no_args { dummy_wells,   // Wells from Schedule object
-                                    0,             // Duration of time step
-                                    0,             // Simulation step
-                                    node.number(),
-                                    summary_state, // SummaryState
-                                    {},            // Well results - data::Wells
-                                    {},            // Region <-> cell mappings.
-                                    this->grid,
-                                    {}};
-
-            const auto val = handle( no_args );
-
-            auto * nodeptr = ecl_smspec_add_node( smspec, keyword.c_str(), node.namedEntity().c_str(), std::max(node.number(), 0), st.getUnits().name( val.unit ), 0 );
-            this->handlers->handlers.emplace_back( nodeptr, handle );
-        } else if (node.isUserDefined()) {
-            std::string udq_unit = "?????";
-            const auto& udq_params = st.runspec().udqParams();
-
-            if (udq.has_unit(keyword))
-                udq_unit = udq.unit(keyword);
-
-            ecl_smspec_add_node(smspec, keyword.c_str(), node.namedEntity().c_str(), std::max(node.number(), 0), udq_unit.c_str(), udq_params.undefinedValue());
-        } else
-            unsupported_keywords.insert(keyword);
-    }
-    for ( const auto& keyword : unsupported_keywords ) {
-        Opm::OpmLog::info("Summary keyword " + std::string(keyword) + " is unhandled");
-    }
-
-    // Guarantee existence of certain summary vectors (mostly rates and
-    // cumulative totals for wells, groups, and field) that are required
-    // for simulation restart.
+    std::unique_ptr<Spec>
+    createStream(const ResultSet& rset, const Formatted& fmt) const
     {
-        auto& rvec     = this->handlers->rstvec_backing_store;
-        auto& hndlrs   = this->handlers->handlers;
+        return std::make_unique<Spec>(rset, fmt, this->uconv(),
+                                      this->cartDims_, this->restart_,
+                                      this->start_);
+    }
 
-        // Required restart vectors for wells, groups, and field.
-        for (const auto& vector : requiredRestartVectors(schedule)) {
-            const auto& kw     = vector.first;
-            const auto& entity = vector.second;
+private:
+    Opm::UnitSystem::UnitType  utype_;
+    std::array<int,3>          cartDims_;
+    Spec::StartTime            start_;
+    Spec::RestartSpecification restart_{};
 
-            const auto key = genKey(kw, entity);
-            if (ecl_sum_has_key(this->ecl_sum.get(), key.c_str())) {
-                // Vector already requested in SUMMARY section.
-                // Don't add a second evaluation of this.
-                continue;
-            }
+    Spec::UnitConvention uconv() const;
+};
 
-            auto func = funs.find(kw);
-            if (func == std::end(funs)) {
-                throw std::logic_error {
-                    "Unable to find handler for '" + kw + "'"
-                };
-            }
-
-            rvec.push_back(makeRestartVectorSMSPEC(kw, entity));
-            hndlrs.emplace_back(rvec.back().get(), func->second);
-        }
-
-        // Required restart vectors for segments (if applicable).
-        for (const auto& segRes : requiredSegmentVectors(schedule)) {
-            const auto key = genKey(segRes);
-            if (ecl_sum_has_key(this->ecl_sum.get(), key.c_str())) {
-                // Segment result already requested in SUMMARY section.
-                // Don't add a second evaluation of this.
-                continue;
-            }
-
-            auto func = funs.find(segRes.vector);
-            if (func == std::end(funs)) {
-                throw std::logic_error {
-                    "Unable to find handler for '" + segRes.vector + "'"
-                };
-            }
-
-            rvec.push_back(makeRestartVectorSMSPEC(segRes));
-            hndlrs.emplace_back(rvec.back().get(), func->second);
-        }
+SMSpecStreamDeferredCreation::
+SMSpecStreamDeferredCreation(const Opm::InitConfig&          initcfg,
+                             const Opm::EclipseGrid&         grid,
+                             const std::time_t               start,
+                             const Opm::UnitSystem::UnitType utype)
+    : utype_   (utype)
+    , cartDims_(grid.getNXYZ())
+    , start_   (std::chrono::system_clock::from_time_t(start))
+{
+    if (initcfg.restartRequested()) {
+        this->restart_.root = initcfg.getRestartRootName();
+        this->restart_.step = initcfg.getRestartStep();
     }
 }
 
-void Summary::eval( SummaryState& st,
-                    int report_step,
-                    double secs_elapsed,
-                    const EclipseState& es,
-                    const Schedule& schedule,
-                    const data::Wells& wells ,
-                    const std::map<std::string, double>& single_values,
-                    const std::map<std::string, std::vector<double>>& region_values,
-                    const std::map<std::pair<std::string, int>, double>& block_values) const {
+SMSpecStreamDeferredCreation::Spec::UnitConvention
+SMSpecStreamDeferredCreation::uconv() const
+{
+    using UType = ::Opm::UnitSystem::UnitType;
 
-    if (secs_elapsed < st.get_elapsed()) {
-        const auto& usys    = es.getUnits();
-        const auto  elapsed = usys.from_si(measure::time, secs_elapsed);
-        const auto  prev_el = usys.from_si(measure::time, st.get_elapsed());
-        const auto  unt     = '[' + std::string{ usys.name(measure::time) } + ']';
+    if (this->utype_ == UType::UNIT_TYPE_METRIC)
+        return Spec::UnitConvention::Metric;
 
-        throw std::invalid_argument {
-            "Elapsed time ("
-            + std::to_string(elapsed) + ' ' + unt
-            + ") must not precede previous elapsed time ("
-            + std::to_string(prev_el) + ' ' + unt
-            + "). Incorrect restart time?"
-        };
+    if (this->utype_ == UType::UNIT_TYPE_FIELD)
+        return Spec::UnitConvention::Field;
+
+    if (this->utype_ == UType::UNIT_TYPE_LAB)
+        return Spec::UnitConvention::Lab;
+
+    if (this->utype_ == UType::UNIT_TYPE_PVT_M)
+        return Spec::UnitConvention::Pvt_M;
+
+    throw std::invalid_argument {
+        "Unsupported Unit Convention (" +
+        std::to_string(static_cast<int>(this->utype_)) + ')'
+    };
+}
+
+std::unique_ptr<SMSpecStreamDeferredCreation>
+makeDeferredSMSpecCreation(const Opm::EclipseState& es,
+                           const Opm::EclipseGrid&  grid,
+                           const Opm::Schedule&     sched)
+{
+    return std::make_unique<SMSpecStreamDeferredCreation>
+        (es.cfg().init(), grid, sched.posixStartTime(),
+         es.getUnits().getType());
+}
+
+std::string makeUpperCase(std::string input)
+{
+    for (auto& c : input) {
+        const auto u = std::toupper(static_cast<unsigned char>(c));
+        c = static_cast<std::string::value_type>(u);
     }
+
+    return input;
+}
+
+Opm::EclIO::OutputStream::ResultSet
+makeResultSet(const Opm::IOConfig& iocfg, const std::string& basenm)
+{
+    const auto& base = basenm.empty()
+        ? makeUpperCase(iocfg.getBaseName())
+        : basenm;
+
+    return { iocfg.getOutputDir(), base };
+}
+
+} // Anonymous namespace
+
+class Opm::out::Summary::SummaryImplementation
+{
+public:
+    explicit SummaryImplementation(const EclipseState&  es,
+                                   const SummaryConfig& sumcfg,
+                                   const EclipseGrid&   grid,
+                                   const Schedule&      sched,
+                                   const std::string&   basename);
+
+    SummaryImplementation(const SummaryImplementation& rhs) = delete;
+    SummaryImplementation(SummaryImplementation&& rhs) = default;
+    SummaryImplementation& operator=(const SummaryImplementation& rhs) = delete;
+    SummaryImplementation& operator=(SummaryImplementation&& rhs) = default;
+
+    void eval(const EclipseState&            es,
+              const Schedule&                sched,
+              const int                      sim_step,
+              const double                   duration,
+              const data::WellRates&         well_solution,
+              const GlobalProcessParameters& single_values,
+              const RegionParameters&        region_values,
+              const BlockValues&             block_values,
+              SummaryState&                  st) const;
+
+    void internal_store(const SummaryState& st, const int report_step);
+    void write();
+
+private:
+    struct MiniStep
+    {
+        int id{0};
+        int seq{-1};
+        std::vector<float> params{};
+    };
+
+    using EvalPtr = SummaryOutputParameters::EvalPtr;
+
+    std::reference_wrapper<const Opm::EclipseGrid> grid_;
+    Opm::out::RegionCache regCache_;
+
+    std::unique_ptr<SMSpecStreamDeferredCreation> deferredSMSpec_;
+
+    Opm::EclIO::OutputStream::ResultSet rset_;
+    Opm::EclIO::OutputStream::Formatted fmt_;
+    Opm::EclIO::OutputStream::Unified   unif_;
+
+    int miniStepID_{0};
+    int prevCreate_{-1};
+    int prevReportStepID_{-1};
+    std::vector<MiniStep>::size_type numUnwritten_{0};
+
+    SummaryOutputParameters  outputParameters_{};
+    std::vector<EvalPtr>     requiredRestartParameters_{};
+    std::vector<std::string> valueKeys_{};
+    std::vector<MiniStep>    unwritten_{};
+
+    std::unique_ptr<Opm::EclIO::OutputStream::SummarySpecification> smspec_{};
+    std::unique_ptr<Opm::EclIO::EclOutput> stream_{};
+
+    void configureTimeVectors(const EclipseState& es);
+
+    void configureSummaryInput(const EclipseState&  es,
+                               const SummaryConfig& sumcfg,
+                               const EclipseGrid&   grid,
+                               const Schedule&      sched);
+
+    void configureRequiredRestartParameters(const SummaryConfig& sumcfg,
+                                            const Schedule&      sched);
+
+    MiniStep& getNextMiniStep(const int report_step);
+    const MiniStep& lastUnwritten() const;
+
+    void write(const MiniStep& ms);
+
+    void createSMSpecIfNecessary();
+    void createSmryStreamIfNecessary(const int report_step);
+};
+
+Opm::out::Summary::SummaryImplementation::
+SummaryImplementation(const EclipseState&  es,
+                      const SummaryConfig& sumcfg,
+                      const EclipseGrid&   grid,
+                      const Schedule&      sched,
+                      const std::string&   basename)
+    : grid_          (std::cref(grid))
+    , regCache_      (es.get3DProperties(), grid, sched)
+    , deferredSMSpec_(makeDeferredSMSpecCreation(es, grid, sched))
+    , rset_          (makeResultSet(es.cfg().io(), basename))
+    , fmt_           { es.cfg().io().getFMTOUT() }
+    , unif_          { es.cfg().io().getUNIFOUT() }
+{
+    this->configureTimeVectors(es);
+    this->configureSummaryInput(es, sumcfg, grid, sched);
+    this->configureRequiredRestartParameters(sumcfg, sched);
+}
+
+void Opm::out::Summary::SummaryImplementation::
+internal_store(const SummaryState& st, const int report_step)
+{
+    auto& ms = this->getNextMiniStep(report_step);
+
+    const auto nParam = this->valueKeys_.size();
+
+    for (auto i = decltype(nParam){0}; i < nParam; ++i) {
+        if (! st.has(this->valueKeys_[i]))
+            // Parameter not yet evaluated (e.g., well/group not
+            // yet active).  Nothing to do here.
+            continue;
+
+        ms.params[i] = st.get(this->valueKeys_[i]);
+    }
+}
+
+void
+Opm::out::Summary::SummaryImplementation::
+eval(const EclipseState&            es,
+     const Schedule&                sched,
+     const int                      sim_step,
+     const double                   duration,
+     const data::WellRates&         well_solution,
+     const GlobalProcessParameters& single_values,
+     const RegionParameters&        region_values,
+     const BlockValues&             block_values,
+     Opm::SummaryState&             st) const
+{
+    const Evaluator::InputData input {
+        es, sched, this->grid_, this->regCache_
+    };
+
+    const Evaluator::SimulatorResults simRes {
+        well_solution, single_values, region_values, block_values
+    };
+
+    for (auto& evalPtr : this->outputParameters_.getEvaluators()) {
+        evalPtr->update(sim_step, duration, input, simRes, st);
+    }
+
+    for (auto& evalPtr : this->requiredRestartParameters_) {
+        evalPtr->update(sim_step, duration, input, simRes, st);
+    }
+}
+
+void Opm::out::Summary::SummaryImplementation::write()
+{
+    const auto zero = std::vector<MiniStep>::size_type{0};
+    if (this->numUnwritten_ == zero)
+        // No unwritten data.  Nothing to do so return early.
+        return;
+
+    this->createSMSpecIfNecessary();
+
+    if (this->prevReportStepID_ < this->lastUnwritten().seq) {
+        this->smspec_->write(this->outputParameters_.summarySpecification());
+    }
+
+    for (auto i = 0*this->numUnwritten_; i < this->numUnwritten_; ++i)
+        this->write(this->unwritten_[i]);
+
+    // Eagerly output last set of parameters to permanent storage.
+    this->stream_->flushStream();
+
+    // Reset "unwritten" counter to reflect the fact that we've
+    // output all stored ministeps.
+    this->numUnwritten_ = zero;
+}
+
+void Opm::out::Summary::SummaryImplementation::write(const MiniStep& ms)
+{
+    this->createSmryStreamIfNecessary(ms.seq);
+
+    if (this->prevReportStepID_ < ms.seq) {
+        // XXX: Should probably write SEQHDR = 0 here since
+        ///     we do not know the actual encoding needed.
+        this->stream_->write("SEQHDR", std::vector<int>{ ms.seq });
+        this->prevReportStepID_ = ms.seq;
+    }
+
+    this->stream_->write("MINISTEP", std::vector<int>{ ms.id });
+    this->stream_->write("PARAMS"  , ms.params);
+}
+
+void
+Opm::out::Summary::SummaryImplementation::
+configureTimeVectors(const EclipseState& es)
+{
+    const auto dfltwgname = std::string(":+:+:+:+");
+    const auto dfltnum    = 0;
+
+    // XXX: Save keys might need/want to include a random component too.
+    auto makeKey = [this](const std::string& keyword) -> void
+    {
+        this->valueKeys_.push_back(
+            "SMSPEC.Internal." + keyword + ".Value.SAVE"
+        );
+    };
+
+    // TIME
+    {
+        const auto& kw = std::string("TIME");
+        makeKey(kw);
+
+        const auto* utime = es.getUnits().name(UnitSystem::measure::time);
+        auto eval = std::make_unique<Evaluator::Time>(this->valueKeys_.back());
+
+        this->outputParameters_
+            .makeParameter(kw, dfltwgname, dfltnum, utime, std::move(eval));
+    }
+
+#if NOT_YET
+    // YEARS
+    {
+        const auto& kw = std::string("YEARS");
+        makeKey(kw);
+
+        auto eval = std::make_unique<Evaluator::Years>(this->valueKeys_.back());
+
+        this->outputParameters_
+            .makeParameter(kw, dfltwgname, dfltnum, kw, std::move(eval));
+    }
+#endif // NOT_YET
+}
+
+void
+Opm::out::Summary::SummaryImplementation::
+configureSummaryInput(const EclipseState&  es,
+                      const SummaryConfig& sumcfg,
+                      const EclipseGrid&   grid,
+                      const Schedule&      sched)
+{
+    const auto st = SummaryState {
+        std::chrono::system_clock::from_time_t(sched.getStartTime())
+    };
+
+    Evaluator::Factory fact {
+        es, grid, st, sched.getUDQConfig(sched.size() - 1)
+    };
+
+    auto unsuppkw = std::vector<std::string>{};
+    for (const auto& node : sumcfg) {
+        auto prmDescr = fact.create(node);
+
+        if (! prmDescr.evaluator) {
+            // No known evaluation function/type for this keyword
+            unsuppkw.push_back(node.keyword());
+            continue;
+        }
+
+        // This keyword has a known evaluation method.
+
+        this->valueKeys_.push_back(std::move(prmDescr.uniquekey));
+
+        this->outputParameters_
+            .makeParameter(node.keyword(),
+                           makeWGName(node.namedEntity()),
+                           node.number(),
+                           std::move(prmDescr.unit),
+                           std::move(prmDescr.evaluator));
+    }
+
+    if (! unsuppkw.empty())
+        reportUnsupportedKeywords(std::move(unsuppkw));
+}
+
+void
+Opm::out::Summary::SummaryImplementation::
+configureRequiredRestartParameters(const SummaryConfig& sumcfg,
+                                   const Schedule&      sched)
+{
+    auto makeEvaluator = [&sumcfg, this](const SummaryNode& node) -> void
+    {
+        if (sumcfg.hasSummaryKey(node.uniqueNodeKey()))
+            // Handler already exists.  Don't add second evaluation.
+            return;
+
+        auto fcnPos = funs.find(node.keyword());
+        assert ((fcnPos != funs.end()) &&
+                "Internal error creating required restart vectors");
+
+        auto eval = std::make_unique<
+            Evaluator::FunctionRelation>(node, fcnPos->second);
+
+        this->requiredRestartParameters_.push_back(std::move(eval));
+    };
+
+    for (const auto& node : requiredRestartVectors(sched))
+        makeEvaluator(node);
+
+    for (const auto& node : requiredSegmentVectors(sched))
+        makeEvaluator(node);
+}
+
+Opm::out::Summary::SummaryImplementation::MiniStep&
+Opm::out::Summary::SummaryImplementation::getNextMiniStep(const int report_step)
+{
+    if (this->numUnwritten_ == this->unwritten_.size())
+        this->unwritten_.emplace_back();
+
+    assert ((this->numUnwritten_ < this->unwritten_.size()) &&
+            "Internal inconsistency in 'unwritten' counter");
+
+    auto& ms = this->unwritten_[this->numUnwritten_++];
+
+    ms.id  = this->miniStepID_++;  // MINSTEP IDs start at zero.
+    ms.seq = report_step;
+
+    ms.params.resize(this->valueKeys_.size(), 0.0f);
+
+    std::fill(ms.params.begin(), ms.params.end(), 0.0f);
+
+    return ms;
+}
+
+const Opm::out::Summary::SummaryImplementation::MiniStep&
+Opm::out::Summary::SummaryImplementation::lastUnwritten() const
+{
+    assert (this->numUnwritten_ <= this->unwritten_.size());
+    assert (this->numUnwritten_ >  decltype(this->numUnwritten_){0});
+
+    return this->unwritten_[this->numUnwritten_ - 1];
+}
+
+void Opm::out::Summary::SummaryImplementation::createSMSpecIfNecessary()
+{
+    if (this->deferredSMSpec_) {
+        // We need an SMSPEC file and none exists.  Create it and release
+        // the resources captured to make the deferred creation call.
+        this->smspec_ = this->deferredSMSpec_
+            ->createStream(this->rset_, this->fmt_);
+
+        this->deferredSMSpec_.reset();
+    }
+}
+
+void
+Opm::out::Summary::SummaryImplementation::
+createSmryStreamIfNecessary(const int report_step)
+{
+    // Create stream if unset or if non-unified (separate) and new step.
+
+    assert ((this->prevCreate_ <= report_step) &&
+            "Inconsistent Report Step Sequence Detected");
+
+    const auto do_create = ! this->stream_
+        || (! this->unif_.set && (this->prevCreate_ < report_step));
+
+    if (do_create) {
+        this->stream_ = Opm::EclIO::OutputStream::
+            createSummaryFile(this->rset_, report_step,
+                              this->fmt_, this->unif_);
+
+        this->prevCreate_ = report_step;
+    }
+}
+
+namespace {
+
+void validateElapsedTime(const double             secs_elapsed,
+                         const Opm::EclipseState& es,
+                         const Opm::SummaryState& st)
+{
+    if (! (secs_elapsed < st.get_elapsed()))
+        return;
+
+    const auto& usys    = es.getUnits();
+    const auto  elapsed = usys.from_si(measure::time, secs_elapsed);
+    const auto  prev_el = usys.from_si(measure::time, st.get_elapsed());
+    const auto  unt     = '[' + std::string{ usys.name(measure::time) } + ']';
+
+    throw std::invalid_argument {
+        "Elapsed time ("
+        + std::to_string(elapsed) + ' ' + unt
+        + ") must not precede previous elapsed time ("
+        + std::to_string(prev_el) + ' ' + unt
+        + "). Incorrect restart time?"
+    };
+}
+
+} // Anonymous namespace
+
+namespace Opm { namespace out {
+
+Summary::Summary(const EclipseState&  es,
+                 const SummaryConfig& sumcfg,
+                 const EclipseGrid&   grid,
+                 const Schedule&      sched,
+                 const std::string&   basename)
+    : pImpl_(new SummaryImplementation(es, sumcfg, grid, sched, basename))
+{}
+
+void Summary::eval(SummaryState&                  st,
+                   const int                      report_step,
+                   const double                   secs_elapsed,
+                   const EclipseState&            es,
+                   const Schedule&                schedule,
+                   const data::WellRates&         well_solution,
+                   const GlobalProcessParameters& single_values,
+                   const RegionParameters&        region_values,
+                   const BlockValues&             block_values) const
+{
+    validateElapsedTime(secs_elapsed, es, st);
 
     const double duration = secs_elapsed - st.get_elapsed();
 
@@ -1499,129 +2368,25 @@ void Summary::eval( SummaryState& st,
      * necessary to use when consulting the Schedule object. */
     const auto sim_step = std::max( 0, report_step - 1 );
 
-    for( auto& f : this->handlers->handlers ) {
-        const int num = smspec_node_get_num( f.first );
-        double unit_applied_val = smspec_node_get_default( f.first );
+    this->pImpl_->eval(es, schedule, sim_step, duration,
+                       well_solution, single_values,
+                       region_values, block_values, st);
 
-        if (need_wells(smspec_node_get_var_type(f.first ),
-                       smspec_node_get_keyword(f.first))) {
-
-            const auto schedule_wells = find_wells( schedule, f.first, sim_step, this->regionCache );
-            /*
-              It is not a bug as such if the schedule_wells list comes back
-              empty; it just means that at the current timestep no relevant
-              wells have been defined and we do not calculate a value.
-            */
-            if (schedule_wells.size() > 0) {
-                auto eff_factors = well_efficiency_factors( f.first, schedule, schedule_wells, sim_step );
-                const auto val = f.second( { schedule_wells,
-                                             duration,
-                                             sim_step,
-                                             num,
-                                             st,
-                                             wells,
-                                             this->regionCache,
-                                             this->grid,
-                                             eff_factors});
-                unit_applied_val = es.getUnits().from_si( val.unit, val.value );
-            }
-        } else {
-            const auto val = f.second({ {},
-                                        duration,
-                                        sim_step,
-                                        num,
-                                        st,
-                                        {},
-                                        this->regionCache,
-                                        this->grid,
-                                        {} });
-            unit_applied_val = es.getUnits().from_si( val.unit, val.value );
-        }
-
-        update(*f.first, unit_applied_val, st);
-    }
-
-    for( const auto& value_pair : single_values ) {
-        const std::string key = value_pair.first;
-        const auto node_pair = this->handlers->single_value_nodes.find( key );
-        if (node_pair != this->handlers->single_value_nodes.end()) {
-            const auto unit = single_values_units.at( key );
-            double si_value = value_pair.second;
-            double output_value = es.getUnits().from_si(unit , si_value );
-            update(*node_pair->second, output_value, st);
-        }
-    }
-
-    for( const auto& value_pair : region_values ) {
-        const std::string key = value_pair.first;
-        for (size_t reg = 0; reg < value_pair.second.size(); ++reg) {
-            const auto node_pair = this->handlers->region_nodes.find( std::make_pair(key, reg+1) );
-            if (node_pair != this->handlers->region_nodes.end()) {
-                const auto * nodeptr = node_pair->second;
-                const auto unit = region_units.at( key );
-
-                assert (smspec_node_get_num( nodeptr ) - 1 == static_cast<int>(reg));
-                double si_value = value_pair.second[reg];
-                double output_value = es.getUnits().from_si(unit , si_value );
-                update(*nodeptr, output_value, st);
-            }
-        }
-    }
-
-    for( const auto& value_pair : block_values ) {
-        const std::pair<std::string, int> key = value_pair.first;
-        const auto node_pair = this->handlers->block_nodes.find( key );
-        if (node_pair != this->handlers->block_nodes.end()) {
-            const auto * nodeptr = node_pair->second;
-            const auto unit = block_units.at( key.first );
-            double si_value = value_pair.second;
-            double output_value = es.getUnits().from_si(unit , si_value );
-            update(*nodeptr, output_value, st);
-        }
-    }
     eval_udq(schedule, sim_step, st);
+
     st.update_elapsed(duration);
 }
 
-
-void Summary::internal_store(const SummaryState& st, int report_step) {
-    auto* tstep = ecl_sum_add_tstep( this->ecl_sum.get(), report_step, st.get_elapsed() );
-    const ecl_smspec_type * smspec = ecl_sum_get_smspec(this->ecl_sum.get());
-    auto num_nodes = ecl_smspec_num_nodes(smspec);
-    for (int node_index = 0; node_index < num_nodes; node_index++) {
-        const auto& smspec_node = ecl_smspec_iget_node(smspec, node_index);
-        // The TIME node is treated specially, it is created internally in
-        // the ecl_sum instance when the timestep is created - and
-        // furthermore it is not in st SummaryState instance.
-        if (smspec_node.get_params_index() == ecl_smspec_get_time_index(smspec))
-            continue;
-
-        const std::string key = smspec_node.get_gen_key1();
-        if (st.has(key))
-            ecl_sum_tstep_iset(tstep, smspec_node.get_params_index(), st.get(key));
-
-        /*
-          else
-          OpmLog::warning("Have configured summary variable " + key + " for summary output - but it has not been calculated");
-        */
-    }
+void Summary::add_timestep(const SummaryState& st, const int report_step)
+{
+    this->pImpl_->internal_store(st, report_step);
 }
 
-
-void Summary::add_timestep( const SummaryState& st,
-                            int report_step) {
-    this->internal_store(st, report_step);
+void Summary::write() const
+{
+    this->pImpl_->write();
 }
-
-
-void Summary::write() const {
-    ecl_sum_fwrite( this->ecl_sum.get() );
-}
-
 
 Summary::~Summary() {}
-
-
-
 
 }} // namespace Opm::out
