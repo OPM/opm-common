@@ -1,4 +1,5 @@
 #include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 #include <pybind11/pybind11.h>
 #include "converters.hpp"
@@ -48,6 +49,15 @@ void python::common::export_Deck(py::module &module) {
         .def( "__getitem__", &getKeyword_string, ref_internal)
         .def( "__getitem__", &getKeyword_tuple, ref_internal)
         .def( "__str__", &str<Deck>)
+
+        .def("active_unit_system", [](const Deck& deck) -> const UnitSystem& {
+               return deck.getActiveUnitSystem();
+           } )
+
+        .def("default_unit_system", [](const Deck& deck) -> const UnitSystem& {
+               return deck.getDefaultUnitSystem();
+           } )
+
         .def( "count", &count )
       ;
 }

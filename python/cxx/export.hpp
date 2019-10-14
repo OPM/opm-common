@@ -14,6 +14,7 @@ const py::return_value_policy move         = py::return_value_policy::move;
 
 namespace python::common {
 void export_all(py::module& module);
+void export_UnitSystem(py::module& module);
 void export_Connection(py::module& module);
 void export_Deck(py::module& module);
 void export_DeckKeyword(py::module& module);
