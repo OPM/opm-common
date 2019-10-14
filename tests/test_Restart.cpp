@@ -39,17 +39,51 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 
 #include <opm/io/eclipse/OutputStream.hpp>
+#include <opm/io/eclipse/EclIOdata.hpp>
+#include <opm/io/eclipse/ERst.hpp>
+
+#include <tuple>
 
 // ERT stuff
-#include <ert/ecl/ecl_kw.h>
-#include <ert/ecl/ecl_file.h>
 #include <ert/ecl/ecl_util.h>
-#include <ert/ecl/ecl_kw_magic.h>
-#include <ert/ecl_well/well_info.h>
-#include <ert/ecl_well/well_state.h>
-#include <ert/util/test_work_area.h>
+
+#include <tests/WorkArea.cpp>
 
 using namespace Opm;
+
+namespace {
+    int ecl_file_get_num_named_kw(Opm::EclIO::ERst&  rst,
+                                  const std::string& kw)
+    {
+        int count = 0;
+        for (const auto& step : rst.listOfReportStepNumbers()) {
+            for (const auto& vec : rst.listOfRstArrays(step)) {
+                count += std::get<0>(vec) == kw;
+            }
+        }
+
+        return count;
+    }
+
+    EclIO::EclFile::EclEntry
+    ecl_file_iget_named_kw(Opm::EclIO::ERst&  rst,
+                           const std::string& kw,
+                           const int          seqnum)
+    {
+        for (const auto& vec : rst.listOfRstArrays(seqnum)) {
+            if (std::get<0>(vec) == kw) {
+                return vec;
+            }
+        }
+
+        return { "NoSuchKeyword", Opm::EclIO::eclArrType::MESS, 0 };
+    }
+
+    EclIO::eclArrType ecl_kw_get_type(const EclIO::EclFile::EclEntry& vec)
+    {
+        return std::get<1>(vec);
+    }
+}
 
 inline std::string input( const std::string& rst_name = "FIRST_SIM" ) {
            return std::string(
@@ -541,8 +575,8 @@ BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData) {
                                   {"SWAT" , UnitSystem::measure::identity},
                                   {"SGAS" , UnitSystem::measure::identity},
                                   {"TEMP" , UnitSystem::measure::temperature}};
-    test_work_area_type * test_area = test_work_area_alloc("test_restart");
-    test_work_area_copy_file( test_area, "FIRST_SIM.DATA");
+    WorkArea test_area("test_restart");
+    test_area.copyIn("FIRST_SIM.DATA");
 
     Setup setup("FIRST_SIM.DATA");
     EclipseIO eclWriter( setup.es, setup.grid, setup.schedule, setup.summary_config);
@@ -553,7 +587,6 @@ BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData) {
 
     BOOST_CHECK_THROW( second_sim( eclWriter, st, {{"SOIL", UnitSystem::measure::pressure}} ) , std::runtime_error );
     BOOST_CHECK_THROW( second_sim( eclWriter, st, {{"SOIL", UnitSystem::measure::pressure, true}}) , std::runtime_error );
-    test_work_area_free( test_area );
 }
 
 
@@ -561,7 +594,7 @@ BOOST_AUTO_TEST_CASE(ECL_FORMATTED) {
     namespace OS = ::Opm::EclIO::OutputStream;
 
     Setup setup("FIRST_SIM.DATA");
-    test_work_area_type * test_area = test_work_area_alloc("test_Restart");
+    WorkArea test_area("test_Restart");
     auto& io_config = setup.es.getIOConfig();
     {
         auto num_cells = setup.grid.getNumActive( );
@@ -574,9 +607,7 @@ BOOST_AUTO_TEST_CASE(ECL_FORMATTED) {
             io_config.setEclCompatibleRST( false );
             restart_value.addExtra("EXTRA", UnitSystem::measure::pressure, {10,1,2,3});
 
-            const auto outputDir = std::string {
-                test_work_area_get_cwd(test_area)
-            };
+            const auto outputDir = test_area.currentWorkingDirectory();
 
             {
                 const auto seqnum = 1;
@@ -599,12 +630,10 @@ BOOST_AUTO_TEST_CASE(ECL_FORMATTED) {
                 const auto rstFile = ::Opm::EclIO::OutputStream::
                     outputFileName({outputDir, "OPM_FILE"}, "UNRST");
 
-                ecl_file_type * rst_file = ecl_file_open( rstFile.c_str() , 0 );
-                ecl_kw_type * swat = ecl_file_iget_named_kw(rst_file, "SWAT", 0);
+                EclIO::ERst rst{ rstFile };
 
-                BOOST_CHECK_EQUAL( ECL_DOUBLE_TYPE, ecl_kw_get_type(swat));
-                BOOST_CHECK( ecl_file_has_kw(rst_file, "EXTRA"));
-                ecl_file_close(rst_file);
+                BOOST_CHECK_MESSAGE(rst.hasKey("SWAT"), "Restart file must have SWAT vector");
+                BOOST_CHECK_MESSAGE(rst.hasKey("EXTRA"), "Restart file must have EXTRA vector");
             }
 
             io_config.setEclCompatibleRST( true );
@@ -629,18 +658,15 @@ BOOST_AUTO_TEST_CASE(ECL_FORMATTED) {
                 const auto rstFile = ::Opm::EclIO::OutputStream::
                     outputFileName({outputDir, "ECL_FILE"}, "UNRST");
 
-                ecl_file_type * rst_file = ecl_file_open( rstFile.c_str() , 0 );
-                ecl_kw_type * swat = ecl_file_iget_named_kw(rst_file, "SWAT", 0);
+                EclIO::ERst rst{ rstFile };
 
-                BOOST_CHECK_EQUAL( ECL_FLOAT_TYPE, ecl_kw_get_type(swat));
-                BOOST_CHECK( !ecl_file_has_kw(rst_file, "EXTRA"));
-                BOOST_CHECK( !ecl_file_has_kw(rst_file, "OPM_XWEL"));
-                BOOST_CHECK( !ecl_file_has_kw(rst_file, "OPM_IWEL"));
-                ecl_file_close(rst_file);
+                BOOST_CHECK_MESSAGE(rst.hasKey("SWAT"), "Restart file must have SWAT vector");
+                BOOST_CHECK_MESSAGE(!rst.hasKey("EXTRA"), "Restart file must NOT have EXTRA vector");
+                BOOST_CHECK_MESSAGE(!rst.hasKey("OPM_IWEL"), "Restart file must NOT have OPM_IWEL vector");
+                BOOST_CHECK_MESSAGE(!rst.hasKey("OPM_XWEL"), "Restart file must NOT have OPM_XWEL vector");
             }
         }
     }
-    test_work_area_free(test_area);
 }
 
 
@@ -676,8 +702,8 @@ BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData_double) {
     std::vector<RestartKey> solution_keys {RestartKey("SWAT", UnitSystem::measure::identity),
                                            RestartKey("SGAS", UnitSystem::measure::identity)};
 
-    test_work_area_type * test_area = test_work_area_alloc("test_Restart");
-    test_work_area_copy_file( test_area, "FIRST_SIM.DATA");
+    WorkArea test_area("test_Restart");
+    test_area.copyIn("FIRST_SIM.DATA");
     Setup setup("FIRST_SIM.DATA");
     EclipseIO eclWriter( setup.es, setup.grid, setup.schedule, setup.summary_config);
     SummaryState st(std::chrono::system_clock::now());
@@ -685,15 +711,15 @@ BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData_double) {
     auto state1 = first_sim( setup.es , eclWriter , st, true);
     auto state2 = second_sim( eclWriter ,st, solution_keys );
     compare_equal( state1 , state2 , solution_keys);
-    test_work_area_free( test_area );
 }
 
 
 BOOST_AUTO_TEST_CASE(WriteWrongSOlutionSize) {
     namespace OS = ::Opm::EclIO::OutputStream;
 
+    WorkArea test_area("test_Restart");
+    test_area.copyIn("FIRST_SIM.DATA");
     Setup setup("FIRST_SIM.DATA");
-    test_work_area_type * test_area = test_work_area_alloc("test_Restart");
     {
         auto num_cells = setup.grid.getNumActive( ) + 1;
         auto cells = mkSolution( num_cells );
@@ -702,7 +728,7 @@ BOOST_AUTO_TEST_CASE(WriteWrongSOlutionSize) {
 
         const auto seqnum = 1;
         auto rstFile = OS::Restart {
-            OS::ResultSet { test_work_area_get_cwd(test_area), "FILE" }, seqnum,
+            OS::ResultSet { test_area.currentWorkingDirectory(), "FILE" }, seqnum,
             OS::Formatted { false }, OS::Unified { true }
         };
 
@@ -715,7 +741,6 @@ BOOST_AUTO_TEST_CASE(WriteWrongSOlutionSize) {
                                            sumState),
                            std::runtime_error);
     }
-    test_work_area_free(test_area);
 }
 
 
@@ -742,8 +767,9 @@ BOOST_AUTO_TEST_CASE(ExtraData_KEYS) {
 BOOST_AUTO_TEST_CASE(ExtraData_content) {
     namespace OS = ::Opm::EclIO::OutputStream;
 
+    WorkArea test_area("test_Restart");
+    test_area.copyIn("FIRST_SIM.DATA");
     Setup setup("FIRST_SIM.DATA");
-    test_work_area_type * test_area = test_work_area_alloc("test_Restart");
     {
         auto num_cells = setup.grid.getNumActive( );
         auto cells = mkSolution( num_cells );
@@ -756,9 +782,7 @@ BOOST_AUTO_TEST_CASE(ExtraData_content) {
 
             restart_value.addExtra("EXTRA", UnitSystem::measure::pressure, {10,1,2,3});
 
-            const auto outputDir = std::string {
-                test_work_area_get_cwd(test_area)
-            };
+            const auto outputDir = test_area.currentWorkingDirectory();
 
             {
                 const auto seqnum = 1;
@@ -780,17 +804,12 @@ BOOST_AUTO_TEST_CASE(ExtraData_content) {
                 outputFileName({outputDir, "FILE"}, "UNRST");
 
             {
-                ecl_file_type * f = ecl_file_open( rstFile.c_str() , 0 );
-                BOOST_CHECK( ecl_file_has_kw( f , "EXTRA"));
-                {
-                    ecl_kw_type * ex = ecl_file_iget_named_kw( f , "EXTRA" , 0 );
-                    BOOST_CHECK_EQUAL( ecl_kw_get_header( ex) , "EXTRA" );
-                    BOOST_CHECK_EQUAL(  4 , ecl_kw_get_size( ex ));
+                EclIO::ERst rst{ rstFile };
+                BOOST_CHECK_MESSAGE( rst.hasKey("EXTRA"), "Restart file is expexted to have EXTRA vector");
 
-                    BOOST_CHECK_CLOSE( 10 , units.to_si( UnitSystem::measure::pressure, ecl_kw_iget_double( ex, 0 )), 0.00001);
-                    BOOST_CHECK_CLOSE( units.from_si( UnitSystem::measure::pressure, 3), ecl_kw_iget_double( ex, 3 ), 0.00001);
-                }
-                ecl_file_close( f );
+                const auto& ex = rst.getRst<double>("EXTRA", 1);
+                BOOST_CHECK_CLOSE( 10 , units.to_si( UnitSystem::measure::pressure, ex[0] ), 0.00001);
+                BOOST_CHECK_CLOSE( units.from_si( UnitSystem::measure::pressure, 3), ex[3], 0.00001);
             }
 
             BOOST_CHECK_THROW( RestartIO::load( rstFile , 1 , st, {}, setup.es, setup.grid , setup.schedule,
@@ -819,22 +838,20 @@ BOOST_AUTO_TEST_CASE(ExtraData_content) {
             }
         }
     }
-    test_work_area_free(test_area);
 }
 
 
 BOOST_AUTO_TEST_CASE(STORE_THPRES) {
     namespace OS = ::Opm::EclIO::OutputStream;
 
+    WorkArea test_area("test_Restart_THPRES");
+    test_area.copyIn("FIRST_SIM_THPRES.DATA");
     Setup setup("FIRST_SIM_THPRES.DATA");
-    test_work_area_type * test_area = test_work_area_alloc("test_Restart_THPRES");
     {
         auto num_cells = setup.grid.getNumActive( );
         auto cells = mkSolution( num_cells );
         auto wells = mkWells();
-        const auto outputDir = std::string {
-            test_work_area_get_cwd(test_area)
-        };
+        const auto outputDir = test_area.currentWorkingDirectory();
         {
             RestartValue restart_value(cells, wells);
             RestartValue restart_value2(cells, wells);
@@ -897,33 +914,35 @@ BOOST_AUTO_TEST_CASE(STORE_THPRES) {
                 const auto rstFile = ::Opm::EclIO::OutputStream::
                     outputFileName({outputDir, "FILE2"}, "UNRST");
 
-                ecl_file_type * rst_file = ecl_file_open(rstFile.c_str(), 0);
+                EclIO::ERst rst(rstFile);
                 std::map<std::string,int> kw_pos;
-                for (int i=0; i < ecl_file_get_size(rst_file); i++)
-                    kw_pos[ ecl_file_iget_header(rst_file, i ) ] = i;
+
+                {
+                    auto i = 0;
+                    for (const auto& vec : rst.listOfRstArrays(1))
+                        kw_pos[ std::get<0>(vec) ] = i++;
+                }
 
                 BOOST_CHECK( kw_pos["STARTSOL"] < kw_pos["THRESHPR"] );
                 BOOST_CHECK( kw_pos["THRESHPR"] < kw_pos["ENDSOL"] );
                 BOOST_CHECK( kw_pos["ENDSOL"] < kw_pos["EXTRA"] );
 
-                BOOST_CHECK_EQUAL( ecl_file_get_num_named_kw(rst_file, "THRESHPR"), 1);
-                BOOST_CHECK_EQUAL( ecl_file_get_num_named_kw(rst_file, "EXTRA"), 1);
-                BOOST_CHECK_EQUAL( ecl_kw_get_type(ecl_file_iget_named_kw(rst_file, "THRESHPR", 0)), ECL_DOUBLE_TYPE);
-                ecl_file_close(rst_file);
+                BOOST_CHECK_EQUAL( ecl_file_get_num_named_kw(rst, "THRESHPR"), 1);
+                BOOST_CHECK_EQUAL( ecl_file_get_num_named_kw(rst, "EXTRA"), 1);
+                BOOST_CHECK_MESSAGE( ecl_kw_get_type(ecl_file_iget_named_kw(rst, "THRESHPR", 1)) == EclIO::eclArrType::DOUB,
+                                     R"("THRESHPR" vector must have type DOUB)");
             }
-
         }
     }
-    test_work_area_free(test_area);
 }
 
 
 
 BOOST_AUTO_TEST_CASE(Restore_Cumulatives)
 {
+    WorkArea wa{"test_Restart"};
+    wa.copyIn("FIRST_SIM.DATA");
     Setup setup("FIRST_SIM.DATA");
-
-    const auto wa = ::ecl::util::TestArea{"test_Restart"};
 
     // Write fully ECLIPSE compatible output.  This also saves cumulatives.
     setup.es.getIOConfig().setEclCompatibleRST(true);
@@ -936,7 +955,7 @@ BOOST_AUTO_TEST_CASE(Restore_Cumulatives)
 
     namespace OS = ::Opm::EclIO::OutputStream;
 
-    const auto rset   = OS::ResultSet{ wa.test_cwd(), "FILE" };
+    const auto rset   = OS::ResultSet{ wa.currentWorkingDirectory(), "FILE" };
     const auto seqnum = 1;
     {
         auto rstFile = OS::Restart {

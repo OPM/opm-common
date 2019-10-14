@@ -47,6 +47,11 @@ namespace {
                                          this->area_ / filename);
         }
 
+        std::string currentWorkingDirectory() const
+        {
+            return this->area_.generic_string();
+        }
+
         void makeSubDir(const std::string& dirname)
         {
             boost::filesystem::create_directories(this->area_ / dirname);
