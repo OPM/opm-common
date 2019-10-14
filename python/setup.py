@@ -8,28 +8,6 @@ import setuptools
 import glob
 import os
 import subprocess
-import argparse
-
-
-parser = argparse.ArgumentParser()
-parser.add_argument("build")
-parser.add_argument("build_ext")
-parser.add_argument("--build-lib")
-parser.add_argument("--prefix")
-parser.add_argument("--library-dirs")
-parser.add_argument("--include-dirs")
-parser.add_argument("--dry-run", action='store_true')
-args = parser.parse_args()
-
-#Circumnventing setuptools' PYTHONPATH check.
-#This is necessary during install
-if args.prefix:
-   python_version = 'python' + str(sys.version_info.major) + '.' + str(sys.version_info.minor)
-   pkg_path_root = os.path.join(args.prefix, 'lib', python_version, 'site-packages')
-   if 'PYTHONPATH' in os.environ:
-       os.environ['PYTHONPATH'] += ':' + pkg_path_root
-   else:
-       os.environ['PYTHONPATH'] = pkg_path_root
 
 setupdir = os.path.dirname(__file__)
 if setupdir != '':

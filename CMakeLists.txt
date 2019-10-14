@@ -9,6 +9,7 @@ option(ENABLE_ECL_INPUT "Enable eclipse input support?" ON)
 option(ENABLE_ECL_OUTPUT "Enable eclipse output support?" ON)
 option(ENABLE_MOCKSIM "Build the mock simulator for io testing" ON)
 option(OPM_ENABLE_PYTHON "Enable python bindings?" OFF)
+option(OPM_INSTALL_PYTHON "Enable python bindings?" OFF)
 option(OPM_ENABLE_EMBEDDED_PYTHON "Enable python bindings?" OFF)
 
 
@@ -220,10 +221,10 @@ if (OPM_ENABLE_PYTHON)
   find_package(PythonInterp REQUIRED)
   include(FindPythonInterp)
 
-  make_directory(${CMAKE_BINARY_DIR}/python)
   set(PYTHON_PACKAGE_PATH "site-packages")
   set(PYTHON_INSTALL_PREFIX "lib/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/${PYTHON_PACKAGE_PATH}" CACHE STRING "Subdirectory to install Python modules in")
 
+  make_directory(${CMAKE_BINARY_DIR}/python)
   get_target_property(_ecl_include_dirs ecl INTERFACE_INCLUDE_DIRECTORIES)
   get_target_property(_opmcommon_include_dirs opmcommon INCLUDE_DIRECTORIES)
   list(APPEND _opmcommon_include_dirs ${_ecl_include_dirs})
@@ -268,8 +269,20 @@ if (OPM_ENABLE_PYTHON)
   add_custom_target(opmcommon_python ALL DEPENDS python/python/opm/libopmcommon_python.so)
   add_dependencies(opmcommon_python opmcommon)
 
-  install( CODE "execute_process(COMMAND mkdir -p ${CMAKE_INSTALL_PREFIX}/${PYTHON_INSTALL_PREFIX}  )" )
-  install( CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} python/setup.py build_ext --dry-run install --prefix=${CMAKE_INSTALL_PREFIX}  )" )
+  # The install target is based on manually copying the python file tree to the
+  # installation area with a small installation script 'install.py'. Would have
+  # preferred to use standard setup.py install, but the setup.py based solution
+  # refuses to install to a location which the current python executable can not
+  # load from, and the use of eggs in the setup.py based installation makes
+  # debugging quite difficult.
+  #
+  # Since the installation of Python code is nonstandard it is protected by an
+  # extra cmake switch, OPM_INSTALL_PYTHON. If you prefer you can still invoke
+  # setup.py install manually - optionally with the generated script
+  # setup-install.sh - and completely bypass cmake in the installation phase.
+  if (OPM_INSTALL_PYTHON)
+    install( CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_BINARY_DIR}/python/install.py ${CMAKE_BINARY_DIR}/python/python/opm ${CMAKE_INSTALL_PREFIX}/${PYTHON_INSTALL_PREFIX})")
+  endif()
 
   add_test(NAME python_tests
             WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/python
@@ -281,7 +294,7 @@ if (OPM_ENABLE_PYTHON)
 
   # -------------------------------------------------------------------------
   # Let cmake configure some small shell scripts which can be used to simplify
-  # building and testing of the Python extensions.
+  # building, testing and installation of the Python extensions.
   configure_file(python/setup-build.sh.in tmp/setup-build.sh)
   file( COPY ${PROJECT_BINARY_DIR}/tmp/setup-build.sh
         DESTINATION ${PROJECT_BINARY_DIR}
@@ -289,6 +302,11 @@ if (OPM_ENABLE_PYTHON)
 
   configure_file(python/setup-test.sh.in tmp/setup-test.sh)
   file( COPY ${PROJECT_BINARY_DIR}/tmp/setup-test.sh
+        DESTINATION ${PROJECT_BINARY_DIR}
+        FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE )
+
+  configure_file(python/setup-install.sh.in tmp/setup-install.sh)
+  file( COPY ${PROJECT_BINARY_DIR}/tmp/setup-install.sh
         DESTINATION ${PROJECT_BINARY_DIR}
         FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE )
 
