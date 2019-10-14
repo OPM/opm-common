@@ -162,7 +162,7 @@ BOOST_AUTO_TEST_CASE(WellTableDimensions)
 
     const auto ih = Opm::RestartIO::InteHEAD{}
         .wellTableDimensions({
-            numWells, maxPerf, maxWellInGroup, maxGroupInField
+            numWells, maxPerf, maxWellInGroup, maxGroupInField, 0
         });
 
     const auto& v = ih.data();
