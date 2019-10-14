@@ -31,6 +31,7 @@
 
 namespace Opm {
 
+    class Runspec;
     class EclipseGrid;
     class EclipseState;
     class Schedule;
@@ -69,6 +70,10 @@ namespace Opm { namespace RestartIO { namespace Helpers {
                   const std::size_t       lookup_step,
                   const std::vector<int>& inteHead);
 
+    std::vector<int>
+    createActionxDims(  const Runspec&      rspec,
+                        const Schedule&     sched,
+                        const std::size_t   simStep);
 
 }}} // Opm::RestartIO::Helpers
 

@@ -27,6 +27,9 @@
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ArrayDimChecker.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/Actions.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionX.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/Regdims.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
@@ -187,12 +190,24 @@ namespace {
     }
     
     /*Opm::RestartIO::InteHEAD::UdqParam
-    getRandSeedPar(const ::Opm::Runspec& rspec)
+    getUdqParam(const ::Opm::Runspec& rspec, const ::Opm::UDQConfig& udqcfg )
     { 
         const auto& udq_par = rspec.udqParams();
         const auto r_seed = udq_par.rand_seed();
+        const auto no_udq = udqcfg.size();
         
-        return { r_seed};
+        return { r_seed, static_cast<int>(no_udq)};
+    }
+    
+    Opm::RestartIO::InteHEAD::ActionParam
+    getActionParam(const ::Opm::Runspec& rspec, const ::Opm::Action::Actions& acts )
+    { 
+        const auto& no_act = acts.size();
+        const auto max_lines_pr_action = acts.max_input_lines();
+        const auto max_cond_per_action = rspec.actdims().max_conditions();
+        const auto max_characters_per_line = rspec.actdims().max_characters();
+        
+        return { static_cast<int>(no_act), max_lines_pr_action, static_cast<int>(max_cond_per_action), static_cast<int>(max_characters_per_line)};
     }*/
     
     Opm::RestartIO::InteHEAD::WellSegDims
@@ -264,6 +279,8 @@ createInteHead(const EclipseState& es,
 {
     const auto  nwgmax = maxGroupSize(sched, lookup_step);
     const auto  ngmax  = numGroupsInField(sched, lookup_step);
+    //const auto& udqCfg = sched.getUDQConfig(lookup_step);
+    //const auto& acts   = sched.actions(lookup_step);
     const auto& rspec  = es.runspec();
     const auto& tdim   = es.getTableManager();
     const auto& rdim   = tdim.getRegdims();
@@ -292,7 +309,8 @@ createInteHead(const EclipseState& es,
         .regionDimensions   (getRegDims(tdim, rdim))
         .ngroups            ({ ngmax })
         .variousParam       (201702, 100)  // Output should be compatible with Eclipse 100, 2017.02 version.
-        //.udqParam_1         (getRandSeedPar(rspec))
+        //.udqParam_1         (getUdqParam(rspec, udqCfg))
+        //.actionParam        (getActionParam(rspec, acts))
         ;
 
     return ih.data();

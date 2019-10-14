@@ -39,6 +39,7 @@ class Actions {
 public:
     Actions() = default;
     size_t size() const;
+    int max_input_lines() const;
     bool empty() const;
     void add(const ActionX& action);
     bool ready(std::time_t sim_time) const;
