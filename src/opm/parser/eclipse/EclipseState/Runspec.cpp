@@ -19,8 +19,6 @@
 #include <ostream>
 #include <type_traits>
 
-#include <ert/ecl/ecl_util.h>
-
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/W.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
@@ -249,9 +247,13 @@ const EclHysterConfig& Runspec::hysterPar() const noexcept
   available phases in Eclipse restart and init files.
 */
 int Runspec::eclPhaseMask( ) const noexcept {
-    return ( active_phases.active( Phase::WATER ) ? ECL_WATER_PHASE : 0 )
-         | ( active_phases.active( Phase::OIL ) ? ECL_OIL_PHASE : 0 )
-         | ( active_phases.active( Phase::GAS ) ? ECL_GAS_PHASE : 0 );
+    const int water = 1 << 2;
+    const int oil   = 1 << 0;
+    const int gas   = 1 << 1;
+
+    return ( active_phases.active( Phase::WATER ) ? water : 0 )
+         | ( active_phases.active( Phase::OIL ) ? oil : 0 )
+         | ( active_phases.active( Phase::GAS ) ? gas : 0 );
 }
 
 

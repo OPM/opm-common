@@ -20,12 +20,12 @@
 #include <algorithm>
 #include <iostream>
 #include <iterator>
+#include <iomanip>
+#include <sstream>
 
 #include <boost/lexical_cast.hpp>
 
 #include <opm/parser/eclipse/Utility/Functional.hpp>
-
-#include <ert/ecl/ecl_util.h>
 
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
@@ -708,12 +708,27 @@ void RestartConfig::handleScheduleSection(const SCHEDULESection& schedule, const
 
     std::string RestartConfig::getRestartFileName(const std::string& restart_base, int report_step, bool unified , bool fmt_file) {
 
-        ecl_file_enum file_type = (unified) ? ECL_UNIFIED_RESTART_FILE : ECL_RESTART_FILE;
-        char * c_str = ecl_util_alloc_filename( NULL , restart_base.c_str() , file_type, fmt_file , report_step);
-        std::string restart_filename = c_str;
-        free( c_str );
+        auto ext = std::string{};
+        if (unified) {
+            ext = fmt_file ? "FUNRST" : "UNRST";
+        }
+        else {
+            std::ostringstream os;
 
-        return restart_filename;
+            const char* fmt_prefix   = "FGH";
+            const char* unfmt_prefix = "XYZ";
+
+            const int cycle = 10 * 1000;
+            const int p_ix  = report_step / cycle;
+            const int n     = report_step % cycle;
+
+            os << (fmt_file ? fmt_prefix[p_ix] : unfmt_prefix[p_ix])
+               << std::setw(4) << std::setfill('0') << n;
+
+            ext = os.str();
+        }
+
+        return restart_base + '.' + ext;
     }
 
 

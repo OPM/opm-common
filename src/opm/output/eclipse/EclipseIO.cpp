@@ -49,15 +49,14 @@
 #include <cstdlib>
 #include <cctype>
 #include <memory>     // unique_ptr
+#include <stdexcept>
+#include <sstream>
 #include <unordered_map>
 #include <utility>    // move
 
-#include <ert/ecl/EclFilename.hpp>
-#include <ert/ecl/ecl_util.hpp>
-#include <ert/util/util.h>
+#include <boost/filesystem.hpp>
+#include <boost/system/error_code.hpp>
 
-// namespace start here since we don't want the ERT headers in it
-namespace Opm {
 namespace {
 
 inline std::string uppercase( std::string x ) {
@@ -67,8 +66,34 @@ inline std::string uppercase( std::string x ) {
     return x;
 }
 
+void ensure_directory_exists( const boost::filesystem::path& odir )
+{
+    namespace fs = boost::filesystem;
+
+    if (fs::exists( odir ) && !fs::is_directory( odir ))
+        throw std::runtime_error {
+            "Filesystem element '" + odir.generic_string()
+            + "' already exists but is not a directory"
+        };
+
+    boost::system::error_code ec{};
+    if (! fs::exists( odir ))
+        fs::create_directories( odir, ec );
+
+    if (ec != boost::system::errc::success) {
+        std::ostringstream msg;
+
+        msg << "Failed to create output directory '"
+            << odir.generic_string()
+            << "\nSystem reports: " << ec << '\n';
+
+        throw std::runtime_error { msg.str() };
+    }
 }
 
+}
+
+namespace Opm {
 class EclipseIO::Impl {
     public:
     Impl( const EclipseState&, EclipseGrid, const Schedule&, const SummaryConfig& );
@@ -113,14 +138,16 @@ void EclipseIO::Impl::writeINITFile(const data::Solution&                   simP
 
 
 void EclipseIO::Impl::writeEGRIDFile( const NNC& nnc ) {
-    const auto& ioConfig = this->es.getIOConfig();
+    const auto formatted = this->es.cfg().io().getFMTOUT();
 
-    std::string  egridFile( ERT::EclFilename( this->outputDir,
-                                              this->baseName,
-                                              ECL_EGRID_FILE,
-                                              ioConfig.getFMTOUT() ));
+    const auto ext = '.'
+        + (formatted ? std::string{"F"} : std::string{})
+        + "EGRID";
 
-    this->grid.save( egridFile, ioConfig.getFMTOUT(), nnc, this->es.getDeckUnitSystem());
+    const auto egridFile = (boost::filesystem::path{ this->outputDir }
+        / (this->baseName + ext)).generic_string();
+
+    this->grid.save( egridFile, formatted, nnc, this->es.getDeckUnitSystem());
 }
 
 /*
@@ -236,19 +263,8 @@ EclipseIO::EclipseIO( const EclipseState& es,
 {
     if( !this->impl->output_enabled )
         return;
-    {
-        const auto& outputDir = this->impl->outputDir;
 
-        // make sure that the output directory exists, if not try to create it
-        if ( !util_entry_exists( outputDir.c_str() ) ) {
-            util_make_path( outputDir.c_str() );
-        }
-
-        if( !util_is_directory( outputDir.c_str() ) ) {
-            throw std::runtime_error( "The path specified as output directory '"
-                                      + outputDir + "' is not a directory");
-        }
-    }
+    ensure_directory_exists( this->impl->outputDir );
 }
 
 const out::Summary& EclipseIO::summary() {
