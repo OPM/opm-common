@@ -18,15 +18,15 @@
 */
 
 #include <ctime>
+#include <stddef.h>
 
-#include <ert/util/util.h>
+#include <opm/common/utility/TimeService.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
-
 
 namespace Opm {
 
@@ -119,9 +119,14 @@ namespace {
         const std::time_t lastTime = m_timeList.back();
         const size_t step = m_timeList.size();
         if (newTime > lastTime) {
-            int new_day, new_month, new_year, last_day, last_month, last_year;
-            util_set_date_values_utc(newTime, &new_day, &new_month, &new_year);
-            util_set_date_values_utc(lastTime, &last_day, &last_month, &last_year);
+            const auto nw   = TimeStampUTC{ newTime };
+            const auto last = TimeStampUTC{ lastTime };
+
+            const auto new_month  = nw  .month();
+            const auto last_month = last.month();
+
+            const auto new_year  = nw  .year();
+            const auto last_year = last.year();
 
             if (new_month != last_month)
                 m_first_timestep_months.push_back(step);
@@ -305,16 +310,18 @@ namespace {
     }
 
     std::time_t TimeMap::mkdatetime(int in_year, int in_month, int in_day, int hour, int minute, int second) {
-        std::time_t t = util_make_datetime_utc(second, minute, hour, in_day, in_month, in_year);
+        const auto tp = TimeStampUTC{ TimeStampUTC::YMD { in_year, in_month, in_day } }
+            .hour(hour).minutes(minute).seconds(second);
+
+        std::time_t t = asTimeT(tp);
         {
             /*
                The underlying mktime( ) function will happily wrap
                around dates like January 33, this function will check
                that no such wrap-around has taken place.
             */
-            int out_year, out_day, out_month;
-            util_set_date_values_utc( t, &out_day , &out_month, &out_year);
-            if ((in_day != out_day) || (in_month != out_month) || (in_year != out_year))
+            const auto check = TimeStampUTC{ t };
+            if ((in_day != check.day()) || (in_month != check.month()) || (in_year != check.year()))
                 throw std::invalid_argument("Invalid input arguments for date.");
         }
         return t;

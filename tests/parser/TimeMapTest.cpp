@@ -25,7 +25,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-
+#include <opm/common/utility/TimeService.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
@@ -35,7 +35,6 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 
-#include <ert/util/util.h>
 
 const std::time_t startDateJan1st2010 = Opm::TimeMap::mkdate(2010, 1, 1);
 
@@ -346,14 +345,11 @@ BOOST_AUTO_TEST_CASE(initTimestepsLongStep) {
     0   1 jan 1983 START
     1   14 dec 2052*/
 
-    const std::time_t tEnd = tmap.getEndTime();
+    const auto tEnd = Opm::TimeStampUTC { tmap.getEndTime() };
 
-    int year, day, month;
-
-    util_set_date_values_utc(tEnd, &day, &month, &year);
-    BOOST_CHECK_EQUAL(year, 2052);
-    BOOST_CHECK_EQUAL(month, 12);
-    BOOST_CHECK_EQUAL(day, 14);
+    BOOST_CHECK_EQUAL(tEnd.year(), 2052);
+    BOOST_CHECK_EQUAL(tEnd.month(), 12);
+    BOOST_CHECK_EQUAL(tEnd.day(), 14);
 }
 
 
@@ -375,14 +371,11 @@ BOOST_AUTO_TEST_CASE(TimestepsLabUnit) {
     0   1 jan 1983 START
     1   11 jan 1983*/
 
-    const std::time_t tEnd = tmap.getEndTime();
+    const auto tEnd = Opm::TimeStampUTC { tmap.getEndTime() };
 
-    int year, day, month;
-
-    util_set_date_values_utc(tEnd, &day, &month, &year);
-    BOOST_CHECK_EQUAL(year, 1983);
-    BOOST_CHECK_EQUAL(month, 1);
-    BOOST_CHECK_EQUAL(day, 11);
+    BOOST_CHECK_EQUAL(tEnd.year(), 1983);
+    BOOST_CHECK_EQUAL(tEnd.month(), 1);
+    BOOST_CHECK_EQUAL(tEnd.day(), 11);
 }
 
 
@@ -405,73 +398,58 @@ BOOST_AUTO_TEST_CASE(initTimestepsDistantDates) {
     1   1 jan 2040
     2   1 jan 2050*/
 
-    const std::time_t t1 = tmap.getStartTime(1);
-    const std::time_t t2 = tmap.getEndTime();
+    const auto t1 = Opm::TimeStampUTC { tmap.getStartTime(1) };
+    const auto t2 = Opm::TimeStampUTC { tmap.getEndTime() };
 
-    int year, day, month;
+    BOOST_CHECK_EQUAL(t1.year(), 2040);
+    BOOST_CHECK_EQUAL(t1.month(), 1);
+    BOOST_CHECK_EQUAL(t1.day(), 1);
 
-    util_set_date_values_utc(t1, &day, &month, &year);
-    BOOST_CHECK_EQUAL(year, 2040);
-    BOOST_CHECK_EQUAL(month, 1);
-    BOOST_CHECK_EQUAL(day, 1);
-
-    util_set_date_values_utc(t2, &day, &month, &year);
-    BOOST_CHECK_EQUAL(year, 2050);
-    BOOST_CHECK_EQUAL(month, 1);
-    BOOST_CHECK_EQUAL(day, 1);
+    BOOST_CHECK_EQUAL(t2.year(), 2050);
+    BOOST_CHECK_EQUAL(t2.month(), 1);
+    BOOST_CHECK_EQUAL(t2.day(), 1);
 }
 
 
 BOOST_AUTO_TEST_CASE(mkdate) {
     BOOST_CHECK_THROW( Opm::TimeMap::mkdate( 2010 , 0 , 0  ) , std::invalid_argument);
-    std::time_t t0 = Opm::TimeMap::mkdate( 2010 , 1, 1);
-    std::time_t t1 = Opm::TimeMap::forward( t0 , 24*3600);
+    auto t0 = Opm::TimeStampUTC { Opm::TimeMap::mkdate( 2010 , 1, 1) };
+    auto t1 = Opm::TimeStampUTC { Opm::TimeMap::forward( asTimeT(t0) , 24*3600) };
 
-    int year, day, month;
+    BOOST_CHECK_EQUAL( t1.year() , 2010 );
+    BOOST_CHECK_EQUAL( t1.month() , 1 );
+    BOOST_CHECK_EQUAL( t1.day() , 2 );
 
-    util_set_date_values_utc( t1, &day , &month, &year);
-    BOOST_CHECK_EQUAL( year , 2010 );
-    BOOST_CHECK_EQUAL( month , 1 );
-    BOOST_CHECK_EQUAL( day , 2 );
+    t1 = Opm::TimeMap::forward( asTimeT(t1) , -24*3600);
+    BOOST_CHECK_EQUAL( t1.year() , 2010 );
+    BOOST_CHECK_EQUAL( t1.month() , 1 );
+    BOOST_CHECK_EQUAL( t1.day() , 1 );
 
-    t1 = Opm::TimeMap::forward( t1 , -24*3600);
-    util_set_date_values_utc( t1, &day , &month, &year);
-    BOOST_CHECK_EQUAL( year , 2010 );
-    BOOST_CHECK_EQUAL( month , 1 );
-    BOOST_CHECK_EQUAL( day , 1 );
-
-
-    t1 = Opm::TimeMap::forward( t0 , 23, 55 , 300);
-    util_set_date_values_utc( t1, &day , &month, &year);
-    BOOST_CHECK_EQUAL( year , 2010 );
-    BOOST_CHECK_EQUAL( month , 1 );
-    BOOST_CHECK_EQUAL( day , 2 );
+    t1 = Opm::TimeMap::forward( asTimeT(t0) , 23, 55 , 300);
+    BOOST_CHECK_EQUAL( t1.year() , 2010 );
+    BOOST_CHECK_EQUAL( t1.month() , 1 );
+    BOOST_CHECK_EQUAL( t1.day() , 2 );
 
 }
 
 BOOST_AUTO_TEST_CASE(mkdatetime) {
     BOOST_CHECK_THROW(Opm::TimeMap::mkdatetime(2010, 0, 0, 0, 0, 0), std::invalid_argument);
-    std::time_t t0 = Opm::TimeMap::mkdatetime(2010, 1, 1, 0, 0, 0);
-    std::time_t t1 = Opm::TimeMap::forward(t0, 24 * 3600);
+    auto t0 = Opm::TimeStampUTC { Opm::TimeMap::mkdatetime(2010, 1, 1, 0, 0, 0) };
+    auto t1 = Opm::TimeStampUTC { Opm::TimeMap::forward(asTimeT(t0), 24 * 3600) };
 
-    int year, day, month;
+    BOOST_CHECK_EQUAL(t1.year(), 2010);
+    BOOST_CHECK_EQUAL(t1.month(), 1);
+    BOOST_CHECK_EQUAL(t1.day(), 2);
 
-    util_set_date_values_utc(t1, &day, &month, &year);
-    BOOST_CHECK_EQUAL(year, 2010);
-    BOOST_CHECK_EQUAL(month, 1);
-    BOOST_CHECK_EQUAL(day, 2);
+    t1 = Opm::TimeMap::forward(asTimeT(t1), -24 * 3600);
+    BOOST_CHECK_EQUAL(t1.year(), 2010);
+    BOOST_CHECK_EQUAL(t1.month(), 1);
+    BOOST_CHECK_EQUAL(t1.day(), 1);
 
-    t1 = Opm::TimeMap::forward(t1, -24 * 3600);
-    util_set_date_values_utc(t1, &day, &month, &year);
-    BOOST_CHECK_EQUAL(year, 2010);
-    BOOST_CHECK_EQUAL(month, 1);
-    BOOST_CHECK_EQUAL(day, 1);
-
-    t1 = Opm::TimeMap::forward(t0, 23, 55, 300);
-    util_set_date_values_utc(t1, &day, &month, &year);
-    BOOST_CHECK_EQUAL(year, 2010);
-    BOOST_CHECK_EQUAL(month, 1);
-    BOOST_CHECK_EQUAL(day, 2);
+    t1 = Opm::TimeMap::forward(asTimeT(t0), 23, 55, 300);
+    BOOST_CHECK_EQUAL(t1.year(), 2010);
+    BOOST_CHECK_EQUAL(t1.month(), 1);
+    BOOST_CHECK_EQUAL(t1.day(), 2);
 }
 
 Opm::DeckRecord createDeckRecord(int day, const std::string &month, int year, const std::string &time) {
