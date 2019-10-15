@@ -1,5 +1,5 @@
 # Libs to link tests against
-set(TEST_LIBS opmcommon ecl Boost::unit_test_framework)
+set(TEST_LIBS opmcommon Boost::unit_test_framework)
 set(EXTRA_TESTS)
 
 # Generated source, needs to be here
