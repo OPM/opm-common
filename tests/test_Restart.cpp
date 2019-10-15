@@ -44,8 +44,7 @@
 
 #include <tuple>
 
-// ERT stuff
-#include <ert/ecl/ecl_util.h>
+#include <opm/common/utility/TimeService.hpp>
 
 #include <tests/WorkArea.cpp>
 
@@ -505,8 +504,8 @@ RestartValue first_sim(const EclipseState& es, EclipseIO& eclWriter, SummaryStat
     const auto& grid = es.getInputGrid();
     auto num_cells = grid.getNumActive( );
 
-    auto start_time = ecl_util_make_date( 1, 11, 1979 );
-    auto first_step = ecl_util_make_date( 1,  2, 2011 ); // Must be after 2011-01-20
+    auto start_time = TimeStampUTC( TimeStampUTC::YMD{ 1979, 11, 1 } );
+    auto first_step = TimeStampUTC( TimeStampUTC::YMD{ 2011,  2, 1 } ); // Must be after 2011-01-20
 
     auto sol = mkSolution( num_cells );
     auto wells = mkWells();
@@ -515,7 +514,7 @@ RestartValue first_sim(const EclipseState& es, EclipseIO& eclWriter, SummaryStat
     eclWriter.writeTimeStep( st,
                              1,
                              false,
-                             first_step - start_time,
+                             asTimeT(first_step) - asTimeT(start_time),
                              restart_value,
                              write_double);
 
