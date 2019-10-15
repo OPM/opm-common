@@ -35,23 +35,42 @@
 #include <opm/parser/eclipse/Units/Units.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
-// ERT stuff
-#include <ert/util/ert_unique_ptr.hpp>
-#include <ert/util/test_work_area.h>
+#include <opm/io/eclipse/EclFile.hpp>
+#include <opm/io/eclipse/EGrid.hpp>
+#include <opm/io/eclipse/ERst.hpp>
 
-#include <ert/ecl/ecl_kw.h>
-#include <ert/ecl/ecl_grid.h>
-#include <ert/ecl/ecl_endian_flip.h>
-#include <ert/ecl/ecl_file.h>
+#include <algorithm>
+#include <map>
+#include <numeric>
+#include <string>
+#include <tuple>
+#include <vector>
+
+#include <time.h>
+
 #include <ert/ecl/ecl_util.h>
 
-
-#include <ert/ecl_well/well_info.h>
-
-#include <memory>
-#include <map>
+#include <tests/WorkArea.cpp>
 
 using namespace Opm;
+
+namespace {
+
+bool keywordExists(const std::vector<EclIO::EclFile::EclEntry>& knownVec,
+                   const std::string&                           arrayname)
+{
+    return std::any_of(knownVec.begin(), knownVec.end(),
+        [&arrayname](const EclIO::EclFile::EclEntry& entry) -> bool
+    {
+        return std::get<0>(entry) == arrayname;
+    });
+}
+
+template <typename T>
+T sum(const std::vector<T>& array)
+{
+    return std::accumulate(array.begin(), array.end(), T(0));
+}
 
 data::Solution createBlackoilState( int timeStepIdx, int numCells ) {
 
@@ -84,21 +103,11 @@ data::Solution createBlackoilState( int timeStepIdx, int numCells ) {
     return solution;
 }
 
-template< typename T >
-std::vector< T > getErtData( ecl_kw_type *eclKeyword ) {
-    size_t kwSize = ecl_kw_get_size(eclKeyword);
-    T* ertData = static_cast< T* >(ecl_kw_iget_ptr(eclKeyword, 0));
-
-    return { ertData, ertData + kwSize };
-}
-
 template< typename T, typename U >
 void compareErtData(const std::vector< T > &src,
                     const std::vector< U > &dst,
                     double tolerance ) {
-    BOOST_CHECK_EQUAL(src.size(), dst.size());
-    if (src.size() != dst.size())
-        return;
+    BOOST_REQUIRE_EQUAL(src.size(), dst.size());
 
     for (size_t i = 0; i < src.size(); ++i)
         BOOST_CHECK_CLOSE(src[i], dst[i], tolerance);
@@ -111,138 +120,111 @@ void compareErtData(const std::vector<int> &src, const std::vector<int> &dst)
 }
 
 void checkEgridFile( const EclipseGrid& eclGrid ) {
-    // use ERT directly to inspect the EGRID file produced by EclipseIO
-    auto egridFile = fortio_open_reader("FOO.EGRID", /*isFormated=*/0, ECL_ENDIAN_FLIP);
+    auto egridFile = EclIO::EGrid("FOO.EGRID");
 
     const auto numCells = eclGrid.getNX() * eclGrid.getNY() * eclGrid.getNZ();
 
-    while( auto* eclKeyword = ecl_kw_fread_alloc( egridFile ) ) {
-        std::string keywordName(ecl_kw_get_header(eclKeyword));
-        if (keywordName == "COORD") {
-            std::vector< double > sourceData;
-            sourceData = eclGrid.getCOORD();
-            auto resultData = getErtData< float >( eclKeyword );
-            compareErtData(sourceData, resultData, 1e-6);
-        }
-        else if (keywordName == "ZCORN") {
-            std::vector< double > sourceData;
-            sourceData = eclGrid.getZCORN();
-            auto resultData = getErtData< float >( eclKeyword );
-            compareErtData(sourceData, resultData, /*percentTolerance=*/1e-6);
-        }
-        else if (keywordName == "ACTNUM") {
-            std::vector< int > sourceData( numCells );
-            sourceData = eclGrid.getACTNUM();
-            auto resultData = getErtData< int >( eclKeyword );
-
-            if( sourceData.empty() )
-                sourceData.assign( numCells, 1 );
-
-            compareErtData( sourceData, resultData );
-        }
-
-        ecl_kw_free(eclKeyword);
+    {
+        const auto& coord  = egridFile.get<float>("COORD");
+        const auto& expect = eclGrid.getCOORD();
+        compareErtData(expect, coord, 1e-6);
     }
 
-    fortio_fclose(egridFile);
+    {
+        const auto& zcorn  = egridFile.get<float>("ZCORN");
+        const auto& expect = eclGrid.getZCORN();
+        compareErtData(expect, zcorn, 1e-6);
+    }
+
+    if (egridFile.hasKey("ACTNUM")) {
+        const auto& actnum = egridFile.get<int>("ACTNUM");
+        auto expect = eclGrid.getACTNUM();
+
+        if (expect.empty())
+            expect.assign(numCells, 1);
+
+        compareErtData(expect, actnum);
+    }
 }
-
-void loadWells( const char* grid_file , const char* restart_file ) {
-    ecl_grid_type * grid = ecl_grid_alloc( grid_file );
-    well_info_type * well_info = well_info_alloc( grid );
-
-    well_info_load_rstfile( well_info , restart_file, true);
-
-    well_info_free( well_info );
-    ecl_grid_free( grid );
-}
-
 
 void checkInitFile( const Deck& deck, const data::Solution& simProps) {
-    // use ERT directly to inspect the INIT file produced by EclipseIO
-    ERT::ert_unique_ptr<ecl_file_type , ecl_file_close> initFile(ecl_file_open( "FOO.INIT" , 0 ));
+    EclIO::EclFile initFile { "FOO.INIT" };
 
-    for (int k=0; k < ecl_file_get_size(  initFile.get() ); k++) {
-        ecl_kw_type * eclKeyword = ecl_file_iget_kw( initFile.get( ) , k );
-        std::string keywordName(ecl_kw_get_header(eclKeyword));
+    if (initFile.hasKey("PORO")) {
+        const auto& poro   = initFile.get<float>("PORO");
+        const auto& expect = deck.getKeyword("PORO").getSIDoubleData();
 
-        if (keywordName == "PORO") {
-            const auto &sourceData = deck.getKeyword("PORO").getSIDoubleData();
-            auto resultData = getErtData< float >( eclKeyword );
-            compareErtData(sourceData, resultData, 1e-4);
+        compareErtData(expect, poro, 1e-4);
+    }
+
+    if (initFile.hasKey("PERMX")) {
+        const auto& expect = deck.getKeyword("PERMX").getSIDoubleData();
+        auto        permx  = initFile.get<float>("PERMX");
+
+        for (auto& kx : permx) {
+            kx *= 9.869233e-16;
         }
 
-        if (keywordName == "PERMX") {
-            const auto& sourceData = deck.getKeyword("PERMX").getSIDoubleData();
-            auto resultData = getErtData< float >( eclKeyword );
-
-            // convert the data from ERT from Field to SI units (mD to m^2)
-            for (size_t i = 0; i < resultData.size(); ++i) {
-                resultData[i] *= 9.869233e-16;
-            }
-
-            compareErtData(sourceData, resultData, 1e-4);
-        }
+        compareErtData(expect, permx, 1e-4);
     }
 
     /*
       These keyword should always be in the INIT file, irrespective of
       whether they appear in the inut deck or not.
     */
-    BOOST_CHECK( ecl_file_has_kw( initFile.get() , "NTG" ));
-    BOOST_CHECK( ecl_file_has_kw( initFile.get() , "FIPNUM" ));
-    BOOST_CHECK( ecl_file_has_kw( initFile.get() , "SATNUM" ));
+    BOOST_CHECK_MESSAGE( initFile.hasKey("NTG"), R"(INIT file must have "NTG" array)" );
+    BOOST_CHECK_MESSAGE( initFile.hasKey("FIPNUM"), R"(INIT file must have "FIPNUM" array)");
+    BOOST_CHECK_MESSAGE( initFile.hasKey("SATNUM"), R"(INIT file must have "SATNUM" array)");
 
     for (const auto& prop : simProps) {
-        BOOST_CHECK( ecl_file_has_kw( initFile.get() , prop.first.c_str()) );
+        BOOST_CHECK_MESSAGE( initFile.hasKey(prop.first), R"(INIT file must have ")" + prop.first + R"(" array)" );
     }
 }
 
 void checkRestartFile( int timeStepIdx ) {
+    EclIO::ERst rstFile{ "FOO.UNRST" };
+
     for (int i = 1; i <= timeStepIdx; ++i) {
+        if (! rstFile.hasReportStepNumber(i))
+            continue;
+
         auto sol = createBlackoilState( i, 3 * 3 * 3 );
 
-        // use ERT directly to inspect the restart file produced by EclipseIO
-        auto rstFile = fortio_open_reader("FOO.UNRST", /*isFormated=*/0, ECL_ENDIAN_FLIP);
+        rstFile.loadReportStepNumber(i);
 
-        int curSeqnum = -1;
-        while( auto* eclKeyword = ecl_kw_fread_alloc(rstFile) ) {
-            std::string keywordName(ecl_kw_get_header(eclKeyword));
+        const auto& knownVec = rstFile.listOfRstArrays(i);
 
-            if (keywordName == "SEQNUM") {
-                curSeqnum = *static_cast<int*>(ecl_kw_iget_ptr(eclKeyword, 0));
-            }
-            if (curSeqnum != i)
-                continue;
+        if (keywordExists(knownVec, "PRESSURE")) {
+            const auto& press = rstFile.getRst<float>("PRESSURE", i);
+            for( auto& x : sol.data("PRESSURE") )
+                x /= Metric::Pressure;
 
-            if (keywordName == "PRESSURE") {
-                const auto resultData = getErtData< float >( eclKeyword );
-                for( auto& x : sol.data("PRESSURE") )
-                    x /= Metric::Pressure;
-
-                compareErtData( sol.data("PRESSURE"), resultData, 1e-4 );
-            }
-
-            if (keywordName == "SWAT") {
-                const auto resultData = getErtData< float >( eclKeyword );
-                compareErtData(sol.data("SWAT"), resultData, 1e-4);
-            }
-
-            if (keywordName == "SGAS") {
-                const auto resultData = getErtData< float >( eclKeyword );
-                compareErtData( sol.data("SGAS"), resultData, 1e-4 );
-            }
-
-            if (keywordName == "KRO")
-                BOOST_CHECK_EQUAL( 1.0 * i * ecl_kw_get_size( eclKeyword ) , ecl_kw_element_sum_float( eclKeyword ));
-
-            if (keywordName == "KRG")
-                BOOST_CHECK_EQUAL( 10.0 * i * ecl_kw_get_size( eclKeyword ) , ecl_kw_element_sum_float( eclKeyword ));
+            compareErtData( sol.data("PRESSURE"), press, 1e-4 );
         }
 
-        fortio_fclose(rstFile);
+        if (keywordExists(knownVec, "SWAT")) {
+            const auto& swat = rstFile.getRst<float>("SWAT", i);
+            compareErtData( sol.data("SWAT"), swat, 1e-4 );
+        }
+
+        if (keywordExists(knownVec, "SGAS")) {
+            const auto& sgas = rstFile.getRst<float>("SGAS", i);
+            compareErtData( sol.data("SGAS"), sgas, 1e-4 );
+        }
+
+        if (keywordExists(knownVec, "KRO")) {
+            const auto& kro = rstFile.getRst<float>("KRO", i);
+            BOOST_CHECK_CLOSE(1.0 * i * kro.size(), sum(kro), 1.0e-8);
+        }
+
+        if (keywordExists(knownVec, "KRG")) {
+            const auto& krg = rstFile.getRst<float>("KRG", i);
+            BOOST_CHECK_CLOSE(10.0 * i * krg.size(), sum(krg), 1.0e-8);
+        }
     }
 }
+
+} // Anonymous namespace
 
 BOOST_AUTO_TEST_CASE(EclipseIOIntegration) {
     const char *deckString =
@@ -341,14 +323,12 @@ BOOST_AUTO_TEST_CASE(EclipseIOIntegration) {
 
         checkInitFile( deck , eGridProps);
         checkEgridFile( eclGrid );
-        loadWells( "FOO.EGRID", "FOO.UNRST" );
 
-        ecl_file_type * ecl_file = ecl_file_open("FOO.INIT", 0);
-        BOOST_CHECK( ecl_file_has_kw(ecl_file, "STR_V") );
-        ecl_kw_type * kw = ecl_file_iget_named_kw(ecl_file, "STR_V", 0);
-        BOOST_CHECK(67 == ecl_kw_iget_as_double(kw, 2));
-        BOOST_CHECK(89 == ecl_kw_iget_as_double(kw, 26));
-
+        EclIO::EclFile initFile("FOO.INIT");
+        BOOST_CHECK_MESSAGE( initFile.hasKey("STR_V"), R"(INIT file must have "STR_V" array)" );
+        const auto& kw = initFile.get<int>("STR_V");
+        BOOST_CHECK_EQUAL(67, kw[ 2]);
+        BOOST_CHECK_EQUAL(89, kw[26]);
 
         std::ifstream file( "FOO.UNRST", std::ios::binary );
         std::streampos file_size = 0;
@@ -370,7 +350,7 @@ BOOST_AUTO_TEST_CASE(EclipseIOIntegration) {
      * * https://github.com/OPM/opm-output/pull/61
      */
 
-    test_work_area_type * work_area = test_work_area_alloc("test_ecl_writer");
+    WorkArea work_area("test_ecl_writer");
     const auto file_size = write_and_check();
 
     for( int i = 0; i < 3; ++i )
@@ -390,8 +370,4 @@ BOOST_AUTO_TEST_CASE(EclipseIOIntegration) {
      * the file
      */
     BOOST_CHECK_EQUAL( file_size, write_and_check( 3, 5 ) );
-    test_work_area_free(work_area);
-}
-
-BOOST_AUTO_TEST_CASE(OPM_XWEL) {
 }
