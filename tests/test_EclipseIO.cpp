@@ -39,6 +39,8 @@
 #include <opm/io/eclipse/EGrid.hpp>
 #include <opm/io/eclipse/ERst.hpp>
 
+#include <opm/common/utility/TimeService.hpp>
+
 #include <algorithm>
 #include <map>
 #include <numeric>
@@ -47,8 +49,6 @@
 #include <vector>
 
 #include <time.h>
-
-#include <ert/ecl/ecl_util.h>
 
 #include <tests/WorkArea.cpp>
 
@@ -222,6 +222,12 @@ void checkRestartFile( int timeStepIdx ) {
             BOOST_CHECK_CLOSE(10.0 * i * krg.size(), sum(krg), 1.0e-8);
         }
     }
+}
+
+time_t ecl_util_make_date( const int day, const int month, const int year )
+{
+    const auto ymd = Opm::TimeStampUTC::YMD{ year, month, day };
+    return static_cast<time_t>(asTimeT(Opm::TimeStampUTC{ymd}));
 }
 
 } // Anonymous namespace
