@@ -267,14 +267,14 @@ BOOST_AUTO_TEST_CASE(IntSetCorrectly) {
     Opm::TableManager tm(deck);
     Opm::EclipseGrid eg(deck);
     Opm::Eclipse3DProperties props(deck, tm, eg);
-    const auto& property = props.getIntGridProperty("SATNUM");
+    const auto& property_data = props.getIntGridProperty("SATNUM").getData();
 
     for (size_t j = 0; j < 5; j++)
         for (size_t i = 0; i < 5; i++) {
             if (i < 2)
-                BOOST_CHECK_EQUAL( 12 , property.iget(i,j,0));
+                BOOST_CHECK_EQUAL( 12 , property_data[eg.getGlobalIndex(i,j,0)]);
             else
-                BOOST_CHECK_EQUAL( 21 , property.iget(i,j,0));
+                BOOST_CHECK_EQUAL( 21 , property_data[eg.getGlobalIndex(i,j,0)]);
         }
 
 }
@@ -285,13 +285,13 @@ BOOST_AUTO_TEST_CASE(UnitAppliedCorrectly) {
     Opm::TableManager tm(deck);
     Opm::EclipseGrid eg(deck);
     Opm::Eclipse3DProperties props(deck, tm, eg);
-    const auto& permx = props.getDoubleGridProperty("PERMX");
+    const auto& permx_data = props.getDoubleGridProperty("PERMX").getData();
 
     for (size_t j=0; j< 5; j++)
         for (size_t i = 0; i < 5; i++) {
             if (i < 2)
-                BOOST_CHECK_CLOSE( 2 * Opm::Metric::Permeability , permx.iget(i,j,0), 0.0001);
+                BOOST_CHECK_CLOSE( 2 * Opm::Metric::Permeability , permx_data[eg.getGlobalIndex(i,j,0)], 0.0001);
             else
-                BOOST_CHECK_CLOSE( 4 * Opm::Metric::Permeability , permx.iget(i,j,0), 0.0001);
+                BOOST_CHECK_CLOSE( 4 * Opm::Metric::Permeability , permx_data[eg.getGlobalIndex(i,j,0)], 0.0001);
         }
 }

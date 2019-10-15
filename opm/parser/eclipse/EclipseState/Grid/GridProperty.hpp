@@ -147,15 +147,11 @@ public:
     size_t getNZ() const;
 
 
-    T iget(size_t index) const;
-    T iget(size_t i , size_t j , size_t k) const;
-    void iset(size_t index, T value);
-    void iset(size_t i , size_t j , size_t k , T value);
-
 
     const std::vector<bool>& wasDefaulted() const;
-    const std::vector<T>& getData() const;
-    std::vector<T>& getData();
+    const std::vector< T >& getData() const;
+    void assignData(std::vector<T>&& data);
+    void assignData(const std::vector<T>& data);
 
     bool containsNaN() const;
     const std::string& getDimensionString() const;

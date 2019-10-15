@@ -270,17 +270,17 @@ BOOST_AUTO_TEST_CASE(PORV_initFromPoro) {
     const auto& poro = props.getDoubleGridProperty("PORO");
     BOOST_CHECK( !poro.containsNaN() );
 
-    const auto& porv = props.getDoubleGridProperty("PORV");
+    const auto& porv_data = props.getDoubleGridProperty("PORV").getData();
     double cell_volume = 0.25 * 0.25 * 0.25;
 
-    BOOST_CHECK_CLOSE( cell_volume * 0.10 , porv.iget(0,0,0) , 0.001);
-    BOOST_CHECK_CLOSE( cell_volume * 0.10 , porv.iget(9,9,0) , 0.001);
+    BOOST_CHECK_CLOSE( cell_volume * 0.10 , porv_data[grid.getGlobalIndex(0,0,0)] , 0.001);
+    BOOST_CHECK_CLOSE( cell_volume * 0.10 , porv_data[grid.getGlobalIndex(9,9,0)] , 0.001);
 
-    BOOST_CHECK_CLOSE( cell_volume * 0.50 , porv.iget(0,0,4) , 0.001);
-    BOOST_CHECK_CLOSE( cell_volume * 0.50 , porv.iget(9,9,4) , 0.001);
+    BOOST_CHECK_CLOSE( cell_volume * 0.50 , porv_data[grid.getGlobalIndex(0,0,4)] , 0.001);
+    BOOST_CHECK_CLOSE( cell_volume * 0.50 , porv_data[grid.getGlobalIndex(9,9,4)] , 0.001);
 
-    BOOST_CHECK_CLOSE( cell_volume * 1.00 , porv.iget(0,0,9) , 0.001);
-    BOOST_CHECK_CLOSE( cell_volume * 1.00 , porv.iget(9,9,9) , 0.001);
+    BOOST_CHECK_CLOSE( cell_volume * 1.00 , porv_data[grid.getGlobalIndex(0,0,9)] , 0.001);
+    BOOST_CHECK_CLOSE( cell_volume * 1.00 , porv_data[grid.getGlobalIndex(9,9,9)] , 0.001);
 }
 
 BOOST_AUTO_TEST_CASE(PORV_initFromPoroWithCellVolume) {
@@ -289,17 +289,17 @@ BOOST_AUTO_TEST_CASE(PORV_initFromPoroWithCellVolume) {
     Opm::TableManager tm( deck );
     Opm::EclipseGrid grid( deck );
     Opm::Eclipse3DProperties props( deck, tm, grid );
-    const auto& porv = props.getDoubleGridProperty("PORV");
+    const auto& porv_data = props.getDoubleGridProperty("PORV").getData();
     double cell_volume = 0.25 * 0.25 * 0.25;
 
-    BOOST_CHECK_CLOSE( 77.0 , porv.iget(0,0,0) , 0.001);
-    BOOST_CHECK_CLOSE( 77.0 , porv.iget(9,9,0) , 0.001);
+    BOOST_CHECK_CLOSE( 77.0 , porv_data[grid.getGlobalIndex(0,0,0)] , 0.001);
+    BOOST_CHECK_CLOSE( 77.0 , porv_data[grid.getGlobalIndex(9,9,0)] , 0.001);
 
-    BOOST_CHECK_CLOSE( cell_volume * 0.50 , porv.iget(0,0,4) , 0.001);
-    BOOST_CHECK_CLOSE( cell_volume * 0.50 , porv.iget(9,9,4) , 0.001);
+    BOOST_CHECK_CLOSE( cell_volume * 0.50 , porv_data[grid.getGlobalIndex(0,0,4)] , 0.001);
+    BOOST_CHECK_CLOSE( cell_volume * 0.50 , porv_data[grid.getGlobalIndex(9,9,4)] , 0.001);
 
-    BOOST_CHECK_CLOSE( cell_volume * 1.00 , porv.iget(0,0,9) , 0.001);
-    BOOST_CHECK_CLOSE( cell_volume * 1.00 , porv.iget(9,9,9) , 0.001);
+    BOOST_CHECK_CLOSE( cell_volume * 1.00 , porv_data[grid.getGlobalIndex(0,0,9)] , 0.001);
+    BOOST_CHECK_CLOSE( cell_volume * 1.00 , porv_data[grid.getGlobalIndex(9,9,9)] , 0.001);
 }
 
 BOOST_AUTO_TEST_CASE(PORV_multpv) {
@@ -308,21 +308,21 @@ BOOST_AUTO_TEST_CASE(PORV_multpv) {
     Opm::TableManager tm( deck );
     Opm::EclipseGrid grid( deck );
     Opm::Eclipse3DProperties props( deck, tm, grid );
-    const auto& porv = props.getDoubleGridProperty("PORV");
+    const auto& porv_data = props.getDoubleGridProperty("PORV").getData();
     double cell_volume = 0.25 * 0.25 * 0.25;
 
-    BOOST_CHECK_CLOSE( 770.0 , porv.iget(0,0,0) , 0.001);
-    BOOST_CHECK_CLOSE( 770.0 , porv.iget(4,4,0) , 0.001);
-    BOOST_CHECK_CLOSE( 77.0 , porv.iget(9,9,0) , 0.001);
+    BOOST_CHECK_CLOSE( 770.0 , porv_data[grid.getGlobalIndex(0,0,0)] , 0.001);
+    BOOST_CHECK_CLOSE( 770.0 , porv_data[grid.getGlobalIndex(4,4,0)] , 0.001);
+    BOOST_CHECK_CLOSE( 77.0 , porv_data[grid.getGlobalIndex(9,9,0)] , 0.001);
 
-    BOOST_CHECK_CLOSE( cell_volume * 0.50 , porv.iget(0,0,4) , 0.001);
-    BOOST_CHECK_CLOSE( cell_volume * 0.50 , porv.iget(9,9,4) , 0.001);
+    BOOST_CHECK_CLOSE( cell_volume * 0.50 , porv_data[grid.getGlobalIndex(0,0,4)] , 0.001);
+    BOOST_CHECK_CLOSE( cell_volume * 0.50 , porv_data[grid.getGlobalIndex(9,9,4)] , 0.001);
 
-    BOOST_CHECK_CLOSE( cell_volume * 0.90 , porv.iget(0,0,8) , 0.001);
-    BOOST_CHECK_CLOSE( cell_volume * 0.90 , porv.iget(9,9,8) , 0.001);
+    BOOST_CHECK_CLOSE( cell_volume * 0.90 , porv_data[grid.getGlobalIndex(0,0,8)] , 0.001);
+    BOOST_CHECK_CLOSE( cell_volume * 0.90 , porv_data[grid.getGlobalIndex(9,9,8)] , 0.001);
 
-    BOOST_CHECK_CLOSE( cell_volume * 10.00 , porv.iget(0,0,9) , 0.001);
-    BOOST_CHECK_CLOSE( cell_volume * 10.00 , porv.iget(9,9,9) , 0.001);
+    BOOST_CHECK_CLOSE( cell_volume * 10.00 , porv_data[grid.getGlobalIndex(0,0,9)] , 0.001);
+    BOOST_CHECK_CLOSE( cell_volume * 10.00 , porv_data[grid.getGlobalIndex(9,9,9)] , 0.001);
 }
 
 BOOST_AUTO_TEST_CASE(PORV_mutipleBoxAndMultpv) {
@@ -331,13 +331,13 @@ BOOST_AUTO_TEST_CASE(PORV_mutipleBoxAndMultpv) {
     Opm::TableManager tm( deck );
     Opm::EclipseGrid grid( deck );
     Opm::Eclipse3DProperties props( deck, tm, grid );
-    const auto& porv = props.getDoubleGridProperty("PORV");
+    const auto& porv_data = props.getDoubleGridProperty("PORV").getData();
 
-    BOOST_CHECK_CLOSE( 1234.56 , porv.iget(0,0,0) , 0.001);
-    BOOST_CHECK_CLOSE( 1234.56 , porv.iget(9,9,9) , 0.001);
+    BOOST_CHECK_CLOSE( 1234.56 , porv_data[grid.getGlobalIndex(0,0,0)] , 0.001);
+    BOOST_CHECK_CLOSE( 1234.56 , porv_data[grid.getGlobalIndex(9,9,9)] , 0.001);
 
-    BOOST_CHECK_CLOSE( 7890.12 , porv.iget(1,1,1) , 0.001);
-    BOOST_CHECK_CLOSE( 7890.12 , porv.iget(2,2,2) , 0.001);
+    BOOST_CHECK_CLOSE( 7890.12 , porv_data[grid.getGlobalIndex(1,1,1)] , 0.001);
+    BOOST_CHECK_CLOSE( 7890.12 , porv_data[grid.getGlobalIndex(2,2,2)] , 0.001);
 
 }
 
@@ -347,15 +347,15 @@ BOOST_AUTO_TEST_CASE(PORV_multpvAndNtg) {
     Opm::TableManager tm( deck );
     Opm::EclipseGrid grid( deck );
     Opm::Eclipse3DProperties props( deck, tm, grid );
-    const auto& porv = props.getDoubleGridProperty("PORV");
+    const auto& porv_data = props.getDoubleGridProperty("PORV").getData();
     double cell_volume = 0.25 * 0.25 * 0.25;
     double poro = 0.20;
     double multpv = 10;
     double NTG = 2;
     double PORV = 10;
 
-    BOOST_CHECK_CLOSE( PORV * multpv                 , porv.iget(0,0,0) , 0.001);
-    BOOST_CHECK_CLOSE( cell_volume * poro*multpv*NTG , porv.iget(9,9,9) , 0.001);
+    BOOST_CHECK_CLOSE( PORV * multpv                 , porv_data[grid.getGlobalIndex(0,0,0)] , 0.001);
+    BOOST_CHECK_CLOSE( cell_volume * poro*multpv*NTG , porv_data[grid.getGlobalIndex(9,9,9)] , 0.001);
 }
 
 BOOST_AUTO_TEST_CASE(PORV_multregp) {

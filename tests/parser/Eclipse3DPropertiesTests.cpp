@@ -322,31 +322,33 @@ BOOST_AUTO_TEST_CASE(IntGridProperty) {
 
 BOOST_AUTO_TEST_CASE(AddregIntSetCorrectly) {
     Setup s(createValidIntDeck());
-    const auto& property = s.props.getIntGridProperty("SATNUM");
+    const auto& grid = s.grid;
+    const auto& property = s.props.getIntGridProperty("SATNUM").getData();
     for (size_t j = 0; j < 5; j++)
         for (size_t i = 0; i < 5; i++) {
             if (i < 2)
-                BOOST_CHECK_EQUAL(12, property.iget(i, j, 0));
+                BOOST_CHECK_EQUAL(12, property[grid.getGlobalIndex(i, j, 0)]);
             else
-                BOOST_CHECK_EQUAL(21, property.iget(i, j, 0));
+                BOOST_CHECK_EQUAL(21, property[grid.getGlobalIndex(i, j, 0)]);
         }
 
 }
 
 BOOST_AUTO_TEST_CASE(RocknumTest) {
     Setup s(createDeck());
-    const auto& rocknum = s.props.getIntGridProperty("ROCKNUM");
+    const auto& grid = s.grid;
+    const auto& rocknum = s.props.getIntGridProperty("ROCKNUM").getData();
     for (size_t i = 0; i < 10; i++) {
         for (size_t j = 0; j < 10; j++) {
             for (size_t k = 0; k < 10; k++) {
                 if (k < 2)
-                    BOOST_CHECK_EQUAL(1, rocknum.iget(i, j, k));
+                    BOOST_CHECK_EQUAL(1, rocknum[grid.getGlobalIndex(i, j, k)]);
                 else if (k < 4)
-                    BOOST_CHECK_EQUAL(2, rocknum.iget(i, j, k));
+                    BOOST_CHECK_EQUAL(2, rocknum[grid.getGlobalIndex(i, j, k)]);
                 else if (k < 6)
-                    BOOST_CHECK_EQUAL(3, rocknum.iget(i, j, k));
+                    BOOST_CHECK_EQUAL(3, rocknum[grid.getGlobalIndex(i, j, k)]);
                 else
-                    BOOST_CHECK_EQUAL(4, rocknum.iget(i, j, k));
+                    BOOST_CHECK_EQUAL(4, rocknum[grid.getGlobalIndex(i, j, k)]);
             }
         }
     }
@@ -354,14 +356,15 @@ BOOST_AUTO_TEST_CASE(RocknumTest) {
 
 BOOST_AUTO_TEST_CASE(PermxUnitAppliedCorrectly) {
     Setup s( createValidPERMXDeck() );
-    const auto& permx = s.props.getDoubleGridProperty("PermX");
+    const auto& grid = s.grid;
+    const auto& permx = s.props.getDoubleGridProperty("PermX").getData();
 
     for (size_t j = 0; j < 5; j++)
         for (size_t i = 0; i < 5; i++) {
             if (i < 2)
-                BOOST_CHECK_CLOSE(2 * Opm::Metric::Permeability, permx.iget(i, j, 0), 0.0001);
+                BOOST_CHECK_CLOSE(2 * Opm::Metric::Permeability, permx[grid.getGlobalIndex(i, j, 0)], 0.0001);
             else
-                BOOST_CHECK_CLOSE(4 * Opm::Metric::Permeability, permx.iget(i, j, 0), 0.0001);
+                BOOST_CHECK_CLOSE(4 * Opm::Metric::Permeability, permx[grid.getGlobalIndex(i, j, 0)], 0.0001);
         }
 }
 
@@ -439,25 +442,26 @@ BOOST_AUTO_TEST_CASE(getRegions) {
 
 BOOST_AUTO_TEST_CASE(RadialPermeabilityTensor) {
     const Setup s(createQuarterCircleDeck());
-
-    const auto& permr   = s.props.getDoubleGridProperty("PERMR");
-    const auto& permtht = s.props.getDoubleGridProperty("PERMTHT");
-    const auto& permz   = s.props.getDoubleGridProperty("PERMZ");
-    const auto& poro    = s.props.getDoubleGridProperty("PORO");
+    const auto& grid = s.grid;
+    const auto& permr   = s.props.getDoubleGridProperty("PERMR").getData();
+    const auto& permtht = s.props.getDoubleGridProperty("PERMTHT").getData();
+    const auto& permz   = s.props.getDoubleGridProperty("PERMZ").getData();
+    const auto& poro    = s.props.getDoubleGridProperty("PORO").getData();
 
     const double check_tol = 1.0e-6;
 
     // Top layer (explicitly assigned)
-    BOOST_CHECK_CLOSE(100.0*Opm::Metric::Permeability, permr.iget(0, 0, 0), check_tol);
-    BOOST_CHECK_CLOSE(permtht.iget(0, 0, 0), permr.iget(0, 0, 0), check_tol);
-    BOOST_CHECK_CLOSE(permz.iget(0, 0, 0), 0.1 * permr.iget(0, 0, 0), check_tol);
-    BOOST_CHECK_CLOSE(0.3, poro.iget(0, 0, 0), check_tol);
+    BOOST_CHECK_CLOSE(100.0*Opm::Metric::Permeability, permr[0], check_tol);
+    BOOST_CHECK_CLOSE(permtht[0], permr[0], check_tol);
+    BOOST_CHECK_CLOSE(permz[0], 0.1 * permr[0], check_tol);
+    BOOST_CHECK_CLOSE(0.3, poro[0], check_tol);
 
     // Middle layer (copied ultimately form top)
-    BOOST_CHECK_CLOSE(100.0*Opm::Metric::Permeability, permr.iget(49, 10, 9), check_tol);
-    BOOST_CHECK_CLOSE(permtht.iget(49, 10, 9), permr.iget(49, 10, 9), check_tol);
-    BOOST_CHECK_CLOSE(permz.iget(49, 10, 9), 0.1 * permr.iget(49, 10, 9), check_tol);
-    BOOST_CHECK_CLOSE(0.3, poro.iget(49, 10, 9), check_tol);
+    std::size_t g = grid.getGlobalIndex(49,10,9);
+    BOOST_CHECK_CLOSE(100.0*Opm::Metric::Permeability, permr[g], check_tol);
+    BOOST_CHECK_CLOSE(permtht[g], permr[g], check_tol);
+    BOOST_CHECK_CLOSE(permz[g], 0.1 * permr[g], check_tol);
+    BOOST_CHECK_CLOSE(0.3, poro[g], check_tol);
 
     {
         const auto& d1 = s.deck.getKeyword("PERMR");
@@ -562,6 +566,7 @@ EQUALS
 
 BOOST_AUTO_TEST_CASE(DefaultedBox) {
   const Setup s(createMultiplyDeck());
+  const auto& grid = s.grid;
 
   const auto& permx   = s.props.getDoubleGridProperty("PERMX");
   const auto& permz   = s.props.getDoubleGridProperty("PERMZ");
@@ -569,8 +574,16 @@ BOOST_AUTO_TEST_CASE(DefaultedBox) {
   const auto& trany   = s.props.getDoubleGridProperty("TRANY");
   const auto& tranz   = s.props.getDoubleGridProperty("TRANZ");
 
-  BOOST_CHECK_EQUAL( permx.iget(0,0,0)        , permz.iget(0,0,0));
-  BOOST_CHECK_EQUAL( permx.iget(0,0,1) * 0.10 , permz.iget(0,0,1));
+  const auto& permx_data   = s.props.getDoubleGridProperty("PERMX").getData();
+  const auto& permz_data   = s.props.getDoubleGridProperty("PERMZ").getData();
+  const auto& tranx_data   = s.props.getDoubleGridProperty("TRANX").getData();
+  const auto& trany_data   = s.props.getDoubleGridProperty("TRANY").getData();
+  const auto& tranz_data   = s.props.getDoubleGridProperty("TRANZ").getData();
+
+  std::size_t g1 = grid.getGlobalIndex(0,0,0);
+  std::size_t g2 = grid.getGlobalIndex(0,0,1);
+  BOOST_CHECK_EQUAL( permx_data[g1]        , permz_data[g1]);
+  BOOST_CHECK_EQUAL( permx_data[g2] * 0.10 , permz_data[g2]);
 
   BOOST_CHECK( permx.deckAssigned() );
   BOOST_CHECK( permz.deckAssigned() );
@@ -723,12 +736,12 @@ MULTIPLY
 
 BOOST_AUTO_TEST_CASE(DefaultedBoxMultiplyPorv) {
     const Setup s(createMultiplyPorvDeck());
-    const auto& porv   = s.props.getDoubleGridProperty("PORV");
-
-    BOOST_CHECK_CLOSE( porv.iget(9,9,4), 100, 1e-5);
-    BOOST_CHECK_CLOSE( porv.iget(0,0,1), 20, 1e-5);
-    BOOST_CHECK_CLOSE( porv.iget(0,0,0), 10, 1e-5);
-    BOOST_CHECK_CLOSE( porv.iget(1,0,0), 11, 1e-5);
+    const auto& porv   = s.props.getDoubleGridProperty("PORV").getData();
+    const auto& grid = s.grid;
+    BOOST_CHECK_CLOSE( porv[grid.getGlobalIndex(9,9,4)], 100, 1e-5);
+    BOOST_CHECK_CLOSE( porv[grid.getGlobalIndex(0,0,1)], 20, 1e-5);
+    BOOST_CHECK_CLOSE( porv[grid.getGlobalIndex(0,0,0)], 10, 1e-5);
+    BOOST_CHECK_CLOSE( porv[grid.getGlobalIndex(1,0,0)], 11, 1e-5);
 }
 
 static Opm::Deck createMultiplyPorvFailDeck() {

@@ -759,11 +759,13 @@ namespace Opm {
         // assign a NaN in this case...
         const bool useEnptvd = tableManager->useEnptvd();
         const auto& enptvdTables = tableManager->getEnptvdTables();
+        const auto& satnum_data = satnum.getData();
+        const auto& endnum_data = endnum.getData();
 
         const auto gridsize = eclipseGrid->getCartesianSize();
         for( size_t cellIdx = 0; cellIdx < gridsize; cellIdx++ ) {
-            int satTableIdx = satnum.iget( cellIdx ) - 1;
-            int endNum = endnum.iget( cellIdx ) - 1;
+            int satTableIdx = satnum_data[cellIdx] - 1;
+            int endNum = endnum_data[cellIdx] - 1;
 
             if (! eclipseGrid->cellActive(cellIdx)) {
                 // Pick from appropriate saturation region if defined
@@ -824,9 +826,11 @@ namespace Opm {
         const bool useImptvd = tableManager->useImptvd();
         const TableContainer& imptvdTables = tableManager->getImptvdTables();
         const auto gridsize = eclipseGrid->getCartesianSize();
+        const auto& imbnum_data = imbnum.getData();
+        const auto& endnum_data = endnum.getData();
         for( size_t cellIdx = 0; cellIdx < gridsize; cellIdx++ ) {
-            int imbTableIdx = imbnum.iget( cellIdx ) - 1;
-            int endNum = endnum.iget( cellIdx ) - 1;
+            int imbTableIdx = imbnum_data[ cellIdx ] - 1;
+            int endNum = endnum_data[ cellIdx ] - 1;
 
             if (! eclipseGrid->cellActive(cellIdx)) {
                 // Pick from appropriate saturation region if defined

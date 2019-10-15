@@ -61,7 +61,6 @@ static const Opm::DeckKeyword createTABDIMSKeyword( ) {
     return deck.getKeyword("TABDIMS");
 }
 
-BOOST_AUTO_TEST_SUITE(Basic_Proprty_Contents)
 
 BOOST_AUTO_TEST_CASE(Empty) {
     typedef Opm::GridProperty<int>::SupportedKeywordInfo SupportedKeywordInfo;
@@ -78,8 +77,6 @@ BOOST_AUTO_TEST_CASE(Empty) {
             for (size_t i=0; i < 5; i++) {
                 size_t g = i + j*5 + k*25;
                 BOOST_CHECK_EQUAL( 77 , data[g] );
-                BOOST_CHECK_EQUAL( 77 , gridProperty.iget( g ));
-                BOOST_CHECK_EQUAL( 77 , gridProperty.iget( i,j,k ));
             }
         }
     }
@@ -93,11 +90,15 @@ BOOST_AUTO_TEST_CASE(HasNAN) {
     Opm::GridProperty<double> poro( 2 , 2 , 1 , keywordInfo);
 
     BOOST_CHECK( poro.containsNaN() );
-    poro.iset(0,0.15);
-    poro.iset(1,0.15);
-    poro.iset(2,0.15);
+    auto data = poro.getData();
+    data[0] = 0.15;
+    data[1] = 0.15;
+    data[2] = 0.15;
+    poro.assignData(data);
     BOOST_CHECK( poro.containsNaN() );
-    poro.iset(3,0.15);
+
+    data[3] = 0.15;
+    poro.assignData(data);
     BOOST_CHECK( !poro.containsNaN() );
 }
 
@@ -146,8 +147,6 @@ BOOST_AUTO_TEST_CASE(SetFromDeckKeyword) {
                 size_t g = i + j*4 + k*16;
 
                 BOOST_CHECK_EQUAL( g , data[g] );
-                BOOST_CHECK_EQUAL( g , gridProperty.iget(g) );
-                BOOST_CHECK_EQUAL( g , gridProperty.iget(i,j,k) );
 
             }
         }
@@ -165,12 +164,15 @@ BOOST_AUTO_TEST_CASE(copy) {
     Opm::Box layer0(grid, 0, 3, 0, 3, 0, 0);
 
     prop2.copyFrom(prop1, layer0);
+    const auto& prop2_data = prop2.getData();
 
     for (size_t j = 0; j < 4; j++) {
         for (size_t i = 0; i < 4; i++) {
+            std::size_t g1 = i + j*4;
+            std::size_t g2 = g1 + 16;
 
-            BOOST_CHECK_EQUAL(prop2.iget(i, j, 0), 0);
-            BOOST_CHECK_EQUAL(prop2.iget(i, j, 1), 9);
+            BOOST_CHECK_EQUAL(prop2_data[g1], 0);
+            BOOST_CHECK_EQUAL(prop2_data[g2], 9);
         }
     }
 }
@@ -191,12 +193,15 @@ BOOST_AUTO_TEST_CASE(SCALE) {
     prop2.copyFrom( prop1, layer0 );
     prop2.scale( 2, global );
     prop2.scale( 2, layer0 );
+    const auto& prop2_data = prop2.getData();
 
     for (size_t j = 0; j < 4; j++) {
         for (size_t i = 0; i < 4; i++) {
+            std::size_t g1 = i + j*4;
+            std::size_t g2 = g1 + 16;
 
-            BOOST_CHECK_EQUAL( prop2.iget( i, j, 0 ), 4 );
-            BOOST_CHECK_EQUAL( prop2.iget( i, j, 1 ), 18 );
+            BOOST_CHECK_EQUAL( prop2_data[g1], 4 );
+            BOOST_CHECK_EQUAL( prop2_data[g2], 18 );
         }
     }
 }
@@ -212,12 +217,15 @@ BOOST_AUTO_TEST_CASE(SET) {
 
     prop.setScalar( 2, global );
     prop.setScalar( 4, layer0 );
+    const auto& prop_data = prop.getData();
 
     for (size_t j = 0; j < 4; j++) {
         for (size_t i = 0; i < 4; i++) {
+            std::size_t g1 = i + j*4;
+            std::size_t g2 = g1 + 16;
 
-            BOOST_CHECK_EQUAL( prop.iget( i, j, 0 ), 4 );
-            BOOST_CHECK_EQUAL( prop.iget( i, j, 1 ), 2 );
+            BOOST_CHECK_EQUAL( prop_data[g1], 4 );
+            BOOST_CHECK_EQUAL( prop_data[g2], 2 );
         }
     }
 }
@@ -236,12 +244,15 @@ BOOST_AUTO_TEST_CASE(ADD) {
     prop2.copyFrom( prop1, layer0 );
     prop2.add( 2, global );
     prop2.add( 2, layer0 );
+    const auto& prop2_data = prop2.getData();
 
     for (size_t j = 0; j < 4; j++) {
         for (size_t i = 0; i < 4; i++) {
+            std::size_t g1 = i + j*4;
+            std::size_t g2 = g1 + 16;
 
-            BOOST_CHECK_EQUAL( prop2.iget( i, j, 0 ), 5 );
-            BOOST_CHECK_EQUAL( prop2.iget( i, j, 1 ), 11 );
+            BOOST_CHECK_EQUAL( prop2_data[g1], 5 );
+            BOOST_CHECK_EQUAL( prop2_data[g2], 11 );
         }
     }
 }
@@ -456,10 +467,10 @@ BOOST_AUTO_TEST_CASE(GridPropertyInitialization) {
     {
         const auto& double_props = props.getDoubleProperties( );
         const auto& units = deck.getActiveUnitSystem();
-        const auto& permx = double_props.getKeyword("PERMX");
-        BOOST_CHECK_EQUAL(permx.iget(0,0,0), units.to_si(Opm::UnitSystem::measure::permeability, 100));
-        BOOST_CHECK_EQUAL(permx.iget(0,0,1), units.to_si(Opm::UnitSystem::measure::permeability, 1000));
-        BOOST_CHECK_EQUAL(permx.iget(0,0,2), units.to_si(Opm::UnitSystem::measure::permeability, 10000));
+        const auto& permx = double_props.getKeyword("PERMX").getData();
+        BOOST_CHECK_EQUAL(permx[0], units.to_si(Opm::UnitSystem::measure::permeability, 100));
+        BOOST_CHECK_EQUAL(permx[9], units.to_si(Opm::UnitSystem::measure::permeability, 1000));
+        BOOST_CHECK_EQUAL(permx[18], units.to_si(Opm::UnitSystem::measure::permeability, 10000));
     }
 }
 
@@ -485,8 +496,9 @@ BOOST_AUTO_TEST_CASE(multiply) {
     BOOST_CHECK_THROW( p1.multiplyWith(p2) , std::invalid_argument );
     p1.multiplyWith(p3);
 
+    const auto& data = p1.getData();
     for (size_t g = 0; g < p1.getCartesianSize(); g++)
-        BOOST_CHECK_EQUAL( 100 , p1.iget(g));
+        BOOST_CHECK( 100 == data[g]);
 
 }
 
@@ -503,9 +515,9 @@ BOOST_AUTO_TEST_CASE(mask_test) {
 
     p1.initMask(10 , mask);
     p2.maskedSet( 10 , mask);
-
-    for (size_t g = 0; g < p1.getCartesianSize(); g++)
-        BOOST_CHECK_EQUAL( p1.iget(g) , p2.iget(g));
+    const auto& d1 = p1.getData();
+    const auto& d2 = p2.getData();
+    BOOST_CHECK(d1 == d2);
 }
 
 BOOST_AUTO_TEST_CASE(CheckLimits) {
@@ -576,11 +588,8 @@ BOOST_AUTO_TEST_CASE(hasKeyword_assertKeyword) {
     BOOST_CHECK_THROW( gridProperties.getKeyword( "NOT-SUPPORTED" ), std::invalid_argument );
 }
 
-BOOST_AUTO_TEST_SUITE_END()
 
 // =====================================================================
-
-BOOST_AUTO_TEST_SUITE(Defaulted_Flag)
 
 namespace {
 
@@ -741,4 +750,4 @@ END)" };
     }
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+
