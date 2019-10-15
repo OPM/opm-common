@@ -16,13 +16,13 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
+
+#include <stddef.h>
 #include <stdexcept>
 #include <algorithm>
 
 #include <opm/parser/eclipse/EclipseState/Tables/ColumnSchema.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableColumn.hpp>
-
-#include <ert/util/ssize_t.h>
 
 namespace Opm {
 
@@ -271,33 +271,37 @@ namespace Opm {
             for (size_t rowIdx = 0; rowIdx < size(); ++rowIdx) {
                 if (defaultApplied( rowIdx )) {
                     // find first row which was not defaulted before the current one
-                    ssize_t rowBeforeIdx = rowIdx;
+                    int rowBeforeIdx = static_cast<int>(rowIdx);
                     for (; rowBeforeIdx >= 0; -- rowBeforeIdx)
                         if (!defaultApplied(rowBeforeIdx))
                             break;
 
                     // find first row which was not defaulted after the current one
-                    ssize_t rowAfterIdx = rowIdx;
-                    for (; rowAfterIdx < static_cast<ssize_t>(size()); ++ rowAfterIdx)
+                    int rowAfterIdx = static_cast<int>(rowIdx);
+                    for (; rowAfterIdx < static_cast<int>(size()); ++ rowAfterIdx)
                         if (!defaultApplied(rowAfterIdx))
                             break;
 
 
                     // switch to extrapolation by a constant at the fringes
-                    if (rowBeforeIdx < 0 && rowAfterIdx >= static_cast<ssize_t>(size()))
+                    if (rowBeforeIdx < 0 && rowAfterIdx >= static_cast<int>(size()))
                         throw std::invalid_argument("Column " + m_schema.name() + " can't be fully defaulted");
                     else if (rowBeforeIdx < 0)
                         rowBeforeIdx = rowAfterIdx;
-                    else if (rowAfterIdx >= static_cast<ssize_t>(size()))
+                    else if (rowAfterIdx >= static_cast<int>(size()))
                         rowAfterIdx = rowBeforeIdx;
 
                     {
+                        const size_t before = static_cast<size_t>(rowBeforeIdx);
+                        const size_t after  = static_cast<size_t>(rowAfterIdx);
+
                         // linear interpolation
                         double alpha = 0.0;
                         if (rowBeforeIdx != rowAfterIdx)
-                            alpha = (argColumn[rowIdx] - argColumn[rowBeforeIdx]) / (argColumn[rowAfterIdx] - argColumn[rowBeforeIdx]);
+                            alpha = (argColumn[rowIdx] - argColumn[before])
+                                /   (argColumn[after]  - argColumn[before]);
 
-                        double value = m_values[rowBeforeIdx]*(1-alpha) + m_values[rowAfterIdx]*alpha;
+                        double value = m_values[before]*(1-alpha) + m_values[after]*alpha;
 
                         updateValue( rowIdx , value );
                     }
