@@ -3,8 +3,8 @@ import datetime
 from opm.tools import *
 
 from opm.io.parser import Parser
+from .utils import tmp
 
-from utils import tmp
 class TestTimeVector(unittest.TestCase):
 
     def setUp(self):
