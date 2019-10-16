@@ -175,6 +175,30 @@ double GuideRateModel::damping_factor() const {
     return this->damping_factor_;
 }
 
+double GuideRateModel::getA() const {
+    return this->A;
+}
+
+double GuideRateModel::getB() const {
+    return this->B;
+}
+
+double GuideRateModel::getC() const {
+    return this->C;
+}
+
+double GuideRateModel::getD() const {
+    return this->D;
+}
+
+double GuideRateModel::getE() const {
+    return this->E;
+}
+
+double GuideRateModel::getF() const {
+    return this->F;
+}
+
 bool GuideRateModel::allow_increase() const {
     return this->allow_increase_;
 }

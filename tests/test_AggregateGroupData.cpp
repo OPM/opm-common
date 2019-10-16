@@ -498,10 +498,10 @@ BOOST_AUTO_TEST_CASE (Declared_Group_Data)
     BOOST_CHECK_EQUAL(ih.nwells, MockIH::Sz{4});
 
     const auto smry = sim_state();
+    const auto& units    = simCase.es.getUnits();
     auto agrpd = Opm::RestartIO::Helpers::AggregateGroupData{ih.value};
-    agrpd.captureDeclaredGroupData(simCase.sched,
-				   rptStep, smry,
-				   ih.value);
+    agrpd.captureDeclaredGroupData(simCase.sched, units, rptStep, smry,
+            ih.value);
 
     // IGRP (PROD)
     {

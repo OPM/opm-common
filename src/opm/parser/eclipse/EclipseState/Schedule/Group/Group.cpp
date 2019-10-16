@@ -309,6 +309,9 @@ Phase Group::injection_phase() const {
     return this->injection_properties.phase;
 }
 
+const Group::GroupType& Group::getGroupType() const {
+    return this-> group_type;
+}
 
 bool Group::ProductionControls::has_control(Group::ProductionCMode control) const {
     return (this->production_controls & static_cast<int>(control)) != 0;

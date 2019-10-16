@@ -39,6 +39,7 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
 
         namespace Value {
             enum SegmentType : int {
+                REGULAR = -1,
                 AICD  = -8,
                 SICD  = -7,
                 Valve = -5,

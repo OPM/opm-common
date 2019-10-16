@@ -415,7 +415,7 @@ ACTIONX
 ACT02 11 /
 FMWPR > 25 AND /
 WGPR 'OPL02' > GGPR 'LOWER' AND /
-MNTH > MAY / 
+MNTH > NOV / 
 /
 WELOPEN
 '?' 'SHUT' 0 0 0 2* /
@@ -441,19 +441,12 @@ WELOPEN
 /
 ENDACTIO
 
-WELOPEN
- 'OPL01' 'OPEN' 5* / 
-/
-DATES
- 1 'OCT' 2018 / 
-/
-
 --start files/actionxprod.tmpl
 ACTIONX
 ACT01 10 /
 FMWPR > 45 AND /
 WUPR3 'OP*' > 46 OR /
-MNTH > JUN  /
+MNTH > OCT  /
 /
 WELOPEN
 '?' SHUT 0 0 0 2* /
@@ -465,6 +458,14 @@ WELOPEN
  'OPL02' 'OPEN' 5* / 
 /
 ENDACTIO
+
+WELOPEN
+ 'OPL01' 'OPEN' 5* / 
+/
+
+DATES
+ 1 'OCT' 2018 / 
+/
 
 
 WELOPEN

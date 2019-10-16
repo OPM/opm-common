@@ -146,19 +146,19 @@ enum Index : std::vector<double>::size_type {
     DdpLim  =  84,
     DdsLim  =  85,
     dh_086  =  86,
-    dh_087  =  87,
-    dh_088  =  88,
-    dh_089  =  89,
+    grpar_a =  VI::doubhead::GRpar_a,
+    grpar_b =  VI::doubhead::GRpar_b,
+    grpar_c =  VI::doubhead::GRpar_c,
 
     // 90..99
-    dh_090  =  90,
-    dh_091  =  91,
-    dh_092  =  92,
+    grpar_d =  VI::doubhead::GRpar_d,
+    grpar_e =  VI::doubhead::GRpar_e,
+    grpar_f =  VI::doubhead::GRpar_f,
     dh_093  =  93,
     dh_094  =  94,
     dh_095  =  95,
     dh_096  =  96,
-    dh_097  =  97,
+    grpar_int =  VI::doubhead::GRpar_int,
     dh_098  =  98,
     ThrUPT  =  99,
 
@@ -215,7 +215,7 @@ enum Index : std::vector<double>::size_type {
     dh_141  = 141,
     dh_142  = 142,
     dh_143  = 143,
-    dh_144  = 144,
+    grpar_dmp = VI::doubhead::GRpar_damp,
     dh_145  = 145,
     dh_146  = 146,
     dh_147  = 147,
@@ -396,8 +396,8 @@ Opm::RestartIO::DoubHEAD::DoubHEAD()
     this->data_[Index::dh_069] = -1.0;
     this->data_[Index::dh_080] = 1.0e+20;
     this->data_[Index::dh_081] = 1.0e+20;
-    this->data_[Index::dh_091] = 0.0;
-    this->data_[Index::dh_092] = 0.0;
+    this->data_[grpar_e] = 0.0;
+    this->data_[grpar_f] = 0.0;
     this->data_[Index::dh_093] = 0.0;
     this->data_[Index::dh_096] = 0.0;
     this->data_[Index::dh_105] = 1.0;
@@ -624,6 +624,21 @@ Opm::RestartIO::DoubHEAD::udq_param(const UDQParams& udqPar)
     this->data_[UdqPar_2] = udqPar.range();
     this->data_[UdqPar_3] = udqPar.undefinedValue();
     this->data_[UdqPar_4] = udqPar.cmpEpsilon();
+
+    return *this;
+}
+
+Opm::RestartIO::DoubHEAD&
+Opm::RestartIO::DoubHEAD::guide_rate_param(const guideRate& guide_rp)
+{
+    this->data_[grpar_a] = guide_rp.A;
+    this->data_[grpar_b] = guide_rp.B;
+    this->data_[grpar_c] = guide_rp.C;
+    this->data_[grpar_d] = guide_rp.D;
+    this->data_[grpar_e] = guide_rp.E;
+    this->data_[grpar_f] = guide_rp.F;
+    this->data_[grpar_int] = guide_rp.delay;
+    this->data_[grpar_dmp] = guide_rp.damping_fact;
 
     return *this;
 }

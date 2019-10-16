@@ -95,11 +95,15 @@ public:
 
     explicit operator bool() const;
     std::vector<std::string> wells() const;
-    bool has_well(const std::string& well);
+
+    bool has_well(const std::string& well) const;
+
     void add_well(const std::string& well);
 
     Result& operator|=(const Result& other);
+    Result& operator=(const Result& src); 
     Result& operator&=(const Result& other);
+    
 private:
     void assign(bool value);
     bool result;

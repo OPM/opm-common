@@ -4,7 +4,7 @@
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well2.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 
@@ -40,21 +40,7 @@ namespace {
         return Opm::Parser{}.parseFile(fname);        
     } 
 }
-/*
-Opm::SummaryState sum_state_TEST1_FLOW()
-    {
-        auto state = Opm::SummaryState{std::chrono::system_clock::now()};
-        state.update_well_var("OPU01", "WUPR3", 4);
-        state.update_well_var("OPU02", "WUPR3", 3);
-        state.update_well_var("OPL01", "WUPR3", 1);
-        state.update_well_var("OPL02", "WUPR3", 2);
-        
-        state.update("FMWPR", 4);
-                
 
-        return state;
-}
-*/
 Opm::SummaryState sum_state_TEST1()
     {
         auto state = Opm::SummaryState{std::chrono::system_clock::now()};

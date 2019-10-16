@@ -187,10 +187,10 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data)
 
         */
         
-        /*BOOST_CHECK_EQUAL(ih[267] ,       -1); 
+        BOOST_CHECK_EQUAL(ih[267] ,       -1); 
         BOOST_CHECK_EQUAL(dh[212] ,  1.0E+20); 
         BOOST_CHECK_EQUAL(dh[213] ,      0.0); 
-        BOOST_CHECK_EQUAL(dh[214] ,   1.0E-4); */
+        BOOST_CHECK_EQUAL(dh[214] ,   1.0E-4); 
 
     }
 

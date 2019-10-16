@@ -30,7 +30,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Connection.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellConnections.hpp>
-
+#include <opm/parser/eclipse/EclipseState/Schedule/MSW/Segment.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 #include <algorithm>
@@ -418,21 +418,24 @@ namespace {
                                             const std::size_t   baseIndex,
                                             ISegArray&          iSeg)
         {
-            namespace ISegValue = ::Opm::RestartIO::Helpers::
-                VectorItems::ISeg::Value;
+                
+            using IsTyp = ::Opm::RestartIO::Helpers::
+                VectorItems::ISeg::Value::SegmentType;
+            using IsStatus = ::Opm::RestartIO::Helpers::
+                VectorItems::ISeg::Value::SICDStatus;
 
             using Ix = ::Opm::RestartIO::Helpers::
                 VectorItems::ISeg::index;
 
             const auto& sicd = segment.spiralICD();
 
-            iSeg[baseIndex + Ix::SegmentType]    = ISegValue::SegmentType::SICD;
+            iSeg[baseIndex + Ix::SegmentType]    = IsTyp::SICD;
             iSeg[baseIndex + Ix::ICDScalingMode] = sicd->methodFlowScaling();
 
             iSeg[baseIndex + Ix::ICDOpenShutFlag] =
                 (sicd->status() == Opm::SpiralICD::Status::OPEN)
-                ? ISegValue::SICDStatus::Open
-                : ISegValue::SICDStatus::Shut;
+                ? IsStatus::Open
+                : IsStatus::Shut;
         }
 
         template <class ISegArray>
@@ -467,6 +470,11 @@ namespace {
                            const std::vector<int>& inteHead,
                            ISegArray&              iSeg)
         {
+            using IsTyp = ::Opm::RestartIO::Helpers::
+                VectorItems::ISeg::Value::SegmentType;
+            using Ix = ::Opm::RestartIO::Helpers::
+                VectorItems::ISeg::index;
+                
             if (well.isMultiSegment()) {
                 //loop over segment set and print out information
                 const auto& welSegSet     = well.getSegments();
@@ -474,6 +482,12 @@ namespace {
                 const auto& noElmSeg      = nisegz(inteHead);
                 std::size_t segmentInd = 0;
                 auto orderedSegmentNo = segmentOrder(welSegSet, segmentInd);
+                std::vector<int> seg_reorder (welSegSet.size(),0);
+                for (int ind = 0; ind < welSegSet.size(); ind++ ){
+                    const auto s_no = welSegSet[orderedSegmentNo[ind]].segmentNumber();
+                    const auto s_ind = welSegSet.segmentNumberToIndex(s_no);
+                    seg_reorder[s_ind] = ind+1;
+                }
                 for (int ind = 0; ind < welSegSet.size(); ind++) {
                     const auto& segment = welSegSet[ind];
 
@@ -487,10 +501,13 @@ namespace {
                     iSeg[iS + 5] = sumNoInFlowBranches(welSegSet, ind);
                     iSeg[iS + 6] = noConnectionsSegment(completionSet, welSegSet, ind);
                     iSeg[iS + 7] = sumConnectionsSegment(completionSet, welSegSet, ind);
-                    iSeg[iS + 8] = iSeg[iS+0];
+                    iSeg[iS + 8] = seg_reorder[ind];
 
                     if (! isRegular(segment)) {
                         assignSegmentTypeCharacteristics(segment, iS, iSeg);
+                    }
+                    else if (segment.segmentType() == Opm::Segment::SegmentType::REGULAR) {
+                       iSeg[iS + Ix::SegmentType] =  IsTyp::REGULAR;
                     }
                 }
             }

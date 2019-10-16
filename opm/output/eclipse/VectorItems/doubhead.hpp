@@ -27,12 +27,20 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
     // This is a subset of the items in src/opm/output/eclipse/DoubHEAD.cpp .
     // Promote items from that list to this in order to make them public.
     enum doubhead : std::vector<double>::size_type {
-        TsInit = 1,             // Maximum Length of Next Timestep
-        TsMaxz = 2,             // Maximum Length of Timestep After Next
-        TsMinz = 3,             // Minumum Length of All Timesteps
-	UdqPar_2 = 212,		// UDQPARAM item number 2 (Permitted range (+/-) of user-defined quantities)
-	UdqPar_3 = 213,		// UDQPARAM item number 3 (Value given to undefined elements when outputting data)
-	UdqPar_4 = 214,		// UDQPARAM item number 4 (fractional equality tolerance used in ==, <= etc. functions)
+        TsInit  = 1,             // Maximum Length of Next Timestep
+        TsMaxz  = 2,             // Maximum Length of Timestep After Next
+        TsMinz  = 3,             // Minumum Length of All Timesteps
+        GRpar_a = 87,     // Guiderate parameter A
+        GRpar_b = 88,     // Guiderate parameter B
+        GRpar_c = 89,     // Guiderate parameter C
+        GRpar_d = 90,     // Guiderate parameter D
+        GRpar_e = 91,     // Guiderate parameter E
+        GRpar_f = 92,     // Guiderate parameter F
+        GRpar_int = 97,     // Guiderate parameter delay interval
+        GRpar_damp = 144,     // Guiderate parameter damping factor
+        UdqPar_2 = 212,		// UDQPARAM item number 2 (Permitted range (+/-) of user-defined quantities)
+        UdqPar_3 = 213,		// UDQPARAM item number 3 (Value given to undefined elements when outputting data)
+        UdqPar_4 = 214,		// UDQPARAM item number 4 (fractional equality tolerance used in ==, <= etc. functions)
     };
 
 }}}} // Opm::RestartIO::Helpers::VectorItems

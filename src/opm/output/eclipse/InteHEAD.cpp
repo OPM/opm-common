@@ -52,7 +52,7 @@ enum index : std::vector<int>::size_type {
   ih_030       =       30       ,              //       0       0
   ih_031       =       31       ,              //       0       0
   NICONZ       =       VI::intehead::NICONZ,   //       25       15       25       NICON = no of data elements per completion in ICON array (default 19)
-  NSCONZ       =       VI::intehead::NSCONZ,   //       40       0              NSCONZ = number of data elements per completion in SCON array
+  NSCONZ       =       VI::intehead::NSCONZ,   //       41       0              NSCONZ = number of data elements per completion in SCON array
   NXCONZ       =       VI::intehead::NXCONZ,   //       58       0       58       NXCONZ = number of data elements per completion in XCON array
   ih_035       =       35       ,              //       0       0
   NIGRPZ       =       VI::intehead::NIGRPZ,   //       97+intehead_array[19]       0       97 + intehead[19]       NIGRPZ = no of data elements per group in IGRP array
@@ -70,14 +70,14 @@ enum index : std::vector<int>::size_type {
   ih_048       =       48       ,              //       0       0
   ih_049       =       49       ,              //       1       // has been determined by testing
   ih_050       =       50       ,              //       1       // has been determined by testing
-  ih_051       =       51       ,              //       0       0
+  NGCONT       =       VI::intehead::NGCTRL,   //       0 - no group control, 1 if GCONPROD, 2 if GCONINJE
   ih_052       =       52       ,              //       0       0
   ih_053       =       53       ,              //       0       0
   ih_054       =       54       ,              //       0       0
   ih_055       =       55       ,              //       0       0
   ih_056       =       56       ,              //       0       0
   ih_057       =       57       ,              //       0       0
-  ih_058       =       58       ,              //       0       0
+  NGRNPHASE    =       VI::intehead::NGRNPH,   //       Parameter to determine the nominated phase for the guiderate 
   ih_059       =       59       ,              //       0       0
   ih_060       =       60       ,              //       0       0
   ih_061       =       61       ,              //       0       0
@@ -281,11 +281,11 @@ enum index : std::vector<int>::size_type {
   ih_259       =      259       ,              //       0
   ih_260       =      260       ,              //       0
   ih_261       =      261       ,              //       0
-  ih_262       =      262       ,              //       0
-  ih_263       =      263       ,              //       0
+  NOFUDQS      =      VI::intehead::NO_FIELD_UDQS,    //       0
+  NOGUDQS      =      VI::intehead::NO_GROUP_UDQS,    //       0
   ih_264       =      264       ,              //       0
   ih_265       =      265       ,              //       0
-  NOUDQS       =      VI::intehead::NO_UDQS,   //       0
+  NOWUDQS      =      VI::intehead::NO_WELL_UDQS,     //       0
   UDQPAR_1     =      VI::intehead::UDQPAR_1,  //       0
   ih_268       =      268       ,              //       0
   ih_269       =      269       ,              //       0
@@ -309,8 +309,8 @@ enum index : std::vector<int>::size_type {
   ih_287       =      287       ,              //       0
   ih_288       =      288       ,              //       0
   ih_289       =      289       ,              //       0
-  ih_290       =      290       ,              //       0
-  ih_291       =      291       ,              //       0
+  NOIUADS       =      VI::intehead::NO_IUADS,  //       0
+  NOIUAPS       =      VI::intehead::NO_IUAPS,  //       0
   ih_292       =      292       ,              //       0
   ih_293       =      293       ,              //       0
   ih_294       =      294       ,              //       0
@@ -501,7 +501,7 @@ Opm::RestartIO::InteHEAD::wellTableDimensions(const WellTableDim& wtdim)
 
     this->data_[NGMAXZ] = wtdim.maxGroupInField + 1;
     
-    //this->data_[NWMAXZ] = wtdim.maxWellsInField;
+    this->data_[NWMAXZ] = wtdim.maxWellsInField;
 
     return *this;
 }
@@ -567,6 +567,15 @@ params_GRPZ(const std::array<int, 4>& grpz)
     this -> data_[NSGRPZ] = grpz[1];
     this -> data_[NXGRPZ] = grpz[2];
     this -> data_[NZGRPZ] = grpz[3];
+
+    return *this;
+}
+
+Opm::RestartIO::InteHEAD&
+Opm::RestartIO::InteHEAD::
+params_NGCTRL(const int gct)
+{
+    this -> data_[NGCONT] = gct;
 
     return *this;
 }
@@ -682,9 +691,13 @@ Opm::RestartIO::InteHEAD&
 Opm::RestartIO::InteHEAD::
 udqParam_1(const UdqParam& udq_par)
 {
-    this -> data_[UDQPAR_1] = - udq_par.udqParam_1;
-    this -> data_[R_SEED]   = - udq_par.udqParam_1;
-    this -> data_[NOUDQS]   = udq_par.no_udqs;
+    this -> data_[UDQPAR_1]     = - udq_par.udqParam_1;
+    this -> data_[R_SEED]       = - udq_par.udqParam_1;
+    this -> data_[NOWUDQS]      = udq_par.no_wudqs;
+    this -> data_[NOGUDQS]      = udq_par.no_gudqs;
+    this -> data_[NOFUDQS]      = udq_par.no_fudqs;
+    this -> data_[NOIUADS]      = udq_par.no_iuads;
+    this -> data_[NOIUAPS]      = udq_par.no_iuaps;
 
     return *this;
 }
@@ -698,6 +711,31 @@ actionParam(const ActionParam& act_par)
     this -> data_[MXACTC]     = act_par.max_no_conditions_per_action;
     this -> data_[MAXSPRLINE] = ((act_par.max_no_characters_per_line % 8) == 0) ? act_par.max_no_characters_per_line / 8 : 
                                 (act_par.max_no_characters_per_line / 8) + 1;
+
+    return *this;
+}
+
+
+//InteHEAD parameters which meaning are currently not known, but which are needed for Eclipse restart runs with UDQ and ACTIONX data
+Opm::RestartIO::InteHEAD&
+Opm::RestartIO::InteHEAD::
+variousUDQ_ACTIONXParam()
+{
+    this -> data_[159]  =  4;
+    this -> data_[160]  =  5;
+    this -> data_[161]  =  9;
+    this -> data_[246]  = 26;
+    this -> data_[247]  = 16;
+    this -> data_[248]  = 13;
+
+    return *this;
+}
+
+Opm::RestartIO::InteHEAD&
+Opm::RestartIO::InteHEAD::
+nominatedPhaseGuideRate(GuideRateNominatedPhase nphase)
+{
+    this -> data_[NGRNPHASE]  =  nphase.nominated_phase;
 
     return *this;
 }

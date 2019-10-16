@@ -197,6 +197,7 @@ struct ProductionControls {
     InjectionControls injectionControls(const SummaryState& st) const;
     const GroupProductionProperties& productionProperties() const;
     const GroupInjectionProperties& injectionProperties() const;
+    const GroupType& getGroupType() const;
     ProductionCMode production_cmode() const;
     InjectionCMode injection_cmode() const;
     Phase injection_phase() const;
