@@ -44,7 +44,25 @@ namespace Opm {
                    { FaceDir::ZMinus, "MULTZ-" }}),
         m_multregtScanner(props)
     {
-        this->m_multregtScanner.addKeywords(deck.getKeywordList("MULTREGT"));
+        GRIDSection grid_section(deck);
+        EDITSection edit_section(deck);
+        std::vector<const DeckKeyword*> multregt = grid_section.getKeywordList("MULTREGT");
+
+        /*
+          This is a quite contrived piece of code to work around a peculiarity
+          in Eclipse: If the MULTREGT keyword is present in the EDIT section it
+          will *only* be taken into account if the EDIT section also contains
+          the keywords TRANX, TRANZ and TRANZ - otherwise it will be ignored.
+        */
+        if (edit_section.hasKeyword("MULTREGT")) {
+            if (edit_section.hasKeyword("TRANX") && edit_section.hasKeyword("TRANY") && edit_section.hasKeyword("TRANZ")) {
+                for (const auto& kw : edit_section.getKeywordList("MULTREGT"))
+                    multregt.push_back(kw);
+            } else
+                OpmLog::warning("When entering the MULTREGT keyword in EDIT section you must also use keywords TRANX, TRANY and TRANZ. MULTREGT will be ignored");
+        }
+
+        this->m_multregtScanner.addKeywords(multregt);
     }
 
     void TransMult::assertIJK(size_t i , size_t j , size_t k) const {

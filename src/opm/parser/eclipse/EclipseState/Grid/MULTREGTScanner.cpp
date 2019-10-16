@@ -122,10 +122,9 @@ namespace Opm {
                 }
             }
             else
-                throw std::logic_error(
-                                "MULTREGT record is based on region: "
-                                +  record->region_name
-                                + " which is not in the deck");
+                throw std::invalid_argument("MULTREGT record is based on region: "
+                                            +  record->region_name
+                                            + " which is not in the deck");
         }
 
         for (auto iter = searchPairs.begin(); iter != searchPairs.end(); ++iter) {
