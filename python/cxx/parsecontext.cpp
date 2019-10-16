@@ -2,7 +2,6 @@
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <pybind11/stl.h>
 
-#include "common_state.hpp"
 #include "export.hpp"
 
 

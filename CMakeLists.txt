@@ -253,8 +253,6 @@ if (OPM_ENABLE_PYTHON)
                      python/cxx/schedule.cpp
                      python/cxx/export.cpp
                      python/cxx/export.hpp
-                     python/cxx/common_state.cpp
-                     python/cxx/common_state.hpp
                      python/cxx/table_manager.cpp
                      python/cxx/well.cpp
                      COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/python/ ${CMAKE_BINARY_DIR}/python
