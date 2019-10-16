@@ -23,7 +23,8 @@ macro(create_module_dir_var module)
           AND IS_DIRECTORY ${_parent_full_dir}/${_module_leaf})
         # We are using build directories named <prefix><module-name><postfix>
         set(${module}_DIR ${_parent_full_dir}/${_module_leaf})
-      elseif(IS_DIRECTORY ${_parent_full_dir}/${_clone_dir})
+      elseif(IS_DIRECTORY ${_parent_full_dir}/${_clone_dir} AND
+          EXISTS ${_parent_full_dir}/${_clone_dir}/CMakeCache.txt)
         # All modules are in a common build dir
         set(${module}_DIR "${_parent_full_dir}/${_clone_dir}")
       endif()
