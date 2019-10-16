@@ -576,9 +576,6 @@ BOOST_AUTO_TEST_CASE(DefaultedBox) {
 
   const auto& permx_data   = s.props.getDoubleGridProperty("PERMX").getData();
   const auto& permz_data   = s.props.getDoubleGridProperty("PERMZ").getData();
-  const auto& tranx_data   = s.props.getDoubleGridProperty("TRANX").getData();
-  const auto& trany_data   = s.props.getDoubleGridProperty("TRANY").getData();
-  const auto& tranz_data   = s.props.getDoubleGridProperty("TRANZ").getData();
 
   std::size_t g1 = grid.getGlobalIndex(0,0,0);
   std::size_t g2 = grid.getGlobalIndex(0,0,1);
