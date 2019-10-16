@@ -97,16 +97,18 @@ namespace Opm {
       Then it will go through the different regions and looking for
       interface with the wanted region values.
     */
-    MULTREGTScanner::MULTREGTScanner(const Eclipse3DProperties& e3DProps,
-                                     const std::vector< const DeckKeyword* >& keywords) :
-                m_e3DProps(e3DProps) {
+    MULTREGTScanner::MULTREGTScanner(const Eclipse3DProperties& e3DProps) :
+        m_e3DProps(e3DProps)
+    {
+    }
 
-        for (size_t idx = 0; idx < keywords.size(); idx++)
-            this->addKeyword(e3DProps, *keywords[idx] , e3DProps.getDefaultRegionKeyword());
+    void MULTREGTScanner::addKeywords(const std::vector<const DeckKeyword *>& keywords) {
+        for (const auto& kw : keywords)
+            this->addKeyword(*kw);
 
         MULTREGTSearchMap searchPairs;
         for (std::vector<MULTREGTRecord>::const_iterator record = m_records.begin(); record != m_records.end(); ++record) {
-            if (e3DProps.hasDeckIntGridProperty( record->region_name)) {
+            if (this->m_e3DProps.hasDeckIntGridProperty( record->region_name)) {
                 int srcRegion    = record->src_value;
                 int targetRegion = record->target_value;
 
@@ -156,13 +158,13 @@ namespace Opm {
 
 
 
-    void MULTREGTScanner::addKeyword( const Eclipse3DProperties& props, const DeckKeyword& deckKeyword , const std::string& defaultRegion) {
-        assertKeywordSupported( deckKeyword , defaultRegion );
+    void MULTREGTScanner::addKeyword(const DeckKeyword& deckKeyword) {
+        assertKeywordSupported( deckKeyword , this->m_e3DProps.getDefaultRegionKeyword());
 
         for (const auto& deckRecord : deckKeyword) {
             std::vector<int> src_regions;
             std::vector<int> target_regions;
-            std::string region_name = defaultRegion;
+            std::string region_name = this->m_e3DProps.getDefaultRegionKeyword();
 
             const auto& srcItem = deckRecord.getItem("SRC_REGION");
             const auto& targetItem = deckRecord.getItem("TARGET_REGION");
@@ -179,12 +181,12 @@ namespace Opm {
                 region_name = MULTREGT::RegionNameFromDeckValue( regionItem.get<std::string>(0) );
 
             if (srcItem.defaultApplied(0) || srcItem.get<int>(0) < 0)
-                src_regions = props.getRegions( region_name );
+                src_regions = this->m_e3DProps.getRegions( region_name );
             else
                 src_regions.push_back(srcItem.get<int>(0));
 
             if (targetItem.defaultApplied(0) || targetItem.get<int>(0) < 0)
-                target_regions = props.getRegions(region_name);
+                target_regions = this->m_e3DProps.getRegions(region_name);
             else
                 target_regions.push_back(targetItem.get<int>(0));
 

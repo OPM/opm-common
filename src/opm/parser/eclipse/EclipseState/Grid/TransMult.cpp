@@ -42,8 +42,9 @@ namespace Opm {
                    { FaceDir::XMinus, "MULTX-" },
                    { FaceDir::YMinus, "MULTY-" },
                    { FaceDir::ZMinus, "MULTZ-" }}),
-        m_multregtScanner( props, deck.getKeywordList( "MULTREGT" ))
+        m_multregtScanner(props)
     {
+        this->m_multregtScanner.addKeywords(deck.getKeywordList("MULTREGT"));
     }
 
     void TransMult::assertIJK(size_t i , size_t j , size_t k) const {

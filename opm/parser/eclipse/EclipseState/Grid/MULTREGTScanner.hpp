@@ -67,12 +67,11 @@ namespace Opm {
     class MULTREGTScanner {
 
     public:
-        MULTREGTScanner(const Eclipse3DProperties& e3DProps,
-                        const std::vector< const DeckKeyword* >& keywords);
+        MULTREGTScanner(const Eclipse3DProperties& e3DProps);
+        void addKeywords(const std::vector<const DeckKeyword *>& keywords);
         double getRegionMultiplier(size_t globalCellIdx1, size_t globalCellIdx2, FaceDir::DirEnum faceDir) const;
-
     private:
-        void addKeyword( const Eclipse3DProperties& props, const DeckKeyword& deckKeyword, const std::string& defaultRegion);
+        void addKeyword(const DeckKeyword& deckKeyword);
         void assertKeywordSupported(const DeckKeyword& deckKeyword, const std::string& defaultRegion);
         std::vector< MULTREGTRecord > m_records;
         std::map<std::string , MULTREGTSearchMap> m_searchMap;
