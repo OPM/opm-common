@@ -1,5 +1,5 @@
 {"name" : "MULT_XYZ" ,
- "sections" : ["GRID"],
+ "sections" : ["GRID", "EDIT"],
 
  "deck_names" : [
   "MULTTHT",
