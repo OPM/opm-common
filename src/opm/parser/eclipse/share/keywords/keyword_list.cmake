@@ -21,6 +21,7 @@
 #GCUTBACT      records of records
 #GECONT        records of records
 #GIALL         records of tables
+#MASSFLOW      tables w/ int, double, str
 #UDT
 #STOG, STOW, STWG    records of records
 
@@ -423,8 +424,38 @@ set( keywords
      000_Eclipse100/L/LKRW
      000_Eclipse100/L/LKRWR
      000_Eclipse100/L/LOAD
+     000_Eclipse100/L/LOWSALT
+     000_Eclipse100/L/LPCW
+     000_Eclipse100/L/LSALTFNC
+     000_Eclipse100/L/LSLTWNUM
+     000_Eclipse100/L/LSNUM
+     000_Eclipse100/L/LSOGCR
+     000_Eclipse100/L/LSOWCR
+     000_Eclipse100/L/LSWCR
+     000_Eclipse100/L/LSWL
+     000_Eclipse100/L/LSWLPC
+     000_Eclipse100/L/LSWU
+     000_Eclipse100/L/LTOSIGMA
+     000_Eclipse100/L/LWKRO
+     000_Eclipse100/L/LWKRORG
+     000_Eclipse100/L/LWKRORW
+     000_Eclipse100/L/LWKRW
+     000_Eclipse100/L/LWKRWR
+     000_Eclipse100/L/LWPCW
+     000_Eclipse100/L/LWSLTNUM
+     000_Eclipse100/L/LWSNUM
+     000_Eclipse100/L/LWSOGCR
+     000_Eclipse100/L/LWSOWCR
+     000_Eclipse100/L/LWSWCR
+     000_Eclipse100/L/LWSWL
+     000_Eclipse100/L/LWSWLPC
+     000_Eclipse100/L/LWSWU
+     000_Eclipse100/L/LX
+     000_Eclipse100/L/LY
+     000_Eclipse100/L/LZ
      000_Eclipse100/M/MAPAXES
      000_Eclipse100/M/MAPUNITS
+     000_Eclipse100/M/MATCORR
      000_Eclipse100/M/MAXVALUE
      000_Eclipse100/M/MEMORY
      000_Eclipse100/M/MESSAGES
