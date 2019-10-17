@@ -111,7 +111,7 @@ macro (sources_hook)
     include(GenerateKeywords.cmake)
 
     # Append generated sources
-    list(APPEND opm-common_SOURCES ${PROJECT_BINARY_DIR}/ParserKeywords.cpp)
+    list(INSERT opm-common_SOURCES 0 ${PROJECT_BINARY_DIR}/ParserKeywords.cpp)
   endif()
   set_source_files_properties(src/opm/parser/eclipse/Python/Python.cpp
                               PROPERTIES COMPILE_FLAGS -Wno-shadow)
