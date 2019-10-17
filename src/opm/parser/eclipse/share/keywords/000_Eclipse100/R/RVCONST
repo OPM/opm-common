@@ -1,0 +1,7 @@
+{"name" : "RVCONST",
+"sections" : ["PROPS"],
+"size" : 1,
+"items" : [
+{"name" : "RV", "value_type" : "DOUBLE", "dimension" : "OilDissolutionFactor"},
+{"name" : "DEWP", "value_type" : "DOUBLE", "dimension" : "Pressure"}]}
+
