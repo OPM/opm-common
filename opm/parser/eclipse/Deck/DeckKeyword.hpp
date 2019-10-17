@@ -28,6 +28,7 @@
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckValue.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
+#include <opm/common/OpmLog/Location.hpp>
 
 namespace Opm {
     class DeckOutput;
@@ -35,18 +36,6 @@ namespace Opm {
 
     class DeckKeyword {
     public:
-
-        class Location {
-        public:
-            std::string filename;
-            std::size_t lineno;
-
-            Location() = default;
-            Location(std::string fname, std::size_t lno) :
-                filename(std::move(fname)),
-                lineno(lno)
-            {}
-        };
 
 
         typedef std::vector< DeckRecord >::const_iterator const_iterator;
@@ -63,8 +52,6 @@ namespace Opm {
         const std::string& name() const;
         void setFixedSize();
         void setLocation(const std::pair<const std::string&, std::size_t>& location);
-        const std::string& getFileName() const;
-        int getLineNumber() const;
         const Location& location() const;
 
 

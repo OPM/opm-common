@@ -32,16 +32,16 @@ namespace Log {
 
 
 
-    std::string fileMessage(const std::string& filename , int line , const std::string& message) {
+    std::string fileMessage(const Location& location, const std::string& message) {
         std::ostringstream oss;
 
-        oss << message << "\n" << "In file " << filename << ", line " << line << "\n";
+        oss << message << "\n" << "In file " << location.filename << ", line " << location.lineno << "\n";
 
         return oss.str();
     }
 
-    std::string fileMessage(int64_t messageType , const std::string& filename , int line , const std::string& message) {
-        return fileMessage( filename , line , prefixMessage( messageType , message ));
+    std::string fileMessage(int64_t messageType , const Location& location, const std::string& message) {
+        return fileMessage( location , prefixMessage( messageType , message ));
     }
 
 
@@ -86,8 +86,8 @@ namespace Log {
         case MessageType::Warning:
             return AnsiTerminalColors::blue_strong + message + AnsiTerminalColors::none;
         case MessageType::Problem:
-            return AnsiTerminalColors::magenta_strong + message + AnsiTerminalColors::none;  
-        case MessageType::Error:  
+            return AnsiTerminalColors::magenta_strong + message + AnsiTerminalColors::none;
+        case MessageType::Error:
         case MessageType::Bug:
             return AnsiTerminalColors::red_strong + message + AnsiTerminalColors::none;
         default:

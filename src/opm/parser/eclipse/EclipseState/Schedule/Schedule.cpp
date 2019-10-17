@@ -95,7 +95,8 @@ namespace {
     std::string trim_wgname(const DeckKeyword& keyword, const std::string& wgname_arg, const ParseContext& parseContext, ErrorGuard errors) {
         std::string wgname = boost::algorithm::trim_copy(wgname_arg);
         if (wgname != wgname_arg)  {
-            std::string msg = "Illegal space: \"" + wgname_arg + "\" found when defining WELL/GROUP in keyword: " + keyword.name() + " at " + keyword.getFileName() + ":" + std::to_string(keyword.getLineNumber());
+            const auto& location = keyword.location();
+            std::string msg = "Illegal space: \"" + wgname_arg + "\" found when defining WELL/GROUP in keyword: " + keyword.name() + " at " + location.filename + ":" + std::to_string(location.lineno);
             parseContext.handleError(ParseContext::PARSE_WGNAME_SPACE, msg, errors);
         }
         return wgname;

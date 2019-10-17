@@ -299,7 +299,8 @@ namespace Opm {
                     // should be copied...
                     if (tableIdx == 0) {
                         std::string msg = "The first table for keyword "+keywordName+" must be explicitly defined! Ignoring keyword";
-                        OpmLog::warning(Log::fileMessage(tableKeyword.getFileName(), tableKeyword.getLineNumber(), msg));
+                        const auto& location = tableKeyword.location();
+                        OpmLog::warning(Log::fileMessage(location, msg));
                         return;
                     }
                     tableVector.push_back(tableVector.back());

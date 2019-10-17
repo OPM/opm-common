@@ -84,7 +84,7 @@ void Quantity::add_arg(const std::string& arg) {
     this->args.push_back(strip_quotes(arg));
 }
 
-Condition::Condition(const std::vector<std::string>& tokens, const DeckKeyword::Location& location) {
+Condition::Condition(const std::vector<std::string>& tokens, const Location& location) {
     this->lhs = Quantity(tokens[0]);
     std::size_t token_index = 1;
 

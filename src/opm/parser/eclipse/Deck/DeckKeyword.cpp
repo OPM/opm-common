@@ -191,15 +191,7 @@ namespace Opm {
         this->m_location = Location(location.first, location.second);
     }
 
-    const std::string& DeckKeyword::getFileName() const {
-        return this->m_location.filename;
-    }
-
-    int DeckKeyword::getLineNumber() const {
-        return this->m_location.lineno;
-    }
-
-    const DeckKeyword::Location& DeckKeyword::location() const {
+    const Location& DeckKeyword::location() const {
         return this->m_location;
     }
 

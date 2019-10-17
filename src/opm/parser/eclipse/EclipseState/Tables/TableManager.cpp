@@ -895,7 +895,7 @@ namespace Opm {
         const auto& keywords = deck.getKeywordList(keywordName);
         for (size_t i = 0; i < keywords.size(); ++i) {
             std::string msg = "Ambiguous keyword "+keywordName+" defined here";
-            OpmLog::error(Log::fileMessage(keywords[i]->getFileName(), keywords[i]->getLineNumber(), msg));
+            OpmLog::error(Log::fileMessage(keywords[i]->location(), msg));
         }
     }
 

@@ -26,6 +26,7 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
+#include <opm/common/OpmLog/Location.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
@@ -597,7 +598,7 @@ BOOST_AUTO_TEST_CASE(TestFieldAND) {
 
 
 BOOST_AUTO_TEST_CASE(Conditions) {
-    auto location = DeckKeyword::Location("File", 100);
+    auto location = Location("File", 100);
 
     // Missing comparator
     BOOST_CHECK_THROW(Action::Condition cond({"WWCT", "OPX"}, location), std::invalid_argument);
