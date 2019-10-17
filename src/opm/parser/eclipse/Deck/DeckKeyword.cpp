@@ -33,7 +33,6 @@ namespace Opm {
 
     DeckKeyword::DeckKeyword(const ParserKeyword& parserKeyword) :
         m_keywordName(parserKeyword.getName()),
-        m_lineNumber(-1),
         m_isDataKeyword(false),
         m_slashTerminated(true),
         parser_keyword(parserKeyword)
@@ -42,7 +41,6 @@ namespace Opm {
 
     DeckKeyword::DeckKeyword(const ParserKeyword& parserKeyword, const std::string& keywordName) :
         m_keywordName(keywordName),
-        m_lineNumber(-1),
         m_isDataKeyword(false),
         m_slashTerminated(true),
         parser_keyword(parserKeyword)
@@ -190,20 +188,19 @@ namespace Opm {
     }
 
     void DeckKeyword::setLocation(const std::pair<const std::string&, std::size_t>& location) {
-        m_fileName = location.first;
-        m_lineNumber = location.second;
+        this->m_location = Location(location.first, location.second);
     }
 
     const std::string& DeckKeyword::getFileName() const {
-        return m_fileName;
+        return this->m_location.filename;
     }
 
     int DeckKeyword::getLineNumber() const {
-        return m_lineNumber;
+        return this->m_location.lineno;
     }
 
-    std::pair<std::string, std::size_t> DeckKeyword::location() const {
-        return std::make_pair( this->getFileName(), this->getLineNumber() );
+    const DeckKeyword::Location& DeckKeyword::location() const {
+        return this->m_location;
     }
 
     void DeckKeyword::setDataKeyword(bool isDataKeyword_) {

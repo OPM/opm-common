@@ -35,6 +35,20 @@ namespace Opm {
 
     class DeckKeyword {
     public:
+
+        class Location {
+        public:
+            std::string filename;
+            std::size_t lineno;
+
+            Location() = default;
+            Location(std::string fname, std::size_t lno) :
+                filename(std::move(fname)),
+                lineno(lno)
+            {}
+        };
+
+
         typedef std::vector< DeckRecord >::const_iterator const_iterator;
 
         explicit DeckKeyword(const ParserKeyword& parserKeyword);
@@ -51,7 +65,7 @@ namespace Opm {
         void setLocation(const std::pair<const std::string&, std::size_t>& location);
         const std::string& getFileName() const;
         int getLineNumber() const;
-        std::pair<std::string, std::size_t> location() const;
+        const Location& location() const;
 
 
         size_t size() const;
@@ -90,8 +104,7 @@ namespace Opm {
         friend std::ostream& operator<<(std::ostream& os, const DeckKeyword& keyword);
     private:
         std::string m_keywordName;
-        std::string m_fileName;
-        int m_lineNumber;
+        Location m_location;
 
         std::vector< DeckRecord > m_recordList;
         bool m_isDataKeyword;

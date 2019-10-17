@@ -34,6 +34,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/Actions.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionX.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
@@ -596,7 +597,7 @@ BOOST_AUTO_TEST_CASE(TestFieldAND) {
 
 
 BOOST_AUTO_TEST_CASE(Conditions) {
-    auto location = std::make_pair<std::string, std::size_t>("FILE", 0);
+    auto location = DeckKeyword::Location("File", 100);
 
     // Missing comparator
     BOOST_CHECK_THROW(Action::Condition cond({"WWCT", "OPX"}, location), std::invalid_argument);

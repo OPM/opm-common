@@ -23,6 +23,8 @@
 #include <string>
 #include <vector>
 
+#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
+
 namespace Opm {
 
 namespace Action {
@@ -62,7 +64,7 @@ enum class Comparator {
 };
 
 
-    Condition(const std::vector<std::string>& tokens, const std::pair<std::string, std::size_t>& location);
+    Condition(const std::vector<std::string>& tokens, const DeckKeyword::Location& location);
 
 
     Quantity lhs;
