@@ -68,7 +68,7 @@ namespace Opm {
     }
 
 
-    DeckKeyword::DeckKeyword(const ParserKeyword& parserKeyword,  const std::vector<std::vector<DeckValue>>& record_list) :
+    DeckKeyword::DeckKeyword(const ParserKeyword& parserKeyword,  const std::vector<std::vector<DeckValue>>& record_list, UnitSystem& system_active, UnitSystem& system_default) :
         DeckKeyword(parserKeyword)
     {
         if (parserKeyword.hasFixedSize() && (record_list.size() != parserKeyword.getFixedSize()))
@@ -94,12 +94,14 @@ namespace Opm {
                           break;
                       case type_tag::fdouble:
                           {
-                              // The arguments active_dim and default_dim are totally dummy,
-                              // and just added here to get this to compile after rebase.
-                              UnitSystem unit_system(UnitSystem::UnitType::UNIT_TYPE_METRIC);
-                              auto active_dim = unit_system.getDimension("1");
-                              auto default_dim = unit_system.getDimension("1");
-                              DeckItem deck_item(parser_item.name(), double(), {active_dim}, {default_dim});
+                              auto& dim = parser_item.dimensions();
+                              std::vector<Dimension> active_dimensions;
+                              std::vector<Dimension> default_dimensions;
+                              if (dim.size() > 0) {
+                                 active_dimensions.push_back( system_active.getNewDimension(dim[0]) );
+                                 default_dimensions.push_back( system_default.getNewDimension(dim[0]) );
+                              }
+                              DeckItem deck_item(parser_item.name(), double(), active_dimensions, default_dimensions);
                               add_deckvalue<double>(std::move(deck_item), deck_record, parser_item, input_record, j);
                           }
                           break;

@@ -7,6 +7,7 @@ from opm.io.parser import ParseContext
 
 from opm.io.deck import DeckKeyword
 
+unit_foot = 0.3048 #meters
 
 class TestParser(unittest.TestCase):
 
@@ -14,7 +15,7 @@ class TestParser(unittest.TestCase):
 START             -- 0
 10 MAI 2007 /
 RUNSPEC
-
+FIELD
 DIMENS
 2 2 1 /
 GRID
@@ -55,6 +56,11 @@ FIPNUM
 
     def test_create_deck_kw(self):
         parser = Parser()
+        deck = parser.parse_string(self.REGIONDATA)
+        active_unit_system = deck.active_unit_system()
+        default_unit_system = deck.default_unit_system()
+        self.assertEqual(active_unit_system.name, "Field")
+
         with self.assertRaises(ValueError):
             kw = parser["NOT_A_VALID_KEYWORD"]
 
@@ -64,53 +70,63 @@ FIPNUM
         dkw_field = DeckKeyword(field)
         assert(dkw_field.name == "FIELD")
 
-        DeckKeyword(parser["AQUCWFAC"], [[]])
+        DeckKeyword(parser["AQUCWFAC"], [[]], active_unit_system, default_unit_system)
 
         with self.assertRaises(TypeError):
-            dkw_wrong =  DeckKeyword(parser["AQUCWFAC"], [22.2, 0.25])
+            dkw_wrong =  DeckKeyword(parser["AQUCWFAC"], [22.2, 0.25], active_unit_system, default_unit_system)
 
-        dkw_aqannc = DeckKeyword(parser["AQANNC"], [[12, 1, 2, 3, 0.89], [13, 4, 5, 6, 0.625]])
+        dkw_aqannc = DeckKeyword(parser["AQANNC"], [[12, 1, 2, 3, 0.89], [13, 4, 5, 6, 0.625]], active_unit_system, default_unit_system)
         assert( len(dkw_aqannc[0]) == 5 )
-        assert( dkw_aqannc[0][2][0] == 2 )
-        assert( dkw_aqannc[1][1][0] == 4 )
-        assert( dkw_aqannc[1][4][0] == 0.625 )
+        assert( dkw_aqannc[0][2].get_int(0) == 2 )
+        assert( dkw_aqannc[1][1].get_int(0) == 4 )
+        with self.assertRaises(ValueError):
+            value = dkw_aqannc[1][1].get_raw(0)
+        with self.assertRaises(ValueError):
+            value = dkw_aqannc[1][1].get_SI(0)
+        assert( dkw_aqannc[1][4].get_raw(0) == 0.625 )
+        self.assertAlmostEqual( dkw_aqannc[1][4].get_SI(0), 0.625 * unit_foot**2 )
+        assert( dkw_aqannc[1][4].get_raw_data_list() == [0.625] )
+        self.assertAlmostEqual( dkw_aqannc[1][4].get_SI_data_list()[0], 0.625 * unit_foot**2 )
+        with self.assertRaises(ValueError):
+            value = dkw_aqannc[1][4].get_int(0)
 
-        dkw_aqantrc = DeckKeyword(parser["AQANTRC"], [[12, "ABC", 8]])
-        assert( dkw_aqantrc[0][1][0] == "ABC" )
-        assert( dkw_aqantrc[0][2][0] == 8.0 )
+        dkw_aqantrc = DeckKeyword(parser["AQANTRC"], [[12, "ABC", 8]], active_unit_system, default_unit_system)
+        assert( dkw_aqantrc[0][1].get_str(0) == "ABC" )
+        assert( dkw_aqantrc[0][2].get_raw(0) == 8.0 )
 
-        dkw1 = DeckKeyword(parser["AQUCWFAC"], [["*", 0.25]])
-        assert( dkw1[0][0][0] == 0.0 )
-        assert( dkw1[0][1][0] == 0.25 )
+        dkw1 = DeckKeyword(parser["AQUCWFAC"], [["*", 0.25]], active_unit_system, default_unit_system)
+        assert( dkw1[0][0].get_raw(0) == 0.0 )
+        assert( dkw1[0][1].get_raw(0) == 0.25 )
 
-        dkw2 = DeckKeyword(parser["AQUCWFAC"], [[0.25, "*"]])
-        assert( dkw2[0][0][0] == 0.25 )
-        assert( dkw2[0][1][0] == 1.0 )
+        dkw2 = DeckKeyword(parser["AQUCWFAC"], [[0.25, "*"]], active_unit_system, default_unit_system)
+        assert( dkw2[0][0].get_raw(0) == 0.25 )
+        assert( dkw2[0][1].get_raw(0) == 1.0 )
 
-        dkw3 = DeckKeyword(parser["AQUCWFAC"], [[0.50]])
-        assert( dkw3[0][0][0] == 0.50 )
-        assert( dkw3[0][1][0] == 1.0 )
+        dkw3 = DeckKeyword(parser["AQUCWFAC"], [[0.50]], active_unit_system, default_unit_system)
+        assert( dkw3[0][0].get_raw(0) == 0.50 )
+        assert( dkw3[0][1].get_raw(0) == 1.0 )
 
-        dkw4 = DeckKeyword(parser["CBMOPTS"], [["3*", "A", "B", "C", "2*", 0.375]])
-        assert( dkw4[0][0][0] == "TIMEDEP" )
-        assert( dkw4[0][2][0] == "NOKRMIX" )
-        assert( dkw4[0][3][0] == "A" )
-        assert( dkw4[0][6][0] == "PMPVK" )
-        assert( dkw4[0][8][0] == 0.375 )
+        dkw4 = DeckKeyword(parser["CBMOPTS"], [["3*", "A", "B", "C", "2*", 0.375]], active_unit_system, default_unit_system)
+        assert( dkw4[0][0].get_str(0) == "TIMEDEP" )
+        assert( dkw4[0][2].get_str(0) == "NOKRMIX" )
+        assert( dkw4[0][3].get_str(0) == "A" )
+        assert( dkw4[0][6].get_str(0) == "PMPVK" )
+        assert( dkw4[0][8].get_raw(0) == 0.375 )
+        with self.assertRaises(TypeError):
+            dkw4[0][8].get_data_list()
 
         with self.assertRaises(TypeError):
-            DeckKeyword(parser["CBMOPTS"], [["3*", "A", "B", "C", "R2*", 0.77]])
+            DeckKeyword(parser["CBMOPTS"], [["3*", "A", "B", "C", "R2*", 0.77]], active_unit_system, default_unit_system)
 
         with self.assertRaises(TypeError):
-            DeckKeyword(parser["CBMOPTS"], [["3*", "A", "B", "C", "2.2*", 0.77]])
+            DeckKeyword(parser["CBMOPTS"], [["3*", "A", "B", "C", "2.2*", 0.77]], active_unit_system, default_unit_system)
 
-        dkw5 = DeckKeyword(parser["AQUCWFAC"], [["2*5.5"]])
-        assert( dkw5[0][0][0] == 5.5 )
-        assert( dkw5[0][1][0] == 5.5 )
+        dkw5 = DeckKeyword(parser["AQUCWFAC"], [["2*5.5"]], active_unit_system, default_unit_system)
+        assert( dkw5[0][0].get_raw(0) == 5.5 )
+        assert( dkw5[0][1].get_raw(0) == 5.5 )
 
         with self.assertRaises(ValueError):
-            raise DeckKeyword(parser["AQANTRC"], [["1*2.2", "ABC", 8]])
-        
+            raise DeckKeyword(parser["AQANTRC"], [["1*2.2", "ABC", 8]], active_unit_system, default_unit_system)
 
 
 if __name__ == "__main__":
