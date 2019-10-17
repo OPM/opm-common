@@ -15,7 +15,6 @@ set (opm-common_DEPS
 
 if(ENABLE_ECL_INPUT)
   list(APPEND opm-common_DEPS
-        "ecl REQUIRED"
         # various runtime library enhancements
         "Boost 1.44.0
           COMPONENTS system filesystem unit_test_framework regex REQUIRED")
