@@ -94,7 +94,7 @@ namespace {
     }
 
 
-
+#if 0
     void ParserRecord::applyUnitsToDeck( Deck& deck, DeckRecord& deckRecord ) const {
         for( const auto& parser_item : *this ) {
             if( parser_item.dimensions().empty() ) continue;
@@ -122,6 +122,7 @@ namespace {
             }
         }
     }
+#endif
 
 
     const ParserItem& ParserRecord::get(size_t index) const {
@@ -145,11 +146,12 @@ namespace {
         return *itr;
     }
 
-    DeckRecord ParserRecord::parse(const ParseContext& parseContext , ErrorGuard& errors , RawRecord& rawRecord, const std::string& keyword, const std::string& filename) const {
+
+    DeckRecord ParserRecord::parse(const ParseContext& parseContext , ErrorGuard& errors , RawRecord& rawRecord, UnitSystem& active_unitsystem, UnitSystem& default_unitsystem, const std::string& keyword, const std::string& filename) const {
         std::vector< DeckItem > items;
         items.reserve( this->size() + 20 );
         for( const auto& parserItem : *this )
-            items.emplace_back( parserItem.scan( rawRecord ) );
+            items.emplace_back( parserItem.scan( rawRecord, active_unitsystem, default_unitsystem ) );
 
         if (rawRecord.size() > 0) {
             std::string msg = "The RawRecord for keyword \""  + keyword + "\" in file\"" + filename + "\" contained " +

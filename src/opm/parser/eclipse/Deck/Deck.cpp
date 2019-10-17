@@ -108,15 +108,12 @@ namespace Opm {
         return this->keywordMap.find( keyword )->second;
     }
 
-    DeckView::DeckView( const_iterator first_arg, const_iterator last_arg ) :
-        first( first_arg ), last( last_arg )
+    DeckView::DeckView( const_iterator first_arg, const_iterator last_arg)
     {
-        size_t index = 0;
-        for( const auto& kw : *this )
-            this->keywordMap[ kw.name() ].push_back( index++ );
+        this->init(first_arg, last_arg);
     }
 
-    void DeckView::reinit( const_iterator first_arg, const_iterator last_arg ) {
+    void DeckView::init( const_iterator first_arg, const_iterator last_arg ) {
         this->first = first_arg;
         this->last = last_arg;
 
@@ -131,47 +128,51 @@ namespace Opm {
         DeckView( limits.first, limits.second )
     {}
 
-    Deck::Deck() : Deck( std::vector< DeckKeyword >() ) {}
+    Deck::Deck() :
+        Deck( std::vector<DeckKeyword>() )
+    {}
 
-    Deck::Deck( std::vector< DeckKeyword >&& x ) :
-        DeckView( x.begin(), x.end() ),
-        keywordList( std::move( x ) ),
-        defaultUnits( UnitSystem::newMETRIC() ),
-        activeUnits( UnitSystem::newMETRIC() ),
-        m_dataFile(""),
-        input_path("")
+
+    /*
+      This constructor should be ssen as a technical implemtation detail of the
+      default constructor, and not something which should be invoked directly.
+      The point is that the derived class DeckView contains iterators to the
+      keywordList member in the base class - this represents some ordering
+      challenges in the construction phase.
+    */
+    Deck::Deck( std::vector<DeckKeyword>&& x) :
+        DeckView(x.begin(), x.end()),
+        keywordList(std::move(x)),
+        defaultUnits( UnitSystem::newMETRIC() )
     {
-        /*
-         * If multiple unit systems are requested, metric is preferred over
-         * lab, and field over metric, for as long as we have no easy way of
-         * figuring out which was requested last.
-         */
-        if( this->hasKeyword( "PVT-M" ) )
-            this->activeUnits = UnitSystem::newPVT_M();
-        if( this->hasKeyword( "LAB" ) )
-            this->activeUnits = UnitSystem::newLAB();
-        if( this->hasKeyword( "FIELD" ) )
-            this->activeUnits = UnitSystem::newFIELD();
-        if( this->hasKeyword( "METRIC" ) )
-            this->activeUnits = UnitSystem::newMETRIC();
     }
 
     Deck::Deck( const Deck& d ) :
-        DeckView( d.begin(), d.begin() ),
+        DeckView(d.begin(), d.end()),
         keywordList( d.keywordList ),
         defaultUnits( d.defaultUnits ),
-        activeUnits( d.activeUnits ),
         m_dataFile( d.m_dataFile ),
-        input_path( d.input_path ) {
-        this->reinit(this->keywordList.begin(), this->keywordList.end());
+        input_path( d.input_path )
+    {
+        this->init(this->keywordList.begin(), this->keywordList.end());
+        if (d.activeUnits)
+            this->activeUnits.reset( new UnitSystem(*d.activeUnits.get()));
     }
 
-    void Deck::addKeyword( DeckKeyword&& keyword ) {
-        this->keywordList.push_back( std::move( keyword ) );
 
+    void Deck::addKeyword( DeckKeyword&& keyword ) {
+        if (keyword.name() == "FIELD")
+            this->selectActiveUnitSystem( UnitSystem::UnitType::UNIT_TYPE_FIELD );
+        else if (keyword.name() == "METRIC")
+            this->selectActiveUnitSystem( UnitSystem::UnitType::UNIT_TYPE_METRIC );
+        else if (keyword.name() == "LAB")
+            this->selectActiveUnitSystem( UnitSystem::UnitType::UNIT_TYPE_LAB );
+        else if (keyword.name() == "PVT-M")
+            this->selectActiveUnitSystem( UnitSystem::UnitType::UNIT_TYPE_PVT_M );
+
+        this->keywordList.push_back( std::move( keyword ) );
         auto fst = this->keywordList.begin();
         auto lst = this->keywordList.end();
-
         this->add( &this->keywordList.back(), fst, lst );
     }
 
@@ -194,11 +195,29 @@ namespace Opm {
     }
 
     UnitSystem& Deck::getActiveUnitSystem() {
-        return this->activeUnits;
+        this->unit_system_access_count++;
+        if (this->activeUnits)
+            return *this->activeUnits;
+        else
+            return this->defaultUnits;
     }
 
+    void Deck::selectActiveUnitSystem(UnitSystem::UnitType unit_type) {
+        const auto& current = this->getActiveUnitSystem();
+        if (current.use_count() > 0 && (current.getType() != unit_type))
+            throw std::invalid_argument("Sorry - can not change unit system after dimensionfull features have been entered");
+
+        if (current.getType() != unit_type)
+            this->activeUnits.reset( new UnitSystem(unit_type) );
+    }
+
+
     const UnitSystem& Deck::getActiveUnitSystem() const {
-        return this->activeUnits;
+        this->unit_system_access_count++;
+        if (this->activeUnits)
+            return *this->activeUnits;
+        else
+            return this->defaultUnits;
     }
 
     const std::string& Deck::getDataFile() const {

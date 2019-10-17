@@ -22,6 +22,7 @@
 
 #include <opm/json/JsonObject.hpp>
 
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
@@ -434,7 +435,8 @@ BOOST_AUTO_TEST_CASE(scan_PreMatureTerminator_defaultUsed) {
     itemInt.setDefault(123);
 
     RawRecord rawRecord1( "" );
-    const auto defaulted = itemInt.scan(rawRecord1);
+    UnitSystem unit_system;
+    const auto defaulted = itemInt.scan(rawRecord1, unit_system, unit_system);
 
     BOOST_CHECK(defaulted.defaultApplied(0));
     BOOST_CHECK_EQUAL(defaulted.get< int >(0), 123);
@@ -644,7 +646,8 @@ BOOST_AUTO_TEST_CASE(Scan_All_CorrectIntSetInDeckItem) {
     ParserItem itemInt("ITEM", INT); itemInt.setSizeType(sizeType);
 
     RawRecord rawRecord( "100 443 10*77 10*1 25" );
-    const auto deckIntItem = itemInt.scan(rawRecord);
+    UnitSystem unit_system;
+    const auto deckIntItem = itemInt.scan(rawRecord, unit_system, unit_system);
     BOOST_CHECK_EQUAL(23U, deckIntItem.size());
     BOOST_CHECK_EQUAL(77,  deckIntItem.get< int >(3));
     BOOST_CHECK_EQUAL(1,   deckIntItem.get< int >(21));
@@ -657,7 +660,8 @@ BOOST_AUTO_TEST_CASE(Scan_All_WithDefaults) {
     itemInt.setInputType( ParserItem::itype::INT );
 
     RawRecord rawRecord( "100 10* 10*1 25" );
-    const auto deckIntItem = itemInt.scan(rawRecord);
+    UnitSystem unit_system;
+    const auto deckIntItem = itemInt.scan(rawRecord, unit_system, unit_system);
     BOOST_CHECK_EQUAL(22U, deckIntItem.size());
     BOOST_CHECK(!deckIntItem.defaultApplied(0));
     BOOST_CHECK( deckIntItem.defaultApplied(1));
@@ -671,7 +675,8 @@ BOOST_AUTO_TEST_CASE(Scan_SINGLE_CorrectIntSetInDeckItem) {
     ParserItem itemInt(std::string("ITEM2"), INT);
 
     RawRecord rawRecord("100 44.3 'Heisann'" );
-    const auto deckIntItem = itemInt.scan(rawRecord);
+    UnitSystem unit_system;
+    const auto deckIntItem = itemInt.scan(rawRecord, unit_system, unit_system);
     BOOST_CHECK_EQUAL(100, deckIntItem.get< int >(0));
 }
 
@@ -681,13 +686,14 @@ BOOST_AUTO_TEST_CASE(Scan_SeveralInts_CorrectIntsSetInDeckItem) {
     ParserItem itemInt3(std::string("ITEM3"), INT);
 
     RawRecord rawRecord( "100 443 338932 222.33 'Heisann' " );
-    const auto deckIntItem1 = itemInt1.scan(rawRecord);
+    UnitSystem unit_system;
+    const auto deckIntItem1 = itemInt1.scan(rawRecord, unit_system, unit_system);
     BOOST_CHECK_EQUAL(100, deckIntItem1.get< int >(0));
 
-    const auto deckIntItem2 = itemInt2.scan(rawRecord);
+    const auto deckIntItem2 = itemInt2.scan(rawRecord, unit_system, unit_system);
     BOOST_CHECK_EQUAL(443, deckIntItem2.get< int >(0));
 
-    const auto deckIntItem3 = itemInt3.scan(rawRecord);
+    const auto deckIntItem3 = itemInt3.scan(rawRecord, unit_system, unit_system);
     BOOST_CHECK_EQUAL(338932, deckIntItem3.get< int >(0));
 }
 
@@ -699,8 +705,9 @@ BOOST_AUTO_TEST_CASE(Scan_Multiplier_CorrectIntsSetInDeckItem) {
     ParserItem itemInt("ITEM2", INT);
 
     RawRecord rawRecord( "3*4 " );
+    UnitSystem unit_system;
     itemInt.setSizeType(ParserItem::item_size::ALL);
-    const auto deckIntItem = itemInt.scan(rawRecord);
+    const auto deckIntItem = itemInt.scan(rawRecord, unit_system, unit_system);
     BOOST_CHECK_EQUAL(4, deckIntItem.get< int >(0));
     BOOST_CHECK_EQUAL(4, deckIntItem.get< int >(1));
     BOOST_CHECK_EQUAL(4, deckIntItem.get< int >(2));
@@ -709,8 +716,9 @@ BOOST_AUTO_TEST_CASE(Scan_Multiplier_CorrectIntsSetInDeckItem) {
 BOOST_AUTO_TEST_CASE(Scan_StarNoMultiplier_ExceptionThrown) {
     ParserItem itemInt("ITEM2", INT);
 
+    UnitSystem unit_system;
     RawRecord rawRecord( "*45 " );
-    BOOST_CHECK_THROW(itemInt.scan(rawRecord), std::invalid_argument);
+    BOOST_CHECK_THROW(itemInt.scan(rawRecord, unit_system, unit_system), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(Scan_MultipleItems_CorrectIntsSetInDeckItem) {
@@ -718,8 +726,9 @@ BOOST_AUTO_TEST_CASE(Scan_MultipleItems_CorrectIntsSetInDeckItem) {
     ParserItem itemInt2(std::string("ITEM2"), INT);
 
     RawRecord rawRecord( "10 20" );
-    const auto deckIntItem1 = itemInt1.scan(rawRecord);
-    const auto deckIntItem2 = itemInt2.scan(rawRecord);
+    UnitSystem unit_system;
+    const auto deckIntItem1 = itemInt1.scan(rawRecord, unit_system, unit_system);
+    const auto deckIntItem2 = itemInt2.scan(rawRecord, unit_system, unit_system);
 
     BOOST_CHECK_EQUAL(10, deckIntItem1.get< int >(0));
     BOOST_CHECK_EQUAL(20, deckIntItem2.get< int >(0));
@@ -730,8 +739,9 @@ BOOST_AUTO_TEST_CASE(Scan_MultipleDefault_CorrectIntsSetInDeckItem) {
     ParserItem itemInt2("ITEM2", INT); itemInt2.setDefault(20);
 
     RawRecord rawRecord( "* * " );
-    const auto deckIntItem1 = itemInt1.scan(rawRecord);
-    const auto deckIntItem2 = itemInt2.scan(rawRecord);
+    UnitSystem unit_system;
+    const auto deckIntItem1 = itemInt1.scan(rawRecord, unit_system, unit_system);
+    const auto deckIntItem2 = itemInt2.scan(rawRecord, unit_system, unit_system);
 
     BOOST_CHECK_EQUAL(10, deckIntItem1.get< int >(0));
     BOOST_CHECK_EQUAL(20, deckIntItem2.get< int >(0));
@@ -742,8 +752,9 @@ BOOST_AUTO_TEST_CASE(Scan_MultipleWithMultiplier_CorrectIntsSetInDeckItem) {
     ParserItem itemInt2("ITEM2", INT);
 
     RawRecord rawRecord( "2*30" );
-    const auto deckIntItem1 = itemInt1.scan(rawRecord);
-    const auto deckIntItem2 = itemInt2.scan(rawRecord);
+    UnitSystem unit_system;
+    const auto deckIntItem1 = itemInt1.scan(rawRecord, unit_system, unit_system);
+    const auto deckIntItem2 = itemInt2.scan(rawRecord, unit_system, unit_system);
 
     BOOST_CHECK_EQUAL(30, deckIntItem1.get< int >(0));
     BOOST_CHECK_EQUAL(30, deckIntItem2.get< int >(0));
@@ -752,15 +763,17 @@ BOOST_AUTO_TEST_CASE(Scan_MultipleWithMultiplier_CorrectIntsSetInDeckItem) {
 BOOST_AUTO_TEST_CASE(Scan_MalformedMultiplier_Throw) {
     ParserItem itemInt1("ITEM1", INT);
 
+    UnitSystem unit_system;
     RawRecord rawRecord( "2.10*30" );
-    BOOST_CHECK_THROW(itemInt1.scan(rawRecord), std::invalid_argument);
+    BOOST_CHECK_THROW(itemInt1.scan(rawRecord, unit_system, unit_system), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(Scan_MalformedMultiplierChar_Throw) {
     ParserItem itemInt1("ITEM1", INT);
 
     RawRecord rawRecord( "210X30" );
-    BOOST_CHECK_THROW(itemInt1.scan(rawRecord), std::invalid_argument);
+    UnitSystem unit_system;
+    BOOST_CHECK_THROW(itemInt1.scan(rawRecord, unit_system, unit_system), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(Scan_MultipleWithMultiplierDefault_CorrectIntsSetInDeckItem) {
@@ -768,8 +781,9 @@ BOOST_AUTO_TEST_CASE(Scan_MultipleWithMultiplierDefault_CorrectIntsSetInDeckItem
     ParserItem itemInt2("ITEM2", INT); itemInt2.setDefault(20);
 
     RawRecord rawRecord( "2*" );
-    const auto deckIntItem1 = itemInt1.scan(rawRecord);
-    const auto deckIntItem2 = itemInt2.scan(rawRecord);
+    UnitSystem unit_system;
+    const auto deckIntItem1 = itemInt1.scan(rawRecord, unit_system, unit_system);
+    const auto deckIntItem2 = itemInt2.scan(rawRecord, unit_system, unit_system);
 
     BOOST_CHECK_EQUAL(10, deckIntItem1.get< int >(0));
     BOOST_CHECK_EQUAL(20, deckIntItem2.get< int >(0));
@@ -780,15 +794,16 @@ BOOST_AUTO_TEST_CASE(Scan_RawRecordErrorInRawData_ExceptionThrown) {
 
     // Wrong type
     RawRecord rawRecord2( "333.2 /" );
-    BOOST_CHECK_THROW(itemInt.scan(rawRecord2), std::invalid_argument);
+    UnitSystem unit_system;
+    BOOST_CHECK_THROW(itemInt.scan(rawRecord2, unit_system, unit_system), std::invalid_argument);
 
     // Wrong type
     RawRecord rawRecord3( "100X /" );
-    BOOST_CHECK_THROW(itemInt.scan(rawRecord3), std::invalid_argument);
+    BOOST_CHECK_THROW(itemInt.scan(rawRecord3, unit_system, unit_system), std::invalid_argument);
 
     // Wrong type
     RawRecord rawRecord5( "astring /" );
-    BOOST_CHECK_THROW(itemInt.scan(rawRecord5), std::invalid_argument);
+    BOOST_CHECK_THROW(itemInt.scan(rawRecord5, unit_system, unit_system), std::invalid_argument);
 }
 
 /*********************String************************'*/
@@ -816,21 +831,23 @@ BOOST_AUTO_TEST_CASE(InitializeStringItem_FromJsonObject_withDefaultInvalid_thro
 BOOST_AUTO_TEST_CASE(init_defaultvalue_defaultset) {
     ParserItem itemString(std::string("ITEM1"), STRING);
     RawRecord rawRecord0( "'1*'" );
+    UnitSystem unit_system;
     itemString.setDefault(std::string("DEFAULT"));
-    BOOST_CHECK_EQUAL("1*", itemString.scan( rawRecord0 ).get< std::string >(0) );
+    BOOST_CHECK_EQUAL("1*", itemString.scan( rawRecord0, unit_system, unit_system ).get< std::string >(0) );
 
     RawRecord rawRecord1( "13*" );
-    BOOST_CHECK_EQUAL("DEFAULT" , itemString.scan( rawRecord1 ).get< std::string >(0) );
+    BOOST_CHECK_EQUAL("DEFAULT" , itemString.scan( rawRecord1, unit_system, unit_system ).get< std::string >(0) );
 
     RawRecord rawRecord2( "*" );
-    BOOST_CHECK_EQUAL("DEFAULT", itemString.scan( rawRecord2 ).get< std::string >(0) );
+    BOOST_CHECK_EQUAL("DEFAULT", itemString.scan( rawRecord2, unit_system, unit_system ).get< std::string >(0) );
 }
 
 BOOST_AUTO_TEST_CASE(scan_all_valuesCorrect) {
     ParserItem itemString("ITEMWITHMANY", STRING);
     RawRecord rawRecord( "'WELL1' FISK BANAN 3*X OPPLEGG_FOR_DATAANALYSE 'Foo$*!% BAR' " );
+    UnitSystem unit_system;
     itemString.setSizeType( ParserItem::item_size::ALL );
-    const auto deckItem = itemString.scan(rawRecord);
+    const auto deckItem = itemString.scan(rawRecord, unit_system, unit_system);
     BOOST_CHECK_EQUAL(8U, deckItem.size());
 
     BOOST_CHECK_EQUAL("WELL1", deckItem.get< std::string >(0));
@@ -846,9 +863,10 @@ BOOST_AUTO_TEST_CASE(scan_all_valuesCorrect) {
 BOOST_AUTO_TEST_CASE(scan_all_withdefaults) {
     ParserItem itemString("ITEMWITHMANY", INT);
     RawRecord rawRecord( "10*1 10* 10*2 " );
+    UnitSystem unit_system;
     itemString.setDefault(0);
     itemString.setSizeType( ParserItem::item_size::ALL );
-    const auto deckItem = itemString.scan(rawRecord);
+    const auto deckItem = itemString.scan(rawRecord, unit_system, unit_system);
 
     BOOST_CHECK_EQUAL(30U, deckItem.size());
 
@@ -871,7 +889,8 @@ BOOST_AUTO_TEST_CASE(scan_all_withdefaults) {
 BOOST_AUTO_TEST_CASE(scan_single_dataCorrect) {
     ParserItem itemString( "ITEM1", STRING);
     RawRecord rawRecord( "'WELL1' 'WELL2'" );
-    const auto deckItem = itemString.scan(rawRecord);
+    UnitSystem unit_system;
+    const auto deckItem = itemString.scan(rawRecord, unit_system, unit_system);
     BOOST_CHECK_EQUAL(1U, deckItem.size());
     BOOST_CHECK_EQUAL("WELL1", deckItem.get< std::string >(0));
 }
@@ -879,24 +898,24 @@ BOOST_AUTO_TEST_CASE(scan_single_dataCorrect) {
 BOOST_AUTO_TEST_CASE(scan_singleWithMixedRecord_dataCorrect) {
     ParserItem itemString("ITEM1", STRING);
     ParserItem itemInt("ITEM1", INT);
-
+    UnitSystem unit_system;
     RawRecord rawRecord( "2 'WELL1' /" );
-    itemInt.scan(rawRecord);
-    const auto deckItem = itemString.scan(rawRecord);
+    itemInt.scan(rawRecord, unit_system, unit_system);
+    const auto deckItem = itemString.scan(rawRecord, unit_system, unit_system);
     BOOST_CHECK_EQUAL("WELL1", deckItem.get< std::string >(0));
 }
 
 /******************String and int**********************/
 BOOST_AUTO_TEST_CASE(scan_intsAndStrings_dataCorrect) {
     RawRecord rawRecord( "'WELL1' 2 2 2*3" );
-
+    UnitSystem unit_system;
     ParserItem itemSingleString(std::string("ITEM1"), STRING);
-    const auto deckItemWell1 = itemSingleString.scan(rawRecord);
+    const auto deckItemWell1 = itemSingleString.scan(rawRecord, unit_system, unit_system);
     BOOST_CHECK_EQUAL("WELL1", deckItemWell1.get< std::string >(0));
 
     ParserItem itemSomeInts("SOMEINTS", INT);
     itemSomeInts.setSizeType( ParserItem::item_size::ALL );
-    const auto deckItemInts = itemSomeInts.scan(rawRecord);
+    const auto deckItemInts = itemSomeInts.scan(rawRecord, unit_system, unit_system);
     BOOST_CHECK_EQUAL(2, deckItemInts.get< int >(0));
     BOOST_CHECK_EQUAL(2, deckItemInts.get< int >(1));
     BOOST_CHECK_EQUAL(3, deckItemInts.get< int >(2));
@@ -1031,7 +1050,8 @@ BOOST_AUTO_TEST_CASE(parse_validRecord_noThrow) {
     ParseContext parseContext;
     ErrorGuard errors;
     RawRecord raw( string_view( "100 443" ) );
-    BOOST_CHECK_NO_THROW(record.parse(parseContext, errors, raw , "KEYWORD", "filename") );
+    UnitSystem unit_system;
+    BOOST_CHECK_NO_THROW(record.parse(parseContext, errors, raw , unit_system, unit_system, "KEYWORD", "filename") );
 }
 
 BOOST_AUTO_TEST_CASE(parse_validRecord_deckRecordCreated) {
@@ -1039,7 +1059,8 @@ BOOST_AUTO_TEST_CASE(parse_validRecord_deckRecordCreated) {
     RawRecord rawRecord( string_view( "100 443" ) );
     ParseContext parseContext;
     ErrorGuard errors;
-    const auto deckRecord = record.parse(parseContext , errors, rawRecord, "KEYWORD", "filename");
+    UnitSystem unit_system;
+    const auto deckRecord = record.parse(parseContext , errors, rawRecord, unit_system, unit_system, "KEYWORD", "filename");
     BOOST_CHECK_EQUAL(2U, deckRecord.size());
 }
 
@@ -1070,7 +1091,8 @@ BOOST_AUTO_TEST_CASE(parse_validMixedRecord_noThrow) {
     RawRecord rawRecord( string_view( "1 2 10.0 20.0 4 90.0") );
     ParseContext parseContext;
     ErrorGuard errors;
-    BOOST_CHECK_NO_THROW(record.parse(parseContext, errors, rawRecord, "KEYWORD", "filename"));
+    UnitSystem unit_system;
+    BOOST_CHECK_NO_THROW(record.parse(parseContext, errors, rawRecord, unit_system, unit_system, "KEYWORD", "filename"));
 }
 
 BOOST_AUTO_TEST_CASE(Equal_Equal_ReturnsTrue) {
@@ -1117,9 +1139,10 @@ BOOST_AUTO_TEST_CASE(ParseWithDefault_defaultAppliedCorrectInDeck) {
     // but it seems to appear in the wild. Thus, we interpret this as "1*"...
     {
         RawRecord rawRecord( "* " );
-        const auto& deckStringItem = itemString.scan(rawRecord);
-        const auto& deckIntItem = itemInt.scan(rawRecord);
-        const auto& deckDoubleItem = itemDouble.scan(rawRecord);
+        UnitSystem unit_system;
+        const auto& deckStringItem = itemString.scan(rawRecord, unit_system, unit_system);
+        const auto& deckIntItem = itemInt.scan(rawRecord, unit_system, unit_system);
+        const auto& deckDoubleItem = itemDouble.scan(rawRecord, unit_system, unit_system);
 
         BOOST_CHECK(deckStringItem.size() == 1);
         BOOST_CHECK(deckIntItem.size() == 1);
@@ -1132,9 +1155,10 @@ BOOST_AUTO_TEST_CASE(ParseWithDefault_defaultAppliedCorrectInDeck) {
 
     {
         RawRecord rawRecord( "" );
-        const auto deckStringItem = itemString.scan(rawRecord);
-        const auto deckIntItem = itemInt.scan(rawRecord);
-        const auto deckDoubleItem = itemDouble.scan(rawRecord);
+        UnitSystem unit_system;
+        const auto deckStringItem = itemString.scan(rawRecord, unit_system, unit_system);
+        const auto deckIntItem = itemInt.scan(rawRecord, unit_system, unit_system);
+        const auto deckDoubleItem = itemDouble.scan(rawRecord, unit_system, unit_system);
 
         BOOST_CHECK_EQUAL(deckStringItem.size(), 1);
         BOOST_CHECK_EQUAL(deckIntItem.size(), 1);
@@ -1151,9 +1175,10 @@ BOOST_AUTO_TEST_CASE(ParseWithDefault_defaultAppliedCorrectInDeck) {
 
         // let the raw record be "consumed" by the items. Note that the scan() method
         // modifies the rawRecord object!
-        const auto& deckStringItem = itemString.scan(rawRecord);
-        const auto& deckIntItem = itemInt.scan(rawRecord);
-        const auto& deckDoubleItem = itemDouble.scan(rawRecord);
+        UnitSystem unit_system;
+        const auto& deckStringItem = itemString.scan(rawRecord, unit_system, unit_system);
+        const auto& deckIntItem = itemInt.scan(rawRecord, unit_system, unit_system);
+        const auto& deckDoubleItem = itemDouble.scan(rawRecord, unit_system, unit_system);
 
         BOOST_CHECK_EQUAL(deckStringItem.size(), 1);
         BOOST_CHECK_EQUAL(deckIntItem.size(), 1);
@@ -1167,9 +1192,10 @@ BOOST_AUTO_TEST_CASE(ParseWithDefault_defaultAppliedCorrectInDeck) {
     // again this is invalid according to the RM, but it is used anyway in the wild...
     {
         RawRecord rawRecord( "* * *" );
-        const auto deckStringItem = itemString.scan(rawRecord);
-        const auto deckIntItem = itemInt.scan(rawRecord);
-        const auto deckDoubleItem = itemDouble.scan(rawRecord);
+        UnitSystem unit_system;
+        const auto deckStringItem = itemString.scan(rawRecord, unit_system, unit_system);
+        const auto deckIntItem = itemInt.scan(rawRecord, unit_system, unit_system);
+        const auto deckDoubleItem = itemDouble.scan(rawRecord, unit_system, unit_system);
 
         BOOST_CHECK_EQUAL(deckStringItem.size(), 1);
         BOOST_CHECK_EQUAL(deckIntItem.size(), 1);
@@ -1182,9 +1208,10 @@ BOOST_AUTO_TEST_CASE(ParseWithDefault_defaultAppliedCorrectInDeck) {
 
     {
         RawRecord rawRecord(  "3*" );
-        const auto deckStringItem = itemString.scan(rawRecord);
-        const auto deckIntItem = itemInt.scan(rawRecord);
-        const auto deckDoubleItem = itemDouble.scan(rawRecord);
+        UnitSystem unit_system;
+        const auto deckStringItem = itemString.scan(rawRecord, unit_system, unit_system);
+        const auto deckIntItem = itemInt.scan(rawRecord, unit_system, unit_system);
+        const auto deckDoubleItem = itemDouble.scan(rawRecord, unit_system, unit_system);
 
         BOOST_CHECK_EQUAL(deckStringItem.size(), 1);
         BOOST_CHECK_EQUAL(deckIntItem.size(), 1);
@@ -1210,14 +1237,14 @@ BOOST_AUTO_TEST_CASE(Parse_RawRecordTooManyItems_Throws) {
 
 
     RawRecord rawRecord(  "3 3 3 " );
-
-    BOOST_CHECK_NO_THROW(parserRecord.parse(parseContext, errors, rawRecord, "KEYWORD", "filename"));
+    UnitSystem unit_system;
+    BOOST_CHECK_NO_THROW(parserRecord.parse(parseContext, errors, rawRecord, unit_system, unit_system, "KEYWORD", "filename"));
 
     RawRecord rawRecordOneExtra(  "3 3 3 4 " );
-    BOOST_CHECK_THROW(parserRecord.parse(parseContext, errors, rawRecordOneExtra, "KEYWORD", "filename"), std::invalid_argument);
+    BOOST_CHECK_THROW(parserRecord.parse(parseContext, errors, rawRecordOneExtra, unit_system, unit_system, "KEYWORD", "filename"), std::invalid_argument);
 
     RawRecord rawRecordForgotRecordTerminator(  "3 3 3 \n 4 4 4 " );
-    BOOST_CHECK_THROW(parserRecord.parse(parseContext, errors, rawRecordForgotRecordTerminator, "KEYWORD", "filename"), std::invalid_argument);
+    BOOST_CHECK_THROW(parserRecord.parse(parseContext, errors, rawRecordForgotRecordTerminator, unit_system, unit_system, "KEYWORD", "filename"), std::invalid_argument);
 
 }
 
@@ -1235,10 +1262,11 @@ BOOST_AUTO_TEST_CASE(Parse_RawRecordTooFewItems) {
     ParseContext parseContext;
     ErrorGuard errors;
     RawRecord rawRecord(  "3 3  " );
+    UnitSystem unit_system;
     // no default specified for the third item, record can be parsed just fine but trying
     // to access the data will raise an exception...;
-    BOOST_CHECK_NO_THROW(parserRecord.parse(parseContext, errors, rawRecord, "KEWYORD", "filename"));
-    auto record = parserRecord.parse(parseContext, errors , rawRecord, "KEYWORD", "filename");
+    BOOST_CHECK_NO_THROW(parserRecord.parse(parseContext, errors, rawRecord, unit_system, unit_system, "KEWYORD", "filename"));
+    auto record = parserRecord.parse(parseContext, errors , rawRecord, unit_system, unit_system, "KEYWORD", "filename");
     BOOST_CHECK_NO_THROW(record.getItem(2));
     BOOST_CHECK_THROW(record.getItem(2).get< int >(0), std::out_of_range);
 }
@@ -1613,13 +1641,14 @@ BOOST_AUTO_TEST_CASE(ParseEmptyRecord) {
     RawKeyword rawkeyword( tabdimsKeyword.getName() , "FILE" , 10U , false, Raw::FIXED, 1);
     ParseContext parseContext;
     ErrorGuard errors;
+    UnitSystem unit_system;
 
     BOOST_CHECK_EQUAL( Raw::FIXED , rawkeyword.getSizeType());
     rawkeyword.addRecord( RawRecord("") );
     record.addItem(item);
     tabdimsKeyword.addRecord( record );
 
-    const auto deckKeyword = tabdimsKeyword.parse( parseContext, errors, rawkeyword , "filename");
+    const auto deckKeyword = tabdimsKeyword.parse( parseContext, errors, rawkeyword , unit_system, unit_system, "filename");
     BOOST_REQUIRE_EQUAL( 1U , deckKeyword.size());
 
     const auto& deckRecord = deckKeyword.getRecord(0);
@@ -1639,13 +1668,15 @@ BOOST_AUTO_TEST_CASE(ParseKeywordHasDimensionCorrect) {
     ParserRecord record;
 
     BOOST_CHECK( !parserKeyword.hasDimension());
+    BOOST_CHECK_EQUAL( 0U , item1.dimensions().size() );
+    item2.push_backDimension("Length");
+    BOOST_CHECK_EQUAL( 1U , item2.dimensions().size() );
 
     record.addItem( item1 );
     parserKeyword.addRecord( record );
     BOOST_CHECK( !parserKeyword.hasDimension() );
     BOOST_CHECK_EQUAL( 0U , item1.dimensions().size() );
 
-    item2.push_backDimension("Length");
     record.addItem( item2 );
 
     auto parserKeyword2 = createDynamicSized("JA");
@@ -1990,6 +2021,29 @@ RSCONSTT
     const auto deck = Parser{}.parseString( deck_string );
 }
 
+BOOST_AUTO_TEST_CASE(InvalidLateUnits) {
+    const auto deck_string = std::string { R"(RUNSPEC
+DX
+   100*100/
+
+FIELD
+
+)" };
+    /*
+      The opm-parser will fail hard if you change unit system with one of the
+      FIELD, METRIC, LAB or PVT-M keywords after you have loaded a keyword with
+      a dimension. This test verifies that you indeed get an exception in this
+      case.
+
+      The faulty situation should be "impossible" because the unit system
+      keywords should be in the RUNSPEC section, and all the other keywords in
+      the RUNSPEC section are integer keywords without dimension. Hence the deck
+      used in this test has incorrectly put the DX keyword in the RUNSPEC
+      section in order to provoke the exception; if at some stage the opm parser
+      treats section stricter this test might fail due to that reason instead.
+    */
+    BOOST_CHECK_THROW( Parser{}.parseString(deck_string), std::invalid_argument);
+}
 
 BOOST_AUTO_TEST_CASE(ParseRSConstT) {
     // Check that parsing RSCONSTT does not bleed into next keyword.

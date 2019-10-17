@@ -100,8 +100,7 @@ namespace Opm {
 
             DeckView( const_iterator first, const_iterator last );
             explicit DeckView( std::pair< const_iterator, const_iterator > );
-
-            void reinit( const_iterator, const_iterator );
+            void init( const_iterator, const_iterator );
 
         private:
             const_iterator first;
@@ -139,6 +138,7 @@ namespace Opm {
             const UnitSystem& getActiveUnitSystem() const;
             UnitSystem& getActiveUnitSystem();
             UnitSystem& getDefaultUnitSystem();
+            void selectActiveUnitSystem( UnitSystem::UnitType unit_type );
 
             const std::string& getInputPath() const;
             const std::string& getDataFile() const;
@@ -150,14 +150,15 @@ namespace Opm {
             void write( DeckOutput& output ) const ;
             friend std::ostream& operator<<(std::ostream& os, const Deck& deck);
         private:
-            Deck( std::vector< DeckKeyword >&& );
+            Deck(std::vector<DeckKeyword>&& keywordList);
 
             std::vector< DeckKeyword > keywordList;
             UnitSystem defaultUnits;
-            UnitSystem activeUnits;
+            std::unique_ptr<UnitSystem> activeUnits;
 
             std::string m_dataFile;
             std::string input_path;
+            mutable std::size_t unit_system_access_count = 0;
     };
 }
 #endif  /* DECK_HPP */

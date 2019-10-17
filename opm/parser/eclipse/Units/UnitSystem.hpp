@@ -97,6 +97,7 @@ namespace Opm {
         void to_si( measure, std::vector<double>& ) const;
         const char* name( measure ) const;
         std::string deck_name() const;
+        std::size_t use_count() const;
 
         static bool valid_name(const std::string& deck_name);
         static UnitSystem newMETRIC();
@@ -119,6 +120,21 @@ namespace Opm {
         const double* measure_table_from_si;
         const double* measure_table_to_si;
         const char* const*  unit_name_table;
+
+        /*
+          The active unit system is determined runtime, to be certain that we do
+          not end up in a situation where we first use the default unit system,
+          and then subsequently change it.
+
+          The Deck::selectActiveUnitSystem() method has this code:
+
+             const auto& current = this->getActiveUnitSystem();
+             if (current.use_count() > 0)
+                  throw std::logic_error("Sorry - can not change unit system halways");
+
+
+        */
+        mutable std::size_t m_use_count = 0;
     };
 }
 

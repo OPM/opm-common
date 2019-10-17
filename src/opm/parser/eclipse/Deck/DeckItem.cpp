@@ -77,23 +77,28 @@ DeckItem::DeckItem( const std::string& nm, int) :
 {
 }
 
-DeckItem::DeckItem( const std::string& nm, double) :
-    type( get_type< double >() ),
-    item_name( nm )
-{
-}
-
-DeckItem::DeckItem( const std::string& nm, UDAValue) :
-    type( get_type< UDAValue >() ),
-    item_name( nm )
-{
-}
-
 DeckItem::DeckItem( const std::string& nm, std::string) :
     type( get_type< std::string >() ),
     item_name( nm )
 {
 }
+
+DeckItem::DeckItem( const std::string& nm, double, const std::vector<Dimension>& active_dim, const std::vector<Dimension>& default_dim) :
+    type( get_type< double >() ),
+    item_name( nm ),
+    active_dimensions(active_dim),
+    default_dimensions(default_dim)
+{
+}
+
+DeckItem::DeckItem( const std::string& nm, UDAValue, const std::vector<Dimension>& active_dim, const std::vector<Dimension>& default_dim) :
+    type( get_type< UDAValue >() ),
+    item_name( nm ),
+    active_dimensions(active_dim),
+    default_dimensions(default_dim)
+{
+}
+
 
 const std::string& DeckItem::name() const {
     return this->item_name;
@@ -128,25 +133,31 @@ size_t DeckItem::out_size() const {
     return std::max( data_size , this->defaulted.size() );
 }
 
-/*
-  The non const overload is only used for the UDAValue type because we need to
-  mutate the UDAValue object and add dimension to it retroactively.
-*/
-/*template<>
-UDAValue& DeckItem::get( size_t index ) {
-    return this->uval[index];
-}
-*/
 
 template< typename T >
 T DeckItem::get( size_t index ) const {
     return this->value_ref< T >().at( index );
 }
 
+template<>
+UDAValue DeckItem::get( size_t index ) const {
+    auto value = this->value_ref<UDAValue>().at(index);
+    if (this->active_dimensions.empty())
+        return value;
+
+    std::size_t dim_index = index % this->active_dimensions.size();
+    if (this->defaulted[index])
+        return UDAValue( value, this->default_dimensions[dim_index]);
+    else
+        return UDAValue( value, this->active_dimensions[dim_index]);
+}
+
+
 template< typename T >
 const std::vector< T >& DeckItem::getData() const {
     return this->value_ref< T >();
 }
+
 
 template< typename T >
 void DeckItem::push( T x ) {
@@ -169,7 +180,7 @@ void DeckItem::push_back( std::string x ) {
 }
 
 void DeckItem::push_back( UDAValue x ) {
-  this->push( std::move( x ) );
+    this->push( std::move( x ) );
 }
 
 template< typename T >
@@ -193,7 +204,7 @@ void DeckItem::push_back( std::string x, size_t n ) {
 }
 
 void DeckItem::push_back( UDAValue x, size_t n ) {
-  this->push( std::move( x ), n );
+    this->push( std::move( x ), n );
 }
 
 template< typename T >
@@ -220,7 +231,7 @@ void DeckItem::push_backDefault( std::string x ) {
 }
 
 void DeckItem::push_backDefault( UDAValue x ) {
-  this->push_default( std::move( x ) );
+    this->push_default( std::move( x ) );
 }
 
 
@@ -247,10 +258,11 @@ const std::vector<double>& DeckItem::getData() const {
     if (this->raw_data)
         return data;
 
-    const auto dim_size = dimensions.size();
+    const auto dim_size = this->active_dimensions.size();
     for( size_t index = 0; index < data.size(); index++ ) {
         const auto dimIndex = index % dim_size;
-        data[ index ] = this->dimensions[ dimIndex ].convertSiToRaw( data[ index ] );
+        const auto& dim = this->defaulted[index] ? this->default_dimensions[dimIndex] : this->active_dimensions[dimIndex];
+        data[ index ] = dim.convertSiToRaw( data[ index ] );
     }
     this->raw_data = true;
     return data;
@@ -262,7 +274,7 @@ const std::vector< double >& DeckItem::getSIDoubleData() const {
         return data;
 
 
-    if( this->dimensions.empty() )
+    if( this->active_dimensions.empty() )
         throw std::invalid_argument("No dimension has been set for item'"
                                     + this->name()
                                     + "'; can not ask for SI data");
@@ -271,72 +283,18 @@ const std::vector< double >& DeckItem::getSIDoubleData() const {
      * This is an unobservable state change - SIData is lazily converted to
      * SI units, so externally the object still behaves as const
      */
-    const auto dim_size = dimensions.size();
-    for( size_t index = 0; index < data.size(); index++ ) {
+
+    const auto dim_size = this->active_dimensions.size();
+    const auto sz = data.size();
+    for( size_t index = 0; index < sz; index++ ) {
         const auto dimIndex = index % dim_size;
-        data[ index ] = this->dimensions[ dimIndex ].convertRawToSi( data[ index ] );
+        const auto& dim = this->defaulted[index] ? this->default_dimensions[dimIndex] : this->active_dimensions[dimIndex];
+        data[ index ] = dim.convertRawToSi( data[ index ] );
     }
     this->raw_data = false;
     return data;
 }
 
-
-
-
-void DeckItem::push_backDimension( const Dimension& active,
-                                   const Dimension& def ) {
-    if (this->type == type_tag::fdouble) {
-        const auto& ds = this->value_ref< double >();
-        const bool dim_inactive = ds.empty()
-            || this->defaultApplied( ds.size() - 1 );
-
-        this->dimensions.push_back( dim_inactive ? def : active );
-        return;
-    }
-
-    if (this->type == type_tag::uda) {
-        auto& du = this->value_ref< UDAValue >();
-        const bool dim_inactive = du.empty()
-            || this->defaultApplied( du.size() - 1 );
-
-        // The data model when it comes to UDA values, dimensions for vectors
-        // and so on is stretched beyond the breaking point. It is a *really*
-        // hard assumption here that UDA values only apply to scalar values.
-        if (du.size() > 1)
-            throw std::logic_error("Internal program meltdown - we do not handle non-scalar UDA values");
-
-        /*
-          The interaction between UDA values and dimensions is not really clean,
-          and treated differently for items with UDAValue and 'normal' items
-          with double data. The points of difference include:
-
-          - The double data do not have a dimension property; that is solely
-            carried by the DeckItem which will apply unit conversion and return
-            naked double values with the correct transformations applied. The
-            UDAvalues will hold on to a Dimension object, which is not used
-            before the UDAValue is eventually converted to a numerical value at
-            simulation time.
-
-          - For double data like PORO the conversion is one dimension object
-            which is applied to all elements in the container, whereas for
-            UDAValues one would need to assign an individual Dimension object to
-            each UDAValue instance - this is "solved" by requiring that in the
-            case of UDAValues only scalar values are allowed; that is not really
-            a practical limitation.
-
-          Finally the use of set() method to mutate the DeckItem in the case of
-          UDAValues is unfortunate.
-        */
-
-        if (du.size() == 1)
-            du[0].set_dim( dim_inactive ? def : active );
-
-        this->dimensions.push_back( dim_inactive ? def : active );
-        return;
-    }
-
-    throw std::logic_error("Tried to push dimensions to an item which can not hold dimension. ");
-}
 
 type_tag DeckItem::getType() const {
     return this->type;

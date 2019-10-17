@@ -22,6 +22,7 @@
 
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/Deck/DeckOutput.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
@@ -49,23 +50,21 @@ namespace Opm {
     }
 
     namespace {
-    template< typename T > 
-    void add_deckvalue( const std::string& kw_name, DeckRecord& currentDeckRecord, const ParserItem& parser_item, const std::vector<DeckValue>& current_record, size_t j) {
-
-         DeckItem item(parser_item.name(), T());
-         if (j >= current_record.size() || current_record[j].is_default()) {
+    template <typename T>
+    void add_deckvalue( DeckItem deck_item, DeckRecord& deck_record, const ParserItem& parser_item, const std::vector<DeckValue>& input_record, size_t j) {
+         if (j >= input_record.size() || input_record[j].is_default()) {
               if (parser_item.hasDefault())
-                  item.push_back( parser_item.getDefault<T>() );
+                  deck_item.push_back( parser_item.getDefault<T>() );
               else
-                  item.push_backDummyDefault();
+                  deck_item.push_backDummyDefault();
          }
-         else if (current_record[j].is_compatible<T>())
-             item.push_back( current_record[j].get<T>() );
+         else if (input_record[j].is_compatible<T>())
+             deck_item.push_back( input_record[j].get<T>() );
          else
-              throw std::invalid_argument("For input to DeckKeyword '" + kw_name + 
+             throw std::invalid_argument("For input to DeckKeyword '" + deck_item.name() +
                                           ", item '" + parser_item.name() +
-                                          "': wrong type.");  
-         currentDeckRecord.addItem( std::move(item) ); 
+                                          "': wrong type.");
+         deck_record.addItem( std::move(deck_item) );
     }
     }
 
@@ -75,40 +74,52 @@ namespace Opm {
     {
         if (parserKeyword.hasFixedSize() && (record_list.size() != parserKeyword.getFixedSize()))
              throw std::invalid_argument("Wrong number of records added to constructor for deckkeyword '" + name() + "'.");
-        
+
         for (size_t i = 0; i < record_list.size(); i++) {
-             
-             ParserRecord parser_record = parserKeyword.getRecord(i);
-             const std::vector<DeckValue>& current_record = record_list[i];
-             DeckRecord currentDeckRecord;        
+
+             const ParserRecord& parser_record = parserKeyword.getRecord(i);
+             const std::vector<DeckValue>& input_record = record_list[i];
+             DeckRecord deck_record;
 
              for (size_t j = 0; j < parser_record.size(); j++) {
-                   
-                  const ParserItem& parser_item = parser_record.get(j);            
+                  const ParserItem& parser_item = parser_record.get(j);
                   if (parser_item.sizeType() == ParserItem::item_size::ALL)
                       throw std::invalid_argument("constructor  DeckKeyword::DeckKeyword(const ParserKeyword&,  const std::vector<std::vector<DeckValue>>&) does not handle sizetype ALL.");
 
                   switch( parser_item.dataType() ) {
-                    
-                      case type_tag::integer: 
-                          add_deckvalue<int>( name(), currentDeckRecord, parser_item, current_record, j);
+                      case type_tag::integer:
+                          {
+                              DeckItem deck_item(parser_item.name(), int());
+                              add_deckvalue<int>(std::move(deck_item), deck_record, parser_item, input_record, j);
+                          }
                           break;
-                      case type_tag::fdouble: 
-                          add_deckvalue<double>( name(), currentDeckRecord, parser_item, current_record, j);
+                      case type_tag::fdouble:
+                          {
+                              // The arguments active_dim and default_dim are totally dummy,
+                              // and just added here to get this to compile after rebase.
+                              UnitSystem unit_system(UnitSystem::UnitType::UNIT_TYPE_METRIC);
+                              auto active_dim = unit_system.getDimension("1");
+                              auto default_dim = unit_system.getDimension("1");
+                              DeckItem deck_item(parser_item.name(), double(), {active_dim}, {default_dim});
+                              add_deckvalue<double>(std::move(deck_item), deck_record, parser_item, input_record, j);
+                          }
                           break;
-                      case type_tag::string:  
-                          add_deckvalue<std::string>( name(), currentDeckRecord, parser_item, current_record, j);
+                      case type_tag::string:
+                          {
+                              DeckItem deck_item(parser_item.name(), std::string());
+                              add_deckvalue<std::string>(std::move(deck_item), deck_record, parser_item, input_record, j);
+                          }
                           break;
 
                       default: throw std::invalid_argument("For input to DeckKeyword '" + name() + ": unsupported type. (only support for string, double and int.)");
                   }
              }
 
-             addRecord( std::move(currentDeckRecord) );
+             this->addRecord( std::move(deck_record) );
 
         }
 
-       
+
     }
 
 
@@ -119,12 +130,16 @@ namespace Opm {
             throw std::invalid_argument("Deckkeyword '" + name() + "' is not a data keyword.");
 
         const ParserRecord& parser_record = parserKeyword.getRecord(0);
-        const ParserItem& parser_item = parser_record.get(0); 
+        const ParserItem& parser_item = parser_record.get(0);
 
         setDataKeyword();
         DeckItem item;
         if (parser_item.dataType() == type_tag::fdouble) {
-            item = DeckItem(parser_item.name(), double());
+            // The unit system treatment here is a total hack to compile
+            UnitSystem unit_system(UnitSystem::UnitType::UNIT_TYPE_METRIC);
+            const auto& active_dim = unit_system.getDimension("1");
+            const auto& default_dim = unit_system.getDimension("1");
+            item = DeckItem(parser_item.name(), double(), { active_dim }, { default_dim });
             for (double val : data)
                 item.push_back(val);
         }
@@ -142,20 +157,24 @@ namespace Opm {
     }
 
 
-    DeckKeyword::DeckKeyword(const ParserKeyword& parserKeyword, const std::vector<double>& data) : 
+    DeckKeyword::DeckKeyword(const ParserKeyword& parserKeyword, const std::vector<double>& data) :
         DeckKeyword(parserKeyword)
     {
         if (!parserKeyword.isDataKeyword())
             throw std::invalid_argument("Deckkeyword '" + name() + "' is not a data keyword.");
 
         const ParserRecord& parser_record = parserKeyword.getRecord(0);
-        const ParserItem& parser_item = parser_record.get(0); 
+        const ParserItem& parser_item = parser_record.get(0);
 
         setDataKeyword();
         if (parser_item.dataType() != type_tag::fdouble)
             throw std::invalid_argument("Input to DeckKeyword '" + name() + "': cannot be std::vector<double>.");
 
-        DeckItem item(parser_item.name(), double());
+        // The unit system treatment here is a total hack to compile
+        UnitSystem unit_system(UnitSystem::UnitType::UNIT_TYPE_METRIC);
+        const auto& active_dim = unit_system.getDimension("1");
+        const auto& default_dim = unit_system.getDimension("1");
+        DeckItem item(parser_item.name(), double(), { active_dim }, { default_dim });
         for (double val : data)
             item.push_back(val);
 
