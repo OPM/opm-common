@@ -75,7 +75,7 @@ namespace {
             }
         }
 
-        return { "NoSuchKeyword", Opm::EclIO::eclArrType::MESS, 0 };
+        return EclIO::EclFile::EclEntry{ "NoSuchKeyword", Opm::EclIO::eclArrType::MESS, 0 };
     }
 
     EclIO::eclArrType ecl_kw_get_type(const EclIO::EclFile::EclEntry& vec)
