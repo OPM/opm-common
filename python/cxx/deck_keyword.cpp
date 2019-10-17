@@ -1,5 +1,7 @@
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
+
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 
 #include <opm/parser/eclipse/Deck/DeckValue.hpp>
@@ -143,7 +145,8 @@ void python::common::export_DeckKeyword(py::module& module) {
                  }
                  value_record_list.push_back( value_record );
              }
-             return DeckKeyword(parser_keyword, value_record_list);
+             UnitSystem unit_system(UnitSystem::UnitType::UNIT_TYPE_METRIC);
+             return DeckKeyword(parser_keyword, value_record_list, unit_system, unit_system);
          }  )  )
 
         .def( "__repr__", &DeckKeyword::name )
