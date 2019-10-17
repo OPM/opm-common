@@ -1152,10 +1152,11 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
             const std::vector<double>& coord = COORDKeyWord.getSIDoubleData();
 
             int * actnum = nullptr;
+            std::vector<int> actnumVector;
 
             if (deck.hasKeyword<ParserKeywords::ACTNUM>()) {
                 const auto& actnumKeyword = deck.getKeyword<ParserKeywords::ACTNUM>();
-                std::vector<int> actnumVector = actnumKeyword.getIntData();
+                actnumVector = actnumKeyword.getIntData();
 
                 actnum=actnumVector.data();
              }
