@@ -54,9 +54,6 @@ namespace {
         throw py::key_error( name );
     }
 
-    GTNode get_grouptree ( const Schedule& sch, const std::string& root_node, const size_t& timestep) {
-        return sch.groupTree(root_node, timestep);
-    }
     system_clock::time_point get_start_time( const Schedule& s ) {
         return datetime(s.posixStartTime());
     }
@@ -102,7 +99,6 @@ void python::common::export_Schedule(py::module& module) {
     .def( "get_wells", &Schedule::getWells2)
     .def( "get_well", &get_well)
     .def( "__contains__", &has_well )
-    .def( "group", &Schedule::getGroup2, ref_internal)
-    .def( "_group_tree", &get_grouptree, ref_internal);
+    .def( "group", &Schedule::getGroup2, ref_internal);
 
 }

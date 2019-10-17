@@ -42,7 +42,6 @@ ext_modules = [
                 'cxx/parsecontext.cpp',
                 'cxx/parser.cpp',
                 'cxx/schedule.cpp',
-                'cxx/common_state.cpp',
                 'cxx/table_manager.cpp',
                 'cxx/well.cpp',
                 'cxx/export.cpp'

@@ -186,7 +186,6 @@ if(ENABLE_ECL_INPUT)
           python/cxx/parser.cpp
           python/cxx/schedule.cpp
           python/cxx/export.cpp
-          python/cxx/common_state.cpp
           python/cxx/table_manager.cpp
           python/cxx/well.cpp
           python/cxx/log.cpp
