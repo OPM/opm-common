@@ -6,11 +6,9 @@ source `dirname $0`/build-opm-module.sh
 mkdir deps
 ln -sf $WORKSPACE deps/opm-common
 
+# No upstreams
 declare -a upstreams
-upstreams=(libecl)
-
 declare -A upstreamRev
-upstreamRev[libecl]=master
 
 # Downstreams and revisions
 declare -a downstreams

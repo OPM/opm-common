@@ -225,14 +225,11 @@ if (OPM_ENABLE_PYTHON)
   set(PYTHON_INSTALL_PREFIX "lib/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/${PYTHON_PACKAGE_PATH}" CACHE STRING "Subdirectory to install Python modules in")
 
   make_directory(${CMAKE_BINARY_DIR}/python)
-  get_target_property(_ecl_include_dirs ecl INTERFACE_INCLUDE_DIRECTORIES)
   get_target_property(_opmcommon_include_dirs opmcommon INCLUDE_DIRECTORIES)
   list(APPEND _opmcommon_include_dirs ${_ecl_include_dirs})
   string(REPLACE ";" ":" _setup_include_dirs "${_opmcommon_include_dirs}")
 
-  get_target_property(_ecl_lib ecl LOCATION)
-  get_filename_component(_ecl_lib_dir ${_ecl_lib} DIRECTORY)
-  set(_opmcommon_lib_dirs ${_ecl_lib_dir} ${CMAKE_BINARY_DIR}/lib ${CMAKE_PREFIX_PATH}/lib)
+  set(_opmcommon_lib_dirs ${CMAKE_BINARY_DIR}/lib ${CMAKE_PREFIX_PATH}/lib)
   string(REPLACE ";" ":" _setup_lib_dirs "${_opmcommon_lib_dirs}")
 
   add_custom_command(OUTPUT python/python/opm/libopmcommon_python.so

@@ -5,7 +5,6 @@ declare -A configurations
 declare -A EXTRA_MODULE_FLAGS
 EXTRA_MODULE_FLAGS[opm-simulators]="-DBUILD_EBOS_EXTENSIONS=ON -DBUILD_EBOS_DEBUG_EXTENSIONS=ON -DBUILD_FLOW_VARIANTS=ON"
 EXTRA_MODULE_FLAGS[opm-common]="-DOPM_ENABLE_PYTHON=ON -DOPM_ENABLE_EMBEDDED_PYTHON=ON -DOPM_INSTALL_PYTHON=ON"
-EXTRA_MODULE_FLAGS[libecl]="-DCMAKE_POSITION_INDEPENDENT_CODE=1"
 
 # Parse revisions from trigger comment and setup arrays
 # Depends on: 'upstreams', upstreamRev',
@@ -13,7 +12,6 @@ EXTRA_MODULE_FLAGS[libecl]="-DCMAKE_POSITION_INDEPENDENT_CODE=1"
 #             'ghprbCommentBody',
 #             'CONFIGURATIONS', 'TOOLCHAINS'
 function parseRevisions {
-  # Set default for libecl to be last known good commit.
   for upstream in ${upstreams[*]}
   do
     if grep -qi "$upstream=" <<< $ghprbCommentBody
@@ -148,12 +146,7 @@ function clone_module {
   mkdir -p $WORKSPACE/deps/$1
   cd $WORKSPACE/deps/$1
   git init .
-  if [ "$1" == "libecl" ]
-  then
-    git remote add origin https://github.com/equinor/$1
-  else
-    git remote add origin https://github.com/OPM/$1
-  fi
+  git remote add origin https://github.com/OPM/$1
   git fetch --depth 1 origin $2:branch_to_build
   git checkout branch_to_build
   git log HEAD -1 | cat

@@ -25,6 +25,8 @@
 #include <ctime>
 #include <map>
 
+#include <stddef.h>
+
 namespace Opm {
 
     class Deck;

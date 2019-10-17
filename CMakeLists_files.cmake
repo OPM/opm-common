@@ -35,6 +35,7 @@ list (APPEND MAIN_SOURCE_FILES
       src/opm/common/utility/parameters/ParameterGroup.cpp
       src/opm/common/utility/parameters/ParameterTools.cpp
       src/opm/common/utility/numeric/calculateCellVol.cpp
+      src/opm/common/utility/TimeService.cpp
 )
 if(ENABLE_ECL_INPUT)
   list(APPEND MAIN_SOURCE_FILES
@@ -451,6 +452,7 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/common/utility/parameters/ParameterStrings.hpp
       opm/common/utility/parameters/ParameterTools.hpp
       opm/common/utility/numeric/calculateCellVol.hpp
+      opm/common/utility/TimeService.hpp
 )
 if(ENABLE_ECL_INPUT)
   list(APPEND PUBLIC_HEADER_FILES
