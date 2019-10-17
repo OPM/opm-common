@@ -19,6 +19,7 @@
 
 #include <stdexcept>
 
+#include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/Fault.hpp>
@@ -44,6 +45,15 @@ namespace Opm {
                    { FaceDir::ZMinus, "MULTZ-" }}),
         m_multregtScanner( props, deck.getKeywordList( "MULTREGT" ))
     {
+        EDITSection edit_section(deck);
+        if (edit_section.hasKeyword("MULTREGT")) {
+            std::string msg =
+R"(This deck has the MULTREGT keyword located in the EDIT section. Note that:
+      1) The MULTREGT keyword from EDIT section will be applied.
+      2) It is recommended to place MULTREGT in the GRID section.)";
+
+            OpmLog::warning(msg);
+        }
     }
 
     void TransMult::assertIJK(size_t i , size_t j , size_t k) const {
