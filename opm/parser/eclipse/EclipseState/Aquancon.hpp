@@ -56,14 +56,20 @@ namespace Opm {
 
         private:
 
-            std::vector<Aquancon::AquanconOutput> logic_application(const std::vector<Aquancon::AquanconOutput>& original_vector);
+            static std::vector<Aquancon::AquanconOutput> logic_application(const std::vector<Aquancon::AquanconOutput>& original_vector);
 
-            void collate_function(std::vector<Aquancon::AquanconOutput>& output_vector,
+            static void collate_function(std::vector<Aquancon::AquanconOutput>& output_vector,
                                   std::vector<Opm::AquanconRecord>& m_aqurecord,
-                                  std::vector<int> m_aquiferID_per_record, int m_maxAquID);
+                                  const std::vector<int>& m_aquiferID_per_record, int m_maxAquID);
 
-            void convert_record_id_to_aquifer_id(std::vector<int>& record_indices_matching_id, int i,
-                                                 std::vector<int> m_aquiferID_per_record);
+            static void convert_record_id_to_aquifer_id(std::vector<int>& record_indices_matching_id, int i,
+                                                        const std::vector<int>& m_aquiferID_per_record);
+
+            // for a cell to be inside reservoir, its indices need to be within the reservoir grid dimension range,
+            // and it needs to be active
+            static bool cellInsideReservoir(const EclipseGrid& grid, int i, int j, int k);
+
+            static bool neighborCellInsideReservoir(const EclipseGrid& grid, int i, int j, int k, FaceDir::DirEnum faceDir);
 
             std::vector<Aquancon::AquanconOutput> m_aquoutput;
     };
