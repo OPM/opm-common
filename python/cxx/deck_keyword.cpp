@@ -115,28 +115,28 @@ void python::common::export_DeckKeyword(py::module& module) {
                  py::list record = record_obj.cast<py::list>();
                  std::vector<DeckValue> value_record;
 
-                 for (py::handle value_obj : record) {
+                 for (const py::handle& value_obj : record) {
 
                       try {
                           int val_int = value_obj.cast<int>();
                           value_record.push_back( DeckValue(val_int) );
                           continue;
                       }
-                      catch (std::exception e_int) {}
+                      catch (const std::exception& e_int) {}
 
                       try {
                            double val_double = value_obj.cast<double>();
                            value_record.push_back( DeckValue(val_double) );
                            continue;
                       }
-                      catch (std::exception e_double) {}
+                      catch (const std::exception& e_double) {}
 
                       try {
                            std::string val_string = value_obj.cast<std::string>();
                            push_string_as_deck_value(value_record, val_string);
                            continue;
                       }
-                      catch (std::exception e_string) {}
+                      catch (const std::exception& e_string) {}
 
                       throw py::type_error("DeckKeyword: tried to add unkown type to record.");
 
