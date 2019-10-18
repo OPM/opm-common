@@ -5,23 +5,10 @@ option(SIBLING_SEARCH "Search for other modules in sibling directories?" ON)
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
 set(OPM_MACROS_ROOT ${PROJECT_SOURCE_DIR})
 
-option(ENABLE_ECL_INPUT "Enable eclipse input support?" ON)
-option(ENABLE_ECL_OUTPUT "Enable eclipse output support?" ON)
 option(ENABLE_MOCKSIM "Build the mock simulator for io testing" ON)
 option(OPM_ENABLE_PYTHON "Enable python bindings?" OFF)
 option(OPM_INSTALL_PYTHON "Enable python bindings?" OFF)
 option(OPM_ENABLE_EMBEDDED_PYTHON "Enable python bindings?" OFF)
-
-
-# Output implies input
-if(ENABLE_ECL_OUTPUT)
-  set(ENABLE_ECL_INPUT ON)
-endif()
-
-# And likewise, no input means no output
-if(NOT ENABLE_ECL_INPUT)
-  set(ENABLE_ECL_OUTPUT OFF)
-endif()
 
 
 # not the same location as most of the other projects; this hook overrides
@@ -29,26 +16,20 @@ macro (dir_hook)
 endmacro (dir_hook)
 
 # We need to define this variable in the installed cmake config file.
-set(OPM_PROJECT_EXTRA_CODE_INSTALLED  "#ENABLE_ECL_INPUT is needed by opm-common-prereq.cmake
-                                       set(ENABLE_ECL_INPUT ${ENABLE_ECL_INPUT})
-                                       set(OPM_MACROS_ROOT ${CMAKE_INSTALL_PREFIX}/share/opm)
+set(OPM_PROJECT_EXTRA_CODE_INSTALLED  "set(OPM_MACROS_ROOT ${CMAKE_INSTALL_PREFIX}/share/opm)
                                        list(APPEND CMAKE_MODULE_PATH \${OPM_MACROS_ROOT}/cmake/Modules)
                                        include(OpmPackage) #Make macros availabe after find_package(opm-common)")
 
-set(OPM_PROJECT_EXTRA_CODE_INTREE "#ENABLE_ECL_INPUT is needed by opm-common-prereq.cmake
-                                   set(ENABLE_ECL_INPUT ${ENABLE_ECL_INPUT})
-                                   set(OPM_MACROS_ROOT ${OPM_MACROS_ROOT})
+set(OPM_PROJECT_EXTRA_CODE_INTREE "set(OPM_MACROS_ROOT ${OPM_MACROS_ROOT})
                                    list(APPEND CMAKE_MODULE_PATH \${OPM_MACROS_ROOT}/cmake/Modules)
                                    include(OpmPackage) #Make macros availabe after find_package(opm-common)")
-if(ENABLE_ECL_OUTPUT)
-  set(OPM_PROJECT_EXTRA_CODE_INSTALLED "${OPM_PROJECT_EXTRA_CODE_INSTALLED}
-                                        set(COMPARE_ECL_COMMAND ${CMAKE_INSTALL_PREFIX}/bin${${name}_VER_DIR}/compareECL)
-                                        set(OPM_PACK_COMMAND ${CMAKE_INSTALL_PREFIX}/bin${${name}_VER_DIR}/opmpack)")
+set(OPM_PROJECT_EXTRA_CODE_INSTALLED "${OPM_PROJECT_EXTRA_CODE_INSTALLED}
+                                      set(COMPARE_ECL_COMMAND ${CMAKE_INSTALL_PREFIX}/bin${${name}_VER_DIR}/compareECL)
+                                      set(OPM_PACK_COMMAND ${CMAKE_INSTALL_PREFIX}/bin${${name}_VER_DIR}/opmpack)")
 
-  set(OPM_PROJECT_EXTRA_CODE_INTREE "${OPM_PROJECT_EXTRA_CODE_INTREE}
-                                     set(COMPARE_ECL_COMMAND ${PROJECT_BINARY_DIR}/bin/compareECL)
-                                     set(OPM_PACK_COMMAND ${PROJECT_BINARY_DIR}/bin/opmpack)")
-endif()
+set(OPM_PROJECT_EXTRA_CODE_INTREE "${OPM_PROJECT_EXTRA_CODE_INTREE}
+                                   set(COMPARE_ECL_COMMAND ${PROJECT_BINARY_DIR}/bin/compareECL)
+                                   set(OPM_PACK_COMMAND ${PROJECT_BINARY_DIR}/bin/opmpack)")
 
 # project information is in dune.module. Read this file and set variables.
 # we cannot generate dune.module since it is read by dunecontrol before
@@ -69,36 +50,22 @@ include (${project}-prereqs)
 include (CMakeLists_files.cmake)
 
 macro (config_hook)
-  if(ENABLE_ECL_INPUT)
-    if(NOT cjson_FOUND)
-      list(APPEND EXTRA_INCLUDES ${PROJECT_SOURCE_DIR}/external/cjson)
-    endif()
-    # For this project
-    include_directories(${EXTRA_INCLUDES} ${PROJECT_BINARY_DIR}/include)
+  if(NOT cjson_FOUND)
+    list(APPEND EXTRA_INCLUDES ${PROJECT_SOURCE_DIR}/external/cjson)
+  endif()
+  # For this project
+  include_directories(${EXTRA_INCLUDES} ${PROJECT_BINARY_DIR}/include)
 
-    # For downstreams
-    list(APPEND EXTRA_INCLUDES ${PROJECT_BINARY_DIR}/include)
-    set(OPM_PROJECT_EXTRA_CODE_INTREE "${OPM_PROJECT_EXTRA_CODE_INTREE}
-                                       list(APPEND opm-common_INCLUDE_DIRS ${EXTRA_INCLUDES})")
-    if(ENABLE_ECL_INPUT)
-      set(OPM_PROJECT_EXTRA_CODE_INTREE "${OPM_PROJECT_EXTRA_CODE_INTREE}
-                                         set(HAVE_ECL_INPUT 1)")
-      set(OPM_PROJECT_EXTRA_CODE_INSTALLED "${OPM_PROJECT_EXTRA_CODE_INSTALLED}
-                                            set(HAVE_ECL_INPUT 1)")
-    endif()
-    if(ENABLE_ECL_OUTPUT)
-      set(OPM_PROJECT_EXTRA_CODE_INTREE "${OPM_PROJECT_EXTRA_CODE_INTREE}
-                                         set(HAVE_ECL_OUTPUT 1)")
-      set(OPM_PROJECT_EXTRA_CODE_INSTALLED "${OPM_PROJECT_EXTRA_CODE_INSTALLED}
-                                            set(HAVE_ECL_OUTPUT 1)")
-    endif()
+  # For downstreams
+  list(APPEND EXTRA_INCLUDES ${PROJECT_BINARY_DIR}/include)
+  set(OPM_PROJECT_EXTRA_CODE_INTREE "${OPM_PROJECT_EXTRA_CODE_INTREE}
+                                     list(APPEND opm-common_INCLUDE_DIRS ${EXTRA_INCLUDES})")
 
-    # Configure boost targets for old cmake
-    include(cmake/Modules/BoostTargets.cmake)
+  # Configure boost targets for old cmake
+  include(cmake/Modules/BoostTargets.cmake)
 
-    if (HAVE_DYNAMIC_BOOST_TEST)
-      set_target_properties(Boost::unit_test_framework PROPERTIES INTERFACE_COMPILE_DEFINITIONS BOOST_TEST_DYN_LINK=1)
-    endif()
+  if (HAVE_DYNAMIC_BOOST_TEST)
+    set_target_properties(Boost::unit_test_framework PROPERTIES INTERFACE_COMPILE_DEFINITIONS BOOST_TEST_DYN_LINK=1)
   endif()
 endmacro (config_hook)
 
@@ -106,13 +73,11 @@ macro (prereqs_hook)
 endmacro (prereqs_hook)
 
 macro (sources_hook)
-  if(ENABLE_ECL_INPUT)
-    # Keyword generation
-    include(GenerateKeywords.cmake)
+  # Keyword generation
+  include(GenerateKeywords.cmake)
 
-    # Append generated sources
-    list(INSERT opm-common_SOURCES 0 ${PROJECT_BINARY_DIR}/ParserKeywords.cpp)
-  endif()
+  # Append generated sources
+  list(INSERT opm-common_SOURCES 0 ${PROJECT_BINARY_DIR}/ParserKeywords.cpp)
   set_source_files_properties(src/opm/parser/eclipse/Python/Python.cpp
                               PROPERTIES COMPILE_FLAGS -Wno-shadow)
 endmacro (sources_hook)
@@ -124,9 +89,7 @@ macro (files_hook)
 endmacro (files_hook)
 
 macro (tests_hook)
-  if(ENABLE_ECL_INPUT)
-    include(ExtraTests.cmake)
-  endif()
+  include(ExtraTests.cmake)
 endmacro (tests_hook)
 
 macro (install_hook)
@@ -157,29 +120,26 @@ if (ENABLE_MOCKSIM)
 endif()
 
 # Build the compare utilities
-if(ENABLE_ECL_INPUT)
-  add_executable(compareECL
-    test_util/EclFilesComparator.cpp
-    test_util/EclRegressionTest.cpp
-    test_util/compareECL.cpp
-    )
+add_executable(compareECL
+  test_util/EclFilesComparator.cpp
+  test_util/EclRegressionTest.cpp
+  test_util/compareECL.cpp
+)
 
-  add_executable(convertECL
-    test_util/convertECL.cpp
-    )
+add_executable(convertECL
+  test_util/convertECL.cpp
+)
 
-  foreach(target compareECL convertECL)
-    target_link_libraries(${target} opmcommon)
-    install(TARGETS ${target} DESTINATION bin)
-  endforeach()
+foreach(target compareECL convertECL)
+  target_link_libraries(${target} opmcommon)
+  install(TARGETS ${target} DESTINATION bin)
+endforeach()
 
-  # Add the tests
-  set(_libs opmcommon
-            ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+# Add the tests
+set(_libs opmcommon
+          ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 
-  opm_add_test(test_EclFilesComparator
-    CONDITION
-      ENABLE_ECL_INPUT
+opm_add_test(test_EclFilesComparator
     SOURCES
       tests/test_EclFilesComparator.cpp
       test_util/EclFilesComparator.cpp
@@ -190,8 +150,6 @@ if(ENABLE_ECL_INPUT)
     )
 
   opm_add_test(test_EclRegressionTest
-    CONDITION
-      ENABLE_ECL_INPUT
     SOURCES
       tests/test_EclRegressionTest.cpp
       test_util/EclFilesComparator.cpp
@@ -202,12 +160,10 @@ if(ENABLE_ECL_INPUT)
       ${PROJECT_BINARY_DIR}/tests
     )
 
-  foreach(test test_EclIO test_EGrid test_ERft test_ERst test_ESmry)
-    opm_add_test(${test} CONDITION ENABLE_ECL_INPUT
-                         LIBRARIES ${_libs}
-                         WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/tests)
-  endforeach()
-endif()
+foreach(test test_EclIO test_EGrid test_ERft test_ERst test_ESmry)
+  opm_add_test(${test} LIBRARIES ${_libs}
+                       WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/tests)
+endforeach()
 
 # Install build system files
 install(DIRECTORY cmake DESTINATION share/opm)

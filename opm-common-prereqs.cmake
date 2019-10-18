@@ -13,17 +13,10 @@ set (opm-common_DEPS
 	"CXX11Features REQUIRED"
 	)
 
-if(ENABLE_ECL_INPUT)
-  list(APPEND opm-common_DEPS
-        # various runtime library enhancements
-        "Boost 1.44.0
-          COMPONENTS system filesystem unit_test_framework regex REQUIRED")
-else()
-  list(APPEND opm-common_DEPS
-        # various runtime library enhancements
-        "Boost 1.44.0
-          COMPONENTS system unit_test_framework REQUIRED")
-endif()
+list(APPEND opm-common_DEPS
+      # various runtime library enhancements
+      "Boost 1.44.0
+        COMPONENTS system filesystem unit_test_framework regex REQUIRED")
 # We need a defined target for libecl when linking.
 # The definition of the target is done implicitly below when
 # libecl is searched for.
