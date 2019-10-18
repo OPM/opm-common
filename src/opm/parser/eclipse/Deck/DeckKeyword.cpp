@@ -39,8 +39,9 @@ namespace Opm {
     {
     }
 
-    DeckKeyword::DeckKeyword(const ParserKeyword& parserKeyword, const std::string& keywordName) :
+    DeckKeyword::DeckKeyword(const ParserKeyword& parserKeyword, const Location& location, const std::string& keywordName) :
         m_keywordName(keywordName),
+        m_location(location),
         m_isDataKeyword(false),
         m_slashTerminated(true),
         parser_keyword(parserKeyword)
@@ -187,9 +188,6 @@ namespace Opm {
         m_slashTerminated = false;
     }
 
-    void DeckKeyword::setLocation(const std::pair<const std::string&, std::size_t>& location) {
-        this->m_location = Location(location.first, location.second);
-    }
 
     const Location& DeckKeyword::location() const {
         return this->m_location;

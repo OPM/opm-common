@@ -41,17 +41,13 @@ namespace Opm {
         typedef std::vector< DeckRecord >::const_iterator const_iterator;
 
         explicit DeckKeyword(const ParserKeyword& parserKeyword);
-
-        DeckKeyword(const ParserKeyword& parserKeyword, const std::string& keywordName);
-
+        DeckKeyword(const ParserKeyword& parserKeyword, const Location& location, const std::string& keywordName);
         DeckKeyword(const ParserKeyword& parserKeyword, const std::vector<std::vector<DeckValue>>& record_list);
-
         DeckKeyword(const ParserKeyword& parserKeyword, const std::vector<int>& data);
         DeckKeyword(const ParserKeyword& parserKeyword, const std::vector<double>& data);
 
         const std::string& name() const;
         void setFixedSize();
-        void setLocation(const std::pair<const std::string&, std::size_t>& location);
         const Location& location() const;
 
 

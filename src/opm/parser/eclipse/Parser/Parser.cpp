@@ -310,7 +310,7 @@ struct file {
 
 class InputStack : public std::stack< file, std::vector< file > > {
     public:
-        void push( std::string&& input, boost::filesystem::path p = "" );
+        void push( std::string&& input, boost::filesystem::path p = "<memory string>" );
 
     private:
         std::list< std::string > string_storage;
@@ -829,10 +829,10 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
             {
                 std::stringstream ss;
 
-                const auto& location = rawKeyword->getLocation();
+                const auto& location = rawKeyword->location();
                 ss << std::setw(5) << parserState.deck.size()
                    << " Reading " << std::setw(8) << std::left << rawKeyword->getKeywordName()
-                   << " in file " << location.first << ", line " << std::to_string(location.second);
+                   << " in file " << location.filename << ", line " << std::to_string(location.lineno);
                 OpmLog::info(ss.str());
             }
             try {
@@ -848,9 +848,9 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
                   error message; the parser is quite confused at this state and
                   we should not be tempted to continue the parsing.
                 */
-                const auto& location = rawKeyword->getLocation();
+                const auto& location = rawKeyword->location();
                 std::string msg = "\nFailed to parse keyword: " + rawKeyword->getKeywordName() + "\n" +
-                                  "In file " + location.first + ", line " +  std::to_string(location.second) + "\n\n" +
+                                  "In file " + location.filename + ", line " +  std::to_string(location.lineno) + "\n\n" +
                                   "Error message: " + exc.what() + "\n";
 
                 throw std::invalid_argument(msg);
