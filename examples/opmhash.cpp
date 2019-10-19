@@ -64,9 +64,10 @@ std::vector<keyword> load_deck(const char * deck_file) {
     auto deck = parser.parseFile(deck_file, parseContext, errors);
     for (const auto& kw : deck) {
         std::stringstream ss;
+        const auto& location = kw.location();
         ss << kw;
 
-        keywords.emplace_back(kw.name(), kw.getFileName(), kw.getLineNumber(), std::hash<std::string>{}(ss.str()));
+        keywords.emplace_back(kw.name(), location.filename, location.lineno, std::hash<std::string>{}(ss.str()));
     }
     return keywords;
 }

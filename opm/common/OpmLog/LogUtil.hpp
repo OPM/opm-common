@@ -23,7 +23,10 @@
 #include <cstdint>
 #include <string>
 
+#include <opm/common/OpmLog/Location.hpp>
+
 namespace Opm {
+
 namespace Log {
     namespace MessageType {
         const int64_t Debug     =  1;   /* Excessive information */
@@ -56,8 +59,8 @@ namespace Log {
 
 
     bool isPower2(int64_t x);
-    std::string fileMessage(const std::string& path, int line , const std::string& msg);
-    std::string fileMessage(int64_t messageType , const std::string& path, int line , const std::string& msg);
+    std::string fileMessage(const Location& location, const std::string& msg);
+    std::string fileMessage(int64_t messageType , const Location& location , const std::string& msg);
     std::string prefixMessage(int64_t messageType , const std::string& msg);
     std::string colorCodeMessage(int64_t messageType , const std::string& msg);
 

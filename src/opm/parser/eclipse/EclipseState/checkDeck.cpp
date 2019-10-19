@@ -38,7 +38,8 @@ bool checkDeck( const Deck& deck, const Parser& parser, const ParseContext& pars
             const auto& keyword = deck.getKeyword(keywordIdx);
             if (!parser.isRecognizedKeyword( keyword.name() ) ) {
                 std::string msg("Keyword '" + keyword.name() + "' is unknown.");
-                OpmLog::warning( Log::fileMessage(keyword.getFileName(), keyword.getLineNumber(), msg) );
+                const auto& location = keyword.location();
+                OpmLog::warning( Log::fileMessage(location, msg) );
                 deckValid = false;
             }
         }
@@ -55,9 +56,10 @@ bool checkDeck( const Deck& deck, const Parser& parser, const ParseContext& pars
         const std::string& fileUnitSystem =
             boost::to_upper_copy(keyword->getRecord(0).getItem("FILE_UNIT_SYSTEM").getTrimmedString(0));
         if (fileUnitSystem != deckUnitSystem) {
+            const auto& location = keyword->location();
             std::string msg =
                 "Unit system " + fileUnitSystem + " specified via the FILEUNIT keyword at "
-                + keyword->getFileName() + ":" + std::to_string(keyword->getLineNumber())
+                + location.filename + ":" + std::to_string(location.lineno)
                 + " does not correspond to the unit system used by the deck ("
                 + deckUnitSystem + ")";
             parseContext.handleError(ParseContext::UNIT_SYSTEM_MISMATCH, msg, errorGuard);

@@ -28,6 +28,7 @@
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckValue.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
+#include <opm/common/OpmLog/Location.hpp>
 
 namespace Opm {
     class DeckOutput;
@@ -35,23 +36,19 @@ namespace Opm {
 
     class DeckKeyword {
     public:
+
+
         typedef std::vector< DeckRecord >::const_iterator const_iterator;
 
         explicit DeckKeyword(const ParserKeyword& parserKeyword);
-
-        DeckKeyword(const ParserKeyword& parserKeyword, const std::string& keywordName);
-
+        DeckKeyword(const ParserKeyword& parserKeyword, const Location& location, const std::string& keywordName);
         DeckKeyword(const ParserKeyword& parserKeyword, const std::vector<std::vector<DeckValue>>& record_list);
-
         DeckKeyword(const ParserKeyword& parserKeyword, const std::vector<int>& data);
         DeckKeyword(const ParserKeyword& parserKeyword, const std::vector<double>& data);
 
         const std::string& name() const;
         void setFixedSize();
-        void setLocation(const std::pair<const std::string&, std::size_t>& location);
-        const std::string& getFileName() const;
-        int getLineNumber() const;
-        std::pair<std::string, std::size_t> location() const;
+        const Location& location() const;
 
 
         size_t size() const;
@@ -90,8 +87,7 @@ namespace Opm {
         friend std::ostream& operator<<(std::ostream& os, const DeckKeyword& keyword);
     private:
         std::string m_keywordName;
-        std::string m_fileName;
-        int m_lineNumber;
+        Location m_location;
 
         std::vector< DeckRecord > m_recordList;
         bool m_isDataKeyword;

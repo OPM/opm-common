@@ -30,6 +30,7 @@ namespace Opm {
     static const std::string emptystr = "";
 
     RawKeyword::RawKeyword(const string_view& name, Raw::KeywordSizeEnum sizeType , const std::string& filename, size_t lineNR, bool slash_terminated) :
+        m_location(filename, lineNR),
         slash_terminated_records(slash_terminated),
         m_partialRecordString( emptystr )
     {
@@ -41,6 +42,7 @@ namespace Opm {
     }
 
     RawKeyword::RawKeyword(const string_view& name , const std::string& filename, size_t lineNR , size_t inputSize, bool slash_terminated, bool isTableCollection ) :
+        m_location(filename, lineNR),
         slash_terminated_records(slash_terminated)
     {
         commonInit(name.string(),filename,lineNR);
@@ -176,14 +178,6 @@ namespace Opm {
 
     bool RawKeyword::isFinished() const {
         return m_isFinished;
-    }
-
-    const std::string& RawKeyword::getFilename() const {
-        return m_filename;
-    }
-
-    size_t RawKeyword::getLineNR() const {
-        return m_lineNR;
     }
 
     RawKeyword::const_iterator RawKeyword::begin() const {

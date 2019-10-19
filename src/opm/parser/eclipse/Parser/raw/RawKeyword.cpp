@@ -49,8 +49,7 @@ namespace {
 
     RawKeyword::RawKeyword(const std::string& name, const std::string& filename, std::size_t lineNR, bool raw_string, Raw::KeywordSizeEnum sizeType, std::size_t size_arg) :
         m_name(keyword_name(name)),
-        m_filename(filename),
-        m_lineNR(lineNR),
+        m_location(filename, lineNR),
         raw_string_keyword(raw_string),
         m_sizeType(sizeType)
     {
@@ -131,8 +130,8 @@ namespace {
         return m_isFinished;
     }
 
-    std::pair<std::string, std::size_t> RawKeyword::getLocation() const {
-        return std::make_pair(this->m_filename, this->m_lineNR);
+    const Location& RawKeyword::location() const {
+        return this->m_location;
     }
 
     RawKeyword::const_iterator RawKeyword::begin() const {

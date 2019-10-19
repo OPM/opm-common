@@ -84,7 +84,7 @@ void Quantity::add_arg(const std::string& arg) {
     this->args.push_back(strip_quotes(arg));
 }
 
-Condition::Condition(const std::vector<std::string>& tokens, const std::pair<std::string, std::size_t>& location) {
+Condition::Condition(const std::vector<std::string>& tokens, const Location& location) {
     this->lhs = Quantity(tokens[0]);
     std::size_t token_index = 1;
 
@@ -105,7 +105,7 @@ Condition::Condition(const std::vector<std::string>& tokens, const std::pair<std
     }
 
     if (token_index >= tokens.size())
-        throw std::invalid_argument("Could not determine right hand side / comparator for ACTIONX keyword at " + location.first + ":" + std::to_string(location.second));
+        throw std::invalid_argument("Could not determine right hand side / comparator for ACTIONX keyword at " + location.filename + ":" + std::to_string(location.lineno));
 
     this->rhs = Quantity(tokens[token_index]);
     token_index++;

@@ -322,7 +322,8 @@ inline std::map< std::string, int > RPT( const DeckKeyword& keyword,
 
 
     if (ints && strs) {
-        std::string msg = "Mixed style input is not allowed for keyword: " + keyword.name() + " at " + keyword.getFileName() + "(" + std::to_string( keyword.getLineNumber() ) + ")";
+        const auto& location = keyword.location();
+        std::string msg = "Mixed style input is not allowed for keyword: " + keyword.name() + " at " + location.filename + "(" + std::to_string( location.lineno ) + ")";
         parseContext.handleError(ParseContext::RPT_MIXED_STYLE, msg, errors);
 
         std::vector<std::string> stack;
@@ -330,7 +331,7 @@ inline std::map< std::string, int > RPT( const DeckKeyword& keyword,
             if (is_int(deck_items[index])) {
 
                 if (stack.size() < 2) {
-                    std::string errmsg = "Can not interpret " + keyword.name() + " at " + keyword.getFileName() + "(" + std::to_string( keyword.getLineNumber() ) + ")";
+                    std::string errmsg = "Can not interpret " + keyword.name() + " at " + location.filename + "(" + std::to_string( location.lineno ) + ")";
                     throw std::invalid_argument(errmsg);
                 }
 
@@ -343,7 +344,7 @@ inline std::map< std::string, int > RPT( const DeckKeyword& keyword,
                     stack.clear();
                     items.push_back( mnemonic + "=" + deck_items[index]);
                 } else {
-                    std::string errmsg = "Can not interpret " + keyword.name() + " at " + keyword.getFileName() + "(" + std::to_string( keyword.getLineNumber() ) + ")";
+                    std::string errmsg = "Can not interpret " + keyword.name() + " at " + location.filename + "(" + std::to_string( location.lineno ) + ")";
                     throw std::invalid_argument(errmsg);
                 }
 
