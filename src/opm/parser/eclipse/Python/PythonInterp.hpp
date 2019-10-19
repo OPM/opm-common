@@ -58,7 +58,7 @@ public:
         return this->fail();
     };
 
-    bool exec(const std::string& python_code, const Parser& parser, Deck& deck) {
+    bool exec(const std::string& /* python_code*/ , const Parser& /* parser */, Deck& /* deck */) {
         return this->fail();
     }
 
