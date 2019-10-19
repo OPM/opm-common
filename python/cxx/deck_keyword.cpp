@@ -62,7 +62,7 @@ struct DeckRecordIterator
 
 bool is_int(const std::string& s)
 {
-    return !s.empty() && std::find_if(s.begin(), 
+    return !s.empty() && std::find_if(s.begin(),
         s.end(), [](char c) { return !std::isdigit(c); }) == s.end();
 }
 
@@ -72,7 +72,7 @@ void push_string_as_deck_value(std::vector<DeckValue>& record, const std::string
     std::size_t star_pos = str.find('*');
     if (star_pos != std::string::npos) {
         int multiplier = 1;
-        
+
         std::string mult_str = str.substr(0, star_pos);
 
         if (mult_str.length() > 0) {
@@ -94,7 +94,7 @@ void push_string_as_deck_value(std::vector<DeckValue>& record, const std::string
 
         for (int i = 0; i < multiplier; i++)
             record.push_back( value );
-      
+
     }
     else
         record.push_back( DeckValue(str) );
@@ -115,31 +115,31 @@ void python::common::export_DeckKeyword(py::module& module) {
                  py::list record = record_obj.cast<py::list>();
                  std::vector<DeckValue> value_record;
 
-                 for (py::handle value_obj : record) { 
+                 for (const py::handle& value_obj : record) {
 
                       try {
                           int val_int = value_obj.cast<int>();
                           value_record.push_back( DeckValue(val_int) );
                           continue;
                       }
-                      catch (std::exception e_int) {}
+                      catch (const std::exception& e_int) {}
 
                       try {
                            double val_double = value_obj.cast<double>();
                            value_record.push_back( DeckValue(val_double) );
                            continue;
                       }
-                      catch (std::exception e_double) {}
+                      catch (const std::exception& e_double) {}
 
                       try {
-                           std::string val_string = value_obj.cast<std::string>();                                      
+                           std::string val_string = value_obj.cast<std::string>();
                            push_string_as_deck_value(value_record, val_string);
                            continue;
                       }
-                      catch (std::exception e_string) {}
+                      catch (const std::exception& e_string) {}
 
                       throw py::type_error("DeckKeyword: tried to add unkown type to record.");
-             
+
                  }
                  value_record_list.push_back( value_record );
              }
