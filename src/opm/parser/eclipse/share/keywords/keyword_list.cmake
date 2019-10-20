@@ -554,22 +554,50 @@ set( keywords
      000_Eclipse100/Q/QDRILL
      000_Eclipse100/R/RADFIN4
      000_Eclipse100/R/RADIAL
+     000_Eclipse100/R/RAINFALL
+     000_Eclipse100/R/RBEDCONT
+     000_Eclipse100/R/RCMASTS
+     000_Eclipse100/R/REACHES
+     000_Eclipse100/R/READDATA
      000_Eclipse100/R/REFINE
      000_Eclipse100/R/REGDIMS
+     000_Eclipse100/R/RESIDNUM
      000_Eclipse100/R/REGION_PROBE
      000_Eclipse100/R/REGION2REGION_PROBE
      000_Eclipse100/R/REGIONS
      000_Eclipse100/R/RESTART
+     000_Eclipse100/R/RESVNUM
+     000_Eclipse100/R/RIVDEBUG
+     000_Eclipse100/R/RIVERSYS
+     000_Eclipse100/R/RIVRDIMS
+     000_Eclipse100/R/RIVRPROP
+     000_Eclipse100/R/RIVRXSEC
+     000_Eclipse100/R/RIVSALT
+     000_Eclipse100/R/RIVTRACE
      000_Eclipse100/R/RKTRMDIR
      000_Eclipse100/R/ROCK
      000_Eclipse100/R/ROCK2D
      000_Eclipse100/R/ROCK2DTR
      000_Eclipse100/R/ROCKCOMP
+     000_Eclipse100/R/ROCKFRAC
      000_Eclipse100/R/ROCKNUM
      000_Eclipse100/R/ROCKOPTS
+     000_Eclipse100/R/ROCKPAMA
      000_Eclipse100/R/ROCKTAB
+     000_Eclipse100/R/ROCKTABH
+     000_Eclipse100/R/ROCKTABW
+     000_Eclipse100/R/ROCKTHSG
+     000_Eclipse100/R/ROCKTSIG
+     000_Eclipse100/R/ROCKV
      000_Eclipse100/R/ROCKWNOD
+     000_Eclipse100/R/RPTCPL
      000_Eclipse100/R/RPTGRID
+     000_Eclipse100/R/RPTGRIDL
+     000_Eclipse100/R/RPTHMD
+     000_Eclipse100/R/RPTHMG
+     000_Eclipse100/R/RPTHMW
+     000_Eclipse100/R/RPTINIT
+     000_Eclipse100/R/RPTISOL
      000_Eclipse100/R/RPTONLY
      000_Eclipse100/R/RPTONLYO
      000_Eclipse100/R/RPTPROPS
@@ -577,11 +605,13 @@ set( keywords
      000_Eclipse100/R/RPTRST
      000_Eclipse100/R/RPTRUNSP
      000_Eclipse100/R/RPTSCHED
-     000_Eclipse100/R/RPTSOL
      000_Eclipse100/R/RPTSMRY
+     000_Eclipse100/R/RPTSOL
      000_Eclipse100/R/RS
      000_Eclipse100/R/RSCONST
      000_Eclipse100/R/RSCONSTT
+     000_Eclipse100/R/RSGI
+     000_Eclipse100/R/RSSPEC
      000_Eclipse100/R/RSVD
      000_Eclipse100/R/RTEMP
      000_Eclipse100/R/RTEMPA
@@ -589,6 +619,9 @@ set( keywords
      000_Eclipse100/R/RUNSPEC
      000_Eclipse100/R/RUNSUM
      000_Eclipse100/R/RV
+     000_Eclipse100/R/RVCONST
+     000_Eclipse100/R/RVCONSTT
+     000_Eclipse100/R/RVGI
      000_Eclipse100/R/RVVD
      000_Eclipse100/S/SATNUM
      000_Eclipse100/S/SATOPTS
