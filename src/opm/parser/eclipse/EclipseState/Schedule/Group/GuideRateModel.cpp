@@ -69,7 +69,11 @@ GuideRateModel::GuideRateModel(double time_interval_arg,
 }
 
 double GuideRateModel::pot(double oil_pot, double gas_pot, double wat_pot) const {
-    switch (this->m_target) {
+    return pot(this->target(), oil_pot, gas_pot, wat_pot);
+}
+
+double GuideRateModel::pot(Target target, double oil_pot, double gas_pot, double wat_pot) {
+    switch (target) {
     case Target::OIL:
         return oil_pot;
 
@@ -78,6 +82,9 @@ double GuideRateModel::pot(double oil_pot, double gas_pot, double wat_pot) const
 
     case Target::GAS:
         return gas_pot;
+
+    case Target::WAT:
+        return wat_pot;
 
     case Target::COMB:
         throw std::logic_error("Not implemented - don't have a clue?");
@@ -230,6 +237,9 @@ GuideRateModel::Target GuideRateModel::convert_target(Well2::GuideRateTarget wel
     if (well_target == Well2::GuideRateTarget::LIQ)
         return Target::LIQ;
 
+    if (well_target == Well2::GuideRateTarget::WAT)
+        return Target::WAT;
+
     throw std::logic_error("Can not convert this .... ");
 }
 
@@ -242,6 +252,9 @@ GuideRateModel::Target GuideRateModel::convert_target(Group2::GuideRateTarget gr
 
     if (group_target == Group2::GuideRateTarget::LIQ)
         return Target::LIQ;
+
+    if (group_target == Group2::GuideRateTarget::WAT)
+        return Target::WAT;
 
     throw std::logic_error("Can not convert this .... ");
 }

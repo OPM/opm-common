@@ -65,6 +65,7 @@ public:
 
     static Target convert_target(Group2::GuideRateTarget group_target);
     static Target convert_target(Well2::GuideRateTarget well_target);
+    static double pot(Target target, double oil_pot, double gas_pot, double wat_pot);
 private:
     double pot(double oil_pot, double gas_pot, double wat_pot) const;
     /*
