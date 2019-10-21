@@ -3024,3 +3024,175 @@ BOOST_AUTO_TEST_SUITE_END ()
 // =====================================================================
 
 BOOST_AUTO_TEST_SUITE_END ()
+
+// =====================================================================
+
+BOOST_AUTO_TEST_SUITE (Density)
+
+BOOST_AUTO_TEST_CASE (Single_Region)
+{
+    const auto input = std::string { R"(RUNSPEC
+DIMENS
+  10 10 10 /
+
+TITLE
+  Test DENSITY Output
+
+OIL
+WATER
+
+METRIC
+
+TABDIMS
+-- NTSFUN  NTPVT  NSSFUN  NPPVT  NTFIP  NRPVT
+   1*      1      1*      4      1*     3
+/
+
+GRID
+INIT
+DXV
+  10*100 /
+DYV
+  10*100 /
+DZV
+  10*10 /
+
+DEPTHZ
+  121*2000 /
+
+PERMX
+  1000*100.0 /
+
+COPY
+  'PERMX' 'PERMY' /
+  'PERMX' 'PERMZ' /
+/
+
+MULTIPLY
+  'PERMZ' 0.1 /
+/
+
+PORO
+  1000*0.3 /
+
+PROPS
+DENSITY
+  859.1 1033.2 0.859 /
+
+END
+)"  };
+
+    const auto es = ::Opm::EclipseState { Opm::Parser{}.parseString(input) };
+
+    auto tables = ::Opm::Tables(es.getUnits());
+    tables.addDensity(es.getTableManager().getDensityTable());
+
+    const auto& tabdims = tables.tabdims();
+    const auto& tab     = tables.tab();
+
+    const auto ibdens = tabdims[ Ix::DensityTableStart ] - 1;
+    const auto ntdens = tabdims[ Ix::DensityNumTables ];
+    const auto ncol   = 3;
+
+    BOOST_CHECK_EQUAL(ntdens, 1);
+
+    const auto density = std::vector<double> {
+        &tab[ ibdens ] + 0,
+        &tab[ ibdens ] + ntdens*ncol
+    };
+
+    const auto expect_density = makeTable(ncol, {
+        // rhoOS    rhoWS      rhoGS
+        859.1,      1033.2,    0.859,
+    });
+
+    check_is_close(density, expect_density);
+}
+
+BOOST_AUTO_TEST_CASE (Multi_Region)
+{
+    const auto input = std::string { R"(RUNSPEC
+DIMENS
+  10 10 10 /
+
+TITLE
+  Test DENSITY Output
+
+OIL
+WATER
+
+METRIC
+
+TABDIMS
+-- NTSFUN  NTPVT  NSSFUN  NPPVT  NTFIP  NRPVT
+   1*      4      1*      4      1*     3
+/
+
+GRID
+INIT
+DXV
+  10*100 /
+DYV
+  10*100 /
+DZV
+  10*10 /
+
+DEPTHZ
+  121*2000 /
+
+PERMX
+  1000*100.0 /
+
+COPY
+  'PERMX' 'PERMY' /
+  'PERMX' 'PERMZ' /
+/
+
+MULTIPLY
+  'PERMZ' 0.1 /
+/
+
+PORO
+  1000*0.3 /
+
+PROPS
+DENSITY
+  859.1 1035.4 0.8591 /
+  860.2 1037.6 0.8592 /
+  861.3 1039.8 0.8593 /
+  862.4 1042.0 0.8594 /
+
+END
+)"  };
+
+    const auto es = ::Opm::EclipseState { Opm::Parser{}.parseString(input) };
+
+    auto tables = ::Opm::Tables(es.getUnits());
+    tables.addDensity(es.getTableManager().getDensityTable());
+
+    const auto& tabdims = tables.tabdims();
+    const auto& tab     = tables.tab();
+
+    const auto ibdens = tabdims[ Ix::DensityTableStart ] - 1;
+    const auto ntdens = tabdims[ Ix::DensityNumTables ];
+    const auto ncol   = 3;
+
+    BOOST_CHECK_EQUAL(ntdens, 4);
+
+    const auto density = std::vector<double> {
+        &tab[ ibdens ] + 0,
+        &tab[ ibdens ] + ntdens*ncol
+    };
+
+    const auto expect_density = makeTable(ncol, {
+        // rhoOS    rhoWS      rhoGS
+        859.1,      1035.4,    0.8591,
+        860.2,      1037.6,    0.8592,
+        861.3,      1039.8,    0.8593,
+        862.4,      1042.0,    0.8594,
+    });
+
+    check_is_close(density, expect_density);
+}
+
+BOOST_AUTO_TEST_SUITE_END ()    // Density
