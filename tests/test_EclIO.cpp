@@ -150,31 +150,30 @@ BOOST_AUTO_TEST_CASE(TestEclFile_FORMATTED) {
     std::vector<int> vect1b=file2.get<int>("ICON");
 
     BOOST_CHECK_EQUAL(vect1a.size(), vect1b.size());
-    BOOST_CHECK_EQUAL(vect1a==vect1b,true);
+    BOOST_CHECK(vect1a == vect1b);
 
     std::vector<float> vect2a=file1.get<float>("PORV");
     std::vector<float> vect2b=file2.get<float>("PORV");
 
     BOOST_CHECK_EQUAL(vect2a.size(), vect2b.size());
-    BOOST_CHECK_EQUAL(vect2a==vect2b,true);
+    BOOST_CHECK(vect2a == vect2b);
 
     std::vector<double> vect3a=file1.get<double>("XCON");
     std::vector<double> vect3b=file2.get<double>("XCON");
 
-    BOOST_CHECK_EQUAL(vect3a.size(), vect3b.size());
-    BOOST_CHECK_EQUAL(vect3a==vect3b,true);
+    BOOST_CHECK(vect3a == vect3b);
 
     std::vector<bool> vect4a=file1.get<bool>("LOGIHEAD");
     std::vector<bool> vect4b=file2.get<bool>("LOGIHEAD");
 
     BOOST_CHECK_EQUAL(vect4a.size(), vect4b.size());
-    BOOST_CHECK_EQUAL(vect4a==vect4b,true);
+    BOOST_CHECK(vect4a == vect4b);
 
     std::vector<std::string> vect5a=file1.get<std::string>("KEYWORDS");
     std::vector<std::string> vect5b=file2.get<std::string>("KEYWORDS");
 
     BOOST_CHECK_EQUAL(vect5a.size(), vect5b.size());
-    BOOST_CHECK_EQUAL(vect5a==vect5b,true);
+    BOOST_CHECK(vect5a == vect5b);
 
 }
 

@@ -431,21 +431,12 @@ std::vector<double> readFormattedDoubArray(const std::string& file_str, const in
 
     std::function<double(const std::string&)> f = [](std::string val)
                                                   {
-                                                      int p1 = val.find_first_of("D");
+                                                      auto p1 = val.find_first_of("D");
 
-                                                      if (p1 == -1) {
-                                                          p1 = val.find_first_of("-", 1);
-                                                          if (p1 > -1) {
-                                                              val = val.insert(p1,"E");
-                                                          } else {
-                                                              p1 = val.find_first_of("+", 1);
-
-                                                              if (p1 == -1) {
-                                                                  std::string message="In Routine Read readFormattedDoubArray, could not convert '" + val + "' to double.";
-                                                                  OPM_THROW(std::invalid_argument,message);
-                                                              }
-
-                                                              val = val.insert(p1,"E");
+                                                      if (p1 == std::string::npos) {
+                                                          auto p2 = val.find_first_of("-+", 1);
+                                                          if (p2 != std::string::npos) {
+                                                              val = val.insert(p2,"E");
                                                           }
                                                       } else {
                                                           val.replace(p1,1,"E");
