@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(TestEclFile_BINARY) {
     BOOST_CHECK_EQUAL(file1.hasKey("PORV"), true);
     BOOST_CHECK_EQUAL(file1.hasKey("XPORV"), false);
 
-    // test member functon get, use size of vector to confirm that vectror is ok 
+    // test member functon get, use size of vector to confirm that vectror is ok
 
     std::vector<int> vect1a=file1.get<int>(0);
     std::vector<int> vect1b=file1.get<int>("ICON");
@@ -138,8 +138,8 @@ BOOST_AUTO_TEST_CASE(TestEclFile_FORMATTED) {
     std::string testFile2="ECLFILE.FINIT";
 
     // loading data both from binary and formatted file. Check that
-    // date vectors are identical 
-    
+    // date vectors are identical
+
     EclFile file1(testFile1);
     file1.loadData();
 
@@ -221,7 +221,7 @@ BOOST_AUTO_TEST_CASE(TestEcl_Write_formatted) {
     std::string testFile="TEST.FDAT";
 
     // loading vectors from formatted input file and write data back to a formatted file1
-    // compare input and output file, and delete file. 
+    // compare input and output file, and delete file.
 
     EclFile file1(inputFile);
     file1.loadData();
@@ -256,11 +256,11 @@ BOOST_AUTO_TEST_CASE(TestEcl_getList) {
     std::string inputFile="ECLFILE.INIT";
     std::string testFile="TEST.DAT";
 
-    // use EclFile to read/open a binary file 
+    // use EclFile to read/open a binary file
     // Use API for class EclFile together with class EclOutput to write an
     // identical eclfile
-    // EclFile::getList(), EclFile::get<T>(int)    
-    
+    // EclFile::getList(), EclFile::get<T>(int)
+
     EclFile file1(inputFile);
     file1.loadData();
 
@@ -316,11 +316,11 @@ BOOST_AUTO_TEST_CASE(TestEcl_Write_CHAR) {
         EclOutput eclTest(testFile, true);
         eclTest.write("TEST",refStrList);
     }
-    
+
     {
         EclFile file1(testFile);
         std::vector<std::string> strList=file1.get<std::string>("TEST");
-        
+
         for (size_t n = 0; n < refStrList.size(); n++) {
             BOOST_CHECK(refStrList[n] == strList[n]);
         }
@@ -329,6 +329,6 @@ BOOST_AUTO_TEST_CASE(TestEcl_Write_CHAR) {
     if (remove(testFile.c_str())==-1) {
         std::cout << " > Warning! temporary file was not deleted" << std::endl;
     };
-    
-    
+
+
 }
