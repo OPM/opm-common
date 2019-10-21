@@ -17,16 +17,20 @@
    +   */
 
 #include "config.h"
+#include <math.h>
+#include <stdio.h>
 
 #include <algorithm>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
-#include <math.h>
-#include <stdio.h>
+#include <limits>
 #include <tuple>
+#include <cmath>
 
 #include <opm/io/eclipse/EclFile.hpp>
+#include "WorkArea.cpp"
+
 #include <opm/io/eclipse/EclOutput.hpp>
 
 #define BOOST_TEST_MODULE Test EclIO
@@ -247,6 +251,27 @@ BOOST_AUTO_TEST_CASE(TestEcl_Write_formatted) {
     if (remove(testFile.c_str())==-1) {
         std::cout << " > Warning! temporary file was not deleted" << std::endl;
     };
+}
+
+BOOST_AUTO_TEST_CASE(TestEcl_Write_formatted_not_finite) {
+    WorkArea wa;
+    std::vector<float>  float_vector{std::numeric_limits<float>::infinity()  , std::numeric_limits<float>::quiet_NaN()};
+    std::vector<double> double_vector{std::numeric_limits<double>::infinity(), std::numeric_limits<double>::quiet_NaN()};
+
+    {
+        EclOutput testfile("TEST.FINIT", true);
+        testfile.write("FLOAT", float_vector);
+        testfile.write("DOUBLE", double_vector);
+    }
+
+    EclFile file1("TEST.FINIT");
+    file1.loadData();
+    auto f = file1.get<float>("FLOAT");
+    auto d = file1.get<double>("DOUBLE");
+    BOOST_CHECK(std::isinf(f[0]));
+    BOOST_CHECK(std::isinf(d[0]));
+    BOOST_CHECK(std::isnan(f[1]));
+    BOOST_CHECK(std::isnan(d[1]));
 }
 
 

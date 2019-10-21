@@ -324,6 +324,16 @@ std::string EclOutput::make_real_string(float value) const
     if (value == 0.0) {
         return "0.00000000E+00";
     } else {
+        if (std::isnan(value))
+            return "NAN";
+
+        if (std::isinf(value)) {
+            if (value > 0)
+                return "INF";
+            else
+                return "-INF";
+        }
+
         std::string tmpstr(buffer);
 
         int exp =  value < 0.0 ? std::stoi(tmpstr.substr(11, 3)) :  std::stoi(tmpstr.substr(10, 3));
@@ -350,9 +360,18 @@ std::string EclOutput::make_doub_string(double value) const
     if (value == 0.0) {
         return "0.00000000000000D+00";
     } else {
-        std::string tmpstr(buffer);
+        if (std::isnan(value))
+            return "NAN";
 
-        int exp =  value < 0.0 ? std::stoi(tmpstr.substr(17, 4)) :  std::stoi(tmpstr.substr(16, 4));
+        if (std::isinf(value)) {
+            if (value > 0)
+                return "INF";
+            else
+                return "-INF";
+        }
+
+        std::string tmpstr(buffer);
+        int exp = value < 0.0 ? std::stoi(tmpstr.substr(17, 4)) : std::stoi(tmpstr.substr(16, 4));
 
         if (value < 0.0) {
             if (std::abs(exp) < 100) {
@@ -360,8 +379,7 @@ std::string EclOutput::make_doub_string(double value) const
             } else {
                 tmpstr = "-0." + tmpstr.substr(1, 1) + tmpstr.substr(3, 13);
             }
-        }
-        else {
+        } else {
             if (std::abs(exp) < 100) {
                 tmpstr = "0." + tmpstr.substr(0, 1) + tmpstr.substr(2, 13) + "D";
             } else {
@@ -369,9 +387,8 @@ std::string EclOutput::make_doub_string(double value) const
             }
         }
 
-        std::sprintf (buffer, "%+03i", exp+1);
+        std::sprintf(buffer, "%+03i", exp + 1);
         tmpstr = tmpstr + buffer;
-
         return tmpstr;
     }
 }
