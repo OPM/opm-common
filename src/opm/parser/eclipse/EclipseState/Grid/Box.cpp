@@ -116,7 +116,7 @@ namespace Opm {
         return global_index_list;
     }
 
-    const std::vector<Box::index_pair>& Box::index_list() const {
+    const std::vector<Box::cell_index>& Box::index_list() const {
         return m_index_list;
     }
 
@@ -135,8 +135,12 @@ namespace Opm {
                     size_t g = i * m_stride[0] + j*m_stride[1] + k*m_stride[2];
 
                     global_index_list.push_back(g);
-                    if (this->grid.cellActive(g))
-                        m_index_list.push_back({g,this->grid.activeIndex(g)});
+                    if (this->grid.cellActive(g)) {
+                        std::size_t global_index = g;
+                        std::size_t active_index = this->grid.activeIndex(g);
+                        std::size_t data_index = ii + ij*this->m_dims[0] + ik*this->m_dims[0]*this->m_dims[1];
+                        m_index_list.push_back({global_index, active_index, data_index});
+                    }
                 }
             }
         }

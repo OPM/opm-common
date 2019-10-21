@@ -29,9 +29,10 @@ namespace Opm {
     class Box {
     public:
 
-        struct index_pair {
-            std::size_t global;
-            std::size_t active;
+        struct cell_index {
+            std::size_t global_index;
+            std::size_t active_index;
+            std::size_t data_index;
         };
 
         Box(const EclipseGrid& grid);
@@ -39,7 +40,7 @@ namespace Opm {
         size_t size() const;
         bool   isGlobal() const;
         size_t getDim(size_t idim) const;
-        const std::vector<index_pair>& index_list() const;
+        const std::vector<cell_index>& index_list() const;
         const std::vector<size_t>& getIndexList() const;
         bool equal(const Box& other) const;
 
@@ -60,7 +61,7 @@ namespace Opm {
 
         bool   m_isGlobal;
         std::vector<size_t> global_index_list;
-        std::vector<index_pair> m_index_list;
+        std::vector<cell_index> m_index_list;
 
         int lower(int dim) const;
         int upper(int dim) const;
