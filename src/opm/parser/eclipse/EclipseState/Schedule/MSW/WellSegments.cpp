@@ -171,7 +171,7 @@ namespace Opm {
             for (int i = segment1; i <= segment2; ++i) {
                 // for the first or the only segment in the range is the one specified in the WELSEGS
                 // from the second segment in the range, the outlet segment is the previous segment in the range
-                int outlet_segment = -1;
+                int outlet_segment;
                 if (i == segment1) {
                     outlet_segment = outlet_segment_readin;
                 } else {
