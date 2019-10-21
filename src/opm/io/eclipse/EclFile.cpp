@@ -429,9 +429,8 @@ std::vector<bool> readFormattedLogiArray(const std::string& file_str, const int 
 std::vector<double> readFormattedDoubArray(const std::string& file_str, const int size, long int fromPos)
 {
 
-    std::function<double(const std::string&)> f = [](const std::string& value)
+    std::function<double(const std::string&)> f = [](std::string val)
                                                   {
-                                                      std::string val(value);
                                                       int p1 = val.find_first_of("D");
 
                                                       if (p1 == -1) {
