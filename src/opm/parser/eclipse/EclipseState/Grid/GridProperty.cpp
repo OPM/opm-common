@@ -244,21 +244,25 @@ namespace Opm {
     }
 
     template< typename T >
-    void GridProperty< T >::loadFromDeckKeyword( const DeckKeyword& deckKeyword ) {
+    void GridProperty< T >::loadFromDeckKeyword( const DeckKeyword& deckKeyword, bool multiply ) {
         const auto& deckItem = getDeckItem(deckKeyword);
         const auto size = deckItem.size();
         for (size_t dataPointIdx = 0; dataPointIdx < size; ++dataPointIdx) {
-            if (!deckItem.defaultApplied(dataPointIdx))
-                setDataPoint(dataPointIdx, dataPointIdx, deckItem);
+            if (!deckItem.defaultApplied(dataPointIdx)) {
+                if (multiply)
+                    mulDataPoint(dataPointIdx, dataPointIdx, deckItem);
+                else
+                    setDataPoint(dataPointIdx, dataPointIdx, deckItem);
+            }
         }
 
         this->assigned = true;
     }
 
     template< typename T >
-    void GridProperty< T >::loadFromDeckKeyword( const Box& inputBox, const DeckKeyword& deckKeyword) {
+    void GridProperty< T >::loadFromDeckKeyword( const Box& inputBox, const DeckKeyword& deckKeyword, bool multiply) {
         if (inputBox.isGlobal())
-            loadFromDeckKeyword( deckKeyword );
+            loadFromDeckKeyword( deckKeyword, multiply );
         else {
             const auto& deckItem = getDeckItem(deckKeyword);
             const std::vector<size_t>& indexList = inputBox.getIndexList();
@@ -268,7 +272,10 @@ namespace Opm {
                     if (sourceIdx < deckItem.size()
                         && !deckItem.defaultApplied(sourceIdx))
                         {
-                            setDataPoint(sourceIdx, targetIdx, deckItem);
+                            if (multiply)
+                                mulDataPoint(sourceIdx, targetIdx, deckItem);
+                            else
+                                setDataPoint(sourceIdx, targetIdx, deckItem);
                         }
                 }
             } else {
@@ -408,11 +415,21 @@ void GridProperty<double>::setDataPoint(size_t sourceIdx, size_t targetIdx, cons
     this->setElement(targetIdx, deckItem.getSIDouble(sourceIdx));
 }
 
-    template <typename T>
-    void GridProperty<T>::setElement(const typename std::vector<T>::size_type i, const T value, const bool defaulted) {
-        this->m_data[i] = value;
-        this->m_defaulted[i] = defaulted;
-    }
+template <typename T>
+void GridProperty<T>::setElement(const typename std::vector<T>::size_type i, const T value, const bool defaulted) {
+    this->m_data[i] = value;
+    this->m_defaulted[i] = defaulted;
+}
+
+template<>
+void GridProperty<double>::mulDataPoint(size_t sourceIdx, size_t targetIdx, const DeckItem& deckItem) {
+    this->m_data[targetIdx] *= deckItem.getSIDouble(sourceIdx);
+}
+
+template<>
+void GridProperty<int>::mulDataPoint(size_t sourceIdx, size_t targetIdx, const DeckItem& deckItem) {
+    this->m_data[targetIdx] *= deckItem.get<int>(sourceIdx);
+}
 
 
 template<>
