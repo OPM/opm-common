@@ -22,6 +22,7 @@
 #GECONT        records of records
 #GIALL         records of tables
 #MASSFLOW      tables w/ int, double, str
+#MESSAGE       record without slash
 #UDT
 
 set( keywords
@@ -458,13 +459,19 @@ set( keywords
      000_Eclipse100/M/MAXVALUE
      000_Eclipse100/M/MEMORY
      000_Eclipse100/M/MESSAGES
+     000_Eclipse100/M/MESSOPTS
+     000_Eclipse100/M/MESSSRVC
      000_Eclipse100/M/METRIC
+     000_Eclipse100/M/MINNNCT
+     000_Eclipse100/M/MINPORV
      000_Eclipse100/M/MINPV
      000_Eclipse100/M/MINPVV
      000_Eclipse100/M/MINVALUE
      000_Eclipse100/M/MISC
      000_Eclipse100/M/MISCIBLE
      000_Eclipse100/M/MISCNUM
+     000_Eclipse100/M/MLANG
+     000_Eclipse100/M/MLANGSLV
      000_Eclipse100/M/MONITOR
      000_Eclipse100/M/MSFN
      000_Eclipse100/M/MSGFILE
