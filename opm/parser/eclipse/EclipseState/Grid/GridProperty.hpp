@@ -175,8 +175,8 @@ public:
        DeckKeyword equals nx*ny*nz.
     */
 
-    void loadFromDeckKeyword( const DeckKeyword& );
-    void loadFromDeckKeyword( const Box&, const DeckKeyword& );
+    void loadFromDeckKeyword( const DeckKeyword& , bool);
+    void loadFromDeckKeyword( const Box&, const DeckKeyword& , bool);
 
     void copyFrom( const GridProperty< T >&, const Box& );
     void scale( T scaleFactor, const Box& );
@@ -309,6 +309,7 @@ public:
 private:
     const DeckItem& getDeckItem( const DeckKeyword& );
     void setDataPoint(size_t sourceIdx, size_t targetIdx, const DeckItem& deckItem);
+    void mulDataPoint(size_t sourceIdx, size_t targetIdx, const DeckItem& deckItem);
     void setElement(const typename std::vector<T>::size_type i,
                     const T                                  value,
                     const bool                               defaulted = false);

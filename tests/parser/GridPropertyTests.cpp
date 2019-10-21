@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(SetFromDeckKeyword_notData_Throws) {
     typedef Opm::GridProperty<int>::SupportedKeywordInfo SupportedKeywordInfo;
     SupportedKeywordInfo keywordInfo("TABDIMS" , 100, "1");
     Opm::GridProperty<int> gridProperty( 6 ,1,1 , keywordInfo);
-    BOOST_CHECK_THROW( gridProperty.loadFromDeckKeyword( tabdimsKw ) , std::invalid_argument );
+    BOOST_CHECK_THROW( gridProperty.loadFromDeckKeyword( tabdimsKw, false ) , std::invalid_argument );
 }
 
 
@@ -128,7 +128,7 @@ BOOST_AUTO_TEST_CASE(SetFromDeckKeyword_wrong_size_throws) {
     typedef Opm::GridProperty<int>::SupportedKeywordInfo SupportedKeywordInfo;
     SupportedKeywordInfo keywordInfo("SATNUM" , 66, "1");
     Opm::GridProperty<int> gridProperty( 15 ,1,1, keywordInfo);
-    BOOST_CHECK_THROW( gridProperty.loadFromDeckKeyword( satnumKw ) , std::invalid_argument );
+    BOOST_CHECK_THROW( gridProperty.loadFromDeckKeyword( satnumKw, false ) , std::invalid_argument );
 }
 
 
@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_CASE(SetFromDeckKeyword) {
     typedef Opm::GridProperty<int>::SupportedKeywordInfo SupportedKeywordInfo;
     SupportedKeywordInfo keywordInfo("SATNUM" , 99, "1");
     Opm::GridProperty<int> gridProperty( 4 , 4 , 2 , keywordInfo);
-    gridProperty.loadFromDeckKeyword( satnumKw );
+    gridProperty.loadFromDeckKeyword( satnumKw, false );
     const std::vector<int>& data = gridProperty.getData();
     for (size_t k=0; k < 2; k++) {
         for (size_t j=0; j < 4; j++) {
