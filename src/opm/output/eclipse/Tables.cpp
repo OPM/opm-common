@@ -1982,20 +1982,29 @@ namespace Opm {
 
     void Tables::addDensity( const DensityTable& density)
     {
-        if (density.size() > 0) {
-            const double default_value = -2e20;
-            const size_t num_columns = density[0].size;
-            std::vector<double> densityData( density.size() * num_columns , default_value);
+        if (density.size() == 0) { return; }
 
-            this->m_tabdims[Ix::DensityNumTables] = density.size();
-            for (size_t table_num = 0; table_num < density.size(); table_num++) {
-                const auto& record = density[table_num];
-                densityData[ table_num * num_columns ]    = this->units.from_si( UnitSystem::measure::density , record.oil);
-                densityData[ table_num * num_columns + 1] = this->units.from_si( UnitSystem::measure::density , record.water);
-                densityData[ table_num * num_columns + 2] = this->units.from_si( UnitSystem::measure::density , record.gas);
+        const double default_value = -2.0e20;
+        const auto nreg = density.size();
+        const auto nph  = density[0].size;
+
+        std::vector<double> densityData(nreg * nph, default_value);
+        {
+            const auto urho = UnitSystem::measure::density;
+
+            auto* rho_o = &densityData[0*nreg + 0]; // Oil   <-> Column 0
+            auto* rho_w = &densityData[1*nreg + 0]; // Water <-> Column 1
+            auto* rho_g = &densityData[2*nreg + 0]; // Gas   <-> Column 2
+
+            for (const auto& record : density) {
+                *rho_o++ = this->units.from_si(urho, record.oil);
+                *rho_w++ = this->units.from_si(urho, record.water);
+                *rho_g++ = this->units.from_si(urho, record.gas);
             }
-            this->addData(Ix::DensityTableStart, densityData );
         }
+
+        this->m_tabdims[Ix::DensityNumTables] = nreg;
+        this->addData(Ix::DensityTableStart, densityData );
     }
 
     void Tables::addPVTTables(const EclipseState& es)
