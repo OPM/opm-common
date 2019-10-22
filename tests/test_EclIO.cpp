@@ -17,16 +17,20 @@
    +   */
 
 #include "config.h"
+#include <math.h>
+#include <stdio.h>
 
 #include <algorithm>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
-#include <math.h>
-#include <stdio.h>
+#include <limits>
 #include <tuple>
+#include <cmath>
 
 #include <opm/io/eclipse/EclFile.hpp>
+#include "WorkArea.cpp"
+
 #include <opm/io/eclipse/EclOutput.hpp>
 
 #define BOOST_TEST_MODULE Test EclIO
@@ -99,7 +103,7 @@ BOOST_AUTO_TEST_CASE(TestEclFile_BINARY) {
     BOOST_CHECK_EQUAL(file1.hasKey("PORV"), true);
     BOOST_CHECK_EQUAL(file1.hasKey("XPORV"), false);
 
-    // test member functon get, use size of vector to confirm that vectror is ok 
+    // test member functon get, use size of vector to confirm that vectror is ok
 
     std::vector<int> vect1a=file1.get<int>(0);
     std::vector<int> vect1b=file1.get<int>("ICON");
@@ -138,8 +142,8 @@ BOOST_AUTO_TEST_CASE(TestEclFile_FORMATTED) {
     std::string testFile2="ECLFILE.FINIT";
 
     // loading data both from binary and formatted file. Check that
-    // date vectors are identical 
-    
+    // date vectors are identical
+
     EclFile file1(testFile1);
     file1.loadData();
 
@@ -150,31 +154,30 @@ BOOST_AUTO_TEST_CASE(TestEclFile_FORMATTED) {
     std::vector<int> vect1b=file2.get<int>("ICON");
 
     BOOST_CHECK_EQUAL(vect1a.size(), vect1b.size());
-    BOOST_CHECK_EQUAL(vect1a==vect1b,true);
+    BOOST_CHECK(vect1a == vect1b);
 
     std::vector<float> vect2a=file1.get<float>("PORV");
     std::vector<float> vect2b=file2.get<float>("PORV");
 
     BOOST_CHECK_EQUAL(vect2a.size(), vect2b.size());
-    BOOST_CHECK_EQUAL(vect2a==vect2b,true);
+    BOOST_CHECK(vect2a == vect2b);
 
     std::vector<double> vect3a=file1.get<double>("XCON");
     std::vector<double> vect3b=file2.get<double>("XCON");
 
-    BOOST_CHECK_EQUAL(vect3a.size(), vect3b.size());
-    BOOST_CHECK_EQUAL(vect3a==vect3b,true);
+    BOOST_CHECK(vect3a == vect3b);
 
     std::vector<bool> vect4a=file1.get<bool>("LOGIHEAD");
     std::vector<bool> vect4b=file2.get<bool>("LOGIHEAD");
 
     BOOST_CHECK_EQUAL(vect4a.size(), vect4b.size());
-    BOOST_CHECK_EQUAL(vect4a==vect4b,true);
+    BOOST_CHECK(vect4a == vect4b);
 
     std::vector<std::string> vect5a=file1.get<std::string>("KEYWORDS");
     std::vector<std::string> vect5b=file2.get<std::string>("KEYWORDS");
 
     BOOST_CHECK_EQUAL(vect5a.size(), vect5b.size());
-    BOOST_CHECK_EQUAL(vect5a==vect5b,true);
+    BOOST_CHECK(vect5a == vect5b);
 
 }
 
@@ -221,7 +224,7 @@ BOOST_AUTO_TEST_CASE(TestEcl_Write_formatted) {
     std::string testFile="TEST.FDAT";
 
     // loading vectors from formatted input file and write data back to a formatted file1
-    // compare input and output file, and delete file. 
+    // compare input and output file, and delete file.
 
     EclFile file1(inputFile);
     file1.loadData();
@@ -250,17 +253,38 @@ BOOST_AUTO_TEST_CASE(TestEcl_Write_formatted) {
     };
 }
 
+BOOST_AUTO_TEST_CASE(TestEcl_Write_formatted_not_finite) {
+    WorkArea wa;
+    std::vector<float>  float_vector{std::numeric_limits<float>::infinity()  , std::numeric_limits<float>::quiet_NaN()};
+    std::vector<double> double_vector{std::numeric_limits<double>::infinity(), std::numeric_limits<double>::quiet_NaN()};
+
+    {
+        EclOutput testfile("TEST.FINIT", true);
+        testfile.write("FLOAT", float_vector);
+        testfile.write("DOUBLE", double_vector);
+    }
+
+    EclFile file1("TEST.FINIT");
+    file1.loadData();
+    auto f = file1.get<float>("FLOAT");
+    auto d = file1.get<double>("DOUBLE");
+    BOOST_CHECK(std::isinf(f[0]));
+    BOOST_CHECK(std::isinf(d[0]));
+    BOOST_CHECK(std::isnan(f[1]));
+    BOOST_CHECK(std::isnan(d[1]));
+}
+
 
 BOOST_AUTO_TEST_CASE(TestEcl_getList) {
 
     std::string inputFile="ECLFILE.INIT";
     std::string testFile="TEST.DAT";
 
-    // use EclFile to read/open a binary file 
+    // use EclFile to read/open a binary file
     // Use API for class EclFile together with class EclOutput to write an
     // identical eclfile
-    // EclFile::getList(), EclFile::get<T>(int)    
-    
+    // EclFile::getList(), EclFile::get<T>(int)
+
     EclFile file1(inputFile);
     file1.loadData();
 
@@ -316,11 +340,11 @@ BOOST_AUTO_TEST_CASE(TestEcl_Write_CHAR) {
         EclOutput eclTest(testFile, true);
         eclTest.write("TEST",refStrList);
     }
-    
+
     {
         EclFile file1(testFile);
         std::vector<std::string> strList=file1.get<std::string>("TEST");
-        
+
         for (size_t n = 0; n < refStrList.size(); n++) {
             BOOST_CHECK(refStrList[n] == strList[n]);
         }
@@ -329,6 +353,6 @@ BOOST_AUTO_TEST_CASE(TestEcl_Write_CHAR) {
     if (remove(testFile.c_str())==-1) {
         std::cout << " > Warning! temporary file was not deleted" << std::endl;
     };
-    
-    
+
+
 }

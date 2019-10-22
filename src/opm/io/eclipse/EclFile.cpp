@@ -39,7 +39,7 @@ namespace {
 bool fileExists(const std::string& filename){
 
     std::ifstream fileH(filename.c_str());
-    return fileH.good();   
+    return fileH.good();
 }
 
 bool isFormatted(const std::string& filename)
@@ -342,11 +342,11 @@ std::vector<T> readFormattedArray(const std::string& file_str, const int size, l
     arr.reserve(size);
 
     long int p1=fromPos;
-    
+
     for (int i=0; i< size; i++) {
         p1 = file_str.find_first_not_of(' ',p1);
         long int p2 = file_str.find_first_of(' ', p1);
-        
+
         arr.push_back(process(file_str.substr(p1, p2-p1)));
 
         p1 = file_str.find_first_not_of(' ',p2);
@@ -429,24 +429,14 @@ std::vector<bool> readFormattedLogiArray(const std::string& file_str, const int 
 std::vector<double> readFormattedDoubArray(const std::string& file_str, const int size, long int fromPos)
 {
 
-    std::function<double(const std::string&)> f = [](const std::string& value)
+    std::function<double(const std::string&)> f = [](std::string val)
                                                   {
-                                                      std::string val(value);
-                                                      int p1 = val.find_first_of("D");
+                                                      auto p1 = val.find_first_of("D");
 
-                                                      if (p1 == -1) {
-                                                          p1 = val.find_first_of("-", 1);
-                                                          if (p1 > -1) {
-                                                              val = val.insert(p1,"E");
-                                                          } else {
-                                                              p1 = val.find_first_of("+", 1);
-
-                                                              if (p1 == -1) {
-                                                                  std::string message="In Routine Read readFormattedDoubArray, could not convert '" + val + "' to double.";
-                                                                  OPM_THROW(std::invalid_argument,message);
-                                                              }
-
-                                                              val = val.insert(p1,"E");
+                                                      if (p1 == std::string::npos) {
+                                                          auto p2 = val.find_first_of("-+", 1);
+                                                          if (p2 != std::string::npos) {
+                                                              val = val.insert(p2,"E");
                                                           }
                                                       } else {
                                                           val.replace(p1,1,"E");
@@ -596,7 +586,7 @@ void EclFile::loadData()
         std::iota(arrIndices.begin(), arrIndices.end(), 0);
 
         this->loadData(arrIndices);
-        
+
     } else {
 
         std::fstream fileH;
@@ -622,11 +612,11 @@ void EclFile::loadData(const std::string& name)
     if (formatted) {
 
         std::ifstream inFile(inputFilename);
-        
+
         for (unsigned int arrIndex = 0; arrIndex < array_name.size(); arrIndex++) {
-            
+
             if (array_name[arrIndex] == name) {
-                
+
                 inFile.seekg(ifStreamPos[arrIndex]);
 
                 char* buffer;
@@ -637,7 +627,7 @@ void EclFile::loadData(const std::string& name)
                 std::string fileStr = std::string(buffer, size);
 
                 loadFormattedArray(fileStr, arrIndex, 0);
-                
+
                 delete[] buffer;
             }
         }
@@ -671,7 +661,7 @@ void EclFile::loadData(const std::vector<int>& arrIndex)
         std::ifstream inFile(inputFilename);
 
         for (int ind : arrIndex) {
-            
+
             inFile.seekg(ifStreamPos[ind]);
 
             char* buffer;
@@ -682,7 +672,7 @@ void EclFile::loadData(const std::vector<int>& arrIndex)
             std::string fileStr = std::string(buffer, size);
 
             loadFormattedArray(fileStr, ind, 0);
-            
+
             delete[] buffer;
         }
 
@@ -719,9 +709,9 @@ void EclFile::loadData(int arrIndex)
             inFile.read (buffer, size);
 
             std::string fileStr = std::string(buffer, size);
-            
+
             loadFormattedArray(fileStr, arrIndex, 0);
-            
+
             delete[] buffer;
 
 
