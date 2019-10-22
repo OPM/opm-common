@@ -81,6 +81,10 @@ then
   PRNUMBER=${rev//[!0-9]/}
   DATA_PR=`curl -X GET https://api.github.com/repos/OPM/opm-tests/pulls?head=jenkins4opm:$BRANCH_NAME | grep '"number":' | awk -F ':' '{print $2}' | sed -e 's/,//' -e 's/ //'`
   git push -u jenkins4opm $BRANCH_NAME -f
+fi
+
+if [ -n "$DATA_PR" ]
+then
   curl -d "{ \"body\": \"Existing PR https://github.com/OPM/opm-tests/pull/$DATA_PR was updated\" }" -X POST https://api.github.com/repos/OPM/$MAIN_REPO/issues/$PRNUMBER/comments?access_token=$GH_TOKEN
 else
   git-open-pull -u jenkins4opm --base-account OPM --base-repo opm-tests -r /tmp/cmsg $BRANCH_NAME
