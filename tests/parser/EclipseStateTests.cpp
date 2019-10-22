@@ -67,10 +67,13 @@ static Deck createDeckTOP() {
 "1000*0.25 /\n"
 "TOPS\n"
 "1000*0.25 /\n"
+"BOX\n"
+"1 10 1 10 1 1 /\n"
 "PORO \n"
 "100*0.10 /\n"
 "PERMX \n"
 "100*0.25 /\n"
+"ENDBOX\n"
 "EDIT\n"
 "OIL\n"
 "\n"
@@ -645,3 +648,4 @@ BOOST_AUTO_TEST_CASE(TestIOConfigCreationWithSolutionRPTSOL) {
         BOOST_CHECK_EQUAL(true, rstConfig.getWriteRestartFile(0));
     }
 }
+
