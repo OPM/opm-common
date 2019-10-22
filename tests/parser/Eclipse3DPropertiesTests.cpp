@@ -31,6 +31,7 @@
 
 #include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
@@ -263,12 +264,14 @@ struct Setup
     Opm::TableManager tablemanager;
     Opm::EclipseGrid grid;
     Opm::Eclipse3DProperties props;
+    Opm::FieldPropsManager fp;
 
     explicit Setup(Opm::Deck&& deckArg) :
             deck(std::move( deckArg ) ),
             tablemanager(deck),
             grid(deck),
-            props(deck, tablemanager, grid)
+            props(deck, tablemanager, grid),
+            fp(deck, grid)
     {
     }
 };
@@ -277,21 +280,25 @@ struct Setup
 BOOST_AUTO_TEST_CASE(HasDeckProperty) {
     Setup s(createDeck());
     BOOST_CHECK(s.props.hasDeckIntGridProperty("SATNUM"));
+    BOOST_CHECK(s.fp.try_get<int>("SATNUM") != nullptr);
 }
 
 BOOST_AUTO_TEST_CASE(SupportsProperty) {
     Setup s(createDeck());
-    std::vector<std::string> keywordList = {
-        // int props
-        "ACTNUM", "SATNUM", "IMBNUM", "PVTNUM", "EQLNUM", "ENDNUM", "FLUXNUM", "MULTNUM", "FIPNUM", "MISCNUM", "OPERNUM", "ROCKNUM",
-        // double props
-        "TEMPI", "MULTPV", "PERMX", "permy", "PERMZ", "SWATINIT", "THCONR", "NTG"
-    };
+    std::vector<std::string> int_keywords = {"SATNUM", "IMBNUM", "PVTNUM", "EQLNUM", "ENDNUM", "FLUXNUM", "MULTNUM", "FIPNUM", "MISCNUM", "OPERNUM", "ROCKNUM"};
+    std::vector<std::string> double_keywords = {"TEMPI", "MULTPV", "PERMX", "PERMY", "PERMZ", "SWATINIT", "THCONR", "NTG"};
 
-    for (auto keyword : keywordList)
+    for (auto keyword : int_keywords) {
         BOOST_CHECK(s.props.supportsGridProperty(keyword));
+        BOOST_CHECK(s.fp.supported<int>(keyword));
+    }
 
+    for (auto keyword : double_keywords) {
+        BOOST_CHECK(s.props.supportsGridProperty(keyword));
+        BOOST_CHECK(s.fp.supported<double>(keyword));
+    }
 }
+
 
 BOOST_AUTO_TEST_CASE(DefaultRegionFluxnum) {
     Setup s(createDeck());
@@ -305,6 +312,8 @@ BOOST_AUTO_TEST_CASE(UnsupportedKeywordsThrows) {
 
     BOOST_CHECK_THROW(s.props.getIntGridProperty("NONO"), std::logic_error);
     BOOST_CHECK_THROW(s.props.getDoubleGridProperty("NONO"), std::logic_error);
+    BOOST_CHECK_THROW(s.fp.get<double>("NONO"), std::invalid_argument);
+    BOOST_CHECK_THROW(s.fp.get<int>("NONO"), std::invalid_argument);
 
     BOOST_CHECK_NO_THROW(s.props.hasDeckIntGridProperty("FluxNUM"));
     BOOST_CHECK_NO_THROW(s.props.supportsGridProperty("NONO"));
@@ -312,12 +321,22 @@ BOOST_AUTO_TEST_CASE(UnsupportedKeywordsThrows) {
 
 BOOST_AUTO_TEST_CASE(IntGridProperty) {
     Setup s(createDeck());
-    int cnt = 0;
-    for (auto x : s.props.getIntGridProperty("SaTNuM").getData()) {
-        BOOST_CHECK_EQUAL(x, 2);
-        cnt++;
+    {
+        int cnt = 0;
+        for (auto x : s.props.getIntGridProperty("SATNUM").getData()) {
+            BOOST_CHECK_EQUAL(x, 2);
+            cnt++;
+        }
+        BOOST_CHECK_EQUAL(cnt, 1000);
     }
-    BOOST_CHECK_EQUAL(cnt, 1000);
+    {
+        int cnt = 0;
+        for (auto x : s.fp.get_global<int>("SATNUM")) {
+            BOOST_CHECK_EQUAL(x, 2);
+            cnt++;
+        }
+        BOOST_CHECK_EQUAL(cnt, 1000);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(AddregIntSetCorrectly) {

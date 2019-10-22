@@ -64,6 +64,7 @@ namespace Opm {
         void endKeyword();
 
         const Box& getActiveBox() const;
+        const std::vector<Box::cell_index>& index_list() const;
 
     private:
         const EclipseGrid& grid;

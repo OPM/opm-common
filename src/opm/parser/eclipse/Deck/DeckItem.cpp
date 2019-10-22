@@ -51,7 +51,7 @@ const std::vector< double >& DeckItem::value_ref< double >() const {
     if (this->type == get_type<double>())
         return this->dval;
 
-    throw std::invalid_argument( "DeckItem::value_ref<double> Item of wrong type." );
+    throw std::invalid_argument( "DeckItem::value_ref<double> Item of wrong type. this->type: " + tag_name(this->type) + " " + this->name());
 }
 
 template<>

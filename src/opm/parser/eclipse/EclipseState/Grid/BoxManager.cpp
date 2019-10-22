@@ -64,4 +64,7 @@ namespace Opm {
         this->m_keywordBox.reset( 0 );
     }
 
+    const std::vector<Box::cell_index>& BoxManager::index_list() const {
+        return this->getActiveBox().index_list();
+    }
 }

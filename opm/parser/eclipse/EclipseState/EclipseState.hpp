@@ -28,6 +28,7 @@
 #include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Edit/EDITNNC.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FaultCollection.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
@@ -129,6 +130,9 @@ namespace Opm {
         EDITNNC m_inputEditNnc;
         EclipseGrid m_inputGrid;
         Eclipse3DProperties m_eclipseProperties;
+#ifdef ENABLE_3DPROPS_TESTING
+        FieldPropsManager field_props;
+#endif
         const SimulationConfig m_simulationConfig;
         TransMult m_transMult;
 
