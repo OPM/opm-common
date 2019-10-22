@@ -25,6 +25,9 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
+#include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/TransMult.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/TransMult.hpp>
@@ -43,4 +46,32 @@ BOOST_AUTO_TEST_CASE(Empty) {
 
     BOOST_CHECK_EQUAL( transMult.getMultiplier(9,9,9, Opm::FaceDir::YMinus) , 1.0 );
     BOOST_CHECK_EQUAL( transMult.getMultiplier(100 , Opm::FaceDir::ZMinus) , 1.0 );
+}
+
+
+BOOST_AUTO_TEST_CASE(GridAndEdit) {
+    const std::string deck_string = R"(
+RUNSPEC
+GRIDOPTS
+  'YES'  2 /
+
+DIMENS
+ 5 5 5 /
+GRID
+MULTZ
+  125*2 /
+EDIT
+MULTZ
+  125*2 /
+)";
+
+    Opm::Parser parser;
+    Opm::Deck deck = parser.parseString(deck_string);
+    Opm::TableManager tables(deck);
+    Opm::EclipseGrid grid(5,5,5);
+    Opm::Eclipse3DProperties props(deck, tables, grid);
+    Opm::TransMult transMult(grid, deck, props);
+
+    transMult.applyMULT(props.getDoubleGridProperty("MULTZ"), Opm::FaceDir::ZPlus);
+    BOOST_CHECK_EQUAL( transMult.getMultiplier(0,0,0 , Opm::FaceDir::ZPlus) , 4.0 );
 }
