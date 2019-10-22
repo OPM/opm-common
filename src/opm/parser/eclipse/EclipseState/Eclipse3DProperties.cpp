@@ -642,14 +642,35 @@ namespace Opm {
     ///  m_doubleGridProperties fields directly and *NOT* use the public methods
     ///  getIntGridProperty / getDoubleGridProperty.
     void Eclipse3DProperties::loadGridPropertyFromDeckKeyword(const Box& inputBox,
-                                                              const DeckKeyword& deckKeyword) {
+                                                              const DeckKeyword& deckKeyword,
+                                                              bool edit_section) {
+        static std::set<std::string> multiply_keywords = {"MULTX",
+                                                          "MULTY",
+                                                          "MULTZ",
+                                                          "MULTX-",
+                                                          "MULTY-",
+                                                          "MULTZ-"};
+        /*
+          The opm input handling is not really section aware, some keywords
+          should be handled differently in the EDIT section and the GRID
+          section. In particular this applies top the transmissibility
+          multipliers MULT(XYZ) where they should be assigned and reassigned in
+          the GRID section, and applied multiplicatively in the EDIT section.
+
+          Here we have special cased hack for the MULT(XYZ) keywords, there are
+          probably other keywords as well which also should be handled
+          differently in the GRID and EDIT sections, but this is handled on a
+          bug by bug basis.
+        */
+
         const std::string& keyword = deckKeyword.name();
+        bool multiply = (edit_section && (multiply_keywords.count(keyword) == 1));
         if (m_intGridProperties.supportsKeyword( keyword )) {
             auto& gridProperty = m_intGridProperties.getOrCreateProperty( keyword );
-            gridProperty.loadFromDeckKeyword( inputBox, deckKeyword );
+            gridProperty.loadFromDeckKeyword( inputBox, deckKeyword , false );
         } else if (m_doubleGridProperties.supportsKeyword( keyword )) {
             auto& gridProperty = m_doubleGridProperties.getOrCreateProperty( keyword );
-            gridProperty.loadFromDeckKeyword( inputBox, deckKeyword );
+            gridProperty.loadFromDeckKeyword( inputBox, deckKeyword, multiply );
         } else {
             throw std::logic_error( "Tried to load unsupported grid property from keyword: " + deckKeyword.name() );
         }
@@ -747,31 +768,33 @@ namespace Opm {
                                                      const EclipseGrid& eclipseGrid) {
 
         if (Section::hasGRID(deck))
-            scanSection(GRIDSection(deck), eclipseGrid);
+            scanSection(GRIDSection(deck), eclipseGrid, false);
 
         if (Section::hasREGIONS(deck))
-            scanSection(REGIONSSection(deck), eclipseGrid);
+            scanSection(REGIONSSection(deck), eclipseGrid, false);
 
         if (Section::hasEDIT(deck))
-            scanSection(EDITSection(deck), eclipseGrid);
+            scanSection(EDITSection(deck), eclipseGrid, true);
 
         if (Section::hasPROPS(deck))
-            scanSection(PROPSSection(deck), eclipseGrid);
+            scanSection(PROPSSection(deck), eclipseGrid, false);
 
         if (Section::hasSOLUTION(deck))
-            scanSection(SOLUTIONSection(deck), eclipseGrid);
+            scanSection(SOLUTIONSection(deck), eclipseGrid, false);
     }
 
 
 
     void Eclipse3DProperties::scanSection(const Section& section,
-                                          const EclipseGrid& eclipseGrid) {
+                                          const EclipseGrid& eclipseGrid,
+                                          bool edit_section) {
         BoxManager boxManager(eclipseGrid);
         for( const auto& deckKeyword : section ) {
 
             if (supportsGridProperty(deckKeyword.name()) )
                 loadGridPropertyFromDeckKeyword( boxManager.getActiveBox(),
-                                                 deckKeyword);
+                                                 deckKeyword,
+                                                 edit_section);
             else {
                 if (deckKeyword.name() == "BOX")
                     handleBOXKeyword(deckKeyword, boxManager);

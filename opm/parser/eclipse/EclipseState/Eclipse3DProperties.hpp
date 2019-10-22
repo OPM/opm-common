@@ -77,7 +77,8 @@ namespace Opm {
                                    const EclipseGrid& eclipseGrid);
 
         void scanSection(const Section& section,
-                         const EclipseGrid& eclipseGrid);
+                         const EclipseGrid& eclipseGrid,
+                         bool edit_section);
 
         void handleADDKeyword(     const DeckKeyword& deckKeyword, BoxManager& boxManager);
         void handleBOXKeyword(     const DeckKeyword& deckKeyword, BoxManager& boxManager);
@@ -96,7 +97,8 @@ namespace Opm {
         void handleOPERATERKeyword( const DeckKeyword& deckKeyword);
 
         void loadGridPropertyFromDeckKeyword(const Box& inputBox,
-                                             const DeckKeyword& deckKeyword);
+                                             const DeckKeyword& deckKeyword,
+                                             bool edity_section);
 
         void adjustSOGCRwithSWL();
 
