@@ -25,9 +25,9 @@ namespace Opm {
 namespace Operate {
 
 //using operate_fptr = decltype(&MULTA);
-using function = std::function<double(double,double,double,double)>;
+using function = std::function<double(double,double)>;
 
-function get(const std::string& function);
+function get(const std::string& func, double alpha, double beta);
 
 }
 }

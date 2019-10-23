@@ -435,11 +435,11 @@ namespace Opm {
 
             std::vector<T> targetData = result_prop.getData();
             const std::vector<T>& srcData = getKeyword( srcArray ).getData();
-            Operate::function func = Operate::get( operation );
+            Operate::function func = Operate::get( operation, alpha, beta );
 
             setKeywordBox(record, boxManager);
             for (auto index : boxManager.getActiveBox().getIndexList())
-                targetData[index] = func( targetData[index] , srcData[index] , alpha, beta );
+                targetData[index] = func( targetData[index] , srcData[index]);
 
             result_prop.assignData(targetData);
         }
@@ -468,13 +468,13 @@ namespace Opm {
 
             std::vector<T> result_data = result_prop.getData();
             const std::vector<T>& parameter_data = getKeyword( parameter_array ).getData();
-            Operate::function func = Operate::get(operation);
+            Operate::function func = Operate::get(operation, alpha, beta);
             std::vector<bool> mask;
 
             regionProperty.initMask(region_value, mask);
             for (size_t index = 0; index < mask.size(); index++) {
                 if (mask[index])
-                    result_data[index] = func(result_data[index], parameter_data[index], alpha, beta);
+                    result_data[index] = func(result_data[index], parameter_data[index]);
             }
 
             result_prop.assignData(result_data);

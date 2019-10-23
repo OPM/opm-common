@@ -104,24 +104,30 @@ namespace {
         return std::abs(X);
     }
 
-    static const std::map<std::string, function> operations = {{"MULTA", &MULTA},
-                                                               {"POLY", &POLY},
-                                                               {"SLOG", &SLOG},
-                                                               {"LOG10", &LOG10},
-                                                               {"LOGE", &LOGE},
-                                                               {"INV", &INV},
-                                                               {"MULTX", &MULTX},
-                                                               {"ADDX", &ADDX},
-                                                               {"COPY", &COPY},
-                                                               {"MAXLIM", &MAXLIM},
-                                                               {"MINLIM", &MINLIM},
-                                                               {"MULTP", &MULTP},
-                                                               {"ABS", &ABS},
-                                                               {"MULTIPLY", &MULTIPLY}};
+    using func4 = decltype(&MULTA);
+    static const std::map<std::string, func4> operations = {{"MULTA", &MULTA},
+                                                            {"POLY", &POLY},
+                                                            {"SLOG", &SLOG},
+                                                            {"LOG10", &LOG10},
+                                                            {"LOGE", &LOGE},
+                                                            {"INV", &INV},
+                                                            {"MULTX", &MULTX},
+                                                            {"ADDX", &ADDX},
+                                                            {"COPY", &COPY},
+                                                            {"MAXLIM", &MAXLIM},
+                                                            {"MINLIM", &MINLIM},
+                                                            {"MULTP", &MULTP},
+                                                            {"ABS", &ABS},
+                                                            {"MULTIPLY", &MULTIPLY}};
 }
 
-function get(const std::string& func) {
-    return operations.at(func);
+function get(const std::string& func, double alpha, double beta) {
+    auto inner_func = operations.at(func);
+
+    return [alpha, beta, inner_func](double R, double X)
+           {
+               return inner_func(R,X,alpha,beta);
+           };
 }
 
 }
