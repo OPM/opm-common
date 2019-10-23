@@ -70,6 +70,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Grid/GridProperty.cpp
     src/opm/parser/eclipse/EclipseState/Grid/MULTREGTScanner.cpp
     src/opm/parser/eclipse/EclipseState/Grid/NNC.cpp
+    src/opm/parser/eclipse/EclipseState/Grid/Operate.cpp
     src/opm/parser/eclipse/EclipseState/Grid/PinchMode.cpp
     src/opm/parser/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.cpp
     src/opm/parser/eclipse/EclipseState/Grid/setKeywordBox.cpp
