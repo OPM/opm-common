@@ -187,7 +187,11 @@ if(ENABLE_ECL_INPUT)
     test_util/convertECL.cpp
     )
 
-  foreach(target compareECL convertECL)
+  add_executable(summary
+    test_util/summary.cpp
+    )
+
+  foreach(target compareECL convertECL summary)
     target_link_libraries(${target} opmcommon)
     install(TARGETS ${target} DESTINATION bin)
   endforeach()
