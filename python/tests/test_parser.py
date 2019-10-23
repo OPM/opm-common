@@ -4,35 +4,10 @@ import sys
 
 from opm.io.parser import Parser
 from opm.io.parser import ParseContext
-
 from opm.io.deck import DeckKeyword
 
 
 class TestParser(unittest.TestCase):
-
-    REGIONDATA = """
-START             -- 0
-10 MAI 2007 /
-RUNSPEC
-
-DIMENS
-2 2 1 /
-GRID
-DX
-4*0.25 /
-DY
-4*0.25 /
-DZ
-4*0.25 /
-TOPS
-4*0.25 /
-REGIONS
-OPERNUM
-3 3 1 2 /
-FIPNUM
-1 1 2 3 /
-"""
-
 
     def setUp(self):
         self.spe3fn = 'tests/spe3/SPE3CASE1.DATA'
