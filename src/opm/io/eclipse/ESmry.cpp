@@ -31,6 +31,7 @@
 #include <set>
 #include <stdexcept>
 
+#include <iostream>
 #include <boost/filesystem.hpp> 
 
 #include <opm/io/eclipse/EclFile.hpp>
@@ -158,7 +159,7 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
 
         getRstString(restartArray, pathRstFile, rstRootN);
     }
-    
+
     int nFiles = static_cast<int>(smryArray.size());
     
     // arrayInd should hold indices for each vector and runs
@@ -190,7 +191,7 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
         std::vector<std::string> wgnames = smspec.get<std::string>("WGNAMES");
         std::vector<int> nums = smspec.get<int>("NUMS");
 
- 	    std::vector<int> tmpVect(keywords.size(), -1);
+        std::vector<int> tmpVect(keywords.size(), -1);
         arrayInd[n]=tmpVect;
 
         std::set<std::string>::iterator it;
@@ -286,12 +287,14 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
         //    2 or 3 arrays pr time step.
         //       If timestep is a report step:  MINISTEP, PARAMS and SEQHDR
         //       else : MINISTEP and PARAMS
-        
-        
+
         size_t i = std::get<0>(arraySourceList[0]) == "SEQHDR" ? 1 : 0 ;
 
+        std::string prevFile;
+        std::unique_ptr<EclFile> pEclFile;
+
         while  (i < arraySourceList.size()){
-            
+
             if (std::get<0>(arraySourceList[i]) != "MINISTEP"){
                 std::string message="Reading summary file, expecting keyword MINISTEP, found '" + std::get<0>(arraySourceList[i]) + "'";
                 throw std::invalid_argument(message);
@@ -304,10 +307,16 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
             
             i++;
 
-            EclFile resfile(std::get<1>(arraySourceList[i]));
+            if (std::get<1>(arraySourceList[i]) != prevFile){
+                pEclFile = std::make_unique<EclFile>(std::get<1>(arraySourceList[i]));
+                pEclFile->loadData();
+                
+                prevFile = std::get<1>(arraySourceList[i]);
+            }    
+            
             int m = std::get<2>(arraySourceList[i]);
             
-            std::vector<float> tmpData = resfile.get<float>(m);
+            std::vector<float> tmpData = pEclFile->get<float>(m);
 
             time = tmpData[0];
 
@@ -344,7 +353,7 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
                    param[ind][step] = tmpData[j];        
                 }
             }
-            
+
             if (reportStepNumber >= toReportStepNumber) {
                 i = arraySourceList.size();
             }
@@ -356,9 +365,9 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
 
         n--;
     }
-    
+
     nVect = keywList.size();
-    
+
     for (auto keyw : keywList){
         keyword.push_back(keyw);
     }
