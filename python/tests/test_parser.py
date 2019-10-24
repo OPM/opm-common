@@ -4,7 +4,6 @@ import sys
 
 from opm.io.parser import Parser
 from opm.io.parser import ParseContext
-
 from opm.io.deck import DeckKeyword
 
 unit_foot = 0.3048 #meters

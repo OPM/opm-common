@@ -8,6 +8,7 @@ from opm.io.summary import SummaryConfig
 
 
 class TestState2(unittest.TestCase):
+
     FAULTS_DECK = """
 RUNSPEC
 
