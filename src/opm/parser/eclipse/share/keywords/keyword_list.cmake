@@ -572,6 +572,8 @@ set( keywords
      000_Eclipse100/P/PVTO
      000_Eclipse100/P/PVTW
      000_Eclipse100/Q/QDRILL
+     000_Eclipse100/Q/QHRATING
+     000_Eclipse100/Q/QMOBIL
      000_Eclipse100/R/RADFIN4
      000_Eclipse100/R/RADIAL
      000_Eclipse100/R/RAINFALL
