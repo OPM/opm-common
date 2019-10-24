@@ -847,13 +847,22 @@ namespace Opm {
 
 
     void Eclipse3DProperties::handleBOXKeyword( const DeckKeyword& deckKeyword,  BoxManager& boxManager) {
-        const auto& record = deckKeyword.getRecord(0);
-        int I1 = record.getItem("I1").get< int >(0) - 1;
-        int I2 = record.getItem("I2").get< int >(0) - 1;
-        int J1 = record.getItem("J1").get< int >(0) - 1;
-        int J2 = record.getItem("J2").get< int >(0) - 1;
-        int K1 = record.getItem("K1").get< int >(0) - 1;
-        int K2 = record.getItem("K2").get< int >(0) - 1;
+        const auto& deckRecord = deckKeyword.getRecord(0);
+        const auto& I1Item = deckRecord.getItem("I1");
+        const auto& I2Item = deckRecord.getItem("I2");
+        const auto& J1Item = deckRecord.getItem("J1");
+        const auto& J2Item = deckRecord.getItem("J2");
+        const auto& K1Item = deckRecord.getItem("K1");
+        const auto& K2Item = deckRecord.getItem("K2");
+
+        const auto& active_box = boxManager.getActiveBox();
+
+        const int I1 = I1Item.defaultApplied(0) ? active_box.I1() : I1Item.get<int>(0) - 1;
+        const int I2 = I2Item.defaultApplied(0) ? active_box.I2() : I2Item.get<int>(0) - 1;
+        const int J1 = J1Item.defaultApplied(0) ? active_box.J1() : J1Item.get<int>(0) - 1;
+        const int J2 = J2Item.defaultApplied(0) ? active_box.J2() : J2Item.get<int>(0) - 1;
+        const int K1 = K1Item.defaultApplied(0) ? active_box.K1() : K1Item.get<int>(0) - 1;
+        const int K2 = K2Item.defaultApplied(0) ? active_box.K2() : K2Item.get<int>(0) - 1;
 
         boxManager.setInputBox( I1 , I2 , J1 , J2 , K1 , K2 );
     }

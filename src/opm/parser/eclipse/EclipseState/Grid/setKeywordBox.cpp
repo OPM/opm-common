@@ -31,12 +31,12 @@ namespace Opm {
 
         const auto& active_box = boxManager.getActiveBox();
 
-        const int i1 = I1Item.hasValue(0) ? I1Item.get<int>(0) - 1 : active_box.I1();
-        const int i2 = I2Item.hasValue(0) ? I2Item.get<int>(0) - 1 : active_box.I2();
-        const int j1 = J1Item.hasValue(0) ? J1Item.get<int>(0) - 1 : active_box.J1();
-        const int j2 = J2Item.hasValue(0) ? J2Item.get<int>(0) - 1 : active_box.J2();
-        const int k1 = K1Item.hasValue(0) ? K1Item.get<int>(0) - 1 : active_box.K1();
-        const int k2 = K2Item.hasValue(0) ? K2Item.get<int>(0) - 1 : active_box.K2();
+        const int i1 = I1Item.defaultApplied(0) ? active_box.I1() : I1Item.get<int>(0) - 1;
+        const int i2 = I2Item.defaultApplied(0) ? active_box.I2() : I2Item.get<int>(0) - 1;
+        const int j1 = J1Item.defaultApplied(0) ? active_box.J1() : J1Item.get<int>(0) - 1;
+        const int j2 = J2Item.defaultApplied(0) ? active_box.J2() : J2Item.get<int>(0) - 1;
+        const int k1 = K1Item.defaultApplied(0) ? active_box.K1() : K1Item.get<int>(0) - 1;
+        const int k2 = K2Item.defaultApplied(0) ? active_box.K2() : K2Item.get<int>(0) - 1;
 
         boxManager.setKeywordBox( i1,i2,j1,j2,k1,k2 );
     }

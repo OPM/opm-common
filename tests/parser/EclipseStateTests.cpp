@@ -649,3 +649,33 @@ BOOST_AUTO_TEST_CASE(TestIOConfigCreationWithSolutionRPTSOL) {
     }
 }
 
+
+BOOST_AUTO_TEST_CASE(TestBox) {
+    const char * regionData =
+                "START             --\n"
+                "10 MAI 2007 /\n"
+                "RUNSPEC\n"
+                "DIMENS\n"
+                "2 2 1 /\n"
+                "GRID\n"
+                "DX\n"
+                "4*0.25 /\n"
+                "BOX\n"
+                "1* 1 1 1 1 1 /\n"
+                "DY\n"
+                "4*0.25 /\n"
+                "DZ\n"
+                "4*0.25 /\n"
+                "TOPS\n"
+                "4*0.25 /\n"
+                "REGIONS\n"
+                "OPERNUM\n"
+                "3 3 1 2 /\n"
+                "FIPNUM\n"
+                "1 1 2 3 /\n";
+    Parser parser;
+    auto deck = parser.parseString(regionData);
+    EclipseState state(deck);    
+
+}
+
