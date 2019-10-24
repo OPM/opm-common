@@ -39,9 +39,9 @@ inv_ecl_month = {1 : "JAN",
                  12 : "DEC"}
 
 def _make_datetime(dates_record):
-    day = dates_record[0][0]
-    month = dates_record[1][0]
-    year = dates_record[2][0]
+    day = dates_record[0].get_int(0)
+    month = dates_record[1].get_str(0)
+    year = dates_record[2].get_int(0)
 
     return datetime.datetime(year, ecl_month[month], day)
 

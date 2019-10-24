@@ -23,11 +23,14 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
+
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/A.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/B.hpp>
 
+#include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckValue.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 
@@ -36,7 +39,6 @@ using namespace Opm;
 BOOST_AUTO_TEST_CASE(DeckValueTest) {
 
     const DeckValue value0;
-
     BOOST_CHECK(value0.is_default());
     BOOST_CHECK(!value0.is_compatible<int>());
     BOOST_CHECK(!value0.is_compatible<std::string>());
@@ -75,23 +77,27 @@ BOOST_AUTO_TEST_CASE(DeckValueTest) {
 BOOST_AUTO_TEST_CASE(DeckKeywordConstructor) {
 
     Parser parser;
+    Deck deck;
+
+    UnitSystem& unit_default = deck.getDefaultUnitSystem();
+    UnitSystem  unit_active(UnitSystem::UnitType::UNIT_TYPE_LAB);
 
     const ParserKeyword& big_model = parser.getKeyword("BIGMODEL");
-    BOOST_CHECK_THROW( DeckKeyword( big_model, {{DeckValue("WORD_A")}} ), std::invalid_argument );
+    BOOST_CHECK_THROW( DeckKeyword( big_model, {{DeckValue("WORD_A")}}, unit_active, unit_default ), std::invalid_argument );
 
     const ParserKeyword& box = parser.getKeyword("BOX");
     std::vector< DeckValue > record1 = {DeckValue(1), DeckValue(2), DeckValue(3), DeckValue(4), DeckValue(5), DeckValue(6)};
-    DeckKeyword dkw(box, {record1});
-    BOOST_CHECK_NO_THROW( DeckKeyword( box, {record1} ) );
-    BOOST_CHECK_THROW( DeckKeyword( box, {{ record1, record1 }}), std::invalid_argument );
+    DeckKeyword dkw(box, {record1}, unit_active, unit_default);
+    BOOST_CHECK_NO_THROW( DeckKeyword( box, {record1}, unit_active, unit_default ) );
+    BOOST_CHECK_THROW( DeckKeyword( box, {{ record1, record1 }}, unit_default, unit_active), std::invalid_argument );
 
     const ParserKeyword& addreg = parser.getKeyword("ADDREG");
 
-    BOOST_CHECK_NO_THROW( DeckKeyword( addreg, {{ DeckValue("WORD_A") }} ) );
-    BOOST_CHECK_THROW( DeckKeyword( addreg, {{DeckValue("WORD_A"), DeckValue(77), DeckValue(16.25), DeckValue("WORD_B")}} ) , std::invalid_argument);
+    BOOST_CHECK_NO_THROW( DeckKeyword( addreg, {{ DeckValue("WORD_A") }}, unit_active, unit_default ) );
+    BOOST_CHECK_THROW( DeckKeyword( addreg, {{DeckValue("WORD_A"), DeckValue(77), DeckValue(16.25), DeckValue("WORD_B")}}, unit_default, unit_active ) , std::invalid_argument);
 
     std::vector< DeckValue > record = {DeckValue("WORD_A"), DeckValue(16.25), DeckValue(77), DeckValue("WORD_B")};
-    DeckKeyword deck_kw(addreg, {record});
+    DeckKeyword deck_kw(addreg, {record}, unit_active, unit_default);
 
     BOOST_CHECK_EQUAL( deck_kw.size(), 1 );
 
@@ -110,7 +116,7 @@ BOOST_AUTO_TEST_CASE(DeckKeywordConstructor) {
 
     //checking default values:
     record = {DeckValue("WORD_A"), DeckValue(), DeckValue(77)};
-    DeckKeyword deck_kw1(addreg, {record});
+    DeckKeyword deck_kw1(addreg, {record}, unit_active, unit_default);
 
     const DeckRecord& deck_record1 = deck_kw1.getRecord(0);
     const auto& shift1 = deck_record1.getItem( 1 );
@@ -119,7 +125,15 @@ BOOST_AUTO_TEST_CASE(DeckKeywordConstructor) {
     BOOST_CHECK_EQUAL( name1.get<std::string>(0), "M" );
 
     //check that int can substitute double
-    BOOST_CHECK_NO_THROW( DeckKeyword(addreg, {{DeckValue("WORD_A"), DeckValue(5), DeckValue(77)}}   ) );
+    BOOST_CHECK_NO_THROW( DeckKeyword(addreg, {{DeckValue("WORD_A"), DeckValue(5), DeckValue(77)}}, unit_active, unit_default   ) );
+
+    //Check correct SI conversion
+    const ParserKeyword& delayact = parser.getKeyword("DELAYACT");
+    DeckKeyword delayact_kw( delayact, {{DeckValue("ABC"), DeckValue("DEF"), DeckValue(1.0), DeckValue(8)}}, unit_active, unit_default );
+    const auto& deck_record2 = delayact_kw.getRecord(0);
+    const auto& delay = deck_record2.getItem( 2 );
+    BOOST_CHECK_EQUAL( delay.get<double>(0), 1.0 );
+    BOOST_CHECK_EQUAL( delay.getSIDouble(0), 3600.0 );
 
 
 }

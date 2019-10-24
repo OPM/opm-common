@@ -66,7 +66,7 @@ FIPNUM
         self.assertIn('FIPNUM', self.deck)
         self.assertEqual(len(self.deck['FIPNUM']), 1)
         self.assertEqual(len(self.deck['FIPNUM'][0]), 1)
-        self.assertEqual(len(self.deck['FIPNUM'][0][0]), 4)
+        self.assertEqual(len(self.deck['FIPNUM'][0][0].get_data_list()), 4)
 
 
 if __name__ == "__main__":
