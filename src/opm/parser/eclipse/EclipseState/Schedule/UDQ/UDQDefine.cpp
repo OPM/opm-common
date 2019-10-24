@@ -195,4 +195,8 @@ const std::string& UDQDefine::input_string() const {
     return this->string_data;
 }
 
+std::set<UDQTokenType> UDQDefine::func_tokens() const {
+    return this->ast->func_tokens();
+}
+
 }

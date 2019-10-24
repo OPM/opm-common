@@ -1401,4 +1401,14 @@ WCONPROD
         BOOST_CHECK_EQUAL( record1.use_count, 1);
         BOOST_CHECK_EQUAL( record1.use_index, 1);
     }
+    {
+        const auto& udq_config = schedule.getUDQConfig(2);
+        const auto& def1 = udq_config.definitions()[0];
+        const auto& tokens = def1.func_tokens();
+        BOOST_CHECK_EQUAL( tokens.count( UDQTokenType::number ), 1);
+        BOOST_CHECK_EQUAL( tokens.count( UDQTokenType::ecl_expr), 1);
+        BOOST_CHECK_EQUAL( tokens.count( UDQTokenType::binary_op_sub), 1);
+        BOOST_CHECK_EQUAL( tokens.count( UDQTokenType::binary_op_mul), 1);
+    }
 }
+

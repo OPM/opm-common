@@ -23,6 +23,7 @@
 
 #include <string>
 #include <vector>
+#include <set>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQSet.hpp>
@@ -59,6 +60,7 @@ public:
     const std::string& keyword() const;
     const std::string& input_string() const;
     UDQVarType  var_type() const;
+    std::set<UDQTokenType> func_tokens() const;
 private:
     const UDQParams& udq_params;  // Beacuse of the shared RNG stream this must be a reference.
     std::string m_keyword;

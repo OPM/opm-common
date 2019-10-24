@@ -21,6 +21,7 @@
 #define UDQASTNODE_HPP
 
 #include <string>
+#include <set>
 #include <vector>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQSet.hpp>
@@ -43,7 +44,9 @@ public:
 
     UDQTokenType type;
     UDQVarType var_type = UDQVarType::NONE;
+    std::set<UDQTokenType> func_tokens() const;
 private:
+    void func_tokens(std::set<UDQTokenType>& tokens) const;
 
     std::string string_value;
     double scalar_value;

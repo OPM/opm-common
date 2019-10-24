@@ -201,5 +201,17 @@ UDQSet UDQASTNode::eval(UDQVarType target_type, const UDQContext& context) const
     throw std::invalid_argument("Should not be here ...");
 }
 
+void UDQASTNode::func_tokens(std::set<UDQTokenType>& tokens) const {
+    tokens.insert( this->type );
+    for (const auto& arg : this->arglist)
+        arg.func_tokens(tokens);
+}
+
+std::set<UDQTokenType> UDQASTNode::func_tokens() const {
+    std::set<UDQTokenType> tokens;
+    this->func_tokens(tokens);
+    return tokens;
+}
+
 
 }
