@@ -17,6 +17,7 @@
 */
 #include <cmath>
 #include <map>
+#include <string>
 
 #include "Operate.hpp"
 
