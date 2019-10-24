@@ -23,6 +23,7 @@
 #GIALL         records of tables
 #MASSFLOW      tables w/ int, double, str
 #MESSAGE       record without slash
+#MPFNNC        records of records
 #UDT
 
 set( keywords
@@ -473,18 +474,30 @@ set( keywords
      000_Eclipse100/M/MLANG
      000_Eclipse100/M/MLANGSLV
      000_Eclipse100/M/MONITOR
+     000_Eclipse100/M/MPFANUM
      000_Eclipse100/M/MSFN
      000_Eclipse100/M/MSGFILE
+     000_Eclipse100/M/MULSGGD
+     000_Eclipse100/M/MULSGGDV
      000_Eclipse100/M/MULTFLT
      000_Eclipse100/M/MULTIN
      000_Eclipse100/M/MULTOUT
+     000_Eclipse100/M/MULTOUTS
      000_Eclipse100/M/MULTIPLY
      000_Eclipse100/M/MULTIREG
      000_Eclipse100/M/MULTNUM
      000_Eclipse100/M/MULTPV
+     000_Eclipse100/M/MULTREAL
+     000_Eclipse100/M/MULTREGD
+     000_Eclipse100/M/MULTREGH
      000_Eclipse100/M/MULTREGP
      000_Eclipse100/M/MULTREGT
+     000_Eclipse100/M/MULTSIG
+     000_Eclipse100/M/MULTSIGV
      000_Eclipse100/M/MULT_XYZ
+     000_Eclipse100/N/NARROW
+     000_Eclipse100/N/NCONSUMP
+     000_Eclipse100/N/NEFAC
      000_Eclipse100/N/NETBALAN
      000_Eclipse100/N/NEWTRAN
      000_Eclipse100/N/NEXTSTEP
