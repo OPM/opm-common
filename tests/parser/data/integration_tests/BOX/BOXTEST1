@@ -37,6 +37,8 @@ MINVALUE
 NTG 1.5 1 10 1  5 5  5 /  -- NTG >= 1.5
 /
 
+FLUXNUM
+  1000*1 /
 
 PERMX
   1000*1 /
@@ -73,8 +75,6 @@ PROPS
 
 REGIONS
 
-FLUXNUM
-  1000*1 /
 
 SATNUM
   1000*2 /
