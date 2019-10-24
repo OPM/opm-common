@@ -67,9 +67,9 @@ namespace Opm {
 
             // for a cell to be inside reservoir, its indices need to be within the reservoir grid dimension range,
             // and it needs to be active
-            static bool cellInsideReservoir(const EclipseGrid& grid, int i, int j, int k);
+            static bool cellInsideReservoirAndActive(const EclipseGrid& grid, int i, int j, int k);
 
-            static bool neighborCellInsideReservoir(const EclipseGrid& grid, int i, int j, int k, FaceDir::DirEnum faceDir);
+            static bool neighborCellInsideReservoirAndActive(const EclipseGrid& grid, int i, int j, int k, FaceDir::DirEnum faceDir);
 
             std::vector<Aquancon::AquanconOutput> m_aquoutput;
     };
