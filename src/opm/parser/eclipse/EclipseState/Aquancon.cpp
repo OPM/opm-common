@@ -55,7 +55,7 @@ namespace Opm {
         for (size_t aquanconRecordIdx = 0; aquanconRecordIdx < aquanconKeyword.size(); ++aquanconRecordIdx)
         {
             const auto& aquanconRecord = aquanconKeyword.getRecord(aquanconRecordIdx);
-            aquiferID_per_record.at(aquanconRecordIdx) = aquanconRecord.getItem("AQUIFER_ID").template get<int>(0);
+            aquiferID_per_record[aquanconRecordIdx] = aquanconRecord.getItem("AQUIFER_ID").template get<int>(0);
 
             // offset the indices
             const int i1 = aquanconRecord.getItem("I1").template get<int>(0) - 1;
@@ -65,8 +65,8 @@ namespace Opm {
             const int k1 = aquanconRecord.getItem("K1").template get<int>(0) - 1;
             const int k2 = aquanconRecord.getItem("K2").template get<int>(0) - 1;
 
-            m_maxAquID = (m_maxAquID < aquiferID_per_record.at(aquanconRecordIdx) )?
-                            aquiferID_per_record.at(aquanconRecordIdx) : m_maxAquID;
+            m_maxAquID = (m_maxAquID < aquiferID_per_record[aquanconRecordIdx] )?
+                            aquiferID_per_record[aquanconRecordIdx] : m_maxAquID;
 
             const FaceDir::DirEnum faceDir = FaceDir::FromString(aquanconRecord.getItem("FACE").getTrimmedString(0));
 
@@ -75,29 +75,29 @@ namespace Opm {
             // not sure whether we should give a warning when input other than "YES" or "NO"
             const bool allow_aquifer_inside_reservoir = str_inside_reservoir == "YES" ? true : false;
 
+            auto& aqurecord = aqurecords[aquanconRecordIdx];
             // Loop over the cartesian indices to convert to the global grid index
             for (int k = k1; k <= k2; k++) {
                 for (int j = j1; j <= j2; j++) {
                     for (int i = i1; i <= i2; i++) {
                         if ( grid.cellActive(i, j, k) ) { // the cell itself needs to be active
                             if (  allow_aquifer_inside_reservoir
-                               || !neighborCellInsideReservoir(grid, i, j, k, faceDir) ) {
-                                aqurecords.at(aquanconRecordIdx)
-                                     .global_index_per_record.push_back(grid.getGlobalIndex(i, j, k));
+                               || !neighborCellInsideReservoirAndActive(grid, i, j, k, faceDir) ) {
+                                     aqurecord.global_index_per_record.push_back(grid.getGlobalIndex(i, j, k));
                              }
                         }
                     }
                 }
             }
-            const size_t global_index_per_record_size = aqurecords.at(aquanconRecordIdx).global_index_per_record.size();
+            const size_t global_index_per_record_size = aqurecord.global_index_per_record.size();
 
-            aqurecords.at(aquanconRecordIdx).influx_coeff_per_record.resize(global_index_per_record_size, nullptr);
+            aqurecord.influx_coeff_per_record.resize(global_index_per_record_size, nullptr);
 
             if (aquanconRecord.getItem("INFLUX_COEFF").hasValue(0))
             {
                 const double influx_coeff = aquanconRecord.getItem("INFLUX_COEFF").getSIDouble(0);
 
-                for (auto& influx: aqurecords.at(aquanconRecordIdx).influx_coeff_per_record)
+                for (auto& influx: aqurecord.influx_coeff_per_record)
                 {
                     influx.reset(new double(influx_coeff));
                 }
@@ -106,9 +106,9 @@ namespace Opm {
 
             const double influx_mult = aquanconRecord.getItem("INFLUX_MULT").getSIDouble(0);
 
-            aqurecords.at(aquanconRecordIdx).influx_mult_per_record.resize(global_index_per_record_size, influx_mult);
-            aqurecords.at(aquanconRecordIdx).face_per_record.resize(global_index_per_record_size, faceDir);
-            aqurecords.at(aquanconRecordIdx).record_index_per_record.resize(global_index_per_record_size, aquanconRecordIdx);
+            aqurecord.influx_mult_per_record.resize(global_index_per_record_size, influx_mult);
+            aqurecord.face_per_record.resize(global_index_per_record_size, faceDir);
+            aqurecord.record_index_per_record.resize(global_index_per_record_size, aquanconRecordIdx);
         }
 
         // Collate_function
@@ -119,7 +119,7 @@ namespace Opm {
     }
 
 
-    bool Aquancon::cellInsideReservoir(const Opm::EclipseGrid& grid, const int i, const int j, const int k)
+    bool Aquancon::cellInsideReservoirAndActive(const Opm::EclipseGrid& grid, const int i, const int j, const int k)
     {
         if ( i < 0 || j < 0 || k < 0
             || size_t(i) > grid.getNX() - 1
@@ -132,28 +132,22 @@ namespace Opm {
         return grid.cellActive(i, j, k );
     }
 
-    bool Aquancon::neighborCellInsideReservoir(const Opm::EclipseGrid& grid,
+    bool Aquancon::neighborCellInsideReservoirAndActive(const Opm::EclipseGrid& grid,
            const int i, const int j, const int k, const Opm::FaceDir::DirEnum faceDir)
     {
         switch(faceDir) {
         case FaceDir::XMinus:
-            return cellInsideReservoir(grid, i - 1, j, k);
-            break;
+            return cellInsideReservoirAndActive(grid, i - 1, j, k);
         case FaceDir::XPlus:
-            return cellInsideReservoir(grid, i + 1, j, k);
-            break;
+            return cellInsideReservoirAndActive(grid, i + 1, j, k);
         case FaceDir::YMinus:
-            return cellInsideReservoir(grid, i, j - 1, k);
-            break;
+            return cellInsideReservoirAndActive(grid, i, j - 1, k);
         case FaceDir::YPlus:
-            return cellInsideReservoir(grid, i, j + 1, k);
-            break;
+            return cellInsideReservoirAndActive(grid, i, j + 1, k);
         case FaceDir::ZMinus:
-            return cellInsideReservoir(grid, i, j, k - 1);
-            break;
+            return cellInsideReservoirAndActive(grid, i, j, k - 1);
         case FaceDir::ZPlus:
-            return cellInsideReservoir(grid, i, j, k + 1);
-            break;
+            return cellInsideReservoirAndActive(grid, i, j, k + 1);
         default:
             throw std::runtime_error("Unknown FaceDir enum " + std::to_string(faceDir));
         }

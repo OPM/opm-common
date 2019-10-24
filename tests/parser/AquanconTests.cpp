@@ -172,7 +172,7 @@ BOOST_AUTO_TEST_CASE(AquanconTest_DEFAULT_INFLUX) {
 }
 
 // allowing aquifer exists inside the reservoir
-inline Deck createAQUANCONDeck_ALLOW_INSIDE_AQUAN() {
+inline Deck createAQUANCONDeck_ALLOW_INSIDE_AQUAN_OR_NOT() {
     const char *deckData =
         "DIMENS\n"
         "3 3 3 /\n"
@@ -197,21 +197,26 @@ inline Deck createAQUANCONDeck_ALLOW_INSIDE_AQUAN() {
         "\n"
         "AQUFETP\n"
         "  1 20.0 1000.0 2000. 0.000001 200.0 /\n"
+        "  2 20.0 1000.0 2000. 0.000001 200.0 /\n"
         "/\n"
         "AQUANCON\n"
         "   1      1  1   1   1   1  1  J-  2* YES /\n"
         "   1      2  2   1   1   1  1  J-  2* YES /\n"
         "   1      2  2   2   2   1  1  J-  2* YES /\n"
+        "   2      1  1   1   1   3  3  J-  2* NO /\n"
+        "   2      2  2   1   1   3  3  J-  2* NO /\n"
+        "   2      2  2   2   2   3  3  J-  2* NO /\n"
         "/ \n";
 
     Parser parser;
     return parser.parseString(deckData);
 }
 
-BOOST_AUTO_TEST_CASE(AquanconTest_ALLOW_AQUIFER_INSIDE) {
-    auto deck = createAQUANCONDeck_ALLOW_INSIDE_AQUAN();
+BOOST_AUTO_TEST_CASE(AquanconTest_ALLOW_AQUIFER_INSIDE_OR_NOT) {
+    auto deck = createAQUANCONDeck_ALLOW_INSIDE_AQUAN_OR_NOT();
     const EclipseState eclState( deck );
     const Aquancon aqucon( eclState.getInputGrid(), deck);
     const std::vector<Aquancon::AquanconOutput>& aquifer_cons = aqucon.getAquOutput();
     BOOST_CHECK_EQUAL(aquifer_cons[0].global_index.size(), 2);
+    BOOST_CHECK_EQUAL(aquifer_cons[1].global_index.size(), 1);
 }
