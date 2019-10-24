@@ -23,6 +23,8 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <opm/common/utility/numeric/cmp.hpp>
+
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
@@ -142,6 +144,11 @@ BOOST_AUTO_TEST_CASE(DeckKeywordConstructor) {
 BOOST_AUTO_TEST_CASE(DeckKeywordVectorInt) {
     
    Parser parser;
+   Deck deck;
+
+   UnitSystem& unit_default = deck.getDefaultUnitSystem();
+   UnitSystem  unit_active(UnitSystem::UnitType::UNIT_TYPE_LAB);
+
    const ParserKeyword& hbnum = parser.getKeyword("HBNUM");
    const ParserKeyword& box = parser.getKeyword("BOX");
 
@@ -153,27 +160,33 @@ BOOST_AUTO_TEST_CASE(DeckKeywordVectorInt) {
    BOOST_CHECK( hbnum_kw.getIntData() == data );   
 
    std::vector<double> data_double = {1.1, 2.2};
-   BOOST_CHECK_THROW(DeckKeyword(hbnum, data_double), std::invalid_argument);
+   BOOST_CHECK_THROW(DeckKeyword(hbnum, data_double, unit_active, unit_default), std::invalid_argument);
 }
 
 
 BOOST_AUTO_TEST_CASE(DeckKeywordVectorDouble) {
     
    Parser parser;
-   const ParserKeyword& poro = parser.getKeyword("PORO");
+   Deck deck;
+
+   UnitSystem& unit_default = deck.getDefaultUnitSystem();
+   UnitSystem  unit_active(UnitSystem::UnitType::UNIT_TYPE_LAB);
+
+   const ParserKeyword& zcorn = parser.getKeyword("ZCORN");  //vector of dim length
    const ParserKeyword& box = parser.getKeyword("BOX");
 
    std::vector<double> data = {1.1, 2.2, 3.3};
-   BOOST_CHECK_THROW(DeckKeyword(box, data), std::invalid_argument);
-   DeckKeyword poro_kw(poro, data);
-   BOOST_CHECK(poro_kw.isDataKeyword());
-   BOOST_CHECK_EQUAL(poro_kw.getDataSize(), 3);
-   BOOST_CHECK( poro_kw.getRawDoubleData() == data );
+   
+   BOOST_CHECK_THROW(DeckKeyword(box, data, unit_active, unit_default), std::invalid_argument);
+   DeckKeyword zcorn_kw(zcorn, data, unit_active, unit_default);
+   BOOST_CHECK(zcorn_kw.isDataKeyword());
+   BOOST_CHECK_EQUAL(zcorn_kw.getDataSize(), 3);
+   BOOST_CHECK( zcorn_kw.getRawDoubleData() == data );
+   std::vector<double> SI_data = zcorn_kw.getSIDoubleData();
+   BOOST_CHECK( cmp::scalar_equal<double>(SI_data[0], 0.011) );
+   BOOST_CHECK( cmp::scalar_equal<double>(SI_data[1], 0.022) );
+   BOOST_CHECK( cmp::scalar_equal<double>(SI_data[2], 0.033) );
 
-   std::vector<int> data_int = {1, 2};
-   poro_kw = DeckKeyword(poro, data_int);
-   std::vector<double> raw_int = {1.0, 2.0};
-   BOOST_CHECK( poro_kw.getRawDoubleData() == raw_int );
 }
 
 

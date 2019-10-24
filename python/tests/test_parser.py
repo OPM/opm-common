@@ -2,6 +2,8 @@ import unittest
 import os.path
 import sys
 
+import numpy as np
+
 from opm.io.parser import Parser
 from opm.io.parser import ParseContext
 from opm.io.deck import DeckKeyword
@@ -52,7 +54,7 @@ FIPNUM
         deck = parser.parse_string(string)
         deck = parser.parse_string(string, context)
 
-    def test_create_deck_kw(self):
+    def test_deck_kw_records(self):
         parser = Parser()
         deck = parser.parse_string(self.REGIONDATA)
         active_unit_system = deck.active_unit_system()
@@ -126,6 +128,26 @@ FIPNUM
         with self.assertRaises(ValueError):
             raise DeckKeyword(parser["AQANTRC"], [["1*2.2", "ABC", 8]], active_unit_system, default_unit_system)
 
+
+    def test_deck_kw_vector(self):
+        parser = Parser()
+        deck = parser.parse_string(self.REGIONDATA)
+        active_unit_system = deck.active_unit_system()
+        default_unit_system = deck.default_unit_system()
+        self.assertEqual(active_unit_system.name, "Field")
+
+        int_array = np.array([0, 1, 2, 3])
+        hbnum_kw = DeckKeyword( parser["HBNUM"], int_array)
+        assert( np.array_equal(hbnum_kw.get_int_array(), int_array) )
+
+        raw_array = np.array([1.1, 2.2, 3.3])
+        zcorn_kw = DeckKeyword( parser["ZCORN"], raw_array, active_unit_system, default_unit_system)
+        assert( np.array_equal(zcorn_kw.get_raw_array(), raw_array) )
+        si_array = zcorn_kw.get_SI_array()
+        self.assertAlmostEqual( si_array[0], 1.1 * unit_foot )
+        self.assertAlmostEqual( si_array[2], 3.3 * unit_foot )
+        
+    
 
 if __name__ == "__main__":
     unittest.main()
