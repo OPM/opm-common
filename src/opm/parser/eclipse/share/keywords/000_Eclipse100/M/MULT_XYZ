@@ -2,6 +2,10 @@
  "sections" : ["GRID", "EDIT"],
 
  "deck_names" : [
+  "MULTTHT",
+  "MULTTHT-",
+  "MULTR",
+  "MULTR-",
   "MULTX",
   "MULTX-",
   "MULTY",
