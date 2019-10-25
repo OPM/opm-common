@@ -99,15 +99,15 @@ void push_string_as_deck_value(std::vector<DeckValue>& record, const std::string
 
 
 py::array_t<int> get_int_array(const DeckKeyword& kw) {
-    return vector_to_numpy_array( kw.getIntData() );
+    return convert::numpy_array( kw.getIntData() );
 }
 
 py::array_t<double> get_raw_array(const DeckKeyword& kw) {
-    return vector_to_numpy_array( kw.getRawDoubleData() );
+    return convert::numpy_array( kw.getRawDoubleData() );
 }
 
 py::array_t<double> get_SI_array(const DeckKeyword& kw) {
-    return vector_to_numpy_array( kw.getSIDoubleData() );
+    return convert::numpy_array( kw.getSIDoubleData() );
 }
 
 }
@@ -163,11 +163,11 @@ void python::common::export_DeckKeyword(py::module& module) {
         .def_property_readonly("name", &DeckKeyword::name )
 
     .def(py::init([](const ParserKeyword& parser_keyword, py::array_t<int> py_data) {               
-            return DeckKeyword(parser_keyword, numpy_array_to_vector(py_data));
+            return DeckKeyword(parser_keyword, convert::vector(py_data));
         } ) )
 
     .def(py::init([](const ParserKeyword& parser_keyword, py::array_t<double> py_data, UnitSystem& active_system, UnitSystem& default_system) {               
-            return DeckKeyword(parser_keyword, numpy_array_to_vector(py_data), active_system, default_system);
+            return DeckKeyword(parser_keyword, convert::vector(py_data), active_system, default_system);
         } ) )
         
     .def("get_int_array", &get_int_array)

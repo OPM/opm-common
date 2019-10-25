@@ -21,9 +21,10 @@ std::string str( const T& t ) {
     return stream.str();
 }
 
+namespace convert {
 
 template <class T>
-std::vector<T> numpy_array_to_vector(py::array_t<T>& input) {
+std::vector<T> vector(py::array_t<T>& input) {
     T * input_ptr    = (T *) input.request().ptr; 
     std::vector<T> output(input.size());
   
@@ -35,7 +36,7 @@ std::vector<T> numpy_array_to_vector(py::array_t<T>& input) {
 
 
 template <class T>
-py::array_t<T> vector_to_numpy_array(const std::vector<T>& input) {
+py::array_t<T> numpy_array(const std::vector<T>& input) {
     auto output =  py::array_t<T>(input.size());
     T * py_array_ptr = (T*)output.request().ptr;
 
@@ -43,6 +44,8 @@ py::array_t<T> vector_to_numpy_array(const std::vector<T>& input) {
         py_array_ptr[i] = input[i];
 
     return output;
+}
+
 }
 
 #endif //SUNBEAM_CONVERTERS_HPP
