@@ -23,7 +23,7 @@ def closed(well):
 
 class TestWells(unittest.TestCase):
 
-    
+
     @classmethod
     def setUpClass(cls):
         deck = Parser().parse('tests/spe3/SPE3CASE1.DATA')
@@ -86,7 +86,7 @@ class TestWells(unittest.TestCase):
         self.assertTrue(prod.available_gctrl())
 
     def testWellDefinedFilter(self):
-        
+
         defined0 = list(filter(defined(0), self.sch.get_wells(0) ))
         defined1 = list(filter(defined(1), self.sch.get_wells(1) ))
         self.assertEqual(len(list(defined0)), 2)

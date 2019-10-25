@@ -185,3 +185,5 @@ PROPS\nREGIONS
         self.assertTrue('WOPR' in smry) # hasKeyword
         self.assertFalse('NONO' in smry) # hasKeyword
         
+if __name__ == "__main__":
+    unittest.main()
