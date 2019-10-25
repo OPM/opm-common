@@ -268,6 +268,7 @@ std::string typeName(UDQVarType var_type) {
     }
 }
 
+
 UDAKeyword keyword(UDAControl control) {
     const std::map<UDAControl, UDAKeyword> c2k = {{UDAControl::WCONPROD_ORAT, UDAKeyword::WCONPROD},
                                                   {UDAControl::WCONPROD_GRAT, UDAKeyword::WCONPROD},
@@ -315,6 +316,6 @@ int uadCode(UDAControl control) {
       return it->second;
 
     throw std::logic_error("Unrecognized enum type - internal error");
-}  
+}
 }
 }
