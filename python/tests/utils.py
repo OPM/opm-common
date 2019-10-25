@@ -1,5 +1,6 @@
 import contextlib
 import os
+import os.path
 import shutil
 import tempfile
 import unittest
@@ -18,6 +19,11 @@ def tmpdir(path, teardown=True):
                 return function(*args, **kwargs)
         return decorator.decorator(wrapper, function)
     return real_decorator
+
+
+
+def test_path(path):
+    return os.path.join(os.path.dirname(__file__), path)
 
 
 @contextlib.contextmanager

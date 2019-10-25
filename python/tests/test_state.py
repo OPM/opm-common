@@ -5,6 +5,7 @@ from opm.io.parser import Parser
 from opm.io.ecl_state import EclipseState
 from opm.io.schedule import Schedule
 from opm.io.summary import SummaryConfig
+from utils import test_path
 
 
 class TestState2(unittest.TestCase):
@@ -55,12 +56,12 @@ SATNUM
 """
 
     @classmethod
-    def setUpClass(cls):      
+    def setUpClass(cls):
         parser = Parser()
-        cls.deck_cpa  = parser.parse('tests/data/CORNERPOINT_ACTNUM.DATA')
+        cls.deck_cpa  = parser.parse(test_path('data/CORNERPOINT_ACTNUM.DATA'))
         cls.cp_state = EclipseState(cls.deck_cpa)
 
-        cls.deck_spe3 = parser.parse('tests/spe3/SPE3CASE1.DATA')
+        cls.deck_spe3 = parser.parse(test_path('spe3/SPE3CASE1.DATA'))
         cls.state    = EclipseState(cls.deck_spe3)
         cls.schedule  = Schedule(cls.deck_spe3, cls.state)
         cls.summary_config = SummaryConfig(cls.deck_spe3, cls.state, cls.schedule)
@@ -184,6 +185,6 @@ PROPS\nREGIONS
         self.assertTrue('SummaryConfig' in repr(smry))
         self.assertTrue('WOPR' in smry) # hasKeyword
         self.assertFalse('NONO' in smry) # hasKeyword
-        
+
 if __name__ == "__main__":
     unittest.main()

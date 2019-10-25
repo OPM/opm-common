@@ -3,6 +3,7 @@ import opm.io
 
 from opm.io.parser import Parser
 from opm.io.ecl_state import EclipseState
+from utils import test_path
 
 
 class TestProps(unittest.TestCase):
@@ -14,10 +15,10 @@ class TestProps(unittest.TestCase):
 
     def setUp(self):
         parser = Parser()
-        deck = parser.parse('tests/spe3/SPE3CASE1.DATA')
-        self.spe3 = EclipseState(deck)       
+        deck = parser.parse(test_path('spe3/SPE3CASE1.DATA'))
+        self.spe3 = EclipseState(deck)
         self.props = self.spe3.props()
-        
+
     def test_contains(self):
         p = self.props
         self.assertTrue('PORO'  in p)
@@ -39,7 +40,7 @@ class TestProps(unittest.TestCase):
             #millidarcy->SI
             return md * 1e-3 * 9.869233e-13
         e3dp  = self.props
-        
+
         grid  = self.spe3.grid()
         permx = e3dp['PERMX']
         print('set(PERMX) = %s' % set(permx))
@@ -52,7 +53,7 @@ class TestProps(unittest.TestCase):
                     perm  = permx[g_idx]
                     darcy = darcys[k]
                     self.assertClose(darcy, perm)
-    
+
     def test_volume(self):
         e3dp  = self.props
         grid  = self.spe3.grid()
@@ -65,7 +66,7 @@ class TestProps(unittest.TestCase):
                     if k == 0:
                         self.assertClose(exp, grid.getCellVolume(g_idx))
                     self.assertEqual(grid.getCellVolume(g_idx), grid.getCellVolume(i, j, k))
-   
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -4,6 +4,7 @@ import datetime as dt
 from opm.io.parser import Parser
 from opm.io.ecl_state import EclipseState
 from opm.io.schedule import Schedule
+from utils import test_path
 
 
 class TestSchedule(unittest.TestCase):
@@ -11,7 +12,7 @@ class TestSchedule(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        deck  = Parser().parse('tests/spe3/SPE3CASE1.DATA')
+        deck  = Parser().parse(test_path('spe3/SPE3CASE1.DATA'))
         state = EclipseState(deck)
         cls.sch = Schedule( deck, state )
 

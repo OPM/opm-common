@@ -3,7 +3,7 @@ import datetime
 from opm.tools import *
 
 from opm.io.parser import Parser
-from .utils import tmp
+from utils import test_path, tmp
 
 class TestTimeVector(unittest.TestCase):
 
@@ -57,10 +57,10 @@ class TestTimeVector(unittest.TestCase):
 
 
     def test_load(self):
-        tv = TimeVector(datetime.date(1997, 11, 6), base_file = "tests/data/schedule/part1.sch")
-        tv.load("tests/data/schedule/part3.sch")
-        tv.load("tests/data/schedule/fragment_dates.sch")
-        tv.load("tests/data/schedule/part2.sch")
+        tv = TimeVector(datetime.date(1997, 11, 6), base_file = test_path("data/schedule/part1.sch"))
+        tv.load(test_path("data/schedule/part3.sch"))
+        tv.load(test_path("data/schedule/fragment_dates.sch"))
+        tv.load(test_path("data/schedule/part2.sch"))
 
         self.assertEqual(tv.dates, [datetime.datetime(1997, 11,  6),
                                     datetime.datetime(1997, 11, 14),
@@ -80,9 +80,9 @@ class TestTimeVector(unittest.TestCase):
                                     datetime.datetime(1998,  8,  1)])
 
     def test_str(self):
-        tv = TimeVector(datetime.date(1997, 11, 6), base_string = open("tests/data/schedule/part1.sch").read())
-        tv.load("tests/data/schedule/part3.sch")
-        tv.load("tests/data/schedule/part2.sch")
+        tv = TimeVector(datetime.date(1997, 11, 6), base_string = open(test_path("data/schedule/part1.sch")).read())
+        tv.load(test_path("data/schedule/part3.sch"))
+        tv.load(test_path("data/schedule/part2.sch"))
 
         s = str(tv)
         tv2 = TimeVector(datetime.date(1997, 11, 6))
@@ -93,17 +93,17 @@ class TestTimeVector(unittest.TestCase):
 
 
     def test_optional(self):
-        tv = TimeVector(datetime.date(1997, 11, 6), base_file = "tests/data/schedule/part1.sch")
+        tv = TimeVector(datetime.date(1997, 11, 6), base_file = test_path("data/schedule/part1.sch"))
 
         # Must have a starting date, either as first keyword in loaded file,
         # or alternatively as the optional date argument.
         with self.assertRaises(ValueError):
-            tv.load("tests/data/schedule/fragment.sch")
+            tv.load(test_path("data/schedule/fragment.sch"))
 
         with self.assertRaises(ValueError):
-            tv.load("tests/data/schedule/fragment_dates.sch", date = datetime.datetime(1998, 1,1))
+            tv.load(test_path("data/schedule/fragment_dates.sch"), date = datetime.datetime(1998, 1,1))
 
-        tv.load("tests/data/schedule/fragment.sch", date = datetime.datetime(1998, 1, 10))
+        tv.load(test_path("data/schedule/fragment.sch"), date = datetime.datetime(1998, 1, 10))
         ts = tv[-1]
         self.assertEqual(ts.dt, datetime.datetime(1998, 1 , 10))
         self.assertEqual(ts.keywords[0].name, "WCONINJE")
@@ -112,14 +112,14 @@ class TestTimeVector(unittest.TestCase):
 
     def test_user_test(self):
        tv=TimeVector(datetime.date(1999,12,31))
-       tv.load('tests/data/schedule/TEMPLATE.SCH', date=datetime.datetime(1999,12,31))
+       tv.load(test_path('data/schedule/TEMPLATE.SCH'), date=datetime.datetime(1999,12,31))
        self.assertListEqual(tv.dates, [datetime.datetime(1999,12,31),
                                        datetime.datetime(2000,1,1),
                                        datetime.datetime(2000,2,1),
                                        datetime.datetime(2000,3,1)])
 
     def test_no_leading_DATES(self):
-        tv = TimeVector(datetime.date(1997, 11, 6), base_file="tests/data/schedule/part1.sch")
+        tv = TimeVector(datetime.date(1997, 11, 6), base_file=test_path("data/schedule/part1.sch"))
         s = str(tv)
         d = Parser().parse_string(s)
         kw0 = d[0]
@@ -129,7 +129,7 @@ class TestTimeVector(unittest.TestCase):
         self.assertEqual("", str(tv2))
 
     def test_drop_dates(self):
-        tv = TimeVector(datetime.date(1997, 11, 6), base_file="tests/data/schedule/part1.sch")
+        tv = TimeVector(datetime.date(1997, 11, 6), base_file=test_path("data/schedule/part1.sch"))
         with self.assertRaises(KeyError):
             tv.delete(datetime.datetime(2019,1,1))
 

@@ -3,7 +3,7 @@ import unittest
 from opm.io.parser import Parser
 from opm.io.ecl_state import EclipseState
 from opm.io.schedule import Schedule
-
+from utils import test_path
 
 def flowing(connection):
   return connection.state == 'OPEN'
@@ -16,8 +16,10 @@ class TestWells(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        deck = Parser().parse('tests/spe3/SPE3CASE1.DATA')
+        deck = Parser().parse(test_path('spe3/SPE3CASE1.DATA'))
+        print("Creating state")
         cls.state = EclipseState(deck)
+        print("State OK")
         cls.sch = Schedule(deck, cls.state)
         cls.timesteps = cls.sch.timesteps
 
@@ -31,7 +33,7 @@ class TestWells(unittest.TestCase):
         self.assertEqual(p01, (6,6,3))
         self.assertEqual(p10, (0,0,0))
         self.assertEqual(p11, (0,0,1))
-    
+
     def test_connection_state(self):
         for timestep,_ in enumerate(self.timesteps):
             for well in self.sch.get_wells(timestep):
