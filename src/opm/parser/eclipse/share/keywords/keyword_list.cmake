@@ -500,8 +500,14 @@ set( keywords
      000_Eclipse100/N/NCONSUMP
      000_Eclipse100/N/NEFAC
      000_Eclipse100/N/NETBALAN
+     000_Eclipse100/N/NETCOMPA
+     000_Eclipse100/N/NETWORK
+     000_Eclipse100/N/NEWTON
      000_Eclipse100/N/NEWTRAN
+     000_Eclipse100/N/NEXT
      000_Eclipse100/N/NEXTSTEP
+     000_Eclipse100/N/NEXTSTPL
+     000_Eclipse100/N/NINENUM
      000_Eclipse100/N/NNC
      000_Eclipse100/N/NNEWTF
      000_Eclipse100/N/NOCASC
