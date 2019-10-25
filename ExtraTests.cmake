@@ -90,7 +90,18 @@ if(HAVE_OPM_TESTS)
                 ${OPM_TESTS_ROOT}/spe9/SPE9.DATA
                 ${OPM_TESTS_ROOT}/spe10model1/SPE10_MODEL1.DATA
                 ${OPM_TESTS_ROOT}/spe10model2/SPE10_MODEL2.DATA
-                ${OPM_TESTS_ROOT}/msw_2d_h/2D_H__.DATA )
+                ${OPM_TESTS_ROOT}/msw_2d_h/2D_H__.DATA
+                ${OPM_TESTS_ROOT}/model2/0_BASE_MODEL2.DATA
+                ${OPM_TESTS_ROOT}/model2/1_MULTREGT_MODEL2.DATA
+                ${OPM_TESTS_ROOT}/model2/2_MULTXYZ_MODEL2.DATA
+                ${OPM_TESTS_ROOT}/model2/3_MULTFLT_MODEL2.DATA
+                ${OPM_TESTS_ROOT}/model2/4_MINPVV_MODEL2.DATA
+                ${OPM_TESTS_ROOT}/model2/5_SWATINIT_MODEL2.DATA
+                ${OPM_TESTS_ROOT}/model2/6_ENDSCALE_MODEL2.DATA
+                ${OPM_TESTS_ROOT}/model2/7_HYSTERESIS_MODEL2.DATA
+                ${OPM_TESTS_ROOT}/model2/8_MULTIPLY_TRANXYZ_MODEL2.DATA
+                ${OPM_TESTS_ROOT}/model2/9_EDITNNC_MODEL2.DATA)
+
       get_filename_component(test_name ${deck} NAME_WE)
       opm_add_test(${test_name} NO_COMPILE
                    EXE_NAME parse_write
