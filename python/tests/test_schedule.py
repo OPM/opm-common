@@ -4,11 +4,11 @@ import datetime as dt
 from opm.io.parser import Parser
 from opm.io.ecl_state import EclipseState
 from opm.io.schedule import Schedule
-    
+
 
 class TestSchedule(unittest.TestCase):
 
-    
+
     @classmethod
     def setUpClass(cls):
         deck  = Parser().parse('tests/spe3/SPE3CASE1.DATA')
@@ -52,7 +52,7 @@ class TestSchedule(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             self.sch.group('foo', 0)
-        
+
 
 if __name__ == "__main__":
     unittest.main()
