@@ -44,7 +44,7 @@ namespace Opm {
         DeckKeyword(const ParserKeyword& parserKeyword, const Location& location, const std::string& keywordName);
         DeckKeyword(const ParserKeyword& parserKeyword, const std::vector<std::vector<DeckValue>>& record_list, UnitSystem& system_active, UnitSystem& system_default);
         DeckKeyword(const ParserKeyword& parserKeyword, const std::vector<int>& data);
-        DeckKeyword(const ParserKeyword& parserKeyword, const std::vector<double>& data);
+        DeckKeyword(const ParserKeyword& parserKeyword, const std::vector<double>& data, UnitSystem& system_active, UnitSystem& system_default);
 
         const std::string& name() const;
         void setFixedSize();

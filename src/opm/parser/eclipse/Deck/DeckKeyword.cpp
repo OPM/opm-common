@@ -134,23 +134,12 @@ namespace Opm {
         const ParserItem& parser_item = parser_record.get(0);
 
         setDataKeyword();
-        DeckItem item;
-        if (parser_item.dataType() == type_tag::fdouble) {
-            // The unit system treatment here is a total hack to compile
-            UnitSystem unit_system(UnitSystem::UnitType::UNIT_TYPE_METRIC);
-            const auto& active_dim = unit_system.getDimension("1");
-            const auto& default_dim = unit_system.getDimension("1");
-            item = DeckItem(parser_item.name(), double(), { active_dim }, { default_dim });
-            for (double val : data)
-                item.push_back(val);
-        }
-        else if (parser_item.dataType() == type_tag::integer) {
-            item = DeckItem(parser_item.name(), int());
-            for (int val : data)
-                item.push_back(val);
-        }
-        else
+        if (parser_item.dataType() != type_tag::integer)
             throw std::invalid_argument("Input to DeckKeyword '" + name() + "': cannot be std::vector<int>.");
+      
+        DeckItem item(parser_item.name(), int() );
+        for (int val : data)
+            item.push_back(val);
 
         DeckRecord deck_record;
         deck_record.addItem( std::move(item) );
@@ -158,7 +147,7 @@ namespace Opm {
     }
 
 
-    DeckKeyword::DeckKeyword(const ParserKeyword& parserKeyword, const std::vector<double>& data) :
+    DeckKeyword::DeckKeyword(const ParserKeyword& parserKeyword, const std::vector<double>& data, UnitSystem& system_active, UnitSystem& system_default) :
         DeckKeyword(parserKeyword)
     {
         if (!parserKeyword.isDataKeyword())
@@ -171,11 +160,14 @@ namespace Opm {
         if (parser_item.dataType() != type_tag::fdouble)
             throw std::invalid_argument("Input to DeckKeyword '" + name() + "': cannot be std::vector<double>.");
 
-        // The unit system treatment here is a total hack to compile
-        UnitSystem unit_system(UnitSystem::UnitType::UNIT_TYPE_METRIC);
-        const auto& active_dim = unit_system.getDimension("1");
-        const auto& default_dim = unit_system.getDimension("1");
-        DeckItem item(parser_item.name(), double(), { active_dim }, { default_dim });
+        auto& dim = parser_item.dimensions();
+        std::vector<Dimension> active_dimensions;
+        std::vector<Dimension> default_dimensions;
+        if (dim.size() > 0) {
+             active_dimensions.push_back( system_active.getNewDimension(dim[0]) );
+             default_dimensions.push_back( system_default.getNewDimension(dim[0]) );
+        }
+        DeckItem item(parser_item.name(), double(), active_dimensions, default_dimensions);
         for (double val : data)
             item.push_back(val);
 

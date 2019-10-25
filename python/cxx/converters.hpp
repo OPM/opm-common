@@ -3,6 +3,7 @@
 
 #include <sstream>
 #include <pybind11/pybind11.h>
+#include <pybind11/numpy.h>
 
 namespace py = pybind11;
 
@@ -18,6 +19,33 @@ std::string str( const T& t ) {
     std::stringstream stream;
     stream << t;
     return stream.str();
+}
+
+namespace convert {
+
+template <class T>
+std::vector<T> vector(py::array_t<T>& input) {
+    T * input_ptr    = (T *) input.request().ptr; 
+    std::vector<T> output(input.size());
+  
+    for (int i = 0; i < input.size(); i++)
+        output[i] = input_ptr[i];
+
+    return output;
+}
+
+
+template <class T>
+py::array_t<T> numpy_array(const std::vector<T>& input) {
+    auto output =  py::array_t<T>(input.size());
+    T * py_array_ptr = (T*)output.request().ptr;
+
+    for (size_t i = 0; i < input.size(); i++)
+        py_array_ptr[i] = input[i];
+
+    return output;
+}
+
 }
 
 #endif //SUNBEAM_CONVERTERS_HPP
