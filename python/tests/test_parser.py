@@ -5,6 +5,7 @@ import sys
 from opm.io.parser import Parser
 from opm.io.parser import ParseContext
 from opm.io.deck import DeckKeyword
+from utils import test_path
 
 unit_foot = 0.3048 #meters
 
@@ -34,8 +35,8 @@ FIPNUM
 """
 
     def setUp(self):
-        self.spe3fn = 'tests/spe3/SPE3CASE1.DATA'
-        self.norne_fname = os.path.abspath('examples/data/norne/NORNE_ATW2013.DATA')
+        self.spe3fn = test_path('spe3/SPE3CASE1.DATA')
+        self.norne_fname = test_path('../examples/data/norne/NORNE_ATW2013.DATA')
 
     def test_create(self):
         parser = Parser()

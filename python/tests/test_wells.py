@@ -3,6 +3,7 @@ import opm
 from opm.io.parser import Parser
 from opm.io.ecl_state import EclipseState
 from opm.io.schedule import Schedule
+from utils import test_path
 
 def injector(well):
     return well.isinjector()
@@ -26,7 +27,7 @@ class TestWells(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        deck = Parser().parse('tests/spe3/SPE3CASE1.DATA')
+        deck = Parser().parse(test_path('spe3/SPE3CASE1.DATA'))
         state = EclipseState(deck)
         cls.sch = Schedule( deck, state )
         cls.timesteps = cls.sch.timesteps
@@ -120,7 +121,7 @@ class TestWells(unittest.TestCase):
         num_steps = len( self.sch.timesteps )
         w0 = self.sch.get_wells(num_steps - 1)[0]
         c0,c1 = w0.connections()
-        
+
         self.assertEqual((6,6,2), c0.pos)
         self.assertEqual((6,6,3), c1.pos)
 

@@ -5,6 +5,7 @@ import sys
 
 from opm.io.parser import Parser, ParseContext
 from opm.io.ecl_state import EclipseState
+from utils import test_path
 
 class TestParse(unittest.TestCase):
 
@@ -32,8 +33,8 @@ FIPNUM
 """
 
     def setUp(self):
-        self.spe3fn = 'tests/spe3/SPE3CASE1.DATA'
-        self.norne_fname = os.path.abspath('examples/data/norne/NORNE_ATW2013.DATA')
+        self.spe3fn = test_path('spe3/SPE3CASE1.DATA')
+        self.norne_fname = test_path('../examples/data/norne/NORNE_ATW2013.DATA')
 
     def test_parse(self):
         deck = Parser().parse(self.spe3fn)
@@ -75,7 +76,7 @@ FIPNUM
          parse_context = ParseContext( [('PARSE_RANDOM_SLASH', opm.io.action.ignore)] )
          deck = Parser().parse(self.norne_fname, parse_context)
          es = EclipseState( deck )
-         
+
          self.assertEqual(46, es.grid().nx)
          self.assertEqual(112, es.grid().ny)
          self.assertEqual(22, es.grid().nz)
