@@ -6,6 +6,6 @@
         {"name" : "V0" ,              		"value_type" : "DOUBLE" ,                        "dimension" : "Length*Length*Length"},
         {"name" : "C_T" , 			"value_type" : "DOUBLE" ,                        "dimension" : "1/Pressure"},
         {"name" : "PI" ,              		"value_type" : "DOUBLE" ,                        "dimension" : "ReservoirVolume/Pressure*Time"},
-        {"name" : "TABLE_NUM_WATER_PRESS" ,     "value_type" : "INT"    , "default_value" : 1},
-        {"name" : "SALINITY" ,        		"value_type" : "DOUBLE" , "default_value" : 0 , "dimension" : "Salinity"},
+        {"name" : "TABLE_NUM_WATER_PRESS" ,     "value_type" : "INT"    , "default" : 1},
+        {"name" : "SALINITY" ,        		"value_type" : "DOUBLE" , "default" : 0 , "dimension" : "Salinity"},
         {"name" : "TEMP" ,            		"value_type" : "DOUBLE" , "                      dimension" : "Temperature"}]}
