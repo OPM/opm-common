@@ -49,8 +49,11 @@ BOOST_AUTO_TEST_CASE(INSTANTIATE) {
     std::string python_code = R"(
 print('Parser: {}'.format(context.parser))
 print('Deck: {}'.format(context.deck))
+kw = context.DeckKeyword( context.parser['FIELD'] )
+context.deck.add(kw)
 )";
     BOOST_CHECK_NO_THROW( python.exec(python_code, parser, deck));
+    BOOST_CHECK( deck.hasKeyword("FIELD") );
 }
 
 #endif
