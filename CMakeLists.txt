@@ -229,7 +229,11 @@ if (OPM_ENABLE_PYTHON)
   list(APPEND _opmcommon_include_dirs ${_ecl_include_dirs})
   string(REPLACE ";" ":" _setup_include_dirs "${_opmcommon_include_dirs}")
 
-  set(_opmcommon_lib_dirs ${CMAKE_BINARY_DIR}/lib ${CMAKE_PREFIX_PATH}/lib)
+  if (CMAKE_PREFIX_PATH)
+    set(_opmcommon_lib_dirs ${PROJECT_BINARY_DIR}/lib ${CMAKE_PREFIX_PATH}/lib)
+  else()
+    set(_opmcommon_lib_dirs ${PROJECT_BINARY_DIR}/lib)
+  endif()
   string(REPLACE ";" ":" _setup_lib_dirs "${_opmcommon_lib_dirs}")
 
   add_custom_command(OUTPUT python/python/opm/libopmcommon_python.so
