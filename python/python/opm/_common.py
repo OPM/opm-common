@@ -19,6 +19,7 @@ from .libopmcommon_python import Schedule
 from .libopmcommon_python import OpmLog
 from .libopmcommon_python import SummaryConfig
 
+from .libopmioecl_python import EclFileBind, eclArrType
 
 #from .schedule            import Well, Connection, Schedule
 #from .config     import EclipseConfig
