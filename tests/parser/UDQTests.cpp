@@ -1403,7 +1403,8 @@ WCONPROD
     }
     {
         const auto& udq_config = schedule.getUDQConfig(2);
-        const auto& def1 = udq_config.definitions()[0];
+        const auto& def = udq_config.definitions();
+        const auto& def1 = def[0];
         const auto& tokens = def1.func_tokens();
         BOOST_CHECK_EQUAL( tokens.count( UDQTokenType::number ), 1);
         BOOST_CHECK_EQUAL( tokens.count( UDQTokenType::ecl_expr), 1);
