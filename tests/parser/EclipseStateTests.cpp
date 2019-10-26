@@ -490,7 +490,7 @@ BOOST_AUTO_TEST_CASE(TestIOConfigCreation) {
                           "/\n";
 
 
-    Parser parser(new Parser());
+    Parser parser{};
     auto deck = parser.parseString(deckData) ;
     EclipseState state(deck );
 
