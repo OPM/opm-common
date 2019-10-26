@@ -268,6 +268,20 @@ if (OPM_ENABLE_PYTHON)
   add_custom_target(opmcommon_python ALL DEPENDS python/python/opm/libopmcommon_python.so)
   add_dependencies(opmcommon_python opmcommon)
 
+  
+  add_custom_command(OUTPUT python/python/opm/python${PYTHON_VER}/libopmioecl_python.so
+                     DEPENDS
+                     python/cxx/eclipse_io.cpp
+                     COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/python/ ${CMAKE_BINARY_DIR}/python
+                     COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_BINARY_DIR}/python/setup.py
+                                                      build
+                                                      build_ext
+                                                      --build-lib=${CMAKE_BINARY_DIR}/python/python/opm/python${PYTHON_VER}
+                     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/python
+                     COMMENT "Building more python bindings")
+  
+  
+  
   # The install target is based on manually copying the python file tree to the
   # installation area with a small installation script 'install.py'. Would have
   # preferred to use standard setup.py install, but the setup.py based solution
