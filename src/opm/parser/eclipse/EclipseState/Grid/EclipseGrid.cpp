@@ -903,7 +903,7 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         }
 
         return coord;
-    };
+    }
 
     std::vector<double> EclipseGrid::makeZcornDzTops(const std::array<int, 3>& dims, const std::vector<double>& dz, const std::vector<double>& tops) const {
 
@@ -947,7 +947,7 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         }
 
         return zcorn;
-    };
+    }
 
     double EclipseGrid::sumIdir(int i1, int j, int k, const std::array<int, 3>& dims, const std::vector<double>& dx) const {
 
@@ -1156,7 +1156,10 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
                 const auto& actnumKeyword = deck.getKeyword<ParserKeywords::ACTNUM>();
                 actnumVector = actnumKeyword.getIntData();
 
-                actnum=actnumVector.data();
+                const auto nGlobCells = dims[0] * dims[1] * dims[2];
+                if (actnumVector.size() == static_cast<decltype(actnumVector.size())>(nGlobCells)) {
+                    actnum=actnumVector.data();
+                }
              }
 
             initCornerPointGrid( dims, coord , zcorn, actnum, nullptr );

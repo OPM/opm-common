@@ -17,14 +17,16 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdexcept>
-#include <iostream>
-#include <boost/filesystem.hpp>
 #include <cstdio>
-#include <numeric>
-#include <math.h>
-#include <unistd.h>
 #include <ctime>
+#include <iostream>
+#include <math.h>
+#include <memory>
+#include <numeric>
+#include <stdexcept>
+#include <unistd.h>
+
+#include <boost/filesystem.hpp>
 
 #define BOOST_TEST_MODULE EclipseGridTests
 #include <boost/test/unit_test.hpp>
@@ -1029,7 +1031,7 @@ BOOST_AUTO_TEST_CASE(GridActnumVia3D) {
 BOOST_AUTO_TEST_CASE(GridActnumViaState) {
     auto deck = createActnumDeck();
 
-    BOOST_CHECK_NO_THROW( new Opm::EclipseState( deck));
+    BOOST_CHECK_NO_THROW( std::unique_ptr<Opm::EclipseState>(new Opm::EclipseState( deck)));
     Opm::EclipseState es( deck);
     BOOST_CHECK_EQUAL(es.getInputGrid().getNumActive(), 2 * 2 * 2 - 1);
 }

@@ -17,8 +17,10 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdexcept>
 #include <iostream>
+#include <memory>
+#include <stdexcept>
+
 #include <boost/filesystem.hpp>
 
 #define BOOST_TEST_MODULE WellConnectionsTests
@@ -91,8 +93,8 @@ BOOST_AUTO_TEST_CASE(MultisegmentWellTest) {
     Opm::ParseContext parseContext;
     parseContext.update(Opm::ParseContext::SCHEDULE_COMPSEGS_INVALID, Opm::InputError::THROW_EXCEPTION);
     parseContext.update(Opm::ParseContext::SCHEDULE_COMPSEGS_NOT_SUPPORTED, Opm::InputError::THROW_EXCEPTION);
-    Opm::WellConnections* new_connection_set = nullptr;
-    BOOST_CHECK_NO_THROW(new_connection_set = Opm::newConnectionsWithSegments(compsegs, connection_set, segment_set, grid, parseContext, errorGuard));
+    std::unique_ptr<Opm::WellConnections> new_connection_set{nullptr};
+    BOOST_CHECK_NO_THROW(new_connection_set.reset(Opm::newConnectionsWithSegments(compsegs, connection_set, segment_set, grid, parseContext, errorGuard)));
 
     BOOST_CHECK_EQUAL(7U, new_connection_set->size());
 
@@ -178,10 +180,10 @@ BOOST_AUTO_TEST_CASE(WrongDistanceCOMPSEGS) {
     Opm::ErrorGuard   errorGuard;
     Opm::ParseContext parseContext;
     parseContext.update(Opm::ParseContext::SCHEDULE_COMPSEGS_INVALID, Opm::InputError::THROW_EXCEPTION);
-    BOOST_CHECK_THROW(Opm::newConnectionsWithSegments(compsegs, connection_set, segment_set, grid, parseContext, errorGuard), std::invalid_argument);
+    BOOST_CHECK_THROW(std::unique_ptr<Opm::WellConnections>(Opm::newConnectionsWithSegments(compsegs, connection_set, segment_set, grid, parseContext, errorGuard)), std::invalid_argument);
 
     parseContext.update(Opm::ParseContext::SCHEDULE_COMPSEGS_INVALID, Opm::InputError::IGNORE);
-    BOOST_CHECK_NO_THROW(Opm::newConnectionsWithSegments(compsegs, connection_set, segment_set, grid, parseContext, errorGuard));
+    BOOST_CHECK_NO_THROW(std::unique_ptr<Opm::WellConnections>(Opm::newConnectionsWithSegments(compsegs, connection_set, segment_set, grid, parseContext, errorGuard)));
 }
 
 BOOST_AUTO_TEST_CASE(NegativeDepthCOMPSEGS) {
@@ -234,9 +236,10 @@ BOOST_AUTO_TEST_CASE(NegativeDepthCOMPSEGS) {
 
     Opm::ErrorGuard   errorGuard;
     Opm::ParseContext parseContext;
+    std::unique_ptr<Opm::WellConnections> wconns{nullptr};
     parseContext.update(Opm::ParseContext::SCHEDULE_COMPSEGS_NOT_SUPPORTED, Opm::InputError::THROW_EXCEPTION);
-    BOOST_CHECK_THROW(Opm::newConnectionsWithSegments(compsegs, connection_set, segment_set, grid, parseContext, errorGuard), std::invalid_argument);
+    BOOST_CHECK_THROW(wconns.reset(Opm::newConnectionsWithSegments(compsegs, connection_set, segment_set, grid, parseContext, errorGuard)), std::invalid_argument);
 
     parseContext.update(Opm::ParseContext::SCHEDULE_COMPSEGS_NOT_SUPPORTED, Opm::InputError::IGNORE);
-    BOOST_CHECK_NO_THROW(Opm::newConnectionsWithSegments(compsegs, connection_set, segment_set, grid, parseContext, errorGuard));
+    BOOST_CHECK_NO_THROW(wconns.reset(Opm::newConnectionsWithSegments(compsegs, connection_set, segment_set, grid, parseContext, errorGuard)));
 }
