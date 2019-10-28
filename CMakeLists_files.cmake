@@ -171,10 +171,12 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/Utility/Stringview.cpp
   )
 
-  if (OPM_ENABLE_EMBEDDED_PYTHON)
-    list( APPEND PYTHON_SOURCE_FILES
-          src/opm/parser/eclipse/Python/PythonInterp.cpp
-          python/cxx/unit_system.cpp
+
+# This list is only used to register a CMake dependency between the the python
+# extension and the corresponding C++ wrapper files. The cpp files actually
+# listed here are repeated in the actual definition of the extension in the
+# setup.py file.
+  list( APPEND PYTHON_CXX_SOURCE_FILES
           python/cxx/connection.cpp
           python/cxx/deck.cpp
           python/cxx/deck_keyword.cpp
@@ -182,20 +184,26 @@ if(ENABLE_ECL_INPUT)
           python/cxx/eclipse_config.cpp
           python/cxx/eclipse_grid.cpp
           python/cxx/eclipse_state.cpp
+          python/cxx/export.cpp
           python/cxx/group.cpp
+          python/cxx/log.cpp
           python/cxx/parsecontext.cpp
           python/cxx/parser.cpp
           python/cxx/schedule.cpp
-          python/cxx/export.cpp
           python/cxx/table_manager.cpp
+          python/cxx/unit_system.cpp
           python/cxx/well.cpp
-          python/cxx/log.cpp
           )
-    set_source_files_properties(${PYTHON_SOURCE_FILES} PROPERTIES COMPILE_FLAGS -Wno-shadow)
-    list( APPEND MAIN_SOURCE_FILES ${PYTHON_SOURCE_FILES})
+
+  if (OPM_ENABLE_EMBEDDED_PYTHON)
+    set_source_files_properties(${PYTHON_CXX_SOURCE_FILES} PROPERTIES COMPILE_FLAGS -Wno-shadow)
+    set_source_files_properties(src/opm/parser/eclipse/Python/PythonInterp.cpp PROPERTIES COMPILE_FLAGS -Wno-shadow)
+    list( APPEND MAIN_SOURCE_FILES src/opm/parser/eclipse/Python/PythonInterp.cpp ${PYTHON_CXX_SOURCE_FILES})
   endif()
 
-
+  list( APPEND PYTHON_CXX_DEPENDS ${PYTHON_CXX_SOURCE_FILES}
+    python/cxx/converters.hpp
+    python/cxx/export.hpp)
 
   if(NOT cjson_FOUND)
     list(APPEND MAIN_SOURCE_FILES external/cjson/cJSON.c)
