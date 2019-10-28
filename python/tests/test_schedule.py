@@ -4,8 +4,11 @@ import datetime as dt
 from opm.io.parser import Parser
 from opm.io.ecl_state import EclipseState
 from opm.io.schedule import Schedule
-from utils import test_path
 
+try:
+    from tests.utils import test_path
+except ImportError:
+    from utils import test_path
 
 class TestSchedule(unittest.TestCase):
 

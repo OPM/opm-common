@@ -3,13 +3,16 @@ import unittest
 from opm.io.parser import Parser
 from opm.io.ecl_state import EclipseState
 from opm.io.schedule import Schedule
-from utils import test_path
+try:
+    from tests.utils import test_path
+except ImportError:
+    from utils import test_path
 
 def flowing(connection):
-  return connection.state == 'OPEN'
+    return connection.state == 'OPEN'
 
 def closed(connection):
-  return connection.state == 'SHUT'
+    return connection.state == 'SHUT'
 
 
 class TestWells(unittest.TestCase):

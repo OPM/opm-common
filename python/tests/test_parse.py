@@ -5,7 +5,10 @@ import sys
 
 from opm.io.parser import Parser, ParseContext
 from opm.io.ecl_state import EclipseState
-from utils import test_path
+try:
+    from tests.utils import test_path
+except ImportError:
+    from utils import test_path
 
 class TestParse(unittest.TestCase):
 

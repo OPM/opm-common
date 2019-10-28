@@ -7,7 +7,11 @@ import numpy as np
 from opm.io.parser import Parser
 from opm.io.parser import ParseContext
 from opm.io.deck import DeckKeyword
-from utils import test_path
+try:
+    from tests.utils import test_path
+except ImportError:
+    from utils import test_path
+
 
 unit_foot = 0.3048 #meters
 
