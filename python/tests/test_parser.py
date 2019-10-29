@@ -151,6 +151,10 @@ FIPNUM
         si_array = zcorn_kw.get_SI_array()
         self.assertAlmostEqual( si_array[0], 1.1 * unit_foot )
         self.assertAlmostEqual( si_array[2], 3.3 * unit_foot )
+
+        assert( not( "ZCORN" in deck ) )
+        deck.add( zcorn_kw )
+        assert( "ZCORN" in deck )
         
     
 

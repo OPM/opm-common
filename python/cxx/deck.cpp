@@ -35,6 +35,11 @@ namespace {
         return deck.getKeyword(index);
     }
 
+    //This adds a keyword by copy
+    void addKeyword(Deck& deck, const DeckKeyword kw) {
+         deck.addKeyword(kw);
+    }
+
 
 }
 
@@ -59,6 +64,7 @@ void python::common::export_Deck(py::module &module) {
            } )
 
         .def( "count", &count )
+        .def( "add", &addKeyword)
       ;
 }
 
