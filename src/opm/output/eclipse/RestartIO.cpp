@@ -31,6 +31,8 @@
 #include <opm/output/eclipse/AggregateUDQData.hpp>
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
+#include <opm/output/eclipse/VectorItems/intehead.hpp>
+
 #include <opm/io/eclipse/OutputStream.hpp>
 #include <opm/io/eclipse/PaddedOutputString.hpp>
 
@@ -42,13 +44,18 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Well2.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/Eqldims.hpp>
 
+#include <opm/common/OpmLog/OpmLog.hpp>
+
 #include <algorithm>
 #include <cassert>
+#include <cmath>
 #include <cstddef>
 #include <fstream>
 #include <initializer_list>
+#include <iomanip>
 #include <iterator>
 #include <string>
+#include <sstream>
 #include <unordered_set>
 #include <vector>
 
@@ -471,6 +478,30 @@ namespace {
         }
     }
 
+    int numChar(const std::size_t num_reports)
+    {
+        return static_cast<int>(
+            1 + std::floor(std::log10(static_cast<double>(num_reports))));
+    }
+
+    void logRestartOutput(const int               report_step,
+                          const std::size_t       num_reports,
+                          const std::vector<int>& inteHD)
+    {
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::intehead;
+
+        std::ostringstream logmsg;
+
+        logmsg << "Restart file written for report step: "
+               << std::setw(numChar(num_reports)) << report_step << '/'
+               << std::setw(0) << num_reports << ".  Date: "
+               << std::setw(4) <<                      inteHD[Ix::YEAR]  << '/'
+               << std::setw(2) << std::setfill('0') << inteHD[Ix::MONTH] << '/'
+               << std::setw(2) << std::setfill('0') << inteHD[Ix::DAY];
+
+        ::Opm::OpmLog::info(logmsg.str());
+    }
+
 } // Anonymous namespace
 
 void save(EclIO::OutputStream::Restart& rstFile,
@@ -532,6 +563,8 @@ void save(EclIO::OutputStream::Restart& rstFile,
     if (! ecl_compatible_rst) {
         writeExtraData(value.extra, rstFile);
     }
+
+    logRestartOutput(report_step, schedule.getTimeMap().numTimesteps(), inteHD);
 }
 
 }} // Opm::RestartIO

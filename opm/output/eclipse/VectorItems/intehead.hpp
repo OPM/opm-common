@@ -75,7 +75,11 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
         NICAQZ  =  45,      //  Number of data elements per aquifer connection in ICAQ array
         NSCAQZ  =  46,      //  Number of data elements per aquifer connection in SCAQ array
         NACAQZ  =  47,      //  Number of data elements per aquifer connection in ACAQ array
-        
+
+        DAY     =  64,      //  Calendar day of report step (1..31)
+        MONTH   =  65,      //  Calendar month of report step (1..12)
+        YEAR    =  66,      //  Calendar year of report step
+
         NOOFACTIONS = 156,  //  The number of actions in the dataset
         MAXNOLINES = 157,   //  Maximum number of lines of schedule data for ACTION keyword - including ENDACTIO
         MAXNOSTRPRLINE = 158,   //  Maximum number of 8-chars strings pr input line of Action data (rounded up from input)
