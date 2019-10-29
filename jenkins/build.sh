@@ -33,3 +33,6 @@ printHeader opm-common
 source $WORKSPACE/deps/opm-common/jenkins/setup-opm-tests.sh
 
 build_module_full opm-common
+
+ghprbCommentBody=""
+build_module_full opm-common-python3
