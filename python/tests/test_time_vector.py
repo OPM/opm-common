@@ -3,7 +3,10 @@ import datetime
 from opm.tools import *
 
 from opm.io.parser import Parser
-from utils import test_path, tmp
+try:
+    from tests.utils import test_path, tmp
+except ImportError:
+    from utils import test_path, tmp
 
 class TestTimeVector(unittest.TestCase):
 

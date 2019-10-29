@@ -8,6 +8,11 @@ import setuptools
 import glob
 import os
 import subprocess
+try:
+    from importlib.machinery import EXTENSION_SUFFIXES
+    suffix = EXTENSION_SUFFIXES[0]
+except ImportError:
+    suffix = ".so"
 
 setupdir = os.path.dirname(__file__)
 if setupdir != '':
@@ -66,7 +71,7 @@ setup(
                 'opm.tools'
             ],
     ext_modules=ext_modules,
-    package_data={'opm': ['libopmcommon_python.so']},
+    package_data={'opm': ['libopmcommon_python{}'.format(suffix)]},
     include_package_data=True,
     license='Open Source',
     zip_safe=False,

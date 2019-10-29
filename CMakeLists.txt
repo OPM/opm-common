@@ -236,27 +236,18 @@ if (OPM_ENABLE_PYTHON)
   endif()
   string(REPLACE ";" ":" _setup_lib_dirs "${_opmcommon_lib_dirs}")
 
-  add_custom_command(OUTPUT python/python/opm/libopmcommon_python.so
-                     DEPENDS
-                     python/cxx/unit_system.cpp
-                     python/cxx/connection.cpp
-                     python/cxx/converters.hpp
-                     python/cxx/deck.cpp
-                     python/cxx/deck_keyword.cpp
-                     python/cxx/eclipse_3d_properties.cpp
-                     python/cxx/eclipse_config.cpp
-                     python/cxx/eclipse_grid.cpp
-                     python/cxx/eclipse_state.cpp
-                     python/cxx/group.cpp
-                     python/cxx/log.cpp
-                     python/cxx/parsecontext.cpp
-                     python/cxx/parser.cpp
-                     python/cxx/schedule.cpp
-                     python/cxx/export.cpp
-                     python/cxx/export.hpp
-                     python/cxx/table_manager.cpp
-                     python/cxx/well.cpp
+  execute_process(COMMAND ${PYTHON_EXECUTABLE} target_name.py
+                  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/python
+                  OUTPUT_VARIABLE python_lib_target)
+
+  add_custom_target(copy_python ALL
+                    COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/python/install.py ${CMAKE_SOURCE_DIR}/python ${CMAKE_BINARY_DIR} 0)
+
+  add_custom_command(OUTPUT python/python/opm/${python_lib_target}
+                     DEPENDS ${PYTHON_CXX_DEPENDS}
+                     DEPENDS copy_python
                      COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/python/ ${CMAKE_BINARY_DIR}/python
+
                      COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_BINARY_DIR}/python/setup.py
                                                       build
                                                       build_ext
@@ -265,7 +256,7 @@ if (OPM_ENABLE_PYTHON)
                                                       --include-dirs=${_setup_include_dirs}
                      WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/python
                      COMMENT "Building python bindings")
-  add_custom_target(opmcommon_python ALL DEPENDS python/python/opm/libopmcommon_python.so)
+  add_custom_target(opmcommon_python ALL DEPENDS python/python/opm/${python_lib_target})
   add_dependencies(opmcommon_python opmcommon)
 
   # The install target is based on manually copying the python file tree to the
@@ -280,7 +271,7 @@ if (OPM_ENABLE_PYTHON)
   # setup.py install manually - optionally with the generated script
   # setup-install.sh - and completely bypass cmake in the installation phase.
   if (OPM_INSTALL_PYTHON)
-    install( CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_BINARY_DIR}/python/install.py ${CMAKE_BINARY_DIR}/python/python/opm ${CMAKE_INSTALL_PREFIX}/${PYTHON_INSTALL_PREFIX})")
+    install( CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_BINARY_DIR}/python/install.py ${CMAKE_BINARY_DIR}/python/python/opm ${CMAKE_INSTALL_PREFIX}/${PYTHON_INSTALL_PREFIX} 1)")
   endif()
 
   add_test(NAME python_tests

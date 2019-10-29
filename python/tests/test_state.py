@@ -5,8 +5,10 @@ from opm.io.parser import Parser
 from opm.io.ecl_state import EclipseState
 from opm.io.schedule import Schedule
 from opm.io.summary import SummaryConfig
-from utils import test_path
-
+try:
+    from tests.utils import test_path
+except ImportError:
+    from utils import test_path
 
 class TestState2(unittest.TestCase):
 
@@ -140,7 +142,7 @@ SATNUM
         # jf["GAS_OIL"]      = -1.0   # N/A
 
         parser = Parser()
-        deck = parser.parse('tests/data/JFUNC.DATA')
+        deck = parser.parse(test_path('data/JFUNC.DATA'))
         js = EclipseState(deck)
         self.assertEqual('JFUNC TEST', js.title)
         jf = js.jfunc()
