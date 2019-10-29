@@ -246,8 +246,6 @@ if (OPM_ENABLE_PYTHON)
   add_custom_command(OUTPUT python/python/opm/${python_lib_target}
                      DEPENDS ${PYTHON_CXX_DEPENDS}
                      DEPENDS copy_python
-                     COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/python/ ${CMAKE_BINARY_DIR}/python
-
                      COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_BINARY_DIR}/python/setup.py
                                                       build
                                                       build_ext
