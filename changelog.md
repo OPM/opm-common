@@ -7,6 +7,8 @@ it in here, only the bigger features and interface changes.
 
 * opm-common and the rest of OPM does not use libecl anymore and
   supports reading and writing Eclipse files directly
+* Improved Eclipse compatible restart, support for unified and non unified
+  files, and formatted and unformatted files
 * Support for reading and checking various additional keywords was introduced (those
   starting with A - M, R, T, V, W, Z).
 * ACTIONX support implemented
