@@ -2,6 +2,7 @@ import sys
 import os
 import shutil
 import compileall
+import filecmp
 
 src_root = sys.argv[1]
 target_prefix = sys.argv[2]
@@ -28,7 +29,11 @@ for path,_ ,fnames in os.walk(src_root):
 
         src_file = os.path.join(path, f)
         target_file = os.path.join(target_path, f)
-        shutil.copy(src_file, target_file)
+        if not os.path.isfile(target_file):
+            shutil.copy(src_file, target_file)
+        elif not filecmp.cmp(src_file, target_file):
+            shutil.copy(src_file, target_file)
+
 
         if install:
             print("-- Installing: {}".format(target_file))
