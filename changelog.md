@@ -7,10 +7,6 @@ it in here, only the bigger features and interface changes.
 
 * opm-common and the rest of OPM does not use libecl anymore and
   supports reading and writing Eclipse files directly
-* improved Eclipse compatible restart support (including e.g. UDQ
-  data, ACTIONX), unified or separate files, either formatted or unformatted
-* Added experimental python bindings to interact with simulators
-* Sunbeam python wrappers have been included in module
 * Support for reading and checking various additional keywords was introduced (those
   starting with A - M, R, T, V, W, Z).
 * ACTIONX support implemented
