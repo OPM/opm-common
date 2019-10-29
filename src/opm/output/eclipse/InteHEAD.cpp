@@ -83,9 +83,9 @@ enum index : std::vector<int>::size_type {
   ih_061       =       61       ,              //       0       0
   ih_062       =       62       ,              //       0       0
   ih_063       =       63       ,              //       0       0
-  DAY          =       64       ,              //       IDAY       2              IDAY = calendar day at this report time
-  MONTH        =       65       ,              //       IMON       6              IMON = calendar month at this report time
-  YEAR         =       66       ,              //       IYEAR       2016              IYEAR = calendar year at this report time
+  DAY          =       VI::intehead::DAY,      //       IDAY          2     IDAY = calendar day at this report time
+  MONTH        =       VI::intehead::MONTH,    //       IMON          6     IMON = calendar month at this report time
+  YEAR         =       VI::intehead::YEAR,     //       IYEAR      2016     IYEAR = calendar year at this report time
   NUM_SOLVER_STEPS  =  67       ,              //  The number of solver steps the simulator has performed so far.
   REPORT_STEP       =  68       ,              // The sequence/report number for for this restart file.
   ih_069       =       69       ,              //       0       0
