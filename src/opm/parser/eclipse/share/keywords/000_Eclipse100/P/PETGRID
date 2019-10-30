@@ -1,0 +1,5 @@
+{"name":"PETGRID", "sections" : ["GRID"], "size" : 1, "items" : 
+    [
+        {"name" : "FILE_NAME" , "value_type" : "STRING"}
+    ]
+}
