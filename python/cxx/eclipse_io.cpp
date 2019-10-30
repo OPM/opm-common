@@ -4,13 +4,6 @@
 
 #include <src/opm/io/eclipse/EclFile.cpp>
 #include <opm/io/eclipse/EclIOdata.hpp>
-#include <src/opm/io/eclipse/EclUtil.cpp>
-
-#include <src/opm/common/OpmLog/OpmLog.cpp>
-#include <src/opm/common/OpmLog/LogBackend.cpp>
-#include <src/opm/common/OpmLog/LogUtil.cpp>
-#include <src/opm/common/OpmLog/StreamLog.cpp>
-#include <src/opm/common/OpmLog/Logger.cpp>      
 
 
 namespace py = pybind11;
