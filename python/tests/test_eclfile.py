@@ -3,6 +3,10 @@ import sys
 import numpy as np
 
 from opm.io.ecl import EclFile
+try:
+    from tests.utils import test_path
+except ImportError:
+    from utils import test_path
 
 
 class TestEclFile(unittest.TestCase):
@@ -15,18 +19,18 @@ class TestEclFile(unittest.TestCase):
 
         self.assertRaises(ValueError, EclFile, "/file/that/does_not_exists")
 
-        file2uf = EclFile("tests/data/SPE9.INIT")
+        file2uf = EclFile(test_path("data/SPE9.INIT"))
         self.assertEqual(len(file2uf), 24)
 
         arrList = file2uf.getListOfArrays()
         self.assertEqual(arrList, refList)
 
-        file2f = EclFile("tests/data/SPE9.FINIT")
+        file2f = EclFile(test_path("data/SPE9.FINIT"))
         self.assertEqual(len(file2f), 24)
 
     def test_get_function(self):
 
-        file1 = EclFile("tests/data/SPE9.INIT")
+        file1 = EclFile(test_path("data/SPE9.INIT"))
 
         first = file1.get(0)
         self.assertEqual(len(first), 95)
@@ -40,7 +44,7 @@ class TestEclFile(unittest.TestCase):
 
     def test_get_function_float(self):
 
-        file1 = EclFile("tests/data/SPE9.INIT")
+        file1 = EclFile(test_path("data/SPE9.INIT"))
 
         dzList=[20.0, 15.0, 26.0, 15.0, 16.0, 14.0, 8.0, 8.0, 18.0, 12.0, 19.0, 18.0, 20.0, 50.0, 100.0]
         poroList = [0.087, 0.097, 0.111, 0.16, 0.13, 0.17, 0.17, 0.08, 0.14, 0.13, 0.12, 0.105, 0.12, 0.116, 0.157]
@@ -70,7 +74,7 @@ class TestEclFile(unittest.TestCase):
 
         refTabData=[0.147E+02, 0.2E+21, 0.4E+03, 0.2E+21, 0.8E+03, 0.2E+21, 0.12E+04, 0.2E+21, 0.16E+04, 0.2E+21, 0.2E+04, 0.2E+21, 0.24E+04, 0.2E+21, 0.28E+04, 0.2E+21, 0.32E+04, 0.2E+21, 0.36E+04, 0.2E+21, 0.4E+04, 0.5E+04, 0.1E+01, 0.2E+21, 0.98814229249012E+00, 0.2E+21, 0.97513408093613E+00]
 
-        file1 = EclFile("tests/data/SPE9.INIT")
+        file1 = EclFile(test_path("data/SPE9.INIT"))
 
         tab = file1.get("TAB")
 
@@ -86,7 +90,7 @@ class TestEclFile(unittest.TestCase):
         refTabdims = [ 885, 1, 1, 1, 1, 1, 1, 67, 11, 2, 1, 78, 1, 78, 78, 0, 0, 0, 83, 1, 686, 40, 1, 86, 40, 1,
                       286, 1, 80, 1 ]
 
-        file1 = EclFile("tests/data/SPE9.INIT")
+        file1 = EclFile(test_path("data/SPE9.INIT"))
         tabdims = file1.get("TABDIMS")
 
         self.assertTrue(isinstance(tabdims, np.ndarray))
@@ -98,7 +102,7 @@ class TestEclFile(unittest.TestCase):
 
     def test_get_function_logi(self):
 
-        file1 = EclFile("tests/data/9_EDITNNC.INIT")
+        file1 = EclFile(test_path("data/9_EDITNNC.INIT"))
 
         self.assertTrue("LOGIHEAD" in file1)
         logih = file1.get("LOGIHEAD")
@@ -110,7 +114,7 @@ class TestEclFile(unittest.TestCase):
 
     def test_get_function_char(self):
 
-        file1 = EclFile("tests/data/9_EDITNNC.SMSPEC")
+        file1 = EclFile(test_path("data/9_EDITNNC.SMSPEC"))
 
         self.assertTrue("KEYWORDS" in file1)
         keyw = file1.get("KEYWORDS")
