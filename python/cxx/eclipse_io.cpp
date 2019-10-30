@@ -5,32 +5,39 @@
 #include <src/opm/io/eclipse/EclFile.cpp>
 #include <opm/io/eclipse/EclIOdata.hpp>
 
+#include "export.hpp"
+#include "converters.hpp"
 
 namespace py = pybind11;
 
-class EclFileTmp : public Opm::EclIO::EclFile {
-    
-public:
-    EclFileTmp(const std::string& filename): Opm::EclIO::EclFile(filename) {};
 
-    py::array_t<float> getFloatNumpy(int arrIndex) {
-        std::vector<float> tmp=get<float>(arrIndex);
-        return py::array(py::dtype("f"), {tmp.size()}, {}, &tmp[0]);
-    };
+namespace {
 
-    py::array_t<double> getDoubleNumpy(int arrIndex) {
-        std::vector<double> tmp=get<double>(arrIndex);
-        return py::array(py::dtype("d"), {tmp.size()}, {}, &tmp[0]);
-    };
+py::array get_vector(Opm::EclIO::EclFile * file_ptr, std::size_t array_index) {
+    auto array_type = std::get<1>(file_ptr->getList()[array_index]);
+    if (array_type == Opm::EclIO::INTE)
+        return convert::numpy_array( file_ptr->get<int>(array_index) );
 
-    py::array_t<int> getIntegerNumpy(int arrIndex) {
-        std::vector<int> tmp=get<int>(arrIndex);
-        return py::array(py::dtype("i"), {tmp.size()}, {}, &tmp[0]); 
-    };
-};
+    if (array_type == Opm::EclIO::REAL)
+        return convert::numpy_array( file_ptr->get<float>(array_index) );
+
+    if (array_type == Opm::EclIO::DOUB)
+        return convert::numpy_array( file_ptr->get<double>(array_index) );
+
+    if (array_type == Opm::EclIO::LOGI)
+        return convert::numpy_array( file_ptr->get<bool>(array_index) );
+
+    if (array_type == Opm::EclIO::CHAR)
+        return convert::numpy_string_array( file_ptr->get<std::string>(array_index) );
+
+    throw std::logic_error("Data type not supported");
+}
+
+}
 
 
-PYBIND11_MODULE(libopmioecl_python, m) {
+
+void python::common::export_IO(py::module& m) {
 
     py::enum_<Opm::EclIO::eclArrType>(m, "eclArrType", py::arithmetic())
         .value("INTE", Opm::EclIO::INTE)
@@ -41,26 +48,13 @@ PYBIND11_MODULE(libopmioecl_python, m) {
         .value("MESS", Opm::EclIO::MESS)
         .export_values();
 
-    py::class_<std::vector<std::tuple<std::string,Opm::EclIO::eclArrType,int>>>(m, "EclEntry")
-        .def(py::init<>())
-        .def("__len__", [](const std::vector<std::tuple<std::string,Opm::EclIO::eclArrType,int>> &v) { return v.size(); })
-        .def("__getitem__", [](std::vector<std::tuple<std::string,Opm::EclIO::eclArrType,int>> &v, int item) { return v[item];})
-        .def("__iter__", [](std::vector<std::tuple<std::string,Opm::EclIO::eclArrType,int>> &v) {
-            return py::make_iterator(v.begin(), v.end());
-    }, py::keep_alive<0, 1>());
 
-        
-    py::class_<EclFileTmp>(m, "EclFileBind")
-        .def(py::init<const std::string &>())
-        .def("getList", &EclFileTmp::getList)   
-        .def("hasKey", &EclFileTmp::hasKey)   
-
-        .def("loadAllData", (void (EclFileTmp::*)(void)) &EclFileTmp::loadData)   
-        .def("loadDataByIndex", (void (EclFileTmp::*)(int)) &EclFileTmp::loadData)   
-
-        .def("getRealFromIndexNumpy", &EclFileTmp::getFloatNumpy)   
-        .def("getDoubFromIndexNumpy", &EclFileTmp::getDoubleNumpy)   
-        .def("getInteFromIndexNumpy", &EclFileTmp::getIntegerNumpy)   
-        .def("getLogiFromIndex", (const std::vector<bool>& (EclFileTmp::*)(int)) &EclFileTmp::get<bool>)   
-        .def("getCharFromIndex", (const std::vector<std::string>& (EclFileTmp::*)(int)) &EclFileTmp::get<std::string>);   
+    py::class_<Opm::EclIO::EclFile>(m, "EclFile")
+        .def(py::init<const std::string &, bool>(), py::arg("filename"), py::arg("preload") = false)
+        .def_property_readonly("arrays", &Opm::EclIO::EclFile::getList)
+        .def("getListOfArrays", &Opm::EclIO::EclFile::getList)
+        .def("__contains__", &Opm::EclIO::EclFile::hasKey)
+        .def("__len__", &Opm::EclIO::EclFile::size)
+        .def("__getitem__", &get_vector)
+        .def("get", &get_vector);
 }

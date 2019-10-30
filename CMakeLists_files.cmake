@@ -183,6 +183,7 @@ if(ENABLE_ECL_INPUT)
           python/cxx/converters.cpp
           python/cxx/deck.cpp
           python/cxx/deck_keyword.cpp
+          python/cxx/eclipse_io.cpp
           python/cxx/eclipse_3d_properties.cpp
           python/cxx/eclipse_config.cpp
           python/cxx/eclipse_grid.cpp

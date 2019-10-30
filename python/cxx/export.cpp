@@ -18,6 +18,7 @@ void python::common::export_all(py::module& module) {
     export_EclipseGrid(module);
     export_UnitSystem(module);
     export_Log(module);
+    export_IO(module);
 }
 
 
