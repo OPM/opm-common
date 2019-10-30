@@ -24,6 +24,10 @@
 #MASSFLOW      tables w/ int, double, str
 #MESSAGE       record without slash
 #MPFNNC        records of records
+#OUTSOL        old kw without explanation
+#PARAOPTS      typeless item (reserved)
+#PCG32D        2 types of tables/records, first size fixed but not always 1
+#PCW32D        2 types of tables/records, first size fixed but not always 1
 #UDT
 #STOG, STOW, STWG    records of records
 
@@ -502,31 +506,46 @@ set( keywords
      000_Eclipse100/N/NETBALAN
      000_Eclipse100/N/NETCOMPA
      000_Eclipse100/N/NETWORK
-     000_Eclipse100/N/NEWTON
      000_Eclipse100/N/NEWTRAN
      000_Eclipse100/N/NEXT
      000_Eclipse100/N/NEXTSTEP
      000_Eclipse100/N/NEXTSTPL
      000_Eclipse100/N/NINENUM
+     000_Eclipse100/N/NINEPOIN
+     000_Eclipse100/N/NMATOPTS
+     000_Eclipse100/N/NMATRIX
      000_Eclipse100/N/NNC
      000_Eclipse100/N/NNEWTF
      000_Eclipse100/N/NOCASC
      000_Eclipse100/N/NODEPROP
+     000_Eclipse100/N/NODPPM
      000_Eclipse100/N/NOECHO
      000_Eclipse100/N/NOGGF
+     000_Eclipse100/N/NOHMD
+     000_Eclipse100/N/NOHMO
+     000_Eclipse100/N/NOHYST
      000_Eclipse100/N/NOINSPEC
      000_Eclipse100/N/NOMONITO
      000_Eclipse100/N/NONNC
      000_Eclipse100/N/NORSSPEC
      000_Eclipse100/N/NOSIM
      000_Eclipse100/N/NOWARN
+     000_Eclipse100/N/NOWARNEP
+     000_Eclipse100/N/NRSOUT
      000_Eclipse100/N/NSTACK
      000_Eclipse100/N/NTG
      000_Eclipse100/N/NUMRES
      000_Eclipse100/N/NUPCOL
+     000_Eclipse100/N/NWATREM
+     000_Eclipse100/N/NXFIN
+     000_Eclipse100/N/NYFIN
+     000_Eclipse100/N/NZFIN
+     000_Eclipse100/O/OFM
      000_Eclipse100/O/OIL
+     000_Eclipse100/O/OILAPI
      000_Eclipse100/O/OILVISCT
      000_Eclipse100/O/OLDTRAN
+     000_Eclipse100/O/OLDTRANR
      000_Eclipse100/O/OPERATE
      000_Eclipse100/O/OPERATER
      000_Eclipse100/O/OPERNUM
@@ -534,11 +553,22 @@ set( keywords
      000_Eclipse100/O/OUTRAD
      000_Eclipse100/O/OVERBURD
      000_Eclipse100/P/PARALLEL
+     000_Eclipse100/P/PARTTRAC
      000_Eclipse100/P/PATHS
+     000_Eclipse100/P/PBUB
      000_Eclipse100/P/PBVD
      000_Eclipse100/P/PCG
+     000_Eclipse100/P/PCW
+     000_Eclipse100/P/PDEW
      000_Eclipse100/P/PDVD
+     000_Eclipse100/P/PEBI
+     000_Eclipse100/P/PECOEFS
+     000_Eclipse100/P/PEDIMS
+     000_Eclipse100/P/PEGTABX
+     000_Eclipse100/P/PEKTABX
+     000_Eclipse100/P/PENUM
      000_Eclipse100/P/PERFORMANCE_PROBE
+     000_Eclipse100/P/PERMAVE
      000_Eclipse100/P/PERMR
      000_Eclipse100/P/PERMTHT
      000_Eclipse100/P/PERMX
@@ -547,7 +577,9 @@ set( keywords
      000_Eclipse100/P/PERMYZ
      000_Eclipse100/P/PERMZ
      000_Eclipse100/P/PERMZX
+     000_Eclipse100/P/PETGRID
      000_Eclipse100/P/PETOPTS
+     000_Eclipse100/P/PICOND
      000_Eclipse100/P/PIMTDIMS
      000_Eclipse100/P/PIMULTAB
      000_Eclipse100/P/PINCH
