@@ -10,13 +10,12 @@
 #include <src/opm/common/OpmLog/LogBackend.cpp>
 #include <src/opm/common/OpmLog/LogUtil.cpp>
 #include <src/opm/common/OpmLog/StreamLog.cpp>
-#include <src/opm/common/OpmLog/Logger.cpp>      
+#include <src/opm/common/OpmLog/Logger.cpp>
 
-
-namespace py = pybind11;
+#include "export.hpp"
 
 class EclFileTmp : public Opm::EclIO::EclFile {
-    
+
 public:
     EclFileTmp(const std::string& filename): Opm::EclIO::EclFile(filename) {};
 
@@ -32,12 +31,12 @@ public:
 
     py::array_t<int> getIntegerNumpy(int arrIndex) {
         std::vector<int> tmp=get<int>(arrIndex);
-        return py::array(py::dtype("i"), {tmp.size()}, {}, &tmp[0]); 
+        return py::array(py::dtype("i"), {tmp.size()}, {}, &tmp[0]);
     };
 };
 
 
-PYBIND11_MODULE(libopmioecl_python, m) {
+void python::common::export_IO(py::module& m) {
 
     py::enum_<Opm::EclIO::eclArrType>(m, "eclArrType", py::arithmetic())
         .value("INTE", Opm::EclIO::INTE)
@@ -56,18 +55,18 @@ PYBIND11_MODULE(libopmioecl_python, m) {
             return py::make_iterator(v.begin(), v.end());
     }, py::keep_alive<0, 1>());
 
-        
+
     py::class_<EclFileTmp>(m, "EclFileBind")
         .def(py::init<const std::string &>())
-        .def("getList", &EclFileTmp::getList)   
-        .def("hasKey", &EclFileTmp::hasKey)   
+        .def("getList", &EclFileTmp::getList)
+        .def("hasKey", &EclFileTmp::hasKey)
 
-        .def("loadAllData", (void (EclFileTmp::*)(void)) &EclFileTmp::loadData)   
-        .def("loadDataByIndex", (void (EclFileTmp::*)(int)) &EclFileTmp::loadData)   
+        .def("loadAllData", (void (EclFileTmp::*)(void)) &EclFileTmp::loadData)
+        .def("loadDataByIndex", (void (EclFileTmp::*)(int)) &EclFileTmp::loadData)
 
-        .def("getRealFromIndexNumpy", &EclFileTmp::getFloatNumpy)   
-        .def("getDoubFromIndexNumpy", &EclFileTmp::getDoubleNumpy)   
-        .def("getInteFromIndexNumpy", &EclFileTmp::getIntegerNumpy)   
-        .def("getLogiFromIndex", (const std::vector<bool>& (EclFileTmp::*)(int)) &EclFileTmp::get<bool>)   
-        .def("getCharFromIndex", (const std::vector<std::string>& (EclFileTmp::*)(int)) &EclFileTmp::get<std::string>);   
+        .def("getRealFromIndexNumpy", &EclFileTmp::getFloatNumpy)
+        .def("getDoubFromIndexNumpy", &EclFileTmp::getDoubleNumpy)
+        .def("getInteFromIndexNumpy", &EclFileTmp::getIntegerNumpy)
+        .def("getLogiFromIndex", (const std::vector<bool>& (EclFileTmp::*)(int)) &EclFileTmp::get<bool>)
+        .def("getCharFromIndex", (const std::vector<std::string>& (EclFileTmp::*)(int)) &EclFileTmp::get<std::string>);
 }
