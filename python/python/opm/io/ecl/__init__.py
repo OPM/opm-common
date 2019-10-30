@@ -35,10 +35,10 @@ class EclFile:
     def getListOfArrays(self):
         return self.arrayNameList	
 
-    def getNumArrays(self):
+    def __len__(self):
         return len(self.arrayNameList)	
 
-    def hasArray(self, name):
+    def __contains__(self, name):
         return self.eclfile.hasKey(name)
     
     def get(self, arg):
