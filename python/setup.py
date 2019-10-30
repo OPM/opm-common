@@ -36,6 +36,7 @@ ext_modules = [
         [
                 'cxx/unit_system.cpp',
                 'cxx/connection.cpp',
+                'cxx/converters.cpp',
                 'cxx/deck.cpp',
                 'cxx/deck_keyword.cpp',
                 'cxx/eclipse_3d_properties.cpp',
