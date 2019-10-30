@@ -898,4 +898,10 @@ const std::vector<std::string>& EclFile::get<std::string>(const std::string &nam
     return getImpl(search->second, CHAR, char_array, "string");
 }
 
+
+std::size_t EclFile::size() const {
+    return this->array_name.size();
+}
+
+
 }} // namespace Opm::ecl
