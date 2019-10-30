@@ -47,14 +47,6 @@ void python::common::export_IO(py::module& m) {
         .value("MESS", Opm::EclIO::MESS)
         .export_values();
 
-    py::class_<std::vector<std::tuple<std::string,Opm::EclIO::eclArrType,int>>>(m, "EclEntry")
-        .def(py::init<>())
-        .def("__len__", [](const std::vector<std::tuple<std::string,Opm::EclIO::eclArrType,int>> &v) { return v.size(); })
-        .def("__getitem__", [](std::vector<std::tuple<std::string,Opm::EclIO::eclArrType,int>> &v, int item) { return v[item];})
-        .def("__iter__", [](std::vector<std::tuple<std::string,Opm::EclIO::eclArrType,int>> &v) {
-            return py::make_iterator(v.begin(), v.end());
-    }, py::keep_alive<0, 1>());
-
 
     py::class_<EclFileTmp>(m, "EclFileBind")
         .def(py::init<const std::string &>())
