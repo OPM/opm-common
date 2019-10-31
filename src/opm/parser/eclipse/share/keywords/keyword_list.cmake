@@ -583,10 +583,16 @@ set( keywords
      000_Eclipse100/P/PIMTDIMS
      000_Eclipse100/P/PIMULTAB
      000_Eclipse100/P/PINCH
+     000_Eclipse100/P/PINCHNUM
+     000_Eclipse100/P/PINCHOUT
+     000_Eclipse100/P/PINCHREG
+     000_Eclipse100/P/PINCHXY
      000_Eclipse100/P/PLMIXNUM
      000_Eclipse100/P/PLMIXPAR
      000_Eclipse100/P/PLYADS
      000_Eclipse100/P/PLYADSS
+     000_Eclipse100/P/PLYATEMP
+     000_Eclipse100/P/PLYCAMAX
      000_Eclipse100/P/PLYDHFLF
      000_Eclipse100/P/PLYMAX
      000_Eclipse100/P/PLYROCK
