@@ -192,10 +192,22 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
     }
 
     void WellConnections::loadCOMPDAT(const DeckRecord& record, const EclipseGrid& grid, const Eclipse3DProperties& eclipseProperties) {
-        const auto& permx = eclipseProperties.getDoubleGridProperty("PERMX").getData();
-        const auto& permy = eclipseProperties.getDoubleGridProperty("PERMY").getData();
-        const auto& permz = eclipseProperties.getDoubleGridProperty("PERMZ").getData();
-        const auto& ntg   = eclipseProperties.getDoubleGridProperty("NTG").getData();
+        const auto& permx = eclipseProperties.getDoubleGridProperty("PERMX").compressedCopy(grid);
+        const auto& permy = eclipseProperties.getDoubleGridProperty("PERMY").compressedCopy(grid);
+        const auto& permz = eclipseProperties.getDoubleGridProperty("PERMZ").compressedCopy(grid);
+        const auto& ntg   = eclipseProperties.getDoubleGridProperty("NTG").compressedCopy(grid);
+        const auto& satnum_data = eclipseProperties.getIntGridProperty("SATNUM").compressedCopy(grid);
+
+        this->loadCOMPDAT(record, grid, satnum_data, permx, permy, permz, ntg);
+    }
+
+    void WellConnections::loadCOMPDAT(const DeckRecord& record,
+                                      const EclipseGrid& grid,
+                                      const std::vector<int>& satnum_data,
+                                      const std::vector<double>& permx,
+                                      const std::vector<double>& permy,
+                                      const std::vector<double>& permz,
+                                      const std::vector<double>& ntg) {
 
         const auto& itemI = record.getItem( "I" );
         const auto defaulted_I = itemI.defaultApplied( 0 ) || itemI.get< int >( 0 ) == 0;
@@ -209,7 +221,6 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
         int K2 = record.getItem("K2").get< int >(0) - 1;
         Connection::State state = Connection::StateFromString( record.getItem("STATE").getTrimmedString(0) );
 
-        const auto& satnum_data = eclipseProperties.getIntGridProperty("SATNUM").getData();
         int satTableId = -1;
         bool defaultSatTable = true;
         const auto& CFItem = record.getItem("CONNECTION_TRANSMISSIBILITY_FACTOR");
@@ -241,11 +252,12 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
             if (!grid.cellActive(I, J, k))
                 continue;
 
+            size_t active_index = grid.activeIndex(I,J,k);
             double CF = -1;
             double Kh = -1;
 
             if (defaultSatTable)
-                satTableId = satnum_data[grid.getGlobalIndex(I,J,k)];
+                satTableId = satnum_data[active_index];
 
             auto same_ijk = [&]( const Connection& c ) {
                 return c.sameCoordinate( I,J,k );
@@ -266,11 +278,10 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
                 // Angle of completion exposed to flow.  We assume centre
                 // placement so there's complete exposure (= 2\pi).
                 const double angle = 6.2831853071795864769252867665590057683943387987502116419498;
-                size_t global_index = grid.getGlobalIndex(I,J,k);
-                std::array<double,3> cell_perm = {{ permx[global_index], permy[global_index], permz[global_index]}};
-                std::array<double,3> cell_size = grid.getCellDims(global_index);
+                std::array<double,3> cell_perm = {{ permx[active_index], permy[active_index], permz[active_index]}};
+                std::array<double,3> cell_size = grid.getCellDims(I,J,k);
                 const auto& K = permComponents(direction, cell_perm);
-                const auto& D = effectiveExtent(direction, ntg[global_index], cell_size);
+                const auto& D = effectiveExtent(direction, ntg[active_index], cell_size);
 
                 if (r0Item.hasValue(0))
                     r0 = r0Item.getSIDouble(0);

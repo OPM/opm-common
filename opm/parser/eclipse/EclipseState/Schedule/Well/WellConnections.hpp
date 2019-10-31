@@ -97,6 +97,14 @@ namespace Opm {
                            const double segDistEnd= 0.0,
                            const bool defaultSatTabId = true);
 
+        void loadCOMPDAT(const DeckRecord& record,
+                         const EclipseGrid& grid,
+                         const std::vector<int>& satnum_data,
+                         const std::vector<double>& permx,
+                         const std::vector<double>& permy,
+                         const std::vector<double>& permz,
+                         const std::vector<double>& ntg);
+
         size_t findClosestConnection(int oi, int oj, double oz, size_t start_pos);
 
         int headI, headJ;
