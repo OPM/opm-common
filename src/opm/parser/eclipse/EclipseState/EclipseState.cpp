@@ -199,6 +199,9 @@ namespace Opm {
     }
 
     void EclipseState::initFaults(const Deck& deck) {
+        if (!Section::hasGRID(deck))
+            return;
+
         const GRIDSection gridSection ( deck );
 
         m_faults = FaultCollection(gridSection, m_inputGrid);
