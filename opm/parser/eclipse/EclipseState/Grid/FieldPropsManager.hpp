@@ -29,6 +29,8 @@ class FieldProps;
 
 class FieldPropsManager {
 public:
+    // The default constructor should be removed when the FieldPropsManager is mandatory
+    FieldPropsManager() = default;
     FieldPropsManager(const Deck& deck, const EclipseGrid& grid);
     void reset_grid(const EclipseGrid& grid);
 

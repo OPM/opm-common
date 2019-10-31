@@ -130,9 +130,7 @@ namespace Opm {
         EDITNNC m_inputEditNnc;
         EclipseGrid m_inputGrid;
         Eclipse3DProperties m_eclipseProperties;
-#ifdef ENABLE_3DPROPS_TESTING
         FieldPropsManager field_props;
-#endif
         const SimulationConfig m_simulationConfig;
         TransMult m_transMult;
 
