@@ -49,6 +49,88 @@
 namespace Opm {
 
 
+namespace {
+
+#ifdef ENABLE_3DPROPS_TESTING
+void assert_field_properties(const EclipseGrid& grid, const FieldPropsManager& fp, const Eclipse3DProperties& ep) {
+    std::vector<std::string> int_keywords = {"FLUXNUM",
+                                             "MULTNUM",
+                                             "OPERNUM",
+                                             "ROCKNUM",
+                                             //"ENDNUM",
+                                             "EQLNUM",
+                                             "FIPNUM",
+                                             "IMBNUM",
+                                             "MISCNUM",
+                                             "OPERNUM",
+                                             "PVTNUM",
+                                             "SATNUM"};
+
+    std::vector<std::string> double_keywords = {"MULTPV",
+                                                //"NTG",
+                                                "PORO",
+                                                "PERMX",
+                                                "PERMY",
+                                                "PERMZ",
+                                                "SWATINIT",
+                                                "TEMPI",
+                                                "THCONR"};
+
+    for (const auto& kw : double_keywords) {
+        bool has = fp.try_get<double>(kw);
+        if (has != ep.hasDeckDoubleGridProperty(kw)) {
+            std::cerr << "FieldPropsManager:   " << has << std::endl;
+            std::cerr << "Eclipse3dProperties: " << ep.hasDeckDoubleGridProperty(kw) << std::endl;
+            throw std::logic_error("Exist Error for: " + kw);
+        }
+
+        if (has) {
+            const auto& fp_data = fp.get<double>(kw);
+            const auto& ep_data = ep.getDoubleGridProperty(kw).compressedCopy(grid);
+            if (fp_data != ep_data) {
+                printf("size: %ld  %ld \n", fp_data.size(), ep_data.size());
+                for (std::size_t i=0; i< fp_data.size(); i++) {
+                    if (fp_data[i] == ep_data[i])
+                        printf("fp[%ld]: %lg   ep[%ld]: %lg \n", i, fp_data[i], i, ep_data[i]);
+                    else
+                        printf("fp[%ld]: %lg   ep[%ld]: %lg ** \n", i, fp_data[i], i, ep_data[i]);
+                }
+
+                throw std::logic_error("Data error for: " + kw);
+            }
+        }
+    }
+
+    for (const auto& kw : int_keywords) {
+        bool has = fp.try_get<int>(kw);
+        if (has != ep.hasDeckIntGridProperty(kw)) {
+            std::cerr << "FieldPropsManager:   " << has << std::endl;
+            std::cerr << "Eclipse3dProperties: " << ep.hasDeckIntGridProperty(kw) << std::endl;
+            throw std::logic_error("Exists error for: " + kw);
+        }
+
+        if (has) {
+            const auto& fp_data = fp.get<int>(kw);
+            const auto& ep_data = ep.getIntGridProperty(kw).compressedCopy(grid);
+            if (fp_data != ep_data) {
+                printf("size: %ld  %ld \n", fp_data.size(), ep_data.size());
+                for (std::size_t i=0; i< fp_data.size(); i++)
+                    printf("fp[%ld]: %d   ep[%ld]: %d \n", i, fp_data[i], i, ep_data[i]);
+
+                throw std::logic_error("Data error for: " + kw);
+            }
+        }
+    }
+}
+#endif
+
+}
+
+
+
+
+
+
     EclipseState::EclipseState(const Deck& deck , const ParseContext& parseContext, ErrorGuard& errors) :
         m_tables(            deck ),
         m_runspec(           deck ),
@@ -58,6 +140,9 @@ namespace Opm {
         m_inputEditNnc(      deck ),
         m_inputGrid(         deck, nullptr ),
         m_eclipseProperties( deck, m_tables, m_inputGrid ),
+#ifdef ENABLE_3DPROPS_TESTING
+        field_props(         deck, m_inputGrid),
+#endif
         m_simulationConfig(  m_eclipseConfig.getInitConfig().restartRequested(), deck, m_eclipseProperties ),
         m_transMult(         GridDims(deck), deck, m_eclipseProperties )
     {
@@ -76,6 +161,10 @@ namespace Opm {
 
         initTransMult();
         initFaults(deck);
+#ifdef ENABLE_3DPROPS_TESTING
+        this->field_props.reset_grid( this->m_inputGrid );
+        assert_field_properties(this->m_inputGrid, this->field_props, this->m_eclipseProperties);
+#endif
     }
 
 
@@ -199,6 +288,9 @@ namespace Opm {
     }
 
     void EclipseState::initFaults(const Deck& deck) {
+        if (!Section::hasGRID(deck))
+            return;
+
         const GRIDSection gridSection ( deck );
 
         m_faults = FaultCollection(gridSection, m_inputGrid);

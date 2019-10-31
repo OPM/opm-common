@@ -675,7 +675,7 @@ BOOST_AUTO_TEST_CASE(TestBox) {
                 "1 1 2 3 /\n";
     Parser parser;
     auto deck = parser.parseString(regionData);
-    EclipseState state(deck);    
+    EclipseState state(deck);
 
 }
 

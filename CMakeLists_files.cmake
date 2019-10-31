@@ -58,6 +58,8 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/EclipseState.cpp
     src/opm/parser/eclipse/EclipseState/EndpointScaling.cpp
     src/opm/parser/eclipse/EclipseState/Edit/EDITNNC.cpp
+    src/opm/parser/eclipse/EclipseState/Grid/FieldProps.cpp
+    src/opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.cpp
     src/opm/parser/eclipse/EclipseState/Grid/Box.cpp
     src/opm/parser/eclipse/EclipseState/Grid/BoxManager.cpp
     src/opm/parser/eclipse/EclipseState/Grid/EclipseGrid.cpp
@@ -284,6 +286,7 @@ if(ENABLE_ECL_INPUT)
     tests/parser/EventTests.cpp
     tests/parser/FaceDirTests.cpp
     tests/parser/FaultTests.cpp
+    tests/parser/FieldPropsTests.cpp
     tests/parser/FoamTests.cpp
     tests/parser/FunctionalTests.cpp
     tests/parser/GeomodifierTests.cpp
@@ -501,6 +504,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.hpp
        opm/parser/eclipse/EclipseState/Grid/Fault.hpp
        opm/parser/eclipse/EclipseState/Grid/Box.hpp
+       opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp
        opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp
        opm/parser/eclipse/EclipseState/Grid/FaultFace.hpp
        opm/parser/eclipse/EclipseState/Grid/NNC.hpp
