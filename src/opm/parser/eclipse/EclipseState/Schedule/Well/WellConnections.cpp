@@ -24,6 +24,7 @@
 
 #include <opm/parser/eclipse/Units/Units.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Connection.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellConnections.hpp>
@@ -191,6 +192,16 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
                             defaultSatTabId);
     }
 
+    void WellConnections::loadCOMPDAT(const DeckRecord& record, const EclipseGrid& grid, const FieldPropsManager& field_properties) {
+        const auto permx        = field_properties.try_get<double>("PERMX");
+        const auto permy        = field_properties.try_get<double>("PERMY");
+        const auto permz        = field_properties.try_get<double>("PERMZ");
+        const auto& ntg         = field_properties.get<double>("NTG");
+        const auto& satnum_data = field_properties.get<int>("SATNUM");
+
+        this->loadCOMPDAT(record, grid, satnum_data, permx, permy, permz, ntg);
+    }
+
     void WellConnections::loadCOMPDAT(const DeckRecord& record, const EclipseGrid& grid, const Eclipse3DProperties& eclipseProperties) {
         const auto& permx = eclipseProperties.getDoubleGridProperty("PERMX").compressedCopy(grid);
         const auto& permy = eclipseProperties.getDoubleGridProperty("PERMY").compressedCopy(grid);
@@ -198,15 +209,15 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
         const auto& ntg   = eclipseProperties.getDoubleGridProperty("NTG").compressedCopy(grid);
         const auto& satnum_data = eclipseProperties.getIntGridProperty("SATNUM").compressedCopy(grid);
 
-        this->loadCOMPDAT(record, grid, satnum_data, permx, permy, permz, ntg);
+        this->loadCOMPDAT(record, grid, satnum_data, std::addressof(permx), std::addressof(permy), std::addressof(permz), ntg);
     }
 
     void WellConnections::loadCOMPDAT(const DeckRecord& record,
                                       const EclipseGrid& grid,
                                       const std::vector<int>& satnum_data,
-                                      const std::vector<double>& permx,
-                                      const std::vector<double>& permy,
-                                      const std::vector<double>& permz,
+                                      const std::vector<double>* permx,
+                                      const std::vector<double>* permy,
+                                      const std::vector<double>* permz,
                                       const std::vector<double>& ntg) {
 
         const auto& itemI = record.getItem( "I" );
@@ -274,11 +285,13 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
                 goto CF_done;
 
             /* We must calculate CF and Kh from the items in the COMPDAT record and cell properties. */
-            {
+            if (permx && permy && permz) {
                 // Angle of completion exposed to flow.  We assume centre
                 // placement so there's complete exposure (= 2\pi).
                 const double angle = 6.2831853071795864769252867665590057683943387987502116419498;
-                std::array<double,3> cell_perm = {{ permx[active_index], permy[active_index], permz[active_index]}};
+                std::array<double,3> cell_perm = {{ permx->operator[](active_index),
+                                                    permy->operator[](active_index),
+                                                    permz->operator[](active_index)}};
                 std::array<double,3> cell_size = grid.getCellDims(I,J,k);
                 const auto& K = permComponents(direction, cell_perm);
                 const auto& D = effectiveExtent(direction, ntg[active_index], cell_size);
@@ -300,7 +313,8 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
                             Kh = std::sqrt(K[0] * K[1]) * D[2];
                     }
                 }
-            }
+            } else
+                throw std::invalid_argument("Missing PERM values to calculate connection factors");
 
 
         CF_done:
