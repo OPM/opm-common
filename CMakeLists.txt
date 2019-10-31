@@ -135,6 +135,21 @@ macro (install_hook)
           PATTERN *.hpp)
 endmacro (install_hook)
 
+# If opm-common is configured to embed the python interpreter we must make sure
+# that all downstream modules link libpython transitively. Due to the required
+# integration with Python+cmake machinery provided by pybind11 this is done by
+# manually adding to the opm-common_LIBRARIES variable here, and not in the
+# OpmnLibMain function. Here only the library dependency is implemented, the
+# bulk of the python configuration is further down in the file.
+if (OPM_ENABLE_PYTHON)
+  find_package(PythonInterp REQUIRED)
+  include(FindPythonInterp)
+  if (OPM_ENABLE_EMBEDDED_PYTHON)
+    list(APPEND opm-common_LIBRARIES ${PYTHON_LIBRARY})
+  endif()
+endif()
+
+
 # all setup common to the OPM library modules is done here
 include (OpmLibMain)
 
@@ -218,9 +233,6 @@ install(FILES etc/opm_bash_completion.sh.in DESTINATION share/opm/etc)
 if (OPM_ENABLE_PYTHON)
   # -------------------------------------------------------------------------
   # 1: Wrap C++ functionality in Python
-  find_package(PythonInterp REQUIRED)
-  include(FindPythonInterp)
-
   set(PYTHON_PACKAGE_PATH "site-packages")
   set(PYTHON_INSTALL_PREFIX "lib/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/${PYTHON_PACKAGE_PATH}" CACHE STRING "Subdirectory to install Python modules in")
 
