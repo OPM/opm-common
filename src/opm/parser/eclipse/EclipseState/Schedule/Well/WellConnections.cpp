@@ -238,6 +238,9 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
             rw = 0.5*unit::feet;
 
         for (int k = K1; k <= K2; k++) {
+            if (!grid.cellActive(I, J, k))
+                continue;
+
             double CF = -1;
             double Kh = -1;
 
@@ -293,47 +296,44 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
             auto prev = std::find_if( this->m_connections.begin(),
                                       this->m_connections.end(),
                                       same_ijk );
-	    // Only add connection for active grid cells
-            if (grid.cellActive(I, J, k)) {
-                if (prev == this->m_connections.end()) {
-                    std::size_t noConn = this->m_connections.size();
-                    this->addConnection(I,J,k,
-                                        grid.getCellDepth( I,J,k ),
-                                        state,
-                                        CF,
-                                        Kh,
-                                        rw,
-                                        r0,
-                                        skin_factor,
-                                        satTableId,
-                                        direction,
-                                        noConn, 0., 0., defaultSatTable);
-                } else {
-                    std::size_t noConn = prev->getSeqIndex();
-                    // The complnum value carries over; the rest of the state is fully specified by
-                    // the current COMPDAT keyword.
-                    int complnum = prev->complnum();
-                    std::size_t css_ind = prev->getCompSegSeqIndex();
-                    int conSegNo = prev->segment();
-                    std::size_t con_SIndex = prev->getSeqIndex();
-                    double conCDepth = prev->depth();
-                    double conSDStart = prev->getSegDistStart();
-                    double conSDEnd = prev->getSegDistEnd();
-                    *prev = Connection(I,J,k,
-                                       complnum,
-                                       grid.getCellDepth(I,J,k),
-                                       state,
-                                       CF,
-                                       Kh,
-                                       rw,
-                                       r0,
-                                       skin_factor,
-                                       satTableId,
-                                       direction,
-                                       noConn, conSDStart, conSDEnd, defaultSatTable);
-                    prev->setCompSegSeqIndex(css_ind);
-                    prev->updateSegment(conSegNo, conCDepth, con_SIndex);
-                }
+            if (prev == this->m_connections.end()) {
+                std::size_t noConn = this->m_connections.size();
+                this->addConnection(I,J,k,
+                                    grid.getCellDepth( I,J,k ),
+                                    state,
+                                    CF,
+                                    Kh,
+                                    rw,
+                                    r0,
+                                    skin_factor,
+                                    satTableId,
+                                    direction,
+                                    noConn, 0., 0., defaultSatTable);
+            } else {
+                std::size_t noConn = prev->getSeqIndex();
+                // The complnum value carries over; the rest of the state is fully specified by
+                // the current COMPDAT keyword.
+                int complnum = prev->complnum();
+                std::size_t css_ind = prev->getCompSegSeqIndex();
+                int conSegNo = prev->segment();
+                std::size_t con_SIndex = prev->getSeqIndex();
+                double conCDepth = prev->depth();
+                double conSDStart = prev->getSegDistStart();
+                double conSDEnd = prev->getSegDistEnd();
+                *prev = Connection(I,J,k,
+                                   complnum,
+                                   grid.getCellDepth(I,J,k),
+                                   state,
+                                   CF,
+                                   Kh,
+                                   rw,
+                                   r0,
+                                   skin_factor,
+                                   satTableId,
+                                   direction,
+                                   noConn, conSDStart, conSDEnd, defaultSatTable);
+                prev->setCompSegSeqIndex(css_ind);
+                prev->updateSegment(conSegNo, conCDepth, con_SIndex);
             }
         }
     }
