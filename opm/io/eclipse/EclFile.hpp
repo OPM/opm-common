@@ -35,7 +35,7 @@ namespace Opm { namespace EclIO {
 class EclFile
 {
 public:
-    explicit EclFile(const std::string& filename);
+    explicit EclFile(const std::string& filename, bool preload = false);
     bool formattedInput() { return formatted; }
 
     void loadData();                            // load all data
