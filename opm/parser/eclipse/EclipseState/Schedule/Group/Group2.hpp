@@ -109,6 +109,8 @@ struct GroupInjectionProperties {
     UDAValue resv_max_rate;
     UDAValue target_reinj_fraction;
     UDAValue target_void_fraction;
+    std::string reinj_group;
+    std::string voidage_group;
 
     int injection_controls = 0;
     bool operator==(const GroupInjectionProperties& other) const;
@@ -123,6 +125,8 @@ struct InjectionControls {
     double target_reinj_fraction;
     double target_void_fraction;
     int injection_controls = 0;
+    std::string reinj_group;
+    std::string voidage_group;
     bool has_control(InjectionCMode control) const;
 };
 

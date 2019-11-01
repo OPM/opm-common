@@ -1458,6 +1458,13 @@ namespace {
                 auto reservoirInjectionRate = record.getItem("RESV_TARGET").get<UDAValue>(0);
                 auto reinj_target = record.getItem("REINJ_TARGET").get<UDAValue>(0);
                 auto voidage_target = record.getItem("VOIDAGE_TARGET").get<UDAValue>(0);
+                std::string reinj_group = group_name;
+                if (!record.getItem("REINJECT_GROUP").defaultApplied(0))
+                    reinj_group = record.getItem("REINJECT_GROUP").getTrimmedString(0);
+
+                std::string voidage_group = group_name;
+                if (!record.getItem("VOIDAGE_GROUP").defaultApplied(0))
+                    voidage_group = record.getItem("VOIDAGE_GROUP").getTrimmedString(0);;
 
                 //surfaceInjectionRate = injection::rateToSI(surfaceInjectionRate, phase, section.unitSystem());
                 {
@@ -1470,6 +1477,8 @@ namespace {
                     injection.target_reinj_fraction = reinj_target;
                     injection.target_void_fraction = voidage_target;
                     injection.injection_controls = 0;
+                    injection.reinj_group = reinj_group;
+                    injection.voidage_group = voidage_group;
 
                     if (!record.getItem("SURFACE_TARGET").defaultApplied(0))
                         injection.injection_controls += static_cast<int>(Group2::InjectionCMode::RATE);

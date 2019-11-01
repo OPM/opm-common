@@ -115,7 +115,9 @@ bool Group2::GroupInjectionProperties::operator==(const GroupInjectionProperties
         this->resv_max_rate         == other.resv_max_rate &&
         this->target_reinj_fraction == other.target_reinj_fraction &&
         this->injection_controls    == other.injection_controls &&
-        this->target_void_fraction  == other.target_void_fraction;
+        this->target_void_fraction  == other.target_void_fraction &&
+        this->reinj_group           == other.reinj_group &&
+        this->voidage_group         == other.voidage_group;
 }
 
 
@@ -288,6 +290,8 @@ Group2::InjectionControls Group2::injectionControls(const SummaryState& st) cons
     ic.resv_max_rate = UDA::eval_group_uda(this->injection_properties.resv_max_rate, this->m_name, st, this->udq_undefined);
     ic.target_reinj_fraction = UDA::eval_group_uda(this->injection_properties.target_reinj_fraction, this->m_name, st, this->udq_undefined);
     ic.target_void_fraction = UDA::eval_group_uda(this->injection_properties.target_void_fraction, this->m_name, st, this->udq_undefined);
+    ic.reinj_group = this->injection_properties.reinj_group;
+    ic.voidage_group = this->injection_properties.voidage_group;
     return ic;
 }
 
