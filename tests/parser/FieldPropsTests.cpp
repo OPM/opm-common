@@ -43,14 +43,10 @@ BOOST_AUTO_TEST_CASE(CreateFieldProps) {
     EclipseGrid grid(10,10,10);
     Deck deck;
     FieldPropsManager fpm(deck, grid);
-    BOOST_CHECK(!fpm.try_get<int>("SATNUM"));
     BOOST_CHECK(!fpm.try_get<double>("PORO"));
-    BOOST_CHECK(!fpm.try_get<int>("SATNUM"));
     BOOST_CHECK(!fpm.try_get<double>("PORO"));
     BOOST_CHECK_THROW(fpm.get<double>("PORO"), std::out_of_range);
-    BOOST_CHECK_THROW(fpm.get<int>("SATNUM"), std::out_of_range);
     BOOST_CHECK_THROW(fpm.get_global<double>("PORO"), std::out_of_range);
-    BOOST_CHECK_THROW(fpm.get_global<int>("SATNUM"), std::out_of_range);
     BOOST_CHECK_THROW(fpm.try_get<int>("NOT_SUPPORTED"), std::invalid_argument);
     BOOST_CHECK_THROW(fpm.try_get<double>("NOT_SUPPORTED"), std::invalid_argument);
     BOOST_CHECK_THROW(fpm.get<int>("NOT_SUPPORTED"), std::invalid_argument);
