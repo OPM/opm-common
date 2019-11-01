@@ -348,6 +348,8 @@ BOOST_AUTO_TEST_CASE( WellTestGroups ) {
         BOOST_CHECK_CLOSE( 20/Metric::Time , injection.resv_max_rate, 0.001);
         BOOST_CHECK_EQUAL( 0.75 , injection.target_reinj_fraction);
         BOOST_CHECK_EQUAL( 0.95 , injection.target_void_fraction);
+        BOOST_CHECK_EQUAL("INJ" , injection.reinj_group);
+        BOOST_CHECK_EQUAL("INJ" , injection.voidage_group);
         BOOST_CHECK(group.isInjectionGroup());
     }
     {
