@@ -28,6 +28,8 @@
 #PARAOPTS      typeless item (reserved)
 #PCG32D        2 types of tables/records, first size fixed but not always 1
 #PCW32D        2 types of tables/records, first size fixed but not always 1
+#PVZG          2 types of tables/records
+#PVTWSALT      2 types of tables/records
 #UDT
 #STOG, STOW, STWG    records of records
 
@@ -595,10 +597,19 @@ set( keywords
      000_Eclipse100/P/PLYCAMAX
      000_Eclipse100/P/PLYDHFLF
      000_Eclipse100/P/PLYMAX
+     000_Eclipse100/P/PLYOPTS
+     000_Eclipse100/P/PLYRMDEN
      000_Eclipse100/P/PLYROCK
+     000_Eclipse100/P/PLYROCKM
      000_Eclipse100/P/PLYSHEAR
      000_Eclipse100/P/PLYSHLOG
+     000_Eclipse100/P/PLYTRRF
+     000_Eclipse100/P/PLYTRRFA
      000_Eclipse100/P/PLYVISC
+     000_Eclipse100/P/PLYVISCS
+     000_Eclipse100/P/PLYVISCT
+     000_Eclipse100/P/PLYVSCST
+     000_Eclipse100/P/PMAX
      000_Eclipse100/P/PMISC
      000_Eclipse100/P/POLYMER
      000_Eclipse100/P/PORO
@@ -606,8 +617,13 @@ set( keywords
      000_Eclipse100/P/PPCWMAX
      000_Eclipse100/P/PRESSURE
      000_Eclipse100/P/PROPS
+     000_Eclipse100/P/PRIORITY
      000_Eclipse100/P/PRORDER
+     000_Eclipse100/P/PSTEADY
+     000_Eclipse100/P/PSWRG
+     000_Eclipse100/P/PSWRO
      000_Eclipse100/P/PVCDO
+     000_Eclipse100/P/PVCO
      000_Eclipse100/P/PVDG
      000_Eclipse100/P/PVDO
      000_Eclipse100/P/PVDS
