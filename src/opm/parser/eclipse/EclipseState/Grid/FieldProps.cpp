@@ -42,6 +42,7 @@ static const std::map<std::string, std::string> unit_string = {{"PORO", "1"},
                                                                {"SWATINIT", "1"}};
 
 static const std::set<std::string> oper_keywords = {"ADD", "EQUALS", "MAXVALUE", "MINVALUE", "MULTIPLY"};
+static const std::set<std::string> region_oper_keywords = {"ADDREG", "EQUALREG"};
 static const std::set<std::string> box_keywords = {"BOX", "ENDBOX"};
 static const std::map<std::string, double> double_scalar_init = {{"NTG", 1}};
 
@@ -176,6 +177,7 @@ void multiply_scalar(FieldProps::FieldData<T>& field_data, T value, const std::v
 
 template <typename T>
 void add_scalar(FieldProps::FieldData<T>& field_data, T value, const std::vector<Box::cell_index>& index_list) {
+    printf("Running add_scalar\n");
     for (const auto& cell_index : index_list) {
         if (field_data.assigned[cell_index.active_index])
             field_data.data[cell_index.active_index] += value;
@@ -201,6 +203,39 @@ void max_value(FieldProps::FieldData<T>& field_data, T max_value, const std::vec
         }
     }
 }
+
+std::string make_region_name(const std::string& deck_value) {
+    if (deck_value == "O")
+        return "OPERNUM";
+
+    if (deck_value == "F")
+        return "FLUXNUM";
+
+    if (deck_value == "M")
+        return "MULTNUM";
+
+    throw std::invalid_argument("The input string: " + deck_value + " was invalid. Expected: O/F/M");
+}
+
+FieldProps::ScalarOperation fromString(const std::string& keyword) {
+    if (keyword == ParserKeywords::ADD::keywordName || keyword == ParserKeywords::ADDREG::keywordName)
+        return FieldProps::ScalarOperation::ADD;
+
+    if (keyword == ParserKeywords::EQUALS::keywordName || keyword == ParserKeywords::EQUALREG::keywordName)
+        return FieldProps::ScalarOperation::EQUAL;
+
+    if (keyword == ParserKeywords::MULTIPLY::keywordName || keyword == ParserKeywords::MULTIREG::keywordName)
+        return FieldProps::ScalarOperation::MUL;
+
+    if (keyword == ParserKeywords::MINVALUE::keywordName)
+        return FieldProps::ScalarOperation::MIN;
+
+    if (keyword == ParserKeywords::MAXVALUE::keywordName)
+        return FieldProps::ScalarOperation::MAX;
+
+    throw std::invalid_argument("Keyword operation not recognized");
+}
+
 
 void setKeywordBox( const DeckRecord& deckRecord,  BoxManager& boxManager) {
     const auto& I1Item = deckRecord.getItem("I1");
@@ -265,6 +300,8 @@ FieldProps::FieldProps(const Deck& deck, const EclipseGrid& grid_arg) :
     if (Section::hasREGIONS(deck))
         this->scanREGIONSSection(REGIONSSection(deck));
 }
+
+
 
 void FieldProps::reset_grid(const EclipseGrid& grid_arg) {
     const auto& new_actnum = grid_arg.getACTNUM();
@@ -361,6 +398,25 @@ FieldProps::FieldData<int>& FieldProps::get(const std::string& keyword) {
         throw std::out_of_range("Integer keyword " + keyword + " is not supported");
 }
 
+std::vector<Box::cell_index> FieldProps::region_index( const DeckItem& region_item, int region_value ) {
+    std::string region_name = region_item.defaultApplied(0) ? this->default_region : make_region_name(region_item.get<std::string>(0));
+    const auto& region = this->get<int>(region_name);
+    if (!region.valid())
+        throw std::invalid_argument("Trying to work with invalid region: " + region_name);
+
+    std::vector<Box::cell_index> index_list;
+    std::size_t active_index = 0;
+    const auto& region_data = region.data;
+    for (std::size_t g = 0; g < this->actnum.size(); g++) {
+        if (this->actnum[g] != 0) {
+            if (region_data[active_index] == region_value)
+                index_list.emplace_back( g, active_index, g );
+            active_index += 1;
+        }
+    }
+    return index_list;
+}
+
 
 template <>
 bool FieldProps::has<double>(const std::string& keyword) const {
@@ -408,7 +464,10 @@ void FieldProps::scanGRIDSection(const GRIDSection& grid_section) {
             this->handle_int_keyword(keyword, box_manager);
 
         else if (keywords::oper_keywords.count(name) == 1)
-            this->handle_scalar_operation(keyword, box_manager);
+            this->handle_operation(keyword, box_manager);
+
+        else if (keywords::region_oper_keywords.count(name) == 1)
+            this->handle_region_operation(keyword);
 
         else if (keywords::box_keywords.count(name) == 1)
             handle_box_keyword(*this->grid, keyword, box_manager);
@@ -430,7 +489,7 @@ void FieldProps::scanPROPSSection(const PROPSSection& props_section) {
             this->handle_props_section_double_keyword(keyword, box_manager);
 
         else if (keywords::oper_keywords.count(name) == 1)
-            this->handle_scalar_operation(keyword, box_manager);
+            this->handle_operation(keyword, box_manager);
 
         else if (keywords::box_keywords.count(name) == 1)
             handle_box_keyword(*this->grid, keyword, box_manager);
@@ -453,7 +512,10 @@ void FieldProps::scanREGIONSSection(const REGIONSSection& regions_section) {
             this->handle_int_keyword(keyword, box_manager);
 
         else if (keywords::oper_keywords.count(name) == 1)
-            this->handle_scalar_operation(keyword, box_manager);
+            this->handle_operation(keyword, box_manager);
+
+        else if (keywords::region_oper_keywords.count(name) == 1)
+            this->handle_region_operation(keyword);
 
         else if (keywords::box_keywords.count(name) == 1)
             handle_box_keyword(*this->grid, keyword, box_manager);
@@ -495,25 +557,50 @@ void FieldProps::handle_grid_section_double_keyword(const DeckKeyword& keyword, 
 
 
 template <typename T>
-void FieldProps::handle_scalar_operation(const std::string& keyword, FieldData<T>& data, T scalar_value, const Box& box) {
-    if (keyword == ParserKeywords::EQUALS::keywordName)
-        assign_scalar(data, scalar_value, box.index_list());
+void FieldProps::apply(ScalarOperation op, FieldData<T>& data, T scalar_value, const std::vector<Box::cell_index>& index_list) {
+    if (op == ScalarOperation::EQUAL)
+        assign_scalar(data, scalar_value, index_list);
 
-    else if (keyword == ParserKeywords::MULTIPLY::keywordName)
-        multiply_scalar(data, scalar_value, box.index_list());
+    else if (op == ScalarOperation::MUL)
+        multiply_scalar(data, scalar_value, index_list);
 
-    else if (keyword == ParserKeywords::ADD::keywordName)
-        add_scalar(data, scalar_value, box.index_list());
+    else if (op == ScalarOperation::ADD)
+        add_scalar(data, scalar_value, index_list);
 
-    else if (keyword == ParserKeywords::MINVALUE::keywordName)
-        min_value(data, scalar_value, box.index_list());
+    else if (op == ScalarOperation::MIN)
+        min_value(data, scalar_value, index_list);
 
-    else if (keyword == ParserKeywords::MAXVALUE::keywordName)
-        max_value(data, scalar_value, box.index_list());
+    else if (op == ScalarOperation::MAX)
+        max_value(data, scalar_value, index_list);
 }
 
 
-void FieldProps::handle_scalar_operation(const DeckKeyword& keyword, BoxManager& box_manager) {
+void FieldProps::handle_region_operation(const DeckKeyword& keyword) {
+    for (const auto& record : keyword) {
+        const std::string& target_kw = record.getItem(0).get<std::string>(0);
+        int region_value = record.getItem(2).get<int>(0);
+        const auto& index_list = this->region_index(record.getItem(3), region_value);
+
+        if (FieldProps::supported<double>(target_kw)) {
+            double value = record.getItem(1).get<double>(0);
+            if (keyword.name() != ParserKeywords::MULTIPLY::keywordName)
+                value = this->getSIValue(target_kw, value);
+
+            auto& field_data = this->get<double>(target_kw);
+            FieldProps::apply(fromString(keyword.name()), field_data, value, index_list);
+            continue;
+        }
+
+        if (FieldProps::supported<int>(target_kw)) {
+            continue;
+        }
+
+        //throw std::out_of_range("The keyword: " + keyword + " is not supported");
+    }
+}
+
+
+void FieldProps::handle_operation(const DeckKeyword& keyword, BoxManager& box_manager) {
     for (const auto& record : keyword) {
         setKeywordBox(record, box_manager);
         const std::string& target_kw = record.getItem(0).get<std::string>(0);
@@ -524,7 +611,7 @@ void FieldProps::handle_scalar_operation(const DeckKeyword& keyword, BoxManager&
                 scalar_value = this->getSIValue(target_kw, scalar_value);
 
             auto& field_data = this->get<double>(target_kw);
-            FieldProps::handle_scalar_operation(keyword.name(), field_data, scalar_value, box_manager.getActiveBox());
+            FieldProps::apply(fromString(keyword.name()), field_data, scalar_value, box_manager.index_list());
             continue;
         }
 
@@ -532,7 +619,7 @@ void FieldProps::handle_scalar_operation(const DeckKeyword& keyword, BoxManager&
         if (FieldProps::supported<int>(target_kw)) {
             int scalar_value = static_cast<int>(record.getItem(1).get<double>(0));
             auto& field_data = this->get<int>(target_kw);
-            FieldProps::handle_scalar_operation(keyword.name(), field_data, scalar_value, box_manager.getActiveBox());
+            FieldProps::apply(fromString(keyword.name()), field_data, scalar_value, box_manager.index_list());
             continue;
         }
 

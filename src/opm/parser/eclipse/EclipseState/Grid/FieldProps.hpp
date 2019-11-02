@@ -34,6 +34,15 @@ class EclipseGrid;
 class FieldProps {
 public:
 
+    enum class ScalarOperation {
+         ADD = 1,
+         EQUAL = 2,
+         MUL = 3,
+         MIN = 4,
+         MAX = 5
+    };
+
+
     template<typename T>
     struct FieldData {
         std::vector<T> data;
@@ -148,8 +157,10 @@ private:
     void erase(const std::string& keyword);
 
     template <typename T>
-    static void handle_scalar_operation(const std::string& keyword, FieldData<T>& data, T scalar_value, const Box& box);
-    void handle_scalar_operation(const DeckKeyword& keyword, BoxManager& box_manager);
+    static void apply(ScalarOperation op, FieldData<T>& data, T scalar_value, const std::vector<Box::cell_index>& index_list);
+    std::vector<Box::cell_index> region_index( const DeckItem& regionItem, int region_value );
+    void handle_operation(const DeckKeyword& keyword, BoxManager& box_manager);
+    void handle_region_operation(const DeckKeyword& keyword);
     void handle_props_section_double_keyword(const DeckKeyword& keyword, const BoxManager& box_manager);
     void handle_grid_section_double_keyword(const DeckKeyword& keyword, const BoxManager& box_manager);
     void handle_int_keyword(const DeckKeyword& keyword, const BoxManager& box_manager);
