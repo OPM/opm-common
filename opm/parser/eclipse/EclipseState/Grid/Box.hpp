@@ -33,6 +33,13 @@ namespace Opm {
             std::size_t global_index;
             std::size_t active_index;
             std::size_t data_index;
+
+            cell_index(std::size_t g,std::size_t a, std::size_t d) :
+                global_index(g),
+                active_index(a),
+                data_index(d)
+            {}
+
         };
 
         Box(const EclipseGrid& grid);
