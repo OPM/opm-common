@@ -126,7 +126,7 @@ public:
     const std::vector<ElmType>&
     getKeyword(const std::string& vector)
     {
-        return this->rst_file_->getRst<ElmType>(vector, this->report_step_);
+        return this->rst_file_->getRst<ElmType>(vector, this->report_step_, 0);
     }
 
     const std::vector<int>& intehead()

@@ -127,28 +127,28 @@ BOOST_AUTO_TEST_CASE(TestERst_1) {
 
     // non exising report step number, should throw exception 
     
-    BOOST_CHECK_THROW(std::vector<int> vect1=rst1.getRst<int>("ICON",0) , std::invalid_argument );
-    BOOST_CHECK_THROW(std::vector<float> vect2=rst1.getRst<float>("PRESSURE",0) , std::invalid_argument );
-    BOOST_CHECK_THROW(std::vector<double> vect3=rst1.getRst<double>("XGRP",0) , std::invalid_argument );
-    BOOST_CHECK_THROW(std::vector<bool> vect4=rst1.getRst<bool>("LOGIHEAD",0) , std::invalid_argument );
-    BOOST_CHECK_THROW(std::vector<std::string> vect4=rst1.getRst<std::string>("ZWEL",0) , std::invalid_argument );
+    BOOST_CHECK_THROW(std::vector<int> vect1=rst1.getRst<int>("ICON",0, 0) , std::invalid_argument );
+    BOOST_CHECK_THROW(std::vector<float> vect2=rst1.getRst<float>("PRESSURE",0, 0) , std::invalid_argument );
+    BOOST_CHECK_THROW(std::vector<double> vect3=rst1.getRst<double>("XGRP",0, 0) , std::invalid_argument );
+    BOOST_CHECK_THROW(std::vector<bool> vect4=rst1.getRst<bool>("LOGIHEAD",0, 0) , std::invalid_argument );
+    BOOST_CHECK_THROW(std::vector<std::string> vect4=rst1.getRst<std::string>("ZWEL",0, 0) , std::invalid_argument );
 
     // calling getRst<T> member function with wrong type, should throw exception
 
-    BOOST_CHECK_THROW(std::vector<float> vect1=rst1.getRst<float>("ICON",5) , std::runtime_error );
-    BOOST_CHECK_THROW(std::vector<int> vect2=rst1.getRst<int>("PRESSURE",5), std::runtime_error );
-    BOOST_CHECK_THROW(std::vector<float> vect3=rst1.getRst<float>("XGRP",5), std::runtime_error );
-    BOOST_CHECK_THROW(std::vector<double> vect4=rst1.getRst<double>("LOGIHEAD",5), std::runtime_error );
-    BOOST_CHECK_THROW(std::vector<bool> vect5=rst1.getRst<bool>("ZWEL",5), std::runtime_error );
+    BOOST_CHECK_THROW(std::vector<float> vect1=rst1.getRst<float>("ICON",5, 0) , std::runtime_error );
+    BOOST_CHECK_THROW(std::vector<int> vect2=rst1.getRst<int>("PRESSURE",5, 0), std::runtime_error );
+    BOOST_CHECK_THROW(std::vector<float> vect3=rst1.getRst<float>("XGRP",5, 0), std::runtime_error );
+    BOOST_CHECK_THROW(std::vector<double> vect4=rst1.getRst<double>("LOGIHEAD",5, 0), std::runtime_error );
+    BOOST_CHECK_THROW(std::vector<bool> vect5=rst1.getRst<bool>("ZWEL",5, 0), std::runtime_error );
 
     // report step number exists, but data is not loaded. Vector should in this case
     // be loaded on demand. Hence not throwing an exception
 
-    std::vector<int> vect1=rst1.getRst<int>("ICON",10);
-    std::vector<float> vect2=rst1.getRst<float>("PRESSURE",10);
-    std::vector<double> vect3=rst1.getRst<double>("XGRP",10);
-    std::vector<bool> vect4=rst1.getRst<bool>("LOGIHEAD",10);
-    std::vector<std::string> vect5=rst1.getRst<std::string>("ZWEL",10);
+    std::vector<int> vect1=rst1.getRst<int>("ICON",10, 0);
+    std::vector<float> vect2=rst1.getRst<float>("PRESSURE",10, 0);
+    std::vector<double> vect3=rst1.getRst<double>("XGRP",10, 0);
+    std::vector<bool> vect4=rst1.getRst<bool>("LOGIHEAD",10, 0);
+    std::vector<std::string> vect5=rst1.getRst<std::string>("ZWEL",10, 0);
 
     BOOST_CHECK_EQUAL(ref_icon_10==vect1, true);
 
@@ -163,11 +163,11 @@ BOOST_AUTO_TEST_CASE(TestERst_1) {
 
     rst1.loadReportStepNumber(25);
 
-    vect1 = rst1.getRst<int>("ICON",25);
-    vect2 = rst1.getRst<float>("PRESSURE",25);
-    vect3 = rst1.getRst<double>("XGRP",25);
-    vect4 = rst1.getRst<bool>("LOGIHEAD",25);
-    vect5 = rst1.getRst<std::string>("ZWEL",25);
+    vect1 = rst1.getRst<int>("ICON",25, 0);
+    vect2 = rst1.getRst<float>("PRESSURE",25, 0);
+    vect3 = rst1.getRst<double>("XGRP",25, 0);
+    vect4 = rst1.getRst<bool>("LOGIHEAD",25, 0);
+    vect5 = rst1.getRst<std::string>("ZWEL",25, 0);
 
     BOOST_CHECK_EQUAL(ref_icon_25==vect1, true);
 
@@ -187,19 +187,19 @@ static void readAndWrite(EclOutput& eclTest, ERst& rst1,
                          eclArrType arrType)
 {
     if (arrType == INTE) {
-        std::vector<int> vect = rst1.getRst<int>(name, seqnum);
+        std::vector<int> vect = rst1.getRst<int>(name, seqnum, 0);
         eclTest.write(name, vect);
     } else if (arrType == REAL) {
-        std::vector<float> vect = rst1.getRst<float>(name, seqnum);
+        std::vector<float> vect = rst1.getRst<float>(name, seqnum, 0);
         eclTest.write(name, vect);
     } else if (arrType == DOUB) {
-        std::vector<double> vect = rst1.getRst<double>(name, seqnum);
+        std::vector<double> vect = rst1.getRst<double>(name, seqnum, 0);
         eclTest.write(name, vect);
     } else if (arrType == LOGI) {
-        std::vector<bool> vect = rst1.getRst<bool>(name, seqnum);
+        std::vector<bool> vect = rst1.getRst<bool>(name, seqnum, 0);
         eclTest.write(name, vect);
     } else if (arrType == CHAR) {
-        std::vector<std::string> vect = rst1.getRst<std::string>(name, seqnum);
+        std::vector<std::string> vect = rst1.getRst<std::string>(name, seqnum, 0);
         eclTest.write(name, vect);
     } else if (arrType == MESS) {
         eclTest.write(name, std::vector<char>());
@@ -301,9 +301,9 @@ BOOST_AUTO_TEST_CASE(TestERst_4) {
     BOOST_CHECK_EQUAL(rst3.hasReportStepNumber(4), false);
     BOOST_CHECK_EQUAL(rst3.hasReportStepNumber(25), true);
 
-    std::vector<float> pres1 = rst1.getRst<float>("PRESSURE",25);
-    std::vector<float> pres2 = rst2.getRst<float>("PRESSURE",25);
-    std::vector<float> pres3 = rst3.getRst<float>("PRESSURE",25);
+    std::vector<float> pres1 = rst1.getRst<float>("PRESSURE",25, 0);
+    std::vector<float> pres2 = rst2.getRst<float>("PRESSURE",25, 0);
+    std::vector<float> pres3 = rst3.getRst<float>("PRESSURE",25, 0);
     
     BOOST_CHECK_EQUAL(pres1==pres2, true);
     BOOST_CHECK_EQUAL(pres1==pres3, true);
@@ -443,7 +443,7 @@ BOOST_AUTO_TEST_CASE(Unformatted)
         rst.loadReportStepNumber(1);
 
         {
-            const auto& I = rst.getRst<int>("I", 1);
+            const auto& I = rst.getRst<int>("I", 1, 0);
             const auto  expect_I = std::vector<int>{ 1, 7, 2, 9 };
             BOOST_CHECK_EQUAL_COLLECTIONS(I.begin(), I.end(),
                                           expect_I.begin(),
@@ -451,7 +451,7 @@ BOOST_AUTO_TEST_CASE(Unformatted)
         }
 
         {
-            const auto& L = rst.getRst<bool>("L", 1);
+            const auto& L = rst.getRst<bool>("L", 1, 0);
             const auto  expect_L = std::vector<bool> {
                 true, false, false, true,
             };
@@ -462,7 +462,7 @@ BOOST_AUTO_TEST_CASE(Unformatted)
         }
 
         {
-            const auto& S = rst.getRst<float>("S", 1);
+            const auto& S = rst.getRst<float>("S", 1, 0);
             const auto  expect_S = std::vector<float>{
                 3.1f, 4.1f, 59.265f,
             };
@@ -471,7 +471,7 @@ BOOST_AUTO_TEST_CASE(Unformatted)
         }
 
         {
-            const auto& D = rst.getRst<double>("D", 1);
+            const auto& D = rst.getRst<double>("D", 1, 0);
             const auto  expect_D = std::vector<double>{
                 2.71, 8.21,
             };
@@ -480,7 +480,7 @@ BOOST_AUTO_TEST_CASE(Unformatted)
         }
 
         {
-            const auto& Z = rst.getRst<std::string>("Z", 1);
+            const auto& Z = rst.getRst<std::string>("Z", 1, 0);
             const auto  expect_Z = std::vector<std::string>{
                 "W1", "W2",  // ERst trims trailing blanks
             };
@@ -541,7 +541,7 @@ BOOST_AUTO_TEST_CASE(Unformatted)
         rst.loadReportStepNumber(5);
 
         {
-            const auto& I = rst.getRst<int>("I", 5);
+            const auto& I = rst.getRst<int>("I", 5, 0);
             const auto  expect_I = std::vector<int>{ 1, 2, 3, 4 };
             BOOST_CHECK_EQUAL_COLLECTIONS(I.begin(), I.end(),
                                           expect_I.begin(),
@@ -549,7 +549,7 @@ BOOST_AUTO_TEST_CASE(Unformatted)
         }
 
         {
-            const auto& L = rst.getRst<bool>("L", 5);
+            const auto& L = rst.getRst<bool>("L", 5, 0);
             const auto  expect_L = std::vector<bool> {
                 false, false, false, true,
             };
@@ -560,7 +560,7 @@ BOOST_AUTO_TEST_CASE(Unformatted)
         }
 
         {
-            const auto& S = rst.getRst<float>("S", 5);
+            const auto& S = rst.getRst<float>("S", 5, 0);
             const auto  expect_S = std::vector<float>{
                 1.23e-04f, 1.234e5f, -5.4321e-9f,
             };
@@ -569,7 +569,7 @@ BOOST_AUTO_TEST_CASE(Unformatted)
         }
 
         {
-            const auto& D = rst.getRst<double>("D", 5);
+            const auto& D = rst.getRst<double>("D", 5, 0);
             const auto  expect_D = std::vector<double>{
                 0.6931, 1.6180,
             };
@@ -578,7 +578,7 @@ BOOST_AUTO_TEST_CASE(Unformatted)
         }
 
         {
-            const auto& Z = rst.getRst<std::string>("Z", 5);
+            const auto& Z = rst.getRst<std::string>("Z", 5, 0);
             const auto  expect_Z = std::vector<std::string>{
                 "HELLO", ",", "WORLD",  // ERst trims trailing blanks
             };
@@ -639,7 +639,7 @@ BOOST_AUTO_TEST_CASE(Unformatted)
         rst.loadReportStepNumber(13);
 
         {
-            const auto& I = rst.getRst<int>("I", 13);
+            const auto& I = rst.getRst<int>("I", 13, 0);
             const auto  expect_I = std::vector<int>{ 35, 51, 13};
             BOOST_CHECK_EQUAL_COLLECTIONS(I.begin(), I.end(),
                                           expect_I.begin(),
@@ -647,7 +647,7 @@ BOOST_AUTO_TEST_CASE(Unformatted)
         }
 
         {
-            const auto& L = rst.getRst<bool>("L", 13);
+            const auto& L = rst.getRst<bool>("L", 13, 0);
             const auto  expect_L = std::vector<bool> {
                 true, true, true, false,
             };
@@ -658,7 +658,7 @@ BOOST_AUTO_TEST_CASE(Unformatted)
         }
 
         {
-            const auto& S = rst.getRst<float>("S", 13);
+            const auto& S = rst.getRst<float>("S", 13, 0);
             const auto  expect_S = std::vector<float>{
                 17.29e-02f, 1.4142f,
             };
@@ -667,7 +667,7 @@ BOOST_AUTO_TEST_CASE(Unformatted)
         }
 
         {
-            const auto& D = rst.getRst<double>("D", 13);
+            const auto& D = rst.getRst<double>("D", 13, 0);
             const auto  expect_D = std::vector<double>{
                 0.6931, 1.6180, 123.45e6,
             };
@@ -676,7 +676,7 @@ BOOST_AUTO_TEST_CASE(Unformatted)
         }
 
         {
-            const auto& Z = rst.getRst<std::string>("Z", 13);
+            const auto& Z = rst.getRst<std::string>("Z", 13, 0);
             const auto  expect_Z = std::vector<std::string>{
                 "G1", "FIELD",  // ERst trims trailing blanks
             };
@@ -747,7 +747,7 @@ BOOST_AUTO_TEST_CASE(Formatted)
         rst.loadReportStepNumber(13);
 
         {
-            const auto& I = rst.getRst<int>("I", 13);
+            const auto& I = rst.getRst<int>("I", 13, 0);
             const auto  expect_I = std::vector<int>{ 35, 51, 13 };
             BOOST_CHECK_EQUAL_COLLECTIONS(I.begin(), I.end(),
                                           expect_I.begin(),
@@ -755,7 +755,7 @@ BOOST_AUTO_TEST_CASE(Formatted)
         }
 
         {
-            const auto& L = rst.getRst<bool>("L", 13);
+            const auto& L = rst.getRst<bool>("L", 13, 0);
             const auto  expect_L = std::vector<bool> {
                 true, true, true, false,
             };
@@ -766,7 +766,7 @@ BOOST_AUTO_TEST_CASE(Formatted)
         }
 
         {
-            const auto& S = rst.getRst<float>("S", 13);
+            const auto& S = rst.getRst<float>("S", 13, 0);
             const auto  expect_S = std::vector<float>{
                 17.29e-02f, 1.4142f,
             };
@@ -775,7 +775,7 @@ BOOST_AUTO_TEST_CASE(Formatted)
         }
 
         {
-            const auto& D = rst.getRst<double>("D", 13);
+            const auto& D = rst.getRst<double>("D", 13, 0);
             const auto  expect_D = std::vector<double>{
                 0.6931, 1.6180, 123.45e6,
             };
@@ -784,7 +784,7 @@ BOOST_AUTO_TEST_CASE(Formatted)
         }
 
         {
-            const auto& Z = rst.getRst<std::string>("Z", 13);
+            const auto& Z = rst.getRst<std::string>("Z", 13, 0);
             const auto  expect_Z = std::vector<std::string>{
                 "G1", "FIELD",  // ERst trims trailing blanks
             };
@@ -836,7 +836,7 @@ BOOST_AUTO_TEST_CASE(Formatted)
         rst.loadReportStepNumber(5);
 
         {
-            const auto& I = rst.getRst<int>("I", 5);
+            const auto& I = rst.getRst<int>("I", 5, 0);
             const auto  expect_I = std::vector<int>{ 1, 2, 3, 4 };
             BOOST_CHECK_EQUAL_COLLECTIONS(I.begin(), I.end(),
                                           expect_I.begin(),
@@ -855,7 +855,7 @@ BOOST_AUTO_TEST_CASE(Formatted)
         }
 
         {
-            const auto& S = rst.getRst<float>("S", 5);
+            const auto& S = rst.getRst<float>("S", 5, 0);
             const auto  expect_S = std::vector<float>{
                 1.23e-04f, 1.234e5f, -5.4321e-9f,
             };
@@ -864,7 +864,7 @@ BOOST_AUTO_TEST_CASE(Formatted)
         }
 
         {
-            const auto& D = rst.getRst<double>("D", 5);
+            const auto& D = rst.getRst<double>("D", 5, 0);
             const auto  expect_D = std::vector<double>{
                 0.6931, 1.6180,
             };
@@ -873,7 +873,7 @@ BOOST_AUTO_TEST_CASE(Formatted)
         }
 
         {
-            const auto& Z = rst.getRst<std::string>("Z", 5);
+            const auto& Z = rst.getRst<std::string>("Z", 5, 0);
             const auto  expect_Z = std::vector<std::string>{
                 "HELLO", ",", "WORLD",  // ERst trims trailing blanks
             };
@@ -917,7 +917,7 @@ BOOST_AUTO_TEST_CASE(Formatted)
         rst.loadReportStepNumber(13);
 
         {
-            const auto& I = rst.getRst<int>("I", 13);
+            const auto& I = rst.getRst<int>("I", 13, 0);
             const auto  expect_I = std::vector<int>{ 35, 51, 13 };
             BOOST_CHECK_EQUAL_COLLECTIONS(I.begin(), I.end(),
                                           expect_I.begin(),
@@ -925,7 +925,7 @@ BOOST_AUTO_TEST_CASE(Formatted)
         }
 
         {
-            const auto& L = rst.getRst<bool>("L", 13);
+            const auto& L = rst.getRst<bool>("L", 13, 0);
             const auto  expect_L = std::vector<bool> {
                 true, true, true, false,
             };
@@ -936,7 +936,7 @@ BOOST_AUTO_TEST_CASE(Formatted)
         }
 
         {
-            const auto& S = rst.getRst<float>("S", 13);
+            const auto& S = rst.getRst<float>("S", 13, 0);
             const auto  expect_S = std::vector<float>{
                 17.29e-02f, 1.4142f,
             };
@@ -945,7 +945,7 @@ BOOST_AUTO_TEST_CASE(Formatted)
         }
 
         {
-            const auto& D = rst.getRst<double>("D", 13);
+            const auto& D = rst.getRst<double>("D", 13, 0);
             const auto  expect_D = std::vector<double>{
                 0.6931, 1.6180, 123.45e6,
             };
@@ -954,7 +954,7 @@ BOOST_AUTO_TEST_CASE(Formatted)
         }
 
         {
-            const auto& Z = rst.getRst<std::string>("Z", 13);
+            const auto& Z = rst.getRst<std::string>("Z", 13, 0);
             const auto  expect_Z = std::vector<std::string>{
                 "G1", "FIELD",  // ERst trims trailing blanks
             };

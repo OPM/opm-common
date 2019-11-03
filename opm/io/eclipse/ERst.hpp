@@ -42,10 +42,18 @@ public:
     void loadReportStepNumber(int number);
 
     template <typename T>
-    const std::vector<T>& getRst(const std::string& name, int reportStepNumber);
+    const std::vector<T>& getRst(const std::string& name, int reportStepNumber, int occurrence);
+
+    template <typename T>
+    const std::vector<T>& getRst(int index, int reportStepNumber){
+        auto indRange = this->getIndexRange(reportStepNumber);
+        return  this->get<T>(index + std::get<0>(indRange));
+    }
+
+    int count(const std::string& name, int reportStepNumber) const; 
 
     const std::vector<int>& listOfReportStepNumbers() const { return seqnum; }
-
+    
     std::vector<EclEntry> listOfRstArrays(int reportStepNumber);
 
     friend class OutputStream::Restart;
@@ -59,10 +67,12 @@ private:
     void initUnified();
     void initSeparate(const int number);
 
-    int getArrayIndex(const std::string& name, int seqnum) const;
+    int getArrayIndex(const std::string& name, int seqnum, int occurrence) const;
+    std::tuple<int,int> getIndexRange(int reportStepNumber) const; 
 
     std::streampos
     restartStepWritePosition(const int seqnumValue) const;
+    
 };
 
 }} // namespace Opm::EclIO
