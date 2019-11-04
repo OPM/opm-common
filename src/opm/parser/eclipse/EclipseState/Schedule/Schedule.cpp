@@ -119,6 +119,7 @@ namespace {
         m_messageLimits( this->m_timeMap ),
         m_runspec( runspec ),
         wtest_config(this->m_timeMap, std::make_shared<WellTestConfig>() ),
+        gconsale(this->m_timeMap, std::make_shared<GConSale>() ),
         wlist_manager( this->m_timeMap, std::make_shared<WListManager>()),
         udq_config(this->m_timeMap, std::make_shared<UDQConfig>(deck)),
         udq_active(this->m_timeMap, std::make_shared<UDQActive>()),
@@ -336,6 +337,9 @@ namespace {
 
         else if (keyword.name() == "GEFAC")
             handleGEFAC(keyword, currentStep, parseContext, errors);
+
+        else if (keyword.name() == "GCONSALE")
+            handleGCONSALE(keyword, currentStep);
 
         else if (keyword.name() == "GUIDERAT")
             handleGUIDERAT(keyword, currentStep);
@@ -1603,6 +1607,24 @@ namespace {
         }
     }
 
+    void Schedule::handleGCONSALE( const DeckKeyword& keyword, size_t currentStep) {
+        const auto& current = *this->gconsale.get(currentStep);
+        std::shared_ptr<GConSale> new_gconsale(new GConSale(current));
+        for( const auto& record : keyword ) {
+            const std::string& groupName = record.getItem("GROUP").getTrimmedString(0);
+            auto sales_target = record.getItem("SALES_TARGET").get<UDAValue>(0);
+            auto max_rate = record.getItem("MAX_SALES_RATE").get<UDAValue>(0);
+            auto min_rate = record.getItem("MIN_SALES_RATE").get<UDAValue>(0);
+            std::cout << "SALES TARGET = " << sales_target.get<double>() << std::endl;
+            std::string procedure = record.getItem("MAX_PROC").getTrimmedString(0);
+
+            new_gconsale->add(groupName, sales_target, max_rate, min_rate, procedure);
+
+        }
+        this->gconsale.update(currentStep, new_gconsale);
+    }
+
+
     void Schedule::handleGUIDERAT( const DeckKeyword& keyword, size_t currentStep) {
         const auto& record = keyword.getRecord(0);
 
@@ -2573,6 +2595,11 @@ void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, c
 
     const WellTestConfig& Schedule::wtestConfig(size_t timeStep) const {
         const auto& ptr = this->wtest_config.get(timeStep);
+        return *ptr;
+    }
+
+    const GConSale& Schedule::gConSale(size_t timeStep) const {
+        const auto& ptr = this->gconsale.get(timeStep);
         return *ptr;
     }
 

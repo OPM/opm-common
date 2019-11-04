@@ -378,3 +378,42 @@ BOOST_AUTO_TEST_CASE(TESTGuideRate) {
 
     GuideRate gr(schedule);
 }
+
+BOOST_AUTO_TEST_CASE(TESTGCONSALE) {
+    Parser parser;
+    std::string input = R"(
+        START             -- 0
+        31 AUG 1993 /
+        SCHEDULE
+
+        GRUPTREE
+           'G1'  'FIELD' /
+           'G2'  'FIELD' /
+        /
+
+        GCONSALE
+        'G1' 50000 55000 45000 WELL /
+        /
+        )";
+
+    auto deck = parser.parseString(input);
+    EclipseGrid grid(10,10,10);
+    TableManager table ( deck );
+    Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    Runspec runspec (deck );
+    Schedule schedule(deck, grid, eclipseProperties, runspec);
+
+    double metric_to_si = 1.0 / (24.0 * 3600.0);  //cubic meters / day
+
+    const auto& gconsale = schedule.gConSale(0);
+    BOOST_CHECK_EQUAL(gconsale.size(), 1);
+    BOOST_CHECK(gconsale.has("G1"));
+    BOOST_CHECK(!gconsale.has("G2"));
+    const GConSale::GCONSALEGroup& group = gconsale.get("G1");
+    BOOST_CHECK_EQUAL(group.sales_target.get<double>(),   50000 * metric_to_si);
+    BOOST_CHECK_EQUAL(group.max_sales_rate.get<double>(), 55000 * metric_to_si);
+    BOOST_CHECK_EQUAL(group.min_sales_rate.get<double>(), 45000 * metric_to_si);
+    BOOST_CHECK(group.max_proc == GConSale::MaxProcedure::WELL);
+
+    
+}

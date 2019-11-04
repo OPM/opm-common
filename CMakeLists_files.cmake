@@ -99,6 +99,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Schedule/Group/GuideRate.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Group/GuideRateConfig.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Group/GuideRateModel.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/Group/GConSale.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Group/GTNode.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Well/injection.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/MessageLimits.cpp
@@ -620,6 +621,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Schedule/Group/GTNode.hpp
        opm/parser/eclipse/EclipseState/Schedule/Group/Group2.hpp
        opm/parser/eclipse/EclipseState/Schedule/Group/GuideRate.hpp
+       opm/parser/eclipse/EclipseState/Schedule/Group/GConSale.hpp
        opm/parser/eclipse/EclipseState/Schedule/Group/GuideRateConfig.hpp
        opm/parser/eclipse/EclipseState/Schedule/Group/GuideRateModel.hpp
        opm/parser/eclipse/EclipseState/Schedule/MessageLimits.hpp
