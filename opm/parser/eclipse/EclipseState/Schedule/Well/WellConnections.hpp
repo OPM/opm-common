@@ -26,6 +26,7 @@
 namespace Opm {
     class EclipseGrid;
     class Eclipse3DProperties;
+    class FieldPropsManager;
     class WellConnections {
     public:
 
@@ -48,6 +49,7 @@ namespace Opm {
                            const double segDistEnd= 0.0,
                            const bool defaultSatTabId = true);
         void loadCOMPDAT(const DeckRecord& record, const EclipseGrid& grid, const Eclipse3DProperties& eclipseProperties);
+        void loadCOMPDAT(const DeckRecord& record, const EclipseGrid& grid, const FieldPropsManager& field_properties);
 
         using const_iterator = std::vector< Connection >::const_iterator;
 
@@ -96,6 +98,14 @@ namespace Opm {
                            const double segDistStart= 0.0,
                            const double segDistEnd= 0.0,
                            const bool defaultSatTabId = true);
+
+        void loadCOMPDAT(const DeckRecord& record,
+                         const EclipseGrid& grid,
+                         const std::vector<int>& satnum_data,
+                         const std::vector<double>* permx,
+                         const std::vector<double>* permy,
+                         const std::vector<double>* permz,
+                         const std::vector<double>& ntg);
 
         size_t findClosestConnection(int oi, int oj, double oz, size_t start_pos);
 

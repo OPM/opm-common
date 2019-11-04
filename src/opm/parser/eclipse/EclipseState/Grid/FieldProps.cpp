@@ -45,6 +45,7 @@ static const std::set<std::string> oper_keywords = {"ADD", "EQUALS", "MAXVALUE",
 static const std::set<std::string> box_keywords = {"BOX", "ENDBOX"};
 static const std::map<std::string, double> double_scalar_init = {{"NTG", 1}};
 
+static const std::map<std::string, int> int_scalar_init = {{"SATNUM", 1}};
 
 namespace GRID {
 static const std::set<std::string> double_keywords = {"MULTPV", "NTG", "PORO", "PERMX", "PERMY", "PERMZ", "THCONR"};
@@ -351,6 +352,10 @@ FieldProps::FieldData<int>& FieldProps::get(const std::string& keyword) {
 
     if (FieldProps::supported<int>(keyword)) {
         this->int_data[keyword] = FieldData<int>(this->grid->getNumActive());
+        auto init_iter = keywords::int_scalar_init.find(keyword);
+        if (init_iter != keywords::int_scalar_init.end())
+            this->int_data[keyword].assign(init_iter->second);
+
         return this->int_data[keyword];
     } else
         throw std::out_of_range("Integer keyword " + keyword + " is not supported");
