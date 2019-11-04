@@ -64,6 +64,7 @@ public:
     bool hasKey(const std::string &name) const;
 
     const std::vector<std::string>& arrayNames() const { return array_name; }
+    std::size_t size() const;
 
 protected:
     bool formatted;

@@ -272,6 +272,8 @@ BOOST_AUTO_TEST_CASE(TestEcl_Write_formatted_not_finite) {
     BOOST_CHECK(std::isinf(d[0]));
     BOOST_CHECK(std::isnan(f[1]));
     BOOST_CHECK(std::isnan(d[1]));
+
+    BOOST_CHECK_EQUAL(file1.size(), 2);
 }
 
 
