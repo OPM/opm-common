@@ -754,3 +754,30 @@ TSTEP
 }
 
 
+
+BOOST_AUTO_TEST_CASE(ACTIONRESULT_COPY_EMPTY) {
+    Action::Result res1(false);
+    auto res2 = res1;
+
+    BOOST_CHECK(!res1);
+    BOOST_CHECK(!res2);
+    BOOST_CHECK(res1.wells() == std::vector<std::string>());
+    BOOST_CHECK(res2.wells() == std::vector<std::string>());
+
+    BOOST_CHECK(!res1.has_well("NO"));
+    BOOST_CHECK(!res2.has_well("NO"));
+}
+
+BOOST_AUTO_TEST_CASE(ACTIONRESULT_COPY_WELLS) {
+    Action::Result res1(true, {"W1", "W2", "W3"});
+    auto res2 = res1;
+
+    BOOST_CHECK(res1);
+    BOOST_CHECK(res2);
+    BOOST_CHECK(!res1.has_well("NO"));
+    BOOST_CHECK(!res2.has_well("NO"));
+    for (const auto& w : {"W1", "W2", "W3"}) {
+        BOOST_CHECK(res1.has_well(w));
+        BOOST_CHECK(res2.has_well(w));
+    }
+}

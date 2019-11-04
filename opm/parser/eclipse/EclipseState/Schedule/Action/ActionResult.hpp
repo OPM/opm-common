@@ -91,10 +91,11 @@ public:
     explicit Result(bool result_arg);
     Result(bool result_arg, const std::vector<std::string>& wells);
     Result(bool result_arg, const WellSet& wells);
+    Result(const Result& src);
 
     explicit operator bool() const;
     std::vector<std::string> wells() const;
-
+    bool has_well(const std::string& well);
     void add_well(const std::string& well);
 
     Result& operator|=(const Result& other);
@@ -102,6 +103,12 @@ public:
 private:
     void assign(bool value);
     bool result;
+    /*
+      The set of matching wells is implemented with pointer semantics to be able
+      to differentiate between an empty set of wells - like all the wells with
+      WWCT > 1, and a result set which does not have well information at all -
+      e.g. FOPR > 0.
+    */
     std::unique_ptr<WellSet> matching_wells;
 };
 
