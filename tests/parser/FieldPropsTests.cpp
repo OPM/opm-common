@@ -68,6 +68,14 @@ GRID
 
 PORO
    1000*0.10 /
+
+BOX
+  1 3 1 3 1 3 /
+
+PERMX
+  27*0.6/
+
+
 )";
     std::vector<int> actnum(1000, 1);
     for (std::size_t i=0; i< 1000; i += 2)
@@ -76,12 +84,19 @@ PORO
     Deck deck = Parser{}.parseString(deck_string);
     FieldPropsManager fpm(deck, grid);
 
-
+    BOOST_CHECK(!fpm.has<double>("NO-PORO"));
+    BOOST_CHECK(fpm.has<double>("PORO"));
     const auto& poro1 = fpm.get<double>("PORO");
     BOOST_CHECK_EQUAL(poro1.size(), grid.getNumActive());
 
     const auto& poro2 = fpm.try_get<double>("PORO");
     BOOST_CHECK(poro1 == *poro2);
+
+    BOOST_CHECK(!fpm.has<double>("NO-PORO"));
+
+    // PERMX keyword is not fully initialized
+    BOOST_CHECK(!fpm.try_get<double>("PERMX"));
+    BOOST_CHECK(!fpm.has<double>("PERMX"));
 }
 
 

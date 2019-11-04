@@ -34,6 +34,42 @@ public:
     FieldPropsManager(const Deck& deck, const EclipseGrid& grid);
     void reset_grid(const EclipseGrid& grid);
 
+    /*
+      Because the FieldProps class can autocreate properties the semantics of
+      get() and has() is slightly non intuitve:
+
+      - The has<T>("KW") method will check if the current FieldProps container
+        has an installed "KW" keyword; if the container has the keyword in
+        question it will check if all elements have been assigned a value - only
+        in that case will it return true. The has<T>("KW") method will *not* try
+        to create a new keyword.
+
+      - The has<T>("KW") method will *not* consult the supported<T>("KW")
+        method; i.e. if you ask has<T>("UNKNOWN_KEYWORD") you will just get a
+        false.
+
+      - The get<T>("KW") method will try to create a new keyword if it does not
+        already have the keyword you are asking for. This implies that you can
+        get the following non intuitive sequence of events:
+
+            FieldPropsManager fpm(deck, grid);
+
+            fpm.has<int>("SATNUM");                => false
+            auto satnum = fpm.get<int>("SATNUM");  => SATNUM is autocreated
+            fpm.has<int>("SATNUM");                => true
+
+      - When checking whether the container has the keyword you should rephrase
+        the question slightly:
+
+        * Does the container have the keyword *right now* => has<T>("KW")
+        * Can the container provide the keyword => ptr = try_get<T>("KW")
+
+      - It is quite simple to create a deck where the keywords are only partly
+        initialized, all the methods in the FieldPropsManager only consider
+        fully initialized keywords.
+     */
+
+
     template <typename T>
     const std::vector<T>& get(const std::string& keyword) const;
 
@@ -41,11 +77,13 @@ public:
     const std::vector<T>* try_get(const std::string& keyword) const;
 
     template <typename T>
+    bool has(const std::string& keyword) const;
+
+    template <typename T>
     std::vector<T> get_global(const std::string& keyword) const;
 
     template <typename T>
     static bool supported(const std::string& keyword);
-
 
 private:
     std::shared_ptr<FieldProps> fp;

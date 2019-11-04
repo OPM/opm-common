@@ -77,14 +77,13 @@ void assert_field_properties(const EclipseGrid& grid, const FieldPropsManager& f
                                                 "THCONR"};
 
     for (const auto& kw : double_keywords) {
-        bool has = fp.try_get<double>(kw);
-        if (has != ep.hasDeckDoubleGridProperty(kw)) {
-            std::cerr << "FieldPropsManager:   " << has << std::endl;
+        if (fp.has<double>(kw) != ep.hasDeckDoubleGridProperty(kw)) {
+            std::cerr << "FieldPropsManager:   " << fp.has<double>(kw) << std::endl;
             std::cerr << "Eclipse3dProperties: " << ep.hasDeckDoubleGridProperty(kw) << std::endl;
             throw std::logic_error("Exist Error for: " + kw);
         }
 
-        if (has) {
+        if (fp.has<double>(kw)) {
             const auto& fp_data = fp.get<double>(kw);
             const auto& ep_data = ep.getDoubleGridProperty(kw).compressedCopy(grid);
             if (fp_data != ep_data) {
@@ -102,14 +101,13 @@ void assert_field_properties(const EclipseGrid& grid, const FieldPropsManager& f
     }
 
     for (const auto& kw : int_keywords) {
-        bool has = fp.try_get<int>(kw);
-        if (has != ep.hasDeckIntGridProperty(kw)) {
-            std::cerr << "FieldPropsManager:   " << has << std::endl;
+        if (fp.has<int>(kw) != ep.hasDeckIntGridProperty(kw)) {
+            std::cerr << "FieldPropsManager:   " << fp.has<int>(kw) << std::endl;
             std::cerr << "Eclipse3dProperties: " << ep.hasDeckIntGridProperty(kw) << std::endl;
             throw std::logic_error("Exists error for: " + kw);
         }
 
-        if (has) {
+        if (fp.has<int>(kw)) {
             const auto& fp_data = fp.get<int>(kw);
             const auto& ep_data = ep.getIntGridProperty(kw).compressedCopy(grid);
             if (fp_data != ep_data) {
