@@ -1609,7 +1609,7 @@ namespace {
             std::cout << "SALES TARGET = " << sales_target.get<double>() << std::endl;
             std::string procedure = record.getItem("MAX_PROC").getTrimmedString(0);
 
-            new_gconsale->add_group(groupName, sales_target, max_rate, min_rate, procedure);
+            new_gconsale->add(groupName, sales_target, max_rate, min_rate, procedure);
 
         }
         this->gconsale.update(currentStep, new_gconsale);

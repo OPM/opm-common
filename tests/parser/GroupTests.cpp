@@ -409,7 +409,7 @@ BOOST_AUTO_TEST_CASE(TESTGCONSALE) {
     BOOST_CHECK_EQUAL(gconsale.size(), 1);
     BOOST_CHECK(gconsale.has("G1"));
     BOOST_CHECK(!gconsale.has("G2"));
-    const GConSale::GCONSALEGroup& group = gconsale.getGroup("G1");
+    const GConSale::GCONSALEGroup& group = gconsale.get("G1");
     BOOST_CHECK_EQUAL(group.sales_target.get<double>(),   50000 * metric_to_si);
     BOOST_CHECK_EQUAL(group.max_sales_rate.get<double>(), 55000 * metric_to_si);
     BOOST_CHECK_EQUAL(group.min_sales_rate.get<double>(), 45000 * metric_to_si);

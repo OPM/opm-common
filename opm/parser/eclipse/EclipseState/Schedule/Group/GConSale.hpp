@@ -42,9 +42,9 @@ namespace Opm {
         GConSale();
         
         bool has(const std::string& name) const;
-        const GCONSALEGroup& getGroup(const std::string& name) const;
-        MaxProcedure stringToProcedure(const std::string& procedure);
-        void add_group(const std::string& name, const UDAValue& sales_target, const UDAValue& max_rate, const UDAValue& min_rate, const std::string& procedure);
+        const GCONSALEGroup& get(const std::string& name) const;
+        static MaxProcedure stringToProcedure(const std::string& procedure);
+        void add(const std::string& name, const UDAValue& sales_target, const UDAValue& max_rate, const UDAValue& min_rate, const std::string& procedure);
         size_t size() const;
 
     private:

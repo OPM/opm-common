@@ -30,7 +30,7 @@ bool GConSale::has(const std::string& name) const {
     return (groups.find(name) != groups.end());
 }
 
-const GConSale::GCONSALEGroup& GConSale::getGroup(const std::string& name) const {
+const GConSale::GCONSALEGroup& GConSale::get(const std::string& name) const {
 
     auto it = groups.find(name);
     if (it == groups.end())
@@ -55,7 +55,7 @@ GConSale::MaxProcedure GConSale::stringToProcedure(const std::string& str_proc) 
     return MaxProcedure::NONE;
 }
 
-void GConSale::add_group(const std::string& name, const UDAValue& sales_target, const UDAValue& max_rate, const UDAValue& min_rate, const std::string& procedure) {
+void GConSale::add(const std::string& name, const UDAValue& sales_target, const UDAValue& max_rate, const UDAValue& min_rate, const std::string& procedure) {
     groups[name] = GCONSALEGroup();
     GConSale::GCONSALEGroup& group = groups[name];
     group.sales_target = sales_target;
