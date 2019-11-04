@@ -40,6 +40,13 @@ Result::Result(bool result_arg, const WellSet& wells) :
     this->matching_wells.reset( new WellSet(wells) );
 }
 
+Result::Result(const Result& src)
+{
+    this->result = src.result;
+    if (src.matching_wells)
+        this->matching_wells.reset( new WellSet(*src.matching_wells) );
+}
+
 
 Result::operator bool() const {
     return this->result;
@@ -85,6 +92,13 @@ void Result::add_well(const std::string& well) {
     if (!this->matching_wells)
         this->matching_wells.reset( new WellSet() );
     this->matching_wells->add(well);
+}
+
+bool Result::has_well(const std::string& well) {
+    if (!this->matching_wells)
+        return false;
+
+    return this->matching_wells->contains(well);
 }
 
 /******************************************************************/
