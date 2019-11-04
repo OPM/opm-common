@@ -617,6 +617,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Schedule/Group/GTNode.hpp
        opm/parser/eclipse/EclipseState/Schedule/Group/Group2.hpp
        opm/parser/eclipse/EclipseState/Schedule/Group/GuideRate.hpp
+       opm/parser/eclipse/EclipseState/Schedule/Group/GConSale.hpp
        opm/parser/eclipse/EclipseState/Schedule/Group/GuideRateConfig.hpp
        opm/parser/eclipse/EclipseState/Schedule/Group/GuideRateModel.hpp
        opm/parser/eclipse/EclipseState/Schedule/MessageLimits.hpp
