@@ -454,7 +454,7 @@ std::vector<double> readFormattedDoubArray(const std::string& file_str, const in
 
 namespace Opm { namespace EclIO {
 
-EclFile::EclFile(const std::string& filename) : inputFilename(filename)
+EclFile::EclFile(const std::string& filename, bool preload) : inputFilename(filename)
 {
     if (!fileExists(filename)){
         std::string message="Could not open EclFile: " + filename;
@@ -512,8 +512,10 @@ EclFile::EclFile(const std::string& filename) : inputFilename(filename)
 
     fileH.seekg(0, std::ios_base::end);
     this->ifStreamPos.push_back(static_cast<unsigned long>(fileH.tellg()));
-
     fileH.close();
+
+    if (preload)
+        this->loadData();
 }
 
 

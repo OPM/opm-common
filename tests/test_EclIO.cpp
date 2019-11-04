@@ -226,8 +226,7 @@ BOOST_AUTO_TEST_CASE(TestEcl_Write_formatted) {
     // loading vectors from formatted input file and write data back to a formatted file1
     // compare input and output file, and delete file.
 
-    EclFile file1(inputFile);
-    file1.loadData();
+    EclFile file1(inputFile, true);
 
     std::vector<int> icon = file1.get<int>("ICON");
     std::vector<float> porv = file1.get<float>("PORV");
