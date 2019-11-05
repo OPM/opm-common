@@ -1,21 +1,6 @@
-//===========================================================================
-//
-// File: RootFinders.hpp
-//
-// Created: Thu May  6 19:59:42 2010
-//
-// Author(s): Atgeirr F Rasmussen <atgeirr@sintef.no>
-//            Jostein R Natvig    <jostein.r.natvig@sintef.no>
-//
-// $Date$
-//
-// $Revision$
-//
-//===========================================================================
-
 /*
-  Copyright 2010 SINTEF ICT, Applied Mathematics.
-  Copyright 2010 Statoil ASA.
+  Copyright 2010, 2019 SINTEF Digital
+  Copyright 2010, 2019 Equinor ASA
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -292,6 +277,126 @@ namespace Opm
 
 
     };
+
+
+
+    template <class ErrorPolicy = ThrowOnError>
+    class RegulaFalsiBisection
+    {
+    public:
+        inline static std::string name()
+        {
+            return "RegulaFalsiBisection";
+        }
+
+        /// Implements a modified regula falsi method as described in
+        /// "Improved algorithms of Illinois-type for the numerical
+        /// solution of nonlinear equations"
+        /// by J. A. Ford. Current variant is the 'Pegasus' method.
+        /// Combines this method with the bisection method, inspired by
+        /// http://phillipmfeldman.org/Python/roots/find_roots.html
+        template <class Functor>
+        inline static double solve(const Functor& f,
+                                   const double a,
+                                   const double b,
+                                   const int max_iter,
+                                   const double tolerance,
+                                   int& iterations_used)
+        {
+            using namespace std;
+            const double sqrt_half = std::sqrt(0.5);
+            const double macheps = numeric_limits<double>::epsilon();
+            const double eps = tolerance + macheps * max(max(fabs(a), fabs(b)), 1.0);
+
+            double x0 = a;
+            double x1 = b;
+            double f0 = f(x0);
+            const double epsF = tolerance + macheps * max(fabs(f0), 1.0);
+            if (fabs(f0) < epsF) {
+                return x0;
+            }
+            double f1 = f(x1);
+            if (fabs(f1) < epsF) {
+                return x1;
+            }
+            if (f0 * f1 > 0.0) {
+                return ErrorPolicy::handleBracketingFailure(a, b, f0, f1);
+            }
+            iterations_used = 0;
+            // In every iteraton, x1 is the last point computed,
+            // and x0 is the last point computed that makes it a bracket.
+            double width = fabs(x1 - x0);
+            double contraction = 1.0;
+            while (width >= 1e-9 * eps) {
+                // If we are contracting sufficiently to at least halve
+                // the interval width in two iterations we use regula
+                // falsi. Otherwise, we take a bisection step to avoid
+                // slow convergence.
+                const double xnew = (contraction < sqrt_half)
+                    ? regulaFalsiStep(x0, x1, f0, f1)
+                    : bisectionStep(x0, x1, f0, f1);
+                const double fnew = f(xnew);
+                ++iterations_used;
+                if (iterations_used > max_iter) {
+                    return ErrorPolicy::handleTooManyIterations(x0, x1, max_iter);
+                }
+                if (fabs(fnew) < epsF) {
+                    return xnew;
+                }
+                // Now we must check which point we must replace.
+                if ((fnew > 0.0) == (f0 > 0.0)) {
+                    // We must replace x0.
+                    x0 = x1;
+                    f0 = f1;
+                } else {
+                    // We must replace x1, this is the case where
+                    // the modification to regula falsi kicks in,
+                    // by modifying f0.
+                    // 1. The classic Illinois method
+                    // const double gamma = 0.5;
+                    // @afr: The next two methods do not work??!!?
+                    // 2. The method called 'Method 3' in the paper.
+                    // const double phi0 = f1/f0;
+                    // const double phi1 = fnew/f1;
+                    // const double gamma = 1.0 - phi1/(1.0 - phi0);
+                    // 3. The method called 'Method 4' in the paper.
+                    // const double phi0 = f1/f0;
+                    // const double phi1 = fnew/f1;
+                    // const double gamma = 1.0 - phi0 - phi1;
+                    //                  cout << "phi0 = " << phi0 <<" phi1 = " << phi1 <<
+                    //                  " gamma = " << gamma << endl;
+                    // 4. The 'Pegasus' method
+                    const double gamma = f1 / (f1 + fnew);
+                    // 5. Straight unmodified Regula Falsi
+                    // const double gamma = 1.0;
+                    f0 *= gamma;
+                }
+                x1 = xnew;
+                f1 = fnew;
+                const double widthnew = fabs(x1 - x0);
+                contraction = widthnew/width;
+                width = widthnew;
+            }
+            return 0.5 * (x0 + x1);
+        }
+
+
+    private:
+        inline static double regulaFalsiStep(const double a, const double b, const double fa, const double fb)
+        {
+            assert(fa * fb < 0.0);
+            return (b * fa - a * fb) / (fa - fb);
+        }
+        inline static double bisectionStep(const double a, const double b, const double fa, const double fb)
+        {
+            static_cast<void>(fa);
+            static_cast<void>(fb);
+            assert(fa * fb < 0.0);
+            return 0.5*(a + b);
+        }
+    };
+
+
 
 
 
