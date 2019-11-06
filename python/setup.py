@@ -36,8 +36,10 @@ ext_modules = [
         [
                 'cxx/unit_system.cpp',
                 'cxx/connection.cpp',
+                'cxx/converters.cpp',
                 'cxx/deck.cpp',
                 'cxx/deck_keyword.cpp',
+                'cxx/eclipse_io.cpp',
                 'cxx/eclipse_3d_properties.cpp',
                 'cxx/eclipse_config.cpp',
                 'cxx/eclipse_grid.cpp',
@@ -56,6 +58,18 @@ ext_modules = [
         undef_macros=["NDEBUG"],
         include_dirs=["pybind11/include"]
     ),
+
+    Extension(
+        'libopmioecl_python',
+        [
+                'cxx/eclipse_io.cpp',
+        ],
+        libraries=['opmcommon', 'boost_filesystem', 'boost_regex'],
+        language='c++',
+        undef_macros=["NDEBUG"],
+        include_dirs=["pybind11/include"]
+    )
+
 ]
 
 setup(
@@ -68,10 +82,11 @@ setup(
                 'opm.io.ecl_state',
                 'opm.io.parser',
                 'opm.io.schedule',
+                'opm.io.ecl',
                 'opm.tools'
             ],
     ext_modules=ext_modules,
-    package_data={'opm': ['libopmcommon_python{}'.format(suffix)]},
+    package_data={'opm': ['libopmcommon_python{}'.format(suffix), 'libopmioecl_python'.format(suffix)]},
     include_package_data=True,
     license='Open Source',
     zip_safe=False,

@@ -23,6 +23,8 @@ std::string str( const T& t ) {
 
 namespace convert {
 
+py::array numpy_string_array(const std::vector<std::string>& input);
+
 template <class T>
 std::vector<T> vector(py::array_t<T>& input) {
     T * input_ptr    = (T *) input.request().ptr; 

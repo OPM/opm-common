@@ -181,8 +181,10 @@ if(ENABLE_ECL_INPUT)
 # setup.py file.
   list( APPEND PYTHON_CXX_SOURCE_FILES
           python/cxx/connection.cpp
+          python/cxx/converters.cpp
           python/cxx/deck.cpp
           python/cxx/deck_keyword.cpp
+          python/cxx/eclipse_io.cpp
           python/cxx/eclipse_3d_properties.cpp
           python/cxx/eclipse_config.cpp
           python/cxx/eclipse_grid.cpp
