@@ -394,6 +394,12 @@ BOOST_AUTO_TEST_CASE(TESTGCONSALE) {
         GCONSALE
         'G1' 50000 55000 45000 WELL /
         /
+
+        GCONSUMP
+        'G1' 20 50 'a_node' /
+        'G2' 30 60 /
+        /
+        
         )";
 
     auto deck = parser.parseString(input);
@@ -414,6 +420,19 @@ BOOST_AUTO_TEST_CASE(TESTGCONSALE) {
     BOOST_CHECK_EQUAL(group.max_sales_rate.get<double>(), 55000 * metric_to_si);
     BOOST_CHECK_EQUAL(group.min_sales_rate.get<double>(), 45000 * metric_to_si);
     BOOST_CHECK(group.max_proc == GConSale::MaxProcedure::WELL);
+
+    const auto& gconsump = schedule.gConSump(0);
+    BOOST_CHECK_EQUAL(gconsump.size(), 2);
+    BOOST_CHECK(gconsump.has("G1"));
+    BOOST_CHECK(gconsump.has("G2"));
+    const GConSump::GCONSUMPGroup group1 = gconsump.get("G1");
+    BOOST_CHECK_EQUAL(group1.consumption_rate.get<double>(), 20 * metric_to_si);
+    BOOST_CHECK_EQUAL(group1.import_rate.get<double>(), 50 * metric_to_si);
+    BOOST_CHECK( group1.network_node == "a_node" );
+
+    const GConSump::GCONSUMPGroup group2 = gconsump.get("G2");
+    BOOST_CHECK_EQUAL( group2.network_node.size(), 0 );
+
 
     
 }

@@ -124,6 +124,7 @@ namespace {
         udq_active(this->m_timeMap, std::make_shared<UDQActive>()),
         guide_rate_config(this->m_timeMap, std::make_shared<GuideRateConfig>()),
         gconsale(this->m_timeMap, std::make_shared<GConSale>() ),
+        gconsump(this->m_timeMap, std::make_shared<GConSump>() ),
         global_whistctl_mode(this->m_timeMap, Well2::ProducerCMode::CMODE_UNDEFINED),
         m_actions(this->m_timeMap, std::make_shared<Action::Actions>()),
         rft_config(this->m_timeMap),
@@ -340,6 +341,9 @@ namespace {
 
         else if (keyword.name() == "GCONSALE")
             handleGCONSALE(keyword, currentStep);
+
+        else if (keyword.name() == "GCONSUMP")
+            handleGCONSUMP(keyword, currentStep);
 
         else if (keyword.name() == "GUIDERAT")
             handleGUIDERAT(keyword, currentStep);
@@ -1615,13 +1619,31 @@ namespace {
             auto sales_target = record.getItem("SALES_TARGET").get<UDAValue>(0);
             auto max_rate = record.getItem("MAX_SALES_RATE").get<UDAValue>(0);
             auto min_rate = record.getItem("MIN_SALES_RATE").get<UDAValue>(0);
-            std::cout << "SALES TARGET = " << sales_target.get<double>() << std::endl;
             std::string procedure = record.getItem("MAX_PROC").getTrimmedString(0);
 
             new_gconsale->add(groupName, sales_target, max_rate, min_rate, procedure);
 
         }
         this->gconsale.update(currentStep, new_gconsale);
+    }
+
+
+    void Schedule::handleGCONSUMP( const DeckKeyword& keyword, size_t currentStep) {
+        const auto& current = *this->gconsump.get(currentStep);
+        std::shared_ptr<GConSump> new_gconsump(new GConSump(current));
+        for( const auto& record : keyword ) {
+            const std::string& groupName = record.getItem("GROUP").getTrimmedString(0);
+            auto consumption_rate = record.getItem("GAS_CONSUMP_RATE").get<UDAValue>(0);
+            auto import_rate = record.getItem("GAS_IMPORT_RATE").get<UDAValue>(0);
+
+            std::string network_node_name;
+            auto network_node = record.getItem("NETWORK_NODE");
+            if (!network_node.defaultApplied(0))
+                network_node_name = network_node.getTrimmedString(0);
+
+            new_gconsump->add(groupName, consumption_rate, import_rate, network_node_name);
+        }
+        this->gconsump.update(currentStep, new_gconsump);
     }
 
 
@@ -2600,6 +2622,11 @@ void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, c
 
     const GConSale& Schedule::gConSale(size_t timeStep) const {
         const auto& ptr = this->gconsale.get(timeStep);
+        return *ptr;
+    }
+
+    const GConSump& Schedule::gConSump(size_t timeStep) const {
+        const auto& ptr = this->gconsump.get(timeStep);
         return *ptr;
     }
 
