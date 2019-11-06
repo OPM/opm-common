@@ -776,24 +776,24 @@ void ECLRegressionTest::results_rst()
                         std::cout << "Comparing " << keywords1[i] << " ... ";
 
                         if (arrayType1[i] == INTE) {
-                            auto vect1 = rst1.getRst<int>(keywords1[i], seqn);
-                            auto vect2 = rst2.getRst<int>(keywords2[ind2], seqn);
+                            auto vect1 = rst1.getRst<int>(keywords1[i], seqn, 0);
+                            auto vect2 = rst2.getRst<int>(keywords2[ind2], seqn, 0);
                             compareVectors(vect1, vect2, keywords1[i], reference);
                         } else if (arrayType1[i] == REAL) {
-                            auto vect1 = rst1.getRst<float>(keywords1[i], seqn);
-                            auto vect2 = rst2.getRst<float>(keywords2[ind2], seqn);
+                            auto vect1 = rst1.getRst<float>(keywords1[i], seqn, 0);
+                            auto vect2 = rst2.getRst<float>(keywords2[ind2], seqn, 0);
                             compareFloatingPointVectors(vect1, vect2, keywords1[i], reference);
                         } else if (arrayType1[i] == DOUB) {
-                            auto vect1 = rst1.getRst<double>(keywords1[i], seqn);
-                            auto vect2 = rst2.getRst<double>(keywords2[ind2], seqn);
+                            auto vect1 = rst1.getRst<double>(keywords1[i], seqn, 0);
+                            auto vect2 = rst2.getRst<double>(keywords2[ind2], seqn, 0);
                             compareFloatingPointVectors(vect1, vect2, keywords1[i], reference);
                         } else if (arrayType1[i] == LOGI) {
-                            auto vect1 = rst1.getRst<bool>(keywords1[i], seqn);
-                            auto vect2 = rst2.getRst<bool>(keywords2[ind2], seqn);
+                            auto vect1 = rst1.getRst<bool>(keywords1[i], seqn, 0);
+                            auto vect2 = rst2.getRst<bool>(keywords2[ind2], seqn, 0);
                             compareVectors(vect1, vect2, keywords1[i], reference);
                         } else if (arrayType1[i] == CHAR) {
-                            auto vect1 = rst1.getRst<std::string>(keywords1[i], seqn);
-                            auto vect2 = rst2.getRst<std::string>(keywords2[ind2], seqn);
+                            auto vect1 = rst1.getRst<std::string>(keywords1[i], seqn, 0);
+                            auto vect2 = rst2.getRst<std::string>(keywords2[ind2], seqn, 0);
                             compareVectors(vect1, vect2, keywords1[i], reference);
                         } else if (arrayType1[i] == MESS) {
                             // shold not be any associated data

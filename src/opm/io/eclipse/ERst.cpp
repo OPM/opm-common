@@ -63,7 +63,7 @@ ERst::ERst(const std::string& filename)
         this->initUnified();
     }
     else {
-	this->initSeparate(seqnumFromSeparateFilename(filename));
+        this->initSeparate(seqnumFromSeparateFilename(filename));
     }
 }
 
@@ -114,6 +114,29 @@ std::vector<EclFile::EclEntry> ERst::listOfRstArrays(int reportStepNumber)
     return list;
 }
 
+int ERst::count(const std::string& name, int reportStepNumber) const
+{
+
+    if (!hasReportStepNumber(reportStepNumber)) {
+        std::string message = "Trying to count vectors of name " + name + " from non existing sequence " + std::to_string(reportStepNumber);
+        OPM_THROW(std::invalid_argument, message);
+    }
+    
+    int count = 0;
+    
+    auto range_it = arrIndexRange.find(reportStepNumber);
+
+    std::pair<int,int> indexRange = range_it->second;
+    
+    for (int i=std::get<0>(indexRange); i<std::get<1>(indexRange);i++){
+        if (array_name[i] == name){
+            count++;
+        }
+    }
+    
+    return count;
+}
+
 void ERst::initUnified()
 {
     loadData("SEQNUM");
@@ -160,7 +183,19 @@ void ERst::initSeparate(const int number)
     this->reportLoaded[number] = false;
 }
 
-int ERst::getArrayIndex(const std::string& name, int number) const
+std::tuple<int,int> ERst::getIndexRange(int reportStepNumber) const {
+
+    if (!hasReportStepNumber(reportStepNumber)) {
+        std::string message = "Trying to get index range for non existing sequence " + std::to_string(reportStepNumber);
+        OPM_THROW(std::invalid_argument, message);
+    }
+    
+    auto range_it = arrIndexRange.find(reportStepNumber);
+    
+    return range_it->second;
+}
+
+int ERst::getArrayIndex(const std::string& name, int number, int occurrenc) const
 {
     if (!hasReportStepNumber(number)) {
         std::string message = "Trying to get vector " + name + " from non existing sequence " + std::to_string(number);
@@ -174,6 +209,10 @@ int ERst::getArrayIndex(const std::string& name, int number) const
     auto it = std::find(array_name.begin() + indexRange.first,
                         array_name.begin() + indexRange.second, name);
 
+    for (int t = 0; t < occurrenc; t++){
+        it = std::find(it + 1 , array_name.begin() + indexRange.second, name);
+    }
+    
     if (std::distance(array_name.begin(),it) == indexRange.second) {
         std::string message = "Array " + name + " not found in sequence " + std::to_string(number);
         OPM_THROW(std::runtime_error, message);
@@ -193,40 +232,37 @@ ERst::restartStepWritePosition(const int seqnumValue) const
 }
 
 template<>
-const std::vector<int>& ERst::getRst<int>(const std::string& name, int reportStepNumber)
+const std::vector<int>& ERst::getRst<int>(const std::string& name, int reportStepNumber, int occurrence)
 {
-    int ind = getArrayIndex(name, reportStepNumber);
+    int ind = getArrayIndex(name, reportStepNumber, occurrence);
     return getImpl(ind, INTE, inte_array, "integer");
 }
 
-
 template<>
-const std::vector<float>& ERst::getRst<float>(const std::string& name, int reportStepNumber)
+const std::vector<float>& ERst::getRst<float>(const std::string& name, int reportStepNumber, int occurrence)
 {
-    int ind = getArrayIndex(name, reportStepNumber);
+    int ind = getArrayIndex(name, reportStepNumber, occurrence);
     return getImpl(ind, REAL, real_array, "float");
 }
 
-
 template<>
-const std::vector<double>& ERst::getRst<double>(const std::string& name, int reportStepNumber)
+const std::vector<double>& ERst::getRst<double>(const std::string& name, int reportStepNumber, int occurrence)
 {
-    int ind = getArrayIndex(name, reportStepNumber);
+    int ind = getArrayIndex(name, reportStepNumber, occurrence);
     return getImpl(ind, DOUB, doub_array, "double");
 }
 
-
 template<>
-const std::vector<bool>& ERst::getRst<bool>(const std::string& name, int reportStepNumber)
+const std::vector<bool>& ERst::getRst<bool>(const std::string& name, int reportStepNumber, int occurrence)
 {
-    int ind = getArrayIndex(name, reportStepNumber);
+    int ind = getArrayIndex(name, reportStepNumber, occurrence);
     return getImpl(ind, LOGI, logi_array, "bool");
 }
 
 template<>
-const std::vector<std::string>& ERst::getRst<std::string>(const std::string& name, int reportStepNumber)
+const std::vector<std::string>& ERst::getRst<std::string>(const std::string& name, int reportStepNumber, int occurrence)
 {
-    int ind = getArrayIndex(name, reportStepNumber);
+    int ind = getArrayIndex(name, reportStepNumber, occurrence);
     return getImpl(ind, CHAR, char_array, "string");
 }
 

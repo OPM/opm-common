@@ -22,12 +22,20 @@ void write(EclOutput& outFile, EclFile& file1,
 
 template<typename T>
 void write(EclOutput& outFile, ERst& file1,
-           const std::string& name, int reportStepNumber)
+           const std::string& name, int index, int reportStepNumber)
 {
-
-    auto vect = file1.getRst<T>(name, reportStepNumber);
+    auto vect = file1.getRst<T>(index, reportStepNumber);
     outFile.write(name, vect);
 }
+
+template<typename T>
+void write(EclOutput& outFile, ERst& file1,
+           const std::string& name, int index)
+{
+    auto vect = file1.get<T>(index);
+    outFile.write(name, vect);
+}
+
 
 template <typename T>
 void writeArray(std::string name, eclArrType arrType, T& file1, int index, EclOutput& outFile) {
@@ -50,24 +58,42 @@ void writeArray(std::string name, eclArrType arrType, T& file1, int index, EclOu
     }
 }
 
+template <typename T>
+void writeArray(std::string name, eclArrType arrType, T& file1, int index, int reportStepNumber, EclOutput& outFile) {
+
+    if (arrType == INTE) {
+        write<int>(outFile, file1, name, index, reportStepNumber);
+    } else if (arrType == REAL) {
+        write<float>(outFile, file1, name, index, reportStepNumber);
+    } else if (arrType == DOUB) {
+        write<double>(outFile, file1, name, index, reportStepNumber);
+    } else if (arrType == LOGI) {
+        write<bool>(outFile, file1, name, index, reportStepNumber);
+    } else if (arrType == CHAR) {
+        write<std::string>(outFile, file1, name, index, reportStepNumber);
+    } else if (arrType == MESS) {
+        outFile.message(name);
+    } else {
+        std::cout << "unknown array type " << std::endl;
+        exit(1);
+    }
+}
+
 void writeArrayList(std::vector<EclEntry>& arrayList, EclFile file1, EclOutput& outFile) {
 
     for (size_t index = 0; index < arrayList.size(); index++) {
         std::string name = std::get<0>(arrayList[index]);
         eclArrType arrType = std::get<1>(arrayList[index]);
-
         writeArray(name, arrType, file1, index, outFile);
     }
 }
-
 
 void writeArrayList(std::vector<EclEntry>& arrayList, ERst file1, int reportStepNumber, EclOutput& outFile) {
 
     for (size_t index = 0; index < arrayList.size(); index++) {
         std::string name = std::get<0>(arrayList[index]);
         eclArrType arrType = std::get<1>(arrayList[index]);
-
-        writeArray(name, arrType, file1, reportStepNumber, outFile);
+        writeArray(name, arrType, file1, index , reportStepNumber, outFile);
     }
 }
 
@@ -131,7 +157,7 @@ int main(int argc, char **argv) {
 
             for (auto seqn : reportStepList) {
 
-                std::vector<int> inteh = rst1.getRst<int>("INTEHEAD", seqn);
+                std::vector<int> inteh = rst1.getRst<int>("INTEHEAD", seqn, 0);
 
                 std::cout << "Report step number: "
                           << std::setfill(' ') << std::setw(4) << seqn << "   Date: " << inteh[66] << "/"

@@ -806,7 +806,7 @@ BOOST_AUTO_TEST_CASE(ExtraData_content) {
                 EclIO::ERst rst{ rstFile };
                 BOOST_CHECK_MESSAGE( rst.hasKey("EXTRA"), "Restart file is expexted to have EXTRA vector");
 
-                const auto& ex = rst.getRst<double>("EXTRA", 1);
+                const auto& ex = rst.getRst<double>("EXTRA", 1, 0);
                 BOOST_CHECK_CLOSE( 10 , units.to_si( UnitSystem::measure::pressure, ex[0] ), 0.00001);
                 BOOST_CHECK_CLOSE( units.from_si( UnitSystem::measure::pressure, 3), ex[3], 0.00001);
             }
