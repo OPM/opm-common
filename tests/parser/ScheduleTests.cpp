@@ -3422,7 +3422,7 @@ BOOST_AUTO_TEST_CASE(nupcol) {
         " 10  OKT 2008 / \n"
         "/\n"
         "NUPCOL\n"
-        "  4 /\n"
+        "  1* /\n"
         "DATES\n             -- 1\n"
         " 10  OKT 2009 / \n"
         "/\n"
@@ -3442,8 +3442,9 @@ BOOST_AUTO_TEST_CASE(nupcol) {
     Schedule schedule( deck, grid, eclipseProperties,runspec);
 
     {
-        BOOST_CHECK_EQUAL(schedule.getNupcol(0),3);
-        BOOST_CHECK_EQUAL(schedule.getNupcol(1),4);
+        // Flow uses 12 as default
+        BOOST_CHECK_EQUAL(schedule.getNupcol(0),12);
+        BOOST_CHECK_EQUAL(schedule.getNupcol(1),12);
         BOOST_CHECK_EQUAL(schedule.getNupcol(2),10);
     }
 }

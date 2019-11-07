@@ -36,6 +36,7 @@
 #include <opm/parser/eclipse/Parser/ParserKeywords/C.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/G.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/L.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/N.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/V.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/W.hpp>
 
@@ -127,7 +128,7 @@ namespace {
         global_whistctl_mode(this->m_timeMap, Well2::ProducerCMode::CMODE_UNDEFINED),
         m_actions(this->m_timeMap, std::make_shared<Action::Actions>()),
         rft_config(this->m_timeMap),
-        m_nupcol(this->m_timeMap, 3)
+        m_nupcol(this->m_timeMap, ParserKeywords::NUPCOL::NUM_ITER::defaultValue)
     {
         addGroup( "FIELD", 0, deck.getActiveUnitSystem());
 
@@ -536,7 +537,12 @@ namespace {
     }
 
     void Schedule::handleNUPCOL( const DeckKeyword& keyword, size_t currentStep) {
-        const int nupcol = keyword.getRecord(0).getItem("NUM_ITER").get<int>(0);
+        int nupcol = keyword.getRecord(0).getItem("NUM_ITER").get<int>(0);
+        if (keyword.getRecord(0).getItem("NUM_ITER").defaultApplied(0)) {
+            std::string msg = "OPM Flow uses 12 as default NUPCOL value";
+            OpmLog::note(msg);
+        }
+
         this->m_nupcol.update(currentStep, nupcol);
     }
 
