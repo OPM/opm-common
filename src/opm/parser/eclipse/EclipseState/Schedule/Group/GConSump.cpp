@@ -21,10 +21,6 @@
 
 namespace Opm {
 
-GConSump::GConSump() {
-}
-
-
 bool GConSump::has(const std::string& name) const {
     return (groups.find(name) != groups.end());
 }

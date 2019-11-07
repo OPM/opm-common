@@ -39,7 +39,7 @@ namespace Opm {
             MaxProcedure max_proc;
         };
 
-        GConSale();
+        GConSale() = default;
         
         bool has(const std::string& name) const;
         const GCONSALEGroup& get(const std::string& name) const;

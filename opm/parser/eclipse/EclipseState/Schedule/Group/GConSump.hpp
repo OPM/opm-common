@@ -29,7 +29,7 @@ namespace Opm {
 
     class GConSump {
     public:
-        GConSump();
+        GConSump() = default;
 
         struct GCONSUMPGroup {
             UDAValue consumption_rate;

@@ -23,9 +23,6 @@
 
 namespace Opm {
 
-GConSale::GConSale() {
-}
-
 bool GConSale::has(const std::string& name) const {
     return (groups.find(name) != groups.end());
 }
