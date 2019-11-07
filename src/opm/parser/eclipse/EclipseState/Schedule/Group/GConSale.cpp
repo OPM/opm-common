@@ -53,7 +53,6 @@ GConSale::MaxProcedure GConSale::stringToProcedure(const std::string& str_proc) 
 }
 
 void GConSale::add(const std::string& name, const UDAValue& sales_target, const UDAValue& max_rate, const UDAValue& min_rate, const std::string& procedure) {
-    groups[name] = GCONSALEGroup();
     GConSale::GCONSALEGroup& group = groups[name];
     group.sales_target = sales_target;
     group.max_sales_rate = max_rate;
