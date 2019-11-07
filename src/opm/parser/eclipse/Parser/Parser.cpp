@@ -28,6 +28,7 @@
 
 #include <opm/json/JsonObject.hpp>
 
+#include <opm/parser/eclipse/Python/Python.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
@@ -349,11 +350,13 @@ class ParserState {
 
         std::map< std::string, std::string > pathMap;
         boost::filesystem::path rootPath;
+
     public:
         ParserKeywordSizeEnum lastSizeType = SLASH_TERMINATED;
         std::string lastKeyWord;
 
         Deck deck;
+        Python python;
         const ParseContext& parseContext;
         ErrorGuard& errors;
         bool unknown_keyword = false;
@@ -836,12 +839,17 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
                 OpmLog::info(ss.str());
             }
             try {
-                parserState.deck.addKeyword( parserKeyword.parse( parserState.parseContext,
-                                                                  parserState.errors,
-                                                                  *rawKeyword,
-                                                                  parserState.deck.getActiveUnitSystem(),
-                                                                  parserState.deck.getDefaultUnitSystem(),
-                                                                  filename ) );
+                if (rawKeyword->getKeywordName() ==  Opm::RawConsts::pyinput) {
+                    std::string python_string = rawKeyword->getFirstRecord().getRecordString();
+                    parserState.python.exec(python_string, parser, parserState.deck);
+                }
+                else
+                    parserState.deck.addKeyword( parserKeyword.parse( parserState.parseContext,
+                                                                      parserState.errors,
+                                                                      *rawKeyword,
+                                                                      parserState.deck.getActiveUnitSystem(),
+                                                                      parserState.deck.getDefaultUnitSystem(),
+                                                                      filename ) );
             } catch (const std::exception& exc) {
                 /*
                   This catch-all of parsing errors is to be able to write a good
