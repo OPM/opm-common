@@ -26,6 +26,8 @@
 #include <string>
 #include <vector>
 
+#include <opm/common/OpmLog/Location.hpp>
+
 namespace Opm {
 
     /*
@@ -48,7 +50,7 @@ namespace Opm {
             Undefined,
         };
 
-        explicit SummaryNode(std::string keyword, const Category cat);
+        explicit SummaryNode(std::string keyword, const Category cat, Location loc_arg);
 
         SummaryNode& parameterType(const Type type);
         SummaryNode& namedEntity(std::string name);
@@ -63,10 +65,11 @@ namespace Opm {
         bool isUserDefined() const { return this->userDefined_; }
 
         std::string uniqueNodeKey() const;
-
+        const Location& location( ) const { return this->loc; }
     private:
         std::string keyword_;
         Category    category_;
+        Location    loc;
         Type        type_{ Type::Undefined };
         std::string name_{};
         int         number_{std::numeric_limits<int>::min()};

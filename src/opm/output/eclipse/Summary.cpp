@@ -21,6 +21,7 @@
 #include <opm/output/eclipse/Summary.hpp>
 
 #include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/OpmLog/Location.hpp>
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
@@ -124,7 +125,7 @@ namespace {
              const std::string& name) -> void
         {
             for (const auto& vector : vectors) {
-                entities.emplace_back(kwpref + vector.kw, cat);
+                entities.emplace_back(kwpref + vector.kw, cat, Location());
 
                 entities.back().namedEntity(name)
                 .parameterType(vector.type);
@@ -134,15 +135,15 @@ namespace {
         for (const auto& well_name : sched.wellNames()) {
             makeEntities('W', SN::Category::Well, well_name);
 
-            entities.emplace_back("WBHP", SN::Category::Well);
+            entities.emplace_back("WBHP", SN::Category::Well, Location());
             entities.back().namedEntity(well_name)
             .parameterType(SN::Type::Pressure);
 
-            entities.emplace_back("WGVIR", SN::Category::Well);
+            entities.emplace_back("WGVIR", SN::Category::Well, Location());
             entities.back().namedEntity(well_name)
             .parameterType(SN::Type::Rate);
 
-            entities.emplace_back("WWVIR", SN::Category::Well);
+            entities.emplace_back("WWVIR", SN::Category::Well, Location());
             entities.back().namedEntity(well_name)
             .parameterType(SN::Type::Rate);
         }
@@ -163,16 +164,16 @@ namespace {
         using SN = Opm::SummaryNode;
         auto ret = std::vector<SN>{};
 
-        auto sofr = SN{ "SOFR", SN::Category::Segment }
+        auto sofr = SN{ "SOFR", SN::Category::Segment, Location() }
             .parameterType(SN::Type::Rate);
 
-        auto sgfr = SN{ "SGFR", SN::Category::Segment }
+        auto sgfr = SN{ "SGFR", SN::Category::Segment, Location() }
             .parameterType(SN::Type::Rate);
 
-        auto swfr = SN{ "SWFR", SN::Category::Segment }
+        auto swfr = SN{ "SWFR", SN::Category::Segment, Location() }
             .parameterType(SN::Type::Rate);
 
-        auto spr = SN{ "SPR", SN::Category::Segment }
+        auto spr = SN{ "SPR", SN::Category::Segment, Location() }
             .parameterType(SN::Type::Pressure);
 
         auto makeVectors =
@@ -1790,13 +1791,15 @@ namespace Evaluator {
     }
 } // namespace Evaluator
 
-void reportUnsupportedKeywords(std::vector<std::string> keywords)
+void reportUnsupportedKeywords(std::vector<Opm::SummaryNode> keywords)
 {
     std::sort(keywords.begin(), keywords.end());
     auto uend = std::unique(keywords.begin(), keywords.end());
 
-    for (auto kw = keywords.begin(); kw != uend; ++kw)
-        ::Opm::OpmLog::info("Summary keyword '" + *kw + "' is unhandled");
+    for (auto node = keywords.begin(); node != uend; ++node) {
+        const auto& location = node->location();
+        ::Opm::OpmLog::warning("Unhandled summary keyword '" + node->keyword() + "' at " + location.filename + ", line " + std::to_string(location.lineno));
+    }
 }
 
 std::string makeWGName(std::string name)
@@ -2196,13 +2199,13 @@ configureSummaryInput(const EclipseState&  es,
         es, grid, st, sched.getUDQConfig(sched.size() - 1)
     };
 
-    auto unsuppkw = std::vector<std::string>{};
+    auto unsuppkw = std::vector<SummaryNode>{};
     for (const auto& node : sumcfg) {
         auto prmDescr = fact.create(node);
 
         if (! prmDescr.evaluator) {
             // No known evaluation function/type for this keyword
-            unsuppkw.push_back(node.keyword());
+            unsuppkw.push_back(node);
             continue;
         }
 

@@ -88,7 +88,10 @@ namespace {
       'PERFORMA', where only the keywords in the expanded list should
       be included.
     */
-    const std::set<std::string> meta_keywords = {"PERFORMA" , "ALL" , "FMWSET", "GMWSET"};
+    const std::map<std::string, std::vector<std::string>> meta_keywords = {{"PERFORMA", PERFORMA_keywords},
+                                                                           {"ALL", ALL_keywords},
+                                                                           {"FMWSET", FMWSET_keywords},
+                                                                           {"GMWSET", GMWSET_keywords}};
 
     /*
       This is a hardcoded mapping between 3D field keywords,
@@ -249,9 +252,10 @@ inline void keywordW( SummaryConfig::keyword_list& list,
 
 inline void keywordW( SummaryConfig::keyword_list& list,
                       const std::string& keyword,
+                      Location loc,
                       const Schedule& schedule) {
     auto param = SummaryNode {
-        keyword, SummaryNode::Category::Well
+        keyword, SummaryNode::Category::Well , std::move(loc)
     }
     .parameterType( parseKeywordType(keyword) )
     .isUserDefined( is_udq(keyword) );
@@ -278,14 +282,15 @@ inline void keywordW( SummaryConfig::keyword_list& list,
     */
     if (keyword.name().back() == 'L') {
         if (!is_udq(keyword.name())) {
-            std::string msg = std::string("The completion keywords like: " + keyword.name() + " are not supported");
+            const auto& location = keyword.location();
+            std::string msg = std::string("The completion keywords like: " + keyword.name() + " are not supported at: " + location.filename + ", line " + std::to_string(location.lineno));
             parseContext.handleError( ParseContext::SUMMARY_UNHANDLED_KEYWORD, msg, errors);
             return;
         }
     }
 
     auto param = SummaryNode {
-        keyword.name(), SummaryNode::Category::Well
+        keyword.name(), SummaryNode::Category::Well, keyword.location()
     }
     .parameterType( parseKeywordType(keyword.name()) )
     .isUserDefined( is_udq(keyword.name()) );
@@ -305,9 +310,10 @@ inline void keywordW( SummaryConfig::keyword_list& list,
 
 inline void keywordG( SummaryConfig::keyword_list& list,
                       const std::string& keyword,
+                      Location loc,
                       const Schedule& schedule ) {
     auto param = SummaryNode {
-        keyword, SummaryNode::Category::Group
+        keyword, SummaryNode::Category::Group, std::move(loc)
     }
     .parameterType( parseKeywordType(keyword) )
     .isUserDefined( is_udq(keyword) );
@@ -328,7 +334,7 @@ inline void keywordG( SummaryConfig::keyword_list& list,
     if( keyword.name() == "GMWSET" ) return;
 
     auto param = SummaryNode {
-        keyword.name(), SummaryNode::Category::Group
+        keyword.name(), SummaryNode::Category::Group, keyword.location()
     }
     .parameterType( parseKeywordType(keyword.name()) )
     .isUserDefined( is_udq(keyword.name()) );
@@ -354,9 +360,10 @@ inline void keywordG( SummaryConfig::keyword_list& list,
 }
 
 inline void keywordF( SummaryConfig::keyword_list& list,
-                      const std::string& keyword ) {
+                      const std::string& keyword,
+                      Location loc) {
     auto param = SummaryNode {
-        keyword, SummaryNode::Category::Field
+        keyword, SummaryNode::Category::Field, std::move(loc)
     }
     .parameterType( parseKeywordType(keyword) )
     .isUserDefined( is_udq(keyword) );
@@ -367,7 +374,7 @@ inline void keywordF( SummaryConfig::keyword_list& list,
 inline void keywordF( SummaryConfig::keyword_list& list,
                       const DeckKeyword& keyword ) {
     if( keyword.name() == "FMWSET" ) return;
-    keywordF( list, keyword.name() );
+    keywordF( list, keyword.name(), keyword.location() );
 }
 
 inline std::array< int, 3 > getijk( const DeckRecord& record,
@@ -388,7 +395,7 @@ inline void keywordB( SummaryConfig::keyword_list& list,
                       const DeckKeyword& keyword,
                       const GridDims& dims) {
     auto param = SummaryNode {
-        keyword.name(), SummaryNode::Category::Block
+        keyword.name(), SummaryNode::Category::Block, keyword.location()
     }
     .parameterType( parseKeywordType(keyword.name()) )
     .isUserDefined( is_udq(keyword.name()) );
@@ -405,15 +412,16 @@ inline void keywordR2R( SummaryConfig::keyword_list& /* list */,
                         ErrorGuard& errors,
                         const DeckKeyword& keyword)
 {
-    std::string msg = "OPM/flow does not support region to region summary keywords - " + keyword.name() + " is ignored.";
+    const auto& location = keyword.location();
+    std::string msg = "Region to region summary keyword: " + keyword.name() + " at " + location.filename + ", line " + std::to_string(location.lineno) + " is ignored";
     parseContext.handleError(ParseContext::SUMMARY_UNHANDLED_KEYWORD, msg, errors);
 }
 
 
   inline void keywordR( SummaryConfig::keyword_list& list,
-                      const DeckKeyword& keyword,
-                      const TableManager& tables,
-                      const ParseContext& parseContext,
+                        const DeckKeyword& keyword,
+                        const TableManager& tables,
+                        const ParseContext& parseContext,
                         ErrorGuard& errors ) {
 
     /* RUNSUM is not a region keyword but a directive for how to format and
@@ -441,7 +449,7 @@ inline void keywordR2R( SummaryConfig::keyword_list& /* list */,
 
     // Don't (currently) need parameter type for region keywords
     auto param = SummaryNode {
-        keyword.name(), SummaryNode::Category::Region
+        keyword.name(), SummaryNode::Category::Region, keyword.location()
     }
     .isUserDefined( is_udq(keyword.name()) );
 
@@ -455,17 +463,17 @@ inline void keywordR2R( SummaryConfig::keyword_list& /* list */,
 
 
 inline void keywordMISC( SummaryConfig::keyword_list& list,
-                           const std::string& keyword)
+                         const std::string& keyword,
+                         Location loc)
 {
-    if (meta_keywords.count( keyword ) == 0)
-        list.emplace_back( keyword, SummaryNode::Category::Miscellaneous );
+    if (meta_keywords.count(keyword) == 0)
+        list.emplace_back( keyword, SummaryNode::Category::Miscellaneous , std::move(loc));
 }
-
 
 inline void keywordMISC( SummaryConfig::keyword_list& list,
                          const DeckKeyword& keyword)
 {
-    keywordMISC( list, keyword.name() );
+    keywordMISC(list, keyword.name(), keyword.location());
 }
 
   inline void keywordC( SummaryConfig::keyword_list& list,
@@ -476,7 +484,7 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
                         const GridDims& dims) {
 
     auto param = SummaryNode {
-        keyword.name(), SummaryNode::Category::Connection
+        keyword.name(), SummaryNode::Category::Connection, keyword.location()
     }
     .parameterType( parseKeywordType( keyword.name()) )
     .isUserDefined( is_udq(keyword.name()) );
@@ -551,7 +559,7 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
             return;
 
         auto param = SummaryNode {
-            keyword.name(), SummaryNode::Category::Segment
+            keyword.name(), SummaryNode::Category::Segment, keyword.location()
         }
         .namedEntity( well.name() )
         .isUserDefined( is_udq(keyword.name()) );
@@ -767,6 +775,7 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
 
 inline void handleKW( SummaryConfig::keyword_list& list,
                       const std::string& keyword,
+                      Location loc,
                       const Schedule& schedule,
                       const ParseContext& parseContext,
                       ErrorGuard& errors) {
@@ -785,10 +794,10 @@ inline void handleKW( SummaryConfig::keyword_list& list,
     const auto cat = parseKeywordCategory( keyword );
 
     switch( cat ) {
-        case Cat::Well: return keywordW( list, keyword, schedule );
-        case Cat::Group: return keywordG( list, keyword, schedule );
-        case Cat::Field: return keywordF( list, keyword );
-        case Cat::Miscellaneous: return keywordMISC( list, keyword );
+        case Cat::Well: return keywordW( list, keyword, std::move(loc), schedule );
+        case Cat::Group: return keywordG( list, keyword, std::move(loc), schedule );
+        case Cat::Field: return keywordF( list, keyword, std::move(loc) );
+        case Cat::Miscellaneous: return keywordMISC( list, keyword, std::move(loc));
 
         default:
             throw std::logic_error("Keyword type: " + to_string( cat ) + " is not supported in alias lists. Internal error handling: " + keyword);
@@ -805,9 +814,10 @@ inline void handleKW( SummaryConfig::keyword_list& list,
 
 // =====================================================================
 
-SummaryNode::SummaryNode(std::string keyword, const Category cat) :
+SummaryNode::SummaryNode(std::string keyword, const Category cat, Location loc_arg) :
     keyword_(std::move(keyword)),
-    category_(cat)
+    category_(cat),
+    loc(std::move(loc_arg))
 {}
 
 SummaryNode& SummaryNode::parameterType(const Type type)
@@ -957,31 +967,13 @@ SummaryConfig::SummaryConfig( const Deck& deck,
         handleKW( this->keywords, kw, schedule, tables, parseContext, errors, dims);
     }
 
-    if( section.hasKeyword( "ALL" ) ) {
-        for (const auto& kw : ALL_keywords) {
-            if (!this->hasKeyword(kw))
-                handleKW(this->keywords, kw, schedule, parseContext, errors);
-        }
-    }
-
-    if( section.hasKeyword( "GMWSET" ) ) {
-        for (const auto& kw : GMWSET_keywords) {
-            if (!this->hasKeyword(kw))
-                handleKW(this->keywords, kw, schedule, parseContext, errors);
-        }
-    }
-
-    if( section.hasKeyword( "FMWSET" ) ) {
-        for (const auto& kw : FMWSET_keywords) {
-            if (!this->hasKeyword(kw))
-                handleKW(this->keywords, kw, schedule, parseContext, errors);
-        }
-    }
-
-    if( section.hasKeyword( "PERFORMA" ) ) {
-        for (const auto& kw : PERFORMA_keywords) {
-            if (!this->hasKeyword(kw))
-                handleKW(this->keywords, kw, schedule, parseContext, errors);
+    for (const auto& meta_pair : meta_keywords) {
+        if( section.hasKeyword( meta_pair.first ) ) {
+            const auto& deck_keyword = section.getKeyword(meta_pair.first);
+            for (const auto& kw : meta_pair.second) {
+                if (!this->hasKeyword(kw))
+                    handleKW(this->keywords, kw, deck_keyword.location(), schedule, parseContext, errors);
+            }
         }
     }
 
