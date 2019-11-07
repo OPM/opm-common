@@ -32,6 +32,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GTNode.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GuideRateConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GConSale.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Group/GConSump.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
 #include <opm/parser/eclipse/EclipseState/Util/OrderedMap.hpp>
@@ -182,6 +183,7 @@ namespace Opm
         const UDQActive& udqActive(size_t timeStep) const;
         const WellTestConfig& wtestConfig(size_t timestep) const;
         const GConSale& gConSale(size_t timestep) const;
+        const GConSump& gConSump(size_t timestep) const;
         const WListManager& getWListManager(size_t timeStep) const;
         const UDQConfig& getUDQConfig(size_t timeStep) const;
         const Action::Actions& actions(std::size_t timeStep) const;
@@ -237,6 +239,7 @@ namespace Opm
         DynamicState<std::shared_ptr<UDQActive>> udq_active;
         DynamicState<std::shared_ptr<GuideRateConfig>> guide_rate_config;
         DynamicState<std::shared_ptr<GConSale>> gconsale;
+        DynamicState<std::shared_ptr<GConSump>> gconsump;
         DynamicState<Well2::ProducerCMode> global_whistctl_mode;
         DynamicState<std::shared_ptr<Action::Actions>> m_actions;
         RFTConfig rft_config;
@@ -285,6 +288,7 @@ namespace Opm
         void handleGCONPROD( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
         void handleGEFAC( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
         void handleGCONSALE( const DeckKeyword& keyword, size_t currentStep);
+        void handleGCONSUMP( const DeckKeyword& keyword, size_t currentStep);
         void handleGUIDERAT( const DeckKeyword& keyword, size_t currentStep);
         void handleLINCOM( const DeckKeyword& keyword, size_t currentStep);
         void handleWEFAC( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);

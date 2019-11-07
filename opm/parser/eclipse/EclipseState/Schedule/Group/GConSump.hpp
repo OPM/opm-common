@@ -17,41 +17,35 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef GCONSALE_H
-#define GCONSALE_H
+#ifndef GCONSUMP_H
+#define GCONSUMP_H
 
 #include <map>
 #include <string>
 
+#include <opm/parser/eclipse/Deck/UDAValue.hpp>
+
 namespace Opm {
 
-    class GConSale {
+    class GConSump {
     public:
+        GConSump() = default;
 
-        enum class MaxProcedure {
-            NONE, CON, CON_P, WELL, PLUG, RATE, MAXR, END
+        struct GCONSUMPGroup {
+            UDAValue consumption_rate;
+            UDAValue import_rate;
+            std::string network_node;
         };
 
-        struct GCONSALEGroup {
-            UDAValue sales_target;
-            UDAValue max_sales_rate;
-            UDAValue min_sales_rate;
-            MaxProcedure max_proc;
-        };
-
-        GConSale() = default;
-        
         bool has(const std::string& name) const;
-        const GCONSALEGroup& get(const std::string& name) const;
-        static MaxProcedure stringToProcedure(const std::string& procedure);
-        void add(const std::string& name, const UDAValue& sales_target, const UDAValue& max_rate, const UDAValue& min_rate, const std::string& procedure);
+        const GCONSUMPGroup& get(const std::string& name) const;
+        void add(const std::string& name, const UDAValue& consumption_rate, const UDAValue& import_rate, const std::string network_node);
         size_t size() const;
 
     private:
-        std::map<std::string, GCONSALEGroup> groups;
+        std::map<std::string, GCONSUMPGroup> groups;
     };
 
 }
-
 
 #endif
