@@ -21,6 +21,8 @@
 #ifndef TIMEMAP_HPP_
 #define TIMEMAP_HPP_
 
+#include <opm/common/utility/TimeService.hpp>
+
 #include <vector>
 #include <ctime>
 #include <map>
@@ -58,8 +60,7 @@ namespace Opm {
         double getTimeStepLength(size_t tStepIdx) const;
 
         /// Return true if the given timestep is the first one of a new month or year, or if frequency > 1,
-        /// return true for every n'th timestep of every first new month or first new year timesteps,
-        /// starting from start_timestep-1.
+        /// return true if the step is the first of each n-month or n-month period, starting from start_timestep - 1.
         bool isTimestepInFirstOfMonthsYearsSequence(size_t timestep, bool years = true, size_t start_timestep = 1, size_t frequency = 1) const;
 
         static std::time_t timeFromEclipse(const DeckRecord &dateRecord);
@@ -73,13 +74,16 @@ namespace Opm {
 
         std::vector<std::time_t> m_timeList;
 
-        const std::vector<size_t>& getFirstTimestepMonths() const;
-        const std::vector<size_t>& getFirstTimestepYears() const;
         bool isTimestepInFreqSequence (size_t timestep, size_t start_timestep, size_t frequency, bool years) const;
         size_t closest(const std::vector<size_t> & vec, size_t value) const;
 
-        std::vector<size_t> m_first_timestep_years;   // A list of the first timestep of every year
-        std::vector<size_t> m_first_timestep_months;  // A list of the first timestep of every month
+        struct StepData
+        {
+            size_t stepnumber;
+            TimeStampUTC timestamp;
+        };
+        std::vector<StepData> m_first_timestep_years;   // A list of the first timestep of every year
+        std::vector<StepData> m_first_timestep_months;  // A list of the first timestep of every month
     };
 }
 

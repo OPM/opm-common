@@ -313,17 +313,165 @@ BOOST_AUTO_TEST_CASE(initTimestepsYearsAndMonths) {
     for (size_t timestep = 0; timestep <= 17; ++timestep) {
         if ((5 == timestep) || (6 == timestep) || (8 == timestep) || (9 == timestep) ||
             (10 == timestep) || (11 == timestep) || (12 == timestep) || (13 == timestep)) {
-            BOOST_CHECK_EQUAL(true, tmap.isTimestepInFirstOfMonthsYearsSequence(timestep, false, true));
+            BOOST_CHECK_EQUAL(true, tmap.isTimestepInFirstOfMonthsYearsSequence(timestep, false));
         } else {
-            BOOST_CHECK_EQUAL(false, tmap.isTimestepInFirstOfMonthsYearsSequence(timestep, false, true));
+            BOOST_CHECK_EQUAL(false, tmap.isTimestepInFirstOfMonthsYearsSequence(timestep, false));
         }
     }
 
     for (size_t timestep = 0; timestep <= 17; ++timestep) {
         if (13 == timestep) {
-            BOOST_CHECK_EQUAL(true, tmap.isTimestepInFirstOfMonthsYearsSequence(timestep, true, false));
+            BOOST_CHECK_EQUAL(true, tmap.isTimestepInFirstOfMonthsYearsSequence(timestep, true));
         } else {
-            BOOST_CHECK_EQUAL(false, tmap.isTimestepInFirstOfMonthsYearsSequence(timestep, true, false));
+            BOOST_CHECK_EQUAL(false, tmap.isTimestepInFirstOfMonthsYearsSequence(timestep, true));
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(initTimestepsYearsAndMonthsSkippingMonthsFrequency) {
+    const char *deckData =
+        "START\n"
+        " 21 MAY 1981 /\n"
+        "\n"
+        "DATES\n"
+        " 5 JUL 1981 /\n"
+        " 6 JUL 1981 /\n"
+        " 5 AUG 1981 /\n"
+        " 5 SEP 1981 /\n"
+        " 1 OCT 1981 /\n"
+        " 1 NOV 1981 /\n"
+        " 1 DEC 1981 /\n"
+        " 1 JAN 1982 /\n"
+        " 1 JAN 1982 13:55:44 /\n"
+        " 3 JAN 1982 14:56:45.123 /\n"
+        " 1 JAN 1983 /\n"
+        " 1 JAN 1984 /\n"
+        " 1 JAN 1985 /\n"
+        " 1 JAN 1988 /\n"
+        "/\n";
+
+    Opm::Parser parser;
+    auto deck = parser.parseString(deckData);
+    const Opm::TimeMap tmap(deck);
+
+    /*deckData timesteps:
+    0  21  may 1981 START
+    1   5  jul 1981
+    2   6  jul 1981
+    3   5  aug 1981
+    4   5  sep 1981
+    5   1  oct 1981
+    6   1  nov 1981
+    7   1  dec 1981
+    8   1  jan 1982
+    9   1  jan 1982
+    10  3  jan 1982
+    11  1  jan 1983
+    12  1  jan 1984
+    13  1  jan 1985
+    14  1  jan 1988*/
+
+    // Month, not set frequency.
+    {
+        std::vector<bool> expected = {
+            false, // 0  21  may 1981 START
+            true,  // 1   5  jul 1981
+            false, // 2   6  jul 1981
+            true,  // 3   5  aug 1981
+            true,  // 4   5  sep 1981
+            true,  // 5   1  oct 1981
+            true,  // 6   1  nov 1981
+            true,  // 7   1  dec 1981
+            true,  // 8   1  jan 1982
+            false, // 9   1  jan 1982
+            false, // 10  3  jan 1982
+            true,  // 11  1  jan 1983
+            true,  // 12  1  jan 1984
+            true,  // 13  1  jan 1985
+            true   // 14  1  jan 1988
+        };
+
+        for (size_t timestep = 0; timestep < expected.size(); ++timestep) {
+            const bool ok = tmap.isTimestepInFirstOfMonthsYearsSequence(timestep, false) == expected[timestep];
+            BOOST_CHECK_MESSAGE(ok, "failing for timestep " << timestep);
+        }
+    }
+
+    // Month, frequency 2.
+    {
+        std::vector<bool> expected = {
+            false, // 0  21  may 1981 START
+            true,  // 1   5  jul 1981
+            false, // 2   6  jul 1981
+            false, // 3   5  aug 1981
+            true,  // 4   5  sep 1981
+            false, // 5   1  oct 1981
+            true,  // 6   1  nov 1981
+            false, // 7   1  dec 1981
+            true,  // 8   1  jan 1982
+            false, // 9   1  jan 1982
+            false, // 10  3  jan 1982
+            true,  // 11  1  jan 1983
+            true,  // 12  1  jan 1984
+            true,  // 13  1  jan 1985
+            true   // 14  1  jan 1988
+        };
+
+        for (size_t timestep = 0; timestep < expected.size(); ++timestep) {
+            const bool ok = tmap.isTimestepInFirstOfMonthsYearsSequence(timestep, false, 1, 2) == expected[timestep];
+            BOOST_CHECK_MESSAGE(ok, "failing for timestep " << timestep);
+        }
+    }
+
+    // Year, not set frequency.
+    {
+        std::vector<bool> expected = {
+            false, // 0  21  may 1981 START
+            false, // 1   5  jul 1981
+            false, // 2   6  jul 1981
+            false, // 3   5  aug 1981
+            false, // 4   5  sep 1981
+            false, // 5   1  oct 1981
+            false, // 6   1  nov 1981
+            false, // 7   1  dec 1981
+            true,  // 8   1  jan 1982
+            false, // 9   1  jan 1982
+            false, // 10  3  jan 1982
+            true,  // 11  1  jan 1983
+            true,  // 12  1  jan 1984
+            true,  // 13  1  jan 1985
+            true   // 14  1  jan 1988
+        };
+
+        for (size_t timestep = 0; timestep < expected.size(); ++timestep) {
+            const bool ok = tmap.isTimestepInFirstOfMonthsYearsSequence(timestep, true) == expected[timestep];
+            BOOST_CHECK_MESSAGE(ok, "failing for timestep " << timestep);
+        }
+    }
+
+    // Year, frequency 2.
+    {
+        std::vector<bool> expected = {
+            false, // 0  21  may 1981 START
+            false, // 1   5  jul 1981
+            false, // 2   6  jul 1981
+            false, // 3   5  aug 1981
+            false, // 4   5  sep 1981
+            false, // 5   1  oct 1981
+            false, // 6   1  nov 1981
+            false, // 7   1  dec 1981
+            false, // 8   1  jan 1982
+            false, // 9   1  jan 1982
+            false, // 10  3  jan 1982
+            true,  // 11  1  jan 1983
+            false, // 12  1  jan 1984
+            true,  // 13  1  jan 1985
+            true   // 14  1  jan 1988
+        };
+
+        for (size_t timestep = 0; timestep < expected.size(); ++timestep) {
+            const bool ok = tmap.isTimestepInFirstOfMonthsYearsSequence(timestep, true, 1, 2) == expected[timestep];
+            BOOST_CHECK_MESSAGE(ok, "failing for timestep " << timestep);
         }
     }
 }

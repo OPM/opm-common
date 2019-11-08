@@ -55,20 +55,23 @@ namespace {
 
     TimeMap::TimeMap( const Deck& deck) {
 
+        std::time_t time;
         if (deck.hasKeyword("START")) {
             // Use the 'START' keyword to find out the start date (if the
             // keyword was specified)
             const auto& keyword = deck.getKeyword("START");
-            m_timeList.push_back(timeFromEclipse(keyword.getRecord(0)));
-
+            time = timeFromEclipse(keyword.getRecord(0));
         } else {
             // The default start date is not specified in the Eclipse
             // reference manual. We hence just assume it is same as for
             // the START keyword for Eclipse R100, i.e., January 1st,
             // 1983...
-            const std::time_t time = mkdate(1983, 1, 1);
-            m_timeList.push_back(time);
+            time = mkdate(1983, 1, 1);
         }
+        m_timeList.push_back(time);
+        auto timestamp = TimeStampUTC{time};
+        m_first_timestep_months.push_back({0, timestamp});
+        m_first_timestep_years.push_back({0, timestamp});
 
         // find all "TSTEP" and "DATES" keywords in the deck and deal
         // with them one after another
@@ -128,11 +131,11 @@ namespace {
             const auto new_year  = nw  .year();
             const auto last_year = last.year();
 
-            if (new_month != last_month)
-                m_first_timestep_months.push_back(step);
+            if (new_month != last_month || new_year != last_year)
+                m_first_timestep_months.push_back({step, nw});
 
             if (new_year != last_year)
-                m_first_timestep_years.push_back(step);
+                m_first_timestep_years.push_back({step, nw});
 
             m_timeList.push_back(newTime);
         } else
@@ -221,10 +224,11 @@ namespace {
 
     bool TimeMap::isTimestepInFirstOfMonthsYearsSequence(size_t timestep, bool years, size_t start_timestep, size_t frequency) const {
         bool timestep_first_of_month_year = false;
-        const std::vector<size_t>& timesteps = (years) ? getFirstTimestepYears() : getFirstTimestepMonths();
+        const auto& timesteps = (years) ? m_first_timestep_years : m_first_timestep_months;
 
-        std::vector<size_t>::const_iterator ci_timestep = std::find(timesteps.begin(), timesteps.end(), timestep);
-        if (ci_timestep != timesteps.end()) {
+        auto same_step = [timestep](const StepData& sd) { return sd.stepnumber == timestep; };
+        auto ci_timestep = std::find_if(timesteps.begin(), timesteps.end(), same_step);
+        if (ci_timestep != timesteps.end() && ci_timestep != timesteps.begin()) {
             if (1 >= frequency) {
                 timestep_first_of_month_year = true;
             } else { //Frequency given
@@ -235,55 +239,62 @@ namespace {
     }
 
 
-    // This method returns true for every n'th timestep in the vector of timesteps m_first_timestep_years or m_first_timestep_months,
-    // starting from one before the position of start_timestep. If the given start_timestep is not a value in the month or year vector,
-    // set the first timestep that are both within the vector and higher than the initial start_timestep as new start_timestep.
-
+    // Return true if the step is the first of each n-month or n-month
+    // period, starting from start_timestep - 1, with n = frequency.
     bool TimeMap::isTimestepInFreqSequence (size_t timestep, size_t start_timestep, size_t frequency, bool years) const {
-        bool timestep_right_frequency = false;
-        const std::vector<size_t>& timesteps = (years) ? getFirstTimestepYears() : getFirstTimestepMonths();
+        // Find iterator to data for 'start_timestep' or first
+        // in-sequence step following it, set start_year and
+        // start_month.
+        const auto& timesteps = (years) ? m_first_timestep_years : m_first_timestep_months;
+        auto compare_stepnumber = [](const StepData& sd, size_t value) { return sd.stepnumber < value; };
+        auto ci_start_timestep = std::lower_bound(timesteps.begin(), timesteps.end(), start_timestep - 1, compare_stepnumber);
+        if (ci_start_timestep == timesteps.end()) {
+            // We are after the end of the sequence.
+            return false;
+        }
+        const int start_year = ci_start_timestep->timestamp.year();
+        const int start_month = ci_start_timestep->timestamp.month() - 1; // For 0-indexing.
 
-        std::vector<size_t>::const_iterator ci_timestep = std::find(timesteps.begin(), timesteps.end(), timestep);
-        std::vector<size_t>::const_iterator ci_start_timestep = std::find(timesteps.begin(), timesteps.end(), start_timestep);
-
-        //Find new start_timestep if the given one is not a value in the timesteps vector
-        bool start_ts_in_timesteps = false;
-        if (ci_start_timestep != timesteps.end()) {
-            start_ts_in_timesteps = true;
-        } else if (ci_start_timestep == timesteps.end()) {
-            size_t new_start = closest(timesteps, start_timestep);
-            if (0 != new_start) {
-                ci_start_timestep = std::find(timesteps.begin(), timesteps.end(), new_start);
-                start_ts_in_timesteps = true;
-            }
+        // Find iterator to data for 'timestep'.
+        auto same_step = [timestep](const StepData& sd) { return sd.stepnumber == timestep; };
+        auto ci_timestep = std::find_if(timesteps.begin(), timesteps.end(), same_step);
+        // The ci_timestep can be assumed to be different from
+        // timesteps.end(), or we would not be in this function.
+        // If, however, it is at or before the first timestep we should
+        // always return false.
+        if (ci_timestep <= ci_start_timestep) {
+            return false;
         }
 
-
-        if (start_ts_in_timesteps) {
-            //Pick every n'th element, starting on start_timestep + (n-1), that is, every n'th element from ci_start_timestep - 1 for freq n > 1
-            if (ci_timestep >= ci_start_timestep) {
-                int dist = std::distance( ci_start_timestep, ci_timestep ) + 1;
-                if ((dist % frequency) == 0) {
-                    timestep_right_frequency = true;
-                }
+        if (years) {
+            // Year logic.
+            const int my_year = ci_timestep->timestamp.year();
+            if ((my_year - start_year) % frequency == 0) {
+                return true;
+            } else {
+                // Check if we are in a new (frequency-year) period.
+                const auto prev_it = ci_timestep - 1;
+                const int prev_year = prev_it->timestamp.year();
+                return (my_year - start_year)/frequency > (prev_year - start_year)/frequency;
+            }
+        } else {
+            // Month logic.
+            const int my_year = ci_timestep->timestamp.year();
+            const int my_month = (my_year - start_year) * 12 + ci_timestep->timestamp.month() - 1;
+            // my_month is now the count of months since start_month.
+            assert(my_month > start_month);
+            if ((my_month - start_month) % frequency == 0) {
+                return true;
+            } else {
+                // Check if we are in a new (frequency-month) period.
+                const auto prev_it = ci_timestep - 1;
+                const int prev_year = prev_it->timestamp.year();
+                const int prev_month = (prev_year - start_year) * 12 + prev_it->timestamp.month() - 1;
+                return (my_month - start_month)/frequency > (prev_month - start_month)/frequency;
             }
         }
-
-        return timestep_right_frequency;
     }
 
-
-
-
-
-    const std::vector<size_t>& TimeMap::getFirstTimestepMonths() const {
-        return m_first_timestep_months;
-    }
-
-
-    const std::vector<size_t>& TimeMap::getFirstTimestepYears() const {
-        return m_first_timestep_years;
-    }
 
     // vec is assumed to be sorted
     size_t TimeMap::closest(const std::vector<size_t> & vec, size_t value) const
