@@ -50,10 +50,12 @@ public:
         return  this->get<T>(index + std::get<0>(indRange));
     }
 
-    int count(const std::string& name, int reportStepNumber) const; 
+    int count(const std::string& name, int reportStepNumber) const;
+
+    int size() const { return seqnum.size(); };
 
     const std::vector<int>& listOfReportStepNumbers() const { return seqnum; }
-    
+
     std::vector<EclEntry> listOfRstArrays(int reportStepNumber);
 
     friend class OutputStream::Restart;
