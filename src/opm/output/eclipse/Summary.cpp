@@ -924,6 +924,7 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "CGPT", mul( crate< rt::gas, producer >, duration ) },
     { "CNPT", mul( crate< rt::solvent, producer >, duration ) },
     { "CCIT", mul( crate< rt::wat, injector, polymer >, duration ) },
+    { "CCPT", mul( crate< rt::wat, producer, polymer >, duration ) },
     { "CTFAC", trans_factors },
 
     { "FWPR", rate< rt::wat, producer > },
@@ -958,6 +959,7 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "FGIR", rate< rt::gas, injector > },
     { "FNIR", rate< rt::solvent, injector > },
     { "FCIR", rate< rt::wat, injector, polymer > },
+    { "FCPR", rate< rt::wat, producer, polymer > },
     { "FVIR", sum( sum( rate< rt::reservoir_water, injector>, rate< rt::reservoir_oil, injector >),
                    rate< rt::reservoir_gas, injector>)},
 
@@ -967,6 +969,7 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "FGIT", mul( rate< rt::gas, injector >, duration ) },
     { "FNIT", mul( rate< rt::solvent, injector >, duration ) },
     { "FCIT", mul( rate< rt::wat, injector, polymer >, duration ) },
+    { "FCPT", mul( rate< rt::wat, producer, polymer >, duration ) },
     { "FLIT", mul( sum( rate< rt::wat, injector >, rate< rt::oil, injector > ),
                    duration ) },
     { "FVIT", mul( sum( sum( rate< rt::reservoir_water, injector>, rate< rt::reservoir_oil, injector >),
