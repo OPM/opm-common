@@ -392,7 +392,7 @@ namespace Opm {
 
     template< typename T >
     void GridProperties<T>::handleCOPYREGRecord( const DeckRecord& record, const GridProperty<int>& regionProperty ) {
-        const std::string& srcArray    = record.getItem("ARRAY").get< std::string >(0);
+        const std::string& srcArray    = record.getItem("SRC_ARRAY").get< std::string >(0);
         const std::string& targetArray = record.getItem("TARGET_ARRAY").get< std::string >(0);
 
         if (!supportsKeyword( targetArray))
