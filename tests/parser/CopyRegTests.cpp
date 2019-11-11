@@ -163,14 +163,14 @@ static Opm::Deck createValidIntDeck() {
         "1  1  2  2 2\n"
         "1  1  2  2 2\n"
         "/\n"
-        "SATNUM\n"
-        "  25*10 /\n"
         "FLUXNUM\n"
         "  25*3 /\n"
+        "REGIONS\n"
+        "SATNUM\n"
+        "  25*10 /\n"
         "COPYREG\n"
         "  SATNUM FLUXNUM 1    M / \n"
         "/\n"
-        "EDIT\n"
         "\n";
 
     Opm::Parser parser;

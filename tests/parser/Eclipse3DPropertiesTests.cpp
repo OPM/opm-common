@@ -107,6 +107,7 @@ static Opm::Deck createValidIntDeck() {
             "1  1  2  2 2\n"
             "1  1  2  2 2\n"
             "/\n"
+            "REGIONS\n"
             "SATNUM\n"
             " 25*1 \n"
             "/\n"
@@ -114,7 +115,6 @@ static Opm::Deck createValidIntDeck() {
             "  satnum 11 1    M / \n"
             "  SATNUM 20 2      / \n"
             "/\n"
-            "EDIT\n"
             "\n";
 
     Opm::Parser parser;

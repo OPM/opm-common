@@ -959,7 +959,7 @@ namespace Opm {
 
     void Eclipse3DProperties::handleCOPYREGKeyword( const DeckKeyword& deckKeyword) {
         for( const auto& record : deckKeyword ) {
-            const std::string& srcArray = record.getItem("ARRAY").get< std::string >(0);
+            const std::string& srcArray = record.getItem("SRC_ARRAY").get< std::string >(0);
             const auto& regionProperty = getRegion( record.getItem("REGION_NAME") );
 
             if (m_intGridProperties.hasKeyword( srcArray ))
