@@ -25,7 +25,7 @@
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/BoxManager.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/Box.hpp>
 
 #include "FieldProps.hpp"
 
@@ -35,6 +35,8 @@ namespace Opm {
 namespace {
 
 namespace keywords {
+
+
 static const std::map<std::string, std::string> unit_string = {{"PORO", "1"},
                                                                {"PERMX", "Permeability"},
                                                                {"PERMY", "Permeability"},
@@ -49,6 +51,7 @@ static const std::map<std::string, double> double_scalar_init = {{"NTG", 1}};
 
 static const std::map<std::string, int> int_scalar_init = {{"SATNUM", 1}};
 
+
 namespace GRID {
 static const std::set<std::string> double_keywords = {"MULTPV", "NTG", "PORO", "PERMX", "PERMY", "PERMZ", "THCONR"};
 static const std::set<std::string> int_keywords    = {"FLUXNUM", "MULTNUM", "OPERNUM", "ROCKNUM"};
@@ -57,10 +60,12 @@ static const std::set<std::string> top_keywords    = {"PORO", "PERMX", "PERMY", 
 
 namespace EDIT {
 static const std::set<std::string> double_keywords = {"MULTPV"};
+static const std::set<std::string> int_keywords = {};
 }
 
 namespace PROPS {
 static const std::set<std::string> double_keywords = {"SWATINIT"};
+static const std::set<std::string> int_keywords = {};
 }
 
 namespace REGIONS {
@@ -68,11 +73,13 @@ static const std::set<std::string> int_keywords = {"ENDNUM", "EQLNUM", "FIPNUM",
 }
 
 namespace SOLUTION {
-static const std::set<std::string> double_keywords = {"TEMPI"};
+static const std::set<std::string> double_keywords = {"PRESSURE", "SWAT", "SGAS", "TEMPI"};
+static const std::set<std::string> int_keywords = {};
 }
 
 namespace SCHEDULE {
 static const std::set<std::string> int_keywords = {"ROCKNUM"};
+static const std::set<std::string> double_keywords = {};
 }
 }
 
@@ -178,7 +185,6 @@ void multiply_scalar(FieldProps::FieldData<T>& field_data, T value, const std::v
 
 template <typename T>
 void add_scalar(FieldProps::FieldData<T>& field_data, T value, const std::vector<Box::cell_index>& index_list) {
-    printf("Running add_scalar\n");
     for (const auto& cell_index : index_list) {
         if (field_data.assigned[cell_index.active_index])
             field_data.data[cell_index.active_index] += value;
@@ -238,47 +244,12 @@ FieldProps::ScalarOperation fromString(const std::string& keyword) {
 }
 
 
-void setKeywordBox( const DeckRecord& deckRecord,  BoxManager& boxManager) {
-    const auto& I1Item = deckRecord.getItem("I1");
-    const auto& I2Item = deckRecord.getItem("I2");
-    const auto& J1Item = deckRecord.getItem("J1");
-    const auto& J2Item = deckRecord.getItem("J2");
-    const auto& K1Item = deckRecord.getItem("K1");
-    const auto& K2Item = deckRecord.getItem("K2");
-
-    const auto& active_box = boxManager.getActiveBox();
-
-    const int i1 = I1Item.defaultApplied(0) ? active_box.I1() : I1Item.get<int>(0) - 1;
-    const int i2 = I2Item.defaultApplied(0) ? active_box.I2() : I2Item.get<int>(0) - 1;
-    const int j1 = J1Item.defaultApplied(0) ? active_box.J1() : J1Item.get<int>(0) - 1;
-    const int j2 = J2Item.defaultApplied(0) ? active_box.J2() : J2Item.get<int>(0) - 1;
-    const int k1 = K1Item.defaultApplied(0) ? active_box.K1() : K1Item.get<int>(0) - 1;
-    const int k2 = K2Item.defaultApplied(0) ? active_box.K2() : K2Item.get<int>(0) - 1;
-
-    boxManager.setKeywordBox( i1,i2,j1,j2,k1,k2 );
-}
-
-void handle_box_keyword(const EclipseGrid& grid, const DeckKeyword& deckKeyword,  BoxManager& boxManager) {
+void handle_box_keyword(const DeckKeyword& deckKeyword,  Box& box) {
     if (deckKeyword.name() == ParserKeywords::BOX::keywordName) {
         const auto& record = deckKeyword.getRecord(0);
-
-        const auto& I1Item = record.getItem("I1");
-        const auto& I2Item = record.getItem("I2");
-        const auto& J1Item = record.getItem("J1");
-        const auto& J2Item = record.getItem("J2");
-        const auto& K1Item = record.getItem("K1");
-        const auto& K2Item = record.getItem("K2");
-
-        const int i1 = I1Item.defaultApplied(0) ? 0            : I1Item.get<int>(0) - 1;
-        const int i2 = I2Item.defaultApplied(0) ? grid.getNX() : I2Item.get<int>(0) - 1;
-        const int j1 = J1Item.defaultApplied(0) ? 0            : J1Item.get<int>(0) - 1;
-        const int j2 = J2Item.defaultApplied(0) ? grid.getNY() : J2Item.get<int>(0) - 1;
-        const int k1 = K1Item.defaultApplied(0) ? 0            : K1Item.get<int>(0) - 1;
-        const int k2 = K2Item.defaultApplied(0) ? grid.getNZ() : K2Item.get<int>(0) - 1;
-
-        boxManager.setInputBox( i1 , i2 , j1 , j2 , k1 , k2 );
-    } else if (deckKeyword.name() == ParserKeywords::ENDBOX::keywordName)
-        boxManager.endInputBox();
+        box.update(record);
+    } else
+        box.reset();
 }
 
 }
@@ -296,11 +267,17 @@ FieldProps::FieldProps(const Deck& deck, const EclipseGrid& grid_arg, const Tabl
     if (Section::hasGRID(deck))
         this->scanGRIDSection(GRIDSection(deck));
 
+    if (Section::hasEDIT(deck))
+        this->scanEDITSection(EDITSection(deck));
+
     if (Section::hasPROPS(deck))
         this->scanPROPSSection(PROPSSection(deck));
 
     if (Section::hasREGIONS(deck))
         this->scanREGIONSSection(REGIONSSection(deck));
+
+    if (Section::hasSOLUTION(deck))
+        this->scanSOLUTIONSection(SOLUTIONSection(deck));
 }
 
 
@@ -454,106 +431,32 @@ double FieldProps::getSIValue(const std::string& keyword, double raw_value) cons
 }
 
 
-void FieldProps::scanGRIDSection(const GRIDSection& grid_section) {
-    BoxManager box_manager(*this->grid);
-
-    for (const auto& keyword : grid_section) {
-        const std::string& name = keyword.name();
-        if (keywords::GRID::double_keywords.count(name) == 1)
-            this->handle_grid_section_double_keyword(keyword, box_manager);
-
-        if (keywords::GRID::int_keywords.count(name) == 1)
-            this->handle_int_keyword(keyword, box_manager);
-
-        else if (keywords::oper_keywords.count(name) == 1)
-            this->handle_operation(keyword, box_manager);
-
-        else if (keywords::region_oper_keywords.count(name) == 1)
-            this->handle_region_operation(keyword);
-
-        else if (keywords::box_keywords.count(name) == 1)
-            handle_box_keyword(*this->grid, keyword, box_manager);
-
-        else if (name == ParserKeywords::COPY::keywordName)
-            handle_COPY(keyword, box_manager);
-
-        box_manager.endKeyword();
-    }
-}
 
 
-void FieldProps::scanPROPSSection(const PROPSSection& props_section) {
-    BoxManager box_manager(*this->grid);
 
-    for (const auto& keyword : props_section) {
-        const std::string& name = keyword.name();
-        if (keywords::PROPS::double_keywords.count(name) == 1)
-            this->handle_props_section_double_keyword(keyword, box_manager);
-
-        else if (keywords::oper_keywords.count(name) == 1)
-            this->handle_operation(keyword, box_manager);
-
-        else if (keywords::box_keywords.count(name) == 1)
-            handle_box_keyword(*this->grid, keyword, box_manager);
-
-        else if (name == ParserKeywords::COPY::keywordName)
-            handle_COPY(keyword, box_manager);
-
-        box_manager.endKeyword();
-    }
-}
-
-
-void FieldProps::scanREGIONSSection(const REGIONSSection& regions_section) {
-    BoxManager box_manager(*this->grid);
-
-    for (const auto& keyword : regions_section) {
-        const std::string& name = keyword.name();
-
-        if (keywords::REGIONS::int_keywords.count(name) == 1)
-            this->handle_int_keyword(keyword, box_manager);
-
-        else if (keywords::oper_keywords.count(name) == 1)
-            this->handle_operation(keyword, box_manager);
-
-        else if (keywords::region_oper_keywords.count(name) == 1)
-            this->handle_region_operation(keyword);
-
-        else if (keywords::box_keywords.count(name) == 1)
-            handle_box_keyword(*this->grid, keyword, box_manager);
-
-        else if (name == ParserKeywords::COPY::keywordName)
-            handle_COPY(keyword, box_manager);
-
-        box_manager.endKeyword();
-    }
-}
-
-
-void FieldProps::handle_int_keyword(const DeckKeyword& keyword, const BoxManager& box_manager) {
+void FieldProps::handle_int_keyword(const DeckKeyword& keyword, const Box& box) {
     auto& field_data = this->get<int>(keyword.name());
     const auto& deck_data = keyword.getIntData();
-    assign_deck(keyword, field_data, deck_data, box_manager.getActiveBox());
+    assign_deck(keyword, field_data, deck_data, box);
 }
 
 
-void FieldProps::handle_props_section_double_keyword(const DeckKeyword& keyword, const BoxManager& box_manager) {
+void FieldProps::handle_double_keyword(const DeckKeyword& keyword, const Box& box) {
     auto& field_data = this->get<double>(keyword.name());
     const auto& deck_data = keyword.getSIDoubleData();
-    assign_deck(keyword, field_data, deck_data, box_manager.getActiveBox());
+    assign_deck(keyword, field_data, deck_data, box);
 }
 
 
-void FieldProps::handle_grid_section_double_keyword(const DeckKeyword& keyword, const BoxManager& box_manager) {
+void FieldProps::handle_grid_section_double_keyword(const DeckKeyword& keyword, const Box& box) {
     auto& field_data = this->get<double>(keyword.name());
     const auto& deck_data = keyword.getSIDoubleData();
-    assign_deck(keyword, field_data, deck_data, box_manager.getActiveBox());
-
+    assign_deck(keyword, field_data, deck_data, box);
     if (field_data.valid())
         return;
 
     if (keywords::GRID::top_keywords.count(keyword.name()) == 1)
-        distribute_toplayer(*this->grid, field_data, deck_data, box_manager.getActiveBox());
+        distribute_toplayer(*this->grid, field_data, deck_data, box);
 }
 
 
@@ -601,11 +504,11 @@ void FieldProps::handle_region_operation(const DeckKeyword& keyword) {
     }
 }
 
-
-void FieldProps::handle_operation(const DeckKeyword& keyword, BoxManager& box_manager) {
+/* This can just use a local box - no need for the manager */
+void FieldProps::handle_operation(const DeckKeyword& keyword, Box box) {
     for (const auto& record : keyword) {
-        setKeywordBox(record, box_manager);
         const std::string& target_kw = record.getItem(0).get<std::string>(0);
+        box.update(record);
 
         if (FieldProps::supported<double>(target_kw)) {
             double scalar_value = record.getItem(1).get<double>(0);
@@ -613,7 +516,7 @@ void FieldProps::handle_operation(const DeckKeyword& keyword, BoxManager& box_ma
                 scalar_value = this->getSIValue(target_kw, scalar_value);
 
             auto& field_data = this->get<double>(target_kw);
-            FieldProps::apply(fromString(keyword.name()), field_data, scalar_value, box_manager.index_list());
+            FieldProps::apply(fromString(keyword.name()), field_data, scalar_value, box.index_list());
             continue;
         }
 
@@ -621,7 +524,7 @@ void FieldProps::handle_operation(const DeckKeyword& keyword, BoxManager& box_ma
         if (FieldProps::supported<int>(target_kw)) {
             int scalar_value = static_cast<int>(record.getItem(1).get<double>(0));
             auto& field_data = this->get<int>(target_kw);
-            FieldProps::apply(fromString(keyword.name()), field_data, scalar_value, box_manager.index_list());
+            FieldProps::apply(fromString(keyword.name()), field_data, scalar_value, box.index_list());
             continue;
         }
 
@@ -630,19 +533,28 @@ void FieldProps::handle_operation(const DeckKeyword& keyword, BoxManager& box_ma
 }
 
 
-void FieldProps::handle_COPY(const DeckKeyword& keyword, BoxManager& box_manager) {
+void FieldProps::handle_COPY(const DeckKeyword& keyword, Box box, bool region) {
     for (const auto& record : keyword) {
-        setKeywordBox(record, box_manager);
         const std::string& src_kw = record.getItem(0).get<std::string>(0);
         const std::string& target_kw = record.getItem(1).get<std::string>(0);
+        std::vector<Box::cell_index> index_list;
+
+        if (region) {
+            int region_value = record.getItem(2).get<int>(0);
+            const auto& region_item = record.getItem(4);
+            index_list = this->region_index(region_item, region_value);
+        } else {
+            box.update(record);
+            index_list = box.index_list();
+        }
 
 
         if (FieldProps::supported<double>(src_kw)) {
             const auto * src_data = this->try_get<double>(src_kw);
             if (!src_data)
-                throw std::invalid_argument("Tried to copy from not fully initialized keword: " + src_kw);
+                throw std::invalid_argument("Tried to copy from not fully initialized keyword: " + src_kw);
             auto& target_data = this->get<double>(target_kw);
-            target_data.assign(*src_data, box_manager.getActiveBox());
+            target_data.assign(*src_data, index_list);
 
             continue;
         }
@@ -650,14 +562,142 @@ void FieldProps::handle_COPY(const DeckKeyword& keyword, BoxManager& box_manager
         if (FieldProps::supported<int>(src_kw)) {
             const auto * src_data = this->try_get<int>(src_kw);
             if (!src_data)
-                throw std::invalid_argument("Tried to copy from not fully initialized keword: " + src_kw);
+                throw std::invalid_argument("Tried to copy from not fully initialized keyword: " + src_kw);
             auto& target_data = this->get<int>(target_kw);
-            target_data.assign(*src_data, box_manager.getActiveBox());
+            target_data.assign(*src_data, index_list);
 
             continue;
         }
     }
 }
 
+
+
+void FieldProps::handle_keyword(const DeckKeyword& keyword, Box& box) {
+    const std::string& name = keyword.name();
+
+    if (keywords::oper_keywords.count(name) == 1)
+        this->handle_operation(keyword, box);
+
+    else if (keywords::region_oper_keywords.count(name) == 1)
+        this->handle_region_operation(keyword);
+
+    else if (keywords::box_keywords.count(name) == 1)
+        handle_box_keyword(keyword, box);
+
+    else if (name == ParserKeywords::COPY::keywordName)
+        handle_COPY(keyword, box, false);
+
+    else if (name == ParserKeywords::COPYREG::keywordName)
+        handle_COPY(keyword, box, true);
+}
+
+/**********************************************************************/
+
+
+void FieldProps::scanGRIDSection(const GRIDSection& grid_section) {
+    Box box(*this->grid);
+
+    for (const auto& keyword : grid_section) {
+        const std::string& name = keyword.name();
+
+        if (keywords::GRID::double_keywords.count(name) == 1) {
+            this->handle_grid_section_double_keyword(keyword, box);
+            continue;
+        }
+
+        if (keywords::GRID::int_keywords.count(name) == 1) {
+            this->handle_int_keyword(keyword, box);
+            continue;
+        }
+
+        this->handle_keyword(keyword, box);
+    }
+}
+
+void FieldProps::scanEDITSection(const EDITSection& edit_section) {
+    Box box(*this->grid);
+    for (const auto& keyword : edit_section) {
+        const std::string& name = keyword.name();
+        if (keywords::EDIT::double_keywords.count(name) == 1) {
+            this->handle_double_keyword(keyword, box);
+            continue;
+        }
+
+        if (keywords::EDIT::int_keywords.count(name) == 1) {
+            this->handle_int_keyword(keyword, box);
+            continue;
+        }
+
+        this->handle_keyword(keyword, box);
+    }
+}
+
+
+void FieldProps::scanPROPSSection(const PROPSSection& props_section) {
+    Box box(*this->grid);
+
+    for (const auto& keyword : props_section) {
+        const std::string& name = keyword.name();
+        if (keywords::PROPS::double_keywords.count(name) == 1) {
+            this->handle_double_keyword(keyword, box);
+            continue;
+        }
+
+        if (keywords::PROPS::int_keywords.count(name) == 1) {
+            this->handle_int_keyword(keyword, box);
+            continue;
+        }
+
+        this->handle_keyword(keyword, box);
+    }
+}
+
+
+void FieldProps::scanREGIONSSection(const REGIONSSection& regions_section) {
+    Box box(*this->grid);
+
+    for (const auto& keyword : regions_section) {
+        const std::string& name = keyword.name();
+        if (keywords::REGIONS::int_keywords.count(name) == 1) {
+            this->handle_int_keyword(keyword, box);
+            continue;
+        }
+
+        this->handle_keyword(keyword, box);
+    }
+}
+
+
+void FieldProps::scanSOLUTIONSection(const SOLUTIONSection& solution_section) {
+    Box box(*this->grid);
+    for (const auto& keyword : solution_section) {
+        const std::string& name = keyword.name();
+        if (keywords::SOLUTION::double_keywords.count(name) == 1) {
+            this->handle_double_keyword(keyword, box);
+            continue;
+        }
+
+        this->handle_keyword(keyword, box);
+    }
+}
+
+void FieldProps::scanSCHEDULESection(const SCHEDULESection& schedule_section) {
+    Box box(*this->grid);
+    for (const auto& keyword : schedule_section) {
+        const std::string& name = keyword.name();
+        if (keywords::SCHEDULE::double_keywords.count(name) == 1) {
+            this->handle_double_keyword(keyword, box);
+            continue;
+        }
+
+        if (keywords::SCHEDULE::int_keywords.count(name) == 1) {
+            this->handle_int_keyword(keyword, box);
+            continue;
+        }
+
+        this->handle_keyword(keyword, box);
+    }
+}
 
 }
