@@ -37,6 +37,7 @@
 #include <opm/parser/eclipse/EclipseState/Grid/Box.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 
 static const Opm::DeckKeyword createSATNUMKeyword( ) {
@@ -375,37 +376,57 @@ BOOST_AUTO_TEST_CASE(GridPropertyInitialization) {
     Opm::TableManager tm(deck);
     Opm::EclipseGrid eg(deck);
     Opm::Eclipse3DProperties props(deck, tm, eg);
+    Opm::FieldPropsManager fp(deck, eg);
 
     // make sure that Eclipse3DProperties throws if it is bugged about an _unsupported_ keyword
     BOOST_CHECK_THROW(props.hasDeckIntGridProperty("ISWU"), std::logic_error);
     BOOST_CHECK_THROW(props.hasDeckDoubleGridProperty("FLUXNUM"), std::logic_error);
 
+    // The FieldPropsManager will just return false if you ask for a unsupported keyword.
+    BOOST_CHECK(!fp.has<int>("ISWU"));
+    BOOST_CHECK(!fp.has<double>("FLUXNUM"));
+
+
     // make sure that Eclipse3DProperties does not throw if it is asked for a supported
     // grid property that is not contained in the deck
     BOOST_CHECK_NO_THROW(props.hasDeckDoubleGridProperty("ISWU"));
     BOOST_CHECK_NO_THROW(props.hasDeckIntGridProperty("FLUXNUM"));
+    BOOST_CHECK(!fp.has<int>("FLUXNUM"));
+    BOOST_CHECK(!fp.has<double>("ISWU"));
 
     BOOST_CHECK(!props.hasDeckDoubleGridProperty("ISWU"));
     BOOST_CHECK(!props.hasDeckIntGridProperty("FLUXNUM"));
 
-    BOOST_CHECK(props.hasDeckIntGridProperty("SATNUM"));
-    BOOST_CHECK(props.hasDeckIntGridProperty("IMBNUM"));
+    for (const auto& kw : {"SATNUM", "IMBNUM"}) {
+        BOOST_CHECK(props.hasDeckIntGridProperty(kw));
+        BOOST_CHECK(fp.has<int>(kw));
+    }
 
-    BOOST_CHECK(props.hasDeckDoubleGridProperty("SWU"));
-    BOOST_CHECK(props.hasDeckDoubleGridProperty("ISGU"));
-    BOOST_CHECK(props.hasDeckDoubleGridProperty("SGCR"));
-    BOOST_CHECK(props.hasDeckDoubleGridProperty("ISGCR"));
+    for (const auto& kw : {"SWU", "ISGU", "SGCR", "ISGCR"}) {
+        BOOST_CHECK(props.hasDeckDoubleGridProperty(kw));
+        BOOST_CHECK(fp.has<double>(kw));
+    }
 
     const auto& swuPropData = props.getDoubleGridProperty("SWU").getData();
     BOOST_CHECK_EQUAL(swuPropData[0 * 3*3], 0.93);
     BOOST_CHECK_EQUAL(swuPropData[1 * 3*3], 0.852);
     BOOST_CHECK_EQUAL(swuPropData[2 * 3*3], 0.801);
 
+    const auto& fp_swu = fp.get_global<double>("SWU");
+    BOOST_CHECK_EQUAL(fp_swu[0 * 3*3], 0.93);
+    BOOST_CHECK_EQUAL(fp_swu[1 * 3*3], 0.852);
+    BOOST_CHECK_EQUAL(fp_swu[2 * 3*3], 0.801);
+
+
     const auto& sguPropData = props.getDoubleGridProperty("ISGU").getData();
     BOOST_CHECK_EQUAL(sguPropData[0 * 3*3], 0.9);
     BOOST_CHECK_EQUAL(sguPropData[1 * 3*3], 0.85);
     BOOST_CHECK_EQUAL(sguPropData[2 * 3*3], 0.80);
 
+    const auto& fp_sgu = fp.get_global<double>("ISGU");
+    BOOST_CHECK_EQUAL(fp_sgu[0 * 3*3], 0.9);
+    BOOST_CHECK_EQUAL(fp_sgu[1 * 3*3], 0.85);
+    BOOST_CHECK_EQUAL(fp_sgu[2 * 3*3], 0.80);
 
     const auto& satnum = props.getIntGridProperty("SATNUM");
     {
@@ -424,6 +445,21 @@ BOOST_AUTO_TEST_CASE(GridPropertyInitialization) {
             BOOST_CHECK_EQUAL( cells3[i] , i + 16);
         }
     }
+    const auto& fp_satnum = fp.get_global<int>("SATNUM");
+    {
+        BOOST_CHECK_EQUAL(8, std::count(fp_satnum.begin(), fp_satnum.end(), 1));
+        BOOST_CHECK_EQUAL(8, std::count(fp_satnum.begin(), fp_satnum.end(), 2));
+        BOOST_CHECK_EQUAL(8, std::count(fp_satnum.begin(), fp_satnum.end(), 3));
+
+        for (size_t i = 0; i < 8; i++) {
+            BOOST_CHECK_EQUAL( fp_satnum[i] , i );
+            BOOST_CHECK_EQUAL( fp_satnum[i + 8]  , i + 8);
+            BOOST_CHECK_EQUAL( fp_satnum[i + 16] , i + 16);
+        }
+    }
+
+
+
     {
         const auto cells1 = satnum.indexEqual(1 );
         const auto cells2 = satnum.indexEqual(2 );
