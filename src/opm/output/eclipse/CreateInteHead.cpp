@@ -48,7 +48,7 @@ namespace {
     {
         auto ncwmax = 0;
 
-        for (const auto& well : sched.getWells2(lookup_step)) {
+        for (const auto& well : sched.getWells(lookup_step)) {
             const auto ncw = well.getConnections().size();
 
             ncwmax = std::max(ncwmax, static_cast<int>(ncw));
@@ -217,11 +217,11 @@ namespace {
     {
 	const auto& wsd = rspec.wellSegmentDimensions();
 
-        const auto& sched_wells = sched.getWells2(lookup_step);
+        const auto& sched_wells = sched.getWells(lookup_step);
 
         const auto nsegwl =
             std::count_if(std::begin(sched_wells), std::end(sched_wells),
-                          [](const Opm::Well2& well)
+                          [](const Opm::Well& well)
             {
                 return well.isMultiSegment();
             });

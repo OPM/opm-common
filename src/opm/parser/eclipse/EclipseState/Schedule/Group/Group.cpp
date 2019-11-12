@@ -19,13 +19,13 @@
 
 
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Group/Group2.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp>
 
 #include "../eval_uda.hpp"
 
 namespace Opm {
 
-Group2::Group2(const std::string& name, std::size_t insert_index_arg, std::size_t init_step_arg, double udq_undefined_arg, const UnitSystem& unit_system_arg) :
+Group::Group(const std::string& name, std::size_t insert_index_arg, std::size_t init_step_arg, double udq_undefined_arg, const UnitSystem& unit_system_arg) :
     m_name(name),
     m_insert_index(insert_index_arg),
     init_step(init_step_arg),
@@ -41,31 +41,31 @@ Group2::Group2(const std::string& name, std::size_t insert_index_arg, std::size_
         this->parent_group = "FIELD";
 }
 
-std::size_t Group2::insert_index() const {
+std::size_t Group::insert_index() const {
     return this->m_insert_index;
 }
 
-bool Group2::defined(size_t timeStep) const {
+bool Group::defined(size_t timeStep) const {
     return (timeStep >= this->init_step);
 }
 
-const std::string& Group2::name() const {
+const std::string& Group::name() const {
     return this->m_name;
 }
 
-const Group2::GroupProductionProperties& Group2::productionProperties() const {
+const Group::GroupProductionProperties& Group::productionProperties() const {
     return this->production_properties;
 }
 
-const Group2::GroupInjectionProperties& Group2::injectionProperties() const {
+const Group::GroupInjectionProperties& Group::injectionProperties() const {
     return this->injection_properties;
 }
 
-int Group2::getGroupNetVFPTable() const {
+int Group::getGroupNetVFPTable() const {
     return this->vfp_table;
 }
 
-bool Group2::updateNetVFPTable(int vfp_arg) {
+bool Group::updateNetVFPTable(int vfp_arg) {
     if (this->vfp_table != vfp_arg) {
         this->vfp_table = vfp_arg;
         return true;
@@ -73,7 +73,7 @@ bool Group2::updateNetVFPTable(int vfp_arg) {
         return false;
 }
 
-bool Group2::updateInjection(const GroupInjectionProperties& injection) {
+bool Group::updateInjection(const GroupInjectionProperties& injection) {
     bool update = false;
 
     if (this->injection_properties != injection) {
@@ -90,7 +90,7 @@ bool Group2::updateInjection(const GroupInjectionProperties& injection) {
 }
 
 
-bool Group2::updateProduction(const GroupProductionProperties& production) {
+bool Group::updateProduction(const GroupProductionProperties& production) {
     bool update = false;
 
     if (this->production_properties != production) {
@@ -107,7 +107,7 @@ bool Group2::updateProduction(const GroupProductionProperties& production) {
 }
 
 
-bool Group2::GroupInjectionProperties::operator==(const GroupInjectionProperties& other) const {
+bool Group::GroupInjectionProperties::operator==(const GroupInjectionProperties& other) const {
     return
         this->phase                 == other.phase &&
         this->cmode                 == other.cmode &&
@@ -121,12 +121,12 @@ bool Group2::GroupInjectionProperties::operator==(const GroupInjectionProperties
 }
 
 
-bool Group2::GroupInjectionProperties::operator!=(const GroupInjectionProperties& other) const {
+bool Group::GroupInjectionProperties::operator!=(const GroupInjectionProperties& other) const {
     return !(*this == other);
 }
 
 
-bool Group2::GroupProductionProperties::operator==(const GroupProductionProperties& other) const {
+bool Group::GroupProductionProperties::operator==(const GroupProductionProperties& other) const {
     return
         this->cmode               == other.cmode &&
         this->exceed_action       == other.exceed_action &&
@@ -139,54 +139,54 @@ bool Group2::GroupProductionProperties::operator==(const GroupProductionProperti
 }
 
 
-bool Group2::GroupProductionProperties::operator!=(const GroupProductionProperties& other) const {
+bool Group::GroupProductionProperties::operator!=(const GroupProductionProperties& other) const {
     return !(*this == other);
 }
 
-bool Group2::hasType(GroupType gtype) const {
+bool Group::hasType(GroupType gtype) const {
     return ((this->group_type & gtype) == gtype);
 }
 
-void Group2::addType(GroupType new_gtype) {
+void Group::addType(GroupType new_gtype) {
     this->group_type = this->group_type | new_gtype;
 }
 
-bool Group2::isProductionGroup() const {
+bool Group::isProductionGroup() const {
     return this->hasType(GroupType::PRODUCTION);
 }
 
-bool Group2::isInjectionGroup() const {
+bool Group::isInjectionGroup() const {
     return this->hasType(GroupType::INJECTION);
 }
 
-void Group2::setProductionGroup() {
+void Group::setProductionGroup() {
     this->addType(GroupType::PRODUCTION);
 }
 
-void Group2::setInjectionGroup() {
+void Group::setInjectionGroup() {
     this->addType(GroupType::INJECTION);
 }
 
 
-std::size_t Group2::numWells() const {
+std::size_t Group::numWells() const {
     return this->m_wells.size();
 }
 
-const std::vector<std::string>& Group2::wells() const {
+const std::vector<std::string>& Group::wells() const {
     return this->m_wells.data();
 }
 
-const std::vector<std::string>& Group2::groups() const {
+const std::vector<std::string>& Group::groups() const {
     return this->m_groups.data();
 }
 
-bool Group2::wellgroup() const {
+bool Group::wellgroup() const {
     if (this->m_groups.size() > 0)
         return false;
     return true;
 }
 
-bool Group2::addWell(const std::string& well_name) {
+bool Group::addWell(const std::string& well_name) {
     if (!this->m_groups.empty())
         throw std::logic_error("Groups can not mix group and well children. Trying to add well: " + well_name + " to group: " + this->name());
 
@@ -197,17 +197,17 @@ bool Group2::addWell(const std::string& well_name) {
     return false;
 }
 
-bool Group2::hasWell(const std::string& well_name) const  {
+bool Group::hasWell(const std::string& well_name) const  {
     return (this->m_wells.count(well_name) == 1);
 }
 
-void Group2::delWell(const std::string& well_name) {
+void Group::delWell(const std::string& well_name) {
     auto rm_count = this->m_wells.erase(well_name);
     if (rm_count == 0)
         throw std::invalid_argument("Group: " + this->name() + " does not have well: " + well_name);
 }
 
-bool Group2::addGroup(const std::string& group_name) {
+bool Group::addGroup(const std::string& group_name) {
     if (!this->m_wells.empty())
         throw std::logic_error("Groups can not mix group and well children. Trying to add group: " + group_name + " to group: " + this->name());
 
@@ -218,17 +218,17 @@ bool Group2::addGroup(const std::string& group_name) {
     return false;
 }
 
-bool Group2::hasGroup(const std::string& group_name) const  {
+bool Group::hasGroup(const std::string& group_name) const  {
     return (this->m_groups.count(group_name) == 1);
 }
 
-void Group2::delGroup(const std::string& group_name) {
+void Group::delGroup(const std::string& group_name) {
     auto rm_count = this->m_groups.erase(group_name);
     if (rm_count == 0)
         throw std::invalid_argument("Group does not have group: " + group_name);
 }
 
-bool Group2::update_gefac(double gf, bool transfer_gf) {
+bool Group::update_gefac(double gf, bool transfer_gf) {
     bool update = false;
     if (this->gefac != gf) {
         this->gefac = gf;
@@ -243,20 +243,20 @@ bool Group2::update_gefac(double gf, bool transfer_gf) {
     return update;
 }
 
-double Group2::getGroupEfficiencyFactor() const {
+double Group::getGroupEfficiencyFactor() const {
     return this->gefac;
 }
 
-bool Group2::getTransferGroupEfficiencyFactor() const {
+bool Group::getTransferGroupEfficiencyFactor() const {
     return this->transfer_gefac;
 }
 
-const std::string& Group2::parent() const {
+const std::string& Group::parent() const {
     return this->parent_group;
 }
 
 
-bool Group2::updateParent(const std::string& parent) {
+bool Group::updateParent(const std::string& parent) {
     if (this->parent_group != parent) {
         this->parent_group = parent;
         return true;
@@ -265,8 +265,8 @@ bool Group2::updateParent(const std::string& parent) {
     return false;
 }
 
-Group2::ProductionControls Group2::productionControls(const SummaryState& st) const {
-    Group2::ProductionControls pc;
+Group::ProductionControls Group::productionControls(const SummaryState& st) const {
+    Group::ProductionControls pc;
 
     pc.cmode = this->production_properties.cmode;
     pc.exceed_action = this->production_properties.exceed_action;
@@ -281,8 +281,8 @@ Group2::ProductionControls Group2::productionControls(const SummaryState& st) co
     return pc;
 }
 
-Group2::InjectionControls Group2::injectionControls(const SummaryState& st) const {
-    Group2::InjectionControls ic;
+Group::InjectionControls Group::injectionControls(const SummaryState& st) const {
+    Group::InjectionControls ic;
 
     ic.phase = this->injection_properties.phase;
     ic.cmode = this->injection_properties.cmode;
@@ -295,38 +295,38 @@ Group2::InjectionControls Group2::injectionControls(const SummaryState& st) cons
     return ic;
 }
 
-Group2::ProductionCMode Group2::production_cmode() const {
+Group::ProductionCMode Group::production_cmode() const {
     return this->production_properties.cmode;
 }
 
-Group2::InjectionCMode Group2::injection_cmode() const {
+Group::InjectionCMode Group::injection_cmode() const {
     return this->injection_properties.cmode;
 }
 
-Phase Group2::injection_phase() const {
+Phase Group::injection_phase() const {
     return this->injection_properties.phase;
 }
 
 
-bool Group2::ProductionControls::has_control(Group2::ProductionCMode control) const {
+bool Group::ProductionControls::has_control(Group::ProductionCMode control) const {
     return (this->production_controls & static_cast<int>(control)) != 0;
 }
 
 
-bool Group2::InjectionControls::has_control(InjectionCMode cmode_arg) const {
+bool Group::InjectionControls::has_control(InjectionCMode cmode_arg) const {
     return (this->injection_controls & static_cast<int>(cmode_arg)) != 0;
 }
 
-bool Group2::has_control(Group2::ProductionCMode control) const {
+bool Group::has_control(Group::ProductionCMode control) const {
     return (this->production_properties.production_controls & static_cast<int>(control)) != 0;
 }
 
-bool Group2::has_control(InjectionCMode control) const {
+bool Group::has_control(InjectionCMode control) const {
     return (this->injection_properties.injection_controls & static_cast<int>(control)) != 0;
 }
 
 
-const std::string Group2::ExceedAction2String( ExceedAction enumValue ) {
+const std::string Group::ExceedAction2String( ExceedAction enumValue ) {
     switch(enumValue) {
     case ExceedAction::NONE:
         return "NONE";
@@ -346,7 +346,7 @@ const std::string Group2::ExceedAction2String( ExceedAction enumValue ) {
 }
 
 
-Group2::ExceedAction Group2::ExceedActionFromString( const std::string& stringValue ) {
+Group::ExceedAction Group::ExceedActionFromString( const std::string& stringValue ) {
 
     if (stringValue == "NONE")
         return ExceedAction::NONE;
@@ -365,7 +365,7 @@ Group2::ExceedAction Group2::ExceedActionFromString( const std::string& stringVa
 }
 
 
-const std::string Group2::InjectionCMode2String( InjectionCMode enumValue ) {
+const std::string Group::InjectionCMode2String( InjectionCMode enumValue ) {
     switch( enumValue ) {
     case InjectionCMode::NONE:
         return "NONE";
@@ -385,7 +385,7 @@ const std::string Group2::InjectionCMode2String( InjectionCMode enumValue ) {
 }
 
 
-Group2::InjectionCMode Group2::InjectionCModeFromString( const std::string& stringValue ) {
+Group::InjectionCMode Group::InjectionCModeFromString( const std::string& stringValue ) {
     if (stringValue == "NONE")
         return InjectionCMode::NONE;
     else if (stringValue == "RATE")
@@ -402,17 +402,17 @@ Group2::InjectionCMode Group2::InjectionCModeFromString( const std::string& stri
         throw std::invalid_argument("Unknown enum state string: " + stringValue );
 }
 
-Group2::GroupType operator|(Group2::GroupType lhs, Group2::GroupType rhs) {
-    return static_cast<Group2::GroupType>(static_cast<std::underlying_type<Group2::GroupType>::type>(lhs) | static_cast<std::underlying_type<Group2::GroupType>::type>(rhs));
+Group::GroupType operator|(Group::GroupType lhs, Group::GroupType rhs) {
+    return static_cast<Group::GroupType>(static_cast<std::underlying_type<Group::GroupType>::type>(lhs) | static_cast<std::underlying_type<Group::GroupType>::type>(rhs));
 }
 
 
-Group2::GroupType operator&(Group2::GroupType lhs, Group2::GroupType rhs) {
-    return static_cast<Group2::GroupType>(static_cast<std::underlying_type<Group2::GroupType>::type>(lhs) & static_cast<std::underlying_type<Group2::GroupType>::type>(rhs));
+Group::GroupType operator&(Group::GroupType lhs, Group::GroupType rhs) {
+    return static_cast<Group::GroupType>(static_cast<std::underlying_type<Group::GroupType>::type>(lhs) & static_cast<std::underlying_type<Group::GroupType>::type>(rhs));
 }
 
 
-const std::string Group2::ProductionCMode2String( ProductionCMode enumValue ) {
+const std::string Group::ProductionCMode2String( ProductionCMode enumValue ) {
     switch( enumValue ) {
     case ProductionCMode::NONE:
         return "NONE";
@@ -438,7 +438,7 @@ const std::string Group2::ProductionCMode2String( ProductionCMode enumValue ) {
 }
 
 
-Group2::ProductionCMode Group2::ProductionCModeFromString( const std::string& stringValue ) {
+Group::ProductionCMode Group::ProductionCModeFromString( const std::string& stringValue ) {
     if (stringValue == "NONE")
         return ProductionCMode::NONE;
     else if (stringValue == "ORAT")
@@ -461,7 +461,7 @@ Group2::ProductionCMode Group2::ProductionCModeFromString( const std::string& st
         throw std::invalid_argument("Unknown enum state string: " + stringValue );
 }
 
-Group2::GuideRateTarget Group2::GuideRateTargetFromString( const std::string& stringValue ) {
+Group::GuideRateTarget Group::GuideRateTargetFromString( const std::string& stringValue ) {
     if (stringValue == "OIL")
         return GuideRateTarget::OIL;
     else if (stringValue == "WAT")

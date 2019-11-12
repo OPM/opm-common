@@ -31,7 +31,7 @@
 #include <opm/parser/eclipse/EclipseState/Util/Value.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Group/Group2.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GuideRateModel.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GuideRate.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
@@ -44,13 +44,13 @@ using namespace Opm;
 
 
 BOOST_AUTO_TEST_CASE(CreateGroup_CorrectNameAndDefaultValues) {
-    Opm::Group2 group("G1" , 1, 0, 0, UnitSystem::newMETRIC());
+    Opm::Group group("G1" , 1, 0, 0, UnitSystem::newMETRIC());
     BOOST_CHECK_EQUAL( "G1" , group.name() );
 }
 
 
 BOOST_AUTO_TEST_CASE(CreateGroupCreateTimeOK) {
-    Opm::Group2 group("G1" , 1, 5, 0, UnitSystem::newMETRIC());
+    Opm::Group group("G1" , 1, 5, 0, UnitSystem::newMETRIC());
     BOOST_CHECK_EQUAL( false, group.defined( 4 ));
     BOOST_CHECK_EQUAL( true, group.defined( 5 ));
     BOOST_CHECK_EQUAL( true, group.defined( 6 ));
@@ -59,8 +59,8 @@ BOOST_AUTO_TEST_CASE(CreateGroupCreateTimeOK) {
 
 
 BOOST_AUTO_TEST_CASE(CreateGroup_SetInjectorProducer_CorrectStatusSet) {
-    Opm::Group2 group1("IGROUP" , 1,  0, 0, UnitSystem::newMETRIC());
-    Opm::Group2 group2("PGROUP" , 2,  0, 0, UnitSystem::newMETRIC());
+    Opm::Group group1("IGROUP" , 1,  0, 0, UnitSystem::newMETRIC());
+    Opm::Group group2("PGROUP" , 2,  0, 0, UnitSystem::newMETRIC());
 
     group1.setProductionGroup();
     BOOST_CHECK(group1.isProductionGroup());
@@ -74,16 +74,16 @@ BOOST_AUTO_TEST_CASE(CreateGroup_SetInjectorProducer_CorrectStatusSet) {
 
 
 BOOST_AUTO_TEST_CASE(ControlModeOK) {
-    Opm::Group2 group("G1" , 1, 0, 0, UnitSystem::newMETRIC());
+    Opm::Group group("G1" , 1, 0, 0, UnitSystem::newMETRIC());
     Opm::SummaryState st(std::chrono::system_clock::now());
     const auto& inj = group.injectionControls(st);
-    BOOST_CHECK( Opm::Group2::InjectionCMode::NONE == inj.cmode);
+    BOOST_CHECK( Opm::Group::InjectionCMode::NONE == inj.cmode);
 }
 
 
 
 BOOST_AUTO_TEST_CASE(GroupChangePhaseSameTimeThrows) {
-    Opm::Group2 group("G1" , 1, 0, 0, UnitSystem::newMETRIC());
+    Opm::Group group("G1" , 1, 0, 0, UnitSystem::newMETRIC());
     Opm::SummaryState st(std::chrono::system_clock::now());
     const auto& inj = group.injectionControls(st);
     BOOST_CHECK_EQUAL( Opm::Phase::WATER , inj.phase); // Default phase - assumed WATER
@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(GroupChangePhaseSameTimeThrows) {
 
 
 BOOST_AUTO_TEST_CASE(GroupDoesNotHaveWell) {
-    Opm::Group2 group("G1" , 1, 0, 0, UnitSystem::newMETRIC());
+    Opm::Group group("G1" , 1, 0, 0, UnitSystem::newMETRIC());
 
     BOOST_CHECK_EQUAL(false , group.hasWell("NO"));
     BOOST_CHECK_EQUAL(0U , group.numWells());
@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithGEFAC) {
     BOOST_CHECK_EQUAL(group_names.size(), 1);
     BOOST_CHECK_EQUAL(group_names[0], "PRODUC");
 
-    const auto& group1 = schedule.getGroup2("PRODUC", 0);
+    const auto& group1 = schedule.getGroup("PRODUC", 0);
     BOOST_CHECK_EQUAL(group1.getGroupEfficiencyFactor(), 0.85);
     BOOST_CHECK(group1.getTransferGroupEfficiencyFactor());
 }
@@ -183,13 +183,13 @@ BOOST_AUTO_TEST_CASE(createDeckWithWGRUPCONandWCONPROD) {
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck );
     Opm::Schedule schedule(deck,  grid, eclipseProperties, runspec);
-    const auto& currentWell = schedule.getWell2("B-37T2", 0);
-    const Opm::Well2::WellProductionProperties& wellProductionProperties = currentWell.getProductionProperties();
-    BOOST_CHECK(wellProductionProperties.controlMode == Opm::Well2::ProducerCMode::GRUP);
+    const auto& currentWell = schedule.getWell("B-37T2", 0);
+    const Opm::Well::WellProductionProperties& wellProductionProperties = currentWell.getProductionProperties();
+    BOOST_CHECK(wellProductionProperties.controlMode == Opm::Well::ProducerCMode::GRUP);
 
     BOOST_CHECK_EQUAL(currentWell.isAvailableForGroupControl(), true);
     BOOST_CHECK_EQUAL(currentWell.getGuideRate(), 30);
-    BOOST_CHECK(currentWell.getGuideRatePhase() == Opm::Well2::GuideRateTarget::OIL);
+    BOOST_CHECK(currentWell.getGuideRatePhase() == Opm::Well::GuideRateTarget::OIL);
     BOOST_CHECK_EQUAL(currentWell.getGuideRateScalingFactor(), 1.0);
 
 
@@ -228,18 +228,18 @@ BOOST_AUTO_TEST_CASE(createDeckWithGRUPNET) {
         Runspec runspec (deck );
         Opm::Schedule schedule(deck,  grid, eclipseProperties, runspec);
 
-        const auto& group1 = schedule.getGroup2("PROD", 0);
-        const auto& group2 = schedule.getGroup2("MANI-E2", 0);
-        const auto& group3 = schedule.getGroup2("MANI-K1", 0);
+        const auto& group1 = schedule.getGroup("PROD", 0);
+        const auto& group2 = schedule.getGroup("MANI-E2", 0);
+        const auto& group3 = schedule.getGroup("MANI-K1", 0);
         BOOST_CHECK_EQUAL(group1.getGroupNetVFPTable(), 0);
         BOOST_CHECK_EQUAL(group2.getGroupNetVFPTable(), 9);
         BOOST_CHECK_EQUAL(group3.getGroupNetVFPTable(), 9999);
 }
 
 
-BOOST_AUTO_TEST_CASE(Group2Create) {
-    Opm::Group2 g1("NAME", 1, 1, 0, UnitSystem::newMETRIC());
-    Opm::Group2 g2("NAME", 1, 1, 0, UnitSystem::newMETRIC());
+BOOST_AUTO_TEST_CASE(GroupCreate) {
+    Opm::Group g1("NAME", 1, 1, 0, UnitSystem::newMETRIC());
+    Opm::Group g2("NAME", 1, 1, 0, UnitSystem::newMETRIC());
 
     BOOST_CHECK( g1.addWell("W1") );
     BOOST_CHECK( !g1.addWell("W1") );
@@ -287,14 +287,14 @@ BOOST_AUTO_TEST_CASE(createDeckWithGCONPROD) {
     Opm::Schedule schedule(deck,  grid, eclipseProperties, runspec);
     SummaryState st(std::chrono::system_clock::now());
 
-    const auto& group1 = schedule.getGroup2("G1", 0);
-    const auto& group2 = schedule.getGroup2("G2", 0);
+    const auto& group1 = schedule.getGroup("G1", 0);
+    const auto& group2 = schedule.getGroup("G2", 0);
 
     auto ctrl1 = group1.productionControls(st);
     auto ctrl2 = group2.productionControls(st);
 
-    BOOST_CHECK(ctrl1.exceed_action == Group2::ExceedAction::RATE);
-    BOOST_CHECK(ctrl2.exceed_action == Group2::ExceedAction::CON);
+    BOOST_CHECK(ctrl1.exceed_action == Group::ExceedAction::RATE);
+    BOOST_CHECK(ctrl2.exceed_action == Group::ExceedAction::CON);
 }
 
 

@@ -42,7 +42,7 @@
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well2.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -696,12 +696,12 @@ namespace {
     void checkWellVectorSizes(const std::vector<int>&                   opm_iwel,
                               const std::vector<double>&                opm_xwel,
                               const std::vector<Opm::data::Rates::opt>& phases,
-                              const std::vector<Opm::Well2>&            sched_wells)
+                              const std::vector<Opm::Well>&            sched_wells)
     {
         const auto expected_xwel_size =
             std::accumulate(sched_wells.begin(), sched_wells.end(),
                             std::size_t(0),
-                [&phases](const std::size_t acc, const Opm::Well2& w)
+                [&phases](const std::size_t acc, const Opm::Well& w)
                 -> std::size_t
             {
                 return acc
@@ -744,7 +744,7 @@ namespace {
 
         using rt = Opm::data::Rates::opt;
 
-        const auto& sched_wells = schedule.getWells2(rst_view.simStep());
+        const auto& sched_wells = schedule.getWells(rst_view.simStep());
         std::vector<rt> phases;
         {
             const auto& phase = es.runspec().phases();
@@ -859,7 +859,7 @@ namespace {
         if (gas) { xc.rates.set(Opm::data::Rates::opt::gas, 0.0); }
     }
 
-    void restoreConnResults(const Opm::Well2&       well,
+    void restoreConnResults(const Opm::Well&       well,
                             const std::size_t       wellID,
                             const Opm::EclipseGrid& grid,
                             const Opm::UnitSystem&  usys,
@@ -980,7 +980,7 @@ namespace {
     }
 
     Opm::data::Well
-    restore_well(const Opm::Well2&       well,
+    restore_well(const Opm::Well&       well,
                  const std::size_t       wellID,
                  const Opm::EclipseGrid& grid,
                  const Opm::UnitSystem&  usys,
@@ -1068,7 +1068,7 @@ namespace {
         const auto& units  = es.getUnits();
         const auto& phases = es.runspec().phases();
 
-        const auto& wells = schedule.getWells2(rst_view->simStep());
+        const auto& wells = schedule.getWells(rst_view->simStep());
         for (auto nWells = wells.size(), wellID = 0*nWells;
                   wellID < nWells; ++wellID)
         {
@@ -1165,7 +1165,7 @@ namespace {
         // Well cumulatives
         {
             const auto  wellData = WellVectors { intehead, rst_view };
-            const auto& wells    = schedule.getWells2(sim_step);
+            const auto& wells    = schedule.getWells(sim_step);
 
             for (auto nWells = wells.size(), wellID = 0*nWells;
                  wellID < nWells; ++wellID)
@@ -1182,7 +1182,7 @@ namespace {
             };
 
             for (const auto& gname : schedule.groupNames(sim_step)) {
-                const auto& group = schedule.getGroup2(gname, sim_step);
+                const auto& group = schedule.getGroup(gname, sim_step);
                 // Note: Order of group values in {I,X}GRP arrays mostly
                 // matches group's order of occurrence in .DATA file.
                 // Values pertaining to FIELD are stored at zero-based order

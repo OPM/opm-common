@@ -28,7 +28,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicVector.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Events.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Group/Group2.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GTNode.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GuideRateConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GConSale.hpp>
@@ -41,7 +41,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/RFTConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/VFPInjTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/VFPProdTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well2.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellTestConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/Actions.hpp>
 
@@ -70,14 +70,14 @@
     3. The DynamicState<T> has an awareness of the total length of the time
        axis, trying to access values beyound that is illegal.
 
-  For many of the non-trival objects like eg Well2 and Group2 the DynamicState<>
+  For many of the non-trival objects like eg Well and Group the DynamicState<>
   contains a shared pointer to an underlying object, that way the fill operation
   when the vector is resized is quite fast. The following pattern is quite
   common for the Schedule implementation:
 
 
        // Create a new well object.
-       std::shared_ptr<Well> new_well = this->getWell2( well_name, time_step );
+       std::shared_ptr<Well> new_well = this->getWell( well_name, time_step );
 
        // Update the new well object with new settings from the deck, the
        // updateXXXX() method will return true if the well object was actually
@@ -170,14 +170,14 @@ namespace Opm
         std::vector<std::string> groupNames(const std::string& pattern) const;
         std::vector<std::string> groupNames() const;
 
-        void updateWell(std::shared_ptr<Well2> well, size_t reportStep);
-        const Well2& getWell2(const std::string& wellName, size_t timeStep) const;
-        const Well2& getWell2atEnd(const std::string& well_name) const;
-        std::vector<Well2> getWells2(size_t timeStep) const;
-        std::vector<Well2> getWells2atEnd() const;
+        void updateWell(std::shared_ptr<Well> well, size_t reportStep);
+        const Well& getWell(const std::string& wellName, size_t timeStep) const;
+        const Well& getWellatEnd(const std::string& well_name) const;
+        std::vector<Well> getWells(size_t timeStep) const;
+        std::vector<Well> getWellsatEnd() const;
 
-        std::vector<const Group2*> getChildGroups2(const std::string& group_name, size_t timeStep) const;
-        std::vector<Well2> getChildWells2(const std::string& group_name, size_t timeStep) const;
+        std::vector<const Group*> getChildGroups2(const std::string& group_name, size_t timeStep) const;
+        std::vector<Well> getChildWells2(const std::string& group_name, size_t timeStep) const;
         const OilVaporizationProperties& getOilVaporizationProperties(size_t timestep) const;
 
         const UDQActive& udqActive(size_t timeStep) const;
@@ -195,7 +195,7 @@ namespace Opm
         size_t numGroups(size_t timeStep) const;
         bool hasGroup(const std::string& groupName) const;
         bool hasGroup(const std::string& groupName, std::size_t timeStep) const;
-        const Group2& getGroup2(const std::string& groupName, size_t timeStep) const;
+        const Group& getGroup(const std::string& groupName, size_t timeStep) const;
 
         const Tuning& getTuning() const;
         const MessageLimits& getMessageLimits() const;
@@ -223,8 +223,8 @@ namespace Opm
         int getNupcol(size_t reportStep) const;
     private:
         TimeMap m_timeMap;
-        OrderedMap< std::string, DynamicState<std::shared_ptr<Well2>>> wells_static;
-        OrderedMap< std::string, DynamicState<std::shared_ptr<Group2>>> groups;
+        OrderedMap< std::string, DynamicState<std::shared_ptr<Well>>> wells_static;
+        OrderedMap< std::string, DynamicState<std::shared_ptr<Group>>> groups;
         DynamicState< OilVaporizationProperties > m_oilvaporizationproperties;
         Events m_events;
         DynamicVector< Deck > m_modifierDeck;
@@ -240,7 +240,7 @@ namespace Opm
         DynamicState<std::shared_ptr<GuideRateConfig>> guide_rate_config;
         DynamicState<std::shared_ptr<GConSale>> gconsale;
         DynamicState<std::shared_ptr<GConSump>> gconsump;
-        DynamicState<Well2::ProducerCMode> global_whistctl_mode;
+        DynamicState<Well::ProducerCMode> global_whistctl_mode;
         DynamicState<std::shared_ptr<Action::Actions>> m_actions;
         RFTConfig rft_config;
         DynamicState<int> m_nupcol;
@@ -249,16 +249,16 @@ namespace Opm
         std::map<std::string,Events> well_events;
 
         GTNode groupTree(const std::string& root_node, std::size_t report_step, const GTNode * parent) const;
-        void updateGroup(std::shared_ptr<Group2> group, size_t reportStep);
+        void updateGroup(std::shared_ptr<Group> group, size_t reportStep);
         bool checkGroups(const ParseContext& parseContext, ErrorGuard& errors);
         void updateUDQActive( std::size_t timeStep, std::shared_ptr<UDQActive> udq );
-        bool updateWellStatus( const std::string& well, size_t reportStep , Well2::Status status);
+        bool updateWellStatus( const std::string& well, size_t reportStep , Well::Status status);
         void addWellToGroup( const std::string& group_name, const std::string& well_name , size_t timeStep);
         void iterateScheduleSection(const ParseContext& parseContext ,  ErrorGuard& errors, const SCHEDULESection& , const EclipseGrid& grid,
                                     const Eclipse3DProperties& eclipseProperties);
         void addACTIONX(const Action::ActionX& action, std::size_t currentStep);
         void addGroupToGroup( const std::string& parent_group, const std::string& child_group, size_t timeStep);
-        void addGroupToGroup( const std::string& parent_group, const Group2& child_group, size_t timeStep);
+        void addGroupToGroup( const std::string& parent_group, const Group& child_group, size_t timeStep);
         void addGroup(const std::string& groupName , size_t timeStep, const UnitSystem& unit_system);
         void addWell(const std::string& wellName, const DeckRecord& record, size_t timeStep, Connection::Order connection_order, const UnitSystem& unit_system);
         void handleUDQ(const DeckKeyword& keyword, size_t currentStep);

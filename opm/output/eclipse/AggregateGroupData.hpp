@@ -32,7 +32,7 @@
 namespace Opm {
 class Schedule;
 class SummaryState;
-class Group2;
+class Group;
 } // Opm
 
 namespace Opm { namespace RestartIO { namespace Helpers {

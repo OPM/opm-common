@@ -95,7 +95,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Schedule/Action/Condition.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/ArrayDimChecker.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Events.cpp
-    src/opm/parser/eclipse/EclipseState/Schedule/Group/Group2.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/Group/Group.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Group/GuideRate.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Group/GuideRateConfig.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Group/GuideRateModel.cpp
@@ -116,7 +116,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Schedule/Tuning.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Well/Connection.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/eval_uda.cpp
-    src/opm/parser/eclipse/EclipseState/Schedule/Well/Well2.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/Well/Well.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Well/WellConnections.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Well/WList.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Well/WListManager.cpp
@@ -605,7 +605,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Schedule/Well/Connection.hpp
        opm/parser/eclipse/EclipseState/Schedule/Well/ProductionControls.hpp
        opm/parser/eclipse/EclipseState/Schedule/Well/InjectionControls.hpp
-       opm/parser/eclipse/EclipseState/Schedule/Well/Well2.hpp
+       opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp
        opm/parser/eclipse/EclipseState/Schedule/Well/WList.hpp
        opm/parser/eclipse/EclipseState/Schedule/Well/WListManager.hpp
        opm/parser/eclipse/EclipseState/Schedule/Well/WellEconProductionLimits.hpp
@@ -623,7 +623,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp
        opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp
        opm/parser/eclipse/EclipseState/Schedule/Group/GTNode.hpp
-       opm/parser/eclipse/EclipseState/Schedule/Group/Group2.hpp
+       opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp
        opm/parser/eclipse/EclipseState/Schedule/Group/GuideRate.hpp
        opm/parser/eclipse/EclipseState/Schedule/Group/GConSale.hpp
        opm/parser/eclipse/EclipseState/Schedule/Group/GConSump.hpp

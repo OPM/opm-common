@@ -54,7 +54,7 @@ namespace {
     }
 
     template <class ConnOp>
-    void connectionLoop(const std::vector<Opm::Well2>& wells,
+    void connectionLoop(const std::vector<Opm::Well>& wells,
                         const Opm::EclipseGrid&        grid,
                         ConnOp&&                       connOp)
     {
@@ -278,7 +278,7 @@ captureDeclaredConnData(const Schedule&        sched,
                         const data::WellRates& xw,
                         const std::size_t      sim_step)
 {
-    const auto& wells = sched.getWells2(sim_step);
+    const auto& wells = sched.getWells(sim_step);
     //
     // construct a composite vector of connection objects  holding
     // rates for all open connectons
@@ -313,7 +313,7 @@ captureDeclaredConnData(const Schedule&        sched,
     }
 
     connectionLoop(wells, grid, [&units, &allWellConnections, this]
-        (const Well2&      well, const std::size_t wellID,
+        (const Well&      well, const std::size_t wellID,
          const Connection& conn, const std::size_t connID) -> void
     {
         auto ic = this->iConn_(wellID, connID);

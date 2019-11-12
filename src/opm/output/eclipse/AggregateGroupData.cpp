@@ -25,7 +25,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GTNode.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Group/Group2.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp>
 
 #include <algorithm>
 #include <cstddef>
@@ -56,7 +56,7 @@ int nwgmax(const std::vector<int>& inteHead)
 
 
 template <typename GroupOp>
-void groupLoop(const std::vector<const Opm::Group2*>& groups,
+void groupLoop(const std::vector<const Opm::Group*>& groups,
                GroupOp&&                             groupOp)
 {
     auto groupID = std::size_t{0};
@@ -70,14 +70,14 @@ void groupLoop(const std::vector<const Opm::Group2*>& groups,
 }
 
 
-int currentGroupLevel(const Opm::Schedule& sched, const Opm::Group2& group, const size_t simStep)
+int currentGroupLevel(const Opm::Schedule& sched, const Opm::Group& group, const size_t simStep)
 {
     if (group.defined( simStep )) {
         auto current = group;
         int level = 0;
         while (current.name() != "FIELD") {
             level += 1;
-            current = sched.getGroup2(current.parent(), simStep);
+            current = sched.getGroup(current.parent(), simStep);
         }
 
         return level;
@@ -88,7 +88,7 @@ int currentGroupLevel(const Opm::Schedule& sched, const Opm::Group2& group, cons
     }
 }
 
-int groupType(const Opm::Group2& group) {
+int groupType(const Opm::Group& group) {
     if (group.wellgroup())
         return 0;
     else
@@ -96,7 +96,7 @@ int groupType(const Opm::Group2& group) {
 }
 
 
-std::size_t groupSize(const Opm::Group2& group) {
+std::size_t groupSize(const Opm::Group& group) {
     if (group.wellgroup())
         return group.wells().size();
     else
@@ -124,7 +124,7 @@ allocate(const std::vector<int>& inteHead)
 
 template <class IGrpArray>
 void staticContrib(const Opm::Schedule&    sched,
-                   const Opm::Group2&      group,
+                   const Opm::Group&      group,
                    const int               nwgmax,
                    const int               ngmaxz,
                    const std::size_t       simStep,
@@ -135,14 +135,14 @@ void staticContrib(const Opm::Schedule&    sched,
         //group has child wells
         //store the well number (sequence index) in iGrp according to the sequence they are defined
         for (const auto& well_name : group.wells()) {
-            const auto& well = sched.getWell2(well_name, simStep);
+            const auto& well = sched.getWell(well_name, simStep);
             iGrp[igrpCount] = well.seqIndex() + 1;
             igrpCount += 1;
         }
     } else if (!group.groups().empty()) {
         int igrpCount = 0;
         for (const auto& group_name : group.groups()) {
-            const auto& child_group = sched.getGroup2(group_name, simStep);
+            const auto& child_group = sched.getGroup(group_name, simStep);
             iGrp[igrpCount] = child_group.insert_index();
             igrpCount += 1;
         }
@@ -186,7 +186,7 @@ void staticContrib(const Opm::Schedule&    sched,
     if (group.name() == "FIELD")
         iGrp[nwgmax+28] = 0;
     else {
-        const auto& parent_group = sched.getGroup2(group.parent(), simStep);
+        const auto& parent_group = sched.getGroup(group.parent(), simStep);
         if (parent_group.name() == "FIELD")
             iGrp[nwgmax+28] = ngmaxz;
         else
@@ -283,7 +283,7 @@ void dynamicContrib(const std::vector<std::string>&      restart_group_keys,
                     const std::vector<std::string>&      restart_field_keys,
                     const std::map<std::string, size_t>& groupKeyToIndex,
                     const std::map<std::string, size_t>& fieldKeyToIndex,
-                    const Opm::Group2&                    group,
+                    const Opm::Group&                    group,
                     const Opm::SummaryState&             sumState,
                     XGrpArray&                           xGrp)
 {
@@ -329,7 +329,7 @@ allocate(const std::vector<int>& inteHead)
 }
 
 template <class ZGroupArray>
-void staticContrib(const Opm::Group2& group, ZGroupArray& zGroup)
+void staticContrib(const Opm::Group& group, ZGroupArray& zGroup)
 {
     zGroup[0] = group.name();
 }
@@ -359,16 +359,16 @@ captureDeclaredGroupData(const Opm::Schedule&                 sched,
                          const Opm::SummaryState&             sumState,
                          const std::vector<int>&              inteHead)
 {
-    std::vector<const Opm::Group2*> curGroups(ngmaxz(inteHead), nullptr);
+    std::vector<const Opm::Group*> curGroups(ngmaxz(inteHead), nullptr);
     for (const auto& group_name : sched.groupNames(simStep)) {
-        const auto& group = sched.getGroup2(group_name, simStep);
+        const auto& group = sched.getGroup(group_name, simStep);
         int ind = (group.name() == "FIELD")
             ? ngmaxz(inteHead)-1 : group.insert_index()-1;
         curGroups[ind] = std::addressof(group);
     }
 
     groupLoop(curGroups, [&sched, simStep, this]
-              (const Group2& group, const std::size_t groupID) -> void
+              (const Group& group, const std::size_t groupID) -> void
                          {
                              auto ig = this->iGroup_[groupID];
 
@@ -378,7 +378,7 @@ captureDeclaredGroupData(const Opm::Schedule&                 sched,
 
     // Define Static Contributions to SGrp Array.
     groupLoop(curGroups,
-              [this](const Group2& /* group */, const std::size_t groupID) -> void
+              [this](const Group& /* group */, const std::size_t groupID) -> void
               {
                   auto sw = this->sGroup_[groupID];
                   SGrp::staticContrib(sw);
@@ -386,7 +386,7 @@ captureDeclaredGroupData(const Opm::Schedule&                 sched,
 
     // Define Dynamic Contributions to XGrp Array.
     groupLoop(curGroups, [&sumState, this]
-              (const Group2& group, const std::size_t groupID) -> void
+              (const Group& group, const std::size_t groupID) -> void
                          {
                              auto xg = this->xGroup_[groupID];
 
@@ -397,7 +397,7 @@ captureDeclaredGroupData(const Opm::Schedule&                 sched,
 
     // Define Static Contributions to ZGrp Array.
     groupLoop(curGroups, [this, &inteHead]
-              (const Group2& group, const std::size_t /* groupID */) -> void
+              (const Group& group, const std::size_t /* groupID */) -> void
                          {
                              std::size_t group_index = group.insert_index() - 1;
                              if (group.name() == "FIELD")

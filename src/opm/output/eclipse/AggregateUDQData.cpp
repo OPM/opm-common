@@ -275,7 +275,7 @@ namespace {
 
         template <class DUDGArray>
         void staticContrib(const Opm::SummaryState& st,
-                           const std::vector<const Opm::Group2*> groups,
+                           const std::vector<const Opm::Group*> groups,
                            const std::string udq,
                            const std::size_t ngmaxz,
                            DUDGArray&   dUdg)
@@ -352,13 +352,13 @@ std::pair<bool, int > findInVector(const std::vector<T>  & vecOfElements, const 
 }
 
 // Make ordered list of current groups
-const std::vector<const Opm::Group2*> currentGroups(const Opm::Schedule& sched,
+const std::vector<const Opm::Group*> currentGroups(const Opm::Schedule& sched,
                                                     const std::size_t simStep,
                                                     const std::vector<int>& inteHead )
 {
-    std::vector<const Opm::Group2*> curGroups(ngmaxz(inteHead), nullptr);
+    std::vector<const Opm::Group*> curGroups(ngmaxz(inteHead), nullptr);
     for (const auto& group_name : sched.groupNames(simStep)) {
-        const auto& group = sched.getGroup2(group_name, simStep);
+        const auto& group = sched.getGroup(group_name, simStep);
         
         //The FIELD group is the first group according to the insert_index()
         //In the Eclipse compatible restart file, the FILED group is put at the end of the list of groups (ngmaxz(inteHead)-1)
@@ -402,11 +402,11 @@ const std::vector<int> iuap_data(const Opm::Schedule& sched,
         auto& ctrl = iuap[ind].control;
         wg_key = Opm::UDQ::keyword(ctrl);
         if ((wg_key == Opm::UDAKeyword::WCONPROD) || (wg_key == Opm::UDAKeyword::WCONINJE)) {
-            const auto& well = sched.getWell2(iuap[ind].wgname, simStep);
+            const auto& well = sched.getWell(iuap[ind].wgname, simStep);
             wg_no.push_back(well.seqIndex());
         }
         else if ((wg_key == Opm::UDAKeyword::GCONPROD) || (wg_key == Opm::UDAKeyword::GCONINJE)) {
-            const auto& group = sched.getGroup2(iuap[ind].wgname, simStep);
+            const auto& group = sched.getGroup(iuap[ind].wgname, simStep);
             wg_no.push_back(group.insert_index());
         }
         else {

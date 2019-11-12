@@ -26,7 +26,7 @@
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Group/Group2.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellConnections.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ArrayDimChecker.hpp>
@@ -60,7 +60,7 @@ namespace {
         {
             auto nconn = std::size_t{0};
             for (const auto& well_name : sched.wellNames()) {
-                const auto& well = sched.getWell2atEnd(well_name);
+                const auto& well = sched.getWellatEnd(well_name);
                 nconn = std::max(nconn, well.getConnections().size());
             }
 
@@ -158,7 +158,7 @@ Opm::maxGroupSize(const Opm::Schedule& sched,
     int nwgmax = 0;
 
     for (const auto& gnm : sched.groupNames(step)) {
-        const auto& grp = sched.getGroup2(gnm, step);
+        const auto& grp = sched.getGroup(gnm, step);
         const auto  gsz = grp.wellgroup()
             ? grp.numWells() : grp.groups().size();
 

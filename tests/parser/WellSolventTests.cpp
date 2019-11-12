@@ -205,10 +205,10 @@ BOOST_AUTO_TEST_CASE(TestDynamicWSOLVENT) {
     const auto& record = keyword.getRecord(0);
     const std::string& well_name = record.getItem("WELL").getTrimmedString(0);
     BOOST_CHECK_EQUAL(well_name, "W_1");
-    BOOST_CHECK_EQUAL(schedule.getWell2("W_1", 0).getSolventFraction(),0); //default 0
-    BOOST_CHECK_EQUAL(schedule.getWell2("W_1", 1).getSolventFraction(),1);
-    BOOST_CHECK_EQUAL(schedule.getWell2("W_1", 2).getSolventFraction(),1);
-    BOOST_CHECK_EQUAL(schedule.getWell2("W_1", 3).getSolventFraction(),0);
+    BOOST_CHECK_EQUAL(schedule.getWell("W_1", 0).getSolventFraction(),0); //default 0
+    BOOST_CHECK_EQUAL(schedule.getWell("W_1", 1).getSolventFraction(),1);
+    BOOST_CHECK_EQUAL(schedule.getWell("W_1", 2).getSolventFraction(),1);
+    BOOST_CHECK_EQUAL(schedule.getWell("W_1", 3).getSolventFraction(),0);
 }
 
 BOOST_AUTO_TEST_CASE(TestOilInjector) {

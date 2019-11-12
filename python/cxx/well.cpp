@@ -1,22 +1,22 @@
 #include <tuple>
 
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well2.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
 #include <pybind11/stl.h>
 #include "export.hpp"
 
 
 namespace {
 
-    std::vector<Connection> connections( const Well2& w ) {
+    std::vector<Connection> connections( const Well& w ) {
         const auto& well_connections = w.getConnections();
         return std::vector<Connection>(well_connections.begin(), well_connections.end());
     }
 
-    std::string status( const Well2& w )  {
-        return Well2::Status2String( w.getStatus() );
+    std::string status( const Well& w )  {
+        return Well::Status2String( w.getStatus() );
     }
 
-    std::string preferred_phase( const Well2& w ) {
+    std::string preferred_phase( const Well& w ) {
         switch( w.getPreferredPhase() ) {
             case Phase::OIL:   return "OIL";
             case Phase::GAS:   return "GAS";
@@ -25,7 +25,7 @@ namespace {
         }
     }
 
-    std::tuple<int, int, double> get_pos( const Well2& w ) {
+    std::tuple<int, int, double> get_pos( const Well& w ) {
         return std::make_tuple(w.getHeadI(), w.getHeadJ(), w.getRefDepth());
     }
 
@@ -33,17 +33,17 @@ namespace {
 
 void python::common::export_Well(py::module& module) {
 
-    py::class_< Well2 >( module, "Well")
-        .def_property_readonly( "name", &Well2::name )
+    py::class_< Well >( module, "Well")
+        .def_property_readonly( "name", &Well::name )
         .def_property_readonly( "preferred_phase", &preferred_phase )
         .def( "pos",             &get_pos )
         .def( "status",          &status )
-        .def( "isdefined",       &Well2::hasBeenDefined )
-        .def( "isinjector",      &Well2::isInjector )
-        .def( "isproducer",      &Well2::isProducer )
-        .def( "group",           &Well2::groupName )
-        .def( "guide_rate",      &Well2::getGuideRate )
-        .def( "available_gctrl", &Well2::isAvailableForGroupControl )
+        .def( "isdefined",       &Well::hasBeenDefined )
+        .def( "isinjector",      &Well::isInjector )
+        .def( "isproducer",      &Well::isProducer )
+        .def( "group",           &Well::groupName )
+        .def( "guide_rate",      &Well::getGuideRate )
+        .def( "available_gctrl", &Well::isAvailableForGroupControl )
         .def( "connections",     &connections );
 
 }

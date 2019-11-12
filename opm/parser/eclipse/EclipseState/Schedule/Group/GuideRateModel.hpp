@@ -21,8 +21,8 @@
 #define GUIDE_RATE_MODEL_HPP
 
 #include <opm/parser/eclipse/Deck/UDAValue.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Group/Group2.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well2.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
 
 namespace Opm {
 
@@ -63,8 +63,8 @@ public:
     bool operator!=(const GuideRateModel& other) const;
     Target target() const;
 
-    static Target convert_target(Group2::GuideRateTarget group_target);
-    static Target convert_target(Well2::GuideRateTarget well_target);
+    static Target convert_target(Group::GuideRateTarget group_target);
+    static Target convert_target(Well::GuideRateTarget well_target);
     static double pot(Target target, double oil_pot, double gas_pot, double wat_pot);
 private:
     double pot(double oil_pot, double gas_pot, double wat_pot) const;

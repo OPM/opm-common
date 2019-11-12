@@ -207,7 +207,7 @@ BOOST_AUTO_TEST_CASE(loadCOMPDATTESTSPE1) {
     Opm::Schedule sched(deck, state);
     const auto& units = deck.getActiveUnitSystem();
 
-    const auto& prod = sched.getWell2("PROD", 0);
+    const auto& prod = sched.getWell("PROD", 0);
     const auto& connections = prod.getConnections();
     const auto& conn0 = connections[0];
     /* Expected values come from Eclipse simulation. */
@@ -320,7 +320,7 @@ BOOST_AUTO_TEST_CASE(loadCOMPDATTESTSPE9) {
   {"PRODU26" ,3 ,     0.176,    118.6}};
 
    for (const auto& ec : expected) {
-     const auto& well = sched.getWell2(ec.well, 0);
+     const auto& well = sched.getWell(ec.well, 0);
        const auto& connections = well.getConnections();
        const auto& conn = connections[ec.ci - 1];
 

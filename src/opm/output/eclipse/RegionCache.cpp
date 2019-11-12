@@ -33,7 +33,7 @@ namespace out {
 RegionCache::RegionCache(const Eclipse3DProperties& properties, const EclipseGrid& grid, const Schedule& schedule) {
     const auto& fipnum_data = properties.getIntGridProperty("FIPNUM").getData();
 
-    const auto& wells = schedule.getWells2atEnd();
+    const auto& wells = schedule.getWellsatEnd();
     for (const auto& well : wells) {
         const auto& connections = well.getConnections( );
         for (const auto& c : connections) {

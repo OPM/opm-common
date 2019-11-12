@@ -25,8 +25,8 @@
 #include <memory>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GuideRateModel.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Group/Group2.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well2.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
 
 namespace Opm {
 
@@ -34,30 +34,30 @@ namespace Opm {
 class GuideRateConfig {
 public:
 
-struct Well {
+ struct WellTarget {
     double guide_rate;
-    Well2::GuideRateTarget target;
+    Well::GuideRateTarget target;
     double scaling_factor;
 };
 
-struct Group {
+struct GroupTarget {
     double guide_rate;
-    Group2::GuideRateTarget target;
+    Group::GuideRateTarget target;
 };
 
     const GuideRateModel& model() const;
     bool has_model() const;
     bool update_model(const GuideRateModel& model);
-    void update_well(const Well2& well);
-    void update_group(const Group2& group);
-    const Well& well(const std::string& well) const;
-    const Group& group(const std::string& group) const;
+    void update_well(const Well& well);
+    void update_group(const Group& group);
+    const WellTarget& well(const std::string& well) const;
+    const GroupTarget& group(const std::string& group) const;
     bool has_well(const std::string& well) const;
     bool has_group(const std::string& group) const;
 private:
     std::shared_ptr<GuideRateModel> m_model;
-    std::unordered_map<std::string, Well> wells;
-    std::unordered_map<std::string, Group> groups;
+    std::unordered_map<std::string, WellTarget> wells;
+    std::unordered_map<std::string, GroupTarget> groups;
 };
 
 }

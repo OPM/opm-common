@@ -21,7 +21,7 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/W.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/updatingConnectionsWithSegments.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well2.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQActive.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellProductionProperties.hpp>
@@ -74,7 +74,7 @@ namespace {
 }
 
 
-Well2::Well2(const std::string& wname_arg,
+Well::Well(const std::string& wname_arg,
              const std::string& gname,
              std::size_t init_step_arg,
              std::size_t insert_index_arg,
@@ -102,7 +102,7 @@ Well2::Well2(const std::string& wname_arg,
     allow_cross_flow(DeckItem::to_bool(ParserKeywords::WELSPECS::CROSSFLOW::defaultValue)),
     automatic_shutin( ParserKeywords::WELSPECS::CROSSFLOW::defaultValue == "SHUT"),
     producer(true),
-    guide_rate({true, -1, Well2::GuideRateTarget::UNDEFINED,ParserKeywords::WGRUPCON::SCALING_FACTOR::defaultValue}),
+    guide_rate({true, -1, Well::GuideRateTarget::UNDEFINED,ParserKeywords::WGRUPCON::SCALING_FACTOR::defaultValue}),
     efficiency_factor(1.0),
     solvent_fraction(0.0),
     econ_limits(std::make_shared<WellEconProductionLimits>()),
@@ -118,7 +118,7 @@ Well2::Well2(const std::string& wname_arg,
     this->updateProduction(p);
 }
 
-bool Well2::updateEfficiencyFactor(double efficiency_factor_arg) {
+bool Well::updateEfficiencyFactor(double efficiency_factor_arg) {
     if (this->efficiency_factor != efficiency_factor_arg) {
         this->efficiency_factor = efficiency_factor_arg;
         return true;
@@ -127,7 +127,7 @@ bool Well2::updateEfficiencyFactor(double efficiency_factor_arg) {
     return false;
 }
 
-bool Well2::updateWellGuideRate(double guide_rate_arg) {
+bool Well::updateWellGuideRate(double guide_rate_arg) {
     if (this->guide_rate.guide_rate != guide_rate_arg) {
         this->guide_rate.guide_rate = guide_rate_arg;
         return true;
@@ -137,7 +137,7 @@ bool Well2::updateWellGuideRate(double guide_rate_arg) {
 }
 
 
-bool Well2::updateFoamProperties(std::shared_ptr<WellFoamProperties> foam_properties_arg) {
+bool Well::updateFoamProperties(std::shared_ptr<WellFoamProperties> foam_properties_arg) {
     if (this->producer) {
         throw std::runtime_error("Not allowed to set foam injection properties for well " + name()
                                  + " since it is a production well");
@@ -151,7 +151,7 @@ bool Well2::updateFoamProperties(std::shared_ptr<WellFoamProperties> foam_proper
 }
 
 
-bool Well2::updatePolymerProperties(std::shared_ptr<WellPolymerProperties> polymer_properties_arg) {
+bool Well::updatePolymerProperties(std::shared_ptr<WellPolymerProperties> polymer_properties_arg) {
     if (this->producer) {
         throw std::runtime_error("Not allowed to set polymer injection properties for well " + name() +
                                  " since it is a production well");
@@ -165,7 +165,7 @@ bool Well2::updatePolymerProperties(std::shared_ptr<WellPolymerProperties> polym
 }
 
 
-bool Well2::updateEconLimits(std::shared_ptr<WellEconProductionLimits> econ_limits_arg) {
+bool Well::updateEconLimits(std::shared_ptr<WellEconProductionLimits> econ_limits_arg) {
     if (*this->econ_limits != *econ_limits_arg) {
         this->econ_limits = econ_limits_arg;
         return true;
@@ -174,17 +174,17 @@ bool Well2::updateEconLimits(std::shared_ptr<WellEconProductionLimits> econ_limi
     return false;
 }
 
-void Well2::switchToProducer() {
+void Well::switchToProducer() {
     auto p = std::make_shared<WellInjectionProperties>(this->getInjectionProperties());
 
     p->BHPLimit.reset( 0 );
-    p->dropInjectionControl( Opm::Well2::InjectorCMode::BHP );
+    p->dropInjectionControl( Opm::Well::InjectorCMode::BHP );
     this->updateInjection( p );
     this->updateProducer(true);
 }
 
 
-void Well2::switchToInjector() {
+void Well::switchToInjector() {
     auto p = std::make_shared<WellProductionProperties>(getProductionProperties());
 
     p->BHPLimit.assert_numeric();
@@ -194,7 +194,7 @@ void Well2::switchToInjector() {
     this->updateProducer( false );
 }
 
-bool Well2::updateInjection(std::shared_ptr<WellInjectionProperties> injection_arg) {
+bool Well::updateInjection(std::shared_ptr<WellInjectionProperties> injection_arg) {
     if (this->producer)
         this->switchToInjector( );
 
@@ -206,7 +206,7 @@ bool Well2::updateInjection(std::shared_ptr<WellInjectionProperties> injection_a
     return false;
 }
 
-bool Well2::updateProduction(std::shared_ptr<WellProductionProperties> production_arg) {
+bool Well::updateProduction(std::shared_ptr<WellProductionProperties> production_arg) {
     if (!this->producer)
         this->switchToProducer( );
 
@@ -218,7 +218,7 @@ bool Well2::updateProduction(std::shared_ptr<WellProductionProperties> productio
     return false;
 }
 
-bool Well2::updateTracer(std::shared_ptr<WellTracerProperties> tracer_properties_arg) {
+bool Well::updateTracer(std::shared_ptr<WellTracerProperties> tracer_properties_arg) {
     if (*this->tracer_properties != *tracer_properties_arg) {
         this->tracer_properties = tracer_properties_arg;
         return true;
@@ -227,7 +227,7 @@ bool Well2::updateTracer(std::shared_ptr<WellTracerProperties> tracer_properties
     return false;
 }
 
-bool Well2::updateWellGuideRate(bool available, double guide_rate_arg, GuideRateTarget guide_phase, double scale_factor) {
+bool Well::updateWellGuideRate(bool available, double guide_rate_arg, GuideRateTarget guide_phase, double scale_factor) {
     bool update = false;
     if (this->guide_rate.available != available) {
         this->guide_rate.available = available;
@@ -253,7 +253,7 @@ bool Well2::updateWellGuideRate(bool available, double guide_rate_arg, GuideRate
 }
 
 
-bool Well2::updateProducer(bool producer_arg) {
+bool Well::updateProducer(bool producer_arg) {
     if (this->producer != producer_arg) {
         this->producer = producer_arg;
         return true;
@@ -262,7 +262,7 @@ bool Well2::updateProducer(bool producer_arg) {
 }
 
 
-bool Well2::updateGroup(const std::string& group_arg) {
+bool Well::updateGroup(const std::string& group_arg) {
     if (this->group_name != group_arg) {
         this->group_name = group_arg;
         return true;
@@ -271,7 +271,7 @@ bool Well2::updateGroup(const std::string& group_arg) {
 }
 
 
-bool Well2::updateHead(int I, int J) {
+bool Well::updateHead(int I, int J) {
     bool update = false;
     if (this->headI != I) {
         this->headI = I;
@@ -287,7 +287,7 @@ bool Well2::updateHead(int I, int J) {
 }
 
 
-bool Well2::updateStatus(Status status_arg) {
+bool Well::updateStatus(Status status_arg) {
     if (this->status != status_arg) {
         this->status = status_arg;
         return true;
@@ -297,7 +297,7 @@ bool Well2::updateStatus(Status status_arg) {
 }
 
 
-bool Well2::updateRefDepth(double ref_depth_arg) {
+bool Well::updateRefDepth(double ref_depth_arg) {
     if (this->ref_depth != ref_depth_arg) {
         this->ref_depth = ref_depth_arg;
         return true;
@@ -306,7 +306,7 @@ bool Well2::updateRefDepth(double ref_depth_arg) {
     return false;
 }
 
-bool Well2::updateDrainageRadius(double drainage_radius_arg) {
+bool Well::updateDrainageRadius(double drainage_radius_arg) {
     if (this->drainage_radius != drainage_radius_arg) {
         this->drainage_radius = drainage_radius_arg;
         return true;
@@ -316,7 +316,7 @@ bool Well2::updateDrainageRadius(double drainage_radius_arg) {
 }
 
 
-bool Well2::updateCrossFlow(bool allow_cross_flow_arg) {
+bool Well::updateCrossFlow(bool allow_cross_flow_arg) {
     if (this->allow_cross_flow != allow_cross_flow_arg) {
         this->allow_cross_flow = allow_cross_flow_arg;
         return true;
@@ -325,7 +325,7 @@ bool Well2::updateCrossFlow(bool allow_cross_flow_arg) {
     return false;
 }
 
-bool Well2::updateAutoShutin(bool auto_shutin) {
+bool Well::updateAutoShutin(bool auto_shutin) {
     if (this->automatic_shutin != auto_shutin) {
         this->automatic_shutin = auto_shutin;
         return true;
@@ -335,7 +335,7 @@ bool Well2::updateAutoShutin(bool auto_shutin) {
 }
 
 
-bool Well2::updateConnections(const std::shared_ptr<WellConnections> connections_arg) {
+bool Well::updateConnections(const std::shared_ptr<WellConnections> connections_arg) {
     if( this->ordering  == Connection::Order::TRACK)
         connections_arg->orderConnections( this->headI, this->headJ );
 
@@ -351,7 +351,7 @@ bool Well2::updateConnections(const std::shared_ptr<WellConnections> connections
 }
 
 
-bool Well2::updateSolventFraction(double solvent_fraction_arg) {
+bool Well::updateSolventFraction(double solvent_fraction_arg) {
     if (this->solvent_fraction != solvent_fraction_arg) {
         this->solvent_fraction = solvent_fraction_arg;
         return true;
@@ -361,34 +361,34 @@ bool Well2::updateSolventFraction(double solvent_fraction_arg) {
 }
 
 
-bool Well2::handleCOMPSEGS(const DeckKeyword& keyword, const EclipseGrid& grid,
+bool Well::handleCOMPSEGS(const DeckKeyword& keyword, const EclipseGrid& grid,
                            const ParseContext& parseContext, ErrorGuard& errors) {
     std::shared_ptr<WellConnections> new_connection_set( newConnectionsWithSegments(keyword, *this->connections, *this->segments , grid,
                                                                                     parseContext, errors) );
     return this->updateConnections(new_connection_set);
 }
 
-const std::string& Well2::groupName() const {
+const std::string& Well::groupName() const {
     return this->group_name;
 }
 
 
-bool Well2::isMultiSegment() const {
+bool Well::isMultiSegment() const {
     if (this->segments)
         return true;
     return false;
 }
 
-bool Well2::isProducer() const {
+bool Well::isProducer() const {
     return this->producer;
 }
 
-bool Well2::isInjector() const {
+bool Well::isInjector() const {
     return !this->producer;
 }
 
 
-Well2::InjectorType Well2::injectorType() const {
+Well::InjectorType Well::injectorType() const {
     if (this->producer)
         throw std::runtime_error("Can not access injectorType attribute of a producer");
 
@@ -397,54 +397,54 @@ Well2::InjectorType Well2::injectorType() const {
 
 
 
-bool Well2::isAvailableForGroupControl() const {
+bool Well::isAvailableForGroupControl() const {
     return this->guide_rate.available;
 }
 
-double Well2::getGuideRate() const {
+double Well::getGuideRate() const {
     return this->guide_rate.guide_rate;
 }
 
-Well2::GuideRateTarget Well2::getGuideRatePhase() const {
+Well::GuideRateTarget Well::getGuideRatePhase() const {
     return this->guide_rate.guide_phase;
 }
 
-double Well2::getGuideRateScalingFactor() const {
+double Well::getGuideRateScalingFactor() const {
     return this->guide_rate.scale_factor;
 }
 
 
-double Well2::getEfficiencyFactor() const {
+double Well::getEfficiencyFactor() const {
     return this->efficiency_factor;
 }
 
-double Well2::getSolventFraction() const {
+double Well::getSolventFraction() const {
     return this->solvent_fraction;
 }
 
 
 
-std::size_t Well2::seqIndex() const {
+std::size_t Well::seqIndex() const {
     return this->insert_index;
 }
 
-int Well2::getHeadI() const {
+int Well::getHeadI() const {
     return this->headI;
 }
 
-int Well2::getHeadJ() const {
+int Well::getHeadJ() const {
     return this->headJ;
 }
 
-bool Well2::getAutomaticShutIn() const {
+bool Well::getAutomaticShutIn() const {
     return this->automatic_shutin;
 }
 
-bool Well2::getAllowCrossFlow() const {
+bool Well::getAllowCrossFlow() const {
     return this->allow_cross_flow;
 }
 
-double Well2::getRefDepth() const {
+double Well::getRefDepth() const {
     if( this->ref_depth >= 0.0 )
         return this->ref_depth;
 
@@ -458,58 +458,58 @@ double Well2::getRefDepth() const {
 }
 
 
-double Well2::getDrainageRadius() const {
+double Well::getDrainageRadius() const {
     return this->drainage_radius;
 }
 
 
-const std::string& Well2::name() const {
+const std::string& Well::name() const {
     return this->wname;
 }
 
 
-const WellConnections& Well2::getConnections() const {
+const WellConnections& Well::getConnections() const {
     return *this->connections;
 }
 
-const WellFoamProperties& Well2::getFoamProperties() const {
+const WellFoamProperties& Well::getFoamProperties() const {
     return *this->foam_properties;
 }
 
-const WellPolymerProperties& Well2::getPolymerProperties() const {
+const WellPolymerProperties& Well::getPolymerProperties() const {
     return *this->polymer_properties;
 }
 
 
-const WellTracerProperties& Well2::getTracerProperties() const {
+const WellTracerProperties& Well::getTracerProperties() const {
     return *this->tracer_properties;
 }
 
-const WellEconProductionLimits& Well2::getEconLimits() const {
+const WellEconProductionLimits& Well::getEconLimits() const {
     return *this->econ_limits;
 }
 
-const Well2::WellProductionProperties& Well2::getProductionProperties() const {
+const Well::WellProductionProperties& Well::getProductionProperties() const {
     return *this->production;
 }
 
-const WellSegments& Well2::getSegments() const {
+const WellSegments& Well::getSegments() const {
     if (this->segments)
         return *this->segments;
     else
         throw std::logic_error("Asked for segment information in not MSW well: " + this->name());
 }
 
-const Well2::WellInjectionProperties& Well2::getInjectionProperties() const {
+const Well::WellInjectionProperties& Well::getInjectionProperties() const {
     return *this->injection;
 }
 
-Well2::Status Well2::getStatus() const {
+Well::Status Well::getStatus() const {
     return this->status;
 }
 
 
-std::map<int, std::vector<Connection>> Well2::getCompletions() const {
+std::map<int, std::vector<Connection>> Well::getCompletions() const {
     std::map<int, std::vector<Connection>> completions;
 
     for (const auto& conn : *this->connections) {
@@ -524,11 +524,11 @@ std::map<int, std::vector<Connection>> Well2::getCompletions() const {
     return completions;
 }
 
-Phase Well2::getPreferredPhase() const {
+Phase Well::getPreferredPhase() const {
     return this->phase;
 }
 
-bool Well2::handleWELOPEN(const DeckRecord& record, Connection::State state_arg) {
+bool Well::handleWELOPEN(const DeckRecord& record, Connection::State state_arg) {
 
     auto match = [=]( const Connection &c) -> bool {
         if (!match_eq(c.getI(), record, "I" , -1)) return false;
@@ -551,7 +551,7 @@ bool Well2::handleWELOPEN(const DeckRecord& record, Connection::State state_arg)
     return this->updateConnections(new_connections);
 }
 
-bool Well2::handleCOMPLUMP(const DeckRecord& record) {
+bool Well::handleCOMPLUMP(const DeckRecord& record) {
 
     auto match = [=]( const Connection &c) -> bool {
         if (!match_eq(c.getI(), record, "I" , -1))  return false;
@@ -579,7 +579,7 @@ bool Well2::handleCOMPLUMP(const DeckRecord& record) {
 
 
 
-bool Well2::handleWPIMULT(const DeckRecord& record) {
+bool Well::handleWPIMULT(const DeckRecord& record) {
 
     auto match = [=]( const Connection &c) -> bool {
         if (!match_ge(c.complnum(), record, "FIRST")) return false;
@@ -605,7 +605,7 @@ bool Well2::handleWPIMULT(const DeckRecord& record) {
 }
 
 
-bool Well2::handleWELSEGS(const DeckKeyword& keyword) {
+bool Well::handleWELSEGS(const DeckKeyword& keyword) {
     if( this->segments )
         throw std::logic_error("re-entering WELSEGS for a well is not supported yet!!.");
 
@@ -621,16 +621,16 @@ bool Well2::handleWELSEGS(const DeckKeyword& keyword) {
         return false;
 }
 
-void Well2::filterConnections(const EclipseGrid& grid) {
+void Well::filterConnections(const EclipseGrid& grid) {
     this->connections->filter(grid);
 }
 
 
-std::size_t Well2::firstTimeStep() const {
+std::size_t Well::firstTimeStep() const {
     return this->init_step;
 }
 
-bool Well2::hasBeenDefined(size_t timeStep) const {
+bool Well::hasBeenDefined(size_t timeStep) const {
     if (timeStep < this->init_step)
         return false;
     else
@@ -639,7 +639,7 @@ bool Well2::hasBeenDefined(size_t timeStep) const {
 
 
 
-bool Well2::canOpen() const {
+bool Well::canOpen() const {
     if (this->allow_cross_flow)
         return true;
 
@@ -668,12 +668,12 @@ bool Well2::canOpen() const {
 }
 
 
-bool Well2::predictionMode() const {
+bool Well::predictionMode() const {
     return this->prediction_mode;
 }
 
 
-bool Well2::updatePrediction(bool prediction_mode_arg) {
+bool Well::updatePrediction(bool prediction_mode_arg) {
     if (this->prediction_mode != prediction_mode_arg) {
         this->prediction_mode = prediction_mode_arg;
         return true;
@@ -683,11 +683,11 @@ bool Well2::updatePrediction(bool prediction_mode_arg) {
 }
 
 
-Connection::Order Well2::getWellConnectionOrdering() const {
+Connection::Order Well::getWellConnectionOrdering() const {
     return this->ordering;
 }
 
-double Well2::production_rate(const SummaryState& st, Phase prod_phase) const {
+double Well::production_rate(const SummaryState& st, Phase prod_phase) const {
     if( !this->isProducer() ) return 0.0;
 
     const auto controls = this->productionControls(st);
@@ -712,21 +712,21 @@ double Well2::production_rate(const SummaryState& st, Phase prod_phase) const {
                             "This is likely a programming error." );
 }
 
-double Well2::injection_rate(const SummaryState& st, Phase phase_arg) const {
+double Well::injection_rate(const SummaryState& st, Phase phase_arg) const {
     if( !this->isInjector() ) return 0.0;
     const auto controls = this->injectionControls(st);
 
     const auto type = controls.injector_type;
 
-    if( phase_arg == Phase::WATER && type != Well2::InjectorType::WATER ) return 0.0;
-    if( phase_arg == Phase::OIL   && type != Well2::InjectorType::OIL   ) return 0.0;
-    if( phase_arg == Phase::GAS   && type != Well2::InjectorType::GAS   ) return 0.0;
+    if( phase_arg == Phase::WATER && type != Well::InjectorType::WATER ) return 0.0;
+    if( phase_arg == Phase::OIL   && type != Well::InjectorType::OIL   ) return 0.0;
+    if( phase_arg == Phase::GAS   && type != Well::InjectorType::GAS   ) return 0.0;
 
     return controls.surface_rate;
 }
 
 
-bool Well2::wellNameInWellNamePattern(const std::string& wellName, const std::string& wellNamePattern) {
+bool Well::wellNameInWellNamePattern(const std::string& wellName, const std::string& wellNamePattern) {
     bool wellNameInPattern = false;
     if (fnmatch( wellNamePattern.c_str() , wellName.c_str() , 0 ) == 0) {
         wellNameInPattern = true;
@@ -735,7 +735,7 @@ bool Well2::wellNameInWellNamePattern(const std::string& wellName, const std::st
 }
 
 
-Well2::ProductionControls Well2::productionControls(const SummaryState& st) const {
+Well::ProductionControls Well::productionControls(const SummaryState& st) const {
     if (this->isProducer()) {
         auto controls = this->production->controls(st, this->udq_undefined);
         controls.prediction_mode = this->predictionMode();
@@ -744,7 +744,7 @@ Well2::ProductionControls Well2::productionControls(const SummaryState& st) cons
         throw std::logic_error("Trying to get production data from an injector");
 }
 
-Well2::InjectionControls Well2::injectionControls(const SummaryState& st) const {
+Well::InjectionControls Well::injectionControls(const SummaryState& st) const {
     if (!this->isProducer()) {
         auto controls = this->injection->controls(this->unit_system, st, this->udq_undefined);
         controls.prediction_mode = this->predictionMode();
@@ -762,21 +762,21 @@ Well2::InjectionControls Well2::injectionControls(const SummaryState& st) const 
 */
 
 
-int Well2::vfp_table_number() const {
+int Well::vfp_table_number() const {
     if (this->producer)
         return this->production->VFPTableNumber;
     else
         return this->injection->VFPTableNumber;
 }
 
-double Well2::alq_value() const {
+double Well::alq_value() const {
     if (this->producer)
         return this->production->ALQValue;
 
     throw std::runtime_error("Can not ask for ALQ value in an injector");
 }
 
-double Well2::temperature() const {
+double Well::temperature() const {
     if (!this->producer)
         return this->injection->temperature;
 
@@ -784,7 +784,7 @@ double Well2::temperature() const {
 }
 
 
-std::string Well2::Status2String(Well2::Status enumValue) {
+std::string Well::Status2String(Well::Status enumValue) {
     switch( enumValue ) {
     case Status::OPEN:
         return "OPEN";
@@ -800,7 +800,7 @@ std::string Well2::Status2String(Well2::Status enumValue) {
 }
 
 
-Well2::Status Well2::StatusFromString(const std::string& stringValue) {
+Well::Status Well::StatusFromString(const std::string& stringValue) {
     if (stringValue == "OPEN")
         return Status::OPEN;
     else if (stringValue == "SHUT")
@@ -814,7 +814,7 @@ Well2::Status Well2::StatusFromString(const std::string& stringValue) {
 }
 
 
-const std::string Well2::InjectorType2String( Well2::InjectorType enumValue ) {
+const std::string Well::InjectorType2String( Well::InjectorType enumValue ) {
     switch( enumValue ) {
     case InjectorType::OIL:
         return "OIL";
@@ -829,7 +829,7 @@ const std::string Well2::InjectorType2String( Well2::InjectorType enumValue ) {
     }
 }
 
-Well2::InjectorType Well2::InjectorTypeFromString( const std::string& stringValue ) {
+Well::InjectorType Well::InjectorTypeFromString( const std::string& stringValue ) {
     if (stringValue == "OIL")
         return InjectorType::OIL;
     else if (stringValue == "WATER")
@@ -844,7 +844,7 @@ Well2::InjectorType Well2::InjectorTypeFromString( const std::string& stringValu
         throw std::invalid_argument("Unknown enum state string: " + stringValue );
 }
 
-const std::string Well2::InjectorCMode2String( InjectorCMode enumValue ) {
+const std::string Well::InjectorCMode2String( InjectorCMode enumValue ) {
     switch( enumValue ) {
     case InjectorCMode::RESV:
         return "RESV";
@@ -862,7 +862,7 @@ const std::string Well2::InjectorCMode2String( InjectorCMode enumValue ) {
 }
 
 
-Well2::InjectorCMode Well2::InjectorCModeFromString(const std::string &stringValue) {
+Well::InjectorCMode Well::InjectorCModeFromString(const std::string &stringValue) {
     if (stringValue == "RATE")
         return InjectorCMode::RATE;
     else if (stringValue == "RESV")
@@ -877,7 +877,7 @@ Well2::InjectorCMode Well2::InjectorCModeFromString(const std::string &stringVal
         throw std::invalid_argument("Unknown enum state string: " + stringValue);
 }
 
-Well2::WELTARGCMode Well2::WELTARGCModeFromString(const std::string& string_value) {
+Well::WELTARGCMode Well::WELTARGCModeFromString(const std::string& string_value) {
     if (string_value == "ORAT")
         return WELTARGCMode::ORAT;
 
@@ -915,7 +915,7 @@ Well2::WELTARGCMode Well2::WELTARGCModeFromString(const std::string& string_valu
 }
 
 
-const std::string Well2::ProducerCMode2String( ProducerCMode enumValue ) {
+const std::string Well::ProducerCMode2String( ProducerCMode enumValue ) {
     switch( enumValue ) {
     case ProducerCMode::ORAT:
         return "ORAT";
@@ -940,7 +940,7 @@ const std::string Well2::ProducerCMode2String( ProducerCMode enumValue ) {
     }
 }
 
-Well2::ProducerCMode Well2::ProducerCModeFromString( const std::string& stringValue ) {
+Well::ProducerCMode Well::ProducerCModeFromString( const std::string& stringValue ) {
     if (stringValue == "ORAT")
         return ProducerCMode::ORAT;
     else if (stringValue == "WRAT")
@@ -966,7 +966,7 @@ Well2::ProducerCMode Well2::ProducerCModeFromString( const std::string& stringVa
 }
 
 
-const std::string Well2::GuideRateTarget2String( GuideRateTarget enumValue ) {
+const std::string Well::GuideRateTarget2String( GuideRateTarget enumValue ) {
     switch( enumValue ) {
     case GuideRateTarget::OIL:
         return "OIL";
@@ -993,7 +993,7 @@ const std::string Well2::GuideRateTarget2String( GuideRateTarget enumValue ) {
     }
 }
 
-Well2::GuideRateTarget Well2::GuideRateTargetFromString( const std::string& stringValue ) {
+Well::GuideRateTarget Well::GuideRateTargetFromString( const std::string& stringValue ) {
     if (stringValue == "OIL")
         return GuideRateTarget::OIL;
     else if (stringValue == "WAT")

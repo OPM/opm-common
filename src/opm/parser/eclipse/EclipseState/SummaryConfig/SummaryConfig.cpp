@@ -33,7 +33,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridDims.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Group/Group2.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
@@ -503,7 +503,7 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
 
         for(const auto& name : well_names) {
             param.namedEntity(name);
-            const auto& well = schedule.getWell2atEnd(name);
+            const auto& well = schedule.getWellatEnd(name);
             /*
              * we don't want to add completions that don't exist, so we iterate
              * over a well's completions regardless of the desired block is
@@ -542,7 +542,7 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
 
 
     int maxNumWellSegments(const std::size_t /* last_timestep */,
-                           const Well2&       well)
+                           const Well&       well)
     {
         return well.isMultiSegment()
             ? well.getSegments().size() : 0;
@@ -551,7 +551,7 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
     void makeSegmentNodes(const std::size_t               last_timestep,
                           const int                       segID,
                           const DeckKeyword&              keyword,
-                          const Well2&                    well,
+                          const Well&                    well,
                           SummaryConfig::keyword_list&    list)
     {
         if (!well.isMultiSegment())
@@ -593,7 +593,7 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
 
         const auto segID = -1;
 
-        for (const auto& well : schedule.getWells2atEnd())
+        for (const auto& well : schedule.getWellsatEnd())
             makeSegmentNodes(last_timestep, segID, keyword,
                              well, list);
     }
@@ -637,7 +637,7 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
                 ? -1 : record.getItem(1).get<int>(0);
 
             for (const auto& well_name : well_names)
-                makeSegmentNodes(last_timestep, segID, keyword, schedule.getWell2atEnd(well_name), list);
+                makeSegmentNodes(last_timestep, segID, keyword, schedule.getWellatEnd(well_name), list);
         }
     }
 
