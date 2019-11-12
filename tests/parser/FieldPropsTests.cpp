@@ -144,3 +144,28 @@ SATNUM
     grid.resetACTNUM(actnum1);
     BOOST_CHECK_THROW(fpm.reset_grid(grid), std::logic_error);
 }
+
+BOOST_AUTO_TEST_CASE(ADDREG) {
+    std::string deck_string = R"(
+GRID
+
+PORO
+   6*0.1 /
+
+MULTNUM
+ 2 2 2 1 1 1 /
+
+ADDREG
+  PORO 1.0 1 M /
+/
+
+)";
+    std::vector<int> actnum1 = {1,1,0,0,1,1};
+    EclipseGrid grid(3,2,1); grid.resetACTNUM(actnum1);
+    Deck deck = Parser{}.parseString(deck_string);
+    FieldPropsManager fpm(deck, grid);
+    const auto& poro = fpm.get<double>("PORO");
+    BOOST_CHECK_EQUAL(poro.size(), 4);
+    BOOST_CHECK_EQUAL(poro[0], 0.10);
+    BOOST_CHECK_EQUAL(poro[3], 1.10);
+}
