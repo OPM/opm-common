@@ -60,7 +60,11 @@ public:
 private:
     std::shared_ptr<PythonInterp> interp;
 };
+
+std::unique_ptr<Python> PythonInstance();
+
 }
+
 
 
 #endif

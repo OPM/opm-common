@@ -356,7 +356,7 @@ class ParserState {
         std::string lastKeyWord;
 
         Deck deck;
-        Python python;
+        std::unique_ptr<Python> python;
         const ParseContext& parseContext;
         ErrorGuard& errors;
         bool unknown_keyword = false;
@@ -411,6 +411,7 @@ ParserState::ParserState(const std::vector<std::pair<std::string, std::string>>&
                          ErrorGuard& errors_arg) :
     code_keywords(code_keywords_arg),
     parseContext( __parseContext ),
+    python( PythonInstance() ),
     errors( errors_arg )
 {}
 
@@ -421,6 +422,7 @@ ParserState::ParserState( const std::vector<std::pair<std::string, std::string>>
     code_keywords(code_keywords_arg),
     rootPath( boost::filesystem::canonical( p ).parent_path() ),
     parseContext( context ),
+    python( PythonInstance() ),
     errors( errors_arg )
 {
     openRootFile( p );
@@ -840,8 +842,12 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
             }
             try {
                 if (rawKeyword->getKeywordName() ==  Opm::RawConsts::pyinput) {
-                    std::string python_string = rawKeyword->getFirstRecord().getRecordString();
-                    parserState.python.exec(python_string, parser, parserState.deck);
+                    if (parserState.python) {
+                        std::string python_string = rawKeyword->getFirstRecord().getRecordString();
+                        parserState.python->exec(python_string, parser, parserState.deck);
+                    }
+                    else
+                        throw std::logic_error("Cannot yet embed Python while still running Python.");
                 }
                 else
                     parserState.deck.addKeyword( parserKeyword.parse( parserState.parseContext,
