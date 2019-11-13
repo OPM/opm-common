@@ -429,7 +429,6 @@ public:
     bool handleCOMPLUMP(const DeckRecord& record);
     bool handleWPIMULT(const DeckRecord& record);
 
-    void filterConnections(const EclipseGrid& grid);
     void switchToInjector();
     void switchToProducer();
     ProductionControls productionControls(const SummaryState& st) const;
