@@ -64,7 +64,7 @@ static const std::set<std::string> int_keywords = {};
 }
 
 namespace PROPS {
-static const std::set<std::string> double_keywords = {"SWATINIT"};
+static const std::set<std::string> double_keywords = {"ISGCR", "ISGU", "SGCR", "SWATINIT", "SWU"};
 static const std::set<std::string> int_keywords = {};
 }
 
