@@ -876,12 +876,12 @@ BOOST_AUTO_TEST_CASE(BASIC_EQ_5) {
                         " 24 MAY 1981 /\n"
                         "  1 JUN 1981 /\n"
                         "  1 JUL 1981 /\n" // write
-                        "  1 JAN 1982 /\n"
+                        "  1 JAN 1982 /\n" // write
                         "  2 JAN 1982 /\n"
-                        "  1 FEB 1982 /\n" // write
-                        "  1 MAR 1982 /\n"
-                        "  1 APR 1983 /\n" //write
-                        "  2 JUN 1983 /\n"
+                        "  1 FEB 1982 /\n"
+                        "  1 MAR 1982 /\n" // write
+                        "  1 APR 1983 /\n" // write
+                        "  2 JUN 1983 /\n" // write
                         "/\n";
 
     auto deck = Parser().parseString( data);
@@ -889,10 +889,10 @@ BOOST_AUTO_TEST_CASE(BASIC_EQ_5) {
 
     /* BASIC=5, restart file is written at the first report step of each month.
      */
-    for( size_t ts : { 1, 2, 3, 4, 6, 7, 9, 11  } )
+    for( size_t ts : { 1, 2, 3, 4, 7, 8 } )
         BOOST_CHECK( !ioConfig.getWriteRestartFile( ts ) );
 
-    for( size_t ts : { 5, 8, 10 } )
+    for( size_t ts : { 5, 6, 9, 10, 11 } )
         BOOST_CHECK( ioConfig.getWriteRestartFile( ts ) );
 }
 
