@@ -33,6 +33,7 @@
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
@@ -42,7 +43,7 @@ using namespace Opm;
 BOOST_AUTO_TEST_CASE(CreateFieldProps) {
     EclipseGrid grid(10,10,10);
     Deck deck;
-    FieldPropsManager fpm(deck, grid);
+    FieldPropsManager fpm(deck, grid, TableManager());
     BOOST_CHECK(!fpm.try_get<double>("PORO"));
     BOOST_CHECK(!fpm.try_get<double>("PORO"));
     BOOST_CHECK_THROW(fpm.get<double>("PORO"), std::out_of_range);
@@ -78,7 +79,7 @@ PERMX
         actnum[i] = 0;
     EclipseGrid grid(EclipseGrid(10,10,10), actnum);
     Deck deck = Parser{}.parseString(deck_string);
-    FieldPropsManager fpm(deck, grid);
+    FieldPropsManager fpm(deck, grid, TableManager());
 
     BOOST_CHECK(!fpm.has<double>("NO-PORO"));
     BOOST_CHECK(fpm.has<double>("PORO"));
@@ -107,7 +108,7 @@ COPY
 
     EclipseGrid grid(EclipseGrid(10,10,10));
     Deck deck = Parser{}.parseString(deck_string);
-    BOOST_CHECK_THROW( FieldPropsManager(deck, grid), std::invalid_argument);
+    BOOST_CHECK_THROW( FieldPropsManager(deck, grid, TableManager()), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(GRID_RESET) {
@@ -121,7 +122,7 @@ SATNUM
     std::vector<int> actnum1 = {1,1,1,0,0,0,1,1,1};
     EclipseGrid grid(3,1,3); grid.resetACTNUM(actnum1);
     Deck deck = Parser{}.parseString(deck_string);
-    FieldPropsManager fpm(deck, grid);
+    FieldPropsManager fpm(deck, grid, TableManager());
     const auto& s1 = fpm.get<int>("SATNUM");
     BOOST_CHECK_EQUAL(s1.size(), 6);
     BOOST_CHECK_EQUAL(s1[0], 0);
@@ -163,7 +164,7 @@ ADDREG
     std::vector<int> actnum1 = {1,1,0,0,1,1};
     EclipseGrid grid(3,2,1); grid.resetACTNUM(actnum1);
     Deck deck = Parser{}.parseString(deck_string);
-    FieldPropsManager fpm(deck, grid);
+    FieldPropsManager fpm(deck, grid, TableManager());
     const auto& poro = fpm.get<double>("PORO");
     BOOST_CHECK_EQUAL(poro.size(), 4);
     BOOST_CHECK_EQUAL(poro[0], 0.10);

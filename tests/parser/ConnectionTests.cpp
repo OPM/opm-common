@@ -35,6 +35,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Connection.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellConnections.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
 
@@ -149,7 +150,7 @@ Opm::WellConnections loadCOMPDAT(const std::string& compdat_keyword) {
     Opm::Parser parser;
     const auto deck = parser.parseString(compdat_keyword);
     Opm::Eclipse3DProperties props(deck, tables, grid );
-    Opm::FieldPropsManager field_props(deck, grid);
+    Opm::FieldPropsManager field_props(deck, grid, Opm::TableManager());
     const auto& keyword = deck.getKeyword("COMPDAT", 0);
     Opm::WellConnections connections1(10,10);
     Opm::WellConnections connections2(10,10);

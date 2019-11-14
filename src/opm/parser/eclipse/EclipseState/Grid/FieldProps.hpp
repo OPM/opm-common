@@ -30,6 +30,7 @@ namespace Opm {
 
 class Deck;
 class EclipseGrid;
+class TableManager;
 
 class FieldProps {
 public:
@@ -105,7 +106,7 @@ public:
     };
 
 
-    FieldProps(const Deck& deck, const EclipseGrid& grid);
+    FieldProps(const Deck& deck, const EclipseGrid& grid, const TableManager& table_arg);
     void reset_grid(const EclipseGrid& grid);
 
     template <typename T>
@@ -168,6 +169,7 @@ private:
 
     const UnitSystem unit_system;
     const EclipseGrid* grid;   // A reseatable pointer to const.
+    const TableManager& tables;
     std::size_t active_size;
     std::vector<int> actnum;
     const std::string default_region;

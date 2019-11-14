@@ -26,12 +26,13 @@ namespace Opm {
 class EclipseGrid;
 class Deck;
 class FieldProps;
+class TableManager;
 
 class FieldPropsManager {
 public:
     // The default constructor should be removed when the FieldPropsManager is mandatory
     FieldPropsManager() = default;
-    FieldPropsManager(const Deck& deck, const EclipseGrid& grid);
+    FieldPropsManager(const Deck& deck, const EclipseGrid& grid, const TableManager& tables);
     void reset_grid(const EclipseGrid& grid);
 
     /*

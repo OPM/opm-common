@@ -26,8 +26,8 @@
 
 namespace Opm {
 
-FieldPropsManager::FieldPropsManager(const Deck& deck, const EclipseGrid& grid_arg) :
-    fp(std::make_shared<FieldProps>(deck, grid_arg))
+FieldPropsManager::FieldPropsManager(const Deck& deck, const EclipseGrid& grid_arg, const TableManager& tables) :
+    fp(std::make_shared<FieldProps>(deck, grid_arg, tables))
 {}
 
 void FieldPropsManager::reset_grid(const EclipseGrid& grid) {
