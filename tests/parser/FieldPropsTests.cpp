@@ -20,6 +20,7 @@
 #include <stdexcept>
 #include <iostream>
 #include <memory>
+#include <numeric>
 
 #define BOOST_TEST_MODULE FieldPropsTests
 
@@ -36,6 +37,8 @@
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+
+#include "src/opm/parser/eclipse/EclipseState/Grid/FieldProps.hpp"
 
 
 using namespace Opm;
@@ -169,4 +172,20 @@ ADDREG
     BOOST_CHECK_EQUAL(poro.size(), 4);
     BOOST_CHECK_EQUAL(poro[0], 0.10);
     BOOST_CHECK_EQUAL(poro[3], 1.10);
+}
+
+
+
+BOOST_AUTO_TEST_CASE(ASSIGN) {
+    FieldProps::FieldData<int> data(100);
+    std::vector<int> wrong_size(50);
+
+    BOOST_CHECK_THROW( data.assign( wrong_size ), std::invalid_argument );
+
+    std::vector<int> ext_data(100);
+    std::iota(ext_data.begin(), ext_data.end(), 0);
+    data.assign( ext_data );
+
+    BOOST_CHECK(data.valid());
+    BOOST_CHECK(data.data == ext_data);
 }

@@ -102,6 +102,14 @@ public:
                 }
             }
         }
+
+        void assign(const std::vector<T>& src) {
+            if (src.size() != this->size())
+                throw std::invalid_argument("Size misamtch got: " + std::to_string(src.size()) + " expected: " + std::to_string(this->size()));
+
+            std::fill(this->assigned.begin(), this->assigned.end(), true);
+            std::copy(src.begin(), src.end(), this->data.begin());
+        }
     };
 
 
