@@ -41,7 +41,7 @@
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well2.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/Eqldims.hpp>
 
 #include <opm/common/OpmLog/OpmLog.hpp>
@@ -106,7 +106,7 @@ namespace {
 
     std::vector<double>
     serialize_OPM_XWEL(const data::Wells&             wells,
-                       const std::vector<Opm::Well2>& sched_wells,
+                       const std::vector<Opm::Well>& sched_wells,
                        const Phases&                  phase_spec,
                        const EclipseGrid&             grid)
     {
@@ -120,7 +120,7 @@ namespace {
         std::vector< double > xwel;
         for (const auto& sched_well : sched_wells) {
             if (wells.count(sched_well.name()) == 0 ||
-                sched_well.getStatus() == Opm::Well2::Status::SHUT)
+                sched_well.getStatus() == Opm::Well::Status::SHUT)
             {
                 const auto elems = (sched_well.getConnections().size()
                                     * (phases.size() + data::Connection::restart_size))
@@ -321,7 +321,7 @@ namespace {
         // Extended set of OPM well vectors
         if (!ecl_compatible_rst)
         {
-            const auto sched_wells = schedule.getWells2(sim_step);
+            const auto sched_wells = schedule.getWells(sim_step);
             const auto sched_well_names = schedule.wellNames(sim_step);
 
             const auto opm_xwel =
@@ -537,12 +537,12 @@ void save(EclIO::OutputStream::Restart& rstFile,
 
     // Write well and MSW data only when applicable (i.e., when present)
     {
-        const auto& wells = schedule.getWells2(sim_step);
+        const auto& wells = schedule.getWells(sim_step);
 
         if (! wells.empty()) {
             const auto haveMSW =
                 std::any_of(std::begin(wells), std::end(wells),
-                    [](const Well2& well)
+                    [](const Well& well)
             {
                 return well.isMultiSegment();
             });

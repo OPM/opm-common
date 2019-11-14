@@ -47,7 +47,7 @@ class UDQActive;
 class UDQConfig;
 
 
-class Well2 {
+class Well {
 public:
 
     enum class Status {
@@ -198,7 +198,7 @@ public:
         int     VFPTableNumber;
         bool    predictionMode;
         int     injectionControls;
-        Well2::InjectorType injectorType;
+        Well::InjectorType injectorType;
         InjectorCMode controlMode;
 
         bool operator==(const WellInjectionProperties& other) const;
@@ -327,7 +327,7 @@ public:
     };
 
 
-    Well2(const std::string& wname,
+    Well(const std::string& wname,
           const std::string& gname,
           std::size_t init_step,
           std::size_t insert_index,
@@ -470,7 +470,7 @@ private:
     std::shared_ptr<const WellSegments> segments;
 };
 
-std::ostream& operator<<( std::ostream&, const Well2::WellInjectionProperties& );
+std::ostream& operator<<( std::ostream&, const Well::WellInjectionProperties& );
 std::ostream& operator<<( std::ostream&, const WellProductionProperties& );
 
 

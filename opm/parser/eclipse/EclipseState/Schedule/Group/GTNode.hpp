@@ -19,8 +19,8 @@
 
 #include <vector>
 
-#include <opm/parser/eclipse/EclipseState/Schedule/Group/Group2.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well2.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
 
 #ifndef GROUPTREE2
 #define GROUPTREE2
@@ -29,25 +29,25 @@ namespace Opm {
 
 class GTNode {
 public:
-    GTNode(const Group2& group, const GTNode* parent);
+    GTNode(const Group& group, const GTNode* parent);
 
     void add_group(const GTNode& child_group);
-    void add_well(const Well2& well);
+    void add_well(const Well& well);
 
-    const std::vector<Well2>& wells() const;
+    const std::vector<Well>& wells() const;
     const std::vector<GTNode>& groups() const;
     const std::string& name() const;
     const GTNode& parent() const;
-    const Group2& group() const;
+    const Group& group() const;
 private:
-    const Group2 m_group;
+    const Group m_group;
     const GTNode * m_parent;
     /*
       Class T with a stl container <T> - supposedly undefined behavior before
       C++17 - but it compiles without warnings.
     */
     std::vector<GTNode> m_child_groups;
-    std::vector<Well2> m_wells;
+    std::vector<Well> m_wells;
 };
 
 }

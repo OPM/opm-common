@@ -47,7 +47,7 @@ bool GuideRateConfig::update_model(const GuideRateModel& new_model) {
     return false;
 }
 
-void GuideRateConfig::update_well(const Well2& well) {
+void GuideRateConfig::update_well(const Well& well) {
     if (well.isAvailableForGroupControl()) {
         auto& well_node = this->wells[well.name()];
         well_node.guide_rate = well.getGuideRate();
@@ -57,17 +57,17 @@ void GuideRateConfig::update_well(const Well2& well) {
         this->wells.erase(well.name());
 }
 
-const GuideRateConfig::Well& GuideRateConfig::well(const std::string& well) const {
+const GuideRateConfig::WellTarget& GuideRateConfig::well(const std::string& well) const {
     return this->wells.at(well);
 }
 
-void GuideRateConfig::update_group(const Group2& group) {
+void GuideRateConfig::update_group(const Group& group) {
     if (group.name() == "FIELD")
         return;
 
     const auto& properties = group.productionProperties();
     auto guide_target = properties.guide_rate_def;
-    if (guide_target == Group2::GuideRateTarget::NO_GUIDE_RATE) {
+    if (guide_target == Group::GuideRateTarget::NO_GUIDE_RATE) {
         this->groups.erase(group.name());
         return;
     }
@@ -77,7 +77,7 @@ void GuideRateConfig::update_group(const Group2& group) {
     group_node.target = guide_target;
 }
 
-const GuideRateConfig::Group& GuideRateConfig::group(const std::string& group) const {
+const GuideRateConfig::GroupTarget& GuideRateConfig::group(const std::string& group) const {
     return this->groups.at(group);
 }
 

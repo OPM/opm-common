@@ -21,7 +21,7 @@
 
 namespace Opm {
 
-GTNode::GTNode(const Group2& group_arg, const GTNode * parent_arg) :
+GTNode::GTNode(const Group& group_arg, const GTNode * parent_arg) :
     m_group(group_arg),
     m_parent(parent_arg)
 {}
@@ -30,7 +30,7 @@ const std::string& GTNode::name() const {
     return this->m_group.name();
 }
 
-const Group2& GTNode::group() const {
+const Group& GTNode::group() const {
     return this->m_group;
 }
 
@@ -42,7 +42,7 @@ const GTNode& GTNode::parent() const {
 }
 
 
-void GTNode::add_well(const Well2& well) {
+void GTNode::add_well(const Well& well) {
     this->m_wells.push_back(well);
 }
 
@@ -50,7 +50,7 @@ void GTNode::add_group(const GTNode& child_group) {
     this->m_child_groups.push_back(child_group);
 }
 
-const std::vector<Well2>& GTNode::wells() const {
+const std::vector<Well>& GTNode::wells() const {
     return this->m_wells;
 }
 

@@ -22,7 +22,7 @@
 
 #include <string>
 
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well2.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
 
 namespace Opm {
 class UDAvalue;
@@ -32,7 +32,7 @@ class UnitSystem;
 namespace UDA {
 
     double eval_well_uda(const UDAValue& value, const std::string& name, const SummaryState& st, double udq_undefined);
-double eval_well_uda_rate(const UDAValue& value, const std::string& name, const SummaryState& st, double udq_undefined, Well2::InjectorType wellType, const UnitSystem& unitSystem);
+double eval_well_uda_rate(const UDAValue& value, const std::string& name, const SummaryState& st, double udq_undefined, Well::InjectorType wellType, const UnitSystem& unitSystem);
 
     double eval_group_uda(const UDAValue& value, const std::string& name, const SummaryState& st, double udq_undefined);
     double eval_group_uda_rate(const UDAValue& value, const std::string& name, const SummaryState& st, double udq_undefined, Phase phase, const UnitSystem& unitSystem);

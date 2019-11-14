@@ -133,7 +133,7 @@ void verifyWellState(const std::string& rst_filename, const Opm::Schedule& sched
         BOOST_CHECK_EQUAL(iwel[i*niwelz], std::get<0>(ref_wellHead[step][i]));
         BOOST_CHECK_EQUAL(iwel[i*niwelz + 1], std::get<1>(ref_wellHead[step][i]));
 
-        Opm::Well2 sched_well2 = schedule.getWell2(wellList[i], step);
+        Opm::Well sched_well2 = schedule.getWell(wellList[i], step);
 
         BOOST_CHECK_EQUAL(iwel[i*niwelz], sched_well2.getHeadI() +1 );
         BOOST_CHECK_EQUAL(iwel[i*niwelz + 1], sched_well2.getHeadJ() +1 );
@@ -144,13 +144,13 @@ void verifyWellState(const std::string& rst_filename, const Opm::Schedule& sched
             sched_wtype = 1;
         } else {
             switch( sched_well2.getInjectionProperties(  ).injectorType ) {
-            case Opm::Well2::InjectorType::WATER:
+            case Opm::Well::InjectorType::WATER:
                 sched_wtype = 3;
                 break;
-            case Opm::Well2::InjectorType::GAS:
+            case Opm::Well::InjectorType::GAS:
                 sched_wtype = 4;
                 break;
-            case Opm::Well2::InjectorType::OIL:
+            case Opm::Well::InjectorType::OIL:
                 sched_wtype = 2;
                 break;
             default:

@@ -246,7 +246,7 @@ namespace {
     {
         auto rft = WellRFT{ xcon.size() };
 
-        for (const auto& conn : sched.getWell2(wname, reportStep).getConnections()) {
+        for (const auto& conn : sched.getWell(wname, reportStep).getConnections()) {
             const auto i = static_cast<std::size_t>(conn.getI());
             const auto j = static_cast<std::size_t>(conn.getJ());
             const auto k = static_cast<std::size_t>(conn.getK());

@@ -552,7 +552,7 @@ BOOST_AUTO_TEST_CASE (Declared_Connection_Data)
     const auto rptStep = std::size_t{1};
 
     const auto ih = MockIH {
-        static_cast<int>(simCase.sched.getWells2(rptStep).size())
+        static_cast<int>(simCase.sched.getWells(rptStep).size())
     };
 
     BOOST_CHECK_EQUAL(ih.nwells, MockIH::Sz{2});
@@ -710,7 +710,7 @@ BOOST_AUTO_TEST_CASE (Declared_Connection_Data)
 BOOST_AUTO_TEST_CASE(InactiveCell) {
     auto simCase = SimulationCase{first_sim()};
     const auto rptStep = std::size_t{1};
-    const auto ih = MockIH {static_cast<int>(simCase.sched.getWells2(rptStep).size())};
+    const auto ih = MockIH {static_cast<int>(simCase.sched.getWells(rptStep).size())};
     const Opm::data::WellRates wrc = wr();
     auto conn0 = Opm::RestartIO::Helpers::AggregateConnectionData{ih.value};
     conn0.captureDeclaredConnData(simCase.sched,

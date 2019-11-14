@@ -25,8 +25,8 @@
 #include <ctime>
 #include <unordered_map>
 
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well2.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Group/Group2.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp>
 
 namespace Opm {
 
@@ -65,8 +65,8 @@ struct Potential {
     {}
 
 
-    double eval(Group2::GuideRateTarget target) const;
-    double eval(Well2::GuideRateTarget target) const;
+    double eval(Group::GuideRateTarget target) const;
+    double eval(Well::GuideRateTarget target) const;
 
 
     double oil_pot;
@@ -77,8 +77,8 @@ struct Potential {
 public:
     GuideRate(const Schedule& schedule);
     void   compute(const std::string& wgname, size_t report_step, double sim_time, double oil_pot, double gas_pot, double wat_pot);
-    double get(const std::string& well, Well2::GuideRateTarget target) const;
-    double get(const std::string& group, Group2::GuideRateTarget target) const;
+    double get(const std::string& well, Well::GuideRateTarget target) const;
+    double get(const std::string& group, Group::GuideRateTarget target) const;
 private:
     void well_compute(const std::string& wgname, size_t report_step, double sim_time, double oil_pot, double gas_pot, double wat_pot);
     void group_compute(const std::string& wgname, size_t report_step, double sim_time, double oil_pot, double gas_pot, double wat_pot);

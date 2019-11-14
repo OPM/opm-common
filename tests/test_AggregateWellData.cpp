@@ -380,7 +380,7 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data)
     const auto rptStep = std::size_t{1};
 
     const auto ih = MockIH {
-        static_cast<int>(simCase.sched.getWells2(rptStep).size())
+        static_cast<int>(simCase.sched.getWells(rptStep).size())
     };
 
     BOOST_CHECK_EQUAL(ih.nwells, MockIH::Sz{2});
@@ -531,7 +531,7 @@ BOOST_AUTO_TEST_CASE (Dynamic_Well_Data_Step1)
     const auto rptStep = std::size_t{1};
 
     const auto ih = MockIH {
-        static_cast<int>(simCase.sched.getWells2(rptStep).size())
+        static_cast<int>(simCase.sched.getWells(rptStep).size())
     };
 
     const auto xw   = well_rates_1();
@@ -638,7 +638,7 @@ BOOST_AUTO_TEST_CASE (Dynamic_Well_Data_Step2)
     const auto rptStep = std::size_t{2};
 
     const auto ih = MockIH {
-        static_cast<int>(simCase.sched.getWells2(rptStep).size())
+        static_cast<int>(simCase.sched.getWells(rptStep).size())
     };
 
     const auto xw   = well_rates_2();

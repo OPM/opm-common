@@ -387,7 +387,7 @@ namespace {
     }
 
     template <typename MSWOp>
-    void MSWLoop(const std::vector<const Opm::Well2*>& wells,
+    void MSWLoop(const std::vector<const Opm::Well*>& wells,
                  MSWOp&&                               mswOp)
     {
         auto mswID = std::size_t{0};
@@ -420,7 +420,7 @@ namespace {
         }
 
         template <class ISegArray>
-        void staticContrib(const Opm::Well2&       well,
+        void staticContrib(const Opm::Well&       well,
                            const std::vector<int>& inteHead,
                            ISegArray&              iSeg)
         {
@@ -471,7 +471,7 @@ namespace {
         }
 
         template <class RSegArray>
-        void staticContrib_useMSW(const Opm::Well2&           well,
+        void staticContrib_useMSW(const Opm::Well&           well,
                                   const std::vector<int>&     inteHead,
                                   const Opm::EclipseGrid&     grid,
                                   const Opm::UnitSystem&      units,
@@ -643,7 +643,7 @@ namespace {
         }
 
         template <class ILBSArray>
-        void staticContrib(const Opm::Well2& well,
+        void staticContrib(const Opm::Well& well,
                            ILBSArray&        iLBS)
         {
             if (well.isMultiSegment()) {
@@ -682,7 +682,7 @@ namespace {
         }
 
         template <class ILBRArray>
-        void staticContrib(const Opm::Well2&  well,
+        void staticContrib(const Opm::Well&  well,
                            const std::vector<int>& inteHead,
                            ILBRArray&        iLBR)
         {
@@ -732,8 +732,8 @@ captureDeclaredMSWData(const Schedule&         sched,
                        const Opm::data::WellRates&  wr
                        )
 {
-    const auto& wells = sched.getWells2(rptStep);
-    auto msw = std::vector<const Opm::Well2*>{};
+    const auto& wells = sched.getWells(rptStep);
+    auto msw = std::vector<const Opm::Well*>{};
 
     //msw.reserve(wells.size());
     for (const auto& well : wells) {
@@ -743,7 +743,7 @@ captureDeclaredMSWData(const Schedule&         sched,
     // Extract Contributions to ISeg Array
     {
         MSWLoop(msw, [&inteHead, this]
-            (const Well2& well, const std::size_t mswID) -> void
+            (const Well& well, const std::size_t mswID) -> void
         {
             auto imsw = this->iSeg_[mswID];
 
@@ -753,7 +753,7 @@ captureDeclaredMSWData(const Schedule&         sched,
     // Extract Contributions to RSeg Array
     {
         MSWLoop(msw, [&units, &inteHead, &grid, &smry, this, &wr]
-            (const Well2& well, const std::size_t mswID) -> void
+            (const Well& well, const std::size_t mswID) -> void
         {
             auto rmsw = this->rSeg_[mswID];
 
@@ -763,7 +763,7 @@ captureDeclaredMSWData(const Schedule&         sched,
     // Extract Contributions to ILBS Array
     {
         MSWLoop(msw, [this]
-            (const Well2& well, const std::size_t mswID) -> void
+            (const Well& well, const std::size_t mswID) -> void
         {
             auto ilbs_msw = this->iLBS_[mswID];
 
@@ -773,7 +773,7 @@ captureDeclaredMSWData(const Schedule&         sched,
     // Extract Contributions to ILBR Array
     {
         MSWLoop(msw, [&inteHead, this]
-            (const Well2& well, const std::size_t mswID) -> void
+            (const Well& well, const std::size_t mswID) -> void
         {
             auto ilbr_msw = this->iLBR_[mswID];
 

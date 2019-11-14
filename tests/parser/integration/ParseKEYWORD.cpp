@@ -579,7 +579,7 @@ BOOST_AUTO_TEST_CASE( MULTISEGMENT_ABS ) {
     // checking the relation between segments and completions
     // and also the depth of completions
     BOOST_CHECK(sched.hasWell("PROD01"));
-    const auto& well = sched.getWell2("PROD01", 0);
+    const auto& well = sched.getWell("PROD01", 0);
     const auto& connections = well.getConnections();
     BOOST_CHECK_EQUAL(7U, connections.size());
 
@@ -1363,22 +1363,22 @@ BOOST_AUTO_TEST_CASE( WCONPROD ) {
     BOOST_CHECK(sched.hasWell("PROX5"));
 
     {
-        const auto& well0 = sched.getWell2("PROD2", 0 );
-        const auto& well1 = sched.getWell2("PROD2", 1 );
+        const auto& well0 = sched.getWell("PROD2", 0 );
+        const auto& well1 = sched.getWell("PROD2", 1 );
         BOOST_CHECK_CLOSE(1000/Metric::Time, well0.getProductionProperties().OilRate.get<double>(), 0.001);
         BOOST_CHECK_CLOSE(1500/Metric::Time, well1.getProductionProperties().OilRate.get<double>(), 0.001);
     }
 
     {
-        const auto& well0 = sched.getWell2("PROD3", 0 );
-        const auto& well1 = sched.getWell2("PROD3", 1 );
+        const auto& well0 = sched.getWell("PROD3", 0 );
+        const auto& well1 = sched.getWell("PROD3", 1 );
         BOOST_CHECK_CLOSE(0/Metric::Time, well0.getProductionProperties().OilRate.get<double>(), 0.001);
         BOOST_CHECK_CLOSE(1500/Metric::Time, well1.getProductionProperties().OilRate.get<double>(), 0.001);
     }
 
     {
-        const auto& well0 = sched.getWell2("PROX5", 0);
-        const auto& well1 = sched.getWell2("PROX5", 1);
+        const auto& well0 = sched.getWell("PROX5", 0);
+        const auto& well1 = sched.getWell("PROX5", 1);
         BOOST_CHECK_CLOSE(2000/Metric::Time, well0.getProductionProperties().OilRate.get<double>(), 0.001);
         BOOST_CHECK_CLOSE(2000/Metric::Time, well1.getProductionProperties().OilRate.get<double>(), 0.001);
     }
@@ -1404,8 +1404,8 @@ BOOST_AUTO_TEST_CASE( WCONINJE ) {
     BOOST_CHECK(sched.hasWell("INJX5"));
 
     {
-        const auto& well0 = sched.getWell2("INJE2", 0);
-        const auto& well1 = sched.getWell2("INJE2", 1);
+        const auto& well0 = sched.getWell("INJE2", 0);
+        const auto& well1 = sched.getWell("INJE2", 1);
         const auto controls0 = well0.injectionControls(st);
         const auto controls1 = well1.injectionControls(st);
         BOOST_CHECK_CLOSE(1000/Metric::Time, controls0.surface_rate, 0.001);
@@ -1413,14 +1413,14 @@ BOOST_AUTO_TEST_CASE( WCONINJE ) {
     }
 
     {
-        const auto& well1 = sched.getWell2("INJE3", 1);
+        const auto& well1 = sched.getWell("INJE3", 1);
         const auto controls1 = well1.injectionControls(st);
         BOOST_CHECK_CLOSE(1500/Metric::Time, controls1.surface_rate, 0.001);
     }
 
     {
-        const auto& well0 = sched.getWell2("INJX5", 0);
-        const auto& well1 = sched.getWell2("INJX5", 1);
+        const auto& well0 = sched.getWell("INJX5", 0);
+        const auto& well1 = sched.getWell("INJX5", 1);
         const auto controls0 = well0.injectionControls(st);
         const auto controls1 = well1.injectionControls(st);
         BOOST_CHECK_CLOSE(2000/Metric::Time, controls0.surface_rate, 0.001);

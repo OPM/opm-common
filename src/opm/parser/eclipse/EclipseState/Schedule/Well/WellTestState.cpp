@@ -102,7 +102,7 @@ namespace Opm {
 
     std::vector<std::pair<std::string, WellTestConfig::Reason>>
     WellTestState::updateWells(const WellTestConfig& config,
-                               const std::vector<Well2>& wells_ecl,
+                               const std::vector<Well>& wells_ecl,
                                double sim_time) {
         std::vector<std::pair<std::string, WellTestConfig::Reason>> output;
 
@@ -110,7 +110,7 @@ namespace Opm {
 
         for (auto& well : this->wells) {
             auto well_ecl = std::find_if(wells_ecl.begin(), wells_ecl.end(),
-                    [&well](const Well2& w)
+                    [&well](const Well& w)
                     {
                         return w.name() == well.name;
                     });
@@ -119,7 +119,7 @@ namespace Opm {
                 throw std::runtime_error("No well named " + well.name + " is found in wells_ecl.");
 
             // if the well is SHUT, we do not consider to test it
-            if (well_ecl->getStatus() != Well2::Status::OPEN)
+            if (well_ecl->getStatus() != Well::Status::OPEN)
                 continue;
 
             if (well.closed && config.has(well.name, well.reason)) {

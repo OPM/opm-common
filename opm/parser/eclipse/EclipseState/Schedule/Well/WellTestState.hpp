@@ -24,7 +24,7 @@
 #include <vector>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellTestConfig.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well2.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
 
 namespace Opm {
 
@@ -83,7 +83,7 @@ public:
       the openiing attempts, and also set the time for the last attempt to open.
     */
     std::vector<std::pair<std::string, WellTestConfig::Reason>> updateWells(const WellTestConfig& config,
-                                                                            const std::vector<Well2>& wells_ecl,
+                                                                            const std::vector<Well>& wells_ecl,
                                                                             double sim_time);
 
     /*

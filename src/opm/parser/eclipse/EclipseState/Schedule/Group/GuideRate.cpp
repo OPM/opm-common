@@ -22,33 +22,33 @@
 
 namespace Opm {
 
-double GuideRate::Potential::eval(Well2::GuideRateTarget target) const {
-    if (target == Well2::GuideRateTarget::OIL)
+double GuideRate::Potential::eval(Well::GuideRateTarget target) const {
+    if (target == Well::GuideRateTarget::OIL)
         return this->oil_pot;
 
-    if (target == Well2::GuideRateTarget::GAS)
+    if (target == Well::GuideRateTarget::GAS)
         return this->gas_pot;
 
-    if (target == Well2::GuideRateTarget::LIQ)
+    if (target == Well::GuideRateTarget::LIQ)
         return this->oil_pot + this->wat_pot;
 
-    if (target == Well2::GuideRateTarget::WAT)
+    if (target == Well::GuideRateTarget::WAT)
         return this->wat_pot;
 
     throw std::logic_error("Don't know how to convert .... ");
 }
 
-double GuideRate::Potential::eval(Group2::GuideRateTarget target) const {
-    if (target == Group2::GuideRateTarget::OIL)
+double GuideRate::Potential::eval(Group::GuideRateTarget target) const {
+    if (target == Group::GuideRateTarget::OIL)
         return this->oil_pot;
 
-    if (target == Group2::GuideRateTarget::GAS)
+    if (target == Group::GuideRateTarget::GAS)
         return this->gas_pot;
 
-    if (target == Group2::GuideRateTarget::LIQ)
+    if (target == Group::GuideRateTarget::LIQ)
         return this->oil_pot + this->wat_pot;
 
-    if (target == Group2::GuideRateTarget::WAT)
+    if (target == Group::GuideRateTarget::WAT)
         return this->wat_pot;
 
     throw std::logic_error("Don't know how to convert .... ");
@@ -61,7 +61,7 @@ GuideRate::GuideRate(const Schedule& schedule_arg) :
 
 
 
-double GuideRate::get(const std::string& well, Well2::GuideRateTarget target) const {
+double GuideRate::get(const std::string& well, Well::GuideRateTarget target) const {
     const auto iter = this->values.find(well);
     if (iter != this->values.end()) {
         const auto& value = iter->second;
@@ -80,7 +80,7 @@ double GuideRate::get(const std::string& well, Well2::GuideRateTarget target) co
     }
 }
 
-double GuideRate::get(const std::string& group, Group2::GuideRateTarget target) const {
+double GuideRate::get(const std::string& group, Group::GuideRateTarget target) const {
     const auto iter = this->values.find(group);
      if (iter != this->values.end()) {
         auto model_target = GuideRateModel::convert_target(target);
@@ -126,7 +126,7 @@ void GuideRate::group_compute(const std::string& wgname, size_t report_step, dou
         // then we just return.
         if (iter != this->values.end()) {
             const auto& grv = iter->second;
-            if (group.target == Group2::GuideRateTarget::FORM) {
+            if (group.target == Group::GuideRateTarget::FORM) {
                 if (!config.has_model())
                     throw std::logic_error("When specifying GUIDERATE target FORM you must enter a guiderate model with the GUIDERAT keyword");
 
@@ -137,13 +137,13 @@ void GuideRate::group_compute(const std::string& wgname, size_t report_step, dou
         }
 
 
-        if (group.target == Group2::GuideRateTarget::INJV)
+        if (group.target == Group::GuideRateTarget::INJV)
             throw std::logic_error("Group guide rate mode: INJV not implemented");
 
-        if (group.target == Group2::GuideRateTarget::POTN)
+        if (group.target == Group::GuideRateTarget::POTN)
             throw std::logic_error("Group guide rate mode: POTN not implemented");
 
-        if (group.target == Group2::GuideRateTarget::FORM) {
+        if (group.target == Group::GuideRateTarget::FORM) {
             double guide_rate;
             if (!config.has_model())
                 throw std::logic_error("When specifying GUIDERATE target FORM you must enter a guiderate model with the GUIDERAT keyword");
@@ -174,7 +174,7 @@ void GuideRate::well_compute(const std::string& wgname, size_t report_step, doub
         if (!this->schedule.hasWell(wgname, report_step))
             return;
 
-        const auto& well = this->schedule.getWell2(wgname, report_step);
+        const auto& well = this->schedule.getWell(wgname, report_step);
 
         // GUIDERAT does not apply to injectors
         if (well.isInjector())

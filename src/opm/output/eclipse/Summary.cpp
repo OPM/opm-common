@@ -28,7 +28,7 @@
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Group/Group2.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
@@ -187,7 +187,7 @@ namespace {
         };
 
         for (const auto& wname : sched.wellNames()) {
-            const auto& well = sched.getWell2atEnd(wname);
+            const auto& well = sched.getWellatEnd(wname);
 
             if (! well.isMultiSegment()) {
                 // Don't allocate MS summary vectors for non-MS wells.
@@ -320,7 +320,7 @@ struct quantity {
  * is the index of the block in question. wells is simulation data.
  */
 struct fn_args {
-    const std::vector<Opm::Well2>& schedule_wells;
+    const std::vector<Opm::Well>& schedule_wells;
     double duration;
     const int sim_step;
     int  num;
@@ -414,7 +414,7 @@ inline quantity rate( const fn_args& args ) {
 template< bool injection >
 inline quantity flowing( const fn_args& args ) {
     const auto& wells = args.wells;
-    auto pred = [&wells]( const Opm::Well2& w ) {
+    auto pred = [&wells]( const Opm::Well& w ) {
         const auto& name = w.name();
         return w.isInjector( ) == injection
             && wells.count( name ) > 0
@@ -572,7 +572,7 @@ inline quantity thp( const fn_args& args ) {
 inline quantity bhp_history( const fn_args& args ) {
     if( args.schedule_wells.empty() ) return { 0.0, measure::pressure };
 
-    const Opm::Well2& sched_well = args.schedule_wells.front();
+    const Opm::Well& sched_well = args.schedule_wells.front();
 
     double bhp_hist;
     if ( sched_well.isProducer(  ) )
@@ -586,7 +586,7 @@ inline quantity bhp_history( const fn_args& args ) {
 inline quantity thp_history( const fn_args& args ) {
     if( args.schedule_wells.empty() ) return { 0.0, measure::pressure };
 
-    const Opm::Well2& sched_well = args.schedule_wells.front();
+    const Opm::Well& sched_well = args.schedule_wells.front();
 
     double thp_hist;
     if ( sched_well.isProducer() )
@@ -633,7 +633,7 @@ inline quantity injection_history( const fn_args& args ) {
 inline quantity res_vol_production_target( const fn_args& args ) {
 
     double sum = 0.0;
-    for( const Opm::Well2& sched_well : args.schedule_wells )
+    for( const Opm::Well& sched_well : args.schedule_wells )
         if (sched_well.getProductionProperties().predictionMode)
             sum += sched_well.getProductionProperties().ResVRate.get<double>();
 
@@ -1114,7 +1114,7 @@ static const std::unordered_map< std::string, Opm::UnitSystem::measure> block_un
   {"BOVIS"      , Opm::UnitSystem::measure::viscosity},
 };
 
-inline std::vector<Opm::Well2> find_wells( const Opm::Schedule& schedule,
+inline std::vector<Opm::Well> find_wells( const Opm::Schedule& schedule,
                                            const Opm::SummaryNode& node,
                                            const int sim_step,
                                            const Opm::out::RegionCache& regionCache ) {
@@ -1128,7 +1128,7 @@ inline std::vector<Opm::Well2> find_wells( const Opm::Schedule& schedule,
         const auto& name = node.namedEntity();
 
         if (schedule.hasWell(name, sim_step)) {
-            const auto& well = schedule.getWell2( name, sim_step );
+            const auto& well = schedule.getWell( name, sim_step );
             return { well };
         } else
             return {};
@@ -1143,20 +1143,20 @@ inline std::vector<Opm::Well2> find_wells( const Opm::Schedule& schedule,
     }
 
     if( cat == Opm::SummaryNode::Category::Field )
-        return schedule.getWells2(sim_step);
+        return schedule.getWells(sim_step);
 
     if( cat == Opm::SummaryNode::Category::Region ) {
-        std::vector<Opm::Well2> wells;
+        std::vector<Opm::Well> wells;
 
         const auto region = node.number();
 
         for ( const auto& connection : regionCache.connections( region ) ){
             const auto& w_name = connection.first;
             if (schedule.hasWell(w_name, sim_step)) {
-                const auto& well = schedule.getWell2( w_name, sim_step );
+                const auto& well = schedule.getWell( w_name, sim_step );
 
                 const auto& it = std::find_if( wells.begin(), wells.end(),
-                                               [&] ( const Opm::Well2& elem )
+                                               [&] ( const Opm::Well& elem )
                                                { return elem.name() == well.name(); });
                 if ( it == wells.end() )
                     wells.push_back( well );
@@ -1274,13 +1274,13 @@ struct EfficiencyFactor
 
     void setFactors(const Opm::SummaryNode&        node,
                     const Opm::Schedule&           schedule,
-                    const std::vector<Opm::Well2>& schedule_wells,
+                    const std::vector<Opm::Well>& schedule_wells,
                     const int                      sim_step);
 };
 
 void EfficiencyFactor::setFactors(const Opm::SummaryNode&        node,
                                   const Opm::Schedule&           schedule,
-                                  const std::vector<Opm::Well2>& schedule_wells,
+                                  const std::vector<Opm::Well>& schedule_wells,
                                   const int                      sim_step)
 {
     this->factors.clear();
@@ -1302,7 +1302,7 @@ void EfficiencyFactor::setFactors(const Opm::SummaryNode&        node,
             continue;
 
         double eff_factor = well.getEfficiencyFactor();
-        const auto* group_ptr = std::addressof(schedule.getGroup2(well.groupName(), sim_step));
+        const auto* group_ptr = std::addressof(schedule.getGroup(well.groupName(), sim_step));
 
         while(true){
             if((   is_group
@@ -1313,7 +1313,7 @@ void EfficiencyFactor::setFactors(const Opm::SummaryNode&        node,
 
             if (group_ptr->name() == "FIELD")
                 break;
-            group_ptr = std::addressof( schedule.getGroup2( group_ptr->parent(), sim_step ) );
+            group_ptr = std::addressof( schedule.getGroup( group_ptr->parent(), sim_step ) );
         }
 
         this->factors.emplace_back( well.name(), eff_factor );
@@ -1369,7 +1369,7 @@ namespace Evaluator {
             const auto wells = get_wells
                 ? find_wells(input.sched, this->node_,
                              static_cast<int>(sim_step), input.reg)
-                : std::vector<Opm::Well2>{};
+                : std::vector<Opm::Well>{};
 
             if (get_wells && wells.empty())
                 // Parameter depends on well information, but no active

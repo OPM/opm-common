@@ -46,7 +46,7 @@ namespace UDA {
 }
 
 
-double eval_well_uda_rate(const UDAValue& value, const std::string& well, const SummaryState& st, double udq_default, Well2::InjectorType wellType, const UnitSystem& unitSystem) {
+double eval_well_uda_rate(const UDAValue& value, const std::string& well, const SummaryState& st, double udq_default, Well::InjectorType wellType, const UnitSystem& unitSystem) {
     double raw_rate = eval_well_uda(value, well, st, udq_default);
     return injection::rateToSI(raw_rate, wellType, unitSystem);
 }

@@ -618,7 +618,7 @@ BOOST_AUTO_TEST_CASE (Declared_MSW_Data)
     const auto rptStep = std::size_t{1};
 
     const auto ih = MockIH {
-        static_cast<int>(simCase.sched.getWells2(rptStep).size())
+        static_cast<int>(simCase.sched.getWells(rptStep).size())
     };
 
     BOOST_CHECK_EQUAL(ih.nwells, MockIH::Sz{2});

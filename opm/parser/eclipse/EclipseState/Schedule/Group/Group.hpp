@@ -31,7 +31,7 @@
 namespace Opm {
 
 class SummaryState;
-class Group2 {
+class Group {
 public:
 
 // A group can have both injection controls and production controls set at
@@ -161,7 +161,7 @@ struct ProductionControls {
 };
 
 
-    Group2(const std::string& group_name, std::size_t insert_index_arg, std::size_t init_step_arg, double udq_undefined_arg, const UnitSystem& unit_system);
+    Group(const std::string& group_name, std::size_t insert_index_arg, std::size_t init_step_arg, double udq_undefined_arg, const UnitSystem& unit_system);
 
     bool defined(std::size_t timeStep) const;
     std::size_t insert_index() const;
@@ -223,8 +223,8 @@ private:
     GroupProductionProperties production_properties{};
 };
 
-Group2::GroupType operator |(Group2::GroupType lhs, Group2::GroupType rhs);
-Group2::GroupType operator &(Group2::GroupType lhs, Group2::GroupType rhs);
+Group::GroupType operator |(Group::GroupType lhs, Group::GroupType rhs);
+Group::GroupType operator &(Group::GroupType lhs, Group::GroupType rhs);
 
 }
 

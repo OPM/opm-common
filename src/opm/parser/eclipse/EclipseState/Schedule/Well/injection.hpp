@@ -21,12 +21,12 @@
 #define INJECTION_HPP
 
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well2.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
 
 namespace Opm {
 namespace injection {
 
-double rateToSI(double rawRate, Well2::InjectorType wellType, const Opm::UnitSystem &unitSystem);
+double rateToSI(double rawRate, Well::InjectorType wellType, const Opm::UnitSystem &unitSystem);
 double rateToSI(double rawRate, Phase wellPhase, const Opm::UnitSystem& unitSystem);
 
 }
