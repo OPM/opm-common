@@ -733,6 +733,16 @@ namespace Opm {
         return value;
     }
 
+
+
+    static double cell_depth(const EclipseGrid * grid, std::size_t cell_index, bool active_only) {
+        if (active_only)
+            return grid->getCellDepth( grid->getGlobalIndex(cell_index) );
+        else
+            return grid->getCellDepth(cell_index);
+    }
+
+
     static std::vector< double > satnumApply( size_t size,
                                               const std::string& columnName,
                                               const std::vector< double >& fallbackValues,
@@ -749,19 +759,21 @@ namespace Opm {
         // cell and we would need to know how the simulator wants to interpolate between
         // sampling points. Both of these are outside the scope of opm-parser, so we just
         // assign a NaN in this case...
+        bool active_only = (size == eclipseGrid->getNumActive());
         const bool useEnptvd = tableManager->useEnptvd();
         const auto& enptvdTables = tableManager->getEnptvdTables();
-        const auto gridsize = eclipseGrid->getCartesianSize();
-        for( size_t cellIdx = 0; cellIdx < gridsize; cellIdx++ ) {
+        for( size_t cellIdx = 0; cellIdx < values.size(); cellIdx++ ) {
             int satTableIdx = satnum_data[cellIdx] - 1;
             int endNum = endnum_data[cellIdx] - 1;
 
-            if (! eclipseGrid->cellActive(cellIdx)) {
-                // Pick from appropriate saturation region if defined
-                // in this cell, else use region 1 (satTableIdx == 0).
-                values[cellIdx] = (satTableIdx >= 0)
-                    ? fallbackValues[satTableIdx] : fallbackValues[0];
-                continue;
+            if (!active_only) {
+                if (! eclipseGrid->cellActive(cellIdx)) {
+                    // Pick from appropriate saturation region if defined
+                    // in this cell, else use region 1 (satTableIdx == 0).
+                    values[cellIdx] = (satTableIdx >= 0)
+                        ? fallbackValues[satTableIdx] : fallbackValues[0];
+                    continue;
+                }
             }
 
             // Active cell better have {SAT,END}NUM > 0.
@@ -774,15 +786,15 @@ namespace Opm {
                 };
             }
 
-            double cellDepth = eclipseGrid->getCellDepth( cellIdx );
+            //double cellDepth = eclipseGrid->getCellDepth( cellIdx );
 
 
             values[cellIdx] = selectValue(enptvdTables,
-                                        (useEnptvd && endNum >= 0) ? endNum : -1,
-                                        columnName,
-                                        cellDepth,
-                                        fallbackValues[ satTableIdx ],
-                                        useOneMinusTableValue);
+                                          (useEnptvd && endNum >= 0) ? endNum : -1,
+                                          columnName,
+                                          cell_depth(eclipseGrid, cellIdx, active_only),
+                                          fallbackValues[ satTableIdx ],
+                                          useOneMinusTableValue);
         }
 
         return values;
@@ -832,19 +844,21 @@ namespace Opm {
         // cell and we would need to know how the simulator wants to interpolate between
         // sampling points. Both of these are outside the scope of opm-parser, so we just
         // assign a NaN in this case...
+        bool active_only = (size == eclipseGrid->getNumActive());
         const bool useImptvd = tableManager->useImptvd();
         const TableContainer& imptvdTables = tableManager->getImptvdTables();
-        const auto gridsize = eclipseGrid->getCartesianSize();
-        for( size_t cellIdx = 0; cellIdx < gridsize; cellIdx++ ) {
+        for( size_t cellIdx = 0; cellIdx < values.size(); cellIdx++ ) {
             int imbTableIdx = imbnum_data[ cellIdx ] - 1;
             int endNum = endnum_data[ cellIdx ] - 1;
 
-            if (! eclipseGrid->cellActive(cellIdx)) {
-                // Pick from appropriate saturation region if defined
-                // in this cell, else use region 1 (imbTableIdx == 0).
-                values[cellIdx] = (imbTableIdx >= 0)
-                    ? fallBackValues[imbTableIdx] : fallBackValues[0];
-                continue;
+            if (!active_only) {
+                if (! eclipseGrid->cellActive(cellIdx)) {
+                    // Pick from appropriate saturation region if defined
+                    // in this cell, else use region 1 (imbTableIdx == 0).
+                    values[cellIdx] = (imbTableIdx >= 0)
+                        ? fallBackValues[imbTableIdx] : fallBackValues[0];
+                    continue;
+                }
             }
 
             // Active cell better have {IMB,END}NUM > 0.
@@ -857,14 +871,12 @@ namespace Opm {
                 };
             }
 
-            double cellDepth = eclipseGrid->getCellDepth( cellIdx );
-
             values[cellIdx] = selectValue(imptvdTables,
-                                                (useImptvd && endNum >= 0) ? endNum : -1,
-                                                columnName,
-                                                cellDepth,
-                                                fallBackValues[imbTableIdx],
-                                                useOneMinusTableValue);
+                                          (useImptvd && endNum >= 0) ? endNum : -1,
+                                          columnName,
+                                          cell_depth(eclipseGrid, cellIdx, active_only),
+                                          fallBackValues[imbTableIdx],
+                                          useOneMinusTableValue);
         }
 
         return values;
