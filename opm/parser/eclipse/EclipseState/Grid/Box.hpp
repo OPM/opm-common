@@ -25,7 +25,9 @@
 #include <cstddef>
 
 namespace Opm {
+    class DeckRecord;
     class EclipseGrid;
+
     class Box {
     public:
 
@@ -44,6 +46,9 @@ namespace Opm {
 
         Box(const EclipseGrid& grid);
         Box(const EclipseGrid& grid , int i1 , int i2 , int j1 , int j2 , int k1 , int k2);
+        void update(const DeckRecord& deckRecord);
+        void reset();
+
         size_t size() const;
         bool   isGlobal() const;
         size_t getDim(size_t idim) const;
@@ -60,11 +65,12 @@ namespace Opm {
         int K2() const;
 
     private:
+        void init(int i1, int i2, int j1, int j2, int k1, int k2);
         void initIndexList();
         const EclipseGrid& grid;
+        size_t m_stride[3];
         size_t m_dims[3] = { 0, 0, 0 };
         size_t m_offset[3];
-        size_t m_stride[3];
 
         bool   m_isGlobal;
         std::vector<size_t> global_index_list;

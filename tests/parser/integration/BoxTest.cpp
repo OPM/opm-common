@@ -38,12 +38,16 @@ inline std::string prefix() {
     return boost::unit_test::framework::master_test_suite().argv[1];
 }
 
-inline EclipseState makeState(const std::string& fileName) {
+inline Deck makeDeck(const std::string& fileName) {
     Parser parser;
     boost::filesystem::path boxFile(fileName);
-    auto deck =  parser.parseFile(boxFile.string());
-    return EclipseState( deck );
+    return parser.parseFile(boxFile.string());
 }
+
+inline EclipseState makeState(const std::string& fileName) {
+    return EclipseState( makeDeck(fileName) );
+}
+
 
 BOOST_AUTO_TEST_CASE( PERMX ) {
     EclipseState state = makeState( prefix() + "BOX/BOXTEST1" );
@@ -155,3 +159,18 @@ BOOST_AUTO_TEST_CASE( OPERATE ) {
     BOOST_CHECK_EQUAL( ntg[grid.getGlobalIndex(0,0,4)], 1.5 );  // MINVALUE
 }
 
+BOOST_AUTO_TEST_CASE( CONSTRUCTOR_AND_UPDATE ) {
+    auto deck = makeDeck( prefix() + "BOX/BOXTEST1" );
+    EclipseGrid grid(deck);
+    const auto& box_keyword = deck.getKeyword("BOX", 0);
+    const auto& operate_keyword = deck.getKeyword("OPERATE");
+    Box box(grid);
+    box.update(box_keyword.getRecord(0));
+    BOOST_CHECK_EQUAL(box.size(), 8);
+
+    box.update( operate_keyword.getRecord(0) );
+    BOOST_CHECK_EQUAL(box.size(), 50);
+
+    box.reset();
+    BOOST_CHECK_EQUAL(box.size(), 1000);
+}

@@ -19,6 +19,9 @@
 
 #include <stdexcept>
 
+#include <opm/parser/eclipse/Deck/DeckItem.hpp>
+#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
+
 #include <opm/parser/eclipse/EclipseState/Grid/Box.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
@@ -36,6 +39,12 @@ namespace {
     }
 
 
+    void update_default(int &value, std::size_t& default_count, const Opm::DeckItem& item) {
+        if (item.defaultApplied(0))
+            default_count += 1;
+        else
+            value = item.get<int>(0) - 1;
+    }
 }
 
 namespace Opm {
@@ -43,33 +52,58 @@ namespace Opm {
     Box::Box(const EclipseGrid& grid_arg) :
         grid(grid_arg)
     {
-        m_dims[0] = grid_arg.getNX();
-        m_dims[1] = grid_arg.getNY();
-        m_dims[2] = grid_arg.getNZ();
-
-        m_offset[0] = 0;
-        m_offset[1] = 0;
-        m_offset[2] = 0;
-
-        m_stride[0] = 1;
-        m_stride[1] = m_dims[0];
-        m_stride[2] = m_dims[0] * m_dims[1];
-
-        m_isGlobal = true;
-        initIndexList();
+        this->reset();
     }
 
 
     Box::Box(const EclipseGrid& grid_arg, int i1 , int i2 , int j1 , int j2 , int k1 , int k2) :
         grid(grid_arg)
     {
-        std::size_t nx = grid_arg.getNX();
-        std::size_t ny = grid_arg.getNY();
-        std::size_t nz = grid_arg.getNZ();
+        this->init(i1,i2,j1,j2,k1,k2);
+    }
 
-        assert_dims(nx , i1 , i2);
-        assert_dims(ny , j1 , j2);
-        assert_dims(nz , k1 , k2);
+
+    void Box::update(const DeckRecord& deckRecord) {
+        const auto& I1Item = deckRecord.getItem("I1");
+        const auto& I2Item = deckRecord.getItem("I2");
+        const auto& J1Item = deckRecord.getItem("J1");
+        const auto& J2Item = deckRecord.getItem("J2");
+        const auto& K1Item = deckRecord.getItem("K1");
+        const auto& K2Item = deckRecord.getItem("K2");
+
+        std::size_t default_count = 0;
+        int i1 = 0;
+        int i2 = this->grid.getNX() - 1;
+        int j1 = 0;
+        int j2 = this->grid.getNY() - 1;
+        int k1 = 0;
+        int k2 = this->grid.getNZ() - 1;
+
+        update_default(i1, default_count, I1Item);
+        update_default(i2, default_count, I2Item);
+        update_default(j1, default_count, J1Item);
+        update_default(j2, default_count, J2Item);
+        update_default(k1, default_count, K1Item);
+        update_default(k2, default_count, K2Item);
+
+        if (default_count != 6)
+            this->init(i1,i2,j1,j2,k1,k2);
+    }
+
+
+    void Box::reset()
+    {
+        this->init(0, this->grid.getNX() - 1 , 0, this->grid.getNY() - 1, 0, this->grid.getNZ() - 1);
+    }
+
+
+    void Box::init(int i1, int i2, int j1, int j2, int k1, int k2) {
+        assert_dims(this->grid.getNX(), i1 , i2);
+        assert_dims(this->grid.getNY(), j1 , j2);
+        assert_dims(this->grid.getNZ(), k1 , k2);
+        m_stride[0] = 1;
+        m_stride[1] = this->grid.getNX();
+        m_stride[2] = this->grid.getNX() * this->grid.getNY();
 
         m_dims[0] = (size_t) (i2 - i1 + 1);
         m_dims[1] = (size_t) (j2 - j1 + 1);
@@ -79,11 +113,7 @@ namespace Opm {
         m_offset[1] = (size_t) j1;
         m_offset[2] = (size_t) k1;
 
-        m_stride[0] = 1;
-        m_stride[1] = nx;
-        m_stride[2] = nx*ny;
-
-        if (size() == size_t(nx*ny*nz))
+        if (size() == this->grid.getCartesianSize())
             m_isGlobal = true;
         else
             m_isGlobal = false;
