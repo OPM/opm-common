@@ -738,20 +738,12 @@ namespace Opm {
                                               const std::vector< double >& fallbackValues,
                                               const TableManager* tableManager,
                                               const EclipseGrid* eclipseGrid,
-                                              const GridProperties<int>* intGridProperties,
+                                              const std::vector<int>& satnum_data,
+                                              const std::vector<int>& endnum_data,
                                               bool useOneMinusTableValue ) {
 
 
         std::vector< double > values( size, 0 );
-        auto tabdims = tableManager->getTabdims();
-
-        const auto& satnum = intGridProperties->getKeyword("SATNUM");
-        const auto& endnum = intGridProperties->getKeyword("ENDNUM");
-        int numSatTables = tabdims.getNumSatTables();
-
-        // SATNUM = 0 *might* occur in deactivated cells
-        satnum.checkLimits( 0 , numSatTables );
-
         // Actually assign the defaults. If the ENPVD keyword was specified in the deck,
         // this currently cannot be done because we would need the Z-coordinate of the
         // cell and we would need to know how the simulator wants to interpolate between
@@ -759,9 +751,6 @@ namespace Opm {
         // assign a NaN in this case...
         const bool useEnptvd = tableManager->useEnptvd();
         const auto& enptvdTables = tableManager->getEnptvdTables();
-        const auto& satnum_data = satnum.getData();
-        const auto& endnum_data = endnum.getData();
-
         const auto gridsize = eclipseGrid->getCartesianSize();
         for( size_t cellIdx = 0; cellIdx < gridsize; cellIdx++ ) {
             int satTableIdx = satnum_data[cellIdx] - 1;
@@ -799,24 +788,44 @@ namespace Opm {
         return values;
     }
 
+
+    static std::vector< double > satnumApply( size_t size,
+                                              const std::string& columnName,
+                                              const std::vector< double >& fallbackValues,
+                                              const TableManager* tableManager,
+                                              const EclipseGrid* eclipseGrid,
+                                              const GridProperties<int>* intGridProperties,
+                                              bool useOneMinusTableValue ) {
+        auto tabdims = tableManager->getTabdims();
+        const auto& satnum = intGridProperties->getKeyword("SATNUM");
+        const auto& endnum = intGridProperties->getKeyword("ENDNUM");
+        int numSatTables = tabdims.getNumSatTables();
+
+        // SATNUM = 0 *might* occur in deactivated cells
+        satnum.checkLimits( 0 , numSatTables );
+
+        return satnumApply(size,
+                           columnName,
+                           fallbackValues,
+                           tableManager,
+                           eclipseGrid,
+                           satnum.getData(),
+                           endnum.getData(),
+                           useOneMinusTableValue);
+    }
+
+
+
     static std::vector< double > imbnumApply( size_t size,
                                               const std::string& columnName,
                                               const std::vector< double >& fallBackValues,
                                               const TableManager* tableManager,
                                               const EclipseGrid* eclipseGrid,
-                                              const GridProperties<int>* intGridProperties,
+                                              const std::vector<int>& imbnum_data,
+                                              const std::vector<int>& endnum_data,
                                               bool useOneMinusTableValue ) {
 
         std::vector< double > values( size, 0 );
-
-        const auto& imbnum = intGridProperties->getKeyword("IMBNUM");
-        const auto& endnum = intGridProperties->getKeyword("ENDNUM");
-
-        auto tabdims = tableManager->getTabdims();
-        const int numSatTables = tabdims.getNumSatTables();
-
-        // IMBNUM = 0 *might* occur in deactivated cells
-        imbnum.checkLimits( 0 , numSatTables );
 
         // Actually assign the defaults. if the ENPVD keyword was specified in the deck,
         // this currently cannot be done because we would need the Z-coordinate of the
@@ -826,8 +835,6 @@ namespace Opm {
         const bool useImptvd = tableManager->useImptvd();
         const TableContainer& imptvdTables = tableManager->getImptvdTables();
         const auto gridsize = eclipseGrid->getCartesianSize();
-        const auto& imbnum_data = imbnum.getData();
-        const auto& endnum_data = endnum.getData();
         for( size_t cellIdx = 0; cellIdx < gridsize; cellIdx++ ) {
             int imbTableIdx = imbnum_data[ cellIdx ] - 1;
             int endNum = endnum_data[ cellIdx ] - 1;
@@ -862,6 +869,35 @@ namespace Opm {
 
         return values;
     }
+
+
+    static std::vector< double > imbnumApply( size_t size,
+                                              const std::string& columnName,
+                                              const std::vector< double >& fallbackValues,
+                                              const TableManager* tableManager,
+                                              const EclipseGrid* eclipseGrid,
+                                              const GridProperties<int>* intGridProperties,
+                                              bool useOneMinusTableValue ) {
+        auto tabdims = tableManager->getTabdims();
+        const auto& imbnum = intGridProperties->getKeyword("IMBNUM");
+        const auto& endnum = intGridProperties->getKeyword("ENDNUM");
+        int numSatTables = tabdims.getNumSatTables();
+
+        // IMBNUM = 0 *might* occur in deactivated cells
+        imbnum.checkLimits( 0 , numSatTables );
+
+        return imbnumApply(size,
+                           columnName,
+                           fallbackValues,
+                           tableManager,
+                           eclipseGrid,
+                           imbnum.getData(),
+                           endnum.getData(),
+                           useOneMinusTableValue);
+
+    }
+
+
 
     std::vector< double > SGLEndpoint( size_t size,
                                        const TableManager * tableManager,
