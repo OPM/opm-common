@@ -74,7 +74,6 @@ namespace Opm {
         std::string name_{};
         int         number_{std::numeric_limits<int>::min()};
         bool        userDefined_{false};
-        Location    loc;
     };
 
     bool operator==(const SummaryNode& lhs, const SummaryNode& rhs);
