@@ -72,6 +72,8 @@ namespace Opm {
 
         template< typename T > const std::vector< T >& getData() const;
         const std::vector< double >& getSIDoubleData() const;
+        std::vector<bool> defaulted() const;
+
 
         void push_back( UDAValue );
         void push_back( int );
@@ -99,7 +101,9 @@ namespace Opm {
         /*
           The comparison can be adjusted with the cmp_default and
           cmp_numeric flags. If cmp_default is set to true the
-          comparison will take the defaulted status of the items into
+          comparison will take the defaulted status of the items int
+          size_t size() const;
+
           account, i.e. two items will compare differently if one is
           defaulted and the other has the default value explicitly
           set. The default behaviour is cmp_default == false -
@@ -116,6 +120,10 @@ namespace Opm {
         bool operator!=(const DeckItem& other) const;
         static bool to_bool(std::string string_value);
     private:
+        enum class status : unsigned char {valid = 0,
+                                           default_ = 1,
+                                           invalid = 2};
+
         mutable std::vector< double > dval;
         std::vector< int > ival;
         std::vector< std::string > sval;
@@ -134,6 +142,8 @@ namespace Opm {
         std::vector< Dimension > active_dimensions;
         std::vector< Dimension > default_dimensions;
 
+        size_t __size() const;
+        void assert_index(std::size_t index) const;
         template< typename T > std::vector< T >& value_ref();
         template< typename T > const std::vector< T >& value_ref() const;
         template< typename T > void push( T );

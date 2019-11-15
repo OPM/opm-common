@@ -71,6 +71,16 @@ const std::vector< UDAValue >& DeckItem::value_ref< UDAValue >() const {
 }
 
 
+std::vector<bool> DeckItem::defaulted() const {
+    std::vector<bool> def(this->value_status.size(), true);
+    for (std::size_t i=0; i < this->value_status.size(); i++) {
+        if (this->value_status[i] == status::valid)
+            def[i] = false;
+    }
+    return def;
+}
+
+
 DeckItem::DeckItem( const std::string& nm, int) :
     type( get_type< int >() ),
     item_name( nm )
@@ -131,8 +141,16 @@ T DeckItem::get( size_t index ) const {
     return this->value_ref< T >()[index];
 }
 
+
+void DeckItem::assert_index(std::size_t index) const {
+    if (this->value_status.at(index) == status::invalid)
+        throw std::invalid_argument("Tried to access invalid deck value for item: " + this->name());
+}
+
+
 template<>
 UDAValue DeckItem::get( size_t index ) const {
+    this->assert_index(index);
     auto value = this->value_ref<UDAValue>().at(index);
     if (this->active_dimensions.empty())
         return value;
@@ -235,12 +253,14 @@ void DeckItem::push_backDummyDefault() {
 }
 
 std::string DeckItem::getTrimmedString( size_t index ) const {
+    this->assert_index(index);
     return boost::algorithm::trim_copy(
                this->value_ref< std::string >().at( index )
            );
 }
 
 double DeckItem::getSIDouble( size_t index ) const {
+    this->assert_index(index);
     return this->getSIDoubleData().at( index );
 }
 
@@ -478,4 +498,9 @@ template void DeckItem::push_backDummyDefault<UDAValue>();
 template const std::vector< int >& DeckItem::getData< int >() const;
 template const std::vector< UDAValue >& DeckItem::getData< UDAValue >() const;
 template const std::vector< std::string >& DeckItem::getData< std::string >() const;
+
+template void DeckItem::push_backDummyDefault<int>( );
+template void DeckItem::push_backDummyDefault<double>( );
+template void DeckItem::push_backDummyDefault<std::string>( );
+template void DeckItem::push_backDummyDefault<UDAValue>( );
 }

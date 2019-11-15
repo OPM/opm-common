@@ -209,6 +209,21 @@ BOOST_AUTO_TEST_CASE(DefaultAppliedString) {
     BOOST_CHECK( deckStringItem.data_size() == 1 );
     BOOST_CHECK( deckStringItem.get< std::string >(0) == "FOO" );
     BOOST_CHECK( deckStringItem.defaultApplied(0) );
+
+    deckStringItem.push_back("BAR");
+    BOOST_CHECK( deckStringItem.data_size() == 2 );
+    BOOST_CHECK( deckStringItem.get< std::string >(1) == "BAR" );
+    BOOST_CHECK( !deckStringItem.defaultApplied(1) );
+
+    deckStringItem.push_backDefault( "FOO" );
+    BOOST_CHECK( deckStringItem.data_size() == 3 );
+    BOOST_CHECK( deckStringItem.get< std::string >(2) == "FOO" );
+    BOOST_CHECK( deckStringItem.defaultApplied(2) );
+
+    const auto& defaulted = deckStringItem.defaulted();
+    BOOST_CHECK( defaulted[0] );
+    BOOST_CHECK(!defaulted[1] );
+    BOOST_CHECK( defaulted[2] );
 }
 
 
