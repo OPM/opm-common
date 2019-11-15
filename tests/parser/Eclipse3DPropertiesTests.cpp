@@ -271,7 +271,7 @@ struct Setup
             tablemanager(deck),
             grid(deck),
             props(deck, tablemanager, grid),
-            fp(deck, grid)
+            fp(deck, grid, tablemanager)
     {
     }
 };

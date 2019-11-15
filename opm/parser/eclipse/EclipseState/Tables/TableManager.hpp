@@ -337,7 +337,7 @@ namespace Opm {
         std::vector<PvtoTable> m_pvtoTables;
         std::vector<Rock2dTable> m_rock2dTables;
         std::vector<Rock2dtrTable> m_rock2dtrTables;
-        PvtwTable m_pvtwTable;        
+        PvtwTable m_pvtwTable;
         PvcdoTable m_pvcdoTable;
         DensityTable m_densityTable;
         RockTable m_rockTable;

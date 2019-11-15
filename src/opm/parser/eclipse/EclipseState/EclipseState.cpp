@@ -139,7 +139,7 @@ void assert_field_properties(const EclipseGrid& grid, const FieldPropsManager& f
         m_inputGrid(         deck, nullptr ),
         m_eclipseProperties( deck, m_tables, m_inputGrid ),
 #ifdef ENABLE_3DPROPS_TESTING
-        field_props(         deck, m_inputGrid),
+        field_props(         deck, m_inputGrid, m_tables),
 #endif
         m_simulationConfig(  m_eclipseConfig.getInitConfig().restartRequested(), deck, m_eclipseProperties ),
         m_transMult(         GridDims(deck), deck, m_eclipseProperties )

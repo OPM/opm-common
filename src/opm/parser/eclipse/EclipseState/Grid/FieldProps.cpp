@@ -23,6 +23,7 @@
 #include <opm/parser/eclipse/Parser/ParserKeywords/P.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/BoxManager.hpp>
 
@@ -284,9 +285,10 @@ void handle_box_keyword(const EclipseGrid& grid, const DeckKeyword& deckKeyword,
 
 
 
-FieldProps::FieldProps(const Deck& deck, const EclipseGrid& grid_arg) :
+FieldProps::FieldProps(const Deck& deck, const EclipseGrid& grid_arg, const TableManager& table_arg) :
     unit_system(deck.getActiveUnitSystem()),
     grid(std::addressof(grid_arg)),
+    tables(table_arg),
     active_size(grid_arg.getNumActive()),
     actnum(grid_arg.getACTNUM()),
     default_region(default_region_keyword(deck))
