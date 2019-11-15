@@ -244,6 +244,11 @@ const T& ParserItem::getDefault() const {
     if( get_type< T >() != this->data_type )
         throw std::invalid_argument( "getDefault: Wrong type." );
 
+    /*
+      If the item has size_type == ALL you are actually allowed to ask for the
+      default value even if no default value has been specified. This is
+      obviously a hole ....
+    */
     if( !this->hasDefault() && this->m_sizeType == item_size::ALL )
         return default_value< T >();
 
