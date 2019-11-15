@@ -271,8 +271,8 @@ void ECLRegressionTest::checkSpesificKeyword(std::vector<std::string>& keywords1
     auto search2 = std::find(keywords2.begin(), keywords2.end(), spesificKeyword);
 
     if (search1 == keywords1.end() && search2 == keywords2.end()) {
-        std::cout << "Testing spesific kewyword in " << reference << ". Keyword not found in any of the cases ." << std::endl;
-        OPM_THROW(std::runtime_error, "\nTesting spesific kewyword in " << reference << ". Keyword not found in any of the cases .");
+        std::cout << "Testing specific keyword \"" << spesificKeyword << "\" in " << reference << ". Keyword not found in any of the cases ." << std::endl;
+        OPM_THROW(std::runtime_error, "\nTesting spesific keyword \"" << spesificKeyword << "\" in " << reference << ". Keyword not found in any of the cases .");
     }
 
     eclArrType arrType;
@@ -918,7 +918,8 @@ void ECLRegressionTest::results_smry()
                 }
                 
                 if (vect1.size() != vect2.size()) {
-                    OPM_THROW(std::runtime_error, "\nKeyword " << keywords1[i] << " summary vector of different length");
+                    OPM_THROW(std::runtime_error, "\nKeyword " << keywords1[i] << " summary vector of different length ("
+                              << vect1.size() << " != " << vect2.size() <<")");
                 }
 
                 compareFloatingPointVectors(vect1, vect2, keywords1[i], reference);
