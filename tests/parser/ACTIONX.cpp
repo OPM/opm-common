@@ -26,6 +26,8 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
+#include <opm/common/utility/TimeService.hpp>
+
 #include <opm/common/OpmLog/Location.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
@@ -44,7 +46,7 @@ using namespace Opm;
 
 
 
-#if 0
+
 BOOST_AUTO_TEST_CASE(Create) {
     const auto action_kw = std::string{ R"(
 ACTIONX
@@ -52,13 +54,13 @@ ACTIONX
    WWCT OPX  > 0.75 /
 /
 )"};
-    ActionX action1("NAME", 10, 100, 0);
+    Action::ActionX action1("NAME", 10, 100, 0);
     BOOST_CHECK_EQUAL(action1.name(), "NAME");
 
     const auto deck = Parser{}.parseString( action_kw );
     const auto& kw = deck.getKeyword("ACTIONX");
 
-    ActionX action2(kw, 0);
+    Action::ActionX action2(kw, 0);
     BOOST_CHECK_EQUAL(action2.name(), "ACTION");
 }
 
@@ -142,14 +144,14 @@ TSTEP
 
 
 BOOST_AUTO_TEST_CASE(TestActions) {
-    Opm::SummaryState st;
+    Opm::SummaryState st(std::chrono::system_clock::now());
     Opm::Action::Context context(st);
-    Opm::Actions config;
+    Opm::Action::Actions config;
     std::vector<std::string> matching_wells;
     BOOST_CHECK_EQUAL(config.size(), 0);
     BOOST_CHECK(config.empty());
 
-    Opm::ActionX action1("NAME", 10, 100, 0);
+    Opm::Action::ActionX action1("NAME", 10, 100, 0);
     config.add(action1);
     BOOST_CHECK_EQUAL(config.size(), 1);
     BOOST_CHECK(!config.empty());
@@ -157,33 +159,33 @@ BOOST_AUTO_TEST_CASE(TestActions) {
     double min_wait = 86400;
     size_t max_eval = 3;
     {
-        Opm::ActionX action("NAME", max_eval, min_wait, util_make_date_utc(1, 7, 2000));
+        Opm::Action::ActionX action("NAME", max_eval, min_wait, asTimeT(TimeStampUTC(TimeStampUTC::YMD{ 2000, 7, 1 })) );
         config.add(action);
         BOOST_CHECK_EQUAL(config.size(), 1);
 
 
-        Opm::ActionX action3("NAME3", 1000000, 0, util_make_date_utc(1,7,2000));
+        Opm::Action::ActionX action3("NAME3", 1000000, 0, asTimeT(TimeStampUTC(TimeStampUTC::YMD{ 2000, 7, 1 })) );
         config.add(action3);
     }
-    Opm::ActionX& action2 = config.at("NAME");
+    const Opm::Action::ActionX& action2 = config.get("NAME");
     // The action2 instance has an empty condition, so it will never evaluate to true.
-    BOOST_CHECK(action2.ready(util_make_date_utc(1,7,2000)));
-    BOOST_CHECK(!action2.ready(util_make_date_utc(1,6,2000)));
-    BOOST_CHECK(!action2.eval(util_make_date_utc(1,6,2000), context));
+    BOOST_CHECK(action2.ready(  asTimeT(TimeStampUTC(TimeStampUTC::YMD{ 2000, 7, 1 }))  ));
+    BOOST_CHECK(!action2.ready(  asTimeT(TimeStampUTC(TimeStampUTC::YMD{ 2000, 6, 1 }))   ));
+    BOOST_CHECK(!action2.eval(asTimeT(TimeStampUTC(TimeStampUTC::YMD{ 2000, 6, 1 })), context));
 
-    auto pending = config.pending( util_make_date_utc(7,8,2000));
+    auto pending = config.pending( asTimeT(TimeStampUTC(TimeStampUTC::YMD{ 2000, 8, 7 }))  );
     BOOST_CHECK_EQUAL( pending.size(), 2);
     for (auto& ptr : pending) {
-        BOOST_CHECK( ptr->ready(util_make_date_utc(7,8,2000)));
-        BOOST_CHECK( !ptr->eval(util_make_date_utc(7,8,2000), context));
+        BOOST_CHECK( ptr->ready(  asTimeT(TimeStampUTC(TimeStampUTC::YMD{ 2000, 8, 7 }))  ));
+        BOOST_CHECK( !ptr->eval(asTimeT(TimeStampUTC(TimeStampUTC::YMD{ 2000, 8, 7 })), context));
     }
-    BOOST_CHECK(!action2.eval(util_make_date_utc(7,8,2000), context));
+    BOOST_CHECK(!action2.eval(asTimeT(TimeStampUTC(TimeStampUTC::YMD{ 2000, 8, 7 })), context));
 }
 
 
 
 BOOST_AUTO_TEST_CASE(TestContext) {
-    Opm::SummaryState st;
+    Opm::SummaryState st(std::chrono::system_clock::now());
     st.update_well_var("OP1", "WOPR", 100);
     Opm::Action::Context context(st);
 
@@ -225,7 +227,7 @@ TSTEP
 }
 
 
-BOOST_AUTO_TEST_CASE(TestAction::AST_BASIC) {
+BOOST_AUTO_TEST_CASE(TestAction_AST_BASIC) {
     // Missing comparator
     BOOST_REQUIRE_THROW( Action::AST( {"WWCT", "OPX", "0.75"} ), std::invalid_argument);
 
@@ -238,7 +240,7 @@ BOOST_AUTO_TEST_CASE(TestAction::AST_BASIC) {
     Action::AST ast1({"WWCT", "OPX", ">", "0.75"});
     Action::AST ast2({"WWCT", "OPX", "=", "WWCT", "OPX"});
     Action::AST ast3({"WWCT", "OPY", ">", "0.75"});
-    SummaryState st;
+    SummaryState st(std::chrono::system_clock::now());
     Action::Context context(st);
     std::vector<std::string> matching_wells;
 
@@ -252,11 +254,11 @@ BOOST_AUTO_TEST_CASE(TestAction::AST_BASIC) {
     BOOST_REQUIRE_THROW(ast3.eval(context), std::out_of_range);
 }
 
-BOOST_AUTO_TEST_CASE(TestAction::AST_OR_AND) {
+BOOST_AUTO_TEST_CASE(TestAction_AST_OR_AND) {
     Action::AST ast_or({"WWCT", "OPX", ">", "0.75", "OR", "WWCT", "OPY", ">", "0.75"});
     Action::AST ast_and({"WWCT", "OPX", ">", "0.75", "AND", "WWCT", "OPY", ">", "0.75"});
     Action::AST par({"WWCT", "OPX", ">", "0.75", "AND", "(", "WWCT", "OPY", ">", "0.75", "OR", "WWCT", "OPZ", ">", "0.75", ")"});
-    SummaryState st;
+    SummaryState st(std::chrono::system_clock::now());
     Action::Context context(st);
 
     context.add("WWCT", "OPX", 100);
@@ -292,7 +294,7 @@ BOOST_AUTO_TEST_CASE(TestAction::AST_OR_AND) {
 
 BOOST_AUTO_TEST_CASE(DATE) {
     Action::AST ast({"MNTH", ">=", "JUN"});
-    SummaryState st;
+    SummaryState st(std::chrono::system_clock::now());
     Action::Context context(st);
 
     context.add("MNTH", 6);
@@ -308,7 +310,7 @@ BOOST_AUTO_TEST_CASE(DATE) {
 
 BOOST_AUTO_TEST_CASE(MANUAL1) {
     Action::AST ast({"GGPR", "FIELD", ">", "50000", "AND", "WGOR", "PR", ">" ,"GGOR", "FIELD"});
-    SummaryState st;
+    SummaryState st(std::chrono::system_clock::now());
     Action::Context context(st);
 
     context.add("GGPR", "FIELD", 60000 );
@@ -329,7 +331,7 @@ BOOST_AUTO_TEST_CASE(MANUAL1) {
 
 BOOST_AUTO_TEST_CASE(MANUAL2) {
     Action::AST ast({"GWCT", "LIST1", ">", "0.70", "AND", "(", "GWPR", "LIST1", ">", "GWPR", "LIST2", "OR", "GWPR", "LIST1", ">", "GWPR", "LIST3", ")"});
-    SummaryState st;
+    SummaryState st(std::chrono::system_clock::now());
     Action::Context context(st);
 
     context.add("GWCT", "LIST1", 1.0);
@@ -365,7 +367,7 @@ BOOST_AUTO_TEST_CASE(MANUAL2) {
 
 BOOST_AUTO_TEST_CASE(MANUAL3) {
     Action::AST ast({"MNTH", ".GE.", "MAR", "AND", "MNTH", ".LE.", "OCT", "AND", "GMWL", "HIGH", ".GE.", "4"});
-    SummaryState st;
+    SummaryState st(std::chrono::system_clock::now());
     Action::Context context(st);
 
     context.add("MNTH", 4);
@@ -388,7 +390,7 @@ BOOST_AUTO_TEST_CASE(MANUAL3) {
 
 BOOST_AUTO_TEST_CASE(MANUAL4) {
     Action::AST ast({"GWCT", "FIELD", ">", "0.8", "AND", "DAY", ">", "1", "AND", "MNTH", ">", "JUN", "AND", "YEAR", ">=", "2021"});
-    SummaryState st;
+    SummaryState st(std::chrono::system_clock::now());
     Action::Context context(st);
 
     context.add("MNTH", 7);
@@ -408,7 +410,7 @@ BOOST_AUTO_TEST_CASE(MANUAL4) {
 
 BOOST_AUTO_TEST_CASE(MANUAL5) {
     Action::AST ast({"WCG2", "PROD1", ">", "WCG5", "PROD2", "AND", "GCG3", "G1", ">", "GCG7", "G2", "OR", "FCG1", ">", "FCG7"});
-    SummaryState st;
+    SummaryState st(std::chrono::system_clock::now());
     Action::Context context(st);
 
     context.add("WCG2", "PROD1", 100);
@@ -448,7 +450,7 @@ BOOST_AUTO_TEST_CASE(MANUAL5) {
 
 BOOST_AUTO_TEST_CASE(LGR) {
     Action::AST ast({"LWCC" , "OPX", "LOCAL", "1", "2", "3", ">", "100"});
-    SummaryState st;
+    SummaryState st(std::chrono::system_clock::now());
     Action::Context context(st);
 
     context.add("LWCC", "OPX:LOCAL:1:2:3", 200);
@@ -459,8 +461,8 @@ BOOST_AUTO_TEST_CASE(LGR) {
 }
 
 
-BOOST_AUTO_TEST_CASE(Action::ContextTest) {
-    SummaryState st;
+BOOST_AUTO_TEST_CASE(Action_ContextTest) {
+    SummaryState st(std::chrono::system_clock::now());
     st.update("WWCT:OP1", 100);
     Action::Context context(st);
 
@@ -477,7 +479,7 @@ BOOST_AUTO_TEST_CASE(Action::ContextTest) {
 
 BOOST_AUTO_TEST_CASE(TestMatchingWells) {
     Action::AST ast({"WOPR", "*", ">", "1.0"});
-    SummaryState st;
+    SummaryState st(std::chrono::system_clock::now());
 
     st.update_well_var("OPX", "WOPR", 0);
     st.update_well_var("OPY", "WOPR", 0.50);
@@ -495,7 +497,7 @@ BOOST_AUTO_TEST_CASE(TestMatchingWells) {
 BOOST_AUTO_TEST_CASE(TestMatchingWells2) {
   Action::AST ast1({"WOPR", "P*", ">", "1.0"});
   Action::AST ast2({"WOPR", "*", ">", "1.0"});
-  SummaryState st;
+  SummaryState st(std::chrono::system_clock::now());
 
   st.update_well_var("PX", "WOPR", 0);
   st.update_well_var("PY", "WOPR", 0.50);
@@ -519,7 +521,7 @@ BOOST_AUTO_TEST_CASE(TestMatchingWells2) {
   BOOST_CHECK_EQUAL( std::count(wells2.begin(), wells2.end(), "PZ") , 1);
   BOOST_CHECK_EQUAL( std::count(wells2.begin(), wells2.end(), "IZ") , 1);
 }
-#endif
+
 
 
 BOOST_AUTO_TEST_CASE(TestMatchingWells_AND) {
