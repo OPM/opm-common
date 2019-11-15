@@ -416,7 +416,7 @@ FieldProps::FieldData<double>& FieldProps::get(const std::string& keyword) {
         if (keywords::PROPS::satfunc_keywords.count(keyword) == 1) {
             this->init_satfunc_keyword(keyword, this->double_data[keyword]);
             auto d = this->double_data[keyword];
-            printf("--- Have initialized: %s ", keyword.c_str());
+            printf("--- Have initialized: %s valid: %d\n", keyword.c_str(), d.valid());
             for (std::size_t i=0; i < d.size(); i++) {
                 printf("%3lg ", d.data[i]);
                 if (i % 10 == 0)
@@ -712,6 +712,11 @@ void FieldProps::scanPROPSSection(const PROPSSection& props_section) {
     for (const auto& keyword : props_section) {
         const std::string& name = keyword.name();
         if (keywords::PROPS::double_keywords.count(name) == 1) {
+            this->handle_double_keyword(keyword, box);
+            continue;
+        }
+
+        if (keywords::PROPS::satfunc_keywords.count(name) == 1) {
             this->handle_double_keyword(keyword, box);
             continue;
         }

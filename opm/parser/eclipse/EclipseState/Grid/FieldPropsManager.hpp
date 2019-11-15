@@ -50,6 +50,7 @@ public:
         method; i.e. if you ask has<T>("UNKNOWN_KEYWORD") you will just get a
         false.
 
+
       - The get<T>("KW") method will try to create a new keyword if it does not
         already have the keyword you are asking for. This implies that you can
         get the following non intuitive sequence of events:

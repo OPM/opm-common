@@ -71,6 +71,7 @@ bool FieldPropsManager::supported(const std::string& keyword) {
     return FieldProps::supported<T>(keyword);
 }
 
+
 template <typename T>
 bool FieldPropsManager::has(const std::string& keyword) const {
     if (!this->fp->has<T>(keyword))
