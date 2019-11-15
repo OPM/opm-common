@@ -65,8 +65,14 @@ static const std::set<std::string> int_keywords = {};
 }
 
 namespace PROPS {
-static const std::set<std::string> double_keywords = {"ISGCR", "ISGU", "SGCR", "SWATINIT", "SWU"};
 static const std::set<std::string> int_keywords = {};
+static const std::set<std::string> double_keywords = {"SWATINIT"};
+static const std::set<std::string> satfunc_keywords = {
+    "SGL",   "ISGL",   "SGU",   "ISGU",  "SWL",    "ISWL",  "SWU",
+    "ISWU",  "SGCR",   "ISGCR", "SOWCR", "ISOWCR", "SOGCR", "ISOGCR",
+    "SWCR",  "ISWCR",  "PCW",   "IPCW",  "PCG",    "IPCG",  "KRW",
+    "IKRW",  "KRWR",   "IKRWR", "KRO",   "IKRO",   "KRORW", "IKRORW",
+    "KRORG", "IKRORG", "KRG",   "IKRG",  "KRGR",   "IKRGR"};
 }
 
 namespace REGIONS {
@@ -323,6 +329,9 @@ bool FieldProps::supported<double>(const std::string& keyword) {
     if (keywords::PROPS::double_keywords.count(keyword) != 0)
         return true;
 
+    if (keywords::PROPS::satfunc_keywords.count(keyword) != 0)
+        return true;
+
     if (keywords::SOLUTION::double_keywords.count(keyword) != 0)
         return true;
 
@@ -343,6 +352,44 @@ bool FieldProps::supported<int>(const std::string& keyword) {
     return false;
 }
 
+
+template <>
+FieldProps::FieldData<int>& FieldProps::get(const std::string& keyword) {
+    auto iter = this->int_data.find(keyword);
+    if (iter != this->int_data.end())
+        return iter->second;
+
+    if (FieldProps::supported<int>(keyword)) {
+        this->int_data[keyword] = FieldData<int>(this->grid->getNumActive());
+        auto init_iter = keywords::int_scalar_init.find(keyword);
+        if (init_iter != keywords::int_scalar_init.end())
+            this->int_data[keyword].assign(init_iter->second);
+
+        return this->int_data[keyword];
+    } else
+        throw std::out_of_range("Integer keyword " + keyword + " is not supported");
+}
+
+
+void FieldProps::init_satfunc_keyword(const std::string& keyword, FieldData<double>& data) {
+    const auto& endnum = this->get<int>("ENDNUM");
+    if (!endnum.valid())
+        throw std::invalid_argument("The ENDNUM vector is not valid");
+
+    if (keyword[0] == 'I') {
+        const auto& imbnum = this->get<int>("IMBNUM");
+        if (!imbnum.valid())
+            throw std::invalid_argument("The IMBNUM vector is not valid");
+        data.assign( satfunc::init(keyword, this->tables, *this->grid, imbnum.data, endnum.data));
+    } else {
+        const auto& satnum = this->get<int>("SATNUM");
+        if (!satnum.valid())
+            throw std::invalid_argument("The SATNUM vector is not valid");
+        data.assign( satfunc::init(keyword, this->tables, *this->grid, satnum.data, endnum.data) );
+    }
+}
+
+
 template <>
 FieldProps::FieldData<double>& FieldProps::get(const std::string& keyword) {
     auto iter = this->double_data.find(keyword);
@@ -351,10 +398,13 @@ FieldProps::FieldData<double>& FieldProps::get(const std::string& keyword) {
 
     if (FieldProps::supported<double>(keyword)) {
         this->double_data[keyword] = FieldData<double>(this->grid->getNumActive());
+
         auto init_iter = keywords::double_scalar_init.find(keyword);
         if (init_iter != keywords::double_scalar_init.end())
             this->double_data[keyword].default_assign(init_iter->second);
 
+        if (keywords::PROPS::satfunc_keywords.count(keyword) == 1)
+            this->init_satfunc_keyword(keyword, this->double_data[keyword]);
         return this->double_data[keyword];
     } else
         throw std::out_of_range("Double keyword: " + keyword + " is not supported");
@@ -448,6 +498,7 @@ void FieldProps::handle_double_keyword(const DeckKeyword& keyword, const Box& bo
     const auto& deck_data = keyword.getSIDoubleData();
     assign_deck(keyword, field_data, deck_data, box);
 }
+
 
 
 void FieldProps::handle_grid_section_double_keyword(const DeckKeyword& keyword, const Box& box) {

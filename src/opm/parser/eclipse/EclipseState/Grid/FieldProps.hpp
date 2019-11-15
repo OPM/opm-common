@@ -190,6 +190,7 @@ private:
     void handle_region_operation(const DeckKeyword& keyword);
     void handle_COPY(const DeckKeyword& keyword, Box box, bool region);
 
+    void init_satfunc_keyword(const std::string& keyword, FieldData<double>& data);
     void handle_keyword(const DeckKeyword& keyword, Box& box);
     void handle_grid_section_double_keyword(const DeckKeyword& keyword, const Box& box);
     void handle_double_keyword(const DeckKeyword& keyword, const Box& box);

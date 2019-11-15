@@ -1598,8 +1598,7 @@ namespace satfunc {
                              const std::vector<int>& endnum) {
 
         using func_type = decltype(&IKRGEndpoint);
-        static std::map<std::string, func_type> func_table = {{"IKRGR", IKRGREndpoint},
-                                                              {"SGL", SGLEndpoint},
+        static std::map<std::string, func_type> func_table = {{"SGL", SGLEndpoint},
                                                               {"ISGL", ISGLEndpoint},
                                                               {"SGU", SGUEndpoint},
                                                               {"ISGU", ISGLEndpoint},
