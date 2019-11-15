@@ -24,7 +24,7 @@
 
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/BoxManager.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/Box.hpp>
 
 namespace Opm {
 
@@ -94,8 +94,8 @@ public:
             std::fill(this->assigned.begin(), this->assigned.end(), true);
         }
 
-        void assign(const FieldData<T>& src, const Box& box) {
-            for (const auto& ci : box.index_list()) {
+        void assign(const FieldData<T>& src, const std::vector<Box::cell_index>& index_list) {
+            for (const auto& ci : index_list) {
                 if (src.assigned[ci.active_index]) {
                     this->data[ci.active_index] = src.data[ci.active_index];
                     this->assigned[ci.active_index] = true;
@@ -103,6 +103,13 @@ public:
             }
         }
 
+        void assign(const std::vector<T>& src) {
+            if (src.size() != this->size())
+                throw std::invalid_argument("Size misamtch got: " + std::to_string(src.size()) + " expected: " + std::to_string(this->size()));
+
+            std::fill(this->assigned.begin(), this->assigned.end(), true);
+            std::copy(src.begin(), src.end(), this->data.begin());
+        }
     };
 
 
@@ -151,21 +158,27 @@ public:
 
 private:
     void scanGRIDSection(const GRIDSection& grid_section);
+    void scanEDITSection(const EDITSection& edit_section);
     void scanPROPSSection(const PROPSSection& props_section);
     void scanREGIONSSection(const REGIONSSection& regions_section);
+    void scanSOLUTIONSection(const SOLUTIONSection& solution_section);
+    void scanSCHEDULESection(const SCHEDULESection& schedule_section);
     double getSIValue(const std::string& keyword, double raw_value) const;
     template <typename T>
     void erase(const std::string& keyword);
 
+
     template <typename T>
     static void apply(ScalarOperation op, FieldData<T>& data, T scalar_value, const std::vector<Box::cell_index>& index_list);
     std::vector<Box::cell_index> region_index( const DeckItem& regionItem, int region_value );
-    void handle_operation(const DeckKeyword& keyword, BoxManager& box_manager);
+    void handle_operation(const DeckKeyword& keyword, Box box);
     void handle_region_operation(const DeckKeyword& keyword);
-    void handle_props_section_double_keyword(const DeckKeyword& keyword, const BoxManager& box_manager);
-    void handle_grid_section_double_keyword(const DeckKeyword& keyword, const BoxManager& box_manager);
-    void handle_int_keyword(const DeckKeyword& keyword, const BoxManager& box_manager);
-    void handle_COPY(const DeckKeyword& keyword, BoxManager& box_manager);
+    void handle_COPY(const DeckKeyword& keyword, Box box, bool region);
+
+    void handle_keyword(const DeckKeyword& keyword, Box& box);
+    void handle_grid_section_double_keyword(const DeckKeyword& keyword, const Box& box);
+    void handle_double_keyword(const DeckKeyword& keyword, const Box& box);
+    void handle_int_keyword(const DeckKeyword& keyword, const Box& box);
 
     const UnitSystem unit_system;
     const EclipseGrid* grid;   // A reseatable pointer to const.
