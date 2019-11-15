@@ -1590,6 +1590,50 @@ namespace satfunc {
         return imbnumApply( grid.getNumActive(), "IKRGR", krgr, tableManager, grid,
                             imbnum, endnum, false );
     }
+
+    std::vector<double> init(const std::string& kewyord,
+                             const TableManager& tables,
+                             const EclipseGrid& grid,
+                             const std::vector<int>& num,
+                             const std::vector<int>& endnum) {
+
+        using func_type = decltype(&IKRGEndpoint);
+        static std::map<std::string, func_type> func_table = {{"IKRGR", IKRGREndpoint},
+                                                              {"SGL", SGLEndpoint},
+                                                              {"ISGL", ISGLEndpoint},
+                                                              {"SGU", SGUEndpoint},
+                                                              {"ISGU", ISGLEndpoint},
+                                                              {"SWL", SWLEndpoint},
+                                                              {"ISWL", ISWLEndpoint},
+                                                              {"SWU", SWUEndpoint},
+                                                              {"ISWU", ISWUEndpoint},
+                                                              {"SGCR", SGCREndpoint},
+                                                              {"ISGCR", ISGCREndpoint},
+                                                              {"SOWCR", SOWCREndpoint},
+                                                              {"ISOWCR", ISOWCREndpoint},
+                                                              {"SOGCR", SOGCREndpoint},
+                                                              {"ISOGCR", ISOWCREndpoint},
+                                                              {"SWCR", SWCREndpoint},
+                                                              {"ISWCR", ISWCREndpoint},
+                                                              {"PCW", PCWEndpoint},
+                                                              {"IPCW", IPCWEndpoint},
+                                                              {"PCG", PCGEndpoint},
+                                                              {"IPCG", IPCGEndpoint},
+                                                              {"KRW", KRWEndpoint},
+                                                              {"IKRW", IKRORWEndpoint},
+                                                              {"KRWR", KRWREndpoint},
+                                                              {"IKRWR", IKRWEndpoint},
+                                                              {"KRO", KROEndpoint},
+                                                              {"IKRO", IKROEndpoint},
+                                                              {"KRORW", KRORWEndpoint},
+                                                              {"IKRORW", IKRORWEndpoint},
+                                                              {"KRORG", KRORGEndpoint},
+                                                              {"IKRORG", IKRORGEndpoint},
+                                                              {"KRG", KRGEndpoint},
+                                                              {"IKRG", IKRGEndpoint},
+                                                              {"KRGR", KRGREndpoint},
+                                                              {"IKRGR", IKRGREndpoint}};
+    }
 }
 
 }

@@ -370,6 +370,8 @@ namespace satfunc {
                                       const EclipseGrid&,
                                       const std::vector<int>&,
                                       const std::vector<int>&);
+
+    std::vector<double> init(const std::string& kewyord, const TableManager& tables, const EclipseGrid& grid, const std::vector<int>& num, const std::vector<int>& endnum);
 }
 }
 
