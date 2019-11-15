@@ -50,7 +50,17 @@ static const std::set<std::string> region_oper_keywords = {"ADDREG", "EQUALREG"}
 static const std::set<std::string> box_keywords = {"BOX", "ENDBOX"};
 static const std::map<std::string, double> double_scalar_init = {{"NTG", 1}};
 
-static const std::map<std::string, int> int_scalar_init = {{"SATNUM", 1}};
+static const std::map<std::string, int> int_scalar_init = {{"ENDNUM", 1},
+                                                           {"EQLNUM", 1},
+                                                           {"FLUXNUM", 1},
+                                                           {"IMBNUM", 1},
+                                                           {"MISCNUM", 1},
+                                                           {"MULTNUM", 1},
+                                                           {"OPERNUM", 1},
+                                                           {"PVTNUM",1},
+                                                           {"ROCKNUM", 1},
+                                                           {"SATNUM", 1},
+                                                           {"PLMIXNUM", 1}};
 
 
 namespace GRID {
@@ -403,8 +413,17 @@ FieldProps::FieldData<double>& FieldProps::get(const std::string& keyword) {
         if (init_iter != keywords::double_scalar_init.end())
             this->double_data[keyword].default_assign(init_iter->second);
 
-        if (keywords::PROPS::satfunc_keywords.count(keyword) == 1)
+        if (keywords::PROPS::satfunc_keywords.count(keyword) == 1) {
             this->init_satfunc_keyword(keyword, this->double_data[keyword]);
+            auto d = this->double_data[keyword];
+            printf("--- Have initialized: %s ", keyword.c_str());
+            for (std::size_t i=0; i < d.size(); i++) {
+                printf("%3lg ", d.data[i]);
+                if (i % 10 == 0)
+                    printf("\n");
+            }
+        }
+
         return this->double_data[keyword];
     } else
         throw std::out_of_range("Double keyword: " + keyword + " is not supported");

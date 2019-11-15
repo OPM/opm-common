@@ -1591,7 +1591,7 @@ namespace satfunc {
                             imbnum, endnum, false );
     }
 
-    std::vector<double> init(const std::string& kewyord,
+    std::vector<double> init(const std::string& keyword,
                              const TableManager& tables,
                              const EclipseGrid& grid,
                              const std::vector<int>& num,
@@ -1632,6 +1632,8 @@ namespace satfunc {
                                                               {"IKRG", IKRGEndpoint},
                                                               {"KRGR", KRGREndpoint},
                                                               {"IKRGR", IKRGREndpoint}};
+        const auto& func = func_table.at(keyword);
+        return func(tables, grid, num, endnum);
     }
 }
 

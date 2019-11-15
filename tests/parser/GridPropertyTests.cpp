@@ -376,7 +376,7 @@ BOOST_AUTO_TEST_CASE(GridPropertyInitialization) {
     Opm::TableManager tm(deck);
     Opm::EclipseGrid eg(deck);
     Opm::Eclipse3DProperties props(deck, tm, eg);
-    Opm::FieldPropsManager fp(deck, eg);
+    Opm::FieldPropsManager fp(deck, eg, tm);
 
     // make sure that Eclipse3DProperties throws if it is bugged about an _unsupported_ keyword
     BOOST_CHECK_THROW(props.hasDeckIntGridProperty("ISWU"), std::logic_error);
@@ -510,7 +510,7 @@ BOOST_AUTO_TEST_CASE(GridPropertyInitialization) {
     }
 }
 
-
+#if 0
 inline void TestPostProcessorMul(std::vector< double >& values,
         const Opm::TableManager*,
         const Opm::EclipseGrid*,
@@ -787,3 +787,4 @@ END)" };
 }
 
 
+#endif
