@@ -467,14 +467,14 @@ std::string ParserItem::createCode(const std::string& indent) const {
 namespace {
 
 template< typename T >
-void scan_item( DeckItem& item, const ParserItem& p, RawRecord& record ) {
-    bool parse_raw = p.parseRaw();
+void scan_item( DeckItem& deck_item, const ParserItem& parser_item, RawRecord& record ) {
+    bool parse_raw = parser_item.parseRaw();
 
-    if( p.sizeType() == ParserItem::item_size::ALL ) {
+    if( parser_item.sizeType() == ParserItem::item_size::ALL ) {
         if (parse_raw) {
             while (record.size()) {
                 auto token = record.pop_front();
-                item.push_back( token.string() );
+                deck_item.push_back( token.string() );
             }
             return;
         }
@@ -486,20 +486,20 @@ void scan_item( DeckItem& item, const ParserItem& p, RawRecord& record ) {
             std::string valueString;
 
             if( !isStarToken( token, countString, valueString ) ) {
-                item.push_back( readValueToken< T >( token ) );
+                deck_item.push_back( readValueToken< T >( token ) );
                 continue;
             }
 
             StarToken st(token, countString, valueString);
 
             if( st.hasValue() ) {
-                item.push_back( readValueToken< T >( st.valueString() ), st.count() );
+                deck_item.push_back( readValueToken< T >( st.valueString() ), st.count() );
                 continue;
             }
 
-            auto value = p.getDefault< T >();
+            auto value = parser_item.getDefault< T >();
             for (size_t i=0; i < st.count(); i++)
-                item.push_backDefault( value );
+                deck_item.push_backDefault( value );
         }
 
         return;
@@ -507,20 +507,20 @@ void scan_item( DeckItem& item, const ParserItem& p, RawRecord& record ) {
 
     if( record.size() == 0 ) {
         // if the record was ended prematurely,
-        if( p.hasDefault() ) {
+        if( parser_item.hasDefault() ) {
             // use the default value for the item, if there is one...
-            item.push_backDefault( p.getDefault< T >() );
+            deck_item.push_backDefault( parser_item.getDefault< T >() );
         } else {
             // ... otherwise indicate that the deck item should throw once the
             // item's data is accessed.
-            item.push_backDummyDefault();
+            deck_item.push_backDummyDefault();
         }
 
         return;
     }
 
     if (parse_raw) {
-        item.push_back( record.pop_front().string());
+        deck_item.push_back( record.pop_front().string());
         return;
     }
 
@@ -530,18 +530,18 @@ void scan_item( DeckItem& item, const ParserItem& p, RawRecord& record ) {
     std::string countString;
     std::string valueString;
     if( !isStarToken(token, countString, valueString) ) {
-        item.push_back( readValueToken<T>( token) );
+        deck_item.push_back( readValueToken<T>( token) );
         return;
     }
 
     StarToken st(token, countString, valueString);
 
     if( st.hasValue() )
-        item.push_back(readValueToken< T >( st.valueString()) );
-    else if( p.hasDefault() )
-        item.push_backDefault( p.getDefault< T >() );
+        deck_item.push_back(readValueToken< T >( st.valueString()) );
+    else if( parser_item.hasDefault() )
+        deck_item.push_backDefault( parser_item.getDefault< T >() );
     else
-        item.push_backDummyDefault();
+        deck_item.push_backDummyDefault();
 
     const auto value_start = token.size() - valueString.size();
     // replace the first occurence of "N*FOO" by a sequence of N-1 times
