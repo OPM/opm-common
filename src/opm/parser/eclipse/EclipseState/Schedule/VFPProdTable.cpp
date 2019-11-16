@@ -48,7 +48,7 @@ VFPProdTable::FLO_TYPE getFloType( const DeckItem& item) {
         return VFPProdTable::FLO_GAS;
     }
     else {
-        throw std::invalid_argument("Invalid RATE_TYPE string");
+        throw std::invalid_argument("Invalid RATE_TYPE string: " + flo_string);
     }
     return VFPProdTable::FLO_INVALID;
 }
