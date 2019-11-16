@@ -1,7 +1,7 @@
 {"name" : "GINODE" ,
  "sections" : ["PROPS"],
  "size" : {"keyword" : "TABDIMS" , "item" : "NTPVT"},
-"items" : [{"name" : "table" ,
+"items" : [{"name" : "DATA" ,
             "value_type" : "DOUBLE" ,
             "size_type" : "ALL",
             "dimension" : ["1"]}]}

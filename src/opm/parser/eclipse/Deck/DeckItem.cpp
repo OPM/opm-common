@@ -118,7 +118,7 @@ bool DeckItem::hasValue( size_t index ) const {
     }
 }
 
-size_t DeckItem::size() const {
+size_t DeckItem::data_size() const {
     switch( this->type ) {
         case type_tag::integer: return this->ival.size();
         case type_tag::fdouble: return this->dval.size();
@@ -128,8 +128,9 @@ size_t DeckItem::size() const {
     }
 }
 
+
 size_t DeckItem::out_size() const {
-    size_t data_size = this->size();
+    size_t data_size = this->data_size();
     return std::max( data_size , this->defaulted.size() );
 }
 
@@ -365,7 +366,7 @@ bool DeckItem::equal(const DeckItem& other, bool cmp_default, bool cmp_numeric) 
     if (this->type != other.type)
         return false;
 
-    if (this->size() != other.size())
+    if (this->data_size() != other.data_size())
         return false;
 
     if (this->item_name != other.item_name)

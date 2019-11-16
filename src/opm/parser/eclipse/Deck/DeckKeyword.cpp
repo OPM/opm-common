@@ -237,7 +237,7 @@ namespace Opm {
 
 
     size_t DeckKeyword::getDataSize() const {
-        return this->getDataRecord().getDataItem().size();
+        return this->getDataRecord().getDataItem().data_size();
     }
 
 

@@ -37,8 +37,8 @@ namespace {
 template <typename T>
 inline const Opm::DeckItem& getNonEmptyItem( const Opm::DeckRecord& record) {
     const auto& retval = record.getItem<T>();
-    if (retval.size() == 0) {
-        throw std::invalid_argument("Zero-sized record found where non-empty record expected");
+    if (!retval.hasValue(0)) {
+        throw std::invalid_argument("Missing data");
     }
     return retval;
 }

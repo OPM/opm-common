@@ -57,7 +57,8 @@ namespace Opm {
         // keywords like e.g. SGL), then the remaining values are defaulted. The deck
         // creates the defaulted items if all their sizes are fully specified by the
         // keyword, though...
-        size_t size() const;
+
+        size_t data_size() const;
         size_t out_size() const;
 
         template<typename T>

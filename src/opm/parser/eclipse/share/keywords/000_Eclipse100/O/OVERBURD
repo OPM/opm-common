@@ -1,5 +1,5 @@
 {"name" : "OVERBURD" , "sections" : ["PROPS"], "size" : {"keyword" : "ROCKCOMP" , "item" : "NTROCC"},
-        "items" : [{"name" : "table" ,
+        "items" : [{"name" : "DATA" ,
                    "value_type" : "DOUBLE" ,
                    "size_type" : "ALL",
                    "dimension" : ["Length" , "Pressure"]}]}

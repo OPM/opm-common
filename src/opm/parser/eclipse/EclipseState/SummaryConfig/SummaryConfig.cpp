@@ -440,7 +440,7 @@ inline void keywordR2R( SummaryConfig::keyword_list& /* list */,
     const auto& item = keyword.getDataRecord().getDataItem();
     std::vector<int> regions;
 
-    if (item.size() > 0)
+    if (item.data_size() > 0)
         regions = item.getData< int >();
     else {
         for (size_t region=1; region <= numfip; region++)

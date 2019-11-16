@@ -246,7 +246,7 @@ namespace Opm {
     template< typename T >
     void GridProperty< T >::loadFromDeckKeyword( const DeckKeyword& deckKeyword, bool multiply ) {
         const auto& deckItem = getDeckItem(deckKeyword);
-        const auto size = deckItem.size();
+        const auto size = deckItem.data_size();
         for (size_t dataPointIdx = 0; dataPointIdx < size; ++dataPointIdx) {
             if (!deckItem.defaultApplied(dataPointIdx)) {
                 if (multiply)
@@ -266,10 +266,10 @@ namespace Opm {
         else {
             const auto& deckItem = getDeckItem(deckKeyword);
             const std::vector<size_t>& indexList = inputBox.getIndexList();
-            if (indexList.size() == deckItem.size()) {
+            if (indexList.size() == deckItem.data_size()) {
                 for (size_t sourceIdx = 0; sourceIdx < indexList.size(); sourceIdx++) {
                     size_t targetIdx = indexList[sourceIdx];
-                    if (sourceIdx < deckItem.size()
+                    if (sourceIdx < deckItem.data_size()
                         && !deckItem.defaultApplied(sourceIdx))
                         {
                             if (multiply)
@@ -280,7 +280,7 @@ namespace Opm {
                 }
             } else {
                 std::string boxSize = std::to_string(static_cast<long long>(indexList.size()));
-                std::string keywordSize = std::to_string(static_cast<long long>(deckItem.size()));
+                std::string keywordSize = std::to_string(static_cast<long long>(deckItem.data_size()));
 
                 throw std::invalid_argument("Size mismatch: Box:" + boxSize + "  DeckKeyword:" + keywordSize);
             }
@@ -397,9 +397,9 @@ namespace Opm {
 
         const auto& deckItem = deckKeyword.getRecord(0).getItem(0);
 
-        if (deckItem.size() > m_data.size())
+        if (deckItem.data_size() > m_data.size())
             throw std::invalid_argument("Size mismatch when setting data for:" + getKeywordName()
-                                        + " keyword size: " + std::to_string( deckItem.size() )
+                                        + " keyword size: " + std::to_string( deckItem.data_size() )
                                         + " input size: " + std::to_string( m_data.size()) );
 
         return deckItem;

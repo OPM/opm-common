@@ -702,11 +702,11 @@ GasvisctTable::GasvisctTable( const Deck& deck, const DeckItem& deckItem ) {
 
     SimpleTable::addColumns();
 
-    if ( deckItem.size() % numColumns() != 0)
+    if ( deckItem.data_size() % numColumns() != 0)
         throw std::runtime_error("Number of columns in the data file is inconsistent "
                                  "with the expected number for keyword GASVISCT");
 
-    size_t rows = deckItem.size() / m_schema.size();
+    size_t rows = deckItem.data_size() / m_schema.size();
     for (size_t columnIndex=0; columnIndex < m_schema.size(); columnIndex++) {
         auto& column = getColumn( columnIndex );
         for (size_t rowIdx = 0; rowIdx < rows; rowIdx++) {
