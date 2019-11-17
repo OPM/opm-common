@@ -22,6 +22,7 @@
 #include <string>
 #include <unordered_set>
 
+#include <opm/parser/eclipse/Deck/value_status.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/Box.hpp>
@@ -47,14 +48,14 @@ public:
     template<typename T>
     struct FieldData {
         std::vector<T> data;
-        std::vector<bool> assigned;
+        std::vector<value::status> value_status;
 
 
         FieldData() = default;
 
         FieldData(std::size_t active_size) :
             data(std::vector<T>(active_size)),
-            assigned(std::vector<bool>(active_size, false))
+            value_status(active_size, value::status::uninitialized)
         {
         }
 
@@ -64,8 +65,9 @@ public:
         }
 
         bool valid() const {
-            const auto& it = std::find(this->assigned.begin(), this->assigned.end(), false);
-            if (it == this->assigned.end())
+            static const std::array<value::status,2> invalid_value = {value::status::uninitialized, value::status::empty_default};
+            const auto& it = std::find_first_of(this->value_status.begin(), this->value_status.end(), invalid_value.begin(), invalid_value.end());
+            if (it == this->value_status.end())
                 return true;
 
             return false;
@@ -77,7 +79,7 @@ public:
             for (std::size_t g = 0; g < active_map.size(); g++) {
                 if (active_map[g] && shift > 0) {
                     this->data[g - shift] = this->data[g];
-                    this->assigned[g - shift] = this->assigned[g];
+                    this->value_status[g - shift] = this->value_status[g];
                     continue;
                 }
 
@@ -86,29 +88,27 @@ public:
             }
 
             this->data.resize(this->data.size() - shift);
-            this->assigned.resize(this->assigned.size() - shift);
+            this->value_status.resize(this->value_status.size() - shift);
         }
 
-        void assign(T value) {
-            std::fill(this->data.begin(), this->data.end(), value);
-            std::fill(this->assigned.begin(), this->assigned.end(), true);
-        }
-
-        void assign(const FieldData<T>& src, const std::vector<Box::cell_index>& index_list) {
+        void copy(const FieldData<T>& src, const std::vector<Box::cell_index>& index_list) {
             for (const auto& ci : index_list) {
-                if (src.assigned[ci.active_index]) {
-                    this->data[ci.active_index] = src.data[ci.active_index];
-                    this->assigned[ci.active_index] = true;
-                }
+                this->data[ci.active_index] = src.data[ci.active_index];
+                this->value_status[ci.active_index] = src.value_status[ci.active_index];
             }
         }
 
-        void assign(const std::vector<T>& src) {
-            if (src.size() != this->size())
-                throw std::invalid_argument("Size misamtch got: " + std::to_string(src.size()) + " expected: " + std::to_string(this->size()));
+        void default_assign(T value) {
+            std::fill(this->data.begin(), this->data.end(), value);
+            std::fill(this->value_status.begin(), this->value_status.end(), value::status::valid_default);
+        }
 
-            std::fill(this->assigned.begin(), this->assigned.end(), true);
+        void default_assign(const std::vector<T>& src) {
+            if (src.size() != this->size())
+                throw std::invalid_argument("Size mismatch got: " + std::to_string(src.size()) + " expected: " + std::to_string(this->size()));
+
             std::copy(src.begin(), src.end(), this->data.begin());
+            std::fill(this->value_status.begin(), this->value_status.end(), value::status::valid_default);
         }
     };
 

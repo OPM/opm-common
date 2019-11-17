@@ -24,7 +24,7 @@ namespace Opm {
 
 namespace value {
 
-enum class status : unsigned char { unitialized = 0,
+enum class status : unsigned char { uninitialized = 0,
                                     deck_value = 1,
                                     empty_default = 2,
                                     valid_default = 3 };

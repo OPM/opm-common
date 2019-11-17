@@ -180,11 +180,11 @@ BOOST_AUTO_TEST_CASE(ASSIGN) {
     FieldProps::FieldData<int> data(100);
     std::vector<int> wrong_size(50);
 
-    BOOST_CHECK_THROW( data.assign( wrong_size ), std::invalid_argument );
+    BOOST_CHECK_THROW( data.default_assign( wrong_size ), std::invalid_argument );
 
     std::vector<int> ext_data(100);
     std::iota(ext_data.begin(), ext_data.end(), 0);
-    data.assign( ext_data );
+    data.default_assign( ext_data );
 
     BOOST_CHECK(data.valid());
     BOOST_CHECK(data.data == ext_data);
