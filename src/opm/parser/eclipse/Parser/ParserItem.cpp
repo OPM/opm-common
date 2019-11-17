@@ -513,7 +513,7 @@ void scan_item( DeckItem& deck_item, const ParserItem& parser_item, RawRecord& r
         } else {
             // ... otherwise indicate that the deck item should throw once the
             // item's data is accessed.
-            deck_item.push_backDummyDefault();
+            deck_item.push_backDummyDefault<T>();
         }
 
         return;
@@ -541,7 +541,7 @@ void scan_item( DeckItem& deck_item, const ParserItem& parser_item, RawRecord& r
     else if( parser_item.hasDefault() )
         deck_item.push_backDefault( parser_item.getDefault< T >() );
     else
-        deck_item.push_backDummyDefault();
+        deck_item.push_backDummyDefault<T>();
 
     const auto value_start = token.size() - valueString.size();
     // replace the first occurence of "N*FOO" by a sequence of N-1 times

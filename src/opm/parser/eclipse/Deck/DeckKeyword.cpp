@@ -55,7 +55,7 @@ namespace Opm {
               if (parser_item.hasDefault())
                   deck_item.push_back( parser_item.getDefault<T>() );
               else
-                  deck_item.push_backDummyDefault();
+                  deck_item.push_backDummyDefault<T>();
          }
          else if (input_record[j].is_compatible<T>())
              deck_item.push_back( input_record[j].get<T>() );

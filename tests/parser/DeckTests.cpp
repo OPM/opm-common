@@ -166,10 +166,10 @@ BOOST_AUTO_TEST_CASE(DummyDefaultsString) {
     DeckItem deckStringItem("TEST", std::string() );
     BOOST_CHECK_EQUAL(deckStringItem.data_size(), 0);
 
-    deckStringItem.push_backDummyDefault();
-    BOOST_CHECK_EQUAL(deckStringItem.data_size(), 0);
+    deckStringItem.push_backDummyDefault<std::string>();
+    BOOST_CHECK_EQUAL(deckStringItem.data_size(), 1);
     BOOST_CHECK_EQUAL(true, deckStringItem.defaultApplied(0));
-    BOOST_CHECK_THROW(deckStringItem.get< std::string >(0), std::out_of_range);
+    BOOST_CHECK_THROW(deckStringItem.get< std::string >(0), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(GetStringAtIndex_NoData_ExceptionThrown) {
@@ -270,10 +270,10 @@ BOOST_AUTO_TEST_CASE(DummyDefaultsDouble) {
     DeckItem deckDoubleItem( "TEST", double(), dims.first, dims.second);
     BOOST_CHECK_EQUAL(deckDoubleItem.data_size(), 0);
 
-    deckDoubleItem.push_backDummyDefault();
-    BOOST_CHECK_EQUAL(deckDoubleItem.data_size(), 0);
+    deckDoubleItem.push_backDummyDefault<double>();
+    BOOST_CHECK_EQUAL(deckDoubleItem.data_size(), 1);
     BOOST_CHECK_EQUAL(true, deckDoubleItem.defaultApplied(0));
-    BOOST_CHECK_THROW(deckDoubleItem.get< double >(0), std::out_of_range);
+    BOOST_CHECK_THROW(deckDoubleItem.get< double >(0), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(PushBackMultipleDouble) {
@@ -344,12 +344,12 @@ BOOST_AUTO_TEST_CASE(DummyDefaultsInt) {
     DeckItem deckIntItem( "TEST", int() );
     BOOST_CHECK_EQUAL(deckIntItem.data_size(), 0);
 
-    deckIntItem.push_backDummyDefault();
-    BOOST_CHECK_EQUAL(deckIntItem.data_size(), 0);
+    deckIntItem.push_backDummyDefault<int>();
+    BOOST_CHECK_EQUAL(deckIntItem.data_size(), 1);
     BOOST_CHECK_EQUAL(true, deckIntItem.defaultApplied(0));
     BOOST_CHECK_EQUAL( false , deckIntItem.hasValue(0));
     BOOST_CHECK_EQUAL( false , deckIntItem.hasValue(1));
-    BOOST_CHECK_THROW(deckIntItem.get< int >(0), std::out_of_range);
+    BOOST_CHECK_THROW(deckIntItem.get< int >(0), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(GetIntAtIndex_NoData_ExceptionThrown) {

@@ -1099,7 +1099,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithWeltArgException2) {
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck);
-    BOOST_CHECK_THROW(Schedule(deck, grid , eclipseProperties, runspec), std::out_of_range);
+    BOOST_CHECK_THROW(Schedule(deck, grid , eclipseProperties, runspec), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(createDeckWithWPIMULT) {

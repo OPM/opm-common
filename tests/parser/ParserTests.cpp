@@ -1247,7 +1247,7 @@ BOOST_AUTO_TEST_CASE(Parse_RawRecordTooFewItems) {
     BOOST_CHECK_NO_THROW(parserRecord.parse(parseContext, errors, rawRecord, unit_system, unit_system, "KEWYORD", "filename"));
     auto record = parserRecord.parse(parseContext, errors , rawRecord, unit_system, unit_system, "KEYWORD", "filename");
     BOOST_CHECK_NO_THROW(record.getItem(2));
-    BOOST_CHECK_THROW(record.getItem(2).get< int >(0), std::out_of_range);
+    BOOST_CHECK_THROW(record.getItem(2).get< int >(0), std::invalid_argument);
 }
 
 

@@ -1012,7 +1012,7 @@ VFPPROD \n\
         auto units = Opm::UnitSystem::newMETRIC();
         BOOST_CHECK_EQUAL(deck.count("VFPPROD"), 1);
 
-        BOOST_CHECK_THROW(Opm::VFPProdTable(vfpprodKeyword, units), std::out_of_range);
+        BOOST_CHECK_THROW(Opm::VFPProdTable(vfpprodKeyword, units), std::invalid_argument);
     }
 
 
