@@ -60,7 +60,7 @@ namespace Opm {
 
     class ParserItem {
     public:
-        enum class item_size { ALL, SINGLE };
+        enum class item_size { SINGLE, ALL, ALL_DATA_REQUIRED};
         static item_size   size_from_string( const std::string& );
         static std::string string_from_size( item_size );
 

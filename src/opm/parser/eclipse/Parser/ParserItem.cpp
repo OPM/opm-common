@@ -86,14 +86,16 @@ std::string as_string(double value) {
 ParserItem::item_size ParserItem::size_from_string( const std::string& str ) {
     if( str == "ALL" )   return item_size::ALL;
     if( str == "SINGLE") return item_size::SINGLE;
+    if( str == "ALL_DATA_REQUIRED") return item_size::ALL_DATA_REQUIRED;
     throw std::invalid_argument( str + " can not be converted "
                                  "to enum 'item_size'" );
 }
 
 std::string ParserItem::string_from_size( ParserItem::item_size sz ) {
     switch( sz ) {
-        case item_size::ALL:    return "ALL";
-        case item_size::SINGLE: return "SINGLE";
+        case item_size::ALL:               return "ALL";
+        case item_size::SINGLE:            return "SINGLE";
+        case item_size::ALL_DATA_REQUIRED: return "ALL_DATA_REQUIRED";
     }
 
     throw std::logic_error( "ParserItem::string_from_size: Fatal error; should not be reachable" );
@@ -195,7 +197,7 @@ ParserItem::ParserItem( const Json::JsonObject& json ) :
 
 template< typename T >
 void ParserItem::setDefault( T val ) {
-    if( this->data_type != type_tag::fdouble && this->m_sizeType == item_size::ALL )
+    if( this->data_type != type_tag::fdouble && (this->m_sizeType == item_size::ALL || this->m_sizeType == item_size::ALL_DATA_REQUIRED))
         throw std::invalid_argument( "The size type ALL can not be combined "
                                      "with an explicit default value." );
 
@@ -374,10 +376,7 @@ bool ParserItem::operator!=( const ParserItem& rhs ) const {
 
 
 std::string ParserItem::size_literal() const {
-    if (this->m_sizeType == item_size::ALL)
-        return "ParserItem::item_size::ALL";
-    else
-        return "ParserItem::item_size::SINGLE";
+    return "ParserItem::item_size::" + ParserItem::string_from_size(this->m_sizeType);
 }
 
 std::string ParserItem::type_literal() const {
@@ -474,8 +473,9 @@ namespace {
 template< typename T >
 void scan_item( DeckItem& deck_item, const ParserItem& parser_item, RawRecord& record ) {
     bool parse_raw = parser_item.parseRaw();
+    auto size_type = parser_item.sizeType();
 
-    if( parser_item.sizeType() == ParserItem::item_size::ALL ) {
+    if( size_type == ParserItem::item_size::ALL || size_type == ParserItem::item_size::ALL_DATA_REQUIRED) {
         if (parse_raw) {
             while (record.size()) {
                 auto token = record.pop_front();
@@ -501,6 +501,9 @@ void scan_item( DeckItem& deck_item, const ParserItem& parser_item, RawRecord& r
                 deck_item.push_back( readValueToken< T >( st.valueString() ), st.count() );
                 continue;
             }
+
+            if (size_type == ParserItem::item_size::ALL_DATA_REQUIRED)
+                throw std::invalid_argument("Sorry - can *not* enter defaults for this item");
 
             auto value = parser_item.getDefault< T >();
             for (size_t i=0; i < st.count(); i++)

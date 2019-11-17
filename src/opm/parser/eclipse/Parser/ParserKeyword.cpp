@@ -384,8 +384,16 @@ void set_dimensions( ParserItem& item,
         ParserItem item( itemName, input_type);
         ParserRecord record;
 
-        item.setSizeType( ParserItem::item_size::ALL );
 
+        /*
+          Observe that it is supported to set default values for the data items,
+          but in the parsing process the default values are used differently
+          than in the 'normal' case: It is not allowed with '*' to denote defaults
+          in the deck for these keywords, rather the default value is used when the
+          keyword is constructed in the FieldProps data structure.
+        */
+
+        item.setSizeType( ParserItem::item_size::ALL_DATA_REQUIRED );
         if (input_type == ParserItem::itype::INT) {
             if(hasDefault) {
                 int defaultValue = dataConfig.get_int("default");

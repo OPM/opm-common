@@ -1528,7 +1528,7 @@ BOOST_AUTO_TEST_CASE(AddDataKeywordFromJson_correctlyConfigured) {
     BOOST_CHECK_EQUAL(1U , parserKeyword.getFixedSize() );
 
     BOOST_CHECK_EQUAL( item.name() , ParserKeywords::ACTNUM::DATA::itemName );
-    BOOST_CHECK_EQUAL( ParserItem::item_size::ALL, item.sizeType() );
+    BOOST_CHECK_EQUAL( ParserItem::item_size::ALL_DATA_REQUIRED, item.sizeType() );
 }
 
 BOOST_AUTO_TEST_CASE(AddkeywordFromJson_numTables_incoorect_throw) {

@@ -1,1 +1,5 @@
-{"name": "ACTPARAM", "sections": ["RUNSPEC"], "size": 1, "data" : {"value_type" : "DOUBLE" , "default" : 1e-4}}
+{"name": "ACTPARAM", "sections": ["RUNSPEC"], "size": 1,
+"items" : [
+{"name" : "TARGET_VIOLATION", "default" : 100, "value_type" : "DOUBLE"},
+{"name" : "TOL", "default" : 1e-4, "value_type" : "DOUBLE"}]}
+
