@@ -661,6 +661,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/Deck/DeckKeyword.hpp
        opm/parser/eclipse/Deck/DeckRecord.hpp
        opm/parser/eclipse/Deck/UDAValue.hpp
+       opm/parser/eclipse/Deck/value_status.hpp
        opm/parser/eclipse/Python/Python.hpp)
 endif()
 if(ENABLE_ECL_OUTPUT)
