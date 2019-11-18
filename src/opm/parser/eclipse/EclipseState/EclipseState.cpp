@@ -207,6 +207,11 @@ void assert_field_properties(const EclipseGrid& grid, const FieldPropsManager& f
     }
 
 
+    const FieldPropsManager& EclipseState::fieldProps() const {
+        return this->field_props;
+    }
+
+
     const TableManager& EclipseState::getTableManager() const {
         return m_tables;
     }
