@@ -131,7 +131,7 @@ namespace Opm {
         size_t recordIndex = 0;
         while (recordIndex < keyword.size()) {
             const auto& item = keyword.getRecord(recordIndex).getItem(0);
-            if (item.size( ) == 0) {
+            if (!item.hasValue(0)) {
                 ranges.push_back( std::make_pair( startRecord , recordIndex ) );
                 startRecord = recordIndex + 1;
             }

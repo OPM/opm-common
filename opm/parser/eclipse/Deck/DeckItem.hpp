@@ -28,12 +28,15 @@
 #include <opm/parser/eclipse/Units/Dimension.hpp>
 #include <opm/parser/eclipse/Utility/Typetools.hpp>
 #include <opm/parser/eclipse/Deck/UDAValue.hpp>
+#include <opm/parser/eclipse/Deck/value_status.hpp>
+
 
 namespace Opm {
     class DeckOutput;
 
     class DeckItem {
     public:
+
         DeckItem() = default;
         DeckItem( const std::string&, int);
         DeckItem( const std::string&, std::string);
@@ -57,8 +60,8 @@ namespace Opm {
         // keywords like e.g. SGL), then the remaining values are defaulted. The deck
         // creates the defaulted items if all their sizes are fully specified by the
         // keyword, though...
-        size_t size() const;
-        size_t out_size() const;
+
+        size_t data_size() const;
 
         template<typename T>
         T get( size_t index ) const;
@@ -83,6 +86,8 @@ namespace Opm {
         void push_backDefault( double );
         void push_backDefault( std::string );
         // trying to access the data of a "dummy default item" will raise an exception
+
+        template <typename T>
         void push_backDummyDefault();
 
         type_tag getType() const;
@@ -119,7 +124,7 @@ namespace Opm {
         type_tag type = type_tag::unknown;
 
         std::string item_name;
-        std::vector< bool > defaulted;
+        std::vector<value::status> value_status;
         /*
           To save space we mutate the dval object in place when asking for SI
           data; the current state of of the dval member is tracked with the

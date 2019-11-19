@@ -439,8 +439,9 @@ void RestartConfig::handleScheduleSection(const SCHEDULESection& schedule, const
             continue;
         }
 
-        if( name == "TSTEP" ) {
-            current_step += keyword.getRecord( 0 ).getItem( 0 ).size();
+
+       if( name == "TSTEP" ) {
+            current_step += keyword.getRecord( 0 ).getItem( 0 ).data_size();
             continue;
         }
 
@@ -668,7 +669,7 @@ void RestartConfig::handleScheduleSection(const SCHEDULESection& schedule, const
 
         const auto& item = record.getItem(0);
 
-        for (size_t index = 0; index < item.size(); ++index) {
+        for (size_t index = 0; index < item.data_size(); ++index) {
             const std::string& mnemonic = item.get< std::string >(index);
 
             found_mnemonic_RESTART = mnemonic.find("RESTART=");
@@ -685,7 +686,7 @@ void RestartConfig::handleScheduleSection(const SCHEDULESection& schedule, const
            Restart integer switch is integer control nr 7 */
 
         if (found_mnemonic_RESTART == std::string::npos) {
-            if (item.size() >= 7)  {
+            if (item.data_size() >= 7)  {
                 const std::string& integer_control = item.get< std::string >(6);
                 try {
                     restart = boost::lexical_cast<size_t>(integer_control);

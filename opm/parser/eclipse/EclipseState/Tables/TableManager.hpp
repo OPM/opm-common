@@ -195,7 +195,7 @@ namespace Opm {
             size_t regionIdx = 0;
             size_t tableIdx = 0;
             for (unsigned lineIdx = 0; lineIdx < numEntries; ++lineIdx) {
-                if (keyword.getRecord(lineIdx).getItem("PRESSURE").size() > 0) {
+                if (keyword.getRecord(lineIdx).getItem("PRESSURE").hasValue(0)) {
                     rocktable[regionIdx].init(keyword.getRecord(lineIdx), tableIdx);
                     tableIdx++;
                 } else { // next region
@@ -227,8 +227,8 @@ namespace Opm {
 
             const auto& tableKeyword = deck.getKeyword(keywordName);
             for (size_t tableIdx = 0; tableIdx < tableKeyword.size(); ++tableIdx) {
-                const auto& dataItem = tableKeyword.getRecord( tableIdx ).getItem( 0 );
-                if (dataItem.size() > 0) {
+                const auto& dataItem = tableKeyword.getRecord( tableIdx ).getItem("DATA");
+                if (dataItem.data_size() > 0) {
                     std::shared_ptr<TableType> table = std::make_shared<TableType>( dataItem, useJFunc() );
                     container.addTable( tableIdx , table );
                 }
@@ -254,8 +254,8 @@ namespace Opm {
 
             const auto& tableKeyword = deck.getKeyword(keywordName);
             for (size_t tableIdx = 0; tableIdx < tableKeyword.size(); ++tableIdx) {
-                const auto& dataItem = tableKeyword.getRecord( tableIdx ).getItem( 0 );
-                if (dataItem.size() > 0) {
+                const auto& dataItem = tableKeyword.getRecord( tableIdx ).getItem("DATA");
+                if (dataItem.data_size() > 0) {
                     std::shared_ptr<TableType> table = std::make_shared<TableType>( dataItem );
                     container.addTable( tableIdx , table );
                 }
@@ -293,8 +293,8 @@ namespace Opm {
 
             const auto& tableKeyword = deck.getKeyword(keywordName);
             for (size_t tableIdx = 0; tableIdx < tableKeyword.size(); ++tableIdx) {
-                const auto& dataItem = tableKeyword.getRecord( tableIdx ).getItem( 0 );
-                if (dataItem.size() == 0) {
+                const auto& dataItem = tableKeyword.getRecord( tableIdx ).getItem("DATA");
+                if (dataItem.data_size() == 0) {
                     // for simple tables, an empty record indicates that the previous table
                     // should be copied...
                     if (tableIdx == 0) {

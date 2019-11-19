@@ -412,7 +412,7 @@ namespace Opm {
         for (size_t tableIdx = 0; tableIdx < tableKeyword.size(); ++tableIdx) {
             const auto& tableRecord = tableKeyword.getRecord( tableIdx );
             const auto& dataItem = tableRecord.getItem( 0 );
-            if (dataItem.size() > 0) {
+            if (dataItem.data_size() > 0) {
                 std::shared_ptr<GasvisctTable> table = std::make_shared<GasvisctTable>( deck , dataItem );
                 container.addTable( tableIdx , table );
             }
@@ -444,7 +444,7 @@ namespace Opm {
             const auto& indexRecord = tableKeyword.getRecord( tableIdx );
             const auto& dataRecord = tableKeyword.getRecord( tableIdx + 1);
             const auto& dataItem = dataRecord.getItem( 0 );
-            if (dataItem.size() > 0) {
+            if (dataItem.data_size() > 0) {
                 std::shared_ptr<PlyshlogTable> table = std::make_shared<PlyshlogTable>(indexRecord , dataRecord);
                 container.addTable( tableIdx , table );
             }
@@ -600,7 +600,7 @@ namespace Opm {
         for (size_t tableIdx = 0; tableIdx < rocktabKeyword.size(); ++tableIdx) {
             const auto& tableRecord = rocktabKeyword.getRecord( tableIdx );
             const auto& dataItem = tableRecord.getItem( 0 );
-            if (dataItem.size() > 0) {
+            if (dataItem.data_size() > 0) {
                 std::shared_ptr<RocktabTable> table = std::make_shared<RocktabTable>( dataItem , isDirectional, useStressOption );
                 container.addTable( tableIdx , table );
             }

@@ -6,7 +6,7 @@
   "keyword":"EQLDIMS" , "item":"NTTRVD"
  },
  "items" : [{
-  "name" : "table",
+  "name" : "DATA",
   "value_type" : "DOUBLE",
   "size_type" : "ALL",
   "dimension" : ["Length" , "1"]

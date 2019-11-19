@@ -185,7 +185,7 @@ void python::common::export_DeckKeyword(py::module& module) {
 
 
     py::class_< DeckItem >(module, "DeckItem")
-        .def( "__len__", &DeckItem::size )
+        .def( "__len__", &DeckItem::data_size )
         .def("get_str", &DeckItem::get<std::string>)
         .def("get_int", &DeckItem::get<int>)
         .def("get_raw", &DeckItem::get<double>)

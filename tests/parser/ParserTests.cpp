@@ -648,7 +648,7 @@ BOOST_AUTO_TEST_CASE(Scan_All_CorrectIntSetInDeckItem) {
     RawRecord rawRecord( "100 443 10*77 10*1 25" );
     UnitSystem unit_system;
     const auto deckIntItem = itemInt.scan(rawRecord, unit_system, unit_system);
-    BOOST_CHECK_EQUAL(23U, deckIntItem.size());
+    BOOST_CHECK_EQUAL(23U, deckIntItem.data_size());
     BOOST_CHECK_EQUAL(77,  deckIntItem.get< int >(3));
     BOOST_CHECK_EQUAL(1,   deckIntItem.get< int >(21));
     BOOST_CHECK_EQUAL(25,  deckIntItem.get< int >(22));
@@ -662,7 +662,7 @@ BOOST_AUTO_TEST_CASE(Scan_All_WithDefaults) {
     RawRecord rawRecord( "100 10* 10*1 25" );
     UnitSystem unit_system;
     const auto deckIntItem = itemInt.scan(rawRecord, unit_system, unit_system);
-    BOOST_CHECK_EQUAL(22U, deckIntItem.size());
+    BOOST_CHECK_EQUAL(22U, deckIntItem.data_size());
     BOOST_CHECK(!deckIntItem.defaultApplied(0));
     BOOST_CHECK( deckIntItem.defaultApplied(1));
     BOOST_CHECK(!deckIntItem.defaultApplied(11));
@@ -848,7 +848,7 @@ BOOST_AUTO_TEST_CASE(scan_all_valuesCorrect) {
     UnitSystem unit_system;
     itemString.setSizeType( ParserItem::item_size::ALL );
     const auto deckItem = itemString.scan(rawRecord, unit_system, unit_system);
-    BOOST_CHECK_EQUAL(8U, deckItem.size());
+    BOOST_CHECK_EQUAL(8U, deckItem.data_size());
 
     BOOST_CHECK_EQUAL("WELL1", deckItem.get< std::string >(0));
     BOOST_CHECK_EQUAL("FISK", deckItem.get< std::string >(1));
@@ -868,7 +868,7 @@ BOOST_AUTO_TEST_CASE(scan_all_withdefaults) {
     itemString.setSizeType( ParserItem::item_size::ALL );
     const auto deckItem = itemString.scan(rawRecord, unit_system, unit_system);
 
-    BOOST_CHECK_EQUAL(30U, deckItem.size());
+    BOOST_CHECK_EQUAL(30U, deckItem.data_size());
 
     BOOST_CHECK( !deckItem.defaultApplied(0) );
     BOOST_CHECK( !deckItem.defaultApplied(9) );
@@ -891,7 +891,6 @@ BOOST_AUTO_TEST_CASE(scan_single_dataCorrect) {
     RawRecord rawRecord( "'WELL1' 'WELL2'" );
     UnitSystem unit_system;
     const auto deckItem = itemString.scan(rawRecord, unit_system, unit_system);
-    BOOST_CHECK_EQUAL(1U, deckItem.size());
     BOOST_CHECK_EQUAL("WELL1", deckItem.get< std::string >(0));
 }
 
@@ -1144,10 +1143,6 @@ BOOST_AUTO_TEST_CASE(ParseWithDefault_defaultAppliedCorrectInDeck) {
         const auto& deckIntItem = itemInt.scan(rawRecord, unit_system, unit_system);
         const auto& deckDoubleItem = itemDouble.scan(rawRecord, unit_system, unit_system);
 
-        BOOST_CHECK(deckStringItem.size() == 1);
-        BOOST_CHECK(deckIntItem.size() == 1);
-        BOOST_CHECK(deckDoubleItem.size() == 1);
-
         BOOST_CHECK(deckStringItem.defaultApplied(0));
         BOOST_CHECK(deckIntItem.defaultApplied(0));
         BOOST_CHECK(deckDoubleItem.defaultApplied(0));
@@ -1159,10 +1154,6 @@ BOOST_AUTO_TEST_CASE(ParseWithDefault_defaultAppliedCorrectInDeck) {
         const auto deckStringItem = itemString.scan(rawRecord, unit_system, unit_system);
         const auto deckIntItem = itemInt.scan(rawRecord, unit_system, unit_system);
         const auto deckDoubleItem = itemDouble.scan(rawRecord, unit_system, unit_system);
-
-        BOOST_CHECK_EQUAL(deckStringItem.size(), 1);
-        BOOST_CHECK_EQUAL(deckIntItem.size(), 1);
-        BOOST_CHECK_EQUAL(deckDoubleItem.size(), 1);
 
         BOOST_CHECK(deckStringItem.defaultApplied(0));
         BOOST_CHECK(deckIntItem.defaultApplied(0));
@@ -1180,10 +1171,6 @@ BOOST_AUTO_TEST_CASE(ParseWithDefault_defaultAppliedCorrectInDeck) {
         const auto& deckIntItem = itemInt.scan(rawRecord, unit_system, unit_system);
         const auto& deckDoubleItem = itemDouble.scan(rawRecord, unit_system, unit_system);
 
-        BOOST_CHECK_EQUAL(deckStringItem.size(), 1);
-        BOOST_CHECK_EQUAL(deckIntItem.size(), 1);
-        BOOST_CHECK_EQUAL(deckDoubleItem.size(), 1);
-
         BOOST_CHECK(!deckStringItem.defaultApplied(0));
         BOOST_CHECK(!deckIntItem.defaultApplied(0));
         BOOST_CHECK(!deckDoubleItem.defaultApplied(0));
@@ -1197,10 +1184,6 @@ BOOST_AUTO_TEST_CASE(ParseWithDefault_defaultAppliedCorrectInDeck) {
         const auto deckIntItem = itemInt.scan(rawRecord, unit_system, unit_system);
         const auto deckDoubleItem = itemDouble.scan(rawRecord, unit_system, unit_system);
 
-        BOOST_CHECK_EQUAL(deckStringItem.size(), 1);
-        BOOST_CHECK_EQUAL(deckIntItem.size(), 1);
-        BOOST_CHECK_EQUAL(deckDoubleItem.size(), 1);
-
         BOOST_CHECK(deckStringItem.defaultApplied(0));
         BOOST_CHECK(deckIntItem.defaultApplied(0));
         BOOST_CHECK(deckDoubleItem.defaultApplied(0));
@@ -1212,10 +1195,6 @@ BOOST_AUTO_TEST_CASE(ParseWithDefault_defaultAppliedCorrectInDeck) {
         const auto deckStringItem = itemString.scan(rawRecord, unit_system, unit_system);
         const auto deckIntItem = itemInt.scan(rawRecord, unit_system, unit_system);
         const auto deckDoubleItem = itemDouble.scan(rawRecord, unit_system, unit_system);
-
-        BOOST_CHECK_EQUAL(deckStringItem.size(), 1);
-        BOOST_CHECK_EQUAL(deckIntItem.size(), 1);
-        BOOST_CHECK_EQUAL(deckDoubleItem.size(), 1);
 
         BOOST_CHECK(deckStringItem.defaultApplied(0));
         BOOST_CHECK(deckIntItem.defaultApplied(0));
@@ -1268,7 +1247,7 @@ BOOST_AUTO_TEST_CASE(Parse_RawRecordTooFewItems) {
     BOOST_CHECK_NO_THROW(parserRecord.parse(parseContext, errors, rawRecord, unit_system, unit_system, "KEWYORD", "filename"));
     auto record = parserRecord.parse(parseContext, errors , rawRecord, unit_system, unit_system, "KEYWORD", "filename");
     BOOST_CHECK_NO_THROW(record.getItem(2));
-    BOOST_CHECK_THROW(record.getItem(2).get< int >(0), std::out_of_range);
+    BOOST_CHECK_THROW(record.getItem(2).get< int >(0), std::invalid_argument);
 }
 
 
@@ -1653,8 +1632,6 @@ BOOST_AUTO_TEST_CASE(ParseEmptyRecord) {
 
     const auto& deckRecord = deckKeyword.getRecord(0);
     BOOST_REQUIRE_EQUAL( 1U , deckRecord.size());
-
-    BOOST_CHECK_EQUAL(0U , deckRecord.getItem( 0 ).size());
 }
 
 
@@ -1945,9 +1922,6 @@ DENSITY
     BOOST_CHECK_EQUAL( rs.name( ), "RS" );
     BOOST_CHECK_EQUAL( pbub.name( ), "PB" );
 
-    BOOST_CHECK_EQUAL( rs.size( ), 1 );
-    BOOST_CHECK_EQUAL( pbub.size( ), 1 );
-
     BOOST_CHECK( ! rs.defaultApplied( 0 ) );
     BOOST_CHECK( ! pbub.defaultApplied( 0 ) );
 
@@ -1994,9 +1968,6 @@ DENSITY
 
     BOOST_CHECK_EQUAL( rs.name( ), "RS" );
     BOOST_CHECK_EQUAL( pbub.name( ), "PB" );
-
-    BOOST_CHECK_EQUAL( rs.size( ), 0 );
-    BOOST_CHECK_EQUAL( pbub.size( ), 0 );
 
     BOOST_CHECK( rs.defaultApplied( 0 ) );
     BOOST_CHECK( pbub.defaultApplied( 0 ) );
@@ -2082,9 +2053,6 @@ DENSITY
         BOOST_CHECK_EQUAL( rs.name( ), "RS_CONSTT" );
         BOOST_CHECK_EQUAL( pbub.name( ), "PB_CONSTT" );
 
-        BOOST_CHECK_EQUAL( rs.size( ), 1 );
-        BOOST_CHECK_EQUAL( pbub.size( ), 1 );
-
         BOOST_CHECK( ! rs.defaultApplied( 0 ) );
         BOOST_CHECK( ! pbub.defaultApplied( 0 ) );
 
@@ -2105,9 +2073,6 @@ DENSITY
 
         BOOST_CHECK_EQUAL( rs.name( ), "RS_CONSTT" );
         BOOST_CHECK_EQUAL( pbub.name( ), "PB_CONSTT" );
-
-        BOOST_CHECK_EQUAL( rs.size( ), 1 );
-        BOOST_CHECK_EQUAL( pbub.size( ), 1 );
 
         BOOST_CHECK( ! rs.defaultApplied( 0 ) );
         BOOST_CHECK( ! pbub.defaultApplied( 0 ) );

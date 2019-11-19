@@ -253,7 +253,7 @@ namespace {
 
         else if (keyword.name() == "TSTEP") {
             checkIfAllConnectionsIsShut(currentStep);
-            currentStep += keyword.getRecord(0).getItem(0).size(); // This is a bit weird API.
+            currentStep += keyword.getRecord(0).getItem(0).data_size(); // This is a bit weird API.
         }
 
         else if (keyword.name() == "UDQ")

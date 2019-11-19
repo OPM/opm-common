@@ -731,10 +731,10 @@ BOOST_AUTO_TEST_CASE( RSVD ) {
     const auto& rec1 = kw1.getRecord(0);
     const auto& rec3 = kw1.getRecord(2);
 
-    const auto& item1       = rec1.getItem("table");
+    const auto& item1       = rec1.getItem("DATA");
     BOOST_CHECK( fabs(item1.getSIDouble(0) - 2382) < 0.001);
 
-    const auto& item3       = rec3.getItem("table");
+    const auto& item3       = rec3.getItem("DATA");
     BOOST_CHECK( fabs(item3.getSIDouble(7) - 106.77) < 0.001);
 }
 
@@ -775,21 +775,18 @@ PVTG
 
     const auto& item0_0 = record0.getItem("GAS_PRESSURE");
     const auto& item0_1 = record0.getItem("DATA");
-    BOOST_CHECK_EQUAL(1U , item0_0.size());
-    BOOST_CHECK_EQUAL(9U , item0_1.size());
-    BOOST_CHECK_EQUAL(2U , record0.size());
+    BOOST_CHECK(item0_0.hasValue(0));
+    BOOST_CHECK_EQUAL(9U , item0_1.data_size());
 
     const auto& item1_0 = record1.getItem("GAS_PRESSURE");
     const auto& item1_1 = record1.getItem("DATA");
-    BOOST_CHECK_EQUAL(1U , item1_0.size());
-    BOOST_CHECK_EQUAL(9U , item1_1.size());
-    BOOST_CHECK_EQUAL(2U , record1.size());
+    BOOST_CHECK(item1_0.hasValue(0));
+    BOOST_CHECK_EQUAL(9U , item1_1.data_size());
 
     const auto& item2_0 = record2.getItem("GAS_PRESSURE");
     const auto& item2_1 = record2.getItem("DATA");
     BOOST_CHECK( item2_0.defaultApplied(0));
-    BOOST_CHECK_EQUAL(0U , item2_1.size());
-    BOOST_CHECK_EQUAL(2U , record2.size());
+    BOOST_CHECK_EQUAL(0U , item2_1.data_size());
 
 
     const auto& item3_0 = record3.getItem("GAS_PRESSURE");
@@ -800,16 +797,14 @@ PVTG
     BOOST_CHECK( !item3_1.defaultApplied(3));
     BOOST_CHECK( item3_1.defaultApplied(4));
     BOOST_CHECK( !item3_1.defaultApplied(5));
-    BOOST_CHECK_EQUAL(1U , item3_0.size());
-    BOOST_CHECK_EQUAL(9U , item3_1.size());
-    BOOST_CHECK_EQUAL(2U , record3.size());
+    BOOST_CHECK(item3_0.hasValue(0));
+    BOOST_CHECK_EQUAL(9U , item3_1.data_size());
 
 
     const auto& item4_0 = record4.getItem("GAS_PRESSURE");
     const auto& item4_1 = record4.getItem("DATA");
-    BOOST_CHECK_EQUAL(1U , item4_0.size());
-    BOOST_CHECK_EQUAL(9U , item4_1.size());
-    BOOST_CHECK_EQUAL(2U , record4.size());
+    BOOST_CHECK(item4_0.hasValue(0));
+    BOOST_CHECK_EQUAL(9U , item4_1.data_size());
 
     /*
     {
@@ -872,32 +867,32 @@ PVTO
 
     const auto& item0_0 = record0.getItem("RS");
     const auto& item0_1 = record0.getItem("DATA");
-    BOOST_CHECK_EQUAL(1U , item0_0.size());
-    BOOST_CHECK_EQUAL(9U , item0_1.size());
+    BOOST_CHECK(item0_0.hasValue(0));
+    BOOST_CHECK_EQUAL(9U , item0_1.data_size());
     BOOST_CHECK_EQUAL(2U , record0.size());
 
     const auto& item1_0 = record1.getItem("RS");
     const auto& item1_1 = record1.getItem("DATA");
-    BOOST_CHECK_EQUAL(1U , item1_0.size());
-    BOOST_CHECK_EQUAL(9U , item1_1.size());
+    BOOST_CHECK(item1_0.hasValue(0));
+    BOOST_CHECK_EQUAL(9U , item1_1.data_size());
     BOOST_CHECK_EQUAL(2U , record1.size());
 
     const auto& item2_0 = record2.getItem("RS");
     const auto& item2_1 = record2.getItem("DATA");
     BOOST_CHECK(item2_0.defaultApplied(0));
-    BOOST_CHECK_EQUAL(0U , item2_1.size());
+    BOOST_CHECK_EQUAL(0U , item2_1.data_size());
     BOOST_CHECK_EQUAL(2U , record2.size());
 
     const auto& item3_0 = record3.getItem("RS");
     const auto& item3_1 = record3.getItem("DATA");
-    BOOST_CHECK_EQUAL(1U , item3_0.size());
-    BOOST_CHECK_EQUAL(9U , item3_1.size());
+    BOOST_CHECK(item3_0.hasValue(0));
+    BOOST_CHECK_EQUAL(9U , item3_1.data_size());
     BOOST_CHECK_EQUAL(2U , record3.size());
 
     const auto& item4_0 = record4.getItem("RS");
     const auto& item4_1 = record4.getItem("DATA");
-    BOOST_CHECK_EQUAL(1U , item4_0.size());
-    BOOST_CHECK_EQUAL(9U , item4_1.size());
+    BOOST_CHECK(item4_0.hasValue(0));
+    BOOST_CHECK_EQUAL(9U , item4_1.data_size());
     BOOST_CHECK_EQUAL(2U , record4.size());
 
 
@@ -945,7 +940,7 @@ SGOF
     const auto& record0 = kw1.getRecord(0);
     BOOST_CHECK_EQUAL(1U , record0.size());
     const auto& item0 = record0.getItem(0);
-    BOOST_CHECK_EQUAL(10U * 4, item0.size());
+    BOOST_CHECK_EQUAL(10U * 4, item0.data_size());
 
     Opm::SgofTable sgofTable(deck.getKeyword("SGOF").getRecord(0).getItem(0), false);
     BOOST_CHECK_EQUAL(10U, sgofTable.getSgColumn().size());
@@ -983,7 +978,7 @@ SWOF
     const auto& item0 = record0.getItem(0);
     BOOST_CHECK_EQUAL(1U , kw1.size());
     BOOST_CHECK_EQUAL(1U , record0.size());
-    BOOST_CHECK_EQUAL(10U * 4, item0.size());
+    BOOST_CHECK_EQUAL(10U * 4, item0.data_size());
 
     Opm::SwofTable swofTable(deck.getKeyword("SWOF").getRecord(0).getItem(0), false);
     BOOST_CHECK_EQUAL(10U, swofTable.getSwColumn().size());
@@ -1039,7 +1034,7 @@ SLGOF
     const auto& item0 = record0.getItem(0);
     BOOST_CHECK_EQUAL(1U , kw1.size());
     BOOST_CHECK_EQUAL(1U , record0.size());
-    BOOST_CHECK_EQUAL(10U * 4, item0.size());
+    BOOST_CHECK_EQUAL(10U * 4, item0.data_size());
 
     Opm::SlgofTable slgofTable( deck.getKeyword("SLGOF").getRecord(0).getItem(0), false );
     BOOST_CHECK_EQUAL(10U, slgofTable.getSlColumn().size());
@@ -1169,7 +1164,7 @@ BOOST_AUTO_TEST_CASE( VFPPROD ) {
         const auto& record = VFPPROD1.getRecord(1);
         const auto& item = record.getItem("FLOW_VALUES");
 
-        BOOST_CHECK_EQUAL( item.size() , 12 );
+        BOOST_CHECK_EQUAL( item.data_size() , 12 );
         BOOST_CHECK_EQUAL( item.get< double >(0)  ,   100 );
         BOOST_CHECK_EQUAL( item.get< double >(11) , 20000 );
     }
@@ -1178,7 +1173,7 @@ BOOST_AUTO_TEST_CASE( VFPPROD ) {
         const auto& record = VFPPROD1.getRecord(2);
         const auto& item = record.getItem("THP_VALUES");
 
-        BOOST_CHECK_EQUAL( item.size() , 7 );
+        BOOST_CHECK_EQUAL( item.data_size() , 7 );
         BOOST_CHECK_CLOSE( item.get< double >(0)  , 16.01 , 0.0001 );
         BOOST_CHECK_CLOSE( item.get< double >(6) ,  61.01 , 0.0001 );
     }
@@ -1187,7 +1182,7 @@ BOOST_AUTO_TEST_CASE( VFPPROD ) {
         const auto& record = VFPPROD1.getRecord(3);
         const auto& item = record.getItem("WFR_VALUES");
 
-        BOOST_CHECK_EQUAL( item.size() , 9 );
+        BOOST_CHECK_EQUAL( item.data_size() , 9 );
         BOOST_CHECK_CLOSE( item.get< double >(1)  , 0.1 , 0.0001 );
         BOOST_CHECK_CLOSE( item.get< double >(7) ,  0.9 , 0.0001 );
     }
@@ -1196,7 +1191,7 @@ BOOST_AUTO_TEST_CASE( VFPPROD ) {
         const auto& record = VFPPROD1.getRecord(4);
         const auto& item = record.getItem("GFR_VALUES");
 
-        BOOST_CHECK_EQUAL( item.size() , 9 );
+        BOOST_CHECK_EQUAL( item.data_size() , 9 );
         BOOST_CHECK_EQUAL( item.get< double >(0)  ,   90 );
         BOOST_CHECK_EQUAL( item.get< double >(8) , 10000 );
     }
@@ -1205,7 +1200,7 @@ BOOST_AUTO_TEST_CASE( VFPPROD ) {
         const auto& record = VFPPROD1.getRecord(5);
         const auto& item = record.getItem("ALQ_VALUES");
 
-        BOOST_CHECK_EQUAL( item.size() , 1 );
+        BOOST_CHECK_EQUAL( item.data_size() , 1 );
         BOOST_CHECK_EQUAL( item.get< double >(0)  ,   0 );
     }
 
@@ -1214,28 +1209,28 @@ BOOST_AUTO_TEST_CASE( VFPPROD ) {
 
         {
             const auto& item = record.getItem("THP_INDEX");
-            BOOST_CHECK_EQUAL( item.size() , 1 );
+            BOOST_CHECK( item.hasValue(0));
             BOOST_CHECK_EQUAL( item.get< int >(0) , 1 );
         }
 
         {
             const auto& item = record.getItem("WFR_INDEX");
-            BOOST_CHECK_EQUAL( item.size() , 1 );
+            BOOST_CHECK( item.hasValue(0));
             BOOST_CHECK_EQUAL( item.get< int >(0) , 1 );
         }
         {
             const auto& item = record.getItem("GFR_INDEX");
-            BOOST_CHECK_EQUAL( item.size() , 1 );
+            BOOST_CHECK( item.hasValue(0));
             BOOST_CHECK_EQUAL( item.get< int >(0) , 1 );
         }
         {
             const auto& item = record.getItem("ALQ_INDEX");
-            BOOST_CHECK_EQUAL( item.size() , 1 );
+            BOOST_CHECK( item.hasValue(0));
             BOOST_CHECK_EQUAL( item.get< int >(0) , 1 );
         }
         {
             const auto& item = record.getItem("VALUES");
-            BOOST_CHECK_EQUAL( item.size() , 12 );
+            BOOST_CHECK_EQUAL( item.data_size() , 12 );
             BOOST_CHECK_EQUAL( item.get< double >(0) , 44.85 );
             BOOST_CHECK_EQUAL( item.get< double >(11) , 115.14 );
         }
@@ -1245,27 +1240,27 @@ BOOST_AUTO_TEST_CASE( VFPPROD ) {
         const auto& record = VFPPROD1.getRecord(572);
         {
             const auto& item = record.getItem("THP_INDEX");
-            BOOST_CHECK_EQUAL( item.size() , 1 );
+            BOOST_CHECK( item.hasValue(0));
             BOOST_CHECK_EQUAL( item.get< int >(0) , 7 );
         }
         {
             const auto& item = record.getItem("WFR_INDEX");
-            BOOST_CHECK_EQUAL( item.size() , 1 );
+            BOOST_CHECK( item.hasValue(0));
             BOOST_CHECK_EQUAL( item.get< int >(0) , 9 );
         }
         {
             const auto& item = record.getItem("GFR_INDEX");
-            BOOST_CHECK_EQUAL( item.size() , 1 );
+            BOOST_CHECK( item.hasValue(0));
             BOOST_CHECK_EQUAL( item.get< int >(0) , 9 );
         }
         {
             const auto& item = record.getItem("ALQ_INDEX");
-            BOOST_CHECK_EQUAL( item.size() , 1 );
+            BOOST_CHECK( item.hasValue(0));
             BOOST_CHECK_EQUAL( item.get< int >(0) , 1 );
         }
         {
             const auto& item = record.getItem("VALUES");
-            BOOST_CHECK_EQUAL( item.size() , 12 );
+            BOOST_CHECK_EQUAL( item.data_size() , 12 );
             BOOST_CHECK_EQUAL( item.get< double >(0) , 100.80 );
             BOOST_CHECK_EQUAL( item.get< double >(11) , 147.79 );
         }

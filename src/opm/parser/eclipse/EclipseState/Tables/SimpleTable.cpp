@@ -75,11 +75,11 @@ namespace Opm {
     void SimpleTable::init( const DeckItem& deckItem ) {
         this->addColumns();
 
-        if ( (deckItem.size() % numColumns()) != 0)
+        if ( (deckItem.data_size() % numColumns()) != 0)
             throw std::runtime_error("Number of columns in the data file is"
                     "inconsistent with the ones specified");
 
-        size_t rows = deckItem.size() / numColumns();
+        size_t rows = deckItem.data_size() / numColumns();
         for (size_t colIdx = 0; colIdx < numColumns(); ++colIdx) {
             auto& column = getColumn( colIdx );
             for (size_t rowIdx = 0; rowIdx < rows; rowIdx++) {
