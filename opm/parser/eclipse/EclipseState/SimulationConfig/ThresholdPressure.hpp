@@ -28,12 +28,14 @@ namespace Opm {
 
     class Deck;
     class Eclipse3DProperties;
+    class FieldPropsManager;
 
     class ThresholdPressure {
 
     public:
         ThresholdPressure(bool restart,
                           const Deck& deck,
+                          const FieldPropsManager& fp,
                           const Eclipse3DProperties& eclipseProperties);
 
 

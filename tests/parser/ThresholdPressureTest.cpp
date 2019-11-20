@@ -68,7 +68,7 @@ const std::string& inputStr_RESTART2 = "RUNSPEC\n"
   "\n"
   "REGIONS\n"
   "EQLNUM\n"
-  "   27*4 /\n"
+  "   120*4 /\n"
   "SOLUTION\n"
   "RESTART\n"
   "  CASE 100/\n"
@@ -87,7 +87,7 @@ const std::string& inputStrWithEqlNum =
                               "\n"
                               "REGIONS\n"
                               "EQLNUM\n"
-                              "   27*3 /\n"
+                              "   120*3 /\n"
                               "SOLUTION\n"
                               "THPRES\n"
                               "1 2 12.0/\n"
@@ -105,7 +105,7 @@ const std::string& inputStrWithEqlNumall0 =
                               "\n"
                               "REGIONS\n"
                               "EQLNUM\n"
-                              "   27*0 /\n"
+                              "   120*0 /\n"
                               "SOLUTION\n"
                               "THPRES\n"
                               "1 2 12.0/\n"
@@ -189,7 +189,7 @@ const std::string& inputStrMissingPressure = "RUNSPEC\n"
                                          "\n"
                                          "REGIONS\n"
                                          "EQLNUM\n"
-                                         "   27*3 /\n"
+                                         "   120*3 /\n"
                                          "SOLUTION\n"
                                          "THPRES\n"
                                          "1 2 12.0/\n"
@@ -211,6 +211,7 @@ struct Setup
     TableManager tablemanager;
     EclipseGrid grid;
     Eclipse3DProperties props;
+    FieldPropsManager fp;
     InitConfig initConfig;
     ThresholdPressure threshPres;
 
@@ -219,8 +220,9 @@ struct Setup
             tablemanager(deck),
             grid(10, 3, 4),
             props(deck, tablemanager, grid),
+            fp(deck, grid, tablemanager),
             initConfig(deck),
-            threshPres(initConfig.restartRequested(), deck, props)
+            threshPres(initConfig.restartRequested(), deck, fp, props)
     {
     }
 
@@ -229,8 +231,9 @@ struct Setup
             tablemanager(deck),
             grid(10, 3, 4),
             props(deck, tablemanager, grid),
+            fp(deck, grid, tablemanager),
             initConfig(deck),
-            threshPres(initConfig.restartRequested(), deck, props)
+            threshPres(initConfig.restartRequested(), deck, fp, props)
     {
     }
 

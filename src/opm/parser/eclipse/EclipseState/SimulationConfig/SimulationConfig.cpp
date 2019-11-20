@@ -22,6 +22,7 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/parser/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/SimulationConfig/ThresholdPressure.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/C.hpp>
@@ -49,8 +50,9 @@ namespace Opm {
 
     SimulationConfig::SimulationConfig(bool restart,
                                        const Deck& deck,
+                                       const FieldPropsManager& fp,
                                        const Eclipse3DProperties& eclipseProperties) :
-        m_ThresholdPressure( restart, deck, eclipseProperties ),
+        m_ThresholdPressure( restart, deck, fp, eclipseProperties ),
         m_useCPR(false),
         m_DISGAS(false),
         m_VAPOIL(false),
