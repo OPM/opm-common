@@ -733,7 +733,7 @@ const std::string& FieldProps::default_region() const {
     return this->m_default_region;
 }
 
+
 template std::vector<bool> FieldProps::defaulted<int>(const std::string& keyword);
 template std::vector<bool> FieldProps::defaulted<double>(const std::string& keyword);
-
 }
