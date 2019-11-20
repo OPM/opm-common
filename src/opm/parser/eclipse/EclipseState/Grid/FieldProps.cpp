@@ -263,7 +263,7 @@ FieldProps::FieldProps(const Deck& deck, const EclipseGrid& grid_arg, const Tabl
     tables(table_arg),
     active_size(grid_arg.getNumActive()),
     actnum(grid_arg.getACTNUM()),
-    default_region(default_region_keyword(deck))
+    m_default_region(default_region_keyword(deck))
 {
     if (Section::hasGRID(deck))
         this->scanGRIDSection(GRIDSection(deck));
@@ -379,7 +379,7 @@ FieldProps::FieldData<int>& FieldProps::get(const std::string& keyword) {
 }
 
 std::vector<Box::cell_index> FieldProps::region_index( const DeckItem& region_item, int region_value ) {
-    std::string region_name = region_item.defaultApplied(0) ? this->default_region : make_region_name(region_item.get<std::string>(0));
+    std::string region_name = region_item.defaultApplied(0) ? this->m_default_region : make_region_name(region_item.get<std::string>(0));
     const auto& region = this->get<int>(region_name);
     if (!region.valid())
         throw std::invalid_argument("Trying to work with invalid region: " + region_name);
@@ -701,6 +701,9 @@ void FieldProps::scanSCHEDULESection(const SCHEDULESection& schedule_section) {
     }
 }
 
+const std::string& FieldProps::default_region() const {
+    return this->m_default_region;
+}
 
 template std::vector<bool> FieldProps::defaulted<int>(const std::string& keyword);
 template std::vector<bool> FieldProps::defaulted<double>(const std::string& keyword);

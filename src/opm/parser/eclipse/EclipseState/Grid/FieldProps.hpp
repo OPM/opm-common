@@ -116,6 +116,9 @@ public:
     FieldProps(const Deck& deck, const EclipseGrid& grid, const TableManager& table_arg);
     void reset_grid(const EclipseGrid& grid);
 
+    const std::string& default_region() const;
+
+
     template <typename T>
     FieldData<T>& get(const std::string& keyword);
 
@@ -197,7 +200,7 @@ private:
     const TableManager& tables;
     std::size_t active_size;
     std::vector<int> actnum;
-    const std::string default_region;
+    const std::string m_default_region;
     std::unordered_map<std::string, FieldData<int>> int_data;
     std::unordered_map<std::string, FieldData<double>> double_data;
 };
