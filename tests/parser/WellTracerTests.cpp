@@ -133,10 +133,9 @@ BOOST_AUTO_TEST_CASE(TestNoTracer) {
     auto deck = createDeckWithOutTracer();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
     FieldPropsManager fp(deck, grid, table);
     Runspec runspec ( deck );
-    Schedule schedule(deck, grid , fp, eclipseProperties, runspec);
+    Schedule schedule(deck, grid , fp, runspec);
     BOOST_CHECK(!deck.hasKeyword("WTRACER"));
 }
 
@@ -145,10 +144,9 @@ BOOST_AUTO_TEST_CASE(TestDynamicWTRACER) {
     auto deck = createDeckWithDynamicWTRACER();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
     FieldPropsManager fp( deck , grid, table);
     Runspec runspec ( deck );
-    Schedule schedule(deck, grid , fp, eclipseProperties, runspec);
+    Schedule schedule(deck, grid , fp, runspec);
     BOOST_CHECK(deck.hasKeyword("WTRACER"));
     const auto& keyword = deck.getKeyword("WTRACER");
     BOOST_CHECK_EQUAL(keyword.size(),1);
@@ -168,10 +166,9 @@ BOOST_AUTO_TEST_CASE(TestTracerInProducerTHROW) {
     auto deck = createDeckWithTracerInProducer();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
     FieldPropsManager fp( deck , grid, table);
     Runspec runspec ( deck );
 
-    BOOST_CHECK_THROW(Schedule(deck, grid, fp, eclipseProperties, runspec), std::invalid_argument);
+    BOOST_CHECK_THROW(Schedule(deck, grid, fp, runspec), std::invalid_argument);
 }
 

@@ -44,8 +44,7 @@ BOOST_AUTO_TEST_CASE(create) {
     EclipseState es(deck);
     const EclipseGrid& grid = es.getInputGrid();
     Schedule schedule( deck, es);
-    out::RegionCache rc(es.get3DProperties().getIntGridProperty("FIPNUM").compressedCopy(grid) , grid, schedule);
-
+    out::RegionCache rc(es.fieldProps().get<int>("FIPNUM"), grid, schedule);
     {
         const auto& empty = rc.connections( 4 );
         BOOST_CHECK_EQUAL( empty.size() , 0 );

@@ -25,7 +25,6 @@
 namespace Opm {
 
     class Deck;
-    class Eclipse3DProperties;
     class FieldPropsManager;
 
     class SimulationConfig {
@@ -35,8 +34,7 @@ namespace Opm {
         SimulationConfig();
         SimulationConfig(bool restart,
                          const Deck& deck,
-                         const FieldPropsManager& fp,
-                         const Eclipse3DProperties& gridProperties);
+                         const FieldPropsManager& fp);
         SimulationConfig(const ThresholdPressure& thresholdPressure,
                          bool useCPR, bool DISGAS, bool VAPOIL, bool isThermal);
 

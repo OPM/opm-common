@@ -21,8 +21,8 @@
 
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
-#include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/Fault.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FaultFace.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FaultCollection.hpp>
@@ -34,7 +34,7 @@
 
 namespace Opm {
 
-   TransMult::TransMult(const GridDims& dims, const Deck& deck, const FieldPropsManager& fp, const Eclipse3DProperties& props) :
+   TransMult::TransMult(const GridDims& dims, const Deck& deck, const FieldPropsManager& fp) :
         m_nx( dims.getNX()),
         m_ny( dims.getNY()),
         m_nz( dims.getNZ()),
@@ -44,7 +44,7 @@ namespace Opm {
                    { FaceDir::XMinus, "MULTX-" },
                    { FaceDir::YMinus, "MULTY-" },
                    { FaceDir::ZMinus, "MULTZ-" }}),
-        m_multregtScanner( dims, fp, props, deck.getKeywordList( "MULTREGT" ))
+        m_multregtScanner( dims, fp, deck.getKeywordList( "MULTREGT" ))
     {
         EDITSection edit_section(deck);
         if (edit_section.hasKeyword("MULTREGT")) {

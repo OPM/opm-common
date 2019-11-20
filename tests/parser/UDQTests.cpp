@@ -144,10 +144,9 @@ Schedule make_schedule(const std::string& input) {
     } else {
         EclipseGrid grid(10,10,10);
         TableManager table ( deck );
-        Eclipse3DProperties eclipseProperties ( deck , table, grid);
         FieldPropsManager fp( deck , grid, table);
         Runspec runspec (deck);
-        return Schedule(deck, grid , fp, eclipseProperties, runspec);
+        return Schedule(deck, grid , fp, runspec);
     }
 }
 

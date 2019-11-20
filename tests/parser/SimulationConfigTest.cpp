@@ -139,9 +139,8 @@ BOOST_AUTO_TEST_CASE(SimulationConfigGetThresholdPressureTableTest) {
     auto deck = createDeck(inputStr);
     TableManager tm(deck);
     EclipseGrid eg(10, 3, 4);
-    Eclipse3DProperties ep(deck, tm, eg);
     FieldPropsManager fp(deck, eg, tm);
-    BOOST_CHECK_NO_THROW( SimulationConfig(false, deck, fp, ep ) );
+    BOOST_CHECK_NO_THROW( SimulationConfig(false, deck, fp) );
 }
 
 
@@ -149,9 +148,8 @@ BOOST_AUTO_TEST_CASE(SimulationConfigNOTHPRES) {
     auto deck = createDeck(inputStr_noTHPRES);
     TableManager tm(deck);
     EclipseGrid eg(10, 3, 4);
-    Eclipse3DProperties ep(deck, tm, eg);
     FieldPropsManager fp(deck, eg, tm);
-    SimulationConfig simulationConfig(false, deck, fp, ep);
+    SimulationConfig simulationConfig(false, deck, fp);
     BOOST_CHECK( !simulationConfig.useThresholdPressure() );
 }
 
@@ -159,9 +157,8 @@ BOOST_AUTO_TEST_CASE(SimulationConfigCPRNotUsed) {
     auto deck = createDeck(inputStr_noTHPRES);
     TableManager tm(deck);
     EclipseGrid eg(10, 3, 4);
-    Eclipse3DProperties ep(deck, tm, eg);
     FieldPropsManager fp(deck, eg, tm);
-    SimulationConfig simulationConfig(false, deck, fp, ep);
+    SimulationConfig simulationConfig(false, deck, fp);
     BOOST_CHECK( ! simulationConfig.useCPR());
 }
 
@@ -169,10 +166,9 @@ BOOST_AUTO_TEST_CASE(SimulationConfigCPRUsed) {
     auto deck = createDeck(inputStr_cpr);
     TableManager tm(deck);
     EclipseGrid eg(10, 3, 4);
-    Eclipse3DProperties ep(deck, tm, eg);
     SUMMARYSection summary(deck);
     FieldPropsManager fp(deck, eg, tm);
-    SimulationConfig simulationConfig(false, deck, fp, ep);
+    SimulationConfig simulationConfig(false, deck, fp);
     BOOST_CHECK(     simulationConfig.useCPR() );
     BOOST_CHECK(  !  summary.hasKeyword("CPR") );
 }
@@ -182,10 +178,9 @@ BOOST_AUTO_TEST_CASE(SimulationConfigCPRInSUMMARYSection) {
     auto deck = createDeck(inputStr_cpr_in_SUMMARY);
     TableManager tm(deck);
     EclipseGrid eg(10, 3, 4);
-    Eclipse3DProperties ep(deck, tm, eg);
     SUMMARYSection summary(deck);
     FieldPropsManager fp(deck, eg, tm);
-    SimulationConfig simulationConfig(false, deck, fp, ep);
+    SimulationConfig simulationConfig(false, deck, fp);
     BOOST_CHECK( ! simulationConfig.useCPR());
     BOOST_CHECK(   summary.hasKeyword("CPR"));
 }
@@ -195,10 +190,9 @@ BOOST_AUTO_TEST_CASE(SimulationConfigCPRBoth) {
     auto deck = createDeck(inputStr_cpr_BOTH);
     TableManager tm(deck);
     EclipseGrid eg(10, 3, 4);
-    Eclipse3DProperties ep(deck, tm, eg);
     SUMMARYSection summary(deck);
     FieldPropsManager fp(deck, eg, tm);
-    SimulationConfig simulationConfig(false, deck, fp, ep);
+    SimulationConfig simulationConfig(false, deck, fp);
     BOOST_CHECK(  simulationConfig.useCPR());
     BOOST_CHECK(  summary.hasKeyword("CPR"));
 
@@ -221,18 +215,16 @@ BOOST_AUTO_TEST_CASE(SimulationConfig_VAPOIL_DISGAS) {
     auto deck = createDeck(inputStr);
     TableManager tm(deck);
     EclipseGrid eg(10, 3, 4);
-    Eclipse3DProperties ep(deck, tm, eg);
     FieldPropsManager fp(deck, eg, tm);
-    SimulationConfig simulationConfig(false, deck, fp, ep);
+    SimulationConfig simulationConfig(false, deck, fp);
     BOOST_CHECK_EQUAL( false , simulationConfig.hasDISGAS());
     BOOST_CHECK_EQUAL( false , simulationConfig.hasVAPOIL());
 
     auto deck_vd = createDeck(inputStr_vap_dis);
     TableManager tm_vd(deck_vd);
     EclipseGrid eg_vd(10, 3, 4);
-    Eclipse3DProperties ep_vd(deck_vd, tm, eg);
     FieldPropsManager fp_vd(deck_vd, eg, tm);
-    SimulationConfig simulationConfig_vd(false, deck_vd, fp_vd, ep_vd);
+    SimulationConfig simulationConfig_vd(false, deck_vd, fp_vd);
     BOOST_CHECK_EQUAL( true , simulationConfig_vd.hasDISGAS());
     BOOST_CHECK_EQUAL( true , simulationConfig_vd.hasVAPOIL());
 }
@@ -244,9 +236,8 @@ BOOST_AUTO_TEST_CASE(SimulationConfig_TEMP_THERMAL)
         const auto deck = createDeck(inputStr);
         const auto tm = TableManager(deck);
         const auto eg = EclipseGrid(10, 3, 4);
-        const auto ep = Eclipse3DProperties(deck, tm, eg);
         const auto fp = FieldPropsManager(deck, eg, tm);
-        const auto simulationConfig = Opm::SimulationConfig(false, deck, fp, ep);
+        const auto simulationConfig = Opm::SimulationConfig(false, deck, fp);
 
         BOOST_CHECK(! simulationConfig.isThermal());
     }
@@ -255,9 +246,8 @@ BOOST_AUTO_TEST_CASE(SimulationConfig_TEMP_THERMAL)
         const auto deck = createDeck(simDeckStringTEMP());
         const auto tm = TableManager(deck);
         const auto eg = EclipseGrid(10, 3, 4);
-        const auto ep = Eclipse3DProperties(deck, tm, eg);
         const auto fp = FieldPropsManager(deck, eg, tm);
-        const auto simulationConfig = Opm::SimulationConfig(false, deck, fp, ep);
+        const auto simulationConfig = Opm::SimulationConfig(false, deck, fp);
 
         BOOST_CHECK(simulationConfig.isThermal());
     }
@@ -266,9 +256,8 @@ BOOST_AUTO_TEST_CASE(SimulationConfig_TEMP_THERMAL)
         const auto deck = createDeck(simDeckStringTHERMAL());
         const auto tm = TableManager(deck);
         const auto eg = EclipseGrid(10, 3, 4);
-        const auto ep = Eclipse3DProperties(deck, tm, eg);
         const auto fp = FieldPropsManager(deck, eg, tm);
-        const auto simulationConfig = Opm::SimulationConfig(false, deck, fp, ep);
+        const auto simulationConfig = Opm::SimulationConfig(false, deck, fp);
 
         BOOST_CHECK(simulationConfig.isThermal());
     }

@@ -213,6 +213,18 @@ public:
     template <typename T>
     std::vector<std::string> keys() const;
 
+    /*
+      Don't understand why - but these are needed to work with opm-simulators heavily templated code?!
+     */
+    const std::vector<int>& get_int(const std::string& keyword) const { return this->get<int>(keyword); }
+    std::vector<int> get_global_int(const std::string& keyword) const { return this->get_global<int>(keyword); }
+
+    const std::vector<double>& get_double(const std::string& keyword) const { return this->get<double>(keyword); }
+    std::vector<double> get_global_double(const std::string& keyword) const { return this->get_global<double>(keyword); }
+
+    bool has_int(const std::string& keyword) const { return this->has<int>(keyword); }
+    bool has_double(const std::string& keyword) const { return this->has<double>(keyword); }
+
 private:
     std::shared_ptr<FieldProps> fp;
 };

@@ -100,18 +100,14 @@ static Deck createDeckTOP() {
 BOOST_AUTO_TEST_CASE(GetPOROTOPBased) {
     auto deck = createDeckTOP();
     EclipseState state(deck );
-    const Eclipse3DProperties& props = state.get3DProperties();
+    const auto& fp = state.fieldProps();
 
-    const GridProperty<double>& poro  = props.getDoubleGridProperty( "PORO" );
-    const GridProperty<double>& permx = props.getDoubleGridProperty( "PERMX" );
+    const auto& poro  = fp.get<double>( "PORO" );
+    const auto& permx = fp.get<double>( "PERMX" );
 
-    BOOST_CHECK_EQUAL(1000U , poro.getCartesianSize() );
-    BOOST_CHECK_EQUAL(1000U , permx.getCartesianSize() );
-    const auto& poro_data  = poro.getData();
-    const auto& permx_data = permx.getData();
-    for (size_t i=0; i < poro.getCartesianSize(); i++) {
-        BOOST_CHECK_EQUAL( 0.10 , poro_data[i]);
-        BOOST_CHECK_EQUAL( 0.25 * Metric::Permeability , permx_data[i]);
+    for (size_t i=0; i < poro.size(); i++) {
+        BOOST_CHECK_EQUAL( 0.10 , poro[i]);
+        BOOST_CHECK_EQUAL( 0.25 * Metric::Permeability , permx[i]);
     }
 }
 
@@ -278,9 +274,9 @@ BOOST_AUTO_TEST_CASE(IntProperties) {
     auto deck = createDeck();
     EclipseState state( deck );
 
-    BOOST_CHECK_EQUAL( false, state.get3DProperties().supportsGridProperty( "NONO" ) );
-    BOOST_CHECK_EQUAL( true,  state.get3DProperties().supportsGridProperty( "SATNUM" ) );
-    BOOST_CHECK_EQUAL( true,  state.get3DProperties().hasDeckIntGridProperty( "SATNUM" ) );
+    BOOST_CHECK_EQUAL( false, state.fieldProps().supported<int>( "NONO" ) );
+    BOOST_CHECK_EQUAL( true,  state.fieldProps().supported<int>( "SATNUM" ) );
+    BOOST_CHECK_EQUAL( true,  state.fieldProps().has<int>( "SATNUM" ) );
 }
 
 
@@ -288,11 +284,10 @@ BOOST_AUTO_TEST_CASE(GetProperty) {
     auto deck = createDeck();
     EclipseState state(deck);
 
-    const auto& satNUM = state.get3DProperties().getIntGridProperty( "SATNUM" );
-    const auto& satnum_data = satNUM.getData();
-    BOOST_CHECK_EQUAL(1000U , satNUM.getCartesianSize() );
-    for (size_t i=0; i < satNUM.getCartesianSize(); i++)
-        BOOST_CHECK_EQUAL( 2 , satnum_data[i]);
+    const auto& satnum = state.fieldProps().get_global<int>("SATNUM");
+    BOOST_CHECK_EQUAL(1000U , satnum.size() );
+    for (size_t i=0; i < satnum.size(); i++)
+        BOOST_CHECK_EQUAL( 2 , satnum[i]);
 }
 
 BOOST_AUTO_TEST_CASE(GetTransMult) {
@@ -427,11 +422,11 @@ static Deck createDeckWithGridOpts() {
 BOOST_AUTO_TEST_CASE(NoGridOptsDefaultRegion) {
     auto deck = createDeckNoGridOpts();
     EclipseState state(deck);
-    const auto& props   = state.get3DProperties();
-    const auto& multnum = props.getIntGridProperty("MULTNUM");
-    const auto& fluxnum = props.getIntGridProperty("FLUXNUM");
-    const auto  default_kw = props.getDefaultRegionKeyword();
-    const auto& def_pro = props.getIntGridProperty(default_kw);
+    const auto& fp = state.fieldProps();
+    const auto& multnum = fp.get<int>("MULTNUM");
+    const auto& fluxnum = fp.get<int>("FLUXNUM");
+    const auto  default_kw = fp.default_region();
+    const auto& def_pro = fp.get<int>(default_kw);
 
     BOOST_CHECK_EQUAL( &fluxnum  , &def_pro );
     BOOST_CHECK_NE( &fluxnum  , &multnum );
@@ -441,11 +436,11 @@ BOOST_AUTO_TEST_CASE(NoGridOptsDefaultRegion) {
 BOOST_AUTO_TEST_CASE(WithGridOptsDefaultRegion) {
     auto deck = createDeckWithGridOpts();
     EclipseState state(deck);
-    const auto& props   = state.get3DProperties();
-    const auto& multnum = props.getIntGridProperty("MULTNUM");
-    const auto& fluxnum = props.getIntGridProperty("FLUXNUM");
-    const auto  default_kw = props.getDefaultRegionKeyword();
-    const auto& def_pro = props.getIntGridProperty(default_kw);
+    const auto& fp = state.fieldProps();
+    const auto& multnum = fp.get<int>("MULTNUM");
+    const auto& fluxnum = fp.get<int>("FLUXNUM");
+    const auto  default_kw = fp.default_region();
+    const auto& def_pro = fp.get<int>(default_kw);
 
     BOOST_CHECK_EQUAL( &multnum , &def_pro );
     BOOST_CHECK_NE( &fluxnum  , &multnum );
