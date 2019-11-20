@@ -44,8 +44,6 @@ namespace Opm {
 
         const bool thpresKeyword    = solutionSection.hasKeyword<ParserKeywords::THPRES>();
         const bool thpresftKeyword  = gridSection.hasKeyword<ParserKeywords::THPRESFT>();
-        const bool hasEqlnumKeyword = eclipseProperties.hasDeckIntGridProperty( "EQLNUM" );
-        int        maxEqlnum        = 0;
 
         //Is THPRES option set?
         if( runspecSection.hasKeyword<ParserKeywords::EQLOPTS>() ) {
@@ -89,13 +87,13 @@ namespace Opm {
 
         //Option is set and keyword is found
         if( m_active && thpresKeyword ) {
-            if( !hasEqlnumKeyword )
+            if( !eclipseProperties.hasDeckIntGridProperty("EQLNUM"))
                 throw std::runtime_error("Error when internalizing THPRES: EQLNUM keyword not found in deck");
 
             //Find max of eqlnum
             const auto& eqlnumKeyword = eclipseProperties.getIntGridProperty( "EQLNUM" );
             const auto& eqlnum = eqlnumKeyword.getData();
-            maxEqlnum = *std::max_element(eqlnum.begin(), eqlnum.end());
+            int maxEqlnum = *std::max_element(eqlnum.begin(), eqlnum.end());
 
             if (0 == maxEqlnum) {
                 throw std::runtime_error("Error in EQLNUM data: all values are 0");
