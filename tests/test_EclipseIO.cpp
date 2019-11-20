@@ -256,6 +256,8 @@ BOOST_AUTO_TEST_CASE(EclipseIOIntegration) {
         "7.0 8.0 9.0 /\n"
         "TOPS\n"
         "9*100 /\n"
+        "PORO \n"
+        "  27*0.15 /\n"
         "PROPS\n"
         "REGIONS\n"
         "SATNUM\n"

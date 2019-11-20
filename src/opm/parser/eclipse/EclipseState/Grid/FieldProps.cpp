@@ -81,6 +81,8 @@ static const std::map<std::string, int> int_scalar_init = {{"SATNUM", 1},
                                                            {"EQLNUM", 1},
                                                            {"IMBNUM", 1},
                                                            {"FIPNUM", 1},   // All FIPxxx keywords should (probably) be added with init==1
+                                                           {"EQLNUM", 1},
+                                                           {"PVTNUM", 1},
                                                            {"ACTNUM", 1}};
 
 
