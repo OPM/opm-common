@@ -139,7 +139,7 @@ void assign_deck(const DeckKeyword& keyword, FieldProps::FieldData<T>& field_dat
 
     for (const auto& cell_index : box.index_list()) {
         field_data.data[cell_index.active_index] = deck_data[cell_index.data_index];
-        field_data.assigned[cell_index.active_index] = true;
+        field_data.value_status[cell_index.active_index] = value::status::deck_value;
     }
 }
 
@@ -150,35 +150,36 @@ void distribute_toplayer(const EclipseGrid& grid, FieldProps::FieldData<T>& fiel
     for (const auto& cell_index : box.index_list()) {
         if (cell_index.global_index < layer_size) {
             toplayer.data[cell_index.global_index] = deck_data[cell_index.data_index];
-            toplayer.assigned[cell_index.global_index] = true;
+            toplayer.value_status[cell_index.global_index] = value::status::deck_value;
         }
     }
 
     for (std::size_t active_index = 0; active_index < field_data.size(); active_index++) {
-        if (!field_data.assigned[active_index]) {
+        if (field_data.value_status[active_index] == value::status::uninitialized) {
             std::size_t global_index = grid.getGlobalIndex(active_index);
             const auto ijk = grid.getIJK(global_index);
             std::size_t layer_index = ijk[0] + ijk[1] * grid.getNX();
-            if (toplayer.assigned[layer_index]) {
+            if (toplayer.value_status[layer_index] == value::status::deck_value) {
                 field_data.data[active_index] = toplayer.data[layer_index];
-                field_data.assigned[active_index] = true;
+                field_data.value_status[active_index] = value::status::valid_default;
             }
         }
     }
 }
 
+
 template <typename T>
 void assign_scalar(FieldProps::FieldData<T>& field_data, T value, const std::vector<Box::cell_index>& index_list) {
     for (const auto& cell_index : index_list) {
         field_data.data[cell_index.active_index] = value;
-        field_data.assigned[cell_index.active_index] = true;
+        field_data.value_status[cell_index.active_index] = value::status::deck_value;
     }
 }
 
 template <typename T>
 void multiply_scalar(FieldProps::FieldData<T>& field_data, T value, const std::vector<Box::cell_index>& index_list) {
     for (const auto& cell_index : index_list) {
-        if (field_data.assigned[cell_index.active_index])
+        if (value::has_value(field_data.value_status[cell_index.active_index]))
             field_data.data[cell_index.active_index] *= value;
     }
 }
@@ -186,7 +187,7 @@ void multiply_scalar(FieldProps::FieldData<T>& field_data, T value, const std::v
 template <typename T>
 void add_scalar(FieldProps::FieldData<T>& field_data, T value, const std::vector<Box::cell_index>& index_list) {
     for (const auto& cell_index : index_list) {
-        if (field_data.assigned[cell_index.active_index])
+        if (value::has_value(field_data.value_status[cell_index.active_index]))
             field_data.data[cell_index.active_index] += value;
     }
 }
@@ -194,7 +195,7 @@ void add_scalar(FieldProps::FieldData<T>& field_data, T value, const std::vector
 template <typename T>
 void min_value(FieldProps::FieldData<T>& field_data, T min_value, const std::vector<Box::cell_index>& index_list) {
     for (const auto& cell_index : index_list) {
-        if (field_data.assigned[cell_index.active_index]) {
+        if (value::has_value(field_data.value_status[cell_index.active_index])) {
             T value = field_data.data[cell_index.active_index];
             field_data.data[cell_index.active_index] = std::max(value, min_value);
         }
@@ -204,7 +205,7 @@ void min_value(FieldProps::FieldData<T>& field_data, T min_value, const std::vec
 template <typename T>
 void max_value(FieldProps::FieldData<T>& field_data, T max_value, const std::vector<Box::cell_index>& index_list) {
     for (const auto& cell_index : index_list) {
-        if (field_data.assigned[cell_index.active_index]) {
+        if (value::has_value(field_data.value_status[cell_index.active_index])) {
             T value = field_data.data[cell_index.active_index];
             field_data.data[cell_index.active_index] = std::min(value, max_value);
         }
@@ -351,7 +352,7 @@ FieldProps::FieldData<double>& FieldProps::get(const std::string& keyword) {
         this->double_data[keyword] = FieldData<double>(this->grid->getNumActive());
         auto init_iter = keywords::double_scalar_init.find(keyword);
         if (init_iter != keywords::double_scalar_init.end())
-            this->double_data[keyword].assign(init_iter->second);
+            this->double_data[keyword].default_assign(init_iter->second);
 
         return this->double_data[keyword];
     } else
@@ -370,7 +371,7 @@ FieldProps::FieldData<int>& FieldProps::get(const std::string& keyword) {
         this->int_data[keyword] = FieldData<int>(this->grid->getNumActive());
         auto init_iter = keywords::int_scalar_init.find(keyword);
         if (init_iter != keywords::int_scalar_init.end())
-            this->int_data[keyword].assign(init_iter->second);
+            this->int_data[keyword].default_assign(init_iter->second);
 
         return this->int_data[keyword];
     } else
@@ -554,7 +555,7 @@ void FieldProps::handle_COPY(const DeckKeyword& keyword, Box box, bool region) {
             if (!src_data)
                 throw std::invalid_argument("Tried to copy from not fully initialized keyword: " + src_kw);
             auto& target_data = this->get<double>(target_kw);
-            target_data.assign(*src_data, index_list);
+            target_data.copy(*src_data, index_list);
 
             continue;
         }
@@ -564,7 +565,7 @@ void FieldProps::handle_COPY(const DeckKeyword& keyword, Box box, bool region) {
             if (!src_data)
                 throw std::invalid_argument("Tried to copy from not fully initialized keyword: " + src_kw);
             auto& target_data = this->get<int>(target_kw);
-            target_data.assign(*src_data, index_list);
+            target_data.copy(*src_data, index_list);
 
             continue;
         }
