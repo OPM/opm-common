@@ -84,6 +84,9 @@ public:
     std::vector<T> get_global(const std::string& keyword) const;
 
     template <typename T>
+    std::vector<bool> defaulted(const std::string& keyword) const;
+
+    template <typename T>
     static bool supported(const std::string& keyword);
 
 private:
