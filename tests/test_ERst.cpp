@@ -87,10 +87,10 @@ BOOST_AUTO_TEST_CASE(TestERst_1) {
     std::string testFile="SPE1_TESTCASE.UNRST";
     std::vector<int> refReportStepNumbers= {1,2,5,10,15,25,50,100,120};
 
-    std::vector<std::string> ref_zwel_10 = {"PROD","","","INJ","",""};        
-    std::vector<std::string> ref_zwel_25 = {"PROD","","","INJ","",""};        
+    std::vector<std::string> ref_zwel_10 = {"PROD","","","INJ","",""};
+    std::vector<std::string> ref_zwel_25 = {"PROD","","","INJ","",""};
 
-    std::vector<int> ref_icon_10 = {1,10,10,3,0,1,0,0,0,0,0,0,1,3,0,0,0,0,0,0,0,0,0,0,0,1,1, 
+    std::vector<int> ref_icon_10 = {1,10,10,3,0,1,0,0,0,0,0,0,1,3,0,0,0,0,0,0,0,0,0,0,0,1,1,
                                     1,1,0,1,0,0,0,0,0,0,1,3,0,0,0,0,0,0,0,0,0,0,0};
 
     std::vector<int> ref_icon_25 = {1,10,10,3,0,1,0,0,0,0,0,0,1,3,0,0,0,0,0,0,0,0,0,0,0,1,1,
@@ -107,10 +107,10 @@ BOOST_AUTO_TEST_CASE(TestERst_1) {
 
 
     std::vector<bool> ref_logih_25 = ref_logih_10;
-    
+
     ERst rst1(testFile);
     rst1.loadReportStepNumber(5);
-    
+
     std::vector<int> reportStepNumbers = rst1.listOfReportStepNumbers();
     BOOST_CHECK_EQUAL(reportStepNumbers==refReportStepNumbers, true);
 
@@ -125,8 +125,8 @@ BOOST_AUTO_TEST_CASE(TestERst_1) {
     std::vector<std::tuple<std::string, eclArrType, int>> rstArrays; // = rst1.listOfRstArrays(4);
     BOOST_CHECK_THROW(rstArrays = rst1.listOfRstArrays(4), std::invalid_argument);
 
-    // non exising report step number, should throw exception 
-    
+    // non exising report step number, should throw exception
+
     BOOST_CHECK_THROW(std::vector<int> vect1=rst1.getRst<int>("ICON",0, 0) , std::invalid_argument );
     BOOST_CHECK_THROW(std::vector<float> vect2=rst1.getRst<float>("PRESSURE",0, 0) , std::invalid_argument );
     BOOST_CHECK_THROW(std::vector<double> vect3=rst1.getRst<double>("XGRP",0, 0) , std::invalid_argument );
@@ -179,7 +179,7 @@ BOOST_AUTO_TEST_CASE(TestERst_1) {
 
     BOOST_CHECK_EQUAL(ref_logih_25==vect4, true);
     BOOST_CHECK_EQUAL(ref_zwel_25==vect5, true);
-    
+
 }
 
 static void readAndWrite(EclOutput& eclTest, ERst& rst1,
@@ -211,13 +211,13 @@ static void readAndWrite(EclOutput& eclTest, ERst& rst1,
 
 
 BOOST_AUTO_TEST_CASE(TestERst_2) {
-    
+
     std::string testFile="SPE1_TESTCASE.UNRST";
     std::string outFile="TEST.UNRST";
 
     // using API for ERst to read all array from a binary unified restart file1
-    // Then write the data back to a new file and check that new file is identical with input file 
-    
+    // Then write the data back to a new file and check that new file is identical with input file
+
     ERst rst1(testFile);
 
     {
@@ -251,7 +251,7 @@ BOOST_AUTO_TEST_CASE(TestERst_3) {
     std::string outFile="TEST.FUNRST";
 
     // using API for ERst to read all array from a formatted unified restart file1
-    // Then write the data back to a new file and check that new file is identical with input file 
+    // Then write the data back to a new file and check that new file is identical with input file
 
     ERst rst1(testFile);
 
@@ -304,10 +304,10 @@ BOOST_AUTO_TEST_CASE(TestERst_4) {
     std::vector<float> pres1 = rst1.getRst<float>("PRESSURE",25, 0);
     std::vector<float> pres2 = rst2.getRst<float>("PRESSURE",25, 0);
     std::vector<float> pres3 = rst3.getRst<float>("PRESSURE",25, 0);
-    
+
     BOOST_CHECK_EQUAL(pres1==pres2, true);
     BOOST_CHECK_EQUAL(pres1==pres3, true);
-    
+
 }
 
 
