@@ -43,11 +43,12 @@ namespace Opm {
     class FaultCollection;
     class Eclipse3DProperties;
     class DeckKeyword;
+    class FieldPropsManager;
 
     class TransMult {
 
     public:
-        TransMult(const GridDims& dims, const Deck& deck, const Eclipse3DProperties& props);
+        TransMult(const GridDims& dims, const Deck& deck, const FieldPropsManager& fp, const Eclipse3DProperties& props);
         double getMultiplier(size_t globalIndex, FaceDir::DirEnum faceDir) const;
         double getMultiplier(size_t i , size_t j , size_t k, FaceDir::DirEnum faceDir) const;
         double getRegionMultiplier( size_t globalCellIndex1, size_t globalCellIndex2, FaceDir::DirEnum faceDir) const;

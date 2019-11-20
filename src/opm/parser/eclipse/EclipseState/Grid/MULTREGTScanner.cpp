@@ -97,9 +97,11 @@ namespace Opm {
       Then it will go through the different regions and looking for
       interface with the wanted region values.
     */
-    MULTREGTScanner::MULTREGTScanner(const Eclipse3DProperties& e3DProps,
+    MULTREGTScanner::MULTREGTScanner(const FieldPropsManager& fp_arg,
+                                     const Eclipse3DProperties& e3DProps,
                                      const std::vector< const DeckKeyword* >& keywords) :
-                m_e3DProps(e3DProps) {
+        fp(fp_arg),
+        m_e3DProps(e3DProps) {
 
         for (size_t idx = 0; idx < keywords.size(); idx++)
             this->addKeyword(e3DProps, *keywords[idx] , e3DProps.getDefaultRegionKeyword());
