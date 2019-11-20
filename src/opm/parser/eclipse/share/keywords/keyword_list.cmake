@@ -10,28 +10,20 @@
 # the file: opm/autodiff/MissingFeatures.cpp
 
 #Some keywords are found to be of 'special' structure:
-#W             WHAT
-#ECONT         Terminates with two /
-#COALNUM       matrix structure
-#DYNAMICR      records of records
-#FIP           prefix to a possible user-defined longer keyword.
-#              e.g. FIPXAREA or FIPYAREA
-#FOAMFCN       records of records
-#GCONPRI       Eclipse300 specific items
-#GCUTBACT      records of records
-#GECONT        records of records
-#GIALL         records of tables
-#MASSFLOW      tables w/ int, double, str
-#MESSAGE       record without slash
-#MPFNNC        records of records
-#OUTSOL        old kw without explanation
-#PARAOPTS      typeless item (reserved)
-#PCG32D        2 types of tables/records, first size fixed but not always 1
-#PCW32D        2 types of tables/records, first size fixed but not always 1
-#PVZG          2 types of tables/records
-#PVTWSALT      2 types of tables/records
-#UDT
-#STOG, STOW, STWG    records of records
+#These are grouped as:
+#
+#    Double records:
+#       CECONT: note that this also has two types of records
+#       DYNAMICS: note that this also has two types of records
+#       GCUTBACT: note that this also has two types of records
+#       GECONT: note that this also has two types of records
+#       MPFNNC: note that this also has two types of records
+#       UDT: user defined table
+#
+#    Alternating record types
+#       PVZG
+#       PVTSALT
+#       STOG, STOW, STWG
 
 set( keywords
      000_Eclipse100/A/ACTDIMS
@@ -93,6 +85,7 @@ set( keywords
      000_Eclipse100/C/CECON
      000_Eclipse100/C/COAL
      000_Eclipse100/C/COALADS
+     000_Eclipse100/C/COALNUM
      000_Eclipse100/C/COALPP
      000_Eclipse100/C/COARSEN
      000_Eclipse100/C/COLLAPSE
@@ -276,6 +269,7 @@ set( keywords
      000_Eclipse100/G/GCONCAL
      000_Eclipse100/G/GCONENG
      000_Eclipse100/G/GCONINJE
+     000_Eclipse100/G/GCONPRI
      000_Eclipse100/G/GCONPROD
      000_Eclipse100/G/GCONSALE
      000_Eclipse100/G/GCONSUMP
@@ -292,6 +286,7 @@ set( keywords
      000_Eclipse100/G/GEFAC
      000_Eclipse100/G/GETGLOB
      000_Eclipse100/G/GI
+     000_Eclipse100/G/GIALL
      000_Eclipse100/G/GIMODEL
      000_Eclipse100/G/GINODE
      000_Eclipse100/G/GLIFTLIM
@@ -463,9 +458,11 @@ set( keywords
      000_Eclipse100/L/LZ
      000_Eclipse100/M/MAPAXES
      000_Eclipse100/M/MAPUNITS
+     000_Eclipse100/M/MASSFLOW
      000_Eclipse100/M/MATCORR
      000_Eclipse100/M/MAXVALUE
      000_Eclipse100/M/MEMORY
+     000_Eclipse100/M/MESSAGE
      000_Eclipse100/M/MESSAGES
      000_Eclipse100/M/MESSOPTS
      000_Eclipse100/M/MESSSRVC
@@ -555,12 +552,15 @@ set( keywords
      000_Eclipse100/O/OUTRAD
      000_Eclipse100/O/OVERBURD
      000_Eclipse100/P/PARALLEL
+     000_Eclipse100/P/PARAOPTS
      000_Eclipse100/P/PARTTRAC
      000_Eclipse100/P/PATHS
      000_Eclipse100/P/PBUB
      000_Eclipse100/P/PBVD
      000_Eclipse100/P/PCG
+     000_Eclipse100/P/PCG32D
      000_Eclipse100/P/PCW
+     000_Eclipse100/P/PCW32D
      000_Eclipse100/P/PDEW
      000_Eclipse100/P/PDVD
      000_Eclipse100/P/PEBI
