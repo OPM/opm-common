@@ -138,7 +138,7 @@ namespace Opm {
     }
 
 
-    void MULTREGTScanner::assertKeywordSupported( const DeckKeyword& deckKeyword, const std::string& /* defaultRegion */) {
+    void MULTREGTScanner::assertKeywordSupported( const DeckKeyword& deckKeyword) {
         for (const auto& deckRecord : deckKeyword) {
             const auto& srcItem = deckRecord.getItem("SRC_REGION");
             const auto& targetItem = deckRecord.getItem("TARGET_REGION");
@@ -157,8 +157,7 @@ namespace Opm {
 
 
     void MULTREGTScanner::addKeyword( const Eclipse3DProperties& props, const DeckKeyword& deckKeyword , const std::string& defaultRegion) {
-        assertKeywordSupported( deckKeyword , defaultRegion );
-
+        assertKeywordSupported( deckKeyword );
         for (const auto& deckRecord : deckKeyword) {
             std::vector<int> src_regions;
             std::vector<int> target_regions;

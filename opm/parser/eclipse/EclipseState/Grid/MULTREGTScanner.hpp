@@ -73,7 +73,7 @@ namespace Opm {
 
     private:
         void addKeyword( const Eclipse3DProperties& props, const DeckKeyword& deckKeyword, const std::string& defaultRegion);
-        void assertKeywordSupported(const DeckKeyword& deckKeyword, const std::string& defaultRegion);
+        void assertKeywordSupported(const DeckKeyword& deckKeyword);
         std::vector< MULTREGTRecord > m_records;
         std::map<std::string , MULTREGTSearchMap> m_searchMap;
         const Eclipse3DProperties& m_e3DProps;
