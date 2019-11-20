@@ -82,6 +82,9 @@ public:
     bool has(const std::string& keyword) const;
 
     template <typename T>
+    std::vector<std::string> keys() const;
+
+    template <typename T>
     std::vector<T> get_global(const std::string& keyword) const;
 
     template <typename T>

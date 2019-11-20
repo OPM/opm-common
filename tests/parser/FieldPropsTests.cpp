@@ -97,6 +97,17 @@ PERMX
     // PERMX keyword is not fully initialized
     BOOST_CHECK(!fpm.try_get<double>("PERMX"));
     BOOST_CHECK(!fpm.has<double>("PERMX"));
+
+    {
+        const auto& keys = fpm.keys<double>();
+        BOOST_CHECK_EQUAL(keys.size(), 1);
+        BOOST_CHECK(std::find(keys.begin(), keys.end(), "PORO")  != keys.end());
+        BOOST_CHECK(std::find(keys.begin(), keys.end(), "PERMX") == keys.end());
+    }
+    {
+        const auto& keys = fpm.keys<int>();
+        BOOST_CHECK_EQUAL(keys.size(), 0);
+    }
 }
 
 

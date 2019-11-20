@@ -129,6 +129,9 @@ public:
     bool has(const std::string& keyword) const;
 
     template <typename T>
+    std::vector<std::string> keys() const;
+
+    template <typename T>
     const FieldData<T>* try_get(const std::string& keyword) {
         const FieldData<T> * field_data;
 

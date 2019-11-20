@@ -90,6 +90,13 @@ const std::string& FieldPropsManager::default_region() const {
     return this->fp->default_region();
 }
 
+template <typename T>
+std::vector<std::string> FieldPropsManager::keys() const {
+    return this->fp->keys<T>();
+}
+
+
+
 template bool FieldPropsManager::supported<int>(const std::string&);
 template bool FieldPropsManager::supported<double>(const std::string&);
 
@@ -98,6 +105,9 @@ template bool FieldPropsManager::has<double>(const std::string&) const;
 
 template std::vector<bool> FieldPropsManager::defaulted<int>(const std::string&) const;
 template std::vector<bool> FieldPropsManager::defaulted<double>(const std::string&) const;
+
+template std::vector<std::string> FieldPropsManager::keys<int>() const;
+template std::vector<std::string> FieldPropsManager::keys<double>() const;
 
 template std::vector<int> FieldPropsManager::get_global(const std::string& keyword) const;
 template std::vector<double> FieldPropsManager::get_global(const std::string& keyword) const;
