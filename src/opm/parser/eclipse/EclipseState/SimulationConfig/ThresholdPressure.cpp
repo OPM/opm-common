@@ -29,10 +29,17 @@
 
 namespace Opm {
 
+#ifdef ENABLE_3DPROPS_TESTING
     ThresholdPressure::ThresholdPressure(bool restart,
                                          const Deck& deck,
                                          const FieldPropsManager& fp,
-                                         const Eclipse3DProperties& eclipseProperties) :
+                                         const Eclipse3DProperties& ) :
+#else
+        ThresholdPressure::ThresholdPressure(bool restart,
+                                             const Deck& deck,
+                                             const FieldPropsManager& ,
+                                             const Eclipse3DProperties& eclipseProperties) :
+#endif
         m_active(false),
         m_restart(restart)
     {
@@ -89,12 +96,19 @@ namespace Opm {
 
         //Option is set and keyword is found
         if( m_active && thpresKeyword ) {
+#ifdef ENABLE_3DPROPS_TESTING
+            if (!fp.has<int>("EQLNUM"))
+                throw std::runtime_error("Error when internalizing THPRES: EQLNUM keyword not found in deck");
+
+            const auto& eqlnum = fp.get<int>("EQLNUM");
+#else
             if( !eclipseProperties.hasDeckIntGridProperty("EQLNUM"))
                 throw std::runtime_error("Error when internalizing THPRES: EQLNUM keyword not found in deck");
 
-            //Find max of eqlnum
             const auto& eqlnumKeyword = eclipseProperties.getIntGridProperty( "EQLNUM" );
             const auto& eqlnum = eqlnumKeyword.getData();
+#endif
+            //Find max of eqlnum
             int maxEqlnum = *std::max_element(eqlnum.begin(), eqlnum.end());
 
             if (0 == maxEqlnum) {
