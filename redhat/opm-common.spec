@@ -118,7 +118,7 @@ mkdir openmpi
 cd openmpi
 %{?el6:module load openmpi-x86_64}
 %{?!el6:module load mpi/openmpi-x86_64}
-%{?el6:cmake3} %{?!el6:cmake} -DUSE_MPI=1 -DBUILD_SHARED_LIBS=1 -DCMAKE_BUILD_TYPE=RelWithDebInfo  -DSTRIP_DEBUGGING_SYMBOLS=ON -DCMAKE_INSTALL_PREFIX=%{_prefix}/lib64/openmpi -DCMAKE_INSTALL_LIBDIR=lib -DUSE_RUNPATH=OFF -DWITH_NATIVE=OFF %{?!el8:-DCMAKE_CXX_COMPILER=/opt/rh/devtoolset-6/root/usr/bin/g++ -DCMAKE_C_COMPILER=/opt/rh/devtoolset-6/root/usr/bin/gcc -DCMAKE_Fortran_COMPILER=/opt/rh/devtoolset-6/root/usr/bin/gfortran -DBOOST_LIBRARYDIR=/opt/rh/rh-mariadb102/root/usr/lib64 -DBOOST_INCLUDEDIR=/opt/rh/rh-mariadb102/root/usr/include} ..
+cmake3 -DUSE_MPI=1 -DBUILD_SHARED_LIBS=1 -DCMAKE_BUILD_TYPE=RelWithDebInfo  -DSTRIP_DEBUGGING_SYMBOLS=ON -DCMAKE_INSTALL_PREFIX=%{_prefix}/lib64/openmpi -DCMAKE_INSTALL_LIBDIR=lib -DUSE_RUNPATH=OFF -DWITH_NATIVE=OFF %{?!el8:-DCMAKE_CXX_COMPILER=/opt/rh/devtoolset-6/root/usr/bin/g++ -DCMAKE_C_COMPILER=/opt/rh/devtoolset-6/root/usr/bin/gcc -DCMAKE_Fortran_COMPILER=/opt/rh/devtoolset-6/root/usr/bin/gfortran -DBOOST_LIBRARYDIR=/opt/rh/rh-mariadb102/root/usr/lib64 -DBOOST_INCLUDEDIR=/opt/rh/rh-mariadb102/root/usr/include} ..
 make %{?_smp_mflags}
 make test
 cd ..
@@ -129,7 +129,7 @@ cd mpich
 %{?el6:module load mpich-x86_64}
 %{?!el6:module rm mpi/openmpi-x86_64}
 %{?!el6:module load mpi/mpich-x86_64}
-%{?el6:cmake3} %{?!el6:cmake} -DUSE_MPI=1 -DBUILD_SHARED_LIBS=1 -DCMAKE_BUILD_TYPE=RelWithDebInfo  -DSTRIP_DEBUGGING_SYMBOLS=ON -DCMAKE_INSTALL_PREFIX=%{_prefix}/lib64/mpich -DCMAKE_INSTALL_LIBDIR=lib -DUSE_RUNPATH=OFF -DWITH_NATIVE=OFF %{?!el8:-DCMAKE_CXX_COMPILER=/opt/rh/devtoolset-6/root/usr/bin/g++ -DCMAKE_C_COMPILER=/opt/rh/devtoolset-6/root/usr/bin/gcc -DCMAKE_Fortran_COMPILER=/opt/rh/devtoolset-6/root/usr/bin/gfortran -DBOOST_LIBRARYDIR=/opt/rh/rh-mariadb102/root/usr/lib64 -DBOOST_INCLUDEDIR=/opt/rh/rh-mariadb102/root/usr/include} ..
+cmake3 -DUSE_MPI=1 -DBUILD_SHARED_LIBS=1 -DCMAKE_BUILD_TYPE=RelWithDebInfo  -DSTRIP_DEBUGGING_SYMBOLS=ON -DCMAKE_INSTALL_PREFIX=%{_prefix}/lib64/mpich -DCMAKE_INSTALL_LIBDIR=lib -DUSE_RUNPATH=OFF -DWITH_NATIVE=OFF %{?!el8:-DCMAKE_CXX_COMPILER=/opt/rh/devtoolset-6/root/usr/bin/g++ -DCMAKE_C_COMPILER=/opt/rh/devtoolset-6/root/usr/bin/gcc -DCMAKE_Fortran_COMPILER=/opt/rh/devtoolset-6/root/usr/bin/gfortran -DBOOST_LIBRARYDIR=/opt/rh/rh-mariadb102/root/usr/lib64 -DBOOST_INCLUDEDIR=/opt/rh/rh-mariadb102/root/usr/include} ..
 make %{?_smp_mflags}
 make test
 
