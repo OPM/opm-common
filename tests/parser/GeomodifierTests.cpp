@@ -77,11 +77,12 @@ BOOST_AUTO_TEST_CASE( CheckUnsoppertedInSCHEDULE ) {
     EclipseGrid grid( deck );
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    FieldPropsManager fp( deck , grid, table);
 
     parseContext.update( ParseContext::UNSUPPORTED_SCHEDULE_GEO_MODIFIER , InputError::IGNORE );
     {
         Runspec runspec ( deck );
-        Schedule schedule( deck, grid , eclipseProperties, runspec , parseContext, errors);
+        Schedule schedule( deck, grid , fp, eclipseProperties, runspec , parseContext, errors);
         auto events = schedule.getEvents( );
         BOOST_CHECK_EQUAL( false , events.hasEvent( ScheduleEvents::GEO_MODIFIER , 1 ));
         BOOST_CHECK_EQUAL( true  , events.hasEvent( ScheduleEvents::GEO_MODIFIER , 2 ));

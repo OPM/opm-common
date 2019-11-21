@@ -108,6 +108,7 @@ namespace {
 
     Schedule::Schedule( const Deck& deck,
                         const EclipseGrid& grid,
+                        const FieldPropsManager& fp,
                         const Eclipse3DProperties& eclipseProperties,
                         const Runspec &runspec,
                         const ParseContext& parseContext,
@@ -148,32 +149,35 @@ namespace {
         }
 
         if (Section::hasSCHEDULE(deck))
-            iterateScheduleSection( parseContext, errors, SCHEDULESection( deck ), grid, eclipseProperties );
+            iterateScheduleSection( parseContext, errors, SCHEDULESection( deck ), grid, fp, eclipseProperties );
     }
 
 
     template <typename T>
     Schedule::Schedule( const Deck& deck,
                         const EclipseGrid& grid,
+                        const FieldPropsManager& fp,
                         const Eclipse3DProperties& eclipseProperties,
                         const Runspec &runspec,
                         const ParseContext& parseContext,
                         T&& errors) :
-        Schedule(deck, grid, eclipseProperties, runspec, parseContext, errors)
+        Schedule(deck, grid, fp, eclipseProperties, runspec, parseContext, errors)
     {}
 
 
     Schedule::Schedule( const Deck& deck,
                         const EclipseGrid& grid,
+                        const FieldPropsManager& fp,
                         const Eclipse3DProperties& eclipseProperties,
                         const Runspec &runspec) :
-        Schedule(deck, grid, eclipseProperties, runspec, ParseContext(), ErrorGuard())
+        Schedule(deck, grid, fp, eclipseProperties, runspec, ParseContext(), ErrorGuard())
     {}
 
 
     Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext& parse_context, ErrorGuard& errors) :
         Schedule(deck,
                  es.getInputGrid(),
+                 es.fieldProps(),
                  es.get3DProperties(),
                  es.runspec(),
                  parse_context,
@@ -186,6 +190,7 @@ namespace {
     Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext& parse_context, T&& errors) :
         Schedule(deck,
                  es.getInputGrid(),
+                 es.fieldProps(),
                  es.get3DProperties(),
                  es.runspec(),
                  parse_context,
@@ -219,6 +224,7 @@ namespace {
                                  const ParseContext& parseContext,
                                  ErrorGuard& errors,
                                  const EclipseGrid& grid,
+                                 const FieldPropsManager& fp,
                                  const Eclipse3DProperties& eclipseProperties,
                                  const UnitSystem& unit_system,
                                  std::vector<std::pair<const DeckKeyword*, size_t > >& rftProperties) {
@@ -311,7 +317,7 @@ namespace {
             handleWGRUPCON(keyword, currentStep);
 
         else if (keyword.name() == "COMPDAT")
-            handleCOMPDAT(keyword, currentStep, grid, eclipseProperties, parseContext, errors);
+            handleCOMPDAT(keyword, currentStep, grid, fp, eclipseProperties, parseContext, errors);
 
         else if (keyword.name() == "WELSEGS")
             handleWELSEGS(keyword, currentStep);
@@ -417,7 +423,7 @@ namespace {
 
 
     void Schedule::iterateScheduleSection(const ParseContext& parseContext , ErrorGuard& errors, const SCHEDULESection& section , const EclipseGrid& grid,
-                                          const Eclipse3DProperties& eclipseProperties) {
+                                          const FieldPropsManager& fp, const Eclipse3DProperties& eclipseProperties) {
         size_t currentStep = 0;
         const auto& unit_system = section.unitSystem();
         std::vector<std::pair< const DeckKeyword* , size_t> > rftProperties;
@@ -445,7 +451,7 @@ namespace {
                 }
                 this->addACTIONX(action, currentStep);
             } else
-                this->handleKeyword(currentStep, section, keywordIdx, keyword, parseContext, errors, grid, eclipseProperties, unit_system, rftProperties);
+                this->handleKeyword(currentStep, section, keywordIdx, keyword, parseContext, errors, grid, fp, eclipseProperties, unit_system, rftProperties);
 
             keywordIdx++;
             if (keywordIdx == section.size())
@@ -1861,7 +1867,7 @@ namespace {
         }
     }
 
-    void Schedule::handleCOMPDAT( const DeckKeyword& keyword, size_t currentStep, const EclipseGrid& grid, const Eclipse3DProperties& eclipseProperties, const ParseContext& parseContext, ErrorGuard& errors) {
+    void Schedule::handleCOMPDAT( const DeckKeyword& keyword, size_t currentStep, const EclipseGrid& grid, const FieldPropsManager& fp, const Eclipse3DProperties& eclipseProperties, const ParseContext& parseContext, ErrorGuard& errors) {
         for (const auto& record : keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             auto wellnames = this->wellNames(wellNamePattern, currentStep);
@@ -1872,8 +1878,11 @@ namespace {
                 {
                     auto well2 = std::shared_ptr<Well>(new Well( this->getWell(name, currentStep)));
                     auto connections = std::shared_ptr<WellConnections>( new WellConnections( well2->getConnections()));
+#ifdef ENABLE_3DPROPS_TESTING
+                    connections->loadCOMPDAT(record, grid, fp);
+#else
                     connections->loadCOMPDAT(record, grid, eclipseProperties);
-
+#endif
                     /*
                       This block implements the following dubious logic.
 

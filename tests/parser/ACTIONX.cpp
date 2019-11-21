@@ -29,6 +29,7 @@
 #include <opm/common/utility/TimeService.hpp>
 
 #include <opm/common/OpmLog/Location.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
@@ -127,19 +128,20 @@ TSTEP
     EclipseGrid grid1(10,10,10);
     TableManager table ( deck1 );
     Eclipse3DProperties eclipseProperties ( deck1 , table, grid1);
+    FieldPropsManager fp( deck1 , grid1, table);
     Runspec runspec (deck1);
 
     // The ACTIONX keyword has no matching 'ENDACTIO' -> exception
-    BOOST_CHECK_THROW(Schedule(deck1, grid1, eclipseProperties, runspec ), std::invalid_argument);
+    BOOST_CHECK_THROW(Schedule(deck1, grid1, fp, eclipseProperties, runspec ), std::invalid_argument);
 
-    Schedule sched(deck2, grid1, eclipseProperties, runspec);
+    Schedule sched(deck2, grid1, fp, eclipseProperties, runspec);
     BOOST_CHECK( !sched.hasWell("W1") );
     BOOST_CHECK( sched.hasWell("W2"));
 
     // The deck3 contains the 'GRID' keyword in the ACTIONX block - that is not a whitelisted keyword.
     ParseContext parseContext( {{ParseContext::ACTIONX_ILLEGAL_KEYWORD, InputError::THROW_EXCEPTION}} );
     ErrorGuard errors;
-    BOOST_CHECK_THROW(Schedule(deck3, grid1, eclipseProperties, runspec, parseContext, errors), std::invalid_argument);
+    BOOST_CHECK_THROW(Schedule(deck3, grid1, fp, eclipseProperties, runspec, parseContext, errors), std::invalid_argument);
 }
 
 
@@ -221,9 +223,10 @@ TSTEP
     EclipseGrid grid1(10,10,10);
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid1);
+    FieldPropsManager fp( deck , grid1, table);
     Runspec runspec(deck);
 
-    return Schedule(deck, grid1, eclipseProperties, runspec);
+    return Schedule(deck, grid1, fp, eclipseProperties, runspec);
 }
 
 
@@ -683,8 +686,10 @@ TSTEP
     EclipseGrid grid1(10,10,10);
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid1);
+    FieldPropsManager fp( deck , grid1, table);
+
     Runspec runspec (deck);
-    Schedule sched(deck, grid1, eclipseProperties, runspec);
+    Schedule sched(deck, grid1, fp, eclipseProperties, runspec);
     const auto& actions0 = sched.actions(0);
     BOOST_CHECK_EQUAL(actions0.size(), 0);
 

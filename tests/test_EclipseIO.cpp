@@ -278,7 +278,7 @@ BOOST_AUTO_TEST_CASE(EclipseIOIntegration) {
         auto deck = Parser().parseString( deckString);
         auto es = EclipseState( deck );
         auto& eclGrid = es.getInputGrid();
-        Schedule schedule(deck, eclGrid, es.get3DProperties(), es.runspec());
+        Schedule schedule(deck, es);
         SummaryConfig summary_config( deck, schedule, es.getTableManager( ));
         SummaryState st(std::chrono::system_clock::now());
         es.getIOConfig().setBaseName( "FOO" );

@@ -24,6 +24,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WList.hpp>
@@ -143,8 +144,9 @@ static Opm::Schedule createSchedule(const std::string& schedule) {
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    FieldPropsManager fp( deck , grid, table);
     Runspec runspec (deck);
-    return Schedule(deck, grid , eclipseProperties, runspec );
+    return Schedule(deck, grid , fp, eclipseProperties, runspec );
 }
 
 

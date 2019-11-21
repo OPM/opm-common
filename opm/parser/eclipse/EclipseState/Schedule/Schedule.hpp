@@ -96,6 +96,7 @@ namespace Opm
     class EclipseGrid;
     class Eclipse3DProperties;
     class EclipseState;
+    class FieldPropsManager;
     class Runspec;
     class SCHEDULESection;
     class SummaryState;
@@ -110,6 +111,7 @@ namespace Opm
     public:
         Schedule(const Deck& deck,
                  const EclipseGrid& grid,
+                 const FieldPropsManager& fp,
                  const Eclipse3DProperties& eclipseProperties,
                  const Runspec &runspec,
                  const ParseContext& parseContext,
@@ -118,6 +120,7 @@ namespace Opm
         template<typename T>
         Schedule(const Deck& deck,
                  const EclipseGrid& grid,
+                 const FieldPropsManager& fp,
                  const Eclipse3DProperties& eclipseProperties,
                  const Runspec &runspec,
                  const ParseContext& parseContext,
@@ -125,6 +128,7 @@ namespace Opm
 
         Schedule(const Deck& deck,
                  const EclipseGrid& grid,
+                 const FieldPropsManager& fp,
                  const Eclipse3DProperties& eclipseProperties,
                  const Runspec &runspec);
 
@@ -255,6 +259,7 @@ namespace Opm
         bool updateWellStatus( const std::string& well, size_t reportStep , Well::Status status);
         void addWellToGroup( const std::string& group_name, const std::string& well_name , size_t timeStep);
         void iterateScheduleSection(const ParseContext& parseContext ,  ErrorGuard& errors, const SCHEDULESection& , const EclipseGrid& grid,
+                                    const FieldPropsManager& fp,
                                     const Eclipse3DProperties& eclipseProperties);
         void addACTIONX(const Action::ActionX& action, std::size_t currentStep);
         void addGroupToGroup( const std::string& parent_group, const std::string& child_group, size_t timeStep);
@@ -268,7 +273,7 @@ namespace Opm
         void handleWCONHIST( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
         void handleWCONPROD( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
         void handleWGRUPCON( const DeckKeyword& keyword, size_t currentStep);
-        void handleCOMPDAT( const DeckKeyword& keyword,  size_t currentStep, const EclipseGrid& grid, const Eclipse3DProperties& eclipseProperties, const ParseContext& parseContext, ErrorGuard& errors);
+        void handleCOMPDAT( const DeckKeyword& keyword,  size_t currentStep, const EclipseGrid& grid, const FieldPropsManager& fp, const Eclipse3DProperties& eclipseProperties, const ParseContext& parseContext, ErrorGuard& errors);
         void handleCOMPLUMP( const DeckKeyword& keyword,  size_t currentStep );
         void handleWELSEGS( const DeckKeyword& keyword, size_t currentStep);
         void handleCOMPSEGS( const DeckKeyword& keyword, size_t currentStep, const EclipseGrid& grid, const ParseContext& parseContext, ErrorGuard& errors);
@@ -318,6 +323,7 @@ namespace Opm
                            const DeckKeyword& keyword,
                            const ParseContext& parseContext, ErrorGuard& errors,
                            const EclipseGrid& grid,
+                           const FieldPropsManager& fp,
                            const Eclipse3DProperties& eclipseProperties,
                            const UnitSystem& unit_system,
                            std::vector<std::pair<const DeckKeyword*, size_t > >& rftProperties);

@@ -30,6 +30,7 @@
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/EclipseState/Util/Value.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GuideRateModel.hpp>
@@ -129,7 +130,8 @@ BOOST_AUTO_TEST_CASE(createDeckWithGEFAC) {
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck );
-    Opm::Schedule schedule(deck,  grid, eclipseProperties, runspec);
+    FieldPropsManager fp( deck , grid, table);
+    Opm::Schedule schedule(deck,  grid, fp, eclipseProperties, runspec);
 
     auto group_names = schedule.groupNames("PRODUC");
     BOOST_CHECK_EQUAL(group_names.size(), 1);
@@ -181,8 +183,9 @@ BOOST_AUTO_TEST_CASE(createDeckWithWGRUPCONandWCONPROD) {
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    FieldPropsManager fp( deck , grid, table);
     Runspec runspec (deck );
-    Opm::Schedule schedule(deck,  grid, eclipseProperties, runspec);
+    Opm::Schedule schedule(deck,  grid, fp, eclipseProperties, runspec);
     const auto& currentWell = schedule.getWell("B-37T2", 0);
     const Opm::Well::WellProductionProperties& wellProductionProperties = currentWell.getProductionProperties();
     BOOST_CHECK(wellProductionProperties.controlMode == Opm::Well::ProducerCMode::GRUP);
@@ -225,8 +228,9 @@ BOOST_AUTO_TEST_CASE(createDeckWithGRUPNET) {
         EclipseGrid grid(10,10,10);
         TableManager table ( deck );
         Eclipse3DProperties eclipseProperties ( deck , table, grid);
+        FieldPropsManager fp( deck , grid, table);
         Runspec runspec (deck );
-        Opm::Schedule schedule(deck,  grid, eclipseProperties, runspec);
+        Opm::Schedule schedule(deck,  grid, fp, eclipseProperties, runspec);
 
         const auto& group1 = schedule.getGroup("PROD", 0);
         const auto& group2 = schedule.getGroup("MANI-E2", 0);
@@ -283,8 +287,9 @@ BOOST_AUTO_TEST_CASE(createDeckWithGCONPROD) {
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    FieldPropsManager fp( deck , grid, table);
     Runspec runspec (deck );
-    Opm::Schedule schedule(deck,  grid, eclipseProperties, runspec);
+    Opm::Schedule schedule(deck,  grid, fp, eclipseProperties, runspec);
     SummaryState st(std::chrono::system_clock::now());
 
     const auto& group1 = schedule.getGroup("G1", 0);
@@ -336,10 +341,11 @@ BOOST_AUTO_TEST_CASE(TESTGuideRateLINCOM) {
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    FieldPropsManager fp( deck , grid, table);
     Runspec runspec (deck );
 
     /* The 'COMB' target mode is not supported */
-    BOOST_CHECK_THROW(Opm::Schedule schedule(deck, grid, eclipseProperties, runspec), std::logic_error);
+    BOOST_CHECK_THROW(Opm::Schedule schedule(deck, grid, fp, eclipseProperties, runspec), std::logic_error);
 }
 
 BOOST_AUTO_TEST_CASE(TESTGuideRate) {
@@ -373,8 +379,9 @@ BOOST_AUTO_TEST_CASE(TESTGuideRate) {
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    FieldPropsManager fp( deck , grid, table);
     Runspec runspec (deck );
-    Schedule schedule(deck, grid, eclipseProperties, runspec);
+    Schedule schedule(deck, grid, fp, eclipseProperties, runspec);
 
     GuideRate gr(schedule);
 }
@@ -399,15 +406,16 @@ BOOST_AUTO_TEST_CASE(TESTGCONSALE) {
         'G1' 20 50 'a_node' /
         'G2' 30 60 /
         /
-        
+
         )";
 
     auto deck = parser.parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    FieldPropsManager fp( deck , grid, table);
     Runspec runspec (deck );
-    Schedule schedule(deck, grid, eclipseProperties, runspec);
+    Schedule schedule(deck, grid, fp, eclipseProperties, runspec);
 
     double metric_to_si = 1.0 / (24.0 * 3600.0);  //cubic meters / day
 
@@ -434,5 +442,5 @@ BOOST_AUTO_TEST_CASE(TESTGCONSALE) {
     BOOST_CHECK_EQUAL( group2.network_node.size(), 0 );
 
 
-    
+
 }

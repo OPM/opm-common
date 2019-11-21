@@ -57,7 +57,7 @@ struct test_data {
     test_data(const std::string& deck_string) :
         deck( Parser().parseString(deck_string)),
         state( this->deck ),
-        schedule( this->deck, this->state.getInputGrid(), this->state.get3DProperties(), this->state.runspec()),
+        schedule( this->deck, this->state),
         summary_config( this->deck, this->schedule, this->state.getTableManager())
     {
         auto& ioconfig = this->state.getIOConfig();
