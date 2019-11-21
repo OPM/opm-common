@@ -189,3 +189,31 @@ BOOST_AUTO_TEST_CASE(ASSIGN) {
     BOOST_CHECK(data.valid());
     BOOST_CHECK(data.data == ext_data);
 }
+
+
+BOOST_AUTO_TEST_CASE(Defaulted) {
+    std::string deck_string = R"(
+GRID
+
+BOX
+  1 10 1 10 1 1 /
+
+NTG
+  100*2 /
+
+)";
+
+    EclipseGrid grid(EclipseGrid(10,10, 2));
+    Deck deck = Parser{}.parseString(deck_string);
+    FieldPropsManager fpm(deck, grid, TableManager());
+    const auto& ntg = fpm.get<double>("NTG");
+    const auto& defaulted = fpm.defaulted<double>("NTG");
+
+    for (std::size_t g=0; g < 100; g++) {
+        BOOST_CHECK_EQUAL(ntg[g], 2);
+        BOOST_CHECK_EQUAL(defaulted[g], false);
+
+        BOOST_CHECK_EQUAL(ntg[g + 100], 1);
+        BOOST_CHECK_EQUAL(defaulted[g + 100], true);
+    }
+}

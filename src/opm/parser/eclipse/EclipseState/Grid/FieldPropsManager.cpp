@@ -80,11 +80,20 @@ bool FieldPropsManager::has(const std::string& keyword) const {
     return data_ptr.valid();
 }
 
+template <typename T>
+std::vector<bool> FieldPropsManager::defaulted(const std::string& keyword) const {
+    return this->fp->defaulted<T>(keyword);
+}
+
+
 template bool FieldPropsManager::supported<int>(const std::string&);
 template bool FieldPropsManager::supported<double>(const std::string&);
 
 template bool FieldPropsManager::has<int>(const std::string&) const;
 template bool FieldPropsManager::has<double>(const std::string&) const;
+
+template std::vector<bool> FieldPropsManager::defaulted<int>(const std::string&) const;
+template std::vector<bool> FieldPropsManager::defaulted<double>(const std::string&) const;
 
 template std::vector<int> FieldPropsManager::get_global(const std::string& keyword) const;
 template std::vector<double> FieldPropsManager::get_global(const std::string& keyword) const;
@@ -94,4 +103,5 @@ template const std::vector<double>& FieldPropsManager::get(const std::string& ke
 
 template const std::vector<int>* FieldPropsManager::try_get(const std::string& keyword) const;
 template const std::vector<double>* FieldPropsManager::try_get(const std::string& keyword) const;
+
 }

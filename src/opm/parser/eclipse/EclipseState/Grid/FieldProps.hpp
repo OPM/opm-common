@@ -156,6 +156,18 @@ public:
     }
 
 
+    template <typename T>
+    std::vector<bool> defaulted(const std::string& keyword) {
+        const auto& field = this->get<T>(keyword);
+        std::vector<bool> def(field.size());
+
+        for (std::size_t i=0; i < def.size(); i++)
+            def[i] = value::defaulted( field.value_status[i]);
+
+        return def;
+    }
+
+
 private:
     void scanGRIDSection(const GRIDSection& grid_section);
     void scanEDITSection(const EDITSection& edit_section);

@@ -701,4 +701,8 @@ void FieldProps::scanSCHEDULESection(const SCHEDULESection& schedule_section) {
     }
 }
 
+
+template std::vector<bool> FieldProps::defaulted<int>(const std::string& keyword);
+template std::vector<bool> FieldProps::defaulted<double>(const std::string& keyword);
+
 }
