@@ -86,6 +86,10 @@ std::vector<bool> FieldPropsManager::defaulted(const std::string& keyword) const
 }
 
 
+const std::string& FieldPropsManager::default_region() const {
+    return this->fp->default_region();
+}
+
 template bool FieldPropsManager::supported<int>(const std::string&);
 template bool FieldPropsManager::supported<double>(const std::string&);
 
