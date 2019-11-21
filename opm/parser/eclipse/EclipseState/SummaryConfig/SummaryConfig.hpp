@@ -76,6 +76,8 @@ namespace Opm {
         bool        userDefined_{false};
     };
 
+    SummaryNode::Category parseKeywordCategory(const std::string& keyword);
+
     bool operator==(const SummaryNode& lhs, const SummaryNode& rhs);
     bool operator<(const SummaryNode& lhs, const SummaryNode& rhs);
 

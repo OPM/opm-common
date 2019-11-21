@@ -21,6 +21,8 @@
 #include <cstring>
 #include <cstdlib>
 
+#include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
+
 #include "ActionParser.hpp"
 
 namespace Opm {
@@ -82,6 +84,22 @@ TokenType Parser::get_type(const std::string& arg) {
     return TokenType::ecl_expr;
 }
 
+FuncType Parser::get_func(const std::string& arg) {
+
+    using Cat = SummaryNode::Category;
+    SummaryNode::Category cat = parseKeywordCategory(arg);
+    switch (cat) {
+        case Cat::Well:  return FuncType::well;
+        case Cat::Group: return FuncType::group;
+        /*case 'F': return Cat::Field;
+        case 'C': return Cat::Connection;
+        case 'R': return Cat::Region;
+        case 'B': return Cat::Block;
+        case 'S': return Cat::Segment;*/
+    }
+    return FuncType::none;
+}
+
 
 ParseNode Parser::next() {
     this->current_pos++;
@@ -89,7 +107,7 @@ ParseNode Parser::next() {
         return TokenType::end;
 
     std::string arg = this->tokens[this->current_pos];
-    return ParseNode(get_type(arg), arg);
+    return ParseNode(get_type(arg), get_func(arg), arg);
 }
 
 
@@ -98,7 +116,7 @@ ParseNode Parser::current() const {
         return TokenType::end;
 
     std::string arg = this->tokens[this->current_pos];
-    return ParseNode(get_type(arg), arg);
+    return ParseNode(get_type(arg), get_func(arg), arg);
 }
 
 
@@ -108,6 +126,7 @@ Action::ASTNode Parser::parse_left() {
         return TokenType::error;
 
     std::string func = current.value;
+    FuncType func_type = current.func;
     std::vector<std::string> arg_list;
     current = this->next();
     while (current.type == TokenType::ecl_expr || current.type == TokenType::number) {
@@ -115,7 +134,7 @@ Action::ASTNode Parser::parse_left() {
         current = this->next();
     }
 
-    return Action::ASTNode(TokenType::ecl_expr, func, arg_list);
+    return Action::ASTNode(TokenType::ecl_expr, func_type, func, arg_list);
 }
 
 Action::ASTNode Parser::parse_op() {
@@ -145,13 +164,14 @@ Action::ASTNode Parser::parse_right() {
         return TokenType::error;
 
     std::string func = current.value;
+    FuncType func_type = current.func;
     std::vector<std::string> arg_list;
     current = this->next();
     while (current.type == TokenType::ecl_expr || current.type == TokenType::number) {
         arg_list.push_back(current.value);
         current = this->next();
     }
-    return Action::ASTNode(TokenType::ecl_expr, func, arg_list);
+    return Action::ASTNode(TokenType::ecl_expr, func_type, func, arg_list);
 }
 
 

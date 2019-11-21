@@ -62,8 +62,9 @@ ASTNode::ASTNode(double value) :
 {}
 
 
-ASTNode::ASTNode(TokenType type_arg, const std::string& func_arg, const std::vector<std::string>& arg_list_arg):
+ASTNode::ASTNode(TokenType type_arg, FuncType func_type_arg, const std::string& func_arg, const std::vector<std::string>& arg_list_arg):
     type(type_arg),
+    func_type(func_type_arg),
     func(func_arg),
     arg_list(strip_quotes(arg_list_arg))
 {}
@@ -92,6 +93,9 @@ Action::Value ASTNode::value(const Action::Context& context) const {
           well patterns like 'P*'.
         */
         if ((this->arg_list.size() == 1) && (arg_list[0].find("*") != std::string::npos)) {
+            if (this->func_type != FuncType::well)
+                throw std::logic_error(": attempted to action-evaluate list not of type well.");
+
             Action::Value well_values;
             int fnmatch_flags = 0;
             for (const auto& well : context.wells(this->func)) {

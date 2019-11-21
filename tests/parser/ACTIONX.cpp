@@ -478,7 +478,15 @@ BOOST_AUTO_TEST_CASE(Action_ContextTest) {
     BOOST_REQUIRE_THROW(context.get("WGOR", "B37"), std::out_of_range);
 }
 
+//Note: that this is only temporary test.
+//Groupnames w/ astirisks wil eventually work with ACTIONX
+BOOST_AUTO_TEST_CASE(TestGroupList) {
+    Action::AST ast({"GWPR", "*", ">", "1.0"});
+    SummaryState st(std::chrono::system_clock::now());
 
+    Action::Context context(st);
+    BOOST_CHECK_THROW( ast.eval(context), std::logic_error );
+}
 
 BOOST_AUTO_TEST_CASE(TestMatchingWells) {
     Action::AST ast({"WOPR", "*", ">", "1.0"});
