@@ -22,13 +22,18 @@
 
 #include <memory>
 #include <vector>
-#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/SpiralICD.hpp>
 
 namespace Opm {
 
     class Segment {
     public:
+
+        enum class SegmentType {
+            REGULAR,
+            SICD
+        };
+
         Segment();
 
         Segment(int segment_number_in, int branch_in, int outlet_segment_in, double length_in, double depth_in,
@@ -44,7 +49,8 @@ namespace Opm {
         double crossArea() const;
         double volume() const;
         bool dataReady() const;
-        WellSegment::SegmentType segmentType() const;
+
+        SegmentType segmentType() const;
 
         void setVolume(const double volume_in);
         void setDepthAndLength(const double depth_in, const double length_in);
@@ -108,7 +114,7 @@ namespace Opm {
         bool m_data_ready;
         // indicate the type of the segment
         // regular or spiral ICD
-        WellSegment::SegmentType m_segment_type = WellSegment::REGULAR;
+        SegmentType m_segment_type = SegmentType::REGULAR;
 
         // information related to SpiralICD. It is nullptr for segments are not
         // spiral ICD type

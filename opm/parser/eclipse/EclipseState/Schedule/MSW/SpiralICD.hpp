@@ -1,5 +1,6 @@
 /*
   Copyright 2017 SINTEF Digital, Mathematics and Cybernetics.
+  Copyright 2019 Equinor ASA.
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -32,6 +33,12 @@ namespace Opm {
 
     class SpiralICD {
     public:
+
+        enum class Status {
+            OPEN,
+            SHUT
+        };
+
         explicit SpiralICD(const DeckRecord& record);
 
         // the function will return a map
@@ -42,7 +49,7 @@ namespace Opm {
         fromWSEGSICD(const DeckKeyword& wsegsicd);
 
         double maxAbsoluteRate() const;
-        const std::string& status() const;
+        Status status() const;
         double strength() const;
         double length() const;
         double densityCalibration() const;
@@ -65,7 +72,7 @@ namespace Opm {
         double m_max_viscosity_ratio;
         int m_method_flow_scaling;
         double m_max_absolute_rate;
-        std::string m_status;
+        Status m_status;
         // scaling factor is the only one can not be gotten from deck directly, needs to be
         // updated afterwards
         double m_scaling_fractor;

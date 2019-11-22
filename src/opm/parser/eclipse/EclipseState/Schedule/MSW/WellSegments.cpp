@@ -417,6 +417,45 @@ namespace Opm {
                            rhs.segment_number_to_index.begin() );
     }
 
+    double WellSegments::segmentLength(const int segment_number) const {
+        double segment_length;
+
+        const Segment& segment = getFromSegmentNumber(segment_number);
+        if (segment_number == 1) {// top segment
+            segment_length = segment.totalLength();
+        } else {
+            // other segments
+            const int outlet_segment_number = segment.outletSegment();
+            const Segment &outlet_segment = getFromSegmentNumber(outlet_segment_number);
+
+            segment_length = segment.totalLength() - outlet_segment.totalLength();
+        }
+
+        if (segment_length <= 0.)
+            throw std::runtime_error(" non positive segemnt length is obtained for segment "
+                                     + std::to_string(segment_number));
+
+        return segment_length;
+    }
+
+    bool WellSegments::updateWSEGSICD(const std::vector<std::pair<int, SpiralICD> >& sicd_pairs) {
+        if (m_comp_pressure_drop == CompPressureDrop::H__) {
+            const std::string msg = "to use spiral ICD segment for well " + m_well_name
+                                  + " , you have to activate the frictional pressure drop calculation";
+            throw std::runtime_error(msg);
+        }
+
+        for (const auto& pair_elem : sicd_pairs) {
+            const int segment_number = pair_elem.first;
+            const SpiralICD& spiral_icd = pair_elem.second;
+            Segment segment = this->getFromSegmentNumber(segment_number);
+            segment.updateSpiralICD(spiral_icd);
+            this->addSegment(segment);
+        }
+
+        return true;
+    }
+
     bool WellSegments::operator!=( const WellSegments& rhs ) const {
         return !( *this == rhs );
     }

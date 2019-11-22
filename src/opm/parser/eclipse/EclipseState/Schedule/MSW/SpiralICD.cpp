@@ -1,5 +1,6 @@
 /*
   Copyright 2017 SINTEF Digital, Mathematics and Cybernetics.
+  Copyright 2019 Equinor ASA.
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -39,9 +40,13 @@ namespace Opm {
               m_max_absolute_rate(record.getItem("MAX_ABS_RATE").hasValue(0)
                                   ? record.getItem("MAX_ABS_RATE").getSIDouble(0)
                                   : std::numeric_limits<double>::max()),
-              m_status(record.getItem("STATUS").getTrimmedString(0)),
               m_scaling_fractor(std::numeric_limits<double>::lowest())
     {
+        if (record.getItem("STATUS").getTrimmedString(0) == "OPEN") {
+            m_status = Status::OPEN;
+        } else {
+            m_status = Status::SHUT;
+        }
     }
 
     std::map<std::string, std::vector<std::pair<int, SpiralICD> > >
@@ -76,7 +81,7 @@ namespace Opm {
         return m_max_absolute_rate;
     }
 
-    const std::string &SpiralICD::status() const {
+    SpiralICD::Status SpiralICD::status() const {
         return m_status;
     }
 
@@ -142,6 +147,9 @@ namespace Opm {
         } else if (m_method_flow_scaling == 1) {
             m_scaling_fractor = std::abs(m_length);
         } else if (m_method_flow_scaling == 2) {
+            if (completion_length == 0.) {
+                throw std::logic_error("Zero connection length is found. No way to update scaling factor for this SICD segment");
+            }
             m_scaling_fractor = m_length / completion_length;
         } else {
             throw std::logic_error(" invalid method specified to calculate flow scaling factor for SICD");

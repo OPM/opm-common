@@ -476,7 +476,7 @@ BOOST_AUTO_TEST_CASE( MULTISEGMENT_ABS ) {
         const std::string length_depth_type_string = WellSegments::LengthDepthToString(length_depth_type);
         BOOST_CHECK_EQUAL( length_depth_type_string, "ABS" );
         const std::string comp_pressure_drop_string = WellSegments::CompPressureDropToString(comp_pressure_drop);
-        BOOST_CHECK_EQUAL( comp_pressure_drop_string, "H--" );
+        BOOST_CHECK_EQUAL( comp_pressure_drop_string, "HF-" );
         const std::string multiphase_model_string = WellSegments::MultiPhaseModelToString(multiphase_model);
         BOOST_CHECK_EQUAL( multiphase_model_string, "HO" );
     }

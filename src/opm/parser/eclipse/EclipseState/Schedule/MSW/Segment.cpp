@@ -99,7 +99,7 @@ namespace Opm {
         return m_data_ready;
     }
 
-    WellSegment::SegmentType Segment::segmentType() const {
+    Segment::SegmentType Segment::segmentType() const {
         return m_segment_type;
     }
 
@@ -143,7 +143,7 @@ namespace Opm {
     }
 
     void Segment::updateSpiralICD(const SpiralICD& spiral_icd) {
-        m_segment_type = WellSegment::SPIRALICD;
+        m_segment_type = SegmentType::SICD;
         m_spiral_icd = std::make_shared<SpiralICD>(spiral_icd);
     }
 

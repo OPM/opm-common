@@ -85,6 +85,8 @@ namespace Opm {
 
         double segmentLength(const int segment_number) const;
 
+        bool updateWSEGSICD(const std::vector<std::pair<int, SpiralICD> >& sicd_pairs);
+
     private:
         void processABS();
         void processINC(const bool first_time);

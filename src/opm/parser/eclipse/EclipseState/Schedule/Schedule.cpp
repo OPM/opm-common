@@ -1971,26 +1971,16 @@ namespace {
                                 SpiralICD::fromWSEGSICD(keyword);
 
         for (const auto& map_elem : spiral_icds) {
-            const std::string& well_name = map_elem.first;
+            const std::string& well_name_pattern = map_elem.first;
+            const auto well_names = this->wellNames(well_name_pattern, currentStep);
             const std::vector<std::pair<int, SpiralICD> >& sicd_pairs = map_elem.second;
-            Well& well = this->m_wells.get( well_name );
-            SegmentSet segment_set = well.getSegmentSet(currentStep);
-            // to have spiral ICD devices, frictional pressure drop must be activated
-            if (segment_set.compPressureDrop() == WellSegment::H__) {
-                const std::string msg = "to use spiral ICD segment for well " + well_name
-                                      + " , you have to activate the frictional pressure drop calculation";
-                throw std::runtime_error(msg);
-            }
 
-            for (const auto& pair_elem : sicd_pairs) {
-                const int segment_number = pair_elem.first;
-                const SpiralICD& spiral_icd = pair_elem.second;
-                Segment segment = segment_set.getFromSegmentNumber(segment_number);
-                segment.updateSpiralICD(spiral_icd);
-                segment_set.addSegment(segment);
+            for (const auto& well_name : well_names) {
+                auto& dynamic_state = this->wells_static.at(well_name);
+                auto well_ptr = std::make_shared<Well>( *dynamic_state[currentStep] );
+                if (well_ptr -> updateWSEGSICD(sicd_pairs) )
+                    this->updateWell(well_ptr, currentStep);
             }
-            // update the segment set with new information
-            well.updateSegmentSet(currentStep, segment_set);
         }
     }
 
