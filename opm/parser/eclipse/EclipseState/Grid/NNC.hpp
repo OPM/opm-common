@@ -32,6 +32,14 @@ struct NNCdata {
         : cell1(c1), cell2(c2), trans(t)
     {}
     NNCdata() = default;
+
+    bool operator==(const NNCdata& data) const
+    {
+        return cell1 == data.cell1 &&
+               cell2 == data.cell2 &&
+               trans == data.trans;
+    }
+
     size_t cell1;
     size_t cell2;
     double trans;
@@ -48,10 +56,13 @@ public:
 
     /// Construct from input deck.
     explicit NNC(const Deck& deck);
+    explicit NNC(const std::vector<NNCdata>& nncdata) : m_nnc(nncdata) {}
     void addNNC(const size_t cell1, const size_t cell2, const double trans);
     const std::vector<NNCdata>& data() const { return m_nnc; }
     size_t numNNC() const;
     bool hasNNC() const;
+
+    bool operator==(const NNC& data) const;
 
 private:
 

@@ -31,6 +31,9 @@ public:
 
     /// Construct from input deck
     explicit EDITNNC(const Deck& deck);
+
+    explicit EDITNNC(const std::vector<NNCdata>& data);
+
     /// \brief Get an ordered set of EDITNNC
     const std::vector<NNCdata>& data() const
     {
@@ -40,6 +43,8 @@ public:
     size_t size() const;
     /// \brief Whether EDITNNC was empty.
     bool empty() const;
+
+    bool operator==(const EDITNNC& data) const;
 
 private:
     std::vector<NNCdata> m_editnnc;

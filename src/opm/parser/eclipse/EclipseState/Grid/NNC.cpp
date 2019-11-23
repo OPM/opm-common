@@ -70,5 +70,9 @@ namespace Opm
         return m_nnc.size()>0;
     }
 
+    bool NNC::operator==(const NNC& data) const {
+        return m_nnc == data.m_nnc;
+    }
+
 } // namespace Opm
 
