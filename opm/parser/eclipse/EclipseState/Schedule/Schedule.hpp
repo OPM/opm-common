@@ -279,6 +279,9 @@ namespace Opm
         void handleWELSEGS( const DeckKeyword& keyword, size_t currentStep);
         void handleCOMPSEGS( const DeckKeyword& keyword, size_t currentStep, const EclipseGrid& grid, const ParseContext& parseContext, ErrorGuard& errors);
         void handleWSEGSICD( const DeckKeyword& keyword, size_t currentStep);
+        // TODO: we should incorporate ParseContext and ErrorGuard, including the above keyword
+        void handleWSEGVALV( const DeckKeyword& keyword, size_t currentStep);
+
         void handleWCONINJE( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
         void handleWFOAM( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
         void handleWPOLYMER( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);

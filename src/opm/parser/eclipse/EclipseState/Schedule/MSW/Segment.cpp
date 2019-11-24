@@ -18,6 +18,7 @@
 */
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/Segment.hpp>
 
+#include <cassert>
 
 namespace Opm {
 
@@ -154,3 +155,64 @@ namespace Opm {
 
 
 }
+
+    // TODO: we can pass in the segment length here. It is tricky anyway
+    void Segment::updateValve(const Valve& valve, const double segment_length) {
+        // TODO: assert here is for debugging purpose, will be improved later
+        // we need to update some values for the vale
+        auto valve_ptr = std::make_shared<Valve>(valve);
+
+        if (valve_ptr->pipeAdditionalLength() < 0.) { // defaulted for this
+            valve_ptr->setPipeAdditionalLength(segment_length);
+        }
+
+        if (valve_ptr->pipeDiameter() < 0.) {
+            valve_ptr->setPipeDiameter(m_internal_diameter);
+            if (this->m_valve != nullptr) {
+                valve_ptr->setPipeDiameter(this->m_valve->pipeDiameter());
+                assert(m_internal_diameter == this->m_valve->pipeDiameter());
+            }
+        } else {
+            this->m_internal_diameter = valve_ptr->pipeDiameter();
+        }
+        assert(m_internal_diameter == valve_ptr->pipeDiameter());
+
+        if (valve_ptr->pipeRoughness() < 0.) {
+            valve_ptr->setPipeRoughness(m_roughness);
+            if (this->m_valve != nullptr) {
+                valve_ptr->setPipeRoughness(this->m_valve->pipeRoughness());
+                assert(m_roughness == this->m_valve->pipeRoughness());
+            }
+        } else {
+            this->m_roughness = valve_ptr->pipeRoughness();
+        }
+        assert(this->m_roughness == valve_ptr->pipeRoughness());
+
+        if (valve_ptr->pipeCrossArea() < 0.) {
+            valve_ptr->setPipeCrossArea(m_cross_area);
+            if (this->m_valve != nullptr) {
+                valve_ptr->setPipeCrossArea(this->m_valve->pipeCrossArea());
+                assert(m_cross_area == this->m_valve->pipeCrossArea());
+            }
+        } else {
+            this->m_cross_area = valve_ptr->pipeCrossArea();
+        }
+        assert(this->m_cross_area == valve_ptr->pipeCrossArea());
+
+        if (valve_ptr->conMaxCrossArea() < 0.) {
+            valve_ptr->setPipeMaxCrossArea(valve_ptr->pipeCrossArea());
+        }
+
+        this->m_valve = valve_ptr;
+
+        m_segment_type = SegmentType::VALVE;
+    }
+
+
+    const std::shared_ptr<Valve>&
+    Segment::valve() const {
+        return m_valve;
+    }
+
+    }
+

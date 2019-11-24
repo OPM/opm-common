@@ -110,6 +110,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Schedule/MSW/WellSegments.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/MSW/updatingConnectionsWithSegments.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/MSW/SpiralICD.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/MSW/Valve.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/RFTConfig.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Schedule.cpp
@@ -643,6 +644,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Schedule/MSW/SpiralICD.hpp
        opm/parser/eclipse/EclipseState/SimulationConfig/ThresholdPressure.hpp
        opm/parser/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp
+       opm/parser/eclipse/EclipseState/Schedule/MSW/Valve.hpp
        opm/parser/eclipse/EclipseState/IOConfig/RestartConfig.hpp
        opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp
        opm/parser/eclipse/EclipseState/checkDeck.hpp
