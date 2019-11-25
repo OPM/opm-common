@@ -1506,8 +1506,11 @@ namespace {
                     if (!record.getItem("VOIDAGE_TARGET").defaultApplied(0))
                         injection.injection_controls += static_cast<int>(Group::InjectionCMode::VREP);
 
-                    if (group_ptr->updateInjection(injection))
+                    if (group_ptr->updateInjection(injection)) {
                         this->updateGroup(std::move(group_ptr), currentStep);
+                        m_events.addEvent( ScheduleEvents::GROUP_INJECTION_UPDATE , currentStep);
+                        this->addGroupEvent(group_name, ScheduleEvents::GROUP_INJECTION_UPDATE, currentStep);
+                    }
                 }
             }
         }
@@ -1590,6 +1593,8 @@ namespace {
                         this->guide_rate_config.update( currentStep, std::move(new_config) );
 
                         this->updateGroup(std::move(group_ptr), currentStep);
+                        m_events.addEvent( ScheduleEvents::GROUP_PRODUCTION_UPDATE , currentStep);
+                        this->addGroupEvent(group_name, ScheduleEvents::GROUP_PRODUCTION_UPDATE, currentStep);
                     }
                 }
             }
@@ -2409,6 +2414,8 @@ void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, c
         dynamic_state.update(timeStep, group_ptr);
 
         m_events.addEvent( ScheduleEvents::NEW_GROUP , timeStep );
+        group_events.insert( std::make_pair(groupName, Events(this->m_timeMap)));
+        this->addGroupEvent(groupName, ScheduleEvents::NEW_GROUP, timeStep);
 
         // All newly created groups are attached to the field group,
         // can then be relocated with the GRUPTREE keyword.
@@ -2514,6 +2521,23 @@ void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, c
 
     bool Schedule::hasWellEvent(const std::string& well, uint64_t event_mask, size_t reportStep) const {
         const auto& events = this->getWellEvents(well);
+        return events.hasEvent(event_mask, reportStep);
+    }
+
+    const Events& Schedule::getGroupEvents(const std::string& group) const {
+        if (this->group_events.count(group) > 0)
+            return this->group_events.at(group);
+        else
+            throw std::invalid_argument("No such group " + group);
+    }
+
+    void Schedule::addGroupEvent(const std::string& group, ScheduleEvents::Events event, size_t reportStep)  {
+        auto& events = this->group_events.at(group);
+        events.addEvent(event, reportStep);
+    }
+
+    bool Schedule::hasGroupEvent(const std::string& group, uint64_t event_mask, size_t reportStep) const {
+        const auto& events = this->getGroupEvents(group);
         return events.hasEvent(event_mask, reportStep);
     }
 

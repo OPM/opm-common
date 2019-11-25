@@ -93,7 +93,14 @@ namespace Opm
 
             /* The VFP tables have changed */
             VFPINJ_UPDATE = 4096,
-            VFPPROD_UPDATE = 8192
+            VFPPROD_UPDATE = 8192,
+
+
+            /*
+              GROUP production or injection targets has changed
+            */
+            GROUP_PRODUCTION_UPDATE = 16384,
+            GROUP_INJECTION_UPDATE = 32768
         };
     }
 

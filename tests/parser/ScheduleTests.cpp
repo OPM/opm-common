@@ -1292,6 +1292,11 @@ BOOST_AUTO_TEST_CASE(createDeckModifyMultipleGCONPROD) {
         BOOST_CHECK_EQUAL(g2.productionControls(st).oil_target, 2000 * siFactorL);
 
         auto gh = schedule.getGroup("H1", 1);
+
+
+        BOOST_CHECK(  !schedule.hasGroupEvent( "G2", ScheduleEvents::GROUP_PRODUCTION_UPDATE , 1 ));
+        BOOST_CHECK(  schedule.hasGroupEvent( "G2", ScheduleEvents::GROUP_PRODUCTION_UPDATE , 2 ));
+
 }
 
 BOOST_AUTO_TEST_CASE(createDeckWithDRSDT) {
