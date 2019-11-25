@@ -10,7 +10,7 @@ namespace {
 
     py::list getNNC( const EclipseState& state ) {
         py::list l;
-        for( const auto& x : state.getInputNNC().nncdata() )
+        for( const auto& x : state.getInputNNC().data() )
             l.append( py::make_tuple( x.cell1, x.cell2, x.trans )  );
         return l;
     }

@@ -1614,7 +1614,7 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         std::vector<int> nnc1;
         std::vector<int> nnc2;
 
-        for (const NNCdata& n : nnc.nncdata() ) {
+        for (const NNCdata& n : nnc.data() ) {
             nnc1.push_back(n.cell1 + 1);
             nnc2.push_back(n.cell2 + 1);
         }
