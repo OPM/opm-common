@@ -63,7 +63,8 @@ enum class InjectionCMode  : int {
     RESV = 2,
     REIN = 4,
     VREP = 8,
-    FLD  = 16
+    FLD  = 16,
+    SALE = 32
 };
 static const std::string InjectionCMode2String( InjectionCMode enumValue );
 static InjectionCMode InjectionCModeFromString( const std::string& stringValue );

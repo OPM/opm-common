@@ -1629,6 +1629,12 @@ namespace {
 
             new_gconsale->add(groupName, sales_target, max_rate, min_rate, procedure);
 
+            auto group_ptr = std::make_shared<Group>(this->getGroup(groupName, currentStep));
+            Group::GroupInjectionProperties injection;
+            injection.phase = Phase::GAS;
+            if (group_ptr->updateInjection(injection)) {
+                this->updateGroup(std::move(group_ptr), currentStep);
+            }
         }
         this->gconsale.update(currentStep, new_gconsale);
     }
