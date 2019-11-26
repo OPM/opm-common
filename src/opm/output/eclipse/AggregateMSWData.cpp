@@ -120,7 +120,6 @@ namespace {
     }
     std::vector<std::size_t> segmentOrder(const Opm::WellSegments& segSet, const std::size_t segIndex) {
         std::vector<std::size_t> ordSegNumber;
-        std::vector<std::size_t> tempOrdVect;
         std::vector<std::size_t> segIndCB;
         // Store "heel" segment since that will not always be at the end of the list
         segIndCB.push_back(segIndex);
