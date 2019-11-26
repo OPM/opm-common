@@ -287,8 +287,8 @@ namespace Opm
         void handleGCONINJE( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
         void handleGCONPROD( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
         void handleGEFAC( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
-        void handleGCONSALE( const DeckKeyword& keyword, size_t currentStep);
-        void handleGCONSUMP( const DeckKeyword& keyword, size_t currentStep);
+        void handleGCONSALE( const DeckKeyword& keyword, size_t currentStep, const UnitSystem& unit_system);
+        void handleGCONSUMP( const DeckKeyword& keyword, size_t currentStep, const UnitSystem& unit_system);
         void handleGUIDERAT( const DeckKeyword& keyword, size_t currentStep);
         void handleLINCOM( const DeckKeyword& keyword, size_t currentStep);
         void handleWEFAC( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
