@@ -23,7 +23,7 @@
 
 namespace Opm {
 
-    class DeckItem;
+    class DeckReckord;
 
     class PlyrockTable : public SimpleTable {
     public:
