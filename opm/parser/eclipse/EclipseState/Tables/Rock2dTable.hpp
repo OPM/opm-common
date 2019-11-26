@@ -23,7 +23,7 @@
 
 namespace Opm {
 
-    class DeckKeyword;
+    class DeckRecord;
 
     class Rock2dTable {
     public:
