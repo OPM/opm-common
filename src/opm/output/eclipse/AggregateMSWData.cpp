@@ -169,17 +169,7 @@ namespace {
                 newSInd = segSet.size();
             }
         }
-
-        if (origBranchNo == 1) {
-            // make the vector of ordered segments - by segment index (zero-based)
-            tempOrdVect.resize(ordSegNumber.size());
-            for (std::size_t ov_ind = 0; ov_ind < ordSegNumber.size(); ov_ind++) {
-                tempOrdVect[ordSegNumber[ov_ind]] = ov_ind;
-            }
-            return tempOrdVect;
-        } else {
-            return ordSegNumber;
-        }
+        return ordSegNumber;
     }
 
 
