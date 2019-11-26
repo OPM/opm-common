@@ -596,7 +596,7 @@ namespace {
         auto tran = std::vector<double>{};
         tran.reserve(nnc.numNNC());
 
-        for (const auto& nd : nnc.nncdata()) {
+        for (const auto& nd : nnc.data()) {
             tran.push_back(nd.trans);
         }
 

@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(readDeck)
     EclipseState eclipseState(deck);
     const auto& nnc = eclipseState.getInputNNC();
     BOOST_CHECK(nnc.hasNNC());
-    const std::vector<NNCdata>& nncdata = nnc.nncdata();
+    const std::vector<NNCdata>& nncdata = nnc.data();
 
     // test the NNCs in nnc.DATA
     BOOST_CHECK_EQUAL(nnc.numNNC(), 4);
@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(addNNCfromDeck)
     EclipseState eclipseState(deck);
     auto nnc = eclipseState.getInputNNC();
     BOOST_CHECK(nnc.hasNNC());
-    const std::vector<NNCdata>& nncdata = nnc.nncdata();
+    const std::vector<NNCdata>& nncdata = nnc.data();
 
     BOOST_CHECK_EQUAL(nnc.numNNC(), 4);
     // test add NNC
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(addNNC)
     Opm::NNC nnc;
     // add NNC
     nnc.addNNC(2,2,2.0);
-    const std::vector<NNCdata>& nncdata = nnc.nncdata();
+    const std::vector<NNCdata>& nncdata = nnc.data();
     BOOST_CHECK_EQUAL(nnc.numNNC(), 1);
     BOOST_CHECK_EQUAL(nncdata[0].cell1, 2);
     BOOST_CHECK_EQUAL(nncdata[0].cell1, 2);
