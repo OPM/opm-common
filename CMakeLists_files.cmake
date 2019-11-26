@@ -676,9 +676,11 @@ if(ENABLE_ECL_OUTPUT)
         opm/io/eclipse/ESmry.hpp
         opm/io/eclipse/PaddedOutputString.hpp
         opm/io/eclipse/OutputStream.hpp
+        opm/output/data/Aquifer.hpp
         opm/output/data/Cells.hpp
         opm/output/data/Solution.hpp
         opm/output/data/Wells.hpp
+        opm/output/eclipse/VectorItems/aquifer.hpp
         opm/output/eclipse/VectorItems/connection.hpp
         opm/output/eclipse/VectorItems/group.hpp
         opm/output/eclipse/VectorItems/intehead.hpp

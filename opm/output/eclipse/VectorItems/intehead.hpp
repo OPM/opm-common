@@ -85,7 +85,7 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
         MAXNOSTRPRLINE = 158,   //  Maximum number of 8-chars strings pr input line of Action data (rounded up from input)
 
         NWMAXZ  = 163,      //  Maximum number of wells in the model
-        
+
         NSEGWL  = 174,      //  Number of multisegment wells defined with WELSEG
         NSWLMX  = 175,      //  Maximum number of segmented wells (item 1 ofWSEGDIMS)
         NSEGMX  = 176,      //  Maximum number of segments per well (item 2 of WSEGDIMS)
@@ -94,10 +94,13 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
         NISEGZ  = 178,      //  Number of entries per segment in ISEG array
         NRSEGZ  = 179,      //  Number of entries per segment in RSEG array
         NILBRZ  = 180,      //  Number of entries per segment in ILBR array
-	
-        MAX_ACT_COND = 245,      //  Maximum number of conditions pr action /  
-        NO_UDQS = 266,      //  No of UDQ data (parameters) /  
-        UDQPAR_1 = 267,      //  Integer seed value for the RAND /  
+
+        MAX_ACT_COND = 245,      //  Maximum number of conditions pr action
+
+        MAX_AN_AQUIFERS = 252, // Maximum number of analytic aquifers
+
+        NO_UDQS = 266,      //  No of UDQ data (parameters)
+        UDQPAR_1 = 267,      //  Integer seed value for the RAND
         RSEED    = 296,
     };
 }}}} // Opm::RestartIO::Helpers::VectorItems

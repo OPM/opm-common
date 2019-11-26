@@ -27,14 +27,20 @@
 #include <opm/io/eclipse/ERst.hpp>
 #include <opm/io/eclipse/EclIOdata.hpp>
 
-#include <opm/output/eclipse/RestartValue.hpp>
+#include <opm/output/data/Aquifer.hpp>
+#include <opm/output/data/Cells.hpp>
+#include <opm/output/data/Solution.hpp>
+#include <opm/output/data/Wells.hpp>
 
+#include <opm/output/eclipse/VectorItems/aquifer.hpp>
 #include <opm/output/eclipse/VectorItems/connection.hpp>
 #include <opm/output/eclipse/VectorItems/doubhead.hpp>
 #include <opm/output/eclipse/VectorItems/group.hpp>
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
 #include <opm/output/eclipse/VectorItems/msw.hpp>
 #include <opm/output/eclipse/VectorItems/well.hpp>
+
+#include <opm/output/eclipse/RestartValue.hpp>
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
@@ -481,6 +487,55 @@ SegmentVectors::rseg(const std::size_t mswID, const std::size_t segID) const
 
 // ---------------------------------------------------------------------
 
+class AquiferVectors
+{
+public:
+    template <typename T>
+    using Window = boost::iterator_range<
+        typename std::vector<T>::const_iterator
+    >;
+
+    explicit AquiferVectors(const std::vector<int>&          intehead,
+                            std::shared_ptr<RestartFileView> rst_view);
+
+    bool hasDefinedValues() const;
+
+    Window<double> xaaq(const std::size_t aquiferID) const;
+
+private:
+    std::size_t maxAnalyticAquifer_;
+    std::size_t numXAnalyticAquiferElm_;
+
+    std::shared_ptr<RestartFileView> rstView_;
+};
+
+AquiferVectors::AquiferVectors(const std::vector<int>&          intehead,
+                               std::shared_ptr<RestartFileView> rst_view)
+    : maxAnalyticAquifer_    (intehead[VI::intehead::MAX_AN_AQUIFERS])
+    , numXAnalyticAquiferElm_(intehead[VI::intehead::NXAAQZ])
+    , rstView_               (std::move(rst_view))
+{}
+
+bool AquiferVectors::hasDefinedValues() const
+{
+    return this->rstView_->hasKeyword<double>("XAAQ");
+}
+
+AquiferVectors::Window<double>
+AquiferVectors::xaaq(const std::size_t aquiferID) const
+{
+    if (! this->hasDefinedValues()) {
+        throw std::logic_error {
+            "Cannot Request XAAQ Values Unless Defined"
+        };
+    }
+
+    return getDataWindow(this->rstView_->getKeyword<double>("XAAQ"),
+                         this->numXAnalyticAquiferElm_, aquiferID);
+}
+
+// ---------------------------------------------------------------------
+
 namespace {
     void throwIfMissingRequired(const Opm::RestartKey& rst_key)
     {
@@ -491,6 +546,16 @@ namespace {
                 "' is not available in restart file"
             };
         }
+    }
+
+    bool hasAnalyticAquifers(const RestartFileView& rst_view)
+    {
+        return rst_view.hasKeyword<double>("XAAQ");
+    }
+
+    std::size_t numAnalyticAquifers(RestartFileView& rst_view)
+    {
+        return rst_view.intehead()[VI::intehead::MAX_AN_AQUIFERS];
     }
 
     std::vector<double>
@@ -1087,6 +1152,33 @@ namespace {
         return soln;
     }
 
+    void restore_aquifers(const ::Opm::EclipseState&       es,
+                          std::shared_ptr<RestartFileView> rst_view,
+                          Opm::RestartValue&               rst_value)
+    {
+        using M  = ::Opm::UnitSystem::measure;
+        using Ix = VI::XAnalyticAquifer::index;
+
+        const auto& intehead    = rst_view->intehead();
+        const auto  aquiferData = AquiferVectors{ intehead, rst_view };
+
+        const auto  numAq = numAnalyticAquifers(*rst_view);
+        const auto& units = es.getUnits();
+
+        for (auto aquiferID = 0*numAq; aquiferID < numAq; ++aquiferID) {
+            const auto& xaaq = aquiferData.xaaq(aquiferID);
+
+            rst_value.aquifer.emplace_back();
+
+            auto& aqData = rst_value.aquifer.back();
+
+            aqData.aquiferID = 1 + static_cast<int>(aquiferID);
+            aqData.pressure  = units.to_si(M::pressure, xaaq[Ix::Pressure]);
+            aqData.volume    = units.to_si(M::liquid_surface_volume,
+                                           xaaq[Ix::ProdVolume]);
+        }
+    }
+
     void assign_well_cumulatives(const std::string& well,
                                  const std::size_t  wellID,
                                  const WellVectors& wellData,
@@ -1236,6 +1328,10 @@ namespace Opm { namespace RestartIO  {
 
         if (! extra_keys.empty()) {
             restoreExtra(extra_keys, es.getUnits(), *rst_view, rst_value);
+        }
+
+        if (hasAnalyticAquifers(*rst_view)) {
+            restore_aquifers(es, rst_view, rst_value);
         }
 
         restore_cumulative(summary_state, schedule, std::move(rst_view));
