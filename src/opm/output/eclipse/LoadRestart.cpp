@@ -784,8 +784,12 @@ namespace {
                 auto& connection = well.connections.back();
 
                 connection.index          = grid.getGlobalIndex(i, j, k);
-                connection.pressure       = *opm_xwel_data;  ++opm_xwel_data;
-                connection.reservoir_rate = *opm_xwel_data;  ++opm_xwel_data;
+                connection.pressure       = *opm_xwel_data++;
+                connection.reservoir_rate = *opm_xwel_data++;
+                connection.cell_pressure = *opm_xwel_data++;
+                connection.cell_saturation_water = *opm_xwel_data++;
+                connection.cell_saturation_gas = *opm_xwel_data++;
+                connection.effective_Kh = *opm_xwel_data++;
 
                 for (const auto& phase : phases) {
                     connection.rates.set(phase, *opm_xwel_data);
