@@ -19,6 +19,7 @@
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/SimulationConfig/ThresholdPressure.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/E.hpp>
@@ -28,9 +29,17 @@
 
 namespace Opm {
 
+#ifdef ENABLE_3DPROPS_TESTING
     ThresholdPressure::ThresholdPressure(bool restart,
                                          const Deck& deck,
-                                         const Eclipse3DProperties& eclipseProperties) :
+                                         const FieldPropsManager& fp,
+                                         const Eclipse3DProperties& ) :
+#else
+        ThresholdPressure::ThresholdPressure(bool restart,
+                                             const Deck& deck,
+                                             const FieldPropsManager& ,
+                                             const Eclipse3DProperties& eclipseProperties) :
+#endif
         m_active(false),
         m_restart(restart)
     {
@@ -44,8 +53,6 @@ namespace Opm {
 
         const bool thpresKeyword    = solutionSection.hasKeyword<ParserKeywords::THPRES>();
         const bool thpresftKeyword  = gridSection.hasKeyword<ParserKeywords::THPRESFT>();
-        const bool hasEqlnumKeyword = eclipseProperties.hasDeckIntGridProperty( "EQLNUM" );
-        int        maxEqlnum        = 0;
 
         //Is THPRES option set?
         if( runspecSection.hasKeyword<ParserKeywords::EQLOPTS>() ) {
@@ -89,13 +96,20 @@ namespace Opm {
 
         //Option is set and keyword is found
         if( m_active && thpresKeyword ) {
-            if( !hasEqlnumKeyword )
+#ifdef ENABLE_3DPROPS_TESTING
+            if (!fp.has<int>("EQLNUM"))
                 throw std::runtime_error("Error when internalizing THPRES: EQLNUM keyword not found in deck");
 
-            //Find max of eqlnum
+            const auto& eqlnum = fp.get<int>("EQLNUM");
+#else
+            if( !eclipseProperties.hasDeckIntGridProperty("EQLNUM"))
+                throw std::runtime_error("Error when internalizing THPRES: EQLNUM keyword not found in deck");
+
             const auto& eqlnumKeyword = eclipseProperties.getIntGridProperty( "EQLNUM" );
             const auto& eqlnum = eqlnumKeyword.getData();
-            maxEqlnum = *std::max_element(eqlnum.begin(), eqlnum.end());
+#endif
+            //Find max of eqlnum
+            int maxEqlnum = *std::max_element(eqlnum.begin(), eqlnum.end());
 
             if (0 == maxEqlnum) {
                 throw std::runtime_error("Error in EQLNUM data: all values are 0");
