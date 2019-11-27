@@ -69,6 +69,13 @@ namespace data {
         UnitSystem::measure dim;   //< Dimension of the data to write
         std::vector<double> data;  //< The actual data itself
         TargetType target;
+
+        bool operator==(const CellData& cell2) const
+        {
+            return dim == cell2.dim &&
+                   data == cell2.data &&
+                   target == cell2.target;
+        }
     };
 
 }

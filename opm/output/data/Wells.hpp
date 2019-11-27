@@ -90,6 +90,8 @@ namespace Opm {
             template <class MessageBufferType>
             void read(MessageBufferType& buffer);
 
+            bool operator==(const Rates& rat2) const;
+
         private:
             double& get_ref( opt );
             const double& get_ref( opt ) const;
@@ -128,6 +130,18 @@ namespace Opm {
         double cell_saturation_gas;
         double effective_Kh;
 
+        bool operator==(const Connection& conn2) const
+        {
+            return index == conn2.index &&
+                   rates == conn2.rates &&
+                   pressure == conn2.pressure &&
+                   reservoir_rate == conn2.reservoir_rate &&
+                   cell_pressure == conn2.cell_pressure &&
+                   cell_saturation_water == conn2.cell_saturation_water &&
+                   cell_saturation_gas == conn2.cell_saturation_gas &&
+                   effective_Kh == conn2.effective_Kh;
+        }
+
         template <class MessageBufferType>
         void write(MessageBufferType& buffer) const;
         template <class MessageBufferType>
@@ -138,6 +152,13 @@ namespace Opm {
         Rates rates;
         double pressure;
         std::size_t segNumber;
+
+        bool operator==(const Segment& seg2) const
+        {
+          return rates == seg2.rates &&
+                 pressure == seg2.pressure &&
+                 segNumber == seg2.segNumber;
+        }
 
         template <class MessageBufferType>
         void write(MessageBufferType& buffer) const;
@@ -159,6 +180,17 @@ namespace Opm {
         void write(MessageBufferType& buffer) const;
         template <class MessageBufferType>
         void read(MessageBufferType& buffer);
+
+        bool operator==(const Well& well2) const
+        {
+          return rates == well2.rates &&
+                 bhp == well2.bhp &&
+                 thp == well2.thp &&
+                 temperature == well2.temperature &&
+                 control == well2.control &&
+                 connections == well2.connections &&
+                 segments == well2.segments;
+        }
     };
 
 
@@ -213,10 +245,9 @@ namespace Opm {
                 this->emplace(name, well);
             }
         }
-
     };
 
-    using Wells = WellRates;    
+    using Wells = WellRates;
 
 
     /* IMPLEMENTATIONS */
@@ -250,6 +281,28 @@ namespace Opm {
                     );
 
         return *this;
+    }
+
+    inline bool Rates::operator==(const Rates& rate) const
+    {
+      return mask == rate.mask &&
+             wat == rate.wat &&
+             oil == rate.oil &&
+             gas == rate.gas &&
+             polymer == rate.polymer &&
+             solvent == rate.solvent &&
+             energy == rate.energy &&
+             dissolved_gas == rate.dissolved_gas &&
+             vaporized_oil == rate.vaporized_oil &&
+             reservoir_water == rate.reservoir_water &&
+             reservoir_oil == rate.reservoir_oil &&
+             reservoir_gas == rate.reservoir_gas &&
+             productivity_index_water == rate.productivity_index_water &&
+             productivity_index_gas == rate.productivity_index_gas &&
+             productivity_index_oil == rate.productivity_index_oil &&
+             well_potential_water == rate.well_potential_water &&
+             well_potential_oil == rate.well_potential_oil &&
+             well_potential_gas == rate.well_potential_gas;
     }
 
 
