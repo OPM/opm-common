@@ -89,3 +89,11 @@ then
 else
   git-open-pull -u jenkins4opm --base-account OPM --base-repo opm-tests -r /tmp/cmsg $BRANCH_NAME
 fi
+
+# Post data update diff as comment on PR
+if [ -f $WORKSPACE/data_diff ]
+then
+  DIFF=`cat $WORKSPACE/data_diff | python -c 'import json,sys; print(json.dumps(sys.stdin.read()))'`
+  DATA_PR=`curl -X GET https://api.github.com/repos/OPM/opm-tests/pulls?head=jenkins4opm:$BRANCH_NAME | grep '"number":' | awk -F ':' '{print $2}' | sed -e 's/,//' -e 's/ //'`
+  curl -d "{ \"body\": \"$DIFF\" }" -X POST https://api.github.com/repos/OPM/opm-tests/issues/$DATA_PR/comments?access_token=$GH_TOKEN
+fi
