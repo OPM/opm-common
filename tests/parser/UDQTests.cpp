@@ -36,13 +36,17 @@ using namespace Opm;
 
 Schedule make_schedule(const std::string& input) {
     Parser parser;
-
     auto deck = parser.parseString(input);
-    EclipseGrid grid(10,10,10);
-    TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
-    Runspec runspec (deck);
-    return Schedule(deck, grid , eclipseProperties, runspec);
+    if (deck.hasKeyword("DIMENS")) {
+        EclipseState es(deck);
+        return Schedule(deck, es);
+    } else {
+        EclipseGrid grid(10,10,10);
+        TableManager table ( deck );
+        Eclipse3DProperties eclipseProperties ( deck , table, grid);
+        Runspec runspec (deck);
+        return Schedule(deck, grid , eclipseProperties, runspec);
+    }
 }
 
 
