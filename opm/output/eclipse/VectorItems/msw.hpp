@@ -30,7 +30,20 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
             OutSeg         = 1, // Outlet segment (one-based)
             InSegCurBranch = 2, // Inflow segment current branch (one-based)
             BranchNo       = 3, // Branch number (one-based)
+
+            SegmentType    = 11,
+
+            ICDScalingMode  = 18,
+            ICDOpenShutFlag = 19,
         };
+
+        namespace Value {
+            enum SegmentType : int {
+                AICD  = -8,
+                SICD  = -7,
+                Valve = -5,
+            };
+        } // Value
     } // ISeg
 
     namespace RSeg {
@@ -50,6 +63,26 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
             Pressure     = 11,  // Segment pressure
 
             item40  =  39,      // Unknown
+
+            ValveLength    = 40, // Length of valve
+            ValveArea      = 41, // Cross-sectional area of valve
+            ValveFlowCoeff = 42, // Valve's dimensionless flow coefficient
+            ValveMaxArea   = 43, // Maximal cross-sectional valve area
+
+            DeviceBaseStrength = 86,
+
+            CalibrFluidDensity   = 88,
+            CalibrFluidViscosity = 89,
+
+            CriticalWaterFraction = 90,
+            TransitionRegWidth    = 91,
+            MaxEmulsionRatio      = 92,
+            MaxValidFlowRate      = 97,
+
+            ICDLength = 102,
+
+            ValveAreaFraction  = 103,
+
             item106 = 105,      // Unknown
             item107 = 106,      // Unknown
             item108 = 107,      // Unknown
