@@ -2052,7 +2052,11 @@ SummaryImplementation(const EclipseState&  es,
                       const Schedule&      sched,
                       const std::string&   basename)
     : grid_          (std::cref(grid))
-    , regCache_      (es.get3DProperties(), grid, sched)
+#ifdef ENABLE_3DPROPS_TESTING
+    , regCache_      (es.get3DProperties().getIntGridProperty("FIPNUM").compressedCopy(grid), grid, sched)
+#else
+    , regCache_      (es.fieldProps().get<int>("FIPNMUM"), grid, sched)
+#endif
     , deferredSMSpec_(makeDeferredSMSpecCreation(es, grid, sched))
     , rset_          (makeResultSet(es.cfg().io(), basename))
     , fmt_           { es.cfg().io().getFMTOUT() }

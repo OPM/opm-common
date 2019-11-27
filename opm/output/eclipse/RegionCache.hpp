@@ -23,7 +23,6 @@
 #include <vector>
 
 namespace Opm {
-    class Eclipse3DProperties;
     class Schedule;
     class EclipseGrid;
 
@@ -31,7 +30,7 @@ namespace out {
     class RegionCache {
     public:
         RegionCache() = default;
-        RegionCache(const Eclipse3DProperties& properties, const EclipseGrid& grid, const Schedule& schedule);
+        RegionCache(const std::vector<int>& fipnum, const EclipseGrid& grid, const Schedule& schedule);
         const std::vector<std::pair<std::string,size_t>>& connections( int region_id ) const;
 
     private:
