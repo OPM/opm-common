@@ -204,10 +204,8 @@ namespace Opm
 
         const RFTConfig& rftConfig() const;
         const Events& getEvents() const;
-        const Events& getWellEvents(const std::string& well) const;
-        bool hasWellEvent(const std::string& well, uint64_t event_mask, size_t reportStep) const;
-        const Events& getGroupEvents(const std::string& group) const;
-        bool hasGroupEvent(const std::string& group, uint64_t event_mask, size_t reportStep) const;
+        const Events& getWellGroupEvents(const std::string& wellGroup) const;
+        bool hasWellGroupEvent(const std::string& wellGroup, uint64_t event_mask, size_t reportStep) const;
         const Deck& getModifierDeck(size_t timeStep) const;
         bool hasOilVaporizationProperties() const;
         const VFPProdTable& getVFPProdTable(int table_id, size_t timeStep) const;
@@ -248,9 +246,7 @@ namespace Opm
         DynamicState<int> m_nupcol;
 
 
-        std::map<std::string,Events> well_events;
-        std::map<std::string,Events> group_events;
-
+        std::map<std::string,Events> wellgroup_events;
 
         GTNode groupTree(const std::string& root_node, std::size_t report_step, const GTNode * parent) const;
         void updateGroup(std::shared_ptr<Group> group, size_t reportStep);
@@ -325,9 +321,7 @@ namespace Opm
                            const Eclipse3DProperties& eclipseProperties,
                            const UnitSystem& unit_system,
                            std::vector<std::pair<const DeckKeyword*, size_t > >& rftProperties);
-        void addWellEvent(const std::string& well, ScheduleEvents::Events event, size_t reportStep);
-        void addGroupEvent(const std::string& group, ScheduleEvents::Events event, size_t reportStep);
-
+        void addWellGroupEvent(const std::string& wellGroup, ScheduleEvents::Events event, size_t reportStep);
     };
 }
 

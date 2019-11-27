@@ -885,11 +885,11 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWELOPEN_CombineShutCompletionsAndAddN
   const auto& well_5 = schedule.getWell("OP_1", 5);
   // timestep 3. Close all completions with WELOPEN and immediately open new completions with COMPDAT.
   BOOST_CHECK(Well::Status::OPEN == well_3.getStatus());
-  BOOST_CHECK( !schedule.hasWellEvent( "OP_1", ScheduleEvents::WELL_STATUS_CHANGE , 3 ));
+  BOOST_CHECK( !schedule.hasWellGroupEvent( "OP_1", ScheduleEvents::WELL_STATUS_CHANGE , 3 ));
   // timestep 4. Close all completions with WELOPEN. The well will be shut since no completions
   // are open.
   BOOST_CHECK(Well::Status::SHUT == well_4.getStatus());
-  BOOST_CHECK( schedule.hasWellEvent( "OP_1", ScheduleEvents::WELL_STATUS_CHANGE , 4 ));
+  BOOST_CHECK( schedule.hasWellGroupEvent( "OP_1", ScheduleEvents::WELL_STATUS_CHANGE , 4 ));
   // timestep 5. Open new completions. But keep the well shut,
   BOOST_CHECK(Well::Status::SHUT == well_5.getStatus());
 }
@@ -1294,8 +1294,8 @@ BOOST_AUTO_TEST_CASE(createDeckModifyMultipleGCONPROD) {
         auto gh = schedule.getGroup("H1", 1);
 
 
-        BOOST_CHECK(  !schedule.hasGroupEvent( "G2", ScheduleEvents::GROUP_PRODUCTION_UPDATE , 1 ));
-        BOOST_CHECK(  schedule.hasGroupEvent( "G2", ScheduleEvents::GROUP_PRODUCTION_UPDATE , 2 ));
+        BOOST_CHECK(  !schedule.hasWellGroupEvent( "G2", ScheduleEvents::GROUP_PRODUCTION_UPDATE , 1 ));
+        BOOST_CHECK(  schedule.hasWellGroupEvent( "G2", ScheduleEvents::GROUP_PRODUCTION_UPDATE , 2 ));
 
 }
 
