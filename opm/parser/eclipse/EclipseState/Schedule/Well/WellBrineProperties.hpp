@@ -17,21 +17,21 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef OPM_WELLSALTWATERPROPERTIES_HEADER_INCLUDED
-#define OPM_WELLSALTWATERPROPERTIES_HEADER_INCLUDED
+#ifndef OPM_WELLBRINEPROPERTIES_HEADER_INCLUDED
+#define OPM_WELLBRINEPROPERTIES_HEADER_INCLUDED
 
 namespace Opm
 {
 
 class DeckRecord;
 
-struct WellSaltwaterProperties
+struct WellBrineProperties
 {
-    double m_saltwaterConcentration = 0.0;
+    double m_saltConcentration = 0.0;
     void handleWSALT(const DeckRecord& rec);
-    bool operator!=(const WellSaltwaterProperties& other) const;
+    bool operator!=(const WellBrineProperties& other) const;
 };
 
 } // namespace Opm
 
-#endif // OPM_WELLSALTWATERPROPERTIES_HEADER_INCLUDED
+#endif // OPM_WELLBRINEPROPERTIES_HEADER_INCLUDED
