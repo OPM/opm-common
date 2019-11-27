@@ -409,6 +409,23 @@ bool FieldProps::has<int>(const std::string& keyword) const {
 }
 
 template <>
+std::vector<std::string> FieldProps::keys<double>() const {
+    std::vector<std::string> klist;
+    for (const auto& data_pair : this->double_data)
+        klist.push_back(data_pair.first);
+    return klist;
+}
+
+template <>
+std::vector<std::string> FieldProps::keys<int>() const {
+    std::vector<std::string> klist;
+    for (const auto& data_pair : this->int_data)
+        klist.push_back(data_pair.first);
+    return klist;
+}
+
+
+template <>
 void FieldProps::erase<int>(const std::string& keyword) {
     this->int_data.erase(keyword);
 }
