@@ -33,7 +33,7 @@ namespace Opm {
         enum class SegmentType {
             REGULAR,
             SICD,
-            VALVE
+            VALVE,
         };
 
         Segment();
@@ -54,9 +54,19 @@ namespace Opm {
 
         SegmentType segmentType() const;
 
+        bool isRegular() const
+        {
+            return this->segmentType() == SegmentType::REGULAR;
+        }
+
         bool isSpiralICD() const
         {
             return this->segmentType() == SegmentType::SICD;
+        }
+
+        bool isValve() const
+        {
+            return this->segmentType() == SegmentType::VALVE;
         }
 
         void setVolume(const double volume_in);
