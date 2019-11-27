@@ -2053,9 +2053,9 @@ SummaryImplementation(const EclipseState&  es,
                       const std::string&   basename)
     : grid_          (std::cref(grid))
 #ifdef ENABLE_3DPROPS_TESTING
-    , regCache_      (es.get3DProperties().getIntGridProperty("FIPNUM").compressedCopy(grid), grid, sched)
+    , regCache_      (es.fieldProps().get<int>("FIPNUM"), grid, sched)
 #else
-    , regCache_      (es.fieldProps().get<int>("FIPNMUM"), grid, sched)
+    , regCache_      (es.get3DProperties().getIntGridProperty("FIPNUM").compressedCopy(grid), grid, sched)
 #endif
     , deferredSMSpec_(makeDeferredSMSpecCreation(es, grid, sched))
     , rset_          (makeResultSet(es.cfg().io(), basename))

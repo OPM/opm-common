@@ -49,8 +49,19 @@ static const std::set<std::string> region_oper_keywords = {"ADDREG", "EQUALREG"}
 static const std::set<std::string> box_keywords = {"BOX", "ENDBOX"};
 static const std::map<std::string, double> double_scalar_init = {{"NTG", 1}};
 
-static const std::map<std::string, int> int_scalar_init = {{"SATNUM", 1}};
+static const std::map<std::string, int> int_scalar_init = {{"SATNUM", 1},
+                                                           {"FIPNUM", 1}};   // All FIPxxx keywords should (probably) be added with init==1 
 
+/*
+bool isFipxxx< int >(const std::string& keyword) {
+    // FIPxxxx can be any keyword, e.g. FIPREG or FIPXYZ that has the pattern "FIP.+"
+    // However, it can not be FIPOWG as that is an actual keyword.
+    if (keyword.size() < 4 || keyword == "FIPOWG") {
+        return false;
+    }
+    return keyword[0] == 'F' && keyword[1] == 'I' && keyword[2] == 'P';
+}
+*/
 
 namespace GRID {
 static const std::set<std::string> double_keywords = {"MULTPV", "NTG", "PORO", "PERMX", "PERMY", "PERMZ", "THCONR"};
