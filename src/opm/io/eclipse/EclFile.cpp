@@ -501,10 +501,10 @@ EclFile::EclFile(const std::string& filename, bool preload) : inputFilename(file
 
         if (formatted) {
             unsigned long int sizeOfNextArray = sizeOnDiskFormatted(num, arrType);
-            fileH.ignore(sizeOfNextArray);
+            fileH.seekg(static_cast<std::streamoff>(sizeOfNextArray), std::ios_base::cur);
         } else {
             unsigned long int sizeOfNextArray = sizeOnDiskBinary(num, arrType);
-            fileH.ignore(sizeOfNextArray);
+            fileH.seekg(static_cast<std::streamoff>(sizeOfNextArray), std::ios_base::cur);
         }
 
         n++;
