@@ -63,7 +63,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellPolymerProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellProductionProperties.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/WellSaltwaterProperties.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/WellBrineProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellConnections.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/Units/Dimension.hpp>
@@ -1120,9 +1120,9 @@ namespace {
             for (const auto& well_name : well_names) {
                 const auto& dynamic_state = this->wells_static.at(well_name);
                 auto well2 = std::make_shared<Well>(*dynamic_state[currentStep]);
-                auto saltwater_properties = std::make_shared<WellSaltwaterProperties>(well2->getSaltwaterProperties());
-                saltwater_properties->handleWSALT(record);
-                if (well2->updateSaltwaterProperties(saltwater_properties))
+                auto brine_properties = std::make_shared<WellBrineProperties>(well2->getBrineProperties());
+                brine_properties->handleWSALT(record);
+                if (well2->updateBrineProperties(brine_properties))
                     this->updateWell(well2, currentStep);
             }
         }

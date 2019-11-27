@@ -30,7 +30,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/ProductionControls.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/InjectionControls.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellFoamProperties.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/WellSaltwaterProperties.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/WellBrineProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellTracerProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellPolymerProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellEconProductionLimits.hpp>
@@ -454,7 +454,7 @@ public:
     const WellEconProductionLimits& getEconLimits() const;
     const WellFoamProperties& getFoamProperties() const;
     const WellPolymerProperties& getPolymerProperties() const;
-    const WellSaltwaterProperties& getSaltwaterProperties() const;
+    const WellBrineProperties& getBrineProperties() const;
     const WellTracerProperties& getTracerProperties() const;
     const WellConnections& getConnections() const;
     const WellSegments& getSegments() const;
@@ -506,7 +506,7 @@ public:
     bool updateTracer(std::shared_ptr<WellTracerProperties> tracer_properties);
     bool updateFoamProperties(std::shared_ptr<WellFoamProperties> foam_properties);
     bool updatePolymerProperties(std::shared_ptr<WellPolymerProperties> polymer_properties);
-    bool updateSaltwaterProperties(std::shared_ptr<WellSaltwaterProperties> saltwater_properties);
+    bool updateBrineProperties(std::shared_ptr<WellBrineProperties> brine_properties);
     bool updateEconLimits(std::shared_ptr<WellEconProductionLimits> econ_limits);
     bool updateProduction(std::shared_ptr<WellProductionProperties> production);
     bool updateInjection(std::shared_ptr<WellInjectionProperties> injection);
@@ -560,7 +560,7 @@ private:
     std::shared_ptr<const WellEconProductionLimits> econ_limits;
     std::shared_ptr<const WellFoamProperties> foam_properties;
     std::shared_ptr<const WellPolymerProperties> polymer_properties;
-    std::shared_ptr<const WellSaltwaterProperties> saltwater_properties;
+    std::shared_ptr<const WellBrineProperties> brine_properties;
     std::shared_ptr<const WellTracerProperties> tracer_properties;
     std::shared_ptr<WellConnections> connections; // The WellConnections object can not be const because of the filterConnections method - would be beneficial to rewrite to enable const
     std::shared_ptr<const WellProductionProperties> production;

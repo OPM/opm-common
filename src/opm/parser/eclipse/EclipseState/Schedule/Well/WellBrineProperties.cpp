@@ -17,17 +17,17 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/WellSaltwaterProperties.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/WellBrineProperties.hpp>
 
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Deck/UDAValue.hpp>
 
-void Opm::WellSaltwaterProperties::handleWSALT(const DeckRecord& rec)
+void Opm::WellBrineProperties::handleWSALT(const DeckRecord& rec)
 {
-    this->m_saltwaterConcentration = rec.getItem("CONCENTRATION").get<UDAValue>(0).get<double>();
+    this->m_saltConcentration = rec.getItem("CONCENTRATION").get<UDAValue>(0).get<double>();
 }
 
-bool Opm::WellSaltwaterProperties::operator!=(const WellSaltwaterProperties& other) const
+bool Opm::WellBrineProperties::operator!=(const WellBrineProperties& other) const
 {
-    return this->m_saltwaterConcentration != other.m_saltwaterConcentration;
+    return this->m_saltConcentration != other.m_saltConcentration;
 }

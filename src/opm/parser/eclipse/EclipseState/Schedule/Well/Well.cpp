@@ -126,7 +126,7 @@ Well::Well(const std::string& wname_arg,
     econ_limits(std::make_shared<WellEconProductionLimits>()),
     foam_properties(std::make_shared<WellFoamProperties>()),
     polymer_properties(std::make_shared<WellPolymerProperties>()),
-    saltwater_properties(std::make_shared<WellSaltwaterProperties>()),
+    brine_properties(std::make_shared<WellBrineProperties>()),
     tracer_properties(std::make_shared<WellTracerProperties>()),
     connections(std::make_shared<WellConnections>(headI, headJ)),
     production(std::make_shared<WellProductionProperties>(wname)),
@@ -242,13 +242,13 @@ bool Well::updatePolymerProperties(std::shared_ptr<WellPolymerProperties> polyme
     return false;
 }
 
-bool Well::updateSaltwaterProperties(std::shared_ptr<WellSaltwaterProperties> saltwater_properties_arg) {
+bool Well::updateBrineProperties(std::shared_ptr<WellBrineProperties> brine_properties_arg) {
     if (this->producer) {
-        throw std::runtime_error("Not allowed to set saltwater injection properties for well " + name() +
+        throw std::runtime_error("Not allowed to set brine injection properties for well " + name() +
                                  " since it is a production well");
     }
-    if (*this->saltwater_properties != *saltwater_properties_arg) {
-        this->saltwater_properties = saltwater_properties_arg;
+    if (*this->brine_properties != *brine_properties_arg) {
+        this->brine_properties = brine_properties_arg;
         return true;
     }
 
@@ -570,8 +570,8 @@ const WellPolymerProperties& Well::getPolymerProperties() const {
     return *this->polymer_properties;
 }
 
-const WellSaltwaterProperties& Well::getSaltwaterProperties() const {
-    return *this->saltwater_properties;
+const WellBrineProperties& Well::getBrineProperties() const {
+    return *this->brine_properties;
 }
 
 const WellTracerProperties& Well::getTracerProperties() const {
@@ -850,8 +850,8 @@ double Well::production_rate(const SummaryState& st, Phase prod_phase) const {
             throw std::invalid_argument( "Production of 'POLYMW' requested.");
         case Phase::FOAM:
             throw std::invalid_argument( "Production of 'FOAM' requested.");
-        case Phase::SALTWATER:
-        throw std::invalid_argument( "Production of 'SALTWATER' requested.");
+        case Phase::BRINE:
+        throw std::invalid_argument( "Production of 'BRINE' requested.");
     }
 
     throw std::logic_error( "Unreachable state. Invalid Phase value. "
