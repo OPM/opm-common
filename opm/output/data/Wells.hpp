@@ -117,7 +117,7 @@ namespace Opm {
 
     struct Connection {
         using global_index = size_t;
-        static const constexpr int restart_size = 2;
+        static const constexpr int restart_size = 6;
 
         global_index index;
         Rates rates;

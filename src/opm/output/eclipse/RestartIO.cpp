@@ -166,6 +166,10 @@ namespace {
 
                 xwel.push_back(connection->pressure);
                 xwel.push_back(connection->reservoir_rate);
+                xwel.push_back(connection->cell_pressure);
+                xwel.push_back(connection->cell_saturation_water);
+                xwel.push_back(connection->cell_saturation_gas);
+                xwel.push_back(connection->effective_Kh);
 
                 for (auto phase : phases)
                     xwel.push_back(connection->rates.get(phase));
