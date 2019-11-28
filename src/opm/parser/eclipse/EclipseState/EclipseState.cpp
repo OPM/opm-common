@@ -56,7 +56,7 @@ void assert_field_properties(const EclipseGrid& grid, const FieldPropsManager& f
     std::vector<std::string> int_keywords = {"FLUXNUM",
                                              "MULTNUM",
                                              "OPERNUM",
-                                             //"ROCKNUM",
+                                             "ROCKNUM",
                                              //"ENDNUM",
                                              "EQLNUM",
                                              "FIPNUM",
