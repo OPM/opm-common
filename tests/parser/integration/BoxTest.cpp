@@ -119,10 +119,6 @@ BOOST_AUTO_TEST_CASE( PARSE_MULTIPLY_COPY ) {
 
 
 
-BOOST_AUTO_TEST_CASE( KEYWORD_BOX_TOO_SMALL) {
-    BOOST_CHECK_THROW( makeState(prefix() + "BOX/BOXTEST3") , std::invalid_argument);
-}
-
 BOOST_AUTO_TEST_CASE( EQUALS ) {
     EclipseState state = makeState( prefix() + "BOX/BOXTEST1" );
     const auto& pvtnum = state.get3DProperties().getIntGridProperty( "PVTNUM" ).getData();
