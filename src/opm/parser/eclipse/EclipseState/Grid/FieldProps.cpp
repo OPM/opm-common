@@ -80,7 +80,7 @@ static const std::set<std::string> int_keywords = {};
 }
 
 namespace REGIONS {
-static const std::set<std::string> int_keywords = {"ENDNUM", "EQLNUM", "FIPNUM", "IMBNUM", "MISCNUM", "OPERNUM", "PVTNUM", "SATNUM"};
+static const std::set<std::string> int_keywords = {"ENDNUM", "EQLNUM", "FIPNUM", "IMBNUM", "MISCNUM", "OPERNUM", "PVTNUM", "SATNUM", "LWSLTNUM"};
 }
 
 namespace SOLUTION {
