@@ -258,47 +258,6 @@ std::ostream& operator<<( std::ostream& stream,
     return stream;
 }
 
-bool operator==( const Rates& lhs, const Rates& rhs ) {
-    using rt = Rates::opt;
-
-    BOOST_CHECK_EQUAL( lhs.has( rt::wat ), rhs.has( rt::wat ) );
-    BOOST_CHECK_EQUAL( lhs.has( rt::oil ), rhs.has( rt::oil ) );
-    BOOST_CHECK_EQUAL( lhs.has( rt::gas ), rhs.has( rt::gas ) );
-    BOOST_CHECK_EQUAL( lhs.has( rt::polymer ), rhs.has( rt::polymer ) );
-    BOOST_CHECK_EQUAL( lhs.get( rt::wat, 0.0 ), rhs.get( rt::wat, 0.0 ) );
-    BOOST_CHECK_EQUAL( lhs.get( rt::oil, 0.0 ), rhs.get( rt::oil, 0.0 ) );
-    BOOST_CHECK_EQUAL( lhs.get( rt::gas, 0.0 ), rhs.get( rt::gas, 0.0 ) );
-    BOOST_CHECK_EQUAL( lhs.get( rt::polymer, 0.0 ), rhs.get( rt::polymer, 0.0 ) );
-
-    return true;
-}
-
-bool operator==( const Connection& lhs, const Connection& rhs ) {
-    BOOST_CHECK_EQUAL( lhs.index, rhs.index );
-    BOOST_CHECK_EQUAL( lhs.rates, rhs.rates );
-    BOOST_CHECK_EQUAL( lhs.pressure, rhs.pressure );
-    BOOST_CHECK_EQUAL( lhs.reservoir_rate, rhs.reservoir_rate );
-
-    return true;
-}
-
-bool operator!=( const Connection& lhs, const Connection& rhs ) {
-    return !( lhs == rhs );
-}
-
-bool operator==( const Well& lhs, const Well& rhs ) {
-    BOOST_CHECK_EQUAL( lhs.rates, rhs.rates );
-    BOOST_CHECK_EQUAL( lhs.bhp, rhs.bhp );
-    BOOST_CHECK_EQUAL( lhs.temperature, rhs.temperature );
-    BOOST_CHECK_EQUAL( lhs.control, rhs.control );
-
-    BOOST_CHECK_EQUAL_COLLECTIONS(
-            lhs.connections.begin(), lhs.connections.end(),
-            rhs.connections.begin(), rhs.connections.end() );
-
-    return true;
-}
-
 }
 
 
