@@ -20,6 +20,8 @@
 #include <opm/parser/eclipse/Deck/UDAValue.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GConSale.hpp>
+#include <opm/parser/eclipse/EclipseState/Runspec.hpp>
+#include "../eval_uda.hpp"
 
 namespace Opm {
 
@@ -34,6 +36,17 @@ const GConSale::GCONSALEGroup& GConSale::get(const std::string& name) const {
         throw std::invalid_argument("Current GConSale obj. does not contain '" + name + "'.");
     else
         return it->second;
+}
+
+const GConSale::GCONSALEGroupProp GConSale::get(const std::string& name, const SummaryState& st) const {
+
+    GCONSALEGroupProp prop;
+    const GConSale::GCONSALEGroup& group = this->get(name);
+    prop.sales_target = UDA::eval_group_uda_rate(group.sales_target, name, st, group.udq_undefined, Phase::GAS, group.unit_system);
+    prop.max_sales_rate = UDA::eval_group_uda_rate(group.max_sales_rate, name, st, group.udq_undefined, Phase::GAS, group.unit_system);
+    prop.min_sales_rate = UDA::eval_group_uda_rate(group.min_sales_rate, name, st, group.udq_undefined, Phase::GAS, group.unit_system);
+    prop.max_proc = group.max_proc;
+    return prop;
 }
 
 GConSale::MaxProcedure GConSale::stringToProcedure(const std::string& str_proc) {
@@ -52,12 +65,14 @@ GConSale::MaxProcedure GConSale::stringToProcedure(const std::string& str_proc) 
     return MaxProcedure::NONE;
 }
 
-void GConSale::add(const std::string& name, const UDAValue& sales_target, const UDAValue& max_rate, const UDAValue& min_rate, const std::string& procedure) {
+void GConSale::add(const std::string& name, const UDAValue& sales_target, const UDAValue& max_rate, const UDAValue& min_rate, const std::string& procedure, double udq_undefined_arg, const UnitSystem& unit_system) {
     GConSale::GCONSALEGroup& group = groups[name];
     group.sales_target = sales_target;
     group.max_sales_rate = max_rate;
     group.min_sales_rate = min_rate;
     group.max_proc = stringToProcedure(procedure);
+    group.udq_undefined = udq_undefined_arg;
+    group.unit_system = unit_system;
 }
 
 size_t GConSale::size() const {

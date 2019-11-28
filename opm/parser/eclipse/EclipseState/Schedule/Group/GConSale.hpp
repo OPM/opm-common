@@ -23,6 +23,10 @@
 #include <map>
 #include <string>
 
+#include <opm/parser/eclipse/Deck/UDAValue.hpp>
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
+
 namespace Opm {
 
     class GConSale {
@@ -37,14 +41,24 @@ namespace Opm {
             UDAValue max_sales_rate;
             UDAValue min_sales_rate;
             MaxProcedure max_proc;
+            double udq_undefined;
+            UnitSystem unit_system;
+        };
+
+        struct GCONSALEGroupProp {
+            double sales_target;
+            double max_sales_rate;
+            double min_sales_rate;
+            MaxProcedure max_proc;
         };
 
         GConSale() = default;
         
         bool has(const std::string& name) const;
         const GCONSALEGroup& get(const std::string& name) const;
+        const GCONSALEGroupProp get(const std::string& name, const SummaryState& st) const;
         static MaxProcedure stringToProcedure(const std::string& procedure);
-        void add(const std::string& name, const UDAValue& sales_target, const UDAValue& max_rate, const UDAValue& min_rate, const std::string& procedure);
+        void add(const std::string& name, const UDAValue& sales_target, const UDAValue& max_rate, const UDAValue& min_rate, const std::string& procedure, double udq_undefined_arg, const UnitSystem& unit_system);
         size_t size() const;
 
     private:

@@ -24,6 +24,8 @@
 #include <string>
 
 #include <opm/parser/eclipse/Deck/UDAValue.hpp>
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 
 namespace Opm {
 
@@ -35,11 +37,20 @@ namespace Opm {
             UDAValue consumption_rate;
             UDAValue import_rate;
             std::string network_node;
+            double udq_undefined;
+            UnitSystem unit_system;
+        };
+
+        struct GCONSUMPGroupProp {
+            double consumption_rate;
+            double import_rate;
+            std::string network_node;
         };
 
         bool has(const std::string& name) const;
         const GCONSUMPGroup& get(const std::string& name) const;
-        void add(const std::string& name, const UDAValue& consumption_rate, const UDAValue& import_rate, const std::string network_node);
+        const GCONSUMPGroupProp get(const std::string& name, const SummaryState& st) const;
+        void add(const std::string& name, const UDAValue& consumption_rate, const UDAValue& import_rate, const std::string network_node, double udq_undefined_arg, const UnitSystem& unit_system);
         size_t size() const;
 
     private:

@@ -341,10 +341,10 @@ namespace {
             handleGEFAC(keyword, currentStep, parseContext, errors);
 
         else if (keyword.name() == "GCONSALE")
-            handleGCONSALE(keyword, currentStep);
+            handleGCONSALE(keyword, currentStep, unit_system);
 
         else if (keyword.name() == "GCONSUMP")
-            handleGCONSUMP(keyword, currentStep);
+            handleGCONSUMP(keyword, currentStep, unit_system);
 
         else if (keyword.name() == "GUIDERAT")
             handleGUIDERAT(keyword, currentStep);
@@ -1622,7 +1622,7 @@ namespace {
         }
     }
 
-    void Schedule::handleGCONSALE( const DeckKeyword& keyword, size_t currentStep) {
+    void Schedule::handleGCONSALE( const DeckKeyword& keyword, size_t currentStep, const UnitSystem& unit_system) {
         const auto& current = *this->gconsale.get(currentStep);
         std::shared_ptr<GConSale> new_gconsale(new GConSale(current));
         for( const auto& record : keyword ) {
@@ -1631,15 +1631,22 @@ namespace {
             auto max_rate = record.getItem("MAX_SALES_RATE").get<UDAValue>(0);
             auto min_rate = record.getItem("MIN_SALES_RATE").get<UDAValue>(0);
             std::string procedure = record.getItem("MAX_PROC").getTrimmedString(0);
+            auto udqconfig = this->getUDQConfig(currentStep).params().undefinedValue();
 
-            new_gconsale->add(groupName, sales_target, max_rate, min_rate, procedure);
+            new_gconsale->add(groupName, sales_target, max_rate, min_rate, procedure, udqconfig, unit_system);
 
+            auto group_ptr = std::make_shared<Group>(this->getGroup(groupName, currentStep));
+            Group::GroupInjectionProperties injection;
+            injection.phase = Phase::GAS;
+            if (group_ptr->updateInjection(injection)) {
+                this->updateGroup(std::move(group_ptr), currentStep);
+            }
         }
         this->gconsale.update(currentStep, new_gconsale);
     }
 
 
-    void Schedule::handleGCONSUMP( const DeckKeyword& keyword, size_t currentStep) {
+    void Schedule::handleGCONSUMP( const DeckKeyword& keyword, size_t currentStep, const UnitSystem& unit_system) {
         const auto& current = *this->gconsump.get(currentStep);
         std::shared_ptr<GConSump> new_gconsump(new GConSump(current));
         for( const auto& record : keyword ) {
@@ -1652,7 +1659,9 @@ namespace {
             if (!network_node.defaultApplied(0))
                 network_node_name = network_node.getTrimmedString(0);
 
-            new_gconsump->add(groupName, consumption_rate, import_rate, network_node_name);
+            auto udqconfig = this->getUDQConfig(currentStep).params().undefinedValue();
+
+            new_gconsump->add(groupName, consumption_rate, import_rate, network_node_name, udqconfig, unit_system);
         }
         this->gconsump.update(currentStep, new_gconsump);
     }
