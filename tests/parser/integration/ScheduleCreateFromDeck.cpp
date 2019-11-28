@@ -835,17 +835,17 @@ BOOST_AUTO_TEST_CASE(TestWellEvents) {
     Runspec runspec(deck);
     Schedule sched(deck , grid , eclipseProperties, runspec);
 
-    BOOST_CHECK(  sched.hasWellEvent( "W_1", ScheduleEvents::NEW_WELL , 0 ));
-    BOOST_CHECK(  sched.hasWellEvent( "W_2", ScheduleEvents::NEW_WELL , 2 ));
-    BOOST_CHECK( !sched.hasWellEvent( "W_2", ScheduleEvents::NEW_WELL , 3 ));
-    BOOST_CHECK(  sched.hasWellEvent( "W_2", ScheduleEvents::WELL_WELSPECS_UPDATE , 3 ));
+    BOOST_CHECK(  sched.hasWellGroupEvent( "W_1", ScheduleEvents::NEW_WELL , 0 ));
+    BOOST_CHECK(  sched.hasWellGroupEvent( "W_2", ScheduleEvents::NEW_WELL , 2 ));
+    BOOST_CHECK( !sched.hasWellGroupEvent( "W_2", ScheduleEvents::NEW_WELL , 3 ));
+    BOOST_CHECK(  sched.hasWellGroupEvent( "W_2", ScheduleEvents::WELL_WELSPECS_UPDATE , 3 ));
 
-    BOOST_CHECK( sched.hasWellEvent( "W_1", ScheduleEvents::WELL_STATUS_CHANGE , 0 ));
-    BOOST_CHECK( sched.hasWellEvent( "W_1", ScheduleEvents::WELL_STATUS_CHANGE , 1 ));
-    BOOST_CHECK( sched.hasWellEvent( "W_1", ScheduleEvents::WELL_STATUS_CHANGE , 3 ));
-    BOOST_CHECK( sched.hasWellEvent( "W_1", ScheduleEvents::WELL_STATUS_CHANGE , 4 ));
-    BOOST_CHECK( !sched.hasWellEvent( "W_1", ScheduleEvents::WELL_STATUS_CHANGE , 5 ));
+    BOOST_CHECK( sched.hasWellGroupEvent( "W_1", ScheduleEvents::WELL_STATUS_CHANGE , 0 ));
+    BOOST_CHECK( sched.hasWellGroupEvent( "W_1", ScheduleEvents::WELL_STATUS_CHANGE , 1 ));
+    BOOST_CHECK( sched.hasWellGroupEvent( "W_1", ScheduleEvents::WELL_STATUS_CHANGE , 3 ));
+    BOOST_CHECK( sched.hasWellGroupEvent( "W_1", ScheduleEvents::WELL_STATUS_CHANGE , 4 ));
+    BOOST_CHECK( !sched.hasWellGroupEvent( "W_1", ScheduleEvents::WELL_STATUS_CHANGE , 5 ));
 
-    BOOST_CHECK( sched.hasWellEvent( "W_1", ScheduleEvents::COMPLETION_CHANGE , 0 ));
-    BOOST_CHECK( sched.hasWellEvent( "W_1", ScheduleEvents::COMPLETION_CHANGE , 5 ));
+    BOOST_CHECK( sched.hasWellGroupEvent( "W_1", ScheduleEvents::COMPLETION_CHANGE , 0 ));
+    BOOST_CHECK( sched.hasWellGroupEvent( "W_1", ScheduleEvents::COMPLETION_CHANGE , 5 ));
 }

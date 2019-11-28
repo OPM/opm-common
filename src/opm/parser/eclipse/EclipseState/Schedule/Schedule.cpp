@@ -658,7 +658,7 @@ namespace {
 
                     if (update) {
                         this->updateWell(well2, currentStep);
-                        this->addWellEvent(well2->name(), ScheduleEvents::WELL_WELSPECS_UPDATE, currentStep);
+                        this->addWellGroupEvent(well2->name(), ScheduleEvents::WELL_WELSPECS_UPDATE, currentStep);
                     }
                 }
             }
@@ -774,7 +774,7 @@ namespace {
 
                     if (update_well) {
                         m_events.addEvent( ScheduleEvents::PRODUCTION_UPDATE , currentStep);
-                        this->addWellEvent( well2->name(), ScheduleEvents::PRODUCTION_UPDATE, currentStep);
+                        this->addWellGroupEvent( well2->name(), ScheduleEvents::PRODUCTION_UPDATE, currentStep);
                         this->updateWell(well2, currentStep);
                     }
                     if ( !well2->getAllowCrossFlow()) {
@@ -836,7 +836,7 @@ namespace {
 
                     if (update_well) {
                         m_events.addEvent( ScheduleEvents::PRODUCTION_UPDATE , currentStep);
-                        this->addWellEvent( well2->name(), ScheduleEvents::PRODUCTION_UPDATE, currentStep);
+                        this->addWellGroupEvent( well2->name(), ScheduleEvents::PRODUCTION_UPDATE, currentStep);
                         this->updateWell(well2, currentStep);
                     }
 
@@ -866,7 +866,7 @@ namespace {
             auto well2 = std::make_shared<Well>(*dynamic_state[reportStep]);
             if (well2->updateStatus(status)) {
                 m_events.addEvent( ScheduleEvents::WELL_STATUS_CHANGE, reportStep );
-                this->addWellEvent( well2->name(), ScheduleEvents::WELL_STATUS_CHANGE, reportStep);
+                this->addWellGroupEvent( well2->name(), ScheduleEvents::WELL_STATUS_CHANGE, reportStep);
                 this->updateWell(well2, reportStep);
                 update = true;
             }
@@ -923,7 +923,7 @@ namespace {
                     if (update_well) {
                         this->updateWell(well2, currentStep);
                         m_events.addEvent( ScheduleEvents::INJECTION_UPDATE , currentStep );
-                        this->addWellEvent( well_name, ScheduleEvents::INJECTION_UPDATE, currentStep);
+                        this->addWellGroupEvent( well_name, ScheduleEvents::INJECTION_UPDATE, currentStep);
                     }
 
                     // if the well has zero surface rate limit or reservior rate limit, while does not allow crossflow,
@@ -986,7 +986,7 @@ namespace {
                     if (update_well) {
                         this->updateWell(well2, currentStep);
                         m_events.addEvent( ScheduleEvents::INJECTION_UPDATE , currentStep );
-                        this->addWellEvent( well_name, ScheduleEvents::INJECTION_UPDATE, currentStep);
+                        this->addWellGroupEvent( well_name, ScheduleEvents::INJECTION_UPDATE, currentStep);
                     }
 
                     if ( ! well2->getAllowCrossFlow() && (injection->surfaceInjectionRate.get<double>() == 0)) {
@@ -1506,8 +1506,11 @@ namespace {
                     if (!record.getItem("VOIDAGE_TARGET").defaultApplied(0))
                         injection.injection_controls += static_cast<int>(Group::InjectionCMode::VREP);
 
-                    if (group_ptr->updateInjection(injection))
+                    if (group_ptr->updateInjection(injection)) {
                         this->updateGroup(std::move(group_ptr), currentStep);
+                        m_events.addEvent( ScheduleEvents::GROUP_INJECTION_UPDATE , currentStep);
+                        this->addWellGroupEvent(group_name, ScheduleEvents::GROUP_INJECTION_UPDATE, currentStep);
+                    }
                 }
             }
         }
@@ -1590,6 +1593,8 @@ namespace {
                         this->guide_rate_config.update( currentStep, std::move(new_config) );
 
                         this->updateGroup(std::move(group_ptr), currentStep);
+                        m_events.addEvent( ScheduleEvents::GROUP_PRODUCTION_UPDATE , currentStep);
+                        this->addWellGroupEvent(group_name, ScheduleEvents::GROUP_PRODUCTION_UPDATE, currentStep);
                     }
                 }
             }
@@ -1896,7 +1901,7 @@ namespace {
                     if (well2->updateConnections(connections))
                         this->updateWell(well2, currentStep);
                 }
-                this->addWellEvent(name, ScheduleEvents::COMPLETION_CHANGE, currentStep);
+                this->addWellGroupEvent(name, ScheduleEvents::COMPLETION_CHANGE, currentStep);
             }
         }
         m_events.addEvent(ScheduleEvents::COMPLETION_CHANGE, currentStep);
@@ -2129,8 +2134,8 @@ void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, c
             dynamic_state.update(timeStep, well_ptr);
         }
         m_events.addEvent( ScheduleEvents::NEW_WELL , timeStep );
-        well_events.insert( std::make_pair(wellName, Events(this->m_timeMap)));
-        this->addWellEvent(wellName, ScheduleEvents::NEW_WELL, timeStep);
+        wellgroup_events.insert( std::make_pair(wellName, Events(this->m_timeMap)));
+        this->addWellGroupEvent(wellName, ScheduleEvents::NEW_WELL, timeStep);
     }
 
     size_t Schedule::numWells() const {
@@ -2409,6 +2414,8 @@ void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, c
         dynamic_state.update(timeStep, group_ptr);
 
         m_events.addEvent( ScheduleEvents::NEW_GROUP , timeStep );
+        wellgroup_events.insert( std::make_pair(groupName, Events(this->m_timeMap)));
+        this->addWellGroupEvent(groupName, ScheduleEvents::NEW_GROUP, timeStep);
 
         // All newly created groups are attached to the field group,
         // can then be relocated with the GRUPTREE keyword.
@@ -2470,7 +2477,7 @@ void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, c
             auto well_ptr = std::make_shared<Well>( well );
             well_ptr->updateGroup(group_name);
             this->updateWell(well_ptr, timeStep);
-            this->addWellEvent(well_ptr->name(), ScheduleEvents::WELL_WELSPECS_UPDATE, timeStep);
+            this->addWellGroupEvent(well_ptr->name(), ScheduleEvents::WELL_WELSPECS_UPDATE, timeStep);
 
             // Remove well child reference from previous group
             auto group = std::make_shared<Group>(this->getGroup(old_gname, timeStep));
@@ -2500,20 +2507,20 @@ void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, c
     }
 
 
-    const Events& Schedule::getWellEvents(const std::string& well) const {
-        if (this->well_events.count(well) > 0)
-            return this->well_events.at(well);
+    const Events& Schedule::getWellGroupEvents(const std::string& wellGroup) const {
+        if (this->wellgroup_events.count(wellGroup) > 0)
+            return this->wellgroup_events.at(wellGroup);
         else
-            throw std::invalid_argument("No such well " + well);
+            throw std::invalid_argument("No such well og group " + wellGroup);
     }
 
-    void Schedule::addWellEvent(const std::string& well, ScheduleEvents::Events event, size_t reportStep)  {
-        auto& events = this->well_events.at(well);
+    void Schedule::addWellGroupEvent(const std::string& wellGroup, ScheduleEvents::Events event, size_t reportStep)  {
+        auto& events = this->wellgroup_events.at(wellGroup);
         events.addEvent(event, reportStep);
     }
 
-    bool Schedule::hasWellEvent(const std::string& well, uint64_t event_mask, size_t reportStep) const {
-        const auto& events = this->getWellEvents(well);
+    bool Schedule::hasWellGroupEvent(const std::string& wellGroup, uint64_t event_mask, size_t reportStep) const {
+        const auto& events = this->getWellGroupEvents(wellGroup);
         return events.hasEvent(event_mask, reportStep);
     }
 
