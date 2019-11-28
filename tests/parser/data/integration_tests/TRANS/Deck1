@@ -29,7 +29,8 @@ MULTFLT
    'F2' 0.10  /
 /
 
-
+PORO
+   25*0.15 /
 
 SCHEDULE
 

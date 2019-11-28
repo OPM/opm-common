@@ -546,6 +546,8 @@ DZV
   5*5 /
 TOPS
   25*2500 /
+PORO
+  125*0.15 /
 PERMX
   125*500 /
 COPY
@@ -2968,6 +2970,8 @@ START\n \
 8 MAR 1998 /\n \
 \n \
 GRID \n\
+PORO\n\
+  1000*0.25 /\n\
 PERMX \n\
   1000*0.10/ \n\
 COPY \n\
@@ -3102,6 +3106,8 @@ BOOST_AUTO_TEST_CASE(POLYINJ_TEST) {
         "START\n"
         "   8 MAR 2018/\n"
         "GRID\n"
+        "PORO\n"
+        "  1000*0.25 /\n"
         "PERMX\n"
         "  1000*0.25 /\n"
         "COPY\n"
@@ -3170,6 +3176,8 @@ BOOST_AUTO_TEST_CASE(WFOAM_TEST) {
         "   8 MAR 2018/\n"
         "GRID\n"
         "PERMX\n"
+        "  1000*0.25 /\n"
+        "PORO\n"
         "  1000*0.25 /\n"
         "COPY\n"
         "  PERMX  PERMY /\n"

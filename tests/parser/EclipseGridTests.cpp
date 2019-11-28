@@ -819,6 +819,8 @@ BOOST_AUTO_TEST_CASE(ConstructorNORUNSPEC) {
         "  8000*1 / \n"
         "ACTNUM \n"
         "  1000*1 / \n"
+        "PORO\n"
+        "  1000*0.15 /\n"
         "EDIT\n"
         "\n";
 
@@ -842,6 +844,8 @@ BOOST_AUTO_TEST_CASE(ConstructorNoSections) {
         "  8000*1 / \n"
         "ACTNUM \n"
         "  1000*1 / \n"
+        "PORO\n"
+        "  1000*0.15 /\n"
         "\n";
 
     Opm::Parser parser;
@@ -905,6 +909,8 @@ static Opm::Deck createActnumDeck() {
             "EQUALS\n"
             " ACTNUM 0 1 1 1 1 1 1 /\n"
             "/ \n"
+            "PORO\n"
+            "  8*0.15 /\n"
             "FLUXNUM\n"
             "8*0 /\n";
 
@@ -930,6 +936,8 @@ static Opm::Deck createActnumBoxDeck() {
             "  10*0.25 /\n"
             "DEPTHZ\n"
             "  121*0.25 /\n"
+            "PORO \n"
+            "  1000*0.15 /\n"
             "EQUALS\n"
             " ACTNUM 0 1 10 1 10 1 1 /\n" // disable top layer
             "/ \n"
@@ -1004,7 +1012,6 @@ BOOST_AUTO_TEST_CASE(GridBoxActnum) {
         BOOST_CHECK_THROW( grid.activeIndex(0,0,0) , std::invalid_argument );
     }
 }
-
 
 BOOST_AUTO_TEST_CASE(GridActnumVia3D) {
     auto deck = createActnumDeck();
@@ -1236,6 +1243,8 @@ static Opm::Deck radial_keywords_OK() {
         "10*0.25 /\n"
         "TOPS\n"
         "60*0.0 /\n"
+        "PORO \n"
+        "  600*0.15 /"
         "\n";
 
     Opm::Parser parser;
@@ -1261,6 +1270,8 @@ static Opm::Deck radial_keywords_OK_CIRCLE() {
         "10*0.25 /\n"
         "TOPS\n"
         "60*0.0 /\n"
+        "PORO \n"
+        "  600*0.15 /"
         "\n";
 
     Opm::Parser parser;
@@ -1304,6 +1315,8 @@ static Opm::Deck radial_keywords_DRV_size_mismatch() {
         "12*0.25 /\n"
         "TOPS\n"
         "60*0.0 /\n"
+        "PORO \n"
+        "  720*0.15 /"
         "\n";
 
     Opm::Parser parser;
@@ -1329,6 +1342,8 @@ static Opm::Deck radial_keywords_DZV_size_mismatch() {
         "11*0.25 /\n"
         "TOPS\n"
         "60*0.0 /\n"
+        "PORO \n"
+        "  720*0.15 /"
         "\n";
 
     Opm::Parser parser;
@@ -1353,6 +1368,8 @@ static Opm::Deck radial_keywords_DTHETAV_size_mismatch() {
         "12*0.25 /\n"
         "TOPS\n"
         "60*0.0 /\n"
+        "PORO \n"
+        "  720*0.15 /"
         "\n";
 
     Opm::Parser parser;
@@ -1380,6 +1397,8 @@ static Opm::Deck radial_keywords_TOPS_size_mismatch() {
         "12*0.25 /\n"
         "TOPS\n"
         "65*0.0 /\n"
+        "PORO \n"
+        "  720*0.15 /"
         "\n";
 
     Opm::Parser parser;
@@ -1404,6 +1423,8 @@ static Opm::Deck radial_keywords_ANGLE_OVERFLOW() {
         "12*0.25 /\n"
         "TOPS\n"
         "60*0.0 /\n"
+        "PORO \n"
+        "  720*0.15 /"
         "\n";
 
     Opm::Parser parser;
@@ -1437,6 +1458,8 @@ static Opm::Deck radial_details() {
         "2*1 /\n"
         "TOPS\n"
         "5*1.0 /\n"
+        "PORO \n"
+        "  10*0.15 /"
         "\n";
 
     Opm::Parser parser;
@@ -1497,6 +1520,8 @@ static Opm::Deck createCARTDeckTest3x4x2() {
         "12*25 12*35 /\n"
         "TOPS\n"
         "2500 2510 2520  2520 2530 2540  2540 2550 2560  2560 2570 2580 /\n"
+        "PORO \n"
+        "  24*0.15 /"
         "EDIT\n"
         "\n";
 
@@ -1633,6 +1658,8 @@ static Opm::Deck BAD_CP_GRID() {
         "   109.0170   109.3660   108.6681   109.0170   109.0170   109.3660\n"
         "   108.8426   109.1916   109.1916   109.5406  /\n"
         "\n"
+        "PORO\n"
+        "  8*0.15 /\n"
         "EDIT\n";
 
     Opm::Parser parser;
@@ -1674,6 +1701,8 @@ static Opm::Deck BAD_CP_GRID_MAPAXES() {
         "   109.0170   109.3660   108.6681   109.0170   109.0170   109.3660\n"
         "   108.8426   109.1916   109.1916   109.5406  /\n"
         "\n"
+        "PORO\n"
+        "  8*0.15 /\n"
         "EDIT\n";
 
     Opm::Parser parser;
@@ -1698,6 +1727,8 @@ BOOST_AUTO_TEST_CASE(SAVE_FIELD_UNITS) {
         " 16*20 16*30 16*50 / \n"
         "TOPS\n"
         " 16*8325 / \n"
+        "PORO\n"
+        "  48*0.15 /\n"
         "EDIT\n"
         "\n";
 
@@ -1721,6 +1752,8 @@ BOOST_AUTO_TEST_CASE(SAVE_FIELD_UNITS) {
         " 16*20 16*30 16*50 / \n"
         "TOPS\n"
         " 16*8325 / \n"
+        "PORO\n"
+        "  48*0.15 /\n"
         "EDIT\n"
         "\n";
 
@@ -1744,6 +1777,8 @@ BOOST_AUTO_TEST_CASE(SAVE_FIELD_UNITS) {
         " 16*20 16*30 16*50 / \n"
         "TOPS\n"
         " 16*8325 / \n"
+        "PORO\n"
+        "  48*0.15 /\n"
         "EDIT\n"
         "\n";
 
@@ -1906,6 +1941,8 @@ BOOST_AUTO_TEST_CASE(SAVE_METRIC_UNITS) {
         " 3 2 1  3 3 2   1.05 / \n"
         " 4 2 1  4 3 2   1.15 / \n"
         "/ \n"
+        "PORO\n"
+        "  48*0.15 /\n"
         "EDIT\n"
         "\n";
 
@@ -1933,6 +1970,8 @@ BOOST_AUTO_TEST_CASE(SAVE_METRIC_UNITS) {
         " 3 2 1  3 3 2   1.05 / \n"
         " 4 2 1  4 3 2   1.15 / \n"
         "/ \n"
+        "PORO\n"
+        "  48*0.15 /\n"
         "EDIT\n"
         "\n";
 
@@ -2191,6 +2230,8 @@ BOOST_AUTO_TEST_CASE(TESTCP_ACTNUM_UPDATE) {
         " 2002.9995  2003.8722  2003.8722  2004.7448  2004.7448  2005.6174 / \n"
         "ACTNUM\n"
         " 0 1 1 1 0 1 / \n"
+        "PORO\n"
+        "  6*0.15 /\n"
         "EDIT\n"
         "\n";
 
@@ -2258,7 +2299,8 @@ BOOST_AUTO_TEST_CASE(TEST_altGridConstructors) {
         "\n"
         "ACTNUM\n"
         " 1 1 1 1 1 0 1 1 1 0 1 1  /\n"
-
+        "PORO\n"
+        "  24*0.15 /\n"
         "EDIT\n"
         "\n";
 
@@ -2316,6 +2358,8 @@ static Opm::Deck BAD_CP_GRID_ACTNUM() {
         "\n"
         "ACTNUM\n"
         "   1 1 1 1 0 1 0 1  /\n"
+        "PORO\n"
+        "  8*0.15 /\n"
         "EDIT\n";
 
     Opm::Parser parser;
@@ -2386,6 +2430,8 @@ BOOST_AUTO_TEST_CASE(TEST_constructFromEgrid) {
         " 100*8325 / \n"
         "ACTNUM\n"
         " 44*1 3*0 7*1 3*0  243*1/\n"
+        "PORO\n"
+        "  300*0.15 /\n"
         "EDIT\n"
         "\n";
 
@@ -2445,7 +2491,9 @@ BOOST_AUTO_TEST_CASE(TEST_GDFILE_1) {
         "ZCORN\n"
         "2000.0000  2001.7452  2000.0000  2001.7452  2004.9992  2006.7445\n"
         "2004.9992  2006.7445  2004.9992  2006.7445  2004.9992  2006.7445\n"
-        "2014.9977  2016.7430  2014.9977  2016.7430 /\n";
+        "2014.9977  2016.7430  2014.9977  2016.7430 /\n"
+        "PORO\n"
+        "   2*0.15 /\n";
 
     const char* deckData2 =
         "RUNSPEC\n"
@@ -2458,7 +2506,9 @@ BOOST_AUTO_TEST_CASE(TEST_GDFILE_1) {
         "10.0000    10.0000  2000.0000      9.8255    10.0000  2014.9977\n"
         "109.9848   10.0000  2001.7452    109.8102    10.0000  2016.7430\n"
         "10.0000   110.0000  2000.0000      9.8255   110.0000  2014.9977\n"
-        "109.9848   110.0000  2001.7452    109.8102   110.0000  2016.7430 /\n";
+        "109.9848   110.0000  2001.7452    109.8102   110.0000  2016.7430 /\n"
+        "PORO\n"
+        "   2*0.15 /\n";
 
     const char* deckData3 =
         "RUNSPEC\n"
@@ -2470,7 +2520,10 @@ BOOST_AUTO_TEST_CASE(TEST_GDFILE_1) {
         "ZCORN\n"
         "2000.0000  2001.7452  2000.0000  2001.7452  2004.9992  2006.7445\n"
         "2004.9992  2006.7445  2004.9992  2006.7445  2004.9992  2006.7445\n"
-        "2014.9977  2016.7430  2014.9977  2016.7430 /\n";
+        "2014.9977  2016.7430  2014.9977  2016.7430 /\n"
+        "PORO\n"
+        "   2*0.15 /\n";
+
 
     Opm::Parser parser;
     auto deck1 = parser.parseString( deckData1) ;
@@ -2516,6 +2569,8 @@ BOOST_AUTO_TEST_CASE(TEST_GDFILE_2) {
         "   109.0170   109.3660   108.6681   109.0170   109.0170   109.3660\n"
         "   108.8426   109.1916   109.1916   109.5406  /\n"
         "\n"
+        "PORO\n"
+        "   8*0.15 /\n"
         "EDIT\n";
 
     const char* deckData1a =
@@ -2551,6 +2606,8 @@ BOOST_AUTO_TEST_CASE(TEST_GDFILE_2) {
         "\n"
         "ACTNUM\n"
         " 1 1 1 1 0 1 0 1 /\n"
+        "PORO\n"
+        "   8*0.15 /\n"
         "EDIT\n";
 
     const char* deckData1b =
@@ -2591,6 +2648,8 @@ BOOST_AUTO_TEST_CASE(TEST_GDFILE_2) {
         "\n"
         "ACTNUM\n"
         " 1 1 1 1 0 1 0 1 /\n"
+        "PORO\n"
+        "   8*0.15 /\n"
         "EDIT\n";
 
     const char* deckData2 =

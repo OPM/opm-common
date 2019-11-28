@@ -50,6 +50,8 @@ MULTREGT
 4  2    0.6  XYZ   ALL    F / 
 /
 
+PORO
+  8*0.15 /
 
 EDIT
 

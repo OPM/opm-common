@@ -177,6 +177,9 @@ RPTGRID
   --
  /
 
+PORO
+   500*0.15 /
+
 PROPS       ==========================================================
 
 -- WATER RELATIVE PERMEABILITY AND CAPILLARY PRESSURE ARE TABULATED AS
