@@ -124,7 +124,7 @@ namespace {
             {
                 const auto elems = (sched_well.getConnections().size()
                                     * (phases.size() + data::Connection::restart_size))
-                    + 2 /* bhp, temperature */
+                    + 3 /* bhp, thp, temperature */
                     + phases.size();
 
                 // write zeros if no well data is provided
@@ -135,6 +135,7 @@ namespace {
             const auto& well = wells.at( sched_well.name() );
 
             xwel.push_back( well.bhp );
+            xwel.push_back( well.thp );
             xwel.push_back( well.temperature );
 
             for (auto phase : phases)

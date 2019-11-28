@@ -285,6 +285,7 @@ data::Wells mkWells() {
 
     data::Well w1, w2;
     w1.rates = r1;
+    w1.thp = 1.0;
     w1.bhp = 1.23;
     w1.temperature = 3.45;
     w1.control = 1;
@@ -297,6 +298,7 @@ data::Wells mkWells() {
     w1.connections.push_back( { 288, rc2, 33.19, 123.4, 432.1, 0.26, 0.45, 2.56 } );
 
     w2.rates = r2;
+    w2.thp = 2.0;
     w2.bhp = 2.34;
     w2.temperature = 4.56;
     w2.control = 2;

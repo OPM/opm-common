@@ -705,7 +705,7 @@ namespace {
                 -> std::size_t
             {
                 return acc
-                    + 2 + phases.size()
+                    + 3 + phases.size()
                     + (w.getConnections().size()
                         * (phases.size() + Opm::data::Connection::restart_size));
             });
@@ -764,6 +764,7 @@ namespace {
             auto& well = wells[ sched_well.name() ];
 
             well.bhp         = *opm_xwel_data;  ++opm_xwel_data;
+            well.thp         = *opm_xwel_data;  ++opm_xwel_data;
             well.temperature = *opm_xwel_data;  ++opm_xwel_data;
             well.control     = *opm_iwel_data;  ++opm_iwel_data;
 
