@@ -68,7 +68,10 @@ class Phases {
 
 class Welldims {
 public:
+    Welldims() = default;
     explicit Welldims(const Deck& deck);
+    Welldims(int WMax, int CWMax, int WGMax, int GMax) :
+      nWMax(WMax), nCWMax(CWMax), nWGMax(WGMax), nGMax(GMax) {}
 
     int maxConnPerWell() const
     {
@@ -89,6 +92,14 @@ public:
     {
         return this->nWMax;
     }
+
+    bool operator==(const Welldims& data) const {
+        return this->maxConnPerWell() == data.maxConnPerWell() &&
+               this->maxWellsPerGroup() == data.maxWellsPerGroup() &&
+               this->maxGroupsInField() == data.maxGroupsInField() &&
+               this->maxWellsInField() == data.maxWellsInField();
+    }
+
 private:
     int nWMax  { 0 };
     int nCWMax { 0 };
