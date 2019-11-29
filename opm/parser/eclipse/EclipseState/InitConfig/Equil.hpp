@@ -44,8 +44,10 @@ namespace Opm {
 
             Equil() = default;
             explicit Equil( const DeckKeyword& );
+            Equil(const std::vector<EquilRecord>& records);
 
             const EquilRecord& getRecord( size_t id ) const;
+            const std::vector<EquilRecord>& records() const;
 
             size_t size() const;
             bool empty() const;
@@ -53,8 +55,10 @@ namespace Opm {
             const_iterator begin() const;
             const_iterator end() const;
 
+            bool operator==(const Equil& data) const;
+
         private:
-            std::vector< EquilRecord > records;
+            std::vector< EquilRecord > m_records;
     };
 
 }
