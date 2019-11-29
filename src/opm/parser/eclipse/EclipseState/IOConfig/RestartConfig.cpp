@@ -552,6 +552,21 @@ void RestartConfig::handleScheduleSection(const SCHEDULESection& schedule, const
         initFirstOutput( );
     }
 
+    RestartConfig::RestartConfig(const TimeMap& timeMap,
+                                 int firstRestartStep,
+                                 bool writeInitial,
+                                 const DynamicState<RestartSchedule>& restart_sched,
+                                 const DynamicState<std::map<std::string,int>>& restart_keyw,
+                                 const std::vector<bool>& save_keyw) :
+        m_timemap(timeMap),
+        m_first_restart_step(firstRestartStep),
+        m_write_initial_RST_file(writeInitial),
+        restart_schedule(restart_sched),
+        restart_keywords(restart_keyw),
+        save_keywords(save_keyw)
+    {
+    }
+
 
     RestartSchedule RestartConfig::getNode( size_t timestep ) const{
         return restart_schedule.get(timestep);
@@ -738,4 +753,39 @@ void RestartConfig::handleScheduleSection(const SCHEDULESection& schedule, const
         return m_first_restart_step;
     }
 
+
+    const TimeMap& RestartConfig::timeMap() const {
+        return m_timemap;
+    }
+
+
+    bool RestartConfig::writeInitialRst() const {
+        return m_write_initial_RST_file;
+    }
+
+
+    const DynamicState<RestartSchedule>& RestartConfig::restartSchedule() const {
+        return restart_schedule;
+    }
+
+
+    const DynamicState<std::map<std::string,int>>&
+    RestartConfig::restartKeywords() const {
+        return restart_keywords;
+    }
+
+
+    const std::vector<bool>& RestartConfig::saveKeywords() const {
+        return save_keywords;
+    }
+
+
+    bool RestartConfig::operator==(const RestartConfig& data) const {
+        return this->timeMap() == data.timeMap() &&
+               this->getFirstRestartStep() == data.getFirstRestartStep() &&
+               this->writeInitialRst() == data.writeInitialRst() &&
+               this->restartSchedule() == data.restartSchedule() &&
+               this->restartKeywords() == data.restartKeywords() &&
+               this->saveKeywords() == data.saveKeywords();
+    }
 }

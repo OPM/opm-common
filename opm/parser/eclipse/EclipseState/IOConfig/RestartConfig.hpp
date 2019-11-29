@@ -317,7 +317,7 @@ namespace Opm {
 
     public:
 
-        RestartConfig();
+        RestartConfig() = default;
 
         template<typename T>
         RestartConfig( const Deck&, const ParseContext& parseContext, T&& errors );
@@ -331,6 +331,12 @@ namespace Opm {
                        ErrorGuard& errors,
                        TimeMap timemap );
 
+        RestartConfig(const TimeMap& timeMap,
+                      int firstRestartStep,
+                      bool writeInitial,
+                      const DynamicState<RestartSchedule>& restart_sched,
+                      const DynamicState<std::map<std::string,int>>& restart_keyw,
+                      const std::vector<bool>& save_keyw);
 
         int  getFirstRestartStep() const;
         bool getWriteRestartFile(size_t timestep, bool log=true) const;
@@ -343,6 +349,15 @@ namespace Opm {
 
         RestartSchedule getNode( size_t timestep ) const;
         static std::string getRestartFileName(const std::string& restart_base, int report_step, bool unified, bool fmt_file);
+
+        const TimeMap& timeMap() const;
+        bool writeInitialRst() const;
+        const DynamicState<RestartSchedule>& restartSchedule() const;
+        const DynamicState<std::map<std::string,int>>& restartKeywords() const;
+        const std::vector<bool>& saveKeywords() const;
+
+        bool operator==(const RestartConfig& data) const;
+
     private:
 
 
@@ -362,7 +377,7 @@ namespace Opm {
         void handleRPTSOL( const DeckKeyword& keyword);
 
         TimeMap m_timemap;
-        int     m_first_restart_step;
+        int     m_first_restart_step = 1;
         bool    m_write_initial_RST_file = false;
 
         void handleScheduleSection( const SCHEDULESection& schedule, const ParseContext& parseContext, ErrorGuard& errors);
