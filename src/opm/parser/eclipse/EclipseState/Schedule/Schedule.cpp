@@ -1379,6 +1379,8 @@ namespace {
                             this->updateWellStatus( wname, currentStep, well_status );
                             if (well_status == open)
                                 this->rft_config.addWellOpen(wname, currentStep);
+
+                            OpmLog::info(Well::Status2String(well_status) + " well: " + wname + " at report step: " + std::to_string(currentStep));
                         }
                     }
                 }
@@ -1391,9 +1393,12 @@ namespace {
                 {
                     auto& dynamic_state = this->wells_static.at(wname);
                     auto well_ptr = std::make_shared<Well>( *dynamic_state[currentStep] );
-                    if (well_ptr->handleWELOPEN(record, comp_status))
+                    if (well_ptr->handleWELOPEN(record, comp_status)) {
                         // The updateWell call breaks test at line 825 and 831 in ScheduleTests
                         this->updateWell(well_ptr, currentStep);
+                        const auto well_status = Well::StatusFromString( status_str );
+                        OpmLog::info(Well::Status2String(well_status) + " well: " + wname + " at report step: " + std::to_string(currentStep));
+                    }
                 }
                 m_events.addEvent( ScheduleEvents::COMPLETION_CHANGE, currentStep );
             }
