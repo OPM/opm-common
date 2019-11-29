@@ -3,6 +3,11 @@
 
 namespace Opm {
 
+    EquilRecord::EquilRecord() :
+        EquilRecord(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, false, false, 0.0)
+  {
+  }
+
    EquilRecord::EquilRecord( double datum_depth_arg, double datum_depth_pc_arg, double woc_depth, double woc_pc, double goc_depth, double goc_pc, bool live_oil_init, bool wet_gas_init, int target_accuracy) :
        datum_depth(datum_depth_arg),
        datum_depth_ps(datum_depth_pc_arg),
@@ -49,6 +54,20 @@ namespace Opm {
 
     int EquilRecord::initializationTargetAccuracy() const {
         return this->init_target_accuracy;
+    }
+
+    bool EquilRecord::operator==(const EquilRecord& data) const {
+        return datum_depth == data.datum_depth &&
+               datum_depth_ps == data.datum_depth_ps &&
+               water_oil_contact_depth == data.water_oil_contact_depth &&
+               water_oil_contact_capillary_pressure ==
+               data.water_oil_contact_capillary_pressure &&
+               data.gas_oil_contact_depth == data.gas_oil_contact_depth &&
+               gas_oil_contact_capillary_pressure ==
+               data.gas_oil_contact_capillary_pressure &&
+               live_oil_init_proc == data.live_oil_init_proc &&
+               wet_gas_init_proc == data.wet_gas_init_proc &&
+               init_target_accuracy == data.init_target_accuracy;
     }
 
     /* */
