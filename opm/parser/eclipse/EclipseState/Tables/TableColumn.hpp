@@ -31,9 +31,19 @@ namespace Opm {
 
     class TableColumn {
     public:
+        TableColumn();
         explicit TableColumn( const ColumnSchema& schema );
+        TableColumn(const ColumnSchema& schema,
+                    const std::string& name,
+                    const std::vector<double>& values,
+                    const std::vector<bool>& defaults,
+                    size_t defaultCount);
         size_t size( ) const;
+        const ColumnSchema& schema() const;
         const std::string& name() const;
+        const std::vector<double>& values() const;
+        const std::vector<bool>& defaults() const;
+        size_t defaultCount() const;
         void assertOrder(double value1 , double value2) const;
         void addValue(double);
         void addDefault();
@@ -60,6 +70,9 @@ namespace Opm {
         std::vector<double> vectorCopy() const;
         std::vector<double>::const_iterator begin() const;
         std::vector<double>::const_iterator end() const;
+
+        bool operator==(const TableColumn& data) const;
+
     private:
         void assertUpdate(size_t index, double value) const;
         void assertPrevious(size_t index , double value) const;

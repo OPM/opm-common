@@ -26,12 +26,30 @@
 
 namespace Opm {
 
+    TableColumn::TableColumn()
+    {
+        m_defaultCount = 0;
+    }
+
     TableColumn::TableColumn(const ColumnSchema& schema) :
         m_schema( schema )
     {
         m_defaultCount = 0;
     }
 
+
+    TableColumn::TableColumn(const ColumnSchema& schema,
+                             const std::string& name,
+                             const std::vector<double>& values,
+                             const std::vector<bool>& defaults,
+                             size_t defaultCount) :
+        m_schema(schema),
+        m_name(name),
+        m_values(values),
+        m_default(defaults),
+        m_defaultCount(defaultCount)
+    {
+    }
 
 
     size_t TableColumn::size() const {
@@ -44,8 +62,24 @@ namespace Opm {
             throw std::invalid_argument("Incorrect ordering of values in column: " + m_schema.name());
     }
 
+    const ColumnSchema& TableColumn::schema() const {
+        return m_schema;
+    }
+
     const std::string& TableColumn::name() const {
         return m_name;
+    }
+
+    const std::vector<double>& TableColumn::values() const {
+        return m_values;
+    }
+
+    const std::vector<bool>& TableColumn::defaults() const {
+        return m_default;
+    }
+
+    size_t TableColumn::defaultCount() const {
+        return m_defaultCount;
     }
 
     void TableColumn::assertNext(size_t index , double value) const {
@@ -322,6 +356,14 @@ namespace Opm {
 
     std::vector<double> TableColumn::vectorCopy() const {
         return std::vector<double>( begin() , end());
+    }
+
+    bool TableColumn::operator==(const TableColumn& data) const {
+        return this->schema() == data.schema() &&
+               this->name() == data.name() &&
+               this->values() == data.values() &&
+               this->defaults() == data.defaults() &&
+               this->defaultCount() == data.defaultCount();
     }
 
 }
