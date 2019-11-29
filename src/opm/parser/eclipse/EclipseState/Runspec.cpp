@@ -125,6 +125,20 @@ WellSegmentDims::WellSegmentDims(const Deck& deck) : WellSegmentDims()
     }
 }
 
+WellSegmentDims::WellSegmentDims(int segWellMax, int segMax, int latBranchMax) :
+    nSegWellMax(segWellMax),
+    nSegmentMax(segMax),
+    nLatBranchMax(latBranchMax)
+{
+}
+
+bool WellSegmentDims::operator==(const WellSegmentDims& data) const
+{
+    return this->maxSegmentedWells() == data.maxSegmentedWells() &&
+           this->maxSegmentsPerWell() == data.maxSegmentsPerWell() &&
+           this->maxLateralBranchesPerWell() == data.maxLateralBranchesPerWell();
+}
+
 EclHysterConfig::EclHysterConfig(const Opm::Deck& deck)
     {
 

@@ -111,6 +111,8 @@ class WellSegmentDims {
 public:
     WellSegmentDims();
     explicit WellSegmentDims(const Deck& deck);
+    WellSegmentDims(int segWellMax, int segMax, int latBranchMax);
+
 
     int maxSegmentedWells() const
     {
@@ -126,6 +128,8 @@ public:
     {
         return this->nLatBranchMax;
     }
+
+    bool operator==(const WellSegmentDims& data) const;
 
 private:
     int nSegWellMax;
