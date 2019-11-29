@@ -87,8 +87,9 @@ BOOST_AUTO_TEST_CASE(WellCOMPDATtestTRACK) {
     Opm::EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    FieldPropsManager fp( deck , grid, table);
     Opm::Runspec runspec (deck);
-    Opm::Schedule schedule(deck, grid , eclipseProperties, runspec);
+    Opm::Schedule schedule(deck, grid , fp, eclipseProperties, runspec);
     const auto& op_1 = schedule.getWell("OP_1", 2);
 
     const auto& completions = op_1.getConnections();
@@ -127,8 +128,9 @@ BOOST_AUTO_TEST_CASE(WellCOMPDATtestDefaultTRACK) {
     Opm::EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    FieldPropsManager fp( deck , grid, table);
     Opm::Runspec runspec (deck);
-    Opm::Schedule schedule(deck, grid , eclipseProperties, runspec);
+    Opm::Schedule schedule(deck, grid , fp, eclipseProperties, runspec);
     const auto& op_1 = schedule.getWell("OP_1", 2);
 
     const auto& completions = op_1.getConnections();
@@ -170,8 +172,9 @@ BOOST_AUTO_TEST_CASE(WellCOMPDATtestINPUT) {
     Opm::ErrorGuard errors;
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    FieldPropsManager fp( deck , grid, table);
     Opm::Runspec runspec (deck);
-    Opm::Schedule schedule(deck, grid , eclipseProperties, runspec, Opm::ParseContext(), errors);
+    Opm::Schedule schedule(deck, grid , fp, eclipseProperties, runspec, Opm::ParseContext(), errors);
     const auto& op_1 = schedule.getWell("OP_1", 2);
 
     const auto& completions = op_1.getConnections();

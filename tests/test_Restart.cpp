@@ -519,7 +519,7 @@ struct Setup {
         deck( Parser().parseFile( path) ),
         es( deck),
         grid( es.getInputGrid( ) ),
-        schedule( deck, grid, es.get3DProperties(), es.runspec()),
+        schedule( deck, es ),
         summary_config( deck, schedule, es.getTableManager( ))
     {
         auto& io_config = es.getIOConfig();
@@ -560,7 +560,7 @@ BOOST_AUTO_TEST_CASE(ECL_FORMATTED) {
         auto num_cells = setup.grid.getNumActive( );
         auto cells = mkSolution( num_cells );
         auto wells = mkWells();
-	auto sumState = sim_state();
+        auto sumState = sim_state();
         {
             RestartValue restart_value(cells, wells);
 

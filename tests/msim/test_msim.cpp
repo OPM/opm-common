@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(RUN) {
     Parser parser;
     Deck deck = parser.parseFile("SPE1CASE1.DATA");
     EclipseState state(deck);
-    Schedule schedule(deck, state.getInputGrid(), state.get3DProperties(), state.runspec());
+    Schedule schedule(deck, state);
     SummaryConfig summary_config(deck, schedule, state.getTableManager());
     msim msim(state);
 

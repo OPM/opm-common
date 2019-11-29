@@ -148,7 +148,7 @@ static SummaryConfig createSummary( std::string input , const ParseContext& pars
     ErrorGuard errors;
     auto deck = createDeck( input );
     EclipseState state( deck, parseContext, errors );
-    Schedule schedule(deck, state.getInputGrid(), state.get3DProperties(), state.runspec(), parseContext, errors);
+    Schedule schedule(deck, state.getInputGrid(), state.fieldProps(), state.get3DProperties(), state.runspec(), parseContext, errors);
     return SummaryConfig( deck, schedule, state.getTableManager( ), parseContext, errors );
 }
 
@@ -167,7 +167,7 @@ BOOST_AUTO_TEST_CASE(wells_all) {
 BOOST_AUTO_TEST_CASE(EMPTY) {
     auto deck = createDeck_no_wells( "" );
     EclipseState state( deck );
-    Schedule schedule(deck, state.getInputGrid(), state.get3DProperties(), state.runspec());
+    Schedule schedule(deck, state);
     SummaryConfig conf(deck, schedule, state.getTableManager());
     BOOST_CHECK_EQUAL( conf.size(), 0 );
 }
@@ -179,7 +179,7 @@ BOOST_AUTO_TEST_CASE(wells_missingI) {
     auto deck = createDeck_no_wells( input );
     parseContext.update(ParseContext::SUMMARY_UNKNOWN_WELL, InputError::THROW_EXCEPTION);
     EclipseState state( deck, parseContext, errors );
-    Schedule schedule(deck, state.getInputGrid(), state.get3DProperties(), state.runspec(), parseContext, errors);
+    Schedule schedule(deck, state, parseContext, errors );
     BOOST_CHECK_NO_THROW( SummaryConfig( deck, schedule, state.getTableManager( ), parseContext, errors ));
 }
 

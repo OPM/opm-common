@@ -348,7 +348,7 @@ struct setup {
         deck( Parser().parseFile( path) ),
         es( deck ),
         grid( es.getInputGrid() ),
-        schedule( deck, grid, es.get3DProperties(), es.runspec()),
+        schedule( deck, es),
         config( deck, schedule, es.getTableManager()),
         wells( result_wells() ),
         name( toupper(std::move(fname)) ),

@@ -79,8 +79,9 @@ BOOST_AUTO_TEST_CASE(MESSAGES) {
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    FieldPropsManager fp( deck , grid, table);
     Runspec runspec (deck);
-    Schedule schedule(deck, grid, eclipseProperties, runspec);
+    Schedule schedule(deck, grid, fp, eclipseProperties, runspec);
     const MessageLimits limits = schedule.getMessageLimits();
 
     BOOST_CHECK_EQUAL( limits.getBugPrintLimit( 0 ) , 77 );   // The pre Schedule initialization
