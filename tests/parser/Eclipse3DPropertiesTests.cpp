@@ -285,7 +285,7 @@ BOOST_AUTO_TEST_CASE(HasDeckProperty) {
 
 BOOST_AUTO_TEST_CASE(SupportsProperty) {
     Setup s(createDeck());
-    std::vector<std::string> int_keywords = {"SATNUM", "IMBNUM", "PVTNUM", "EQLNUM", "ENDNUM", "FLUXNUM", "MULTNUM", "FIPNUM", "MISCNUM", "OPERNUM", "ROCKNUM"};
+    std::vector<std::string> int_keywords = {"SATNUM", "IMBNUM", "PVTNUM", "EQLNUM", "ENDNUM", "FLUXNUM", "MULTNUM", "FIPNUM", "MISCNUM", "OPERNUM", "ROCKNUM", "LWSLTNUM"};
     std::vector<std::string> double_keywords = {"TEMPI", "MULTPV", "PERMX", "PERMY", "PERMZ", "SWATINIT", "THCONR", "NTG"};
 
     for (auto keyword : int_keywords) {
