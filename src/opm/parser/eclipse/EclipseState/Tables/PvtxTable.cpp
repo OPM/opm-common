@@ -35,6 +35,21 @@ namespace Opm {
     }
 
 
+    PvtxTable::PvtxTable(const ColumnSchema& outer_schema,
+                         const TableColumn& outer_column,
+                         const TableSchema& undersat_schema,
+                         const TableSchema& sat_schema,
+                         const std::vector<SimpleTable>& undersat_tables,
+                         const SimpleTable& sat_table) :
+        m_outerColumnSchema(outer_schema),
+        m_outerColumn(outer_column),
+        m_underSaturatedSchema(undersat_schema),
+        m_saturatedSchema(sat_schema),
+        m_underSaturatedTables(undersat_tables),
+        m_saturatedTable(sat_table)
+    {
+    }
+
 
     /*
       The Schema pointers m_saturatedSchema and m_underSaturatedSchema must
@@ -149,5 +164,38 @@ namespace Opm {
             throw std::invalid_argument("Invalid index");
     }
 
-}
 
+    const ColumnSchema& PvtxTable::getOuterColumnSchema() const {
+        return m_outerColumnSchema;
+    }
+
+
+    const TableColumn& PvtxTable::getOuterColumn() const {
+        return m_outerColumn;
+    }
+
+
+    const TableSchema& PvtxTable::getUnderSaturatedSchema() const {
+        return m_underSaturatedSchema;
+    }
+
+
+    const TableSchema& PvtxTable::getSaturatedSchema() const {
+        return m_saturatedSchema;
+    }
+
+
+    const std::vector<SimpleTable>& PvtxTable::getUnderSaturatedTables() const {
+        return m_underSaturatedTables;
+    }
+
+
+    bool PvtxTable::operator==(const PvtxTable& data) const {
+        return this->getOuterColumnSchema() == data.getOuterColumnSchema() &&
+               this->getOuterColumn() == data.getOuterColumn() &&
+               this->getUnderSaturatedSchema() == data.getUnderSaturatedSchema() &&
+               this->getSaturatedSchema() == data.getSaturatedSchema() &&
+               this->getUnderSaturatedTables() == data.getUnderSaturatedTables() &&
+               this->getSaturatedTable() == data.getSaturatedTable();
+    }
+}
