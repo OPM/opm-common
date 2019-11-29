@@ -91,6 +91,16 @@ namespace {
         }
     }
 
+    TimeMap::TimeMap(const std::vector<std::time_t>& timeList,
+                     const std::vector<StepData>& firstStepMonths,
+                     const std::vector<StepData>& firstStepYears)
+        : m_timeList(timeList)
+        , m_first_timestep_years(firstStepYears)
+        , m_first_timestep_months(firstStepMonths)
+    {
+    }
+
+
     size_t TimeMap::numTimesteps() const {
         return m_timeList.size() - 1;
     }
@@ -221,6 +231,27 @@ namespace {
                              this->m_timeList.front());
     }
 
+    const std::vector<std::time_t>& TimeMap::timeList() const
+    {
+        return m_timeList;
+    }
+
+    const std::vector<TimeMap::StepData>& TimeMap::firstTimeStepMonths() const
+    {
+        return m_first_timestep_months;
+    }
+
+    const std::vector<TimeMap::StepData>& TimeMap::firstTimeStepYears() const
+    {
+        return m_first_timestep_years;
+    }
+
+    bool TimeMap::operator==(const TimeMap& data) const
+    {
+        return this->timeList() == data.timeList() &&
+               this->firstTimeStepMonths() == data.firstTimeStepMonths() &&
+               this->firstTimeStepYears() == data.firstTimeStepYears();
+    }
 
     bool TimeMap::isTimestepInFirstOfMonthsYearsSequence(size_t timestep, bool years, size_t start_timestep, size_t frequency) const {
         bool timestep_first_of_month_year = false;

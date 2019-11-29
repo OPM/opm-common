@@ -75,6 +75,14 @@ Opm::TimeStampUTC& Opm::TimeStampUTC::operator=(const std::time_t tp)
     return *this;
 }
 
+bool Opm::TimeStampUTC::operator==(const TimeStampUTC& data) const
+{
+    return ymd_ == data.ymd_ &&
+           hour_ == data.hour_ &&
+           minutes_ == data.minutes_ &&
+           seconds_ == data.seconds_ &&
+           usec_ == data.usec_;
+}
 
 Opm::TimeStampUTC::TimeStampUTC(const YMD& ymd)
     : ymd_{ std::move(ymd) }
