@@ -186,7 +186,16 @@ private:
 
 class Runspec {
 public:
+    Runspec() = default;
     explicit Runspec( const Deck& );
+    Runspec(const Phases& act_phases,
+            const Tabdims& tabdims,
+            const EndpointScaling& endScale,
+            const Welldims& wellDims,
+            const WellSegmentDims& wsegDims,
+            const UDQParams& udqparams,
+            const EclHysterConfig& hystPar,
+            const Actdims& actDims);
 
     const UDQParams& udqParams() const noexcept;
     const Phases& phases() const noexcept;
@@ -197,6 +206,8 @@ public:
     int eclPhaseMask( ) const noexcept;
     const EclHysterConfig& hysterPar() const noexcept;
     const Actdims& actdims() const noexcept;
+
+    bool operator==(const Runspec& data) const;
 
 private:
     Phases active_phases;
