@@ -69,12 +69,25 @@ Phases::Phases( bool oil, bool gas, bool wat, bool sol, bool pol, bool energy, b
 
 {}
 
+Phases::Phases(const std::bitset<NUM_PHASES_IN_ENUM>& bset) :
+    bits(bset)
+{
+}
+
+unsigned long Phases::getBits() const {
+    return bits.to_ulong();
+}
+
 bool Phases::active( Phase p ) const noexcept {
     return this->bits[ static_cast< int >( p ) ];
 }
 
 size_t Phases::size() const noexcept {
     return this->bits.count();
+}
+
+bool Phases::operator==(const Phases& data) const {
+    return bits == data.bits;
 }
 
 Welldims::Welldims(const Deck& deck)
