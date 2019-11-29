@@ -51,6 +51,12 @@ namespace Opm {
               required(_required)
         {}
 
+        bool operator==(const RestartKey& key2) const
+        {
+            return key == key2.key &&
+                   dim == key2.dim &&
+                   required == key2.required;
+        }
     };
 
 
@@ -69,6 +75,8 @@ namespace Opm {
 
         RestartValue(data::Solution sol, data::Wells wells_arg);
 
+        RestartValue() {}
+
         bool hasExtra(const std::string& key) const;
         void addExtra(const std::string& key, UnitSystem::measure dimension, std::vector<double> data);
         void addExtra(const std::string& key, std::vector<double> data);
@@ -76,6 +84,13 @@ namespace Opm {
 
         void convertFromSI(const UnitSystem& units);
         void convertToSI(const UnitSystem& units);
+
+        bool operator==(const RestartValue& val2) const
+        {
+          return solution == val2.solution &&
+                 wells == val2.wells &&
+                 extra == val2.extra;
+        }
     };
 
 }

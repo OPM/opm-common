@@ -120,7 +120,6 @@ namespace {
     }
     std::vector<std::size_t> segmentOrder(const Opm::WellSegments& segSet, const std::size_t segIndex) {
         std::vector<std::size_t> ordSegNumber;
-        std::vector<std::size_t> tempOrdVect;
         std::vector<std::size_t> segIndCB;
         // Store "heel" segment since that will not always be at the end of the list
         segIndCB.push_back(segIndex);
@@ -169,17 +168,7 @@ namespace {
                 newSInd = segSet.size();
             }
         }
-
-        if (origBranchNo == 1) {
-            // make the vector of ordered segments - by segment index (zero-based)
-            tempOrdVect.resize(ordSegNumber.size());
-            for (std::size_t ov_ind = 0; ov_ind < ordSegNumber.size(); ov_ind++) {
-                tempOrdVect[ordSegNumber[ov_ind]] = ov_ind;
-            }
-            return tempOrdVect;
-        } else {
-            return ordSegNumber;
-        }
+        return ordSegNumber;
     }
 
 
