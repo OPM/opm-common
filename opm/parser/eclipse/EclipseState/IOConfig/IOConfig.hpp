@@ -151,6 +151,16 @@ namespace Opm {
         IOConfig() = default;
         explicit IOConfig( const Deck& );
         explicit IOConfig( const std::string& input_path );
+        IOConfig(bool write_init, bool write_egrid,
+                 bool unifin, bool unifout,
+                 bool fmtin, bool fmtout,
+                 int firstRestartStep,
+                 const std::string& deck_name,
+                 bool output_enabled,
+                 const std::string& output_dir,
+                 bool no_sim,
+                 const std::string& base_name,
+                 bool ecl_compatible_rst);
 
         void setEclCompatibleRST(bool ecl_rst);
         bool getEclCompatibleRST() const;
@@ -160,6 +170,8 @@ namespace Opm {
         bool getUNIFIN() const;
         bool getFMTIN() const;
         bool getFMTOUT() const;
+        const std::string& getDeckFileName() const;
+        bool getNoSim() const;
         const std::string& getEclipseInputPath() const;
 
         void overrideNOSIM(bool nosim);
@@ -187,6 +199,8 @@ namespace Opm {
         int  getFirstRestartStep() const;
         void overrideRestartWriteInterval(size_t interval);
         void setWriteInitialRestartFile(bool writeInitialRestartFile);
+
+        bool operator==(const IOConfig& data) const;
 
     private:
         bool            m_write_INIT_file = false;
