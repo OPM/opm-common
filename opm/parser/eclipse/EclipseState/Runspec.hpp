@@ -140,7 +140,9 @@ private:
 class EclHysterConfig
 {
 public:
+    EclHysterConfig() = default;
     explicit EclHysterConfig(const Deck& deck);
+    EclHysterConfig(bool active, int pcMod, int krMod);
 
 
     /*!
@@ -168,6 +170,8 @@ public:
      * 0: use the Carlson model for relative permeability hysteresis
      */
     int krHysteresisModel() const;
+
+    bool operator==(const EclHysterConfig& data) const;
 
 private:
     // enable hysteresis at all

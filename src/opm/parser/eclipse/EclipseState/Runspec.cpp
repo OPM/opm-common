@@ -209,6 +209,11 @@ EclHysterConfig::EclHysterConfig(const Opm::Deck& deck)
             throw std::runtime_error("Capillary pressure hysteresis is not supported yet");
         }
     }
+
+EclHysterConfig::EclHysterConfig(bool active, int pcMod, int krMod) :
+    activeHyst(active), pcHystMod(pcMod), krHystMod(krMod)
+    {
+    }
     
 
 bool EclHysterConfig::active() const 
@@ -219,6 +224,12 @@ int EclHysterConfig::pcHysteresisModel() const
         
 int EclHysterConfig::krHysteresisModel() const
     { return krHystMod; }
+
+bool EclHysterConfig::operator==(const EclHysterConfig& data) const {
+    return this->active() == data.active() &&
+           this->pcHysteresisModel() == data.pcHysteresisModel() &&
+           this->krHysteresisModel() == data.krHysteresisModel();
+}
 
 Runspec::Runspec( const Deck& deck ) :
     active_phases( Phases( deck.hasKeyword( "OIL" ),
