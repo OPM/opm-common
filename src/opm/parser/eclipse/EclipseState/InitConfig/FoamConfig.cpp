@@ -161,10 +161,21 @@ FoamConfig::FoamConfig(const Deck& deck)
     }
 }
 
+FoamConfig::FoamConfig(const std::vector<FoamData>& data)
+    : data_(data)
+{
+}
+
 const FoamData&
 FoamConfig::getRecord(std::size_t index) const
 {
     return this->data_.at(index);
+}
+
+const std::vector<FoamData>&
+FoamConfig::records() const
+{
+    return this->data_;
 }
 
 std::size_t
@@ -190,4 +201,11 @@ FoamConfig::end() const
 {
     return this->data_.end();
 }
+
+bool
+FoamConfig::operator==(const FoamConfig& data) const
+{
+    return data_ == data.data_;
+}
+
 } // namespace Opm

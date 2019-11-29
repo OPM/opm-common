@@ -65,8 +65,10 @@ class FoamConfig
 public:
     FoamConfig() = default;
     explicit FoamConfig(const Deck&);
+    FoamConfig(const std::vector<FoamData>& data);
 
     const FoamData& getRecord(std::size_t index) const;
+    const std::vector<FoamData>& records() const;
 
     std::size_t size() const;
     bool empty() const;
@@ -74,6 +76,8 @@ public:
     using const_iterator = std::vector<FoamData>::const_iterator;
     const_iterator begin() const;
     const_iterator end() const;
+
+    bool operator==(const FoamConfig& data) const;
 
 private:
     std::vector<FoamData> data_;
