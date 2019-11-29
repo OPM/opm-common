@@ -33,8 +33,14 @@ class DeckRecord;
 class FoamData
 {
 public:
+    FoamData();
     FoamData(const DeckRecord& FOAMFSC_record, const DeckRecord& FOAMROCK_record);
     explicit FoamData(const DeckRecord& FOAMROCK_record);
+    FoamData(double reference_surfactant_concentration,
+             double exponent,
+             double minimum_surfactant_concentration,
+             bool allow_desorption,
+             double rock_density);
 
     double referenceSurfactantConcentration() const;
     double exponent() const;
@@ -42,6 +48,8 @@ public:
 
     bool allowDesorption() const;
     double rockDensity() const;
+
+    bool operator==(const FoamData& data) const;
 
 private:
     double reference_surfactant_concentration_;

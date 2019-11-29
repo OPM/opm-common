@@ -29,6 +29,14 @@ namespace Opm
 
 // FoamData member functions.
 
+FoamData::FoamData()
+    : FoamData(0.0,
+               ParserKeywords::FOAMFSC::EXPONENT::defaultValue,
+               ParserKeywords::FOAMFSC::MIN_SURF_CONC::defaultValue,
+               false, 1.0)
+{
+}
+
 FoamData::FoamData(const DeckRecord& FOAMFSC_record, const DeckRecord& FOAMROCK_record)
     : reference_surfactant_concentration_(FOAMFSC_record.getItem(0).getSIDouble(0))
     , exponent_(FOAMFSC_record.getItem(1).getSIDouble(0))
@@ -59,6 +67,19 @@ FoamData::FoamData(const DeckRecord& FOAMROCK_record)
     allow_desorption_ = (ads_ind == 1);
 }
 
+FoamData::FoamData(double reference_surfactant_concentration,
+                   double exponent,
+                   double minimum_surfactant_concentration,
+                   bool allow_desorption,
+                   double rock_density)
+    : reference_surfactant_concentration_(reference_surfactant_concentration)
+    , exponent_(exponent)
+    , minimum_surfactant_concentration_(minimum_surfactant_concentration)
+    , allow_desorption_(allow_desorption)
+    , rock_density_(rock_density)
+{
+}
+
 double
 FoamData::referenceSurfactantConcentration() const
 {
@@ -87,6 +108,18 @@ double
 FoamData::rockDensity() const
 {
     return this->rock_density_;
+}
+
+bool
+FoamData::operator==(const FoamData& data) const
+{
+    return reference_surfactant_concentration_ ==
+           data.reference_surfactant_concentration_ &&
+           exponent_ == data.exponent_ &&
+           minimum_surfactant_concentration_ ==
+           data.minimum_surfactant_concentration_ &&
+           allow_desorption_ == data.allow_desorption_ &&
+           rock_density_ == data.rock_density_;
 }
 
 // FoamConfig member functions.
