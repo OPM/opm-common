@@ -23,6 +23,11 @@
 
 namespace Opm {
 
+    JFunc::JFunc()
+        : JFunc(Flag::BOTH, 0.0, 0.0, 0.0, 0.0, Direction::XY)
+    {
+    }
+
     JFunc::JFunc(const Deck& deck)
     {
         const auto& kw = *deck.getKeywordList<ParserKeywords::JFUNC>()[0];
@@ -59,6 +64,17 @@ namespace Opm {
             throw std::invalid_argument("Illegal JFUNC DIRECTION, must be XY, X, Y, or Z.  Was \"" + kw_dir + "\".");
     }
 
+    JFunc::JFunc(Flag flag, double ow, double go,
+                 double alpha, double beta, Direction dir)
+        : m_flag(flag)
+        , m_owSurfaceTension(ow)
+        , m_goSurfaceTension(go)
+        , m_alphaFactor(alpha)
+        , m_betaFactor(beta)
+        , m_direction(dir)
+    {
+    }
+
     double JFunc::alphaFactor() const {
         return m_alphaFactor;
     }
@@ -86,4 +102,14 @@ namespace Opm {
     const JFunc::Direction& JFunc::direction() const {
         return m_direction;
     }
+
+    bool JFunc::operator==(const JFunc& data) const {
+        return this->flag() == data.flag() &&
+               this->owSurfaceTension() == data.owSurfaceTension() &&
+               this->goSurfaceTension() == data.goSurfaceTension() &&
+               this->alphaFactor() == data.alphaFactor() &&
+               this->betaFactor() == data.betaFactor() &&
+               this->direction() == data.direction();
+    }
+
 } // Opm::
