@@ -37,7 +37,14 @@ namespace Opm {
     public:
         SimpleTable() = default;
         SimpleTable(TableSchema, const DeckItem& deckItem);
+        SimpleTable(const TableSchema& schema,
+                    const OrderedMap<std::string, TableColumn>& columns,
+                    bool jfunc);
         explicit SimpleTable( TableSchema );
+
+        const TableSchema& schema() const;
+        const OrderedMap<std::string, TableColumn>& columns() const;
+        bool jfunc() const;
         void addColumns();
         void init(const DeckItem& deckItem );
         size_t numColumns() const;
@@ -62,6 +69,8 @@ namespace Opm {
 
         /// throws std::invalid_argument if jf != m_jfunc
         void assertJFuncPressure(const bool jf) const;
+
+        bool operator==(const SimpleTable& data) const;
 
     protected:
         TableSchema m_schema;

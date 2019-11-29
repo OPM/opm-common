@@ -41,6 +41,30 @@ namespace Opm {
     }
 
 
+    SimpleTable::SimpleTable(const TableSchema& schema,
+                             const OrderedMap<std::string, TableColumn>& columns,
+                             bool jf) :
+        m_schema(schema),
+        m_columns(columns),
+        m_jfunc(jf)
+    {
+    }
+
+
+    const TableSchema& SimpleTable::schema() const {
+        return m_schema;
+    }
+
+
+    const OrderedMap<std::string, TableColumn>& SimpleTable::columns() const {
+        return m_columns;
+    }
+
+
+    bool SimpleTable::jfunc() const {
+        return m_jfunc;
+    }
+
     void SimpleTable::addRow( const std::vector<double>& row) {
         if (row.size() == numColumns()) {
             for (size_t colIndex  = 0; colIndex < numColumns(); colIndex++) {
@@ -156,5 +180,12 @@ namespace Opm {
             std::cerr << "Developer warning: Pressure column is read with JFUNC in deck." << std::endl;
         else
             std::cerr << "Developer warning: Raw values from JFUNC column is read, but JFUNC not provided in deck." << std::endl;
+    }
+
+
+    bool SimpleTable::operator==(const SimpleTable& data) const {
+        return this->schema() == data.schema() &&
+               this->columns() == data.columns() &&
+               this->jfunc() == data.jfunc();
     }
 }
