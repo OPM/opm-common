@@ -173,6 +173,10 @@ COPY
   PERMX PERMY /
  /
 
+
+PORO
+   500*0.15 /
+
 RPTGRID
   -- Report Levels for Grid Section Data
   --

@@ -56,6 +56,8 @@ MULTFLT
   'F1' 0.50 /
   'F2' 0.50 /
 /
+PORO
+   1000*0.15/
 EDIT
 MULTFLT /
   'F2' 0.25 /
@@ -125,6 +127,8 @@ MULTFLT
   'F1' 0.50 /
   'F2' 0.50 /
 /
+PORO
+   1000*0.15/
 EDIT
 MULTFLT /
   'F2' 0.25 /
