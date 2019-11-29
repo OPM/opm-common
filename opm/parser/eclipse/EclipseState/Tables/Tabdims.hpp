@@ -63,6 +63,12 @@ namespace Opm {
             }
         }
 
+        Tabdims(size_t ntsfun, size_t ntpvt, size_t nssfun, size_t nppvt,
+                size_t ntfip, size_t nrpvt) :
+            m_ntsfun(ntsfun), m_ntpvt(ntpvt), m_nssfun(nssfun),
+            m_nppvt(nppvt), m_ntfip(ntfip), m_nrpvt(nrpvt)
+        { }
+
 
         size_t getNumSatTables() const {
             return m_ntsfun;
@@ -86,6 +92,15 @@ namespace Opm {
 
         size_t getNumRSNodes() const {
             return m_nrpvt;
+        }
+
+        bool operator==(const Tabdims& data) const {
+            return this->getNumSatTables() == data.getNumSatTables() &&
+                   this->getNumPVTTables() == data.getNumPVTTables() &&
+                   this->getNumSatNodes() == data.getNumSatNodes() &&
+                   this->getNumPressureNodes() == data.getNumPressureNodes() &&
+                   this->getNumFIPRegions() == data.getNumFIPRegions() &&
+                   this->getNumRSNodes() == data.getNumRSNodes();
         }
 
     private:
