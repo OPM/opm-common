@@ -22,6 +22,11 @@
 
 namespace Opm {
 
+    TableSchema::TableSchema(const OrderedMap<std::string, ColumnSchema>& columns) :
+        m_columns(columns)
+    {
+    }
+
     void TableSchema::addColumn( ColumnSchema column ) {
         m_columns.insert( std::make_pair( column.name(), column ));
     }
@@ -42,4 +47,11 @@ namespace Opm {
         return m_columns.count( name ) > 0;
     }
 
+    const OrderedMap<std::string, ColumnSchema>& TableSchema::getColumns() const {
+        return m_columns;
+    }
+
+    bool TableSchema::operator==(const TableSchema& data) const {
+        return this->getColumns() == data.getColumns();
+    }
 }
