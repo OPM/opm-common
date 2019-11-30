@@ -523,6 +523,7 @@ BOOST_AUTO_TEST_CASE(TestIOConfigCreationWithSolutionRPTRST) {
                           "\n"
                           "DIMENS\n"
                           " 10 10 10 /\n"
+                          "GRID\n"
                           "DX\n"
                           "1000*0.25 /\n"
                           "DY\n"
