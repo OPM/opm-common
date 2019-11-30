@@ -96,6 +96,7 @@ std::vector<std::string> FieldPropsManager::keys() const {
 }
 
 
+
 template bool FieldPropsManager::supported<int>(const std::string&);
 template bool FieldPropsManager::supported<double>(const std::string&);
 

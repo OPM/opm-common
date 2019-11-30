@@ -67,15 +67,6 @@ namespace Opm {
     }
 
 
-namespace {
-
-std::vector<int> unique(const std::vector<int> data) {
-    std::set<int> set_data(data.begin(), data.end());
-    return { set_data.begin(), set_data.end() };
-}
-
-}
-
 
     /*****************************************************************/
     /*
@@ -106,18 +97,12 @@ std::vector<int> unique(const std::vector<int> data) {
       Then it will go through the different regions and looking for
       interface with the wanted region values.
     */
-     MULTREGTScanner::MULTREGTScanner(const GridDims& grid,
-                                      const FieldPropsManager& fp_arg,
-                                      const Eclipse3DProperties& e3DProps,
-                                      const std::vector< const DeckKeyword* >& keywords) :
-         nx(grid.getNX()),
-         ny(grid.getNY()),
-         nz(grid.getNZ()),
-         fp(fp_arg),
-         m_e3DProps(e3DProps) {
+    MULTREGTScanner::MULTREGTScanner(const Eclipse3DProperties& e3DProps,
+                                     const std::vector< const DeckKeyword* >& keywords) :
+                m_e3DProps(e3DProps) {
 
         for (size_t idx = 0; idx < keywords.size(); idx++)
-            this->addKeyword(*keywords[idx] , this->fp.default_region());
+            this->addKeyword(e3DProps, *keywords[idx] , e3DProps.getDefaultRegionKeyword());
 
         MULTREGTSearchMap searchPairs;
         for (std::vector<MULTREGTRecord>::const_iterator record = m_records.begin(); record != m_records.end(); ++record) {
@@ -153,7 +138,7 @@ std::vector<int> unique(const std::vector<int> data) {
     }
 
 
-    void MULTREGTScanner::assertKeywordSupported( const DeckKeyword& deckKeyword) {
+    void MULTREGTScanner::assertKeywordSupported( const DeckKeyword& deckKeyword, const std::string& /* defaultRegion */) {
         for (const auto& deckRecord : deckKeyword) {
             const auto& srcItem = deckRecord.getItem("SRC_REGION");
             const auto& targetItem = deckRecord.getItem("TARGET_REGION");
@@ -171,8 +156,9 @@ std::vector<int> unique(const std::vector<int> data) {
 
 
 
-    void MULTREGTScanner::addKeyword( const DeckKeyword& deckKeyword , const std::string& defaultRegion) {
-        assertKeywordSupported( deckKeyword );
+    void MULTREGTScanner::addKeyword( const Eclipse3DProperties& props, const DeckKeyword& deckKeyword , const std::string& defaultRegion) {
+        assertKeywordSupported( deckKeyword , defaultRegion );
+
         for (const auto& deckRecord : deckKeyword) {
             std::vector<int> src_regions;
             std::vector<int> target_regions;
@@ -193,20 +179,12 @@ std::vector<int> unique(const std::vector<int> data) {
                 region_name = MULTREGT::RegionNameFromDeckValue( regionItem.get<std::string>(0) );
 
             if (srcItem.defaultApplied(0) || srcItem.get<int>(0) < 0)
-#ifdef ENABLE_3DPROPS_TESTING
-                src_regions = unique(this->fp.get<int>(region_name));
-#else
-                src_regions = unique(this->m_e3DProps.getIntGridProperty( region_name ).getData());
-#endif
+                src_regions = props.getRegions( region_name );
             else
                 src_regions.push_back(srcItem.get<int>(0));
 
             if (targetItem.defaultApplied(0) || targetItem.get<int>(0) < 0)
-#ifdef ENABLE_3DPROPS_TESTING
-                target_regions = unique(fp.get<int>(region_name));
-#else
-                target_regions = unique(this->m_e3DProps.getIntGridProperty(region_name).getData());
-#endif
+                target_regions = props.getRegions(region_name);
             else
                 target_regions.push_back(targetItem.get<int>(0));
 
@@ -244,12 +222,9 @@ std::vector<int> unique(const std::vector<int> data) {
     double MULTREGTScanner::getRegionMultiplier(size_t globalIndex1 , size_t globalIndex2, FaceDir::DirEnum faceDir) const {
 
         for (auto iter = m_searchMap.begin(); iter != m_searchMap.end(); iter++) {
-#ifdef ENABLE_3DPROPS_TESTING
-            const auto& region_data = this->fp.get_global<int>( iter->first );
-#else
-            const auto& region_data = m_e3DProps.getIntGridProperty( (*iter).first ).getData();
-#endif
+            const Opm::GridProperty<int>& region = m_e3DProps.getIntGridProperty( (*iter).first );
             const MULTREGTSearchMap& map = (*iter).second;
+            const auto& region_data = region.getData();
 
             int regionId1 = region_data[globalIndex1];
             int regionId2 = region_data[globalIndex2];
@@ -263,10 +238,10 @@ std::vector<int> unique(const std::vector<int> data) {
             const MULTREGTRecord* record = map.at(pair);
 
             bool applyMultiplier = true;
-            int i1 = globalIndex1 % this->nx;
-            int i2 = globalIndex2 % this->nx;
-            int j1 = globalIndex1 / this->nx % this->nz;
-            int j2 = globalIndex2 / this->nx % this->nz;
+            int i1 = globalIndex1 % region.getNX();
+            int i2 = globalIndex2 % region.getNX();
+            int j1 = globalIndex1 / region.getNX() % region.getNY();
+            int j2 = globalIndex2 / region.getNX() % region.getNY();
 
             if (record->nnc_behaviour == MULTREGT::NNC){
                 applyMultiplier = true;
