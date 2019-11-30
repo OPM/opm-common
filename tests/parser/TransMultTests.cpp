@@ -29,6 +29,7 @@
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/TransMult.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/TransMult.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
@@ -36,7 +37,8 @@
 
 BOOST_AUTO_TEST_CASE(Empty) {
     Opm::Eclipse3DProperties props;
-    Opm::TransMult transMult(Opm::GridDims(10,10,10) ,{} , props);
+    Opm::FieldPropsManager fp;
+    Opm::TransMult transMult(Opm::GridDims(10,10,10) ,{} , fp, props);
 
     BOOST_CHECK_THROW( transMult.getMultiplier(12,10,10 , Opm::FaceDir::XPlus) , std::invalid_argument );
     BOOST_CHECK_THROW( transMult.getMultiplier(1000 , Opm::FaceDir::XPlus) , std::invalid_argument );
@@ -70,7 +72,8 @@ MULTZ
     Opm::TableManager tables(deck);
     Opm::EclipseGrid grid(5,5,5);
     Opm::Eclipse3DProperties props(deck, tables, grid);
-    Opm::TransMult transMult(grid, deck, props);
+    Opm::FieldPropsManager fp(deck, grid, tables);
+    Opm::TransMult transMult(grid, deck, fp, props);
 
     transMult.applyMULT(props.getDoubleGridProperty("MULTZ"), Opm::FaceDir::ZPlus);
     BOOST_CHECK_EQUAL( transMult.getMultiplier(0,0,0 , Opm::FaceDir::ZPlus) , 4.0 );

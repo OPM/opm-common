@@ -1872,7 +1872,11 @@ namespace {
         }
     }
 
-    void Schedule::handleCOMPDAT( const DeckKeyword& keyword, size_t currentStep, const EclipseGrid& grid, const FieldPropsManager& fp, const Eclipse3DProperties& eclipseProperties, const ParseContext& parseContext, ErrorGuard& errors) {
+#ifdef ENABLE_3DPROPS_TESTING
+    void Schedule::handleCOMPDAT( const DeckKeyword& keyword, size_t currentStep, const EclipseGrid& grid, const FieldPropsManager& fp, const Eclipse3DProperties&, const ParseContext& parseContext, ErrorGuard& errors) {
+#else
+    void Schedule::handleCOMPDAT( const DeckKeyword& keyword, size_t currentStep, const EclipseGrid& grid, const FieldPropsManager& , const Eclipse3DProperties& eclipseProperties, const ParseContext& parseContext, ErrorGuard& errors) {
+#endif
         for (const auto& record : keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             auto wellnames = this->wellNames(wellNamePattern, currentStep);
