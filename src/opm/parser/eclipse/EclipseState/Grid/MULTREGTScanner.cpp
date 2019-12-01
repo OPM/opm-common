@@ -121,7 +121,8 @@ std::vector<int> unique(const std::vector<int> data) {
 
         MULTREGTSearchMap searchPairs;
         for (std::vector<MULTREGTRecord>::const_iterator record = m_records.begin(); record != m_records.end(); ++record) {
-            if (e3DProps.hasDeckIntGridProperty( record->region_name)) {
+            const std::string& region_name = record->region_name;
+            if (e3DProps.hasDeckIntGridProperty( region_name)) {
                 int srcRegion    = record->src_value;
                 int targetRegion = record->target_value;
 
@@ -137,8 +138,16 @@ std::vector<int> unique(const std::vector<int> data) {
             else
                 throw std::logic_error(
                                 "MULTREGT record is based on region: "
-                                +  record->region_name
+                                +  region_name
                                 + " which is not in the deck");
+
+#ifdef ENABLE_3DPROPS_TESTING
+            if (this->regions.count(region_name) == 0)
+                this->regions[region_name] = this->fp.get_global<int>(region_name);
+#else
+            if (this->regions.count(region_name) == 0)
+                this->regions[region_name] = this->m_3DProps.getIntGridProperty(region_name).getData();
+#endif
         }
 
         for (auto iter = searchPairs.begin(); iter != searchPairs.end(); ++iter) {
@@ -244,12 +253,7 @@ std::vector<int> unique(const std::vector<int> data) {
     double MULTREGTScanner::getRegionMultiplier(size_t globalIndex1 , size_t globalIndex2, FaceDir::DirEnum faceDir) const {
 
         for (auto iter = m_searchMap.begin(); iter != m_searchMap.end(); iter++) {
-#ifdef ENABLE_3DPROPS_TESTING
-            // const auto& region_data = this->fp.get_global<int>( iter->first );
-            const auto& region_data = m_e3DProps.getIntGridProperty( (*iter).first ).getData();
-#else
-            const auto& region_data = m_e3DProps.getIntGridProperty( (*iter).first ).getData();
-#endif
+            const auto& region_data = this->regions.at( iter->first );
             const MULTREGTSearchMap& map = (*iter).second;
 
             int regionId1 = region_data[globalIndex1];

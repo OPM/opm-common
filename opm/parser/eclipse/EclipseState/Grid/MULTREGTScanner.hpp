@@ -82,6 +82,7 @@ namespace Opm {
         const Eclipse3DProperties& m_e3DProps;
         std::vector< MULTREGTRecord > m_records;
         std::map<std::string , MULTREGTSearchMap> m_searchMap;
+        std::map<std::string, std::vector<int>> regions;
     };
 
 }
