@@ -245,7 +245,8 @@ std::vector<int> unique(const std::vector<int> data) {
 
         for (auto iter = m_searchMap.begin(); iter != m_searchMap.end(); iter++) {
 #ifdef ENABLE_3DPROPS_TESTING
-            const auto& region_data = this->fp.get_global<int>( iter->first );
+            // const auto& region_data = this->fp.get_global<int>( iter->first );
+            const auto& region_data = m_e3DProps.getIntGridProperty( (*iter).first ).getData();
 #else
             const auto& region_data = m_e3DProps.getIntGridProperty( (*iter).first ).getData();
 #endif
