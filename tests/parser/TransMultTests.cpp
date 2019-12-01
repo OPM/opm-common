@@ -37,8 +37,9 @@
 
 BOOST_AUTO_TEST_CASE(Empty) {
     Opm::Eclipse3DProperties props;
-    Opm::FieldPropsManager fp;
-    Opm::TransMult transMult(Opm::GridDims(10,10,10) ,{} , fp, props);
+    Opm::EclipseGrid grid(10,10,10);
+    Opm::FieldPropsManager fp(Opm::Deck(), grid, Opm::TableManager());
+    Opm::TransMult transMult(grid ,{} , fp, props);
 
     BOOST_CHECK_THROW( transMult.getMultiplier(12,10,10 , Opm::FaceDir::XPlus) , std::invalid_argument );
     BOOST_CHECK_THROW( transMult.getMultiplier(1000 , Opm::FaceDir::XPlus) , std::invalid_argument );
