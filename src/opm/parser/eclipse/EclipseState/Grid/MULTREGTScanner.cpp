@@ -116,16 +116,22 @@ std::vector<int> unique(const std::vector<int> data) {
          fp(fp_arg),
          m_e3DProps(e3DProps) {
 
+#ifdef ENABLE_3DPROPS_TESTING
+         this->default_region = this->fp.default_region();
+#else
+         this->default_region = this->m_e3DProps.getDefaultRegionKeyword();
+#endif
+
         for (size_t idx = 0; idx < keywords.size(); idx++)
-            this->addKeyword(*keywords[idx] , this->fp.default_region());
+            this->addKeyword(*keywords[idx] , this->default_region);
 
         MULTREGTSearchMap searchPairs;
         for (std::vector<MULTREGTRecord>::const_iterator record = m_records.begin(); record != m_records.end(); ++record) {
             const std::string& region_name = record->region_name;
 #ifdef ENABLE_3DPROPS_TESTING
-            if (fp_arg.has<int>( region_name)) {
+            if (this->fp.has<int>( region_name)) {
 #else
-            if (e3DProps.hasDeckIntGridProperty( region_name)) {
+            if (this->m_e3DProps.hasDeckIntGridProperty( region_name)) {
 #endif
                 int srcRegion    = record->src_value;
                 int targetRegion = record->target_value;
