@@ -200,7 +200,6 @@ private:
 
     const UnitSystem unit_system;
     const EclipseGrid* grid;   // A reseatable pointer to const.
-    const TableManager& tables;
     std::size_t active_size;
     std::vector<int> actnum;
     const std::string m_default_region;

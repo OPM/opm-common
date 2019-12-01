@@ -268,10 +268,9 @@ void handle_box_keyword(const DeckKeyword& deckKeyword,  Box& box) {
 
 
 
-FieldProps::FieldProps(const Deck& deck, const EclipseGrid& grid_arg, const TableManager& table_arg) :
+FieldProps::FieldProps(const Deck& deck, const EclipseGrid& grid_arg, const TableManager& ) :
     unit_system(deck.getActiveUnitSystem()),
     grid(std::addressof(grid_arg)),
-    tables(table_arg),
     active_size(grid_arg.getNumActive()),
     actnum(grid_arg.getACTNUM()),
     m_default_region(default_region_keyword(deck))
