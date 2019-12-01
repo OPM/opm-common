@@ -122,7 +122,11 @@ std::vector<int> unique(const std::vector<int> data) {
         MULTREGTSearchMap searchPairs;
         for (std::vector<MULTREGTRecord>::const_iterator record = m_records.begin(); record != m_records.end(); ++record) {
             const std::string& region_name = record->region_name;
+#ifdef ENABLE_3DPROPS_TESTING
+            if (fp_arg.has<int>( region_name)) {
+#else
             if (e3DProps.hasDeckIntGridProperty( region_name)) {
+#endif
                 int srcRegion    = record->src_value;
                 int targetRegion = record->target_value;
 
@@ -146,7 +150,7 @@ std::vector<int> unique(const std::vector<int> data) {
                 this->regions[region_name] = this->fp.get_global<int>(region_name);
 #else
             if (this->regions.count(region_name) == 0)
-                this->regions[region_name] = this->m_3DProps.getIntGridProperty(region_name).getData();
+                this->regions[region_name] = this->m_e3DProps.getIntGridProperty(region_name).getData();
 #endif
         }
 
