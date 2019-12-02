@@ -140,6 +140,14 @@ namespace Opm{
 
     // SkprwatTable
 
+    SkprwatTable::SkprwatTable(const std::vector<double>& throughputs,
+                               const std::vector<double>& velocities,
+                               int tableNumber,
+                               const std::vector<std::vector<double>>& data)
+        : PolyInjTable(throughputs, velocities, tableNumber, data)
+    {
+    }
+
     SkprwatTable::SkprwatTable(const Opm::DeckKeyword &table)
     {
         using namespace ParserKeywords;
@@ -183,6 +191,10 @@ namespace Opm{
         return getTableData();
     }
 
+    bool SkprwatTable::operator==(const SkprwatTable& data) const
+    {
+        return static_cast<const PolyInjTable&>(*this) == static_cast<const PolyInjTable&>(data);
+    }
 
     // SkprpolyTable
 
