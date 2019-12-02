@@ -59,6 +59,12 @@ struct ROCKRecord {
 
     double reference_pressure;
     double compressibility;
+
+    bool operator==(const ROCKRecord& data) const {
+        return reference_pressure == data.reference_pressure &&
+               compressibility == data.compressibility;
+    }
+
 };
 
 struct RockTable : public FlatTable< ROCKRecord > {
