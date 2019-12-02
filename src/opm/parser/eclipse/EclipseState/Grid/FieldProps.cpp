@@ -154,30 +154,6 @@ void assign_deck(const DeckKeyword& keyword, FieldProps::FieldData<T>& field_dat
     }
 }
 
-template <typename T>
-void distribute_toplayer(const EclipseGrid& grid, FieldProps::FieldData<T>& field_data, const std::vector<T>& deck_data, const Box& box) {
-    const std::size_t layer_size = grid.getNX() * grid.getNY();
-    FieldProps::FieldData<double> toplayer(grid.getNX() * grid.getNY());
-    for (const auto& cell_index : box.index_list()) {
-        if (cell_index.global_index < layer_size) {
-            toplayer.data[cell_index.global_index] = deck_data[cell_index.data_index];
-            toplayer.value_status[cell_index.global_index] = value::status::deck_value;
-        }
-    }
-
-    for (std::size_t active_index = 0; active_index < field_data.size(); active_index++) {
-        if (field_data.value_status[active_index] == value::status::uninitialized) {
-            std::size_t global_index = grid.getGlobalIndex(active_index);
-            const auto ijk = grid.getIJK(global_index);
-            std::size_t layer_index = ijk[0] + ijk[1] * grid.getNX();
-            if (toplayer.value_status[layer_index] == value::status::deck_value) {
-                field_data.data[active_index] = toplayer.data[layer_index];
-                field_data.value_status[active_index] = value::status::valid_default;
-            }
-        }
-    }
-}
-
 
 template <typename T>
 void assign_scalar(FieldProps::FieldData<T>& field_data, T value, const std::vector<Box::cell_index>& index_list) {
@@ -268,33 +244,39 @@ void handle_box_keyword(const DeckKeyword& deckKeyword,  Box& box) {
 
 
 
-FieldProps::FieldProps(const Deck& deck, const EclipseGrid& grid_arg, const TableManager& ) :
+FieldProps::FieldProps(const Deck& deck, const EclipseGrid& grid, const TableManager& ) :
     unit_system(deck.getActiveUnitSystem()),
-    grid(std::addressof(grid_arg)),
-    active_size(grid_arg.getNumActive()),
-    actnum(grid_arg.getACTNUM()),
+    active_size(grid.getNumActive()),
+    global_size(grid.getCartesianSize()),
+    nx(grid.getNX()),
+    ny(grid.getNY()),
+    nz(grid.getNZ()),
+    actnum(grid.getACTNUM()),
     m_default_region(default_region_keyword(deck))
 {
     if (Section::hasGRID(deck))
-        this->scanGRIDSection(GRIDSection(deck));
+        this->scanGRIDSection(GRIDSection(deck), grid);
 
     if (Section::hasEDIT(deck))
-        this->scanEDITSection(EDITSection(deck));
+        this->scanEDITSection(EDITSection(deck), grid);
 
     if (Section::hasPROPS(deck))
-        this->scanPROPSSection(PROPSSection(deck));
+        this->scanPROPSSection(PROPSSection(deck), grid);
 
     if (Section::hasREGIONS(deck))
-        this->scanREGIONSSection(REGIONSSection(deck));
+        this->scanREGIONSSection(REGIONSSection(deck), grid);
 
     if (Section::hasSOLUTION(deck))
-        this->scanSOLUTIONSection(SOLUTIONSection(deck));
+        this->scanSOLUTIONSection(SOLUTIONSection(deck), grid);
 }
 
 
 
-void FieldProps::reset_grid(const EclipseGrid& grid_arg) {
-    const auto& new_actnum = grid_arg.getACTNUM();
+void FieldProps::reset_grid(const EclipseGrid& grid) {
+    if (this->global_size != grid.getCartesianSize())
+        throw std::logic_error("reset_grid() must be called with the same number of global cells");
+
+    const auto& new_actnum = grid.getACTNUM();
     if (new_actnum == this->actnum)
         return;
 
@@ -317,9 +299,41 @@ void FieldProps::reset_grid(const EclipseGrid& grid_arg) {
     for (auto& data : this->int_data)
         data.second.compress(active_map);
 
-    this->grid = std::addressof(grid_arg);
     this->actnum = new_actnum;
+    this->active_size = grid.getNumActive();
 }
+
+
+void FieldProps::distribute_toplayer(FieldProps::FieldData<double>& field_data, const std::vector<double>& deck_data, const Box& box) {
+    const std::size_t layer_size = this->nx * this->ny;
+    FieldProps::FieldData<double> toplayer(layer_size);
+    for (const auto& cell_index : box.index_list()) {
+        if (cell_index.global_index < layer_size) {
+            toplayer.data[cell_index.global_index] = deck_data[cell_index.data_index];
+            toplayer.value_status[cell_index.global_index] = value::status::deck_value;
+        }
+    }
+
+    std::size_t active_index = 0;
+    for (std::size_t k = 0; k < this->nz; k++) {
+        for (std::size_t j = 0; j < this->ny; j++) {
+            for (std::size_t i = 0; i < this->nx; i++) {
+                std::size_t g = i + j*this->nx + k*this->nx*this->ny;
+                if (this->actnum[g]) {
+                    if (field_data.value_status[active_index] == value::status::uninitialized) {
+                        std::size_t layer_index = i + j*this->nx;
+                        if (toplayer.value_status[layer_index] == value::status::deck_value) {
+                            field_data.data[active_index] = toplayer.data[layer_index];
+                            field_data.value_status[active_index] = value::status::valid_default;
+                        }
+                    }
+                    active_index += 1;
+                }
+            }
+        }
+    }
+}
+
 
 template <>
 bool FieldProps::supported<double>(const std::string& keyword) {
@@ -359,7 +373,7 @@ FieldProps::FieldData<double>& FieldProps::get(const std::string& keyword) {
         return iter->second;
 
     if (FieldProps::supported<double>(keyword)) {
-        this->double_data[keyword] = FieldData<double>(this->grid->getNumActive());
+        this->double_data[keyword] = FieldData<double>(this->active_size);
         auto init_iter = keywords::double_scalar_init.find(keyword);
         if (init_iter != keywords::double_scalar_init.end())
             this->double_data[keyword].default_assign(init_iter->second);
@@ -378,7 +392,7 @@ FieldProps::FieldData<int>& FieldProps::get(const std::string& keyword) {
         return iter->second;
 
     if (FieldProps::supported<int>(keyword)) {
-        this->int_data[keyword] = FieldData<int>(this->grid->getNumActive());
+        this->int_data[keyword] = FieldData<int>(this->active_size);
         auto init_iter = keywords::int_scalar_init.find(keyword);
         if (init_iter != keywords::int_scalar_init.end())
             this->int_data[keyword].default_assign(init_iter->second);
@@ -484,7 +498,7 @@ void FieldProps::handle_grid_section_double_keyword(const DeckKeyword& keyword, 
         return;
 
     if (keywords::GRID::top_keywords.count(keyword.name()) == 1)
-        distribute_toplayer(*this->grid, field_data, deck_data, box);
+        this->distribute_toplayer(field_data, deck_data, box);
 }
 
 
@@ -623,8 +637,8 @@ void FieldProps::handle_keyword(const DeckKeyword& keyword, Box& box) {
 /**********************************************************************/
 
 
-void FieldProps::scanGRIDSection(const GRIDSection& grid_section) {
-    Box box(*this->grid);
+void FieldProps::scanGRIDSection(const GRIDSection& grid_section, const EclipseGrid& grid) {
+    Box box(grid);
 
     for (const auto& keyword : grid_section) {
         const std::string& name = keyword.name();
@@ -643,8 +657,8 @@ void FieldProps::scanGRIDSection(const GRIDSection& grid_section) {
     }
 }
 
-void FieldProps::scanEDITSection(const EDITSection& edit_section) {
-    Box box(*this->grid);
+void FieldProps::scanEDITSection(const EDITSection& edit_section, const EclipseGrid& grid) {
+    Box box(grid);
     for (const auto& keyword : edit_section) {
         const std::string& name = keyword.name();
         if (keywords::EDIT::double_keywords.count(name) == 1) {
@@ -662,8 +676,8 @@ void FieldProps::scanEDITSection(const EDITSection& edit_section) {
 }
 
 
-void FieldProps::scanPROPSSection(const PROPSSection& props_section) {
-    Box box(*this->grid);
+void FieldProps::scanPROPSSection(const PROPSSection& props_section, const EclipseGrid& grid) {
+    Box box(grid);
 
     for (const auto& keyword : props_section) {
         const std::string& name = keyword.name();
@@ -682,8 +696,8 @@ void FieldProps::scanPROPSSection(const PROPSSection& props_section) {
 }
 
 
-void FieldProps::scanREGIONSSection(const REGIONSSection& regions_section) {
-    Box box(*this->grid);
+void FieldProps::scanREGIONSSection(const REGIONSSection& regions_section, const EclipseGrid& grid) {
+    Box box(grid);
 
     for (const auto& keyword : regions_section) {
         const std::string& name = keyword.name();
@@ -697,8 +711,8 @@ void FieldProps::scanREGIONSSection(const REGIONSSection& regions_section) {
 }
 
 
-void FieldProps::scanSOLUTIONSection(const SOLUTIONSection& solution_section) {
-    Box box(*this->grid);
+void FieldProps::scanSOLUTIONSection(const SOLUTIONSection& solution_section, const EclipseGrid& grid) {
+    Box box(grid);
     for (const auto& keyword : solution_section) {
         const std::string& name = keyword.name();
         if (keywords::SOLUTION::double_keywords.count(name) == 1) {
@@ -710,8 +724,8 @@ void FieldProps::scanSOLUTIONSection(const SOLUTIONSection& solution_section) {
     }
 }
 
-void FieldProps::scanSCHEDULESection(const SCHEDULESection& schedule_section) {
-    Box box(*this->grid);
+void FieldProps::scanSCHEDULESection(const SCHEDULESection& schedule_section, const EclipseGrid& grid) {
+    Box box(grid);
     for (const auto& keyword : schedule_section) {
         const std::string& name = keyword.name();
         if (keywords::SCHEDULE::double_keywords.count(name) == 1) {

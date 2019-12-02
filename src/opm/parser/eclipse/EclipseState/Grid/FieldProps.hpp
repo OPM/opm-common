@@ -150,10 +150,10 @@ public:
 
     template <typename T>
     std::vector<T> global_copy(const std::vector<T>& data) const {
-        std::vector<T> global_data(this->grid->getCartesianSize());
+        std::vector<T> global_data(this->global_size);
         std::size_t i = 0;
-        for (std::size_t g = 0; g < this->grid->getCartesianSize(); g++) {
-            if (this->grid->cellActive(g)) {
+        for (std::size_t g = 0; g < this->global_size; g++) {
+            if (this->actnum[g]) {
                 global_data[g] = data[i];
                 i++;
             }
@@ -175,12 +175,12 @@ public:
 
 
 private:
-    void scanGRIDSection(const GRIDSection& grid_section);
-    void scanEDITSection(const EDITSection& edit_section);
-    void scanPROPSSection(const PROPSSection& props_section);
-    void scanREGIONSSection(const REGIONSSection& regions_section);
-    void scanSOLUTIONSection(const SOLUTIONSection& solution_section);
-    void scanSCHEDULESection(const SCHEDULESection& schedule_section);
+    void scanGRIDSection(const GRIDSection& grid_section, const EclipseGrid& grid);
+    void scanEDITSection(const EDITSection& edit_section, const EclipseGrid& grid);
+    void scanPROPSSection(const PROPSSection& props_section, const EclipseGrid& grid);
+    void scanREGIONSSection(const REGIONSSection& regions_section, const EclipseGrid& grid);
+    void scanSOLUTIONSection(const SOLUTIONSection& solution_section, const EclipseGrid& grid);
+    void scanSCHEDULESection(const SCHEDULESection& schedule_section, const EclipseGrid& grid);
     double getSIValue(const std::string& keyword, double raw_value) const;
     template <typename T>
     void erase(const std::string& keyword);
@@ -192,6 +192,7 @@ private:
     void handle_operation(const DeckKeyword& keyword, Box box);
     void handle_region_operation(const DeckKeyword& keyword);
     void handle_COPY(const DeckKeyword& keyword, Box box, bool region);
+    void distribute_toplayer(FieldProps::FieldData<double>& field_data, const std::vector<double>& deck_data, const Box& box);
 
     void handle_keyword(const DeckKeyword& keyword, Box& box);
     void handle_grid_section_double_keyword(const DeckKeyword& keyword, const Box& box);
@@ -199,8 +200,9 @@ private:
     void handle_int_keyword(const DeckKeyword& keyword, const Box& box);
 
     const UnitSystem unit_system;
-    const EclipseGrid* grid;   // A reseatable pointer to const.
     std::size_t active_size;
+    std::size_t global_size;
+    std::size_t nx,ny,nz;
     std::vector<int> actnum;
     const std::string m_default_region;
     std::unordered_map<std::string, FieldData<int>> int_data;
