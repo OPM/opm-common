@@ -15,6 +15,8 @@
   You should have received a copy of the GNU General Public License along with
   OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include <functional>
+
 #include <opm/parser/eclipse/Parser/ParserKeywords/A.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/B.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/C.hpp>
@@ -41,16 +43,19 @@ static const std::map<std::string, std::string> unit_string = {{"PORO", "1"},
                                                                {"PERMX", "Permeability"},
                                                                {"PERMY", "Permeability"},
                                                                {"PERMZ", "Permeability"},
+                                                               {"PORV", "ReservoirVolume"},
                                                                {"NTG", "1"},
                                                                {"SWATINIT", "1"}};
 
 static const std::set<std::string> oper_keywords = {"ADD", "EQUALS", "MAXVALUE", "MINVALUE", "MULTIPLY"};
 static const std::set<std::string> region_oper_keywords = {"ADDREG", "EQUALREG"};
 static const std::set<std::string> box_keywords = {"BOX", "ENDBOX"};
-static const std::map<std::string, double> double_scalar_init = {{"NTG", 1}};
+static const std::map<std::string, double> double_scalar_init = {{"NTG", 1},
+                                                                 {"MULTPV", 1}};
 
 static const std::map<std::string, int> int_scalar_init = {{"SATNUM", 1},
-                                                           {"FIPNUM", 1}};   // All FIPxxx keywords should (probably) be added with init==1 
+                                                           {"FIPNUM", 1},   // All FIPxxx keywords should (probably) be added with init==1 
+                                                           {"ACTNUM", 1}};
 
 /*
 bool isFipxxx< int >(const std::string& keyword) {
@@ -65,12 +70,12 @@ bool isFipxxx< int >(const std::string& keyword) {
 
 namespace GRID {
 static const std::set<std::string> double_keywords = {"MULTPV", "NTG", "PORO", "PERMX", "PERMY", "PERMZ", "THCONR"};
-static const std::set<std::string> int_keywords    = {"FLUXNUM", "MULTNUM", "OPERNUM", "ROCKNUM"};
+static const std::set<std::string> int_keywords    = {"ACTNUM", "FLUXNUM", "MULTNUM", "OPERNUM", "ROCKNUM"};
 static const std::set<std::string> top_keywords    = {"PORO", "PERMX", "PERMY", "PERMZ"};
 }
 
 namespace EDIT {
-static const std::set<std::string> double_keywords = {"MULTPV"};
+static const std::set<std::string> double_keywords = {"MULTPV", "PORV"};
 static const std::set<std::string> int_keywords = {};
 }
 
@@ -240,6 +245,14 @@ void handle_box_keyword(const DeckKeyword& deckKeyword,  Box& box) {
         box.reset();
 }
 
+
+std::vector<double> extract_cell_volume(const EclipseGrid& grid) {
+    std::vector<double> cell_volume(grid.getNumActive());
+    for (std::size_t active_index = 0; active_index < grid.getNumActive(); active_index++)
+        cell_volume[active_index] = grid.getCellVolume( grid.getGlobalIndex(active_index));
+    return cell_volume;
+}
+
 }
 
 
@@ -251,7 +264,8 @@ FieldProps::FieldProps(const Deck& deck, const EclipseGrid& grid, const TableMan
     nx(grid.getNX()),
     ny(grid.getNY()),
     nz(grid.getNZ()),
-    actnum(grid.getACTNUM()),
+    m_actnum(grid.getACTNUM()),
+    cell_volume(extract_cell_volume(grid)),
     m_default_region(default_region_keyword(deck))
 {
     if (Section::hasGRID(deck))
@@ -277,13 +291,13 @@ void FieldProps::reset_grid(const EclipseGrid& grid) {
         throw std::logic_error("reset_grid() must be called with the same number of global cells");
 
     const auto& new_actnum = grid.getACTNUM();
-    if (new_actnum == this->actnum)
+    if (new_actnum == this->m_actnum)
         return;
 
     std::vector<bool> active_map(this->active_size, true);
     std::size_t active_index = 0;
-    for (std::size_t g = 0; g < this->actnum.size(); g++) {
-        if (this->actnum[g] != 0) {
+    for (std::size_t g = 0; g < this->m_actnum.size(); g++) {
+        if (this->m_actnum[g] != 0) {
             if (new_actnum[g] == 0)
                 active_map[active_index] = false;
             active_index += 1;
@@ -299,8 +313,11 @@ void FieldProps::reset_grid(const EclipseGrid& grid) {
     for (auto& data : this->int_data)
         data.second.compress(active_map);
 
-    this->actnum = new_actnum;
+    this->m_actnum = std::move(new_actnum);
     this->active_size = grid.getNumActive();
+    this->cell_volume = extract_cell_volume(grid);
+    if (this->porv_ptr)
+        this->porv_ptr.reset( nullptr );
 }
 
 
@@ -319,7 +336,7 @@ void FieldProps::distribute_toplayer(FieldProps::FieldData<double>& field_data, 
         for (std::size_t j = 0; j < this->ny; j++) {
             for (std::size_t i = 0; i < this->nx; i++) {
                 std::size_t g = i + j*this->nx + k*this->nx*this->ny;
-                if (this->actnum[g]) {
+                if (this->m_actnum[g]) {
                     if (field_data.value_status[active_index] == value::status::uninitialized) {
                         std::size_t layer_index = i + j*this->nx;
                         if (toplayer.value_status[layer_index] == value::status::deck_value) {
@@ -411,8 +428,8 @@ std::vector<Box::cell_index> FieldProps::region_index( const DeckItem& region_it
     std::vector<Box::cell_index> index_list;
     std::size_t active_index = 0;
     const auto& region_data = region.data;
-    for (std::size_t g = 0; g < this->actnum.size(); g++) {
-        if (this->actnum[g] != 0) {
+    for (std::size_t g = 0; g < this->m_actnum.size(); g++) {
+        if (this->m_actnum[g] != 0) {
             if (region_data[active_index] == region_value)
                 index_list.emplace_back( g, active_index, g );
             active_index += 1;
@@ -435,8 +452,10 @@ bool FieldProps::has<int>(const std::string& keyword) const {
 template <>
 std::vector<std::string> FieldProps::keys<double>() const {
     std::vector<std::string> klist;
-    for (const auto& data_pair : this->double_data)
-        klist.push_back(data_pair.first);
+    for (const auto& data_pair : this->double_data) {
+        if (data_pair.second.valid())
+            klist.push_back(data_pair.first);
+    }
     return klist;
 }
 
@@ -635,6 +654,102 @@ void FieldProps::handle_keyword(const DeckKeyword& keyword, Box& box) {
 }
 
 /**********************************************************************/
+
+std::vector<double> FieldProps::porv() {
+    if (this->porv_ptr)
+        return *this->porv_ptr;
+
+    FieldProps::FieldData<double> porv(this->active_size);
+    if (this->has<double>("PORV"))
+        porv = this->get<double>("PORV");
+
+    auto& porv_data = porv.data;
+    auto& porv_status = porv.value_status;
+
+    if (!porv.valid()) {
+        const auto& poro = this->get<double>("PORO");
+        const auto& poro_status = poro.value_status;
+        const auto& poro_data = poro.data;
+
+        for (std::size_t active_index = 0; active_index < this->active_size; active_index++) {
+            if (value::has_value(porv_status[active_index]))
+                continue;
+
+            if (value::has_value(poro_status[active_index])) {
+                porv_data[active_index] = this->cell_volume[active_index] * poro_data[active_index];
+                porv_status[active_index] = value::status::valid_default;
+            }
+        }
+    }
+    if (!porv.valid())
+        throw std::invalid_argument("Do not have enough information to create PORV");
+
+
+    // The NTG multiplication is only done one the cells which have PORV caclulated as PORO * V
+    if (this->has<double>("NTG")) {
+        const auto& ntg = this->get_valid_data<double>("NTG");
+        for (std::size_t active_index = 0; active_index < this->active_size; active_index++) {
+            if (porv_status[active_index] == value::status::valid_default)
+                porv_data[active_index] *= ntg[active_index];
+        }
+    }
+
+
+    // The MULTPV multiplication is done on all cells
+    if (this->has<double>("MULTPV")) {
+        const auto& multpv = this->get_valid_data<double>("MULTPV");
+        std::transform(porv_data.begin(), porv_data.end(), multpv.begin(), porv_data.begin(), std::multiplies<double>());
+    }
+
+
+    this->porv_ptr = std::make_unique<std::vector<double>>(porv_data);
+    return *this->porv_ptr;
+}
+
+
+/*
+  This function generates a new ACTNUM vector.The ACTNUM vector which is
+  returned is joined result of three different data sources:
+
+     1. The ACTNUM of if the grid which is part of this FieldProps structure.
+
+     2. If there have been ACTNUM operations in the DECK of the type:
+
+        EQUALS
+            ACTNUM 0 1 10 1 10 1 3 /
+        /
+
+     3. Cells with PORV == 0 will get ACTNUM = 0.
+
+  Observe that due to steps 2 and 3 the ACTNUM vector returned from this
+  function will in general differ from the internal ACTNUM used in the
+  FieldProps instance.
+*/
+std::vector<int> FieldProps::actnum() {
+    auto actnum = this->m_actnum;
+    const auto& deck_actnum = this->get<int>("ACTNUM");
+    const auto& porv_data = this->porv();
+
+    std::vector<int> global_map(this->active_size);
+    {
+        std::size_t active_index = 0;
+        for (std::size_t g = 0; g < this->global_size; g++) {
+            if (this->m_actnum[g]) {
+                global_map[active_index] = g;
+                active_index++;
+            }
+        }
+    }
+
+
+    for (std::size_t active_index = 0; active_index < this->active_size; active_index++) {
+        auto global_index = global_map[active_index];
+        actnum[global_index] = deck_actnum.data[active_index];
+        if (porv_data[active_index] == 0)
+            actnum[global_index] = 0;
+    }
+    return actnum;
+}
 
 
 void FieldProps::scanGRIDSection(const GRIDSection& grid_section, const EclipseGrid& grid) {

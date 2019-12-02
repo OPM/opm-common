@@ -66,7 +66,7 @@ void assert_field_properties(const EclipseGrid& grid, const FieldPropsManager& f
                                              "PVTNUM",
                                              "SATNUM"};
 
-    std::vector<std::string> double_keywords = {"MULTPV",
+    std::vector<std::string> double_keywords = {//"MULTPV",
                                                 //"NTG",
                                                 "PORO",
                                                 "PERMX",
@@ -144,8 +144,12 @@ void assert_field_properties(const EclipseGrid& grid, const FieldPropsManager& f
         m_simulationConfig(  m_eclipseConfig.getInitConfig().restartRequested(), deck, field_props, m_eclipseProperties ),
         m_transMult(         GridDims(deck), deck, field_props, m_eclipseProperties )
     {
+#ifdef ENABLE_3DPROPS_TESTING
+        m_eclipseProperties.getIntGridProperty("ACTNUM").getData();
+        m_inputGrid.resetACTNUM(this->field_props.actnum());
+#else
         m_inputGrid.resetACTNUM(m_eclipseProperties.getIntGridProperty("ACTNUM").getData());
-
+#endif
         if( this->runspec().phases().size() < 3 )
             OpmLog::info("Only " + std::to_string( this->runspec().phases().size() )
                                                                 + " fluid phases are enabled" );

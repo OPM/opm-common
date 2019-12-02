@@ -110,6 +110,24 @@ public:
             std::copy(src.begin(), src.end(), this->data.begin());
             std::fill(this->value_status.begin(), this->value_status.end(), value::status::valid_default);
         }
+
+        void default_update(const std::vector<T>& src) {
+            if (src.size() != this->size())
+                throw std::invalid_argument("Size mismatch got: " + std::to_string(src.size()) + " expected: " + std::to_string(this->size()));
+
+            for (std::size_t i = 0; i < src.size(); i++) {
+                if (!value::has_value(this->value_status[i])) {
+                    this->value_status[i] = value::status::valid_default;
+                    this->data[i] = src[i];
+                }
+            }
+        }
+
+        void update(std::size_t index, T value, value::status status) {
+            this->data[index] = value;
+            this->value_status[index] = status;
+        }
+
     };
 
 
@@ -118,6 +136,8 @@ public:
 
     const std::string& default_region() const;
 
+    std::vector<int> actnum();
+    std::vector<double> porv();
 
     template <typename T>
     FieldData<T>& get(const std::string& keyword);
@@ -132,8 +152,18 @@ public:
     std::vector<std::string> keys() const;
 
     template <typename T>
+    const std::vector<T>& get_valid_data(const std::string& keyword) {
+        const auto& field_ptr = this->try_get<T>(keyword);
+        if (field_ptr)
+            return field_ptr->data;
+        else
+            throw std::invalid_argument("No such valid keyword: " + keyword);
+    }
+
+    template <typename T>
     const FieldData<T>* try_get(const std::string& keyword) {
         const FieldData<T> * field_data;
+        bool has0 = this->has<T>(keyword);
 
         try {
             field_data = std::addressof(this->get<T>(keyword));
@@ -144,7 +174,9 @@ public:
         if (field_data->valid())
             return field_data;
 
-        this->erase<T>(keyword);
+        if (!has0)
+            this->erase<T>(keyword);
+
         return nullptr;
     }
 
@@ -153,7 +185,7 @@ public:
         std::vector<T> global_data(this->global_size);
         std::size_t i = 0;
         for (std::size_t g = 0; g < this->global_size; g++) {
-            if (this->actnum[g]) {
+            if (this->m_actnum[g]) {
                 global_data[g] = data[i];
                 i++;
             }
@@ -203,10 +235,14 @@ private:
     std::size_t active_size;
     std::size_t global_size;
     std::size_t nx,ny,nz;
-    std::vector<int> actnum;
+    std::vector<int> m_actnum;
+    std::vector<double> cell_volume;
     const std::string m_default_region;
     std::unordered_map<std::string, FieldData<int>> int_data;
     std::unordered_map<std::string, FieldData<double>> double_data;
+
+    // PORV calculation is quite expensive so this is cached
+    std::unique_ptr<std::vector<double>> porv_ptr;
 };
 
 }
