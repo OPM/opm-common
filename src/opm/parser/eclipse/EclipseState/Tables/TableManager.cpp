@@ -92,6 +92,55 @@
 
 namespace Opm {
 
+    TableManager::TableManager(const std::map<std::string, TableContainer>& simpleTables,
+                               const std::vector<PvtgTable>& pvtgTables,
+                               const std::vector<PvtoTable>& pvtoTables,
+                               const std::vector<Rock2dTable>& rock2dTables,
+                               const std::vector<Rock2dtrTable>& rock2dtrTables,
+                               const PvtwTable& pvtwTable,
+                               const PvcdoTable& pvcdoTable,
+                               const DensityTable& densityTable,
+                               const RockTable& rockTable,
+                               const ViscrefTable& viscrefTable,
+                               const WatdentTable& watdentTable,
+                               const std::map<int, PlymwinjTable>& plymwinjTables,
+                               const std::map<int, SkprwatTable>& skprwatTables,
+                               const std::map<int, SkprpolyTable>& skprpolyTables,
+                               const Tabdims& tabdims,
+                               const Regdims& regdims,
+                               const Eqldims& eqldims,
+                               const Aqudims& aqudims,
+                               bool useImptvd,
+                               bool useEnptvd,
+                               bool useEqlnum,
+                               std::shared_ptr<JFunc> jfunc_param,
+                               double rtemp)
+        :
+        m_simpleTables(simpleTables),
+        m_pvtgTables(pvtgTables),
+        m_pvtoTables(pvtoTables),
+        m_rock2dTables(rock2dTables),
+        m_rock2dtrTables(rock2dtrTables),
+        m_pvtwTable(pvtwTable),
+        m_pvcdoTable(pvcdoTable),
+        m_densityTable(densityTable),
+        m_rockTable(rockTable),
+        m_viscrefTable(viscrefTable),
+        m_watdentTable(watdentTable),
+        m_plymwinjTables(plymwinjTables),
+        m_skprwatTables(skprwatTables),
+        m_skprpolyTables(skprpolyTables),
+        m_tabdims(tabdims),
+        m_regdims(std::make_shared<Regdims>(regdims)),
+        m_eqldims(std::make_shared<Eqldims>(eqldims)),
+        m_aqudims(aqudims),
+        hasImptvd(useImptvd),
+        hasEnptvd(useEnptvd),
+        hasEqlnum(useEqlnum),
+        jfunc(std::move(jfunc_param)),
+        m_rtemp(rtemp)
+    {
+    }
 
 
     TableManager::TableManager( const Deck& deck )
@@ -142,6 +191,34 @@ namespace Opm {
         if ( deck.hasKeyword( "ROCK2DTR") )
             initRockTables(deck, "ROCK2DTR", m_rock2dtrTables );
 
+    }
+
+    TableManager& TableManager::operator=(const TableManager& data) {
+        m_simpleTables = data.m_simpleTables;
+        m_pvtgTables = data.m_pvtgTables;
+        m_pvtoTables = data.m_pvtoTables;
+        m_rock2dTables = data.m_rock2dTables;
+        m_rock2dtrTables = data.m_rock2dtrTables;
+        m_pvtwTable = data.m_pvtwTable;
+        m_pvcdoTable = data.m_pvcdoTable;
+        m_densityTable = data.m_densityTable;
+        m_viscrefTable = data.m_viscrefTable;
+        m_watdentTable = data.m_watdentTable;
+        m_plymwinjTables = data.m_plymwinjTables;
+        m_skprwatTables = data.m_skprwatTables;
+        m_skprpolyTables = data.m_skprpolyTables;
+        m_tabdims = data.m_tabdims;
+        m_regdims = std::make_shared<Regdims>(*data.m_regdims);
+        m_eqldims = std::make_shared<Eqldims>(*data.m_eqldims);
+        m_aqudims = data.m_aqudims;
+        hasImptvd = data.hasImptvd;
+        hasEnptvd = data.hasEnptvd;
+        hasEqlnum = data.hasEqlnum;
+        if (data.jfunc)
+          jfunc = std::make_shared<JFunc>(*data.jfunc);
+        m_rtemp = data.m_rtemp;
+
+        return *this;
     }
 
     void TableManager::initDims(const Deck& deck) {
@@ -870,6 +947,10 @@ namespace Opm {
         return m_skprpolyTables;
     }
 
+    const std::map<std::string, TableContainer>& TableManager::getSimpleTables() const {
+        return m_simpleTables;
+    }
+
     bool TableManager::useImptvd() const {
         return hasImptvd;
     }
@@ -901,6 +982,37 @@ namespace Opm {
 
     double TableManager::rtemp() const {
         return this->m_rtemp;
+    }
+
+    bool TableManager::operator==(const TableManager& data) const {
+        bool jfuncOk = false;
+        if (jfunc && data.jfunc)
+            jfuncOk = *jfunc == *data.jfunc;
+        if (!jfunc && !data.jfunc)
+            jfuncOk = true;
+
+        return m_simpleTables == data.m_simpleTables &&
+               m_pvtgTables == data.m_pvtgTables &&
+               m_pvtoTables == data.m_pvtoTables &&
+               m_rock2dTables == data.m_rock2dTables &&
+               m_rock2dtrTables == data.m_rock2dtrTables &&
+               m_pvtwTable == data.m_pvtwTable &&
+               m_pvcdoTable == data.m_pvcdoTable &&
+               m_densityTable == data.m_densityTable &&
+               m_viscrefTable == data.m_viscrefTable &&
+               m_watdentTable == data.m_watdentTable &&
+               m_plymwinjTables == data.m_plymwinjTables &&
+               m_skprwatTables == data.m_skprwatTables &&
+               m_skprpolyTables == data.m_skprpolyTables &&
+               m_tabdims == data.m_tabdims &&
+               *m_regdims == *data.m_regdims &&
+               *m_eqldims == *data.m_eqldims &&
+               m_aqudims == data.m_aqudims &&
+               hasImptvd == data.hasImptvd &&
+               hasEnptvd == data.hasEnptvd &&
+               hasEqlnum == data.hasEqlnum &&
+               jfuncOk &&
+               m_rtemp == data.m_rtemp;
     }
 
 }
