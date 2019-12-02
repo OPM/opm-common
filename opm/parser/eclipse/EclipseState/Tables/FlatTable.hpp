@@ -109,6 +109,12 @@ struct WATDENTRecord {
     double reference_temperature;
     double first_coefficient;
     double second_coefficient;
+
+    bool operator==(const WATDENTRecord& data) const {
+        return reference_temperature == data.reference_temperature &&
+               first_coefficient == data.first_coefficient &&
+               second_coefficient == data.second_coefficient;
+    }
 };
 
 struct WatdentTable : public FlatTable< WATDENTRecord > {
