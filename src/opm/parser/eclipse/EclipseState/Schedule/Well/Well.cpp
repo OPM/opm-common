@@ -528,7 +528,22 @@ Phase Well::getPreferredPhase() const {
     return this->phase;
 }
 
-bool Well::handleWELOPEN(const DeckRecord& record, Connection::State state_arg) {
+/*
+  When all connections of a well are closed with the WELOPEN keywords, the well
+  itself should also be SHUT. In the main parsing code this is handled by the
+  function checkIfAllConnectionsIsShut() which is called at the end of every
+  report step in Schedule::iterateScheduleSection(). This is donn in this way
+  because there is some twisted logic aggregating connection changes over a
+  complete report step.
+
+  However - when the WELOPEN is called as a ACTIONX action the full
+  Schedule::iterateScheduleSection() is not run and the check if all connections
+  is closed is not done. Therefor we have a action_mode flag here which makes
+  sure to close the well in this case.
+*/
+
+
+bool Well::handleWELOPEN(const DeckRecord& record, Connection::State state_arg, bool action_mode) {
 
     auto match = [=]( const Connection &c) -> bool {
         if (!match_eq(c.getI(), record, "I" , -1)) return false;
@@ -548,6 +563,11 @@ bool Well::handleWELOPEN(const DeckRecord& record, Connection::State state_arg) 
 
         new_connections->add(c);
     }
+    if (action_mode) {
+        if (new_connections->allConnectionsShut())
+            this->status = Status::SHUT;
+    }
+
     return this->updateConnections(new_connections);
 }
 

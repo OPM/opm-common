@@ -423,7 +423,7 @@ ACTIONX
 /
 
 WELOPEN
-  '?' 'SHUT' /
+  '?' 'SHUT' 0 0 0 2* /
 /
 
 ENDACTIO

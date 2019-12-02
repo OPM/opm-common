@@ -797,3 +797,49 @@ BOOST_AUTO_TEST_CASE(ExtraAccessors) {
     BOOST_CHECK_EQUAL(inj.vfp_table_number(), 100);
     BOOST_CHECK_EQUAL(prod.vfp_table_number(), 200);
 }
+
+BOOST_AUTO_TEST_CASE(WELOPEN) {
+    Opm::Parser parser;
+    std::string input =
+                "START             -- 0 \n"
+                "19 JUN 2007 / \n"
+                "SCHEDULE\n"
+                "DATES             -- 1\n"
+                " 10  OKT 2008 / \n"
+                "/\n"
+                "WELSPECS\n"
+                "    'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
+                "/\n"
+                "COMPDAT\n"
+                " 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+                " 'OP_1'  9  9   3   9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+                " 'OP_1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / \n"
+                "/\n"
+                "WELOPEN \n"
+                " 'OP_1'  'OPEN' /\n"
+                "/\n"
+                "DATES             -- 2\n"
+                " 20  JAN 2010 / \n"
+                "/\n"
+                "WELOPEN \n"
+                " 'OP_1'  'SHUT' 0 0 0 2* /\n"
+                "/\n";
+
+
+    auto deck = parser.parseString(input);
+    Opm::EclipseGrid grid(10,10,10);
+    TableManager table ( deck );
+    Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    FieldPropsManager fp(deck, grid, table);
+    Opm::Runspec runspec (deck);
+    Opm::Schedule schedule(deck, grid , fp, eclipseProperties, runspec);
+    {
+        const auto& op_1 = schedule.getWell("OP_1", 1);
+        BOOST_CHECK(op_1.getStatus() == Well::Status::OPEN);
+    }
+    {
+        const auto& op_1 = schedule.getWell("OP_1", 2);
+        BOOST_CHECK(op_1.getStatus() == Well::Status::SHUT);
+    }
+
+}

@@ -1358,6 +1358,7 @@ namespace {
         };
 
         constexpr auto open = Well::Status::OPEN;
+        bool action_mode = !matching_wells.empty();
 
         for( const auto& record : keyword ) {
             const auto& wellNamePattern = record.getItem( "WELL" ).getTrimmedString(0);
@@ -1399,7 +1400,7 @@ namespace {
                 {
                     auto& dynamic_state = this->wells_static.at(wname);
                     auto well_ptr = std::make_shared<Well>( *dynamic_state[currentStep] );
-                    if (well_ptr->handleWELOPEN(record, comp_status)) {
+                    if (well_ptr->handleWELOPEN(record, comp_status, action_mode)) {
                         // The updateWell call breaks test at line 825 and 831 in ScheduleTests
                         this->updateWell(well_ptr, currentStep);
                         const auto well_status = Well::StatusFromString( status_str );
