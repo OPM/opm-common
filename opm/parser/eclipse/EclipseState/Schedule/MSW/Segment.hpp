@@ -123,6 +123,7 @@ namespace Opm {
         // indicate if the data related to 'INC' or 'ABS' is ready
         // the volume will be updated at a final step.
         bool m_data_ready;
+
         // indicate the type of the segment
         // regular or spiral ICD
         SegmentType m_segment_type = SegmentType::REGULAR;
@@ -130,10 +131,6 @@ namespace Opm {
         // information related to SpiralICD. It is nullptr for segments are not
         // spiral ICD type
         std::shared_ptr<SpiralICD> m_spiral_icd;
-
-        // indicate the type of the segment
-        // regular or Valve
-        SegmentType m_segment_type = SegmentType::REGULAR;
 
         // information related to sub-critical valve. It is nullptr for segments are not
         // of type of Valve

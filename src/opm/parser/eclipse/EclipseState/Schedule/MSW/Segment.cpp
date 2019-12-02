@@ -153,9 +153,6 @@ namespace Opm {
     }
 
 
-
-}
-
     // TODO: we can pass in the segment length here. It is tricky anyway
     void Segment::updateValve(const Valve& valve, const double segment_length) {
         // TODO: assert here is for debugging purpose, will be improved later
@@ -214,5 +211,5 @@ namespace Opm {
         return m_valve;
     }
 
-    }
+}
 
