@@ -75,6 +75,7 @@ Opm::TimeStampUTC& Opm::TimeStampUTC::operator=(const std::time_t tp)
     return *this;
 }
 
+
 Opm::TimeStampUTC::TimeStampUTC(const YMD& ymd)
     : ymd_{ std::move(ymd) }
 {}
@@ -117,3 +118,9 @@ std::time_t Opm::asTimeT(const TimeStampUTC& tp)
 
     return makeUTCTime(timePoint);
 }
+
+Opm::TimeStampUTC Opm::operator+(const Opm::TimeStampUTC& lhs, std::chrono::duration<double> delta) {
+    return Opm::TimeStampUTC( advance(Opm::asTimeT(lhs) , delta.count()) );
+}
+
+

@@ -20,6 +20,7 @@
 #ifndef OPM_TIMESERVICE_HEADER_INCLUDED
 #define OPM_TIMESERVICE_HEADER_INCLUDED
 
+#include <chrono>
 #include <ctime>
 
 namespace Opm {
@@ -61,6 +62,7 @@ namespace Opm {
         int usec_{0};
     };
 
+    TimeStampUTC operator+(const TimeStampUTC& lhs, std::chrono::duration<double> delta);
     std::time_t asTimeT(const TimeStampUTC& tp);
 
 } // namespace Opm
