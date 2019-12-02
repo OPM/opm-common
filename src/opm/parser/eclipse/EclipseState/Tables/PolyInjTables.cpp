@@ -38,6 +38,17 @@ namespace Opm{
 
     // PolyInjTable
 
+    PolyInjTable::PolyInjTable(const std::vector<double>& throughputs,
+                               const std::vector<double>& velocities,
+                               int tableNumber,
+                               const std::vector<std::vector<double>>& data)
+        : m_throughputs(throughputs)
+        , m_velocities(velocities)
+        , m_table_number(tableNumber)
+        , m_data(data)
+    {
+    }
+
     int PolyInjTable::getTableNumber() const
     {
         return m_table_number;
@@ -56,6 +67,14 @@ namespace Opm{
     const std::vector<std::vector<double>>& PolyInjTable::getTableData() const
     {
         return m_data;
+    }
+
+    bool PolyInjTable::operator==(const PolyInjTable& data) const
+    {
+        return this->getTableNumber() == data.getTableNumber() &&
+               this->getThroughputs() == data.getThroughputs() &&
+               this->getVelocities() == data.getVelocities() &&
+               this->getTableData() == data.getTableData();
     }
 
 

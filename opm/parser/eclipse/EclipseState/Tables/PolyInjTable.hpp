@@ -44,18 +44,26 @@ namespace Opm {
     class PolyInjTable {
     public:
 
+        PolyInjTable() = default;
+        PolyInjTable(const std::vector<double>& throughputs,
+                     const std::vector<double>& velocities,
+                     int tableNumber,
+                     const std::vector<std::vector<double>>& data);
+
         int getTableNumber() const;
 
         const std::vector<double>& getThroughputs() const;
         const std::vector<double>& getVelocities() const;
         const std::vector<std::vector<double>>& getTableData() const;
 
+        bool operator==(const PolyInjTable& data) const;
+
     protected:
         std::vector<double> m_throughputs;
         std::vector<double> m_velocities;
 
         // TODO: maybe not needed, since this is also stored in the std::map
-        int m_table_number;
+        int m_table_number = 0;
 
         // each vector corresponds to the values corresponds to one value related to one x sampling point
         // as a result, the number of the vector should be equal to be the size of m_x_points,
