@@ -425,7 +425,7 @@ public:
 
     bool handleWELSEGS(const DeckKeyword& keyword);
     bool handleCOMPSEGS(const DeckKeyword& keyword, const EclipseGrid& grid, const ParseContext& parseContext, ErrorGuard& errors);
-    bool handleWELOPEN(const DeckRecord& record, Connection::State status);
+    bool handleWELOPEN(const DeckRecord& record, Connection::State status, bool action_mode);
     bool handleCOMPLUMP(const DeckRecord& record);
     bool handleWPIMULT(const DeckRecord& record);
 
