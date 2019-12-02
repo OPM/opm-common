@@ -92,6 +92,11 @@ struct VISCREFRecord {
 
     double reference_pressure;
     double reference_rs;
+
+    bool operator==(const VISCREFRecord& data) const {
+        return reference_pressure == data.reference_pressure &&
+              reference_rs == data.reference_rs;
+    }
 };
 
 struct ViscrefTable : public FlatTable< VISCREFRecord > {
