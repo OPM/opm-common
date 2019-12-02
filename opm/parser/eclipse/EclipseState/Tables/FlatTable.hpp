@@ -9,6 +9,9 @@ template< typename T >
 struct FlatTable : public std::vector< T > {
     FlatTable() = default;
     explicit FlatTable( const DeckKeyword& );
+    explicit FlatTable(const std::vector<T>& data) :
+        std::vector<T>(data)
+    {}
 };
 
 struct DENSITYRecord {
