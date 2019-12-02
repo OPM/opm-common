@@ -81,6 +81,14 @@ namespace Opm{
 
     // PlymwinjTable
 
+    PlymwinjTable::PlymwinjTable(const std::vector<double>& throughputs,
+                                 const std::vector<double>& velocities,
+                                 int tableNumber,
+                                 const std::vector<std::vector<double>>& data)
+        : PolyInjTable(throughputs, velocities, tableNumber, data)
+    {
+    }
+
     PlymwinjTable::PlymwinjTable(const Opm::DeckKeyword& table)
     {
         using namespace ParserKeywords;
@@ -122,6 +130,11 @@ namespace Opm{
     PlymwinjTable::getMoleWeights() const
     {
         return getTableData();
+    }
+
+    bool PlymwinjTable::operator==(const PlymwinjTable& data) const
+    {
+        return static_cast<const PolyInjTable&>(*this) == static_cast<const PolyInjTable&>(data);
     }
 
 
