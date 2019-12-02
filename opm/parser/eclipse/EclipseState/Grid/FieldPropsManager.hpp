@@ -31,7 +31,7 @@ class TableManager;
 class FieldPropsManager {
 public:
     // The default constructor should be removed when the FieldPropsManager is mandatory
-    FieldPropsManager() = default;
+    FieldPropsManager() = delete;
     FieldPropsManager(const Deck& deck, const EclipseGrid& grid, const TableManager& tables);
     void reset_grid(const EclipseGrid& grid);
     const std::string& default_region() const;
