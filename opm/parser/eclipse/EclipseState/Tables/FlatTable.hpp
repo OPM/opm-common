@@ -20,6 +20,12 @@ struct DENSITYRecord {
     double oil;
     double water;
     double gas;
+
+    bool operator==(const DENSITYRecord& data) const {
+        return oil == data.oil &&
+               water == data.water &&
+               gas == data.gas;
+    }
 };
 
 struct DensityTable : public FlatTable< DENSITYRecord > {
