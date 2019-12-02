@@ -67,6 +67,14 @@ struct PVCDORecord {
     double compressibility;
     double viscosity;
     double viscosibility;
+
+    bool operator==(const PVCDORecord& data) const {
+        return reference_pressure == data.reference_pressure &&
+               volume_factor == data.volume_factor &&
+               compressibility == data.compressibility &&
+               viscosity == data.viscosity &&
+               viscosibility == data.viscosibility;
+    }
 };
 
 struct PvcdoTable : public FlatTable< PVCDORecord > {
