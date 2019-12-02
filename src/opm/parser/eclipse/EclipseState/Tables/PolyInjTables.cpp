@@ -186,6 +186,17 @@ namespace Opm{
 
     // SkprpolyTable
 
+    SkprpolyTable::SkprpolyTable(const std::vector<double>& throughputs,
+                                 const std::vector<double>& velocities,
+                                 int tableNumber,
+                                 const std::vector<std::vector<double>>& data,
+                                 double referenceConcentration)
+        : PolyInjTable(throughputs, velocities, tableNumber, data)
+        , m_ref_polymer_concentration(referenceConcentration)
+    {
+    }
+
+
     SkprpolyTable::SkprpolyTable(const Opm::DeckKeyword &table)
     {
         using namespace ParserKeywords;
@@ -235,10 +246,21 @@ namespace Opm{
         return m_ref_polymer_concentration;
     }
 
+    void SkprpolyTable::setReferenceConcentration(double refConcentration)
+    {
+        m_ref_polymer_concentration = refConcentration;
+    }
+
     const std::vector<std::vector<double>>&
     SkprpolyTable::getSkinPressures() const
     {
         return getTableData();
+    }
+
+    bool SkprpolyTable::operator==(const SkprpolyTable& data) const
+    {
+        return  this->referenceConcentration() == data.referenceConcentration() &&
+                static_cast<const PolyInjTable&>(*this) == static_cast<const PolyInjTable&>(data);
     }
 
 }
