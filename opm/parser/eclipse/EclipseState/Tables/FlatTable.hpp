@@ -31,6 +31,14 @@ struct PVTWRecord {
     double compressibility;
     double viscosity;
     double viscosibility;
+
+    bool operator==(const PVTWRecord& data) const {
+        return reference_pressure == data.reference_pressure &&
+               volume_factor == data.volume_factor &&
+               compressibility == data.compressibility &&
+               viscosity == data.viscosity &&
+               viscosibility == data.viscosibility;
+    }
 };
 
 struct PvtwTable : public FlatTable< PVTWRecord > {
