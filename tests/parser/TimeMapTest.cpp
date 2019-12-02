@@ -623,12 +623,11 @@ Opm::DeckRecord createDeckRecord(int day, const std::string &month, int year, co
 
 BOOST_AUTO_TEST_CASE(TimeServiceOperatorPlus) {
     Opm::TimeStampUTC t0(Opm::TimeMap::mkdatetime(2010,1,1,0,0,0));
-    auto t1 = t0 + std::chrono::duration<double>(3600*24 + 0.50);
+    auto t1 = t0 + std::chrono::duration<double>(3600*24);
 
     BOOST_CHECK_EQUAL(t1.year(), 2010);
     BOOST_CHECK_EQUAL(t1.month(), 1);
     BOOST_CHECK_EQUAL(t1.day(), 2);
-    BOOST_CHECK_EQUAL(t1.microseconds(), 500000);
 }
 
 
