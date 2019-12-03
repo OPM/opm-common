@@ -82,8 +82,8 @@ namespace Opm {
             /// chaining.
             inline Rates& set( opt m, double value );
 
-            /// true if any option is set; false otherwise
-            inline bool any() const noexcept;
+            /// Returns true if any of the rates oil, gas, water is nonzero
+            inline bool flowing() const;
 
             template <class MessageBufferType>
             void write(MessageBufferType& buffer) const;
@@ -349,12 +349,15 @@ namespace Opm {
                 );
     }
 
-    inline bool Rates::any() const noexcept {
-        return static_cast< enum_size >( this->mask ) != 0;
+
+    bool inline Rates::flowing() const {
+        return ((this->wat != 0) ||
+                (this->oil != 0) ||
+                (this->gas != 0));
     }
 
     inline bool Well::flowing() const noexcept {
-        return this->rates.any();
+        return this->rates.flowing();
     }
 
     template <class MessageBufferType>
