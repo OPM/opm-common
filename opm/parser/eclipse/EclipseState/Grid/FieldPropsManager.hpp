@@ -36,6 +36,8 @@ public:
     FieldPropsManager(const Deck& deck, const EclipseGrid& grid, const TableManager& tables);
     void reset_grid(const EclipseGrid& grid);
     const std::string& default_region() const;
+    std::vector<int> actnum() const;
+    std::vector<double> porv() const;
 
     /*
       Because the FieldProps class can autocreate properties the semantics of
