@@ -279,19 +279,19 @@ void assert_field_properties(const EclipseGrid& grid, const FieldPropsManager& f
     void EclipseState::initTransMult() {
         const auto& p = m_eclipseProperties;
         if (m_eclipseProperties.hasDeckDoubleGridProperty("MULTX"))
-            m_transMult.applyMULT(p.getDoubleGridProperty("MULTX"), FaceDir::XPlus);
+            m_transMult.applyMULT(p.getDoubleGridProperty("MULTX").getData(), FaceDir::XPlus);
         if (m_eclipseProperties.hasDeckDoubleGridProperty("MULTX-"))
-            m_transMult.applyMULT(p.getDoubleGridProperty("MULTX-"), FaceDir::XMinus);
+            m_transMult.applyMULT(p.getDoubleGridProperty("MULTX-").getData(), FaceDir::XMinus);
 
         if (m_eclipseProperties.hasDeckDoubleGridProperty("MULTY"))
-            m_transMult.applyMULT(p.getDoubleGridProperty("MULTY"), FaceDir::YPlus);
+            m_transMult.applyMULT(p.getDoubleGridProperty("MULTY").getData(), FaceDir::YPlus);
         if (m_eclipseProperties.hasDeckDoubleGridProperty("MULTY-"))
-            m_transMult.applyMULT(p.getDoubleGridProperty("MULTY-"), FaceDir::YMinus);
+            m_transMult.applyMULT(p.getDoubleGridProperty("MULTY-").getData(), FaceDir::YMinus);
 
         if (m_eclipseProperties.hasDeckDoubleGridProperty("MULTZ"))
-            m_transMult.applyMULT(p.getDoubleGridProperty("MULTZ"), FaceDir::ZPlus);
+            m_transMult.applyMULT(p.getDoubleGridProperty("MULTZ").getData(), FaceDir::ZPlus);
         if (m_eclipseProperties.hasDeckDoubleGridProperty("MULTZ-"))
-            m_transMult.applyMULT(p.getDoubleGridProperty("MULTZ-"), FaceDir::ZMinus);
+            m_transMult.applyMULT(p.getDoubleGridProperty("MULTZ-").getData(), FaceDir::ZMinus);
     }
 
     void EclipseState::initFaults(const Deck& deck) {

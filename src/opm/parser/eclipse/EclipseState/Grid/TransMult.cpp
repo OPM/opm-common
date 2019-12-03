@@ -71,14 +71,14 @@ R"(This deck has the MULTREGT keyword located in the EDIT section. Note that:
 
     double TransMult::getMultiplier(size_t globalIndex,  FaceDir::DirEnum faceDir) const {
         if (globalIndex < m_nx * m_ny * m_nz)
-            return getMultiplier__(globalIndex , faceDir);
+            return this->getMultiplier__(globalIndex , faceDir);
         else
             throw std::invalid_argument("Invalid global index");
     }
 
     double TransMult::getMultiplier__(size_t globalIndex,  FaceDir::DirEnum faceDir) const {
         if (hasDirectionProperty( faceDir )) {
-            const auto& data = m_trans.at(faceDir).getData();
+            const auto& data = m_trans.at(faceDir);
             return data[globalIndex];
         } else
             return 1.0;
@@ -88,7 +88,7 @@ R"(This deck has the MULTREGT keyword located in the EDIT section. Note that:
 
 
     double TransMult::getMultiplier(size_t i , size_t j , size_t k, FaceDir::DirEnum faceDir) const {
-        size_t globalIndex = getGlobalIndex(i,j,k);
+        size_t globalIndex = this->getGlobalIndex(i,j,k);
         return getMultiplier__( globalIndex , faceDir );
     }
 
@@ -100,27 +100,21 @@ R"(This deck has the MULTREGT keyword located in the EDIT section. Note that:
         return m_trans.count(faceDir) == 1;
     }
 
-    void TransMult::insertNewProperty(FaceDir::DirEnum faceDir) {
-        GridPropertySupportedKeywordInfo<double> kwInfo(m_names[faceDir] , 1.0 , "1");
-        GridProperty< double > prop( m_nx, m_ny, m_nz, kwInfo );
-        m_trans.emplace( faceDir, std::move( prop ) );
-    }
 
-
-    GridProperty<double>& TransMult::getDirectionProperty(FaceDir::DirEnum faceDir) {
-        if (m_trans.count(faceDir) == 0)
-            insertNewProperty(faceDir);
+    std::vector<double>& TransMult::getDirectionProperty(FaceDir::DirEnum faceDir) {
+        if (m_trans.count(faceDir) == 0) {
+            std::size_t global_size = this->m_nx * this->m_ny * this->m_nz;
+            m_trans[faceDir] = std::vector<double>(global_size, 1);
+        }
 
         return m_trans.at( faceDir );
     }
 
-    void TransMult::applyMULT(const GridProperty<double>& srcProp, FaceDir::DirEnum faceDir)
+    void TransMult::applyMULT(const std::vector<double>& srcData, FaceDir::DirEnum faceDir)
     {
-        auto& dstProp = getDirectionProperty(faceDir);
-
-        const std::vector<double> &srcData = srcProp.getData();
+        auto& dstProp = this->getDirectionProperty(faceDir);
         for (size_t i = 0; i < srcData.size(); ++i)
-            dstProp.multiplyValueAtIndex(i, srcData[i]);
+            dstProp[i] *= srcData[i];
     }
 
 
@@ -129,12 +123,10 @@ R"(This deck has the MULTREGT keyword located in the EDIT section. Note that:
 
         for( const auto& face : fault ) {
             FaceDir::DirEnum faceDir = face.getDir();
-            auto& multProperty = getDirectionProperty(faceDir);
+            auto& multProperty = this->getDirectionProperty(faceDir);
 
-
-            for( auto globalIndex : face ) {
-                multProperty.multiplyValueAtIndex( globalIndex , transMult);
-            }
+            for( auto globalIndex : face )
+                multProperty[globalIndex] *= transMult;
         }
     }
 
@@ -142,7 +134,7 @@ R"(This deck has the MULTREGT keyword located in the EDIT section. Note that:
     void TransMult::applyMULTFLT(const FaultCollection& faults) {
         for (size_t faultIndex = 0; faultIndex < faults.size(); faultIndex++) {
             auto& fault = faults.getFault(faultIndex);
-            applyMULTFLT(fault);
+            this->applyMULTFLT(fault);
         }
     }
-    }
+}
