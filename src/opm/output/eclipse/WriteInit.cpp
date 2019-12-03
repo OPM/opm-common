@@ -476,8 +476,10 @@ namespace {
         properties.assertKeyword("FIPNUM");
 
         for (const auto& property : properties) {
-            auto ecl_data = property.compressedCopy(grid);
+            if (property.getKeywordName() == "ACTNUM")
+                continue;
 
+            auto ecl_data = property.compressedCopy(grid);
             initFile.write(property.getKeywordName(), ecl_data);
         }
     }
