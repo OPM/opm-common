@@ -72,6 +72,12 @@ PORO
 BOX
   1 3 1 3 1 3 /
 
+PORV
+  27*100 /
+
+ACTNUM
+   27*1 /
+
 PERMX
   27*0.6/
 
@@ -103,10 +109,16 @@ PERMX
         BOOST_CHECK_EQUAL(keys.size(), 1);
         BOOST_CHECK(std::find(keys.begin(), keys.end(), "PORO")  != keys.end());
         BOOST_CHECK(std::find(keys.begin(), keys.end(), "PERMX") == keys.end());
+
+        // The PORV property should be extracted with the special function
+        // fp.porv() and not the general get<double>() functionality.
+        BOOST_CHECK(std::find(keys.begin(), keys.end(), "PORV") == keys.end());
     }
     {
         const auto& keys = fpm.keys<int>();
         BOOST_CHECK_EQUAL(keys.size(), 0);
+
+        BOOST_CHECK(std::find(keys.begin(), keys.end(), "ACTNUM") == keys.end());
     }
 }
 
