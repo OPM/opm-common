@@ -72,6 +72,7 @@ namespace Opm {
 
         template< typename T > const std::vector< T >& getData() const;
         const std::vector< double >& getSIDoubleData() const;
+        const std::vector<value::status>& getValueStatus() const;
 
         void push_back( UDAValue );
         void push_back( int );

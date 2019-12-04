@@ -28,6 +28,7 @@
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckValue.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
+#include <opm/parser/eclipse/Deck/value_status.hpp>
 #include <opm/common/OpmLog/Location.hpp>
 
 namespace Opm {
@@ -63,6 +64,7 @@ namespace Opm {
         const std::vector<double>& getRawDoubleData() const;
         const std::vector<double>& getSIDoubleData() const;
         const std::vector<std::string>& getStringData() const;
+        const std::vector<value::status>& getValueStatus() const;
         const ParserKeyword& parserKeyword() const;
         size_t getDataSize() const;
         void write( DeckOutput& output ) const;
