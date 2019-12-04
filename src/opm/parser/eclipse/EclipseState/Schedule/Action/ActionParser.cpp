@@ -106,7 +106,7 @@ ParseNode Parser::next() {
         return TokenType::end;
 
     std::string arg = this->tokens[this->current_pos];
-    return ParseNode(get_type(arg), get_func(arg), arg);
+    return ParseNode(get_type(arg), arg);
 }
 
 
@@ -115,7 +115,7 @@ ParseNode Parser::current() const {
         return TokenType::end;
 
     std::string arg = this->tokens[this->current_pos];
-    return ParseNode(get_type(arg), get_func(arg), arg);
+    return ParseNode(get_type(arg), arg);
 }
 
 
@@ -125,7 +125,7 @@ Action::ASTNode Parser::parse_left() {
         return TokenType::error;
 
     std::string func = current.value;
-    FuncType func_type = current.func;
+    FuncType func_type = get_func(current.value);
     std::vector<std::string> arg_list;
     current = this->next();
     while (current.type == TokenType::ecl_expr || current.type == TokenType::number) {
@@ -163,7 +163,7 @@ Action::ASTNode Parser::parse_right() {
         return TokenType::error;
 
     std::string func = current.value;
-    FuncType func_type = current.func;
+    FuncType func_type = FuncType::none;
     std::vector<std::string> arg_list;
     current = this->next();
     while (current.type == TokenType::ecl_expr || current.type == TokenType::number) {
