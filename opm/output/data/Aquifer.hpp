@@ -21,6 +21,7 @@
 #define OPM_OUTPUT_AQUIFER_HPP
 
 #include <map>
+#include <memory>
 #include <vector>
 
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
@@ -31,10 +32,26 @@ namespace Opm { namespace data {
      * Small struct that keeps track of data for output to restart/summary
      * files.
      */
+    enum class AquiferType
+    {
+        Fetkovich, CarterTracey,
+    };
+
+    struct FetkovichData {
+        double initVolume;
+        double prodIndex;
+        double timeConstant;
+    };
+
     struct AquiferData {
         int aquiferID;    //< One-based ID, range 1..NANAQ
         double pressure;  //< Aquifer pressure
         double volume;    //< Produced liquid volume
+        double initPressure;    //< Aquifer's initial pressure
+        double datumDepth;      //< Aquifer's pressure reference depth
+
+        AquiferType type;
+        std::shared_ptr<FetkovichData> aquFet;
     };
 
 }} // Opm::data

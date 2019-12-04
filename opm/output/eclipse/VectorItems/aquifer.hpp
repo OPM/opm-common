@@ -24,10 +24,44 @@
 
 namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems {
 
+    namespace IAnalyticAquifer {
+        enum index : std::vector<int>::size_type {
+            NumAquiferConn = 0,
+            WatPropTable = 1,
+
+            TypeRelated1 =  9,
+            TypeRelated2 = 10,
+        };
+    } // IAnalyticAquifer
+
+    namespace SAnalyticAquifer {
+        enum index : std::vector<float>::size_type {
+            Compressibility = 0,
+
+            FetInitVol = 1,
+            FetProdIndex = 2,
+            FetTimeConstant = 3,
+
+            CTRadius = 1,
+            CTPermeability = 2,
+            CTPorosity = 3,
+
+            InitPressure = 4,
+            DatumDepth = 5,
+
+            CTThickness = 6,
+            CTAngle = 7,
+            CTWatMassDensity = 8,
+            CTWatViscosity = 9,
+        };
+    } // SAnalyticAquifer
+
     namespace XAnalyticAquifer {
         enum index : std::vector<double>::size_type {
+            FlowRate   = 0,
             Pressure   = 1,  // Dynamic aquifer pressure
             ProdVolume = 2,  // Liquid volume produced from aquifer (into reservoir)
+            TotalArea  = 3,
         };
     } // XAnalyticAquifer
 
