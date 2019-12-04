@@ -42,9 +42,9 @@ const GConSale::GCONSALEGroupProp GConSale::get(const std::string& name, const S
 
     GCONSALEGroupProp prop;
     const GConSale::GCONSALEGroup& group = this->get(name);
-    prop.sales_target = UDA::eval_group_uda_rate(group.sales_target, name, st, group.udq_undefined, Phase::GAS, group.unit_system);
-    prop.max_sales_rate = UDA::eval_group_uda_rate(group.max_sales_rate, name, st, group.udq_undefined, Phase::GAS, group.unit_system);
-    prop.min_sales_rate = UDA::eval_group_uda_rate(group.min_sales_rate, name, st, group.udq_undefined, Phase::GAS, group.unit_system);
+    prop.sales_target = UDA::eval_group_uda(group.sales_target, name, st, group.udq_undefined);
+    prop.max_sales_rate = UDA::eval_group_uda(group.max_sales_rate, name, st, group.udq_undefined);
+    prop.min_sales_rate = UDA::eval_group_uda(group.min_sales_rate, name, st, group.udq_undefined);
     prop.max_proc = group.max_proc;
     return prop;
 }
