@@ -45,13 +45,28 @@ static const std::map<std::string, std::string> unit_string = {{"PORO", "1"},
                                                                {"PERMZ", "Permeability"},
                                                                {"PORV", "ReservoirVolume"},
                                                                {"NTG", "1"},
-                                                               {"SWATINIT", "1"}};
+                                                               {"SWATINIT", "1"},
+                                                               {"MULTPV", "1"},
+                                                               {"MULTX", "1"},
+                                                               {"MULTX-", "1"},
+                                                               {"MULTY", "1"},
+                                                               {"MULTY-", "1"},
+                                                               {"MULTZ", "1"},
+                                                               {"MULTZ-", "1"}};
+
+
 
 static const std::set<std::string> oper_keywords = {"ADD", "EQUALS", "MAXVALUE", "MINVALUE", "MULTIPLY"};
 static const std::set<std::string> region_oper_keywords = {"ADDREG", "EQUALREG"};
 static const std::set<std::string> box_keywords = {"BOX", "ENDBOX"};
 static const std::map<std::string, double> double_scalar_init = {{"NTG", 1},
-                                                                 {"MULTPV", 1}};
+                                                                 {"MULTPV", 1},
+                                                                 {"MULTX", 1},
+                                                                 {"MULTX-", 1},
+                                                                 {"MULTY", 1},
+                                                                 {"MULTY-", 1},
+                                                                 {"MULTZ", 1},
+                                                                 {"MULTZ-", 1}};
 
 static const std::map<std::string, int> int_scalar_init = {{"SATNUM", 1},
                                                            {"FIPNUM", 1},   // All FIPxxx keywords should (probably) be added with init==1 
@@ -69,13 +84,13 @@ bool isFipxxx< int >(const std::string& keyword) {
 */
 
 namespace GRID {
-static const std::set<std::string> double_keywords = {"MULTPV", "NTG", "PORO", "PERMX", "PERMY", "PERMZ", "THCONR"};
+static const std::set<std::string> double_keywords = {"MULTPV", "NTG", "PORO", "PERMX", "PERMY", "PERMZ", "THCONR", "MULTX", "MULTX-", "MULTY-", "MULTY", "MULTZ", "MULTZ-"};
 static const std::set<std::string> int_keywords    = {"ACTNUM", "FLUXNUM", "MULTNUM", "OPERNUM", "ROCKNUM"};
 static const std::set<std::string> top_keywords    = {"PORO", "PERMX", "PERMY", "PERMZ"};
 }
 
 namespace EDIT {
-static const std::set<std::string> double_keywords = {"MULTPV", "PORV"};
+static const std::set<std::string> double_keywords = {"MULTPV", "PORV","MULTX", "MULTX-", "MULTY-", "MULTY", "MULTZ", "MULTZ-"};
 static const std::set<std::string> int_keywords = {};
 }
 

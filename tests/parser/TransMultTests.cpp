@@ -76,6 +76,6 @@ MULTZ
     Opm::FieldPropsManager fp(deck, grid, tables);
     Opm::TransMult transMult(grid, deck, fp, props);
 
-    transMult.applyMULT(props.getDoubleGridProperty("MULTZ"), Opm::FaceDir::ZPlus);
+    transMult.applyMULT(props.getDoubleGridProperty("MULTZ").getData(), Opm::FaceDir::ZPlus);
     BOOST_CHECK_EQUAL( transMult.getMultiplier(0,0,0 , Opm::FaceDir::ZPlus) , 4.0 );
 }
