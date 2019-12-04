@@ -271,7 +271,7 @@ enum index : std::vector<int>::size_type {
   ih_249       =      249       ,              //       0
   ih_250       =      250       ,              //       0
   ih_251       =      251       ,              //       0
-  MAAQID       =      252       ,              //       0                     MAAQID = maximum number of analytic aquifers
+  MAAQID       =      VI::intehead::MAX_AN_AQUIFERS,              //       0                     MAAQID = maximum number of analytic aquifers
   ih_253       =      253       ,              //       0
   ih_254       =      254       ,              //       0
   ih_255       =      255       ,              //       0

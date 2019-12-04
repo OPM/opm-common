@@ -18,16 +18,18 @@
 #ifndef RESTART_VALUE_HPP
 #define RESTART_VALUE_HPP
 
-#include <string>
 #include <map>
+#include <string>
+#include <utility>
 #include <vector>
 
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
+
+#include <opm/output/data/Aquifer.hpp>
 #include <opm/output/data/Solution.hpp>
 #include <opm/output/data/Wells.hpp>
 
 namespace Opm {
-
 
     class RestartKey {
     public:
@@ -59,19 +61,17 @@ namespace Opm {
         }
     };
 
-
     /*
-      A simple class used to communicate values between the simulator and the
-      RestartIO function.
+      A simple class used to communicate values between the simulator and
+      the RestartIO functions.
     */
-
-
     class RestartValue {
     public:
         using ExtraVector = std::vector<std::pair<RestartKey, std::vector<double>>>;
         data::Solution solution;
         data::Wells wells;
         ExtraVector extra;
+        std::vector<data::AquiferData> aquifer;
 
         RestartValue(data::Solution sol, data::Wells wells_arg);
 
@@ -95,5 +95,4 @@ namespace Opm {
 
 }
 
-
-#endif
+#endif // RESTART_VALUE_HPP
