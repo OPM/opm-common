@@ -1248,5 +1248,394 @@ namespace Opm {
                             intGridProperties, false );
     }
 
+namespace satfunc {
+
+
+    std::vector< double > SGLEndpoint( const TableManager & tableManager,
+                                       const EclipseGrid& grid,
+                                       const std::vector<int>& satnum,
+                                       const std::vector<int>& endnum)
+    {
+        const auto min_gas = findMinGasSaturation( tableManager );
+        return satnumApply( grid.getNumActive(), "SGCO", min_gas, tableManager, grid,
+                            satnum, endnum, false );
+    }
+
+    std::vector< double > ISGLEndpoint( const TableManager & tableManager,
+                                        const EclipseGrid& grid,
+                                        const std::vector<int>& imbnum,
+                                        const std::vector<int>& endnum)
+    {
+        const auto min_gas = findMinGasSaturation( tableManager );
+        return imbnumApply( grid.getNumActive(), "SGCO", min_gas, tableManager, grid,
+                            imbnum, endnum, false );
+    }
+
+    std::vector< double > SGUEndpoint( const TableManager & tableManager,
+                                       const EclipseGrid& grid,
+                                       const std::vector<int>& satnum,
+                                       const std::vector<int>& endnum)
+    {
+        const auto max_gas = findMaxGasSaturation( tableManager );
+        return satnumApply( grid.getNumActive(), "SGMAX", max_gas, tableManager, grid,
+                            satnum, endnum, false );
+    }
+
+    std::vector< double > ISGUEndpoint( const TableManager & tableManager,
+                                        const EclipseGrid& grid,
+                                        const std::vector<int>& imbnum,
+                                        const std::vector<int>& endnum)
+    {
+        const auto max_gas = findMaxGasSaturation( tableManager );
+        return imbnumApply( grid.getNumActive(), "SGMAX", max_gas, tableManager, grid,
+                            imbnum, endnum, false );
+    }
+
+    std::vector< double > SWLEndpoint( const TableManager & tableManager,
+                                       const EclipseGrid& grid,
+                                       const std::vector<int>& satnum,
+                                       const std::vector<int>& endnum)
+    {
+        const auto min_water = findMinWaterSaturation( tableManager );
+        return satnumApply( grid.getNumActive(), "SWCO", min_water, tableManager, grid,
+                            satnum, endnum, false );
+    }
+
+    std::vector< double > ISWLEndpoint( const TableManager & tableManager,
+                                        const EclipseGrid  & grid,
+                                        const std::vector<int>& imbnum,
+                                        const std::vector<int>& endnum)
+    {
+        const auto min_water = findMinWaterSaturation( tableManager );
+        return imbnumApply( grid.getNumActive(), "SWCO", min_water, tableManager, grid,
+                            imbnum, endnum, false );
+    }
+
+    std::vector< double > SWUEndpoint( const TableManager & tableManager,
+                                       const EclipseGrid  & grid,
+                                       const std::vector<int>& satnum,
+                                       const std::vector<int>& endnum)
+    {
+        const auto max_water = findMaxWaterSaturation( tableManager );
+        return satnumApply( grid.getNumActive(), "SWMAX", max_water, tableManager, grid,
+                            satnum, endnum, true );
+    }
+
+    std::vector< double > ISWUEndpoint( const TableManager & tableManager,
+                                        const EclipseGrid  & grid,
+                                        const std::vector<int>& imbnum,
+                                        const std::vector<int>& endnum)
+    {
+        const auto max_water = findMaxWaterSaturation( tableManager );
+        return imbnumApply( grid.getNumActive(), "SWMAX", max_water, tableManager, grid,
+                            imbnum, endnum, true);
+    }
+
+    std::vector< double > SGCREndpoint( const TableManager & tableManager,
+                                        const EclipseGrid  & grid,
+                                        const std::vector<int>& satnum,
+                                        const std::vector<int>& endnum)
+    {
+        const auto crit_gas = findCriticalGas( tableManager );
+        return satnumApply( grid.getNumActive(), "SGCRIT", crit_gas, tableManager, grid,
+                            satnum, endnum, false );
+    }
+
+    std::vector< double > ISGCREndpoint( const TableManager & tableManager,
+                                         const EclipseGrid  & grid,
+                                         const std::vector<int>& imbnum,
+                                         const std::vector<int>& endnum)
+    {
+        const auto crit_gas = findCriticalGas( tableManager );
+        return imbnumApply( grid.getNumActive(), "SGCRIT", crit_gas, tableManager, grid,
+                            imbnum, endnum, false );
+    }
+
+    std::vector< double > SOWCREndpoint( const TableManager & tableManager,
+                                         const EclipseGrid  & grid,
+                                         const std::vector<int>& satnum,
+                                         const std::vector<int>& endnum)
+    {
+        const auto oil_water = findCriticalOilWater( tableManager );
+        return satnumApply( grid.getNumActive(), "SOWCRIT", oil_water, tableManager, grid,
+                            satnum, endnum, false );
+    }
+
+    std::vector< double > ISOWCREndpoint( const TableManager & tableManager,
+                                          const EclipseGrid  & grid,
+                                          const std::vector<int>& imbnum,
+                                          const std::vector<int>& endnum)
+    {
+        const auto oil_water = findCriticalOilWater( tableManager );
+        return imbnumApply( grid.getNumActive(), "SOWCRIT", oil_water, tableManager, grid,
+                            imbnum, endnum, false );
+    }
+
+    std::vector< double > SOGCREndpoint( const TableManager & tableManager,
+                                         const EclipseGrid  & grid,
+                                         const std::vector<int>& satnum,
+                                         const std::vector<int>& endnum)
+    {
+        const auto crit_oil_gas = findCriticalOilGas( tableManager );
+        return satnumApply( grid.getNumActive(), "SOGCRIT", crit_oil_gas, tableManager, grid,
+                            satnum, endnum, false );
+    }
+
+    std::vector< double > ISOGCREndpoint( const TableManager & tableManager,
+                                          const EclipseGrid  & grid,
+                                          const std::vector<int>& imbnum,
+                                          const std::vector<int>& endnum)
+    {
+        const auto crit_oil_gas = findCriticalOilGas( tableManager );
+        return imbnumApply( grid.getNumActive(), "SOGCRIT", crit_oil_gas, tableManager, grid,
+                            imbnum, endnum, false );
+    }
+
+    std::vector< double > SWCREndpoint( const TableManager & tableManager,
+                                        const EclipseGrid  & grid,
+                                        const std::vector<int>& satnum,
+                                        const std::vector<int>& endnum)
+    {
+        const auto crit_water = findCriticalWater( tableManager );
+        return satnumApply( grid.getNumActive(), "SWCRIT", crit_water, tableManager, grid,
+                            satnum, endnum, false );
+    }
+
+    std::vector< double > ISWCREndpoint( const TableManager & tableManager,
+                                         const EclipseGrid  & grid,
+                                         const std::vector<int>& imbnum,
+                                         const std::vector<int>& endnum)
+    {
+        const auto crit_water = findCriticalWater( tableManager );
+        return imbnumApply( grid.getNumActive(), "SWCRIT", crit_water, tableManager, grid,
+                            imbnum, endnum, false );
+    }
+
+    std::vector< double > PCWEndpoint( const TableManager & tableManager,
+                                       const EclipseGrid  & grid,
+                                       const std::vector<int>& satnum,
+                                       const std::vector<int>& endnum)
+    {
+        const auto max_pcow = findMaxPcow( tableManager );
+        return satnumApply( grid.getNumActive(), "PCW", max_pcow, tableManager, grid,
+                            satnum, endnum, false );
+    }
+
+    std::vector< double > IPCWEndpoint( const TableManager & tableManager,
+                                        const EclipseGrid  & grid,
+                                        const std::vector<int>& imbnum,
+                                        const std::vector<int>& endnum)
+    {
+        const auto max_pcow = findMaxPcow( tableManager );
+        return imbnumApply( grid.getNumActive(), "IPCW", max_pcow, tableManager, grid,
+                            imbnum, endnum, false );
+    }
+
+    std::vector< double > PCGEndpoint( const TableManager & tableManager,
+                                       const EclipseGrid  & grid,
+                                       const std::vector<int>& satnum,
+                                       const std::vector<int>& imbnum)
+    {
+        const auto max_pcog = findMaxPcog( tableManager );
+        return satnumApply( grid.getNumActive(), "PCG", max_pcog, tableManager, grid,
+                            satnum, imbnum, false );
+    }
+
+    std::vector< double > IPCGEndpoint( const TableManager & tableManager,
+                                        const EclipseGrid  & grid,
+                                        const std::vector<int>& imbnum,
+                                        const std::vector<int>& endnum)
+    {
+        const auto max_pcog = findMaxPcog( tableManager );
+        return imbnumApply( grid.getNumActive(), "IPCG", max_pcog, tableManager, grid,
+                            imbnum, endnum, false );
+    }
+
+    std::vector< double > KRWEndpoint( const TableManager & tableManager,
+                                       const EclipseGrid  & grid,
+                                       const std::vector<int>& satnum,
+                                       const std::vector<int>& endnum)
+    {
+        const auto max_krw = findMaxKrw( tableManager );
+        return satnumApply( grid.getNumActive(), "KRW", max_krw, tableManager, grid,
+                            satnum, endnum, false );
+    }
+
+    std::vector< double > IKRWEndpoint( const TableManager & tableManager,
+                                        const EclipseGrid  & grid,
+                                        const std::vector<int>& imbnum,
+                                        const std::vector<int>& endnum)
+    {
+        const auto krwr = findKrwr( tableManager );
+        return imbnumApply( grid.getNumActive(), "IKRW", krwr, tableManager, grid,
+                            imbnum, endnum, false );
+    }
+
+    std::vector< double > KRWREndpoint( const TableManager & tableManager,
+                                        const EclipseGrid  & grid,
+                                        const std::vector<int>& satnum,
+                                        const std::vector<int>& endnum)
+    {
+        const auto krwr = findKrwr( tableManager );
+        return satnumApply( grid.getNumActive(), "KRWR", krwr, tableManager, grid,
+                            satnum, endnum, false );
+    }
+
+    std::vector< double > IKRWREndpoint( const TableManager & tableManager,
+                                         const EclipseGrid  & grid,
+                                         const std::vector<int>& imbnum,
+                                         const std::vector<int>& endnum)
+    {
+        const auto krwr = findKrwr( tableManager );
+        return imbnumApply( grid.getNumActive(), "IKRWR", krwr, tableManager, grid,
+                            imbnum, endnum, false );
+    }
+
+    std::vector< double > KROEndpoint( const TableManager & tableManager,
+                                       const EclipseGrid  & grid,
+                                       const std::vector<int>& satnum,
+                                       const std::vector<int>& endnum)
+    {
+        const auto max_kro = findMaxKro( tableManager );
+        return satnumApply( grid.getNumActive(), "KRO", max_kro, tableManager, grid,
+                            satnum, endnum, false );
+    }
+
+    std::vector< double > IKROEndpoint( const TableManager & tableManager,
+                                        const EclipseGrid  & grid,
+                                        const std::vector<int>& imbnum,
+                                        const std::vector<int>& endnum)
+    {
+        const auto max_kro = findMaxKro( tableManager );
+        return imbnumApply( grid.getNumActive(), "IKRO", max_kro, tableManager, grid,
+                            imbnum, endnum, false );
+    }
+
+    std::vector< double > KRORWEndpoint( const TableManager & tableManager,
+                                         const EclipseGrid  & grid,
+                                         const std::vector<int>& satnum,
+                                         const std::vector<int>& endnum)
+    {
+        const auto krorw = findKrorw( tableManager );
+        return satnumApply( grid.getNumActive(), "KRORW", krorw, tableManager, grid,
+                            satnum, endnum, false );
+    }
+
+    std::vector< double > IKRORWEndpoint( const TableManager & tableManager,
+                                          const EclipseGrid  & grid,
+                                          const std::vector<int>& imbnum,
+                                          const std::vector<int>& endnum)
+    {
+        const auto krorw = findKrorw( tableManager );
+        return imbnumApply( grid.getNumActive(), "IKRORW", krorw, tableManager, grid,
+                            imbnum, endnum, false );
+    }
+
+    std::vector< double > KRORGEndpoint( const TableManager & tableManager,
+                                         const EclipseGrid  & grid,
+                                         const std::vector<int>& satnum,
+                                         const std::vector<int>& endnum)
+    {
+        const auto krorg = findKrorg( tableManager );
+        return satnumApply( grid.getNumActive(), "KRORG", krorg, tableManager, grid,
+                            satnum, endnum, false );
+    }
+
+    std::vector< double > IKRORGEndpoint( const TableManager & tableManager,
+                                          const EclipseGrid  & grid,
+                                          const std::vector<int>& imbnum,
+                                          const std::vector<int>& endnum)
+    {
+        const auto krorg = findKrorg( tableManager );
+        return imbnumApply( grid.getNumActive(), "IKRORG", krorg, tableManager, grid,
+                            imbnum, endnum, false );
+    }
+
+    std::vector< double > KRGEndpoint( const TableManager & tableManager,
+                                       const EclipseGrid  & grid,
+                                       const std::vector<int>& satnum,
+                                       const std::vector<int>& endnum)
+    {
+        const auto max_krg = findMaxKrg( tableManager );
+        return satnumApply( grid.getNumActive(), "KRG", max_krg, tableManager, grid,
+                            satnum, endnum, false );
+    }
+
+    std::vector< double > IKRGEndpoint( const TableManager & tableManager,
+                                        const EclipseGrid  & grid,
+                                        const std::vector<int>& imbnum,
+                                        const std::vector<int>& endnum)
+    {
+        const auto max_krg = findMaxKrg( tableManager );
+        return imbnumApply( grid.getNumActive(), "IKRG", max_krg, tableManager, grid,
+                            imbnum, endnum, false );
+    }
+
+    std::vector< double > KRGREndpoint( const TableManager & tableManager,
+                                        const EclipseGrid  & grid,
+                                        const std::vector<int>& satnum,
+                                        const std::vector<int>& endnum)
+    {
+        const auto krgr = findKrgr( tableManager );
+        return satnumApply( grid.getNumActive(), "KRGR", krgr, tableManager, grid,
+                            satnum, endnum, false );
+    }
+
+    std::vector< double > IKRGREndpoint( const TableManager & tableManager,
+                                         const EclipseGrid& grid,
+                                         const std::vector<int>& imbnum,
+                                         const std::vector<int>& endnum)
+    {
+        const auto krgr = findKrgr( tableManager );
+        return imbnumApply( grid.getNumActive(), "IKRGR", krgr, tableManager, grid,
+                            imbnum, endnum, false );
+    }
+
+    std::vector<double> init(const std::string& keyword,
+                             const TableManager& tables,
+                             const EclipseGrid& grid,
+                             const std::vector<int>& num,
+                             const std::vector<int>& endnum) {
+
+        using func_type = decltype(&IKRGEndpoint);
+        static std::map<std::string, func_type> func_table = {{"IKRGR", IKRGREndpoint},
+                                                              {"SGL", SGLEndpoint},
+                                                              {"ISGL", ISGLEndpoint},
+                                                              {"SGU", SGUEndpoint},
+                                                              {"ISGU", ISGUEndpoint},
+                                                              {"SWL", SWLEndpoint},
+                                                              {"ISWL", ISWLEndpoint},
+                                                              {"SWU", SWUEndpoint},
+                                                              {"ISWU", ISWUEndpoint},
+                                                              {"SGCR", SGCREndpoint},
+                                                              {"ISGCR", ISGCREndpoint},
+                                                              {"SOWCR", SOWCREndpoint},
+                                                              {"ISOWCR", ISOWCREndpoint},
+                                                              {"SOGCR", SOGCREndpoint},
+                                                              {"ISOGCR", ISOWCREndpoint},
+                                                              {"SWCR", SWCREndpoint},
+                                                              {"ISWCR", ISWCREndpoint},
+                                                              {"PCW", PCWEndpoint},
+                                                              {"IPCW", IPCWEndpoint},
+                                                              {"PCG", PCGEndpoint},
+                                                              {"IPCG", IPCGEndpoint},
+                                                              {"KRW", KRWEndpoint},
+                                                              {"IKRW", IKRORWEndpoint},
+                                                              {"KRWR", KRWREndpoint},
+                                                              {"IKRWR", IKRWEndpoint},
+                                                              {"KRO", KROEndpoint},
+                                                              {"IKRO", IKROEndpoint},
+                                                              {"KRORW", KRORWEndpoint},
+                                                              {"IKRORW", IKRORWEndpoint},
+                                                              {"KRORG", KRORGEndpoint},
+                                                              {"IKRORG", IKRORGEndpoint},
+                                                              {"KRG", KRGEndpoint},
+                                                              {"IKRG", IKRGEndpoint},
+                                                              {"KRGR", KRGREndpoint},
+                                                              {"IKRGR", IKRGREndpoint}};
+        const auto& func = func_table[keyword];
+        return func(tables, grid, num, endnum);
+    }
+}
 
 }
