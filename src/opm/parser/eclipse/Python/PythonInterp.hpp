@@ -18,8 +18,8 @@
 */
 
 
-#ifndef EMBEDDED_PYTHON_INTERP
-#define EMBEDDED_PYTHON_INTERP
+#ifndef PYTHON_INTERP
+#define PYTHON_INTERP
 
 #include <string>
 #include <stdexcept>

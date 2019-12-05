@@ -23,11 +23,10 @@
 
 namespace Opm {
 
-Python::Python():
-    interp(std::make_shared<PythonInterp>())
+Python::Python() :
+    interp(std::make_shared<PythonInterp>())    
 {
 }
-
 
 bool Python::exec(const std::string& python_code) const {
     this->interp->exec(python_code);
@@ -48,6 +47,15 @@ Python::operator bool() const {
         return bool( *this->interp );
     else
         return false;
+}
+
+std::unique_ptr<Python> PythonInstance() {
+    #ifdef EMBEDDED_PYTHON
+    if (Py_IsInitialized())
+        return NULL;
+    #endif
+    
+    return std::make_unique<Python>();
 }
 
 

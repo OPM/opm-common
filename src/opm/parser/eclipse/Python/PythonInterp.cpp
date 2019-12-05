@@ -27,11 +27,12 @@
 
 #include "python/cxx/export.hpp"
 #include "PythonInterp.hpp"
+#include "EmbedModule.hpp"
 
 namespace py = pybind11;
 namespace Opm {
 
-PYBIND11_EMBEDDED_MODULE(context, module) {
+OPM_EMBEDDED_MODULE(context, module) {
     python::common::export_all(module);
 }
 
