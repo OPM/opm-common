@@ -28,6 +28,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/Box.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.hpp>
 
 #include "FieldProps.hpp"
 
@@ -39,20 +40,14 @@ namespace {
 namespace keywords {
 
 
-static const std::map<std::string, std::string> unit_string = {{"PORO", "1"},
-                                                               {"PERMX", "Permeability"},
+/*
+  If a keyword is not mentioned here the getSIValue() function will silently
+  assume the keyword is dimensionless.
+*/
+static const std::map<std::string, std::string> unit_string = {{"PERMX", "Permeability"},
                                                                {"PERMY", "Permeability"},
                                                                {"PERMZ", "Permeability"},
-                                                               {"PORV", "ReservoirVolume"},
-                                                               {"NTG", "1"},
-                                                               {"SWATINIT", "1"},
-                                                               {"MULTPV", "1"},
-                                                               {"MULTX", "1"},
-                                                               {"MULTX-", "1"},
-                                                               {"MULTY", "1"},
-                                                               {"MULTY-", "1"},
-                                                               {"MULTZ", "1"},
-                                                               {"MULTZ-", "1"}};
+                                                               {"PORV", "ReservoirVolume"}};
 
 
 
@@ -69,6 +64,8 @@ static const std::map<std::string, double> double_scalar_init = {{"NTG", 1},
                                                                  {"MULTZ-", 1}};
 
 static const std::map<std::string, int> int_scalar_init = {{"SATNUM", 1},
+                                                           {"ENDNUM", 1},
+                                                           {"IMBNUM", 1},
                                                            {"FIPNUM", 1},   // All FIPxxx keywords should (probably) be added with init==1 
                                                            {"ACTNUM", 1}};
 
@@ -97,6 +94,45 @@ static const std::set<std::string> int_keywords = {};
 namespace PROPS {
 static const std::set<std::string> double_keywords = {"SWATINIT"};
 static const std::set<std::string> int_keywords = {};
+
+#define dirfunc(base) base, base "X", base "X-", base "Y", base "Y-", base "Z", base "Z-"
+
+static const std::set<std::string> satfunc = {"SWLPC", "ISWLPC", "SGLPC", "ISGLPC",
+                                              dirfunc("SGL"),
+                                              dirfunc("ISGL"),
+                                              dirfunc("SGU"),
+                                              dirfunc("ISGU"),
+                                              dirfunc("SWL"),
+                                              dirfunc("ISWL"),
+                                              dirfunc("SWU"),
+                                              dirfunc("ISWU"),
+                                              dirfunc("SGCR"),
+                                              dirfunc("ISGCR"),
+                                              dirfunc("SOWCR"),
+                                              dirfunc("ISOWCR"),
+                                              dirfunc("SOGCR"),
+                                              dirfunc("ISOGCR"),
+                                              dirfunc("SWCR"),
+                                              dirfunc("ISWCR"),
+                                              dirfunc("PCW"),
+                                              dirfunc("IPCW"),
+                                              dirfunc("PCG"),
+                                              dirfunc("IPCG"),
+                                              dirfunc("KRW"),
+                                              dirfunc("IKRW"),
+                                              dirfunc("KRWR"),
+                                              dirfunc("IKRWR"),
+                                              dirfunc("KRO"),
+                                              dirfunc("IKRO"),
+                                              dirfunc("KRORW"),
+                                              dirfunc("IKRORW"),
+                                              dirfunc("KRORG"),
+                                              dirfunc("IKRORG"),
+                                              dirfunc("KRG"),
+                                              dirfunc("IKRG"),
+                                              dirfunc("KRGR"),
+                                              dirfunc("IKRGR")};
+
 }
 
 namespace REGIONS {
@@ -158,7 +194,7 @@ std::string default_region_keyword(const Deck& deck) {
 
 
 template <typename T>
-void assign_deck(const DeckKeyword& keyword, FieldProps::FieldData<T>& field_data, const std::vector<T>& deck_data, const Box& box) {
+void assign_deck(const DeckKeyword& keyword, FieldProps::FieldData<T>& field_data, const std::vector<T>& deck_data, const std::vector<value::status>& deck_status, const Box& box) {
     if (box.size() != deck_data.size()) {
         const auto& location = keyword.location();
         std::string msg = "Fundamental error with keyword: " + keyword.name() +
@@ -169,8 +205,39 @@ void assign_deck(const DeckKeyword& keyword, FieldProps::FieldData<T>& field_dat
 
 
     for (const auto& cell_index : box.index_list()) {
-        field_data.data[cell_index.active_index] = deck_data[cell_index.data_index];
-        field_data.value_status[cell_index.active_index] = value::status::deck_value;
+        auto active_index = cell_index.active_index;
+        auto data_index = cell_index.data_index;
+
+        if (value::has_value(deck_status[data_index])) {
+            if (deck_status[data_index] == value::status::deck_value || field_data.value_status[active_index] == value::status::uninitialized) {
+                field_data.data[active_index] = deck_data[data_index];
+                field_data.value_status[active_index] = deck_status[data_index];
+            }
+        }
+    }
+}
+
+template <typename T>
+void distribute_toplayer(const EclipseGrid& grid, FieldProps::FieldData<T>& field_data, const std::vector<T>& deck_data, const Box& box) {
+    const std::size_t layer_size = grid.getNX() * grid.getNY();
+    FieldProps::FieldData<double> toplayer(grid.getNX() * grid.getNY());
+    for (const auto& cell_index : box.index_list()) {
+        if (cell_index.global_index < layer_size) {
+            toplayer.data[cell_index.global_index] = deck_data[cell_index.data_index];
+            toplayer.value_status[cell_index.global_index] = value::status::deck_value;
+        }
+    }
+
+    for (std::size_t active_index = 0; active_index < field_data.size(); active_index++) {
+        if (field_data.value_status[active_index] == value::status::uninitialized) {
+            std::size_t global_index = grid.getGlobalIndex(active_index);
+            const auto ijk = grid.getIJK(global_index);
+            std::size_t layer_index = ijk[0] + ijk[1] * grid.getNX();
+            if (toplayer.value_status[layer_index] == value::status::deck_value) {
+                field_data.data[active_index] = toplayer.data[layer_index];
+                field_data.value_status[active_index] = value::status::valid_default;
+            }
+        }
     }
 }
 
@@ -272,7 +339,7 @@ std::vector<double> extract_cell_volume(const EclipseGrid& grid) {
 
 
 
-FieldProps::FieldProps(const Deck& deck, const EclipseGrid& grid, const TableManager& ) :
+FieldProps::FieldProps(const Deck& deck, const EclipseGrid& grid, const TableManager& tables) :
     unit_system(deck.getActiveUnitSystem()),
     active_size(grid.getNumActive()),
     global_size(grid.getCartesianSize()),
@@ -289,11 +356,11 @@ FieldProps::FieldProps(const Deck& deck, const EclipseGrid& grid, const TableMan
     if (Section::hasEDIT(deck))
         this->scanEDITSection(EDITSection(deck), grid);
 
-    if (Section::hasPROPS(deck))
-        this->scanPROPSSection(PROPSSection(deck), grid);
-
     if (Section::hasREGIONS(deck))
         this->scanREGIONSSection(REGIONSSection(deck), grid);
+
+    if (Section::hasPROPS(deck))
+        this->scanPROPSSection(PROPSSection(deck), grid, tables);
 
     if (Section::hasSOLUTION(deck))
         this->scanSOLUTIONSection(SOLUTIONSection(deck), grid);
@@ -376,6 +443,9 @@ bool FieldProps::supported<double>(const std::string& keyword) {
         return true;
 
     if (keywords::PROPS::double_keywords.count(keyword) != 0)
+        return true;
+
+    if (keywords::PROPS::satfunc.count(keyword) != 0)
         return true;
 
     if (keywords::SOLUTION::double_keywords.count(keyword) != 0)
@@ -508,10 +578,10 @@ void FieldProps::erase<double>(const std::string& keyword) {
 
 double FieldProps::getSIValue(const std::string& keyword, double raw_value) const {
     const auto& iter = keywords::unit_string.find(keyword);
-    if (iter == keywords::unit_string.end())
-        throw std::logic_error("Trying to look up dimension string for keyword: " + keyword);
+    std::string dim_string = "1";
+    if (iter != keywords::unit_string.end())
+        dim_string = iter->second;
 
-    const auto& dim_string = iter->second;
     const auto& dim = this->unit_system.parse( dim_string );
     return dim.convertRawToSi(raw_value);
 }
@@ -523,21 +593,24 @@ double FieldProps::getSIValue(const std::string& keyword, double raw_value) cons
 void FieldProps::handle_int_keyword(const DeckKeyword& keyword, const Box& box) {
     auto& field_data = this->get<int>(keyword.name());
     const auto& deck_data = keyword.getIntData();
-    assign_deck(keyword, field_data, deck_data, box);
+    const auto& deck_status = keyword.getValueStatus();
+    assign_deck(keyword, field_data, deck_data, deck_status, box);
 }
 
 
 void FieldProps::handle_double_keyword(const DeckKeyword& keyword, const Box& box) {
     auto& field_data = this->get<double>(keyword.name());
     const auto& deck_data = keyword.getSIDoubleData();
-    assign_deck(keyword, field_data, deck_data, box);
+    const auto& deck_status = keyword.getValueStatus();
+    assign_deck(keyword, field_data, deck_data, deck_status, box);
 }
 
 
 void FieldProps::handle_grid_section_double_keyword(const DeckKeyword& keyword, const Box& box) {
     auto& field_data = this->get<double>(keyword.name());
     const auto& deck_data = keyword.getSIDoubleData();
-    assign_deck(keyword, field_data, deck_data, box);
+    const auto& deck_status = keyword.getValueStatus();
+    assign_deck(keyword, field_data, deck_data, deck_status, box);
     if (field_data.valid())
         return;
 
@@ -816,11 +889,27 @@ void FieldProps::scanEDITSection(const EDITSection& edit_section, const EclipseG
 }
 
 
-void FieldProps::scanPROPSSection(const PROPSSection& props_section, const EclipseGrid& grid) {
+void FieldProps::scanPROPSSection(const PROPSSection& props_section, const EclipseGrid& grid, const TableManager& tables) {
     Box box(grid);
 
     for (const auto& keyword : props_section) {
         const std::string& name = keyword.name();
+        if (keywords::PROPS::satfunc.count(name) == 1) {
+            if (!this->has<double>(name)) {
+                auto& satfunc = this->get<double>(name);
+                const auto& endnum = this->get_valid_data<int>("ENDNUM");
+                if (name[0] == 'I') {
+                    const auto& imbnum = this->get_valid_data<int>("IMBNUM");
+                    satfunc.default_update(satfunc::init(name, tables, grid, imbnum, endnum));
+                } else {
+                    const auto& satnum = this->get_valid_data<int>("SATNUM");
+                    satfunc.default_update(satfunc::init(name, tables, grid, satnum, endnum));
+                }
+            }
+            this->handle_double_keyword(keyword, box);
+            continue;
+        }
+
         if (keywords::PROPS::double_keywords.count(name) == 1) {
             this->handle_double_keyword(keyword, box);
             continue;

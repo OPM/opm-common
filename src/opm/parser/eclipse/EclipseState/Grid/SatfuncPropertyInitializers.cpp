@@ -1591,6 +1591,7 @@ namespace satfunc {
                             imbnum, endnum, false );
     }
 
+
     std::vector<double> init(const std::string& keyword,
                              const TableManager& tables,
                              const EclipseGrid& grid,
@@ -1598,41 +1599,50 @@ namespace satfunc {
                              const std::vector<int>& endnum) {
 
         using func_type = decltype(&IKRGEndpoint);
-        static std::map<std::string, func_type> func_table = {{"IKRGR", IKRGREndpoint},
-                                                              {"SGL", SGLEndpoint},
-                                                              {"ISGL", ISGLEndpoint},
-                                                              {"SGU", SGUEndpoint},
-                                                              {"ISGU", ISGUEndpoint},
-                                                              {"SWL", SWLEndpoint},
-                                                              {"ISWL", ISWLEndpoint},
-                                                              {"SWU", SWUEndpoint},
-                                                              {"ISWU", ISWUEndpoint},
-                                                              {"SGCR", SGCREndpoint},
-                                                              {"ISGCR", ISGCREndpoint},
-                                                              {"SOWCR", SOWCREndpoint},
-                                                              {"ISOWCR", ISOWCREndpoint},
-                                                              {"SOGCR", SOGCREndpoint},
-                                                              {"ISOGCR", ISOWCREndpoint},
-                                                              {"SWCR", SWCREndpoint},
-                                                              {"ISWCR", ISWCREndpoint},
-                                                              {"PCW", PCWEndpoint},
-                                                              {"IPCW", IPCWEndpoint},
-                                                              {"PCG", PCGEndpoint},
-                                                              {"IPCG", IPCGEndpoint},
-                                                              {"KRW", KRWEndpoint},
-                                                              {"IKRW", IKRORWEndpoint},
-                                                              {"KRWR", KRWREndpoint},
-                                                              {"IKRWR", IKRWEndpoint},
-                                                              {"KRO", KROEndpoint},
-                                                              {"IKRO", IKROEndpoint},
-                                                              {"KRORW", KRORWEndpoint},
-                                                              {"IKRORW", IKRORWEndpoint},
-                                                              {"KRORG", KRORGEndpoint},
-                                                              {"IKRORG", IKRORGEndpoint},
-                                                              {"KRG", KRGEndpoint},
-                                                              {"IKRG", IKRGEndpoint},
-                                                              {"KRGR", KRGREndpoint},
-                                                              {"IKRGR", IKRGREndpoint}};
+
+#define dirfunc(base, func) {base, func}, \
+                            {base "X", func}, {base "X-", func},  \
+                            {base "Y", func}, {base "Y-", func},  \
+                            {base "Z", func}, {base "Z-", func}
+
+        static std::map<std::string, func_type> func_table = {{"SGLPC", SGLEndpoint},
+                                                              {"ISGLPC", ISGLEndpoint},
+                                                              {"SWLPC", SWLEndpoint},
+                                                              {"ISWLPC", ISWLEndpoint},
+                                                              dirfunc("SGL", SGLEndpoint),
+                                                              dirfunc("ISGL", ISGLEndpoint),
+                                                              dirfunc("SGU", SGUEndpoint),
+                                                              dirfunc("ISGU", ISGUEndpoint),
+                                                              dirfunc("SWL", SWLEndpoint),
+                                                              dirfunc("ISWL", ISWLEndpoint),
+                                                              dirfunc("SWU", SWUEndpoint),
+                                                              dirfunc("ISWU", ISWUEndpoint),
+                                                              dirfunc("SGCR", SGCREndpoint),
+                                                              dirfunc("ISGCR", ISGCREndpoint),
+                                                              dirfunc("SOWCR", SOWCREndpoint),
+                                                              dirfunc("ISOWCR", ISOWCREndpoint),
+                                                              dirfunc("SOGCR", SOGCREndpoint),
+                                                              dirfunc("ISOGCR", ISOWCREndpoint),
+                                                              dirfunc("SWCR", SWCREndpoint),
+                                                              dirfunc("ISWCR", ISWCREndpoint),
+                                                              dirfunc("PCW", PCWEndpoint),
+                                                              dirfunc("IPCW", IPCWEndpoint),
+                                                              dirfunc("PCG", PCGEndpoint),
+                                                              dirfunc("IPCG", IPCGEndpoint),
+                                                              dirfunc("KRW", KRWEndpoint),
+                                                              dirfunc("IKRW", IKRORWEndpoint),
+                                                              dirfunc("KRWR", KRWREndpoint),
+                                                              dirfunc("IKRWR", IKRWEndpoint),
+                                                              dirfunc("KRO", KROEndpoint),
+                                                              dirfunc("IKRO", IKROEndpoint),
+                                                              dirfunc("KRORW", KRORWEndpoint),
+                                                              dirfunc("IKRORW", IKRORWEndpoint),
+                                                              dirfunc("KRORG", KRORGEndpoint),
+                                                              dirfunc("IKRORG", IKRORGEndpoint),
+                                                              dirfunc("KRG", KRGEndpoint),
+                                                              dirfunc("IKRG", IKRGEndpoint),
+                                                              dirfunc("KRGR", KRGREndpoint),
+                                                              dirfunc("IKRGR", IKRGREndpoint)};
         const auto& func = func_table[keyword];
         return func(tables, grid, num, endnum);
     }
