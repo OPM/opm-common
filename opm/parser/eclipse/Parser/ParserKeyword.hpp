@@ -130,6 +130,8 @@ namespace Opm {
         bool isDataKeyword() const;
         bool rawStringKeyword() const;
         bool isCodeKeyword() const;
+        bool isAlternatingKeyword() const;
+        void setAlternatingKeyword(bool alternating);
 
         std::string createDeclaration(const std::string& indent) const;
         std::string createDecl() const;
@@ -151,6 +153,7 @@ namespace Opm {
         bool m_isTableCollection;
         std::string m_Description;
         bool raw_string_keyword = false;
+        bool alternating_keyword = false;
         std::string code_end;
 
         static bool validNameStart(const string_view& name);
@@ -163,6 +166,7 @@ namespace Opm {
         void initSizeKeyword(const Json::JsonObject& sizeObject);
         void commonInit(const std::string& name, ParserKeywordSizeEnum sizeType);
         void addItems( const Json::JsonObject& jsonConfig);
+        void parseRecords( const Json::JsonObject recordsConfig, size_t num_records );
     };
 
 std::ostream& operator<<( std::ostream&, const ParserKeyword& );
