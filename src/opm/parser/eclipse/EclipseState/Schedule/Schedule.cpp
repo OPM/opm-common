@@ -325,6 +325,9 @@ namespace {
         else if (keyword.name() == "COMPSEGS")
             handleCOMPSEGS(keyword, currentStep, grid, parseContext, errors);
 
+        else if (keyword.name() == "WSEGSICD")
+            handleWSEGSICD(keyword, currentStep);
+
         else if (keyword.name() == "WELOPEN")
             handleWELOPEN(keyword, currentStep, parseContext, errors);
 
@@ -1958,6 +1961,25 @@ namespace {
             auto well_ptr = std::make_shared<Well>( *dynamic_state[currentStep] );
             if (well_ptr->handleCOMPSEGS(keyword, grid, parseContext, errors))
                 this->updateWell(well_ptr, currentStep);
+        }
+    }
+
+    void Schedule::handleWSEGSICD( const DeckKeyword& keyword, size_t currentStep) {
+
+        const std::map<std::string, std::vector<std::pair<int, SpiralICD> > > spiral_icds =
+                                SpiralICD::fromWSEGSICD(keyword);
+
+        for (const auto& map_elem : spiral_icds) {
+            const std::string& well_name_pattern = map_elem.first;
+            const auto well_names = this->wellNames(well_name_pattern, currentStep);
+            const std::vector<std::pair<int, SpiralICD> >& sicd_pairs = map_elem.second;
+
+            for (const auto& well_name : well_names) {
+                auto& dynamic_state = this->wells_static.at(well_name);
+                auto well_ptr = std::make_shared<Well>( *dynamic_state[currentStep] );
+                if (well_ptr -> updateWSEGSICD(sicd_pairs) )
+                    this->updateWell(well_ptr, currentStep);
+            }
         }
     }
 

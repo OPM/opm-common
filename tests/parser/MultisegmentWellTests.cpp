@@ -42,6 +42,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/updatingConnectionsWithSegments.hpp>
 
 BOOST_AUTO_TEST_CASE(MultisegmentWellTest) {
+
     auto dir = Opm::Connection::Direction::Z;
     Opm::WellConnections connection_set(10,10);
     Opm::EclipseGrid grid(20,20,20);
@@ -58,12 +59,13 @@ BOOST_AUTO_TEST_CASE(MultisegmentWellTest) {
 
     const std::string compsegs_string =
         "WELSEGS \n"
-        "'PROD01' 2512.5 2512.5 1.0e-5 'ABS' 'H--' 'HO' /\n"
+        "'PROD01' 2512.5 2512.5 1.0e-5 'ABS' 'HF-' 'HO' /\n"
         "2         2      1      1    2537.5 2537.5  0.3   0.00010 /\n"
         "3         3      1      2    2562.5 2562.5  0.2  0.00010 /\n"
         "4         4      2      2    2737.5 2537.5  0.2  0.00010 /\n"
         "6         6      2      4    3037.5 2539.5  0.2  0.00010 /\n"
         "7         7      2      6    3337.5 2534.5  0.2  0.00010 /\n"
+        "8         8      3      7    3337.6 2534.5  0.2  0.00015 /\n"
         "/\n"
         "\n"
         "COMPSEGS\n"
@@ -74,7 +76,10 @@ BOOST_AUTO_TEST_CASE(MultisegmentWellTest) {
         "19    1     2     2   2637.5   2837.5 /\n"
         "18    1     2     2   2837.5   3037.5 /\n"
         "17    1     2     2   3037.5   3237.5 /\n"
-        "16    1     2     2   3237.5   3437.5 /\n"
+        "16    1     2     3   3237.5   3437.5 /\n"
+        "/\n"
+        "WSEGSICD\n"
+        "'PROD01'  8   8   0.002   -0.7  1* 1* 0.6 1* 1* 2* 'SHUT' /\n"
         "/\n";
 
     Opm::Parser parser;
@@ -85,9 +90,10 @@ BOOST_AUTO_TEST_CASE(MultisegmentWellTest) {
 
     Opm::WellSegments segment_set;
     const Opm::DeckKeyword welsegs = deck.getKeyword("WELSEGS");
+
     segment_set.loadWELSEGS(welsegs);
 
-    BOOST_CHECK_EQUAL(6U, segment_set.size());
+    BOOST_CHECK_EQUAL(7U, segment_set.size());
 
     Opm::ErrorGuard   errorGuard;
     Opm::ParseContext parseContext;
@@ -95,6 +101,62 @@ BOOST_AUTO_TEST_CASE(MultisegmentWellTest) {
     parseContext.update(Opm::ParseContext::SCHEDULE_COMPSEGS_NOT_SUPPORTED, Opm::InputError::THROW_EXCEPTION);
     std::unique_ptr<Opm::WellConnections> new_connection_set{nullptr};
     BOOST_CHECK_NO_THROW(new_connection_set.reset(Opm::newConnectionsWithSegments(compsegs, connection_set, segment_set, grid, parseContext, errorGuard)));
+
+    // checking the ICD segment
+    const Opm::DeckKeyword wsegsicd = deck.getKeyword("WSEGSICD");
+    BOOST_CHECK_EQUAL(1U, wsegsicd.size());
+    const Opm::DeckRecord& record = wsegsicd.getRecord(0);
+    const int start_segment = record.getItem("SEG1").get< int >(0);
+    const int end_segment = record.getItem("SEG2").get< int >(0);
+    BOOST_CHECK_EQUAL(8, start_segment);
+    BOOST_CHECK_EQUAL(8, end_segment);
+
+    const auto sicd_map = Opm::SpiralICD::fromWSEGSICD(wsegsicd);
+
+    BOOST_CHECK_EQUAL(1U, sicd_map.size());
+
+    const auto it = sicd_map.begin();
+    const std::string& well_name = it->first;
+    BOOST_CHECK_EQUAL(well_name, "PROD01");
+
+    const auto& sicd_vector = it->second;
+    BOOST_CHECK_EQUAL(1U, sicd_vector.size());
+    const int segment_number = sicd_vector[0].first;
+    const Opm::SpiralICD& sicd = sicd_vector[0].second;
+
+    BOOST_CHECK_EQUAL(8, segment_number);
+
+    Opm::Segment segment = segment_set.getFromSegmentNumber(segment_number);
+    segment.updateSpiralICD(sicd);
+
+    BOOST_CHECK(Opm::Segment::SegmentType::SICD==segment.segmentType());
+
+    const std::shared_ptr<Opm::SpiralICD> sicd_ptr = segment.spiralICD();
+    BOOST_CHECK_GT(sicd_ptr->maxAbsoluteRate(), 1.e99);
+    BOOST_CHECK(sicd_ptr->status()==Opm::SpiralICD::Status::SHUT);
+    // 0.002 bars*day*day/Volume^2
+    BOOST_CHECK_EQUAL(sicd_ptr->strength(), 0.002*1.e5*86400.*86400.);
+    BOOST_CHECK_EQUAL(sicd_ptr->length(), -0.7);
+    BOOST_CHECK_EQUAL(sicd_ptr->densityCalibration(), 1000.25);
+    // 1.45 cp
+    BOOST_CHECK_EQUAL(sicd_ptr->viscosityCalibration(), 1.45 * 0.001);
+    BOOST_CHECK_EQUAL(sicd_ptr->criticalValue(), 0.6);
+    BOOST_CHECK_EQUAL(sicd_ptr->widthTransitionRegion(), 0.05);
+    BOOST_CHECK_EQUAL(sicd_ptr->maxViscosityRatio(), 5.0);
+    BOOST_CHECK_EQUAL(sicd_ptr->methodFlowScaling(), -1);
+    // the scaling factor has not been updated properly, so it will throw
+    BOOST_CHECK_THROW(sicd_ptr->scalingFactor(), std::runtime_error);
+
+    const int outlet_segment_number = segment.outletSegment();
+    const double outlet_segment_length = segment_set.segmentLength(outlet_segment_number);
+    // only one connection attached to the outlet segment in this case
+    const Opm::Connection& connection = new_connection_set->getFromIJK(15, 0, 1);
+    const double connection_length = connection.getSegDistEnd() - connection.getSegDistStart();
+    sicd_ptr->updateScalingFactor(outlet_segment_length, connection_length);
+
+    // updated, so it should not throw
+    BOOST_CHECK_NO_THROW(sicd_ptr->scalingFactor());
+    BOOST_CHECK_EQUAL(0.7, sicd_ptr->scalingFactor());
 
     BOOST_CHECK_EQUAL(7U, new_connection_set->size());
 
@@ -125,8 +187,9 @@ BOOST_AUTO_TEST_CASE(MultisegmentWellTest) {
     const Opm::Connection& connection7 = new_connection_set->get(6);
     const int segment_number_connection7 = connection7.segment();
     const double center_depth_connection7 = connection7.depth();
-    BOOST_CHECK_EQUAL(segment_number_connection7, 7);
+    BOOST_CHECK_EQUAL(segment_number_connection7, 8);
     BOOST_CHECK_EQUAL(center_depth_connection7, 2534.5);
+
 }
 
 BOOST_AUTO_TEST_CASE(WrongDistanceCOMPSEGS) {

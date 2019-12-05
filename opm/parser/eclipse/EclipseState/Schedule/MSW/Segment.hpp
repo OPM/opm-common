@@ -22,11 +22,18 @@
 
 #include <memory>
 #include <vector>
+#include <opm/parser/eclipse/EclipseState/Schedule/MSW/SpiralICD.hpp>
 
 namespace Opm {
 
     class Segment {
     public:
+
+        enum class SegmentType {
+            REGULAR,
+            SICD
+        };
+
         Segment();
 
         Segment(int segment_number_in, int branch_in, int outlet_segment_in, double length_in, double depth_in,
@@ -43,6 +50,8 @@ namespace Opm {
         double volume() const;
         bool dataReady() const;
 
+        SegmentType segmentType() const;
+
         void setVolume(const double volume_in);
         void setDepthAndLength(const double depth_in, const double length_in);
 
@@ -54,6 +63,9 @@ namespace Opm {
         bool operator==( const Segment& ) const;
         bool operator!=( const Segment& ) const;
 
+        void updateSpiralICD(const SpiralICD& spiral_icd);
+
+        const std::shared_ptr<SpiralICD>& spiralICD() const;
 
     private:
         // segment number
@@ -100,6 +112,13 @@ namespace Opm {
         // indicate if the data related to 'INC' or 'ABS' is ready
         // the volume will be updated at a final step.
         bool m_data_ready;
+        // indicate the type of the segment
+        // regular or spiral ICD
+        SegmentType m_segment_type = SegmentType::REGULAR;
+
+        // information related to SpiralICD. It is nullptr for segments are not
+        // spiral ICD type
+        std::shared_ptr<SpiralICD> m_spiral_icd;
 
         static constexpr double invalid_value = -1.e100;
         // We are not handling the length of segment projected onto the X-axis and Y-axis.
