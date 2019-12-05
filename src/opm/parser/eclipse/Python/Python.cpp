@@ -50,8 +50,10 @@ Python::operator bool() const {
 }
 
 std::unique_ptr<Python> PythonInstance() {
+    #ifdef EMBEDDED_PYTHON
     if (Py_IsInitialized())
         return NULL;
+    #endif
     
     return std::make_unique<Python>();
 }
