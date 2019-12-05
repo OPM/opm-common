@@ -20,6 +20,20 @@ enum TokenType {
   error          // 13
 };
 
+enum class FuncType {
+  none,
+  time,
+  region,
+  field,
+  group,
+  well,
+  well_segment,
+  well_connection,
+  Well_lgr,
+  aquifer,
+  block
+};
+
 
 
 namespace Opm {

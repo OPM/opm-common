@@ -21,6 +21,8 @@
 #include <cstring>
 #include <cstdlib>
 
+#include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
+
 #include "ActionParser.hpp"
 
 namespace Opm {
@@ -82,6 +84,25 @@ TokenType Parser::get_type(const std::string& arg) {
     return TokenType::ecl_expr;
 }
 
+FuncType Parser::get_func(const std::string& arg) {
+
+    if (arg == "YEAR") return FuncType::time;
+    if (arg == "MNTH") return FuncType::time;
+    if (arg == "DAY")  return FuncType::time;
+
+    using Cat = SummaryNode::Category;
+    SummaryNode::Category cat = parseKeywordCategory(arg);
+    switch (cat) {
+        case Cat::Well:       return FuncType::well;
+        case Cat::Group:      return FuncType::group;
+        case Cat::Connection: return FuncType::well_connection;
+        case Cat::Region:     return FuncType::region;
+        case Cat::Block:      return FuncType::block;
+        case Cat::Segment:    return FuncType::well_segment;
+    }
+    return FuncType::none;
+}
+
 
 ParseNode Parser::next() {
     this->current_pos++;
@@ -108,6 +129,7 @@ Action::ASTNode Parser::parse_left() {
         return TokenType::error;
 
     std::string func = current.value;
+    FuncType func_type = get_func(current.value);
     std::vector<std::string> arg_list;
     current = this->next();
     while (current.type == TokenType::ecl_expr || current.type == TokenType::number) {
@@ -115,7 +137,7 @@ Action::ASTNode Parser::parse_left() {
         current = this->next();
     }
 
-    return Action::ASTNode(TokenType::ecl_expr, func, arg_list);
+    return Action::ASTNode(TokenType::ecl_expr, func_type, func, arg_list);
 }
 
 Action::ASTNode Parser::parse_op() {
@@ -145,13 +167,14 @@ Action::ASTNode Parser::parse_right() {
         return TokenType::error;
 
     std::string func = current.value;
+    FuncType func_type = FuncType::none;
     std::vector<std::string> arg_list;
     current = this->next();
     while (current.type == TokenType::ecl_expr || current.type == TokenType::number) {
         arg_list.push_back(current.value);
         current = this->next();
     }
-    return Action::ASTNode(TokenType::ecl_expr, func, arg_list);
+    return Action::ASTNode(TokenType::ecl_expr, func_type, func, arg_list);
 }
 
 

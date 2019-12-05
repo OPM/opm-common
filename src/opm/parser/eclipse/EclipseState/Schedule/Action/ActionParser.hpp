@@ -51,6 +51,7 @@ class Parser {
 public:
     static Action::ASTNode parse(const std::vector<std::string>& tokens);
     static TokenType get_type(const std::string& arg);
+    static FuncType get_func(const std::string& arg);
 
 private:
     explicit Parser(const std::vector<std::string>& tokens);

@@ -683,25 +683,6 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
         }
     }
 
-    SummaryNode::Category parseKeywordCategory(const std::string& keyword) {
-        using Cat = SummaryNode::Category;
-
-        if (is_special(keyword)) { return Cat::Miscellaneous; }
-
-        switch (keyword[0]) {
-            case 'W': return Cat::Well;
-            case 'G': return Cat::Group;
-            case 'F': return Cat::Field;
-            case 'C': return Cat::Connection;
-            case 'R': return Cat::Region;
-            case 'B': return Cat::Block;
-            case 'S': return Cat::Segment;
-        }
-
-        // TCPU, MLINEARS, NEWTON, &c
-        return Cat::Miscellaneous;
-    }
-
     std::string to_string(const SummaryNode::Category cat) {
         switch( cat ) {
             case SummaryNode::Category::Well: return "Well";
@@ -813,6 +794,27 @@ inline void handleKW( SummaryConfig::keyword_list& list,
 }
 
 // =====================================================================
+
+
+SummaryNode::Category parseKeywordCategory(const std::string& keyword) {
+    using Cat = SummaryNode::Category;
+
+    if (is_special(keyword)) { return Cat::Miscellaneous; }
+
+    switch (keyword[0]) {
+        case 'W': return Cat::Well;
+        case 'G': return Cat::Group;
+        case 'F': return Cat::Field;
+        case 'C': return Cat::Connection;
+        case 'R': return Cat::Region;
+        case 'B': return Cat::Block;
+        case 'S': return Cat::Segment;
+    }
+
+    // TCPU, MLINEARS, NEWTON, &c
+    return Cat::Miscellaneous;
+}
+
 
 SummaryNode::SummaryNode(std::string keyword, const Category cat, Location loc_arg) :
     keyword_(std::move(keyword)),
