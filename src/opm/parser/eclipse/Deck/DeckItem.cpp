@@ -108,6 +108,10 @@ bool DeckItem::defaultApplied( size_t index ) const {
     return value::defaulted( this->value_status.at(index));
 }
 
+const std::vector<value::status>& DeckItem::getValueStatus() const {
+    return this->value_status;
+}
+
 bool DeckItem::hasValue( size_t index ) const {
     if (index >= this->value_status.size())
         return false;

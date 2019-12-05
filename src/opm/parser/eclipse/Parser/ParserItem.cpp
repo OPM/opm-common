@@ -244,9 +244,6 @@ const T& ParserItem::getDefault() const {
     if( get_type< T >() != this->data_type )
         throw std::invalid_argument( "getDefault: Wrong type." );
 
-    if( !this->hasDefault() && this->m_sizeType == item_size::ALL )
-        return default_value< T >();
-
     if( !this->hasDefault() )
         throw std::invalid_argument( "No default value available for item "
                                      + this->name() );
@@ -497,9 +494,14 @@ void scan_item( DeckItem& deck_item, const ParserItem& parser_item, RawRecord& r
                 continue;
             }
 
-            auto value = parser_item.getDefault< T >();
-            for (size_t i=0; i < st.count(); i++)
-                deck_item.push_backDefault( value );
+            if (parser_item.hasDefault()) {
+                auto value = parser_item.getDefault< T >();
+                for (size_t i=0; i < st.count(); i++)
+                    deck_item.push_backDefault( value );
+            } else {
+                for (size_t i=0; i < st.count(); i++)
+                    deck_item.push_backDummyDefault<T>();
+            }
         }
 
         return;

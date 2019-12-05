@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(DeckKeywordConstructor) {
 
 
 BOOST_AUTO_TEST_CASE(DeckKeywordVectorInt) {
-    
+
    Parser parser;
    Deck deck;
 
@@ -157,7 +157,7 @@ BOOST_AUTO_TEST_CASE(DeckKeywordVectorInt) {
    DeckKeyword hbnum_kw(hbnum, data);
    BOOST_CHECK(hbnum_kw.isDataKeyword());
    BOOST_CHECK_EQUAL(hbnum_kw.getDataSize(), 9);
-   BOOST_CHECK( hbnum_kw.getIntData() == data );   
+   BOOST_CHECK( hbnum_kw.getIntData() == data );
 
    std::vector<double> data_double = {1.1, 2.2};
    BOOST_CHECK_THROW(DeckKeyword(hbnum, data_double, unit_active, unit_default), std::invalid_argument);
@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_CASE(DeckKeywordVectorInt) {
 
 
 BOOST_AUTO_TEST_CASE(DeckKeywordVectorDouble) {
-    
+
    Parser parser;
    Deck deck;
 
@@ -176,7 +176,7 @@ BOOST_AUTO_TEST_CASE(DeckKeywordVectorDouble) {
    const ParserKeyword& box = parser.getKeyword("BOX");
 
    std::vector<double> data = {1.1, 2.2, 3.3};
-   
+
    BOOST_CHECK_THROW(DeckKeyword(box, data, unit_active, unit_default), std::invalid_argument);
    DeckKeyword zcorn_kw(zcorn, data, unit_active, unit_default);
    BOOST_CHECK(zcorn_kw.isDataKeyword());
@@ -191,5 +191,24 @@ BOOST_AUTO_TEST_CASE(DeckKeywordVectorDouble) {
 
 
 
+
+
+
+BOOST_AUTO_TEST_CASE(ValueStatus) {
+    const std::string deck_string = R"(
+PERMX
+  100* /
+)";
+
+    Parser parser;
+    Deck deck = parser.parseString(deck_string);
+    const auto& permx = deck.getKeyword("PERMX");
+    const auto& status = permx.getValueStatus();
+    BOOST_CHECK_EQUAL(status.size(), 100);
+    for (const auto& vs : status) {
+        BOOST_CHECK(!value::has_value(vs));
+        BOOST_CHECK(vs == value::status::empty_default);
+    }
+}
 
 

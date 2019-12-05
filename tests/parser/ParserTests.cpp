@@ -472,7 +472,7 @@ BOOST_AUTO_TEST_CASE(InitializeIntItem_FromJsonObject) {
     ParserItem item1( jsonConfig );
     BOOST_CHECK_EQUAL( "ITEM1" , item1.name() );
     BOOST_CHECK_EQUAL( ParserItem::item_size::ALL, item1.sizeType() );
-    BOOST_CHECK(item1.getDefault< int >() < 0);
+    BOOST_CHECK_THROW(item1.getDefault< int >(), std::invalid_argument);
 }
 
 
