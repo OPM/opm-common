@@ -348,7 +348,7 @@ namespace {
                             std::end  (xw.connections),
                     [](const Opm::data::Connection& c)
                 {
-                    return c.rates.any();
+                    return c.rates.flowing();
                 });
 
             iWell[Ix::item9] = any_flowing_conn
