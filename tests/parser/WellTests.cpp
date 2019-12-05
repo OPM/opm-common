@@ -219,7 +219,6 @@ BOOST_AUTO_TEST_CASE(isProducerCorrectlySet) {
     }
 
 
-
     {
         Opm::Well well("WELL1" , "GROUP", 0, 1, 0, 0, 0.0, Opm::Phase::OIL, Opm::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0);
 

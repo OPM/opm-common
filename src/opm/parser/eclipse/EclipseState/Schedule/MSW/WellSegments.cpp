@@ -432,7 +432,7 @@ namespace Opm {
         }
 
         if (segment_length <= 0.)
-            throw std::runtime_error(" non positive segemnt length is obtained for segment "
+            throw std::runtime_error(" non positive segment length is obtained for segment "
                                      + std::to_string(segment_number));
 
         return segment_length;

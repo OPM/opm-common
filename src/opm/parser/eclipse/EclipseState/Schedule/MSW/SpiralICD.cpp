@@ -39,8 +39,7 @@ namespace Opm {
               m_method_flow_scaling(record.getItem("METHOD_SCALING_FACTOR").get<int>(0)),
               m_max_absolute_rate(record.getItem("MAX_ABS_RATE").hasValue(0)
                                   ? record.getItem("MAX_ABS_RATE").getSIDouble(0)
-                                  : std::numeric_limits<double>::max()),
-              m_scaling_fractor(std::numeric_limits<double>::lowest())
+                                  : std::numeric_limits<double>::max()), m_scaling_factor(std::numeric_limits<double>::lowest())
     {
         if (record.getItem("STATUS").getTrimmedString(0) == "OPEN") {
             m_status = Status::OPEN;
@@ -123,19 +122,19 @@ namespace Opm {
 
     double SpiralICD::scalingFactor() const
     {
-        if (m_scaling_fractor <= 0.)
-            throw std::runtime_error("the scaling factor has invalid value " + std::to_string(m_scaling_fractor));
+        if (m_scaling_factor <= 0.)
+            throw std::runtime_error("the scaling factor has invalid value " + std::to_string(m_scaling_factor));
 
-        return m_scaling_fractor;
+        return m_scaling_factor;
     }
 
     void SpiralICD::updateScalingFactor(const double outlet_segment_length, const double completion_length)
     {
         if (m_method_flow_scaling < 0) {
             if (m_length > 0.) { // icd length / outlet segment length
-                m_scaling_fractor = m_length / outlet_segment_length;
+                m_scaling_factor = m_length / outlet_segment_length;
             } else if (m_length < 0.) {
-                m_scaling_fractor = std::abs(m_length);
+                m_scaling_factor = std::abs(m_length);
             } else { // icd length is zero, not sure the proper way to handle this yet
                 throw std::logic_error("Zero-value length of SICD is found when calcuating scaling factor");
             }
@@ -143,14 +142,14 @@ namespace Opm {
             if (m_length  <= 0.)
                 throw std::logic_error("Non positive length of SICD if found when method of scaling is zero");
 
-            m_scaling_fractor = m_length / outlet_segment_length;
+            m_scaling_factor = m_length / outlet_segment_length;
         } else if (m_method_flow_scaling == 1) {
-            m_scaling_fractor = std::abs(m_length);
+            m_scaling_factor = std::abs(m_length);
         } else if (m_method_flow_scaling == 2) {
             if (completion_length == 0.) {
                 throw std::logic_error("Zero connection length is found. No way to update scaling factor for this SICD segment");
             }
-            m_scaling_fractor = m_length / completion_length;
+            m_scaling_factor = m_length / completion_length;
         } else {
             throw std::logic_error(" invalid method specified to calculate flow scaling factor for SICD");
         }

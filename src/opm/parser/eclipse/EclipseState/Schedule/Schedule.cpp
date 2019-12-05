@@ -325,8 +325,8 @@ namespace {
         else if (keyword.name() == "COMPSEGS")
             handleCOMPSEGS(keyword, currentStep, grid, parseContext, errors);
 
-            else if (keyword.name() == "WSEGSICD")
-                handleWSEGSICD(keyword, currentStep);
+        else if (keyword.name() == "WSEGSICD")
+            handleWSEGSICD(keyword, currentStep);
 
         else if (keyword.name() == "WELOPEN")
             handleWELOPEN(keyword, currentStep, parseContext, errors);
@@ -420,7 +420,6 @@ namespace {
             } else {
                 std::string msg = "OPM does not support grid property modifier " + keyword.name() + " in the Schedule section. Error at report: " + std::to_string( currentStep );
                 parseContext.handleError( ParseContext::UNSUPPORTED_SCHEDULE_GEO_MODIFIER , msg, errors );
-
             }
         }
     }

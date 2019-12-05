@@ -85,6 +85,7 @@ namespace Opm {
 
         double segmentLength(const int segment_number) const;
 
+        // it returns true if there is no error encountered during the update
         bool updateWSEGSICD(const std::vector<std::pair<int, SpiralICD> >& sicd_pairs);
 
     private:

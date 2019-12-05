@@ -75,7 +75,7 @@ namespace Opm {
         Status m_status;
         // scaling factor is the only one can not be gotten from deck directly, needs to be
         // updated afterwards
-        double m_scaling_fractor;
+        double m_scaling_factor;
 };
 
 }
