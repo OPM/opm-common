@@ -209,7 +209,7 @@ public:
 private:
     void scanGRIDSection(const GRIDSection& grid_section, const EclipseGrid& grid);
     void scanEDITSection(const EDITSection& edit_section, const EclipseGrid& grid);
-    void scanPROPSSection(const PROPSSection& props_section, const EclipseGrid& grid);
+    void scanPROPSSection(const PROPSSection& props_section, const EclipseGrid& grid, const TableManager& tables);
     void scanREGIONSSection(const REGIONSSection& regions_section, const EclipseGrid& grid);
     void scanSOLUTIONSection(const SOLUTIONSection& solution_section, const EclipseGrid& grid);
     void scanSCHEDULESection(const SCHEDULESection& schedule_section, const EclipseGrid& grid);
@@ -247,3 +247,4 @@ private:
 
 }
 #endif
+
