@@ -46,6 +46,17 @@
     } \
   }
 
+namespace {
+
+template <typename T>
+std::vector<T> sorted(std::vector<T> v) {
+    std::sort(v.begin(), v.end());
+    return v;
+}
+
+}
+
+
 using namespace Opm::EclIO;
 
 ECLRegressionTest::~ECLRegressionTest()
@@ -566,7 +577,19 @@ void ECLRegressionTest::results_init()
             std::cout << "\nComparing init files \n" << std::endl;
 
             if (spesificKeyword.empty()) {
-                compareKeywords(keywords1, keywords2, reference);
+                if (keywords1.size() == keywords2.size() && keywords1 != keywords2) {
+                    /*
+                      If the keywords come in different order in the two files
+                      we mark that as a test failure, but all comparisons are
+                      still performed, and the keyword reordering can be
+                      identified by the error message.
+                    */
+                    auto kw1 = sorted(keywords1);
+                    auto kw2 = sorted(keywords2);
+                    compareKeywords(kw1,kw2,reference);
+                    HANDLE_ERROR(std::runtime_error, "Keyword reordering detected in INIT file");
+                } else
+                    compareKeywords(keywords1, keywords2, reference);
             } else {
                 checkSpesificKeyword(keywords1, keywords2, arrayType1, arrayType2, reference);
             }
