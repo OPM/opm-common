@@ -137,7 +137,7 @@ public:
     const std::string& default_region() const;
 
     std::vector<int> actnum();
-    std::vector<double> porv();
+    std::vector<double> porv(bool global);
 
     template <typename T>
     FieldData<T>& get(const std::string& keyword);

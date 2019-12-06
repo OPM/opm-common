@@ -753,54 +753,55 @@ void FieldProps::handle_keyword(const DeckKeyword& keyword, Box& box) {
 
 /**********************************************************************/
 
-std::vector<double> FieldProps::porv() {
-    if (this->porv_ptr)
-        return *this->porv_ptr;
+std::vector<double> FieldProps::porv(bool global) {
+    if (!this->porv_ptr) {
+        FieldProps::FieldData<double> porv(this->active_size);
+        if (this->has<double>("PORV"))
+            porv = this->get<double>("PORV");
 
-    FieldProps::FieldData<double> porv(this->active_size);
-    if (this->has<double>("PORV"))
-        porv = this->get<double>("PORV");
+        auto& porv_data = porv.data;
+        auto& porv_status = porv.value_status;
 
-    auto& porv_data = porv.data;
-    auto& porv_status = porv.value_status;
+        if (!porv.valid()) {
+            const auto& poro = this->get<double>("PORO");
+            const auto& poro_status = poro.value_status;
+            const auto& poro_data = poro.data;
 
-    if (!porv.valid()) {
-        const auto& poro = this->get<double>("PORO");
-        const auto& poro_status = poro.value_status;
-        const auto& poro_data = poro.data;
+            for (std::size_t active_index = 0; active_index < this->active_size; active_index++) {
+                if (value::has_value(porv_status[active_index]))
+                    continue;
 
-        for (std::size_t active_index = 0; active_index < this->active_size; active_index++) {
-            if (value::has_value(porv_status[active_index]))
-                continue;
-
-            if (value::has_value(poro_status[active_index])) {
-                porv_data[active_index] = this->cell_volume[active_index] * poro_data[active_index];
-                porv_status[active_index] = value::status::valid_default;
+                if (value::has_value(poro_status[active_index])) {
+                    porv_data[active_index] = this->cell_volume[active_index] * poro_data[active_index];
+                    porv_status[active_index] = value::status::valid_default;
+                }
             }
         }
-    }
-    if (!porv.valid())
-        throw std::invalid_argument("Do not have enough information to create PORV");
+        if (!porv.valid())
+            throw std::invalid_argument("Do not have enough information to create PORV");
 
 
-    // The NTG multiplication is only done one the cells which have PORV caclulated as PORO * V
-    if (this->has<double>("NTG")) {
-        const auto& ntg = this->get_valid_data<double>("NTG");
-        for (std::size_t active_index = 0; active_index < this->active_size; active_index++) {
-            if (porv_status[active_index] == value::status::valid_default)
-                porv_data[active_index] *= ntg[active_index];
+        // The NTG multiplication is only done one the cells which have PORV caclulated as PORO * V
+        if (this->has<double>("NTG")) {
+            const auto& ntg = this->get_valid_data<double>("NTG");
+            for (std::size_t active_index = 0; active_index < this->active_size; active_index++) {
+                if (porv_status[active_index] == value::status::valid_default)
+                    porv_data[active_index] *= ntg[active_index];
+            }
         }
+
+
+        // The MULTPV multiplication is done on all cells
+        if (this->has<double>("MULTPV")) {
+            const auto& multpv = this->get_valid_data<double>("MULTPV");
+            std::transform(porv_data.begin(), porv_data.end(), multpv.begin(), porv_data.begin(), std::multiplies<double>());
+        }
+
+        this->porv_ptr = std::make_unique<std::vector<double>>(porv_data);
     }
 
-
-    // The MULTPV multiplication is done on all cells
-    if (this->has<double>("MULTPV")) {
-        const auto& multpv = this->get_valid_data<double>("MULTPV");
-        std::transform(porv_data.begin(), porv_data.end(), multpv.begin(), porv_data.begin(), std::multiplies<double>());
-    }
-
-
-    this->porv_ptr = std::make_unique<std::vector<double>>(porv_data);
+    if (global)
+        return this->global_copy(*this->porv_ptr);
     return *this->porv_ptr;
 }
 
@@ -826,7 +827,7 @@ std::vector<double> FieldProps::porv() {
 std::vector<int> FieldProps::actnum() {
     auto actnum = this->m_actnum;
     const auto& deck_actnum = this->get<int>("ACTNUM");
-    const auto& porv_data = this->porv();
+    const auto& porv_data = this->porv(false);
 
     std::vector<int> global_map(this->active_size);
     {
