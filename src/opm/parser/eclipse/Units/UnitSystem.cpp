@@ -1035,7 +1035,8 @@ namespace {
 
 
     void UnitSystem::addDimension( Dimension dimension ) {
-        this->m_dimensions[ dimension.getName() ] = std::move( dimension );
+        const auto dimname = dimension.getName();
+        this->m_dimensions[ dimname ] = std::move( dimension );
     }
 
     void UnitSystem::addDimension(const std::string& dimension , double SIfactor, double SIoffset) {
