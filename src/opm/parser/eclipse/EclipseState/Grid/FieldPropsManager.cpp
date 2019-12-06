@@ -99,8 +99,8 @@ std::vector<int> FieldPropsManager::actnum() const {
     return this->fp->actnum();
 }
 
-std::vector<double> FieldPropsManager::porv() const {
-    return this->fp->porv();
+std::vector<double> FieldPropsManager::porv(bool global) const {
+    return this->fp->porv(global);
 }
 
 template bool FieldPropsManager::supported<int>(const std::string&);

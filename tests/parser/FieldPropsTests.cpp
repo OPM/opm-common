@@ -285,6 +285,10 @@ ENDBOX
     const auto& defaulted = fpm.defaulted<double>("PORV");
     const auto& porv = fpm.porv();
 
+    // All cells should be active for this grid
+    BOOST_CHECK_EQUAL(porv.size(), grid.getNumActive());
+    BOOST_CHECK_EQUAL(porv.size(), grid.getCartesianSize());
+
     // k = 0: poro * V
     for (std::size_t g = 0; g < 100; g++) {
         BOOST_CHECK_EQUAL(porv[g], grid.getCellVolume(g) * poro[g]);
@@ -318,5 +322,21 @@ ENDBOX
         BOOST_CHECK_EQUAL(poro[g], 0.10);
         BOOST_CHECK_EQUAL(ntg[g], 1.0);
         BOOST_CHECK_EQUAL(multpv[g], 4.0);
+    }
+
+
+    std::vector<int> actnum(400, 1);
+    actnum[0] = 0;
+    grid.resetACTNUM(actnum);
+
+    fpm.reset_grid(grid);
+    auto porv_global = fpm.porv(true);
+    auto porv_active = fpm.porv(false);
+    BOOST_CHECK_EQUAL( porv_active.size(), grid.getNumActive());
+    BOOST_CHECK_EQUAL( porv_global.size(), grid.getCartesianSize());
+    BOOST_CHECK_EQUAL( porv_global[0], 0);
+    for (std::size_t g = 1; g < grid.getCartesianSize(); g++) {
+        BOOST_CHECK_EQUAL(porv_active[g - 1], porv_global[g]);
+        BOOST_CHECK_EQUAL(porv_global[g], porv[g]);
     }
 }
