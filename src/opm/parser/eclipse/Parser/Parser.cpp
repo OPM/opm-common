@@ -410,8 +410,8 @@ ParserState::ParserState(const std::vector<std::pair<std::string, std::string>>&
                          const ParseContext& __parseContext,
                          ErrorGuard& errors_arg) :
     code_keywords(code_keywords_arg),
-    parseContext( __parseContext ),
     python( PythonInstance() ),
+    parseContext( __parseContext ),
     errors( errors_arg )
 {}
 
@@ -421,8 +421,8 @@ ParserState::ParserState( const std::vector<std::pair<std::string, std::string>>
                           boost::filesystem::path p ) :
     code_keywords(code_keywords_arg),
     rootPath( boost::filesystem::canonical( p ).parent_path() ),
-    parseContext( context ),
     python( PythonInstance() ),
+    parseContext( context ),
     errors( errors_arg )
 {
     openRootFile( p );
