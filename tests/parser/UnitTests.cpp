@@ -302,12 +302,15 @@ BOOST_AUTO_TEST_CASE(METRIC_UNITS)
     BOOST_CHECK_CLOSE( metric.to_si( Meas::liquid_surface_volume , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.to_si( Meas::gas_surface_volume , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.to_si( Meas::volume , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.to_si( Meas::geometric_volume, 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.to_si( Meas::liquid_surface_rate , 1.0 ) , 1.1574074074074073e-05 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.to_si( Meas::gas_surface_rate , 1.0 ) , 1.1574074074074073e-05 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.to_si( Meas::rate , 1.0 ) , 1.1574074074074073e-05 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.to_si( Meas::geometric_volume_rate , 1.0 ) , 1.1574074074074073e-05 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.to_si( Meas::transmissibility , 1.0 ) , 1.157407407407407e-13 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.to_si( Meas::effective_Kh , 1.0 ) , 9.869232667160129e-16 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.to_si( Meas::mass , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.to_si( Meas::mass_rate , 1.0 ) , 1.1574074074074073e-05 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.to_si( Meas::gas_oil_ratio , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.to_si( Meas::oil_gas_ratio , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.to_si( Meas::water_cut , 1.0 ) , 1.0 , 1.0e-10 );
@@ -320,6 +323,7 @@ BOOST_AUTO_TEST_CASE(METRIC_UNITS)
     BOOST_CHECK_CLOSE( metric.to_si( Meas::liquid_productivity_index , 1.0 ) , 1.1574074074074073e-10 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.to_si( Meas::gas_productivity_index , 1.0 ) , 1.1574074074074073e-10 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.to_si( Meas::energy, 1.0), 1000, 1e-10);
+    BOOST_CHECK_CLOSE( metric.to_si( Meas::icd_strength, 1.0), 7.46496e+14, 1e-10);
 
     // ----------------------------------------------------------------
     // SI -> METRIC
@@ -335,12 +339,15 @@ BOOST_AUTO_TEST_CASE(METRIC_UNITS)
     BOOST_CHECK_CLOSE( metric.from_si( Meas::liquid_surface_volume , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.from_si( Meas::gas_surface_volume , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.from_si( Meas::volume , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.from_si( Meas::geometric_volume , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.from_si( Meas::liquid_surface_rate , 1.0 ) , 86.400e3 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.from_si( Meas::gas_surface_rate , 1.0 ) , 86.400e3 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.from_si( Meas::rate , 1.0 ) , 86.400e3 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.from_si( Meas::geometric_volume_rate , 1.0 ) , 86.400e3 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.from_si( Meas::transmissibility , 1.0 ) , 8.64e+12 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.from_si( Meas::effective_Kh , 1.0 ) , 1.01325e+15 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.from_si( Meas::mass , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.from_si( Meas::mass_rate , 1.0 ) , 86.400e3 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.from_si( Meas::gas_oil_ratio , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.from_si( Meas::oil_gas_ratio , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.from_si( Meas::water_cut , 1.0 ) , 1.0 , 1.0e-10 );
@@ -353,6 +360,7 @@ BOOST_AUTO_TEST_CASE(METRIC_UNITS)
     BOOST_CHECK_CLOSE( metric.from_si( Meas::liquid_productivity_index , 1.0 ) , 86.400e8 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.from_si( Meas::gas_productivity_index , 1.0 ) , 86.400e8 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.from_si( Meas::energy, 1000.0), 1, 1e-10);
+    BOOST_CHECK_CLOSE( metric.from_si( Meas::icd_strength, 7.46496e+14), 1.0, 1e-10);
 }
 
 BOOST_AUTO_TEST_CASE(FIELD_UNITS)
@@ -377,12 +385,15 @@ BOOST_AUTO_TEST_CASE(FIELD_UNITS)
     BOOST_CHECK_CLOSE( field.to_si( Meas::liquid_surface_volume , 1.0 ) , 0.1589872949280001 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.to_si( Meas::gas_surface_volume , 1.0 ) , 28.31684659200000 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.to_si( Meas::volume , 1.0 ) , 0.1589872949280001 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.to_si( Meas::geometric_volume, 1.0 ) , 2.8316846592e-02 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.to_si( Meas::liquid_surface_rate , 1.0 ) , 1.840130728333334e-06 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.to_si( Meas::gas_surface_rate , 1.0 ) , 3.277412800000001e-04 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.to_si( Meas::rate , 1.0 ) , 1.840130728333334e-06 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.to_si( Meas::geometric_volume_rate, 1.0 ) , 3.2774128e-07 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.to_si( Meas::transmissibility , 1.0 ) , 2.668883979653090e-13 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.to_si( Meas::effective_Kh , 1.0 ) , 3.008142116950407e-16 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.to_si( Meas::mass , 1.0 ) , 0.45359237 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.to_si( Meas::mass_rate , 1.0 ) , 5.249911689814815e-06 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.to_si( Meas::gas_oil_ratio , 1.0 ) , 178.1076066790352 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.to_si( Meas::oil_gas_ratio , 1.0 ) , 5.614583333333335e-03 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.to_si( Meas::water_cut , 1.0 ) , 1.0 , 1.0e-10 );
@@ -394,6 +405,8 @@ BOOST_AUTO_TEST_CASE(FIELD_UNITS)
     BOOST_CHECK_CLOSE( field.to_si( Meas::water_inverse_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.to_si( Meas::liquid_productivity_index , 1.0 ) , 1.840130728333334e-06 / 6.894757293168360e+03  , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.to_si( Meas::gas_productivity_index , 1.0 ) , 3.277412800000001e-04 / 6.894757293168360e+03 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.to_si( Meas::energy , 1.0 ) , 1054.3503 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.to_si( Meas::icd_strength , 1.0 ) , 6.418842091749854e+16 , 1.0e-10 );
 
     // ----------------------------------------------------------------
     // SI -> FIELD
@@ -409,9 +422,11 @@ BOOST_AUTO_TEST_CASE(FIELD_UNITS)
     BOOST_CHECK_CLOSE( field.from_si( Meas::liquid_surface_volume , 1.0 ) , 6.289810770432102e+00 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.from_si( Meas::gas_surface_volume , 1.0 ) , 3.531466672148859e-02 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.from_si( Meas::volume , 1.0 ) , 6.289810770432102e+00 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.from_si( Meas::geometric_volume, 2.8316846592e-02 ), 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.from_si( Meas::liquid_surface_rate , 1.0 ) , 5.434396505653337e+05 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.from_si( Meas::gas_surface_rate , 1.0 ) , 3.051187204736614e+03 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.from_si( Meas::rate , 1.0 ) , 5.434396505653337e+05 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.from_si( Meas::geometric_volume_rate, 3.2774128e-07 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.from_si( Meas::transmissibility , 1.0 ) , 3.746884494132199e+12 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.from_si( Meas::effective_Kh , 1.0 ) , 3.324311023622047e+15 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.from_si( Meas::mass , 1.0 ) , 2.204622621848776e+00 , 1.0e-10 );
@@ -426,6 +441,8 @@ BOOST_AUTO_TEST_CASE(FIELD_UNITS)
     BOOST_CHECK_CLOSE( field.from_si( Meas::water_inverse_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.from_si( Meas::liquid_productivity_index , 1.0 ) , 5.434396505653337e+05 * 6.894757293168360e+03 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.from_si( Meas::gas_productivity_index , 1.0 ) , 3.051187204736614e+03 * 6.894757293168360e+03, 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.from_si( Meas::energy , 1054.3503 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.from_si( Meas::icd_strength , 6.418842091749854e+16 ) , 1.0 , 1.0e-10 );
 }
 
 BOOST_AUTO_TEST_CASE(LAB_UNITS)
@@ -450,12 +467,15 @@ BOOST_AUTO_TEST_CASE(LAB_UNITS)
     BOOST_CHECK_CLOSE( lab.to_si( Meas::liquid_surface_volume , 1.0 ) , 1.0e-6 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.to_si( Meas::gas_surface_volume , 1.0 ) , 1.0e-6 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.to_si( Meas::volume , 1.0 ) , 1.0e-6 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.to_si( Meas::geometric_volume, 1.0 ) , 1.0e-6 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.to_si( Meas::liquid_surface_rate , 1.0 ) , 2.777777777777778e-10 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.to_si( Meas::gas_surface_rate , 1.0 ) , 2.777777777777778e-10 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.to_si( Meas::rate , 1.0 ) , 2.777777777777778e-10 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.to_si( Meas::geometric_volume_rate, 1.0 ) , 2.777777777777778e-10 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.to_si( Meas::transmissibility , 1.0 ) , 2.741453518655592e-18 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.to_si( Meas::effective_Kh , 1.0 ) , 9.869232667160130e-18 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.to_si( Meas::mass , 1.0 ) , 1.0e-3 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.to_si( Meas::mass_rate , 1.0 ) , 2.777777777777778e-07 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.to_si( Meas::gas_oil_ratio , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.to_si( Meas::oil_gas_ratio , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.to_si( Meas::water_cut , 1.0 ) , 1.0 , 1.0e-10 );
@@ -467,6 +487,8 @@ BOOST_AUTO_TEST_CASE(LAB_UNITS)
     BOOST_CHECK_CLOSE( lab.to_si( Meas::water_inverse_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.to_si( Meas::liquid_productivity_index , 1.0 ) , 2.777777777777778e-10 / 101325.0  , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.to_si( Meas::gas_productivity_index , 1.0 ) , 2.777777777777778e-10 / 101325.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.to_si( Meas::energy , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.to_si( Meas::icd_strength , 1.0 ) , 1.313172e+24 , 1.0e-10 );
 
     // ----------------------------------------------------------------
     // SI -> LAB
@@ -482,12 +504,15 @@ BOOST_AUTO_TEST_CASE(LAB_UNITS)
     BOOST_CHECK_CLOSE( lab.from_si( Meas::liquid_surface_volume , 1.0 ) , 1.0e6 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.from_si( Meas::gas_surface_volume , 1.0 ) , 1.0e6 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.from_si( Meas::volume , 1.0 ) , 1.0e6 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.from_si( Meas::geometric_volume , 1.0 ) , 1.0e6 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.from_si( Meas::liquid_surface_rate , 1.0 ) , 3.6e9 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.from_si( Meas::gas_surface_rate , 1.0 ) , 3.6e9 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.from_si( Meas::rate , 1.0 ) , 3.6e9 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.from_si( Meas::geometric_volume_rate, 1.0 ) , 3.6e9 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.from_si( Meas::transmissibility , 1.0 ) , 3.647699999999999e+17 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.from_si( Meas::effective_Kh , 1.0 ) , 1.01325e+17 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.from_si( Meas::mass , 1.0 ) , 1.0e3 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.from_si( Meas::mass_rate , 1.0 ) , 3.6e+06 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.from_si( Meas::gas_oil_ratio , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.from_si( Meas::oil_gas_ratio , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.from_si( Meas::water_cut , 1.0 ) , 1.0 , 1.0e-10 );
@@ -499,6 +524,8 @@ BOOST_AUTO_TEST_CASE(LAB_UNITS)
     BOOST_CHECK_CLOSE( lab.from_si( Meas::water_inverse_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.from_si( Meas::liquid_productivity_index , 1.0 ) , 3.6e9 * 101325.0, 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.from_si( Meas::gas_productivity_index , 1.0 ) , 3.6e9 * 101325.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.from_si( Meas::energy , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.from_si( Meas::icd_strength , 1.0 ) , 7.615148662932201e-25 , 1.0e-10 );
 }
 
 BOOST_AUTO_TEST_CASE(PVT_M_UNITS)
@@ -523,12 +550,15 @@ BOOST_AUTO_TEST_CASE(PVT_M_UNITS)
     BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::liquid_surface_volume , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::gas_surface_volume , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::volume , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::geometric_volume , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::liquid_surface_rate , 1.0 ) , 1.1574074074074073e-05 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::gas_surface_rate , 1.0 ) , 1.1574074074074073e-05 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::rate , 1.0 ) , 1.1574074074074073e-05 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::geometric_volume_rate , 1.0 ) , 1.1574074074074073e-05 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::transmissibility , 1.0 ) , 1.142272299439830e-13 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::effective_Kh , 1.0 ) , 9.869232667160129e-16 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::mass , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::mass_rate , 1.0 ) , 1.1574074074074073e-05 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::gas_oil_ratio , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::oil_gas_ratio , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::water_cut , 1.0 ) , 1.0 , 1.0e-10 );
@@ -540,6 +570,8 @@ BOOST_AUTO_TEST_CASE(PVT_M_UNITS)
     BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::water_inverse_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::liquid_productivity_index , 1.0 ) , 1.1574074074074073e-05 /101325.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::gas_productivity_index , 1.0 ) , 1.1574074074074073e-05 /101325.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::energy , 1.0 ) , 1.0e3 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::icd_strength , 1.0 ) , 7.56387072e+14 , 1.0e-10 );
 
     // ----------------------------------------------------------------
     // SI -> PVT-M
@@ -555,12 +587,15 @@ BOOST_AUTO_TEST_CASE(PVT_M_UNITS)
     BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::liquid_surface_volume , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::gas_surface_volume , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::volume , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::geometric_volume , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::liquid_surface_rate , 1.0 ) , 86.400e3 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::gas_surface_rate , 1.0 ) , 86.400e3 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::rate , 1.0 ) , 86.400e3 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::geometric_volume_rate , 1.0 ) , 86.400e3 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::transmissibility , 1.0 ) , 8.75448e+12 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::effective_Kh , 1.0 ) , 1.01325e+15 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::mass , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::mass_rate , 1.0 ) , 86.400e3 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::gas_oil_ratio , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::oil_gas_ratio , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::water_cut , 1.0 ) , 1.0 , 1.0e-10 );
@@ -572,6 +607,8 @@ BOOST_AUTO_TEST_CASE(PVT_M_UNITS)
     BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::water_inverse_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::liquid_productivity_index , 1.0 ) , 86.400e3 * 101325.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::gas_productivity_index , 1.0 ) , 86.400e3 * 101325.0, 1.0e-10 );
+    BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::energy , 1.0 ) , 1.0e-3 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::icd_strength , 1.0 ) , 1.322074420647951e-15 , 1.0e-10 );
 }
 
 BOOST_AUTO_TEST_CASE(TemperatureConversions)
