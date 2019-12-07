@@ -166,7 +166,7 @@ namespace Opm {
         void initSizeKeyword(const Json::JsonObject& sizeObject);
         void commonInit(const std::string& name, ParserKeywordSizeEnum sizeType);
         void addItems( const Json::JsonObject& jsonConfig);
-        void parseRecords( const Json::JsonObject recordsConfig, size_t num_records );
+        void parseRecords( const Json::JsonObject& recordsConfig, size_t num_records );
     };
 
 std::ostream& operator<<( std::ostream&, const ParserKeyword& );

@@ -153,7 +153,7 @@ namespace Opm {
     }
 
 
-    void ParserKeyword::parseRecords( const Json::JsonObject recordsConfig , size_t num_records) {
+    void ParserKeyword::parseRecords( const Json::JsonObject& recordsConfig , size_t num_records) {
          if (recordsConfig.is_array()) {
              size_t num_records = recordsConfig.size();
              for (size_t i = 0; i < num_records; i++) {
@@ -443,7 +443,7 @@ void set_dimensions( ParserItem& item,
 
         if( recordIndex >= this->m_records.size() ) {
             if (alternating_keyword) {
-                return this->m_records[ recordIndex % 2 ];
+                return this->m_records[ recordIndex % this->m_records.size() ];
             }
             else
                 return this->m_records.back();
