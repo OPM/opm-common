@@ -339,7 +339,7 @@ std::vector<double> extract_cell_volume(const EclipseGrid& grid) {
 
 
 
-FieldProps::FieldProps(const Deck& deck, const EclipseGrid& grid, const TableManager& tables) :
+FieldProps::FieldProps(const Deck& deck, const EclipseGrid& grid, const TableManager& tables_arg) :
     unit_system(deck.getActiveUnitSystem()),
     active_size(grid.getNumActive()),
     global_size(grid.getCartesianSize()),
@@ -348,22 +348,24 @@ FieldProps::FieldProps(const Deck& deck, const EclipseGrid& grid, const TableMan
     nz(grid.getNZ()),
     m_actnum(grid.getACTNUM()),
     cell_volume(extract_cell_volume(grid)),
-    m_default_region(default_region_keyword(deck))
+    m_default_region(default_region_keyword(deck)),
+    grid_ptr(&grid),
+    tables(tables_arg)
 {
     if (Section::hasGRID(deck))
-        this->scanGRIDSection(GRIDSection(deck), grid);
+        this->scanGRIDSection(GRIDSection(deck));
 
     if (Section::hasEDIT(deck))
-        this->scanEDITSection(EDITSection(deck), grid);
+        this->scanEDITSection(EDITSection(deck));
 
     if (Section::hasREGIONS(deck))
-        this->scanREGIONSSection(REGIONSSection(deck), grid);
+        this->scanREGIONSSection(REGIONSSection(deck));
 
     if (Section::hasPROPS(deck))
-        this->scanPROPSSection(PROPSSection(deck), grid, tables);
+        this->scanPROPSSection(PROPSSection(deck));
 
     if (Section::hasSOLUTION(deck))
-        this->scanSOLUTIONSection(SOLUTIONSection(deck), grid);
+        this->scanSOLUTIONSection(SOLUTIONSection(deck));
 }
 
 
@@ -400,6 +402,8 @@ void FieldProps::reset_grid(const EclipseGrid& grid) {
     this->cell_volume = extract_cell_volume(grid);
     if (this->porv_ptr)
         this->porv_ptr.reset( nullptr );
+
+    this->grid_ptr = &grid;
 }
 
 
@@ -479,6 +483,9 @@ FieldProps::FieldData<double>& FieldProps::get(const std::string& keyword) {
         auto init_iter = keywords::double_scalar_init.find(keyword);
         if (init_iter != keywords::double_scalar_init.end())
             this->double_data[keyword].default_assign(init_iter->second);
+
+        if (keywords::PROPS::satfunc.count(keyword) == 1)
+            this->init_satfunc(keyword, this->double_data[keyword]);
 
         return this->double_data[keyword];
     } else
@@ -851,8 +858,8 @@ std::vector<int> FieldProps::actnum() {
 }
 
 
-void FieldProps::scanGRIDSection(const GRIDSection& grid_section, const EclipseGrid& grid) {
-    Box box(grid);
+void FieldProps::scanGRIDSection(const GRIDSection& grid_section) {
+    Box box(*this->grid_ptr);
 
     for (const auto& keyword : grid_section) {
         const std::string& name = keyword.name();
@@ -871,8 +878,8 @@ void FieldProps::scanGRIDSection(const GRIDSection& grid_section, const EclipseG
     }
 }
 
-void FieldProps::scanEDITSection(const EDITSection& edit_section, const EclipseGrid& grid) {
-    Box box(grid);
+void FieldProps::scanEDITSection(const EDITSection& edit_section) {
+    Box box(*this->grid_ptr);
     for (const auto& keyword : edit_section) {
         const std::string& name = keyword.name();
         if (keywords::EDIT::double_keywords.count(name) == 1) {
@@ -890,23 +897,25 @@ void FieldProps::scanEDITSection(const EDITSection& edit_section, const EclipseG
 }
 
 
-void FieldProps::scanPROPSSection(const PROPSSection& props_section, const EclipseGrid& grid, const TableManager& tables) {
-    Box box(grid);
+void FieldProps::init_satfunc(const std::string& keyword, FieldData<double>& satfunc) {
+    const auto& endnum = this->get_valid_data<int>("ENDNUM");
+    if (keyword[0] == 'I') {
+        const auto& imbnum = this->get_valid_data<int>("IMBNUM");
+        satfunc.default_update(satfunc::init(keyword, this->tables, *this->grid_ptr, imbnum, endnum));
+    } else {
+        const auto& satnum = this->get_valid_data<int>("SATNUM");
+        satfunc.default_update(satfunc::init(keyword, this->tables, *this->grid_ptr, satnum, endnum));
+    }
+}
+
+
+
+void FieldProps::scanPROPSSection(const PROPSSection& props_section) {
+    Box box(*this->grid_ptr);
 
     for (const auto& keyword : props_section) {
         const std::string& name = keyword.name();
         if (keywords::PROPS::satfunc.count(name) == 1) {
-            if (!this->has<double>(name)) {
-                auto& satfunc = this->get<double>(name);
-                const auto& endnum = this->get_valid_data<int>("ENDNUM");
-                if (name[0] == 'I') {
-                    const auto& imbnum = this->get_valid_data<int>("IMBNUM");
-                    satfunc.default_update(satfunc::init(name, tables, grid, imbnum, endnum));
-                } else {
-                    const auto& satnum = this->get_valid_data<int>("SATNUM");
-                    satfunc.default_update(satfunc::init(name, tables, grid, satnum, endnum));
-                }
-            }
             this->handle_double_keyword(keyword, box);
             continue;
         }
@@ -926,8 +935,8 @@ void FieldProps::scanPROPSSection(const PROPSSection& props_section, const Eclip
 }
 
 
-void FieldProps::scanREGIONSSection(const REGIONSSection& regions_section, const EclipseGrid& grid) {
-    Box box(grid);
+void FieldProps::scanREGIONSSection(const REGIONSSection& regions_section) {
+    Box box(*this->grid_ptr);
 
     for (const auto& keyword : regions_section) {
         const std::string& name = keyword.name();
@@ -941,8 +950,8 @@ void FieldProps::scanREGIONSSection(const REGIONSSection& regions_section, const
 }
 
 
-void FieldProps::scanSOLUTIONSection(const SOLUTIONSection& solution_section, const EclipseGrid& grid) {
-    Box box(grid);
+void FieldProps::scanSOLUTIONSection(const SOLUTIONSection& solution_section) {
+    Box box(*this->grid_ptr);
     for (const auto& keyword : solution_section) {
         const std::string& name = keyword.name();
         if (keywords::SOLUTION::double_keywords.count(name) == 1) {
@@ -954,8 +963,8 @@ void FieldProps::scanSOLUTIONSection(const SOLUTIONSection& solution_section, co
     }
 }
 
-void FieldProps::scanSCHEDULESection(const SCHEDULESection& schedule_section, const EclipseGrid& grid) {
-    Box box(grid);
+void FieldProps::scanSCHEDULESection(const SCHEDULESection& schedule_section) {
+    Box box(*this->grid_ptr);
     for (const auto& keyword : schedule_section) {
         const std::string& name = keyword.name();
         if (keywords::SCHEDULE::double_keywords.count(name) == 1) {

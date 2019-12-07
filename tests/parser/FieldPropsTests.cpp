@@ -340,3 +340,126 @@ ENDBOX
         BOOST_CHECK_EQUAL(porv_global[g], porv[g]);
     }
 }
+
+
+BOOST_AUTO_TEST_CASE(LATE_GET_SATFUNC) {
+    const char* deckString =
+        "RUNSPEC\n"
+        "\n"
+        "OIL\n"
+        "GAS\n"
+        "WATER\n"
+        "TABDIMS\n"
+        "3 /\n"
+        "\n"
+        "METRIC\n"
+        "\n"
+        "DIMENS\n"
+        "3 3 3 /\n"
+        "\n"
+        "GRID\n"
+        "\n"
+        "PERMX\n"
+        " 27*1000 /\n"
+        "MAXVALUE\n"
+        "  PERMX 100 4* 1  1/\n"
+        "/\n"
+        "MINVALUE\n"
+        "  PERMX 10000 4* 3  3/\n"
+        "/\n"
+        "ACTNUM\n"
+        " 0 8*1 0 8*1 0 8*1 /\n"
+        "DXV\n"
+        "1 1 1 /\n"
+        "\n"
+        "DYV\n"
+        "1 1 1 /\n"
+        "\n"
+        "DZV\n"
+        "1 1 1 /\n"
+        "\n"
+        "TOPS\n"
+        "9*100 /\n"
+        "\n"
+        "PORO \n"
+        "  27*0.15 /\n"
+        "PROPS\n"
+        "\n"
+        "SWOF\n"
+        // table 1
+        // S_w    k_r,w    k_r,o    p_c,ow
+        "  0.1    0        1.0      2.0\n"
+        "  0.15   0        0.9      1.0\n"
+        "  0.2    0.01     0.5      0.5\n"
+        "  0.93   0.91     0.0      0.0\n"
+        "/\n"
+        // table 2
+        // S_w    k_r,w    k_r,o    p_c,ow
+        "  0.00   0        1.0      2.0\n"
+        "  0.05   0.01     1.0      2.0\n"
+        "  0.10   0.02     0.9      1.0\n"
+        "  0.15   0.03     0.5      0.5\n"
+        "  0.852  1.00     0.0      0.0\n"
+        "/\n"
+        // table 3
+        // S_w    k_r,w    k_r,o    p_c,ow
+        "  0.00   0.00     0.9      2.0\n"
+        "  0.05   0.02     0.8      1.0\n"
+        "  0.10   0.03     0.5      0.5\n"
+        "  0.801  1.00     0.0      0.0\n"
+        "/\n"
+        "\n"
+        "SGOF\n"
+        // table 1
+        // S_g    k_r,g    k_r,o    p_c,og
+        "  0.00   0.00     0.9      2.0\n"
+        "  0.05   0.02     0.8      1.0\n"
+        "  0.10   0.03     0.5      0.5\n"
+        "  0.80   1.00     0.0      0.0\n"
+        "/\n"
+        // table 2
+        // S_g    k_r,g    k_r,o    p_c,og
+        "  0.05   0.00     1.0      2\n"
+        "  0.10   0.02     0.9      1\n"
+        "  0.15   0.03     0.5      0.5\n"
+        "  0.85   1.00     0.0      0\n"
+        "/\n"
+        // table 3
+        // S_g    k_r,g    k_r,o    p_c,og
+        "  0.1    0        1.0      2\n"
+        "  0.15   0        0.9      1\n"
+        "  0.2    0.01     0.5      0.5\n"
+        "  0.9    0.91     0.0      0\n"
+        "/\n"
+        "\n"
+        "REGIONS\n"
+        "\n"
+        "SATNUM\n"
+        "9*1 9*2 9*3 /\n"
+        "\n"
+        "IMBNUM\n"
+        "9*3 9*2 9*1 /\n"
+        "\n"
+        "SOLUTION\n"
+        "\n"
+        "SCHEDULE\n";
+
+    Opm::Parser parser;
+
+    auto deck = parser.parseString(deckString);
+    Opm::TableManager tm(deck);
+    Opm::EclipseGrid eg(deck);
+    Opm::FieldPropsManager fp(deck, eg, tm);
+
+    const auto& fp_swu = fp.get_global<double>("SWU");
+    BOOST_CHECK_EQUAL(fp_swu[1 + 0 * 3*3], 0.93);
+    BOOST_CHECK_EQUAL(fp_swu[1 + 1 * 3*3], 0.852);
+    BOOST_CHECK_EQUAL(fp_swu[1 + 2 * 3*3], 0.801);
+
+    const auto& fp_sgu = fp.get_global<double>("ISGU");
+    BOOST_CHECK_EQUAL(fp_sgu[1 + 0 * 3*3], 0.9);
+    BOOST_CHECK_EQUAL(fp_sgu[1 + 1 * 3*3], 0.85);
+    BOOST_CHECK_EQUAL(fp_sgu[1 + 2 * 3*3], 0.80);
+
+}
+
