@@ -44,6 +44,7 @@ namespace Opm {
 
         };
 
+        Box(std::size_t nx, std::size_t ny, std::size_t nz, const std::vector<int>& actnum_arg);
         Box(const EclipseGrid& grid);
         Box(const EclipseGrid& grid , int i1 , int i2 , int j1 , int j2 , int k1 , int k2);
         void update(const DeckRecord& deckRecord);
@@ -67,10 +68,11 @@ namespace Opm {
     private:
         void init(int i1, int i2, int j1, int j2, int k1, int k2);
         void initIndexList();
-        const EclipseGrid& grid;
-        size_t m_stride[3];
-        size_t m_dims[3] = { 0, 0, 0 };
-        size_t m_offset[3];
+        const std::vector<int> actnum;
+        std::array<std::size_t, 3> grid_dims;
+        std::array<std::size_t, 3> box_stride;
+        std::array<std::size_t, 3> box_dims = {{ 0, 0, 0 }};
+        std::array<std::size_t, 3> box_offset;
 
         bool   m_isGlobal;
         std::vector<size_t> global_index_list;

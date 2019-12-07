@@ -49,15 +49,24 @@ namespace {
 
 namespace Opm {
 
-    Box::Box(const EclipseGrid& grid_arg) :
-        grid(grid_arg)
+
+    Box::Box(std::size_t nx, std::size_t ny, std::size_t nz, const std::vector<int>& actnum_arg) :
+        actnum(actnum_arg),
+        grid_dims({nx,ny,nz})
+    {
+        if (this->actnum.size() != nx*ny*nz)
+            throw std::invalid_argument("Size mismatch: actnum.size(): " + std::to_string(this->actnum.size()) + " nx*ny*nz: " + std::to_string(nx*ny*nz));
+    }
+
+    Box::Box(const EclipseGrid& grid) :
+        Box(grid.getNX(), grid.getNY(), grid.getNZ(), grid.getACTNUM())
     {
         this->reset();
     }
 
 
-    Box::Box(const EclipseGrid& grid_arg, int i1 , int i2 , int j1 , int j2 , int k1 , int k2) :
-        grid(grid_arg)
+    Box::Box(const EclipseGrid& grid, int i1 , int i2 , int j1 , int j2 , int k1 , int k2) :
+        Box(grid)
     {
         this->init(i1,i2,j1,j2,k1,k2);
     }
@@ -73,11 +82,11 @@ namespace Opm {
 
         std::size_t default_count = 0;
         int i1 = 0;
-        int i2 = this->grid.getNX() - 1;
+        int i2 = this->grid_dims[0] - 1;
         int j1 = 0;
-        int j2 = this->grid.getNY() - 1;
+        int j2 = this->grid_dims[1] - 1;
         int k1 = 0;
-        int k2 = this->grid.getNZ() - 1;
+        int k2 = this->grid_dims[2] - 1;
 
         update_default(i1, default_count, I1Item);
         update_default(i2, default_count, I2Item);
@@ -93,38 +102,38 @@ namespace Opm {
 
     void Box::reset()
     {
-        this->init(0, this->grid.getNX() - 1 , 0, this->grid.getNY() - 1, 0, this->grid.getNZ() - 1);
+        this->init(0, this->grid_dims[0] , 0, this->grid_dims[1] - 1, 0, this->grid_dims[2] - 1);
     }
 
 
     void Box::init(int i1, int i2, int j1, int j2, int k1, int k2) {
-        assert_dims(this->grid.getNX(), i1 , i2);
-        assert_dims(this->grid.getNY(), j1 , j2);
-        assert_dims(this->grid.getNZ(), k1 , k2);
-        m_stride[0] = 1;
-        m_stride[1] = this->grid.getNX();
-        m_stride[2] = this->grid.getNX() * this->grid.getNY();
+        assert_dims(this->grid_dims[0], i1 , i2);
+        assert_dims(this->grid_dims[1], j1 , j2);
+        assert_dims(this->grid_dims[2], k1 , k2);
+        box_stride[0] = 1;
+        box_stride[1] = this->grid_dims[0];
+        box_stride[2] = this->grid_dims[0] * this->grid_dims[1];
 
-        m_dims[0] = (size_t) (i2 - i1 + 1);
-        m_dims[1] = (size_t) (j2 - j1 + 1);
-        m_dims[2] = (size_t) (k2 - k1 + 1);
+        box_dims[0] = (size_t) (i2 - i1 + 1);
+        box_dims[1] = (size_t) (j2 - j1 + 1);
+        box_dims[2] = (size_t) (k2 - k1 + 1);
 
-        m_offset[0] = (size_t) i1;
-        m_offset[1] = (size_t) j1;
-        m_offset[2] = (size_t) k1;
+        box_offset[0] = (size_t) i1;
+        box_offset[1] = (size_t) j1;
+        box_offset[2] = (size_t) k1;
 
-        if (size() == this->grid.getCartesianSize())
+        if (size() == this->grid_dims[0] * this->grid_dims[1] * this->grid_dims[2])
             m_isGlobal = true;
         else
             m_isGlobal = false;
 
-        initIndexList();
+        this->initIndexList();
     }
 
 
 
     size_t Box::size() const {
-        return m_dims[0] * m_dims[1] * m_dims[2];
+        return box_dims[0] * box_dims[1] * box_dims[2];
     }
 
 
@@ -137,7 +146,7 @@ namespace Opm {
         if (idim >= 3)
             throw std::invalid_argument("The input dimension value is invalid");
 
-        return m_dims[idim];
+        return box_dims[idim];
     }
 
 
@@ -155,21 +164,22 @@ namespace Opm {
         global_index_list.clear();
         m_index_list.clear();
 
-        size_t ii,ij,ik;
-        for (ik=0; ik < m_dims[2]; ik++) {
-            size_t k = ik + m_offset[2];
-            for (ij=0; ij < m_dims[1]; ij++) {
-                size_t j = ij + m_offset[1];
-                for (ii=0; ii < m_dims[0]; ii++) {
-                    size_t i = ii + m_offset[0];
-                    size_t g = i * m_stride[0] + j*m_stride[1] + k*m_stride[2];
+        std::size_t active_index = 0;
+        for (std::size_t ik=0; ik < box_dims[2]; ik++) {
+            size_t k = ik + box_offset[2];
+            for (std::size_t ij=0; ij < box_dims[1]; ij++) {
+                size_t j = ij + box_offset[1];
+                for (std::size_t ii=0; ii < box_dims[0]; ii++) {
+                    size_t i = ii + box_offset[0];
+                    size_t g = i * box_stride[0] + j*box_stride[1] + k*box_stride[2];
 
                     global_index_list.push_back(g);
-                    if (this->grid.cellActive(g)) {
+                    if (this->actnum[g]) {
                         std::size_t global_index = g;
-                        std::size_t active_index = this->grid.activeIndex(g);
-                        std::size_t data_index = ii + ij*this->m_dims[0] + ik*this->m_dims[0]*this->m_dims[1];
+                        std::size_t data_index = ii + ij*this->box_dims[0] + ik*this->box_dims[0]*this->box_dims[1];
                         m_index_list.push_back({global_index, active_index, data_index});
+
+                        active_index++;
                     }
                 }
             }
@@ -183,13 +193,13 @@ namespace Opm {
 
         {
             for (size_t idim = 0; idim < 3; idim++) {
-                if (m_dims[idim] != other.m_dims[idim])
+                if (box_dims[idim] != other.box_dims[idim])
                     return false;
 
-                if (m_stride[idim] != other.m_stride[idim])
+                if (box_stride[idim] != other.box_stride[idim])
                     return false;
 
-                if (m_offset[idim] != other.m_offset[idim])
+                if (box_offset[idim] != other.box_offset[idim])
                     return false;
             }
         }
@@ -199,11 +209,11 @@ namespace Opm {
 
 
     int Box::lower(int dim) const {
-        return m_offset[dim];
+        return box_offset[dim];
     }
 
     int Box::upper(int dim) const {
-        return m_offset[dim] + m_dims[dim] - 1;
+        return box_offset[dim] + box_dims[dim] - 1;
     }
 
     int Box::I1() const {

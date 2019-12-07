@@ -177,6 +177,9 @@ BOOST_AUTO_TEST_CASE(BoxNineArg) {
 
     // K2 >= Nz
     BOOST_CHECK_THROW( Opm::Box(grid,1,1,2,2,3,nz), std::invalid_argument);
+
+    BOOST_CHECK_THROW(Opm::Box(nx + 1, ny + 1, nz + 1,grid.getACTNUM()), std::invalid_argument);
+    BOOST_CHECK_NO_THROW(Opm::Box(nx, ny, nz, grid.getACTNUM()));
 }
 
 BOOST_AUTO_TEST_CASE(TestKeywordBox2) {
