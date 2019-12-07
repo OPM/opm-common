@@ -47,14 +47,20 @@ namespace keywords {
 static const std::map<std::string, std::string> unit_string = {{"PERMX", "Permeability"},
                                                                {"PERMY", "Permeability"},
                                                                {"PERMZ", "Permeability"},
-                                                               {"PORV", "ReservoirVolume"}};
-
-
+                                                               {"PORV", "ReservoirVolume"},
+                                                               {"TRANX", "Transmissibility"},
+                                                               {"TRANY", "Transmissibility"},
+                                                               {"TRANZ", "Transmissibility"},
+                                                               {"NTG", "1"},
+                                                               {"SWATINIT", "1"}};
 
 static const std::set<std::string> oper_keywords = {"ADD", "EQUALS", "MAXVALUE", "MINVALUE", "MULTIPLY"};
 static const std::set<std::string> region_oper_keywords = {"ADDREG", "EQUALREG"};
 static const std::set<std::string> box_keywords = {"BOX", "ENDBOX"};
 static const std::map<std::string, double> double_scalar_init = {{"NTG", 1},
+                                                                 {"TRANX", 1},    // The default scalar init for TRAN is a hack to support
+                                                                 {"TRANY", 1},    // TRAN modification in the deck. downstream implementation
+                                                                 {"TRANZ", 1},    // in ecltransmissibility.hh - quite broken.
                                                                  {"MULTPV", 1},
                                                                  {"MULTX", 1},
                                                                  {"MULTX-", 1},
@@ -66,8 +72,9 @@ static const std::map<std::string, double> double_scalar_init = {{"NTG", 1},
 static const std::map<std::string, int> int_scalar_init = {{"SATNUM", 1},
                                                            {"ENDNUM", 1},
                                                            {"IMBNUM", 1},
-                                                           {"FIPNUM", 1},   // All FIPxxx keywords should (probably) be added with init==1 
+                                                           {"FIPNUM", 1},   // All FIPxxx keywords should (probably) be added with init==1
                                                            {"ACTNUM", 1}};
+
 
 /*
 bool isFipxxx< int >(const std::string& keyword) {
@@ -87,7 +94,7 @@ static const std::set<std::string> top_keywords    = {"PORO", "PERMX", "PERMY", 
 }
 
 namespace EDIT {
-static const std::set<std::string> double_keywords = {"MULTPV", "PORV","MULTX", "MULTX-", "MULTY-", "MULTY", "MULTZ", "MULTZ-"};
+static const std::set<std::string> double_keywords = {"MULTPV", "PORV","MULTX", "MULTX-", "MULTY-", "MULTY", "MULTZ", "MULTZ-", "TRANX", "TRANY", "TRANZ"};
 static const std::set<std::string> int_keywords = {};
 }
 
