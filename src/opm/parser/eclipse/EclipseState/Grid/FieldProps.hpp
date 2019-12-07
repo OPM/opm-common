@@ -207,12 +207,12 @@ public:
 
 
 private:
-    void scanGRIDSection(const GRIDSection& grid_section, const EclipseGrid& grid);
-    void scanEDITSection(const EDITSection& edit_section, const EclipseGrid& grid);
-    void scanPROPSSection(const PROPSSection& props_section, const EclipseGrid& grid, const TableManager& tables);
-    void scanREGIONSSection(const REGIONSSection& regions_section, const EclipseGrid& grid);
-    void scanSOLUTIONSection(const SOLUTIONSection& solution_section, const EclipseGrid& grid);
-    void scanSCHEDULESection(const SCHEDULESection& schedule_section, const EclipseGrid& grid);
+    void scanGRIDSection(const GRIDSection& grid_section);
+    void scanEDITSection(const EDITSection& edit_section);
+    void scanPROPSSection(const PROPSSection& props_section);
+    void scanREGIONSSection(const REGIONSSection& regions_section);
+    void scanSOLUTIONSection(const SOLUTIONSection& solution_section);
+    void scanSCHEDULESection(const SCHEDULESection& schedule_section);
     double getSIValue(const std::string& keyword, double raw_value) const;
     template <typename T>
     void erase(const std::string& keyword);
@@ -230,6 +230,7 @@ private:
     void handle_grid_section_double_keyword(const DeckKeyword& keyword, const Box& box);
     void handle_double_keyword(const DeckKeyword& keyword, const Box& box);
     void handle_int_keyword(const DeckKeyword& keyword, const Box& box);
+    void init_satfunc(const std::string& keyword, FieldData<double>& satfunc);
 
     const UnitSystem unit_system;
     std::size_t active_size;
@@ -238,6 +239,8 @@ private:
     std::vector<int> m_actnum;
     std::vector<double> cell_volume;
     const std::string m_default_region;
+    const EclipseGrid * grid_ptr;      // A bit undecided whether to properly use the grid or not ...
+    const TableManager& tables;
     std::unordered_map<std::string, FieldData<int>> int_data;
     std::unordered_map<std::string, FieldData<double>> double_data;
 
