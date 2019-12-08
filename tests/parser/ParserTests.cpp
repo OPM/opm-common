@@ -1723,6 +1723,57 @@ BOOST_AUTO_TEST_CASE(ConstructFromJson_withRecords_and_items_throws) {
     BOOST_CHECK_THROW( ParserKeyword kw( jsonObject ) , std::invalid_argument);
 }
 
+BOOST_AUTO_TEST_CASE(ConstructFromJson_withAlternatingRecords) {
+    const std::string json_string = R"(
+    {"name" : "STOG", "sections" : ["PROPS"] , "num_tables" : {"keyword" : "TABDIMS" , "item" : "NTPVT"}, "alternating_records" : [[
+      {"name" : "ref_oil_pressure", "value_type" : "DOUBLE"}], [
+      {"name" : "oil_phase_pressure" , "value_type" : "DOUBLE"},
+      {"name" : "surface_rension", "value_type" : "DOUBLE"}]]}
+    )";
+    Json::JsonObject jsonObject( json_string );
+    ParserKeyword kw( jsonObject );
+    BOOST_CHECK( kw.isAlternatingKeyword() );
+    BOOST_CHECK_EQUAL(kw.getRecord(0).size(), 1);
+    BOOST_CHECK_EQUAL(kw.getRecord(1).size(), 2);
+}
+
+BOOST_AUTO_TEST_CASE(ConstructFromJson_withAlternatingRecordswithItems) {
+    const std::string json_string = R"(
+    {"name" : "STOG", "sections" : ["PROPS"] , "num_tables" : {"keyword" : "TABDIMS" , "item" : "NTPVT"}, "alternating_records" : [[
+      {"name" : "ref_oil_pressure", "value_type" : "DOUBLE"}], [
+      {"name" : "oil_phase_pressure" , "value_type" : "DOUBLE"},
+      {"name" : "surface_rension", "value_type" : "DOUBLE"}]], "items" : [{"name" : "w", "value_type" : "STRING"}]}
+    )";
+    Json::JsonObject jsonObject( json_string );
+    BOOST_CHECK_THROW( ParserKeyword kw( jsonObject ), std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(ConstructFromJson_withAlternatingRecordsSizeWithoutBrackets) {
+    const std::string json_string = R"(
+    {"name" : "STOG", "sections" : ["PROPS"] , "size" : 6, "alternating_records" : [[
+      {"name" : "ref_oil_pressure", "value_type" : "DOUBLE"}], [
+      {"name" : "oil_phase_pressure" , "value_type" : "DOUBLE"},
+      {"name" : "surface_rension", "value_type" : "DOUBLE"}]]}
+    )";
+    Json::JsonObject jsonObject( json_string );
+    BOOST_CHECK_THROW( ParserKeyword kw( jsonObject ), std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(GetAlternatingKeywordFromParser) {
+    Parser parser;
+    BOOST_CHECK(parser.hasKeyword("STOG"));
+    ParserKeyword kw = parser.getKeyword("STOG");
+    BOOST_CHECK(kw.isAlternatingKeyword());
+    auto record0 = kw.getRecord(0);
+    auto record1 = kw.getRecord(1);
+    BOOST_CHECK_EQUAL(record0.get(0).name(), "REF_OIL_PHASE_PRESSURE");
+    BOOST_CHECK_EQUAL(record1.get(0).name(), "table");
+    BOOST_CHECK(kw.getRecord(2) == record0);
+    BOOST_CHECK(kw.getRecord(3) == record1);
+    BOOST_CHECK(kw.getRecord(12) == record0);
+    BOOST_CHECK(kw.getRecord(13) == record1);
+}
+
 
 BOOST_AUTO_TEST_CASE(Create1Arg) {
     ParserKeyword kw("GRID");

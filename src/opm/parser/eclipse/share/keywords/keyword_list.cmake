@@ -789,6 +789,7 @@ set( keywords
      000_Eclipse100/S/SSWL
      000_Eclipse100/S/SSWU
      000_Eclipse100/S/START
+     000_Eclipse100/S/STOG
      000_Eclipse100/S/STONE
      000_Eclipse100/S/STONE1
      000_Eclipse100/S/STONE1EX

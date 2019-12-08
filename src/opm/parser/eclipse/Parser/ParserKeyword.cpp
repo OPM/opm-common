@@ -153,6 +153,18 @@ namespace Opm {
     }
 
 
+    void ParserKeyword::parseRecords( const Json::JsonObject& recordsConfig , size_t num_records) {
+         if (recordsConfig.is_array()) {
+             size_t num_records = recordsConfig.size();
+             for (size_t i = 0; i < num_records; i++) {
+                  const Json::JsonObject itemsConfig = recordsConfig.get_array_item(i);
+                  addItems(itemsConfig);
+             }
+         } else
+             throw std::invalid_argument("The records item must point to an array item");
+    }
+
+
     ParserKeyword::ParserKeyword(const Json::JsonObject& jsonConfig) {
 
       if (jsonConfig.has_item("name")) {
@@ -172,7 +184,7 @@ namespace Opm {
         initSectionNames(jsonConfig);
         initMatchRegex(jsonConfig);
 
-        if (jsonConfig.has_item("items") && jsonConfig.has_item("records"))
+        if (jsonConfig.has_item("items") && (jsonConfig.has_item("records") || jsonConfig.has_item("alternating_records")))
             throw std::invalid_argument("Fatal error in " + getName() + " configuration. Can NOT have both records: and items:");
 
         if (jsonConfig.has_item("items")) {
@@ -182,14 +194,16 @@ namespace Opm {
 
         if (jsonConfig.has_item("records")) {
             const Json::JsonObject recordsConfig = jsonConfig.get_item("records");
-            if (recordsConfig.is_array()) {
-                size_t num_records = recordsConfig.size();
-                for (size_t i = 0; i < num_records; i++) {
-                    const Json::JsonObject itemsConfig = recordsConfig.get_array_item(i);
-                    addItems(itemsConfig);
-                }
-            } else
-                throw std::invalid_argument("The records item must point to an array item");
+            parseRecords( recordsConfig, recordsConfig.size() );
+        }
+
+        if (jsonConfig.has_item("alternating_records")) {
+            alternating_keyword = true;
+            if (!jsonConfig.has_item("num_tables") || jsonConfig.has_item("size"))
+                throw std::invalid_argument("alternating_records must have num_tables.");
+            const Json::JsonObject recordsConfig = jsonConfig.get_item("alternating_records");
+            size_t num_records = recordsConfig.size();
+            parseRecords( recordsConfig, num_records );
         }
 
         if (jsonConfig.has_item("data"))
@@ -425,8 +439,13 @@ void set_dimensions( ParserItem& item,
         if( this->m_records.empty() )
             throw std::invalid_argument( "Trying to get record from empty keyword" );
 
-        if( recordIndex >= this->m_records.size() )
-            return this->m_records.back();
+        if( recordIndex >= this->m_records.size() ) {
+            if (alternating_keyword) {
+                return this->m_records[ recordIndex % this->m_records.size() ];
+            }
+            else
+                return this->m_records.back();
+        }
 
         return this->m_records[ recordIndex ];
     }
@@ -566,6 +585,14 @@ void set_dimensions( ParserItem& item,
         return (this->m_keywordSizeType == FIXED_CODE);
     }
 
+    bool ParserKeyword::isAlternatingKeyword() const {
+        return alternating_keyword;
+    }
+
+    void ParserKeyword::setAlternatingKeyword(bool alternating) {
+        alternating_keyword = alternating;
+    }
+
     bool ParserKeyword::hasMatchRegex() const {
         return !m_matchRegexString.empty();
     }
@@ -667,6 +694,10 @@ void set_dimensions( ParserItem& item,
         {
             ss << indent << "addDeckName(\"" << *deckNameIt << "\");" << '\n';
         }
+
+        // set AlternatingRecords
+        if (alternating_keyword)
+            ss << indent << "setAlternatingKeyword(true);" << '\n';
 
         // set the deck name match regex
         if (hasMatchRegex())
