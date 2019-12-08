@@ -429,6 +429,15 @@ BOOST_AUTO_TEST_CASE(GridPropertyInitialization) {
     BOOST_CHECK_EQUAL(fp_sgu[1 + 1 * 3*3], 0.85);
     BOOST_CHECK_EQUAL(fp_sgu[1 + 2 * 3*3], 0.80);
 
+
+    const auto& fp_sogcr = fp.get_global<double>("SOGCR");
+    const auto& prop_sogcr = props.getDoubleGridProperty("SOGCR").getData();
+    for (std::size_t g=0; g < eg.getCartesianSize(); g++) {
+        if (eg.cellActive(g))
+            BOOST_CHECK_EQUAL(fp_sogcr[g], prop_sogcr[g]);
+    }
+
+
     const auto& satnum = props.getIntGridProperty("SATNUM");
     {
         const auto& activeMap = eg.getActiveMap();
