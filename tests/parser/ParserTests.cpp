@@ -1759,18 +1759,6 @@ BOOST_AUTO_TEST_CASE(ConstructFromJson_withAlternatingRecordsSizeWithoutBrackets
     BOOST_CHECK_THROW( ParserKeyword kw( jsonObject ), std::invalid_argument);
 }
 
-BOOST_AUTO_TEST_CASE(ConstructFromJson_withAlternatingRecordsWrongSize) {
-    const std::string json_string = R"(
-    {"name" : "STOG", "sections" : ["PROPS"] , "num_tables" : {"keyword" : "TABDIMS" , "item" : "NTPVT"}, "alternating_records" : [[
-      {"name" : "ref_oil_pressure", "value_type" : "DOUBLE"}], [
-      {"name" : "oil_phase_pressure" , "value_type" : "DOUBLE"},
-      {"name" : "surface_rension", "value_type" : "DOUBLE"}], [
-      {"name" : "Name", "value_type" : "STRING"}]]}
-    )";
-    Json::JsonObject jsonObject( json_string );
-    BOOST_CHECK_THROW( ParserKeyword kw( jsonObject ), std::invalid_argument);
-}
-
 BOOST_AUTO_TEST_CASE(GetAlternatingKeywordFromParser) {
     Parser parser;
     BOOST_CHECK(parser.hasKeyword("STOG"));

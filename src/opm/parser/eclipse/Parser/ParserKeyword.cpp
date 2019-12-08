@@ -203,8 +203,6 @@ namespace Opm {
                 throw std::invalid_argument("alternating_records must have num_tables.");
             const Json::JsonObject recordsConfig = jsonConfig.get_item("alternating_records");
             size_t num_records = recordsConfig.size();
-            if (num_records != 2)
-                throw std::invalid_argument("alternating records has only 2 records.");
             parseRecords( recordsConfig, num_records );
         }
 
