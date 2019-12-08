@@ -25,49 +25,39 @@
   This includes the logic for parsing as well as the associated tables. It is meant to be used by opm-grid and opm-simulators in order to
   implement the Fetkovich analytical aquifer model in OPM Flow.
 */
+#include <memory>
 
-#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/A.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/Deck/DeckItem.hpp>
-#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
-#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/Aqudims.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/TableContainer.hpp>
-#include <boost/concept_check.hpp>
-#include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 namespace Opm {
 
-    class Aquifetp {
-        public:
+class Aquifetp {
+    public:
 
-            struct AQUFETP_data{
+    struct AQUFETP_data{
 
-                    // Aquifer ID
-                    int aquiferID;
-                    // Table IDs
-                    int inftableID, pvttableID;
-                    std::vector<int> cell_id;
-                    // Variables constants
-                    double  J, // Specified Productivity Index
-			  rho, // water density in the aquifer
-			  C_t, // total rock compressibility
-			   V0, // initial volume of water in aquifer
-			   d0; // aquifer datum depth
+        // Aquifer ID
+        int aquiferID;
+        // Table IDs
+        int inftableID, pvttableID;
+        std::vector<int> cell_id;
+        // Variables constants
+        double  J, // Specified Productivity Index
+            rho, // water density in the aquifer
+            C_t, // total rock compressibility
+            V0, // initial volume of water in aquifer
+            d0; // aquifer datum depth
 		    std::shared_ptr<double> p0; //Initial aquifer pressure at datum depth d0 - nullptr if the pressure has been defaulted.
-            };
-
-            Aquifetp(const Deck& deck);
-
-            const std::vector<Aquifetp::AQUFETP_data>& getAquifers() const;
-            int getAqPvtTabID(size_t aquiferIndex);
-    
-        private:
-  
-            std::vector<Aquifetp::AQUFETP_data> m_aqufetp;
-
     };
+
+    Aquifetp(const Deck& deck);
+    const std::vector<Aquifetp::AQUFETP_data>& getAquifers() const;
+    int getAqPvtTabID(size_t aquiferIndex);
+
+private:
+    std::vector<Aquifetp::AQUFETP_data> m_aqufetp;
+};
 }
 
 
