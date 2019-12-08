@@ -238,6 +238,7 @@ private:
     std::size_t nx,ny,nz;
     std::vector<int> m_actnum;
     std::vector<double> cell_volume;
+    std::vector<double> cell_depth;
     const std::string m_default_region;
     const EclipseGrid * grid_ptr;      // A bit undecided whether to properly use the grid or not ...
     const TableManager& tables;

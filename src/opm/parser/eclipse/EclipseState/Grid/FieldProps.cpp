@@ -342,6 +342,13 @@ std::vector<double> extract_cell_volume(const EclipseGrid& grid) {
     return cell_volume;
 }
 
+std::vector<double> extract_cell_depth(const EclipseGrid& grid) {
+    std::vector<double> cell_depth(grid.getNumActive());
+    for (std::size_t active_index = 0; active_index < grid.getNumActive(); active_index++)
+        cell_depth[active_index] = grid.getCellDepth( grid.getGlobalIndex(active_index));
+    return cell_depth;
+}
+
 }
 
 
@@ -355,6 +362,7 @@ FieldProps::FieldProps(const Deck& deck, const EclipseGrid& grid, const TableMan
     nz(grid.getNZ()),
     m_actnum(grid.getACTNUM()),
     cell_volume(extract_cell_volume(grid)),
+    cell_depth(extract_cell_depth(grid)),
     m_default_region(default_region_keyword(deck)),
     grid_ptr(&grid),
     tables(tables_arg)
@@ -407,6 +415,7 @@ void FieldProps::reset_grid(const EclipseGrid& grid) {
     this->m_actnum = std::move(new_actnum);
     this->active_size = grid.getNumActive();
     this->cell_volume = extract_cell_volume(grid);
+    this->cell_depth = extract_cell_depth(grid);
     if (this->porv_ptr)
         this->porv_ptr.reset( nullptr );
 
@@ -908,10 +917,10 @@ void FieldProps::init_satfunc(const std::string& keyword, FieldData<double>& sat
     const auto& endnum = this->get_valid_data<int>("ENDNUM");
     if (keyword[0] == 'I') {
         const auto& imbnum = this->get_valid_data<int>("IMBNUM");
-        satfunc.default_update(satfunc::init(keyword, this->tables, *this->grid_ptr, imbnum, endnum));
+        satfunc.default_update(satfunc::init(keyword, this->tables, this->cell_depth, imbnum, endnum));
     } else {
         const auto& satnum = this->get_valid_data<int>("SATNUM");
-        satfunc.default_update(satfunc::init(keyword, this->tables, *this->grid_ptr, satnum, endnum));
+        satfunc.default_update(satfunc::init(keyword, this->tables, this->cell_depth, satnum, endnum));
     }
 }
 

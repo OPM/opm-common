@@ -734,20 +734,12 @@ namespace Opm {
     }
 
 
-
-    static double cell_depth(const EclipseGrid& grid, std::size_t cell_index, bool active_only) {
-        if (active_only)
-            return grid.getCellDepth( grid.getGlobalIndex(cell_index) );
-        else
-            return grid.getCellDepth(cell_index);
-    }
-
-
     static std::vector< double > satnumApply( size_t size,
                                               const std::string& columnName,
                                               const std::vector< double >& fallbackValues,
                                               const TableManager& tableManager,
-                                              const EclipseGrid& eclipseGrid,
+                                              const std::vector<double>& cell_depth,
+                                              const std::vector<int> * actnum,
                                               const std::vector<int>& satnum_data,
                                               const std::vector<int>& endnum_data,
                                               bool useOneMinusTableValue ) {
@@ -759,21 +751,18 @@ namespace Opm {
         // cell and we would need to know how the simulator wants to interpolate between
         // sampling points. Both of these are outside the scope of opm-parser, so we just
         // assign a NaN in this case...
-        bool active_only = (size == eclipseGrid.getNumActive());
         const bool useEnptvd = tableManager.useEnptvd();
         const auto& enptvdTables = tableManager.getEnptvdTables();
         for( size_t cellIdx = 0; cellIdx < values.size(); cellIdx++ ) {
             int satTableIdx = satnum_data[cellIdx] - 1;
             int endNum = endnum_data[cellIdx] - 1;
 
-            if (!active_only) {
-                if (! eclipseGrid.cellActive(cellIdx)) {
-                    // Pick from appropriate saturation region if defined
-                    // in this cell, else use region 1 (satTableIdx == 0).
-                    values[cellIdx] = (satTableIdx >= 0)
-                        ? fallbackValues[satTableIdx] : fallbackValues[0];
-                    continue;
-                }
+            if (actnum && (actnum->operator[](cellIdx) == 0)) {
+                // Pick from appropriate saturation region if defined
+                // in this cell, else use region 1 (satTableIdx == 0).
+                values[cellIdx] = (satTableIdx >= 0)
+                    ? fallbackValues[satTableIdx] : fallbackValues[0];
+                continue;
             }
 
             // Active cell better have {SAT,END}NUM > 0.
@@ -789,7 +778,7 @@ namespace Opm {
             values[cellIdx] = selectValue(enptvdTables,
                                           (useEnptvd && endNum >= 0) ? endNum : -1,
                                           columnName,
-                                          cell_depth(eclipseGrid, cellIdx, active_only),
+                                          cell_depth[cellIdx],
                                           fallbackValues[ satTableIdx ],
                                           useOneMinusTableValue);
         }
@@ -802,13 +791,18 @@ namespace Opm {
                                               const std::string& columnName,
                                               const std::vector< double >& fallbackValues,
                                               const TableManager& tableManager,
-                                              const EclipseGrid& eclipseGrid,
+                                              const EclipseGrid& grid,
                                               const GridProperties<int>* intGridProperties,
                                               bool useOneMinusTableValue ) {
         auto tabdims = tableManager.getTabdims();
         const auto& satnum = intGridProperties->getKeyword("SATNUM");
         const auto& endnum = intGridProperties->getKeyword("ENDNUM");
         int numSatTables = tabdims.getNumSatTables();
+
+        std::vector<double> cell_depth(grid.getCartesianSize());
+        for (std::size_t g=0; g < grid.getCartesianSize(); g++)
+            cell_depth[g] = grid.getCellDepth(g);
+
 
         // SATNUM = 0 *might* occur in deactivated cells
         satnum.checkLimits( 0 , numSatTables );
@@ -817,7 +811,8 @@ namespace Opm {
                            columnName,
                            fallbackValues,
                            tableManager,
-                           eclipseGrid,
+                           cell_depth,
+                           std::addressof(grid.getACTNUM()),
                            satnum.getData(),
                            endnum.getData(),
                            useOneMinusTableValue);
@@ -829,7 +824,8 @@ namespace Opm {
                                               const std::string& columnName,
                                               const std::vector< double >& fallBackValues,
                                               const TableManager& tableManager,
-                                              const EclipseGrid& eclipseGrid,
+                                              const std::vector<double>& cell_depth,
+                                              const std::vector<int> * actnum,
                                               const std::vector<int>& imbnum_data,
                                               const std::vector<int>& endnum_data,
                                               bool useOneMinusTableValue ) {
@@ -841,21 +837,18 @@ namespace Opm {
         // cell and we would need to know how the simulator wants to interpolate between
         // sampling points. Both of these are outside the scope of opm-parser, so we just
         // assign a NaN in this case...
-        bool active_only = (size == eclipseGrid.getNumActive());
         const bool useImptvd = tableManager.useImptvd();
         const TableContainer& imptvdTables = tableManager.getImptvdTables();
         for( size_t cellIdx = 0; cellIdx < values.size(); cellIdx++ ) {
             int imbTableIdx = imbnum_data[ cellIdx ] - 1;
             int endNum = endnum_data[ cellIdx ] - 1;
 
-            if (!active_only) {
-                if (! eclipseGrid.cellActive(cellIdx)) {
-                    // Pick from appropriate saturation region if defined
-                    // in this cell, else use region 1 (imbTableIdx == 0).
-                    values[cellIdx] = (imbTableIdx >= 0)
-                        ? fallBackValues[imbTableIdx] : fallBackValues[0];
-                    continue;
-                }
+            if (actnum && (actnum->operator[](cellIdx) == 0)) {
+                // Pick from appropriate saturation region if defined
+                // in this cell, else use region 1 (imbTableIdx == 0).
+                values[cellIdx] = (imbTableIdx >= 0)
+                    ? fallBackValues[imbTableIdx] : fallBackValues[0];
+                continue;
             }
 
             // Active cell better have {IMB,END}NUM > 0.
@@ -871,7 +864,7 @@ namespace Opm {
             values[cellIdx] = selectValue(imptvdTables,
                                           (useImptvd && endNum >= 0) ? endNum : -1,
                                           columnName,
-                                          cell_depth(eclipseGrid, cellIdx, active_only),
+                                          cell_depth[cellIdx],
                                           fallBackValues[imbTableIdx],
                                           useOneMinusTableValue);
         }
@@ -892,6 +885,10 @@ namespace Opm {
         const auto& endnum = intGridProperties->getKeyword("ENDNUM");
         int numSatTables = tabdims.getNumSatTables();
 
+        std::vector<double> cell_depth(eclipseGrid.getCartesianSize());
+        for (std::size_t g=0; g < eclipseGrid.getCartesianSize(); g++)
+            cell_depth[g] = eclipseGrid.getCellDepth(g);
+
         // IMBNUM = 0 *might* occur in deactivated cells
         imbnum.checkLimits( 0 , numSatTables );
 
@@ -899,7 +896,8 @@ namespace Opm {
                            columnName,
                            fallbackValues,
                            tableManager,
-                           eclipseGrid,
+                           cell_depth,
+                           std::addressof(eclipseGrid.getACTNUM()),
                            imbnum.getData(),
                            endnum.getData(),
                            useOneMinusTableValue);
@@ -1252,349 +1250,349 @@ namespace satfunc {
 
 
     std::vector< double > SGLEndpoint( const TableManager & tableManager,
-                                       const EclipseGrid& grid,
+                                       const std::vector<double>& cell_depth,
                                        const std::vector<int>& satnum,
                                        const std::vector<int>& endnum)
     {
         const auto min_gas = findMinGasSaturation( tableManager );
-        return satnumApply( grid.getNumActive(), "SGCO", min_gas, tableManager, grid,
+        return satnumApply( cell_depth.size(), "SGCO", min_gas, tableManager, cell_depth, nullptr,
                             satnum, endnum, false );
     }
 
     std::vector< double > ISGLEndpoint( const TableManager & tableManager,
-                                        const EclipseGrid& grid,
+                                        const std::vector<double>& cell_depth,
                                         const std::vector<int>& imbnum,
                                         const std::vector<int>& endnum)
     {
         const auto min_gas = findMinGasSaturation( tableManager );
-        return imbnumApply( grid.getNumActive(), "SGCO", min_gas, tableManager, grid,
+        return imbnumApply( cell_depth.size(), "SGCO", min_gas, tableManager, cell_depth, nullptr,
                             imbnum, endnum, false );
     }
 
     std::vector< double > SGUEndpoint( const TableManager & tableManager,
-                                       const EclipseGrid& grid,
+                                       const std::vector<double>& cell_depth,
                                        const std::vector<int>& satnum,
                                        const std::vector<int>& endnum)
     {
         const auto max_gas = findMaxGasSaturation( tableManager );
-        return satnumApply( grid.getNumActive(), "SGMAX", max_gas, tableManager, grid,
+        return satnumApply( cell_depth.size(), "SGMAX", max_gas, tableManager, cell_depth, nullptr,
                             satnum, endnum, false );
     }
 
     std::vector< double > ISGUEndpoint( const TableManager & tableManager,
-                                        const EclipseGrid& grid,
+                                        const std::vector<double>& cell_depth,
                                         const std::vector<int>& imbnum,
                                         const std::vector<int>& endnum)
     {
         const auto max_gas = findMaxGasSaturation( tableManager );
-        return imbnumApply( grid.getNumActive(), "SGMAX", max_gas, tableManager, grid,
+        return imbnumApply( cell_depth.size(), "SGMAX", max_gas, tableManager, cell_depth, nullptr,
                             imbnum, endnum, false );
     }
 
     std::vector< double > SWLEndpoint( const TableManager & tableManager,
-                                       const EclipseGrid& grid,
+                                       const std::vector<double>& cell_depth,
                                        const std::vector<int>& satnum,
                                        const std::vector<int>& endnum)
     {
         const auto min_water = findMinWaterSaturation( tableManager );
-        return satnumApply( grid.getNumActive(), "SWCO", min_water, tableManager, grid,
+        return satnumApply( cell_depth.size(), "SWCO", min_water, tableManager, cell_depth, nullptr,
                             satnum, endnum, false );
     }
 
     std::vector< double > ISWLEndpoint( const TableManager & tableManager,
-                                        const EclipseGrid  & grid,
+                                        const std::vector<double>& cell_depth,
                                         const std::vector<int>& imbnum,
                                         const std::vector<int>& endnum)
     {
         const auto min_water = findMinWaterSaturation( tableManager );
-        return imbnumApply( grid.getNumActive(), "SWCO", min_water, tableManager, grid,
+        return imbnumApply( cell_depth.size(), "SWCO", min_water, tableManager, cell_depth, nullptr,
                             imbnum, endnum, false );
     }
 
     std::vector< double > SWUEndpoint( const TableManager & tableManager,
-                                       const EclipseGrid  & grid,
+                                       const std::vector<double>& cell_depth,
                                        const std::vector<int>& satnum,
                                        const std::vector<int>& endnum)
     {
         const auto max_water = findMaxWaterSaturation( tableManager );
-        return satnumApply( grid.getNumActive(), "SWMAX", max_water, tableManager, grid,
+        return satnumApply( cell_depth.size(), "SWMAX", max_water, tableManager, cell_depth, nullptr,
                             satnum, endnum, true );
     }
 
     std::vector< double > ISWUEndpoint( const TableManager & tableManager,
-                                        const EclipseGrid  & grid,
+                                        const std::vector<double>& cell_depth,
                                         const std::vector<int>& imbnum,
                                         const std::vector<int>& endnum)
     {
         const auto max_water = findMaxWaterSaturation( tableManager );
-        return imbnumApply( grid.getNumActive(), "SWMAX", max_water, tableManager, grid,
+        return imbnumApply( cell_depth.size(), "SWMAX", max_water, tableManager, cell_depth, nullptr,
                             imbnum, endnum, true);
     }
 
     std::vector< double > SGCREndpoint( const TableManager & tableManager,
-                                        const EclipseGrid  & grid,
+                                        const std::vector<double>& cell_depth,
                                         const std::vector<int>& satnum,
                                         const std::vector<int>& endnum)
     {
         const auto crit_gas = findCriticalGas( tableManager );
-        return satnumApply( grid.getNumActive(), "SGCRIT", crit_gas, tableManager, grid,
+        return satnumApply( cell_depth.size(), "SGCRIT", crit_gas, tableManager, cell_depth, nullptr,
                             satnum, endnum, false );
     }
 
     std::vector< double > ISGCREndpoint( const TableManager & tableManager,
-                                         const EclipseGrid  & grid,
+                                         const std::vector<double>& cell_depth,
                                          const std::vector<int>& imbnum,
                                          const std::vector<int>& endnum)
     {
         const auto crit_gas = findCriticalGas( tableManager );
-        return imbnumApply( grid.getNumActive(), "SGCRIT", crit_gas, tableManager, grid,
+        return imbnumApply( cell_depth.size(), "SGCRIT", crit_gas, tableManager, cell_depth, nullptr,
                             imbnum, endnum, false );
     }
 
     std::vector< double > SOWCREndpoint( const TableManager & tableManager,
-                                         const EclipseGrid  & grid,
+                                         const std::vector<double>& cell_depth,
                                          const std::vector<int>& satnum,
                                          const std::vector<int>& endnum)
     {
         const auto oil_water = findCriticalOilWater( tableManager );
-        return satnumApply( grid.getNumActive(), "SOWCRIT", oil_water, tableManager, grid,
+        return satnumApply( cell_depth.size(), "SOWCRIT", oil_water, tableManager, cell_depth, nullptr,
                             satnum, endnum, false );
     }
 
     std::vector< double > ISOWCREndpoint( const TableManager & tableManager,
-                                          const EclipseGrid  & grid,
+                                          const std::vector<double>& cell_depth,
                                           const std::vector<int>& imbnum,
                                           const std::vector<int>& endnum)
     {
         const auto oil_water = findCriticalOilWater( tableManager );
-        return imbnumApply( grid.getNumActive(), "SOWCRIT", oil_water, tableManager, grid,
+        return imbnumApply( cell_depth.size(), "SOWCRIT", oil_water, tableManager, cell_depth, nullptr,
                             imbnum, endnum, false );
     }
 
     std::vector< double > SOGCREndpoint( const TableManager & tableManager,
-                                         const EclipseGrid  & grid,
+                                         const std::vector<double>& cell_depth,
                                          const std::vector<int>& satnum,
                                          const std::vector<int>& endnum)
     {
         const auto crit_oil_gas = findCriticalOilGas( tableManager );
-        return satnumApply( grid.getNumActive(), "SOGCRIT", crit_oil_gas, tableManager, grid,
+        return satnumApply( cell_depth.size(), "SOGCRIT", crit_oil_gas, tableManager, cell_depth, nullptr,
                             satnum, endnum, false );
     }
 
     std::vector< double > ISOGCREndpoint( const TableManager & tableManager,
-                                          const EclipseGrid  & grid,
+                                          const std::vector<double>& cell_depth,
                                           const std::vector<int>& imbnum,
                                           const std::vector<int>& endnum)
     {
         const auto crit_oil_gas = findCriticalOilGas( tableManager );
-        return imbnumApply( grid.getNumActive(), "SOGCRIT", crit_oil_gas, tableManager, grid,
+        return imbnumApply( cell_depth.size(), "SOGCRIT", crit_oil_gas, tableManager, cell_depth, nullptr,
                             imbnum, endnum, false );
     }
 
     std::vector< double > SWCREndpoint( const TableManager & tableManager,
-                                        const EclipseGrid  & grid,
+                                        const std::vector<double>& cell_depth,
                                         const std::vector<int>& satnum,
                                         const std::vector<int>& endnum)
     {
         const auto crit_water = findCriticalWater( tableManager );
-        return satnumApply( grid.getNumActive(), "SWCRIT", crit_water, tableManager, grid,
+        return satnumApply( cell_depth.size(), "SWCRIT", crit_water, tableManager, cell_depth, nullptr,
                             satnum, endnum, false );
     }
 
     std::vector< double > ISWCREndpoint( const TableManager & tableManager,
-                                         const EclipseGrid  & grid,
+                                         const std::vector<double>& cell_depth,
                                          const std::vector<int>& imbnum,
                                          const std::vector<int>& endnum)
     {
         const auto crit_water = findCriticalWater( tableManager );
-        return imbnumApply( grid.getNumActive(), "SWCRIT", crit_water, tableManager, grid,
+        return imbnumApply( cell_depth.size(), "SWCRIT", crit_water, tableManager, cell_depth, nullptr,
                             imbnum, endnum, false );
     }
 
     std::vector< double > PCWEndpoint( const TableManager & tableManager,
-                                       const EclipseGrid  & grid,
+                                       const std::vector<double>& cell_depth,
                                        const std::vector<int>& satnum,
                                        const std::vector<int>& endnum)
     {
         const auto max_pcow = findMaxPcow( tableManager );
-        return satnumApply( grid.getNumActive(), "PCW", max_pcow, tableManager, grid,
+        return satnumApply( cell_depth.size(), "PCW", max_pcow, tableManager, cell_depth, nullptr,
                             satnum, endnum, false );
     }
 
     std::vector< double > IPCWEndpoint( const TableManager & tableManager,
-                                        const EclipseGrid  & grid,
+                                        const std::vector<double>& cell_depth,
                                         const std::vector<int>& imbnum,
                                         const std::vector<int>& endnum)
     {
         const auto max_pcow = findMaxPcow( tableManager );
-        return imbnumApply( grid.getNumActive(), "IPCW", max_pcow, tableManager, grid,
+        return imbnumApply( cell_depth.size(), "IPCW", max_pcow, tableManager, cell_depth, nullptr,
                             imbnum, endnum, false );
     }
 
     std::vector< double > PCGEndpoint( const TableManager & tableManager,
-                                       const EclipseGrid  & grid,
+                                       const std::vector<double>& cell_depth,
                                        const std::vector<int>& satnum,
                                        const std::vector<int>& imbnum)
     {
         const auto max_pcog = findMaxPcog( tableManager );
-        return satnumApply( grid.getNumActive(), "PCG", max_pcog, tableManager, grid,
+        return satnumApply( cell_depth.size(), "PCG", max_pcog, tableManager, cell_depth, nullptr,
                             satnum, imbnum, false );
     }
 
     std::vector< double > IPCGEndpoint( const TableManager & tableManager,
-                                        const EclipseGrid  & grid,
+                                        const std::vector<double>& cell_depth,
                                         const std::vector<int>& imbnum,
                                         const std::vector<int>& endnum)
     {
         const auto max_pcog = findMaxPcog( tableManager );
-        return imbnumApply( grid.getNumActive(), "IPCG", max_pcog, tableManager, grid,
+        return imbnumApply( cell_depth.size(), "IPCG", max_pcog, tableManager, cell_depth, nullptr,
                             imbnum, endnum, false );
     }
 
     std::vector< double > KRWEndpoint( const TableManager & tableManager,
-                                       const EclipseGrid  & grid,
+                                       const std::vector<double>& cell_depth,
                                        const std::vector<int>& satnum,
                                        const std::vector<int>& endnum)
     {
         const auto max_krw = findMaxKrw( tableManager );
-        return satnumApply( grid.getNumActive(), "KRW", max_krw, tableManager, grid,
+        return satnumApply( cell_depth.size(), "KRW", max_krw, tableManager, cell_depth, nullptr,
                             satnum, endnum, false );
     }
 
     std::vector< double > IKRWEndpoint( const TableManager & tableManager,
-                                        const EclipseGrid  & grid,
+                                        const std::vector<double>& cell_depth,
                                         const std::vector<int>& imbnum,
                                         const std::vector<int>& endnum)
     {
         const auto krwr = findKrwr( tableManager );
-        return imbnumApply( grid.getNumActive(), "IKRW", krwr, tableManager, grid,
+        return imbnumApply( cell_depth.size(), "IKRW", krwr, tableManager, cell_depth, nullptr,
                             imbnum, endnum, false );
     }
 
     std::vector< double > KRWREndpoint( const TableManager & tableManager,
-                                        const EclipseGrid  & grid,
+                                        const std::vector<double>& cell_depth,
                                         const std::vector<int>& satnum,
                                         const std::vector<int>& endnum)
     {
         const auto krwr = findKrwr( tableManager );
-        return satnumApply( grid.getNumActive(), "KRWR", krwr, tableManager, grid,
+        return satnumApply( cell_depth.size(), "KRWR", krwr, tableManager, cell_depth, nullptr,
                             satnum, endnum, false );
     }
 
     std::vector< double > IKRWREndpoint( const TableManager & tableManager,
-                                         const EclipseGrid  & grid,
+                                         const std::vector<double>& cell_depth,
                                          const std::vector<int>& imbnum,
                                          const std::vector<int>& endnum)
     {
         const auto krwr = findKrwr( tableManager );
-        return imbnumApply( grid.getNumActive(), "IKRWR", krwr, tableManager, grid,
+        return imbnumApply( cell_depth.size(), "IKRWR", krwr, tableManager, cell_depth, nullptr,
                             imbnum, endnum, false );
     }
 
     std::vector< double > KROEndpoint( const TableManager & tableManager,
-                                       const EclipseGrid  & grid,
+                                       const std::vector<double>& cell_depth,
                                        const std::vector<int>& satnum,
                                        const std::vector<int>& endnum)
     {
         const auto max_kro = findMaxKro( tableManager );
-        return satnumApply( grid.getNumActive(), "KRO", max_kro, tableManager, grid,
+        return satnumApply( cell_depth.size(), "KRO", max_kro, tableManager, cell_depth, nullptr,
                             satnum, endnum, false );
     }
 
     std::vector< double > IKROEndpoint( const TableManager & tableManager,
-                                        const EclipseGrid  & grid,
+                                        const std::vector<double>& cell_depth,
                                         const std::vector<int>& imbnum,
                                         const std::vector<int>& endnum)
     {
         const auto max_kro = findMaxKro( tableManager );
-        return imbnumApply( grid.getNumActive(), "IKRO", max_kro, tableManager, grid,
+        return imbnumApply( cell_depth.size(), "IKRO", max_kro, tableManager, cell_depth, nullptr,
                             imbnum, endnum, false );
     }
 
     std::vector< double > KRORWEndpoint( const TableManager & tableManager,
-                                         const EclipseGrid  & grid,
+                                         const std::vector<double>& cell_depth,
                                          const std::vector<int>& satnum,
                                          const std::vector<int>& endnum)
     {
         const auto krorw = findKrorw( tableManager );
-        return satnumApply( grid.getNumActive(), "KRORW", krorw, tableManager, grid,
+        return satnumApply( cell_depth.size(), "KRORW", krorw, tableManager, cell_depth, nullptr,
                             satnum, endnum, false );
     }
 
     std::vector< double > IKRORWEndpoint( const TableManager & tableManager,
-                                          const EclipseGrid  & grid,
+                                          const std::vector<double>& cell_depth,
                                           const std::vector<int>& imbnum,
                                           const std::vector<int>& endnum)
     {
         const auto krorw = findKrorw( tableManager );
-        return imbnumApply( grid.getNumActive(), "IKRORW", krorw, tableManager, grid,
+        return imbnumApply( cell_depth.size(), "IKRORW", krorw, tableManager, cell_depth, nullptr,
                             imbnum, endnum, false );
     }
 
     std::vector< double > KRORGEndpoint( const TableManager & tableManager,
-                                         const EclipseGrid  & grid,
+                                         const std::vector<double>& cell_depth,
                                          const std::vector<int>& satnum,
                                          const std::vector<int>& endnum)
     {
         const auto krorg = findKrorg( tableManager );
-        return satnumApply( grid.getNumActive(), "KRORG", krorg, tableManager, grid,
+        return satnumApply( cell_depth.size(), "KRORG", krorg, tableManager, cell_depth, nullptr,
                             satnum, endnum, false );
     }
 
     std::vector< double > IKRORGEndpoint( const TableManager & tableManager,
-                                          const EclipseGrid  & grid,
+                                          const std::vector<double>& cell_depth,
                                           const std::vector<int>& imbnum,
                                           const std::vector<int>& endnum)
     {
         const auto krorg = findKrorg( tableManager );
-        return imbnumApply( grid.getNumActive(), "IKRORG", krorg, tableManager, grid,
+        return imbnumApply( cell_depth.size(), "IKRORG", krorg, tableManager, cell_depth, nullptr,
                             imbnum, endnum, false );
     }
 
     std::vector< double > KRGEndpoint( const TableManager & tableManager,
-                                       const EclipseGrid  & grid,
+                                       const std::vector<double>& cell_depth,
                                        const std::vector<int>& satnum,
                                        const std::vector<int>& endnum)
     {
         const auto max_krg = findMaxKrg( tableManager );
-        return satnumApply( grid.getNumActive(), "KRG", max_krg, tableManager, grid,
+        return satnumApply( cell_depth.size(), "KRG", max_krg, tableManager, cell_depth, nullptr,
                             satnum, endnum, false );
     }
 
     std::vector< double > IKRGEndpoint( const TableManager & tableManager,
-                                        const EclipseGrid  & grid,
+                                        const std::vector<double>& cell_depth,
                                         const std::vector<int>& imbnum,
                                         const std::vector<int>& endnum)
     {
         const auto max_krg = findMaxKrg( tableManager );
-        return imbnumApply( grid.getNumActive(), "IKRG", max_krg, tableManager, grid,
+        return imbnumApply( cell_depth.size(), "IKRG", max_krg, tableManager, cell_depth, nullptr,
                             imbnum, endnum, false );
     }
 
     std::vector< double > KRGREndpoint( const TableManager & tableManager,
-                                        const EclipseGrid  & grid,
+                                        const std::vector<double>& cell_depth,
                                         const std::vector<int>& satnum,
                                         const std::vector<int>& endnum)
     {
         const auto krgr = findKrgr( tableManager );
-        return satnumApply( grid.getNumActive(), "KRGR", krgr, tableManager, grid,
+        return satnumApply( cell_depth.size(), "KRGR", krgr, tableManager, cell_depth, nullptr,
                             satnum, endnum, false );
     }
 
     std::vector< double > IKRGREndpoint( const TableManager & tableManager,
-                                         const EclipseGrid& grid,
+                                         const std::vector<double>& cell_depth,
                                          const std::vector<int>& imbnum,
                                          const std::vector<int>& endnum)
     {
         const auto krgr = findKrgr( tableManager );
-        return imbnumApply( grid.getNumActive(), "IKRGR", krgr, tableManager, grid,
+        return imbnumApply( cell_depth.size(), "IKRGR", krgr, tableManager, cell_depth, nullptr,
                             imbnum, endnum, false );
     }
 
 
     std::vector<double> init(const std::string& keyword,
                              const TableManager& tables,
-                             const EclipseGrid& grid,
+                             const std::vector<double>& cell_depth,
                              const std::vector<int>& num,
                              const std::vector<int>& endnum) {
 
@@ -1644,8 +1642,7 @@ namespace satfunc {
                                                               dirfunc("KRGR", KRGREndpoint),
                                                               dirfunc("IKRGR", IKRGREndpoint)};
         const auto& func = func_table[keyword];
-        return func(tables, grid, num, endnum);
+        return func(tables, cell_depth, num, endnum);
     }
 }
-
 }
