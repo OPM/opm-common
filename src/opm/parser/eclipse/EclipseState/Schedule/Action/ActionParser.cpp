@@ -99,8 +99,8 @@ FuncType Parser::get_func(const std::string& arg) {
         case Cat::Region:     return FuncType::region;
         case Cat::Block:      return FuncType::block;
         case Cat::Segment:    return FuncType::well_segment;
+        default:              return FuncType::none;
     }
-    return FuncType::none;
 }
 
 

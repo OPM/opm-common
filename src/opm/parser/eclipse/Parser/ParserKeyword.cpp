@@ -153,7 +153,7 @@ namespace Opm {
     }
 
 
-    void ParserKeyword::parseRecords( const Json::JsonObject& recordsConfig , size_t num_records) {
+    void ParserKeyword::parseRecords( const Json::JsonObject& recordsConfig) {
          if (recordsConfig.is_array()) {
              size_t num_records = recordsConfig.size();
              for (size_t i = 0; i < num_records; i++) {
@@ -194,7 +194,7 @@ namespace Opm {
 
         if (jsonConfig.has_item("records")) {
             const Json::JsonObject recordsConfig = jsonConfig.get_item("records");
-            parseRecords( recordsConfig, recordsConfig.size() );
+            parseRecords( recordsConfig );
         }
 
         if (jsonConfig.has_item("alternating_records")) {
@@ -202,8 +202,7 @@ namespace Opm {
             if (!jsonConfig.has_item("num_tables") || jsonConfig.has_item("size"))
                 throw std::invalid_argument("alternating_records must have num_tables.");
             const Json::JsonObject recordsConfig = jsonConfig.get_item("alternating_records");
-            size_t num_records = recordsConfig.size();
-            parseRecords( recordsConfig, num_records );
+            parseRecords( recordsConfig );
         }
 
         if (jsonConfig.has_item("data"))
