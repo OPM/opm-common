@@ -385,20 +385,23 @@ FieldProps::FieldProps(const Deck& deck, const EclipseGrid& grid, const TableMan
 
 
 
-void FieldProps::reset_grid(const EclipseGrid& grid) {
-    if (this->global_size != grid.getCartesianSize())
-        throw std::logic_error("reset_grid() must be called with the same number of global cells");
+void FieldProps::reset_actnum(const std::vector<int>& new_actnum) {
+    if (this->global_size != new_actnum.size())
+        throw std::logic_error("reset_actnum() must be called with the same number of global cells");
 
-    const auto& new_actnum = grid.getACTNUM();
     if (new_actnum == this->m_actnum)
         return;
 
     std::vector<bool> active_map(this->active_size, true);
     std::size_t active_index = 0;
+    std::size_t new_active_size = 0;
     for (std::size_t g = 0; g < this->m_actnum.size(); g++) {
         if (this->m_actnum[g] != 0) {
             if (new_actnum[g] == 0)
                 active_map[active_index] = false;
+            else
+                new_active_size += 1;
+
             active_index += 1;
         } else {
             if (new_actnum[g] != 0)
@@ -412,14 +415,13 @@ void FieldProps::reset_grid(const EclipseGrid& grid) {
     for (auto& data : this->int_data)
         data.second.compress(active_map);
 
-    this->m_actnum = std::move(new_actnum);
-    this->active_size = grid.getNumActive();
-    this->cell_volume = extract_cell_volume(grid);
-    this->cell_depth = extract_cell_depth(grid);
+    FieldProps::compress(this->cell_volume, active_map);
+    FieldProps::compress(this->cell_depth, active_map);
     if (this->porv_ptr)
         this->porv_ptr.reset( nullptr );
 
-    this->grid_ptr = &grid;
+    this->m_actnum = std::move(new_actnum);
+    this->active_size = new_active_size;
 }
 
 

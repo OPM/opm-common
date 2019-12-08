@@ -30,8 +30,8 @@ FieldPropsManager::FieldPropsManager(const Deck& deck, const EclipseGrid& grid_a
     fp(std::make_shared<FieldProps>(deck, grid_arg, tables))
 {}
 
-void FieldPropsManager::reset_grid(const EclipseGrid& grid) {
-    this->fp->reset_grid(grid);
+void FieldPropsManager::reset_actnum(const std::vector<int>& actnum) {
+    this->fp->reset_actnum(actnum);
 }
 
 template <typename T>
