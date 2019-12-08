@@ -202,176 +202,176 @@ namespace Opm {
 namespace satfunc {
 
     std::vector<double> SGLEndpoint(const TableManager&,
-                                    const EclipseGrid&,
+                                    const std::vector<double>&,
                                     const std::vector<int>&,
                                     const std::vector<int>&);
 
     std::vector<double> ISGLEndpoint(const TableManager&,
-                                     const EclipseGrid&,
+                                     const std::vector<double>&,
                                      const std::vector<int>&,
                                      const std::vector<int>&);
 
     std::vector<double> SGUEndpoint(const TableManager&,
-                                    const EclipseGrid&,
+                                    const std::vector<double>&,
                                     const std::vector<int>&,
                                     const std::vector<int>&);
 
     std::vector<double> ISGUEndpoint(const TableManager&,
-                                     const EclipseGrid&,
+                                     const std::vector<double>&,
                                      const std::vector<int>&,
                                      const std::vector<int>&);
 
     std::vector<double> SWLEndpoint(const TableManager&,
-                                    const EclipseGrid&,
+                                    const std::vector<double>&,
                                     const std::vector<int>&,
                                     const std::vector<int>&);
 
     std::vector<double> ISWLEndpoint(const TableManager&,
-                                     const EclipseGrid&,
+                                     const std::vector<double>&,
                                      const std::vector<int>&,
                                      const std::vector<int>&);
 
     std::vector<double> SWUEndpoint(const TableManager&,
-                                    const EclipseGrid&,
+                                    const std::vector<double>&,
                                     const std::vector<int>&,
                                     const std::vector<int>&);
 
     std::vector<double> ISWUEndpoint(const TableManager&,
-                                     const EclipseGrid&,
+                                     const std::vector<double>&,
                                      const std::vector<int>&,
                                      const std::vector<int>&);
 
     std::vector<double> SGCREndpoint(const TableManager&,
-                                     const EclipseGrid&,
+                                     const std::vector<double>&,
                                      const std::vector<int>&,
                                      const std::vector<int>&);
 
     std::vector<double> ISGCREndpoint(const TableManager&,
-                                      const EclipseGrid&,
+                                      const std::vector<double>&,
                                       const std::vector<int>&,
                                       const std::vector<int>&);
 
     std::vector<double> SOWCREndpoint(const TableManager&,
-                                      const EclipseGrid&,
+                                      const std::vector<double>&,
                                       const std::vector<int>&,
                                       const std::vector<int>&);
 
     std::vector<double> ISOWCREndpoint(const TableManager&,
-                                       const EclipseGrid&,
+                                       const std::vector<double>&,
                                        const std::vector<int>&,
                                        const std::vector<int>&);
 
     std::vector<double> SOGCREndpoint(const TableManager&,
-                                      const EclipseGrid&,
+                                      const std::vector<double>&,
                                       const std::vector<int>&,
                                       const std::vector<int>&);
 
     std::vector<double> ISOGCREndpoint(const TableManager&,
-                                       const EclipseGrid&,
+                                       const std::vector<double>&,
                                        const std::vector<int>&,
                                        const std::vector<int>&);
 
     std::vector<double> SWCREndpoint(const TableManager&,
-                                     const EclipseGrid&,
+                                     const std::vector<double>&,
                                      const std::vector<int>&,
                                      const std::vector<int>&);
 
     std::vector<double> ISWCREndpoint(const TableManager&,
-                                      const EclipseGrid&,
+                                      const std::vector<double>&,
                                       const std::vector<int>&,
                                       const std::vector<int>&);
 
     std::vector<double> PCWEndpoint(const TableManager&,
-                                    const EclipseGrid&,
+                                    const std::vector<double>&,
                                     const std::vector<int>&,
                                     const std::vector<int>&);
 
     std::vector<double> IPCWEndpoint(const TableManager&,
-                                     const EclipseGrid&,
+                                     const std::vector<double>&,
                                      const std::vector<int>&,
                                      const std::vector<int>&);
 
     std::vector<double> PCGEndpoint(const TableManager&,
-                                    const EclipseGrid&,
+                                    const std::vector<double>&,
                                     const std::vector<int>&,
                                     const std::vector<int>&);
 
     std::vector<double> IPCGEndpoint(const TableManager&,
-                                     const EclipseGrid&,
+                                     const std::vector<double>&,
                                      const std::vector<int>&,
                                      const std::vector<int>&);
 
     std::vector<double> KRWEndpoint(const TableManager&,
-                                    const EclipseGrid&,
+                                    const std::vector<double>&,
                                     const std::vector<int>&,
                                     const std::vector<int>&);
 
     std::vector<double> IKRWEndpoint(const TableManager&,
-                                     const EclipseGrid&,
+                                     const std::vector<double>&,
                                      const std::vector<int>&,
                                      const std::vector<int>&);
 
     std::vector<double> KRWREndpoint(const TableManager&,
-                                     const EclipseGrid&,
+                                     const std::vector<double>&,
                                      const std::vector<int>&,
                                      const std::vector<int>&);
 
     std::vector<double> IKRWREndpoint(const TableManager&,
-                                      const EclipseGrid&,
+                                      const std::vector<double>&,
                                       const std::vector<int>&,
                                       const std::vector<int>&);
 
     std::vector<double> KROEndpoint(const TableManager&,
-                                    const EclipseGrid&,
+                                    const std::vector<double>&,
                                     const std::vector<int>&,
                                     const std::vector<int>&);
 
     std::vector<double> IKROEndpoint(const TableManager&,
-                                     const EclipseGrid&,
+                                     const std::vector<double>&,
                                      const std::vector<int>&,
                                      const std::vector<int>&);
 
     std::vector<double> KRORWEndpoint(const TableManager&,
-                                      const EclipseGrid&,
+                                      const std::vector<double>&,
                                       const std::vector<int>&,
                                       const std::vector<int>&);
 
     std::vector<double> IKRORWEndpoint(const TableManager&,
-                                       const EclipseGrid&,
+                                       const std::vector<double>&,
                                        const std::vector<int>&,
                                        const std::vector<int>&);
 
     std::vector<double> KRORGEndpoint(const TableManager&,
-                                      const EclipseGrid&,
+                                      const std::vector<double>&,
                                       const std::vector<int>&,
                                       const std::vector<int>&);
 
     std::vector<double> IKRORGEndpoint(const TableManager&,
-                                       const EclipseGrid&,
+                                       const std::vector<double>&,
                                        const std::vector<int>&,
                                        const std::vector<int>&);
 
     std::vector<double> KRGEndpoint(const TableManager&,
-                                    const EclipseGrid&,
+                                    const std::vector<double>&,
                                     const std::vector<int>&,
                                     const std::vector<int>&);
 
     std::vector<double> IKRGEndpoint(const TableManager&,
-                                     const EclipseGrid&,
+                                     const std::vector<double>&,
                                      const std::vector<int>&,
                                      const std::vector<int>&);
 
     std::vector<double> KRGREndpoint(const TableManager&,
-                                     const EclipseGrid&,
+                                     const std::vector<double>&,
                                      const std::vector<int>&,
                                      const std::vector<int>&);
 
     std::vector<double> IKRGREndpoint(const TableManager&,
-                                      const EclipseGrid&,
+                                      const std::vector<double>&,
                                       const std::vector<int>&,
                                       const std::vector<int>&);
 
-    std::vector<double> init(const std::string& kewyord, const TableManager& tables, const EclipseGrid& grid, const std::vector<int>& num, const std::vector<int>& endnum);
+    std::vector<double> init(const std::string& kewyord, const TableManager& tables, const std::vector<double>& cell_depth, const std::vector<int>& num, const std::vector<int>& endnum);
 }
 }
 
