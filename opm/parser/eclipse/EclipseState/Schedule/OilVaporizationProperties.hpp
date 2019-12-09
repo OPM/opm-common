@@ -40,7 +40,14 @@ namespace Opm
         };
 
 
+        OilVaporizationProperties();
         explicit OilVaporizationProperties(const size_t numPvtReginIdx);
+        OilVaporizationProperties(OilVaporization type,
+                                  const std::vector<double>& vap1,
+                                  const std::vector<double>& vap2,
+                                  const std::vector<double>& maxDRSDT,
+                                  const std::vector<bool>& maxDRSDT_allCells,
+                                  const std::vector<double>& maxDRVDT);
         static void updateDRSDT(Opm::OilVaporizationProperties& ovp, const std::vector<double>& maxDRSDT, const std::vector<std::string>& option);
         static void updateDRVDT(Opm::OilVaporizationProperties& ovp, const std::vector<double>& maxDRVDT);
         static void updateVAPPARS(Opm::OilVaporizationProperties& ovp, const std::vector<double>& vap1, const std::vector<double>& vap2);
@@ -55,6 +62,12 @@ namespace Opm
         bool drvdtActive() const;
         bool defined() const;
         size_t numPvtRegions() const {return m_maxDRSDT.size();}
+
+        const std::vector<double>& vap1() const;
+        const std::vector<double>& vap2() const;
+        const std::vector<double>& maxDRSDT() const;
+        const std::vector<bool>& maxDRSDT_allCells() const;
+        const std::vector<double>& maxDRVDT() const;
 
         /*
          * if either argument was default constructed == will always be false
