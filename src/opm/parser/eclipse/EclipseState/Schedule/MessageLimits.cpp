@@ -32,6 +32,10 @@ namespace Opm {
         limits( timemap , MLimits())
     { }
 
+    MessageLimits::MessageLimits(const DynamicState<MLimits>& limits_) :
+        limits(limits_)
+    { }
+
 
     int MessageLimits::getMessagePrintLimit(size_t timestep) const
     {
@@ -202,6 +206,15 @@ namespace Opm {
         this->update( timestep , mlimit );
     }
 
+    const DynamicState<MLimits>& MessageLimits::getLimits() const
+    {
+        return limits;
+    }
+
+    bool MessageLimits::operator==(const MessageLimits& data) const
+    {
+        return limits == data.limits;
+    }
 
 
 }
