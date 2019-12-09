@@ -34,7 +34,7 @@ public:
     // The default constructed fieldProps object is **NOT** usable
     FieldPropsManager() = default;
     FieldPropsManager(const Deck& deck, const EclipseGrid& grid, const TableManager& tables);
-    void reset_grid(const EclipseGrid& grid);
+    void reset_actnum(const std::vector<int>& actnum);
     const std::string& default_region() const;
     std::vector<int> actnum() const;
     std::vector<double> porv(bool global = false) const;

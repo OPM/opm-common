@@ -164,7 +164,7 @@ void assert_field_properties(const EclipseGrid& grid, const FieldPropsManager& f
         initTransMult();
         initFaults(deck);
 #ifdef ENABLE_3DPROPS_TESTING
-        this->field_props.reset_grid( this->m_inputGrid );
+        this->field_props.reset_actnum( this->m_inputGrid.getACTNUM() );
         assert_field_properties(this->m_inputGrid, this->field_props, this->m_eclipseProperties);
 #endif
     }

@@ -159,8 +159,7 @@ SATNUM
     BOOST_CHECK_EQUAL(s1[5], 8);
 
     std::vector<int> actnum2 = {1,0,1,0,0,0,1,0,1};
-    grid.resetACTNUM(actnum2);
-    fpm.reset_grid(grid);
+    fpm.reset_actnum(actnum2);
 
     BOOST_CHECK_EQUAL(s1.size(), 4);
     BOOST_CHECK_EQUAL(s1[0], 0);
@@ -168,8 +167,7 @@ SATNUM
     BOOST_CHECK_EQUAL(s1[2], 6);
     BOOST_CHECK_EQUAL(s1[3], 8);
 
-    grid.resetACTNUM(actnum1);
-    BOOST_CHECK_THROW(fpm.reset_grid(grid), std::logic_error);
+    BOOST_CHECK_THROW(fpm.reset_actnum(actnum1), std::logic_error);
 }
 
 BOOST_AUTO_TEST_CASE(ADDREG) {
@@ -329,7 +327,7 @@ ENDBOX
     actnum[0] = 0;
     grid.resetACTNUM(actnum);
 
-    fpm.reset_grid(grid);
+    fpm.reset_actnum(actnum);
     auto porv_global = fpm.porv(true);
     auto porv_active = fpm.porv(false);
     BOOST_CHECK_EQUAL( porv_active.size(), grid.getNumActive());
