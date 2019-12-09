@@ -45,6 +45,15 @@ public:
         // the related WTEST keywords is entered and will begin
         // taking effects since this report step
         int begin_report_step;
+
+        bool operator==(const WTESTWell& data) const {
+            return name == data.name &&
+                   shut_reason == data.shut_reason &&
+                   test_interval == data.test_interval &&
+                   num_test == data.num_test &&
+                   startup_time == data.startup_time &&
+                   begin_report_step == data.begin_report_step;
+        }
     };
 
     WellTestConfig();
