@@ -28,6 +28,12 @@ WellTestConfig::WellTestConfig() {
 
 }
 
+WellTestConfig::WellTestConfig(const std::vector<WTESTWell>& well)
+    : wells(well)
+{
+}
+
+
 void WellTestConfig::add_well(const std::string& well, Reason shut_reason, double test_interval,
                               int num_retries, double startup_time, const int current_step) {
 
@@ -143,6 +149,18 @@ WellTestConfig::WTESTWell*  WellTestConfig::getWell(const std::string& well_name
 size_t WellTestConfig::size() const {
     return wells.size();
 }
+
+
+const std::vector<WellTestConfig::WTESTWell>& WellTestConfig::getWells() const {
+    return wells;
+}
+
+
+bool WellTestConfig::operator==(const WellTestConfig& data) const {
+    return this->getWells() == data.getWells();
+}
+
+
 
 }
 

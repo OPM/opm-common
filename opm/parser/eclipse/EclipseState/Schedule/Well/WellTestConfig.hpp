@@ -57,6 +57,8 @@ public:
     };
 
     WellTestConfig();
+    WellTestConfig(const std::vector<WTESTWell>& well);
+
     void add_well(const std::string& well, Reason reason, double test_interval, int num_test, double startup_time, int current_step);
     void add_well(const std::string& well, const std::string& reasons, double test_interval,
                   int num_test, double startup_time, int current_step);
@@ -66,7 +68,11 @@ public:
     const WTESTWell& get(const std::string& well, Reason reason) const;
     size_t size() const;
 
+    const std::vector<WTESTWell>& getWells() const;
+
     static std::string reasonToString(const Reason reason);
+
+    bool operator==(const WellTestConfig& data) const;
 
 private:
     std::vector<WTESTWell> wells;
