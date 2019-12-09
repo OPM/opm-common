@@ -50,6 +50,13 @@ inline const Opm::DeckItem& getNonEmptyItem( const Opm::DeckRecord& record) {
 
 namespace Opm {
 
+VFPInjTable::VFPInjTable()
+{
+    m_table_num = -1;
+    m_datum_depth = 0.0;
+    m_flo_type = FLO_INVALID;
+}
+
 VFPInjTable::VFPInjTable(int table_num,
                          double datum_depth,
                          FLO_TYPE flo_type,
@@ -308,6 +315,32 @@ void VFPInjTable::convertTHPToSI(std::vector<double>& values,
                                  const UnitSystem& unit_system) {
     double scaling_factor = unit_system.parse("Pressure").getSIScaling();
     scaleValues(values, scaling_factor);
+}
+
+
+bool VFPInjTable::operator==(const VFPInjTable& data) const {
+    return this->getTableNum() == data.getTableNum() &&
+           this->getDatumDepth () == data.getDatumDepth() &&
+           this->getFloType() == data.getFloType() &&
+           this->getFloAxis() == data.getFloAxis() &&
+           this->getTHPAxis() == data.getTHPAxis() &&
+           this->getTable() == data.getTable();
+}
+
+
+VFPInjTable& VFPInjTable::operator=(const VFPInjTable& data) {
+    m_table_num = data.m_table_num;
+    m_datum_depth = data.m_datum_depth;
+    m_flo_type = data.m_flo_type;
+    m_flo_data = data.m_flo_data;
+    m_thp_data = data.m_thp_data;
+    extents shape;
+    shape[0] = data.m_data.shape()[0];
+    shape[1] = data.m_data.shape()[1];
+    m_data.resize(shape);
+    for (size_t i = 0; i < data.m_data.num_elements(); ++i)
+        *(m_data.data() + i) = *(data.m_data.data() + i);
+    return *this;
 }
 
 
