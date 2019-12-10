@@ -33,10 +33,56 @@
 
 namespace Opm {
 
+    Well::WellProductionProperties::WellProductionProperties()
+        : BHPH(0.0), THPH(0.0), VFPTableNumber(0),
+          ALQValue(0.0), predictionMode(false),
+          controlMode(ProducerCMode::NONE),
+          whistctl_cmode(ProducerCMode::NONE),
+          m_productionControls(0)
+    {}
+
     Well::WellProductionProperties::WellProductionProperties(const std::string& name_arg) :
         name(name_arg),
         predictionMode( true )
     {}
+
+    Well::WellProductionProperties::WellProductionProperties(const std::string& wname,
+                                                             const UDAValue& oilRate,
+                                                             const UDAValue& waterRate,
+                                                             const UDAValue& gasRate,
+                                                             const UDAValue& liquidRate,
+                                                             const UDAValue& resvRate,
+                                                             const UDAValue& BHP,
+                                                             const UDAValue& THP,
+                                                             double bhph,
+                                                             double thph,
+                                                             int vfpTableNum,
+                                                             double alqValue,
+                                                             bool predMode,
+                                                             ProducerCMode ctrlMode,
+                                                             ProducerCMode whistctlMode,
+                                                             int prodCtrls)
+        : name(wname),
+          OilRate(oilRate),
+          WaterRate(waterRate),
+          GasRate(gasRate),
+          LiquidRate(liquidRate),
+          ResVRate(resvRate),
+          BHPLimit(BHP),
+          THPLimit(THP),
+          BHPH(bhph),
+          THPH(thph),
+          VFPTableNumber(vfpTableNum),
+          ALQValue(alqValue),
+          predictionMode(predMode),
+          controlMode(ctrlMode),
+          whistctl_cmode(whistctlMode),
+          m_productionControls(prodCtrls)
+    {
+    }
+
+
+
 
 
     void Well::WellProductionProperties::init_rates( const DeckRecord& record ) {
@@ -308,5 +354,8 @@ bool Well::WellProductionProperties::effectiveHistoryProductionControl(const Wel
         return (update_count > 0);
     }
 
+    int Well::WellProductionProperties::getNumProductionControls() const {
+        return m_productionControls;
+    }
 
 } // namespace Opm
