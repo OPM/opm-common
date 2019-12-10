@@ -39,7 +39,19 @@ namespace Opm {
             SHUT
         };
 
+        SpiralICD();
         explicit SpiralICD(const DeckRecord& record);
+        SpiralICD(double strength,
+                  double length,
+                  double densityCalibration,
+                  double viscosityCalibration,
+                  double criticalValue,
+                  double widthTransitionRegion,
+                  double maxViscosityRatio,
+                  int methodFlowScaling,
+                  double maxAbsoluteRate,
+                  Status status,
+                  double scalingFactor);
 
         // the function will return a map
         // [
@@ -61,6 +73,8 @@ namespace Opm {
 
         void updateScalingFactor(const double segment_length, const double completion_length);
         double scalingFactor() const;
+
+        bool operator==(const SpiralICD& data) const;
 
     private:
         double m_strength;
