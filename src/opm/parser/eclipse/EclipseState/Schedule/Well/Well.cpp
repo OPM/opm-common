@@ -72,6 +72,25 @@ namespace {
 
 }
 
+Well::Well() :
+    init_step(0),
+    insert_index(0),
+    headI(0),
+    headJ(0),
+    ref_depth(0.0),
+    phase(Phase::OIL),
+    ordering(Connection::Order::DEPTH),
+    udq_undefined(0.0),
+    status(Status::STOP),
+    drainage_radius(0.0),
+    allow_cross_flow(false),
+    automatic_shutin(false),
+    producer(false),
+    efficiency_factor(0.0),
+    solvent_fraction(0.0)
+{
+}
+
 
 Well::Well(const std::string& wname_arg,
              const std::string& gname,
@@ -115,6 +134,65 @@ Well::Well(const std::string& wname_arg,
     auto p = std::make_shared<WellProductionProperties>(wname);
     p->whistctl_cmode = whistctl_cmode;
     this->updateProduction(p);
+}
+
+Well::Well(const std::string& wname_arg,
+          const std::string& gname,
+          std::size_t init_step_arg,
+          std::size_t insert_index_arg,
+          int headI_arg,
+          int headJ_arg,
+          double ref_depth_arg,
+          const Phase& phase_arg,
+          Connection::Order ordering_arg,
+          const UnitSystem& units,
+          double udq_undefined_arg,
+          Status status_arg,
+          double drainageRadius,
+          bool allowCrossFlow,
+          bool automaticShutIn,
+          bool isProducer,
+          const WellGuideRate& guideRate,
+          double efficiencyFactor,
+          double solventFraction,
+          bool predictionMode,
+          std::shared_ptr<const WellEconProductionLimits> econLimits,
+          std::shared_ptr<const WellFoamProperties> foamProperties,
+          std::shared_ptr<const WellPolymerProperties> polymerProperties,
+          std::shared_ptr<const WellTracerProperties> tracerProperties,
+          std::shared_ptr<WellConnections> connections_arg,
+          std::shared_ptr<const WellProductionProperties> production_arg,
+          std::shared_ptr<const WellInjectionProperties> injection_arg,
+          std::shared_ptr<const WellSegments> segments_arg) :
+    wname(wname_arg),
+    group_name(gname),
+    init_step(init_step_arg),
+    insert_index(insert_index_arg),
+    headI(headI_arg),
+    headJ(headJ_arg),
+    ref_depth(ref_depth_arg),
+    phase(phase_arg),
+    ordering(ordering_arg),
+    unit_system(units),
+    udq_undefined(udq_undefined_arg),
+    status(status_arg),
+    drainage_radius(drainageRadius),
+    allow_cross_flow(allowCrossFlow),
+    automatic_shutin(automaticShutIn),
+    producer(isProducer),
+    guide_rate(guideRate),
+    efficiency_factor(efficiencyFactor),
+    solvent_fraction(solventFraction),
+    prediction_mode(predictionMode),
+    econ_limits(econLimits),
+    foam_properties(foamProperties),
+    polymer_properties(polymerProperties),
+    tracer_properties(tracerProperties),
+    connections(connections_arg),
+    production(production_arg),
+    injection(injection_arg),
+    segments(segments_arg)
+{
 }
 
 bool Well::updateEfficiencyFactor(double efficiency_factor_arg) {
@@ -1057,4 +1135,57 @@ Well::GuideRateTarget Well::GuideRateTargetFromString( const std::string& string
     else
         throw std::invalid_argument("Unknown enum state string: " + stringValue );
 }
+
+const Well::WellGuideRate& Well::wellGuideRate() const {
+    return guide_rate;
+}
+
+const UnitSystem& Well::units() const {
+    return unit_system;
+}
+
+double Well::udqUndefined() const {
+    return udq_undefined;
+}
+
+bool Well::hasSegments() const {
+    return segments != nullptr;
+}
+
+
+bool Well::operator==(const Well& data) const {
+    if (this->hasSegments() != data.hasSegments()) {
+        return false;
+    }
+
+    if (this->hasSegments() && (this->getSegments() != data.getSegments()))  {
+        return false;
+    }
+
+    return this->name() == data.name() &&
+           this->groupName() == data.groupName() &&
+           this->firstTimeStep() == data.firstTimeStep() &&
+           this->seqIndex() == data.seqIndex() &&
+           this->getHeadI() == data.getHeadI() &&
+           this->getHeadJ() == data.getHeadJ() &&
+           this->getRefDepth() == data.getRefDepth() &&
+           this->getPreferredPhase() == data.getPreferredPhase() &&
+           this->getWellConnectionOrdering() == data.getWellConnectionOrdering() &&
+           this->units() == data.units() &&
+           this->udqUndefined() == data.udqUndefined() &&
+           this->getStatus() == data.getStatus() &&
+           this->getDrainageRadius() == data.getDrainageRadius() &&
+           this->getAllowCrossFlow() == data.getAllowCrossFlow() &&
+           this->getAutomaticShutIn() == data.getAutomaticShutIn() &&
+           this->isProducer() == data.isProducer() &&
+           this->wellGuideRate() == data.wellGuideRate() &&
+           this->getEfficiencyFactor() == data.getEfficiencyFactor() &&
+           this->getSolventFraction() == data.getSolventFraction() &&
+           this->getEconLimits() == data.getEconLimits() &&
+           this->getFoamProperties() == data.getFoamProperties() &&
+           this->getTracerProperties() == data.getTracerProperties() &&
+           this->getProductionProperties() == data.getProductionProperties() &&
+           this->getInjectionProperties() == data.getInjectionProperties();
+}
+
 }
