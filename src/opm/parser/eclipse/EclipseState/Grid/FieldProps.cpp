@@ -22,6 +22,7 @@
 #include <opm/parser/eclipse/Parser/ParserKeywords/C.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/E.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/M.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/O.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/P.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
@@ -31,6 +32,7 @@
 #include <opm/parser/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.hpp>
 
 #include "FieldProps.hpp"
+#include "Operate.hpp"
 
 
 namespace Opm {
@@ -54,8 +56,8 @@ static const std::map<std::string, std::string> unit_string = {{"PERMX", "Permea
                                                                {"NTG", "1"},
                                                                {"SWATINIT", "1"}};
 
-static const std::set<std::string> oper_keywords = {"ADD", "EQUALS", "MAXVALUE", "MINVALUE", "MULTIPLY"};
-static const std::set<std::string> region_oper_keywords = {"ADDREG", "EQUALREG"};
+static const std::set<std::string> oper_keywords = {"ADD", "EQUALS", "MAXVALUE", "MINVALUE", "MULTIPLY", "OPERATE"};
+static const std::set<std::string> region_oper_keywords = {"ADDREG", "EQUALREG", "OPERATER"};
 static const std::set<std::string> box_keywords = {"BOX", "ENDBOX"};
 static const std::map<std::string, double> double_scalar_init = {{"NTG", 1},
                                                                  {"TRANX", 1},    // The default scalar init for TRAN is a hack to support
@@ -663,20 +665,44 @@ void FieldProps::apply(ScalarOperation op, FieldData<T>& data, T scalar_value, c
         max_value(data, scalar_value, index_list);
 }
 
+template <typename T>
+void FieldProps::apply(const DeckRecord& record, FieldData<T>& target_data, const FieldData<T>& src_data, const std::vector<Box::cell_index>& index_list) {
+    const std::string& func_name = record.getItem("OPERATION").get< std::string >(0);
+    const double alpha           = record.getItem("PARAM1").get< double >(0);
+    const double beta            = record.getItem("PARAM2").get< double >(0);
+    Operate::function func       = Operate::get( func_name, alpha, beta );
+    bool check_target            = (func_name == "MULTIPLY" || func_name == "POLY");
+
+    for (const auto& cell_index : index_list) {
+        if (value::has_value(src_data.value_status[cell_index.active_index])) {
+            if ((check_target == false) || (value::has_value(target_data.value_status[cell_index.active_index]))) {
+                target_data.data[cell_index.active_index]         = func(target_data.data[cell_index.active_index], src_data.data[cell_index.active_index]);
+                target_data.value_status[cell_index.active_index] = src_data.value_status[cell_index.active_index];
+            }
+        }
+    }
+}
 
 void FieldProps::handle_region_operation(const DeckKeyword& keyword) {
     for (const auto& record : keyword) {
         const std::string& target_kw = record.getItem(0).get<std::string>(0);
-        int region_value = record.getItem(2).get<int>(0);
-        const auto& index_list = this->region_index(record.getItem(3), region_value);
+        int region_value = record.getItem("REGION_NUMBER").get<int>(0);
+        const auto& index_list = this->region_index(record.getItem("REGION_NAME"), region_value);
 
         if (FieldProps::supported<double>(target_kw)) {
-            double value = record.getItem(1).get<double>(0);
-            if (keyword.name() != ParserKeywords::MULTIPLY::keywordName)
-                value = this->getSIValue(target_kw, value);
-
             auto& field_data = this->get<double>(target_kw);
-            FieldProps::apply(fromString(keyword.name()), field_data, value, index_list);
+
+            if (keyword.name() == ParserKeywords::OPERATER::keywordName) {
+                const std::string& src_kw = record.getItem("ARRAY_PARAMETER").get<std::string>(0);
+                const auto& src_data = this->get<double>(src_kw);
+                FieldProps::apply(record, field_data, src_data, index_list);
+            } else {
+                double value = record.getItem(1).get<double>(0);
+                if (keyword.name() != ParserKeywords::MULTIPLY::keywordName)
+                    value = this->getSIValue(target_kw, value);
+                FieldProps::apply(fromString(keyword.name()), field_data, value, index_list);
+            }
+
             continue;
         }
 
@@ -695,12 +721,19 @@ void FieldProps::handle_operation(const DeckKeyword& keyword, Box box) {
         box.update(record);
 
         if (FieldProps::supported<double>(target_kw)) {
-            double scalar_value = record.getItem(1).get<double>(0);
-            if (keyword.name() != ParserKeywords::MULTIPLY::keywordName)
-                scalar_value = this->getSIValue(target_kw, scalar_value);
-
             auto& field_data = this->get<double>(target_kw);
-            FieldProps::apply(fromString(keyword.name()), field_data, scalar_value, box.index_list());
+
+            if (keyword.name() == ParserKeywords::OPERATE::keywordName) {
+                const std::string& src_kw = record.getItem("ARRAY").get<std::string>(0);
+                const auto& src_data = this->get<double>(src_kw);
+                FieldProps::apply(record, field_data, src_data, box.index_list());
+            } else {
+                double scalar_value = record.getItem(1).get<double>(0);
+                if (keyword.name() != ParserKeywords::MULTIPLY::keywordName)
+                    scalar_value = this->getSIValue(target_kw, scalar_value);
+                FieldProps::apply(fromString(keyword.name()), field_data, scalar_value, box.index_list());
+            }
+
             continue;
         }
 

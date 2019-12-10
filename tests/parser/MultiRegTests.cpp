@@ -250,6 +250,7 @@ BOOST_AUTO_TEST_CASE(Test_OPERATER) {
     Opm::TableManager tm(deck);
     Opm::EclipseGrid eg(deck);
     Opm::Eclipse3DProperties props(deck, tm, eg);
+    Opm::FieldPropsManager fp(deck, eg, tm);
 
     const auto& porv_data  = props.getDoubleGridProperty("PORV").getData();
     const auto& permx_data = props.getDoubleGridProperty("PERMX").getData();
@@ -258,5 +259,13 @@ BOOST_AUTO_TEST_CASE(Test_OPERATER) {
     BOOST_CHECK_EQUAL( porv_data[0], 0.50 );
     BOOST_CHECK_EQUAL( permx_data[0] / permy_data[0], 0.50 );
     BOOST_CHECK_EQUAL( permx_data[1], permy_data[1]);
+
+    const auto& porv  = fp.porv(true);
+    const auto& permx = fp.get_global<double>("PERMX");
+    const auto& permy = fp.get_global<double>("PERMY");
+
+    BOOST_CHECK_EQUAL( porv[0], 0.50 );
+    BOOST_CHECK_EQUAL( permx[0] / permy[0], 0.50 );
+    BOOST_CHECK_EQUAL( permx[1], permy[1]);
 }
 

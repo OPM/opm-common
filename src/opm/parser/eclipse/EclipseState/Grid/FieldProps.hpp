@@ -221,7 +221,11 @@ private:
 
 
     template <typename T>
+    void apply(const DeckRecord& record, FieldData<T>& target_data, const FieldData<T>& src_data, const std::vector<Box::cell_index>& index_list);
+
+    template <typename T>
     static void apply(ScalarOperation op, FieldData<T>& data, T scalar_value, const std::vector<Box::cell_index>& index_list);
+
     std::vector<Box::cell_index> region_index( const DeckItem& regionItem, int region_value );
     void handle_operation(const DeckKeyword& keyword, Box box);
     void handle_region_operation(const DeckKeyword& keyword);

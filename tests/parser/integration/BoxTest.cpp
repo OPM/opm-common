@@ -144,15 +144,15 @@ BOOST_AUTO_TEST_CASE( EQUALS ) {
 BOOST_AUTO_TEST_CASE( OPERATE ) {
     EclipseState state = makeState( prefix() + "BOX/BOXTEST1" );
     const EclipseGrid& grid = state.getInputGrid();
-    const auto& ntg = state.get3DProperties().getDoubleGridProperty( "NTG" ).getData();
+    const auto& ntg = state.fieldProps().get_global<double>("NTG");
 
     BOOST_CHECK_EQUAL( ntg[grid.getGlobalIndex(0,0,0)], 8.50 );  // MULTA
     BOOST_CHECK_EQUAL( ntg[grid.getGlobalIndex(0,5,0)], 5.00 );  // POLY
-    BOOST_CHECK_EQUAL( ntg[grid.getGlobalIndex(0,0,1)], 4.0 );  // COPY
-    BOOST_CHECK_EQUAL( ntg[grid.getGlobalIndex(0,5,1)], 4.0 );  // MINLIM
-    BOOST_CHECK_EQUAL( ntg[grid.getGlobalIndex(0,0,2)], 2.0 );  // MAXLIM
-    BOOST_CHECK_EQUAL( ntg[grid.getGlobalIndex(0,0,3)], 0.5 );  // MAXVALUE
-    BOOST_CHECK_EQUAL( ntg[grid.getGlobalIndex(0,0,4)], 1.5 );  // MINVALUE
+    BOOST_CHECK_EQUAL( ntg[grid.getGlobalIndex(0,0,1)], 4.0 );   // COPY
+    BOOST_CHECK_EQUAL( ntg[grid.getGlobalIndex(0,5,1)], 4.0 );   // MINLIM
+    BOOST_CHECK_EQUAL( ntg[grid.getGlobalIndex(0,0,2)], 2.0 );   // MAXLIM
+    BOOST_CHECK_EQUAL( ntg[grid.getGlobalIndex(0,0,3)], 0.5 );   // MAXVALUE
+    BOOST_CHECK_EQUAL( ntg[grid.getGlobalIndex(0,0,4)], 1.5 );   // MINVALUE
 }
 
 BOOST_AUTO_TEST_CASE( CONSTRUCTOR_AND_UPDATE ) {
