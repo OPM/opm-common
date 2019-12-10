@@ -276,7 +276,7 @@ MULTPV
 ENDBOX
 )";
 
-    EclipseGrid grid(EclipseGrid(10,10, 4));
+    EclipseGrid grid(10,10, 4);
     Deck deck = Parser{}.parseString(deck_string);
     FieldPropsManager fpm(deck, grid, TableManager());
     const auto& poro = fpm.get<double>("PORO");
@@ -463,3 +463,36 @@ BOOST_AUTO_TEST_CASE(LATE_GET_SATFUNC) {
 
 }
 
+BOOST_AUTO_TEST_CASE(GET_TEMP) {
+    std::string deck_string = R"(
+GRID
+
+PORO
+   200*0.15 /
+
+)";
+
+    EclipseGrid grid(10,10, 2);
+    Deck deck = Parser{}.parseString(deck_string);
+    std::vector<int> actnum(200, 1); actnum[0] = 0;
+    grid.resetACTNUM(actnum);
+    FieldPropsManager fpm(deck, grid, TableManager());
+
+    BOOST_CHECK(!fpm.has<double>("NTG"));
+    const auto& ntg = fpm.get_copy<double>("NTG");
+    BOOST_CHECK(!fpm.has<double>("NTG"));
+    BOOST_CHECK(ntg.size() == grid.getNumActive());
+
+
+    BOOST_CHECK(fpm.has<double>("PORO"));
+    const auto& poro = fpm.get_copy<double>("PORO");
+    BOOST_CHECK(fpm.has<double>("PORO"));
+
+    BOOST_CHECK(!fpm.has<int>("SATNUM"));
+    const auto& satnum = fpm.get_copy<int>("SATNUM", true);
+    BOOST_CHECK(!fpm.has<int>("SATNUM"));
+    BOOST_CHECK(satnum.size() == grid.getCartesianSize());
+
+    //The PERMY keyword can not be default initialized
+    BOOST_CHECK_THROW(fpm.get_copy<double>("PERMY"), std::invalid_argument);
+}

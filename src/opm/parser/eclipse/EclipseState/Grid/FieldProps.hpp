@@ -195,6 +195,28 @@ public:
 
 
     template <typename T>
+    std::vector<T> get_copy(const std::string& keyword, bool global) {
+        if (this->has<T>(keyword)) {
+            const auto& data = this->get_valid_data<T>(keyword);
+
+            if (global)
+                return this->global_copy(data);
+            else
+                return data;
+        } else {
+            const auto& field_ptr = this->try_get<T>(keyword);
+            if (!field_ptr)
+                throw std::invalid_argument("No such valid keyword: " + keyword);
+
+            if (global)
+                return this->global_copy(this->extract<T>(keyword));
+            else
+                return this->extract<T>(keyword);
+        }
+    }
+
+
+    template <typename T>
     std::vector<bool> defaulted(const std::string& keyword) {
         const auto& field = this->get<T>(keyword);
         std::vector<bool> def(field.size());
@@ -217,6 +239,8 @@ private:
     template <typename T>
     void erase(const std::string& keyword);
 
+    template <typename T>
+    std::vector<T> extract(const std::string& keyword);
 
     template <typename T>
     static void apply(ScalarOperation op, FieldData<T>& data, T scalar_value, const std::vector<Box::cell_index>& index_list);

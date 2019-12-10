@@ -79,13 +79,10 @@ public:
     const std::vector<T>& get(const std::string& keyword) const;
 
     template <typename T>
+    std::vector<T> get_copy(const std::string& keyword, bool global=false) const;
+
+    template <typename T>
     const std::vector<T>* try_get(const std::string& keyword) const;
-
-    template <typename T>
-    bool has(const std::string& keyword) const;
-
-    template <typename T>
-    std::vector<std::string> keys() const;
 
     template <typename T>
     std::vector<T> get_global(const std::string& keyword) const;
@@ -95,6 +92,12 @@ public:
 
     template <typename T>
     static bool supported(const std::string& keyword);
+
+    template <typename T>
+    bool has(const std::string& keyword) const;
+
+    template <typename T>
+    std::vector<std::string> keys() const;
 
 private:
     std::shared_ptr<FieldProps> fp;
