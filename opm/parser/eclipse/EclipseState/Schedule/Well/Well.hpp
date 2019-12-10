@@ -156,6 +156,13 @@ public:
         double guide_rate;
         GuideRateTarget guide_phase;
         double scale_factor;
+
+        bool operator==(const WellGuideRate& data) const {
+            return available == data.available &&
+                   guide_rate == data.guide_rate &&
+                   guide_phase == data.guide_phase &&
+                   scale_factor == data.scale_factor;
+        }
     };
 
 
