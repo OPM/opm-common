@@ -257,14 +257,6 @@ ENDBOX
 EDIT
 
 BOX
-  1 10 1 10 3 3 /
-
-PORV
-  100*3 /
-
-ENDBOX
-
-BOX
   1 10 1 10 4 4 /
 
 MULTPV
@@ -272,6 +264,15 @@ MULTPV
 
 
 ENDBOX
+
+BOX
+  1 10 1 10 3 3 /
+
+PORV
+  100*3 /
+
+ENDBOX
+
 )";
 
     EclipseGrid grid(EclipseGrid(10,10, 4));

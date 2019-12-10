@@ -155,6 +155,8 @@ static Opm::Deck createValidIntDeck() {
         "25*0.25 /\n"
         "PERMY\n"
         "   25*1.0 /\n"
+        "PERMX\n"
+        "   25*1.0 /\n"
         "PORO\n"
         "   25*1.0 /\n"
         "MULTNUM \n"
@@ -265,6 +267,7 @@ BOOST_AUTO_TEST_CASE(Test_OPERATER) {
     const auto& permy = fp.get_global<double>("PERMY");
 
     BOOST_CHECK_EQUAL( porv[0], 0.50 );
+    BOOST_CHECK_EQUAL( porv[1], 1.00 );
     BOOST_CHECK_EQUAL( permx[0] / permy[0], 0.50 );
     BOOST_CHECK_EQUAL( permx[1], permy[1]);
 }

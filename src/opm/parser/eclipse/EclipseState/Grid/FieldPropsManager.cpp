@@ -100,8 +100,13 @@ std::vector<int> FieldPropsManager::actnum() const {
 }
 
 std::vector<double> FieldPropsManager::porv(bool global) const {
-    return this->fp->porv(global);
+    const auto& data = this->get<double>("PORV");
+    if (global)
+        return this->fp->global_copy(data);
+    else
+        return data;
 }
+
 
 template bool FieldPropsManager::supported<int>(const std::string&);
 template bool FieldPropsManager::supported<double>(const std::string&);
