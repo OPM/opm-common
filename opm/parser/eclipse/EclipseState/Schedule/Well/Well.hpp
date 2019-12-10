@@ -205,7 +205,21 @@ public:
         bool operator==(const WellInjectionProperties& other) const;
         bool operator!=(const WellInjectionProperties& other) const;
 
+        WellInjectionProperties();
         WellInjectionProperties(const std::string& wname);
+        WellInjectionProperties(const std::string& wname,
+                                const UDAValue& surfaceInjRate,
+                                const UDAValue& reservoirInjRate,
+                                const UDAValue& BHP,
+                                const UDAValue& THP,
+                                double temp, double bhph,
+                                double thph,
+                                int vfpTableNum,
+                                bool predMode,
+                                int injControls,
+                                Well::InjectorType injType,
+                                InjectorCMode ctrlMode);
+
         void handleWELTARG(WELTARGCMode cmode, double newValue, double siFactorG, double siFactorL, double siFactorP);
         void handleWCONINJE(const DeckRecord& record, bool availableForGroupControl, const std::string& well_name);
         void handleWCONINJH(const DeckRecord& record, bool is_producer, const std::string& well_name);

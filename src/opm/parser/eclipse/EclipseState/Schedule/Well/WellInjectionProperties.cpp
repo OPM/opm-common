@@ -35,6 +35,14 @@
 namespace Opm {
 
 
+    Well::WellInjectionProperties::WellInjectionProperties()
+        : temperature(0.0), BHPH(0.0), THPH(0.0), VFPTableNumber(0),
+          predictionMode(false), injectionControls(0),
+          injectorType(Well::InjectorType::WATER),
+          controlMode(Well::InjectorCMode::CMODE_UNDEFINED)
+    {
+    }
+
     Well::WellInjectionProperties::WellInjectionProperties(const std::string& wname)
         : name(wname),
           injectorType(InjectorType::WATER),
@@ -49,6 +57,36 @@ namespace Opm {
         predictionMode=true;
         injectionControls=0;
     }
+
+
+    Well::WellInjectionProperties::WellInjectionProperties(const std::string& wname,
+                                                           const UDAValue& surfaceInjRate,
+                                                           const UDAValue& reservoirInjRate,
+                                                           const UDAValue& BHP,
+                                                           const UDAValue& THP,
+                                                           double temp, double bhph,
+                                                           double thph,
+                                                           int vfpTableNum,
+                                                           bool predMode,
+                                                           int injControls,
+                                                           Well::InjectorType injType,
+                                                           InjectorCMode ctrlMode)
+        : name(wname),
+          surfaceInjectionRate(surfaceInjRate),
+          reservoirInjectionRate(reservoirInjRate),
+          BHPLimit(BHP),
+          THPLimit(THP),
+          temperature(temp),
+          BHPH(bhph),
+          THPH(thph),
+          VFPTableNumber(vfpTableNum),
+          predictionMode(predMode),
+          injectionControls(injControls),
+          injectorType(injType),
+          controlMode(ctrlMode)
+    {
+    }
+
 
 
     void Well::WellInjectionProperties::handleWCONINJE(const DeckRecord& record, bool availableForGroupControl, const std::string& well_name) {
