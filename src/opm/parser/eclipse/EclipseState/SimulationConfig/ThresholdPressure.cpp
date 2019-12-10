@@ -129,9 +129,8 @@ namespace Opm {
 
                 const int r1 = region1Item.get< int >(0);
                 const int r2 = region2Item.get< int >(0);
-                if (r1 > maxEqlnum || r2 > maxEqlnum) {
-                    throw std::runtime_error("Too high region numbers in THPRES keyword");
-                }
+                if (r1 > maxEqlnum || r2 > maxEqlnum)
+                    throw std::runtime_error("Too high region numbers in THPRES keyword.   R1: "  + std::to_string(r1) + " R2: " + std::to_string(r2) + " max(EQLNUM): " + std::to_string(maxEqlnum));
 
                 if (thpressItem.hasValue(0)) {
                     addBarrier( r1 , r2 , thpressItem.getSIDouble( 0 ) );
