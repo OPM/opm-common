@@ -115,7 +115,7 @@ namespace Opm {
         return m_max_viscosity_ratio;
     }
 
-    double SpiralICD::methodFlowScaling() const
+    int SpiralICD::methodFlowScaling() const
     {
         return m_method_flow_scaling;
     }
