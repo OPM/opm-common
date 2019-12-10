@@ -2600,7 +2600,7 @@ void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, c
     }
 
 
-    void Schedule::filterConnections(const EclipseGrid& grid) {
+    void Schedule::filterConnections(const ActiveGridCells& grid) {
         for (auto& dynamic_pair : this->wells_static) {
             auto& dynamic_state = dynamic_pair.second;
             for (auto& well_pair : dynamic_state.unique()) {

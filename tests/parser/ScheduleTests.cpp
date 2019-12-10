@@ -2992,8 +2992,13 @@ BOOST_AUTO_TEST_CASE(FilterCompletions2) {
     }
     actnum[grid1.getGlobalIndex(8,8,1)] = 0;
     {
-        EclipseGrid grid2(grid1, actnum);
-        schedule.filterConnections(grid2);
+        std::vector<int> globalCell(grid1.getNumActive());
+        for(std::size_t i = 0; i < grid1.getNumActive(); ++i)
+            if (actnum[grid1.getGlobalIndex(i)])
+                globalCell[i] = grid1.getGlobalIndex(i);
+        ActiveGridCells active(grid1.getNXYZ(), globalCell.data(),
+                               grid1.getNumActive());
+        schedule.filterConnections(active);
 
         const auto& c1_1 = schedule.getWell("OP_1", 1).getConnections();
         const auto& c1_3 = schedule.getWell("OP_1", 3).getConnections();
