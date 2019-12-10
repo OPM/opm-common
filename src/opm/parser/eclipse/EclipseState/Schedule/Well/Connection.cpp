@@ -72,6 +72,38 @@ namespace Opm {
           m_defaultSatTabId(defaultSatTabId)
     {}
 
+    Connection::Connection(Direction dir, double depth, State state,
+                           int satTableId, int complnum, double CF,
+                           double Kh, double rw, double r0, double skinFactor,
+                           const std::array<int,3>& IJK, std::size_t seqIndex,
+                           double segDistStart, double segDistEnd,
+                           bool defaultSatTabId, std::size_t compSegSeqIndex,
+                           int segment, double wellPi)
+        : direction(dir)
+        , center_depth(depth)
+        , open_state(state)
+        , sat_tableId(satTableId)
+        , m_complnum(complnum)
+        , m_CF(CF)
+        , m_Kh(Kh)
+        , m_rw(rw)
+        , m_r0(r0)
+        , m_skin_factor(skinFactor)
+        , ijk(IJK)
+        , m_seqIndex(seqIndex)
+        , m_segDistStart(segDistStart)
+        , m_segDistEnd(segDistEnd)
+        , m_defaultSatTabId(defaultSatTabId)
+        , m_compSeg_seqIndex(compSegSeqIndex)
+        , segment_number(segment)
+        , wPi(wellPi)
+    {}
+
+    Connection::Connection()
+          : Connection(Direction::X, 1.0, State::SHUT,
+                       0, 0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                       {0,0,0}, 0, 0.0, 0.0, false, 0, 0, 0.0)
+    {}
 
     bool Connection::sameCoordinate(const int i, const int j, const int k) const {
         if ((ijk[0] == i) && (ijk[1] == j) && (ijk[2] == k)) {
