@@ -25,7 +25,6 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQActive.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellProductionProperties.hpp>
-
 #include <fnmatch.h>
 
 namespace Opm {
@@ -651,7 +650,7 @@ bool Well::updateWSEGSICD(const std::vector<std::pair<int, SpiralICD> >& sicd_pa
         return false;
 }
 
-void Well::filterConnections(const EclipseGrid& grid) {
+void Well::filterConnections(const ActiveGridCells& grid) {
     this->connections->filter(grid);
 }
 

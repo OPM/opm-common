@@ -30,6 +30,7 @@ list (APPEND MAIN_SOURCE_FILES
       src/opm/common/OpmLog/OpmLog.cpp
       src/opm/common/OpmLog/StreamLog.cpp
       src/opm/common/OpmLog/TimerLog.cpp
+      src/opm/common/utility/ActiveGridCells.cpp
       src/opm/common/utility/numeric/MonotCubicInterpolator.cpp
       src/opm/common/utility/parameters/Parameter.cpp
       src/opm/common/utility/parameters/ParameterGroup.cpp
@@ -256,6 +257,7 @@ if(ENABLE_ECL_OUTPUT)
 endif()
 
 list (APPEND TEST_SOURCE_FILES
+      tests/test_ActiveGridCells.cpp
       tests/test_calculateCellVol.cpp
       tests/test_cmp.cpp
       tests/test_cubic.cpp
@@ -451,6 +453,7 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/common/OpmLog/OpmLog.hpp
       opm/common/OpmLog/StreamLog.hpp
       opm/common/OpmLog/TimerLog.hpp
+      opm/common/utility/ActiveGridCells.hpp
       opm/common/utility/numeric/cmp.hpp
       opm/common/utility/platform_dependent/disable_warnings.h
       opm/common/utility/platform_dependent/reenable_warnings.h

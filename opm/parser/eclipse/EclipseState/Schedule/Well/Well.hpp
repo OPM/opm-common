@@ -35,6 +35,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellEconProductionLimits.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
 
+#include <opm/common/utility/ActiveGridCells.hpp>
 
 namespace Opm {
 
@@ -430,7 +431,7 @@ public:
     bool handleCOMPLUMP(const DeckRecord& record);
     bool handleWPIMULT(const DeckRecord& record);
 
-    void filterConnections(const EclipseGrid& grid);
+    void filterConnections(const ActiveGridCells& grid);
     void switchToInjector();
     void switchToProducer();
     ProductionControls productionControls(const SummaryState& st) const;
