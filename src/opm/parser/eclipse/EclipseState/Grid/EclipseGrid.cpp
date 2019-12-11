@@ -93,9 +93,6 @@ EclipseGrid::EclipseGrid(const std::string& fileName )
     initGridFromEGridFile(egridfile, fileName);
 
     resetACTNUM(m_actnum);
-
-    calculateGeometryData();
-
 }
 
 
@@ -156,7 +153,6 @@ EclipseGrid::EclipseGrid(size_t nx, size_t ny , size_t nz,
     }
 
     resetACTNUM();
-    calculateGeometryData();
 }
 
 EclipseGrid::EclipseGrid(const EclipseGrid& src, const double* zcorn, const std::vector<int>& actnum)
@@ -174,8 +170,6 @@ EclipseGrid::EclipseGrid(const EclipseGrid& src, const double* zcorn, const std:
 
         ZcornMapper mapper( getNX(), getNY(), getNZ());
         zcorn_fixed = mapper.fixupZCORN( m_zcorn );
-
-        calculateGeometryData();
     }
 
     resetACTNUM(actnum);
@@ -291,8 +285,6 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
             resetACTNUM();
         }
     }
-
-    calculateGeometryData();
 }
 
 
@@ -567,82 +559,6 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         zcorn_fixed = mapper.fixupZCORN( m_zcorn );
     }
 
-    void EclipseGrid::calculateGeometryData() {
-
-        const std::array<int, 3> dims = getNXYZ();
-        int nCells = getCartesianSize();
-
-        std::array<double,8> X = {0.0};
-        std::array<double,8> Y = {0.0};
-        std::array<double,8> Z = {0.0};
-
-        m_cellCenter.clear();
-        m_dx.clear();
-        m_dy.clear();
-        m_dz.clear();
-
-        m_cellCenter.resize(nCells);
-        m_dx.resize(nCells);
-        m_dy.resize(nCells);
-        m_dz.resize(nCells);
-
-        std::array<int, 3> ijk;
-        size_t n = 0;
-
-        for (size_t k = 0; k< getNZ(); k++) {
-            for (size_t j = 0; j< getNY(); j++) {
-                for (size_t i = 0; i< getNX(); i++) {
-
-                    ijk[0] = i;
-                    ijk[1] = j;
-                    ijk[2] = k;
-
-                    getCellCorners(ijk, dims, X, Y, Z );
-
-                    std::array<double, 3> center;
-
-                    center[0]=std::accumulate(X.begin(), X.end(), 0.0) / 8.0;
-                    center[1]=std::accumulate(Y.begin(), Y.end(), 0.0) / 8.0;
-                    center[2]=std::accumulate(Z.begin(), Z.end(), 0.0) / 8.0;
-
-                    m_cellCenter[n] = center;
-
-                    // calculate dx
-
-                    double x2 = (X[1]+X[3]+X[5]+X[7])/4.0;
-                    double y2 = (Y[1]+Y[3]+Y[5]+Y[7])/4.0;
-
-                    double x1 = (X[0]+X[2]+X[4]+X[6])/4.0;
-                    double y1 = (Y[0]+Y[2]+Y[4]+Y[6])/4.0;
-
-                    double dx = sqrt(pow((x2-x1), 2.0) + pow((y2-y1), 2.0) );
-
-                    // calculate dy
-
-                    x2 = (X[2]+X[3]+X[6]+X[7])/4.0;
-                    y2 = (Y[2]+Y[3]+Y[6]+Y[7])/4.0;
-
-                    x1 = (X[0]+X[1]+X[4]+X[5])/4.0;
-                    y1 = (Y[0]+Y[1]+Y[4]+Y[5])/4.0;
-
-                    double dy = sqrt(pow((x2-x1), 2.0) + pow((y2-y1), 2.0));
-
-                    // calculate dz
-
-                    double z2 = (Z[4]+Z[5]+Z[6]+Z[7])/4.0;
-                    double z1 = (Z[0]+Z[1]+Z[2]+Z[3])/4.0;
-
-                    double dz = z2-z1;
-
-                    m_dx[n] = dx;
-                    m_dy[n] = dy;
-                    m_dz[n] = dz;
-
-                    n++;
-                }
-            }
-        }
-    }
 
     void EclipseGrid::getCellCorners(const std::array<int, 3>& ijk, const std::array<int, 3>& dims,
                                      std::array<double,8>& X,
@@ -1471,10 +1387,36 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         return dz;
     }
 
+
     std::array<double, 3> EclipseGrid::getCellDims(size_t globalIndex) const {
         assertGlobalIndex( globalIndex );
+        std::array<double,8> X;
+        std::array<double,8> Y;
+        std::array<double,8> Z;
+        this->getCellCorners(globalIndex, X, Y, Z );
 
-        return std::array<double,3> {{m_dx[globalIndex] , m_dy[globalIndex] , m_dz[globalIndex] }};
+        // calculate dx
+        double x1 = (X[0]+X[2]+X[4]+X[6])/4.0;
+        double y1 = (Y[0]+Y[2]+Y[4]+Y[6])/4.0;
+        double x2 = (X[1]+X[3]+X[5]+X[7])/4.0;
+        double y2 = (Y[1]+Y[3]+Y[5]+Y[7])/4.0;
+        double dx = sqrt(pow((x2-x1), 2.0) + pow((y2-y1), 2.0) );
+
+        // calculate dy
+        x1 = (X[0]+X[1]+X[4]+X[5])/4.0;
+        y1 = (Y[0]+Y[1]+Y[4]+Y[5])/4.0;
+        x2 = (X[2]+X[3]+X[6]+X[7])/4.0;
+        y2 = (Y[2]+Y[3]+Y[6]+Y[7])/4.0;
+        double dy = sqrt(pow((x2-x1), 2.0) + pow((y2-y1), 2.0));
+
+        // calculate dz
+
+        double z2 = (Z[4]+Z[5]+Z[6]+Z[7])/4.0;
+        double z1 = (Z[0]+Z[1]+Z[2]+Z[3])/4.0;
+        double dz = z2-z1;
+
+
+        return std::array<double,3> {{dx, dy, dz}};
     }
 
     std::array<double, 3> EclipseGrid::getCellDims(size_t i , size_t j , size_t k) const {
@@ -1486,13 +1428,19 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         }
     }
 
-    const std::array<double, 3>& EclipseGrid::getCellCenter(size_t globalIndex) const {
+    std::array<double, 3> EclipseGrid::getCellCenter(size_t globalIndex) const {
         assertGlobalIndex( globalIndex );
-
-        return m_cellCenter[globalIndex];
+        std::array<double,8> X;
+        std::array<double,8> Y;
+        std::array<double,8> Z;
+        this->getCellCorners(globalIndex, X, Y, Z );
+        return std::array<double,3> { { std::accumulate(X.begin(), X.end(), 0.0) / 8.0,
+                                        std::accumulate(Y.begin(), Y.end(), 0.0) / 8.0,
+                                        std::accumulate(Z.begin(), Z.end(), 0.0) / 8.0 } };
     }
 
-    const std::array<double, 3>& EclipseGrid::getCellCenter(size_t i,size_t j, size_t k) const {
+
+    std::array<double, 3> EclipseGrid::getCellCenter(size_t i,size_t j, size_t k) const {
         assertIJK(i,j,k);
 
         const std::array<int, 3> dims = getNXYZ();
