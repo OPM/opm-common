@@ -22,6 +22,7 @@
 #include <opm/parser/eclipse/Parser/ParserKeywords/C.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/E.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/M.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/O.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/P.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
@@ -31,6 +32,7 @@
 #include <opm/parser/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.hpp>
 
 #include "FieldProps.hpp"
+#include "Operate.hpp"
 
 
 namespace Opm {
@@ -54,8 +56,8 @@ static const std::map<std::string, std::string> unit_string = {{"PERMX", "Permea
                                                                {"NTG", "1"},
                                                                {"SWATINIT", "1"}};
 
-static const std::set<std::string> oper_keywords = {"ADD", "EQUALS", "MAXVALUE", "MINVALUE", "MULTIPLY"};
-static const std::set<std::string> region_oper_keywords = {"ADDREG", "EQUALREG"};
+static const std::set<std::string> oper_keywords = {"ADD", "EQUALS", "MAXVALUE", "MINVALUE", "MULTIPLY", "OPERATE"};
+static const std::set<std::string> region_oper_keywords = {"ADDREG", "EQUALREG", "OPERATER"};
 static const std::set<std::string> box_keywords = {"BOX", "ENDBOX"};
 static const std::map<std::string, double> double_scalar_init = {{"NTG", 1},
                                                                  {"TRANX", 1},    // The default scalar init for TRAN is a hack to support
@@ -417,8 +419,6 @@ void FieldProps::reset_actnum(const std::vector<int>& new_actnum) {
 
     FieldProps::compress(this->cell_volume, active_map);
     FieldProps::compress(this->cell_depth, active_map);
-    if (this->porv_ptr)
-        this->porv_ptr.reset( nullptr );
 
     this->m_actnum = std::move(new_actnum);
     this->active_size = new_active_size;
@@ -505,6 +505,9 @@ FieldProps::FieldData<double>& FieldProps::get(const std::string& keyword) {
         if (keywords::PROPS::satfunc.count(keyword) == 1)
             this->init_satfunc(keyword, this->double_data[keyword]);
 
+        if (keyword == ParserKeywords::PORV::keywordName)
+            this->init_porv(this->double_data[keyword]);
+
         return this->double_data[keyword];
     } else
         throw std::out_of_range("Double keyword: " + keyword + " is not supported");
@@ -529,8 +532,7 @@ FieldProps::FieldData<int>& FieldProps::get(const std::string& keyword) {
         throw std::out_of_range("Integer keyword " + keyword + " is not supported");
 }
 
-std::vector<Box::cell_index> FieldProps::region_index( const DeckItem& region_item, int region_value ) {
-    std::string region_name = region_item.defaultApplied(0) ? this->m_default_region : make_region_name(region_item.get<std::string>(0));
+std::vector<Box::cell_index> FieldProps::region_index( const std::string& region_name, int region_value ) {
     const auto& region = this->get<int>(region_name);
     if (!region.valid())
         throw std::invalid_argument("Trying to work with invalid region: " + region_name);
@@ -546,6 +548,11 @@ std::vector<Box::cell_index> FieldProps::region_index( const DeckItem& region_it
         }
     }
     return index_list;
+}
+
+std::vector<Box::cell_index> FieldProps::region_index( const DeckItem& region_item, int region_value ) {
+    std::string region_name = region_item.defaultApplied(0) ? this->m_default_region : make_region_name(region_item.get<std::string>(0));
+    return this->region_index(region_name, region_value);
 }
 
 
@@ -663,20 +670,49 @@ void FieldProps::apply(ScalarOperation op, FieldData<T>& data, T scalar_value, c
         max_value(data, scalar_value, index_list);
 }
 
+template <typename T>
+void FieldProps::apply(const DeckRecord& record, FieldData<T>& target_data, const FieldData<T>& src_data, const std::vector<Box::cell_index>& index_list) {
+    const std::string& func_name = record.getItem("OPERATION").get< std::string >(0);
+    const double alpha           = record.getItem("PARAM1").get< double >(0);
+    const double beta            = record.getItem("PARAM2").get< double >(0);
+    Operate::function func       = Operate::get( func_name, alpha, beta );
+    bool check_target            = (func_name == "MULTIPLY" || func_name == "POLY");
+
+    for (const auto& cell_index : index_list) {
+        if (value::has_value(src_data.value_status[cell_index.active_index])) {
+            if ((check_target == false) || (value::has_value(target_data.value_status[cell_index.active_index]))) {
+                target_data.data[cell_index.active_index]         = func(target_data.data[cell_index.active_index], src_data.data[cell_index.active_index]);
+                target_data.value_status[cell_index.active_index] = src_data.value_status[cell_index.active_index];
+            } else
+                throw std::invalid_argument("Tried to use unset property value in OPERATE/OPERATER keyword");
+        } else
+            throw std::invalid_argument("Tried to use unset property value in OPERATE/OPERATER keyword");
+    }
+}
 
 void FieldProps::handle_region_operation(const DeckKeyword& keyword) {
     for (const auto& record : keyword) {
         const std::string& target_kw = record.getItem(0).get<std::string>(0);
-        int region_value = record.getItem(2).get<int>(0);
-        const auto& index_list = this->region_index(record.getItem(3), region_value);
+        int region_value = record.getItem("REGION_NUMBER").get<int>(0);
 
         if (FieldProps::supported<double>(target_kw)) {
-            double value = record.getItem(1).get<double>(0);
-            if (keyword.name() != ParserKeywords::MULTIPLY::keywordName)
-                value = this->getSIValue(target_kw, value);
-
             auto& field_data = this->get<double>(target_kw);
-            FieldProps::apply(fromString(keyword.name()), field_data, value, index_list);
+
+            if (keyword.name() == ParserKeywords::OPERATER::keywordName) {
+                // For the OPERATER keyword we fetch the region name from the deck record
+                // with no extra hoops.
+                const auto& index_list = this->region_index(record.getItem("REGION_NAME").get<std::string>(0), region_value);
+                const std::string& src_kw = record.getItem("ARRAY_PARAMETER").get<std::string>(0);
+                const auto& src_data = this->get<double>(src_kw);
+                FieldProps::apply(record, field_data, src_data, index_list);
+            } else {
+                double value = record.getItem(1).get<double>(0);
+                const auto& index_list = this->region_index(record.getItem("REGION_NAME"), region_value);
+                if (keyword.name() != ParserKeywords::MULTIPLY::keywordName)
+                    value = this->getSIValue(target_kw, value);
+                FieldProps::apply(fromString(keyword.name()), field_data, value, index_list);
+            }
+
             continue;
         }
 
@@ -695,12 +731,19 @@ void FieldProps::handle_operation(const DeckKeyword& keyword, Box box) {
         box.update(record);
 
         if (FieldProps::supported<double>(target_kw)) {
-            double scalar_value = record.getItem(1).get<double>(0);
-            if (keyword.name() != ParserKeywords::MULTIPLY::keywordName)
-                scalar_value = this->getSIValue(target_kw, scalar_value);
-
             auto& field_data = this->get<double>(target_kw);
-            FieldProps::apply(fromString(keyword.name()), field_data, scalar_value, box.index_list());
+
+            if (keyword.name() == ParserKeywords::OPERATE::keywordName) {
+                const std::string& src_kw = record.getItem("ARRAY").get<std::string>(0);
+                const auto& src_data = this->get<double>(src_kw);
+                FieldProps::apply(record, field_data, src_data, box.index_list());
+            } else {
+                double scalar_value = record.getItem(1).get<double>(0);
+                if (keyword.name() != ParserKeywords::MULTIPLY::keywordName)
+                    scalar_value = this->getSIValue(target_kw, scalar_value);
+                FieldProps::apply(fromString(keyword.name()), field_data, scalar_value, box.index_list());
+            }
+
             continue;
         }
 
@@ -778,56 +821,34 @@ void FieldProps::handle_keyword(const DeckKeyword& keyword, Box& box) {
 
 /**********************************************************************/
 
-std::vector<double> FieldProps::porv(bool global) {
-    if (!this->porv_ptr) {
-        FieldProps::FieldData<double> porv(this->active_size);
-        if (this->has<double>("PORV"))
-            porv = this->get<double>("PORV");
 
-        auto& porv_data = porv.data;
-        auto& porv_status = porv.value_status;
+void FieldProps::init_porv(FieldData<double>& porv) {
+    auto& porv_data = porv.data;
+    auto& porv_status = porv.value_status;
 
-        if (!porv.valid()) {
-            const auto& poro = this->get<double>("PORO");
-            const auto& poro_status = poro.value_status;
-            const auto& poro_data = poro.data;
+    const auto& poro = this->get<double>("PORO");
+    const auto& poro_status = poro.value_status;
+    const auto& poro_data = poro.data;
 
-            for (std::size_t active_index = 0; active_index < this->active_size; active_index++) {
-                if (value::has_value(porv_status[active_index]))
-                    continue;
-
-                if (value::has_value(poro_status[active_index])) {
-                    porv_data[active_index] = this->cell_volume[active_index] * poro_data[active_index];
-                    porv_status[active_index] = value::status::valid_default;
-                }
-            }
+    for (std::size_t active_index = 0; active_index < this->active_size; active_index++) {
+        if (value::has_value(poro_status[active_index])) {
+            porv_data[active_index] = this->cell_volume[active_index] * poro_data[active_index];
+            porv_status[active_index] = value::status::valid_default;
         }
-        if (!porv.valid())
-            throw std::invalid_argument("Do not have enough information to create PORV");
-
-
-        // The NTG multiplication is only done one the cells which have PORV caclulated as PORO * V
-        if (this->has<double>("NTG")) {
-            const auto& ntg = this->get_valid_data<double>("NTG");
-            for (std::size_t active_index = 0; active_index < this->active_size; active_index++) {
-                if (porv_status[active_index] == value::status::valid_default)
-                    porv_data[active_index] *= ntg[active_index];
-            }
-        }
-
-
-        // The MULTPV multiplication is done on all cells
-        if (this->has<double>("MULTPV")) {
-            const auto& multpv = this->get_valid_data<double>("MULTPV");
-            std::transform(porv_data.begin(), porv_data.end(), multpv.begin(), porv_data.begin(), std::multiplies<double>());
-        }
-
-        this->porv_ptr = std::make_unique<std::vector<double>>(porv_data);
     }
 
-    if (global)
-        return this->global_copy(*this->porv_ptr);
-    return *this->porv_ptr;
+    if (this->has<double>("NTG")) {
+        const auto& ntg = this->get_valid_data<double>("NTG");
+        for (std::size_t active_index = 0; active_index < this->active_size; active_index++)
+            porv_data[active_index] *= ntg[active_index];
+    }
+
+
+    if (this->has<double>("MULTPV")) {
+        const auto& multpv = this->get_valid_data<double>("MULTPV");
+        printf("Doing MULTPV multiplication");
+        std::transform(porv_data.begin(), porv_data.end(), multpv.begin(), porv_data.begin(), std::multiplies<double>());
+    }
 }
 
 
@@ -852,7 +873,6 @@ std::vector<double> FieldProps::porv(bool global) {
 std::vector<int> FieldProps::actnum() {
     auto actnum = this->m_actnum;
     const auto& deck_actnum = this->get<int>("ACTNUM");
-    const auto& porv_data = this->porv(false);
 
     std::vector<int> global_map(this->active_size);
     {
@@ -866,6 +886,8 @@ std::vector<int> FieldProps::actnum() {
     }
 
 
+    const auto& porv = this->get<double>("PORV");
+    const auto& porv_data = porv.data;
     for (std::size_t active_index = 0; active_index < this->active_size; active_index++) {
         auto global_index = global_map[active_index];
         actnum[global_index] = deck_actnum.data[active_index];

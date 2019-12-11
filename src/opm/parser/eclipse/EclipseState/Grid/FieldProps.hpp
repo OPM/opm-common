@@ -139,7 +139,6 @@ public:
     const std::string& default_region() const;
 
     std::vector<int> actnum();
-    std::vector<double> porv(bool global);
 
     template <typename T>
     FieldData<T>& get(const std::string& keyword);
@@ -221,8 +220,13 @@ private:
 
 
     template <typename T>
+    void apply(const DeckRecord& record, FieldData<T>& target_data, const FieldData<T>& src_data, const std::vector<Box::cell_index>& index_list);
+
+    template <typename T>
     static void apply(ScalarOperation op, FieldData<T>& data, T scalar_value, const std::vector<Box::cell_index>& index_list);
+
     std::vector<Box::cell_index> region_index( const DeckItem& regionItem, int region_value );
+    std::vector<Box::cell_index> region_index( const std::string& region_name, int region_value );
     void handle_operation(const DeckKeyword& keyword, Box box);
     void handle_region_operation(const DeckKeyword& keyword);
     void handle_COPY(const DeckKeyword& keyword, Box box, bool region);
@@ -233,6 +237,7 @@ private:
     void handle_double_keyword(const DeckKeyword& keyword, const Box& box);
     void handle_int_keyword(const DeckKeyword& keyword, const Box& box);
     void init_satfunc(const std::string& keyword, FieldData<double>& satfunc);
+    void init_porv(FieldData<double>& porv);
 
     const UnitSystem unit_system;
     std::size_t active_size;
@@ -246,9 +251,6 @@ private:
     const TableManager& tables;
     std::unordered_map<std::string, FieldData<int>> int_data;
     std::unordered_map<std::string, FieldData<double>> double_data;
-
-    // PORV calculation is quite expensive so this is cached
-    std::unique_ptr<std::vector<double>> porv_ptr;
 };
 
 }
