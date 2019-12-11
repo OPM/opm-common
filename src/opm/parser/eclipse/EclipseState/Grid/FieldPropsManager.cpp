@@ -72,6 +72,11 @@ std::vector<T> FieldPropsManager::get_global(const std::string& keyword) const {
 }
 
 template <typename T>
+std::vector<T> FieldPropsManager::get_copy(const std::string& keyword, bool global) const {
+    return this->fp->get_copy<T>(keyword, global);
+}
+
+template <typename T>
 bool FieldPropsManager::supported(const std::string& keyword) {
     return FieldProps::supported<T>(keyword);
 }
@@ -130,6 +135,9 @@ template std::vector<double> FieldPropsManager::get_global(const std::string& ke
 
 template const std::vector<int>& FieldPropsManager::get(const std::string& keyword) const;
 template const std::vector<double>& FieldPropsManager::get(const std::string& keyword) const;
+
+template std::vector<int> FieldPropsManager::get_copy(const std::string& keyword, bool global) const;
+template std::vector<double> FieldPropsManager::get_copy(const std::string& keyword, bool global) const;
 
 template const std::vector<int>* FieldPropsManager::try_get(const std::string& keyword) const;
 template const std::vector<double>* FieldPropsManager::try_get(const std::string& keyword) const;

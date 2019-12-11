@@ -605,6 +605,25 @@ void FieldProps::erase<double>(const std::string& keyword) {
     this->double_data.erase(keyword);
 }
 
+template <>
+std::vector<int> FieldProps::extract<int>(const std::string& keyword) {
+    auto field_iter = this->int_data.find(keyword);
+    auto field = std::move(field_iter->second);
+    std::vector<int> data = std::move( field.data );
+    this->int_data.erase( field_iter );
+    return data;
+}
+
+template <>
+std::vector<double> FieldProps::extract<double>(const std::string& keyword) {
+    auto field_iter = this->double_data.find(keyword);
+    auto field = std::move(field_iter->second);
+    std::vector<double> data = std::move( field.data );
+    this->double_data.erase( field_iter );
+    return data;
+}
+
+
 
 
 
