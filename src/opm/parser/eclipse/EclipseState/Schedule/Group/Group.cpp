@@ -131,7 +131,7 @@ bool Group::GroupProductionProperties::operator==(const GroupProductionPropertie
         this->cmode               == other.cmode &&
         this->exceed_action       == other.exceed_action &&
         this->oil_target          == other.oil_target &&
-        this->water_target        == other.oil_target &&
+        this->water_target        == other.water_target &&
         this->gas_target          == other.gas_target &&
         this->liquid_target       == other.liquid_target &&
         this->production_controls == other.production_controls &&
