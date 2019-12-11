@@ -44,8 +44,7 @@ namespace Opm {
         // [
         //     "WELL1" : [<seg1, valv1>, <seg2, valv2> ...]
         //     ....
-        static std::map<std::string, std::vector<std::pair<int, Valve> > >
-        fromWSEGVAVLV(const DeckKeyword& keyword);
+        static std::map<std::string, std::vector<std::pair<int, Valve> > > fromWSEGVALV(const DeckKeyword& keyword);
 
         // parameters for constriction pressure loss
         double conFlowCoefficient() const;

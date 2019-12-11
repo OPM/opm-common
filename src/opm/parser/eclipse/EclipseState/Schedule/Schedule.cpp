@@ -1987,8 +1987,7 @@ namespace {
     }
 	    	    
     void Schedule::handleWSEGVALV( const DeckKeyword& keyword, size_t currentStep) {
-        const std::map<std::string, std::vector<std::pair<int, Valve> > > valves =
-                         Valve::fromWSEGVAVLV(keyword);
+        const std::map<std::string, std::vector<std::pair<int, Valve> > > valves = Valve::fromWSEGVALV(keyword);
 
         for (const auto& map_elem : valves) {
             const std::string& well_name_pattern = map_elem.first;

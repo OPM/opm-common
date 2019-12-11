@@ -73,7 +73,7 @@ namespace Opm {
     }
 
     std::map<std::string, std::vector<std::pair<int, Valve> > >
-    Valve::fromWSEGVAVLV(const DeckKeyword& keyword)
+    Valve::fromWSEGVALV(const DeckKeyword& keyword)
     {
         std::map<std::string, std::vector<std::pair<int, Valve> > > res;
 

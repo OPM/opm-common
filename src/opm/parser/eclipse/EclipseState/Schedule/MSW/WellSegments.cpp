@@ -468,10 +468,7 @@ namespace Opm {
             const int segment_number = pair.first;
             const Valve& valve = pair.second;
             Segment segment = this->getFromSegmentNumber(segment_number);
-            const Segment& outlet_segment = this->getFromSegmentNumber(segment.outletSegment());
-            const double segment_length = segment.totalLength() - outlet_segment.totalLength();
-            // TODO: assert for development
-            assert(segment_length > 0.);
+            const double segment_length = this->segmentLength(segment_number);
             // this function can return bool
             segment.updateValve(valve, segment_length);
             this->addSegment(segment);
