@@ -262,6 +262,11 @@ namespace Opm {
         void calculateGeometryData();
 
         void getCellCorners(const std::array<int, 3>& ijk, const std::array<int, 3>& dims, std::array<double,8>& X, std::array<double,8>& Y, std::array<double,8>& Z) const;
+        void getCellCorners(const std::size_t globalIndex,
+                            std::array<double,8>& X,
+                            std::array<double,8>& Y,
+                            std::array<double,8>& Z) const;
+
    };
 
     class CoordMapper {

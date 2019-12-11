@@ -710,6 +710,18 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         }
     }
 
+
+    void EclipseGrid::getCellCorners(const std::size_t globalIndex,
+                                     std::array<double,8>& X,
+                                     std::array<double,8>& Y,
+                                     std::array<double,8>& Z) const
+    {
+        this->assertGlobalIndex(globalIndex);
+        auto ijk = this->getIJK(globalIndex);
+        this->getCellCorners(ijk, this->getNXYZ(), X, Y, Z);
+    }
+
+
     std::vector<double> EclipseGrid::makeCoordDxvDyvDzvDepthz(const std::array<int, 3>& dims, const std::vector<double>& dxv, const std::vector<double>& dyv, const std::vector<double>& dzv, const std::vector<double>& depthz) const {
 
         std::vector<double> coord;
