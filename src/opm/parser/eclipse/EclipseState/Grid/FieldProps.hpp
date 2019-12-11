@@ -206,6 +206,16 @@ public:
         return def;
     }
 
+    std::size_t active_size;
+    std::size_t global_size;
+
+    std::size_t num_int() const {
+        return this->int_data.size();
+    }
+
+    std::size_t num_double() const {
+        return this->double_data.size();
+    }
 
 private:
     void scanGRIDSection(const GRIDSection& grid_section);
@@ -240,8 +250,6 @@ private:
     void init_porv(FieldData<double>& porv);
 
     const UnitSystem unit_system;
-    std::size_t active_size;
-    std::size_t global_size;
     std::size_t nx,ny,nz;
     std::vector<int> m_actnum;
     std::vector<double> cell_volume;
