@@ -47,8 +47,6 @@ namespace Opm {
         static std::map<std::string, std::vector<std::pair<int, Valve> > >
         fromWSEGVAVLV(const DeckKeyword& keyword);
 
-        Status status() const;
-
         // parameters for constriction pressure loss
         double conFlowCoefficient() const;
         double conCrossArea() const;
@@ -60,21 +58,26 @@ namespace Opm {
         double pipeRoughness() const;
         double pipeCrossArea() const;
 
+        // Status: OPEN or SHUT
+        Status status() const;
+
+        void setConMaxCrossArea(const double area);
+
+        void setPipeAdditionalLength(const double length);
         void setPipeDiameter(const double dia);
         void setPipeRoughness(const double rou);
         void setPipeCrossArea(const double area);
-        void setPipeMaxCrossArea(const double area);
-        void setPipeAdditionalLength(const double length);
 
     private:
-        double m_con_flow_coeff;
-        double m_con_cross_area;
+        const double m_con_flow_coeff;
+        const double m_con_cross_area;
+        double m_con_max_cross_area;
+
         double m_pipe_additional_length;
         double m_pipe_diameter;
         double m_pipe_roughness;
         double m_pipe_cross_area;
         Status m_status;
-        double m_con_max_cross_area;
     };
 
 }

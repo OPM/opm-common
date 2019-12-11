@@ -76,7 +76,7 @@ namespace Opm {
 
         void updateValve(const Valve& valve, const double segment_length);
 
-        const std::shared_ptr<Valve>& valve() const;
+        const Valve* valve() const;
 
     private:
         // segment number

@@ -133,7 +133,7 @@ namespace Opm {
         m_pipe_cross_area = area;
     }
 
-    void Valve::setPipeMaxCrossArea(const double area) {
+    void Valve::setConMaxCrossArea(const double area) {
         m_con_max_cross_area = area;
     }
 
