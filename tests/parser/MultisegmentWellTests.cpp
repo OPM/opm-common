@@ -306,3 +306,135 @@ BOOST_AUTO_TEST_CASE(NegativeDepthCOMPSEGS) {
     parseContext.update(Opm::ParseContext::SCHEDULE_COMPSEGS_NOT_SUPPORTED, Opm::InputError::IGNORE);
     BOOST_CHECK_NO_THROW(wconns.reset(Opm::newConnectionsWithSegments(compsegs, connection_set, segment_set, grid, parseContext, errorGuard)));
 }
+
+BOOST_AUTO_TEST_CASE(testwsegvalv) {
+    auto dir = Opm::Connection::Direction::Z;
+    Opm::WellConnections connection_set(10,10);
+    Opm::EclipseGrid grid(20,20,20);
+    connection_set.add(Opm::Connection( 19, 0, 0, 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0, dir,0, 0., 0., true) );
+    connection_set.add(Opm::Connection( 19, 0, 1, 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0, dir,0, 0., 0., true) );
+    connection_set.add(Opm::Connection( 19, 0, 2, 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0, dir,0, 0., 0., true) );
+
+    connection_set.add(Opm::Connection( 18, 0, 1, 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Opm::Connection::Direction::X,0, 0., 0., true) );
+    connection_set.add(Opm::Connection( 17, 0, 1, 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Opm::Connection::Direction::X,0, 0., 0., true) );
+    connection_set.add(Opm::Connection( 16, 0, 1, 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Opm::Connection::Direction::X,0, 0., 0., true) );
+    connection_set.add(Opm::Connection( 15, 0, 1, 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Opm::Connection::Direction::X,0, 0., 0., true) );
+
+    BOOST_CHECK_EQUAL( 7U , connection_set.size() );
+
+    const std::string compsegs_string =
+        "WELSEGS \n"
+        "'PROD01' 2512.5 2512.5 1.0e-5 'ABS' 'HF-' 'HO' /\n"
+        "2         2      1      1    2537.5 2537.5  0.3   0.00010 /\n"
+        "3         3      1      2    2562.5 2562.5  0.2  0.00010 /\n"
+        "4         4      2      2    2737.5 2537.5  0.2  0.00010 /\n"
+        "6         6      2      4    3037.5 2539.5  0.2  0.00010 /\n"
+        "7         7      2      6    3337.5 2534.5  0.2  0.00010 /\n"
+        "8         8      3      6    3037.6 2539.5  0.2  0.00015 /\n"
+        "9         9      4      7    3337.6 2534.5  0.2  0.00015 /\n"
+        "/\n"
+        "\n"
+        "COMPSEGS\n"
+        "PROD01 / \n"
+        "20    1     1     1   2512.5   2525.0 /\n"
+        "20    1     2     1   2525.0   2550.0 /\n"
+        "20    1     3     1   2550.0   2575.0 /\n"
+        "19    1     2     2   2637.5   2837.5 /\n"
+        "18    1     2     2   2837.5   3037.5 /\n"
+        "17    1     2     3   2937.5   3137.5 /\n"
+        "16    1     2     4   3237.5   3437.5 /\n"
+        "/\n"
+        "WSEGVALV\n"
+        "'PROD01'  8   0.002  5. /\n"
+        "'PROD01'  9   0.001  6. 0. 1.2 0.1 8. SHUT 9./\n"
+        "/\n";
+
+    Opm::Parser parser;
+    Opm::Deck deck = parser.parseString(compsegs_string);
+
+    const Opm::DeckKeyword compsegs = deck.getKeyword("COMPSEGS");
+    BOOST_CHECK_EQUAL( 8U, compsegs.size() );
+
+    Opm::WellSegments segment_set;
+    const Opm::DeckKeyword welsegs = deck.getKeyword("WELSEGS");
+
+    segment_set.loadWELSEGS(welsegs);
+
+    BOOST_CHECK_EQUAL(8U, segment_set.size());
+
+    Opm::ErrorGuard   errorGuard;
+    Opm::ParseContext parseContext;
+    parseContext.update(Opm::ParseContext::SCHEDULE_COMPSEGS_INVALID, Opm::InputError::THROW_EXCEPTION);
+    parseContext.update(Opm::ParseContext::SCHEDULE_COMPSEGS_NOT_SUPPORTED, Opm::InputError::THROW_EXCEPTION);
+    std::unique_ptr<Opm::WellConnections> new_connection_set{nullptr};
+    BOOST_CHECK_NO_THROW(new_connection_set.reset(Opm::newConnectionsWithSegments(compsegs, connection_set, segment_set, grid, parseContext, errorGuard)));
+
+    // checking the WSEGVALV segment
+    const Opm::DeckKeyword wsegvalv = deck.getKeyword("WSEGVALV");
+    BOOST_CHECK_EQUAL(2U, wsegvalv.size());
+
+    const Opm::DeckRecord& record1 = wsegvalv.getRecord(0);
+    const int seg1 = record1.getItem("SEGMENT_NUMBER").get< int >(0);
+    BOOST_CHECK_EQUAL(8, seg1);
+
+    const Opm::DeckRecord& record2 = wsegvalv.getRecord(1);
+    const int seg2 = record2.getItem("SEGMENT_NUMBER").get< int >(0);
+    BOOST_CHECK_EQUAL(9, seg2);
+
+    const auto segvalv_map = Opm::Valve::fromWSEGVALV(wsegvalv);
+    BOOST_CHECK_EQUAL(1U, segvalv_map.size());
+
+    const auto it = segvalv_map.begin();
+    const std::string& well_name = it->first;
+    BOOST_CHECK_EQUAL(well_name, "PROD01");
+
+    const auto& segvalv_vector = it->second;
+    BOOST_CHECK_EQUAL(2U, segvalv_vector.size());
+
+    const int segment_number1 = segvalv_vector[0].first;
+    BOOST_CHECK_EQUAL(8, segment_number1);
+    const Opm::Valve& valve1 = segvalv_vector[0].second;
+
+    Opm::Segment segment1 = segment_set.getFromSegmentNumber(segment_number1);
+    const double segment_length1 = segment_set.segmentLength(segment_number1);
+    segment1.updateValve(valve1, segment_length1);
+    BOOST_CHECK(Opm::Segment::SegmentType::VALVE==segment1.segmentType());
+
+    const Opm::Valve* valv1 = segment1.valve();
+    BOOST_CHECK_EQUAL(valv1->conFlowCoefficient(), 0.002);
+    BOOST_CHECK_EQUAL(valv1->conCrossArea(), 5.);
+    BOOST_CHECK_EQUAL(valv1->conMaxCrossArea(), 0.031415926535897934);
+    BOOST_CHECK_CLOSE(valv1->pipeAdditionalLength(), 0.1, 1.e-10);
+    BOOST_CHECK_EQUAL(valv1->pipeDiameter(), 0.2);
+    BOOST_CHECK_EQUAL(valv1->pipeRoughness(), 0.00015);
+    BOOST_CHECK_EQUAL(valv1->pipeCrossArea(), 0.031415926535897934);
+    BOOST_CHECK(valv1->status()==Opm::Valve::Status::OPEN);
+
+    const int segment_number2 = segvalv_vector[1].first;
+    BOOST_CHECK_EQUAL(9, segment_number2);
+    const Opm::Valve& valve2 = segvalv_vector[1].second;
+    Opm::Segment segment2 = segment_set.getFromSegmentNumber(segment_number1);
+    const double segment_length2 = segment_set.segmentLength(segment_number2);
+    // checking the original segment input
+    BOOST_CHECK_EQUAL(segment2.internalDiameter(), 0.2);
+    BOOST_CHECK_EQUAL(segment2.roughness(), 0.00015);
+    BOOST_CHECK_EQUAL(segment2.crossArea(), 0.031415926535897934);
+
+    segment2.updateValve(valve2, segment_length2);
+    BOOST_CHECK(Opm::Segment::SegmentType::VALVE ==segment2.segmentType());
+
+    const Opm::Valve* valv2 = segment2.valve();
+    BOOST_CHECK_EQUAL(valv2->conFlowCoefficient(), 0.001);
+    BOOST_CHECK_EQUAL(valv2->conCrossArea(), 6.);
+    BOOST_CHECK_EQUAL(valv2->conMaxCrossArea(), 9.);
+    BOOST_CHECK_EQUAL(valv2->pipeAdditionalLength(), 0.0);
+    BOOST_CHECK_EQUAL(valv2->pipeDiameter(), 1.2);
+    BOOST_CHECK_EQUAL(valv2->pipeRoughness(), 0.1);
+    BOOST_CHECK_EQUAL(valv2->pipeCrossArea(), 8.);
+    BOOST_CHECK(valv2->status()==Opm::Valve::Status::SHUT);
+
+    // valve changes the segment data
+    BOOST_CHECK_EQUAL(segment2.internalDiameter(), valv2->pipeDiameter());
+    BOOST_CHECK_EQUAL(segment2.roughness(), valv2->pipeRoughness());
+    BOOST_CHECK_EQUAL(segment2.crossArea(), valv2->pipeCrossArea());
+}

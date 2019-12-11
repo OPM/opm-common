@@ -18,6 +18,7 @@
 */
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/Segment.hpp>
 
+#include <cassert>
 
 namespace Opm {
 
@@ -152,5 +153,45 @@ namespace Opm {
     }
 
 
+    void Segment::updateValve(const Valve& valve, const double segment_length) {
+        // we need to update some values for the vale
+        auto valve_ptr = std::make_shared<Valve>(valve);
+
+        if (valve_ptr->pipeAdditionalLength() < 0.) { // defaulted for this
+            valve_ptr->setPipeAdditionalLength(segment_length);
+        }
+
+        if (valve_ptr->pipeDiameter() < 0.) {
+            valve_ptr->setPipeDiameter(m_internal_diameter);
+        } else {
+            this->m_internal_diameter = valve_ptr->pipeDiameter();
+        }
+
+        if (valve_ptr->pipeRoughness() < 0.) {
+            valve_ptr->setPipeRoughness(m_roughness);
+        } else {
+            this->m_roughness = valve_ptr->pipeRoughness();
+        }
+
+        if (valve_ptr->pipeCrossArea() < 0.) {
+            valve_ptr->setPipeCrossArea(m_cross_area);
+        } else {
+            this->m_cross_area = valve_ptr->pipeCrossArea();
+        }
+
+        if (valve_ptr->conMaxCrossArea() < 0.) {
+            valve_ptr->setConMaxCrossArea(valve_ptr->pipeCrossArea());
+        }
+
+        this->m_valve = valve_ptr;
+
+        m_segment_type = SegmentType::VALVE;
+    }
+
+
+    const Valve* Segment::valve() const {
+        return m_valve.get();
+    }
 
 }
+

@@ -6,7 +6,10 @@
   "SGFR",
   "SOFR",
   "SPR",
-  "SWFR"
+  "SWFR",
+  "SPRD",
+  "SPRDF",
+  "SPRDH"
  ],
 
  "comment" : "This list is incomplete",

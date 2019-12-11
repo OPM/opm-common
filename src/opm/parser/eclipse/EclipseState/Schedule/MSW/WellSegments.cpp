@@ -456,6 +456,28 @@ namespace Opm {
         return true;
     }
 
+    bool WellSegments::updateWSEGVALV(const std::vector<std::pair<int, Valve> >& valve_pairs) {
+
+        if (m_comp_pressure_drop == CompPressureDrop::H__) {
+            const std::string msg = "to use WSEGVALV segment for well " + m_well_name
+                                    + " , you have to activate the frictional pressure drop calculation";
+            throw std::runtime_error(msg);
+        }
+
+        for (const auto& pair : valve_pairs) {
+            const int segment_number = pair.first;
+            const Valve& valve = pair.second;
+            Segment segment = this->getFromSegmentNumber(segment_number);
+            const double segment_length = this->segmentLength(segment_number);
+            // this function can return bool
+            segment.updateValve(valve, segment_length);
+            this->addSegment(segment);
+        }
+
+        return true;
+    }
+
+
     bool WellSegments::operator!=( const WellSegments& rhs ) const {
         return !( *this == rhs );
     }
