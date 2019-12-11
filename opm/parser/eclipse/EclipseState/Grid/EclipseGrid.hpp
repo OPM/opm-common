@@ -195,7 +195,6 @@ namespace Opm {
         PinchMode::ModeEnum m_pinchoutMode;
         PinchMode::ModeEnum m_multzMode;
 
-        mutable std::vector< int > activeMap;
         bool m_circle = false;
 
         size_t zcorn_fixed = 0;
