@@ -1,5 +1,5 @@
 {
-    "name" : "PVZG", "sections" : ["PROPS"], "num_tables" : {"keyword" : "TABDIMS" , "item" : "NTPVT"}, "alternating_records" : [
+    "name" : "PVTWSALT", "sections" : ["PROPS"], "num_tables" : {"keyword" : "TABDIMS" , "item" : "NTPVT"}, "alternating_records" : [
     [
         {"name" : "REF_TEMP", "value_type" : "DOUBLE", "dimension" : "Temperature"}
     ],
