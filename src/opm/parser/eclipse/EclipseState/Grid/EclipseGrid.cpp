@@ -1460,8 +1460,15 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
 
     double EclipseGrid::getCellThickness(size_t globalIndex) const {
         assertGlobalIndex( globalIndex );
+        std::array<double,8> X;
+        std::array<double,8> Y;
+        std::array<double,8> Z;
+        this->getCellCorners(globalIndex, X, Y, Z );
 
-        return m_dz[globalIndex];
+        double z2 = (Z[4]+Z[5]+Z[6]+Z[7])/4.0;
+        double z1 = (Z[0]+Z[1]+Z[2]+Z[3])/4.0;
+        double dz = z2-z1;
+        return dz;
     }
 
     std::array<double, 3> EclipseGrid::getCellDims(size_t globalIndex) const {
