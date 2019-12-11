@@ -213,7 +213,6 @@ namespace Opm {
         std::vector<int> m_global_to_active;
 
         // Geometry data.
-        std::vector<double> m_depth;
         std::vector<double> m_dx;
         std::vector<double> m_dy;
         std::vector<double> m_dz;

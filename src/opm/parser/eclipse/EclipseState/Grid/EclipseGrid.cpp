@@ -580,13 +580,11 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         m_dx.clear();
         m_dy.clear();
         m_dz.clear();
-        m_depth.clear();
 
         m_cellCenter.resize(nCells);
         m_dx.resize(nCells);
         m_dy.resize(nCells);
         m_dz.resize(nCells);
-        m_depth.resize(nCells);
 
         std::array<int, 3> ijk;
         size_t n = 0;
@@ -639,8 +637,6 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
                     m_dx[n] = dx;
                     m_dy[n] = dy;
                     m_dz[n] = dz;
-
-                    m_depth[n] =  (z2 + z1) / 2.0;
 
                     n++;
                 }
@@ -1539,16 +1535,20 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
 
     double EclipseGrid::getCellDepth(size_t globalIndex) const {
         assertGlobalIndex( globalIndex );
+        std::array<double,8> X;
+        std::array<double,8> Y;
+        std::array<double,8> Z;
+        this->getCellCorners(globalIndex, X, Y, Z );
 
-        return m_depth[globalIndex];
+        double z2 = (Z[4]+Z[5]+Z[6]+Z[7])/4.0;
+        double z1 = (Z[0]+Z[1]+Z[2]+Z[3])/4.0;
+        return (z1 + z2)/2.0;
     }
 
     double EclipseGrid::getCellDepth(size_t i, size_t j, size_t k) const {
-        assertIJK(i,j,k);
-
-        size_t globalIndex = getGlobalIndex( i,j,k );
-
-        return getCellDepth(globalIndex);
+        this->assertIJK(i,j,k);
+        size_t globalIndex = getGlobalIndex(i,j,k);
+        return this->getCellDepth(globalIndex);
     }
 
     const std::vector<int>& EclipseGrid::getACTNUM( ) const {
