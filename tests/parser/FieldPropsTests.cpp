@@ -484,8 +484,13 @@ PORO
 
 
     BOOST_CHECK(fpm.has<double>("PORO"));
-    const auto& poro = fpm.get_copy<double>("PORO");
+    const auto& poro1 = fpm.get_copy<double>("PORO");
     BOOST_CHECK(fpm.has<double>("PORO"));
+    const auto& poro2 = fpm.get_copy<double>("PORO");
+    BOOST_CHECK(fpm.has<double>("PORO"));
+    BOOST_CHECK( poro1 == poro2 );
+    BOOST_CHECK( &poro1 != &poro2 );
+    BOOST_CHECK( poro1.size() == grid.getNumActive());
 
     BOOST_CHECK(!fpm.has<int>("SATNUM"));
     const auto& satnum = fpm.get_copy<int>("SATNUM", true);
