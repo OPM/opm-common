@@ -79,6 +79,7 @@ set( keywords
      000_Eclipse100/C/CART
      000_Eclipse100/C/CBMOPTS
      000_Eclipse100/C/CECON
+     000_Eclipse100/C/CECONT
      000_Eclipse100/C/COAL
      000_Eclipse100/C/COALADS
      000_Eclipse100/C/COALNUM

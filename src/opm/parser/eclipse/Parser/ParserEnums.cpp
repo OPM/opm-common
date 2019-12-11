@@ -42,6 +42,9 @@ namespace Opm {
         case FIXED_CODE:
             return "FIXED_CODE";
             break;
+        case DOUBLE_SLASH_TERMINATED:
+            return "DOUBLE_SLASH_TERMINATED";
+            break;
         default:
             throw std::invalid_argument("Implementation error - should NOT be here");
         }

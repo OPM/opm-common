@@ -96,6 +96,13 @@ namespace {
         if (this->m_sizeType == Raw::SLASH_TERMINATED)
             this->m_isFinished = true;
 
+        if (this->m_sizeType == Raw::DOUBLE_SLASH_TERMINATED) {
+            if (m_isTempFinished)
+                this->m_isFinished = true;
+            else
+                this->m_isTempFinished = true; 
+        }
+
         if (m_sizeType == Raw::TABLE_COLLECTION) {
             m_currentNumTables += 1;
             if (m_currentNumTables == m_numTables)
@@ -110,12 +117,15 @@ namespace {
 
 
     bool RawKeyword::addRecord(RawRecord record) {
+
+        if (record.size() > 0)
+            m_isTempFinished = false;
+
         this->m_records.push_back(std::move(record));
         if (m_records.size() == this->m_fixedSize) {
             if( this->m_sizeType == Raw::FIXED || this->m_sizeType == Raw::CODE)
                 this->m_isFinished = true;
         }
-
         return this->m_isFinished;
     }
 

@@ -1774,6 +1774,38 @@ BOOST_AUTO_TEST_CASE(GetAlternatingKeywordFromParser) {
     BOOST_CHECK(kw.getRecord(13) == record1);
 }
 
+BOOST_AUTO_TEST_CASE(ConstructFromJson_withDoubleRecords) {
+    const std::string json_string = R"(
+    {"name" : "CECONT", "sections" : ["PROPS"] , "records_set" : [[
+      {"name" : "WELL", "value_type" : "STRING"}, 
+      {"name" : "I", "value_type" : "INT"},
+      {"name" : "J", "value_type" : "INT"},
+      {"name" : "K", "value_type" : "INT"}], [
+      {"name" : "TRACER" , "value_type" : "STRING"},
+      {"name" : "rate", "value_type" : "DOUBLE"}]]}
+    )";
+    Json::JsonObject jsonObject( json_string );
+    ParserKeyword kw( jsonObject );
+    BOOST_CHECK( kw.isDoubleRecordKeyword() );
+    BOOST_CHECK_EQUAL(kw.getRecord(0).size(), 4);
+    BOOST_CHECK_EQUAL(kw.getRecord(1).size(), 2);
+}
+
+BOOST_AUTO_TEST_CASE(GetDoubleRecordKeywordFromParser) {
+    Parser parser;
+    BOOST_CHECK(parser.hasKeyword("CECONT"));
+    ParserKeyword kw = parser.getKeyword("CECONT");
+    BOOST_CHECK(kw.isDoubleRecordKeyword());
+    BOOST_CHECK(kw.getSizeType() == DOUBLE_SLASH_TERMINATED);
+    auto record0 = kw.getRecord(0);
+    auto record1 = kw.getRecord(1);
+    BOOST_CHECK_EQUAL(record0.get(0).name(), "WELL");
+    BOOST_CHECK_EQUAL(record1.get(0).name(), "TRACER");
+    BOOST_CHECK(kw.getRecord(11) == record1);
+    BOOST_CHECK(kw.getRecord(13) == record1);
+}
+
+
 
 BOOST_AUTO_TEST_CASE(Create1Arg) {
     ParserKeyword kw("GRID");
@@ -2134,6 +2166,80 @@ DENSITY
         BOOST_CHECK_CLOSE( rs.getSIDouble( 0 ), 71.243042671614077, 1.0e-10 );
         BOOST_CHECK_CLOSE( pbub.getSIDouble( 0 ), 6.515545642044100e+06, 1.0e-10 );
     }
+}
+
+BOOST_AUTO_TEST_CASE(ParseDoubleRecords) {
+        const auto deck_string = std::string { R"(
+RUNSPEC
+FIELD
+TABDIMS
+  1* 2
+/
+
+PROPS
+
+DENSITY
+  50.91  62.4 /
+  51.90  64.2 /
+
+SCHEDULE
+
+CECONT
+PROD1 4* CON NO /
+TR1 1000.0 0.5 /
+TR2 2* 1* 0.8 2* /
+TR3 1500.0 0.1 /
+/
+PROD2 5 6 3 3 CON+ NO /
+TR3 100.0 0.05 /
+/
+PROD3 6* /
+TR4 200 5* /
+PLY 1* 0.7 /
+/
+/
+
+GCONSUMP
+PLAT-A 20 50 /
+PLAT-B 15 /
+/
+
+)" };
+    Parser parser;
+    auto deck = parser.parseString(deck_string);
+    BOOST_CHECK( deck.hasKeyword("CECONT") );
+    BOOST_CHECK( deck.hasKeyword("GCONSUMP") );
+
+    auto kw_density = deck.getKeyword("DENSITY");
+
+    auto kw = deck.getKeyword("CECONT");
+    BOOST_CHECK( kw.isDoubleRecordKeyword() );
+
+    auto record00 = kw.getRecord(0);
+    BOOST_CHECK_EQUAL(record00.getItem(0).name(), "WELL");
+    BOOST_CHECK_EQUAL(record00.getItem(0).get<std::string>(0), "PROD1");
+    BOOST_CHECK(record00.getItem(1).getType() == type_tag::integer);
+    BOOST_CHECK_EQUAL(record00.getItem(1).get<int>(0), 0);
+
+    auto record01 = kw.getRecord(1);
+    BOOST_CHECK_EQUAL(record01.getItem(0).name(), "TRACER");
+    BOOST_CHECK_EQUAL(record01.getItem(0).get<std::string>(0), "TR1");
+    BOOST_CHECK(record01.getItem(1).getType() == type_tag::fdouble);
+    BOOST_CHECK_EQUAL(record01.getItem(1).get<double>(0), 1000);
+
+    auto record04 = kw.getRecord(4);
+    BOOST_CHECK_EQUAL(record04.getItem(0).name(), "WELL");
+    BOOST_CHECK_EQUAL(record04.getItem(0).get<std::string>(0), "PROD2");
+    BOOST_CHECK(record04.getItem(1).getType() == type_tag::integer);
+    BOOST_CHECK_EQUAL(record04.getItem(1).get<int>(0), 5);
+
+    auto record08 = kw.getRecord(8);
+    BOOST_CHECK_EQUAL(record08.getItem(0).name(), "TRACER");
+    BOOST_CHECK_EQUAL(record08.getItem(0).get<std::string>(0), "PLY");
+    BOOST_CHECK(record08.getItem(2).getType() == type_tag::fdouble);
+    BOOST_CHECK_EQUAL(record08.getItem(2).get<double>(0), 0.7);
+  
+
 }
 
 

@@ -140,6 +140,11 @@ namespace Opm {
             return;
         }
 
+        if (jsonConfig.has_item("records_set")) {
+           m_keywordSizeType = DOUBLE_SLASH_TERMINATED;
+           return;
+        }
+
         if (jsonConfig.has_item("items") || jsonConfig.has_item("records")) {
             // The number of records is undetermined - the keyword will be '/'
             // terminated.
@@ -184,7 +189,9 @@ namespace Opm {
         initSectionNames(jsonConfig);
         initMatchRegex(jsonConfig);
 
-        if (jsonConfig.has_item("items") && (jsonConfig.has_item("records") || jsonConfig.has_item("alternating_records")))
+        if (jsonConfig.has_item("items") && (jsonConfig.has_item("records") || 
+                                             jsonConfig.has_item("alternating_records") ||
+                                             jsonConfig.has_item("records_set") ))
             throw std::invalid_argument("Fatal error in " + getName() + " configuration. Can NOT have both records: and items:");
 
         if (jsonConfig.has_item("items")) {
@@ -202,6 +209,12 @@ namespace Opm {
             if (!jsonConfig.has_item("num_tables") || jsonConfig.has_item("size"))
                 throw std::invalid_argument("alternating_records must have num_tables.");
             const Json::JsonObject recordsConfig = jsonConfig.get_item("alternating_records");
+            parseRecords( recordsConfig );
+        }
+
+        if (jsonConfig.has_item("records_set")) {
+            double_records = true;
+            const Json::JsonObject recordsConfig = jsonConfig.get_item("records_set");
             parseRecords( recordsConfig );
         }
 
@@ -523,19 +536,40 @@ void set_dimensions( ParserItem& item,
                                      UnitSystem& active_unitsystem,
                                      UnitSystem& default_unitsystem,
                                      const std::string& filename) const {
+
         if( !rawKeyword.isFinished() )
             throw std::invalid_argument("Tried to create a deck keyword from an incomplete raw keyword " + rawKeyword.getKeywordName());
 
         DeckKeyword keyword( rawKeyword.location(), rawKeyword.getKeywordName() );
         keyword.setDataKeyword( isDataKeyword() );
 
-        size_t record_nr = 0;
-        for( auto& rawRecord : rawKeyword ) {
-            if( m_records.size() == 0 && rawRecord.size() > 0 )
-                throw std::invalid_argument("Missing item information " + rawKeyword.getKeywordName());
+        if (double_records)
+            keyword.setDoubleRecordKeyword();
 
-            keyword.addRecord( this->getRecord( record_nr ).parse( parseContext, errors, rawRecord, active_unitsystem, default_unitsystem, rawKeyword.getKeywordName(), filename ) );
-            record_nr++;
+        if (double_records) {
+            /* Note: this merely dumps all records sequentially into m_recordList.
+               In order to actually use double-record keywords, DeckKeyword needs to have a 
+               2-dimensional DeckRecord structure, e.g.
+               std::vector< std::vector<DeckRecord >> m_recordList; */
+            size_t record_nr = 0;
+            for (auto& rawRecord : rawKeyword) {
+                if (rawRecord.size() == 0)
+                     record_nr = 0;
+                else {
+                     keyword.addRecord( this->getRecord( record_nr ).parse( parseContext, errors, rawRecord, active_unitsystem, default_unitsystem, rawKeyword.getKeywordName(), filename ) );
+                     record_nr++;
+                }
+            }
+        }
+        else {
+            size_t record_nr = 0;
+            for( auto& rawRecord : rawKeyword ) {
+                if( m_records.size() == 0 && rawRecord.size() > 0 )
+                    throw std::invalid_argument("Missing item information " + rawKeyword.getKeywordName());
+
+                keyword.addRecord( this->getRecord( record_nr ).parse( parseContext, errors, rawRecord, active_unitsystem, default_unitsystem, rawKeyword.getKeywordName(), filename ) );
+                record_nr++;
+            }
         }
 
         if (this->hasFixedSize( ))
@@ -588,8 +622,16 @@ void set_dimensions( ParserItem& item,
         return alternating_keyword;
     }
 
+    bool ParserKeyword::isDoubleRecordKeyword() const {
+        return double_records;
+    }
+
     void ParserKeyword::setAlternatingKeyword(bool alternating) {
         alternating_keyword = alternating;
+    }
+
+    void ParserKeyword::setDoubleRecordsKeyword(bool double_rec) {
+        double_records = double_rec;
     }
 
     bool ParserKeyword::hasMatchRegex() const {
@@ -662,6 +704,7 @@ void set_dimensions( ParserItem& item,
             switch (m_keywordSizeType) {
             case SLASH_TERMINATED:
             case FIXED_CODE:
+            case DOUBLE_SLASH_TERMINATED:
             case UNKNOWN:
                 ss << "setSizeType(" << sizeString << ");" << '\n';
                 break;
@@ -697,6 +740,10 @@ void set_dimensions( ParserItem& item,
         // set AlternatingRecords
         if (alternating_keyword)
             ss << indent << "setAlternatingKeyword(true);" << '\n';
+
+        // set DoubleRecords
+        if (double_records)
+            ss << indent << "setDoubleRecordsKeyword(true);" << '\n';
 
         // set the deck name match regex
         if (hasMatchRegex())
