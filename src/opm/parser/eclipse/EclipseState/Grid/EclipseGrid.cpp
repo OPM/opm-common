@@ -576,14 +576,12 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         std::array<double,8> Y = {0.0};
         std::array<double,8> Z = {0.0};
 
-        m_volume.clear();
         m_cellCenter.clear();
         m_dx.clear();
         m_dy.clear();
         m_dz.clear();
         m_depth.clear();
 
-        m_volume.resize(nCells);
         m_cellCenter.resize(nCells);
         m_dx.resize(nCells);
         m_dy.resize(nCells);
@@ -602,8 +600,6 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
                     ijk[2] = k;
 
                     getCellCorners(ijk, dims, X, Y, Z );
-
-                    m_volume[n] = calculateCellVol(X, Y, Z);
 
                     std::array<double, 3> center;
 
@@ -1443,19 +1439,18 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
 
 
     double EclipseGrid::getCellVolume(size_t globalIndex) const {
-
         assertGlobalIndex( globalIndex );
-
-        return m_volume[globalIndex];
+        std::array<double,8> X;
+        std::array<double,8> Y;
+        std::array<double,8> Z;
+        this->getCellCorners(globalIndex, X, Y, Z );
+        return calculateCellVol(X, Y, Z);
     }
 
     double EclipseGrid::getCellVolume(size_t i , size_t j , size_t k) const {
-
-        assertIJK(i,j,k);
-
-        size_t globalIndex = getGlobalIndex( i,j,k );
-
-        return getCellVolume(globalIndex);
+        this->assertIJK(i,j,k);
+        size_t globalIndex = getGlobalIndex(i,j,k);
+        return this->getCellVolume(globalIndex);
     }
 
     double EclipseGrid::getCellThickness(size_t i , size_t j , size_t k) const {
