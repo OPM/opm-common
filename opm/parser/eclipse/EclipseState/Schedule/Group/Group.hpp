@@ -162,12 +162,35 @@ struct ProductionControls {
 };
 
 
+    Group();
     Group(const std::string& group_name, std::size_t insert_index_arg, std::size_t init_step_arg, double udq_undefined_arg, const UnitSystem& unit_system);
+    Group(const std::string& gname,
+          std::size_t insert_idx,
+          std::size_t initstep,
+          double udqUndef,
+          const UnitSystem& units,
+          GroupType gtype,
+          double groupEF,
+          bool transferGroupEF,
+          int vfp,
+          const std::string& parent,
+          const IOrderSet<std::string>& well,
+          const IOrderSet<std::string>& group,
+          const GroupInjectionProperties& injProps,
+          const GroupProductionProperties& prodProps);
+
 
     bool defined(std::size_t timeStep) const;
     std::size_t insert_index() const;
+    std::size_t initStep() const;
+    double udqUndefined() const;
+    const UnitSystem& units() const;
     const std::string& name() const;
+    GroupType type() const;
     int getGroupNetVFPTable() const;
+    const IOrderSet<std::string>& iwells() const;
+    const IOrderSet<std::string>& igroups() const;
+
     bool updateNetVFPTable(int vfp_arg);
     bool update_gefac(double gefac, bool transfer_gefac);
 
@@ -203,6 +226,9 @@ struct ProductionControls {
     Phase injection_phase() const;
     bool has_control(ProductionCMode control) const;
     bool has_control(InjectionCMode control) const;
+
+    bool operator==(const Group& data) const;
+
 private:
     bool hasType(GroupType gtype) const;
     void addType(GroupType new_gtype);
