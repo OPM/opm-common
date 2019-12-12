@@ -1557,11 +1557,12 @@ namespace {
                         std::string guide_rate_str = record.getItem("GUIDE_RATE_DEF").getTrimmedString(0);
                         guide_rate_def = Group::GuideRateTargetFromString( guide_rate_str );
 
-                        if ((guide_rate_str == "INJ" || guide_rate_str == "POTN" || guide_rate_str == "FORM")) {
+                        if ((guide_rate_def == Group::GuideRateTarget::INJV ||
+                             guide_rate_def == Group::GuideRateTarget::POTN ||
+                             guide_rate_def == Group::GuideRateTarget::FORM)) {
                             std::string msg = "The supplied guide_rate value will be ignored";
                             parseContext.handleError(ParseContext::SCHEDULE_IGNORED_GUIDE_RATE, msg, errors);
-                        }
-                        else {
+                        } else {
                             guide_rate = record.getItem("GUIDE_RATE").get<double>(0);
                             if (guide_rate == 0)
                                 guide_rate_def = Group::GuideRateTarget::POTN;
