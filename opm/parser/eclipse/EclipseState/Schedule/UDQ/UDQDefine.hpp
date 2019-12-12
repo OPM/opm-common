@@ -62,7 +62,6 @@ public:
     UDQVarType  var_type() const;
     std::set<UDQTokenType> func_tokens() const;
 private:
-    const UDQParams& udq_params;  // Beacuse of the shared RNG stream this must be a reference.
     std::string m_keyword;
     std::shared_ptr<UDQASTNode> ast;
     UDQVarType m_var_type;
