@@ -68,6 +68,33 @@ GuideRateModel::GuideRateModel(double time_interval_arg,
         throw std::logic_error("Sorry - the 'COMB' mode is not supported");
 }
 
+GuideRateModel::GuideRateModel(double time_interval_arg,
+                               Target target_arg,
+                               const std::array<double, 6>& coefs_arg,
+                               bool allow_increase_arg,
+                               double damping_factor_arg,
+                               bool use_free_gas_arg,
+                               bool use_default_model_arg,
+                               const std::array<UDAValue,3>& udaCoefs_arg) :
+    time_interval(time_interval_arg),
+    m_target(target_arg),
+    A(coefs_arg[0]),
+    B(coefs_arg[1]),
+    C(coefs_arg[2]),
+    D(coefs_arg[3]),
+    E(coefs_arg[4]),
+    F(coefs_arg[5]),
+    allow_increase_(allow_increase_arg),
+    damping_factor_(damping_factor_arg),
+    use_free_gas(use_free_gas_arg),
+    default_model(use_default_model_arg),
+    alpha(udaCoefs_arg[0]),
+    beta(udaCoefs_arg[1]),
+    gamma(udaCoefs_arg[2])
+{
+}
+
+
 double GuideRateModel::pot(double oil_pot, double gas_pot, double wat_pot) const {
     return pot(this->target(), oil_pot, gas_pot, wat_pot);
 }
@@ -281,5 +308,25 @@ GuideRateModel::Target GuideRateModel::convert_target(Group::GuideRateTarget gro
         return Target::WAT;
 
     throw std::logic_error("Can not convert this .... ");
+}
+
+double GuideRateModel::timeInterval() const {
+    return time_interval;
+}
+
+std::array<double,6> GuideRateModel::coefs() const {
+    return {A, B, C, D, E, F};
+}
+
+bool GuideRateModel::free_gas() const {
+    return use_free_gas;
+}
+
+bool GuideRateModel::defaultModel() const {
+    return default_model;
+}
+
+std::array<UDAValue,3> GuideRateModel::udaCoefs() const {
+    return {alpha, beta, gamma};
 }
 }
