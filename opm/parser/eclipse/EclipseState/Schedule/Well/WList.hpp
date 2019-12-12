@@ -26,14 +26,20 @@ namespace Opm {
 class WList {
 public:
     using storage = std::unordered_set<std::string>;
+
+    WList() = default;
+    WList(const storage& wlist);
     std::size_t size() const;
     void add(const std::string& well);
     void del(const std::string& well);
     bool has(const std::string& well) const;
 
     std::vector<std::string> wells() const;
+    const storage& wellList() const;
     storage::const_iterator begin() const;
     storage::const_iterator end() const;
+
+    bool operator==(const WList& data) const;
 private:
     storage well_list;
 };
