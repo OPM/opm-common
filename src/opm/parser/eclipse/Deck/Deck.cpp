@@ -132,6 +132,24 @@ namespace Opm {
         Deck( std::vector<DeckKeyword>() )
     {}
 
+    Deck::Deck(const std::vector<DeckKeyword>& keywords,
+               const UnitSystem& defUnits,
+               const UnitSystem* activeUnit,
+               const std::string& dataFile,
+               const std::string& inputPath,
+               size_t accessCount) :
+        keywordList(keywords),
+        defaultUnits(defUnits),
+        m_dataFile(dataFile),
+        input_path(inputPath),
+        unit_system_access_count(accessCount)
+    {
+        if (activeUnit)
+            activeUnits.reset(new UnitSystem(*activeUnit));
+        this->init(keywordList.begin(), keywordList.end());
+    }
+
+
 
     /*
       This constructor should be ssen as a technical implemtation detail of the
@@ -157,6 +175,7 @@ namespace Opm {
         this->init(this->keywordList.begin(), this->keywordList.end());
         if (d.activeUnits)
             this->activeUnits.reset( new UnitSystem(*d.activeUnits.get()));
+        unit_system_access_count = d.unit_system_access_count;
     }
 
 
@@ -228,6 +247,18 @@ namespace Opm {
         return this->input_path;
     }
 
+    const std::unique_ptr<UnitSystem>& Deck::activeUnitSystem() const {
+        return this->activeUnits;
+    }
+
+    const std::vector<DeckKeyword>& Deck::keywords() const {
+        return keywordList;
+    }
+
+    std::size_t Deck::unitSystemAccessCount() const {
+        return unit_system_access_count;
+    }
+
     std::string Deck::makeDeckPath(const std::string& path) const {
         if (path.size() > 0 && path[0] == '/')
             return path;
@@ -266,6 +297,34 @@ namespace Opm {
             if (kw_index < size())
                 output.write_string( output.keyword_sep );
         }
+    }
+
+    Deck& Deck::operator=(const Deck& data) {
+        keywordList = data.keywordList;
+        defaultUnits = data.defaultUnits;
+        m_dataFile = data.m_dataFile;
+        input_path = data.input_path;
+        unit_system_access_count = data.unit_system_access_count;
+        this->init(this->keywordList.begin(), this->keywordList.end());
+        activeUnits.reset();
+        if (data.activeUnits)
+            activeUnits.reset(new UnitSystem(*data.activeUnits));
+
+        return *this;
+    }
+
+    bool Deck::operator==(const Deck& data) const {
+        if ((activeUnitSystem() && !data.activeUnitSystem()) ||
+            (!activeUnitSystem() && data.activeUnitSystem()))
+            return false;
+
+        if (activeUnitSystem() && *activeUnitSystem() != *data.activeUnitSystem())
+            return false;
+        return this->keywords() == data.keywords() &&
+               this->getDefaultUnitSystem() == data.getDefaultUnitSystem() &&
+               this->getDataFile() == data.getDataFile() &&
+               this->getInputPath() == data.getInputPath() &&
+               this->unitSystemAccessCount() == data.unitSystemAccessCount();
     }
 
     std::ostream& operator<<(std::ostream& os, const Deck& deck) {
