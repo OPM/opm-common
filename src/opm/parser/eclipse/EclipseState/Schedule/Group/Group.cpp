@@ -134,6 +134,8 @@ bool Group::GroupProductionProperties::operator==(const GroupProductionPropertie
         this->water_target        == other.oil_target &&
         this->gas_target          == other.gas_target &&
         this->liquid_target       == other.liquid_target &&
+        this->guide_rate          == other.guide_rate &&
+        this->guide_rate_def      == other.guide_rate_def &&
         this->production_controls == other.production_controls &&
         this->resv_target         == other.resv_target;
 }
