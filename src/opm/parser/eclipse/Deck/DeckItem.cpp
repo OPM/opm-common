@@ -31,6 +31,28 @@
 
 namespace Opm {
 
+DeckItem::DeckItem(const std::vector<double>& dVec,
+                   const std::vector<int>& iVec,
+                   const std::vector<std::string>& sVec,
+                   const std::vector<UDAValue>& uVec,
+                   type_tag typ,
+                   const std::string& itemName,
+                   const std::vector<value::status>& valueStat,
+                   bool rawdata,
+                   const std::vector<Dimension>& activeDim,
+                   const std::vector<Dimension>& defDim)
+    : dval(dVec)
+    , ival(iVec)
+    , sval(sVec)
+    , uval(uVec)
+    , type(typ)
+    , item_name(itemName)
+    , value_status(valueStat)
+    , raw_data(rawdata)
+    , active_dimensions(activeDim)
+    , default_dimensions(defDim)
+{}
+
 template< typename T >
 std::vector< T >& DeckItem::value_ref() {
     return const_cast< std::vector< T >& >(
@@ -462,6 +484,37 @@ bool DeckItem::to_bool(std::string string_value) {
     throw std::invalid_argument("Could not convert string " + string_value + " to bool ");
 }
 
+const std::vector<double>& DeckItem::dVal() const {
+    return dval;
+}
+
+const std::vector<int>& DeckItem::iVal() const {
+    return ival;
+}
+
+const std::vector<std::string>& DeckItem::sVal() const {
+    return sval;
+}
+
+const std::vector<UDAValue>& DeckItem::uVal() const {
+    return uval;
+}
+
+const std::vector<value::status>& DeckItem::valueStatus() const {
+    return value_status;
+}
+
+bool DeckItem::rawData() const {
+    return raw_data;
+}
+
+const std::vector<Dimension>& DeckItem::activeDimensions() const {
+    return active_dimensions;
+}
+
+const std::vector<Dimension>& DeckItem::defaultDimensions() const {
+    return default_dimensions;
+}
 
 
 /*
