@@ -62,6 +62,15 @@ namespace Opm {
 
 
         WellSegments() = default;
+        WellSegments(const std::string& wname,
+                     double depthTopSeg,
+                     double lengthTopSeg,
+                     double volumeTopSeg,
+                     LengthDepth lenDepType,
+                     CompPressureDrop compDrop,
+                     MultiPhaseModel multiPhase,
+                     const std::vector<Segment>& segments,
+                     const std::map<int,int>& segmentNumberIdx);
 
         const std::string& wellName() const;
         int size() const;
@@ -70,6 +79,7 @@ namespace Opm {
         double volumeTopSegment() const;
 
         CompPressureDrop compPressureDrop() const;
+        LengthDepth lengthDepthType() const;
         MultiPhaseModel multiPhaseModel() const;
 
         // mapping the segment number to the index in the vector of segments
@@ -92,6 +102,8 @@ namespace Opm {
 
         // it returns true if there is no error encountered during the update
         bool updateWSEGSICD(const std::vector<std::pair<int, SpiralICD> >& sicd_pairs);
+        const std::vector<Segment>& segments() const;
+        const std::map<int,int>& segmentNumberIndex() const;
 
         bool updateWSEGVALV(const std::vector<std::pair<int, Valve> >& valve_pairs);
 
