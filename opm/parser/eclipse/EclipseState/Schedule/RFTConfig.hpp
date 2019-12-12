@@ -25,10 +25,10 @@
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Connection.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 
 namespace Opm {
 
-class TimeMap;
 class RFTConfig {
 public:
     enum class RFT {
@@ -50,6 +50,20 @@ public:
     static std::string PLT2String(PLT enumValue);
     static PLT PLTFromString( const std::string& stringValue);
 
+    using RFTMap = std::unordered_map<std::string,
+                                      DynamicState<std::pair<RFT, std::size_t>>>;
+
+    using PLTMap = std::unordered_map<std::string,
+                                      DynamicState<std::pair<PLT, std::size_t>>>;
+
+    RFTConfig();
+    RFTConfig(const TimeMap& tm,
+              const std::pair<bool, std::size_t>& rftTime,
+              const std::unordered_set<std::string>& rftName,
+              const std::unordered_map<std::string, std::size_t>& wellOpen,
+              const RFTMap& rconfig,
+              const PLTMap& pconfig);
+
 
     explicit RFTConfig(const TimeMap& time_map);
     bool rft(const std::string& well, std::size_t report_step) const;
@@ -63,13 +77,23 @@ public:
     void updateRFT(const std::string& well, std::size_t report_step, RFT value);
     void updatePLT(const std::string& well, std::size_t report_step, PLT value);
     void addWellOpen(const std::string& well, std::size_t report_step);
+
+    const TimeMap& timeMap() const;
+    const std::pair<bool, std::size_t>& wellOpenRftTime() const;
+    const std::unordered_set<std::string>& wellOpenRftName() const;
+    const std::unordered_map<std::string, std::size_t>& wellOpen() const;
+    const RFTMap& rftConfig() const;
+    const PLTMap& pltConfig() const;
+
+    bool operator==(const RFTConfig& data) const;
+
 private:
-    const TimeMap& tm;
+    TimeMap tm;
     std::pair<bool, std::size_t> well_open_rft_time;
     std::unordered_set<std::string> well_open_rft_name;
     std::unordered_map<std::string, std::size_t> well_open;
-    std::unordered_map<std::string, DynamicState<std::pair<RFT, std::size_t>>> rft_config;
-    std::unordered_map<std::string, DynamicState<std::pair<PLT, std::size_t>>> plt_config;
+    RFTMap rft_config;
+    PLTMap plt_config;
 };
 
 }
