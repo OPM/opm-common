@@ -85,7 +85,6 @@ public:
         std::string udq;
         std::string wgname;
         UDAControl control;
-        int uad_code;
     };
 
     int update(const UDQConfig& udq_config, const UDAValue& uda, const std::string& wgname, UDAControl control);
