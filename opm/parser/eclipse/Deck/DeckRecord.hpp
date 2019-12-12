@@ -70,6 +70,8 @@ namespace Opm {
         bool operator==(const DeckRecord& other) const;
         bool operator!=(const DeckRecord& other) const;
 
+        const std::vector<DeckItem>& getItems() const;
+
     private:
         std::vector< DeckItem > m_items;
 
