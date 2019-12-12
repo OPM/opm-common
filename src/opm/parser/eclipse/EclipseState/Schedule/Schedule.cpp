@@ -1932,9 +1932,6 @@ namespace {
                             "The well is therefore also shut.";
                         OpmLog::note(msg);
                     }
-
-                    if (well2->updateConnections(connections))
-                        this->updateWell(well2, currentStep);
                 }
                 this->addWellGroupEvent(name, ScheduleEvents::COMPLETION_CHANGE, currentStep);
             }
