@@ -46,6 +46,22 @@ namespace Opm {
     {}
 
 
+    UDQConfig::UDQConfig(const UDQParams& params,
+                         const UDQFunctionTable& funcTable,
+                         const std::unordered_map<std::string, UDQDefine>& definition,
+                         const std::unordered_map<std::string, UDQAssign>& assignment,
+                         const std::unordered_map<std::string, std::string>& unit,
+                         const OrderedMap<std::string, UDQIndex>& inputIdx,
+                         const std::map<UDQVarType, std::size_t>& tCount) :
+        udq_params(params),
+        udqft(funcTable),
+        m_definitions(definition),
+        m_assignments(assignment),
+        units(unit),
+        input_index(inputIdx),
+        type_count(tCount)
+    {}
+
 
     const UDQParams& UDQConfig::params() const {
         return this->udq_params;
@@ -254,6 +270,42 @@ namespace Opm {
 
     const UDQFunctionTable& UDQConfig::function_table() const {
         return this->udqft;
+    }
+
+
+    const std::unordered_map<std::string, UDQDefine>& UDQConfig::definitionMap() const {
+        return this->m_definitions;
+    }
+
+
+    const std::unordered_map<std::string, UDQAssign>& UDQConfig::assignmentMap() const {
+        return this->m_assignments;
+    }
+
+
+    const std::unordered_map<std::string, std::string>& UDQConfig::unitsMap() const {
+        return this->units;
+    }
+
+
+    const OrderedMap<std::string, UDQIndex>& UDQConfig::inputIndex() const {
+        return this->input_index;
+    }
+
+
+    const std::map<UDQVarType, std::size_t>& UDQConfig::typeCount() const {
+        return this->type_count;
+    }
+
+
+    bool UDQConfig::operator==(const UDQConfig& data) const {
+        return this->params() == data.params() &&
+               this->function_table() == data.function_table() &&
+               this->definitionMap() == data.definitionMap() &&
+               this->assignmentMap() == data.assignmentMap() &&
+               this->unitsMap() == data.unitsMap() &&
+               this->inputIndex() == data.inputIndex() &&
+               this->typeCount() == data.typeCount();
     }
 
 }
