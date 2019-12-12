@@ -35,13 +35,19 @@ namespace Opm {
 
 class UDQASTNode {
 public:
+    UDQASTNode();
     explicit UDQASTNode(UDQTokenType type_arg);
     explicit UDQASTNode(double scalar_value);
     UDQASTNode(UDQTokenType type_arg, const std::string& func_name, const UDQASTNode& arg);
     UDQASTNode(UDQTokenType type_arg, const std::string& func_name, const UDQASTNode& left, const UDQASTNode& right);
     UDQASTNode(UDQTokenType type_arg, const std::string& func_name);
     UDQASTNode(UDQTokenType type_arg, const std::string& string_value, const std::vector<std::string>& selector);
-
+    UDQASTNode(UDQVarType varType, UDQTokenType typ,
+               const std::string& stringVal,
+               double scalarVal,
+               const std::vector<std::string>& selectors,
+               const std::shared_ptr<UDQASTNode>& left_arg,
+               const std::shared_ptr<UDQASTNode>& right_arg);
 
     UDQSet eval(UDQVarType eval_target, const UDQContext& context) const;
 
@@ -53,6 +59,16 @@ public:
     void set_right(const UDQASTNode& arg);
     UDQASTNode* get_left() const;
     UDQASTNode* get_right() const;
+
+    bool operator==(const UDQASTNode& data) const;
+
+    const std::string& stringValue() const;
+    UDQTokenType getType() const;
+    double scalarValue() const;
+    const std::vector<std::string>& getSelectors() const;
+    const std::shared_ptr<UDQASTNode>& getLeft() const;
+    const std::shared_ptr<UDQASTNode>& getRight() const;
+
 private:
     UDQTokenType type;
     void func_tokens(std::set<UDQTokenType>& tokens) const;
