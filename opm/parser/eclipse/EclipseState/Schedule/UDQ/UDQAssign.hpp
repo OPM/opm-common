@@ -49,11 +49,21 @@ public:
         }
     };
 
+    UDQAssign();
     UDQAssign(const std::string& keyword, const std::vector<std::string>& selector, double value);
+    UDQAssign(const std::string& keyword,
+              UDQVarType varType,
+              const std::vector<AssignRecord>& records);
+
     const std::string& keyword() const;
     UDQVarType var_type() const;
     void add_record(const std::vector<std::string>& selector, double value);
     UDQSet eval(const std::vector<std::string>& wells) const;
+
+    const std::vector<AssignRecord>& getRecords() const;
+
+    bool operator==(const UDQAssign& data) const;
+
 private:
     std::string m_keyword;
     UDQVarType m_var_type;
