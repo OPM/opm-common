@@ -30,14 +30,24 @@ namespace Opm {
 
 class UDQFunctionTable {
 public:
+    using FunctionMap = std::unordered_map<std::string,
+                                           std::shared_ptr<UDQFunction>>;
     explicit UDQFunctionTable(const UDQParams& params);
     UDQFunctionTable();
+    UDQFunctionTable(const UDQParams& param,
+                     const FunctionMap& map);
     bool has_function(const std::string& name) const;
     const UDQFunction& get(const std::string& name) const;
+
+    const UDQParams& getParams() const;
+    const FunctionMap& functionMap() const;
+
+    bool operator==(const UDQFunctionTable& data) const;
+
 private:
-    void insert_function(std::shared_ptr<const UDQFunction> func);
+    void insert_function(std::shared_ptr<UDQFunction> func);
     UDQParams params;
-    std::unordered_map<std::string, std::shared_ptr<const UDQFunction>> function_table;
+    FunctionMap function_table;
 };
 }
 #endif
