@@ -356,9 +356,9 @@ std::vector<double> extract_cell_depth(const EclipseGrid& grid) {
 
 
 FieldProps::FieldProps(const Deck& deck, const EclipseGrid& grid, const TableManager& tables_arg) :
-    unit_system(deck.getActiveUnitSystem()),
     active_size(grid.getNumActive()),
     global_size(grid.getCartesianSize()),
+    unit_system(deck.getActiveUnitSystem()),
     nx(grid.getNX()),
     ny(grid.getNY()),
     nz(grid.getNZ()),
