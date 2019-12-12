@@ -42,6 +42,11 @@ public:
     struct AssignRecord {
         std::vector<std::string> selector;
         double value;
+
+        bool operator==(const AssignRecord& data) const {
+            return selector == data.selector &&
+                   value == data.value;
+        }
     };
 
     UDQAssign(const std::string& keyword, const std::vector<std::string>& selector, double value);
