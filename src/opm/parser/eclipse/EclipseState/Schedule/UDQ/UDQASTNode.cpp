@@ -18,11 +18,10 @@
 */
 #include <fnmatch.h>
 
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQASTNode.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunction.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunctionTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
-
-#include "UDQASTNode.hpp"
 
 namespace Opm {
 
