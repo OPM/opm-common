@@ -51,6 +51,10 @@ namespace Opm {
         return m_SIfactor;
     }
 
+    double Dimension::getSIScalingRaw() const {
+        return m_SIfactor;
+    }
+
     double Dimension::getSIOffset() const {
         return m_SIoffset;
     }
