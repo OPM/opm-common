@@ -23,6 +23,10 @@
 
 namespace Opm {
 
+GConSump::GConSump(const std::map<std::string,GCONSUMPGroup>& group)
+    : groups(group)
+{}
+
 bool GConSump::has(const std::string& name) const {
     return (groups.find(name) != groups.end());
 }
@@ -62,6 +66,14 @@ void GConSump::add(const std::string& name, const UDAValue& consumption_rate, co
 
 size_t GConSump::size() const {
     return groups.size();
+}
+
+const std::map<std::string,GConSump::GCONSUMPGroup>& GConSump::getGroups() const {
+    return groups;
+}
+
+bool GConSump::operator==(const GConSump& data) const {
+    return this->getGroups() == data.getGroups();
 }
 
 }

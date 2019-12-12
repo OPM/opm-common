@@ -31,14 +31,20 @@ namespace Opm {
 
     class GConSump {
     public:
-        GConSump() = default;
-
         struct GCONSUMPGroup {
             UDAValue consumption_rate;
             UDAValue import_rate;
             std::string network_node;
             double udq_undefined;
             UnitSystem unit_system;
+
+            bool operator==(const GCONSUMPGroup& data) const {
+                return consumption_rate == data.consumption_rate &&
+                       import_rate == data.import_rate &&
+                       network_node == data.network_node &&
+                       udq_undefined == data.udq_undefined &&
+                       unit_system == data.unit_system;
+            }
         };
 
         struct GCONSUMPGroupProp {
@@ -47,11 +53,18 @@ namespace Opm {
             std::string network_node;
         };
 
+        GConSump() = default;
+        GConSump(const std::map<std::string, GCONSUMPGroup>& group);
+
         bool has(const std::string& name) const;
         const GCONSUMPGroup& get(const std::string& name) const;
         const GCONSUMPGroupProp get(const std::string& name, const SummaryState& st) const;
         void add(const std::string& name, const UDAValue& consumption_rate, const UDAValue& import_rate, const std::string network_node, double udq_undefined_arg, const UnitSystem& unit_system);
         size_t size() const;
+
+        const std::map<std::string, GCONSUMPGroup>& getGroups() const;
+
+        bool operator==(const GConSump& data) const;
 
     private:
         std::map<std::string, GCONSUMPGroup> groups;
