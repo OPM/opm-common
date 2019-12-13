@@ -34,6 +34,52 @@ Copyright 2018 Statoil ASA.
 
 using namespace Opm;
 
+BOOST_AUTO_TEST_CASE(TEST)
+{
+    UDQParams udqp;
+    UDQFunctionTable udqft;
+    UDQDefine def1(udqp, "WUWI3", {"GOPR" , "MAU", "*", "2.0", "*", "0.25", "*", "10"});
+    UDQDefine def2(udqp, "WUWI3", {"2.0", "*", "0.25", "*", "3"});
+    UDQDefine def3(udqp, "WUWI3", {"GOPR" , "FIELD", "-", "2.0", "*", "3"});
+    UDQDefine def4(udqp, "WUWI3", {"FOPR" , "/",  "2"});
+
+    SummaryState st(std::chrono::system_clock::now());
+    UDQContext context(udqft, st);
+
+    st.update_group_var("MAU", "GOPR", 4);
+    st.update_group_var("XXX", "GOPR", 5);
+    st.update_group_var("FIELD", "GOPR", 6);
+    st.update_well_var("P1", "WBHP", 0.5);
+    st.update_well_var("P2", "WBHP", 0.5);
+    st.update("FOPR", 2);
+
+    auto res1 = def1.eval(context);
+    BOOST_CHECK_EQUAL( res1["P1"].value(), 20 );
+    BOOST_CHECK_EQUAL( res1["P2"].value(), 20 );
+
+    auto res2 = def2.eval(context);
+    BOOST_CHECK_EQUAL( res2["P1"].value(), 1.50 );
+    BOOST_CHECK_EQUAL( res2["P2"].value(), 1.50 );
+
+    auto res3 = def3.eval(context);
+    BOOST_CHECK_EQUAL( res3["P1"].value(), 0.00 );
+    BOOST_CHECK_EQUAL( res3["P2"].value(), 0.00 );
+
+    auto res4 = def4.eval(context);
+    BOOST_CHECK_EQUAL( res4["P1"].value(), 1.00 );
+    BOOST_CHECK_EQUAL( res4["P2"].value(), 1.00 );
+
+    /*
+      This expression has a well set as target type, and involves group with
+      wildcard that is not supported by flow.
+    */
+    BOOST_CHECK_THROW( UDQDefine(udqp, "WUWI2", {"GOPR", "G*", "*", "2.0"}), std::logic_error);
+
+    /*
+      UDQVarType == BLOCK is not yet supported.
+    */
+    BOOST_CHECK_THROW( UDQDefine(udqp, "WUWI2", {"BPR", "1","1", "1", "*", "2.0"}), std::logic_error);
+}
 
 Schedule make_schedule(const std::string& input) {
     Parser parser;
@@ -110,6 +156,8 @@ BOOST_AUTO_TEST_CASE(UDQWellSetTest) {
     BOOST_CHECK_EQUAL(ws["P1"].value(), 1.0);
 
     BOOST_REQUIRE_THROW(ws.assign("NO_SUCH_WELL", 1.0), std::out_of_range);
+    BOOST_REQUIRE_THROW(ws[10], std::out_of_range);
+    BOOST_REQUIRE_THROW(ws["NO_SUCH_WELL"], std::out_of_range);
 
     ws.assign("*", 2.0);
     for (const auto& w : wells)
@@ -451,7 +499,7 @@ BOOST_AUTO_TEST_CASE(UDQ_SET) {
     s1.assign(0,0.0);
     {
         UDQSet s2("NAME", 6);
-        BOOST_REQUIRE_THROW(s1 + s2, std::invalid_argument);
+        BOOST_REQUIRE_THROW(s1 + s2, std::logic_error);
     }
     {
         UDQSet s2("NAME", 5);
@@ -566,9 +614,7 @@ BOOST_AUTO_TEST_CASE(CMP_FUNCTIONS) {
     arg2.assign(2, 2.5);
     arg2.assign(4, 4.0);
 
-    BOOST_CHECK_THROW(UDQBinaryFunction::EQ(0.25, arg1, arg3), std::invalid_argument);
-
-
+    BOOST_CHECK_THROW(UDQBinaryFunction::EQ(0.25, arg1, arg3), std::logic_error);
     {
         auto result = UDQBinaryFunction::EQ(0, arg1, arg2);
 

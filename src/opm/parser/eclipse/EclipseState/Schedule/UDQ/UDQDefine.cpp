@@ -131,11 +131,29 @@ UDQDefine::UDQDefine(const UDQParams& udq_params_arg,
     }
 }
 
+namespace {
 
+/*
+  This function unconditinally returns true and is of-course quite useless at
+  the moment; it is retained here in the hope that it is possible to actually
+  make it useful in the future. See the comment in UDQEnums.hpp about 'UDQ type
+  system'.
+*/
+bool dynamic_type_check(UDQVarType lhs, UDQVarType rhs) {
+    if (lhs == rhs)
+        return true;
+
+    if (rhs == UDQVarType::SCALAR)
+        return true;
+
+    return true;
+}
+
+}
 
 UDQSet UDQDefine::eval(const UDQContext& context) const {
     UDQSet res = this->ast->eval(this->m_var_type, context);
-    if (!UDQ::compatibleTypes(this->var_type(), res.var_type())) {
+    if (!dynamic_type_check(this->var_type(), res.var_type())) {
         std::string msg = "Invalid runtime type conversion detected when evaluating UDQ";
         throw std::invalid_argument(msg);
     }
@@ -152,8 +170,9 @@ UDQSet UDQDefine::eval(const UDQContext& context) const {
 
           Both the expressions "SUM(WOPR)" and "WOPR OP1" evaluate to a scalar,
           this should then be copied all wells, so that WUINJ1:$WELL should
-          evaulate to the same numerical value for all wells; the same should
-          also apply for group sets.
+          evaulate to the same numerical value for all wells. We implement the
+          same behavior for group sets - but there is lots of uncertainty
+          regarding the semantics of group sets.
         */
 
         double scalar_value = res[0].value();

@@ -207,13 +207,19 @@ UDQVarType UDQSet::var_type() const {
     return this->m_var_type;
 }
 
+std::vector<std::string> UDQSet::wgnames() const {
+    std::vector<std::string> names;
+    for (const auto& index_pair : this->wgname_index)
+        names.push_back(index_pair.first);
+    return names;
+}
 
 /************************************************************************/
 
 
 void UDQSet::operator+=(const UDQSet& rhs) {
     if (this->size() != rhs.size())
-        throw std::invalid_argument("Incompatible size in UDQSet operator+");
+        throw std::logic_error("Incompatible size in UDQSet operator+");
 
     for (std::size_t index = 0; index < this->size(); index++)
         this->values[index] += rhs[index];
@@ -235,7 +241,7 @@ void UDQSet::operator-=(const UDQSet& rhs) {
 
 void UDQSet::operator*=(const UDQSet& rhs) {
     if (this->size() != rhs.size())
-        throw std::invalid_argument("Incompatible size");
+        throw std::logic_error("Incompatible size  UDQSet operator*");
 
     for (std::size_t index = 0; index < this->size(); index++)
         this->values[index] *= rhs[index];
@@ -248,7 +254,7 @@ void UDQSet::operator*=(double rhs) {
 
 void UDQSet::operator/=(const UDQSet& rhs) {
     if (this->size() != rhs.size())
-        throw std::invalid_argument("Incompatible size");
+        throw std::logic_error("Incompatible size  UDQSet operator/");
 
     for (std::size_t index = 0; index < this->size(); index++)
         this->values[index] /= rhs[index];
@@ -281,7 +287,7 @@ std::size_t UDQSet::defined_size() const {
 
 const UDQScalar& UDQSet::operator[](std::size_t index) const {
     if (index >= this->size())
-        throw std::invalid_argument("Index out of range");
+        throw std::out_of_range("Index out of range in UDQset::operator[]");
     return this->values[index];
 }
 
@@ -375,9 +381,37 @@ UDQScalar operator/(double lhs, const UDQScalar& rhs) {
     return result;
 }
 
+/*-----------------------------------------------------------------*/
+
+namespace {
+
+/*
+  If one result set is scalar and the other represents a set of wells/groups,
+  the scalar result is promoted to a set of the right type.
+*/
+UDQSet udq_cast(const UDQSet& lhs, const UDQSet& rhs)
+{
+    if (lhs.size() != rhs.size()) {
+        if (lhs.var_type() != UDQVarType::SCALAR) {
+            printf("s1: %ld  s2: %ld \n", lhs.size(), rhs.size());
+            throw std::logic_error("Type/size mismatch");
+        }
+
+        if (rhs.var_type() == UDQVarType::WELL_VAR)
+            return UDQSet::wells(lhs.name(), rhs.wgnames(), lhs[0].value());
+
+        if (rhs.var_type() == UDQVarType::GROUP_VAR)
+            return UDQSet::groups(lhs.name(), rhs.wgnames(), lhs[0].value());
+
+        throw std::logic_error("Don't have a clue");
+    } else
+        return lhs;
+}
+
+}
 
 UDQSet operator+(const UDQSet&lhs, const UDQSet& rhs) {
-    UDQSet sum = lhs;
+    UDQSet sum = udq_cast(lhs, rhs);
     sum += rhs;
     return sum;
 }
@@ -395,9 +429,9 @@ UDQSet operator+(double lhs, const UDQSet& rhs) {
 }
 
 UDQSet operator-(const UDQSet&lhs, const UDQSet& rhs) {
-    UDQSet sum = lhs;
-    sum -= rhs;
-    return sum;
+    UDQSet diff = udq_cast(lhs, rhs);
+    diff -= rhs;
+    return diff;
 }
 
 UDQSet operator-(const UDQSet&lhs, double rhs) {
@@ -413,15 +447,15 @@ UDQSet operator-(double lhs, const UDQSet& rhs) {
 }
 
 UDQSet operator*(const UDQSet&lhs, const UDQSet& rhs) {
-    UDQSet sum = lhs;
-    sum *= rhs;
-    return sum;
+    UDQSet prod = udq_cast(lhs, rhs);
+    prod *= rhs;
+    return prod;
 }
 
 UDQSet operator*(const UDQSet&lhs, double rhs) {
-    UDQSet sum = lhs;
-    sum *= rhs;
-    return sum;
+    UDQSet prod = lhs;
+    prod *= rhs;
+    return prod;
 }
 
 UDQSet operator*(double lhs, const UDQSet& rhs) {
@@ -431,15 +465,15 @@ UDQSet operator*(double lhs, const UDQSet& rhs) {
 }
 
 UDQSet operator/(const UDQSet&lhs, const UDQSet& rhs) {
-    UDQSet sum = lhs;
-    sum /= rhs;
-    return sum;
+    UDQSet frac = udq_cast(lhs, rhs);
+    frac /= rhs;
+    return frac;
 }
 
 UDQSet operator/(const UDQSet&lhs, double rhs) {
-    UDQSet sum = lhs;
-    sum /= rhs;
-    return sum;
+    UDQSet frac = lhs;
+    frac /= rhs;
+    return frac;
 }
 
 UDQSet operator/(double lhs, const UDQSet&rhs) {
