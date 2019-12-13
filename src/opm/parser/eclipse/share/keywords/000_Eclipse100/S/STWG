@@ -1,5 +1,5 @@
 {
-    "name" : "STOW", "sections" : ["PROPS"], "num_tables" : {"keyword" : "TABDIMS" , "item" : "NTPVT"}, "alternating_records" : [
+    "name" : "STWG", "sections" : ["PROPS"], "num_tables" : {"keyword" : "TABDIMS" , "item" : "NTPVT"}, "alternating_records" : [
     [
         {"name" : "REF_OIL_PRESSURE", "value_type" : "DOUBLE", "dimension" : "Pressure"}
     ],

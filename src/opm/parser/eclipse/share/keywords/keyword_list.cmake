@@ -20,10 +20,6 @@
 #       MPFNNC: note that this also has two types of records
 #       UDT: user defined table
 #
-#    Alternating record types
-#       PVZG
-#       PVTSALT
-#       STOG, STOW, STWG
 
 set( keywords
      000_Eclipse100/A/ACTDIMS
@@ -631,7 +627,9 @@ set( keywords
      000_Eclipse100/P/PVTG
      000_Eclipse100/P/PVTNUM
      000_Eclipse100/P/PVTO
+     000_Eclipse100/P/PVTWSALT
      000_Eclipse100/P/PVTW
+     000_Eclipse100/P/PVZG
      000_Eclipse100/Q/QDRILL
      000_Eclipse100/Q/QHRATING
      000_Eclipse100/Q/QMOBIL
@@ -794,6 +792,8 @@ set( keywords
      000_Eclipse100/S/STONE1
      000_Eclipse100/S/STONE1EX
      000_Eclipse100/S/STONE2
+     000_Eclipse100/S/STOW
+     000_Eclipse100/S/STWG
      000_Eclipse100/S/SUMMARY
      000_Eclipse100/S/SUMTHIN
      000_Eclipse100/S/SURF
