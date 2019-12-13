@@ -110,6 +110,8 @@ BOOST_AUTO_TEST_CASE(UDQWellSetTest) {
     BOOST_CHECK_EQUAL(ws["P1"].value(), 1.0);
 
     BOOST_REQUIRE_THROW(ws.assign("NO_SUCH_WELL", 1.0), std::out_of_range);
+    BOOST_REQUIRE_THROW(ws[10], std::out_of_range);
+    BOOST_REQUIRE_THROW(ws["NO_SUCH_WELL"], std::out_of_range);
 
     ws.assign("*", 2.0);
     for (const auto& w : wells)

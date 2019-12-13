@@ -287,7 +287,7 @@ std::size_t UDQSet::defined_size() const {
 
 const UDQScalar& UDQSet::operator[](std::size_t index) const {
     if (index >= this->size())
-        throw std::invalid_argument("Index out of range");
+        throw std::out_of_range("Index out of range in UDQset::operator[]");
     return this->values[index];
 }
 
