@@ -207,6 +207,12 @@ UDQVarType UDQSet::var_type() const {
     return this->m_var_type;
 }
 
+std::vector<std::string> UDQSet::wgnames() const {
+    std::vector<std::string> names;
+    for (const auto& index_pair : this->wgname_index)
+        names.push_back(index_pair.first);
+    return names;
+}
 
 /************************************************************************/
 
