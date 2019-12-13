@@ -23,6 +23,11 @@
 
 namespace Opm {
 
+/*
+
+
+*/
+
 enum class UDQVarType {
     NONE = 0,
     SCALAR = 1,
@@ -132,7 +137,6 @@ enum class UDAKeyword {
 
 namespace UDQ {
 
-    bool compatibleTypes(UDQVarType lhs, UDQVarType rhs);
     UDQVarType targetType(const std::string& keyword);
     UDQVarType varType(const std::string& keyword);
     UDQAction actionType(const std::string& action_string);

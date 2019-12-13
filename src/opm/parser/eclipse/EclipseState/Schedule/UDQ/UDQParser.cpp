@@ -237,9 +237,27 @@ namespace {
             std::cout << token << " ";
         std::cout << std::endl;
     }
+
+/*
+  This function is extremely weak - hopefully it can be improved in the future.
+  See the comment in UDQEnums.hpp about 'UDQ type system'.
+*/
+bool static_type_check(UDQVarType lhs, UDQVarType rhs) {
+    if (lhs == rhs)
+        return true;
+
+    if (rhs == UDQVarType::SCALAR)
+        return true;
+
+    /*
+      This does not check if the rhs evaluates to a scalar.
+    */
+    if (rhs == UDQVarType::WELL_VAR)
+        return (lhs == UDQVarType::WELL_VAR);
+
+    return true;
 }
-
-
+}
 
 
 UDQASTNode UDQParser::parse(const UDQParams& udq_params, UDQVarType target_type, const std::string& target_var, const std::vector<std::string>& tokens, const ParseContext& parseContext, ErrorGuard& errors)
@@ -264,7 +282,7 @@ UDQASTNode UDQParser::parse(const UDQParams& udq_params, UDQVarType target_type,
         return UDQASTNode( udq_params.undefinedValue() );
     }
 
-    if (!UDQ::compatibleTypes(target_type, tree.var_type)) {
+    if (!static_type_check(target_type, tree.var_type)) {
         std::string msg = "Invalid compile-time type conversion detected in UDQ expression target type: " + UDQ::typeName(target_type) + " expr type: " + UDQ::typeName(tree.var_type);
         parseContext.handleError(ParseContext::UDQ_TYPE_ERROR, msg, errors);
         if (parseContext.get(ParseContext::UDQ_TYPE_ERROR) != InputError::IGNORE)
