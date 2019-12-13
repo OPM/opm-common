@@ -170,8 +170,9 @@ UDQSet UDQDefine::eval(const UDQContext& context) const {
 
           Both the expressions "SUM(WOPR)" and "WOPR OP1" evaluate to a scalar,
           this should then be copied all wells, so that WUINJ1:$WELL should
-          evaulate to the same numerical value for all wells; the same should
-          also apply for group sets.
+          evaulate to the same numerical value for all wells. We implement the
+          same behavior for group sets - but there is lots of uncertainty
+          regarding the semantics of group sets.
         */
 
         double scalar_value = res[0].value();
