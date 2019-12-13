@@ -19,9 +19,11 @@
 
 #include <algorithm>
 #include <cassert>
-#include <vector>
-#include <sstream>
+#include <exception>
 #include <iostream>
+#include <sstream>
+#include <stdexcept>
+#include <vector>
 
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
@@ -47,6 +49,7 @@ namespace Opm {
                            double skin_factor,
                            const int satTableId,
                            const Direction directionArg,
+                           const CTFKind ctf_kind,
 			   const std::size_t seqIndex,
 			   const double segDistStart,
 			   const double segDistEnd,
@@ -62,6 +65,7 @@ namespace Opm {
           m_r0(r0),
           m_skin_factor(skin_factor),
           ijk({i,j,k}),
+          m_ctfkind(ctf_kind),
           m_seqIndex(seqIndex),
           m_segDistStart(segDistStart),
           m_segDistEnd(segDistEnd),
@@ -211,6 +215,7 @@ namespace Opm {
         ss << "sat_tableId " << this->sat_tableId << std::endl;
         ss << "open_state " << Connection::State2String(this->open_state) << std::endl;
         ss << "direction " << Connection::Direction2String(this->direction) << std::endl;
+        ss << "CTF Source " << Connection::CTFKindToString(this->m_ctfkind) << '\n';
         ss << "segment_nr " << this->segment_number << std::endl;
         ss << "center_depth " << this->center_depth << std::endl;
         ss << "seqIndex " << this->m_seqIndex << std::endl;
@@ -336,7 +341,20 @@ Connection::Order Connection::OrderFromString(const std::string& stringValue ) {
         throw std::invalid_argument("Unknown enum state string: " + stringValue );
 }
 
+std::string Connection::CTFKindToString(const CTFKind ctf_kind)
+{
+    switch (ctf_kind) {
+        case CTFKind::DeckValue:
+            return "DeckValue";
 
+        case CTFKind::Defaulted:
+            return "Defaulted";
+    }
 
+    throw std::invalid_argument {
+        "Unhandled CTF Kind Value: " +
+        std::to_string(static_cast<int>(ctf_kind))
+    };
 }
 
+}
