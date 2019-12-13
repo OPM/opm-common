@@ -66,9 +66,10 @@ public:
   static UDQASTNode parse(const UDQParams& udq_params, UDQVarType target_type, const std::string& target_var, const std::vector<std::string>& tokens, const ParseContext& parseContext, ErrorGuard& errors);
 
 private:
-    UDQParser(const UDQParams& udq_params1, const std::vector<std::string>& tokens1) :
+    UDQParser(const UDQParams& udq_params1, UDQVarType ttype, const std::vector<std::string>& tokens1) :
         udq_params(udq_params1),
         udqft(UDQFunctionTable(udq_params)),
+        target_type(ttype),
         tokens(tokens1)
     {}
 
@@ -85,6 +86,7 @@ private:
 
     const UDQParams& udq_params;
     UDQFunctionTable udqft;
+    UDQVarType target_type;
     std::vector<std::string> tokens;
     ssize_t current_pos = -1;
 };

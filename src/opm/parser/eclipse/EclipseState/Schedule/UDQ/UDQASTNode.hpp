@@ -49,8 +49,8 @@ private:
     void func_tokens(std::set<UDQTokenType>& tokens) const;
 
     std::string string_value;
-    double scalar_value;
     std::vector<std::string> selector;
+    double scalar_value;
     std::vector<UDQASTNode> arglist;
 };
 

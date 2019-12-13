@@ -78,8 +78,29 @@ UDQASTNode::UDQASTNode(UDQTokenType type_arg,
 }
 
 
+namespace {
 
+bool is_scalar(UDQVarType var_type, const std::vector<std::string>& selector)
+{
+    if (var_type == UDQVarType::SCALAR)
+        return true;
 
+    if (var_type == UDQVarType::FIELD_VAR)
+        return true;
+
+    if (var_type == UDQVarType::WELL_VAR) {
+        if (selector.empty())
+            return false;
+        return (selector[0].find("*") == std::string::npos);
+    }
+
+    if (var_type == UDQVarType::GROUP_VAR) {
+        if (selector.empty())
+            return false;
+        return (selector[0].find("*") == std::string::npos);
+    }
+}
+}
 
 UDQASTNode::UDQASTNode(UDQTokenType type_arg,
                        const std::string& string_value_arg,
@@ -94,6 +115,13 @@ UDQASTNode::UDQASTNode(UDQTokenType type_arg,
 
     if (type_arg == UDQTokenType::ecl_expr)
         this->var_type = UDQ::targetType(string_value);
+
+    if (this->var_type == UDQVarType::CONNECTION_VAR ||
+        this->var_type == UDQVarType::REGION_VAR ||
+        this->var_type == UDQVarType::SEGMENT_VAR ||
+        this->var_type == UDQVarType::AQUIFER_VAR ||
+        this->var_type == UDQVarType::BLOCK_VAR)
+        throw std::logic_error("UDQ variable of type: " + UDQ::typeName(this->var_type) + " not yet supported in flow");
 }
 
 
@@ -105,12 +133,12 @@ UDQSet UDQASTNode::eval(UDQVarType target_type, const UDQContext& context) const
             const auto& wells = context.wells();
 
             if (this->selector.size() > 0) {
-                int fnmatch_flags = 0;
                 const std::string& well_pattern = this->selector[0];
                 if (well_pattern.find("*") == std::string::npos)
-                    return UDQSet::wells(this->string_value, wells, context.get_well_var(well_pattern, this->string_value));
+                    return UDQSet::scalar(this->string_value, context.get_well_var(well_pattern, this->string_value));
                 else {
                     auto res = UDQSet::wells(this->string_value, wells);
+                    int fnmatch_flags = 0;
                     for (const auto& well : wells) {
                         if (fnmatch(well_pattern.c_str(), well.c_str(), fnmatch_flags) == 0) {
                             if (context.has_well_var(well, this->string_value))
@@ -130,24 +158,14 @@ UDQSet UDQASTNode::eval(UDQVarType target_type, const UDQContext& context) const
         }
 
         if (this->var_type == UDQVarType::GROUP_VAR) {
-            const auto& groups = context.groups();
-
             if (this->selector.size() > 0) {
-                int fnmatch_flags = 0;
                 const std::string& group_pattern = this->selector[0];
                 if (group_pattern.find("*") == std::string::npos)
-                    return UDQSet::groups(this->string_value, groups, context.get_group_var(group_pattern, this->string_value));
-                else {
-                    auto res = UDQSet::groups(this->string_value, groups);
-                    for (const auto& group : groups) {
-                        if (fnmatch(group_pattern.c_str(), group.c_str(), fnmatch_flags) == 0) {
-                            if (context.has_group_var(group, this->string_value))
-                                res.assign(group, context.get_group_var(group, this->string_value));
-                        }
-                    }
-                    return res;
-                }
+                    return UDQSet::scalar(this->string_value, context.get_group_var(group_pattern, this->string_value));
+                else
+                    throw std::logic_error("Group names with wildcards is not yet supported");
             } else {
+                const auto& groups = context.groups();
                 auto res = UDQSet::groups(this->string_value, groups);
                 for (const auto& group : groups) {
                     if (context.has_group_var(group, this->string_value))
@@ -156,6 +174,11 @@ UDQSet UDQASTNode::eval(UDQVarType target_type, const UDQContext& context) const
                 return res;
             }
         }
+
+        if (this->var_type == UDQVarType::FIELD_VAR)
+            return UDQSet::scalar(this->string_value, context.get(this->string_value));
+
+        throw std::logic_error("Should not be here: var_type: " + UDQ::typeName(this->var_type));
     }
 
 

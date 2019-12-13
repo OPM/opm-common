@@ -24,8 +24,36 @@
 namespace Opm {
 
 /*
+  The UDQ variables can be of of many different types. In addition they can be
+  either scalars or vector sets. The arch example of a vector set is well
+  variables - in the expressions:
 
+    UDQ
+       DEFINE WUBHP WBHP * 1.15 /
+       DEFINE WUORAT 1000 /
+    /
 
+  we define two UDQ values 'WUBHP' and 'WUORAT'. Both of these UDQ values will
+  apply to all wells; the WUBHP vector will correspond to the normal BHP scaled
+  up 15%, the WUORAT has the scalar value 1000 for all the wells. The well sets
+  can be qualified with a wellname, if the wellname has a wildcard we will get a
+  well set, if the wellname is fully qualified we have a scalar:
+
+  UDQ
+     DEFINE WUWCT   WWCT 'OP*' /
+     DEFINE FUORAT  WOPR 'OPX' * 100 /
+  /
+
+  Here the UDQ WUCWT corresponds to the well WWCT for all wells matching the
+  name 'OP*', and it is undefined for the remaing wells. The UDQ FUORAT is a
+  scalar, given by the WOPR of well 'OPX' - multiplied by 100.
+
+  There are clearly rules for how the different variable types can be combined
+  in expressions, and what will be resulting type from an expression -
+  unfortunately that is not yet very well implemented in the opm codebase. In
+  UDQParser.cpp there is a function static_type_check and in UDQDefine there is
+  a function dynamic_type_check - these functions try to verfiy that the type
+  conversions are legitimate, but currently they are woefully inadequate.
 */
 
 enum class UDQVarType {

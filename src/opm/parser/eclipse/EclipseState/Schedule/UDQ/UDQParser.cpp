@@ -262,9 +262,8 @@ bool static_type_check(UDQVarType lhs, UDQVarType rhs) {
 
 UDQASTNode UDQParser::parse(const UDQParams& udq_params, UDQVarType target_type, const std::string& target_var, const std::vector<std::string>& tokens, const ParseContext& parseContext, ErrorGuard& errors)
 {
-    UDQParser parser(udq_params, tokens);
+    UDQParser parser(udq_params, target_type, tokens);
     parser.next();
-
     auto tree = parser.parse_cmp();
     auto current = parser.current();
 
