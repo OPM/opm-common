@@ -34,17 +34,15 @@ namespace Opm {
     DeckKeyword::DeckKeyword(const ParserKeyword& parserKeyword) :
         m_keywordName(parserKeyword.getName()),
         m_isDataKeyword(false),
-        m_slashTerminated(true),
-        parser_keyword(parserKeyword)
+        m_slashTerminated(true)
     {
     }
 
-    DeckKeyword::DeckKeyword(const ParserKeyword& parserKeyword, const Location& location, const std::string& keywordName) :
+    DeckKeyword::DeckKeyword(const Location& location, const std::string& keywordName) :
         m_keywordName(keywordName),
         m_location(location),
         m_isDataKeyword(false),
-        m_slashTerminated(true),
-        parser_keyword(parserKeyword)
+        m_slashTerminated(true)
     {
     }
 
@@ -193,10 +191,6 @@ namespace Opm {
 
     bool DeckKeyword::isDataKeyword() const {
         return m_isDataKeyword;
-    }
-
-    const ParserKeyword& DeckKeyword::parserKeyword() const {
-        return this->parser_keyword;
     }
 
     const std::string& DeckKeyword::name() const {
