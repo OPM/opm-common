@@ -418,24 +418,21 @@ namespace {
                                             const std::size_t   baseIndex,
                                             ISegArray&          iSeg)
         {
-                
-            using IsTyp = ::Opm::RestartIO::Helpers::
-                VectorItems::ISeg::Value::SegmentType;
-            using IsStatus = ::Opm::RestartIO::Helpers::
-                VectorItems::ISeg::Value::SICDStatus;
+             namespace ISegValue = ::Opm::RestartIO::Helpers::
+                VectorItems::ISeg::Value;
 
             using Ix = ::Opm::RestartIO::Helpers::
                 VectorItems::ISeg::index;
 
             const auto& sicd = segment.spiralICD();
 
-            iSeg[baseIndex + Ix::SegmentType]    = IsTyp::SICD;
+            iSeg[baseIndex + Ix::SegmentType]    = ISegValue::SegmentType::SICD;
             iSeg[baseIndex + Ix::ICDScalingMode] = sicd->methodFlowScaling();
 
             iSeg[baseIndex + Ix::ICDOpenShutFlag] =
                 (sicd->status() == Opm::SpiralICD::Status::OPEN)
-                ? IsStatus::Open
-                : IsStatus::Shut;
+                ? ISegValue::SICDStatus::Open
+                : ISegValue::SICDStatus::Shut;
         }
 
         template <class ISegArray>
@@ -472,6 +469,7 @@ namespace {
         {
             using IsTyp = ::Opm::RestartIO::Helpers::
                 VectorItems::ISeg::Value::SegmentType;
+                
             using Ix = ::Opm::RestartIO::Helpers::
                 VectorItems::ISeg::index;
                 
@@ -506,7 +504,7 @@ namespace {
                     if (! isRegular(segment)) {
                         assignSegmentTypeCharacteristics(segment, iS, iSeg);
                     }
-                    else if (segment.segmentType() == Opm::Segment::SegmentType::REGULAR) {
+                    if (segment.segmentType() == Opm::Segment::SegmentType::REGULAR) {
                        iSeg[iS + Ix::SegmentType] =  IsTyp::REGULAR;
                     }
                 }
