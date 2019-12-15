@@ -272,6 +272,7 @@ private:
     void handle_int_keyword(const DeckKeyword& keyword, const Box& box);
     void init_satfunc(const std::string& keyword, FieldData<double>& satfunc);
     void init_porv(FieldData<double>& porv);
+    void init_tempi(FieldData<double>& tempi);
 
     const UnitSystem unit_system;
     std::size_t nx,ny,nz;
