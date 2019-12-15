@@ -500,3 +500,29 @@ PORO
     //The PERMY keyword can not be default initialized
     BOOST_CHECK_THROW(fpm.get_copy<double>("PERMY"), std::invalid_argument);
 }
+
+BOOST_AUTO_TEST_CASE(GET_TEMPI) {
+    std::string deck_string = R"(
+RUNSPEC
+
+EQLDIMS
+/
+PROPS
+
+RTEMPVD
+   0.5 0
+   1.5 100 /
+
+
+)";
+
+    EclipseGrid grid(1,1, 2);
+    Deck deck = Parser{}.parseString(deck_string);
+    Opm::TableManager tm(deck);
+    FieldPropsManager fpm(deck, grid, tm);
+
+    const auto& tempi = fpm.get<double>("TEMPI");
+    double celcius_offset = 273.15;
+    BOOST_CHECK_CLOSE( tempi[0], 0 + celcius_offset , 1e-6);
+    BOOST_CHECK_CLOSE( tempi[1], 100 + celcius_offset , 1e-6);
+}

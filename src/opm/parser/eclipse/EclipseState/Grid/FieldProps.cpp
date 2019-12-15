@@ -27,6 +27,7 @@
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/RtempvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/Box.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.hpp>
@@ -54,7 +55,7 @@ static const std::map<std::string, std::string> unit_string = {{"PERMX", "Permea
                                                                {"TRANY", "Transmissibility"},
                                                                {"TRANZ", "Transmissibility"},
                                                                {"NTG", "1"},
-                                                               {"SWATINIT", "1"}};
+                                                               {"TEMPI", "Temperature"}};
 
 static const std::set<std::string> oper_keywords = {"ADD", "EQUALS", "MAXVALUE", "MINVALUE", "MULTIPLY", "OPERATE"};
 static const std::set<std::string> region_oper_keywords = {"ADDREG", "EQUALREG", "OPERATER"};
@@ -73,6 +74,7 @@ static const std::map<std::string, double> double_scalar_init = {{"NTG", 1},
 
 static const std::map<std::string, int> int_scalar_init = {{"SATNUM", 1},
                                                            {"ENDNUM", 1},
+                                                           {"EQLNUM", 1},
                                                            {"IMBNUM", 1},
                                                            {"FIPNUM", 1},   // All FIPxxx keywords should (probably) be added with init==1
                                                            {"ACTNUM", 1}};
@@ -508,6 +510,9 @@ FieldProps::FieldData<double>& FieldProps::get(const std::string& keyword) {
         if (keyword == ParserKeywords::PORV::keywordName)
             this->init_porv(this->double_data[keyword]);
 
+        if (keyword == ParserKeywords::TEMPI::keywordName)
+            this->init_tempi(this->double_data[keyword]);
+
         return this->double_data[keyword];
     } else
         throw std::out_of_range("Double keyword: " + keyword + " is not supported");
@@ -817,8 +822,6 @@ void FieldProps::handle_COPY(const DeckKeyword& keyword, Box box, bool region) {
     }
 }
 
-
-
 void FieldProps::handle_keyword(const DeckKeyword& keyword, Box& box) {
     const std::string& name = keyword.name();
 
@@ -840,6 +843,23 @@ void FieldProps::handle_keyword(const DeckKeyword& keyword, Box& box) {
 
 /**********************************************************************/
 
+
+void FieldProps::init_tempi(FieldData<double>& tempi) {
+    if (this->tables.hasTables("RTEMPVD")) {
+        const auto& eqlnum = this->get_valid_data<int>("EQLNUM");
+        const auto& rtempvd = this->tables.getRtempvdTables();
+        std::vector< double > tempi_values( this->active_size, 0 );
+
+        for (size_t active_index = 0; active_index < this->active_size; active_index++) {
+            const auto& table = rtempvd.getTable<RtempvdTable>(eqlnum[active_index] - 1);
+            double depth = this->cell_depth[active_index];
+            tempi_values[active_index] = table.evaluate("Temperature", depth);
+        }
+
+        tempi.default_update(tempi_values);
+    } else
+        tempi.default_assign(this->tables.rtemp());
+}
 
 void FieldProps::init_porv(FieldData<double>& porv) {
     auto& porv_data = porv.data;
