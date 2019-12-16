@@ -22,8 +22,11 @@
 
 #include <memory>
 #include <vector>
-#include <opm/parser/eclipse/EclipseState/Schedule/MSW/SpiralICD.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/MSW/Valve.hpp>
+
+namespace Opm {
+    class SpiralICD;
+    class Valve;
+}
 
 namespace Opm {
 
@@ -53,21 +56,6 @@ namespace Opm {
         bool dataReady() const;
 
         SegmentType segmentType() const;
-
-        bool isRegular() const
-        {
-            return this->segmentType() == SegmentType::REGULAR;
-        }
-
-        bool isSpiralICD() const
-        {
-            return this->segmentType() == SegmentType::SICD;
-        }
-
-        bool isValve() const
-        {
-            return this->segmentType() == SegmentType::VALVE;
-        }
 
         void setVolume(const double volume_in);
         void setDepthAndLength(const double depth_in, const double length_in);
@@ -135,7 +123,7 @@ namespace Opm {
         bool m_data_ready;
 
         // indicate the type of the segment
-        // regular or spiral ICD
+        // regular, spiral ICD, or Valve.
         SegmentType m_segment_type = SegmentType::REGULAR;
 
         // information related to SpiralICD. It is nullptr for segments are not
@@ -151,8 +139,22 @@ namespace Opm {
         // They are not used in the simulations and we are not supporting the plotting.
         // There are other three properties for segment related to thermal conduction,
         // while they are not supported by the keyword at the moment.
-
     };
+
+    inline bool isRegular(const Segment& segment)
+    {
+        return segment.segmentType() == Segment::SegmentType::REGULAR;
+    }
+
+    inline bool isSpiralICD(const Segment& segment)
+    {
+        return segment.segmentType() == Segment::SegmentType::SICD;
+    }
+
+    inline bool isValve(const Segment& segment)
+    {
+        return segment.segmentType() == Segment::SegmentType::VALVE;
+    }
 }
 
 #endif

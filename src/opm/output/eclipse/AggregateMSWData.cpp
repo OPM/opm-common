@@ -22,8 +22,9 @@
 #include <opm/output/eclipse/VectorItems/msw.hpp>
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
-
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
+
+#include <opm/parser/eclipse/EclipseState/Schedule/MSW/SpiralICD.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/Valve.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
@@ -452,11 +453,11 @@ namespace {
                                               const std::size_t   baseIndex,
                                               ISegArray&          iSeg)
         {
-            if (segment.isSpiralICD()) {
+            if (isSpiralICD(segment)) {
                 assignSpiralICDCharacteristics(segment, baseIndex, iSeg);
             }
 
-            if (segment.isValve()) {
+            if (isValve(segment)) {
                 assignValveCharacteristics(baseIndex, iSeg);
             }
         }
@@ -488,7 +489,7 @@ namespace {
                     iSeg[iS + 7] = sumConnectionsSegment(completionSet, welSegSet, ind);
                     iSeg[iS + 8] = iSeg[iS+0];
 
-                    if (! segment.isRegular()) {
+                    if (! isRegular(segment)) {
                         assignSegmentTypeCharacteristics(segment, iS, iSeg);
                     }
                 }
@@ -617,11 +618,11 @@ namespace {
                                               const int                baseIndex,
                                               RSegArray&               rSeg)
         {
-            if (segment.isSpiralICD()) {
+            if (isSpiralICD(segment)) {
                 assignSpiralICDCharacteristics(segment, usys, baseIndex, rSeg);
             }
 
-            if (segment.isValve()) {
+            if (isValve(segment)) {
                 assignValveCharacteristics(segment, usys, baseIndex, rSeg);
             }
         }
@@ -773,7 +774,7 @@ namespace {
                     rSeg[iS + 109] = 1.0;
                     rSeg[iS + 110] = 1.0;
 
-                    if (! segment.isRegular()) {
+                    if (! isRegular(segment)) {
                         assignSegmentTypeCharacteristics(segment, units, iS, rSeg);
                     }
                 }
