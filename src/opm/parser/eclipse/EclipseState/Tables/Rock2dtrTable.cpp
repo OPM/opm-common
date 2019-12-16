@@ -29,6 +29,13 @@ namespace Opm {
         {
         }
 
+        Rock2dtrTable::Rock2dtrTable(const std::vector<std::vector<double>>& transMultValues,
+                                     const std::vector<double>& pressureValues)
+            : m_transMultValues(transMultValues)
+            , m_pressureValues(pressureValues)
+        {
+        }
+
         void Rock2dtrTable::init(const DeckRecord& record, size_t /* tableIdx */)
         {
             m_pressureValues.push_back(record.getItem("PRESSURE").getSIDoubleData()[0]);
@@ -53,6 +60,12 @@ namespace Opm {
         double Rock2dtrTable::getTransMultValue(size_t pressureIndex, size_t saturationIndex) const
         {
             return m_transMultValues[pressureIndex][saturationIndex];
+        }
+
+        bool Rock2dtrTable::operator==(const Rock2dtrTable& data) const
+        {
+              return this->transMultValues() == data.transMultValues() &&
+                     this->pressureValues() == data.pressureValues();
         }
 
 }

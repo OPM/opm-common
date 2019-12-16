@@ -30,17 +30,29 @@ namespace Opm {
 
 template <typename K, typename T>
 class OrderedMap {
-
-using storage_type = typename std::vector<std::pair<K,T>>;
-using index_type = typename std::unordered_map<K,std::size_t>;
-using iter_type = typename storage_type::iterator;
-using const_iter_type = typename storage_type::const_iterator;
+public:
+    using storage_type = typename std::vector<std::pair<K,T>>;
+    using index_type = typename std::unordered_map<K,std::size_t>;
+    using iter_type = typename storage_type::iterator;
+    using const_iter_type = typename storage_type::const_iterator;
 
 private:
     index_type m_map;
     storage_type m_vector;
 
 public:
+
+    OrderedMap() = default;
+
+    OrderedMap(const index_type& index, const storage_type& storage)
+        : m_map(index)
+        , m_vector(storage)
+    {
+    }
+
+    const index_type getIndex() const { return m_map; }
+
+    const storage_type getStorage() const { return m_vector; }
 
     std::size_t count(const K& key) const {
         return this->m_map.count(key);
@@ -174,6 +186,11 @@ public:
             return this->m_vector.end();
 
         return std::next(this->m_vector.begin(), map_iter->second);
+    }
+
+    bool operator==(const OrderedMap<K,T>& data) const {
+        return this->getIndex() == data.getIndex() &&
+               this->getStorage() == data.getStorage();
     }
 };
 }

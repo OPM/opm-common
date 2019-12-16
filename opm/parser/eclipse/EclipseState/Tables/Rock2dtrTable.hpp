@@ -28,11 +28,21 @@ namespace Opm {
     class Rock2dtrTable {
     public:
         Rock2dtrTable();
+        Rock2dtrTable(const std::vector<std::vector<double>>& transMultValues,
+                      const std::vector<double>& pressureValues);
         void init(const Opm::DeckRecord& record, size_t tableIdx);
         size_t size() const;
         size_t sizeMultValues() const;
         double getPressureValue(size_t index) const;
         double getTransMultValue(size_t pressureIndex, size_t saturationIndex ) const;
+
+        const std::vector<std::vector<double>>& transMultValues() const
+        { return m_transMultValues; }
+
+        const std::vector<double>& pressureValues() const
+        { return m_pressureValues; }
+
+        bool operator==(const Rock2dtrTable& data) const;
 
     protected:
         std::vector< std::vector <double> > m_transMultValues;

@@ -28,12 +28,21 @@ namespace Opm {
     class Rock2dTable {
     public:
         Rock2dTable();
+        Rock2dTable(const std::vector<std::vector<double>>& pvmultValues,
+                    const std::vector<double>& pressureValues);
         void init(const Opm::DeckRecord& record, size_t tableIdx);
         size_t size() const;
         size_t sizeMultValues() const;
         double getPressureValue(size_t index) const;
         double getPvmultValue(size_t pressureIndex, size_t saturationIndex ) const;
 
+        const std::vector<std::vector<double>>& pvmultValues() const
+        { return m_pvmultValues; }
+
+        const std::vector<double>& pressureValues() const
+        { return m_pressureValues; }
+
+        bool operator==(const Rock2dTable& data) const;
 
     protected:
         std::vector< std::vector <double> > m_pvmultValues;

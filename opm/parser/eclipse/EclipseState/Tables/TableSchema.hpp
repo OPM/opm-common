@@ -30,13 +30,19 @@ namespace Opm {
 
     class TableSchema {
     public:
+        TableSchema() = default;
+        TableSchema(const OrderedMap<std::string, ColumnSchema>& columns);
         void addColumn( ColumnSchema );
         const ColumnSchema& getColumn( const std::string& name ) const;
         const ColumnSchema& getColumn( size_t columnIndex ) const;
         bool hasColumn(const std::string&) const;
 
+        const OrderedMap<std::string, ColumnSchema>& getColumns() const;
+
         /* Number of columns */
         size_t size() const;
+
+        bool operator==(const TableSchema& data) const;
     private:
         OrderedMap<std::string, ColumnSchema> m_columns;
     };

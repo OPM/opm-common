@@ -33,11 +33,19 @@ namespace Opm {
     class ThresholdPressure {
 
     public:
+        using ThresholdPressureTable = std::vector<std::pair<bool,double>>;
+        using PressureTable = std::map<std::pair<int,int>,std::pair<bool,double>>;
+
         ThresholdPressure(bool restart,
                           const Deck& deck,
                           const FieldPropsManager& fp,
                           const Eclipse3DProperties& eclipseProperties);
 
+        ThresholdPressure(bool active, bool restart,
+                          const ThresholdPressureTable& thpTable,
+                          const PressureTable& pTable);
+
+        ThresholdPressure() { m_active = m_restart = false; }
 
         /*
           The hasRegionBarrier() method checks if a threshold pressure
@@ -67,6 +75,14 @@ namespace Opm {
         size_t size() const;
         bool active() const;
         bool restart() const;
+
+        const ThresholdPressureTable& thresholdPressureTable() const
+        { return m_thresholdPressureTable; }
+
+        const PressureTable& pressureTable() const
+        { return m_pressureTable; }
+
+        bool operator==(const ThresholdPressure& data) const;
     private:
         bool m_active;
         bool m_restart;

@@ -23,6 +23,13 @@
 
 namespace Opm {
 
+    ColumnSchema::ColumnSchema() :
+        m_order(Table::INCREASING),
+        m_defaultAction(Table::DEFAULT_NONE),
+        m_defaultValue(0.0)
+    {
+    }
+
     ColumnSchema::ColumnSchema(const std::string& nm, Table::ColumnOrderEnum order, Table::DefaultAction defaultAction) :
         m_name( nm ),
         m_order( order ),
@@ -45,6 +52,9 @@ namespace Opm {
         return m_name;
     }
 
+    Table::ColumnOrderEnum ColumnSchema::order() const {
+        return m_order;
+    }
 
     bool ColumnSchema::validOrder( double value1 , double value2) const {
         switch (m_order) {
@@ -109,6 +119,14 @@ namespace Opm {
             return m_defaultValue;
         else
             throw std::invalid_argument("Column must be configured with constant default when using this method");
+    }
+
+
+    bool ColumnSchema::operator==(const ColumnSchema& data) const {
+        return this->name() == data.name() &&
+               this->order() == data.order() &&
+               this->getDefaultMode() == data.getDefaultMode() &&
+               m_defaultValue == data.m_defaultValue;
     }
 
 }
