@@ -47,13 +47,26 @@ namespace Opm {
     class TransMult {
 
     public:
+        TransMult() = default;
         TransMult(const GridDims& dims, const Deck& deck, const FieldPropsManager& fp);
+        TransMult(const std::array<size_t,3>& size,
+                  const std::map<FaceDir::DirEnum, std::vector<double>>& trans,
+                  const std::map<FaceDir::DirEnum, std::string>& names,
+                  const MULTREGTScanner& scanner);
+
         double getMultiplier(size_t globalIndex, FaceDir::DirEnum faceDir) const;
         double getMultiplier(size_t i , size_t j , size_t k, FaceDir::DirEnum faceDir) const;
         double getRegionMultiplier( size_t globalCellIndex1, size_t globalCellIndex2, FaceDir::DirEnum faceDir) const;
         void applyMULT(const std::vector<double>& srcMultProp, FaceDir::DirEnum faceDir);
         void applyMULTFLT(const FaultCollection& faults);
         void applyMULTFLT(const Fault& fault);
+
+        std::array<size_t,3> getSize() const;
+        const std::map<FaceDir::DirEnum, std::vector<double>>& getTrans() const;
+        const std::map<FaceDir::DirEnum, std::string>& getNames() const;
+        const MULTREGTScanner& getScanner() const;
+
+        bool operator==(const TransMult& data) const;
 
     private:
         size_t getGlobalIndex(size_t i , size_t j , size_t k) const;
@@ -62,7 +75,7 @@ namespace Opm {
         bool hasDirectionProperty(FaceDir::DirEnum faceDir) const;
         std::vector<double>& getDirectionProperty(FaceDir::DirEnum faceDir);
 
-        size_t m_nx , m_ny , m_nz;
+        size_t m_nx = 0, m_ny = 0, m_nz = 0;
         std::map<FaceDir::DirEnum , std::vector<double> > m_trans;
         std::map<FaceDir::DirEnum , std::string> m_names;
         MULTREGTScanner m_multregtScanner;
