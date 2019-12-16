@@ -46,129 +46,37 @@ namespace Opm {
     public:
         explicit Tuning(const TimeMap& timemap);
 
-        void setTuningInitialValue(const std::string& tuningItem, double value,bool resetVector);
-        void setTuningInitialValue(const std::string& tuningItem, int value, bool resetVector);
-        
-        void getTuningItemValue(const std::string& tuningItem, size_t timestep, double& value);
-        void getTuningItemValue(const std::string& tuningItem, size_t timestep, int& value);
+        template<class T>
+        void set(const std::string& tuningItem, size_t timestep, T value);
+        template<class T>
+        T get(const std::string& tuningItem, size_t timestep) const;
 
+        bool has(const std::string& tuningItem, size_t timestep) const;
 
-        /* Record 1 */
-        double getTSINIT(size_t timestep) const;
-        double getTSMAXZ(size_t timestep) const;
-        double getTSMINZ(size_t timestep) const;
-        double getTSMCHP(size_t timestep) const;
-        double getTSFMAX(size_t timestep) const;
-        double getTSFMIN(size_t timestep) const;
-        double getTSFCNV(size_t timestep) const;
-        double getTFDIFF(size_t timestep) const;
-        double getTHRUPT(size_t timestep) const;
-        double getTMAXWC(size_t timestep) const;
-        bool   getTMAXWChasValue(size_t timestep) const;
-        void   setTSINIT(size_t timestep, double TSINIT);
-        void   setTSMAXZ(size_t timestep, double TSMAXZ);
-        void   setTSMINZ(size_t timestep, double TSMINZ);
-        void   setTSMCHP(size_t timestep, double TSMCHP);
-        void   setTSFMAX(size_t timestep, double TSFMAX);
-        void   setTSFMIN(size_t timestep, double TSFMIN);
-        void   setTSFCNV(size_t timestep, double TSFCNV);
-        void   setTFDIFF(size_t timestep, double TFDIFF);
-        void   setTHRUPT(size_t timestep, double THRUPT);
-        void   setTMAXWC(size_t timestep, double TMAXWC);
-        /* Record 2 */
-        double getTRGTTE(size_t timestep) const;
-        double getTRGCNV(size_t timestep) const;
-        double getTRGMBE(size_t timestep) const;
-        double getTRGLCV(size_t timestep) const;
-        double getXXXTTE(size_t timestep) const;
-        double getXXXCNV(size_t timestep) const;
-        double getXXXMBE(size_t timestep) const;
-        double getXXXLCV(size_t timestep) const;
-        double getXXXWFL(size_t timestep) const;
-        double getTRGFIP(size_t timestep) const;
-        double getTRGSFT(size_t timestep) const;
-        bool   getTRGSFThasValue(size_t timestep) const;
-        double getTHIONX(size_t timestep) const;
-        int    getTRWGHT(size_t timestep) const;
-        void   setTRGTTE(size_t timestep, double TRGTTE);
-        void   setTRGCNV(size_t timestep, double TRGCNV);
-        void   setTRGMBE(size_t timestep, double TRGMBE);
-        void   setTRGLCV(size_t timestep, double TRGLCV);
-        void   setXXXTTE(size_t timestep, double XXXTTE);
-        void   setXXXCNV(size_t timestep, double XXXCNV);
-        void   setXXXMBE(size_t timestep, double XXXMBE);
-        void   setXXXLCV(size_t timestep, double XXXLCV);
-        void   setXXXWFL(size_t timestep, double XXXWFL);
-        void   setTRGFIP(size_t timestep, double TRGFIP);
-        void   setTRGSFT(size_t timestep, double TRGFIP);
-        void   setTHIONX(size_t timestep, double THIONX);
-        void   setTRWGHT(size_t timestep, int TRWGHT);
-        /* Record 3 */
-        int    getNEWTMX(size_t timestep) const;
-        int    getNEWTMN(size_t timestep) const;
-        int    getLITMAX(size_t timestep) const;
-        int    getLITMIN(size_t timestep) const;
-        int    getMXWSIT(size_t timestep) const;
-        int    getMXWPIT(size_t timestep) const;
-        double getDDPLIM(size_t timestep) const;
-        double getDDSLIM(size_t timestep) const;
-        double getTRGDPR(size_t timestep) const;
-        double getXXXDPR(size_t timestep) const;
-        bool   getXXXDPRhasValue(size_t timestep) const;
-        void   setNEWTMX(size_t timestep, int NEWTMX);
-        void   setNEWTMN(size_t timestep, int NEWTMN);
-        void   setLITMAX(size_t timestep, int LITMAX);
-        void   setLITMIN(size_t timestep, int LITMIN);
-        void   setMXWSIT(size_t timestep, int MXWSIT);
-        void   setMXWPIT(size_t timestep, int MXWPIT);
-        void   setDDPLIM(size_t timestep, double DDPLIM);
-        void   setDDSLIM(size_t timestep, double DDSLIM);
-        void   setTRGDPR(size_t timestep, double TRGDPR);
-        void   setXXXDPR(size_t timestep, double XXXDPR);
-
+        template<class T>
+        void setInitial(const std::string& tuningItem, T value, bool resetVector);
 
     private:
-        /* Record1 */
-        DynamicState<double> m_TSINIT;
-        DynamicState<double> m_TSMAXZ;
-        DynamicState<double> m_TSMINZ;
-        DynamicState<double> m_TSMCHP;
-        DynamicState<double> m_TSFMAX;
-        DynamicState<double> m_TSFMIN;
-        DynamicState<double> m_TSFCNV;
-        DynamicState<double> m_TFDIFF;
-        DynamicState<double> m_THRUPT;
-        DynamicState<double> m_TMAXWC;
-        DynamicState<int>    m_TMAXWC_has_value;
-        /* Record 2 */
-        DynamicState<double> m_TRGTTE;
-        DynamicState<double> m_TRGCNV;
-        DynamicState<double> m_TRGMBE;
-        DynamicState<double> m_TRGLCV;
-        DynamicState<double> m_XXXTTE;
-        DynamicState<double> m_XXXCNV;
-        DynamicState<double> m_XXXMBE;
-        DynamicState<double> m_XXXLCV;
-        DynamicState<double> m_XXXWFL;
-        DynamicState<double> m_TRGFIP;
-        DynamicState<double> m_TRGSFT;
-        DynamicState<int>    m_TRGSFT_has_value;
-        DynamicState<double> m_THIONX;
-        DynamicState<int>    m_TRWGHT;
-        /* Record 3 */
-        DynamicState<int>    m_NEWTMX;
-        DynamicState<int>    m_NEWTMN;
-        DynamicState<int>    m_LITMAX;
-        DynamicState<int>    m_LITMIN;
-        DynamicState<int>    m_MXWSIT;
-        DynamicState<int>    m_MXWPIT;
-        DynamicState<double> m_DDPLIM;
-        DynamicState<double> m_DDSLIM;
-        DynamicState<double> m_TRGDPR;
-        DynamicState<double> m_XXXDPR;
-        DynamicState<int>    m_XXXDPR_has_value;
+        std::map<std::string, DynamicState<double>> m_fields;
+        std::map<std::string, DynamicState<int>> m_int_fields;
+        std::map<std::string, DynamicState<int>> m_has_fields;
         std::map<std::string, bool> m_ResetValue;
     };
+
+    template<>
+    int Tuning::get<int>(const std::string& tuningItem, size_t timestep) const;
+    template<>
+    double Tuning::get<double>(const std::string& tuningItem, size_t timestep) const;
+
+    template<>
+    void Tuning::set<int>(const std::string& tuningItem, size_t timestep, int value);
+    template<>
+    void Tuning::set<double>(const std::string& tuningItem, size_t timestep, double value);
+
+    template<>
+    void Tuning::setInitial<int>(const std::string& tuningItem, int value, bool resetVector);
+    template<>
+    void Tuning::setInitial<double>(const std::string& tuningItem, double value, bool resetVector);
 
 } //namespace Opm
 

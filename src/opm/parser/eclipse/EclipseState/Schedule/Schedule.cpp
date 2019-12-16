@@ -1731,36 +1731,36 @@ namespace {
             const auto& record1 = keyword.getRecord(0);
 
             double TSINIT = record1.getItem("TSINIT").getSIDouble(0);
-            this->m_tuning.setTSINIT(currentStep, TSINIT);
+            this->m_tuning.set("TSINIT", currentStep, TSINIT);
 
             double TSMAXZ = record1.getItem("TSMAXZ").getSIDouble(0);
-            this->m_tuning.setTSMAXZ(currentStep, TSMAXZ);
+            this->m_tuning.set("TSMAXZ", currentStep, TSMAXZ);
 
             double TSMINZ = record1.getItem("TSMINZ").getSIDouble(0);
-            this->m_tuning.setTSMINZ(currentStep, TSMINZ);
+            this->m_tuning.set("TSMINZ", currentStep, TSMINZ);
 
             double TSMCHP = record1.getItem("TSMCHP").getSIDouble(0);
-            this->m_tuning.setTSMCHP(currentStep, TSMCHP);
+            this->m_tuning.set("TSMCHP", currentStep, TSMCHP);
 
             double TSFMAX = record1.getItem("TSFMAX").get< double >(0);
-            this->m_tuning.setTSFMAX(currentStep, TSFMAX);
+            this->m_tuning.set("TSFMAX", currentStep, TSFMAX);
 
             double TSFMIN = record1.getItem("TSFMIN").get< double >(0);
-            this->m_tuning.setTSFMIN(currentStep, TSFMIN);
+            this->m_tuning.set("TSFMIN", currentStep, TSFMIN);
 
             double TSFCNV = record1.getItem("TSFCNV").get< double >(0);
-            this->m_tuning.setTSFCNV(currentStep, TSFCNV);
+            this->m_tuning.set("TSFCNV", currentStep, TSFCNV);
 
             double TFDIFF = record1.getItem("TFDIFF").get< double >(0);
-            this->m_tuning.setTFDIFF(currentStep, TFDIFF);
+            this->m_tuning.set("TFDIFF", currentStep, TFDIFF);
 
             double THRUPT = record1.getItem("THRUPT").get< double >(0);
-            this->m_tuning.setTHRUPT(currentStep, THRUPT);
+            this->m_tuning.set("THRUPT", currentStep, THRUPT);
 
             const auto& TMAXWCdeckItem = record1.getItem("TMAXWC");
             if (TMAXWCdeckItem.hasValue(0)) {
                 double TMAXWC = TMAXWCdeckItem.getSIDouble(0);
-                this->m_tuning.setTMAXWC(currentStep, TMAXWC);
+                this->m_tuning.set("TMAXWC", currentStep, TMAXWC);
             }
         }
 
@@ -1769,46 +1769,46 @@ namespace {
             const auto& record2 = keyword.getRecord(1);
 
             double TRGTTE = record2.getItem("TRGTTE").get< double >(0);
-            this->m_tuning.setTRGTTE(currentStep, TRGTTE);
+            this->m_tuning.set("TRGTTE", currentStep, TRGTTE);
 
             double TRGCNV = record2.getItem("TRGCNV").get< double >(0);
-            this->m_tuning.setTRGCNV(currentStep, TRGCNV);
+            this->m_tuning.set("TRGCNV", currentStep, TRGCNV);
 
             double TRGMBE = record2.getItem("TRGMBE").get< double >(0);
-            this->m_tuning.setTRGMBE(currentStep, TRGMBE);
+            this->m_tuning.set("TRGMBE", currentStep, TRGMBE);
 
             double TRGLCV = record2.getItem("TRGLCV").get< double >(0);
-            this->m_tuning.setTRGLCV(currentStep, TRGLCV);
+            this->m_tuning.set("TRGLCV", currentStep, TRGLCV);
 
             double XXXTTE = record2.getItem("XXXTTE").get< double >(0);
-            this->m_tuning.setXXXTTE(currentStep, XXXTTE);
+            this->m_tuning.set("XXXTTE", currentStep, XXXTTE);
 
             double XXXCNV = record2.getItem("XXXCNV").get< double >(0);
-            this->m_tuning.setXXXCNV(currentStep, XXXCNV);
+            this->m_tuning.set("XXXCNV", currentStep, XXXCNV);
 
             double XXXMBE = record2.getItem("XXXMBE").get< double >(0);
-            this->m_tuning.setXXXMBE(currentStep, XXXMBE);
+            this->m_tuning.set("XXXMBE", currentStep, XXXMBE);
 
             double XXXLCV = record2.getItem("XXXLCV").get< double >(0);
-            this->m_tuning.setXXXLCV(currentStep, XXXLCV);
+            this->m_tuning.set("XXXLCV", currentStep, XXXLCV);
 
             double XXXWFL = record2.getItem("XXXWFL").get< double >(0);
-            this->m_tuning.setXXXWFL(currentStep, XXXWFL);
+            this->m_tuning.set("XXXWFL", currentStep, XXXWFL);
 
             double TRGFIP = record2.getItem("TRGFIP").get< double >(0);
-            this->m_tuning.setTRGFIP(currentStep, TRGFIP);
+            this->m_tuning.set("TRGFIP", currentStep, TRGFIP);
 
             const auto& TRGSFTdeckItem = record2.getItem("TRGSFT");
             if (TRGSFTdeckItem.hasValue(0)) {
                 double TRGSFT = TRGSFTdeckItem.get< double >(0);
-                this->m_tuning.setTRGSFT(currentStep, TRGSFT);
+                this->m_tuning.set("TRGSFT", currentStep, TRGSFT);
             }
 
             double THIONX = record2.getItem("THIONX").get< double >(0);
-            this->m_tuning.setTHIONX(currentStep, THIONX);
+            this->m_tuning.set("THIONX", currentStep, THIONX);
 
             int TRWGHT = record2.getItem("TRWGHT").get< int >(0);
-            this->m_tuning.setTRWGHT(currentStep, TRWGHT);
+            this->m_tuning.set("TRWGHT", currentStep, TRWGHT);
         }
 
 
@@ -1816,36 +1816,36 @@ namespace {
             const auto& record3 = keyword.getRecord(2);
 
             int NEWTMX = record3.getItem("NEWTMX").get< int >(0);
-            this->m_tuning.setNEWTMX(currentStep, NEWTMX);
+            this->m_tuning.set("NEWTMX", currentStep, NEWTMX);
 
             int NEWTMN = record3.getItem("NEWTMN").get< int >(0);
-            this->m_tuning.setNEWTMN(currentStep, NEWTMN);
+            this->m_tuning.set("NEWTMN", currentStep, NEWTMN);
 
             int LITMAX = record3.getItem("LITMAX").get< int >(0);
-            this->m_tuning.setLITMAX(currentStep, LITMAX);
+            this->m_tuning.set("LITMAX", currentStep, LITMAX);
 
             int LITMIN = record3.getItem("LITMIN").get< int >(0);
-            this->m_tuning.setLITMIN(currentStep, LITMIN);
+            this->m_tuning.set("LITMIN", currentStep, LITMIN);
 
             int MXWSIT = record3.getItem("MXWSIT").get< int >(0);
-            this->m_tuning.setMXWSIT(currentStep, MXWSIT);
+            this->m_tuning.set("MXWSIT", currentStep, MXWSIT);
 
             int MXWPIT = record3.getItem("MXWPIT").get< int >(0);
-            this->m_tuning.setMXWPIT(currentStep, MXWPIT);
+            this->m_tuning.set("MXWPIT", currentStep, MXWPIT);
 
             double DDPLIM = record3.getItem("DDPLIM").getSIDouble(0);
-            this->m_tuning.setDDPLIM(currentStep, DDPLIM);
+            this->m_tuning.set("DDPLIM", currentStep, DDPLIM);
 
             double DDSLIM = record3.getItem("DDSLIM").get< double >(0);
-            this->m_tuning.setDDSLIM(currentStep, DDSLIM);
+            this->m_tuning.set("DDSLIM", currentStep, DDSLIM);
 
             double TRGDPR = record3.getItem("TRGDPR").getSIDouble(0);
-            this->m_tuning.setTRGDPR(currentStep, TRGDPR);
+            this->m_tuning.set("TRGDPR", currentStep, TRGDPR);
 
             const auto& XXXDPRdeckItem = record3.getItem("XXXDPR");
             if (XXXDPRdeckItem.hasValue(0)) {
                 double XXXDPR = XXXDPRdeckItem.getSIDouble(0);
-                this->m_tuning.setXXXDPR(currentStep, XXXDPR);
+                this->m_tuning.set("XXXDPR", currentStep, XXXDPR);
             }
         }
         m_events.addEvent( ScheduleEvents::TUNING_CHANGE , currentStep);

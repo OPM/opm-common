@@ -85,112 +85,112 @@ BOOST_AUTO_TEST_CASE(TuningTest) {
   size_t timestep = 4;
   BOOST_CHECK(!event.hasEvent(ScheduleEvents::TUNING_CHANGE, timestep));
 
-  double TSINIT_default = tuning.getTSINIT(timestep);
+  double TSINIT_default = tuning.get<double>("TSINIT", timestep);
   BOOST_CHECK_CLOSE(TSINIT_default, 1 * Metric::Time, diff);
 
-  double TSMAXZ_default = tuning.getTSMAXZ(timestep);
+  double TSMAXZ_default = tuning.get<double>("TSMAXZ", timestep);
   BOOST_CHECK_CLOSE(TSMAXZ_default, 365 * Metric::Time, diff);
 
-  double TSMINZ_default = tuning.getTSMINZ(timestep);
+  double TSMINZ_default = tuning.get<double>("TSMINZ", timestep);
   BOOST_CHECK_CLOSE(TSMINZ_default, 0.1 * Metric::Time, diff);
 
-  double TSMCHP_default = tuning.getTSMCHP(timestep);
+  double TSMCHP_default = tuning.get<double>("TSMCHP", timestep);
   BOOST_CHECK_CLOSE(TSMCHP_default, 0.15 * Metric::Time, diff);
 
-  double TSFMAX_default = tuning.getTSFMAX(timestep);
+  double TSFMAX_default = tuning.get<double>("TSFMAX", timestep);
   BOOST_CHECK_CLOSE(TSFMAX_default, 3.0, diff);
 
-  double TSFMIN_default = tuning.getTSFMIN(timestep);
+  double TSFMIN_default = tuning.get<double>("TSFMIN", timestep);
   BOOST_CHECK_CLOSE(TSFMIN_default, 0.3, diff);
 
-  double TSFCNV_default = tuning.getTSFCNV(timestep);
+  double TSFCNV_default = tuning.get<double>("TSFCNV", timestep);
   BOOST_CHECK_CLOSE(TSFCNV_default, 0.1, diff);
 
-  double TFDIFF_default = tuning.getTFDIFF(timestep);
+  double TFDIFF_default = tuning.get<double>("TFDIFF", timestep);
   BOOST_CHECK_CLOSE(TFDIFF_default, 1.25, diff);
 
-  double THRUPT_default = tuning.getTHRUPT(timestep);
+  double THRUPT_default = tuning.get<double>("THRUPT", timestep);
   BOOST_CHECK_CLOSE(THRUPT_default, 1E20, diff);
 
-  bool TMAXWC_has_value = tuning.getTMAXWChasValue(timestep);
-  double TMAXWC_default = tuning.getTMAXWC(timestep);
+  bool TMAXWC_has_value = tuning.has("TMAXWC", timestep);
+  double TMAXWC_default = tuning.get<double>("TMAXWC", timestep);
   BOOST_CHECK_EQUAL(false, TMAXWC_has_value);
   BOOST_CHECK_CLOSE(TMAXWC_default, 0.0 * Metric::Time, diff);
 
 
   /********* Record 2 ************/
-  double TRGTTE_default = tuning.getTRGTTE(timestep);
+  double TRGTTE_default = tuning.get<double>("TRGTTE", timestep);
   BOOST_CHECK_CLOSE(TRGTTE_default, 0.1, diff);
 
-  double TRGCNV_default = tuning.getTRGCNV(timestep);
+  double TRGCNV_default = tuning.get<double>("TRGCNV", timestep);
   BOOST_CHECK_CLOSE(TRGCNV_default, 0.001, diff);
 
-  double TRGMBE_default = tuning.getTRGMBE(timestep);
+  double TRGMBE_default = tuning.get<double>("TRGMBE", timestep);
   BOOST_CHECK_CLOSE(TRGMBE_default, 1.0E-7, diff);
 
-  double TRGLCV_default = tuning.getTRGLCV(timestep);
+  double TRGLCV_default = tuning.get<double>("TRGLCV", timestep);
   BOOST_CHECK_CLOSE(TRGLCV_default, 0.0001, diff);
 
-  double XXXTTE_default = tuning.getXXXTTE(timestep);
+  double XXXTTE_default = tuning.get<double>("XXXTTE", timestep);
   BOOST_CHECK_CLOSE(XXXTTE_default, 10.0, diff);
 
-  double XXXCNV_default = tuning.getXXXCNV(timestep);
+  double XXXCNV_default = tuning.get<double>("XXXCNV", timestep);
   BOOST_CHECK_CLOSE(XXXCNV_default, 0.01, diff);
 
-  double XXXMBE_default = tuning.getXXXMBE(timestep);
+  double XXXMBE_default = tuning.get<double>("XXXMBE", timestep);
   BOOST_CHECK_CLOSE(XXXMBE_default, 1.0E-6, diff);
 
-  double XXXLCV_default = tuning.getXXXLCV(timestep);
+  double XXXLCV_default = tuning.get<double>("XXXLCV", timestep);
   BOOST_CHECK_CLOSE(XXXLCV_default, 0.001, diff);
 
-  double XXXWFL_default = tuning.getXXXWFL(timestep);
+  double XXXWFL_default = tuning.get<double>("XXXWFL", timestep);
   BOOST_CHECK_CLOSE(XXXWFL_default, 0.001, diff);
 
-  double TRGFIP_default = tuning.getTRGFIP(timestep);
+  double TRGFIP_default = tuning.get<double>("TRGFIP", timestep);
   BOOST_CHECK_CLOSE(TRGFIP_default, 0.025, diff);
 
-  bool TRGSFT_has_value = tuning.getTRGSFThasValue(timestep);
-  double TRGSFT_default = tuning.getTRGSFT(timestep);
+  bool TRGSFT_has_value = tuning.has("TRGSFT", timestep);
+  double TRGSFT_default = tuning.get<double>("TRGSFT", timestep);
   BOOST_CHECK_EQUAL(false, TRGSFT_has_value);
   BOOST_CHECK_CLOSE(TRGSFT_default, 0.0, diff);
 
-  double THIONX_default = tuning.getTHIONX(timestep);
+  double THIONX_default = tuning.get<double>("THIONX", timestep);
   BOOST_CHECK_CLOSE(THIONX_default, 0.01, diff);
 
-  int TRWGHT_default = tuning.getTRWGHT(timestep);
+  int TRWGHT_default = tuning.get<int>("TRWGHT", timestep);
   BOOST_CHECK_EQUAL(TRWGHT_default, 1);
 
 
   /********* Record 3 ************/
-  int NEWTMX_default = tuning.getNEWTMX(timestep);
+  int NEWTMX_default = tuning.get<int>("NEWTMX", timestep);
   BOOST_CHECK_EQUAL(NEWTMX_default, 12);
 
-  int NEWTMN_default = tuning.getNEWTMN(timestep);
+  int NEWTMN_default = tuning.get<int>("NEWTMN", timestep);
   BOOST_CHECK_EQUAL(NEWTMN_default, 1);
 
-  int LITMAX_default = tuning.getLITMAX(timestep);
+  int LITMAX_default = tuning.get<int>("LITMAX", timestep);
   BOOST_CHECK_EQUAL(LITMAX_default, 25);
 
-  int LITMIN_default = tuning.getLITMIN(timestep);
+  int LITMIN_default = tuning.get<int>("LITMIN", timestep);
   BOOST_CHECK_EQUAL(LITMIN_default, 1);
 
-  int MXWSIT_default = tuning.getMXWSIT(timestep);
+  int MXWSIT_default = tuning.get<int>("MXWSIT", timestep);
   BOOST_CHECK_EQUAL(MXWSIT_default, 8);
 
-  int MXWPIT_default = tuning.getMXWPIT(timestep);
+  int MXWPIT_default = tuning.get<int>("MXWPIT", timestep);
   BOOST_CHECK_EQUAL(MXWPIT_default, 8);
 
-  double DDPLIM_default = tuning.getDDPLIM(timestep);
+  double DDPLIM_default = tuning.get<double>("DDPLIM", timestep);
   BOOST_CHECK_CLOSE(DDPLIM_default, 1.0E6 * Metric::Pressure, diff);
 
-  double DDSLIM_default = tuning.getDDSLIM(timestep);
+  double DDSLIM_default = tuning.get<double>("DDSLIM", timestep);
   BOOST_CHECK_CLOSE(DDSLIM_default, 1.0E6, diff);
 
-  double TRGDPR_default = tuning.getTRGDPR(timestep);
+  double TRGDPR_default = tuning.get<double>("TRGDPR", timestep);
   BOOST_CHECK_CLOSE(TRGDPR_default, 1.0E6 * Metric::Pressure, diff);
 
-  bool XXXDPR_has_value = tuning.getXXXDPRhasValue(timestep);
-  double XXXDPR_default = tuning.getXXXDPR(timestep);
+  bool XXXDPR_has_value = tuning.has("XXXDPR", timestep);
+  double XXXDPR_default = tuning.get<double>("XXXDPR", timestep);
   BOOST_CHECK_EQUAL(false, XXXDPR_has_value);
   BOOST_CHECK_CLOSE(XXXDPR_default, 0.0, diff);
 
@@ -201,110 +201,110 @@ BOOST_AUTO_TEST_CASE(TuningTest) {
   /********* Record 1 ***********/
   timestep = 5;
   BOOST_CHECK(event.hasEvent(ScheduleEvents::TUNING_CHANGE, timestep));
-  double TSINIT = tuning.getTSINIT(timestep);
+  double TSINIT = tuning.get<double>("TSINIT", timestep);
   BOOST_CHECK_CLOSE(TSINIT, 2 * Metric::Time, diff);
 
-  double TSMAXZ = tuning.getTSMAXZ(timestep);
+  double TSMAXZ = tuning.get<double>("TSMAXZ", timestep);
   BOOST_CHECK_CLOSE(TSMAXZ, 300 * Metric::Time, diff);
 
-  double TSMINZ = tuning.getTSMINZ(timestep);
+  double TSMINZ = tuning.get<double>("TSMINZ", timestep);
   BOOST_CHECK_CLOSE(TSMINZ, 0.3 * Metric::Time, diff);
 
-  double TSMCHP = tuning.getTSMCHP(timestep);
+  double TSMCHP = tuning.get<double>("TSMCHP", timestep);
   BOOST_CHECK_CLOSE(TSMCHP, 0.30 * Metric::Time, diff);
 
-  double TSFMAX = tuning.getTSFMAX(timestep);
+  double TSFMAX = tuning.get<double>("TSFMAX", timestep);
   BOOST_CHECK_CLOSE(TSFMAX, 6.0, 1.0);
 
-  double TSFMIN = tuning.getTSFMIN(timestep);
+  double TSFMIN = tuning.get<double>("TSFMIN", timestep);
   BOOST_CHECK_CLOSE(TSFMIN, 0.6, 1.0);
 
-  double TSFCNV = tuning.getTSFCNV(timestep);
+  double TSFCNV = tuning.get<double>("TSFCNV", timestep);
   BOOST_CHECK_CLOSE(TSFCNV, 0.2, diff);
 
-  double TFDIFF = tuning.getTFDIFF(timestep);
+  double TFDIFF = tuning.get<double>("TFDIFF", timestep);
   BOOST_CHECK_CLOSE(TFDIFF, 2.25, diff);
 
-  double THRUPT = tuning.getTHRUPT(timestep);
+  double THRUPT = tuning.get<double>("THRUPT", timestep);
   BOOST_CHECK_CLOSE(THRUPT, 2E20, diff);
 
-  TMAXWC_has_value = tuning.getTMAXWChasValue(timestep);
-  TMAXWC_default = tuning.getTMAXWC(timestep);
+  TMAXWC_has_value = tuning.has("TMAXWC", timestep);
+  TMAXWC_default = tuning.get<double>("TMAXWC", timestep);
   BOOST_CHECK_EQUAL(false, TMAXWC_has_value);
   BOOST_CHECK_CLOSE(TMAXWC_default, 0.0 * Metric::Time, diff);
 
   /********* Record 2 ***********/
-  double TRGTTE = tuning.getTRGTTE(timestep);
+  double TRGTTE = tuning.get<double>("TRGTTE", timestep);
   BOOST_CHECK_CLOSE(TRGTTE, 0.2, diff);
 
-  double TRGCNV = tuning.getTRGCNV(timestep);
+  double TRGCNV = tuning.get<double>("TRGCNV", timestep);
   BOOST_CHECK_CLOSE(TRGCNV, 0.002, diff);
 
-  double TRGMBE = tuning.getTRGMBE(timestep);
+  double TRGMBE = tuning.get<double>("TRGMBE", timestep);
   BOOST_CHECK_CLOSE(TRGMBE, 2.0E-7, diff);
 
-  double TRGLCV = tuning.getTRGLCV(timestep);
+  double TRGLCV = tuning.get<double>("TRGLCV", timestep);
   BOOST_CHECK_CLOSE(TRGLCV, 0.0002, diff);
 
-  double XXXTTE = tuning.getXXXTTE(timestep);
+  double XXXTTE = tuning.get<double>("XXXTTE", timestep);
   BOOST_CHECK_CLOSE(XXXTTE, 11.0, diff);
 
-  double XXXCNV = tuning.getXXXCNV(timestep);
+  double XXXCNV = tuning.get<double>("XXXCNV", timestep);
   BOOST_CHECK_CLOSE(XXXCNV, 0.02, diff);
 
-  double XXXMBE = tuning.getXXXMBE(timestep);
+  double XXXMBE = tuning.get<double>("XXXMBE", timestep);
   BOOST_CHECK_CLOSE(XXXMBE, 2.0E-6, diff);
 
-  double XXXLCV = tuning.getXXXLCV(timestep);
+  double XXXLCV = tuning.get<double>("XXXLCV", timestep);
   BOOST_CHECK_CLOSE(XXXLCV, 0.002, diff);
 
-  double XXXWFL = tuning.getXXXWFL(timestep);
+  double XXXWFL = tuning.get<double>("XXXWFL", timestep);
   BOOST_CHECK_CLOSE(XXXWFL, 0.002, diff);
 
-  double TRGFIP = tuning.getTRGFIP(timestep);
+  double TRGFIP = tuning.get<double>("TRGFIP", timestep);
   BOOST_CHECK_CLOSE(TRGFIP, 0.035, diff);
 
-  TRGSFT_has_value = tuning.getTRGSFThasValue(timestep);
-  double TRGSFT = tuning.getTRGSFT(timestep);
+  TRGSFT_has_value = tuning.has("TRGSFT", timestep);
+  double TRGSFT = tuning.get<double>("TRGSFT", timestep);
   BOOST_CHECK_EQUAL(true, TRGSFT_has_value);
   BOOST_CHECK_CLOSE(TRGSFT, 66.0, diff);
 
-  double THIONX = tuning.getTHIONX(timestep);
+  double THIONX = tuning.get<double>("THIONX", timestep);
   BOOST_CHECK_CLOSE(THIONX, 0.02, diff);
 
-  int TRWGHT = tuning.getTRWGHT(timestep);
+  int TRWGHT = tuning.get<int>("TRWGHT", timestep);
   BOOST_CHECK_EQUAL(TRWGHT, 2);
 
   /********* Record 3 ***********/
-  int NEWTMX = tuning.getNEWTMX(timestep);
+  int NEWTMX = tuning.get<int>("NEWTMX", timestep);
   BOOST_CHECK_EQUAL(NEWTMX, 13);
 
-  int NEWTMN = tuning.getNEWTMN(timestep);
+  int NEWTMN = tuning.get<int>("NEWTMN", timestep);
   BOOST_CHECK_EQUAL(NEWTMN, 2);
 
-  int LITMAX = tuning.getLITMAX(timestep);
+  int LITMAX = tuning.get<int>("LITMAX", timestep);
   BOOST_CHECK_EQUAL(LITMAX, 26);
 
-  int LITMIN = tuning.getLITMIN(timestep);
+  int LITMIN = tuning.get<int>("LITMIN", timestep);
   BOOST_CHECK_EQUAL(LITMIN, 2);
 
-  int MXWSIT = tuning.getMXWSIT(timestep);
+  int MXWSIT = tuning.get<int>("MXWSIT", timestep);
   BOOST_CHECK_EQUAL(MXWSIT, 9);
 
-  int MXWPIT = tuning.getMXWPIT(timestep);
+  int MXWPIT = tuning.get<int>("MXWPIT", timestep);
   BOOST_CHECK_EQUAL(MXWPIT, 9);
 
-  double DDPLIM= tuning.getDDPLIM(timestep);
+  double DDPLIM = tuning.get<double>("DDPLIM", timestep);
   BOOST_CHECK_CLOSE(DDPLIM, 4.0E6 * Metric::Pressure, diff);
 
-  double DDSLIM= tuning.getDDSLIM(timestep);
+  double DDSLIM = tuning.get<double>("DDSLIM", timestep);
   BOOST_CHECK_CLOSE(DDSLIM, 4.0E6, diff);
 
-  double TRGDPR = tuning.getTRGDPR(timestep);
+  double TRGDPR = tuning.get<double>("TRGDPR", timestep);
   BOOST_CHECK_CLOSE(TRGDPR, 4.0E6 * Metric::Pressure, diff);
 
-  XXXDPR_has_value = tuning.getXXXDPRhasValue(timestep);
-  double XXXDPR = tuning.getXXXDPR(timestep);
+  XXXDPR_has_value = tuning.has("XXXDPR", timestep);
+  double XXXDPR = tuning.get<double>("XXXDPR", timestep);
   BOOST_CHECK_EQUAL(true, XXXDPR_has_value);
   BOOST_CHECK_CLOSE(XXXDPR, 1.0 * Metric::Pressure, diff);
 
@@ -316,8 +316,8 @@ BOOST_AUTO_TEST_CASE(TuningTest) {
   /********* Record 1 ***********/
   timestep = 10;
   BOOST_CHECK(event.hasEvent(ScheduleEvents::TUNING_CHANGE, timestep));
-  TMAXWC_has_value = tuning.getTMAXWChasValue(timestep);
-  TMAXWC_default = tuning.getTMAXWC(timestep);
+  TMAXWC_has_value = tuning.has("TMAXWC", timestep);
+  TMAXWC_default = tuning.get<double>("TMAXWC", timestep);
   BOOST_CHECK_EQUAL(true, TMAXWC_has_value);
   BOOST_CHECK_CLOSE(TMAXWC_default, 10.0 * Metric::Time, diff);
 
@@ -344,13 +344,13 @@ BOOST_AUTO_TEST_CASE(TuningInitTest) {
   /********* Record 1 ***********/
   size_t timestep = 0;
   double value = 100.00;
-  tuning.setTuningInitialValue("TSINIT",value, false);
-  double TSINIT_default = tuning.getTSINIT(timestep);
+  tuning.setInitial("TSINIT", value, false);
+  double TSINIT_default = tuning.get<double>("TSINIT", timestep);
   BOOST_CHECK_CLOSE(TSINIT_default, 100.00, diff);
 
   timestep = 10;
-  bool TMAXWC_has_value = tuning.getTMAXWChasValue(timestep);
-  double TMAXWC_default = tuning.getTMAXWC(timestep);
+  bool TMAXWC_has_value = tuning.has("TMAXWC", timestep);
+  double TMAXWC_default = tuning.get<double>("TMAXWC", timestep);
   BOOST_CHECK_EQUAL(true, TMAXWC_has_value);
   BOOST_CHECK_CLOSE(TMAXWC_default, 10.0 * Metric::Time, diff);
 
@@ -376,12 +376,12 @@ BOOST_AUTO_TEST_CASE(TuningResetTest) {
   /********* Record 1 ***********/
   size_t timestep = 0;
   double value = 666.00;
-  tuning.setTuningInitialValue("TSINIT",value, true);
-  double TSINIT_default = tuning.getTSINIT(timestep);
+  tuning.setInitial("TSINIT", value, true);
+  double TSINIT_default = tuning.get<double>("TSINIT", timestep);
   BOOST_CHECK_CLOSE(TSINIT_default, 666.00, diff);
 
   timestep = 10;
-  TSINIT_default = tuning.getTSINIT(timestep);
+  TSINIT_default = tuning.get<double>("TSINIT", timestep);
   BOOST_CHECK_CLOSE(TSINIT_default, 666.00, diff);
 
 }

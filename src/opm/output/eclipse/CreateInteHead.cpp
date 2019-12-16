@@ -172,12 +172,12 @@ namespace {
     getTuningPars(const ::Opm::Tuning& tuning,
                   const std::size_t    lookup_step)
     {
-        const auto& newtmx = tuning.getNEWTMX(lookup_step);
-        const auto& newtmn = tuning.getNEWTMN(lookup_step);
-        const auto& litmax = tuning.getLITMAX(lookup_step);
-        const auto& litmin = tuning.getLITMIN(lookup_step);
-        const auto& mxwsit = tuning.getMXWSIT(lookup_step);
-        const auto& mxwpit = tuning.getMXWPIT(lookup_step);
+        const auto& newtmx = tuning.get<int>("NEWTMX", lookup_step);
+        const auto& newtmn = tuning.get<int>("NEWTMN", lookup_step);
+        const auto& litmax = tuning.get<int>("LITMAX", lookup_step);
+        const auto& litmin = tuning.get<int>("LITMIN", lookup_step);
+        const auto& mxwsit = tuning.get<int>("MXWSIT", lookup_step);
+        const auto& mxwpit = tuning.get<int>("MXWPIT", lookup_step);
 
         return {
             newtmx,

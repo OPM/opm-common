@@ -540,34 +540,34 @@ Opm::RestartIO::DoubHEAD::tuningParameters(const Tuning&     tuning,
                                            const double      cnvT)
 {
     // Record 1
-    this->data_[Index::TsInit] = tuning.getTSINIT(lookup_step) / cnvT;
-    this->data_[Index::TsMaxz] = tuning.getTSMAXZ(lookup_step) / cnvT;
-    this->data_[Index::TsMinz] = tuning.getTSMINZ(lookup_step) / cnvT;
-    this->data_[Index::TsMchp] = tuning.getTSMCHP(lookup_step) / cnvT;
-    this->data_[Index::TsFMax] = tuning.getTSFMAX(lookup_step);
-    this->data_[Index::TsFMin] = tuning.getTSFMIN(lookup_step);
-    this->data_[Index::TsFcnv] = tuning.getTSFCNV(lookup_step);
-    this->data_[Index::ThrUPT] = tuning.getTHRUPT(lookup_step);
-    this->data_[Index::TfDIFF] = tuning.getTFDIFF(lookup_step);
+    this->data_[Index::TsInit] = tuning.get<double>("TSINIT", lookup_step) / cnvT;
+    this->data_[Index::TsMaxz] = tuning.get<double>("TSMAXZ", lookup_step) / cnvT;
+    this->data_[Index::TsMinz] = tuning.get<double>("TSMINZ", lookup_step) / cnvT;
+    this->data_[Index::TsMchp] = tuning.get<double>("TSMCHP", lookup_step) / cnvT;
+    this->data_[Index::TsFMax] = tuning.get<double>("TSFMAX", lookup_step);
+    this->data_[Index::TsFMin] = tuning.get<double>("TSFMIN", lookup_step);
+    this->data_[Index::TsFcnv] = tuning.get<double>("TSFCNV", lookup_step);
+    this->data_[Index::ThrUPT] = tuning.get<double>("THRUPT", lookup_step);
+    this->data_[Index::TfDIFF] = tuning.get<double>("TFDIFF", lookup_step);
 
     // Record 2
-    this->data_[Index::TrgTTE] = tuning.getTRGTTE(lookup_step);
-    this->data_[Index::TrgCNV] = tuning.getTRGCNV(lookup_step);
-    this->data_[Index::TrgMBE] = tuning.getTRGMBE(lookup_step);
-    this->data_[Index::TrgLCV] = tuning.getTRGLCV(lookup_step);
-    this->data_[Index::XxxTTE] = tuning.getXXXTTE(lookup_step);
-    this->data_[Index::XxxCNV] = tuning.getXXXCNV(lookup_step);
-    this->data_[Index::XxxMBE] = tuning.getXXXMBE(lookup_step);
-    this->data_[Index::XxxLCV] = tuning.getXXXLCV(lookup_step);
-    this->data_[Index::XxxWFL] = tuning.getXXXWFL(lookup_step);
-    this->data_[Index::TrgFIP] = tuning.getTRGFIP(lookup_step);
-    this->data_[Index::TrgSFT] = tuning.getTRGSFT(lookup_step);
+    this->data_[Index::TrgTTE] = tuning.get<double>("TRGTTE", lookup_step);
+    this->data_[Index::TrgCNV] = tuning.get<double>("TRGCNV", lookup_step);
+    this->data_[Index::TrgMBE] = tuning.get<double>("TRGMBE", lookup_step);
+    this->data_[Index::TrgLCV] = tuning.get<double>("TRGLCV", lookup_step);
+    this->data_[Index::XxxTTE] = tuning.get<double>("XXXTTE", lookup_step);
+    this->data_[Index::XxxCNV] = tuning.get<double>("XXXCNV", lookup_step);
+    this->data_[Index::XxxMBE] = tuning.get<double>("XXXMBE", lookup_step);
+    this->data_[Index::XxxLCV] = tuning.get<double>("XXXLCV", lookup_step);
+    this->data_[Index::XxxWFL] = tuning.get<double>("XXXWFL", lookup_step);
+    this->data_[Index::TrgFIP] = tuning.get<double>("TRGFIP", lookup_step);
+    this->data_[Index::TrgSFT] = tuning.get<double>("TRGSFT", lookup_step);
 
     // Record 3
-    this->data_[Index::TrgDPR] = tuning.getTRGDPR(lookup_step);
-    this->data_[Index::XxxDPR] = tuning.getXXXDPR(lookup_step);
-    this->data_[Index::DdpLim] = tuning.getDDPLIM(lookup_step);
-    this->data_[Index::DdsLim] = tuning.getDDSLIM(lookup_step);
+    this->data_[Index::TrgDPR] = tuning.get<double>("TRGDPR", lookup_step);
+    this->data_[Index::XxxDPR] = tuning.get<double>("XXXDPR", lookup_step);
+    this->data_[Index::DdpLim] = tuning.get<double>("DDPLIM", lookup_step);
+    this->data_[Index::DdsLim] = tuning.get<double>("DDSLIM", lookup_step);
 
     return *this;
 }
