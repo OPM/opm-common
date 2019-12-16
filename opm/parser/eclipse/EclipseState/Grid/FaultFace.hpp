@@ -29,22 +29,25 @@ namespace Opm {
 
 class FaultFace {
 public:
+    FaultFace() = default;
     FaultFace(size_t nx , size_t ny , size_t nz,
               size_t I1 , size_t I2,
               size_t J1 , size_t J2,
               size_t K1 , size_t K2,
               FaceDir::DirEnum faceDir);
+    FaultFace(const std::vector<size_t>& indices, FaceDir::DirEnum faceDir);
 
     std::vector<size_t>::const_iterator begin() const;
     std::vector<size_t>::const_iterator end() const;
     FaceDir::DirEnum getDir() const;
+    const std::vector<size_t>& getIndices() const;
 
     bool operator==( const FaultFace& rhs ) const;
     bool operator!=( const FaultFace& rhs ) const;
 
 private:
     static void checkCoord(size_t dim , size_t l1 , size_t l2);
-    FaceDir::DirEnum m_faceDir;
+    FaceDir::DirEnum m_faceDir = FaceDir::XPlus;
     std::vector<size_t> m_indexList;
 };
 

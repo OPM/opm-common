@@ -55,6 +55,12 @@ namespace Opm {
                 }
     }
 
+    FaultFace::FaultFace(const std::vector<size_t>& indices, FaceDir::DirEnum faceDir)
+        : m_faceDir(faceDir)
+        , m_indexList(indices)
+    {
+    }
+
 
     void FaultFace::checkCoord(size_t dim , size_t l1 , size_t l2) {
         if (l1 > l2)
@@ -88,5 +94,9 @@ namespace Opm {
 
     bool FaultFace::operator!=( const FaultFace& rhs ) const {
         return !( *this == rhs );
+    }
+
+    const std::vector<size_t>& FaultFace::getIndices() const {
+        return m_indexList;
     }
 }
