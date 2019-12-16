@@ -232,13 +232,13 @@ TSTEP
 
 BOOST_AUTO_TEST_CASE(TestAction_AST_BASIC) {
     // Missing comparator
-    BOOST_REQUIRE_THROW( Action::AST( {"WWCT", "OPX", "0.75"} ), std::invalid_argument);
+    BOOST_REQUIRE_THROW( Action::AST( std::vector<std::string>{"WWCT", "OPX", "0.75"} ), std::invalid_argument);
 
     // Left hand side must be function expression
-    BOOST_REQUIRE_THROW( Action::AST({"0.75", "<", "1.0"}), std::invalid_argument);
+    BOOST_REQUIRE_THROW( Action::AST(std::vector<std::string>{"0.75", "<", "1.0"}), std::invalid_argument);
 
     //Extra data
-    BOOST_REQUIRE_THROW(Action::AST({"0.75", "<", "1.0", "EXTRA"}), std::invalid_argument);
+    BOOST_REQUIRE_THROW(Action::AST(std::vector<std::string>{"0.75", "<", "1.0", "EXTRA"}), std::invalid_argument);
 
     Action::AST ast1({"WWCT", "OPX", ">", "0.75"});
     Action::AST ast2({"WWCT", "OPX", "=", "WWCT", "OPX"});
@@ -296,7 +296,7 @@ BOOST_AUTO_TEST_CASE(TestAction_AST_OR_AND) {
 }
 
 BOOST_AUTO_TEST_CASE(DATE) {
-    Action::AST ast({"MNTH", ">=", "JUN"});
+    Action::AST ast(std::vector<std::string>{"MNTH", ">=", "JUN"});
     SummaryState st(std::chrono::system_clock::now());
     Action::Context context(st);
 
