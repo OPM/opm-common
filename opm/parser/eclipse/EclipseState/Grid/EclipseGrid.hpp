@@ -150,8 +150,8 @@ namespace Opm {
         /// Will return a vector a length num_active; where the value
         /// of each element is the corresponding global index.
         const std::vector<int>& getActiveMap() const;
-        const std::array<double, 3>& getCellCenter(size_t i,size_t j, size_t k) const;
-        const std::array<double, 3>& getCellCenter(size_t globalIndex) const;
+        std::array<double, 3> getCellCenter(size_t i,size_t j, size_t k) const;
+        std::array<double, 3> getCellCenter(size_t globalIndex) const;
         std::array<double, 3> getCornerPos(size_t i,size_t j, size_t k, size_t corner_index) const;
         double getCellVolume(size_t globalIndex) const;
         double getCellVolume(size_t i , size_t j , size_t k) const;
@@ -195,7 +195,6 @@ namespace Opm {
         PinchMode::ModeEnum m_pinchoutMode;
         PinchMode::ModeEnum m_multzMode;
 
-        mutable std::vector< int > activeMap;
         bool m_circle = false;
 
         size_t zcorn_fixed = 0;
@@ -212,14 +211,6 @@ namespace Opm {
         int m_nactive;
         std::vector<int> m_active_to_global;
         std::vector<int> m_global_to_active;
-
-        // Geometry data.
-        std::vector<double> m_volume;
-        std::vector<double> m_depth;
-        std::vector<double> m_dx;
-        std::vector<double> m_dy;
-        std::vector<double> m_dz;
-        std::vector<std::array<double, 3>> m_cellCenter;
 
         void initGridFromEGridFile(Opm::EclIO::EclFile& egridfile, std::string fileName);
 
@@ -260,9 +251,12 @@ namespace Opm {
         double sumJdir(int i, int k, int j1, const std::array<int, 3>& dims, const std::vector<double>& dy) const;
         double sumKdir(int i, int j, const std::array<int, 3>& dims, const std::vector<double>& dz) const;
 
-        void calculateGeometryData();
-
         void getCellCorners(const std::array<int, 3>& ijk, const std::array<int, 3>& dims, std::array<double,8>& X, std::array<double,8>& Y, std::array<double,8>& Z) const;
+        void getCellCorners(const std::size_t globalIndex,
+                            std::array<double,8>& X,
+                            std::array<double,8>& Y,
+                            std::array<double,8>& Z) const;
+
    };
 
     class CoordMapper {
