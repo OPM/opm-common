@@ -350,8 +350,9 @@ namespace {
                           const ::Opm::EclipseGrid&         grid,
                           const ::Opm::UnitSystem&          units,
                           ::Opm::EclIO::OutputStream::Init& initFile)
-         auto porv = es.get3DProperties()
-            .getDoubleGridProperty("PORV").getData();
+     {
+        auto porv = es.get3DProperties()
+           .getDoubleGridProperty("PORV").getData();
         for (auto nGlob    = porv.size(),
                   globCell = 0*nGlob; globCell < nGlob; ++globCell)
         {
@@ -361,7 +362,7 @@ namespace {
         }
         units.from_si(::Opm::UnitSystem::measure::volume, porv);
         initFile.write("PORV", singlePrecision(porv));
-    }
+     }
 
 
     void writeIntegerCellProperties(const ::Opm::EclipseState&        es,
