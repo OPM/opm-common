@@ -30,6 +30,15 @@ namespace Opm {
         {
         }
 
+        PvtwsaltTable::PvtwsaltTable(double refPressValue,
+                                     double refSaltConValue,
+                                     const std::vector<double>& tableValues)
+            : m_pRefValues(refPressValue)
+            , m_saltConsRefValues(refSaltConValue)
+            , m_tableValues(tableValues)
+        {
+        }
+
         void PvtwsaltTable::init(const Opm::DeckRecord& record0, const Opm::DeckRecord& record1)
         {
 
@@ -41,6 +50,11 @@ namespace Opm {
         size_t PvtwsaltTable::size() const
         {
             return m_tableValues.size()/numEntries;
+        }
+
+        const std::vector<double>& PvtwsaltTable::getTableValues() const
+        {
+            return m_tableValues;
         }
 
         double PvtwsaltTable::getReferencePressureValue() const
@@ -111,6 +125,13 @@ namespace Opm {
             }
             return viscosibility;
 
+        }
+
+        bool PvtwsaltTable::operator==(const PvtwsaltTable& data) const
+        {
+            return m_pRefValues == data.m_pRefValues &&
+                   m_saltConsRefValues == data.m_saltConsRefValues &&
+                   m_tableValues == data.m_tableValues;
         }
 
 }

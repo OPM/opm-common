@@ -28,6 +28,10 @@ namespace Opm {
     class PvtwsaltTable {
     public:
         PvtwsaltTable();
+        PvtwsaltTable(double refPressValue,
+                      double refSaltConValue,
+                      const std::vector<double>& tableValues);
+
         void init(const Opm::DeckRecord& record0, const Opm::DeckRecord& record1);
         size_t size() const;
         std::vector<double> getSaltConcentrationColumn() const;
@@ -37,8 +41,9 @@ namespace Opm {
         std::vector<double> getViscosibilityColumn() const;
         double getReferencePressureValue() const;
         double getReferenceSaltConcentrationValue() const;
+        const std::vector<double>& getTableValues() const;
 
-
+        bool operator==(const PvtwsaltTable& data) const;
 
     protected:
 
