@@ -157,6 +157,7 @@ SATNUM
     BOOST_CHECK_EQUAL(s1[3], 6);
     BOOST_CHECK_EQUAL(s1[4], 7);
     BOOST_CHECK_EQUAL(s1[5], 8);
+    BOOST_CHECK_EQUAL(fpm.active_size(), 6);
 
     std::vector<int> actnum2 = {1,0,1,0,0,0,1,0,1};
     fpm.reset_actnum(actnum2);
@@ -166,6 +167,7 @@ SATNUM
     BOOST_CHECK_EQUAL(s1[1], 2);
     BOOST_CHECK_EQUAL(s1[2], 6);
     BOOST_CHECK_EQUAL(s1[3], 8);
+    BOOST_CHECK_EQUAL(fpm.active_size(), 4);
 
     BOOST_CHECK_THROW(fpm.reset_actnum(actnum1), std::logic_error);
 }

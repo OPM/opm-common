@@ -117,6 +117,9 @@ std::vector<double> FieldPropsManager::porv(bool global) const {
         return data;
 }
 
+std::size_t FieldPropsManager::active_size() const {
+    return this->fp->active_size;
+}
 
 template bool FieldPropsManager::supported<int>(const std::string&);
 template bool FieldPropsManager::supported<double>(const std::string&);

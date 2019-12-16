@@ -67,6 +67,15 @@ public:
     MemInfo meminfo( ) const;
 
     /*
+     The number of cells in the fields managed by this FieldPropsManager.
+     Initially this will correspond to the number of active cells in the grid
+     used when constructing the FieldPropsManager, but using the reset_actnum()
+     method it is possible to deactivate additional cells.
+    */
+    std::size_t active_size() const;
+
+
+    /*
       Because the FieldProps class can autocreate properties the semantics of
       get() and has() is slightly non intuitve:
 
