@@ -117,6 +117,7 @@ namespace Opm {
             typedef std::vector< keyword_type > keyword_list;
             typedef keyword_list::const_iterator const_iterator;
 
+            SummaryConfig() = default;
             SummaryConfig( const Deck&,
                            const Schedule&,
                            const TableManager&,
@@ -134,6 +135,9 @@ namespace Opm {
                            const Schedule&,
                            const TableManager&);
 
+            SummaryConfig(const keyword_list& kwds,
+                          const std::set<std::string>& shortKwds,
+                          const std::set<std::string>& smryKwds);
 
 
             const_iterator begin() const;
@@ -161,6 +165,13 @@ namespace Opm {
             */
             bool require3DField( const std::string& keyword) const;
             bool requireFIPNUM( ) const;
+
+            const keyword_list& getKwds() const;
+            const std::set<std::string>& getShortKwds() const;
+            const std::set<std::string>& getSmryKwds() const;
+
+            bool operator==(const SummaryConfig& data) const;
+
         private:
             SummaryConfig( const Deck& deck,
                            const Schedule& schedule,
