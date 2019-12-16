@@ -55,7 +55,11 @@ static const std::map<std::string, std::string> unit_string = {{"PERMX", "Permea
                                                                {"TRANY", "Transmissibility"},
                                                                {"TRANZ", "Transmissibility"},
                                                                {"NTG", "1"},
-                                                               {"TEMPI", "Temperature"}};
+                                                               {"TEMPI", "Temperature"},
+                                                               {"THCROCK", "Energy/AnsoluteTemperature*Length*Time"},
+                                                               {"THCOIL", "Energy/AnsoluteTemperature*Length*Time"},
+                                                               {"THCGAS", "Energy/AnsoluteTemperature*Length*Time"},
+                                                               {"THCWATER", "Energy/AnsoluteTemperature*Length*Time"}};
 
 static const std::set<std::string> oper_keywords = {"ADD", "EQUALS", "MAXVALUE", "MINVALUE", "MULTIPLY", "OPERATE"};
 static const std::set<std::string> region_oper_keywords = {"ADDREG", "EQUALREG", "OPERATER"};
@@ -92,7 +96,8 @@ bool isFipxxx< int >(const std::string& keyword) {
 */
 
 namespace GRID {
-static const std::set<std::string> double_keywords = {"MULTPV", "NTG", "PORO", "PERMX", "PERMY", "PERMZ", "THCONR", "MULTX", "MULTX-", "MULTY-", "MULTY", "MULTZ", "MULTZ-"};
+static const std::set<std::string> double_keywords = {"MULTPV", "NTG", "PORO", "PERMX", "PERMY", "PERMZ", "THCONR", "MULTX", "MULTX-", "MULTY-", "MULTY", "MULTZ", "MULTZ-",
+                                                      "THCONSF", "THCROCK", "THCOIL", "THCGAS", "THCWATER"};    // The THxxxx keywords are related to thermal properties - they are all E300 keywords.
 static const std::set<std::string> int_keywords    = {"ACTNUM", "FLUXNUM", "MULTNUM", "OPERNUM", "ROCKNUM"};
 static const std::set<std::string> top_keywords    = {"PORO", "PERMX", "PERMY", "PERMZ"};
 }
