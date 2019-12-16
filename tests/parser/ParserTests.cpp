@@ -2227,13 +2227,15 @@ PLAT-B 15 /
     BOOST_CHECK(record01.getItem(1).getType() == type_tag::fdouble);
     BOOST_CHECK_EQUAL(record01.getItem(1).get<double>(0), 1000);
 
-    auto record04 = kw.getRecord(4);
+    BOOST_CHECK_EQUAL( kw.getRecord(4).size(), 0 );
+
+    auto record04 = kw.getRecord(5);
     BOOST_CHECK_EQUAL(record04.getItem(0).name(), "WELL");
     BOOST_CHECK_EQUAL(record04.getItem(0).get<std::string>(0), "PROD2");
     BOOST_CHECK(record04.getItem(1).getType() == type_tag::integer);
     BOOST_CHECK_EQUAL(record04.getItem(1).get<int>(0), 5);
 
-    auto record08 = kw.getRecord(8);
+    auto record08 = kw.getRecord(10);
     BOOST_CHECK_EQUAL(record08.getItem(0).name(), "TRACER");
     BOOST_CHECK_EQUAL(record08.getItem(0).get<std::string>(0), "PLY");
     BOOST_CHECK(record08.getItem(2).getType() == type_tag::fdouble);

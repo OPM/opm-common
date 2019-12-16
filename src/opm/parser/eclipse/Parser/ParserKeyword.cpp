@@ -553,8 +553,10 @@ void set_dimensions( ParserItem& item,
                std::vector< std::vector<DeckRecord >> m_recordList; */
             size_t record_nr = 0;
             for (auto& rawRecord : rawKeyword) {
-                if (rawRecord.size() == 0)
+                if (rawRecord.size() == 0) {
+                     keyword.addRecord( DeckRecord() );
                      record_nr = 0;
+                }
                 else {
                      keyword.addRecord( this->getRecord( record_nr ).parse( parseContext, errors, rawRecord, active_unitsystem, default_unitsystem, rawKeyword.getKeywordName(), filename ) );
                      record_nr++;
