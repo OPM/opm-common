@@ -38,6 +38,7 @@ namespace Action {
 class Actions {
 public:
     Actions() = default;
+    Actions(const std::vector<ActionX>& action);
     size_t size() const;
     int max_input_lines() const;
     bool empty() const;
@@ -49,6 +50,11 @@ public:
 
     std::vector<ActionX>::const_iterator begin() const;
     std::vector<ActionX>::const_iterator end() const;
+
+    const std::vector<ActionX>& getActions() const;
+
+    bool operator==(const Actions& data) const;
+
 private:
     std::vector<ActionX> actions;
 };
