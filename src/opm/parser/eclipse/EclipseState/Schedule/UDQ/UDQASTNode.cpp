@@ -78,30 +78,6 @@ UDQASTNode::UDQASTNode(UDQTokenType type_arg,
 }
 
 
-namespace {
-
-bool is_scalar(UDQVarType var_type, const std::vector<std::string>& selector)
-{
-    if (var_type == UDQVarType::SCALAR)
-        return true;
-
-    if (var_type == UDQVarType::FIELD_VAR)
-        return true;
-
-    if (var_type == UDQVarType::WELL_VAR) {
-        if (selector.empty())
-            return false;
-        return (selector[0].find("*") == std::string::npos);
-    }
-
-    if (var_type == UDQVarType::GROUP_VAR) {
-        if (selector.empty())
-            return false;
-        return (selector[0].find("*") == std::string::npos);
-    }
-}
-}
-
 UDQASTNode::UDQASTNode(UDQTokenType type_arg,
                        const std::string& string_value_arg,
                        const std::vector<std::string>& selector_arg) :
