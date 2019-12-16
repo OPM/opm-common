@@ -67,6 +67,17 @@ ASTNode::ASTNode(TokenType type_arg, FuncType func_type_arg, const std::string& 
     arg_list(strip_quotes(arg_list_arg))
 {}
 
+ASTNode::ASTNode(TokenType type_arg, FuncType ftype, const std::string& func_arg,
+                 const std::vector<std::string>& args, double num,
+                 const std::vector<ASTNode>& childs):
+    type(type_arg),
+    func_type(ftype),
+    func(func_arg),
+    arg_list(args),
+    number(num),
+    children(childs)
+{}
+
 size_t ASTNode::size() const {
     return this->children.size();
 }
@@ -129,6 +140,31 @@ Action::Result ASTNode::eval(const Action::Context& context) const {
     auto v1 = this->children[0].value(context);
     auto v2 = this->children[1].value(context);
     return v1.eval_cmp(this->type, v2);
+}
+
+
+const std::vector<std::string>& ASTNode::argList() const {
+    return arg_list;
+}
+
+
+double ASTNode::getNumber() const {
+    return number;
+}
+
+
+const std::vector<ASTNode>& ASTNode::childrens() const {
+    return children;
+}
+
+
+bool ASTNode::operator==(const ASTNode& data) const {
+    return type == data.type &&
+           func_type == data.func_type &&
+           func == data.func &&
+           arg_list == data.arg_list &&
+           number == data.number &&
+           children == data.children;
 }
 
 }
