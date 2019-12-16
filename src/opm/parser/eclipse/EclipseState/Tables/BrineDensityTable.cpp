@@ -29,6 +29,11 @@ namespace Opm {
         {
         }
 
+        BrineDensityTable::BrineDensityTable(const std::vector<double>& tableValues)
+            : m_tableValues(tableValues)
+        {
+        }
+
         void BrineDensityTable::init(const Opm::DeckRecord& record )
         {
             m_tableValues = record.getItem("BRINE_DENSITY").getSIDoubleData();
@@ -37,6 +42,11 @@ namespace Opm {
         const std::vector<double>& BrineDensityTable::getBrineDensityColumn() const
         {
             return m_tableValues;
+        }
+
+        bool BrineDensityTable::operator==(const BrineDensityTable& data) const
+        {
+            return m_tableValues == data.m_tableValues;
         }
 
 

@@ -27,8 +27,12 @@ namespace Opm {
     class BrineDensityTable {
     public:
         BrineDensityTable();
+        BrineDensityTable(const std::vector<double>& tableValues);
+
         void init(const Opm::DeckRecord& record);
         const std::vector<double>& getBrineDensityColumn() const;
+
+        bool operator==(const BrineDensityTable& data) const;
 
     private:
         std::vector<double> m_tableValues;
