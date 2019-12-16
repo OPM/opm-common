@@ -2601,6 +2601,11 @@ void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, c
     const OilVaporizationProperties& Schedule::getOilVaporizationProperties(size_t timestep) const {
         return m_oilvaporizationproperties.get(timestep);
     }
+    
+    const Well::ProducerCMode& Schedule::getGlobalWhistctlMmode(size_t timestep) const {
+        return global_whistctl_mode.get(timestep);
+    }
+
 
     bool Schedule::hasOilVaporizationProperties() const {
         for( size_t i = 0; i < this->m_timeMap.size(); ++i )

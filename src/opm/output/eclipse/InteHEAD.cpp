@@ -90,7 +90,7 @@ enum index : std::vector<int>::size_type {
   REPORT_STEP       =  68       ,              // The sequence/report number for for this restart file.
   ih_069       =       69       ,              //       0       0
   ih_070       =       70       ,              //       0       0
-  ih_071       =       71       ,              //       0       0
+  NWHISTCTL    =       VI::intehead::WHISTC,   //       index for WHISTCTL keyword
   ih_072       =       72       ,              //       0       0
   ih_073       =       73       ,              //       0       0
   ih_074       =       74       ,              //       0       0
@@ -736,6 +736,15 @@ Opm::RestartIO::InteHEAD::
 nominatedPhaseGuideRate(GuideRateNominatedPhase nphase)
 {
     this -> data_[NGRNPHASE]  =  nphase.nominated_phase;
+
+    return *this;
+}
+
+Opm::RestartIO::InteHEAD&
+Opm::RestartIO::InteHEAD::
+whistControlMode(int mode)
+{
+    this -> data_[NWHISTCTL]  =  mode;
 
     return *this;
 }

@@ -143,6 +143,7 @@ namespace Opm { namespace RestartIO {
         InteHEAD& actionParam(const ActionParam& act_par);
         InteHEAD& variousUDQ_ACTIONXParam();
         InteHEAD& nominatedPhaseGuideRate(GuideRateNominatedPhase nphase);
+        InteHEAD& whistControlMode(int mode);
 
         const std::vector<int>& data() const
         {

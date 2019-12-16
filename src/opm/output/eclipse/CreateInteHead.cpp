@@ -55,6 +55,17 @@ namespace {
         {nph_enum::COMB, 9},
     };
     
+    using prod_cmode = Opm::Well::ProducerCMode;
+    const std::map<prod_cmode, int> prod_cmodeToECL = {
+        {prod_cmode::NONE,  0},
+        {prod_cmode::ORAT,  1},
+        {prod_cmode::WRAT,  2},
+        {prod_cmode::GRAT,  3},
+        {prod_cmode::LRAT,  4},
+        {prod_cmode::RESV,  5},
+        {prod_cmode::BHP,   7},
+    };
+    
     int maxConnPerWell(const Opm::Schedule& sched,
                        const std::size_t    lookup_step)
     {
@@ -365,6 +376,20 @@ namespace {
 
             return {nom_phase};
     }
+    
+    int getWhistctlMode(const ::Opm::Schedule& sched,
+                     const std::size_t    lookup_step)
+    {
+            int mode = 0;            
+            const auto& w_hist_ctl_mode = sched.getGlobalWhistctlMmode(lookup_step);
+            const auto it_ctl = prod_cmodeToECL.find(w_hist_ctl_mode);
+                if (it_ctl != prod_cmodeToECL.end()) {
+                    mode = it_ctl->second;
+                }
+
+            return mode;
+    }
+
 } // Anonymous
 
 // #####################################################################
@@ -416,6 +441,7 @@ createInteHead(const EclipseState& es,
         .actionParam        (getActionParam(rspec, acts))
         .variousUDQ_ACTIONXParam()
         .nominatedPhaseGuideRate(setGuideRateNominatedPhase(sched,lookup_step))
+        .whistControlMode(getWhistctlMode(sched,lookup_step))
         ;
 
     return ih.data();

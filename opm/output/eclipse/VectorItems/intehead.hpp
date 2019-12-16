@@ -83,6 +83,8 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
         DAY     =  64,      //  Calendar day of report step (1..31)
         MONTH   =  65,      //  Calendar month of report step (1..12)
         YEAR    =  66,      //  Calendar year of report step
+        
+        WHISTC   =  71,      //  Calendar year of report step
 
         NOOFACTIONS = 156,  //  The number of actions in the dataset
         MAXNOLINES = 157,   //  Maximum number of lines of schedule data for ACTION keyword - including ENDACTIO

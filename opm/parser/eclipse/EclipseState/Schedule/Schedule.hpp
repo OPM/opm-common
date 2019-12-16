@@ -184,6 +184,7 @@ namespace Opm
         std::vector<const Group*> getChildGroups2(const std::string& group_name, size_t timeStep) const;
         std::vector<Well> getChildWells2(const std::string& group_name, size_t timeStep) const;
         const OilVaporizationProperties& getOilVaporizationProperties(size_t timestep) const;
+        const Well::ProducerCMode& getGlobalWhistctlMmode(size_t timestep) const;
 
         const UDQActive& udqActive(size_t timeStep) const;
         const WellTestConfig& wtestConfig(size_t timestep) const;
