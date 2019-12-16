@@ -795,7 +795,6 @@ inline void handleKW( SummaryConfig::keyword_list& list,
 
 // =====================================================================
 
-
 SummaryNode::Category parseKeywordCategory(const std::string& keyword) {
     using Cat = SummaryNode::Category;
 

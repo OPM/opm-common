@@ -50,6 +50,7 @@ namespace Opm {
             Undefined,
         };
 
+        SummaryNode() = default;
         explicit SummaryNode(std::string keyword, const Category cat, Location loc_arg);
 
         SummaryNode& parameterType(const Type type);
