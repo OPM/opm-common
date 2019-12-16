@@ -206,6 +206,56 @@ namespace {
 
 
 
+    Schedule::Schedule(const TimeMap& timeMap,
+                       const WellMap& wellsStatic,
+                       const GroupMap& group,
+                       const DynamicState<OilVaporizationProperties>& oilVapProps,
+                       const Events& events,
+                       const DynamicVector<Deck>& modifierDeck,
+                       const Tuning& tuning,
+                       const MessageLimits& messageLimits,
+                       const Runspec& runspec,
+                       const VFPProdMap& vfpProdTables,
+                       const VFPInjMap& vfpInjTables,
+                       const DynamicState<std::shared_ptr<WellTestConfig>>& wtestConfig,
+                       const DynamicState<std::shared_ptr<WListManager>>& wListManager,
+                       const DynamicState<std::shared_ptr<UDQConfig>>& udqConfig,
+                       const DynamicState<std::shared_ptr<UDQActive>>& udqActive,
+                       const DynamicState<std::shared_ptr<GuideRateConfig>>& guideRateConfig,
+                       const DynamicState<std::shared_ptr<GConSale>>& gconSale,
+                       const DynamicState<std::shared_ptr<GConSump>>& gconSump,
+                       const DynamicState<Well::ProducerCMode>& globalWhistCtlMode,
+                       const DynamicState<std::shared_ptr<Action::Actions>>& actions,
+                       const RFTConfig& rftconfig,
+                       const DynamicState<int>& nupCol,
+                       const std::map<std::string,Events>& wellGroupEvents) :
+        m_timeMap(timeMap),
+        wells_static(wellsStatic),
+        groups(group),
+        m_oilvaporizationproperties(oilVapProps),
+        m_events(events),
+        m_modifierDeck(modifierDeck),
+        m_tuning(tuning),
+        m_messageLimits(messageLimits),
+        m_runspec(runspec),
+        vfpprod_tables(vfpProdTables),
+        vfpinj_tables(vfpInjTables),
+        wtest_config(wtestConfig),
+        wlist_manager(wListManager),
+        udq_config(udqConfig),
+        udq_active(udqActive),
+        guide_rate_config(guideRateConfig),
+        gconsale(gconSale),
+        gconsump(gconSump),
+        global_whistctl_mode(globalWhistCtlMode),
+        m_actions(actions),
+        rft_config(rftconfig),
+        m_nupcol(nupCol),
+        wellgroup_events(wellGroupEvents)
+    {}
+
+
+
     std::time_t Schedule::getStartTime() const {
         return this->posixStartTime( );
     }
@@ -2633,7 +2683,7 @@ void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, c
     const OilVaporizationProperties& Schedule::getOilVaporizationProperties(size_t timestep) const {
         return m_oilvaporizationproperties.get(timestep);
     }
-    
+
     const Well::ProducerCMode& Schedule::getGlobalWhistctlMmode(size_t timestep) const {
         return global_whistctl_mode.get(timestep);
     }
@@ -2808,6 +2858,134 @@ void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, c
         return this->m_nupcol.get(reportStep);
     }
 
+    const Schedule::WellMap& Schedule::getStaticWells() const {
+        return wells_static;
+    }
 
+    const Schedule::GroupMap& Schedule::getGroups() const {
+        return groups;
+    }
+
+    const DynamicState<OilVaporizationProperties>& Schedule::getOilVapProps() const {
+        return m_oilvaporizationproperties;
+    }
+
+    const DynamicVector<Deck>& Schedule::getModifierDeck() const {
+        return m_modifierDeck;
+    }
+
+    const Runspec& Schedule::getRunspec() const {
+        return m_runspec;
+    }
+
+    const Schedule::VFPProdMap& Schedule::getVFPProdTables() const {
+        return vfpprod_tables;
+    }
+
+    const Schedule::VFPInjMap& Schedule::getVFPInjTables() const {
+        return vfpinj_tables;
+    }
+
+    const DynamicState<std::shared_ptr<WellTestConfig>>& Schedule::getWellTestConfig() const  {
+        return wtest_config;
+    }
+
+    const DynamicState<std::shared_ptr<WListManager>>& Schedule::getWListManager() const {
+        return wlist_manager;
+    }
+
+    const DynamicState<std::shared_ptr<UDQConfig>>& Schedule::getUDQConfig() const {
+        return udq_config;
+    }
+
+    const DynamicState<std::shared_ptr<UDQActive>>& Schedule::getUDQActive() const {
+        return udq_active;
+    }
+
+    const DynamicState<std::shared_ptr<GuideRateConfig>>& Schedule::getGuideRateConfig() const {
+        return guide_rate_config;
+    }
+
+    const DynamicState<std::shared_ptr<GConSale>>& Schedule::getGConSale() const {
+        return gconsale;
+    }
+
+    const DynamicState<std::shared_ptr<GConSump>>& Schedule::getGConSump() const {
+        return gconsump;
+    }
+
+    const DynamicState<Well::ProducerCMode>& Schedule::getGlobalWhistCtlMode() const {
+        return global_whistctl_mode;
+    }
+
+    const DynamicState<std::shared_ptr<Action::Actions>>& Schedule::getActions() const {
+        return m_actions;
+    }
+
+    const DynamicState<int>& Schedule::getNupCol() const {
+        return m_nupcol;
+    }
+
+     const std::map<std::string,Events>& Schedule::getWellGroupEvents() const {
+        return wellgroup_events;
+     }
+
+     bool Schedule::operator==(const Schedule& data) const {
+        auto&& comparePtr = [](const auto& t1, const auto& t2) {
+                               if ((t1 && !t2) || (!t1 && t2))
+                                   return false;
+                               if (!t1)
+                                   return true;
+
+                               return *t1 == *t2;
+        };
+
+        auto&& compareDynState = [comparePtr](const auto& state1, const auto& state2) {
+            if (state1.data().size() != state2.data().size())
+                return false;
+            return std::equal(state1.data().begin(), state1.data().end(),
+                              state2.data().begin(), comparePtr);
+        };
+
+        auto&& compareMap = [comparePtr,
+                             compareDynState](const auto& map1, const auto& map2) {
+            if (map1.size() != map2.size())
+                return false;
+            auto it2 = map2.begin();
+            for (const auto& it : map1) {
+                if (it.first != it2->first)
+                    return false;
+                if (!compareDynState(it.second, it2->second))
+                    return false;
+
+                ++it2;
+            }
+            return true;
+        };
+
+        return this->getTimeMap() == data.getTimeMap() &&
+               compareMap(this->getStaticWells(), data.getStaticWells()) &&
+               compareMap(this->getGroups(), data.getGroups()) &&
+               this->getOilVapProps() == data.getOilVapProps() &&
+               this->getEvents() == data.getEvents() &&
+               this->getModifierDeck() == data.getModifierDeck() &&
+               this->getTuning() == data.getTuning() &&
+               this->getMessageLimits() == data.getMessageLimits() &&
+               this->getRunspec() == data.getRunspec() &&
+               compareMap(this->getVFPProdTables(), data.getVFPProdTables()) &&
+               compareMap(this->getVFPInjTables(), data.getVFPInjTables()) &&
+               compareDynState(this->getWellTestConfig(), data.getWellTestConfig()) &&
+               compareDynState(this->getWListManager(), data.getWListManager()) &&
+               compareDynState(this->getUDQConfig(), data.getUDQConfig()) &&
+               compareDynState(this->getUDQActive(), data.getUDQActive()) &&
+               compareDynState(this->getGuideRateConfig(), data.getGuideRateConfig()) &&
+               compareDynState(this->getGConSale(), data.getGConSale()) &&
+               compareDynState(this->getGConSump(), data.getGConSump()) &&
+               this->getGlobalWhistCtlMode() == data.getGlobalWhistCtlMode() &&
+               compareDynState(this->getActions(), data.getActions()) &&
+               this->rftConfig () == data.rftConfig() &&
+               this->getNupCol() == data.getNupCol() &&
+               this->getWellGroupEvents() == data.getWellGroupEvents();
+     }
 
 }
