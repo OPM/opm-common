@@ -423,10 +423,16 @@ namespace {
 
     template <typename T, class WriteVector>
     void writeCellPropertiesWithDefaultFlag(const Properties& propList,
-                                            const ::Opm::GridProperties<T>& propValues,
-                                            const ::Opm::FieldPropsManager& fp,
-                                            const ::Opm::EclipseGrid&       grid,
-                                            WriteVector&&                   write)
+                                            const ::Opm::GridProperties<T>&
+#ifndef ENABLE_3DPROPS_TESTING
+                                            propValues
+#endif
+                                            , const ::Opm::FieldPropsManager& fp,
+                                            const ::Opm::EclipseGrid&
+#ifndef ENABLE_3DPROPS_TESTING
+                                            grid
+#endif
+                                            , WriteVector&&                   write)
     {
         for (const auto& prop : propList) {
 #ifdef ENABLE_3DPROPS_TESTING
@@ -452,10 +458,16 @@ namespace {
 
     template <typename T, class WriteVector>
     void writeCellPropertiesValuesOnly(const Properties& propList,
-                                       const ::Opm::GridProperties<T>& propValues,
-                                       const ::Opm::FieldPropsManager& fp,
-                                       const ::Opm::EclipseGrid&       grid,
-                                       WriteVector&&                   write)
+                                       const ::Opm::GridProperties<T>&
+#ifndef ENABLE_3DPROPS_TESTING
+                                       propValues
+#endif
+                                       , const ::Opm::FieldPropsManager& fp,
+                                       const ::Opm::EclipseGrid&
+#ifndef ENABLE_3DPROPS_TESTING
+                                       grid
+#endif
+                                       , WriteVector&&                   write)
     {
         for (const auto& prop : propList) {
 
