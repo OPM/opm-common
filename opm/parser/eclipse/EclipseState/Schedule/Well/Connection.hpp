@@ -67,7 +67,10 @@ namespace Opm {
         static const std::string Order2String( Order enumValue );
         static Order OrderFromString(const std::string& comporderStringValue);
 
-
+        enum class CTFKind {
+            DeckValue,
+            Defaulted,
+        };
 
         Connection(int i, int j , int k ,
                    int complnum,
@@ -80,6 +83,7 @@ namespace Opm {
                    double skin_factor,
                    const int satTableId,
                    const Direction direction,
+                   const CTFKind ctf_kind,
                    const std::size_t seqIndex,
                    const double segDistStart,
                    const double segDistEnd,
@@ -118,6 +122,10 @@ namespace Opm {
         void setSegDistStart(const double& distStart);
         void setSegDistEnd(const double& distEnd);
         std::string str() const;
+        bool ctfAssignedFromInput() const
+        {
+            return this->m_ctfkind == CTFKind::DeckValue;
+        }
 
         bool operator==( const Connection& ) const;
         bool operator!=( const Connection& ) const;
@@ -134,6 +142,7 @@ namespace Opm {
         double m_skin_factor;
 
         std::array<int,3> ijk;
+        CTFKind m_ctfkind;
         std::size_t m_seqIndex;
         double m_segDistStart;
         double m_segDistEnd;
@@ -144,6 +153,8 @@ namespace Opm {
         // -1 means the completion is not related to segment
         int segment_number = -1;
         double wPi = 1.0;
+
+        static std::string CTFKindToString(const CTFKind);
     };
 }
 
