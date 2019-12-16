@@ -548,9 +548,8 @@ void set_dimensions( ParserItem& item,
 
         if (double_records) {
             /* Note: this merely dumps all records sequentially into m_recordList.
-               In order to actually use double-record keywords, DeckKeyword needs to have a 
-               2-dimensional DeckRecord structure, e.g.
-               std::vector< std::vector<DeckRecord >> m_recordList; */
+               Each block of records is separated by an empty DeckRecord.
+            */
             size_t record_nr = 0;
             for (auto& rawRecord : rawKeyword) {
                 if (rawRecord.size() == 0) {
