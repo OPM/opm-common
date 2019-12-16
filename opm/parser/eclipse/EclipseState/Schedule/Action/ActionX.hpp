@@ -63,9 +63,19 @@ namespace Action {
 
 class ActionX {
 public:
+    ActionX();
     ActionX(const std::string& name, size_t max_run, double max_wait, std::time_t start_time);
     ActionX(const DeckKeyword& kw, std::time_t start_time);
     ActionX(const DeckRecord& record, std::time_t start_time);
+    ActionX(const std::string& nam,
+            size_t maxRun,
+            double minWait,
+            std::time_t startTime,
+            const std::vector<DeckKeyword>& keyword,
+            const AST& cond,
+            const std::vector<Condition>& conditions,
+            size_t runCount,
+            std::time_t lastRun);
 
     void addKeyword(const DeckKeyword& kw);
     bool ready(std::time_t sim_time) const;
@@ -84,8 +94,15 @@ public:
       The conditions() and keyword_strings() methods, and their underlying data
       members are only present to support writing formatted restart files.
     */
+    const std::vector<DeckKeyword>& getKeywords() const;
     const std::vector<Condition>& conditions() const;
+    const Action::AST& getCondition() const;
     std::vector<std::string> keyword_strings() const;
+    size_t getRunCount() const;
+    std::time_t getLastRun() const;
+
+    bool operator==(const ActionX& data) const;
+
 private:
     std::string m_name;
     size_t m_max_run = 0;
