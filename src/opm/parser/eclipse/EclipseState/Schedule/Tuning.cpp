@@ -66,6 +66,83 @@ namespace Opm {
     {
     }
 
+    Tuning::Tuning(const DynamicState<double>& TSINIT,
+                   const DynamicState<double>& TSMAXZ,
+                   const DynamicState<double>& TSMINZ,
+                   const DynamicState<double>& TSMCHP,
+                   const DynamicState<double>& TSFMAX,
+                   const DynamicState<double>& TSFMIN,
+                   const DynamicState<double>& TSFCNV,
+                   const DynamicState<double>& TFDIFF,
+                   const DynamicState<double>& THRUPT,
+                   const DynamicState<double>& TMAXWC,
+                   const DynamicState<int>& TMAXWC_has_value,
+                   const DynamicState<double>& TRGTTE,
+                   const DynamicState<double>& TRGCNV,
+                   const DynamicState<double>& TRGMBE,
+                   const DynamicState<double>& TRGLCV,
+                   const DynamicState<double>& XXXTTE,
+                   const DynamicState<double>& XXXCNV,
+                   const DynamicState<double>& XXXMBE,
+                   const DynamicState<double>& XXXLCV,
+                   const DynamicState<double>& XXXWFL,
+                   const DynamicState<double>& TRGFIP,
+                   const DynamicState<double>& TRGSFT,
+                   const DynamicState<int>& TRGSFT_has_value,
+                   const DynamicState<double>& THIONX,
+                   const DynamicState<int>& TRWGHT,
+                   const DynamicState<int>& NEWTMX,
+                   const DynamicState<int>& NEWTMN,
+                   const DynamicState<int>& LITMAX,
+                   const DynamicState<int>& LITMIN,
+                   const DynamicState<int>& MXWSIT,
+                   const DynamicState<int>& MXWPIT,
+                   const DynamicState<double>& DDPLIM,
+                   const DynamicState<double>& DDSLIM,
+                   const DynamicState<double>& TRGDPR,
+                   const DynamicState<double>& XXXDPR,
+                   const DynamicState<int>& XXXDPR_has_value,
+                   const std::map<std::string, bool>& resetValue) :
+        m_TSINIT(TSINIT),
+        m_TSMAXZ(TSMAXZ),
+        m_TSMINZ(TSMINZ),
+        m_TSMCHP(TSMCHP),
+        m_TSFMAX(TSFMAX),
+        m_TSFMIN(TSFMIN),
+        m_TSFCNV(TSFCNV),
+        m_TFDIFF(TFDIFF),
+        m_THRUPT(THRUPT),
+        m_TMAXWC(TMAXWC),
+        m_TMAXWC_has_value(TMAXWC_has_value),
+        m_TRGTTE(TRGTTE),
+        m_TRGCNV(TRGCNV),
+        m_TRGMBE(TRGMBE),
+        m_TRGLCV(TRGLCV),
+        m_XXXTTE(XXXTTE),
+        m_XXXCNV(XXXCNV),
+        m_XXXMBE(XXXMBE),
+        m_XXXLCV(XXXLCV),
+        m_XXXWFL(XXXWFL),
+        m_TRGFIP(TRGFIP),
+        m_TRGSFT(TRGSFT),
+        m_TRGSFT_has_value(TRGSFT_has_value),
+        m_THIONX(THIONX),
+        m_TRWGHT(TRWGHT),
+        m_NEWTMX(NEWTMX),
+        m_NEWTMN(NEWTMN),
+        m_LITMAX(LITMAX),
+        m_LITMIN(LITMIN),
+        m_MXWSIT(MXWSIT),
+        m_MXWPIT(MXWPIT),
+        m_DDPLIM(DDPLIM),
+        m_DDSLIM(DDSLIM),
+        m_TRGDPR(TRGDPR),
+        m_XXXDPR(XXXDPR),
+        m_XXXDPR_has_value(XXXDPR_has_value),
+        m_ResetValue(resetValue)
+    {
+    }
+
 
     void Tuning::getTuningItemValue(const std::string& tuningItem, size_t timestep, double& value) {
         if(m_ResetValue.find(tuningItem)!= m_ResetValue.end()){
@@ -206,6 +283,46 @@ namespace {
 
 }
 
+    bool Tuning::operator==(const Tuning& data) const {
+        return this->getTSINIT() == data.getTSINIT() &&
+               this->getTSMAXZ() == data.getTSMAXZ() &&
+               this->getTSMINZ() == data.getTSMINZ() &&
+               this->getTSMCHP() == data.getTSMCHP() &&
+               this->getTSFMAX() == data.getTSFMAX() &&
+               this->getTSFMIN() == data.getTSFMIN() &&
+               this->getTSFCNV() == data.getTSFCNV() &&
+               this->getTFDIFF() == data.getTFDIFF() &&
+               this->getTHRUPT() == data.getTHRUPT() &&
+               this->getTMAXWC() == data.getTMAXWC() &&
+               this->getTMAXWC_has_value() == data.getTMAXWC_has_value() &&
+               this->getTRGTTE() == data.getTRGTTE() &&
+               this->getTRGCNV() == data.getTRGCNV() &&
+               this->getTRGMBE() == data.getTRGMBE() &&
+               this->getTRGLCV() == data.getTRGLCV() &&
+               this->getXXXTTE() == data.getXXXTTE() &&
+               this->getXXXCNV() == data.getXXXCNV() &&
+               this->getXXXMBE() == data.getXXXMBE() &&
+               this->getXXXLCV() == data.getXXXLCV() &&
+               this->getXXXWFL() == data.getXXXWFL() &&
+               this->getTRGFIP() == data.getTRGFIP() &&
+               this->getTRGSFT() == data.getTRGSFT() &&
+               this->getTRGSFT_has_value() == data.getTRGSFT_has_value() &&
+               this->getTHIONX() == data.getTHIONX() &&
+               this->getTRWGHT() == data.getTRWGHT() &&
+               this->getNEWTMX() == data.getNEWTMX() &&
+               this->getNEWTMN() == data.getNEWTMN() &&
+               this->getLITMAX() == data.getLITMAX() &&
+               this->getLITMIN() == data.getLITMIN() &&
+               this->getMXWSIT() == data.getMXWSIT() &&
+               this->getMXWPIT() == data.getMXWPIT() &&
+               this->getDDPLIM() == data.getDDPLIM() &&
+               this->getDDSLIM() == data.getDDSLIM() &&
+               this->getTRGDPR() == data.getTRGDPR() &&
+               this->getXXXDPR() == data.getXXXDPR() &&
+               this->getXXXDPR_has_value() == data.getXXXDPR_has_value() &&
+               this->getResetValues() == data.getResetValues();
+    }
+
     /*The following "get" method declarations diverges from coding standard to improve readability*/
     double Tuning::getTSINIT(size_t timestep) const { return getValue("TSINIT", m_TSINIT, m_ResetValue, timestep); }
     double Tuning::getTSMAXZ(size_t timestep) const { return getValue("TSMAXZ", m_TSMAXZ, m_ResetValue, timestep); }
@@ -282,5 +399,153 @@ namespace {
     void Tuning::setTRGDPR(size_t timestep, double TRGDPR) { m_TRGDPR.update(timestep, TRGDPR); }
     void Tuning::setXXXDPR(size_t timestep, double XXXDPR) { m_XXXDPR.update(timestep, XXXDPR);
                                                              m_XXXDPR_has_value.update(timestep, true); }
+
+    const DynamicState<double>& Tuning::getTSINIT() const {
+        return m_TSINIT;
+    }
+
+    const DynamicState<double>& Tuning::getTSMAXZ() const {
+        return m_TSMAXZ;
+    }
+
+    const DynamicState<double>& Tuning::getTSMINZ() const {
+        return m_TSMINZ;
+    }
+
+    const DynamicState<double>& Tuning::getTSMCHP() const {
+        return m_TSMCHP;
+    }
+
+    const DynamicState<double>& Tuning::getTSFMAX() const {
+        return m_TSFMAX;
+    }
+
+    const DynamicState<double>& Tuning::getTSFMIN() const {
+        return m_TSFMIN;
+    }
+
+    const DynamicState<double>& Tuning::getTSFCNV() const {
+        return m_TSFCNV;
+    }
+
+    const DynamicState<double>& Tuning::getTFDIFF() const {
+        return m_TFDIFF;
+    }
+
+    const DynamicState<double>& Tuning::getTHRUPT() const {
+        return m_THRUPT;
+    }
+
+    const DynamicState<double>& Tuning::getTMAXWC() const {
+        return m_TMAXWC;
+    }
+
+    const DynamicState<int>& Tuning::getTMAXWC_has_value() const {
+        return m_TMAXWC_has_value;
+    }
+
+    const DynamicState<double>& Tuning::getTRGTTE() const {
+        return m_TRGTTE;
+    }
+
+    const DynamicState<double>& Tuning::getTRGCNV() const {
+        return m_TRGCNV;
+    }
+
+    const DynamicState<double>& Tuning::getTRGMBE() const {
+        return m_TRGMBE;
+    }
+
+    const DynamicState<double>& Tuning::getTRGLCV() const {
+        return m_TRGLCV;
+    }
+
+    const DynamicState<double>& Tuning::getXXXTTE() const {
+        return m_XXXTTE;
+    }
+
+    const DynamicState<double>& Tuning::getXXXCNV() const {
+        return m_XXXCNV;
+    }
+
+    const DynamicState<double>& Tuning::getXXXMBE() const {
+        return m_XXXMBE;
+    }
+
+    const DynamicState<double>& Tuning::getXXXLCV() const {
+        return m_XXXLCV;
+    }
+
+    const DynamicState<double>& Tuning::getXXXWFL() const {
+        return m_XXXWFL;
+    }
+
+    const DynamicState<double>& Tuning::getTRGFIP() const {
+        return m_TRGFIP;
+    }
+
+    const DynamicState<double>& Tuning::getTRGSFT() const {
+        return m_TRGSFT;
+    }
+
+    const DynamicState<int>& Tuning::getTRGSFT_has_value() const {
+        return m_TRGSFT_has_value;
+    }
+
+    const DynamicState<double>& Tuning::getTHIONX() const {
+        return m_THIONX;
+    }
+
+    const DynamicState<int>& Tuning::getTRWGHT() const {
+        return m_TRWGHT;
+    }
+
+    const DynamicState<int>& Tuning::getNEWTMX() const {
+        return m_NEWTMX;
+    }
+
+    const DynamicState<int>& Tuning::getNEWTMN() const {
+        return m_NEWTMN;
+    }
+
+    const DynamicState<int>& Tuning::getLITMAX() const {
+        return m_LITMAX;
+    }
+
+    const DynamicState<int>& Tuning::getLITMIN() const {
+        return m_LITMIN;
+    }
+
+    const DynamicState<int>& Tuning::getMXWSIT() const {
+        return m_MXWSIT;
+    }
+
+    const DynamicState<int>& Tuning::getMXWPIT() const {
+        return m_MXWPIT;
+    }
+
+    const DynamicState<double>& Tuning::getDDPLIM() const {
+        return m_DDPLIM;
+    }
+
+    const DynamicState<double>& Tuning::getDDSLIM() const {
+        return m_DDSLIM;
+    }
+
+    const DynamicState<double>& Tuning::getTRGDPR() const {
+        return m_TRGDPR;
+    }
+
+    const DynamicState<double>& Tuning::getXXXDPR() const {
+        return m_XXXDPR;
+    }
+
+    const DynamicState<int>& Tuning::getXXXDPR_has_value() const {
+        return m_XXXDPR_has_value;
+    }
+
+    const std::map<std::string,bool>& Tuning::getResetValues() const {
+        return m_ResetValue;
+    }
 
 } //namespace Opm
