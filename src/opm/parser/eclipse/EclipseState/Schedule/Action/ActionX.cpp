@@ -21,9 +21,9 @@
 #include <unordered_set>
 
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionValue.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionX.hpp>
 
-#include "ActionValue.hpp"
 #include "ActionParser.hpp"
 
 namespace Opm {

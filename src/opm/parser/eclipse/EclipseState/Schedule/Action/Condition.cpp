@@ -20,9 +20,9 @@
 #include <string>
 
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionValue.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/Condition.hpp>
 
-#include "ActionValue.hpp"
 #include "ActionParser.hpp"
 
 

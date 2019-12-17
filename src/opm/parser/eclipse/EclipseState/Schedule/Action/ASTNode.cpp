@@ -20,10 +20,8 @@
 #include <fnmatch.h>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionContext.hpp>
-
-#include "ASTNode.hpp"
-#include "ActionValue.hpp"
-
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionValue.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/ASTNode.hpp>
 
 namespace {
     std::string strip_quotes(const std::string& s) {

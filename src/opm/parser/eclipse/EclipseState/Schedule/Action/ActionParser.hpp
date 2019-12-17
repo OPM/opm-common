@@ -23,8 +23,8 @@
 #include <vector>
 #include <string>
 
-#include "ASTNode.hpp"
-#include "ActionValue.hpp"
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/ASTNode.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionValue.hpp>
 
 namespace Opm {
 

@@ -25,10 +25,10 @@
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionAST.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionContext.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionValue.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/ASTNode.hpp>
 
-#include "ASTNode.hpp"
 #include "ActionParser.hpp"
-#include "ActionValue.hpp"
 
 namespace Opm {
 namespace Action {
