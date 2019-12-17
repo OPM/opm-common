@@ -103,11 +103,9 @@ namespace {
         for (const auto& group_name : sched.groupNames(lookup_step)) {
             const auto& group = sched.getGroup(group_name, lookup_step);
             if (group.isProductionGroup()) { 
-                std::cout << "CrIH group.name()" << group.name() << " group.production_cmode() " << static_cast<int>(group.production_cmode()) << std::endl;
                 gctrl = 1;
             }
             if (group.isInjectionGroup()) { 
-                std::cout << "CrIH group.name()" << group.name() << " group.injection_cmode() " << static_cast<int>(group.injection_cmode()) << std::endl;
                 gctrl = 2;
             }
         }
