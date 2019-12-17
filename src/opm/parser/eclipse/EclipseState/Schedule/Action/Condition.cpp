@@ -127,5 +127,14 @@ Condition::Condition(const std::vector<std::string>& tokens, const Location& loc
 }
 
 
+bool Condition::operator==(const Condition& data) const {
+    return lhs == data.lhs &&
+           rhs == data.rhs &&
+           logic == data.logic &&
+           cmp == data.cmp &&
+           cmp_string == data.cmp_string;
+}
+
+
 }
 }

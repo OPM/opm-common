@@ -69,6 +69,7 @@ enum class Comparator {
 };
 
 
+    Condition() = default;
     Condition(const std::vector<std::string>& tokens, const Location& location);
 
 
@@ -77,6 +78,8 @@ enum class Comparator {
     Logical logic = Logical::END;
     Comparator cmp = Comparator::INVALID;
     std::string cmp_string;
+
+    bool operator==(const Condition& data) const;
 };
 
 
