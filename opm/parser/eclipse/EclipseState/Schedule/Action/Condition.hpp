@@ -41,6 +41,11 @@ public:
     void add_arg(const std::string& arg);
     std::string quantity;
     std::vector<std::string> args;
+
+    bool operator==(const Quantity& data) const {
+        return quantity == data.quantity &&
+               args == data.args;
+    }
 };
 
 
