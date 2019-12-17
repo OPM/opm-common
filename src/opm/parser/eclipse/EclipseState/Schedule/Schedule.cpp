@@ -1428,6 +1428,11 @@ namespace {
       does not check or enforce in any way that this is done (i.e. it
       is not checked or verified that the well is initialized with any
       WCONxxxx keyword).
+
+      Update: See the discussion following the defintions of the SI factors, due
+        to a bad design we currently need the well to be specified with WCONPROD
+        / WCONHIST before WELTARG is applied, if not the units for the rates
+        will be wrong.
     */
 
     void Schedule::handleWELTARG( const SCHEDULESection& section ,
@@ -1435,9 +1440,36 @@ namespace {
                                   size_t currentStep,
                                   const ParseContext& parseContext, ErrorGuard& errors) {
         Opm::UnitSystem unitSystem = section.unitSystem();
-        double siFactorL = unitSystem.parse("LiquidSurfaceVolume/Time").getSIScaling();
-        double siFactorG = unitSystem.parse("GasSurfaceVolume/Time").getSIScaling();
-        double siFactorP = unitSystem.parse("Pressure").getSIScaling();
+        /*
+          double siFactorL = unitSystem.parse("LiquidSurfaceVolume/Time").getSIScaling();
+          double siFactorG = unitSystem.parse("GasSurfaceVolume/Time").getSIScaling();
+          double siFactorP = unitSystem.parse("Pressure").getSIScaling();
+        */
+
+        /*
+          Unit system handling in the UDA values has become a complete mess. The
+          point is that the UDA values can *optionally* carry a dimension object
+          with them, and then that unit system is transparaently used when
+          calling UDAValue::get<double>(). For UDA values which come from the
+          deck they are properly decorated with unitsystem, and things work as
+          they should. But when it comes to *explicitly setting* UDA values from
+          the API, as is done in the WELTARG implementation - things are quite
+          broken.
+
+          What currently "works" is:
+
+          - The well must be fully specified with WCONPROD / WCONHIST before the
+            WELTARG keyword is used.
+
+          - The unit conversion here in handleWELTARG is bypassed by setting the
+            conversion factors to 1.0, and the conversion which comes from the
+            dim objects internalized in the UDA objects will handle things on
+            return.
+        */
+
+        const double siFactorL = 1.0;
+        const double siFactorG = 1.0;
+        const double siFactorP = 1.0;
 
         for( const auto& record : keyword ) {
 
