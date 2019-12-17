@@ -1208,25 +1208,47 @@ void eval_udq(const Opm::Schedule& schedule, std::size_t sim_step, Opm::SummaryS
     const UDQConfig& udq = schedule.getUDQConfig(sim_step);
     const auto& func_table = udq.function_table();
     UDQContext context(func_table, st);
-    std::vector<std::string> wells;
-    for (const auto& well_name : schedule.wellNames())
-        wells.push_back(well_name);
+    {
+        const std::vector<std::string> wells = st.wells();
 
-    for (const auto& assign : udq.assignments(UDQVarType::WELL_VAR)) {
-        auto ws = assign.eval(wells);
-        for (const auto& well : wells) {
-            const auto& udq_value = ws[well];
-            if (udq_value)
-                st.update_well_var(well, ws.name(), udq_value.value());
+        for (const auto& assign : udq.assignments(UDQVarType::WELL_VAR)) {
+            auto ws = assign.eval(wells);
+            for (const auto& well : wells) {
+                const auto& udq_value = ws[well];
+                if (udq_value)
+                    st.update_well_var(well, ws.name(), udq_value.value());
+            }
+        }
+
+        for (const auto& def : udq.definitions(UDQVarType::WELL_VAR)) {
+            auto ws = def.eval(context);
+            for (const auto& well : wells) {
+                const auto& udq_value = ws[well];
+                if (udq_value)
+                    st.update_well_var(well, def.keyword(), udq_value.value());
+            }
         }
     }
 
-    for (const auto& def : udq.definitions(UDQVarType::WELL_VAR)) {
-        auto ws = def.eval(context);
-        for (const auto& well : wells) {
-            const auto& udq_value = ws[well];
-            if (udq_value)
-                st.update_well_var(well, def.keyword(), udq_value.value());
+    {
+        const std::vector<std::string> groups = st.groups();
+
+        for (const auto& assign : udq.assignments(UDQVarType::GROUP_VAR)) {
+            auto ws = assign.eval(groups);
+            for (const auto& group : groups) {
+                const auto& udq_value = ws[group];
+                if (udq_value)
+                    st.update_group_var(group, ws.name(), udq_value.value());
+            }
+        }
+
+        for (const auto& def : udq.definitions(UDQVarType::GROUP_VAR)) {
+            auto ws = def.eval(context);
+            for (const auto& group : groups) {
+                const auto& udq_value = ws[group];
+                if (udq_value)
+                    st.update_group_var(group, def.keyword(), udq_value.value());
+            }
         }
     }
 

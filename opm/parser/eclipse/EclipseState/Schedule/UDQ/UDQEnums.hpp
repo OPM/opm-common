@@ -59,14 +59,14 @@ namespace Opm {
 enum class UDQVarType {
     NONE = 0,
     SCALAR = 1,
-    WELL_VAR = 2,
-    CONNECTION_VAR= 3,
-    FIELD_VAR = 4,
-    GROUP_VAR = 5,
-    REGION_VAR = 6,
-    SEGMENT_VAR = 7,
-    AQUIFER_VAR = 8,
-    BLOCK_VAR = 9
+    CONNECTION_VAR = 2,
+    FIELD_VAR = 3,
+    REGION_VAR = 4,
+    SEGMENT_VAR = 5,
+    AQUIFER_VAR = 6,
+    BLOCK_VAR = 7,
+    WELL_VAR = 8,
+    GROUP_VAR = 9
 };
 
 
@@ -165,8 +165,10 @@ enum class UDAKeyword {
 
 namespace UDQ {
 
+    UDQVarType targetType(const std::string& keyword, const std::vector<std::string>& selector);
     UDQVarType targetType(const std::string& keyword);
     UDQVarType varType(const std::string& keyword);
+    UDQVarType coerce(UDQVarType t1, UDQVarType t2);
     UDQAction actionType(const std::string& action_string);
     UDQTokenType funcType(const std::string& func_name);
     bool binaryFunc(UDQTokenType token_type);
@@ -177,7 +179,6 @@ namespace UDQ {
     std::string typeName(UDQVarType var_type);
     UDAKeyword keyword(UDAControl control);
     int uadCode(UDAControl control);
-
 }
 }
 
