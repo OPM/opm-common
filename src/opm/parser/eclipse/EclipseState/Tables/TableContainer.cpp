@@ -20,9 +20,15 @@
 #include <string>
 #include <iostream>
 
+#include <opm/parser/eclipse/EclipseState/Tables/SimpleTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableContainer.hpp>
 
 namespace Opm {
+
+    TableContainer::TableContainer() :
+        m_maxTables(0)
+    {
+    }
 
     TableContainer::TableContainer(size_t maxTables) :
         m_maxTables(maxTables)
@@ -37,6 +43,15 @@ namespace Opm {
 
     size_t TableContainer::size() const {
         return m_tables.size();
+    }
+
+
+    size_t TableContainer::max() const {
+        return m_maxTables;
+    }
+
+    const TableContainer::TableMap& TableContainer::tables() const {
+        return m_tables;
     }
 
 
@@ -73,6 +88,23 @@ namespace Opm {
             throw std::invalid_argument("TableContainer has max: " + std::to_string( m_maxTables ) + " tables. Table number: " + std::to_string( tableNumber ) + " illegal.");
 
         m_tables[tableNumber] = table;
+    }
+
+
+    bool TableContainer::operator==(const TableContainer& data) const {
+        if (this->max() != data.max())
+            return false;
+        if (this->size() != data.size())
+            return false;
+        for (const auto& it : m_tables) {
+            auto it2 = data.m_tables.find(it.first);
+            if (it2 == data.m_tables.end())
+                return false;
+            if (!(*it.second == *it2->second))
+                return false;
+        }
+
+        return true;
     }
 }
 

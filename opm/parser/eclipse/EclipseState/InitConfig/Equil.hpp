@@ -19,9 +19,13 @@ namespace Opm {
             bool wetGasInitConstantRv() const;
             int initializationTargetAccuracy() const;
 
-            EquilRecord( double datum_depth_arg, double datum_depth_pc_arg, double woc_depth, double woc_pc, double goc_depth, double goc_pc, bool live_oil_init, bool wet_gas_init, int target_accuracy);
-        private:
+            EquilRecord();
 
+            EquilRecord( double datum_depth_arg, double datum_depth_pc_arg, double woc_depth, double woc_pc, double goc_depth, double goc_pc, bool live_oil_init, bool wet_gas_init, int target_accuracy);
+
+            bool operator==(const EquilRecord& data) const;
+
+        private:
             double datum_depth;
             double datum_depth_ps;
             double water_oil_contact_depth;
@@ -40,8 +44,10 @@ namespace Opm {
 
             Equil() = default;
             explicit Equil( const DeckKeyword& );
+            Equil(const std::vector<EquilRecord>& records);
 
             const EquilRecord& getRecord( size_t id ) const;
+            const std::vector<EquilRecord>& records() const;
 
             size_t size() const;
             bool empty() const;
@@ -49,8 +55,10 @@ namespace Opm {
             const_iterator begin() const;
             const_iterator end() const;
 
+            bool operator==(const Equil& data) const;
+
         private:
-            std::vector< EquilRecord > records;
+            std::vector< EquilRecord > m_records;
     };
 
 }

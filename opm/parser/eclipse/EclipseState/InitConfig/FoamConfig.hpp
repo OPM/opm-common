@@ -33,8 +33,14 @@ class DeckRecord;
 class FoamData
 {
 public:
+    FoamData();
     FoamData(const DeckRecord& FOAMFSC_record, const DeckRecord& FOAMROCK_record);
     explicit FoamData(const DeckRecord& FOAMROCK_record);
+    FoamData(double reference_surfactant_concentration,
+             double exponent,
+             double minimum_surfactant_concentration,
+             bool allow_desorption,
+             double rock_density);
 
     double referenceSurfactantConcentration() const;
     double exponent() const;
@@ -42,6 +48,8 @@ public:
 
     bool allowDesorption() const;
     double rockDensity() const;
+
+    bool operator==(const FoamData& data) const;
 
 private:
     double reference_surfactant_concentration_;
@@ -57,8 +65,10 @@ class FoamConfig
 public:
     FoamConfig() = default;
     explicit FoamConfig(const Deck&);
+    FoamConfig(const std::vector<FoamData>& data);
 
     const FoamData& getRecord(std::size_t index) const;
+    const std::vector<FoamData>& records() const;
 
     std::size_t size() const;
     bool empty() const;
@@ -66,6 +76,8 @@ public:
     using const_iterator = std::vector<FoamData>::const_iterator;
     const_iterator begin() const;
     const_iterator end() const;
+
+    bool operator==(const FoamConfig& data) const;
 
 private:
     std::vector<FoamData> data_;

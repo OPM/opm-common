@@ -3,6 +3,11 @@
 
 namespace Opm {
 
+    EquilRecord::EquilRecord() :
+        EquilRecord(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, false, false, 0.0)
+  {
+  }
+
    EquilRecord::EquilRecord( double datum_depth_arg, double datum_depth_pc_arg, double woc_depth, double woc_pc, double goc_depth, double goc_pc, bool live_oil_init, bool wet_gas_init, int target_accuracy) :
        datum_depth(datum_depth_arg),
        datum_depth_ps(datum_depth_pc_arg),
@@ -51,6 +56,20 @@ namespace Opm {
         return this->init_target_accuracy;
     }
 
+    bool EquilRecord::operator==(const EquilRecord& data) const {
+        return datum_depth == data.datum_depth &&
+               datum_depth_ps == data.datum_depth_ps &&
+               water_oil_contact_depth == data.water_oil_contact_depth &&
+               water_oil_contact_capillary_pressure ==
+               data.water_oil_contact_capillary_pressure &&
+               data.gas_oil_contact_depth == data.gas_oil_contact_depth &&
+               gas_oil_contact_capillary_pressure ==
+               data.gas_oil_contact_capillary_pressure &&
+               live_oil_init_proc == data.live_oil_init_proc &&
+               wet_gas_init_proc == data.wet_gas_init_proc &&
+               init_target_accuracy == data.init_target_accuracy;
+    }
+
     /* */
 
     Equil::Equil( const DeckKeyword& keyword )
@@ -66,27 +85,40 @@ namespace Opm {
             auto wet_gas_init = record.getItem(7).get<int>(0) <= 0;
             auto target_accuracy = record.getItem(8).get<int>(0);
 
-            this->records.push_back( EquilRecord(datum_depth_arg, datum_depth_pc_arg, woc_depth, woc_pc, goc_depth, goc_pc, live_oil_init, wet_gas_init, target_accuracy) );
+            this->m_records.push_back( EquilRecord(datum_depth_arg, datum_depth_pc_arg, woc_depth, woc_pc, goc_depth, goc_pc, live_oil_init, wet_gas_init, target_accuracy) );
         }
     }
 
+    Equil::Equil(const std::vector<EquilRecord>& records) :
+        m_records(records)
+    {
+    }
+
     const EquilRecord& Equil::getRecord( size_t id ) const {
-        return this->records.at( id );
+        return this->m_records.at( id );
+    }
+
+    const std::vector<EquilRecord>& Equil::records() const {
+        return m_records;
     }
 
     size_t Equil::size() const {
-        return this->records.size();
+        return this->m_records.size();
     }
 
     bool Equil::empty() const {
-        return this->records.empty();
+        return this->m_records.empty();
     }
 
     Equil::const_iterator Equil::begin() const {
-        return this->records.begin();
+        return this->m_records.begin();
     }
 
     Equil::const_iterator Equil::end() const {
-        return this->records.end();
+        return this->m_records.end();
+    }
+
+    bool Equil::operator==(const Equil& data) const {
+        return this->records() == data.records();
     }
 }
