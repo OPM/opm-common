@@ -291,8 +291,8 @@ const UDQScalar& UDQSet::operator[](std::size_t index) const {
     return this->values[index];
 }
 
-const UDQScalar& UDQSet::operator[](const std::string& well) const {
-    std::size_t index = this->wgname_index.at(well);
+const UDQScalar& UDQSet::operator[](const std::string& wgname) const {
+    std::size_t index = this->wgname_index.at(wgname);
     return this->operator[](index);
 }
 

@@ -131,10 +131,6 @@ UDQVarType targetType(const std::string& keyword) {
 
     char first_char =  keyword[0];
     switch(first_char) {
-    case 'W':
-        return UDQVarType::WELL_VAR;
-    case 'G':
-        return UDQVarType::GROUP_VAR;
     case 'C':
         return UDQVarType::CONNECTION_VAR;
     case 'R':
@@ -147,6 +143,10 @@ UDQVarType targetType(const std::string& keyword) {
         return UDQVarType::AQUIFER_VAR;
     case 'B':
         return UDQVarType::BLOCK_VAR;
+    case 'W':
+        return UDQVarType::WELL_VAR;
+    case 'G':
+        return UDQVarType::GROUP_VAR;
     default:
         try {
             std::stod(keyword);
@@ -157,6 +157,23 @@ UDQVarType targetType(const std::string& keyword) {
     }
 
 }
+
+UDQVarType targetType(const std::string& keyword, const std::vector<std::string>& selector) {
+    auto tt = targetType(keyword);
+
+    if (tt == UDQVarType::WELL_VAR || tt == UDQVarType::GROUP_VAR) {
+        if (selector.empty())
+            return tt;
+        else {
+            const auto& wgname = selector[0];
+            if (wgname.find("*") != std::string::npos)
+                return tt;
+        }
+    }
+
+    return UDQVarType::SCALAR;
+}
+
 
 
 UDQVarType varType(const std::string& keyword) {
@@ -234,7 +251,46 @@ UDQTokenType funcType(const std::string& func_name) {
 }
 
 
+UDQVarType coerce(UDQVarType t1, UDQVarType t2) {
+    if (t1 == t2)
+        return t1;
 
+    if (t1 == UDQVarType::WELL_VAR ) {
+        if (t2 == UDQVarType::GROUP_VAR)
+            throw std::logic_error("Can not coerce well variable and group variable");
+
+        return t1;
+    }
+
+    if (t1 == UDQVarType::GROUP_VAR ) {
+        if (t2 == UDQVarType::WELL_VAR)
+            throw std::logic_error("Can not coerce well variable and group variable");
+
+        return t1;
+    }
+
+    if (t2 == UDQVarType::WELL_VAR ) {
+        if (t1 == UDQVarType::GROUP_VAR)
+            throw std::logic_error("Can not coerce well variable and group variable");
+
+        return t2;
+    }
+
+    if (t2 == UDQVarType::GROUP_VAR ) {
+        if (t1 == UDQVarType::WELL_VAR)
+            throw std::logic_error("Can not coerce well variable and group variable");
+
+        return t2;
+    }
+
+    if (t1 == UDQVarType::NONE)
+        return t2;
+
+    if (t2 == UDQVarType::NONE)
+        return t1;
+
+    return t1;
+}
 
 
 

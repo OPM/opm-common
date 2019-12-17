@@ -34,6 +34,59 @@ Copyright 2018 Statoil ASA.
 
 using namespace Opm;
 
+BOOST_AUTO_TEST_CASE(TYPE_COERCION) {
+    BOOST_CHECK( UDQVarType::SCALAR == UDQ::coerce(UDQVarType::SCALAR, UDQVarType::SCALAR) );
+
+    BOOST_CHECK( UDQVarType::WELL_VAR == UDQ::coerce(UDQVarType::SCALAR, UDQVarType::WELL_VAR));
+    BOOST_CHECK( UDQVarType::WELL_VAR == UDQ::coerce(UDQVarType::WELL_VAR, UDQVarType::FIELD_VAR));
+
+    BOOST_CHECK( UDQVarType::GROUP_VAR == UDQ::coerce(UDQVarType::SCALAR, UDQVarType::GROUP_VAR));
+    BOOST_CHECK( UDQVarType::GROUP_VAR == UDQ::coerce(UDQVarType::GROUP_VAR, UDQVarType::FIELD_VAR));
+
+    BOOST_CHECK_THROW( UDQ::coerce(UDQVarType::GROUP_VAR, UDQVarType::WELL_VAR), std::logic_error );
+    BOOST_CHECK_THROW( UDQ::coerce(UDQVarType::WELL_VAR, UDQVarType::GROUP_VAR), std::logic_error );
+}
+
+
+BOOST_AUTO_TEST_CASE(GROUP_VARIABLES)
+{
+    UDQParams udqp;
+    UDQFunctionTable udqft;
+    UDQDefine def_group(udqp, "GUOPRL",{"(", "5000",  "-",  "GOPR",  "LOWER",  "*", "0.13",  "-",  "GOPR",  "UPPER",  "*", "0.15", ")" , "*",  "0.89"});
+    SummaryState st(std::chrono::system_clock::now());
+    UDQContext context(udqft, st);
+    double gopr_lower = 1234;
+    double gopr_upper = 4321;
+
+    st.update_group_var("LOWER", "GOPR", gopr_lower);
+    st.update_group_var("UPPER", "GOPR", gopr_upper);
+
+    auto res_group = def_group.eval(context);
+    BOOST_CHECK_EQUAL( res_group["UPPER"].value(), (5000 - gopr_lower*0.13 - gopr_upper*0.15)*0.89);
+    BOOST_CHECK_EQUAL( res_group["UPPER"].value(), (5000 - gopr_lower*0.13 - gopr_upper*0.15)*0.89);
+}
+
+
+
+BOOST_AUTO_TEST_CASE(SUBTRACT)
+{
+    UDQParams udqp;
+    UDQFunctionTable udqft;
+    UDQDefine def(udqp, "WU", {"16", "-", "8", "-", "4", "-", "2", "-", "1"});
+    UDQDefine scalar(udqp, "WU", {"16"});
+
+    SummaryState st(std::chrono::system_clock::now());
+    UDQContext context(udqft, st);
+
+    st.update_well_var("P1", "WOPR", 4);
+    auto res = def.eval(context);
+    BOOST_CHECK_EQUAL( res[0].value(), 1.0);
+
+    auto res2 = scalar.eval(context);
+    BOOST_CHECK_EQUAL( res2[0].value(), 16.0);
+}
+
+
 BOOST_AUTO_TEST_CASE(TEST)
 {
     UDQParams udqp;
@@ -124,8 +177,6 @@ BOOST_AUTO_TEST_CASE(UDQFieldSetTest) {
     std::vector<std::string> wells = {"P1", "P2", "P3", "P4"};
     UDQParams udqp;
     UDQFunctionTable udqft(udqp);
-    UDQDefine def_fxxx(udqp, "FU_SCALAR", {"123"});
-    UDQDefine def_fopr(udqp, "FUOPR", {"SUM", "(", "WOPR", ")"});
     SummaryState st(std::chrono::system_clock::now());
     UDQContext context(udqft, st);
 
@@ -134,12 +185,19 @@ BOOST_AUTO_TEST_CASE(UDQFieldSetTest) {
     st.update_well_var("P3", "WOPR", 3.0);
     st.update_well_var("P4", "WOPR", 4.0);
 
-    auto fxxx_res = def_fxxx.eval(context);
-    BOOST_CHECK_EQUAL( fxxx_res[0].value(), 123.0 );
-    BOOST_CHECK( fxxx_res.var_type() == UDQVarType::FIELD_VAR);
+    /*{
+        UDQDefine def_fxxx(udqp, "FU_SCALAR", {"123"});
+        auto fxxx_res = def_fxxx.eval(context);
+        BOOST_CHECK_EQUAL( fxxx_res[0].value(), 123.0 );
+        BOOST_CHECK( fxxx_res.var_type() == UDQVarType::FIELD_VAR);
+    }
+    */
 
-    auto fopr_res = def_fopr.eval(context);
-    BOOST_CHECK_EQUAL( fopr_res[0].value(), 10.0 );
+    {
+        UDQDefine def_fopr(udqp, "FUOPR", {"SUM", "(", "WOPR", ")"});
+        auto fopr_res = def_fopr.eval(context);
+        BOOST_CHECK_EQUAL( fopr_res[0].value(), 10.0 );
+    }
 }
 
 

@@ -83,8 +83,13 @@ UDQParseNode UDQParser::next() {
 }
 
 
+bool UDQParser::empty() const {
+    return (static_cast<size_t>(this->current_pos) == this->tokens.size());
+}
+
+
 UDQParseNode UDQParser::current() const {
-    if (static_cast<size_t>(this->current_pos) == this->tokens.size())
+    if (this->empty())
         return UDQTokenType::end;
 
     const std::string& arg = this->tokens[this->current_pos];
@@ -111,7 +116,7 @@ UDQASTNode UDQParser::parse_factor() {
 
         current = this->current();
         if (current.type != UDQTokenType::close_paren)
-            return UDQTokenType::error;
+            return UDQASTNode(UDQTokenType::error);
 
         this->next();
         return inner_expr;
@@ -126,12 +131,12 @@ UDQASTNode UDQParser::parse_factor() {
 
             current = this->current();
             if (current.type != UDQTokenType::close_paren)
-                return UDQTokenType::error;
+                return UDQASTNode(UDQTokenType::error);
 
             this->next();
             return UDQASTNode(func_node.type, func_node.value, arg_expr);
         } else
-            return UDQTokenType::error;
+            return UDQASTNode(UDQTokenType::error);
     }
 
     UDQASTNode node(current.type, current.value, current.selector);
@@ -141,17 +146,16 @@ UDQASTNode UDQParser::parse_factor() {
 
 UDQASTNode UDQParser::parse_pow() {
     auto left = this->parse_factor();
-    auto current = this->current();
-    if (current.type == UDQTokenType::end)
+    if (this->empty())
         return left;
 
+    auto current = this->current();
     if (current.type == UDQTokenType::binary_op_pow) {
-        auto func_node = current;
         this->next();
-        auto right = this->parse_mul();
-        if (right.type == UDQTokenType::end)
+        if (this->empty())
             return UDQASTNode(UDQTokenType::error);
 
+        auto right = this->parse_mul();
         return UDQASTNode(current.type, current.value, left, right);
     }
 
@@ -163,16 +167,15 @@ UDQASTNode UDQParser::parse_pow() {
 UDQASTNode UDQParser::parse_mul() {
     auto left = this->parse_pow();
     auto current = this->current();
-    if (current.type == UDQTokenType::end)
+    if (this->empty())
         return left;
 
     if (current.type == UDQTokenType::binary_op_mul || current.type == UDQTokenType::binary_op_div) {
-        auto func_node = current;
         this->next();
-        auto right = this->parse_mul();
-        if (right.type == UDQTokenType::end)
+        if (this->empty())
             return UDQASTNode(UDQTokenType::error);
 
+        auto right = this->parse_mul();
         return UDQASTNode(current.type, current.value, left, right);
     }
 
@@ -181,21 +184,42 @@ UDQASTNode UDQParser::parse_mul() {
 
 
 UDQASTNode UDQParser::parse_add() {
-    auto left = this->parse_mul();
-    auto current = this->current();
-    if (current.type == UDQTokenType::end)
-        return left;
+    std::vector<UDQASTNode> nodes;
+    {
+        std::unique_ptr<UDQASTNode> current_node;
+        while (true) {
+            auto node = this->parse_mul();
+            if (current_node) {
+                current_node->set_right(node);
+                nodes.push_back(*current_node);
+            } else
+                nodes.push_back(node);
 
-    if (current.type == UDQTokenType::binary_op_add || current.type == UDQTokenType::binary_op_sub) {
-        auto func_node = current;
-        auto next = this->next();
-        auto right = this->parse_add();
-        if (right.type == UDQTokenType::end)
-            return UDQASTNode(UDQTokenType::error);
+            if (this->empty())
+                break;
 
-        return UDQASTNode(current.type, current.value, left, right);
+            auto current_token = this->current();
+            if (current_token.type == UDQTokenType::binary_op_add || current_token.type == UDQTokenType::binary_op_sub) {
+                current_node.reset( new UDQASTNode(current_token.type, current_token.value) );
+                this->next();
+                if (this->empty())
+                    return UDQASTNode( UDQTokenType::error );
+            } else if (current_token.type == UDQTokenType::close_paren || UDQ::cmpFunc(current_token.type))
+                break;
+            else
+                return UDQASTNode( UDQTokenType::error );
+        }
     }
-    return left;
+
+    UDQASTNode top_node = nodes.back();
+    if (nodes.size() > 1) {
+        UDQASTNode * current = &top_node;
+        for (std::size_t index = nodes.size() - 1; index > 0; index--) {
+            current->set_left(nodes[index - 1]);
+            current = current->get_left();
+        }
+    }
+    return top_node;
 }
 
 
@@ -214,17 +238,17 @@ UDQASTNode UDQParser::parse_add() {
 
 UDQASTNode UDQParser::parse_cmp() {
     auto left = this->parse_add();
-    auto current = this->current();
-    if (current.type == UDQTokenType::end)
+    if (this->empty())
         return left;
 
+    auto current = this->current();
     if (UDQ::cmpFunc(current.type)) {
         auto func_node = current;
         this->next();
-        auto right = this->parse_cmp();
-        if (right.type == UDQTokenType::end)
+        if (this->empty())
             return UDQASTNode(UDQTokenType::error);
 
+        auto right = this->parse_cmp();
         return UDQASTNode(current.type, current.value, left, right);
     }
     return left;
@@ -255,7 +279,7 @@ bool static_type_check(UDQVarType lhs, UDQVarType rhs) {
     if (rhs == UDQVarType::WELL_VAR)
         return (lhs == UDQVarType::WELL_VAR);
 
-    return true;
+    return false;
 }
 }
 
@@ -265,19 +289,18 @@ UDQASTNode UDQParser::parse(const UDQParams& udq_params, UDQVarType target_type,
     UDQParser parser(udq_params, target_type, tokens);
     parser.next();
     auto tree = parser.parse_cmp();
-    auto current = parser.current();
 
-    if (current.type != UDQTokenType::end || tree.type == UDQTokenType::error) {
-        if (current.type != UDQTokenType::end) {
-            size_t index = parser.current_pos;
-            std::string msg = "Extra unhandled data starting with token[" + std::to_string(index) + "] = " + current.value;
-            parseContext.handleError(ParseContext::UDQ_PARSE_ERROR, msg, errors);
-        }
+    if (!parser.empty()) {
+        size_t index = parser.current_pos;
+        auto current = parser.current();
+        std::string msg = "Extra unhandled data starting with token[" + std::to_string(index) + "] = " + current.value;
+        parseContext.handleError(ParseContext::UDQ_PARSE_ERROR, msg, errors);
+        return UDQASTNode( udq_params.undefinedValue() );
+    }
 
-        if (tree.type == UDQTokenType::error) {
-            std::string msg = "Failed to parse UDQ expression";
-            parseContext.handleError(ParseContext::UDQ_PARSE_ERROR, msg, errors);
-        }
+    if (!tree.valid()) {
+        std::string msg = "ERROR: Failed to parse UDQ expression";
+        parseContext.handleError(ParseContext::UDQ_PARSE_ERROR, msg, errors);
         return UDQASTNode( udq_params.undefinedValue() );
     }
 
