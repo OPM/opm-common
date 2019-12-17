@@ -163,7 +163,6 @@ void staticContrib(const Opm::Schedule&     sched,
     
     if ((group.getGroupType() == Opm::Group::GroupType::NONE) || (group.getGroupType() == Opm::Group::GroupType::PRODUCTION) ) {
         const auto& prod_cmode = group.production_cmode();
-        std::cout << "IGRP[nwgmax + 5] group.name()" << group.name() << " prod_cmode " << static_cast<int>(prod_cmode) << std::endl;
         
         if (prod_cmode == Opm::Group::ProductionCMode::FLD) {
             iGrp[nwgmax + 5] = -1;
