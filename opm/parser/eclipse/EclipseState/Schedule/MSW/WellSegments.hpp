@@ -26,6 +26,11 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/Segment.hpp>
 
 namespace Opm {
+    class SpiralICD;
+    class Valve;
+}
+
+namespace Opm {
 
     class DeckKeyword;
 
