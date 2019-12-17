@@ -538,6 +538,9 @@ namespace {
 
                 case UType::UNIT_TYPE_PVT_M:
                     return 1.322e-15f;
+
+                default:
+                    break;
             }
 
             throw std::invalid_argument {
