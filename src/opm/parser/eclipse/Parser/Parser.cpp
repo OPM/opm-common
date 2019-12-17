@@ -560,11 +560,16 @@ void ParserState::addPathAlias( const std::string& alias, const std::string& pat
 RawKeyword * newRawKeyword(const ParserKeyword& parserKeyword, const std::string& keywordString, ParserState& parserState, const Parser& parser) {
     bool raw_string_keyword = parserKeyword.rawStringKeyword();
 
-    if( parserKeyword.getSizeType() == SLASH_TERMINATED || parserKeyword.getSizeType() == UNKNOWN) {
+    if( parserKeyword.getSizeType() == SLASH_TERMINATED || parserKeyword.getSizeType() == UNKNOWN || parserKeyword.getSizeType() == DOUBLE_SLASH_TERMINATED) {
 
-        const auto rawSizeType = parserKeyword.getSizeType() == SLASH_TERMINATED
-            ? Raw::SLASH_TERMINATED
-            : Raw::UNKNOWN;
+        const auto size_type = parserKeyword.getSizeType();
+        Raw::KeywordSizeEnum rawSizeType;
+
+        switch(size_type) {
+            case SLASH_TERMINATED:        rawSizeType = Raw::SLASH_TERMINATED; break;
+            case UNKNOWN:                 rawSizeType = Raw::UNKNOWN; break;
+            case DOUBLE_SLASH_TERMINATED: rawSizeType = Raw::DOUBLE_SLASH_TERMINATED; break;
+        }
 
         return new RawKeyword( keywordString,
                                parserState.current_path().string(),

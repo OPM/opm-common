@@ -10,13 +10,8 @@
 # the file: opm/autodiff/MissingFeatures.cpp
 
 #Some keywords are found to be of 'special' structure:
-#These are grouped as:
+#These are :
 #
-#    Double records:
-#       CECONT: note that this also has two types of records
-#       DYNAMICS: note that this also has two types of records
-#       GCUTBACT: note that this also has two types of records
-#       GECONT: note that this also has two types of records
 #       MPFNNC: note that this also has two types of records
 #       UDT: user defined table
 #
@@ -79,6 +74,7 @@ set( keywords
      000_Eclipse100/C/CART
      000_Eclipse100/C/CBMOPTS
      000_Eclipse100/C/CECON
+     000_Eclipse100/C/CECONT
      000_Eclipse100/C/COAL
      000_Eclipse100/C/COALADS
      000_Eclipse100/C/COALNUM
@@ -271,6 +267,7 @@ set( keywords
      000_Eclipse100/G/GCONSUMP
      000_Eclipse100/G/GCONTOL
      000_Eclipse100/G/GCUTBACK
+     000_Eclipse100/G/GCUTBACT
      000_Eclipse100/G/GCVD
      000_Eclipse100/G/GDCQ
      000_Eclipse100/G/GDCQECON
@@ -279,6 +276,7 @@ set( keywords
      000_Eclipse100/G/GDORIENT
      000_Eclipse100/G/GDRILPOT
      000_Eclipse100/G/GECON
+     000_Eclipse100/G/GECONT
      000_Eclipse100/G/GEFAC
      000_Eclipse100/G/GETGLOB
      000_Eclipse100/G/GI
@@ -475,6 +473,7 @@ set( keywords
      000_Eclipse100/M/MLANGSLV
      000_Eclipse100/M/MONITOR
      000_Eclipse100/M/MPFANUM
+     000_Eclipse100/M/MPFNNC
      000_Eclipse100/M/MSFN
      000_Eclipse100/M/MSGFILE
      000_Eclipse100/M/MULSGGD

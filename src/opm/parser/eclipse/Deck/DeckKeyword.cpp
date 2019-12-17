@@ -189,8 +189,16 @@ namespace Opm {
         m_isDataKeyword = isDataKeyword_;
     }
 
+   void DeckKeyword::setDoubleRecordKeyword(bool isDoubleRecordKeyword) {
+        m_isDoubleRecordKeyword = isDoubleRecordKeyword;
+   }
+
     bool DeckKeyword::isDataKeyword() const {
         return m_isDataKeyword;
+    }
+
+    bool DeckKeyword::isDoubleRecordKeyword() const {
+        return m_isDoubleRecordKeyword;
     }
 
     const std::string& DeckKeyword::name() const {

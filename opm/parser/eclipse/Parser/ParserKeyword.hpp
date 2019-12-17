@@ -131,7 +131,9 @@ namespace Opm {
         bool rawStringKeyword() const;
         bool isCodeKeyword() const;
         bool isAlternatingKeyword() const;
+        bool isDoubleRecordKeyword() const;
         void setAlternatingKeyword(bool alternating);
+        void setDoubleRecordsKeyword(bool double_rec);
 
         std::string createDeclaration(const std::string& indent) const;
         std::string createDecl() const;
@@ -154,6 +156,7 @@ namespace Opm {
         std::string m_Description;
         bool raw_string_keyword = false;
         bool alternating_keyword = false;
+        bool double_records = false;
         std::string code_end;
 
         static bool validNameStart(const string_view& name);
