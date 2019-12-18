@@ -32,6 +32,16 @@ bool EndpointScaling::threepoint() const noexcept {
     return this->options[ static_cast< ue >( option::threepoint ) ];
 }
 
+unsigned long EndpointScaling::getBits() const {
+    return options.to_ulong();
+}
+
+bool EndpointScaling::operator==(const EndpointScaling& data) const {
+    return options == data.options;
+}
+
+
+
 namespace {
 
 bool threepoint_scaling( const Deck& deck ) {
@@ -112,6 +122,11 @@ EndpointScaling::EndpointScaling( const Deck& deck ) {
         this->options.set( static_cast< ue >( option::reversible ), reversible_ );
         this->options.set( static_cast< ue >( option::threepoint ), threep_ );
     }
+}
+
+EndpointScaling::EndpointScaling(const std::bitset<4>& opts) :
+    options(opts)
+{
 }
 
 }

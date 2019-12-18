@@ -44,6 +44,14 @@ Actdims::Actdims(const Deck& deck)
     }
 }
 
+Actdims::Actdims(std::size_t keyw, std::size_t line_cnt,
+                 std::size_t chars, std::size_t conds) :
+    keywords(keyw),
+    line_count(line_cnt),
+    characters(chars),
+    conditions(conds)
+{}
+
 std::size_t Actdims::max_keywords() const {
     return this->keywords;
 }
@@ -58,6 +66,13 @@ std::size_t Actdims::max_characters() const {
 
 std::size_t Actdims::max_conditions() const {
     return this->conditions;
+}
+
+bool Actdims::operator==(const Actdims& data) const {
+    return this->max_keywords() == data.max_keywords() &&
+           this->max_line_count() == data.max_line_count() &&
+           this->max_characters() == data.max_characters() &&
+           this->max_conditions() == data.max_conditions();
 }
 
 

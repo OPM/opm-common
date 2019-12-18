@@ -68,7 +68,10 @@ class Phases {
 
 class Welldims {
 public:
+    Welldims() = default;
     explicit Welldims(const Deck& deck);
+    Welldims(int WMax, int CWMax, int WGMax, int GMax) :
+      nWMax(WMax), nCWMax(CWMax), nWGMax(WGMax), nGMax(GMax) {}
 
     int maxConnPerWell() const
     {
@@ -89,6 +92,14 @@ public:
     {
         return this->nWMax;
     }
+
+    bool operator==(const Welldims& data) const {
+        return this->maxConnPerWell() == data.maxConnPerWell() &&
+               this->maxWellsPerGroup() == data.maxWellsPerGroup() &&
+               this->maxGroupsInField() == data.maxGroupsInField() &&
+               this->maxWellsInField() == data.maxWellsInField();
+    }
+
 private:
     int nWMax  { 0 };
     int nCWMax { 0 };
@@ -100,6 +111,8 @@ class WellSegmentDims {
 public:
     WellSegmentDims();
     explicit WellSegmentDims(const Deck& deck);
+    WellSegmentDims(int segWellMax, int segMax, int latBranchMax);
+
 
     int maxSegmentedWells() const
     {
@@ -116,6 +129,8 @@ public:
         return this->nLatBranchMax;
     }
 
+    bool operator==(const WellSegmentDims& data) const;
+
 private:
     int nSegWellMax;
     int nSegmentMax;
@@ -125,7 +140,9 @@ private:
 class EclHysterConfig
 {
 public:
+    EclHysterConfig() = default;
     explicit EclHysterConfig(const Deck& deck);
+    EclHysterConfig(bool active, int pcMod, int krMod);
 
 
     /*!
@@ -154,6 +171,8 @@ public:
      */
     int krHysteresisModel() const;
 
+    bool operator==(const EclHysterConfig& data) const;
+
 private:
     // enable hysteresis at all
     bool activeHyst  { false };
@@ -167,7 +186,16 @@ private:
 
 class Runspec {
 public:
+    Runspec() = default;
     explicit Runspec( const Deck& );
+    Runspec(const Phases& act_phases,
+            const Tabdims& tabdims,
+            const EndpointScaling& endScale,
+            const Welldims& wellDims,
+            const WellSegmentDims& wsegDims,
+            const UDQParams& udqparams,
+            const EclHysterConfig& hystPar,
+            const Actdims& actDims);
 
     const UDQParams& udqParams() const noexcept;
     const Phases& phases() const noexcept;
@@ -178,6 +206,8 @@ public:
     int eclPhaseMask( ) const noexcept;
     const EclHysterConfig& hysterPar() const noexcept;
     const Actdims& actdims() const noexcept;
+
+    bool operator==(const Runspec& data) const;
 
 private:
     Phases active_phases;

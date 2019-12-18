@@ -95,6 +95,21 @@ PvtgTable::PvtgTable( const DeckKeyword& keyword, size_t tableIdx ) :
         PvtxTable::init(keyword, tableIdx);
     }
 
+PvtgTable::PvtgTable(const ColumnSchema& outer_schema,
+                     const TableColumn& outer_column,
+                     const TableSchema& undersat_schema,
+                     const TableSchema& sat_schema,
+                     const std::vector<SimpleTable>& undersat_tables,
+                     const SimpleTable& sat_table) :
+      PvtxTable(outer_schema, outer_column, undersat_schema, sat_schema,
+                undersat_tables, sat_table)
+{
+}
+
+bool PvtgTable::operator==(const PvtgTable& data) const {
+    return static_cast<const PvtxTable&>(*this) == static_cast<const PvtxTable&>(data);
+}
+
 PvtoTable::PvtoTable( const DeckKeyword& keyword, size_t tableIdx) :
     PvtxTable("RS") {
         m_underSaturatedSchema.addColumn( ColumnSchema( "P"  , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));
@@ -108,6 +123,23 @@ PvtoTable::PvtoTable( const DeckKeyword& keyword, size_t tableIdx) :
 
         PvtxTable::init(keyword , tableIdx);
     }
+
+PvtoTable::PvtoTable(const ColumnSchema& outer_schema,
+                     const TableColumn& outer_column,
+                     const TableSchema& undersat_schema,
+                     const TableSchema& sat_schema,
+                     const std::vector<SimpleTable>& undersat_tables,
+                     const SimpleTable& sat_table) :
+      PvtxTable(outer_schema, outer_column, undersat_schema, sat_schema,
+                undersat_tables, sat_table)
+{
+}
+
+
+bool PvtoTable::operator==(const PvtoTable& data) const {
+    return static_cast<const PvtxTable&>(*this) == static_cast<const PvtxTable&>(data);
+}
+
 
 SpecheatTable::SpecheatTable(const DeckItem& item)
 {

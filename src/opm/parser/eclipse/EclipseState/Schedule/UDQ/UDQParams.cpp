@@ -77,6 +77,22 @@ namespace Opm {
     }
 
 
+    UDQParams::UDQParams(bool reseed, int seed,
+                         double range, double undefined,
+                         double cmp) :
+        reseed_rng(reseed),
+        random_seed(seed),
+        value_range(range),
+        undefined_value(undefined),
+        cmp_eps(cmp)
+    {
+        auto now = std::chrono::high_resolution_clock::now();
+        auto ns = std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch());
+        this->m_true_rng.seed( ns.count() );
+        this->m_sim_rng.seed( this->random_seed );
+    }
+
+
     /*
       If the internal flag reseed_rng is set to true, this method will reset the
       rng true_rng with the seed applied; the purpose of this function is to be
@@ -110,6 +126,17 @@ namespace Opm {
 
     std::mt19937& UDQParams::true_rng() {
         return this->m_true_rng;
+    }
+
+    bool UDQParams::reseed() const {
+        return this->reseed_rng;
+    }
+
+    bool UDQParams::operator==(const UDQParams& data) const {
+        return this->reseed_rng == data.reseed_rng &&
+               this->random_seed == data.random_seed &&
+               this->value_range == data.value_range &&
+               this->cmp_eps == data.cmp_eps;
     }
 
 }

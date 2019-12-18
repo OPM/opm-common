@@ -125,6 +125,20 @@ WellSegmentDims::WellSegmentDims(const Deck& deck) : WellSegmentDims()
     }
 }
 
+WellSegmentDims::WellSegmentDims(int segWellMax, int segMax, int latBranchMax) :
+    nSegWellMax(segWellMax),
+    nSegmentMax(segMax),
+    nLatBranchMax(latBranchMax)
+{
+}
+
+bool WellSegmentDims::operator==(const WellSegmentDims& data) const
+{
+    return this->maxSegmentedWells() == data.maxSegmentedWells() &&
+           this->maxSegmentsPerWell() == data.maxSegmentsPerWell() &&
+           this->maxLateralBranchesPerWell() == data.maxLateralBranchesPerWell();
+}
+
 EclHysterConfig::EclHysterConfig(const Opm::Deck& deck)
     {
 
@@ -195,6 +209,11 @@ EclHysterConfig::EclHysterConfig(const Opm::Deck& deck)
             throw std::runtime_error("Capillary pressure hysteresis is not supported yet");
         }
     }
+
+EclHysterConfig::EclHysterConfig(bool active, int pcMod, int krMod) :
+    activeHyst(active), pcHystMod(pcMod), krHystMod(krMod)
+    {
+    }
     
 
 bool EclHysterConfig::active() const 
@@ -205,6 +224,12 @@ int EclHysterConfig::pcHysteresisModel() const
         
 int EclHysterConfig::krHysteresisModel() const
     { return krHystMod; }
+
+bool EclHysterConfig::operator==(const EclHysterConfig& data) const {
+    return this->active() == data.active() &&
+           this->pcHysteresisModel() == data.pcHysteresisModel() &&
+           this->krHysteresisModel() == data.krHysteresisModel();
+}
 
 Runspec::Runspec( const Deck& deck ) :
     active_phases( Phases( deck.hasKeyword( "OIL" ),
@@ -222,6 +247,24 @@ Runspec::Runspec( const Deck& deck ) :
     udq_params( deck ),
     hystpar( deck ),
     m_actdims( deck )
+{}
+
+Runspec::Runspec(const Phases& act_phases,
+                 const Tabdims& tabdims,
+                 const EndpointScaling& endScale,
+                 const Welldims& wellDims,
+                 const WellSegmentDims& wsegDims,
+                 const UDQParams& udqparams,
+                 const EclHysterConfig& hystPar,
+                 const Actdims& actDims) :
+  active_phases(act_phases),
+  m_tabdims(tabdims),
+  endscale(endScale),
+  welldims(wellDims),
+  wsegdims(wsegDims),
+  udq_params(udqparams),
+  hystpar(hystPar),
+  m_actdims(actDims)
 {}
 
 const Phases& Runspec::phases() const noexcept {
@@ -272,6 +315,17 @@ int Runspec::eclPhaseMask( ) const noexcept {
 
 const UDQParams& Runspec::udqParams() const noexcept {
     return this->udq_params;
+}
+
+
+bool Runspec::operator==(const Runspec& data) const {
+    return this->phases() == data.phases() &&
+           this->tabdims() == data.tabdims() &&
+           this->endpointScaling() == data.endpointScaling() &&
+           this->wellDimensions() == data.wellDimensions() &&
+           this->wellSegmentDimensions() == data.wellSegmentDimensions() &&
+           this->hysterPar() == data.hysterPar() &&
+           this->actdims() == data.actdims();
 }
 
 }

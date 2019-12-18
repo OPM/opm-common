@@ -28,11 +28,15 @@ class Actdims {
 public:
     Actdims();
     explicit Actdims(const Deck& deck);
+    Actdims(std::size_t keyw, std::size_t line_cnt,
+            std::size_t chars, std::size_t conds);
 
     std::size_t max_keywords() const;
     std::size_t max_line_count() const;
     std::size_t max_characters() const;
     std::size_t max_conditions() const;
+
+    bool operator==(const Actdims& data) const;
 
 private:
     std::size_t keywords;

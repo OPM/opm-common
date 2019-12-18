@@ -29,6 +29,7 @@ class EndpointScaling {
     public:
         EndpointScaling() noexcept = default;
         explicit EndpointScaling( const Deck& );
+        EndpointScaling(const std::bitset<4>& opts);
 
         /* true if endpoint scaling is enabled, otherwise false */
         operator bool() const noexcept;
@@ -39,6 +40,10 @@ class EndpointScaling {
         bool irreversible() const noexcept;
         bool twopoint() const noexcept;
         bool threepoint() const noexcept;
+
+        unsigned long getBits() const;
+
+        bool operator==(const EndpointScaling& data) const;
 
     private:
         enum class option {
