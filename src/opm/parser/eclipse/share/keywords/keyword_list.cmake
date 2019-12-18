@@ -160,6 +160,7 @@ set( keywords
      000_Eclipse100/D/DUALPORO
      000_Eclipse100/D/DUMPFLUX
      000_Eclipse100/D/DUMPCUPL
+     000_Eclipse100/D/DYNAMICR
      000_Eclipse100/D/DYNRDIMS
      000_Eclipse100/D/DX
      000_Eclipse100/D/DXV

@@ -1970,6 +1970,34 @@ STONE
     }
 }
 
+BOOST_AUTO_TEST_CASE(ParseDynamicr) {
+    const auto deck_string = std::string { R"(RUNSPEC
+FIELD
+SOLUTION
+DYNAMICR
+FIPYYY
+1 /
+"IN" FIPXXX 1 /
+/
+FIPYYY
+2 /
+"ALL" FIPXXX 2 FIPXXX 3 /
+/
+FIPYYY
+3 /
+BOIP <= 500000 /
+/ENDDYN
+SCHEDULE
+GCUTBACK
+G1 0.6 3* 0.9 LIQ /
+/
+)"};
+
+Parser parser;
+auto deck = parser.parseString(deck_string);
+BOOST_CHECK( deck.hasKeyword("GCUTBACK") );
+
+}
 
 BOOST_AUTO_TEST_CASE(ParseRSConst) {
     // Check that parsing RSCONST does not bleed into next keyword.
