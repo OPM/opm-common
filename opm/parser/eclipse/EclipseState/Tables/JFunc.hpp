@@ -32,13 +32,19 @@ public:
     enum class Flag { BOTH, WATER, GAS };
     enum class Direction { XY, X, Y, Z };
 
+    JFunc();
     explicit JFunc(const Deck& deck);
+    JFunc(Flag flag, double ow, double go,
+          double alpha, double beta, Direction dir);
+
     double alphaFactor() const;
     double betaFactor() const;
     double goSurfaceTension() const;
     double owSurfaceTension() const;
     const Flag& flag() const;
     const Direction& direction() const;
+
+    bool operator==(const JFunc& data) const;
 
 private:
     Flag       m_flag;             // JFUNC flag: WATER, GAS, or BOTH.  Default BOTH
