@@ -569,6 +569,8 @@ RawKeyword * newRawKeyword(const ParserKeyword& parserKeyword, const std::string
             case SLASH_TERMINATED:        rawSizeType = Raw::SLASH_TERMINATED; break;
             case UNKNOWN:                 rawSizeType = Raw::UNKNOWN; break;
             case DOUBLE_SLASH_TERMINATED: rawSizeType = Raw::DOUBLE_SLASH_TERMINATED; break;
+            default:
+                throw std::logic_error("Should not be here!");
         }
 
         return new RawKeyword( keywordString,
