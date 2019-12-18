@@ -218,7 +218,7 @@ namespace {
                 EclIO::OutputStream::Restart& rstFile)
     {
         // write INTEHEAD to restart file
-        const auto ih = Helpers::
+        auto ih = Helpers::
             createInteHead(es, grid, schedule, simTime,
                            report_step, // Should really be number of timesteps
                            report_step, sim_step);
