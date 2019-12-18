@@ -905,7 +905,6 @@ namespace {
         return wells;
     }
 
-
     void restoreConnRates(const WellVectors::Window<double>& xcon,
                           const Opm::UnitSystem&             usys,
                           const bool                         oil,
@@ -954,6 +953,7 @@ namespace {
     {
         using M  = ::Opm::UnitSystem::measure;
         using Ix = ::Opm::RestartIO::Helpers::VectorItems::XConn::index;
+
         const auto iwel  = wellData.iwel(wellID);
         const auto nConn = static_cast<std::size_t>(iwel[VI::IWell::index::NConn]);
 
@@ -964,13 +964,14 @@ namespace {
         {
             const auto& connections = well.getConnections();
             xw.connections.resize(connections.size(), Opm::data::Connection{});
-            std::size_t simConnID{0};
+
+            auto simConnID = std::size_t{0};
             for (const auto& conn : connections) {
                 auto& xc = xw.connections[simConnID];
                 zeroConnRates(oil, gas, wat, xc);
 
                 xc.index = conn.global_index();
-                simConnID++;
+                ++simConnID;
             }
         }
 
@@ -981,17 +982,19 @@ namespace {
             return;
         }
 
-        for (std::size_t rstConnID = 0; rstConnID < nConn; rstConnID++) {
+        for (auto rstConnID = 0*nConn; rstConnID < nConn; ++rstConnID) {
             const auto icon = wellData.icon(wellID, rstConnID);
+
             const auto i = icon[VI::IConn::index::CellI] - 1;
             const auto j = icon[VI::IConn::index::CellJ] - 1;
             const auto k = icon[VI::IConn::index::CellK] - 1;
-            auto * xc = xw.find_connection(grid.getGlobalIndex(i,j,k));
-            if (!xc)
-                continue;
+
+            auto* xc = xw.find_connection(grid.getGlobalIndex(i, j, k));
+            if (xc == nullptr) { continue; }
 
             const auto xcon = wellData.xcon(wellID, rstConnID);
             restoreConnRates(xcon, usys, oil, gas, wat, *xc);
+
             xc->pressure = usys.to_si(M::pressure, xcon[Ix::Pressure]);
         }
     }
@@ -1395,13 +1398,12 @@ namespace {
         // Well cumulatives
         {
             const auto  wellData = WellVectors { intehead, rst_view };
-            const auto& wells    = schedule.getWells(sim_step);
+            const auto& wells    = schedule.wellNames(sim_step);
 
             for (auto nWells = wells.size(), wellID = 0*nWells;
                  wellID < nWells; ++wellID)
             {
-                assign_well_cumulatives(wells[wellID].name(),
-                                        wellID, wellData, smry);
+                assign_well_cumulatives(wells[wellID], wellID, wellData, smry);
             }
         }
 
