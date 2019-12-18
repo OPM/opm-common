@@ -56,8 +56,8 @@
 #include <initializer_list>
 #include <iomanip>
 #include <iterator>
-#include <string>
 #include <sstream>
+#include <string>
 #include <unordered_set>
 #include <vector>
 
@@ -208,7 +208,8 @@ namespace {
     }
 
     std::vector<int>
-    writeHeader(const int                     sim_step,
+    writeHeader(const int                     report_step,
+                const int                     sim_step,
                 const double                  next_step_size,
                 const double                  simTime,
                 const Schedule&               schedule,
@@ -217,8 +218,11 @@ namespace {
                 EclIO::OutputStream::Restart& rstFile)
     {
         // write INTEHEAD to restart file
-        const auto ih = Helpers::createInteHead(es, grid, schedule,
-                                                simTime, sim_step, sim_step);
+        const auto ih = Helpers::
+            createInteHead(es, grid, schedule, simTime,
+                           report_step, // Should really be number of timesteps
+                           report_step, sim_step);
+
         rstFile.write("INTEHEAD", ih);
 
         // write LOGIHEAD to restart file
@@ -275,12 +279,18 @@ namespace {
         rstFile.write("RSEG", MSWData.getRSeg());
     }
 
-    void writeUDQ(int                           sim_step,
+    void writeUDQ(const int                     report_step,
+                  const int                     sim_step,
                   const Schedule&               schedule,
                   const SummaryState&           sum_state,
                   const std::vector<int>&       ih,
                   EclIO::OutputStream::Restart& rstFile)
     {
+        if (report_step == 0) {
+            // Initial condition.  No UDQs yet.
+            return;
+        }
+
         // write UDQ - data to restart file
         const std::size_t simStep = static_cast<size_t> (sim_step);
 
@@ -301,12 +311,18 @@ namespace {
         }
     }
 
-    void writeActionx(int                       sim_step,
-                  const EclipseState&           es,
-                  const Schedule&               schedule,
-                  const SummaryState&           sum_state,
-                  EclIO::OutputStream::Restart& rstFile)
+    void writeActionx(const int                     report_step,
+                      const int                     sim_step,
+                      const EclipseState&           es,
+                      const Schedule&               schedule,
+                      const SummaryState&           sum_state,
+                      EclIO::OutputStream::Restart& rstFile)
     {
+        if (report_step == 0) {
+            // Initial condition.  No ACTION* data yet.
+            return;
+        }
+
         // write ACTIONX - data to restart file
         const std::size_t simStep = static_cast<size_t> (sim_step);
         
@@ -368,6 +384,41 @@ namespace {
         rstFile.write("ICON", connectionData.getIConn());
         rstFile.write("SCON", connectionData.getSConn());
         rstFile.write("XCON", connectionData.getXConn());
+    }
+
+    void writeDynamicData(const int                     sim_step,
+                          const bool                    ecl_compatible_rst,
+                          const Phases&                 phases,
+                          const UnitSystem&             units,
+                          const EclipseGrid&            grid,
+                          const Schedule&               schedule,
+                          const data::WellRates&        wellSol,
+                          const Opm::SummaryState&      sumState,
+                          const std::vector<int>&       inteHD,
+                          EclIO::OutputStream::Restart& rstFile)
+    {
+        writeGroup(sim_step, units, schedule, sumState, inteHD, rstFile);
+
+        // Write well and MSW data only when applicable (i.e., when present)
+        const auto& wells = schedule.getWells(sim_step);
+
+        if (! wells.empty()) {
+            const auto haveMSW =
+                std::any_of(std::begin(wells), std::end(wells),
+                    [](const Well& well)
+            {
+                return well.isMultiSegment();
+            });
+
+            if (haveMSW) {
+                writeMSWData(sim_step, units, schedule, grid, sumState,
+                             wellSol, inteHD, rstFile);
+            }
+
+            writeWell(sim_step, ecl_compatible_rst,
+                      phases, units, grid, schedule,
+                      wellSol, sumState, inteHD, rstFile);
+        }
     }
 
     bool haveHysteresis(const RestartValue& value)
@@ -437,6 +488,7 @@ namespace {
                        const Schedule&               schedule,
                        const SummaryState&           sum_state,
                        int                           report_step,
+                       int                           sim_step,
                        const bool                    ecl_compatible_rst,
                        const bool                    write_double_arg,
                        const std::vector<int>&       inteHD,
@@ -466,7 +518,7 @@ namespace {
             }
         }
 
-        writeUDQ(report_step, schedule, sum_state, inteHD, rstFile);
+        writeUDQ(report_step, sim_step, schedule, sum_state, inteHD, rstFile);
         
         for (const auto& elm : value.extra) {
             const std::string& key = elm.first.key;
@@ -558,37 +610,19 @@ void save(EclIO::OutputStream::Restart& rstFile,
     value.convertFromSI(units);
 
     const auto inteHD =
-        writeHeader(sim_step, nextStepSize(value), seconds_elapsed,
-                    schedule, grid, es, rstFile);
+        writeHeader(report_step, sim_step, nextStepSize(value),
+                    seconds_elapsed, schedule, grid, es, rstFile);
 
-    writeGroup(sim_step, units, schedule, sumState, inteHD, rstFile);
-
-    // Write well and MSW data only when applicable (i.e., when present)
-    {
-        const auto& wells = schedule.getWells(sim_step);
-
-        if (! wells.empty()) {
-            const auto haveMSW =
-                std::any_of(std::begin(wells), std::end(wells),
-                    [](const Well& well)
-            {
-                return well.isMultiSegment();
-            });
-
-            if (haveMSW) {
-                writeMSWData(sim_step, units, schedule, grid, sumState,
-                             value.wells, inteHD, rstFile);
-            }
-
-            writeWell(sim_step, ecl_compatible_rst,
-                      es.runspec().phases(), units, grid, schedule,
-                      value.wells, sumState, inteHD, rstFile);
-        }
+    if (report_step > 0) {
+        writeDynamicData(sim_step, ecl_compatible_rst, es.runspec().phases(),
+                         units, grid, schedule, value.wells, sumState,
+                         inteHD, rstFile);
     }
-    
-    writeActionx(sim_step, es, schedule, sumState, rstFile);
-    
-    writeSolution(value, schedule, sumState, sim_step, ecl_compatible_rst, write_double, inteHD, rstFile);
+
+    writeActionx(report_step, sim_step, es, schedule, sumState, rstFile);
+
+    writeSolution(value, schedule, sumState, report_step, sim_step,
+                  ecl_compatible_rst, write_double, inteHD, rstFile);
 
     if (! ecl_compatible_rst) {
         writeExtraData(value.extra, rstFile);

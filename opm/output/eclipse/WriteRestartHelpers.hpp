@@ -22,11 +22,6 @@
 
 #include <vector>
 
-// Missing definitions (really belong in ert/ecl_well/well_const.h, but not
-// defined there)
-#define SCON_KH_INDEX 3
-
-
 // Forward declarations
 
 namespace Opm {
@@ -43,8 +38,6 @@ namespace Opm {
 
 namespace Opm { namespace RestartIO { namespace Helpers {
 
-    const double UNIMPLEMENTED_VALUE = 1e-100; // placeholder for values not yet available 
-
     std::vector<double>
     createDoubHead(const EclipseState& es,
                    const Schedule&     sched,
@@ -52,15 +45,14 @@ namespace Opm { namespace RestartIO { namespace Helpers {
                    const double        simTime,
                    const double        nextTimeStep);
 
-
-
     std::vector<int>
     createInteHead(const EclipseState& es,
                    const EclipseGrid&  grid,
                    const Schedule&     sched,
                    const double        simTime,
                    const int           num_solver_steps,
-                   const int           lookup_step);   // The integer index used to look up dynamic properties, e.g. the number of well.
+                   const int           report_step,
+                   const int           lookup_step);
 
     std::vector<bool>
     createLogiHead(const EclipseState& es);

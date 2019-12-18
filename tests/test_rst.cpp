@@ -183,9 +183,6 @@ TSTEP            -- 8
 
         return Opm::Parser{}.parseString(input);
     }
-
-
-
 } // namespace
 
 struct SimulationCase
@@ -217,6 +214,7 @@ BOOST_AUTO_TEST_CASE(group_test) {
                                                             simCase.grid,
                                                             simCase.sched,
                                                             0,
+                                                            sim_step,
                                                             sim_step,
                                                             sim_step);
 
@@ -267,6 +265,7 @@ BOOST_AUTO_TEST_CASE(State_test) {
                                                             simCase.grid,
                                                             simCase.sched,
                                                             0,
+                                                            sim_step,
                                                             sim_step,
                                                             sim_step);
 
