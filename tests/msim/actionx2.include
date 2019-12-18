@@ -56,7 +56,7 @@ WELLDIMS
 -- 	   - we are dealing with only one 'group'
 -- Item 4: maximum number of wells in any one group
 -- 	   - there must be two wells in a group as there are two wells in total
-   2 1 1 2 /
+   5 1 1 2 /
 
 UNIFOUT
 
