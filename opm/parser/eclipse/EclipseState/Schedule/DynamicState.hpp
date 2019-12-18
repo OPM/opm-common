@@ -60,9 +60,16 @@ class DynamicState {
     public:
         typedef typename std::vector< T >::iterator iterator;
 
+        DynamicState() = default;
+
         DynamicState( const TimeMap& timeMap, T initial ) :
             m_data( timeMap.size(), initial ),
             initial_range( timeMap.size() )
+        {}
+
+        DynamicState(const std::vector<T>& data,
+                     size_t init_range) :
+            m_data(data), initial_range(init_range)
         {}
 
         void globalReset( T value ) {
@@ -205,6 +212,19 @@ class DynamicState {
 
     std::size_t size() const {
         return this->m_data.size();
+    }
+
+    const std::vector<T>& data() const {
+        return m_data;
+    }
+
+    size_t initialRange() const {
+        return initial_range;
+    }
+
+    bool operator==(const DynamicState<T>& data) const {
+        return m_data == data.m_data &&
+               initial_range == data.initial_range;
     }
 
     private:

@@ -88,6 +88,34 @@ namespace Opm {
         this->setBaseName(basename(input_path));
     }
 
+    IOConfig::IOConfig(bool write_init, bool write_egrid,
+                       bool unifin, bool unifout,
+                       bool fmtin, bool fmtout,
+                       int firstRestartStep,
+                       const std::string& deck_name,
+                       bool output_enabled,
+                       const std::string& output_dir,
+                       bool no_sim,
+                       const std::string& base_name,
+                       bool ecl_compatible_r) :
+        m_write_INIT_file(write_init),
+        m_write_EGRID_file(write_egrid),
+        m_UNIFIN(unifin),
+        m_UNIFOUT(unifout),
+        m_FMTIN(fmtin),
+        m_FMTOUT(fmtout),
+        m_first_restart_step(firstRestartStep),
+        m_deck_filename(deck_name),
+        m_output_enabled(output_enabled),
+        m_output_dir(output_dir),
+        m_nosim(no_sim),
+        m_base_name(base_name),
+        ecl_compatible_rst(ecl_compatible_r)
+    {
+    }
+
+
+
     static inline bool write_egrid_file( const GRIDSection& grid ) {
         if( grid.hasKeyword( "NOGGF" ) ) return false;
         if( !grid.hasKeyword( "GRIDFILE" ) ) return true;
@@ -252,6 +280,38 @@ namespace Opm {
 
     bool IOConfig::initOnly( ) const {
         return m_nosim;
+    }
+
+
+    int IOConfig::getFirstRestartStep() const {
+        return m_first_restart_step;
+    }
+
+
+    const std::string& IOConfig::getDeckFileName() const {
+        return m_deck_filename;
+    }
+
+
+    bool IOConfig::getNoSim() const {
+        return m_nosim;
+    }
+
+
+    bool IOConfig::operator==(const IOConfig& data) const {
+        return this->getWriteINITFile() == data.getWriteINITFile() &&
+               this->getWriteEGRIDFile() == data.getWriteEGRIDFile() &&
+               this->getUNIFIN() == data.getUNIFIN() &&
+               this->getUNIFOUT() == data.getUNIFOUT() &&
+               this->getFMTIN() == data.getFMTIN() &&
+               this->getFMTOUT() == data.getFMTOUT() &&
+               this->getFirstRestartStep() == data.getFirstRestartStep() &&
+               this->getDeckFileName() == data.getDeckFileName() &&
+               this->getOutputEnabled() == data.getOutputEnabled() &&
+               this->getOutputDir() == data.getOutputDir() &&
+               this->getNoSim() == data.getNoSim() &&
+               this->getBaseName() == data.getBaseName() &&
+               this->getEclCompatibleRST() == data.getEclCompatibleRST();
     }
 
 
