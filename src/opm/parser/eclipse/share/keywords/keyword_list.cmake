@@ -12,7 +12,7 @@
 #Some keywords are found to be of 'special' structure:
 #These are :
 #
-#       MPFNNC: note that this also has two types of records
+#       ADSOPRP: size = {"keyword" : "TABDIMS" , "item" : "NTSFUN"} + 1
 #       UDT: user defined table
 #
 
@@ -21,6 +21,7 @@ set( keywords
      000_Eclipse100/A/ACTION
      000_Eclipse100/A/ACTIONG
      000_Eclipse100/A/ACTIONR
+     000_Eclipse100/A/ACTIONS
      000_Eclipse100/A/ACTIONW
      000_Eclipse100/A/ACTIONX
      000_Eclipse100/A/ACTNUM
@@ -38,12 +39,18 @@ set( keywords
      000_Eclipse100/A/ALPOLADS
      000_Eclipse100/A/ALSURFAD
      000_Eclipse100/A/ALSURFST
+     000_Eclipse100/A/AMALGAM
      000_Eclipse100/A/API
      000_Eclipse100/A/APIGROUP
+     000_Eclipse100/A/APILIM
+     000_Eclipse100/A/APIVD
      000_Eclipse100/A/AQANCONL
      000_Eclipse100/A/AQANNC
      000_Eclipse100/A/AQANTRC
+     000_Eclipse100/A/AQUALIST
      000_Eclipse100/A/AQUANCON
+     000_Eclipse100/A/AQUCHGAS
+     000_Eclipse100/A/AQUCHWAT
      000_Eclipse100/A/AQUCON
      000_Eclipse100/A/AQUCT
      000_Eclipse100/A/AQUCWFAC
@@ -58,9 +65,12 @@ set( keywords
      000_Eclipse100/A/AQUTAB
      000_Eclipse100/A/AUTOCOAR
      000_Eclipse100/A/AUTOREF
+     000_Eclipse100/B/BDENSITY
      000_Eclipse100/B/BIGMODEL
+     000_Eclipse100/B/BGGI
      000_Eclipse100/B/BLACKOIL
      000_Eclipse100/B/BLOCK_PROBE
+     000_Eclipse100/B/BOGI
      000_Eclipse100/B/BOUNDARY
      000_Eclipse100/B/BOX
      000_Eclipse100/B/BPARA
