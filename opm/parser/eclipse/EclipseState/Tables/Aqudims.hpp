@@ -46,6 +46,19 @@ namespace Opm {
             
         { }
 
+        Aqudims(size_t mxnaqn, size_t mxnaqc, size_t niftbl, size_t nriftb,
+                size_t nanaqu, size_t ncamax, size_t mxnali, size_t mxaaql) :
+            m_mxnaqn(mxnaqn),
+            m_mxnaqc(mxnaqc),
+            m_niftbl(niftbl),
+            m_nriftb(nriftb),
+            m_nanaqu(nanaqu),
+            m_ncamax(ncamax),
+            m_mxnali(mxnali),
+            m_mxaaql(mxaaql)
+
+        { }
+
         explicit Aqudims(const Deck& deck) :
             Aqudims()
         {
@@ -100,7 +113,19 @@ namespace Opm {
         size_t getNumAnalyticAquifersSingleList() const
         {
             return m_mxaaql;
-        }        
+        }
+
+        bool operator==(const Aqudims& data) const
+        {
+            return m_mxnaqn == data.m_mxnaqn &&
+                   m_mxnaqc == data.m_mxnaqc &&
+                   m_niftbl == data.m_niftbl &&
+                   m_nriftb == data.m_nriftb &&
+                   m_nanaqu == data.m_nanaqu &&
+                   m_ncamax == data.m_ncamax &&
+                   m_mxnali == data.m_mxnali &&
+                   m_mxaaql == data.m_mxaaql;
+        }
 
     private:
         size_t m_mxnaqn , m_mxnaqc , m_niftbl , m_nriftb , m_nanaqu , m_ncamax , m_mxnali , m_mxaaql;

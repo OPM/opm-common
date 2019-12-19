@@ -28,9 +28,15 @@ namespace Opm {
     class PlymwinjTable : public PolyInjTable {
     public:
 
+        PlymwinjTable() = default;
+        PlymwinjTable(const std::vector<double>& throughputs,
+                      const std::vector<double>& velocities,
+                      int tableNumber,
+                      const std::vector<std::vector<double>>& data);
         explicit PlymwinjTable(const DeckKeyword& table);
 
         const std::vector<std::vector<double>>& getMoleWeights() const;
+        bool operator==(const PlymwinjTable& data) const;
     };
 
 }

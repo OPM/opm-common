@@ -73,6 +73,15 @@ namespace Opm {
         {
             return m_nstrvd;
         }
+
+        bool operator==(const Eqldims& data) const
+        {
+            return this->getNumEquilRegions() == data.getNumEquilRegions() &&
+                   this->getNumDepthNodesP() == data.getNumDepthNodesP() &&
+                   this->getNumDepthNodesTable() == data.getNumDepthNodesTable() &&
+                   this->getNumTracerTables() == data.getNumTracerTables() &&
+                   this->getNumDepthNodesTracer() == data.getNumDepthNodesTracer();
+        }
     private:
         size_t m_ntequl , m_depth_nodes_p , m_depth_nodes_tab , m_nttrvd , m_nstrvd;
 

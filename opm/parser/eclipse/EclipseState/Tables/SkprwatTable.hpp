@@ -28,10 +28,17 @@ namespace Opm {
     class SkprwatTable : public PolyInjTable {
     public:
 
+        SkprwatTable() = default;
+        SkprwatTable(const std::vector<double>& throughputs,
+                     const std::vector<double>& velocities,
+                     int tableNumber,
+                     const std::vector<std::vector<double>>& data);
+
         explicit SkprwatTable(const DeckKeyword& table);
 
         const std::vector<std::vector<double>>& getSkinPressures() const;
 
+        bool operator==(const SkprwatTable& data) const;
     };
 
 }
