@@ -193,6 +193,8 @@ void python::common::export_DeckKeyword(py::module& module) {
         .def("get_data_list", &item_to_pylist)
         .def("get_raw_data_list", &raw_data_to_pylist)
         .def("get_SI_data_list", &SI_data_to_pylist)
+        .def("has_value", &DeckItem::hasValue)
+        .def("defaulted", &DeckItem::defaultApplied)
         ;
 
 
