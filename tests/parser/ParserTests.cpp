@@ -2268,8 +2268,37 @@ PLAT-B 15 /
     BOOST_CHECK_EQUAL(record08.getItem(0).get<std::string>(0), "PLY");
     BOOST_CHECK(record08.getItem(2).getType() == type_tag::fdouble);
     BOOST_CHECK_EQUAL(record08.getItem(2).get<double>(0), 0.7);
-  
+}
 
+
+BOOST_AUTO_TEST_CASE(ParseSpecialKeywords) {
+    const auto deck_string = std::string { R"(RUNSPEC
+FIELD
+TABDIMS
+    2 /
+PROPS
+
+ADSORP
+POLYMER /
+LANGMUIR 0.0012  0.7  0.4  1.1  0.5  100 /
+LANGMUIR 0.0009  0.7  0.5  1.2  0.3  50 /
+
+ROCK
+3600.00 .40E-05 /
+3600.00 .40E-05 /
+3000 0 /
+
+SCHEDULE
+GCUTBACK
+G1 0.6 3* 0.9 LIQ /
+/
+)"};
+
+Parser parser;
+auto deck = parser.parseString(deck_string);
+BOOST_CHECK( deck.hasKeyword("GCUTBACK") );
+auto kw = deck.getKeyword("GCUTBACK");
+BOOST_CHECK_EQUAL( kw.size(), 1 );
 }
 
 

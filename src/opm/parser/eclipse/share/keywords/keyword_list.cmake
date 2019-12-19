@@ -12,7 +12,6 @@
 #Some keywords are found to be of 'special' structure:
 #These are :
 #
-#       ADSOPRP: size = {"keyword" : "TABDIMS" , "item" : "NTSFUN"} + 1
 #       UDT: user defined table
 #
 
@@ -30,6 +29,7 @@ set( keywords
      000_Eclipse100/A/ADDREG
      000_Eclipse100/A/ADDZCORN
      000_Eclipse100/A/ADSALNOD
+     000_Eclipse100/A/ADSORP
      000_Eclipse100/A/AITS
      000_Eclipse100/A/AITSOFF
      000_Eclipse100/A/ALL

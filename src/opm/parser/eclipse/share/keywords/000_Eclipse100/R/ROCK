@@ -1,7 +1,7 @@
 {
   "name": "ROCK",
   "sections": ["PROPS"],
-  "size": {"keyword":"TABDIMS", "item":"NTPVT"},
+  "size": "UNKNOWN",
   "items": [
         {"name": "PREF", "value_type": "DOUBLE", "default": 1.0132, "dimension": "Pressure"},
         {"name": "COMPRESSIBILITY", "value_type": "DOUBLE", "default": 0, "dimension": "1/Pressure"}
