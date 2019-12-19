@@ -248,12 +248,23 @@ BOOST_AUTO_TEST_CASE(PORV) {
 GRID
 
 PORO
-  400*0.10 /
+  500*0.10 /
 
 BOX
   1 10 1 10 2 2 /
 
 NTG
+  100*2 /
+
+ENDBOX
+
+MULTNUM
+  500*1 /
+
+BOX
+   1 10 1 10 5 5 /
+
+MULTNUM
   100*2 /
 
 ENDBOX
@@ -277,9 +288,17 @@ PORV
 
 ENDBOX
 
+
+MULTREGP
+  2 8 F /  -- This should be ignored
+  2 5 M /
+/
+
+ENDBOX
+
 )";
 
-    EclipseGrid grid(10,10, 4);
+    EclipseGrid grid(10,10, 5);
     Deck deck = Parser{}.parseString(deck_string);
     FieldPropsManager fpm(deck, grid, TableManager());
     const auto& poro = fpm.get<double>("PORO");
@@ -327,8 +346,14 @@ ENDBOX
         BOOST_CHECK_EQUAL(multpv[g], 4.0);
     }
 
+    // k = 4: poro * V * MULTREGP
+    for (std::size_t g = 400; g < 500; g++) {
+        BOOST_CHECK_EQUAL(porv[g], grid.getCellVolume(g) * poro[g] * 5.0);
+        BOOST_CHECK_EQUAL(porv[g], 0.50);
+        BOOST_CHECK_EQUAL(poro[g], 0.10);
+    }
 
-    std::vector<int> actnum(400, 1);
+    std::vector<int> actnum(500, 1);
     actnum[0] = 0;
     grid.resetACTNUM(actnum);
 
