@@ -41,6 +41,7 @@ ext_modules = [
                 'cxx/deck_keyword.cpp',
                 'cxx/eclipse_io.cpp',
                 'cxx/eclipse_3d_properties.cpp',
+                'cxx/field_props.cpp',
                 'cxx/eclipse_config.cpp',
                 'cxx/eclipse_grid.cpp',
                 'cxx/eclipse_state.cpp',

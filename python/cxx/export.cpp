@@ -13,6 +13,7 @@ void python::common::export_all(py::module& module) {
     export_Connection(module);
     export_EclipseConfig(module);
     export_Eclipse3DProperties(module);
+    export_FieldProperties(module);
     export_EclipseState(module);
     export_TableManager(module);
     export_EclipseGrid(module);
