@@ -60,6 +60,16 @@ public:
         data.resize(data.size() - shift);
     }
 
+    enum class GetStatus {
+         OK = 1,
+         INVALID_DATA = 2,               // std::runtime_error
+         MISSING_KEYWORD = 3,            // std::out_of_range
+         NOT_SUPPPORTED_KEYWORD = 4      // std::logic_error
+    };
+
+
+
+
     template<typename T>
     struct FieldData {
         std::vector<T> data;
@@ -133,15 +143,64 @@ public:
     };
 
 
+    template<typename T>
+    struct FieldDataManager {
+        const std::string& keyword;
+        GetStatus status;
+        const FieldData<T> * data_ptr;
+
+        FieldDataManager(const std::string& k, GetStatus s, const FieldData<T> * d) :
+            keyword(k),
+            status(s),
+            data_ptr(d)
+        { }
+
+
+        void verify_status() const {
+            switch (status) {
+            case FieldProps::GetStatus::OK:
+                return;
+            case FieldProps::GetStatus::INVALID_DATA:
+                throw std::runtime_error("The keyword: " + keyword + " has not been fully initialized");
+            case FieldProps::GetStatus::MISSING_KEYWORD:
+                throw std::out_of_range("No such keyword in deck: " + keyword);
+            case FieldProps::GetStatus::NOT_SUPPPORTED_KEYWORD:
+                throw std::logic_error("The kewyord  " + keyword + " is not supported");
+            }
+        }
+
+        const std::vector<T>* ptr() const {
+            if (this->data_ptr)
+                return std::addressof(this->data_ptr->data);
+            else
+                return nullptr;
+        }
+
+        const std::vector<T>& data() const {
+            this->verify_status();
+            return this->data_ptr->data;
+        }
+
+        const FieldData<T>& field_data() const {
+            this->verify_status();
+            return *this->data_ptr;
+        }
+
+        bool valid() const {
+            return (this->status == GetStatus::OK);
+        }
+
+    };
+
+
+
+
     FieldProps(const Deck& deck, const EclipseGrid& grid, const TableManager& table_arg);
     void reset_actnum(const std::vector<int>& actnum);
 
     const std::string& default_region() const;
 
     std::vector<int> actnum();
-
-    template <typename T>
-    FieldData<T>& get(const std::string& keyword);
 
     template <typename T>
     static bool supported(const std::string& keyword);
@@ -152,34 +211,66 @@ public:
     template <typename T>
     std::vector<std::string> keys() const;
 
-    template <typename T>
-    const std::vector<T>& get_valid_data(const std::string& keyword) {
-        const auto& field_ptr = this->try_get<T>(keyword);
-        if (field_ptr)
-            return field_ptr->data;
-        else
-            throw std::invalid_argument("No such valid keyword: " + keyword);
-    }
 
     template <typename T>
-    const FieldData<T>* try_get(const std::string& keyword) {
+    FieldDataManager<T> try_get(const std::string& keyword) {
+        if (!FieldProps::supported<T>(keyword))
+            return FieldDataManager<T>(keyword, GetStatus::NOT_SUPPPORTED_KEYWORD, nullptr);
+
         const FieldData<T> * field_data;
         bool has0 = this->has<T>(keyword);
 
-        try {
-            field_data = std::addressof(this->get<T>(keyword));
-        } catch (const std::out_of_range&) {
-            return nullptr;
+        field_data = std::addressof(this->init_get<T>(keyword));
+        if (field_data->valid())
+            return FieldDataManager<T>(keyword, GetStatus::OK, field_data);
+
+        if (!has0) {
+            this->erase<T>(keyword);
+            return FieldDataManager<T>(keyword, GetStatus::MISSING_KEYWORD, nullptr);
         }
 
-        if (field_data->valid())
-            return field_data;
-
-        if (!has0)
-            this->erase<T>(keyword);
-
-        return nullptr;
+        return FieldDataManager<T>(keyword, GetStatus::INVALID_DATA, nullptr);
     }
+
+
+    template <typename T>
+    const std::vector<T>& get(const std::string& keyword) {
+        const auto& data = this->try_get<T>(keyword);
+        return data.data();
+    }
+
+
+
+    template <typename T>
+    std::vector<T> get_copy(const std::string& keyword, bool global) {
+        bool has0 = this->has<T>(keyword);
+        const auto& data = this->get<T>(keyword);
+
+        if (has0) {
+            if (global)
+                return this->global_copy(data);
+            else
+                return data;
+        } else {
+            if (global)
+                return this->global_copy(this->extract<T>(keyword));
+            else
+                return this->extract<T>(keyword);
+        }
+    }
+
+
+    template <typename T>
+    std::vector<bool> defaulted(const std::string& keyword) {
+        const auto& field = this->init_get<T>(keyword);
+        std::vector<bool> def(field.size());
+
+        for (std::size_t i=0; i < def.size(); i++)
+            def[i] = value::defaulted( field.value_status[i]);
+
+        return def;
+    }
+
 
     template <typename T>
     std::vector<T> global_copy(const std::vector<T>& data) const {
@@ -192,40 +283,6 @@ public:
             }
         }
         return global_data;
-    }
-
-
-    template <typename T>
-    std::vector<T> get_copy(const std::string& keyword, bool global) {
-        if (this->has<T>(keyword)) {
-            const auto& data = this->get_valid_data<T>(keyword);
-
-            if (global)
-                return this->global_copy(data);
-            else
-                return data;
-        } else {
-            const auto& field_ptr = this->try_get<T>(keyword);
-            if (!field_ptr)
-                throw std::invalid_argument("No such valid keyword: " + keyword);
-
-            if (global)
-                return this->global_copy(this->extract<T>(keyword));
-            else
-                return this->extract<T>(keyword);
-        }
-    }
-
-
-    template <typename T>
-    std::vector<bool> defaulted(const std::string& keyword) {
-        const auto& field = this->get<T>(keyword);
-        std::vector<bool> def(field.size());
-
-        for (std::size_t i=0; i < def.size(); i++)
-            def[i] = value::defaulted( field.value_status[i]);
-
-        return def;
     }
 
     std::size_t active_size;
@@ -258,6 +315,9 @@ private:
 
     template <typename T>
     static void apply(ScalarOperation op, FieldData<T>& data, T scalar_value, const std::vector<Box::cell_index>& index_list);
+
+    template <typename T>
+    FieldData<T>& init_get(const std::string& keyword);
 
     std::vector<Box::cell_index> region_index( const DeckItem& regionItem, int region_value );
     std::vector<Box::cell_index> region_index( const std::string& region_name, int region_value );

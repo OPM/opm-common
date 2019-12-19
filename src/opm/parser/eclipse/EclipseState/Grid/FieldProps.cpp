@@ -515,59 +515,53 @@ bool FieldProps::supported<int>(const std::string& keyword) {
 }
 
 template <>
-FieldProps::FieldData<double>& FieldProps::get(const std::string& keyword) {
+FieldProps::FieldData<double>& FieldProps::init_get(const std::string& keyword) {
     auto iter = this->double_data.find(keyword);
     if (iter != this->double_data.end())
         return iter->second;
 
-    if (FieldProps::supported<double>(keyword)) {
-        this->double_data[keyword] = FieldData<double>(this->active_size);
-        auto init_iter = keywords::double_scalar_init.find(keyword);
-        if (init_iter != keywords::double_scalar_init.end())
-            this->double_data[keyword].default_assign(init_iter->second);
+    this->double_data[keyword] = FieldData<double>(this->active_size);
+    auto init_iter = keywords::double_scalar_init.find(keyword);
+    if (init_iter != keywords::double_scalar_init.end())
+        this->double_data[keyword].default_assign(init_iter->second);
 
-        if (keyword == ParserKeywords::PORV::keywordName)
-            this->init_porv(this->double_data[keyword]);
+    if (keyword == ParserKeywords::PORV::keywordName)
+        this->init_porv(this->double_data[keyword]);
 
-        if (keyword == ParserKeywords::TEMPI::keywordName)
-            this->init_tempi(this->double_data[keyword]);
+    if (keyword == ParserKeywords::TEMPI::keywordName)
+        this->init_tempi(this->double_data[keyword]);
 
-        if (keywords::PROPS::satfunc.count(keyword) == 1) {
-            this->init_satfunc(keyword, this->double_data[keyword]);
+    if (keywords::PROPS::satfunc.count(keyword) == 1) {
+        this->init_satfunc(keyword, this->double_data[keyword]);
 
-            if (this->tables.hasTables("SGOF")) {
-                const auto shift_iter = keywords::PROPS::sogcr_shift.find(keyword);
-                if (shift_iter != keywords::PROPS::sogcr_shift.end())
-                    this->subtract_swl(this->double_data[keyword], shift_iter->second);
-            }
+        if (this->tables.hasTables("SGOF")) {
+            const auto shift_iter = keywords::PROPS::sogcr_shift.find(keyword);
+            if (shift_iter != keywords::PROPS::sogcr_shift.end())
+                this->subtract_swl(this->double_data[keyword], shift_iter->second);
         }
+    }
 
-        return this->double_data[keyword];
-    } else
-        throw std::out_of_range("Double keyword: " + keyword + " is not supported");
+    return this->double_data[keyword];
 }
 
 
 
 template <>
-FieldProps::FieldData<int>& FieldProps::get(const std::string& keyword) {
+FieldProps::FieldData<int>& FieldProps::init_get(const std::string& keyword) {
     auto iter = this->int_data.find(keyword);
     if (iter != this->int_data.end())
         return iter->second;
 
-    if (FieldProps::supported<int>(keyword)) {
-        this->int_data[keyword] = FieldData<int>(this->active_size);
-        auto init_iter = keywords::int_scalar_init.find(keyword);
-        if (init_iter != keywords::int_scalar_init.end())
-            this->int_data[keyword].default_assign(init_iter->second);
+    this->int_data[keyword] = FieldData<int>(this->active_size);
+    auto init_iter = keywords::int_scalar_init.find(keyword);
+    if (init_iter != keywords::int_scalar_init.end())
+        this->int_data[keyword].default_assign(init_iter->second);
 
-        return this->int_data[keyword];
-    } else
-        throw std::out_of_range("Integer keyword " + keyword + " is not supported");
+    return this->int_data[keyword];
 }
 
 std::vector<Box::cell_index> FieldProps::region_index( const std::string& region_name, int region_value ) {
-    const auto& region = this->get<int>(region_name);
+    const auto& region = this->init_get<int>(region_name);
     if (!region.valid())
         throw std::invalid_argument("Trying to work with invalid region: " + region_name);
 
@@ -676,7 +670,7 @@ double FieldProps::getSIValue(const std::string& keyword, double raw_value) cons
 
 
 void FieldProps::handle_int_keyword(const DeckKeyword& keyword, const Box& box) {
-    auto& field_data = this->get<int>(keyword.name());
+    auto& field_data = this->init_get<int>(keyword.name());
     const auto& deck_data = keyword.getIntData();
     const auto& deck_status = keyword.getValueStatus();
     assign_deck(keyword, field_data, deck_data, deck_status, box);
@@ -684,7 +678,7 @@ void FieldProps::handle_int_keyword(const DeckKeyword& keyword, const Box& box) 
 
 
 void FieldProps::handle_double_keyword(const DeckKeyword& keyword, const Box& box) {
-    auto& field_data = this->get<double>(keyword.name());
+    auto& field_data = this->init_get<double>(keyword.name());
     const auto& deck_data = keyword.getSIDoubleData();
     const auto& deck_status = keyword.getValueStatus();
     assign_deck(keyword, field_data, deck_data, deck_status, box);
@@ -692,7 +686,7 @@ void FieldProps::handle_double_keyword(const DeckKeyword& keyword, const Box& bo
 
 
 void FieldProps::handle_grid_section_double_keyword(const DeckKeyword& keyword, const Box& box) {
-    auto& field_data = this->get<double>(keyword.name());
+    auto& field_data = this->init_get<double>(keyword.name());
     const auto& deck_data = keyword.getSIDoubleData();
     const auto& deck_status = keyword.getValueStatus();
     assign_deck(keyword, field_data, deck_data, deck_status, box);
@@ -749,14 +743,14 @@ void FieldProps::handle_region_operation(const DeckKeyword& keyword) {
         int region_value = record.getItem("REGION_NUMBER").get<int>(0);
 
         if (FieldProps::supported<double>(target_kw)) {
-            auto& field_data = this->get<double>(target_kw);
+            auto& field_data = this->init_get<double>(target_kw);
 
             if (keyword.name() == ParserKeywords::OPERATER::keywordName) {
                 // For the OPERATER keyword we fetch the region name from the deck record
                 // with no extra hoops.
                 const auto& index_list = this->region_index(record.getItem("REGION_NAME").get<std::string>(0), region_value);
                 const std::string& src_kw = record.getItem("ARRAY_PARAMETER").get<std::string>(0);
-                const auto& src_data = this->get<double>(src_kw);
+                const auto& src_data = this->init_get<double>(src_kw);
                 FieldProps::apply(record, field_data, src_data, index_list);
             } else {
                 double value = record.getItem(1).get<double>(0);
@@ -784,11 +778,11 @@ void FieldProps::handle_operation(const DeckKeyword& keyword, Box box) {
         box.update(record);
 
         if (FieldProps::supported<double>(target_kw)) {
-            auto& field_data = this->get<double>(target_kw);
+            auto& field_data = this->init_get<double>(target_kw);
 
             if (keyword.name() == ParserKeywords::OPERATE::keywordName) {
                 const std::string& src_kw = record.getItem("ARRAY").get<std::string>(0);
-                const auto& src_data = this->get<double>(src_kw);
+                const auto& src_data = this->init_get<double>(src_kw);
                 FieldProps::apply(record, field_data, src_data, box.index_list());
             } else {
                 double scalar_value = record.getItem(1).get<double>(0);
@@ -803,7 +797,7 @@ void FieldProps::handle_operation(const DeckKeyword& keyword, Box box) {
 
         if (FieldProps::supported<int>(target_kw)) {
             int scalar_value = static_cast<int>(record.getItem(1).get<double>(0));
-            auto& field_data = this->get<int>(target_kw);
+            auto& field_data = this->init_get<int>(target_kw);
             FieldProps::apply(fromString(keyword.name()), field_data, scalar_value, box.index_list());
             continue;
         }
@@ -830,22 +824,20 @@ void FieldProps::handle_COPY(const DeckKeyword& keyword, Box box, bool region) {
 
 
         if (FieldProps::supported<double>(src_kw)) {
-            const auto * src_data = this->try_get<double>(src_kw);
-            if (!src_data)
-                throw std::invalid_argument("Tried to copy from not fully initialized keyword: " + src_kw);
-            auto& target_data = this->get<double>(target_kw);
-            target_data.copy(*src_data, index_list);
+            const auto& src_data = this->try_get<double>(src_kw);
+            src_data.verify_status();
 
+            auto& target_data = this->init_get<double>(target_kw);
+            target_data.copy(src_data.field_data(), index_list);
             continue;
         }
 
         if (FieldProps::supported<int>(src_kw)) {
-            const auto * src_data = this->try_get<int>(src_kw);
-            if (!src_data)
-                throw std::invalid_argument("Tried to copy from not fully initialized keyword: " + src_kw);
-            auto& target_data = this->get<int>(target_kw);
-            target_data.copy(*src_data, index_list);
+            const auto& src_data = this->try_get<int>(src_kw);
+            src_data.verify_status();
 
+            auto& target_data = this->init_get<int>(target_kw);
+            target_data.copy(src_data.field_data(), index_list);
             continue;
         }
     }
@@ -875,7 +867,7 @@ void FieldProps::handle_keyword(const DeckKeyword& keyword, Box& box) {
 
 void FieldProps::init_tempi(FieldData<double>& tempi) {
     if (this->tables.hasTables("RTEMPVD")) {
-        const auto& eqlnum = this->get_valid_data<int>("EQLNUM");
+        const auto& eqlnum = this->get<int>("EQLNUM");
         const auto& rtempvd = this->tables.getRtempvdTables();
         std::vector< double > tempi_values( this->active_size, 0 );
 
@@ -894,7 +886,7 @@ void FieldProps::init_porv(FieldData<double>& porv) {
     auto& porv_data = porv.data;
     auto& porv_status = porv.value_status;
 
-    const auto& poro = this->get<double>("PORO");
+    const auto& poro = this->init_get<double>("PORO");
     const auto& poro_status = poro.value_status;
     const auto& poro_data = poro.data;
 
@@ -906,14 +898,14 @@ void FieldProps::init_porv(FieldData<double>& porv) {
     }
 
     if (this->has<double>("NTG")) {
-        const auto& ntg = this->get_valid_data<double>("NTG");
+        const auto& ntg = this->get<double>("NTG");
         for (std::size_t active_index = 0; active_index < this->active_size; active_index++)
             porv_data[active_index] *= ntg[active_index];
     }
 
 
     if (this->has<double>("MULTPV")) {
-        const auto& multpv = this->get_valid_data<double>("MULTPV");
+        const auto& multpv = this->get<double>("MULTPV");
         printf("Doing MULTPV multiplication");
         std::transform(porv_data.begin(), porv_data.end(), multpv.begin(), porv_data.begin(), std::multiplies<double>());
     }
@@ -940,7 +932,7 @@ void FieldProps::init_porv(FieldData<double>& porv) {
 */
 std::vector<int> FieldProps::actnum() {
     auto actnum = this->m_actnum;
-    const auto& deck_actnum = this->get<int>("ACTNUM");
+    const auto& deck_actnum = this->init_get<int>("ACTNUM");
 
     std::vector<int> global_map(this->active_size);
     {
@@ -954,7 +946,7 @@ std::vector<int> FieldProps::actnum() {
     }
 
 
-    const auto& porv = this->get<double>("PORV");
+    const auto& porv = this->init_get<double>("PORV");
     const auto& porv_data = porv.data;
     for (std::size_t active_index = 0; active_index < this->active_size; active_index++) {
         auto global_index = global_map[active_index];
@@ -1006,12 +998,12 @@ void FieldProps::scanEDITSection(const EDITSection& edit_section) {
 
 
 void FieldProps::init_satfunc(const std::string& keyword, FieldData<double>& satfunc) {
-    const auto& endnum = this->get_valid_data<int>("ENDNUM");
+    const auto& endnum = this->get<int>("ENDNUM");
     if (keyword[0] == 'I') {
-        const auto& imbnum = this->get_valid_data<int>("IMBNUM");
+        const auto& imbnum = this->get<int>("IMBNUM");
         satfunc.default_update(satfunc::init(keyword, this->tables, this->cell_depth, imbnum, endnum));
     } else {
-        const auto& satnum = this->get_valid_data<int>("SATNUM");
+        const auto& satnum = this->get<int>("SATNUM");
         satfunc.default_update(satfunc::init(keyword, this->tables, this->cell_depth, satnum, endnum));
     }
 }
@@ -1026,7 +1018,7 @@ void FieldProps::init_satfunc(const std::string& keyword, FieldData<double>& sat
  */
 void FieldProps::subtract_swl(FieldProps::FieldData<double>& sogcr, const std::string& swl_kw)
 {
-    const auto& swl = this->get<double>(swl_kw);
+    const auto& swl = this->init_get<double>(swl_kw);
     for (std::size_t i = 0; i < sogcr.size(); i++) {
         if (value::defaulted(sogcr.value_status[i]))
             sogcr.data[i] -= swl.data[i];

@@ -49,15 +49,17 @@ BOOST_AUTO_TEST_CASE(CreateFieldProps) {
     FieldPropsManager fpm(deck, grid, TableManager());
     BOOST_CHECK(!fpm.try_get<double>("PORO"));
     BOOST_CHECK(!fpm.try_get<double>("PORO"));
-    BOOST_CHECK_THROW(fpm.get<double>("PORO"), std::out_of_range);
-    BOOST_CHECK_THROW(fpm.get_global<double>("PORO"), std::out_of_range);
-    BOOST_CHECK_THROW(fpm.try_get<int>("NOT_SUPPORTED"), std::invalid_argument);
-    BOOST_CHECK_THROW(fpm.try_get<double>("NOT_SUPPORTED"), std::invalid_argument);
-    BOOST_CHECK_THROW(fpm.get<int>("NOT_SUPPORTED"), std::invalid_argument);
-    BOOST_CHECK_THROW(fpm.get<double>("NOT_SUPPORTED"), std::invalid_argument);
+    BOOST_CHECK(!fpm.try_get<double>("NO_SUCH_KEYWOWRD"));
+    BOOST_CHECK(!fpm.try_get<int>("NO_SUCH_KEYWOWRD"));
 
-    BOOST_CHECK_THROW(fpm.get_global<double>("NO1"), std::invalid_argument);
-    BOOST_CHECK_THROW(fpm.get_global<int>("NO2"), std::invalid_argument);
+    BOOST_CHECK_THROW(fpm.get<double>("PORO"), std::out_of_range);
+    BOOST_CHECK_THROW(fpm.get_global<double>("PERMX"), std::out_of_range);
+    BOOST_CHECK_THROW(fpm.get_copy<double>("PERMX"), std::out_of_range);
+    BOOST_CHECK_THROW(fpm.get<int>("NOT_SUPPORTED"), std::logic_error);
+    BOOST_CHECK_THROW(fpm.get<double>("NOT_SUPPORTED"), std::logic_error);
+
+    BOOST_CHECK_THROW(fpm.get_global<double>("NO1"), std::logic_error);
+    BOOST_CHECK_THROW(fpm.get_global<int>("NO2"), std::logic_error);
 }
 
 
@@ -103,7 +105,7 @@ PERMX
     // PERMX keyword is not fully initialized
     BOOST_CHECK(!fpm.try_get<double>("PERMX"));
     BOOST_CHECK(!fpm.has<double>("PERMX"));
-
+    BOOST_CHECK_THROW(fpm.get<double>("PERMX"), std::runtime_error);
     {
         const auto& keys = fpm.keys<double>();
         BOOST_CHECK_EQUAL(keys.size(), 1);
@@ -134,7 +136,7 @@ COPY
 
     EclipseGrid grid(EclipseGrid(10,10,10));
     Deck deck = Parser{}.parseString(deck_string);
-    BOOST_CHECK_THROW( FieldPropsManager(deck, grid, TableManager()), std::invalid_argument);
+    BOOST_CHECK_THROW( FieldPropsManager(deck, grid, TableManager()), std::out_of_range);
 }
 
 BOOST_AUTO_TEST_CASE(GRID_RESET) {
@@ -500,7 +502,7 @@ PORO
     BOOST_CHECK(satnum.size() == grid.getCartesianSize());
 
     //The PERMY keyword can not be default initialized
-    BOOST_CHECK_THROW(fpm.get_copy<double>("PERMY"), std::invalid_argument);
+    BOOST_CHECK_THROW(fpm.get_copy<double>("PERMY"), std::out_of_range);
 }
 
 BOOST_AUTO_TEST_CASE(GET_TEMPI) {
