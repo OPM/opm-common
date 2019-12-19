@@ -75,10 +75,16 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
         NICAQZ  =  45,      //  Number of data elements per aquifer connection in ICAQ array
         NSCAQZ  =  46,      //  Number of data elements per aquifer connection in SCAQ array
         NACAQZ  =  47,      //  Number of data elements per aquifer connection in ACAQ array
+        
+        NGCTRL   =  51,      //  Index indicating if group control is used or not (1 - if group control, 0 if not)
+        
+        NGRNPH   =  58,      //  Index indicating if group control is used or not (1 - if group control, 0 if not)
 
         DAY     =  64,      //  Calendar day of report step (1..31)
         MONTH   =  65,      //  Calendar month of report step (1..12)
         YEAR    =  66,      //  Calendar year of report step
+        
+        WHISTC   =  71,      //  Calendar year of report step
 
         NOOFACTIONS = 156,  //  The number of actions in the dataset
         MAXNOLINES = 157,   //  Maximum number of lines of schedule data for ACTION keyword - including ENDACTIO
@@ -96,11 +102,14 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
         NILBRZ  = 180,      //  Number of entries per segment in ILBR array
 
         MAX_ACT_COND = 245,      //  Maximum number of conditions pr action
-
         MAX_AN_AQUIFERS = 252, // Maximum number of analytic aquifers
 
-        NO_UDQS = 266,      //  No of UDQ data (parameters)
-        UDQPAR_1 = 267,      //  Integer seed value for the RAND
+        NO_FIELD_UDQS = 262, //  No of Field UDQ data (parameters) /  
+        NO_GROUP_UDQS = 263, //  No of Group UDQ data (parameters) /  
+        NO_WELL_UDQS = 266,  //  No of Well UDQ data (parameters) /  
+        UDQPAR_1 = 267,      //  Integer seed value for the RAND /  
+        NO_IUADS = 290,      //  No IUADs 
+        NO_IUAPS = 291,      //  No IUAPs
         RSEED    = 296,
     };
 }}}} // Opm::RestartIO::Helpers::VectorItems

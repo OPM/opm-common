@@ -19,6 +19,7 @@
 
 #include <opm/output/eclipse/AggregateGroupData.hpp>
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
+#include <opm/output/eclipse/VectorItems/group.hpp>
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
@@ -123,12 +124,14 @@ allocate(const std::vector<int>& inteHead)
 }
 
 template <class IGrpArray>
-void staticContrib(const Opm::Schedule&    sched,
-                   const Opm::Group&      group,
-                   const int               nwgmax,
-                   const int               ngmaxz,
-                   const std::size_t       simStep,
-                   IGrpArray&              iGrp)
+void staticContrib(const Opm::Schedule&     sched,
+                   const Opm::Group&        group,
+                   const int                nwgmax,
+                   const int                ngmaxz,
+                   const std::size_t        simStep,
+                   const Opm::SummaryState& sumState,
+                   const std::map<Opm::Group::InjectionCMode, int> cmodeToNum,
+                   IGrpArray&               iGrp)
 {
     if (group.wellgroup()) {
         int igrpCount = 0;
@@ -151,6 +154,87 @@ void staticContrib(const Opm::Schedule&    sched,
     //assign the number of child wells or child groups to
     // location nwgmax
     iGrp[nwgmax] = groupSize(group);
+    
+    /*IGRP[NWGMAX + 5]  
+        =   -1 group under higher group control
+        =   0    for NONE (no control)
+        =   1  group under rate control
+    */
+    
+    if ((group.getGroupType() == Opm::Group::GroupType::NONE) || (group.getGroupType() == Opm::Group::GroupType::PRODUCTION) ) {
+        const auto& prod_cmode = group.production_cmode();
+        
+        if (prod_cmode == Opm::Group::ProductionCMode::FLD) {
+            iGrp[nwgmax + 5] = -1;
+        }
+        else if (prod_cmode == Opm::Group::ProductionCMode::NONE) {
+             iGrp[nwgmax + 5] = 0;
+        }
+        else {
+            iGrp[nwgmax + 5] = 1;
+        }
+
+        // Set iGrp for [nwgmax + 7]
+        /*
+        = 0 for group with  "FLD" or "NONE"
+        = 4 for "GRAT" FIELD
+        = -40000 for production group with "ORAT"
+        = -4000  for production group with "WRAT"
+        = -400    for production group with "GRAT"
+        = -40     for production group with "LRAT"
+         */
+
+        if ((prod_cmode == Opm::Group::ProductionCMode::NONE) || prod_cmode == Opm::Group::ProductionCMode::FLD) {
+            iGrp[nwgmax + 7] = 0;
+        }
+        else if ((prod_cmode == Opm::Group::ProductionCMode::ORAT)) {
+            iGrp[nwgmax + 7] = -40000;
+        }
+        else if ((prod_cmode == Opm::Group::ProductionCMode::WRAT)) {
+            iGrp[nwgmax + 7] = -4000;
+        }
+        else if ((prod_cmode == Opm::Group::ProductionCMode::GRAT)) {
+            iGrp[nwgmax + 7] = -400;
+            if (group.name() == "FIELD") {
+                iGrp[nwgmax + 7] = 4;
+            }
+        }
+        else if ((prod_cmode == Opm::Group::ProductionCMode::LRAT)) {
+            iGrp[nwgmax + 7] = -40;
+        }
+    }
+    //Set injection group status
+    //item[nwgmax + 16] - mode for operation for injection group
+    // 1 - RATE 
+    // 2 - RESV
+    // 3 - REIN
+    // 4 - VREP
+    // 0 - ellers
+    
+    if (group.isInjectionGroup()) {
+        const auto& inj_cntl = group.injectionControls(sumState);
+        const auto& inj_mode = inj_cntl.cmode;
+        const auto& phs = inj_cntl.phase;
+        //Gas injection control
+        if (phs == Opm::Phase::WATER) {
+            const auto it = cmodeToNum.find(inj_mode);
+            if (it != cmodeToNum.end()) {
+                iGrp[nwgmax + 16] = it->second;
+                iGrp[nwgmax + 18] = iGrp[nwgmax + 16];
+                iGrp[nwgmax + 19] = iGrp[nwgmax + 16];
+            }
+        }
+        //Water injection control
+        else if (phs == Opm::Phase::GAS) {
+            const auto it = cmodeToNum.find(inj_mode);
+            if (it != cmodeToNum.end()) {
+                iGrp[nwgmax + 21] = it->second;
+                iGrp[nwgmax + 23] = iGrp[nwgmax + 21];
+                iGrp[nwgmax + 24] = iGrp[nwgmax + 21];
+            }
+        }
+    }
+    
     iGrp[nwgmax + 26] = groupType(group);
 
     //find group level ("FIELD" is level 0) and store the level in
@@ -161,7 +245,7 @@ void staticContrib(const Opm::Schedule&    sched,
     //
     if (group.name() != "FIELD")
     {
-        iGrp[nwgmax+ 5] = -1;
+        //iGrp[nwgmax+ 5] = -1;
         iGrp[nwgmax+12] = -1;
         iGrp[nwgmax+17] = -1;
         iGrp[nwgmax+22] = -1;
@@ -192,6 +276,7 @@ void staticContrib(const Opm::Schedule&    sched,
         else
             iGrp[nwgmax+28] = parent_group.insert_index();
     }
+
 }
 } // Igrp
 
@@ -214,8 +299,15 @@ allocate(const std::vector<int>& inteHead)
 }
 
 template <class SGrpArray>
-void staticContrib(SGrpArray& sGrp)
+void staticContrib(const Opm::Group&        group,
+                   const Opm::SummaryState& sumState,
+                   const Opm::UnitSystem& units,
+                   SGrpArray&               sGrp)
 {
+    using Isp = ::Opm::RestartIO::Helpers::VectorItems::SGroup::prod_index;
+    using Isi = ::Opm::RestartIO::Helpers::VectorItems::SGroup::inj_index;
+    using M = ::Opm::UnitSystem::measure;
+    
     const auto dflt   = -1.0e+20f;
     const auto dflt_2 = -2.0e+20f;
     const auto infty  =  1.0e+20f;
@@ -256,6 +348,67 @@ void staticContrib(SGrpArray& sGrp)
     auto e = b + std::min(init.size(), sz);
 
     std::copy(b, e, std::begin(sGrp));
+    
+    auto sgprop = [&units](const M u, const double x) -> float
+    {
+        return static_cast<float>(units.from_si(u, x));
+    };
+    
+    if (group.isProductionGroup()) {
+        const auto& prod_cntl = group.productionControls(sumState);
+        
+        if (prod_cntl.oil_target > 0.) {
+            sGrp[Isp::OilRateLimit] = sgprop(M::liquid_surface_rate, prod_cntl.oil_target);
+            sGrp[37] = sGrp[Isp::OilRateLimit];
+            sGrp[52] = sGrp[Isp::OilRateLimit];  // "ORAT" control
+        }
+        if (prod_cntl.water_target > 0.) {
+            sGrp[Isp::WatRateLimit > 0.] = sgprop(M::liquid_surface_rate, prod_cntl.water_target);
+            sGrp[38] = sGrp[Isp::WatRateLimit];
+            sGrp[53] = sGrp[Isp::WatRateLimit];  //"WRAT" control
+        }
+        if (prod_cntl.gas_target > 0.) {
+            sGrp[Isp::GasRateLimit] = sgprop(M::gas_surface_rate, prod_cntl.gas_target);
+            sGrp[39] = sGrp[Isp::GasRateLimit];
+        }
+        if (prod_cntl.liquid_target > 0.) {
+            sGrp[Isp::LiqRateLimit] = sgprop(M::liquid_surface_rate, prod_cntl.liquid_target);
+            sGrp[40] = sGrp[Isp::LiqRateLimit];
+        }
+    }
+    
+    if (group.isInjectionGroup()) {
+        const auto& inj_cntl = group.injectionControls(sumState);
+        const auto& phs = inj_cntl.phase;
+        if (phs == Opm::Phase::GAS) {
+            if (inj_cntl.surface_max_rate > 0.) {
+                sGrp[Isi::gasSurfRateLimit] = sgprop(M::gas_surface_rate, inj_cntl.surface_max_rate);
+            }
+            if (inj_cntl.resv_max_rate > 0.) {
+                sGrp[Isi::gasResRateLimit > 0.] = sgprop(M::rate, inj_cntl.resv_max_rate);
+            }
+            if (inj_cntl.target_reinj_fraction > 0.) {
+                sGrp[Isi::gasReinjectionLimit] = inj_cntl.target_reinj_fraction;
+            }
+            if (inj_cntl.target_void_fraction > 0.) {
+                sGrp[Isi::gasVoidageLimit] = inj_cntl.target_void_fraction;
+            }
+        }
+        if (phs == Opm::Phase::WATER) {
+            if (inj_cntl.surface_max_rate > 0.) {
+                sGrp[Isi::waterSurfRateLimit] = sgprop(M::liquid_surface_rate, inj_cntl.surface_max_rate);
+            }
+            if (inj_cntl.resv_max_rate > 0.) {
+                sGrp[Isi::waterResRateLimit > 0.] = sgprop(M::rate, inj_cntl.resv_max_rate);
+            }
+            if (inj_cntl.target_reinj_fraction > 0.) {
+                sGrp[Isi::waterReinjectionLimit] = inj_cntl.target_reinj_fraction;
+            }
+            if (inj_cntl.target_void_fraction > 0.) {
+                sGrp[Isi::waterVoidageLimit] = inj_cntl.target_void_fraction;
+            }
+        }
+    }
 }
 } // SGrp
 
@@ -355,6 +508,7 @@ AggregateGroupData(const std::vector<int>& inteHead)
 void
 Opm::RestartIO::Helpers::AggregateGroupData::
 captureDeclaredGroupData(const Opm::Schedule&                 sched,
+                         const Opm::UnitSystem&               units,
                          const std::size_t                    simStep,
                          const Opm::SummaryState&             sumState,
                          const std::vector<int>&              inteHead)
@@ -367,21 +521,21 @@ captureDeclaredGroupData(const Opm::Schedule&                 sched,
         curGroups[ind] = std::addressof(group);
     }
 
-    groupLoop(curGroups, [&sched, simStep, this]
+    groupLoop(curGroups, [&sched, simStep, sumState, this]
               (const Group& group, const std::size_t groupID) -> void
                          {
                              auto ig = this->iGroup_[groupID];
 
                              IGrp::staticContrib(sched, group, this->nWGMax_, this->nGMaxz_,
-                                                 simStep, ig);
+                                                 simStep, sumState, this->cmodeToNum, ig);
                          });
 
     // Define Static Contributions to SGrp Array.
     groupLoop(curGroups,
-              [this](const Group& /* group */, const std::size_t groupID) -> void
+              [&sumState, &units, this](const Group& group , const std::size_t groupID) -> void
               {
                   auto sw = this->sGroup_[groupID];
-                  SGrp::staticContrib(sw);
+                  SGrp::staticContrib(group, sumState, units, sw);
               });
 
     // Define Dynamic Contributions to XGrp Array.

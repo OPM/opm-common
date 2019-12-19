@@ -40,6 +40,17 @@ namespace Opm { namespace RestartIO {
             std::chrono::duration<double, std::chrono::seconds::period> elapsed;
         };
         
+        struct guideRate {
+            double A;
+            double B;
+            double C;
+            double D;
+            double E;
+            double F;
+            double delay;
+            double damping_fact;
+        };
+        
         DoubHEAD();
 
         ~DoubHEAD() = default;
@@ -61,6 +72,7 @@ namespace Opm { namespace RestartIO {
                         const double      cnvT);
 	
         DoubHEAD& udq_param(const UDQParams& udqPar);
+        DoubHEAD& guide_rate_param(const guideRate& guide_rp);
 
         const std::vector<double>& data() const
         {

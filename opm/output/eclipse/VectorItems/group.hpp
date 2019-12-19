@@ -24,6 +24,30 @@
 
 namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems {
 
+    
+        namespace SGroup {
+        enum prod_index : std::vector<float>::size_type {
+            OilRateLimit  =  6, // Group's oil production target/limit
+            WatRateLimit  =  7, // Group's water production target/limit
+            GasRateLimit  =  8, // Group's gas production target/limit
+            LiqRateLimit  =  9, // Group's liquid production target/limit
+        };
+        
+        enum inj_index : std::vector<float>::size_type {
+            waterSurfRateLimit      =  15, // Group's water surface volume injection rate target/limit
+            waterResRateLimit       =  16, // Group's water reservoir volume injection rate target/limit
+            waterReinjectionLimit   =  17, // Group's water reinjection fraction target/limit
+            waterVoidageLimit       =  18, // Group's water voidage injection fraction target/limit
+            gasSurfRateLimit        =  20, // Group's gas surface volume injection rate target/limit
+            gasResRateLimit         =  21, // Group's gas reservoir volume injection rate target/limit
+            gasReinjectionLimit     =  22, // Group's gas reinjection fraction target/limit
+            gasVoidageLimit         =  23, // Group's gas voidage injection fraction target/limit
+
+        };
+    } // SGroup
+
+    
+    
     namespace XGroup {
         enum index : std::vector<double>::size_type {
             OilPrRate  =  0, // Group's oil production rate

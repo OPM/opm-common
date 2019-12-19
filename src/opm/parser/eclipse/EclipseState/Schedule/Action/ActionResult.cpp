@@ -18,6 +18,7 @@
 */
 
 #include <vector>
+#include <algorithm>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionResult.hpp>
 
@@ -43,10 +44,9 @@ Result::Result(bool result_arg, const WellSet& wells) :
 Result::Result(const Result& src)
 {
     this->result = src.result;
-    if (src.matching_wells)
+    if (src.matching_wells) 
         this->matching_wells.reset( new WellSet(*src.matching_wells) );
 }
-
 
 Result::operator bool() const {
     return this->result;
@@ -58,7 +58,6 @@ std::vector<std::string> Result::wells() const {
     else
         return {};
 }
-
 
 Result& Result::operator|=(const Result& other) {
     this->result = this->result || other.result;
@@ -84,6 +83,14 @@ Result& Result::operator&=(const Result& other) {
     return *this;
 }
 
+Result& Result::operator=(const Result& src) 
+{
+    this->result = src.result;
+    if (src.matching_wells) this->matching_wells.reset( new WellSet(*src.matching_wells) );
+    
+    return *this;
+}
+
 void Result::assign(bool value) {
     this->result = value;
 }
@@ -94,7 +101,7 @@ void Result::add_well(const std::string& well) {
     this->matching_wells->add(well);
 }
 
-bool Result::has_well(const std::string& well) {
+bool Result::has_well(const std::string& well) const {
     if (!this->matching_wells)
         return false;
 

@@ -29,6 +29,8 @@
 #include <opm/output/eclipse/AggregateConnectionData.hpp>
 #include <opm/output/eclipse/AggregateMSWData.hpp>
 #include <opm/output/eclipse/AggregateUDQData.hpp>
+#include <opm/output/eclipse/AggregateActionxData.hpp>
+
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
@@ -232,6 +234,7 @@ namespace {
     }
 
     void writeGroup(int                           sim_step,
+                    const UnitSystem&             units,
                     const Schedule&               schedule,
                     const Opm::SummaryState&      sumState,
                     const std::vector<int>&       ih,
@@ -242,7 +245,7 @@ namespace {
 
         auto  groupData = Helpers::AggregateGroupData(ih);
 
-        groupData.captureDeclaredGroupData(schedule, simStep, sumState, ih);
+        groupData.captureDeclaredGroupData(schedule, units, simStep, sumState, ih);
 
         rstFile.write("IGRP", groupData.getIGroup());
         rstFile.write("SGRP", groupData.getSGroup());
@@ -278,10 +281,6 @@ namespace {
                   const std::vector<int>&       ih,
                   EclIO::OutputStream::Restart& rstFile)
     {
-        //return;
-        //need to add test if UDQ-data exist and UDQ - active exist etc. 
-        // do not write unless data exists and copy E100 logic.
-        
         // write UDQ - data to restart file
         const std::size_t simStep = static_cast<size_t> (sim_step);
 
@@ -299,6 +298,30 @@ namespace {
             if (udqDims[ 2] >= 1) rstFile.write("IUAD", udqData.getIUAD());
             if (udqDims[ 7] >= 1) rstFile.write("IUAP", udqData.getIUAP());
             if (udqDims[ 6] >= 1) rstFile.write("IGPH", udqData.getIGPH());
+        }
+    }
+
+    void writeActionx(int                       sim_step,
+                  const EclipseState&           es,
+                  const Schedule&               schedule,
+                  const SummaryState&           sum_state,
+                  EclIO::OutputStream::Restart& rstFile)
+    {
+        // write ACTIONX - data to restart file
+        const std::size_t simStep = static_cast<size_t> (sim_step);
+        
+        const auto actDims = Opm::RestartIO::Helpers::createActionxDims(es.runspec(), schedule, simStep);
+        auto  actionxData = Opm::RestartIO::Helpers::AggregateActionxData(actDims);
+        actionxData.captureDeclaredActionxData(schedule, sum_state, actDims, simStep);
+        
+        if (actDims[0] >= 1) {
+            rstFile.write("IACT", actionxData.getIACT());
+            rstFile.write("SACT", actionxData.getSACT());
+            rstFile.write("ZACT", actionxData.getZACT());
+            rstFile.write("ZLACT", actionxData.getZLACT());
+            rstFile.write("ZACN", actionxData.getZACN());
+            rstFile.write("IACN", actionxData.getIACN());
+            rstFile.write("SACN", actionxData.getSACN());
         }
     }
 
@@ -538,7 +561,7 @@ void save(EclIO::OutputStream::Restart& rstFile,
         writeHeader(sim_step, nextStepSize(value), seconds_elapsed,
                     schedule, grid, es, rstFile);
 
-    writeGroup(sim_step, schedule, sumState, inteHD, rstFile);
+    writeGroup(sim_step, units, schedule, sumState, inteHD, rstFile);
 
     // Write well and MSW data only when applicable (i.e., when present)
     {
@@ -562,6 +585,8 @@ void save(EclIO::OutputStream::Restart& rstFile,
                       value.wells, sumState, inteHD, rstFile);
         }
     }
+    
+    writeActionx(sim_step, es, schedule, sumState, rstFile);
     
     writeSolution(value, schedule, sumState, sim_step, ecl_compatible_rst, write_double, inteHD, rstFile);
 

@@ -180,6 +180,7 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
     namespace ZWell {
         enum index : std::vector<const char*>::size_type {
             WellName = 0, // Well name
+            ActionX  = 2, // ActionX name
         };
     } // ZWell
 }}}} // Opm::RestartIO::Helpers::VectorItems

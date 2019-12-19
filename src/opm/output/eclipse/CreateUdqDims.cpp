@@ -20,6 +20,7 @@
 
 #include <opm/output/eclipse/AggregateUDQData.hpp>
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
+#include <opm/output/eclipse/VectorItems/intehead.hpp>
 
 #include <opm/output/eclipse/InteHEAD.hpp>
 #include <opm/output/eclipse/DoubHEAD.hpp>
@@ -38,6 +39,8 @@
 #include <chrono>
 #include <cstddef>
 #include <vector>
+
+namespace VI = ::Opm::RestartIO::Helpers::VectorItems;
 
 namespace {
 
@@ -68,56 +71,10 @@ std::size_t entriesPerZUDL()
 
 std::size_t noIGphs(const std::vector<int>& inteHead)
 {
-    std::size_t no_entries = inteHead[20];
+    std::size_t no_entries = (inteHead[VI::intehead::NO_GROUP_UDQS] > 0) ? inteHead[20] : 0;
     return no_entries;
 }
 
-// maximum number of wells
-std::size_t nwmaxz(const std::vector<int>& inteHead)
-{
-        return inteHead[163];
-}
-
-// maximum number of groups
-std::size_t ngmaxz(const std::vector<int>& inteHead)
-{
-    return inteHead[20];
-}
-
-int noWellUdqs(const Opm::Schedule& sched,
-               const std::size_t    simStep)
-{
-    const auto& udqCfg = sched.getUDQConfig(simStep);
-    std::size_t i_wudq = 0;
-    for (const auto& udq_input : udqCfg.input()) {
-        if (udq_input.var_type() ==  Opm::UDQVarType::WELL_VAR) {
-            i_wudq++;
-        }
-    }   
-    return i_wudq;
-}
-
-int noGroupUdqs(const Opm::Schedule& sched,
-               const std::size_t    simStep)
-{
-    const auto& udqCfg = sched.getUDQConfig(simStep);
-    const auto& input = udqCfg.input();
-    return std::count_if(input.begin(), input.end(), [](const Opm::UDQInput inp) { return (inp.var_type() == Opm::UDQVarType::GROUP_VAR); });
-
-}
-
-int noFieldUdqs(const Opm::Schedule& sched,
-               const std::size_t    simStep)
-{
-    const auto& udqCfg = sched.getUDQConfig(simStep);
-    std::size_t i_fudq = 0;
-    for (const auto& udq_input : udqCfg.input()) {
-        if (udq_input.var_type() ==  Opm::UDQVarType::FIELD_VAR) {
-            i_fudq++;
-        }
-    }
-    return i_fudq;
-}
 
 } // Anonymous
 
@@ -132,23 +89,22 @@ createUdqDims(const Schedule&     		sched,
               const std::vector<int>&   inteHead) 
 {
     const auto& udqCfg = sched.getUDQConfig(lookup_step);
-    const auto& udqActive = sched.udqActive(lookup_step);
     std::vector<int> udqDims; 
     udqDims.resize(13,0);
     
     udqDims[ 0] = udqCfg.size();
     udqDims[ 1] = entriesPerIUDQ();
-    udqDims[ 2] = udqActive.IUAD_size();
+    udqDims[ 2] = inteHead[VI::intehead::NO_IUADS];
     udqDims[ 3] = entriesPerIUAD();
     udqDims[ 4] = entriesPerZUDN();
     udqDims[ 5] = entriesPerZUDL();
     udqDims[ 6] = noIGphs(inteHead);
-    udqDims[ 7] = udqActive.IUAP_size();
-    udqDims[ 8] = nwmaxz(inteHead);
-    udqDims[ 9] = noWellUdqs(sched, lookup_step);
-    udqDims[10] = ngmaxz(inteHead);
-    udqDims[11] = noGroupUdqs(sched, lookup_step);
-    udqDims[12] = noFieldUdqs(sched, lookup_step);
+    udqDims[ 7] = inteHead[VI::intehead::NO_IUAPS];
+    udqDims[ 8] = inteHead[VI::intehead::NWMAXZ];
+    udqDims[ 9] = inteHead[VI::intehead::NO_WELL_UDQS];
+    udqDims[10] = inteHead[VI::intehead::NGMAXZ];
+    udqDims[11] = inteHead[VI::intehead::NO_GROUP_UDQS];
+    udqDims[12] = inteHead[VI::intehead::NO_FIELD_UDQS];
 
     return udqDims;
 }

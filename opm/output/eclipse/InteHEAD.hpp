@@ -93,7 +93,11 @@ namespace Opm { namespace RestartIO {
 	
 	struct UdqParam {
 	  int    udqParam_1;
-      int    no_udqs;
+      int    no_wudqs;
+      int    no_gudqs;
+      int    no_fudqs;
+      int    no_iuads;
+      int    no_iuaps;
 	};
 
     struct ActionParam {
@@ -102,6 +106,11 @@ namespace Opm { namespace RestartIO {
       int   max_no_conditions_per_action;
       int   max_no_characters_per_line;
      };
+     
+     struct GuideRateNominatedPhase {
+      int   nominated_phase;
+     };
+     
         InteHEAD();
         ~InteHEAD() = default;
 
@@ -122,6 +131,7 @@ namespace Opm { namespace RestartIO {
         InteHEAD& params_NWELZ(const int niwelz, const int nswelz, const int nxwelz, const int nzwelz);
         InteHEAD& params_NCON(const int niconz, const int nsconz, const int nxconz);
         InteHEAD& params_GRPZ(const std::array<int, 4>& grpz);
+        InteHEAD& params_NGCTRL(const int gct);
         InteHEAD& params_NAAQZ(const int ncamax, const int niaaqz, const int nsaaqz, const int nxaaqz, const int nicaqz, const int nscaqz, const int nacaqz);
         InteHEAD& stepParam(const int tstep, const int report_step);
         InteHEAD& tuningParam(const TuningPar& tunpar);
@@ -131,6 +141,9 @@ namespace Opm { namespace RestartIO {
         InteHEAD& ngroups(const Group& gr);
         InteHEAD& udqParam_1(const UdqParam& udqpar);
         InteHEAD& actionParam(const ActionParam& act_par);
+        InteHEAD& variousUDQ_ACTIONXParam();
+        InteHEAD& nominatedPhaseGuideRate(GuideRateNominatedPhase nphase);
+        InteHEAD& whistControlMode(int mode);
 
         const std::vector<int>& data() const
         {

@@ -23,6 +23,7 @@
 #include <opm/output/eclipse/WindowedArray.hpp>
 
 #include <opm/io/eclipse/PaddedOutputString.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionResult.hpp>
 
 #include <cstddef>
 #include <string>
@@ -39,6 +40,11 @@ namespace Opm { namespace data {
 }} // Opm::data
 
 namespace Opm { namespace RestartIO { namespace Helpers {
+    
+    struct ActionResStatus {
+        std::vector<Opm::Action::Result> result;
+        std::vector<std::string> name;
+    };
 
     class AggregateWellData
     {
