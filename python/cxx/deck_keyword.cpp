@@ -162,14 +162,14 @@ void python::common::export_DeckKeyword(py::module& module) {
         .def( "__len__", &DeckKeyword::size )
         .def_property_readonly("name", &DeckKeyword::name )
 
-    .def(py::init([](const ParserKeyword& parser_keyword, py::array_t<int> py_data) {               
+    .def(py::init([](const ParserKeyword& parser_keyword, py::array_t<int> py_data) {
             return DeckKeyword(parser_keyword, convert::vector(py_data));
         } ) )
 
-    .def(py::init([](const ParserKeyword& parser_keyword, py::array_t<double> py_data, UnitSystem& active_system, UnitSystem& default_system) {               
+    .def(py::init([](const ParserKeyword& parser_keyword, py::array_t<double> py_data, UnitSystem& active_system, UnitSystem& default_system) {
             return DeckKeyword(parser_keyword, convert::vector(py_data), active_system, default_system);
         } ) )
-        
+
     .def("get_int_array", &get_int_array)
     .def("get_raw_array", &get_raw_array)
     .def("get_SI_array", &get_SI_array)
@@ -193,6 +193,8 @@ void python::common::export_DeckKeyword(py::module& module) {
         .def("get_data_list", &item_to_pylist)
         .def("get_raw_data_list", &raw_data_to_pylist)
         .def("get_SI_data_list", &SI_data_to_pylist)
+        .def("has_value", &DeckItem::hasValue)
+        .def("defaulted", &DeckItem::defaultApplied)
         ;
 
 
