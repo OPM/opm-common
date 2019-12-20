@@ -51,6 +51,7 @@ static const std::map<std::string, std::string> unit_string = {{"PERMX", "Permea
                                                                {"PERMY", "Permeability"},
                                                                {"PERMZ", "Permeability"},
                                                                {"PORV", "ReservoirVolume"},
+                                                               {"SPOLY", "Density"},
                                                                {"TRANX", "Transmissibility"},
                                                                {"TRANY", "Transmissibility"},
                                                                {"TRANZ", "Transmissibility"},
@@ -173,7 +174,7 @@ static const std::set<std::string> int_keywords = {"ENDNUM", "EQLNUM", "FIPNUM",
 }
 
 namespace SOLUTION {
-static const std::set<std::string> double_keywords = {"PRESSURE", "SWAT", "SGAS", "TEMPI"};
+static const std::set<std::string> double_keywords = {"PRESSURE", "SPOLY", "SWAT", "SGAS", "TEMPI"};
 static const std::set<std::string> int_keywords = {};
 }
 
