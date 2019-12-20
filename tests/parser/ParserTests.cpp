@@ -2270,7 +2270,6 @@ PLAT-B 15 /
     BOOST_CHECK_EQUAL(record08.getItem(2).get<double>(0), 0.7);
 }
 
-
 BOOST_AUTO_TEST_CASE(ParseSpecialKeywords) {
     const auto deck_string = std::string { R"(RUNSPEC
 FIELD
@@ -2289,16 +2288,34 @@ ROCK
 3000 0 /
 
 SCHEDULE
+UDT
+-- here comes a comment
+-- and another comment
+-- comment
+
+
+FIELD 1/
+-- and anothther comment
+NV 4.0E+06 5.0E+06 6.0E+06 7.0E+06 /
+40 50 60 70 /
+/
+/
 GCUTBACK
 G1 0.6 3* 0.9 LIQ /
+G2 1* 3.0 2* 0.9 RESV /
 /
+UDT
+LANGMUIR 4 /
+LC 2 /
+This keyword will not be finished
 )"};
 
 Parser parser;
 auto deck = parser.parseString(deck_string);
 BOOST_CHECK( deck.hasKeyword("GCUTBACK") );
 auto kw = deck.getKeyword("GCUTBACK");
-BOOST_CHECK_EQUAL( kw.size(), 1 );
+BOOST_CHECK_EQUAL( kw.size(), 2 );
+auto record = kw.getRecord(1);
+BOOST_CHECK_EQUAL( record.getItem(5).get<double>(0), 0.9 );
+BOOST_CHECK( !deck.hasKeyword("LANGMUIR") );
 }
-
-

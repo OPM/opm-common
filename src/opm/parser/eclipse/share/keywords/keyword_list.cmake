@@ -9,12 +9,6 @@
 # you are therefore encouraged to go to the opm-simulators repository and update
 # the file: opm/autodiff/MissingFeatures.cpp
 
-#Some keywords are found to be of 'special' structure:
-#These are :
-#
-#       UDT: user defined table
-#
-
 set( keywords
      000_Eclipse100/A/ACTDIMS
      000_Eclipse100/A/ACTION
@@ -882,6 +876,7 @@ set( keywords
      000_Eclipse100/U/UDQ
      000_Eclipse100/U/UDQDIMS
      000_Eclipse100/U/UDQPARAM
+     000_Eclipse100/U/UDT
      000_Eclipse100/U/UDTDIMS
      000_Eclipse100/U/UNCODHMD
      000_Eclipse100/U/UNIFIN
