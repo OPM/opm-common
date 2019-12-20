@@ -312,8 +312,8 @@ BOOST_AUTO_TEST_CASE(UnsupportedKeywordsThrows) {
 
     BOOST_CHECK_THROW(s.props.getIntGridProperty("NONO"), std::logic_error);
     BOOST_CHECK_THROW(s.props.getDoubleGridProperty("NONO"), std::logic_error);
-    BOOST_CHECK_THROW(s.fp.get<double>("NONO"), std::invalid_argument);
-    BOOST_CHECK_THROW(s.fp.get<int>("NONO"), std::invalid_argument);
+    BOOST_CHECK_THROW(s.fp.get<double>("NONO"), std::logic_error);
+    BOOST_CHECK_THROW(s.fp.get<int>("NONO"), std::logic_error);
 
     BOOST_CHECK_NO_THROW(s.props.hasDeckIntGridProperty("FluxNUM"));
     BOOST_CHECK_NO_THROW(s.props.supportsGridProperty("NONO"));

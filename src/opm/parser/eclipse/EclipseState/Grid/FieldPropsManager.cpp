@@ -36,30 +36,19 @@ void FieldPropsManager::reset_actnum(const std::vector<int>& actnum) {
 
 FieldPropsManager::MemInfo FieldPropsManager::meminfo( ) const {
     return FieldPropsManager::MemInfo(this->fp->global_size, this->fp->active_size, this->fp->num_int(), this->fp->num_double());
-
 }
 
 template <typename T>
 const std::vector<T>& FieldPropsManager::get(const std::string& keyword) const {
-    const auto& data_ptr = this->try_get<T>(keyword);
-    if (data_ptr)
-        return *data_ptr;
-
-    if (!this->fp->has<T>(keyword))
-        throw std::out_of_range("No such keyword in deck: " + keyword);
-
-    throw std::out_of_range("Keyword " + keyword + " is not fully initialized");
+    return this->fp->get<T>(keyword);
 }
 
 
 template <typename T>
 const std::vector<T>* FieldPropsManager::try_get(const std::string& keyword) const {
-    const auto& data_ptr = this->fp->try_get<T>(keyword);
-    if (data_ptr)
-        return std::addressof(data_ptr->data);
-
-    if (!FieldProps::supported<T>(keyword))
-        throw std::invalid_argument("The keyword: " + keyword + " is not supported");
+    const auto& data = this->fp->try_get<T>(keyword);
+    if (data.valid())
+        return data.ptr();
 
     return nullptr;
 }
@@ -85,9 +74,8 @@ template <typename T>
 bool FieldPropsManager::has(const std::string& keyword) const {
     if (!this->fp->has<T>(keyword))
         return false;
-
-    const auto& data_ptr = this->fp->get<T>(keyword);
-    return data_ptr.valid();
+    const auto& data = this->fp->try_get<T>(keyword);
+    return data.valid();
 }
 
 template <typename T>
