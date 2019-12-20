@@ -45,6 +45,11 @@ done
 export REASON
 export BRANCH_NAME
 $WORKSPACE/deps/opm-simulators/tests/update_reference_data.sh $OPM_TESTS_ROOT
+if test $? -eq 5
+then
+  echo "No tests failed - no data to update. Exiting"
+  exit 0
+fi
 
 # Finally open the pull request
 cd $OPM_TESTS_ROOT
