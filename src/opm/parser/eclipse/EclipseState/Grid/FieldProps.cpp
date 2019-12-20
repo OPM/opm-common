@@ -50,12 +50,14 @@ namespace keywords {
 static const std::map<std::string, std::string> unit_string = {{"PERMX", "Permeability"},
                                                                {"PERMY", "Permeability"},
                                                                {"PERMZ", "Permeability"},
-                                                               {"PORV", "ReservoirVolume"},
+                                                               {"PORV",  "ReservoirVolume"},
                                                                {"SPOLY", "Density"},
                                                                {"TRANX", "Transmissibility"},
                                                                {"TRANY", "Transmissibility"},
                                                                {"TRANZ", "Transmissibility"},
                                                                {"NTG", "1"},
+                                                               {"RS", "GasDissolutionFactor"},
+                                                               {"RV", "OilDissolutionFactor"},
                                                                {"TEMPI", "Temperature"},
                                                                {"THCROCK", "Energy/AnsoluteTemperature*Length*Time"},
                                                                {"THCOIL", "Energy/AnsoluteTemperature*Length*Time"},
@@ -174,7 +176,7 @@ static const std::set<std::string> int_keywords = {"ENDNUM", "EQLNUM", "FIPNUM",
 }
 
 namespace SOLUTION {
-static const std::set<std::string> double_keywords = {"PRESSURE", "SPOLY", "SWAT", "SGAS", "TEMPI"};
+static const std::set<std::string> double_keywords = {"PRESSURE", "SPOLY", "SWAT", "SGAS", "TEMPI", "RS", "RV"};
 static const std::set<std::string> int_keywords = {};
 }
 
