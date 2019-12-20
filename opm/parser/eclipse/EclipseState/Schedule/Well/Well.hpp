@@ -156,6 +156,13 @@ public:
         double guide_rate;
         GuideRateTarget guide_phase;
         double scale_factor;
+
+        bool operator==(const WellGuideRate& data) const {
+            return available == data.available &&
+                   guide_rate == data.guide_rate &&
+                   guide_phase == data.guide_phase &&
+                   scale_factor == data.scale_factor;
+        }
     };
 
 
@@ -205,7 +212,21 @@ public:
         bool operator==(const WellInjectionProperties& other) const;
         bool operator!=(const WellInjectionProperties& other) const;
 
+        WellInjectionProperties();
         WellInjectionProperties(const std::string& wname);
+        WellInjectionProperties(const std::string& wname,
+                                const UDAValue& surfaceInjRate,
+                                const UDAValue& reservoirInjRate,
+                                const UDAValue& BHP,
+                                const UDAValue& THP,
+                                double temp, double bhph,
+                                double thph,
+                                int vfpTableNum,
+                                bool predMode,
+                                int injControls,
+                                Well::InjectorType injType,
+                                InjectorCMode ctrlMode);
+
         void handleWELTARG(WELTARGCMode cmode, double newValue, double siFactorG, double siFactorL, double siFactorP);
         void handleWCONINJE(const DeckRecord& record, bool availableForGroupControl, const std::string& well_name);
         void handleWCONINJH(const DeckRecord& record, bool is_producer, const std::string& well_name);
@@ -289,7 +310,25 @@ public:
 
         bool operator==(const WellProductionProperties& other) const;
         bool operator!=(const WellProductionProperties& other) const;
+
+        WellProductionProperties();
         WellProductionProperties(const std::string& name_arg);
+        WellProductionProperties(const std::string& wname,
+                                 const UDAValue& oilRate,
+                                 const UDAValue& waterRate,
+                                 const UDAValue& gasRate,
+                                 const UDAValue& liquidRate,
+                                 const UDAValue& resvRate,
+                                 const UDAValue& BHP,
+                                 const UDAValue& THP,
+                                 double bhph,
+                                 double thph,
+                                 int vfpTableNum,
+                                 double alqValue,
+                                 bool predMode,
+                                 ProducerCMode ctrlMode,
+                                 ProducerCMode whistctlMode,
+                                 int prodCtrls);
 
         bool hasProductionControl(ProducerCMode controlModeArg) const {
             return (m_productionControls & static_cast<int>(controlModeArg)) != 0;
@@ -314,6 +353,9 @@ public:
         void clearControls();
         ProductionControls controls(const SummaryState& st, double udq_default) const;
         bool updateUDQActive(const UDQConfig& udq_config, UDQActive& active) const;
+
+        int getNumProductionControls() const;
+
     private:
         int m_productionControls = 0;
         void init_rates( const DeckRecord& record );

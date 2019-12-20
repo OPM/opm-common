@@ -72,6 +72,8 @@ namespace Opm {
             Defaulted,
         };
 
+
+        Connection();
         Connection(int i, int j , int k ,
                    int complnum,
                    double depth,
@@ -88,6 +90,25 @@ namespace Opm {
                    const double segDistStart,
                    const double segDistEnd,
                    const bool defaultSatTabId);
+
+        Connection(Direction dir,
+                   double depth,
+                   State state,
+                   int satTableId,
+                   int complnum,
+                   double CF,
+                   double Kh,
+                   double rw,
+                   double r0,
+                   double skinFactor,
+                   const std::array<int,3>& IJK,
+                   std::size_t seqIndex,
+                   double segDistStart,
+                   double segDistEnd,
+                   bool defaultSatTabId,
+                   std::size_t compSegSeqIndex,
+                   int segment,
+                   double wellPi);
 
 
         bool attachedToSegment() const;

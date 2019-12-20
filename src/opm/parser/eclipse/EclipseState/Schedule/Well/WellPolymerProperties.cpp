@@ -34,6 +34,18 @@ namespace Opm {
         m_skprpolytable = -1;
     }
 
+    WellPolymerProperties::WellPolymerProperties(double polymerConcentration,
+                                                 double saltConcentration,
+                                                 int plymwinjtable,
+                                                 int skprwattable,
+                                                 int skprpolytable)
+        : m_polymerConcentration(polymerConcentration)
+        , m_saltConcentration(saltConcentration)
+        , m_plymwinjtable(plymwinjtable)
+        , m_skprwattable(skprwattable)
+        , m_skprpolytable(skprpolytable)
+    { }
+
     bool WellPolymerProperties::operator==(const WellPolymerProperties& other) const {
         if ((m_polymerConcentration == other.m_polymerConcentration) &&
             (m_saltConcentration == other.m_saltConcentration) &&

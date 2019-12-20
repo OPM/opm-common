@@ -47,6 +47,39 @@ namespace Opm {
     {
     }
 
+    WellEconProductionLimits::WellEconProductionLimits(double minOilRate,
+                                                       double minGasRate,
+                                                       double maxWaterCut,
+                                                       double maxGasOilRatio,
+                                                       double maxWaterGasRatio,
+                                                       EconWorkover workover,
+                                                       bool endRun,
+                                                       const std::string& followonWell,
+                                                       QuantityLimit quantityLimit,
+                                                       double secondaryMaxWaterCut,
+                                                       EconWorkover workoverSecondary,
+                                                       double maxGasLiquidRatio,
+                                                       double minLiquidRate,
+                                                       double maxTemperature,
+                                                       double minReservoirFluidRate)
+        : m_min_oil_rate(minOilRate)
+        , m_min_gas_rate(minGasRate)
+        , m_max_water_cut(maxWaterCut)
+        , m_max_gas_oil_ratio(maxGasOilRatio)
+        , m_max_water_gas_ratio(maxWaterGasRatio)
+        , m_workover(workover)
+        , m_end_run(endRun)
+        , m_followon_well(followonWell)
+        , m_quantity_limit(quantityLimit)
+        , m_secondary_max_water_cut(secondaryMaxWaterCut)
+        , m_workover_secondary(workoverSecondary)
+        , m_max_gas_liquid_ratio(maxGasLiquidRatio)
+        , m_min_liquid_rate(minLiquidRate)
+        , m_max_temperature(maxTemperature)
+        , m_min_reservoir_fluid_rate(minReservoirFluidRate)
+    {
+    }
+
 
 
     WellEconProductionLimits::WellEconProductionLimits(const DeckRecord& record)

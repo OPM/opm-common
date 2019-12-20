@@ -33,7 +33,12 @@ namespace Opm {
     public:
 
 
+        WellConnections();
         WellConnections(int headI, int headJ);
+        WellConnections(int headI, int headJ,
+                        size_t numRemoved,
+                        const std::vector<Connection>& connections);
+
         // cppcheck-suppress noExplicitConstructor
         WellConnections(const WellConnections& src, const EclipseGrid& grid);
         void addConnection(int i, int j , int k ,
@@ -84,6 +89,11 @@ namespace Opm {
 
         bool operator==( const WellConnections& ) const;
         bool operator!=( const WellConnections& ) const;
+
+        int getHeadI() const;
+        int getHeadJ() const;
+        size_t getNumRemoved() const;
+        const std::vector<Connection>& getConnections() const;
 
     private:
         void addConnection(int i, int j , int k ,

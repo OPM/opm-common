@@ -29,6 +29,7 @@ struct WellFoamProperties
 {
     double m_foamConcentration = 0.0;
     void handleWFOAM(const DeckRecord& rec);
+    bool operator==(const WellFoamProperties& other) const;
     bool operator!=(const WellFoamProperties& other) const;
 };
 

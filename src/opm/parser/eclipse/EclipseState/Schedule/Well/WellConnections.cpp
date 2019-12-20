@@ -115,9 +115,25 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
 
 } // anonymous namespace
 
+    WellConnections::WellConnections() :
+      headI(0), headJ(0), num_removed(0)
+    {
+    }
+
     WellConnections::WellConnections(int headIArg, int headJArg) :
         headI(headIArg),
         headJ(headJArg)
+    {
+    }
+
+
+    WellConnections::WellConnections(int headIArg, int headJArg,
+                                     size_t numRemoved,
+                                     const std::vector<Connection>& connections) :
+        headI(headIArg),
+        headJ(headJArg),
+        num_removed(numRemoved),
+        m_connections(connections)
     {
     }
 
@@ -504,5 +520,25 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
                                       [&grid](const Connection& c) { return !grid.cellActive(c.getI(), c.getJ(), c.getK()); });
         this->num_removed += std::distance(new_end, m_connections.end());
         m_connections.erase(new_end, m_connections.end());
+    }
+
+
+    int WellConnections::getHeadI() const {
+        return headI;
+    }
+
+
+    int WellConnections::getHeadJ() const {
+        return headJ;
+    }
+
+
+    size_t WellConnections::getNumRemoved() const {
+        return num_removed;
+    }
+
+
+    const std::vector<Connection>& WellConnections::getConnections() const {
+        return m_connections;
     }
 }
