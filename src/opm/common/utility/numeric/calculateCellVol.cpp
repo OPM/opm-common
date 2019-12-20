@@ -40,112 +40,94 @@
 */
 
 double C(const double* r, int i1, int i2, int i3){
+   int g = i1 + i2 * 2 + i3 * 4;
 
-   double temp;
+   if (g == 0)
+       return r[0];
 
-   temp = 0.0;
+   if (g == 1)
+       return r[1] - r[0];
 
-   if ((i1 == 0) && (i2 == 0) && (i3 == 0)){
-       temp = r[0];
-   }
+   if (g == 2)
+       return r[2] - r[0];
 
-   if ((i1 == 1) && (i2 == 0) && (i3 == 0)){
-       temp = r[1] - r[0];
-   }
+   if (g == 3)
+       return r[3] + r[0] - r[2] - r[1];
 
-   if ((i1 == 0) && (i2 == 1) && (i3 == 0)){
-       temp = r[2] - r[0];
-   }
+   if (g == 4)
+       return r[4] - r[0];
 
-   if ((i1 == 0) && (i2 == 0) && (i3 == 1)){
-       temp = r[4]-r[0];
-   }
+   if (g == 5)
+       return r[5] + r[0] - r[4] - r[1];
 
-   if ((i1 == 1) && (i2 == 1) && (i3 == 0)){
-       temp = r[3] + r[0] - r[2] - r[1];
-   }
+   if (g == 6)
+       return r[6] + r[0] - r[4] - r[2];
 
-   if ((i1 == 0) && (i2 == 1) && (i3 == 1)){
-       temp = r[6] + r[0] - r[4] - r[2];
-   }
-
-   if ((i1 == 1) && (i2 == 0) && (i3 == 1)){
-       temp = r[5] + r[0] - r[4] - r[1];
-   }
-
-   if ((i1 == 1) && (i2 == 1) && (i3 == 1)){
-       temp = r[7] + r[4] + r[2] + r[1] - r[6] - r[5] - r[3] - r[0];
-   }
-
-   return temp;
+   return  r[7] + r[4] + r[2] + r[1] - r[6] - r[5] - r[3] - r[0];
 }
 
 
-double perm123sign(int i1, int i2, int i3){
+struct pqr_t {
+    int pb;
+    int pg;
+    int qa;
+    int qg;
+    int ra;
+    int rb;
+};
 
-   double temp;
-
-   if ((i1 ==1 ) && (i2==2) && (i3 == 3)){
-       temp = 1.0;
-   } else if ((i1 == 1) && (i2==3) && (i3 == 2)){
-       temp = -1.0;
-   } else if ((i1 == 2) && (i2 == 1) && (i3 == 3)){
-       temp = -1.0;
-   } else if ((i1 == 2) && (i2 == 3) && (i3 == 1)){
-       temp = 1.0;
-   } else if ((i1 == 3) && (i2 == 1) && (i3 == 2)){
-       temp = 1.0;
-   } else if ((i1 == 3) && (i2 == 2) && (i3 == 1)){
-       temp = -1.0;
-   } else {
-       OPM_THROW(std::logic_error, "Wrong indices in perm123sign");
-   }
-
-   return temp;
-}
 
 double calculateCellVol(const std::array<double,8>& X, const std::array<double,8>& Y, const std::array<double,8>& Z){
+    /*
+      The permutation array should be ordered so that the sign:
 
-  double volume = 0.0;
-  const double* vect[3];
-  int permutation[] = {1, 2, 3};
+         sign = (-1)^N, N = # permutations
 
-  do {
-      for (int j = 0; j < 3; ++j){
-          if (permutation[j] == 1){
-              vect[j] = X.data();
-          } else if (permutation[j] == 2){
-              vect[j] = Y.data();
-          } else if (permutation[j] == 3){
-              vect[j] = Z.data();
-          } else {
-              // this condition can never happen, since all values in 'permutation'
-              // is covered, but compiler analysis may not be deep enough to not give
-              // warnings about 'vect' being uninitialized further down.
-              assert(false);
-              vect[j] = 0;
-          }
-      }
+      is alternating - so that the sign can just be changed multiplying with -1.
+    */
+    static const std::array< std::array<std::size_t, 3>, 6 > permutation = {{{ 0, 1, 2},
+                                                                             { 0, 2, 1},
+                                                                             { 1, 2, 0},
+                                                                             { 1, 0, 2},
+                                                                             { 2, 0, 1},
+                                                                             { 2, 1, 0}}};
 
 
-      for (int pb = 0; pb < 2; ++pb){
-          for (int pg = 0; pg < 2; ++pg){
-              for (int qa = 0; qa < 2; ++qa){
-                  for (int qg = 0; qg < 2; ++qg){
-                      for (int ra = 0; ra < 2; ++ra){
-                          for (int rb = 0; rb < 2; ++rb){
-                              const double cprod = C(vect[0], 1, pb, pg)*C(vect[1], qa, 1, qg)*C(vect[2], ra, rb, 1);
-                              const double denom = (qa+ra+1) * (pb+rb+1) * (pg+qg+1);
-                              volume += perm123sign(permutation[0], permutation[1], permutation[2]) * cprod / denom;
-                          }
-                      }
-                  }
-              }
-          }
-      }
-  } while (std::next_permutation(std::begin(permutation), std::end(permutation)));
+    static const std::array<pqr_t, 64> pqr_array
+        = {{{0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 1}, {0, 0, 0, 0, 1, 0}, {0, 0, 0, 0, 1, 1},
+            {0, 0, 0, 1, 0, 0}, {0, 0, 0, 1, 0, 1}, {0, 0, 0, 1, 1, 0}, {0, 0, 0, 1, 1, 1},
+            {0, 0, 1, 0, 0, 0}, {0, 0, 1, 0, 0, 1}, {0, 0, 1, 0, 1, 0}, {0, 0, 1, 0, 1, 1},
+            {0, 0, 1, 1, 0, 0}, {0, 0, 1, 1, 0, 1}, {0, 0, 1, 1, 1, 0}, {0, 0, 1, 1, 1, 1},
+            {0, 1, 0, 0, 0, 0}, {0, 1, 0, 0, 0, 1}, {0, 1, 0, 0, 1, 0}, {0, 1, 0, 0, 1, 1},
+            {0, 1, 0, 1, 0, 0}, {0, 1, 0, 1, 0, 1}, {0, 1, 0, 1, 1, 0}, {0, 1, 0, 1, 1, 1},
+            {0, 1, 1, 0, 0, 0}, {0, 1, 1, 0, 0, 1}, {0, 1, 1, 0, 1, 0}, {0, 1, 1, 0, 1, 1},
+            {0, 1, 1, 1, 0, 0}, {0, 1, 1, 1, 0, 1}, {0, 1, 1, 1, 1, 0}, {0, 1, 1, 1, 1, 1},
+            {1, 0, 0, 0, 0, 0}, {1, 0, 0, 0, 0, 1}, {1, 0, 0, 0, 1, 0}, {1, 0, 0, 0, 1, 1},
+            {1, 0, 0, 1, 0, 0}, {1, 0, 0, 1, 0, 1}, {1, 0, 0, 1, 1, 0}, {1, 0, 0, 1, 1, 1},
+            {1, 0, 1, 0, 0, 0}, {1, 0, 1, 0, 0, 1}, {1, 0, 1, 0, 1, 0}, {1, 0, 1, 0, 1, 1},
+            {1, 0, 1, 1, 0, 0}, {1, 0, 1, 1, 0, 1}, {1, 0, 1, 1, 1, 0}, {1, 0, 1, 1, 1, 1},
+            {1, 1, 0, 0, 0, 0}, {1, 1, 0, 0, 0, 1}, {1, 1, 0, 0, 1, 0}, {1, 1, 0, 0, 1, 1},
+            {1, 1, 0, 1, 0, 0}, {1, 1, 0, 1, 0, 1}, {1, 1, 0, 1, 1, 0}, {1, 1, 0, 1, 1, 1},
+            {1, 1, 1, 0, 0, 0}, {1, 1, 1, 0, 0, 1}, {1, 1, 1, 0, 1, 0}, {1, 1, 1, 0, 1, 1},
+            {1, 1, 1, 1, 0, 0}, {1, 1, 1, 1, 0, 1}, {1, 1, 1, 1, 1, 0}, {1, 1, 1, 1, 1, 1}}};
 
-  return std::fabs(volume);
+    double volume = 0.0;
+    const double* vect[3];
+    const std::array<std::array<double,8>,3> data = {{X, Y, Z}};
+    double perm_sign = 1;
+    for (const auto& perm : permutation) {
+        for (std::size_t perm_index = 0; perm_index < 3; perm_index++)
+            vect[perm_index] = data[perm[perm_index]].data();
+
+        for (const auto& pqr : pqr_array) {
+            const double cprod = C(vect[0], 1, pqr.pb, pqr.pg)*C(vect[1], pqr.qa, 1, pqr.qg)*C(vect[2], pqr.ra, pqr.rb, 1);
+            const double denom = (pqr.qa + pqr.ra + 1) * (pqr.pb + pqr.rb + 1) * (pqr.pg + pqr.qg + 1);
+            volume += perm_sign * cprod / denom;
+        }
+
+        perm_sign *= -1;
+    }
+    return std::fabs(volume);
 }
 
 
