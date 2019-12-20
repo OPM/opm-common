@@ -124,6 +124,17 @@ VFPProdTable::ALQ_TYPE getALQType( const DeckItem& item) {
 
 }
 
+VFPProdTable::VFPProdTable()
+{
+    m_table_num = -1;
+    m_datum_depth = 0.0;
+    m_flo_type = FLO_INVALID;
+    m_wfr_type = WFR_INVALID;
+    m_gfr_type = GFR_INVALID;
+    m_alq_type = ALQ_INVALID;
+
+}
+
 VFPProdTable::VFPProdTable(int table_num,
                            double datum_depth,
                            FLO_TYPE flo_type,
@@ -513,6 +524,44 @@ void VFPProdTable::convertGFRToSI(const GFR_TYPE& type,
             throw std::logic_error("Invalid FLO type");
     }
     scaleValues(values, scaling_factor);
+}
+
+
+bool VFPProdTable::operator==(const VFPProdTable& data) const {
+    return this->getTableNum() == data.getTableNum() &&
+           this->getDatumDepth () == data.getDatumDepth() &&
+           this->getFloType() == data.getFloType() &&
+           this->getWFRType() == data.getWFRType() &&
+           this->getGFRType() == data.getGFRType() &&
+           this->getALQType() == data.getALQType() &&
+           this->getFloAxis() == data.getFloAxis() &&
+           this->getTHPAxis() == data.getTHPAxis() &&
+           this->getWFRAxis() == data.getWFRAxis() &&
+           this->getGFRAxis() == data.getGFRAxis() &&
+           this->getALQAxis() == data.getALQAxis() &&
+           this->getTable() == data.getTable();
+}
+
+
+VFPProdTable& VFPProdTable::operator=(const VFPProdTable& data) {
+    m_table_num = data.m_table_num;
+    m_datum_depth = data.m_datum_depth;
+    m_flo_type = data.m_flo_type;
+    m_wfr_type = data.m_wfr_type;
+    m_gfr_type = data.m_gfr_type;
+    m_alq_type = data.m_alq_type;
+    m_flo_data = data.m_flo_data;
+    m_thp_data = data.m_thp_data;
+    m_wfr_data = data.m_wfr_data;
+    m_gfr_data = data.m_gfr_data;
+    m_alq_data = data.m_alq_data;
+    extents shape;
+    for (size_t i = 0; i < 5; ++i)
+        shape[i] = data.m_data.shape()[i];
+    m_data.resize(shape);
+    for (size_t i = 0; i < data.m_data.num_elements(); ++i)
+        *(m_data.data() + i) = *(data.m_data.data() + i);
+    return *this;
 }
 
 } //Namespace opm

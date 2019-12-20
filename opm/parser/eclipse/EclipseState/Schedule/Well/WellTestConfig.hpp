@@ -45,9 +45,20 @@ public:
         // the related WTEST keywords is entered and will begin
         // taking effects since this report step
         int begin_report_step;
+
+        bool operator==(const WTESTWell& data) const {
+            return name == data.name &&
+                   shut_reason == data.shut_reason &&
+                   test_interval == data.test_interval &&
+                   num_test == data.num_test &&
+                   startup_time == data.startup_time &&
+                   begin_report_step == data.begin_report_step;
+        }
     };
 
     WellTestConfig();
+    WellTestConfig(const std::vector<WTESTWell>& well);
+
     void add_well(const std::string& well, Reason reason, double test_interval, int num_test, double startup_time, int current_step);
     void add_well(const std::string& well, const std::string& reasons, double test_interval,
                   int num_test, double startup_time, int current_step);
@@ -57,7 +68,11 @@ public:
     const WTESTWell& get(const std::string& well, Reason reason) const;
     size_t size() const;
 
+    const std::vector<WTESTWell>& getWells() const;
+
     static std::string reasonToString(const Reason reason);
+
+    bool operator==(const WellTestConfig& data) const;
 
 private:
     std::vector<WTESTWell> wells;
