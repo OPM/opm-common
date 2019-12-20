@@ -176,7 +176,7 @@ static const std::set<std::string> int_keywords = {"ENDNUM", "EQLNUM", "FIPNUM",
 }
 
 namespace SOLUTION {
-static const std::set<std::string> double_keywords = {"PRESSURE", "SPOLY", "SWAT", "SGAS", "TEMPI", "RS", "RV"};
+static const std::set<std::string> double_keywords = {"PRESSURE", "SPOLY", "SPOLYMW", "SWAT", "SGAS", "TEMPI", "RS", "RV"};
 static const std::set<std::string> int_keywords = {};
 }
 
