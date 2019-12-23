@@ -573,7 +573,7 @@ namespace {
             if (prop->whistctl_cmode != controlMode) {
                 prop->whistctl_cmode = controlMode;
                 well2->updateProduction(prop);
-                this->updateWell(well2, currentStep);
+                this->updateWell(std::move(well2), currentStep);
             }
         }
 
@@ -585,7 +585,7 @@ namespace {
             if (prop->whistctl_cmode != controlMode) {
                 prop->whistctl_cmode = controlMode;
                 well2->updateProduction(prop);
-                this->updateWell(well2, currentStep);
+                this->updateWell(std::move(well2), currentStep);
             }
         }
 
@@ -597,7 +597,7 @@ namespace {
             if (prop->whistctl_cmode != controlMode) {
                 prop->whistctl_cmode = controlMode;
                 well2->updateProduction(prop);
-                this->updateWell(well2, currentStep);
+                this->updateWell(std::move(well2), currentStep);
             }
         }
     }
@@ -719,8 +719,8 @@ namespace {
                     update |= well2->updateDrainageRadius(drainageRadius);
 
                     if (update) {
-                        this->updateWell(well2, currentStep);
-                        this->addWellGroupEvent(well2->name(), ScheduleEvents::WELL_WELSPECS_UPDATE, currentStep);
+                        this->updateWell(std::move(well2), currentStep);
+                        this->addWellGroupEvent(wellName, ScheduleEvents::WELL_WELSPECS_UPDATE, currentStep);
                     }
                 }
             }
@@ -899,7 +899,7 @@ namespace {
                     if (update_well) {
                         m_events.addEvent( ScheduleEvents::PRODUCTION_UPDATE , currentStep);
                         this->addWellGroupEvent( well2->name(), ScheduleEvents::PRODUCTION_UPDATE, currentStep);
-                        this->updateWell(well2, currentStep);
+                        this->updateWell(std::move(well2), currentStep);
                     }
 
                     auto udq = std::make_shared<UDQActive>(this->udqActive(currentStep));
@@ -925,7 +925,7 @@ namespace {
 
     void Schedule::updateWell(std::shared_ptr<Well> well, size_t reportStep) {
         auto& dynamic_state = this->wells_static.at(well->name());
-        dynamic_state.update(reportStep, well);
+        dynamic_state.update(reportStep, std::move(well));
     }
 
 
@@ -958,7 +958,7 @@ namespace {
                     auto& dynamic_state = this->wells_static.at(wname);
                     auto well_ptr = std::make_shared<Well>( *dynamic_state[currentStep] );
                     if (well_ptr->handleWPIMULT(record))
-                        this->updateWell(well_ptr, currentStep);
+                        this->updateWell(std::move(well_ptr), currentStep);
                 }
             }
         }
@@ -1089,7 +1089,7 @@ namespace {
                 auto foam_properties = std::make_shared<WellFoamProperties>(well2->getFoamProperties());
                 foam_properties->handleWFOAM(record);
                 if (well2->updateFoamProperties(foam_properties))
-                    this->updateWell(well2, currentStep);
+                    this->updateWell(std::move(well2), currentStep);
             }
         }
     }
@@ -1109,7 +1109,7 @@ namespace {
                     auto polymer_properties = std::make_shared<WellPolymerProperties>( well2->getPolymerProperties() );
                     polymer_properties->handleWPOLYMER(record);
                     if (well2->updatePolymerProperties(polymer_properties))
-                        this->updateWell(well2, currentStep);
+                        this->updateWell(std::move(well2), currentStep);
                 }
             }
         }
@@ -1152,7 +1152,7 @@ namespace {
                     auto polymer_properties = std::make_shared<WellPolymerProperties>( well2->getPolymerProperties() );
                     polymer_properties->handleWPMITAB(record);
                     if (well2->updatePolymerProperties(polymer_properties))
-                        this->updateWell(well2, currentStep);
+                        this->updateWell(std::move(well2), currentStep);
                 }
             }
         }
@@ -1176,7 +1176,7 @@ namespace {
                     auto polymer_properties = std::make_shared<WellPolymerProperties>( well2->getPolymerProperties() );
                     polymer_properties->handleWSKPTAB(record);
                     if (well2->updatePolymerProperties(polymer_properties))
-                        this->updateWell(well2, currentStep);
+                        this->updateWell(std::move(well2), currentStep);
                 }
             }
         }
@@ -1197,7 +1197,7 @@ namespace {
                     auto well2 = std::make_shared<Well>(*dynamic_state[currentStep]);
                     auto econ_limits = std::make_shared<WellEconProductionLimits>( record );
                     if (well2->updateEconLimits(econ_limits))
-                        this->updateWell(well2, currentStep);
+                        this->updateWell(std::move(well2), currentStep);
                 }
             }
         }
@@ -1217,7 +1217,7 @@ namespace {
                     auto& dynamic_state = this->wells_static.at(well_name);
                     auto well2 = std::make_shared<Well>(*dynamic_state[currentStep]);
                     if (well2->updateEfficiencyFactor(efficiencyFactor))
-                        this->updateWell(well2, currentStep);
+                        this->updateWell(std::move(well2), currentStep);
                 }
             }
         }
@@ -1320,7 +1320,7 @@ namespace {
                         if (well.getSolventFraction() != fraction) {
                             auto new_well = std::make_shared<Well>(well);
                             new_well->updateSolventFraction(fraction);
-                            this->updateWell(new_well, currentStep);
+                            this->updateWell(std::move(new_well), currentStep);
                         }
                     } else
                         throw std::invalid_argument("The WSOLVENT keyword can only be applied to gas injectors");
@@ -1346,7 +1346,7 @@ namespace {
                     auto wellTracerProperties = std::make_shared<WellTracerProperties>( well->getTracerProperties() );
                     wellTracerProperties->setConcentration(tracerName, tracerConcentration);
                     if (well->updateTracer(wellTracerProperties))
-                        this->updateWell(well, currentStep);
+                        this->updateWell(std::move(well), currentStep);
                 }
             }
         }
@@ -1376,7 +1376,7 @@ namespace {
                         auto inj = std::make_shared<Well::WellInjectionProperties>(well_ptr->getInjectionProperties());
                         inj->temperature = temp;
                         well_ptr->updateInjection(inj);
-                        this->updateWell(well_ptr, currentStep);
+                        this->updateWell(std::move(well_ptr), currentStep);
                     }
                 }
             }
@@ -1410,7 +1410,7 @@ namespace {
                         auto inj = std::make_shared<Well::WellInjectionProperties>(well_ptr->getInjectionProperties());
                         inj->temperature = temp;
                         well_ptr->updateInjection(inj);
-                        this->updateWell(well_ptr, currentStep);
+                        this->updateWell(std::move(well_ptr), currentStep);
                     }
                 }
             }
@@ -1428,7 +1428,7 @@ namespace {
                     auto& dynamic_state = this->wells_static.at(wname);
                     auto well_ptr = std::make_shared<Well>( *dynamic_state[timestep] );
                     if (well_ptr->handleCOMPLUMP(record))
-                        this->updateWell(well_ptr, timestep);
+                        this->updateWell(std::move(well_ptr), timestep);
                 }
             }
         }
@@ -1552,7 +1552,7 @@ namespace {
                             update |= well2->updateWellGuideRate(newValue);
                     }
                     if (update)
-                        this->updateWell(well2, currentStep);
+                        this->updateWell(std::move(well2), currentStep);
                 }
             }
         }
@@ -2024,7 +2024,7 @@ namespace {
             auto& dynamic_state = this->wells_static.at(wname);
             auto well_ptr = std::make_shared<Well>( *dynamic_state[currentStep] );
             if (well_ptr->handleWELSEGS(keyword))
-                this->updateWell(well_ptr, currentStep);
+                this->updateWell(std::move(well_ptr), currentStep);
         }
     }
 
@@ -2036,7 +2036,7 @@ namespace {
             auto& dynamic_state = this->wells_static.at(well_name);
             auto well_ptr = std::make_shared<Well>( *dynamic_state[currentStep] );
             if (well_ptr->handleCOMPSEGS(keyword, grid, parseContext, errors))
-                this->updateWell(well_ptr, currentStep);
+                this->updateWell(std::move(well_ptr), currentStep);
         }
     }
 
@@ -2054,7 +2054,7 @@ namespace {
                 auto& dynamic_state = this->wells_static.at(well_name);
                 auto well_ptr = std::make_shared<Well>( *dynamic_state[currentStep] );
                 if (well_ptr -> updateWSEGSICD(sicd_pairs) )
-                    this->updateWell(well_ptr, currentStep);
+                    this->updateWell(std::move(well_ptr), currentStep);
             }
         }
     }
@@ -2071,7 +2071,7 @@ namespace {
                 auto& dynamic_state = this->wells_static.at(well_name);
                 auto well_ptr = std::make_shared<Well>( *dynamic_state[currentStep] );
                 if (well_ptr -> updateWSEGVALV(valve_pairs) )
-                    this->updateWell(well_ptr, currentStep);
+                    this->updateWell(std::move(well_ptr), currentStep);
             }
         }
     }
@@ -2093,11 +2093,11 @@ namespace {
                     auto& dynamic_state = this->wells_static.at(well_name);
                     auto well_ptr = std::make_shared<Well>( *dynamic_state[currentStep] );
                     if (well_ptr->updateWellGuideRate(availableForGroupControl, guide_rate, phase, scaling_factor)) {
-                        this->updateWell(well_ptr, currentStep);
-
                         auto new_config = std::make_shared<GuideRateConfig>( this->guideRateConfig(currentStep) );
                         new_config->update_well(*well_ptr);
                         this->guide_rate_config.update( currentStep, std::move(new_config) );
+
+                        this->updateWell(std::move(well_ptr), currentStep);
                     }
                 }
             }
@@ -2619,7 +2619,7 @@ void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, c
         if (old_gname != group_name) {
             auto well_ptr = std::make_shared<Well>( well );
             well_ptr->updateGroup(group_name);
-            this->updateWell(well_ptr, timeStep);
+            this->updateWell(std::move(well_ptr), timeStep);
             this->addWellGroupEvent(well_ptr->name(), ScheduleEvents::WELL_WELSPECS_UPDATE, timeStep);
 
             // Remove well child reference from previous group
