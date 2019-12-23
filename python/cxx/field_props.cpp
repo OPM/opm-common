@@ -9,15 +9,6 @@
 
 namespace {
 
-    py::list getitem( const FieldPropsManager& m, const std::string& kw) {
-        if (m.has<int>(kw))
-            return iterable_to_pylist( m.get<int>(kw) );
-        if (m.has<double>(kw))
-            return iterable_to_pylist( m.get<double>(kw) );
-
-        throw py::key_error( "no such grid property " + kw );
-    }
-
     bool contains( const FieldPropsManager& manager, const std::string& kw) {
         if (manager.has<int>(kw))
             return true;
@@ -26,6 +17,21 @@ namespace {
 
         return false;
     }
+
+    py::array_t<double> get_double_array(const FieldPropsManager& m, const std::string& kw) {
+        if (m.has<double>(kw))
+            return convert::numpy_array( m.get<double>(kw) );
+        else
+            throw std::invalid_argument("Keyword '" + kw + "'is not of type double.");
+    }
+
+    py::array_t<int> get_int_array(const FieldPropsManager& m, const std::string& kw) {
+        if (m.has<int>(kw))
+            return convert::numpy_array( m.get<int>(kw) );
+        else
+            throw std::invalid_argument("Keyword '" + kw + "'is not of type int.");
+    }
+
 }
 
 
@@ -33,7 +39,8 @@ void python::common::export_FieldProperties(py::module& module) {
     
     py::class_< FieldPropsManager >( module, "FieldProperties")
     .def( "__contains__", &contains )
-    .def( "__getitem__",  &getitem )
+    .def( "get_double_array",  &get_double_array )
+    .def( "get_int_array",  &get_int_array )
     ;
 
 }

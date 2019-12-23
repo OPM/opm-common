@@ -19,6 +19,9 @@ class TestProps(unittest.TestCase):
     def setUp(self):
         parser = Parser()
         deck = parser.parse(test_path('spe3/SPE3CASE1.DATA'))
+        #int_array = np.array([0, 1, 2, 3])
+        #hbnum_kw = DeckKeyword( parser["HBNUM"], int_array)
+        #deck.add(hbnum_kw)
         self.spe3 = EclipseState(deck)
         self.props = self.spe3.ecl3d_props()
         if (not test_field_props()):

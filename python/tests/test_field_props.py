@@ -32,11 +32,11 @@ if (test_field_props()):
 
         def test_getitem(self):
             p = self.props
-            poro = p['PORO']
+            poro = p.get_double_array('PORO')
             self.assertEqual(324, len(poro))
             self.assertEqual(0.13, poro[0])
             self.assertTrue( 'PERMX' in p )
-            px = p['PERMX']
+            px = p.get_double_array('PERMX')
             print(len(px))
             self.assertEqual(324, len(px))
 
@@ -47,7 +47,7 @@ if (test_field_props()):
             field_props = self.props
 
             grid  = self.spe3.grid()
-            permx = field_props['PERMX']
+            permx = field_props.get_double_array('PERMX')
             print('set(PERMX) = %s' % set(permx))
             # 130mD, 40mD, 20mD, and 150mD, respectively, top to bottom
             darcys = {0:md2si(130), 1:md2si(40), 2:md2si(20), 3:md2si(150)}
