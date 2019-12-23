@@ -18,6 +18,8 @@
 */
 
 #include <iostream>
+#include <iomanip>
+#include <chrono>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
@@ -44,12 +46,37 @@ inline void loadDeck( const char * deck_file) {
     Opm::Parser parser;
 
     std::cout << "Loading deck: " << deck_file << " ..... "; std::cout.flush();
+
+    std::chrono::system_clock::time_point start;
+
+    start = std::chrono::system_clock::now();
     auto deck = parser.parseFile(deck_file, parseContext, errors);
+    auto deck_time = std::chrono::system_clock::now() - start;
+
     std::cout << "parse complete - creating EclipseState .... ";  std::cout.flush();
+
+    start = std::chrono::system_clock::now();
     Opm::EclipseState state( deck, parseContext, errors );
+    auto state_time = std::chrono::system_clock::now() - start;
+
+    std::cout << "creating Schedule .... ";  std::cout.flush();
+
+    start = std::chrono::system_clock::now();
     Opm::Schedule schedule( deck, state);
+    auto schedule_time = std::chrono::system_clock::now() - start;
+
+    std::cout << "creating SummaryConfig .... ";  std::cout.flush();
+
+    start = std::chrono::system_clock::now();
     Opm::SummaryConfig summary( deck, schedule, state.getTableManager( ), parseContext, errors );
-    std::cout << "complete." << std::endl;
+    auto summary_time = std::chrono::system_clock::now() - start;
+
+    std::cout << "complete." << std::endl << std::endl;
+    std::cout << "Time: " << std::endl;
+    std::cout << "   deck.....: "  << std::chrono::duration<double>(deck_time).count()  << " seconds" << std::endl;
+    std::cout << "   state....: "  << std::chrono::duration<double>(state_time).count()  << " seconds" << std::endl;
+    std::cout << "   schedule.: "  << std::chrono::duration<double>(schedule_time).count()  << " seconds" << std::endl;
+    std::cout << "   summary..: "  << std::chrono::duration<double>(summary_time).count()  << " seconds" << std::endl;
 }
 
 
