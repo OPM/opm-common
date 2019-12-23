@@ -79,6 +79,7 @@ public:
     static UDQSet LN(const UDQSet& arg);
     static UDQSet LOG(const UDQSet& arg);
     static UDQSet NINT(const UDQSet& arg);
+    static UDQSet SORT(const UDQSet& arg, bool ascending);
     static UDQSet SORTA(const UDQSet& arg);
     static UDQSet SORTD(const UDQSet& arg);
     static UDQSet UNDEF(const UDQSet& arg);

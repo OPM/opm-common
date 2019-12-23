@@ -306,35 +306,46 @@ namespace {
         return result;
     }
 
+}
 
-    UDQSet udq_sort(const UDQSet& arg, std::size_t defined_size, const std::function<bool(int,int)>& cmp) {
-        auto result = arg;
-        std::vector<int> index(defined_size);
-        std::iota(index.begin(), index.end(), 1);
-        std::sort(index.begin(), index.end(), cmp);
 
-        std::size_t output_index = 0;
-        for (auto sort_index : index) {
-            while (!result[output_index])
-                output_index++;
-
-            result.assign(output_index, sort_index);
-            output_index++;
+UDQSet UDQUnaryElementalFunction::SORT(const UDQSet& arg, bool ascending) {
+    using sort_node = std::pair<std::size_t, double>;
+    std::vector<sort_node> sort_nodes;
+    for (std::size_t index = 0; index < arg.size(); index++) {
+        const auto& value = arg[index];
+        if (value.defined()) {
+            if (ascending)
+                sort_nodes.emplace_back(index,  value.value() );
+            else
+                sort_nodes.emplace_back(index, -value.value() );
         }
-        return result;
     }
+
+    std::sort(sort_nodes.begin(), sort_nodes.end(), [](const sort_node& s1, const sort_node& s2) { return s1.second < s2.second; });
+
+    auto result = arg;
+    double sort_value = 1;
+    for (const auto& node : sort_nodes) {
+        const auto& index = node.first;
+        auto& value = result[index];
+        if (value.defined()) {
+            result.assign(index, sort_value);
+            sort_value += 1;
+        }
+    }
+    return result;
 }
 
-
-UDQSet UDQUnaryElementalFunction::SORTA(const UDQSet& arg) {
-    auto defined_values = arg.defined_values();
-    return udq_sort(arg, defined_values.size(), [&defined_values](int a, int b){ return defined_values[a - 1] < defined_values[b - 1]; });
-}
 
 UDQSet UDQUnaryElementalFunction::SORTD(const UDQSet& arg) {
-    auto defined_values = arg.defined_values();
-    return udq_sort(arg, defined_values.size(), [&defined_values](int a, int b){ return defined_values[a - 1] > defined_values[b - 1]; });
+    return UDQUnaryElementalFunction::SORT(arg, false);
 }
+
+UDQSet UDQUnaryElementalFunction::SORTA(const UDQSet& arg) {
+    return UDQUnaryElementalFunction::SORT(arg, true);
+}
+
 
 UDQBinaryFunction::UDQBinaryFunction(const std::string& name, std::function<UDQSet(const UDQSet& lhs, const UDQSet& rhs)> f) :
     UDQFunction(name),
