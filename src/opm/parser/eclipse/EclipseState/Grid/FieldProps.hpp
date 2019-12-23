@@ -89,13 +89,14 @@ public:
     struct FieldData {
         std::vector<T> data;
         std::vector<value::status> value_status;
-
+        mutable bool all_set;
 
         FieldData() = default;
 
         FieldData(std::size_t active_size) :
             data(std::vector<T>(active_size)),
-            value_status(active_size, value::status::uninitialized)
+            value_status(active_size, value::status::uninitialized),
+            all_set(false)
         {
         }
 
@@ -105,12 +106,14 @@ public:
         }
 
         bool valid() const {
-            static const std::array<value::status,2> invalid_value = {value::status::uninitialized, value::status::empty_default};
-            const auto& it = std::find_first_of(this->value_status.begin(), this->value_status.end(), invalid_value.begin(), invalid_value.end());
-            if (it == this->value_status.end())
+            if (this->all_set)
                 return true;
 
-            return false;
+            static const std::array<value::status,2> invalid_value = {value::status::uninitialized, value::status::empty_default};
+            const auto& it = std::find_first_of(this->value_status.begin(), this->value_status.end(), invalid_value.begin(), invalid_value.end());
+            this->all_set = (it == this->value_status.end());
+
+            return this->all_set;
         }
 
         void compress(const std::vector<bool>& active_map) {
