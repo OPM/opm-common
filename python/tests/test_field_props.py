@@ -1,7 +1,10 @@
 import unittest
 import opm.io
 
+import numpy as np
+
 from opm.io.parser import Parser
+from opm.io.deck import DeckKeyword
 from opm.io.ecl_state import EclipseState, test_field_props
 try:
     from tests.utils import test_path
@@ -21,6 +24,9 @@ if (test_field_props()):
         def setUp(self):
             parser = Parser()
             deck = parser.parse(test_path('spe3/SPE3CASE1.DATA'))
+            int_array = np.ones(324)
+            actnum_kw = DeckKeyword( parser["ACTNUM"], int_array)
+            deck.add(actnum_kw)
             self.spe3 = EclipseState(deck)
             self.props = self.spe3.field_props()
 
@@ -29,6 +35,8 @@ if (test_field_props()):
             self.assertTrue('PORO' in p)
             self.assertFalse('NONO' in p)
             self.assertTrue('PORV' in p)
+            self.assertTrue('ACTNUM' in p)
+            
 
         def test_getitem(self):
             p = self.props
@@ -39,6 +47,7 @@ if (test_field_props()):
             px = p.get_double_array('PERMX')
             print(len(px))
             self.assertEqual(324, len(px))
+            self.assertEqual(324, len(p.get_int_array('ACTNUM')))
 
         def test_permx_values(self):
             def md2si(md):
