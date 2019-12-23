@@ -213,6 +213,7 @@ namespace Opm {
             GridProperties< int >::SupportedKeywordInfo( "EQLNUM" , 1, "1", true ),
             GridProperties< int >::SupportedKeywordInfo( "FLUXNUM", 1, "1", true ),
             GridProperties< int >::SupportedKeywordInfo( "IMBNUM" , 1, "1", true ),
+            GridProperties< int >::SupportedKeywordInfo( "ISOLNUM", 1, "1", true ),
             GridProperties< int >::SupportedKeywordInfo( "MISCNUM", 1, "1", true ),
             GridProperties< int >::SupportedKeywordInfo( "MULTNUM", 1, "1", true ),
             GridProperties< int >::SupportedKeywordInfo( "OPERNUM", 1, "1", true ),
