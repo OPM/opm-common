@@ -85,14 +85,24 @@ namespace {
         return l;
     }
 
+    const FieldPropsManager& get_field_props(const EclipseState& state) {
+        if (enable3DPropsTesting())
+            return state.fieldProps();
+        else
+            throw std::logic_error("Field properties not implemented for this compilation.");
+    }
+
 }
 
 void python::common::export_EclipseState(py::module& module) {
 
+    module.def("test_field_props", &enable3DPropsTesting);
+
     py::class_< EclipseState >( module, "EclipseState" )
         .def(py::init<const Deck&>())
         .def_property_readonly( "title", &EclipseState::getTitle )
-        .def( "props",          &EclipseState::get3DProperties, ref_internal)
+        .def( "ecl3d_props",    &EclipseState::get3DProperties, ref_internal)
+        .def( "field_props",    &get_field_props, ref_internal)
         .def( "grid",           &EclipseState::getInputGrid, ref_internal)
         .def( "config",         &EclipseState::cfg, ref_internal)
         .def( "tables",         &EclipseState::getTableManager, ref_internal)

@@ -39,6 +39,8 @@
 
 namespace Opm {
 
+    bool enable3DPropsTesting();
+
     template< typename > class GridProperty;
     template< typename > class GridProperties;
 
