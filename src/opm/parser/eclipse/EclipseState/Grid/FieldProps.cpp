@@ -84,6 +84,7 @@ static const std::map<std::string, int> int_scalar_init = {{"SATNUM", 1},
                                                            {"ENDNUM", 1},
                                                            {"EQLNUM", 1},
                                                            {"IMBNUM", 1},
+                                                           {"ISOLNUM",1},
                                                            {"FIPNUM", 1},   // All FIPxxx keywords should (probably) be added with init==1
                                                            {"EQLNUM", 1},
                                                            {"PVTNUM", 1},
@@ -104,7 +105,7 @@ bool isFipxxx< int >(const std::string& keyword) {
 namespace GRID {
 static const std::set<std::string> double_keywords = {"MULTPV", "NTG", "PORO", "PERMX", "PERMY", "PERMZ", "THCONR", "MULTX", "MULTX-", "MULTY-", "MULTY", "MULTZ", "MULTZ-",
                                                       "THCONSF", "THCROCK", "THCOIL", "THCGAS", "THCWATER"};    // The THxxxx keywords are related to thermal properties - they are all E300 keywords.
-static const std::set<std::string> int_keywords    = {"ACTNUM", "FLUXNUM", "MULTNUM", "OPERNUM", "ROCKNUM"};
+static const std::set<std::string> int_keywords    = {"ACTNUM", "FLUXNUM", "ISOLNUM", "MULTNUM", "OPERNUM", "ROCKNUM"};
 static const std::set<std::string> top_keywords    = {"PORO", "PERMX", "PERMY", "PERMZ"};
 }
 
