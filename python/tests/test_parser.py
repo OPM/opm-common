@@ -3,6 +3,7 @@ import os.path
 import sys
 
 import numpy as np
+import matplotlib.pyplot
 
 from opm.io.parser import Parser
 from opm.io.parser import ParseContext
