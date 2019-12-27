@@ -144,11 +144,7 @@ BOOST_AUTO_TEST_CASE( EQUALS ) {
 BOOST_AUTO_TEST_CASE( OPERATE ) {
     EclipseState state = makeState( prefix() + "BOX/BOXTEST1" );
     const EclipseGrid& grid = state.getInputGrid();
-#ifdef ENABLE_3DPROPS_TESTING
     const auto& ntg = state.fieldProps().get_global<double>("NTG");
-#else
-    const auto& ntg = state.get3DProperties().getDoubleGridProperty("NTG").getData();
-#endif
     BOOST_CHECK_EQUAL( ntg[grid.getGlobalIndex(0,0,0)], 8.50 );  // MULTA
     BOOST_CHECK_EQUAL( ntg[grid.getGlobalIndex(0,5,0)], 5.00 );  // POLY
     BOOST_CHECK_EQUAL( ntg[grid.getGlobalIndex(0,0,1)], 4.0 );   // COPY

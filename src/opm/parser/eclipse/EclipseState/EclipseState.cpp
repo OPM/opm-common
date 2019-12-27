@@ -199,7 +199,6 @@ bool enable3DPropsTesting() {
     }
 
     void EclipseState::initTransMult() {
-#ifdef ENABLE_3DPROPS_TESTING
         const auto& fp = this->field_props;
         if (fp.has<double>("MULTX"))  this->m_transMult.applyMULT(fp.get_global<double>("MULTX") , FaceDir::XPlus);
         if (fp.has<double>("MULTX-")) this->m_transMult.applyMULT(fp.get_global<double>("MULTX-"), FaceDir::XMinus);
@@ -209,23 +208,6 @@ bool enable3DPropsTesting() {
 
         if (fp.has<double>("MULTZ"))  this->m_transMult.applyMULT(fp.get_global<double>("MULTZ") , FaceDir::ZPlus);
         if (fp.has<double>("MULTZ-")) this->m_transMult.applyMULT(fp.get_global<double>("MULTZ-"), FaceDir::ZMinus);
-#else
-        const auto& p = m_eclipseProperties;
-        if (m_eclipseProperties.hasDeckDoubleGridProperty("MULTX"))
-            m_transMult.applyMULT(p.getDoubleGridProperty("MULTX").getData(), FaceDir::XPlus);
-        if (m_eclipseProperties.hasDeckDoubleGridProperty("MULTX-"))
-            m_transMult.applyMULT(p.getDoubleGridProperty("MULTX-").getData(), FaceDir::XMinus);
-
-        if (m_eclipseProperties.hasDeckDoubleGridProperty("MULTY"))
-            m_transMult.applyMULT(p.getDoubleGridProperty("MULTY").getData(), FaceDir::YPlus);
-        if (m_eclipseProperties.hasDeckDoubleGridProperty("MULTY-"))
-            m_transMult.applyMULT(p.getDoubleGridProperty("MULTY-").getData(), FaceDir::YMinus);
-
-        if (m_eclipseProperties.hasDeckDoubleGridProperty("MULTZ"))
-            m_transMult.applyMULT(p.getDoubleGridProperty("MULTZ").getData(), FaceDir::ZPlus);
-        if (m_eclipseProperties.hasDeckDoubleGridProperty("MULTZ-"))
-            m_transMult.applyMULT(p.getDoubleGridProperty("MULTZ-").getData(), FaceDir::ZMinus);
-#endif
     }
 
     void EclipseState::initFaults(const Deck& deck) {

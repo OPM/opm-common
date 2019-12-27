@@ -313,7 +313,6 @@ namespace {
     }
 
 
-#ifdef ENABLE_3DPROPS_TESTING
 
     void writePoreVolume(const ::Opm::EclipseState&        es,
                          const ::Opm::UnitSystem&          units,
@@ -344,53 +343,6 @@ namespace {
 
     }
 
-#else
-
-     void writePoreVolume(const ::Opm::EclipseState&        es,
-                          const ::Opm::EclipseGrid&         grid,
-                          const ::Opm::UnitSystem&          units,
-                          ::Opm::EclIO::OutputStream::Init& initFile)
-     {
-        auto porv = es.get3DProperties()
-           .getDoubleGridProperty("PORV").getData();
-        for (auto nGlob    = porv.size(),
-                  globCell = 0*nGlob; globCell < nGlob; ++globCell)
-        {
-            if (! grid.cellActive(globCell)) {
-                porv[globCell] = 0.0;
-            }
-        }
-        units.from_si(::Opm::UnitSystem::measure::volume, porv);
-        initFile.write("PORV", singlePrecision(porv));
-     }
-
-
-    void writeIntegerCellProperties(const ::Opm::EclipseState&        es,
-                                    const ::Opm::EclipseGrid&         grid,
-                                    ::Opm::EclIO::OutputStream::Init& initFile)
-    {
-
-        // The INIT file should always contain PVT, saturation function,
-        // equilibration, and fluid-in-place region vectors.  Call
-        // assertKeyword() here--on a 'const' GridProperties object--to
-        // invoke the autocreation property, and ensure that the keywords
-        // exist in the properties container.
-        const auto& properties = es.get3DProperties().getIntProperties();
-        properties.assertKeyword("PVTNUM");
-        properties.assertKeyword("SATNUM");
-        properties.assertKeyword("EQLNUM");
-        properties.assertKeyword("FIPNUM");
-
-        for (const auto& property : properties) {
-            if (property.getKeywordName() == "ACTNUM")
-                continue;
-
-            auto ecl_data = property.compressedCopy(grid);
-            initFile.write(property.getKeywordName(), ecl_data);
-        }
-    }
-
-#endif
 
 
     void writeGridGeometry(const ::Opm::EclipseGrid&         grid,
@@ -647,28 +599,13 @@ void Opm::InitIO::write(const ::Opm::EclipseState&              es,
     // set to zero for inactive cells.  This treatment implies that the
     // active/inactive cell mapping can be inferred by reading the PORV
     // vector from the result set.
-#ifdef ENABLE_3DPROPS_TESTING
     writePoreVolume(es, units, initFile);
-#else
-    writePoreVolume(es, grid, units, initFile);
-#endif
-
     writeGridGeometry(grid, units, initFile);
-
     writeDoubleCellProperties(es, units, initFile);
-
     writeSimulatorProperties(grid, simProps, initFile);
-
     writeTableData(es, units, initFile);
-
-#ifdef ENABLE_3DPROPS_TESTING
     writeIntegerCellProperties(es, initFile);
-#else
-    writeIntegerCellProperties(es, grid, initFile);
-#endif
-
     writeIntegerMaps(std::move(int_data), initFile);
-
     writeSatFuncScaling(es, units, initFile);
 
     if (nnc.numNNC() > std::size_t{0}) {
