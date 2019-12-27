@@ -22,6 +22,7 @@
 #include <boost/test/unit_test.hpp>
 #include <iostream>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/PyAction.hpp>
 
 using namespace Opm;
 
@@ -76,4 +77,6 @@ PYACTION -- Comment
         BOOST_CHECK_EQUAL(parsed_code, input_code);
         BOOST_CHECK( deck.hasKeyword("GRID"));
     }
+
+    PyAction pyact(input_code);
 }

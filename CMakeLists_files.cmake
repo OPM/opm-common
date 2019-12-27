@@ -94,6 +94,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Schedule/Action/ActionValue.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Action/ASTNode.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Action/Condition.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/Action/PyAction.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/ArrayDimChecker.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Events.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Group/Group.cpp
@@ -607,6 +608,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Schedule/Action/ActionX.hpp
        opm/parser/eclipse/EclipseState/Schedule/Action/Condition.hpp
        opm/parser/eclipse/EclipseState/Schedule/Action/ASTNode.hpp
+       opm/parser/eclipse/EclipseState/Schedule/Action/PyAction.hpp
        opm/parser/eclipse/EclipseState/Schedule/ArrayDimChecker.hpp
        opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp
        opm/parser/eclipse/EclipseState/Schedule/VFPInjTable.hpp

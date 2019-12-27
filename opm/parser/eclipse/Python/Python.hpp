@@ -23,6 +23,7 @@
 #include <memory>
 #include <string>
 
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/PyAction.hpp>
 
 namespace Opm {
 class PythonInterp;
@@ -56,6 +57,7 @@ public:
     Python();
     bool exec(const std::string& python_code) const;
     bool exec(const std::string& python_code, const Parser& parser, Deck& deck) const;
+    bool exec(const PyAction& py_action) const;
     explicit operator bool() const;
 private:
     std::shared_ptr<PythonInterp> interp;
