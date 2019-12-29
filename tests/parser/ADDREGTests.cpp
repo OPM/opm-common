@@ -30,7 +30,6 @@
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 
-#include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 

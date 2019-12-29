@@ -421,19 +421,19 @@ FieldProps::FieldProps(const Deck& deck, const EclipseGrid& grid, const TableMan
     }
 
 
-    if (Section::hasGRID(deck))
+    if (DeckSection::hasGRID(deck))
         this->scanGRIDSection(GRIDSection(deck));
 
-    if (Section::hasEDIT(deck))
+    if (DeckSection::hasEDIT(deck))
         this->scanEDITSection(EDITSection(deck));
 
-    if (Section::hasREGIONS(deck))
+    if (DeckSection::hasREGIONS(deck))
         this->scanREGIONSSection(REGIONSSection(deck));
 
-    if (Section::hasPROPS(deck))
+    if (DeckSection::hasPROPS(deck))
         this->scanPROPSSection(PROPSSection(deck));
 
-    if (Section::hasSOLUTION(deck))
+    if (DeckSection::hasSOLUTION(deck))
         this->scanSOLUTIONSection(SOLUTIONSection(deck));
 }
 

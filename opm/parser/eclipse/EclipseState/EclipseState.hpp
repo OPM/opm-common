@@ -55,7 +55,7 @@ namespace Opm {
     class IOConfig;
     class ParseContext;
     class RestartConfig;
-    class Section;
+    class DeckSection;
     class SimulationConfig;
     class TableManager;
     class UnitSystem;
@@ -120,7 +120,7 @@ namespace Opm {
         void initTransMult();
         void initFaults(const Deck& deck);
 
-        void setMULTFLT(const Opm::Section& section);
+        void setMULTFLT(const Opm::DeckSection& section);
 
         void complainAboutAmbiguousKeyword(const Deck& deck,
                                            const std::string& keywordName);

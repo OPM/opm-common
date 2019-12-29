@@ -39,7 +39,7 @@ namespace Opm {
     class DeckKeyword;
     class DeckRecord;
     class EclipseGrid;
-    class Section;
+    class DeckSection;
     class TableManager;
     class UnitSystem;
 
@@ -76,7 +76,7 @@ namespace Opm {
         void processGridProperties(const Deck& deck,
                                    const EclipseGrid& eclipseGrid);
 
-        void scanSection(const Section& section,
+        void scanSection(const DeckSection& section,
                          const EclipseGrid& eclipseGrid,
                          bool edit_section);
 
