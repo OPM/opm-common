@@ -26,8 +26,19 @@
 
 namespace Opm {
 
+enum class Section {
+    RUNSPEC,
+    GRID,
+    EDIT,
+    PROPS,
+    SOLUTION,
+    SUMMARY,
+    SCHEDULE
+};
+
     class UnitSystem;
     class Parser;
+
 
 class DeckSection : public DeckView {
     public:
