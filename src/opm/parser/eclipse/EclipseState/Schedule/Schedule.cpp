@@ -2619,7 +2619,7 @@ void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, c
         if (old_gname != group_name) {
             auto well_ptr = std::make_shared<Well>( well );
             well_ptr->updateGroup(group_name);
-            this->updateWell(std::move(well_ptr), timeStep);
+            this->updateWell(well_ptr, timeStep);
             this->addWellGroupEvent(well_ptr->name(), ScheduleEvents::WELL_WELSPECS_UPDATE, timeStep);
 
             // Remove well child reference from previous group
