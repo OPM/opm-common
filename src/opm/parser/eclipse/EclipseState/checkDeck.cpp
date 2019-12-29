@@ -22,7 +22,7 @@
 #include <opm/common/OpmLog/LogUtil.hpp>
 
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
-#include <opm/parser/eclipse/Deck/Section.hpp>
+#include <opm/parser/eclipse/Deck/DeckSection.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
@@ -48,7 +48,7 @@ bool checkDeck( const Deck& deck, const Parser& parser, const ParseContext& pars
     // make sure all mandatory sections are present and that their order is correct
     if (enabledChecks & SectionTopology) {
         bool ensureKeywordSection = enabledChecks & KeywordSection;
-        deckValid = deckValid && Section::checkSectionTopology(deck, parser, ensureKeywordSection);
+        deckValid = deckValid && DeckSection::checkSectionTopology(deck, parser, ensureKeywordSection);
     }
 
     const std::string& deckUnitSystem = boost::to_upper_copy(deck.getActiveUnitSystem().getName());

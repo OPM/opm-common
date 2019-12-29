@@ -24,7 +24,7 @@
 #include <string>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/Deck/Section.hpp>
+#include <opm/parser/eclipse/Deck/DeckSection.hpp>
 #include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/Box.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/BoxManager.hpp>
@@ -768,25 +768,25 @@ namespace Opm {
     void Eclipse3DProperties::processGridProperties( const Deck& deck,
                                                      const EclipseGrid& eclipseGrid) {
 
-        if (Section::hasGRID(deck))
+        if (DeckSection::hasGRID(deck))
             scanSection(GRIDSection(deck), eclipseGrid, false);
 
-        if (Section::hasREGIONS(deck))
+        if (DeckSection::hasREGIONS(deck))
             scanSection(REGIONSSection(deck), eclipseGrid, false);
 
-        if (Section::hasEDIT(deck))
+        if (DeckSection::hasEDIT(deck))
             scanSection(EDITSection(deck), eclipseGrid, true);
 
-        if (Section::hasPROPS(deck))
+        if (DeckSection::hasPROPS(deck))
             scanSection(PROPSSection(deck), eclipseGrid, false);
 
-        if (Section::hasSOLUTION(deck))
+        if (DeckSection::hasSOLUTION(deck))
             scanSection(SOLUTIONSection(deck), eclipseGrid, false);
     }
 
 
 
-    void Eclipse3DProperties::scanSection(const Section& section,
+    void Eclipse3DProperties::scanSection(const DeckSection& section,
                                           const EclipseGrid& eclipseGrid,
                                           bool edit_section) {
         BoxManager boxManager(eclipseGrid);

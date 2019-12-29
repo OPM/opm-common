@@ -24,7 +24,7 @@
 #include <vector>
 
 #include <opm/parser/eclipse/Deck/value_status.hpp>
-#include <opm/parser/eclipse/Deck/Section.hpp>
+#include <opm/parser/eclipse/Deck/DeckSection.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/Box.hpp>
 

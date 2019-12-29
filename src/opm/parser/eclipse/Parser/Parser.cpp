@@ -33,7 +33,7 @@
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
-#include <opm/parser/eclipse/Deck/Section.hpp>
+#include <opm/parser/eclipse/Deck/DeckSection.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
@@ -1195,9 +1195,9 @@ std::vector<std::string> Parser::getAllDeckNames () const {
         return false;
     }
 
-    bool Section::checkSectionTopology(const Deck& deck,
-                                       const Parser& parser,
-                                       bool ensureKeywordSectionAffiliation)
+    bool DeckSection::checkSectionTopology(const Deck& deck,
+                                           const Parser& parser,
+                                           bool ensureKeywordSectionAffiliation)
     {
         if( deck.size() == 0 ) {
             std::string msg = "empty decks are invalid\n";

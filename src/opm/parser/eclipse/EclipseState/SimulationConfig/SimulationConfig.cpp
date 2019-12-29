@@ -20,7 +20,7 @@
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
-#include <opm/parser/eclipse/Deck/Section.hpp>
+#include <opm/parser/eclipse/Deck/DeckSection.hpp>
 #include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/parser/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
@@ -63,7 +63,7 @@ namespace Opm {
         m_VAPOIL(false),
         m_isThermal(false)
     {
-        if (Section::hasRUNSPEC(deck)) {
+        if (DeckSection::hasRUNSPEC(deck)) {
             const RUNSPECSection runspec(deck);
             if (runspec.hasKeyword<ParserKeywords::CPR>()) {
                 const auto& cpr = runspec.getKeyword<ParserKeywords::CPR>();
