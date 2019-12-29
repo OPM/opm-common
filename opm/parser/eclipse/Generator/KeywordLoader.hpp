@@ -22,34 +22,25 @@
 #define KEYWORD_LOADER_HPP
 
 #include <map>
-#include <memory>
 #include <string>
 #include <vector>
 
 #include <boost/filesystem/path.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 
 namespace Opm {
 
-    class ParserKeyword;
 
     class KeywordLoader {
 
     public:
-        KeywordLoader(bool verbose);
-        size_t size() const;
-        bool hasKeyword(const std::string& keyword) const;
-        std::shared_ptr<const ParserKeyword> getKeyword(const std::string& keyword) const;
+        KeywordLoader(const std::vector<std::string>& keyword_files, bool verbose);
         std::string getJsonFile(const std::string& keyword) const;
-        void loadKeyword(const std::string& filename);
-        void loadKeyword(boost::filesystem::path& path);
 
-        std::map<std::string , std::shared_ptr<ParserKeyword> >::const_iterator keyword_begin( ) const;
-        std::map<std::string , std::shared_ptr<ParserKeyword> >::const_iterator keyword_end( ) const;
+        std::map<char , std::vector<ParserKeyword> >::const_iterator begin( ) const;
+        std::map<char , std::vector<ParserKeyword> >::const_iterator end( ) const;
     private:
-        void addKeyword(std::shared_ptr<ParserKeyword> keyword , const std::string& jsonFile);
-
-        bool m_verbose;
-        std::map<std::string , std::shared_ptr<ParserKeyword> > m_keywords;
+        std::map<char, std::vector<ParserKeyword>> keywords;
         std::map<std::string , std::string > m_jsonFile;
     };
 }

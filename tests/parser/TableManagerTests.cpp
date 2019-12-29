@@ -46,8 +46,6 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/VFPProdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/VFPInjTable.hpp>
 
-#include <opm/parser/eclipse/Parser/ParserKeywords.hpp>
-
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 #include <stdexcept>

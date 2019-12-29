@@ -44,6 +44,7 @@ add_custom_command(
     OUTPUT  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords.cpp ${PROJECT_BINARY_DIR}/tmp_gen/inlinekw.cpp
     COMMAND genkw keyword_list.argv
                   ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords.cpp
+                  ${PROJECT_BINARY_DIR}/tmp_gen/ParserInit.cpp
                   ${PROJECT_BINARY_DIR}/tmp_gen/include/
                   opm/parser/eclipse/Parser/ParserKeywords
                   ${PROJECT_BINARY_DIR}/tmp_gen/inlinekw.cpp
@@ -51,7 +52,7 @@ add_custom_command(
 )
 
 # To avoid some rebuilds
-add_custom_command(OUTPUT ParserKeywords.cpp inlinekw.cpp
+add_custom_command(OUTPUT ParserKeywords.cpp inlinekw.cpp ParserInit.cpp
                    DEPENDS ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords.cpp
                    COMMAND ${CMAKE_COMMAND} -DBASE_DIR=${PROJECT_BINARY_DIR}
                                             -P ${PROJECT_SOURCE_DIR}/CopyHeaders.cmake)

@@ -40,23 +40,17 @@ const std::string testHeader =
     "#include <boost/test/unit_test.hpp>\n"
     "#include <memory>\n"
     "#include <opm/json/JsonObject.hpp>\n"
-    "#include <opm/parser/eclipse/Parser/ParserKeywords.hpp>\n"
     "#include <opm/parser/eclipse/Parser/ParserKeyword.hpp>\n"
     "#include <opm/parser/eclipse/Parser/ParserItem.hpp>\n"
     "#include <opm/parser/eclipse/Parser/ParserRecord.hpp>\n"
     "#include <opm/parser/eclipse/Units/UnitSystem.hpp>\n"
-    "using namespace Opm;\n"
-    "auto unitSystem =  UnitSystem::newMETRIC();\n";
+    "auto unitSystem =  Opm::UnitSystem::newMETRIC();\n";
 
 const std::string sourceHeader =
     "#include <opm/parser/eclipse/Deck/UDAValue.hpp>\n"
-    "#include <opm/parser/eclipse/Parser/ParserKeyword.hpp>\n"
     "#include <opm/parser/eclipse/Parser/ParserItem.hpp>\n"
     "#include <opm/parser/eclipse/Parser/ParserRecord.hpp>\n"
-    "#include <opm/parser/eclipse/Parser/Parser.hpp>\n"
-    "#include <opm/parser/eclipse/Parser/ParserKeywords.hpp>\n\n\n"
-    "namespace Opm {\n"
-    "namespace ParserKeywords {\n\n";
+    "#include <opm/parser/eclipse/Parser/Parser.hpp>\n\n\n";
 }
 
 namespace Opm {
@@ -102,71 +96,71 @@ namespace Opm {
         return update;
     }
 
+    bool KeywordGenerator::updateInitSource(const KeywordLoader& loader , const std::string& sourceFile ) const {
+        std::stringstream newSource;
+        newSource << "#include <opm/parser/eclipse/Parser/Parser.hpp>" << std::endl;
+        for(const auto& kw_pair : loader) {
+            const auto& first_char = kw_pair.first;
+            newSource << "#include <opm/parser/eclipse/Parser/ParserKeywords/" << first_char << ".hpp>" << std::endl;
+        }
+        newSource << "namespace Opm {" << std::endl;
+        newSource << "namespace ParserKeywords {" << std::endl;
+        newSource << "void addDefaultKeywords(Parser& p);"  << std::endl
+                  << "void addDefaultKeywords(Parser& p) {" << std::endl;
 
-    bool KeywordGenerator::updateSource(const KeywordLoader& loader , const std::string& sourceFile ) const {
+        for(const auto& kw_pair : loader) {
+            const auto& keywords = kw_pair.second;
+            for (const auto& kw: keywords)
+                newSource << "   p.addKeyword< ParserKeywords::"
+                          << kw.className()
+                          << " >();" << std::endl;
+        }
+        newSource << "}" << std::endl;
+        newSource << "}" << std::endl;
+
+        newSource << "void Parser::addDefaultKeywords() {\n    ParserKeywords::addDefaultKeywords(*this);\n}" << std::endl;
+        newSource << "}" << std::endl;
+        return write_file( newSource, sourceFile, m_verbose, "init" );
+    }
+
+    bool KeywordGenerator::updateKeywordSource(const KeywordLoader& loader , const std::string& sourceFile ) const {
         std::stringstream newSource;
         newSource << sourceHeader << std::endl;
 
-        newSource << "void addDefaultKeywords(Parser& p);"  << std::endl
-                  << "void addDefaultKeywords(Parser& p) {" << std::endl;
-        for( auto iter = loader.keyword_begin(); iter != loader.keyword_end(); ++iter ) {
-            newSource << "p.addKeyword< ParserKeywords::"
-                      << iter->second->className()
-                      << " >();" << std::endl;
+        for(const auto& kw_pair : loader) {
+            const auto& first_char = kw_pair.first;
+            const auto& keywords = kw_pair.second;
+            newSource << std::endl << std::endl << "#include <opm/parser/eclipse/Parser/ParserKeywords/" << first_char << ".hpp>" << std::endl;
+            newSource << "namespace Opm {" << std::endl;
+            newSource << "namespace ParserKeywords {" << std::endl;
+            for (const auto& kw: keywords)
+                newSource << kw.createCode() << std::endl;
+            newSource << "}\n}" << std::endl;
         }
-
-        newSource << "}" << std::endl;
-
-        for (auto iter = loader.keyword_begin(); iter != loader.keyword_end(); ++iter) {
-            std::shared_ptr<ParserKeyword> keyword = (*iter).second;
-            newSource << keyword->createCode() << std::endl;
-        }
-
-        newSource << "}" << std::endl;
-
-        newSource << "void Parser::addDefaultKeywords() {" << std::endl
-                  << "  Opm::ParserKeywords::addDefaultKeywords(*this);" << std::endl
-                  << "}}" << std::endl;
 
         return write_file( newSource, sourceFile, m_verbose, "source" );
     }
 
-    bool KeywordGenerator::updateHeader(const KeywordLoader& loader, const std::string& headerBuildPath, const std::string& headerFile) const {
+    bool KeywordGenerator::updateHeader(const KeywordLoader& loader, const std::string& headerBuildPath, const std::string& headerPath) const {
         bool update = false;
 
-        std::map< char, std::vector< const ParserKeyword* > > keywords;
-        for( auto iter = loader.keyword_begin(); iter != loader.keyword_end(); ++iter )
-            keywords[ std::toupper( iter->second->className().at(0) ) ].push_back( iter->second.get() );
-
-        for( const auto& iter : keywords ) {
+        for( const auto& kw_pair : loader) {
             std::stringstream stream;
+            const auto& first_char = kw_pair.first;
+            const auto& keywords = kw_pair.second;
 
-            stream << headerHeader( std::string( 1, std::toupper( iter.first ) ) );
-            for( auto& kw : iter.second )
-                stream << kw->createDeclaration("   ") << std::endl;
+            stream << headerHeader( std::string( 1, std::toupper( first_char ) ) );
+            for( auto& kw : keywords )
+                stream << kw.createDeclaration("   ") << std::endl;
 
             stream << "}" << std::endl << "}" << std::endl;
             stream << "#endif" << std::endl;
 
-            const auto final_path = headerBuildPath + headerFile + "/" + std::string( 1, iter.first ) + ".hpp";
+            const auto final_path = headerBuildPath + headerPath+ "/" + std::string( 1, first_char ) + ".hpp";
             if( write_file( stream, final_path, m_verbose, "header" ) )
                 update = true;
         }
-
-        std::stringstream stream;
-        stream << headerHeader("");
-        stream << "}}" << std::endl;
-
-        for( const auto& iter : keywords )
-            stream << "#include <"
-                << headerFile + "/"
-                << std::string( 1, std::toupper( iter.first ) ) + ".hpp>"
-                << std::endl;
-
-        stream << "#endif" << std::endl;
-
-        const auto final_path = headerBuildPath + headerFile + ".hpp";
-        return write_file( stream, final_path, m_verbose, "header" ) || update;
+        return update;
     }
 
 
@@ -185,27 +179,32 @@ namespace Opm {
         std::stringstream stream;
 
         stream << testHeader;
-        for (auto iter = loader.keyword_begin(); iter != loader.keyword_end(); ++iter) {
-            const std::string& keywordName = (*iter).first;
-            std::shared_ptr<ParserKeyword> keyword = (*iter).second;
-            stream << startTest(keywordName);
-            stream << "    std::string jsonFile = \"" << loader.getJsonFile( keywordName) << "\";" << std::endl;
-            stream << "    boost::filesystem::path jsonPath( jsonFile );" << std::endl;
-            stream << "    Json::JsonObject jsonConfig( jsonPath );" << std::endl;
-            stream << "    ParserKeyword jsonKeyword(jsonConfig);" << std::endl;
-            stream << "    ParserKeywords::" << keywordName << " inlineKeyword;" << std::endl;
-            stream << "    BOOST_CHECK_EQUAL( jsonKeyword, inlineKeyword );" << std::endl;
-            stream << "    if (jsonKeyword.hasDimension()) {" <<std::endl;
-            stream << "        const auto& parserRecord = jsonKeyword.getRecord(0);" << std::endl;
-            stream << "        for (size_t i=0; i < parserRecord.size(); i++){" << std::endl;
-            stream << "            const auto& item = parserRecord.get( i );" << std::endl;
-            stream << "            for (const auto& dim : item.dimensions())" << std::endl;
-            stream << "                BOOST_CHECK_NO_THROW( unitSystem.getNewDimension( dim ));" << std::endl;
-            stream << "        }" << std::endl;
-            stream << "    }" << std::endl;
-            stream << endTest(  );
+        for(const auto& kw_pair : loader) {
+            const auto& first_char = kw_pair.first;
+            stream << "#include <opm/parser/eclipse/Parser/ParserKeywords/" << first_char << ".hpp>" << std::endl;
+            stream << "namespace Opm {" << std::endl;
+            const auto& keywords = kw_pair.second;
+            for (const auto& kw: keywords) {
+                const std::string& keywordName = kw.getName();
+                stream << startTest(keywordName);
+                stream << "    std::string jsonFile = \"" << loader.getJsonFile( keywordName) << "\";" << std::endl;
+                stream << "    boost::filesystem::path jsonPath( jsonFile );" << std::endl;
+                stream << "    Json::JsonObject jsonConfig( jsonPath );" << std::endl;
+                stream << "    ParserKeyword jsonKeyword(jsonConfig);" << std::endl;
+                stream << "    ParserKeywords::" << keywordName << " inlineKeyword;" << std::endl;
+                stream << "    BOOST_CHECK_EQUAL( jsonKeyword, inlineKeyword );" << std::endl;
+                stream << "    if (jsonKeyword.hasDimension()) {" <<std::endl;
+                stream << "        const auto& parserRecord = jsonKeyword.getRecord(0);" << std::endl;
+                stream << "        for (size_t i=0; i < parserRecord.size(); i++){" << std::endl;
+                stream << "            const auto& item = parserRecord.get( i );" << std::endl;
+                stream << "            for (const auto& dim : item.dimensions())" << std::endl;
+                stream << "                BOOST_CHECK_NO_THROW( unitSystem.getNewDimension( dim ));" << std::endl;
+                stream << "        }" << std::endl;
+                stream << "    }" << std::endl;
+                stream << endTest(  );
+            }
+            stream << "}" << std::endl;
         }
-
         return updateFile( stream , testFile );
     }
 }

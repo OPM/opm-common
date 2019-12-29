@@ -13,13 +13,6 @@ list(APPEND EXTRA_TESTS inlinekw)
 include(cmake/Modules/CheckCaseSensitiveFileSystem.cmake)
 set(_testdir ${PROJECT_SOURCE_DIR}/tests/parser/data)
 
-opm_add_test(LoaderTest
-             SOURCES tests/parser/KeywordLoaderTests.cpp
-                     src/opm/parser/eclipse/Generator/KeywordLoader.cpp
-             LIBRARIES ${TEST_LIBS}
-             TEST_ARGS ${_testdir}/parser/keyword-generator/)
-list(APPEND EXTRA_TESTS LoaderTest)
-
 opm_add_test(ParserTests
              SOURCES tests/parser/ParserTests.cpp
              LIBRARIES ${TEST_LIBS}
