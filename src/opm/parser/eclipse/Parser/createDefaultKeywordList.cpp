@@ -89,8 +89,8 @@ int main(int , char ** argv) {
     Opm::KeywordLoader loader( keyword_list, false );
     Opm::KeywordGenerator generator( true );
 
-    generator.updateInitSource(loader , init_file_name );
     generator.updateKeywordSource(loader , source_file_name );
+    generator.updateInitSource(loader , init_file_name );
     generator.updateHeader(loader, header_file_base_path, header_file_path );
     generator.updateTest( loader , test_file_name );
 }

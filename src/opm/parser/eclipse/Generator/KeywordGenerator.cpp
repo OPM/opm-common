@@ -76,27 +76,19 @@ namespace Opm {
             boost::filesystem::create_directories( file.parent_path());
     }
 
-    bool KeywordGenerator::updateFile(const std::stringstream& newContent , const std::string& filename) {
+    void KeywordGenerator::updateFile(const std::stringstream& newContent , const std::string& filename) {
         ensurePath(filename);
         std::ofstream outputStream(filename);
         outputStream << newContent.str();
-
-        return true;
     }
 
-    static bool write_file( const std::stringstream& stream, const std::string& file, bool verbose, std::string desc = "source" ) {
-        auto update = KeywordGenerator::updateFile( stream, file );
-        if( !verbose ) return update;
-
-        if( update )
+    static void write_file( const std::stringstream& stream, const std::string& file, bool verbose, std::string desc = "source" ) {
+        KeywordGenerator::updateFile( stream, file );
+        if( verbose )
             std::cout << "Updated " << desc << " file written to: " << file << std::endl;
-        else
-            std::cout << "No changes to " << desc << " file: " << file << std::endl;
-
-        return update;
     }
 
-    bool KeywordGenerator::updateInitSource(const KeywordLoader& loader , const std::string& sourceFile ) const {
+    void KeywordGenerator::updateInitSource(const KeywordLoader& loader , const std::string& sourceFile ) const {
         std::stringstream newSource;
         newSource << "#include <opm/parser/eclipse/Parser/Parser.hpp>" << std::endl;
         for(const auto& kw_pair : loader) {
@@ -120,10 +112,10 @@ namespace Opm {
 
         newSource << "void Parser::addDefaultKeywords() {\n    ParserKeywords::addDefaultKeywords(*this);\n}" << std::endl;
         newSource << "}" << std::endl;
-        return write_file( newSource, sourceFile, m_verbose, "init" );
+        write_file( newSource, sourceFile, m_verbose, "init" );
     }
 
-    bool KeywordGenerator::updateKeywordSource(const KeywordLoader& loader , const std::string& sourceFile ) const {
+    void KeywordGenerator::updateKeywordSource(const KeywordLoader& loader , const std::string& sourceFile ) const {
         std::stringstream newSource;
         newSource << sourceHeader << std::endl;
 
@@ -138,12 +130,10 @@ namespace Opm {
             newSource << "}\n}" << std::endl;
         }
 
-        return write_file( newSource, sourceFile, m_verbose, "source" );
+        write_file( newSource, sourceFile, m_verbose, "source" );
     }
 
-    bool KeywordGenerator::updateHeader(const KeywordLoader& loader, const std::string& headerBuildPath, const std::string& headerPath) const {
-        bool update = false;
-
+    void KeywordGenerator::updateHeader(const KeywordLoader& loader, const std::string& headerBuildPath, const std::string& headerPath) const {
         for( const auto& kw_pair : loader) {
             std::stringstream stream;
             const auto& first_char = kw_pair.first;
@@ -157,10 +147,8 @@ namespace Opm {
             stream << "#endif" << std::endl;
 
             const auto final_path = headerBuildPath + headerPath+ "/" + std::string( 1, first_char ) + ".hpp";
-            if( write_file( stream, final_path, m_verbose, "header" ) )
-                update = true;
+            write_file( stream, final_path, m_verbose, "header" );
         }
-        return update;
     }
 
 
@@ -175,7 +163,7 @@ namespace Opm {
 
 
 
-    bool KeywordGenerator::updateTest(const KeywordLoader& loader , const std::string& testFile) const {
+    void KeywordGenerator::updateTest(const KeywordLoader& loader , const std::string& testFile) const {
         std::stringstream stream;
 
         stream << testHeader;
@@ -205,7 +193,7 @@ namespace Opm {
             }
             stream << "}" << std::endl;
         }
-        return updateFile( stream , testFile );
+        updateFile( stream , testFile );
     }
 }
 

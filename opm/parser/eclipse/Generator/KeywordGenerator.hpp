@@ -36,13 +36,12 @@ namespace Opm {
         static std::string endTest();
         static std::string startTest(const std::string& test_name);
         static std::string headerHeader( const std::string& );
-        static bool updateFile(const std::stringstream& newContent, const std::string& filename);
+        static void updateFile(const std::stringstream& newContent, const std::string& filename);
 
-        bool updateInitSource(const KeywordLoader& loader, const std::string& sourceFile ) const;
-        bool updateKeywordSource(const KeywordLoader& loader, const std::string& sourceFile ) const;
-        bool updateHeader(const KeywordLoader& loader, const std::string& headerBuildPath, const std::string& headerPath) const;
-        bool updateTest(const KeywordLoader& loader , const std::string& testFile) const;
-
+        void updateInitSource(const KeywordLoader& loader, const std::string& sourceFile ) const;
+        void updateKeywordSource(const KeywordLoader& loader, const std::string& sourceFile ) const;
+        void updateHeader(const KeywordLoader& loader, const std::string& headerBuildPath, const std::string& headerPath) const;
+        void updateTest(const KeywordLoader& loader , const std::string& testFile) const;
     private:
         bool m_verbose;
     };
