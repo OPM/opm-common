@@ -63,6 +63,8 @@ namespace Opm {
             keyword_map.insert( std::pair<std::string , ParserKeyword> ( name , std::move(*parserKeyword)));
         }
 
+        this->keywords['Y'] = {};
+        this->keywords['X'] = {};
         for (const auto& kw_pair : keyword_map) {
             const auto& name = kw_pair.first;
             const auto& parserKeyword = kw_pair.second;

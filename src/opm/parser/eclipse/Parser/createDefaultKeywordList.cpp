@@ -60,7 +60,7 @@ int main(int , char ** argv) {
             << std::endl;
     }
     const char * keyword_list_file = argv[1];
-    const char * source_file_name = argv[2];
+    const char * source_file_path = argv[2];
     const char * init_file_name = argv[3];
     const char * header_file_base_path = argv[4];
     const char * header_file_path = argv[5];
@@ -89,7 +89,7 @@ int main(int , char ** argv) {
     Opm::KeywordLoader loader( keyword_list, false );
     Opm::KeywordGenerator generator( true );
 
-    generator.updateKeywordSource(loader , source_file_name );
+    generator.updateKeywordSource(loader , source_file_path );
     generator.updateInitSource(loader , init_file_name );
     generator.updateHeader(loader, header_file_base_path, header_file_path );
     generator.updateTest( loader , test_file_name );

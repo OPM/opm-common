@@ -115,22 +115,22 @@ namespace Opm {
         write_file( newSource, sourceFile, m_verbose, "init" );
     }
 
-    void KeywordGenerator::updateKeywordSource(const KeywordLoader& loader , const std::string& sourceFile ) const {
-        std::stringstream newSource;
-        newSource << sourceHeader << std::endl;
+    void KeywordGenerator::updateKeywordSource(const KeywordLoader& loader , const std::string& sourcePath ) const {
 
         for(const auto& kw_pair : loader) {
             const auto& first_char = kw_pair.first;
             const auto& keywords = kw_pair.second;
+            std::stringstream newSource;
+            newSource << sourceHeader << std::endl;
             newSource << std::endl << std::endl << "#include <opm/parser/eclipse/Parser/ParserKeywords/" << first_char << ".hpp>" << std::endl;
             newSource << "namespace Opm {" << std::endl;
             newSource << "namespace ParserKeywords {" << std::endl;
             for (const auto& kw: keywords)
                 newSource << kw.createCode() << std::endl;
             newSource << "}\n}" << std::endl;
+            write_file( newSource, sourcePath + "/" + first_char + ".cpp", m_verbose, "source" );
         }
 
-        write_file( newSource, sourceFile, m_verbose, "source" );
     }
 
     void KeywordGenerator::updateHeader(const KeywordLoader& loader, const std::string& headerBuildPath, const std::string& headerPath) const {
