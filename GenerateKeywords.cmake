@@ -74,7 +74,7 @@ add_custom_command( OUTPUT
                   ${PROJECT_BINARY_DIR}/tmp_gen/ParserInit.cpp
                   ${PROJECT_BINARY_DIR}/tmp_gen/include/
                   opm/parser/eclipse/Parser/ParserKeywords
-                  ${PROJECT_BINARY_DIR}/tmp_gen/inlinekw.cpp
+                  ${PROJECT_BINARY_DIR}/tmp_gen/TestKeywords.cpp
     DEPENDS genkw ${keyword_files} src/opm/parser/eclipse/share/keywords/keyword_list.cmake
 )
 
@@ -106,7 +106,7 @@ add_custom_command(OUTPUT
   ${PROJECT_BINARY_DIR}/ParserKeywords/X.cpp
   ${PROJECT_BINARY_DIR}/ParserKeywords/Y.cpp
   ${PROJECT_BINARY_DIR}/ParserKeywords/Z.cpp
-  ${PROJECT_BINARY_DIR}/inlinekw.cpp
+  ${PROJECT_BINARY_DIR}/TestKeywords.cpp
   ${PROJECT_BINARY_DIR}/ParserInit.cpp
                    DEPENDS ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/A.cpp
                    COMMAND ${CMAKE_COMMAND} -DBASE_DIR=${PROJECT_BINARY_DIR}

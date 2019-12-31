@@ -3,8 +3,8 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E copy_if_different
                         ${BASE_DIR}/ParserInit.cpp)
 
 execute_process(COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                        ${BASE_DIR}/tmp_gen/inlinekw.cpp
-                        ${BASE_DIR}/inlinekw.cpp)
+                        ${BASE_DIR}/tmp_gen/TestKeywords.cpp
+                        ${BASE_DIR}/TestKeywords.cpp)
 
 
 file(GLOB HDRS ${BASE_DIR}/tmp_gen/include/opm/parser/eclipse/Parser/ParserKeywords/*.hpp)

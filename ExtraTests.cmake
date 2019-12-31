@@ -4,10 +4,10 @@ set(EXTRA_TESTS)
 
 # Generated source, needs to be here
 opm_add_test(InlineKeywordTest
-             EXE_NAME inlinekw
-             SOURCES ${PROJECT_BINARY_DIR}/inlinekw.cpp
+             EXE_NAME TestKeywords
+             SOURCES ${PROJECT_BINARY_DIR}/TestKeywords.cpp
              LIBRARIES ${TEST_LIBS})
-list(APPEND EXTRA_TESTS inlinekw)
+list(APPEND EXTRA_TESTS TestKeywords)
 
 # Extra compile definitions and extra parameters
 include(cmake/Modules/CheckCaseSensitiveFileSystem.cmake)

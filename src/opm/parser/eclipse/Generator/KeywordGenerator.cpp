@@ -34,17 +34,6 @@
 
 namespace {
 
-const std::string testHeader =
-    "#define BOOST_TEST_MODULE ParserRecordTests\n"
-    "#include <boost/filesystem.hpp>\n"
-    "#include <boost/test/unit_test.hpp>\n"
-    "#include <memory>\n"
-    "#include <opm/json/JsonObject.hpp>\n"
-    "#include <opm/parser/eclipse/Parser/ParserKeyword.hpp>\n"
-    "#include <opm/parser/eclipse/Parser/ParserItem.hpp>\n"
-    "#include <opm/parser/eclipse/Parser/ParserRecord.hpp>\n"
-    "#include <opm/parser/eclipse/Units/UnitSystem.hpp>\n"
-    "auto unitSystem =  Opm::UnitSystem::newMETRIC();\n";
 
 const std::string sourceHeader =
     "#include <opm/parser/eclipse/Deck/UDAValue.hpp>\n"
@@ -166,33 +155,51 @@ namespace Opm {
     void KeywordGenerator::updateTest(const KeywordLoader& loader , const std::string& testFile) const {
         std::stringstream stream;
 
-        stream << testHeader;
         for(const auto& kw_pair : loader) {
             const auto& first_char = kw_pair.first;
             stream << "#include <opm/parser/eclipse/Parser/ParserKeywords/" << first_char << ".hpp>" << std::endl;
-            stream << "namespace Opm {" << std::endl;
+        }
+
+        stream << R"(
+
+#define BOOST_TEST_MODULE GeneratedKeywordTest
+#include <boost/filesystem.hpp>
+#include <boost/test/unit_test.hpp>
+#include <memory>
+#include <opm/json/JsonObject.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
+#include <opm/parser/eclipse/Parser/ParserItem.hpp>
+#include <opm/parser/eclipse/Parser/ParserRecord.hpp>
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
+auto unitSystem =  Opm::UnitSystem::newMETRIC();
+
+namespace Opm {
+void test_keyword(const ParserKeyword& inline_keyword, const std::string& json_file) {
+    boost::filesystem::path jsonPath( json_file );
+    Json::JsonObject jsonConfig( jsonPath );
+    ParserKeyword json_keyword(jsonConfig);
+    BOOST_CHECK_EQUAL( json_keyword, inline_keyword);
+    if (json_keyword.hasDimension()) {
+        const auto& parserRecord = json_keyword.getRecord(0);
+        for (size_t i=0; i < parserRecord.size(); i++){
+            const auto& item = parserRecord.get( i );
+            for (const auto& dim : item.dimensions())
+                BOOST_CHECK_NO_THROW( unitSystem.getNewDimension( dim ));
+        }
+    }
+}
+
+
+)";
+
+        for(const auto& kw_pair : loader) {
+            stream << std::endl << "BOOST_AUTO_TEST_CASE(TestKeywords" << kw_pair.first << ") {" << std::endl;
             const auto& keywords = kw_pair.second;
-            for (const auto& kw: keywords) {
-                const std::string& keywordName = kw.getName();
-                stream << startTest(keywordName);
-                stream << "    std::string jsonFile = \"" << loader.getJsonFile( keywordName) << "\";" << std::endl;
-                stream << "    boost::filesystem::path jsonPath( jsonFile );" << std::endl;
-                stream << "    Json::JsonObject jsonConfig( jsonPath );" << std::endl;
-                stream << "    ParserKeyword jsonKeyword(jsonConfig);" << std::endl;
-                stream << "    ParserKeywords::" << keywordName << " inlineKeyword;" << std::endl;
-                stream << "    BOOST_CHECK_EQUAL( jsonKeyword, inlineKeyword );" << std::endl;
-                stream << "    if (jsonKeyword.hasDimension()) {" <<std::endl;
-                stream << "        const auto& parserRecord = jsonKeyword.getRecord(0);" << std::endl;
-                stream << "        for (size_t i=0; i < parserRecord.size(); i++){" << std::endl;
-                stream << "            const auto& item = parserRecord.get( i );" << std::endl;
-                stream << "            for (const auto& dim : item.dimensions())" << std::endl;
-                stream << "                BOOST_CHECK_NO_THROW( unitSystem.getNewDimension( dim ));" << std::endl;
-                stream << "        }" << std::endl;
-                stream << "    }" << std::endl;
-                stream << endTest(  );
-            }
+            for (const auto& kw: keywords)
+                stream << "    test_keyword( ParserKeywords::" << kw.getName() << "(),\"" << loader.getJsonFile( kw.getName()) << "\");" << std::endl;
             stream << "}" << std::endl;
         }
+        stream << "}" << std::endl;
         updateFile( stream , testFile );
     }
 }
