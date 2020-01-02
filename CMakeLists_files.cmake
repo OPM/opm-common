@@ -200,6 +200,7 @@ if(ENABLE_ECL_INPUT)
           python/cxx/parsecontext.cpp
           python/cxx/parser.cpp
           python/cxx/schedule.cpp
+          python/cxx/summary_state.cpp
           python/cxx/table_manager.cpp
           python/cxx/unit_system.cpp
           python/cxx/well.cpp
