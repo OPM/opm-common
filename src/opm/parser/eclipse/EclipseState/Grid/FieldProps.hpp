@@ -345,8 +345,7 @@ private:
     void distribute_toplayer(FieldProps::FieldData<double>& field_data, const std::vector<double>& deck_data, const Box& box);
 
     void handle_keyword(const DeckKeyword& keyword, Box& box);
-    void handle_grid_section_double_keyword(const DeckKeyword& keyword, const Box& box);
-    void handle_double_keyword(const DeckKeyword& keyword, const Box& box);
+    void handle_double_keyword(Section section, const DeckKeyword& keyword, const Box& box);
     void handle_int_keyword(const DeckKeyword& keyword, const Box& box);
     void init_satfunc(const std::string& keyword, FieldData<double>& satfunc);
     void init_porv(FieldData<double>& porv);

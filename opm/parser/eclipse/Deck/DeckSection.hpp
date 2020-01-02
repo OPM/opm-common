@@ -31,6 +31,7 @@ enum class Section {
     GRID,
     EDIT,
     PROPS,
+    REGIONS,
     SOLUTION,
     SUMMARY,
     SCHEDULE
