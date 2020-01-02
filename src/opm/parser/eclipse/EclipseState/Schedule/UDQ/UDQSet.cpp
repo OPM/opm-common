@@ -17,6 +17,7 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <fnmatch.h>
+#include <algorithm>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQSet.hpp>
 
@@ -25,6 +26,10 @@ namespace Opm {
 UDQScalar::UDQScalar(double value) :
     m_value(value),
     m_defined(true)
+{}
+
+UDQScalar::UDQScalar(const std::string& wgname) :
+    m_wgname(wgname)
 {}
 
 bool UDQScalar::defined() const {
@@ -36,6 +41,10 @@ double UDQScalar::value() const {
         throw std::invalid_argument("UDQSCalar: Value not defined");
 
     return this->m_value;
+}
+
+const std::string& UDQScalar::wgname() const {
+    return this->m_wgname;
 }
 
 void UDQScalar::assign(double value) {
@@ -101,6 +110,21 @@ const std::string& UDQSet::name() const {
     return this->m_name;
 }
 
+UDQSet::UDQSet(const std::string& name, UDQVarType var_type, const std::vector<std::string>& wgnames) :
+    m_name(name),
+    m_var_type(var_type)
+{
+    for (const auto& wgname : wgnames)
+        this->values.emplace_back(wgname);
+}
+
+UDQSet::UDQSet(const std::string& name, UDQVarType var_type) :
+    m_name(name),
+    m_var_type(var_type)
+{
+    this->values.resize(1);
+}
+
 UDQSet::UDQSet(const std::string& name, UDQVarType var_type, std::size_t size) :
     m_name(name),
     m_var_type(var_type)
@@ -116,7 +140,7 @@ UDQSet::UDQSet(const std::string& name, std::size_t size) :
 
 UDQSet UDQSet::scalar(const std::string& name, double scalar_value)
 {
-    UDQSet us(name, UDQVarType::SCALAR, 1);
+    UDQSet us(name, UDQVarType::SCALAR);
     us.assign(scalar_value);
     return us;
 }
@@ -129,22 +153,14 @@ UDQSet UDQSet::empty(const std::string& name)
 
 UDQSet UDQSet::field(const std::string& name, double scalar_value)
 {
-    UDQSet us(name, UDQVarType::FIELD_VAR, 1);
+    UDQSet us(name, UDQVarType::FIELD_VAR);
     us.assign(scalar_value);
     return us;
 }
 
 
 UDQSet UDQSet::wells(const std::string& name, const std::vector<std::string>& wells) {
-    UDQSet us(name, UDQVarType::WELL_VAR, wells.size());
-
-    std::size_t index = 0;
-    for (const auto& well : wells) {
-        us.wgname_index[well] = index;
-        index += 1;
-    }
-
-    return us;
+    return UDQSet(name, UDQVarType::WELL_VAR, wells);
 }
 
 UDQSet UDQSet::wells(const std::string& name, const std::vector<std::string>& wells, double scalar_value) {
@@ -155,16 +171,9 @@ UDQSet UDQSet::wells(const std::string& name, const std::vector<std::string>& we
 
 
 UDQSet UDQSet::groups(const std::string& name, const std::vector<std::string>& groups) {
-    UDQSet us(name, UDQVarType::GROUP_VAR, groups.size());
-
-    std::size_t index = 0;
-    for (const auto& group : groups) {
-        us.wgname_index[group] = index;
-        index += 1;
-    }
-
-    return us;
+    return UDQSet(name, UDQVarType::GROUP_VAR, groups);
 }
+
 
 UDQSet UDQSet::groups(const std::string& name, const std::vector<std::string>& groups, double scalar_value) {
     UDQSet us = UDQSet::groups(name, groups);
@@ -180,16 +189,16 @@ std::size_t UDQSet::size() const {
 
 
 void UDQSet::assign(const std::string& wgname, double value) {
-    if (wgname.find('*') == std::string::npos) {
-        std::size_t index = this->wgname_index.at(wgname);
-        UDQSet::assign(index, value);
-    } else {
+    bool assigned = false;
+    for (auto& udq_value : this->values) {
         int flags = 0;
-        for (const auto& pair : this->wgname_index) {
-            if (fnmatch(wgname.c_str(), pair.first.c_str(), flags) == 0)
-                UDQSet::assign(pair.second, value);
+        if (fnmatch(wgname.c_str(), udq_value.wgname().c_str(), flags) == 0) {
+            udq_value.assign( value );
+            assigned = true;
         }
     }
+    if (!assigned)
+        throw std::out_of_range("No well/group matching: " + wgname);
 }
 
 void UDQSet::assign(double value) {
@@ -209,8 +218,8 @@ UDQVarType UDQSet::var_type() const {
 
 std::vector<std::string> UDQSet::wgnames() const {
     std::vector<std::string> names;
-    for (const auto& index_pair : this->wgname_index)
-        names.push_back(index_pair.first);
+    for (const auto& value : this->values)
+        names.push_back(value.wgname());
     return names;
 }
 
@@ -292,8 +301,10 @@ const UDQScalar& UDQSet::operator[](std::size_t index) const {
 }
 
 const UDQScalar& UDQSet::operator[](const std::string& wgname) const {
-    std::size_t index = this->wgname_index.at(wgname);
-    return this->operator[](index);
+    auto value_iter = std::find_if( this->values.begin(), this->values.end(), [&wgname](const UDQScalar& value) { return (value.wgname() == wgname );});
+    if (value_iter == this->values.end())
+        throw std::out_of_range("No such well/group: " + wgname);
+    return *value_iter;
 }
 
 

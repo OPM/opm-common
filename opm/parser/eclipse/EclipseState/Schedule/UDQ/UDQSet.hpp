@@ -32,7 +32,9 @@ namespace Opm {
 class UDQScalar {
 public:
     UDQScalar() = default;
-    UDQScalar(double value);
+    explicit UDQScalar(double value);
+    explicit UDQScalar(const std::string& wgname);
+    UDQScalar(const std::string& wgname, double value);
 
     void operator+=(const UDQScalar& rhs);
     void operator+=(double rhs);
@@ -47,14 +49,20 @@ public:
     void assign(double value);
     bool defined() const;
     double value() const;
+    const std::string& wgname() const;
 public:
     double m_value;
+    std::string m_wgname;
     bool m_defined = false;
 };
 
 
 class UDQSet {
 public:
+    UDQSet(const std::string& name);
+    UDQSet(const std::string& name, UDQVarType var_type);
+    UDQSet(const std::string& name, UDQVarType var_type, const std::vector<std::string>& wgnames);
+    UDQSet(const std::string& name, UDQVarType var_type, std::size_t size);
     UDQSet(const std::string& name, std::size_t size);
     static UDQSet scalar(const std::string& name, double value);
     static UDQSet empty(const std::string& name);
@@ -90,12 +98,9 @@ public:
     UDQVarType var_type() const;
 private:
     UDQSet() = default;
-    UDQSet(const std::string& name, UDQVarType var_type, std::size_t size);
-
 
     std::string m_name;
     UDQVarType m_var_type = UDQVarType::NONE;
-    std::unordered_map<std::string, std::size_t> wgname_index;
     std::vector<UDQScalar> values;
 };
 
