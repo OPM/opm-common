@@ -38,12 +38,28 @@ public:
     double guide_rate;
     Well::GuideRateTarget target;
     double scaling_factor;
+
+    bool operator==(const WellTarget& data) const {
+        return guide_rate == data.guide_rate &&
+               target == data.target &&
+               scaling_factor == data.scaling_factor;
+    }
 };
 
 struct GroupTarget {
     double guide_rate;
     Group::GuideRateTarget target;
+
+    bool operator==(const GroupTarget& data) const {
+        return guide_rate == data.guide_rate &&
+               target == data.target;
+    }
 };
+
+    GuideRateConfig() = default;
+    GuideRateConfig(std::shared_ptr<GuideRateModel> model,
+                    const std::unordered_map<std::string,WellTarget>& well,
+                    const std::unordered_map<std::string,GroupTarget>& group);
 
     const GuideRateModel& model() const;
     bool has_model() const;
@@ -54,6 +70,13 @@ struct GroupTarget {
     const GroupTarget& group(const std::string& group) const;
     bool has_well(const std::string& well) const;
     bool has_group(const std::string& group) const;
+
+    std::shared_ptr<GuideRateModel> getModel() const;
+    const std::unordered_map<std::string, WellTarget>& getWells() const;
+    const std::unordered_map<std::string, GroupTarget>& getGroups() const;
+
+    bool operator==(const GuideRateConfig& data) const;
+
 private:
     std::shared_ptr<GuideRateModel> m_model;
     std::unordered_map<std::string, WellTarget> wells;

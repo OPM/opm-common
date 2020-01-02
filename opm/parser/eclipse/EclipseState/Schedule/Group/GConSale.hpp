@@ -43,6 +43,15 @@ namespace Opm {
             MaxProcedure max_proc;
             double udq_undefined;
             UnitSystem unit_system;
+
+            bool operator==(const GCONSALEGroup& data) const {
+                return sales_target == data.sales_target &&
+                       max_sales_rate == data.max_sales_rate &&
+                       min_sales_rate == data.min_sales_rate &&
+                       max_proc == data.max_proc &&
+                       udq_undefined == data.udq_undefined &&
+                       unit_system == data.unit_system;
+            }
         };
 
         struct GCONSALEGroupProp {
@@ -53,6 +62,7 @@ namespace Opm {
         };
 
         GConSale() = default;
+        GConSale(const std::map<std::string, GCONSALEGroup>& group);
         
         bool has(const std::string& name) const;
         const GCONSALEGroup& get(const std::string& name) const;
@@ -60,6 +70,10 @@ namespace Opm {
         static MaxProcedure stringToProcedure(const std::string& procedure);
         void add(const std::string& name, const UDAValue& sales_target, const UDAValue& max_rate, const UDAValue& min_rate, const std::string& procedure, double udq_undefined_arg, const UnitSystem& unit_system);
         size_t size() const;
+
+        const std::map<std::string, GCONSALEGroup>& getGroups() const;
+
+        bool operator==(const GConSale& data) const;
 
     private:
         std::map<std::string, GCONSALEGroup> groups;

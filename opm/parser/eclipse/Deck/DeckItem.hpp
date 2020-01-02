@@ -44,6 +44,16 @@ namespace Opm {
         DeckItem( const std::string&, UDAValue) = delete;
         DeckItem( const std::string&, UDAValue, const std::vector<Dimension>& active_dim, const std::vector<Dimension>& default_dim);
         DeckItem( const std::string&, double, const std::vector<Dimension>& active_dim, const std::vector<Dimension>& default_dim);
+        DeckItem(const std::vector<double>& dVec,
+                 const std::vector<int>& iVec,
+                 const std::vector<std::string>& sVec,
+                 const std::vector<UDAValue>& uVec,
+                 type_tag type,
+                 const std::string& itemName,
+                 const std::vector<value::status>& valueStat,
+                 bool rawdata,
+                 const std::vector<Dimension>& activeDim,
+                 const std::vector<Dimension>& defDim);
 
         const std::string& name() const;
 
@@ -116,6 +126,17 @@ namespace Opm {
         bool operator==(const DeckItem& other) const;
         bool operator!=(const DeckItem& other) const;
         static bool to_bool(std::string string_value);
+
+        const std::vector<double>& dVal() const;
+        const std::vector<int>& iVal() const;
+        const std::vector<std::string>& sVal() const;
+        const std::vector<UDAValue>& uVal() const;
+
+        const std::vector<value::status>& valueStatus() const;
+        bool rawData() const;
+        const std::vector<Dimension>& activeDimensions() const;
+        const std::vector<Dimension>& defaultDimensions() const;
+
     private:
         mutable std::vector< double > dval;
         std::vector< int > ival;

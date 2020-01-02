@@ -53,6 +53,15 @@ public:
                    double damping_factor_arg,
                    bool use_free_gas_arg);
 
+    GuideRateModel(double time_interval_arg,
+                   Target target_arg,
+                   const std::array<double,6>& coefs_arg,
+                   bool allow_increase_arg,
+                   double damping_factor_arg,
+                   bool use_free_gas_arg,
+                   bool use_default_model_arg,
+                   const std::array<UDAValue,3>& udaCoefs_arg);
+
     GuideRateModel() = default;
     bool updateLINCOM(const UDAValue& alpha, const UDAValue& beta, const UDAValue& gamma);
     double eval(double oil_pot, double gas_pot, double wat_pot) const;
@@ -72,6 +81,12 @@ public:
     static Target convert_target(Group::GuideRateTarget group_target);
     static Target convert_target(Well::GuideRateTarget well_target);
     static double pot(Target target, double oil_pot, double gas_pot, double wat_pot);
+
+    double timeInterval() const;
+    std::array<double, 6> coefs() const;
+    bool free_gas() const;
+    bool defaultModel() const;
+    std::array<UDAValue,3> udaCoefs() const;
 private:
     double pot(double oil_pot, double gas_pot, double wat_pot) const;
     /*
