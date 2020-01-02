@@ -38,7 +38,16 @@ namespace Opm {
             SHUT
         };
 
+        Valve();
         explicit Valve(const DeckRecord& record);
+        Valve(double conFlowCoeff,
+              double conCrossA,
+              double conMaxCrossA,
+              double pipeAddLength,
+              double pipeDiam,
+              double pipeRough,
+              double pipeCrossA,
+              Status stat);
 
         // the function will return a map
         // [
@@ -67,9 +76,11 @@ namespace Opm {
         void setPipeRoughness(const double rou);
         void setPipeCrossArea(const double area);
 
+        bool operator==(const Valve& data) const;
+
     private:
-        const double m_con_flow_coeff;
-        const double m_con_cross_area;
+        double m_con_flow_coeff;
+        double m_con_cross_area;
         double m_con_max_cross_area;
 
         double m_pipe_additional_length;

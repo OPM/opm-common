@@ -36,6 +36,27 @@
 
 namespace Opm {
 
+    WellSegments::WellSegments(const std::string& wname,
+                               double depthTopSeg,
+                               double lengthTopSeg,
+                               double volumeTopSeg,
+                               LengthDepth lenDepType,
+                               CompPressureDrop compDrop,
+                               MultiPhaseModel multiPhase,
+                               const std::vector<Segment>& segments,
+                               const std::map<int,int>& segmentNumberIdx)
+       : m_well_name(wname)
+       , m_depth_top(depthTopSeg)
+       , m_length_top(lengthTopSeg)
+       , m_volume_top(volumeTopSeg)
+       , m_length_depth_type(lenDepType)
+       , m_comp_pressure_drop(compDrop)
+       , m_multiphase_model(multiPhase)
+       , m_segments(segments)
+       , segment_number_to_index(segmentNumberIdx)
+    {
+    }
+
     const std::string& WellSegments::wellName() const {
         return m_well_name;
     }
@@ -560,6 +581,18 @@ WellSegments::MultiPhaseModel WellSegments::MultiPhaseModelFromString(const std:
     } else {
         throw std::invalid_argument("Unknown enum string_value: " + string_value + " for MultiPhaseModel");
     }
-
 }
+
+WellSegments::LengthDepth WellSegments::lengthDepthType() const {
+    return m_length_depth_type;
+}
+
+const std::vector<Segment>& WellSegments::segments() const {
+    return m_segments;
+}
+
+const std::map<int,int>& WellSegments::segmentNumberIndex() const {
+    return segment_number_to_index;
+}
+
 }

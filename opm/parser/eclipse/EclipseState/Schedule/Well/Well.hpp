@@ -370,6 +370,7 @@ public:
     };
 
 
+    Well();
     Well(const std::string& wname,
           const std::string& gname,
           std::size_t init_step,
@@ -382,6 +383,35 @@ public:
           Connection::Order ordering,
           const UnitSystem& unit_system,
           double udq_undefined);
+
+    Well(const std::string& wname,
+         const std::string& gname,
+         std::size_t init_step,
+         std::size_t insert_index,
+         int headI,
+         int headJ,
+         double ref_depth,
+         const Phase& phase_arg,
+         Connection::Order ordering,
+         const UnitSystem& unit_system,
+         double udq_undefined,
+         Status status,
+         double drainageRadius,
+         bool allowCrossFlow,
+         bool automaticShutIn,
+         bool isProducer,
+         const WellGuideRate& guideRate,
+         double efficiencyFactor,
+         double solventFraction,
+         bool prediction_mode,
+         std::shared_ptr<const WellEconProductionLimits> econLimits,
+         std::shared_ptr<const WellFoamProperties> foamProperties,
+         std::shared_ptr<const WellPolymerProperties> polymerProperties,
+         std::shared_ptr<const WellTracerProperties> tracerProperties,
+         std::shared_ptr<WellConnections> connections,
+         std::shared_ptr<const WellProductionProperties> production,
+         std::shared_ptr<const WellInjectionProperties> injection,
+         std::shared_ptr<const WellSegments> segments);
 
     bool isMultiSegment() const;
     bool isAvailableForGroupControl() const;
@@ -482,6 +512,13 @@ public:
     int vfp_table_number() const;
     double alq_value() const;
     double temperature() const;
+    const UnitSystem& units() const;
+    double udqUndefined() const;
+    bool hasSegments() const;
+    const WellGuideRate& wellGuideRate() const;
+
+    bool operator==(const Well& data) const;
+
 private:
     std::string wname;
     std::string group_name;

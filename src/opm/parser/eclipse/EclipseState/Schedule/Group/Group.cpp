@@ -25,6 +25,11 @@
 
 namespace Opm {
 
+Group::Group()
+    : Group("", 0, 0, 0.0, UnitSystem())
+{
+}
+
 Group::Group(const std::string& name, std::size_t insert_index_arg, std::size_t init_step_arg, double udq_undefined_arg, const UnitSystem& unit_system_arg) :
     m_name(name),
     m_insert_index(insert_index_arg),
@@ -41,8 +46,55 @@ Group::Group(const std::string& name, std::size_t insert_index_arg, std::size_t 
         this->parent_group = "FIELD";
 }
 
+Group::Group(const std::string& gname,
+             std::size_t insert_idx,
+             std::size_t initstep,
+             double udqUndef,
+             const UnitSystem& units,
+             GroupType gtype,
+             double groupEF,
+             bool transferGroupEF,
+             int vfp,
+             const std::string& parentName,
+             const IOrderSet<std::string>& well,
+             const IOrderSet<std::string>& group,
+             const GroupInjectionProperties& injProps,
+             const GroupProductionProperties& prodProps) :
+    m_name(gname),
+    m_insert_index(insert_idx),
+    init_step(initstep),
+    udq_undefined(udqUndef),
+    unit_system(units),
+    group_type(gtype),
+    gefac(groupEF),
+    transfer_gefac(transferGroupEF),
+    vfp_table(vfp),
+    parent_group(parentName),
+    m_wells(well),
+    m_groups(group),
+    injection_properties(injProps),
+    production_properties(prodProps)
+{
+}
+
 std::size_t Group::insert_index() const {
     return this->m_insert_index;
+}
+
+std::size_t Group::initStep() const {
+    return this->init_step;
+}
+
+double Group::udqUndefined() const {
+    return this->udq_undefined;
+}
+
+const UnitSystem& Group::units() const {
+    return this->unit_system;
+}
+
+Group::GroupType Group::type() const {
+    return this->group_type;
 }
 
 bool Group::defined(size_t timeStep) const {
@@ -63,6 +115,14 @@ const Group::GroupInjectionProperties& Group::injectionProperties() const {
 
 int Group::getGroupNetVFPTable() const {
     return this->vfp_table;
+}
+
+const IOrderSet<std::string>& Group::iwells() const {
+    return m_wells;
+}
+
+const IOrderSet<std::string>& Group::igroups() const {
+    return m_groups;
 }
 
 bool Group::updateNetVFPTable(int vfp_arg) {
@@ -491,6 +551,24 @@ Group::GuideRateTarget Group::GuideRateTargetFromString( const std::string& stri
         return GuideRateTarget::NO_GUIDE_RATE;
     else
         return GuideRateTarget::NO_GUIDE_RATE;
+}
+
+bool Group::operator==(const Group& data) const
+{
+    return this->name() == data.name() &&
+           this->insert_index() == data.insert_index() &&
+           this->initStep() == data.initStep() &&
+           this->udqUndefined() == data.udqUndefined() &&
+           this->units() == data.units() &&
+           this->type() == data.type() &&
+           this->getGroupEfficiencyFactor() == data.getGroupEfficiencyFactor() &&
+           this->getTransferGroupEfficiencyFactor() == data.getTransferGroupEfficiencyFactor() &&
+           this->getGroupNetVFPTable() == data.getGroupNetVFPTable() &&
+           this->parent() == data.parent() &&
+           this->iwells() == data.iwells() &&
+           this->igroups() == data.igroups() &&
+           this->injectionProperties() == data.injectionProperties() &&
+           this->productionProperties() == data.productionProperties();
 }
 
 }
