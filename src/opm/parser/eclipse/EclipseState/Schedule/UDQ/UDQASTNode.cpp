@@ -18,14 +18,16 @@
 */
 #include <fnmatch.h>
 
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQASTNode.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunction.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunctionTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
 
-#include "UDQASTNode.hpp"
-
 namespace Opm {
 
+UDQASTNode::UDQASTNode() :
+    UDQASTNode(UDQTokenType::error)
+{}
 
 
 UDQASTNode::UDQASTNode(UDQTokenType type_arg) :
@@ -100,6 +102,22 @@ UDQASTNode::UDQASTNode(UDQTokenType type_arg,
     this->set_left(left_arg);
     this->set_right(right_arg);
 }
+
+
+UDQASTNode::UDQASTNode(UDQVarType varType, UDQTokenType typ,
+                       const std::string& stringVal,
+                       double scalarVal,
+                       const std::vector<std::string>& selectors,
+                       const std::shared_ptr<UDQASTNode>& left_arg,
+                       const std::shared_ptr<UDQASTNode>& right_arg) :
+    var_type(varType),
+    type(typ),
+    string_value(stringVal),
+    selector(selectors),
+    scalar_value(scalarVal),
+    left(left_arg),
+    right(right_arg)
+{}
 
 
 UDQASTNode::UDQASTNode(UDQTokenType type_arg,
@@ -273,6 +291,52 @@ void UDQASTNode::set_left(const UDQASTNode& arg) {
 void UDQASTNode::set_right(const UDQASTNode& arg) {
     this->right = std::make_unique<UDQASTNode>(arg);
     this->update_type(arg);
+}
+
+bool UDQASTNode::operator==(const UDQASTNode& data) const {
+    if ((this->getLeft() && !data.getLeft()) ||
+        (!this->getLeft() && data.getLeft()))
+        return false;
+
+    if (this->getLeft() && !(*this->getLeft() == *data.getLeft()))
+        return false;
+
+    if ((this->getRight() && !data.getRight()) ||
+        (!this->getRight() && data.getRight()))
+        return false;
+
+    if (this->getRight() && !(*this->getRight() == *data.getRight()))
+        return false;
+
+    return type == data.type &&
+           var_type == data.var_type &&
+           string_value == data.string_value &&
+           scalar_value == data.scalar_value &&
+           selector == data.selector;
+}
+
+const std::string& UDQASTNode::stringValue() const {
+    return string_value;
+}
+
+double UDQASTNode::scalarValue() const {
+    return scalar_value;
+}
+
+const std::vector<std::string>& UDQASTNode::getSelectors() const {
+    return selector;
+}
+
+const std::shared_ptr<UDQASTNode>& UDQASTNode::getLeft() const {
+    return left;
+}
+
+const std::shared_ptr<UDQASTNode>& UDQASTNode::getRight() const {
+    return right;
+}
+
+UDQTokenType UDQASTNode::getType() const {
+    return type;
 }
 
 }

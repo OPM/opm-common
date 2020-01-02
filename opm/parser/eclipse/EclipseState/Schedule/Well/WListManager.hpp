@@ -27,11 +27,17 @@ class WList;
 
 class WListManager {
 public:
+    WListManager() = default;
+    WListManager(const std::map<std::string,WList>& list);
     bool hasList(const std::string&) const;
     WList& getList(const std::string& name);
     const WList& getList(const std::string& name) const;
     WList& newList(const std::string& name);
     void delWell(const std::string& well);
+
+    const std::map<std::string,WList>& lists() const;
+    bool operator==(const WListManager& data) const;
+
 private:
     std::map<std::string, WList> wlists;
 };

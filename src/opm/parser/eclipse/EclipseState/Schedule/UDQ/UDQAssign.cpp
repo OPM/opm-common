@@ -22,11 +22,25 @@
 
 namespace Opm {
 
+UDQAssign::UDQAssign() :
+    m_var_type(UDQVarType::NONE)
+{
+}
+
 UDQAssign::UDQAssign(const std::string& keyword, const std::vector<std::string>& selector, double value) :
     m_keyword(keyword),
     m_var_type(UDQ::varType(keyword))
 {
     this->add_record(selector, value);
+}
+
+UDQAssign::UDQAssign(const std::string& keyword,
+                     UDQVarType varType,
+                     const std::vector<AssignRecord>& record) :
+    m_keyword(keyword),
+    m_var_type(varType),
+    records(record)
+{
 }
 
 void UDQAssign::add_record(const std::vector<std::string>& selector, double value) {
@@ -58,4 +72,15 @@ UDQSet UDQAssign::eval(const std::vector<std::string>& wells) const {
     }
     throw std::invalid_argument("Not yet implemented");
 }
+
+const std::vector<UDQAssign::AssignRecord>& UDQAssign::getRecords() const {
+    return records;
+}
+
+bool UDQAssign::operator==(const UDQAssign& data) const {
+    return this->keyword() == data.keyword() &&
+           this->var_type() == data.var_type() &&
+           this->getRecords() == data.getRecords();
+}
+
 }

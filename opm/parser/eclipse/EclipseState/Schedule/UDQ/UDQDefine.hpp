@@ -38,6 +38,8 @@ class ErrorGuard;
 
 class UDQDefine{
 public:
+    UDQDefine();
+
     UDQDefine(const UDQParams& udq_params,
               const std::string& keyword,
               const std::vector<std::string>& deck_data);
@@ -55,14 +57,21 @@ public:
               const ParseContext& parseContext,
               T&& errors);
 
+    UDQDefine(const std::string& keyword,
+              std::shared_ptr<UDQASTNode> astPtr,
+              UDQVarType type,
+              const std::string& string_data);
 
     UDQSet eval(const UDQContext& context) const;
     const std::string& keyword() const;
     const std::string& input_string() const;
     UDQVarType  var_type() const;
     std::set<UDQTokenType> func_tokens() const;
+    std::shared_ptr<UDQASTNode> getAst() const;
+
+    bool operator==(const UDQDefine& data) const;
+
 private:
-    const UDQParams& udq_params;  // Beacuse of the shared RNG stream this must be a reference.
     std::string m_keyword;
     std::shared_ptr<UDQASTNode> ast;
     UDQVarType m_var_type;

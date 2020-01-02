@@ -37,6 +37,13 @@ public:
 
     class Record{
     public:
+        Record() :
+            input_index(0),
+            control(UDAControl::WCONPROD_ORAT),
+            uad_code(0),
+            use_count(1)
+        {}
+
         Record(const std::string& udq_arg, std::size_t input_index_arg, std::size_t use_index_arg, const std::string& wgname_arg, UDAControl control_arg) :
             udq(udq_arg),
             input_index(input_index_arg),
@@ -74,6 +81,11 @@ public:
    
     class InputRecord {
     public:
+        InputRecord() :
+            input_index(0),
+            control(UDAControl::WCONPROD_ORAT)
+        {}
+
         InputRecord(std::size_t input_index_arg, const std::string& udq_arg, const std::string& wgname_arg, UDAControl control_arg) :
             input_index(input_index_arg),
             udq(udq_arg),
@@ -81,12 +93,24 @@ public:
             control(control_arg)
         {}
 
+        bool operator==(const InputRecord& other) const {
+            return this->input_index == other.input_index &&
+                   this->udq == other.udq &&
+                   this->wgname == other.wgname &&
+                   this->control == other.control;
+        }
+
         std::size_t input_index;
         std::string udq;
         std::string wgname;
         UDAControl control;
     };
 
+    UDQActive() = default;
+    UDQActive(const std::vector<InputRecord>& inputRecs,
+              const std::vector<Record>& outputRecs,
+              const std::unordered_map<std::string,std::size_t>& udqkeys,
+              const std::unordered_map<std::string,std::size_t>& wgkeys);
     int update(const UDQConfig& udq_config, const UDAValue& uda, const std::string& wgname, UDAControl control);
     std::size_t IUAD_size() const;
     std::size_t IUAP_size() const;
@@ -94,6 +118,14 @@ public:
     Record operator[](std::size_t index) const;
     const std::vector<Record>& get_iuad() const;
     std::vector<InputRecord> get_iuap() const;
+
+    const std::vector<InputRecord>& getInputRecords() const;
+    const std::vector<Record>& getOutputRecords() const;
+    const std::unordered_map<std::string, std::size_t>& getUdqKeys() const;
+    const std::unordered_map<std::string, std::size_t>& getWgKeys() const;
+
+    bool operator==(const UDQActive& data) const;
+
 private:
     std::string udq_hash(const std::string& udq, UDAControl control);
     std::string wg_hash(const std::string& wgname, UDAControl control);

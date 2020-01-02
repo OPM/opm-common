@@ -23,12 +23,12 @@
 
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQASTNode.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQDefine.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
 
 #include "../../../Parser/raw/RawConsts.hpp"
 #include "UDQParser.hpp"
-#include "UDQASTNode.hpp"
 
 namespace Opm {
 
@@ -61,6 +61,10 @@ std::vector<std::string> quote_split(const std::string& item) {
 
 }
 
+UDQDefine::UDQDefine()
+    : m_var_type(UDQVarType::NONE)
+{}
+
 template <typename T>
 UDQDefine::UDQDefine(const UDQParams& udq_params_arg,
                      const std::string& keyword,
@@ -78,12 +82,11 @@ UDQDefine::UDQDefine(const UDQParams& udq_params_arg,
 {}
 
 
-UDQDefine::UDQDefine(const UDQParams& udq_params_arg,
+UDQDefine::UDQDefine(const UDQParams& udq_params,
                      const std::string& keyword,
                      const std::vector<std::string>& deck_data,
                      const ParseContext& parseContext,
                      ErrorGuard& errors) :
-    udq_params(udq_params_arg),
     m_keyword(keyword),
     m_var_type(UDQ::varType(keyword))
 {
@@ -121,7 +124,7 @@ UDQDefine::UDQDefine(const UDQParams& udq_params_arg,
 
         }
     }
-    this->ast = std::make_shared<UDQASTNode>( UDQParser::parse(this->udq_params, this->m_var_type, this->m_keyword, tokens, parseContext, errors) );
+    this->ast = std::make_shared<UDQASTNode>( UDQParser::parse(udq_params, this->m_var_type, this->m_keyword, tokens, parseContext, errors) );
 
     this->string_data = "";
     for (std::size_t index = 0; index < deck_data.size(); index++) {
@@ -130,6 +133,18 @@ UDQDefine::UDQDefine(const UDQParams& udq_params_arg,
             this->string_data += " ";
     }
 }
+
+
+UDQDefine::UDQDefine(const std::string& keyword,
+                     std::shared_ptr<UDQASTNode> astPtr,
+                     UDQVarType type,
+                     const std::string& stringData)
+    : m_keyword(keyword)
+    , ast(astPtr)
+    , m_var_type(type)
+    , string_data(stringData)
+{}
+
 
 namespace {
 
@@ -216,6 +231,21 @@ const std::string& UDQDefine::input_string() const {
 
 std::set<UDQTokenType> UDQDefine::func_tokens() const {
     return this->ast->func_tokens();
+}
+
+std::shared_ptr<UDQASTNode> UDQDefine::getAst() const {
+    return this->ast;
+}
+
+bool UDQDefine::operator==(const UDQDefine& data) const {
+    if ((ast && !data.ast) || (!ast && data.ast))
+        return false;
+    if (ast && !(*ast == *data.ast))
+        return false;
+
+    return this->keyword() == data.keyword() &&
+           this->var_type() == data.var_type() &&
+           this->input_string() == data.input_string();
 }
 
 }

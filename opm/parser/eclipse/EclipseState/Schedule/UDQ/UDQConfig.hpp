@@ -40,8 +40,18 @@ namespace Opm {
     class Deck;
     class UDQConfig {
     public:
+        UDQConfig() = default;
         explicit UDQConfig(const Deck& deck);
         explicit UDQConfig(const UDQParams& params);
+        UDQConfig(const UDQParams& params,
+                  const UDQFunctionTable& funcTable,
+                  const std::unordered_map<std::string, UDQDefine>& definition,
+                  const std::unordered_map<std::string, UDQAssign>& assignment,
+                  const std::unordered_map<std::string, std::string>& unit,
+                  const OrderedMap<std::string, UDQIndex>& inputIdx,
+                  const std::map<UDQVarType, std::size_t>& tCount);
+
+
         const std::string& unit(const std::string& key) const;
         bool has_unit(const std::string& keyword) const;
         bool has_keyword(const std::string& keyword) const;
@@ -52,6 +62,11 @@ namespace Opm {
         void add_define(const std::string& quantity, const std::vector<std::string>& expression);
 
         std::vector<UDQDefine> definitions() const;
+        const std::unordered_map<std::string, UDQDefine>& definitionMap() const;
+        const std::unordered_map<std::string, UDQAssign>& assignmentMap() const;
+        const std::unordered_map<std::string, std::string>& unitsMap() const;
+        const OrderedMap<std::string, UDQIndex>& inputIndex() const;
+        const std::map<UDQVarType, std::size_t>& typeCount() const;
         std::vector<UDQDefine> definitions(UDQVarType var_type) const;
         std::vector<UDQInput> input() const;
 
@@ -66,6 +81,9 @@ namespace Opm {
         std::vector<UDQAssign> assignments(UDQVarType var_type) const;
         const UDQParams& params() const;
         const UDQFunctionTable& function_table() const;
+
+        bool operator==(const UDQConfig& config) const;
+
     private:
         void add_node(const std::string& quantity, UDQAction action);
 

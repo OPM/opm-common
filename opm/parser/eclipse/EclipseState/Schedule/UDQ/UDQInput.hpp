@@ -42,6 +42,13 @@ public:
     {
     }
 
+    bool operator==(const UDQIndex& data) const {
+        return insert_index == data.insert_index &&
+               typed_insert_index == data.typed_insert_index &&
+               action == data.action &&
+               var_type == data.var_type;
+    }
+
 
     std::size_t insert_index;
     std::size_t typed_insert_index;

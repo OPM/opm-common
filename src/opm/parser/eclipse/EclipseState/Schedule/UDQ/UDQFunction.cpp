@@ -33,12 +33,23 @@ UDQFunction::UDQFunction(const std::string& name) :
 {
 }
 
+UDQFunction::UDQFunction(const std::string& name, UDQTokenType funcType) :
+    m_name(name),
+    func_type(funcType)
+{
+}
+
 UDQTokenType UDQFunction::type() const {
     return this->func_type;
 }
 
 const std::string& UDQFunction::name() const {
     return this->m_name;
+}
+
+bool UDQFunction::operator==(const UDQFunction& data) const {
+    return this->name() == data.name() &&
+           this->type() == data.type();
 }
 
 UDQScalarFunction::UDQScalarFunction(const std::string&name, std::function<UDQSet(const UDQSet& arg)> f) :

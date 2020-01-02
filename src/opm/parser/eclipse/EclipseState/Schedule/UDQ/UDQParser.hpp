@@ -23,11 +23,10 @@
 #include <string>
 #include <vector>
 
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQASTNode.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunctionTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQParams.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
-
-#include "UDQASTNode.hpp"
 
 namespace Opm {
 
