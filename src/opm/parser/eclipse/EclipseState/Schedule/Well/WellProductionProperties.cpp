@@ -220,34 +220,34 @@ namespace Opm {
 
 
 
-void Well::WellProductionProperties::handleWELTARG(Well::WELTARGCMode cmode, double newValue, double siFactorG, double siFactorL, double siFactorP) {
+void Well::WellProductionProperties::handleWELTARG(Well::WELTARGCMode cmode, double newValue) {
         if (cmode == WELTARGCMode::ORAT){
             this->OilRate.assert_numeric("Can not combine UDA and WELTARG");
-            this->OilRate.reset( newValue * siFactorL );
+            this->OilRate.reset( newValue );
         }
         else if (cmode == WELTARGCMode::WRAT){
             this->WaterRate.assert_numeric("Can not combine UDA and WELTARG");
-            this->WaterRate.reset( newValue * siFactorL );
+            this->WaterRate.reset( newValue );
         }
         else if (cmode == WELTARGCMode::GRAT){
             this->GasRate.assert_numeric("Can not combine UDA and WELTARG");
-            this->GasRate.reset( newValue * siFactorG );
+            this->GasRate.reset( newValue );
         }
         else if (cmode == WELTARGCMode::LRAT){
             this->LiquidRate.assert_numeric("Can not combine UDA and WELTARG");
-            this->LiquidRate.reset( newValue * siFactorL );
+            this->LiquidRate.reset( newValue );
         }
         else if (cmode == WELTARGCMode::RESV){
             this->ResVRate.assert_numeric("Can not combine UDA and WELTARG");
-            this->ResVRate.reset( newValue * siFactorL );
+            this->ResVRate.reset( newValue );
         }
         else if (cmode == WELTARGCMode::BHP){
             this->BHPLimit.assert_numeric("Can not combine UDA and WELTARG");
-            this->BHPLimit.reset( newValue * siFactorP );
+            this->BHPLimit.reset( newValue );
         }
         else if (cmode == WELTARGCMode::THP){
             this->THPLimit.assert_numeric("Can not combine UDA and WELTARG");
-            this->THPLimit.reset(newValue * siFactorP);
+            this->THPLimit.reset(newValue );
         }
         else if (cmode == WELTARGCMode::VFP)
             this->VFPTableNumber = static_cast<int> (newValue);

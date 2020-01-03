@@ -143,38 +143,38 @@ namespace Opm {
 
 
 
-    void Well::WellInjectionProperties::handleWELTARG(WELTARGCMode cmode, double newValue, double siFactorG, double siFactorL, double siFactorP) {
+    void Well::WellInjectionProperties::handleWELTARG(WELTARGCMode cmode, double newValue) {
         if (cmode == Well::WELTARGCMode::BHP){
-            this->BHPLimit.reset( newValue * siFactorP );
+            this->BHPLimit.reset( newValue );
         }
         else if (cmode == WELTARGCMode::ORAT){
             if(this->injectorType == Well::InjectorType::OIL){
-                this->surfaceInjectionRate.reset( newValue * siFactorL );
+                this->surfaceInjectionRate.reset( newValue );
             }else{
                 std::invalid_argument("Well type must be OIL to set the oil rate");
             }
         }
         else if (cmode == WELTARGCMode::WRAT){
             if(this->injectorType == Well::InjectorType::WATER)
-                this->surfaceInjectionRate.reset( newValue * siFactorL );
+                this->surfaceInjectionRate.reset( newValue );
             else
                 std::invalid_argument("Well type must be WATER to set the water rate");
         }
         else if (cmode == WELTARGCMode::GRAT){
             if(this->injectorType == Well::InjectorType::GAS){
-                this->surfaceInjectionRate.reset( newValue * siFactorG );
+                this->surfaceInjectionRate.reset( newValue );
             }else{
                 std::invalid_argument("Well type must be GAS to set the gas rate");
             }
         }
         else if (cmode == WELTARGCMode::THP){
-            this->THPLimit.reset( newValue * siFactorP );
+            this->THPLimit.reset( newValue );
         }
         else if (cmode == WELTARGCMode::VFP){
             this->VFPTableNumber = static_cast<int> (newValue);
         }
         else if (cmode == WELTARGCMode::RESV){
-            this->reservoirInjectionRate.reset( newValue * siFactorL );
+            this->reservoirInjectionRate.reset( newValue );
         }
         else if (cmode != WELTARGCMode::GUID){
             throw std::invalid_argument("Invalid keyword (MODE) supplied");

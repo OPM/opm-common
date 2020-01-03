@@ -1491,38 +1491,6 @@ namespace {
                                   const DeckKeyword& keyword,
                                   size_t currentStep,
                                   const ParseContext& parseContext, ErrorGuard& errors) {
-        Opm::UnitSystem unitSystem = section.unitSystem();
-        /*
-          double siFactorL = unitSystem.parse("LiquidSurfaceVolume/Time").getSIScaling();
-          double siFactorG = unitSystem.parse("GasSurfaceVolume/Time").getSIScaling();
-          double siFactorP = unitSystem.parse("Pressure").getSIScaling();
-        */
-
-        /*
-          Unit system handling in the UDA values has become a complete mess. The
-          point is that the UDA values can *optionally* carry a dimension object
-          with them, and then that unit system is transparaently used when
-          calling UDAValue::get<double>(). For UDA values which come from the
-          deck they are properly decorated with unitsystem, and things work as
-          they should. But when it comes to *explicitly setting* UDA values from
-          the API, as is done in the WELTARG implementation - things are quite
-          broken.
-
-          What currently "works" is:
-
-          - The well must be fully specified with WCONPROD / WCONHIST before the
-            WELTARG keyword is used.
-
-          - The unit conversion here in handleWELTARG is bypassed by setting the
-            conversion factors to 1.0, and the conversion which comes from the
-            dim objects internalized in the UDA objects will handle things on
-            return.
-        */
-
-        const double siFactorL = 1.0;
-        const double siFactorG = 1.0;
-        const double siFactorP = 1.0;
-
         for( const auto& record : keyword ) {
 
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
@@ -1541,13 +1509,13 @@ namespace {
                     bool update = false;
                     if (well2->isProducer()) {
                         auto prop = std::make_shared<Well::WellProductionProperties>(well2->getProductionProperties());
-                        prop->handleWELTARG(cmode, newValue, siFactorG, siFactorL, siFactorP);
+                        prop->handleWELTARG(cmode, newValue);
                         update = well2->updateProduction(prop);
                         if (cmode == Well::WELTARGCMode::GUID)
                             update |= well2->updateWellGuideRate(newValue);
                     } else {
                         auto inj = std::make_shared<Well::WellInjectionProperties>(well2->getInjectionProperties());
-                        inj->handleWELTARG(cmode, newValue, siFactorG, siFactorL, siFactorP);
+                        inj->handleWELTARG(cmode, newValue);
                         update = well2->updateInjection(inj);
                         if (cmode == Well::WELTARGCMode::GUID)
                             update |= well2->updateWellGuideRate(newValue);
