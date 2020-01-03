@@ -58,13 +58,15 @@ namespace Opm {
         injectionControls=0;
     }
 
-
     Well::WellInjectionProperties::WellInjectionProperties(const std::string& wname,
                                                            const UDAValue& surfaceInjRate,
                                                            const UDAValue& reservoirInjRate,
                                                            const UDAValue& BHP,
                                                            const UDAValue& THP,
-                                                           double temp, double bhph,
+                                                           double bhp_hist,
+                                                           double thp_hist,
+                                                           double temp,
+                                                           double bhph,
                                                            double thph,
                                                            int vfpTableNum,
                                                            bool predMode,
@@ -74,8 +76,10 @@ namespace Opm {
         : name(wname),
           surfaceInjectionRate(surfaceInjRate),
           reservoirInjectionRate(reservoirInjRate),
-          BHPLimit(BHP),
-          THPLimit(THP),
+          BHPTarget(BHP),
+          THPTarget(THP),
+          bhp_hist_limit(bhp_hist),
+          thp_hist_limit(thp_hist),
           temperature(temp),
           BHPH(bhph),
           THPH(thph),
@@ -86,7 +90,6 @@ namespace Opm {
           controlMode(ctrlMode)
     {
     }
-
 
 
     void Well::WellInjectionProperties::handleWCONINJE(const DeckRecord& record, bool availableForGroupControl, const std::string& well_name) {
@@ -108,7 +111,7 @@ namespace Opm {
 
 
         if (!record.getItem("THP").defaultApplied(0)) {
-            this->THPLimit       = record.getItem("THP").get<UDAValue>(0);
+            this->THPTarget = record.getItem("THP").get<UDAValue>(0);
             this->addInjectionControl(InjectorCMode::THP);
         } else
             this->dropInjectionControl(InjectorCMode::THP);
@@ -119,11 +122,10 @@ namespace Opm {
           There is a sensible default BHP limit defined, so the BHPLimit can be
           safely set unconditionally, and we make BHP limit as a constraint based
           on that default value. It is not easy to infer from the manual, while the
-          current behavoir agrees with the behovir of Eclipse when BHPLimit is not
+          current behavoir agrees with the behavior of Eclipse when BHPLimit is not
           specified while employed during group control.
         */
-        this->setBHPLimit(record.getItem("BHP").get<UDAValue>(0).getSI());
-        // BHP control should always be there.
+        this->BHPTarget = record.getItem("BHP").get<UDAValue>(0);
         this->addInjectionControl(InjectorCMode::BHP);
 
         if (availableForGroupControl)
@@ -143,37 +145,47 @@ namespace Opm {
 
 
 
-    void Well::WellInjectionProperties::handleWELTARG(WELTARGCMode cmode, double newValue) {
+    void Well::WellInjectionProperties::handleWELTARG(WELTARGCMode cmode, double newValue, double SiFactorP) {
         if (cmode == Well::WELTARGCMode::BHP){
-            this->BHPLimit.reset( newValue );
+            if (this->predictionMode) {
+                this->BHPTarget.assert_numeric("Can not combine UDA and WELTARG");
+                this->BHPTarget.reset( newValue );
+            } else
+                this->bhp_hist_limit = newValue * SiFactorP;
         }
         else if (cmode == WELTARGCMode::ORAT){
             if(this->injectorType == Well::InjectorType::OIL){
+                this->surfaceInjectionRate.assert_numeric("Can not combine UDA and WELTARG");
                 this->surfaceInjectionRate.reset( newValue );
             }else{
                 std::invalid_argument("Well type must be OIL to set the oil rate");
             }
         }
         else if (cmode == WELTARGCMode::WRAT){
-            if(this->injectorType == Well::InjectorType::WATER)
+            if (this->injectorType == Well::InjectorType::WATER) {
+                this->surfaceInjectionRate.assert_numeric("Can not combine UDA and WELTARG");
                 this->surfaceInjectionRate.reset( newValue );
+            }
             else
                 std::invalid_argument("Well type must be WATER to set the water rate");
         }
         else if (cmode == WELTARGCMode::GRAT){
             if(this->injectorType == Well::InjectorType::GAS){
+                this->surfaceInjectionRate.assert_numeric("Can not combine UDA and WELTARG");
                 this->surfaceInjectionRate.reset( newValue );
             }else{
                 std::invalid_argument("Well type must be GAS to set the gas rate");
             }
         }
         else if (cmode == WELTARGCMode::THP){
-            this->THPLimit.reset( newValue );
+            this->THPTarget.assert_numeric("Can not combine UDA and WELTARG");
+            this->THPTarget.reset( newValue );
         }
         else if (cmode == WELTARGCMode::VFP){
             this->VFPTableNumber = static_cast<int> (newValue);
         }
         else if (cmode == WELTARGCMode::RESV){
+            this->surfaceInjectionRate.assert_numeric("Can not combine UDA and WELTARG");
             this->reservoirInjectionRate.reset( newValue );
         }
         else if (cmode != WELTARGCMode::GUID){
@@ -210,7 +222,7 @@ namespace Opm {
 
         // when well is under BHP control, we use its historical BHP value as BHP limit
         if (newControlMode == InjectorCMode::BHP) {
-            this->setBHPLimit(this->BHPH);
+            this->bhp_hist_limit = this->BHPH;
         } else {
             const bool switching_from_producer = is_producer;
             const bool switching_from_prediction = this->predictionMode;
@@ -238,10 +250,12 @@ namespace Opm {
         if ((surfaceInjectionRate == other.surfaceInjectionRate) &&
             (reservoirInjectionRate == other.reservoirInjectionRate) &&
             (temperature == other.temperature) &&
-            (BHPLimit == other.BHPLimit) &&
-            (THPLimit == other.THPLimit) &&
+            (BHPTarget == other.BHPTarget) &&
+            (THPTarget == other.THPTarget) &&
             (BHPH == other.BHPH) &&
             (THPH == other.THPH) &&
+            (bhp_hist_limit == other.bhp_hist_limit) &&
+            (thp_hist_limit == other.thp_hist_limit) &&
             (VFPTableNumber == other.VFPTableNumber) &&
             (predictionMode == other.predictionMode) &&
             (injectionControls == other.injectionControls) &&
@@ -259,12 +273,13 @@ namespace Opm {
     void Well::WellInjectionProperties::resetDefaultHistoricalBHPLimit() {
         // this default BHP value is from simulation result,
         // without finding any related document
-        BHPLimit.reset( 6891.2 * unit::barsa );
+        this->bhp_hist_limit = 6891.2 * unit::barsa;
     }
 
-    void Well::WellInjectionProperties::setBHPLimit(const double limit) {
-        BHPLimit.reset( limit );
+    void Well::WellInjectionProperties::resetBHPLimit() {
+        this->bhp_hist_limit = 0;
     }
+
 
     std::ostream& operator<<( std::ostream& stream,
                               const Well::WellInjectionProperties& wp ) {
@@ -273,8 +288,8 @@ namespace Opm {
             << "surfacerate: "      << wp.surfaceInjectionRate << ", "
             << "reservoir rate "    << wp.reservoirInjectionRate << ", "
             << "temperature: "      << wp.temperature << ", "
-            << "BHP limit: "        << wp.BHPLimit << ", "
-            << "THP limit: "        << wp.THPLimit << ", "
+            << "BHP target: "       << wp.BHPTarget << ", "
+            << "THP target: "       << wp.THPTarget << ", "
             << "BHPH: "             << wp.BHPH << ", "
             << "THPH: "             << wp.THPH << ", "
             << "VFP table: "        << wp.VFPTableNumber << ", "
@@ -285,14 +300,18 @@ namespace Opm {
     }
 
 
-Well::InjectionControls Well::WellInjectionProperties::controls(const UnitSystem& unit_sys, const SummaryState& st, double udq_def) const {
+     Well::InjectionControls Well::WellInjectionProperties::controls(const UnitSystem& unit_sys, const SummaryState& st, double udq_def) const {
         InjectionControls controls(this->injectionControls);
 
         controls.surface_rate = UDA::eval_well_uda_rate(this->surfaceInjectionRate, this->name, st, udq_def, this->injectorType, unit_sys);
         controls.reservoir_rate = UDA::eval_well_uda(this->reservoirInjectionRate, this->name, st, udq_def);
-        controls.bhp_limit = UDA::eval_well_uda(this->BHPLimit, this->name, st, udq_def);
-        controls.thp_limit = UDA::eval_well_uda(this->THPLimit, this->name, st, udq_def);
-
+        if (this->predictionMode) {
+            controls.bhp_limit = UDA::eval_well_uda(this->BHPTarget, this->name, st, udq_def);
+            controls.thp_limit = UDA::eval_well_uda(this->THPTarget, this->name, st, udq_def);
+        } else {
+            controls.bhp_limit = this->bhp_hist_limit;
+            controls.thp_limit = this->thp_hist_limit;
+        }
         controls.temperature = this->temperature;
         controls.injector_type = this->injectorType;
         controls.cmode = this->controlMode;
@@ -307,8 +326,8 @@ Well::InjectionControls Well::WellInjectionProperties::controls(const UnitSystem
 
         update_count += active.update(udq_config, this->surfaceInjectionRate, this->name, UDAControl::WCONINJE_RATE);
         update_count += active.update(udq_config, this->reservoirInjectionRate, this->name, UDAControl::WCONINJE_RESV);
-        update_count += active.update(udq_config, this->BHPLimit, this->name, UDAControl::WCONINJE_BHP);
-        update_count += active.update(udq_config, this->THPLimit, this->name, UDAControl::WCONINJE_THP);
+        update_count += active.update(udq_config, this->BHPTarget, this->name, UDAControl::WCONINJE_BHP);
+        update_count += active.update(udq_config, this->THPTarget, this->name, UDAControl::WCONINJE_THP);
 
         return (update_count > 0);
     }

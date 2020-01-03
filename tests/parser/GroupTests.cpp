@@ -424,9 +424,12 @@ BOOST_AUTO_TEST_CASE(TESTGCONSALE) {
     BOOST_CHECK(gconsale.has("G1"));
     BOOST_CHECK(!gconsale.has("G2"));
     const GConSale::GCONSALEGroup& group = gconsale.get("G1");
-    BOOST_CHECK_EQUAL(group.sales_target.get<double>(),   50000 * metric_to_si);
-    BOOST_CHECK_EQUAL(group.max_sales_rate.get<double>(), 55000 * metric_to_si);
-    BOOST_CHECK_EQUAL(group.min_sales_rate.get<double>(), 45000 * metric_to_si);
+    BOOST_CHECK_EQUAL(group.sales_target.get<double>(),   50000);
+    BOOST_CHECK_EQUAL(group.max_sales_rate.get<double>(), 55000);
+    BOOST_CHECK_EQUAL(group.min_sales_rate.get<double>(), 45000);
+    BOOST_CHECK_EQUAL(group.sales_target.getSI(),   50000 * metric_to_si);
+    BOOST_CHECK_EQUAL(group.max_sales_rate.getSI(), 55000 * metric_to_si);
+    BOOST_CHECK_EQUAL(group.min_sales_rate.getSI(), 45000 * metric_to_si);
     BOOST_CHECK(group.max_proc == GConSale::MaxProcedure::WELL);
 
     const auto& gconsump = schedule.gConSump(0);
@@ -434,8 +437,10 @@ BOOST_AUTO_TEST_CASE(TESTGCONSALE) {
     BOOST_CHECK(gconsump.has("G1"));
     BOOST_CHECK(gconsump.has("G2"));
     const GConSump::GCONSUMPGroup group1 = gconsump.get("G1");
-    BOOST_CHECK_EQUAL(group1.consumption_rate.get<double>(), 20 * metric_to_si);
-    BOOST_CHECK_EQUAL(group1.import_rate.get<double>(), 50 * metric_to_si);
+    BOOST_CHECK_EQUAL(group1.consumption_rate.get<double>(), 20);
+    BOOST_CHECK_EQUAL(group1.import_rate.get<double>(), 50);
+    BOOST_CHECK_EQUAL(group1.consumption_rate.getSI(), 20 * metric_to_si);
+    BOOST_CHECK_EQUAL(group1.import_rate.getSI(), 50 * metric_to_si);
     BOOST_CHECK( group1.network_node == "a_node" );
 
     const GConSump::GCONSUMPGroup group2 = gconsump.get("G2");

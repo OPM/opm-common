@@ -823,7 +823,7 @@ namespace {
                         well2->updateProducer(true);
 
                         auto inj_props = std::make_shared<Well::WellInjectionProperties>(well2->getInjectionProperties());
-                        inj_props->setBHPLimit(0);
+                        inj_props->resetBHPLimit();
                         well2->updateInjection(inj_props);
                     }
 
@@ -1491,6 +1491,8 @@ namespace {
                                   const DeckKeyword& keyword,
                                   size_t currentStep,
                                   const ParseContext& parseContext, ErrorGuard& errors) {
+        Opm::UnitSystem unitSystem = section.unitSystem();
+        const double SiFactorP = unitSystem.parse("Pressure").getSIScaling();
         for( const auto& record : keyword ) {
 
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
@@ -1509,13 +1511,13 @@ namespace {
                     bool update = false;
                     if (well2->isProducer()) {
                         auto prop = std::make_shared<Well::WellProductionProperties>(well2->getProductionProperties());
-                        prop->handleWELTARG(cmode, newValue);
+                        prop->handleWELTARG(cmode, newValue, SiFactorP);
                         update = well2->updateProduction(prop);
                         if (cmode == Well::WELTARGCMode::GUID)
                             update |= well2->updateWellGuideRate(newValue);
                     } else {
                         auto inj = std::make_shared<Well::WellInjectionProperties>(well2->getInjectionProperties());
-                        inj->handleWELTARG(cmode, newValue);
+                        inj->handleWELTARG(cmode, newValue, SiFactorP);
                         update = well2->updateInjection(inj);
                         if (cmode == Well::WELTARGCMode::GUID)
                             update |= well2->updateWellGuideRate(newValue);

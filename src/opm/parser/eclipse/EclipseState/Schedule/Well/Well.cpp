@@ -254,7 +254,7 @@ bool Well::updateEconLimits(std::shared_ptr<WellEconProductionLimits> econ_limit
 void Well::switchToProducer() {
     auto p = std::make_shared<WellInjectionProperties>(this->getInjectionProperties());
 
-    p->BHPLimit.reset( 0 );
+    p->BHPTarget.reset(0);
     p->dropInjectionControl( Opm::Well::InjectorCMode::BHP );
     this->updateInjection( p );
     this->updateProducer(true);
@@ -264,8 +264,7 @@ void Well::switchToProducer() {
 void Well::switchToInjector() {
     auto p = std::make_shared<WellProductionProperties>(getProductionProperties());
 
-    p->BHPLimit.assert_numeric();
-    p->BHPLimit.reset(0);
+    p->setBHPLimit(0);
     p->dropProductionControl( ProducerCMode::BHP );
     this->updateProduction( p );
     this->updateProducer( false );
