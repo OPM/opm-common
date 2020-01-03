@@ -19,7 +19,7 @@
 
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/Deck/Section.hpp>
+#include <opm/parser/eclipse/Deck/DeckSection.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/SimulationConfig/ThresholdPressure.hpp>
@@ -45,7 +45,7 @@ namespace Opm {
         m_restart(restart)
     {
 
-        if( !Section::hasRUNSPEC( deck ) || (!Section::hasSOLUTION( deck ) && !Section::hasGRID( deck )) )
+        if( !DeckSection::hasRUNSPEC( deck ) || (!DeckSection::hasSOLUTION( deck ) && !DeckSection::hasGRID( deck )) )
             return;
 
         RUNSPECSection runspecSection( deck );

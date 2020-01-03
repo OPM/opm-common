@@ -26,7 +26,7 @@
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
-#include <opm/parser/eclipse/Deck/Section.hpp>
+#include <opm/parser/eclipse/Deck/DeckSection.hpp>
 
 namespace Opm {
 
@@ -59,27 +59,27 @@ namespace Opm {
         return { first, last };
     }
 
-    Section::Section( const Deck& deck, const std::string& section )
+    DeckSection::DeckSection( const Deck& deck, const std::string& section )
         : DeckView( find_section( deck, section ) ),
           section_name( section ),
           units( deck.getActiveUnitSystem() )
     {}
 
-    const std::string& Section::name() const {
+    const std::string& DeckSection::name() const {
         return this->section_name;
     }
 
-    const UnitSystem& Section::unitSystem() const {
+    const UnitSystem& DeckSection::unitSystem() const {
         return this->units;
     }
 
-    bool Section::hasRUNSPEC(const Deck& deck) { return deck.hasKeyword( "RUNSPEC" ); }
-    bool Section::hasGRID(const Deck& deck) { return deck.hasKeyword( "GRID" ); }
-    bool Section::hasEDIT(const Deck& deck) { return deck.hasKeyword( "EDIT" ); }
-    bool Section::hasPROPS(const Deck& deck) { return deck.hasKeyword( "PROPS" ); }
-    bool Section::hasREGIONS(const Deck& deck) { return deck.hasKeyword( "REGIONS" ); }
-    bool Section::hasSOLUTION(const Deck& deck) { return deck.hasKeyword( "SOLUTION" ); }
-    bool Section::hasSUMMARY(const Deck& deck) { return deck.hasKeyword( "SUMMARY" ); }
-    bool Section::hasSCHEDULE(const Deck& deck) { return deck.hasKeyword( "SCHEDULE" ); }
+    bool DeckSection::hasRUNSPEC(const Deck& deck) { return deck.hasKeyword( "RUNSPEC" ); }
+    bool DeckSection::hasGRID(const Deck& deck) { return deck.hasKeyword( "GRID" ); }
+    bool DeckSection::hasEDIT(const Deck& deck) { return deck.hasKeyword( "EDIT" ); }
+    bool DeckSection::hasPROPS(const Deck& deck) { return deck.hasKeyword( "PROPS" ); }
+    bool DeckSection::hasREGIONS(const Deck& deck) { return deck.hasKeyword( "REGIONS" ); }
+    bool DeckSection::hasSOLUTION(const Deck& deck) { return deck.hasKeyword( "SOLUTION" ); }
+    bool DeckSection::hasSUMMARY(const Deck& deck) { return deck.hasKeyword( "SUMMARY" ); }
+    bool DeckSection::hasSCHEDULE(const Deck& deck) { return deck.hasKeyword( "SCHEDULE" ); }
 
 }

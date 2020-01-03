@@ -31,7 +31,7 @@
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
-#include <opm/parser/eclipse/Deck/Section.hpp>
+#include <opm/parser/eclipse/Deck/DeckSection.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
@@ -554,4 +554,34 @@ RTEMPVD
     double celcius_offset = 273.15;
     BOOST_CHECK_CLOSE( tempi[0], 0 + celcius_offset , 1e-6);
     BOOST_CHECK_CLOSE( tempi[1], 100 + celcius_offset , 1e-6);
+}
+
+BOOST_AUTO_TEST_CASE(GridAndEdit) {
+    const std::string deck_string = R"(
+RUNSPEC
+
+GRID
+MULTZ
+  125*2 /
+MULTX
+  125*2 /
+MULTX
+  125*2 /
+PORO
+  125*0.15 /
+EDIT
+MULTZ
+  125*2 /
+)";
+
+    Opm::Parser parser;
+    Opm::Deck deck = parser.parseString(deck_string);
+    Opm::EclipseGrid grid(5,5,5);
+    Opm::TableManager tm(deck);
+    FieldPropsManager fpm(deck, grid, tm);
+
+    const auto& multz = fpm.get<double>("MULTZ");
+    const auto& multx = fpm.get<double>("MULTX");
+    BOOST_CHECK_EQUAL( multz[0], 4 );
+    BOOST_CHECK_EQUAL( multx[0], 2 );
 }

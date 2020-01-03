@@ -27,7 +27,7 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 
-#include <opm/parser/eclipse/Deck/Section.hpp>
+#include <opm/parser/eclipse/Deck/DeckSection.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>

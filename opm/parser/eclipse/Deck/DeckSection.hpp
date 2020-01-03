@@ -26,14 +26,26 @@
 
 namespace Opm {
 
+enum class Section {
+    RUNSPEC,
+    GRID,
+    EDIT,
+    PROPS,
+    REGIONS,
+    SOLUTION,
+    SUMMARY,
+    SCHEDULE
+};
+
     class UnitSystem;
     class Parser;
 
-class Section : public DeckView {
+
+class DeckSection : public DeckView {
     public:
         using DeckView::const_iterator;
 
-        Section( const Deck& deck, const std::string& startKeyword );
+        DeckSection( const Deck& deck, const std::string& startKeyword );
         const std::string& name() const;
         const UnitSystem& unitSystem() const;
 
@@ -58,52 +70,52 @@ class Section : public DeckView {
 
     };
 
-    class RUNSPECSection : public Section {
+    class RUNSPECSection : public DeckSection {
     public:
-        using Section::const_iterator;
-        explicit RUNSPECSection(const Deck& deck) : Section(deck, "RUNSPEC") {}
+        using DeckSection::const_iterator;
+        explicit RUNSPECSection(const Deck& deck) : DeckSection(deck, "RUNSPEC") {}
     };
 
-    class GRIDSection : public Section {
+    class GRIDSection : public DeckSection {
     public:
-        using Section::const_iterator;
-        explicit GRIDSection(const Deck& deck) : Section(deck, "GRID") {}
+        using DeckSection::const_iterator;
+        explicit GRIDSection(const Deck& deck) : DeckSection(deck, "GRID") {}
     };
 
-    class EDITSection : public Section {
+    class EDITSection : public DeckSection {
     public:
-        using Section::const_iterator;
-        explicit EDITSection(const Deck& deck) : Section(deck, "EDIT") {}
+        using DeckSection::const_iterator;
+        explicit EDITSection(const Deck& deck) : DeckSection(deck, "EDIT") {}
     };
 
-    class PROPSSection : public Section {
+    class PROPSSection : public DeckSection {
     public:
-        using Section::const_iterator;
-        explicit PROPSSection(const Deck& deck) : Section(deck, "PROPS") {}
+        using DeckSection::const_iterator;
+        explicit PROPSSection(const Deck& deck) : DeckSection(deck, "PROPS") {}
     };
 
-    class REGIONSSection : public Section {
+    class REGIONSSection : public DeckSection {
     public:
-        using Section::const_iterator;
-        explicit REGIONSSection(const Deck& deck) : Section(deck, "REGIONS") {}
+        using DeckSection::const_iterator;
+        explicit REGIONSSection(const Deck& deck) : DeckSection(deck, "REGIONS") {}
     };
 
-    class SOLUTIONSection : public Section {
+    class SOLUTIONSection : public DeckSection {
     public:
-        using Section::const_iterator;
-        explicit SOLUTIONSection(const Deck& deck) : Section(deck, "SOLUTION") {}
+        using DeckSection::const_iterator;
+        explicit SOLUTIONSection(const Deck& deck) : DeckSection(deck, "SOLUTION") {}
     };
 
-    class SUMMARYSection : public Section {
+    class SUMMARYSection : public DeckSection {
     public:
-        using Section::const_iterator;
-        explicit SUMMARYSection(const Deck& deck) : Section(deck, "SUMMARY") {}
+        using DeckSection::const_iterator;
+        explicit SUMMARYSection(const Deck& deck) : DeckSection(deck, "SUMMARY") {}
     };
 
-    class SCHEDULESection : public Section {
+    class SCHEDULESection : public DeckSection {
     public:
-        using Section::const_iterator;
-        explicit SCHEDULESection(const Deck& deck) : Section(deck, "SCHEDULE") {}
+        using DeckSection::const_iterator;
+        explicit SCHEDULESection(const Deck& deck) : DeckSection(deck, "SCHEDULE") {}
     };
 }
 

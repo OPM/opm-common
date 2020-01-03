@@ -47,7 +47,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/Deck/DeckKeyword.cpp
     src/opm/parser/eclipse/Deck/DeckRecord.cpp
     src/opm/parser/eclipse/Deck/DeckOutput.cpp
-    src/opm/parser/eclipse/Deck/Section.cpp
+    src/opm/parser/eclipse/Deck/DeckSection.cpp
     src/opm/parser/eclipse/Deck/UDAValue.cpp
     src/opm/parser/eclipse/Python/Python.cpp
     src/opm/parser/eclipse/EclipseState/AquiferCT.cpp
@@ -665,7 +665,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunctionTable.hpp
        opm/parser/eclipse/Deck/DeckItem.hpp
        opm/parser/eclipse/Deck/Deck.hpp
-       opm/parser/eclipse/Deck/Section.hpp
+       opm/parser/eclipse/Deck/DeckSection.hpp
        opm/parser/eclipse/Deck/DeckOutput.hpp
        opm/parser/eclipse/Deck/DeckValue.hpp
        opm/parser/eclipse/Deck/DeckKeyword.hpp

@@ -31,7 +31,7 @@
 #include <opm/io/eclipse/EclFile.hpp>
 #include <opm/io/eclipse/EclOutput.hpp>
 
-#include <opm/parser/eclipse/Deck/Section.hpp>
+#include <opm/parser/eclipse/Deck/DeckSection.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
