@@ -20,6 +20,8 @@
 #ifndef LOCATION_HPP
 #define LOCATION_HPP
 
+namespace Opm {
+
 class Location {
 public:
     std::string filename = "<memory string>";
@@ -30,6 +32,13 @@ public:
         filename(std::move(fname)),
         lineno(lno)
     {}
+
+    bool operator==(const Location& data) const {
+        return filename == data.filename &&
+               lineno == data.lineno;
+    }
 };
+
+}
 
 #endif
