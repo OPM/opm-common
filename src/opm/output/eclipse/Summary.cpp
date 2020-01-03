@@ -635,7 +635,7 @@ inline quantity res_vol_production_target( const fn_args& args ) {
     double sum = 0.0;
     for( const Opm::Well& sched_well : args.schedule_wells )
         if (sched_well.getProductionProperties().predictionMode)
-            sum += sched_well.getProductionProperties().ResVRate.get<double>();
+            sum += sched_well.getProductionProperties().ResVRate.getSI();
 
     return { sum, measure::rate };
 }

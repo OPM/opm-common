@@ -24,7 +24,7 @@
 
 void Opm::WellFoamProperties::handleWFOAM(const DeckRecord& rec)
 {
-    this->m_foamConcentration = rec.getItem("FOAM_CONCENTRATION").get<UDAValue>(0).get<double>();
+    this->m_foamConcentration = rec.getItem("FOAM_CONCENTRATION").get<UDAValue>(0).getSI();
 }
 
 bool Opm::WellFoamProperties::operator==(const WellFoamProperties& other) const

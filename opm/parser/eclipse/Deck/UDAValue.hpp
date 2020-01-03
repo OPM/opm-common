@@ -39,6 +39,8 @@ public:
     template<typename T>
     T get() const;
 
+    double getSI() const;
+
     template<typename T>
     bool is() const;
 

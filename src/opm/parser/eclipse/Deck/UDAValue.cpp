@@ -75,6 +75,12 @@ bool UDAValue::is<std::string>() const {
 template<>
 double UDAValue::get() const {
     this->assert_numeric();
+    return this->double_value;
+}
+
+
+double UDAValue::getSI() const {
+    this->assert_numeric();
     return this->dim.convertRawToSi(this->double_value);
 }
 

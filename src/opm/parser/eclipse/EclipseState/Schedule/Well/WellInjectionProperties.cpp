@@ -122,7 +122,7 @@ namespace Opm {
           current behavoir agrees with the behovir of Eclipse when BHPLimit is not
           specified while employed during group control.
         */
-        this->setBHPLimit(record.getItem("BHP").get<UDAValue>(0).get<double>());
+        this->setBHPLimit(record.getItem("BHP").get<UDAValue>(0).getSI());
         // BHP control should always be there.
         this->addInjectionControl(InjectorCMode::BHP);
 

@@ -1278,7 +1278,7 @@ namespace {
         for( const auto& record : keyword ) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = wellNames( wellNamePattern , currentStep);
-            double fraction = record.getItem("SOLVENT_FRACTION").get< UDAValue >(0).get<double>();
+            double fraction = record.getItem("SOLVENT_FRACTION").get< UDAValue >(0).getSI();
 
             if (well_names.empty())
                 invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
@@ -1310,7 +1310,7 @@ namespace {
                 invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
 
             for(const auto& well_name : well_names) {
-                double tracerConcentration = record.getItem("CONCENTRATION").get< UDAValue >(0).get<double>();
+                double tracerConcentration = record.getItem("CONCENTRATION").get< UDAValue >(0).getSI();
                 const std::string& tracerName = record.getItem("TRACER").getTrimmedString(0);
                 {
                     auto well = std::make_shared<Well>( this->getWell(well_name, currentStep));

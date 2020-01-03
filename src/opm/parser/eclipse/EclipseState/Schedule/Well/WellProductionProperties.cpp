@@ -96,12 +96,13 @@ namespace Opm {
     {
         this->predictionMode = false;
         // update LiquidRate
-        this->LiquidRate = UDAValue(this->WaterRate.get<double>() + this->OilRate.get<double>());
+        this->LiquidRate = UDAValue(this->WaterRate.getSI() + this->OilRate.getSI());
 
         if ( record.getItem( "BHP" ).hasValue(0) )
-            this->BHPH = record.getItem("BHP").get<UDAValue>(0).get<double>();
+            this->BHPH = record.getItem("BHP").get<UDAValue>(0).getSI();
+
         if ( record.getItem( "THP" ).hasValue(0) )
-            this->THPH = record.getItem("THP").get<UDAValue>(0).get<double>();
+            this->THPH = record.getItem("THP").get<UDAValue>(0).getSI();
 
         const auto& cmodeItem = record.getItem("CMODE");
         if ( cmodeItem.defaultApplied(0) ) {
@@ -140,7 +141,7 @@ namespace Opm {
         if (vfp_table != 0)
             this->VFPTableNumber = vfp_table;
 
-        auto alq_value = record.getItem("Lift").get< double >(0); //NOTE: Unit of ALQ is never touched
+        auto alq_value = record.getItem("Lift").get<double>(0); //NOTE: Unit of ALQ is never touched
         if (alq_value != 0.)
             this->ALQValue = alq_value;
     }
@@ -316,7 +317,7 @@ bool Well::WellProductionProperties::effectiveHistoryProductionControl(const Wel
     }
 
     double Well::WellProductionProperties::getBHPLimit() const {
-        return BHPLimit.get<double>();
+        return BHPLimit.getSI();
     }
 
 
