@@ -44,7 +44,46 @@ namespace Opm {
     */
 
     public:
+        Tuning() = default;
         explicit Tuning(const TimeMap& timemap);
+        Tuning(const DynamicState<double>& TSINIT,
+               const DynamicState<double>& TSMAXZ,
+               const DynamicState<double>& TSMINZ,
+               const DynamicState<double>& TSMCHP,
+               const DynamicState<double>& TSFMAX,
+               const DynamicState<double>& TSFMIN,
+               const DynamicState<double>& TSFCNV,
+               const DynamicState<double>& TFDIFF,
+               const DynamicState<double>& THRUPT,
+               const DynamicState<double>& TMAXWC,
+               const DynamicState<int>& TMAXWC_has_value,
+               const DynamicState<double>& TRGTTE,
+               const DynamicState<double>& TRGCNV,
+               const DynamicState<double>& TRGMBE,
+               const DynamicState<double>& TRGLCV,
+               const DynamicState<double>& XXXTTE,
+               const DynamicState<double>& XXXCNV,
+               const DynamicState<double>& XXXMBE,
+               const DynamicState<double>& XXXLCV,
+               const DynamicState<double>& XXXWFL,
+               const DynamicState<double>& TRGFIP,
+               const DynamicState<double>& TRGSFT,
+               const DynamicState<int>& TRGSFT_has_value,
+               const DynamicState<double>& THIONX,
+               const DynamicState<int>& TRWGHT,
+               const DynamicState<int>& NEWTMX,
+               const DynamicState<int>& NEWTMN,
+               const DynamicState<int>& LITMAX,
+               const DynamicState<int>& LITMIN,
+               const DynamicState<int>& MXWSIT,
+               const DynamicState<int>& MXWPIT,
+               const DynamicState<double>& DDPLIM,
+               const DynamicState<double>& DDSLIM,
+               const DynamicState<double>& TGRDPR,
+               const DynamicState<double>& XXXDPR,
+               const DynamicState<int>& XXXDPR_has_value,
+               const std::map<std::string, bool>& resetValue);
+
 
         void setTuningInitialValue(const std::string& tuningItem, double value,bool resetVector);
         void setTuningInitialValue(const std::string& tuningItem, int value, bool resetVector);
@@ -126,6 +165,48 @@ namespace Opm {
         void   setTRGDPR(size_t timestep, double TRGDPR);
         void   setXXXDPR(size_t timestep, double XXXDPR);
 
+        const DynamicState<double>& getTSINIT() const;
+        const DynamicState<double>& getTSMAXZ() const;
+        const DynamicState<double>& getTSMINZ() const;
+        const DynamicState<double>& getTSMCHP() const;
+        const DynamicState<double>& getTSFMAX() const;
+        const DynamicState<double>& getTSFMIN() const;
+        const DynamicState<double>& getTSFCNV() const;
+        const DynamicState<double>& getTFDIFF() const;
+        const DynamicState<double>& getTHRUPT() const;
+        const DynamicState<double>& getTMAXWC() const;
+        const DynamicState<int>& getTMAXWC_has_value() const;
+
+        const DynamicState<double>& getTRGTTE() const;
+        const DynamicState<double>& getTRGCNV() const;
+        const DynamicState<double>& getTRGMBE() const;
+        const DynamicState<double>& getTRGLCV() const;
+        const DynamicState<double>& getXXXTTE() const;
+        const DynamicState<double>& getXXXCNV() const;
+        const DynamicState<double>& getXXXMBE() const;
+        const DynamicState<double>& getXXXLCV() const;
+        const DynamicState<double>& getXXXWFL() const;
+        const DynamicState<double>& getTRGFIP() const;
+        const DynamicState<double>& getTRGSFT() const;
+        const DynamicState<int>& getTRGSFT_has_value() const;
+        const DynamicState<double>& getTHIONX() const;
+        const DynamicState<int>& getTRWGHT() const;
+
+        const DynamicState<int>& getNEWTMX() const;
+        const DynamicState<int>& getNEWTMN() const;
+        const DynamicState<int>& getLITMAX() const;
+        const DynamicState<int>& getLITMIN() const;
+        const DynamicState<int>& getMXWSIT() const;
+        const DynamicState<int>& getMXWPIT() const;
+        const DynamicState<double>& getDDPLIM() const;
+        const DynamicState<double>& getDDSLIM() const;
+        const DynamicState<double>& getTRGDPR() const;
+        const DynamicState<double>& getXXXDPR() const;
+        const DynamicState<int>& getXXXDPR_has_value() const;
+
+        const std::map<std::string,bool>& getResetValues() const;
+
+        bool operator==(const Tuning& data) const;
 
     private:
         /* Record1 */

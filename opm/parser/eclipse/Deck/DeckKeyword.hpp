@@ -41,11 +41,18 @@ namespace Opm {
 
         typedef std::vector< DeckRecord >::const_iterator const_iterator;
 
+        DeckKeyword();
         explicit DeckKeyword(const ParserKeyword& parserKeyword);
         DeckKeyword(const Location& location, const std::string& keywordName);
         DeckKeyword(const ParserKeyword& parserKeyword, const std::vector<std::vector<DeckValue>>& record_list, UnitSystem& system_active, UnitSystem& system_default);
         DeckKeyword(const ParserKeyword& parserKeyword, const std::vector<int>& data);
         DeckKeyword(const ParserKeyword& parserKeyword, const std::vector<double>& data, UnitSystem& system_active, UnitSystem& system_default);
+        DeckKeyword(const std::string& kwName,
+                    const Location& loc,
+                    const std::vector<DeckRecord>& record,
+                    bool dataKw,
+                    bool slashTerminated);
+
 
         const std::string& name() const;
         void setFixedSize();
@@ -56,11 +63,13 @@ namespace Opm {
         void addRecord(DeckRecord&& record);
         const DeckRecord& getRecord(size_t index) const;
         DeckRecord& getRecord(size_t index);
+        const std::vector<DeckRecord>& records() const;
         const DeckRecord& getDataRecord() const;
         void setDataKeyword(bool isDataKeyword = true);
         void setDoubleRecordKeyword(bool isDoubleRecordKeyword = true);
         bool isDataKeyword() const;
         bool isDoubleRecordKeyword() const;
+        bool isSlashTerminated() const;
 
         const std::vector<int>& getIntData() const;
         const std::vector<double>& getRawDoubleData() const;

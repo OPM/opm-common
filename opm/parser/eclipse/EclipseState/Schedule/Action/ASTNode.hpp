@@ -17,6 +17,9 @@ public:
     ASTNode(TokenType type_arg);
     ASTNode(double value);
     ASTNode(TokenType type_arg, FuncType func_type_arg, const std::string& func_arg, const std::vector<std::string>& arg_list_arg);
+    ASTNode(TokenType type_arg, FuncType ftype, const std::string& func_arg,
+            const std::vector<std::string>& args, double number,
+            const std::vector<ASTNode>& childs);
 
     Action::Result eval(const Action::Context& context) const;
     Action::Value value(const Action::Context& context) const;
@@ -25,6 +28,12 @@ public:
     void add_child(const ASTNode& child);
     size_t size() const;
     std::string func;
+
+    const std::vector<std::string>& argList() const;
+    const std::vector<ASTNode>& childrens() const;
+    double getNumber() const;
+
+    bool operator==(const ASTNode& data) const;
 
 private:
     std::vector<std::string> arg_list;

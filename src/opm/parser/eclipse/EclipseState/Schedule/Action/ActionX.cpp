@@ -21,9 +21,9 @@
 #include <unordered_set>
 
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionValue.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionX.hpp>
 
-#include "ActionValue.hpp"
 #include "ActionParser.hpp"
 
 namespace Opm {
@@ -33,6 +33,12 @@ namespace Action {
 bool ActionX::valid_keyword(const std::string& keyword) {
     static std::unordered_set<std::string> actionx_whitelist = {"WELSPECS","WELOPEN"};
     return (actionx_whitelist.find(keyword) != actionx_whitelist.end());
+}
+
+
+ActionX::ActionX() :
+    m_start_time(0)
+{
 }
 
 
@@ -68,6 +74,29 @@ ActionX::ActionX(const DeckKeyword& kw, std::time_t start_time) :
     }
     this->condition = Action::AST(tokens);
 }
+
+
+ActionX::ActionX(const std::string& nam,
+                 size_t maxRun,
+                 double minWait,
+                 std::time_t startTime,
+                 const std::vector<DeckKeyword>& keyword,
+                 const AST& cond,
+                 const std::vector<Condition>& conditions,
+                 size_t runCount,
+                 std::time_t lastRun) :
+    m_name(nam),
+    m_max_run(maxRun),
+    m_min_wait(minWait),
+    m_start_time(startTime),
+    keywords(keyword),
+    condition(cond),
+    m_conditions(conditions),
+    run_count(runCount),
+    last_run(lastRun)
+{
+}
+
 
 
 void ActionX::addKeyword(const DeckKeyword& kw) {
@@ -148,6 +177,37 @@ std::vector<std::string> ActionX::keyword_strings() const {
 
 const std::vector<Condition>& ActionX::conditions() const {
     return this->m_conditions;
+}
+
+
+const std::vector<DeckKeyword>& ActionX::getKeywords() const {
+    return this->keywords;
+}
+
+
+size_t ActionX::getRunCount() const {
+    return run_count;
+}
+
+std::time_t ActionX::getLastRun() const {
+    return last_run;
+}
+
+const AST& ActionX::getCondition() const {
+    return condition;
+}
+
+
+bool ActionX::operator==(const ActionX& data) const {
+    return this->name() == data.name() &&
+           this->max_run() == data.max_run() &&
+           this->min_wait() == data.min_wait() &&
+           this->start_time() == data.start_time() &&
+           this->getKeywords() == data.getKeywords() &&
+           this->getCondition() == data.getCondition() &&
+           this->conditions() == data.conditions() &&
+           this->getRunCount() == data.getRunCount() &&
+           this->getLastRun() == data.getLastRun();
 }
 
 }

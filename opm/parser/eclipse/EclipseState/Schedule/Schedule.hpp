@@ -110,6 +110,12 @@ namespace Opm
 
     class Schedule {
     public:
+        using WellMap = OrderedMap<std::string, DynamicState<std::shared_ptr<Well>>>;
+        using GroupMap = OrderedMap<std::string, DynamicState<std::shared_ptr<Group>>>;
+        using VFPProdMap = std::map<int, DynamicState<std::shared_ptr<VFPProdTable>>>;
+        using VFPInjMap = std::map<int, DynamicState<std::shared_ptr<VFPInjTable>>>;
+
+        Schedule() = default;
         Schedule(const Deck& deck,
                  const EclipseGrid& grid,
                  const FieldPropsManager& fp,
@@ -146,6 +152,30 @@ namespace Opm
 
         Schedule(const Deck& deck,
                  const EclipseState& es);
+
+        Schedule(const TimeMap& timeMap,
+                 const WellMap& wellsStatic,
+                 const GroupMap& group,
+                 const DynamicState<OilVaporizationProperties>& oilVapProps,
+                 const Events& events,
+                 const DynamicVector<Deck>& modifierDeck,
+                 const Tuning& tuning,
+                 const MessageLimits& messageLimits,
+                 const Runspec& runspec,
+                 const VFPProdMap& vfpProdTables,
+                 const VFPInjMap& vfpInjTables,
+                 const DynamicState<std::shared_ptr<WellTestConfig>>& wtestConfig,
+                 const DynamicState<std::shared_ptr<WListManager>>& wListManager,
+                 const DynamicState<std::shared_ptr<UDQConfig>>& udqConfig,
+                 const DynamicState<std::shared_ptr<UDQActive>>& udqActive,
+                 const DynamicState<std::shared_ptr<GuideRateConfig>>& guideRateConfig,
+                 const DynamicState<std::shared_ptr<GConSale>>& gconSale,
+                 const DynamicState<std::shared_ptr<GConSump>>& gconSump,
+                 const DynamicState<Well::ProducerCMode>& globalWhistCtlMode,
+                 const DynamicState<std::shared_ptr<Action::Actions>>& actions,
+                 const RFTConfig& rftconfig,
+                 const DynamicState<int>& nupCol,
+                 const std::map<std::string,Events>& wellGroupEvents);
 
         /*
          * If the input deck does not specify a start time, Eclipse's 1. Jan
@@ -227,18 +257,40 @@ namespace Opm
 
         void applyAction(size_t reportStep, const Action::ActionX& action, const Action::Result& result);
         int getNupcol(size_t reportStep) const;
+
+        const WellMap& getStaticWells() const;
+        const GroupMap& getGroups() const;
+        const DynamicState<OilVaporizationProperties>& getOilVapProps() const;
+        const DynamicVector<Deck>& getModifierDeck() const;
+        const Runspec& getRunspec() const;
+        const VFPProdMap& getVFPProdTables() const;
+        const VFPInjMap& getVFPInjTables() const;
+        const DynamicState<std::shared_ptr<WellTestConfig>>& getWellTestConfig() const;
+        const DynamicState<std::shared_ptr<WListManager>>& getWListManager() const;
+        const DynamicState<std::shared_ptr<UDQConfig>>& getUDQConfig() const;
+        const DynamicState<std::shared_ptr<UDQActive>>& getUDQActive() const;
+        const DynamicState<std::shared_ptr<GuideRateConfig>>& getGuideRateConfig() const;
+        const DynamicState<std::shared_ptr<GConSale>>& getGConSale() const;
+        const DynamicState<std::shared_ptr<GConSump>>& getGConSump() const;
+        const DynamicState<Well::ProducerCMode>& getGlobalWhistCtlMode() const;
+        const DynamicState<std::shared_ptr<Action::Actions>>& getActions() const;
+        const DynamicState<int>& getNupCol() const;
+        const std::map<std::string,Events>& getWellGroupEvents() const;
+
+        bool operator==(const Schedule& data) const;
+
     private:
         TimeMap m_timeMap;
-        OrderedMap< std::string, DynamicState<std::shared_ptr<Well>>> wells_static;
-        OrderedMap< std::string, DynamicState<std::shared_ptr<Group>>> groups;
+        WellMap wells_static;
+        GroupMap groups;
         DynamicState< OilVaporizationProperties > m_oilvaporizationproperties;
         Events m_events;
         DynamicVector< Deck > m_modifierDeck;
         Tuning m_tuning;
         MessageLimits m_messageLimits;
         Runspec m_runspec;
-        std::map<int, DynamicState<std::shared_ptr<VFPProdTable>>> vfpprod_tables;
-        std::map<int, DynamicState<std::shared_ptr<VFPInjTable>>> vfpinj_tables;
+        VFPProdMap vfpprod_tables;
+        VFPInjMap vfpinj_tables;
         DynamicState<std::shared_ptr<WellTestConfig>> wtest_config;
         DynamicState<std::shared_ptr<WListManager>> wlist_manager;
         DynamicState<std::shared_ptr<UDQConfig>> udq_config;

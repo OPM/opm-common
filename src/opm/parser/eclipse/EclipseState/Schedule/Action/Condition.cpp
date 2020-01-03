@@ -20,9 +20,9 @@
 #include <string>
 
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionValue.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/Condition.hpp>
 
-#include "ActionValue.hpp"
 #include "ActionParser.hpp"
 
 
@@ -124,6 +124,15 @@ Condition::Condition(const std::vector<std::string>& tokens, const Location& loc
 
         token_index++;
     }
+}
+
+
+bool Condition::operator==(const Condition& data) const {
+    return lhs == data.lhs &&
+           rhs == data.rhs &&
+           logic == data.logic &&
+           cmp == data.cmp &&
+           cmp_string == data.cmp_string;
 }
 
 

@@ -125,7 +125,7 @@ namespace {
              const std::string& name) -> void
         {
             for (const auto& vector : vectors) {
-                entities.emplace_back(kwpref + vector.kw, cat, Location());
+                entities.emplace_back(kwpref + vector.kw, cat, ::Opm::Location());
 
                 entities.back().namedEntity(name)
                 .parameterType(vector.type);
@@ -135,15 +135,15 @@ namespace {
         for (const auto& well_name : sched.wellNames()) {
             makeEntities('W', SN::Category::Well, well_name);
 
-            entities.emplace_back("WBHP", SN::Category::Well, Location());
+            entities.emplace_back("WBHP", SN::Category::Well, ::Opm::Location());
             entities.back().namedEntity(well_name)
             .parameterType(SN::Type::Pressure);
 
-            entities.emplace_back("WGVIR", SN::Category::Well, Location());
+            entities.emplace_back("WGVIR", SN::Category::Well, ::Opm::Location());
             entities.back().namedEntity(well_name)
             .parameterType(SN::Type::Rate);
 
-            entities.emplace_back("WWVIR", SN::Category::Well, Location());
+            entities.emplace_back("WWVIR", SN::Category::Well, ::Opm::Location());
             entities.back().namedEntity(well_name)
             .parameterType(SN::Type::Rate);
         }
@@ -164,16 +164,16 @@ namespace {
         using SN = Opm::SummaryNode;
         auto ret = std::vector<SN>{};
 
-        auto sofr = SN{ "SOFR", SN::Category::Segment, Location() }
+        auto sofr = SN{ "SOFR", SN::Category::Segment, ::Opm::Location() }
             .parameterType(SN::Type::Rate);
 
-        auto sgfr = SN{ "SGFR", SN::Category::Segment, Location() }
+        auto sgfr = SN{ "SGFR", SN::Category::Segment, ::Opm::Location() }
             .parameterType(SN::Type::Rate);
 
-        auto swfr = SN{ "SWFR", SN::Category::Segment, Location() }
+        auto swfr = SN{ "SWFR", SN::Category::Segment, ::Opm::Location() }
             .parameterType(SN::Type::Rate);
 
-        auto spr = SN{ "SPR", SN::Category::Segment, Location() }
+        auto spr = SN{ "SPR", SN::Category::Segment, ::Opm::Location() }
             .parameterType(SN::Type::Pressure);
 
         auto makeVectors =

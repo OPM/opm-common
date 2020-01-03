@@ -44,7 +44,12 @@ class AST{
 public:
     AST() = default;
     explicit AST(const std::vector<std::string>& tokens);
+    AST(const std::shared_ptr<ASTNode>& cond);
     Result eval(const Context& context) const;
+
+    std::shared_ptr<ASTNode> getCondition() const;
+
+    bool operator==(const AST& data) const;
 private:
     /*
       The use of a pointer here is to be able to create this class with only a
