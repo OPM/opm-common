@@ -776,12 +776,22 @@ bool Well::canOpen() const {
         if (prod.WaterRate.is<std::string>())
           return true;
 
-        return ((prod.OilRate.get<double>() + prod.GasRate.get<double>() + prod.WaterRate.get<double>()) != 0);
+        if (!prod.OilRate.zero())
+            return true;
+
+        if (!prod.GasRate.zero())
+            return true;
+
+        if (!prod.WaterRate.zero())
+            return true;
+
+        return false;
     } else {
         const auto& inj = *this->injection;
         if (inj.surfaceInjectionRate.is<std::string>())
             return true;
-        return inj.surfaceInjectionRate.get<double>() != 0;
+
+        return !inj.surfaceInjectionRate.zero();
     }
 }
 

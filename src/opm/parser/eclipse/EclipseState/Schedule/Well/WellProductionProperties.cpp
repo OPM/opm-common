@@ -172,7 +172,7 @@ namespace Opm {
             if( !record.getItem( cmode.first ).defaultApplied( 0 ) ) {
 
                 // a zero value THP limit will not be handled as a THP limit
-                if (cmode.first == "THP" && this->THPLimit.get<double>() == 0.)
+                if (cmode.first == "THP" && this->THPLimit.zero())
                     continue;
 
                 this->addProductionControl( cmode.second );

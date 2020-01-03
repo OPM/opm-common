@@ -847,7 +847,7 @@ namespace {
                         const auto& oil_rate = properties->OilRate;
                         const auto& water_rate = properties->WaterRate;
                         const auto& gas_rate = properties->GasRate;
-                        if ((oil_rate.get<double>() + water_rate.get<double>() + gas_rate.get<double>()) == 0) {
+                        if (oil_rate.zero() && water_rate.zero() && gas_rate.zero()) {
                             std::string msg =
                                 "Well " + well2->name() + " is a history matched well with zero rate where crossflow is banned. " +
                                 "This well will be closed at " + std::to_string ( m_timeMap.getTimePassedUntil(currentStep) / (60*60*24) ) + " days";
@@ -998,14 +998,14 @@ namespace {
                          "This well will be closed at " + std::to_string ( m_timeMap.getTimePassedUntil(currentStep) / (60*60*24) ) + " days";
 
                          if (injection->surfaceInjectionRate.is<double>()) {
-                             if (injection->hasInjectionControl(Well::InjectorCMode::RATE) && injection->surfaceInjectionRate.get<double>() == 0) {
+                             if (injection->hasInjectionControl(Well::InjectorCMode::RATE) && injection->surfaceInjectionRate.zero()) {
                                  OpmLog::note(msg);
                                  updateWellStatus( well_name, currentStep, Well::Status::SHUT );
                              }
                          }
 
                          if (injection->reservoirInjectionRate.is<double>()) {
-                             if (injection->hasInjectionControl(Well::InjectorCMode::RESV) && injection->reservoirInjectionRate.get<double>() == 0) {
+                             if (injection->hasInjectionControl(Well::InjectorCMode::RESV) && injection->reservoirInjectionRate.zero()) {
                                  OpmLog::note(msg);
                                  updateWellStatus( well_name, currentStep, Well::Status::SHUT );
                              }
@@ -1053,7 +1053,7 @@ namespace {
                         this->addWellGroupEvent( well_name, ScheduleEvents::INJECTION_UPDATE, currentStep);
                     }
 
-                    if ( ! well2->getAllowCrossFlow() && (injection->surfaceInjectionRate.get<double>() == 0)) {
+                    if ( ! well2->getAllowCrossFlow() && (injection->surfaceInjectionRate.zero())) {
                         std::string msg =
                             "Well " + well_name + " is an injector with zero rate where crossflow is banned. " +
                             "This well will be closed at " + std::to_string ( m_timeMap.getTimePassedUntil(currentStep) / (60*60*24) ) + " days";

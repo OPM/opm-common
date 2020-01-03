@@ -102,7 +102,10 @@ std::string UDAValue::get() const {
     throw std::invalid_argument("UDAValue does not hold a string value");
 }
 
-
+bool UDAValue::zero() const {
+    this->assert_numeric();
+    return (this->double_value == 0.0);
+}
 
 const Dimension& UDAValue::get_dim() const {
     return this->dim;
