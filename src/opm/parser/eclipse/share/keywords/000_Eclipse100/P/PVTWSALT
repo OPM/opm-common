@@ -1,9 +1,10 @@
 {
-    "name" : "PVTWSALT", "sections" : ["PROPS"], "num_tables" : {"keyword" : "TABDIMS" , "item" : "NTPVT"}, "alternating_records" : [
+    "name" : "PVTWSALT", "sections" : ["PROPS"], "size" : {"keyword" : "TABDIMS" , "item" : "NTPVT"}, "alternating_records" : [
     [
-        {"name" : "REF_TEMP", "value_type" : "DOUBLE", "dimension" : "Temperature"}
+        {"name":"P_REF", "value_type" : "DOUBLE", "dimension":"Pressure"},
+        {"name":"SALT_CONCENTRATION_REF", "value_type" : "DOUBLE", "default" : 0.0,"dimension":"Density"}
     ],
-    [ 
-        {"name" : "table", "value_type" : "DOUBLE", "size_type" : "ALL", "dimension" : ["Pressure" , "1", "Viscosity"]}
+    [
+        {"name" : "table", "value_type" : "DOUBLE", "size_type" : "ALL", "dimension" : ["Density","1","1/Pressure","Viscosity", "1/Pressure"]}
     ]]
 }
