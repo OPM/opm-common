@@ -24,7 +24,7 @@
 namespace Opm {
 
 Python::Python() :
-    interp(std::make_shared<PythonInterp>())    
+    interp(std::make_shared<PythonInterp>())
 {
 }
 
@@ -40,6 +40,10 @@ bool Python::exec(const std::string& python_code, const Parser& parser, Deck& de
     return true;
 }
 
+bool Python::exec(const PyAction& py_action) const {
+    this->interp->exec(py_action.code());
+    return true;
+}
 
 
 Python::operator bool() const {
@@ -54,7 +58,7 @@ std::unique_ptr<Python> PythonInstance() {
     if (Py_IsInitialized())
         return NULL;
     #endif
-    
+
     return std::make_unique<Python>();
 }
 
