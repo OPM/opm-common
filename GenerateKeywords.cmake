@@ -68,7 +68,7 @@ add_custom_command( OUTPUT
   ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/X.cpp
   ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/Y.cpp
   ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/Z.cpp
-  ${PROJECT_BINARY_DIR}/tmp_gen/inlinekw.cpp
+  ${PROJECT_BINARY_DIR}/tmp_gen/TestKeywords.cpp
   COMMAND genkw keyword_list.argv
                   ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords
                   ${PROJECT_BINARY_DIR}/tmp_gen/ParserInit.cpp
