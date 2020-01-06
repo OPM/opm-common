@@ -40,18 +40,74 @@ string(REGEX REPLACE "([^;]+)" "${PROJECT_SOURCE_DIR}/src/opm/parser/eclipse/sha
 configure_file(src/opm/parser/eclipse/keyword_list.argv.in keyword_list.argv)
 
 # Generate keyword source
-add_custom_command(
-    OUTPUT  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords.cpp ${PROJECT_BINARY_DIR}/tmp_gen/inlinekw.cpp
-    COMMAND genkw keyword_list.argv
-                  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords.cpp
+
+add_custom_command( OUTPUT
+  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/A.cpp
+  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/B.cpp
+  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/C.cpp
+  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/D.cpp
+  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/E.cpp
+  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/F.cpp
+  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/G.cpp
+  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/H.cpp
+  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/I.cpp
+  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/J.cpp
+  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/K.cpp
+  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/L.cpp
+  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/M.cpp
+  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/N.cpp
+  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/O.cpp
+  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/P.cpp
+  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/Q.cpp
+  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/R.cpp
+  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/S.cpp
+  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/T.cpp
+  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/U.cpp
+  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/V.cpp
+  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/W.cpp
+  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/X.cpp
+  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/Y.cpp
+  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/Z.cpp
+  ${PROJECT_BINARY_DIR}/tmp_gen/inlinekw.cpp
+  COMMAND genkw keyword_list.argv
+                  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords
+                  ${PROJECT_BINARY_DIR}/tmp_gen/ParserInit.cpp
                   ${PROJECT_BINARY_DIR}/tmp_gen/include/
                   opm/parser/eclipse/Parser/ParserKeywords
-                  ${PROJECT_BINARY_DIR}/tmp_gen/inlinekw.cpp
+                  ${PROJECT_BINARY_DIR}/tmp_gen/TestKeywords.cpp
     DEPENDS genkw ${keyword_files} src/opm/parser/eclipse/share/keywords/keyword_list.cmake
 )
 
 # To avoid some rebuilds
-add_custom_command(OUTPUT ParserKeywords.cpp inlinekw.cpp
-                   DEPENDS ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords.cpp
+add_custom_command(OUTPUT
+  ${PROJECT_BINARY_DIR}/ParserKeywords/A.cpp
+  ${PROJECT_BINARY_DIR}/ParserKeywords/B.cpp
+  ${PROJECT_BINARY_DIR}/ParserKeywords/C.cpp
+  ${PROJECT_BINARY_DIR}/ParserKeywords/D.cpp
+  ${PROJECT_BINARY_DIR}/ParserKeywords/E.cpp
+  ${PROJECT_BINARY_DIR}/ParserKeywords/F.cpp
+  ${PROJECT_BINARY_DIR}/ParserKeywords/G.cpp
+  ${PROJECT_BINARY_DIR}/ParserKeywords/H.cpp
+  ${PROJECT_BINARY_DIR}/ParserKeywords/I.cpp
+  ${PROJECT_BINARY_DIR}/ParserKeywords/J.cpp
+  ${PROJECT_BINARY_DIR}/ParserKeywords/K.cpp
+  ${PROJECT_BINARY_DIR}/ParserKeywords/L.cpp
+  ${PROJECT_BINARY_DIR}/ParserKeywords/M.cpp
+  ${PROJECT_BINARY_DIR}/ParserKeywords/N.cpp
+  ${PROJECT_BINARY_DIR}/ParserKeywords/O.cpp
+  ${PROJECT_BINARY_DIR}/ParserKeywords/P.cpp
+  ${PROJECT_BINARY_DIR}/ParserKeywords/Q.cpp
+  ${PROJECT_BINARY_DIR}/ParserKeywords/R.cpp
+  ${PROJECT_BINARY_DIR}/ParserKeywords/S.cpp
+  ${PROJECT_BINARY_DIR}/ParserKeywords/T.cpp
+  ${PROJECT_BINARY_DIR}/ParserKeywords/U.cpp
+  ${PROJECT_BINARY_DIR}/ParserKeywords/V.cpp
+  ${PROJECT_BINARY_DIR}/ParserKeywords/W.cpp
+  ${PROJECT_BINARY_DIR}/ParserKeywords/X.cpp
+  ${PROJECT_BINARY_DIR}/ParserKeywords/Y.cpp
+  ${PROJECT_BINARY_DIR}/ParserKeywords/Z.cpp
+  ${PROJECT_BINARY_DIR}/TestKeywords.cpp
+  ${PROJECT_BINARY_DIR}/ParserInit.cpp
+                   DEPENDS ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords/A.cpp
                    COMMAND ${CMAKE_COMMAND} -DBASE_DIR=${PROJECT_BINARY_DIR}
                                             -P ${PROJECT_SOURCE_DIR}/CopyHeaders.cmake)

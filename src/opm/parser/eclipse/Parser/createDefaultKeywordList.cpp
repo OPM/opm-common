@@ -60,38 +60,37 @@ int main(int , char ** argv) {
             << std::endl;
     }
     const char * keyword_list_file = argv[1];
-    const char * source_file_name = argv[2];
-    const char * header_file_base_path = argv[3];
-    const char * header_file_name = argv[4];
-    const char * test_file_name = argv[5];
+    const char * source_file_path = argv[2];
+    const char * init_file_name = argv[3];
+    const char * header_file_base_path = argv[4];
+    const char * header_file_path = argv[5];
+    const char * test_file_name = argv[6];
 
 
-    Opm::KeywordGenerator generator( true );
-    Opm::KeywordLoader loader( false );
-
+    std::vector<std::string> keyword_list;
     {
+        std::string buffer;
+        std::ifstream is(keyword_list_file);
+        std::getline( is , buffer );
+        is.close();
+
         size_t start = 0;
-        std::string keyword_list;
-
-        {
-            std::ifstream is(keyword_list_file);
-            std::getline( is , keyword_list );
-            is.close();
-        }
-
         while (true) {
-            size_t end = keyword_list.find( ";" , start);
+            size_t end = buffer.find( ";" , start);
             if (end == std::string::npos) {
-                loader.loadKeyword( keyword_list.substr( start ));
+                keyword_list.push_back( buffer.substr(start) );
                 break;
             }
 
-            loader.loadKeyword( keyword_list.substr( start , end - start ));
+            keyword_list.push_back( buffer.substr(start, end - start ));
             start = end + 1;
         }
     }
+    Opm::KeywordLoader loader( keyword_list, false );
+    Opm::KeywordGenerator generator( true );
 
-    generator.updateSource(loader , source_file_name );
-    generator.updateHeader(loader, header_file_base_path, header_file_name );
+    generator.updateKeywordSource(loader , source_file_path );
+    generator.updateInitSource(loader , init_file_name );
+    generator.updateHeader(loader, header_file_base_path, header_file_path );
     generator.updateTest( loader , test_file_name );
 }

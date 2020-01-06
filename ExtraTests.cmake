@@ -4,21 +4,14 @@ set(EXTRA_TESTS)
 
 # Generated source, needs to be here
 opm_add_test(InlineKeywordTest
-             EXE_NAME inlinekw
-             SOURCES ${PROJECT_BINARY_DIR}/inlinekw.cpp
+             EXE_NAME TestKeywords
+             SOURCES ${PROJECT_BINARY_DIR}/TestKeywords.cpp
              LIBRARIES ${TEST_LIBS})
-list(APPEND EXTRA_TESTS inlinekw)
+list(APPEND EXTRA_TESTS TestKeywords)
 
 # Extra compile definitions and extra parameters
 include(cmake/Modules/CheckCaseSensitiveFileSystem.cmake)
 set(_testdir ${PROJECT_SOURCE_DIR}/tests/parser/data)
-
-opm_add_test(LoaderTest
-             SOURCES tests/parser/KeywordLoaderTests.cpp
-                     src/opm/parser/eclipse/Generator/KeywordLoader.cpp
-             LIBRARIES ${TEST_LIBS}
-             TEST_ARGS ${_testdir}/parser/keyword-generator/)
-list(APPEND EXTRA_TESTS LoaderTest)
 
 opm_add_test(ParserTests
              SOURCES tests/parser/ParserTests.cpp

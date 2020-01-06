@@ -30,31 +30,46 @@
 
 namespace Opm {
 
-    KeywordLoader::KeywordLoader(bool verbose)
-        : m_verbose(verbose)
+    KeywordLoader::KeywordLoader(const std::vector<std::string>& keyword_files, bool verbose)
     {
-    }
+        std::map<std::string, ParserKeyword> keyword_map;
+        for (const auto& keyword_file : keyword_files) {
+            if (verbose)
+                std::cout << "Loading keyword from file: " << keyword_file << std::endl;
+
+            boost::filesystem::path path( keyword_file );
+            std::unique_ptr<ParserKeyword> parserKeyword;
+
+            try {
+                Json::JsonObject jsonConfig = Json::JsonObject( path );
+                parserKeyword.reset( new ParserKeyword(jsonConfig) );
+                boost::filesystem::path abs_path = boost::filesystem::absolute( path );
+            } catch (const std::exception& exc) {
+                std::cerr << std::endl;
+                std::cerr << "Failed to create parserkeyword from: " << path.string() << std::endl;
+                std::cerr << exc.what() << std::endl;
+                std::cerr << std::endl;
+                throw;
+            }
+
+            const std::string name = parserKeyword->getName();
+            if (keyword_map.find(name) != keyword_map.end()) {
+                this->m_jsonFile.erase(name);
+                keyword_map.erase(name);
+            }
 
 
-    size_t KeywordLoader::size() const {
-        return m_keywords.size();
-    }
+            this->m_jsonFile.insert( std::pair<std::string , std::string> ( name , keyword_file));
+            keyword_map.insert( std::pair<std::string , ParserKeyword> ( name , std::move(*parserKeyword)));
+        }
 
-
-    bool KeywordLoader::hasKeyword(const std::string& keyword) const {
-        if (m_keywords.find( keyword ) == m_keywords.end())
-            return false;
-        else
-            return true;
-    }
-
-
-    std::shared_ptr<const ParserKeyword> KeywordLoader::getKeyword(const std::string& keyword) const {
-        auto iter = m_keywords.find( keyword );
-        if (iter == m_keywords.end())
-            throw std::invalid_argument("Keyword " + keyword + " not loaded");
-        else
-            return (*iter).second;
+        this->keywords['Y'] = {};
+        this->keywords['X'] = {};
+        for (const auto& kw_pair : keyword_map) {
+            const auto& name = kw_pair.first;
+            const auto& parserKeyword = kw_pair.second;
+            this->keywords[name[0]].push_back( std::move(parserKeyword) );
+        }
     }
 
 
@@ -67,53 +82,14 @@ namespace Opm {
     }
 
 
-    void KeywordLoader::loadKeyword(boost::filesystem::path& path) {
-        std::shared_ptr<Json::JsonObject> jsonConfig = std::make_shared<Json::JsonObject>( path );
-        try {
-            std::shared_ptr<ParserKeyword> parserKeyword = std::make_shared<ParserKeyword>(*jsonConfig);
-            boost::filesystem::path abs_path = boost::filesystem::absolute( path );
-            addKeyword( parserKeyword , abs_path.generic_string() );
-        } catch (const std::exception& exc) {
-            std::cerr << std::endl;
-            std::cerr << "Failed to create parserkeyword from: " << path.string() << std::endl;
-            std::cerr << exc.what() << std::endl;
-            std::cerr << std::endl;
-            throw;
-        }
+    std::map<char, std::vector<ParserKeyword >>::const_iterator KeywordLoader::begin( ) const {
+        return this->keywords.begin( );
     }
 
 
-    void KeywordLoader::loadKeyword(const std::string& filename) {
-        boost::filesystem::path path( filename );
-        if (m_verbose)
-            std::cout << "Loading keyword from file: " << filename << std::endl;
-        return loadKeyword( path );
+    std::map<char , std::vector<ParserKeyword >>::const_iterator KeywordLoader::end( ) const {
+        return this->keywords.end( );
     }
-
-
-    void KeywordLoader::addKeyword(std::shared_ptr<ParserKeyword> keyword , const std::string& jsonFile) {
-        const std::string& name = keyword->getName();
-
-        if (hasKeyword(name)) {
-            m_keywords[name] = keyword;
-            m_jsonFile[name] = jsonFile;
-        } else {
-            m_keywords.insert( std::pair<std::string , std::shared_ptr<ParserKeyword> > (name , keyword) );
-            m_jsonFile.insert( std::pair<std::string , std::string> ( name , jsonFile));
-        }
-    }
-
-
-
-    std::map<std::string , std::shared_ptr<ParserKeyword> >::const_iterator KeywordLoader::keyword_begin( ) const {
-        return m_keywords.begin( );
-    }
-
-    std::map<std::string , std::shared_ptr<ParserKeyword> >::const_iterator KeywordLoader::keyword_end( ) const {
-        return m_keywords.end( );
-    }
-
-
 }
 
 
