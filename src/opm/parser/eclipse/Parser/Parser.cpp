@@ -19,6 +19,7 @@
 
 #include <cctype>
 #include <fstream>
+#include <iterator>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
@@ -600,7 +601,10 @@ RawKeyword * newRawKeyword(const ParserKeyword& parserKeyword, const std::string
     if( deck.hasKeyword(keyword_size.keyword ) ) {
         const auto& sizeDefinitionKeyword = deck.getKeyword(keyword_size.keyword);
         const auto& record = sizeDefinitionKeyword.getRecord(0);
-        const auto targetSize = record.getItem( keyword_size.item ).get< int >( 0 ) + keyword_size.shift;
+        auto targetSize = record.getItem( keyword_size.item ).get< int >( 0 ) + keyword_size.shift;
+        if (parserKeyword.isAlternatingKeyword())
+            targetSize *= std::distance( parserKeyword.begin(), parserKeyword.end() );
+
         return new RawKeyword( keywordString,
                                parserState.current_path().string(),
                                parserState.line(),

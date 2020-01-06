@@ -206,8 +206,6 @@ namespace Opm {
 
         if (jsonConfig.has_item("alternating_records")) {
             alternating_keyword = true;
-            if (!jsonConfig.has_item("num_tables") || jsonConfig.has_item("size"))
-                throw std::invalid_argument("alternating_records must have num_tables.");
             const Json::JsonObject recordsConfig = jsonConfig.get_item("alternating_records");
             parseRecords( recordsConfig );
         }
