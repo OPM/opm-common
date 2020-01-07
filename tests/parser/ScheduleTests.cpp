@@ -1570,24 +1570,34 @@ BOOST_AUTO_TEST_CASE(changeBhpLimitInHistoryModeWithWeltarg) {
     FieldPropsManager fp( deck , grid, table);
     Runspec runspec (deck);
     Schedule sched(deck, grid , fp, eclipseProperties, runspec);
-    /*
+    SummaryState st(std::chrono::system_clock::now());
+    const auto& unit_system = deck.getActiveUnitSystem();
+
     // The BHP limit should not be effected by WCONHIST
-    BOOST_CHECK_EQUAL(sched.getWell("P", 1).getProductionProperties().BHPLimit.get<double>(), 50 * 1e5); // 1
-    BOOST_CHECK_EQUAL(sched.getWell("P", 2).getProductionProperties().BHPLimit.get<double>(), 50 * 1e5); // 2
-
-
-    BOOST_CHECK_EQUAL(sched.getWell("I", 1).getInjectionProperties().BHPLimit.get<double>(), 600 * 1e5); // 1
-    BOOST_CHECK_EQUAL(sched.getWell("I", 2).getInjectionProperties().BHPLimit.get<double>(), 600 * 1e5); // 2
-
+    {
+        const auto& c1 = sched.getWell("P",1).getProductionProperties().controls(st, 0);
+        const auto& c2 = sched.getWell("P",2).getProductionProperties().controls(st, 0);
+        BOOST_CHECK_EQUAL(c1.bhp_limit, 50 * 1e5); // 1
+        BOOST_CHECK_EQUAL(c2.bhp_limit, 50 * 1e5); // 2
+    }
+    {
+        const auto& c1 = sched.getWell("I",1).getInjectionProperties().controls(unit_system, st, 0);
+        const auto& c2 = sched.getWell("I",2).getInjectionProperties().controls(unit_system, st, 0);
+        BOOST_CHECK_EQUAL(c1.bhp_limit, 600 * 1e5); // 1
+        BOOST_CHECK_EQUAL(c2.bhp_limit, 600 * 1e5); // 2
+    }
     BOOST_CHECK_EQUAL(sched.getWell("I", 2).getInjectionProperties().hasInjectionControl(Opm::Well::InjectorCMode::BHP), true);
 
-    // The well is producer for timestep 3 and the injection properties BHPLimit should be set to zero.
+    // The well is producer for timestep 3 and the injection properties BHPTarget should be set to zero.
     BOOST_CHECK(sched.getWell("I", 3).isProducer());
-    BOOST_CHECK_EQUAL(sched.getWell("I", 3).getInjectionProperties().BHPLimit.get<double>(), 0); // 3
     BOOST_CHECK_EQUAL(sched.getWell("I", 3).getProductionProperties().hasProductionControl(Opm::Well::ProducerCMode::BHP), true );
     BOOST_CHECK_EQUAL(sched.getWell("I", 4).getInjectionProperties().hasInjectionControl(Opm::Well::InjectorCMode::BHP), true );
-    BOOST_CHECK_EQUAL(sched.getWell("I", 4).getInjectionProperties().BHPLimit.get<double>(), 6891.2 * 1e5); // 4
-    */
+    {
+        const auto& c3 = sched.getWell("I",3).getInjectionProperties().controls(unit_system, st, 0);
+        const auto& c4 = sched.getWell("I",4).getInjectionProperties().controls(unit_system, st, 0);
+        BOOST_CHECK_EQUAL(c3.bhp_limit, 0); // 1
+        BOOST_CHECK_EQUAL(c4.bhp_limit, 6891.2 * 1e5); // 2
+    }
 }
 
 BOOST_AUTO_TEST_CASE(changeModeWithWHISTCTL) {

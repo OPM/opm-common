@@ -46,6 +46,7 @@ namespace Opm {
         predictionMode( true )
     {}
 
+
     Well::WellProductionProperties::WellProductionProperties(const std::string& wname,
                                                              const UDAValue& oilRate,
                                                              const UDAValue& waterRate,
@@ -54,6 +55,8 @@ namespace Opm {
                                                              const UDAValue& resvRate,
                                                              const UDAValue& BHP,
                                                              const UDAValue& THP,
+                                                             double bhp_hist,
+                                                             double thp_hist,
                                                              double bhph,
                                                              double thph,
                                                              int vfpTableNum,
@@ -68,8 +71,10 @@ namespace Opm {
           GasRate(gasRate),
           LiquidRate(liquidRate),
           ResVRate(resvRate),
-          BHPLimit(BHP),
-          THPLimit(THP),
+          BHPTarget(BHP),
+          THPTarget(THP),
+          bhp_hist_limit(bhp_hist),
+          thp_hist_limit(thp_hist),
           BHPH(bhph),
           THPH(thph),
           VFPTableNumber(vfpTableNum),
@@ -84,7 +89,6 @@ namespace Opm {
 
 
 
-
     void Well::WellProductionProperties::init_rates( const DeckRecord& record ) {
         this->OilRate    = record.getItem("ORAT").get<UDAValue>(0);
         this->WaterRate  = record.getItem("WRAT").get<UDAValue>(0);
@@ -95,13 +99,16 @@ namespace Opm {
     void Well::WellProductionProperties::init_history(const DeckRecord& record)
     {
         this->predictionMode = false;
-        // update LiquidRate
-        this->LiquidRate = UDAValue(this->WaterRate.get<double>() + this->OilRate.get<double>());
+        // update LiquidRate. The funnny constrction with explicitly making a new
+        // UDAValue is to ensure that the UDAValue has the correct dimension.
+        this->LiquidRate = UDAValue(this->LiquidRate, this->OilRate.get_dim());
+        this->LiquidRate.reset(this->WaterRate.get<double>() + this->OilRate.get<double>());
 
         if ( record.getItem( "BHP" ).hasValue(0) )
-            this->BHPH = record.getItem("BHP").get<UDAValue>(0).get<double>();
+            this->BHPH = record.getItem("BHP").get<UDAValue>(0).getSI();
+
         if ( record.getItem( "THP" ).hasValue(0) )
-            this->THPH = record.getItem("THP").get<UDAValue>(0).get<double>();
+            this->THPH = record.getItem("THP").get<UDAValue>(0).getSI();
 
         const auto& cmodeItem = record.getItem("CMODE");
         if ( cmodeItem.defaultApplied(0) ) {
@@ -140,7 +147,7 @@ namespace Opm {
         if (vfp_table != 0)
             this->VFPTableNumber = vfp_table;
 
-        auto alq_value = record.getItem("Lift").get< double >(0); //NOTE: Unit of ALQ is never touched
+        auto alq_value = record.getItem("Lift").get<double>(0); //NOTE: Unit of ALQ is never touched
         if (alq_value != 0.)
             this->ALQValue = alq_value;
     }
@@ -151,8 +158,8 @@ namespace Opm {
     {
         this->predictionMode = true;
 
-        this->BHPLimit       = record.getItem("BHP").get<UDAValue>(0);
-        this->THPLimit       = record.getItem("THP").get<UDAValue>(0);
+        this->BHPTarget      = record.getItem("BHP").get<UDAValue>(0);
+        this->THPTarget      = record.getItem("THP").get<UDAValue>(0);
         this->ALQValue       = record.getItem("ALQ").get< double >(0); //NOTE: Unit of ALQ is never touched
         this->VFPTableNumber = record.getItem("VFP_TABLE").get< int >(0);
         this->LiquidRate     = record.getItem("LRAT").get<UDAValue>(0);
@@ -171,7 +178,7 @@ namespace Opm {
             if( !record.getItem( cmode.first ).defaultApplied( 0 ) ) {
 
                 // a zero value THP limit will not be handled as a THP limit
-                if (cmode.first == "THP" && this->THPLimit.get<double>() == 0.)
+                if (cmode.first == "THP" && this->THPTarget.zero())
                     continue;
 
                 this->addProductionControl( cmode.second );
@@ -219,34 +226,37 @@ namespace Opm {
 
 
 
-void Well::WellProductionProperties::handleWELTARG(Well::WELTARGCMode cmode, double newValue, double siFactorG, double siFactorL, double siFactorP) {
+    void Well::WellProductionProperties::handleWELTARG(Well::WELTARGCMode cmode, double newValue, double SiFactorP) {
         if (cmode == WELTARGCMode::ORAT){
             this->OilRate.assert_numeric("Can not combine UDA and WELTARG");
-            this->OilRate.reset( newValue * siFactorL );
+            this->OilRate.reset( newValue );
         }
         else if (cmode == WELTARGCMode::WRAT){
             this->WaterRate.assert_numeric("Can not combine UDA and WELTARG");
-            this->WaterRate.reset( newValue * siFactorL );
+            this->WaterRate.reset( newValue );
         }
         else if (cmode == WELTARGCMode::GRAT){
             this->GasRate.assert_numeric("Can not combine UDA and WELTARG");
-            this->GasRate.reset( newValue * siFactorG );
+            this->GasRate.reset( newValue );
         }
         else if (cmode == WELTARGCMode::LRAT){
             this->LiquidRate.assert_numeric("Can not combine UDA and WELTARG");
-            this->LiquidRate.reset( newValue * siFactorL );
+            this->LiquidRate.reset( newValue );
         }
         else if (cmode == WELTARGCMode::RESV){
             this->ResVRate.assert_numeric("Can not combine UDA and WELTARG");
-            this->ResVRate.reset( newValue * siFactorL );
+            this->ResVRate.reset( newValue );
         }
         else if (cmode == WELTARGCMode::BHP){
-            this->BHPLimit.assert_numeric("Can not combine UDA and WELTARG");
-            this->BHPLimit.reset( newValue * siFactorP );
+            if (this->predictionMode) {
+                this->BHPTarget.assert_numeric("Can not combine UDA and WELTARG");
+                this->BHPTarget.reset( newValue );
+            } else
+                this->bhp_hist_limit = newValue * SiFactorP;
         }
         else if (cmode == WELTARGCMode::THP){
-            this->THPLimit.assert_numeric("Can not combine UDA and WELTARG");
-            this->THPLimit.reset(newValue * siFactorP);
+            this->THPTarget.assert_numeric("Can not combine UDA and WELTARG");
+            this->THPTarget.reset(newValue );
         }
         else if (cmode == WELTARGCMode::VFP)
             this->VFPTableNumber = static_cast<int> (newValue);
@@ -262,8 +272,10 @@ void Well::WellProductionProperties::handleWELTARG(Well::WELTARGCMode cmode, dou
             && GasRate              == other.GasRate
             && LiquidRate           == other.LiquidRate
             && ResVRate             == other.ResVRate
-            && BHPLimit             == other.BHPLimit
-            && THPLimit             == other.THPLimit
+            && BHPTarget            == other.BHPTarget
+            && THPTarget            == other.THPTarget
+            && bhp_hist_limit       == other.bhp_hist_limit
+            && thp_hist_limit       == other.thp_hist_limit
             && BHPH                 == other.BHPH
             && THPH                 == other.THPH
             && VFPTableNumber       == other.VFPTableNumber
@@ -287,8 +299,8 @@ void Well::WellProductionProperties::handleWELTARG(Well::WELTARGCMode cmode, dou
             << "gas rate: "     << wp.GasRate           << ", "
             << "liquid rate: "  << wp.LiquidRate        << ", "
             << "ResV rate: "    << wp.ResVRate          << ", "
-            << "BHP limit: "    << wp.BHPLimit          << ", "
-            << "THP limit: "    << wp.THPLimit          << ", "
+            << "BHP target: "   << wp.BHPTarget         << ", "
+            << "THP target: "   << wp.THPTarget         << ", "
             << "BHPH: "         << wp.BHPH              << ", "
             << "THPH: "         << wp.THPH              << ", "
             << "VFP table: "    << wp.VFPTableNumber    << ", "
@@ -297,26 +309,23 @@ void Well::WellProductionProperties::handleWELTARG(Well::WELTARGCMode cmode, dou
             << "prediction: "   << wp.predictionMode    << " }";
     }
 
-bool Well::WellProductionProperties::effectiveHistoryProductionControl(const Well::ProducerCMode cmode) {
+    bool Well::WellProductionProperties::effectiveHistoryProductionControl(const Well::ProducerCMode cmode) {
         // Note, not handling CRAT for now
         return ( (cmode == ProducerCMode::LRAT || cmode == ProducerCMode::RESV || cmode == ProducerCMode::ORAT ||
                   cmode == ProducerCMode::WRAT || cmode == ProducerCMode::GRAT || cmode == ProducerCMode::BHP) );
     }
 
     void Well::WellProductionProperties::resetDefaultBHPLimit() {
-        BHPLimit = UDAValue( 1. * unit::atm );
+        double si_value = 1. * unit::atm;
+        this->setBHPLimit(si_value);
     }
 
     void Well::WellProductionProperties::clearControls() {
         m_productionControls = 0;
     }
 
-    void Well::WellProductionProperties::setBHPLimit(const double limit) {
-        BHPLimit = UDAValue( limit );
-    }
-
-    double Well::WellProductionProperties::getBHPLimit() const {
-        return BHPLimit.get<double>();
+    void Well::WellProductionProperties::setBHPLimit(const double si_limit) {
+        this->bhp_hist_limit = si_limit;
     }
 
 
@@ -328,8 +337,14 @@ bool Well::WellProductionProperties::effectiveHistoryProductionControl(const Wel
         controls.gas_rate = UDA::eval_well_uda(this->GasRate, this->name, st, udq_undef);
         controls.liquid_rate = UDA::eval_well_uda(this->LiquidRate, this->name, st, udq_undef);
         controls.resv_rate = UDA::eval_well_uda(this->ResVRate, this->name, st, udq_undef);
-        controls.bhp_limit = UDA::eval_well_uda(this->BHPLimit, this->name, st, udq_undef);
-        controls.thp_limit= UDA::eval_well_uda(this->THPLimit, this->name, st, udq_undef);
+
+        if (this->predictionMode) {
+            controls.bhp_limit = UDA::eval_well_uda(this->BHPTarget, this->name, st, udq_undef);
+            controls.thp_limit = UDA::eval_well_uda(this->THPTarget, this->name, st, udq_undef);
+        } else {
+            controls.bhp_limit = this->bhp_hist_limit;
+            controls.thp_limit = this->thp_hist_limit;
+        }
 
         controls.bhp_history = this->BHPH;
         controls.thp_history = this->THPH;
@@ -348,8 +363,8 @@ bool Well::WellProductionProperties::effectiveHistoryProductionControl(const Wel
         update_count += active.update(udq_config, this->GasRate, this->name, UDAControl::WCONPROD_GRAT);
         update_count += active.update(udq_config, this->LiquidRate, this->name, UDAControl::WCONPROD_LRAT);
         update_count += active.update(udq_config, this->ResVRate, this->name, UDAControl::WCONPROD_RESV);
-        update_count += active.update(udq_config, this->BHPLimit, this->name, UDAControl::WCONPROD_BHP);
-        update_count += active.update(udq_config, this->THPLimit, this->name, UDAControl::WCONPROD_THP);
+        update_count += active.update(udq_config, this->BHPTarget, this->name, UDAControl::WCONPROD_BHP);
+        update_count += active.update(udq_config, this->THPTarget, this->name, UDAControl::WCONPROD_THP);
 
         return (update_count > 0);
     }

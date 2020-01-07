@@ -823,7 +823,7 @@ namespace {
                         well2->updateProducer(true);
 
                         auto inj_props = std::make_shared<Well::WellInjectionProperties>(well2->getInjectionProperties());
-                        inj_props->setBHPLimit(0);
+                        inj_props->resetBHPLimit();
                         well2->updateInjection(inj_props);
                     }
 
@@ -847,7 +847,7 @@ namespace {
                         const auto& oil_rate = properties->OilRate;
                         const auto& water_rate = properties->WaterRate;
                         const auto& gas_rate = properties->GasRate;
-                        if ((oil_rate.get<double>() + water_rate.get<double>() + gas_rate.get<double>()) == 0) {
+                        if (oil_rate.zero() && water_rate.zero() && gas_rate.zero()) {
                             std::string msg =
                                 "Well " + well2->name() + " is a history matched well with zero rate where crossflow is banned. " +
                                 "This well will be closed at " + std::to_string ( m_timeMap.getTimePassedUntil(currentStep) / (60*60*24) ) + " days";
@@ -998,14 +998,14 @@ namespace {
                          "This well will be closed at " + std::to_string ( m_timeMap.getTimePassedUntil(currentStep) / (60*60*24) ) + " days";
 
                          if (injection->surfaceInjectionRate.is<double>()) {
-                             if (injection->hasInjectionControl(Well::InjectorCMode::RATE) && injection->surfaceInjectionRate.get<double>() == 0) {
+                             if (injection->hasInjectionControl(Well::InjectorCMode::RATE) && injection->surfaceInjectionRate.zero()) {
                                  OpmLog::note(msg);
                                  updateWellStatus( well_name, currentStep, Well::Status::SHUT );
                              }
                          }
 
                          if (injection->reservoirInjectionRate.is<double>()) {
-                             if (injection->hasInjectionControl(Well::InjectorCMode::RESV) && injection->reservoirInjectionRate.get<double>() == 0) {
+                             if (injection->hasInjectionControl(Well::InjectorCMode::RESV) && injection->reservoirInjectionRate.zero()) {
                                  OpmLog::note(msg);
                                  updateWellStatus( well_name, currentStep, Well::Status::SHUT );
                              }
@@ -1053,7 +1053,7 @@ namespace {
                         this->addWellGroupEvent( well_name, ScheduleEvents::INJECTION_UPDATE, currentStep);
                     }
 
-                    if ( ! well2->getAllowCrossFlow() && (injection->surfaceInjectionRate.get<double>() == 0)) {
+                    if ( ! well2->getAllowCrossFlow() && (injection->surfaceInjectionRate.zero())) {
                         std::string msg =
                             "Well " + well_name + " is an injector with zero rate where crossflow is banned. " +
                             "This well will be closed at " + std::to_string ( m_timeMap.getTimePassedUntil(currentStep) / (60*60*24) ) + " days";
@@ -1278,7 +1278,7 @@ namespace {
         for( const auto& record : keyword ) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = wellNames( wellNamePattern , currentStep);
-            double fraction = record.getItem("SOLVENT_FRACTION").get< UDAValue >(0).get<double>();
+            double fraction = record.getItem("SOLVENT_FRACTION").get< UDAValue >(0).getSI();
 
             if (well_names.empty())
                 invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
@@ -1310,7 +1310,7 @@ namespace {
                 invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
 
             for(const auto& well_name : well_names) {
-                double tracerConcentration = record.getItem("CONCENTRATION").get< UDAValue >(0).get<double>();
+                double tracerConcentration = record.getItem("CONCENTRATION").get< UDAValue >(0).getSI();
                 const std::string& tracerName = record.getItem("TRACER").getTrimmedString(0);
                 {
                     auto well = std::make_shared<Well>( this->getWell(well_name, currentStep));
@@ -1492,37 +1492,7 @@ namespace {
                                   size_t currentStep,
                                   const ParseContext& parseContext, ErrorGuard& errors) {
         Opm::UnitSystem unitSystem = section.unitSystem();
-        /*
-          double siFactorL = unitSystem.parse("LiquidSurfaceVolume/Time").getSIScaling();
-          double siFactorG = unitSystem.parse("GasSurfaceVolume/Time").getSIScaling();
-          double siFactorP = unitSystem.parse("Pressure").getSIScaling();
-        */
-
-        /*
-          Unit system handling in the UDA values has become a complete mess. The
-          point is that the UDA values can *optionally* carry a dimension object
-          with them, and then that unit system is transparaently used when
-          calling UDAValue::get<double>(). For UDA values which come from the
-          deck they are properly decorated with unitsystem, and things work as
-          they should. But when it comes to *explicitly setting* UDA values from
-          the API, as is done in the WELTARG implementation - things are quite
-          broken.
-
-          What currently "works" is:
-
-          - The well must be fully specified with WCONPROD / WCONHIST before the
-            WELTARG keyword is used.
-
-          - The unit conversion here in handleWELTARG is bypassed by setting the
-            conversion factors to 1.0, and the conversion which comes from the
-            dim objects internalized in the UDA objects will handle things on
-            return.
-        */
-
-        const double siFactorL = 1.0;
-        const double siFactorG = 1.0;
-        const double siFactorP = 1.0;
-
+        const double SiFactorP = unitSystem.parse("Pressure").getSIScaling();
         for( const auto& record : keyword ) {
 
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
@@ -1541,13 +1511,13 @@ namespace {
                     bool update = false;
                     if (well2->isProducer()) {
                         auto prop = std::make_shared<Well::WellProductionProperties>(well2->getProductionProperties());
-                        prop->handleWELTARG(cmode, newValue, siFactorG, siFactorL, siFactorP);
+                        prop->handleWELTARG(cmode, newValue, SiFactorP);
                         update = well2->updateProduction(prop);
                         if (cmode == Well::WELTARGCMode::GUID)
                             update |= well2->updateWellGuideRate(newValue);
                     } else {
                         auto inj = std::make_shared<Well::WellInjectionProperties>(well2->getInjectionProperties());
-                        inj->handleWELTARG(cmode, newValue, siFactorG, siFactorL, siFactorP);
+                        inj->handleWELTARG(cmode, newValue, SiFactorP);
                         update = well2->updateInjection(inj);
                         if (cmode == Well::WELTARGCMode::GUID)
                             update |= well2->updateWellGuideRate(newValue);

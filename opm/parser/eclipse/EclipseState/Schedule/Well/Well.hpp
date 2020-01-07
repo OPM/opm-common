@@ -198,8 +198,12 @@ public:
         std::string name;
         UDAValue  surfaceInjectionRate;
         UDAValue  reservoirInjectionRate;
-        UDAValue  BHPLimit;
-        UDAValue  THPLimit;
+        UDAValue  BHPTarget;
+        UDAValue  THPTarget;
+
+        double  bhp_hist_limit;
+        double  thp_hist_limit = 0;
+
         double  temperature;
         double  BHPH;
         double  THPH;
@@ -219,7 +223,10 @@ public:
                                 const UDAValue& reservoirInjRate,
                                 const UDAValue& BHP,
                                 const UDAValue& THP,
-                                double temp, double bhph,
+                                double bhp_hist,
+                                double thp_hist,
+                                double temp,
+                                double bhph,
                                 double thph,
                                 int vfpTableNum,
                                 bool predMode,
@@ -227,7 +234,7 @@ public:
                                 Well::InjectorType injType,
                                 InjectorCMode ctrlMode);
 
-        void handleWELTARG(WELTARGCMode cmode, double newValue, double siFactorG, double siFactorL, double siFactorP);
+        void handleWELTARG(WELTARGCMode cmode, double newValue, double SIFactorP);
         void handleWCONINJE(const DeckRecord& record, bool availableForGroupControl, const std::string& well_name);
         void handleWCONINJH(const DeckRecord& record, bool is_producer, const std::string& well_name);
         bool hasInjectionControl(InjectorCMode controlModeArg) const {
@@ -250,7 +257,7 @@ public:
         }
 
         void resetDefaultHistoricalBHPLimit();
-
+        void resetBHPLimit();
         void setBHPLimit(const double limit);
         InjectionControls controls(const UnitSystem& unit_system, const SummaryState& st, double udq_default) const;
         bool updateUDQActive(const UDQConfig& udq_config, UDQActive& active) const;
@@ -296,9 +303,13 @@ public:
         UDAValue  GasRate;
         UDAValue  LiquidRate;
         UDAValue  ResVRate;
+        UDAValue  BHPTarget;
+        UDAValue  THPTarget;
+
         // BHP and THP limit
-        UDAValue  BHPLimit;
-        UDAValue  THPLimit;
+        double  bhp_hist_limit;
+        double  thp_hist_limit = 0;
+
         // historical BHP and THP under historical mode
         double  BHPH        = 0.0;
         double  THPH        = 0.0;
@@ -321,6 +332,8 @@ public:
                                  const UDAValue& resvRate,
                                  const UDAValue& BHP,
                                  const UDAValue& THP,
+                                 double bhp_hist,
+                                 double thp_hist,
                                  double bhph,
                                  double thph,
                                  int vfpTableNum,
@@ -348,13 +361,14 @@ public:
         static bool effectiveHistoryProductionControl(ProducerCMode cmode);
         void handleWCONPROD( const std::string& well, const DeckRecord& record);
         void handleWCONHIST( const DeckRecord& record);
-        void handleWELTARG( WELTARGCMode cmode, double newValue, double siFactorG, double siFactorL, double siFactorP);
+        void handleWELTARG( WELTARGCMode cmode, double newValue, double SiFactorP);
         void resetDefaultBHPLimit();
         void clearControls();
         ProductionControls controls(const SummaryState& st, double udq_default) const;
         bool updateUDQActive(const UDQConfig& udq_config, UDQActive& active) const;
 
         int getNumProductionControls() const;
+        void setBHPLimit(const double limit);
 
     private:
         int m_productionControls = 0;
@@ -363,8 +377,6 @@ public:
         void init_history(const DeckRecord& record);
 
         WellProductionProperties(const DeckRecord& record);
-
-        void setBHPLimit(const double limit);
 
         double getBHPLimit() const;
     };

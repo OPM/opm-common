@@ -254,7 +254,7 @@ bool Well::updateEconLimits(std::shared_ptr<WellEconProductionLimits> econ_limit
 void Well::switchToProducer() {
     auto p = std::make_shared<WellInjectionProperties>(this->getInjectionProperties());
 
-    p->BHPLimit.reset( 0 );
+    p->BHPTarget.reset(0);
     p->dropInjectionControl( Opm::Well::InjectorCMode::BHP );
     this->updateInjection( p );
     this->updateProducer(true);
@@ -264,8 +264,7 @@ void Well::switchToProducer() {
 void Well::switchToInjector() {
     auto p = std::make_shared<WellProductionProperties>(getProductionProperties());
 
-    p->BHPLimit.assert_numeric();
-    p->BHPLimit.reset(0);
+    p->setBHPLimit(0);
     p->dropProductionControl( ProducerCMode::BHP );
     this->updateProduction( p );
     this->updateProducer( false );
@@ -776,12 +775,22 @@ bool Well::canOpen() const {
         if (prod.WaterRate.is<std::string>())
           return true;
 
-        return ((prod.OilRate.get<double>() + prod.GasRate.get<double>() + prod.WaterRate.get<double>()) != 0);
+        if (!prod.OilRate.zero())
+            return true;
+
+        if (!prod.GasRate.zero())
+            return true;
+
+        if (!prod.WaterRate.zero())
+            return true;
+
+        return false;
     } else {
         const auto& inj = *this->injection;
         if (inj.surfaceInjectionRate.is<std::string>())
             return true;
-        return inj.surfaceInjectionRate.get<double>() != 0;
+
+        return !inj.surfaceInjectionRate.zero();
     }
 }
 

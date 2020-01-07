@@ -146,7 +146,8 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
     BOOST_CHECK(sched.hasWell("W_2"));
     BOOST_CHECK(sched.hasWell("W_3"));
 
-    BOOST_CHECK_CLOSE( 777/Metric::Time , sched.getWell("W_2", 7).getProductionProperties().ResVRate.get<double>() , 0.0001);
+    BOOST_CHECK_CLOSE( 777/Metric::Time , sched.getWell("W_2", 7).getProductionProperties().ResVRate.getSI() , 0.0001);
+    BOOST_CHECK_CLOSE( 777 , sched.getWell("W_2", 7).getProductionProperties().ResVRate.get<double>() , 0.0001);
     BOOST_CHECK_EQUAL( 0 ,                sched.getWell("W_2", 8).getProductionProperties().ResVRate.get<double>());
 
     BOOST_CHECK( Well::Status::SHUT == sched.getWell("W_2", 3).getStatus());
@@ -171,41 +172,75 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
     BOOST_CHECK( Well::Status::AUTO == sched.getWell("W_3", 3).getStatus());
     {
         const auto& prop7 = sched.getWell("W_3", 7).getProductionProperties();
-        BOOST_CHECK_CLOSE( 999/Metric::Time , prop7.LiquidRate.get<double>() , 0.001);
+        BOOST_CHECK_CLOSE( 999/Metric::Time , prop7.LiquidRate.getSI() , 0.001);
+        BOOST_CHECK_CLOSE( 999 , prop7.LiquidRate.get<double>() , 0.001);
         BOOST_CHECK( Well::ProducerCMode::RESV == prop7.controlMode);
     }
-    BOOST_CHECK_CLOSE( 8000./Metric::Time , sched.getWell("W_3", 3).getProductionProperties().LiquidRate.get<double>(), 1.e-12);
-    BOOST_CHECK_CLOSE( 18000./Metric::Time, sched.getWell("W_3", 8).getProductionProperties().LiquidRate.get<double>(), 1.e-12);
+    BOOST_CHECK_CLOSE( 8000/Metric::Time , sched.getWell("W_3", 3).getProductionProperties().LiquidRate.getSI(), 1.e-12);
+    BOOST_CHECK_CLOSE( 18000/Metric::Time, sched.getWell("W_3", 8).getProductionProperties().LiquidRate.getSI(), 1.e-12);
+    BOOST_CHECK_CLOSE( 8000 , sched.getWell("W_3", 3).getProductionProperties().LiquidRate.get<double>(), 1.e-12);
+    BOOST_CHECK_CLOSE( 18000, sched.getWell("W_3", 8).getProductionProperties().LiquidRate.get<double>(), 1.e-12);
 
 
     {
         BOOST_CHECK_EQUAL(sched.getWell("W_1", 3).getProductionProperties().predictionMode, false);
-        BOOST_CHECK_CLOSE(sched.getWell("W_1", 3).getProductionProperties().WaterRate.get<double>() , 4/Metric::Time, 0.001);
-        BOOST_CHECK_CLOSE(sched.getWell("W_1", 3).getProductionProperties().GasRate.get<double>()   , 12345/Metric::Time, 0.001);
-        BOOST_CHECK_CLOSE(sched.getWell("W_1", 3).getProductionProperties().OilRate.get<double>() , 4000/Metric::Time, 0.001);
+        BOOST_CHECK_CLOSE(sched.getWell("W_1", 3).getProductionProperties().WaterRate.get<double>() , 4, 0.001);
+        BOOST_CHECK_CLOSE(sched.getWell("W_1", 3).getProductionProperties().GasRate.get<double>()   , 12345, 0.001);
+        BOOST_CHECK_CLOSE(sched.getWell("W_1", 3).getProductionProperties().OilRate.get<double>() , 4000, 0.001);
 
-        BOOST_CHECK_CLOSE(sched.getWell("W_1", 4).getProductionProperties().OilRate.get<double>() , 4000/Metric::Time, 0.001);
-        BOOST_CHECK_CLOSE(sched.getWell("W_1", 4).getProductionProperties().WaterRate.get<double>() , 4/Metric::Time, 0.001);
-        BOOST_CHECK_CLOSE(sched.getWell("W_1", 4).getProductionProperties().GasRate.get<double>()   , 12345/Metric::Time,0.001);
+        BOOST_CHECK_CLOSE(sched.getWell("W_1", 4).getProductionProperties().OilRate.get<double>() , 4000, 0.001);
+        BOOST_CHECK_CLOSE(sched.getWell("W_1", 4).getProductionProperties().WaterRate.get<double>() , 4, 0.001);
+        BOOST_CHECK_CLOSE(sched.getWell("W_1", 4).getProductionProperties().GasRate.get<double>()   , 12345,0.001);
 
-        BOOST_CHECK_CLOSE(sched.getWell("W_1", 5).getProductionProperties().WaterRate.get<double>(), 4/Metric::Time, 0.001);
-        BOOST_CHECK_CLOSE(sched.getWell("W_1", 5).getProductionProperties().GasRate.get<double>() , 12345/Metric::Time, 0.001);
-        BOOST_CHECK_CLOSE(sched.getWell("W_1", 5).getProductionProperties().OilRate.get<double>() , 4000/Metric::Time, 0.001);
+        BOOST_CHECK_CLOSE(sched.getWell("W_1", 5).getProductionProperties().WaterRate.get<double>(), 4, 0.001);
+        BOOST_CHECK_CLOSE(sched.getWell("W_1", 5).getProductionProperties().GasRate.get<double>() , 12345, 0.001);
+        BOOST_CHECK_CLOSE(sched.getWell("W_1", 5).getProductionProperties().OilRate.get<double>() , 4000, 0.001);
 
 
         BOOST_CHECK_EQUAL(sched.getWell("W_1", 6).getProductionProperties().predictionMode, false);
-        BOOST_CHECK_CLOSE(sched.getWell("W_1", 6).getProductionProperties().OilRate.get<double>() , 14000/Metric::Time, 0.001);
+        BOOST_CHECK_CLOSE(sched.getWell("W_1", 6).getProductionProperties().OilRate.get<double>() , 14000, 0.001);
 
         BOOST_CHECK_EQUAL(sched.getWell("W_1", 7).getProductionProperties().predictionMode, true);
-        BOOST_CHECK_CLOSE(sched.getWell("W_1", 7).getProductionProperties().OilRate.get<double>() , 11000/Metric::Time, 0.001);
-        BOOST_CHECK_CLOSE(sched.getWell("W_1", 7).getProductionProperties().WaterRate.get<double>() , 44/Metric::Time, 0.001);
+        BOOST_CHECK_CLOSE(sched.getWell("W_1", 7).getProductionProperties().OilRate.get<double>() , 11000, 0.001);
+        BOOST_CHECK_CLOSE(sched.getWell("W_1", 7).getProductionProperties().WaterRate.get<double>() , 44, 0.001);
 
 
         BOOST_CHECK_EQUAL(sched.getWell("W_1", 8).getProductionProperties().predictionMode, false);
-        BOOST_CHECK_CLOSE(sched.getWell("W_1", 8).getProductionProperties().OilRate.get<double>() , 13000/Metric::Time , 0.001);
+        BOOST_CHECK_CLOSE(sched.getWell("W_1", 8).getProductionProperties().OilRate.get<double>() , 13000, 0.001);
 
-        BOOST_CHECK_CLOSE(sched.getWell("W_1", 10).getInjectionProperties().BHPLimit.get<double>(), 123.00 * Metric::Pressure , 0.001);
-        BOOST_CHECK_CLOSE(sched.getWell("W_1", 10).getInjectionProperties().THPLimit.get<double>(), 678.00 * Metric::Pressure , 0.001);
+        BOOST_CHECK_CLOSE(sched.getWell("W_1", 10).getInjectionProperties().BHPTarget.get<double>(), 123.00 , 0.001);
+        BOOST_CHECK_CLOSE(sched.getWell("W_1", 10).getInjectionProperties().THPTarget.get<double>(), 678.00 , 0.001);
+
+        //----
+
+        BOOST_CHECK_EQUAL(sched.getWell("W_1", 3).getProductionProperties().predictionMode, false);
+        BOOST_CHECK_CLOSE(sched.getWell("W_1", 3).getProductionProperties().WaterRate.getSI() , 4/Metric::Time, 0.001);
+        BOOST_CHECK_CLOSE(sched.getWell("W_1", 3).getProductionProperties().GasRate.getSI()   , 12345/Metric::Time, 0.001);
+        BOOST_CHECK_CLOSE(sched.getWell("W_1", 3).getProductionProperties().OilRate.getSI() , 4000/Metric::Time, 0.001);
+
+        BOOST_CHECK_CLOSE(sched.getWell("W_1", 4).getProductionProperties().OilRate.getSI() , 4000/Metric::Time, 0.001);
+        BOOST_CHECK_CLOSE(sched.getWell("W_1", 4).getProductionProperties().WaterRate.getSI() , 4/Metric::Time, 0.001);
+        BOOST_CHECK_CLOSE(sched.getWell("W_1", 4).getProductionProperties().GasRate.getSI()   , 12345/Metric::Time,0.001);
+
+        BOOST_CHECK_CLOSE(sched.getWell("W_1", 5).getProductionProperties().WaterRate.getSI(), 4/Metric::Time, 0.001);
+        BOOST_CHECK_CLOSE(sched.getWell("W_1", 5).getProductionProperties().GasRate.getSI() , 12345/Metric::Time, 0.001);
+        BOOST_CHECK_CLOSE(sched.getWell("W_1", 5).getProductionProperties().OilRate.getSI() , 4000/Metric::Time, 0.001);
+
+
+        BOOST_CHECK_EQUAL(sched.getWell("W_1", 6).getProductionProperties().predictionMode, false);
+        BOOST_CHECK_CLOSE(sched.getWell("W_1", 6).getProductionProperties().OilRate.getSI() , 14000/Metric::Time, 0.001);
+
+        BOOST_CHECK_EQUAL(sched.getWell("W_1", 7).getProductionProperties().predictionMode, true);
+        BOOST_CHECK_CLOSE(sched.getWell("W_1", 7).getProductionProperties().OilRate.getSI() , 11000/Metric::Time, 0.001);
+        BOOST_CHECK_CLOSE(sched.getWell("W_1", 7).getProductionProperties().WaterRate.getSI() , 44/Metric::Time, 0.001);
+
+
+        BOOST_CHECK_EQUAL(sched.getWell("W_1", 8).getProductionProperties().predictionMode, false);
+        BOOST_CHECK_CLOSE(sched.getWell("W_1", 8).getProductionProperties().OilRate.getSI() , 13000/Metric::Time , 0.001);
+
+        BOOST_CHECK_CLOSE(sched.getWell("W_1", 10).getInjectionProperties().BHPTarget.getSI(), 123.00 * Metric::Pressure , 0.001);
+        BOOST_CHECK_CLOSE(sched.getWell("W_1", 10).getInjectionProperties().THPTarget.getSI(), 678.00 * Metric::Pressure , 0.001);
+
 
 
 
@@ -270,7 +305,8 @@ BOOST_AUTO_TEST_CASE(WellTestCOMPDAT) {
     BOOST_CHECK(sched.hasWell("W_2"));
     BOOST_CHECK(sched.hasWell("W_3"));
     {
-        BOOST_CHECK_CLOSE(13000/Metric::Time , sched.getWell("W_1", 8).getProductionProperties().OilRate.get<double>() , 0.0001);
+        BOOST_CHECK_CLOSE(13000/Metric::Time , sched.getWell("W_1", 8).getProductionProperties().OilRate.getSI() , 0.0001);
+        BOOST_CHECK_CLOSE(13000 , sched.getWell("W_1", 8).getProductionProperties().OilRate.get<double>() , 0.0001);
         {
             const auto& connections = sched.getWell("W_1", 3).getConnections();
             BOOST_CHECK_EQUAL(4U, connections.size());

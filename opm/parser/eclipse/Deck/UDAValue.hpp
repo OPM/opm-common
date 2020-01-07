@@ -36,8 +36,19 @@ public:
     explicit UDAValue(const std::string&);
     UDAValue(const UDAValue& src, const Dimension& dim);
 
+    /*
+      The get<double>() and get<std::string>() methods will throw an
+      exception if the internal type and the template parameter disagree.
+    */
+
     template<typename T>
     T get() const;
+
+    /*
+      The getSI() can only be called for numerical values.
+    */
+    double getSI() const;
+    bool zero() const;
 
     template<typename T>
     bool is() const;

@@ -1255,7 +1255,9 @@ BOOST_AUTO_TEST_CASE(UDA_VALUE_DIM) {
     UDAValue value1(value0, dim);
 
     BOOST_CHECK_EQUAL( value0.get<double>(), 1);
-    BOOST_CHECK_EQUAL( value1.get<double>(), 10);
+    BOOST_CHECK_EQUAL( value0.getSI(), 1);
+    BOOST_CHECK_EQUAL( value1.get<double>(), 1);
+    BOOST_CHECK_EQUAL( value1.getSI(), 10);
 }
 
 
