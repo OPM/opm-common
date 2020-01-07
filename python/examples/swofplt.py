@@ -2,18 +2,22 @@
 
 import sys
 from os.path import isdir, join
-import sunbeam
 from datetime import datetime as dt
 
 import numpy as np
 import matplotlib.pyplot as plt
 
+import opm.io
+from opm.io.parser import Parser, ParseContext
+from opm.io.ecl_state import EclipseState
+from opm.io.schedule import Schedule
+
 
 def plotswof(ecl):
-    assert('SWOF' in ecl.table)
-    krw  = ecl.table['SWOF', 'KRW']
-    krow = ecl.table['SWOF', 'KROW']
-    pcow = ecl.table['SWOF', 'PCOW']
+    assert('SWOF' in ecl.tables())
+    krw  = lambda x: ecl.tables().evaluate('SWOF', 0, 'KRW', x)
+    krow = lambda x: ecl.tables().evaluate('SWOF', 0, 'KROW', x)
+    pcow = lambda x: ecl.tables().evaluate('SWOF', 0, 'PCOW', x)
 
     swofl = [x/20.0       for x in range(21)]
     krwl  = [krw(x/20.0)  for x in range(21)]
@@ -48,7 +52,9 @@ def haveopmdata():
 
 def parse(fname):
     s = dt.now()
-    es = sunbeam.parse(fname, ('PARSE_RANDOM_SLASH', sunbeam.action.ignore))
+    ps = ParseContext([('PARSE_RANDOM_SLASH', opm.io.action.ignore)])
+    deck = Parser().parse(fname, ps)
+    es = EclipseState(deck)
     e = dt.now()
     print('Parsing took %s sec' % (e - s).seconds)
     return es
