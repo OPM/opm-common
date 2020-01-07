@@ -329,7 +329,6 @@ BOOST_AUTO_TEST_CASE(PdvdTable_Tests) {
     BOOST_CHECK_THROW(Opm::PdvdTable pdvdTable2(deck.getKeyword("PDVD").getRecord(1).getItem(0)), std::invalid_argument);
 }
 
-
 BOOST_AUTO_TEST_CASE(SgwfnTable_Tests) {
     const char *deckData =
         "TABDIMS\n"

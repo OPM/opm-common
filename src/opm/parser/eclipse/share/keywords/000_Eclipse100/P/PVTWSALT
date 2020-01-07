@@ -5,6 +5,6 @@
         {"name":"SALT_CONCENTRATION_REF", "value_type" : "DOUBLE", "default" : 0.0,"dimension":"Density"}
     ],
     [
-        {"name" : "table", "value_type" : "DOUBLE", "size_type" : "ALL", "dimension" : ["Density","1","1/Pressure","Viscosity", "1/Pressure"]}
+        {"name" : "DATA", "value_type" : "DOUBLE", "size_type" : "ALL", "dimension" : ["Density","1","1/Pressure","Viscosity", "1/Pressure"]}
     ]]
 }

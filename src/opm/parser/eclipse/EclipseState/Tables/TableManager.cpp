@@ -337,7 +337,7 @@ namespace Opm {
         addTables( "RVVD", m_eqldims->getNumEquilRegions());
         addTables( "PBVD", m_eqldims->getNumEquilRegions());
         addTables( "PDVD", m_eqldims->getNumEquilRegions());
-	addTables( "SALTVD", m_eqldims->getNumEquilRegions());
+        addTables( "SALTVD", m_eqldims->getNumEquilRegions());
 
         addTables( "AQUTAB", m_aqudims.getNumInfluenceTablesCT());
         {
@@ -400,7 +400,7 @@ namespace Opm {
         initSimpleTableContainer<RvvdTable>(deck, "RVVD" , m_eqldims->getNumEquilRegions());
         initSimpleTableContainer<PbvdTable>(deck, "PBVD" , m_eqldims->getNumEquilRegions());
         initSimpleTableContainer<PdvdTable>(deck, "PDVD" , m_eqldims->getNumEquilRegions());
-	initSimpleTableContainer<SaltvdTable>(deck, "SALTVD" , m_eqldims->getNumEquilRegions());
+        initSimpleTableContainer<SaltvdTable>(deck, "SALTVD" , m_eqldims->getNumEquilRegions());
         initSimpleTableContainer<AqutabTable>(deck, "AQUTAB" , m_aqudims.getNumInfluenceTablesCT());
         {
             size_t numEndScaleTables = ParserKeywords::ENDSCALE::NUM_TABLES::defaultValue;

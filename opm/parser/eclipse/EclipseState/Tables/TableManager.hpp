@@ -114,7 +114,7 @@ namespace Opm {
         const TableContainer& getRvvdTables() const;
         const TableContainer& getPbvdTables() const;
         const TableContainer& getPdvdTables() const;
-	const TableContainer& getSaltvdTables() const;
+        const TableContainer& getSaltvdTables() const;
         const TableContainer& getEnkrvdTables() const;
         const TableContainer& getEnptvdTables() const;
         const TableContainer& getImkrvdTables() const;
