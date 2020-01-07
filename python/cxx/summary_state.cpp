@@ -51,5 +51,8 @@ void python::common::export_SummaryState(py::module& module) {
         .def("elapsed", &SummaryState::get_elapsed)
         .def_property_readonly("groups", groups)
         .def_property_readonly("wells", wells)
+        .def("__contains__", &SummaryState::has)
+        .def("has_well_var", &SummaryState::has_well_var)
+        .def("has_group_var", &SummaryState::has_group_var)
         .def("__getitem__", &SummaryState::get);
 }
