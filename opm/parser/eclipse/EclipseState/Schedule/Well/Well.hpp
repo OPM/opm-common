@@ -202,8 +202,8 @@ public:
         UDAValue  BHPTarget;
         UDAValue  THPTarget;
 
-        double  bhp_hist_limit;
-        double  thp_hist_limit = 0;
+        double  bhp_hist_limit = 0.0;
+        double  thp_hist_limit = 0.0;
 
         double  temperature;
         double  BHPH;
@@ -308,8 +308,8 @@ public:
         UDAValue  THPTarget;
 
         // BHP and THP limit
-        double  bhp_hist_limit;
-        double  thp_hist_limit = 0;
+        double  bhp_hist_limit = 0.0;
+        double  thp_hist_limit = 0.0;
 
         // historical BHP and THP under historical mode
         double  BHPH        = 0.0;
