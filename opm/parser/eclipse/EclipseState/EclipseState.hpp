@@ -117,7 +117,8 @@ namespace Opm {
         void complainAboutAmbiguousKeyword(const Deck& deck,
                                            const std::string& keywordName);
 
-        const TableManager m_tables;
+     protected:
+        TableManager m_tables;
         Runspec m_runspec;
         EclipseConfig m_eclipseConfig;
         UnitSystem m_deckUnitSystem;
@@ -125,7 +126,7 @@ namespace Opm {
         EDITNNC m_inputEditNnc;
         EclipseGrid m_inputGrid;
         FieldPropsManager field_props;
-        const SimulationConfig m_simulationConfig;
+        SimulationConfig m_simulationConfig;
         TransMult m_transMult;
 
         FaultCollection m_faults;
