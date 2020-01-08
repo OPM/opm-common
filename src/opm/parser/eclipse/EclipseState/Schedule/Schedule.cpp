@@ -813,7 +813,7 @@ namespace {
                 invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
 
             for( const auto& well_name : well_names) {
-                updateWellStatus( well_name , currentStep , status );
+                updateWellStatus( well_name , currentStep , status, false );
                 {
                     auto& dynamic_state = this->wells_static.at(well_name);
                     auto well2 = std::make_shared<Well>(*dynamic_state[currentStep]);
@@ -856,7 +856,7 @@ namespace {
                                 "Well " + well2->name() + " is a history matched well with zero rate where crossflow is banned. " +
                                 "This well will be closed at " + std::to_string ( m_timeMap.getTimePassedUntil(currentStep) / (60*60*24) ) + " days";
                             OpmLog::note(msg);
-                            updateWellStatus( well_name, currentStep, Well::Status::SHUT );
+                            updateWellStatus( well_name, currentStep, Well::Status::SHUT, false );
                         }
                     }
                 }
@@ -877,7 +877,7 @@ namespace {
 
             for( const auto& well_name : well_names) {
 
-                updateWellStatus( well_name , currentStep , status );
+                updateWellStatus( well_name , currentStep , status, false );
                 {
                     auto& dynamic_state = this->wells_static.at(well_name);
                     auto well2 = std::make_shared<Well>(*dynamic_state[currentStep]);
@@ -918,15 +918,15 @@ namespace {
 
 
     void Schedule::shut_well(const std::string& well_name, std::size_t report_step) {
-        this->updateWellStatus(well_name, report_step, Well::Status::SHUT );
+        this->updateWellStatus(well_name, report_step, Well::Status::SHUT, true);
     }
 
     void Schedule::open_well(const std::string& well_name, std::size_t report_step) {
-        this->updateWellStatus(well_name, report_step, Well::Status::OPEN );
+        this->updateWellStatus(well_name, report_step, Well::Status::OPEN, true);
     }
 
     void Schedule::stop_well(const std::string& well_name, std::size_t report_step) {
-        this->updateWellStatus(well_name, report_step, Well::Status::STOP );
+        this->updateWellStatus(well_name, report_step, Well::Status::STOP, true);
     }
 
     void Schedule::updateWell(std::shared_ptr<Well> well, size_t reportStep) {
@@ -939,19 +939,17 @@ namespace {
       Function is quite dangerous - because if this is called while holding a
       Well pointer that will go stale and needs to be refreshed.
     */
-    bool Schedule::updateWellStatus( const std::string& well_name, size_t reportStep , Well::Status status) {
+    bool Schedule::updateWellStatus( const std::string& well_name, size_t reportStep , Well::Status status, bool update_connections) {
         bool update = false;
-        {
-            auto& dynamic_state = this->wells_static.at(well_name);
-            auto well2 = std::make_shared<Well>(*dynamic_state[reportStep]);
-            if (well2->updateStatus(status)) {
-                m_events.addEvent( ScheduleEvents::WELL_STATUS_CHANGE, reportStep );
-                this->addWellGroupEvent( well2->name(), ScheduleEvents::WELL_STATUS_CHANGE, reportStep);
-                this->updateWell(well2, reportStep);
-                update = true;
-                if (status == Well::Status::OPEN)
-                    this->rft_config.addWellOpen(well_name, reportStep);
-            }
+        auto& dynamic_state = this->wells_static.at(well_name);
+        auto well2 = std::make_shared<Well>(*dynamic_state[reportStep]);
+        if (well2->updateStatus(status, update_connections)) {
+            m_events.addEvent( ScheduleEvents::WELL_STATUS_CHANGE, reportStep );
+            this->addWellGroupEvent( well2->name(), ScheduleEvents::WELL_STATUS_CHANGE, reportStep);
+            this->updateWell(well2, reportStep);
+            update = true;
+            if (status == Well::Status::OPEN)
+                this->rft_config.addWellOpen(well_name, reportStep);
         }
         return update;
     }
@@ -985,7 +983,7 @@ namespace {
 
             for( const auto& well_name : well_names ) {
                 Well::Status status = Well::StatusFromString( record.getItem("STATUS").getTrimmedString(0));
-                updateWellStatus( well_name , currentStep , status );
+                updateWellStatus( well_name , currentStep , status, false );
                 {
                     bool update_well = false;
                     auto& dynamic_state = this->wells_static.at(well_name);
@@ -1018,14 +1016,14 @@ namespace {
                          if (injection->surfaceInjectionRate.is<double>()) {
                              if (injection->hasInjectionControl(Well::InjectorCMode::RATE) && injection->surfaceInjectionRate.zero()) {
                                  OpmLog::note(msg);
-                                 updateWellStatus( well_name, currentStep, Well::Status::SHUT );
+                                 updateWellStatus( well_name, currentStep, Well::Status::SHUT, false );
                              }
                          }
 
                          if (injection->reservoirInjectionRate.is<double>()) {
                              if (injection->hasInjectionControl(Well::InjectorCMode::RESV) && injection->reservoirInjectionRate.zero()) {
                                  OpmLog::note(msg);
-                                 updateWellStatus( well_name, currentStep, Well::Status::SHUT );
+                                 updateWellStatus( well_name, currentStep, Well::Status::SHUT, false );
                              }
                          }
                     }
@@ -1048,7 +1046,7 @@ namespace {
                 invalidNamePattern( wellNamePattern, parseContext, errors, keyword);
 
             for (const auto& well_name : well_names) {
-                updateWellStatus( well_name, currentStep, status );
+                updateWellStatus( well_name, currentStep, status, false );
                 {
                     bool update_well = false;
                     auto& dynamic_state = this->wells_static.at(well_name);
@@ -1076,7 +1074,7 @@ namespace {
                             "Well " + well_name + " is an injector with zero rate where crossflow is banned. " +
                             "This well will be closed at " + std::to_string ( m_timeMap.getTimePassedUntil(currentStep) / (60*60*24) ) + " days";
                         OpmLog::note(msg);
-                        updateWellStatus( well_name, currentStep, Well::Status::SHUT );
+                        updateWellStatus( well_name, currentStep, Well::Status::SHUT, false );
                     }
                 }
             }
@@ -1478,7 +1476,7 @@ namespace {
                                 + std::to_string( days ) + " days";
                             OpmLog::note(msg);
                         } else {
-                            this->updateWellStatus( wname, currentStep, well_status );
+                            this->updateWellStatus( wname, currentStep, well_status, false );
                             if (well_status == open)
                                 this->rft_config.addWellOpen(wname, currentStep);
 
@@ -2709,7 +2707,7 @@ void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, c
             const auto& well = this->getWell(wname, timeStep);
             const auto& connections = well.getConnections();
             if (connections.allConnectionsShut())
-                this->updateWellStatus( well.name(), timeStep, Well::Status::SHUT);
+                this->updateWellStatus( well.name(), timeStep, Well::Status::SHUT, false);
         }
     }
 

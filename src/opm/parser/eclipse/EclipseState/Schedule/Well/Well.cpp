@@ -379,13 +379,41 @@ bool Well::updateHead(int I, int J) {
 }
 
 
-bool Well::updateStatus(Status status_arg) {
-    if (this->status != status_arg) {
-        this->status = status_arg;
-        return true;
+bool Well::updateStatus(Status well_state, bool update_connections) {
+    bool update = false;
+    if (update_connections) {
+        Connection::State connection_state;
+
+        switch (well_state) {
+        case Status::OPEN:
+            connection_state = Connection::State::OPEN;
+            break;
+        case Status::SHUT:
+            connection_state = Connection::State::SHUT;
+            break;
+        case Status::AUTO:
+            connection_state = Connection::State::AUTO;
+            break;
+        case Status::STOP:
+            connection_state = Connection::State::SHUT;
+            break;
+        }
+
+        auto new_connections = std::make_shared<WellConnections>(this->headI, this->headJ);
+        for (auto c : *this->connections) {
+            c.setState(connection_state);
+            new_connections->add(c);
+        }
+
+        update = this->updateConnections(new_connections);
     }
 
-    return false;
+    if (this->status != well_state) {
+        this->status = well_state;
+        update = true;
+    }
+
+    return update;
 }
 
 
@@ -627,7 +655,7 @@ Phase Well::getPreferredPhase() const {
   When all connections of a well are closed with the WELOPEN keywords, the well
   itself should also be SHUT. In the main parsing code this is handled by the
   function checkIfAllConnectionsIsShut() which is called at the end of every
-  report step in Schedule::iterateScheduleSection(). This is donn in this way
+  report step in Schedule::iterateScheduleSection(). This is done in this way
   because there is some twisted logic aggregating connection changes over a
   complete report step.
 
@@ -665,6 +693,10 @@ bool Well::handleWELOPEN(const DeckRecord& record, Connection::State state_arg, 
 
     return this->updateConnections(new_connections);
 }
+
+
+
+
 
 bool Well::handleCOMPLUMP(const DeckRecord& record) {
 

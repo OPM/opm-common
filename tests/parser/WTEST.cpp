@@ -78,13 +78,13 @@ BOOST_AUTO_TEST_CASE(WTEST_STATE2) {
     std::vector<Well> wells;
     wells.emplace_back("WELL_NAME", "A", 0, 0, 1, 1, 200., Phase::OIL, Well::ProducerCMode::NONE, Connection::Order::TRACK, us, 0.);
     {
-        wells[0].updateStatus(Well::Status::SHUT);
+        wells[0].updateStatus(Well::Status::SHUT, false);
         auto shut_wells = st.updateWells(wc, wells, 5000);
         BOOST_CHECK_EQUAL(shut_wells.size(), 0);
     }
 
     {
-        wells[0].updateStatus(Well::Status::OPEN);
+        wells[0].updateStatus(Well::Status::OPEN, false);
         auto shut_wells = st.updateWells(wc, wells, 5000);
         BOOST_CHECK_EQUAL( shut_wells.size(), 1);
     }
@@ -115,12 +115,12 @@ BOOST_AUTO_TEST_CASE(WTEST_STATE) {
 
     WellTestConfig wc;
     {
-        wells[0].updateStatus(Well::Status::SHUT);
+        wells[0].updateStatus(Well::Status::SHUT, false);
         auto shut_wells = st.updateWells(wc, wells, 110. * day);
         BOOST_CHECK_EQUAL(shut_wells.size(), 0);
     }
     {
-        wells[0].updateStatus(Well::Status::OPEN);
+        wells[0].updateStatus(Well::Status::OPEN, false);
         auto shut_wells = st.updateWells(wc, wells, 110. * day);
         BOOST_CHECK_EQUAL(shut_wells.size(), 0);
     }
@@ -151,10 +151,10 @@ BOOST_AUTO_TEST_CASE(WTEST_STATE) {
     wc.add_well("WELL_NAME", WellTestConfig::Reason::PHYSICAL, 1000. * day, 3, 0, 5);
 
 
-    wells[0].updateStatus(Well::Status::SHUT);
+    wells[0].updateStatus(Well::Status::SHUT, false);
     BOOST_CHECK_EQUAL( st.updateWells(wc, wells, 4100. * day).size(), 0);
 
-    wells[0].updateStatus(Well::Status::OPEN);
+    wells[0].updateStatus(Well::Status::OPEN, false);
     BOOST_CHECK_EQUAL( st.updateWells(wc, wells, 4100. * day).size(), 1);
 
     BOOST_CHECK_EQUAL( st.updateWells(wc, wells, 5200. * day).size(), 1);
@@ -182,9 +182,9 @@ BOOST_AUTO_TEST_CASE(WTEST_STATE_COMPLETIONS) {
     const UnitSystem us{};
     std::vector<Well> wells;
     wells.emplace_back("WELL_NAME", "A", 0, 0, 1, 1, 200., Phase::OIL, Well::ProducerCMode::NONE, Connection::Order::TRACK, us, 0.);
-    wells[0].updateStatus(Well::Status::OPEN);
+    wells[0].updateStatus(Well::Status::OPEN, false);
     wells.emplace_back("WELLX", "A", 0, 0, 2, 2, 200., Phase::OIL, Well::ProducerCMode::NONE, Connection::Order::TRACK, us, 0.);
-    wells[1].updateStatus(Well::Status::OPEN);
+    wells[1].updateStatus(Well::Status::OPEN, false);
 
     auto closed_completions = st.updateWells(wc, wells, 5000);
     BOOST_CHECK_EQUAL( closed_completions.size(), 0);
