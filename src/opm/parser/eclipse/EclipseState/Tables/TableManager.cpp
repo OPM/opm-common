@@ -105,6 +105,8 @@ namespace Opm {
                                const RockTable& rockTable,
                                const ViscrefTable& viscrefTable,
                                const WatdentTable& watdentTable,
+                               const std::vector<PvtwsaltTable>& pvtwsaltTables,
+                               const std::vector<BrineDensityTable>& bdensityTables,
                                const std::map<int, PlymwinjTable>& plymwinjTables,
                                const std::map<int, SkprwatTable>& skprwatTables,
                                const std::map<int, SkprpolyTable>& skprpolyTables,
@@ -129,6 +131,8 @@ namespace Opm {
         m_rockTable(rockTable),
         m_viscrefTable(viscrefTable),
         m_watdentTable(watdentTable),
+        m_pvtwsaltTables(pvtwsaltTables),
+        m_bdensityTables(bdensityTables),
         m_plymwinjTables(plymwinjTables),
         m_skprwatTables(skprwatTables),
         m_skprpolyTables(skprpolyTables),
@@ -215,6 +219,8 @@ namespace Opm {
         m_densityTable = data.m_densityTable;
         m_viscrefTable = data.m_viscrefTable;
         m_watdentTable = data.m_watdentTable;
+        m_pvtwsaltTables = data.m_pvtwsaltTables;
+        m_bdensityTables = data.m_bdensityTables;
         m_plymwinjTables = data.m_plymwinjTables;
         m_skprwatTables = data.m_skprwatTables;
         m_skprpolyTables = data.m_skprpolyTables;
@@ -1027,6 +1033,8 @@ namespace Opm {
                m_densityTable == data.m_densityTable &&
                m_viscrefTable == data.m_viscrefTable &&
                m_watdentTable == data.m_watdentTable &&
+               m_pvtwsaltTables == data.m_pvtwsaltTables &&
+               m_bdensityTables == data.m_bdensityTables &&
                m_plymwinjTables == data.m_plymwinjTables &&
                m_skprwatTables == data.m_skprwatTables &&
                m_skprpolyTables == data.m_skprpolyTables &&

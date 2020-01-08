@@ -72,6 +72,8 @@ namespace Opm {
                      const RockTable& rockTable,
                      const ViscrefTable& viscrefTable,
                      const WatdentTable& watdentTable,
+                     const std::vector<PvtwsaltTable>& pvtwsaltTables,
+                     const std::vector<BrineDensityTable>& bdensityTables,
                      const std::map<int, PlymwinjTable>& plymwinjTables,
                      const std::map<int, SkprwatTable>& skprwatTables,
                      const std::map<int, SkprpolyTable>& skprpolyTables,
