@@ -213,6 +213,7 @@ if(ENABLE_ECL_INPUT)
   if (OPM_ENABLE_EMBEDDED_PYTHON)
     set_source_files_properties(${PYTHON_CXX_SOURCE_FILES} PROPERTIES COMPILE_FLAGS -Wno-shadow)
     set_source_files_properties(src/opm/parser/eclipse/Python/PythonInterp.cpp PROPERTIES COMPILE_FLAGS -Wno-shadow)
+    set_source_files_properties(src/opm/parser/eclipse/EclipseState/Schedule/Action/PyAction.cpp PROPERTIES COMPILE_FLAGS -Wno-shadow)
     list( APPEND MAIN_SOURCE_FILES src/opm/parser/eclipse/Python/PythonInterp.cpp ${PYTHON_CXX_SOURCE_FILES})
   endif()
 

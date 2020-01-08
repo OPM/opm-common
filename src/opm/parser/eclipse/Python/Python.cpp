@@ -17,7 +17,8 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
+#include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/Python/Python.hpp>
 #include "PythonInterp.hpp"
 
@@ -40,8 +41,8 @@ bool Python::exec(const std::string& python_code, const Parser& parser, Deck& de
     return true;
 }
 
-bool Python::exec(const PyAction& py_action) const {
-    this->interp->exec(py_action.code());
+bool Python::exec(const PyAction& py_action, EclipseState& ecl_state, Schedule& schedule, std::size_t report_step, SummaryState& st) const {
+    this->interp->exec(py_action, ecl_state, schedule, report_step, st);
     return true;
 }
 

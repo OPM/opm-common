@@ -46,6 +46,21 @@ bool PythonInterp::exec(const std::string& python_code, const Parser& parser, De
 }
 
 
+bool PythonInterp::exec(const PyAction& py_action, EclipseState& ecl_state, Schedule& schedule, std::size_t report_step, SummaryState& st) {
+    auto context = py::module::import("context");
+
+    context.attr("schedule") = &schedule;
+    context.attr("sim") = &st;
+    context.attr("state") = &ecl_state;
+    context.attr("report_step") = report_step;
+    context.attr("storage") = static_cast<py::dict*>(py_action.storage());
+
+    py::exec(py_action.code(), py::globals(), py::dict(py::arg("context") = context));
+    return true;
+}
+
+
+
 bool PythonInterp::exec(const std::string& python_code) {
     py::exec(python_code, py::globals());
     return true;

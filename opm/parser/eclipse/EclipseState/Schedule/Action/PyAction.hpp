@@ -30,8 +30,22 @@ class PyAction {
 public:
     explicit PyAction(const std::string& code_arg);
     const std::string& code() const;
+    ~PyAction();
+
+    /*
+      Storage is a void pointer to a Python dictionary: py::dict. It is represented
+      with a void pointer in this way to avoid adding the Pybind11 headers to this
+      file. Calling scope must do a cast before using the storage pointer:
+
+          py::dict * storage = static_cast<py::dict *>(py_action.storage());
+
+      The purpose of this dictionary is to allow PYACTION scripts to store state
+      between invocations.
+    */
+    void * storage() const;
 private:
     std::string input_code;
+    void * m_storage;
 };
 
 }

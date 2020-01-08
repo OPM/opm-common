@@ -29,7 +29,9 @@ namespace Opm {
 class PythonInterp;
 class Parser;
 class Deck;
-
+class SummaryState;
+class Schedule;
+class EclipseState;
 
 /*
   This class is a thin wrapper around the PythonInterp class. The Python class
@@ -57,7 +59,7 @@ public:
     Python();
     bool exec(const std::string& python_code) const;
     bool exec(const std::string& python_code, const Parser& parser, Deck& deck) const;
-    bool exec(const PyAction& py_action) const;
+    bool exec(const PyAction& py_action, EclipseState& ecl_state, Schedule& schedule, std::size_t report_step, SummaryState& st) const;
     explicit operator bool() const;
 private:
     std::shared_ptr<PythonInterp> interp;
