@@ -31,3 +31,8 @@ bool Opm::WellBrineProperties::operator!=(const WellBrineProperties& other) cons
 {
     return this->m_saltConcentration != other.m_saltConcentration;
 }
+
+bool Opm::WellBrineProperties::operator==(const WellBrineProperties& other) const
+{
+    return this->m_saltConcentration == other.m_saltConcentration;
+}
