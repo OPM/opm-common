@@ -420,6 +420,7 @@ public:
          std::shared_ptr<const WellEconProductionLimits> econLimits,
          std::shared_ptr<const WellFoamProperties> foamProperties,
          std::shared_ptr<const WellPolymerProperties> polymerProperties,
+         std::shared_ptr<const WellBrineProperties> brineProperties,
          std::shared_ptr<const WellTracerProperties> tracerProperties,
          std::shared_ptr<WellConnections> connections,
          std::shared_ptr<const WellProductionProperties> production,
