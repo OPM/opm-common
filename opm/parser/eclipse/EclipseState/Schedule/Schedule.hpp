@@ -210,6 +210,9 @@ namespace Opm
         const Well& getWellatEnd(const std::string& well_name) const;
         std::vector<Well> getWells(size_t timeStep) const;
         std::vector<Well> getWellsatEnd() const;
+        void shut_well(const std::string& well_name, std::size_t report_step);
+        void stop_well(const std::string& well_name, std::size_t report_step);
+        void open_well(const std::string& well_name, std::size_t report_step);
 
         std::vector<const Group*> getChildGroups2(const std::string& group_name, size_t timeStep) const;
         std::vector<Well> getChildWells2(const std::string& group_name, size_t timeStep) const;

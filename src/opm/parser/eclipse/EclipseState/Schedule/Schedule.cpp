@@ -917,6 +917,18 @@ namespace {
     }
 
 
+    void Schedule::shut_well(const std::string& well_name, std::size_t report_step) {
+        this->updateWellStatus(well_name, report_step, Well::Status::SHUT );
+    }
+
+    void Schedule::open_well(const std::string& well_name, std::size_t report_step) {
+        this->updateWellStatus(well_name, report_step, Well::Status::OPEN );
+    }
+
+    void Schedule::stop_well(const std::string& well_name, std::size_t report_step) {
+        this->updateWellStatus(well_name, report_step, Well::Status::STOP );
+    }
+
     void Schedule::updateWell(std::shared_ptr<Well> well, size_t reportStep) {
         auto& dynamic_state = this->wells_static.at(well->name());
         dynamic_state.update(reportStep, well);
@@ -2062,7 +2074,7 @@ namespace {
             }
         }
     }
-	    	    
+
     void Schedule::handleWSEGVALV( const DeckKeyword& keyword, size_t currentStep) {
         const std::map<std::string, std::vector<std::pair<int, Valve> > > valves = Valve::fromWSEGVALV(keyword);
 
