@@ -44,7 +44,7 @@ C = B * 20
 SCHEDULE
 
 PYACTION Her comes an ignored comment
-)" + input_code + "<<<";
+)" + input_code + "PYEND";
 
     const std::string deck_string2 = R"(
 SCHEDULE
@@ -57,7 +57,7 @@ PYACTION
 SCHEDULE
 
 PYACTION -- Comment
-)" + input_code + "<<<" + "\nGRID";
+)" + input_code + "PYEND" + "\nGRID";
 
 
     Parser parser;
