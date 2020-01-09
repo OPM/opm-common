@@ -68,17 +68,17 @@ BOOST_AUTO_TEST_CASE(PYINPUT_BASIC) {
         PYINPUT
         kw = context.DeckKeyword( context.parser['FIELD'] )
         context.deck.add(kw)
-        <<<
+        PYEND
         DIMENS
         2 2 1 /
         PYINPUT
         import numpy as np
         dx = np.array([0.25, 0.25, 0.25, 0.25])
         active_unit_system = context.deck.active_unit_system()
-        default_unit_system = context.deck.default_unit_system()        
+        default_unit_system = context.deck.default_unit_system()
         kw = context.DeckKeyword( context.parser['DX'], dx, active_unit_system, default_unit_system )
         context.deck.add(kw)
-        <<<
+        PYEND
         DY
         4*0.25 /
         )";
