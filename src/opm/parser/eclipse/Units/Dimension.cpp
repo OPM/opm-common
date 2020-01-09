@@ -33,9 +33,10 @@ namespace Opm {
 
     }
 
-    Dimension::Dimension(const std::string& name, double SIfactor, double SIoffset)
+    Dimension::Dimension(const std::string& name, double SIfactor,
+                         double SIoffset, bool sanityCheck)
     {
-        for (auto iter = name.begin(); iter != name.end(); ++iter) {
+        for (auto iter = name.begin(); iter != name.end() && sanityCheck; ++iter) {
             if (!isalpha(*iter) && (*iter) != '1')
                 throw std::invalid_argument("Invalid dimension name");
         }
