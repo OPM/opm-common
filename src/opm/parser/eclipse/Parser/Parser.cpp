@@ -741,8 +741,10 @@ std::unique_ptr<RawKeyword> tryParseKeyword( ParserState& parserState, const Par
                     parserState.handleRandomText( line );
             }
         } else {
+            const auto& parserKeyword = parser.getParserKeywordFromDeckName(rawKeyword->getKeywordName());
+            const auto& parserRecord = parserKeyword.getRecord( rawKeyword->size() );
+
             if (rawKeyword->getSizeType() == Raw::CODE) {
-                const auto& parserKeyword = parser.getParserKeywordFromDeckName(rawKeyword->getKeywordName());
                 auto end_pos = line.find(parserKeyword.codeEnd());
                 if (end_pos != std::string::npos) {
                     string_view line_content = { line.begin(), line.begin() + end_pos};
