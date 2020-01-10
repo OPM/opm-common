@@ -933,6 +933,8 @@ namespace {
                 this->addWellGroupEvent( well2->name(), ScheduleEvents::WELL_STATUS_CHANGE, reportStep);
                 this->updateWell(well2, reportStep);
                 update = true;
+                if (status == Well::Status::OPEN)
+                    this->rft_config.addWellOpen(well_name, reportStep);
             }
         }
         return update;
