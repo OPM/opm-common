@@ -30,6 +30,8 @@
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 
+#include <opm/io/eclipse/rst/header.hpp>
+
 #include <algorithm>
 #include <array>
 #include <initializer_list>
@@ -488,4 +490,142 @@ TSTEP
     checkDate(11, { 2010, 12, 30 }); // RStep 11 == 2009-12-30 -> 2010-12-30
 }
 
+
+BOOST_AUTO_TEST_CASE(TestHeader) {
+    using USys = Opm::RestartIO::InteHEAD::UnitSystem;
+    using Ph = Opm::RestartIO::InteHEAD::Phases;
+
+    const auto nx = 10;
+    const auto ny = 11;
+    const auto nz = 12;
+    const auto nactive = 1345;
+    const auto numWells        = 17;
+    const auto maxPerf         = 29;
+    const auto maxWellsInGroup  =  3;
+    const auto maxGroupInField = 14;
+    const auto maxWellsInField = 25;
+    const auto year = 2010;
+    const auto month = 1;
+    const auto mday = 27;
+    const auto hour = 11;
+    const auto minute = 22;
+    const auto seconds = 30;
+    const auto mseconds = 1234;
+    const auto total_mseconds = seconds * 1000000 + mseconds;
+    const auto phase_sum = 7;
+    const auto niwelz = 10;
+    const auto nswelz = 11;
+    const auto nxwelz = 12;
+    const auto nzwelz = 13;
+    const auto niconz = 77;
+    const auto nsconz = 88;
+    const auto nxconz = 99;
+    const auto nigrpz = 21;
+    const auto nsgrpz = 22;
+    const auto nxgrpz = 23;
+    const auto nzgrpz = 24;
+    const auto ncamax = 1;
+    const auto niaaqz = 11;
+    const auto nsaaqz = 111;
+    const auto nxaaqz = 11111;
+    const auto nicaqz = 111111;
+    const auto nscaqz = 1111111;
+    const auto nacaqz = 11111111;
+    const auto tstep  = 78;
+    const auto sim_step = 12;
+    const auto report_step = sim_step + 1;
+    const auto newtmx	= 17;
+    const auto newtmn	=  5;
+    const auto litmax	= 102;
+    const auto litmin	= 20;
+    const auto mxwsit	= 8;
+    const auto mxwpit	= 6;
+    const auto version = 2015;
+    const auto iprog = 100;
+    const auto nsegwl = 3;
+    const auto nswlmx = 4;
+    const auto nsegmx = 5;
+    const auto nlbrmx = 6;
+    const auto nisegz = 7;
+    const auto nrsegz = 8;
+    const auto nilbrz = 9;
+    const auto ntfip  = 12;
+    const auto nmfipr = 22;
+    const auto ngroup  = 8;
+
+    auto ih = Opm::RestartIO::InteHEAD{}
+         .dimensions(nx, ny, nz)
+         .numActive(nactive)
+         .unitConventions(USys::Metric)
+         .wellTableDimensions({ numWells, maxPerf, maxWellsInGroup, maxGroupInField, maxWellsInField})
+         .calendarDate({year, month, mday, hour, minute, seconds, mseconds})
+         .activePhases(Ph{1,1,1})
+         .params_NWELZ(niwelz, nswelz, nxwelz, nzwelz)
+         .params_NCON(niconz, nsconz, nxconz)
+         .params_GRPZ({nigrpz, nsgrpz, nxgrpz, nzgrpz})
+         .params_NAAQZ(ncamax, niaaqz, nsaaqz, nxaaqz, nicaqz, nscaqz, nacaqz)
+         .stepParam(tstep, sim_step)
+         .tuningParam({newtmx, newtmn, litmax, litmin, mxwsit, mxwpit})
+         .variousParam(version, iprog)
+         .wellSegDimensions({nsegwl, nswlmx, nsegmx, nlbrmx, nisegz, nrsegz, nilbrz})
+         .regionDimensions({ntfip, nmfipr, 0,0,0})
+         .ngroups({ngroup});
+
+    Opm::RestartIO::Header header(ih.data(), std::vector<bool>(100), std::vector<double>(1000));
+    BOOST_CHECK_EQUAL(header.nx, nx);
+    BOOST_CHECK_EQUAL(header.ny, ny);
+    BOOST_CHECK_EQUAL(header.nactive, nactive);
+    BOOST_CHECK_EQUAL(header.num_wells, numWells);
+    BOOST_CHECK_EQUAL(header.max_perf, maxPerf);
+    BOOST_CHECK_EQUAL(header.max_wells_in_group, std::max(maxWellsInGroup , maxGroupInField));
+    BOOST_CHECK_EQUAL(header.max_groups_in_field, maxGroupInField + 1);
+    BOOST_CHECK_EQUAL(header.max_wells_in_field, maxWellsInField);
+    BOOST_CHECK_EQUAL(header.year, year);
+    BOOST_CHECK_EQUAL(header.month, month);
+    BOOST_CHECK_EQUAL(header.mday, mday);
+    BOOST_CHECK_EQUAL(header.hour, hour);
+    BOOST_CHECK_EQUAL(header.minute, minute);
+    BOOST_CHECK_EQUAL(header.microsecond, total_mseconds);
+    BOOST_CHECK_EQUAL(header.phase_sum , phase_sum);
+    BOOST_CHECK_EQUAL(header.niwelz, niwelz);
+    BOOST_CHECK_EQUAL(header.nswelz, nswelz);
+    BOOST_CHECK_EQUAL(header.nxwelz, nxwelz);
+    BOOST_CHECK_EQUAL(header.nzwelz, nzwelz);
+    BOOST_CHECK_EQUAL(header.niconz, niconz);
+    BOOST_CHECK_EQUAL(header.nsconz, nsconz);
+    BOOST_CHECK_EQUAL(header.nxconz, nxconz);
+    BOOST_CHECK_EQUAL(header.nigrpz, nigrpz);
+    BOOST_CHECK_EQUAL(header.nsgrpz, nsgrpz);
+    BOOST_CHECK_EQUAL(header.nxgrpz, nxgrpz);
+    BOOST_CHECK_EQUAL(header.nzgrpz, nzgrpz);
+    BOOST_CHECK_EQUAL(header.ncamax, ncamax);
+    BOOST_CHECK_EQUAL(header.niaaqz, niaaqz);
+    BOOST_CHECK_EQUAL(header.nsaaqz, nsaaqz);
+    BOOST_CHECK_EQUAL(header.nxaaqz, nxaaqz);
+    BOOST_CHECK_EQUAL(header.nicaqz, nicaqz);
+    BOOST_CHECK_EQUAL(header.nscaqz, nscaqz);
+    BOOST_CHECK_EQUAL(header.nacaqz, nacaqz);
+    BOOST_CHECK_EQUAL(header.tstep, tstep);
+    BOOST_CHECK_EQUAL(header.report_step, report_step);
+    BOOST_CHECK_EQUAL(header.newtmx, newtmx);
+    BOOST_CHECK_EQUAL(header.newtmn, newtmn);
+    BOOST_CHECK_EQUAL(header.litmax, litmax);
+    BOOST_CHECK_EQUAL(header.litmin, litmin);
+    BOOST_CHECK_EQUAL(header.mxwsit, mxwsit);
+    BOOST_CHECK_EQUAL(header.mxwpit, mxwpit);
+    BOOST_CHECK_EQUAL(header.version, version);
+    BOOST_CHECK_EQUAL(header.iprog, iprog);
+    BOOST_CHECK_EQUAL(header.nsegwl, nsegwl);
+    BOOST_CHECK_EQUAL(header.nswlmx, nswlmx);
+    BOOST_CHECK_EQUAL(header.nsegmx, nsegmx);
+    BOOST_CHECK_EQUAL(header.nlbrmx, nlbrmx);
+    BOOST_CHECK_EQUAL(header.nisegz, nisegz);
+    BOOST_CHECK_EQUAL(header.nilbrz, nilbrz);
+    BOOST_CHECK_EQUAL(header.ntfip, ntfip);
+    BOOST_CHECK_EQUAL(header.nmfipr, nmfipr);
+    BOOST_CHECK_EQUAL(header.ngroup, ngroup);
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
+
