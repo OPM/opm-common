@@ -330,8 +330,8 @@ BOOST_AUTO_TEST_CASE(Time_and_report_step)
 
     const auto& v = ih.data();
 
-    BOOST_CHECK_EQUAL(v[67], 12);    // TSTEP
-    BOOST_CHECK_EQUAL(v[68], 2 + 1); // REP_STEP (= sim_step + 1)
+    BOOST_CHECK_EQUAL(v[VI::intehead::NUM_SOLVER_STEPS], 12);    // TSTEP
+    BOOST_CHECK_EQUAL(v[VI::intehead::REPORT_STEP], 2 + 1); // REP_STEP (= sim_step + 1)
 }
 
 BOOST_AUTO_TEST_CASE(Tuning_param)
@@ -350,12 +350,12 @@ BOOST_AUTO_TEST_CASE(Tuning_param)
 
     const auto& v = ih.data();
 
-    BOOST_CHECK_EQUAL(v[80], newtmx);        // NEWTMX
-    BOOST_CHECK_EQUAL(v[81], newtmn);        // NEWTMN
-    BOOST_CHECK_EQUAL(v[82], litmax);        // LITMAX
-    BOOST_CHECK_EQUAL(v[83], litmin);        // LITMIN
-    BOOST_CHECK_EQUAL(v[86], mxwsit);        // MXWSIT
-    BOOST_CHECK_EQUAL(v[87], mxwpit);        // MXWPIT
+    BOOST_CHECK_EQUAL(v[VI::intehead::NEWTMX], newtmx);
+    BOOST_CHECK_EQUAL(v[VI::intehead::NEWTMN], newtmn);
+    BOOST_CHECK_EQUAL(v[VI::intehead::LITMAX], litmax);
+    BOOST_CHECK_EQUAL(v[VI::intehead::LITMIN], litmin);
+    BOOST_CHECK_EQUAL(v[VI::intehead::MXWSIT], mxwsit);
+    BOOST_CHECK_EQUAL(v[VI::intehead::MXWPIT], mxwpit);
 }
 
 BOOST_AUTO_TEST_CASE(Various_Parameters)
@@ -365,8 +365,8 @@ BOOST_AUTO_TEST_CASE(Various_Parameters)
 
     const auto& v = ih.data();
 
-    BOOST_CHECK_EQUAL(v[  1], 2015); // VERSION
-    BOOST_CHECK_EQUAL(v[ 94], 100); // IPROG
+    BOOST_CHECK_EQUAL(v[VI::intehead::VERSION], 2015); // VERSION
+    BOOST_CHECK_EQUAL(v[VI::intehead::IPROG], 100);    // IPROG
     BOOST_CHECK_EQUAL(v[ 76],   5); // IH_076
     BOOST_CHECK_EQUAL(v[101],   1); // IH_101
     BOOST_CHECK_EQUAL(v[103],   1); // IH_103
@@ -413,8 +413,8 @@ BOOST_AUTO_TEST_CASE(regionDimensions)
 
     const auto& v = ih.data();
 
-    BOOST_CHECK_EQUAL(v[89], ntfip);  // NTFIP
-    BOOST_CHECK_EQUAL(v[99], nmfipr); // NMFIPR
+    BOOST_CHECK_EQUAL(v[VI::intehead::NTFIP], ntfip);
+    BOOST_CHECK_EQUAL(v[VI::intehead::NMFIPR], nmfipr);
 }
 
 BOOST_AUTO_TEST_CASE(ngroups)
@@ -426,7 +426,7 @@ BOOST_AUTO_TEST_CASE(ngroups)
 	
     const auto& v = ih.data();
 
-    BOOST_CHECK_EQUAL(v[18], ngroup);  // NGRP
+    BOOST_CHECK_EQUAL(v[VI::intehead::NGRP], ngroup);
 }
 BOOST_AUTO_TEST_CASE(SimulationDate)
 {
