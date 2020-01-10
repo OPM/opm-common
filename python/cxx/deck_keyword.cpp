@@ -8,6 +8,7 @@
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
+#include <opm/parser/eclipse/Deck/UDAValue.hpp>
 #include <opm/parser/eclipse/Utility/Typetools.hpp>
 
 #include "export.hpp"
@@ -190,6 +191,7 @@ void python::common::export_DeckKeyword(py::module& module) {
         .def("get_int", &DeckItem::get<int>)
         .def("get_raw", &DeckItem::get<double>)
         .def("get_SI", &DeckItem::getSIDouble)
+        .def("get_UDA", &DeckItem::get<UDAValue>)
         .def("get_data_list", &item_to_pylist)
         .def("get_raw_data_list", &raw_data_to_pylist)
         .def("get_SI_data_list", &SI_data_to_pylist)

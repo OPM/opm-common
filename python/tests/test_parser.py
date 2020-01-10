@@ -59,6 +59,22 @@ FIPNUM
         deck = parser.parse_string(string)
         deck = parser.parse_string(string, context)
 
+    def test_spe_records(self):
+        parser = Parser()
+        deck = parser.parse(self.spe3fn)
+        assert(deck["START"][0][0].get_int(0) == 1)
+        assert(deck["START"][0][1].get_str(0) == "JAN")
+        assert(deck["START"][0][2].get_int(0) == 2015)
+
+        assert(deck["WCONPROD"][0][0].get_str(0) == "PROD")
+        assert(not deck["WCONPROD"][0][0].defaulted(0))
+        assert(deck["WCONPROD"][0][1].get_str(0) == "OPEN")
+        assert(deck["WCONPROD"][0][2].get_str(0) == "GRAT")
+        assert(deck["WCONPROD"][0][3].defaulted(0))
+        assert(deck["WCONPROD"][0][4].defaulted(0))
+        assert(deck["WCONPROD"][0][5].get_UDA(0) == 6200)
+
+
     def test_deck_kw_records(self):
         parser = Parser()
         deck = parser.parse_string(self.REGIONDATA)
@@ -155,8 +171,8 @@ FIPNUM
         assert( not( "ZCORN" in deck ) )
         deck.add( zcorn_kw )
         assert( "ZCORN" in deck )
-        
-    
+
+
 
 if __name__ == "__main__":
     unittest.main()
