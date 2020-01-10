@@ -132,7 +132,7 @@ namespace Opm {
         DeckKeyword(parserKeyword)
     {
         if (!parserKeyword.isDataKeyword())
-            throw std::invalid_argument("Deckkeyword '" + name() + "' is not a data keyword.");
+            throw std::invalid_argument("DeckKeyword '" + name() + "' is not a data keyword.");
 
         const ParserRecord& parser_record = parserKeyword.getRecord(0);
         const ParserItem& parser_item = parser_record.get(0);
@@ -140,7 +140,7 @@ namespace Opm {
         setDataKeyword();
         if (parser_item.dataType() != type_tag::integer)
             throw std::invalid_argument("Input to DeckKeyword '" + name() + "': cannot be std::vector<int>.");
-      
+
         DeckItem item(parser_item.name(), int() );
         for (int val : data)
             item.push_back(val);
