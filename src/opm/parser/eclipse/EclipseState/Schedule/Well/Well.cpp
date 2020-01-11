@@ -126,6 +126,7 @@ Well::Well(const std::string& wname_arg,
     econ_limits(std::make_shared<WellEconProductionLimits>()),
     foam_properties(std::make_shared<WellFoamProperties>()),
     polymer_properties(std::make_shared<WellPolymerProperties>()),
+    brine_properties(std::make_shared<WellBrineProperties>()),
     tracer_properties(std::make_shared<WellTracerProperties>()),
     connections(std::make_shared<WellConnections>(headI, headJ)),
     production(std::make_shared<WellProductionProperties>(wname)),
@@ -159,6 +160,7 @@ Well::Well(const std::string& wname_arg,
           std::shared_ptr<const WellEconProductionLimits> econLimits,
           std::shared_ptr<const WellFoamProperties> foamProperties,
           std::shared_ptr<const WellPolymerProperties> polymerProperties,
+          std::shared_ptr<const WellBrineProperties> brineProperties,
           std::shared_ptr<const WellTracerProperties> tracerProperties,
           std::shared_ptr<WellConnections> connections_arg,
           std::shared_ptr<const WellProductionProperties> production_arg,
@@ -187,6 +189,7 @@ Well::Well(const std::string& wname_arg,
     econ_limits(econLimits),
     foam_properties(foamProperties),
     polymer_properties(polymerProperties),
+    brine_properties(brineProperties),
     tracer_properties(tracerProperties),
     connections(connections_arg),
     production(production_arg),
@@ -235,6 +238,19 @@ bool Well::updatePolymerProperties(std::shared_ptr<WellPolymerProperties> polyme
     }
     if (*this->polymer_properties != *polymer_properties_arg) {
         this->polymer_properties = polymer_properties_arg;
+        return true;
+    }
+
+    return false;
+}
+
+bool Well::updateBrineProperties(std::shared_ptr<WellBrineProperties> brine_properties_arg) {
+    if (this->producer) {
+        throw std::runtime_error("Not allowed to set brine injection properties for well " + name() +
+                                 " since it is a production well");
+    }
+    if (*this->brine_properties != *brine_properties_arg) {
+        this->brine_properties = brine_properties_arg;
         return true;
     }
 
@@ -556,6 +572,9 @@ const WellPolymerProperties& Well::getPolymerProperties() const {
     return *this->polymer_properties;
 }
 
+const WellBrineProperties& Well::getBrineProperties() const {
+    return *this->brine_properties;
+}
 
 const WellTracerProperties& Well::getTracerProperties() const {
     return *this->tracer_properties;
@@ -833,6 +852,8 @@ double Well::production_rate(const SummaryState& st, Phase prod_phase) const {
             throw std::invalid_argument( "Production of 'POLYMW' requested.");
         case Phase::FOAM:
             throw std::invalid_argument( "Production of 'FOAM' requested.");
+        case Phase::BRINE:
+        throw std::invalid_argument( "Production of 'BRINE' requested.");
     }
 
     throw std::logic_error( "Unreachable state. Invalid Phase value. "

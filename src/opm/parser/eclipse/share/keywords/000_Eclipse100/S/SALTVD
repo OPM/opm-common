@@ -1,4 +1,7 @@
 {"name" : "SALTVD" ,
- "sections" : ["SOLUTION"],
- "size" : {"keyword" : "EQLDIMS", "item" : "NTEQUL"},
- "items" : [{"name" : "DATA", "value_type" : "DOUBLE", "size_type" : "ALL"}]}
+"comment" : "Hardcoded two columns. Multi-Component Brine Model not supported",
+"sections" : ["SOLUTION"], "size" : {"keyword" : "EQLDIMS" , "item" : "NTEQUL"},
+        "items" : [{"name" : "DATA" ,
+                   "value_type" : "DOUBLE" ,
+                   "size_type" : "ALL",
+                   "dimension" : ["Length" , "Density"]}]}
