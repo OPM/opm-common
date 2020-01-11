@@ -774,6 +774,7 @@ if(ENABLE_ECL_OUTPUT)
         opm/io/eclipse/rst/well.hpp
         opm/output/data/Aquifer.hpp
         opm/output/data/Cells.hpp
+        opm/output/data/Groups.hpp
         opm/output/data/Solution.hpp
         opm/output/data/Wells.hpp
         opm/output/data/Groups.hpp

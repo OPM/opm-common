@@ -133,6 +133,25 @@ public:
     };
 
     // Note: guide rates don't exist at the FIELD level.
+    const std::map<int, inj_cmode_enum> ICntlModeToiCMode = {
+                                                    {0, inj_cmode_enum::NONE},
+                                                    {1, inj_cmode_enum::RATE},
+                                                    {2, inj_cmode_enum::RESV},
+                                                    {3, inj_cmode_enum::REIN},
+                                                    {4, inj_cmode_enum::VREP},    };
+
+    using p_cmode = Opm::Group::ProductionCMode;
+    const std::map<int, p_cmode> PCntlModeToPCMode = {
+                                                    {0, p_cmode::NONE},
+                                                    {1, p_cmode::ORAT},
+                                                    {2, p_cmode::WRAT},
+                                                    {3, p_cmode::GRAT},
+                                                    {4, p_cmode::LRAT},
+                                                    {9, p_cmode::CRAT},
+                                                    {5, p_cmode::RESV},
+                                                    {6, p_cmode::PRBL},
+    };
+
     const std::map<std::string, size_t> fieldKeyToIndex = {
                                                            {"FOPR",  0},
                                                            {"FWPR",  1},

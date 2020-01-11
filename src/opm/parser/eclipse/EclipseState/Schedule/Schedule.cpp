@@ -2153,11 +2153,11 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
             const std::string& childName = trim_wgname(keyword, record.getItem("CHILD_GROUP").get<std::string>(0), parseContext, errors);
             const std::string& parentName = trim_wgname(keyword, record.getItem("PARENT_GROUP").get<std::string>(0), parseContext, errors);
 
-            if (!hasGroup(parentName))
-                addGroup( parentName , currentStep, unit_system );
-
             if (!hasGroup(childName))
                 addGroup( childName , currentStep, unit_system );
+            
+            if (!hasGroup(parentName))
+                addGroup( parentName , currentStep, unit_system );
 
             this->addGroupToGroup(parentName, childName, currentStep);
         }
