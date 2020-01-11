@@ -41,7 +41,7 @@ namespace UDA {
         output_value = st.get(string_var);
 
     // We do not handle negative rates.
-    output_value = std::max(0.0, output_value);
+    // output_value = std::max(0.0, output_value);
     return value.get_dim().convertRawToSi(output_value);
 }
 
@@ -65,7 +65,7 @@ double eval_group_uda(const UDAValue& value, const std::string& group, const Sum
         output_value = st.get(string_var);
 
     // We do not handle negative rates.
-    output_value = std::max(0.0, output_value);
+    // output_value = std::max(0.0, output_value);
     return value.get_dim().convertRawToSi(output_value);
 }
 
