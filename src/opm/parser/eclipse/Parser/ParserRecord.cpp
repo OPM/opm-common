@@ -207,4 +207,9 @@ namespace {
         return stream << "    }";
     }
 
+
+    const std::string& ParserRecord::end_string() const {
+        return this->record_end;
+    }
+
 }

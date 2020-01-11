@@ -49,13 +49,6 @@ PYACTION Her comes an ignored comment
     const std::string deck_string2 = R"(
 SCHEDULE
 
-PYACTION
-)" + input_code;
-
-
-    const std::string deck_string3 = R"(
-SCHEDULE
-
 PYACTION -- Comment
 )" + input_code + "PYEND" + "\nGRID";
 
@@ -68,11 +61,6 @@ PYACTION -- Comment
     }
     {
         auto deck = parser.parseString(deck_string2);
-        const auto& parsed_code = deck.getKeyword("PYACTION").getRecord(0).getItem("code").get<std::string>(0);
-        BOOST_CHECK_EQUAL(parsed_code, input_code);
-    }
-    {
-        auto deck = parser.parseString(deck_string3);
         const auto& parsed_code = deck.getKeyword("PYACTION").getRecord(0).getItem("code").get<std::string>(0);
         BOOST_CHECK_EQUAL(parsed_code, input_code);
         BOOST_CHECK( deck.hasKeyword("GRID"));

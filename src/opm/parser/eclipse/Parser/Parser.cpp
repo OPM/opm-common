@@ -741,8 +741,10 @@ std::unique_ptr<RawKeyword> tryParseKeyword( ParserState& parserState, const Par
                     parserState.handleRandomText( line );
             }
         } else {
+            const auto& parserKeyword = parser.getParserKeywordFromDeckName(rawKeyword->getKeywordName());
+            const auto& parserRecord = parserKeyword.getRecord( rawKeyword->size() );
+
             if (rawKeyword->getSizeType() == Raw::CODE) {
-                const auto& parserKeyword = parser.getParserKeywordFromDeckName(rawKeyword->getKeywordName());
                 auto end_pos = line.find(parserKeyword.codeEnd());
                 if (end_pos != std::string::npos) {
                     string_view line_content = { line.begin(), line.begin() + end_pos};
@@ -814,19 +816,8 @@ std::unique_ptr<RawKeyword> tryParseKeyword( ParserState& parserState, const Par
         if (rawKeyword->getSizeType() == Raw::UNKNOWN)
             rawKeyword->terminateKeyword();
 
-        if (!rawKeyword->isFinished()) {
-            /*
-              It is not necessary to explicitly terminate code keywords, in that
-              case they will load all the content until EOF is reached.
-            */
-            if (rawKeyword->getSizeType() == Raw::CODE) {
-                RawRecord record(string_view{ record_buffer.begin(), record_buffer.end() + 1}, true);
-                rawKeyword->addRecord(record);
-                return rawKeyword;
-            }
-
+        if (!rawKeyword->isFinished())
             throw std::invalid_argument("Keyword " + rawKeyword->getKeywordName() + " is not properly terminated");
-        }
     }
 
     return rawKeyword;

@@ -55,11 +55,13 @@ namespace Opm {
         bool operator==( const ParserRecord& ) const;
         bool operator!=( const ParserRecord& ) const;
         bool rawStringRecord() const;
+        const std::string& end_string() const;
 
     private:
         bool m_dataRecord;
         std::vector< ParserItem > m_items;
         bool raw_string_record = false;
+        std::string record_end = "/";
     };
 
 std::ostream& operator<<( std::ostream&, const ParserRecord& );
