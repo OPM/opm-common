@@ -57,6 +57,17 @@ class TestSchedule(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.sch.group('foo', 0)
 
+    def test_open_shut(self):
+        deck  = Parser().parse(test_path('spe3/SPE3CASE1.DATA'))
+        state = EclipseState(deck)
+        sch = Schedule( deck, state )
+        prod = sch.get_well("PROD", 1)
+        self.assertEqual(prod.status(), "OPEN")
+
+        sch.shut_well("PROD", 10)
+        prod = sch.get_well("PROD", 10)
+        self.assertEqual(prod.status(), "SHUT")
+
 
 if __name__ == "__main__":
     unittest.main()

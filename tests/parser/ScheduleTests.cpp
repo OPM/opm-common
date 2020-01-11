@@ -3351,9 +3351,9 @@ BOOST_AUTO_TEST_CASE(WELL_STATIC) {
     BOOST_CHECK(ws.updateRefDepth(1.0));
     BOOST_CHECK(!ws.updateRefDepth(1.0));
 
-    ws.updateStatus(Well::Status::OPEN);
-    BOOST_CHECK(!ws.updateStatus(Well::Status::OPEN));
-    BOOST_CHECK(ws.updateStatus(Well::Status::SHUT));
+    ws.updateStatus(Well::Status::OPEN, false);
+    BOOST_CHECK(!ws.updateStatus(Well::Status::OPEN, false));
+    BOOST_CHECK(ws.updateStatus(Well::Status::SHUT, false));
 
     const auto& connections = ws.getConnections();
     BOOST_CHECK_EQUAL(connections.size(), 0);

@@ -210,6 +210,9 @@ namespace Opm
         const Well& getWellatEnd(const std::string& well_name) const;
         std::vector<Well> getWells(size_t timeStep) const;
         std::vector<Well> getWellsatEnd() const;
+        void shut_well(const std::string& well_name, std::size_t report_step);
+        void stop_well(const std::string& well_name, std::size_t report_step);
+        void open_well(const std::string& well_name, std::size_t report_step);
 
         std::vector<const Group*> getChildGroups2(const std::string& group_name, size_t timeStep) const;
         std::vector<Well> getChildWells2(const std::string& group_name, size_t timeStep) const;
@@ -310,7 +313,7 @@ namespace Opm
         void updateGroup(std::shared_ptr<Group> group, size_t reportStep);
         bool checkGroups(const ParseContext& parseContext, ErrorGuard& errors);
         void updateUDQActive( std::size_t timeStep, std::shared_ptr<UDQActive> udq );
-        bool updateWellStatus( const std::string& well, size_t reportStep , Well::Status status);
+        bool updateWellStatus( const std::string& well, size_t reportStep , Well::Status status, bool update_connections);
         void addWellToGroup( const std::string& group_name, const std::string& well_name , size_t timeStep);
         void iterateScheduleSection(const ParseContext& parseContext ,  ErrorGuard& errors, const SCHEDULESection& , const EclipseGrid& grid,
                                     const FieldPropsManager& fp,
