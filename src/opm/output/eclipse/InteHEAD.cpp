@@ -37,7 +37,7 @@ enum index : std::vector<int>::size_type {
   ih_015       =       15       ,              //       0       0
   NWELLS       =       VI::intehead::NWELLS,   //       NWELLS       39              NWELL = number of wells
   NCWMAX       =       VI::intehead::NCWMAX,   //       NCWMAX       108       Weldims item2       NCWMAX = maximum number of completions per well
-  NGRP         =       18       ,              //       NGRP?       0       Number of actual groups
+  NGRP         =       VI::intehead::NGRP,     //       NGRP?        0       Number of actual groups
   NWGMAX       =       VI::intehead::NWGMAX,   //       NWGMAX       0       maximum of weldims item3 or item4       NWGMAX = maximum number of wells in any well group
   NGMAXZ       =       VI::intehead::NGMAXZ,   //       NGMAXZ       0       weldims item3 + 1       NGMAXZ = maximum number of groups in field
   ih_021       =       21       ,              //       0       0
@@ -86,8 +86,8 @@ enum index : std::vector<int>::size_type {
   DAY          =       VI::intehead::DAY,      //       IDAY          2     IDAY = calendar day at this report time
   MONTH        =       VI::intehead::MONTH,    //       IMON          6     IMON = calendar month at this report time
   YEAR         =       VI::intehead::YEAR,     //       IYEAR      2016     IYEAR = calendar year at this report time
-  NUM_SOLVER_STEPS  =  67       ,              //  The number of solver steps the simulator has performed so far.
-  REPORT_STEP       =  68       ,              // The sequence/report number for for this restart file.
+  NUM_SOLVER_STEPS  =  VI::intehead::NUM_SOLVER_STEPS,         //  The number of solver steps the simulator has performed so far.
+  REPORT_STEP       =  VI::intehead::REPORT_STEP,              // The sequence/report number for for this restart file.
   ih_069       =       69       ,              //       0       0
   ih_070       =       70       ,              //       0       0
   NWHISTCTL    =       VI::intehead::WHISTC,   //       index for WHISTCTL keyword
@@ -99,26 +99,26 @@ enum index : std::vector<int>::size_type {
   ih_077       =       77       ,              //       0       0
   ih_078       =       78       ,              //       0       0
   ih_079       =       79       ,              //       0       0
-  NEWTMX       =       80       ,              //       0       0       Tuning,Record3,Item1
-  NEWTMN       =       81       ,              //       0       0       Tuning,Record3,Item2
-  LITMAX       =       82       ,              //       0       0       Tuning,Record3,Item3
-  LITMIN       =       83       ,              //       0       0       Tuning,Record3,Item4
+  NEWTMX       =       VI::intehead::NEWTMX,   //       0       0       Tuning,Record3,Item1
+  NEWTMN       =       VI::intehead::NEWTMN,   //       0       0       Tuning,Record3,Item2
+  LITMAX       =       VI::intehead::LITMAX,   //       0       0       Tuning,Record3,Item3
+  LITMIN       =       VI::intehead::LITMIN,   //       0       0       Tuning,Record3,Item4
   ih_084       =       84       ,              //       0       0       Tuning,Record3,Item5
   ih_085       =       85       ,              //       0       0       Tuning,Record3,Item6
-  MXWSIT       =       86       ,              //       0       0
-  MXWPIT       =       87       ,              //       0       0
+  MXWSIT       =       VI::intehead::MXWSIT,   //       0       0
+  MXWPIT       =       VI::intehead::MXWPIT,   //       0       0
   ih_088       =       88       ,              //       0       0
-  NTFIP        =       89       ,              //       0       0       REGDIMS item1, or TABDIMS item 5
+  NTFIP        =       VI::intehead::NTFIP,    //       0       0
   ih_090       =       90       ,              //       0       0
   ih_091       =       91       ,              //       0       0
   ih_092       =       92       ,              //       0       0
   ih_093       =       93       ,              //       0       0
-  IPROG        =       94       ,              //       0       100              IPROG = simulation program identifier:  100 - ECLIPSE 100, 300 - ECLIPSE 300, 500 - ECLIPSE 300 (thermal option), negative - Other simulator
+  IPROG        =       VI::intehead::IPROG,    //       0       100
   INITSIZE     =       95       ,              //       0       0
   ih_096       =       96       ,              //       0       0
   ih_097       =       97       ,              //       0       0
   ih_098       =       98       ,              //       0       0
-  NMFIPR       =       99       ,              //       0       0       REGDIMS item2
+  NMFIPR       =       VI::intehead::NMFIPR,   //       0       0
   ih_100       =      100       ,              //       0       0
   ih_101       =      101       ,              //       0       0       1
   ih_102       =      102       ,              //       0       0
@@ -225,8 +225,8 @@ enum index : std::vector<int>::size_type {
   ih_203       =      203       ,              //       0
   ih_204       =      204       ,              //       0
   ih_205       =      205       ,              //       0
-  IHOURZ       =      206       ,              //       IHOURZ                     IHOURZ = current simulation time HH:MM:SS – number of hours (HH) (0-23).
-  IMINTS       =      207       ,              //       IMINTS                     IMINTS = current simulation time HH:MM:SS - number of minutes (MM) (0-59).
+  IHOURZ       =      VI::intehead::IHOURZ,
+  IMINTS       =      VI::intehead::IMINTS,
   ih_208       =      208       ,              //       0
   ih_209       =      209       ,              //       0
   ih_210       =      210       ,              //       0
@@ -429,7 +429,7 @@ enum index : std::vector<int>::size_type {
   ih_407       =      407       ,              //       0
   ih_408       =      408       ,              //       0
   ih_409       =      409       ,              //       0
-  ISECND       =      410       ,              //       0                     ISECND = current simulation time HH:MM:SS - number of seconds (SS), reported in microseconds (0-59,999,999)
+  ISECND       =      VI::intehead::ISECND,
  // ---------------------------------------------------------------------
  // ---------------------------------------------------------------------
 
