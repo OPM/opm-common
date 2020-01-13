@@ -525,7 +525,6 @@ const std::vector<Dimension>& DeckItem::defaultDimensions() const {
 template int DeckItem::get< int >( size_t ) const;
 template double DeckItem::get< double >( size_t ) const;
 template std::string DeckItem::get< std::string >( size_t ) const;
-template UDAValue DeckItem::get< UDAValue >( size_t ) const;
 
 template void DeckItem::push_backDummyDefault<int>();
 template void DeckItem::push_backDummyDefault<double>();
