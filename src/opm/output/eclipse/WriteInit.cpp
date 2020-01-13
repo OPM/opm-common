@@ -388,16 +388,16 @@ namespace {
         }
     }
 
-    template <typename T, class WriteVector>
+    template <class WriteVector>
     void writeCellPropertiesValuesOnly(const Properties& propList,
                                        const ::Opm::FieldPropsManager& fp,
                                        WriteVector&&                   write)
     {
         for (const auto& prop : propList) {
 
-            if (!fp.has<T>(prop.name))
+            if (!fp.has<double>(prop.name))
                 continue;
-            auto data = fp.get<T>(prop.name);
+            auto data = fp.get<double>(prop.name);
             write(prop, std::move(data));
         }
     }
@@ -431,7 +431,7 @@ namespace {
             });
         }
         else {
-            writeCellPropertiesValuesOnly<double>(propList, fp, 
+            writeCellPropertiesValuesOnly(propList, fp, 
                 [&units, &initFile](const CellProperty&   prop,
                                     std::vector<double>&& value)
             {
