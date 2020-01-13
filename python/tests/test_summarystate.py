@@ -12,7 +12,8 @@ class TestSummaryState(unittest.TestCase):
         st = opm.io.sim.SummaryState(datetime.datetime.now())
         st.update("FOPT", 100)
         self.assertEqual(st["FOPT"], 100)
-
+        self.assertTrue("FOPT" in st)
+        self.assertFalse("FWPR" in st)
 
         with self.assertRaises(IndexError):
             x = st["FWPR"]
@@ -26,6 +27,9 @@ class TestSummaryState(unittest.TestCase):
         st.update_group_var("G2", "GOPR", 200)
         st.update_group_var("G3", "GOPR", 300)
         self.assertEqual(st.group_var("G3", "GOPR"), 300)
+
+        self.assertTrue(st.has_group_var("G1", "GOPR"))
+        self.assertFalse(st.has_well_var("OP1", "GOPR"))
 
         groups = st.groups
         self.assertEqual(len(groups), 3)

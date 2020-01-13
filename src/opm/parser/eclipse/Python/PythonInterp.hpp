@@ -24,6 +24,12 @@
 #include <string>
 #include <stdexcept>
 
+#include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/PyAction.hpp>
+#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
+
+
 #ifdef EMBEDDED_PYTHON
 
 #include <pybind11/embed.h>
@@ -44,6 +50,7 @@ class __attribute__ ((visibility("hidden"))) PythonInterp {
 public:
     bool exec(const std::string& python_code);
     bool exec(const std::string& python_code, const Parser& parser, Deck& deck);
+    bool exec(const PyAction& py_action, EclipseState& ecl_state, Schedule& schedule, std::size_t report_step, SummaryState& st);
     explicit operator bool() const { return true; }
 private:
     py::scoped_interpreter guard = {};
@@ -59,6 +66,10 @@ public:
     };
 
     bool exec(const std::string& /* python_code*/ , const Parser& /* parser */, Deck& /* deck */) {
+        return this->fail();
+    }
+
+    bool exec(const PyAction&, EclipseState& ecl_state, Schedule&, std::size_t, SummaryState& ) {
         return this->fail();
     }
 
