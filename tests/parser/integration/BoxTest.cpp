@@ -51,9 +51,9 @@ inline EclipseState makeState(const std::string& fileName) {
 
 BOOST_AUTO_TEST_CASE( PERMX ) {
     EclipseState state = makeState( prefix() + "BOX/BOXTEST1" );
-    const auto& permx = state.get3DProperties().getDoubleGridProperty( "PERMX" ).getData();
-    const auto& permy = state.get3DProperties().getDoubleGridProperty( "PERMY" ).getData();
-    const auto& permz = state.get3DProperties().getDoubleGridProperty( "PERMZ" ).getData();
+    const auto& permx = state.fieldProps().get_global<double>( "PERMX" );
+    const auto& permy = state.fieldProps().get_global<double>( "PERMY" );
+    const auto& permz = state.fieldProps().get_global<double>( "PERMZ" );
     size_t i, j, k;
     const EclipseGrid& grid = state.getInputGrid();
 
@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE( PERMX ) {
 
 BOOST_AUTO_TEST_CASE( PARSE_BOX_OK ) {
     EclipseState state = makeState( prefix() + "BOX/BOXTEST1" );
-    const auto& satnum = state.get3DProperties().getIntGridProperty( "SATNUM" ).getData();
+    const auto& satnum = state.fieldProps().get_global<int>( "SATNUM" );
     {
         size_t i, j, k;
         const EclipseGrid& grid = state.getInputGrid();
@@ -96,8 +96,8 @@ BOOST_AUTO_TEST_CASE( PARSE_BOX_OK ) {
 
 BOOST_AUTO_TEST_CASE( PARSE_MULTIPLY_COPY ) {
     EclipseState state = makeState( prefix() + "BOX/BOXTEST1" );
-    const auto& satnum = state.get3DProperties().getIntGridProperty( "SATNUM" ).getData();
-    const auto& fipnum = state.get3DProperties().getIntGridProperty( "FIPNUM" ).getData();
+    const auto& satnum = state.fieldProps().get_global<int>( "SATNUM" );
+    const auto& fipnum = state.fieldProps().get_global<int>( "FIPNUM" );
     size_t i, j, k;
     const EclipseGrid& grid = state.getInputGrid();
 
@@ -121,9 +121,9 @@ BOOST_AUTO_TEST_CASE( PARSE_MULTIPLY_COPY ) {
 
 BOOST_AUTO_TEST_CASE( EQUALS ) {
     EclipseState state = makeState( prefix() + "BOX/BOXTEST1" );
-    const auto& pvtnum = state.get3DProperties().getIntGridProperty( "PVTNUM" ).getData();
-    const auto& eqlnum = state.get3DProperties().getIntGridProperty( "EQLNUM" ).getData();
-    const auto& poro = state.get3DProperties().getDoubleGridProperty( "PORO" ).getData();
+    const auto& pvtnum = state.fieldProps().get_global<int>( "PVTNUM" );
+    const auto& eqlnum = state.fieldProps().get_global<int>( "EQLNUM" );
+    const auto& poro   = state.fieldProps().get_global<double>( "PORO" );
     size_t i, j, k;
     const EclipseGrid& grid = state.getInputGrid();
 
@@ -144,11 +144,7 @@ BOOST_AUTO_TEST_CASE( EQUALS ) {
 BOOST_AUTO_TEST_CASE( OPERATE ) {
     EclipseState state = makeState( prefix() + "BOX/BOXTEST1" );
     const EclipseGrid& grid = state.getInputGrid();
-#ifdef ENABLE_3DPROPS_TESTING
     const auto& ntg = state.fieldProps().get_global<double>("NTG");
-#else
-    const auto& ntg = state.get3DProperties().getDoubleGridProperty("NTG").getData();
-#endif
     BOOST_CHECK_EQUAL( ntg[grid.getGlobalIndex(0,0,0)], 8.50 );  // MULTA
     BOOST_CHECK_EQUAL( ntg[grid.getGlobalIndex(0,5,0)], 5.00 );  // POLY
     BOOST_CHECK_EQUAL( ntg[grid.getGlobalIndex(0,0,1)], 4.0 );   // COPY

@@ -591,9 +591,7 @@ BOOST_AUTO_TEST_CASE( MULTISEGMENT_ABS ) {
 
 
     const EclipseState state(deck);
-    const auto& grid = state.getInputGrid();
     const TableManager table ( deck );
-    const Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck);
     const Schedule sched(deck, state);
 
@@ -1368,10 +1366,9 @@ BOOST_AUTO_TEST_CASE( WCONPROD ) {
     auto deck =  parser.parseFile(wconprodFile);
     EclipseGrid grid(30,30,30);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
     FieldPropsManager fp( deck , grid, table);
     Runspec runspec (deck);
-    Schedule sched(deck, grid, fp, eclipseProperties, runspec );
+    Schedule sched(deck, grid, fp, runspec );
 
     BOOST_CHECK_EQUAL(5U, sched.numWells());
     BOOST_CHECK(sched.hasWell("INJE1"));
@@ -1415,10 +1412,9 @@ BOOST_AUTO_TEST_CASE( WCONINJE ) {
     auto deck = parser.parseFile(wconprodFile);
     EclipseGrid grid(30,30,30);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties( deck , table, grid );
     FieldPropsManager fp(deck, grid, table);
     Runspec runspec (deck);
-    Schedule sched( deck, grid, fp, eclipseProperties, runspec);
+    Schedule sched( deck, grid, fp, runspec);
     SummaryState st(std::chrono::system_clock::now());
 
     BOOST_CHECK_EQUAL(5U, sched.numWells());

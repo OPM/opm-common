@@ -98,7 +98,6 @@ namespace Opm {
         bool hasInputEDITNNC() const;
 
         const FieldPropsManager& fieldProps() const;
-        const Eclipse3DProperties& get3DProperties() const;
         const TableManager& getTableManager() const;
         const EclipseConfig& getEclipseConfig() const;
         const EclipseConfig& cfg() const;
@@ -132,7 +131,6 @@ namespace Opm {
         NNC m_inputNnc;
         EDITNNC m_inputEditNnc;
         EclipseGrid m_inputGrid;
-        Eclipse3DProperties m_eclipseProperties;
         FieldPropsManager field_props;
         const SimulationConfig m_simulationConfig;
         TransMult m_transMult;

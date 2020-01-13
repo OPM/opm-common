@@ -313,7 +313,6 @@ namespace {
     }
 
 
-#ifdef ENABLE_3DPROPS_TESTING
 
     void writePoreVolume(const ::Opm::EclipseState&        es,
                          const ::Opm::UnitSystem&          units,
@@ -344,53 +343,6 @@ namespace {
 
     }
 
-#else
-
-     void writePoreVolume(const ::Opm::EclipseState&        es,
-                          const ::Opm::EclipseGrid&         grid,
-                          const ::Opm::UnitSystem&          units,
-                          ::Opm::EclIO::OutputStream::Init& initFile)
-     {
-        auto porv = es.get3DProperties()
-           .getDoubleGridProperty("PORV").getData();
-        for (auto nGlob    = porv.size(),
-                  globCell = 0*nGlob; globCell < nGlob; ++globCell)
-        {
-            if (! grid.cellActive(globCell)) {
-                porv[globCell] = 0.0;
-            }
-        }
-        units.from_si(::Opm::UnitSystem::measure::volume, porv);
-        initFile.write("PORV", singlePrecision(porv));
-     }
-
-
-    void writeIntegerCellProperties(const ::Opm::EclipseState&        es,
-                                    const ::Opm::EclipseGrid&         grid,
-                                    ::Opm::EclIO::OutputStream::Init& initFile)
-    {
-
-        // The INIT file should always contain PVT, saturation function,
-        // equilibration, and fluid-in-place region vectors.  Call
-        // assertKeyword() here--on a 'const' GridProperties object--to
-        // invoke the autocreation property, and ensure that the keywords
-        // exist in the properties container.
-        const auto& properties = es.get3DProperties().getIntProperties();
-        properties.assertKeyword("PVTNUM");
-        properties.assertKeyword("SATNUM");
-        properties.assertKeyword("EQLNUM");
-        properties.assertKeyword("FIPNUM");
-
-        for (const auto& property : properties) {
-            if (property.getKeywordName() == "ACTNUM")
-                continue;
-
-            auto ecl_data = property.compressedCopy(grid);
-            initFile.write(property.getKeywordName(), ecl_data);
-        }
-    }
-
-#endif
 
 
     void writeGridGeometry(const ::Opm::EclipseGrid&         grid,
@@ -423,79 +375,41 @@ namespace {
 
     template <typename T, class WriteVector>
     void writeCellPropertiesWithDefaultFlag(const Properties& propList,
-                                            const ::Opm::GridProperties<T>&
-#ifndef ENABLE_3DPROPS_TESTING
-                                            propValues
-#endif
-                                            , const ::Opm::FieldPropsManager& fp,
-                                            const ::Opm::EclipseGrid&
-#ifndef ENABLE_3DPROPS_TESTING
-                                            grid
-#endif
-                                            , WriteVector&&                   write)
+                                            const ::Opm::FieldPropsManager& fp,
+                                            WriteVector&&  write)
     {
         for (const auto& prop : propList) {
-#ifdef ENABLE_3DPROPS_TESTING
             if (! fp.has<T>(prop.name))
                 continue;
 
             auto data = fp.get<T>(prop.name);
             auto defaulted = fp.defaulted<T>(prop.name);
             write(prop, std::move(defaulted), std::move(data));
-#else
-            if (! propValues.hasKeyword(prop.name)) {
-                continue;
-            }
-
-            const auto& opm_property = propValues.getKeyword(prop.name);
-            const auto& dflt         = opm_property.wasDefaulted();
-
-            write(prop, grid.compressedVector(dflt),
-                  opm_property.compressedCopy(grid));
-#endif
         }
     }
 
-    template <typename T, class WriteVector>
+    template <class WriteVector>
     void writeCellPropertiesValuesOnly(const Properties& propList,
-                                       const ::Opm::GridProperties<T>&
-#ifndef ENABLE_3DPROPS_TESTING
-                                       propValues
-#endif
-                                       , const ::Opm::FieldPropsManager& fp,
-                                       const ::Opm::EclipseGrid&
-#ifndef ENABLE_3DPROPS_TESTING
-                                       grid
-#endif
-                                       , WriteVector&&                   write)
+                                       const ::Opm::FieldPropsManager& fp,
+                                       WriteVector&&                   write)
     {
         for (const auto& prop : propList) {
 
-#ifdef ENABLE_3DPROPS_TESTING
-            if (!fp.has<T>(prop.name))
+            if (!fp.has<double>(prop.name))
                 continue;
-            auto data = fp.get<T>(prop.name);
+            auto data = fp.get<double>(prop.name);
             write(prop, std::move(data));
-#else
-            if (! propValues.hasKeyword(prop.name)) {
-                continue;
-            }
-            const auto& opm_property = propValues.getKeyword(prop.name);
-            write(prop, opm_property.compressedCopy(grid));
-#endif
         }
     }
 
     void writeDoubleCellProperties(const Properties&                    propList,
-                                   const ::Opm::GridProperties<double>& propValues,
                                    const ::Opm::FieldPropsManager&      fp,
-                                   const ::Opm::EclipseGrid&            grid,
                                    const ::Opm::UnitSystem&             units,
                                    const bool                           needDflt,
                                    ::Opm::EclIO::OutputStream::Init&    initFile)
     {
         if (needDflt) {
-            writeCellPropertiesWithDefaultFlag(propList, propValues, fp, grid,
+            writeCellPropertiesWithDefaultFlag<double>(propList, fp,
                 [&units, &initFile](const CellProperty&   prop,
                                     std::vector<bool>&&   dflt,
                                     std::vector<double>&& value)
@@ -517,7 +431,7 @@ namespace {
             });
         }
         else {
-            writeCellPropertiesValuesOnly(propList, propValues, fp, grid,
+            writeCellPropertiesValuesOnly(propList, fp, 
                 [&units, &initFile](const CellProperty&   prop,
                                     std::vector<double>&& value)
             {
@@ -528,7 +442,6 @@ namespace {
     }
 
     void writeDoubleCellProperties(const ::Opm::EclipseState&        es,
-                                   const ::Opm::EclipseGrid&         grid,
                                    const ::Opm::UnitSystem&          units,
                                    ::Opm::EclIO::OutputStream::Init& initFile)
     {
@@ -543,15 +456,10 @@ namespace {
         // The INIT file should always contain the NTG property, we
         // therefore invoke the auto create functionality to ensure
         // that "NTG" is included in the properties container.
-        const auto& properties = es.get3DProperties().getDoubleProperties();
         const auto& fp = es.fieldProps();
-#ifdef ENABLE_3DPROPS_TESTING
         es.fieldProps().get<double>("NTG");
-#else
-        properties.assertKeyword("NTG");
-#endif
-        writeDoubleCellProperties(doubleKeywords, properties, fp,
-                                  grid, units, false, initFile);
+        writeDoubleCellProperties(doubleKeywords, fp,
+                                  units, false, initFile);
     }
 
     void writeSimulatorProperties(const ::Opm::EclipseGrid&         grid,
@@ -596,27 +504,19 @@ namespace {
     }
 
     void writeFilledSatFuncScaling(const Properties&                 propList,
-                                   ::Opm::GridProperties<double>&&   propValues,
                                    ::Opm::FieldPropsManager&&        fp,
-                                   const ::Opm::EclipseGrid&         grid,
                                    const ::Opm::UnitSystem&          units,
                                    ::Opm::EclIO::OutputStream::Init& initFile)
     {
-        for (const auto& prop : propList) {
-#ifdef ENABLE_3DPROPS_TESTING
+        for (const auto& prop : propList)
             fp.get<double>(prop.name);
-#else
-            propValues.assertKeyword(prop.name);
-#endif
-        }
 
         // Don't write sentinel value if input defaulted.
-        writeDoubleCellProperties(propList, propValues, fp, grid,
+        writeDoubleCellProperties(propList, fp,
                                   units, false, initFile);
     }
 
     void writeSatFuncScaling(const ::Opm::EclipseState&        es,
-                             const ::Opm::EclipseGrid&         grid,
                              const ::Opm::UnitSystem&          units,
                              ::Opm::EclIO::OutputStream::Init& initFile)
     {
@@ -630,7 +530,6 @@ namespace {
             + ph.active(Opm::Phase::OIL)
             + ph.active(Opm::Phase::GAS);
 
-        const auto& props = es.get3DProperties().getDoubleProperties();
         const auto& fp = es.fieldProps();
         if (! es.cfg().init().filleps() || (nactph < 3)) {
             if (nactph < 3) {
@@ -648,8 +547,8 @@ namespace {
             //
             // Output only those endpoint arrays that exist in the input
             // deck.  Write sentinel value if input defaulted.
-            writeDoubleCellProperties(epsVectors.getVectors(), props, fp,
-                                      grid, units, true, initFile);
+            writeDoubleCellProperties(epsVectors.getVectors(), fp,
+                                      units, true, initFile);
         }
         else {
             // Input deck specified FILLEPS so we should output all endpoint
@@ -659,12 +558,10 @@ namespace {
             // make a copy of the properties object and modify that copy in
             // order to leave the original intact.  Don't write sentinel
             // value if input defaulted.
-            auto propsCopy = props;
             auto fp_copy = fp;
             writeFilledSatFuncScaling(epsVectors.getVectors(),
-                                      std::move(propsCopy),
                                       std::move(fp_copy),
-                                      grid, units, initFile);
+                                      units, initFile);
         }
     }
 
@@ -702,29 +599,14 @@ void Opm::InitIO::write(const ::Opm::EclipseState&              es,
     // set to zero for inactive cells.  This treatment implies that the
     // active/inactive cell mapping can be inferred by reading the PORV
     // vector from the result set.
-#ifdef ENABLE_3DPROPS_TESTING
     writePoreVolume(es, units, initFile);
-#else
-    writePoreVolume(es, grid, units, initFile);
-#endif
-
     writeGridGeometry(grid, units, initFile);
-
-    writeDoubleCellProperties(es, grid, units, initFile);
-
+    writeDoubleCellProperties(es, units, initFile);
     writeSimulatorProperties(grid, simProps, initFile);
-
     writeTableData(es, units, initFile);
-
-#ifdef ENABLE_3DPROPS_TESTING
     writeIntegerCellProperties(es, initFile);
-#else
-    writeIntegerCellProperties(es, grid, initFile);
-#endif
-
     writeIntegerMaps(std::move(int_data), initFile);
-
-    writeSatFuncScaling(es, grid, units, initFile);
+    writeSatFuncScaling(es, units, initFile);
 
     if (nnc.numNNC() > std::size_t{0}) {
         writeNonNeighbourConnections(nnc, units, initFile);

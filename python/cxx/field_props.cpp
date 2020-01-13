@@ -13,7 +13,7 @@ namespace {
         if (manager.has<int>(kw))
             return true;
         if (manager.has<double>(kw))
-            return true;      
+            return true;
 
         return false;
     }
@@ -32,13 +32,26 @@ namespace {
             throw std::invalid_argument("Keyword '" + kw + "'is not of type int.");
     }
 
+
+    py::array get_array(const FieldPropsManager& m, const std::string& kw) {
+        if (m.has<double>(kw))
+            return convert::numpy_array(m.get<double>(kw));
+
+        if (m.has<int>(kw))
+            return convert::numpy_array(m.get<int>(kw));
+
+        throw std::invalid_argument("No such keyword: " + kw);
+    }
+
+
 }
 
 
 void python::common::export_FieldProperties(py::module& module) {
-    
+
     py::class_< FieldPropsManager >( module, "FieldProperties")
     .def( "__contains__", &contains )
+    .def("__getitem__", &get_array)
     .def( "get_double_array",  &get_double_array )
     .def( "get_int_array",  &get_int_array )
     ;

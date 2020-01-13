@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_CASE(Empty) {
     Opm::Eclipse3DProperties props;
     Opm::EclipseGrid grid(10,10,10);
     Opm::FieldPropsManager fp(Opm::Deck(), grid, Opm::TableManager());
-    Opm::TransMult transMult(grid ,{} , fp, props);
+    Opm::TransMult transMult(grid ,{} , fp);
 
     BOOST_CHECK_THROW( transMult.getMultiplier(12,10,10 , Opm::FaceDir::XPlus) , std::invalid_argument );
     BOOST_CHECK_THROW( transMult.getMultiplier(1000 , Opm::FaceDir::XPlus) , std::invalid_argument );
@@ -72,10 +72,9 @@ MULTZ
     Opm::Deck deck = parser.parseString(deck_string);
     Opm::TableManager tables(deck);
     Opm::EclipseGrid grid(5,5,5);
-    Opm::Eclipse3DProperties props(deck, tables, grid);
     Opm::FieldPropsManager fp(deck, grid, tables);
-    Opm::TransMult transMult(grid, deck, fp, props);
+    Opm::TransMult transMult(grid, deck, fp);
 
-    transMult.applyMULT(props.getDoubleGridProperty("MULTZ").getData(), Opm::FaceDir::ZPlus);
+    transMult.applyMULT(fp.get_global<double>("MULTZ"), Opm::FaceDir::ZPlus);
     BOOST_CHECK_EQUAL( transMult.getMultiplier(0,0,0 , Opm::FaceDir::ZPlus) , 4.0 );
 }

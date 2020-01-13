@@ -3,7 +3,7 @@ import opm.io
 import numpy as np 
 
 from opm.io.parser import Parser
-from opm.io.ecl_state import EclipseState, test_field_props
+from opm.io.ecl_state import EclipseState
 try:
     from tests.utils import test_path
 except ImportError:
@@ -21,10 +21,7 @@ class TestProps(unittest.TestCase):
         parser = Parser()
         deck = parser.parse(test_path('spe3/SPE3CASE1.DATA'))
         self.spe3 = EclipseState(deck)
-        self.props = self.spe3.ecl3d_props()
-        if (not test_field_props()):
-             with self.assertRaises(RuntimeError):
-                 self.field = self.spe3.field_props()
+        self.props = self.spe3.field_props()
 
     def test_contains(self):
         p = self.props

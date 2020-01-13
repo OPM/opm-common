@@ -148,7 +148,7 @@ static SummaryConfig createSummary( std::string input , const ParseContext& pars
     ErrorGuard errors;
     auto deck = createDeck( input );
     EclipseState state( deck, parseContext, errors );
-    Schedule schedule(deck, state.getInputGrid(), state.fieldProps(), state.get3DProperties(), state.runspec(), parseContext, errors);
+    Schedule schedule(deck, state, parseContext, errors);
     return SummaryConfig( deck, schedule, state.getTableManager( ), parseContext, errors );
 }
 

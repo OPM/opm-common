@@ -361,10 +361,9 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckMissingReturnsDefaults) {
     deck.addKeyword( DeckKeyword( parser.getKeyword("SCHEDULE" )));
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
     FieldPropsManager fp( deck , grid, table);
     Runspec runspec (deck);
-    Schedule schedule(deck, grid , fp, eclipseProperties, runspec );
+    Schedule schedule(deck, grid , fp, runspec );
     BOOST_CHECK_EQUAL( schedule.getStartTime() , TimeMap::mkdate(1983, 1 , 1));
 }
 
@@ -372,10 +371,9 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsOrdered) {
     auto deck = createDeckWithWellsOrdered();
     EclipseGrid grid(100,100,100);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
     FieldPropsManager fp( deck , grid, table);
     Runspec runspec (deck);
-    Schedule schedule(deck, grid , fp, eclipseProperties, runspec);
+    Schedule schedule(deck, grid , fp, runspec);
     auto well_names = schedule.wellNames();
 
     BOOST_CHECK_EQUAL( "CW_1" , well_names[0]);
@@ -402,10 +400,9 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsOrderedGRUPTREE) {
     auto deck = createDeckWithWellsOrderedGRUPTREE();
     EclipseGrid grid(100,100,100);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
     FieldPropsManager fp( deck , grid, table);
     Runspec runspec (deck);
-    Schedule schedule(deck, grid , fp, eclipseProperties, runspec);
+    Schedule schedule(deck, grid , fp, runspec);
 
     BOOST_CHECK_THROW( schedule.getChildWells2( "NO_SUCH_GROUP" , 1 ), std::invalid_argument);
     {
@@ -454,10 +451,9 @@ BOOST_AUTO_TEST_CASE(GroupTree2TEST) {
     auto deck = createDeckWithWellsOrderedGRUPTREE();
     EclipseGrid grid(100,100,100);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
     FieldPropsManager fp( deck , grid, table);
     Runspec runspec (deck);
-    Schedule schedule(deck, grid , fp, eclipseProperties, runspec);
+    Schedule schedule(deck, grid , fp, runspec);
 
     BOOST_CHECK_THROW( schedule.groupTree("NO_SUCH_GROUP", 0), std::invalid_argument);
     auto cg1 = schedule.getGroup("CG1", 0);
@@ -485,11 +481,10 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithStart) {
     auto deck = createDeck();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
     FieldPropsManager fp( deck , grid, table);
     Runspec runspec (deck);
 
-    Schedule schedule(deck, grid , fp, eclipseProperties, runspec);
+    Schedule schedule(deck, grid , fp, runspec);
     BOOST_CHECK_EQUAL( schedule.getStartTime() , TimeMap::mkdate(1998, 3  , 8 ));
 }
 
@@ -498,22 +493,20 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithSCHEDULENoThrow) {
     Deck deck;
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
     FieldPropsManager fp( deck , grid, table);
     deck.addKeyword( DeckKeyword( parser.getKeyword("SCHEDULE" )));
     Runspec runspec (deck);
 
-    BOOST_CHECK_NO_THROW( Schedule( deck, grid , fp, eclipseProperties, runspec));
+    BOOST_CHECK_NO_THROW( Schedule( deck, grid , fp, runspec));
 }
 
 BOOST_AUTO_TEST_CASE(EmptyScheduleHasNoWells) {
     EclipseGrid grid(10,10,10);
     auto deck = createDeck();
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
     FieldPropsManager fp( deck , grid, table);
     Runspec runspec (deck);;
-    Schedule schedule(deck, grid , fp, eclipseProperties, runspec);
+    Schedule schedule(deck, grid , fp, runspec);
     BOOST_CHECK_EQUAL( 0U , schedule.numWells() );
     BOOST_CHECK_EQUAL( false , schedule.hasWell("WELL1") );
     BOOST_CHECK_THROW( schedule.getWell("WELL2", 0) , std::invalid_argument );
@@ -525,10 +518,9 @@ BOOST_AUTO_TEST_CASE(EmptyScheduleHasFIELDGroup) {
     EclipseGrid grid(10,10,10);
     auto deck = createDeck();
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
     FieldPropsManager fp( deck , grid, table);
     Runspec runspec (deck);
-    Schedule schedule(deck , grid , fp, eclipseProperties, runspec);
+    Schedule schedule(deck , grid , fp, runspec);
 
     BOOST_CHECK_EQUAL( 1U , schedule.numGroups() );
     BOOST_CHECK_EQUAL( true , schedule.hasGroup("FIELD") );
@@ -621,10 +613,9 @@ BOOST_AUTO_TEST_CASE(WellsIterator_Empty_EmptyVectorReturned) {
     EclipseGrid grid(10,10,10);
     auto deck = createDeck();
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
     FieldPropsManager fp( deck , grid, table);
     Runspec runspec (deck);
-    Schedule schedule(deck , grid , fp, eclipseProperties, runspec);
+    Schedule schedule(deck , grid , fp, runspec);
 
     const auto wells_alltimesteps = schedule.getWellsatEnd();
     BOOST_CHECK_EQUAL(0U, wells_alltimesteps.size());
@@ -640,10 +631,9 @@ BOOST_AUTO_TEST_CASE(WellsIterator_HasWells_WellsReturned) {
     EclipseGrid grid(10,10,10);
     auto deck = createDeckWithWells();
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
     FieldPropsManager fp( deck , grid, table);
     Runspec runspec (deck);
-    Schedule schedule(deck , grid , fp, eclipseProperties, runspec);
+    Schedule schedule(deck , grid , fp, runspec);
     size_t timeStep = 0;
 
     const auto wells_alltimesteps = schedule.getWellsatEnd();
@@ -660,10 +650,9 @@ BOOST_AUTO_TEST_CASE(ReturnNumWellsTimestep) {
     EclipseGrid grid(10,10,10);
     auto deck = createDeckWithWells();
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
     FieldPropsManager fp( deck , grid, table);
     Runspec runspec (deck);
-    Schedule schedule(deck, grid , fp, eclipseProperties, runspec);
+    Schedule schedule(deck, grid , fp, runspec);
 
     BOOST_CHECK_EQUAL(schedule.numWells(0), 1);
     BOOST_CHECK_EQUAL(schedule.numWells(1), 1);
@@ -675,10 +664,9 @@ BOOST_AUTO_TEST_CASE(TestCrossFlowHandling) {
     EclipseGrid grid(10,10,10);
     auto deck = createDeckForTestingCrossFlow();
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
     FieldPropsManager fp( deck , grid, table);
     Runspec runspec (deck);
-    Schedule schedule(deck, grid , fp, eclipseProperties, runspec);
+    Schedule schedule(deck, grid , fp, runspec);
 
     BOOST_CHECK_EQUAL(schedule.getWell("BAN", 0).getAllowCrossFlow(), false);
     BOOST_CHECK_EQUAL(schedule.getWell("ALLOW", 0).getAllowCrossFlow(), true);
@@ -749,10 +737,9 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsAndConnectionDataWithWELOPEN) {
     EclipseGrid grid(10,10,10);
   auto deck = createDeckWithWellsAndConnectionDataWithWELOPEN();
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
     FieldPropsManager fp( deck , grid, table);
     Runspec runspec (deck);
-    Schedule schedule(deck ,grid , fp, eclipseProperties, runspec);
+    Schedule schedule(deck ,grid , fp, runspec);
     {
         constexpr auto well_shut = Well::Status::SHUT;
         constexpr auto well_open = Well::Status::OPEN;
@@ -834,10 +821,9 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWELOPEN_TryToOpenWellWithShutCompleti
     EclipseGrid grid(10,10,10);
     auto deck = parser.parseString(input);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
     FieldPropsManager fp( deck , grid, table);
     Runspec runspec (deck);
-    Schedule schedule(deck ,  grid , fp, eclipseProperties, runspec);
+    Schedule schedule(deck ,  grid , fp, runspec);
     const auto& well2_3 = schedule.getWell("OP_1",3);
     const auto& well2_4 = schedule.getWell("OP_1",4);
     BOOST_CHECK(Well::Status::SHUT == well2_3.getStatus());
@@ -895,10 +881,9 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWELOPEN_CombineShutCompletionsAndAddN
   EclipseGrid grid(10,10,10);
   auto deck = parser.parseString(input);
   TableManager table ( deck );
-  Eclipse3DProperties eclipseProperties ( deck , table, grid);
   FieldPropsManager fp( deck , grid, table);
   Runspec runspec (deck);
-  Schedule schedule(deck, grid , fp, eclipseProperties, runspec);
+  Schedule schedule(deck, grid , fp, runspec);
   const auto& well_3 = schedule.getWell("OP_1", 3);
   const auto& well_4 = schedule.getWell("OP_1", 4);
   const auto& well_5 = schedule.getWell("OP_1", 5);
@@ -954,10 +939,9 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWRFT) {
     EclipseGrid grid(10,10,10);
     auto deck = parser.parseString(input);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
     FieldPropsManager fp( deck , grid, table);
     Runspec runspec (deck);
-    Schedule schedule(deck, grid , fp, eclipseProperties, runspec);
+    Schedule schedule(deck, grid , fp, runspec);
     const auto& rft_config = schedule.rftConfig();
 
     BOOST_CHECK_EQUAL(2 , rft_config.firstRFTOutput());
@@ -1013,10 +997,9 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWRFTPLT) {
     EclipseGrid grid(10,10,10);
     auto deck = parser.parseString(input);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
     FieldPropsManager fp( deck , grid, table);
     Runspec runspec (deck);
-    Schedule schedule(deck, grid , fp, eclipseProperties, runspec);
+    Schedule schedule(deck, grid , fp, runspec);
     const auto& well = schedule.getWell("OP_1", 4);
     BOOST_CHECK(Well::Status::OPEN == well.getStatus());
 
@@ -1064,10 +1047,9 @@ BOOST_AUTO_TEST_CASE(createDeckWithWeltArg) {
     auto deck = parser.parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
     FieldPropsManager fp( deck , grid, table);
     Runspec runspec (deck);
-    Schedule schedule(deck,  grid , fp, eclipseProperties, runspec);
+    Schedule schedule(deck,  grid , fp, runspec);
     Opm::UnitSystem unitSystem = deck.getActiveUnitSystem();
     double siFactorL = unitSystem.parse("LiquidSurfaceVolume/Time").getSIScaling();
     double siFactorG = unitSystem.parse("GasSurfaceVolume/Time").getSIScaling();
@@ -1105,11 +1087,10 @@ BOOST_AUTO_TEST_CASE(createDeckWithWeltArgException) {
     auto deck = parser.parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
     FieldPropsManager fp( deck , grid, table);
     Runspec runspec (deck);
 
-    BOOST_CHECK_THROW(Schedule(deck, grid , fp, eclipseProperties, runspec),
+    BOOST_CHECK_THROW(Schedule(deck, grid , fp, runspec),
                       std::invalid_argument);
 }
 
@@ -1125,10 +1106,9 @@ BOOST_AUTO_TEST_CASE(createDeckWithWeltArgException2) {
     auto deck = parser.parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
     FieldPropsManager fp( deck , grid, table);
     Runspec runspec (deck);
-    BOOST_CHECK_THROW(Schedule(deck, grid , fp, eclipseProperties, runspec), std::invalid_argument);
+    BOOST_CHECK_THROW(Schedule(deck, grid , fp, runspec), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(createDeckWithWPIMULT) {
@@ -1172,10 +1152,9 @@ BOOST_AUTO_TEST_CASE(createDeckWithWPIMULT) {
     auto deck = parser.parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
     FieldPropsManager fp( deck , grid, table);
     Runspec runspec (deck);
-    Schedule schedule(deck, grid , fp, eclipseProperties, runspec);
+    Schedule schedule(deck, grid , fp, runspec);
 
     const auto& cs2 = schedule.getWell("OP_1", 2).getConnections();
     const auto& cs3 = schedule.getWell("OP_1", 3).getConnections();
@@ -1244,17 +1223,16 @@ BOOST_AUTO_TEST_CASE(WELSPECS_WGNAME_SPACE) {
         auto deck = parser.parseString(input);
         EclipseGrid grid( deck );
         TableManager table ( deck );
-        Eclipse3DProperties eclipseProperties ( deck , table, grid);
         FieldPropsManager fp( deck , grid, table);
         Runspec runspec (deck);
         ParseContext parseContext;
         ErrorGuard errors;
 
         parseContext.update(ParseContext::PARSE_WGNAME_SPACE, InputError::THROW_EXCEPTION);
-        BOOST_CHECK_THROW( Opm::Schedule(deck,  grid, fp, eclipseProperties, runspec, parseContext, errors), std::invalid_argument);
+        BOOST_CHECK_THROW( Opm::Schedule(deck,  grid, fp, runspec, parseContext, errors), std::invalid_argument);
 
         parseContext.update(ParseContext::PARSE_WGNAME_SPACE, InputError::IGNORE);
-        BOOST_CHECK_NO_THROW( Opm::Schedule(deck,  grid, fp, eclipseProperties, runspec, parseContext, errors));
+        BOOST_CHECK_NO_THROW( Opm::Schedule(deck,  grid, fp, runspec, parseContext, errors));
 }
 
 BOOST_AUTO_TEST_CASE(createDeckModifyMultipleGCONPROD) {
@@ -1297,10 +1275,9 @@ BOOST_AUTO_TEST_CASE(createDeckModifyMultipleGCONPROD) {
         auto deck = parser.parseString(input);
         EclipseGrid grid( deck );
         TableManager table ( deck );
-        Eclipse3DProperties eclipseProperties ( deck , table, grid);
         FieldPropsManager fp( deck , grid, table);
         Runspec runspec (deck);
-        Opm::Schedule schedule(deck,  grid, fp, eclipseProperties, runspec);
+        Opm::Schedule schedule(deck,  grid, fp, runspec);
         Opm::SummaryState st(std::chrono::system_clock::now());
 
         Opm::UnitSystem unitSystem = deck.getActiveUnitSystem();
@@ -1347,10 +1324,9 @@ BOOST_AUTO_TEST_CASE(createDeckWithDRSDT) {
     auto deck = parser.parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
     FieldPropsManager fp( deck , grid, table);
     Runspec runspec (deck);
-    Schedule schedule(deck, grid , fp, eclipseProperties, runspec);
+    Schedule schedule(deck, grid , fp, runspec);
     size_t currentStep = 1;
     BOOST_CHECK_EQUAL(schedule.hasOilVaporizationProperties(), true);
     const auto& ovap = schedule.getOilVaporizationProperties(currentStep);
@@ -1382,10 +1358,9 @@ BOOST_AUTO_TEST_CASE(createDeckWithDRSDTR) {
     auto deck = parser.parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
     FieldPropsManager fp(deck, grid, table);
     Runspec runspec (deck);
-    Schedule schedule(deck, grid , fp, eclipseProperties, runspec);
+    Schedule schedule(deck, grid , fp, runspec);
     size_t currentStep = 1;
     BOOST_CHECK_EQUAL(schedule.hasOilVaporizationProperties(), true);
     const auto& ovap = schedule.getOilVaporizationProperties(currentStep);
@@ -1430,10 +1405,9 @@ BOOST_AUTO_TEST_CASE(createDeckWithDRSDTthenDRVDT) {
     auto deck = parser.parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
     FieldPropsManager fp( deck , grid, table);
     Runspec runspec (deck);
-    Schedule schedule(deck, grid , fp, eclipseProperties, runspec);
+    Schedule schedule(deck, grid , fp, runspec);
     BOOST_CHECK_EQUAL(schedule.hasOilVaporizationProperties(), true);
 
     const OilVaporizationProperties& ovap1 = schedule.getOilVaporizationProperties(1);
@@ -1472,10 +1446,9 @@ BOOST_AUTO_TEST_CASE(createDeckWithVAPPARS) {
     auto deck = parser.parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
     FieldPropsManager fp( deck , grid, table);
     Runspec runspec (deck);
-    Schedule schedule(deck, grid , fp, eclipseProperties, runspec);
+    Schedule schedule(deck, grid , fp, runspec);
     size_t currentStep = 1;
     BOOST_CHECK_EQUAL(schedule.hasOilVaporizationProperties(), true);
     const OilVaporizationProperties& ovap = schedule.getOilVaporizationProperties(currentStep);
@@ -1504,10 +1477,9 @@ BOOST_AUTO_TEST_CASE(createDeckWithOutOilVaporizationProperties) {
     auto deck = parser.parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
     FieldPropsManager fp( deck , grid, table);
     Runspec runspec (deck);
-    Schedule schedule(deck, grid , fp, eclipseProperties, runspec);
+    Schedule schedule(deck, grid , fp, runspec);
 
     BOOST_CHECK_EQUAL(schedule.hasOilVaporizationProperties(), false);
 
@@ -1566,12 +1538,11 @@ BOOST_AUTO_TEST_CASE(changeBhpLimitInHistoryModeWithWeltarg) {
     auto deck = parser.parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
     FieldPropsManager fp( deck , grid, table);
     Runspec runspec (deck);
-    Schedule sched(deck, grid , fp, eclipseProperties, runspec);
     SummaryState st(std::chrono::system_clock::now());
     const auto& unit_system = deck.getActiveUnitSystem();
+    Schedule sched(deck, grid , fp, runspec);
 
     // The BHP limit should not be effected by WCONHIST
     {
@@ -1664,10 +1635,9 @@ BOOST_AUTO_TEST_CASE(changeModeWithWHISTCTL) {
     auto deck = parser.parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
     FieldPropsManager fp( deck , grid, table);
     Runspec runspec (deck);
-    Schedule schedule(deck, grid , fp, eclipseProperties, runspec);
+    Schedule schedule(deck, grid , fp, runspec);
 
     //Start
     BOOST_CHECK_THROW(schedule.getWell("P1", 0), std::invalid_argument);
@@ -1771,10 +1741,9 @@ BOOST_AUTO_TEST_CASE(fromWCONHISTtoWCONPROD) {
     auto deck = parser.parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
     FieldPropsManager fp( deck , grid, table);
     Runspec runspec (deck);
-    Schedule schedule(deck, grid , fp, eclipseProperties, runspec);
+    Schedule schedule(deck, grid , fp, runspec);
 
     //Start
     BOOST_CHECK_THROW(schedule.getWell("P1", 0), std::invalid_argument);
@@ -1860,10 +1829,9 @@ BOOST_AUTO_TEST_CASE(WHISTCTL_NEW_WELL) {
     auto deck = parser.parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
     FieldPropsManager fp( deck , grid, table);
     Runspec runspec (deck);
-    Schedule schedule(deck, grid , fp, eclipseProperties, runspec);
+    Schedule schedule(deck, grid , fp, runspec);
 
     //10  OKT 2008
     BOOST_CHECK(schedule.getWell("P1", 1).getProductionProperties().controlMode == Opm::Well::ProducerCMode::GRAT);
@@ -1937,10 +1905,9 @@ BOOST_AUTO_TEST_CASE(unsupportedOptionWHISTCTL) {
     auto deck = parser.parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
     FieldPropsManager fp( deck , grid, table);
     Runspec runspec (deck);
-    BOOST_CHECK_THROW(Schedule(deck, grid, fp, eclipseProperties, runspec), std::invalid_argument);
+    BOOST_CHECK_THROW(Schedule(deck, grid, fp, runspec), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(move_HEAD_I_location) {
@@ -1967,10 +1934,9 @@ BOOST_AUTO_TEST_CASE(move_HEAD_I_location) {
     auto deck = Parser().parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
     FieldPropsManager fp( deck , grid, table);
     Runspec runspec (deck);
-    Schedule schedule( deck, grid, fp, eclipseProperties,runspec);
+    Schedule schedule( deck, grid, fp, runspec);
     BOOST_CHECK_EQUAL(2, schedule.getWell("W1", 1).getHeadI());
     BOOST_CHECK_EQUAL(3, schedule.getWell("W1", 2).getHeadI());
 }
@@ -1999,10 +1965,9 @@ BOOST_AUTO_TEST_CASE(change_ref_depth) {
     auto deck = Parser().parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
     FieldPropsManager fp( deck , grid, table);
     Runspec runspec (deck);
-    Schedule schedule( deck, grid, fp, eclipseProperties,runspec);
+    Schedule schedule( deck, grid, fp, runspec);
     BOOST_CHECK_CLOSE(2873.94, schedule.getWell("W1", 1).getRefDepth(), 1e-5);
     BOOST_CHECK_EQUAL(12.0, schedule.getWell("W1", 2).getRefDepth());
 }
@@ -2039,10 +2004,9 @@ BOOST_AUTO_TEST_CASE(WTEMP_well_template) {
     auto deck = Parser().parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
     FieldPropsManager fp( deck , grid, table);
     Runspec runspec (deck);
-    Schedule schedule( deck, grid, fp, eclipseProperties,runspec);
+    Schedule schedule( deck, grid, fp, runspec);
 
     BOOST_CHECK_CLOSE(288.71, schedule.getWell("W1", 1).getInjectionProperties().temperature, 1e-5);
     BOOST_CHECK_CLOSE(288.71, schedule.getWell("W1", 2).getInjectionProperties().temperature, 1e-5);
@@ -2086,10 +2050,9 @@ BOOST_AUTO_TEST_CASE(WTEMPINJ_well_template) {
         auto deck = Parser().parseString(input);
         EclipseGrid grid(10,10,10);
         TableManager table ( deck );
-        Eclipse3DProperties eclipseProperties ( deck , table, grid);
         FieldPropsManager fp( deck , grid, table);
         Runspec runspec (deck);
-        Schedule schedule( deck, grid, fp, eclipseProperties,runspec);
+        Schedule schedule( deck, grid, fp, runspec);
 
         // Producerwell - currently setting temperature only acts on injectors.
         BOOST_CHECK_CLOSE(288.71, schedule.getWell("W1", 1).getInjectionProperties().temperature, 1e-5);
@@ -2139,10 +2102,9 @@ BOOST_AUTO_TEST_CASE( COMPDAT_sets_automatic_complnum ) {
     auto deck = Parser().parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
     FieldPropsManager fp( deck , grid, table);
     Runspec runspec (deck);
-    Schedule schedule( deck, grid, fp, eclipseProperties,runspec);
+    Schedule schedule( deck, grid, fp, runspec);
     const auto& cs1 = schedule.getWell( "W1", 1 ).getConnections(  );
     BOOST_CHECK_EQUAL( 1, cs1.get( 0 ).complnum() );
     BOOST_CHECK_EQUAL( 2, cs1.get( 1 ).complnum() );
@@ -2190,10 +2152,9 @@ BOOST_AUTO_TEST_CASE( COMPDAT_multiple_wells ) {
     auto deck = Parser().parseString( input);
     EclipseGrid grid( 10, 10, 10 );
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
     FieldPropsManager fp( deck , grid, table);
     Runspec runspec (deck);
-    Schedule schedule( deck, grid, fp, eclipseProperties,runspec);
+    Schedule schedule( deck, grid, fp, runspec);
 
     {
         const auto& w1cs = schedule.getWell( "W1", 1 ).getConnections();
@@ -2260,10 +2221,9 @@ BOOST_AUTO_TEST_CASE( COMPDAT_multiple_records_same_completion ) {
     auto deck = Parser().parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
     FieldPropsManager fp( deck , grid, table);
     Runspec runspec (deck);
-    Schedule schedule( deck, grid, fp, eclipseProperties,runspec);
+    Schedule schedule( deck, grid, fp, runspec);
     const auto& cs = schedule.getWell( "W1", 1 ).getConnections();
     BOOST_CHECK_EQUAL( 3U, cs.size() );
     BOOST_CHECK_EQUAL( 1, cs.get( 0 ).complnum() );
@@ -2301,10 +2261,9 @@ BOOST_AUTO_TEST_CASE( complump_less_than_1 ) {
     auto deck = Parser().parseString( input);
     EclipseGrid grid( 10, 10, 10);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
     FieldPropsManager fp( deck , grid, table);
     Runspec runspec (deck);
-    BOOST_CHECK_THROW( Schedule( deck , grid, fp, eclipseProperties, runspec), std::invalid_argument );
+    BOOST_CHECK_THROW( Schedule( deck , grid, fp, runspec), std::invalid_argument );
 }
 
 BOOST_AUTO_TEST_CASE( complump ) {
@@ -2354,10 +2313,9 @@ BOOST_AUTO_TEST_CASE( complump ) {
     auto deck = Parser().parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
     FieldPropsManager fp( deck , grid, table);
     Runspec runspec (deck);
-    Schedule schedule( deck, grid, fp, eclipseProperties,runspec);
+    Schedule schedule( deck, grid, fp, runspec);
 
     const auto& sc0 = schedule.getWell("W1", 0).getConnections();
     /* complnum should be modified by COMPLNUM */
@@ -2445,10 +2403,9 @@ BOOST_AUTO_TEST_CASE( COMPLUMP_specific_coordinates ) {
     auto deck = Parser().parseString( input);
     EclipseGrid grid( 10, 10, 10 );
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
     FieldPropsManager fp( deck , grid, table);
     Runspec runspec (deck);
-    Schedule schedule( deck, grid, fp, eclipseProperties,runspec);
+    Schedule schedule( deck, grid, fp, runspec);
 
     const auto& cs1 = schedule.getWell("W1", 1).getConnections();
     const auto& cs2 = schedule.getWell("W1", 2).getConnections();
@@ -2916,10 +2873,9 @@ BOOST_AUTO_TEST_CASE(handleWEFAC) {
     auto deck = parser.parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
     FieldPropsManager fp( deck , grid, table);
     Runspec runspec (deck);
-    Schedule schedule(deck, grid , fp, eclipseProperties, runspec);
+    Schedule schedule(deck, grid , fp, runspec);
 
     //1
     BOOST_CHECK_EQUAL(schedule.getWell("P", 1).getEfficiencyFactor(), 0.5);
@@ -2962,10 +2918,9 @@ BOOST_AUTO_TEST_CASE(historic_BHP_and_THP) {
     auto deck = parser.parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
     FieldPropsManager fp( deck , grid, table);
     Runspec runspec (deck);
-    Schedule schedule( deck, grid, fp, eclipseProperties,runspec);
+    Schedule schedule( deck, grid, fp, runspec);
 
     {
         const auto& prod = schedule.getWell("P", 1).getProductionProperties();
@@ -2996,10 +2951,9 @@ BOOST_AUTO_TEST_CASE(FilterCompletions2) {
     std::vector<int> actnum(1000,1);
     auto deck = createDeckWithWellsAndCompletionData();
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid1);
     FieldPropsManager fp( deck , grid1, table);
     Runspec runspec (deck);
-    Schedule schedule(deck, grid1 , fp, eclipseProperties, runspec);
+    Schedule schedule(deck, grid1 , fp, runspec);
     {
         const auto& c1_1 = schedule.getWell("OP_1", 1).getConnections();
         const auto& c1_3 = schedule.getWell("OP_1", 3).getConnections();
@@ -3090,10 +3044,9 @@ VFPINJ \n                                       \
     auto deck = parser.parseString(deckData);
     EclipseGrid grid1(10,10,10);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid1);
     FieldPropsManager fp( deck , grid1, table);
     Runspec runspec (deck);
-    Schedule schedule(deck, grid1 , fp, eclipseProperties, runspec);
+    Schedule schedule(deck, grid1 , fp, runspec);
 
     BOOST_CHECK( schedule.getEvents().hasEvent(ScheduleEvents::VFPINJ_UPDATE, 0));
     BOOST_CHECK( !schedule.getEvents().hasEvent(ScheduleEvents::VFPINJ_UPDATE, 1));
@@ -3218,10 +3171,9 @@ BOOST_AUTO_TEST_CASE(POLYINJ_TEST) {
     auto deck = parser.parseString(deckData);
     EclipseGrid grid1(10,10,10);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid1);
     FieldPropsManager fp( deck , grid1, table);
     Runspec runspec (deck);
-    Schedule schedule(deck, grid1 , fp, eclipseProperties, runspec);
+    Schedule schedule(deck, grid1 , fp, runspec);
 
     const auto& poly0 = schedule.getWell("INJE01", 0).getPolymerProperties();
     const auto& poly1 = schedule.getWell("INJE01", 1).getPolymerProperties();
@@ -3279,10 +3231,9 @@ BOOST_AUTO_TEST_CASE(WFOAM_TEST) {
     auto deck = parser.parseString(deckData);
     EclipseGrid grid1(10,10,10);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid1);
     FieldPropsManager fp( deck , grid1, table);
     Runspec runspec (deck);
-    Schedule schedule(deck, grid1 , fp, eclipseProperties, runspec);
+    Schedule schedule(deck, grid1 , fp, runspec);
 
     const auto& f0 = schedule.getWell("INJE01", 0).getFoamProperties();
     const auto& f1 = schedule.getWell("INJE01", 1).getFoamProperties();
@@ -3298,10 +3249,9 @@ BOOST_AUTO_TEST_CASE(WTEST_CONFIG) {
     auto deck = createDeckWTEST();
     EclipseGrid grid1(10,10,10);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid1);
     FieldPropsManager fp( deck , grid1, table);
     Runspec runspec (deck);
-    Schedule schedule(deck, grid1 , fp, eclipseProperties, runspec);
+    Schedule schedule(deck, grid1 , fp, runspec);
 
     const auto& wtest_config1 = schedule.wtestConfig(0);
     BOOST_CHECK_EQUAL(wtest_config1.size(), 2);
@@ -3328,10 +3278,9 @@ BOOST_AUTO_TEST_CASE(WELL_STATIC) {
     auto deck = createDeckWithWells();
     EclipseGrid grid1(10,10,10);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid1);
     FieldPropsManager fp( deck , grid1, table);
     Runspec runspec (deck);
-    Schedule schedule(deck, grid1 , fp, eclipseProperties, runspec);
+    Schedule schedule(deck, grid1 , fp, runspec);
     BOOST_CHECK_THROW( schedule.getWell("NO_SUCH_WELL", 0), std::invalid_argument);
     BOOST_CHECK_THROW( schedule.getWell("W_3", 0), std::invalid_argument);
 
@@ -3377,10 +3326,9 @@ BOOST_AUTO_TEST_CASE(WellNames) {
     auto deck = createDeckWTEST();
     EclipseGrid grid1(10,10,10);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid1);
     FieldPropsManager fp( deck , grid1, table);
     Runspec runspec (deck);
-    Schedule schedule(deck, grid1 , fp, eclipseProperties, runspec);
+    Schedule schedule(deck, grid1 , fp, runspec);
 
     auto names = schedule.wellNames("NO_SUCH_WELL", 0);
     BOOST_CHECK_EQUAL(names.size(), 0);
@@ -3492,10 +3440,9 @@ BOOST_AUTO_TEST_CASE(RFT_CONFIG2) {
     auto deck = createDeckRFTConfig();
     EclipseGrid grid1(10,10,10);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid1);
     FieldPropsManager fp( deck , grid1, table);
     Runspec runspec (deck);
-    Schedule schedule(deck, grid1 , fp, eclipseProperties, runspec);
+    Schedule schedule(deck, grid1 , fp, runspec);
     const auto& rft_config = schedule.rftConfig();
     BOOST_CHECK_EQUAL(1, rft_config.firstRFTOutput());
 }
@@ -3526,10 +3473,9 @@ BOOST_AUTO_TEST_CASE(nupcol) {
     auto deck = parser.parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
     FieldPropsManager fp( deck , grid, table);
     Runspec runspec (deck);
-    Schedule schedule( deck, grid, fp, eclipseProperties,runspec);
+    Schedule schedule( deck, grid, fp, runspec);
 
     {
         // Flow uses 12 as default
@@ -3619,10 +3565,9 @@ DATES             -- 4
     auto deck = parser.parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
     FieldPropsManager fp( deck , grid, table);
     Runspec runspec (deck);
-    Schedule schedule( deck, grid, fp, eclipseProperties,runspec);
+    Schedule schedule( deck, grid, fp, runspec);
 
     {
         const auto& grc = schedule.guideRateConfig(0);

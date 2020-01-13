@@ -95,7 +95,6 @@ namespace Opm
     class DeckKeyword;
     class DeckRecord;
     class EclipseGrid;
-    class Eclipse3DProperties;
     class EclipseState;
     class FieldPropsManager;
     class Runspec;
@@ -119,7 +118,6 @@ namespace Opm
         Schedule(const Deck& deck,
                  const EclipseGrid& grid,
                  const FieldPropsManager& fp,
-                 const Eclipse3DProperties& eclipseProperties,
                  const Runspec &runspec,
                  const ParseContext& parseContext,
                  ErrorGuard& errors);
@@ -128,7 +126,6 @@ namespace Opm
         Schedule(const Deck& deck,
                  const EclipseGrid& grid,
                  const FieldPropsManager& fp,
-                 const Eclipse3DProperties& eclipseProperties,
                  const Runspec &runspec,
                  const ParseContext& parseContext,
                  T&& errors);
@@ -136,7 +133,6 @@ namespace Opm
         Schedule(const Deck& deck,
                  const EclipseGrid& grid,
                  const FieldPropsManager& fp,
-                 const Eclipse3DProperties& eclipseProperties,
                  const Runspec &runspec);
 
         Schedule(const Deck& deck,
@@ -316,8 +312,7 @@ namespace Opm
         bool updateWellStatus( const std::string& well, size_t reportStep , Well::Status status, bool update_connections);
         void addWellToGroup( const std::string& group_name, const std::string& well_name , size_t timeStep);
         void iterateScheduleSection(const ParseContext& parseContext ,  ErrorGuard& errors, const SCHEDULESection& , const EclipseGrid& grid,
-                                    const FieldPropsManager& fp,
-                                    const Eclipse3DProperties& eclipseProperties);
+                                    const FieldPropsManager& fp);
         void addACTIONX(const Action::ActionX& action, std::size_t currentStep);
         void addGroupToGroup( const std::string& parent_group, const std::string& child_group, size_t timeStep);
         void addGroupToGroup( const std::string& parent_group, const Group& child_group, size_t timeStep);
@@ -330,7 +325,7 @@ namespace Opm
         void handleWCONHIST( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
         void handleWCONPROD( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
         void handleWGRUPCON( const DeckKeyword& keyword, size_t currentStep);
-        void handleCOMPDAT( const DeckKeyword& keyword,  size_t currentStep, const EclipseGrid& grid, const FieldPropsManager& fp, const Eclipse3DProperties& eclipseProperties, const ParseContext& parseContext, ErrorGuard& errors);
+        void handleCOMPDAT( const DeckKeyword& keyword,  size_t currentStep, const EclipseGrid& grid, const FieldPropsManager& fp, const ParseContext& parseContext, ErrorGuard& errors);
         void handleCOMPLUMP( const DeckKeyword& keyword,  size_t currentStep );
         void handleWELSEGS( const DeckKeyword& keyword, size_t currentStep);
         void handleCOMPSEGS( const DeckKeyword& keyword, size_t currentStep, const EclipseGrid& grid, const ParseContext& parseContext, ErrorGuard& errors);
@@ -387,7 +382,6 @@ namespace Opm
                            const ParseContext& parseContext, ErrorGuard& errors,
                            const EclipseGrid& grid,
                            const FieldPropsManager& fp,
-                           const Eclipse3DProperties& eclipseProperties,
                            const UnitSystem& unit_system,
                            std::vector<std::pair<const DeckKeyword*, size_t > >& rftProperties);
         void addWellGroupEvent(const std::string& wellGroup, ScheduleEvents::Events event, size_t reportStep);

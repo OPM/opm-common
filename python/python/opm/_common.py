@@ -15,7 +15,6 @@ from .libopmcommon_python import Parser, ParseContext
 from .libopmcommon_python import DeckKeyword
 
 from .libopmcommon_python import EclipseState
-from .libopmcommon_python import test_field_props
 from .libopmcommon_python import FieldProperties
 from .libopmcommon_python import Schedule
 from .libopmcommon_python import OpmLog
