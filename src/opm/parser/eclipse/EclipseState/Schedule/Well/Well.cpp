@@ -397,6 +397,8 @@ bool Well::updateStatus(Status well_state, bool update_connections) {
         case Status::STOP:
             connection_state = Connection::State::SHUT;
             break;
+        default:
+            throw std::logic_error("Bug - should not be here");
         }
 
         auto new_connections = std::make_shared<WellConnections>(this->headI, this->headJ);
