@@ -2952,8 +2952,7 @@ void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, c
                               state2.data().begin(), comparePtr);
         };
 
-        auto&& compareMap = [comparePtr,
-                             compareDynState](const auto& map1, const auto& map2) {
+        auto&& compareMap = [compareDynState](const auto& map1, const auto& map2) {
             if (map1.size() != map2.size())
                 return false;
             auto it2 = map2.begin();

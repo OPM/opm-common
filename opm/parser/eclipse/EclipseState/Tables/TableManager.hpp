@@ -253,10 +253,9 @@ namespace Opm {
             const auto& keyword = deck.getKeyword("PVTWSALT");
             size_t numEntries = keyword.size();
             size_t regionIdx = 0;
-            for (unsigned lineIdx = 0; lineIdx < numEntries; ++lineIdx) {
+            for (unsigned lineIdx = 0; lineIdx < numEntries; lineIdx += 2) {
                 pvtwtables[regionIdx].init(keyword.getRecord(lineIdx), keyword.getRecord(lineIdx+1));
                 ++regionIdx;
-                ++lineIdx;
             }
             assert(regionIdx == numTables);
         }

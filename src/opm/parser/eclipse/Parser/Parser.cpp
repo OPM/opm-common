@@ -742,7 +742,6 @@ std::unique_ptr<RawKeyword> tryParseKeyword( ParserState& parserState, const Par
             }
         } else {
             const auto& parserKeyword = parser.getParserKeywordFromDeckName(rawKeyword->getKeywordName());
-            const auto& parserRecord = parserKeyword.getRecord( rawKeyword->size() );
 
             if (rawKeyword->getSizeType() == Raw::CODE) {
                 auto end_pos = line.find(parserKeyword.codeEnd());
