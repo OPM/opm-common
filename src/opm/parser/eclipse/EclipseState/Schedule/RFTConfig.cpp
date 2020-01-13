@@ -19,19 +19,27 @@
 
 #include <opm/parser/eclipse/EclipseState/Schedule/RFTConfig.hpp>
 
+#include <algorithm>
+#include <cassert>
+#include <utility>
+
 namespace Opm {
 
 RFTConfig::RFTConfig()
-    : well_open_rft_time{false, 0}
+    : tm{}
+    , first_rft_event(tm.size())
+    , well_open_rft_time{false, 0}
 {
 }
 
 RFTConfig::RFTConfig(const TimeMap& tmap,
+                     const std::size_t first_rft,
                      const std::pair<bool, std::size_t>& rftTime,
-                     const std::unordered_set<std::string>& rftName,
-                     const std::unordered_map<std::string, std::size_t>& wellOpen,
+                     const WellOpenTimeMap& rftName,
+                     const WellOpenTimeMap& wellOpen,
                      const RFTMap& rconfig, const PLTMap& pconfig)
     : tm(tmap)
+    , first_rft_event(first_rft)
     , well_open_rft_time(rftTime)
     , well_open_rft_name(rftName)
     , well_open(wellOpen)
@@ -41,35 +49,24 @@ RFTConfig::RFTConfig(const TimeMap& tmap,
 }
 
 RFTConfig::RFTConfig(const TimeMap& time_map) :
-    tm(time_map)
+    tm(time_map),
+    first_rft_event(tm.size()),
+    well_open_rft_time{false, 0}
 {
 }
 
 bool RFTConfig::rft(const std::string& well_name, std::size_t report_step) const {
     if (report_step >= this->tm.size())
-        throw std::invalid_argument("Invalid ");
+        throw std::invalid_argument("Invalid report step " + std::to_string(report_step));
 
-    const auto well_iter = this->well_open.find(well_name);
-    if (well_iter != this->well_open.end()) {
+    if (this->outputRftAtWellopen(this->well_open.find(well_name), report_step))
+        return true;
 
-        // A general "Output RFT when the well is opened" has been configured with WRFT
-        if (this->well_open_rft_time.first && this->well_open_rft_time.second <= report_step) {
-            if (well_iter->second == report_step)
-                return true;
-        }
-
-
-        // A FOPN setting has been configured with the WRFTPLT keyword
-        if (this->well_open_rft_name.count(well_name) > 0) {
-            if (well_iter->second == report_step)
-                return true;
-        }
-    }
-
-    if (this->rft_config.count(well_name) == 0)
+    auto cfg = this->rft_config.find(well_name);
+    if (cfg == this->rft_config.end())
         return false;
 
-    auto rft_pair = this->rft_config.at(well_name)[report_step];
+    const auto& rft_pair = cfg->second[report_step];
     if (rft_pair.first == RFT::YES)
         return (rft_pair.second == report_step);
 
@@ -89,10 +86,11 @@ bool RFTConfig::plt(const std::string& well_name, std::size_t report_step) const
     if (report_step >= this->tm.size())
         throw std::invalid_argument("Invalid ");
 
-    if (this->plt_config.count(well_name) == 0)
+    auto cfg = this->plt_config.find(well_name);
+    if (cfg == this->plt_config.end())
         return false;
 
-    auto plt_pair = this->plt_config.at(well_name)[report_step];
+    const auto& plt_pair = cfg->second[report_step];
     if (plt_pair.first == PLT::YES)
         return (plt_pair.second == report_step);
 
@@ -108,24 +106,52 @@ bool RFTConfig::plt(const std::string& well_name, std::size_t report_step) const
     return false;
 }
 
+template <typename Value>
+void RFTConfig::updateConfig(const std::string& well_name,
+                             const std::size_t  report_step,
+                             const Value        value,
+                             ConfigMap<Value>&  cfgmap)
+{
+    auto cfg = cfgmap.find(well_name);
+    if (cfg == cfgmap.end()) {
+        auto state = DynamicState<std::pair<Value, std::size_t>> {
+            this->tm, std::make_pair(Value::NO, 0)
+        };
+
+        auto stat = cfgmap.emplace(well_name, std::move(state));
+        if (! stat.second)
+            return;
+
+        cfg = stat.first;
+    }
+
+    cfg->second.update(report_step, std::make_pair(value, report_step));
+}
+
 void RFTConfig::updateRFT(const std::string& well_name, std::size_t report_step, RFT value) {
-    if (value == RFT::FOPN)
-        this->setWellOpenRFT(well_name);
-    else {
-        if (this->rft_config.count(well_name) == 0) {
-            auto state = DynamicState<std::pair<RFT, std::size_t>>(this->tm, std::make_pair(RFT::NO, 0));
-            this->rft_config.emplace( well_name, state );
-        }
-        this->rft_config.at(well_name).update(report_step, std::make_pair(value, report_step));
+    if (value == RFT::FOPN) {
+        this->setWellOpenRFT(well_name, report_step);
+
+        auto wo = this->well_open.find(well_name);
+        if (wo != this->well_open.end())
+            // New candidate first RFT event time is 'report_step' if
+            // well is already open, well's open event time otherwise.
+            this->updateFirst(std::max(report_step, wo->second));
+    } else {
+        this->updateConfig(well_name, report_step, value, this->rft_config);
+
+        if (value != RFT::NO)
+            // YES, REPT, or TIMESTEP.
+            this->updateFirstIfNotShut(well_name, report_step);
     }
 }
 
 void RFTConfig::updatePLT(const std::string& well_name, std::size_t report_step, PLT value) {
-    if (this->plt_config.count(well_name) == 0) {
-        auto state = DynamicState<std::pair<PLT, std::size_t>>(this->tm, std::make_pair(PLT::NO, 0));
-        this->plt_config.emplace( well_name, state );
-    }
-    this->plt_config.at(well_name).update(report_step, std::make_pair(value, report_step));
+    this->updateConfig(well_name, report_step, value, this->plt_config);
+
+    if (value != PLT::NO)
+        // YES, REPT, or TIMESTEP.
+        this->updateFirstIfNotShut(well_name, report_step);
 }
 
 
@@ -138,67 +164,31 @@ bool RFTConfig::getWellOpenRFT(const std::string& well_name, std::size_t report_
 
 
 void RFTConfig::setWellOpenRFT(std::size_t report_step) {
-    this->well_open_rft_time = std::make_pair(true, report_step);
+    this->well_open_rft_time.second = this->well_open_rft_time.first
+        ? std::min(this->well_open_rft_time.second, report_step)
+        : report_step;
+
+    this->well_open_rft_time.first = true;
+
+    this->updateFirst(this->firstWellopenStepNotBefore(report_step));
 }
 
 void RFTConfig::setWellOpenRFT(const std::string& well_name) {
-    this->well_open_rft_name.insert( well_name );
+    this->setWellOpenRFT(well_name, std::size_t(0));
 }
 
 
 void RFTConfig::addWellOpen(const std::string& well_name, std::size_t report_step) {
-    if (this->well_open.count(well_name) == 0)
-        this->well_open[well_name] = report_step;
-}
-
-std::size_t RFTConfig::firstRFTOutput() const {
-    std::size_t first_rft = this->tm.size();
-    if (this->well_open_rft_time.first) {
-        // The WRFT keyword has been used to request RFT output at well open for all wells.
-        std::size_t rft_time = this->well_open_rft_time.second;
-        for (const auto& rft_pair : this->well_open) {
-            if (rft_pair.second >= rft_time)
-                first_rft = std::min(first_rft, rft_pair.second);
-        }
-    } else {
-        // Go through the individual wells and look for first open settings
-        for (const auto& rft_pair : this->well_open)
-            first_rft = std::min(first_rft, rft_pair.second);
-    }
-
-    for (const auto& plt_pair : this->plt_config) {
-        const auto& dynamic_state = plt_pair.second;
-        /*
-          We do not really output PLT, so this predictae will unconditionally
-          return false.
-        */
-        auto pred = [] (const std::pair<PLT, std::size_t>& ) { return false; };
-        int this_first_rft = dynamic_state.find_if(pred);
-        if (this_first_rft >= 0)
-            first_rft = std::min(first_rft, static_cast<std::size_t>(this_first_rft));
-    }
-
-    for (const auto& rft_pair : this->rft_config) {
-      const auto& dynamic_state = rft_pair.second;
-
-      auto pred = [] (const std::pair<RFT, std::size_t>& pred_arg) {
-                    if (pred_arg.first == RFT::YES)
-                        return true;
-                    if (pred_arg.first == RFT::REPT)
-                        return true;
-                    if (pred_arg.first == RFT::TIMESTEP)
-                        return true;
-                    return false;
-                  };
-
-      int this_first_rft = dynamic_state.find_if(pred);
-      if (this_first_rft >= 0)
-        first_rft = std::min(first_rft, static_cast<std::size_t>(this_first_rft));
-    }
-    return first_rft;
+    // Implicitly handles 'well_name' already being in the map.
+    this->well_open.emplace(well_name, report_step);
 }
 
 bool RFTConfig::active(std::size_t report_step) const {
+    for (auto well = this->well_open.begin(), end = this->well_open.end(); well != end; ++well) {
+        if (this->outputRftAtWellopen(well, report_step))
+            return true;
+    }
+
     for (const auto& rft_pair : this->rft_config) {
         if (this->rft(rft_pair.first, report_step))
             return true;
@@ -280,11 +270,11 @@ const std::pair<bool, std::size_t>& RFTConfig::wellOpenRftTime() const {
     return well_open_rft_time;
 }
 
-const std::unordered_set<std::string>& RFTConfig::wellOpenRftName() const {
+const RFTConfig::WellOpenTimeMap& RFTConfig::wellOpenRftName() const {
     return well_open_rft_name;
 }
 
-const std::unordered_map<std::string, std::size_t>& RFTConfig::wellOpen() const {
+const RFTConfig::WellOpenTimeMap& RFTConfig::wellOpen() const {
     return well_open;
 }
 
@@ -298,6 +288,7 @@ const RFTConfig::PLTMap& RFTConfig::pltConfig() const {
 
 bool RFTConfig::operator==(const RFTConfig& data) const {
     return this->timeMap() == data.timeMap() &&
+           this->firstRFTOutput() == data.firstRFTOutput() &&
            this->wellOpenRftTime() == data.wellOpenRftTime() &&
            this->wellOpenRftName() == data.wellOpenRftName() &&
            this->wellOpen() == data.wellOpen() &&
@@ -305,4 +296,83 @@ bool RFTConfig::operator==(const RFTConfig& data) const {
            this->pltConfig() == data.pltConfig();
 }
 
+bool RFTConfig::outputRftAtWellopen(WellOpenTimeMap::const_iterator well_iter, const std::size_t report_step) const {
+    assert ((report_step < this->tm.size()) && "Internal logic error for report step");
+
+    if (well_iter == this->well_open.end())
+        return false;
+
+    if (report_step < this->first_rft_event)
+        return false;
+
+    if (this->well_open_rft_time.first && this->well_open_rft_time.second <= report_step) {
+        // A general "Output RFT when the well is opened" has been
+        // configured with WRFT.  Output RFT data if the well opens
+        // at this report step.
+        if (well_iter->second == report_step)
+            return true;
+    }
+
+    auto rft_open = this->well_open_rft_name.find(well_iter->first);
+    if (rft_open == this->well_open_rft_name.end())
+        // No FOPN event configured for this well (i.e., well_iter->first).
+        return false;
+
+    // An FOPN setting has been configured with the WRFTPLT keyword.
+    // Output RFT data if we're at the FOPN event time and the well is
+    // already open or if we're after FOPN event time and the well
+    // opens at this step.
+    return ((report_step == rft_open->second) && (well_iter->second <= report_step))
+        || ((report_step >  rft_open->second) && (well_iter->second == report_step));
+}
+
+std::size_t RFTConfig::firstWellopenStepNotBefore(const std::size_t report_step) const {
+    if (well_open.empty())
+        // No well-open events at all (unexpected).
+        return this->tm.size();
+
+    using VT = WellOpenTimeMap::value_type;
+
+    auto event = std::min_element(this->well_open.begin(), this->well_open.end(),
+        [report_step](const VT& elem, const VT& low) -> bool
+    {
+        if (elem.second < report_step)
+            return false;
+
+        return elem.second < low.second;
+    });
+
+    if (event->second < report_step)
+        // All well-open events happen *before* 'report_step'.
+        return this->tm.size();
+
+    return event->second;
+}
+
+void RFTConfig::updateFirstIfNotShut(const std::string& well_name, const std::size_t report_step) {
+    auto wo = this->well_open.find(well_name);
+
+    if ((wo != this->well_open.end()) && (wo->second <= report_step))
+        // Well opens no later than 'report_step'.  New candidate
+        // first RFT output event is 'report_step'.
+        this->updateFirst(report_step);
+}
+
+void RFTConfig::updateFirst(const std::size_t report_step) {
+    this->first_rft_event = std::min(this->first_rft_event, report_step);
+}
+
+void RFTConfig::setWellOpenRFT(const std::string& well_name, const std::size_t report_step)
+{
+    auto pos = this->well_open_rft_name.find(well_name);
+    if (pos == this->well_open_rft_name.end()) {
+        auto stat = this->well_open_rft_name.emplace(well_name, this->tm.size());
+        if (! stat.second)
+            return;
+
+        pos = stat.first;
+    }
+
+    pos->second = std::min(pos->second, report_step);
+}
 }
