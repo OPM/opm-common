@@ -50,9 +50,9 @@ public:
     {
     }
 
-    const index_type getIndex() const { return m_map; }
+    const index_type& getIndex() const { return m_map; }
 
-    const storage_type getStorage() const { return m_vector; }
+    const storage_type& getStorage() const { return m_vector; }
 
     std::size_t count(const K& key) const {
         return this->m_map.count(key);
