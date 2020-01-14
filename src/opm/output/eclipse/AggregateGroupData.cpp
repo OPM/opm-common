@@ -212,11 +212,9 @@ void staticContrib(const Opm::Schedule&     sched,
     // 0 - ellers
     
     if (group.isInjectionGroup()) {
-        const auto& inj_cntl = group.injectionControls(sumState);
-        const auto& inj_mode = inj_cntl.cmode;
-        const auto& phs = inj_cntl.phase;
-        //Gas injection control
-        if (phs == Opm::Phase::WATER) {
+        if (group.hasInjectionControl(Opm::Phase::WATER)) {
+            const auto& inj_cntl = group.injectionControls(Opm::Phase::WATER, sumState);
+            const auto& inj_mode = inj_cntl.cmode;
             const auto it = cmodeToNum.find(inj_mode);
             if (it != cmodeToNum.end()) {
                 iGrp[nwgmax + 16] = it->second;
@@ -224,8 +222,10 @@ void staticContrib(const Opm::Schedule&     sched,
                 iGrp[nwgmax + 19] = iGrp[nwgmax + 16];
             }
         }
-        //Water injection control
-        else if (phs == Opm::Phase::GAS) {
+
+        if (group.hasInjectionControl(Opm::Phase::GAS)) {
+            const auto& inj_cntl = group.injectionControls(Opm::Phase::GAS, sumState);
+            const auto& inj_mode = inj_cntl.cmode;
             const auto it = cmodeToNum.find(inj_mode);
             if (it != cmodeToNum.end()) {
                 iGrp[nwgmax + 21] = it->second;
@@ -378,9 +378,8 @@ void staticContrib(const Opm::Group&        group,
     }
     
     if (group.isInjectionGroup()) {
-        const auto& inj_cntl = group.injectionControls(sumState);
-        const auto& phs = inj_cntl.phase;
-        if (phs == Opm::Phase::GAS) {
+        if (group.hasInjectionControl(Opm::Phase::GAS)) {
+            const auto& inj_cntl = group.injectionControls(Opm::Phase::GAS, sumState);
             if (inj_cntl.surface_max_rate > 0.) {
                 sGrp[Isi::gasSurfRateLimit] = sgprop(M::gas_surface_rate, inj_cntl.surface_max_rate);
             }
@@ -394,7 +393,9 @@ void staticContrib(const Opm::Group&        group,
                 sGrp[Isi::gasVoidageLimit] = inj_cntl.target_void_fraction;
             }
         }
-        if (phs == Opm::Phase::WATER) {
+
+        if (group.hasInjectionControl(Opm::Phase::WATER)) {
+            const auto& inj_cntl = group.injectionControls(Opm::Phase::WATER, sumState);
             if (inj_cntl.surface_max_rate > 0.) {
                 sGrp[Isi::waterSurfRateLimit] = sgprop(M::liquid_surface_rate, inj_cntl.surface_max_rate);
             }

@@ -75,21 +75,6 @@ BOOST_AUTO_TEST_CASE(CreateGroup_SetInjectorProducer_CorrectStatusSet) {
 
 
 
-BOOST_AUTO_TEST_CASE(ControlModeOK) {
-    Opm::Group group("G1" , 1, 0, 0, UnitSystem::newMETRIC());
-    Opm::SummaryState st(std::chrono::system_clock::now());
-    const auto& inj = group.injectionControls(st);
-    BOOST_CHECK( Opm::Group::InjectionCMode::NONE == inj.cmode);
-}
-
-
-
-BOOST_AUTO_TEST_CASE(GroupChangePhaseSameTimeThrows) {
-    Opm::Group group("G1" , 1, 0, 0, UnitSystem::newMETRIC());
-    Opm::SummaryState st(std::chrono::system_clock::now());
-    const auto& inj = group.injectionControls(st);
-    BOOST_CHECK_EQUAL( Opm::Phase::WATER , inj.phase); // Default phase - assumed WATER
-}
 
 
 
@@ -442,4 +427,80 @@ BOOST_AUTO_TEST_CASE(TESTGCONSALE) {
 
 
 
+}
+
+BOOST_AUTO_TEST_CASE(GCONINJE_MULTIPLE_PHASES) {
+    Parser parser;
+    std::string input = R"(
+        START             -- 0
+        31 AUG 1993 /
+        SCHEDULE
+
+        GRUPTREE
+           'G1'  'FIELD' /
+           'G2'  'FIELD' /
+        /
+
+        GCONINJE
+           'G1'   'WATER'   1*  1000      /
+           'G1'   'GAS'     1*  1*   2000 /
+           'G2'   'WATER'   1*  1000      /
+        /
+
+        TSTEP
+           10 /
+
+        GCONINJE
+           'G2'   'WATER'   1*  1000      /
+           'G2'   'GAS'     1*  1*   2000 /
+           'G1'   'GAS'     1*  1000      /
+        /
+
+        )";
+
+    auto deck = parser.parseString(input);
+    EclipseGrid grid(10,10,10);
+    TableManager table ( deck );
+    FieldPropsManager fp( deck , Phases{true, true, true}, grid, table);
+    Runspec runspec (deck );
+    Schedule schedule(deck, grid, fp, runspec);
+    SummaryState st(std::chrono::system_clock::now());
+    // Step 0
+    {
+        const auto& g1 = schedule.getGroup("G1", 0);
+        BOOST_CHECK(  g1.hasInjectionControl(Phase::WATER));
+        BOOST_CHECK(  g1.hasInjectionControl(Phase::GAS));
+        BOOST_CHECK( !g1.hasInjectionControl(Phase::OIL));
+
+        const auto& wc = g1.injectionControls(Phase::WATER, st);
+        const auto& gc = g1.injectionControls(Phase::GAS, st);
+        BOOST_CHECK_THROW(g1.injectionControls(Phase::OIL, st), std::out_of_range);
+
+        BOOST_CHECK(g1.has_topup_phase());
+        BOOST_CHECK(Phase::GAS == g1.topup_phase());
+    }
+    {
+        const auto& g2 = schedule.getGroup("G2", 0);
+        BOOST_CHECK(!g2.has_topup_phase());
+        BOOST_CHECK_THROW(g2.topup_phase(), std::logic_error);
+    }
+    // Step 1
+    {
+        const auto& g2 = schedule.getGroup("G2", 1);
+        BOOST_CHECK(  g2.hasInjectionControl(Phase::WATER));
+        BOOST_CHECK(  g2.hasInjectionControl(Phase::GAS));
+        BOOST_CHECK( !g2.hasInjectionControl(Phase::OIL));
+
+        const auto& wc = g2.injectionControls(Phase::WATER, st);
+        const auto& gc = g2.injectionControls(Phase::GAS, st);
+        BOOST_CHECK_THROW(g2.injectionControls(Phase::OIL, st), std::out_of_range);
+
+        BOOST_CHECK(g2.has_topup_phase());
+        BOOST_CHECK(Phase::GAS == g2.topup_phase());
+    }
+    {
+        const auto& g1 = schedule.getGroup("G1", 1);
+        BOOST_CHECK(!g1.has_topup_phase());
+        BOOST_CHECK_THROW(g1.topup_phase(), std::logic_error);
+    }
 }

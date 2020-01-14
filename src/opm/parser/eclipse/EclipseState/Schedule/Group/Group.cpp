@@ -45,7 +45,7 @@ Group::Group(const std::string& name, std::size_t insert_index_arg, std::size_t 
     if (name != "FIELD")
         this->parent_group = "FIELD";
 }
-
+/*
 Group::Group(const std::string& gname,
              std::size_t insert_idx,
              std::size_t initstep,
@@ -76,6 +76,7 @@ Group::Group(const std::string& gname,
     production_properties(prodProps)
 {
 }
+*/
 
 std::size_t Group::insert_index() const {
     return this->m_insert_index;
@@ -109,9 +110,6 @@ const Group::GroupProductionProperties& Group::productionProperties() const {
     return this->production_properties;
 }
 
-const Group::GroupInjectionProperties& Group::injectionProperties() const {
-    return this->injection_properties;
-}
 
 int Group::getGroupNetVFPTable() const {
     return this->vfp_table;
@@ -133,19 +131,50 @@ bool Group::updateNetVFPTable(int vfp_arg) {
         return false;
 }
 
+namespace {
+namespace detail {
+
+bool has_control(int controls, Group::InjectionCMode cmode) {
+    return ((controls & static_cast<int>(cmode)) != 0);
+}
+
+bool has_control(int controls, Group::ProductionCMode cmode) {
+    return ((controls & static_cast<int>(cmode)) != 0);
+}
+}
+}
+
 bool Group::updateInjection(const GroupInjectionProperties& injection) {
     bool update = false;
-
-    if (this->injection_properties != injection) {
-        this->injection_properties = injection;
-        update = true;
-    }
 
     if (!this->hasType(GroupType::INJECTION)) {
         this->addType(GroupType::INJECTION);
         update = true;
     }
 
+    auto iter = this->injection_properties.find(injection.phase);
+    if (iter == this->injection_properties.end()) {
+        this->injection_properties.insert(std::make_pair(injection.phase, injection));
+        update = true;
+    } else {
+        if (iter->second != injection) {
+            iter->second = injection;
+            update = true;
+        }
+    }
+
+    if (detail::has_control(injection.injection_controls, Group::InjectionCMode::RESV) ||
+        detail::has_control(injection.injection_controls, Group::InjectionCMode::REIN) ||
+        detail::has_control(injection.injection_controls, Group::InjectionCMode::VREP)) {
+        auto topup_phase = std::make_pair(injection.phase, true);
+        if (topup_phase != this->m_topup_phase) {
+            this->m_topup_phase = topup_phase;
+            update = true;
+        }
+    } else {
+        if (this->m_topup_phase == std::make_pair(injection.phase, true))
+            this->m_topup_phase = std::make_pair(injection.phase, false);
+    }
     return update;
 }
 
@@ -317,6 +346,18 @@ const std::string& Group::parent() const {
     return this->parent_group;
 }
 
+const Phase& Group::topup_phase() const {
+    if (this->m_topup_phase.second)
+        return this->m_topup_phase.first;
+    else
+        throw std::logic_error("Asked for topup phase in well without topup phase defined");
+}
+
+
+bool Group::has_topup_phase() const {
+    return this->m_topup_phase.second;
+}
+
 
 bool Group::updateParent(const std::string& parent) {
     if (this->parent_group != parent) {
@@ -343,30 +384,31 @@ Group::ProductionControls Group::productionControls(const SummaryState& st) cons
     return pc;
 }
 
-Group::InjectionControls Group::injectionControls(const SummaryState& st) const {
+Group::InjectionControls Group::injectionControls(Phase phase, const SummaryState& st) const {
     Group::InjectionControls ic;
+    const auto& inj = this->injection_properties.at(phase);
 
-    ic.phase = this->injection_properties.phase;
-    ic.cmode = this->injection_properties.cmode;
-    ic.surface_max_rate = UDA::eval_group_uda_rate(this->injection_properties.surface_max_rate, this->m_name, st, this->udq_undefined, ic.phase, this->unit_system);
-    ic.resv_max_rate = UDA::eval_group_uda(this->injection_properties.resv_max_rate, this->m_name, st, this->udq_undefined);
-    ic.target_reinj_fraction = UDA::eval_group_uda(this->injection_properties.target_reinj_fraction, this->m_name, st, this->udq_undefined);
-    ic.target_void_fraction = UDA::eval_group_uda(this->injection_properties.target_void_fraction, this->m_name, st, this->udq_undefined);
-    ic.reinj_group = this->injection_properties.reinj_group;
-    ic.voidage_group = this->injection_properties.voidage_group;
+    ic.phase = inj.phase;
+    ic.cmode = inj.cmode;
+    ic.surface_max_rate = UDA::eval_group_uda_rate(inj.surface_max_rate, this->m_name, st, this->udq_undefined, ic.phase, this->unit_system);
+    ic.resv_max_rate = UDA::eval_group_uda(inj.resv_max_rate, this->m_name, st, this->udq_undefined);
+    ic.target_reinj_fraction = UDA::eval_group_uda(inj.target_reinj_fraction, this->m_name, st, this->udq_undefined);
+    ic.target_void_fraction = UDA::eval_group_uda(inj.target_void_fraction, this->m_name, st, this->udq_undefined);
+    ic.reinj_group = inj.reinj_group;
+    ic.voidage_group = inj.voidage_group;
+
     return ic;
 }
 
+bool Group::hasInjectionControl(Phase phase) const {
+    return (this->injection_properties.count(phase) > 0);
+}
+
+
+
+
 Group::ProductionCMode Group::production_cmode() const {
     return this->production_properties.cmode;
-}
-
-Group::InjectionCMode Group::injection_cmode() const {
-    return this->injection_properties.cmode;
-}
-
-Phase Group::injection_phase() const {
-    return this->injection_properties.phase;
 }
 
 const Group::GroupType& Group::getGroupType() const {
@@ -374,20 +416,15 @@ const Group::GroupType& Group::getGroupType() const {
 }
 
 bool Group::ProductionControls::has_control(Group::ProductionCMode control) const {
-    return (this->production_controls & static_cast<int>(control)) != 0;
+    return detail::has_control(this->production_controls, control);
 }
 
-
 bool Group::InjectionControls::has_control(InjectionCMode cmode_arg) const {
-    return (this->injection_controls & static_cast<int>(cmode_arg)) != 0;
+    return detail::has_control(this->injection_controls, cmode_arg);
 }
 
 bool Group::has_control(Group::ProductionCMode control) const {
-    return (this->production_properties.production_controls & static_cast<int>(control)) != 0;
-}
-
-bool Group::has_control(InjectionCMode control) const {
-    return (this->injection_properties.injection_controls & static_cast<int>(control)) != 0;
+    return detail::has_control(production_properties.production_controls, control);
 }
 
 
@@ -567,7 +604,8 @@ bool Group::operator==(const Group& data) const
            this->parent() == data.parent() &&
            this->iwells() == data.iwells() &&
            this->igroups() == data.igroups() &&
-           this->injectionProperties() == data.injectionProperties() &&
+           this->m_topup_phase == data.m_topup_phase &&
+           this->injection_properties == data.injection_properties &&
            this->productionProperties() == data.productionProperties();
 }
 
