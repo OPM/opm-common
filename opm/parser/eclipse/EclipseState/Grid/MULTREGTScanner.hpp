@@ -57,6 +57,15 @@ namespace Opm {
         int directions;
         MULTREGT::NNCBehaviourEnum nnc_behaviour;
         std::string region_name;
+
+        bool operator==(const MULTREGTRecord& data) const {
+            return src_value == data.src_value &&
+                   target_value == data.target_value &&
+                   trans_mult == data.trans_mult &&
+                   directions == data.directions &&
+                   nnc_behaviour == data.nnc_behaviour &&
+                   region_name == data.region_name;
+        }
     };
 
     typedef std::map< std::pair<int , int> , const MULTREGTRecord * >  MULTREGTSearchMap;
