@@ -576,7 +576,7 @@ BOOST_AUTO_TEST_CASE(TestHeader) {
     BOOST_CHECK_EQUAL(header.ny, ny);
     BOOST_CHECK_EQUAL(header.nactive, nactive);
     BOOST_CHECK_EQUAL(header.num_wells, numWells);
-    BOOST_CHECK_EQUAL(header.max_perf, maxPerf);
+    BOOST_CHECK_EQUAL(header.ncwmax, maxPerf);
     BOOST_CHECK_EQUAL(header.max_wells_in_group, std::max(maxWellsInGroup , maxGroupInField));
     BOOST_CHECK_EQUAL(header.max_groups_in_field, maxGroupInField + 1);
     BOOST_CHECK_EQUAL(header.max_wells_in_field, maxWellsInField);
