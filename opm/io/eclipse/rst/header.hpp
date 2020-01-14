@@ -31,7 +31,7 @@ struct Header {
     int nz;
     int nactive;
     int num_wells;
-    int max_perf;
+    int ncwmax;
     int max_wells_in_group;
     int max_groups_in_field;
     int max_wells_in_field;

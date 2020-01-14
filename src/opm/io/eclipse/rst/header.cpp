@@ -32,7 +32,7 @@ Header::Header(const std::vector<int>& intehead, const std::vector<bool>& logihe
     nz(intehead[VI::intehead::NZ]),
     nactive(intehead[VI::intehead::NACTIV]),
     num_wells(intehead[VI::intehead::NWELLS]),
-    max_perf(intehead[VI::intehead::NCWMAX]),
+    ncwmax(intehead[VI::intehead::NCWMAX]),
     max_wells_in_group(intehead[VI::intehead::NWGMAX]),
     max_groups_in_field(intehead[VI::intehead::NGMAXZ]),
     max_wells_in_field(intehead[VI::intehead::NWMAXZ]),
