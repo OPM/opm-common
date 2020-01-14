@@ -76,15 +76,36 @@ namespace Opm {
     class MULTREGTScanner {
 
     public:
+        using ExternalSearchMap = std::map<std::string, std::map<std::pair<int,int>, int>>;
+
+        MULTREGTScanner() = default;
+        MULTREGTScanner(const MULTREGTScanner& data);
         MULTREGTScanner(const GridDims& grid,
                         const FieldPropsManager* fp_arg,
                         const std::vector< const DeckKeyword* >& keywords);
+        MULTREGTScanner(const std::array<size_t,3>& size,
+                        const std::vector<MULTREGTRecord>& records,
+                        const ExternalSearchMap& searchMap,
+                        const std::map<std::string, std::vector<int>>& region,
+                        const std::string& defaultRegion);
+
         double getRegionMultiplier(size_t globalCellIdx1, size_t globalCellIdx2, FaceDir::DirEnum faceDir) const;
 
+        std::array<size_t,3> getSize() const;
+        const std::vector<MULTREGTRecord>& getRecords() const;
+        ExternalSearchMap getSearchMap() const;
+        const std::map<std::string, std::vector<int>>& getRegions() const;
+        const std::string& getDefaultRegion() const;
+
+        bool operator==(const MULTREGTScanner& data) const;
+        MULTREGTScanner& operator=(const MULTREGTScanner& data);
+
     private:
+        void constructSearchMap(const ExternalSearchMap& searchMap);
+
         void addKeyword( const DeckKeyword& deckKeyword, const std::string& defaultRegion);
         void assertKeywordSupported(const DeckKeyword& deckKeyword);
-        std::size_t nx,ny,nz;
+        std::size_t nx = 0,ny = 0, nz = 0;
         const FieldPropsManager* fp = nullptr;
         std::vector< MULTREGTRecord > m_records;
         std::map<std::string , MULTREGTSearchMap> m_searchMap;
