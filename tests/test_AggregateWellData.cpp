@@ -23,10 +23,15 @@
 #include <boost/test/unit_test.hpp>
 
 #include <opm/output/eclipse/AggregateWellData.hpp>
+#include <opm/output/eclipse/AggregateConnectionData.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
 #include <opm/output/eclipse/VectorItems/well.hpp>
+#include <opm/output/eclipse/WriteRestartHelpers.hpp>
+
+#include <opm/io/eclipse/rst/well.hpp>
+#include <opm/io/eclipse/rst/header.hpp>
 
 #include <opm/output/data/Wells.hpp>
 
@@ -342,17 +347,21 @@ TSTEP            -- 8
 
         return xw;
     }
-}
+
+
+} // namespace
 
 struct SimulationCase
 {
     explicit SimulationCase(const Opm::Deck& deck)
         : es   { deck }
+        , grid { deck }
         , sched{ deck, es }
     {}
 
     // Order requirement: 'es' must be declared/initialised before 'sched'.
     Opm::EclipseState es;
+    Opm::EclipseGrid  grid;
     Opm::Schedule     sched;
 };
 
@@ -772,6 +781,74 @@ BOOST_AUTO_TEST_CASE (Dynamic_Well_Data_Step2)
         BOOST_CHECK_CLOSE(xwell[i2 + Ix::HistWatPrTotal], 3456.7, 1.0e-10);
         BOOST_CHECK_CLOSE(xwell[i2 + Ix::HistGasPrTotal], 4567.8, 1.0e-10);
     }
+}
+
+
+BOOST_AUTO_TEST_CASE(WELL_POD) {
+    const auto simCase = SimulationCase{first_sim()};
+    const auto& units = simCase.es.getUnits();
+    // Report Step 2: 2011-01-20 --> 2013-06-15
+    const auto rptStep = std::size_t{2};
+    const auto sim_step = rptStep - 1;
+    Opm::SummaryState sumState(std::chrono::system_clock::now());
+
+    const auto ih = Opm::RestartIO::Helpers::createInteHead(simCase.es,
+                                                            simCase.grid,
+                                                            simCase.sched,
+                                                            0,
+                                                            sim_step,
+                                                            sim_step);
+
+    auto wellData = Opm::RestartIO::Helpers::AggregateWellData(ih);
+    wellData.captureDeclaredWellData(simCase.sched, units, sim_step, sumState, ih);
+    wellData.captureDynamicWellData(simCase.sched, sim_step, {} , sumState);
+
+    auto connectionData = Opm::RestartIO::Helpers::AggregateConnectionData(ih);
+    connectionData.captureDeclaredConnData(simCase.sched, simCase.grid, units, {} , sim_step);
+
+    const auto& iwel = wellData.getIWell();
+    const auto& swel = wellData.getSWell();
+    const auto& xwel = wellData.getXWell();
+    const auto& zwel = wellData.getZWell();
+
+    const auto& icon = connectionData.getIConn();
+    const auto& scon = connectionData.getSConn();
+    const auto& xcon = connectionData.getXConn();
+
+    Opm::RestartIO::Header header(ih, std::vector<bool>(100), std::vector<double>(1000));
+    std::vector<Opm::RestartIO::Well> wells;
+    for (auto iw = 0; iw < header.num_wells; iw++) {
+        std::size_t zwel_offset = header.nzwelz * iw;
+        std::size_t iwel_offset = header.niwelz * iw;
+        std::size_t swel_offset = header.nswelz * iw;
+        std::size_t xwel_offset = header.nxwelz * iw;
+        std::size_t icon_offset = header.niconz * header.ncwmax * iw;
+        std::size_t scon_offset = header.nsconz * header.ncwmax * iw;
+        std::size_t xcon_offset = header.nxconz * header.ncwmax * iw;
+
+        wells.emplace_back(header,
+                           zwel.data() + zwel_offset,
+                           iwel.data() + iwel_offset,
+                           swel.data() + swel_offset,
+                           xwel.data() + xwel_offset,
+                           icon.data() + icon_offset,
+                           scon.data() + scon_offset,
+                           xcon.data() + xcon_offset);
+
+    }
+    // Well OP2
+    const auto& well2 = wells[1];
+    BOOST_CHECK_EQUAL(well2.k1k2.first, 1);
+    BOOST_CHECK_EQUAL(well2.k1k2.second, 1);
+    BOOST_CHECK_EQUAL(well2.ij[0], 8);
+    BOOST_CHECK_EQUAL(well2.ij[1], 8);
+    BOOST_CHECK_EQUAL(well2.name, "OP_2");
+
+    BOOST_CHECK_EQUAL(well2.connections.size(), 1);
+    const auto& conn1 = well2.connections[0];
+    BOOST_CHECK_EQUAL(conn1.ijk[0], 8);
+    BOOST_CHECK_EQUAL(conn1.ijk[1], 8);
+    BOOST_CHECK_EQUAL(conn1.ijk[2], 1);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
