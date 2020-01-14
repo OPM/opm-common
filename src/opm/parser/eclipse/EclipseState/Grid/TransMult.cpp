@@ -44,7 +44,7 @@ namespace Opm {
                    { FaceDir::XMinus, "MULTX-" },
                    { FaceDir::YMinus, "MULTY-" },
                    { FaceDir::ZMinus, "MULTZ-" }}),
-        m_multregtScanner( dims, fp, deck.getKeywordList( "MULTREGT" ))
+        m_multregtScanner( dims, &fp, deck.getKeywordList( "MULTREGT" ))
     {
         EDITSection edit_section(deck);
         if (edit_section.hasKeyword("MULTREGT")) {

@@ -77,7 +77,7 @@ namespace Opm {
 
     public:
         MULTREGTScanner(const GridDims& grid,
-                        const FieldPropsManager& fp_arg,
+                        const FieldPropsManager* fp_arg,
                         const std::vector< const DeckKeyword* >& keywords);
         double getRegionMultiplier(size_t globalCellIdx1, size_t globalCellIdx2, FaceDir::DirEnum faceDir) const;
 
@@ -85,7 +85,7 @@ namespace Opm {
         void addKeyword( const DeckKeyword& deckKeyword, const std::string& defaultRegion);
         void assertKeywordSupported(const DeckKeyword& deckKeyword);
         std::size_t nx,ny,nz;
-        const FieldPropsManager& fp;
+        const FieldPropsManager* fp = nullptr;
         std::vector< MULTREGTRecord > m_records;
         std::map<std::string , MULTREGTSearchMap> m_searchMap;
         std::map<std::string, std::vector<int>> regions;
