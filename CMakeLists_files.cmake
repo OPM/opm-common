@@ -324,6 +324,7 @@ if(ENABLE_ECL_INPUT)
     tests/parser/RawKeywordTests.cpp
     tests/parser/ResinsightTest.cpp
     tests/parser/RestartConfigTests.cpp
+    tests/parser/RFTConfigTests.cpp
     tests/parser/RockTableTests.cpp
     tests/parser/RunspecTests.cpp
     tests/parser/SaltTableTests.cpp

@@ -315,46 +315,47 @@ static Deck createDeckWithWellsAndCompletionData() {
 }
 
 static Deck createDeckRFTConfig() {
-    Opm::Parser parser;
-    std::string input =
-      "START             -- 0 \n"
-      "1 NOV 1979 / \n"
-      "SCHEDULE\n"
-      "DATES             -- 1\n"
-      " 1 DES 1979/ \n"
-      "/\n"
-      "WELSPECS\n"
-      "    'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
-      "    'OP_2'       'OP'   8   8 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
-      "    'OP_3'       'OP'   7   7 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
-      "/\n"
-      "COMPDAT\n"
-      " 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-      " 'OP_1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / \n"
-      " 'OP_2'  8  8   1   3 'OPEN' 1*    1.168   0.311   107.872 1*  1*  'Y'  21.925 / \n"
-      " 'OP_2'  8  7   3   3 'OPEN' 1*   15.071   0.311  1391.859 1*  1*  'Y'  21.920 / \n"
-      " 'OP_2'  8  7   3   6 'OPEN' 1*    6.242   0.311   576.458 1*  1*  'Y'  21.915 / \n"
-      " 'OP_3'  7  7   1   1 'OPEN' 1*   27.412   0.311  2445.337 1*  1*  'Y'  18.521 / \n"
-      " 'OP_3'  7  7   2   2 'OPEN' 1*   55.195   0.311  4923.842 1*  1*  'Y'  18.524 / \n"
-      "/\n"
-      "WELOPEN\n"
-      " 'OP_2' 'OPEN' /\n"
-      "/\n"
-      "DATES\n"
-      " 10  JUL 2007 / \n"
-      "/\n"
-      "WRFTPLT"
-      "  'OP_2'       'YES'        'NO'        'NO' / \n"
-      "/\n"
-      "DATES \n"
-      " 10  AUG 2007 / \n"
-      "/\n"
-      "COMPDAT\n" // with defaulted I and J
-      " 'OP_1'  0  *   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-      "/\n";
-
-    return parser.parseString(input);
+    return ::Opm::Parser{}.parseString(R"(RUNSPEC
+START             -- 0
+  1 NOV 1979 /
+SCHEDULE
+DATES             -- 1  (sim step = 0)
+ 1 DES 1979/
+/
+WELSPECS
+    'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+    'OP_2'       'OP'   8   8 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+    'OP_3'       'OP'   7   7 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+/
+COMPDAT
+ 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+ 'OP_1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 /
+ 'OP_2'  8  8   1   3 'OPEN' 1*    1.168   0.311   107.872 1*  1*  'Y'  21.925 /
+ 'OP_2'  8  7   3   3 'OPEN' 1*   15.071   0.311  1391.859 1*  1*  'Y'  21.920 /
+ 'OP_2'  8  7   3   6 'OPEN' 1*    6.242   0.311   576.458 1*  1*  'Y'  21.915 /
+ 'OP_3'  7  7   1   1 'OPEN' 1*   27.412   0.311  2445.337 1*  1*  'Y'  18.521 /
+ 'OP_3'  7  7   2   2 'OPEN' 1*   55.195   0.311  4923.842 1*  1*  'Y'  18.524 /
+/
+WELOPEN
+ 'OP_2' 'OPEN' /
+/
+DATES             -- 2  (sim step = 1)
+ 10  JUL 2007 /
+/
+WRFTPLT
+  'OP_2'       'YES'        'NO'        'NO' /
+/
+DATES             -- 3  (sim step = 2)
+ 10  AUG 2007 /
+/
+COMPDAT
+-- with defaulted I and J
+ 'OP_1'  0  *   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+/
+END
+)");
 }
+
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckMissingReturnsDefaults) {
     Deck deck;
     Parser parser;
@@ -3444,7 +3445,8 @@ BOOST_AUTO_TEST_CASE(RFT_CONFIG2) {
     Runspec runspec (deck);
     Schedule schedule(deck, grid1 , fp, runspec);
     const auto& rft_config = schedule.rftConfig();
-    BOOST_CHECK_EQUAL(1, rft_config.firstRFTOutput());
+
+    BOOST_CHECK_EQUAL(2, rft_config.firstRFTOutput());
 }
 
 
@@ -3602,5 +3604,3 @@ DATES             -- 4
 
     gr.compute("XYZ",1, 1.0, oil_pot, gas_pot, wat_pot);
 }
-
-
