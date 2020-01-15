@@ -23,8 +23,8 @@
 namespace Opm {
 namespace RestartIO {
 
-struct Header {
-    Header(const std::vector<int>& intehead, const std::vector<bool>& logihead, const std::vector<double>& doubhead);
+struct RstHeader {
+    RstHeader(const std::vector<int>& intehead, const std::vector<bool>& logihead, const std::vector<double>& doubhead);
 
     int nx;
     int ny;
