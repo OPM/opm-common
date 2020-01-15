@@ -237,6 +237,7 @@ if(ENABLE_ECL_OUTPUT)
           src/opm/io/eclipse/OutputStream.cpp
           src/opm/io/eclipse/rst/connection.cpp
           src/opm/io/eclipse/rst/header.cpp
+          src/opm/io/eclipse/rst/segment.cpp
           src/opm/output/eclipse/AggregateActionxData.cpp
           src/opm/output/eclipse/AggregateConnectionData.cpp
           src/opm/output/eclipse/AggregateGroupData.cpp
@@ -703,6 +704,7 @@ if(ENABLE_ECL_OUTPUT)
         opm/io/eclipse/OutputStream.hpp
         opm/io/eclipse/rst/connection.hpp
         opm/io/eclipse/rst/header.hpp
+        opm/io/eclipse/rst/segment.hpp
         opm/output/data/Aquifer.hpp
         opm/output/data/Cells.hpp
         opm/output/data/Solution.hpp
