@@ -92,4 +92,12 @@ BOOST_AUTO_TEST_CASE (String_Shortening)
     }
 }
 
+BOOST_AUTO_TEST_CASE (Trim) {
+    const auto s1 = PadString<4>{"X"};
+    BOOST_CHECK_EQUAL(s1.trim(), std::string{"X"});
+
+    const auto s2 = PadString<4>{"ABCD"};
+    BOOST_CHECK_EQUAL(s2.trim(), std::string{"ABCD"});
+}
+
 BOOST_AUTO_TEST_SUITE_END()

@@ -72,6 +72,18 @@ namespace Opm { namespace EclIO {
             return this->s_.data();
         }
 
+
+        std::string trim() const {
+            const auto end_pos = std::strchr(this->s_.data(), ' ');
+            if (end_pos == nullptr)
+                return std::string{ this->s_.data(), N};
+            else {
+                const std::string::size_type length = end_pos - this->s_.data();
+                return std::string{ this->s_.data(), length };
+            }
+        }
+
+
     private:
         enum : typename std::array<char, N + 1>::size_type { NChar = N };
 
