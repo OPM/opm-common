@@ -143,11 +143,11 @@ namespace Opm {
         if (cmode == ProducerCMode::BHP)
             this->setBHPLimit(this->BHPH);
 
-        const auto vfp_table = record.getItem("VFPTable").get< int >(0);
+        const auto vfp_table = record.getItem("VFP_TABLE").get< int >(0);
         if (vfp_table != 0)
             this->VFPTableNumber = vfp_table;
 
-        auto alq_value = record.getItem("Lift").get<double>(0); //NOTE: Unit of ALQ is never touched
+        auto alq_value = record.getItem("LIFT").get<double>(0); //NOTE: Unit of ALQ is never touched
         if (alq_value != 0.)
             this->ALQValue = alq_value;
     }
