@@ -16,17 +16,51 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <opm/io/eclipse/rst/header.hpp>
 #include <opm/io/eclipse/rst/segment.hpp>
-#include <opm/output/eclipse/VectorItems/connection.hpp>
-
+#include <opm/output/eclipse/VectorItems/msw.hpp>
 
 namespace VI = ::Opm::RestartIO::Helpers::VectorItems;
 
 namespace Opm {
 namespace RestartIO {
 
-Segment::Segment() {}
+Segment::Segment(const int * iseg, const double * rseg) :
+    segment(iseg[VI::ISeg::SegNo]),
+    outlet_segment(iseg[VI::ISeg::OutSeg]),
+    inflow_segment(iseg[VI::ISeg::InSegCurBranch]),
+    branch(iseg[VI::ISeg::BranchNo]),
+    segment_type(iseg[VI::ISeg::SegmentType]),
+    icd_scaling_mode(iseg[VI::ISeg::ICDScalingMode]),
+    icd_open_flag(iseg[VI::ISeg::ICDOpenShutFlag]),
+    dist_outlet(rseg[VI::RSeg::DistOutlet]),
+    outlet_dz(rseg[VI::RSeg::OutletDepthDiff]),
+    diameter(rseg[VI::RSeg::SegDiam]),
+    roughness(rseg[VI::RSeg::SegRough]),
+    area(rseg[VI::RSeg::SegArea]),
+    volume(rseg[VI::RSeg::SegVolume]),
+    dist_bhp_ref(rseg[VI::RSeg::DistBHPRef]),
+    bhp_ref_dz(rseg[VI::RSeg::DepthBHPRef]),
+    total_flow(rseg[VI::RSeg::TotFlowRate]),
+    water_flow_fraction(rseg[VI::RSeg::WatFlowFract]),
+    gas_flow_fraction(rseg[VI::RSeg::GasFlowFract]),
+    pressure(rseg[VI::RSeg::Pressure]),
+    valve_length(rseg[VI::RSeg::ValveLength]),
+    valve_area(rseg[VI::RSeg::ValveArea]),
+    valve_flow_coeff(rseg[VI::RSeg::ValveFlowCoeff]),
+    valve_max_area(rseg[VI::RSeg::ValveMaxArea]),
+    base_strength(rseg[VI::RSeg::DeviceBaseStrength]),
+    fluid_density(rseg[VI::RSeg::CalibrFluidDensity]),
+    fluid_viscosity(rseg[VI::RSeg::CalibrFluidViscosity]),
+    critical_water_fraction(rseg[VI::RSeg::CriticalWaterFraction]),
+    transition_region_width(rseg[VI::RSeg::TransitionRegWidth]),
+    max_emulsion_ratio(rseg[VI::RSeg::MaxEmulsionRatio]),
+    max_valid_flow_rate(rseg[VI::RSeg::MaxValidFlowRate]),
+    icd_length(rseg[VI::RSeg::ICDLength]),
+    valve_area_fraction(rseg[VI::RSeg::ValveAreaFraction])
+{}
+
+
+Branch::Branch(const int * ilbs, const int * ilbr) {}
 
 }
 }

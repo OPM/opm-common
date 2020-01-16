@@ -29,6 +29,7 @@
 
 #include <opm/output/data/Wells.hpp>
 
+#include <opm/io/eclipse/rst/segment.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
@@ -817,6 +818,37 @@ BOOST_AUTO_TEST_CASE (Declared_MSW_Data)
 
     }
 }
+
+
+BOOST_AUTO_TEST_CASE(MSW_RST) {
+    const auto simCase = SimulationCase{first_sim()};
+
+    // Report Step 1: 2115-01-01 --> 2015-01-03
+    const auto rptStep = std::size_t{1};
+
+    const auto ih = MockIH {
+                            static_cast<int>(simCase.sched.getWells(rptStep).size())
+    };
+
+    const auto smry = sim_state();
+    const Opm::data::WellRates wrc = wr();
+    auto amswd = Opm::RestartIO::Helpers::AggregateMSWData{ih.value};
+    amswd.captureDeclaredMSWData(simCase.sched,
+                                 rptStep,
+                                 simCase.es.getUnits(),
+                                 ih.value,
+                                 simCase.grid,
+                                 smry,
+                                 wrc
+                                 );
+    const auto& iseg = amswd.getISeg();
+    const auto& rseg = amswd.getRSeg();
+    const auto& ilbs = amswd.getILBs();
+    const auto& ilbr = amswd.getILBr();
+    auto segment = Opm::RestartIO::Segment(iseg.data(), rseg.data());
+    auto branch = Opm::RestartIO::Branch(ilbs.data(), ilbr.data());
+}
+
 
 
 BOOST_AUTO_TEST_SUITE_END()
