@@ -817,8 +817,8 @@ BOOST_AUTO_TEST_CASE(TestRestartIOConnection) {
     const auto xcon = conn.getXConn();
 
     std::vector<Opm::RestartIO::Connection> connections;
-    for (std::size_t iw=0; iw < header.num_wells; iw++) {
-        for (std::size_t ic=0; ic < header.ncwmax; ic++) {
+    for (int iw = 0; iw < header.num_wells; iw++) {
+        for (int ic = 0; ic < header.ncwmax; ic++) {
             std::size_t icon_offset = header.niconz * (header.ncwmax * iw + ic);
             std::size_t scon_offset = header.nsconz * (header.ncwmax * iw + ic);
             std::size_t xcon_offset = header.nxconz * (header.ncwmax * iw + ic);
