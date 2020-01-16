@@ -32,10 +32,11 @@
 #include <opm/parser/eclipse/EclipseState/Grid/TransMult.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/TransMult.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridDims.hpp>
+#include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 
 BOOST_AUTO_TEST_CASE(Empty) {
     Opm::EclipseGrid grid(10,10,10);
-    Opm::FieldPropsManager fp(Opm::Deck(), grid, Opm::TableManager());
+    Opm::FieldPropsManager fp(Opm::Deck(), Opm::Phases{true, true, true}, grid, Opm::TableManager());
     Opm::TransMult transMult(grid ,{} , fp);
 
     BOOST_CHECK_THROW( transMult.getMultiplier(12,10,10 , Opm::FaceDir::XPlus) , std::invalid_argument );
@@ -69,7 +70,7 @@ MULTZ
     Opm::Deck deck = parser.parseString(deck_string);
     Opm::TableManager tables(deck);
     Opm::EclipseGrid grid(5,5,5);
-    Opm::FieldPropsManager fp(deck, grid, tables);
+    Opm::FieldPropsManager fp(deck, Opm::Phases{true, true, true}, grid, tables);
     Opm::TransMult transMult(grid, deck, fp);
 
     transMult.applyMULT(fp.get_global_double("MULTZ"), Opm::FaceDir::ZPlus);

@@ -22,6 +22,8 @@
 #include <boost/test/unit_test.hpp>
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
+#include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgofTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SlgofTable.hpp>
@@ -1366,7 +1368,7 @@ BOOST_AUTO_TEST_CASE( WCONPROD ) {
     auto deck =  parser.parseFile(wconprodFile);
     EclipseGrid grid(30,30,30);
     TableManager table ( deck );
-    FieldPropsManager fp( deck , grid, table);
+    FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
     Runspec runspec (deck);
     Schedule sched(deck, grid, fp, runspec );
 
@@ -1412,7 +1414,7 @@ BOOST_AUTO_TEST_CASE( WCONINJE ) {
     auto deck = parser.parseFile(wconprodFile);
     EclipseGrid grid(30,30,30);
     TableManager table ( deck );
-    FieldPropsManager fp(deck, grid, table);
+    FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     Runspec runspec (deck);
     Schedule sched( deck, grid, fp, runspec);
     SummaryState st(std::chrono::system_clock::now());

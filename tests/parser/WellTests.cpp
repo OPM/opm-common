@@ -33,6 +33,7 @@
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQActive.hpp>
@@ -86,7 +87,7 @@ BOOST_AUTO_TEST_CASE(WellCOMPDATtestTRACK) {
     auto deck = parser.parseString(input);
     Opm::EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    FieldPropsManager fp( deck , grid, table);
+    FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
     Opm::Runspec runspec (deck);
     Opm::Schedule schedule(deck, grid , fp, runspec);
     const auto& op_1 = schedule.getWell("OP_1", 2);
@@ -126,7 +127,7 @@ BOOST_AUTO_TEST_CASE(WellCOMPDATtestDefaultTRACK) {
     auto deck = parser.parseString(input);
     Opm::EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    FieldPropsManager fp( deck , grid, table);
+    FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
     Opm::Runspec runspec (deck);
     Opm::Schedule schedule(deck, grid , fp, runspec);
     const auto& op_1 = schedule.getWell("OP_1", 2);
@@ -169,7 +170,7 @@ BOOST_AUTO_TEST_CASE(WellCOMPDATtestINPUT) {
     Opm::EclipseGrid grid(10,10,10);
     Opm::ErrorGuard errors;
     TableManager table ( deck );
-    FieldPropsManager fp( deck , grid, table);
+    FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
     Opm::Runspec runspec (deck);
     Opm::Schedule schedule(deck, grid , fp, runspec, Opm::ParseContext(), errors);
     const auto& op_1 = schedule.getWell("OP_1", 2);
@@ -844,7 +845,7 @@ BOOST_AUTO_TEST_CASE(WELOPEN) {
     auto deck = parser.parseString(input);
     Opm::EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    FieldPropsManager fp(deck, grid, table);
+    FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     Opm::Runspec runspec (deck);
     Opm::Schedule schedule(deck, grid , fp, runspec);
     {
@@ -855,5 +856,4 @@ BOOST_AUTO_TEST_CASE(WELOPEN) {
         const auto& op_1 = schedule.getWell("OP_1", 2);
         BOOST_CHECK(op_1.getStatus() == Well::Status::SHUT);
     }
-
 }

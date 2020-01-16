@@ -31,6 +31,7 @@
 #include <opm/common/OpmLog/Location.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionAST.hpp>
@@ -127,7 +128,7 @@ TSTEP
     auto deck3 = parser.parseString(WITH_GRID);
     EclipseGrid grid1(10,10,10);
     TableManager table ( deck1 );
-    FieldPropsManager fp( deck1 , grid1, table);
+    FieldPropsManager fp( deck1, Phases{true, true, true}, grid1, table);
     Runspec runspec (deck1);
 
     // The ACTIONX keyword has no matching 'ENDACTIO' -> exception
@@ -221,7 +222,7 @@ TSTEP
     auto deck = parser.parseString(deck_string);
     EclipseGrid grid1(10,10,10);
     TableManager table ( deck );
-    FieldPropsManager fp( deck , grid1, table);
+    FieldPropsManager fp( deck, Phases{true, true, true}, grid1, table);
     Runspec runspec(deck);
 
     return Schedule(deck, grid1, fp, runspec);
@@ -691,7 +692,7 @@ TSTEP
     auto deck = parser.parseString(deck_string);
     EclipseGrid grid1(10,10,10);
     TableManager table ( deck );
-    FieldPropsManager fp( deck , grid1, table);
+    FieldPropsManager fp( deck, Phases{true, true, true}, grid1, table);
 
     Runspec runspec (deck);
     Schedule sched(deck, grid1, fp, runspec);

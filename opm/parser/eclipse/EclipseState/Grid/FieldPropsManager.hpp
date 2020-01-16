@@ -27,6 +27,7 @@ namespace Opm {
 class EclipseGrid;
 class Deck;
 class FieldProps;
+class Phases;
 class TableManager;
 
 class FieldPropsManager {
@@ -60,7 +61,7 @@ public:
     // The default constructor should be removed when the FieldPropsManager is mandatory
     // The default constructed fieldProps object is **NOT** usable
     FieldPropsManager() = default;
-    FieldPropsManager(const Deck& deck, const EclipseGrid& grid, const TableManager& tables);
+    FieldPropsManager(const Deck& deck, const Phases& ph, const EclipseGrid& grid, const TableManager& tables);
     void reset_actnum(const std::vector<int>& actnum);
     const std::string& default_region() const;
     std::vector<int> actnum() const;

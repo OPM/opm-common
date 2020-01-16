@@ -24,6 +24,7 @@
 
 #include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
@@ -133,7 +134,7 @@ BOOST_AUTO_TEST_CASE(TestNoTracer) {
     auto deck = createDeckWithOutTracer();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    FieldPropsManager fp(deck, grid, table);
+    FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     Runspec runspec ( deck );
     Schedule schedule(deck, grid , fp, runspec);
     BOOST_CHECK(!deck.hasKeyword("WTRACER"));
@@ -144,7 +145,7 @@ BOOST_AUTO_TEST_CASE(TestDynamicWTRACER) {
     auto deck = createDeckWithDynamicWTRACER();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    FieldPropsManager fp( deck , grid, table);
+    FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
     Runspec runspec ( deck );
     Schedule schedule(deck, grid , fp, runspec);
     BOOST_CHECK(deck.hasKeyword("WTRACER"));
@@ -166,9 +167,8 @@ BOOST_AUTO_TEST_CASE(TestTracerInProducerTHROW) {
     auto deck = createDeckWithTracerInProducer();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    FieldPropsManager fp( deck , grid, table);
+    FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
     Runspec runspec ( deck );
 
     BOOST_CHECK_THROW(Schedule(deck, grid, fp, runspec), std::invalid_argument);
 }
-

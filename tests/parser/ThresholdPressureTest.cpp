@@ -28,6 +28,7 @@
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/SimulationConfig/ThresholdPressure.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
@@ -214,7 +215,7 @@ struct Setup
             deck(createDeck(ParseContext(), input)),
             tablemanager(deck),
             grid(10, 3, 4),
-            fp(deck, grid, tablemanager),
+            fp(deck, Opm::Phases{true, true, true}, grid, tablemanager),
             initConfig(deck),
             threshPres(initConfig.restartRequested(), deck, fp)
     {
@@ -224,7 +225,7 @@ struct Setup
             deck(createDeck(parseContextArg, input)),
             tablemanager(deck),
             grid(10, 3, 4),
-            fp(deck, grid, tablemanager),
+            fp(deck, Opm::Phases{true, true, true}, grid, tablemanager),
             initConfig(deck),
             threshPres(initConfig.restartRequested(), deck, fp)
     {

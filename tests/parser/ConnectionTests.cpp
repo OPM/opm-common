@@ -38,6 +38,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 
+#include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 
 namespace Opm {
@@ -152,7 +153,7 @@ Opm::WellConnections loadCOMPDAT(const std::string& compdat_keyword) {
     Opm::TableManager tables;
     Opm::Parser parser;
     const auto deck = parser.parseString(compdat_keyword);
-    Opm::FieldPropsManager field_props(deck, grid, Opm::TableManager());
+    Opm::FieldPropsManager field_props(deck, Opm::Phases{true, true, true}, grid, Opm::TableManager());
     const auto& keyword = deck.getKeyword("COMPDAT", 0);
     Opm::WellConnections connections(10,10);
     for (const auto& rec : keyword)

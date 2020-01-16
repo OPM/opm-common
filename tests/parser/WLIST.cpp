@@ -143,7 +143,7 @@ static Opm::Schedule createSchedule(const std::string& schedule) {
     auto deck = parser.parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    FieldPropsManager fp( deck , grid, table);
+    FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
     Runspec runspec (deck);
     return Schedule(deck, grid , fp, runspec );
 }

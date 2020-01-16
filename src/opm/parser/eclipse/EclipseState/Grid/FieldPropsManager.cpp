@@ -20,14 +20,15 @@
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
+#include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 
 #include "FieldProps.hpp"
 
 
 namespace Opm {
 
-FieldPropsManager::FieldPropsManager(const Deck& deck, const EclipseGrid& grid_arg, const TableManager& tables) :
-    fp(std::make_shared<FieldProps>(deck, grid_arg, tables))
+FieldPropsManager::FieldPropsManager(const Deck& deck, const Phases& phases, const EclipseGrid& grid_arg, const TableManager& tables) :
+    fp(std::make_shared<FieldProps>(deck, phases, grid_arg, tables))
 {}
 
 void FieldPropsManager::reset_actnum(const std::vector<int>& actnum) {

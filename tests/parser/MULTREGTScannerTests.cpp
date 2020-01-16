@@ -35,6 +35,8 @@
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/Box.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FaceDir.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
+#include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 
 
@@ -107,7 +109,7 @@ BOOST_AUTO_TEST_CASE(InvalidInput) {
     Opm::EclipseGrid grid( deck );
     Opm::TableManager tm(deck);
     Opm::EclipseGrid eg( deck );
-    Opm::FieldPropsManager fp(deck, eg, tm);
+    Opm::FieldPropsManager fp(deck, Opm::Phases{true, true, true}, eg, tm);
 
     // Invalid direction
     std::vector<const Opm::DeckKeyword*> keywords0;
@@ -173,7 +175,7 @@ BOOST_AUTO_TEST_CASE(NotSupported) {
     Opm::EclipseGrid grid( deck );
     Opm::TableManager tm(deck);
     Opm::EclipseGrid eg( deck );
-    Opm::FieldPropsManager fp(deck, eg, tm);
+    Opm::FieldPropsManager fp(deck, Opm::Phases{true, true, true}, eg, tm);
 
 
     // Not support NOAQUNNC behaviour
@@ -234,7 +236,7 @@ BOOST_AUTO_TEST_CASE(DefaultedRegions) {
   Opm::EclipseGrid grid( deck );
   Opm::TableManager tm(deck);
   Opm::EclipseGrid eg( deck );
-  Opm::FieldPropsManager fp(deck, eg, tm);
+  Opm::FieldPropsManager fp(deck, Opm::Phases{true, true, true}, eg, tm);
 
 
   std::vector<const Opm::DeckKeyword*> keywords0;
@@ -294,7 +296,7 @@ BOOST_AUTO_TEST_CASE(MULTREGT_COPY_MULTNUM) {
     Opm::Deck deck = createCopyMULTNUMDeck();
     Opm::TableManager tm(deck);
     Opm::EclipseGrid eg(deck);
-    Opm::FieldPropsManager fp(deck, eg, tm);
+    Opm::FieldPropsManager fp(deck, Opm::Phases{true, true, true}, eg, tm);
 
     BOOST_CHECK_NO_THROW(fp.has_int("FLUXNUM"));
     BOOST_CHECK_NO_THROW(fp.has_int("MULTNUM"));
