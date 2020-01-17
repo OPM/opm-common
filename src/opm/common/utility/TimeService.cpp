@@ -63,6 +63,15 @@ Opm::TimeStampUTC::TimeStampUTC(const std::time_t tp)
     this->hour(tm.tm_hour).minutes(tm.tm_min).seconds(tm.tm_sec);
 }
 
+Opm::TimeStampUTC::TimeStampUTC(const Opm::TimeStampUTC::YMD& ymd,
+                                int hour, int minutes, int seconds, int usec)
+    : ymd_(ymd)
+    , hour_(hour)
+    , minutes_(minutes)
+    , seconds_(seconds)
+    , usec_(usec)
+{}
+
 Opm::TimeStampUTC& Opm::TimeStampUTC::operator=(const std::time_t tp)
 {
     auto t = tp;
