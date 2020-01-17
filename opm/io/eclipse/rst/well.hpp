@@ -20,9 +20,11 @@
 #define RST_WELL
 
 #include <array>
+#include <vector>
 #include <string>
 
 #include <opm/io/eclipse/rst/connection.hpp>
+#include <opm/io/eclipse/rst/segment.hpp>
 #include <opm/io/eclipse/PaddedOutputString.hpp>
 
 namespace Opm {
@@ -39,6 +41,19 @@ struct Well {
          const int * icon,
          const float * scon,
          const double * xcon);
+
+    Well(const Header& header,
+         const EclIO::PaddedOutputString<8>* zwel,
+         const int * iwel,
+         const float * swel,
+         const double * xwel,
+         const int * icon,
+         const float * scon,
+         const double * xcon,
+         const std::vector<int>& iseg,
+         const std::vector<double>& rseg,
+         const std::vector<int>& ilbs,
+         const std::vector<int>& ilbr);
 
     std::string name;
     std::array<int, 2> ij;
@@ -88,6 +103,7 @@ struct Well {
     double gas_void_rate;
 
     std::vector<Connection> connections;
+    std::vector<Segment> segments;
 };
 
 

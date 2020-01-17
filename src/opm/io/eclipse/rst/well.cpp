@@ -90,5 +90,29 @@ Well::Well(const Header& header,
     }
 }
 
+Well::Well(const Header& header,
+           const EclIO::PaddedOutputString<8>* zwel,
+           const int * iwel,
+           const float * swel,
+           const double * xwel,
+           const int * icon,
+           const float * scon,
+           const double * xcon,
+           const std::vector<int>& iseg,
+           const std::vector<double>& rseg,
+           const std::vector<int>& ilbs,
+           const std::vector<int>& ilbr) :
+    Well(header, zwel, iwel, swel, xwel, icon, scon, xcon)
+{
+
+    if (this->msw_index) {
+        for (int is=0; is < header.nsegmx; is++) {
+            std::size_t iseg_offset = header.nisegz * (is + (this->msw_index - 1) * header.nsegmx);
+            std::size_t rseg_offset = header.nrsegz * (is + (this->msw_index - 1) * header.nsegmx);
+            this->segments.emplace_back( iseg.data() + iseg_offset, rseg.data() + rseg_offset );
+        }
+    }
+}
+
 }
 }

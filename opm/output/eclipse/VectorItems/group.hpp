@@ -34,7 +34,7 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
         };
         
         enum inj_index : std::vector<float>::size_type {
-            waterSurfRateLimit      =  15, // Group's water surface volume injection rate target/limit
+            waterSurfRateLimit      =  15, //i Group's water surface volume injection rate target/limit
             waterResRateLimit       =  16, // Group's water reservoir volume injection rate target/limit
             waterReinjectionLimit   =  17, // Group's water reinjection fraction target/limit
             waterVoidageLimit       =  18, // Group's water voidage injection fraction target/limit
