@@ -27,7 +27,8 @@ namespace Opm {
     class Dimension {
     public:
         Dimension();
-        Dimension(const std::string& name, double SIfactor, double SIoffset = 0.0);
+        Dimension(const std::string& name, double SIfactor,
+                  double SIoffset = 0.0, bool sanityCheck = true);
 
         double getSIScaling() const;
         double getSIScalingRaw() const;
