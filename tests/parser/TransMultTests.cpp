@@ -28,15 +28,12 @@
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
-#include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/TransMult.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/TransMult.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridDims.hpp>
 
 BOOST_AUTO_TEST_CASE(Empty) {
-    Opm::Eclipse3DProperties props;
     Opm::EclipseGrid grid(10,10,10);
     Opm::FieldPropsManager fp(Opm::Deck(), grid, Opm::TableManager());
     Opm::TransMult transMult(grid ,{} , fp);

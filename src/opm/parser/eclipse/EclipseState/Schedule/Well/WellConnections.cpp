@@ -25,7 +25,6 @@
 #include <opm/parser/eclipse/Units/Units.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
-#include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Connection.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellConnections.hpp>
 
@@ -221,16 +220,6 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
         const auto& satnum_data = field_properties.get<int>("SATNUM");
 
         this->loadCOMPDAT(record, grid, satnum_data, permx, permy, permz, ntg);
-    }
-
-    void WellConnections::loadCOMPDAT(const DeckRecord& record, const EclipseGrid& grid, const Eclipse3DProperties& eclipseProperties) {
-        const auto& permx = eclipseProperties.getDoubleGridProperty("PERMX").compressedCopy(grid);
-        const auto& permy = eclipseProperties.getDoubleGridProperty("PERMY").compressedCopy(grid);
-        const auto& permz = eclipseProperties.getDoubleGridProperty("PERMZ").compressedCopy(grid);
-        const auto& ntg   = eclipseProperties.getDoubleGridProperty("NTG").compressedCopy(grid);
-        const auto& satnum_data = eclipseProperties.getIntGridProperty("SATNUM").compressedCopy(grid);
-
-        this->loadCOMPDAT(record, grid, satnum_data, std::addressof(permx), std::addressof(permy), std::addressof(permz), ntg);
     }
 
     void WellConnections::loadCOMPDAT(const DeckRecord& record,

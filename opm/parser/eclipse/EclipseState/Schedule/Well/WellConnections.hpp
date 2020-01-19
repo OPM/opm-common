@@ -27,7 +27,6 @@
 
 namespace Opm {
     class EclipseGrid;
-    class Eclipse3DProperties;
     class FieldPropsManager;
     class WellConnections {
     public:
@@ -56,7 +55,6 @@ namespace Opm {
                            const double segDistStart= 0.0,
                            const double segDistEnd= 0.0,
                            const bool defaultSatTabId = true);
-        void loadCOMPDAT(const DeckRecord& record, const EclipseGrid& grid, const Eclipse3DProperties& eclipseProperties);
         void loadCOMPDAT(const DeckRecord& record, const EclipseGrid& grid, const FieldPropsManager& field_properties);
 
         using const_iterator = std::vector< Connection >::const_iterator;
