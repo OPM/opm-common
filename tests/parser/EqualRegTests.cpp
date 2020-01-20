@@ -33,10 +33,8 @@
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 
-#include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 
 
@@ -113,99 +111,6 @@ static Opm::Deck createDeckUnInitialized() {
 }
 
 
-static Opm::Deck createValidIntDeck() {
-    const char* deckData =
-        "RUNSPEC\n"
-        "GRIDOPTS\n"
-        " 'YES'   2 /"
-        "\n"
-        "DIMENS\n"
-        " 5 5 1 /\n"
-        "GRID\n"
-        "DX\n"
-        "25*0.25 /\n"
-        "DY\n"
-        "25*0.25 /\n"
-        "DZ\n"
-        "25*0.25 /\n"
-        "TOPS\n"
-        "25*0.25 /\n"
-        "FLUXNUM \n"
-        "1  1  2  2 2\n"
-        "1  1  2  2 2\n"
-        "1  1  2  2 2\n"
-        "1  1  2  2 2\n"
-        "1  1  2  2 2\n"
-        "/\n"
-        "MULTNUM \n"
-        "1  1  2  2 2\n"
-        "1  1  2  2 2\n"
-        "1  1  2  2 2\n"
-        "1  1  2  2 2\n"
-        "1  1  2  2 2\n"
-        "/\n"
-        "EQUALREG\n"
-        "  SATNUM 11 1    M / \n"
-        "  SATNUM 20 2      / \n"
-        "/\n"
-        "EDIT\n"
-        "\n";
-
-    Opm::Parser parser;
-    return parser.parseString(deckData) ;
-}
-
-
-static Opm::Deck createValidPERMXDeck() {
-    const char* deckData =
-        "RUNSPEC\n"
-        "GRIDOPTS\n"
-        " 'YES'   2 /"
-        "\n"
-        "DIMENS\n"
-        " 5 5 1 /\n"
-        "GRID\n"
-        "DX\n"
-        "25*0.25 /\n"
-        "DY\n"
-        "25*0.25 /\n"
-        "DZ\n"
-        "25*0.25 /\n"
-        "TOPS\n"
-        "25*0.25 /\n"
-        "MULTNUM \n"
-        "1  1  2  2 2\n"
-        "1  1  2  2 2\n"
-        "1  1  2  2 2\n"
-        "1  1  2  2 2\n"
-        "1  1  2  2 2\n"
-        "/\n"
-        "BOX\n"
-        "  1 2  1 5 1 1 / \n"
-        "PERMZ\n"
-        "  10*1 /\n"
-        "ENDBOX\n"
-        "BOX\n"
-        "  3 5  1 5 1 1 / \n"
-        "PERMZ\n"
-        "  15*2 /\n"
-        "ENDBOX\n"
-        "EQUALREG\n"
-        "  PERMX 1 1     / \n"
-        "  PERMX 2 2     / \n"
-        "/\n"
-        "EQUALS\n"
-        "   PERMY 1 1 2 1 5 1 1 / \n"
-        "   PERMY 2 3 5 1 5 1 1 / \n"
-        "/\n"
-        "EDIT\n"
-        "\n";
-
-    Opm::Parser parser;
-    return parser.parseString(deckData) ;
-}
-
-
 
 
 BOOST_AUTO_TEST_CASE(InvalidArrayThrows) {
@@ -229,32 +134,3 @@ BOOST_AUTO_TEST_CASE(UnInitializedVectorThrows) {
     BOOST_CHECK_THROW( new Opm::EclipseState( deck) , std::invalid_argument );
 }
 
-BOOST_AUTO_TEST_CASE(IntSetCorrectly) {
-    Opm::Deck deck = createValidIntDeck();
-    Opm::TableManager tm(deck);
-    Opm::EclipseGrid eg(deck);
-    Opm::Eclipse3DProperties props(deck, tm, eg);
-    const auto& property = props.getIntGridProperty("SATNUM").getData();
-    for (size_t j = 0; j < 5; j++)
-        for (size_t i = 0; i < 5; i++) {
-            std::size_t g = eg.getGlobalIndex(i,j,0);
-            if (i < 2)
-                BOOST_CHECK_EQUAL(11, property[g]);
-            else
-                BOOST_CHECK_EQUAL(20, property[g]);
-        }
-}
-
-BOOST_AUTO_TEST_CASE(UnitAppliedCorrectly) {
-    Opm::Deck deck = createValidPERMXDeck();
-    Opm::TableManager tm(deck);
-    Opm::EclipseGrid eg(deck);
-    Opm::Eclipse3DProperties props(deck, tm, eg);
-    const auto& permx = props.getDoubleGridProperty("PERMX").getData();
-    const auto& permy = props.getDoubleGridProperty("PERMY").getData();
-    const auto& permz = props.getDoubleGridProperty("PERMZ").getData();
-    for (size_t g = 0; g < 25; g++) {
-        BOOST_CHECK_EQUAL(permz[g], permx[g]);
-        BOOST_CHECK_EQUAL(permy[g], permx[g]);
-    }
-}

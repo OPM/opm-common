@@ -30,10 +30,8 @@
 #include <opm/parser/eclipse/Deck/DeckSection.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
-#include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
 
 
 static Opm::Deck createDeckInvalidArray() {
@@ -229,38 +227,11 @@ BOOST_AUTO_TEST_CASE(UnInitializedVectorThrows) {
     BOOST_CHECK_THROW( new Opm::EclipseState( deck) , std::invalid_argument );
 }
 
-
-BOOST_AUTO_TEST_CASE(IntSetCorrectly) {
-    Opm::Deck deck = createValidIntDeck();
-    Opm::TableManager tm(deck);
-    Opm::EclipseGrid eg(deck);
-    Opm::Eclipse3DProperties props(deck, tm, eg);
-
-    const auto& property_data = props.getIntGridProperty("SATNUM").getData();
-    for (size_t j = 0; j < 5; j++)
-        for (size_t i = 0; i < 5; i++) {
-            if (i < 2)
-                BOOST_CHECK_EQUAL(11, property_data[eg.getGlobalIndex(i,j,0)]);
-            else
-                BOOST_CHECK_EQUAL(40, property_data[eg.getGlobalIndex(i,j,0)]);
-        }
-}
-
-
 BOOST_AUTO_TEST_CASE(Test_OPERATER) {
     Opm::Deck deck = createValidIntDeck();
     Opm::TableManager tm(deck);
     Opm::EclipseGrid eg(deck);
-    Opm::Eclipse3DProperties props(deck, tm, eg);
     Opm::FieldPropsManager fp(deck, eg, tm);
-
-    const auto& porv_data  = props.getDoubleGridProperty("PORV").getData();
-    const auto& permx_data = props.getDoubleGridProperty("PERMX").getData();
-    const auto& permy_data = props.getDoubleGridProperty("PERMY").getData();
-
-    BOOST_CHECK_EQUAL( porv_data[0], 0.50 );
-    BOOST_CHECK_EQUAL( permx_data[0] / permy_data[0], 0.50 );
-    BOOST_CHECK_EQUAL( permx_data[1], permy_data[1]);
 
     const auto& porv  = fp.porv(true);
     const auto& permx = fp.get_global<double>("PERMX");

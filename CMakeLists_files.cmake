@@ -54,7 +54,6 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Aquifetp.cpp
     src/opm/parser/eclipse/EclipseState/Aquancon.cpp
     src/opm/parser/eclipse/EclipseState/checkDeck.cpp
-    src/opm/parser/eclipse/EclipseState/Eclipse3DProperties.cpp
     src/opm/parser/eclipse/EclipseState/EclipseConfig.cpp
     src/opm/parser/eclipse/EclipseState/EclipseState.cpp
     src/opm/parser/eclipse/EclipseState/EndpointScaling.cpp
@@ -69,8 +68,6 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Grid/Fault.cpp
     src/opm/parser/eclipse/EclipseState/Grid/FaultFace.cpp
     src/opm/parser/eclipse/EclipseState/Grid/GridDims.cpp
-    src/opm/parser/eclipse/EclipseState/Grid/GridProperties.cpp
-    src/opm/parser/eclipse/EclipseState/Grid/GridProperty.cpp
     src/opm/parser/eclipse/EclipseState/Grid/MULTREGTScanner.cpp
     src/opm/parser/eclipse/EclipseState/Grid/NNC.cpp
     src/opm/parser/eclipse/EclipseState/Grid/Operate.cpp
@@ -193,7 +190,6 @@ if(ENABLE_ECL_INPUT)
           python/cxx/deck.cpp
           python/cxx/deck_keyword.cpp
           python/cxx/eclipse_io.cpp
-          python/cxx/eclipse_3d_properties.cpp
           python/cxx/field_props.cpp
           python/cxx/eclipse_config.cpp
           python/cxx/eclipse_grid.cpp
@@ -297,7 +293,6 @@ if(ENABLE_ECL_INPUT)
     tests/parser/DeckTests.cpp
     tests/parser/DynamicStateTests.cpp
     tests/parser/DynamicVectorTests.cpp
-    tests/parser/Eclipse3DPropertiesTests.cpp
     tests/parser/EclipseGridTests.cpp
     tests/parser/EmbeddedPython.cpp
     tests/parser/EqualRegTests.cpp
@@ -308,7 +303,6 @@ if(ENABLE_ECL_INPUT)
     tests/parser/FoamTests.cpp
     tests/parser/FunctionalTests.cpp
     tests/parser/GeomodifierTests.cpp
-    tests/parser/GridPropertyTests.cpp
     tests/parser/GroupTests.cpp
     tests/parser/InitConfigTest.cpp
     tests/parser/IOConfigTests.cpp
@@ -321,7 +315,6 @@ if(ENABLE_ECL_INPUT)
     tests/parser/ParseContext_EXIT1.cpp
     tests/parser/ParseDATAWithDefault.cpp
     tests/parser/PYACTION.cpp
-    tests/parser/PORVTests.cpp
     tests/parser/RawKeywordTests.cpp
     tests/parser/ResinsightTest.cpp
     tests/parser/RestartConfigTests.cpp
@@ -329,7 +322,6 @@ if(ENABLE_ECL_INPUT)
     tests/parser/RockTableTests.cpp
     tests/parser/RunspecTests.cpp
     tests/parser/SaltTableTests.cpp
-    tests/parser/SatfuncPropertyInitializersTests.cpp
     tests/parser/ScheduleTests.cpp
     tests/parser/SectionTests.cpp
     tests/parser/SimpleTableTests.cpp
@@ -518,7 +510,6 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Edit/EDITNNC.hpp
        opm/parser/eclipse/EclipseState/Grid/GridDims.hpp
        opm/parser/eclipse/EclipseState/Grid/TransMult.hpp
-       opm/parser/eclipse/EclipseState/Grid/GridProperties.hpp
        opm/parser/eclipse/EclipseState/Grid/PinchMode.hpp
        opm/parser/eclipse/EclipseState/Grid/MULTREGTScanner.hpp
        opm/parser/eclipse/EclipseState/Grid/FaultCollection.hpp
@@ -526,14 +517,12 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Grid/Fault.hpp
        opm/parser/eclipse/EclipseState/Grid/Box.hpp
        opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp
-       opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp
        opm/parser/eclipse/EclipseState/Grid/FaultFace.hpp
        opm/parser/eclipse/EclipseState/Grid/NNC.hpp
        opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp
        opm/parser/eclipse/EclipseState/Grid/BoxManager.hpp
        opm/parser/eclipse/EclipseState/Grid/FaceDir.hpp
        opm/parser/eclipse/EclipseState/Grid/MinpvMode.hpp
-       opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp
        opm/parser/eclipse/EclipseState/EndpointScaling.hpp
        opm/parser/eclipse/EclipseState/Tables/SimpleTable.hpp
        opm/parser/eclipse/EclipseState/Tables/PolyInjTable.hpp

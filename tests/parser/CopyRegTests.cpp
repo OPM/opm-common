@@ -33,10 +33,8 @@
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 
-#include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 
 
@@ -141,43 +139,6 @@ static Opm::Deck createDeckUnInitialized() {
 }
 
 
-static Opm::Deck createValidIntDeck() {
-    const char *deckData =
-        "RUNSPEC\n"
-        "\n"
-        "DIMENS\n"
-        " 5 5 1 /\n"
-        "GRID\n"
-        "DX\n"
-        "25*0.25 /\n"
-        "DY\n"
-        "25*0.25 /\n"
-        "DZ\n"
-        "25*0.25 /\n"
-        "TOPS\n"
-        "25*0.25 /\n"
-        "MULTNUM \n"
-        "1  1  2  2 2\n"
-        "1  1  2  2 2\n"
-        "1  1  2  2 2\n"
-        "1  1  2  2 2\n"
-        "1  1  2  2 2\n"
-        "/\n"
-        "FLUXNUM\n"
-        "  25*3 /\n"
-        "REGIONS\n"
-        "SATNUM\n"
-        "  25*10 /\n"
-        "COPYREG\n"
-        "  SATNUM FLUXNUM 1    M / \n"
-        "/\n"
-        "\n";
-
-    Opm::Parser parser;
-    return parser.parseString(deckData) ;
-}
-
-
 
 
 BOOST_AUTO_TEST_CASE(InvalidArrayThrows1) {
@@ -212,20 +173,3 @@ BOOST_AUTO_TEST_CASE(TypeMismatchThrows) {
 }
 
 
-
-BOOST_AUTO_TEST_CASE(IntSetCorrectly) {
-    Opm::Deck deck = createValidIntDeck();
-    Opm::TableManager tm(deck);
-    Opm::EclipseGrid eg(deck);
-    Opm::Eclipse3DProperties props(deck, tm, eg);
-    const auto& property = props.getIntGridProperty("FLUXNUM").getData();
-
-    for (size_t j = 0; j < 5; j++)
-        for (size_t i = 0; i < 5; i++) {
-            std::size_t g = eg.getGlobalIndex(i,j,0);
-            if (i < 2)
-                BOOST_CHECK_EQUAL( 10 , property[g]);
-            else
-                BOOST_CHECK_EQUAL( 3 , property[g]);
-        }
-}
