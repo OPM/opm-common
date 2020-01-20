@@ -3,6 +3,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <opm/io/eclipse/PaddedOutputString.hpp>
+#include <opm/parser/eclipse/Utility/String.hpp>
 
 // Convenience alias.
 template <std::size_t N>
@@ -90,6 +91,17 @@ BOOST_AUTO_TEST_CASE (String_Shortening)
 
         BOOST_CHECK_EQUAL(s.c_str(), std::string{"This string"});
     }
+}
+
+BOOST_AUTO_TEST_CASE (Trim) {
+    const auto s1 = PadString<4>{"X"};
+    BOOST_CHECK_EQUAL(Opm::trim_copy(s1), std::string{"X"});
+
+    const auto s2 = PadString<4>{"ABCD"};
+    BOOST_CHECK_EQUAL(Opm::trim_copy(s2), std::string{"ABCD"});
+
+    const auto s3 = PadString<4>{""};
+    BOOST_CHECK_EQUAL(Opm::trim_copy(s3), std::string{""});
 }
 
 BOOST_AUTO_TEST_SUITE_END()
