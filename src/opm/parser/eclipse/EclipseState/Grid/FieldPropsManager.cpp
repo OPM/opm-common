@@ -97,6 +97,10 @@ std::vector<int> FieldPropsManager::actnum() const {
     return this->fp->actnum();
 }
 
+const std::vector<int>& FieldPropsManager::indexmap() const {
+    return this->fp->indexmap();
+}
+
 std::vector<double> FieldPropsManager::porv(bool global) const {
     const auto& data = this->get<double>("PORV");
     if (global)

@@ -63,7 +63,34 @@ public:
     FieldPropsManager(const Deck& deck, const EclipseGrid& grid, const TableManager& tables);
     void reset_actnum(const std::vector<int>& actnum);
     const std::string& default_region() const;
+
+    /*
+      The indexmap() function will return an integer vector of size nx*ny*nz
+      elements. If the index g corresponds to an active cell the storage index
+      is given by indexmap[g], otherwise indexmap[g] == -1.
+
+         const auto& prop = fp.get<double>("PROP");
+         const auto& indexmap = fp.indexmap();
+
+         for (std::size_t g = 0; g < indexmap.size()) {
+             if (indexmap[g] >= 0)
+                 auto value = prop[indexmap[g]]
+             else
+                 auto value = 0;
+         }
+
+      Observe that there is an effective difference between indexmap() and
+      actnum(); the former returns a mapping which corresponds to the current
+      internal state. The actnum() function creates a dynamic mappping where
+      both PORV==0 and also explicit deck manipulations of ACTNUM have been
+      taken into account. In general calling scope should use indexmap() - the
+      only situation where actnum() should be used is when a new effective
+      ACTNUM is requested to update a grid.
+    */
+    const std::vector<int>& indexmap() const;
+
     std::vector<int> actnum() const;
+
     std::vector<double> porv(bool global = false) const;
     MemInfo meminfo( ) const;
 

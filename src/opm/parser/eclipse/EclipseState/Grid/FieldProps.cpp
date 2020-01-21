@@ -400,6 +400,19 @@ std::vector<double> extract_cell_depth(const EclipseGrid& grid) {
     return cell_depth;
 }
 
+std::vector<int> make_indexmap(const std::vector<int>& actnum) {
+    std::vector<int> indexmap(actnum.size() , -1);
+    int active_index = 0;
+    for (std::size_t g = 0; g < actnum.size(); g++) {
+        if (actnum[g] != 0) {
+            indexmap[g] = active_index;
+            active_index += 1;
+        }
+    }
+    return indexmap;
+}
+
+
 }
 
 
@@ -412,6 +425,7 @@ FieldProps::FieldProps(const Deck& deck, const EclipseGrid& grid, const TableMan
     ny(grid.getNY()),
     nz(grid.getNZ()),
     m_actnum(grid.getACTNUM()),
+    m_indexmap(make_indexmap(m_actnum)),
     cell_volume(extract_cell_volume(grid)),
     cell_depth(extract_cell_depth(grid)),
     m_default_region(default_region_keyword(deck)),
@@ -494,6 +508,7 @@ void FieldProps::reset_actnum(const std::vector<int>& new_actnum) {
 
     this->m_actnum = std::move(new_actnum);
     this->active_size = new_active_size;
+    this->m_indexmap = make_indexmap(this->m_actnum);
 }
 
 
@@ -983,9 +998,6 @@ void FieldProps::init_porv(FieldData<double>& porv) {
   FieldProps instance.
 */
 std::vector<int> FieldProps::actnum() {
-    auto actnum = this->m_actnum;
-    const auto& deck_actnum = this->init_get<int>("ACTNUM");
-
     std::vector<int> global_map(this->active_size);
     {
         std::size_t active_index = 0;
@@ -997,7 +1009,8 @@ std::vector<int> FieldProps::actnum() {
         }
     }
 
-
+    auto actnum = this->m_actnum;
+    const auto& deck_actnum = this->init_get<int>("ACTNUM");
     const auto& porv = this->init_get<double>("PORV");
     const auto& porv_data = porv.data;
     for (std::size_t active_index = 0; active_index < this->active_size; active_index++) {
@@ -1009,6 +1022,9 @@ std::vector<int> FieldProps::actnum() {
     return actnum;
 }
 
+const std::vector<int>& FieldProps::indexmap() const {
+    return this->m_indexmap;
+}
 
 void FieldProps::scanGRIDSection(const GRIDSection& grid_section) {
     Box box(*this->grid_ptr);

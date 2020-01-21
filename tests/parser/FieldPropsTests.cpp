@@ -92,6 +92,13 @@ PERMX
     Deck deck = Parser{}.parseString(deck_string);
     FieldPropsManager fpm(deck, grid, TableManager());
 
+    const auto& indexmap = fpm.indexmap();
+    for (int i=0; i< 500; i += 1) {
+        BOOST_CHECK(indexmap[i*2] < 0);
+        BOOST_CHECK(indexmap[i*2 + 1] == i);
+    }
+
+
     BOOST_CHECK(!fpm.has<double>("NO-PORO"));
     BOOST_CHECK(fpm.has<double>("PORO"));
     const auto& poro1 = fpm.get<double>("PORO");
@@ -363,9 +370,11 @@ ENDBOX
     BOOST_CHECK_EQUAL( porv_active.size(), grid.getNumActive());
     BOOST_CHECK_EQUAL( porv_global.size(), grid.getCartesianSize());
     BOOST_CHECK_EQUAL( porv_global[0], 0);
+    const auto& indexmap = fpm.indexmap();
     for (std::size_t g = 1; g < grid.getCartesianSize(); g++) {
         BOOST_CHECK_EQUAL(porv_active[g - 1], porv_global[g]);
         BOOST_CHECK_EQUAL(porv_global[g], porv[g]);
+        BOOST_CHECK_EQUAL(indexmap[g], g-1);
     }
 }
 

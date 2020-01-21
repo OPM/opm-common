@@ -219,6 +219,7 @@ public:
     const std::string& default_region() const;
 
     std::vector<int> actnum();
+    const std::vector<int>& indexmap() const;
 
     template <typename T>
     static bool supported(const std::string& keyword);
@@ -355,6 +356,7 @@ private:
     const UnitSystem unit_system;
     std::size_t nx,ny,nz;
     std::vector<int> m_actnum;
+    std::vector<int> m_indexmap;
     std::vector<double> cell_volume;
     std::vector<double> cell_depth;
     const std::string m_default_region;
