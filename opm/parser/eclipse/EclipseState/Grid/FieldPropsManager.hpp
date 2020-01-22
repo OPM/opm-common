@@ -161,9 +161,9 @@ public:
 
     /*
       The get_copy() has exactly the same behaviour as get(), but the important
-      difference is that said keyword is not already in the container it is not
-      installed in the container; if we look at SATNUM which is a keywor which
-      can be automatically instantiated we have the following behavior:
+      difference is that if said keyword is not already in the container it is
+      not installed in the container; if we look at SATNUM which is a keyword
+      which can be automatically instantiated we have the following behavior:
 
       get():
           fp.has<int>("SATNUM") -> false
