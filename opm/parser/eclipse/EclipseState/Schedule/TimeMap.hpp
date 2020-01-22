@@ -51,16 +51,12 @@ namespace Opm {
 
         TimeMap() = default;
         explicit TimeMap(std::time_t startTime);
-        explicit TimeMap( const Deck& deck);
+        explicit TimeMap(const Deck& deck);
         explicit TimeMap(const std::vector<std::time_t>& time_points);
         TimeMap(const std::vector<std::time_t>& timeList,
                 const std::vector<StepData>& firstStepMonths,
                 const std::vector<StepData>& firstStepYears);
 
-        void addTime(std::time_t newTime);
-        void addTStep(int64_t step);
-        void addFromDATESKeyword( const DeckKeyword& DATESKeyword );
-        void addFromTSTEPKeyword( const DeckKeyword& TSTEPKeyword );
         size_t size() const;
         size_t last() const;
         size_t numTimesteps() const;
@@ -99,6 +95,10 @@ namespace Opm {
 
         bool isTimestepInFreqSequence (size_t timestep, size_t start_timestep, size_t frequency, bool years) const;
         size_t closest(const std::vector<size_t> & vec, size_t value) const;
+        void addTStep(int64_t step);
+        void addTime(std::time_t newTime);
+        void addFromDATESKeyword( const DeckKeyword& DATESKeyword );
+        void addFromTSTEPKeyword( const DeckKeyword& TSTEPKeyword );
 
         std::vector<StepData> m_first_timestep_years;   // A list of the first timestep of every year
         std::vector<StepData> m_first_timestep_months;  // A list of the first timestep of every month

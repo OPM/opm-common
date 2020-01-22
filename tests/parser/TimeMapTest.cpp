@@ -47,44 +47,29 @@ BOOST_AUTO_TEST_CASE(CreateTimeMapFromTimeT) {
 }
 
 
-BOOST_AUTO_TEST_CASE(AddDateBeforeThrows) {
-    Opm::TimeMap timeMap(startDateJan1st2010);
-    const std::time_t dateBefore = Opm::TimeMap::mkdate(2009, 2, 1);
-    BOOST_CHECK_THROW(timeMap.addTime(dateBefore), std::invalid_argument);
-}
-
-
 BOOST_AUTO_TEST_CASE(GetStartDate) {
     Opm::TimeMap timeMap(startDateJan1st2010);
     BOOST_CHECK_EQUAL( Opm::TimeMap::mkdate(2010, 1, 1) , timeMap.getStartTime(/*timeStepIdx=*/0));
 }
 
 
-BOOST_AUTO_TEST_CASE(AddDateAfterSizeCorrect) {
-    Opm::TimeMap timeMap(startDateJan1st2010);
-    const std::time_t dateAfter = Opm::TimeMap::mkdate(2010, 2, 1);
-    timeMap.addTime(dateAfter);
-    BOOST_CHECK_EQUAL( 2U , timeMap.size());
-}
-
 
 BOOST_AUTO_TEST_CASE(AddDateNegativeStepThrows) {
-    const std::time_t startDate = time(NULL);
-    Opm::TimeMap timeMap(startDate);
-    BOOST_CHECK_THROW(timeMap.addTStep(static_cast<time_t>(-1)) , std::invalid_argument);
+    std::vector<std::time_t> time_points = { Opm::asTimeT(Opm::TimeStampUTC({2000,1,1})), Opm::asTimeT(Opm::TimeStampUTC({1999,1,1}))};
+    BOOST_CHECK_THROW(Opm::TimeMap timeMap(time_points), std::invalid_argument);
 }
 
 
 BOOST_AUTO_TEST_CASE(AddStepSizeCorrect) {
-    Opm::TimeMap timeMap{startDateJan1st2010};
-
-    timeMap.addTStep(static_cast<time_t>(1 * 60 * 60));
-    timeMap.addTStep(static_cast<time_t>(23 * 60 * 60));
+    std::vector<std::time_t> time_points = { Opm::asTimeT(Opm::TimeStampUTC({2010,1,1})),
+                                             Opm::asTimeT(Opm::TimeStampUTC({2010,1,2})),
+                                             Opm::asTimeT(Opm::TimeStampUTC({2010,1,3}))};
+    Opm::TimeMap timeMap(time_points);
     BOOST_CHECK_EQUAL(3U, timeMap.size());
 
     BOOST_CHECK_THROW(timeMap[3] , std::invalid_argument );
     BOOST_CHECK_EQUAL(timeMap[0] , Opm::TimeMap::mkdate(2010, 1, 1 ));
-    BOOST_CHECK_EQUAL(timeMap[2] , Opm::TimeMap::mkdate(2010, 1, 2 ));
+    BOOST_CHECK_EQUAL(timeMap[2] , Opm::TimeMap::mkdate(2010, 1, 3 ));
 }
 
 
@@ -181,21 +166,6 @@ BOOST_AUTO_TEST_CASE( timeFromEclipseInputRecord ) {
 
 
 
-BOOST_AUTO_TEST_CASE( addDATESFromWrongKeywordThrows ) {
-    Opm::Parser parser;
-    Opm::TimeMap timeMap(startDateJan1st2010);
-    Opm::DeckKeyword deckKeyword( parser.getKeyword("GRID") );
-    BOOST_CHECK_THROW( timeMap.addFromDATESKeyword( deckKeyword ) , std::invalid_argument );
-}
-
-
-
-BOOST_AUTO_TEST_CASE( addTSTEPFromWrongKeywordThrows ) {
-    Opm::Parser parser;
-    Opm::TimeMap timeMap(startDateJan1st2010);
-    Opm::DeckKeyword deckKeyword(parser.getKeyword("GRID"));
-    BOOST_CHECK_THROW( timeMap.addFromTSTEPKeyword( deckKeyword ) , std::invalid_argument );
-}
 
 BOOST_AUTO_TEST_CASE(TimeStepsCorrect) {
     const char *deckData =

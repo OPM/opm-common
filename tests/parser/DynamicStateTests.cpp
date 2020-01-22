@@ -30,6 +30,16 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
 
 
+Opm::TimeMap make_timemap(int num) {
+    std::vector<std::time_t> tp;
+    for (int i = 0; i < num; i++)
+        tp.push_back( Opm::asTimeT(Opm::TimeStampUTC({2010,1,i+1})));
+
+    Opm::TimeMap timeMap{ tp };
+    return timeMap;
+}
+
+
 
 BOOST_AUTO_TEST_CASE(CreateDynamicTest) {
     const std::time_t startDate = Opm::TimeMap::mkdate(2010, 1, 1);
@@ -56,11 +66,7 @@ BOOST_AUTO_TEST_CASE(DynamicStateGetDefault) {
 
 
 BOOST_AUTO_TEST_CASE(DynamicStateSetOutOfRangeThrows) {
-    const std::time_t startDate = Opm::TimeMap::mkdate(2010, 1, 1);
-    Opm::TimeMap timeMap{ startDate };
-    for (size_t i = 0; i < 2; i++)
-        timeMap.addTStep((i+1) * 24 * 60 * 60);
-
+    Opm::TimeMap timeMap = make_timemap(3);
     Opm::DynamicState<int> state(timeMap , 137);
 
     BOOST_CHECK_THROW( state.update(3 , 100) , std::out_of_range );
@@ -68,11 +74,7 @@ BOOST_AUTO_TEST_CASE(DynamicStateSetOutOfRangeThrows) {
 
 
 BOOST_AUTO_TEST_CASE(DynamicStateSetOK) {
-    const std::time_t startDate = Opm::TimeMap::mkdate(2010, 1, 1);
-    Opm::TimeMap timeMap{ startDate };
-
-    for (size_t i = 0; i < 10; i++)
-        timeMap.addTStep((i+1) * 24 * 60 * 60);
+    Opm::TimeMap timeMap = make_timemap(11);
     Opm::DynamicState<int> state(timeMap , 137);
 
     state.update(2 , 23 );
@@ -97,11 +99,7 @@ BOOST_AUTO_TEST_CASE(DynamicStateSetOK) {
 }
 
 BOOST_AUTO_TEST_CASE(DynamicStateAddAt) {
-    const std::time_t startDate = Opm::TimeMap::mkdate(2010, 1, 1);
-    Opm::TimeMap timeMap{ startDate };
-    for (size_t i = 0; i < 10; i++)
-        timeMap.addTStep((i+1) * 24 * 60 * 60);
-
+    Opm::TimeMap timeMap = make_timemap(11);
     Opm::DynamicState<int> state(timeMap , 0);
 
     state.update( 10 , 77 );
@@ -115,10 +113,7 @@ BOOST_AUTO_TEST_CASE(DynamicStateAddAt) {
 }
 
 BOOST_AUTO_TEST_CASE(DynamicStateOperatorSubscript) {
-    const std::time_t startDate = Opm::TimeMap::mkdate(2010, 1, 1);
-    Opm::TimeMap timeMap{ startDate };
-    for (size_t i = 0; i < 10; i++)
-        timeMap.addTStep((i+1) * 24 * 60 * 60);
+    Opm::TimeMap timeMap = make_timemap(11);
     Opm::DynamicState<int> state(timeMap , 137);
 
     state.update( 10 , 200 );
@@ -129,14 +124,9 @@ BOOST_AUTO_TEST_CASE(DynamicStateOperatorSubscript) {
 
 
 BOOST_AUTO_TEST_CASE(DynamicStateInitial) {
-    const std::time_t startDate = Opm::TimeMap::mkdate(2010, 1, 1);
-    Opm::TimeMap timeMap{ startDate };
-    for (size_t i = 0; i < 10; i++)
-        timeMap.addTStep((i+1) * 24 * 60 * 60);
-
+    Opm::TimeMap timeMap = make_timemap(11);
     Opm::DynamicState<int> state(timeMap , 137);
     Opm::DynamicState<int> state2(timeMap , 137);
-
 
     state.update( 10 , 200 );
     BOOST_CHECK_EQUAL( state[9] , 137 );
@@ -165,11 +155,7 @@ BOOST_AUTO_TEST_CASE(DynamicStateInitial) {
 }
 
 BOOST_AUTO_TEST_CASE( ResetGlobal ) {
-    const std::time_t startDate = Opm::TimeMap::mkdate(2010, 1, 1);
-    Opm::TimeMap timeMap{ startDate };
-    for (size_t i = 0; i < 10; i++)
-        timeMap.addTStep((i+1) * 24 * 60 * 60);
-
+    Opm::TimeMap timeMap = make_timemap(11);
     Opm::DynamicState<int> state(timeMap , 137);
 
     state.update(5 , 100);
@@ -193,11 +179,7 @@ BOOST_AUTO_TEST_CASE( ResetGlobal ) {
 
 
 BOOST_AUTO_TEST_CASE( CheckReturn ) {
-    const std::time_t startDate = Opm::TimeMap::mkdate(2010, 1, 1);
-    Opm::TimeMap timeMap{ startDate };
-    for (size_t i = 0; i < 10; i++)
-        timeMap.addTStep((i+1) * 24 * 60 * 60);
-
+    Opm::TimeMap timeMap = make_timemap(11);
     Opm::DynamicState<int> state(timeMap , 137);
 
     BOOST_CHECK_EQUAL( false , state.update( 0 , 137 ));
@@ -207,11 +189,7 @@ BOOST_AUTO_TEST_CASE( CheckReturn ) {
 
 
 BOOST_AUTO_TEST_CASE( UpdateEmptyInitial ) {
-    const std::time_t startDate = Opm::TimeMap::mkdate(2010, 1, 1);
-    Opm::TimeMap timeMap{ startDate };
-    for (size_t i = 0; i < 10; i++)
-        timeMap.addTStep((i+1) * 24 * 60 * 60);
-
+    Opm::TimeMap timeMap = make_timemap(11);
     Opm::DynamicState<int> state(timeMap , 137);
 
     BOOST_CHECK_EQUAL( state[5] , 137 );
@@ -221,11 +199,7 @@ BOOST_AUTO_TEST_CASE( UpdateEmptyInitial ) {
 
 
 BOOST_AUTO_TEST_CASE( find ) {
-    const std::time_t startDate = Opm::TimeMap::mkdate(2010, 1, 1);
-    Opm::TimeMap timeMap{ startDate };
-    for (size_t i = 0; i < 5; i++)
-        timeMap.addTStep((i+1) * 24 * 60 * 60);
-
+    Opm::TimeMap timeMap = make_timemap(6);
     Opm::DynamicState<int> state(timeMap , 137);
 
     BOOST_CHECK_EQUAL( state.find( 137 ) , 0 );
@@ -254,11 +228,7 @@ BOOST_AUTO_TEST_CASE( find ) {
 
 
 BOOST_AUTO_TEST_CASE( update_elm ) {
-    const std::time_t startDate = Opm::TimeMap::mkdate(2010, 1, 1);
-    Opm::TimeMap timeMap{ startDate };
-    for (size_t i = 0; i < 5; i++)
-        timeMap.addTStep((i+1) * 24 * 60 * 60);
-
+    Opm::TimeMap timeMap = make_timemap(6);
     Opm::DynamicState<int> state(timeMap , 137);
     state.update( 5, 88 );
     BOOST_CHECK_THROW( state.update_elm(10,88) , std::out_of_range );
@@ -280,11 +250,7 @@ BOOST_AUTO_TEST_CASE( update_elm ) {
 }
 
 BOOST_AUTO_TEST_CASE( update_equal ) {
-    const std::time_t startDate = Opm::TimeMap::mkdate(2010, 1, 1);
-    Opm::TimeMap timeMap{ startDate };
-    for (size_t i = 0; i < 10; i++)
-        timeMap.addTStep((i+1) * 24 * 60 * 60);
-
+    Opm::TimeMap timeMap = make_timemap(11);
     Opm::DynamicState<int> state(timeMap , 0);
     state.update( 5, 100 );
     BOOST_REQUIRE_THROW(state.update_equal(100, 100), std::out_of_range);
@@ -315,11 +281,7 @@ BOOST_AUTO_TEST_CASE( update_equal ) {
 
 
 BOOST_AUTO_TEST_CASE( UNIQUE ) {
-    const std::time_t startDate = Opm::TimeMap::mkdate(2010, 1, 1);
-    Opm::TimeMap timeMap{ startDate };
-    for (size_t i = 0; i < 10; i++)
-        timeMap.addTStep((i+1) * 24 * 60 * 60);
-
+    Opm::TimeMap timeMap = make_timemap(11);
     Opm::DynamicState<int> state(timeMap , 13);
     auto unique0 = state.unique();
     BOOST_CHECK_EQUAL(unique0.size(), 1);
