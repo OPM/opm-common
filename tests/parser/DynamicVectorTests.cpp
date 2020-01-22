@@ -31,7 +31,7 @@
 
 BOOST_AUTO_TEST_CASE(CreateDynamicTest) {
     const std::time_t startDate = Opm::TimeMap::mkdate(2010, 1, 1);
-    Opm::TimeMap timeMap{ startDate };
+    Opm::TimeMap timeMap({ startDate });
     Opm::DynamicVector<double> vector(timeMap , 9.99);
 
     BOOST_CHECK_EQUAL( vector[0] , 9.99 );

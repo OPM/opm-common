@@ -49,10 +49,6 @@ namespace {
                                                       {"DES", 12}};
 }
 
-    TimeMap::TimeMap(std::time_t startTime) {
-        m_timeList.push_back(startTime);
-    }
-
     TimeMap::TimeMap(const std::vector<std::time_t>& time_points) {
         if (time_points.empty())
             throw std::invalid_argument("Can not initialize with empty list of time points");

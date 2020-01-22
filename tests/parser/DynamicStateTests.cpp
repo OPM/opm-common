@@ -43,14 +43,14 @@ Opm::TimeMap make_timemap(int num) {
 
 BOOST_AUTO_TEST_CASE(CreateDynamicTest) {
     const std::time_t startDate = Opm::TimeMap::mkdate(2010, 1, 1);
-    Opm::TimeMap timeMap{ startDate };
+    Opm::TimeMap timeMap({ startDate });
     Opm::DynamicState<double> state(timeMap , 9.99);
 }
 
 
 BOOST_AUTO_TEST_CASE(DynamicStateGetOutOfRangeThrows) {
     const std::time_t startDate = Opm::TimeMap::mkdate(2010, 1, 1);
-    Opm::TimeMap timeMap{ startDate };
+    Opm::TimeMap timeMap({ startDate });
     Opm::DynamicState<double> state(timeMap , 9.99);
     BOOST_CHECK_THROW( state.get(1) , std::out_of_range );
 }
@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(DynamicStateGetOutOfRangeThrows) {
 
 BOOST_AUTO_TEST_CASE(DynamicStateGetDefault) {
     const std::time_t startDate = Opm::TimeMap::mkdate(2010, 1, 1);
-    Opm::TimeMap timeMap{ startDate };
+    Opm::TimeMap timeMap( { startDate } );
     Opm::DynamicState<int> state(timeMap , 137);
     BOOST_CHECK_EQUAL( 137 , state.get(0));
     BOOST_CHECK_EQUAL( 137 , state.back() );

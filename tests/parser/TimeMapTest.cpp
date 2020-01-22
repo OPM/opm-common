@@ -40,15 +40,8 @@ const std::time_t startDateJan1st2010 = Opm::TimeMap::mkdate(2010, 1, 1);
 
 Opm::DeckRecord createDeckRecord(int day, const std::string &month, int year, const std::string &time = "00:00:00.000");
 
-BOOST_AUTO_TEST_CASE(CreateTimeMapFromTimeT) {
-    std::time_t startDate = time(NULL);
-    Opm::TimeMap timeMap(startDate);
-    BOOST_CHECK_EQUAL(1U , timeMap.size());
-}
-
-
 BOOST_AUTO_TEST_CASE(GetStartDate) {
-    Opm::TimeMap timeMap(startDateJan1st2010);
+    Opm::TimeMap timeMap({ startDateJan1st2010 });
     BOOST_CHECK_EQUAL( Opm::TimeMap::mkdate(2010, 1, 1) , timeMap.getStartTime(/*timeStepIdx=*/0));
 }
 
