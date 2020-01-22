@@ -31,7 +31,7 @@
 
 BOOST_AUTO_TEST_CASE(CreateDynamicTest) {
     const std::time_t startDate = Opm::TimeMap::mkdate(2010, 1, 1);
-    Opm::TimeMap timeMap{ startDate };
+    Opm::TimeMap timeMap({ startDate });
     Opm::DynamicVector<double> vector(timeMap , 9.99);
 
     BOOST_CHECK_EQUAL( vector[0] , 9.99 );
@@ -42,10 +42,11 @@ BOOST_AUTO_TEST_CASE(CreateDynamicTest) {
 
 BOOST_AUTO_TEST_CASE(DynamicVectorSet) {
     const std::time_t startDate = Opm::TimeMap::mkdate(2010, 1, 1);
-    Opm::TimeMap timeMap{ startDate };
-    for (size_t i = 0; i < 4; i++)
-        timeMap.addTStep((i+1) * 24 * 60 * 60);
+    std::vector<std::time_t> tp = { startDate };
+    for (int i = 0; i < 4; i++)
+        tp.push_back( Opm::asTimeT(Opm::TimeStampUTC({2010,1,i+2})));
 
+    Opm::TimeMap timeMap{ tp };
     Opm::DynamicVector<int> state(timeMap , 137);
     BOOST_CHECK_EQUAL( 137 , state[0] );
     BOOST_CHECK_EQUAL( 137 , state[1] );
@@ -67,11 +68,13 @@ BOOST_AUTO_TEST_CASE(DynamicVectorSet) {
 
 BOOST_AUTO_TEST_CASE(DynamicVectorPtr) {
     const std::time_t startDate = Opm::TimeMap::mkdate(2010, 1, 1);
-    Opm::TimeMap timeMap{ startDate };
-    for (size_t i = 0; i < 4; i++)
-        timeMap.addTStep((i+1) * 24 * 60 * 60);
+    std::vector<std::time_t> tp = { startDate };
+    for (int i = 0; i < 4; i++)
+        tp.push_back( Opm::asTimeT(Opm::TimeStampUTC({2010,1,i+2})));
 
+    Opm::TimeMap timeMap{ tp };
     Opm::DynamicVector<int> state( timeMap , 137 );
+
     BOOST_CHECK_EQUAL( 137 , state.iget(0) );
     BOOST_CHECK_EQUAL( 137 , state.iget(1) );
     BOOST_CHECK_EQUAL( 137 , state.iget(2) );

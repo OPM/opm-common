@@ -3393,13 +3393,16 @@ BOOST_AUTO_TEST_CASE(WellNames) {
 
 
 BOOST_AUTO_TEST_CASE(RFT_CONFIG) {
-    TimeMap tm(Opm::TimeMap::mkdate(2010, 1,1));
-    tm.addTStep(static_cast<time_t>(24 * 60 * 60));
-    tm.addTStep(static_cast<time_t>(24 * 60 * 60));
-    tm.addTStep(static_cast<time_t>(24 * 60 * 60));
-    tm.addTStep(static_cast<time_t>(24 * 60 * 60));
-    tm.addTStep(static_cast<time_t>(24 * 60 * 60));
+    std::vector<std::time_t> tp = { asTimeT( TimeStampUTC({2010, 1, 1})),
+                                    asTimeT( TimeStampUTC({2010, 1, 2})),
+                                    asTimeT( TimeStampUTC({2010, 1, 3})),
+                                    asTimeT( TimeStampUTC({2010, 1, 4})),
+                                    asTimeT( TimeStampUTC({2010, 1, 5})),
+                                    asTimeT( TimeStampUTC({2010, 1, 6}))};
 
+
+
+    TimeMap tm(tp);
     RFTConfig conf(tm);
     BOOST_CHECK_THROW( conf.rft("W1", 100), std::invalid_argument);
     BOOST_CHECK_THROW( conf.plt("W1", 100), std::invalid_argument);
