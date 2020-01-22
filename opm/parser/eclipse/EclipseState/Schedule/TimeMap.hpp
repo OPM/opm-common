@@ -37,24 +37,9 @@ namespace Opm {
 
     class TimeMap {
     public:
-        struct StepData
-        {
-            size_t stepnumber;
-            TimeStampUTC timestamp;
-
-            bool operator==(const StepData& data) const
-            {
-                return stepnumber == data.stepnumber &&
-                       timestamp == data.timestamp;
-            }
-        };
-
         TimeMap() = default;
         explicit TimeMap(const Deck& deck);
         explicit TimeMap(const std::vector<std::time_t>& time_points);
-        TimeMap(const std::vector<std::time_t>& timeList,
-                const std::vector<StepData>& firstStepMonths,
-                const std::vector<StepData>& firstStepYears);
 
         size_t size() const;
         size_t last() const;
@@ -72,9 +57,6 @@ namespace Opm {
         double getTimeStepLength(size_t tStepIdx) const;
 
         const std::vector<std::time_t>& timeList() const;
-        const std::vector<StepData>& firstTimeStepMonths() const;
-        const std::vector<StepData>& firstTimeStepYears() const;
-
         bool operator==(const TimeMap& data) const;
 
         /// Return true if the given timestep is the first one of a new month or year, or if frequency > 1,
@@ -89,6 +71,17 @@ namespace Opm {
         static std::time_t mkdatetime(int year, int month, int day, int hour, int minute, int second);
         static const std::map<std::string, int>& eclipseMonthIndices();
     private:
+        struct StepData
+        {
+            size_t stepnumber;
+            TimeStampUTC timestamp;
+
+            bool operator==(const StepData& data) const
+            {
+                return stepnumber == data.stepnumber &&
+                       timestamp == data.timestamp;
+            }
+        };
 
         std::vector<std::time_t> m_timeList;
 
