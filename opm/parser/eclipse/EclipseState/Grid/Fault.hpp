@@ -32,7 +32,11 @@ namespace Opm {
 
 class Fault {
 public:
+    Fault() = default;
     explicit Fault(const std::string& faultName);
+    Fault(const std::string& name,
+           double transMult,
+           const std::vector<FaultFace>& faceList);
 
     const  std::string& getName() const;
     void   setTransMult(double transMult);
@@ -40,13 +44,14 @@ public:
     void   addFace( FaultFace );
     std::vector< FaultFace >::const_iterator begin() const;
     std::vector< FaultFace >::const_iterator end() const;
+    const std::vector<FaultFace>& getFaceList() const;
 
     bool operator==( const Fault& rhs ) const;
     bool operator!=( const Fault& rhs ) const;
 
 private:
     std::string m_name;
-    double m_transMult;
+    double m_transMult = 0.0;
     std::vector< FaultFace > m_faceList;
 };
 }

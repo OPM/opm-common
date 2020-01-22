@@ -106,21 +106,21 @@ std::vector<int> unique(const std::vector<int> data) {
       interface with the wanted region values.
     */
      MULTREGTScanner::MULTREGTScanner(const GridDims& grid,
-                                      const FieldPropsManager& fp_arg,
+                                      const FieldPropsManager* fp_arg,
                                       const std::vector< const DeckKeyword* >& keywords) :
          nx(grid.getNX()),
          ny(grid.getNY()),
          nz(grid.getNZ()),
          fp(fp_arg) {
 
-        this->default_region = this->fp.default_region();
+        this->default_region = this->fp->default_region();
         for (size_t idx = 0; idx < keywords.size(); idx++)
             this->addKeyword(*keywords[idx] , this->default_region);
 
         MULTREGTSearchMap searchPairs;
         for (std::vector<MULTREGTRecord>::const_iterator record = m_records.begin(); record != m_records.end(); ++record) {
             const std::string& region_name = record->region_name;
-            if (this->fp.has<int>( region_name)) {
+            if (this->fp->has<int>( region_name)) {
                 int srcRegion    = record->src_value;
                 int targetRegion = record->target_value;
 
@@ -140,7 +140,7 @@ std::vector<int> unique(const std::vector<int> data) {
                                 + " which is not in the deck");
 
             if (this->regions.count(region_name) == 0)
-                this->regions[region_name] = this->fp.get_global<int>(region_name);
+                this->regions[region_name] = this->fp->get_global<int>(region_name);
         }
 
         for (auto iter = searchPairs.begin(); iter != searchPairs.end(); ++iter) {
@@ -152,6 +152,27 @@ std::vector<int> unique(const std::vector<int> data) {
 
             m_searchMap[keyword][pair] = record;
         }
+    }
+
+
+    MULTREGTScanner::MULTREGTScanner(const std::array<size_t,3>& size,
+                                     const std::vector<MULTREGTRecord>& records,
+                                     const ExternalSearchMap& searchMap,
+                                     const std::map<std::string, std::vector<int>>& region,
+                                     const std::string& defaultRegion) :
+        nx(size[0]),
+        ny(size[1]),
+        nz(size[2]),
+        m_records(records),
+        regions(region),
+        default_region(defaultRegion)
+    {
+        constructSearchMap(searchMap);
+    }
+
+
+    MULTREGTScanner::MULTREGTScanner(const MULTREGTScanner& data) {
+        *this = data;
     }
 
 
@@ -195,12 +216,12 @@ std::vector<int> unique(const std::vector<int> data) {
                 region_name = MULTREGT::RegionNameFromDeckValue( regionItem.get<std::string>(0) );
 
             if (srcItem.defaultApplied(0) || srcItem.get<int>(0) < 0)
-                src_regions = unique(this->fp.get<int>(region_name));
+                src_regions = unique(this->fp->get<int>(region_name));
             else
                 src_regions.push_back(srcItem.get<int>(0));
 
             if (targetItem.defaultApplied(0) || targetItem.get<int>(0) < 0)
-                target_regions = unique(fp.get<int>(region_name));
+                target_regions = unique(fp->get<int>(region_name));
             else
                 target_regions.push_back(targetItem.get<int>(0));
 
@@ -274,5 +295,70 @@ std::vector<int> unique(const std::vector<int> data) {
 
         }
         return 1;
+    }
+
+    std::array<size_t,3> MULTREGTScanner::getSize() const {
+        return {nx, ny, nz};
+    }
+
+    const std::vector<MULTREGTRecord>& MULTREGTScanner::getRecords() const {
+        return m_records;
+    }
+
+    const std::map<std::string, std::vector<int>>& MULTREGTScanner::getRegions() const {
+        return regions;
+    }
+
+    const std::string& MULTREGTScanner::getDefaultRegion() const {
+        return default_region;
+    }
+
+    MULTREGTScanner::ExternalSearchMap MULTREGTScanner::getSearchMap() const {
+        ExternalSearchMap result;
+        for (const auto& it : m_searchMap) {
+            std::map<std::pair<int,int>, int> res;
+            for (const auto& it2 : it.second) {
+                auto ffunc = [&](const Opm::MULTREGTRecord& a)
+                {
+                    return &a == it2.second;
+                };
+                auto rIt = std::find_if(m_records.begin(), m_records.end(), ffunc);
+                res[it2.first] = std::distance(m_records.begin(), rIt);
+            }
+            result[it.first] = res;
+        }
+        return result;
+    }
+
+    void MULTREGTScanner::constructSearchMap(const ExternalSearchMap& searchMap) {
+        for (const auto& it : searchMap) {
+            std::map<std::pair<int,int>, const Opm::MULTREGTRecord*> res;
+            for (const auto& it2 : it.second) {
+                res[it2.first] = &m_records[it2.second];
+            }
+            m_searchMap.insert({it.first, res});
+        }
+    }
+
+    bool MULTREGTScanner::operator==(const MULTREGTScanner& data) const {
+        return this->getSize() == data.getSize() &&
+               this->getRecords() == data.getRecords() &&
+               this->getRegions() == data.getRegions() &&
+               this->getSearchMap() == data.getSearchMap() &&
+               this->getDefaultRegion() == data.getDefaultRegion();
+    }
+
+    MULTREGTScanner& MULTREGTScanner::operator=(const MULTREGTScanner& data) {
+        nx = data.nx;
+        ny = data.ny;
+        nz = data.nz;
+        fp = data.fp;
+        m_records = data.m_records;
+        regions = data.regions;
+        default_region = data.default_region;
+        m_searchMap.clear();
+        constructSearchMap(data.getSearchMap());
+
+        return *this;
     }
 }

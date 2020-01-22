@@ -36,6 +36,16 @@ namespace Opm {
     }
 
 
+    EclipseConfig::EclipseConfig(const IOConfig& ioConfig,
+                                 const InitConfig& initConfig,
+                                 const RestartConfig& restartConfig) :
+        m_ioConfig(ioConfig),
+        m_initConfig(initConfig),
+        m_restartConfig(restartConfig)
+    {
+    }
+
+
     const InitConfig& EclipseConfig::init() const {
         return m_initConfig;
     }
@@ -60,6 +70,12 @@ namespace Opm {
     // [[deprecated]] --- use init()
     const InitConfig& EclipseConfig::getInitConfig() const {
         return init();
+    }
+
+    bool EclipseConfig::operator==(const EclipseConfig& data) const {
+        return this->init() == data.init() &&
+               this->io() == data.io() &&
+               this->restart() == data.restart();
     }
 
 }

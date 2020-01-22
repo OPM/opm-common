@@ -36,6 +36,7 @@ class FaultCollection {
 public:
     FaultCollection();
     FaultCollection(const GRIDSection& gridSection, const GridDims& grid);
+    FaultCollection(const OrderedMap<std::string, Fault>& faults);
 
     size_t size() const;
     bool hasFault(const std::string& faultName) const;
@@ -47,6 +48,10 @@ public:
     /// we construct the fault based on faultName.  To get the fault: getFault
     void addFault(const std::string& faultName);
     void setTransMult(const std::string& faultName , double transMult);
+
+    const OrderedMap<std::string, Fault>& getFaults() const;
+
+    bool operator==(const FaultCollection& data) const;
 
 private:
     void addFaultFaces(const GridDims& grid,

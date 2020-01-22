@@ -43,7 +43,7 @@ namespace Opm {
                    { FaceDir::XMinus, "MULTX-" },
                    { FaceDir::YMinus, "MULTY-" },
                    { FaceDir::ZMinus, "MULTZ-" }}),
-        m_multregtScanner( dims, fp, deck.getKeywordList( "MULTREGT" ))
+        m_multregtScanner( dims, &fp, deck.getKeywordList( "MULTREGT" ))
     {
         EDITSection edit_section(deck);
         if (edit_section.hasKeyword("MULTREGT")) {
@@ -54,6 +54,20 @@ R"(This deck has the MULTREGT keyword located in the EDIT section. Note that:
 
             OpmLog::warning(msg);
         }
+    }
+
+
+    TransMult::TransMult(const std::array<size_t,3>& size,
+                         const std::map<FaceDir::DirEnum, std::vector<double>>& trans,
+                         const std::map<FaceDir::DirEnum, std::string>& names,
+                         const MULTREGTScanner& scanner) :
+        m_nx(size[0]),
+        m_ny(size[1]),
+        m_nz(size[2]),
+        m_trans(trans),
+        m_names(names),
+        m_multregtScanner(scanner)
+    {
     }
 
     void TransMult::assertIJK(size_t i , size_t j , size_t k) const {
@@ -136,4 +150,28 @@ R"(This deck has the MULTREGT keyword located in the EDIT section. Note that:
             this->applyMULTFLT(fault);
         }
     }
+
+    std::array<size_t,3> TransMult::getSize() const {
+        return {m_nx, m_ny, m_nz};
+    }
+
+    const std::map<FaceDir::DirEnum, std::vector<double>>& TransMult::getTrans() const {
+        return m_trans;
+    }
+
+    const std::map<FaceDir::DirEnum, std::string>& TransMult::getNames() const {
+        return m_names;
+    }
+
+    const MULTREGTScanner& TransMult::getScanner() const {
+        return m_multregtScanner;
+    }
+
+    bool TransMult::operator==(const TransMult& data) const {
+        return this->getSize() == data.getSize() &&
+               this->getTrans() == data.getTrans() &&
+               this->getNames() == data.getNames() &&
+               this->getScanner() == data.getScanner();
+    }
+
 }
