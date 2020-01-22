@@ -52,6 +52,7 @@ namespace Opm {
         TimeMap() = default;
         explicit TimeMap(std::time_t startTime);
         explicit TimeMap( const Deck& deck);
+        explicit TimeMap(const std::vector<std::time_t>& time_points);
         TimeMap(const std::vector<std::time_t>& timeList,
                 const std::vector<StepData>& firstStepMonths,
                 const std::vector<StepData>& firstStepYears);
