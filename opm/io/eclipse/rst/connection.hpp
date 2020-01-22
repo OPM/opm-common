@@ -25,8 +25,8 @@ namespace RestartIO {
 
 class Header;
 
-struct Connection {
-    Connection(const int* icon, const float* scon, const double *xcon);
+struct RstConnection {
+    RstConnection(const int* icon, const float* scon, const double *xcon);
 
     int insert_index;
     std::array<int,3> ijk;

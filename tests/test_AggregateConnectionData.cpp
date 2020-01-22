@@ -803,7 +803,7 @@ BOOST_AUTO_TEST_CASE(TestRestartIOConnection) {
     const auto ih = MockIH {static_cast<int>(simCase.sched.getWells(rptStep).size())};
     const Opm::data::WellRates wrc = wr();
 
-    Opm::RestartIO::Header header(ih.value, lh, dh);
+    Opm::RestartIO::RstHeader header(ih.value, lh, dh);
     auto conn = Opm::RestartIO::Helpers::AggregateConnectionData{ih.value};
     conn.captureDeclaredConnData(simCase.sched,
                                  simCase.grid,
@@ -816,7 +816,7 @@ BOOST_AUTO_TEST_CASE(TestRestartIOConnection) {
     const auto scon = conn.getSConn();
     const auto xcon = conn.getXConn();
 
-    std::vector<Opm::RestartIO::Connection> connections;
+    std::vector<Opm::RestartIO::RstConnection> connections;
     for (int iw = 0; iw < header.num_wells; iw++) {
         for (int ic = 0; ic < header.ncwmax; ic++) {
             std::size_t icon_offset = header.niconz * (header.ncwmax * iw + ic);

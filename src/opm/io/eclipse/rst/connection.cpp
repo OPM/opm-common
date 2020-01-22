@@ -26,7 +26,7 @@ namespace VI = ::Opm::RestartIO::Helpers::VectorItems;
 namespace Opm {
 namespace RestartIO {
 
-Connection::Connection(const int* icon, const float* scon, const double* xcon) :
+RstConnection::RstConnection(const int* icon, const float* scon, const double* xcon) :
     insert_index(icon[VI::IConn::SeqIndex]),
     ijk({icon[VI::IConn::CellI] - 1, icon[VI::IConn::CellJ] - 1, icon[VI::IConn::CellK] - 1}),
     status(icon[VI::IConn::ConnStat]),

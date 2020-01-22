@@ -232,7 +232,11 @@ if(ENABLE_ECL_OUTPUT)
           src/opm/io/eclipse/ESmry.cpp
           src/opm/io/eclipse/OutputStream.cpp
           src/opm/io/eclipse/rst/connection.cpp
+          src/opm/io/eclipse/rst/group.cpp
           src/opm/io/eclipse/rst/header.cpp
+          src/opm/io/eclipse/rst/segment.cpp
+          src/opm/io/eclipse/rst/state.cpp
+          src/opm/io/eclipse/rst/well.cpp
           src/opm/output/eclipse/AggregateActionxData.cpp
           src/opm/output/eclipse/AggregateConnectionData.cpp
           src/opm/output/eclipse/AggregateGroupData.cpp
@@ -366,6 +370,7 @@ if(ENABLE_ECL_OUTPUT)
           tests/test_PaddedOutputString.cpp
           tests/test_Restart.cpp
           tests/test_RFT.cpp
+          tests/test_rst.cpp
           tests/test_Solution.cpp
           tests/test_Summary.cpp
           tests/test_Tables.cpp
@@ -427,6 +432,7 @@ if(ENABLE_ECL_INPUT)
     examples/opmi.cpp
     examples/opmpack.cpp
     examples/opmhash.cpp
+    tests/rst_load.cpp
   )
 endif()
 
@@ -691,7 +697,11 @@ if(ENABLE_ECL_OUTPUT)
         opm/io/eclipse/PaddedOutputString.hpp
         opm/io/eclipse/OutputStream.hpp
         opm/io/eclipse/rst/connection.hpp
+        opm/io/eclipse/rst/group.hpp
         opm/io/eclipse/rst/header.hpp
+        opm/io/eclipse/rst/segment.hpp
+        opm/io/eclipse/rst/state.hpp
+        opm/io/eclipse/rst/well.hpp
         opm/output/data/Aquifer.hpp
         opm/output/data/Cells.hpp
         opm/output/data/Solution.hpp
