@@ -35,7 +35,7 @@ namespace Opm {
         InitConfig();
         explicit InitConfig(const Deck& deck);
         InitConfig(const Equil& equil, const FoamConfig& foam,
-                   bool filleps, bool restartReq, int restartStep,
+                   bool filleps, bool gravity, bool restartReq, int restartStep,
                    const std::string& restartRootName);
 
         void setRestart( const std::string& root, int step);
@@ -45,6 +45,8 @@ namespace Opm {
 
         bool hasEquil() const;
         const Equil& getEquil() const;
+
+        bool hasGravity() const;
 
         bool hasFoamConfig() const;
         const FoamConfig& getFoamConfig() const;
@@ -60,6 +62,7 @@ namespace Opm {
         Equil equil;
         FoamConfig foamconfig;
         bool m_filleps;
+        bool m_gravity = true;
 
         bool m_restartRequested = false;
         int m_restartStep = 0;
