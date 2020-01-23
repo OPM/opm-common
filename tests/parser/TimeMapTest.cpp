@@ -594,3 +594,108 @@ BOOST_AUTO_TEST_CASE(TimeServiceOperatorPlus) {
 }
 
 
+BOOST_AUTO_TEST_CASE(RESTART) {
+    std::string deck_string1 = R"(
+START
+ 1 JAN 2000 /
+
+RESTART
+  'CASE'  5 /
+
+SCHEDULE
+
+SKIPREST
+
+DATES
+ 1 JAN 2001 /
+ 1 JAN 2002 /
+ 1 JAN 2003 /
+ 1 JAN 2004 /
+/
+
+DATES
+ 1  JAN 2005 /
+/
+
+DATES
+ 1 JAN 2006 /
+ 1 JAN 2007 /
+ 1 JAN 2008 /
+ 1 JAN 2009 /
+ 1 JAN 2010 /
+/
+)";
+
+    std::string deck_string2 = R"(
+START
+ 1 JAN 2000 /
+
+RESTART
+  'CASE'  5 /
+
+SCHEDULE
+
+-- The period before the restart dates has been removed - the restart date
+-- should still be picked up as report step 5.
+--DATES
+-- 1 JAN 2001 /
+-- 1 JAN 2002 /
+-- 1 JAN 2003 /
+-- 1 JAN 2004 /
+--/
+
+DATES
+ 1  JUL 2005 /
+/
+
+DATES
+ 1 JAN 2006 /
+ 1 JAN 2007 /
+ 1 JAN 2008 /
+ 1 JAN 2009 /
+ 1 JAN 2010 /
+/
+)";
+
+    std::string deck_string3 = R"(
+START
+ 1 JAN 2000 /
+
+RESTART
+  'CASE'  5 /
+
+SCHEDULE
+
+-- This test does not have SKIPREST
+
+TSTEP
+   1 1 1 /
+)";
+
+    Opm::Parser parser;
+    const auto deck1 = parser.parseString(deck_string1);
+    const auto deck2 = parser.parseString(deck_string2);
+    const auto deck3 = parser.parseString(deck_string3);
+
+    // The date 2005-01-02 is not present as a DATES in the deck; invalid input.
+    auto invalid_restart = std::make_pair(Opm::asTimeT(Opm::TimeStampUTC({2005, 1, 2})), 5);
+    auto valid_restart = std::make_pair(Opm::asTimeT(Opm::TimeStampUTC({2005, 1, 1})), 5);
+
+    BOOST_CHECK_THROW( Opm::TimeMap(deck1, invalid_restart) , std::invalid_argument);
+    Opm::TimeMap tm1(deck1, valid_restart);
+    BOOST_CHECK_THROW( tm1[1], std::invalid_argument );
+    BOOST_CHECK_THROW( tm1[4], std::invalid_argument );
+    auto start = tm1[0];
+    BOOST_CHECK_EQUAL(start , Opm::asTimeT(Opm::TimeStampUTC({2000,1,1})));
+    BOOST_CHECK_EQUAL(tm1[5] , Opm::asTimeT(Opm::TimeStampUTC({2005,1,1})));
+
+    Opm::TimeMap tm2(deck2, valid_restart);
+    BOOST_CHECK_EQUAL(tm2[5], Opm::asTimeT(Opm::TimeStampUTC({2005,1,1})));
+    BOOST_CHECK_EQUAL(tm2[6], Opm::asTimeT(Opm::TimeStampUTC({2005,7,1})));
+
+    Opm::TimeMap tm3(deck3, valid_restart);
+    BOOST_CHECK_EQUAL(tm3[5], Opm::asTimeT(Opm::TimeStampUTC({2005,1,1})));
+    BOOST_CHECK_EQUAL(tm3[6], Opm::asTimeT(Opm::TimeStampUTC({2005,1,2})));
+    BOOST_CHECK_EQUAL(tm3[7], Opm::asTimeT(Opm::TimeStampUTC({2005,1,3})));
+    BOOST_CHECK_EQUAL(tm3[8], Opm::asTimeT(Opm::TimeStampUTC({2005,1,4})));
+}
