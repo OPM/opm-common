@@ -177,7 +177,7 @@ struct ProductionControls {
           const std::string& parent,
           const IOrderSet<std::string>& well,
           const IOrderSet<std::string>& group,
-          const GroupInjectionProperties& injProps,
+          const std::map<Phase, GroupInjectionProperties> &injProps,
           const GroupProductionProperties& prodProps);
 
 
@@ -221,7 +221,7 @@ struct ProductionControls {
     InjectionControls injectionControls(Phase phase, const SummaryState& st) const;
     bool hasInjectionControl(Phase phase) const;
     const GroupProductionProperties& productionProperties() const;
-    const GroupInjectionProperties& injectionProperties() const;
+    const std::map<Phase , GroupInjectionProperties>& injectionProperties() const;
     const GroupType& getGroupType() const;
     ProductionCMode production_cmode() const;
     InjectionCMode injection_cmode() const;

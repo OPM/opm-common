@@ -45,7 +45,7 @@ Group::Group(const std::string& name, std::size_t insert_index_arg, std::size_t 
     if (name != "FIELD")
         this->parent_group = "FIELD";
 }
-/*
+
 Group::Group(const std::string& gname,
              std::size_t insert_idx,
              std::size_t initstep,
@@ -58,7 +58,7 @@ Group::Group(const std::string& gname,
              const std::string& parentName,
              const IOrderSet<std::string>& well,
              const IOrderSet<std::string>& group,
-             const GroupInjectionProperties& injProps,
+             const std::map<Phase, GroupInjectionProperties>& injProps,
              const GroupProductionProperties& prodProps) :
     m_name(gname),
     m_insert_index(insert_idx),
@@ -76,7 +76,7 @@ Group::Group(const std::string& gname,
     production_properties(prodProps)
 {
 }
-*/
+
 
 std::size_t Group::insert_index() const {
     return this->m_insert_index;
@@ -110,6 +110,9 @@ const Group::GroupProductionProperties& Group::productionProperties() const {
     return this->production_properties;
 }
 
+const std::map<Phase, Group::GroupInjectionProperties>& Group::injectionProperties() const {
+    return this->injection_properties;
+}
 
 int Group::getGroupNetVFPTable() const {
     return this->vfp_table;
@@ -390,6 +393,7 @@ Group::InjectionControls Group::injectionControls(Phase phase, const SummaryStat
 
     ic.phase = inj.phase;
     ic.cmode = inj.cmode;
+    ic.injection_controls = inj.injection_controls;
     ic.surface_max_rate = UDA::eval_group_uda_rate(inj.surface_max_rate, this->m_name, st, this->udq_undefined, ic.phase, this->unit_system);
     ic.resv_max_rate = UDA::eval_group_uda(inj.resv_max_rate, this->m_name, st, this->udq_undefined);
     ic.target_reinj_fraction = UDA::eval_group_uda(inj.target_reinj_fraction, this->m_name, st, this->udq_undefined);
