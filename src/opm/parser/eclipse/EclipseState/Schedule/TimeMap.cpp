@@ -54,6 +54,8 @@ namespace {
             throw std::invalid_argument("Can not initialize with empty list of time points");
 
         this->m_timeList.push_back(time_points[0]);
+        m_first_timestep_months.push_back({0, TimeStampUTC{time_points[0]}});
+        m_first_timestep_years.push_back({0, TimeStampUTC{time_points[0]}});
         for (std::size_t ti = 1; ti < time_points.size(); ti++)
             this->addTime( time_points[ti] );
     }
