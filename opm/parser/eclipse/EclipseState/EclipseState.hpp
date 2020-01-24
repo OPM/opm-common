@@ -68,6 +68,7 @@ namespace Opm {
             AllProperties = IntProperties | DoubleProperties
         };
 
+        EclipseState() = default;
         EclipseState(const Deck& deck);
 
         const IOConfig& getIOConfig() const;
