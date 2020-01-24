@@ -1818,8 +1818,24 @@ namespace Evaluator {
 
 void reportUnsupportedKeywords(std::vector<Opm::SummaryNode> keywords)
 {
-    std::sort(keywords.begin(), keywords.end());
-    auto uend = std::unique(keywords.begin(), keywords.end());
+    // Sort by location first, then keyword.
+    auto loc_kw_ordering = [](const Opm::SummaryNode& n1, const Opm::SummaryNode& n2) {
+        if (n1.location() == n2.location()) {
+            return n1.keyword() < n2.keyword();
+        }
+        if (n1.location().filename == n2.location().filename) {
+            return n1.location().lineno < n2.location().lineno;
+        }
+        return n1.location().filename < n2.location().filename;
+    };
+    std::sort(keywords.begin(), keywords.end(), loc_kw_ordering);
+
+    // Reorder to remove duplicate { keyword, location } pairs, since
+    // that will give duplicate and therefore useless warnings.
+    auto same_kw_and_loc = [](const Opm::SummaryNode& n1, const Opm::SummaryNode& n2) {
+        return (n1.keyword() == n2.keyword()) && (n1.location() == n2.location());
+    };
+    auto uend = std::unique(keywords.begin(), keywords.end(), same_kw_and_loc);
 
     for (auto node = keywords.begin(); node != uend; ++node) {
         const auto& location = node->location();
