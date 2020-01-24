@@ -21,6 +21,7 @@
 #define OPM_SIMULATION_CONFIG_HPP
 
 #include <opm/parser/eclipse/EclipseState/SimulationConfig/ThresholdPressure.hpp>
+#include <opm/parser/eclipse/EclipseState/SimulationConfig/BCConfig.hpp>
 
 namespace Opm {
 
@@ -36,9 +37,11 @@ namespace Opm {
                          const Deck& deck,
                          const FieldPropsManager& fp);
         SimulationConfig(const ThresholdPressure& thresholdPressure,
+                         const BCConfig& bc,
                          bool useCPR, bool DISGAS, bool VAPOIL, bool isThermal);
 
         const ThresholdPressure& getThresholdPressure() const;
+        const BCConfig& bcconfig() const;
         bool useThresholdPressure() const;
         bool useCPR() const;
         bool hasDISGAS() const;
@@ -49,6 +52,7 @@ namespace Opm {
 
     private:
         ThresholdPressure m_ThresholdPressure;
+        BCConfig m_bcconfig;
         bool m_useCPR;
         bool m_DISGAS;
         bool m_VAPOIL;
