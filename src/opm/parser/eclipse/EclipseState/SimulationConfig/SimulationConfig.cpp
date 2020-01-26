@@ -48,7 +48,7 @@
 namespace Opm {
 
     SimulationConfig::SimulationConfig() :
-        SimulationConfig(ThresholdPressure(), BCConfig(), false, false, false, false)
+        SimulationConfig(ThresholdPressure(), BCConfig(), RockConfig(), false, false, false, false)
     {
     }
 
@@ -57,6 +57,7 @@ namespace Opm {
                                        const FieldPropsManager& fp) :
         m_ThresholdPressure( restart, deck, fp),
         m_bcconfig(deck),
+        m_rock_config(deck, fp),
         m_useCPR(false),
         m_DISGAS(false),
         m_VAPOIL(false),
@@ -85,10 +86,12 @@ namespace Opm {
 
     SimulationConfig::SimulationConfig(const ThresholdPressure& thresholdPressure,
                                        const BCConfig& bcconfig,
+                                       const RockConfig& rock_config,
                                        bool useCPR, bool DISGAS,
                                        bool VAPOIL, bool isThermal) :
         m_ThresholdPressure(thresholdPressure),
         m_bcconfig(bcconfig),
+        m_rock_config(rock_config),
         m_useCPR(useCPR),
         m_DISGAS(DISGAS),
         m_VAPOIL(VAPOIL),
@@ -102,6 +105,10 @@ namespace Opm {
 
     const BCConfig& SimulationConfig::bcconfig() const {
         return m_bcconfig;
+    }
+
+    const RockConfig& SimulationConfig::rock_config() const {
+        return this->m_rock_config;
     }
 
     bool SimulationConfig::useThresholdPressure() const {
@@ -127,6 +134,7 @@ namespace Opm {
     bool SimulationConfig::operator==(const SimulationConfig& data) const {
         return this->getThresholdPressure() == data.getThresholdPressure() &&
                this->bcconfig() == data.bcconfig() &&
+               this->rock_config() == data.rock_config() &&
                this->useCPR() == data.useCPR() &&
                this->hasDISGAS() == data.hasDISGAS() &&
                this->hasVAPOIL() == data.hasVAPOIL() &&
