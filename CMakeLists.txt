@@ -253,11 +253,33 @@ if (OPM_ENABLE_PYTHON)
   string(REPLACE ";" ":" _setup_include_dirs "${_opmcommon_include_dirs}")
 
   if (CMAKE_PREFIX_PATH)
-    set(_opmcommon_lib_dirs ${PROJECT_BINARY_DIR}/lib ${CMAKE_PREFIX_PATH}/lib)
+    set(_opmcommon_lib_dirs ${PROJECT_BINARY_DIR}/lib ${CMAKE_PREFIX_PATH}/${CMAKE_INSTALL_LIBDIR})
   else()
     set(_opmcommon_lib_dirs ${PROJECT_BINARY_DIR}/lib)
   endif()
   string(REPLACE ";" ":" _setup_lib_dirs "${_opmcommon_lib_dirs}")
+
+  if (USE_RUNPATH)
+    set (_python_rpath_list)
+    if (CMAKE_PREFIX_PATH)
+      foreach(path ${CMAKE_PREFIX_PATH})
+        list(APPEND _python_rpath_list "${path}/${CMAKE_INSTALL_LIBDIR}")
+      endforeach()
+    endif()
+
+    if (BUILD_SHARED_LIBS)
+      list(APPEND _python_rpath_list "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
+    endif()
+
+    if (_python_rpath_list)
+      string(REPLACE ";" ":" _rpath "${_python_rpath_list}")
+      set( _rpath_arg "--rpath=${_rpath}")
+    else()
+      set(_rpath_arg "")
+    endif()
+  else()
+    set( _rpath_arg "")
+  endif()
 
   execute_process(COMMAND ${PYTHON_EXECUTABLE} target_name.py
                   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/python
@@ -274,6 +296,7 @@ if (OPM_ENABLE_PYTHON)
                                                       build_ext
                                                       --build-lib=${PROJECT_BINARY_DIR}/python/python/opm
                                                       --library-dirs=${_setup_lib_dirs}
+                                                      ${_rpath_arg}
                                                       --include-dirs=${_setup_include_dirs}
                      WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/python
                      COMMENT "Building python bindings")
