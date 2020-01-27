@@ -91,7 +91,7 @@ namespace Opm {
         const EDITNNC& getInputEDITNNC() const;
         bool hasInputEDITNNC() const;
 
-        const FieldPropsManager& fieldProps() const;
+        virtual const FieldPropsManager& fieldProps() const;
         const TableManager& getTableManager() const;
         const EclipseConfig& getEclipseConfig() const;
         const EclipseConfig& cfg() const;
