@@ -235,7 +235,7 @@ struct Setup
 BOOST_AUTO_TEST_CASE(ThresholdPressureDeckHasEqlnum) {
     Setup s(inputStrWithEqlNum);
 
-    BOOST_CHECK(s.fp.has<int>("EQLNUM"));
+    BOOST_CHECK(s.fp.has_int("EQLNUM"));
 }
 
 BOOST_AUTO_TEST_CASE(ThresholdPressureTest) {

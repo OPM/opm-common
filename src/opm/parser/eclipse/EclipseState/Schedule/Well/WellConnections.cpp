@@ -216,8 +216,8 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
         const auto permx        = field_properties.try_get<double>("PERMX");
         const auto permy        = field_properties.try_get<double>("PERMY");
         const auto permz        = field_properties.try_get<double>("PERMZ");
-        const auto& ntg         = field_properties.get<double>("NTG");
-        const auto& satnum_data = field_properties.get<int>("SATNUM");
+        const auto& ntg         = field_properties.get_double("NTG");
+        const auto& satnum_data = field_properties.get_int("SATNUM");
 
         this->loadCOMPDAT(record, grid, satnum_data, permx, permy, permz, ntg);
     }

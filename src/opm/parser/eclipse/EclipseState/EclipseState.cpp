@@ -199,14 +199,14 @@ bool enable3DPropsTesting() {
 
     void EclipseState::initTransMult() {
         const auto& fp = this->field_props;
-        if (fp.has<double>("MULTX"))  this->m_transMult.applyMULT(fp.get_global<double>("MULTX") , FaceDir::XPlus);
-        if (fp.has<double>("MULTX-")) this->m_transMult.applyMULT(fp.get_global<double>("MULTX-"), FaceDir::XMinus);
+        if (fp.has_double("MULTX"))  this->m_transMult.applyMULT(fp.get_global_double("MULTX") , FaceDir::XPlus);
+        if (fp.has_double("MULTX-")) this->m_transMult.applyMULT(fp.get_global_double("MULTX-"), FaceDir::XMinus);
 
-        if (fp.has<double>("MULTY"))  this->m_transMult.applyMULT(fp.get_global<double>("MULTY") , FaceDir::YPlus);
-        if (fp.has<double>("MULTY-")) this->m_transMult.applyMULT(fp.get_global<double>("MULTY-"), FaceDir::YMinus);
+        if (fp.has_double("MULTY"))  this->m_transMult.applyMULT(fp.get_global_double("MULTY") , FaceDir::YPlus);
+        if (fp.has_double("MULTY-")) this->m_transMult.applyMULT(fp.get_global_double("MULTY-"), FaceDir::YMinus);
 
-        if (fp.has<double>("MULTZ"))  this->m_transMult.applyMULT(fp.get_global<double>("MULTZ") , FaceDir::ZPlus);
-        if (fp.has<double>("MULTZ-")) this->m_transMult.applyMULT(fp.get_global<double>("MULTZ-"), FaceDir::ZMinus);
+        if (fp.has_double("MULTZ"))  this->m_transMult.applyMULT(fp.get_global_double("MULTZ") , FaceDir::ZPlus);
+        if (fp.has_double("MULTZ-")) this->m_transMult.applyMULT(fp.get_global_double("MULTZ-"), FaceDir::ZMinus);
     }
 
     void EclipseState::initFaults(const Deck& deck) {

@@ -49,9 +49,9 @@ inline EclipseState makeState(const std::string& fileName) {
 
 BOOST_AUTO_TEST_CASE( PERMX ) {
     EclipseState state = makeState( prefix() + "BOX/BOXTEST1" );
-    const auto& permx = state.fieldProps().get_global<double>( "PERMX" );
-    const auto& permy = state.fieldProps().get_global<double>( "PERMY" );
-    const auto& permz = state.fieldProps().get_global<double>( "PERMZ" );
+    const auto& permx = state.fieldProps().get_global_double( "PERMX" );
+    const auto& permy = state.fieldProps().get_global_double( "PERMY" );
+    const auto& permz = state.fieldProps().get_global_double( "PERMZ" );
     size_t i, j, k;
     const EclipseGrid& grid = state.getInputGrid();
 
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE( PERMX ) {
 
 BOOST_AUTO_TEST_CASE( PARSE_BOX_OK ) {
     EclipseState state = makeState( prefix() + "BOX/BOXTEST1" );
-    const auto& satnum = state.fieldProps().get_global<int>( "SATNUM" );
+    const auto& satnum = state.fieldProps().get_global_int( "SATNUM" );
     {
         size_t i, j, k;
         const EclipseGrid& grid = state.getInputGrid();
@@ -94,8 +94,8 @@ BOOST_AUTO_TEST_CASE( PARSE_BOX_OK ) {
 
 BOOST_AUTO_TEST_CASE( PARSE_MULTIPLY_COPY ) {
     EclipseState state = makeState( prefix() + "BOX/BOXTEST1" );
-    const auto& satnum = state.fieldProps().get_global<int>( "SATNUM" );
-    const auto& fipnum = state.fieldProps().get_global<int>( "FIPNUM" );
+    const auto& satnum = state.fieldProps().get_global_int( "SATNUM" );
+    const auto& fipnum = state.fieldProps().get_global_int( "FIPNUM" );
     size_t i, j, k;
     const EclipseGrid& grid = state.getInputGrid();
 
@@ -119,9 +119,9 @@ BOOST_AUTO_TEST_CASE( PARSE_MULTIPLY_COPY ) {
 
 BOOST_AUTO_TEST_CASE( EQUALS ) {
     EclipseState state = makeState( prefix() + "BOX/BOXTEST1" );
-    const auto& pvtnum = state.fieldProps().get_global<int>( "PVTNUM" );
-    const auto& eqlnum = state.fieldProps().get_global<int>( "EQLNUM" );
-    const auto& poro   = state.fieldProps().get_global<double>( "PORO" );
+    const auto& pvtnum = state.fieldProps().get_global_int( "PVTNUM" );
+    const auto& eqlnum = state.fieldProps().get_global_int( "EQLNUM" );
+    const auto& poro   = state.fieldProps().get_global_double( "PORO" );
     size_t i, j, k;
     const EclipseGrid& grid = state.getInputGrid();
 
@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE( EQUALS ) {
 BOOST_AUTO_TEST_CASE( OPERATE ) {
     EclipseState state = makeState( prefix() + "BOX/BOXTEST1" );
     const EclipseGrid& grid = state.getInputGrid();
-    const auto& ntg = state.fieldProps().get_global<double>("NTG");
+    const auto& ntg = state.fieldProps().get_global_double("NTG");
     BOOST_CHECK_EQUAL( ntg[grid.getGlobalIndex(0,0,0)], 8.50 );  // MULTA
     BOOST_CHECK_EQUAL( ntg[grid.getGlobalIndex(0,5,0)], 5.00 );  // POLY
     BOOST_CHECK_EQUAL( ntg[grid.getGlobalIndex(0,0,1)], 4.0 );   // COPY

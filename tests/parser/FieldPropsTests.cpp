@@ -52,14 +52,14 @@ BOOST_AUTO_TEST_CASE(CreateFieldProps) {
     BOOST_CHECK(!fpm.try_get<double>("NO_SUCH_KEYWOWRD"));
     BOOST_CHECK(!fpm.try_get<int>("NO_SUCH_KEYWOWRD"));
 
-    BOOST_CHECK_THROW(fpm.get<double>("PORO"), std::out_of_range);
-    BOOST_CHECK_THROW(fpm.get_global<double>("PERMX"), std::out_of_range);
+    BOOST_CHECK_THROW(fpm.get_double("PORO"), std::out_of_range);
+    BOOST_CHECK_THROW(fpm.get_global_double("PERMX"), std::out_of_range);
     BOOST_CHECK_THROW(fpm.get_copy<double>("PERMX"), std::out_of_range);
-    BOOST_CHECK_THROW(fpm.get<int>("NOT_SUPPORTED"), std::logic_error);
-    BOOST_CHECK_THROW(fpm.get<double>("NOT_SUPPORTED"), std::logic_error);
+    BOOST_CHECK_THROW(fpm.get_int("NOT_SUPPORTED"), std::logic_error);
+    BOOST_CHECK_THROW(fpm.get_double("NOT_SUPPORTED"), std::logic_error);
 
-    BOOST_CHECK_THROW(fpm.get_global<double>("NO1"), std::logic_error);
-    BOOST_CHECK_THROW(fpm.get_global<int>("NO2"), std::logic_error);
+    BOOST_CHECK_THROW(fpm.get_global_double("NO1"), std::logic_error);
+    BOOST_CHECK_THROW(fpm.get_global_int("NO2"), std::logic_error);
 }
 
 
@@ -92,20 +92,20 @@ PERMX
     Deck deck = Parser{}.parseString(deck_string);
     FieldPropsManager fpm(deck, grid, TableManager());
 
-    BOOST_CHECK(!fpm.has<double>("NO-PORO"));
-    BOOST_CHECK(fpm.has<double>("PORO"));
-    const auto& poro1 = fpm.get<double>("PORO");
+    BOOST_CHECK(!fpm.has_double("NO-PORO"));
+    BOOST_CHECK(fpm.has_double("PORO"));
+    const auto& poro1 = fpm.get_double("PORO");
     BOOST_CHECK_EQUAL(poro1.size(), grid.getNumActive());
 
     const auto& poro2 = fpm.try_get<double>("PORO");
     BOOST_CHECK(poro1 == *poro2);
 
-    BOOST_CHECK(!fpm.has<double>("NO-PORO"));
+    BOOST_CHECK(!fpm.has_double("NO-PORO"));
 
     // PERMX keyword is not fully initialized
     BOOST_CHECK(!fpm.try_get<double>("PERMX"));
-    BOOST_CHECK(!fpm.has<double>("PERMX"));
-    BOOST_CHECK_THROW(fpm.get<double>("PERMX"), std::runtime_error);
+    BOOST_CHECK(!fpm.has_double("PERMX"));
+    BOOST_CHECK_THROW(fpm.get_double("PERMX"), std::runtime_error);
     {
         const auto& keys = fpm.keys<double>();
         BOOST_CHECK_EQUAL(keys.size(), 1);
@@ -151,7 +151,7 @@ SATNUM
     EclipseGrid grid(3,1,3); grid.resetACTNUM(actnum1);
     Deck deck = Parser{}.parseString(deck_string);
     FieldPropsManager fpm(deck, grid, TableManager());
-    const auto& s1 = fpm.get<int>("SATNUM");
+    const auto& s1 = fpm.get_int("SATNUM");
     BOOST_CHECK_EQUAL(s1.size(), 6);
     BOOST_CHECK_EQUAL(s1[0], 0);
     BOOST_CHECK_EQUAL(s1[1], 1);
@@ -193,7 +193,7 @@ ADDREG
     EclipseGrid grid(3,2,1); grid.resetACTNUM(actnum1);
     Deck deck = Parser{}.parseString(deck_string);
     FieldPropsManager fpm(deck, grid, TableManager());
-    const auto& poro = fpm.get<double>("PORO");
+    const auto& poro = fpm.get_double("PORO");
     BOOST_CHECK_EQUAL(poro.size(), 4);
     BOOST_CHECK_EQUAL(poro[0], 0.10);
     BOOST_CHECK_EQUAL(poro[3], 1.10);
@@ -231,7 +231,7 @@ NTG
     EclipseGrid grid(EclipseGrid(10,10, 2));
     Deck deck = Parser{}.parseString(deck_string);
     FieldPropsManager fpm(deck, grid, TableManager());
-    const auto& ntg = fpm.get<double>("NTG");
+    const auto& ntg = fpm.get_double("NTG");
     const auto& defaulted = fpm.defaulted<double>("NTG");
 
     for (std::size_t g=0; g < 100; g++) {
@@ -301,9 +301,9 @@ ENDBOX
     EclipseGrid grid(10,10, 5);
     Deck deck = Parser{}.parseString(deck_string);
     FieldPropsManager fpm(deck, grid, TableManager());
-    const auto& poro = fpm.get<double>("PORO");
-    const auto& ntg = fpm.get<double>("NTG");
-    const auto& multpv = fpm.get<double>("MULTPV");
+    const auto& poro = fpm.get_double("PORO");
+    const auto& ntg = fpm.get_double("NTG");
+    const auto& multpv = fpm.get_double("MULTPV");
     const auto& defaulted = fpm.defaulted<double>("PORV");
     const auto& porv = fpm.porv();
 
@@ -479,12 +479,12 @@ BOOST_AUTO_TEST_CASE(LATE_GET_SATFUNC) {
     Opm::EclipseGrid eg(deck);
     Opm::FieldPropsManager fp(deck, eg, tm);
 
-    const auto& fp_swu = fp.get_global<double>("SWU");
+    const auto& fp_swu = fp.get_global_double("SWU");
     BOOST_CHECK_EQUAL(fp_swu[1 + 0 * 3*3], 0.93);
     BOOST_CHECK_EQUAL(fp_swu[1 + 1 * 3*3], 0.852);
     BOOST_CHECK_EQUAL(fp_swu[1 + 2 * 3*3], 0.801);
 
-    const auto& fp_sgu = fp.get_global<double>("ISGU");
+    const auto& fp_sgu = fp.get_global_double("ISGU");
     BOOST_CHECK_EQUAL(fp_sgu[1 + 0 * 3*3], 0.9);
     BOOST_CHECK_EQUAL(fp_sgu[1 + 1 * 3*3], 0.85);
     BOOST_CHECK_EQUAL(fp_sgu[1 + 2 * 3*3], 0.80);
@@ -506,24 +506,24 @@ PORO
     grid.resetACTNUM(actnum);
     FieldPropsManager fpm(deck, grid, TableManager());
 
-    BOOST_CHECK(!fpm.has<double>("NTG"));
+    BOOST_CHECK(!fpm.has_double("NTG"));
     const auto& ntg = fpm.get_copy<double>("NTG");
-    BOOST_CHECK(!fpm.has<double>("NTG"));
+    BOOST_CHECK(!fpm.has_double("NTG"));
     BOOST_CHECK(ntg.size() == grid.getNumActive());
 
 
-    BOOST_CHECK(fpm.has<double>("PORO"));
+    BOOST_CHECK(fpm.has_double("PORO"));
     const auto& poro1 = fpm.get_copy<double>("PORO");
-    BOOST_CHECK(fpm.has<double>("PORO"));
+    BOOST_CHECK(fpm.has_double("PORO"));
     const auto& poro2 = fpm.get_copy<double>("PORO");
-    BOOST_CHECK(fpm.has<double>("PORO"));
+    BOOST_CHECK(fpm.has_double("PORO"));
     BOOST_CHECK( poro1 == poro2 );
     BOOST_CHECK( &poro1 != &poro2 );
     BOOST_CHECK( poro1.size() == grid.getNumActive());
 
-    BOOST_CHECK(!fpm.has<int>("SATNUM"));
+    BOOST_CHECK(!fpm.has_int("SATNUM"));
     const auto& satnum = fpm.get_copy<int>("SATNUM", true);
-    BOOST_CHECK(!fpm.has<int>("SATNUM"));
+    BOOST_CHECK(!fpm.has_int("SATNUM"));
     BOOST_CHECK(satnum.size() == grid.getCartesianSize());
 
     //The PERMY keyword can not be default initialized
@@ -550,7 +550,7 @@ RTEMPVD
     Opm::TableManager tm(deck);
     FieldPropsManager fpm(deck, grid, tm);
 
-    const auto& tempi = fpm.get<double>("TEMPI");
+    const auto& tempi = fpm.get_double("TEMPI");
     double celcius_offset = 273.15;
     BOOST_CHECK_CLOSE( tempi[0], 0 + celcius_offset , 1e-6);
     BOOST_CHECK_CLOSE( tempi[1], 100 + celcius_offset , 1e-6);
@@ -580,8 +580,8 @@ MULTZ
     Opm::TableManager tm(deck);
     FieldPropsManager fpm(deck, grid, tm);
 
-    const auto& multz = fpm.get<double>("MULTZ");
-    const auto& multx = fpm.get<double>("MULTX");
+    const auto& multz = fpm.get_double("MULTZ");
+    const auto& multx = fpm.get_double("MULTX");
     BOOST_CHECK_EQUAL( multz[0], 4 );
     BOOST_CHECK_EQUAL( multx[0], 2 );
 }

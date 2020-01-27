@@ -88,10 +88,10 @@ namespace Opm {
 
         //Option is set and keyword is found
         if( m_active && thpresKeyword ) {
-            if (!fp.has<int>("EQLNUM"))
+            if (!fp.has_int("EQLNUM"))
                 throw std::runtime_error("Error when internalizing THPRES: EQLNUM keyword not found in deck");
 
-            const auto& eqlnum = fp.get<int>("EQLNUM");
+            const auto& eqlnum = fp.get_int("EQLNUM");
 
             //Find max of eqlnum
             int maxEqlnum = *std::max_element(eqlnum.begin(), eqlnum.end());

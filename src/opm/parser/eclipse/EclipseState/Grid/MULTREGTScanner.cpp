@@ -120,7 +120,7 @@ std::vector<int> unique(const std::vector<int> data) {
         MULTREGTSearchMap searchPairs;
         for (std::vector<MULTREGTRecord>::const_iterator record = m_records.begin(); record != m_records.end(); ++record) {
             const std::string& region_name = record->region_name;
-            if (this->fp->has<int>( region_name)) {
+            if (this->fp->has_int( region_name)) {
                 int srcRegion    = record->src_value;
                 int targetRegion = record->target_value;
 
@@ -140,7 +140,7 @@ std::vector<int> unique(const std::vector<int> data) {
                                 + " which is not in the deck");
 
             if (this->regions.count(region_name) == 0)
-                this->regions[region_name] = this->fp->get_global<int>(region_name);
+                this->regions[region_name] = this->fp->get_global_int(region_name);
         }
 
         for (auto iter = searchPairs.begin(); iter != searchPairs.end(); ++iter) {
@@ -216,12 +216,12 @@ std::vector<int> unique(const std::vector<int> data) {
                 region_name = MULTREGT::RegionNameFromDeckValue( regionItem.get<std::string>(0) );
 
             if (srcItem.defaultApplied(0) || srcItem.get<int>(0) < 0)
-                src_regions = unique(this->fp->get<int>(region_name));
+                src_regions = unique(this->fp->get_int(region_name));
             else
                 src_regions.push_back(srcItem.get<int>(0));
 
             if (targetItem.defaultApplied(0) || targetItem.get<int>(0) < 0)
-                target_regions = unique(fp->get<int>(region_name));
+                target_regions = unique(fp->get_int(region_name));
             else
                 target_regions.push_back(targetItem.get<int>(0));
 

@@ -99,8 +99,8 @@ BOOST_AUTO_TEST_CASE(GetPOROTOPBased) {
     EclipseState state(deck );
     const auto& fp = state.fieldProps();
 
-    const auto& poro  = fp.get<double>( "PORO" );
-    const auto& permx = fp.get<double>( "PERMX" );
+    const auto& poro  = fp.get_double( "PORO" );
+    const auto& permx = fp.get_double( "PERMX" );
 
     for (size_t i=0; i < poro.size(); i++) {
         BOOST_CHECK_EQUAL( 0.10 , poro[i]);
@@ -273,7 +273,7 @@ BOOST_AUTO_TEST_CASE(IntProperties) {
 
     BOOST_CHECK_EQUAL( false, state.fieldProps().supported<int>( "NONO" ) );
     BOOST_CHECK_EQUAL( true,  state.fieldProps().supported<int>( "SATNUM" ) );
-    BOOST_CHECK_EQUAL( true,  state.fieldProps().has<int>( "SATNUM" ) );
+    BOOST_CHECK_EQUAL( true,  state.fieldProps().has_int( "SATNUM" ) );
 }
 
 
@@ -281,7 +281,7 @@ BOOST_AUTO_TEST_CASE(GetProperty) {
     auto deck = createDeck();
     EclipseState state(deck);
 
-    const auto& satnum = state.fieldProps().get_global<int>("SATNUM");
+    const auto& satnum = state.fieldProps().get_global_int("SATNUM");
     BOOST_CHECK_EQUAL(1000U , satnum.size() );
     for (size_t i=0; i < satnum.size(); i++)
         BOOST_CHECK_EQUAL( 2 , satnum[i]);
@@ -420,10 +420,10 @@ BOOST_AUTO_TEST_CASE(NoGridOptsDefaultRegion) {
     auto deck = createDeckNoGridOpts();
     EclipseState state(deck);
     const auto& fp = state.fieldProps();
-    const auto& multnum = fp.get<int>("MULTNUM");
-    const auto& fluxnum = fp.get<int>("FLUXNUM");
+    const auto& multnum = fp.get_int("MULTNUM");
+    const auto& fluxnum = fp.get_int("FLUXNUM");
     const auto  default_kw = fp.default_region();
-    const auto& def_pro = fp.get<int>(default_kw);
+    const auto& def_pro = fp.get_int(default_kw);
 
     BOOST_CHECK_EQUAL( &fluxnum  , &def_pro );
     BOOST_CHECK_NE( &fluxnum  , &multnum );
@@ -434,10 +434,10 @@ BOOST_AUTO_TEST_CASE(WithGridOptsDefaultRegion) {
     auto deck = createDeckWithGridOpts();
     EclipseState state(deck);
     const auto& fp = state.fieldProps();
-    const auto& multnum = fp.get<int>("MULTNUM");
-    const auto& fluxnum = fp.get<int>("FLUXNUM");
+    const auto& multnum = fp.get_int("MULTNUM");
+    const auto& fluxnum = fp.get_int("FLUXNUM");
     const auto  default_kw = fp.default_region();
-    const auto& def_pro = fp.get<int>(default_kw);
+    const auto& def_pro = fp.get_int(default_kw);
 
     BOOST_CHECK_EQUAL( &multnum , &def_pro );
     BOOST_CHECK_NE( &fluxnum  , &multnum );

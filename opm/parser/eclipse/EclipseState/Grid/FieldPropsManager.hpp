@@ -113,26 +113,6 @@ public:
 
 
     /*
-      Return the keyword values as a std::vector<>. All elements in the return
-      value are guaranteed to be assigned a valid value. If the keyword is not
-      in the container, or not all elements have a valid value - an exception
-      will be raised:
-
-       - keyword which is not supported at all -> std::logic_error
-       - keyword which is not in the deck at all -> std::out_of_range
-       - keyword which has not been fully initialized -> std::runtime_error
-
-      Many of the keywords in the container can be automatically created, in
-      that case the get() method will silently create a new keyword and default
-      initialize if it is not already in the container. The different exceptions
-      raised for the different error conditions are the same for get(),
-      get_copy() and get_global().
-    */
-    template <typename T>
-    const std::vector<T>& get(const std::string& keyword) const;
-
-
-    /*
       The get_copy() has exactly the same behaviour as get(), but the important
       difference is that said keyword is not already in the container it is not
       installed in the container; if we look at SATNUM which is a keywor which
@@ -155,14 +135,6 @@ public:
     std::vector<T> get_copy(const std::string& keyword, bool global=false) const;
 
     /*
-      This is exactly like the get() method, but the returned vector will have
-      global cartesian size, where all inactive cells have been filled with
-      zeros.
-    */
-    template <typename T>
-    std::vector<T> get_global(const std::string& keyword) const;
-
-    /*
       Will return a pointer to the keyword data, or nullptr if the container
       does not have suce a keyword. Observe that container will hold on to an
       manage the underlying keyword data.
@@ -173,14 +145,6 @@ public:
     */
     template <typename T> const std::vector<T>* try_get(const
     std::string& keyword) const;
-
-    /*
-      Will check if the container has the keyword loaded; in a fully initialized
-      state. If you ask for a keyword which is not supported at all you will
-      just get false back.
-    */
-    template <typename T>
-    bool has(const std::string& keyword) const;
 
     /*
       You can ask whether the elements in the keyword have a default value -
@@ -213,9 +177,6 @@ public:
     template <typename T>
     std::vector<std::string> keys() const;
 
-    /*
-      Don't understand why - but these are needed to work with opm-simulators heavily templated code?!
-     */
     const std::vector<int>& get_int(const std::string& keyword) const { return this->get<int>(keyword); }
     std::vector<int> get_global_int(const std::string& keyword) const { return this->get_global<int>(keyword); }
 
@@ -226,6 +187,42 @@ public:
     bool has_double(const std::string& keyword) const { return this->has<double>(keyword); }
 
 private:
+    /*
+      Return the keyword values as a std::vector<>. All elements in the return
+      value are guaranteed to be assigned a valid value. If the keyword is not
+      in the container, or not all elements have a valid value - an exception
+      will be raised:
+
+       - keyword which is not supported at all -> std::logic_error
+       - keyword which is not in the deck at all -> std::out_of_range
+       - keyword which has not been fully initialized -> std::runtime_error
+
+      Many of the keywords in the container can be automatically created, in
+      that case the get() method will silently create a new keyword and default
+      initialize if it is not already in the container. The different exceptions
+      raised for the different error conditions are the same for get(),
+      get_copy() and get_global().
+    */
+    template <typename T>
+    const std::vector<T>& get(const std::string& keyword) const;
+
+    /*
+      Will check if the container has the keyword loaded; in a fully initialized
+      state. If you ask for a keyword which is not supported at all you will
+      just get false back.
+    */
+    template <typename T>
+    bool has(const std::string& keyword) const;
+
+    /*
+      This is exactly like the get() method, but the returned vector will have
+      global cartesian size, where all inactive cells have been filled with
+      zeros.
+    */
+    template <typename T>
+    std::vector<T> get_global(const std::string& keyword) const;
+
+
     std::shared_ptr<FieldProps> fp;
 };
 
