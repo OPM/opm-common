@@ -20,6 +20,9 @@
 #define RST_HEADER
 
 #include <vector>
+#include <ctime>
+#include <cstddef>
+
 namespace Opm {
 namespace RestartIO {
 
@@ -110,6 +113,8 @@ struct RstHeader {
     double udq_range;
     double udq_undefined;
     double udq_eps;
+
+    std::pair<std::time_t, std::size_t> restart_info() const;
 };
 
 

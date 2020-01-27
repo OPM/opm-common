@@ -23,6 +23,7 @@
 #include <string>
 
 #include <opm/io/eclipse/ERst.hpp>
+#include <opm/io/eclipse/rst/header.hpp>
 #include <opm/io/eclipse/rst/group.hpp>
 #include <opm/io/eclipse/rst/well.hpp>
 
@@ -66,10 +67,9 @@ struct RstState {
 
     std::vector<RstWell> wells;
     std::vector<RstGroup> groups;
-
+    RstHeader header;
 private:
-    void add_groups(const RstHeader& header,
-                    const std::vector<std::string>& zgrp,
+    void add_groups(const std::vector<std::string>& zgrp,
                     const std::vector<int>& igrp,
                     const std::vector<float>& sgrp,
                     const std::vector<double>& xgrp);

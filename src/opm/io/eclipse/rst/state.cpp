@@ -42,21 +42,21 @@ RstState::RstState(const std::vector<int>& intehead,
                    const std::vector<double>& xwel,
                    const std::vector<int>& icon,
                    const std::vector<float>& scon,
-                   const std::vector<double>& xcon)
+                   const std::vector<double>& xcon):
+    header(intehead, logihead, doubhead)
 {
-    RstHeader header(intehead, logihead, doubhead);
-    this->add_groups(header, zgrp, igrp, sgrp, xgrp);
+    this->add_groups(zgrp, igrp, sgrp, xgrp);
 
-    for (int iw = 0; iw < header.num_wells; iw++) {
-        std::size_t zwel_offset = iw * header.nzwelz;
-        std::size_t iwel_offset = iw * header.niwelz;
-        std::size_t swel_offset = iw * header.nswelz;
-        std::size_t xwel_offset = iw * header.nxwelz;
-        std::size_t icon_offset = iw * header.niconz * header.ncwmax;
-        std::size_t scon_offset = iw * header.nsconz * header.ncwmax;
-        std::size_t xcon_offset = iw * header.nxconz * header.ncwmax;
+    for (int iw = 0; iw < this->header.num_wells; iw++) {
+        std::size_t zwel_offset = iw * this->header.nzwelz;
+        std::size_t iwel_offset = iw * this->header.niwelz;
+        std::size_t swel_offset = iw * this->header.nswelz;
+        std::size_t xwel_offset = iw * this->header.nxwelz;
+        std::size_t icon_offset = iw * this->header.niconz * this->header.ncwmax;
+        std::size_t scon_offset = iw * this->header.nsconz * this->header.ncwmax;
+        std::size_t xcon_offset = iw * this->header.nxconz * this->header.ncwmax;
 
-        this->wells.emplace_back(header,
+        this->wells.emplace_back(this->header,
                                  zwel.data() + zwel_offset,
                                  iwel.data() + iwel_offset,
                                  swel.data() + swel_offset,
@@ -85,21 +85,21 @@ RstState::RstState(const std::vector<int>& intehead,
              const std::vector<float>& scon,
              const std::vector<double>& xcon,
              const std::vector<int>& iseg,
-             const std::vector<double>& rseg)
+             const std::vector<double>& rseg) :
+    header(intehead, logihead, doubhead)
 {
-    RstHeader header(intehead, logihead, doubhead);
-    this->add_groups(header, zgrp, igrp, sgrp, xgrp);
+    this->add_groups(zgrp, igrp, sgrp, xgrp);
 
-    for (int iw = 0; iw < header.num_wells; iw++) {
-        std::size_t zwel_offset = iw * header.nzwelz;
-        std::size_t iwel_offset = iw * header.niwelz;
-        std::size_t swel_offset = iw * header.nswelz;
-        std::size_t xwel_offset = iw * header.nxwelz;
-        std::size_t icon_offset = iw * header.niconz * header.ncwmax;
-        std::size_t scon_offset = iw * header.nsconz * header.ncwmax;
-        std::size_t xcon_offset = iw * header.nxconz * header.ncwmax;
+    for (int iw = 0; iw < this->header.num_wells; iw++) {
+        std::size_t zwel_offset = iw * this->header.nzwelz;
+        std::size_t iwel_offset = iw * this->header.niwelz;
+        std::size_t swel_offset = iw * this->header.nswelz;
+        std::size_t xwel_offset = iw * this->header.nxwelz;
+        std::size_t icon_offset = iw * this->header.niconz * this->header.ncwmax;
+        std::size_t scon_offset = iw * this->header.nsconz * this->header.ncwmax;
+        std::size_t xcon_offset = iw * this->header.nxconz * this->header.ncwmax;
 
-        this->wells.emplace_back(header,
+        this->wells.emplace_back(this->header,
                                  zwel.data() + zwel_offset,
                                  iwel.data() + iwel_offset,
                                  swel.data() + swel_offset,
@@ -112,17 +112,16 @@ RstState::RstState(const std::vector<int>& intehead,
     }
 }
 
-void RstState::add_groups(const RstHeader& header,
-                          const std::vector<std::string>& zgrp,
+void RstState::add_groups(const std::vector<std::string>& zgrp,
                           const std::vector<int>& igrp,
                           const std::vector<float>& sgrp,
                           const std::vector<double>& xgrp)
 {
-    for (int ig=0; ig < header.ngroup; ig++) {
-        std::size_t zgrp_offset = ig * header.nzgrpz;
-        std::size_t igrp_offset = ig * header.nigrpz;
-        std::size_t sgrp_offset = ig * header.nsgrpz;
-        std::size_t xgrp_offset = ig * header.nxgrpz;
+    for (int ig=0; ig < this->header.ngroup; ig++) {
+        std::size_t zgrp_offset = ig * this->header.nzgrpz;
+        std::size_t igrp_offset = ig * this->header.nigrpz;
+        std::size_t sgrp_offset = ig * this->header.nsgrpz;
+        std::size_t xgrp_offset = ig * this->header.nxgrpz;
 
         this->groups.emplace_back(zgrp.data() + zgrp_offset,
                                   igrp.data() + igrp_offset,
