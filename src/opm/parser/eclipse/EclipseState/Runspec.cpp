@@ -20,6 +20,7 @@
 #include <type_traits>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/T.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/W.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 
@@ -234,6 +235,32 @@ bool EclHysterConfig::operator==(const EclHysterConfig& data) const {
            this->krHysteresisModel() == data.krHysteresisModel();
 }
 
+SatFuncControls::SatFuncControls()
+    : tolcrit(ParserKeywords::TOLCRIT::VALUE::defaultValue)
+{}
+
+SatFuncControls::SatFuncControls(const Deck& deck)
+    : SatFuncControls()
+{
+    using Kw = ParserKeywords::TOLCRIT;
+
+    if (deck.hasKeyword<Kw>()) {
+        // SIDouble doesn't perform any unit conversions here since
+        // TOLCRIT is a pure scalar (Dimension = 1).
+        this->tolcrit = deck.getKeyword<Kw>(0).getRecord(0)
+            .getItem<Kw::VALUE>().getSIDouble(0);
+    }
+}
+
+SatFuncControls::SatFuncControls(const double tolcritArg)
+    : tolcrit(tolcritArg)
+{}
+
+bool SatFuncControls::operator==(const SatFuncControls& rhs) const
+{
+    return this->minimumRelpermMobilityThreshold() == rhs.minimumRelpermMobilityThreshold();
+}
+
 Runspec::Runspec( const Deck& deck ) :
     active_phases( Phases( deck.hasKeyword( "OIL" ),
                            deck.hasKeyword( "GAS" ),
@@ -250,7 +277,8 @@ Runspec::Runspec( const Deck& deck ) :
     wsegdims( deck ),
     udq_params( deck ),
     hystpar( deck ),
-    m_actdims( deck )
+    m_actdims( deck ),
+    m_sfuncctrl( deck )
 {}
 
 Runspec::Runspec(const Phases& act_phases,
@@ -260,7 +288,8 @@ Runspec::Runspec(const Phases& act_phases,
                  const WellSegmentDims& wsegDims,
                  const UDQParams& udqparams,
                  const EclHysterConfig& hystPar,
-                 const Actdims& actDims) :
+                 const Actdims& actDims,
+                 const SatFuncControls& sfuncctrl) :
   active_phases(act_phases),
   m_tabdims(tabdims),
   endscale(endScale),
@@ -268,7 +297,8 @@ Runspec::Runspec(const Phases& act_phases,
   wsegdims(wsegDims),
   udq_params(udqparams),
   hystpar(hystPar),
-  m_actdims(actDims)
+  m_actdims(actDims),
+  m_sfuncctrl(sfuncctrl)
 {}
 
 const Phases& Runspec::phases() const noexcept {
@@ -302,6 +332,11 @@ const EclHysterConfig& Runspec::hysterPar() const noexcept
     return this->hystpar;
 }
 
+const SatFuncControls& Runspec::saturationFunctionControls() const noexcept
+{
+    return this->m_sfuncctrl;
+}
+
 /*
   Returns an integer in the range 0...7 which can be used to indicate
   available phases in Eclipse restart and init files.
@@ -329,7 +364,8 @@ bool Runspec::operator==(const Runspec& data) const {
            this->wellDimensions() == data.wellDimensions() &&
            this->wellSegmentDimensions() == data.wellSegmentDimensions() &&
            this->hysterPar() == data.hysterPar() &&
-           this->actdims() == data.actdims();
+           this->actdims() == data.actdims() &&
+           this->saturationFunctionControls() == data.saturationFunctionControls();
 }
 
 }
