@@ -16,10 +16,13 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <utility>
+
 #include <opm/io/eclipse/rst/header.hpp>
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
 #include <opm/output/eclipse/VectorItems/logihead.hpp>
 #include <opm/output/eclipse/VectorItems/doubhead.hpp>
+#include <opm/common/utility/TimeService.hpp>
 
 namespace VI = ::Opm::RestartIO::Helpers::VectorItems;
 
@@ -110,6 +113,12 @@ RstHeader::RstHeader(const std::vector<int>& intehead, const std::vector<bool>& 
     udq_eps(doubhead[VI::doubhead::UdqPar_4])
 {
 }
+
+std::pair<std::time_t, std::size_t> RstHeader::restart_info() const {
+    return std::make_pair(asTimeT(TimeStampUTC({this->year, this->month, this->mday})),
+                          std::size_t(this->report_step));
+}
+
 
 }
 }

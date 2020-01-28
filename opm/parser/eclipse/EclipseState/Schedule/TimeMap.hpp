@@ -47,6 +47,7 @@ namespace Opm {
         size_t numTimesteps() const;
         double getTotalTime() const;
         double seconds(size_t timeStep) const;
+        std::size_t restart_offset() const;
 
         std::time_t operator[] (size_t index) const;
         /// Return the date and time where a given time step starts.
@@ -94,7 +95,7 @@ namespace Opm {
         std::vector<std::time_t> m_timeList;
         std::vector<StepData> m_first_timestep_years;   // A list of the first timestep of every year
         std::vector<StepData> m_first_timestep_months;  // A list of the first timestep of every month
-        std::size_t restart_offset = 0;
+        std::size_t m_restart_offset = 0;
     };
 }
 
