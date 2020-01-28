@@ -46,6 +46,8 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/Actions.hpp>
 
 #include <opm/common/utility/ActiveGridCells.hpp>
+#include <opm/io/eclipse/rst/state.hpp>
+
 
 /*
   The DynamicState<std::shared_ptr<T>> pattern: The quantities in the Schedule
@@ -120,7 +122,8 @@ namespace Opm
                  const FieldPropsManager& fp,
                  const Runspec &runspec,
                  const ParseContext& parseContext,
-                 ErrorGuard& errors);
+                 ErrorGuard& errors,
+                 const RestartIO::RstState* rst = nullptr);
 
         template<typename T>
         Schedule(const Deck& deck,
@@ -128,26 +131,31 @@ namespace Opm
                  const FieldPropsManager& fp,
                  const Runspec &runspec,
                  const ParseContext& parseContext,
-                 T&& errors);
+                 T&& errors,
+                 const RestartIO::RstState* rst = nullptr);
 
         Schedule(const Deck& deck,
                  const EclipseGrid& grid,
                  const FieldPropsManager& fp,
-                 const Runspec &runspec);
+                 const Runspec &runspec,
+                 const RestartIO::RstState* rst = nullptr);
 
         Schedule(const Deck& deck,
                  const EclipseState& es,
                  const ParseContext& parseContext,
-                 ErrorGuard& errors);
+                 ErrorGuard& errors,
+                 const RestartIO::RstState* rst = nullptr);
 
         template <typename T>
         Schedule(const Deck& deck,
                  const EclipseState& es,
                  const ParseContext& parseContext,
-                 T&& errors);
+                 T&& errors,
+                 const RestartIO::RstState* rst = nullptr);
 
         Schedule(const Deck& deck,
-                 const EclipseState& es);
+                 const EclipseState& es,
+                 const RestartIO::RstState* rst = nullptr);
 
         Schedule(const TimeMap& timeMap,
                  const WellMap& wellsStatic,
