@@ -325,12 +325,6 @@ namespace Opm {
         RestartConfig( const Deck&, const ParseContext& parseContext, ErrorGuard& errors );
         RestartConfig( const Deck& );
 
-        RestartConfig( const SCHEDULESection& schedule,
-                       const SOLUTIONSection& solution,
-                       const ParseContext& parseContext,
-                       ErrorGuard& errors,
-                       TimeMap timemap );
-
         RestartConfig(const TimeMap& timeMap,
                       int firstRestartStep,
                       bool writeInitial,

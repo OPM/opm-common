@@ -515,16 +515,6 @@ void RestartConfig::handleScheduleSection(const SCHEDULESection& schedule, const
         }
     }
 
-
-
-    RestartConfig::RestartConfig( const Deck& deck, const ParseContext& parseContext, ErrorGuard& errors ) :
-        RestartConfig( SCHEDULESection( deck ),
-                       SOLUTIONSection( deck ),
-                       parseContext,
-                       errors,
-                       TimeMap{ deck } )
-    {}
-
     template<typename T>
     RestartConfig::RestartConfig( const Deck& deck, const ParseContext& parseContext, T&& errors ) :
         RestartConfig(deck, parseContext, errors)
@@ -535,22 +525,18 @@ void RestartConfig::handleScheduleSection(const SCHEDULESection& schedule, const
     {}
 
 
-    RestartConfig::RestartConfig( const SCHEDULESection& schedule,
-                                  const SOLUTIONSection& solution,
-                                  const ParseContext& parseContext,
-                                  ErrorGuard& errors,
-                                  TimeMap timemap) :
-        m_timemap( std::move( timemap ) ),
+    RestartConfig::RestartConfig( const Deck& deck, const ParseContext& parseContext, ErrorGuard& errors ) :
+        m_timemap( deck ),
         m_first_restart_step( -1 ),
-        restart_schedule( m_timemap, { 0, 0, 1 } ),
+        restart_schedule( m_timemap, {0,0,1}),
         restart_keywords( m_timemap, {} ),
         save_keywords( m_timemap.size(), false )
     {
-        handleSolutionSection( solution, parseContext, errors );
-        handleScheduleSection( schedule, parseContext, errors );
-
+        handleSolutionSection( SOLUTIONSection(deck), parseContext, errors );
+        handleScheduleSection( SCHEDULESection(deck), parseContext, errors );
         initFirstOutput( );
     }
+
 
     RestartConfig::RestartConfig(const TimeMap& timeMap,
                                  int firstRestartStep,
