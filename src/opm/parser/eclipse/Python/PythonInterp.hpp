@@ -69,7 +69,7 @@ public:
         return this->fail();
     }
 
-    bool exec(const PyAction&, EclipseState& ecl_state, Schedule&, std::size_t, SummaryState& ) {
+    bool exec(const PyAction&, EclipseState&, Schedule&, std::size_t, SummaryState& ) {
         return this->fail();
     }
 
