@@ -71,13 +71,13 @@ namespace {
         for (std::size_t ti = 1; ti < time_points.size(); ti++) {
             if (time_points[ti] == invalid_time) {
                 this->m_timeList.push_back(invalid_time);
-                this->restart_offset += 1;
+                this->m_restart_offset += 1;
             }
             else
                 this->addTime( time_points[ti] );
         }
-        if (this->restart_offset > 0)
-            this->restart_offset += 1;
+        if (this->m_restart_offset > 0)
+            this->m_restart_offset += 1;
     }
 
     TimeMap::TimeMap( const Deck& deck, const std::pair<std::time_t, std::size_t>& restart) {
@@ -100,13 +100,13 @@ namespace {
         }
 
         auto restart_time = restart.first;
-        this->restart_offset = restart.second;
+        this->m_restart_offset = restart.second;
         bool skip = false;
 
-        for (std::size_t it = 1; it < this->restart_offset; it++)
+        for (std::size_t it = 1; it < this->m_restart_offset; it++)
             this->m_timeList.push_back(invalid_time);
 
-        if (this->restart_offset > 0) {
+        if (this->m_restart_offset > 0) {
             if (skiprest)
                 skip = true;
             else {
@@ -144,13 +144,13 @@ namespace {
         /*
           There is a coupling between the presence of the SKIPREST keyword and
           the restart argument: The restart argument indicates whether this is
-          deck should be parsed as restarted deck. If restart_offset == 0 we do
+          deck should be parsed as restarted deck. If m_restart_offset == 0 we do
           not interpret this as restart situation and the presence of SKIPREST
           is ignored. In the opposite case we verify - post loading - that we
           have actually located the restart date - otherwise "something is
           broken".
         */
-        if (this->restart_offset != 0) {
+        if (this->m_restart_offset != 0) {
             if (skiprest) {
                 const auto iter = std::find(this->m_timeList.begin(), this->m_timeList.end(), restart_time);
                 if (iter == this->m_timeList.end())
@@ -291,7 +291,7 @@ namespace {
         return this->m_timeList == data.m_timeList &&
                this->m_first_timestep_months == data.m_first_timestep_months &&
                this->m_first_timestep_years == data.m_first_timestep_years &&
-               this->restart_offset == data.restart_offset;
+               this->m_restart_offset == data.m_restart_offset;
     }
 
     bool TimeMap::isTimestepInFirstOfMonthsYearsSequence(size_t timestep, bool years, size_t start_timestep, size_t frequency) const {
@@ -384,7 +384,7 @@ namespace {
         if (index >= m_timeList.size())
             throw std::invalid_argument("Index out of range");
 
-        if (index > 0 && index < this->restart_offset)
+        if (index > 0 && index < this->m_restart_offset)
             throw std::invalid_argument("Tried to get time information from the base case in restarted run");
 
         return m_timeList[index];
@@ -412,13 +412,16 @@ namespace {
         return t;
     }
 
-
     std::time_t TimeMap::forward(std::time_t t, int64_t seconds) {
         return t + seconds;
     }
 
     std::time_t TimeMap::forward(std::time_t t, int64_t hours, int64_t minutes, int64_t seconds) {
         return t + seconds + minutes * 60 + hours * 3600;
+    }
+
+    std::size_t TimeMap::restart_offset() const {
+        return this->m_restart_offset;
     }
 }
 
