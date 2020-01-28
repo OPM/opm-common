@@ -234,8 +234,8 @@ BOOST_AUTO_TEST_CASE(Test_OPERATER) {
     Opm::FieldPropsManager fp(deck, eg, tm);
 
     const auto& porv  = fp.porv(true);
-    const auto& permx = fp.get_global<double>("PERMX");
-    const auto& permy = fp.get_global<double>("PERMY");
+    const auto& permx = fp.get_global_double("PERMX");
+    const auto& permy = fp.get_global_double("PERMY");
 
     BOOST_CHECK_EQUAL( porv[0], 0.50 );
     BOOST_CHECK_EQUAL( porv[1], 1.00 );

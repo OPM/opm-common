@@ -330,13 +330,13 @@ namespace {
         // invoke the autocreation property, and ensure that the keywords
         // exist in the properties container.
         const auto& fp = es.fieldProps();
-        fp.get<int>("PVTNUM");
-        fp.get<int>("SATNUM");
-        fp.get<int>("EQLNUM");
-        fp.get<int>("FIPNUM");
+        fp.get_int("PVTNUM");
+        fp.get_int("SATNUM");
+        fp.get_int("EQLNUM");
+        fp.get_int("FIPNUM");
 
         for (const auto& keyword : fp.keys<int>())
-            initFile.write(keyword, fp.get<int>(keyword));
+            initFile.write(keyword, fp.get_int(keyword));
 
     }
 
@@ -370,17 +370,17 @@ namespace {
         initFile.write("DZ"   , dz);
     }
 
-    template <typename T, class WriteVector>
-    void writeCellPropertiesWithDefaultFlag(const Properties& propList,
-                                            const ::Opm::FieldPropsManager& fp,
-                                            WriteVector&&  write)
+    template <class WriteVector>
+    void writeCellDoublePropertiesWithDefaultFlag(const Properties& propList,
+                                                  const ::Opm::FieldPropsManager& fp,
+                                                  WriteVector&&  write)
     {
         for (const auto& prop : propList) {
-            if (! fp.has<T>(prop.name))
+            if (! fp.has_double(prop.name))
                 continue;
 
-            auto data = fp.get<T>(prop.name);
-            auto defaulted = fp.defaulted<T>(prop.name);
+            auto data = fp.get_double(prop.name);
+            auto defaulted = fp.defaulted<double>(prop.name);
             write(prop, std::move(defaulted), std::move(data));
         }
     }
@@ -392,9 +392,9 @@ namespace {
     {
         for (const auto& prop : propList) {
 
-            if (!fp.has<double>(prop.name))
+            if (!fp.has_double(prop.name))
                 continue;
-            auto data = fp.get<double>(prop.name);
+            auto data = fp.get_double(prop.name);
             write(prop, std::move(data));
         }
     }
@@ -406,7 +406,7 @@ namespace {
                                    ::Opm::EclIO::OutputStream::Init&    initFile)
     {
         if (needDflt) {
-            writeCellPropertiesWithDefaultFlag<double>(propList, fp,
+            writeCellDoublePropertiesWithDefaultFlag(propList, fp,
                 [&units, &initFile](const CellProperty&   prop,
                                     std::vector<bool>&&   dflt,
                                     std::vector<double>&& value)
@@ -454,7 +454,7 @@ namespace {
         // therefore invoke the auto create functionality to ensure
         // that "NTG" is included in the properties container.
         const auto& fp = es.fieldProps();
-        es.fieldProps().get<double>("NTG");
+        es.fieldProps().get_double("NTG");
         writeDoubleCellProperties(doubleKeywords, fp,
                                   units, false, initFile);
     }
@@ -506,7 +506,7 @@ namespace {
                                    ::Opm::EclIO::OutputStream::Init& initFile)
     {
         for (const auto& prop : propList)
-            fp.get<double>(prop.name);
+            fp.get_double(prop.name);
 
         // Don't write sentinel value if input defaulted.
         writeDoubleCellProperties(propList, fp,

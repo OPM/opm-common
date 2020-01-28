@@ -296,10 +296,10 @@ BOOST_AUTO_TEST_CASE(MULTREGT_COPY_MULTNUM) {
     Opm::EclipseGrid eg(deck);
     Opm::FieldPropsManager fp(deck, eg, tm);
 
-    BOOST_CHECK_NO_THROW(fp.has<int>("FLUXNUM"));
-    BOOST_CHECK_NO_THROW(fp.has<int>("MULTNUM"));
-    const auto& fdata = fp.get_global<int>("FLUXNUM");
-    const auto& mdata = fp.get_global<int>("MULTNUM");
+    BOOST_CHECK_NO_THROW(fp.has_int("FLUXNUM"));
+    BOOST_CHECK_NO_THROW(fp.has_int("MULTNUM"));
+    const auto& fdata = fp.get_global_int("FLUXNUM");
+    const auto& mdata = fp.get_global_int("MULTNUM");
     std::vector<int> data = { 1, 2, 1, 2, 3, 4, 3, 4 };
 
     for (auto i = 0; i < 2 * 2 * 2; i++) {

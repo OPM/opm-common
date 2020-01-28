@@ -10,35 +10,35 @@
 namespace {
 
     bool contains( const FieldPropsManager& manager, const std::string& kw) {
-        if (manager.has<int>(kw))
+        if (manager.has_int(kw))
             return true;
-        if (manager.has<double>(kw))
+        if (manager.has_double(kw))
             return true;
 
         return false;
     }
 
     py::array_t<double> get_double_array(const FieldPropsManager& m, const std::string& kw) {
-        if (m.has<double>(kw))
-            return convert::numpy_array( m.get<double>(kw) );
+        if (m.has_double(kw))
+            return convert::numpy_array( m.get_double(kw) );
         else
             throw std::invalid_argument("Keyword '" + kw + "'is not of type double.");
     }
 
     py::array_t<int> get_int_array(const FieldPropsManager& m, const std::string& kw) {
-        if (m.has<int>(kw))
-            return convert::numpy_array( m.get<int>(kw) );
+        if (m.has_int(kw))
+            return convert::numpy_array( m.get_int(kw) );
         else
             throw std::invalid_argument("Keyword '" + kw + "'is not of type int.");
     }
 
 
     py::array get_array(const FieldPropsManager& m, const std::string& kw) {
-        if (m.has<double>(kw))
-            return convert::numpy_array(m.get<double>(kw));
+        if (m.has_double(kw))
+            return convert::numpy_array(m.get_double(kw));
 
-        if (m.has<int>(kw))
-            return convert::numpy_array(m.get<int>(kw));
+        if (m.has_int(kw))
+            return convert::numpy_array(m.get_int(kw));
 
         throw std::invalid_argument("No such keyword: " + kw);
     }

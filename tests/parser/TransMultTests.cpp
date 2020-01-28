@@ -72,6 +72,6 @@ MULTZ
     Opm::FieldPropsManager fp(deck, grid, tables);
     Opm::TransMult transMult(grid, deck, fp);
 
-    transMult.applyMULT(fp.get_global<double>("MULTZ"), Opm::FaceDir::ZPlus);
+    transMult.applyMULT(fp.get_global_double("MULTZ"), Opm::FaceDir::ZPlus);
     BOOST_CHECK_EQUAL( transMult.getMultiplier(0,0,0 , Opm::FaceDir::ZPlus) , 4.0 );
 }

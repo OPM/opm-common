@@ -969,7 +969,7 @@ BOOST_AUTO_TEST_CASE(GridBoxActnum) {
     const auto& fp = es.fieldProps();
     const auto& grid = es.getInputGrid();
 
-    BOOST_CHECK_NO_THROW(fp.get<int>("ACTNUM"));
+    BOOST_CHECK_NO_THROW(fp.get_int("ACTNUM"));
 
     size_t active = 10 * 10 * 10     // 1000
                     - (10 * 10 * 1)  // - top layer
@@ -1024,7 +1024,7 @@ BOOST_AUTO_TEST_CASE(GridActnumVia3D) {
     std::vector<int> actnum = {1, 1, 0, 1, 1, 0, 1, 1};
     Opm::EclipseGrid grid3( grid , actnum);
 
-    BOOST_CHECK_NO_THROW(fp.get<int>("ACTNUM"));
+    BOOST_CHECK_NO_THROW(fp.get_int("ACTNUM"));
     BOOST_CHECK_NO_THROW(grid.getNumActive());
     BOOST_CHECK_EQUAL(grid.getNumActive(), 2 * 2 * 2 - 1);
 
