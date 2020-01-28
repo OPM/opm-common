@@ -375,14 +375,13 @@ namespace Opm {
                                           bool years  = false,
                                           bool months = false) const;
         void handleRPTSOL( const DeckKeyword& keyword);
+        void handleScheduleSection( const SCHEDULESection& schedule, const ParseContext& parseContext, ErrorGuard& errors);
+        void update( size_t step, const RestartSchedule& rs);
+        static RestartSchedule rptsched( const DeckKeyword& );
 
         TimeMap m_timemap;
         int     m_first_restart_step = 1;
         bool    m_write_initial_RST_file = false;
-
-        void handleScheduleSection( const SCHEDULESection& schedule, const ParseContext& parseContext, ErrorGuard& errors);
-        void update( size_t step, const RestartSchedule& rs);
-        static RestartSchedule rptsched( const DeckKeyword& );
 
         DynamicState< RestartSchedule > restart_schedule;
         DynamicState< std::map< std::string, int > > restart_keywords;
