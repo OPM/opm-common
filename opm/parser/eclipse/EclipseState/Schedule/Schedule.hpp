@@ -400,7 +400,7 @@ namespace Opm
         void handleVFPINJ(const DeckKeyword& vfpprodKeyword, const UnitSystem& unit_system, size_t currentStep);
         void checkUnhandledKeywords( const SCHEDULESection& ) const;
         void checkIfAllConnectionsIsShut(size_t currentStep);
-        void handleKeyword(size_t& currentStep,
+        void handleKeyword(size_t currentStep,
                            const SCHEDULESection& section,
                            size_t keywordIdx,
                            const DeckKeyword& keyword,
