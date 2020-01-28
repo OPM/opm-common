@@ -130,6 +130,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Schedule/Well/WellProductionProperties.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Well/WellTestConfig.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Well/WellTestState.cpp
+    src/opm/parser/eclipse/EclipseState/SimulationConfig/BCConfig.cpp
     src/opm/parser/eclipse/EclipseState/SimulationConfig/SimulationConfig.cpp
     src/opm/parser/eclipse/EclipseState/SimulationConfig/ThresholdPressure.cpp
     src/opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.cpp
@@ -655,6 +656,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Schedule/MSW/updatingConnectionsWithSegments.hpp
        opm/parser/eclipse/EclipseState/Schedule/MSW/SpiralICD.hpp
        opm/parser/eclipse/EclipseState/SimulationConfig/ThresholdPressure.hpp
+       opm/parser/eclipse/EclipseState/SimulationConfig/BCConfig.hpp
        opm/parser/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp
        opm/parser/eclipse/EclipseState/Schedule/MSW/Valve.hpp
        opm/parser/eclipse/EclipseState/IOConfig/RestartConfig.hpp
