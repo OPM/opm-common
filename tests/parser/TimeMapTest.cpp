@@ -165,6 +165,7 @@ BOOST_AUTO_TEST_CASE(TimeStepsCorrect) {
         "START\n"
         " 21 MAY 1981 /\n"
         "\n"
+        "SCHEDULE\n"
         "TSTEP\n"
         " 1 2 3 4 5 /\n"
         "\n"
@@ -230,6 +231,7 @@ BOOST_AUTO_TEST_CASE(initTimestepsYearsAndMonths) {
         "START\n"
         " 21 MAY 1981 /\n"
         "\n"
+        "SCHEDULE\n"
         "TSTEP\n"
         " 1 2 3 4 5 /\n"
         "\n"
@@ -296,6 +298,7 @@ BOOST_AUTO_TEST_CASE(initTimestepsYearsAndMonthsSkippingMonthsFrequency) {
         "START\n"
         " 21 MAY 1981 /\n"
         "\n"
+        "SCHEDULE\n"
         "DATES\n"
         " 5 JUL 1981 /\n"
         " 6 JUL 1981 /\n"
@@ -445,6 +448,7 @@ BOOST_AUTO_TEST_CASE(initTimestepsLongStep) {
         "START\n"
         " 1 JAN 1983 /\n"
         "\n"
+        "SCHEDULE\n"
         "TSTEP\n"
         " 25550 /\n";
 
@@ -471,6 +475,7 @@ BOOST_AUTO_TEST_CASE(TimestepsLabUnit) {
         "\n"
         "LAB\n"
         " \n"
+        "SCHEDULE\n"
         "TSTEP\n"
         " 24*10 /\n";
 
@@ -495,6 +500,7 @@ BOOST_AUTO_TEST_CASE(initTimestepsDistantDates) {
         "START\n"
         " 1 JAN 1983 /\n"
         "\n"
+        "SCHEDULE\n"
         "DATES\n"
         " 1 JAN 2040 /\n"
         " 1 JAN 2050 /\n"
