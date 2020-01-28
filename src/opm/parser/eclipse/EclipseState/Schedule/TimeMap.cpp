@@ -25,6 +25,7 @@
 #include <opm/parser/eclipse/Parser/ParserKeywords/S.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Deck/DeckSection.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
@@ -115,7 +116,7 @@ namespace {
             }
         }
 
-        for( const auto& keyword : deck ) {
+        for( const auto& keyword : SCHEDULESection(deck)) {
             // We're only interested in "TSTEP" and "DATES" keywords,
             // so we ignore everything else here...
             if (keyword.name() != "TSTEP" && keyword.name() != "DATES")
