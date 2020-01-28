@@ -193,11 +193,6 @@ namespace Opm {
 
         bool initOnly() const;
 
-        // Proxy methods forwarding directly to corresponding RestartConfig
-        bool getWriteRestartFile(size_t timestep) const;
-        void overrideRestartWriteInterval(size_t interval);
-        void setWriteInitialRestartFile(bool writeInitialRestartFile);
-
         bool operator==(const IOConfig& data) const;
 
     private:
