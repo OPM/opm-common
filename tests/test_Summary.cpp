@@ -240,13 +240,23 @@ static data::Wells result_wells() {
         rates1, 0.1 * ps, 0.2 * ps, 0.3 * ps, 1,
         { {well1_comp1} },
         { { segment.segNumber, segment } },
+        data::CurrentControl{}
     };
+    well1.current_control.isProducer = false;
+    well1.current_control.inj =::Opm::Well::InjectorCMode::BHP;
 
     using SegRes = decltype(well1.segments);
+    using Ctrl = data::CurrentControl;
 
-    data::Well well2 { rates2, 1.1 * ps, 1.2 * ps, 1.3 * ps, 2, { {well2_comp1 , well2_comp2} }, SegRes{} };
-    data::Well well3 { rates3, 2.1 * ps, 2.2 * ps, 2.3 * ps, 3, { {well3_comp1} }, SegRes{} };
-    data::Well well6 { rates6, 2.1 * ps, 2.2 * ps, 2.3 * ps, 3, { {well6_comp1} }, SegRes{} };
+    data::Well well2 { rates2, 1.1 * ps, 1.2 * ps, 1.3 * ps, 2, { {well2_comp1 , well2_comp2} }, SegRes{}, Ctrl{} };
+    well2.current_control.prod = ::Opm::Well::ProducerCMode::ORAT;
+
+    data::Well well3 { rates3, 2.1 * ps, 2.2 * ps, 2.3 * ps, 3, { {well3_comp1} }, SegRes{}, Ctrl{} };
+    well2.current_control.prod = ::Opm::Well::ProducerCMode::RESV;
+
+    data::Well well6 { rates6, 2.1 * ps, 2.2 * ps, 2.3 * ps, 3, { {well6_comp1} }, SegRes{}, Ctrl{} };
+    well6.current_control.isProducer = false;
+    well6.current_control.inj = ::Opm::Well::InjectorCMode::GRUP;
 
     data::Wells wellrates;
 
@@ -1490,6 +1500,12 @@ BOOST_AUTO_TEST_CASE(READ_WRITE_WELLDATA) {
             // No data for segment 10 of well W_2 (or no such segment).
             const auto& W2 = wellRatesCopy.at("W_2");
             BOOST_CHECK_THROW(W2.segments.at(10), std::out_of_range);
+
+            const auto& W6 = wellRatesCopy.at("W_6");
+            const auto& curr = W6.current_control;
+            BOOST_CHECK_MESSAGE(!curr.isProducer, "W_6 must be an injector");
+            BOOST_CHECK_MESSAGE(curr.prod == ::Opm::Well::ProducerCMode::CMODE_UNDEFINED, "W_6 must have an undefined producer control");
+            BOOST_CHECK_MESSAGE(curr.inj == ::Opm::Well::InjectorCMode::GRUP, "W_6 must be on GRUP control");
 }
 
 BOOST_AUTO_TEST_CASE(efficiency_factor) {
@@ -3122,7 +3138,6 @@ BOOST_AUTO_TEST_SUITE_END()
 // =====================================================================
 
 BOOST_AUTO_TEST_SUITE(Reset_Cumulative_Vectors)
-
 
 BOOST_AUTO_TEST_CASE(SummaryState_TOTAL) {
     SummaryState st(std::chrono::system_clock::now());
