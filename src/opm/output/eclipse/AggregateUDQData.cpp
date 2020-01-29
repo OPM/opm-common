@@ -409,10 +409,19 @@ const std::vector<int> Opm::RestartIO::Helpers::igphData::ig_phase(const Opm::Sc
         if (curGroups[ind] != nullptr) {
             const auto& group = *curGroups[ind];
             if (group.isInjectionGroup()) {
-                const auto& phase = group.injection_phase();
-                if ( phase == Opm::Phase::OIL   ) inj_phase[group.insert_index()] = 1;
-                if ( phase == Opm::Phase::WATER ) inj_phase[group.insert_index()] = 2;
-                if ( phase == Opm::Phase::GAS   ) inj_phase[group.insert_index()] = 3;
+                /*
+                  Initial code could only inject one phase for each group, then
+                  numerical value '3' was used for the gas phase, that can not
+                  be right?
+                */
+                int phase_sum = 0;
+                if (group.hasInjectionControl(Opm::Phase::OIL))
+                    phase_sum += 1;
+                if (group.hasInjectionControl(Opm::Phase::WATER))
+                    phase_sum += 2;
+                if (group.hasInjectionControl(Opm::Phase::GAS))
+                    phase_sum += 4;
+                inj_phase[group.insert_index()] = phase_sum;
             }
         }
     }
