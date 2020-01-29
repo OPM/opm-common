@@ -17,6 +17,8 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <unordered_set>
+
 #include <opm/parser/eclipse/Parser/ParserKeywords/R.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/SimulationConfig/RockConfig.hpp>
@@ -29,7 +31,7 @@ namespace {
 
 
 std::string num_prop(const std::string& prop_name) {
-    static const std::unordered_map<std::string> prop_names = {"PVTNUM", "SATNUM", "ROCKNUM"};
+    static const std::unordered_set<std::string> prop_names = {"PVTNUM", "SATNUM", "ROCKNUM"};
     if (prop_names.count(prop_name) == 1)
         return prop_name;
 
@@ -132,7 +134,7 @@ RockConfig::RockConfig(const Deck& deck, const FieldPropsManager& fp)
             this->num_property = "ROCKNUM";
 
         this->num_tables = record.getItem<rockcomp::NTROCC>().get<int>(0);
-        this->hyst_mode = hysteris(record.getItem<rockcomp::HYSTERESIS>().getTrimmedString(0));
+        this->hyst_mode = hysteresis(record.getItem<rockcomp::HYSTERESIS>().getTrimmedString(0));
         this->m_water_compaction = DeckItem::to_bool(record.getItem<rockcomp::WATER_COMPACTION>().getTrimmedString(0));
 
         this->m_active = true;
