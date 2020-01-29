@@ -29,17 +29,14 @@
 namespace Opm {
 
     EclipseConfig::EclipseConfig(const Deck& deck, const ParseContext& parseContext, ErrorGuard& errors) :
-            m_ioConfig(        deck),
             m_initConfig(      deck),
             m_restartConfig(   deck, parseContext, errors )
     {
     }
 
 
-    EclipseConfig::EclipseConfig(const IOConfig& ioConfig,
-                                 const InitConfig& initConfig,
+    EclipseConfig::EclipseConfig(const InitConfig& initConfig,
                                  const RestartConfig& restartConfig) :
-        m_ioConfig(ioConfig),
         m_initConfig(initConfig),
         m_restartConfig(restartConfig)
     {
@@ -51,11 +48,11 @@ namespace Opm {
     }
 
     const IOConfig& EclipseConfig::io() const {
-        return m_ioConfig;
+        return this->m_restartConfig.ioConfig();
     }
 
     IOConfig& EclipseConfig::io() {
-        return m_ioConfig;
+        return this->m_restartConfig.ioConfig();
     }
 
     const RestartConfig& EclipseConfig::restart() const {
@@ -74,7 +71,6 @@ namespace Opm {
 
     bool EclipseConfig::operator==(const EclipseConfig& data) const {
         return this->init() == data.init() &&
-               this->io() == data.io() &&
                this->restart() == data.restart();
     }
 

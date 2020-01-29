@@ -23,6 +23,7 @@
 #include <vector>
 #include <set>
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
+#include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 #include <boost/date_time.hpp>
 
 /*
@@ -312,8 +313,7 @@ namespace Opm {
             size_t rptsched_restart = 0;
     };
     //    }
-
-    class RestartConfig {
+     class RestartConfig {
 
     public:
 
@@ -325,13 +325,8 @@ namespace Opm {
         RestartConfig( const Deck&, const ParseContext& parseContext, ErrorGuard& errors );
         RestartConfig( const Deck& );
 
-        RestartConfig( const SCHEDULESection& schedule,
-                       const SOLUTIONSection& solution,
-                       const ParseContext& parseContext,
-                       ErrorGuard& errors,
-                       TimeMap timemap );
-
-        RestartConfig(const TimeMap& timeMap,
+        RestartConfig(const IOConfig& io_config,
+                      const TimeMap& timeMap,
                       int firstRestartStep,
                       bool writeInitial,
                       const DynamicState<RestartSchedule>& restart_sched,
@@ -342,6 +337,8 @@ namespace Opm {
         bool getWriteRestartFile(size_t timestep, bool log=true) const;
         const std::map< std::string, int >& getRestartKeywords( size_t timestep ) const;
         int getKeyword( const std::string& keyword, size_t timeStep) const;
+        const IOConfig& ioConfig() const;
+        IOConfig& ioConfig();
 
         void overrideRestartWriteInterval(size_t interval);
         void handleSolutionSection(const SOLUTIONSection& solutionSection, const ParseContext& parseContext, ErrorGuard& errors);
@@ -357,7 +354,6 @@ namespace Opm {
         const std::vector<bool>& saveKeywords() const;
 
         bool operator==(const RestartConfig& data) const;
-
     private:
 
 
@@ -375,14 +371,14 @@ namespace Opm {
                                           bool years  = false,
                                           bool months = false) const;
         void handleRPTSOL( const DeckKeyword& keyword);
-
-        TimeMap m_timemap;
-        int     m_first_restart_step = 1;
-        bool    m_write_initial_RST_file = false;
-
         void handleScheduleSection( const SCHEDULESection& schedule, const ParseContext& parseContext, ErrorGuard& errors);
         void update( size_t step, const RestartSchedule& rs);
         static RestartSchedule rptsched( const DeckKeyword& );
+
+        IOConfig io_config;
+        TimeMap m_timemap;
+        int     m_first_restart_step = 1;
+        bool    m_write_initial_RST_file = false;
 
         DynamicState< RestartSchedule > restart_schedule;
         DynamicState< std::map< std::string, int > > restart_keywords;

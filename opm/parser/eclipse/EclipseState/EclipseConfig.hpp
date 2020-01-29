@@ -37,13 +37,12 @@ namespace Opm {
     public:
         EclipseConfig() = default;
         EclipseConfig(const Deck& deck, const ParseContext& parseContext, ErrorGuard& errors);
-        EclipseConfig(const IOConfig& ioConfig,
-                      const InitConfig& initConfig,
+        EclipseConfig(const InitConfig& initConfig,
                       const RestartConfig& restartConfig);
 
         const InitConfig& init() const;
-        const IOConfig& io() const;
         IOConfig& io();
+        const IOConfig& io() const;
         const RestartConfig& restart() const;
         const InitConfig& getInitConfig() const;
         const RestartConfig& getRestartConfig() const;
@@ -51,7 +50,6 @@ namespace Opm {
         bool operator==(const EclipseConfig& data) const;
 
     private:
-        IOConfig m_ioConfig;
         InitConfig m_initConfig;
         RestartConfig m_restartConfig;
     };
