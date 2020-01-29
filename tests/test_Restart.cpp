@@ -332,9 +332,30 @@ Opm::SummaryState sim_state()
     return state;
 }
 
-RestartValue first_sim(const EclipseState& es, EclipseIO& eclWriter, SummaryState& st, bool write_double) {
-    const auto& grid = es.getInputGrid();
-    auto num_cells = grid.getNumActive( );
+struct Setup {
+    Deck deck;
+    EclipseState es;
+    const EclipseGrid& grid;
+    Schedule schedule;
+    SummaryConfig summary_config;
+
+    Setup( const char* path) :
+        deck( Parser().parseFile( path) ),
+        es( deck),
+        grid( es.getInputGrid( ) ),
+        schedule( deck, es ),
+        summary_config( deck, schedule, es.getTableManager( ))
+    {
+        auto& io_config = es.getIOConfig();
+        io_config.setEclCompatibleRST(false);
+    }
+
+};
+
+
+RestartValue first_sim(const Setup& setup, SummaryState& st, bool write_double) {
+    EclipseIO eclWriter( setup.es, setup.grid, setup.schedule, setup.summary_config);
+    auto num_cells = setup.grid.getNumActive( );
 
     auto start_time = TimeStampUTC( TimeStampUTC::YMD{ 1979, 11, 1 } );
     auto first_step = TimeStampUTC( TimeStampUTC::YMD{ 2011,  2, 1 } ); // Must be after 2011-01-20
@@ -353,7 +374,8 @@ RestartValue first_sim(const EclipseState& es, EclipseIO& eclWriter, SummaryStat
     return restart_value;
 }
 
-RestartValue second_sim(const EclipseIO& writer, SummaryState& summary_state, const std::vector<RestartKey>& solution_keys) {
+RestartValue second_sim(const Setup& setup, SummaryState& summary_state, const std::vector<RestartKey>& solution_keys) {
+    EclipseIO writer(setup.es, setup.grid, setup.schedule, setup.summary_config);
     return writer.loadRestart( summary_state, solution_keys );
 }
 
@@ -379,26 +401,6 @@ void compare( const RestartValue& fst,
 }
 
 
-struct Setup {
-    Deck deck;
-    EclipseState es;
-    const EclipseGrid& grid;
-    Schedule schedule;
-    SummaryConfig summary_config;
-
-    Setup( const char* path) :
-        deck( Parser().parseFile( path) ),
-        es( deck),
-        grid( es.getInputGrid( ) ),
-        schedule( deck, es ),
-        summary_config( deck, schedule, es.getTableManager( ))
-    {
-        auto& io_config = es.getIOConfig();
-        io_config.setEclCompatibleRST(false);
-    }
-
-};
-
 
 
 BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData) {
@@ -407,28 +409,31 @@ BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData) {
                                   {"SGAS" , UnitSystem::measure::identity},
                                   {"TEMP" , UnitSystem::measure::temperature}};
     WorkArea test_area("test_restart");
-    test_area.copyIn("FIRST_SIM.DATA");
+    test_area.copyIn("BASE_SIM.DATA");
+    test_area.copyIn("RESTART_SIM.DATA");
 
-    Setup setup("FIRST_SIM.DATA");
-    EclipseIO eclWriter( setup.es, setup.grid, setup.schedule, setup.summary_config);
+    Setup base_setup("BASE_SIM.DATA");
+    Setup restart_setup("RESTART_SIM.DATA");
     SummaryState st(std::chrono::system_clock::now());
-    auto state1 = first_sim( setup.es , eclWriter , st, false );
-    auto state2 = second_sim( eclWriter , st , keys );
+    auto state1 = first_sim( base_setup , st, false );
+    auto state2 = second_sim( restart_setup , st , keys );
     compare(state1, state2 , keys);
 
-    BOOST_CHECK_THROW( second_sim( eclWriter, st, {{"SOIL", UnitSystem::measure::pressure}} ) , std::runtime_error );
-    BOOST_CHECK_THROW( second_sim( eclWriter, st, {{"SOIL", UnitSystem::measure::pressure, true}}) , std::runtime_error );
+    BOOST_CHECK_THROW( second_sim( restart_setup, st, {{"SOIL", UnitSystem::measure::pressure}} ) , std::runtime_error );
+    BOOST_CHECK_THROW( second_sim( restart_setup, st, {{"SOIL", UnitSystem::measure::pressure, true}}) , std::runtime_error );
 }
 
 
 BOOST_AUTO_TEST_CASE(ECL_FORMATTED) {
     namespace OS = ::Opm::EclIO::OutputStream;
 
-    Setup setup("FIRST_SIM.DATA");
     WorkArea test_area("test_Restart");
-    auto& io_config = setup.es.getIOConfig();
+    test_area.copyIn("BASE_SIM.DATA");
+
+    Setup base_setup("BASE_SIM.DATA");
+    auto& io_config = base_setup.es.getIOConfig();
     {
-        auto num_cells = setup.grid.getNumActive( );
+        auto num_cells = base_setup.grid.getNumActive( );
         auto cells = mkSolution( num_cells );
         auto wells = mkWells();
         auto sumState = sim_state();
@@ -450,9 +455,9 @@ BOOST_AUTO_TEST_CASE(ECL_FORMATTED) {
                 RestartIO::save(rstFile, seqnum,
                                 100,
                                 restart_value,
-                                setup.es,
-                                setup.grid,
-                                setup.schedule,
+                                base_setup.es,
+                                base_setup.grid,
+                                base_setup.schedule,
                                 sumState,
                                 true);
             }
@@ -478,9 +483,9 @@ BOOST_AUTO_TEST_CASE(ECL_FORMATTED) {
                 RestartIO::save(rstFile, seqnum,
                                 100,
                                 restart_value,
-                                setup.es,
-                                setup.grid,
-                                setup.schedule,
+                                base_setup.es,
+                                base_setup.grid,
+                                base_setup.schedule,
                                 sumState,
                                 true);
             }
@@ -534,13 +539,14 @@ BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData_double) {
                                            RestartKey("SGAS", UnitSystem::measure::identity)};
 
     WorkArea test_area("test_Restart");
-    test_area.copyIn("FIRST_SIM.DATA");
-    Setup setup("FIRST_SIM.DATA");
-    EclipseIO eclWriter( setup.es, setup.grid, setup.schedule, setup.summary_config);
+    test_area.copyIn("RESTART_SIM.DATA");
+    test_area.copyIn("BASE_SIM.DATA");
+    Setup base_setup("BASE_SIM.DATA");
+    Setup restart_setup("RESTART_SIM.DATA");
     SummaryState st(std::chrono::system_clock::now());
 
-    auto state1 = first_sim( setup.es , eclWriter , st, true);
-    auto state2 = second_sim( eclWriter ,st, solution_keys );
+    auto state1 = first_sim( base_setup , st, true);
+    auto state2 = second_sim( restart_setup, st, solution_keys );
     compare_equal( state1 , state2 , solution_keys);
 }
 
@@ -549,8 +555,9 @@ BOOST_AUTO_TEST_CASE(WriteWrongSOlutionSize) {
     namespace OS = ::Opm::EclIO::OutputStream;
 
     WorkArea test_area("test_Restart");
-    test_area.copyIn("FIRST_SIM.DATA");
-    Setup setup("FIRST_SIM.DATA");
+    test_area.copyIn("BASE_SIM.DATA");
+    test_area.copyIn("RESTART_SIM.DATA");
+    Setup setup("BASE_SIM.DATA");
     {
         auto num_cells = setup.grid.getNumActive( ) + 1;
         auto cells = mkSolution( num_cells );
@@ -576,7 +583,7 @@ BOOST_AUTO_TEST_CASE(WriteWrongSOlutionSize) {
 
 
 BOOST_AUTO_TEST_CASE(ExtraData_KEYS) {
-    Setup setup("FIRST_SIM.DATA");
+    Setup setup("BASE_SIM.DATA");
     auto num_cells = setup.grid.getNumActive( );
     auto cells = mkSolution( num_cells );
     auto wells = mkWells();
@@ -599,8 +606,9 @@ BOOST_AUTO_TEST_CASE(ExtraData_content) {
     namespace OS = ::Opm::EclIO::OutputStream;
 
     WorkArea test_area("test_Restart");
-    test_area.copyIn("FIRST_SIM.DATA");
-    Setup setup("FIRST_SIM.DATA");
+    test_area.copyIn("BASE_SIM.DATA");
+    test_area.copyIn("RESTART_SIM.DATA");
+    Setup setup("BASE_SIM.DATA");
     {
         auto num_cells = setup.grid.getNumActive( );
         auto cells = mkSolution( num_cells );
@@ -676,10 +684,10 @@ BOOST_AUTO_TEST_CASE(STORE_THPRES) {
     namespace OS = ::Opm::EclIO::OutputStream;
 
     WorkArea test_area("test_Restart_THPRES");
-    test_area.copyIn("FIRST_SIM_THPRES.DATA");
-    Setup setup("FIRST_SIM_THPRES.DATA");
+    test_area.copyIn("BASE_SIM_THPRES.DATA");
+    Setup base_setup("BASE_SIM_THPRES.DATA");
     {
-        auto num_cells = setup.grid.getNumActive( );
+        auto num_cells = base_setup.grid.getNumActive( );
         auto cells = mkSolution( num_cells );
         auto wells = mkWells();
         const auto outputDir = test_area.currentWorkingDirectory();
@@ -714,14 +722,14 @@ BOOST_AUTO_TEST_CASE(STORE_THPRES) {
                 BOOST_CHECK_THROW( RestartIO::save(rstFile, seqnum,
                                                    100,
                                                    restart_value,
-                                                   setup.es,
-                                                   setup.grid,
-                                                   setup.schedule,
+                                                   base_setup.es,
+                                                   base_setup.grid,
+                                                   base_setup.schedule,
                                                    sumState),
                                    std::runtime_error);
             }
 
-            int num_regions = setup.es.getTableManager().getEqldims().getNumEquilRegions();
+            int num_regions = base_setup.es.getTableManager().getEqldims().getNumEquilRegions();
             std::vector<double>  thpres(num_regions * num_regions, 78);
             restart_value2.addExtra("THRESHPR", UnitSystem::measure::pressure, thpres);
             restart_value2.addExtra("EXTRA", UnitSystem::measure::pressure, thpres);
@@ -736,9 +744,9 @@ BOOST_AUTO_TEST_CASE(STORE_THPRES) {
                 RestartIO::save(rstFile, seqnum,
                                 100,
                                 restart_value2,
-                                setup.es,
-                                setup.grid,
-                                setup.schedule, sumState);
+                                base_setup.es,
+                                base_setup.grid,
+                                base_setup.schedule, sumState);
             }
 
             {
@@ -772,8 +780,9 @@ BOOST_AUTO_TEST_CASE(STORE_THPRES) {
 BOOST_AUTO_TEST_CASE(Restore_Cumulatives)
 {
     WorkArea wa{"test_Restart"};
-    wa.copyIn("FIRST_SIM.DATA");
-    Setup setup("FIRST_SIM.DATA");
+    wa.copyIn("BASE_SIM.DATA");
+    wa.copyIn("RESTART_SIM.DATA");
+    Setup setup("BASE_SIM.DATA");
 
     // Write fully ECLIPSE compatible output.  This also saves cumulatives.
     setup.es.getIOConfig().setEclCompatibleRST(true);
