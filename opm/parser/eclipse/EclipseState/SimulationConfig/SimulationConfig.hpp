@@ -20,6 +20,7 @@
 #ifndef OPM_SIMULATION_CONFIG_HPP
 #define OPM_SIMULATION_CONFIG_HPP
 
+#include <opm/parser/eclipse/EclipseState/SimulationConfig/RockConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/SimulationConfig/ThresholdPressure.hpp>
 #include <opm/parser/eclipse/EclipseState/SimulationConfig/BCConfig.hpp>
 
@@ -38,8 +39,10 @@ namespace Opm {
                          const FieldPropsManager& fp);
         SimulationConfig(const ThresholdPressure& thresholdPressure,
                          const BCConfig& bc,
+                         const RockConfig& rock_config,
                          bool useCPR, bool DISGAS, bool VAPOIL, bool isThermal);
 
+        const RockConfig& rock_config() const;
         const ThresholdPressure& getThresholdPressure() const;
         const BCConfig& bcconfig() const;
         bool useThresholdPressure() const;
@@ -53,6 +56,7 @@ namespace Opm {
     private:
         ThresholdPressure m_ThresholdPressure;
         BCConfig m_bcconfig;
+        RockConfig m_rock_config;
         bool m_useCPR;
         bool m_DISGAS;
         bool m_VAPOIL;

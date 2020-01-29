@@ -29,6 +29,10 @@
 #include <opm/parser/eclipse/Parser/ParserKeywords/C.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/SimulationConfig/RockConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
 
 using namespace Opm;
@@ -260,4 +264,33 @@ BOOST_AUTO_TEST_CASE(SimulationConfig_TEMP_THERMAL)
 
         BOOST_CHECK(simulationConfig.isThermal());
     }
+}
+
+
+BOOST_AUTO_TEST_CASE(TESTRockConfig) {
+    const std::string deck_string = R"(
+RUNSPEC
+
+ROCKCOMP
+/
+
+PROPS
+
+ROCK
+   1  0.1 /
+   2  0.2 /
+   3  0.3 /
+
+ROCKOPTS
+   2* SATNUM  /
+
+)";
+    Opm::Parser parser;
+    const auto deck = parser.parseString(deck_string);
+    EclipseGrid grid(10,10,10);
+    FieldPropsManager fp(deck, grid, TableManager());
+    RockConfig rc(deck, fp);
+    BOOST_CHECK_EQUAL(rc.rocknum_property(), "SATNUM");
+    const auto& comp = rc.comp();
+    BOOST_CHECK_EQUAL(comp.size(), 3);
 }
