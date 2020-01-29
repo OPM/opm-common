@@ -102,6 +102,10 @@ namespace Opm {
         return this->field_props;
     }
 
+    const FieldPropsManager& EclipseState::globalFieldProps() const {
+        return this->field_props;
+    }
+
 
     const TableManager& EclipseState::getTableManager() const {
         return m_tables;

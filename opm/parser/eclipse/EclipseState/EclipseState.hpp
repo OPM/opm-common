@@ -76,7 +76,7 @@ namespace Opm {
 
         const InitConfig& getInitConfig() const;
         const SimulationConfig& getSimulationConfig() const;
-        const EclipseGrid& getInputGrid() const;
+        virtual const EclipseGrid& getInputGrid() const;
 
         const FaultCollection& getFaults() const;
         const TransMult& getTransMult() const;
@@ -91,7 +91,10 @@ namespace Opm {
         const EDITNNC& getInputEDITNNC() const;
         bool hasInputEDITNNC() const;
 
+        // The potentially parallelized field properties
         virtual const FieldPropsManager& fieldProps() const;
+        // Always the non-parallel field properties
+        virtual const FieldPropsManager& globalFieldProps() const;
         const TableManager& getTableManager() const;
         const EclipseConfig& getEclipseConfig() const;
         const EclipseConfig& cfg() const;
