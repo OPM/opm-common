@@ -37,6 +37,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 
 #include "src/opm/parser/eclipse/EclipseState/Grid/FieldProps.hpp"
 
@@ -46,7 +47,7 @@ using namespace Opm;
 BOOST_AUTO_TEST_CASE(CreateFieldProps) {
     EclipseGrid grid(10,10,10);
     Deck deck;
-    FieldPropsManager fpm(deck, grid, TableManager());
+    FieldPropsManager fpm(deck, Phases{true, true, true}, grid, TableManager());
     BOOST_CHECK(!fpm.try_get<double>("PORO"));
     BOOST_CHECK(!fpm.try_get<double>("PORO"));
     BOOST_CHECK(!fpm.try_get<double>("NO_SUCH_KEYWOWRD"));
@@ -90,7 +91,7 @@ PERMX
         actnum[i] = 0;
     EclipseGrid grid(EclipseGrid(10,10,10), actnum);
     Deck deck = Parser{}.parseString(deck_string);
-    FieldPropsManager fpm(deck, grid, TableManager());
+    FieldPropsManager fpm(deck, Phases{true, true, true}, grid, TableManager());
 
     BOOST_CHECK(!fpm.has_double("NO-PORO"));
     BOOST_CHECK(fpm.has_double("PORO"));
@@ -136,7 +137,7 @@ COPY
 
     EclipseGrid grid(EclipseGrid(10,10,10));
     Deck deck = Parser{}.parseString(deck_string);
-    BOOST_CHECK_THROW( FieldPropsManager(deck, grid, TableManager()), std::out_of_range);
+    BOOST_CHECK_THROW( FieldPropsManager(deck, Phases{true, true, true}, grid, TableManager()), std::out_of_range);
 }
 
 BOOST_AUTO_TEST_CASE(GRID_RESET) {
@@ -150,7 +151,7 @@ SATNUM
     std::vector<int> actnum1 = {1,1,1,0,0,0,1,1,1};
     EclipseGrid grid(3,1,3); grid.resetACTNUM(actnum1);
     Deck deck = Parser{}.parseString(deck_string);
-    FieldPropsManager fpm(deck, grid, TableManager());
+    FieldPropsManager fpm(deck, Phases{true, true, true}, grid, TableManager());
     const auto& s1 = fpm.get_int("SATNUM");
     BOOST_CHECK_EQUAL(s1.size(), 6);
     BOOST_CHECK_EQUAL(s1[0], 0);
@@ -192,7 +193,7 @@ ADDREG
     std::vector<int> actnum1 = {1,1,0,0,1,1};
     EclipseGrid grid(3,2,1); grid.resetACTNUM(actnum1);
     Deck deck = Parser{}.parseString(deck_string);
-    FieldPropsManager fpm(deck, grid, TableManager());
+    FieldPropsManager fpm(deck, Phases{true, true, true}, grid, TableManager());
     const auto& poro = fpm.get_double("PORO");
     BOOST_CHECK_EQUAL(poro.size(), 4);
     BOOST_CHECK_EQUAL(poro[0], 0.10);
@@ -230,7 +231,7 @@ NTG
 
     EclipseGrid grid(EclipseGrid(10,10, 2));
     Deck deck = Parser{}.parseString(deck_string);
-    FieldPropsManager fpm(deck, grid, TableManager());
+    FieldPropsManager fpm(deck, Phases{true, true, true}, grid, TableManager());
     const auto& ntg = fpm.get_double("NTG");
     const auto& defaulted = fpm.defaulted<double>("NTG");
 
@@ -300,7 +301,7 @@ ENDBOX
 
     EclipseGrid grid(10,10, 5);
     Deck deck = Parser{}.parseString(deck_string);
-    FieldPropsManager fpm(deck, grid, TableManager());
+    FieldPropsManager fpm(deck, Phases{true, true, true}, grid, TableManager());
     const auto& poro = fpm.get_double("PORO");
     const auto& ntg = fpm.get_double("NTG");
     const auto& multpv = fpm.get_double("MULTPV");
@@ -477,7 +478,7 @@ BOOST_AUTO_TEST_CASE(LATE_GET_SATFUNC) {
     auto deck = parser.parseString(deckString);
     Opm::TableManager tm(deck);
     Opm::EclipseGrid eg(deck);
-    Opm::FieldPropsManager fp(deck, eg, tm);
+    Opm::FieldPropsManager fp(deck, Phases{true, true, true}, eg, tm);
 
     const auto& fp_swu = fp.get_global_double("SWU");
     BOOST_CHECK_EQUAL(fp_swu[1 + 0 * 3*3], 0.93);
@@ -504,7 +505,7 @@ PORO
     Deck deck = Parser{}.parseString(deck_string);
     std::vector<int> actnum(200, 1); actnum[0] = 0;
     grid.resetACTNUM(actnum);
-    FieldPropsManager fpm(deck, grid, TableManager());
+    FieldPropsManager fpm(deck, Phases{true, true, true}, grid, TableManager());
 
     BOOST_CHECK(!fpm.has_double("NTG"));
     const auto& ntg = fpm.get_copy<double>("NTG");
@@ -548,7 +549,7 @@ RTEMPVD
     EclipseGrid grid(1,1, 2);
     Deck deck = Parser{}.parseString(deck_string);
     Opm::TableManager tm(deck);
-    FieldPropsManager fpm(deck, grid, tm);
+    FieldPropsManager fpm(deck, Phases{true, true, true}, grid, tm);
 
     const auto& tempi = fpm.get_double("TEMPI");
     double celcius_offset = 273.15;
@@ -578,7 +579,7 @@ MULTZ
     Opm::Deck deck = parser.parseString(deck_string);
     Opm::EclipseGrid grid(5,5,5);
     Opm::TableManager tm(deck);
-    FieldPropsManager fpm(deck, grid, tm);
+    FieldPropsManager fpm(deck, Phases{true, true, true}, grid, tm);
 
     const auto& multz = fpm.get_double("MULTZ");
     const auto& multx = fpm.get_double("MULTX");

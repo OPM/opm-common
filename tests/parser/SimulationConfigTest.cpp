@@ -28,6 +28,7 @@
 #include <opm/parser/eclipse/Deck/DeckSection.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/C.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/SimulationConfig/RockConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
@@ -142,7 +143,7 @@ BOOST_AUTO_TEST_CASE(SimulationConfigGetThresholdPressureTableTest) {
     auto deck = createDeck(inputStr);
     TableManager tm(deck);
     EclipseGrid eg(10, 3, 4);
-    FieldPropsManager fp(deck, eg, tm);
+    FieldPropsManager fp(deck, Phases{true, true, true}, eg, tm);
     BOOST_CHECK_NO_THROW( SimulationConfig(false, deck, fp) );
 }
 
@@ -151,7 +152,7 @@ BOOST_AUTO_TEST_CASE(SimulationConfigNOTHPRES) {
     auto deck = createDeck(inputStr_noTHPRES);
     TableManager tm(deck);
     EclipseGrid eg(10, 3, 4);
-    FieldPropsManager fp(deck, eg, tm);
+    FieldPropsManager fp(deck, Phases{true, true, true}, eg, tm);
     SimulationConfig simulationConfig(false, deck, fp);
     BOOST_CHECK( !simulationConfig.useThresholdPressure() );
 }
@@ -160,7 +161,7 @@ BOOST_AUTO_TEST_CASE(SimulationConfigCPRNotUsed) {
     auto deck = createDeck(inputStr_noTHPRES);
     TableManager tm(deck);
     EclipseGrid eg(10, 3, 4);
-    FieldPropsManager fp(deck, eg, tm);
+    FieldPropsManager fp(deck, Phases{true, true, true}, eg, tm);
     SimulationConfig simulationConfig(false, deck, fp);
     BOOST_CHECK( ! simulationConfig.useCPR());
 }
@@ -170,7 +171,7 @@ BOOST_AUTO_TEST_CASE(SimulationConfigCPRUsed) {
     TableManager tm(deck);
     EclipseGrid eg(10, 3, 4);
     SUMMARYSection summary(deck);
-    FieldPropsManager fp(deck, eg, tm);
+    FieldPropsManager fp(deck, Phases{true, true, true}, eg, tm);
     SimulationConfig simulationConfig(false, deck, fp);
     BOOST_CHECK(     simulationConfig.useCPR() );
     BOOST_CHECK(  !  summary.hasKeyword("CPR") );
@@ -182,7 +183,7 @@ BOOST_AUTO_TEST_CASE(SimulationConfigCPRInSUMMARYSection) {
     TableManager tm(deck);
     EclipseGrid eg(10, 3, 4);
     SUMMARYSection summary(deck);
-    FieldPropsManager fp(deck, eg, tm);
+    FieldPropsManager fp(deck, Phases{true, true, true}, eg, tm);
     SimulationConfig simulationConfig(false, deck, fp);
     BOOST_CHECK( ! simulationConfig.useCPR());
     BOOST_CHECK(   summary.hasKeyword("CPR"));
@@ -194,7 +195,7 @@ BOOST_AUTO_TEST_CASE(SimulationConfigCPRBoth) {
     TableManager tm(deck);
     EclipseGrid eg(10, 3, 4);
     SUMMARYSection summary(deck);
-    FieldPropsManager fp(deck, eg, tm);
+    FieldPropsManager fp(deck, Phases{true, true, true}, eg, tm);
     SimulationConfig simulationConfig(false, deck, fp);
     BOOST_CHECK(  simulationConfig.useCPR());
     BOOST_CHECK(  summary.hasKeyword("CPR"));
@@ -218,7 +219,7 @@ BOOST_AUTO_TEST_CASE(SimulationConfig_VAPOIL_DISGAS) {
     auto deck = createDeck(inputStr);
     TableManager tm(deck);
     EclipseGrid eg(10, 3, 4);
-    FieldPropsManager fp(deck, eg, tm);
+    FieldPropsManager fp(deck, Phases{true, true, true}, eg, tm);
     SimulationConfig simulationConfig(false, deck, fp);
     BOOST_CHECK_EQUAL( false , simulationConfig.hasDISGAS());
     BOOST_CHECK_EQUAL( false , simulationConfig.hasVAPOIL());
@@ -226,7 +227,7 @@ BOOST_AUTO_TEST_CASE(SimulationConfig_VAPOIL_DISGAS) {
     auto deck_vd = createDeck(inputStr_vap_dis);
     TableManager tm_vd(deck_vd);
     EclipseGrid eg_vd(10, 3, 4);
-    FieldPropsManager fp_vd(deck_vd, eg, tm);
+    FieldPropsManager fp_vd(deck_vd, Phases{true, true, true}, eg, tm);
     SimulationConfig simulationConfig_vd(false, deck_vd, fp_vd);
     BOOST_CHECK_EQUAL( true , simulationConfig_vd.hasDISGAS());
     BOOST_CHECK_EQUAL( true , simulationConfig_vd.hasVAPOIL());
@@ -239,7 +240,7 @@ BOOST_AUTO_TEST_CASE(SimulationConfig_TEMP_THERMAL)
         const auto deck = createDeck(inputStr);
         const auto tm = TableManager(deck);
         const auto eg = EclipseGrid(10, 3, 4);
-        const auto fp = FieldPropsManager(deck, eg, tm);
+        const auto fp = FieldPropsManager(deck, Phases{true, true, true}, eg, tm);
         const auto simulationConfig = Opm::SimulationConfig(false, deck, fp);
 
         BOOST_CHECK(! simulationConfig.isThermal());
@@ -249,7 +250,7 @@ BOOST_AUTO_TEST_CASE(SimulationConfig_TEMP_THERMAL)
         const auto deck = createDeck(simDeckStringTEMP());
         const auto tm = TableManager(deck);
         const auto eg = EclipseGrid(10, 3, 4);
-        const auto fp = FieldPropsManager(deck, eg, tm);
+        const auto fp = FieldPropsManager(deck, Phases{true, true, true}, eg, tm);
         const auto simulationConfig = Opm::SimulationConfig(false, deck, fp);
 
         BOOST_CHECK(simulationConfig.isThermal());
@@ -259,7 +260,7 @@ BOOST_AUTO_TEST_CASE(SimulationConfig_TEMP_THERMAL)
         const auto deck = createDeck(simDeckStringTHERMAL());
         const auto tm = TableManager(deck);
         const auto eg = EclipseGrid(10, 3, 4);
-        const auto fp = FieldPropsManager(deck, eg, tm);
+        const auto fp = FieldPropsManager(deck, Phases{true, true, true}, eg, tm);
         const auto simulationConfig = Opm::SimulationConfig(false, deck, fp);
 
         BOOST_CHECK(simulationConfig.isThermal());
@@ -288,7 +289,7 @@ ROCKOPTS
     Opm::Parser parser;
     const auto deck = parser.parseString(deck_string);
     EclipseGrid grid(10,10,10);
-    FieldPropsManager fp(deck, grid, TableManager());
+    FieldPropsManager fp(deck, Phases{true, true, true}, grid, TableManager());
     RockConfig rc(deck, fp);
     BOOST_CHECK_EQUAL(rc.rocknum_property(), "SATNUM");
     const auto& comp = rc.comp();

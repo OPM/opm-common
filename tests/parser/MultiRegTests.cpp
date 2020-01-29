@@ -32,7 +32,8 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
-
+#include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
+#include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 
 static Opm::Deck createDeckInvalidArray() {
     const char* deckData =
@@ -231,7 +232,7 @@ BOOST_AUTO_TEST_CASE(Test_OPERATER) {
     Opm::Deck deck = createValidIntDeck();
     Opm::TableManager tm(deck);
     Opm::EclipseGrid eg(deck);
-    Opm::FieldPropsManager fp(deck, eg, tm);
+    Opm::FieldPropsManager fp(deck, Opm::Phases{true, true, true}, eg, tm);
 
     const auto& porv  = fp.porv(true);
     const auto& permx = fp.get_global_double("PERMX");

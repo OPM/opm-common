@@ -27,6 +27,7 @@
 #include <opm/parser/eclipse/Deck/DeckSection.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/Box.hpp>
+#include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 
 namespace Opm {
 
@@ -213,7 +214,7 @@ public:
 
 
 
-    FieldProps(const Deck& deck, const EclipseGrid& grid, const TableManager& table_arg);
+    FieldProps(const Deck& deck, const Phases& phases, const EclipseGrid& grid, const TableManager& table_arg);
     void reset_actnum(const std::vector<int>& actnum);
 
     const std::string& default_region() const;
@@ -354,6 +355,7 @@ private:
 
     const UnitSystem unit_system;
     std::size_t nx,ny,nz;
+    Phases m_phases;
     std::vector<int> m_actnum;
     std::vector<double> cell_volume;
     std::vector<double> cell_depth;
@@ -367,4 +369,3 @@ private:
 
 }
 #endif
-

@@ -24,8 +24,6 @@
 
 #include <opm/output/eclipse/WriteInit.hpp>
 
-#include <opm/common/OpmLog/OpmLog.hpp>
-
 #include <opm/io/eclipse/OutputStream.hpp>
 
 #include <opm/output/data/Solution.hpp>
@@ -517,28 +515,12 @@ namespace {
                              const ::Opm::UnitSystem&          units,
                              ::Opm::EclIO::OutputStream::Init& initFile)
     {
-        const auto& ph = es.runspec().phases();
-
         const auto epsVectors = ScalingVectors{}
             .withHysteresis(es.runspec().hysterPar().active())
-            .collect       (ph);
-
-        const auto nactph = ph.active(::Opm::Phase::WATER)
-            + ph.active(Opm::Phase::OIL)
-            + ph.active(Opm::Phase::GAS);
+            .collect       (es.runspec().phases());
 
         const auto& fp = es.fieldProps();
-        if (! es.cfg().init().filleps() || (nactph < 3)) {
-            if (nactph < 3) {
-                const auto msg = "OPM-Flow does currently not support "
-                    "FILLEPS for fewer than 3 active phases. "
-                    "Ignoring FILLEPS for "
-                    + std::to_string(nactph)
-                    + " active phases.";
-
-                Opm::OpmLog::warning(msg);
-            }
-
+        if (! es.cfg().init().filleps()) {
             // No FILLEPS in input deck or number of active phases
             // unsupported by Flow's saturation function finalizers.
             //

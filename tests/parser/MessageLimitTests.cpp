@@ -27,6 +27,8 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
+#include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MessageLimits.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
@@ -78,7 +80,7 @@ BOOST_AUTO_TEST_CASE(MESSAGES) {
     auto deck = parser.parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    FieldPropsManager fp( deck , grid, table);
+    FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
     Runspec runspec (deck);
     Schedule schedule(deck, grid, fp, runspec);
     const MessageLimits limits = schedule.getMessageLimits();
@@ -93,4 +95,3 @@ BOOST_AUTO_TEST_CASE(MESSAGES) {
     BOOST_CHECK_EQUAL( limits.getCommentPrintLimit( 2 ) , 2  );
     BOOST_CHECK_EQUAL( limits.getBugPrintLimit( 2 ) , 77 );
 }
-

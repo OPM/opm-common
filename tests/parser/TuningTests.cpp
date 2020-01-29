@@ -25,6 +25,7 @@
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
@@ -71,7 +72,7 @@ BOOST_AUTO_TEST_CASE(TuningTest) {
   auto deck = createDeck(deckStr);
   EclipseGrid grid(10,10,10);
   TableManager table ( deck );
-  FieldPropsManager fp(deck, grid, table);
+  FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
   Runspec runspec (deck);
   Schedule schedule( deck, grid , fp, runspec);
   auto tuning = schedule.getTuning();
@@ -330,7 +331,7 @@ BOOST_AUTO_TEST_CASE(TuningInitTest) {
   auto deck = createDeck(deckStr);
   EclipseGrid grid(10,10,10);
   TableManager table ( deck );
-  FieldPropsManager fp(deck, grid, table);
+  FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
   Runspec runspec (deck);
   Schedule schedule(deck , grid , fp, runspec);
   auto tuning = schedule.getTuning();
@@ -361,7 +362,7 @@ BOOST_AUTO_TEST_CASE(TuningResetTest) {
   auto deck = createDeck(deckStr);
   EclipseGrid grid(10,10,10);
   TableManager table ( deck );
-  FieldPropsManager fp(deck, grid, table);
+  FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
   Runspec runspec (deck);
   Schedule schedule(deck, grid , fp, runspec);
   auto tuning = schedule.getTuning();

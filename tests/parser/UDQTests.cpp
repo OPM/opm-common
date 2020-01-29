@@ -19,6 +19,7 @@ Copyright 2018 Statoil ASA.
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/parser/eclipse/Deck/UDAValue.hpp>
@@ -144,7 +145,7 @@ Schedule make_schedule(const std::string& input) {
     } else {
         EclipseGrid grid(10,10,10);
         TableManager table ( deck );
-        FieldPropsManager fp( deck , grid, table);
+        FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
         Runspec runspec (deck);
         return Schedule(deck, grid , fp, runspec);
     }
