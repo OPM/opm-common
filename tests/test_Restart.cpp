@@ -84,135 +84,6 @@ namespace {
     }
 }
 
-inline std::string input( const std::string& rst_name = "FIRST_SIM" ) {
-           return std::string(
-           "RUNSPEC\n"
-           "OIL\n"
-           "GAS\n"
-           "WATER\n"
-           "DISGAS\n"
-           "VAPOIL\n"
-           "UNIFOUT\n"
-           "UNIFIN\n"
-           "DIMENS\n"
-           " 10 10 10 /\n"
-
-           "GRID\n"
-           "DXV\n"
-           "10*0.25 /\n"
-           "DYV\n"
-           "10*0.25 /\n"
-           "DZV\n"
-           "10*0.25 /\n"
-           "TOPS\n"
-           "100*0.25 /\n"
-           "\n"
-
-           "SOLUTION\n"
-           "RESTART\n"
-           ) + rst_name + std::string(
-           " 1/\n"
-           "\n"
-
-           "START             -- 0 \n"
-           "1 NOV 1979 / \n"
-
-           "SCHEDULE\n"
-           "SKIPREST\n"
-           "RPTRST\n"
-           "BASIC=1\n"
-           "/\n"
-           "DATES             -- 1\n"
-           " 10  OKT 2008 / \n"
-           "/\n"
-           "WELSPECS\n"
-           "    'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
-           "    'OP_2'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
-           "/\n"
-           "COMPDAT\n"
-           " 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-           " 'OP_2'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / \n"
-           " 'OP_1'  9  9   3   3 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-           "/\n"
-           "WCONPROD\n"
-               "'OP_1' 'OPEN' 'ORAT' 20000  4* 1000 /\n"
-           "/\n"
-           "WCONINJE\n"
-               "'OP_2' 'GAS' 'OPEN' 'RATE' 100 200 400 /\n"
-           "/\n"
-
-           "DATES             -- 2\n"
-           " 20  JAN 2011 / \n"
-           "/\n"
-           "WELSPECS\n"
-           "    'OP_3'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
-           "/\n"
-           "COMPDAT\n"
-           " 'OP_3'  9  9   1   1 'SHUT' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-           "/\n"
-           "WCONPROD\n"
-               "'OP_3' 'OPEN' 'ORAT' 20000  4* 1000 /\n"
-           "/\n"
-
-           "DATES             -- 3\n"
-           " 15  JUN 2013 / \n"
-           "/\n"
-           "COMPDAT\n"
-           " 'OP_2'  9  9   3  9 SHUT 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-           " 'OP_1'  9  9   7  7 OPEN 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-           "/\n"
-
-           "DATES             -- 4\n"
-           " 22  APR 2014 / \n"
-           "/\n"
-           "WELSPECS\n"
-           "    'OP_4'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
-           "/\n"
-           "COMPDAT\n"
-           " 'OP_4'  9  9   3  9 'SHUT' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-           " 'OP_3'  9  9   3  9 'SHUT' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-           "/\n"
-           "WCONPROD\n"
-               "'OP_4' 'OPEN' 'ORAT' 20000  4* 1000 /\n"
-           "/\n"
-
-           "DATES             -- 5\n"
-           " 30  AUG 2014 / \n"
-           "/\n"
-           "WELSPECS\n"
-           "    'OP_5'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
-           "/\n"
-           "COMPDAT\n"
-           " 'OP_5'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-           "/\n"
-           "WCONPROD\n"
-               "'OP_5' 'OPEN' 'ORAT' 20000  4* 1000 /\n"
-           "/\n"
-
-           "DATES             -- 6\n"
-           " 15  SEP 2014 / \n"
-           "/\n"
-           "WCONPROD\n"
-               "'OP_3' 'SHUT' 'ORAT' 20000  4* 1000 /\n"
-           "/\n"
-
-           "DATES             -- 7\n"
-           " 9  OCT 2014 / \n"
-           "/\n"
-           "WELSPECS\n"
-           "    'OP_6'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
-           "/\n"
-           "COMPDAT\n"
-           " 'OP_6'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-           "/\n"
-           "WCONPROD\n"
-               "'OP_6' 'OPEN' 'ORAT' 20000  4* 1000 /\n"
-           "/\n"
-           "TSTEP            -- 8\n"
-           "10 /"
-           "/\n"
-           );
-}
 
 namespace Opm {
 namespace data {
@@ -461,9 +332,30 @@ Opm::SummaryState sim_state()
     return state;
 }
 
-RestartValue first_sim(const EclipseState& es, EclipseIO& eclWriter, SummaryState& st, bool write_double) {
-    const auto& grid = es.getInputGrid();
-    auto num_cells = grid.getNumActive( );
+struct Setup {
+    Deck deck;
+    EclipseState es;
+    const EclipseGrid& grid;
+    Schedule schedule;
+    SummaryConfig summary_config;
+
+    Setup( const char* path) :
+        deck( Parser().parseFile( path) ),
+        es( deck),
+        grid( es.getInputGrid( ) ),
+        schedule( deck, es ),
+        summary_config( deck, schedule, es.getTableManager( ))
+    {
+        auto& io_config = es.getIOConfig();
+        io_config.setEclCompatibleRST(false);
+    }
+
+};
+
+
+RestartValue first_sim(const Setup& setup, SummaryState& st, bool write_double) {
+    EclipseIO eclWriter( setup.es, setup.grid, setup.schedule, setup.summary_config);
+    auto num_cells = setup.grid.getNumActive( );
 
     auto start_time = TimeStampUTC( TimeStampUTC::YMD{ 1979, 11, 1 } );
     auto first_step = TimeStampUTC( TimeStampUTC::YMD{ 2011,  2, 1 } ); // Must be after 2011-01-20
@@ -482,7 +374,8 @@ RestartValue first_sim(const EclipseState& es, EclipseIO& eclWriter, SummaryStat
     return restart_value;
 }
 
-RestartValue second_sim(const EclipseIO& writer, SummaryState& summary_state, const std::vector<RestartKey>& solution_keys) {
+RestartValue second_sim(const Setup& setup, SummaryState& summary_state, const std::vector<RestartKey>& solution_keys) {
+    EclipseIO writer(setup.es, setup.grid, setup.schedule, setup.summary_config);
     return writer.loadRestart( summary_state, solution_keys );
 }
 
@@ -508,26 +401,6 @@ void compare( const RestartValue& fst,
 }
 
 
-struct Setup {
-    Deck deck;
-    EclipseState es;
-    const EclipseGrid& grid;
-    Schedule schedule;
-    SummaryConfig summary_config;
-
-    Setup( const char* path) :
-        deck( Parser().parseFile( path) ),
-        es( deck),
-        grid( es.getInputGrid( ) ),
-        schedule( deck, es ),
-        summary_config( deck, schedule, es.getTableManager( ))
-    {
-        auto& io_config = es.getIOConfig();
-        io_config.setEclCompatibleRST(false);
-    }
-
-};
-
 
 
 BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData) {
@@ -536,28 +409,31 @@ BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData) {
                                   {"SGAS" , UnitSystem::measure::identity},
                                   {"TEMP" , UnitSystem::measure::temperature}};
     WorkArea test_area("test_restart");
-    test_area.copyIn("FIRST_SIM.DATA");
+    test_area.copyIn("BASE_SIM.DATA");
+    test_area.copyIn("RESTART_SIM.DATA");
 
-    Setup setup("FIRST_SIM.DATA");
-    EclipseIO eclWriter( setup.es, setup.grid, setup.schedule, setup.summary_config);
+    Setup base_setup("BASE_SIM.DATA");
+    Setup restart_setup("RESTART_SIM.DATA");
     SummaryState st(std::chrono::system_clock::now());
-    auto state1 = first_sim( setup.es , eclWriter , st, false );
-    auto state2 = second_sim( eclWriter , st , keys );
+    auto state1 = first_sim( base_setup , st, false );
+    auto state2 = second_sim( restart_setup , st , keys );
     compare(state1, state2 , keys);
 
-    BOOST_CHECK_THROW( second_sim( eclWriter, st, {{"SOIL", UnitSystem::measure::pressure}} ) , std::runtime_error );
-    BOOST_CHECK_THROW( second_sim( eclWriter, st, {{"SOIL", UnitSystem::measure::pressure, true}}) , std::runtime_error );
+    BOOST_CHECK_THROW( second_sim( restart_setup, st, {{"SOIL", UnitSystem::measure::pressure}} ) , std::runtime_error );
+    BOOST_CHECK_THROW( second_sim( restart_setup, st, {{"SOIL", UnitSystem::measure::pressure, true}}) , std::runtime_error );
 }
 
 
 BOOST_AUTO_TEST_CASE(ECL_FORMATTED) {
     namespace OS = ::Opm::EclIO::OutputStream;
 
-    Setup setup("FIRST_SIM.DATA");
     WorkArea test_area("test_Restart");
-    auto& io_config = setup.es.getIOConfig();
+    test_area.copyIn("BASE_SIM.DATA");
+
+    Setup base_setup("BASE_SIM.DATA");
+    auto& io_config = base_setup.es.getIOConfig();
     {
-        auto num_cells = setup.grid.getNumActive( );
+        auto num_cells = base_setup.grid.getNumActive( );
         auto cells = mkSolution( num_cells );
         auto wells = mkWells();
         auto sumState = sim_state();
@@ -579,9 +455,9 @@ BOOST_AUTO_TEST_CASE(ECL_FORMATTED) {
                 RestartIO::save(rstFile, seqnum,
                                 100,
                                 restart_value,
-                                setup.es,
-                                setup.grid,
-                                setup.schedule,
+                                base_setup.es,
+                                base_setup.grid,
+                                base_setup.schedule,
                                 sumState,
                                 true);
             }
@@ -607,9 +483,9 @@ BOOST_AUTO_TEST_CASE(ECL_FORMATTED) {
                 RestartIO::save(rstFile, seqnum,
                                 100,
                                 restart_value,
-                                setup.es,
-                                setup.grid,
-                                setup.schedule,
+                                base_setup.es,
+                                base_setup.grid,
+                                base_setup.schedule,
                                 sumState,
                                 true);
             }
@@ -663,13 +539,14 @@ BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData_double) {
                                            RestartKey("SGAS", UnitSystem::measure::identity)};
 
     WorkArea test_area("test_Restart");
-    test_area.copyIn("FIRST_SIM.DATA");
-    Setup setup("FIRST_SIM.DATA");
-    EclipseIO eclWriter( setup.es, setup.grid, setup.schedule, setup.summary_config);
+    test_area.copyIn("RESTART_SIM.DATA");
+    test_area.copyIn("BASE_SIM.DATA");
+    Setup base_setup("BASE_SIM.DATA");
+    Setup restart_setup("RESTART_SIM.DATA");
     SummaryState st(std::chrono::system_clock::now());
 
-    auto state1 = first_sim( setup.es , eclWriter , st, true);
-    auto state2 = second_sim( eclWriter ,st, solution_keys );
+    auto state1 = first_sim( base_setup , st, true);
+    auto state2 = second_sim( restart_setup, st, solution_keys );
     compare_equal( state1 , state2 , solution_keys);
 }
 
@@ -678,8 +555,9 @@ BOOST_AUTO_TEST_CASE(WriteWrongSOlutionSize) {
     namespace OS = ::Opm::EclIO::OutputStream;
 
     WorkArea test_area("test_Restart");
-    test_area.copyIn("FIRST_SIM.DATA");
-    Setup setup("FIRST_SIM.DATA");
+    test_area.copyIn("BASE_SIM.DATA");
+    test_area.copyIn("RESTART_SIM.DATA");
+    Setup setup("BASE_SIM.DATA");
     {
         auto num_cells = setup.grid.getNumActive( ) + 1;
         auto cells = mkSolution( num_cells );
@@ -705,7 +583,7 @@ BOOST_AUTO_TEST_CASE(WriteWrongSOlutionSize) {
 
 
 BOOST_AUTO_TEST_CASE(ExtraData_KEYS) {
-    Setup setup("FIRST_SIM.DATA");
+    Setup setup("BASE_SIM.DATA");
     auto num_cells = setup.grid.getNumActive( );
     auto cells = mkSolution( num_cells );
     auto wells = mkWells();
@@ -728,8 +606,9 @@ BOOST_AUTO_TEST_CASE(ExtraData_content) {
     namespace OS = ::Opm::EclIO::OutputStream;
 
     WorkArea test_area("test_Restart");
-    test_area.copyIn("FIRST_SIM.DATA");
-    Setup setup("FIRST_SIM.DATA");
+    test_area.copyIn("BASE_SIM.DATA");
+    test_area.copyIn("RESTART_SIM.DATA");
+    Setup setup("BASE_SIM.DATA");
     {
         auto num_cells = setup.grid.getNumActive( );
         auto cells = mkSolution( num_cells );
@@ -805,10 +684,10 @@ BOOST_AUTO_TEST_CASE(STORE_THPRES) {
     namespace OS = ::Opm::EclIO::OutputStream;
 
     WorkArea test_area("test_Restart_THPRES");
-    test_area.copyIn("FIRST_SIM_THPRES.DATA");
-    Setup setup("FIRST_SIM_THPRES.DATA");
+    test_area.copyIn("BASE_SIM_THPRES.DATA");
+    Setup base_setup("BASE_SIM_THPRES.DATA");
     {
-        auto num_cells = setup.grid.getNumActive( );
+        auto num_cells = base_setup.grid.getNumActive( );
         auto cells = mkSolution( num_cells );
         auto wells = mkWells();
         const auto outputDir = test_area.currentWorkingDirectory();
@@ -843,14 +722,14 @@ BOOST_AUTO_TEST_CASE(STORE_THPRES) {
                 BOOST_CHECK_THROW( RestartIO::save(rstFile, seqnum,
                                                    100,
                                                    restart_value,
-                                                   setup.es,
-                                                   setup.grid,
-                                                   setup.schedule,
+                                                   base_setup.es,
+                                                   base_setup.grid,
+                                                   base_setup.schedule,
                                                    sumState),
                                    std::runtime_error);
             }
 
-            int num_regions = setup.es.getTableManager().getEqldims().getNumEquilRegions();
+            int num_regions = base_setup.es.getTableManager().getEqldims().getNumEquilRegions();
             std::vector<double>  thpres(num_regions * num_regions, 78);
             restart_value2.addExtra("THRESHPR", UnitSystem::measure::pressure, thpres);
             restart_value2.addExtra("EXTRA", UnitSystem::measure::pressure, thpres);
@@ -865,9 +744,9 @@ BOOST_AUTO_TEST_CASE(STORE_THPRES) {
                 RestartIO::save(rstFile, seqnum,
                                 100,
                                 restart_value2,
-                                setup.es,
-                                setup.grid,
-                                setup.schedule, sumState);
+                                base_setup.es,
+                                base_setup.grid,
+                                base_setup.schedule, sumState);
             }
 
             {
@@ -901,8 +780,9 @@ BOOST_AUTO_TEST_CASE(STORE_THPRES) {
 BOOST_AUTO_TEST_CASE(Restore_Cumulatives)
 {
     WorkArea wa{"test_Restart"};
-    wa.copyIn("FIRST_SIM.DATA");
-    Setup setup("FIRST_SIM.DATA");
+    wa.copyIn("BASE_SIM.DATA");
+    wa.copyIn("RESTART_SIM.DATA");
+    Setup setup("BASE_SIM.DATA");
 
     // Write fully ECLIPSE compatible output.  This also saves cumulatives.
     setup.es.getIOConfig().setEclCompatibleRST(true);
