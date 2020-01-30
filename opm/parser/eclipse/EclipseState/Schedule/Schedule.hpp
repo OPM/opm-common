@@ -304,6 +304,18 @@ namespace Opm
 
 
         std::map<std::string,Events> wellgroup_events;
+        void addWell(const std::string& wellName,
+                     const std::string& group,
+                     int headI,
+                     int headJ,
+                     Phase preferredPhase,
+                     double refDepth,
+                     double drainageRadius,
+                     bool allowCrossFlow,
+                     bool automaticShutIn,
+                     size_t timeStep,
+                     Connection::Order wellConnectionOrder,
+                     const UnitSystem& unit_system);
 
         GTNode groupTree(const std::string& root_node, std::size_t report_step, const GTNode * parent) const;
         void updateGroup(std::shared_ptr<Group> group, size_t reportStep);
