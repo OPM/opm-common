@@ -154,8 +154,10 @@ namespace {
         if (this->m_restart_offset != 0) {
             if (skiprest) {
                 const auto iter = std::find(this->m_timeList.begin(), this->m_timeList.end(), restart_time);
-                if (iter == this->m_timeList.end())
-                    throw std::invalid_argument("Could not find restart date");
+                if (iter == this->m_timeList.end()) {
+                    TimeStampUTC ts(restart_time);
+                    throw std::invalid_argument("Could not find restart date " + std::to_string(ts.year()) + "-" + std::to_string(ts.month()) + "-" + std::to_string(ts.day()));
+                }
             }
         }
     }
