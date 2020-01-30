@@ -133,6 +133,9 @@ namespace {
         rft_config(this->m_timeMap),
         m_nupcol(this->m_timeMap, ParserKeywords::NUPCOL::NUM_ITER::defaultValue)
     {
+        if (rst)
+            this->load_rst(*rst, deck.getActiveUnitSystem());
+
         addGroup( "FIELD", 0, deck.getActiveUnitSystem());
 
         /*
@@ -2953,5 +2956,10 @@ void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, c
                this->getNupCol() == data.getNupCol() &&
                this->getWellGroupEvents() == data.getWellGroupEvents();
      }
+
+void Schedule::load_rst(const RestartIO::RstState&, const UnitSystem&)
+{
+}
+
 
 }

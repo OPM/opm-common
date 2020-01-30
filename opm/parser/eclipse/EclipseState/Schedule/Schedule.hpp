@@ -313,6 +313,7 @@ namespace Opm
 
 
         std::map<std::string,Events> wellgroup_events;
+        void load_rst(const RestartIO::RstState& rst, const UnitSystem& unit_system);
         void addWell(const std::string& wellName,
                      const std::string& group,
                      int headI,
