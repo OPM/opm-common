@@ -413,9 +413,10 @@ BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData) {
     test_area.copyIn("RESTART_SIM.DATA");
 
     Setup base_setup("BASE_SIM.DATA");
-    Setup restart_setup("RESTART_SIM.DATA");
     SummaryState st(std::chrono::system_clock::now());
     auto state1 = first_sim( base_setup , st, false );
+
+    Setup restart_setup("RESTART_SIM.DATA");
     auto state2 = second_sim( restart_setup , st , keys );
     compare(state1, state2 , keys);
 
@@ -542,10 +543,11 @@ BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData_double) {
     test_area.copyIn("RESTART_SIM.DATA");
     test_area.copyIn("BASE_SIM.DATA");
     Setup base_setup("BASE_SIM.DATA");
-    Setup restart_setup("RESTART_SIM.DATA");
     SummaryState st(std::chrono::system_clock::now());
 
     auto state1 = first_sim( base_setup , st, true);
+    Setup restart_setup("RESTART_SIM.DATA");
+
     auto state2 = second_sim( restart_setup, st, solution_keys );
     compare_equal( state1 , state2 , solution_keys);
 }
