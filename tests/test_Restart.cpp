@@ -356,18 +356,18 @@ struct Setup {
 RestartValue first_sim(const Setup& setup, SummaryState& st, bool write_double) {
     EclipseIO eclWriter( setup.es, setup.grid, setup.schedule, setup.summary_config);
     auto num_cells = setup.grid.getNumActive( );
-
-    auto start_time = TimeStampUTC( TimeStampUTC::YMD{ 1979, 11, 1 } );
-    auto first_step = TimeStampUTC( TimeStampUTC::YMD{ 2011,  2, 1 } ); // Must be after 2011-01-20
+    int report_step = 1;
+    auto start_time = setup.schedule.getStartTime();
+    auto first_step = setup.schedule.simTime(report_step);
 
     auto sol = mkSolution( num_cells );
     auto wells = mkWells();
     RestartValue restart_value(sol, wells);
 
     eclWriter.writeTimeStep( st,
-                             1,
+                             report_step,
                              false,
-                             asTimeT(first_step) - asTimeT(start_time),
+                             std::difftime(first_step, start_time),
                              restart_value,
                              write_double);
 
@@ -413,9 +413,10 @@ BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData) {
     test_area.copyIn("RESTART_SIM.DATA");
 
     Setup base_setup("BASE_SIM.DATA");
-    Setup restart_setup("RESTART_SIM.DATA");
     SummaryState st(std::chrono::system_clock::now());
     auto state1 = first_sim( base_setup , st, false );
+
+    Setup restart_setup("RESTART_SIM.DATA");
     auto state2 = second_sim( restart_setup , st , keys );
     compare(state1, state2 , keys);
 
@@ -542,10 +543,11 @@ BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData_double) {
     test_area.copyIn("RESTART_SIM.DATA");
     test_area.copyIn("BASE_SIM.DATA");
     Setup base_setup("BASE_SIM.DATA");
-    Setup restart_setup("RESTART_SIM.DATA");
     SummaryState st(std::chrono::system_clock::now());
 
     auto state1 = first_sim( base_setup , st, true);
+    Setup restart_setup("RESTART_SIM.DATA");
+
     auto state2 = second_sim( restart_setup, st, solution_keys );
     compare_equal( state1 , state2 , solution_keys);
 }
