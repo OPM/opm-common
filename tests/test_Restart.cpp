@@ -356,18 +356,18 @@ struct Setup {
 RestartValue first_sim(const Setup& setup, SummaryState& st, bool write_double) {
     EclipseIO eclWriter( setup.es, setup.grid, setup.schedule, setup.summary_config);
     auto num_cells = setup.grid.getNumActive( );
-
-    auto start_time = TimeStampUTC( TimeStampUTC::YMD{ 1979, 11, 1 } );
-    auto first_step = TimeStampUTC( TimeStampUTC::YMD{ 2011,  2, 1 } ); // Must be after 2011-01-20
+    int report_step = 1;
+    auto start_time = setup.schedule.getStartTime();
+    auto first_step = setup.schedule.simTime(report_step);
 
     auto sol = mkSolution( num_cells );
     auto wells = mkWells();
     RestartValue restart_value(sol, wells);
 
     eclWriter.writeTimeStep( st,
-                             1,
+                             report_step,
                              false,
-                             asTimeT(first_step) - asTimeT(start_time),
+                             std::difftime(first_step, start_time),
                              restart_value,
                              write_double);
 
