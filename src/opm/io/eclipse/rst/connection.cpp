@@ -34,7 +34,7 @@ RstConnection::RstConnection(const int* icon, const float* scon, const double* x
     imb_sat_table(icon[VI::IConn::Imbibition]),
     completion(icon[VI::IConn::ComplNum] - 1),
     dir(icon[VI::IConn::ConnDir]),
-    segment(icon[VI::IConn::Segment]),
+    segment(icon[VI::IConn::Segment] - 1),
     tran(scon[VI::SConn::ConnTrans]),
     depth(scon[VI::SConn::Depth]),
     diameter(scon[VI::SConn::Diameter]),
