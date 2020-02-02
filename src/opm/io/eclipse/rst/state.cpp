@@ -16,6 +16,8 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <algorithm>
+
 #include <opm/io/eclipse/rst/header.hpp>
 #include <opm/io/eclipse/rst/connection.hpp>
 #include <opm/io/eclipse/rst/well.hpp>
@@ -130,6 +132,17 @@ void RstState::add_groups(const std::vector<std::string>& zgrp,
     }
 }
 
+const RstWell& RstState::get_well(const std::string& wname) const {
+    const auto well_iter = std::find_if(this->wells.begin(),
+                                        this->wells.end(),
+                                        [&wname] (const auto& well) {
+                                            return well.name == wname;
+                                        });
+    if (well_iter == this->wells.end())
+        throw std::out_of_range("No such well: " + wname);
+
+    return *well_iter;
+}
 
 RstState RstState::load(EclIO::ERst& rst_file, int report_step) {
     rst_file.loadReportStepNumber(report_step);
