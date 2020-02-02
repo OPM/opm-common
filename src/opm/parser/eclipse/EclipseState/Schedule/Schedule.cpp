@@ -2214,31 +2214,28 @@ void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, c
                            const DeckRecord& record,
                            size_t timeStep,
                            Connection::Order wellConnectionOrder,
-                           const UnitSystem& unit_system) {
-
+                           const UnitSystem& unit_system)
+    {
         // We change from eclipse's 1 - n, to a 0 - n-1 solution
         int headI = record.getItem("HEAD_I").get< int >(0) - 1;
         int headJ = record.getItem("HEAD_J").get< int >(0) - 1;
-
-        const std::string phaseStr = record.getItem("PHASE").getTrimmedString(0);
         Phase preferredPhase;
-        if (phaseStr == "LIQ") {
-            // We need a workaround in case the preferred phase is "LIQ",
-            // which is not proper phase and will cause the get_phase()
-            // function to throw. In that case we choose to treat it as OIL.
-            preferredPhase = Phase::OIL;
-            OpmLog::warning("LIQ_PREFERRED_PHASE",
-                            "LIQ preferred phase not supported for well " + wellName + ", using OIL instead");
-        } else {
-            // Normal case.
-            preferredPhase = get_phase(phaseStr);
+        {
+            const std::string phaseStr = record.getItem("PHASE").getTrimmedString(0);
+            if (phaseStr == "LIQ") {
+                // We need a workaround in case the preferred phase is "LIQ",
+                // which is not proper phase and will cause the get_phase()
+                // function to throw. In that case we choose to treat it as OIL.
+                preferredPhase = Phase::OIL;
+                OpmLog::warning("LIQ_PREFERRED_PHASE",
+                                "LIQ preferred phase not supported for well " + wellName + ", using OIL instead");
+            } else
+                preferredPhase = get_phase(phaseStr);
         }
-
         const auto& refDepthItem = record.getItem("REF_DEPTH");
-
         double refDepth = refDepthItem.hasValue( 0 )
-                        ? refDepthItem.getSIDouble( 0 )
-                        : -1.0;
+            ? refDepthItem.getSIDouble( 0 )
+            : -1.0;
 
         double drainageRadius = record.getItem( "D_RADIUS" ).getSIDouble(0);
 
@@ -2252,34 +2249,63 @@ void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, c
         if (automaticShutInStr == "STOP") {
             automaticShutIn = false;
         }
-        {
-            wells_static.insert( std::make_pair(wellName, DynamicState<std::shared_ptr<Well>>(m_timeMap, nullptr)));
 
-            auto& dynamic_state = wells_static.at(wellName);
-            const std::string& group = record.getItem<ParserKeywords::WELSPECS::GROUP>().getTrimmedString(0);
-            std::size_t insert_index = this->wells_static.size() - 1;
-            auto well_ptr = std::make_shared<Well>(wellName,
-                                                    group,
-                                                    timeStep,
-                                                    insert_index,
-                                                    headI, headJ,
-                                                    refDepth,
-                                                    preferredPhase,
-                                                    this->global_whistctl_mode[timeStep],
-                                                    wellConnectionOrder,
-                                                    unit_system,
-                                                    this->getUDQConfig(timeStep).params().undefinedValue());
+        const std::string& group = record.getItem<ParserKeywords::WELSPECS::GROUP>().getTrimmedString(0);
 
-            well_ptr->updateCrossFlow(allowCrossFlow);
-            well_ptr->updateAutoShutin(automaticShutIn);
-            well_ptr->updateDrainageRadius(drainageRadius);
+        this->addWell(wellName,
+                      group,
+                      headI,
+                      headJ,
+                      preferredPhase,
+                      refDepth,
+                      drainageRadius,
+                      allowCrossFlow,
+                      automaticShutIn,
+                      timeStep,
+                      wellConnectionOrder,
+                      unit_system);
+    }
 
-            dynamic_state.update(timeStep, well_ptr);
-        }
+
+    void Schedule::addWell(const std::string& wellName,
+                           const std::string& group,
+                           int headI,
+                           int headJ,
+                           Phase preferredPhase,
+                           double refDepth,
+                           double drainageRadius,
+                           bool allowCrossFlow,
+                           bool automaticShutIn,
+                           size_t timeStep,
+                           Connection::Order wellConnectionOrder,
+                           const UnitSystem& unit_system) {
+
+        wells_static.insert( std::make_pair(wellName, DynamicState<std::shared_ptr<Well>>(m_timeMap, nullptr)));
+
+        auto& dynamic_state = wells_static.at(wellName);
+        std::size_t insert_index = this->wells_static.size() - 1;
+        auto well_ptr = std::make_shared<Well>(wellName,
+                                               group,
+                                               timeStep,
+                                               insert_index,
+                                               headI, headJ,
+                                               refDepth,
+                                               preferredPhase,
+                                               this->global_whistctl_mode[timeStep],
+                                               wellConnectionOrder,
+                                               unit_system,
+                                               this->getUDQConfig(timeStep).params().undefinedValue());
+
+        well_ptr->updateCrossFlow(allowCrossFlow);
+        well_ptr->updateAutoShutin(automaticShutIn);
+        well_ptr->updateDrainageRadius(drainageRadius);
+        dynamic_state.update(timeStep, well_ptr);
+
         m_events.addEvent( ScheduleEvents::NEW_WELL , timeStep );
         wellgroup_events.insert( std::make_pair(wellName, Events(this->m_timeMap)));
         this->addWellGroupEvent(wellName, ScheduleEvents::NEW_WELL, timeStep);
     }
+
 
     size_t Schedule::numWells() const {
         return wells_static.size();
