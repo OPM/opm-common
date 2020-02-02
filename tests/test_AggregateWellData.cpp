@@ -828,6 +828,7 @@ BOOST_AUTO_TEST_CASE(WELL_POD) {
         std::size_t xcon_offset = header.nxconz * header.ncwmax * iw;
 
         wells.emplace_back(header,
+                           "GROUP",
                            zwel.data() + zwel_offset,
                            iwel.data() + iwel_offset,
                            swel.data() + swel_offset,

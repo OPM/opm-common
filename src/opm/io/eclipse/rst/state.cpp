@@ -57,8 +57,11 @@ RstState::RstState(const std::vector<int>& intehead,
         std::size_t icon_offset = iw * this->header.niconz * this->header.ncwmax;
         std::size_t scon_offset = iw * this->header.nsconz * this->header.ncwmax;
         std::size_t xcon_offset = iw * this->header.nxconz * this->header.ncwmax;
+        int group_index = iwel[ iwel_offset + VI::IWell::Group ] - 1;
+        const std::string group = this->groups[group_index].name;
 
         this->wells.emplace_back(this->header,
+                                 group,
                                  zwel.data() + zwel_offset,
                                  iwel.data() + iwel_offset,
                                  swel.data() + swel_offset,
@@ -100,8 +103,11 @@ RstState::RstState(const std::vector<int>& intehead,
         std::size_t icon_offset = iw * this->header.niconz * this->header.ncwmax;
         std::size_t scon_offset = iw * this->header.nsconz * this->header.ncwmax;
         std::size_t xcon_offset = iw * this->header.nxconz * this->header.ncwmax;
+        int group_index = iwel[ iwel_offset + VI::IWell::Group ] - 1;
+        const std::string group = this->groups[group_index].name;
 
         this->wells.emplace_back(this->header,
+                                 group,
                                  zwel.data() + zwel_offset,
                                  iwel.data() + iwel_offset,
                                  swel.data() + swel_offset,
@@ -182,3 +188,4 @@ RstState RstState::load(EclIO::ERst& rst_file, int report_step) {
 
 }
 }
+
