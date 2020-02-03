@@ -41,7 +41,7 @@ namespace Opm {
         enum class State {
             OPEN = 1,
             SHUT = 2,
-            AUTO = 3
+            AUTO = 3   // Seems like the AUTO state can not be serialized to restart files.
         };
 
         static const std::string State2String( State enumValue );
