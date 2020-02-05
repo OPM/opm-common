@@ -69,10 +69,12 @@ namespace Opm {
         };
 
         AquiferCT(const TableManager& tables, const Deck& deck);
+        AquiferCT(const std::vector<AquiferCT::AQUCT_data>& data);
 
         std::size_t size() const;
         std::vector<AquiferCT::AQUCT_data>::const_iterator begin() const;
         std::vector<AquiferCT::AQUCT_data>::const_iterator end() const;
+        const std::vector<AquiferCT::AQUCT_data>& data() const;
         bool operator==(const AquiferCT& other) const;
     private:
         std::vector<AquiferCT::AQUCT_data> m_aquct;

@@ -127,5 +127,8 @@ BOOST_AUTO_TEST_CASE(AquiferCTTest){
             BOOST_CHECK_EQUAL(it.inftableID , 2);
             BOOST_CHECK(it.p0.first == false);
         }
+        auto data = aquiferct.data();
+        AquiferCT aq2(data);
+        BOOST_CHECK( aq2 == aquiferct );
     }
 }

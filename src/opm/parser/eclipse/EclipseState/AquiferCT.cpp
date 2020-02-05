@@ -107,6 +107,10 @@ AquiferCT::AquiferCT(const TableManager& tables, const Deck& deck)
         this->m_aquct.emplace_back(record, tables);
 }
 
+AquiferCT::AquiferCT(const std::vector<AquiferCT::AQUCT_data>& data) :
+    m_aquct(data)
+{}
+
 
 std::size_t AquiferCT::size() const {
     return this->m_aquct.size();
@@ -123,4 +127,9 @@ std::vector<AquiferCT::AQUCT_data>::const_iterator AquiferCT::end() const {
 bool AquiferCT::operator==(const AquiferCT& other) const {
     return this->m_aquct == other.m_aquct;
 }
+
+const std::vector<AquiferCT::AQUCT_data>& AquiferCT::data() const {
+    return this->m_aquct;
+}
+
 }
