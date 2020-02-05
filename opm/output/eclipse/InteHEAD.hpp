@@ -25,15 +25,16 @@
 #include <memory>
 #include <vector>
 
-namespace Opm { namespace RestartIO {
+
+namespace Opm {
+
+class UnitSystem;
+
+namespace RestartIO {
 
     class InteHEAD
     {
     public:
-        enum class UnitSystem {
-            Metric, Field, Lab, PVT_M
-        };
-
         struct WellTableDim {
             int numWells;
             int maxPerf;

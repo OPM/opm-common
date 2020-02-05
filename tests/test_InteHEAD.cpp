@@ -29,6 +29,7 @@
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 #include <opm/io/eclipse/rst/header.hpp>
 
@@ -114,13 +115,11 @@ BOOST_AUTO_TEST_CASE(NumActive)
 
 BOOST_AUTO_TEST_CASE(UnitConventions)
 {
-    using USys = Opm::RestartIO::InteHEAD::UnitSystem;
-
     auto ih = Opm::RestartIO::InteHEAD{};
 
     // Metric
     {
-        ih.unitConventions(USys::Metric);
+        ih.unitConventions(Opm::UnitSystem::newMETRIC());
 
         const auto& v = ih.data();
 
@@ -129,7 +128,7 @@ BOOST_AUTO_TEST_CASE(UnitConventions)
 
     // Field
     {
-        ih.unitConventions(USys::Field);
+        ih.unitConventions(Opm::UnitSystem::newFIELD());
 
         const auto& v = ih.data();
 
@@ -138,7 +137,7 @@ BOOST_AUTO_TEST_CASE(UnitConventions)
 
     // Lab
     {
-        ih.unitConventions(USys::Lab);
+        ih.unitConventions(Opm::UnitSystem::newLAB());
 
         const auto& v = ih.data();
 
@@ -147,7 +146,7 @@ BOOST_AUTO_TEST_CASE(UnitConventions)
 
     // PVT-M
     {
-        ih.unitConventions(USys::PVT_M);
+        ih.unitConventions(Opm::UnitSystem::newPVT_M());
 
         const auto& v = ih.data();
 
@@ -492,7 +491,6 @@ TSTEP
 
 
 BOOST_AUTO_TEST_CASE(TestHeader) {
-    using USys = Opm::RestartIO::InteHEAD::UnitSystem;
     using Ph = Opm::RestartIO::InteHEAD::Phases;
 
     const auto nx = 10;
@@ -556,7 +554,7 @@ BOOST_AUTO_TEST_CASE(TestHeader) {
     auto ih = Opm::RestartIO::InteHEAD{}
          .dimensions(nx, ny, nz)
          .numActive(nactive)
-         .unitConventions(USys::Metric)
+         .unitConventions(Opm::UnitSystem::newMETRIC())
          .wellTableDimensions({ numWells, maxPerf, maxWellsInGroup, maxGroupInField, maxWellsInField})
          .calendarDate({year, month, mday, hour, minute, seconds, mseconds})
          .activePhases(Ph{1,1,1})

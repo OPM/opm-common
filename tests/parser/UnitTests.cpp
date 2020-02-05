@@ -644,6 +644,20 @@ BOOST_AUTO_TEST_CASE(TemperatureConversions)
 
 
 
+BOOST_AUTO_TEST_CASE(EclipseID) {
+    BOOST_CHECK_THROW(UnitSystem(0), std::invalid_argument);
+    BOOST_CHECK_THROW(UnitSystem(5), std::invalid_argument);
+
+    UnitSystem metric1(UnitSystem::UnitType::UNIT_TYPE_METRIC);
+    UnitSystem metric2(metric1.ecl_id());
+    BOOST_CHECK( metric1 == metric2 );
+
+    UnitSystem field1(UnitSystem::UnitType::UNIT_TYPE_FIELD);
+    UnitSystem field2(field1.ecl_id());
+    BOOST_CHECK( field1 == field2 );
+}
+
+
 BOOST_AUTO_TEST_CASE(DECK_NAMES) {
     BOOST_CHECK( !UnitSystem::valid_name("INVALID"));
     BOOST_CHECK( UnitSystem::valid_name("FIELD"));
