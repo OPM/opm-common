@@ -57,12 +57,12 @@ namespace Opm {
         double conFlowCoefficient() const;
         double conCrossArea() const;
         double conMaxCrossArea() const;
-
-        // parameters for pressure loss along the pipe
-        double pipeAdditionalLength() const;
         double pipeDiameter() const;
         double pipeRoughness() const;
         double pipeCrossArea() const;
+
+        // parameters for pressure loss along the pipe
+        double pipeAdditionalLength() const;
 
         // Status: OPEN or SHUT
         ICDStatus status() const;

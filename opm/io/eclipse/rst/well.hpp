@@ -29,12 +29,15 @@
 #include <opm/io/eclipse/rst/segment.hpp>
 
 namespace Opm {
+class UnitSystem;
+
 namespace RestartIO {
 
 struct RstHeader;
 
 struct RstWell {
-    RstWell(const RstHeader& header,
+    RstWell(const ::Opm::UnitSystem& unit_system,
+            const RstHeader& header,
             const std::string& group_arg,
             const std::string* zwel,
             const int * iwel,
@@ -44,7 +47,8 @@ struct RstWell {
             const float * scon,
             const double * xcon);
 
-    RstWell(const RstHeader& header,
+    RstWell(const ::Opm::UnitSystem& unit_system,
+            const RstHeader& header,
             const std::string& group_arg,
             const std::string* zwel,
             const int * iwel,
@@ -104,6 +108,7 @@ struct RstWell {
     double water_void_rate;
     double gas_void_rate;
 
+    const RstSegment segment(int segment_number) const;
     std::vector<RstConnection> connections;
     std::vector<RstSegment> segments;
 };

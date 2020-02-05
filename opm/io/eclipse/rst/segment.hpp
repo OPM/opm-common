@@ -25,10 +25,12 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/icd.hpp>
 
 namespace Opm {
+class UnitSystem;
+
 namespace RestartIO {
 
 struct RstSegment {
-    RstSegment(const int* iseg, const double * rseg);
+    RstSegment(const ::Opm::UnitSystem& unit_system, const int* iseg, const double * rseg);
 
     int segment;
     int outlet_segment;

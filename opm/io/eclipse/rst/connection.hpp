@@ -24,12 +24,14 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Connection.hpp>
 
 namespace Opm {
+class UnitSystem;
+
 namespace RestartIO {
 
 class Header;
 
 struct RstConnection {
-    RstConnection(const int* icon, const float* scon, const double *xcon);
+    RstConnection(const ::Opm::UnitSystem& unit_system, const int* icon, const float* scon, const double *xcon);
 
     int insert_index;
     std::array<int,3> ijk;

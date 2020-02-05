@@ -16,8 +16,9 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <opm/parser/eclipse/EclipseState/Schedule/MSW/Segment.hpp>
 
+#include <opm/io/eclipse/rst/segment.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/MSW/Segment.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/SpiralICD.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/Valve.hpp>
 
@@ -45,6 +46,71 @@ static constexpr double invalid_value = -1.e100;
       m_data_ready(false)
     {
     }
+
+
+    Segment::Segment(const RestartIO::RstSegment& rst_segment):
+        m_segment_number(rst_segment.segment),
+        m_branch(rst_segment.branch),
+        m_outlet_segment(rst_segment.outlet_segment),
+        m_total_length( rst_segment.dist_bhp_ref ),
+        m_depth(rst_segment.bhp_ref_dz),
+        m_internal_diameter(rst_segment.diameter),
+        m_roughness(rst_segment.roughness),
+        m_cross_area(rst_segment.area),
+        m_volume(rst_segment.volume),
+        m_data_ready(true),
+        m_segment_type(rst_segment.segment_type)
+    {
+        if (this->m_segment_type == SegmentType::SICD) {
+            double scalingFactor = -1;  // The scaling factor will be and updated from the simulator.
+
+            SpiralICD icd(rst_segment.base_strength,
+                          rst_segment.icd_length,
+                          rst_segment.fluid_density,
+                          rst_segment.fluid_viscosity,
+                          rst_segment.critical_water_fraction,
+                          rst_segment.transition_region_width,
+                          rst_segment.max_emulsion_ratio,
+                          rst_segment.icd_scaling_mode,
+                          rst_segment.max_valid_flow_rate,
+                          rst_segment.icd_status,
+                          scalingFactor);
+
+            this->updateSpiralICD(icd);
+        }
+
+        if (this->m_segment_type == SegmentType::VALVE) {
+            /*
+              These three variables are currently not stored in the restart
+              file; here we initialize with the default values, but if they have
+              originally been assigned in the deck with non-default values, that
+              will *not* be picked in a restarted run.
+            */
+
+            double pipeDiam = this->m_internal_diameter;
+            double pipeRough = this->m_roughness;
+            double pipeCrossA = this->m_cross_area;
+
+            Valve valve(rst_segment.valve_flow_coeff,
+                        rst_segment.valve_area,
+                        rst_segment.valve_max_area,
+                        rst_segment.valve_length,
+                        pipeDiam,
+                        pipeRough,
+                        pipeCrossA,
+                        rst_segment.icd_status);
+
+            /*
+              The segment length argument should be the length of this
+              particular segment; in the input phase that is calculated from the
+              WellSegments::segmentLength() function which also uses the outlet
+              segment.
+            */
+            double segment_length = -1;
+            this->updateValve(valve, segment_length);
+        }
+    }
+
 
 
     Segment::Segment(int segment_number_in, int branch_in, int outlet_segment_in, double length_in, double depth_in,

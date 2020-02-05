@@ -16,12 +16,14 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include <iostream>
 
 
 #include <iostream>
 
 #include <opm/io/eclipse/rst/state.hpp>
 #include <opm/io/eclipse/ERst.hpp>
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 
 
@@ -34,6 +36,16 @@ int main(int argc, char ** argv) {
                 std::cout << "Loading restart step: " << report_step << std::endl;
                 const auto& state = Opm::RestartIO::RstState::load(rst_file, report_step);
                 static_cast<void>(state); // Suppress unused variable warning.
+
+
+
+                for (const auto& rst_well : state.wells) {
+                    std::cout << "Loading well " << rst_well.name << std::endl;
+                    for (const auto& rst_segment : rst_well.segments) {
+                        std::cout << "  Segment: " << rst_segment.segment << std::endl;
+                        Opm::Segment segment(rst_segment);
+                    }
+                }
             }
         }
     }
