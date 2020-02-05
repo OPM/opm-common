@@ -35,8 +35,6 @@
 #include <opm/parser/eclipse/EclipseState/Tables/Regdims.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 
-#include <opm/parser/eclipse/Units/UnitSystem.hpp>
-
 #include <algorithm>
 #include <cstddef>
 #include <exception>
@@ -207,32 +205,6 @@ namespace {
         }};
     }
 
-    Opm::RestartIO::InteHEAD::UnitSystem
-    getUnitConvention(const ::Opm::UnitSystem& us)
-    {
-        using US = ::Opm::RestartIO::InteHEAD::UnitSystem;
-
-        switch (us.getType()) {
-        case ::Opm::UnitSystem::UnitType::UNIT_TYPE_METRIC:
-            return US::Metric;
-
-        case ::Opm::UnitSystem::UnitType::UNIT_TYPE_FIELD:
-            return US::Field;
-
-        case ::Opm::UnitSystem::UnitType::UNIT_TYPE_LAB:
-            return US::Lab;
-
-        case ::Opm::UnitSystem::UnitType::UNIT_TYPE_PVT_M:
-            return US::PVT_M;
-
-        case ::Opm::UnitSystem::UnitType::UNIT_TYPE_INPUT:
-            throw std::invalid_argument {
-                "Cannot Run Simulation With Non-Standard Units"
-            };
-        }
-
-        return US::Metric;
-    }
 
     Opm::RestartIO::InteHEAD::Phases
     getActivePhases(const ::Opm::Runspec& rspec)
@@ -413,7 +385,7 @@ createInteHead(const EclipseState& es,
     const auto ih = InteHEAD{}
         .dimensions         (grid.getNXYZ())
         .numActive          (static_cast<int>(grid.getNumActive()))
-        .unitConventions    (getUnitConvention(es.getDeckUnitSystem()))
+        .unitConventions    (es.getDeckUnitSystem())
         .wellTableDimensions(getWellTableDims(nwgmax, ngmax, rspec,
                                               sched, lookup_step))
         .calendarDate       (getSimulationTimePoint(sched.posixStartTime(), simTime))

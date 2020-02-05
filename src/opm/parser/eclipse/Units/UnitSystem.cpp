@@ -1043,37 +1043,70 @@ namespace {
 
     namespace {
 
-        UnitSystem::UnitType fromDeckName(const std::string& deck_name) {
-            if (deck_name == "FIELD")
-                return UnitSystem::UnitType::UNIT_TYPE_FIELD;
+    int to_ecl_id(UnitSystem::UnitType unit_type) {
+        if (unit_type == UnitSystem::UnitType::UNIT_TYPE_METRIC)
+            return 1;
 
-            if (deck_name == "METRIC")
-                return UnitSystem::UnitType::UNIT_TYPE_METRIC;
+        if (unit_type == UnitSystem::UnitType::UNIT_TYPE_FIELD)
+            return 2;
 
-            if (deck_name == "LAB")
-                return UnitSystem::UnitType::UNIT_TYPE_LAB;
+        if (unit_type == UnitSystem::UnitType::UNIT_TYPE_LAB)
+            return 3;
 
-            if (deck_name == "PVT-M")
-                return UnitSystem::UnitType::UNIT_TYPE_PVT_M;
+        if (unit_type == UnitSystem::UnitType::UNIT_TYPE_PVT_M)
+            return 4;
 
-            throw std::invalid_argument("Unit string: " + deck_name + " not recognized ");
-        }
+        throw std::invalid_argument("The nonstandard unit system does not have a corresponding ecl id");
     }
 
-    bool UnitSystem::valid_name(const std::string& deck_name) {
-        if (deck_name == "FIELD")
-            return true;
+    UnitSystem::UnitType from_ecl_id(int ecl_id) {
+        if (ecl_id == 1)
+            return UnitSystem::UnitType::UNIT_TYPE_METRIC;
 
-        if (deck_name == "METRIC")
-            return true;
+        if (ecl_id == 2)
+            return UnitSystem::UnitType::UNIT_TYPE_FIELD;
 
-        if (deck_name == "LAB")
-            return true;
+        if (ecl_id == 3)
+            return UnitSystem::UnitType::UNIT_TYPE_LAB;
 
-        if (deck_name == "PVT-M")
-            return true;
+        if (ecl_id == 4)
+            return UnitSystem::UnitType::UNIT_TYPE_PVT_M;
 
-        return false;
+        throw std::invalid_argument("The integer value: " + std::to_string(ecl_id) + " is not recogmized as a valid Eclipse unit ID");
+    }
+
+    UnitSystem::UnitType fromDeckName(const std::string &deck_name) {
+      if (deck_name == "FIELD")
+        return UnitSystem::UnitType::UNIT_TYPE_FIELD;
+
+      if (deck_name == "METRIC")
+        return UnitSystem::UnitType::UNIT_TYPE_METRIC;
+
+      if (deck_name == "LAB")
+        return UnitSystem::UnitType::UNIT_TYPE_LAB;
+
+      if (deck_name == "PVT-M")
+        return UnitSystem::UnitType::UNIT_TYPE_PVT_M;
+
+      throw std::invalid_argument("Unit string: " + deck_name +
+                                  " not recognized ");
+    }
+    }
+
+    bool UnitSystem::valid_name(const std::string &deck_name) {
+      if (deck_name == "FIELD")
+        return true;
+
+      if (deck_name == "METRIC")
+        return true;
+
+      if (deck_name == "LAB")
+        return true;
+
+      if (deck_name == "PVT-M")
+        return true;
+
+      return false;
     }
 
     std::string UnitSystem::deck_name() const {
@@ -1092,6 +1125,17 @@ namespace {
         UnitSystem( fromDeckName(deck_name) )
     {
     }
+
+
+    UnitSystem::UnitSystem(int ecl_id) :
+        UnitSystem(from_ecl_id(ecl_id))
+    {}
+
+
+    int UnitSystem::ecl_id() const {
+        return to_ecl_id( this->m_unittype );
+    }
+
 
     bool UnitSystem::hasDimension(const std::string& dimension) const {
         return (m_dimensions.find( dimension ) != m_dimensions.end());

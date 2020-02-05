@@ -1,6 +1,7 @@
 #include <opm/output/eclipse/InteHEAD.hpp>
 
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 #include <algorithm>
 #include <chrono>
@@ -473,20 +474,7 @@ Opm::RestartIO::InteHEAD::numActive(const int nactive)
 Opm::RestartIO::InteHEAD&
 Opm::RestartIO::InteHEAD::unitConventions(const UnitSystem& usys)
 {
-    const auto unit = [&usys]()
-    {
-        switch (usys) {
-        case UnitSystem::Metric: return 1;
-        case UnitSystem::Field:  return 2;
-        case UnitSystem::Lab:    return 3;
-        case UnitSystem::PVT_M:  return 4;
-        }
-
-        return 1;
-    }();
-
-    this->data_[UNIT] = unit;
-
+    this->data_[UNIT] = usys.ecl_id();
     return *this;
 }
 

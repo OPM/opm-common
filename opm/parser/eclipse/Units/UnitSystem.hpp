@@ -76,6 +76,7 @@ namespace Opm {
             icd_strength,
         };
 
+        explicit UnitSystem(int ecl_id);
         explicit UnitSystem(UnitType unit = UnitType::UNIT_TYPE_METRIC);
         explicit UnitSystem(const std::string& deck_name);
         UnitSystem(const std::string& name, UnitType unit,
@@ -84,6 +85,7 @@ namespace Opm {
 
         const std::string& getName() const;
         UnitType getType() const;
+        int ecl_id() const;
 
         void addDimension(const std::string& dimension, double SIfactor, double SIoffset = 0.0);
         void addDimension( Dimension );
