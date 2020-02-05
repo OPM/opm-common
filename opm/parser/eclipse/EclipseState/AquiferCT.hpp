@@ -61,9 +61,11 @@ namespace Opm {
                     theta ,  // angle subtended by the aquifer boundary
                     c2 ;     // 6.283 (METRIC, PVT-M); 1.1191 (FIELD); 6.283 (LAB).
 
-            std::shared_ptr<double> p0; //Initial aquifer pressure at datum depth, d0
+            std::pair<bool, double> p0; //Initial aquifer pressure at datum depth, d0
             std::vector<double> td, pi;
             std::vector<int> cell_id;
+
+            bool operator==(const AQUCT_data& other) const;
         };
 
         AquiferCT(const TableManager& tables, const Deck& deck);
@@ -71,6 +73,7 @@ namespace Opm {
         std::size_t size() const;
         std::vector<AquiferCT::AQUCT_data>::const_iterator begin() const;
         std::vector<AquiferCT::AQUCT_data>::const_iterator end() const;
+        bool operator==(const AquiferCT& other) const;
     private:
         std::vector<AquiferCT::AQUCT_data> m_aquct;
     };

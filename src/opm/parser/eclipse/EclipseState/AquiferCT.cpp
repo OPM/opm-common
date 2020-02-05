@@ -58,12 +58,11 @@ AquiferCT::AQUCT_data::AQUCT_data(const DeckRecord& record, const TableManager& 
     c1(1.0),
     h(record.getItem("THICKNESS_AQ").getSIDouble(0)),
     theta( record.getItem("INFLUENCE_ANGLE").getSIDouble(0)/360.0),
-    c2(6.283)        // Value of C2 used by E100 (for METRIC, PVT-M and LAB unit systems)
+    c2(6.283),         // Value of C2 used by E100 (for METRIC, PVT-M and LAB unit systems)
+    p0(std::make_pair(false, 0))
 {
-    if (record.getItem("P_INI").hasValue(0)) {
-        double * raw_ptr = new double( record.getItem("P_INI").getSIDouble(0) );
-        this->p0.reset( raw_ptr );
-    }
+    if (record.getItem("P_INI").hasValue(0))
+        this->p0 = std::make_pair(true, record.getItem("P_INI").getSIDouble(0));
 
     // Get the correct influence table values
     if (this->inftableID > 1) {
@@ -78,6 +77,24 @@ AquiferCT::AQUCT_data::AQUCT_data(const DeckRecord& record, const TableManager& 
     }
 }
 
+
+bool AquiferCT::AQUCT_data::operator==(const AquiferCT::AQUCT_data& other) const {
+    return this->aquiferID == other.aquiferID &&
+           this->inftableID == other.inftableID &&
+           this->pvttableID == other.pvttableID &&
+           this->phi_aq == other.phi_aq &&
+           this->C_t == other.C_t &&
+           this->r_o == other.r_o &&
+           this->k_a == other.k_a &&
+           this->c1  == other.c1  &&
+           this->h   == other.h   &&
+           this->theta == other.theta &&
+           this->c2 == other.c2 &&
+           this->p0 == other.p0 &&
+           this->td == other.td &&
+           this->pi == other.pi &&
+           this->cell_id == other.cell_id;
+}
 
 AquiferCT::AquiferCT(const TableManager& tables, const Deck& deck)
 {
@@ -101,5 +118,9 @@ std::vector<AquiferCT::AQUCT_data>::const_iterator AquiferCT::begin() const {
 
 std::vector<AquiferCT::AQUCT_data>::const_iterator AquiferCT::end() const {
     return this->m_aquct.end();
+}
+
+bool AquiferCT::operator==(const AquiferCT& other) const {
+    return this->m_aquct == other.m_aquct;
 }
 }

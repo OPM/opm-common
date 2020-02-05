@@ -112,7 +112,8 @@ BOOST_AUTO_TEST_CASE(AquiferCTTest){
             BOOST_CHECK_EQUAL(it.aquiferID , 1);
             BOOST_CHECK_EQUAL(it.phi_aq , 0.3);
             BOOST_CHECK_EQUAL(it.inftableID , 2);
-            BOOST_CHECK_CLOSE(*(it.p0), 1.5e5, 1e-6);
+            BOOST_CHECK(it.p0.first == true);
+            BOOST_CHECK_CLOSE(it.p0.second, 1.5e5, 1e-6);
         }
         BOOST_CHECK_EQUAL(aquiferct.size(), 1);
     }
@@ -124,7 +125,7 @@ BOOST_AUTO_TEST_CASE(AquiferCTTest){
             BOOST_CHECK_EQUAL(it.aquiferID , 1);
             BOOST_CHECK_EQUAL(it.phi_aq , 0.3);
             BOOST_CHECK_EQUAL(it.inftableID , 2);
-            BOOST_CHECK(it.p0 == nullptr);
+            BOOST_CHECK(it.p0.first == false);
         }
     }
 }
