@@ -22,13 +22,12 @@
 
 namespace Opm {
 
-    AquiferCT::AquiferCT(const EclipseState& eclState, const Deck& deck)
+    AquiferCT::AquiferCT(const TableManager& tables, const Deck& deck)
     {
         if (!deck.hasKeyword("AQUCT"))
             return;
 
         const auto& aquctKeyword = deck.getKeyword("AQUCT");
-
         for (auto& aquctRecord : aquctKeyword){
 
             AquiferCT::AQUCT_data data;
@@ -53,7 +52,7 @@ namespace Opm {
 
             // Get the correct influence table values
             if (data.inftableID > 1){
-                const auto& aqutabTable = eclState.getTableManager().getAqutabTables().getTable(data.inftableID - 2);
+                const auto& aqutabTable = tables.getAqutabTables().getTable(data.inftableID - 2);
                 const auto& aqutab_tdColumn = aqutabTable.getColumn(0);
                 const auto& aqutab_piColumn = aqutabTable.getColumn(1);
                 data.td = aqutab_tdColumn.vectorCopy();

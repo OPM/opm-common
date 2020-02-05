@@ -101,7 +101,7 @@ inline Deck createAquiferCTDeckDefaultP0() {
 
 inline std::vector<AquiferCT::AQUCT_data> init_aquiferct(Deck& deck){
     EclipseState eclState( deck );
-    AquiferCT aquct( eclState, deck);
+    AquiferCT aquct( eclState.getTableManager(), deck);
     std::vector<AquiferCT::AQUCT_data> aquiferct = aquct.getAquifers();
 
     return aquiferct;

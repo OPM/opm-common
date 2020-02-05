@@ -39,7 +39,7 @@
 
 namespace Opm {
 
-    class EclipseState;
+    class TableManager;
 
     class AquiferCT {
         public:
@@ -66,7 +66,7 @@ namespace Opm {
                     std::vector<double> td, pi;
             };
 
-            AquiferCT(const EclipseState& eclState, const Deck& deck);
+            AquiferCT(const TableManager& tables, const Deck& deck);
 
             const std::vector<AquiferCT::AQUCT_data>& getAquifers() const;
             int getAqInflTabID(size_t aquiferIndex);
