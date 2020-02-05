@@ -61,7 +61,6 @@ namespace Opm { namespace RestartIO {
         DoubHEAD& operator=(DoubHEAD&& rhs) = default;
 
         DoubHEAD& tuningParameters(const Tuning&     tuning,
-                                   const std::size_t lookup_step,
                                    const double      cnvT);
 
         DoubHEAD& timeStamp(const TimeStamp& ts);

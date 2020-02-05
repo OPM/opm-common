@@ -155,7 +155,7 @@ namespace Opm
                  const DynamicState<OilVaporizationProperties>& oilVapProps,
                  const Events& events,
                  const DynamicVector<Deck>& modifierDeck,
-                 const Tuning& tuning,
+                 const DynamicState<Tuning>& tuning,
                  const MessageLimits& messageLimits,
                  const Runspec& runspec,
                  const VFPProdMap& vfpProdTables,
@@ -232,7 +232,8 @@ namespace Opm
         bool hasGroup(const std::string& groupName, std::size_t timeStep) const;
         const Group& getGroup(const std::string& groupName, size_t timeStep) const;
 
-        const Tuning& getTuning() const;
+        const Tuning& getTuning(size_t timeStep) const;
+        const DynamicState<Tuning>& getTuning() const;
         const MessageLimits& getMessageLimits() const;
         void invalidNamePattern (const std::string& namePattern, const ParseContext& parseContext, ErrorGuard& errors, const DeckKeyword& keyword) const;
         const GuideRateConfig& guideRateConfig(size_t timeStep) const;
@@ -285,7 +286,7 @@ namespace Opm
         DynamicState< OilVaporizationProperties > m_oilvaporizationproperties;
         Events m_events;
         DynamicVector< Deck > m_modifierDeck;
-        Tuning m_tuning;
+        DynamicState<Tuning> m_tuning;
         MessageLimits m_messageLimits;
         Runspec m_runspec;
         VFPProdMap vfpprod_tables;

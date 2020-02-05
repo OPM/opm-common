@@ -119,7 +119,7 @@ namespace {
         m_oilvaporizationproperties( this->m_timeMap, OilVaporizationProperties(runspec.tabdims().getNumPVTTables()) ),
         m_events( this->m_timeMap ),
         m_modifierDeck( this->m_timeMap, Deck{} ),
-        m_tuning( this->m_timeMap ),
+        m_tuning( this->m_timeMap, Tuning() ),
         m_messageLimits( this->m_timeMap ),
         m_runspec( runspec ),
         wtest_config(this->m_timeMap, std::make_shared<WellTestConfig>() ),
@@ -208,7 +208,7 @@ namespace {
                        const DynamicState<OilVaporizationProperties>& oilVapProps,
                        const Events& events,
                        const DynamicVector<Deck>& modifierDeck,
-                       const Tuning& tuning,
+                       const DynamicState<Tuning>& tuning,
                        const MessageLimits& messageLimits,
                        const Runspec& runspec,
                        const VFPProdMap& vfpProdTables,
@@ -1810,40 +1810,23 @@ namespace {
 
         int numrecords = keyword.size();
 
+        Tuning tuning(m_tuning.get(currentStep));
         if (numrecords > 0) {
             const auto& record1 = keyword.getRecord(0);
 
-            double TSINIT = record1.getItem("TSINIT").getSIDouble(0);
-            this->m_tuning.setTSINIT(currentStep, TSINIT);
-
-            double TSMAXZ = record1.getItem("TSMAXZ").getSIDouble(0);
-            this->m_tuning.setTSMAXZ(currentStep, TSMAXZ);
-
-            double TSMINZ = record1.getItem("TSMINZ").getSIDouble(0);
-            this->m_tuning.setTSMINZ(currentStep, TSMINZ);
-
-            double TSMCHP = record1.getItem("TSMCHP").getSIDouble(0);
-            this->m_tuning.setTSMCHP(currentStep, TSMCHP);
-
-            double TSFMAX = record1.getItem("TSFMAX").get< double >(0);
-            this->m_tuning.setTSFMAX(currentStep, TSFMAX);
-
-            double TSFMIN = record1.getItem("TSFMIN").get< double >(0);
-            this->m_tuning.setTSFMIN(currentStep, TSFMIN);
-
-            double TSFCNV = record1.getItem("TSFCNV").get< double >(0);
-            this->m_tuning.setTSFCNV(currentStep, TSFCNV);
-
-            double TFDIFF = record1.getItem("TFDIFF").get< double >(0);
-            this->m_tuning.setTFDIFF(currentStep, TFDIFF);
-
-            double THRUPT = record1.getItem("THRUPT").get< double >(0);
-            this->m_tuning.setTHRUPT(currentStep, THRUPT);
-
+            tuning.TSINIT = record1.getItem("TSINIT").getSIDouble(0);
+            tuning.TSMAXZ = record1.getItem("TSMAXZ").getSIDouble(0);
+            tuning.TSMINZ = record1.getItem("TSMINZ").getSIDouble(0);
+            tuning.TSMCHP = record1.getItem("TSMCHP").getSIDouble(0);
+            tuning.TSFMAX = record1.getItem("TSFMAX").get< double >(0);
+            tuning.TSFMIN = record1.getItem("TSFMIN").get< double >(0);
+            tuning.TSFCNV = record1.getItem("TSFCNV").get< double >(0);
+            tuning.TFDIFF = record1.getItem("TFDIFF").get< double >(0);
+            tuning.THRUPT = record1.getItem("THRUPT").get< double >(0);
             const auto& TMAXWCdeckItem = record1.getItem("TMAXWC");
             if (TMAXWCdeckItem.hasValue(0)) {
-                double TMAXWC = TMAXWCdeckItem.getSIDouble(0);
-                this->m_tuning.setTMAXWC(currentStep, TMAXWC);
+                tuning.TMAXWC_has_value = true;
+                tuning.TMAXWC = TMAXWCdeckItem.getSIDouble(0);
             }
         }
 
@@ -1851,86 +1834,46 @@ namespace {
         if (numrecords > 1) {
             const auto& record2 = keyword.getRecord(1);
 
-            double TRGTTE = record2.getItem("TRGTTE").get< double >(0);
-            this->m_tuning.setTRGTTE(currentStep, TRGTTE);
-
-            double TRGCNV = record2.getItem("TRGCNV").get< double >(0);
-            this->m_tuning.setTRGCNV(currentStep, TRGCNV);
-
-            double TRGMBE = record2.getItem("TRGMBE").get< double >(0);
-            this->m_tuning.setTRGMBE(currentStep, TRGMBE);
-
-            double TRGLCV = record2.getItem("TRGLCV").get< double >(0);
-            this->m_tuning.setTRGLCV(currentStep, TRGLCV);
-
-            double XXXTTE = record2.getItem("XXXTTE").get< double >(0);
-            this->m_tuning.setXXXTTE(currentStep, XXXTTE);
-
-            double XXXCNV = record2.getItem("XXXCNV").get< double >(0);
-            this->m_tuning.setXXXCNV(currentStep, XXXCNV);
-
-            double XXXMBE = record2.getItem("XXXMBE").get< double >(0);
-            this->m_tuning.setXXXMBE(currentStep, XXXMBE);
-
-            double XXXLCV = record2.getItem("XXXLCV").get< double >(0);
-            this->m_tuning.setXXXLCV(currentStep, XXXLCV);
-
-            double XXXWFL = record2.getItem("XXXWFL").get< double >(0);
-            this->m_tuning.setXXXWFL(currentStep, XXXWFL);
-
-            double TRGFIP = record2.getItem("TRGFIP").get< double >(0);
-            this->m_tuning.setTRGFIP(currentStep, TRGFIP);
-
+            tuning.TRGTTE = record2.getItem("TRGTTE").get< double >(0);
+            tuning.TRGCNV = record2.getItem("TRGCNV").get< double >(0);
+            tuning.TRGMBE = record2.getItem("TRGMBE").get< double >(0);
+            tuning.TRGLCV = record2.getItem("TRGLCV").get< double >(0);
+            tuning.XXXTTE = record2.getItem("XXXTTE").get< double >(0);
+            tuning.XXXCNV = record2.getItem("XXXCNV").get< double >(0);
+            tuning.XXXMBE = record2.getItem("XXXMBE").get< double >(0);
+            tuning.XXXLCV = record2.getItem("XXXLCV").get< double >(0);
+            tuning.XXXWFL = record2.getItem("XXXWFL").get< double >(0);
+            tuning.TRGFIP = record2.getItem("TRGFIP").get< double >(0);
             const auto& TRGSFTdeckItem = record2.getItem("TRGSFT");
             if (TRGSFTdeckItem.hasValue(0)) {
-                double TRGSFT = TRGSFTdeckItem.get< double >(0);
-                this->m_tuning.setTRGSFT(currentStep, TRGSFT);
+                tuning.TRGSFT_has_value = true;
+                tuning.TRGSFT = TRGSFTdeckItem.get< double >(0);
             }
 
-            double THIONX = record2.getItem("THIONX").get< double >(0);
-            this->m_tuning.setTHIONX(currentStep, THIONX);
-
-            int TRWGHT = record2.getItem("TRWGHT").get< int >(0);
-            this->m_tuning.setTRWGHT(currentStep, TRWGHT);
+            tuning.THIONX = record2.getItem("THIONX").get< double >(0);
+            tuning.TRWGHT = record2.getItem("TRWGHT").get< int >(0);
         }
 
 
         if (numrecords > 2) {
             const auto& record3 = keyword.getRecord(2);
 
-            int NEWTMX = record3.getItem("NEWTMX").get< int >(0);
-            this->m_tuning.setNEWTMX(currentStep, NEWTMX);
-
-            int NEWTMN = record3.getItem("NEWTMN").get< int >(0);
-            this->m_tuning.setNEWTMN(currentStep, NEWTMN);
-
-            int LITMAX = record3.getItem("LITMAX").get< int >(0);
-            this->m_tuning.setLITMAX(currentStep, LITMAX);
-
-            int LITMIN = record3.getItem("LITMIN").get< int >(0);
-            this->m_tuning.setLITMIN(currentStep, LITMIN);
-
-            int MXWSIT = record3.getItem("MXWSIT").get< int >(0);
-            this->m_tuning.setMXWSIT(currentStep, MXWSIT);
-
-            int MXWPIT = record3.getItem("MXWPIT").get< int >(0);
-            this->m_tuning.setMXWPIT(currentStep, MXWPIT);
-
-            double DDPLIM = record3.getItem("DDPLIM").getSIDouble(0);
-            this->m_tuning.setDDPLIM(currentStep, DDPLIM);
-
-            double DDSLIM = record3.getItem("DDSLIM").get< double >(0);
-            this->m_tuning.setDDSLIM(currentStep, DDSLIM);
-
-            double TRGDPR = record3.getItem("TRGDPR").getSIDouble(0);
-            this->m_tuning.setTRGDPR(currentStep, TRGDPR);
-
+            tuning.NEWTMX = record3.getItem("NEWTMX").get< int >(0);
+            tuning.NEWTMN = record3.getItem("NEWTMN").get< int >(0);
+            tuning.LITMAX = record3.getItem("LITMAX").get< int >(0);
+            tuning.LITMIN = record3.getItem("LITMIN").get< int >(0);
+            tuning.MXWSIT = record3.getItem("MXWSIT").get< int >(0);
+            tuning.MXWPIT = record3.getItem("MXWPIT").get< int >(0);
+            tuning.DDPLIM = record3.getItem("DDPLIM").getSIDouble(0);
+            tuning.DDSLIM = record3.getItem("DDSLIM").get< double >(0);
+            tuning.TRGDPR = record3.getItem("TRGDPR").getSIDouble(0);
             const auto& XXXDPRdeckItem = record3.getItem("XXXDPR");
             if (XXXDPRdeckItem.hasValue(0)) {
-                double XXXDPR = XXXDPRdeckItem.getSIDouble(0);
-                this->m_tuning.setXXXDPR(currentStep, XXXDPR);
+                tuning.XXXDPR_has_value = true;
+                tuning.XXXDPR = XXXDPRdeckItem.getSIDouble(0);
             }
         }
+        m_tuning.update(currentStep, tuning);
         m_events.addEvent( ScheduleEvents::TUNING_CHANGE , currentStep);
 
     }
@@ -2663,7 +2606,11 @@ void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, c
 
 
 
-    const Tuning& Schedule::getTuning() const {
+    const Tuning& Schedule::getTuning(size_t timeStep) const {
+        return this->m_tuning.get( timeStep );
+    }
+
+    const DynamicState<Tuning>& Schedule::getTuning() const {
         return this->m_tuning;
     }
 

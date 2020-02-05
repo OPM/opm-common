@@ -249,15 +249,14 @@ namespace {
     }
 
     Opm::RestartIO::InteHEAD::TuningPar
-    getTuningPars(const ::Opm::Tuning& tuning,
-                  const std::size_t    lookup_step)
+    getTuningPars(const ::Opm::Tuning& tuning)
     {
-        const auto& newtmx = tuning.getNEWTMX(lookup_step);
-        const auto& newtmn = tuning.getNEWTMN(lookup_step);
-        const auto& litmax = tuning.getLITMAX(lookup_step);
-        const auto& litmin = tuning.getLITMIN(lookup_step);
-        const auto& mxwsit = tuning.getMXWSIT(lookup_step);
-        const auto& mxwpit = tuning.getMXWPIT(lookup_step);
+        const auto& newtmx = tuning.NEWTMX;
+        const auto& newtmn = tuning.NEWTMN;
+        const auto& litmax = tuning.LITMAX;
+        const auto& litmin = tuning.LITMIN;
+        const auto& mxwsit = tuning.MXWSIT;
+        const auto& mxwpit = tuning.MXWPIT;
 
         return {
             newtmx,
@@ -429,7 +428,7 @@ createInteHead(const EclipseState& es,
              // n{isa}caqz: number of data elements per aquifer connection in {ISA}CAQ
         .params_NAAQZ       (1, 18, 24, 10, 7, 2, 4)
         .stepParam          (num_solver_steps, lookup_step)
-        .tuningParam        (getTuningPars(sched.getTuning(), lookup_step))
+        .tuningParam        (getTuningPars(sched.getTuning(lookup_step)))
         .wellSegDimensions  (getWellSegDims(rspec, sched, lookup_step))
         .regionDimensions   (getRegDims(tdim, rdim))
         .ngroups            ({ ngmax })
