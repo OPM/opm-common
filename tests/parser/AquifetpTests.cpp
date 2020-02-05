@@ -129,33 +129,35 @@ inline Deck createAquifetpDeck_defaultPressure(){
   return parser.parseString(deckData);
 }
 
-inline std::vector<Aquifetp::AQUFETP_data> init_aquifetp(Deck& deck){
+inline Aquifetp init_aquifetp(Deck& deck){
   Aquifetp aqufetp(deck);
-  std::vector<Aquifetp::AQUFETP_data> aquifetp = aqufetp.getAquifers();
-
-  return aquifetp;
+  return aqufetp;
 }
 
 BOOST_AUTO_TEST_CASE(AquifetpTest){
   auto aqufetp_deck = createAquifetpDeck();
-  std::vector< Aquifetp::AQUFETP_data > aquifetp = init_aquifetp(aqufetp_deck);
+  const auto& aquifetp = init_aquifetp(aqufetp_deck);
   for (const auto& it : aquifetp){
     BOOST_CHECK_EQUAL(it.aquiferID , 1);
     BOOST_CHECK_EQUAL(it.V0, 2.0e9);
     BOOST_CHECK_EQUAL(it.J, 500/86400e5);
+    BOOST_CHECK( it.p0.first );
   }
+  const auto& data = aquifetp.data();
+  Aquifetp aq2(data);
+  BOOST_CHECK(aq2 == aquifetp);
 
   auto aqufetp_deck_null = createNullAquifetpDeck();
-  std::vector< Aquifetp::AQUFETP_data > aquifetp_null = init_aquifetp(aqufetp_deck_null);
+  const auto& aquifetp_null = init_aquifetp(aqufetp_deck_null);
   BOOST_CHECK_EQUAL(aquifetp_null.size(), 0);
 
   auto aqufetp_deck_default = createAquifetpDeck_defaultPressure();
-  std::vector< Aquifetp::AQUFETP_data > aquifetp_default = init_aquifetp(aqufetp_deck_default);
+  const auto& aquifetp_default = init_aquifetp(aqufetp_deck_default);
   for (const auto& it : aquifetp_default){
     BOOST_CHECK_EQUAL(it.aquiferID , 1);
     BOOST_CHECK_EQUAL(it.V0, 2.0e9);
     BOOST_CHECK_EQUAL(it.J, 500/86400e5);
-    BOOST_CHECK( !it.p0 );
+    BOOST_CHECK( !it.p0.first );
   }
 
 }
