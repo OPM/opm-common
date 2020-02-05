@@ -68,10 +68,9 @@ namespace Opm {
 
             AquiferCT(const TableManager& tables, const Deck& deck);
 
-            const std::vector<AquiferCT::AQUCT_data>& getAquifers() const;
-            int getAqInflTabID(size_t aquiferIndex);
-            int getAqPvtTabID(size_t aquiferIndex);
-
+            std::size_t size() const;
+            std::vector<AquiferCT::AQUCT_data>::const_iterator begin() const;
+            std::vector<AquiferCT::AQUCT_data>::const_iterator end() const;
         private:
 
             std::vector<AquiferCT::AQUCT_data> m_aquct;

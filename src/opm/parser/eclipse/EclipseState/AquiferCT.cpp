@@ -66,19 +66,16 @@ namespace Opm {
             }
     }
 
-    const std::vector<AquiferCT::AQUCT_data>& AquiferCT::getAquifers() const
-    {
-        return m_aquct;
+
+    std::size_t AquiferCT::size() const {
+        return this->m_aquct.size();
     }
 
-    int AquiferCT::getAqInflTabID(size_t aquiferIndex)
-    {
-        return m_aquct.at(aquiferIndex).inftableID;
+    std::vector<AquiferCT::AQUCT_data>::const_iterator AquiferCT::begin() const {
+        return this->m_aquct.begin();
     }
 
-    int AquiferCT::getAqPvtTabID(size_t aquiferIndex)
-    {
-        return m_aquct.at(aquiferIndex).pvttableID;
+    std::vector<AquiferCT::AQUCT_data>::const_iterator AquiferCT::end() const {
+        return this->m_aquct.end();
     }
-
 }

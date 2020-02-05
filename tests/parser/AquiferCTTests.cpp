@@ -99,30 +99,32 @@ inline Deck createAquiferCTDeckDefaultP0() {
     return parser.parseString(deckData);
 }
 
-inline std::vector<AquiferCT::AQUCT_data> init_aquiferct(Deck& deck){
+AquiferCT init_aquiferct(const Deck& deck){
     EclipseState eclState( deck );
-    AquiferCT aquct( eclState.getTableManager(), deck);
-    std::vector<AquiferCT::AQUCT_data> aquiferct = aquct.getAquifers();
-
-    return aquiferct;
+    return AquiferCT(eclState.getTableManager(), deck);
 }
 
 BOOST_AUTO_TEST_CASE(AquiferCTTest){
     auto deck = createAquiferCTDeck();
-    std::vector< AquiferCT::AQUCT_data > aquiferct = init_aquiferct(deck);
-    for (const auto& it : aquiferct){
-        BOOST_CHECK_EQUAL(it.aquiferID , 1);
-        BOOST_CHECK_EQUAL(it.phi_aq , 0.3);
-        BOOST_CHECK_EQUAL(it.inftableID , 2);
-        BOOST_CHECK_CLOSE(*(it.p0), 1.5e5, 1e-6);
+    {
+        auto aquiferct = init_aquiferct(deck);
+        for (const auto& it : aquiferct){
+            BOOST_CHECK_EQUAL(it.aquiferID , 1);
+            BOOST_CHECK_EQUAL(it.phi_aq , 0.3);
+            BOOST_CHECK_EQUAL(it.inftableID , 2);
+            BOOST_CHECK_CLOSE(*(it.p0), 1.5e5, 1e-6);
+        }
+        BOOST_CHECK_EQUAL(aquiferct.size(), 1);
     }
 
     auto deck_default_p0 = createAquiferCTDeckDefaultP0();
-    aquiferct = init_aquiferct(deck_default_p0);
-    for (const auto& it : aquiferct){
-        BOOST_CHECK_EQUAL(it.aquiferID , 1);
-        BOOST_CHECK_EQUAL(it.phi_aq , 0.3);
-        BOOST_CHECK_EQUAL(it.inftableID , 2);
-        BOOST_CHECK(it.p0 == nullptr);
+    {
+        auto aquiferct = init_aquiferct(deck_default_p0);
+        for (const auto& it : aquiferct){
+            BOOST_CHECK_EQUAL(it.aquiferID , 1);
+            BOOST_CHECK_EQUAL(it.phi_aq , 0.3);
+            BOOST_CHECK_EQUAL(it.inftableID , 2);
+            BOOST_CHECK(it.p0 == nullptr);
+        }
     }
 }
