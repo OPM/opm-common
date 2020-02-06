@@ -38,6 +38,8 @@ class Aquifetp {
 
     struct AQUFETP_data{
         AQUFETP_data(const DeckRecord& record);
+        AQUFETP_data() = default;
+        AQUFETP_data(int aquiferID_, int pvttableID_, double J_, double C_t_, double V0_, double d0_, const std::pair<bool, double>& p0_);
         bool operator==(const AQUFETP_data& other) const;
 
         int aquiferID;
@@ -49,6 +51,7 @@ class Aquifetp {
         std::pair<bool, double> p0;
     };
 
+    Aquifetp() = default;
     Aquifetp(const Deck& deck);
     Aquifetp(const std::vector<Aquifetp::AQUFETP_data>& data);
     const std::vector<Aquifetp::AQUFETP_data>& data() const;
