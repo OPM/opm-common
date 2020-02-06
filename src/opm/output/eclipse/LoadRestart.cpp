@@ -67,6 +67,8 @@
 #include <utility>
 #include <vector>
 
+#include <boost/range.hpp>
+
 namespace VI = ::Opm::RestartIO::Helpers::VectorItems;
 
 namespace {
@@ -1026,6 +1028,75 @@ namespace {
         }
     }
 
+    ::Opm::Well::ProducerCMode producerControlMode(const int curr)
+    {
+        using PMode = ::Opm::Well::ProducerCMode;
+        using Ctrl  = VI::IWell::Value::WellCtrlMode;
+
+        switch (curr) {
+            case Ctrl::OilRate:  return PMode::ORAT;
+            case Ctrl::WatRate:  return PMode::WRAT;
+            case Ctrl::GasRate:  return PMode::GRAT;
+            case Ctrl::LiqRate:  return PMode::LRAT;
+            case Ctrl::ResVRate: return PMode::RESV;
+            case Ctrl::THP:      return PMode::THP;
+            case Ctrl::BHP:      return PMode::BHP;
+            case Ctrl::CombRate: return PMode::CRAT;
+            case Ctrl::Group:    return PMode::GRUP;
+
+            default:
+                return PMode::CMODE_UNDEFINED;
+        }
+    }
+
+    ::Opm::Well::InjectorCMode
+    injectorControlMode(const int curr, const int itype)
+    {
+        using IMode = ::Opm::Well::InjectorCMode;
+        using WType = VI::IWell::Value::WellType;
+        using Ctrl  = VI::IWell::Value::WellCtrlMode;
+
+        switch (curr) {
+            case Ctrl::OilRate:
+                return (itype == WType::OilInj)
+                    ? IMode::RATE : IMode::CMODE_UNDEFINED;
+
+            case Ctrl::WatRate:
+                return (itype == WType::WatInj)
+                    ? IMode::RATE : IMode::CMODE_UNDEFINED;
+
+            case Ctrl::GasRate:
+                return (itype == WType::GasInj)
+                    ? IMode::RATE : IMode::CMODE_UNDEFINED;
+
+            case Ctrl::ResVRate: return IMode::RESV;
+            case Ctrl::THP:      return IMode::THP;
+            case Ctrl::BHP:      return IMode::BHP;
+            case Ctrl::Group:    return IMode::GRUP;
+        }
+
+        return IMode::CMODE_UNDEFINED;
+    }
+
+    void restoreCurrentControl(const std::size_t  wellID,
+                               const WellVectors& wellData,
+                               Opm::data::Well&   xw)
+    {
+        const auto iwel = wellData.iwel(wellID);
+        const auto act  = iwel[VI::IWell::index::ActWCtrl];
+        const auto wtyp = iwel[VI::IWell::index::WType];
+
+        auto& curr = xw.current_control;
+
+        curr.isProducer = wtyp == VI::IWell::Value::WellType::Producer;
+        if (curr.isProducer) {
+            curr.prod = producerControlMode(act);
+        }
+        else { // Assume injector
+            curr.inj = injectorControlMode(act, wtyp);
+        }
+    }
+
     void restoreSegmentQuantities(const std::size_t        mswID,
                                   const Opm::WellSegments& segSet,
                                   const Opm::UnitSystem&   usys,
@@ -1085,7 +1156,7 @@ namespace {
     }
 
     Opm::data::Well
-    restore_well(const Opm::Well&       well,
+    restore_well(const Opm::Well&        well,
                  const std::size_t       wellID,
                  const Opm::EclipseGrid& grid,
                  const Opm::UnitSystem&  usys,
@@ -1136,9 +1207,11 @@ namespace {
         //    and pressure values (xw.connections[i].pressure).
         restoreConnResults(well, wellID, grid, usys, phases, wellData, xw);
 
-        // 4) Restore segment quantities if applicable.
-        if (well.isMultiSegment() &&
-            segData.hasDefinedValues())
+        // 4) Restore well's active/current control
+        restoreCurrentControl(wellID, wellData, xw);
+
+        // 5) Restore segment quantities if applicable.
+        if (well.isMultiSegment() && segData.hasDefinedValues())
         {
             const auto iwel   = wellData.iwel(wellID);
             const auto mswID  = iwel[VI::IWell::index::MsWID]; // One-based

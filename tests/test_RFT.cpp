@@ -297,9 +297,10 @@ BOOST_AUTO_TEST_CASE(test_RFT)
         Opm::data::Wells wells;
 
         using SegRes = decltype(wells["w"].segments);
+        using Ctrl = decltype(wells["w"].current_control);
 
-        wells["OP_1"] = { std::move(r1), 1.0, 1.1, 3.1, 1, std::move(well1_comps), SegRes{} };
-        wells["OP_2"] = { std::move(r2), 1.0, 1.1, 3.2, 1, std::move(well2_comps), SegRes{} };
+        wells["OP_1"] = { std::move(r1), 1.0, 1.1, 3.1, 1, std::move(well1_comps), SegRes{}, Ctrl{} };
+        wells["OP_2"] = { std::move(r2), 1.0, 1.1, 3.2, 1, std::move(well2_comps), SegRes{}, Ctrl{} };
 
         RestartValue restart_value(std::move(solution), std::move(wells));
 
@@ -419,9 +420,10 @@ BOOST_AUTO_TEST_CASE(test_RFT2)
                 Opm::data::Solution solution = createBlackoilState(2, numCells);
 
                 using SegRes = decltype(wells["w"].segments);
+                using Ctrl = decltype(wells["w"].current_control);
 
-                wells["OP_1"] = { std::move(r1), 1.0, 1.1, 3.1, 1, std::move(well1_comps), SegRes{} };
-                wells["OP_2"] = { std::move(r2), 1.0, 1.1, 3.2, 1, std::move(well2_comps), SegRes{} };
+                wells["OP_1"] = { std::move(r1), 1.0, 1.1, 3.1, 1, std::move(well1_comps), SegRes{}, Ctrl{} };
+                wells["OP_2"] = { std::move(r2), 1.0, 1.1, 3.2, 1, std::move(well2_comps), SegRes{}, Ctrl{} };
 
                 RestartValue restart_value(std::move(solution), std::move(wells));
 
