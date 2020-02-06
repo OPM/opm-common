@@ -65,7 +65,7 @@ ext_modules = [
         [
                 'cxx/eclipse_io.cpp',
         ],
-        libraries=['opmcommon', 'boost_filesystem', 'boost_regex'],
+        libraries=['opmcommon', 'boost_filesystem', 'boost_regex', 'boost_system'],
         language='c++',
         undef_macros=["NDEBUG"],
         include_dirs=["pybind11/include"]
