@@ -17,45 +17,78 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <utility>
+
+#include <opm/parser/eclipse/Parser/ParserKeywords/A.hpp>
 #include <opm/parser/eclipse/EclipseState/Aquifetp.hpp>
+#include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 
 namespace Opm {
 
-    Aquifetp::Aquifetp(const Deck& deck)
-    {
-        if (!deck.hasKeyword("AQUFETP"))
-            return;
+using AQUFETP = ParserKeywords::AQUFETP;
 
-        const auto& aqufetpKeyword = deck.getKeyword("AQUFETP");
+Aquifetp::AQUFETP_data::AQUFETP_data(const DeckRecord& record) :
+    aquiferID( record.getItem<AQUFETP::AQUIFER_ID>().get<int>(0)),
+    pvttableID( record.getItem<AQUFETP::TABLE_NUM_WATER_PRESS>().get<int>(0)),
+    J( record.getItem<AQUFETP::PI>().getSIDouble(0)),
+    C_t( record.getItem<AQUFETP::C_T>().getSIDouble(0)),
+    V0( record.getItem<AQUFETP::V0>().getSIDouble(0)),
+    d0( record.getItem<AQUFETP::DAT_DEPTH>().getSIDouble(0)),
+    p0(false, 0)
+{
+    if (record.getItem<AQUFETP::P0>().hasValue(0) )
+        this->p0 = std::make_pair(true, record.getItem<AQUFETP::P0>().getSIDouble(0));
+}
 
-        for (auto& aqufetpRecord : aqufetpKeyword){
 
-            Aquifetp::AQUFETP_data data;
+bool Aquifetp::AQUFETP_data::operator==(const Aquifetp::AQUFETP_data& other) const {
+    return this->aquiferID == other.aquiferID &&
+           this->pvttableID == other.pvttableID &&
+           this->J == other.J &&
+           this->C_t == other.C_t &&
+           this->V0 == other.V0 &&
+           this->d0 == other.d0 &&
+           this->p0 == other.p0;
+}
 
-            data.aquiferID = aqufetpRecord.getItem("AQUIFER_ID").template get<int>(0);
-            data.d0 = aqufetpRecord.getItem("DAT_DEPTH").getSIDouble(0);
-            data.C_t = aqufetpRecord.getItem("C_T").getSIDouble(0);
-            data.pvttableID = aqufetpRecord.getItem("TABLE_NUM_WATER_PRESS").template get<int>(0);
-            data.V0 = aqufetpRecord.getItem("V0").getSIDouble(0);
-            data.J = aqufetpRecord.getItem("PI").getSIDouble(0);
+Aquifetp::Aquifetp(const std::vector<Aquifetp::AQUFETP_data>& data) :
+    m_aqufetp(data)
+{}
 
-            if (aqufetpRecord.getItem("P0").hasValue(0) )
-            {
-                double * raw_ptr = new double ( aqufetpRecord.getItem("P0").getSIDouble(0));
-                data.p0.reset( raw_ptr );
-            }
-            m_aqufetp.push_back( std::move(data) );
-        }
-    }
 
-    const std::vector<Aquifetp::AQUFETP_data>& Aquifetp::getAquifers() const
-    {
-        return m_aqufetp;
-    }
+Aquifetp::Aquifetp(const Deck& deck)
+{
+    if (!deck.hasKeyword<AQUFETP>())
+        return;
 
-    int Aquifetp::getAqPvtTabID(size_t aquiferIndex)
-    {
-        return m_aqufetp.at(aquiferIndex).pvttableID;
-    }
+    const auto& aqufetpKeyword = deck.getKeyword<AQUFETP>();
+    for (auto& record : aqufetpKeyword)
+        this->m_aqufetp.emplace_back(record);
+}
+
+
+const std::vector<Aquifetp::AQUFETP_data>& Aquifetp::data() const
+{
+    return m_aqufetp;
+}
+
+
+bool Aquifetp::operator==(const Aquifetp& other) const {
+    return this->m_aqufetp == other.m_aqufetp;
+}
+
+std::size_t Aquifetp::size() const {
+    return this->m_aqufetp.size();
+}
+
+std::vector<Aquifetp::AQUFETP_data>::const_iterator Aquifetp::begin() const {
+    return this->m_aqufetp.begin();
+}
+
+
+std::vector<Aquifetp::AQUFETP_data>::const_iterator Aquifetp::end() const {
+    return this->m_aqufetp.end();
+}
 
 }

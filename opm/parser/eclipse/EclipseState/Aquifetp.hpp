@@ -25,36 +25,38 @@
   This includes the logic for parsing as well as the associated tables. It is meant to be used by opm-grid and opm-simulators in order to
   implement the Fetkovich analytical aquifer model in OPM Flow.
 */
-#include <memory>
+#include <vector>
 
-#include <opm/parser/eclipse/Parser/ParserKeywords/A.hpp>
-#include <opm/parser/eclipse/Deck/Deck.hpp>
 
 namespace Opm {
+
+class Deck;
+class DeckRecord;
 
 class Aquifetp {
     public:
 
     struct AQUFETP_data{
+        AQUFETP_data(const DeckRecord& record);
+        bool operator==(const AQUFETP_data& other) const;
 
-        // Aquifer ID
         int aquiferID;
-        // Table IDs
-        int inftableID, pvttableID;
-        std::vector<int> cell_id;
-        // Variables constants
+        int pvttableID;
         double  J, // Specified Productivity Index
-            rho, // water density in the aquifer
-            C_t, // total rock compressibility
-            V0, // initial volume of water in aquifer
-            d0; // aquifer datum depth
-		    std::shared_ptr<double> p0; //Initial aquifer pressure at datum depth d0 - nullptr if the pressure has been defaulted.
+                C_t, // total rock compressibility
+                V0, // initial volume of water in aquifer
+                d0; // aquifer datum depth
+        std::pair<bool, double> p0;
     };
 
     Aquifetp(const Deck& deck);
-    const std::vector<Aquifetp::AQUFETP_data>& getAquifers() const;
-    int getAqPvtTabID(size_t aquiferIndex);
+    Aquifetp(const std::vector<Aquifetp::AQUFETP_data>& data);
+    const std::vector<Aquifetp::AQUFETP_data>& data() const;
 
+    std::size_t size() const;
+    std::vector<Aquifetp::AQUFETP_data>::const_iterator begin() const;
+    std::vector<Aquifetp::AQUFETP_data>::const_iterator end() const;
+    bool operator==(const Aquifetp& other) const;
 private:
     std::vector<Aquifetp::AQUFETP_data> m_aqufetp;
 };
