@@ -23,6 +23,7 @@ find_opm_package (
    dune-common REQUIRED;
    dune-grid  REQUIRED;
    dune-alugrid;
+   PETSc;
    ZLIB;
    ZOLTAN;
    METIS
@@ -45,6 +46,7 @@ int main (void) {
 "
   # config variables
   "HAVE_DUNE_FEM;
+   HAVE_PETSC;
    HAVE_METIS;
    HAVE_ZLIB;
    HAVE_ZOLTAN

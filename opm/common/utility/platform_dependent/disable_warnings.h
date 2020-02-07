@@ -59,6 +59,7 @@
 #pragma GCC diagnostic ignored "-Wpragmas"
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #pragma GCC diagnostic ignored "-Wdeprecated-register"
+#pragma GCC diagnostic ignored "-Wdeprecated"
 #pragma GCC diagnostic ignored "-Wignored-qualifiers"
 #pragma GCC diagnostic ignored "-Wmismatched-tags"
 #pragma GCC diagnostic ignored "-Wshadow"
@@ -76,6 +77,7 @@
 #pragma GCC diagnostic ignored "-Wcast-qual"
 #pragma GCC diagnostic ignored "-Wignored-attributes"
 #pragma GCC diagnostic ignored "-Wmisleading-indentation"
+#pragma GCC diagnostic ignored "-Wint-in-bool-context"
 #endif // COMPATIBLE_COMPILER
 
 #endif // SILENCE_EXTERNAL_WARNINGS
