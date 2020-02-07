@@ -16,6 +16,8 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <algorithm>
+
 #include <opm/io/eclipse/rst/header.hpp>
 #include <opm/io/eclipse/rst/connection.hpp>
 #include <opm/io/eclipse/rst/well.hpp>
@@ -55,8 +57,11 @@ RstState::RstState(const std::vector<int>& intehead,
         std::size_t icon_offset = iw * this->header.niconz * this->header.ncwmax;
         std::size_t scon_offset = iw * this->header.nsconz * this->header.ncwmax;
         std::size_t xcon_offset = iw * this->header.nxconz * this->header.ncwmax;
+        int group_index = iwel[ iwel_offset + VI::IWell::Group ] - 1;
+        const std::string group = this->groups[group_index].name;
 
         this->wells.emplace_back(this->header,
+                                 group,
                                  zwel.data() + zwel_offset,
                                  iwel.data() + iwel_offset,
                                  swel.data() + swel_offset,
@@ -98,8 +103,11 @@ RstState::RstState(const std::vector<int>& intehead,
         std::size_t icon_offset = iw * this->header.niconz * this->header.ncwmax;
         std::size_t scon_offset = iw * this->header.nsconz * this->header.ncwmax;
         std::size_t xcon_offset = iw * this->header.nxconz * this->header.ncwmax;
+        int group_index = iwel[ iwel_offset + VI::IWell::Group ] - 1;
+        const std::string group = this->groups[group_index].name;
 
         this->wells.emplace_back(this->header,
+                                 group,
                                  zwel.data() + zwel_offset,
                                  iwel.data() + iwel_offset,
                                  swel.data() + swel_offset,
@@ -130,6 +138,17 @@ void RstState::add_groups(const std::vector<std::string>& zgrp,
     }
 }
 
+const RstWell& RstState::get_well(const std::string& wname) const {
+    const auto well_iter = std::find_if(this->wells.begin(),
+                                        this->wells.end(),
+                                        [&wname] (const auto& well) {
+                                            return well.name == wname;
+                                        });
+    if (well_iter == this->wells.end())
+        throw std::out_of_range("No such well: " + wname);
+
+    return *well_iter;
+}
 
 RstState RstState::load(EclIO::ERst& rst_file, int report_step) {
     rst_file.loadReportStepNumber(report_step);
@@ -169,3 +188,4 @@ RstState RstState::load(EclIO::ERst& rst_file, int report_step) {
 
 }
 }
+

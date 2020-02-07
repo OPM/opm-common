@@ -827,7 +827,7 @@ BOOST_AUTO_TEST_CASE(TestRestartIOConnection) {
         }
     }
     const auto& conn0 = connections[0];
-    BOOST_CHECK_EQUAL(conn0.insert_index, 1);
+    BOOST_CHECK_EQUAL(conn0.insert_index, 0);
     BOOST_CHECK_EQUAL(conn0.ijk[0], 0);
     BOOST_CHECK_EQUAL(conn0.ijk[1], 4);
     BOOST_CHECK_EQUAL(conn0.ijk[2], 1);

@@ -65,6 +65,7 @@ struct RstState {
 
     static RstState load(EclIO::ERst& rst_file, int report_step);
 
+    const RstWell& get_well(const std::string& wname) const;
     std::vector<RstWell> wells;
     std::vector<RstGroup> groups;
     RstHeader header;

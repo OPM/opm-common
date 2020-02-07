@@ -327,6 +327,7 @@ if(ENABLE_ECL_INPUT)
     tests/parser/RockTableTests.cpp
     tests/parser/RunspecTests.cpp
     tests/parser/SaltTableTests.cpp
+    tests/parser/ScheduleRestartTests.cpp
     tests/parser/ScheduleTests.cpp
     tests/parser/SectionTests.cpp
     tests/parser/SimpleTableTests.cpp

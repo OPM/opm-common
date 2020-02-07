@@ -26,15 +26,45 @@ namespace VI = ::Opm::RestartIO::Helpers::VectorItems;
 namespace Opm {
 namespace RestartIO {
 
+namespace {
+
+template <typename T>
+T from_int(int);
+
+template <>
+Connection::State from_int(int int_state) {
+    if (int_state == 1)
+        return Connection::State::OPEN;
+
+    return Connection::State::SHUT;
+}
+
+template <>
+Connection::Direction from_int(int int_dir) {
+    switch (int_dir) {
+    case 1:
+        return Connection::Direction::X;
+    case 2:
+        return Connection::Direction::Y;
+    case 3:
+        return Connection::Direction::Z;
+    throw
+        std::invalid_argument("Can not convert: " + std::to_string(int_dir) + " to string");
+    }
+}
+
+}
+
+
 RstConnection::RstConnection(const int* icon, const float* scon, const double* xcon) :
-    insert_index(icon[VI::IConn::SeqIndex]),
+    insert_index(icon[VI::IConn::SeqIndex] - 1),
     ijk({icon[VI::IConn::CellI] - 1, icon[VI::IConn::CellJ] - 1, icon[VI::IConn::CellK] - 1}),
-    status(icon[VI::IConn::ConnStat]),
+    state(from_int<Connection::State>(icon[VI::IConn::ConnStat])),
     drain_sat_table(icon[VI::IConn::Drainage]),
     imb_sat_table(icon[VI::IConn::Imbibition]),
     completion(icon[VI::IConn::ComplNum] - 1),
-    dir(icon[VI::IConn::ConnDir]),
-    segment(icon[VI::IConn::Segment]),
+    dir(from_int<Connection::Direction>(icon[VI::IConn::ConnDir])),
+    segment(icon[VI::IConn::Segment] - 1),
     tran(scon[VI::SConn::ConnTrans]),
     depth(scon[VI::SConn::Depth]),
     diameter(scon[VI::SConn::Diameter]),
