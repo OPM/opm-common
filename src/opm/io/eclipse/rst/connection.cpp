@@ -48,8 +48,8 @@ Connection::Direction from_int(int int_dir) {
         return Connection::Direction::Y;
     case 3:
         return Connection::Direction::Z;
-    throw
-        std::invalid_argument("Can not convert: " + std::to_string(int_dir) + " to string");
+    default:
+        throw std::invalid_argument("Can not convert: " + std::to_string(int_dir) + " to string");
     }
 }
 
