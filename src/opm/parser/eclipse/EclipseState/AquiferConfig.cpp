@@ -50,8 +50,16 @@ bool AquiferConfig::operator==(const AquiferConfig& other) {
            this->aqconn == other.aqconn;
 }
 
-std::tuple<Aquifetp, AquiferCT, Aquancon> AquiferConfig::data() const {
-    return std::make_tuple(this->aquifetp, this->aquiferct, this->aqconn);
+const AquiferCT& AquiferConfig::ct() const {
+    return this->aquiferct;
+}
+
+const Aquifetp& AquiferConfig::fetp() const {
+    return this->aquifetp;
+}
+
+const Aquancon& AquiferConfig::connections() const {
+    return this->aqconn;
 }
 
 }

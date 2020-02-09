@@ -81,6 +81,7 @@ bool enable3DPropsTesting() {
         if( this->runspec().phases().size() < 3 )
             OpmLog::info("Only " + std::to_string( this->runspec().phases().size() )
                                                                 + " fluid phases are enabled" );
+        this->aquifer_config = AquiferConfig(this->m_tables, this->m_inputGrid, deck);
 
         if (deck.hasKeyword( "TITLE" )) {
             const auto& titleKeyword = deck.getKeyword( "TITLE" );
@@ -195,6 +196,10 @@ bool enable3DPropsTesting() {
     }
     std::string EclipseState::getTitle() const {
         return m_title;
+    }
+
+    const AquiferConfig& EclipseState::aquifer() const {
+        return this->aquifer_config;
     }
 
     void EclipseState::initTransMult() {

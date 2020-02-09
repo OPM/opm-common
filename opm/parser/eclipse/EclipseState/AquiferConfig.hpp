@@ -20,8 +20,6 @@
 #ifndef OPM_AUQIFER_CONFIG_HPP
 #define OPM_AUQIFER_CONFIG_HPP
 
-#include <tuple>
-
 #include <opm/parser/eclipse/EclipseState/Aquancon.hpp>
 #include <opm/parser/eclipse/EclipseState/Aquifetp.hpp>
 #include <opm/parser/eclipse/EclipseState/AquiferCT.hpp>
@@ -37,8 +35,11 @@ public:
     AquiferConfig() = default;
     AquiferConfig(const TableManager& tables, const EclipseGrid& grid, const Deck& deck);
     AquiferConfig(const Aquifetp& fetp, const AquiferCT& ct, const Aquancon& conn);
+
     bool active() const;
-    std::tuple<Aquifetp, AquiferCT, Aquancon> data() const;
+    const AquiferCT& ct() const;
+    const Aquifetp& fetp() const;
+    const Aquancon& connections() const;
     bool operator==(const AquiferConfig& other);
 private:
     Aquifetp aquifetp;
