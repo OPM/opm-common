@@ -22,6 +22,7 @@ along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 #include <opm/parser/eclipse/EclipseState/Aquancon.hpp>
 #include <opm/parser/eclipse/EclipseState/AquiferCT.hpp>
 #include <opm/parser/eclipse/EclipseState/Aquifetp.hpp>
+#include <opm/parser/eclipse/EclipseState/AquiferConfig.hpp>
 
 using namespace Opm;
 
@@ -507,6 +508,7 @@ BOOST_AUTO_TEST_CASE(AquifetpTest){
     BOOST_CHECK_EQUAL(it.J, 500/86400e5);
     BOOST_CHECK( !it.p0.first );
   }
+
 }
 
 BOOST_AUTO_TEST_CASE(TEST_CREATE) {
@@ -520,4 +522,22 @@ BOOST_AUTO_TEST_CASE(TEST_CREATE) {
       BOOST_CHECK_EQUAL( aqudims.getNumRowsAquancon() , 1 );
       BOOST_CHECK_EQUAL( aqudims.getNumAquiferLists() , 0 );
       BOOST_CHECK_EQUAL( aqudims.getNumAnalyticAquifersSingleList() , 0 );
+}
+
+BOOST_AUTO_TEST_CASE(Test_Aquifer_Config) {
+    const std::string deck_string = R"(
+DIMENS
+   3 3 3 /
+)";
+    Opm::Parser parser;
+    Opm::Deck deck = parser.parseString(deck_string);
+    Opm::TableManager tables;
+    Opm::EclipseGrid grid(10,10,10);
+    Opm::AquiferConfig conf(tables, grid, deck);
+    BOOST_CHECK(!conf.active());
+
+
+    const auto& data = conf.data();
+    Opm::AquiferConfig conf2(std::get<0>(data), std::get<1>(data), std::get<2>(data));
+    BOOST_CHECK( conf == conf2 );
 }
