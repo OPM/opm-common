@@ -41,7 +41,7 @@ if(NOT CMAKE_CXX_STANDARD)
 
 
   if(NOT MSVC)
-    foreach(_flag "14" "11")
+    foreach(_flag "17" "14" "11")
       set(_FLAG "CXX_FLAG_CXX${_flag}")
       string(TOUPPER ${_FLAG} _FLAG)
       # try to use compiler flag -std=c++${_flag}
