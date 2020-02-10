@@ -64,6 +64,14 @@ project (${${project}_NAME})
 enable_language (C)
 enable_language (CXX)
 
+# Languages and global compiler settings
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+# Various compiler extension checks
+include(OpmCompilerChecks)
+
 # print system information to better pinpoint issues from log alone
 include (UseSystemInfo)
 system_info ()

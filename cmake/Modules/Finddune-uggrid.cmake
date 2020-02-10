@@ -7,8 +7,7 @@ find_opm_package (
   # dependencies
   # TODO: we should probe for all the HAVE_* values listed below;
   # however, we don't actually use them in our implementation, so
-  "CXX11Features REQUIRED;
-  dune-common REQUIRED
+  "dune-common REQUIRED
   "
   # header to search for
   ""
