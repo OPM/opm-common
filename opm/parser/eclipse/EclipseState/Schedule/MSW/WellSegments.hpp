@@ -64,9 +64,6 @@ namespace Opm {
         WellSegments() = default;
         WellSegments(const DeckKeyword& keyword);
         WellSegments(const std::string& wname,
-                     double depthTopSeg,
-                     double lengthTopSeg,
-                     double volumeTopSeg,
                      LengthDepth lenDepType,
                      CompPressureDrop compDrop,
                      MultiPhaseModel multiPhase,
@@ -107,8 +104,8 @@ namespace Opm {
 
     private:
         void processABS();
-        void processINC();
-        void process();
+        void processINC(double depth_top, double length_top);
+        void process(double depth_top, double length_top);
         void addSegment(const Segment& new_segment);
         void loadWELSEGS( const DeckKeyword& welsegsKeyword);
 
@@ -116,12 +113,6 @@ namespace Opm {
         // depth of the nodal point of the top segment
         // it is taken as the BHP reference depth of the well
         // BHP reference depth data from elsewhere will be ignored for multi-segmented wells
-        double m_depth_top;
-        // length down the tubing to the nodal point of the top segment
-        double m_length_top;
-        // effective wellbore volume of the top segment
-        double m_volume_top;
-        // type of the tubing length and depth information
         LengthDepth m_length_depth_type;
         // components of the pressure drop to be included
         CompPressureDrop m_comp_pressure_drop;
