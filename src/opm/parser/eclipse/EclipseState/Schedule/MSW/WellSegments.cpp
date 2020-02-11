@@ -37,11 +37,9 @@
 namespace Opm {
 
     WellSegments::WellSegments(CompPressureDrop compDrop,
-                               MultiPhaseModel multiPhase,
                                const std::vector<Segment>& segments,
                                const std::map<int,int>& segmentNumberIdx)
        : m_comp_pressure_drop(compDrop)
-       , m_multiphase_model(multiPhase)
        , m_segments(segments)
        , segment_number_to_index(segmentNumberIdx)
     {
@@ -72,10 +70,6 @@ namespace Opm {
 
     WellSegments::CompPressureDrop WellSegments::compPressureDrop() const {
         return m_comp_pressure_drop;
-    }
-
-    WellSegments::MultiPhaseModel WellSegments::multiPhaseModel() const {
-        return m_multiphase_model;
     }
 
     const Segment& WellSegments::operator[](size_t idx) const {
@@ -117,7 +111,6 @@ namespace Opm {
         const double volume_top = record1.getItem("WELLBORE_VOLUME").getSIDouble(0);
         const LengthDepth length_depth_type = LengthDepthFromString(record1.getItem("INFO_TYPE").getTrimmedString(0));
         m_comp_pressure_drop = CompPressureDropFromString(record1.getItem("PRESSURE_COMPONENTS").getTrimmedString(0));
-        m_multiphase_model = MultiPhaseModelFromString(record1.getItem("FLOW_MODEL").getTrimmedString(0));
 
         // the main branch is 1 instead of 0
         // the segment number for top segment is also 1
@@ -415,7 +408,6 @@ namespace Opm {
 
     bool WellSegments::operator==( const WellSegments& rhs ) const {
         return this->m_comp_pressure_drop == rhs.m_comp_pressure_drop
-            && this->m_multiphase_model == rhs.m_multiphase_model
             && this->m_segments.size() == rhs.m_segments.size()
             && this->segment_number_to_index.size() == rhs.segment_number_to_index.size()
             && std::equal( this->m_segments.begin(),

@@ -64,7 +64,6 @@ namespace Opm {
         WellSegments() = default;
         WellSegments(const DeckKeyword& keyword);
         WellSegments(CompPressureDrop compDrop,
-                     MultiPhaseModel multiPhase,
                      const std::vector<Segment>& segments,
                      const std::map<int,int>& segmentNumberIdx);
 
@@ -74,7 +73,6 @@ namespace Opm {
         double volumeTopSegment() const;
 
         CompPressureDrop compPressureDrop() const;
-        MultiPhaseModel multiPhaseModel() const;
 
         // mapping the segment number to the index in the vector of segments
         int segmentNumberToIndex(const int segment_number) const;
@@ -107,8 +105,6 @@ namespace Opm {
 
         // components of the pressure drop to be included
         CompPressureDrop m_comp_pressure_drop;
-        // multi-phase flow model
-        MultiPhaseModel m_multiphase_model;
         // There are X and Y cooridnate of the nodal point of the top segment
         // Since they are not used for simulations and we are not supporting plotting,
         // we are not handling them at the moment.
