@@ -93,7 +93,7 @@ namespace Opm {
 
         const Segment& operator[](size_t idx) const;
         void orderSegments();
-        void process(bool first_time);
+        void process();
 
         bool operator==( const WellSegments& ) const;
         bool operator!=( const WellSegments& ) const;
@@ -109,7 +109,7 @@ namespace Opm {
 
     private:
         void processABS();
-        void processINC(const bool first_time);
+        void processINC();
 
         std::string m_well_name;
         // depth of the nodal point of the top segment

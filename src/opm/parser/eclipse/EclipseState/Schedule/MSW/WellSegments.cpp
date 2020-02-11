@@ -244,11 +244,11 @@ namespace Opm {
         return m_segments[segment_index];
     }
 
-    void WellSegments::process(bool first_time) {
+    void WellSegments::process() {
         if (this->m_length_depth_type == LengthDepth::ABS)
             this->processABS();
         else if (this->m_length_depth_type == LengthDepth::INC)
-            this->processINC(first_time);
+            this->processINC();
         else
             throw std::logic_error("Invalid llength/depth/type in segment data structure");
     }
@@ -337,14 +337,11 @@ namespace Opm {
         }
     }
 
-    void WellSegments::processINC(const bool first_time) {
+    void WellSegments::processINC() {
 
         // update the information inside the WellSegments to be in ABS way
-        if (first_time) {
-            Segment new_top_segment(this->m_segments[0], depthTopSegment(), lengthTopSegment());
-            this->addSegment(new_top_segment);
-        }
-
+        Segment new_top_segment(this->m_segments[0], depthTopSegment(), lengthTopSegment());
+        this->addSegment(new_top_segment);
         orderSegments();
 
         // begin with the second segment

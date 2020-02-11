@@ -761,7 +761,7 @@ bool Well::handleWELSEGS(const DeckKeyword& keyword) {
     auto new_segmentset = std::make_shared<WellSegments>();
     new_segmentset->loadWELSEGS(keyword);
 
-    new_segmentset->process(true);
+    new_segmentset->process();
     if (new_segmentset != this->segments) {
         this->segments = new_segmentset;
         this->ref_depth = new_segmentset->depthTopSegment();
