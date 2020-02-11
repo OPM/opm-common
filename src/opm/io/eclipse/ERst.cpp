@@ -23,6 +23,7 @@
 #include <exception>
 #include <iomanip>
 #include <iterator>
+#include <regex>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -33,23 +34,19 @@
 namespace {
     int seqnumFromSeparateFilename(const std::string& filename)
     {
-        int p=0;
+        const auto re = std::regex {
+            R"~(\.[FX]([0-9]{4})$)~"
+        };
 
-        std::string errMessage="Unable to Determine Report Step Sequence Number From Restart Filename \"" + filename + '"'; 
-        
-        if (filename.find(".F") != std::string::npos) {
-            p = filename.find_last_of(".F");
-        } else if (filename.find(".X") != std::string::npos) {
-            p = filename.find_last_of(".X");
-        } else {
-            OPM_THROW(std::invalid_argument, errMessage);
+        auto match = std::smatch{};
+        if (std::regex_search(filename, match, re)) {
+            return std::stoi(match[1]);
         }
-        
-        try {
-            return std::stoi(filename.substr(p+1,filename.size() - p-1));
-        } catch (...) {
-            OPM_THROW(std::invalid_argument, errMessage);
-        }
+
+        throw std::invalid_argument {
+            "Unable to Determine Report Step Sequence Number "
+            "From Restart Filename \"" + filename + '"'
+        };
     }
 }
 

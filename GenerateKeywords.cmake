@@ -32,7 +32,7 @@ if(NOT cjson_FOUND)
 endif()
 add_executable(genkw ${genkw_SOURCES})
 
-target_link_libraries(genkw Boost::regex Boost::filesystem Boost::system)
+target_link_libraries(genkw Boost::filesystem Boost::system)
 
 # Generate keyword list
 include(src/opm/parser/eclipse/share/keywords/keyword_list.cmake)
