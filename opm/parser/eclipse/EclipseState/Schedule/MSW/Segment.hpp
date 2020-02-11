@@ -72,7 +72,6 @@ namespace Opm {
         void setDepthAndLength(const double depth_in, const double length_in);
 
         const std::vector<int>& inletSegments() const;
-        void addInletSegment(const int segment_number);
 
         static double invalidValue();
         static SegmentType type_from_int(int ecl_id);
@@ -80,15 +79,13 @@ namespace Opm {
         bool operator==( const Segment& ) const;
         bool operator!=( const Segment& ) const;
 
-        void updateSpiralICD(const SpiralICD& spiral_icd);
-
         const std::shared_ptr<SpiralICD>& spiralICD() const;
         const std::shared_ptr<Valve>& getValve() const;
-
-        void updateValve(const Valve& valve, const double segment_length);
-
         const Valve* valve() const;
 
+        void updateSpiralICD(const SpiralICD& spiral_icd);
+        void updateValve(const Valve& valve, const double segment_length);
+        void addInletSegment(const int segment_number);
     private:
         // segment number
         // it should work as a ID.
