@@ -88,6 +88,27 @@ static constexpr double invalid_value = -1.e100;
   {
   }
 
+  Segment::Segment(const Segment& src, double new_depth, double new_length):
+      Segment(src)
+  {
+      this->m_depth = new_depth;
+      this->m_total_length = new_length;
+      this->m_data_ready = true;
+  }
+
+  Segment::Segment(const Segment& src, double new_depth, double new_length, double new_volume):
+    Segment(src, new_depth, new_length)
+   {
+       this->m_volume = new_volume;
+   }
+
+
+
+  Segment::Segment(const Segment& src, double new_volume):
+      Segment(src)
+  {
+      this->m_volume = new_volume;
+  }
 
     int Segment::segmentNumber() const {
         return m_segment_number;
@@ -138,16 +159,6 @@ static constexpr double invalid_value = -1.e100;
 
     Segment::SegmentType Segment::segmentType() const {
         return m_segment_type;
-    }
-
-    void Segment::setDepthAndLength(const double depth_in,  const double length_in) {
-        m_total_length = length_in;
-        m_depth = depth_in;
-        m_data_ready = true;
-    }
-
-    void Segment::setVolume(const double volume_in) {
-        m_volume = volume_in;
     }
 
     const std::vector<int>& Segment::inletSegments() const {

@@ -299,16 +299,22 @@ namespace Opm {
             const double volume_segment = m_segments[range_end].crossArea() * length_inc;
 
             for (int k = range_begin; k <= range_end; ++k) {
-                Segment new_segment = m_segments[k];
-                const double temp_length = length_outlet + (k - range_begin + 1) * length_inc;
-                const double temp_depth = depth_outlet + (k - range_end + 1) * depth_inc;
-                if (k != range_end) {
-                    new_segment.setDepthAndLength(temp_depth, temp_length);
+                const auto& old_segment = this->m_segments[k];
+                double new_volume, new_length, new_depth;
+                if (k == range_end) {
+                    new_length = old_segment.totalLength();
+                    new_depth = old_segment.depth();
+                } else {
+                    new_length = length_outlet + (k - range_begin + 1) * length_inc;
+                    new_depth  = depth_outlet + (k - range_end + 1) * depth_inc;
                 }
 
-                if (new_segment.volume() < 0.5 * invalid_value) {
-                    new_segment.setVolume(volume_segment);
-                }
+                if (old_segment.volume() < 0.5 * invalid_value)
+                    new_volume = volume_segment;
+                else
+                    new_volume = old_segment.volume();
+
+                Segment new_segment(old_segment, new_length, new_depth, new_volume);
                 addSegment(new_segment);
             }
             current_index= range_end + 1;
@@ -319,12 +325,13 @@ namespace Opm {
         for (int i = 1; i < size(); ++i) {
             assert(m_segments[i].dataReady());
             if (m_segments[i].volume() == invalid_value) {
-                Segment new_segment = m_segments[i];
+                const auto& old_segment = this->m_segments[i];
                 const int outlet_segment = m_segments[i].outletSegment();
                 const int outlet_index = segmentNumberToIndex(outlet_segment);
                 const double segment_length = m_segments[i].totalLength() - m_segments[outlet_index].totalLength();
                 const double segment_volume = m_segments[i].crossArea() * segment_length;
-                new_segment.setVolume(segment_volume);
+
+                Segment new_segment(old_segment, segment_volume);
                 addSegment(new_segment);
             }
         }
@@ -334,8 +341,7 @@ namespace Opm {
 
         // update the information inside the WellSegments to be in ABS way
         if (first_time) {
-            Segment new_top_segment = (*this)[0];
-            new_top_segment.setDepthAndLength(depthTopSegment(), lengthTopSegment());
+            Segment new_top_segment(this->m_segments[0], depthTopSegment(), lengthTopSegment());
             this->addSegment(new_top_segment);
         }
 
@@ -359,8 +365,7 @@ namespace Opm {
             const double temp_length = outlet_length + m_segments[i_index].totalLength();
 
             // applying the calculated length and depth to the current segment
-            Segment new_segment = this->m_segments[i_index];
-            new_segment.setDepthAndLength(temp_depth, temp_length);
+            Segment new_segment(this->m_segments[i_index], temp_depth, temp_length);
             addSegment(new_segment);
         }
     }

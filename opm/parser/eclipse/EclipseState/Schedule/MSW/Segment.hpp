@@ -42,6 +42,9 @@ namespace Opm {
 
         Segment();
 
+        Segment(const Segment& src, double new_depth, double new_length, double new_volume);
+        Segment(const Segment& src, double new_depth, double new_length);
+        Segment(const Segment& src, double new_volume);
         Segment(int segment_number_in, int branch_in, int outlet_segment_in, double length_in, double depth_in,
                 double internal_diameter_in, double roughness_in, double cross_area_in, double volume_in, bool data_ready_in, SegmentType segment_type_in);
 
@@ -67,9 +70,6 @@ namespace Opm {
         SegmentType segmentType() const;
         int ecl_type_id() const;
 
-
-        void setVolume(const double volume_in);
-        void setDepthAndLength(const double depth_in, const double length_in);
 
         const std::vector<int>& inletSegments() const;
 
