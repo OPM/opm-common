@@ -36,13 +36,11 @@
 
 namespace Opm {
 
-    WellSegments::WellSegments(LengthDepth lenDepType,
-                               CompPressureDrop compDrop,
+    WellSegments::WellSegments(CompPressureDrop compDrop,
                                MultiPhaseModel multiPhase,
                                const std::vector<Segment>& segments,
                                const std::map<int,int>& segmentNumberIdx)
-       : m_length_depth_type(lenDepType)
-       , m_comp_pressure_drop(compDrop)
+       : m_comp_pressure_drop(compDrop)
        , m_multiphase_model(multiPhase)
        , m_segments(segments)
        , segment_number_to_index(segmentNumberIdx)
@@ -117,18 +115,18 @@ namespace Opm {
         const double depth_top = record1.getItem("DEPTH").getSIDouble(0);
         const double length_top = record1.getItem("LENGTH").getSIDouble(0);
         const double volume_top = record1.getItem("WELLBORE_VOLUME").getSIDouble(0);
-        m_length_depth_type = LengthDepthFromString(record1.getItem("INFO_TYPE").getTrimmedString(0));
+        const LengthDepth length_depth_type = LengthDepthFromString(record1.getItem("INFO_TYPE").getTrimmedString(0));
         m_comp_pressure_drop = CompPressureDropFromString(record1.getItem("PRESSURE_COMPONENTS").getTrimmedString(0));
         m_multiphase_model = MultiPhaseModelFromString(record1.getItem("FLOW_MODEL").getTrimmedString(0));
 
         // the main branch is 1 instead of 0
         // the segment number for top segment is also 1
-        if (m_length_depth_type == LengthDepth::INC) {
+        if (length_depth_type == LengthDepth::INC) {
             m_segments.emplace_back( 1, 1, 0, 0., 0.,
                                      invalid_value, invalid_value, invalid_value,
                                      volume_top, false , Segment::SegmentType::REGULAR);
 
-        } else if (m_length_depth_type == LengthDepth::ABS) {
+        } else if (length_depth_type == LengthDepth::ABS) {
             m_segments.emplace_back( 1, 1, 0, length_top, depth_top,
                                      invalid_value, invalid_value, invalid_value,
                                      volume_top, true , Segment::SegmentType::REGULAR);
@@ -171,7 +169,7 @@ namespace Opm {
             double volume;
             if (itemVolume.hasValue(0)) {
                 volume = itemVolume.getSIDouble(0);
-            } else if (m_length_depth_type == LengthDepth::INC) {
+            } else if (length_depth_type == LengthDepth::INC) {
                 volume = area * segment_length;
             } else {
                 volume = invalid_value; // A * L, while L is not determined yet
@@ -189,7 +187,7 @@ namespace Opm {
                     outlet_segment = i - 1;
                 }
 
-                if (m_length_depth_type == LengthDepth::INC) {
+                if (length_depth_type == LengthDepth::INC) {
                     m_segments.emplace_back( i, branch, outlet_segment, segment_length, depth_change,
                                              diameter, roughness, area, volume, false , Segment::SegmentType::REGULAR);
                 } else if (i == segment2) {
@@ -222,7 +220,7 @@ namespace Opm {
         }
 
 
-        this->process(depth_top, length_top);
+        this->process(length_depth_type, depth_top, length_top);
 
     }
 
@@ -236,10 +234,10 @@ namespace Opm {
         return m_segments[segment_index];
     }
 
-    void WellSegments::process(double depth_top, double length_top) {
-        if (this->m_length_depth_type == LengthDepth::ABS)
+    void WellSegments::process(LengthDepth length_depth, double depth_top, double length_top) {
+        if (length_depth == LengthDepth::ABS)
             this->processABS();
-        else if (this->m_length_depth_type == LengthDepth::INC)
+        else if (length_depth == LengthDepth::INC)
             this->processINC(depth_top, length_top);
         else
             throw std::logic_error("Invalid llength/depth/type in segment data structure");
@@ -416,8 +414,7 @@ namespace Opm {
     }
 
     bool WellSegments::operator==( const WellSegments& rhs ) const {
-        return this->m_length_depth_type == rhs.m_length_depth_type
-            && this->m_comp_pressure_drop == rhs.m_comp_pressure_drop
+        return this->m_comp_pressure_drop == rhs.m_comp_pressure_drop
             && this->m_multiphase_model == rhs.m_multiphase_model
             && this->m_segments.size() == rhs.m_segments.size()
             && this->segment_number_to_index.size() == rhs.segment_number_to_index.size()
@@ -562,10 +559,6 @@ WellSegments::MultiPhaseModel WellSegments::MultiPhaseModelFromString(const std:
     } else {
         throw std::invalid_argument("Unknown enum string_value: " + string_value + " for MultiPhaseModel");
     }
-}
-
-WellSegments::LengthDepth WellSegments::lengthDepthType() const {
-    return m_length_depth_type;
 }
 
 const std::vector<Segment>& WellSegments::segments() const {

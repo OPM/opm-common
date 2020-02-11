@@ -63,8 +63,7 @@ namespace Opm {
 
         WellSegments() = default;
         WellSegments(const DeckKeyword& keyword);
-        WellSegments(LengthDepth lenDepType,
-                     CompPressureDrop compDrop,
+        WellSegments(CompPressureDrop compDrop,
                      MultiPhaseModel multiPhase,
                      const std::vector<Segment>& segments,
                      const std::map<int,int>& segmentNumberIdx);
@@ -75,7 +74,6 @@ namespace Opm {
         double volumeTopSegment() const;
 
         CompPressureDrop compPressureDrop() const;
-        LengthDepth lengthDepthType() const;
         MultiPhaseModel multiPhaseModel() const;
 
         // mapping the segment number to the index in the vector of segments
@@ -103,14 +101,10 @@ namespace Opm {
     private:
         void processABS();
         void processINC(double depth_top, double length_top);
-        void process(double depth_top, double length_top);
+        void process(LengthDepth length_depth, double depth_top, double length_top);
         void addSegment(const Segment& new_segment);
         void loadWELSEGS( const DeckKeyword& welsegsKeyword);
 
-        // depth of the nodal point of the top segment
-        // it is taken as the BHP reference depth of the well
-        // BHP reference depth data from elsewhere will be ignored for multi-segmented wells
-        LengthDepth m_length_depth_type;
         // components of the pressure drop to be included
         CompPressureDrop m_comp_pressure_drop;
         // multi-phase flow model
