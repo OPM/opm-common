@@ -100,7 +100,7 @@ namespace Opm {
         }
     }
 
-    void WellSegments::addSegment( Segment new_segment ) {
+    void WellSegments::addSegment( const Segment& new_segment ) {
        // decide whether to push_back or insert
        const int segment_number = new_segment.segmentNumber();
 

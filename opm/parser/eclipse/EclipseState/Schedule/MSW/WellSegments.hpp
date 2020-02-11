@@ -85,7 +85,7 @@ namespace Opm {
         // mapping the segment number to the index in the vector of segments
         int segmentNumberToIndex(const int segment_number) const;
 
-        void addSegment(Segment new_segment);
+        void addSegment(const Segment& new_segment);
 
         void loadWELSEGS( const DeckKeyword& welsegsKeyword);
 
