@@ -62,6 +62,7 @@ namespace Opm {
 
 
         WellSegments() = default;
+        WellSegments(const DeckKeyword& keyword);
         WellSegments(const std::string& wname,
                      double depthTopSeg,
                      double lengthTopSeg,
@@ -85,15 +86,12 @@ namespace Opm {
         // mapping the segment number to the index in the vector of segments
         int segmentNumberToIndex(const int segment_number) const;
 
-        void addSegment(const Segment& new_segment);
 
-        void loadWELSEGS( const DeckKeyword& welsegsKeyword);
 
         const Segment& getFromSegmentNumber(const int segment_number) const;
 
         const Segment& operator[](size_t idx) const;
         void orderSegments();
-        void process();
 
         bool operator==( const WellSegments& ) const;
         bool operator!=( const WellSegments& ) const;
@@ -110,6 +108,9 @@ namespace Opm {
     private:
         void processABS();
         void processINC();
+        void process();
+        void addSegment(const Segment& new_segment);
+        void loadWELSEGS( const DeckKeyword& welsegsKeyword);
 
         std::string m_well_name;
         // depth of the nodal point of the top segment

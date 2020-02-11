@@ -758,16 +758,9 @@ bool Well::handleWELSEGS(const DeckKeyword& keyword) {
     if( this->segments )
         throw std::logic_error("re-entering WELSEGS for a well is not supported yet!!.");
 
-    auto new_segmentset = std::make_shared<WellSegments>();
-    new_segmentset->loadWELSEGS(keyword);
-
-    new_segmentset->process();
-    if (new_segmentset != this->segments) {
-        this->segments = new_segmentset;
-        this->ref_depth = new_segmentset->depthTopSegment();
-        return true;
-    } else
-        return false;
+    this->segments = std::make_shared<WellSegments>(keyword);
+    this->ref_depth = this->segments->depthTopSegment();
+    return true;
 }
 
 

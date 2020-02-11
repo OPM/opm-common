@@ -57,6 +57,12 @@ namespace Opm {
     {
     }
 
+
+    WellSegments::WellSegments(const DeckKeyword& keyword) {
+        this->loadWELSEGS(keyword);
+        this->process();
+    }
+
     const std::string& WellSegments::wellName() const {
         return m_well_name;
     }
@@ -120,8 +126,6 @@ namespace Opm {
         // and information for the whole segment set
         const auto& record1 = welsegsKeyword.getRecord(0);
         m_well_name = record1.getItem("WELL").getTrimmedString(0);
-
-        m_segments.clear();
 
         const double invalid_value = Segment::invalidValue(); // meaningless value to indicate unspecified values
 
