@@ -36,14 +36,12 @@
 
 namespace Opm {
 
-    WellSegments::WellSegments(const std::string& wname,
-                               LengthDepth lenDepType,
+    WellSegments::WellSegments(LengthDepth lenDepType,
                                CompPressureDrop compDrop,
                                MultiPhaseModel multiPhase,
                                const std::vector<Segment>& segments,
                                const std::map<int,int>& segmentNumberIdx)
-       : m_well_name(wname)
-       , m_length_depth_type(lenDepType)
+       : m_length_depth_type(lenDepType)
        , m_comp_pressure_drop(compDrop)
        , m_multiphase_model(multiPhase)
        , m_segments(segments)
@@ -56,12 +54,8 @@ namespace Opm {
         this->loadWELSEGS(keyword);
     }
 
-    const std::string& WellSegments::wellName() const {
-        return m_well_name;
-    }
 
-
-  int WellSegments::size() const {
+    int WellSegments::size() const {
         return m_segments.size();
     }
 
@@ -118,8 +112,6 @@ namespace Opm {
         // for the first record, which provides the information for the top segment
         // and information for the whole segment set
         const auto& record1 = welsegsKeyword.getRecord(0);
-        m_well_name = record1.getItem("WELL").getTrimmedString(0);
-
         const double invalid_value = Segment::invalidValue(); // meaningless value to indicate unspecified values
 
         const double depth_top = record1.getItem("DEPTH").getSIDouble(0);
@@ -424,8 +416,7 @@ namespace Opm {
     }
 
     bool WellSegments::operator==( const WellSegments& rhs ) const {
-        return this->m_well_name == rhs.m_well_name
-            && this->m_length_depth_type == rhs.m_length_depth_type
+        return this->m_length_depth_type == rhs.m_length_depth_type
             && this->m_comp_pressure_drop == rhs.m_comp_pressure_drop
             && this->m_multiphase_model == rhs.m_multiphase_model
             && this->m_segments.size() == rhs.m_segments.size()
@@ -461,8 +452,7 @@ namespace Opm {
 
     bool WellSegments::updateWSEGSICD(const std::vector<std::pair<int, SpiralICD> >& sicd_pairs) {
         if (m_comp_pressure_drop == CompPressureDrop::H__) {
-            const std::string msg = "to use spiral ICD segment for well " + m_well_name
-                                  + " , you have to activate the frictional pressure drop calculation";
+            const std::string msg = "to use spiral ICD segment you have to activate the frictional pressure drop calculation";
             throw std::runtime_error(msg);
         }
 
@@ -480,8 +470,7 @@ namespace Opm {
     bool WellSegments::updateWSEGVALV(const std::vector<std::pair<int, Valve> >& valve_pairs) {
 
         if (m_comp_pressure_drop == CompPressureDrop::H__) {
-            const std::string msg = "to use WSEGVALV segment for well " + m_well_name
-                                    + " , you have to activate the frictional pressure drop calculation";
+            const std::string msg = "to use WSEGVALV segment you have to activate the frictional pressure drop calculation";
             throw std::runtime_error(msg);
         }
 

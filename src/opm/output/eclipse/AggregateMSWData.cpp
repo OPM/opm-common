@@ -178,7 +178,7 @@ namespace {
 
 
     Opm::RestartIO::Helpers::SegmentSetSourceSinkTerms
-    getSegmentSetSSTerms(const Opm::WellSegments& segSet, const std::vector<Opm::data::Connection>& rateConns,
+    getSegmentSetSSTerms(const std::string& wname, const Opm::WellSegments& segSet, const std::vector<Opm::data::Connection>& rateConns,
                          const Opm::WellConnections& welConns, const Opm::UnitSystem& units)
     {
         std::vector<double> qosc (segSet.size(), 0.);
@@ -194,7 +194,7 @@ namespace {
             throw std::invalid_argument {
                 "Inconsistent number of open connections I in Opm::WellConnections (" +
                 std::to_string(welConns.size()) + ") and vector<Opm::data::Connection> (" +
-                std::to_string(rateConns.size()) + ") in Well " + segSet.wellName()
+                std::to_string(rateConns.size()) + ") in Well " + wname
             };
         }
         for (auto nConn = openConnections.size(), connID = 0*nConn; connID < nConn; connID++) {
@@ -222,7 +222,7 @@ namespace {
     }
 
     Opm::RestartIO::Helpers::SegmentSetFlowRates
-    getSegmentSetFlowRates(const Opm::WellSegments& segSet, const std::vector<Opm::data::Connection>& rateConns,
+    getSegmentSetFlowRates(const std::string& wname, const Opm::WellSegments& segSet, const std::vector<Opm::data::Connection>& rateConns,
                            const Opm::WellConnections& welConns, const Opm::UnitSystem& units)
     {
         std::vector<double> sofr (segSet.size(), 0.);
@@ -230,7 +230,7 @@ namespace {
         std::vector<double> sgfr (segSet.size(), 0.);
         //
         //call function to calculate the individual segment source/sink terms
-        auto sSSST = getSegmentSetSSTerms(segSet, rateConns, welConns, units);
+        auto sSSST = getSegmentSetSSTerms(wname, segSet, rateConns, welConns, units);
 
         // find an ordered list of segments
         std::size_t segmentInd = 0;
@@ -355,7 +355,7 @@ namespace {
     }
 
 
-    int inflowSegmentCurBranch(const Opm::WellSegments& segSet, std::size_t segIndex) {
+    int inflowSegmentCurBranch(const std::string& wname, const Opm::WellSegments& segSet, std::size_t segIndex) {
         const auto& branch = segSet[segIndex].branchNumber();
         const auto& segNumber  = segSet[segIndex].segmentNumber();
         int inFlowSegInd = -1;
@@ -368,12 +368,12 @@ namespace {
                     inFlowSegInd = segSet.segmentNumberToIndex(i_segNum);
                 }
                 else {
-                    std::cout << "Non-unique inflow segment in same branch, Well: " << segSet.wellName() << std::endl;
+                    std::cout << "Non-unique inflow segment in same branch, Well: " << wname << std::endl;
                     std::cout <<  "Segment number: " << segNumber << std::endl;
                     std::cout <<  "Branch number: " << branch << std::endl;
                     std::cout <<  "Inflow segment number 1: " << segSet[inFlowSegInd].segmentNumber() << std::endl;
                     std::cout <<  "Inflow segment number 2: " << segSet[ind].segmentNumber() << std::endl;
-                    throw std::invalid_argument("Non-unique inflow segment in same branch, Well " + segSet.wellName());
+                    throw std::invalid_argument("Non-unique inflow segment in same branch, Well " + wname);
                 }
             }
         }
@@ -464,7 +464,7 @@ namespace {
                     auto iS = (segNumber-1)*noElmSeg;
                     iSeg[iS + 0] = welSegSet[orderedSegmentNo[ind]].segmentNumber();
                     iSeg[iS + 1] = segment.outletSegment();
-                    iSeg[iS + 2] = (inflowSegmentCurBranch(welSegSet, ind) == 0) ? 0 : welSegSet[inflowSegmentCurBranch(welSegSet, ind)].segmentNumber();
+                    iSeg[iS + 2] = (inflowSegmentCurBranch(well.name(), welSegSet, ind) == 0) ? 0 : welSegSet[inflowSegmentCurBranch(well.name(), welSegSet, ind)].segmentNumber();
                     iSeg[iS + 3] = segment.branchNumber();
                     iSeg[iS + 4] = noInFlowBranches(welSegSet, ind);
                     iSeg[iS + 5] = sumNoInFlowBranches(welSegSet, ind);
@@ -652,7 +652,7 @@ namespace {
                 // find well connections and calculate segment rates based on well connection production/injection terms
                 auto sSFR = Opm::RestartIO::Helpers::SegmentSetFlowRates{};
                 if (haveWellRes) {
-                    sSFR = getSegmentSetFlowRates(welSegSet, wRatesIt->second.connections, welConns, units);
+                    sSFR = getSegmentSetFlowRates(well.name(), welSegSet, wRatesIt->second.connections, welConns, units);
                 }
                 // 'stringSegNum' is one-based (1 .. #segments inclusive)
                 std::string stringSegNum = std::to_string(segNumber);
