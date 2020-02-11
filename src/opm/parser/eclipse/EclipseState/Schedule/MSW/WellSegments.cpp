@@ -510,13 +510,6 @@ namespace Opm {
         return !( *this == rhs );
     }
 
-    std::ostream& operator<<( std::ostream& stream, const WellSegments& well_segments) {
-        return stream
-            << well_segments.wellName() << " { top: {" <<
-            " L: " << well_segments.lengthTopSegment() <<
-            " D: " << well_segments.depthTopSegment() <<
-            " V: " << well_segments.volumeTopSegment() << " }}";
-    }
 
 const std::string WellSegments::LengthDepthToString(LengthDepth enumValue) {
     switch (enumValue) {
