@@ -57,7 +57,8 @@ ext_modules = [
         libraries=['opmcommon', 'boost_filesystem', 'boost_regex'],
         language='c++',
         undef_macros=["NDEBUG"],
-        include_dirs=["pybind11/include"]
+        include_dirs=["pybind11/include"],
+        extra_compile_args=['-std=c++17']
     )
 ]
 

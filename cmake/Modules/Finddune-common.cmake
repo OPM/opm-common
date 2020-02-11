@@ -16,8 +16,7 @@ find_opm_package (
   "dune-common"
 
   # dependencies
-  "CXX11Features REQUIRED;
-  BLAS REQUIRED;
+  "BLAS REQUIRED;
   LAPACK REQUIRED;
   CxaDemangle;
   MPI

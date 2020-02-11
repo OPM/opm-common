@@ -9,8 +9,6 @@ set (opm-common_CONFIG_VAR
 set (opm-common_DEPS
 	# compile with C99 support if available
 	"C99"
-	# compile with C++0x/11 support if available
-	"CXX11Features REQUIRED"
 	)
 
 if(ENABLE_ECL_INPUT)
