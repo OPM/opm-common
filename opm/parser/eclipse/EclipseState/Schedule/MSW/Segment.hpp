@@ -36,6 +36,7 @@ namespace Opm {
         enum class SegmentType {
             REGULAR,
             SICD,
+            AICD, // Not really supported - just included to complete the enum
             VALVE,
         };
 
@@ -64,6 +65,8 @@ namespace Opm {
         bool dataReady() const;
 
         SegmentType segmentType() const;
+        int ecl_type_id() const;
+
 
         void setVolume(const double volume_in);
         void setDepthAndLength(const double depth_in, const double length_in);
@@ -72,6 +75,7 @@ namespace Opm {
         void addInletSegment(const int segment_number);
 
         static double invalidValue();
+        static SegmentType type_from_int(int ecl_id);
 
         bool operator==( const Segment& ) const;
         bool operator!=( const Segment& ) const;

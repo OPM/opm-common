@@ -233,4 +233,35 @@ static constexpr double invalid_value = -1.e100;
         return m_valve;
     }
 
+    int Segment::ecl_type_id() const {
+        switch (this->m_segment_type) {
+        case SegmentType::REGULAR:
+            return -1;
+        case SegmentType::SICD:
+            return -7;
+        case SegmentType::AICD:
+            return -8;
+        case SegmentType::VALVE:
+            return -5;
+        default:
+            throw std::invalid_argument("Unhanedled segment type");
+        }
+    }
+
+    Segment::SegmentType Segment::type_from_int(int ecl_id) {
+        switch(ecl_id) {
+        case -1:
+            return SegmentType::REGULAR;
+        case -7:
+            return SegmentType::SICD;
+        case -8:
+            return SegmentType::AICD;
+        case -5:
+            return SegmentType::VALVE;
+        default:
+            throw std::invalid_argument("Unhanedled segment type");
+        }
+    }
 }
+
+

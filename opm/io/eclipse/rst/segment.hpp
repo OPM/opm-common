@@ -21,6 +21,7 @@
 
 #include <vector>
 
+#include <opm/parser/eclipse/EclipseState/Schedule/MSW/Segment.hpp>
 namespace Opm {
 namespace RestartIO {
 
@@ -30,7 +31,7 @@ struct RstSegment {
     int segment;
     int outlet_segment;
     int branch;
-    int segment_type;
+    Segment::SegmentType segment_type;
     int icd_scaling_mode;
     int icd_open_flag;
 
