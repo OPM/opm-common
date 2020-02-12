@@ -22,7 +22,6 @@
 #include <vector>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/Segment.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/MSW/SpiralICD.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/icd.hpp>
 
 namespace Opm {
