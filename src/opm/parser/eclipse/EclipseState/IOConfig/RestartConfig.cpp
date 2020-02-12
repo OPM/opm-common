@@ -24,8 +24,6 @@
 #include <iomanip>
 #include <sstream>
 
-#include <boost/lexical_cast.hpp>
-
 #include <opm/parser/eclipse/Utility/Functional.hpp>
 
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
@@ -687,7 +685,7 @@ void RestartConfig::handleScheduleSection(const SCHEDULESection& schedule, const
             found_mnemonic_RESTART = mnemonic.find("RESTART=");
             if (found_mnemonic_RESTART != std::string::npos) {
                 std::string restart_no = mnemonic.substr(found_mnemonic_RESTART+8, mnemonic.size());
-                restart = boost::lexical_cast<size_t>(restart_no);
+                restart = std::strtoul(restart_no.c_str(), nullptr, 10);
                 handle_RPTSOL_RESTART = true;
             }
         }
@@ -700,12 +698,9 @@ void RestartConfig::handleScheduleSection(const SCHEDULESection& schedule, const
         if (found_mnemonic_RESTART == std::string::npos) {
             if (item.data_size() >= 7)  {
                 const std::string& integer_control = item.get< std::string >(6);
-                try {
-                    restart = boost::lexical_cast<size_t>(integer_control);
+                restart = std::strtoul(integer_control.c_str(), nullptr, 10);
+                if (restart != ULONG_MAX)
                     handle_RPTSOL_RESTART = true;
-                } catch (boost::bad_lexical_cast &) {
-                    //do nothing
-                }
             }
         }
 
