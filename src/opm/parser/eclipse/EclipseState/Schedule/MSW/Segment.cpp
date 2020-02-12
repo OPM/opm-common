@@ -24,6 +24,13 @@
 #include <cassert>
 
 namespace Opm {
+namespace {
+
+static constexpr double invalid_value = -1.e100;
+
+}
+
+
 
     Segment::Segment()
     : m_segment_number(-1),

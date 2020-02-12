@@ -143,7 +143,6 @@ namespace Opm {
         // of type of Valve
         std::shared_ptr<Valve> m_valve;
 
-        static constexpr double invalid_value = -1.e100;
         // We are not handling the length of segment projected onto the X-axis and Y-axis.
         // They are not used in the simulations and we are not supporting the plotting.
         // There are other three properties for segment related to thermal conduction,
