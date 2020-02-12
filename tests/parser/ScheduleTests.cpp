@@ -3106,8 +3106,7 @@ VFPINJ \n                                       \
     //The data itself
     {
         typedef Opm::VFPInjTable::array_type::size_type size_type;
-        const Opm::VFPInjTable::array_type& data = vfpinjTable.getTable();
-        const size_type* size = data.shape();
+        const auto size = vfpinjTable.shape();
 
         BOOST_CHECK_EQUAL(size[0], 2);
         BOOST_CHECK_EQUAL(size[1], 3);
@@ -3116,10 +3115,10 @@ VFPINJ \n                                       \
         double conversion_factor = 100000.0;
 
         double index = 0.5;
-        for (size_type t=0; t<size[0]; ++t) {
-            for (size_type f=0; f<size[1]; ++f) {
+        for (size_type t = 0; t < size[0]; ++t) {
+            for (size_type f = 0; f < size[1]; ++f) {
                 index += 1.0;
-                BOOST_CHECK_EQUAL(data[t][f], index*conversion_factor);
+                BOOST_CHECK_EQUAL(vfpinjTable(t,f), index*conversion_factor);
             }
         }
     }

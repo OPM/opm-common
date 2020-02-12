@@ -21,20 +21,18 @@
 #ifndef OPM_PARSER_ECLIPSE_ECLIPSESTATE_TABLES_VFPINJTABLE_HPP_
 #define OPM_PARSER_ECLIPSE_ECLIPSESTATE_TABLES_VFPINJTABLE_HPP_
 
-#include <opm/parser/eclipse/Deck/Deck.hpp>
 
-
-#include <boost/multi_array.hpp>
-
+#include <array>
+#include <vector>
 
 namespace Opm {
 
-    class DeckKeyword;
+class DeckKeyword;
+class UnitSystem;
 
 class VFPInjTable {
 public:
-    typedef boost::multi_array<double, 2> array_type;
-    typedef boost::array<array_type::index, 2> extents;
+    typedef std::vector<double> array_type;
 
     enum FLO_TYPE {
         FLO_OIL=1,
@@ -75,12 +73,10 @@ public:
     }
 
     /**
-     * Returns the data of the table itself. The data is ordered so that
+     * Returns the data of the table itself. For ordered access
+     * use operator()(thp_idx, flo_idx)
      *
-     * table = getTable();
-     * bhp = table[thp_idx][flo_idx];
-     *
-     * gives the bottom hole pressure value in the table for the coordinate
+     * This gives the bottom hole pressure value in the table for the coordinate
      * given by
      * flo_axis = getFloAxis();
      * thp_axis = getTHPAxis();
@@ -93,10 +89,12 @@ public:
     }
 
     bool operator==(const VFPInjTable& data) const;
-    VFPInjTable& operator=(const VFPInjTable& data);
+
+    std::array<size_t,2> shape() const;
+
+    double operator()(size_t thp_idx, size_t flo_idx) const;
 
 private:
-
     int m_table_num;
     double m_datum_depth;
     FLO_TYPE m_flo_type;
@@ -107,6 +105,8 @@ private:
 
     array_type m_data;
     void check();
+
+    double& operator()(size_t thp_idx, size_t flo_idx);
 
     static FLO_TYPE getFloType(std::string flo_string);
 
