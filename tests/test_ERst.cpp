@@ -32,12 +32,13 @@
 #include <iostream>
 #include <iterator>
 #include <math.h>
+#include <random>
 #include <stdio.h>
 #include <tuple>
 #include <type_traits>
 #include<numeric>
 
-#include <boost/filesystem.hpp>
+#include <opm/common/utility/FileSystem.hpp>
 
 using namespace Opm::EclIO;
 
@@ -312,21 +313,20 @@ BOOST_AUTO_TEST_CASE(TestERst_4) {
 
 
 // ====================================================================
-
 class RSet
 {
 public:
     explicit RSet(std::string base)
-        : odir_(boost::filesystem::temp_directory_path() /
-                boost::filesystem::unique_path("rset-%%%%"))
+        : odir_(Opm::filesystem::temp_directory_path() /
+                Opm::unique_path("rset-%%%%"))
         , base_(std::move(base))
     {
-        boost::filesystem::create_directories(this->odir_);
+        Opm::filesystem::create_directories(this->odir_);
     }
 
     ~RSet()
     {
-        boost::filesystem::remove_all(this->odir_);
+        Opm::filesystem::remove_all(this->odir_);
     }
 
     operator ::Opm::EclIO::OutputStream::ResultSet() const
@@ -335,7 +335,7 @@ public:
     }
 
 private:
-    boost::filesystem::path odir_;
+    Opm::filesystem::path odir_;
     std::string             base_;
 };
 

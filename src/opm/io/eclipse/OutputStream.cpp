@@ -38,7 +38,7 @@
 #include <utility>
 #include <vector>
 
-#include <boost/filesystem.hpp>
+#include <opm/common/utility/FileSystem.hpp>
 
 namespace {
     namespace FileExtension
@@ -396,7 +396,7 @@ openUnified(const std::string& fname,
         // to be an actual unified restart file.
         throw std::invalid_argument {
             "Purported existing unified restart file '"
-            + boost::filesystem::path{fname}.filename().string()
+            + Opm::filesystem::path{fname}.filename().string()
             + "' does not appear to be a unified restart file"
         };
     }
@@ -444,7 +444,7 @@ openExisting(const std::string&   fname,
     // resize_file() followed by seekp() is the intended and expected
     // order of operations.
 
-    boost::filesystem::resize_file(fname, writePos);
+    Opm::filesystem::resize_file(fname, writePos);
 
     if (! this->stream_->ofileH.seekp(0, std::ios_base::end)) {
         throw std::invalid_argument {
@@ -800,7 +800,7 @@ std::string
 Opm::EclIO::OutputStream::outputFileName(const ResultSet&   rsetDescriptor,
                                          const std::string& ext)
 {
-    namespace fs = boost::filesystem;
+    namespace fs = Opm::filesystem;
 
     // Allow baseName = "CASE", "CASE.", "CASE.N", or "CASE.N.".
     auto fname = fs::path {

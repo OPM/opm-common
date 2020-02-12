@@ -21,6 +21,7 @@
 #ifndef OPM_TABLE_MANAGER_HPP
 #define OPM_TABLE_MANAGER_HPP
 
+#include <cassert>
 #include <set>
 
 #include <opm/common/OpmLog/OpmLog.hpp>

@@ -22,29 +22,30 @@
 
 #include <string>
 
-#include <boost/filesystem.hpp>
+#include <opm/common/utility/FileSystem.hpp>
 
 namespace {
+
     class WorkArea
     {
     public:
         explicit WorkArea(const std::string& subdir = "")
-            : root_(boost::filesystem::temp_directory_path() /
-                    boost::filesystem::unique_path("wrk-%%%%"))
+            : root_(Opm::filesystem::temp_directory_path() /
+                    Opm::unique_path("wrk-%%%%"))
             , area_(root_)
-            , orig_(boost::filesystem::current_path())
+            , orig_(Opm::filesystem::current_path())
         {
             if (! subdir.empty())
                 this->area_ /= subdir;
 
-            boost::filesystem::create_directories(this->area_);
-            boost::filesystem::current_path(this->area_);
+            Opm::filesystem::create_directories(this->area_);
+            Opm::filesystem::current_path(this->area_);
         }
 
         void copyIn(const std::string& filename) const
         {
-            boost::filesystem::copy_file(this->orig_ / filename,
-                                         this->area_ / filename);
+            Opm::filesystem::copy_file(this->orig_ / filename,
+                                       this->area_ / filename);
         }
 
         std::string currentWorkingDirectory() const
@@ -54,18 +55,18 @@ namespace {
 
         void makeSubDir(const std::string& dirname)
         {
-            boost::filesystem::create_directories(this->area_ / dirname);
+            Opm::filesystem::create_directories(this->area_ / dirname);
         }
 
         ~WorkArea()
         {
-            boost::filesystem::current_path(this->orig_);
-            boost::filesystem::remove_all(this->root_);
+            Opm::filesystem::current_path(this->orig_);
+            Opm::filesystem::remove_all(this->root_);
         }
 
     private:
-        boost::filesystem::path root_;
-        boost::filesystem::path area_;
-        boost::filesystem::path orig_;
+        Opm::filesystem::path root_;
+        Opm::filesystem::path area_;
+        Opm::filesystem::path orig_;
     };
 } // Anonymous

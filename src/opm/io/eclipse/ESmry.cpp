@@ -32,7 +32,7 @@
 #include <stdexcept>
 
 #include <iostream>
-#include <boost/filesystem.hpp> 
+#include <opm/common/utility/FileSystem.hpp>
 
 #include <opm/io/eclipse/EclFile.hpp>
 /*
@@ -60,8 +60,8 @@ namespace Opm { namespace EclIO {
 ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
 {
 
-    boost::filesystem::path inputFileName(filename);
-    boost::filesystem::path rootName = inputFileName.parent_path() / inputFileName.stem();
+    Opm::filesystem::path inputFileName(filename);
+    Opm::filesystem::path rootName = inputFileName.parent_path() / inputFileName.stem();
     
     // if root name (without any extension) given as first argument in constructor, binary will then be assumed
     if (inputFileName.extension()==""){
@@ -77,15 +77,15 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
     bool formatted = inputFileName.extension()==".SMSPEC" ? false : true;
     formattedVect.push_back(formatted);
     
-    boost::filesystem::path path = boost::filesystem::current_path();;
+    Opm::filesystem::path path = Opm::filesystem::current_path();;
 
     updatePathAndRootName(path, rootName);
     
-    boost::filesystem::path smspec_file = path / rootName;
+    Opm::filesystem::path smspec_file = path / rootName;
     smspec_file += inputFileName.extension();
 
-    boost::filesystem::path rstRootN;
-    boost::filesystem::path pathRstFile = path; 
+    Opm::filesystem::path rstRootN;
+    Opm::filesystem::path pathRstFile = path;
     
     std::set<std::string> keywList;
     std::vector<std::pair<std::string,int>> smryArray;
@@ -124,13 +124,13 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
     
     while ((rstRootN.string() != "") && (loadBaseRunData)) {
         
-        boost::filesystem::path rstFile = pathRstFile / rstRootN;
+        Opm::filesystem::path rstFile = pathRstFile / rstRootN;
         rstFile += ".SMSPEC";
         
         bool baseRunFmt = false;
         
         // if unformatted file not exists, check for formatted file
-        if (!boost::filesystem::exists(rstFile)){
+        if (!Opm::filesystem::exists(rstFile)){
             rstFile = pathRstFile / rstRootN;
             rstFile += ".FSMSPEC";
             
@@ -230,7 +230,7 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
             toReportStepNumber = std::numeric_limits<int>::max();
         }
 
-        boost::filesystem::path smspecFile(std::get<0>(smryArray[n]));
+        Opm::filesystem::path smspecFile(std::get<0>(smryArray[n]));
         rootName = smspecFile.parent_path() / smspecFile.stem();
 
         
@@ -239,11 +239,11 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
         // if both unified and non-unified files exists, will use most recent based on 
         // time stamp
 
-        boost::filesystem::path unsmryFile = rootName; 
+        Opm::filesystem::path unsmryFile = rootName;
         
         formattedVect[n] ? unsmryFile += ".FUNSMRY" : unsmryFile += ".UNSMRY";
 
-        bool use_unified = boost::filesystem::exists(unsmryFile.string());
+        bool use_unified = Opm::filesystem::exists(unsmryFile.string());
 
         std::vector<std::string> multFileList = checkForMultipleResultFiles(rootName, formattedVect[n]);
 
@@ -252,8 +252,8 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
         if ((!use_unified) && (multFileList.size()==0)){
             throw std::runtime_error("neigther unified or non-unified result files found");
         } else if ((use_unified) && (multFileList.size()>0)){
-            auto time_multiple = boost::filesystem::last_write_time(multFileList.back());
-            auto time_unified = boost::filesystem::last_write_time(unsmryFile);
+            auto time_multiple = Opm::filesystem::last_write_time(multFileList.back());
+            auto time_unified = Opm::filesystem::last_write_time(unsmryFile);
             
             if (time_multiple > time_unified){
                 resultsFileList=multFileList;
@@ -374,14 +374,14 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
 }
 
 
-std::vector<std::string> ESmry::checkForMultipleResultFiles(const boost::filesystem::path& rootN, bool formatted) const {
+std::vector<std::string> ESmry::checkForMultipleResultFiles(const Opm::filesystem::path& rootN, bool formatted) const {
     
     std::vector<std::string> fileList;
     std::string pathRootN = rootN.parent_path().string();
 
     std::string fileFilter = formatted ? rootN.stem().string()+".A" : rootN.stem().string()+".S"; 
 
-    for (boost::filesystem::directory_iterator itr(pathRootN); itr!=boost::filesystem::directory_iterator(); ++itr)
+    for (Opm::filesystem::directory_iterator itr(pathRootN); itr != Opm::filesystem::directory_iterator(); ++itr)
     {
         std::string file = itr->path().filename().string();
         
@@ -395,7 +395,7 @@ std::vector<std::string> ESmry::checkForMultipleResultFiles(const boost::filesys
     return fileList;
 }
 
-void ESmry::getRstString(const std::vector<std::string>& restartArray, boost::filesystem::path& pathRst, boost::filesystem::path& rootN) const {
+void ESmry::getRstString(const std::vector<std::string>& restartArray, Opm::filesystem::path& pathRst, Opm::filesystem::path& rootN) const {
 
     std::string rootNameStr="";
     
@@ -403,12 +403,12 @@ void ESmry::getRstString(const std::vector<std::string>& restartArray, boost::fi
         rootNameStr = rootNameStr + str;
     }
 
-    rootN = boost::filesystem::path(rootNameStr);
+    rootN = Opm::filesystem::path(rootNameStr);
     
     updatePathAndRootName(pathRst, rootN);
 }
 
-void ESmry::updatePathAndRootName(boost::filesystem::path& dir, boost::filesystem::path& rootN) const {
+void ESmry::updatePathAndRootName(Opm::filesystem::path& dir, Opm::filesystem::path& rootN) const {
 
     if (rootN.parent_path().is_absolute()){
         dir = rootN.parent_path();

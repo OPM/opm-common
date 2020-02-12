@@ -1,5 +1,5 @@
 /*
-  Copyright 2015 Statoil ASA.
+  Copyright 2019 Equinor ASA
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -16,32 +16,31 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
+#ifndef OPM_FILESYSTEM_HPP
+#define OPM_FILESYSTEM_HPP
 
 
-#ifndef KEYWORD_LOADER_HPP
-#define KEYWORD_LOADER_HPP
-
-#include <map>
-#include <string>
-#include <vector>
-
-#include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
-
-namespace Opm {
-
-
-    class KeywordLoader {
-
-    public:
-        KeywordLoader(const std::vector<std::string>& keyword_files, bool verbose);
-        std::string getJsonFile(const std::string& keyword) const;
-
-        std::map<char , std::vector<ParserKeyword> >::const_iterator begin( ) const;
-        std::map<char , std::vector<ParserKeyword> >::const_iterator end( ) const;
-    private:
-        std::map<char, std::vector<ParserKeyword>> keywords;
-        std::map<std::string , std::string > m_jsonFile;
-    };
-}
-
+#if __cplusplus__ >= 201703L
+#include <filesystem>
+#else
+#include <experimental/filesystem>
 #endif
+
+#include <string>
+
+
+namespace Opm
+{
+#if __cplusplus__ >= 201703L
+    namespace filesystem = std::filesystem;
+#else
+    namespace filesystem = std::experimental::filesystem;
+#endif
+
+    // A poor man's filesystem::unique_path
+    std::string unique_path(const std::string& input);
+
+} // end namespace Opm
+
+
+#endif //  OPM_FILESYSTEM_HPP

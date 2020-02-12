@@ -26,8 +26,6 @@
 #include <vector>
 #include <string>
 
-#include <boost/filesystem.hpp>
-
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 

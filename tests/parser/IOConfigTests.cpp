@@ -23,6 +23,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <opm/common/utility/FileSystem.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
@@ -263,7 +264,7 @@ BOOST_AUTO_TEST_CASE(OutputPaths) {
     BOOST_CHECK_EQUAL( output_dir2,  config2.getOutputDir() );
     BOOST_CHECK_EQUAL( "TESTSTRING", config2.getBaseName() );
 
-    namespace fs = boost::filesystem;
+    namespace fs = Opm::filesystem;
 
     Deck deck3;
     deck3.setDataFile( "/path/to/testString.DATA" );

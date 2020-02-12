@@ -24,7 +24,7 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/test/test_tools.hpp>
 
-#include <boost/filesystem/path.hpp>
+#include <opm/common/utility/FileSystem.hpp>
 
 #include <opm/json/JsonObject.hpp>
 
@@ -244,7 +244,7 @@ BOOST_AUTO_TEST_CASE(parseJSONObject_testType) {
 
 
 BOOST_AUTO_TEST_CASE(Parse_fileDoesNotExist_Throws) {
-    boost::filesystem::path jsonFile("file/does/not/exist");
+    Opm::filesystem::path jsonFile("file/does/not/exist");
     BOOST_CHECK_THROW( Json::JsonObject parser(jsonFile) , std::invalid_argument);
 }
 
@@ -252,14 +252,14 @@ BOOST_AUTO_TEST_CASE(Parse_fileDoesNotExist_Throws) {
 
 BOOST_AUTO_TEST_CASE(Parse_fileExists_OK) {
     const auto arg = framework::master_test_suite().argv[1];
-    boost::filesystem::path jsonFile(arg);
+    Opm::filesystem::path jsonFile(arg);
     BOOST_CHECK_NO_THROW( Json::JsonObject parser(jsonFile) );
 }
 
 
 BOOST_AUTO_TEST_CASE(to_string_ok) {
     const auto arg = framework::master_test_suite().argv[1];
-    boost::filesystem::path jsonFile(arg);
+    Opm::filesystem::path jsonFile(arg);
     Json::JsonObject parser(jsonFile);
     std::string json_string =
         "{\n"

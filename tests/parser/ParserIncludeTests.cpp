@@ -19,9 +19,9 @@
 
 
 #define BOOST_TEST_MODULE ParserTests
-#include <boost/filesystem/path.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include <opm/common/utility/FileSystem.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
@@ -33,7 +33,7 @@ inline std::string prefix() {
 
 
 BOOST_AUTO_TEST_CASE(ParserKeyword_includeInvalid) {
-    boost::filesystem::path inputFilePath(prefix() + "includeInvalid.data");
+    Opm::filesystem::path inputFilePath(prefix() + "includeInvalid.data");
 
     Opm::Parser parser;
     Opm::ParseContext parseContext;
@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE(ParserKeyword_includeInvalid) {
 
 
 BOOST_AUTO_TEST_CASE(DATA_FILE_IS_SYMLINK) {
-  boost::filesystem::path inputFilePath(prefix() + "includeSymlinkTestdata/symlink4/path/case.data");
+  Opm::filesystem::path inputFilePath(prefix() + "includeSymlinkTestdata/symlink4/path/case.data");
   Opm::Parser parser;
   std::cout << "Input file: " << inputFilePath.string() << std::endl;
   auto deck = parser.parseFile(inputFilePath.string());
@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(DATA_FILE_IS_SYMLINK) {
 
 
 BOOST_AUTO_TEST_CASE(Verify_find_includes_Data_file_is_a_symlink) {
-    boost::filesystem::path inputFilePath(prefix() + "includeSymlinkTestdata/symlink1/case_symlink.data");
+    Opm::filesystem::path inputFilePath(prefix() + "includeSymlinkTestdata/symlink1/case_symlink.data");
     Opm::Parser parser;
     auto deck = parser.parseFile(inputFilePath.string());
 
@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(Verify_find_includes_Data_file_is_a_symlink) {
 
 
 BOOST_AUTO_TEST_CASE(Verify_find_includes_Data_file_has_include_that_is_a_symlink) {
-    boost::filesystem::path inputFilePath(prefix() + "includeSymlinkTestdata/symlink2/caseWithIncludedSymlink.data");
+    Opm::filesystem::path inputFilePath(prefix() + "includeSymlinkTestdata/symlink2/caseWithIncludedSymlink.data");
     Opm::Parser parser;
     auto deck = parser.parseFile(inputFilePath.string());
 
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(Verify_find_includes_Data_file_has_include_that_is_a_symlin
 
 
 BOOST_AUTO_TEST_CASE(Verify_find_includes_Data_file_has_include_file_that_again_includes_a_symlink) {
-    boost::filesystem::path inputFilePath(prefix() + "includeSymlinkTestdata/symlink3/case.data");
+    Opm::filesystem::path inputFilePath(prefix() + "includeSymlinkTestdata/symlink3/case.data");
     Opm::Parser parser;
     auto deck = parser.parseFile(inputFilePath.string());
 
@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(Verify_find_includes_Data_file_has_include_file_that_again_
 
 
 BOOST_AUTO_TEST_CASE(ParserKeyword_includeValid) {
-    boost::filesystem::path inputFilePath(prefix() + "includeValid.data");
+    Opm::filesystem::path inputFilePath(prefix() + "includeValid.data");
 
     Opm::Parser parser;
     auto deck = parser.parseFile(inputFilePath.string());
@@ -104,9 +104,9 @@ BOOST_AUTO_TEST_CASE(ParserKeyword_includeValid) {
 
 
 BOOST_AUTO_TEST_CASE(ParserKeyword_includeWrongCase) {
-    boost::filesystem::path inputFile1Path(prefix() + "includeWrongCase1.data");
-    boost::filesystem::path inputFile2Path(prefix() + "includeWrongCase2.data");
-    boost::filesystem::path inputFile3Path(prefix() + "includeWrongCase3.data");
+    Opm::filesystem::path inputFile1Path(prefix() + "includeWrongCase1.data");
+    Opm::filesystem::path inputFile2Path(prefix() + "includeWrongCase2.data");
+    Opm::filesystem::path inputFile3Path(prefix() + "includeWrongCase3.data");
 
     Opm::Parser parser;
 

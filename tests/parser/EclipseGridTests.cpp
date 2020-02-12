@@ -26,7 +26,7 @@
 #include <stdexcept>
 #include <unistd.h>
 
-#include <boost/filesystem.hpp>
+#include <opm/common/utility/FileSystem.hpp>
 
 #define BOOST_TEST_MODULE EclipseGridTests
 #include <boost/test/unit_test.hpp>
@@ -1800,14 +1800,14 @@ BOOST_AUTO_TEST_CASE(SAVE_FIELD_UNITS) {
     time_t timer;
     time(&timer);
 
-    std::string cwd = boost::filesystem::current_path().c_str();
+    std::string cwd = Opm::filesystem::current_path().c_str();
     std::string testDir = cwd + "/tmp_dir_" + std::to_string(timer);
 
-    if ( boost::filesystem::exists( testDir )) {
-        boost::filesystem::remove_all(testDir);
+    if ( Opm::filesystem::exists( testDir )) {
+        Opm::filesystem::remove_all(testDir);
     }
 
-    boost::filesystem::create_directory(testDir);
+    Opm::filesystem::create_directory(testDir);
 
     std::string fileName = testDir + "/" + "TMP.EGRID";
     grid1.save(fileName, formatted, nnc, units);
@@ -1912,7 +1912,7 @@ BOOST_AUTO_TEST_CASE(SAVE_FIELD_UNITS) {
         BOOST_CHECK( ref3_mapaxes[n] == test_mapaxes3[n]);
     }
 
-    boost::filesystem::remove_all(testDir);
+    Opm::filesystem::remove_all(testDir);
 }
 
 BOOST_AUTO_TEST_CASE(SAVE_METRIC_UNITS) {
@@ -1993,14 +1993,14 @@ BOOST_AUTO_TEST_CASE(SAVE_METRIC_UNITS) {
     time_t timer;
     time(&timer);
 
-    std::string cwd = boost::filesystem::current_path().c_str();
+    std::string cwd = Opm::filesystem::current_path().c_str();
     std::string testDir = cwd + "/tmp_dir_" + std::to_string(timer);
 
-    if ( boost::filesystem::exists( testDir )) {
-        boost::filesystem::remove_all(testDir);
+    if ( Opm::filesystem::exists( testDir )) {
+        Opm::filesystem::remove_all(testDir);
     }
 
-    boost::filesystem::create_directory(testDir);
+    Opm::filesystem::create_directory(testDir);
 
     std::string fileName = testDir + "/" + "TMP.FEGRID";
     grid1.save(fileName, formatted, nnc, units1);
@@ -2105,7 +2105,7 @@ BOOST_AUTO_TEST_CASE(SAVE_METRIC_UNITS) {
     }
 
 
-    boost::filesystem::remove_all(testDir);
+    Opm::filesystem::remove_all(testDir);
 }
 
 BOOST_AUTO_TEST_CASE(CalcCellDims) {
