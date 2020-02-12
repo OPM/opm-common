@@ -18,6 +18,8 @@
 */
 
 #include <algorithm>
+#include <cassert>
+#include <cmath>
 #include <iostream>
 
 #include <opm/common/OpmLog/OpmLog.hpp>
@@ -159,14 +161,6 @@ VFPProdTable::VFPProdTable(int table_num,
     m_wfr_data = wfr_data;
     m_gfr_data = gfr_data;
     m_alq_data = alq_data;
-
-    extents shape;
-    shape[0] = data.shape()[0];
-    shape[1] = data.shape()[1];
-    shape[2] = data.shape()[2];
-    shape[3] = data.shape()[3];
-    shape[4] = data.shape()[4];
-    m_data.resize(shape);
     m_data = data;
 
     //check();
@@ -276,14 +270,8 @@ VFPProdTable::VFPProdTable( const DeckKeyword& table, const UnitSystem& deck_uni
     size_t ng = m_gfr_data.size();
     size_t na = m_alq_data.size();
     size_t nf = m_flo_data.size();
-    extents shape;
-    shape[0] = nt;
-    shape[1] = nw;
-    shape[2] = ng;
-    shape[3] = na;
-    shape[4] = nf;
-    m_data.resize(shape);
-    std::fill_n(m_data.data(), m_data.num_elements(), std::nan("0"));
+    m_data.resize(nt*nw*ng*na*nf);
+    std::fill_n(m_data.data(), m_data.size(), std::nan("0"));
 
     //Check that size of table matches size of axis:
     if (table.size() != nt*nw*ng*na + 6) {
@@ -315,7 +303,7 @@ VFPProdTable::VFPProdTable( const DeckKeyword& table, const UnitSystem& deck_uni
                         << t << "," << w << "," << g << "," << a << "," << f
                         << "]=" << bhp_tht[f] << " too large" << std::endl;
             }
-            m_data[t][w][g][a][f] = table_scaling_factor*bhp_tht[f];
+            (*this)(t,w,g,a,f) = table_scaling_factor*bhp_tht[f];
         }
     }
 
@@ -355,54 +343,42 @@ void VFPProdTable::check(const DeckKeyword& keyword, const double table_scaling_
     assert(std::is_sorted(m_gfr_data.begin(), m_gfr_data.end()));
     assert(std::is_sorted(m_alq_data.begin(), m_alq_data.end()));
 
+    size_t nt = m_thp_data.size();
+    size_t nw = m_wfr_data.size();
+    size_t ng = m_gfr_data.size();
+    size_t na = m_alq_data.size();
+    size_t nf = m_flo_data.size();
+
     //Check data size matches axes
-    assert(m_data.num_dimensions() == 5);
-    assert(m_data.shape()[0] == m_thp_data.size());
-    assert(m_data.shape()[1] == m_wfr_data.size());
-    assert(m_data.shape()[2] == m_gfr_data.size());
-    assert(m_data.shape()[3] == m_alq_data.size());
-    assert(m_data.shape()[4] == m_flo_data.size());
+    assert(m_data.size() == nt*nw*ng*na*nf);
 
-
-    //Check that all elements have been set
+    //Check that bhp(thp) is a monotonic increasing function.
+    //If this is not the case, we might not be able to determine
+    //the thp from the bhp easily
     typedef array_type::size_type size_type;
-    for (size_type t=0; t<m_data.shape()[0]; ++t) {
-        for (size_type w=0; w<m_data.shape()[1]; ++w) {
-            for (size_type g=0; g<m_data.shape()[2]; ++g) {
-                for (size_type a=0; a<m_data.shape()[3]; ++a) {
-                    for (size_type f=0; f<m_data.shape()[4]; ++f) {
-                        if (std::isnan(m_data[t][w][g][a][f])) {
+    std::string points;
+    for (size_type w = 0; w < nw; ++w) {
+        for (size_type g = 0; g < ng; ++g) {
+            for (size_type a = 0; a < na; ++a) {
+                for (size_type f = 0; f < nf; ++f) {
+                    double bhp_last = (*this)(0,w,g,a,f);
+                    for (size_type t = 0; t < nt; ++t) {
+                        //Check that all elements have been set
+                        if (std::isnan((*this)(t,w,g,a,f))) {
                             //TODO: Replace with proper log message
                             std::cerr << "VFPPROD element ["
                                     << t << "," << w << "," << g << "," << a << "," << f
                                     << "] not set!" << std::endl;
                             throw std::invalid_argument("Missing VFPPROD value");
                         }
-                    }
-                }
-            }
-        }
-    }
-
-
-    //Check that bhp(thp) is a monotonic increasing function.
-    //If this is not the case, we might not be able to determine
-    //the thp from the bhp easily
-    std::string points = "";
-    for (size_type w=0; w<m_data.shape()[1]; ++w) {
-        for (size_type g=0; g<m_data.shape()[2]; ++g) {
-            for (size_type a=0; a<m_data.shape()[3]; ++a) {
-                for (size_type f=0; f<m_data.shape()[4]; ++f) {
-                    double bhp_last = m_data[0][w][g][a][f];
-                    for (size_type t=0; t<m_data.shape()[0]; ++t) {
-                        if (m_data[t][w][g][a][f] < bhp_last) {
+                        if ((*this)(t,w,g,a,f) < bhp_last) {
                             points += "At point (FLOW, THP, WFR, GFR, ALQ) = "
                                     + std::to_string(f) + " " + std::to_string(t) + " "
                                     + std::to_string(w) + " " + std::to_string(g) + " "
                                     + std::to_string(a) + " at BHP = "
-                                    + std::to_string(m_data[t][w][g][a][f] / table_scaling_factor) + "\n";
+                                    + std::to_string((*this)(t,w,g,a,f) / table_scaling_factor) + "\n";
                         }
-                        bhp_last = m_data[t][w][g][a][f];
+                        bhp_last = (*this)(t,w,g,a,f);
                     }
                 }
             }
@@ -543,25 +519,34 @@ bool VFPProdTable::operator==(const VFPProdTable& data) const {
 }
 
 
-VFPProdTable& VFPProdTable::operator=(const VFPProdTable& data) {
-    m_table_num = data.m_table_num;
-    m_datum_depth = data.m_datum_depth;
-    m_flo_type = data.m_flo_type;
-    m_wfr_type = data.m_wfr_type;
-    m_gfr_type = data.m_gfr_type;
-    m_alq_type = data.m_alq_type;
-    m_flo_data = data.m_flo_data;
-    m_thp_data = data.m_thp_data;
-    m_wfr_data = data.m_wfr_data;
-    m_gfr_data = data.m_gfr_data;
-    m_alq_data = data.m_alq_data;
-    extents shape;
-    for (size_t i = 0; i < 5; ++i)
-        shape[i] = data.m_data.shape()[i];
-    m_data.resize(shape);
-    for (size_t i = 0; i < data.m_data.num_elements(); ++i)
-        *(m_data.data() + i) = *(data.m_data.data() + i);
-    return *this;
+double VFPProdTable::operator()(size_t thp_idx, size_t wfr_idx, size_t gfr_idx, size_t alq_idx, size_t flo_idx) const {
+    size_t nw = m_wfr_data.size();
+    size_t ng = m_gfr_data.size();
+    size_t na = m_alq_data.size();
+    size_t nf = m_flo_data.size();
+
+    return m_data[thp_idx*nw*ng*na*nf + wfr_idx*ng*na*nf + gfr_idx*na*nf + alq_idx*nf + flo_idx];
+}
+
+
+double& VFPProdTable::operator()(size_t thp_idx, size_t wfr_idx, size_t gfr_idx, size_t alq_idx, size_t flo_idx) {
+    size_t nw = m_wfr_data.size();
+    size_t ng = m_gfr_data.size();
+    size_t na = m_alq_data.size();
+    size_t nf = m_flo_data.size();
+
+    return m_data[thp_idx*nw*ng*na*nf + wfr_idx*ng*na*nf + gfr_idx*na*nf + alq_idx*nf + flo_idx];
+}
+
+
+std::array<size_t,5> VFPProdTable::shape() const {
+    size_t nt = m_thp_data.size();
+    size_t nw = m_wfr_data.size();
+    size_t ng = m_gfr_data.size();
+    size_t na = m_alq_data.size();
+    size_t nf = m_flo_data.size();
+
+    return {nt, nw, ng, na, nf};
 }
 
 } //Namespace opm
