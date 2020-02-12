@@ -42,7 +42,7 @@ namespace Opm {
 
     Segment::Segment(int segment_number_in, int branch_in, int outlet_segment_in, double length_in, double depth_in,
                      double internal_diameter_in, double roughness_in, double cross_area_in,
-                     double volume_in, bool data_ready_in)
+                     double volume_in, bool data_ready_in, SegmentType segment_type_in)
     : m_segment_number(segment_number_in),
       m_branch(branch_in),
       m_outlet_segment(outlet_segment_in),
@@ -52,7 +52,8 @@ namespace Opm {
       m_roughness(roughness_in),
       m_cross_area(cross_area_in),
       m_volume(volume_in),
-      m_data_ready(data_ready_in)
+      m_data_ready(data_ready_in),
+      m_segment_type(segment_type_in)
     {
     }
 
