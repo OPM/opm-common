@@ -26,8 +26,6 @@
 #include <fstream>
 #include <locale>
 
-#include <boost/filesystem.hpp>
-
 #include <opm/parser/eclipse/Generator/KeywordGenerator.hpp>
 #include <opm/parser/eclipse/Generator/KeywordLoader.hpp>
 
@@ -47,17 +45,6 @@ int main(int , char ** argv) {
         #if !defined(WIN32)
         setenv( "LC_ALL", "C", 1 );
         #endif
-        auto loc = boost::filesystem::path::imbue( std::locale::classic() );
-        boost::filesystem::path::imbue( loc );
-        std::cout << "User preferred locale setting is invalid "
-            << "which breaks Boost <= 1.56 "
-            << "- forcing to 'C' as workaround for Boost <= 1.56. "
-            << "This workaround only applies to compile opm-parser, "
-            << "but your locale settings seem BROKEN, "
-            << "and opm-parser is likely NOT GOING TO WORK. "
-            << "If you're on linux you can try setting the LANG "
-            << "or LC_ALL environment variables to C or POSIX."
-            << std::endl;
     }
     const char * keyword_list_file = argv[1];
     const char * source_file_path = argv[2];
