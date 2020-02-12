@@ -24,6 +24,8 @@
 #include <utility>
 #include <vector>
 
+#include <opm/parser/eclipse/EclipseState/Schedule/MSW/icd.hpp>
+
 
 namespace Opm {
 
@@ -33,10 +35,6 @@ namespace Opm {
 
     class Valve {
     public:
-        enum class Status {
-            OPEN,
-            SHUT
-        };
 
         Valve();
         explicit Valve(const DeckRecord& record);
@@ -47,7 +45,7 @@ namespace Opm {
               double pipeDiam,
               double pipeRough,
               double pipeCrossA,
-              Status stat);
+              ICDStatus stat);
 
         // the function will return a map
         // [
@@ -67,7 +65,7 @@ namespace Opm {
         double pipeCrossArea() const;
 
         // Status: OPEN or SHUT
-        Status status() const;
+        ICDStatus status() const;
 
         void setConMaxCrossArea(const double area);
 
@@ -87,7 +85,7 @@ namespace Opm {
         double m_pipe_diameter;
         double m_pipe_roughness;
         double m_pipe_cross_area;
-        Status m_status;
+        ICDStatus m_status;
     };
 
 }

@@ -22,6 +22,9 @@
 #include <vector>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/Segment.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/MSW/SpiralICD.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/MSW/icd.hpp>
+
 namespace Opm {
 namespace RestartIO {
 
@@ -33,7 +36,7 @@ struct RstSegment {
     int branch;
     Segment::SegmentType segment_type;
     int icd_scaling_mode;
-    int icd_open_flag;
+    ICDStatus icd_status;
 
     double dist_outlet;
     double outlet_dz;
