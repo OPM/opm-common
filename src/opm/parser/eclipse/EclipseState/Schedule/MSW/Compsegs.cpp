@@ -260,27 +260,29 @@ namespace Opm {
         center_depth = segment_depth + (center_distance - segment_distance) / segment_length * depth_change_segment;
     }
 
-    void Compsegs::updateConnectionsWithSegment(const std::vector< Compsegs >& compsegs,
-						const EclipseGrid& grid,
-                                                WellConnections& connection_set) {
+    void
+    Compsegs::updateConnectionsWithSegment(const std::vector<Compsegs>& compsegs,
+                                           const EclipseGrid& grid,
+                                           WellConnections& connection_set)
+    {
 
-        for( const auto& compseg : compsegs ) {
+        for (const auto& compseg : compsegs) {
             const int i = compseg.m_i;
             const int j = compseg.m_j;
             const int k = compseg.m_k;
-	    if (grid.cellActive(i, j, k)) {
-		Connection& connection = connection_set.getFromIJK( i, j, k );
-		connection.updateSegment(compseg.segment_number, compseg.center_depth,compseg.m_seqIndex);
+            if (grid.cellActive(i, j, k)) {
+                Connection& connection = connection_set.getFromIJK(i, j, k);
+                connection.updateSegment(compseg.segment_number, compseg.center_depth, compseg.m_seqIndex);
 
-		//keep connection sequence number from input sequence
-		connection.setCompSegSeqIndex(compseg.m_seqIndex);
-		connection.setSegDistStart(compseg.m_distance_start);
-		connection.setSegDistEnd(compseg.m_distance_end);
-	    }
+                // keep connection sequence number from input sequence
+                connection.setCompSegSeqIndex(compseg.m_seqIndex);
+                connection.setSegDistStart(compseg.m_distance_start);
+                connection.setSegDistEnd(compseg.m_distance_end);
+            }
         }
 
         for (size_t ic = 0; ic < connection_set.size(); ++ic) {
-            if ( !(connection_set.get(ic).attachedToSegment()) ) {
+            if (!(connection_set.get(ic).attachedToSegment())) {
                 throw std::runtime_error("Not all the connections are attached with a segment. "
                                          "The information from COMPSEGS is not complete");
             }
