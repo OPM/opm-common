@@ -30,10 +30,10 @@ namespace Opm {
                                                  const ParseContext& parseContext,
                                                  ErrorGuard& errors)
     {
-        WellConnections * new_connection_set = new WellConnections(input_connections);
+        WellConnections new_connection_set = input_connections;
         std::vector<Compsegs> compsegs_vector = Compsegs::compsegsFromCOMPSEGSKeyword( compsegs, grid, parseContext, errors);
         Compsegs::processCOMPSEGS(compsegs_vector, segment_set);
-        Compsegs::updateConnectionsWithSegment(compsegs_vector, grid, *new_connection_set);
-        return new_connection_set;
+        Compsegs::updateConnectionsWithSegment(compsegs_vector, grid, new_connection_set);
+        return new WellConnections( std::move( new_connection_set ) );
     }
 }
