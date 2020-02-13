@@ -22,8 +22,6 @@
 #include <iomanip>
 #include <cmath>
 
-#include <boost/lexical_cast.hpp>
-
 #include <opm/json/JsonObject.hpp>
 
 #include <opm/parser/eclipse/Parser/ParserItem.hpp>

@@ -22,7 +22,6 @@
 #include <iterator>
 #include <sstream>
 
-#include <boost/lexical_cast.hpp>
 #include <opm/common/utility/FileSystem.hpp>
 
 #include <opm/common/OpmLog/OpmLog.hpp>

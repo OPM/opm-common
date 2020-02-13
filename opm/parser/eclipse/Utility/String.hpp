@@ -20,9 +20,21 @@ typename std::decay< T >::type uppercase( T&& x ) {
     return uppercase( t, t );
 }
 
+template<typename T>
+std::string ltrim_copy(const T& s)
+{
+    auto ret = std::string(s.c_str());
+
+    const auto start = ret.find_first_not_of(" \t\n\r\f\v");
+    if (start == std::string::npos)
+        return "";
+
+    return ret.substr(start);
+}
+
 
 template<typename T>
-std::string trim_copy(const T& s) {
+std::string rtrim_copy(const T& s)
 {
     auto ret = std::string(s.c_str());
 
@@ -32,6 +44,11 @@ std::string trim_copy(const T& s) {
 
     return ret.substr(0, end + 1);
 }
+
+template<typename T>
+std::string trim_copy(const T& s)
+{
+    return ltrim_copy( rtrim_copy(s) );
 }
 }
 #endif //OPM_UTILITY_STRING_HPP
