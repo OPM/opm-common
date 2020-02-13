@@ -26,7 +26,7 @@
 namespace Opm {
 namespace RestartIO {
 
-class RstHeader;
+struct RstHeader;
 
 struct RstGroup {
     RstGroup(const std::string* zwel,

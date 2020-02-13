@@ -305,7 +305,6 @@ ENDBOX
     const auto& poro = fpm.get_double("PORO");
     const auto& ntg = fpm.get_double("NTG");
     const auto& multpv = fpm.get_double("MULTPV");
-    const auto& defaulted = fpm.defaulted<double>("PORV");
     const auto& porv = fpm.porv();
 
     // All cells should be active for this grid

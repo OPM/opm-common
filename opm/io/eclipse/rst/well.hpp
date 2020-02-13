@@ -31,7 +31,7 @@
 namespace Opm {
 namespace RestartIO {
 
-class RstHeader;
+struct RstHeader;
 
 struct RstWell {
     RstWell(const RstHeader& header,
