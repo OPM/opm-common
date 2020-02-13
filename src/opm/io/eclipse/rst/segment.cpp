@@ -20,10 +20,9 @@
 #include <opm/io/eclipse/rst/segment.hpp>
 #include <opm/output/eclipse/VectorItems/msw.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/icd.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/MSW/Segment.hpp>
 
 namespace VI = ::Opm::RestartIO::Helpers::VectorItems;
-
-
 
 namespace Opm {
 
