@@ -68,7 +68,7 @@ struct RstWell {
     int active_control;
     int vfp_table;
     int pred_requested_control;
-    int xflow;
+    bool allow_xflow;
     int hist_requested_control;
     int msw_index;
     int completion_ordering;
