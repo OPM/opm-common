@@ -25,7 +25,7 @@
 #include <stdexcept>
 #include <iostream>
 
-#include <boost/filesystem.hpp>
+#include <opm/common/utility/FileSystem.hpp>
 
 #include <opm/io/eclipse/ERst.hpp>
 #include <opm/io/eclipse/ESmry.hpp>
@@ -59,10 +59,10 @@ void pressure(const EclipseState& es, const Schedule& /* sched */, data::Solutio
     std::fill(data.begin(), data.end(), units.to_si(UnitSystem::measure::pressure, seconds_elapsed));
 }
 
-bool is_file(const boost::filesystem::path& name)
+bool is_file(const Opm::filesystem::path& name)
 {
-    return boost::filesystem::exists(name)
-        && boost::filesystem::is_regular_file(name);
+    return Opm::filesystem::exists(name)
+        && Opm::filesystem::is_regular_file(name);
 }
 
 }

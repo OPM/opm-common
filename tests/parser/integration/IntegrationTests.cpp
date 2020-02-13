@@ -20,7 +20,7 @@
 #define BOOST_TEST_MODULE ParserIntegrationTests
 #include <boost/test/unit_test.hpp>
 #include <boost/test/test_tools.hpp>
-#include <boost/filesystem/path.hpp>
+#include <opm/common/utility/FileSystem.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
@@ -72,7 +72,7 @@ Parser createWWCTParser() {
 }
 
 BOOST_AUTO_TEST_CASE(parse_fileWithWWCTKeyword_deckReturned) {
-    boost::filesystem::path singleKeywordFile(pathprefix() + "wwct.data");
+    Opm::filesystem::path singleKeywordFile(pathprefix() + "wwct.data");
     auto parser = createWWCTParser();
     BOOST_CHECK( parser.isRecognizedKeyword("WWCT"));
     BOOST_CHECK( parser.isRecognizedKeyword("SUMMARY"));
@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(parse_streamWithWWCTKeyword_deckReturned) {
 }
 
 BOOST_AUTO_TEST_CASE(parse_fileWithWWCTKeyword_deckHasWWCT) {
-    boost::filesystem::path singleKeywordFile(pathprefix() + "wwct.data");
+    Opm::filesystem::path singleKeywordFile(pathprefix() + "wwct.data");
     auto parser = createWWCTParser();
     auto deck = parser.parseFile(singleKeywordFile.string());
     BOOST_CHECK(deck.hasKeyword("SUMMARY"));
@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE(parse_fileWithWWCTKeyword_deckHasWWCT) {
 }
 
 BOOST_AUTO_TEST_CASE(parse_fileWithWWCTKeyword_dataIsCorrect) {
-    boost::filesystem::path singleKeywordFile(pathprefix() + "wwct.data");
+    Opm::filesystem::path singleKeywordFile(pathprefix() + "wwct.data");
     auto parser = createWWCTParser();
     auto deck = parser.parseFile(singleKeywordFile.string());
     BOOST_CHECK_EQUAL("WELL-1", deck.getKeyword("WWCT" , 0).getRecord(0).getItem(0).get< std::string >(0));
@@ -157,14 +157,14 @@ static Parser createBPRParser() {
 }
 
 BOOST_AUTO_TEST_CASE(parse_fileWithBPRKeyword_deckReturned) {
-    boost::filesystem::path singleKeywordFile(pathprefix() + "bpr.data");
+    Opm::filesystem::path singleKeywordFile(pathprefix() + "bpr.data");
     auto parser = createBPRParser();
 
     BOOST_CHECK_NO_THROW(parser.parseFile(singleKeywordFile.string()));
 }
 
 BOOST_AUTO_TEST_CASE(parse_fileWithBPRKeyword_DeckhasBRP) {
-    boost::filesystem::path singleKeywordFile(pathprefix() + "bpr.data");
+    Opm::filesystem::path singleKeywordFile(pathprefix() + "bpr.data");
 
     auto parser = createBPRParser();
     auto deck =  parser.parseFile(singleKeywordFile.string());
@@ -173,7 +173,7 @@ BOOST_AUTO_TEST_CASE(parse_fileWithBPRKeyword_DeckhasBRP) {
 }
 
 BOOST_AUTO_TEST_CASE(parse_fileWithBPRKeyword_dataiscorrect) {
-    boost::filesystem::path singleKeywordFile(pathprefix() + "bpr.data");
+    Opm::filesystem::path singleKeywordFile(pathprefix() + "bpr.data");
 
     auto parser = createBPRParser();
     auto deck =  parser.parseFile(singleKeywordFile.string());

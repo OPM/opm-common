@@ -7,6 +7,7 @@ import setuptools
 
 import glob
 import os
+import re
 import subprocess
 try:
     from importlib.machinery import EXTENSION_SUFFIXES
@@ -23,6 +24,14 @@ try:
     cc = os.environ.get("CC", "c++")
     os.environ['CC'] = 'ccache {}'.format(cc)
     print("Using 'ccache {}' as compiler".format(cc))
+
+    # This is very hacky but so is the entire setup.py buildsystem.
+    output=subprocess.check_output([cc, "--version"])
+    libs=['opmcommon', 'boost_system']
+    output=str(output)
+    if output.find('Free Software Foundation'):
+        libs.append('stdc++fs')
+
 except OSError as e:
     print('\nNOTE: please install ccache for faster compilation of python bindings.\n')
 
@@ -54,7 +63,7 @@ ext_modules = [
                 'cxx/well.cpp',
                 'cxx/export.cpp'
         ],
-        libraries=['opmcommon', 'boost_filesystem', 'boost_regex'],
+        libraries=libs,
         language='c++',
         undef_macros=["NDEBUG"],
         include_dirs=["pybind11/include"],

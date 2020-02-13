@@ -23,7 +23,7 @@
 #include <sstream>
 
 #include <boost/lexical_cast.hpp>
-#include <boost/filesystem.hpp>
+#include <opm/common/utility/FileSystem.hpp>
 
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
@@ -60,12 +60,12 @@ namespace Opm {
 
 
         inline std::string basename( const std::string& path ) {
-            return boost::filesystem::path( path ).stem().string();
+            return Opm::filesystem::path( path ).stem().string();
         }
 
 
         inline std::string outputdir( const std::string& path ) {
-            auto dir = boost::filesystem::path( path ).parent_path().string();
+            auto dir = Opm::filesystem::path( path ).parent_path().string();
 
             if( dir.empty() ) return default_dir;
 
@@ -266,7 +266,7 @@ namespace Opm {
     }
 
     std::string IOConfig::fullBasePath( ) const {
-        namespace fs = boost::filesystem;
+        namespace fs = Opm::filesystem;
 
         fs::path dir( m_output_dir );
         fs::path base( m_base_name );

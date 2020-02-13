@@ -31,6 +31,7 @@ list (APPEND MAIN_SOURCE_FILES
       src/opm/common/OpmLog/StreamLog.cpp
       src/opm/common/OpmLog/TimerLog.cpp
       src/opm/common/utility/ActiveGridCells.cpp
+      src/opm/common/utility/FileSystem.cpp
       src/opm/common/utility/numeric/MonotCubicInterpolator.cpp
       src/opm/common/utility/parameters/Parameter.cpp
       src/opm/common/utility/parameters/ParameterGroup.cpp
@@ -471,6 +472,7 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/common/OpmLog/StreamLog.hpp
       opm/common/OpmLog/TimerLog.hpp
       opm/common/utility/ActiveGridCells.hpp
+      opm/common/utility/FileSystem.hpp
       opm/common/utility/numeric/cmp.hpp
       opm/common/utility/platform_dependent/disable_warnings.h
       opm/common/utility/platform_dependent/reenable_warnings.h

@@ -22,7 +22,7 @@
 
 #include <string>
 
-#include <boost/filesystem/path.hpp>
+#include <opm/common/utility/FileSystem.hpp>
 
 struct cJSON;
 
@@ -30,7 +30,7 @@ namespace Json {
 
     class JsonObject {
     public:
-        explicit JsonObject(const boost::filesystem::path& jsonFile );
+        explicit JsonObject(const Opm::filesystem::path& jsonFile );
         explicit JsonObject(const std::string& inline_json);
         explicit JsonObject(const char * inline_json);
         explicit JsonObject(cJSON * root);

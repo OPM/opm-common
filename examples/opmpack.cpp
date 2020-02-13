@@ -19,8 +19,8 @@
 
 #include <iostream>
 #include <getopt.h>
-#include <boost/filesystem.hpp>
 
+#include <opm/common/utility/FileSystem.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
@@ -95,10 +95,10 @@ int main(int argc, char** argv) {
         pack_deck(argv[arg_offset], std::cout);
     else {
         std::ofstream os;
-        using path = boost::filesystem::path;
+        using path = Opm::filesystem::path;
         path input_arg(argv[arg_offset]);
         path output_arg(coutput_arg);
-        if (boost::filesystem::is_directory(output_arg)) {
+        if (Opm::filesystem::is_directory(output_arg)) {
             path output_path = output_arg / input_arg.filename();
             os.open(output_path.string());
         } else

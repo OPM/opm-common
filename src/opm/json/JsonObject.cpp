@@ -23,8 +23,7 @@
 #include <fstream>
 #include <stdexcept>
 
-#include <boost/filesystem/path.hpp>
-#include <boost/filesystem/operations.hpp>
+#include <opm/common/utility/FileSystem.hpp>
 
 #include <opm/json/JsonObject.hpp>
 #include <cJSON.h>
@@ -49,7 +48,7 @@ namespace Json {
 
 
 
-    JsonObject::JsonObject(const boost::filesystem::path& jsonFile ) {
+    JsonObject::JsonObject(const Opm::filesystem::path& jsonFile ) {
         std::ifstream stream(jsonFile.string().c_str());
         if (stream) {
             std::string content_from_file( (std::istreambuf_iterator<char>(stream)),

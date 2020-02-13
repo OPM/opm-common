@@ -20,7 +20,7 @@
 #define BOOST_TEST_MODULE ParserIntegrationTests
 #include <boost/test/unit_test.hpp>
 #include <boost/test/test_tools.hpp>
-#include <boost/filesystem.hpp>
+#include <opm/common/utility/FileSystem.hpp>
 #include <ostream>
 #include <fstream>
 
@@ -32,7 +32,7 @@
 #include <opm/parser/eclipse/Parser/ParserEnums.hpp>
 
 using namespace Opm;
-using namespace boost::filesystem;
+using namespace Opm::filesystem;
 
 static void
 createDeckWithInclude(path& datafile, std::string addEndKeyword)

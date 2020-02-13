@@ -17,6 +17,7 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <cassert>
 #include <ctime>
 #include <stddef.h>
 

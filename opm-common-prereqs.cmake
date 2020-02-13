@@ -9,20 +9,11 @@ set (opm-common_CONFIG_VAR
 set (opm-common_DEPS
 	# compile with C99 support if available
 	"C99"
-	)
+)
 
-if(ENABLE_ECL_INPUT)
-  list(APPEND opm-common_DEPS
-        # various runtime library enhancements
-        "Boost 1.44.0
-          COMPONENTS system filesystem unit_test_framework REQUIRED")
-else()
-  list(APPEND opm-common_DEPS
-        # various runtime library enhancements
-        "Boost 1.44.0
-          COMPONENTS system unit_test_framework REQUIRED")
-endif()
-# We need a defined target for libecl when linking.
-# The definition of the target is done implicitly below when
-# libecl is searched for.
+list(APPEND opm-common_DEPS
+      # various runtime library enhancements
+      "Boost 1.44.0 COMPONENTS system unit_test_framework REQUIRED"
+)
+
 find_package_deps(opm-common)
