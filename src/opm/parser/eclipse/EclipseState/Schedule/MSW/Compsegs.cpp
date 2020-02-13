@@ -272,12 +272,12 @@ namespace Opm {
             const int k = compseg.m_k;
             if (grid.cellActive(i, j, k)) {
                 Connection& connection = connection_set.getFromIJK(i, j, k);
-                connection.updateSegment(compseg.segment_number, compseg.center_depth, compseg.m_seqIndex);
-
-                // keep connection sequence number from input sequence
-                connection.setCompSegSeqIndex(compseg.m_seqIndex);
-                connection.setSegDistStart(compseg.m_distance_start);
-                connection.setSegDistEnd(compseg.m_distance_end);
+                connection.updateSegment(compseg.segment_number,
+                                         compseg.center_depth,
+                                         compseg.m_seqIndex,
+                                         compseg.m_seqIndex,
+                                         compseg.m_distance_start,
+                                         compseg.m_distance_end);
             }
         }
 
