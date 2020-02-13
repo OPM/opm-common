@@ -62,38 +62,27 @@ namespace Opm {
 
 
         WellSegments() = default;
-        WellSegments(const std::string& wname,
-                     double depthTopSeg,
-                     double lengthTopSeg,
-                     double volumeTopSeg,
-                     LengthDepth lenDepType,
-                     CompPressureDrop compDrop,
-                     MultiPhaseModel multiPhase,
+        WellSegments(const DeckKeyword& keyword);
+        WellSegments(CompPressureDrop compDrop,
                      const std::vector<Segment>& segments,
                      const std::map<int,int>& segmentNumberIdx);
 
-        const std::string& wellName() const;
         int size() const;
         double depthTopSegment() const;
         double lengthTopSegment() const;
         double volumeTopSegment() const;
 
         CompPressureDrop compPressureDrop() const;
-        LengthDepth lengthDepthType() const;
-        MultiPhaseModel multiPhaseModel() const;
 
         // mapping the segment number to the index in the vector of segments
         int segmentNumberToIndex(const int segment_number) const;
 
-        void addSegment(Segment new_segment);
 
-        void loadWELSEGS( const DeckKeyword& welsegsKeyword);
 
         const Segment& getFromSegmentNumber(const int segment_number) const;
 
         const Segment& operator[](size_t idx) const;
         void orderSegments();
-        void process(bool first_time);
 
         bool operator==( const WellSegments& ) const;
         bool operator!=( const WellSegments& ) const;
@@ -109,23 +98,13 @@ namespace Opm {
 
     private:
         void processABS();
-        void processINC(const bool first_time);
+        void processINC(double depth_top, double length_top);
+        void process(LengthDepth length_depth, double depth_top, double length_top);
+        void addSegment(const Segment& new_segment);
+        void loadWELSEGS( const DeckKeyword& welsegsKeyword);
 
-        std::string m_well_name;
-        // depth of the nodal point of the top segment
-        // it is taken as the BHP reference depth of the well
-        // BHP reference depth data from elsewhere will be ignored for multi-segmented wells
-        double m_depth_top;
-        // length down the tubing to the nodal point of the top segment
-        double m_length_top;
-        // effective wellbore volume of the top segment
-        double m_volume_top;
-        // type of the tubing length and depth information
-        LengthDepth m_length_depth_type;
         // components of the pressure drop to be included
         CompPressureDrop m_comp_pressure_drop;
-        // multi-phase flow model
-        MultiPhaseModel m_multiphase_model;
         // There are X and Y cooridnate of the nodal point of the top segment
         // Since they are not used for simulations and we are not supporting plotting,
         // we are not handling them at the moment.

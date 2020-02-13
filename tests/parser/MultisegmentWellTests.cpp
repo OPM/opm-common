@@ -90,10 +90,8 @@ BOOST_AUTO_TEST_CASE(MultisegmentWellTest) {
     const Opm::DeckKeyword compsegs = deck.getKeyword("COMPSEGS");
     BOOST_CHECK_EQUAL( 8U, compsegs.size() );
 
-    Opm::WellSegments segment_set;
     const Opm::DeckKeyword welsegs = deck.getKeyword("WELSEGS");
-
-    segment_set.loadWELSEGS(welsegs);
+    Opm::WellSegments segment_set(welsegs);
 
     BOOST_CHECK_EQUAL(7U, segment_set.size());
 
@@ -237,9 +235,8 @@ BOOST_AUTO_TEST_CASE(WrongDistanceCOMPSEGS) {
     const Opm::DeckKeyword compsegs = deck.getKeyword("COMPSEGS");
     BOOST_CHECK_EQUAL( 8U, compsegs.size() );
 
-    Opm::WellSegments segment_set;
     const Opm::DeckKeyword welsegs = deck.getKeyword("WELSEGS");
-    segment_set.loadWELSEGS(welsegs);
+    Opm::WellSegments segment_set(welsegs);
 
     BOOST_CHECK_EQUAL(6U, segment_set.size());
 
@@ -295,9 +292,8 @@ BOOST_AUTO_TEST_CASE(NegativeDepthCOMPSEGS) {
     const Opm::DeckKeyword compsegs = deck.getKeyword("COMPSEGS");
     BOOST_CHECK_EQUAL( 8U, compsegs.size() );
 
-    Opm::WellSegments segment_set;
     const Opm::DeckKeyword welsegs = deck.getKeyword("WELSEGS");
-    segment_set.loadWELSEGS(welsegs);
+    Opm::WellSegments segment_set(welsegs);
 
     BOOST_CHECK_EQUAL(6U, segment_set.size());
 
@@ -360,10 +356,8 @@ BOOST_AUTO_TEST_CASE(testwsegvalv) {
     const Opm::DeckKeyword compsegs = deck.getKeyword("COMPSEGS");
     BOOST_CHECK_EQUAL( 8U, compsegs.size() );
 
-    Opm::WellSegments segment_set;
     const Opm::DeckKeyword welsegs = deck.getKeyword("WELSEGS");
-
-    segment_set.loadWELSEGS(welsegs);
+    Opm::WellSegments segment_set(welsegs);
 
     BOOST_CHECK_EQUAL(8U, segment_set.size());
 

@@ -17,6 +17,9 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+
+#include <iostream>
+
 #include <opm/io/eclipse/rst/state.hpp>
 #include <opm/io/eclipse/ERst.hpp>
 
@@ -28,6 +31,7 @@ int main(int argc, char ** argv) {
         Opm::EclIO::ERst rst_file(argv[iarg]);
         for (int report_step : rst_file.listOfReportStepNumbers()) {
             if (report_step > 0) {
+                std::cout << "Loading restart step: " << report_step << std::endl;
                 const auto& state = Opm::RestartIO::RstState::load(rst_file, report_step);
                 static_cast<void>(state); // Suppress unused variable warning.
             }
