@@ -25,7 +25,7 @@
 #include <vector>
 
 namespace Opm {
-    class Tuning;
+    struct Tuning;
     class Schedule;
     class UDQParams;
 }
@@ -39,7 +39,7 @@ namespace Opm { namespace RestartIO {
             std::chrono::time_point<std::chrono::system_clock>          start;
             std::chrono::duration<double, std::chrono::seconds::period> elapsed;
         };
-        
+
         struct guideRate {
             double A;
             double B;
@@ -50,7 +50,7 @@ namespace Opm { namespace RestartIO {
             double delay;
             double damping_fact;
         };
-        
+
         DoubHEAD();
 
         ~DoubHEAD() = default;
@@ -69,7 +69,7 @@ namespace Opm { namespace RestartIO {
         DoubHEAD& drsdt(const Schedule&   sched,
                         const std::size_t lookup_step,
                         const double      cnvT);
-	
+
         DoubHEAD& udq_param(const UDQParams& udqPar);
         DoubHEAD& guide_rate_param(const guideRate& guide_rp);
 

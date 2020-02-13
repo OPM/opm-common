@@ -743,8 +743,8 @@ BOOST_AUTO_TEST_CASE(CMP_FUNCTIONS) {
 
 BOOST_AUTO_TEST_CASE(BAD_CAST) {
     UDQFunctionTable udqft;
-
-    BOOST_CHECK_THROW( dynamic_cast<const UDQUnaryElementalFunction&>(udqft.get("==")), std::bad_cast);
+    auto x = udqft.get("==");
+    BOOST_CHECK_EQUAL(dynamic_cast<const UDQUnaryElementalFunction*>(&x), nullptr);
 }
 
 
