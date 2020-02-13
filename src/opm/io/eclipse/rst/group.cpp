@@ -33,7 +33,7 @@ RstGroup::RstGroup(const std::string* zwel,
                    const int *,
                    const float * sgrp,
                    const double * xgrp) :
-    name(trim_copy(zwel[0])),
+    name(rtrim_copy(zwel[0])),
     oil_rate_limit(sgrp[VI::SGroup::OilRateLimit]),
     water_rate_limit(sgrp[VI::SGroup::WatRateLimit]),
     gas_rate_limit(sgrp[VI::SGroup::GasRateLimit]),

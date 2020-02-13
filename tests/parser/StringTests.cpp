@@ -181,3 +181,35 @@ BOOST_AUTO_TEST_CASE(strncmp_function) {
     BOOST_CHECK_EQUAL( view.find('X'), std::string::npos);
     BOOST_CHECK_EQUAL( view.find('D'), 9);
 }
+
+
+
+BOOST_AUTO_TEST_CASE(trim) {
+    std::string s1 = "ABC";
+    std::string s2 = " ABC";
+    std::string s3 = "ABC ";
+    std::string s4 = " ABC ";
+    std::string s5 = "";
+    std::string s6 = "      ";
+
+    BOOST_CHECK_EQUAL(trim_copy(s1) , s1);
+    BOOST_CHECK_EQUAL(trim_copy(s2) , s1);
+    BOOST_CHECK_EQUAL(trim_copy(s3) , s1);
+    BOOST_CHECK_EQUAL(trim_copy(s4) , s1);
+    BOOST_CHECK_EQUAL(trim_copy(s5) , s5);
+    BOOST_CHECK_EQUAL(trim_copy(s6) , s5);
+
+    BOOST_CHECK_EQUAL(ltrim_copy(s1) , s1);
+    BOOST_CHECK_EQUAL(ltrim_copy(s2) , s1);
+    BOOST_CHECK_EQUAL(ltrim_copy(s3) , s3);
+    BOOST_CHECK_EQUAL(ltrim_copy(s4) , s3);
+    BOOST_CHECK_EQUAL(ltrim_copy(s5) , s5);
+    BOOST_CHECK_EQUAL(ltrim_copy(s6) , s5);
+
+    BOOST_CHECK_EQUAL(rtrim_copy(s1) , s1);
+    BOOST_CHECK_EQUAL(rtrim_copy(s2) , s2);
+    BOOST_CHECK_EQUAL(rtrim_copy(s3) , s1);
+    BOOST_CHECK_EQUAL(rtrim_copy(s4) , s2);
+    BOOST_CHECK_EQUAL(rtrim_copy(s5) , s5);
+    BOOST_CHECK_EQUAL(rtrim_copy(s6) , s5);
+}

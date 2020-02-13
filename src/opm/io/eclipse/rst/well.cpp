@@ -41,7 +41,7 @@ RstWell::RstWell(const RstHeader& header,
                  const int * icon,
                  const float * scon,
                  const double * xcon) :
-    name(trim_copy(zwel[0])),
+    name(rtrim_copy(zwel[0])),
     group(group_arg),
     ij({iwel[VI::IWell::IHead] - 1, iwel[VI::IWell::JHead] - 1}),
     k1k2(std::make_pair(iwel[VI::IWell::FirstK] - 1, iwel[VI::IWell::LastK] - 1)),
