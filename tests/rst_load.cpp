@@ -18,9 +18,6 @@
 */
 #include <iostream>
 
-
-#include <iostream>
-
 #include <opm/io/eclipse/rst/state.hpp>
 #include <opm/io/eclipse/ERst.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
