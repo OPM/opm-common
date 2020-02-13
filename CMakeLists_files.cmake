@@ -103,6 +103,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Schedule/Group/GTNode.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Well/injection.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/MessageLimits.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/MSW/icd.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/MSW/Compsegs.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/MSW/Segment.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/MSW/WellSegments.cpp
@@ -656,6 +657,8 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Schedule/Events.hpp
        opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.hpp
        opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp
+       opm/parser/eclipse/EclipseState/Schedule/MSW/icd.hpp
+       opm/parser/eclipse/EclipseState/Schedule/MSW/Segment.hpp
        opm/parser/eclipse/EclipseState/Schedule/MSW/Segment.hpp
        opm/parser/eclipse/EclipseState/Schedule/MSW/WellSegments.hpp
        opm/parser/eclipse/EclipseState/Schedule/MSW/updatingConnectionsWithSegments.hpp

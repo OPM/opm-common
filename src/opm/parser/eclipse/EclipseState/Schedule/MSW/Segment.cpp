@@ -24,6 +24,13 @@
 #include <cassert>
 
 namespace Opm {
+namespace {
+
+static constexpr double invalid_value = -1.e100;
+
+}
+
+
 
     Segment::Segment()
     : m_segment_number(-1),
@@ -42,7 +49,7 @@ namespace Opm {
 
     Segment::Segment(int segment_number_in, int branch_in, int outlet_segment_in, double length_in, double depth_in,
                      double internal_diameter_in, double roughness_in, double cross_area_in,
-                     double volume_in, bool data_ready_in)
+                     double volume_in, bool data_ready_in, SegmentType segment_type_in)
     : m_segment_number(segment_number_in),
       m_branch(branch_in),
       m_outlet_segment(outlet_segment_in),
@@ -52,7 +59,8 @@ namespace Opm {
       m_roughness(roughness_in),
       m_cross_area(cross_area_in),
       m_volume(volume_in),
-      m_data_ready(data_ready_in)
+      m_data_ready(data_ready_in),
+      m_segment_type(segment_type_in)
     {
     }
 
@@ -225,4 +233,35 @@ namespace Opm {
         return m_valve;
     }
 
+    int Segment::ecl_type_id() const {
+        switch (this->m_segment_type) {
+        case SegmentType::REGULAR:
+            return -1;
+        case SegmentType::SICD:
+            return -7;
+        case SegmentType::AICD:
+            return -8;
+        case SegmentType::VALVE:
+            return -5;
+        default:
+            throw std::invalid_argument("Unhanedled segment type");
+        }
+    }
+
+    Segment::SegmentType Segment::type_from_int(int ecl_id) {
+        switch(ecl_id) {
+        case -1:
+            return SegmentType::REGULAR;
+        case -7:
+            return SegmentType::SICD;
+        case -8:
+            return SegmentType::AICD;
+        case -5:
+            return SegmentType::VALVE;
+        default:
+            throw std::invalid_argument("Unhanedled segment type");
+        }
+    }
 }
+
+

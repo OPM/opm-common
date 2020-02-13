@@ -137,12 +137,12 @@ namespace Opm {
         if (m_length_depth_type == LengthDepth::INC) {
             m_segments.emplace_back( 1, 1, 0, 0., 0.,
                                      invalid_value, invalid_value, invalid_value,
-                                     m_volume_top, false );
+                                     m_volume_top, false , Segment::SegmentType::REGULAR);
 
         } else if (m_length_depth_type == LengthDepth::ABS) {
             m_segments.emplace_back( 1, 1, 0, m_length_top, m_depth_top,
                                      invalid_value, invalid_value, invalid_value,
-                                     m_volume_top, true );
+                                     m_volume_top, true , Segment::SegmentType::REGULAR);
         }
 
         // read all the information out from the DECK first then process to get all the required information
@@ -202,13 +202,13 @@ namespace Opm {
 
                 if (m_length_depth_type == LengthDepth::INC) {
                     m_segments.emplace_back( i, branch, outlet_segment, segment_length, depth_change,
-                                             diameter, roughness, area, volume, false );
+                                             diameter, roughness, area, volume, false , Segment::SegmentType::REGULAR);
                 } else if (i == segment2) {
                     m_segments.emplace_back( i, branch, outlet_segment, segment_length, depth_change,
-                                             diameter, roughness, area, volume, true );
+                                             diameter, roughness, area, volume, true , Segment::SegmentType::REGULAR);
                 } else {
                     m_segments.emplace_back( i, branch, outlet_segment, invalid_value, invalid_value,
-                                             diameter, roughness, area, volume, false );
+                                             diameter, roughness, area, volume, false , Segment::SegmentType::REGULAR);
                 }
             }
         }

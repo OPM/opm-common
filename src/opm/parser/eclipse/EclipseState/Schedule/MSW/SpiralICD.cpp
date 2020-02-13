@@ -18,6 +18,7 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <opm/parser/eclipse/EclipseState/Schedule/MSW/icd.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/SpiralICD.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
@@ -29,7 +30,7 @@
 namespace Opm {
 
     SpiralICD::SpiralICD()
-          : SpiralICD(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, Status::SHUT, 1.0)
+        : SpiralICD(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, ICDStatus::SHUT, 1.0)
     {
     }
 
@@ -42,7 +43,7 @@ namespace Opm {
                          double maxViscosityRatio,
                          int flowScaling,
                          double maxAbsoluteRate,
-                         Status status,
+                         ICDStatus status,
                          double scalingFactor)
             : m_strength(strength),
               m_length(length),
@@ -73,9 +74,9 @@ namespace Opm {
                                   : std::numeric_limits<double>::max()), m_scaling_factor(std::numeric_limits<double>::lowest())
     {
         if (record.getItem("STATUS").getTrimmedString(0) == "OPEN") {
-            m_status = Status::OPEN;
+            m_status = ICDStatus::OPEN;
         } else {
-            m_status = Status::SHUT;
+            m_status = ICDStatus::SHUT;
         }
     }
 
@@ -111,7 +112,7 @@ namespace Opm {
         return m_max_absolute_rate;
     }
 
-    SpiralICD::Status SpiralICD::status() const {
+    ICDStatus SpiralICD::status() const {
         return m_status;
     }
 
@@ -200,4 +201,10 @@ namespace Opm {
                this->status() == data.status() &&
                this->scalingFactor() == data.scalingFactor();
     }
+
+int SpiralICD::ecl_status() const {
+    return to_int(this->m_status);
+}
+
+
 }

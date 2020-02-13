@@ -19,19 +19,35 @@
 
 #include <opm/io/eclipse/rst/segment.hpp>
 #include <opm/output/eclipse/VectorItems/msw.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/MSW/icd.hpp>
 
 namespace VI = ::Opm::RestartIO::Helpers::VectorItems;
 
+
+
 namespace Opm {
+
+namespace {
+
+template <typename T>
+T from_ecl(int ecl_value);
+
+template <>
+Segment::SegmentType from_ecl(int int_type) {
+    return Segment::type_from_int(int_type);
+}
+
+}
+
 namespace RestartIO {
 
 RstSegment::RstSegment(const int * iseg, const double * rseg) :
     segment(iseg[VI::ISeg::SegNo]),
     outlet_segment(iseg[VI::ISeg::OutSeg]),
     branch(iseg[VI::ISeg::BranchNo]),
-    segment_type(iseg[VI::ISeg::SegmentType]),
+    segment_type(from_ecl<Segment::SegmentType>(iseg[VI::ISeg::SegmentType])),
     icd_scaling_mode(iseg[VI::ISeg::ICDScalingMode]),
-    icd_open_flag(iseg[VI::ISeg::ICDOpenShutFlag]),
+    icd_status(from_int<ICDStatus>(iseg[VI::ISeg::ICDOpenShutFlag])),
     dist_outlet(rseg[VI::RSeg::DistOutlet]),
     outlet_dz(rseg[VI::RSeg::OutletDepthDiff]),
     diameter(rseg[VI::RSeg::SegDiam]),
