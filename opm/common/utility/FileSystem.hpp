@@ -19,11 +19,11 @@
 #ifndef OPM_FILESYSTEM_HPP
 #define OPM_FILESYSTEM_HPP
 
-
-#if __cplusplus__ >= 201703L
-#include <filesystem>
-#else
+#if __cplusplus < 201703L || \
+    (defined(__GNUC__) && __GNUC__ < 8)
 #include <experimental/filesystem>
+#else
+#include <filesystem>
 #endif
 
 #include <string>
@@ -31,10 +31,11 @@
 
 namespace Opm
 {
-#if __cplusplus__ >= 201703L
-    namespace filesystem = std::filesystem;
-#else
+#if __cplusplus < 201703L || \
+    (defined(__GNUC__) && __GNUC__ < 8)
     namespace filesystem = std::experimental::filesystem;
+#else
+    namespace filesystem = std::filesystem;
 #endif
 
     // A poor man's filesystem::unique_path
