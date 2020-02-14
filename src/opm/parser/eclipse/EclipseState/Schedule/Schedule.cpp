@@ -2216,6 +2216,20 @@ void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, c
     }
 
 
+    void Schedule::addWell(Well well, size_t report_step) {
+        const std::string wname = well.name();
+
+        m_events.addEvent( ScheduleEvents::NEW_WELL , report_step );
+        wellgroup_events.insert( std::make_pair(wname, Events(this->m_timeMap)));
+        this->addWellGroupEvent(wname, ScheduleEvents::NEW_WELL, report_step);
+
+        well.setInsertIndex(this->wells_static.size());
+        this->wells_static.insert( std::make_pair(wname, DynamicState<std::shared_ptr<Well>>(m_timeMap, nullptr)));
+        auto& dynamic_well_state = this->wells_static.at(wname);
+        dynamic_well_state.update(report_step, std::make_shared<Well>(std::move(well)));
+    }
+
+
     void Schedule::addWell(const std::string& wellName,
                            const std::string& group,
                            int headI,
@@ -2229,30 +2243,22 @@ void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, c
                            Connection::Order wellConnectionOrder,
                            const UnitSystem& unit_system) {
 
-        wells_static.insert( std::make_pair(wellName, DynamicState<std::shared_ptr<Well>>(m_timeMap, nullptr)));
+        Well well(wellName,
+                  group,
+                  timeStep,
+                  0,
+                  headI, headJ,
+                  refDepth,
+                  preferredPhase,
+                  this->global_whistctl_mode[timeStep],
+                  wellConnectionOrder,
+                  unit_system,
+                  this->getUDQConfig(timeStep).params().undefinedValue(),
+                  drainageRadius,
+                  allowCrossFlow,
+                  automaticShutIn);
 
-        auto& dynamic_state = wells_static.at(wellName);
-        std::size_t insert_index = this->wells_static.size() - 1;
-        auto well_ptr = std::make_shared<Well>(wellName,
-                                               group,
-                                               timeStep,
-                                               insert_index,
-                                               headI, headJ,
-                                               refDepth,
-                                               preferredPhase,
-                                               this->global_whistctl_mode[timeStep],
-                                               wellConnectionOrder,
-                                               unit_system,
-                                               this->getUDQConfig(timeStep).params().undefinedValue());
-
-        well_ptr->updateCrossFlow(allowCrossFlow);
-        well_ptr->updateAutoShutin(automaticShutIn);
-        well_ptr->updateDrainageRadius(drainageRadius);
-        dynamic_state.update(timeStep, well_ptr);
-
-        m_events.addEvent( ScheduleEvents::NEW_WELL , timeStep );
-        wellgroup_events.insert( std::make_pair(wellName, Events(this->m_timeMap)));
-        this->addWellGroupEvent(wellName, ScheduleEvents::NEW_WELL, timeStep);
+        this->addWell( std::move(well), timeStep );
     }
 
 

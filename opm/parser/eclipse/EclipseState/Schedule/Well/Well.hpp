@@ -385,17 +385,20 @@ public:
 
     Well();
     Well(const std::string& wname,
-          const std::string& gname,
-          std::size_t init_step,
-          std::size_t insert_index,
-          int headI,
-          int headJ,
-          double ref_depth,
-          Phase phase,
-          ProducerCMode whistctl_cmode,
-          Connection::Order ordering,
-          const UnitSystem& unit_system,
-          double udq_undefined);
+         const std::string& gname,
+         std::size_t init_step,
+         std::size_t insert_index,
+         int headI,
+         int headJ,
+         double ref_depth,
+         Phase phase,
+         ProducerCMode whistctl_cmode,
+         Connection::Order ordering,
+         const UnitSystem& unit_system,
+         double udq_undefined,
+         double dr,
+         bool allow_xflow,
+         bool auto_shutin);
 
     Well(const std::string& wname,
          const std::string& gname,
@@ -534,7 +537,7 @@ public:
     const WellGuideRate& wellGuideRate() const;
 
     bool operator==(const Well& data) const;
-
+    void setInsertIndex(std::size_t index);
 private:
     std::string wname;
     std::string group_name;
