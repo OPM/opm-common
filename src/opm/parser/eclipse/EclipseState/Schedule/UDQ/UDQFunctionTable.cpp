@@ -20,6 +20,7 @@
 #include <cmath>
 #include <algorithm>
 #include <functional>
+#include <map>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunctionTable.hpp>
 
@@ -132,9 +133,19 @@ bool UDQFunctionTable::operator==(const UDQFunctionTable& data) const {
     if (this->functionMap().size() != data.functionMap().size())
         return false;
 
-    auto tIt = this->functionMap().begin();
-    auto dIt = data.functionMap().begin();
-    for (; tIt != this->functionMap().end(); ++tIt, ++dIt) {
+    // Simply using the operator== method of std::unordered_map would
+    // compare the pointers contained and not the objects pointed to.
+    // We therefore must iterate manually through the container. The
+    // order of the map elements does not matter, and is
+    // indeterminate. Sorting must be done before comparision so that
+    // we compare elements with the same key to each other.
+    using SortedMap = std::map<std::string, std::shared_ptr<UDQFunction>>;
+    SortedMap sorted_fmap(this->functionMap().begin(), this->functionMap().end());
+    SortedMap data_sorted_fmap(data.functionMap().begin(), data.functionMap().end());
+
+    auto tIt = sorted_fmap.begin();
+    auto dIt = data_sorted_fmap.begin();
+    for (; tIt != sorted_fmap.end(); ++tIt, ++dIt) {
         if (tIt->first != dIt->first)
             return false;
 
