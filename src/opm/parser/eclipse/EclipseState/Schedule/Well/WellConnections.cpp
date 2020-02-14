@@ -369,8 +369,12 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
                                    satTableId,
                                    direction, ctf_kind,
                                    noConn, conSDStart, conSDEnd, defaultSatTable);
-                prev->setCompSegSeqIndex(css_ind);
-                prev->updateSegment(conSegNo, conCDepth, con_SIndex);
+                prev->updateSegment(conSegNo,
+                                    conCDepth,
+                                    con_SIndex,
+                                    css_ind,
+                                    conSDStart,
+                                    conSDEnd);
             }
         }
     }

@@ -134,16 +134,18 @@ namespace Opm {
         void setState(State state);
         void setComplnum(int compnum);
         void scaleWellPi(double wellPi);
-        void updateSegment(int segment_number, double center_depth, std::size_t seqIndex);
+        void updateSegment(int segment_number_arg,
+                           double center_depth_arg,
+                           std::size_t seqIndex,
+                           std::size_t compseg_insert_index,
+                           double start,
+                           double end);
         const std::size_t& getSeqIndex() const;
         const bool& getDefaultSatTabId() const;
         const std::size_t& getCompSegSeqIndex() const;
-        void setCompSegSeqIndex(std::size_t index);
         void setDefaultSatTabId(bool id);
         const double& getSegDistStart() const;
         const double& getSegDistEnd() const;
-        void setSegDistStart(const double& distStart);
-        void setSegDistEnd(const double& distEnd);
         std::string str() const;
         bool ctfAssignedFromInput() const
         {
