@@ -83,6 +83,7 @@ struct RstWell {
     float hist_lrat_target;
     float hist_grat_target;
     float hist_bhp_target;
+    float datum_depth;
 
     double oil_rate;
     double water_rate;
