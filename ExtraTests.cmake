@@ -60,7 +60,6 @@ foreach (test BoxTest
 endforeach ()
 
 # opm-tests dependent tests
-opm_add_test("RST_LOAD" NO_COMPILE EXE_NAME rst_load TEST_ARGS "${PROJECT_SOURCE_DIR}/tests/SPE1_TESTCASE.UNRST")
 if(HAVE_OPM_TESTS)
   opm_add_test(parse_write ONLY_COMPILE
                SOURCES tests/parser/integration/parse_write.cpp
