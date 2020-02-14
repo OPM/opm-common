@@ -243,7 +243,7 @@ namespace Opm
         const Tuning& getTuning(size_t timeStep) const;
         const DynamicState<Tuning>& getTuning() const;
         const MessageLimits& getMessageLimits() const;
-        void invalidNamePattern (const std::string& namePattern, const ParseContext& parseContext, ErrorGuard& errors, const DeckKeyword& keyword) const;
+        void invalidNamePattern (const std::string& namePattern, std::size_t report_step, const ParseContext& parseContext, ErrorGuard& errors, const DeckKeyword& keyword) const;
         const GuideRateConfig& guideRateConfig(size_t timeStep) const;
 
         const RFTConfig& rftConfig() const;

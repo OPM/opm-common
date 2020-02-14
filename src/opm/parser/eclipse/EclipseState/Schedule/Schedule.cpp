@@ -814,7 +814,7 @@ namespace {
 
             auto well_names = this->wellNames(wellNamePattern, currentStep);
             if (well_names.empty())
-                invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
+                invalidNamePattern(wellNamePattern, currentStep, parseContext, errors, keyword);
 
             for( const auto& well_name : well_names) {
                 updateWellStatus( well_name , currentStep , status, false );
@@ -877,7 +877,7 @@ namespace {
             const Well::Status status = Well::StatusFromString(record.getItem("STATUS").getTrimmedString(0));
             auto well_names = this->wellNames(wellNamePattern, currentStep);
             if (well_names.empty())
-                invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
+                invalidNamePattern(wellNamePattern, currentStep, parseContext, errors, keyword);
 
             for( const auto& well_name : well_names) {
 
@@ -983,7 +983,7 @@ namespace {
 
             auto well_names = wellNames(wellNamePattern, currentStep);
             if (well_names.empty())
-                invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
+                invalidNamePattern(wellNamePattern, currentStep, parseContext, errors, keyword);
 
             for( const auto& well_name : well_names ) {
                 Well::Status status = Well::StatusFromString( record.getItem("STATUS").getTrimmedString(0));
@@ -1047,7 +1047,7 @@ namespace {
             const auto well_names = wellNames( wellNamePattern, currentStep );
 
             if (well_names.empty())
-                invalidNamePattern( wellNamePattern, parseContext, errors, keyword);
+                invalidNamePattern( wellNamePattern, currentStep, parseContext, errors, keyword);
 
             for (const auto& well_name : well_names) {
                 updateWellStatus( well_name, currentStep, status, false );
@@ -1091,7 +1091,7 @@ namespace {
             const auto well_names = wellNames(wellNamePattern, currentStep );
 
             if (well_names.empty())
-                invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
+                invalidNamePattern(wellNamePattern, currentStep, parseContext, errors, keyword);
 
             for (const auto& well_name : well_names) {
                 const auto& dynamic_state = this->wells_static.at(well_name);
@@ -1110,7 +1110,7 @@ namespace {
             const auto well_names = wellNames( wellNamePattern, currentStep );
 
             if (well_names.empty())
-                invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
+                invalidNamePattern(wellNamePattern, currentStep, parseContext, errors, keyword);
 
             for( const auto& well_name : well_names) {
                 {
@@ -1131,7 +1131,7 @@ namespace {
             const auto well_names = wellNames(wellNamePattern, currentStep );
 
             if (well_names.empty())
-                invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
+                invalidNamePattern(wellNamePattern, currentStep, parseContext, errors, keyword);
 
             for (const auto& well_name : well_names) {
                 const auto& dynamic_state = this->wells_static.at(well_name);
@@ -1153,7 +1153,7 @@ namespace {
             const auto well_names = wellNames( wellNamePattern, currentStep );
 
             if (well_names.empty())
-                invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
+                invalidNamePattern(wellNamePattern, currentStep, parseContext, errors, keyword);
 
             for (const auto& well_name : well_names) {
                 {
@@ -1177,7 +1177,7 @@ namespace {
             const auto well_names = wellNames(wellNamePattern, currentStep);
 
             if (well_names.empty())
-                invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
+                invalidNamePattern(wellNamePattern, currentStep, parseContext, errors, keyword);
 
             for (const auto& well_name : well_names) {
                 {
@@ -1199,7 +1199,7 @@ namespace {
             const auto well_names = wellNames( wellNamePattern , currentStep);
 
             if (well_names.empty())
-                invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
+                invalidNamePattern(wellNamePattern, currentStep, parseContext, errors, keyword);
 
             for(const auto& well_name : well_names) {
                 {
@@ -1220,7 +1220,7 @@ namespace {
             const auto well_names = wellNames( wellNamePattern, currentStep );
 
             if (well_names.empty())
-                invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
+                invalidNamePattern(wellNamePattern, currentStep, parseContext, errors, keyword);
 
             for(const auto& well_name : well_names) {
                 {
@@ -1295,7 +1295,7 @@ namespace {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = wellNames( wellNamePattern , currentStep);
             if (well_names.empty())
-                invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
+                invalidNamePattern(wellNamePattern, currentStep, parseContext, errors, keyword);
 
             double test_interval = record.getItem("INTERVAL").getSIDouble(0);
             const std::string& reasons = record.getItem("REASON").get<std::string>(0);
@@ -1320,7 +1320,7 @@ namespace {
             double fraction = record.getItem("SOLVENT_FRACTION").get< UDAValue >(0).getSI();
 
             if (well_names.empty())
-                invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
+                invalidNamePattern(wellNamePattern, currentStep, parseContext, errors, keyword);
 
             for(const auto& well_name : well_names) {
                 {
@@ -1346,7 +1346,7 @@ namespace {
             const auto well_names = wellNames( wellNamePattern, currentStep );
 
             if (well_names.empty())
-                invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
+                invalidNamePattern(wellNamePattern, currentStep, parseContext, errors, keyword);
 
             for(const auto& well_name : well_names) {
                 double tracerConcentration = record.getItem("CONCENTRATION").get< UDAValue >(0).getSI();
@@ -1368,7 +1368,7 @@ namespace {
             const auto well_names = wellNames( wellNamePattern, currentStep );
             double temp = record.getItem("TEMP").getSIDouble(0);
             if (well_names.empty())
-                invalidNamePattern( wellNamePattern, parseContext, errors, keyword);
+                invalidNamePattern( wellNamePattern, currentStep, parseContext, errors, keyword);
 
             for (const auto& well_name : well_names) {
                 // TODO: Is this the right approach? Setting the well temperature only
@@ -1402,7 +1402,7 @@ namespace {
             double temp = record.getItem("TEMPERATURE").getSIDouble(0);
 
             if (well_names.empty())
-                invalidNamePattern( wellNamePattern, parseContext, errors, keyword);
+                invalidNamePattern( wellNamePattern, currentStep, parseContext, errors, keyword);
 
             for (const auto& well_name : well_names) {
                 // TODO: Is this the right approach? Setting the well temperature only
@@ -1462,7 +1462,7 @@ namespace {
             const auto& status_str = record.getItem( "STATUS" ).getTrimmedString( 0 );
             const auto well_names = this->wellNames(wellNamePattern, currentStep, matching_wells);
             if (well_names.empty())
-                invalidNamePattern( wellNamePattern, parseContext, errors, keyword);
+                invalidNamePattern( wellNamePattern, currentStep, parseContext, errors, keyword);
 
             /* if all records are defaulted or just the status is set, only
              * well status is updated
@@ -1541,7 +1541,7 @@ namespace {
             const auto well_names = wellNames( wellNamePattern, currentStep );
 
             if( well_names.empty() )
-                invalidNamePattern( wellNamePattern, parseContext, errors, keyword);
+                invalidNamePattern( wellNamePattern, currentStep, parseContext, errors, keyword);
 
             for(const auto& well_name : well_names) {
                 {
@@ -1574,7 +1574,7 @@ namespace {
             const auto group_names = this->groupNames(groupNamePattern);
 
             if (group_names.empty())
-                invalidNamePattern(groupNamePattern, parseContext, errors, keyword);
+                invalidNamePattern(groupNamePattern, currentStep, parseContext, errors, keyword);
 
             for (const auto& group_name : group_names){
                 Group::InjectionCMode controlMode = Group::InjectionCModeFromString( record.getItem("CONTROL_MODE").getTrimmedString(0) );
@@ -1634,7 +1634,7 @@ namespace {
             const auto group_names = this->groupNames(groupNamePattern);
 
             if (group_names.empty())
-                invalidNamePattern(groupNamePattern, parseContext, errors, keyword);
+                invalidNamePattern(groupNamePattern, currentStep, parseContext, errors, keyword);
 
             for (const auto& group_name : group_names){
                 Group::ProductionCMode controlMode = Group::ProductionCModeFromString( record.getItem("CONTROL_MODE").getTrimmedString(0) );
@@ -1720,7 +1720,7 @@ namespace {
             const auto group_names = this->groupNames(groupNamePattern);
 
             if (group_names.empty())
-                invalidNamePattern(groupNamePattern, parseContext, errors, keyword);
+                invalidNamePattern(groupNamePattern, currentStep, parseContext, errors, keyword);
 
             for (const auto& group_name : group_names){
                 bool transfer = DeckItem::to_bool(record.getItem("TRANSFER_EXT_NET").getTrimmedString(0));
@@ -1921,7 +1921,7 @@ namespace {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             auto wellnames = this->wellNames(wellNamePattern, currentStep);
             if (wellnames.empty())
-                invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
+                invalidNamePattern(wellNamePattern, currentStep, parseContext, errors, keyword);
 
             for (const auto& name : wellnames) {
                 {
@@ -2126,8 +2126,8 @@ void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, c
         return this->rft_config;
     }
 
-    void Schedule::invalidNamePattern( const std::string& namePattern,  const ParseContext& parseContext, ErrorGuard& errors, const DeckKeyword& keyword ) const {
-        std::string msg = "Error when handling " + keyword.name() +". No names match " +
+void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t report_step, const ParseContext& parseContext, ErrorGuard& errors, const DeckKeyword& keyword ) const {
+    std::string msg = "Error when handling " + keyword.name() + " at step: " + std::to_string(report_step) + ". No names match " +
                           namePattern;
         parseContext.handleError( ParseContext::SCHEDULE_INVALID_NAME, msg, errors );
     }
