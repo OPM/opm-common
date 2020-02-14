@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_SUITE(FileName)
 
 BOOST_AUTO_TEST_CASE(ResultSetDescriptor)
 {
-    const auto odir = std::string{"/x/y/z///"};
+    const auto odir = std::string{"/x/y/z/"};
     const auto ext  = std::string{"F0123"};
 
     {
