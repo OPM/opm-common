@@ -89,11 +89,14 @@ BOOST_AUTO_TEST_CASE(LoadRST) {
 BOOST_AUTO_TEST_CASE(LoadRestartSim) {
     Parser parser;
     auto deck = parser.parseFile("SPE1CASE2.DATA");
+    EclipseState ecl_state(deck);
+    Schedule sched(deck, ecl_state);
+
     auto restart_deck = parser.parseFile("SPE1CASE2_RESTART.DATA");
     EclIO::ERst rst_file("SPE1CASE2.X0060");
     auto rst_state = RestartIO::RstState::load(rst_file, 60);
+    EclipseState ecl_state_restart(restart_deck);
+    Schedule restart_sched(restart_deck, ecl_state_restart, &rst_state);
 
-    EclipseState ecl_state(deck);
-    Schedule sched(deck, ecl_state);
-    //Schedule restart_sched(deck, ecl_state, &rst_state);
+    // Verify that sched and restart_sched are identical from report_step 60 and onwords.
 }
