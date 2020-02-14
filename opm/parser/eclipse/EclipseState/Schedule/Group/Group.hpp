@@ -22,6 +22,7 @@
 
 
 #include <string>
+#include <map>
 
 #include <opm/parser/eclipse/Deck/UDAValue.hpp>
 #include <opm/parser/eclipse/EclipseState/Util/IOrderSet.hpp>
@@ -176,7 +177,7 @@ struct ProductionControls {
           const std::string& parent,
           const IOrderSet<std::string>& well,
           const IOrderSet<std::string>& group,
-          const GroupInjectionProperties& injProps,
+          const std::map<Phase, GroupInjectionProperties> &injProps,
           const GroupProductionProperties& prodProps);
 
 
@@ -217,9 +218,10 @@ struct ProductionControls {
     const std::vector<std::string>& groups() const;
     bool wellgroup() const;
     ProductionControls productionControls(const SummaryState& st) const;
-    InjectionControls injectionControls(const SummaryState& st) const;
+    InjectionControls injectionControls(Phase phase, const SummaryState& st) const;
+    bool hasInjectionControl(Phase phase) const;
     const GroupProductionProperties& productionProperties() const;
-    const GroupInjectionProperties& injectionProperties() const;
+    const std::map<Phase , GroupInjectionProperties>& injectionProperties() const;
     const GroupType& getGroupType() const;
     ProductionCMode production_cmode() const;
     InjectionCMode injection_cmode() const;
@@ -228,6 +230,8 @@ struct ProductionControls {
     bool has_control(InjectionCMode control) const;
 
     bool operator==(const Group& data) const;
+    const Phase& topup_phase() const;
+    bool has_topup_phase() const;
 
 private:
     bool hasType(GroupType gtype) const;
@@ -247,8 +251,9 @@ private:
     IOrderSet<std::string> m_wells;
     IOrderSet<std::string> m_groups;
 
-    GroupInjectionProperties injection_properties{};
+    std::map<Phase, GroupInjectionProperties> injection_properties;
     GroupProductionProperties production_properties{};
+    std::pair<Phase, bool> m_topup_phase{Phase::WATER, false};
 };
 
 Group::GroupType operator |(Group::GroupType lhs, Group::GroupType rhs);
