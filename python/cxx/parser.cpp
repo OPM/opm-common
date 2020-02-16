@@ -6,6 +6,7 @@
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <pybind11/stl.h>
+#include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
 
 #include "export.hpp"
 

@@ -16,6 +16,8 @@ Copyright 2018 Statoil ASA.
 #define BOOST_TEST_MODULE UDQTests
 #include <boost/test/unit_test.hpp>
 
+#include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>

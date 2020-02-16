@@ -942,32 +942,32 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
 
     EclipseState Parser::parse(const std::string &filename, const ParseContext& context, ErrorGuard& errors) {
         assertFullDeck(context);
-        return EclipseState( Parser{}.parseFile( filename, context, errors ), context, errors );
+        return EclipseState( Parser{}.parseFile( filename, context, errors ));
     }
 
-    EclipseState Parser::parse(const Deck& deck, const ParseContext& context, ErrorGuard& errors) {
+    EclipseState Parser::parse(const Deck& deck, const ParseContext& context) {
         assertFullDeck(context);
-        return EclipseState(deck, context, errors);
+        return EclipseState(deck);
     }
 
     EclipseState Parser::parseData(const std::string &data, const ParseContext& context, ErrorGuard& errors) {
         assertFullDeck(context);
         Parser p;
         auto deck = p.parseString(data, context, errors);
-        return parse(deck, context, errors);
+        return parse(deck, context);
     }
 
-    EclipseGrid Parser::parseGrid(const std::string &filename, const ParseContext& context, ErrorGuard& errors) {
+    EclipseGrid Parser::parseGrid(const std::string &filename, const ParseContext& context , ErrorGuard& errors) {
         if (context.hasKey(ParseContext::PARSE_MISSING_SECTIONS))
             return EclipseGrid{ filename };
         return parse(filename, context, errors).getInputGrid();
     }
 
-    EclipseGrid Parser::parseGrid(const Deck& deck, const ParseContext& context, ErrorGuard& errors)
+    EclipseGrid Parser::parseGrid(const Deck& deck, const ParseContext& context)
     {
         if (context.hasKey(ParseContext::PARSE_MISSING_SECTIONS))
             return EclipseGrid{ deck };
-        return parse(deck, context, errors).getInputGrid();
+        return parse(deck, context).getInputGrid();
     }
 
     EclipseGrid Parser::parseGridData(const std::string &data, const ParseContext& context, ErrorGuard& errors) {
@@ -976,7 +976,7 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
         if (context.hasKey(ParseContext::PARSE_MISSING_SECTIONS)) {
             return EclipseGrid{ deck };
         }
-        return parse(deck, context, errors).getInputGrid();
+        return parse(deck, context).getInputGrid();
     }
 
     Deck Parser::parseFile(const std::string &dataFileName, const ParseContext& parseContext, ErrorGuard& errors) const {

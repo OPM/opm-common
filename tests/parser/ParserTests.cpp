@@ -21,12 +21,14 @@
 #include <boost/test/unit_test.hpp>
 
 #include <opm/json/JsonObject.hpp>
+#include <iostream>
 
 #include <opm/common/utility/FileSystem.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
+#include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/A.hpp>

@@ -23,7 +23,6 @@
 #include <memory>
 #include <vector>
 
-#include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Edit/EDITNNC.hpp>
@@ -52,7 +51,6 @@ namespace Opm {
     class EclipseGrid;
     class InitConfig;
     class IOConfig;
-    class ParseContext;
     class RestartConfig;
     class DeckSection;
     class SimulationConfig;
@@ -68,9 +66,6 @@ namespace Opm {
             AllProperties = IntProperties | DoubleProperties
         };
 
-        template<typename T>
-        EclipseState(const Deck& deck , const ParseContext& parseContext, T&& errors);
-        EclipseState(const Deck& deck , const ParseContext& parseContext, ErrorGuard& errors);
         EclipseState(const Deck& deck);
 
         const IOConfig& getIOConfig() const;
@@ -78,9 +73,6 @@ namespace Opm {
 
         const InitConfig& getInitConfig() const;
         const SimulationConfig& getSimulationConfig() const;
-        const RestartConfig& getRestartConfig() const;
-        RestartConfig& getRestartConfig();
-
         const EclipseGrid& getInputGrid() const;
 
         const FaultCollection& getFaults() const;

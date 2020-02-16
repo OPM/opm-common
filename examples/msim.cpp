@@ -37,7 +37,7 @@ int main(int /* argc */, char** argv) {
     Opm::ErrorGuard error_guard;
 
     Opm::Deck deck = parser.parseFile(deck_file, parse_context, error_guard);
-    Opm::EclipseState state(deck, parse_context, error_guard);
+    Opm::EclipseState state(deck);
     Opm::Schedule schedule(deck, state, parse_context, error_guard);
     Opm::SummaryConfig summary_config(deck, schedule, state.getTableManager(), parse_context, error_guard);
 

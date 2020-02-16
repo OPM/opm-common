@@ -37,7 +37,6 @@
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
-#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/M.hpp>
 #include <opm/parser/eclipse/Units/Dimension.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
@@ -48,10 +47,10 @@ namespace Opm {
 
 
 
-    EclipseState::EclipseState(const Deck& deck , const ParseContext& parseContext, ErrorGuard& errors) :
+    EclipseState::EclipseState(const Deck& deck) :
         m_tables(            deck ),
         m_runspec(           deck ),
-        m_eclipseConfig(     deck, parseContext, errors ),
+        m_eclipseConfig(     deck ),
         m_deckUnitSystem(    deck.getActiveUnitSystem() ),
         m_inputNnc(          deck ),
         m_inputEditNnc(      deck ),
@@ -80,17 +79,6 @@ namespace Opm {
     }
 
 
-    template<typename T>
-    EclipseState::EclipseState(const Deck& deck, const ParseContext& parseContext, T&& errors) :
-        EclipseState(deck, parseContext, errors)
-    {}
-
-
-    EclipseState::EclipseState(const Deck& deck) :
-        EclipseState(deck, ParseContext(), ErrorGuard())
-    {}
-
-
     const UnitSystem& EclipseState::getDeckUnitSystem() const {
         return m_deckUnitSystem;
     }
@@ -104,16 +92,8 @@ namespace Opm {
     }
 
 
-    const RestartConfig& EclipseState::getRestartConfig() const {
-        return m_eclipseConfig.getRestartConfig();
-    }
-
     const SimulationConfig& EclipseState::getSimulationConfig() const {
         return m_simulationConfig;
-    }
-
-    RestartConfig& EclipseState::getRestartConfig() {
-        return const_cast< RestartConfig& >( m_eclipseConfig.getRestartConfig() );
     }
 
 

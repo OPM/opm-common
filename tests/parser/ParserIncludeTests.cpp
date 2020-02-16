@@ -21,11 +21,13 @@
 #define BOOST_TEST_MODULE ParserTests
 #include <boost/test/unit_test.hpp>
 
+#include <iostream>
 #include <opm/common/utility/FileSystem.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
+#include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
 
 #include <iostream>
 

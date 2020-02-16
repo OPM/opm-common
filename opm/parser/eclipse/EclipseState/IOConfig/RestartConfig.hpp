@@ -23,6 +23,7 @@
 #include <vector>
 #include <set>
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 
 /*
@@ -198,7 +199,6 @@ namespace Opm {
     class RUNSPECSection;
     class SCHEDULESection;
     class SOLUTIONSection;
-    class TimeMap;
     class Schedule;
     class ParseContext;
     class ErrorGuard;
@@ -319,13 +319,10 @@ namespace Opm {
         RestartConfig() = default;
 
         template<typename T>
-        RestartConfig( const Deck&, const ParseContext& parseContext, T&& errors );
-
-        RestartConfig( const Deck&, const ParseContext& parseContext, ErrorGuard& errors );
-        RestartConfig( const Deck& );
-
-        RestartConfig(const IOConfig& io_config,
-                      const TimeMap& timeMap,
+        RestartConfig( const TimeMap& time_map, const Deck&, const ParseContext& parseContext, T&& errors );
+        RestartConfig( const TimeMap& time_map, const Deck&, const ParseContext& parseContext, ErrorGuard& errors );
+        RestartConfig( const TimeMap& time_map, const Deck& );
+        RestartConfig(const TimeMap& timeMap,
                       int firstRestartStep,
                       bool writeInitial,
                       const DynamicState<RestartSchedule>& restart_sched,
@@ -336,8 +333,6 @@ namespace Opm {
         bool getWriteRestartFile(size_t timestep, bool log=true) const;
         const std::map< std::string, int >& getRestartKeywords( size_t timestep ) const;
         int getKeyword( const std::string& keyword, size_t timeStep) const;
-        const IOConfig& ioConfig() const;
-        IOConfig& ioConfig();
 
         void overrideRestartWriteInterval(size_t interval);
         void handleSolutionSection(const SOLUTIONSection& solutionSection, const ParseContext& parseContext, ErrorGuard& errors);
@@ -374,7 +369,6 @@ namespace Opm {
         void update( size_t step, const RestartSchedule& rs);
         static RestartSchedule rptsched( const DeckKeyword& );
 
-        IOConfig io_config;
         TimeMap m_timemap;
         int     m_first_restart_step = 1;
         bool    m_write_initial_RST_file = false;

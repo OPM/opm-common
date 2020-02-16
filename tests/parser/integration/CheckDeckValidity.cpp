@@ -25,6 +25,9 @@
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/checkDeck.hpp>
+#include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
+
 
 BOOST_AUTO_TEST_CASE( KeywordInCorrectSection ) {
     Opm::Parser parser;

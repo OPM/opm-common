@@ -27,6 +27,8 @@
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
+#include <opm/parser/eclipse/EclipseState/IOConfig/RestartConfig.hpp>
 
 using namespace Opm;
 
@@ -190,7 +192,7 @@ BOOST_AUTO_TEST_CASE(DefaultProperties) {
 
     auto deck = Parser().parseString( data);
     IOConfig ioConfig( deck );
-    RestartConfig rstConfig( deck);
+    RestartConfig rstConfig( TimeMap(deck), deck);
 
     /*If no GRIDFILE nor NOGGF keywords are specified, default output an EGRID file*/
     BOOST_CHECK( ioConfig.getWriteEGRIDFile() );

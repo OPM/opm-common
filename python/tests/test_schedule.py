@@ -68,6 +68,12 @@ class TestSchedule(unittest.TestCase):
         prod = sch.get_well("PROD", 10)
         self.assertEqual(prod.status(), "SHUT")
 
+    def test_restart(self):
+        deck  = Parser().parse(test_path('spe3/SPE3CASE1.DATA'))
+        state = EclipseState(deck)
+        sch = Schedule( deck, state )
+        rst = sch.restart
+
 
 if __name__ == "__main__":
     unittest.main()

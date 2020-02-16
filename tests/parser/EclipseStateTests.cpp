@@ -496,9 +496,7 @@ BOOST_AUTO_TEST_CASE(TestIOConfigCreation) {
 
     Parser parser{};
     auto deck = parser.parseString(deckData) ;
-    EclipseState state(deck );
-
-    const RestartConfig& rstConfig = state.cfg().restart();
+    RestartConfig rstConfig(TimeMap(deck), deck);
 
     BOOST_CHECK_EQUAL(false, rstConfig.getWriteRestartFile(0));
     BOOST_CHECK_EQUAL(false, rstConfig.getWriteRestartFile(1));
@@ -549,9 +547,7 @@ BOOST_AUTO_TEST_CASE(TestIOConfigCreationWithSolutionRPTRST) {
 
     Parser parser;
     auto deck = parser.parseString(deckData) ;
-    EclipseState state(deck);
-
-    const RestartConfig& rstConfig = state.cfg().restart();
+    RestartConfig rstConfig(TimeMap(deck), deck);
 
     BOOST_CHECK_EQUAL(true  ,  rstConfig.getWriteRestartFile(0));
     BOOST_CHECK_EQUAL(false ,  rstConfig.getWriteRestartFile(1));
@@ -643,18 +639,14 @@ BOOST_AUTO_TEST_CASE(TestIOConfigCreationWithSolutionRPTSOL) {
 
     {   //mnemnonics
         auto deck = parser.parseString(deckData) ;
-        EclipseState state(deck);
-
-        const RestartConfig& rstConfig = state.cfg().restart();
+        RestartConfig rstConfig(TimeMap(deck), deck);
 
         BOOST_CHECK_EQUAL(true, rstConfig.getWriteRestartFile(0));
     }
 
     {   //old fashion integer mnemonics
         auto deck = parser.parseString(deckData2) ;
-        EclipseState state(deck);
-
-        const RestartConfig& rstConfig = state.cfg().restart();
+        RestartConfig rstConfig(TimeMap(deck), deck);
 
         BOOST_CHECK_EQUAL(true, rstConfig.getWriteRestartFile(0));
     }

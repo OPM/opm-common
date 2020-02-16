@@ -24,34 +24,28 @@
 
 #include <opm/parser/eclipse/EclipseState/InitConfig/InitConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
-#include <opm/parser/eclipse/EclipseState/IOConfig/RestartConfig.hpp>
 
 namespace Opm {
 
     class Deck;
-    class ParseContext;
-    class ErrorGuard;
 
     class EclipseConfig
     {
     public:
         EclipseConfig() = default;
-        EclipseConfig(const Deck& deck, const ParseContext& parseContext, ErrorGuard& errors);
-        EclipseConfig(const InitConfig& initConfig,
-                      const RestartConfig& restartConfig);
+        EclipseConfig(const Deck& deck);
+        EclipseConfig(const InitConfig& initConfig, const IOConfig& io_conf);
 
         const InitConfig& init() const;
         IOConfig& io();
         const IOConfig& io() const;
-        const RestartConfig& restart() const;
         const InitConfig& getInitConfig() const;
-        const RestartConfig& getRestartConfig() const;
 
         bool operator==(const EclipseConfig& data) const;
 
     private:
         InitConfig m_initConfig;
-        RestartConfig m_restartConfig;
+        IOConfig io_config;
     };
 }
 

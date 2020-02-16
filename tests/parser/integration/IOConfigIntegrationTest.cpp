@@ -308,7 +308,7 @@ BOOST_AUTO_TEST_CASE( NorneRestartConfig ) {
     EclipseState state(deck);
     Schedule schedule(deck, state);
 
-    verifyRestartConfig(schedule.getTimeMap(), state.cfg().restart(), rptConfig);
+    verifyRestartConfig(schedule.getTimeMap(), schedule.restart(), rptConfig);
 }
 
 
@@ -353,8 +353,8 @@ BOOST_AUTO_TEST_CASE( RestartConfig2 ) {
     auto deck = parser.parseFile(path_prefix() + "IOConfig/RPT_TEST2.DATA");
     EclipseState state( deck);
     Schedule schedule(deck, state);
-    const auto& rstConfig = state.cfg().restart();
-    verifyRestartConfig(schedule.getTimeMap(), state.cfg().restart(), rptConfig);
+    const auto& rstConfig = schedule.restart();
+    verifyRestartConfig(schedule.getTimeMap(), rstConfig, rptConfig);
 
     BOOST_CHECK_EQUAL( rstConfig.getFirstRestartStep() , 0 );
 }

@@ -78,10 +78,6 @@ SATNUM
         self.assertFalse(init.restartRequested())
         self.assertEqual(0, init.getRestartStep())
 
-        rst = cfg.restart()
-        self.assertFalse(rst.getWriteRestartFile(0))
-        self.assertEqual(7, rst.getFirstRestartStep())
-
     def test_repr_title(self):
         self.assertEqual('SPE 3 - CASE 1', self.state.title)
 

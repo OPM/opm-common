@@ -28,17 +28,16 @@
 
 namespace Opm {
 
-    EclipseConfig::EclipseConfig(const Deck& deck, const ParseContext& parseContext, ErrorGuard& errors) :
-            m_initConfig(      deck),
-            m_restartConfig(   deck, parseContext, errors )
+    EclipseConfig::EclipseConfig(const Deck& deck) :
+        m_initConfig(deck),
+        io_config(deck)
     {
     }
 
 
-    EclipseConfig::EclipseConfig(const InitConfig& initConfig,
-                                 const RestartConfig& restartConfig) :
+    EclipseConfig::EclipseConfig(const InitConfig& initConfig, const IOConfig& io_conf):
         m_initConfig(initConfig),
-        m_restartConfig(restartConfig)
+        io_config(io_conf)
     {
     }
 
@@ -47,31 +46,20 @@ namespace Opm {
         return m_initConfig;
     }
 
-    const IOConfig& EclipseConfig::io() const {
-        return this->m_restartConfig.ioConfig();
-    }
-
-    IOConfig& EclipseConfig::io() {
-        return this->m_restartConfig.ioConfig();
-    }
-
-    const RestartConfig& EclipseConfig::restart() const {
-        return this->m_restartConfig;
-    }
-
-    // [[deprecated]] --- use restart()
-    const RestartConfig& EclipseConfig::getRestartConfig() const {
-        return this->restart();
-    }
-
     // [[deprecated]] --- use init()
     const InitConfig& EclipseConfig::getInitConfig() const {
         return init();
     }
 
     bool EclipseConfig::operator==(const EclipseConfig& data) const {
-        return this->init() == data.init() &&
-               this->restart() == data.restart();
+        return this->init() == data.init();
     }
 
+    IOConfig& EclipseConfig::io() {
+        return const_cast<IOConfig &>(this->io_config);
+    }
+
+    const IOConfig& EclipseConfig::io() const {
+        return this->io_config;
+    }
 }

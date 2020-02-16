@@ -85,7 +85,9 @@ namespace {
         return sch.hasWell( wellName );
     }
 
-
+    const RestartConfig& restart(const Schedule& sch) {
+        return sch.restart();
+    }
 }
 
 void python::common::export_Schedule(py::module& module) {
@@ -96,6 +98,7 @@ void python::common::export_Schedule(py::module& module) {
     .def_property_readonly( "start",  &get_start_time )
     .def_property_readonly( "end",    &get_end_time )
     .def_property_readonly( "timesteps", &get_timesteps )
+    .def_property_readonly("restart", &restart)
     .def( "shut_well", &Schedule::shut_well)
     .def( "open_well", &Schedule::open_well)
     .def( "stop_well", &Schedule::stop_well)
@@ -103,5 +106,10 @@ void python::common::export_Schedule(py::module& module) {
     .def( "get_well", &get_well)
     .def( "__contains__", &has_well )
     .def( "group", &Schedule::getGroup, ref_internal);
+
+    py::class_< RestartConfig >( module, "RestartConfig")
+        .def( "getKeyword",          &RestartConfig::getKeyword )
+        .def( "getFirstRestartStep", &RestartConfig::getFirstRestartStep )
+        .def( "getWriteRestartFile", &RestartConfig::getWriteRestartFile, py::arg("reportStep"), py::arg("log") = true);
 
 }

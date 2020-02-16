@@ -19,6 +19,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <fstream>
 #include <getopt.h>
 
 #include <opm/common/utility/FileSystem.hpp>
