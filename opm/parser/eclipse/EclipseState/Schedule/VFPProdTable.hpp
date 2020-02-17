@@ -21,7 +21,8 @@
 #define OPM_PARSER_ECLIPSE_ECLIPSESTATE_TABLES_VFPPRODTABLE_HPP_
 
 
-#include <boost/multi_array.hpp>
+#include <array>
+#include <vector>
 
 namespace Opm {
 
@@ -34,8 +35,7 @@ namespace Opm {
  */
 class VFPProdTable {
 public:
-    typedef boost::multi_array<double, 5> array_type;
-    typedef boost::array<array_type::index, 5> extents;
+    typedef std::vector<double> array_type;
 
     enum FLO_TYPE {
         FLO_OIL=1,
@@ -130,12 +130,10 @@ public:
     }
 
     /**
-     * Returns the data of the table itself. The data is ordered so that
+     * Returns the data of the table itself. For ordered access
+     * use operator()(thp_idx, wfr_idx, gfr_idx, alq_idx, flo_idx)
      *
-     * table = getTable();
-     * bhp = table[thp_idx][wfr_idx][gfr_idx][alq_idx][flo_idx];
-     *
-     * gives the bottom hole pressure value in the table for the coordinate
+     * This gives the bottom hole pressure value in the table for the coordinate
      * given by
      * flo_axis = getFloAxis();
      * thp_axis = getTHPAxis();
@@ -150,7 +148,10 @@ public:
     }
 
     bool operator==(const VFPProdTable& data) const;
-    VFPProdTable& operator=(const VFPProdTable& data);
+
+    std::array<size_t,5> shape() const;
+
+    double operator()(size_t thp_idx, size_t wfr_idx, size_t gfr_idx, size_t alq_idx, size_t flo_idx) const;
 
 private:
 
@@ -170,6 +171,8 @@ private:
     array_type m_data;
 
     void check(const DeckKeyword& table, const double factor);
+
+    double& operator()(size_t thp_idx, size_t wfr_idx, size_t gfr_idx, size_t alq_idx, size_t flo_idx);
 
     static void scaleValues(std::vector<double>& values,
                             const double& scaling_factor);
