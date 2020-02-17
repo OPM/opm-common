@@ -843,7 +843,7 @@ BOOST_AUTO_TEST_CASE(MSW_RST) {
                                  );
     const auto& iseg = amswd.getISeg();
     const auto& rseg = amswd.getRSeg();
-    auto segment = Opm::RestartIO::RstSegment(iseg.data(), rseg.data());
+    auto segment = Opm::RestartIO::RstSegment(simCase.es.getUnits(), iseg.data(), rseg.data());
 }
 
 

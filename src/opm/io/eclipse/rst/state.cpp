@@ -25,13 +25,17 @@
 
 #include <opm/output/eclipse/VectorItems/connection.hpp>
 #include <opm/output/eclipse/VectorItems/well.hpp>
+#include <opm/output/eclipse/VectorItems/intehead.hpp>
+
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 namespace VI = ::Opm::RestartIO::Helpers::VectorItems;
 
 namespace Opm {
 namespace RestartIO {
 
-RstState::RstState(const std::vector<int>& intehead,
+RstState::RstState(const ::Opm::UnitSystem& unit_system,
+                   const std::vector<int>& intehead,
                    const std::vector<bool>& logihead,
                    const std::vector<double>& doubhead,
                    const std::vector<std::string>& zgrp,
@@ -47,7 +51,7 @@ RstState::RstState(const std::vector<int>& intehead,
                    const std::vector<double>& xcon):
     header(intehead, logihead, doubhead)
 {
-    this->add_groups(zgrp, igrp, sgrp, xgrp);
+    this->add_groups(unit_system, zgrp, igrp, sgrp, xgrp);
 
     for (int iw = 0; iw < this->header.num_wells; iw++) {
         std::size_t zwel_offset = iw * this->header.nzwelz;
@@ -60,7 +64,8 @@ RstState::RstState(const std::vector<int>& intehead,
         int group_index = iwel[ iwel_offset + VI::IWell::Group ] - 1;
         const std::string group = this->groups[group_index].name;
 
-        this->wells.emplace_back(this->header,
+        this->wells.emplace_back(unit_system,
+                                 this->header,
                                  group,
                                  zwel.data() + zwel_offset,
                                  iwel.data() + iwel_offset,
@@ -75,25 +80,26 @@ RstState::RstState(const std::vector<int>& intehead,
     }
 }
 
-RstState::RstState(const std::vector<int>& intehead,
-             const std::vector<bool>& logihead,
-             const std::vector<double>& doubhead,
-             const std::vector<std::string>& zgrp,
-             const std::vector<int>& igrp,
-             const std::vector<float>& sgrp,
-             const std::vector<double>& xgrp,
-             const std::vector<std::string>& zwel,
-             const std::vector<int>& iwel,
-             const std::vector<float>& swel,
-             const std::vector<double>& xwel,
-             const std::vector<int>& icon,
-             const std::vector<float>& scon,
-             const std::vector<double>& xcon,
-             const std::vector<int>& iseg,
-             const std::vector<double>& rseg) :
+RstState::RstState(const ::Opm::UnitSystem& unit_system,
+                   const std::vector<int>& intehead,
+                   const std::vector<bool>& logihead,
+                   const std::vector<double>& doubhead,
+                   const std::vector<std::string>& zgrp,
+                   const std::vector<int>& igrp,
+                   const std::vector<float>& sgrp,
+                   const std::vector<double>& xgrp,
+                   const std::vector<std::string>& zwel,
+                   const std::vector<int>& iwel,
+                   const std::vector<float>& swel,
+                   const std::vector<double>& xwel,
+                   const std::vector<int>& icon,
+                   const std::vector<float>& scon,
+                   const std::vector<double>& xcon,
+                   const std::vector<int>& iseg,
+                   const std::vector<double>& rseg) :
     header(intehead, logihead, doubhead)
 {
-    this->add_groups(zgrp, igrp, sgrp, xgrp);
+    this->add_groups(unit_system, zgrp, igrp, sgrp, xgrp);
 
     for (int iw = 0; iw < this->header.num_wells; iw++) {
         std::size_t zwel_offset = iw * this->header.nzwelz;
@@ -106,7 +112,8 @@ RstState::RstState(const std::vector<int>& intehead,
         int group_index = iwel[ iwel_offset + VI::IWell::Group ] - 1;
         const std::string group = this->groups[group_index].name;
 
-        this->wells.emplace_back(this->header,
+        this->wells.emplace_back(unit_system,
+                                 this->header,
                                  group,
                                  zwel.data() + zwel_offset,
                                  iwel.data() + iwel_offset,
@@ -120,7 +127,8 @@ RstState::RstState(const std::vector<int>& intehead,
     }
 }
 
-void RstState::add_groups(const std::vector<std::string>& zgrp,
+void RstState::add_groups(const ::Opm::UnitSystem& unit_system,
+                          const std::vector<std::string>& zgrp,
                           const std::vector<int>& igrp,
                           const std::vector<float>& sgrp,
                           const std::vector<double>& xgrp)
@@ -131,7 +139,8 @@ void RstState::add_groups(const std::vector<std::string>& zgrp,
         std::size_t sgrp_offset = ig * this->header.nsgrpz;
         std::size_t xgrp_offset = ig * this->header.nxgrpz;
 
-        this->groups.emplace_back(zgrp.data() + zgrp_offset,
+        this->groups.emplace_back(unit_system,
+                                  zgrp.data() + zgrp_offset,
                                   igrp.data() + igrp_offset,
                                   sgrp.data() + sgrp_offset,
                                   xgrp.data() + xgrp_offset);
@@ -170,22 +179,28 @@ RstState RstState::load(EclIO::ERst& rst_file, int report_step) {
     const auto& scon = rst_file.getRst<float>("SCON", report_step, 0);
     const auto& xcon = rst_file.getRst<double>("XCON", report_step, 0);
 
+    auto unit_id = intehead[VI::intehead::UNIT];
+    ::Opm::UnitSystem unit_system(unit_id);
+
     if (rst_file.hasKey("ISEG")) {
         const auto& iseg = rst_file.getRst<int>("ISEG", report_step, 0);
         const auto& rseg = rst_file.getRst<double>("RSEG", report_step, 0);
 
-        return RstState(intehead, logihead, doubhead,
-                     zgrp, igrp, sgrp, xgrp,
-                     zwel, iwel, swel, xwel,
-                     icon, scon, xcon,
-                     iseg, rseg);
+        return RstState(unit_system,
+                        intehead, logihead, doubhead,
+                        zgrp, igrp, sgrp, xgrp,
+                        zwel, iwel, swel, xwel,
+                        icon, scon, xcon,
+                        iseg, rseg);
     } else
-        return RstState(intehead, logihead, doubhead,
-                     zgrp, igrp, sgrp, xgrp,
-                     zwel, iwel, swel, xwel,
-                     icon, scon, xcon);
+        return RstState(unit_system,
+                        intehead, logihead, doubhead,
+                        zgrp, igrp, sgrp, xgrp,
+                        zwel, iwel, swel, xwel,
+                        icon, scon, xcon);
 }
 
 }
 }
+
 

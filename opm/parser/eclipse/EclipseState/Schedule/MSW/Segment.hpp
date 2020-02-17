@@ -26,6 +26,10 @@
 namespace Opm {
     class SpiralICD;
     class Valve;
+
+    namespace RestartIO {
+        class RstSegment;
+    }
 }
 
 namespace Opm {
@@ -63,6 +67,8 @@ namespace Opm {
                 SegmentType segmentType,
                 std::shared_ptr<SpiralICD> spiralICD,
                 std::shared_ptr<Valve> valv);
+
+        Segment(const RestartIO::RstSegment& rst_segment);
 
         int segmentNumber() const;
         int branchNumber() const;
