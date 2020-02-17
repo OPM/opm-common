@@ -13,7 +13,7 @@ Group:          Development/Libraries/C and C++
 Url:            http://www.opm-project.org/
 Source0:        https://github.com/OPM/%{name}/archive/release/%{version}/%{tag}.tar.gz#/%{name}-%{version}.tar.gz
 BuildRequires:  git doxygen bc openmpi-devel mpich-devel
-%{?!el8:BuildRequires: devtoolset-6-toolchain rh-mariadb102-boost-devel}
+%{?!el8:BuildRequires: devtoolset-8-toolchain rh-mariadb102-boost-devel}
 %{?el8:BuildRequires: boost-devel}
 BuildRequires: cmake3
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
@@ -109,7 +109,7 @@ This package contains the documentation files for opm-common
 %build
 mkdir serial
 cd serial
-cmake3 -DBUILD_SHARED_LIBS=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=%{_prefix} -DCMAKE_INSTALL_DOCDIR=share/doc/%{name}-%{version} -DUSE_RUNPATH=OFF -DWITH_NATIVE=OFF %{!?el8:-DCMAKE_CXX_COMPILER=/opt/rh/devtoolset-6/root/usr/bin/g++ -DCMAKE_C_COMPILER=/opt/rh/devtoolset-6/root/usr/bin/gcc -DCMAKE_Fortran_COMPILER=/opt/rh/devtoolset-6/root/usr/bin/gfortran -DBOOST_LIBRARYDIR=/opt/rh/rh-mariadb102/root/usr/lib64 -DBOOST_INCLUDEDIR=/opt/rh/rh-mariadb102/root/usr/include} ..
+cmake3 -DBUILD_SHARED_LIBS=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=%{_prefix} -DCMAKE_INSTALL_DOCDIR=share/doc/%{name}-%{version} -DUSE_RUNPATH=OFF -DWITH_NATIVE=OFF %{!?el8:-DCMAKE_CXX_COMPILER=/opt/rh/devtoolset-8/root/usr/bin/g++ -DCMAKE_C_COMPILER=/opt/rh/devtoolset-8/root/usr/bin/gcc -DCMAKE_Fortran_COMPILER=/opt/rh/devtoolset-8/root/usr/bin/gfortran -DBOOST_LIBRARYDIR=/opt/rh/rh-mariadb102/root/usr/lib64 -DBOOST_INCLUDEDIR=/opt/rh/rh-mariadb102/root/usr/include} ..
 make %{?_smp_mflags}
 make test
 cd ..
@@ -118,7 +118,7 @@ mkdir openmpi
 cd openmpi
 %{?el6:module load openmpi-x86_64}
 %{?!el6:module load mpi/openmpi-x86_64}
-cmake3 -DUSE_MPI=1 -DBUILD_SHARED_LIBS=1 -DCMAKE_BUILD_TYPE=RelWithDebInfo  -DSTRIP_DEBUGGING_SYMBOLS=ON -DCMAKE_INSTALL_PREFIX=%{_prefix}/lib64/openmpi -DCMAKE_INSTALL_LIBDIR=lib -DUSE_RUNPATH=OFF -DWITH_NATIVE=OFF %{?!el8:-DCMAKE_CXX_COMPILER=/opt/rh/devtoolset-6/root/usr/bin/g++ -DCMAKE_C_COMPILER=/opt/rh/devtoolset-6/root/usr/bin/gcc -DCMAKE_Fortran_COMPILER=/opt/rh/devtoolset-6/root/usr/bin/gfortran -DBOOST_LIBRARYDIR=/opt/rh/rh-mariadb102/root/usr/lib64 -DBOOST_INCLUDEDIR=/opt/rh/rh-mariadb102/root/usr/include} ..
+cmake3 -DUSE_MPI=1 -DBUILD_SHARED_LIBS=1 -DCMAKE_BUILD_TYPE=RelWithDebInfo  -DSTRIP_DEBUGGING_SYMBOLS=ON -DCMAKE_INSTALL_PREFIX=%{_prefix}/lib64/openmpi -DCMAKE_INSTALL_LIBDIR=lib -DUSE_RUNPATH=OFF -DWITH_NATIVE=OFF %{?!el8:-DCMAKE_CXX_COMPILER=/opt/rh/devtoolset-8/root/usr/bin/g++ -DCMAKE_C_COMPILER=/opt/rh/devtoolset-8/root/usr/bin/gcc -DCMAKE_Fortran_COMPILER=/opt/rh/devtoolset-8/root/usr/bin/gfortran -DBOOST_LIBRARYDIR=/opt/rh/rh-mariadb102/root/usr/lib64 -DBOOST_INCLUDEDIR=/opt/rh/rh-mariadb102/root/usr/include} ..
 make %{?_smp_mflags}
 make test
 cd ..
@@ -129,7 +129,7 @@ cd mpich
 %{?el6:module load mpich-x86_64}
 %{?!el6:module rm mpi/openmpi-x86_64}
 %{?!el6:module load mpi/mpich-x86_64}
-cmake3 -DUSE_MPI=1 -DBUILD_SHARED_LIBS=1 -DCMAKE_BUILD_TYPE=RelWithDebInfo  -DSTRIP_DEBUGGING_SYMBOLS=ON -DCMAKE_INSTALL_PREFIX=%{_prefix}/lib64/mpich -DCMAKE_INSTALL_LIBDIR=lib -DUSE_RUNPATH=OFF -DWITH_NATIVE=OFF %{?!el8:-DCMAKE_CXX_COMPILER=/opt/rh/devtoolset-6/root/usr/bin/g++ -DCMAKE_C_COMPILER=/opt/rh/devtoolset-6/root/usr/bin/gcc -DCMAKE_Fortran_COMPILER=/opt/rh/devtoolset-6/root/usr/bin/gfortran -DBOOST_LIBRARYDIR=/opt/rh/rh-mariadb102/root/usr/lib64 -DBOOST_INCLUDEDIR=/opt/rh/rh-mariadb102/root/usr/include} ..
+cmake3 -DUSE_MPI=1 -DBUILD_SHARED_LIBS=1 -DCMAKE_BUILD_TYPE=RelWithDebInfo  -DSTRIP_DEBUGGING_SYMBOLS=ON -DCMAKE_INSTALL_PREFIX=%{_prefix}/lib64/mpich -DCMAKE_INSTALL_LIBDIR=lib -DUSE_RUNPATH=OFF -DWITH_NATIVE=OFF %{?!el8:-DCMAKE_CXX_COMPILER=/opt/rh/devtoolset-8/root/usr/bin/g++ -DCMAKE_C_COMPILER=/opt/rh/devtoolset-8/root/usr/bin/gcc -DCMAKE_Fortran_COMPILER=/opt/rh/devtoolset-8/root/usr/bin/gfortran -DBOOST_LIBRARYDIR=/opt/rh/rh-mariadb102/root/usr/lib64 -DBOOST_INCLUDEDIR=/opt/rh/rh-mariadb102/root/usr/include} ..
 make %{?_smp_mflags}
 make test
 
