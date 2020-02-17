@@ -34,6 +34,14 @@ namespace Opm {
 
         bool operator==(const BrineDensityTable& data) const;
 
+        std::vector<double>::const_iterator begin() const {
+            return m_tableValues.begin();
+        }
+
+        std::vector<double>::const_iterator end() const {
+            return m_tableValues.end();
+        }
+
     private:
         std::vector<double> m_tableValues;
     };
