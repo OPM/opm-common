@@ -348,6 +348,9 @@ template<> constexpr
 measure rate_unit< rt::solvent >() { return measure::gas_surface_rate; }
 
 template<> constexpr
+measure rate_unit< rt::energy >() { return measure::rate; } //measure::???
+
+template<> constexpr
 measure rate_unit< rt::reservoir_water >() { return measure::rate; }
 
 template<> constexpr
@@ -730,6 +733,7 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "WGIR", rate< rt::gas, injector > },
     { "WNIR", rate< rt::solvent, injector > },
     { "WCIR", rate< rt::wat, injector, polymer > },
+    { "WEIR", rate< rt::energy, injector> },
     { "WVIR", sum( sum( rate< rt::reservoir_water, injector >, rate< rt::reservoir_oil, injector > ),
                        rate< rt::reservoir_gas, injector > ) },
 
@@ -738,6 +742,7 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "WGIT", mul( rate< rt::gas, injector >, duration ) },
     { "WNIT", mul( rate< rt::solvent, injector >, duration ) },
     { "WCIT", mul( rate< rt::wat, injector, polymer >, duration ) },
+    { "WEIT", mul( rate< rt::energy, injector >, duration ) },
     { "WVIT", mul( sum( sum( rate< rt::reservoir_water, injector >, rate< rt::reservoir_oil, injector > ),
                         rate< rt::reservoir_gas, injector > ), duration ) },
 
@@ -745,7 +750,7 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "WOPR", rate< rt::oil, producer > },
     { "WGPR", rate< rt::gas, producer > },
     { "WNPR", rate< rt::solvent, producer > },
-
+    { "WEPR", rate< rt::energy, producer> },
     { "WGPRS", rate< rt::dissolved_gas, producer > },
     { "WGPRF", sub( rate< rt::gas, producer >, rate< rt::dissolved_gas, producer > ) },
     { "WOPRS", rate< rt::vaporized_oil, producer > },
