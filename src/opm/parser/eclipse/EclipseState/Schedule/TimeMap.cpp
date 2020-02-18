@@ -159,6 +159,7 @@ namespace {
                     TimeStampUTC ts(restart_time);
                     throw std::invalid_argument("Could not find restart date " + std::to_string(ts.year()) + "-" + std::to_string(ts.month()) + "-" + std::to_string(ts.day()));
                 }
+                this->m_skiprest = true;
             }
         }
     }
@@ -426,6 +427,10 @@ namespace {
 
     std::size_t TimeMap::restart_offset() const {
         return this->m_restart_offset;
+    }
+
+    bool TimeMap::skiprest() const {
+        return this->m_skiprest;
     }
 }
 

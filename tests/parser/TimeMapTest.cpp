@@ -223,6 +223,7 @@ BOOST_AUTO_TEST_CASE(TimeStepsCorrect) {
 
     BOOST_CHECK_EQUAL(tmap.getTimeStepLength(8), 6*24*60*60);
     BOOST_CHECK_EQUAL(tmap.getTimeStepLength(9), 7*24*60*60);
+    BOOST_CHECK(!tmap.skiprest());
 }
 
 
@@ -694,6 +695,7 @@ TSTEP
     auto start = tm1[0];
     BOOST_CHECK_EQUAL(start , Opm::asTimeT(Opm::TimeStampUTC({2000,1,1})));
     BOOST_CHECK_EQUAL(tm1[5] , Opm::asTimeT(Opm::TimeStampUTC({2005,1,1})));
+    BOOST_CHECK(tm1.skiprest());
 
     Opm::TimeMap tm2(deck2, valid_restart);
     BOOST_CHECK_EQUAL(tm2[5], Opm::asTimeT(Opm::TimeStampUTC({2005,1,1})));
