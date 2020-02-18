@@ -20,8 +20,7 @@
 #include <opm/parser/eclipse/Deck/DeckOutput.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Units/Dimension.hpp>
-
-#include <boost/algorithm/string.hpp>
+#include <opm/parser/eclipse/Utility/String.hpp>
 
 #include <algorithm>
 #include <string>
@@ -261,9 +260,7 @@ void DeckItem::push_backDummyDefault() {
 }
 
 std::string DeckItem::getTrimmedString( size_t index ) const {
-    return boost::algorithm::trim_copy(
-               this->value_ref< std::string >().at( index )
-           );
+    return trim_copy(this->value_ref< std::string >().at(index));
 }
 
 double DeckItem::getSIDouble( size_t index ) const {
