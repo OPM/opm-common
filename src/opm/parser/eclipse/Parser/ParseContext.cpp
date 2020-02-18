@@ -20,13 +20,12 @@
 #include <cstdlib>
 #include <iostream>
 
-#include <boost/algorithm/string.hpp>
-
 #include <fnmatch.h>
 
 #include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
 #include <opm/parser/eclipse/Parser/InputErrorAction.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
+#include <opm/parser/eclipse/Utility/String.hpp>
 
 namespace Opm {
 
@@ -294,8 +293,7 @@ namespace Opm {
     */
 
     void ParseContext::update(const std::string& keyString , InputError::Action action) {
-        std::vector<std::string> keys;
-        boost::split( keys , keyString , boost::is_any_of(":|"));
+        std::vector<std::string> keys = split_string(keyString, ":|");
         for (const auto& input_key : keys) {
             std::vector<std::string> matching_keys;
             size_t wildcard_pos = input_key.find("*");
