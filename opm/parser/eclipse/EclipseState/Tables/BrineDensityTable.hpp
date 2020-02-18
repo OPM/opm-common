@@ -42,6 +42,10 @@ namespace Opm {
             return m_tableValues.end();
         }
 
+        std::size_t size() const {
+            return this->m_tableValues.size();
+        }
+
     private:
         std::vector<double> m_tableValues;
     };
