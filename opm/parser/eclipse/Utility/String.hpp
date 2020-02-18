@@ -50,5 +50,24 @@ std::string trim_copy(const T& s)
 {
     return ltrim_copy( rtrim_copy(s) );
 }
+
+
+template<typename T>
+void replaceAll(T& data, const T& toSearch, const T& replace)
+{
+    // Get the first occurrence
+    size_t pos = data.find(toSearch);
+
+    // Repeat till end is reached
+    while (pos != std::string::npos)
+    {
+        // Replace this occurrence of Sub String
+        data.replace(pos, toSearch.size(), replace);
+        // Get the next occurrence from the current position
+        pos = data.find(toSearch, pos + replace.size());
+    }
 }
+
+}
+
 #endif //OPM_UTILITY_STRING_HPP

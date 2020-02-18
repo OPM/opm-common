@@ -213,3 +213,11 @@ BOOST_AUTO_TEST_CASE(trim) {
     BOOST_CHECK_EQUAL(rtrim_copy(s5) , s5);
     BOOST_CHECK_EQUAL(rtrim_copy(s6) , s5);
 }
+
+
+BOOST_AUTO_TEST_CASE(replace_all) {
+    std::string s1 = "lorem ipsum";
+
+    replaceAll<std::string>(s1, "m", "foo");
+    BOOST_CHECK_EQUAL(s1, "lorefoo ipsufoo");
+}
