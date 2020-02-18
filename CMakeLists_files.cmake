@@ -287,10 +287,7 @@ if(ENABLE_ECL_INPUT)
   list(APPEND TEST_SOURCE_FILES
     tests/parser/ACTIONX.cpp
     tests/parser/ADDREGTests.cpp
-    tests/parser/AquiferCTTests.cpp
-    tests/parser/AquifetpTests.cpp
-    tests/parser/AqudimsTests.cpp
-    tests/parser/AquanconTests.cpp
+    tests/parser/AquiferTests.cpp
     tests/parser/BoxTests.cpp
     tests/parser/ColumnSchemaTests.cpp
     tests/parser/ConnectionTests.cpp

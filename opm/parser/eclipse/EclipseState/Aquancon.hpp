@@ -26,7 +26,10 @@
   implement the analytical aquifer models in OPM Flow.
 */
 
+#include <unordered_map>
+
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/FaceDir.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/A.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
@@ -34,44 +37,54 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 
 namespace Opm {
-    namespace{
-        struct AquanconRecord;
-        }
 
     class Aquancon {
         public:
 
-            struct AquanconOutput{
-                int aquiferID;
-                std::vector<size_t> global_index;
-                std::vector<std::shared_ptr<double>> influx_coeff; // Size = size(global_index)
-                std::vector<double> influx_multiplier; // Size = size(global_index)
-                std::vector<int> reservoir_face_dir; // Size = size(global_index)
-                std::vector<int> record_index;
-            };
+        struct AquancCell {
+            int aquiferID;
+            std::size_t global_index;
+            std::pair<bool, double> influx_coeff;
+            double influx_mult;
+            FaceDir::DirEnum face_dir;
 
+            AquancCell(int aquiferID_arg, std::size_t gi, const std::pair<bool, double>& ic, double im, FaceDir::DirEnum fd) :
+                aquiferID(aquiferID_arg),
+                global_index(gi),
+                influx_coeff(ic),
+                influx_mult(im),
+                face_dir(fd)
+            {}
+
+            AquancCell() = default;
+
+            bool operator==(const AquancCell& other) const {
+                return this->aquiferID == other.aquiferID &&
+                       this->global_index == other.global_index &&
+                       this->influx_coeff == other.influx_coeff &&
+                       this->influx_mult == other.influx_mult &&
+                       this->face_dir == other.face_dir;
+            }
+
+        };
+
+
+            Aquancon() = default;
             Aquancon(const EclipseGrid& grid, const Deck& deck);
+            Aquancon(const std::unordered_map<int, std::vector<Aquancon::AquancCell>>& data);
 
-            const std::vector<Aquancon::AquanconOutput>& getAquOutput() const;
+            const std::unordered_map<int, std::vector<Aquancon::AquancCell>>& data() const;
+            bool operator==(const Aquancon& other) const;
+            bool active() const;
 
+            const std::vector<Aquancon::AquancCell> operator[](int aquiferID) const;
         private:
 
-            static std::vector<Aquancon::AquanconOutput> logic_application(const std::vector<Aquancon::AquanconOutput>& original_vector);
-
-            static void collate_function(std::vector<Aquancon::AquanconOutput>& output_vector,
-                                  std::vector<Opm::AquanconRecord>& m_aqurecord,
-                                  const std::vector<int>& m_aquiferID_per_record, int m_maxAquID);
-
-            static void convert_record_id_to_aquifer_id(std::vector<int>& record_indices_matching_id, int i,
-                                                        const std::vector<int>& m_aquiferID_per_record);
-
-            // for a cell to be inside reservoir, its indices need to be within the reservoir grid dimension range,
-            // and it needs to be active
             static bool cellInsideReservoirAndActive(const EclipseGrid& grid, int i, int j, int k);
-
             static bool neighborCellInsideReservoirAndActive(const EclipseGrid& grid, int i, int j, int k, FaceDir::DirEnum faceDir);
 
-            std::vector<Aquancon::AquanconOutput> m_aquoutput;
+
+            std::unordered_map<int, std::vector<Aquancon::AquancCell>> cells;
     };
 }
 

@@ -52,6 +52,18 @@ bool Aquifetp::AQUFETP_data::operator==(const Aquifetp::AQUFETP_data& other) con
            this->p0 == other.p0;
 }
 
+
+Aquifetp::AQUFETP_data::AQUFETP_data(int aquiferID_, int pvttableID_, double J_, double C_t_, double V0_, double d0_, const std::pair<bool, double>& p0_) :
+    aquiferID(aquiferID_),
+    pvttableID(pvttableID_),
+    J(J_),
+    C_t(C_t_),
+    V0(V0_),
+    d0(d0_),
+    p0(p0_)
+{}
+
+
 Aquifetp::Aquifetp(const std::vector<Aquifetp::AQUFETP_data>& data) :
     m_aqufetp(data)
 {}

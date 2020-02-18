@@ -83,6 +83,7 @@ bool AquiferCT::AQUCT_data::operator==(const AquiferCT::AQUCT_data& other) const
            this->inftableID == other.inftableID &&
            this->pvttableID == other.pvttableID &&
            this->phi_aq == other.phi_aq &&
+           this->d0 == other.d0 &&
            this->C_t == other.C_t &&
            this->r_o == other.r_o &&
            this->k_a == other.k_a &&
@@ -95,6 +96,40 @@ bool AquiferCT::AQUCT_data::operator==(const AquiferCT::AQUCT_data& other) const
            this->pi == other.pi &&
            this->cell_id == other.cell_id;
 }
+
+AquiferCT::AQUCT_data::AQUCT_data(int aqID,
+                                  int infID,
+                                  int pvtID,
+                                  double phi_aq_,
+                                  double d0_,
+                                  double C_t_,
+                                  double r_o_,
+                                  double k_a_,
+                                  double c1_,
+                                  double h_,
+                                  double theta_,
+                                  double c2_,
+                                  const std::pair<bool, double>& p0_,
+                                  const std::vector<double>& td_,
+                                  const std::vector<double>& pi_,
+                                  const std::vector<int>& cell_id_) :
+    aquiferID(aqID),
+    inftableID(infID),
+    pvttableID(pvtID),
+    phi_aq(phi_aq_),
+    d0(d0_),
+    C_t(C_t_),
+    r_o(r_o_),
+    k_a(k_a_),
+    c1(c1_),
+    h(h_),
+    theta(theta_),
+    c2(c2_),
+    p0(p0_),
+    td(td_),
+    pi(pi_),
+    cell_id(cell_id_)
+{}
 
 AquiferCT::AquiferCT(const TableManager& tables, const Deck& deck)
 {
