@@ -93,17 +93,20 @@ Well::Well() :
 
 
 Well::Well(const std::string& wname_arg,
-             const std::string& gname,
-             std::size_t init_step_arg,
-             std::size_t insert_index_arg,
-             int headI_arg,
-             int headJ_arg,
-             double ref_depth_arg,
-             Phase phase_arg,
-             ProducerCMode whistctl_cmode,
-             Connection::Order ordering_arg,
-             const UnitSystem& unit_system_arg,
-             double udq_undefined_arg) :
+           const std::string& gname,
+           std::size_t init_step_arg,
+           std::size_t insert_index_arg,
+           int headI_arg,
+           int headJ_arg,
+           double ref_depth_arg,
+           Phase phase_arg,
+           ProducerCMode whistctl_cmode,
+           Connection::Order ordering_arg,
+           const UnitSystem& unit_system_arg,
+           double udq_undefined_arg,
+           double dr,
+           bool allow_xflow,
+           bool auto_shutin):
     wname(wname_arg),
     group_name(gname),
     init_step(init_step_arg),
@@ -116,9 +119,9 @@ Well::Well(const std::string& wname_arg,
     unit_system(unit_system_arg),
     udq_undefined(udq_undefined_arg),
     status(Status::SHUT),
-    drainage_radius(ParserKeywords::WELSPECS::D_RADIUS::defaultValue),
-    allow_cross_flow(DeckItem::to_bool(ParserKeywords::WELSPECS::CROSSFLOW::defaultValue)),
-    automatic_shutin( ParserKeywords::WELSPECS::CROSSFLOW::defaultValue == "SHUT"),
+    drainage_radius(dr),
+    allow_cross_flow(allow_xflow),
+    automatic_shutin(auto_shutin),
     producer(true),
     guide_rate({true, -1, Well::GuideRateTarget::UNDEFINED,ParserKeywords::WGRUPCON::SCALING_FACTOR::defaultValue}),
     efficiency_factor(1.0),
@@ -587,6 +590,11 @@ double Well::getDrainageRadius() const {
 
 const std::string& Well::name() const {
     return this->wname;
+}
+
+
+void Well::setInsertIndex(std::size_t index) {
+    this->insert_index = index;
 }
 
 
