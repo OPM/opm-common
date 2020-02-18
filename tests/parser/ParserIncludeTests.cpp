@@ -27,6 +27,8 @@
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 
+#include <iostream>
+
 inline std::string prefix() {
     return boost::unit_test::framework::master_test_suite().argv[1];
 }

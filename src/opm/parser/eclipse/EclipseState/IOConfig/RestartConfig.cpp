@@ -18,6 +18,7 @@
  */
 
 #include <algorithm>
+#include <climits>
 #include <iostream>
 #include <iterator>
 #include <iomanip>

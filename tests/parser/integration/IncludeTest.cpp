@@ -23,6 +23,7 @@
 #include <opm/common/utility/FileSystem.hpp>
 #include <ostream>
 #include <fstream>
+#include <iostream>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 

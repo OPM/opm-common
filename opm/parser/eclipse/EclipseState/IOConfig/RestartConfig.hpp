@@ -24,7 +24,6 @@
 #include <set>
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
-#include <boost/date_time.hpp>
 
 /*
   The RestartConfig class internalizes information of when (at which

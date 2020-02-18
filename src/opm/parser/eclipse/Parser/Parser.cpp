@@ -20,8 +20,9 @@
 #include <cctype>
 #include <fstream>
 #include <iterator>
+#include <iomanip>
+#include <iostream>
 
-#include <boost/algorithm/string.hpp>
 #include <opm/common/utility/FileSystem.hpp>
 
 #include <opm/common/OpmLog/OpmLog.hpp>

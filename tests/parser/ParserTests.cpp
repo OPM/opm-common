@@ -35,6 +35,8 @@
 #include "src/opm/parser/eclipse/Parser/raw/RawKeyword.hpp"
 #include "src/opm/parser/eclipse/Parser/raw/RawRecord.hpp"
 
+#include <iostream>
+
 using namespace Opm;
 
 namespace {

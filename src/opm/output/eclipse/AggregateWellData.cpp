@@ -44,6 +44,7 @@
 #include <cstring>
 #include <exception>
 #include <iterator>
+#include <iostream>
 #include <stdexcept>
 #include <string>
 
