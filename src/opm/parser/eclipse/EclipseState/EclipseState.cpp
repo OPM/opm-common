@@ -19,8 +19,6 @@
 
 #include <set>
 
-#include <boost/algorithm/string/join.hpp>
-
 #include <opm/common/OpmLog/LogUtil.hpp>
 
 #include <opm/parser/eclipse/Deck/DeckSection.hpp>
@@ -86,7 +84,9 @@ bool enable3DPropsTesting() {
             const auto& titleKeyword = deck.getKeyword( "TITLE" );
             const auto& item = titleKeyword.getRecord( 0 ).getItem( 0 );
             std::vector<std::string> itemValue = item.getData<std::string>();
-            m_title = boost::algorithm::join( itemValue, " " );
+            for (const auto& entry : itemValue)
+                m_title += entry + ' ';
+            m_title.pop_back();
         }
 
         initTransMult();
