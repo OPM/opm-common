@@ -31,6 +31,7 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
+#include <opm/parser/eclipse/Utility/String.hpp>
 
 
 constexpr const std::time_t invalid_time = -1;
@@ -246,8 +247,11 @@ namespace {
             }
         }
 
+        // Accept lower- and mixed-case month names.
+        std::string monthname = uppercase(monthItem.get<std::string>(0));
+
         std::time_t date = mkdatetime(yearItem.get<int>(0),
-                                      eclipseMonthIndices().at(monthItem.get<std::string>(0)),
+                                      eclipseMonthIndices().at(monthname),
                                       dayItem.get<int>(0),
                                       hour,
                                       min,
