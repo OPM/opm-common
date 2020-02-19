@@ -56,6 +56,9 @@ macro (opm_compile_satellites opm satellite excl_all test_regexp)
 
   # compile each of these separately
   foreach (_sat_FILE IN LISTS ${satellite}_SOURCES)
+    if (NOT "${test_regexp}" STREQUAL "" AND NOT Boost_UNIT_TEST_FRAMEWORK_FOUND)
+        continue()
+    endif()
     get_filename_component (_sat_NAME "${_sat_FILE}" NAME_WE)
     add_executable (${_sat_NAME} ${excl_all} ${_sat_FILE})
     add_dependencies (${satellite} ${_sat_NAME})
