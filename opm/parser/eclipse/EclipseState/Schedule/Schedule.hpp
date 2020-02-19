@@ -22,8 +22,6 @@
 #include <map>
 #include <memory>
 
-#include <boost/date_time/posix_time/posix_time_types.hpp>
-
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicVector.hpp>

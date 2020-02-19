@@ -213,3 +213,32 @@ BOOST_AUTO_TEST_CASE(trim) {
     BOOST_CHECK_EQUAL(rtrim_copy(s5) , s5);
     BOOST_CHECK_EQUAL(rtrim_copy(s6) , s5);
 }
+
+
+BOOST_AUTO_TEST_CASE(replace_all) {
+    std::string s1 = "lorem ipsum";
+
+    replaceAll<std::string>(s1, "m", "foo");
+    BOOST_CHECK_EQUAL(s1, "lorefoo ipsufoo");
+}
+
+
+BOOST_AUTO_TEST_CASE(split) {
+    std::string s1 = "lorem ipsum";
+
+    auto split1 = split_string(s1, ' ');
+    BOOST_CHECK_EQUAL(split1.size(), 2);
+    BOOST_CHECK_EQUAL(split1[0], "lorem");
+    BOOST_CHECK_EQUAL(split1[1], "ipsum");
+
+    auto split2 = split_string(s1, "r ");
+    BOOST_CHECK_EQUAL(split2.size(), 3);
+    BOOST_CHECK_EQUAL(split2[0], "lo");
+    BOOST_CHECK_EQUAL(split2[1], "em");
+    BOOST_CHECK_EQUAL(split2[2], "ipsum");
+
+    auto split3 = split_string(s1, "m ");
+    BOOST_CHECK_EQUAL(split3.size(), 2);
+    BOOST_CHECK_EQUAL(split3[0], "lore");
+    BOOST_CHECK_EQUAL(split3[1], "ipsu");
+}

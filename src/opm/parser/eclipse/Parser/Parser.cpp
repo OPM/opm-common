@@ -20,8 +20,9 @@
 #include <cctype>
 #include <fstream>
 #include <iterator>
+#include <iomanip>
+#include <iostream>
 
-#include <boost/algorithm/string.hpp>
 #include <opm/common/utility/FileSystem.hpp>
 
 #include <opm/common/OpmLog/OpmLog.hpp>
@@ -535,7 +536,7 @@ Opm::filesystem::path ParserState::getIncludeFilePath( std::string path ) const 
         size_t cutOffPosition = stringStartingAtPathName.find_first_not_of(validPathNameCharacters);
         std::string stringToFind = stringStartingAtPathName.substr(0, cutOffPosition);
         std::string stringToReplace = this->pathMap.at( stringToFind );
-        boost::replace_all(path, pathKeywordPrefix + stringToFind, stringToReplace);
+        replaceAll(path, pathKeywordPrefix + stringToFind, stringToReplace);
     }
 
     // Check if there are any backslashes in the path...

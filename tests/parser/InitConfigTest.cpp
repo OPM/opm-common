@@ -29,6 +29,8 @@
 
 #include <tests/WorkArea.cpp>
 
+#include <fstream>
+
 using namespace Opm;
 
 const std::string& deckStr =

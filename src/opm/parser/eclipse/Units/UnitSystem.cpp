@@ -20,8 +20,8 @@
 
 #include <iostream>
 #include <stdexcept>
-#include <boost/algorithm/string.hpp>
 
+#include <opm/parser/eclipse/Utility/String.hpp>
 #include <opm/parser/eclipse/Units/Dimension.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
@@ -1183,8 +1183,7 @@ namespace {
 
 
     Dimension UnitSystem::parseFactor(const std::string& dimension) const {
-        std::vector<std::string> dimensionList;
-        boost::split(dimensionList , dimension , boost::is_any_of("*"));
+        std::vector<std::string> dimensionList = split_string(dimension, '*');
 
         double SIfactor = 1.0;
         for( const auto& x : dimensionList ) {
@@ -1210,8 +1209,7 @@ namespace {
         const bool haveDivisor = divCount == 1;
         if( !haveDivisor ) return this->parseFactor( dimension );
 
-        std::vector<std::string> parts;
-        boost::split(parts , dimension , boost::is_any_of("/"));
+        std::vector<std::string> parts = split_string(dimension, '/');
         Dimension dividend = this->parseFactor( parts[0] );
         Dimension divisor = this->parseFactor( parts[1] );
 

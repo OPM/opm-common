@@ -26,6 +26,7 @@
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
+#include <opm/parser/eclipse/Utility/String.hpp>
 
 namespace Opm {
 bool checkDeck( const Deck& deck, const Parser& parser, const ParseContext& parseContext, ErrorGuard& errorGuard, size_t enabledChecks) {
@@ -51,10 +52,11 @@ bool checkDeck( const Deck& deck, const Parser& parser, const ParseContext& pars
         deckValid = deckValid && DeckSection::checkSectionTopology(deck, parser, ensureKeywordSection);
     }
 
-    const std::string& deckUnitSystem = boost::to_upper_copy(deck.getActiveUnitSystem().getName());
+    std::string deckUnitSystem = deck.getActiveUnitSystem().getName();
+    uppercase(deckUnitSystem);
     for (const auto& keyword : deck.getKeywordList("FILEUNIT")) {
-        const std::string& fileUnitSystem =
-            boost::to_upper_copy(keyword->getRecord(0).getItem("FILE_UNIT_SYSTEM").getTrimmedString(0));
+        std::string fileUnitSystem = keyword->getRecord(0).getItem("FILE_UNIT_SYSTEM").getTrimmedString(0);
+        uppercase(fileUnitSystem);
         if (fileUnitSystem != deckUnitSystem) {
             const auto& location = keyword->location();
             std::string msg =

@@ -3,7 +3,9 @@
 
 #include <algorithm>
 #include <cctype>
+#include <sstream>
 #include <string>
+#include <vector>
 
 namespace Opm {
 
@@ -50,5 +52,57 @@ std::string trim_copy(const T& s)
 {
     return ltrim_copy( rtrim_copy(s) );
 }
+
+
+template<typename T>
+void replaceAll(T& data, const T& toSearch, const T& replace)
+{
+    // Get the first occurrence
+    size_t pos = data.find(toSearch);
+
+    // Repeat till end is reached
+    while (pos != std::string::npos)
+    {
+        // Replace this occurrence of Sub String
+        data.replace(pos, toSearch.size(), replace);
+        // Get the next occurrence from the current position
+        pos = data.find(toSearch, pos + replace.size());
+    }
 }
+
+
+inline std::vector<std::string> split_string(const std::string& input,
+                                             char delimiter)
+{
+    std::vector<std::string> result;
+    std::string token;
+    std::istringstream tokenStream(input);
+    while (std::getline(tokenStream, token, delimiter))
+        result.push_back(token);
+
+    return result;
+}
+
+
+inline std::vector<std::string> split_string(const std::string& input,
+                                             const std::string& delimiters)
+{
+    std::vector<std::string> result;
+    std::string::size_type start = 0;
+    while (start < input.size()) {
+        auto end = input.find_first_of(delimiters, start);
+        if (end == std::string::npos) {
+            result.push_back(input.substr(start));
+            end = input.size() - 1;
+        } else if (end != start)
+            result.push_back(input.substr(start, end-start));
+
+        start = end + 1;
+    }
+
+    return result;
+}
+
+}
+
 #endif //OPM_UTILITY_STRING_HPP

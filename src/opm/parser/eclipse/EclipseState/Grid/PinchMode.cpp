@@ -17,8 +17,10 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <boost/algorithm/string.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/PinchMode.hpp>
+#include <opm/parser/eclipse/Utility/String.hpp>
+
+#include <stdexcept>
 
 namespace Opm {
 
@@ -44,8 +46,7 @@ namespace Opm {
         }
 
         ModeEnum PinchModeFromString(const std::string& stringValue) {
-            std::string s(stringValue);
-            boost::algorithm::trim(s);
+            std::string s = trim_copy(stringValue);
 
             ModeEnum mode;
             if      (s == "ALL")    { mode = ModeEnum::ALL;    }

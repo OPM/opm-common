@@ -236,7 +236,7 @@ namespace Opm {
              * \code
              *    using namespace Opm::unit;
              *    std::transform(p.begin(), p.end(), p.begin(),
-             *                   boost::bind(convert::to, _1, psia));
+             *                   std::bind(convert::to, std::placeholders::_1, psia));
              * \endcode
              *
              * @param[in] q    Physical quantity, measured in SI units.

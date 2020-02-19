@@ -17,7 +17,6 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <stdexcept>
-#include <boost/algorithm/string.hpp>
 
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 #include <opm/parser/eclipse/Utility/String.hpp>
@@ -31,7 +30,7 @@ namespace Opm {
 namespace {
 
      std::string keyword_name(const std::string& input_name) {
-         std::string name = boost::algorithm::trim_right_copy(input_name);
+         std::string name = rtrim_copy(input_name);
          if (!ParserKeyword::validDeckName(name))
             throw std::invalid_argument("Not a valid keyword:" + name);
 
