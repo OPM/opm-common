@@ -77,6 +77,12 @@ macro (config_hook)
     if(NOT cjson_FOUND)
       list(APPEND EXTRA_INCLUDES ${PROJECT_SOURCE_DIR}/external/cjson)
     endif()
+
+    if(NOT Boost_FOUND)
+      message(STATUS "Using bundled boost-subset")
+      list(APPEND EXTRA_INCLUDES ${PROJECT_SOURCE_DIR}/external/boost_subset)
+    endif()
+
     # For this project
     include_directories(${EXTRA_INCLUDES} ${PROJECT_BINARY_DIR}/include)
 

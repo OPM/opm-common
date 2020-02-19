@@ -13,7 +13,7 @@ set (opm-common_DEPS
 
 list(APPEND opm-common_DEPS
       # various runtime library enhancements
-      "Boost 1.44.0 COMPONENTS system unit_test_framework REQUIRED"
+			"Boost 1.44.0 COMPONENTS system unit_test_framework"
 )
 
 find_package_deps(opm-common)
