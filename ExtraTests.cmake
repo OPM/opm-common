@@ -2,6 +2,8 @@
 set(TEST_LIBS opmcommon Boost::unit_test_framework)
 set(EXTRA_TESTS)
 
+if (Boost_UNIT_TEST_FRAMEWORK_FOUND)
+
 # Generated source, needs to be here
 opm_add_test(InlineKeywordTest
              EXE_NAME TestKeywords
@@ -113,3 +115,5 @@ opm_add_test(jsonTests
              LIBRARIES ${TEST_LIBS}
              TEST_ARGS ${PROJECT_SOURCE_DIR}/tests/json/example1.json)
 list(APPEND EXTRA_TESTS jsonTests)
+
+endif()
