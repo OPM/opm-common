@@ -135,7 +135,7 @@ namespace {
             iConn[Ix::Imbibition] = iConn[Ix::Drainage];
 
             //complnum is(1 too large): 1 - based while icon is 0 - based?
-            iConn[Ix::ComplNum] = std::abs(conn.complnum());
+            iConn[Ix::ComplNum] = conn.complnum();
             //iConn[Ix::ComplNum] = iConn[Ix::SeqIndex];
 
             iConn[Ix::ConnDir] = static_cast<int>(conn.dir());
