@@ -242,7 +242,7 @@ namespace Opm {
 
         orderSegments();
 
-        int current_index= 1;
+        std::size_t current_index= 1;
         while (current_index< size()) {
             if (m_segments[current_index].dataReady()) {
                 current_index++;
@@ -255,7 +255,7 @@ namespace Opm {
 
             assert(m_segments[outlet_index].dataReady() == true);
 
-            int range_end = range_begin + 1;
+            std::size_t range_end = range_begin + 1;
             for (; range_end < size(); ++range_end) {
                 if (m_segments[range_end].dataReady() == true) {
                     break;
@@ -281,7 +281,7 @@ namespace Opm {
             const double depth_inc = (depth_last - depth_outlet) / number_segments;
             const double volume_segment = m_segments[range_end].crossArea() * length_inc;
 
-            for (int k = range_begin; k <= range_end; ++k) {
+            for (std::size_t k = range_begin; k <= range_end; ++k) {
                 const auto& old_segment = this->m_segments[k];
                 double new_volume, new_length, new_depth;
                 if (k == range_end) {
@@ -305,7 +305,7 @@ namespace Opm {
 
         // then update the volume for all the segments except the top segment
         // this is for the segments specified individually while the volume is not specified.
-        for (int i = 1; i < size(); ++i) {
+        for (std::size_t i = 1; i < size(); ++i) {
             assert(m_segments[i].dataReady());
             if (m_segments[i].volume() == invalid_value) {
                 const auto& old_segment = this->m_segments[i];
@@ -328,7 +328,7 @@ namespace Opm {
         orderSegments();
 
         // begin with the second segment
-        for (int i_index= 1; i_index< size(); ++i_index) {
+        for (std::size_t i_index= 1; i_index< size(); ++i_index) {
             if( m_segments[i_index].dataReady() ) continue;
 
             // find its outlet segment
@@ -358,7 +358,7 @@ namespace Opm {
 
         // top segment will always be the first one
         // before this index, the reordering is done.
-        int current_index= 1;
+        std::size_t current_index= 1;
 
         // clear the mapping from segment number to store index
         segment_number_to_index.clear();
@@ -372,7 +372,7 @@ namespace Opm {
             int target_segment_index= -1;
 
             // looking for target_segment_index
-            for (int i_index= current_index; i_index< size(); ++i_index) {
+            for (std::size_t i_index= current_index; i_index< size(); ++i_index) {
                 const int outlet_segment_number = m_segments[i_index].outletSegment();
                 const int outlet_segment_index = segmentNumberToIndex(outlet_segment_number);
                 if (outlet_segment_index < 0) { // not found the outlet_segment in the done re-ordering segments
