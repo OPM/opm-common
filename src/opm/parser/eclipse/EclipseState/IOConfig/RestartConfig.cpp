@@ -515,18 +515,17 @@ void RestartConfig::handleScheduleSection(const SCHEDULESection& schedule, const
     }
 
     template<typename T>
-    RestartConfig::RestartConfig( const Deck& deck, const ParseContext& parseContext, T&& errors ) :
-        RestartConfig(deck, parseContext, errors)
+    RestartConfig::RestartConfig( const TimeMap& time_map, const Deck& deck, const ParseContext& parseContext, T&& errors ) :
+        RestartConfig(time_map, deck, parseContext, errors)
     {}
 
-    RestartConfig::RestartConfig( const Deck& deck) :
-        RestartConfig(deck, ParseContext(), ErrorGuard())
+    RestartConfig::RestartConfig( const TimeMap& time_map, const Deck& deck) :
+        RestartConfig(time_map, deck, ParseContext(), ErrorGuard())
     {}
 
 
-    RestartConfig::RestartConfig( const Deck& deck, const ParseContext& parseContext, ErrorGuard& errors ) :
-        io_config( deck ),
-        m_timemap( deck ),
+    RestartConfig::RestartConfig( const TimeMap& time_map, const Deck& deck, const ParseContext& parseContext, ErrorGuard& errors ) :
+        m_timemap( time_map ),
         m_first_restart_step( -1 ),
         restart_schedule( m_timemap, {0,0,1}),
         restart_keywords( m_timemap, {} ),
@@ -538,14 +537,12 @@ void RestartConfig::handleScheduleSection(const SCHEDULESection& schedule, const
     }
 
 
-    RestartConfig::RestartConfig(const IOConfig& io_config_arg,
-                                 const TimeMap& timeMap,
+    RestartConfig::RestartConfig(const TimeMap& timeMap,
                                  int firstRestartStep,
                                  bool writeInitial,
                                  const DynamicState<RestartSchedule>& restart_sched,
                                  const DynamicState<std::map<std::string,int>>& restart_keyw,
                                  const std::vector<bool>& save_keyw) :
-        io_config(io_config_arg),
         m_timemap(timeMap),
         m_first_restart_step(firstRestartStep),
         m_write_initial_RST_file(writeInitial),
@@ -582,14 +579,6 @@ void RestartConfig::handleScheduleSection(const SCHEDULESection& schedule, const
 
     const std::map< std::string, int >& RestartConfig::getRestartKeywords( size_t timestep ) const {
         return restart_keywords.at( timestep );
-    }
-
-    IOConfig& RestartConfig::ioConfig() {
-        return this->io_config;
-    }
-
-    const IOConfig& RestartConfig::ioConfig() const {
-        return this->io_config;
     }
 
     int RestartConfig::getKeyword( const std::string& keyword, size_t timeStep) const {
@@ -778,7 +767,6 @@ void RestartConfig::handleScheduleSection(const SCHEDULESection& schedule, const
                this->writeInitialRst() == data.writeInitialRst() &&
                this->restartSchedule() == data.restartSchedule() &&
                this->restartKeywords() == data.restartKeywords() &&
-               this->saveKeywords() == data.saveKeywords() &&
-               this->ioConfig() == data.ioConfig();
+               this->saveKeywords() == data.saveKeywords();
     }
 }

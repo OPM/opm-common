@@ -1,6 +1,5 @@
-#include <vector>  // workaround for missing import in opm-parser/Equil.hpp
+#include <vector>
 #include <opm/parser/eclipse/EclipseState/EclipseConfig.hpp>
-#include <opm/parser/eclipse/EclipseState/IOConfig/RestartConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/InitConfig/InitConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
@@ -15,8 +14,7 @@
 void python::common::export_EclipseConfig(py::module& module)
 {
     py::class_< EclipseConfig >( module, "EclipseConfig" )
-      .def( "init",            &EclipseConfig::init, ref_internal)
-      .def( "restart",         &EclipseConfig::restart, ref_internal);
+        .def( "init",            &EclipseConfig::init, ref_internal);
 
     py::class_< SummaryConfig >( module, "SummaryConfig")
         .def(py::init([](const Deck& deck, const EclipseState& state, const Schedule& schedule) {
@@ -30,10 +28,7 @@ void python::common::export_EclipseConfig(py::module& module)
         .def( "restartRequested",   &InitConfig::restartRequested )
         .def( "getRestartStep"  ,   &InitConfig::getRestartStep );
 
-    py::class_< RestartConfig >( module, "RestartConfig")
-        .def( "getKeyword",          &RestartConfig::getKeyword )
-        .def( "getFirstRestartStep", &RestartConfig::getFirstRestartStep )
-        .def( "getWriteRestartFile", &RestartConfig::getWriteRestartFile, py::arg("reportStep"), py::arg("log") = true);
+    py::class_< IOConfig >( module, "IOConfig");
 
     py::class_< SimulationConfig >( module, "SimulationConfig")
         .def("hasThresholdPressure", &SimulationConfig::useThresholdPressure )
@@ -41,3 +36,4 @@ void python::common::export_EclipseConfig(py::module& module)
         .def("hasDISGAS",            &SimulationConfig::hasDISGAS )
         .def("hasVAPOIL",            &SimulationConfig::hasVAPOIL );
 }
+

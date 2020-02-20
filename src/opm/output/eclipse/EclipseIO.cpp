@@ -213,7 +213,7 @@ void EclipseIO::writeTimeStep(const SummaryState& st,
       but there is an unsupported option to the RPTSCHED keyword which
       will request restart output from every timestep.
     */
-    if(!isSubstep && es.cfg().restart().getWriteRestartFile(report_step))
+    if(!isSubstep && schedule.restart().getWriteRestartFile(report_step))
     {
         EclIO::OutputStream::Restart rstFile {
             EclIO::OutputStream::ResultSet { this->impl->outputDir,

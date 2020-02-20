@@ -56,7 +56,7 @@ inline void loadDeck( const char * deck_file) {
     std::cout << "parse complete - creating EclipseState .... ";  std::cout.flush();
 
     start = std::chrono::system_clock::now();
-    Opm::EclipseState state( deck, parseContext, errors );
+    Opm::EclipseState state( deck );
     auto state_time = std::chrono::system_clock::now() - start;
 
     std::cout << "creating Schedule .... ";  std::cout.flush();

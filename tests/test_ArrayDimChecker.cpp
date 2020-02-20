@@ -351,7 +351,7 @@ struct CaseObjects
 
 CaseObjects::CaseObjects(const Opm::Deck& deck, const Opm::ParseContext& ctxt)
     : guard{}
-    , es   (deck,     ctxt, guard)
+    , es   (deck)
     , sched(deck, es, ctxt, guard)
 {
 }

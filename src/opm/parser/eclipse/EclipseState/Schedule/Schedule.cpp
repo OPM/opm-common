@@ -30,6 +30,7 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Deck/DeckSection.hpp>
+#include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/C.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/G.hpp>
@@ -131,7 +132,8 @@ namespace {
         global_whistctl_mode(this->m_timeMap, Well::ProducerCMode::CMODE_UNDEFINED),
         m_actions(this->m_timeMap, std::make_shared<Action::Actions>()),
         rft_config(this->m_timeMap),
-        m_nupcol(this->m_timeMap, ParserKeywords::NUPCOL::NUM_ITER::defaultValue)
+        m_nupcol(this->m_timeMap, ParserKeywords::NUPCOL::NUM_ITER::defaultValue),
+        restart_config(m_timeMap, deck, parseContext, errors)
     {
         if (rst)
             this->load_rst(*rst, deck.getActiveUnitSystem());
@@ -230,6 +232,7 @@ namespace {
                        const DynamicState<std::shared_ptr<Action::Actions>>& actions,
                        const RFTConfig& rftconfig,
                        const DynamicState<int>& nupCol,
+                       const RestartConfig& rst_config,
                        const std::map<std::string,Events>& wellGroupEvents) :
         m_timeMap(timeMap),
         wells_static(wellsStatic),
@@ -253,6 +256,7 @@ namespace {
         m_actions(actions),
         rft_config(rftconfig),
         m_nupcol(nupCol),
+        restart_config(rst_config),
         wellgroup_events(wellGroupEvents)
     {}
 
@@ -2830,6 +2834,15 @@ void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, c
 
     }
 
+    RestartConfig& Schedule::restart() {
+        return this->restart_config;
+    }
+
+
+    const RestartConfig& Schedule::restart() const {
+        return this->restart_config;
+    }
+
     int Schedule::getNupcol(size_t reportStep) const {
         return this->m_nupcol.get(reportStep);
     }
@@ -2960,6 +2973,7 @@ void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, c
                compareDynState(this->getActions(), data.getActions()) &&
                this->rftConfig () == data.rftConfig() &&
                this->getNupCol() == data.getNupCol() &&
+               this->restart() == data.restart() &&
                this->getWellGroupEvents() == data.getWellGroupEvents();
      }
 

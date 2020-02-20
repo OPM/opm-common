@@ -318,6 +318,9 @@ if (OPM_ENABLE_PYTHON)
     install( CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_BINARY_DIR}/python/install.py ${PROJECT_BINARY_DIR}/python/python/opm ${DEST_PREFIX}${CMAKE_INSTALL_PREFIX}/${PYTHON_INSTALL_PREFIX} 1)")
   endif()
 
+  # Observe that if the opmcommon library has been built as a shared library the
+  # python library opmcommon_python will in general not find it runtime while
+  # testing.
   add_test(NAME python_tests
            WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/python
            COMMAND ${PYTHON_EXECUTABLE} setup.py build_ext --dry-run --build-lib ${PROJECT_BINARY_DIR}/python/python/opm test

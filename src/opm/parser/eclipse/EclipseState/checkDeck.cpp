@@ -21,6 +21,7 @@
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/OpmLog/LogUtil.hpp>
 
+#include <opm/parser/eclipse/Utility/String.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckSection.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
@@ -52,11 +53,9 @@ bool checkDeck( const Deck& deck, const Parser& parser, const ParseContext& pars
         deckValid = deckValid && DeckSection::checkSectionTopology(deck, parser, ensureKeywordSection);
     }
 
-    std::string deckUnitSystem = deck.getActiveUnitSystem().getName();
-    uppercase(deckUnitSystem);
+    const std::string& deckUnitSystem = uppercase(deck.getActiveUnitSystem().getName());
     for (const auto& keyword : deck.getKeywordList("FILEUNIT")) {
-        std::string fileUnitSystem = keyword->getRecord(0).getItem("FILE_UNIT_SYSTEM").getTrimmedString(0);
-        uppercase(fileUnitSystem);
+        const std::string& fileUnitSystem = uppercase(keyword->getRecord(0).getItem("FILE_UNIT_SYSTEM").getTrimmedString(0));
         if (fileUnitSystem != deckUnitSystem) {
             const auto& location = keyword->location();
             std::string msg =

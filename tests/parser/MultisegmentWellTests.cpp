@@ -39,6 +39,8 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellConnections.hpp>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/updatingConnectionsWithSegments.hpp>
 

@@ -16,6 +16,8 @@ Copyright 2018 Statoil ASA.
 #define BOOST_TEST_MODULE UDQTests
 #include <boost/test/unit_test.hpp>
 
+#include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
@@ -741,11 +743,6 @@ BOOST_AUTO_TEST_CASE(CMP_FUNCTIONS) {
     }
 }
 
-BOOST_AUTO_TEST_CASE(BAD_CAST) {
-    UDQFunctionTable udqft;
-    auto x = udqft.get("==");
-    BOOST_CHECK_EQUAL(dynamic_cast<const UDQUnaryElementalFunction*>(&x), nullptr);
-}
 
 
 BOOST_AUTO_TEST_CASE(ELEMENTAL_UNARY_FUNCTIONS) {

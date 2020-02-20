@@ -26,6 +26,7 @@
 #include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
+#include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 
 #include <algorithm>
@@ -147,7 +148,7 @@ static std::vector< std::string > sorted_key_names( const SummaryConfig& summary
 static SummaryConfig createSummary( std::string input , const ParseContext& parseContext = ParseContext()) {
     ErrorGuard errors;
     auto deck = createDeck( input );
-    EclipseState state( deck, parseContext, errors );
+    EclipseState state( deck );
     Schedule schedule(deck, state, parseContext, errors);
     return SummaryConfig( deck, schedule, state.getTableManager( ), parseContext, errors );
 }
@@ -178,7 +179,7 @@ BOOST_AUTO_TEST_CASE(wells_missingI) {
     const auto input = "WWCT\n/\n";
     auto deck = createDeck_no_wells( input );
     parseContext.update(ParseContext::SUMMARY_UNKNOWN_WELL, InputError::THROW_EXCEPTION);
-    EclipseState state( deck, parseContext, errors );
+    EclipseState state( deck );
     Schedule schedule(deck, state, parseContext, errors );
     BOOST_CHECK_NO_THROW( SummaryConfig( deck, schedule, state.getTableManager( ), parseContext, errors ));
 }
