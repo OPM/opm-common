@@ -51,7 +51,7 @@ namespace Opm {
     }
 
 
-    int WellSegments::size() const {
+    std::size_t WellSegments::size() const {
         return m_segments.size();
     }
 
