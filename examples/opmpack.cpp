@@ -19,18 +19,19 @@
 
 #include <fstream>
 #include <iostream>
-#include <fstream>
 #include <getopt.h>
 
 #include <opm/common/utility/FileSystem.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/G.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/InputErrorAction.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 
+namespace fs = Opm::filesystem;
 
-inline void pack_deck( const char * deck_file, std::ostream& os) {
+Opm::Deck pack_deck( const char * deck_file, std::ostream& os) {
     Opm::ParseContext parseContext(Opm::InputError::WARN);
     Opm::ErrorGuard errors;
     Opm::Parser parser;
@@ -38,6 +39,7 @@ inline void pack_deck( const char * deck_file, std::ostream& os) {
     auto deck = parser.parseFile(deck_file, parseContext, errors);
     os << deck;
 
+    return deck;
 }
 
 
@@ -64,27 +66,50 @@ Print NEW_CASE in cwd:
 
     opmpack -o NEW_CASE.DATA path/to/MY_CASE.DATA
 
-
-)";
+As an alternative to the -o option you can use -c; that is equivalent to -o -
+but restart and import files referred to in the deck are also copied. The -o and
+-c options are mutually exclusive. )";
     std::cerr << help_text << std::endl;
     exit(1);
 }
 
 
+void copy_file(const fs::path& source_dir, fs::path fname, const fs::path& target_dir) {
+    if (fname.is_absolute())
+        fname = fs::relative(fname, source_dir);
+
+    auto source_file = source_dir / fname;
+    auto target_file = target_dir / fname;
+
+    if (!fs::is_directory(target_file.parent_path()))
+        fs::create_directories(target_file.parent_path());
+
+    fs::copy_file(source_file, target_file, fs::copy_options::overwrite_existing);
+    std::cerr << "Copying file " << source_file.string() << " -> " << target_file.string() << std::endl;
+}
+
+
+
 int main(int argc, char** argv) {
     int arg_offset = 1;
     bool stdout_output = true;
+    bool copy_binary = false;
     const char * coutput_arg;
 
     while (true) {
         int c;
-        c = getopt(argc, argv, "o:");
+        c = getopt(argc, argv, "c:o:");
         if (c == -1)
             break;
 
         switch(c) {
         case 'o':
             stdout_output = false;
+            coutput_arg = optarg;
+            break;
+        case 'c':
+            stdout_output = false;
+            copy_binary = true;
             coutput_arg = optarg;
             break;
         }
@@ -97,16 +122,41 @@ int main(int argc, char** argv) {
         pack_deck(argv[arg_offset], std::cout);
     else {
         std::ofstream os;
-        using path = Opm::filesystem::path;
-        path input_arg(argv[arg_offset]);
-        path output_arg(coutput_arg);
-        if (Opm::filesystem::is_directory(output_arg)) {
-            path output_path = output_arg / input_arg.filename();
-            os.open(output_path.string());
-        } else
-            os.open(output_arg.string());
+        fs::path input_arg(argv[arg_offset]);
+        fs::path output_arg(coutput_arg);
+        fs::path output_dir(coutput_arg);
 
-        pack_deck(argv[arg_offset], os);
+        if (fs::is_directory(output_arg)) {
+            fs::path output_path = output_arg / input_arg.filename();
+            os.open(output_path.string());
+        } else {
+            os.open(output_arg.string());
+            output_dir = output_arg.parent_path();
+        }
+
+
+        const auto& deck = pack_deck(argv[arg_offset], os);
+        if (copy_binary) {
+            Opm::InitConfig init_config(deck);
+            if (init_config.restartRequested()) {
+                Opm::IOConfig io_config(deck);
+                fs::path restart_file(io_config.getRestartFileName( init_config.getRestartRootName(), init_config.getRestartStep(), false ));
+                copy_file(input_arg.parent_path(), restart_file, output_dir);
+            }
+
+            for (std::size_t import_index = 0; import_index < deck.count("IMPORT"); import_index++) {
+                const auto& import_keyword = deck.getKeyword("IMPORT", import_index);
+                const auto& fname = import_keyword.getRecord(0).getItem("FILE").get<std::string>(0);
+                copy_file(input_arg.parent_path(), fname, output_dir);
+            }
+
+            using GDFILE = Opm::ParserKeywords::GDFILE;
+            if (deck.hasKeyword<GDFILE>()) {
+                const auto& gdfile_keyword = deck.getKeyword<GDFILE>();
+                const auto& fname = gdfile_keyword.getRecord(0).getItem<GDFILE::filename>().get<std::string>(0);
+                copy_file(input_arg.parent_path(), fname, output_dir);
+            }
+        }
     }
 }
 
