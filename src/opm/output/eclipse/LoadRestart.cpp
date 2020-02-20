@@ -1220,7 +1220,7 @@ namespace {
             const auto& segSet = well.getSegments();
 
             if ((mswID > 0) && (numSeg > 0) &&
-                (segSet.size() == numSeg))
+                (static_cast<int>(segSet.size()) == numSeg))
             {
                 restoreSegmentQuantities(mswID - 1, segSet, usys,
                                          phases, segData, xw);

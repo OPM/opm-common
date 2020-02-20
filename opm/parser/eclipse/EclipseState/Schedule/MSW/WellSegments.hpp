@@ -67,7 +67,7 @@ namespace Opm {
                      const std::vector<Segment>& segments,
                      const std::map<int,int>& segmentNumberIdx);
 
-        int size() const;
+        std::size_t size() const;
         double depthTopSegment() const;
         double lengthTopSegment() const;
         double volumeTopSegment() const;
