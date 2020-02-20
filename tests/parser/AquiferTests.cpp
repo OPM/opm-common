@@ -22,8 +22,22 @@ along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 #include <opm/parser/eclipse/EclipseState/Aquancon.hpp>
 #include <opm/parser/eclipse/EclipseState/AquiferCT.hpp>
 #include <opm/parser/eclipse/EclipseState/Aquifetp.hpp>
+#include <opm/parser/eclipse/EclipseState/AquiferConfig.hpp>
 
 using namespace Opm;
+
+
+EclipseGrid makeGrid() {
+    EclipseGrid grid(3,3,3);
+    std::vector<int> actnum(27,1);
+    actnum[0] = 0;
+    actnum[9] = 0;
+    actnum[18] = 0;
+    grid.resetACTNUM(actnum);
+    return grid;
+}
+
+
 
 inline Deck createAquiferCTDeck() {
     const char *deckData =
@@ -286,8 +300,8 @@ inline Deck createAQUANCONDeck() {
 
 BOOST_AUTO_TEST_CASE(AquanconTest_DEFAULT_INFLUX) {
     auto deck1 = createAQUANCONDeck_DEFAULT_INFLUX1();
-    EclipseState eclState1( deck1 );
-    Aquancon aqcon(eclState1.getInputGrid(), deck1);
+    const auto& grid = makeGrid();
+    Aquancon aqcon(grid, deck1);
 
     const auto& cells_aq1 = aqcon[1];
     /*
@@ -301,13 +315,11 @@ BOOST_AUTO_TEST_CASE(AquanconTest_DEFAULT_INFLUX) {
     BOOST_CHECK(aqcon.active());
 
     auto deck2 = createAQUANCONDeck_DEFAULT_INFLUX2();
-    EclipseState eclState2( deck2 );
-    BOOST_CHECK_THROW(Aquancon( eclState2.getInputGrid(), deck2), std::invalid_argument);
+    BOOST_CHECK_THROW(Aquancon( grid, deck2), std::invalid_argument);
 
     // The cell (2,1,1) is attached to both aquifer 1 and aquifer 2 - that is illegal.
     auto deck3 = createAQUANCONDeck_DEFAULT_ILLEGAL();
-    EclipseState eclState3( deck3 );
-    BOOST_CHECK_THROW(Aquancon( eclState3.getInputGrid(), deck3), std::invalid_argument);
+    BOOST_CHECK_THROW(Aquancon( grid, deck3), std::invalid_argument);
 }
 
 
@@ -507,6 +519,7 @@ BOOST_AUTO_TEST_CASE(AquifetpTest){
     BOOST_CHECK_EQUAL(it.J, 500/86400e5);
     BOOST_CHECK( !it.p0.first );
   }
+
 }
 
 BOOST_AUTO_TEST_CASE(TEST_CREATE) {
@@ -520,4 +533,24 @@ BOOST_AUTO_TEST_CASE(TEST_CREATE) {
       BOOST_CHECK_EQUAL( aqudims.getNumRowsAquancon() , 1 );
       BOOST_CHECK_EQUAL( aqudims.getNumAquiferLists() , 0 );
       BOOST_CHECK_EQUAL( aqudims.getNumAnalyticAquifersSingleList() , 0 );
+}
+
+BOOST_AUTO_TEST_CASE(Test_Aquifer_Config) {
+    const std::string deck_string = R"(
+DIMENS
+   3 3 3 /
+)";
+    Opm::Parser parser;
+    Opm::Deck deck = parser.parseString(deck_string);
+    Opm::TableManager tables;
+    Opm::EclipseGrid grid(10,10,10);
+    Opm::AquiferConfig conf(tables, grid, deck);
+    BOOST_CHECK(!conf.active());
+
+
+    const auto& fetp  = conf.fetp();
+    const auto& ct    = conf.ct();
+    const auto& conn  = conf.connections();
+    Opm::AquiferConfig conf2(fetp, ct, conn);
+    BOOST_CHECK( conf == conf2 );
 }

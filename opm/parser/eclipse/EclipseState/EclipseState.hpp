@@ -24,6 +24,7 @@
 #include <vector>
 
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
+#include <opm/parser/eclipse/EclipseState/AquiferConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Edit/EDITNNC.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
@@ -56,6 +57,7 @@ namespace Opm {
     class SimulationConfig;
     class TableManager;
     class UnitSystem;
+
 
     class EclipseState {
     public:
@@ -104,7 +106,7 @@ namespace Opm {
         void applyModifierDeck(const Deck& deck);
 
         const Runspec& runspec() const;
-
+        const AquiferConfig& aquifer() const;
     private:
         void initIOConfigPostSchedule(const Deck& deck);
         void initTransMult();
@@ -128,7 +130,7 @@ namespace Opm {
 
         FaultCollection m_faults;
         std::string m_title;
-
+        AquiferConfig aquifer_config;
     };
 }
 
