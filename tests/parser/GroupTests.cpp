@@ -472,8 +472,8 @@ BOOST_AUTO_TEST_CASE(GCONINJE_MULTIPLE_PHASES) {
         BOOST_CHECK(  g1.hasInjectionControl(Phase::GAS));
         BOOST_CHECK( !g1.hasInjectionControl(Phase::OIL));
 
-        const auto& wc = g1.injectionControls(Phase::WATER, st);
-        const auto& gc = g1.injectionControls(Phase::GAS, st);
+        g1.injectionControls(Phase::WATER, st);
+        g1.injectionControls(Phase::GAS, st);
         BOOST_CHECK_THROW(g1.injectionControls(Phase::OIL, st), std::out_of_range);
 
         BOOST_CHECK(g1.has_topup_phase());
@@ -491,8 +491,8 @@ BOOST_AUTO_TEST_CASE(GCONINJE_MULTIPLE_PHASES) {
         BOOST_CHECK(  g2.hasInjectionControl(Phase::GAS));
         BOOST_CHECK( !g2.hasInjectionControl(Phase::OIL));
 
-        const auto& wc = g2.injectionControls(Phase::WATER, st);
-        const auto& gc = g2.injectionControls(Phase::GAS, st);
+        g2.injectionControls(Phase::WATER, st);
+        g2.injectionControls(Phase::GAS, st);
         BOOST_CHECK_THROW(g2.injectionControls(Phase::OIL, st), std::out_of_range);
 
         BOOST_CHECK(g2.has_topup_phase());
