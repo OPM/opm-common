@@ -77,7 +77,7 @@ namespace {
     inflowSegmentsIndex(const Opm::WellSegments& segSet, const std::size_t& segIndex) {
         const auto& segNumber  = segSet[segIndex].segmentNumber();
         std::vector<std::size_t> inFlowSegInd;
-        for (int ind = 0; ind < segSet.size(); ind++) {
+        for (std::size_t ind = 0; ind < segSet.size(); ind++) {
             const auto& i_outletSeg = segSet[ind].outletSegment();
             if (segNumber == i_outletSeg) {
                 inFlowSegInd.push_back(ind);
@@ -93,7 +93,7 @@ namespace {
         int firstSeg = -1;
         int lastSeg  = -1;
         int outletS = 0;
-        for (int segInd = 0; segInd < segSet.size(); segInd++) {
+        for (std::size_t segInd = 0; segInd < segSet.size(); segInd++) {
             const auto& segNo = segSet[segInd].segmentNumber();
             const auto& i_branch = segSet[segInd].branchNumber();
             const auto& i_outS = segSet[segInd].outletSegment();
@@ -118,7 +118,7 @@ namespace {
 
     std::vector <std::size_t> segmentIndFromOrderedSegmentInd(const Opm::WellSegments& segSet, const std::vector<std::size_t>& ordSegNo) {
         std::vector <std::size_t> sNFOSN (segSet.size(),0);
-        for (int segInd = 0; segInd < segSet.size(); segInd++) {
+        for (std::size_t segInd = 0; segInd < segSet.size(); segInd++) {
             sNFOSN[ordSegNo[segInd]] = segInd;
         }
         return sNFOSN;
@@ -128,7 +128,7 @@ namespace {
         std::vector<std::size_t> segIndCB;
         // Store "heel" segment since that will not always be at the end of the list
         segIndCB.push_back(segIndex);
-        int newSInd = segIndex;
+        std::size_t newSInd = segIndex;
         const auto& origBranchNo = segSet[segIndex].branchNumber();
         bool endOrigBranch;
         // loop down branch to find all segments in branch and number from "toe" to "heel"
@@ -263,7 +263,7 @@ namespace {
 
     std::vector<std::size_t> SegmentSetBranches(const Opm::WellSegments& segSet) {
         std::vector<std::size_t> branches;
-        for (int segInd = 0; segInd < segSet.size(); segInd++) {
+        for (std::size_t segInd = 0; segInd < segSet.size(); segInd++) {
             const auto& i_branch = segSet[segInd].branchNumber();
             if (std::find(branches.begin(), branches.end(), i_branch) == branches.end()) {
                 branches.push_back(i_branch);
@@ -274,7 +274,7 @@ namespace {
 
     int firstSegmentInBranch(const Opm::WellSegments& segSet, const int branch) {
         int firstSegInd = 0;
-        int segInd = 0;
+        std::size_t segInd = 0;
         while ((segInd < segSet.size()) && (firstSegInd == 0)) {
             const auto& i_branch = segSet[segInd].branchNumber();
             if (branch == i_branch) {
@@ -323,7 +323,7 @@ namespace {
         const auto& segNumber  = segSet[segIndex].segmentNumber();
         const auto& branch     = segSet[segIndex].branchNumber();
         int noIFBr = 0;
-        for (int ind = 0; ind < segSet.size(); ind++) {
+        for (std::size_t ind = 0; ind < segSet.size(); ind++) {
             const auto& o_segNum = segSet[ind].outletSegment();
             const auto& i_branch = segSet[ind].branchNumber();
             if ((segNumber == o_segNum) && (branch != i_branch)){
@@ -359,7 +359,7 @@ namespace {
         const auto& branch = segSet[segIndex].branchNumber();
         const auto& segNumber  = segSet[segIndex].segmentNumber();
         int inFlowSegInd = -1;
-        for (int ind = 0; ind < segSet.size(); ind++) {
+        for (std::size_t ind = 0; ind < segSet.size(); ind++) {
             const auto& i_segNum = segSet[ind].segmentNumber();
             const auto& i_branch = segSet[ind].branchNumber();
             const auto& i_outFlowSeg = segSet[ind].outletSegment();
@@ -382,7 +382,7 @@ namespace {
 
     template <typename MSWOp>
     void MSWLoop(const std::vector<const Opm::Well*>& wells,
-                 MSWOp&&                               mswOp)
+                 MSWOp&&                              mswOp)
     {
         auto mswID = std::size_t{0};
         for (const auto* well : wells) {
@@ -452,12 +452,12 @@ namespace {
                 std::size_t segmentInd = 0;
                 auto orderedSegmentNo = segmentOrder(welSegSet, segmentInd);
                 std::vector<int> seg_reorder (welSegSet.size(),0);
-                for (int ind = 0; ind < welSegSet.size(); ind++ ){
+                for (std::size_t ind = 0; ind < welSegSet.size(); ind++ ){
                     const auto s_no = welSegSet[orderedSegmentNo[ind]].segmentNumber();
                     const auto s_ind = welSegSet.segmentNumberToIndex(s_no);
                     seg_reorder[s_ind] = ind+1;
                 }
-                for (int ind = 0; ind < welSegSet.size(); ind++) {
+                for (std::size_t ind = 0; ind < welSegSet.size(); ind++) {
                     const auto& segment = welSegSet[ind];
 
                     auto segNumber = segment.segmentNumber();
@@ -625,7 +625,7 @@ namespace {
         {
             if (well.isMultiSegment()) {
                 // use segment index as counter  - zero-based
-                int segIndex = 0;
+                std::size_t segIndex = 0;
                 using M = ::Opm::UnitSystem::measure;
                 const auto gfactor = (units.getType() == Opm::UnitSystem::UnitType::UNIT_TYPE_FIELD)
                     ? 0.1781076 : 0.001;
