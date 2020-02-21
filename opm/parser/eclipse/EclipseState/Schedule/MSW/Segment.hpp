@@ -28,7 +28,7 @@ namespace Opm {
     class Valve;
 
     namespace RestartIO {
-        class RstSegment;
+        struct RstSegment;
     }
 }
 
