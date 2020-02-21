@@ -1063,6 +1063,10 @@ BOOST_AUTO_TEST_CASE(createDeckWithWeltArg) {
     const auto& well_1 = schedule.getWell("OP_1", 1);
     const auto wpp_1 = well_1.getProductionProperties();
     BOOST_CHECK_EQUAL(wpp_1.WaterRate.get<double>(), 0);
+    BOOST_CHECK (wpp_1.hasProductionControl( Opm::Well::ProducerCMode::ORAT) );
+    BOOST_CHECK (!wpp_1.hasProductionControl( Opm::Well::ProducerCMode::RESV) );
+
+
 
     const auto& well_2 = schedule.getWell("OP_1", 2);
     const auto wpp_2 = well_2.getProductionProperties();
@@ -1076,6 +1080,10 @@ BOOST_AUTO_TEST_CASE(createDeckWithWeltArg) {
     BOOST_CHECK_EQUAL(prod_controls.bhp_limit, 1900 * siFactorP);
     BOOST_CHECK_EQUAL(prod_controls.thp_limit, 2000 * siFactorP);
     BOOST_CHECK_EQUAL(prod_controls.vfp_table_number, 2100);
+
+    BOOST_CHECK (wpp_2.hasProductionControl( Opm::Well::ProducerCMode::ORAT) );
+    BOOST_CHECK (wpp_2.hasProductionControl( Opm::Well::ProducerCMode::RESV) );
+
 }
 
 BOOST_AUTO_TEST_CASE(createDeckWithWeltArgException) {

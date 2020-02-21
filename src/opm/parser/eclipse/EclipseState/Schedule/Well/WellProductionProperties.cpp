@@ -230,22 +230,27 @@ namespace Opm {
         if (cmode == WELTARGCMode::ORAT){
             this->OilRate.assert_numeric("Can not combine UDA and WELTARG");
             this->OilRate.reset( newValue );
+            this->addProductionControl( ProducerCMode::ORAT );
         }
         else if (cmode == WELTARGCMode::WRAT){
             this->WaterRate.assert_numeric("Can not combine UDA and WELTARG");
             this->WaterRate.reset( newValue );
+            this->addProductionControl( ProducerCMode::WRAT );
         }
         else if (cmode == WELTARGCMode::GRAT){
             this->GasRate.assert_numeric("Can not combine UDA and WELTARG");
             this->GasRate.reset( newValue );
+            this->addProductionControl( ProducerCMode::GRAT );
         }
         else if (cmode == WELTARGCMode::LRAT){
             this->LiquidRate.assert_numeric("Can not combine UDA and WELTARG");
             this->LiquidRate.reset( newValue );
+            this->addProductionControl( ProducerCMode::LRAT );
         }
         else if (cmode == WELTARGCMode::RESV){
             this->ResVRate.assert_numeric("Can not combine UDA and WELTARG");
             this->ResVRate.reset( newValue );
+            this->addProductionControl( ProducerCMode::RESV );
         }
         else if (cmode == WELTARGCMode::BHP){
             if (this->predictionMode) {
@@ -253,10 +258,12 @@ namespace Opm {
                 this->BHPTarget.reset( newValue );
             } else
                 this->bhp_hist_limit = newValue * SiFactorP;
+            this->addProductionControl( ProducerCMode::BHP );
         }
         else if (cmode == WELTARGCMode::THP){
             this->THPTarget.assert_numeric("Can not combine UDA and WELTARG");
             this->THPTarget.reset(newValue );
+            this->addProductionControl( ProducerCMode::THP );
         }
         else if (cmode == WELTARGCMode::VFP)
             this->VFPTableNumber = static_cast<int> (newValue);
