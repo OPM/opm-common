@@ -549,6 +549,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Tables/SpecrockTable.hpp
        opm/parser/eclipse/EclipseState/Tables/PvtwsaltTable.hpp
        opm/parser/eclipse/EclipseState/Tables/BrineDensityTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/SaltvdTable.hpp
        opm/parser/eclipse/EclipseState/Tables/PlydhflfTable.hpp
        opm/parser/eclipse/EclipseState/Tables/PlymwinjTable.hpp
        opm/parser/eclipse/EclipseState/Tables/PlyshlogTable.hpp
