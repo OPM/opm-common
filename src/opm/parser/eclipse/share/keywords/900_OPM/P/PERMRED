@@ -1,0 +1,4 @@
+{"name" : "PERMRED", "sections" : ["PROPS"],
+"items" : [
+  {"name" : "POROSITY", "value_type" : "DOUBLE", "dimension" : "1"},
+  {"name" : "PERMREDMULT", "value_type" : "DOUBLE", "dimension" : "1"}]}
