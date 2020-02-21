@@ -1,0 +1,9 @@
+{
+    "name" : "RWGSALT", "sections" : ["PROPS"], "size" : {"keyword" : "TABDIMS" , "item" : "NTPVT"}, "alternating_records" : [
+    [
+        {"name":"P_REF", "value_type" : "DOUBLE", "dimension":"Pressure"},
+    ],
+    [
+        {"name" : "DATA", "value_type" : "DOUBLE", "size_type" : "ALL", "dimension" : ["Density","OilDissolutionFactor"]}
+    ]]
+}
