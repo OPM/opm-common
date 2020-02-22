@@ -64,8 +64,7 @@ namespace Opm {
         WellSegments() = default;
         WellSegments(const DeckKeyword& keyword);
         WellSegments(CompPressureDrop compDrop,
-                     const std::vector<Segment>& segments,
-                     const std::map<int,int>& segmentNumberIdx);
+                     const std::vector<Segment>& segments);
 
         std::size_t size() const;
         double depthTopSegment() const;
@@ -92,7 +91,6 @@ namespace Opm {
         // it returns true if there is no error encountered during the update
         bool updateWSEGSICD(const std::vector<std::pair<int, SpiralICD> >& sicd_pairs);
         const std::vector<Segment>& segments() const;
-        const std::map<int,int>& segmentNumberIndex() const;
 
         bool updateWSEGVALV(const std::vector<std::pair<int, Valve> >& valve_pairs);
 

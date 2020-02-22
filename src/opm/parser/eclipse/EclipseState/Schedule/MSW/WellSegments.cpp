@@ -37,12 +37,11 @@
 namespace Opm {
 
     WellSegments::WellSegments(CompPressureDrop compDrop,
-                               const std::vector<Segment>& segments,
-                               const std::map<int,int>& segmentNumberIdx)
+                               const std::vector<Segment>& segments)
        : m_comp_pressure_drop(compDrop)
-       , m_segments(segments)
-       , segment_number_to_index(segmentNumberIdx)
     {
+        for (const auto& segment : segments)
+            this->addSegment(segment);
     }
 
 
@@ -558,8 +557,5 @@ const std::vector<Segment>& WellSegments::segments() const {
     return m_segments;
 }
 
-const std::map<int,int>& WellSegments::segmentNumberIndex() const {
-    return segment_number_to_index;
-}
 
 }
