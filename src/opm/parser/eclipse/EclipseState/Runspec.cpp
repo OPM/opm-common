@@ -37,7 +37,7 @@ Phase get_phase( const std::string& str ) {
     if( str == "POLYMW" ) return Phase::POLYMW;
     if( str == "FOAM" ) return Phase::FOAM;
     if( str == "BRINE" ) return Phase::BRINE;
-     if( str == "PRECSALT" ) return Phase::SALT;
+    if( str == "PRECSALT" ) return Phase::SALT;
 
     throw std::invalid_argument( "Unknown phase '" + str + "'" );
 }
@@ -71,7 +71,7 @@ Phases::Phases( bool oil, bool gas, bool wat, bool sol, bool pol, bool energy, b
           (energy ? (1 << static_cast< un >( Phase::ENERGY ) ) : 0) |
           (polymw ? (1 << static_cast< un >( Phase::POLYMW ) ) : 0) |
           (foam ? (1 << static_cast< un >( Phase::FOAM ) ) : 0) |
-          (brine ? (1 << static_cast< un >( Phase::BRINE ) ) : 0) ) |
+          (brine ? (1 << static_cast< un >( Phase::BRINE ) ) : 0) |
           (salt ? (1 << static_cast< un >( Phase::SALT ) ) : 0) )
 
 {}
@@ -273,7 +273,7 @@ Runspec::Runspec( const Deck& deck ) :
                            deck.hasKeyword( "THERMAL" ),
                            deck.hasKeyword( "POLYMW"  ),
                            deck.hasKeyword( "FOAM" ),
-                           deck.hasKeyword( "BRINE" ) ) ),
+                           deck.hasKeyword( "BRINE" ),
                            deck.hasKeyword( "PRECSALT" ) ) ),
     m_tabdims( deck ),
     endscale( deck ),

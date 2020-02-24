@@ -150,9 +150,6 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Tables/PvtwsaltTable.cpp
     src/opm/parser/eclipse/EclipseState/Tables/BrineDensityTable.cpp
     src/opm/parser/eclipse/EclipseState/Tables/RwgsaltTable.cpp    
-    src/opm/parser/eclipse/EclipseState/Tables/PermredTable.cpp
-    src/opm/parser/eclipse/EclipseState/Tables/SaltvdTable.cpp
-    src/opm/parser/eclipse/EclipseState/Tables/SaltpvdTable.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQASTNode.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQParams.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQParser.cpp
@@ -331,7 +328,6 @@ if(ENABLE_ECL_INPUT)
     tests/parser/RockTableTests.cpp
     tests/parser/RunspecTests.cpp
     tests/parser/SaltTableTests.cpp
-    tests/parser/SaltPrecTableTests.cpp
     tests/parser/ScheduleRestartTests.cpp
     tests/parser/ScheduleTests.cpp
     tests/parser/SectionTests.cpp
