@@ -42,6 +42,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/FoammobTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PbvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PdvdTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/DenT.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/VFPProdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/VFPInjTable.hpp>
@@ -1753,4 +1754,40 @@ REGDIMS
         BOOST_CHECK_EQUAL(rd.getNRFREG(), std::size_t{33});
         BOOST_CHECK_EQUAL(rd.getNTFREG(), std::size_t{44});
     }
+}
+
+
+
+
+BOOST_AUTO_TEST_CASE(DENT) {
+    const auto deck_string = R"(
+RUNSPEC
+
+TABDIMS
+   1  3 /
+
+PROPS
+
+GASDENT
+   1  2  3 /
+   4  5  6 /
+   7  8  9 /
+
+OILDENT
+   1  2  3 /
+   4  5  6 /
+   7  8  9 /
+
+)";
+
+    Opm::Parser parser;
+    const auto& deck = parser.parseString(deck_string);
+    Opm::TableManager tables(deck);
+    Opm::DenT gd(deck.getKeyword("GASDENT"));
+    Opm::DenT od(deck.getKeyword("OILDENT"));
+    const auto& wd = tables.WatDenT();
+
+    BOOST_CHECK_EQUAL(gd.size(), 3);
+    BOOST_CHECK( gd == od );
+    BOOST_CHECK( wd.size() == 0);
 }

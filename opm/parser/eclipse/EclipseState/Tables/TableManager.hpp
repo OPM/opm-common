@@ -31,13 +31,13 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 
+#include <opm/parser/eclipse/EclipseState/Tables/DenT.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvtgTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvtoTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/Rock2dTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/Rock2dtrTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvtwsaltTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/BrineDensityTable.hpp>
-
 
 #include <opm/parser/eclipse/EclipseState/Tables/FlatTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SorwmisTable.hpp>
@@ -46,7 +46,6 @@
 #include <opm/parser/eclipse/EclipseState/Tables/PmiscTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/MsfnTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/JFunc.hpp>
-
 #include <opm/parser/eclipse/EclipseState/Tables/Tabdims.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableContainer.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/Aqudims.hpp>
@@ -86,6 +85,9 @@ namespace Opm {
                      bool useEnptvd,
                      bool useEqlnum,
                      std::shared_ptr<JFunc> jfunc_param,
+                     const DenT& oilDenT,
+                     const DenT& gasDenT,
+                     const DenT& watDenT,
                      double rtemp);
 
         TableManager& operator=(const TableManager& data);
@@ -158,6 +160,9 @@ namespace Opm {
         const TableContainer& getRockwnodTables() const;
         const TableContainer& getOverburdTables() const;
 
+        const DenT& WatDenT() const;
+        const DenT& GasDenT() const;
+        const DenT& OilDenT() const;
         const PvtwTable& getPvtwTable() const;
         const std::vector<PvtwsaltTable>& getPvtwSaltTables() const;
         const std::vector<BrineDensityTable>& getBrineDensityTables() const;
@@ -429,8 +434,12 @@ namespace Opm {
         std::shared_ptr<JFunc> jfunc;
 
         double m_rtemp;
+        DenT oilDenT;
+        DenT gasDenT;
+        DenT watDenT;
     };
 }
 
 
 #endif
+

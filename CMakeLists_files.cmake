@@ -138,6 +138,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/SimulationConfig/ThresholdPressure.cpp
     src/opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.cpp
     src/opm/parser/eclipse/EclipseState/Tables/ColumnSchema.cpp
+    src/opm/parser/eclipse/EclipseState/Tables/DenT.cpp
     src/opm/parser/eclipse/EclipseState/Tables/JFunc.cpp
     src/opm/parser/eclipse/EclipseState/Tables/PvtxTable.cpp
     src/opm/parser/eclipse/EclipseState/Tables/SimpleTable.cpp
@@ -537,6 +538,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Grid/FaceDir.hpp
        opm/parser/eclipse/EclipseState/Grid/MinpvMode.hpp
        opm/parser/eclipse/EclipseState/EndpointScaling.hpp
+       opm/parser/eclipse/EclipseState/Tables/DenT.hpp
        opm/parser/eclipse/EclipseState/Tables/SimpleTable.hpp
        opm/parser/eclipse/EclipseState/Tables/PolyInjTable.hpp
        opm/parser/eclipse/EclipseState/Tables/PdvdTable.hpp
