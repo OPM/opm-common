@@ -2,4 +2,4 @@
         "items" : [{"name" : "DATA" ,
                    "value_type" : "DOUBLE" ,
                    "size_type" : "ALL",
-                   "dimension" : ["Length" , "Density", "1"]}]}
+                   "dimension" : ["Length" , "1"]}]}

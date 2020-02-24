@@ -149,6 +149,10 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Tables/Rock2dtrTable.cpp
     src/opm/parser/eclipse/EclipseState/Tables/PvtwsaltTable.cpp
     src/opm/parser/eclipse/EclipseState/Tables/BrineDensityTable.cpp
+    src/opm/parser/eclipse/EclipseState/Tables/RwgsaltTable.cpp    
+    src/opm/parser/eclipse/EclipseState/Tables/PermredTable.cpp
+    src/opm/parser/eclipse/EclipseState/Tables/SaltvdTable.cpp
+    src/opm/parser/eclipse/EclipseState/Tables/SaltpvdTable.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQASTNode.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQParams.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQParser.cpp
@@ -327,6 +331,7 @@ if(ENABLE_ECL_INPUT)
     tests/parser/RockTableTests.cpp
     tests/parser/RunspecTests.cpp
     tests/parser/SaltTableTests.cpp
+    tests/parser/SaltPrecTableTests.cpp
     tests/parser/ScheduleRestartTests.cpp
     tests/parser/ScheduleTests.cpp
     tests/parser/SectionTests.cpp
@@ -548,10 +553,14 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Tables/SpecrockTable.hpp
        opm/parser/eclipse/EclipseState/Tables/PvtwsaltTable.hpp
        opm/parser/eclipse/EclipseState/Tables/BrineDensityTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/PermredTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/RwgsaltTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/SaltvdTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/SaltpvdTable.hpp
        opm/parser/eclipse/EclipseState/Tables/PlydhflfTable.hpp
        opm/parser/eclipse/EclipseState/Tables/PlymwinjTable.hpp
        opm/parser/eclipse/EclipseState/Tables/PlyshlogTable.hpp
-       opm/parser/eclipse/EclipseState/Tables/RsvdTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/RsvdTable.hpp       
        opm/parser/eclipse/EclipseState/Tables/SkprwatTable.hpp
        opm/parser/eclipse/EclipseState/Tables/SkprpolyTable.hpp
        opm/parser/eclipse/EclipseState/Tables/SpecheatTable.hpp
@@ -566,6 +575,8 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Tables/JFunc.hpp
        opm/parser/eclipse/EclipseState/Tables/TableIndex.hpp
        opm/parser/eclipse/EclipseState/Tables/PvtgTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/PvtgwTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/PvtgwoTable.hpp
        opm/parser/eclipse/EclipseState/Tables/Tabdims.hpp
        opm/parser/eclipse/EclipseState/Tables/TableSchema.hpp
        opm/parser/eclipse/EclipseState/Tables/RocktabTable.hpp

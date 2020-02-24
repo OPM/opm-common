@@ -61,7 +61,9 @@
 #include <opm/parser/eclipse/EclipseState/Tables/RvvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PbvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PdvdTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/PermredTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SaltvdTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/SaltpvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgcwmisTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgfnTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgofTable.hpp>
@@ -915,6 +917,37 @@ const TableColumn& SaltvdTable::getDepthColumn() const {
 const TableColumn& SaltvdTable::getSaltColumn() const {
     return SimpleTable::getColumn(1); 
 }
+
+SaltpvdTable::SaltpvdTable( const DeckItem& item ) {
+    m_schema.addColumn( ColumnSchema( "DEPTH" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));
+    m_schema.addColumn( ColumnSchema( "SALTP" , Table::RANDOM , Table::DEFAULT_NONE ));
+
+    SimpleTable::init(item);
+}
+
+const TableColumn& SaltpvdTable::getDepthColumn() const {
+    return SimpleTable::getColumn(0);
+}
+
+const TableColumn& SaltpvdTable::getSaltpColumn() const {
+    return SimpleTable::getColumn(1); 
+}
+
+PermredTable::PermredTable( const DeckItem& item ) {
+    m_schema.addColumn( ColumnSchema( "POROSITYCHANGE" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));
+    m_schema.addColumn( ColumnSchema( "PERMEABILIYMULTIPLIER" , Table::RANDOM , Table::DEFAULT_NONE ));
+
+    SimpleTable::init(item);
+}
+
+const TableColumn& PermredTable::getDepthColumn() const {
+    return SimpleTable::getColumn(0);
+}
+
+const TableColumn& PermredTable::getRsColumn() const {
+    return SimpleTable::getColumn(1); 
+}
+
 
 AqutabTable::AqutabTable( const DeckItem& item ) {
     m_schema.addColumn( ColumnSchema( "TD" ,  Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ) );

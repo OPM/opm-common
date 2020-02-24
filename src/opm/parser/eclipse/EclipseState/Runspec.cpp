@@ -37,6 +37,7 @@ Phase get_phase( const std::string& str ) {
     if( str == "POLYMW" ) return Phase::POLYMW;
     if( str == "FOAM" ) return Phase::FOAM;
     if( str == "BRINE" ) return Phase::BRINE;
+     if( str == "PRECSALT" ) return Phase::SALT;
 
     throw std::invalid_argument( "Unknown phase '" + str + "'" );
 }
@@ -52,6 +53,7 @@ std::ostream& operator<<( std::ostream& stream, const Phase& p ) {
         case Phase::POLYMW:  return stream << "POLYMW";
         case Phase::FOAM:    return stream << "FOAM";
         case Phase::BRINE:   return stream << "BRINE";
+        case Phase::SALT:   return stream << "PRECSALT";
 
     }
 
@@ -60,7 +62,7 @@ std::ostream& operator<<( std::ostream& stream, const Phase& p ) {
 
 using un = std::underlying_type< Phase >::type;
 
-Phases::Phases( bool oil, bool gas, bool wat, bool sol, bool pol, bool energy, bool polymw, bool foam, bool brine) noexcept :
+Phases::Phases( bool oil, bool gas, bool wat, bool sol, bool pol, bool energy, bool polymw, bool foam, bool brine, bool salt) noexcept :
     bits( (oil ? (1 << static_cast< un >( Phase::OIL ) )     : 0) |
           (gas ? (1 << static_cast< un >( Phase::GAS ) )     : 0) |
           (wat ? (1 << static_cast< un >( Phase::WATER ) )   : 0) |
@@ -69,7 +71,8 @@ Phases::Phases( bool oil, bool gas, bool wat, bool sol, bool pol, bool energy, b
           (energy ? (1 << static_cast< un >( Phase::ENERGY ) ) : 0) |
           (polymw ? (1 << static_cast< un >( Phase::POLYMW ) ) : 0) |
           (foam ? (1 << static_cast< un >( Phase::FOAM ) ) : 0) |
-          (brine ? (1 << static_cast< un >( Phase::BRINE ) ) : 0) )
+          (brine ? (1 << static_cast< un >( Phase::BRINE ) ) : 0) ) |
+          (salt ? (1 << static_cast< un >( Phase::SALT ) ) : 0) )
 
 {}
 
@@ -271,6 +274,7 @@ Runspec::Runspec( const Deck& deck ) :
                            deck.hasKeyword( "POLYMW"  ),
                            deck.hasKeyword( "FOAM" ),
                            deck.hasKeyword( "BRINE" ) ) ),
+                           deck.hasKeyword( "PRECSALT" ) ) ),
     m_tabdims( deck ),
     endscale( deck ),
     welldims( deck ),

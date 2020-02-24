@@ -36,7 +36,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/Rock2dtrTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvtwsaltTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/BrineDensityTable.hpp>
-
+#include <opm/parser/eclipse/EclipseState/Tables/RwgsaltTable.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Tables/FlatTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SorwmisTable.hpp>
@@ -74,6 +74,7 @@ namespace Opm {
                      const WatdentTable& watdentTable,
                      const std::vector<PvtwsaltTable>& pvtwsaltTables,
                      const std::vector<BrineDensityTable>& bdensityTables,
+                     const std::vector<RwgsaltTable>& rwgsaltTables,
                      const std::map<int, PlymwinjTable>& plymwinjTables,
                      const std::map<int, SkprwatTable>& skprwatTables,
                      const std::map<int, SkprpolyTable>& skprpolyTables,
@@ -117,6 +118,8 @@ namespace Opm {
         const TableContainer& getPbvdTables() const;
         const TableContainer& getPdvdTables() const;
         const TableContainer& getSaltvdTables() const;
+        const TableContainer& getSaltpvdTables() const;
+        const TableContainer& getPermredTables() const;
         const TableContainer& getEnkrvdTables() const;
         const TableContainer& getEnptvdTables() const;
         const TableContainer& getImkrvdTables() const;
@@ -160,6 +163,7 @@ namespace Opm {
         const PvtwTable& getPvtwTable() const;
         const std::vector<PvtwsaltTable>& getPvtwSaltTables() const;
         const std::vector<BrineDensityTable>& getBrineDensityTables() const;
+        const std::vector<RwgsaltTable>& getRwgsaltTables() const;
 
         const PvcdoTable& getPvcdoTable() const;
         const DensityTable& getDensityTable() const;
@@ -274,6 +278,21 @@ namespace Opm {
             }
         }
 
+       template <class TableType>
+        void initRwgsaltTables(const Deck& deck,  std::vector<TableType>& pvtwtables ) {
+
+            size_t numTables = m_tabdims.getNumPVTTables();
+            pvtwtables.resize(numTables);
+
+            const auto& keyword = deck.getKeyword("RWGSALT");
+            size_t numEntries = keyword.size();
+            size_t regionIdx = 0;
+            for (unsigned lineIdx = 0; lineIdx < numEntries; lineIdx += 2) {
+                pvtwtables[regionIdx].init(keyword.getRecord(lineIdx), keyword.getRecord(lineIdx+1));
+                ++regionIdx;
+            }
+            assert(regionIdx == numTables);
+        }
 
         /**
          * JFUNC
@@ -413,6 +432,7 @@ namespace Opm {
         WatdentTable m_watdentTable;
         std::vector<PvtwsaltTable> m_pvtwsaltTables;
         std::vector<BrineDensityTable> m_bdensityTables;
+        std::vector<RwgsaltTable> m_rwgsaltTables;
         std::map<int, PlymwinjTable> m_plymwinjTables;
         std::map<int, SkprwatTable> m_skprwatTables;
         std::map<int, SkprpolyTable> m_skprpolyTables;

@@ -29,7 +29,10 @@
 // generic table classes
 #include <opm/parser/eclipse/EclipseState/Tables/SimpleTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvtwsaltTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/RwgsaltTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SaltvdTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/SaltpvdTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/PermredTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 
 // keyword specific table classes

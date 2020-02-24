@@ -760,6 +760,23 @@ BOOST_AUTO_TEST_CASE( RSVD ) {
     BOOST_CHECK( fabs(item3.getSIDouble(7) - 106.77) < 0.001);
 }
 
+BOOST_AUTO_TEST_CASE( SALTVD ) {
+    Parser parser;
+    std::string pvtgFile(pathprefix() + "SALTVD/SALTVD.txt");
+    auto deck =  parser.parseFile(pvtgFile);
+    const auto& kw1 = deck.getKeyword("SALTVD" , 0);
+    BOOST_CHECK_EQUAL( 6U , kw1.size() );
+
+    const auto& rec1 = kw1.getRecord(0);
+    const auto& rec3 = kw1.getRecord(2);
+
+    const auto& item1       = rec1.getItem("DATA");
+    BOOST_CHECK( fabs(item1.getSIDouble(0) - 2382) < 0.001);
+
+    const auto& item3       = rec3.getItem("DATA");
+    BOOST_CHECK( fabs(item3.getSIDouble(7) - 0.77) < 0.001);
+}
+
 BOOST_AUTO_TEST_CASE( PVTG ) {
 const std::string pvtgData = R"(
 TABDIMS

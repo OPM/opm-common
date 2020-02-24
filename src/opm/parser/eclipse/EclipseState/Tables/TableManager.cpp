@@ -64,9 +64,11 @@
 #include <opm/parser/eclipse/EclipseState/Tables/RsvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PbvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PdvdTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/PermredTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/RtempvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/RvvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SaltvdTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/SaltpvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgcwmisTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgfnTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgofTable.hpp>
@@ -107,6 +109,7 @@ namespace Opm {
                                const WatdentTable& watdentTable,
                                const std::vector<PvtwsaltTable>& pvtwsaltTables,
                                const std::vector<BrineDensityTable>& bdensityTables,
+                               const std::vector<PvtwsaltTable>& rwgwsaltTables,
                                const std::map<int, PlymwinjTable>& plymwinjTables,
                                const std::map<int, SkprwatTable>& skprwatTables,
                                const std::map<int, SkprpolyTable>& skprpolyTables,
@@ -133,6 +136,7 @@ namespace Opm {
         m_watdentTable(watdentTable),
         m_pvtwsaltTables(pvtwsaltTables),
         m_bdensityTables(bdensityTables),
+        m_rwgsaltTables(rwgsaltTables),
         m_plymwinjTables(plymwinjTables),
         m_skprwatTables(skprwatTables),
         m_skprpolyTables(skprpolyTables),
@@ -204,6 +208,9 @@ namespace Opm {
         if ( deck.hasKeyword( "BDENSITY") )
             initBrineTables(deck, m_bdensityTables );
 
+        if ( deck.hasKeyword( "RWGSALT") )
+            initRwgsaltTables(deck, m_rwgsaltTables );
+
 
 
     }
@@ -221,6 +228,7 @@ namespace Opm {
         m_watdentTable = data.m_watdentTable;
         m_pvtwsaltTables = data.m_pvtwsaltTables;
         m_bdensityTables = data.m_bdensityTables;
+        m_rwgsaltTables = data.m_rwgsaltTables;
         m_plymwinjTables = data.m_plymwinjTables;
         m_skprwatTables = data.m_skprwatTables;
         m_skprpolyTables = data.m_skprpolyTables;
@@ -338,12 +346,16 @@ namespace Opm {
         addTables( "WATVISCT", m_tabdims.getNumPVTTables());
         addTables( "GASVISCT", m_tabdims.getNumPVTTables());
 
+        addTables( "PERMRED");
+
         addTables( "PLYMAX", m_regdims->getNPLMIX());
         addTables( "RSVD", m_eqldims->getNumEquilRegions());
         addTables( "RVVD", m_eqldims->getNumEquilRegions());
         addTables( "PBVD", m_eqldims->getNumEquilRegions());
         addTables( "PDVD", m_eqldims->getNumEquilRegions());
         addTables( "SALTVD", m_eqldims->getNumEquilRegions());
+        addTables( "SALTPVD", m_eqldims->getNumEquilRegions());
+        
 
         addTables( "AQUTAB", m_aqudims.getNumInfluenceTablesCT());
         {
@@ -407,7 +419,9 @@ namespace Opm {
         initSimpleTableContainer<PbvdTable>(deck, "PBVD" , m_eqldims->getNumEquilRegions());
         initSimpleTableContainer<PdvdTable>(deck, "PDVD" , m_eqldims->getNumEquilRegions());
         initSimpleTableContainer<SaltvdTable>(deck, "SALTVD" , m_eqldims->getNumEquilRegions());
+        initSimpleTableContainer<SaltpvdTable>(deck, "SALTPVD" , m_eqldims->getNumEquilRegions());
         initSimpleTableContainer<AqutabTable>(deck, "AQUTAB" , m_aqudims.getNumInfluenceTablesCT());
+        
         {
             size_t numEndScaleTables = ParserKeywords::ENDSCALE::NUM_TABLES::defaultValue;
 
@@ -463,6 +477,8 @@ namespace Opm {
 
         initSimpleTableContainer<FoamadsTable>(deck, "FOAMADS", m_tabdims.getNumSatTables());
         initSimpleTableContainer<FoammobTable>(deck, "FOAMMOB", m_tabdims.getNumPVTTables());
+
+        initSimpleTableContainer<PermredTable>(deck, "PERMRED");
 
         initPlyrockTables(deck);
         initPlymaxTables(deck);
@@ -791,6 +807,14 @@ namespace Opm {
         return getTables("SALTVD");
     }
 
+    const TableContainer& TableManager::getSaltpvdTables() const {
+        return getTables("SALTPVD");
+    }
+
+     const TableContainer& TableManager::getPermredTables() const {
+        return getTables("PERMRED");
+    }
+
     const TableContainer& TableManager::getEnkrvdTables() const {
         return getTables("ENKRVD");
     }
@@ -921,6 +945,10 @@ namespace Opm {
         return this->m_bdensityTables;
     }
 
+    const std::vector<RwgsaltTable>& TableManager::getRwgsalttTables() const {
+        return this->m_rwgsaltTables;
+    }
+
     const PvcdoTable& TableManager::getPvcdoTable() const {
         return this->m_pvcdoTable;
     }
@@ -1035,6 +1063,7 @@ namespace Opm {
                m_watdentTable == data.m_watdentTable &&
                m_pvtwsaltTables == data.m_pvtwsaltTables &&
                m_bdensityTables == data.m_bdensityTables &&
+               m_rwgsaltTables == data.m_rwgsaltTables &&
                m_plymwinjTables == data.m_plymwinjTables &&
                m_skprwatTables == data.m_skprwatTables &&
                m_skprpolyTables == data.m_skprpolyTables &&
