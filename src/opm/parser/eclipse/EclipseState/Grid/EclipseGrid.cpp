@@ -337,12 +337,6 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
             m_minpvMode = MinpvMode::ModeEnum::EclSTD;
         }
 
-        if (deck.hasKeyword<ParserKeywords::MINPVFIL>()) {
-            const auto& record = deck.getKeyword<ParserKeywords::MINPVFIL>( ).getRecord(0);
-            const auto& item = record.getItem<ParserKeywords::MINPVFIL::VALUE>( );
-            std::fill(m_minpvVector.begin(), m_minpvVector.end(), item.getSIDouble(0));
-            m_minpvMode = MinpvMode::ModeEnum::OpmFIL;
-        }
     }
 
     void EclipseGrid::initGridFromEGridFile(Opm::EclIO::EclFile& egridfile, std::string fileName){
