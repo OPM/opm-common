@@ -106,6 +106,13 @@ namespace {
     }
 
 
+std::pair<std::time_t, std::size_t> restart_info(const RestartIO::RstState * rst)
+{
+    if (!rst)
+        return std::make_pair(std::time_t{0}, std::size_t{0});
+    else
+        return rst->header.restart_info();
+}
 }
 
     Schedule::Schedule( const Deck& deck,
@@ -115,7 +122,7 @@ namespace {
                         const ParseContext& parseContext,
                         ErrorGuard& errors,
                         const RestartIO::RstState * rst) :
-        m_timeMap( deck ),
+        m_timeMap( deck , restart_info( rst )),
         m_oilvaporizationproperties( this->m_timeMap, OilVaporizationProperties(runspec.tabdims().getNumPVTTables()) ),
         m_events( this->m_timeMap ),
         m_modifierDeck( this->m_timeMap, Deck{} ),
