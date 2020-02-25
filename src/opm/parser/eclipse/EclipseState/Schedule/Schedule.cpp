@@ -275,7 +275,7 @@ namespace {
     }
 
 
-    void Schedule::handleKeyword(size_t& currentStep,
+    void Schedule::handleKeyword(size_t currentStep,
                                  const SCHEDULESection& section,
                                  size_t keywordIdx,
                                  const DeckKeyword& keyword,
@@ -309,17 +309,7 @@ namespace {
                                                          {"MULTTHT"  , false},
                                                          {"MULTTHT-" , false}};
 
-        if (keyword.name() == "DATES") {
-            checkIfAllConnectionsIsShut(currentStep);
-            currentStep += keyword.size();
-        }
-
-        else if (keyword.name() == "TSTEP") {
-            checkIfAllConnectionsIsShut(currentStep);
-            currentStep += keyword.getRecord(0).getItem(0).data_size(); // This is a bit weird API.
-        }
-
-        else if (keyword.name() == "UDQ")
+        if (keyword.name() == "UDQ")
             handleUDQ(keyword, currentStep);
 
         else if (keyword.name() == "WLIST")
@@ -516,8 +506,24 @@ namespace {
                     }
                 }
                 this->addACTIONX(action, currentStep);
-            } else
-                this->handleKeyword(currentStep, section, keywordIdx, keyword, parseContext, errors, grid, fp, unit_system, rftProperties);
+            }
+
+            else if (keyword.name() == "DATES") {
+                checkIfAllConnectionsIsShut(currentStep);
+                currentStep += keyword.size();
+            }
+
+            else if (keyword.name() == "TSTEP") {
+                checkIfAllConnectionsIsShut(currentStep);
+                currentStep += keyword.getRecord(0).getItem(0).data_size();
+            }
+
+            else {
+                if (currentStep >= this->m_timeMap.restart_offset())
+                    this->handleKeyword(currentStep, section, keywordIdx, keyword, parseContext, errors, grid, fp, unit_system, rftProperties);
+                else
+                    OpmLog::info("Skipping keyword: " + keyword.name() + " while loading SCHEDULE section");
+            }
 
             keywordIdx++;
             if (keywordIdx == section.size())
