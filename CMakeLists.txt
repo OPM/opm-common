@@ -174,7 +174,8 @@ if (ENABLE_MOCKSIM)
   foreach( test test_msim test_msim_ACTIONX )
     opm_add_test(${test} SOURCES tests/msim/${test}.cpp
                          LIBRARIES ${_libs}
-                         WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/tests)
+                         WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/tests
+                         CONDITION HAVE_ECL_INPUT AND Boost_UNIT_TEST_FRAMEWORK_FOUND)
   endforeach()
 endif()
 
@@ -205,7 +206,7 @@ if(ENABLE_ECL_INPUT)
 
   opm_add_test(test_EclFilesComparator
     CONDITION
-      ENABLE_ECL_INPUT
+      ENABLE_ECL_INPUT AND Boost_UNIT_TEST_FRAMEWORK_FOUND
     SOURCES
       tests/test_EclFilesComparator.cpp
       test_util/EclFilesComparator.cpp
@@ -217,7 +218,7 @@ if(ENABLE_ECL_INPUT)
 
   opm_add_test(test_EclRegressionTest
     CONDITION
-      ENABLE_ECL_INPUT
+      ENABLE_ECL_INPUT AND Boost_UNIT_TEST_FRAMEWORK_FOUND
     SOURCES
       tests/test_EclRegressionTest.cpp
       test_util/EclFilesComparator.cpp
@@ -229,7 +230,7 @@ if(ENABLE_ECL_INPUT)
     )
 
   foreach(test test_EclIO test_EGrid test_ERft test_ERst test_ESmry)
-    opm_add_test(${test} CONDITION ENABLE_ECL_INPUT
+    opm_add_test(${test} CONDITION ENABLE_ECL_INPUT AND Boost_UNIT_TEST_FRAMEWORK_FOUND
                          LIBRARIES ${_libs}
                          WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/tests)
   endforeach()
