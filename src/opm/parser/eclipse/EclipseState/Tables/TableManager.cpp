@@ -121,6 +121,7 @@ namespace Opm {
                                const DenT& oilDenT_,
                                const DenT& gasDenT_,
                                const DenT& watDenT_,
+                               std::size_t gas_comp_index,
                                double rtemp)
         :
         m_simpleTables(simpleTables),
@@ -150,6 +151,7 @@ namespace Opm {
         oilDenT(oilDenT_),
         gasDenT(gasDenT_),
         watDenT(watDenT_),
+        m_gas_comp_index(gas_comp_index),
         m_rtemp(rtemp)
     {
     }
@@ -218,6 +220,10 @@ namespace Opm {
 
         if (deck.hasKeyword<ParserKeywords::WATDENT>())
             this->watDenT = DenT( deck.getKeyword<ParserKeywords::WATDENT>());
+
+        using GC = ParserKeywords::GCOMPIDX;
+        if (deck.hasKeyword<GC>())
+            this->m_gas_comp_index = deck.getKeyword<GC>().getRecord(0).getItem<GC::GAS_COMPONENT_INDEX>().get<int>(0);
     }
 
     TableManager& TableManager::operator=(const TableManager& data) {
@@ -249,6 +255,7 @@ namespace Opm {
         gasDenT = data.gasDenT;
         oilDenT = data.oilDenT;
         watDenT = data.watDenT;
+        m_gas_comp_index = data.m_gas_comp_index;
 
         return *this;
     }
@@ -727,7 +734,7 @@ namespace Opm {
                 std::shared_ptr<RocktabTable> table = std::make_shared<RocktabTable>( dataItem , isDirectional, useStressOption );
                 container.addTable( tableIdx , table );
             }
-        }        
+        }
     }
 
         size_t TableManager::numFIPRegions() const {
@@ -745,7 +752,7 @@ namespace Opm {
     const Eqldims& TableManager::getEqldims() const {
         return *m_eqldims;
     }
-    
+
     const Aqudims& TableManager::getAqudims() const {
         return m_aqudims;
     }
@@ -1042,6 +1049,10 @@ namespace Opm {
         return this->m_rtemp;
     }
 
+    std::size_t TableManager::gas_comp_index() const {
+        return this->m_gas_comp_index;
+    }
+
     bool TableManager::operator==(const TableManager& data) const {
         bool jfuncOk = false;
         if (jfunc && data.jfunc)
@@ -1075,7 +1086,8 @@ namespace Opm {
                oilDenT == data.oilDenT &&
                watDenT == data.watDenT &&
                jfuncOk &&
-               m_rtemp == data.m_rtemp;
+               m_rtemp == data.m_rtemp &&
+               m_gas_comp_index == data.m_gas_comp_index;
     }
 
 }

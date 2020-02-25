@@ -88,6 +88,7 @@ namespace Opm {
                      const DenT& oilDenT,
                      const DenT& gasDenT,
                      const DenT& watDenT,
+                     std::size_t gas_comp_index,
                      double rtemp);
 
         TableManager& operator=(const TableManager& data);
@@ -163,6 +164,7 @@ namespace Opm {
         const DenT& WatDenT() const;
         const DenT& GasDenT() const;
         const DenT& OilDenT() const;
+        std::size_t gas_comp_index() const;
         const PvtwTable& getPvtwTable() const;
         const std::vector<PvtwsaltTable>& getPvtwSaltTables() const;
         const std::vector<BrineDensityTable>& getBrineDensityTables() const;
@@ -433,10 +435,11 @@ namespace Opm {
         bool hasEqlnum = false;// if deck has keyword EQLNUM
         std::shared_ptr<JFunc> jfunc;
 
-        double m_rtemp;
         DenT oilDenT;
         DenT gasDenT;
         DenT watDenT;
+        std::size_t m_gas_comp_index;
+        double m_rtemp;
     };
 }
 
