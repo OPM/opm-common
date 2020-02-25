@@ -98,6 +98,7 @@ namespace Opm {
         const TableManager& getTableManager() const;
         const EclipseConfig& getEclipseConfig() const;
         const EclipseConfig& cfg() const;
+        const GridDims& gridDims() const;
 
         // the unit system used by the deck. note that it is rarely needed to convert
         // units because internally to opm-parser everything is represented by SI
@@ -129,6 +130,7 @@ namespace Opm {
         NNC m_inputNnc;
         EDITNNC m_inputEditNnc;
         EclipseGrid m_inputGrid;
+        GridDims m_gridDims;
         FieldPropsManager field_props;
         SimulationConfig m_simulationConfig;
         TransMult m_transMult;
