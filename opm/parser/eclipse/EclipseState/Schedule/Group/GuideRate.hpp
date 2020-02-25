@@ -67,6 +67,7 @@ struct Potential {
 
     double eval(Group::GuideRateTarget target) const;
     double eval(Well::GuideRateTarget target) const;
+    double eval(GuideRateModel::Target target) const;
 
 
     double oil_pot;
@@ -79,6 +80,8 @@ public:
     void   compute(const std::string& wgname, size_t report_step, double sim_time, double oil_pot, double gas_pot, double wat_pot);
     double get(const std::string& well, Well::GuideRateTarget target) const;
     double get(const std::string& group, Group::GuideRateTarget target) const;
+    double get(const std::string& name, GuideRateModel::Target model_target) const;
+
 private:
     void well_compute(const std::string& wgname, size_t report_step, double sim_time, double oil_pot, double gas_pot, double wat_pot);
     void group_compute(const std::string& wgname, size_t report_step, double sim_time, double oil_pot, double gas_pot, double wat_pot);

@@ -54,6 +54,22 @@ double GuideRate::Potential::eval(Group::GuideRateTarget target) const {
     throw std::logic_error("Don't know how to convert .... ");
 }
 
+double GuideRate::Potential::eval(GuideRateModel::Target target) const {
+    if (target == GuideRateModel::Target::OIL)
+        return this->oil_pot;
+
+    if (target == GuideRateModel::Target::GAS)
+        return this->gas_pot;
+
+    if (target == GuideRateModel::Target::LIQ)
+        return this->oil_pot + this->wat_pot;
+
+    if (target == GuideRateModel::Target::WAT)
+        return this->wat_pot;
+
+    throw std::logic_error("Don't know how to convert .... ");
+}
+
 
 GuideRate::GuideRate(const Schedule& schedule_arg) :
     schedule(schedule_arg)
@@ -62,42 +78,33 @@ GuideRate::GuideRate(const Schedule& schedule_arg) :
 
 
 double GuideRate::get(const std::string& well, Well::GuideRateTarget target) const {
-    const auto iter = this->values.find(well);
-    if (iter != this->values.end()) {
-        const auto& value = iter->second;
-        auto model_target = GuideRateModel::convert_target(target);
-        if (value.target == model_target)
-            return value.value;
-        else {
-            const auto& pot = this->potentials.at(well);
-            return value.value * GuideRateModel::pot(model_target, pot.oil_pot, pot.gas_pot, pot.wat_pot) /
-                    std::max(1e-12, GuideRateModel::pot(value.target, pot.oil_pot, pot.gas_pot, pot.wat_pot));
-
-        }
-    } else {
-        const auto& pot = this->potentials.at(well);
-        return pot.eval(target);
-    }
+    auto model_target = GuideRateModel::convert_target(target);
+    return get(well, model_target);
 }
 
 double GuideRate::get(const std::string& group, Group::GuideRateTarget target) const {
-    const auto iter = this->values.find(group);
-     if (iter != this->values.end()) {
-        auto model_target = GuideRateModel::convert_target(target);
-        const auto& value = this->values.at(group);
+    auto model_target = GuideRateModel::convert_target(target);
+    return get(group, model_target);
+}
+
+double GuideRate::get(const std::string& name, GuideRateModel::Target model_target) const {
+    const auto iter = this->values.find(name);
+    if (iter != this->values.end()) {
+        const auto& value = iter->second;
         if (value.target == model_target)
             return value.value;
         else {
-            const auto& pot = this->potentials.at(group);
+            const auto& pot = this->potentials.at(name);
             return value.value * GuideRateModel::pot(model_target, pot.oil_pot, pot.gas_pot, pot.wat_pot) /
                     std::max(1e-12, GuideRateModel::pot(value.target, pot.oil_pot, pot.gas_pot, pot.wat_pot));
 
         }
     } else {
-        const auto& pot = this->potentials.at(group);
-        return pot.eval(target);
+        const auto& pot = this->potentials.at(name);
+        return pot.eval(model_target);
     }
 }
+
 
 
 void GuideRate::compute(const std::string& wgname, size_t report_step, double sim_time, double oil_pot, double gas_pot, double wat_pot) {
