@@ -7,6 +7,9 @@ import filecmp
 src_root = sys.argv[1]
 target_prefix = sys.argv[2]
 install = int(sys.argv[3])
+target_destdir = os.environ.get("DESTDIR", "")
+if not target_destdir is "":
+    target_prefix = target_destdir + target_prefix
 
 if not os.path.isdir(src_root):
     sys.exit("No such directory: {}".format(src_root))
