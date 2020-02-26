@@ -74,6 +74,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/SlgofTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/Sof2Table.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/Sof3Table.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/SolventDensityTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SorwmisTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SpecheatTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SpecrockTable.hpp>
@@ -107,6 +108,7 @@ namespace Opm {
                                const WatdentTable& watdentTable,
                                const std::vector<PvtwsaltTable>& pvtwsaltTables,
                                const std::vector<BrineDensityTable>& bdensityTables,
+                               const std::vector<SolventDensityTable>& sdensityTables,
                                const std::map<int, PlymwinjTable>& plymwinjTables,
                                const std::map<int, SkprwatTable>& skprwatTables,
                                const std::map<int, SkprpolyTable>& skprpolyTables,
@@ -137,6 +139,7 @@ namespace Opm {
         m_watdentTable(watdentTable),
         m_pvtwsaltTables(pvtwsaltTables),
         m_bdensityTables(bdensityTables),
+        m_sdensityTables(sdensityTables),
         m_plymwinjTables(plymwinjTables),
         m_skprwatTables(skprwatTables),
         m_skprpolyTables(skprpolyTables),
@@ -212,6 +215,9 @@ namespace Opm {
         if ( deck.hasKeyword( "BDENSITY") )
             initBrineTables(deck, m_bdensityTables );
 
+        if ( deck.hasKeyword( "SDENSITY") )
+            initSolventTables(deck, m_sdensityTables );
+
         if (deck.hasKeyword<ParserKeywords::GASDENT>())
             this->gasDenT = DenT( deck.getKeyword<ParserKeywords::GASDENT>());
 
@@ -239,6 +245,7 @@ namespace Opm {
         m_watdentTable = data.m_watdentTable;
         m_pvtwsaltTables = data.m_pvtwsaltTables;
         m_bdensityTables = data.m_bdensityTables;
+        m_sdensityTables = data.m_sdensityTables;
         m_plymwinjTables = data.m_plymwinjTables;
         m_skprwatTables = data.m_skprwatTables;
         m_skprpolyTables = data.m_skprpolyTables;
@@ -954,6 +961,10 @@ namespace Opm {
         return this->m_bdensityTables;
     }
 
+    const std::vector<SolventDensityTable>& TableManager::getSolventDensityTables() const {
+        return this->m_sdensityTables;
+    }
+
     const PvcdoTable& TableManager::getPvcdoTable() const {
         return this->m_pvcdoTable;
     }
@@ -1072,6 +1083,7 @@ namespace Opm {
                m_watdentTable == data.m_watdentTable &&
                m_pvtwsaltTables == data.m_pvtwsaltTables &&
                m_bdensityTables == data.m_bdensityTables &&
+               m_sdensityTables == data.m_sdensityTables &&
                m_plymwinjTables == data.m_plymwinjTables &&
                m_skprwatTables == data.m_skprwatTables &&
                m_skprpolyTables == data.m_skprpolyTables &&
@@ -1090,6 +1102,17 @@ namespace Opm {
                m_gas_comp_index == data.m_gas_comp_index;
     }
 
+    void TableManager::initSolventTables(const Deck& deck,  std::vector<SolventDensityTable>& solventtables) {
+        size_t numTables = m_tabdims.getNumPVTTables();
+        solventtables.resize(numTables);
+
+        const auto& keyword = deck.getKeyword("SDENSITY");
+        size_t numEntries = keyword.size();
+        assert(numEntries == numTables);
+        for (unsigned lineIdx = 0; lineIdx < numEntries; ++lineIdx) {
+            solventtables[lineIdx].init(keyword.getRecord(lineIdx));
+        }
+    }
 }
 
 
