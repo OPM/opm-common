@@ -319,7 +319,7 @@ if (OPM_ENABLE_PYTHON)
   # testing.
   add_test(NAME python_tests
            WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/python
-           COMMAND ${PYTHON_EXECUTABLE} setup.py build_ext --dry-run --build-lib ${PROJECT_BINARY_DIR}/python/python/opm test
+           COMMAND ${CMAKE_COMMAND} -E env LD_LIBRARY_PATH=${PROJECT_BINARY_DIR}/lib ${PYTHON_EXECUTABLE} setup.py build_ext --dry-run --build-lib ${PROJECT_BINARY_DIR}/python/python/opm test
            )
 
   set_target_properties(opmcommon PROPERTIES POSITION_INDEPENDENT_CODE ON)

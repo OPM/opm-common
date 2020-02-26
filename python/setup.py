@@ -19,21 +19,20 @@ setupdir = os.path.dirname(__file__)
 if setupdir != '':
   os.chdir( setupdir )
 
+cc = os.environ.get("CC", "c++")
 try:
     subprocess.call(['ccache', '--version'])
-    cc = os.environ.get("CC", "c++")
     os.environ['CC'] = 'ccache {}'.format(cc)
     print("Using 'ccache {}' as compiler".format(cc))
-
-    # This is very hacky but so is the entire setup.py buildsystem.
-    output=subprocess.check_output([cc, "--version"])
-    libs=['opmcommon', 'boost_system']
-    output=str(output)
-    if output.find('Free Software Foundation'):
-        libs.append('stdc++fs')
-
 except OSError as e:
     print('\nNOTE: please install ccache for faster compilation of python bindings.\n')
+
+# This is very hacky but so is the entire setup.py buildsystem.
+output=subprocess.check_output([cc, "--version"])
+libs=['opmcommon', 'boost_system']
+output=str(output)
+if output.find('Free Software Foundation'):
+    libs.append('stdc++fs')
 
 if 'build' in sys.argv:
     if not 'build_ext' in sys.argv:
