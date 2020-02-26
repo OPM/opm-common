@@ -11,11 +11,6 @@ option(ENABLE_MOCKSIM "Build the mock simulator for io testing" ON)
 option(OPM_ENABLE_PYTHON "Enable python bindings?" OFF)
 option(OPM_INSTALL_PYTHON "Enable python bindings?" OFF)
 option(OPM_ENABLE_EMBEDDED_PYTHON "Enable python bindings?" OFF)
-option(ENABLE_3DPROPS_TESTING "Enable the in-constructor testing of 3D properties" OFF)
-
-if (ENABLE_3DPROPS_TESTING)
-  add_definitions(-DENABLE_3DPROPS_TESTING)
-endif()
 
 # Output implies input
 if(ENABLE_ECL_OUTPUT)
