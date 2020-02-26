@@ -75,8 +75,14 @@ but restart and import files referred to in the deck are also copied. The -o and
 
 
 void copy_file(const fs::path& source_dir, fs::path fname, const fs::path& target_dir) {
-    if (fname.is_absolute())
-        fname = fs::relative(fname, source_dir);
+    if (fname.is_absolute()) {
+        // change when moving to gcc8+
+        // fname = fs::relative(fname, source_dir);
+        auto cpath = fs::current_path();
+        fs::current_path(source_dir);
+        fname = fname.relative_path();
+        fs::current_path(cpath);
+    }
 
     auto source_file = source_dir / fname;
     auto target_file = target_dir / fname;
