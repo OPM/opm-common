@@ -22,19 +22,19 @@
 
 #include <opm/common/OpmLog/LogUtil.hpp>
 
+#include <opm/parser/eclipse/Parser/ParserKeywords/A.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/E.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/G.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/M.hpp>
-#include <opm/parser/eclipse/Parser/ParserKeywords/V.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/O.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/P.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/S.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/T.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/V.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/W.hpp>
+
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
-#include <opm/parser/eclipse/Parser/ParserKeywords/E.hpp>
-#include <opm/parser/eclipse/Parser/ParserKeywords/M.hpp>
-#include <opm/parser/eclipse/Parser/ParserKeywords/P.hpp>
-#include <opm/parser/eclipse/Parser/ParserKeywords/T.hpp>
-#include <opm/parser/eclipse/Parser/ParserKeywords/V.hpp>
-#include <opm/parser/eclipse/Parser/ParserKeywords/A.hpp>
-#include <opm/parser/eclipse/Parser/ParserKeywords/S.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Tables/BrineDensityTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/EnkrvdTable.hpp>
@@ -118,6 +118,10 @@ namespace Opm {
                                bool useEnptvd,
                                bool useEqlnum,
                                std::shared_ptr<JFunc> jfunc_param,
+                               const DenT& oilDenT_,
+                               const DenT& gasDenT_,
+                               const DenT& watDenT_,
+                               std::size_t gas_comp_index,
                                double rtemp)
         :
         m_simpleTables(simpleTables),
@@ -144,6 +148,10 @@ namespace Opm {
         hasEnptvd(useEnptvd),
         hasEqlnum(useEqlnum),
         jfunc(std::move(jfunc_param)),
+        oilDenT(oilDenT_),
+        gasDenT(gasDenT_),
+        watDenT(watDenT_),
+        m_gas_comp_index(gas_comp_index),
         m_rtemp(rtemp)
     {
     }
@@ -204,8 +212,18 @@ namespace Opm {
         if ( deck.hasKeyword( "BDENSITY") )
             initBrineTables(deck, m_bdensityTables );
 
+        if (deck.hasKeyword<ParserKeywords::GASDENT>())
+            this->gasDenT = DenT( deck.getKeyword<ParserKeywords::GASDENT>());
 
+        if (deck.hasKeyword<ParserKeywords::OILDENT>())
+            this->oilDenT = DenT( deck.getKeyword<ParserKeywords::OILDENT>());
 
+        if (deck.hasKeyword<ParserKeywords::WATDENT>())
+            this->watDenT = DenT( deck.getKeyword<ParserKeywords::WATDENT>());
+
+        using GC = ParserKeywords::GCOMPIDX;
+        if (deck.hasKeyword<GC>())
+            this->m_gas_comp_index = deck.getKeyword<GC>().getRecord(0).getItem<GC::GAS_COMPONENT_INDEX>().get<int>(0);
     }
 
     TableManager& TableManager::operator=(const TableManager& data) {
@@ -234,6 +252,10 @@ namespace Opm {
         if (data.jfunc)
           jfunc = std::make_shared<JFunc>(*data.jfunc);
         m_rtemp = data.m_rtemp;
+        gasDenT = data.gasDenT;
+        oilDenT = data.oilDenT;
+        watDenT = data.watDenT;
+        m_gas_comp_index = data.m_gas_comp_index;
 
         return *this;
     }
@@ -301,6 +323,17 @@ namespace Opm {
         return pair->second;
     }
 
+    const DenT& TableManager::WatDenT() const {
+        return this->watDenT;
+    }
+
+    const DenT& TableManager::GasDenT() const {
+        return this->gasDenT;
+    }
+
+    const DenT& TableManager::OilDenT() const {
+        return this->oilDenT;
+    }
 
     const TableContainer& TableManager::operator[](const std::string& tableName) const {
         return getTables(tableName);
@@ -701,7 +734,7 @@ namespace Opm {
                 std::shared_ptr<RocktabTable> table = std::make_shared<RocktabTable>( dataItem , isDirectional, useStressOption );
                 container.addTable( tableIdx , table );
             }
-        }        
+        }
     }
 
         size_t TableManager::numFIPRegions() const {
@@ -719,7 +752,7 @@ namespace Opm {
     const Eqldims& TableManager::getEqldims() const {
         return *m_eqldims;
     }
-    
+
     const Aqudims& TableManager::getAqudims() const {
         return m_aqudims;
     }
@@ -1016,6 +1049,10 @@ namespace Opm {
         return this->m_rtemp;
     }
 
+    std::size_t TableManager::gas_comp_index() const {
+        return this->m_gas_comp_index;
+    }
+
     bool TableManager::operator==(const TableManager& data) const {
         bool jfuncOk = false;
         if (jfunc && data.jfunc)
@@ -1045,8 +1082,12 @@ namespace Opm {
                hasImptvd == data.hasImptvd &&
                hasEnptvd == data.hasEnptvd &&
                hasEqlnum == data.hasEqlnum &&
+               gasDenT == data.gasDenT &&
+               oilDenT == data.oilDenT &&
+               watDenT == data.watDenT &&
                jfuncOk &&
-               m_rtemp == data.m_rtemp;
+               m_rtemp == data.m_rtemp &&
+               m_gas_comp_index == data.m_gas_comp_index;
     }
 
 }
