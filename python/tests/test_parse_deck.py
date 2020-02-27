@@ -3,8 +3,15 @@ import json
 import opm
 import opm.io
 import os.path
+import numpy as np
+
+try:
+    from tests.utils import test_path
+except ImportError:
+    from utils import test_path
 
 from opm.io.parser import Parser, ParseContext
+from opm.io.deck import DeckKeyword
 
 class TestParse(unittest.TestCase):
 
@@ -81,6 +88,65 @@ FIPNUM
         self.assertIn( 'TESTKEY0', deck )
         self.assertIn( 'TESTKEY1', deck )
         self.assertIn( 'TESTKEY2', deck )
+
+
+    def test_parser_deckItems(self):
+
+        parser = Parser()
+
+        error_recovery = [("PARSE_RANDOM_SLASH", opm.io.action.ignore),
+                          ("PARSE_EXTRA_RECORDS", opm.io.action.ignore)]
+
+        context = ParseContext(error_recovery)
+
+        self.deck_spe1case1 = parser.parse(test_path("data/SPE1CASE1.DATA"), context)
+
+        dkw_compdate = self.deck_spe1case1["COMPDAT"]
+
+        self.assertTrue( dkw_compdate[0][0].is_string() )
+        self.assertFalse( dkw_compdate[0][1].is_string() )
+
+        self.assertTrue( dkw_compdate[0][1].is_int() )
+        self.assertFalse( dkw_compdate[0][1].is_double() )
+
+        self.assertTrue( dkw_compdate[0][8].is_double() )
+
+        self.assertTrue(dkw_compdate[0][0].value == "PROD")
+
+        conI = dkw_compdate[0][1].value
+        conJ = dkw_compdate[0][2].value
+        conK = dkw_compdate[0][3].value
+
+        self.assertEqual(dkw_compdate[0][5].value, "OPEN")
+
+        self.assertTrue((conI, conJ, conK) == (10,10,3))
+
+        self.assertFalse( dkw_compdate[0][7].valid )
+        self.assertTrue( dkw_compdate[0][7].defaulted )
+
+        self.assertEqual( dkw_compdate[0][6].value, 0)
+
+        self.assertEqual( dkw_compdate[0][8].value, 0.5)
+
+        dkw_wconprod = self.deck_spe1case1["WCONPROD"]
+
+        welln= dkw_wconprod[0][0].value
+        self.assertEqual(dkw_wconprod[0][2].value, "ORAT")
+        self.assertEqual(dkw_wconprod[0][3].value, "WUOPRL")
+        self.assertEqual(dkw_wconprod[0][5].value, 1.5e5)
+
+        dkw_permx = self.deck_spe1case1["PERMX"]
+        permx =  dkw_permx.get_raw_array()
+        self.assertEqual(len(permx), 300)
+        self.assertTrue(isinstance(permx, np.ndarray))
+        self.assertEqual(permx.dtype, "float64")
+
+        dkw_eqlnum = self.deck_spe1case1["EQLNUM"]
+        eqlnum =  dkw_eqlnum.get_int_array()
+
+        self.assertEqual(len(eqlnum), 300)
+        self.assertTrue(isinstance(eqlnum, np.ndarray))
+        self.assertEqual(eqlnum.dtype, "int32")
 
 
 

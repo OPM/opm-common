@@ -13,6 +13,7 @@ from .libopmcommon_python import action
 
 from .libopmcommon_python import Parser, ParseContext
 from .libopmcommon_python import DeckKeyword
+from .libopmcommon_python import DeckItem
 
 from .libopmcommon_python import EclipseState
 from .libopmcommon_python import FieldProperties
