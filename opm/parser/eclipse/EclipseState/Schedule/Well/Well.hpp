@@ -27,6 +27,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellConnections.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/WellSegments.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleTypes.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/ProductionControls.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/InjectionControls.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellFoamProperties.hpp>
@@ -62,14 +63,6 @@ public:
     static Status StatusFromString(const std::string& stringValue);
 
 
-    enum class InjectorType {
-        WATER = 1,
-        GAS = 2,
-        OIL = 3,
-        MULTI = 4
-    };
-    static const std::string InjectorType2String( InjectorType enumValue );
-    static InjectorType InjectorTypeFromString( const std::string& stringValue );
 
 
     /*
@@ -211,7 +204,7 @@ public:
         int     VFPTableNumber;
         bool    predictionMode;
         int     injectionControls;
-        Well::InjectorType injectorType;
+        InjectorType injectorType;
         InjectorCMode controlMode;
 
         bool operator==(const WellInjectionProperties& other) const;
@@ -232,7 +225,7 @@ public:
                                 int vfpTableNum,
                                 bool predMode,
                                 int injControls,
-                                Well::InjectorType injType,
+                                InjectorType injType,
                                 InjectorCMode ctrlMode);
 
         void handleWELTARG(WELTARGCMode cmode, double newValue, double SIFactorP);

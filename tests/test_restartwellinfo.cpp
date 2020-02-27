@@ -144,13 +144,13 @@ void verifyWellState(const std::string& rst_filename, const Opm::Schedule& sched
             sched_wtype = 1;
         } else {
             switch( sched_well2.getInjectionProperties(  ).injectorType ) {
-            case Opm::Well::InjectorType::WATER:
+            case Opm::InjectorType::WATER:
                 sched_wtype = 3;
                 break;
-            case Opm::Well::InjectorType::GAS:
+            case Opm::InjectorType::GAS:
                 sched_wtype = 4;
                 break;
-            case Opm::Well::InjectorType::OIL:
+            case Opm::InjectorType::OIL:
                 sched_wtype = 2;
                 break;
             default:

@@ -144,7 +144,7 @@ namespace {
                 return WTypeVal::Producer;
             }
 
-            using IType = ::Opm::Well::InjectorType;
+            using IType = ::Opm::InjectorType;
 
             const auto itype = well.injectionControls(st).injector_type;
 
@@ -179,7 +179,7 @@ namespace {
                 const auto wtype = controls.injector_type;
 
                 using CMode = ::Opm::Well::InjectorCMode;
-                using WType = ::Opm::Well::InjectorType;
+                using WType = ::Opm::InjectorType;
 
                 switch (wmctl) {
                 case CMode::RATE: {
@@ -281,7 +281,7 @@ namespace {
                 }
             }
             else { // injector
-                using IType = ::Opm::Well::InjectorType;
+                using IType = ::Opm::InjectorType;
 
                 switch (curr.inj) {
                 case IMode::RATE: {
@@ -599,7 +599,7 @@ namespace {
                 const auto& ic = well.injectionControls(smry);
 
                 using IP = ::Opm::Well::InjectorCMode;
-                using IT = ::Opm::Well::InjectorType;
+                using IT = ::Opm::InjectorType;
 
                 if (ic.hasControl(IP::RATE)) {
                     if (ic.injector_type == IT::OIL) {
@@ -799,7 +799,7 @@ namespace {
                 assignProducer(well.name(), smry, xWell);
             }
             else if (well.isInjector()) {
-                using IType = ::Opm::Well::InjectorType;
+                using IType = ::Opm::InjectorType;
                 const auto itype = well.injectionControls(smry).injector_type;
 
                 switch (itype) {

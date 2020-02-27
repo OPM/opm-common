@@ -513,7 +513,7 @@ bool Well::isInjector() const {
 }
 
 
-Well::InjectorType Well::injectorType() const {
+InjectorType Well::injectorType() const {
     if (this->producer)
         throw std::runtime_error("Can not access injectorType attribute of a producer");
 
@@ -901,9 +901,9 @@ double Well::injection_rate(const SummaryState& st, Phase phase_arg) const {
 
     const auto type = controls.injector_type;
 
-    if( phase_arg == Phase::WATER && type != Well::InjectorType::WATER ) return 0.0;
-    if( phase_arg == Phase::OIL   && type != Well::InjectorType::OIL   ) return 0.0;
-    if( phase_arg == Phase::GAS   && type != Well::InjectorType::GAS   ) return 0.0;
+    if( phase_arg == Phase::WATER && type != InjectorType::WATER ) return 0.0;
+    if( phase_arg == Phase::OIL   && type != InjectorType::OIL   ) return 0.0;
+    if( phase_arg == Phase::GAS   && type != InjectorType::GAS   ) return 0.0;
 
     return controls.surface_rate;
 }
@@ -997,35 +997,7 @@ Well::Status Well::StatusFromString(const std::string& stringValue) {
 }
 
 
-const std::string Well::InjectorType2String( Well::InjectorType enumValue ) {
-    switch( enumValue ) {
-    case InjectorType::OIL:
-        return "OIL";
-    case InjectorType::GAS:
-        return "GAS";
-    case InjectorType::WATER:
-        return "WATER";
-    case InjectorType::MULTI:
-        return "MULTI";
-    default:
-        throw std::invalid_argument("unhandled enum value");
-    }
-}
 
-Well::InjectorType Well::InjectorTypeFromString( const std::string& stringValue ) {
-    if (stringValue == "OIL")
-        return InjectorType::OIL;
-    else if (stringValue == "WATER")
-        return InjectorType::WATER;
-    else if (stringValue == "WAT")
-        return InjectorType::WATER;
-    else if (stringValue == "GAS")
-        return InjectorType::GAS;
-    else if (stringValue == "MULTI")
-        return InjectorType::MULTI;
-    else
-        throw std::invalid_argument("Unknown enum state string: " + stringValue );
-}
 
 const std::string Well::InjectorCMode2String( InjectorCMode enumValue ) {
     switch( enumValue ) {

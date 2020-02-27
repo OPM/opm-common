@@ -29,20 +29,20 @@
 namespace Opm {
 namespace injection {
 
-    double rateToSI(double rawRate, Well::InjectorType wellType, const Opm::UnitSystem &unitSystem) {
+    double rateToSI(double rawRate, InjectorType wellType, const Opm::UnitSystem &unitSystem) {
         switch (wellType) {
-        case Well::InjectorType::MULTI:
+        case InjectorType::MULTI:
             // multi-phase controlled injectors are a really funny
             // construct in Eclipse: the quantity controlled for is
             // not physically meaningful, i.e. Eclipse adds up
             // MCFT/day and STB/day.
             throw std::logic_error("There is no generic way to handle multi-phase injectors at this level!");
 
-        case Well::InjectorType::OIL:
-        case Well::InjectorType::WATER:
+        case InjectorType::OIL:
+        case InjectorType::WATER:
             return unitSystem.to_si( UnitSystem::measure::liquid_surface_rate, rawRate );
 
-        case Well::InjectorType::GAS:
+        case InjectorType::GAS:
             return unitSystem.to_si( UnitSystem::measure::gas_surface_rate, rawRate );
 
         default:

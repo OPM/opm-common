@@ -1336,7 +1336,7 @@ std::pair<std::time_t, std::size_t> restart_info(const RestartIO::RstState * rst
                 {
                     const auto& well = this->getWell(well_name, currentStep);
                     const auto& inj = well.getInjectionProperties();
-                    if (!well.isProducer() && inj.injectorType == Well::InjectorType::GAS) {
+                    if (!well.isProducer() && inj.injectorType == InjectorType::GAS) {
                         if (well.getSolventFraction() != fraction) {
                             auto new_well = std::make_shared<Well>(well);
                             new_well->updateSolventFraction(fraction);

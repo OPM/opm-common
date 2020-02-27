@@ -1,5 +1,5 @@
 /*
-  Copyright 2019 Equinor ASA.
+  Copyright 2020 Equinor ASA.
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -17,20 +17,22 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef INJECTION_HPP
-#define INJECTION_HPP
-
-#include <opm/parser/eclipse/EclipseState/Runspec.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleTypes.hpp>
+#ifndef OPM_SCHEDULE_TYPES_HPP
+#define OPM_SCHEDULE_TYPES_HPP
 
 namespace Opm {
-namespace injection {
 
-double rateToSI(double rawRate, InjectorType wellType, const Opm::UnitSystem &unitSystem);
-double rateToSI(double rawRate, Phase wellPhase, const Opm::UnitSystem& unitSystem);
+enum class InjectorType {
+    WATER = 1,
+    GAS = 2,
+    OIL = 3,
+    MULTI = 4
+};
+const std::string InjectorType2String( InjectorType enumValue );
+InjectorType InjectorTypeFromString( const std::string& stringValue );
 
 }
-}
+
+
 
 #endif

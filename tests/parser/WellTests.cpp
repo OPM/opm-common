@@ -35,6 +35,7 @@
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleTypes.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQActive.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Connection.hpp>
@@ -291,16 +292,16 @@ BOOST_AUTO_TEST_CASE(XHPLimitDefault) {
 
 
 
-BOOST_AUTO_TEST_CASE(InjectorType) {
+BOOST_AUTO_TEST_CASE(ScheduleTypesInjectorType) {
     Opm::Well well("WELL1", "GROUP", 0, 1, 23, 42, 2334.32, Opm::Phase::WATER, Opm::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
 
 
     auto injectionProps = std::make_shared<Opm::Well::WellInjectionProperties>(well.getInjectionProperties());
-    injectionProps->injectorType = Opm::Well::InjectorType::WATER;
+    injectionProps->injectorType = Opm::InjectorType::WATER;
     well.updateInjection(injectionProps);
     // TODO: Should we test for something other than wate here, as long as
     //       the default value for InjectorType is WellInjector::WATER?
-    BOOST_CHECK( Opm::Well::InjectorType::WATER == well.getInjectionProperties().injectorType);
+    BOOST_CHECK( Opm::InjectorType::WATER == well.getInjectionProperties().injectorType);
 
 }
 
@@ -858,3 +859,5 @@ BOOST_AUTO_TEST_CASE(WELOPEN) {
         BOOST_CHECK(op_1.getStatus() == Well::Status::SHUT);
     }
 }
+
+
