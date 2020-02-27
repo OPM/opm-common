@@ -173,6 +173,7 @@ struct ProductionControls {
           GroupType gtype,
           double groupEF,
           bool transferGroupEF,
+          bool availableForGroupControl,
           int vfp,
           const std::string& parent,
           const IOrderSet<std::string>& well,
@@ -205,6 +206,8 @@ struct ProductionControls {
     void setInjectionGroup();
     double getGroupEfficiencyFactor() const;
     bool   getTransferGroupEfficiencyFactor() const;
+    bool isAvailableForGroupControl() const;
+    void setAvailableForGroupControl(const bool available);
 
     std::size_t numWells() const;
     bool addGroup(const std::string& group_name);
@@ -245,6 +248,7 @@ private:
     GroupType group_type;
     double gefac;
     bool transfer_gefac;
+    bool available_for_group_control;
     int vfp_table;
 
     std::string parent_group;

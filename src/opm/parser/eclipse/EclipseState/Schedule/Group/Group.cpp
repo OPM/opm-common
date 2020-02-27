@@ -39,6 +39,7 @@ Group::Group(const std::string& name, std::size_t insert_index_arg, std::size_t 
     group_type(GroupType::NONE),
     gefac(1),
     transfer_gefac(true),
+    available_for_group_control(name == "FIELD" ? false : true),
     vfp_table(0)
 {
     // All groups are initially created as children of the "FIELD" group.
@@ -54,6 +55,7 @@ Group::Group(const std::string& gname,
              GroupType gtype,
              double groupEF,
              bool transferGroupEF,
+             bool availableForGroupControl,
              int vfp,
              const std::string& parentName,
              const IOrderSet<std::string>& well,
@@ -68,6 +70,7 @@ Group::Group(const std::string& gname,
     group_type(gtype),
     gefac(groupEF),
     transfer_gefac(transferGroupEF),
+    available_for_group_control(availableForGroupControl),
     vfp_table(vfp),
     parent_group(parentName),
     m_wells(well),
@@ -343,6 +346,14 @@ double Group::getGroupEfficiencyFactor() const {
 
 bool Group::getTransferGroupEfficiencyFactor() const {
     return this->transfer_gefac;
+}
+
+bool Group::isAvailableForGroupControl() const {
+    return this->available_for_group_control;
+}
+
+void Group::setAvailableForGroupControl(const bool available) {
+    this->available_for_group_control = available;
 }
 
 const std::string& Group::parent() const {
