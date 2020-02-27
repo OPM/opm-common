@@ -38,7 +38,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/Rock2dtrTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvtwsaltTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/BrineDensityTable.hpp>
-
+#include <opm/parser/eclipse/EclipseState/Tables/SolventDensityTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/FlatTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SorwmisTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgcwmisTable.hpp>
@@ -74,6 +74,7 @@ namespace Opm {
                      const WatdentTable& watdentTable,
                      const std::vector<PvtwsaltTable>& pvtwsaltTables,
                      const std::vector<BrineDensityTable>& bdensityTables,
+                     const std::vector<SolventDensityTable>& sdensityTables,
                      const std::map<int, PlymwinjTable>& plymwinjTables,
                      const std::map<int, SkprwatTable>& skprwatTables,
                      const std::map<int, SkprpolyTable>& skprpolyTables,
@@ -168,6 +169,7 @@ namespace Opm {
         const PvtwTable& getPvtwTable() const;
         const std::vector<PvtwsaltTable>& getPvtwSaltTables() const;
         const std::vector<BrineDensityTable>& getBrineDensityTables() const;
+        const std::vector<SolventDensityTable>& getSolventDensityTables() const;
 
         const PvcdoTable& getPvcdoTable() const;
         const DensityTable& getDensityTable() const;
@@ -282,6 +284,8 @@ namespace Opm {
             }
         }
 
+
+        void initSolventTables(const Deck& deck, std::vector<SolventDensityTable>& solventtables);
 
         /**
          * JFUNC
@@ -421,6 +425,7 @@ namespace Opm {
         WatdentTable m_watdentTable;
         std::vector<PvtwsaltTable> m_pvtwsaltTables;
         std::vector<BrineDensityTable> m_bdensityTables;
+        std::vector<SolventDensityTable> m_sdensityTables;
         std::map<int, PlymwinjTable> m_plymwinjTables;
         std::map<int, SkprwatTable> m_skprwatTables;
         std::map<int, SkprpolyTable> m_skprpolyTables;
