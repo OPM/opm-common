@@ -40,12 +40,13 @@ class Value {
 
 private:
     std::string m_name;
-    bool m_initialized;
+    bool m_initialized = false;
     T m_value;
 
 
 public:
 
+    Value() = default;
     explicit Value(const std::string& name) :
         m_name( name ),
         m_initialized( false )

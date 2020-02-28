@@ -147,4 +147,8 @@ namespace Opm {
         m_nz = dimens[2];
     }
 
+    bool GridDims::operator==(const GridDims& data) const {
+        return this->getNXYZ() == data.getNXYZ();
+    }
+
 }

@@ -68,6 +68,7 @@ namespace Opm {
             AllProperties = IntProperties | DoubleProperties
         };
 
+        EclipseState() = default;
         EclipseState(const Deck& deck);
 
         const IOConfig& getIOConfig() const;
@@ -75,7 +76,7 @@ namespace Opm {
 
         const InitConfig& getInitConfig() const;
         const SimulationConfig& getSimulationConfig() const;
-        const EclipseGrid& getInputGrid() const;
+        virtual const EclipseGrid& getInputGrid() const;
 
         const FaultCollection& getFaults() const;
         const TransMult& getTransMult() const;
@@ -90,10 +91,14 @@ namespace Opm {
         const EDITNNC& getInputEDITNNC() const;
         bool hasInputEDITNNC() const;
 
-        const FieldPropsManager& fieldProps() const;
+        // The potentially parallelized field properties
+        virtual const FieldPropsManager& fieldProps() const;
+        // Always the non-parallel field properties
+        virtual const FieldPropsManager& globalFieldProps() const;
         const TableManager& getTableManager() const;
         const EclipseConfig& getEclipseConfig() const;
         const EclipseConfig& cfg() const;
+        const GridDims& gridDims() const;
 
         // the unit system used by the deck. note that it is rarely needed to convert
         // units because internally to opm-parser everything is represented by SI
@@ -117,15 +122,17 @@ namespace Opm {
         void complainAboutAmbiguousKeyword(const Deck& deck,
                                            const std::string& keywordName);
 
-        const TableManager m_tables;
+     protected:
+        TableManager m_tables;
         Runspec m_runspec;
         EclipseConfig m_eclipseConfig;
         UnitSystem m_deckUnitSystem;
         NNC m_inputNnc;
         EDITNNC m_inputEditNnc;
         EclipseGrid m_inputGrid;
+        GridDims m_gridDims;
         FieldPropsManager field_props;
-        const SimulationConfig m_simulationConfig;
+        SimulationConfig m_simulationConfig;
         TransMult m_transMult;
 
         FaultCollection m_faults;

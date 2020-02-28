@@ -313,7 +313,7 @@ namespace {
                          const ::Opm::UnitSystem&          units,
                          ::Opm::EclIO::OutputStream::Init& initFile)
     {
-        auto porv = es.fieldProps().porv(true);
+        auto porv = es.globalFieldProps().porv(true);
         units.from_si(::Opm::UnitSystem::measure::volume, porv);
         initFile.write("PORV", singlePrecision(porv));
     }
@@ -327,7 +327,7 @@ namespace {
         // assertKeyword() here--on a 'const' GridProperties object--to
         // invoke the autocreation property, and ensure that the keywords
         // exist in the properties container.
-        const auto& fp = es.fieldProps();
+        const auto& fp = es.globalFieldProps();
         fp.get_int("PVTNUM");
         fp.get_int("SATNUM");
         fp.get_int("EQLNUM");
@@ -451,8 +451,8 @@ namespace {
         // The INIT file should always contain the NTG property, we
         // therefore invoke the auto create functionality to ensure
         // that "NTG" is included in the properties container.
-        const auto& fp = es.fieldProps();
-        es.fieldProps().get_double("NTG");
+        const auto& fp = es.globalFieldProps();
+        fp.get_double("NTG");
         writeDoubleCellProperties(doubleKeywords, fp,
                                   units, false, initFile);
     }
@@ -519,7 +519,7 @@ namespace {
             .withHysteresis(es.runspec().hysterPar().active())
             .collect       (es.runspec().phases());
 
-        const auto& fp = es.fieldProps();
+        const auto& fp = es.globalFieldProps();
         if (! es.cfg().init().filleps()) {
             // No FILLEPS in input deck or number of active phases
             // unsupported by Flow's saturation function finalizers.

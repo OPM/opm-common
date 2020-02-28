@@ -32,6 +32,7 @@ namespace Opm {
     {
     public:
 
+        GridDims();
         explicit GridDims(std::array<int, 3> xyz);
 
         GridDims(size_t nx, size_t ny, size_t nz);
@@ -56,9 +57,9 @@ namespace Opm {
 
         void assertIJK(size_t i, size_t j, size_t k) const;
 
-    protected:
-        GridDims();
+        bool operator==(const GridDims& data) const;
 
+    protected:
         size_t m_nx;
         size_t m_ny;
         size_t m_nz;

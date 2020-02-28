@@ -62,10 +62,10 @@ public:
     // The default constructed fieldProps object is **NOT** usable
     FieldPropsManager() = default;
     FieldPropsManager(const Deck& deck, const Phases& ph, const EclipseGrid& grid, const TableManager& tables);
-    void reset_actnum(const std::vector<int>& actnum);
+    virtual void reset_actnum(const std::vector<int>& actnum);
     const std::string& default_region() const;
-    std::vector<int> actnum() const;
-    std::vector<double> porv(bool global = false) const;
+    virtual std::vector<int> actnum() const;
+    virtual std::vector<double> porv(bool global = false) const;
     MemInfo meminfo( ) const;
 
     /*
@@ -178,14 +178,14 @@ public:
     template <typename T>
     std::vector<std::string> keys() const;
 
-    const std::vector<int>& get_int(const std::string& keyword) const { return this->get<int>(keyword); }
-    std::vector<int> get_global_int(const std::string& keyword) const { return this->get_global<int>(keyword); }
+    virtual const std::vector<int>& get_int(const std::string& keyword) const { return this->get<int>(keyword); }
+    virtual std::vector<int> get_global_int(const std::string& keyword) const { return this->get_global<int>(keyword); }
 
-    const std::vector<double>& get_double(const std::string& keyword) const { return this->get<double>(keyword); }
-    std::vector<double> get_global_double(const std::string& keyword) const { return this->get_global<double>(keyword); }
+    virtual const std::vector<double>& get_double(const std::string& keyword) const { return this->get<double>(keyword); }
+    virtual std::vector<double> get_global_double(const std::string& keyword) const { return this->get_global<double>(keyword); }
 
-    bool has_int(const std::string& keyword) const { return this->has<int>(keyword); }
-    bool has_double(const std::string& keyword) const { return this->has<double>(keyword); }
+    virtual bool has_int(const std::string& keyword) const { return this->has<int>(keyword); }
+    virtual bool has_double(const std::string& keyword) const { return this->has<double>(keyword); }
 
 private:
     /*

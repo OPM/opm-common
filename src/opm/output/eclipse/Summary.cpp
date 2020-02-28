@@ -2088,7 +2088,7 @@ SummaryImplementation(const EclipseState&  es,
                       const Schedule&      sched,
                       const std::string&   basename)
     : grid_          (std::cref(grid))
-    , regCache_      (es.fieldProps().get_int("FIPNUM"), grid, sched)
+    , regCache_      (es.globalFieldProps().get_int("FIPNUM"), grid, sched)
     , deferredSMSpec_(makeDeferredSMSpecCreation(es, grid, sched))
     , rset_          (makeResultSet(es.cfg().io(), basename))
     , fmt_           { es.cfg().io().getFMTOUT() }

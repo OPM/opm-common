@@ -55,6 +55,7 @@ namespace Opm {
         m_inputNnc(          deck ),
         m_inputEditNnc(      deck ),
         m_inputGrid(         deck, nullptr ),
+        m_gridDims(          deck ),
         field_props(         deck, m_runspec.phases(), m_inputGrid, m_tables),
         m_simulationConfig(  m_eclipseConfig.getInitConfig().restartRequested(), deck, field_props),
         m_transMult(         GridDims(deck), deck, field_props)
@@ -102,6 +103,10 @@ namespace Opm {
         return this->field_props;
     }
 
+    const FieldPropsManager& EclipseState::globalFieldProps() const {
+        return this->field_props;
+    }
+
 
     const TableManager& EclipseState::getTableManager() const {
         return m_tables;
@@ -130,6 +135,10 @@ namespace Opm {
 
     const EclipseConfig& EclipseState::cfg() const {
         return m_eclipseConfig;
+    }
+
+    const GridDims& EclipseState::gridDims() const {
+        return m_gridDims;
     }
 
     const Runspec& EclipseState::runspec() const {
