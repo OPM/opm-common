@@ -1604,6 +1604,7 @@ std::pair<std::time_t, std::size_t> restart_info(const RestartIO::RstState * rst
                 if (!record.getItem("VOIDAGE_GROUP").defaultApplied(0))
                     voidage_group = record.getItem("VOIDAGE_GROUP").getTrimmedString(0);;
 
+                bool availableForGroupControl = DeckItem::to_bool(record.getItem("FREE").getTrimmedString(0));
                 //surfaceInjectionRate = injection::rateToSI(surfaceInjectionRate, phase, section.unitSystem());
                 {
                     auto group_ptr = std::make_shared<Group>(this->getGroup(group_name, currentStep));
@@ -1630,7 +1631,9 @@ std::pair<std::time_t, std::size_t> restart_info(const RestartIO::RstState * rst
                     if (!record.getItem("VOIDAGE_TARGET").defaultApplied(0))
                         injection.injection_controls += static_cast<int>(Group::InjectionCMode::VREP);
 
-                    if (group_ptr->updateInjection(injection)) {
+                    const bool must_update_avail = group_ptr->isAvailableForGroupControl() != availableForGroupControl;
+                    if (group_ptr->updateInjection(injection) ||  must_update_avail) {
+                        group_ptr->setAvailableForGroupControl(availableForGroupControl);
                         this->updateGroup(std::move(group_ptr), currentStep);
                         m_events.addEvent( ScheduleEvents::GROUP_INJECTION_UPDATE , currentStep);
                         this->addWellGroupEvent(group_name, ScheduleEvents::GROUP_INJECTION_UPDATE, currentStep);
@@ -1676,6 +1679,7 @@ std::pair<std::time_t, std::size_t> restart_info(const RestartIO::RstState * rst
                     }
                 }
                 auto resv_target = record.getItem("RESERVOIR_FLUID_TARGET").getSIDouble(0);
+                bool availableForGroupControl = DeckItem::to_bool(record.getItem("RESPOND_TO_PARENT").getTrimmedString(0));
                 {
                     auto group_ptr = std::make_shared<Group>(this->getGroup(group_name, currentStep));
                     Group::GroupProductionProperties production;
@@ -1712,7 +1716,9 @@ std::pair<std::time_t, std::size_t> restart_info(const RestartIO::RstState * rst
                     if (!record.getItem("RESERVOIR_FLUID_TARGET").defaultApplied(0))
                         production.production_controls += static_cast<int>(Group::ProductionCMode::RESV);
 
-                    if (group_ptr->updateProduction(production)) {
+                    const bool must_update_avail = group_ptr->isAvailableForGroupControl() != availableForGroupControl;
+                    if (group_ptr->updateProduction(production) || must_update_avail) {
+                        group_ptr->setAvailableForGroupControl(availableForGroupControl);
                         auto new_config = std::make_shared<GuideRateConfig>( this->guideRateConfig(currentStep) );
                         new_config->update_group(*group_ptr);
                         this->guide_rate_config.update( currentStep, std::move(new_config) );

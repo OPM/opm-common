@@ -451,8 +451,8 @@ BOOST_AUTO_TEST_CASE(GCONINJE_MULTIPLE_PHASES) {
            10 /
 
         GCONINJE
-           'G2'   'WATER'   1*  1000      /
-           'G2'   'GAS'     1*  1*   2000 /
+           'G2'   'WATER'   1*  1000  /
+           'G2'   'GAS'     1*  1*   2000  2*   'NO' /
            'G1'   'GAS'     1*  1000      /
         /
 
@@ -471,6 +471,7 @@ BOOST_AUTO_TEST_CASE(GCONINJE_MULTIPLE_PHASES) {
         BOOST_CHECK(  g1.hasInjectionControl(Phase::WATER));
         BOOST_CHECK(  g1.hasInjectionControl(Phase::GAS));
         BOOST_CHECK( !g1.hasInjectionControl(Phase::OIL));
+        BOOST_CHECK(  g1.isAvailableForGroupControl() );
 
         g1.injectionControls(Phase::WATER, st);
         g1.injectionControls(Phase::GAS, st);
@@ -483,6 +484,7 @@ BOOST_AUTO_TEST_CASE(GCONINJE_MULTIPLE_PHASES) {
         const auto& g2 = schedule.getGroup("G2", 0);
         BOOST_CHECK(!g2.has_topup_phase());
         BOOST_CHECK_THROW(g2.topup_phase(), std::logic_error);
+        BOOST_CHECK(  g2.isAvailableForGroupControl() );
     }
     // Step 1
     {
@@ -490,6 +492,7 @@ BOOST_AUTO_TEST_CASE(GCONINJE_MULTIPLE_PHASES) {
         BOOST_CHECK(  g2.hasInjectionControl(Phase::WATER));
         BOOST_CHECK(  g2.hasInjectionControl(Phase::GAS));
         BOOST_CHECK( !g2.hasInjectionControl(Phase::OIL));
+        BOOST_CHECK( !g2.isAvailableForGroupControl() );
 
         g2.injectionControls(Phase::WATER, st);
         g2.injectionControls(Phase::GAS, st);
@@ -502,5 +505,6 @@ BOOST_AUTO_TEST_CASE(GCONINJE_MULTIPLE_PHASES) {
         const auto& g1 = schedule.getGroup("G1", 1);
         BOOST_CHECK(!g1.has_topup_phase());
         BOOST_CHECK_THROW(g1.topup_phase(), std::logic_error);
+        BOOST_CHECK(  g1.isAvailableForGroupControl() );
     }
 }
