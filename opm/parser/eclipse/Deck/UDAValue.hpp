@@ -64,6 +64,9 @@ public:
 
     bool operator==(const UDAValue& other) const;
     bool operator!=(const UDAValue& other) const;
+
+    bool is_numeric() { return numeric_value; }
+
 private:
     bool numeric_value;
     double double_value;

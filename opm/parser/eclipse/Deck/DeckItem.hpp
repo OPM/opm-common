@@ -137,6 +137,13 @@ namespace Opm {
         const std::vector<Dimension>& activeDimensions() const;
         const std::vector<Dimension>& defaultDimensions() const;
 
+        bool is_uda() { return  (type == get_type< UDAValue >()); };
+        bool is_double() { return  type == get_type< double >(); };
+        bool is_int() { return  type == get_type< int >() ; };
+        bool is_string() { return  type == get_type< std::string >(); };
+
+        UDAValue& get_uda() { return uval[0]; };
+
     private:
         mutable std::vector< double > dval;
         std::vector< int > ival;

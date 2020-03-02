@@ -110,8 +110,30 @@ py::array_t<double> get_SI_array(const DeckKeyword& kw) {
     return convert::numpy_array( kw.getSIDoubleData() );
 }
 
+bool uda_item_is_numeric(DeckItem *  item)
+{
+    if( !item->is_uda() )
+        throw std::logic_error("deck item doesn't support user defined quantities");
+
+    UDAValue uda = item->get_uda();
+
+    return uda.is_numeric();
 }
 
+double get_uda_double(DeckItem *  item)
+{
+    UDAValue uda = item->get_uda();
+    return uda.get<double>();
+}
+
+std::string get_uda_str(DeckItem *  item)
+{
+    UDAValue uda = item->get_uda();
+    return uda.get<std::string>();
+}
+
+
+}
 void python::common::export_DeckKeyword(py::module& module) {
     py::class_< DeckKeyword >( module, "DeckKeyword")
         .def(py::init<const ParserKeyword& >())
@@ -186,6 +208,10 @@ void python::common::export_DeckKeyword(py::module& module) {
 
     py::class_< DeckItem >(module, "DeckItem")
         .def( "__len__", &DeckItem::data_size )
+        .def("is_uda", &DeckItem::is_uda)
+        .def("is_double", &DeckItem::is_double)
+        .def("is_int", &DeckItem::is_int)
+        .def("is_string", &DeckItem::is_string)
         .def("get_str", &DeckItem::get<std::string>)
         .def("get_int", &DeckItem::get<int>)
         .def("get_raw", &DeckItem::get<double>)
@@ -193,8 +219,11 @@ void python::common::export_DeckKeyword(py::module& module) {
         .def("get_data_list", &item_to_pylist)
         .def("get_raw_data_list", &raw_data_to_pylist)
         .def("get_SI_data_list", &SI_data_to_pylist)
-        .def("has_value", &DeckItem::hasValue)
-        .def("defaulted", &DeckItem::defaultApplied)
+        .def("__has_value", &DeckItem::hasValue)
+        .def("__defaulted", &DeckItem::defaultApplied)
+        .def("__is_numberic", &uda_item_is_numeric)
+        .def("__uda_double", &get_uda_double)
+        .def("__uda_str", &get_uda_str)
         ;
 
 
