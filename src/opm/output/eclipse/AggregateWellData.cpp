@@ -152,7 +152,11 @@ namespace {
             case IType::OIL:   return WTypeVal::OilInj;
             case IType::WATER: return WTypeVal::WatInj;
             case IType::GAS:   return WTypeVal::GasInj;
-            default:           return WTypeVal::WTUnk;
+            case IType::MULTI:
+                throw std::invalid_argument("Do not know how to serialize injectortype MULTI - fatal error for well " + well.name());
+                break;
+            default:
+                throw std::invalid_argument("SHould not be here - unhandled enum value in wellType");
             }
         }
 

@@ -63,7 +63,6 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
 
         namespace Value {
             enum WellType : int {
-                WTUnk    = 0,  // Unknown well type (OPM only)
                 Producer = 1,  // Well is producer
                 OilInj   = 2,  // Well is oil injector
                 WatInj   = 3,  // Well is water injector
