@@ -863,3 +863,47 @@ BOOST_AUTO_TEST_CASE(WELOPEN) {
 }
 
 
+BOOST_AUTO_TEST_CASE(WellTypeTest) {
+    BOOST_CHECK_THROW(Opm::WellType(0, 3), std::invalid_argument);
+    BOOST_CHECK_THROW(Opm::WellType(5, 3), std::invalid_argument);
+    BOOST_CHECK_THROW(Opm::WellType(3, 0), std::invalid_argument);
+    BOOST_CHECK_THROW(Opm::WellType(3, 5), std::invalid_argument);
+
+    Opm::WellType wt1(1,1);
+    BOOST_CHECK(wt1.producer());
+    BOOST_CHECK(!wt1.injector());
+    BOOST_CHECK_EQUAL(wt1.ecl_wtype(), 1);
+    BOOST_CHECK_EQUAL(wt1.ecl_phase(), 1);
+    BOOST_CHECK(wt1.preferred_phase() == Phase::OIL);
+    BOOST_CHECK_THROW(wt1.injector_type(), std::invalid_argument);
+
+    Opm::WellType wt4(4,3);
+    BOOST_CHECK(!wt4.producer());
+    BOOST_CHECK(wt4.injector());
+    BOOST_CHECK_EQUAL(wt4.ecl_wtype(), 4);
+    BOOST_CHECK_EQUAL(wt4.ecl_phase(), 3);
+    BOOST_CHECK(wt4.preferred_phase() == Phase::GAS);
+    BOOST_CHECK(wt4.injector_type() == InjectorType::GAS);
+
+    BOOST_CHECK(wt4.update(true));
+    BOOST_CHECK(!wt4.update(true));
+    BOOST_CHECK(wt4.producer());
+    BOOST_CHECK(!wt4.injector());
+    BOOST_CHECK_EQUAL(wt4.ecl_wtype(), 1);
+    BOOST_CHECK_EQUAL(wt4.ecl_phase(), 3);
+    BOOST_CHECK(wt4.preferred_phase() == Phase::GAS);
+
+    Opm::WellType wtp(false, Phase::WATER);
+    BOOST_CHECK(!wtp.producer());
+    BOOST_CHECK(wtp.injector());
+    BOOST_CHECK_EQUAL(wtp.ecl_wtype(), 3);
+    BOOST_CHECK_EQUAL(wtp.ecl_phase(), 2);
+    BOOST_CHECK(wtp.preferred_phase() == Phase::WATER);
+    BOOST_CHECK(wtp.injector_type() == InjectorType::WATER);
+
+    wtp.update( InjectorType::GAS );
+    BOOST_CHECK_EQUAL(wtp.ecl_wtype(), 4);
+    BOOST_CHECK_EQUAL(wtp.ecl_phase(), 2);
+    BOOST_CHECK(wtp.preferred_phase() == Phase::WATER);
+    BOOST_CHECK(wtp.injector_type() == InjectorType::GAS);
+}
