@@ -384,7 +384,7 @@ public:
          int headI,
          int headJ,
          double ref_depth,
-         Phase phase,
+         const WellType& wtype_arg,
          ProducerCMode whistctl_cmode,
          Connection::Order ordering,
          const UnitSystem& unit_system,
@@ -400,7 +400,7 @@ public:
          int headI,
          int headJ,
          double ref_depth,
-         const Phase& phase_arg,
+         const WellType& wtype_arg,
          Connection::Order ordering,
          const UnitSystem& unit_system,
          double udq_undefined,
@@ -408,7 +408,6 @@ public:
          double drainageRadius,
          bool allowCrossFlow,
          bool automaticShutIn,
-         bool isProducer,
          const WellGuideRate& guideRate,
          double efficiencyFactor,
          double solventFraction,
@@ -431,6 +430,7 @@ public:
 
     bool hasBeenDefined(size_t timeStep) const;
     std::size_t firstTimeStep() const;
+    const WellType& wellType() const;
     bool predictionMode() const;
     bool canOpen() const;
     bool isProducer() const;
@@ -495,7 +495,6 @@ public:
     bool updateConnections(const std::shared_ptr<WellConnections> connections);
     bool updateStatus(Status status, bool update_connections);
     bool updateGroup(const std::string& group);
-    bool updateProducer(bool is_producer);
     bool updateWellGuideRate(bool available, double guide_rate, GuideRateTarget guide_phase, double scale_factor);
     bool updateWellGuideRate(double guide_rate);
     bool updateEfficiencyFactor(double efficiency_factor);
@@ -517,8 +516,6 @@ public:
     bool handleWPIMULT(const DeckRecord& record);
 
     void filterConnections(const ActiveGridCells& grid);
-    void switchToInjector();
-    void switchToProducer();
     ProductionControls productionControls(const SummaryState& st) const;
     InjectionControls injectionControls(const SummaryState& st) const;
     int vfp_table_number() const;
@@ -532,6 +529,9 @@ public:
     bool operator==(const Well& data) const;
     void setInsertIndex(std::size_t index);
 private:
+    void switchToInjector();
+    void switchToProducer();
+
     std::string wname;
     std::string group_name;
     std::size_t init_step;
@@ -539,7 +539,6 @@ private:
     int headI;
     int headJ;
     double ref_depth;
-    Phase phase;
     Connection::Order ordering;
     UnitSystem unit_system;
     double udq_undefined;
@@ -548,7 +547,7 @@ private:
     double drainage_radius;
     bool allow_cross_flow;
     bool automatic_shutin;
-    bool producer;
+    WellType wtype;
     WellGuideRate guide_rate;
     double efficiency_factor;
     double solvent_fraction;

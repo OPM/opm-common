@@ -61,6 +61,7 @@ inline std::ostream& operator<<( std::ostream& stream, const Well& well ) {
 }
 
 
+
 BOOST_AUTO_TEST_CASE(WellCOMPDATtestTRACK) {
     Opm::Parser parser;
     std::string input =
@@ -193,7 +194,7 @@ BOOST_AUTO_TEST_CASE(WellCOMPDATtestINPUT) {
 }
 
 BOOST_AUTO_TEST_CASE(NewWellZeroCompletions) {
-    Opm::Well well("WELL1", "GROUP", 0, 1, 0, 0, 0.0, Opm::Phase::OIL, Opm::Well::ProducerCMode::CMODE_UNDEFINED,  Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
+    Opm::Well well("WELL1", "GROUP", 0, 1, 0, 0, 0.0, Opm::WellType(Opm::Phase::OIL), Opm::Well::ProducerCMode::CMODE_UNDEFINED,  Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
     BOOST_CHECK_EQUAL( 0U , well.getConnections( ).size() );
 }
 
@@ -202,7 +203,7 @@ BOOST_AUTO_TEST_CASE(isProducerCorrectlySet) {
     // HACK: This test checks correctly setting of isProducer/isInjector. This property depends on which of
     //       WellProductionProperties/WellInjectionProperties is set last, independent of actual values.
     {
-        Opm::Well well("WELL1" , "GROUP", 0, 1, 0, 0, 0.0, Opm::Phase::OIL, Opm::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
+        Opm::Well well("WELL1" , "GROUP", 0, 1, 0, 0, 0.0, Opm::WellType(Opm::Phase::OIL), Opm::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
 
 
         /* 1: Well is created as producer */
@@ -220,7 +221,7 @@ BOOST_AUTO_TEST_CASE(isProducerCorrectlySet) {
 
 
     {
-        Opm::Well well("WELL1" , "GROUP", 0, 1, 0, 0, 0.0, Opm::Phase::OIL, Opm::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
+        Opm::Well well("WELL1" , "GROUP", 0, 1, 0, 0, 0.0, Opm::WellType(Opm::Phase::OIL), Opm::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
 
         /* Set a reservoir injection rate => Well becomes an Injector */
         auto injectionProps2 = std::make_shared<Opm::Well::WellInjectionProperties>(well.getInjectionProperties());
@@ -231,7 +232,7 @@ BOOST_AUTO_TEST_CASE(isProducerCorrectlySet) {
     }
 
     {
-        Opm::Well well("WELL1" , "GROUP", 0, 1, 0, 0, 0.0, Opm::Phase::OIL, Opm::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
+        Opm::Well well("WELL1" , "GROUP", 0, 1, 0, 0, 0.0, Opm::WellType(Opm::Phase::OIL), Opm::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
 
         /* Set rates => Well becomes a producer; injection rate should be set to 0. */
         auto injectionProps3 = std::make_shared<Opm::Well::WellInjectionProperties>(well.getInjectionProperties());
@@ -254,7 +255,7 @@ BOOST_AUTO_TEST_CASE(isProducerCorrectlySet) {
 }
 
 BOOST_AUTO_TEST_CASE(GroupnameCorretlySet) {
-    Opm::Well well("WELL1" , "G1", 0, 1, 0, 0, 0.0, Opm::Phase::OIL, Opm::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
+    Opm::Well well("WELL1" , "G1", 0, 1, 0, 0, 0.0, Opm::WellType(Opm::Phase::OIL), Opm::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
 
     BOOST_CHECK_EQUAL("G1" , well.groupName());
     well.updateGroup( "GROUP2");
@@ -263,7 +264,7 @@ BOOST_AUTO_TEST_CASE(GroupnameCorretlySet) {
 
 
 BOOST_AUTO_TEST_CASE(addWELSPECS_setData_dataSet) {
-    Opm::Well well("WELL1", "GROUP", 0, 1, 23, 42, 2334.32, Opm::Phase::WATER, Opm::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
+    Opm::Well well("WELL1", "GROUP", 0, 1, 23, 42, 2334.32, Opm::WellType(Opm::Phase::WATER), Opm::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
 
     BOOST_CHECK_EQUAL(23, well.getHeadI());
     BOOST_CHECK_EQUAL(42, well.getHeadJ());
@@ -273,7 +274,7 @@ BOOST_AUTO_TEST_CASE(addWELSPECS_setData_dataSet) {
 
 
 BOOST_AUTO_TEST_CASE(XHPLimitDefault) {
-    Opm::Well well("WELL1", "GROUP", 0, 1, 23, 42, 2334.32, Opm::Phase::WATER, Opm::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
+    Opm::Well well("WELL1", "GROUP", 0, 1, 23, 42, 2334.32, Opm::WellType(Opm::Phase::WATER), Opm::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
 
 
     auto productionProps = std::make_shared<Opm::Well::WellProductionProperties>(well.getProductionProperties());
@@ -293,7 +294,7 @@ BOOST_AUTO_TEST_CASE(XHPLimitDefault) {
 
 
 BOOST_AUTO_TEST_CASE(ScheduleTypesInjectorType) {
-    Opm::Well well("WELL1", "GROUP", 0, 1, 23, 42, 2334.32, Opm::Phase::WATER, Opm::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
+    Opm::Well well("WELL1", "GROUP", 0, 1, 23, 42, 2334.32, Opm::WellType(Opm::Phase::WATER), Opm::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
 
 
     auto injectionProps = std::make_shared<Opm::Well::WellInjectionProperties>(well.getInjectionProperties());
@@ -311,7 +312,7 @@ BOOST_AUTO_TEST_CASE(ScheduleTypesInjectorType) {
 
 
 BOOST_AUTO_TEST_CASE(WellHaveProductionControlLimit) {
-    Opm::Well well("WELL1", "GROUP", 0, 1, 23, 42, 2334.32, Opm::Phase::WATER, Opm::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
+    Opm::Well well("WELL1", "GROUP", 0, 1, 23, 42, 2334.32, Opm::WellType(Opm::Phase::WATER), Opm::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
 
 
     BOOST_CHECK( !well.getProductionProperties().hasProductionControl( Opm::Well::ProducerCMode::ORAT ));
@@ -358,7 +359,7 @@ BOOST_AUTO_TEST_CASE(WellHaveProductionControlLimit) {
 
 
 BOOST_AUTO_TEST_CASE(WellHaveInjectionControlLimit) {
-    Opm::Well well("WELL1", "GROUP", 0, 1, 23, 42, 2334.32, Opm::Phase::WATER, Opm::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
+    Opm::Well well("WELL1", "GROUP", 0, 1, 23, 42, 2334.32, Opm::WellType(Opm::Phase::WATER), Opm::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
 
     BOOST_CHECK( !well.getInjectionProperties().hasInjectionControl( Opm::Well::InjectorCMode::RATE ));
     BOOST_CHECK( !well.getInjectionProperties().hasInjectionControl( Opm::Well::InjectorCMode::RESV ));
@@ -400,7 +401,7 @@ BOOST_AUTO_TEST_CASE(WellHaveInjectionControlLimit) {
 /*********************************************************************/
 
 BOOST_AUTO_TEST_CASE(WellGuideRatePhase_GuideRatePhaseSet) {
-    Opm::Well well("WELL1" , "GROUP", 0, 1, 0, 0, 0.0, Opm::Phase::OIL, Opm::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
+    Opm::Well well("WELL1" , "GROUP", 0, 1, 0, 0, 0.0, Opm::WellType(Opm::Phase::OIL), Opm::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
 
     BOOST_CHECK(Opm::Well::GuideRateTarget::UNDEFINED == well.getGuideRatePhase());
 
@@ -411,7 +412,7 @@ BOOST_AUTO_TEST_CASE(WellGuideRatePhase_GuideRatePhaseSet) {
 }
 
 BOOST_AUTO_TEST_CASE(WellEfficiencyFactorSet) {
-    Opm::Well well("WELL1" , "GROUP", 0, 1, 0, 0, 0.0, Opm::Phase::OIL, Opm::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
+    Opm::Well well("WELL1" , "GROUP", 0, 1, 0, 0, 0.0, Opm::WellType(Opm::Phase::OIL), Opm::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
 
     BOOST_CHECK_EQUAL(1.0, well.getEfficiencyFactor());
     BOOST_CHECK( well.updateEfficiencyFactor(0.9));
@@ -780,7 +781,7 @@ BOOST_AUTO_TEST_CASE(CMODE_DEFAULT) {
 
 BOOST_AUTO_TEST_CASE(WELL_CONTROLS) {
     auto unit_system = UnitSystem::newMETRIC();
-    Opm::Well well("WELL", "GROUP", 0, 0, 0, 0, 1000, Opm::Phase::OIL, Opm::Well::ProducerCMode::CMODE_UNDEFINED, Opm::Connection::Order::DEPTH, unit_system, 0, 1.0, false, false);
+    Opm::Well well("WELL", "GROUP", 0, 0, 0, 0, 1000, Opm::WellType(Opm::Phase::OIL), Opm::Well::ProducerCMode::CMODE_UNDEFINED, Opm::Connection::Order::DEPTH, unit_system, 0, 1.0, false, false);
     Opm::Well::WellProductionProperties prod(unit_system, "OP1");
     Opm::SummaryState st(std::chrono::system_clock::now());
     well.productionControls(st);
@@ -801,8 +802,8 @@ BOOST_AUTO_TEST_CASE(WELL_CONTROLS) {
 
 
 BOOST_AUTO_TEST_CASE(ExtraAccessors) {
-    Opm::Well inj("WELL1" , "GROUP", 0, 1, 0, 0, 0.0, Opm::Phase::OIL, Opm::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
-    Opm::Well prod("WELL1" , "GROUP", 0, 1, 0, 0, 0.0, Opm::Phase::OIL, Opm::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
+    Opm::Well inj("WELL1" , "GROUP", 0, 1, 0, 0, 0.0,  Opm::WellType(Opm::Phase::OIL), Opm::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
+    Opm::Well prod("WELL1" , "GROUP", 0, 1, 0, 0, 0.0, Opm::WellType(Opm::Phase::OIL), Opm::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
 
     auto inj_props= std::make_shared<Opm::Well::WellInjectionProperties>(inj.getInjectionProperties());
     inj_props->VFPTableNumber = 100;
