@@ -104,6 +104,7 @@ namespace Opm {
                                const PvcdoTable& pvcdoTable,
                                const DensityTable& densityTable,
                                const RockTable& rockTable,
+                               const TlmixparTable& tlmixparTable,
                                const ViscrefTable& viscrefTable,
                                const WatdentTable& watdentTable,
                                const std::vector<PvtwsaltTable>& pvtwsaltTables,
@@ -136,6 +137,7 @@ namespace Opm {
         m_pvcdoTable(pvcdoTable),
         m_densityTable(densityTable),
         m_rockTable(rockTable),
+        m_tlmixparTable(tlmixparTable),
         m_viscrefTable(viscrefTable),
         m_watdentTable(watdentTable),
         m_pvtwsaltTables(pvtwsaltTables),
@@ -235,6 +237,10 @@ namespace Opm {
             this->stcond.pressure = stcondKeyword.getRecord(0).getItem("PRESSURE").getSIDouble(0);
         }
 
+        if (deck.hasKeyword<ParserKeywords::TLMIXPAR>()) {
+            this->m_tlmixparTable = TlmixparTable(deck.getKeyword("TLMIXPAR"));
+        }
+
         using GC = ParserKeywords::GCOMPIDX;
         if (deck.hasKeyword<GC>())
             this->m_gas_comp_index = deck.getKeyword<GC>().getRecord(0).getItem<GC::GAS_COMPONENT_INDEX>().get<int>(0);
@@ -249,6 +255,7 @@ namespace Opm {
         m_pvtwTable = data.m_pvtwTable;
         m_pvcdoTable = data.m_pvcdoTable;
         m_densityTable = data.m_densityTable;
+        m_tlmixparTable = data.m_tlmixparTable;
         m_viscrefTable = data.m_viscrefTable;
         m_watdentTable = data.m_watdentTable;
         m_pvtwsaltTables = data.m_pvtwsaltTables;
@@ -1017,6 +1024,10 @@ namespace Opm {
         return getTables("TLPMIXPA");
     }
 
+    const TlmixparTable& TableManager::getTlmixparTable() const {
+        return m_tlmixparTable;
+    }
+
     const JFunc& TableManager::getJFunc() const {
         if (!jfunc)
             throw std::invalid_argument("Cannot get JFUNC table when JFUNC not in deck");
@@ -1092,6 +1103,7 @@ namespace Opm {
                m_pvtwTable == data.m_pvtwTable &&
                m_pvcdoTable == data.m_pvcdoTable &&
                m_densityTable == data.m_densityTable &&
+               m_tlmixparTable == data.m_tlmixparTable &&
                m_viscrefTable == data.m_viscrefTable &&
                m_watdentTable == data.m_watdentTable &&
                m_pvtwsaltTables == data.m_pvtwsaltTables &&

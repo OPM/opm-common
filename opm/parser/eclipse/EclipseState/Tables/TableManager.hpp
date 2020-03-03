@@ -71,6 +71,7 @@ namespace Opm {
                      const PvcdoTable& pvcdoTable,
                      const DensityTable& densityTable,
                      const RockTable& rockTable,
+                     const TlmixparTable& tlmixparTable,
                      const ViscrefTable& viscrefTable,
                      const WatdentTable& watdentTable,
                      const std::vector<PvtwsaltTable>& pvtwsaltTables,
@@ -178,6 +179,7 @@ namespace Opm {
         const DensityTable& getDensityTable() const;
         const RockTable& getRockTable() const;
         const ViscrefTable& getViscrefTable() const;
+        const TlmixparTable& getTlmixparTable() const;
         const WatdentTable& getWatdentTable() const;
         const std::map<int, PlymwinjTable>& getPlymwinjTables() const;
         const std::map<int, SkprwatTable>& getSkprwatTables() const;
@@ -424,6 +426,7 @@ namespace Opm {
         PvcdoTable m_pvcdoTable;
         DensityTable m_densityTable;
         RockTable m_rockTable;
+        TlmixparTable m_tlmixparTable;
         ViscrefTable m_viscrefTable;
         WatdentTable m_watdentTable;
         std::vector<PvtwsaltTable> m_pvtwsaltTables;
