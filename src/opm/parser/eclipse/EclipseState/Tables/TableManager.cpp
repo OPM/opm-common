@@ -104,6 +104,7 @@ namespace Opm {
                                const PvcdoTable& pvcdoTable,
                                const DensityTable& densityTable,
                                const RockTable& rockTable,
+                               const PlmixparTable& plmixparTable,
                                const TlmixparTable& tlmixparTable,
                                const ViscrefTable& viscrefTable,
                                const WatdentTable& watdentTable,
@@ -137,6 +138,7 @@ namespace Opm {
         m_pvcdoTable(pvcdoTable),
         m_densityTable(densityTable),
         m_rockTable(rockTable),
+        m_plmixparTable(plmixparTable),
         m_tlmixparTable(tlmixparTable),
         m_viscrefTable(viscrefTable),
         m_watdentTable(watdentTable),
@@ -237,6 +239,10 @@ namespace Opm {
             this->stcond.pressure = stcondKeyword.getRecord(0).getItem("PRESSURE").getSIDouble(0);
         }
 
+        if (deck.hasKeyword<ParserKeywords::PLMIXPAR>()) {
+            this->m_plmixparTable = PlmixparTable(deck.getKeyword("PLMIXPAR"));
+        }
+
         if (deck.hasKeyword<ParserKeywords::TLMIXPAR>()) {
             this->m_tlmixparTable = TlmixparTable(deck.getKeyword("TLMIXPAR"));
         }
@@ -255,6 +261,7 @@ namespace Opm {
         m_pvtwTable = data.m_pvtwTable;
         m_pvcdoTable = data.m_pvcdoTable;
         m_densityTable = data.m_densityTable;
+        m_plmixparTable = data.m_plmixparTable;
         m_tlmixparTable = data.m_tlmixparTable;
         m_viscrefTable = data.m_viscrefTable;
         m_watdentTable = data.m_watdentTable;
@@ -1024,6 +1031,10 @@ namespace Opm {
         return getTables("TLPMIXPA");
     }
 
+    const PlmixparTable& TableManager::getPlmixparTable() const {
+        return m_plmixparTable;
+    }
+
     const TlmixparTable& TableManager::getTlmixparTable() const {
         return m_tlmixparTable;
     }
@@ -1103,6 +1114,7 @@ namespace Opm {
                m_pvtwTable == data.m_pvtwTable &&
                m_pvcdoTable == data.m_pvcdoTable &&
                m_densityTable == data.m_densityTable &&
+               m_plmixparTable == data.m_plmixparTable &&
                m_tlmixparTable == data.m_tlmixparTable &&
                m_viscrefTable == data.m_viscrefTable &&
                m_watdentTable == data.m_watdentTable &&
