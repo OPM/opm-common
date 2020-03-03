@@ -78,10 +78,9 @@ void copy_file(const fs::path& source_dir, fs::path fname, const fs::path& targe
     if (fname.is_absolute()) {
         // change when moving to gcc8+
         // fname = fs::relative(fname, source_dir);
-        auto cpath = fs::current_path();
-        fs::current_path(source_dir);
-        fname = fname.relative_path();
-        fs::current_path(cpath);
+        auto prefix_len = fs::canonical(source_dir).string().size();
+        fname = fs::canonical(fname);
+        fname = fs::path( fname.string().substr(prefix_len + 1) );
     }
 
     auto source_file = source_dir / fname;
