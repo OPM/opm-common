@@ -39,6 +39,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/PvtwsaltTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/BrineDensityTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SolventDensityTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/StandardCond.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/FlatTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SorwmisTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgcwmisTable.hpp>
@@ -89,6 +90,7 @@ namespace Opm {
                      const DenT& oilDenT,
                      const DenT& gasDenT,
                      const DenT& watDenT,
+                     const StandardCond& stcond,
                      std::size_t gas_comp_index,
                      double rtemp);
 
@@ -165,6 +167,7 @@ namespace Opm {
         const DenT& WatDenT() const;
         const DenT& GasDenT() const;
         const DenT& OilDenT() const;
+        const StandardCond& stCond() const;
         std::size_t gas_comp_index() const;
         const PvtwTable& getPvtwTable() const;
         const std::vector<PvtwsaltTable>& getPvtwSaltTables() const;
@@ -443,6 +446,7 @@ namespace Opm {
         DenT oilDenT;
         DenT gasDenT;
         DenT watDenT;
+        StandardCond stcond;
         std::size_t m_gas_comp_index;
         double m_rtemp;
     };

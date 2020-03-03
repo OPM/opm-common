@@ -123,6 +123,7 @@ namespace Opm {
                                const DenT& oilDenT_,
                                const DenT& gasDenT_,
                                const DenT& watDenT_,
+                               const StandardCond& stcond_,
                                std::size_t gas_comp_index,
                                double rtemp)
         :
@@ -154,6 +155,7 @@ namespace Opm {
         oilDenT(oilDenT_),
         gasDenT(gasDenT_),
         watDenT(watDenT_),
+        stcond(stcond_),
         m_gas_comp_index(gas_comp_index),
         m_rtemp(rtemp)
     {
@@ -227,6 +229,12 @@ namespace Opm {
         if (deck.hasKeyword<ParserKeywords::WATDENT>())
             this->watDenT = DenT( deck.getKeyword<ParserKeywords::WATDENT>());
 
+        if (deck.hasKeyword<ParserKeywords::STCOND>()) {
+            auto stcondKeyword = deck.getKeyword("STCOND");
+            this->stcond.temperature = stcondKeyword.getRecord(0).getItem("TEMPERATURE").getSIDouble(0);
+            this->stcond.pressure = stcondKeyword.getRecord(0).getItem("PRESSURE").getSIDouble(0);
+        }
+
         using GC = ParserKeywords::GCOMPIDX;
         if (deck.hasKeyword<GC>())
             this->m_gas_comp_index = deck.getKeyword<GC>().getRecord(0).getItem<GC::GAS_COMPONENT_INDEX>().get<int>(0);
@@ -262,6 +270,7 @@ namespace Opm {
         gasDenT = data.gasDenT;
         oilDenT = data.oilDenT;
         watDenT = data.watDenT;
+        stcond = data.stcond;
         m_gas_comp_index = data.m_gas_comp_index;
 
         return *this;
@@ -340,6 +349,10 @@ namespace Opm {
 
     const DenT& TableManager::OilDenT() const {
         return this->oilDenT;
+    }
+
+    const StandardCond& TableManager::stCond() const {
+        return this->stcond;
     }
 
     const TableContainer& TableManager::operator[](const std::string& tableName) const {
@@ -1097,6 +1110,7 @@ namespace Opm {
                gasDenT == data.gasDenT &&
                oilDenT == data.oilDenT &&
                watDenT == data.watDenT &&
+               stcond == data.stcond &&
                jfuncOk &&
                m_rtemp == data.m_rtemp &&
                m_gas_comp_index == data.m_gas_comp_index;
