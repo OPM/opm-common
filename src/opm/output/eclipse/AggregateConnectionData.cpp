@@ -191,7 +191,7 @@ namespace {
 
             sConn[Ix::item30] = -1.0e+20f;
             sConn[Ix::item31] = -1.0e+20f;
-            sConn[Ix::item41] = (conn.ctfAssignedFromInput()) ? 1 : 0;
+            sConn[Ix::CFInDeck] = (conn.ctfAssignedFromInput()) ? 1 : 0;
         }
     } // SConn
 
