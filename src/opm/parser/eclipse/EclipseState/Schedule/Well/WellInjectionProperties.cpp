@@ -25,6 +25,7 @@
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/S.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleTypes.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQActive.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
@@ -38,8 +39,8 @@ namespace Opm {
     Well::WellInjectionProperties::WellInjectionProperties()
         : temperature(0.0), BHPH(0.0), THPH(0.0), VFPTableNumber(0),
           predictionMode(false), injectionControls(0),
-          injectorType(Well::InjectorType::WATER),
-          controlMode(Well::InjectorCMode::CMODE_UNDEFINED)
+          injectorType(InjectorType::WATER),
+          controlMode(InjectorCMode::CMODE_UNDEFINED)
     {
     }
 
@@ -71,7 +72,7 @@ namespace Opm {
                                                            int vfpTableNum,
                                                            bool predMode,
                                                            int injControls,
-                                                           Well::InjectorType injType,
+                                                           InjectorType injType,
                                                            InjectorCMode ctrlMode)
         : name(wname),
           surfaceInjectionRate(surfaceInjRate),
@@ -93,7 +94,7 @@ namespace Opm {
 
 
     void Well::WellInjectionProperties::handleWCONINJE(const DeckRecord& record, bool availableForGroupControl, const std::string& well_name) {
-        this->injectorType = Well::InjectorTypeFromString( record.getItem("TYPE").getTrimmedString(0) );
+        this->injectorType = InjectorTypeFromString( record.getItem("TYPE").getTrimmedString(0) );
         this->predictionMode = true;
 
         if (!record.getItem("RATE").defaultApplied(0)) {
@@ -154,7 +155,7 @@ namespace Opm {
                 this->bhp_hist_limit = newValue * SiFactorP;
         }
         else if (cmode == WELTARGCMode::ORAT){
-            if(this->injectorType == Well::InjectorType::OIL){
+            if(this->injectorType == InjectorType::OIL){
                 this->surfaceInjectionRate.assert_numeric("Can not combine UDA and WELTARG");
                 this->surfaceInjectionRate.reset( newValue );
             }else{
@@ -162,7 +163,7 @@ namespace Opm {
             }
         }
         else if (cmode == WELTARGCMode::WRAT){
-            if (this->injectorType == Well::InjectorType::WATER) {
+            if (this->injectorType == InjectorType::WATER) {
                 this->surfaceInjectionRate.assert_numeric("Can not combine UDA and WELTARG");
                 this->surfaceInjectionRate.reset( newValue );
             }
@@ -170,7 +171,7 @@ namespace Opm {
                 std::invalid_argument("Well type must be WATER to set the water rate");
         }
         else if (cmode == WELTARGCMode::GRAT){
-            if(this->injectorType == Well::InjectorType::GAS){
+            if(this->injectorType == InjectorType::GAS){
                 this->surfaceInjectionRate.assert_numeric("Can not combine UDA and WELTARG");
                 this->surfaceInjectionRate.reset( newValue );
             }else{
@@ -201,7 +202,7 @@ namespace Opm {
             const std::string msg = "Injection type can not be defaulted for keyword WCONINJH";
             throw std::invalid_argument(msg);
         }
-        this->injectorType = Well::InjectorTypeFromString( typeItem.getTrimmedString(0));
+        this->injectorType = InjectorTypeFromString( typeItem.getTrimmedString(0));
 
         if (!record.getItem("RATE").defaultApplied(0)) {
             double injectionRate = record.getItem("RATE").get<double>(0);
@@ -295,7 +296,7 @@ namespace Opm {
             << "VFP table: "        << wp.VFPTableNumber << ", "
             << "prediction mode: "  << wp.predictionMode << ", "
             << "injection ctrl: "   << wp.injectionControls << ", "
-            << "injector type: "    << Well::InjectorType2String(wp.injectorType) << ", "
+            << "injector type: "    << InjectorType2String(wp.injectorType) << ", "
             << "control mode: "     << Well::InjectorCMode2String(wp.controlMode) << " }";
     }
 
