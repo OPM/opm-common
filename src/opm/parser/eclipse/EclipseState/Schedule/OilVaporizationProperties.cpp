@@ -23,19 +23,20 @@ namespace Opm {
     OilVaporizationProperties::OilVaporizationProperties()
     {
         m_type = OilVaporization::UNDEF;
+        m_vap1 = m_vap2 = -1.0;
     }
 
     OilVaporizationProperties::OilVaporizationProperties(const size_t numPvtRegionIdx):
-         m_vap1(numPvtRegionIdx, -1.0),
-         m_vap2(numPvtRegionIdx, -1.0),
+         m_vap1(-1.0),
+         m_vap2(-1.0),
          m_maxDRSDT(numPvtRegionIdx, -1.0),
          m_maxDRSDT_allCells(numPvtRegionIdx),
          m_maxDRVDT(numPvtRegionIdx, -1.0)
     {  }
 
     OilVaporizationProperties::OilVaporizationProperties(OilVaporization type,
-                                                         const std::vector<double>& vap1,
-                                                         const std::vector<double>& vap2,
+                                                         double vap1,
+                                                         double vap2,
                                                          const std::vector<double>& maxDRSDT,
                                                          const std::vector<bool>& maxDRSDT_allCells,
                                                          const std::vector<double>& maxDRVDT):
@@ -75,22 +76,6 @@ namespace Opm {
         return m_type;
     }
 
-    double OilVaporizationProperties::getVap1(const size_t pvtRegionIdx) const{
-        if (m_type == OilVaporization::VAPPARS){
-            return m_vap1[pvtRegionIdx];
-        }else{
-            throw std::logic_error("Only valid if type is VAPPARS");
-        }
-    }
-
-    double OilVaporizationProperties::getVap2(const size_t pvtRegionIdx) const{
-        if (m_type == OilVaporization::VAPPARS){
-            return m_vap2[pvtRegionIdx];
-        }else{
-            throw std::logic_error("Only valid if type is VAPPARS");
-        }
-    }
-
     void OilVaporizationProperties::updateDRSDT(OilVaporizationProperties& ovp, const std::vector<double>& maximums, const std::vector<std::string>& options){
         ovp.m_type = OilVaporization::DRDT;
         ovp.m_maxDRSDT = maximums;
@@ -110,7 +95,7 @@ namespace Opm {
         ovp.m_maxDRVDT = maximums;
     }
 
-    void OilVaporizationProperties::updateVAPPARS(OilVaporizationProperties& ovp, const std::vector<double>& vap1, const std::vector<double>& vap2){
+    void OilVaporizationProperties::updateVAPPARS(OilVaporizationProperties& ovp, double vap1, double vap2){
         ovp.m_type = OilVaporization::VAPPARS;
         ovp.m_vap1 = vap1;
         ovp.m_vap2 = vap2;
@@ -152,11 +137,11 @@ namespace Opm {
         return !(*this == rhs);
     }
 
-    const std::vector<double>& OilVaporizationProperties::vap1() const {
+    double OilVaporizationProperties::vap1() const {
         return m_vap1;
     }
 
-    const std::vector<double>& OilVaporizationProperties::vap2() const {
+    double OilVaporizationProperties::vap2() const {
         return m_vap2;
     }
 

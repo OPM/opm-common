@@ -753,14 +753,11 @@ std::pair<std::time_t, std::size_t> restart_info(const RestartIO::RstState * rst
     }
 
     void Schedule::handleVAPPARS( const DeckKeyword& keyword, size_t currentStep){
-        size_t numPvtRegions = m_runspec.tabdims().getNumPVTTables();
-        std::vector<double> vap(numPvtRegions);
-        std::vector<double> density(numPvtRegions);
         for( const auto& record : keyword ) {
-            std::fill(vap.begin(), vap.end(), record.getItem("OIL_VAP_PROPENSITY").get< double >(0));
-            std::fill(density.begin(), density.end(), record.getItem("OIL_DENSITY_PROPENSITY").get< double >(0));
+            double vap1 = record.getItem("OIL_VAP_PROPENSITY").get< double >(0);
+            double vap2 = record.getItem("OIL_DENSITY_PROPENSITY").get< double >(0);
             OilVaporizationProperties ovp = this->m_oilvaporizationproperties.get(currentStep);
-            OilVaporizationProperties::updateVAPPARS(ovp, vap, density);
+            OilVaporizationProperties::updateVAPPARS(ovp, vap1, vap2);
             this->m_oilvaporizationproperties.update( currentStep, ovp );
         }
     }

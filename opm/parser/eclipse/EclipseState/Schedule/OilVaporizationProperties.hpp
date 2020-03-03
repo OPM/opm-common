@@ -43,18 +43,16 @@ namespace Opm
         OilVaporizationProperties();
         explicit OilVaporizationProperties(const size_t numPvtReginIdx);
         OilVaporizationProperties(OilVaporization type,
-                                  const std::vector<double>& vap1,
-                                  const std::vector<double>& vap2,
+                                  double vap1,
+                                  double vap2,
                                   const std::vector<double>& maxDRSDT,
                                   const std::vector<bool>& maxDRSDT_allCells,
                                   const std::vector<double>& maxDRVDT);
         static void updateDRSDT(Opm::OilVaporizationProperties& ovp, const std::vector<double>& maxDRSDT, const std::vector<std::string>& option);
         static void updateDRVDT(Opm::OilVaporizationProperties& ovp, const std::vector<double>& maxDRVDT);
-        static void updateVAPPARS(Opm::OilVaporizationProperties& ovp, const std::vector<double>& vap1, const std::vector<double>& vap2);
+        static void updateVAPPARS(Opm::OilVaporizationProperties& ovp, double vap1, double vap2);
 
         OilVaporization getType() const;
-        double getVap1(const size_t pvtRegionIdx) const;
-        double getVap2(const size_t pvtRegionIdx) const;
         double getMaxDRSDT(const size_t pvtRegionIdx) const;
         double getMaxDRVDT(const size_t pvtRegionIdx) const;
         bool getOption(const size_t pvtRegionIdx) const;
@@ -63,8 +61,8 @@ namespace Opm
         bool defined() const;
         size_t numPvtRegions() const {return m_maxDRSDT.size();}
 
-        const std::vector<double>& vap1() const;
-        const std::vector<double>& vap2() const;
+        double vap1() const;
+        double vap2() const;
         const std::vector<double>& maxDRSDT() const;
         const std::vector<bool>& maxDRSDT_allCells() const;
         const std::vector<double>& maxDRVDT() const;
@@ -78,8 +76,8 @@ namespace Opm
 
     private:
         OilVaporization m_type = OilVaporization::UNDEF;
-        std::vector<double> m_vap1;
-        std::vector<double> m_vap2;
+        double m_vap1;
+        double m_vap2;
         std::vector<double> m_maxDRSDT;
         std::vector<bool> m_maxDRSDT_allCells;
         std::vector<double> m_maxDRVDT;
