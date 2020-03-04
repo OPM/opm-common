@@ -1144,7 +1144,7 @@ namespace {
 
     const Dimension& UnitSystem::getNewDimension(const std::string& dimension) {
         if( !hasDimension( dimension ) )
-            this->addDimension( this->parse( dimension ) );
+            this->addDimension( dimension, this->parse( dimension ) );
 
         return getDimension( dimension );
     }
@@ -1163,14 +1163,12 @@ namespace {
         return this->m_use_count;
     }
 
-
-    void UnitSystem::addDimension( Dimension dimension ) {
-        const auto dimname = dimension.getName();
-        this->m_dimensions[ dimname ] = std::move( dimension );
+    void UnitSystem::addDimension(const std::string& dimension , const Dimension& dim) {
+        this->m_dimensions[ dimension ] = std::move(dim);
     }
 
     void UnitSystem::addDimension(const std::string& dimension , double SIfactor, double SIoffset) {
-        this->addDimension( Dimension { dimension, SIfactor, SIoffset } );
+        this->addDimension(dimension, Dimension(SIfactor, SIoffset));
     }
 
     const std::string& UnitSystem::getName() const {

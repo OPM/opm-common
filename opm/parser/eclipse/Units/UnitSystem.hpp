@@ -87,8 +87,8 @@ namespace Opm {
         UnitType getType() const;
         int ecl_id() const;
 
+        void addDimension(const std::string& dimension , const Dimension& dim);
         void addDimension(const std::string& dimension, double SIfactor, double SIoffset = 0.0);
-        void addDimension( Dimension );
         const Dimension& getNewDimension(const std::string& dimension);
         const Dimension& getDimension(const std::string& dimension) const;
         bool hasDimension(const std::string& dimension) const;

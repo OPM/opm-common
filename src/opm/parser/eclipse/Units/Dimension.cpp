@@ -25,22 +25,16 @@
 
 namespace Opm {
 
-    Dimension::Dimension() :
-        m_name("Dimensionless")
+    Dimension::Dimension()
     {
         this->m_SIfactor = 1.0;
         this->m_SIoffset = 0.0;
 
     }
 
-    Dimension::Dimension(const std::string& name, double SIfactor,
-                         double SIoffset, bool sanityCheck)
+    Dimension::Dimension(double SIfactor,
+                         double SIoffset)
     {
-        for (auto iter = name.begin(); iter != name.end() && sanityCheck; ++iter) {
-            if (!isalpha(*iter) && (*iter) != '1')
-                throw std::invalid_argument("Invalid dimension name");
-        }
-        m_name = name;
         m_SIfactor = SIfactor;
         m_SIoffset = SIoffset;
     }
@@ -76,9 +70,6 @@ namespace Opm {
         return (siValue - m_SIoffset)/m_SIfactor;
     }
 
-    const std::string& Dimension::getName() const {
-        return m_name;
-    }
 
     // only dimensions with zero offset are compositable...
     bool Dimension::isCompositable() const
@@ -86,7 +77,6 @@ namespace Opm {
 
     Dimension Dimension::newComposite(const std::string& dim , double SIfactor, double SIoffset) {
         Dimension dimension;
-        dimension.m_name = dim;
         dimension.m_SIfactor = SIfactor;
         dimension.m_SIoffset = SIoffset;
         return dimension;
@@ -98,7 +88,6 @@ namespace Opm {
     }
 
     bool Dimension::operator==( const Dimension& rhs ) const {
-        if( this->m_name != rhs.m_name ) return false;
         if( this->m_SIfactor == rhs.m_SIfactor
          && this->m_SIoffset == rhs.m_SIoffset ) return true;
 

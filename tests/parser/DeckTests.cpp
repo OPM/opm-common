@@ -295,7 +295,7 @@ BOOST_AUTO_TEST_CASE(GetSIWithoutDimensionThrows) {
 }
 
 BOOST_AUTO_TEST_CASE(GetSISingleDimensionCorrect) {
-    Dimension dim{ "Length" , 100 };
+    Dimension dim{ 100 };
     DeckItem item( "HEI", double(), { dim }, { dim } );
 
     item.push_back(1.0 , 100 );
@@ -305,8 +305,8 @@ BOOST_AUTO_TEST_CASE(GetSISingleDimensionCorrect) {
 }
 
 BOOST_AUTO_TEST_CASE(GetSISingleDefault) {
-    Dimension dim{ "Length" , 1 };
-    Dimension defaultDim{ "Length" , 100 };
+    Dimension dim{ 1 };
+    Dimension defaultDim{  100 };
     DeckItem item( "HEI", double() , {dim}, {defaultDim});
 
     item.push_backDefault( 1.0 );
@@ -315,11 +315,11 @@ BOOST_AUTO_TEST_CASE(GetSISingleDefault) {
 }
 
 BOOST_AUTO_TEST_CASE(GetSIMultipleDim) {
-    Dimension dim1{ "Length" , 2 };
-    Dimension dim2{ "Length" , 4 };
-    Dimension dim3{ "Length" , 8 };
-    Dimension dim4{ "Length" ,16 };
-    Dimension defaultDim{ "Length" , 100 };
+    Dimension dim1{  2 };
+    Dimension dim2{  4 };
+    Dimension dim3{  8 };
+    Dimension dim4{ 16 };
+    Dimension defaultDim{  100 };
     DeckItem item( "HEI", double(), {dim1, dim2, dim3, dim4}, {defaultDim, defaultDim, defaultDim, defaultDim} );
 
     item.push_back( 1.0, 16 );
