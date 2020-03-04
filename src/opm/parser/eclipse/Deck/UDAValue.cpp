@@ -36,6 +36,10 @@ UDAValue::UDAValue(double value, const Dimension& dim_):
 {
 }
 
+UDAValue::UDAValue(const Dimension& dim_):
+    UDAValue(0, dim_)
+{
+}
 
 UDAValue::UDAValue() :
     UDAValue(0)

@@ -34,6 +34,7 @@ public:
     UDAValue();
     explicit UDAValue(double);
     explicit UDAValue(const std::string&);
+    explicit UDAValue(const Dimension& dim);
     UDAValue(const UDAValue& src, const Dimension& dim);
     UDAValue(double data, const Dimension& dim);
     UDAValue(const std::string& data, const Dimension& dim);
