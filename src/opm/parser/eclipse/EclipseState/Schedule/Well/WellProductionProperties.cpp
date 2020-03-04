@@ -33,17 +33,27 @@
 
 namespace Opm {
 
-    Well::WellProductionProperties::WellProductionProperties()
-        : BHPH(0.0), THPH(0.0), VFPTableNumber(0),
-          ALQValue(0.0), predictionMode(false),
-          controlMode(ProducerCMode::NONE),
-          whistctl_cmode(ProducerCMode::NONE),
-          m_productionControls(0)
+    Well::WellProductionProperties::WellProductionProperties() :
+        WellProductionProperties(UnitSystem(UnitSystem::UnitType::UNIT_TYPE_METRIC), "")
     {}
 
-    Well::WellProductionProperties::WellProductionProperties(const std::string& name_arg) :
+    Well::WellProductionProperties::WellProductionProperties(const UnitSystem& units, const std::string& name_arg) :
         name(name_arg),
-        predictionMode( true )
+        OilRate(units.getDimension(UnitSystem::measure::liquid_surface_rate)),
+        WaterRate(units.getDimension(UnitSystem::measure::liquid_surface_rate)),
+        GasRate(units.getDimension(UnitSystem::measure::gas_surface_rate)),
+        LiquidRate(units.getDimension(UnitSystem::measure::liquid_surface_rate)),
+        ResVRate(units.getDimension(UnitSystem::measure::rate)),
+        BHPTarget(units.getDimension(UnitSystem::measure::pressure)),
+        THPTarget(units.getDimension(UnitSystem::measure::pressure)),
+        BHPH(0.0),
+        THPH(0.0),
+        VFPTableNumber(0),
+        ALQValue(0.0),
+        predictionMode(true),
+        controlMode(ProducerCMode::CMODE_UNDEFINED),
+        whistctl_cmode(ProducerCMode::CMODE_UNDEFINED),
+        m_productionControls(0)
     {}
 
 

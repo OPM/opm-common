@@ -493,10 +493,10 @@ namespace {
 
         Opm::Well::WellProductionProperties properties(const std::string& input) {
             Opm::Parser parser;
-
+            Opm::UnitSystem unit_system(Opm::UnitSystem::UnitType::UNIT_TYPE_METRIC);
             auto deck = parser.parseString(input);
             const auto& record = deck.getKeyword("WCONHIST").getRecord(0);
-            Opm::Well::WellProductionProperties hist("W");
+            Opm::Well::WellProductionProperties hist(unit_system, "W");
             hist.handleWCONHIST(record);
 
 
@@ -542,14 +542,14 @@ namespace {
             return input;
         }
 
-
+        Opm::UnitSystem unit_system(Opm::UnitSystem::UnitType::UNIT_TYPE_METRIC);
         Opm::Well::WellProductionProperties properties(const std::string& input)
         {
             Opm::Parser parser;
             auto deck = parser.parseString(input);
             const auto& kwd     = deck.getKeyword("WCONPROD");
             const auto&  record = kwd.getRecord(0);
-            Opm::Well::WellProductionProperties pred("W");
+            Opm::Well::WellProductionProperties pred(unit_system, "W");
             pred.handleWCONPROD("WELL", record);
 
             return pred;
@@ -767,7 +767,8 @@ BOOST_AUTO_TEST_CASE(BHP_CMODE)
 
 
 BOOST_AUTO_TEST_CASE(CMODE_DEFAULT) {
-    const Opm::Well::WellProductionProperties Pproperties("W");
+    auto unit_system = UnitSystem::newMETRIC();
+    const Opm::Well::WellProductionProperties Pproperties(unit_system, "W");
     const Opm::Well::WellInjectionProperties Iproperties("W");
 
     BOOST_CHECK( Pproperties.controlMode == Opm::Well::ProducerCMode::CMODE_UNDEFINED );
@@ -778,8 +779,9 @@ BOOST_AUTO_TEST_CASE(CMODE_DEFAULT) {
 
 
 BOOST_AUTO_TEST_CASE(WELL_CONTROLS) {
-    Opm::Well well("WELL", "GROUP", 0, 0, 0, 0, 1000, Opm::Phase::OIL, Opm::Well::ProducerCMode::CMODE_UNDEFINED, Opm::Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
-    Opm::Well::WellProductionProperties prod("OP1");
+    auto unit_system = UnitSystem::newMETRIC();
+    Opm::Well well("WELL", "GROUP", 0, 0, 0, 0, 1000, Opm::Phase::OIL, Opm::Well::ProducerCMode::CMODE_UNDEFINED, Opm::Connection::Order::DEPTH, unit_system, 0, 1.0, false, false);
+    Opm::Well::WellProductionProperties prod(unit_system, "OP1");
     Opm::SummaryState st(std::chrono::system_clock::now());
     well.productionControls(st);
 

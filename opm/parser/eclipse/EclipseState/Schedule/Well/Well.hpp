@@ -317,7 +317,7 @@ public:
         bool operator!=(const WellProductionProperties& other) const;
 
         WellProductionProperties();
-        WellProductionProperties(const std::string& name_arg);
+        WellProductionProperties(const UnitSystem& units, const std::string& name_arg);
         WellProductionProperties(const std::string& wname,
                                  const UDAValue& oilRate,
                                  const UDAValue& waterRate,

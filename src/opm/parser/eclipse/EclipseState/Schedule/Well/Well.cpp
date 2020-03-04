@@ -132,10 +132,10 @@ Well::Well(const std::string& wname_arg,
     brine_properties(std::make_shared<WellBrineProperties>()),
     tracer_properties(std::make_shared<WellTracerProperties>()),
     connections(std::make_shared<WellConnections>(headI, headJ)),
-    production(std::make_shared<WellProductionProperties>(wname)),
+    production(std::make_shared<WellProductionProperties>(unit_system, wname)),
     injection(std::make_shared<WellInjectionProperties>(wname))
 {
-    auto p = std::make_shared<WellProductionProperties>(wname);
+    auto p = std::make_shared<WellProductionProperties>(this->unit_system, this->wname);
     p->whistctl_cmode = whistctl_cmode;
     this->updateProduction(p);
 }
