@@ -105,6 +105,11 @@ double GuideRate::get(const std::string& name, GuideRateModel::Target model_targ
     }
 }
 
+bool GuideRate::has(const std::string& name) const
+{
+    return this->values.count(name) > 0;
+}
+
 
 
 void GuideRate::compute(const std::string& wgname, size_t report_step, double sim_time, double oil_pot, double gas_pot, double wat_pot) {
