@@ -131,11 +131,9 @@ FoamConfig::FoamConfig(const Deck& deck)
         // setup for foam at this point, so we detect and deal with it here even though we
         // do not store any data related to it.
         const auto& kw_foamopts = deck.getKeyword<ParserKeywords::FOAMOPTS>();
-        if (kw_foamopts.getRecord(0).getItem(0).get<std::string>(0) != "GAS") {
-            throw std::runtime_error("In FOAMOPTS, only the GAS transport phase is supported.");
-        }
-        if (kw_foamopts.getRecord(0).getItem(1).get<std::string>(0) != "TAB") {
-            throw std::runtime_error("In FOAMOPTS, only the TAB gas mobility reduction model is supported.");
+        transport_phase_ = get_phase(kw_foamopts.getRecord(0).getItem(0).get<std::string>(0));
+        if (kw_foamopts.getRecord(0).getItem(1).get<std::string>(0) == "TAB") {
+            mobility_model_ = MobilityModel::TAB;
         }
     }
     if (deck.hasKeyword<ParserKeywords::FOAMFSC>()) {
@@ -161,8 +159,12 @@ FoamConfig::FoamConfig(const Deck& deck)
     }
 }
 
-FoamConfig::FoamConfig(const std::vector<FoamData>& data)
+FoamConfig::FoamConfig(const std::vector<FoamData>& data,
+                       Phase transport_phase,
+                       MobilityModel mobility_model)
     : data_(data)
+    , transport_phase_(transport_phase)
+    , mobility_model_(mobility_model)
 {
 }
 
@@ -202,10 +204,24 @@ FoamConfig::end() const
     return this->data_.end();
 }
 
+Phase
+FoamConfig::getTransportPhase() const
+{
+    return this->transport_phase_;
+}
+
+FoamConfig::MobilityModel
+FoamConfig::getMobilityModel() const
+{
+    return this->mobility_model_;
+}
+
 bool
 FoamConfig::operator==(const FoamConfig& data) const
 {
-    return data_ == data.data_;
+    return transport_phase_ == data.transport_phase_ &&
+           mobility_model_ == data.mobility_model_ &&
+           data_ == data.data_;
 }
 
 } // namespace Opm
