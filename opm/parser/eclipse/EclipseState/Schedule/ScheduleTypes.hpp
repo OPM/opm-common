@@ -20,6 +20,8 @@
 #ifndef OPM_SCHEDULE_TYPES_HPP
 #define OPM_SCHEDULE_TYPES_HPP
 
+#include <string>
+
 namespace Opm {
 
 enum class InjectorType {
