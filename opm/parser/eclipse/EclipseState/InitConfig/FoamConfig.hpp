@@ -20,6 +20,8 @@
 #ifndef OPM_FOAMCONFIG_HPP
 #define OPM_FOAMCONFIG_HPP
 
+#include <opm/parser/eclipse/EclipseState/Runspec.hpp>
+
 #include <cstddef>
 #include <vector>
 
@@ -63,12 +65,22 @@ private:
 class FoamConfig
 {
 public:
+    enum class MobilityModel {
+      INVALID,
+      TAB
+    };
+
     FoamConfig() = default;
     explicit FoamConfig(const Deck&);
-    FoamConfig(const std::vector<FoamData>& data);
+    FoamConfig(const std::vector<FoamData>& data,
+               Phase transport_phase,
+               MobilityModel mobility_model);
 
     const FoamData& getRecord(std::size_t index) const;
     const std::vector<FoamData>& records() const;
+
+    Opm::Phase getTransportPhase() const;
+    MobilityModel getMobilityModel() const;
 
     std::size_t size() const;
     bool empty() const;
@@ -81,6 +93,8 @@ public:
 
 private:
     std::vector<FoamData> data_;
+    Phase transport_phase_ = Phase::GAS;
+    MobilityModel mobility_model_ = MobilityModel::INVALID;
 };
 
 } // end namespace Opm
