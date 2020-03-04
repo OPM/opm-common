@@ -1158,6 +1158,12 @@ namespace {
         return iter->second;
     }
 
+    Dimension UnitSystem::getDimension(measure m) const {
+        double si_factor = this->measure_table_to_si[ static_cast< int >( m ) ];
+        double si_offset = this->measure_table_to_si_offset[ static_cast<int>( m ) ];
+        return Dimension(si_factor, si_offset);
+    }
+
 
     std::size_t UnitSystem::use_count() const {
         return this->m_use_count;

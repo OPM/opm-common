@@ -91,6 +91,9 @@ namespace Opm {
         void addDimension(const std::string& dimension, double SIfactor, double SIoffset = 0.0);
         const Dimension& getNewDimension(const std::string& dimension);
         const Dimension& getDimension(const std::string& dimension) const;
+        Dimension getDimension(measure m) const;
+
+
         bool hasDimension(const std::string& dimension) const;
         bool equal(const UnitSystem& other) const;
         const std::map<std::string,Dimension>& getDimensions() const;
