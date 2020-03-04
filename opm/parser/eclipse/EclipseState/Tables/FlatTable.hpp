@@ -93,6 +93,22 @@ struct PvcdoTable : public FlatTable< PVCDORecord > {
     using FlatTable< PVCDORecord >::FlatTable;
 };
 
+struct TlmixparRecord {
+    static constexpr std::size_t size = 2;
+
+    double viscosity;
+    double density;
+
+    bool operator==(const TlmixparRecord& data) const {
+        return viscosity == data.viscosity &&
+               density == data.density;
+    }
+};
+
+struct TlmixparTable : public FlatTable< TlmixparRecord> {
+    using FlatTable< TlmixparRecord >::FlatTable;
+};
+
 struct VISCREFRecord {
     static constexpr std::size_t size = 2;
 
