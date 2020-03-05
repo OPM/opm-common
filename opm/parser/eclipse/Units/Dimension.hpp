@@ -39,7 +39,6 @@ namespace Opm {
 
         bool equal(const Dimension& other) const;
         bool isCompositable() const;
-        static Dimension newComposite(const std::string& dim, double SIfactor, double SIoffset = 0.0);
 
         bool operator==( const Dimension& ) const;
         bool operator!=( const Dimension& ) const;

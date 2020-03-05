@@ -1195,7 +1195,7 @@ namespace {
 
             SIfactor *= dim.getSIScaling();
         }
-        return Dimension::newComposite( dimension , SIfactor );
+        return Dimension( SIfactor );
     }
 
     Dimension UnitSystem::parse(const std::string& dimension) const {
@@ -1214,7 +1214,7 @@ namespace {
         if (dividend.getSIOffset() != 0.0 || divisor.getSIOffset() != 0.0)
             throw std::invalid_argument("Composite dimensions cannot currently require a conversion offset");
 
-        return Dimension::newComposite( dimension, dividend.getSIScaling() / divisor.getSIScaling() );
+        return Dimension( dividend.getSIScaling() / divisor.getSIScaling() );
     }
 
 

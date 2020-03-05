@@ -75,13 +75,6 @@ namespace Opm {
     bool Dimension::isCompositable() const
     { return m_SIoffset == 0.0; }
 
-    Dimension Dimension::newComposite(const std::string& dim , double SIfactor, double SIoffset) {
-        Dimension dimension;
-        dimension.m_SIfactor = SIfactor;
-        dimension.m_SIoffset = SIoffset;
-        return dimension;
-    }
-
 
     bool Dimension::equal(const Dimension& other) const {
         return *this == other;

@@ -41,11 +41,6 @@ BOOST_AUTO_TEST_CASE(CreateDimension) {
     BOOST_CHECK_EQUAL(1 , length.getSIScaling());
 }
 
-BOOST_AUTO_TEST_CASE(makeComposite) {
-    auto composite = Dimension::newComposite("Length*Length*Length/Time" , 100);
-    BOOST_CHECK_EQUAL(100 , composite.getSIScaling());
-}
-
 
 BOOST_AUTO_TEST_CASE(CreateUnitSystem) {
     UnitSystem system(UnitSystem::UnitType::UNIT_TYPE_METRIC);
