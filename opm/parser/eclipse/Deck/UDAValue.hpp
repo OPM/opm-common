@@ -55,15 +55,14 @@ public:
     template<typename T>
     bool is() const;
 
-    void reset(double value);
-    void reset(const std::string& value);
-
     void assert_numeric() const;
     void assert_numeric(const std::string& error_msg) const;
     const Dimension& get_dim() const;
 
     bool operator==(const UDAValue& other) const;
     bool operator!=(const UDAValue& other) const;
+    UDAValue& operator=(double value);
+    UDAValue& operator=(const std::string& value);
 
     bool is_numeric() { return numeric_value; }
 

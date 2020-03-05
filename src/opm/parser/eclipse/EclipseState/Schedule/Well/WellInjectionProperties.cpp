@@ -150,14 +150,14 @@ namespace Opm {
         if (cmode == Well::WELTARGCMode::BHP){
             if (this->predictionMode) {
                 this->BHPTarget.assert_numeric("Can not combine UDA and WELTARG");
-                this->BHPTarget.reset( newValue );
+                this->BHPTarget = newValue;
             } else
                 this->bhp_hist_limit = newValue * SiFactorP;
         }
         else if (cmode == WELTARGCMode::ORAT){
             if(this->injectorType == InjectorType::OIL){
                 this->surfaceInjectionRate.assert_numeric("Can not combine UDA and WELTARG");
-                this->surfaceInjectionRate.reset( newValue );
+                this->surfaceInjectionRate = newValue;
             }else{
                 std::invalid_argument("Well type must be OIL to set the oil rate");
             }
@@ -165,7 +165,7 @@ namespace Opm {
         else if (cmode == WELTARGCMode::WRAT){
             if (this->injectorType == InjectorType::WATER) {
                 this->surfaceInjectionRate.assert_numeric("Can not combine UDA and WELTARG");
-                this->surfaceInjectionRate.reset( newValue );
+                this->surfaceInjectionRate = newValue;
             }
             else
                 std::invalid_argument("Well type must be WATER to set the water rate");
@@ -173,21 +173,21 @@ namespace Opm {
         else if (cmode == WELTARGCMode::GRAT){
             if(this->injectorType == InjectorType::GAS){
                 this->surfaceInjectionRate.assert_numeric("Can not combine UDA and WELTARG");
-                this->surfaceInjectionRate.reset( newValue );
+                this->surfaceInjectionRate = newValue;
             }else{
                 std::invalid_argument("Well type must be GAS to set the gas rate");
             }
         }
         else if (cmode == WELTARGCMode::THP){
             this->THPTarget.assert_numeric("Can not combine UDA and WELTARG");
-            this->THPTarget.reset( newValue );
+            this->THPTarget = newValue;
         }
         else if (cmode == WELTARGCMode::VFP){
             this->VFPTableNumber = static_cast<int> (newValue);
         }
         else if (cmode == WELTARGCMode::RESV){
             this->surfaceInjectionRate.assert_numeric("Can not combine UDA and WELTARG");
-            this->reservoirInjectionRate.reset( newValue );
+            this->reservoirInjectionRate = newValue;
         }
         else if (cmode != WELTARGCMode::GUID){
             throw std::invalid_argument("Invalid keyword (MODE) supplied");
@@ -206,7 +206,7 @@ namespace Opm {
 
         if (!record.getItem("RATE").defaultApplied(0)) {
             double injectionRate = record.getItem("RATE").get<double>(0);
-            this->surfaceInjectionRate.reset( injectionRate );
+            this->surfaceInjectionRate = injectionRate;
         }
         if ( record.getItem( "BHP" ).hasValue(0) )
             this->BHPH = record.getItem("BHP").getSIDouble(0);

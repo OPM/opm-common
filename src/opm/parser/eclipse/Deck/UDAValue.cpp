@@ -96,14 +96,17 @@ double UDAValue::getSI() const {
     return this->dim.convertRawToSi(this->double_value);
 }
 
-void UDAValue::reset(double value) {
+
+UDAValue& UDAValue::operator=(double value) {
     this->double_value = value;
     this->numeric_value = true;
+    return *this;
 }
 
-void UDAValue::reset(const std::string& value) {
+UDAValue& UDAValue::operator=(const std::string& value) {
     this->string_value = value;
     this->numeric_value = false;
+    return *this;
 }
 
 template<>
