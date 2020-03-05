@@ -211,7 +211,7 @@ public:
         bool operator!=(const WellInjectionProperties& other) const;
 
         WellInjectionProperties();
-        WellInjectionProperties(const std::string& wname);
+        WellInjectionProperties(const UnitSystem& units, const std::string& wname);
         WellInjectionProperties(const std::string& wname,
                                 const UDAValue& surfaceInjRate,
                                 const UDAValue& reservoirInjRate,

@@ -769,7 +769,7 @@ BOOST_AUTO_TEST_CASE(BHP_CMODE)
 BOOST_AUTO_TEST_CASE(CMODE_DEFAULT) {
     auto unit_system = UnitSystem::newMETRIC();
     const Opm::Well::WellProductionProperties Pproperties(unit_system, "W");
-    const Opm::Well::WellInjectionProperties Iproperties("W");
+    const Opm::Well::WellInjectionProperties Iproperties(unit_system, "W");
 
     BOOST_CHECK( Pproperties.controlMode == Opm::Well::ProducerCMode::CMODE_UNDEFINED );
     BOOST_CHECK( Iproperties.controlMode == Opm::Well::InjectorCMode::CMODE_UNDEFINED );

@@ -37,26 +37,26 @@ namespace Opm {
 
 
     Well::WellInjectionProperties::WellInjectionProperties()
-        : temperature(0.0), BHPH(0.0), THPH(0.0), VFPTableNumber(0),
-          predictionMode(false), injectionControls(0),
-          injectorType(InjectorType::WATER),
-          controlMode(InjectorCMode::CMODE_UNDEFINED)
+        : WellInjectionProperties(UnitSystem(UnitSystem::UnitType::UNIT_TYPE_METRIC), "")
     {
     }
 
-    Well::WellInjectionProperties::WellInjectionProperties(const std::string& wname)
+
+    Well::WellInjectionProperties::WellInjectionProperties(const UnitSystem& units, const std::string& wname)
         : name(wname),
+          surfaceInjectionRate(units.getDimension(UnitSystem::measure::identity)),
+          reservoirInjectionRate(units.getDimension(UnitSystem::measure::rate)),
+          BHPTarget(units.getDimension(UnitSystem::measure::pressure)),
+          THPTarget(units.getDimension(UnitSystem::measure::pressure)),
+          temperature(Metric::TemperatureOffset + ParserKeywords::STCOND::TEMPERATURE::defaultValue),
+          BHPH(0),
+          THPH(0),
+          VFPTableNumber(0),
+          predictionMode(true),
+          injectionControls(0),
           injectorType(InjectorType::WATER),
           controlMode(InjectorCMode::CMODE_UNDEFINED)
     {
-        temperature=
-            Metric::TemperatureOffset
-            + ParserKeywords::STCOND::TEMPERATURE::defaultValue;
-        BHPH=0.0;
-        THPH=0.0;
-        VFPTableNumber=0;
-        predictionMode=true;
-        injectionControls=0;
     }
 
     Well::WellInjectionProperties::WellInjectionProperties(const std::string& wname,
