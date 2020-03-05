@@ -72,8 +72,6 @@ private:
     double double_value;
     std::string string_value;
 
-    /* This 'mutable' modifier is a hack to avoid tampering with the overall
-       const-ness of the data in a deck item. */
     Dimension dim;
 };
 
