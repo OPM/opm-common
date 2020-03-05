@@ -79,12 +79,10 @@ namespace Opm {
     }
 
     InitConfig::InitConfig(const Equil& equils, const FoamConfig& foam,
-                           const PolymerConfig& polymer,
                            bool filleps, bool gravity, bool restartReq, int restartStep,
                            const std::string& restartRootName)
         : equil(equils)
         , foamconfig(foam)
-        , polymerconfig(polymer)
         , m_filleps(filleps)
         , m_gravity(gravity)
         , m_restartRequested(restartReq)
@@ -138,14 +136,9 @@ namespace Opm {
         return this->foamconfig;
     }
 
-    const PolymerConfig& InitConfig::getPolymerConfig() const {
-        return this->polymerconfig;
-    }
-
     bool InitConfig::operator==(const InitConfig& data) const {
         return equil == data.equil &&
                foamconfig == data.foamconfig &&
-               polymerconfig == data.polymerconfig &&
                m_filleps == data.m_filleps &&
                m_gravity == data.m_gravity &&
                m_restartRequested == data.m_restartRequested &&
