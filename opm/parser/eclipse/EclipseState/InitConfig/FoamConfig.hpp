@@ -66,8 +66,8 @@ class FoamConfig
 {
 public:
     enum class MobilityModel {
-      INVALID,
-      TAB
+      TAB,
+      FUNC
     };
 
     FoamConfig() = default;
@@ -94,7 +94,7 @@ public:
 private:
     std::vector<FoamData> data_;
     Phase transport_phase_ = Phase::GAS;
-    MobilityModel mobility_model_ = MobilityModel::INVALID;
+    MobilityModel mobility_model_ = MobilityModel::TAB;
 };
 
 } // end namespace Opm

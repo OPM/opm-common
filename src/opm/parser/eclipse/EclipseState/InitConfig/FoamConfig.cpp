@@ -132,8 +132,17 @@ FoamConfig::FoamConfig(const Deck& deck)
         // do not store any data related to it.
         const auto& kw_foamopts = deck.getKeyword<ParserKeywords::FOAMOPTS>();
         transport_phase_ = get_phase(kw_foamopts.getRecord(0).getItem(0).get<std::string>(0));
-        if (kw_foamopts.getRecord(0).getItem(1).get<std::string>(0) == "TAB") {
+        std::string mobModel = kw_foamopts.getRecord(0).getItem(1).get<std::string>(0);
+        if (mobModel.empty()) {
+            if (transport_phase_ == Phase::GAS) {
+                mobility_model_ = MobilityModel::TAB;
+            } else if (transport_phase_ == Phase::WATER) {
+                mobility_model_ = MobilityModel::FUNC;
+            }
+        } else if (mobModel == "TAB") {
             mobility_model_ = MobilityModel::TAB;
+        } else if (mobModel == "FUNC") {
+            mobility_model_ = MobilityModel::FUNC;
         }
     }
     if (deck.hasKeyword<ParserKeywords::FOAMFSC>()) {
