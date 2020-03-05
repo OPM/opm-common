@@ -438,7 +438,7 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
 
 
 
-    void WellConnections::orderConnections(size_t well_i, size_t well_j)
+    void WellConnections::orderTRACK(size_t well_i, size_t well_j)
     {
         if (m_connections.empty()) {
             return;
