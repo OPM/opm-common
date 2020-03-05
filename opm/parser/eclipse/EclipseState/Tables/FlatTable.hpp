@@ -107,6 +107,26 @@ struct PlmixparTable : public FlatTable< PlmixparRecord> {
     using FlatTable< PlmixparRecord >::FlatTable;
 };
 
+struct PlyvmhRecord {
+    static constexpr std::size_t size = 4;
+
+    double k_mh;
+    double a_mh;
+    double gamma;
+    double kappa;
+
+    bool operator==(const PlyvmhRecord& data) const {
+        return k_mh == data.k_mh &&
+               a_mh == data.a_mh &&
+               gamma == data.gamma &&
+               kappa == data.kappa;
+    }
+};
+
+struct PlyvmhTable : public FlatTable<PlyvmhRecord> {
+    using FlatTable< PlyvmhRecord >::FlatTable;
+};
+
 struct TlmixparRecord {
     static constexpr std::size_t size = 2;
 

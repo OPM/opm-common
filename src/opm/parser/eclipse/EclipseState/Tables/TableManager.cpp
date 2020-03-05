@@ -103,6 +103,7 @@ namespace Opm {
                                const PvtwTable& pvtwTable,
                                const PvcdoTable& pvcdoTable,
                                const DensityTable& densityTable,
+                               const PlyvmhTable& plyvmhTable,
                                const RockTable& rockTable,
                                const PlmixparTable& plmixparTable,
                                const TlmixparTable& tlmixparTable,
@@ -137,6 +138,7 @@ namespace Opm {
         m_pvtwTable(pvtwTable),
         m_pvcdoTable(pvcdoTable),
         m_densityTable(densityTable),
+        m_plyvmhTable(plyvmhTable),
         m_rockTable(rockTable),
         m_plmixparTable(plmixparTable),
         m_tlmixparTable(tlmixparTable),
@@ -247,6 +249,10 @@ namespace Opm {
             this->m_tlmixparTable = TlmixparTable(deck.getKeyword("TLMIXPAR"));
         }
 
+        if (deck.hasKeyword<ParserKeywords::PLYVMH>()) {
+            this->m_plyvmhTable = PlyvmhTable(deck.getKeyword("PLYVMH"));
+        }
+
         using GC = ParserKeywords::GCOMPIDX;
         if (deck.hasKeyword<GC>())
             this->m_gas_comp_index = deck.getKeyword<GC>().getRecord(0).getItem<GC::GAS_COMPONENT_INDEX>().get<int>(0);
@@ -260,6 +266,7 @@ namespace Opm {
         m_rock2dtrTables = data.m_rock2dtrTables;
         m_pvtwTable = data.m_pvtwTable;
         m_pvcdoTable = data.m_pvcdoTable;
+        m_plyvmhTable = data.m_plyvmhTable;
         m_densityTable = data.m_densityTable;
         m_plmixparTable = data.m_plmixparTable;
         m_tlmixparTable = data.m_tlmixparTable;
@@ -1045,6 +1052,9 @@ namespace Opm {
         return *jfunc;
     }
 
+    const PlyvmhTable& TableManager::getPlyvmhTable() const {
+        return m_plyvmhTable;
+    }
 
     const std::map<int, PlymwinjTable>& TableManager::getPlymwinjTables() const {
         return m_plymwinjTables;
@@ -1115,6 +1125,7 @@ namespace Opm {
                m_pvcdoTable == data.m_pvcdoTable &&
                m_densityTable == data.m_densityTable &&
                m_plmixparTable == data.m_plmixparTable &&
+               m_plyvmhTable == data.m_plyvmhTable &&
                m_tlmixparTable == data.m_tlmixparTable &&
                m_viscrefTable == data.m_viscrefTable &&
                m_watdentTable == data.m_watdentTable &&
