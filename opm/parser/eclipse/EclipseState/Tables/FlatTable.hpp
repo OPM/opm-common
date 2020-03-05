@@ -127,6 +127,20 @@ struct PlyvmhTable : public FlatTable<PlyvmhRecord> {
     using FlatTable< PlyvmhRecord >::FlatTable;
 };
 
+struct ShrateRecord {
+    static constexpr std::size_t size = 1;
+
+    double rate;
+
+    bool operator==(const ShrateRecord& data) const {
+        return rate == data.rate;
+    }
+};
+
+struct ShrateTable : public FlatTable<ShrateRecord> {
+    using FlatTable< ShrateRecord >::FlatTable;
+};
+
 struct TlmixparRecord {
     static constexpr std::size_t size = 2;
 
