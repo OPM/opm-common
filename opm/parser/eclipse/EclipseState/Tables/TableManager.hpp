@@ -70,6 +70,7 @@ namespace Opm {
                      const PvtwTable& pvtwTable,
                      const PvcdoTable& pvcdoTable,
                      const DensityTable& densityTable,
+                     const PlyvmhTable& plyvmhTable,
                      const RockTable& rockTable,
                      const PlmixparTable& plmixparTable,
                      const TlmixparTable& tlmixparTable,
@@ -178,6 +179,7 @@ namespace Opm {
 
         const PvcdoTable& getPvcdoTable() const;
         const DensityTable& getDensityTable() const;
+        const PlyvmhTable& getPlyvmhTable() const;
         const RockTable& getRockTable() const;
         const ViscrefTable& getViscrefTable() const;
         const PlmixparTable& getPlmixparTable() const;
@@ -427,6 +429,7 @@ namespace Opm {
         PvtwTable m_pvtwTable;
         PvcdoTable m_pvcdoTable;
         DensityTable m_densityTable;
+        PlyvmhTable m_plyvmhTable;
         RockTable m_rockTable;
         PlmixparTable m_plmixparTable;
         TlmixparTable m_tlmixparTable;
