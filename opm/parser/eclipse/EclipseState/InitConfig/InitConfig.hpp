@@ -24,6 +24,7 @@
 
 #include <opm/parser/eclipse/EclipseState/InitConfig/Equil.hpp>
 #include <opm/parser/eclipse/EclipseState/InitConfig/FoamConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/InitConfig/PolymerConfig.hpp>
 
 namespace Opm {
 
@@ -35,6 +36,7 @@ namespace Opm {
         InitConfig();
         explicit InitConfig(const Deck& deck);
         InitConfig(const Equil& equil, const FoamConfig& foam,
+                   const PolymerConfig& polymer,
                    bool filleps, bool gravity, bool restartReq, int restartStep,
                    const std::string& restartRootName);
 
@@ -51,6 +53,8 @@ namespace Opm {
         bool hasFoamConfig() const;
         const FoamConfig& getFoamConfig() const;
 
+        const PolymerConfig& getPolymerConfig() const;
+
         bool filleps() const
         {
             return this->m_filleps;
@@ -61,6 +65,7 @@ namespace Opm {
     private:
         Equil equil;
         FoamConfig foamconfig;
+        PolymerConfig polymerconfig;
         bool m_filleps;
         bool m_gravity = true;
 
