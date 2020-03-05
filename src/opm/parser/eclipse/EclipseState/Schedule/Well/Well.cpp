@@ -462,7 +462,7 @@ bool Well::updateAutoShutin(bool auto_shutin) {
 
 bool Well::updateConnections(const std::shared_ptr<WellConnections> connections_arg) {
     if( this->ordering  == Connection::Order::TRACK)
-        connections_arg->orderConnections( this->headI, this->headJ );
+        connections_arg->orderTRACK( this->headI, this->headJ );
 
     if (*this->connections != *connections_arg) {
         this->connections = connections_arg;

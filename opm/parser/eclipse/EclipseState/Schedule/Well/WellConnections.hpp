@@ -83,7 +83,7 @@ namespace Opm {
         /// \param[in] well_i  logical cartesian i-coordinate of well head
         /// \param[in] well_j  logical cartesian j-coordinate of well head
         /// \param[in] grid    EclipseGrid object, used for cell depths
-        void orderConnections(size_t well_i, size_t well_j);
+        void orderTRACK(size_t well_i, size_t well_j);
 
         bool operator==( const WellConnections& ) const;
         bool operator!=( const WellConnections& ) const;
