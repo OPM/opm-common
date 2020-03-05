@@ -162,11 +162,21 @@ UDAValue DeckItem::get( size_t index ) const {
     if (this->active_dimensions.empty())
         return value;
 
+    // The UDA value held internally by the DeckItem does not have dimension set
+    // correctly we therefor need to create a new one with the correct dimension
+    // attached before returning.
     std::size_t dim_index = index % this->active_dimensions.size();
-    if (value::defaulted(this->value_status[index]))
-        return UDAValue( value, this->default_dimensions[dim_index]);
-    else
-        return UDAValue( value, this->active_dimensions[dim_index]);
+    if (value::defaulted(this->value_status[index])) {
+        if (value.is<std::string>())
+            return UDAValue(value.get<std::string>(), this->default_dimensions[dim_index]);
+        else
+            return UDAValue(value.get<double>(), this->default_dimensions[dim_index]);
+    } else {
+        if (value.is<std::string>())
+            return UDAValue(value.get<std::string>(), this->active_dimensions[dim_index]);
+        else
+            return UDAValue(value.get<double>(), this->active_dimensions[dim_index]);
+    }
 }
 
 

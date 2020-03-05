@@ -58,12 +58,6 @@ UDAValue::UDAValue(const std::string& value, const Dimension& dim_):
 {
 }
 
-UDAValue::UDAValue(const UDAValue& src, const Dimension& new_dim):
-    UDAValue(src)
-{
-    this->dim = new_dim;
-}
-
 
 void UDAValue::assert_numeric() const {
     std::string msg = "Internal error: The support for use of UDQ/UDA is not complete in opm/flow. The string: '" + this->string_value + "' must be numeric";
