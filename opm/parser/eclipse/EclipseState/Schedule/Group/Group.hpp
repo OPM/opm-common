@@ -196,7 +196,11 @@ struct ProductionControls {
     bool updateNetVFPTable(int vfp_arg);
     bool update_gefac(double gefac, bool transfer_gefac);
 
+    // [[deprecated("use Group::control_group() or Group::flow_group()")]]
     const std::string& parent() const;
+    const std::string& control_group() const;
+    const std::string& flow_group() const;
+
     bool updateParent(const std::string& parent);
     bool updateInjection(const GroupInjectionProperties& injection);
     bool updateProduction(const GroupProductionProperties& production);
