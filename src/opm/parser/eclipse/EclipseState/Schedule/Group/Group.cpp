@@ -360,6 +360,14 @@ const std::string& Group::parent() const {
     return this->parent_group;
 }
 
+const std::string& Group::control_group() const {
+    return this->parent();
+}
+
+const std::string& Group::flow_group() const {
+    return this->parent();
+}
+
 const Phase& Group::topup_phase() const {
     if (this->m_topup_phase.second)
         return this->m_topup_phase.first;
