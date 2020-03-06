@@ -26,6 +26,7 @@
 #include <opm/output/eclipse/VectorItems/connection.hpp>
 #include <opm/output/eclipse/VectorItems/well.hpp>
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
+#include <opm/output/eclipse/VectorItems/doubhead.hpp>
 
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
@@ -52,6 +53,7 @@ RstState::RstState(const ::Opm::UnitSystem& unit_system,
     header(intehead, logihead, doubhead)
 {
     this->add_groups(unit_system, zgrp, igrp, sgrp, xgrp);
+    this->load_tuning(unit_system, intehead, doubhead);
 
     for (int iw = 0; iw < this->header.num_wells; iw++) {
         std::size_t zwel_offset = iw * this->header.nzwelz;
@@ -100,6 +102,7 @@ RstState::RstState(const ::Opm::UnitSystem& unit_system,
     header(intehead, logihead, doubhead)
 {
     this->add_groups(unit_system, zgrp, igrp, sgrp, xgrp);
+    this->load_tuning(unit_system, intehead, doubhead);
 
     for (int iw = 0; iw < this->header.num_wells; iw++) {
         std::size_t zwel_offset = iw * this->header.nzwelz;
@@ -125,6 +128,45 @@ RstState::RstState(const ::Opm::UnitSystem& unit_system,
                                  iseg,
                                  rseg);
     }
+}
+
+void RstState::load_tuning(const ::Opm::UnitSystem& unit_system,
+                           const std::vector<int>& intehead,
+                           const std::vector<double>& doubhead)
+{
+    using M  = ::Opm::UnitSystem::measure;
+
+    this->tuning.NEWTMX  = intehead[ VI::intehead::NEWTMX ];
+    this->tuning.NEWTMN  = intehead[ VI::intehead::NEWTMN ];
+    this->tuning.LITMAX  = intehead[ VI::intehead::LITMAX ];
+    this->tuning.LITMIN  = intehead[ VI::intehead::LITMIN ];
+    this->tuning.MXWSIT  = intehead[ VI::intehead::MXWSIT ];
+    this->tuning.MXWPIT  = intehead[ VI::intehead::MXWPIT ];
+
+    tuning.TSINIT = unit_system.to_si(M::time, doubhead[VI::doubhead::TsInit]);
+    tuning.TSMAXZ = unit_system.to_si(M::time, doubhead[VI::doubhead::TsMaxz]);
+    tuning.TSMINZ = unit_system.to_si(M::time, doubhead[VI::doubhead::TsMinz]);
+    tuning.TSMCHP = unit_system.to_si(M::time, doubhead[VI::doubhead::TsMchp]);
+    tuning.TSFMAX = doubhead[VI::doubhead::TsFMax];
+    tuning.TSFMIN = doubhead[VI::doubhead::TsFMin];
+    tuning.TSFCNV = doubhead[VI::doubhead::TsFcnv];
+    tuning.THRUPT = doubhead[VI::doubhead::ThrUPT];
+    tuning.TFDIFF = doubhead[VI::doubhead::TfDiff];
+    tuning.TRGTTE = doubhead[VI::doubhead::TrgTTE];
+    tuning.TRGCNV = doubhead[VI::doubhead::TrgCNV];
+    tuning.TRGMBE = doubhead[VI::doubhead::TrgMBE];
+    tuning.TRGLCV = doubhead[VI::doubhead::TrgLCV];
+    tuning.XXXTTE = doubhead[VI::doubhead::XxxTTE];
+    tuning.XXXCNV = doubhead[VI::doubhead::XxxCNV];
+    tuning.XXXMBE = doubhead[VI::doubhead::XxxMBE];
+    tuning.XXXLCV = doubhead[VI::doubhead::XxxLCV];
+    tuning.XXXWFL = doubhead[VI::doubhead::XxxWFL];
+    tuning.TRGFIP = doubhead[VI::doubhead::TrgFIP];
+    tuning.TRGSFT = doubhead[VI::doubhead::TrgSFT];
+    tuning.TRGDPR = doubhead[VI::doubhead::TrgDPR];
+    tuning.XXXDPR = doubhead[VI::doubhead::XxxDPR];
+    tuning.DDPLIM = doubhead[VI::doubhead::DdpLim];
+    tuning.DDSLIM = doubhead[VI::doubhead::DdsLim];
 }
 
 void RstState::add_groups(const ::Opm::UnitSystem& unit_system,

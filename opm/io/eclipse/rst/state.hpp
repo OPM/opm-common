@@ -27,6 +27,9 @@
 #include <opm/io/eclipse/rst/group.hpp>
 #include <opm/io/eclipse/rst/well.hpp>
 
+#include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
+
+
 namespace Opm {
 
 class UnitSystem;
@@ -74,7 +77,12 @@ struct RstState {
     std::vector<RstWell> wells;
     std::vector<RstGroup> groups;
     RstHeader header;
+    Tuning tuning;
 private:
+    void load_tuning(const ::Opm::UnitSystem& unit_system,
+                     const std::vector<int>& intehead,
+                     const std::vector<double>& doubhead);
+
     void add_groups(const ::Opm::UnitSystem& unit_system,
                     const std::vector<std::string>& zgrp,
                     const std::vector<int>& igrp,
