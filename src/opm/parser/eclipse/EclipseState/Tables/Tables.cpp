@@ -644,6 +644,23 @@ PlyshlogTable::PlyshlogTable(
     SimpleTable::init( dataRecord.getItem<ParserKeywords::PLYSHLOG::DATA>() );
 }
 
+PlyshlogTable::PlyshlogTable(const TableSchema& schema,
+                             const OrderedMap<std::string, TableColumn>& columns,
+                             bool jfunc,
+                             double refPolymerConcentration,
+                             double refSalinity,
+                             double refTemperature,
+                             bool hasRefSalinity,
+                             bool hasRefTemperature)
+    : SimpleTable(schema, columns, jfunc)
+    , m_refPolymerConcentration(refPolymerConcentration)
+    , m_refSalinity(refSalinity)
+    , m_refTemperature(refTemperature)
+    , m_hasRefSalinity(hasRefSalinity)
+    , m_hasRefTemperature(hasRefTemperature)
+{
+}
+
 double PlyshlogTable::getRefPolymerConcentration() const {
     return m_refPolymerConcentration;
 }
@@ -689,6 +706,15 @@ const TableColumn& PlyshlogTable::getWaterVelocityColumn() const {
 
 const TableColumn& PlyshlogTable::getShearMultiplierColumn() const {
     return getColumn(1);
+}
+
+bool PlyshlogTable::operator==(const PlyshlogTable& data) const {
+    return this->SimpleTable::operator==(data) &&
+           m_refPolymerConcentration == data.m_refPolymerConcentration &&
+           m_refSalinity == data.m_refSalinity &&
+           m_refTemperature == data.m_refTemperature &&
+           m_hasRefSalinity == data.m_hasRefSalinity &&
+           m_hasRefTemperature == data.m_hasRefTemperature;
 }
 
 OilvisctTable::OilvisctTable( const DeckItem& item ) {
