@@ -106,6 +106,7 @@ namespace Opm {
                                const PlyvmhTable& plyvmhTable,
                                const RockTable& rockTable,
                                const PlmixparTable& plmixparTable,
+                               const ShrateTable& shrateTable,
                                const TlmixparTable& tlmixparTable,
                                const ViscrefTable& viscrefTable,
                                const WatdentTable& watdentTable,
@@ -122,6 +123,7 @@ namespace Opm {
                                bool useImptvd,
                                bool useEnptvd,
                                bool useEqlnum,
+                               bool useShrate,
                                std::shared_ptr<JFunc> jfunc_param,
                                const DenT& oilDenT_,
                                const DenT& gasDenT_,
@@ -141,6 +143,7 @@ namespace Opm {
         m_plyvmhTable(plyvmhTable),
         m_rockTable(rockTable),
         m_plmixparTable(plmixparTable),
+        m_shrateTable(shrateTable),
         m_tlmixparTable(tlmixparTable),
         m_viscrefTable(viscrefTable),
         m_watdentTable(watdentTable),
@@ -157,6 +160,7 @@ namespace Opm {
         hasImptvd(useImptvd),
         hasEnptvd(useEnptvd),
         hasEqlnum(useEqlnum),
+        hasShrate(useShrate),
         jfunc(std::move(jfunc_param)),
         oilDenT(oilDenT_),
         gasDenT(gasDenT_),
@@ -245,6 +249,11 @@ namespace Opm {
             this->m_plmixparTable = PlmixparTable(deck.getKeyword("PLMIXPAR"));
         }
 
+        if (deck.hasKeyword<ParserKeywords::SHRATE>()) {
+            this->m_shrateTable = ShrateTable(deck.getKeyword("SHRATE"));
+            hasShrate = true;
+        }
+
         if (deck.hasKeyword<ParserKeywords::TLMIXPAR>()) {
             this->m_tlmixparTable = TlmixparTable(deck.getKeyword("TLMIXPAR"));
         }
@@ -269,6 +278,7 @@ namespace Opm {
         m_plyvmhTable = data.m_plyvmhTable;
         m_densityTable = data.m_densityTable;
         m_plmixparTable = data.m_plmixparTable;
+        m_shrateTable = data.m_shrateTable;
         m_tlmixparTable = data.m_tlmixparTable;
         m_viscrefTable = data.m_viscrefTable;
         m_watdentTable = data.m_watdentTable;
@@ -285,6 +295,7 @@ namespace Opm {
         hasImptvd = data.hasImptvd;
         hasEnptvd = data.hasEnptvd;
         hasEqlnum = data.hasEqlnum;
+        hasShrate = data.hasShrate;
         if (data.jfunc)
           jfunc = std::make_shared<JFunc>(*data.jfunc);
         m_rtemp = data.m_rtemp;
@@ -1042,6 +1053,10 @@ namespace Opm {
         return m_plmixparTable;
     }
 
+    const ShrateTable& TableManager::getShrateTable() const {
+        return m_shrateTable;
+    }
+
     const TlmixparTable& TableManager::getTlmixparTable() const {
         return m_tlmixparTable;
     }
@@ -1082,6 +1097,10 @@ namespace Opm {
 
     bool TableManager::useEqlnum() const {
         return hasEqlnum;
+    }
+
+    bool TableManager::useShrate() const {
+        return hasShrate;
     }
 
     bool TableManager::useJFunc() const {
@@ -1126,6 +1145,7 @@ namespace Opm {
                m_densityTable == data.m_densityTable &&
                m_plmixparTable == data.m_plmixparTable &&
                m_plyvmhTable == data.m_plyvmhTable &&
+               m_shrateTable == data.m_shrateTable &&
                m_tlmixparTable == data.m_tlmixparTable &&
                m_viscrefTable == data.m_viscrefTable &&
                m_watdentTable == data.m_watdentTable &&
@@ -1142,6 +1162,7 @@ namespace Opm {
                hasImptvd == data.hasImptvd &&
                hasEnptvd == data.hasEnptvd &&
                hasEqlnum == data.hasEqlnum &&
+               hasShrate == data.hasShrate &&
                gasDenT == data.gasDenT &&
                oilDenT == data.oilDenT &&
                watDenT == data.watDenT &&

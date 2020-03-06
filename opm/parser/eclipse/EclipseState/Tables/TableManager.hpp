@@ -73,6 +73,7 @@ namespace Opm {
                      const PlyvmhTable& plyvmhTable,
                      const RockTable& rockTable,
                      const PlmixparTable& plmixparTable,
+                     const ShrateTable& shrateTable,
                      const TlmixparTable& tlmixparTable,
                      const ViscrefTable& viscrefTable,
                      const WatdentTable& watdentTable,
@@ -89,6 +90,7 @@ namespace Opm {
                      bool useImptvd,
                      bool useEnptvd,
                      bool useEqlnum,
+                     bool useShrate,
                      std::shared_ptr<JFunc> jfunc_param,
                      const DenT& oilDenT,
                      const DenT& gasDenT,
@@ -183,6 +185,7 @@ namespace Opm {
         const RockTable& getRockTable() const;
         const ViscrefTable& getViscrefTable() const;
         const PlmixparTable& getPlmixparTable() const;
+        const ShrateTable& getShrateTable() const;
         const TlmixparTable& getTlmixparTable() const;
         const WatdentTable& getWatdentTable() const;
         const std::map<int, PlymwinjTable>& getPlymwinjTables() const;
@@ -198,6 +201,9 @@ namespace Opm {
 
         /// deck has keyword "EQLNUM" --- Equilibriation region numbers
         bool useEqlnum() const;
+
+        /// deck has keyword "SHRATE"
+        bool useShrate() const;
 
         /// deck has keyword "JFUNC" --- Use Leverett's J Function for capillary pressure
         bool useJFunc() const;
@@ -432,6 +438,7 @@ namespace Opm {
         PlyvmhTable m_plyvmhTable;
         RockTable m_rockTable;
         PlmixparTable m_plmixparTable;
+        ShrateTable m_shrateTable;
         TlmixparTable m_tlmixparTable;
         ViscrefTable m_viscrefTable;
         WatdentTable m_watdentTable;
@@ -450,6 +457,7 @@ namespace Opm {
         bool hasImptvd = false;// if deck has keyword IMPTVD
         bool hasEnptvd = false;// if deck has keyword ENPTVD
         bool hasEqlnum = false;// if deck has keyword EQLNUM
+        bool hasShrate = false;// if deck has keyword SHRATE
         std::shared_ptr<JFunc> jfunc;
 
         DenT oilDenT;
