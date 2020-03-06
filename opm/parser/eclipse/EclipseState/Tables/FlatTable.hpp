@@ -141,6 +141,20 @@ struct ShrateTable : public FlatTable<ShrateRecord> {
     using FlatTable< ShrateRecord >::FlatTable;
 };
 
+struct Stone1exRecord {
+    static constexpr std::size_t size = 1;
+
+    double eta;
+
+    bool operator==(const Stone1exRecord& data) const {
+        return eta == data.eta;
+    }
+};
+
+struct Stone1exTable : public FlatTable<Stone1exRecord> {
+    using FlatTable< Stone1exRecord >::FlatTable;
+};
+
 struct TlmixparRecord {
     static constexpr std::size_t size = 2;
 

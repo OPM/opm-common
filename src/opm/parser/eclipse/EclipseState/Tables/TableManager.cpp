@@ -107,6 +107,7 @@ namespace Opm {
                                const RockTable& rockTable,
                                const PlmixparTable& plmixparTable,
                                const ShrateTable& shrateTable,
+                               const Stone1exTable& stone1exTable,
                                const TlmixparTable& tlmixparTable,
                                const ViscrefTable& viscrefTable,
                                const WatdentTable& watdentTable,
@@ -144,6 +145,7 @@ namespace Opm {
         m_rockTable(rockTable),
         m_plmixparTable(plmixparTable),
         m_shrateTable(shrateTable),
+        m_stone1exTable(stone1exTable),
         m_tlmixparTable(tlmixparTable),
         m_viscrefTable(viscrefTable),
         m_watdentTable(watdentTable),
@@ -254,6 +256,11 @@ namespace Opm {
             hasShrate = true;
         }
 
+        if (deck.hasKeyword<ParserKeywords::STONE1EX>()) {
+            this->m_stone1exTable = Stone1exTable(deck.getKeyword("STONE1EX"));
+            hasShrate = true;
+        }
+
         if (deck.hasKeyword<ParserKeywords::TLMIXPAR>()) {
             this->m_tlmixparTable = TlmixparTable(deck.getKeyword("TLMIXPAR"));
         }
@@ -279,6 +286,7 @@ namespace Opm {
         m_densityTable = data.m_densityTable;
         m_plmixparTable = data.m_plmixparTable;
         m_shrateTable = data.m_shrateTable;
+        m_stone1exTable = data.m_stone1exTable;
         m_tlmixparTable = data.m_tlmixparTable;
         m_viscrefTable = data.m_viscrefTable;
         m_watdentTable = data.m_watdentTable;
@@ -1057,6 +1065,10 @@ namespace Opm {
         return m_shrateTable;
     }
 
+    const Stone1exTable& TableManager::getStone1exTable() const {
+        return m_stone1exTable;
+    }
+
     const TlmixparTable& TableManager::getTlmixparTable() const {
         return m_tlmixparTable;
     }
@@ -1146,6 +1158,7 @@ namespace Opm {
                m_plmixparTable == data.m_plmixparTable &&
                m_plyvmhTable == data.m_plyvmhTable &&
                m_shrateTable == data.m_shrateTable &&
+               m_stone1exTable == data.m_stone1exTable &&
                m_tlmixparTable == data.m_tlmixparTable &&
                m_viscrefTable == data.m_viscrefTable &&
                m_watdentTable == data.m_watdentTable &&
