@@ -74,6 +74,7 @@ namespace Opm {
                      const RockTable& rockTable,
                      const PlmixparTable& plmixparTable,
                      const ShrateTable& shrateTable,
+                     const Stone1exTable& stone1exTable,
                      const TlmixparTable& tlmixparTable,
                      const ViscrefTable& viscrefTable,
                      const WatdentTable& watdentTable,
@@ -186,6 +187,7 @@ namespace Opm {
         const ViscrefTable& getViscrefTable() const;
         const PlmixparTable& getPlmixparTable() const;
         const ShrateTable& getShrateTable() const;
+        const Stone1exTable& getStone1exTable() const;
         const TlmixparTable& getTlmixparTable() const;
         const WatdentTable& getWatdentTable() const;
         const std::map<int, PlymwinjTable>& getPlymwinjTables() const;
@@ -439,6 +441,7 @@ namespace Opm {
         RockTable m_rockTable;
         PlmixparTable m_plmixparTable;
         ShrateTable m_shrateTable;
+        Stone1exTable m_stone1exTable;
         TlmixparTable m_tlmixparTable;
         ViscrefTable m_viscrefTable;
         WatdentTable m_watdentTable;
