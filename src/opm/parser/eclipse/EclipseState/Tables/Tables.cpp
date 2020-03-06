@@ -839,6 +839,13 @@ RocktabTable::RocktabTable(
     SimpleTable::init(item);
 }
 
+RocktabTable::RocktabTable(const TableSchema& schema,
+                           const OrderedMap<std::string, TableColumn>& columns,
+                           bool jfunc, bool isDirectional)
+    : SimpleTable(schema, columns, jfunc)
+    , m_isDirectional(isDirectional)
+{
+}
 
 const TableColumn& RocktabTable::getPressureColumn() const {
     return SimpleTable::getColumn(0);
@@ -866,6 +873,15 @@ const TableColumn& RocktabTable::getTransmissibilityMultiplierZColumn() const {
     if (!m_isDirectional)
         return SimpleTable::getColumn(2);
     return SimpleTable::getColumn(4);
+}
+
+bool RocktabTable::isDirectional() const {
+    return m_isDirectional;
+}
+
+bool RocktabTable::operator==(const RocktabTable& data) const {
+    return this->SimpleTable::operator==(data) &&
+           m_isDirectional == data.m_isDirectional;
 }
 
 RsvdTable::RsvdTable( const DeckItem& item ) {
