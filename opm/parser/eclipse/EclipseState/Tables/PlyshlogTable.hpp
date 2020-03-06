@@ -32,7 +32,16 @@ namespace Opm {
     public:
         friend class TableManager;
 
+        PlyshlogTable() = default;
         PlyshlogTable(const DeckRecord& indexRecord, const DeckRecord& dataRecord);
+        PlyshlogTable(const TableSchema& schema,
+                      const OrderedMap<std::string, TableColumn>& columns,
+                      bool jfunc,
+                      double refPolymerConcentration,
+                      double refSalinity,
+                      double refTemperature,
+                      bool hasRefSalinity,
+                      bool hasRefTemperature);
 
         double getRefPolymerConcentration() const;
         double getRefSalinity() const;
@@ -47,13 +56,15 @@ namespace Opm {
         const TableColumn& getWaterVelocityColumn() const;
         const TableColumn& getShearMultiplierColumn() const;
 
-    private:
-        double m_refPolymerConcentration;
-        double m_refSalinity;
-        double m_refTemperature;
+        bool operator==(const PlyshlogTable& data) const;
 
-        bool m_hasRefSalinity;
-        bool m_hasRefTemperature;
+    private:
+        double m_refPolymerConcentration = 1.0;
+        double m_refSalinity = 0.0;
+        double m_refTemperature = 0.0;
+
+        bool m_hasRefSalinity = false;
+        bool m_hasRefTemperature = false;
     };
 }
 

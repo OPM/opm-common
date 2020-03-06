@@ -83,7 +83,7 @@ namespace Opm {
         return getTable(tableNumber);
     }
 
-    void TableContainer::addTable(size_t tableNumber , std::shared_ptr<const SimpleTable> table) {
+    void TableContainer::addTable(size_t tableNumber , std::shared_ptr<SimpleTable> table) {
         if (tableNumber >= m_maxTables)
             throw std::invalid_argument("TableContainer has max: " + std::to_string( m_maxTables ) + " tables. Table number: " + std::to_string( tableNumber ) + " illegal.");
 
