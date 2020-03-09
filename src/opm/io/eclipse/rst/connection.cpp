@@ -67,7 +67,7 @@ RstConnection::RstConnection(const ::Opm::UnitSystem& unit_system, const int* ic
     completion(                                              icon[VI::IConn::ComplNum]),
     dir(                                                     from_int<Connection::Direction>(icon[VI::IConn::ConnDir])),
     segment(                                                 icon[VI::IConn::Segment] - 1),
-    tran(          unit_system.to_si(M::transmissibility,    scon[VI::SConn::ConnTrans])),
+    cf(            unit_system.to_si(M::transmissibility,    scon[VI::SConn::ConnTrans])),
     depth(         unit_system.to_si(M::length,              scon[VI::SConn::Depth])),
     diameter(      unit_system.to_si(M::length,              scon[VI::SConn::Diameter])),
     kh(            unit_system.to_si(M::effective_Kh,        scon[VI::SConn::EffectiveKH])),

@@ -42,7 +42,7 @@ struct RstConnection {
     Connection::Direction dir;
     int segment;
 
-    float tran;
+    float cf;
     float depth;
     float diameter;
     float kh;
