@@ -120,6 +120,9 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
 
             DatumDepth     = 9, // Well's reference depth for BHP
 
+            DrainageRadius = 17, // Well's drainage radius - item 7 from WELSPECS
+            EfficiencyFactor1 = 24, // Item2 from WEFAC; this value is repeated at two locations.
+            EfficiencyFactor2 = 31, //
             HistLiqRateTarget = 33, // Well's historical/observed liquid
                                     // rate target/limit
 

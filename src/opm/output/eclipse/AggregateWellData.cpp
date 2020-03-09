@@ -634,6 +634,15 @@ namespace {
             }
 
             sWell[Ix::DatumDepth] = swprop(M::length, datumDepth(well));
+            sWell[Ix::DrainageRadius] = swprop(M::length, well.getDrainageRadius());
+            sWell[Ix::EfficiencyFactor1] = well.getEfficiencyFactor();
+            /*
+              Restart files from Eclipse indicate that the efficiency factor is
+              found in two items in the restart file; since only one of the
+              items is needed in the OPM restart, and we are not really certain
+              that the two values are equal by construction we have only
+              assigned one of the items explicitly here.
+            */
         }
     } // SWell
 
