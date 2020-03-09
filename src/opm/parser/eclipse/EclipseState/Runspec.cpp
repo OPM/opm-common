@@ -20,6 +20,7 @@
 #include <type_traits>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/S.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/T.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/W.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
@@ -279,7 +280,13 @@ Runspec::Runspec( const Deck& deck ) :
     hystpar( deck ),
     m_actdims( deck ),
     m_sfuncctrl( deck )
-{}
+{
+    if (deck.hasKeyword<ParserKeywords::STONE1>())
+        stonetype = StoneType::STONE1;
+    else if (deck.hasKeyword<ParserKeywords::STONE>() ||
+             deck.hasKeyword<ParserKeywords::STONE2>())
+        stonetype = StoneType::STONE2;
+}
 
 Runspec::Runspec(const Phases& act_phases,
                  const Tabdims& tabdims,
@@ -289,16 +296,18 @@ Runspec::Runspec(const Phases& act_phases,
                  const UDQParams& udqparams,
                  const EclHysterConfig& hystPar,
                  const Actdims& actDims,
-                 const SatFuncControls& sfuncctrl) :
-  active_phases(act_phases),
-  m_tabdims(tabdims),
-  endscale(endScale),
-  welldims(wellDims),
-  wsegdims(wsegDims),
-  udq_params(udqparams),
-  hystpar(hystPar),
-  m_actdims(actDims),
-  m_sfuncctrl(sfuncctrl)
+                 const SatFuncControls& sfuncctrl,
+                 StoneType stone) :
+    active_phases(act_phases),
+    m_tabdims(tabdims),
+    endscale(endScale),
+    welldims(wellDims),
+    wsegdims(wsegDims),
+    udq_params(udqparams),
+    hystpar(hystPar),
+    m_actdims(actDims),
+    m_sfuncctrl(sfuncctrl),
+    stonetype(stone)
 {}
 
 const Phases& Runspec::phases() const noexcept {
@@ -356,6 +365,10 @@ const UDQParams& Runspec::udqParams() const noexcept {
     return this->udq_params;
 }
 
+Runspec::StoneType Runspec::stoneType() const noexcept {
+    return this->stonetype;
+}
+
 
 bool Runspec::operator==(const Runspec& data) const {
     return this->phases() == data.phases() &&
@@ -365,7 +378,8 @@ bool Runspec::operator==(const Runspec& data) const {
            this->wellSegmentDimensions() == data.wellSegmentDimensions() &&
            this->hysterPar() == data.hysterPar() &&
            this->actdims() == data.actdims() &&
-           this->saturationFunctionControls() == data.saturationFunctionControls();
+           this->saturationFunctionControls() == data.saturationFunctionControls() &&
+           this->stoneType() == data.stoneType();
 }
 
 }
