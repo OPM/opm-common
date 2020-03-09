@@ -49,6 +49,10 @@ class WellProductionProperties;
 class UDQActive;
 class UDQConfig;
 
+namespace RestartIO {
+class RstWell;
+}
+
 
 class Well {
 public:
@@ -393,6 +397,11 @@ public:
          double dr,
          bool allow_xflow,
          bool auto_shutin);
+
+    Well(const RestartIO::RstWell& rst_well,
+         int report_step,
+         const UnitSystem& unit_system,
+         double udq_undefined);
 
     Well(const std::string& wname,
          const std::string& gname,
