@@ -202,6 +202,12 @@ private:
 
 class Runspec {
 public:
+    enum class StoneType {
+        DEFAULT,
+        STONE1,
+        STONE2
+    };
+
     Runspec() = default;
     explicit Runspec( const Deck& );
     Runspec(const Phases& act_phases,
@@ -212,7 +218,8 @@ public:
             const UDQParams& udqparams,
             const EclHysterConfig& hystPar,
             const Actdims& actDims,
-            const SatFuncControls& sfuncctrl);
+            const SatFuncControls& sfuncctrl,
+            StoneType stonetype);
 
     const UDQParams& udqParams() const noexcept;
     const Phases& phases() const noexcept;
@@ -224,6 +231,7 @@ public:
     const EclHysterConfig& hysterPar() const noexcept;
     const Actdims& actdims() const noexcept;
     const SatFuncControls& saturationFunctionControls() const noexcept;
+    StoneType stoneType() const noexcept;
 
     bool operator==(const Runspec& data) const;
 
@@ -237,6 +245,7 @@ private:
     EclHysterConfig hystpar;
     Actdims m_actdims;
     SatFuncControls m_sfuncctrl;
+    StoneType stonetype = StoneType::DEFAULT;
 };
 
 
