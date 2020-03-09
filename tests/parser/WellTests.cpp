@@ -211,7 +211,7 @@ BOOST_AUTO_TEST_CASE(isProducerCorrectlySet) {
 
         /* Set a surface injection rate => Well becomes an Injector */
         auto injectionProps1 = std::make_shared<Opm::Well::WellInjectionProperties>(well.getInjectionProperties());
-        injectionProps1->surfaceInjectionRate.reset(100);
+        injectionProps1->surfaceInjectionRate = 100;
         well.updateInjection(injectionProps1);
         BOOST_CHECK_EQUAL( true  , well.isInjector());
         BOOST_CHECK_EQUAL( false , well.isProducer());
@@ -224,7 +224,7 @@ BOOST_AUTO_TEST_CASE(isProducerCorrectlySet) {
 
         /* Set a reservoir injection rate => Well becomes an Injector */
         auto injectionProps2 = std::make_shared<Opm::Well::WellInjectionProperties>(well.getInjectionProperties());
-        injectionProps2->reservoirInjectionRate.reset(200);
+        injectionProps2->reservoirInjectionRate = 200;
         well.updateInjection(injectionProps2);
         BOOST_CHECK_EQUAL( false , well.isProducer());
         BOOST_CHECK_EQUAL( 200 , well.getInjectionProperties().reservoirInjectionRate.get<double>());
@@ -238,9 +238,9 @@ BOOST_AUTO_TEST_CASE(isProducerCorrectlySet) {
         well.updateInjection(injectionProps3);
 
         auto properties = std::make_shared<Opm::Well::WellProductionProperties>( well.getProductionProperties() );
-        properties->OilRate.reset(100);
-        properties->GasRate.reset(200);
-        properties->WaterRate.reset(300);
+        properties->OilRate = 100;
+        properties->GasRate = 200;
+        properties->WaterRate = 300;
         well.updateProduction(properties);
 
         BOOST_CHECK_EQUAL( false , well.isInjector());
@@ -277,14 +277,14 @@ BOOST_AUTO_TEST_CASE(XHPLimitDefault) {
 
 
     auto productionProps = std::make_shared<Opm::Well::WellProductionProperties>(well.getProductionProperties());
-    productionProps->BHPTarget.reset(100);
+    productionProps->BHPTarget = 100;
     productionProps->addProductionControl(Opm::Well::ProducerCMode::BHP);
     well.updateProduction(productionProps);
     BOOST_CHECK_EQUAL( 100 , well.getProductionProperties().BHPTarget.get<double>());
     BOOST_CHECK_EQUAL( true, well.getProductionProperties().hasProductionControl( Opm::Well::ProducerCMode::BHP ));
 
     auto injProps = std::make_shared<Opm::Well::WellInjectionProperties>(well.getInjectionProperties());
-    injProps->THPTarget.reset(200);
+    injProps->THPTarget = 200;
     well.updateInjection(injProps);
     BOOST_CHECK_EQUAL( 200 , well.getInjectionProperties().THPTarget.get<double>());
     BOOST_CHECK( !well.getInjectionProperties().hasInjectionControl( Opm::Well::InjectorCMode::THP ));
@@ -318,26 +318,26 @@ BOOST_AUTO_TEST_CASE(WellHaveProductionControlLimit) {
     BOOST_CHECK( !well.getProductionProperties().hasProductionControl( Opm::Well::ProducerCMode::RESV ));
 
     auto properties1 = std::make_shared<Opm::Well::WellProductionProperties>(well.getProductionProperties());
-    properties1->OilRate.reset(100);
+    properties1->OilRate = 100;
     properties1->addProductionControl(Opm::Well::ProducerCMode::ORAT);
     well.updateProduction(properties1);
     BOOST_CHECK(  well.getProductionProperties().hasProductionControl( Opm::Well::ProducerCMode::ORAT ));
     BOOST_CHECK( !well.getProductionProperties().hasProductionControl( Opm::Well::ProducerCMode::RESV ));
 
     auto properties2 = std::make_shared<Opm::Well::WellProductionProperties>(well.getProductionProperties());
-    properties2->ResVRate.reset( 100 );
+    properties2->ResVRate = 100;
     properties2->addProductionControl(Opm::Well::ProducerCMode::RESV);
     well.updateProduction(properties2);
     BOOST_CHECK( well.getProductionProperties().hasProductionControl( Opm::Well::ProducerCMode::RESV ));
 
     auto properties3 = std::make_shared<Opm::Well::WellProductionProperties>(well.getProductionProperties());
-    properties3->OilRate.reset(100);
-    properties3->WaterRate.reset(100);
-    properties3->GasRate.reset(100);
-    properties3->LiquidRate.reset(100);
-    properties3->ResVRate.reset(100);
-    properties3->BHPTarget.reset(100);
-    properties3->THPTarget.reset(100);
+    properties3->OilRate = 100;
+    properties3->WaterRate = 100;
+    properties3->GasRate = 100;
+    properties3->LiquidRate = 100;
+    properties3->ResVRate = 100;
+    properties3->BHPTarget = 100;
+    properties3->THPTarget = 100;
     properties3->addProductionControl(Opm::Well::ProducerCMode::ORAT);
     properties3->addProductionControl(Opm::Well::ProducerCMode::LRAT);
     properties3->addProductionControl(Opm::Well::ProducerCMode::BHP);
@@ -364,22 +364,22 @@ BOOST_AUTO_TEST_CASE(WellHaveInjectionControlLimit) {
     BOOST_CHECK( !well.getInjectionProperties().hasInjectionControl( Opm::Well::InjectorCMode::RESV ));
 
     auto injProps1 = std::make_shared<Opm::Well::WellInjectionProperties>(well.getInjectionProperties());
-    injProps1->surfaceInjectionRate.reset(100);
+    injProps1->surfaceInjectionRate = 100;
     injProps1->addInjectionControl(Opm::Well::InjectorCMode::RATE);
     well.updateInjection(injProps1);
     BOOST_CHECK(  well.getInjectionProperties().hasInjectionControl( Opm::Well::InjectorCMode::RATE ));
     BOOST_CHECK( !well.getInjectionProperties().hasInjectionControl( Opm::Well::InjectorCMode::RESV ));
 
     auto injProps2 = std::make_shared<Opm::Well::WellInjectionProperties>(well.getInjectionProperties());
-    injProps2->reservoirInjectionRate.reset(100);
+    injProps2->reservoirInjectionRate = 100;
     injProps2->addInjectionControl(Opm::Well::InjectorCMode::RESV);
     well.updateInjection(injProps2);
     BOOST_CHECK( well.getInjectionProperties().hasInjectionControl( Opm::Well::InjectorCMode::RESV ));
 
     auto injProps3 = std::make_shared<Opm::Well::WellInjectionProperties>(well.getInjectionProperties());
-    injProps3->BHPTarget.reset(100);
+    injProps3->BHPTarget = 100;
     injProps3->addInjectionControl(Opm::Well::InjectorCMode::BHP);
-    injProps3->THPTarget.reset(100);
+    injProps3->THPTarget = 100;
     injProps3->addInjectionControl(Opm::Well::InjectorCMode::THP);
     well.updateInjection(injProps3);
 
@@ -493,10 +493,10 @@ namespace {
 
         Opm::Well::WellProductionProperties properties(const std::string& input) {
             Opm::Parser parser;
-
+            Opm::UnitSystem unit_system(Opm::UnitSystem::UnitType::UNIT_TYPE_METRIC);
             auto deck = parser.parseString(input);
             const auto& record = deck.getKeyword("WCONHIST").getRecord(0);
-            Opm::Well::WellProductionProperties hist("W");
+            Opm::Well::WellProductionProperties hist(unit_system, "W");
             hist.handleWCONHIST(record);
 
 
@@ -542,14 +542,14 @@ namespace {
             return input;
         }
 
-
+        Opm::UnitSystem unit_system(Opm::UnitSystem::UnitType::UNIT_TYPE_METRIC);
         Opm::Well::WellProductionProperties properties(const std::string& input)
         {
             Opm::Parser parser;
             auto deck = parser.parseString(input);
             const auto& kwd     = deck.getKeyword("WCONPROD");
             const auto&  record = kwd.getRecord(0);
-            Opm::Well::WellProductionProperties pred("W");
+            Opm::Well::WellProductionProperties pred(unit_system, "W");
             pred.handleWCONPROD("WELL", record);
 
             return pred;
@@ -767,8 +767,9 @@ BOOST_AUTO_TEST_CASE(BHP_CMODE)
 
 
 BOOST_AUTO_TEST_CASE(CMODE_DEFAULT) {
-    const Opm::Well::WellProductionProperties Pproperties("W");
-    const Opm::Well::WellInjectionProperties Iproperties("W");
+    auto unit_system = UnitSystem::newMETRIC();
+    const Opm::Well::WellProductionProperties Pproperties(unit_system, "W");
+    const Opm::Well::WellInjectionProperties Iproperties(unit_system, "W");
 
     BOOST_CHECK( Pproperties.controlMode == Opm::Well::ProducerCMode::CMODE_UNDEFINED );
     BOOST_CHECK( Iproperties.controlMode == Opm::Well::InjectorCMode::CMODE_UNDEFINED );
@@ -778,8 +779,9 @@ BOOST_AUTO_TEST_CASE(CMODE_DEFAULT) {
 
 
 BOOST_AUTO_TEST_CASE(WELL_CONTROLS) {
-    Opm::Well well("WELL", "GROUP", 0, 0, 0, 0, 1000, Opm::Phase::OIL, Opm::Well::ProducerCMode::CMODE_UNDEFINED, Opm::Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
-    Opm::Well::WellProductionProperties prod("OP1");
+    auto unit_system = UnitSystem::newMETRIC();
+    Opm::Well well("WELL", "GROUP", 0, 0, 0, 0, 1000, Opm::Phase::OIL, Opm::Well::ProducerCMode::CMODE_UNDEFINED, Opm::Connection::Order::DEPTH, unit_system, 0, 1.0, false, false);
+    Opm::Well::WellProductionProperties prod(unit_system, "OP1");
     Opm::SummaryState st(std::chrono::system_clock::now());
     well.productionControls(st);
 

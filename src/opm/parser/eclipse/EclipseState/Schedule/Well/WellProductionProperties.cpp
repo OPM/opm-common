@@ -33,17 +33,27 @@
 
 namespace Opm {
 
-    Well::WellProductionProperties::WellProductionProperties()
-        : BHPH(0.0), THPH(0.0), VFPTableNumber(0),
-          ALQValue(0.0), predictionMode(false),
-          controlMode(ProducerCMode::NONE),
-          whistctl_cmode(ProducerCMode::NONE),
-          m_productionControls(0)
+    Well::WellProductionProperties::WellProductionProperties() :
+        WellProductionProperties(UnitSystem(UnitSystem::UnitType::UNIT_TYPE_METRIC), "")
     {}
 
-    Well::WellProductionProperties::WellProductionProperties(const std::string& name_arg) :
+    Well::WellProductionProperties::WellProductionProperties(const UnitSystem& units, const std::string& name_arg) :
         name(name_arg),
-        predictionMode( true )
+        OilRate(units.getDimension(UnitSystem::measure::liquid_surface_rate)),
+        WaterRate(units.getDimension(UnitSystem::measure::liquid_surface_rate)),
+        GasRate(units.getDimension(UnitSystem::measure::gas_surface_rate)),
+        LiquidRate(units.getDimension(UnitSystem::measure::liquid_surface_rate)),
+        ResVRate(units.getDimension(UnitSystem::measure::rate)),
+        BHPTarget(units.getDimension(UnitSystem::measure::pressure)),
+        THPTarget(units.getDimension(UnitSystem::measure::pressure)),
+        BHPH(0.0),
+        THPH(0.0),
+        VFPTableNumber(0),
+        ALQValue(0.0),
+        predictionMode(true),
+        controlMode(ProducerCMode::CMODE_UNDEFINED),
+        whistctl_cmode(ProducerCMode::CMODE_UNDEFINED),
+        m_productionControls(0)
     {}
 
 
@@ -101,8 +111,7 @@ namespace Opm {
         this->predictionMode = false;
         // update LiquidRate. The funnny constrction with explicitly making a new
         // UDAValue is to ensure that the UDAValue has the correct dimension.
-        this->LiquidRate = UDAValue(this->LiquidRate, this->OilRate.get_dim());
-        this->LiquidRate.reset(this->WaterRate.get<double>() + this->OilRate.get<double>());
+        this->LiquidRate = UDAValue(this->WaterRate.get<double>() + this->OilRate.get<double>(), this->OilRate.get_dim());
 
         if ( record.getItem( "BHP" ).hasValue(0) )
             this->BHPH = record.getItem("BHP").get<UDAValue>(0).getSI();
@@ -208,8 +217,8 @@ namespace Opm {
     void Well::WellProductionProperties::handleWCONHIST(const DeckRecord& record)
     {
         this->init_rates(record);
-        this->LiquidRate.reset(0);
-        this->ResVRate.reset(0);
+        this->LiquidRate = 0;
+        this->ResVRate = 0;
 
         // when the well is switching to history matching producer from prediction mode
         // or switching from injector to producer
@@ -229,40 +238,40 @@ namespace Opm {
     void Well::WellProductionProperties::handleWELTARG(Well::WELTARGCMode cmode, double newValue, double SiFactorP) {
         if (cmode == WELTARGCMode::ORAT){
             this->OilRate.assert_numeric("Can not combine UDA and WELTARG");
-            this->OilRate.reset( newValue );
+            this->OilRate = newValue;
             this->addProductionControl( ProducerCMode::ORAT );
         }
         else if (cmode == WELTARGCMode::WRAT){
             this->WaterRate.assert_numeric("Can not combine UDA and WELTARG");
-            this->WaterRate.reset( newValue );
+            this->WaterRate = newValue;
             this->addProductionControl( ProducerCMode::WRAT );
         }
         else if (cmode == WELTARGCMode::GRAT){
             this->GasRate.assert_numeric("Can not combine UDA and WELTARG");
-            this->GasRate.reset( newValue );
+            this->GasRate = newValue;
             this->addProductionControl( ProducerCMode::GRAT );
         }
         else if (cmode == WELTARGCMode::LRAT){
             this->LiquidRate.assert_numeric("Can not combine UDA and WELTARG");
-            this->LiquidRate.reset( newValue );
+            this->LiquidRate = newValue;
             this->addProductionControl( ProducerCMode::LRAT );
         }
         else if (cmode == WELTARGCMode::RESV){
             this->ResVRate.assert_numeric("Can not combine UDA and WELTARG");
-            this->ResVRate.reset( newValue );
+            this->ResVRate = newValue;
             this->addProductionControl( ProducerCMode::RESV );
         }
         else if (cmode == WELTARGCMode::BHP){
             if (this->predictionMode) {
                 this->BHPTarget.assert_numeric("Can not combine UDA and WELTARG");
-                this->BHPTarget.reset( newValue );
+                this->BHPTarget = newValue;
             } else
                 this->bhp_hist_limit = newValue * SiFactorP;
             this->addProductionControl( ProducerCMode::BHP );
         }
         else if (cmode == WELTARGCMode::THP){
             this->THPTarget.assert_numeric("Can not combine UDA and WELTARG");
-            this->THPTarget.reset(newValue );
+            this->THPTarget = newValue;
             this->addProductionControl( ProducerCMode::THP );
         }
         else if (cmode == WELTARGCMode::VFP)

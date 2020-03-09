@@ -37,25 +37,8 @@ BOOST_AUTO_TEST_CASE(DefDim) {
 }
 
 BOOST_AUTO_TEST_CASE(CreateDimension) {
-    Dimension length("Length" , 1);
-    BOOST_CHECK_EQUAL("Length" , length.getName());
+    Dimension length(1);
     BOOST_CHECK_EQUAL(1 , length.getSIScaling());
-}
-
-BOOST_AUTO_TEST_CASE(makeComposite) {
-    auto composite = Dimension::newComposite("Length*Length*Length/Time" , 100);
-    BOOST_CHECK_EQUAL("Length*Length*Length/Time" , composite.getName());
-    BOOST_CHECK_EQUAL(100 , composite.getSIScaling());
-}
-
-
-BOOST_AUTO_TEST_CASE(CreateDimensionInvalidNameThrows) {
-    BOOST_CHECK_THROW(Dimension(" " , 1) , std::invalid_argument);
-    BOOST_CHECK_THROW(Dimension(".LX" , 1) , std::invalid_argument);
-    BOOST_CHECK_THROW(Dimension("*" , 1) , std::invalid_argument);
-    BOOST_CHECK_THROW(Dimension("/" , 1) , std::invalid_argument);
-    BOOST_CHECK_THROW(Dimension("2" , 1) , std::invalid_argument);
-    BOOST_CHECK_NO_THROW(Dimension("1" , 1));
 }
 
 
@@ -112,7 +95,6 @@ BOOST_AUTO_TEST_CASE(UnitSystemParseInvalidThrows) {
     system.addDimension("Time" , 9.0 );
 
     auto volumePerTime = system.parse( "Length*Length*Length/Time" );
-    BOOST_CHECK_EQUAL("Length*Length*Length/Time" , volumePerTime.getName() );
     BOOST_CHECK_EQUAL(3.0 , volumePerTime.getSIScaling());
 }
 
@@ -123,6 +105,7 @@ static void checkSystemHasRequiredDimensions( const UnitSystem& system) {
     BOOST_CHECK( system.hasDimension("Length"));
     BOOST_CHECK( system.hasDimension("Mass"));
     BOOST_CHECK( system.hasDimension("Time"));
+
     BOOST_CHECK( system.hasDimension("Permeability"));
     BOOST_CHECK( system.hasDimension("Pressure"));
     BOOST_CHECK( system.hasDimension("Temperature"));
@@ -174,14 +157,12 @@ BOOST_AUTO_TEST_CASE(CreateInputSystem) {
 
 
 BOOST_AUTO_TEST_CASE(DimensionEqual) {
-    Dimension d1("Length" , 1);
-    Dimension d2("Length" , 1);
-    Dimension d3("Time" , 1);
-    Dimension d4("Length" , 2);
+    Dimension d1(1);
+    Dimension d2(1);
+    Dimension d4(2);
 
     BOOST_CHECK_EQUAL( true  , d1.equal(d1) );
     BOOST_CHECK_EQUAL( true  , d1.equal(d2) );
-    BOOST_CHECK_EQUAL( false , d1.equal(d3) );
     BOOST_CHECK_EQUAL( false , d1.equal(d4) );
 }
 

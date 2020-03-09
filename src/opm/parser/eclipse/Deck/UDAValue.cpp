@@ -36,6 +36,10 @@ UDAValue::UDAValue(double value, const Dimension& dim_):
 {
 }
 
+UDAValue::UDAValue(const Dimension& dim_):
+    UDAValue(0, dim_)
+{
+}
 
 UDAValue::UDAValue() :
     UDAValue(0)
@@ -52,12 +56,6 @@ UDAValue::UDAValue(const std::string& value, const Dimension& dim_):
     string_value(value),
     dim(dim_)
 {
-}
-
-UDAValue::UDAValue(const UDAValue& src, const Dimension& new_dim):
-    UDAValue(src)
-{
-    this->dim = new_dim;
 }
 
 
@@ -98,14 +96,17 @@ double UDAValue::getSI() const {
     return this->dim.convertRawToSi(this->double_value);
 }
 
-void UDAValue::reset(double value) {
+
+UDAValue& UDAValue::operator=(double value) {
     this->double_value = value;
     this->numeric_value = true;
+    return *this;
 }
 
-void UDAValue::reset(const std::string& value) {
+UDAValue& UDAValue::operator=(const std::string& value) {
     this->string_value = value;
     this->numeric_value = false;
+    return *this;
 }
 
 template<>

@@ -27,8 +27,8 @@ namespace Opm {
     class Dimension {
     public:
         Dimension();
-        Dimension(const std::string& name, double SIfactor,
-                  double SIoffset = 0.0, bool sanityCheck = true);
+        Dimension(double SIfactor,
+                  double SIoffset = 0.0);
 
         double getSIScaling() const;
         double getSIScalingRaw() const;
@@ -38,15 +38,12 @@ namespace Opm {
         double convertSiToRaw(double siValue) const;
 
         bool equal(const Dimension& other) const;
-        const std::string& getName() const;
         bool isCompositable() const;
-        static Dimension newComposite(const std::string& dim, double SIfactor, double SIoffset = 0.0);
 
         bool operator==( const Dimension& ) const;
         bool operator!=( const Dimension& ) const;
 
     private:
-        std::string m_name;
         double m_SIfactor;
         double m_SIoffset;
     };

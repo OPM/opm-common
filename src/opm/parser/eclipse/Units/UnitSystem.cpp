@@ -1144,7 +1144,7 @@ namespace {
 
     const Dimension& UnitSystem::getNewDimension(const std::string& dimension) {
         if( !hasDimension( dimension ) )
-            this->addDimension( this->parse( dimension ) );
+            this->addDimension( dimension, this->parse( dimension ) );
 
         return getDimension( dimension );
     }
@@ -1158,19 +1158,23 @@ namespace {
         return iter->second;
     }
 
+    Dimension UnitSystem::getDimension(measure m) const {
+        double si_factor = this->measure_table_to_si[ static_cast< int >( m ) ];
+        double si_offset = this->measure_table_to_si_offset[ static_cast<int>( m ) ];
+        return Dimension(si_factor, si_offset);
+    }
+
 
     std::size_t UnitSystem::use_count() const {
         return this->m_use_count;
     }
 
-
-    void UnitSystem::addDimension( Dimension dimension ) {
-        const auto dimname = dimension.getName();
-        this->m_dimensions[ dimname ] = std::move( dimension );
+    void UnitSystem::addDimension(const std::string& dimension , const Dimension& dim) {
+        this->m_dimensions[ dimension ] = std::move(dim);
     }
 
     void UnitSystem::addDimension(const std::string& dimension , double SIfactor, double SIoffset) {
-        this->addDimension( Dimension { dimension, SIfactor, SIoffset } );
+        this->addDimension(dimension, Dimension(SIfactor, SIoffset));
     }
 
     const std::string& UnitSystem::getName() const {
@@ -1197,7 +1201,7 @@ namespace {
 
             SIfactor *= dim.getSIScaling();
         }
-        return Dimension::newComposite( dimension , SIfactor );
+        return Dimension( SIfactor );
     }
 
     Dimension UnitSystem::parse(const std::string& dimension) const {
@@ -1216,7 +1220,7 @@ namespace {
         if (dividend.getSIOffset() != 0.0 || divisor.getSIOffset() != 0.0)
             throw std::invalid_argument("Composite dimensions cannot currently require a conversion offset");
 
-        return Dimension::newComposite( dimension, dividend.getSIScaling() / divisor.getSIScaling() );
+        return Dimension( dividend.getSIScaling() / divisor.getSIScaling() );
     }
 
 

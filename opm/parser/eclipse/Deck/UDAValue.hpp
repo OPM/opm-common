@@ -34,7 +34,7 @@ public:
     UDAValue();
     explicit UDAValue(double);
     explicit UDAValue(const std::string&);
-    UDAValue(const UDAValue& src, const Dimension& dim);
+    explicit UDAValue(const Dimension& dim);
     UDAValue(double data, const Dimension& dim);
     UDAValue(const std::string& data, const Dimension& dim);
 
@@ -55,15 +55,14 @@ public:
     template<typename T>
     bool is() const;
 
-    void reset(double value);
-    void reset(const std::string& value);
-
     void assert_numeric() const;
     void assert_numeric(const std::string& error_msg) const;
     const Dimension& get_dim() const;
 
     bool operator==(const UDAValue& other) const;
     bool operator!=(const UDAValue& other) const;
+    UDAValue& operator=(double value);
+    UDAValue& operator=(const std::string& value);
 
     bool is_numeric() { return numeric_value; }
 
@@ -72,8 +71,6 @@ private:
     double double_value;
     std::string string_value;
 
-    /* This 'mutable' modifier is a hack to avoid tampering with the overall
-       const-ness of the data in a deck item. */
     Dimension dim;
 };
 
