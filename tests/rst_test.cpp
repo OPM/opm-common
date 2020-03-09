@@ -46,22 +46,43 @@ void initLogging() {
     Opm::OpmLog::addBackend( "COUT" , cout_log);
 }
 
+/*
+  This is a small test application which can be used to check that the Schedule
+  object is correctly initialized from a restart file. The two commandline
+  arguments should be .DATA files where the first one should be a normal case,
+  and the second case should be configured for a restart. The actual restart
+  file referred to in the second .DATA file must also be available; the restart
+  time configured in the second .DATA file must be within the time range covered
+  by the first .DATA file.
+*/
 
 int main(int , char ** argv) {
     initLogging();
-    std::string deck_file = argv[1];
+    std::string case1 = argv[1];
+    std::string case2 = argv[2];
     Opm::ParseContext parseContext;
     Opm::ErrorGuard errors;
     Opm::Parser parser;
 
-    auto deck = parser.parseFile(deck_file, parseContext, errors);
-    Opm::EclipseState ecl_state( deck);
-    const auto& init_config = ecl_state.getInitConfig();
+    auto full_deck = parser.parseFile(case1);
+    auto rst_deck = parser.parseFile(case2);
+    Opm::EclipseState full_state(full_deck);
+    Opm::EclipseState rst_state(rst_deck);
+
+    const auto& init_config = rst_state.getInitConfig();
     int report_step = init_config.getRestartStep();
-    const auto& rst_filename = ecl_state.getIOConfig().getRestartFileName( init_config.getRestartRootName(), report_step, false );
+    const auto& rst_filename = rst_state.getIOConfig().getRestartFileName( init_config.getRestartRootName(), report_step, false );
     Opm::EclIO::ERst rst_file(rst_filename);
 
-    std::cout << "Loading restart information from: " << rst_filename << ":" << report_step << std::endl;
-    const auto& rst_state = Opm::RestartIO::RstState::load(rst_file, report_step);
-    Opm::Schedule sched(deck, ecl_state, &rst_state);
+    const auto& rst = Opm::RestartIO::RstState::load(rst_file, report_step);
+    Opm::Schedule sched(full_deck, full_state);
+    Opm::Schedule rst_sched(rst_deck, rst_state, &rst);
+
+    if (Opm::Schedule::cmp(sched, rst_sched, report_step) ) {
+        std::cout << "Schedule objects were equal!" << std::endl;
+        std::exit( EXIT_SUCCESS );
+    } else {
+        std::cout << "Differences were encountered between the Schedule objects" << std::endl;
+        std::exit( EXIT_FAILURE );
+    }
 }
