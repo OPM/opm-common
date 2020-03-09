@@ -26,13 +26,12 @@
 #include <opm/io/eclipse/rst/header.hpp>
 #include <opm/io/eclipse/rst/group.hpp>
 #include <opm/io/eclipse/rst/well.hpp>
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
 
 
 namespace Opm {
-
-class UnitSystem;
 
 namespace RestartIO {
 struct RstState {
@@ -74,10 +73,13 @@ struct RstState {
     static RstState load(EclIO::ERst& rst_file, int report_step);
 
     const RstWell& get_well(const std::string& wname) const;
+
+    const ::Opm::UnitSystem unit_system;
+    RstHeader header;
     std::vector<RstWell> wells;
     std::vector<RstGroup> groups;
-    RstHeader header;
     Tuning tuning;
+
 private:
     void load_tuning(const ::Opm::UnitSystem& unit_system,
                      const std::vector<int>& intehead,
