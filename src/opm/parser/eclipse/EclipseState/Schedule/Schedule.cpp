@@ -838,15 +838,12 @@ std::pair<std::time_t, std::size_t> restart_info(const RestartIO::RstState * rst
 
                     if (switching_from_injector) {
                         properties->resetDefaultBHPLimit();
-                        well2->updateProducer(true);
 
                         auto inj_props = std::make_shared<Well::WellInjectionProperties>(well2->getInjectionProperties());
                         inj_props->resetBHPLimit();
                         well2->updateInjection(inj_props);
-                    }
-
-                    if (well2->updateProducer(true))
                         update_well = true;
+                    }
 
                     if (well2->updateProduction(properties))
                         update_well = true;
@@ -906,9 +903,6 @@ std::pair<std::time_t, std::size_t> restart_info(const RestartIO::RstState * rst
 
                     if (switching_from_injector)
                         properties->resetDefaultBHPLimit();
-
-                    if (well2->updateProducer(true))
-                        update_well = true;
 
                     if (well2->updateProduction(properties))
                         update_well = true;
@@ -1005,9 +999,6 @@ std::pair<std::time_t, std::size_t> restart_info(const RestartIO::RstState * rst
                     auto injection = std::make_shared<Well::WellInjectionProperties>(well2->getInjectionProperties());
                     injection->handleWCONINJE(record, well2->isAvailableForGroupControl(), well_name);
 
-                    if (well2->updateProducer(false))
-                        update_well = true;
-
                     if (well2->updateInjection(injection))
                         update_well = true;
 
@@ -1067,9 +1058,6 @@ std::pair<std::time_t, std::size_t> restart_info(const RestartIO::RstState * rst
                     auto well2 = std::make_shared<Well>(*dynamic_state[currentStep]);
                     auto injection = std::make_shared<Well::WellInjectionProperties>(well2->getInjectionProperties());
                     injection->handleWCONINJH(record, well2->isProducer(), well_name);
-
-                    if (well2->updateProducer(false))
-                        update_well = true;
 
                     if (well2->updateInjection(injection))
                         update_well = true;
@@ -2269,7 +2257,7 @@ void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t 
                   0,
                   headI, headJ,
                   refDepth,
-                  preferredPhase,
+                  WellType(preferredPhase),
                   this->global_whistctl_mode[timeStep],
                   wellConnectionOrder,
                   unit_system,

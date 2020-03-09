@@ -45,6 +45,7 @@
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/WellSegments.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleTypes.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
@@ -1053,20 +1054,19 @@ namespace {
     injectorControlMode(const int curr, const int itype)
     {
         using IMode = ::Opm::Well::InjectorCMode;
-        using WType = VI::IWell::Value::WellType;
         using Ctrl  = VI::IWell::Value::WellCtrlMode;
 
         switch (curr) {
             case Ctrl::OilRate:
-                return (itype == WType::OilInj)
+                return Opm::WellType::oil_injector(itype)
                     ? IMode::RATE : IMode::CMODE_UNDEFINED;
 
             case Ctrl::WatRate:
-                return (itype == WType::WatInj)
+                return Opm::WellType::water_injector(itype)
                     ? IMode::RATE : IMode::CMODE_UNDEFINED;
 
             case Ctrl::GasRate:
-                return (itype == WType::GasInj)
+                return Opm::WellType::gas_injector(itype)
                     ? IMode::RATE : IMode::CMODE_UNDEFINED;
 
             case Ctrl::ResVRate: return IMode::RESV;
@@ -1088,7 +1088,7 @@ namespace {
 
         auto& curr = xw.current_control;
 
-        curr.isProducer = wtyp == VI::IWell::Value::WellType::Producer;
+        curr.isProducer = Opm::WellType::producer(wtyp);
         if (curr.isProducer) {
             curr.prod = producerControlMode(act);
         }
