@@ -20,6 +20,7 @@
 #ifndef OPM_TUNING_HPP
 #define OPM_TUNING_HPP
 
+#include <opm/parser/eclipse/Units/Units.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/T.hpp>
 
 namespace Opm {
