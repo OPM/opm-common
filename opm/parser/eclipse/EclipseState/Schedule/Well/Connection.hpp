@@ -33,8 +33,14 @@
 
 namespace Opm {
 
+namespace RestartIO {
+    class RstConnection;
+}
+
     class DeckKeyword;
     class DeckRecord;
+    class EclipseGrid;
+    class FieldPropsManager;
 
     class Connection {
     public:
@@ -111,6 +117,7 @@ namespace Opm {
                    int segment,
                    double wellPi);
 
+        Connection(const RestartIO::RstConnection& rst_connection, std::size_t insert_index, const EclipseGrid& grid, const FieldPropsManager& fp);
 
         bool attachedToSegment() const;
         bool sameCoordinate(const int i, const int j, const int k) const;

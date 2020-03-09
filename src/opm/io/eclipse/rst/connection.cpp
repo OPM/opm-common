@@ -94,7 +94,7 @@ RstConnection::RstConnection(const ::Opm::UnitSystem& unit_system, const int* ic
     pressure(      unit_system.to_si(M::pressure,            xcon[VI::XConn::Pressure])),
     resv_rate(     unit_system.to_si(M::rate,                xcon[VI::XConn::ResVRate]))
 {
-    auto alpha = 0.008527 * 3.14159265 * 2 * this->kh / this->cf - this->skin_factor;
+    auto alpha = 3.14159265 * 2 * this->kh / this->cf - this->skin_factor;
     this->r0 = this->diameter * exp(alpha) / 2;
 }
 
