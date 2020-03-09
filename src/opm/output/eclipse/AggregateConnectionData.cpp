@@ -184,6 +184,8 @@ namespace {
             sConn[Ix::EffectiveKH] =
                 scprop(M::effective_Kh, conn.Kh());
 
+            sConn[Ix::SkinFactor] = conn.skinFactor(); 
+
             sConn[Ix::item12] = sConn[Ix::ConnTrans];
 
             sConn[Ix::SegDistEnd]   = scprop(M::length, conn.getSegDistEnd());
