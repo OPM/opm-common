@@ -28,14 +28,13 @@
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
 #include <opm/output/eclipse/VectorItems/doubhead.hpp>
 
-#include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 namespace VI = ::Opm::RestartIO::Helpers::VectorItems;
 
 namespace Opm {
 namespace RestartIO {
 
-RstState::RstState(const ::Opm::UnitSystem& unit_system,
+RstState::RstState(const ::Opm::UnitSystem& unit_system_,
                    const std::vector<int>& intehead,
                    const std::vector<bool>& logihead,
                    const std::vector<double>& doubhead,
@@ -50,6 +49,7 @@ RstState::RstState(const ::Opm::UnitSystem& unit_system,
                    const std::vector<int>& icon,
                    const std::vector<float>& scon,
                    const std::vector<double>& xcon):
+    unit_system(unit_system_),
     header(intehead, logihead, doubhead)
 {
     this->add_groups(unit_system, zgrp, igrp, sgrp, xgrp);
@@ -66,7 +66,7 @@ RstState::RstState(const ::Opm::UnitSystem& unit_system,
         int group_index = iwel[ iwel_offset + VI::IWell::Group ] - 1;
         const std::string group = this->groups[group_index].name;
 
-        this->wells.emplace_back(unit_system,
+        this->wells.emplace_back(this->unit_system,
                                  this->header,
                                  group,
                                  zwel.data() + zwel_offset,
@@ -82,7 +82,7 @@ RstState::RstState(const ::Opm::UnitSystem& unit_system,
     }
 }
 
-RstState::RstState(const ::Opm::UnitSystem& unit_system,
+RstState::RstState(const ::Opm::UnitSystem& unit_system_,
                    const std::vector<int>& intehead,
                    const std::vector<bool>& logihead,
                    const std::vector<double>& doubhead,
@@ -99,6 +99,7 @@ RstState::RstState(const ::Opm::UnitSystem& unit_system,
                    const std::vector<double>& xcon,
                    const std::vector<int>& iseg,
                    const std::vector<double>& rseg) :
+    unit_system(unit_system_),
     header(intehead, logihead, doubhead)
 {
     this->add_groups(unit_system, zgrp, igrp, sgrp, xgrp);
@@ -115,7 +116,7 @@ RstState::RstState(const ::Opm::UnitSystem& unit_system,
         int group_index = iwel[ iwel_offset + VI::IWell::Group ] - 1;
         const std::string group = this->groups[group_index].name;
 
-        this->wells.emplace_back(unit_system,
+        this->wells.emplace_back(this->unit_system,
                                  this->header,
                                  group,
                                  zwel.data() + zwel_offset,
@@ -181,7 +182,7 @@ void RstState::add_groups(const ::Opm::UnitSystem& unit_system,
         std::size_t sgrp_offset = ig * this->header.nsgrpz;
         std::size_t xgrp_offset = ig * this->header.nxgrpz;
 
-        this->groups.emplace_back(unit_system,
+        this->groups.emplace_back(this->unit_system,
                                   zgrp.data() + zgrp_offset,
                                   igrp.data() + igrp_offset,
                                   sgrp.data() + sgrp_offset,

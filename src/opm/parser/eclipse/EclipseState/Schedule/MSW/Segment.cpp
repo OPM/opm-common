@@ -107,6 +107,7 @@ static constexpr double invalid_value = -1.e100;
               segment.
             */
             double segment_length = -1;
+            throw std::logic_error("Sorry can not create a Valve segment from restart file");
             this->updateValve(valve, segment_length);
         }
     }

@@ -35,6 +35,14 @@ namespace RestartIO {
 
 using M  = ::Opm::UnitSystem::measure;
 
+double swel_value(float raw_value) {
+    const auto infty =  1.0e+20f;
+    if (raw_value == infty)
+        return 0;
+    else
+        return raw_value;
+}
+
 RstWell::RstWell(const ::Opm::UnitSystem& unit_system,
                  const RstHeader& header,
                  const std::string& group_arg,
@@ -57,11 +65,11 @@ RstWell::RstWell(const ::Opm::UnitSystem& unit_system,
     hist_requested_control(                                          iwel[VI::IWell::HistReqWCtrl]),
     msw_index(                                                       iwel[VI::IWell::MsWID]),
     completion_ordering(                                             iwel[VI::IWell::CompOrd]),
-    orat_target(         unit_system.to_si(M::identity,              swel[VI::SWell::OilRateTarget])),
-    wrat_target(         unit_system.to_si(M::identity,              swel[VI::SWell::WatRateTarget])),
-    grat_target(         unit_system.to_si(M::identity,              swel[VI::SWell::GasRateTarget])),
-    lrat_target(         unit_system.to_si(M::identity,              swel[VI::SWell::LiqRateTarget])),
-    resv_target(         unit_system.to_si(M::identity,              swel[VI::SWell::ResVRateTarget])),
+    orat_target(         unit_system.to_si(M::identity,              swel_value(swel[VI::SWell::OilRateTarget]))),
+    wrat_target(         unit_system.to_si(M::identity,              swel_value(swel[VI::SWell::WatRateTarget]))),
+    grat_target(         unit_system.to_si(M::identity,              swel_value(swel[VI::SWell::GasRateTarget]))),
+    lrat_target(         unit_system.to_si(M::identity,              swel_value(swel[VI::SWell::LiqRateTarget]))),
+    resv_target(         unit_system.to_si(M::identity,              swel_value(swel[VI::SWell::ResVRateTarget]))),
     thp_target(          unit_system.to_si(M::identity,              swel[VI::SWell::THPTarget])),
     bhp_target_float(    unit_system.to_si(M::identity,              swel[VI::SWell::BHPTarget])),
     hist_lrat_target(    unit_system.to_si(M::liquid_surface_rate,   swel[VI::SWell::HistLiqRateTarget])),
