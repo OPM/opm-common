@@ -755,12 +755,17 @@ bool Well::handleWPIMULT(const DeckRecord& record) {
 }
 
 
+void Well::updateSegments(const std::shared_ptr<WellSegments> segments_arg) {
+    this->segments = segments_arg;
+    this->ref_depth = this->segments->depthTopSegment();
+}
+
+
 bool Well::handleWELSEGS(const DeckKeyword& keyword) {
     if( this->segments )
         throw std::logic_error("re-entering WELSEGS for a well is not supported yet!!.");
 
-    this->segments = std::make_shared<WellSegments>(keyword);
-    this->ref_depth = this->segments->depthTopSegment();
+    this->updateSegments( std::make_shared<WellSegments>(keyword) );
     return true;
 }
 
