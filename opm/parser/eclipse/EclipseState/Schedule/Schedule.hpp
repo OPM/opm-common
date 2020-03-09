@@ -323,7 +323,10 @@ namespace Opm
         RestartConfig restart_config;
 
         std::map<std::string,Events> wellgroup_events;
-        void load_rst(const RestartIO::RstState& rst, const UnitSystem& unit_system);
+        void load_rst(const RestartIO::RstState& rst,
+                      const EclipseGrid& grid,
+                      const FieldPropsManager& fp,
+                      const UnitSystem& unit_system);
         void addWell(Well well, size_t report_step);
         void addWell(const std::string& wellName,
                      const std::string& group,
