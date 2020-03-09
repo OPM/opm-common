@@ -64,7 +64,7 @@ RstConnection::RstConnection(const ::Opm::UnitSystem& unit_system, const int* ic
     state(                                                   from_int<Connection::State>(icon[VI::IConn::ConnStat])),
     drain_sat_table(                                         icon[VI::IConn::Drainage]),
     imb_sat_table(                                           icon[VI::IConn::Imbibition]),
-    completion(                                              icon[VI::IConn::ComplNum] - 1),
+    completion(                                              icon[VI::IConn::ComplNum]),
     dir(                                                     from_int<Connection::Direction>(icon[VI::IConn::ConnDir])),
     segment(                                                 icon[VI::IConn::Segment] - 1),
     tran(          unit_system.to_si(M::transmissibility,    scon[VI::SConn::ConnTrans])),
