@@ -289,6 +289,14 @@ namespace Opm
 
         bool operator==(const Schedule& data) const;
 
+
+        /*
+          The cmp() function compares two schedule instances in a context aware
+          manner. Floating point numbers are compared with a tolerance. The
+          purpose of this comparison function is to implement regression tests
+          for the schedule instances creating by loading a restart file.
+        */
+        static bool cmp(const Schedule& sched1, const Schedule& sched2, std::size_t report_step);
     private:
         TimeMap m_timeMap;
         WellMap wells_static;
