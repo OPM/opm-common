@@ -41,6 +41,7 @@ struct RstConnection {
     int completion;
     Connection::Direction dir;
     int segment;
+    Connection::CTFKind cf_kind;
 
     float cf;
     float depth;

@@ -54,6 +54,17 @@ Connection::Direction from_int(int int_dir) {
     }
 }
 
+/*
+  That the CTFKind variable comes from a float looks extremely suspicious; but
+  it has been double checked ...
+*/
+Connection::CTFKind from_float(float float_kind) {
+    if (float_kind == 0)
+        return Connection::CTFKind::Defaulted;
+
+    return Connection::CTFKind::DeckValue;
+}
+
 }
 
 using M  = ::Opm::UnitSystem::measure;
@@ -67,6 +78,7 @@ RstConnection::RstConnection(const ::Opm::UnitSystem& unit_system, const int* ic
     completion(                                              icon[VI::IConn::ComplNum]),
     dir(                                                     from_int<Connection::Direction>(icon[VI::IConn::ConnDir])),
     segment(                                                 icon[VI::IConn::Segment] - 1),
+    cf_kind(                                                 from_float(scon[VI::SConn::CFInDeck])),
     cf(            unit_system.to_si(M::transmissibility,    scon[VI::SConn::ConnTrans])),
     depth(         unit_system.to_si(M::length,              scon[VI::SConn::Depth])),
     diameter(      unit_system.to_si(M::length,              scon[VI::SConn::Diameter])),
