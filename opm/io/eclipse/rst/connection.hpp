@@ -49,12 +49,14 @@ struct RstConnection {
     float kh;
     float segdist_end;
     float segdist_start;
+    float skin_factor;
 
     double oil_rate;
     double water_rate;
     double gas_rate;
     double pressure;
     double resv_rate;
+    double r0;
 };
 
 
