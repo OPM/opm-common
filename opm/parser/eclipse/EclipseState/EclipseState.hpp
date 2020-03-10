@@ -122,8 +122,8 @@ namespace Opm {
             serializer(m_runspec);
             serializer(m_eclipseConfig);
             serializer(m_deckUnitSystem);
-            serializer(m_inputNnc);
-            serializer(m_inputEditNnc);
+            m_inputNnc.serializeOp(serializer);
+            m_inputEditNnc.serializeOp(serializer);
             serializer(m_gridDims);
             serializer(m_simulationConfig);
             serializer(m_transMult);
