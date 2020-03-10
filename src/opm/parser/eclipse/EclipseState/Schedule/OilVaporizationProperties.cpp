@@ -114,23 +114,12 @@ namespace Opm {
     }
 
     bool OilVaporizationProperties::operator==( const OilVaporizationProperties& rhs ) const {
-        if( this->m_type == OilVaporization::UNDEF
-         || rhs.m_type   == OilVaporization::UNDEF
-         || this->m_type != rhs.m_type ) return false;
-
-        switch( this->m_type ) {
-            case OilVaporization::DRDT:
-                return this->m_maxDRSDT == rhs.m_maxDRSDT
-                    && this->m_maxDRSDT_allCells == rhs.m_maxDRSDT_allCells
-                        && this->m_maxDRVDT == rhs.m_maxDRVDT;
-
-            case OilVaporization::VAPPARS:
-                return this->m_vap1 == rhs.m_vap1
-                    && this->m_vap2 == rhs.m_vap2;
-
-            default:
-                throw std::logic_error( "UNDEF Oil vaporization property; this should never happen" );
-        }
+        return m_type == rhs.m_type &&
+               m_vap1 == rhs.m_vap1 &&
+               m_vap2 == rhs.m_vap2 &&
+               m_maxDRSDT == rhs.m_maxDRSDT &&
+               m_maxDRSDT_allCells == rhs.m_maxDRSDT_allCells &&
+               m_maxDRVDT == rhs.m_maxDRVDT;
     }
 
     bool OilVaporizationProperties::operator!=( const OilVaporizationProperties& rhs ) const {
