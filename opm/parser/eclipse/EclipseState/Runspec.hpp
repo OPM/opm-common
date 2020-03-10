@@ -185,29 +185,36 @@ private:
 
 class SatFuncControls {
 public:
+    enum class ThreePhaseOilKrModel {
+        Default,
+        Stone1,
+        Stone2
+    };
+
     SatFuncControls();
     explicit SatFuncControls(const Deck& deck);
-    explicit SatFuncControls(const double tolcritArg);
+    SatFuncControls(const double tolcritArg,
+                    ThreePhaseOilKrModel model);
 
     double minimumRelpermMobilityThreshold() const
     {
         return this->tolcrit;
     }
 
+    ThreePhaseOilKrModel krModel() const
+    {
+        return this->krmodel;
+    }
+
     bool operator==(const SatFuncControls& rhs) const;
 
 private:
     double tolcrit;
+    ThreePhaseOilKrModel krmodel = ThreePhaseOilKrModel::Default;
 };
 
 class Runspec {
 public:
-    enum class StoneType {
-        DEFAULT,
-        STONE1,
-        STONE2
-    };
-
     Runspec() = default;
     explicit Runspec( const Deck& );
     Runspec(const Phases& act_phases,
@@ -218,8 +225,7 @@ public:
             const UDQParams& udqparams,
             const EclHysterConfig& hystPar,
             const Actdims& actDims,
-            const SatFuncControls& sfuncctrl,
-            StoneType stonetype);
+            const SatFuncControls& sfuncctrl);
 
     const UDQParams& udqParams() const noexcept;
     const Phases& phases() const noexcept;
@@ -231,7 +237,6 @@ public:
     const EclHysterConfig& hysterPar() const noexcept;
     const Actdims& actdims() const noexcept;
     const SatFuncControls& saturationFunctionControls() const noexcept;
-    StoneType stoneType() const noexcept;
 
     bool operator==(const Runspec& data) const;
 
@@ -245,7 +250,6 @@ private:
     EclHysterConfig hystpar;
     Actdims m_actdims;
     SatFuncControls m_sfuncctrl;
-    StoneType stonetype = StoneType::DEFAULT;
 };
 
 
