@@ -58,6 +58,7 @@ if(PARMETIS_INCLUDE_DIR)
 endif()
 set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} ${MPI_C_COMPILE_FLAGS}")
 
+include(CheckIncludeFile)
 check_include_file(parmetis.h PARMETIS_FOUND)
 _search_parmetis_lib(PARMETIS_LIBRARY parmetis "The main ParMETIS library.")
 
