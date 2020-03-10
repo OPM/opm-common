@@ -166,11 +166,15 @@ namespace Opm {
             bool require3DField( const std::string& keyword) const;
             bool requireFIPNUM( ) const;
 
-            const keyword_list& getKwds() const;
-            const std::set<std::string>& getShortKwds() const;
-            const std::set<std::string>& getSmryKwds() const;
-
             bool operator==(const SummaryConfig& data) const;
+
+            template<class Serializer>
+            void serializeOp(Serializer& serializer)
+            {
+               serializer(keywords);
+               serializer(short_keywords);
+               serializer(summary_keywords);
+            }
 
         private:
             SummaryConfig( const Deck& deck,
