@@ -251,15 +251,24 @@ SatFuncControls::SatFuncControls(const Deck& deck)
         this->tolcrit = deck.getKeyword<Kw>(0).getRecord(0)
             .getItem<Kw::VALUE>().getSIDouble(0);
     }
+
+    if (deck.hasKeyword<ParserKeywords::STONE1>())
+        krmodel = ThreePhaseOilKrModel::Stone1;
+    else if (deck.hasKeyword<ParserKeywords::STONE>() ||
+             deck.hasKeyword<ParserKeywords::STONE2>())
+        krmodel = ThreePhaseOilKrModel::Stone2;
 }
 
-SatFuncControls::SatFuncControls(const double tolcritArg)
+SatFuncControls::SatFuncControls(const double tolcritArg,
+                                 ThreePhaseOilKrModel model)
     : tolcrit(tolcritArg)
+    , krmodel(model)
 {}
 
 bool SatFuncControls::operator==(const SatFuncControls& rhs) const
 {
-    return this->minimumRelpermMobilityThreshold() == rhs.minimumRelpermMobilityThreshold();
+    return this->minimumRelpermMobilityThreshold() == rhs.minimumRelpermMobilityThreshold() &&
+           this->krModel() == rhs.krModel();
 }
 
 Runspec::Runspec( const Deck& deck ) :
@@ -280,13 +289,7 @@ Runspec::Runspec( const Deck& deck ) :
     hystpar( deck ),
     m_actdims( deck ),
     m_sfuncctrl( deck )
-{
-    if (deck.hasKeyword<ParserKeywords::STONE1>())
-        stonetype = StoneType::STONE1;
-    else if (deck.hasKeyword<ParserKeywords::STONE>() ||
-             deck.hasKeyword<ParserKeywords::STONE2>())
-        stonetype = StoneType::STONE2;
-}
+{}
 
 Runspec::Runspec(const Phases& act_phases,
                  const Tabdims& tabdims,
@@ -296,8 +299,7 @@ Runspec::Runspec(const Phases& act_phases,
                  const UDQParams& udqparams,
                  const EclHysterConfig& hystPar,
                  const Actdims& actDims,
-                 const SatFuncControls& sfuncctrl,
-                 StoneType stone) :
+                 const SatFuncControls& sfuncctrl) :
     active_phases(act_phases),
     m_tabdims(tabdims),
     endscale(endScale),
@@ -306,8 +308,7 @@ Runspec::Runspec(const Phases& act_phases,
     udq_params(udqparams),
     hystpar(hystPar),
     m_actdims(actDims),
-    m_sfuncctrl(sfuncctrl),
-    stonetype(stone)
+    m_sfuncctrl(sfuncctrl)
 {}
 
 const Phases& Runspec::phases() const noexcept {
@@ -365,11 +366,6 @@ const UDQParams& Runspec::udqParams() const noexcept {
     return this->udq_params;
 }
 
-Runspec::StoneType Runspec::stoneType() const noexcept {
-    return this->stonetype;
-}
-
-
 bool Runspec::operator==(const Runspec& data) const {
     return this->phases() == data.phases() &&
            this->tabdims() == data.tabdims() &&
@@ -378,8 +374,7 @@ bool Runspec::operator==(const Runspec& data) const {
            this->wellSegmentDimensions() == data.wellSegmentDimensions() &&
            this->hysterPar() == data.hysterPar() &&
            this->actdims() == data.actdims() &&
-           this->saturationFunctionControls() == data.saturationFunctionControls() &&
-           this->stoneType() == data.stoneType();
+           this->saturationFunctionControls() == data.saturationFunctionControls();
 }
 
 }
