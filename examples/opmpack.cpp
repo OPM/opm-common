@@ -85,9 +85,11 @@ void copy_file(const fs::path& source_dir, fs::path fname, const fs::path& targe
 
     auto source_file = source_dir / fname;
     auto target_file = target_dir / fname;
-
-    if (!fs::is_directory(target_file.parent_path()))
-        fs::create_directories(target_file.parent_path());
+    {
+        const auto& parent_path = target_file.parent_path();
+        if (!parent_path.empty() && !fs::is_directory(parent_path))
+            fs::create_directories(parent_path);
+    }
 
     fs::copy_file(source_file, target_file, fs::copy_options::overwrite_existing);
     std::cerr << "Copying file " << source_file.string() << " -> " << target_file.string() << std::endl;
