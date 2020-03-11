@@ -623,6 +623,7 @@ namespace {
                                   const Opm::data::WellRates& wr,
                                   RSegArray&                  rSeg)
         {
+            using Ix = ::Opm::RestartIO::Helpers::VectorItems::RSeg::index;
             if (well.isMultiSegment()) {
                 // use segment index as counter  - zero-based
                 std::size_t segIndex = 0;
@@ -664,11 +665,11 @@ namespace {
                 };
 
                 // Treat the top segment individually
-                rSeg[0] = units.from_si(M::length, welSegSet.lengthTopSegment());
-                rSeg[1] = units.from_si(M::length, welSegSet.depthTopSegment());
-                rSeg[5] = volFromLengthUnitConv*welSegSet.volumeTopSegment();
-                rSeg[6] = rSeg[0];
-                rSeg[7] = rSeg[1];
+                rSeg[Ix::DistOutlet]      = units.from_si(M::length, welSegSet.lengthTopSegment());
+                rSeg[Ix::OutletDepthDiff] = units.from_si(M::length, welSegSet.depthTopSegment());
+                rSeg[Ix::SegVolume]       = volFromLengthUnitConv*welSegSet.volumeTopSegment();
+                rSeg[Ix::DistBHPRef]      = rSeg[Ix::DistOutlet];
+                rSeg[Ix::DepthBHPRef]     = rSeg[Ix::OutletDepthDiff];
                 //
                 // branch according to whether multisegment well calculations are switched on or not
 
@@ -680,7 +681,7 @@ namespace {
                     temp_w = sSFR.swfr[segIndex]*0.1;
                     temp_g = sSFR.sgfr[segIndex]*gfactor;
                     //Item 12 Segment pressure - use well flow bhp
-                    rSeg[11] = (smry.has(wPKey)) ? smry.get(wPKey) :0.0;
+                    rSeg[Ix::Pressure] = (smry.has(wPKey)) ? smry.get(wPKey) :0.0;
                 }
                 else {
                     // Note: Segment flow rates and pressure from 'smry' have correct
@@ -689,22 +690,22 @@ namespace {
                     temp_w = get("SWFR")*0.1;
                     temp_g = get("SGFR")*gfactor;
                     //Item 12 Segment pressure
-                    rSeg[11] = get("SPR");
+                    rSeg[Ix::Pressure] = get("SPR");
                 }
 
-                rSeg[ 8] = temp_o + temp_w + temp_g;
-                rSeg[ 9] = (std::abs(temp_w) > 0) ? temp_w / rSeg[8] : 0.;
-                rSeg[10] = (std::abs(temp_g) > 0) ? temp_g / rSeg[8] : 0.;
+                rSeg[Ix::TotFlowRate] = temp_o + temp_w + temp_g;
+                rSeg[Ix::WatFlowFract] = (std::abs(temp_w) > 0) ? temp_w / rSeg[8] : 0.;
+                rSeg[Ix::GasFlowFract] = (std::abs(temp_g) > 0) ? temp_g / rSeg[8] : 0.;
 
                 //  value is 1. based on tests on several data sets
-                rSeg[ 39] = 1.;
+                rSeg[Ix::item40] = 1.;
 
-                rSeg[105] = 1.0;
-                rSeg[106] = 1.0;
-                rSeg[107] = 1.0;
-                rSeg[108] = 1.0;
-                rSeg[109] = 1.0;
-                rSeg[110] = 1.0;
+                rSeg[Ix::item106] = 1.0;
+                rSeg[Ix::item107] = 1.0;
+                rSeg[Ix::item108] = 1.0;
+                rSeg[Ix::item109] = 1.0;
+                rSeg[Ix::item110] = 1.0;
+                rSeg[Ix::item111] = 1.0;
 
                 //Treat subsequent segments
                 for (segIndex = 1; segIndex < welSegSet.size(); segIndex++) {
@@ -718,14 +719,14 @@ namespace {
                     const auto& outSeg = segment.outletSegment();
                     const auto& ind_ofs = welSegSet.segmentNumberToIndex(outSeg);
                     auto iS = (segNumber-1)*noElmSeg;
-                    rSeg[iS +   0] = units.from_si(M::length, (segment.totalLength() - welSegSet[ind_ofs].totalLength()));
-                    rSeg[iS +   1] = units.from_si(M::length, (segment.depth() - welSegSet[ind_ofs].depth()));
-                    rSeg[iS +   2] = units.from_si(M::length, (segment.internalDiameter()));
-                    rSeg[iS +   3] = units.from_si(M::length, (segment.roughness()));
-                    rSeg[iS +   4] = areaFromLengthUnitConv *  segment.crossArea();
-                    rSeg[iS +   5] = volFromLengthUnitConv  *  segment.volume();
-                    rSeg[iS +   6] = units.from_si(M::length, (segment.totalLength()));
-                    rSeg[iS +   7] = units.from_si(M::length, (segment.depth()));
+                    rSeg[iS + Ix::DistOutlet] = units.from_si(M::length, (segment.totalLength() - welSegSet[ind_ofs].totalLength()));
+                    rSeg[iS + Ix::OutletDepthDiff] = units.from_si(M::length, (segment.depth() - welSegSet[ind_ofs].depth()));
+                    rSeg[iS + Ix::SegDiam] = units.from_si(M::length, (segment.internalDiameter()));
+                    rSeg[iS + Ix::SegRough] = units.from_si(M::length, (segment.roughness()));
+                    rSeg[iS + Ix::SegArea] = areaFromLengthUnitConv *  segment.crossArea();
+                    rSeg[iS + Ix::SegVolume] = volFromLengthUnitConv  *  segment.volume();
+                    rSeg[iS + Ix::DistBHPRef] = units.from_si(M::length, (segment.totalLength()));
+                    rSeg[iS + Ix::DepthBHPRef] = units.from_si(M::length, (segment.depth()));
 
                     //see section above for explanation of values
                     // branch according to whether multisegment well calculations are switched on or not
@@ -736,7 +737,7 @@ namespace {
                         temp_w = sSFR.swfr[segIndex]*0.1;
                         temp_g = sSFR.sgfr[segIndex]*gfactor;
                         //Item 12 Segment pressure - use well flow bhp
-                        rSeg[iS +  11] = (smry.has(wPKey)) ? smry.get(wPKey) :0.0;
+                        rSeg[iS +  Ix::Pressure] = (smry.has(wPKey)) ? smry.get(wPKey) :0.0;
                     }
                     else {
                         // Note: Segment flow rates and pressure from 'smry' have correct
@@ -745,21 +746,21 @@ namespace {
                         temp_w = get("SWFR")*0.1;
                         temp_g = get("SGFR")*gfactor;
                         //Item 12 Segment pressure
-                        rSeg[iS +  11] = get("SPR");
+                        rSeg[iS +  Ix::Pressure] = get("SPR");
                     }
 
-                    rSeg[iS +  8] = temp_o + temp_w + temp_g;
-                    rSeg[iS +  9] = (std::abs(temp_w) > 0) ? temp_w / rSeg[iS + 8] : 0.;
-                    rSeg[iS + 10] = (std::abs(temp_g) > 0) ? temp_g / rSeg[iS + 8] : 0.;
+                    rSeg[iS + Ix::TotFlowRate] = temp_o + temp_w + temp_g;
+                    rSeg[iS + Ix::WatFlowFract] = (std::abs(temp_w) > 0) ? temp_w / rSeg[iS + 8] : 0.;
+                    rSeg[iS + Ix::GasFlowFract] = (std::abs(temp_g) > 0) ? temp_g / rSeg[iS + 8] : 0.;
 
-                    rSeg[iS +  39] = 1.;
+                    rSeg[iS +  Ix::item40] = 1.;
 
-                    rSeg[iS + 105] = 1.0;
-                    rSeg[iS + 106] = 1.0;
-                    rSeg[iS + 107] = 1.0;
-                    rSeg[iS + 108] = 1.0;
-                    rSeg[iS + 109] = 1.0;
-                    rSeg[iS + 110] = 1.0;
+                    rSeg[iS + Ix::item106] = 1.0;
+                    rSeg[iS + Ix::item107] = 1.0;
+                    rSeg[iS + Ix::item108] = 1.0;
+                    rSeg[iS + Ix::item109] = 1.0;
+                    rSeg[iS + Ix::item110] = 1.0;
+                    rSeg[iS + Ix::item111] = 1.0;
 
                     if (! isRegular(segment)) {
                         assignSegmentTypeCharacteristics(segment, units, iS, rSeg);
