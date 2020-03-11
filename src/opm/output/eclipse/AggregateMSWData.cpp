@@ -711,17 +711,16 @@ namespace {
                 //Treat subsequent segments
                 for (segIndex = 1; segIndex < welSegSet.size(); segIndex++) {
                     const auto& segment = welSegSet[segIndex];
+                    const auto& outlet_segment = welSegSet.getFromSegmentNumber( segment.outletSegment() );
 
                     segNumber = segment.segmentNumber();
                     // 'stringSegNum' is one-based (1 .. #segments inclusive)
                     stringSegNum = std::to_string(segNumber);
 
                     // set the elements of the rSeg array
-                    const auto& outSeg = segment.outletSegment();
-                    const auto& ind_ofs = welSegSet.segmentNumberToIndex(outSeg);
                     auto iS = (segNumber-1)*noElmSeg;
-                    rSeg[iS + Ix::DistOutlet] = units.from_si(M::length, (segment.totalLength() - welSegSet[ind_ofs].totalLength()));
-                    rSeg[iS + Ix::OutletDepthDiff] = units.from_si(M::length, (segment.depth() - welSegSet[ind_ofs].depth()));
+                    rSeg[iS + Ix::DistOutlet] = units.from_si(M::length, (segment.totalLength() - outlet_segment.totalLength()));
+                    rSeg[iS + Ix::OutletDepthDiff] = units.from_si(M::length, (segment.depth() - outlet_segment.depth()));
                     rSeg[iS + Ix::SegDiam] = units.from_si(M::length, (segment.internalDiameter()));
                     rSeg[iS + Ix::SegRough] = units.from_si(M::length, (segment.roughness()));
                     rSeg[iS + Ix::SegArea] = areaFromLengthUnitConv *  segment.crossArea();
