@@ -175,8 +175,8 @@ namespace Opm {
         std::size_t m_compSeg_seqIndex=0;
 
         // related segment number
-        // -1 means the completion is not related to segment
-        int segment_number = -1;
+        // 0 means the completion is not related to segment
+        int segment_number = 0;
         double wPi = 1.0;
 
         static std::string CTFKindToString(const CTFKind);

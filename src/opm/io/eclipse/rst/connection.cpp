@@ -66,7 +66,7 @@ RstConnection::RstConnection(const ::Opm::UnitSystem& unit_system, const int* ic
     imb_sat_table(                                           icon[VI::IConn::Imbibition]),
     completion(                                              icon[VI::IConn::ComplNum]),
     dir(                                                     from_int<Connection::Direction>(icon[VI::IConn::ConnDir])),
-    segment(                                                 icon[VI::IConn::Segment] - 1),
+    segment(                                                 icon[VI::IConn::Segment]),
     tran(          unit_system.to_si(M::transmissibility,    scon[VI::SConn::ConnTrans])),
     depth(         unit_system.to_si(M::length,              scon[VI::SConn::Depth])),
     diameter(      unit_system.to_si(M::length,              scon[VI::SConn::Diameter])),
