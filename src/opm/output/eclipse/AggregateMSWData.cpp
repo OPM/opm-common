@@ -176,6 +176,9 @@ namespace {
         return ordSegNumber;
     }
 
+    std::vector<std::size_t> segmentOrder(const Opm::WellSegments& segSet) {
+        return segmentOrder(segSet, 0);
+    }
 
     Opm::RestartIO::Helpers::SegmentSetSourceSinkTerms
     getSegmentSetSSTerms(const std::string& wname, const Opm::WellSegments& segSet, const std::vector<Opm::data::Connection>& rateConns,
@@ -233,8 +236,7 @@ namespace {
         auto sSSST = getSegmentSetSSTerms(wname, segSet, rateConns, welConns, units);
 
         // find an ordered list of segments
-        std::size_t segmentInd = 0;
-        auto orderedSegmentInd = segmentOrder(segSet, segmentInd);
+        auto orderedSegmentInd = segmentOrder(segSet);
         auto sNFOSN = segmentIndFromOrderedSegmentInd(segSet, orderedSegmentInd);
         // loop over segments according to the ordered segments sequence which ensures that the segments alway are traversed in the from
         // inflow to outflow direction (a branch toe is the innermost inflow end)
@@ -449,8 +451,7 @@ namespace {
                 const auto& welSegSet     = well.getSegments();
                 const auto& completionSet = well.getConnections();
                 const auto& noElmSeg      = nisegz(inteHead);
-                std::size_t segmentInd = 0;
-                auto orderedSegmentNo = segmentOrder(welSegSet, segmentInd);
+                auto orderedSegmentNo = segmentOrder(welSegSet);
                 std::vector<int> seg_reorder (welSegSet.size(),0);
                 for (std::size_t ind = 0; ind < welSegSet.size(); ind++ ){
                     const auto s_no = welSegSet[orderedSegmentNo[ind]].segmentNumber();
@@ -626,15 +627,14 @@ namespace {
             using Ix = ::Opm::RestartIO::Helpers::VectorItems::RSeg::index;
             if (well.isMultiSegment()) {
                 // use segment index as counter  - zero-based
-                std::size_t segIndex = 0;
                 using M = ::Opm::UnitSystem::measure;
                 const auto gfactor = (units.getType() == Opm::UnitSystem::UnitType::UNIT_TYPE_FIELD)
                     ? 0.1781076 : 0.001;
 
                 //loop over segment set and print out information
                 const auto&  noElmSeg  = nrsegz(inteHead);
-                const auto& welSegSet = well.getSegments();
-                auto segNumber = welSegSet[segIndex].segmentNumber();
+                const auto& welSegSet  = well.getSegments();
+                const auto& segment0   = welSegSet[0];
 
                 const auto& conn0 = well.getConnections();
                 const auto& welConns = Opm::WellConnections(conn0, grid);
@@ -655,8 +655,8 @@ namespace {
                 if (haveWellRes) {
                     sSFR = getSegmentSetFlowRates(well.name(), welSegSet, wRatesIt->second.connections, welConns, units);
                 }
-                // 'stringSegNum' is one-based (1 .. #segments inclusive)
-                std::string stringSegNum = std::to_string(segNumber);
+
+                std::string stringSegNum = std::to_string(segment0.segmentNumber());
                 auto get = [&smry, &wname, &stringSegNum](const std::string& vector)
                 {
                     // 'stringSegNum' is one-based (1 .. #segments inclusive)
@@ -664,12 +664,13 @@ namespace {
                     return smry.has(key) ? smry.get(key) : 0.0;
                 };
 
+                auto iS = (segment0.segmentNumber() - 1)*noElmSeg;
                 // Treat the top segment individually
-                rSeg[Ix::DistOutlet]      = units.from_si(M::length, welSegSet.lengthTopSegment());
-                rSeg[Ix::OutletDepthDiff] = units.from_si(M::length, welSegSet.depthTopSegment());
-                rSeg[Ix::SegVolume]       = volFromLengthUnitConv*welSegSet.volumeTopSegment();
-                rSeg[Ix::DistBHPRef]      = rSeg[Ix::DistOutlet];
-                rSeg[Ix::DepthBHPRef]     = rSeg[Ix::OutletDepthDiff];
+                rSeg[iS + Ix::DistOutlet]      = units.from_si(M::length, welSegSet.lengthTopSegment());
+                rSeg[iS + Ix::OutletDepthDiff] = units.from_si(M::length, welSegSet.depthTopSegment());
+                rSeg[iS + Ix::SegVolume]       = volFromLengthUnitConv*welSegSet.volumeTopSegment();
+                rSeg[iS + Ix::DistBHPRef]      = rSeg[iS + Ix::DistOutlet];
+                rSeg[iS + Ix::DepthBHPRef]     = rSeg[iS + Ix::OutletDepthDiff];
                 //
                 // branch according to whether multisegment well calculations are switched on or not
 
@@ -677,11 +678,11 @@ namespace {
                 if (haveWellRes && wRatesIt->second.segments.size() < 2) {
                     // Note: Segment flow rates and pressure from 'smry' have correct
                     // output units and sign conventions.
-                    temp_o = sSFR.sofr[segIndex];
-                    temp_w = sSFR.swfr[segIndex]*0.1;
-                    temp_g = sSFR.sgfr[segIndex]*gfactor;
+                    temp_o = sSFR.sofr[0];
+                    temp_w = sSFR.swfr[0]*0.1;
+                    temp_g = sSFR.sgfr[0]*gfactor;
                     //Item 12 Segment pressure - use well flow bhp
-                    rSeg[Ix::Pressure] = (smry.has(wPKey)) ? smry.get(wPKey) :0.0;
+                    rSeg[iS + Ix::Pressure] = (smry.has(wPKey)) ? smry.get(wPKey) :0.0;
                 }
                 else {
                     // Note: Segment flow rates and pressure from 'smry' have correct
@@ -690,45 +691,42 @@ namespace {
                     temp_w = get("SWFR")*0.1;
                     temp_g = get("SGFR")*gfactor;
                     //Item 12 Segment pressure
-                    rSeg[Ix::Pressure] = get("SPR");
+                    rSeg[iS + Ix::Pressure] = get("SPR");
                 }
 
-                rSeg[Ix::TotFlowRate] = temp_o + temp_w + temp_g;
-                rSeg[Ix::WatFlowFract] = (std::abs(temp_w) > 0) ? temp_w / rSeg[8] : 0.;
-                rSeg[Ix::GasFlowFract] = (std::abs(temp_g) > 0) ? temp_g / rSeg[8] : 0.;
+                rSeg[iS + Ix::TotFlowRate] = temp_o + temp_w + temp_g;
+                rSeg[iS + Ix::WatFlowFract] = (std::abs(temp_w) > 0) ? temp_w / rSeg[8] : 0.;
+                rSeg[iS + Ix::GasFlowFract] = (std::abs(temp_g) > 0) ? temp_g / rSeg[8] : 0.;
 
                 //  value is 1. based on tests on several data sets
-                rSeg[Ix::item40] = 1.;
+                rSeg[iS + Ix::item40] = 1.;
 
-                rSeg[Ix::item106] = 1.0;
-                rSeg[Ix::item107] = 1.0;
-                rSeg[Ix::item108] = 1.0;
-                rSeg[Ix::item109] = 1.0;
-                rSeg[Ix::item110] = 1.0;
-                rSeg[Ix::item111] = 1.0;
+                rSeg[iS + Ix::item106] = 1.0;
+                rSeg[iS + Ix::item107] = 1.0;
+                rSeg[iS + Ix::item108] = 1.0;
+                rSeg[iS + Ix::item109] = 1.0;
+                rSeg[iS + Ix::item110] = 1.0;
+                rSeg[iS + Ix::item111] = 1.0;
 
                 //Treat subsequent segments
-                for (segIndex = 1; segIndex < welSegSet.size(); segIndex++) {
+                for (std::size_t segIndex = 1; segIndex < welSegSet.size(); segIndex++) {
                     const auto& segment = welSegSet[segIndex];
-
-                    segNumber = segment.segmentNumber();
-                    // 'stringSegNum' is one-based (1 .. #segments inclusive)
+                    const auto& outlet_segment = welSegSet.getFromSegmentNumber( segment.outletSegment() );
+                    const int segNumber = segment.segmentNumber();
                     stringSegNum = std::to_string(segNumber);
 
                     // set the elements of the rSeg array
-                    const auto& outSeg = segment.outletSegment();
-                    const auto& ind_ofs = welSegSet.segmentNumberToIndex(outSeg);
-                    auto iS = (segNumber-1)*noElmSeg;
-                    rSeg[iS + Ix::DistOutlet] = units.from_si(M::length, (segment.totalLength() - welSegSet[ind_ofs].totalLength()));
-                    rSeg[iS + Ix::OutletDepthDiff] = units.from_si(M::length, (segment.depth() - welSegSet[ind_ofs].depth()));
-                    rSeg[iS + Ix::SegDiam] = units.from_si(M::length, (segment.internalDiameter()));
-                    rSeg[iS + Ix::SegRough] = units.from_si(M::length, (segment.roughness()));
-                    rSeg[iS + Ix::SegArea] = areaFromLengthUnitConv *  segment.crossArea();
-                    rSeg[iS + Ix::SegVolume] = volFromLengthUnitConv  *  segment.volume();
-                    rSeg[iS + Ix::DistBHPRef] = units.from_si(M::length, (segment.totalLength()));
-                    rSeg[iS + Ix::DepthBHPRef] = units.from_si(M::length, (segment.depth()));
+                    iS = (segNumber - 1)*noElmSeg;
+                    rSeg[iS + Ix::DistOutlet]      = units.from_si(M::length, (segment.totalLength() - outlet_segment.totalLength()));
+                    rSeg[iS + Ix::OutletDepthDiff] = units.from_si(M::length, (segment.depth() - outlet_segment.depth()));
+                    rSeg[iS + Ix::SegDiam]         = units.from_si(M::length, (segment.internalDiameter()));
+                    rSeg[iS + Ix::SegRough]        = units.from_si(M::length, (segment.roughness()));
+                    rSeg[iS + Ix::SegArea]         = areaFromLengthUnitConv *  segment.crossArea();
+                    rSeg[iS + Ix::SegVolume]       = volFromLengthUnitConv  *  segment.volume();
+                    rSeg[iS + Ix::DistBHPRef]      = units.from_si(M::length, (segment.totalLength()));
+                    rSeg[iS + Ix::DepthBHPRef]     = units.from_si(M::length, (segment.depth()));
 
-                    //see section above for explanation of values
+                    // see section above for explanation of values
                     // branch according to whether multisegment well calculations are switched on or not
                     if (haveWellRes && wRatesIt->second.segments.size() < 2) {
                         // Note: Segment flow rates and pressure from 'smry' have correct
