@@ -462,10 +462,10 @@ namespace {
 
                     auto segNumber = segment.segmentNumber();
                     auto iS = (segNumber-1)*noElmSeg;
-                    iSeg[iS + 0] = welSegSet[orderedSegmentNo[ind]].segmentNumber();
-                    iSeg[iS + 1] = segment.outletSegment();
-                    iSeg[iS + 2] = (inflowSegmentCurBranch(well.name(), welSegSet, ind) == 0) ? 0 : welSegSet[inflowSegmentCurBranch(well.name(), welSegSet, ind)].segmentNumber();
-                    iSeg[iS + 3] = segment.branchNumber();
+                    iSeg[iS + Ix::SegNo]          = welSegSet[orderedSegmentNo[ind]].segmentNumber();
+                    iSeg[iS + Ix::OutSeg]         = segment.outletSegment();
+                    iSeg[iS + Ix::InSegCurBranch] = (inflowSegmentCurBranch(well.name(), welSegSet, ind) == 0) ? 0 : welSegSet[inflowSegmentCurBranch(well.name(), welSegSet, ind)].segmentNumber();
+                    iSeg[iS + Ix::BranchNo]       = segment.branchNumber();
                     iSeg[iS + 4] = noInFlowBranches(welSegSet, ind);
                     iSeg[iS + 5] = sumNoInFlowBranches(welSegSet, ind);
                     iSeg[iS + 6] = noConnectionsSegment(completionSet, welSegSet, ind);
