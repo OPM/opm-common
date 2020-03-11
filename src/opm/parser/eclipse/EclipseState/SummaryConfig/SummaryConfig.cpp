@@ -1100,25 +1100,10 @@ bool SummaryConfig::requireFIPNUM( ) const {
 }
 
 
-const SummaryConfig::keyword_list& SummaryConfig::getKwds() const {
-    return keywords;
-}
-
-
-const std::set<std::string>& SummaryConfig::getShortKwds() const {
-    return short_keywords;
-}
-
-
-const std::set<std::string>& SummaryConfig::getSmryKwds() const {
-    return summary_keywords;
-}
-
-
 bool SummaryConfig::operator==(const Opm::SummaryConfig& data) const {
-    return this->getKwds() == data.getKwds() &&
-           this->getShortKwds() == data.getShortKwds() &&
-           this->getSmryKwds() == data.getSmryKwds();
+    return this->keywords == data.keywords &&
+           this->short_keywords == data.short_keywords &&
+           this->summary_keywords == data.summary_keywords;
 }
 
 }
