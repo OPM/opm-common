@@ -112,6 +112,25 @@ namespace Opm {
 
         const Runspec& runspec() const;
         const AquiferConfig& aquifer() const;
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            // FieldPropsManager is handled otherwise, do not add
+            serializer(m_tables);
+            serializer(m_runspec);
+            serializer(m_eclipseConfig);
+            serializer(m_deckUnitSystem);
+            serializer(m_inputNnc);
+            serializer(m_inputEditNnc);
+            serializer(m_gridDims);
+            serializer(m_simulationConfig);
+            serializer(m_transMult);
+            serializer(m_faults);
+            serializer(m_title);
+            serializer(aquifer_config);
+        }
+
     private:
         void initIOConfigPostSchedule(const Deck& deck);
         void initTransMult();
