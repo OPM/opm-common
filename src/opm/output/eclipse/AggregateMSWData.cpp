@@ -176,6 +176,9 @@ namespace {
         return ordSegNumber;
     }
 
+    std::vector<std::size_t> segmentOrder(const Opm::WellSegments& segSet) {
+        return segmentOrder(segSet, 0);
+    }
 
     Opm::RestartIO::Helpers::SegmentSetSourceSinkTerms
     getSegmentSetSSTerms(const std::string& wname, const Opm::WellSegments& segSet, const std::vector<Opm::data::Connection>& rateConns,
@@ -233,8 +236,7 @@ namespace {
         auto sSSST = getSegmentSetSSTerms(wname, segSet, rateConns, welConns, units);
 
         // find an ordered list of segments
-        std::size_t segmentInd = 0;
-        auto orderedSegmentInd = segmentOrder(segSet, segmentInd);
+        auto orderedSegmentInd = segmentOrder(segSet);
         auto sNFOSN = segmentIndFromOrderedSegmentInd(segSet, orderedSegmentInd);
         // loop over segments according to the ordered segments sequence which ensures that the segments alway are traversed in the from
         // inflow to outflow direction (a branch toe is the innermost inflow end)
@@ -449,8 +451,7 @@ namespace {
                 const auto& welSegSet     = well.getSegments();
                 const auto& completionSet = well.getConnections();
                 const auto& noElmSeg      = nisegz(inteHead);
-                std::size_t segmentInd = 0;
-                auto orderedSegmentNo = segmentOrder(welSegSet, segmentInd);
+                auto orderedSegmentNo = segmentOrder(welSegSet);
                 std::vector<int> seg_reorder (welSegSet.size(),0);
                 for (std::size_t ind = 0; ind < welSegSet.size(); ind++ ){
                     const auto s_no = welSegSet[orderedSegmentNo[ind]].segmentNumber();
