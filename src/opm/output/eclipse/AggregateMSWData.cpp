@@ -719,14 +719,14 @@ namespace {
 
                     // set the elements of the rSeg array
                     auto iS = (segNumber-1)*noElmSeg;
-                    rSeg[iS + Ix::DistOutlet] = units.from_si(M::length, (segment.totalLength() - outlet_segment.totalLength()));
+                    rSeg[iS + Ix::DistOutlet]      = units.from_si(M::length, (segment.totalLength() - outlet_segment.totalLength()));
                     rSeg[iS + Ix::OutletDepthDiff] = units.from_si(M::length, (segment.depth() - outlet_segment.depth()));
-                    rSeg[iS + Ix::SegDiam] = units.from_si(M::length, (segment.internalDiameter()));
-                    rSeg[iS + Ix::SegRough] = units.from_si(M::length, (segment.roughness()));
-                    rSeg[iS + Ix::SegArea] = areaFromLengthUnitConv *  segment.crossArea();
-                    rSeg[iS + Ix::SegVolume] = volFromLengthUnitConv  *  segment.volume();
-                    rSeg[iS + Ix::DistBHPRef] = units.from_si(M::length, (segment.totalLength()));
-                    rSeg[iS + Ix::DepthBHPRef] = units.from_si(M::length, (segment.depth()));
+                    rSeg[iS + Ix::SegDiam]         = units.from_si(M::length, (segment.internalDiameter()));
+                    rSeg[iS + Ix::SegRough]        = units.from_si(M::length, (segment.roughness()));
+                    rSeg[iS + Ix::SegArea]         = areaFromLengthUnitConv *  segment.crossArea();
+                    rSeg[iS + Ix::SegVolume]       = volFromLengthUnitConv  *  segment.volume();
+                    rSeg[iS + Ix::DistBHPRef]      = units.from_si(M::length, (segment.totalLength()));
+                    rSeg[iS + Ix::DepthBHPRef]     = units.from_si(M::length, (segment.depth()));
 
                     //see section above for explanation of values
                     // branch according to whether multisegment well calculations are switched on or not
