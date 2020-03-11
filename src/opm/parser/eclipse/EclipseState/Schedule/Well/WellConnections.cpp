@@ -347,19 +347,14 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
                                     direction, ctf_kind,
                                     noConn, 0., 0., defaultSatTable);
             } else {
-                std::size_t noConn = prev->getSeqIndex();
-                // The complnum value carries over; the rest of the state is fully specified by
-                // the current COMPDAT keyword.
-                int complnum = prev->complnum();
                 std::size_t css_ind = prev->getCompSegSeqIndex();
                 int conSegNo = prev->segment();
-                std::size_t con_SIndex = prev->getSeqIndex();
-                double conCDepth = prev->depth();
                 double conSDStart = prev->getSegDistStart();
                 double conSDEnd = prev->getSegDistEnd();
+                double depth = grid.getCellDepth(I,J,k);
                 *prev = Connection(I,J,k,
-                                   complnum,
-                                   grid.getCellDepth(I,J,k),
+                                   prev->complnum(),
+                                   depth,
                                    state,
                                    CF,
                                    Kh,
@@ -368,10 +363,10 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
                                    skin_factor,
                                    satTableId,
                                    direction, ctf_kind,
-                                   noConn, conSDStart, conSDEnd, defaultSatTable);
+                                   prev->getSeqIndex(), conSDStart, conSDEnd, defaultSatTable);
+
                 prev->updateSegment(conSegNo,
-                                    conCDepth,
-                                    con_SIndex,
+                                    depth,
                                     css_ind,
                                     conSDStart,
                                     conSDEnd);
