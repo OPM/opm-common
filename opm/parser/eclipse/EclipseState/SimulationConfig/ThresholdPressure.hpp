@@ -81,6 +81,16 @@ namespace Opm {
         { return m_pressureTable; }
 
         bool operator==(const ThresholdPressure& data) const;
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(m_active);
+            serializer(m_restart);
+            serializer(m_thresholdPressureTable);
+            serializer(m_pressureTable);
+        }
+
     private:
         bool m_active;
         bool m_restart;
