@@ -53,11 +53,11 @@
 #include <opm/parser/eclipse/EclipseState/Tables/PlymwinjTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SkprwatTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SkprpolyTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/Eqldims.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/Regdims.hpp>
 
 namespace Opm {
 
-    class Eqldims;
-    class Regdims;
     class TableManager {
     public:
         explicit TableManager( const Deck& deck );
@@ -453,8 +453,8 @@ namespace Opm {
         std::map<int, SkprpolyTable> m_skprpolyTables;
 
         Tabdims m_tabdims;
-        std::shared_ptr<Regdims> m_regdims;
-        std::shared_ptr<Eqldims> m_eqldims;
+        Regdims m_regdims;
+        Eqldims m_eqldims;
         Aqudims m_aqudims;
 
         bool hasImptvd = false;// if deck has keyword IMPTVD
