@@ -156,8 +156,8 @@ namespace Opm {
         m_skprwatTables(skprwatTables),
         m_skprpolyTables(skprpolyTables),
         m_tabdims(tabdims),
-        m_regdims(std::make_shared<Regdims>(regdims)),
-        m_eqldims(std::make_shared<Eqldims>(eqldims)),
+        m_regdims(regdims),
+        m_eqldims(eqldims),
         m_aqudims(aqudims),
         hasImptvd(useImptvd),
         hasEnptvd(useEnptvd),
@@ -297,8 +297,8 @@ namespace Opm {
         m_skprwatTables = data.m_skprwatTables;
         m_skprpolyTables = data.m_skprpolyTables;
         m_tabdims = data.m_tabdims;
-        m_regdims = std::make_shared<Regdims>(*data.m_regdims);
-        m_eqldims = std::make_shared<Eqldims>(*data.m_eqldims);
+        m_regdims = data.m_regdims;
+        m_eqldims = data.m_eqldims;
         m_aqudims = data.m_aqudims;
         hasImptvd = data.hasImptvd;
         hasEnptvd = data.hasEnptvd;
@@ -328,9 +328,8 @@ namespace Opm {
             int nttrvd    = record.getItem<EQLDIMS::NTTRVD>().get< int >(0);
             int ntsrvd    = record.getItem<EQLDIMS::NSTRVD>().get< int >(0);
 
-            m_eqldims = std::make_shared<Eqldims>(ntsequl , nodes_p , nodes_tab , nttrvd , ntsrvd );
-        } else
-            m_eqldims = std::make_shared<Eqldims>();
+            m_eqldims = Eqldims(ntsequl , nodes_p , nodes_tab , nttrvd , ntsrvd );
+        }
 
         if (deck.hasKeyword<REGDIMS>()) {
             const auto& keyword = deck.getKeyword<REGDIMS>();
@@ -340,9 +339,8 @@ namespace Opm {
             int nrfreg = record.getItem<REGDIMS::NRFREG>().get< int >(0);
             int ntfreg = record.getItem<REGDIMS::NTFREG>().get< int >(0);
             int nplmix = record.getItem<REGDIMS::NPLMIX>().get< int >(0);
-            m_regdims = std::make_shared<Regdims>( ntfip , nmfipr , nrfreg , ntfreg , nplmix );
-        } else
-            m_regdims = std::make_shared<Regdims>();
+            m_regdims = Regdims( ntfip , nmfipr , nrfreg , ntfreg , nplmix );
+        }
     }
 
 
@@ -431,12 +429,12 @@ namespace Opm {
         addTables( "WATVISCT", m_tabdims.getNumPVTTables());
         addTables( "GASVISCT", m_tabdims.getNumPVTTables());
 
-        addTables( "PLYMAX", m_regdims->getNPLMIX());
-        addTables( "RSVD", m_eqldims->getNumEquilRegions());
-        addTables( "RVVD", m_eqldims->getNumEquilRegions());
-        addTables( "PBVD", m_eqldims->getNumEquilRegions());
-        addTables( "PDVD", m_eqldims->getNumEquilRegions());
-        addTables( "SALTVD", m_eqldims->getNumEquilRegions());
+        addTables( "PLYMAX", m_regdims.getNPLMIX());
+        addTables( "RSVD", m_eqldims.getNumEquilRegions());
+        addTables( "RVVD", m_eqldims.getNumEquilRegions());
+        addTables( "PBVD", m_eqldims.getNumEquilRegions());
+        addTables( "PDVD", m_eqldims.getNumEquilRegions());
+        addTables( "SALTVD", m_eqldims.getNumEquilRegions());
 
         addTables( "AQUTAB", m_aqudims.getNumInfluenceTablesCT());
         {
@@ -495,11 +493,11 @@ namespace Opm {
         initSimpleTableContainer<SsfnTable>(deck, "SSFN" , m_tabdims.getNumSatTables());
         initSimpleTableContainer<MsfnTable>(deck, "MSFN" , m_tabdims.getNumSatTables());
 
-        initSimpleTableContainer<RsvdTable>(deck, "RSVD" , m_eqldims->getNumEquilRegions());
-        initSimpleTableContainer<RvvdTable>(deck, "RVVD" , m_eqldims->getNumEquilRegions());
-        initSimpleTableContainer<PbvdTable>(deck, "PBVD" , m_eqldims->getNumEquilRegions());
-        initSimpleTableContainer<PdvdTable>(deck, "PDVD" , m_eqldims->getNumEquilRegions());
-        initSimpleTableContainer<SaltvdTable>(deck, "SALTVD" , m_eqldims->getNumEquilRegions());
+        initSimpleTableContainer<RsvdTable>(deck, "RSVD" , m_eqldims.getNumEquilRegions());
+        initSimpleTableContainer<RvvdTable>(deck, "RVVD" , m_eqldims.getNumEquilRegions());
+        initSimpleTableContainer<PbvdTable>(deck, "PBVD" , m_eqldims.getNumEquilRegions());
+        initSimpleTableContainer<PdvdTable>(deck, "PDVD" , m_eqldims.getNumEquilRegions());
+        initSimpleTableContainer<SaltvdTable>(deck, "SALTVD" , m_eqldims.getNumEquilRegions());
         initSimpleTableContainer<AqutabTable>(deck, "AQUTAB" , m_aqudims.getNumInfluenceTablesCT());
         {
             size_t numEndScaleTables = ParserKeywords::ENDSCALE::NUM_TABLES::defaultValue;
@@ -577,9 +575,9 @@ namespace Opm {
         if (deck.hasKeyword("TEMPVD") && deck.hasKeyword("RTEMPVD"))
             throw std::invalid_argument("The TEMPVD and RTEMPVD tables are mutually exclusive!");
         else if (deck.hasKeyword("TEMPVD"))
-            initSimpleTableContainer<RtempvdTable>(deck, "TEMPVD", "RTEMPVD", m_eqldims->getNumEquilRegions());
+            initSimpleTableContainer<RtempvdTable>(deck, "TEMPVD", "RTEMPVD", m_eqldims.getNumEquilRegions());
         else if (deck.hasKeyword("RTEMPVD"))
-            initSimpleTableContainer<RtempvdTable>(deck, "RTEMPVD", "RTEMPVD" , m_eqldims->getNumEquilRegions());
+            initSimpleTableContainer<RtempvdTable>(deck, "RTEMPVD", "RTEMPVD" , m_eqldims.getNumEquilRegions());
     }
 
 
@@ -742,7 +740,7 @@ namespace Opm {
 
 
     void TableManager::initPlymaxTables(const Deck& deck) {
-        size_t numTables = m_regdims->getNPLMIX();
+        size_t numTables = m_regdims.getNPLMIX();
         const std::string keywordName = "PLYMAX";
         if (!deck.hasKeyword(keywordName)) {
             return;
@@ -799,8 +797,8 @@ namespace Opm {
 
         size_t TableManager::numFIPRegions() const {
         size_t ntfip = m_tabdims.getNumFIPRegions();
-        if (m_regdims->getNTFIP( ) > ntfip)
-            return m_regdims->getNTFIP( );
+        if (m_regdims.getNTFIP( ) > ntfip)
+            return m_regdims.getNTFIP( );
         else
             return ntfip;
     }
@@ -810,7 +808,7 @@ namespace Opm {
     }
 
     const Eqldims& TableManager::getEqldims() const {
-        return *m_eqldims;
+        return m_eqldims;
     }
 
     const Aqudims& TableManager::getAqudims() const {
@@ -818,7 +816,7 @@ namespace Opm {
     }
 
     const Regdims& TableManager::getRegdims() const {
-        return *this->m_regdims;
+        return this->m_regdims;
     }
 
     /*
@@ -1169,8 +1167,8 @@ namespace Opm {
                m_skprwatTables == data.m_skprwatTables &&
                m_skprpolyTables == data.m_skprpolyTables &&
                m_tabdims == data.m_tabdims &&
-               *m_regdims == *data.m_regdims &&
-               *m_eqldims == *data.m_eqldims &&
+               m_regdims == data.m_regdims &&
+               m_eqldims == data.m_eqldims &&
                m_aqudims == data.m_aqudims &&
                hasImptvd == data.hasImptvd &&
                hasEnptvd == data.hasEnptvd &&
