@@ -363,6 +363,7 @@ public:
 
         int getNumProductionControls() const;
         void setBHPLimit(const double limit);
+        int productionControls() const { return this->m_productionControls; }
 
     private:
         int m_productionControls = 0;
