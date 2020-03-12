@@ -2856,78 +2856,6 @@ void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t 
         return this->m_nupcol.get(reportStep);
     }
 
-    const Schedule::WellMap& Schedule::getStaticWells() const {
-        return wells_static;
-    }
-
-    const Schedule::GroupMap& Schedule::getGroups() const {
-        return groups;
-    }
-
-    const DynamicState<OilVaporizationProperties>& Schedule::getOilVapProps() const {
-        return m_oilvaporizationproperties;
-    }
-
-    const DynamicVector<Deck>& Schedule::getModifierDeck() const {
-        return m_modifierDeck;
-    }
-
-    const Runspec& Schedule::getRunspec() const {
-        return m_runspec;
-    }
-
-    const Schedule::VFPProdMap& Schedule::getVFPProdTables() const {
-        return vfpprod_tables;
-    }
-
-    const Schedule::VFPInjMap& Schedule::getVFPInjTables() const {
-        return vfpinj_tables;
-    }
-
-    const DynamicState<std::shared_ptr<WellTestConfig>>& Schedule::getWellTestConfig() const  {
-        return wtest_config;
-    }
-
-    const DynamicState<std::shared_ptr<WListManager>>& Schedule::getWListManager() const {
-        return wlist_manager;
-    }
-
-    const DynamicState<std::shared_ptr<UDQConfig>>& Schedule::getUDQConfig() const {
-        return udq_config;
-    }
-
-    const DynamicState<std::shared_ptr<UDQActive>>& Schedule::getUDQActive() const {
-        return udq_active;
-    }
-
-    const DynamicState<std::shared_ptr<GuideRateConfig>>& Schedule::getGuideRateConfig() const {
-        return guide_rate_config;
-    }
-
-    const DynamicState<std::shared_ptr<GConSale>>& Schedule::getGConSale() const {
-        return gconsale;
-    }
-
-    const DynamicState<std::shared_ptr<GConSump>>& Schedule::getGConSump() const {
-        return gconsump;
-    }
-
-    const DynamicState<Well::ProducerCMode>& Schedule::getGlobalWhistCtlMode() const {
-        return global_whistctl_mode;
-    }
-
-    const DynamicState<std::shared_ptr<Action::Actions>>& Schedule::getActions() const {
-        return m_actions;
-    }
-
-    const DynamicState<int>& Schedule::getNupCol() const {
-        return m_nupcol;
-    }
-
-     const std::map<std::string,Events>& Schedule::getWellGroupEvents() const {
-        return wellgroup_events;
-     }
-
      bool Schedule::operator==(const Schedule& data) const {
         auto&& comparePtr = [](const auto& t1, const auto& t2) {
                                if ((t1 && !t2) || (!t1 && t2))
@@ -2960,30 +2888,30 @@ void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t 
             return true;
         };
 
-        return this->getTimeMap() == data.getTimeMap() &&
-               compareMap(this->getStaticWells(), data.getStaticWells()) &&
-               compareMap(this->getGroups(), data.getGroups()) &&
-               this->getOilVapProps() == data.getOilVapProps() &&
-               this->getEvents() == data.getEvents() &&
-               this->getModifierDeck() == data.getModifierDeck() &&
-               this->getTuning() == data.getTuning() &&
-               this->getMessageLimits() == data.getMessageLimits() &&
-               this->getRunspec() == data.getRunspec() &&
-               compareMap(this->getVFPProdTables(), data.getVFPProdTables()) &&
-               compareMap(this->getVFPInjTables(), data.getVFPInjTables()) &&
-               compareDynState(this->getWellTestConfig(), data.getWellTestConfig()) &&
-               compareDynState(this->getWListManager(), data.getWListManager()) &&
-               compareDynState(this->getUDQConfig(), data.getUDQConfig()) &&
-               compareDynState(this->getUDQActive(), data.getUDQActive()) &&
-               compareDynState(this->getGuideRateConfig(), data.getGuideRateConfig()) &&
-               compareDynState(this->getGConSale(), data.getGConSale()) &&
-               compareDynState(this->getGConSump(), data.getGConSump()) &&
-               this->getGlobalWhistCtlMode() == data.getGlobalWhistCtlMode() &&
-               compareDynState(this->getActions(), data.getActions()) &&
-               this->rftConfig () == data.rftConfig() &&
-               this->getNupCol() == data.getNupCol() &&
-               this->restart() == data.restart() &&
-               this->getWellGroupEvents() == data.getWellGroupEvents();
+        return this->m_timeMap == data.m_timeMap &&
+               compareMap(this->wells_static, data.wells_static) &&
+               compareMap(this->groups, data.groups) &&
+               this->m_oilvaporizationproperties == data.m_oilvaporizationproperties &&
+               this->m_events == data.m_events &&
+               this->m_modifierDeck == data.m_modifierDeck &&
+               this->m_tuning == data.m_tuning &&
+               this->m_messageLimits == data.m_messageLimits &&
+               this->m_runspec == data.m_runspec &&
+               compareMap(this->vfpprod_tables, data.vfpprod_tables) &&
+               compareMap(this->vfpinj_tables, data.vfpinj_tables) &&
+               compareDynState(this->wtest_config, data.wtest_config) &&
+               compareDynState(this->wlist_manager, data.wlist_manager) &&
+               compareDynState(this->udq_config, data.udq_config) &&
+               compareDynState(this->udq_active, data.udq_active) &&
+               compareDynState(this->guide_rate_config, data.guide_rate_config) &&
+               compareDynState(this->gconsale, data.gconsale) &&
+               compareDynState(this->gconsump, data.gconsump) &&
+               this->global_whistctl_mode == data.global_whistctl_mode &&
+               compareDynState(this->m_actions, data.m_actions) &&
+               rft_config  == data.rft_config &&
+               this->m_nupcol == data.m_nupcol &&
+               this->restart_config == data.restart_config &&
+               this->wellgroup_events == data.wellgroup_events;
      }
 
 

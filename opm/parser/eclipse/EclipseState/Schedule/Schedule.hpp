@@ -268,25 +268,6 @@ namespace Opm
         void applyAction(size_t reportStep, const Action::ActionX& action, const Action::Result& result);
         int getNupcol(size_t reportStep) const;
 
-        const WellMap& getStaticWells() const;
-        const GroupMap& getGroups() const;
-        const DynamicState<OilVaporizationProperties>& getOilVapProps() const;
-        const DynamicVector<Deck>& getModifierDeck() const;
-        const Runspec& getRunspec() const;
-        const VFPProdMap& getVFPProdTables() const;
-        const VFPInjMap& getVFPInjTables() const;
-        const DynamicState<std::shared_ptr<WellTestConfig>>& getWellTestConfig() const;
-        const DynamicState<std::shared_ptr<WListManager>>& getWListManager() const;
-        const DynamicState<std::shared_ptr<UDQConfig>>& getUDQConfig() const;
-        const DynamicState<std::shared_ptr<UDQActive>>& getUDQActive() const;
-        const DynamicState<std::shared_ptr<GuideRateConfig>>& getGuideRateConfig() const;
-        const DynamicState<std::shared_ptr<GConSale>>& getGConSale() const;
-        const DynamicState<std::shared_ptr<GConSump>>& getGConSump() const;
-        const DynamicState<Well::ProducerCMode>& getGlobalWhistCtlMode() const;
-        const DynamicState<std::shared_ptr<Action::Actions>>& getActions() const;
-        const DynamicState<int>& getNupCol() const;
-        const std::map<std::string,Events>& getWellGroupEvents() const;
-
         bool operator==(const Schedule& data) const;
 
 
