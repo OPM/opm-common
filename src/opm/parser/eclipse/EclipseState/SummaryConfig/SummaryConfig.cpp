@@ -115,7 +115,13 @@ namespace {
          {"SGAS" , {"BSGAS"}}
     };
 
-    const std::unordered_set<std::string> special_keywords {
+    using keyword_set = std::unordered_set<std::string>;
+
+    inline bool is_in_set(const keyword_set& set, const std::string& keyword) {
+        return set.find(keyword) != set.end();
+    }
+
+    const keyword_set special_keywords {
         "ELAPSED",
         "MAXDPR",
         "MAXDSG",
@@ -132,15 +138,15 @@ namespace {
     };
 
     bool is_special(const std::string& keyword) {
-        return special_keywords.find(keyword) != special_keywords.end();
+        return is_in_set(special_keywords, keyword);
     }
 
-    const std::unordered_set<std::string> udq_blacklist {
+    const keyword_set udq_blacklist {
         "SUMTHIN",
     };
 
     bool is_udq_blacklist(const std::string& keyword) {
-        return udq_blacklist.find(keyword) != udq_blacklist.end();
+        return is_in_set(udq_blacklist, keyword);
     }
 
     bool is_udq(const std::string& keyword) {
@@ -154,17 +160,15 @@ namespace {
     }
 
     bool is_pressure(const std::string& keyword) {
-        using set = std::unordered_set<std::string>;
-        static const auto presskw = set {
+        static const keyword_set presskw {
             "BHP", "BHPH", "THP", "THPH", "PR"
         };
 
-        return presskw.find(keyword.substr(1)) != presskw.end();
+        return is_in_set(presskw, keyword.substr(1));
     }
 
     bool is_rate(const std::string& keyword) {
-        using set = std::unordered_set<std::string>;
-        static const auto ratekw = set {
+        static const keyword_set ratekw {
             "OPR", "GPR", "WPR", "LPR", "NPR", "VPR",
             "OPRH", "GPRH", "WPRH", "LPRH",
             "OVPR", "GVPR", "WVPR",
@@ -177,22 +181,20 @@ namespace {
             "OPI", "OPP", "GPI", "GPP", "WPI", "WPP",
         };
 
-        return ratekw.find(keyword.substr(1)) != ratekw.end();
+        return is_in_set(ratekw, keyword.substr(1));
     }
 
     bool is_ratio(const std::string& keyword) {
-        using set = std::unordered_set<std::string>;
-        static const auto ratiokw = set {
+        static const keyword_set ratiokw {
             "GLR", "GOR", "WCT",
             "GLRH", "GORH", "WCTH",
         };
 
-        return ratiokw.find(keyword.substr(1)) != ratiokw.end();
+        return is_in_set(ratiokw, keyword.substr(1));
     }
 
     bool is_total(const std::string& keyword) {
-        using set = std::unordered_set<std::string>;
-        static const auto totalkw = set {
+        static const keyword_set totalkw {
             "OPT", "GPT", "WPT", "LPT", "NPT",
             "VPT", "OVPT", "GVPT", "WVPT",
             "WPTH", "OPTH", "GPTH", "LPTH",
@@ -202,16 +204,15 @@ namespace {
             "WITH", "OITH", "GITH", "WVIT", "OVIT", "GVIT",
         };
 
-        return totalkw.find(keyword.substr(1)) != totalkw.end();
+        return is_in_set(totalkw, keyword.substr(1));
     }
 
     bool is_count(const std::string& keyword) {
-        using set = std::unordered_set<std::string>;
-        static const auto countkw = set {
+        static const keyword_set countkw {
             "MWIN", "MWIT", "MWPR", "MWPT"
         };
 
-        return countkw.find(keyword) != countkw.end();
+        return is_in_set(countkw, keyword);
     }
 
     bool is_region_to_region(const std::string& keyword) {
