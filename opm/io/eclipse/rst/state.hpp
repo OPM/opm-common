@@ -81,12 +81,10 @@ struct RstState {
     Tuning tuning;
 
 private:
-    void load_tuning(const ::Opm::UnitSystem& unit_system,
-                     const std::vector<int>& intehead,
+    void load_tuning(const std::vector<int>& intehead,
                      const std::vector<double>& doubhead);
 
-    void add_groups(const ::Opm::UnitSystem& unit_system,
-                    const std::vector<std::string>& zgrp,
+    void add_groups(const std::vector<std::string>& zgrp,
                     const std::vector<int>& igrp,
                     const std::vector<float>& sgrp,
                     const std::vector<double>& xgrp);

@@ -49,6 +49,10 @@ class WellProductionProperties;
 class UDQActive;
 class UDQConfig;
 
+namespace RestartIO {
+class RstWell;
+}
+
 
 class Well {
 public:
@@ -363,6 +367,7 @@ public:
 
         int getNumProductionControls() const;
         void setBHPLimit(const double limit);
+        int productionControls() const { return this->m_productionControls; }
 
     private:
         int m_productionControls = 0;
@@ -392,6 +397,11 @@ public:
          double dr,
          bool allow_xflow,
          bool auto_shutin);
+
+    Well(const RestartIO::RstWell& rst_well,
+         int report_step,
+         const UnitSystem& unit_system,
+         double udq_undefined);
 
     Well(const std::string& wname,
          const std::string& gname,
@@ -446,6 +456,13 @@ public:
     double getDrainageRadius() const;
     double getEfficiencyFactor() const;
     Connection::Order getWellConnectionOrdering() const;
+    double getSolventFraction() const;
+    Status getStatus() const;
+    const std::string& groupName() const;
+    Phase getPreferredPhase() const;
+    const WellConnections& getConnections() const;
+    const WellSegments& getSegments() const;
+
     const WellProductionProperties& getProductionProperties() const;
     const WellInjectionProperties& getInjectionProperties() const;
     const WellEconProductionLimits& getEconLimits() const;
@@ -453,12 +470,6 @@ public:
     const WellPolymerProperties& getPolymerProperties() const;
     const WellBrineProperties& getBrineProperties() const;
     const WellTracerProperties& getTracerProperties() const;
-    const WellConnections& getConnections() const;
-    const WellSegments& getSegments() const;
-    double getSolventFraction() const;
-    Status getStatus() const;
-    const std::string& groupName() const;
-    Phase getPreferredPhase() const;
     /* The rate of a given phase under the following assumptions:
      * * Returns zero if production is requested for an injector (and vice
      *   versa)
@@ -492,7 +503,8 @@ public:
     bool updateHead(int I, int J);
     bool updateRefDepth(double ref_dpeth);
     bool updateDrainageRadius(double drainage_radius);
-    bool updateConnections(const std::shared_ptr<WellConnections> connections);
+    void updateSegments(std::shared_ptr<WellSegments> segments_arg);
+    bool updateConnections(std::shared_ptr<WellConnections> connections);
     bool updateStatus(Status status, bool update_connections);
     bool updateGroup(const std::string& group);
     bool updateWellGuideRate(bool available, double guide_rate, GuideRateTarget guide_phase, double scale_factor);

@@ -52,8 +52,8 @@ RstState::RstState(const ::Opm::UnitSystem& unit_system_,
     unit_system(unit_system_),
     header(intehead, logihead, doubhead)
 {
-    this->add_groups(unit_system, zgrp, igrp, sgrp, xgrp);
-    this->load_tuning(unit_system, intehead, doubhead);
+    this->add_groups(zgrp, igrp, sgrp, xgrp);
+    this->load_tuning(intehead, doubhead);
 
     for (int iw = 0; iw < this->header.num_wells; iw++) {
         std::size_t zwel_offset = iw * this->header.nzwelz;
@@ -102,8 +102,8 @@ RstState::RstState(const ::Opm::UnitSystem& unit_system_,
     unit_system(unit_system_),
     header(intehead, logihead, doubhead)
 {
-    this->add_groups(unit_system, zgrp, igrp, sgrp, xgrp);
-    this->load_tuning(unit_system, intehead, doubhead);
+    this->add_groups(zgrp, igrp, sgrp, xgrp);
+    this->load_tuning(intehead, doubhead);
 
     for (int iw = 0; iw < this->header.num_wells; iw++) {
         std::size_t zwel_offset = iw * this->header.nzwelz;
@@ -131,8 +131,7 @@ RstState::RstState(const ::Opm::UnitSystem& unit_system_,
     }
 }
 
-void RstState::load_tuning(const ::Opm::UnitSystem& unit_system,
-                           const std::vector<int>& intehead,
+void RstState::load_tuning(const std::vector<int>& intehead,
                            const std::vector<double>& doubhead)
 {
     using M  = ::Opm::UnitSystem::measure;
@@ -144,10 +143,10 @@ void RstState::load_tuning(const ::Opm::UnitSystem& unit_system,
     this->tuning.MXWSIT  = intehead[ VI::intehead::MXWSIT ];
     this->tuning.MXWPIT  = intehead[ VI::intehead::MXWPIT ];
 
-    tuning.TSINIT = unit_system.to_si(M::time, doubhead[VI::doubhead::TsInit]);
-    tuning.TSMAXZ = unit_system.to_si(M::time, doubhead[VI::doubhead::TsMaxz]);
-    tuning.TSMINZ = unit_system.to_si(M::time, doubhead[VI::doubhead::TsMinz]);
-    tuning.TSMCHP = unit_system.to_si(M::time, doubhead[VI::doubhead::TsMchp]);
+    tuning.TSINIT = this->unit_system.to_si(M::time, doubhead[VI::doubhead::TsInit]);
+    tuning.TSMAXZ = this->unit_system.to_si(M::time, doubhead[VI::doubhead::TsMaxz]);
+    tuning.TSMINZ = this->unit_system.to_si(M::time, doubhead[VI::doubhead::TsMinz]);
+    tuning.TSMCHP = this->unit_system.to_si(M::time, doubhead[VI::doubhead::TsMchp]);
     tuning.TSFMAX = doubhead[VI::doubhead::TsFMax];
     tuning.TSFMIN = doubhead[VI::doubhead::TsFMin];
     tuning.TSFCNV = doubhead[VI::doubhead::TsFcnv];
@@ -170,8 +169,7 @@ void RstState::load_tuning(const ::Opm::UnitSystem& unit_system,
     tuning.DDSLIM = doubhead[VI::doubhead::DdsLim];
 }
 
-void RstState::add_groups(const ::Opm::UnitSystem& unit_system,
-                          const std::vector<std::string>& zgrp,
+void RstState::add_groups(const std::vector<std::string>& zgrp,
                           const std::vector<int>& igrp,
                           const std::vector<float>& sgrp,
                           const std::vector<double>& xgrp)

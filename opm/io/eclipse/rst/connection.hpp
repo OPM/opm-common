@@ -41,8 +41,10 @@ struct RstConnection {
     int completion;
     Connection::Direction dir;
     int segment;
+    Connection::CTFKind cf_kind;
 
-    float tran;
+    float skin_factor;
+    float cf;
     float depth;
     float diameter;
     float kh;
@@ -54,6 +56,7 @@ struct RstConnection {
     double gas_rate;
     double pressure;
     double resv_rate;
+    double r0;
 };
 
 
