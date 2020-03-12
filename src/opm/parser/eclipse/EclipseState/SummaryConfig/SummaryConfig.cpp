@@ -159,7 +159,7 @@ namespace {
             "BHP", "BHPH", "THP", "THPH", "PR"
         };
 
-        return presskw.count(&keyword[1]) > set::size_type{0};
+        return presskw.find(keyword.substr(1)) != presskw.end();
     }
 
     bool is_rate(const std::string& keyword) {
@@ -177,7 +177,7 @@ namespace {
             "OPI", "OPP", "GPI", "GPP", "WPI", "WPP",
         };
 
-        return ratekw.count(&keyword[1]) > set::size_type{0};
+        return ratekw.find(keyword.substr(1)) != ratekw.end();
     }
 
     bool is_ratio(const std::string& keyword) {
@@ -187,7 +187,7 @@ namespace {
             "GLRH", "GORH", "WCTH",
         };
 
-        return ratiokw.count(&keyword[1]) > set::size_type{0};
+        return ratiokw.find(keyword.substr(1)) != ratiokw.end();
     }
 
     bool is_total(const std::string& keyword) {
@@ -202,7 +202,7 @@ namespace {
             "WITH", "OITH", "GITH", "WVIT", "OVIT", "GVIT",
         };
 
-        return totalkw.count(&keyword[1]) > set::size_type{0};
+        return totalkw.find(keyword.substr(1)) != totalkw.end();
     }
 
     bool is_count(const std::string& keyword) {
@@ -211,7 +211,7 @@ namespace {
             "MWIN", "MWIT", "MWPR", "MWPT"
         };
 
-        return countkw.count(keyword) > set::size_type{0};
+        return countkw.find(keyword) != countkw.end();
     }
 
     bool is_region_to_region(const std::string& keyword) {
@@ -478,7 +478,7 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
                          const std::string& keyword,
                          Location loc)
 {
-    if (meta_keywords.count(keyword) == 0)
+    if (meta_keywords.find(keyword) == meta_keywords.end())
         list.emplace_back( keyword, SummaryNode::Category::Miscellaneous , std::move(loc));
 }
 
@@ -1062,12 +1062,12 @@ SummaryConfig& SummaryConfig::merge( SummaryConfig&& other ) {
 
 
 bool SummaryConfig::hasKeyword( const std::string& keyword ) const {
-    return (this->short_keywords.count( keyword ) == 1);
+    return short_keywords.find(keyword) != short_keywords.end();
 }
 
 
 bool SummaryConfig::hasSummaryKey(const std::string& keyword ) const {
-    return (this->summary_keywords.count( keyword ) == 1);
+    return summary_keywords.find(keyword) != summary_keywords.end();
 }
 
 
