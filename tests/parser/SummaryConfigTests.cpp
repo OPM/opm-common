@@ -873,9 +873,9 @@ BOOST_AUTO_TEST_CASE(Summary_Segment)
 BOOST_AUTO_TEST_CASE(EnableRSM) {
     std::string deck_string1 = "";
     std::string deck_string2 = R"(
-SUMMARY
+RUNSUM
 )";
-    const auto& summary_config1 = createSummary("");
+    const auto& summary_config1 = createSummary(deck_string1);
     const auto& summary_config2 = createSummary(deck_string2);
 
     BOOST_CHECK(!summary_config1.doRunSummary());
