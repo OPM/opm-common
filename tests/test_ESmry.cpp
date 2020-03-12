@@ -71,11 +71,11 @@ bool operator==(const std::vector<T> & t1, const std::vector<T> & t2)
 
 
 
-void getRefSmryVect(std::vector <float> &time_ref, std::vector <float> &wgpr_prod_ref, std::vector <float> &wbhp_prod_ref, std::vector <float> &wbhp_inj_ref, 
+void getRefSmryVect(std::vector <float> &time_ref, std::vector <float> &wgpr_prod_ref, std::vector <float> &wbhp_prod_ref, std::vector <float> &wbhp_inj_ref,
  std::vector <float> &fgor_ref, std::vector <float> &bpr_111_ref, std::vector <float> &bpr_10103_ref) {
 
-      // reference vectors check against resinsight, right click and show plot data. 
-    
+      // reference vectors check against resinsight, right click and show plot data.
+
         time_ref = {1,4,13,31,59,90,120,151,181,212,243,273,304,334,365,396,424,455,485,516,546,577,608,638,669,699,730,761,789,820,850,
              881,911,942,973,1003,1034,1064,1095,1126,1154,1185,1215,1246,1276,1307,1338,1368,1399,1429,1460,1491,1519,1550,1580,1611,1641,1672,1703,1733,
              1764,1794,1825,1856,1884,1915,1945,1976,2006,2037,2068,2098,2129,2159,2190,2221,2249,2280,2310,2341,2371,2402,2433,2463,2494,2524,2555,2586,
@@ -83,7 +83,7 @@ void getRefSmryVect(std::vector <float> &time_ref, std::vector <float> &wgpr_pro
              3466,3497,3528,3558,3589,3619,3650};
 
 
-    
+
         wgpr_prod_ref = { 25400,25400.01,25400,24868.41,24679.34,24722.67,24727.77,24727.34,24727.29,24728.52,24730.62,24733.06,24735.76,
              24738.4,24741.04,24743.66,24745.98,24748.4,24750.63,24752.83,24756.07,24761.09,24764.1,24784,27066.45,33575.16,43705.94,54388.21,65340.68,
              77829.57,88535.32,98802.72,108186,117395.1,125395.9,128689.4,129727.7,130422.1,130712.2,130653.5,130509.7,130192.4,129639.2,128959.1,128221.1,
@@ -114,7 +114,7 @@ void getRefSmryVect(std::vector <float> &time_ref, std::vector <float> &wgpr_pro
              9.6552,9.81817,9.96311,10.0741,10.1726,10.2715,10.3662,10.4631,10.5602,10.648,10.7503,10.812,10.8645,10.9203,10.985,11.055,11.1259,11.2608,11.4882,
              11.7386,11.9596,12.1154,12.2423,12.3375,12.4268,12.5285,12.6496,12.7744,12.9017,13.0636,13.2416,13.4274,13.6136,13.7875,13.9853,14.2141,14.4478,
              14.6595,14.8698,15.081,15.29,15.5087,15.7207,15.9375,16.1507,16.3397,16.5477,16.7576,16.9828,17.2054,17.4386,17.6743,17.9048,18.1461,18.3837,18.6359,18.8934,19.1273,19.3865,19.6289,19.8495,20.0575,20.2783,20.5075,20.7371,20.9815,21.2229,21.4733};
-             
+
         bpr_111_ref = {5192.06,5606.51,5909.88,6057.86,6080.45,6080.23,6081.54,6084.29,6097.11,6119.32,6147.81,6181.28,6218.68,6256.71,6297.53,
              6339.85,6378.65,6421.72,6463.58,6507.1,6548.96,6591.99,6634.73,6675.85,6717.01,6752.59,6780.59,6797.41,6802.21,6793.55,6772.59,6738.64,6695.22,
              6639.93,6575.16,6506.73,6433.56,6362.35,6289.45,6217.66,6154.01,6084.96,6019.74,5954.06,5892.19,5830.05,5769.77,5713.17,5656.56,5603.5,5550.54,
@@ -122,7 +122,7 @@ void getRefSmryVect(std::vector <float> &time_ref, std::vector <float> &wgpr_pro
              4849.68,4823.29,4798.5,4773.5,4749.65,4725.15,4700.79,4679.13,4655.68,4633.58,4611.48,4590.75,4569.88,4549.56,4530.49,4511.31,4493.19,4474.8,4456.8,
              4440.94,4423.76,4407.52,4391.18,4375.77,4360.26,4345.2,4331.13,4317.09,4304.08,4291.25,4279.05,4268.46,4257.02,4246.22,4235.16,4224.65,4213.81,
              4203.05,4192.62,4181.76,4171.3,4160.34,4149.32,4139.29,4128.11,4117.22,4105.91,4094.85,4083.42,4072.1,4061.11,4049.77,4038.84,4027.6};
-             
+
         bpr_10103_ref = { 4583.96,4323.13,4063.73,3936.52,3884.46,3904.56,3969.39,4052.03,4136.77,4224.77,4311.05,4392.34,4473.78,4550.3,4627.31,
              4702.24,4768.42,4840.68,4910.14,4981.81,5051.17,5122.48,5206.98,5290.2,5339.93,5335.32,5290.28,5224.73,5142.4,5051.97,4968.24,4882.83,4793.78,4697.18,
              4600.77,4541.35,4502.17,4466.12,4428.31,4389.78,4355.46,4318.33,4282.8,4246.64,4212.19,4177.25,4143.1,4110.87,4078.55,4048.17,4017.89,3989.55,3964.72,
@@ -130,13 +130,13 @@ void getRefSmryVect(std::vector <float> &time_ref, std::vector <float> &wgpr_pro
              3578.56,3565.21,3550.34,3535.32,3521.95,3507.4,3493.98,3481.08,3469.23,3457.1,3445.23,3434.31,3423.9,3413.55,3402.49,3392.2,3383.36,3373.38,3363.72,
              3353.81,3344.61,3335.8,3327.55,3319.76,3312.03,3304.96,3298.14,3291.74,3286.38,3280.83,3275.92,3271,3266.36,3261.69,3257.16,3252.91,3248.64,3244.7,
              3240.73,3236.73,3232.96,3228.72,3224.57,3220.09,3215.85,3211.46,3207.02,3202.65,3198.03,3193.45,3188.54};
-    
+
 }
 
 std::vector<float> getFrom(const std::vector<float> &ref_vect,int from){
-    
+
     std::vector<float> vect;
-    
+
     for (unsigned int i=from; i<ref_vect.size();i++){
        vect.push_back(ref_vect[i]);
     }
@@ -160,7 +160,7 @@ BOOST_AUTO_TEST_CASE(TestESmry_1) {
     for (unsigned int i=0;i< smryVect.size();i++){
         BOOST_REQUIRE_CLOSE (smryVect[i], wgpr_prod_ref[i], 0.01);
     }
-    
+
     smryVect = smry1.get("WBHP:PROD");
 
     for (unsigned int i=0;i< smryVect.size();i++){
@@ -194,30 +194,30 @@ BOOST_AUTO_TEST_CASE(TestESmry_1) {
 
 BOOST_AUTO_TEST_CASE(TestESmry_2) {
 
-    // using a syntetic restart file. 
+    // using a syntetic restart file.
     //
     //   # 1 copied SPE1CASE1 to TMP.DATA
     //      - added two extra summary vectors (FOPT and FGPR)
     //      - deleted 4 vectors WOIR:PROD, WOIR:INJ, WOIT:PROD and WOIT:INJ
     //   # 2 run full simulation with TMP.DATA
     //      - exact same solution as SPE1CASE1
-    //   # 3 renamed TMP1.SMSPEC to SPE1CASE1_RST60.SMSPEC + manual modifications 
+    //   # 3 renamed TMP1.SMSPEC to SPE1CASE1_RST60.SMSPEC + manual modifications
     //      - update RESTART keyword ('SPE1CASE'  '1       '  ... )
     //      - updated DIMENS, last item equal to 60 => restart from report report step 60
     //   # 4 copy TMP1.UNSMRY to SPE1CASE1_RST60.UNSMRY + manual modifications
     //      - delete all data from ministep 0 to ministep 62, (ministep 62 = report step 60 in this run)
-    
-    // this is what the summary file from the restart run would be if the restart was 100% perfect. 
-    // changing summary keywords to make the file realistic. 
 
-    
+    // this is what the summary file from the restart run would be if the restart was 100% perfect.
+    // changing summary keywords to make the file realistic.
+
+
     std::vector <float> time_ref, wgpr_prod_ref, wbhp_prod_ref, wbhp_inj_ref, fgor_ref, bpr_111_ref, bpr_10103_ref;
 
     getRefSmryVect(time_ref, wgpr_prod_ref, wbhp_prod_ref, wbhp_inj_ref,fgor_ref, bpr_111_ref, bpr_10103_ref);
 
     // defaulting second argument, loadBaseRunData. Only data from the restarted run
     // will be loaded. No data from base run (SPE1CASE1 in this case)
-    
+
     ESmry smry1("SPE1CASE1_RST60.SMSPEC");    // equivalent to  smry1("SPE1CASE1_RST60.SMSPEC",false)
 
     std::vector<float> smryVect = smry1.get("TIME");
@@ -259,42 +259,42 @@ BOOST_AUTO_TEST_CASE(TestESmry_2) {
     for (unsigned int i=0;i< smryVect.size();i++){
         BOOST_REQUIRE_CLOSE (smryVect[i], ref_rst60[i], 0.01);
     }
-    
+
     smryVect = smry1.get("BPR:10,10,3");
     ref_rst60 = getFrom(bpr_10103_ref,63);
 
     for (unsigned int i=0;i< smryVect.size();i++){
         BOOST_REQUIRE_CLOSE (smryVect[i], ref_rst60[i], 0.01);
     }
-    
+
 }
 
 BOOST_AUTO_TEST_CASE(TestESmry_3) {
 
-    // using a syntetic restart file. 
+    // using a syntetic restart file.
     //
     //   # 1 copied SPE1CASE1 to TMP.DATA
     //      - added two extra summary vectors (FOPT and FGPR)
     //      - deleted 4 vectors WOIR:PROD, WOIR:INJ, WOIT:PROD and WOIT:INJ
     //   # 2 run full simulation with TMP.DATA
     //      - exact same solution as SPE1CASE1
-    //   # 3 renamed TMP1.SMSPEC to SPE1CASE1_RST60.SMSPEC + manual modifications 
+    //   # 3 renamed TMP1.SMSPEC to SPE1CASE1_RST60.SMSPEC + manual modifications
     //      - update RESTART keyword ('SPE1CASE'  '1       '  ... )
     //      - updated DIMENS, last item equal to 60 => restart from report report step 60
     //   # 4 copy TMP1.UNSMRY to SPE1CASE1_RST60.UNSMRY + manual modifications
     //      - delete all data from ministep 0 to ministep 62, (ministep 62 = report step 60 in this run)
-    
-    // this is what the summary file from the restart run would be if the restart was 100% perfect. 
-    // changing summary keywords to make the file realistic. 
 
-    
+    // this is what the summary file from the restart run would be if the restart was 100% perfect.
+    // changing summary keywords to make the file realistic.
+
+
     std::vector <float> time_ref, wgpr_prod_ref, wbhp_prod_ref, wbhp_inj_ref, fgor_ref, bpr_111_ref, bpr_10103_ref;
 
     getRefSmryVect(time_ref, wgpr_prod_ref, wbhp_prod_ref, wbhp_inj_ref,fgor_ref, bpr_111_ref, bpr_10103_ref);
 
-    // second argument, loadBaseRunData = true. Both data from restarted run and base run loaded 
-    // vectors should be equal to reference vectors (from SPE1CASE1) 
-    
+    // second argument, loadBaseRunData = true. Both data from restarted run and base run loaded
+    // vectors should be equal to reference vectors (from SPE1CASE1)
+
     ESmry smry1("SPE1CASE1_RST60.SMSPEC",true);
 
     std::vector<float> smryVect = smry1.get("TIME");
@@ -338,9 +338,9 @@ BOOST_AUTO_TEST_CASE(TestESmry_3) {
 }
 
 BOOST_AUTO_TEST_CASE(TestESmry_4) {
-    
+
     std::vector<float> time_ref = {31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365, 396, 424, 455, 485, 516, 546, 577, 608, 638, 669, 699, 730, 761, 789, 820, 850, 881, 911, 942, 973, 1003, 1034, 1064, 1095, 1126, 1154, 1185, 1215, 1246, 1276, 1307, 1338, 1368, 1399, 1429, 1460, 1491, 1519, 1550, 1580, 1611, 1641, 1672, 1703, 1733, 1764, 1794, 1825, 1856, 1884, 1915, 1945, 1976, 2006, 2037, 2068, 2098, 2129, 2159, 2190, 2221, 2249, 2280, 2310, 2341, 2371, 2402, 2433, 2463, 2494, 2524, 2555, 2586, 2614, 2645, 2675, 2706, 2736, 2767, 2798, 2828, 2859, 2889, 2920, 2951, 2979, 3010, 3040, 3071, 3101, 3132, 3163, 3193, 3224, 3254, 3285, 3316, 3344, 3375, 3405, 3436, 3466, 3497, 3528, 3558, 3589, 3619, 3650};
-    
+
     ESmry smry1("SPE1CASE1.SMSPEC");
 
     std::vector<float> smryVect = smry1.get("TIME");
