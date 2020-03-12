@@ -878,6 +878,6 @@ SUMMARY
     const auto& summary_config1 = createSummary("");
     const auto& summary_config2 = createSummary(deck_string2);
 
-    BOOST_CHECK(!summary_config1.runsum());
-    BOOST_CHECK(summary_config2.runsum());
+    BOOST_CHECK(!summary_config1.doRunSummary());
+    BOOST_CHECK(summary_config2.doRunSummary());
 }

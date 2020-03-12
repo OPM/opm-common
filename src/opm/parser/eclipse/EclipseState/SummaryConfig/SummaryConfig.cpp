@@ -1106,4 +1106,8 @@ bool SummaryConfig::operator==(const Opm::SummaryConfig& data) const {
            this->summary_keywords == data.summary_keywords;
 }
 
+bool SummaryConfig::doRunSummary() const {
+    return this->doRunSummary_;
+}
+
 }

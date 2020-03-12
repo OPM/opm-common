@@ -176,6 +176,8 @@ namespace Opm {
                serializer(summary_keywords);
             }
 
+            bool doRunSummary() const;
+
         private:
             SummaryConfig( const Deck& deck,
                            const Schedule& schedule,
@@ -192,6 +194,8 @@ namespace Opm {
             keyword_list keywords;
             std::set<std::string> short_keywords;
             std::set<std::string> summary_keywords;
+
+            bool doRunSummary_ { false };
     };
 
 } //namespace Opm
