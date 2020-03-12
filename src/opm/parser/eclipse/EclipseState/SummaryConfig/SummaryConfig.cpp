@@ -121,32 +121,32 @@ namespace {
         return set.find(keyword) != set.end();
     }
 
-    const keyword_set special_keywords {
-        "ELAPSED",
-        "MAXDPR",
-        "MAXDSG",
-        "MAXDSO",
-        "MAXDSW",
-        "NAIMFRAC",
-        "NEWTON",
-        "NLINEARS",
-        "NLINSMAX",
-        "NLINSMIN",
-        "RUNSUM",
-        "STEPTYPE",
-        "WNEWTON",
-    };
-
     bool is_special(const std::string& keyword) {
-        return is_in_set(special_keywords, keyword);
+        static const keyword_set specialkw {
+            "ELAPSED",
+            "MAXDPR",
+            "MAXDSG",
+            "MAXDSO",
+            "MAXDSW",
+            "NAIMFRAC",
+            "NEWTON",
+            "NLINEARS",
+            "NLINSMAX",
+            "NLINSMIN",
+            "RUNSUM",
+            "STEPTYPE",
+            "WNEWTON",
+        };
+
+        return is_in_set(specialkw, keyword);
     }
 
-    const keyword_set udq_blacklist {
-        "SUMTHIN",
-    };
-
     bool is_udq_blacklist(const std::string& keyword) {
-        return is_in_set(udq_blacklist, keyword);
+        static const keyword_set udq_blacklistkw {
+            "SUMTHIN",
+        };
+
+        return is_in_set(udq_blacklistkw, keyword);
     }
 
     bool is_udq(const std::string& keyword) {
