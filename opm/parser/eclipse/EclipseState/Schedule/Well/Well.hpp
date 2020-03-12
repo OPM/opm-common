@@ -446,6 +446,13 @@ public:
     double getDrainageRadius() const;
     double getEfficiencyFactor() const;
     Connection::Order getWellConnectionOrdering() const;
+    double getSolventFraction() const;
+    Status getStatus() const;
+    const std::string& groupName() const;
+    Phase getPreferredPhase() const;
+    const WellConnections& getConnections() const;
+    const WellSegments& getSegments() const;
+
     const WellProductionProperties& getProductionProperties() const;
     const WellInjectionProperties& getInjectionProperties() const;
     const WellEconProductionLimits& getEconLimits() const;
@@ -453,12 +460,6 @@ public:
     const WellPolymerProperties& getPolymerProperties() const;
     const WellBrineProperties& getBrineProperties() const;
     const WellTracerProperties& getTracerProperties() const;
-    const WellConnections& getConnections() const;
-    const WellSegments& getSegments() const;
-    double getSolventFraction() const;
-    Status getStatus() const;
-    const std::string& groupName() const;
-    Phase getPreferredPhase() const;
     /* The rate of a given phase under the following assumptions:
      * * Returns zero if production is requested for an injector (and vice
      *   versa)
