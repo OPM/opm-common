@@ -879,5 +879,8 @@ RUNSUM
     const auto& summary_config2 = createSummary(deck_string2);
 
     BOOST_CHECK(!summary_config1.createRunSummary());
-    BOOST_CHECK(summary_config2.createRunSummary());
+    BOOST_CHECK(!summary_config1.hasKeyword("RUNSUM"));
+
+    BOOST_CHECK( summary_config2.createRunSummary());
+    BOOST_CHECK(!summary_config2.hasKeyword("RUNSUM"));
 }
