@@ -860,19 +860,19 @@ SummaryNode& SummaryNode::isUserDefined(const bool userDefined)
 std::string SummaryNode::uniqueNodeKey() const
 {
     switch (this->category()) {
-    case SummaryNode::Category::Well: // fall-through
+    case SummaryNode::Category::Well: [[fallthrough]];
     case SummaryNode::Category::Group:
         return this->keyword() + ':' + this->namedEntity();
 
-    case SummaryNode::Category::Field: // fall-through
+    case SummaryNode::Category::Field: [[fallthrough]];
     case SummaryNode::Category::Miscellaneous:
         return this->keyword();
 
-    case SummaryNode::Category::Region: // fall-through
+    case SummaryNode::Category::Region: [[fallthrough]];
     case SummaryNode::Category::Block:
         return this->keyword() + ':' + std::to_string(this->number());
 
-    case SummaryNode::Category::Connection: // fall-through
+    case SummaryNode::Category::Connection: [[fallthrough]];
     case SummaryNode::Category::Segment:
         return this->keyword() + ':' + this->namedEntity() + ':' + std::to_string(this->number());
     }
@@ -890,22 +890,22 @@ bool operator==(const SummaryNode& lhs, const SummaryNode& rhs)
     assert (lhs.category() == rhs.category());
 
     switch( lhs.category() ) {
-        case SummaryNode::Category::Field: // fall-through
+        case SummaryNode::Category::Field: [[fallthrough]];
         case SummaryNode::Category::Miscellaneous:
             // Fully identified by keyword
             return true;
 
-        case SummaryNode::Category::Well:  // fall-through
+        case SummaryNode::Category::Well: [[fallthrough]];
         case SummaryNode::Category::Group:
             // Equal if associated to same named entity
             return lhs.namedEntity() == rhs.namedEntity();
 
-        case SummaryNode::Category::Region:  // fall-through
+        case SummaryNode::Category::Region: [[fallthrough]];
         case SummaryNode::Category::Block:
             // Equal if associated to same numeric entity
             return lhs.number() == rhs.number();
 
-        case SummaryNode::Category::Connection:  // fall-through
+        case SummaryNode::Category::Connection: [[fallthrough]];
         case SummaryNode::Category::Segment:
             // Equal if associated to same numeric
             // sub-entity of same named entity
@@ -924,23 +924,23 @@ bool operator<(const SummaryNode& lhs, const SummaryNode& rhs)
     // If we get here, the keyword are equal.
 
     switch( lhs.category() ) {
-        case SummaryNode::Category::Field:  // fall-through
+        case SummaryNode::Category::Field: [[fallthrough]];
         case SummaryNode::Category::Miscellaneous:
             // Fully identified by keyword.
             // Return false for equal keywords.
             return false;
 
-        case SummaryNode::Category::Well:  // fall-through
+        case SummaryNode::Category::Well: [[fallthrough]];
         case SummaryNode::Category::Group:
             // Ordering determined by namedEntityd entity
             return lhs.namedEntity() < rhs.namedEntity();
 
-        case SummaryNode::Category::Region:  // fall-through
+        case SummaryNode::Category::Region: [[fallthrough]];
         case SummaryNode::Category::Block:
             // Ordering determined by numeric entity
             return lhs.number() < rhs.number();
 
-        case SummaryNode::Category::Connection:  // fall-through
+        case SummaryNode::Category::Connection: [[fallthrough]];
         case SummaryNode::Category::Segment:
         {
             // Ordering determined by pair of namedEntity and numeric ID.
