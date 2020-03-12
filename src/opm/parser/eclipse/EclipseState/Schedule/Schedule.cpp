@@ -142,10 +142,9 @@ std::pair<std::time_t, std::size_t> restart_info(const RestartIO::RstState * rst
         m_nupcol(this->m_timeMap, ParserKeywords::NUPCOL::NUM_ITER::defaultValue),
         restart_config(m_timeMap, deck, parseContext, errors)
     {
-        if (rst)
-            this->load_rst(*rst, deck.getActiveUnitSystem());
-
         addGroup( "FIELD", 0, deck.getActiveUnitSystem());
+        if (rst)
+            this->load_rst(*rst, grid, fp, deck.getActiveUnitSystem());
 
         /*
           We can have the MESSAGES keyword anywhere in the deck, we
@@ -487,10 +486,15 @@ std::pair<std::time_t, std::size_t> restart_info(const RestartIO::RstState * rst
 
     void Schedule::iterateScheduleSection(const ParseContext& parseContext , ErrorGuard& errors, const SCHEDULESection& section , const EclipseGrid& grid,
                                           const FieldPropsManager& fp) {
-        size_t currentStep = 0;
         const auto& unit_system = section.unitSystem();
         std::vector<std::pair< const DeckKeyword* , size_t> > rftProperties;
         size_t keywordIdx = 0;
+
+        size_t currentStep;
+        if (this->m_timeMap.skiprest())
+            currentStep = 0;
+        else
+            currentStep = this->m_timeMap.restart_offset();
 
         while (true) {
             const auto& keyword = section.getKeyword(keywordIdx);
@@ -2981,7 +2985,65 @@ void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t 
                this->getWellGroupEvents() == data.getWellGroupEvents();
      }
 
-void Schedule::load_rst(const RestartIO::RstState&, const UnitSystem&)
+
+void Schedule::load_rst(const RestartIO::RstState& rst_state, const EclipseGrid& grid, const FieldPropsManager& fp, const UnitSystem& unit_system)
+{
+    double udq_undefined = 0;
+    const auto report_step = rst_state.header.report_step - 1;
+
+    for (const auto& rst_group : rst_state.groups)
+        this->addGroup(rst_group.name, report_step, unit_system);
+
+    for (const auto& rst_well : rst_state.wells) {
+        Opm::Well well(rst_well, report_step, unit_system, udq_undefined);
+        std::vector<Opm::Connection> connections;
+        std::unordered_map<int, Opm::Segment> segments;
+
+        for (const auto& rst_conn : rst_well.connections)
+            connections.emplace_back(rst_conn, connections.size(), grid, fp);
+
+        for (const auto& rst_segment : rst_well.segments) {
+            Opm::Segment segment(rst_segment);
+            segments.insert(std::make_pair(rst_segment.segment, std::move(segment)));
+        }
+
+        for (auto& connection : connections) {
+            int segment_id = connection.segment();
+            if (segment_id > 0) {
+                std::size_t compsegs_insert_index = 0;
+                double segment_start = 0;
+                double segment_end = 0;
+                const auto& segment = segments.at(segment_id);
+                connection.updateSegment(segment.segmentNumber(),
+                                         segment.depth(),
+                                         compsegs_insert_index,
+                                         segment_start,
+                                         segment_end);
+            }
+        }
+
+        {
+            std::shared_ptr<Opm::WellConnections> well_connections = std::make_shared<Opm::WellConnections>(rst_well.ij[0], rst_well.ij[1], 0, connections);
+            well.updateConnections( std::move(well_connections) );
+        }
+
+        if (!segments.empty()) {
+            std::vector<Segment> segments_list;
+            for (const auto& segment_pair : segments)
+                segments_list.push_back( std::move(segment_pair.second) );
+
+            auto comp_pressure_drop = WellSegments::CompPressureDrop::HFA;
+            std::shared_ptr<Opm::WellSegments> well_segments = std::make_shared<Opm::WellSegments>(comp_pressure_drop, segments_list);
+            well.updateSegments( std::move(well_segments) );
+        }
+
+        this->addWell(well, report_step);
+        this->addWellToGroup(well.groupName(), well.name(), report_step);
+    }
+
+    m_tuning.update(report_step, rst_state.tuning);
+    m_events.addEvent( ScheduleEvents::TUNING_CHANGE , report_step);
+}
 {
 }
 
