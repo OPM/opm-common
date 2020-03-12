@@ -74,12 +74,6 @@ namespace Opm {
         bool active() const;
         bool restart() const;
 
-        const ThresholdPressureTable& thresholdPressureTable() const
-        { return m_thresholdPressureTable; }
-
-        const PressureTable& pressureTable() const
-        { return m_pressureTable; }
-
         bool operator==(const ThresholdPressure& data) const;
 
         template<class Serializer>
