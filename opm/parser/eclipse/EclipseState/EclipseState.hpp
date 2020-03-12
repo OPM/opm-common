@@ -125,7 +125,7 @@ namespace Opm {
             m_inputNnc.serializeOp(serializer);
             m_inputEditNnc.serializeOp(serializer);
             m_gridDims.serializeOp(serializer);
-            serializer(m_simulationConfig);
+            m_simulationConfig.serializeOp(serializer);
             serializer(m_transMult);
             serializer(m_faults);
             serializer(m_title);
