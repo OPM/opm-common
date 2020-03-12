@@ -290,6 +290,7 @@ list (APPEND TEST_SOURCE_FILES
 )
 if(ENABLE_ECL_INPUT)
   list(APPEND TEST_SOURCE_FILES
+    tests/rst_test.cpp
     tests/parser/ACTIONX.cpp
     tests/parser/ADDREGTests.cpp
     tests/parser/AquiferTests.cpp
