@@ -134,8 +134,13 @@ namespace {
         return special_keywords.find(keyword) != special_keywords.end();
     }
 
+    const std::unordered_set<std::string> udq_blacklist {
+        "RUNSUM",
+        "SUMTHIN",
+    };
+
     bool is_udq_blacklist(const std::string& keyword) {
-        return (keyword == "SUMTHIN") || (keyword == "RUNSUM");
+        return udq_blacklist.find(keyword) != udq_blacklist.end();
     }
 
     bool is_udq(const std::string& keyword) {
