@@ -176,7 +176,7 @@ namespace Opm {
                serializer(summary_keywords);
             }
 
-            bool doRunSummary() const;
+            bool createRunSummary() const;
 
         private:
             SummaryConfig( const Deck& deck,

@@ -1117,7 +1117,7 @@ bool SummaryConfig::operator==(const Opm::SummaryConfig& data) const {
            this->summary_keywords == data.summary_keywords;
 }
 
-bool SummaryConfig::doRunSummary() const {
+bool SummaryConfig::createRunSummary() const {
     return this->hasKeyword("RUNSUM");
 }
 
