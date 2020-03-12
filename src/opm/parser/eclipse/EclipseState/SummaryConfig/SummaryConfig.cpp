@@ -126,6 +126,7 @@ namespace {
         "NLINEARS",
         "NLINSMAX",
         "NLINSMIN",
+        "RUNSUM",
         "STEPTYPE",
         "WNEWTON",
     };
@@ -135,7 +136,6 @@ namespace {
     }
 
     const std::unordered_set<std::string> udq_blacklist {
-        "RUNSUM",
         "SUMTHIN",
     };
 
@@ -441,7 +441,6 @@ inline void keywordR2R( SummaryConfig::keyword_list& /* list */,
      * print output. Unfortunately its *recognised* as a region keyword
      * because of its structure and position. Hence the special handling of ignoring it.
      */
-    if( keyword.name() == "RUNSUM" ) return;
     if( keyword.name() == "RPTONLY" ) return;
 
     if( is_region_to_region(keyword.name()) ) {
@@ -1119,7 +1118,7 @@ bool SummaryConfig::operator==(const Opm::SummaryConfig& data) const {
 }
 
 bool SummaryConfig::doRunSummary() const {
-    return this->doRunSummary_;
+    return this->hasKeyword("RUNSUM");
 }
 
 }

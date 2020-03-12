@@ -194,8 +194,6 @@ namespace Opm {
             keyword_list keywords;
             std::set<std::string> short_keywords;
             std::set<std::string> summary_keywords;
-
-            bool doRunSummary_ { false };
     };
 
 } //namespace Opm
