@@ -16,6 +16,8 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <cmath>
+
 #include <opm/io/eclipse/rst/header.hpp>
 #include <opm/io/eclipse/rst/connection.hpp>
 #include <opm/output/eclipse/VectorItems/connection.hpp>
@@ -54,6 +56,17 @@ Connection::Direction from_int(int int_dir) {
     }
 }
 
+/*
+  That the CTFKind variable comes from a float looks extremely suspicious; but
+  it has been double checked ...
+*/
+Connection::CTFKind from_float(float float_kind) {
+    if (float_kind == 0)
+        return Connection::CTFKind::Defaulted;
+
+    return Connection::CTFKind::DeckValue;
+}
+
 }
 
 using M  = ::Opm::UnitSystem::measure;
@@ -67,7 +80,9 @@ RstConnection::RstConnection(const ::Opm::UnitSystem& unit_system, const int* ic
     completion(                                              icon[VI::IConn::ComplNum]),
     dir(                                                     from_int<Connection::Direction>(icon[VI::IConn::ConnDir])),
     segment(                                                 icon[VI::IConn::Segment]),
-    tran(          unit_system.to_si(M::transmissibility,    scon[VI::SConn::ConnTrans])),
+    cf_kind(                                                 from_float(scon[VI::SConn::CFInDeck])),
+    skin_factor(                                             scon[VI::SConn::SkinFactor]),
+    cf(            unit_system.to_si(M::transmissibility,    scon[VI::SConn::ConnTrans])),
     depth(         unit_system.to_si(M::length,              scon[VI::SConn::Depth])),
     diameter(      unit_system.to_si(M::length,              scon[VI::SConn::Diameter])),
     kh(            unit_system.to_si(M::effective_Kh,        scon[VI::SConn::EffectiveKH])),
@@ -78,7 +93,10 @@ RstConnection::RstConnection(const ::Opm::UnitSystem& unit_system, const int* ic
     gas_rate(      unit_system.to_si(M::gas_surface_rate,    xcon[VI::XConn::GasRate])),
     pressure(      unit_system.to_si(M::pressure,            xcon[VI::XConn::Pressure])),
     resv_rate(     unit_system.to_si(M::rate,                xcon[VI::XConn::ResVRate]))
-{}
+{
+    auto alpha = 3.14159265 * 2 * this->kh / this->cf - this->skin_factor;
+    this->r0 = this->diameter * std::exp(alpha) / 2;
+}
 
 }
 }
