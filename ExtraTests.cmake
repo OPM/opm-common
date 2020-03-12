@@ -105,8 +105,6 @@ if(HAVE_OPM_TESTS)
   opm_add_test("SPE9_CP_GROUP2" NO_COMPILE EXE_NAME parse_write TEST_ARGS "${OPM_TESTS_ROOT}/spe9group/SPE9_CP_GROUP.DATA")
   set_property(TEST NORNE_ATW2013
                PROPERTY ENVIRONMENT "OPM_ERRORS_IGNORE=PARSE_RANDOM_SLASH")
-
-  opm_add_test("RST_LOAD_MSW" NO_COMPILE EXE_NAME rst_load TEST_ARGS "${OPM_TESTS_ROOT}/msw_3d_hfa/opm-simulation-reference/flow/3D_MSW.UNRST")
 endif()
 
 # JSON tests

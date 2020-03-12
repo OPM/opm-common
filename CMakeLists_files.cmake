@@ -442,7 +442,6 @@ if(ENABLE_ECL_INPUT)
     examples/opmi.cpp
     examples/opmpack.cpp
     examples/opmhash.cpp
-    tests/rst_load.cpp
   )
 endif()
 
