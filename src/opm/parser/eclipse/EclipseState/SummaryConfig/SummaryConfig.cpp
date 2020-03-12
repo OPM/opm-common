@@ -82,7 +82,6 @@ namespace {
         "MSUMLINS","MSUMNEWT","TIMESTEP","TCPUTS","TCPUDAY","STEPTYPE","TELAPLIN"
     };
 
-
     /*
       The variable type 'ECL_SMSPEC_MISC_TYPE' is a catch-all variable
       type, and will by default internalize keywords like 'ALL' and
@@ -116,15 +115,23 @@ namespace {
          {"SGAS" , {"BSGAS"}}
     };
 
-    bool is_special(const std::string& keyword) {
-        using set = std::unordered_set<std::string>;
-        static const auto specialkw = set {
-            "NEWTON", "NAIMFRAC", "NLINEARS", "NLINSMIN", "NLINSMAX",
-            "ELAPSED", "MAXDPR", "MAXDSO", "MAXDSG", "MAXDSW", "STEPTYPE",
-            "WNEWTON",
-        };
+    const std::unordered_set<std::string> special_keywords {
+        "ELAPSED",
+        "MAXDPR",
+        "MAXDSG",
+        "MAXDSO",
+        "MAXDSW",
+        "NAIMFRAC",
+        "NEWTON",
+        "NLINEARS",
+        "NLINSMAX",
+        "NLINSMIN",
+        "STEPTYPE",
+        "WNEWTON",
+    };
 
-        return specialkw.count(keyword) > set::size_type{0};
+    bool is_special(const std::string& keyword) {
+        return special_keywords.find(keyword) != special_keywords.end();
     }
 
     bool is_udq_blacklist(const std::string& keyword) {
