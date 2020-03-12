@@ -136,7 +136,6 @@ namespace Opm {
         void scaleWellPi(double wellPi);
         void updateSegment(int segment_number_arg,
                            double center_depth_arg,
-                           std::size_t seqIndex,
                            std::size_t compseg_insert_index,
                            double start,
                            double end);
