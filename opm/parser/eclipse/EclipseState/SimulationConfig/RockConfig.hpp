@@ -49,6 +49,13 @@ struct RockComp {
     RockComp() = default;
     RockComp(double pref_arg, double comp_arg);
     bool operator==(const RockComp& other) const;
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(pref);
+        serializer(compressibility);
+    }
 };
 
 
@@ -64,6 +71,18 @@ struct RockComp {
     bool water_compaction() const;
 
     bool operator==(const RockConfig& other) const;
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(m_active);
+        serializer.vector(m_comp);
+        serializer(num_property);
+        serializer(num_tables);
+        serializer(m_water_compaction);
+        serializer(hyst_mode);
+    }
+
 private:
     bool m_active = false;
     std::vector<RockComp> m_comp;
