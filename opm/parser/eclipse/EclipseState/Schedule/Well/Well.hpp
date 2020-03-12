@@ -494,7 +494,8 @@ public:
     bool updateHead(int I, int J);
     bool updateRefDepth(double ref_dpeth);
     bool updateDrainageRadius(double drainage_radius);
-    bool updateConnections(const std::shared_ptr<WellConnections> connections);
+    void updateSegments(std::shared_ptr<WellSegments> segments_arg);
+    bool updateConnections(std::shared_ptr<WellConnections> connections);
     bool updateStatus(Status status, bool update_connections);
     bool updateGroup(const std::string& group);
     bool updateWellGuideRate(bool available, double guide_rate, GuideRateTarget guide_phase, double scale_factor);
