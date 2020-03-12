@@ -354,7 +354,8 @@ BOOST_AUTO_TEST_CASE(TestESmry_4) {
 
 
 BOOST_AUTO_TEST_CASE(TestUnits) {
-    ESmry smry1("SPE1CASE1.SMSPEC");
+    ESmry smry("SPE1CASE1.SMSPEC");
+
     BOOST_CHECK_THROW( smry.get_unit("NO_SUCH_KEY"), std::out_of_range);
     BOOST_CHECK_EQUAL( smry.get_unit("TIME"), "DAYS");
     BOOST_CHECK_EQUAL( smry.get_unit("WOPR:PROD"), "STB/DAY");
