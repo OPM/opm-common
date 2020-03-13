@@ -19,6 +19,7 @@
 #ifndef OPM_IO_ESMRY_HPP
 #define OPM_IO_ESMRY_HPP
 
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -32,6 +33,8 @@ public:
 
     // input is smspec (or fsmspec file)
     explicit ESmry(const std::string& filename, bool loadBaseRunData=false);
+
+    bool write_rsm(const std::optional<std::string>& = std::nullopt) const;
 
     int numberOfVectors() const { return nVect; }
 
@@ -48,6 +51,7 @@ public:
     const std::string& get_unit(const std::string& name) const;
 
 private:
+    Opm::filesystem::path rootName;
     int nVect, nI, nJ, nK;
 
     void ijk_from_global_index(int glob, int &i, int &j, int &k) const;

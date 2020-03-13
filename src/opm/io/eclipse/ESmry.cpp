@@ -55,7 +55,7 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
 {
 
     Opm::filesystem::path inputFileName(filename);
-    Opm::filesystem::path rootName = inputFileName.parent_path() / inputFileName.stem();
+    rootName = inputFileName.parent_path() / inputFileName.stem();
 
     // if root name (without any extension) given as first argument in constructor, binary will then be assumed
     if (inputFileName.extension()==""){
@@ -417,6 +417,12 @@ void ESmry::updatePathAndRootName(Opm::filesystem::path& dir, Opm::filesystem::p
     }
 
     rootN = rootN.stem();
+}
+
+bool ESmry::write_rsm(const std::optional<std::string>& o_filename) const {
+    const std::string filename = o_filename.value_or(std::string(rootName) + ".RSM");
+
+    return false;
 }
 
 bool ESmry::hasKey(const std::string &key) const
