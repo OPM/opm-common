@@ -64,9 +64,13 @@ class Phases {
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
-            unsigned long Bits = bits.to_ulong();
-            serializer(Bits);
-            bits = std::bitset<NUM_PHASES_IN_ENUM>(Bits);
+            if (serializer.isSerializing())
+                serializer(bits.to_ulong());
+            else {
+              unsigned long Bits;
+              serializer(Bits);
+              bits = std::bitset<NUM_PHASES_IN_ENUM>(Bits);
+            }
         }
 
     private:
@@ -278,6 +282,20 @@ public:
     const SatFuncControls& saturationFunctionControls() const noexcept;
 
     bool operator==(const Runspec& data) const;
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        active_phases.serializeOp(serializer);
+        m_tabdims.serializeOp(serializer);
+        endscale.serializeOp(serializer);
+        welldims.serializeOp(serializer);
+        wsegdims.serializeOp(serializer);
+        udq_params.serializeOp(serializer);
+        hystpar.serializeOp(serializer);
+        m_actdims.serializeOp(serializer);
+        m_sfuncctrl.serializeOp(serializer);
+    }
 
 private:
     Phases active_phases;

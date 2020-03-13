@@ -119,7 +119,7 @@ namespace Opm {
         {
             // FieldPropsManager is handled otherwise, do not add
             serializer(m_tables);
-            serializer(m_runspec);
+            m_runspec.serializeOp(serializer);
             m_eclipseConfig.serializeOp(serializer);
             serializer(m_deckUnitSystem);
             m_inputNnc.serializeOp(serializer);

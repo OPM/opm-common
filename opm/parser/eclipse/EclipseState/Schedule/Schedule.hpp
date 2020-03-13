@@ -294,7 +294,7 @@ namespace Opm
             serializer(m_modifierDeck);
             serializer(m_tuning);
             serializer(m_messageLimits);
-            serializer(m_runspec);
+            m_runspec.serializeOp(serializer);
             auto splitvfpprod = splitDynMap(vfpprod_tables);
             serializer(splitvfpprod.first);
             serializer(splitvfpprod.second);
