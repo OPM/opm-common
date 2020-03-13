@@ -42,8 +42,6 @@ namespace Opm {
         const TableColumn& getTransmissibilityMultiplierYColumn() const;
         const TableColumn& getTransmissibilityMultiplierZColumn() const;
 
-        bool isDirectional() const;
-
         bool operator==(const RocktabTable& data) const;
 
         template<class Serializer>

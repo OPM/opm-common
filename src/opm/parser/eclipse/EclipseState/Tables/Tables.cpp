@@ -875,10 +875,6 @@ const TableColumn& RocktabTable::getTransmissibilityMultiplierZColumn() const {
     return SimpleTable::getColumn(4);
 }
 
-bool RocktabTable::isDirectional() const {
-    return m_isDirectional;
-}
-
 bool RocktabTable::operator==(const RocktabTable& data) const {
     return this->SimpleTable::operator==(data) &&
            m_isDirectional == data.m_isDirectional;
