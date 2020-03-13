@@ -62,6 +62,14 @@ class Phases {
 
         bool operator==(const Phases& data) const;
 
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            unsigned long Bits = bits.to_ulong();
+            serializer(Bits);
+            bits = std::bitset<NUM_PHASES_IN_ENUM>(Bits);
+        }
+
     private:
         std::bitset< NUM_PHASES_IN_ENUM > bits;
 };
