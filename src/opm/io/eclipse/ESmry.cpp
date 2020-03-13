@@ -86,22 +86,22 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
 
     // Read data from the summary into local data members.
     {
-        EclFile smspec1(smspec_file.string());
+        EclFile smspec(smspec_file.string());
 
-        smspec1.loadData();   // loading all data
+        smspec.loadData();   // loading all data
 
-        const std::vector<int> dimens = smspec1.get<int>("DIMENS");
+        const std::vector<int> dimens = smspec.get<int>("DIMENS");
 
         nI = dimens[1]; // This is correct -- dimens[0] is something else!
         nJ = dimens[2];
         nK = dimens[3];
 
-        const std::vector<std::string> restartArray = smspec1.get<std::string>("RESTART");
-        const std::vector<std::string> keywords = smspec1.get<std::string>("KEYWORDS");
-        const std::vector<std::string> wgnames = smspec1.get<std::string>("WGNAMES");
-        const std::vector<int> nums = smspec1.get<int>("NUMS");
+        const std::vector<std::string> restartArray = smspec.get<std::string>("RESTART");
+        const std::vector<std::string> keywords = smspec.get<std::string>("KEYWORDS");
+        const std::vector<std::string> wgnames = smspec.get<std::string>("WGNAMES");
+        const std::vector<int> nums = smspec.get<int>("NUMS");
 
-        const std::vector<std::string> units = smspec1.get<std::string>("UNITS");
+        const std::vector<std::string> units = smspec.get<std::string>("UNITS");
 
         for (unsigned int i=0; i<keywords.size(); i++) {
             const std::string keyString = makeKeyString(keywords[i], wgnames[i], nums[i]);
