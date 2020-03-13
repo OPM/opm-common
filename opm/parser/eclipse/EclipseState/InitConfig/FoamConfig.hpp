@@ -101,6 +101,14 @@ public:
 
     bool operator==(const FoamConfig& data) const;
 
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer.vector(data_);
+        serializer(transport_phase_);
+        serializer(mobility_model_);
+    }
+
 private:
     std::vector<FoamData> data_;
     Phase transport_phase_ = Phase::GAS;
