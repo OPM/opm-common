@@ -67,12 +67,12 @@ namespace {
     struct ParamCTorArgs
     {
         std::string kw;
-        Opm::SummaryNode::Type type;
+        Opm::SummaryConfigNode::Type type;
     };
 
     std::vector<ParamCTorArgs> requiredRestartVectors()
     {
-        using Type = ::Opm::SummaryNode::Type;
+        using Type = ::Opm::SummaryConfigNode::Type;
 
         return {
             // Production
@@ -108,12 +108,12 @@ namespace {
         };
     }
 
-    std::vector<Opm::SummaryNode>
+    std::vector<Opm::SummaryConfigNode>
     requiredRestartVectors(const ::Opm::Schedule& sched)
     {
-        auto entities = std::vector<Opm::SummaryNode>{};
+        auto entities = std::vector<Opm::SummaryConfigNode>{};
 
-        using SN = ::Opm::SummaryNode;
+        using SN = ::Opm::SummaryConfigNode;
 
         const auto& vectors = requiredRestartVectors();
 
@@ -156,10 +156,10 @@ namespace {
         return entities;
     }
 
-    std::vector<Opm::SummaryNode>
+    std::vector<Opm::SummaryConfigNode>
     requiredSegmentVectors(const ::Opm::Schedule& sched)
     {
-        using SN = Opm::SummaryNode;
+        using SN = Opm::SummaryConfigNode;
         auto ret = std::vector<SN>{};
 
         auto sofr = SN{ "SOFR", SN::Category::Segment, ::Opm::Location() }
@@ -1113,15 +1113,15 @@ static const std::unordered_map< std::string, Opm::UnitSystem::measure> block_un
 };
 
 inline std::vector<Opm::Well> find_wells( const Opm::Schedule& schedule,
-                                           const Opm::SummaryNode& node,
+                                           const Opm::SummaryConfigNode& node,
                                            const int sim_step,
                                            const Opm::out::RegionCache& regionCache ) {
 
     const auto cat = node.category();
 
-    if ((cat == Opm::SummaryNode::Category::Well) ||
-        (cat == Opm::SummaryNode::Category::Connection) ||
-        (cat == Opm::SummaryNode::Category::Segment))
+    if ((cat == Opm::SummaryConfigNode::Category::Well) ||
+        (cat == Opm::SummaryConfigNode::Category::Connection) ||
+        (cat == Opm::SummaryConfigNode::Category::Segment))
     {
         const auto& name = node.namedEntity();
 
@@ -1132,7 +1132,7 @@ inline std::vector<Opm::Well> find_wells( const Opm::Schedule& schedule,
             return {};
     }
 
-    if( cat == Opm::SummaryNode::Category::Group ) {
+    if( cat == Opm::SummaryConfigNode::Category::Group ) {
         const auto& name = node.namedEntity();
 
         if( !schedule.hasGroup( name ) ) return {};
@@ -1140,10 +1140,10 @@ inline std::vector<Opm::Well> find_wells( const Opm::Schedule& schedule,
         return schedule.getChildWells2( name, sim_step);
     }
 
-    if( cat == Opm::SummaryNode::Category::Field )
+    if( cat == Opm::SummaryConfigNode::Category::Field )
         return schedule.getWells(sim_step);
 
-    if( cat == Opm::SummaryNode::Category::Region ) {
+    if( cat == Opm::SummaryConfigNode::Category::Region ) {
         std::vector<Opm::Well> wells;
 
         const auto region = node.number();
@@ -1168,21 +1168,21 @@ inline std::vector<Opm::Well> find_wells( const Opm::Schedule& schedule,
 }
 
 
-bool need_wells(Opm::SummaryNode::Category cat, const std::string& keyword) {
+bool need_wells(Opm::SummaryConfigNode::Category cat, const std::string& keyword) {
     static const std::set<std::string> region_keywords{"ROIR", "RGIR", "RWIR", "ROPR", "RGPR", "RWPR", "ROIT", "RWIT", "RGIT", "ROPT", "RGPT", "RWPT"};
-    if (cat == Opm::SummaryNode::Category::Well)
+    if (cat == Opm::SummaryConfigNode::Category::Well)
         return true;
 
-    if (cat == Opm::SummaryNode::Category::Group)
+    if (cat == Opm::SummaryConfigNode::Category::Group)
         return true;
 
-    if (cat == Opm::SummaryNode::Category::Field)
+    if (cat == Opm::SummaryConfigNode::Category::Field)
         return true;
 
-    if (cat == Opm::SummaryNode::Category::Connection)
+    if (cat == Opm::SummaryConfigNode::Category::Connection)
         return true;
 
-    if (cat == Opm::SummaryNode::Category::Segment)
+    if (cat == Opm::SummaryConfigNode::Category::Segment)
         return true;
 
     /*
@@ -1191,7 +1191,7 @@ bool need_wells(Opm::SummaryNode::Category cat, const std::string& keyword) {
       region and consequently the list of defined wells is required, other
       region keywords like 'ROIP' do not require well information.
     */
-    if (cat == Opm::SummaryNode::Category::Region) {
+    if (cat == Opm::SummaryConfigNode::Category::Region) {
         if (region_keywords.count(keyword) > 0)
             return true;
     }
@@ -1257,12 +1257,12 @@ void eval_udq(const Opm::Schedule& schedule, std::size_t sim_step, Opm::SummaryS
     }
 }
 
-void updateValue(const Opm::SummaryNode& node, const double value, Opm::SummaryState& st)
+void updateValue(const Opm::SummaryConfigNode& node, const double value, Opm::SummaryState& st)
 {
-    if (node.category() == Opm::SummaryNode::Category::Well)
+    if (node.category() == Opm::SummaryConfigNode::Category::Well)
         st.update_well_var(node.namedEntity(), node.keyword(), value);
 
-    else if (node.category() == Opm::SummaryNode::Category::Group)
+    else if (node.category() == Opm::SummaryConfigNode::Category::Group)
         st.update_group_var(node.namedEntity(), node.keyword(), value);
 
     else
@@ -1292,13 +1292,13 @@ struct EfficiencyFactor
 
     FacColl factors{};
 
-    void setFactors(const Opm::SummaryNode&        node,
+    void setFactors(const Opm::SummaryConfigNode&        node,
                     const Opm::Schedule&           schedule,
                     const std::vector<Opm::Well>& schedule_wells,
                     const int                      sim_step);
 };
 
-void EfficiencyFactor::setFactors(const Opm::SummaryNode&        node,
+void EfficiencyFactor::setFactors(const Opm::SummaryConfigNode&        node,
                                   const Opm::Schedule&           schedule,
                                   const std::vector<Opm::Well>& schedule_wells,
                                   const int                      sim_step)
@@ -1308,14 +1308,14 @@ void EfficiencyFactor::setFactors(const Opm::SummaryNode&        node,
     if (schedule_wells.empty()) { return; }
 
     const auto cat = node.category();
-    if(    cat != Opm::SummaryNode::Category::Group
-        && cat != Opm::SummaryNode::Category::Field
-        && cat != Opm::SummaryNode::Category::Region
-           && (node.type() != Opm::SummaryNode::Type::Total))
+    if(    cat != Opm::SummaryConfigNode::Category::Group
+        && cat != Opm::SummaryConfigNode::Category::Field
+        && cat != Opm::SummaryConfigNode::Category::Region
+           && (node.type() != Opm::SummaryConfigNode::Type::Total))
         return;
 
-    const bool is_group = (cat == Opm::SummaryNode::Category::Group);
-    const bool is_rate = (node.type() != Opm::SummaryNode::Type::Total);
+    const bool is_group = (cat == Opm::SummaryConfigNode::Category::Group);
+    const bool is_rate = (node.type() != Opm::SummaryConfigNode::Type::Total);
 
     for( const auto& well : schedule_wells ) {
         if (!well.hasBeenDefined(sim_step))
@@ -1372,7 +1372,7 @@ namespace Evaluator {
     class FunctionRelation : public Base
     {
     public:
-        explicit FunctionRelation(Opm::SummaryNode node, ofun fcn)
+        explicit FunctionRelation(Opm::SummaryConfigNode node, ofun fcn)
             : node_(std::move(node))
             , fcn_ (std::move(fcn))
         {}
@@ -1413,14 +1413,14 @@ namespace Evaluator {
         }
 
     private:
-        Opm::SummaryNode node_;
+        Opm::SummaryConfigNode node_;
         ofun             fcn_;
     };
 
     class BlockValue : public Base
     {
     public:
-        explicit BlockValue(Opm::SummaryNode               node,
+        explicit BlockValue(Opm::SummaryConfigNode               node,
                             const Opm::UnitSystem::measure m)
             : node_(std::move(node))
             , m_   (m)
@@ -1442,7 +1442,7 @@ namespace Evaluator {
         }
 
     private:
-        Opm::SummaryNode node_;
+        Opm::SummaryConfigNode node_;
         Opm::UnitSystem::measure m_;
 
         Opm::out::Summary::BlockValues::key_type lookupKey() const
@@ -1454,7 +1454,7 @@ namespace Evaluator {
     class RegionValue : public Base
     {
     public:
-        explicit RegionValue(Opm::SummaryNode               node,
+        explicit RegionValue(Opm::SummaryConfigNode               node,
                              const Opm::UnitSystem::measure m)
             : node_(std::move(node))
             , m_   (m)
@@ -1484,7 +1484,7 @@ namespace Evaluator {
         }
 
     private:
-        Opm::SummaryNode node_;
+        Opm::SummaryConfigNode node_;
         Opm::UnitSystem::measure m_;
 
         std::vector<double>::size_type index() const
@@ -1496,7 +1496,7 @@ namespace Evaluator {
     class GlobalProcessValue : public Base
     {
     public:
-        explicit GlobalProcessValue(Opm::SummaryNode               node,
+        explicit GlobalProcessValue(Opm::SummaryConfigNode               node,
                                     const Opm::UnitSystem::measure m)
             : node_(std::move(node))
             , m_   (m)
@@ -1519,7 +1519,7 @@ namespace Evaluator {
         }
 
     private:
-        Opm::SummaryNode node_;
+        Opm::SummaryConfigNode node_;
         Opm::UnitSystem::measure m_;
     };
 
@@ -1609,7 +1609,7 @@ namespace Evaluator {
         Factory& operator=(const Factory&) = delete;
         Factory& operator=(Factory&&) = delete;
 
-        Descriptor create(const Opm::SummaryNode&);
+        Descriptor create(const Opm::SummaryConfigNode&);
 
     private:
         const Opm::EclipseState& es_;
@@ -1617,7 +1617,7 @@ namespace Evaluator {
         const Opm::SummaryState& st_;
         const Opm::UDQConfig&    udq_;
 
-        const Opm::SummaryNode* node_;
+        const Opm::SummaryConfigNode* node_;
 
         Opm::UnitSystem::measure paramUnit_;
         ofun paramFunction_;
@@ -1640,7 +1640,7 @@ namespace Evaluator {
         std::string userDefinedUnit() const;
     };
 
-    Factory::Descriptor Factory::create(const Opm::SummaryNode& node)
+    Factory::Descriptor Factory::create(const Opm::SummaryConfigNode& node)
     {
         this->node_ = &node;
 
@@ -1816,10 +1816,10 @@ namespace Evaluator {
     }
 } // namespace Evaluator
 
-void reportUnsupportedKeywords(std::vector<Opm::SummaryNode> keywords)
+void reportUnsupportedKeywords(std::vector<Opm::SummaryConfigNode> keywords)
 {
     // Sort by location first, then keyword.
-    auto loc_kw_ordering = [](const Opm::SummaryNode& n1, const Opm::SummaryNode& n2) {
+    auto loc_kw_ordering = [](const Opm::SummaryConfigNode& n1, const Opm::SummaryConfigNode& n2) {
         if (n1.location() == n2.location()) {
             return n1.keyword() < n2.keyword();
         }
@@ -1832,7 +1832,7 @@ void reportUnsupportedKeywords(std::vector<Opm::SummaryNode> keywords)
 
     // Reorder to remove duplicate { keyword, location } pairs, since
     // that will give duplicate and therefore useless warnings.
-    auto same_kw_and_loc = [](const Opm::SummaryNode& n1, const Opm::SummaryNode& n2) {
+    auto same_kw_and_loc = [](const Opm::SummaryConfigNode& n1, const Opm::SummaryConfigNode& n2) {
         return (n1.keyword() == n2.keyword()) && (n1.location() == n2.location());
     };
     auto uend = std::unique(keywords.begin(), keywords.end(), same_kw_and_loc);
@@ -2240,7 +2240,7 @@ configureSummaryInput(const EclipseState&  es,
         es, grid, st, sched.getUDQConfig(sched.size() - 1)
     };
 
-    auto unsuppkw = std::vector<SummaryNode>{};
+    auto unsuppkw = std::vector<SummaryConfigNode>{};
     for (const auto& node : sumcfg) {
         auto prmDescr = fact.create(node);
 
@@ -2271,7 +2271,7 @@ Opm::out::Summary::SummaryImplementation::
 configureRequiredRestartParameters(const SummaryConfig& sumcfg,
                                    const Schedule&      sched)
 {
-    auto makeEvaluator = [&sumcfg, this](const SummaryNode& node) -> void
+    auto makeEvaluator = [&sumcfg, this](const SummaryConfigNode& node) -> void
     {
         if (sumcfg.hasSummaryKey(node.uniqueNodeKey()))
             // Handler already exists.  Don't add second evaluation.
