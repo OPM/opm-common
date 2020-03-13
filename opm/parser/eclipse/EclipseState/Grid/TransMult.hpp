@@ -68,6 +68,17 @@ namespace Opm {
 
         bool operator==(const TransMult& data) const;
 
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(m_nx);
+            serializer(m_ny);
+            serializer(m_nz);
+            serializer(m_trans);
+            serializer(m_names);
+            m_multregtScanner.serializeOp(serializer);
+        }
+
     private:
         size_t getGlobalIndex(size_t i , size_t j , size_t k) const;
         void assertIJK(size_t i , size_t j , size_t k) const;
