@@ -198,6 +198,14 @@ public:
 
     bool operator==(const EclHysterConfig& data) const;
 
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(activeHyst);
+        serializer(pcHystMod);
+        serializer(krHystMod);
+    }
+
 private:
     // enable hysteresis at all
     bool activeHyst  { false };
