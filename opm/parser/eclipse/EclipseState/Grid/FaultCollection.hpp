@@ -49,8 +49,6 @@ public:
     void addFault(const std::string& faultName);
     void setTransMult(const std::string& faultName , double transMult);
 
-    const OrderedMap<std::string, Fault>& getFaults() const;
-
     bool operator==(const FaultCollection& data) const;
 
     template<class Serializer>
