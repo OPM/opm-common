@@ -45,6 +45,18 @@ class EndpointScaling {
 
         bool operator==(const EndpointScaling& data) const;
 
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            if (serializer.isSerializing())
+                serializer(options.to_ulong());
+            else {
+                unsigned long bits;
+                serializer(bits);
+                options = std::bitset<4>(bits);
+            }
+        }
+
     private:
         enum class option {
             any         = 0,
