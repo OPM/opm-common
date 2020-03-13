@@ -37,8 +37,6 @@ namespace Opm {
         const ColumnSchema& getColumn( size_t columnIndex ) const;
         bool hasColumn(const std::string&) const;
 
-        const OrderedMap<std::string, ColumnSchema>& getColumns() const;
-
         /* Number of columns */
         size_t size() const;
 
