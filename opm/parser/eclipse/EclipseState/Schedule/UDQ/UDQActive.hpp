@@ -140,11 +140,6 @@ public:
     const std::vector<Record>& get_iuad() const;
     std::vector<InputRecord> get_iuap() const;
 
-    const std::vector<InputRecord>& getInputRecords() const;
-    const std::vector<Record>& getOutputRecords() const;
-    const std::unordered_map<std::string, std::size_t>& getUdqKeys() const;
-    const std::unordered_map<std::string, std::size_t>& getWgKeys() const;
-
     bool operator==(const UDQActive& data) const;
 
     template<class Serializer>
