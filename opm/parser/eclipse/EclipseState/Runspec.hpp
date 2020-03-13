@@ -240,6 +240,13 @@ public:
 
     bool operator==(const SatFuncControls& rhs) const;
 
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(tolcrit);
+        serializer(krmodel);
+    }
+
 private:
     double tolcrit;
     ThreePhaseOilKrModel krmodel = ThreePhaseOilKrModel::Default;
