@@ -273,39 +273,14 @@ namespace Opm {
     }
 
 
-    const std::unordered_map<std::string, UDQDefine>& UDQConfig::definitionMap() const {
-        return this->m_definitions;
-    }
-
-
-    const std::unordered_map<std::string, UDQAssign>& UDQConfig::assignmentMap() const {
-        return this->m_assignments;
-    }
-
-
-    const std::unordered_map<std::string, std::string>& UDQConfig::unitsMap() const {
-        return this->units;
-    }
-
-
-    const OrderedMap<std::string, UDQIndex>& UDQConfig::inputIndex() const {
-        return this->input_index;
-    }
-
-
-    const std::map<UDQVarType, std::size_t>& UDQConfig::typeCount() const {
-        return this->type_count;
-    }
-
-
     bool UDQConfig::operator==(const UDQConfig& data) const {
         return this->params() == data.params() &&
                this->function_table() == data.function_table() &&
-               this->definitionMap() == data.definitionMap() &&
-               this->assignmentMap() == data.assignmentMap() &&
-               this->unitsMap() == data.unitsMap() &&
-               this->inputIndex() == data.inputIndex() &&
-               this->typeCount() == data.typeCount();
+               this->m_definitions == data.m_definitions &&
+               this->m_assignments == data.m_assignments &&
+               this->units == data.units &&
+               this->input_index == data.input_index &&
+               this->type_count == data.type_count;
     }
 
 }

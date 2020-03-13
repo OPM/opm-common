@@ -62,11 +62,6 @@ namespace Opm {
         void add_define(const std::string& quantity, const std::vector<std::string>& expression);
 
         std::vector<UDQDefine> definitions() const;
-        const std::unordered_map<std::string, UDQDefine>& definitionMap() const;
-        const std::unordered_map<std::string, UDQAssign>& assignmentMap() const;
-        const std::unordered_map<std::string, std::string>& unitsMap() const;
-        const OrderedMap<std::string, UDQIndex>& inputIndex() const;
-        const std::map<UDQVarType, std::size_t>& typeCount() const;
         std::vector<UDQDefine> definitions(UDQVarType var_type) const;
         std::vector<UDQInput> input() const;
 
