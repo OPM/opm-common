@@ -39,11 +39,7 @@ namespace Opm {
                     const std::vector<bool>& defaults,
                     size_t defaultCount);
         size_t size( ) const;
-        const ColumnSchema& schema() const;
         const std::string& name() const;
-        const std::vector<double>& values() const;
-        const std::vector<bool>& defaults() const;
-        size_t defaultCount() const;
         void assertOrder(double value1 , double value2) const;
         void addValue(double);
         void addDefault();
