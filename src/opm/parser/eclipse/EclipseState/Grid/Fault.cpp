@@ -76,10 +76,4 @@ namespace Opm {
         return !( *this == rhs );
     }
 
-    const std::vector<FaultFace>& Fault::getFaceList() const {
-        return m_faceList;
-    }
-
-
-
 }

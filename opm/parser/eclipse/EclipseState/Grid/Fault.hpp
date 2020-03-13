@@ -44,7 +44,6 @@ public:
     void   addFace( FaultFace );
     std::vector< FaultFace >::const_iterator begin() const;
     std::vector< FaultFace >::const_iterator end() const;
-    const std::vector<FaultFace>& getFaceList() const;
 
     bool operator==( const Fault& rhs ) const;
     bool operator!=( const Fault& rhs ) const;
