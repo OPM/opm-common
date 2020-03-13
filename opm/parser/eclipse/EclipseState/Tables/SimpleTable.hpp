@@ -42,9 +42,6 @@ namespace Opm {
                     bool jfunc);
         explicit SimpleTable( TableSchema );
 
-        const TableSchema& schema() const;
-        const OrderedMap<std::string, TableColumn>& columns() const;
-        bool jfunc() const;
         void addColumns();
         void init(const DeckItem& deckItem );
         size_t numColumns() const;
