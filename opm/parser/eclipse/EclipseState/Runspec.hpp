@@ -148,6 +148,14 @@ public:
 
     bool operator==(const WellSegmentDims& data) const;
 
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(nSegWellMax);
+        serializer(nSegmentMax);
+        serializer(nLatBranchMax);
+    }
+
 private:
     int nSegWellMax;
     int nSegmentMax;
