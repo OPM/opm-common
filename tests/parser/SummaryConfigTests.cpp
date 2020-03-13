@@ -867,7 +867,20 @@ BOOST_AUTO_TEST_CASE(Summary_Segment)
     BOOST_CHECK(!summary.hasSummaryKey("SWFR:INJE01:1"));
 }
 
+BOOST_AUTO_TEST_CASE(ProcessingInstructions) {
+    const std::string deck_string = R"(
+RUNSUM
+NARROW
+SEPARATE
+)";
 
+    const auto& summary_config = createSummary(deck_string);
+
+    BOOST_CHECK(!summary_config.hasKeyword("NARROW"));
+    BOOST_CHECK(!summary_config.hasKeyword("RUNSUM"));
+    BOOST_CHECK(!summary_config.hasKeyword("SEPARATE"));
+    BOOST_CHECK(!summary_config.hasKeyword("SUMMARY"));
+}
 
 
 BOOST_AUTO_TEST_CASE(EnableRSM) {

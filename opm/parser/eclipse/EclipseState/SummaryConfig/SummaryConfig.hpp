@@ -177,7 +177,7 @@ namespace Opm {
             }
 
             bool createRunSummary() const {
-                return m_createRunSummary;
+                return runSummaryConfig.create;
             }
 
         private:
@@ -197,7 +197,13 @@ namespace Opm {
             std::set<std::string> short_keywords;
             std::set<std::string> summary_keywords;
 
-            bool m_createRunSummary;
+            struct {
+                bool create { false };
+                bool narrow { false };
+                bool separate { true };
+            } runSummaryConfig;
+
+            void handleProcessingInstruction(const std::string& keyword);
     };
 
 } //namespace Opm

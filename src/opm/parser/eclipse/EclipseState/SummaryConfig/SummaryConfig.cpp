@@ -133,7 +133,6 @@ namespace {
             "NLINEARS",
             "NLINSMAX",
             "NLINSMIN",
-            "RUNSUM",
             "STEPTYPE",
             "WNEWTON",
         };
@@ -147,6 +146,17 @@ namespace {
         };
 
         return is_in_set(udq_blacklistkw, keyword);
+    }
+
+    bool is_processing_instruction(const std::string& keyword) {
+        static const keyword_set processing_instructionkw {
+            "NARROW",
+            "RUNSUM",
+            "SEPARATE",
+            "SUMMARY",
+        };
+
+        return is_in_set(processing_instructionkw, keyword);
     }
 
     bool is_udq(const std::string& keyword) {
@@ -438,10 +448,6 @@ inline void keywordR2R( SummaryConfig::keyword_list& /* list */,
                         const ParseContext& parseContext,
                         ErrorGuard& errors ) {
 
-    /* RUNSUM is not a region keyword but a directive for how to format and
-     * print output. Unfortunately its *recognised* as a region keyword
-     * because of its structure and position. Hence the special handling of ignoring it.
-     */
     if( keyword.name() == "RPTONLY" ) return;
 
     if( is_region_to_region(keyword.name()) ) {
@@ -971,14 +977,12 @@ SummaryConfig::SummaryConfig( const Deck& deck,
                               const GridDims& dims) {
     SUMMARYSection section( deck );
 
-    // The kw_iter++ hoops is to skip the initial 'SUMMARY' keyword.
-    auto kw_iter = section.begin();
-    if (kw_iter != section.end())
-        kw_iter++;
-
-    for(; kw_iter != section.end(); ++kw_iter) {
-        const auto& kw = *kw_iter;
-        handleKW( this->keywords, kw, schedule, tables, parseContext, errors, dims);
+    for (const auto &kw : section) {
+        if (is_processing_instruction(kw.name())) {
+            handleProcessingInstruction(kw.name());
+        } else  {
+            handleKW( this->keywords, kw, schedule, tables, parseContext, errors, dims);
+        }
     }
 
     for (const auto& meta_pair : meta_keywords) {
@@ -1116,6 +1120,17 @@ bool SummaryConfig::operator==(const Opm::SummaryConfig& data) const {
     return this->keywords == data.keywords &&
            this->short_keywords == data.short_keywords &&
            this->summary_keywords == data.summary_keywords;
+}
+
+void SummaryConfig::handleProcessingInstruction(const std::string& keyword) {
+    if (keyword == "RUNSUM") {
+        runSummaryConfig.create = true;
+    } else if (keyword == "NARROW") {
+        runSummaryConfig.narrow = true;
+    } else if (keyword == "SEPARATE") {
+        Opm::OpmLog::info("Keyword SEPARATE has no effect (treated as always on).");
+        runSummaryConfig.separate = true;
+    }
 }
 
 }
