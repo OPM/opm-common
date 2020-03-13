@@ -53,6 +53,16 @@ public:
 
     bool operator==(const FoamData& data) const;
 
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(reference_surfactant_concentration_);
+        serializer(exponent_);
+        serializer(minimum_surfactant_concentration_);
+        serializer(allow_desorption_);
+        serializer(rock_density_);
+    }
+
 private:
     double reference_surfactant_concentration_;
     double exponent_;
