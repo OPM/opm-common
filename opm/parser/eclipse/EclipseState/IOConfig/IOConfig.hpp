@@ -169,8 +169,6 @@ namespace Opm {
         bool getUNIFIN() const;
         bool getFMTIN() const;
         bool getFMTOUT() const;
-        const std::string& getDeckFileName() const;
-        bool getNoSim() const;
         const std::string& getEclipseInputPath() const;
 
         void overrideNOSIM(bool nosim);
