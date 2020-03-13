@@ -41,8 +41,6 @@ class EndpointScaling {
         bool twopoint() const noexcept;
         bool threepoint() const noexcept;
 
-        unsigned long getBits() const;
-
         bool operator==(const EndpointScaling& data) const;
 
         template<class Serializer>
