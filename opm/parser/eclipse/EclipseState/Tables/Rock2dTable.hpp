@@ -36,12 +36,6 @@ namespace Opm {
         double getPressureValue(size_t index) const;
         double getPvmultValue(size_t pressureIndex, size_t saturationIndex ) const;
 
-        const std::vector<std::vector<double>>& pvmultValues() const
-        { return m_pvmultValues; }
-
-        const std::vector<double>& pressureValues() const
-        { return m_pressureValues; }
-
         bool operator==(const Rock2dTable& data) const;
 
         template<class Serializer>
