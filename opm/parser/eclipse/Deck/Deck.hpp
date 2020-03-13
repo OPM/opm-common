@@ -29,7 +29,6 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
-#ifdef OPM_PARSER_DECK_API_WARNING
 #ifndef OPM_PARSER_DECK_API
 #pragma message "\n\n" \
 "   ----------------------------------------------------------------------------------\n" \
@@ -39,7 +38,6 @@
 "   #define OPM_PARSER_DECK_API before including the Deck.hpp header.                 \n" \
 "   ----------------------------------------------------------------------------------\n" \
 ""
-#endif
 #endif
 
 

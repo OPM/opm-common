@@ -11,6 +11,7 @@ option(ENABLE_MOCKSIM "Build the mock simulator for io testing" ON)
 option(OPM_ENABLE_PYTHON "Enable python bindings?" OFF)
 option(OPM_INSTALL_PYTHON "Enable python bindings?" OFF)
 option(OPM_ENABLE_EMBEDDED_PYTHON "Enable python bindings?" OFF)
+add_definitions(-DOPM_PARSER_DECK_API)
 
 # Output implies input
 if(ENABLE_ECL_OUTPUT)
