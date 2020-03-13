@@ -233,10 +233,6 @@ std::set<UDQTokenType> UDQDefine::func_tokens() const {
     return this->ast->func_tokens();
 }
 
-std::shared_ptr<UDQASTNode> UDQDefine::getAst() const {
-    return this->ast;
-}
-
 bool UDQDefine::operator==(const UDQDefine& data) const {
     if ((ast && !data.ast) || (!ast && data.ast))
         return false;
