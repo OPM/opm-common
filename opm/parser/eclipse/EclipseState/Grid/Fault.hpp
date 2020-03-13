@@ -49,6 +49,14 @@ public:
     bool operator==( const Fault& rhs ) const;
     bool operator!=( const Fault& rhs ) const;
 
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(m_name);
+        serializer(m_transMult);
+        serializer.vector(m_faceList);
+    }
+
 private:
     std::string m_name;
     double m_transMult = 0.0;
