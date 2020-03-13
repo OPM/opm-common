@@ -24,6 +24,7 @@
 #include <iostream>
 
 #include <opm/common/OpmLog/LogUtil.hpp>
+#include <opm/common/utility/numeric/cmp.hpp>
 
 #include <opm/parser/eclipse/Utility/String.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
@@ -2983,6 +2984,219 @@ void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t 
 
 void Schedule::load_rst(const RestartIO::RstState&, const UnitSystem&)
 {
+}
+
+namespace {
+/*
+  The insane trickery here (thank you Stackoverflow!) is to be able to provide a
+  simple templated comparison function
+
+     template <typename T>
+     int not_equal(const T& arg1, const T& arg2, const std::string& msg);
+
+  which will print arg1 and arg2 on stderr *if* T supports operator<<, otherwise
+  it will just print the typename of T.
+*/
+
+
+template<typename T, typename = int>
+struct cmpx
+{
+    int neq(const T& arg1, const T& arg2, const std::string& msg) {
+        if (arg1 == arg2)
+            return 0;
+
+        std::cerr << "Error when comparing <" << typeid(arg1).name() << ">: " << msg << std::endl;
+        return 1;
+    }
+};
+
+template <typename T>
+struct cmpx<T, decltype(std::cout << T(), 0)>
+{
+    int neq(const T& arg1, const T& arg2, const std::string& msg) {
+        if (arg1 == arg2)
+            return 0;
+
+        std::cerr << "Error when comparing: " << msg << " " << arg1 << " != " << arg2 << std::endl;
+        return 1;
+    }
+};
+
+
+template <typename T>
+int not_equal(const T& arg1, const T& arg2, const std::string& msg) {
+    return cmpx<T>().neq(arg1, arg2, msg);
+}
+
+
+template <>
+int not_equal(const double& arg1, const double& arg2, const std::string& msg) {
+    if (Opm::cmp::scalar_equal(arg1, arg2))
+        return 0;
+
+    std::cerr << "Error when comparing: " << msg << " " << arg1 << " != " << arg2 << std::endl;
+    return 1;
+}
+
+template <>
+int not_equal(const UDAValue& arg1, const UDAValue& arg2, const std::string& msg) {
+    if (arg1.is<double>())
+        return not_equal( arg1.get<double>(), arg2.get<double>(), msg);
+    else
+        return not_equal( arg1.get<std::string>(), arg2.get<std::string>(), msg);
+}
+
+
+std::string well_msg(const std::string& well, const std::string& msg) {
+    return "Well: " + well + " " + msg;
+}
+
+
+}
+
+bool Schedule::cmp(const Schedule& sched1, const Schedule& sched2, std::size_t report_step) {
+    int count = not_equal(sched1.wellNames(report_step), sched2.wellNames(report_step), "Wellnames");
+    if (count != 0)
+        return false;
+
+    for (const auto& wname : sched1.wellNames(report_step)) {
+        const auto& well1 = sched1.getWell(wname, report_step);
+        const auto& well2 = sched2.getWell(wname, report_step);
+        int well_count = 0;
+        {
+            const auto& connections2 = well2.getConnections();
+            const auto& connections1 = well1.getConnections();
+
+            for (std::size_t icon = 0; icon < connections1.size(); icon++) {
+                const auto& conn1 = connections1[icon];
+                const auto& conn2 = connections2[icon];
+                well_count += not_equal( conn1.getI(), conn2.getI(), well_msg(well1.name(), "Connection: I"));
+                well_count += not_equal( conn1.getI() , conn2.getI() , well_msg(well1.name(), "Connection: I"));
+                well_count += not_equal( conn1.getJ() , conn2.getJ() , well_msg(well1.name(), "Connection: J"));
+                well_count += not_equal( conn1.getK() , conn2.getK() , well_msg(well1.name(), "Connection: K"));
+                well_count += not_equal( conn1.state() , conn2.state(), well_msg(well1.name(), "Connection: State"));
+                well_count += not_equal( conn1.dir() , conn2.dir(), well_msg(well1.name(), "Connection: dir"));
+                well_count += not_equal( conn1.complnum() , conn2.complnum(), well_msg(well1.name(), "connection: complnum"));
+                well_count += not_equal( conn1.segment() , conn2.segment(), well_msg(well1.name(), "Connection: segment"));
+                well_count += not_equal( conn1.kind() , conn2.kind(), well_msg(well1.name(), "Connection: CFKind"));
+
+
+                well_count += not_equal( conn1.CF(), conn2.CF(), well_msg(well1.name(), "Connection: CF"));
+                well_count += not_equal( conn1.Kh(), conn2.Kh(), well_msg(well1.name(), "Connection: Kh"));
+                well_count += not_equal( conn1.rw(), conn2.rw(), well_msg(well1.name(), "Connection: rw"));
+                well_count += not_equal( conn1.depth(), conn2.depth(), well_msg(well1.name(), "Connection: depth"));
+
+                well_count += not_equal( conn1.r0(), conn2.r0(), well_msg(well1.name(), "Connection: r0"));
+                well_count += not_equal( conn1.skinFactor(), conn2.skinFactor(), well_msg(well1.name(), "Connection: skinFactor"));
+                well_count += not_equal( conn1.wellPi(), conn2.wellPi(), well_msg(well1.name(), "Connection: PI"));
+
+            }
+        }
+
+        if (not_equal(well1.isMultiSegment(), well2.isMultiSegment(), well_msg(well1.name(), "Is MSW")))
+            return false;
+
+        if (well1.isMultiSegment()) {
+            const auto& segments1 = well1.getSegments();
+            const auto& segments2 = well2.getSegments();
+            if (not_equal(segments1.size(), segments2.size(), "Segments: size"))
+                return false;
+
+            for (std::size_t iseg=0; iseg < segments1.size(); iseg++) {
+                const auto& segment1 = segments1[iseg];
+                const auto& segment2 = segments2[iseg];
+                well_count += not_equal(segment1.segmentNumber(), segment2.segmentNumber(), well_msg(well1.name(), "Segment: segmentNumber"));
+                well_count += not_equal(segment1.branchNumber(), segment2.segmentNumber(), well_msg(well1.name(), "Segment: segmentNumber"));
+                well_count += not_equal(segment1.outletSegment(), segment2.outletSegment(), well_msg(well1.name(), "Segments: outletSegment"));
+                well_count += not_equal(segment1.totalLength(), segment2.totalLength(), well_msg(well1.name(), "Segments: totalLength"));
+                well_count += not_equal(segment1.depth(), segment2.depth(), well_msg(well1.name(), "Segments: depth"));
+                well_count += not_equal(segment1.internalDiameter(), segment2.internalDiameter(), well_msg(well1.name(), "Segments: internalDiameter"));
+                well_count += not_equal(segment1.roughness(), segment2.roughness(), well_msg(well1.name(), "Segments: roughness"));
+                well_count += not_equal(segment1.crossArea(), segment2.crossArea(), well_msg(well1.name(), "Segments: crossArea"));
+                well_count += not_equal(segment1.volume(), segment2.volume(), well_msg(well1.name(), "Segments: volume"));
+            }
+        }
+
+        {
+            const auto& prod1 = well1.getProductionProperties();
+            const auto& prod2 = well2.getProductionProperties();
+
+            well_count += not_equal(prod1.name, prod2.name , well_msg(well1.name(), "Prod: name"));
+            well_count += not_equal(prod1.OilRate, prod2.OilRate, well_msg(well1.name(), "Prod: OilRate"));
+            well_count += not_equal(prod1.GasRate, prod2.GasRate, well_msg(well1.name(), "Prod: GasRate"));
+            well_count += not_equal(prod1.WaterRate, prod2.WaterRate, well_msg(well1.name(), "Prod: WaterRate"));
+            well_count += not_equal(prod1.LiquidRate, prod2.LiquidRate, well_msg(well1.name(), "Prod: LiquidRate"));
+            well_count += not_equal(prod1.ResVRate, prod2.ResVRate, well_msg(well1.name(), "Prod: ResVRate"));
+            well_count += not_equal(prod1.BHPTarget, prod2.BHPTarget, well_msg(well1.name(), "Prod: BHPTarget"));
+            well_count += not_equal(prod1.THPTarget, prod2.THPTarget, well_msg(well1.name(), "Prod: THPTarget"));
+            well_count += not_equal(prod1.bhp_hist_limit, prod2.bhp_hist_limit, well_msg(well1.name(), "Prod: bhp_hist_limit"));
+            well_count += not_equal(prod1.thp_hist_limit, prod2.thp_hist_limit, well_msg(well1.name(), "Prod: thp_hist_limit"));
+            well_count += not_equal(prod1.BHPH, prod2.BHPH, well_msg(well1.name(), "Prod: BHPH"));
+            well_count += not_equal(prod1.THPH, prod2.THPH, well_msg(well1.name(), "Prod: THPH"));
+            well_count += not_equal(prod1.VFPTableNumber, prod2.VFPTableNumber, well_msg(well1.name(), "Prod: VFPTableNumber"));
+            well_count += not_equal(prod1.ALQValue, prod2.ALQValue, well_msg(well1.name(), "Prod: ALQValue"));
+            well_count += not_equal(prod1.productionControls(), prod2.productionControls(), well_msg(well1.name(), "Prod: productionControls"));
+            well_count += not_equal(prod1.predictionMode, prod2.predictionMode, well_msg(well1.name(), "Prod: predictionMode"));
+            well_count += not_equal(prod1.controlMode, prod2.controlMode, well_msg(well1.name(), "Prod: controlMode"));
+            well_count += not_equal(prod1.whistctl_cmode, prod2.whistctl_cmode, well_msg(well1.name(), "Prod: whistctl_cmode"));
+        }
+        {
+            const auto& inj1 = well1.getInjectionProperties();
+            const auto& inj2 = well2.getInjectionProperties();
+
+            well_count += not_equal(inj1.name, inj2.name, well_msg(well1.name(), "Well::Inj: name"));
+            well_count += not_equal(inj1.surfaceInjectionRate, inj2.surfaceInjectionRate, well_msg(well1.name(), "Well::Inj: surfaceInjectionRate"));
+            well_count += not_equal(inj1.reservoirInjectionRate, inj2.reservoirInjectionRate, well_msg(well1.name(), "Well::Inj: reservoirInjectionRate"));
+            well_count += not_equal(inj1.BHPTarget, inj2.BHPTarget, well_msg(well1.name(), "Well::Inj: BHPTarget"));
+            well_count += not_equal(inj1.THPTarget, inj2.THPTarget, well_msg(well1.name(), "Well::Inj: THPTarget"));
+            well_count += not_equal(inj1.bhp_hist_limit, inj2.bhp_hist_limit, well_msg(well1.name(), "Well::Inj: bhp_hist_limit"));
+            well_count += not_equal(inj1.thp_hist_limit, inj2.thp_hist_limit, well_msg(well1.name(), "Well::Inj: thp_hist_limit"));
+            well_count += not_equal(inj1.BHPH, inj2.BHPH, well_msg(well1.name(), "Well::Inj: BHPH"));
+            well_count += not_equal(inj1.THPH, inj2.THPH, well_msg(well1.name(), "Well::Inj: THPH"));
+            well_count += not_equal(inj1.VFPTableNumber, inj2.VFPTableNumber, well_msg(well1.name(), "Well::Inj: VFPTableNumber"));
+            well_count += not_equal(inj1.predictionMode, inj2.predictionMode, well_msg(well1.name(), "Well::Inj: predictionMode"));
+            well_count += not_equal(inj1.injectionControls, inj2.injectionControls, well_msg(well1.name(), "Well::Inj: injectionControls"));
+            well_count += not_equal(inj1.injectorType, inj2.injectorType, well_msg(well1.name(), "Well::Inj: injectorType"));
+            well_count += not_equal(inj1.controlMode, inj2.controlMode, well_msg(well1.name(), "Well::Inj: controlMode"));
+        }
+
+        {
+            well_count += well2.firstTimeStep() > report_step;
+            well_count += not_equal( well1.groupName(), well2.groupName(), well_msg(well1.name(), "Well: groupName"));
+            well_count += not_equal( well1.getHeadI(), well2.getHeadI(), well_msg(well1.name(), "Well: getHeadI"));
+            well_count += not_equal( well1.getHeadJ(), well2.getHeadJ(), well_msg(well1.name(), "Well: getHeadJ"));
+            well_count += not_equal( well1.getRefDepth(), well2.getRefDepth(), well_msg(well1.name(), "Well: getRefDepth"));
+            well_count += not_equal( well1.isMultiSegment(), well2.isMultiSegment() , well_msg(well1.name(), "Well: isMultiSegment"));
+            well_count += not_equal( well1.isAvailableForGroupControl(), well2.isAvailableForGroupControl() , well_msg(well1.name(), "Well: isAvailableForGroupControl"));
+            well_count += not_equal( well1.getGuideRate(), well2.getGuideRate(), well_msg(well1.name(), "Well: getGuideRate"));
+            well_count += not_equal( well1.getGuideRatePhase(), well2.getGuideRatePhase(), well_msg(well1.name(), "Well: getGuideRatePhase"));
+            well_count += not_equal( well1.getGuideRateScalingFactor(), well2.getGuideRateScalingFactor(), well_msg(well1.name(), "Well: getGuideRateScalingFactor"));
+            well_count += not_equal( well1.predictionMode(), well2.predictionMode(), well_msg(well1.name(), "Well: predictionMode"));
+            well_count += not_equal( well1.canOpen(), well2.canOpen(), well_msg(well1.name(), "Well: canOpen"));
+            well_count += not_equal( well1.isProducer(), well2.isProducer(), well_msg(well1.name(), "Well: isProducer"));
+            well_count += not_equal( well1.isInjector(), well2.isInjector(), well_msg(well1.name(), "Well: isInjector"));
+            if (well1.isInjector())
+                well_count += not_equal( well1.injectorType(), well2.injectorType(), well_msg(well1.name(), "Well1: injectorType"));
+            well_count += not_equal( well1.seqIndex(), well2.seqIndex(), well_msg(well1.name(), "Well: seqIndex"));
+            well_count += not_equal( well1.getAutomaticShutIn(), well2.getAutomaticShutIn(), well_msg(well1.name(), "Well: getAutomaticShutIn"));
+            well_count += not_equal( well1.getAllowCrossFlow(), well2.getAllowCrossFlow(), well_msg(well1.name(), "Well: getAllowCrossFlow"));
+            well_count += not_equal( well1.getWellConnectionOrdering(), well2.getWellConnectionOrdering(), well_msg(well1.name(), "Well: getWellConnectionOrdering"));
+            well_count += not_equal( well1.getSolventFraction(), well2.getSolventFraction(), well_msg(well1.name(), "Well: getSolventFraction"));
+            well_count += not_equal( well1.getStatus(), well2.getStatus(), well_msg(well1.name(), "Well: getStatus"));
+            //well_count += not_equal( well1.getInjectionProperties(), well2.getInjectionProperties(), "Well: getInjectionProperties");
+
+
+            if (well1.isProducer())
+                well_count += not_equal( well1.getPreferredPhase(), well2.getPreferredPhase(), well_msg(well1.name(), "Well: getPreferredPhase"));
+            well_count += not_equal( well1.getDrainageRadius(), well2.getDrainageRadius(), well_msg(well1.name(), "Well: getDrainageRadius"));
+            well_count += not_equal( well1.getEfficiencyFactor(), well2.getEfficiencyFactor(), well_msg(well1.name(), "Well: getEfficiencyFactor"));
+        }
+        count += well_count;
+        if (well_count > 0)
+            std::cerr << std::endl;
+    }
+    return (count == 0);
 }
 
 
