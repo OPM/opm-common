@@ -19,6 +19,7 @@
 #include "config.h"
 
 #include <opm/io/eclipse/ESmry.hpp>
+#include <opm/common/utility/FileSystem.hpp>
 
 #define BOOST_TEST_MODULE Test EclIO
 #include <boost/test/unit_test.hpp>
@@ -352,6 +353,16 @@ BOOST_AUTO_TEST_CASE(TestESmry_4) {
 }
 
 
+namespace fs = Opm::filesystem;
+BOOST_AUTO_TEST_CASE(TestCreateRSM) {
+    ESmry smry1("SPE1CASE1.SMSPEC");
+
+    smry1.write_rsm();
+    BOOST_CHECK(fs::exists("SPE1CASE1.RSM"));
+
+    smry1.write_rsm("TEST.RSM");
+    BOOST_CHECK(fs::exists("TEST.RSM"));
+}
 
 BOOST_AUTO_TEST_CASE(TestUnits) {
     ESmry smry("SPE1CASE1.SMSPEC");
