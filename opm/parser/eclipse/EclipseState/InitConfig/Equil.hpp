@@ -61,7 +61,6 @@ namespace Opm {
             Equil(const std::vector<EquilRecord>& records);
 
             const EquilRecord& getRecord( size_t id ) const;
-            const std::vector<EquilRecord>& records() const;
 
             size_t size() const;
             bool empty() const;

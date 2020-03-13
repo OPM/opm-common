@@ -98,10 +98,6 @@ namespace Opm {
         return this->m_records.at( id );
     }
 
-    const std::vector<EquilRecord>& Equil::records() const {
-        return m_records;
-    }
-
     size_t Equil::size() const {
         return this->m_records.size();
     }
@@ -119,6 +115,6 @@ namespace Opm {
     }
 
     bool Equil::operator==(const Equil& data) const {
-        return this->records() == data.records();
+        return this->m_records == data.m_records;
     }
 }
