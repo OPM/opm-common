@@ -151,6 +151,7 @@ namespace {
     bool is_processing_instruction(const std::string& keyword) {
         static const keyword_set processing_instructionkw {
             "NARROW",
+            "RPTONLY",
             "RUNSUM",
             "SEPARATE",
             "SUMMARY",
@@ -447,8 +448,6 @@ inline void keywordR2R( SummaryConfig::keyword_list& /* list */,
                         const TableManager& tables,
                         const ParseContext& parseContext,
                         ErrorGuard& errors ) {
-
-    if( keyword.name() == "RPTONLY" ) return;
 
     if( is_region_to_region(keyword.name()) ) {
         keywordR2R( list, parseContext, errors, keyword );
