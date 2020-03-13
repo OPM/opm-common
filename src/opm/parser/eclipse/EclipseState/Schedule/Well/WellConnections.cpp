@@ -23,6 +23,7 @@
 #include <iostream>
 
 #include <opm/parser/eclipse/Units/Units.hpp>
+#include <opm/io/eclipse/rst/connection.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Connection.hpp>
@@ -244,16 +245,14 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
 
         int satTableId = -1;
         bool defaultSatTable = true;
+        const auto& r0Item = record.getItem("PR");
         const auto& CFItem = record.getItem("CONNECTION_TRANSMISSIBILITY_FACTOR");
         const auto& diameterItem = record.getItem("DIAMETER");
         const auto& KhItem = record.getItem("Kh");
         const auto& satTableIdItem = record.getItem("SAT_TABLE");
-        const auto& r0Item = record.getItem("PR");
         const auto direction = Connection::DirectionFromString(record.getItem("DIR").getTrimmedString(0));
         double skin_factor = record.getItem("SKIN").getSIDouble(0);
         double rw;
-        double r0=0.0;
-
 
         if (satTableIdItem.hasValue(0) && satTableIdItem.get < int > (0) > 0)
         {
@@ -276,6 +275,7 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
             size_t active_index = grid.activeIndex(I,J,k);
             double CF = -1;
             double Kh = -1;
+            double r0 = -1;
             auto ctf_kind = ::Opm::Connection::CTFKind::DeckValue;
 
             if (defaultSatTable)
@@ -284,6 +284,9 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
             auto same_ijk = [&]( const Connection& c ) {
                 return c.sameCoordinate( I,J,k );
             };
+
+            if (r0Item.hasValue(0))
+                r0 = r0Item.getSIDouble(0);
 
             if (KhItem.hasValue(0) && KhItem.getSIDouble(0) > 0.0)
                 Kh = KhItem.getSIDouble(0);
@@ -307,9 +310,7 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
                 const auto& K = permComponents(direction, cell_perm);
                 const auto& D = effectiveExtent(direction, ntg[active_index], cell_size);
 
-                if (r0Item.hasValue(0))
-                    r0 = r0Item.getSIDouble(0);
-                else
+                if (r0 < 0)
                     r0 = effectiveRadius(K,D);
 
                 if (CF < 0) {
@@ -330,6 +331,9 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
 
 
         CF_done:
+            if (r0 < 0)
+                r0 = RestartIO::RstConnection::inverse_peaceman(CF, Kh, rw, skin_factor);
+
             auto prev = std::find_if( this->m_connections.begin(),
                                       this->m_connections.end(),
                                       same_ijk );

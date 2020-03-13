@@ -3120,6 +3120,19 @@ bool Schedule::cmp(const Schedule& sched1, const Schedule& sched2, std::size_t r
     if (count != 0)
         return false;
 
+    {
+        const auto& tm1 = sched1.getTimeMap();
+        const auto& tm2 = sched2.getTimeMap();
+        if (not_equal(tm1.size(), tm2.size(), "TimeMap: size()"))
+            count += 1;
+
+        for (auto& step_index = report_step; step_index < std::min(tm1.size(), tm2.size()) - 1; step_index++) {
+            if (not_equal(tm1[step_index], tm2[step_index], "TimePoint[" + std::to_string(step_index) + "]"))
+                count += 1;
+        }
+
+    }
+
     for (const auto& wname : sched1.wellNames(report_step)) {
         const auto& well1 = sched1.getWell(wname, report_step);
         const auto& well2 = sched2.getWell(wname, report_step);
