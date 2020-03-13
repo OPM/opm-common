@@ -82,7 +82,6 @@ namespace {
         "MSUMLINS","MSUMNEWT","TIMESTEP","TCPUTS","TCPUDAY","STEPTYPE","TELAPLIN"
     };
 
-
     /*
       The variable type 'ECL_SMSPEC_MISC_TYPE' is a catch-all variable
       type, and will by default internalize keywords like 'ALL' and
@@ -116,19 +115,49 @@ namespace {
          {"SGAS" , {"BSGAS"}}
     };
 
+    using keyword_set = std::unordered_set<std::string>;
+
+    inline bool is_in_set(const keyword_set& set, const std::string& keyword) {
+        return set.find(keyword) != set.end();
+    }
+
     bool is_special(const std::string& keyword) {
-        using set = std::unordered_set<std::string>;
-        static const auto specialkw = set {
-            "NEWTON", "NAIMFRAC", "NLINEARS", "NLINSMIN", "NLINSMAX",
-            "ELAPSED", "MAXDPR", "MAXDSO", "MAXDSG", "MAXDSW", "STEPTYPE",
+        static const keyword_set specialkw {
+            "ELAPSED",
+            "MAXDPR",
+            "MAXDSG",
+            "MAXDSO",
+            "MAXDSW",
+            "NAIMFRAC",
+            "NEWTON",
+            "NLINEARS",
+            "NLINSMAX",
+            "NLINSMIN",
+            "STEPTYPE",
             "WNEWTON",
         };
 
-        return specialkw.count(keyword) > set::size_type{0};
+        return is_in_set(specialkw, keyword);
     }
 
     bool is_udq_blacklist(const std::string& keyword) {
-        return (keyword == "SUMTHIN") || (keyword == "RUNSUM");
+        static const keyword_set udq_blacklistkw {
+            "SUMTHIN",
+        };
+
+        return is_in_set(udq_blacklistkw, keyword);
+    }
+
+    bool is_processing_instruction(const std::string& keyword) {
+        static const keyword_set processing_instructionkw {
+            "NARROW",
+            "RPTONLY",
+            "RUNSUM",
+            "SEPARATE",
+            "SUMMARY",
+        };
+
+        return is_in_set(processing_instructionkw, keyword);
     }
 
     bool is_udq(const std::string& keyword) {
@@ -142,17 +171,15 @@ namespace {
     }
 
     bool is_pressure(const std::string& keyword) {
-        using set = std::unordered_set<std::string>;
-        static const auto presskw = set {
+        static const keyword_set presskw {
             "BHP", "BHPH", "THP", "THPH", "PR"
         };
 
-        return presskw.count(&keyword[1]) > set::size_type{0};
+        return is_in_set(presskw, keyword.substr(1));
     }
 
     bool is_rate(const std::string& keyword) {
-        using set = std::unordered_set<std::string>;
-        static const auto ratekw = set {
+        static const keyword_set ratekw {
             "OPR", "GPR", "WPR", "LPR", "NPR", "VPR",
             "OPRH", "GPRH", "WPRH", "LPRH",
             "OVPR", "GVPR", "WVPR",
@@ -165,22 +192,20 @@ namespace {
             "OPI", "OPP", "GPI", "GPP", "WPI", "WPP",
         };
 
-        return ratekw.count(&keyword[1]) > set::size_type{0};
+        return is_in_set(ratekw, keyword.substr(1));
     }
 
     bool is_ratio(const std::string& keyword) {
-        using set = std::unordered_set<std::string>;
-        static const auto ratiokw = set {
+        static const keyword_set ratiokw {
             "GLR", "GOR", "WCT",
             "GLRH", "GORH", "WCTH",
         };
 
-        return ratiokw.count(&keyword[1]) > set::size_type{0};
+        return is_in_set(ratiokw, keyword.substr(1));
     }
 
     bool is_total(const std::string& keyword) {
-        using set = std::unordered_set<std::string>;
-        static const auto totalkw = set {
+        static const keyword_set totalkw {
             "OPT", "GPT", "WPT", "LPT", "NPT",
             "VPT", "OVPT", "GVPT", "WVPT",
             "WPTH", "OPTH", "GPTH", "LPTH",
@@ -190,16 +215,15 @@ namespace {
             "WITH", "OITH", "GITH", "WVIT", "OVIT", "GVIT",
         };
 
-        return totalkw.count(&keyword[1]) > set::size_type{0};
+        return is_in_set(totalkw, keyword.substr(1));
     }
 
     bool is_count(const std::string& keyword) {
-        using set = std::unordered_set<std::string>;
-        static const auto countkw = set {
+        static const keyword_set countkw {
             "MWIN", "MWIT", "MWPR", "MWPT"
         };
 
-        return countkw.count(keyword) > set::size_type{0};
+        return is_in_set(countkw, keyword);
     }
 
     bool is_region_to_region(const std::string& keyword) {
@@ -425,13 +449,6 @@ inline void keywordR2R( SummaryConfig::keyword_list& /* list */,
                         const ParseContext& parseContext,
                         ErrorGuard& errors ) {
 
-    /* RUNSUM is not a region keyword but a directive for how to format and
-     * print output. Unfortunately its *recognised* as a region keyword
-     * because of its structure and position. Hence the special handling of ignoring it.
-     */
-    if( keyword.name() == "RUNSUM" ) return;
-    if( keyword.name() == "RPTONLY" ) return;
-
     if( is_region_to_region(keyword.name()) ) {
         keywordR2R( list, parseContext, errors, keyword );
         return;
@@ -467,7 +484,7 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
                          const std::string& keyword,
                          Location loc)
 {
-    if (meta_keywords.count(keyword) == 0)
+    if (meta_keywords.find(keyword) == meta_keywords.end())
         list.emplace_back( keyword, SummaryNode::Category::Miscellaneous , std::move(loc));
 }
 
@@ -849,19 +866,19 @@ SummaryNode& SummaryNode::isUserDefined(const bool userDefined)
 std::string SummaryNode::uniqueNodeKey() const
 {
     switch (this->category()) {
-    case SummaryNode::Category::Well: // fall-through
+    case SummaryNode::Category::Well: [[fallthrough]];
     case SummaryNode::Category::Group:
         return this->keyword() + ':' + this->namedEntity();
 
-    case SummaryNode::Category::Field: // fall-through
+    case SummaryNode::Category::Field: [[fallthrough]];
     case SummaryNode::Category::Miscellaneous:
         return this->keyword();
 
-    case SummaryNode::Category::Region: // fall-through
+    case SummaryNode::Category::Region: [[fallthrough]];
     case SummaryNode::Category::Block:
         return this->keyword() + ':' + std::to_string(this->number());
 
-    case SummaryNode::Category::Connection: // fall-through
+    case SummaryNode::Category::Connection: [[fallthrough]];
     case SummaryNode::Category::Segment:
         return this->keyword() + ':' + this->namedEntity() + ':' + std::to_string(this->number());
     }
@@ -879,22 +896,22 @@ bool operator==(const SummaryNode& lhs, const SummaryNode& rhs)
     assert (lhs.category() == rhs.category());
 
     switch( lhs.category() ) {
-        case SummaryNode::Category::Field: // fall-through
+        case SummaryNode::Category::Field: [[fallthrough]];
         case SummaryNode::Category::Miscellaneous:
             // Fully identified by keyword
             return true;
 
-        case SummaryNode::Category::Well:  // fall-through
+        case SummaryNode::Category::Well: [[fallthrough]];
         case SummaryNode::Category::Group:
             // Equal if associated to same named entity
             return lhs.namedEntity() == rhs.namedEntity();
 
-        case SummaryNode::Category::Region:  // fall-through
+        case SummaryNode::Category::Region: [[fallthrough]];
         case SummaryNode::Category::Block:
             // Equal if associated to same numeric entity
             return lhs.number() == rhs.number();
 
-        case SummaryNode::Category::Connection:  // fall-through
+        case SummaryNode::Category::Connection: [[fallthrough]];
         case SummaryNode::Category::Segment:
             // Equal if associated to same numeric
             // sub-entity of same named entity
@@ -913,23 +930,23 @@ bool operator<(const SummaryNode& lhs, const SummaryNode& rhs)
     // If we get here, the keyword are equal.
 
     switch( lhs.category() ) {
-        case SummaryNode::Category::Field:  // fall-through
+        case SummaryNode::Category::Field: [[fallthrough]];
         case SummaryNode::Category::Miscellaneous:
             // Fully identified by keyword.
             // Return false for equal keywords.
             return false;
 
-        case SummaryNode::Category::Well:  // fall-through
+        case SummaryNode::Category::Well: [[fallthrough]];
         case SummaryNode::Category::Group:
             // Ordering determined by namedEntityd entity
             return lhs.namedEntity() < rhs.namedEntity();
 
-        case SummaryNode::Category::Region:  // fall-through
+        case SummaryNode::Category::Region: [[fallthrough]];
         case SummaryNode::Category::Block:
             // Ordering determined by numeric entity
             return lhs.number() < rhs.number();
 
-        case SummaryNode::Category::Connection:  // fall-through
+        case SummaryNode::Category::Connection: [[fallthrough]];
         case SummaryNode::Category::Segment:
         {
             // Ordering determined by pair of namedEntity and numeric ID.
@@ -959,14 +976,12 @@ SummaryConfig::SummaryConfig( const Deck& deck,
                               const GridDims& dims) {
     SUMMARYSection section( deck );
 
-    // The kw_iter++ hoops is to skip the initial 'SUMMARY' keyword.
-    auto kw_iter = section.begin();
-    if (kw_iter != section.end())
-        kw_iter++;
-
-    for(; kw_iter != section.end(); ++kw_iter) {
-        const auto& kw = *kw_iter;
-        handleKW( this->keywords, kw, schedule, tables, parseContext, errors, dims);
+    for (const auto &kw : section) {
+        if (is_processing_instruction(kw.name())) {
+            handleProcessingInstruction(kw.name());
+        } else  {
+            handleKW( this->keywords, kw, schedule, tables, parseContext, errors, dims);
+        }
     }
 
     for (const auto& meta_pair : meta_keywords) {
@@ -1051,12 +1066,12 @@ SummaryConfig& SummaryConfig::merge( SummaryConfig&& other ) {
 
 
 bool SummaryConfig::hasKeyword( const std::string& keyword ) const {
-    return (this->short_keywords.count( keyword ) == 1);
+    return short_keywords.find(keyword) != short_keywords.end();
 }
 
 
 bool SummaryConfig::hasSummaryKey(const std::string& keyword ) const {
-    return (this->summary_keywords.count( keyword ) == 1);
+    return summary_keywords.find(keyword) != summary_keywords.end();
 }
 
 
@@ -1104,6 +1119,17 @@ bool SummaryConfig::operator==(const Opm::SummaryConfig& data) const {
     return this->keywords == data.keywords &&
            this->short_keywords == data.short_keywords &&
            this->summary_keywords == data.summary_keywords;
+}
+
+void SummaryConfig::handleProcessingInstruction(const std::string& keyword) {
+    if (keyword == "RUNSUM") {
+        runSummaryConfig.create = true;
+    } else if (keyword == "NARROW") {
+        runSummaryConfig.narrow = true;
+    } else if (keyword == "SEPARATE") {
+        Opm::OpmLog::info("Keyword SEPARATE has no effect (treated as always on).");
+        runSummaryConfig.separate = true;
+    }
 }
 
 }
