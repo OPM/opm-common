@@ -55,7 +55,6 @@ class Phases {
         Phases( bool oil, bool gas, bool wat, bool solvent = false, bool polymer = false, bool energy = false,
                 bool polymw = false, bool foam = false, bool brine = false ) noexcept;
         Phases(const std::bitset<NUM_PHASES_IN_ENUM>& bbits);
-        unsigned long getBits() const;
 
         bool active( Phase ) const noexcept;
         size_t size() const noexcept;
