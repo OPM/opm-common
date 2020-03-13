@@ -50,7 +50,7 @@ class UDQActive;
 class UDQConfig;
 
 namespace RestartIO {
-class RstWell;
+struct RstWell;
 }
 
 
