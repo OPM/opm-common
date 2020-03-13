@@ -419,10 +419,10 @@ void ESmry::updatePathAndRootName(Opm::filesystem::path& dir, Opm::filesystem::p
     rootN = rootN.stem();
 }
 
-bool ESmry::write_rsm(const std::optional<std::string>& o_filename) const {
+void ESmry::write_rsm(const std::optional<std::string>& o_filename) const {
     const std::string filename = o_filename.value_or(std::string(rootName) + ".RSM");
 
-    return false;
+    OPM_THROW(std::runtime_error, "Could not write file " + filename);
 }
 
 bool ESmry::hasKey(const std::string &key) const

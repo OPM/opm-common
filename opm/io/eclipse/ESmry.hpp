@@ -34,7 +34,7 @@ public:
     // input is smspec (or fsmspec file)
     explicit ESmry(const std::string& filename, bool loadBaseRunData=false);
 
-    bool write_rsm(const std::optional<std::string>& = std::nullopt) const;
+    void write_rsm(const std::optional<std::string>& filename = std::nullopt) const;
 
     int numberOfVectors() const { return nVect; }
 
