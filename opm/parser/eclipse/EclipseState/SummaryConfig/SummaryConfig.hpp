@@ -67,6 +67,19 @@ namespace Opm {
 
         std::string uniqueNodeKey() const;
         const Location& location( ) const { return this->loc; }
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(keyword_);
+            serializer(category_);
+            serializer(loc);
+            serializer(type_);
+            serializer(name_);
+            serializer(number_);
+            serializer(userDefined_);
+        }
+
     private:
         std::string keyword_;
         Category    category_;
@@ -171,7 +184,7 @@ namespace Opm {
             template<class Serializer>
             void serializeOp(Serializer& serializer)
             {
-               serializer(keywords);
+               serializer.vector(keywords);
                serializer(short_keywords);
                serializer(summary_keywords);
             }
