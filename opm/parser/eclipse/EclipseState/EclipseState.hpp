@@ -127,7 +127,7 @@ namespace Opm {
             m_gridDims.serializeOp(serializer);
             m_simulationConfig.serializeOp(serializer);
             m_transMult.serializeOp(serializer);
-            serializer(m_faults);
+            m_faults.serializeOp(serializer);
             serializer(m_title);
             serializer(aquifer_config);
         }
