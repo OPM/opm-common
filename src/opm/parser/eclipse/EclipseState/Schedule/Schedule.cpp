@@ -3153,6 +3153,7 @@ bool Schedule::cmp(const Schedule& sched1, const Schedule& sched2, std::size_t r
                 well_count += not_equal( conn1.complnum() , conn2.complnum(), well_msg(well1.name(), "connection: complnum"));
                 well_count += not_equal( conn1.segment() , conn2.segment(), well_msg(well1.name(), "Connection: segment"));
                 well_count += not_equal( conn1.kind() , conn2.kind(), well_msg(well1.name(), "Connection: CFKind"));
+                well_count += not_equal( conn1.getSeqIndex(), conn2.getSeqIndex(), well_msg(well1.name(), "Connection: insertIndex"));
 
 
                 well_count += not_equal( conn1.CF(), conn2.CF(), well_msg(well1.name(), "Connection: CF"));
