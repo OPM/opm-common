@@ -759,14 +759,14 @@ BOOST_AUTO_TEST_CASE(Summary_Segment)
 
     {
         auto sofr = std::find_if(summary.begin(), summary.end(),
-            [](const SummaryNode& node)
+            [](const SummaryConfigNode& node)
         {
             return node.keyword() == "SOFR";
         });
 
         BOOST_REQUIRE(sofr != summary.end());
 
-        BOOST_CHECK_MESSAGE(sofr->category() == SummaryNode::Category::Segment,
+        BOOST_CHECK_MESSAGE(sofr->category() == SummaryConfigNode::Category::Segment,
             R"("SOFR" keyword category must be "Segment")"
         );
         BOOST_CHECK_EQUAL(sofr->namedEntity(), "PROD01");

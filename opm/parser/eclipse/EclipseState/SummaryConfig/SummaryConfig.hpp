@@ -36,7 +36,7 @@ namespace Opm {
       value semantics.
     */
 
-    class SummaryNode {
+    class SummaryConfigNode {
     public:
         enum class Category {
             Well, Group, Field,
@@ -50,13 +50,13 @@ namespace Opm {
             Undefined,
         };
 
-        SummaryNode() = default;
-        explicit SummaryNode(std::string keyword, const Category cat, Location loc_arg);
+        SummaryConfigNode() = default;
+        explicit SummaryConfigNode(std::string keyword, const Category cat, Location loc_arg);
 
-        SummaryNode& parameterType(const Type type);
-        SummaryNode& namedEntity(std::string name);
-        SummaryNode& number(const int num);
-        SummaryNode& isUserDefined(const bool userDefined);
+        SummaryConfigNode& parameterType(const Type type);
+        SummaryConfigNode& namedEntity(std::string name);
+        SummaryConfigNode& number(const int num);
+        SummaryConfigNode& isUserDefined(const bool userDefined);
 
         const std::string& keyword() const { return this->keyword_; }
         Category category() const { return this->category_; }
@@ -90,43 +90,41 @@ namespace Opm {
         bool        userDefined_{false};
     };
 
-    SummaryNode::Category parseKeywordCategory(const std::string& keyword);
+    SummaryConfigNode::Category parseKeywordCategory(const std::string& keyword);
 
-    bool operator==(const SummaryNode& lhs, const SummaryNode& rhs);
-    bool operator<(const SummaryNode& lhs, const SummaryNode& rhs);
+    bool operator==(const SummaryConfigNode& lhs, const SummaryConfigNode& rhs);
+    bool operator<(const SummaryConfigNode& lhs, const SummaryConfigNode& rhs);
 
-    inline bool operator!=(const SummaryNode& lhs, const SummaryNode& rhs)
+    inline bool operator!=(const SummaryConfigNode& lhs, const SummaryConfigNode& rhs)
     {
         return ! (lhs == rhs);
     }
 
-    inline bool operator<=(const SummaryNode& lhs, const SummaryNode& rhs)
+    inline bool operator<=(const SummaryConfigNode& lhs, const SummaryConfigNode& rhs)
     {
         return ! (rhs < lhs);
     }
 
-    inline bool operator>(const SummaryNode& lhs, const SummaryNode& rhs)
+    inline bool operator>(const SummaryConfigNode& lhs, const SummaryConfigNode& rhs)
     {
         return rhs < lhs;
     }
 
-    inline bool operator>=(const SummaryNode& lhs, const SummaryNode& rhs)
+    inline bool operator>=(const SummaryConfigNode& lhs, const SummaryConfigNode& rhs)
     {
         return ! (lhs < rhs);
     }
 
     class Deck;
-    class TableManager;
-    class EclipseState;
-    class ParserKeyword;
-    class Schedule;
     class ErrorGuard;
-    class ParseContext;
     class GridDims;
+    class ParseContext;
+    class Schedule;
+    class TableManager;
 
     class SummaryConfig {
         public:
-            typedef SummaryNode keyword_type;
+            typedef SummaryConfigNode keyword_type;
             typedef std::vector< keyword_type > keyword_list;
             typedef keyword_list::const_iterator const_iterator;
 

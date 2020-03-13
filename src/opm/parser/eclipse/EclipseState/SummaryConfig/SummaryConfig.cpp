@@ -16,9 +16,9 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <iostream>
 #include <algorithm>
 #include <array>
+#include <iostream>
 #include <stdexcept>
 
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
@@ -240,14 +240,14 @@ namespace {
         return keyword[0] == 'A';
     }
 
-    SummaryNode::Type parseKeywordType(const std::string& keyword) {
-        if (is_rate(keyword)) return SummaryNode::Type::Rate;
-        if (is_total(keyword)) return SummaryNode::Type::Total;
-        if (is_ratio(keyword)) return SummaryNode::Type::Ratio;
-        if (is_pressure(keyword)) return SummaryNode::Type::Pressure;
-        if (is_count(keyword)) return SummaryNode::Type::Count;
+    SummaryConfigNode::Type parseKeywordType(const std::string& keyword) {
+        if (is_rate(keyword)) return SummaryConfigNode::Type::Rate;
+        if (is_total(keyword)) return SummaryConfigNode::Type::Total;
+        if (is_ratio(keyword)) return SummaryConfigNode::Type::Ratio;
+        if (is_pressure(keyword)) return SummaryConfigNode::Type::Pressure;
+        if (is_count(keyword)) return SummaryConfigNode::Type::Count;
 
-        return SummaryNode::Type::Undefined;
+        return SummaryConfigNode::Type::Undefined;
     }
 
 void handleMissingWell( const ParseContext& parseContext, ErrorGuard& errors, const std::string& keyword, const std::string& well) {
@@ -270,7 +270,7 @@ void handleMissingGroup( const ParseContext& parseContext , ErrorGuard& errors, 
 
 inline void keywordW( SummaryConfig::keyword_list& list,
                       const std::vector<std::string>& well_names,
-                      SummaryNode baseWellParam) {
+                      SummaryConfigNode baseWellParam) {
     for (const auto& wname : well_names)
         list.push_back( baseWellParam.namedEntity(wname) );
 }
@@ -279,8 +279,8 @@ inline void keywordW( SummaryConfig::keyword_list& list,
                       const std::string& keyword,
                       Location loc,
                       const Schedule& schedule) {
-    auto param = SummaryNode {
-        keyword, SummaryNode::Category::Well , std::move(loc)
+    auto param = SummaryConfigNode {
+        keyword, SummaryConfigNode::Category::Well , std::move(loc)
     }
     .parameterType( parseKeywordType(keyword) )
     .isUserDefined( is_udq(keyword) );
@@ -314,8 +314,8 @@ inline void keywordW( SummaryConfig::keyword_list& list,
         }
     }
 
-    auto param = SummaryNode {
-        keyword.name(), SummaryNode::Category::Well, keyword.location()
+    auto param = SummaryConfigNode {
+        keyword.name(), SummaryConfigNode::Category::Well, keyword.location()
     }
     .parameterType( parseKeywordType(keyword.name()) )
     .isUserDefined( is_udq(keyword.name()) );
@@ -337,8 +337,8 @@ inline void keywordG( SummaryConfig::keyword_list& list,
                       const std::string& keyword,
                       Location loc,
                       const Schedule& schedule ) {
-    auto param = SummaryNode {
-        keyword, SummaryNode::Category::Group, std::move(loc)
+    auto param = SummaryConfigNode {
+        keyword, SummaryConfigNode::Category::Group, std::move(loc)
     }
     .parameterType( parseKeywordType(keyword) )
     .isUserDefined( is_udq(keyword) );
@@ -358,8 +358,8 @@ inline void keywordG( SummaryConfig::keyword_list& list,
 
     if( keyword.name() == "GMWSET" ) return;
 
-    auto param = SummaryNode {
-        keyword.name(), SummaryNode::Category::Group, keyword.location()
+    auto param = SummaryConfigNode {
+        keyword.name(), SummaryConfigNode::Category::Group, keyword.location()
     }
     .parameterType( parseKeywordType(keyword.name()) )
     .isUserDefined( is_udq(keyword.name()) );
@@ -387,8 +387,8 @@ inline void keywordG( SummaryConfig::keyword_list& list,
 inline void keywordF( SummaryConfig::keyword_list& list,
                       const std::string& keyword,
                       Location loc) {
-    auto param = SummaryNode {
-        keyword, SummaryNode::Category::Field, std::move(loc)
+    auto param = SummaryConfigNode {
+        keyword, SummaryConfigNode::Category::Field, std::move(loc)
     }
     .parameterType( parseKeywordType(keyword) )
     .isUserDefined( is_udq(keyword) );
@@ -419,8 +419,8 @@ inline std::array< int, 3 > getijk( const Connection& completion ) {
 inline void keywordB( SummaryConfig::keyword_list& list,
                       const DeckKeyword& keyword,
                       const GridDims& dims) {
-    auto param = SummaryNode {
-        keyword.name(), SummaryNode::Category::Block, keyword.location()
+    auto param = SummaryConfigNode {
+        keyword.name(), SummaryConfigNode::Category::Block, keyword.location()
     }
     .parameterType( parseKeywordType(keyword.name()) )
     .isUserDefined( is_udq(keyword.name()) );
@@ -466,8 +466,8 @@ inline void keywordR2R( SummaryConfig::keyword_list& /* list */,
     }
 
     // Don't (currently) need parameter type for region keywords
-    auto param = SummaryNode {
-        keyword.name(), SummaryNode::Category::Region, keyword.location()
+    auto param = SummaryConfigNode {
+        keyword.name(), SummaryConfigNode::Category::Region, keyword.location()
     }
     .isUserDefined( is_udq(keyword.name()) );
 
@@ -485,7 +485,7 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
                          Location loc)
 {
     if (meta_keywords.find(keyword) == meta_keywords.end())
-        list.emplace_back( keyword, SummaryNode::Category::Miscellaneous , std::move(loc));
+        list.emplace_back( keyword, SummaryConfigNode::Category::Miscellaneous , std::move(loc));
 }
 
 inline void keywordMISC( SummaryConfig::keyword_list& list,
@@ -501,8 +501,8 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
                         const Schedule& schedule,
                         const GridDims& dims) {
 
-    auto param = SummaryNode {
-        keyword.name(), SummaryNode::Category::Connection, keyword.location()
+    auto param = SummaryConfigNode {
+        keyword.name(), SummaryConfigNode::Category::Connection, keyword.location()
     }
     .parameterType( parseKeywordType( keyword.name()) )
     .isUserDefined( is_udq(keyword.name()) );
@@ -576,8 +576,8 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
             // Not an MSW.  Don't create summary vectors for segments.
             return;
 
-        auto param = SummaryNode {
-            keyword.name(), SummaryNode::Category::Segment, keyword.location()
+        auto param = SummaryConfigNode {
+            keyword.name(), SummaryConfigNode::Category::Segment, keyword.location()
         }
         .namedEntity( well.name() )
         .isUserDefined( is_udq(keyword.name()) );
@@ -701,16 +701,16 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
         }
     }
 
-    std::string to_string(const SummaryNode::Category cat) {
+    std::string to_string(const SummaryConfigNode::Category cat) {
         switch( cat ) {
-            case SummaryNode::Category::Well: return "Well";
-            case SummaryNode::Category::Group: return "Group";
-            case SummaryNode::Category::Field: return "Field";
-            case SummaryNode::Category::Region: return "Region";
-            case SummaryNode::Category::Block: return "Block";
-            case SummaryNode::Category::Connection: return "Connection";
-            case SummaryNode::Category::Segment: return "Segment";
-            case SummaryNode::Category::Miscellaneous: return "Miscellaneous";
+            case SummaryConfigNode::Category::Well: return "Well";
+            case SummaryConfigNode::Category::Group: return "Group";
+            case SummaryConfigNode::Category::Field: return "Field";
+            case SummaryConfigNode::Category::Region: return "Region";
+            case SummaryConfigNode::Category::Block: return "Block";
+            case SummaryConfigNode::Category::Connection: return "Connection";
+            case SummaryConfigNode::Category::Segment: return "Segment";
+            case SummaryConfigNode::Category::Miscellaneous: return "Miscellaneous";
         }
 
         throw std::invalid_argument {
@@ -748,7 +748,7 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
                         const ParseContext& parseContext,
                         ErrorGuard& errors,
                         const GridDims& dims) {
-    using Cat = SummaryNode::Category;
+    using Cat = SummaryConfigNode::Category;
 
     const auto& name = keyword.name();
     check_udq( name, schedule, parseContext, errors );
@@ -789,7 +789,7 @@ inline void handleKW( SummaryConfig::keyword_list& list,
         return;
     }
 
-    using Cat = SummaryNode::Category;
+    using Cat = SummaryConfigNode::Category;
     const auto cat = parseKeywordCategory( keyword );
 
     switch( cat ) {
@@ -813,8 +813,8 @@ inline void handleKW( SummaryConfig::keyword_list& list,
 
 // =====================================================================
 
-SummaryNode::Category parseKeywordCategory(const std::string& keyword) {
-    using Cat = SummaryNode::Category;
+SummaryConfigNode::Category parseKeywordCategory(const std::string& keyword) {
+    using Cat = SummaryConfigNode::Category;
 
     if (is_special(keyword)) { return Cat::Miscellaneous; }
 
@@ -833,53 +833,53 @@ SummaryNode::Category parseKeywordCategory(const std::string& keyword) {
 }
 
 
-SummaryNode::SummaryNode(std::string keyword, const Category cat, Location loc_arg) :
+SummaryConfigNode::SummaryConfigNode(std::string keyword, const Category cat, Location loc_arg) :
     keyword_(std::move(keyword)),
     category_(cat),
     loc(std::move(loc_arg))
 {}
 
-SummaryNode& SummaryNode::parameterType(const Type type)
+SummaryConfigNode& SummaryConfigNode::parameterType(const Type type)
 {
     this->type_ = type;
     return *this;
 }
 
-SummaryNode& SummaryNode::namedEntity(std::string name)
+SummaryConfigNode& SummaryConfigNode::namedEntity(std::string name)
 {
     this->name_ = std::move(name);
     return *this;
 }
 
-SummaryNode& SummaryNode::number(const int num)
+SummaryConfigNode& SummaryConfigNode::number(const int num)
 {
     this->number_ = num;
     return *this;
 }
 
-SummaryNode& SummaryNode::isUserDefined(const bool userDefined)
+SummaryConfigNode& SummaryConfigNode::isUserDefined(const bool userDefined)
 {
     this->userDefined_ = userDefined;
     return *this;
 }
 
-std::string SummaryNode::uniqueNodeKey() const
+std::string SummaryConfigNode::uniqueNodeKey() const
 {
     switch (this->category()) {
-    case SummaryNode::Category::Well: [[fallthrough]];
-    case SummaryNode::Category::Group:
+    case SummaryConfigNode::Category::Well: [[fallthrough]];
+    case SummaryConfigNode::Category::Group:
         return this->keyword() + ':' + this->namedEntity();
 
-    case SummaryNode::Category::Field: [[fallthrough]];
-    case SummaryNode::Category::Miscellaneous:
+    case SummaryConfigNode::Category::Field: [[fallthrough]];
+    case SummaryConfigNode::Category::Miscellaneous:
         return this->keyword();
 
-    case SummaryNode::Category::Region: [[fallthrough]];
-    case SummaryNode::Category::Block:
+    case SummaryConfigNode::Category::Region: [[fallthrough]];
+    case SummaryConfigNode::Category::Block:
         return this->keyword() + ':' + std::to_string(this->number());
 
-    case SummaryNode::Category::Connection: [[fallthrough]];
-    case SummaryNode::Category::Segment:
+    case SummaryConfigNode::Category::Connection: [[fallthrough]];
+    case SummaryConfigNode::Category::Segment:
         return this->keyword() + ':' + this->namedEntity() + ':' + std::to_string(this->number());
     }
 
@@ -889,30 +889,30 @@ std::string SummaryNode::uniqueNodeKey() const
     };
 }
 
-bool operator==(const SummaryNode& lhs, const SummaryNode& rhs)
+bool operator==(const SummaryConfigNode& lhs, const SummaryConfigNode& rhs)
 {
     if (lhs.keyword() != rhs.keyword()) return false;
 
     assert (lhs.category() == rhs.category());
 
     switch( lhs.category() ) {
-        case SummaryNode::Category::Field: [[fallthrough]];
-        case SummaryNode::Category::Miscellaneous:
+        case SummaryConfigNode::Category::Field: [[fallthrough]];
+        case SummaryConfigNode::Category::Miscellaneous:
             // Fully identified by keyword
             return true;
 
-        case SummaryNode::Category::Well: [[fallthrough]];
-        case SummaryNode::Category::Group:
+        case SummaryConfigNode::Category::Well: [[fallthrough]];
+        case SummaryConfigNode::Category::Group:
             // Equal if associated to same named entity
             return lhs.namedEntity() == rhs.namedEntity();
 
-        case SummaryNode::Category::Region: [[fallthrough]];
-        case SummaryNode::Category::Block:
+        case SummaryConfigNode::Category::Region: [[fallthrough]];
+        case SummaryConfigNode::Category::Block:
             // Equal if associated to same numeric entity
             return lhs.number() == rhs.number();
 
-        case SummaryNode::Category::Connection: [[fallthrough]];
-        case SummaryNode::Category::Segment:
+        case SummaryConfigNode::Category::Connection: [[fallthrough]];
+        case SummaryConfigNode::Category::Segment:
             // Equal if associated to same numeric
             // sub-entity of same named entity
             return (lhs.namedEntity() == rhs.namedEntity())
@@ -922,7 +922,7 @@ bool operator==(const SummaryNode& lhs, const SummaryNode& rhs)
     return false;
 }
 
-bool operator<(const SummaryNode& lhs, const SummaryNode& rhs)
+bool operator<(const SummaryConfigNode& lhs, const SummaryConfigNode& rhs)
 {
     if (lhs.keyword() < rhs.keyword()) return true;
     if (rhs.keyword() < lhs.keyword()) return false;
@@ -930,24 +930,24 @@ bool operator<(const SummaryNode& lhs, const SummaryNode& rhs)
     // If we get here, the keyword are equal.
 
     switch( lhs.category() ) {
-        case SummaryNode::Category::Field: [[fallthrough]];
-        case SummaryNode::Category::Miscellaneous:
+        case SummaryConfigNode::Category::Field: [[fallthrough]];
+        case SummaryConfigNode::Category::Miscellaneous:
             // Fully identified by keyword.
             // Return false for equal keywords.
             return false;
 
-        case SummaryNode::Category::Well: [[fallthrough]];
-        case SummaryNode::Category::Group:
+        case SummaryConfigNode::Category::Well: [[fallthrough]];
+        case SummaryConfigNode::Category::Group:
             // Ordering determined by namedEntityd entity
             return lhs.namedEntity() < rhs.namedEntity();
 
-        case SummaryNode::Category::Region: [[fallthrough]];
-        case SummaryNode::Category::Block:
+        case SummaryConfigNode::Category::Region: [[fallthrough]];
+        case SummaryConfigNode::Category::Block:
             // Ordering determined by numeric entity
             return lhs.number() < rhs.number();
 
-        case SummaryNode::Category::Connection: [[fallthrough]];
-        case SummaryNode::Category::Segment:
+        case SummaryConfigNode::Category::Connection: [[fallthrough]];
+        case SummaryConfigNode::Category::Segment:
         {
             // Ordering determined by pair of namedEntity and numeric ID.
             //

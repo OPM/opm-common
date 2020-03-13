@@ -90,8 +90,8 @@ FuncType Parser::get_func(const std::string& arg) {
     if (arg == "MNTH") return FuncType::time;
     if (arg == "DAY")  return FuncType::time;
 
-    using Cat = SummaryNode::Category;
-    SummaryNode::Category cat = parseKeywordCategory(arg);
+    using Cat = SummaryConfigNode::Category;
+    SummaryConfigNode::Category cat = parseKeywordCategory(arg);
     switch (cat) {
         case Cat::Well:       return FuncType::well;
         case Cat::Group:      return FuncType::group;
