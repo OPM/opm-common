@@ -34,7 +34,7 @@
 namespace Opm {
 
 namespace RestartIO {
-    class RstConnection;
+    struct RstConnection;
 }
 
     class DeckKeyword;
