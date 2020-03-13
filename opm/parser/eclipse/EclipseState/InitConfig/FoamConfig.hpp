@@ -87,7 +87,6 @@ public:
                MobilityModel mobility_model);
 
     const FoamData& getRecord(std::size_t index) const;
-    const std::vector<FoamData>& records() const;
 
     Opm::Phase getTransportPhase() const;
     MobilityModel getMobilityModel() const;
