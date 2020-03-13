@@ -38,8 +38,8 @@ constexpr int def_ecl_phase = 1;
 using M  = ::Opm::UnitSystem::measure;
 
 double swel_value(float raw_value) {
-    const auto infty =  1.0e+20f;
-    if (raw_value == infty)
+    const auto infty = 1.0e+20f;
+    if (std::abs(raw_value) == infty)
         return 0;
     else
         return raw_value;
@@ -78,7 +78,7 @@ RstWell::RstWell(const ::Opm::UnitSystem& unit_system,
     hist_grat_target(    unit_system.to_si(M::gas_surface_rate,      swel[VI::SWell::HistGasRateTarget])),
     hist_bhp_target(     unit_system.to_si(M::pressure,              swel[VI::SWell::HistBHPTarget])),
     datum_depth(         unit_system.to_si(M::length,                swel[VI::SWell::DatumDepth])),
-    drainage_radius(     unit_system.to_si(M::length,                swel[VI::SWell::DrainageRadius])),
+    drainage_radius(     unit_system.to_si(M::length,                swel_value(swel[VI::SWell::DrainageRadius]))),
     efficiency_factor(   unit_system.to_si(M::identity,              swel[VI::SWell::EfficiencyFactor1])),
     oil_rate(            unit_system.to_si(M::liquid_surface_rate,   xwel[VI::XWell::OilPrRate])),
     water_rate(          unit_system.to_si(M::liquid_surface_rate,   xwel[VI::XWell::WatPrRate])),
