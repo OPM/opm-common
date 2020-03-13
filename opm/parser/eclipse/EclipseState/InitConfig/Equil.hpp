@@ -71,6 +71,12 @@ namespace Opm {
 
             bool operator==(const Equil& data) const;
 
+            template<class Serializer>
+            void serializeOp(Serializer& serializer)
+            {
+                serializer.vector(m_records);
+            }
+
         private:
             std::vector< EquilRecord > m_records;
     };
