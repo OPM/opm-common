@@ -61,6 +61,13 @@ foreach (test BoxTest
   list(APPEND EXTRA_TESTS ${test})
 endforeach ()
 
+opm_add_test( rst_spe1
+              SOURCES tests/rst_test.cpp
+              LIBRARIES ${TEST_LIBS}
+              TEST_ARGS tests/SPE1CASE2.DATA tests/SPE1CASE2_RESTART.DATA )
+list(APPEND EXTRA_TESTS ${test})
+
+
 # opm-tests dependent tests
 if(HAVE_OPM_TESTS)
   opm_add_test(parse_write ONLY_COMPILE
