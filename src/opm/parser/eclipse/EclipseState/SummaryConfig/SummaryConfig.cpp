@@ -16,9 +16,9 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <iostream>
 #include <algorithm>
 #include <array>
+#include <iostream>
 #include <stdexcept>
 
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
