@@ -66,7 +66,11 @@ Connection::CTFKind from_float(float float_kind) {
 
     return Connection::CTFKind::DeckValue;
 }
+}
 
+double RstConnection::inverse_peaceman(double cf, double kh, double rw, double skin) {
+    auto alpha = 3.14159265 * 2 * kh / cf - skin;
+    return rw * std::exp(alpha);
 }
 
 using M  = ::Opm::UnitSystem::measure;
@@ -92,11 +96,19 @@ RstConnection::RstConnection(const ::Opm::UnitSystem& unit_system, const int* ic
     water_rate(    unit_system.to_si(M::liquid_surface_rate, xcon[VI::XConn::WaterRate])),
     gas_rate(      unit_system.to_si(M::gas_surface_rate,    xcon[VI::XConn::GasRate])),
     pressure(      unit_system.to_si(M::pressure,            xcon[VI::XConn::Pressure])),
-    resv_rate(     unit_system.to_si(M::rate,                xcon[VI::XConn::ResVRate]))
-{
-    auto alpha = 3.14159265 * 2 * this->kh / this->cf - this->skin_factor;
-    this->r0 = this->diameter * std::exp(alpha) / 2;
-}
+    resv_rate(     unit_system.to_si(M::rate,                xcon[VI::XConn::ResVRate])),
+    r0( RstConnection::inverse_peaceman(this->cf, this->kh, this->diameter/2, this->skin_factor) )
+    /*
+      r0: The r0 quantity is currently not written or read from the restart
+          file. If the r0 value is given explicitly in the deck it is possible
+          to give a value which is not consistent with the Peaceman formula -
+          that value will be lost when loading back from a restart file.
+
+      insert_index: The insert index property is used internally to keep track
+          of the order the connections have been specified in the deck. It seems
+          that in some cases (MSW ?) eclipse only outputs 0 here.
+    */
+{ }
 
 }
 }

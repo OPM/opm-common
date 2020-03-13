@@ -32,6 +32,7 @@ class Header;
 
 struct RstConnection {
     RstConnection(const ::Opm::UnitSystem& unit_system, const int* icon, const float* scon, const double *xcon);
+    static double inverse_peaceman(double cf, double kh, double rw, double skin);
 
     int insert_index;
     std::array<int,3> ijk;
