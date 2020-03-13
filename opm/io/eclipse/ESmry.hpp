@@ -29,9 +29,9 @@ class ESmry
 {
 public:
 
-    // input is smspec (or fsmspec file)     
+    // input is smspec (or fsmspec file)
     explicit ESmry(const std::string& filename, bool loadBaseRunData=false);
-    
+
     int numberOfVectors() const { return nVect; }
 
     bool hasKey(const std::string& key) const;
@@ -55,10 +55,10 @@ private:
 
     std::vector<int> seqIndex;
     std::vector<float> seqTime;
-    
+
     std::vector<std::string> checkForMultipleResultFiles(const Opm::filesystem::path& rootN, bool formatted) const;
-    
-    void getRstString(const std::vector<std::string>& restartArray, 
+
+    void getRstString(const std::vector<std::string>& restartArray,
                       Opm::filesystem::path& pathRst,
                       Opm::filesystem::path& rootN) const;
 
