@@ -107,10 +107,13 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
         std::vector<std::string> wgnames = smspec1.get<std::string>("WGNAMES");
         std::vector<int> nums = smspec1.get<int>("NUMS");
 
+        std::vector<std::string> units = smspec1.get<std::string>("UNITS");
+
         for (unsigned int i=0; i<keywords.size(); i++) {
             std::string str1 = makeKeyString(keywords[i], wgnames[i], nums[i]);
             if (str1.length() > 0) {
                 keywList.insert(str1);
+                kwunits[str1] = units[i];
             }
         }
 
@@ -146,10 +149,13 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
         std::vector<std::string> wgnames = smspec_rst.get<std::string>("WGNAMES");
         std::vector<int> nums = smspec_rst.get<int>("NUMS");
 
+        std::vector<std::string> units = smspec_rst.get<std::string>("UNITS");
+
         for (size_t i = 0; i < keywords.size(); i++) {
             std::string str1 = makeKeyString(keywords[i], wgnames[i], nums[i]);
             if (str1.length() > 0) {
                 keywList.insert(str1);
+                kwunits[str1] = units[i];
             }
         }
 
@@ -538,7 +544,7 @@ int ESmry::timestepIdxAtReportstepStart(const int reportStep) const
 }
 
 const std::string& ESmry::get_unit(const std::string& name) const {
-    OPM_THROW(std::out_of_range, "No unit found for key " + name);
+    return kwunits.at(name);
 }
 
 }} // namespace Opm::ecl

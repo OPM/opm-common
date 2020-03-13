@@ -20,6 +20,7 @@
 #define OPM_IO_ESMRY_HPP
 
 #include <string>
+#include <unordered_map>
 #include <vector>
 #include <opm/common/utility/FileSystem.hpp>
 
@@ -52,6 +53,7 @@ private:
     void ijk_from_global_index(int glob, int &i, int &j, int &k) const;
     std::vector<std::vector<float>> param;
     std::vector<std::string> keyword;
+    std::unordered_map<std::string, std::string> kwunits;
 
     std::vector<int> seqIndex;
     std::vector<float> seqTime;
