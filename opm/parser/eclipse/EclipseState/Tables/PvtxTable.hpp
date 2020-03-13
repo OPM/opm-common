@@ -128,12 +128,6 @@ The first row actually corresponds to saturated values.
         double getArgValue(size_t index) const;
         const SimpleTable& getSaturatedTable() const;
 
-        const ColumnSchema& getOuterColumnSchema() const;
-        const TableColumn& getOuterColumn() const;
-        const TableSchema& getUnderSaturatedSchema() const;
-        const TableSchema& getSaturatedSchema() const;
-        const std::vector<SimpleTable>& getUnderSaturatedTables() const;
-
         /*
           Will iterate over the internal undersaturated tables; same
           as getUnderSaturatedTable( ).
