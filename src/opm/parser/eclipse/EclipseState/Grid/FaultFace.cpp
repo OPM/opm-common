@@ -95,8 +95,4 @@ namespace Opm {
     bool FaultFace::operator!=( const FaultFace& rhs ) const {
         return !( *this == rhs );
     }
-
-    const std::vector<size_t>& FaultFace::getIndices() const {
-        return m_indexList;
-    }
 }

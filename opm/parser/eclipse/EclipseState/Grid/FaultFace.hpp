@@ -40,7 +40,6 @@ public:
     std::vector<size_t>::const_iterator begin() const;
     std::vector<size_t>::const_iterator end() const;
     FaceDir::DirEnum getDir() const;
-    const std::vector<size_t>& getIndices() const;
 
     bool operator==( const FaultFace& rhs ) const;
     bool operator!=( const FaultFace& rhs ) const;
