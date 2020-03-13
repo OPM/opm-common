@@ -116,13 +116,11 @@ namespace Opm {
     }
 
     class Deck;
-    class TableManager;
-    class EclipseState;
-    class ParserKeyword;
-    class Schedule;
     class ErrorGuard;
-    class ParseContext;
     class GridDims;
+    class ParseContext;
+    class Schedule;
+    class TableManager;
 
     class SummaryConfig {
         public:
