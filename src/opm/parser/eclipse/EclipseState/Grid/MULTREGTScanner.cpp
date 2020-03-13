@@ -297,22 +297,6 @@ std::vector<int> unique(const std::vector<int> data) {
         return 1;
     }
 
-    std::array<size_t,3> MULTREGTScanner::getSize() const {
-        return {nx, ny, nz};
-    }
-
-    const std::vector<MULTREGTRecord>& MULTREGTScanner::getRecords() const {
-        return m_records;
-    }
-
-    const std::map<std::string, std::vector<int>>& MULTREGTScanner::getRegions() const {
-        return regions;
-    }
-
-    const std::string& MULTREGTScanner::getDefaultRegion() const {
-        return default_region;
-    }
-
     MULTREGTScanner::ExternalSearchMap MULTREGTScanner::getSearchMap() const {
         ExternalSearchMap result;
         for (const auto& it : m_searchMap) {
@@ -341,11 +325,13 @@ std::vector<int> unique(const std::vector<int> data) {
     }
 
     bool MULTREGTScanner::operator==(const MULTREGTScanner& data) const {
-        return this->getSize() == data.getSize() &&
-               this->getRecords() == data.getRecords() &&
-               this->getRegions() == data.getRegions() &&
+        return this->nx == data.nx &&
+               this->ny == data.ny &&
+               this->nz == data.nz &&
+               this->m_records == data.m_records &&
+               this->regions == data.regions &&
                this->getSearchMap() == data.getSearchMap() &&
-               this->getDefaultRegion() == data.getDefaultRegion();
+               this->default_region == data.default_region;
     }
 
     MULTREGTScanner& MULTREGTScanner::operator=(const MULTREGTScanner& data) {

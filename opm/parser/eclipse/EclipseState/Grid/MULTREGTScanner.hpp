@@ -102,12 +102,6 @@ namespace Opm {
 
         double getRegionMultiplier(size_t globalCellIdx1, size_t globalCellIdx2, FaceDir::DirEnum faceDir) const;
 
-        std::array<size_t,3> getSize() const;
-        const std::vector<MULTREGTRecord>& getRecords() const;
-        ExternalSearchMap getSearchMap() const;
-        const std::map<std::string, std::vector<int>>& getRegions() const;
-        const std::string& getDefaultRegion() const;
-
         bool operator==(const MULTREGTScanner& data) const;
         MULTREGTScanner& operator=(const MULTREGTScanner& data);
 
@@ -127,6 +121,7 @@ namespace Opm {
         }
 
     private:
+        ExternalSearchMap getSearchMap() const;
         void constructSearchMap(const ExternalSearchMap& searchMap);
 
         void addKeyword( const DeckKeyword& deckKeyword, const std::string& defaultRegion);
