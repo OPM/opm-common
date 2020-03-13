@@ -62,13 +62,6 @@ public:
 
     bool operator==(const UDQASTNode& data) const;
 
-    const std::string& stringValue() const;
-    UDQTokenType getType() const;
-    double scalarValue() const;
-    const std::vector<std::string>& getSelectors() const;
-    const std::shared_ptr<UDQASTNode>& getLeft() const;
-    const std::shared_ptr<UDQASTNode>& getRight() const;
-
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {
