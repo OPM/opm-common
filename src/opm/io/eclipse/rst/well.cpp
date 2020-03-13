@@ -38,8 +38,8 @@ constexpr int def_ecl_phase = 1;
 using M  = ::Opm::UnitSystem::measure;
 
 double swel_value(float raw_value) {
-    const auto infty =  1.0e+20f;
-    if (raw_value == infty)
+    const auto infty = 1.0e+20f;
+    if (std::abs(raw_value) == infty)
         return 0;
     else
         return raw_value;
