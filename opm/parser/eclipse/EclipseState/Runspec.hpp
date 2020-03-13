@@ -96,7 +96,7 @@ public:
         return this->nGMax;
     }
 
-        int maxWellsInField() const
+    int maxWellsInField() const
     {
         return this->nWMax;
     }
@@ -106,6 +106,15 @@ public:
                this->maxWellsPerGroup() == data.maxWellsPerGroup() &&
                this->maxGroupsInField() == data.maxGroupsInField() &&
                this->maxWellsInField() == data.maxWellsInField();
+    }
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(nWMax);
+        serializer(nCWMax);
+        serializer(nWGMax);
+        serializer(nGMax);
     }
 
 private:
