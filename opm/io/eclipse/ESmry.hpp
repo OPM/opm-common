@@ -44,6 +44,8 @@ public:
 
     int timestepIdxAtReportstepStart(const int reportStep) const;
 
+    const std::string& get_unit(const std::string& name) const;
+
 private:
     int nVect, nI, nJ, nK;
 

@@ -537,4 +537,8 @@ int ESmry::timestepIdxAtReportstepStart(const int reportStep) const
     return seqIndex[reportStep - 1];
 }
 
+const std::string& ESmry::get_unit(const std::string& name) const {
+    OPM_THROW(std::out_of_range, "No unit found for key " + name);
+}
+
 }} // namespace Opm::ecl
