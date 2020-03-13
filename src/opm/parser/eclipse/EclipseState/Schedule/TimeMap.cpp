@@ -20,6 +20,7 @@
 #include <cassert>
 #include <ctime>
 #include <stddef.h>
+#include <iomanip>
 
 #include <opm/common/utility/TimeService.hpp>
 
@@ -436,6 +437,23 @@ namespace {
     bool TimeMap::skiprest() const {
         return this->m_skiprest;
     }
+
+std::ostream& operator<<(std::ostream& stream, const TimeMap& tm) {
+    std::stringstream ss;
+    ss << "{";
+    std::size_t index = 0;
+    for (const auto& tp : tm.timeList()) {
+        auto ts = TimeStampUTC(tp);
+        ss << ts.year() << "-" << std::setfill('0') << std::setw(2) << ts.month() << "-" << std::setfill('0') << std::setw(2) << ts.day();
+        index += 1;
+        if (index < tm.timeList().size())
+            ss << ", ";
+        if (index % 12 == 0)
+            ss << std::endl;
+    }
+    ss << "}";
+    return stream << ss.str();
+}
 }
 
 
