@@ -18,20 +18,14 @@
 
 #include <opm/io/eclipse/ESmry.hpp>
 
-#include <exception>
-#include <string>
-#include <string.h>
-#include <sstream>
-#include <iterator>
-#include <iomanip>
 #include <algorithm>
-#include <unistd.h>
+#include <exception>
+#include <iterator>
 #include <limits>
-#include <limits.h>
 #include <set>
 #include <stdexcept>
+#include <string>
 
-#include <iostream>
 #include <opm/common/utility/FileSystem.hpp>
 
 #include <opm/io/eclipse/EclFile.hpp>
