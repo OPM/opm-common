@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(RUN) {
 
         msim.run(schedule, io, false);
 
-        for (const auto& fname : {"SPE1CASE1.INIT", "SPE1CASE1.UNRST", "SPE1CASE1.EGRID", "SPE1CASE1.SMSPEC", "SPE1CASE1.UNSMRY"})
+        for (const auto& fname : {"SPE1CASE1.INIT", "SPE1CASE1.UNRST", "SPE1CASE1.EGRID", "SPE1CASE1.SMSPEC", "SPE1CASE1.UNSMRY", "SPE1CASE1.RSM"})
             BOOST_CHECK( is_file( fname ));
 
         {
