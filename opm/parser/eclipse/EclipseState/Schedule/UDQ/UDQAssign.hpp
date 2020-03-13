@@ -67,8 +67,6 @@ public:
     void add_record(const std::vector<std::string>& selector, double value);
     UDQSet eval(const std::vector<std::string>& wells) const;
 
-    const std::vector<AssignRecord>& getRecords() const;
-
     bool operator==(const UDQAssign& data) const;
 
     template<class Serializer>

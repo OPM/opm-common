@@ -73,14 +73,10 @@ UDQSet UDQAssign::eval(const std::vector<std::string>& wells) const {
     throw std::invalid_argument("Not yet implemented");
 }
 
-const std::vector<UDQAssign::AssignRecord>& UDQAssign::getRecords() const {
-    return records;
-}
-
 bool UDQAssign::operator==(const UDQAssign& data) const {
     return this->keyword() == data.keyword() &&
            this->var_type() == data.var_type() &&
-           this->getRecords() == data.getRecords();
+           this->records == data.records;
 }
 
 }
