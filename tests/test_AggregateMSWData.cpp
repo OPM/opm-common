@@ -644,7 +644,7 @@ BOOST_AUTO_TEST_CASE (Declared_MSW_Data)
         auto start = 2*ih.nisegz;
 
         const auto& iSeg = amswd.getISeg();
-	BOOST_CHECK_EQUAL(iSeg[start + 0] , 15); // PROD-segment 3, ordered segment
+	BOOST_CHECK_EQUAL(iSeg[start + 0] ,  3); // PROD-segment 3, segment number
 	BOOST_CHECK_EQUAL(iSeg[start + 1] ,  2); // PROD-segment 3, outlet segment
 	BOOST_CHECK_EQUAL(iSeg[start + 2] ,  4); // PROD-segment 3, inflow segment current branch
 	BOOST_CHECK_EQUAL(iSeg[start + 3] ,  1); // PROD-segment 3, branch number
@@ -656,7 +656,7 @@ BOOST_AUTO_TEST_CASE (Declared_MSW_Data)
 
 	start = 13*ih.nisegz;
 
-	BOOST_CHECK_EQUAL(iSeg[start + 0] ,  4); // PROD-segment 14, ordered segment
+	BOOST_CHECK_EQUAL(iSeg[start + 0] , 14); // PROD-segment 14, segment number
 	BOOST_CHECK_EQUAL(iSeg[start + 1] , 13); // PROD-segment 14, outlet segment
 	BOOST_CHECK_EQUAL(iSeg[start + 2] , 15); // PROD-segment 14, inflow segment current branch
 	BOOST_CHECK_EQUAL(iSeg[start + 3] ,  2); // PROD-segment 14, branch number
@@ -673,7 +673,7 @@ BOOST_AUTO_TEST_CASE (Declared_MSW_Data)
         auto start = ih.nisegz*ih.nsegmx + 13*ih.nisegz;
 
         const auto& iSeg = amswd.getISeg();
-	BOOST_CHECK_EQUAL(iSeg[start + 0] ,  6); // WINJ-segment 14, ordered segment
+	BOOST_CHECK_EQUAL(iSeg[start + 0] , 14); // WINJ-segment 14, segment number
 	BOOST_CHECK_EQUAL(iSeg[start + 1] , 13); // WINJ-segment 14, outlet segment
 	BOOST_CHECK_EQUAL(iSeg[start + 2] ,  0); // WINJ-segment 14, inflow segment current branch
 	BOOST_CHECK_EQUAL(iSeg[start + 3] ,  1); // WINJ-segment 14, branch number
@@ -684,7 +684,7 @@ BOOST_AUTO_TEST_CASE (Declared_MSW_Data)
 	BOOST_CHECK_EQUAL(iSeg[start + 8] ,  6); // WINJ-segment 14, ordered segment
 
 	start = ih.nisegz*ih.nsegmx + 16*ih.nisegz;
-	BOOST_CHECK_EQUAL(iSeg[start + 0] ,  3); // WINJ-segment 17, ordered segment
+	BOOST_CHECK_EQUAL(iSeg[start + 0] , 17); // WINJ-segment 17, segment number
 	BOOST_CHECK_EQUAL(iSeg[start + 1] , 16); // WINJ-segment 17, outlet segment
  	BOOST_CHECK_EQUAL(iSeg[start + 2] , 18); // WINJ-segment 17, inflow segment current branch
 	BOOST_CHECK_EQUAL(iSeg[start + 3] ,  2); // WINJ-segment 17, branch number
