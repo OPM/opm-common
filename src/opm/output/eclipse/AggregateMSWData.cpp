@@ -463,7 +463,7 @@ namespace {
 
                     auto segNumber = segment.segmentNumber();
                     auto iS = (segNumber-1)*noElmSeg;
-                    iSeg[iS + Ix::SegNo]          = welSegSet[orderedSegmentNo[ind]].segmentNumber();
+                    iSeg[iS + Ix::SegNo]          = segment.segmentNumber();
                     iSeg[iS + Ix::OutSeg]         = segment.outletSegment();
                     iSeg[iS + Ix::InSegCurBranch] = (inflowSegmentCurBranch(well.name(), welSegSet, ind) == 0) ? 0 : welSegSet[inflowSegmentCurBranch(well.name(), welSegSet, ind)].segmentNumber();
                     iSeg[iS + Ix::BranchNo]       = segment.branchNumber();
