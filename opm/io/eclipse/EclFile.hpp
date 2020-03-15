@@ -52,7 +52,7 @@ public:
       char_array.clear();
     }
 
-    using EclEntry = std::tuple<std::string, eclArrType, int>;
+    using EclEntry = std::tuple<std::string, eclArrType, long int>;
     std::vector<EclEntry> getList() const;
 
     template <typename T>
@@ -78,7 +78,7 @@ protected:
 
     std::vector<std::string> array_name;
     std::vector<eclArrType> array_type;
-    std::vector<int> array_size;
+    std::vector<long int> array_size;
 
     std::vector<unsigned long int> ifStreamPos;
 

@@ -30,7 +30,9 @@
 #include <sstream>
 #include <string>
 #include <numeric>
+#include <cmath>
 
+#include <iostream>
 
 // anonymous namespace for EclFile
 
@@ -67,34 +69,59 @@ bool isEOF(std::fstream* fileH)
 }
 
 
-void readBinaryHeader(std::fstream& fileH, std::string& arrName,
-                      int& size, Opm::EclIO::eclArrType &arrType)
+void readBinaryHeader(std::fstream& fileH, std::string& tmpStrName,
+                      int& tmpSize, std::string& tmpStrType)
 {
     int bhead;
-    std::string tmpStrName(8,' ');
-    std::string tmpStrType(4,' ');
 
     fileH.read(reinterpret_cast<char*>(&bhead), sizeof(bhead));
     bhead = Opm::EclIO::flipEndianInt(bhead);
 
-    if (bhead != 16) {
+    if (bhead != 16){
         std::string message="Error reading binary header. Expected 16 bytes of header data, found " + std::to_string(bhead);
         OPM_THROW(std::runtime_error, message);
     }
 
     fileH.read(&tmpStrName[0], 8);
 
-    fileH.read(reinterpret_cast<char*>(&size), sizeof(size));
-    size = Opm::EclIO::flipEndianInt(size);
+    fileH.read(reinterpret_cast<char*>(&tmpSize), sizeof(tmpSize));
+    tmpSize = Opm::EclIO::flipEndianInt(tmpSize);
 
     fileH.read(&tmpStrType[0], 4);
 
     fileH.read(reinterpret_cast<char*>(&bhead), sizeof(bhead));
     bhead = Opm::EclIO::flipEndianInt(bhead);
 
-    if (bhead != 16) {
+    if (bhead != 16){
         std::string message="Error reading binary header. Expected 16 bytes of header data, found " + std::to_string(bhead);
         OPM_THROW(std::runtime_error, message);
+    }
+}
+
+void readBinaryHeader(std::fstream& fileH, std::string& arrName,
+                      long int& size, Opm::EclIO::eclArrType &arrType)
+{
+    std::string tmpStrName(8,' ');
+    std::string tmpStrType(4,' ');
+    int tmpSize;
+
+    readBinaryHeader(fileH, tmpStrName, tmpSize, tmpStrType);
+    
+    if (tmpStrType == "X231"){
+        std::string x231ArrayName = tmpStrName;
+        int x231exp = tmpSize * (-1);
+
+        readBinaryHeader(fileH, tmpStrName, tmpSize, tmpStrType);
+        
+        if (x231ArrayName != tmpStrName)
+            OPM_THROW(std::runtime_error, "Invalied X231 header, name should be same in both headers'");
+
+        if (x231exp < 0)
+            OPM_THROW(std::runtime_error, "Invalied X231 header, size of array should be negative'");
+        
+        size = static_cast<long int>(tmpSize) + static_cast<long int>(x231exp) * pow(2,31); 
+    } else {
+        size = static_cast<long int>(tmpSize);
     }
 
     arrName = tmpStrName;
@@ -114,8 +141,7 @@ void readBinaryHeader(std::fstream& fileH, std::string& arrName,
         OPM_THROW(std::runtime_error, "Error, unknown array type '" + tmpStrType +"'");
 }
 
-
-unsigned long int sizeOnDiskBinary(int num, Opm::EclIO::eclArrType arrType)
+unsigned long int sizeOnDiskBinary(long int num, Opm::EclIO::eclArrType arrType)
 {
     unsigned long int size = 0;
 
@@ -125,24 +151,32 @@ unsigned long int sizeOnDiskBinary(int num, Opm::EclIO::eclArrType arrType)
             OPM_THROW(std::invalid_argument, message);
         }
     } else {
-        auto sizeData = Opm::EclIO::block_size_data_binary(arrType);
-
-        int sizeOfElement = std::get<0>(sizeData);
-        int maxBlockSize = std::get<1>(sizeData);
-        int maxNumberOfElements = maxBlockSize / sizeOfElement;
-
-        size = num * sizeOfElement;
-        size = size + ((num-1) / maxNumberOfElements) * 2 * Opm::EclIO::sizeOfInte; // 8 byte (two integers) every 1000 element
-
         if (num > 0) {
-            size = size + 2 * Opm::EclIO::sizeOfInte;
+            auto sizeData = Opm::EclIO::block_size_data_binary(arrType);
+
+            int sizeOfElement = std::get<0>(sizeData);
+            int maxBlockSize = std::get<1>(sizeData);
+            int maxNumberOfElements = maxBlockSize / sizeOfElement;
+
+            long unsigned int numBlocks = static_cast<unsigned long int>(num)/static_cast<unsigned long int>(maxNumberOfElements);
+            long unsigned int rest = static_cast<unsigned long int>(num) - numBlocks*static_cast<unsigned long int>(maxNumberOfElements);
+
+            long unsigned int size2Inte = static_cast<long unsigned int>(Opm::EclIO::sizeOfInte) * 2;
+            long unsigned int sizeFullBlocks = numBlocks * (static_cast<long unsigned int>(maxBlockSize) + size2Inte);
+
+            long unsigned int sizeLastBlock = 0;
+
+            if (rest > 0)
+                sizeLastBlock = rest * static_cast<long unsigned int>(sizeOfElement) + size2Inte;
+
+            size = sizeFullBlocks + sizeLastBlock;
         }
     }
 
     return size;
 }
 
-unsigned long int sizeOnDiskFormatted(const int num, Opm::EclIO::eclArrType arrType)
+unsigned long int sizeOnDiskFormatted(const long int num, Opm::EclIO::eclArrType arrType)
 {
     unsigned long int size = 0;
 
@@ -189,7 +223,7 @@ unsigned long int sizeOnDiskFormatted(const int num, Opm::EclIO::eclArrType arrT
 
 
 template<typename T, typename T2>
-std::vector<T> readBinaryArray(std::fstream& fileH, const int size, Opm::EclIO::eclArrType type,
+std::vector<T> readBinaryArray(std::fstream& fileH, const long int size, Opm::EclIO::eclArrType type,
                                std::function<T(T2)>& flip)
 {
     std::vector<T> arr;
@@ -201,7 +235,7 @@ std::vector<T> readBinaryArray(std::fstream& fileH, const int size, Opm::EclIO::
 
     arr.reserve(size);
 
-    int rest = size;
+    long int rest = size;
     while (rest > 0) {
         int dhead;
         fileH.read(reinterpret_cast<char*>(&dhead), sizeof(dhead));
@@ -240,27 +274,27 @@ std::vector<T> readBinaryArray(std::fstream& fileH, const int size, Opm::EclIO::
 }
 
 
-std::vector<int> readBinaryInteArray(std::fstream &fileH, const int size)
+std::vector<int> readBinaryInteArray(std::fstream &fileH, const long int size)
 {
     std::function<int(int)> f = Opm::EclIO::flipEndianInt;
     return readBinaryArray<int,int>(fileH, size, Opm::EclIO::INTE, f);
 }
 
 
-std::vector<float> readBinaryRealArray(std::fstream& fileH, const int size)
+std::vector<float> readBinaryRealArray(std::fstream& fileH, const long int size)
 {
     std::function<float(float)> f = Opm::EclIO::flipEndianFloat;
     return readBinaryArray<float,float>(fileH, size, Opm::EclIO::REAL, f);
 }
 
 
-std::vector<double> readBinaryDoubArray(std::fstream& fileH, const int size)
+std::vector<double> readBinaryDoubArray(std::fstream& fileH, const long int size)
 {
     std::function<double(double)> f = Opm::EclIO::flipEndianDouble;
     return readBinaryArray<double,double>(fileH, size, Opm::EclIO::DOUB, f);
 }
 
-std::vector<bool> readBinaryLogiArray(std::fstream &fileH, const int size)
+std::vector<bool> readBinaryLogiArray(std::fstream &fileH, const long int size)
 {
     std::function<bool(unsigned int)> f = [](unsigned int intVal)
                                           {
@@ -279,7 +313,7 @@ std::vector<bool> readBinaryLogiArray(std::fstream &fileH, const int size)
 }
 
 
-std::vector<std::string> readBinaryCharArray(std::fstream& fileH, const int size)
+std::vector<std::string> readBinaryCharArray(std::fstream& fileH, const long int size)
 {
     using Char8 = std::array<char, 8>;
     std::function<std::string(Char8)> f = [](const Char8& val)
@@ -292,7 +326,7 @@ std::vector<std::string> readBinaryCharArray(std::fstream& fileH, const int size
 
 
 void readFormattedHeader(std::fstream& fileH, std::string& arrName,
-                         int &num, Opm::EclIO::eclArrType &arrType)
+                         long int &num, Opm::EclIO::eclArrType &arrType)
 {
     std::string line;
     std::getline(fileH,line);
@@ -310,7 +344,7 @@ void readFormattedHeader(std::fstream& fileH, std::string& arrName,
     std::string antStr = line.substr(p2 + 1, p3 - p2 - 1);
     std::string arrTypeStr = line.substr(p3 + 1, p4 - p3 - 1);
 
-    num = std::stoi(antStr);
+    num = std::stol(antStr);
 
     if (arrTypeStr == "INTE")
         arrType = Opm::EclIO::INTE;
@@ -357,7 +391,7 @@ std::vector<T> readFormattedArray(const std::string& file_str, const int size, l
 }
 
 
-std::vector<int> readFormattedInteArray(const std::string& file_str, const int size, long int fromPos)
+std::vector<int> readFormattedInteArray(const std::string& file_str, const long int size, long int fromPos)
 {
 
     std::function<int(const std::string&)> f = [](const std::string& val)
@@ -369,7 +403,7 @@ std::vector<int> readFormattedInteArray(const std::string& file_str, const int s
 }
 
 
-std::vector<std::string> readFormattedCharArray(const std::string& file_str, const int size, long int fromPos)
+std::vector<std::string> readFormattedCharArray(const std::string& file_str, const long int size, long int fromPos)
 {
     std::vector<std::string> arr;
     arr.reserve(size);
@@ -393,7 +427,7 @@ std::vector<std::string> readFormattedCharArray(const std::string& file_str, con
 }
 
 
-std::vector<float> readFormattedRealArray(const std::string& file_str, const int size, long int fromPos)
+std::vector<float> readFormattedRealArray(const std::string& file_str, const long int size, long int fromPos)
 {
 
     std::function<float(const std::string&)> f = [](const std::string& val)
@@ -408,7 +442,7 @@ std::vector<float> readFormattedRealArray(const std::string& file_str, const int
 }
 
 
-std::vector<bool> readFormattedLogiArray(const std::string& file_str, const int size, long int fromPos)
+std::vector<bool> readFormattedLogiArray(const std::string& file_str, const long int size, long int fromPos)
 {
 
     std::function<bool(const std::string&)> f = [](const std::string& val)
@@ -426,7 +460,7 @@ std::vector<bool> readFormattedLogiArray(const std::string& file_str, const int 
     return readFormattedArray<bool>(file_str, size, fromPos, f);
 }
 
-std::vector<double> readFormattedDoubArray(const std::string& file_str, const int size, long int fromPos)
+std::vector<double> readFormattedDoubArray(const std::string& file_str, const long int size, long int fromPos)
 {
 
     std::function<double(const std::string&)> f = [](std::string val)
@@ -480,8 +514,8 @@ EclFile::EclFile(const std::string& filename, bool preload) : inputFilename(file
     while (!isEOF(&fileH)) {
         std::string arrName(8,' ');
         eclArrType arrType;
-        int num;
-
+        long int num;
+        
         if (formatted) {
             readFormattedHeader(fileH,arrName,num,arrType);
         } else {
@@ -499,13 +533,16 @@ EclFile::EclFile(const std::string& filename, bool preload) : inputFilename(file
 
         arrayLoaded.push_back(false);
 
-        if (formatted) {
-            unsigned long int sizeOfNextArray = sizeOnDiskFormatted(num, arrType);
-            fileH.seekg(static_cast<std::streamoff>(sizeOfNextArray), std::ios_base::cur);
-        } else {
-            unsigned long int sizeOfNextArray = sizeOnDiskBinary(num, arrType);
-            fileH.seekg(static_cast<std::streamoff>(sizeOfNextArray), std::ios_base::cur);
+        if (num > 0){ 
+            if (formatted) {
+                unsigned long int sizeOfNextArray = sizeOnDiskFormatted(num, arrType);
+                fileH.seekg(static_cast<std::streamoff>(sizeOfNextArray), std::ios_base::cur);
+            } else {
+                unsigned long int sizeOfNextArray = sizeOnDiskBinary(num, arrType);
+                fileH.seekg(static_cast<std::streamoff>(sizeOfNextArray), std::ios_base::cur);
+            }
         }
+
 
         n++;
     };
@@ -812,15 +849,24 @@ EclFile::seekPosition(const std::vector<std::string>::size_type arrIndex) const
     //
     //
     //   (*) unformatted header size = 24 bytes =
-    //            4 byte control character
+    //            4 byte => size of header in byte
     //          + 8 byte header/vector name
     //          + 4 byte for number of elements
     //          + 4 byte for element type
-    //          + 4 byte control character
+    //          + 4 byte size of header in byte
+    //
+    //      16 byte header (8+4+4)
     //
     //       +------+------------+------+------+------+
     //       | Ctrl | Keyword    | #elm | type | Ctrl |  (item)
     //       |  4   |  8         |  4   |  4   |  4   |  (#bytes)
+    //       +------+------------+------+------+------+
+    //
+    //      20 byte header (8+8+4)
+    //
+    //       +------+------------+------+------+------+
+    //       | Ctrl | Keyword    | #elm | type | Ctrl |  (item)
+    //       |  4   |  8         |  8   |  4   |  4   |  (#bytes)
     //       +------+------------+------+------+------+
     //
 
