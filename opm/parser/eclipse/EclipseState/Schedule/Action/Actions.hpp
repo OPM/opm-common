@@ -26,6 +26,7 @@
 #include <vector>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionX.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/PyAction.hpp>
 
 namespace Opm {
 namespace Action {

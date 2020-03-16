@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(PYACTION) {
     SummaryState st(std::chrono::system_clock::now());
     const auto& pyaction_kw = deck.getKeyword<ParserKeywords::PYACTION>(0);
     const std::string& fname = pyaction_kw.getRecord(1).getItem(0).get<std::string>(0);
-    PyAction py_action("WCLOSE", PyAction::RunCount::unlimited, PyAction::load(deck.getInputPath(), fname));
+    Action::PyAction py_action("WCLOSE", Action::PyAction::RunCount::unlimited, Action::PyAction::load(deck.getInputPath(), fname));
     st.update_well_var("PROD1", "WWCT", 0);
     python.exec(py_action, ecl_state, schedule, 10, st);
 

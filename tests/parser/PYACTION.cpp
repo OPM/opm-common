@@ -36,8 +36,8 @@ BOOST_AUTO_TEST_CASE(ParsePYACTION) {
     const auto& record1 = keyword.getRecord(1);
 
     const auto& name = record0.getItem(0).get<std::string>(0);
-    auto run_count = PyAction::from_string(record0.getItem(1).get<std::string>(0));
-    std::string code = PyAction::load(deck.getInputPath(), record1.getItem(0).get<std::string>(0));
+    auto run_count = Action::PyAction::from_string(record0.getItem(1).get<std::string>(0));
+    std::string code = Action::PyAction::load(deck.getInputPath(), record1.getItem(0).get<std::string>(0));
 
     std::string literal_code =R"(from math import sin
 import random
@@ -52,8 +52,8 @@ B = A / 10
 C = B * 20
 )";
 
-    PyAction pyaction("ACT1", run_count, code);
+    Action::PyAction pyaction("ACT1", run_count, code);
     BOOST_CHECK_EQUAL(pyaction.name(), "ACT1");
     BOOST_CHECK_EQUAL(pyaction.code(), literal_code);
-    BOOST_CHECK(pyaction.run_count() == PyAction::RunCount::single);
+    BOOST_CHECK(pyaction.run_count() == Action::PyAction::RunCount::single);
 }

@@ -34,7 +34,7 @@ using dict = int;
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/PyAction.hpp>
 
 namespace Opm {
-
+namespace Action {
 
 PyAction::RunCount PyAction::from_string(std::string run_count) {
     run_count = uppercase(run_count);
@@ -109,5 +109,5 @@ void * PyAction::storage() const {
     return this->m_storage;
 }
 
-
+}
 }
