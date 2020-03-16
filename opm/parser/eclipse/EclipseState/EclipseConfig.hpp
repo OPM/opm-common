@@ -43,6 +43,13 @@ namespace Opm {
 
         bool operator==(const EclipseConfig& data) const;
 
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            m_initConfig.serializeOp(serializer);
+            io_config.serializeOp(serializer);
+        }
+
     private:
         InitConfig m_initConfig;
         IOConfig io_config;

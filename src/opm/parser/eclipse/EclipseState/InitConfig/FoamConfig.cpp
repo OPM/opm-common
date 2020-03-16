@@ -183,12 +183,6 @@ FoamConfig::getRecord(std::size_t index) const
     return this->data_.at(index);
 }
 
-const std::vector<FoamData>&
-FoamConfig::records() const
-{
-    return this->data_;
-}
-
 std::size_t
 FoamConfig::size() const
 {

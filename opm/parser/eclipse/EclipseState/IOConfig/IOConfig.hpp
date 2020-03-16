@@ -169,8 +169,6 @@ namespace Opm {
         bool getUNIFIN() const;
         bool getFMTIN() const;
         bool getFMTOUT() const;
-        const std::string& getDeckFileName() const;
-        bool getNoSim() const;
         const std::string& getEclipseInputPath() const;
 
         void overrideNOSIM(bool nosim);
@@ -194,6 +192,23 @@ namespace Opm {
         bool initOnly() const;
 
         bool operator==(const IOConfig& data) const;
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(m_write_INIT_file);
+            serializer(m_write_EGRID_file);
+            serializer(m_UNIFIN);
+            serializer(m_UNIFOUT);
+            serializer(m_FMTIN);
+            serializer(m_FMTOUT);
+            serializer(m_deck_filename);
+            serializer(m_output_enabled);
+            serializer(m_output_dir);
+            serializer(m_nosim);
+            serializer(m_base_name);
+            serializer(ecl_compatible_rst);
+        }
 
     private:
         bool            m_write_INIT_file = false;

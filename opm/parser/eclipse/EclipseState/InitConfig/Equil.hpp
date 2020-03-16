@@ -25,6 +25,20 @@ namespace Opm {
 
             bool operator==(const EquilRecord& data) const;
 
+            template<class Serializer>
+            void serializeOp(Serializer& serializer)
+            {
+                serializer(datum_depth);
+                serializer(datum_depth_ps);
+                serializer(water_oil_contact_depth);
+                serializer(water_oil_contact_capillary_pressure);
+                serializer(gas_oil_contact_depth);
+                serializer(gas_oil_contact_capillary_pressure);
+                serializer(live_oil_init_proc);
+                serializer(wet_gas_init_proc);
+                serializer(init_target_accuracy);
+            }
+
         private:
             double datum_depth;
             double datum_depth_ps;
@@ -47,7 +61,6 @@ namespace Opm {
             Equil(const std::vector<EquilRecord>& records);
 
             const EquilRecord& getRecord( size_t id ) const;
-            const std::vector<EquilRecord>& records() const;
 
             size_t size() const;
             bool empty() const;
@@ -56,6 +69,12 @@ namespace Opm {
             const_iterator end() const;
 
             bool operator==(const Equil& data) const;
+
+            template<class Serializer>
+            void serializeOp(Serializer& serializer)
+            {
+                serializer.vector(m_records);
+            }
 
         private:
             std::vector< EquilRecord > m_records;
