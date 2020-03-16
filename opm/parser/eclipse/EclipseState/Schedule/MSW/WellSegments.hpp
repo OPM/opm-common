@@ -93,7 +93,8 @@ namespace Opm {
         const std::vector<Segment>& segments() const;
 
         bool updateWSEGVALV(const std::vector<std::pair<int, Valve> >& valve_pairs);
-
+        const std::vector<Segment>::const_iterator begin() const;
+        const std::vector<Segment>::const_iterator end() const;
     private:
         void processABS();
         void processINC(double depth_top, double length_top);

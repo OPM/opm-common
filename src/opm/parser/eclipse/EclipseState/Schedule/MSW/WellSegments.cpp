@@ -71,6 +71,14 @@ namespace Opm {
         return m_comp_pressure_drop;
     }
 
+    const std::vector<Segment>::const_iterator WellSegments::begin() const {
+        return this->m_segments.begin();
+    }
+
+    const std::vector<Segment>::const_iterator WellSegments::end() const {
+        return this->m_segments.end();
+    }
+
     const Segment& WellSegments::operator[](size_t idx) const {
         return m_segments[idx];
     }
