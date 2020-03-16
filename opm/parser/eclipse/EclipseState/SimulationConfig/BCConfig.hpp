@@ -69,6 +69,21 @@ public:
                BCComponent comp_arg,
                double rate_arg);
         bool operator==(const BCFace& other) const;
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(i1);
+            serializer(i2);
+            serializer(j1);
+            serializer(j2);
+            serializer(k1);
+            serializer(k2);
+            serializer(bctype);
+            serializer(dir);
+            serializer(component);
+            serializer(rate);
+        }
     };
 
 
@@ -80,6 +95,13 @@ public:
     std::vector<BCFace>::const_iterator begin() const;
     std::vector<BCFace>::const_iterator end() const;
     bool operator==(const BCConfig& other) const;
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer.vector(m_faces);
+    }
+
 private:
     std::vector<BCFace> m_faces;
 };

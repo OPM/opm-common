@@ -46,6 +46,12 @@ public:
 
     bool operator==(const EDITNNC& data) const;
 
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer.vector(m_editnnc);
+    }
+
 private:
     std::vector<NNCdata> m_editnnc;
 };

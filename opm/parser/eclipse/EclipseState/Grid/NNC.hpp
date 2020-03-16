@@ -40,6 +40,14 @@ struct NNCdata {
                trans == data.trans;
     }
 
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(cell1);
+        serializer(cell2);
+        serializer(trans);
+    }
+
     size_t cell1;
     size_t cell2;
     double trans;
@@ -63,6 +71,12 @@ public:
     bool hasNNC() const;
 
     bool operator==(const NNC& data) const;
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer.vector(m_nnc);
+    }
 
 private:
 

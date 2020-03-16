@@ -53,6 +53,18 @@ namespace Opm {
 
         bool operator==(const SimulationConfig& data) const;
 
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            m_ThresholdPressure.serializeOp(serializer);
+            m_bcconfig.serializeOp(serializer);
+            m_rock_config.serializeOp(serializer);
+            serializer(m_useCPR);
+            serializer(m_DISGAS);
+            serializer(m_VAPOIL);
+            serializer(m_isThermal);
+        }
+
     private:
         ThresholdPressure m_ThresholdPressure;
         BCConfig m_bcconfig;
