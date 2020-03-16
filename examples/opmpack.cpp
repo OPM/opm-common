@@ -22,6 +22,7 @@
 #include <getopt.h>
 
 #include <opm/common/utility/FileSystem.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/I.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/G.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
@@ -151,9 +152,10 @@ int main(int argc, char** argv) {
                 copy_file(input_arg.parent_path(), restart_file, output_dir);
             }
 
-            for (std::size_t import_index = 0; import_index < deck.count("IMPORT"); import_index++) {
-                const auto& import_keyword = deck.getKeyword("IMPORT", import_index);
-                const auto& fname = import_keyword.getRecord(0).getItem("FILE").get<std::string>(0);
+            using IMPORT = Opm::ParserKeywords::IMPORT;
+            for (std::size_t import_index = 0; import_index < deck.count<IMPORT>(); import_index++) {
+                const auto& import_keyword = deck.getKeyword<IMPORT>(import_index);
+                const auto& fname = import_keyword.getRecord(0).getItem<IMPORT::FILE>().get<std::string>(0);
                 copy_file(input_arg.parent_path(), fname, output_dir);
             }
 
