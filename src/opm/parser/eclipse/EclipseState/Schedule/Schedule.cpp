@@ -26,6 +26,7 @@
 #include <opm/common/OpmLog/LogUtil.hpp>
 #include <opm/common/utility/numeric/cmp.hpp>
 
+#include <opm/parser/eclipse/Python/Python.hpp>
 #include <opm/parser/eclipse/Utility/String.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
@@ -37,6 +38,7 @@
 #include <opm/parser/eclipse/Parser/ParserKeywords/G.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/L.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/N.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/P.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/V.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/W.hpp>
 
@@ -162,7 +164,7 @@ std::pair<std::time_t, std::size_t> restart_info(const RestartIO::RstState * rst
         }
 
         if (DeckSection::hasSCHEDULE(deck))
-            iterateScheduleSection( parseContext, errors, SCHEDULESection( deck ), grid, fp);
+            iterateScheduleSection( deck.getInputPath(), parseContext, errors, SCHEDULESection( deck ), grid, fp);
     }
 
 
@@ -282,7 +284,8 @@ std::pair<std::time_t, std::size_t> restart_info(const RestartIO::RstState * rst
     }
 
 
-    void Schedule::handleKeyword(size_t currentStep,
+    void Schedule::handleKeyword(const std::string& input_path,
+                                 size_t currentStep,
                                  const SCHEDULESection& section,
                                  size_t keywordIdx,
                                  const DeckKeyword& keyword,
@@ -472,6 +475,9 @@ std::pair<std::time_t, std::size_t> restart_info(const RestartIO::RstState * rst
         else if (keyword.name() == "NUPCOL")
             handleNUPCOL(keyword, currentStep);
 
+        else if (keyword.name() == "PYACTION")
+            handlePYACTION(input_path, keyword, currentStep);
+
         else if (geoModifiers.find( keyword.name() ) != geoModifiers.end()) {
             bool supported = geoModifiers.at( keyword.name() );
             if (supported) {
@@ -485,7 +491,7 @@ std::pair<std::time_t, std::size_t> restart_info(const RestartIO::RstState * rst
     }
 
 
-    void Schedule::iterateScheduleSection(const ParseContext& parseContext , ErrorGuard& errors, const SCHEDULESection& section , const EclipseGrid& grid,
+void Schedule::iterateScheduleSection(const std::string& input_path, const ParseContext& parseContext , ErrorGuard& errors, const SCHEDULESection& section , const EclipseGrid& grid,
                                           const FieldPropsManager& fp) {
         const auto& unit_system = section.unitSystem();
         std::vector<std::pair< const DeckKeyword* , size_t> > rftProperties;
@@ -532,7 +538,7 @@ std::pair<std::time_t, std::size_t> restart_info(const RestartIO::RstState * rst
 
             else {
                 if (currentStep >= this->m_timeMap.restart_offset())
-                    this->handleKeyword(currentStep, section, keywordIdx, keyword, parseContext, errors, grid, fp, unit_system, rftProperties);
+                    this->handleKeyword(input_path, currentStep, section, keywordIdx, keyword, parseContext, errors, grid, fp, unit_system, rftProperties);
                 else
                     OpmLog::info("Skipping keyword: " + keyword.name() + " while loading SCHEDULE section");
             }
@@ -628,6 +634,24 @@ std::pair<std::time_t, std::size_t> restart_info(const RestartIO::RstState * rst
                 this->updateWell(std::move(well2), currentStep);
             }
         }
+    }
+
+    void Schedule::handlePYACTION( const std::string& input_path, const DeckKeyword& keyword, size_t currentStep) {
+        if (!Python::enabled()) {
+            const auto& loc = keyword.location();
+            OpmLog::warning("This version of flow is built without support for Python. Keyword PYACTION in file: " + loc.filename + " line: " + std::to_string(loc.lineno) + " is ignored.");
+            return;
+        }
+
+        using PY = ParserKeywords::PYACTION;
+        const auto& name = keyword.getRecord(0).getItem<PY::NAME>().get<std::string>(0);
+        const auto& run_count = Action::PyAction::from_string( keyword.getRecord(0).getItem<PY::RUN_COUNT>().get<std::string>(0) );
+        const auto& code = Action::PyAction::load( input_path, keyword.getRecord(1).getItem<PY::FILENAME>().get<std::string>(0) );
+
+        Action::PyAction pyaction(name, run_count, code);
+        auto new_actions = std::make_shared<Action::Actions>( this->actions(currentStep) );
+        new_actions->add(pyaction);
+        this->m_actions.update(currentStep, new_actions);
     }
 
     void Schedule::handleNUPCOL( const DeckKeyword& keyword, size_t currentStep) {

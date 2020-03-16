@@ -372,7 +372,7 @@ namespace Opm
         void updateUDQActive( std::size_t timeStep, std::shared_ptr<UDQActive> udq );
         bool updateWellStatus( const std::string& well, size_t reportStep , Well::Status status, bool update_connections);
         void addWellToGroup( const std::string& group_name, const std::string& well_name , size_t timeStep);
-        void iterateScheduleSection(const ParseContext& parseContext ,  ErrorGuard& errors, const SCHEDULESection& , const EclipseGrid& grid,
+        void iterateScheduleSection(const std::string& input_path, const ParseContext& parseContext ,  ErrorGuard& errors, const SCHEDULESection& , const EclipseGrid& grid,
                                     const FieldPropsManager& fp);
         void addACTIONX(const Action::ActionX& action, std::size_t currentStep);
         void addGroupToGroup( const std::string& parent_group, const std::string& child_group, size_t timeStep);
@@ -417,6 +417,7 @@ namespace Opm
         void handleWEFAC( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
 
         void handleTUNING( const DeckKeyword& keyword, size_t currentStep);
+        void handlePYACTION( const std::string& input_path, const DeckKeyword& keyword, size_t currentStep);
         void handleNUPCOL( const DeckKeyword& keyword, size_t currentStep);
         void handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, const UnitSystem& unit_system, const ParseContext& parseContext, ErrorGuard& errors);
         void handleGRUPNET( const DeckKeyword& keyword, size_t currentStep, const UnitSystem& unit_system);
@@ -436,7 +437,8 @@ namespace Opm
         void handleVFPINJ(const DeckKeyword& vfpprodKeyword, const UnitSystem& unit_system, size_t currentStep);
         void checkUnhandledKeywords( const SCHEDULESection& ) const;
         void checkIfAllConnectionsIsShut(size_t currentStep);
-        void handleKeyword(size_t currentStep,
+        void handleKeyword(const std::string& input_path,
+                           size_t currentStep,
                            const SCHEDULESection& section,
                            size_t keywordIdx,
                            const DeckKeyword& keyword,

@@ -56,7 +56,7 @@ std::string PyAction::load(const std::string& input_path, const std::string& fna
     namespace fs = Opm::filesystem;
     fs::path code_path = fs::path(input_path) / fs::path(fname);
     if (fs::exists(code_path)) {
-        std::ifstream ifs(code_path.c_str(), std::ios::in);
+        std::ifstream ifs(code_path);
         return std::string{ std::istreambuf_iterator<char>{ifs}, {} };
     } else
         throw std::invalid_argument("No such file: " + fname);
