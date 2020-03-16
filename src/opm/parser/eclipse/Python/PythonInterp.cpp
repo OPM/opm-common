@@ -46,7 +46,7 @@ bool PythonInterp::exec(const std::string& python_code, const Parser& parser, De
 }
 
 
-bool PythonInterp::exec(const PyAction& py_action, EclipseState& ecl_state, Schedule& schedule, std::size_t report_step, SummaryState& st) {
+bool PythonInterp::exec(const Action::PyAction& py_action, EclipseState& ecl_state, Schedule& schedule, std::size_t report_step, SummaryState& st) {
     auto context = py::module::import("context");
 
     context.attr("schedule") = &schedule;

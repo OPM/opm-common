@@ -25,6 +25,7 @@
 #include <string>
 
 namespace Opm {
+namespace Action {
 
 class PyAction {
 public:
@@ -61,6 +62,7 @@ private:
     std::string input_code;
     void * m_storage;
 };
+}
 
 }
 

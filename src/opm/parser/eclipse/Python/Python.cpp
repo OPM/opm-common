@@ -41,7 +41,7 @@ bool Python::exec(const std::string& python_code, const Parser& parser, Deck& de
     return true;
 }
 
-bool Python::exec(const PyAction& py_action, EclipseState& ecl_state, Schedule& schedule, std::size_t report_step, SummaryState& st) const {
+bool Python::exec(const Action::PyAction& py_action, EclipseState& ecl_state, Schedule& schedule, std::size_t report_step, SummaryState& st) const {
     this->interp->exec(py_action, ecl_state, schedule, report_step, st);
     return true;
 }
