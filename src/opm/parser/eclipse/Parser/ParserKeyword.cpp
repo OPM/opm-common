@@ -749,15 +749,6 @@ void set_dimensions( ParserItem& item,
     }
 
 
-#if 0
-    void ParserKeyword::applyUnitsToDeck( Deck& deck, DeckKeyword& deckKeyword) const {
-        for (size_t index = 0; index < deckKeyword.size(); index++) {
-            const auto& parserRecord = this->getRecord( index );
-            auto& deckRecord = deckKeyword.getRecord( index );
-            parserRecord.applyUnitsToDeck( deck, deckRecord );
-        }
-    }
-#endif
 
     bool ParserKeyword::operator==( const ParserKeyword& rhs ) const {
         // compare the deck names. we don't care about the ordering of the strings.
