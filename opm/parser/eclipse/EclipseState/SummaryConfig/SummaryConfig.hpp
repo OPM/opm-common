@@ -46,7 +46,7 @@ namespace Opm {
         };
 
         enum class Type {
-            Rate, Total, Ratio, Pressure, Count,
+            Rate, Total, Ratio, Pressure, Count, Mode,
             Undefined,
         };
 
