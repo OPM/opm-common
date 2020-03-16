@@ -44,6 +44,7 @@ public:
     int max_input_lines() const;
     bool empty() const;
     void add(const ActionX& action);
+    void add(const PyAction& pyaction);
     bool ready(std::time_t sim_time) const;
     const ActionX& get(const std::string& name) const;
     const ActionX& get(std::size_t index) const;
@@ -62,6 +63,7 @@ public:
 
 private:
     std::vector<ActionX> actions;
+    std::vector<PyAction> pyactions;
 };
 }
 }

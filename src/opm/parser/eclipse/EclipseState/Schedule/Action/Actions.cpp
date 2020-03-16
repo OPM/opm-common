@@ -48,6 +48,14 @@ void Actions::add(const ActionX& action) {
         *iter = action;
 }
 
+void Actions::add(const PyAction& pyaction) {
+    auto iter = std::find_if( this->pyactions.begin(), this->pyactions.end(), [&pyaction](const PyAction& arg) { return arg.name() == pyaction.name(); });
+    if (iter == this->pyactions.end())
+        this->pyactions.push_back(pyaction);
+    else
+        *iter = pyaction;
+}
+
 
 const ActionX& Actions::get(const std::string& name) const {
     const auto iter = std::find_if( this->actions.begin(), this->actions.end(), [&name](const ActionX& action) { return action.name() == name; });
