@@ -84,6 +84,21 @@ namespace Opm {
 
         bool operator==(const UDQConfig& config) const;
 
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            udq_params.serializeOp(serializer);
+            serializer.map(m_definitions);
+            serializer.map(m_assignments);
+            serializer(units);
+            input_index.serializeOp(serializer);
+            serializer(type_count);
+            // The UDQFunction table is constant up to udq_params.
+            // So we can just construct a new instance here.
+            if (!serializer.isSerializing())
+                udqft = UDQFunctionTable(udq_params);
+        }
+
     private:
         void add_node(const std::string& quantity, UDQAction action);
 

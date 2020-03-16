@@ -303,7 +303,7 @@ namespace Opm
             serializer(splitvfpinj.second);
             serializer(wtest_config);
             serializer(wlist_manager);
-            serializer(udq_config);
+            udq_config.serializeOp(serializer);
             udq_active.serializeOp(serializer);
             serializer(guide_rate_config);
             serializer(gconsale);
