@@ -304,7 +304,7 @@ namespace Opm
             serializer(wtest_config);
             serializer(wlist_manager);
             serializer(udq_config);
-            serializer(udq_active);
+            udq_active.serializeOp(serializer);
             serializer(guide_rate_config);
             serializer(gconsale);
             serializer(gconsump);
