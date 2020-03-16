@@ -742,7 +742,7 @@ inline quantity potential_rate( const fn_args& args ) {
     return { sum, rate_unit< phase >() };
 }
 
-template < bool isGroup = true, bool Producer = true, bool waterInjector = false, bool gasInjector = false>
+template < bool isGroup, bool Producer, bool waterInjector, bool gasInjector>
 inline quantity group_control( const fn_args& args ) {
 
     std::string g_name = "";
