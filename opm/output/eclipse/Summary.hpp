@@ -20,6 +20,8 @@
 #ifndef OPM_OUTPUT_SUMMARY_HPP
 #define OPM_OUTPUT_SUMMARY_HPP
 
+#include <opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp>
+
 #include <map>
 #include <memory>
 #include <string>
@@ -36,6 +38,7 @@ namespace Opm {
 
 namespace Opm { namespace data {
     class WellRates;
+    class Group;
 }} // namespace Opm::data
 
 namespace Opm { namespace out {
@@ -62,12 +65,14 @@ public:
               const EclipseState&            es,
               const Schedule&                schedule,
               const data::WellRates&         well_solution,
+              const data::Group&             group_solution,
               const GlobalProcessParameters& single_values,
               const RegionParameters&        region_values = {},
               const BlockValues&             block_values  = {}) const;
 
     void write() const;
 
+    
 private:
     class SummaryImplementation;
     std::unique_ptr<SummaryImplementation> pImpl_;
