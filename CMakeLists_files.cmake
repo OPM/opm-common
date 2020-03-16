@@ -380,6 +380,7 @@ if(ENABLE_ECL_OUTPUT)
           tests/test_rst.cpp
           tests/test_Solution.cpp
           tests/test_Summary.cpp
+          tests/test_Summary_Group.cpp
           tests/test_Tables.cpp
           tests/test_Wells.cpp
           tests/test_WindowedArray.cpp
