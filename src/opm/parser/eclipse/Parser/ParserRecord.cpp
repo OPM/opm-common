@@ -94,35 +94,6 @@ namespace {
     }
 
 
-#if 0
-    void ParserRecord::applyUnitsToDeck( Deck& deck, DeckRecord& deckRecord ) const {
-        for( const auto& parser_item : *this ) {
-            if( parser_item.dimensions().empty() ) continue;
-
-            auto& deckItem = deckRecord.getItem( parser_item.name() );
-            for (const auto& dim : parser_item.dimensions()) {
-                auto activeDimension  = deck.getActiveUnitSystem().getNewDimension(dim);
-                auto defaultDimension = deck.getDefaultUnitSystem().getNewDimension(dim);
-                deckItem.push_backDimension( activeDimension , defaultDimension );
-            }
-
-            /*
-              A little special casing ... the UDAValue elements in the deck must
-              carry their own dimension. Observe that the
-              ParserItem::setSizeType() method guarantees that UDA data is
-              scalar, i.e. this special case loop can be simpler than the
-              general code in the block above.
-            */
-            if (parser_item.dataType() == type_tag::uda && deckItem.size() > 0) {
-                auto uda = deckItem.get<UDAValue>(0);
-                if (deckItem.defaultApplied(0))
-                    uda.set_dim( deck.getDefaultUnitSystem().getNewDimension( parser_item.dimensions().front()));
-                else
-                    uda.set_dim( deck.getActiveUnitSystem().getNewDimension( parser_item.dimensions().front()));
-            }
-        }
-    }
-#endif
 
 
     const ParserItem& ParserRecord::get(size_t index) const {
