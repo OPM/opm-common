@@ -419,6 +419,10 @@ if(ENABLE_ECL_OUTPUT)
           tests/SPE1CASE2.DATA
           tests/SPE1CASE2_RESTART.DATA
           tests/SPE1CASE2.X0060
+          tests/PYACTION.DATA
+          tests/act1.py
+          tests/EMBEDDED_PYTHON.DATA
+          tests/wclose.py
       )
 endif()
 

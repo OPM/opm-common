@@ -22,12 +22,24 @@
 #include <boost/test/unit_test.hpp>
 #include <iostream>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/P.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/PyAction.hpp>
 
 using namespace Opm;
 
 BOOST_AUTO_TEST_CASE(ParsePYACTION) {
-    const std::string input_code = R"(from math import sin
+    Parser parser;
+    auto deck = parser.parseFile("PYACTION.DATA");
+
+    auto keyword = deck.getKeyword<ParserKeywords::PYACTION>(0);
+    const auto& record0 = keyword.getRecord(0);
+    const auto& record1 = keyword.getRecord(1);
+
+    const auto& name = record0.getItem(0).get<std::string>(0);
+    auto run_count = PyAction::from_string(record0.getItem(1).get<std::string>(0));
+    std::string code = PyAction::load(deck.getInputPath(), record1.getItem(0).get<std::string>(0));
+
+    std::string literal_code =R"(from math import sin
 import random
 print("sin(0) = {}".format(sin(0)))
 #---
@@ -40,31 +52,8 @@ B = A / 10
 C = B * 20
 )";
 
-    const std::string deck_string1 = R"(
-SCHEDULE
-
-PYACTION Her comes an ignored comment
-)" + input_code + "PYEND";
-
-    const std::string deck_string2 = R"(
-SCHEDULE
-
-PYACTION -- Comment
-)" + input_code + "PYEND" + "\nGRID";
-
-
-    Parser parser;
-    {
-        auto deck = parser.parseString(deck_string1);
-        const auto& parsed_code = deck.getKeyword("PYACTION").getRecord(0).getItem("code").get<std::string>(0);
-        BOOST_CHECK_EQUAL(parsed_code, input_code);
-    }
-    {
-        auto deck = parser.parseString(deck_string2);
-        const auto& parsed_code = deck.getKeyword("PYACTION").getRecord(0).getItem("code").get<std::string>(0);
-        BOOST_CHECK_EQUAL(parsed_code, input_code);
-        BOOST_CHECK( deck.hasKeyword("GRID"));
-    }
-
-    PyAction pyact(input_code);
+    PyAction pyaction("ACT1", run_count, code);
+    BOOST_CHECK_EQUAL(pyaction.name(), "ACT1");
+    BOOST_CHECK_EQUAL(pyaction.code(), literal_code);
+    BOOST_CHECK(pyaction.run_count() == PyAction::RunCount::single);
 }

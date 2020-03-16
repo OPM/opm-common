@@ -23,6 +23,7 @@
 
 #include <opm/common/utility/FileSystem.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/I.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/P.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/G.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
@@ -158,6 +159,15 @@ int main(int argc, char** argv) {
                 const auto& fname = import_keyword.getRecord(0).getItem<IMPORT::FILE>().get<std::string>(0);
                 copy_file(input_arg.parent_path(), fname, output_dir);
             }
+
+
+            using PYACTION = Opm::ParserKeywords::PYACTION;
+            for (std::size_t pyaction_index = 0; pyaction_index < deck.count<PYACTION>(); pyaction_index++) {
+                const auto& pyaction_keyword = deck.getKeyword<PYACTION>(pyaction_index);
+                const auto& fname = pyaction_keyword.getRecord(1).getItem<PYACTION::FILENAME>().get<std::string>(0);
+                copy_file(input_arg.parent_path(), fname, output_dir);
+            }
+
 
             using GDFILE = Opm::ParserKeywords::GDFILE;
             if (deck.hasKeyword<GDFILE>()) {
