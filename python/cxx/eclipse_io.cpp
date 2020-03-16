@@ -2,7 +2,7 @@
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
 
-#include <src/opm/io/eclipse/EclFile.cpp>
+#include <opm/io/eclipse/EclFile.hpp>
 #include <opm/io/eclipse/EclIOdata.hpp>
 
 #include "export.hpp"
