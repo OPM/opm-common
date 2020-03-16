@@ -34,7 +34,13 @@ bool Python::exec(const std::string& python_code) const {
     return true;
 }
 
-
+bool Python::enabled() {
+#ifdef EMBEDDED_PYTHON
+    return true;
+#else
+    return false;
+#endif
+}
 
 bool Python::exec(const std::string& python_code, const Parser& parser, Deck& deck) const {
     this->interp->exec(python_code, parser, deck);

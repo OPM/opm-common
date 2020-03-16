@@ -40,12 +40,14 @@ BOOST_AUTO_TEST_CASE(INSTANTIATE) {
     Python python;
     BOOST_CHECK(!python);
     BOOST_CHECK_THROW(python.exec("print('Hello world')"), std::logic_error);
+    BOOST_CHECK(! Python::enabled() );
 }
 
 #else
 
 BOOST_AUTO_TEST_CASE(INSTANTIATE) {
     Python python;
+    BOOST_CHECK(Python::enabled());
     BOOST_CHECK(python);
     BOOST_CHECK_NO_THROW(python.exec("print('Hello world')"));
 
