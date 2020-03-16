@@ -65,8 +65,11 @@ opm_add_test( rst_spe1
               SOURCES tests/rst_test.cpp
               LIBRARIES ${TEST_LIBS}
               TEST_ARGS tests/SPE1CASE2.DATA tests/SPE1CASE2_RESTART.DATA )
-list(APPEND EXTRA_TESTS ${test})
 
+# opm_add_test( rst_msw
+#               SOURCES tests/rst_test.cpp
+#               LIBRARIES ${TEST_LIBS}
+#               TEST_ARGS tests/MSW.DATA tests/MSW_RESTART.DATA )
 
 # opm-tests dependent tests
 if(HAVE_OPM_TESTS)
