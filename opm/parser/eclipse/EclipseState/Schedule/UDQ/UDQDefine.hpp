@@ -71,6 +71,15 @@ public:
 
     bool operator==(const UDQDefine& data) const;
 
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(m_keyword);
+        serializer(ast);
+        serializer(m_var_type);
+        serializer(string_data);
+    }
+
 private:
     std::string m_keyword;
     std::shared_ptr<UDQASTNode> ast;
