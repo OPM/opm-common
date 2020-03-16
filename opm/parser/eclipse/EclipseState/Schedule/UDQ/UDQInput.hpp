@@ -49,6 +49,14 @@ public:
                var_type == data.var_type;
     }
 
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(insert_index);
+        serializer(typed_insert_index);
+        serializer(action);
+        serializer(var_type);
+    }
 
     std::size_t insert_index;
     std::size_t typed_insert_index;
