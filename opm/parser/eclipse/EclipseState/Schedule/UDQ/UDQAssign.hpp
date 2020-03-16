@@ -47,6 +47,13 @@ public:
             return selector == data.selector &&
                    value == data.value;
         }
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(selector);
+            serializer(value);
+        }
     };
 
     UDQAssign();
@@ -63,6 +70,14 @@ public:
     const std::vector<AssignRecord>& getRecords() const;
 
     bool operator==(const UDQAssign& data) const;
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(m_keyword);
+        serializer(m_var_type);
+        serializer.vector(records);
+    }
 
 private:
     std::string m_keyword;
