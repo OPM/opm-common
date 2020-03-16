@@ -268,25 +268,6 @@ namespace Opm
         void applyAction(size_t reportStep, const Action::ActionX& action, const Action::Result& result);
         int getNupcol(size_t reportStep) const;
 
-        const WellMap& getStaticWells() const;
-        const GroupMap& getGroups() const;
-        const DynamicState<OilVaporizationProperties>& getOilVapProps() const;
-        const DynamicVector<Deck>& getModifierDeck() const;
-        const Runspec& getRunspec() const;
-        const VFPProdMap& getVFPProdTables() const;
-        const VFPInjMap& getVFPInjTables() const;
-        const DynamicState<std::shared_ptr<WellTestConfig>>& getWellTestConfig() const;
-        const DynamicState<std::shared_ptr<WListManager>>& getWListManager() const;
-        const DynamicState<std::shared_ptr<UDQConfig>>& getUDQConfig() const;
-        const DynamicState<std::shared_ptr<UDQActive>>& getUDQActive() const;
-        const DynamicState<std::shared_ptr<GuideRateConfig>>& getGuideRateConfig() const;
-        const DynamicState<std::shared_ptr<GConSale>>& getGConSale() const;
-        const DynamicState<std::shared_ptr<GConSump>>& getGConSump() const;
-        const DynamicState<Well::ProducerCMode>& getGlobalWhistCtlMode() const;
-        const DynamicState<std::shared_ptr<Action::Actions>>& getActions() const;
-        const DynamicState<int>& getNupCol() const;
-        const std::map<std::string,Events>& getWellGroupEvents() const;
-
         bool operator==(const Schedule& data) const;
 
 
@@ -297,6 +278,52 @@ namespace Opm
           for the schedule instances created by loading a restart file.
         */
         static bool cmp(const Schedule& sched1, const Schedule& sched2, std::size_t report_step);
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(m_timeMap);
+            auto splitWells = splitDynMap(wells_static);
+            serializer(splitWells.first);
+            serializer(splitWells.second);
+            auto splitGroups = splitDynMap(groups);
+            serializer(splitGroups.first);
+            serializer(splitGroups.second);
+            serializer(m_oilvaporizationproperties);
+            serializer(m_events);
+            serializer(m_modifierDeck);
+            serializer(m_tuning);
+            serializer(m_messageLimits);
+            serializer(m_runspec);
+            auto splitvfpprod = splitDynMap(vfpprod_tables);
+            serializer(splitvfpprod.first);
+            serializer(splitvfpprod.second);
+            auto splitvfpinj = splitDynMap(vfpinj_tables);
+            serializer(splitvfpinj.first);
+            serializer(splitvfpinj.second);
+            serializer(wtest_config);
+            serializer(wlist_manager);
+            serializer(udq_config);
+            serializer(udq_active);
+            serializer(guide_rate_config);
+            serializer(gconsale);
+            serializer(gconsump);
+            serializer(global_whistctl_mode);
+            serializer(m_actions);
+            serializer(rft_config);
+            serializer(m_nupcol);
+            serializer(restart_config);
+            serializer(wellgroup_events);
+            if (wells_static.size() == 0)
+                reconstructDynMap(splitWells.first, splitWells.second, wells_static);
+            if (groups.size() == 0)
+                reconstructDynMap(splitGroups.first, splitGroups.second, groups);
+            if (vfpprod_tables.empty())
+                reconstructDynMap(splitvfpprod.first, splitvfpprod.second, vfpprod_tables);
+            if (vfpinj_tables.empty())
+                reconstructDynMap(splitvfpinj.first, splitvfpinj.second, vfpinj_tables);
+        }
+
     private:
         TimeMap m_timeMap;
         WellMap wells_static;
@@ -421,6 +448,54 @@ namespace Opm
                            const UnitSystem& unit_system,
                            std::vector<std::pair<const DeckKeyword*, size_t > >& rftProperties);
         void addWellGroupEvent(const std::string& wellGroup, ScheduleEvents::Events event, size_t reportStep);
+
+        template<template<class, class> class Map, class Type, class Key>
+        std::pair<std::vector<Type>, std::vector<std::pair<Key, std::vector<int>>>>
+        splitDynMap(const Map<Key, Opm::DynamicState<Type>>& map)
+        {
+            // we have to pack the unique ptrs separately, and use an index map
+            // to allow reconstructing the appropriate structures.
+            std::vector<std::pair<Key, std::vector<int>>> asMap;
+            std::vector<Type> unique;
+            for (const auto& it : map) {
+                std::vector<int> idxVec;
+                for (const auto& w : it.second.data()) {
+                    auto candidate = std::find(unique.begin(), unique.end(), w);
+                    auto idx = candidate - unique.begin();
+                    if (candidate == unique.end()) {
+                        unique.push_back(w);
+                        idx = unique.size()-1;
+                    }
+                    idxVec.push_back(idx);
+                }
+                idxVec.push_back(it.second.initialRange());
+                asMap.push_back(std::make_pair(it.first, idxVec));
+            }
+
+            return std::make_pair(unique, asMap);
+        }
+
+        template<class Type>
+        void reconstructDynState(const std::vector<Type>& unique,
+                                 const std::vector<int>& idxVec,
+                                 Opm::DynamicState<Type>& result)
+        {
+            std::vector<Type> ptrData;
+            for (size_t i = 0; i < idxVec.size()-1; ++i) {
+                ptrData.push_back(unique[idxVec[i]]);
+            }
+            result = Opm::DynamicState<Type>(ptrData, idxVec.back());
+        }
+
+        template<template<class, class> class Map, class Type, class Key>
+        void reconstructDynMap(const std::vector<Type>& unique,
+                               const std::vector<std::pair<Key, std::vector<int>>>& asMap,
+                               Map<Key, Opm::DynamicState<Type>>& result)
+        {
+            for (const auto& it : asMap) {
+                reconstructDynState(unique, it.second, result[it.first]);
+            }
+        }
     };
 }
 
