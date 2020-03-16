@@ -227,9 +227,47 @@ class DynamicState {
                initial_range == data.initial_range;
     }
 
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        auto split = Split();
+        serializer.vector(split.first);
+        serializer(split.second);
+        if (m_data.empty())
+            reconstruct(split.first, split.second);
+    }
+
     private:
         std::vector< T > m_data;
         size_t initial_range;
+
+        std::pair<std::vector<T>,std::vector<size_t>> Split() {
+            std::vector<T> unique;
+            std::vector<size_t> idxVec;
+            idxVec.reserve(m_data.size() + 1);
+            for (const auto& w : m_data) {
+                auto candidate = std::find(unique.begin(), unique.end(), w);
+                size_t idx = candidate - unique.begin();
+                if (candidate == unique.end()) {
+                    unique.push_back(w);
+                    idx = unique.size() - 1;
+                }
+                idxVec.push_back(idx);
+            }
+            idxVec.push_back(initial_range);
+
+            return std::make_pair(unique, idxVec);
+        }
+
+        void reconstruct(const std::vector<T>& unique,
+                         const std::vector<size_t>& idxVec) {
+            m_data.clear();
+            m_data.reserve(idxVec.size() - 1);
+            for (size_t i = 0; i < idxVec.size() - 1; ++i)
+                m_data.push_back(unique[idxVec[i]]);
+
+            initial_range = idxVec.back();
+        }
 };
 
 }
