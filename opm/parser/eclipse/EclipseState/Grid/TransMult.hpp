@@ -61,12 +61,18 @@ namespace Opm {
         void applyMULTFLT(const FaultCollection& faults);
         void applyMULTFLT(const Fault& fault);
 
-        std::array<size_t,3> getSize() const;
-        const std::map<FaceDir::DirEnum, std::vector<double>>& getTrans() const;
-        const std::map<FaceDir::DirEnum, std::string>& getNames() const;
-        const MULTREGTScanner& getScanner() const;
-
         bool operator==(const TransMult& data) const;
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(m_nx);
+            serializer(m_ny);
+            serializer(m_nz);
+            serializer(m_trans);
+            serializer(m_names);
+            m_multregtScanner.serializeOp(serializer);
+        }
 
     private:
         size_t getGlobalIndex(size_t i , size_t j , size_t k) const;

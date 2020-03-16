@@ -151,27 +151,13 @@ R"(This deck has the MULTREGT keyword located in the EDIT section. Note that:
         }
     }
 
-    std::array<size_t,3> TransMult::getSize() const {
-        return {m_nx, m_ny, m_nz};
-    }
-
-    const std::map<FaceDir::DirEnum, std::vector<double>>& TransMult::getTrans() const {
-        return m_trans;
-    }
-
-    const std::map<FaceDir::DirEnum, std::string>& TransMult::getNames() const {
-        return m_names;
-    }
-
-    const MULTREGTScanner& TransMult::getScanner() const {
-        return m_multregtScanner;
-    }
-
     bool TransMult::operator==(const TransMult& data) const {
-        return this->getSize() == data.getSize() &&
-               this->getTrans() == data.getTrans() &&
-               this->getNames() == data.getNames() &&
-               this->getScanner() == data.getScanner();
+        return this->m_nx == data.m_nx &&
+               this->m_ny == data.m_ny &&
+               this->m_nz == data.m_nz &&
+               this->m_trans == data.m_trans &&
+               this->m_names == data.m_names &&
+               this->m_multregtScanner == data.m_multregtScanner;
     }
 
 }

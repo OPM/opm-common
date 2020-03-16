@@ -119,11 +119,7 @@ namespace Opm {
         fault.setTransMult( transMult );
     }
 
-    const OrderedMap<std::string, Fault>& FaultCollection::getFaults() const {
-        return m_faults;
-    }
-
     bool FaultCollection::operator==(const FaultCollection& data) const {
-        return this->getFaults() == data.getFaults();
+        return this->m_faults == data.m_faults;
     }
 }

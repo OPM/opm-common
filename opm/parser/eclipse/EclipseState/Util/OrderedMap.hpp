@@ -192,6 +192,13 @@ public:
         return this->getIndex() == data.getIndex() &&
                this->getStorage() == data.getStorage();
     }
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(m_map);
+        serializer.vector(m_vector);
+    }
 };
 }
 

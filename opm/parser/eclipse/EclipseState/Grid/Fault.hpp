@@ -44,10 +44,17 @@ public:
     void   addFace( FaultFace );
     std::vector< FaultFace >::const_iterator begin() const;
     std::vector< FaultFace >::const_iterator end() const;
-    const std::vector<FaultFace>& getFaceList() const;
 
     bool operator==( const Fault& rhs ) const;
     bool operator!=( const Fault& rhs ) const;
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(m_name);
+        serializer(m_transMult);
+        serializer.vector(m_faceList);
+    }
 
 private:
     std::string m_name;

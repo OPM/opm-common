@@ -66,6 +66,17 @@ namespace Opm {
                    nnc_behaviour == data.nnc_behaviour &&
                    region_name == data.region_name;
         }
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(src_value);
+            serializer(target_value);
+            serializer(trans_mult);
+            serializer(directions);
+            serializer(nnc_behaviour);
+            serializer(region_name);
+        }
     };
 
     typedef std::map< std::pair<int , int> , const MULTREGTRecord * >  MULTREGTSearchMap;
@@ -91,16 +102,26 @@ namespace Opm {
 
         double getRegionMultiplier(size_t globalCellIdx1, size_t globalCellIdx2, FaceDir::DirEnum faceDir) const;
 
-        std::array<size_t,3> getSize() const;
-        const std::vector<MULTREGTRecord>& getRecords() const;
-        ExternalSearchMap getSearchMap() const;
-        const std::map<std::string, std::vector<int>>& getRegions() const;
-        const std::string& getDefaultRegion() const;
-
         bool operator==(const MULTREGTScanner& data) const;
         MULTREGTScanner& operator=(const MULTREGTScanner& data);
 
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(nx);
+            serializer(ny);
+            serializer(nz);
+            serializer.vector(m_records);
+            ExternalSearchMap searchMap = getSearchMap();
+            serializer(searchMap);
+            if (m_searchMap.empty())
+                constructSearchMap(searchMap);
+            serializer(regions);
+            serializer(default_region);
+        }
+
     private:
+        ExternalSearchMap getSearchMap() const;
         void constructSearchMap(const ExternalSearchMap& searchMap);
 
         void addKeyword( const DeckKeyword& deckKeyword, const std::string& defaultRegion);
