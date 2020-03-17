@@ -80,6 +80,15 @@ namespace Opm {
                    this->getNPLMIX() == data.getNPLMIX();
         }
 
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(m_NTFIP);
+            serializer(m_NMFIPR);
+            serializer(m_NRFREG);
+            serializer(m_NTFREG);
+            serializer(m_NPLMIX);
+        }
 
     private:
         size_t m_NTFIP;
