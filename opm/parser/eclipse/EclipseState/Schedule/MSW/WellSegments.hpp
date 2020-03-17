@@ -90,7 +90,6 @@ namespace Opm {
 
         // it returns true if there is no error encountered during the update
         bool updateWSEGSICD(const std::vector<std::pair<int, SpiralICD> >& sicd_pairs);
-        const std::vector<Segment>& segments() const;
 
         bool updateWSEGVALV(const std::vector<std::pair<int, Valve> >& valve_pairs);
         const std::vector<Segment>::const_iterator begin() const;
