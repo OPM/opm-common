@@ -314,14 +314,12 @@ namespace Opm
             m_nupcol.template serializeOp<Serializer, false>(serializer);
             restart_config.serializeOp(serializer);
             serializer.map(wellgroup_events);
-            if (wells_static.size() == 0)
+            if (!serializer.isSerializing()) {
                 reconstructDynMap(splitWells.first, splitWells.second, wells_static);
-            if (groups.size() == 0)
                 reconstructDynMap(splitGroups.first, splitGroups.second, groups);
-            if (vfpprod_tables.empty())
                 reconstructDynMap(splitvfpprod.first, splitvfpprod.second, vfpprod_tables);
-            if (vfpinj_tables.empty())
                 reconstructDynMap(splitvfpinj.first, splitvfpinj.second, vfpinj_tables);
+            }
         }
 
     private:
