@@ -44,6 +44,13 @@ namespace Opm {
 
         bool operator==(const Rock2dtrTable& data) const;
 
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(m_transMultValues);
+            serializer(m_pressureValues);
+        }
+
     protected:
         std::vector< std::vector <double> > m_transMultValues;
         std::vector< double > m_pressureValues;
