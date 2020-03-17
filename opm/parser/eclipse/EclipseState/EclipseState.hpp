@@ -129,7 +129,7 @@ namespace Opm {
             m_transMult.serializeOp(serializer);
             m_faults.serializeOp(serializer);
             serializer(m_title);
-            serializer(aquifer_config);
+            aquifer_config.serializeOp(serializer);
         }
 
     private:
