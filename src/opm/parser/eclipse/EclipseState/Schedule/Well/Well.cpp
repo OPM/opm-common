@@ -932,7 +932,7 @@ bool Well::handleWPIMULT(const DeckRecord& record) {
 
 void Well::updateSegments(std::shared_ptr<WellSegments> segments_arg) {
     this->segments = std::move(segments_arg);
-    this->ref_depth = this->segments->depthTopSegment();
+    this->updateRefDepth( this->segments->depthTopSegment() );
 }
 
 
