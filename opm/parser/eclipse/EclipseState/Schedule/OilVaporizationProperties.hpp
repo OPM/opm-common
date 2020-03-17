@@ -63,9 +63,6 @@ namespace Opm
 
         double vap1() const;
         double vap2() const;
-        const std::vector<double>& maxDRSDT() const;
-        const std::vector<bool>& maxDRSDT_allCells() const;
-        const std::vector<double>& maxDRVDT() const;
 
         /*
          * if either argument was default constructed == will always be false

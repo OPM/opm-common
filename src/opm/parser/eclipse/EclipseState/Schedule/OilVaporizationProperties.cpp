@@ -133,16 +133,4 @@ namespace Opm {
     double OilVaporizationProperties::vap2() const {
         return m_vap2;
     }
-
-    const std::vector<double>& OilVaporizationProperties::maxDRSDT() const {
-        return m_maxDRSDT;
-    }
-
-    const std::vector<bool>& OilVaporizationProperties::maxDRSDT_allCells() const {
-        return m_maxDRSDT_allCells;
-    }
-
-    const std::vector<double>& OilVaporizationProperties::maxDRVDT() const {
-        return m_maxDRVDT;
-    }
 }
