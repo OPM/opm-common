@@ -45,6 +45,15 @@ namespace Opm {
 
         bool operator==(const ColumnSchema& data) const;
 
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(m_name);
+            serializer(m_order);
+            serializer(m_defaultAction);
+            serializer(m_defaultValue);
+        }
+
     private:
         std::string m_name;
         Table::ColumnOrderEnum m_order;
