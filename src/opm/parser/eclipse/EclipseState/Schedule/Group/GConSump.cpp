@@ -68,12 +68,8 @@ size_t GConSump::size() const {
     return groups.size();
 }
 
-const std::map<std::string,GConSump::GCONSUMPGroup>& GConSump::getGroups() const {
-    return groups;
-}
-
 bool GConSump::operator==(const GConSump& data) const {
-    return this->getGroups() == data.getGroups();
+    return this->groups == data.groups;
 }
 
 }
