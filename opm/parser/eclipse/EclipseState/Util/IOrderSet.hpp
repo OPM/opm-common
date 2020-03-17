@@ -113,12 +113,8 @@ public:
         return this->m_data;
     };
 
-    const index_type& index() const {
-        return this->m_index;
-    };
-
     bool operator==(const IOrderSet<T>& data) const {
-        return this->index() == data.index() &&
+        return this->m_index == data.m_index &&
                this->data() == data.data();
     }
 
