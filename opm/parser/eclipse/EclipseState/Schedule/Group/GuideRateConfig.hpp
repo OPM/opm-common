@@ -86,10 +86,6 @@ struct GroupTarget {
     bool has_well(const std::string& well) const;
     bool has_group(const std::string& group) const;
 
-    std::shared_ptr<GuideRateModel> getModel() const;
-    const std::unordered_map<std::string, WellTarget>& getWells() const;
-    const std::unordered_map<std::string, GroupTarget>& getGroups() const;
-
     bool operator==(const GuideRateConfig& data) const;
 
     template<class Serializer>
