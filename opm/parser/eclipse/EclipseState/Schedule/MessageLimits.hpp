@@ -61,6 +61,22 @@ namespace Opm {
             return !(*this == other);
         }
 
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(message_print_limit);
+            serializer(comment_print_limit);
+            serializer(warning_print_limit);
+            serializer(problem_print_limit);
+            serializer(error_print_limit);
+            serializer(bug_print_limit);
+            serializer(message_stop_limit);
+            serializer(comment_stop_limit);
+            serializer(warning_stop_limit);
+            serializer(problem_stop_limit);
+            serializer(error_stop_limit);
+            serializer(bug_stop_limit);
+        }
     };
 
 
@@ -107,6 +123,12 @@ namespace Opm {
 
         const DynamicState<MLimits>& getLimits() const;
         bool operator==(const MessageLimits& data) const;
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            limits.serializeOp(serializer);
+        }
 
     private:
         void update(size_t timestep, const MLimits& value);
