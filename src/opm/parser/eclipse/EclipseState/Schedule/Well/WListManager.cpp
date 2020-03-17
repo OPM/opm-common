@@ -54,12 +54,8 @@ namespace Opm {
         }
     }
 
-    const std::map<std::string,WList>& WListManager::lists() const {
-        return this->wlists;
-    }
-
     bool WListManager::operator==(const WListManager& data) const {
-        return this->lists() == data.lists();
+        return this->wlists == data.wlists;
     }
 
 }

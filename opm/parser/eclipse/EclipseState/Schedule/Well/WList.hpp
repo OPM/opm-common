@@ -35,7 +35,6 @@ public:
     bool has(const std::string& well) const;
 
     std::vector<std::string> wells() const;
-    const storage& wellList() const;
     storage::const_iterator begin() const;
     storage::const_iterator end() const;
 

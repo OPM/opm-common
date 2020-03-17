@@ -35,7 +35,6 @@ public:
     WList& newList(const std::string& name);
     void delWell(const std::string& well);
 
-    const std::map<std::string,WList>& lists() const;
     bool operator==(const WListManager& data) const;
 
     template<class Serializer>
