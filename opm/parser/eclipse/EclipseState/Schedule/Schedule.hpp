@@ -282,7 +282,7 @@ namespace Opm
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
-            serializer(m_timeMap);
+            m_timeMap.serializeOp(serializer);
             auto splitWells = splitDynMap(wells_static);
             serializer(splitWells.first);
             serializer(splitWells.second);
