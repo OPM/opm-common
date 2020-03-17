@@ -37,7 +37,7 @@ RFTConfig::RFTConfig(const TimeMap& tmap,
                      const std::pair<bool, std::size_t>& rftTime,
                      const WellOpenTimeMap& rftName,
                      const WellOpenTimeMap& wellOpen,
-                     const RFTMap& rconfig, const PLTMap& pconfig)
+                     const ConfigMap<RFT>& rconfig, const ConfigMap<PLT>& pconfig)
     : tm(tmap)
     , first_rft_event(first_rft)
     , well_open_rft_time(rftTime)
@@ -266,34 +266,14 @@ const TimeMap& RFTConfig::timeMap() const {
     return tm;
 }
 
-const std::pair<bool, std::size_t>& RFTConfig::wellOpenRftTime() const {
-    return well_open_rft_time;
-}
-
-const RFTConfig::WellOpenTimeMap& RFTConfig::wellOpenRftName() const {
-    return well_open_rft_name;
-}
-
-const RFTConfig::WellOpenTimeMap& RFTConfig::wellOpen() const {
-    return well_open;
-}
-
-const RFTConfig::RFTMap& RFTConfig::rftConfig() const {
-    return rft_config;
-}
-
-const RFTConfig::PLTMap& RFTConfig::pltConfig() const {
-    return plt_config;
-}
-
 bool RFTConfig::operator==(const RFTConfig& data) const {
-    return this->timeMap() == data.timeMap() &&
-           this->firstRFTOutput() == data.firstRFTOutput() &&
-           this->wellOpenRftTime() == data.wellOpenRftTime() &&
-           this->wellOpenRftName() == data.wellOpenRftName() &&
-           this->wellOpen() == data.wellOpen() &&
-           this->rftConfig() == data.rftConfig() &&
-           this->pltConfig() == data.pltConfig();
+    return this->tm == data.tm &&
+           this->first_rft_event == data.first_rft_event &&
+           this->well_open_rft_time == data.well_open_rft_time &&
+           this->well_open_rft_name == data.well_open_rft_name &&
+           this->well_open == data.well_open &&
+           this->rft_config == data.rft_config &&
+           this->plt_config == data.plt_config;
 }
 
 bool RFTConfig::outputRftAtWellopen(WellOpenTimeMap::const_iterator well_iter, const std::size_t report_step) const {
