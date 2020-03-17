@@ -46,6 +46,17 @@ public:
 
     bool operator==(const JFunc& data) const;
 
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(m_flag);
+        serializer(m_owSurfaceTension);
+        serializer(m_goSurfaceTension);
+        serializer(m_alphaFactor);
+        serializer(m_betaFactor);
+        serializer(m_direction);
+    }
+
 private:
     Flag       m_flag;             // JFUNC flag: WATER, GAS, or BOTH.  Default BOTH
     double     m_owSurfaceTension; // oil-wat surface tension.  Required if flag is BOTH or WATER
