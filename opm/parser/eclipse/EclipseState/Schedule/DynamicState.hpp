@@ -227,11 +227,12 @@ class DynamicState {
                initial_range == data.initial_range;
     }
 
-    template<class Serializer>
+    // complexType=true if contained type has a serializeOp
+    template<class Serializer, bool complexType = true>
     void serializeOp(Serializer& serializer)
     {
         auto split = Split();
-        serializer.vector(split.first);
+        serializer.template vector<T,complexType>(split.first);
         serializer(split.second);
         if (m_data.empty())
             reconstruct(split.first, split.second);
