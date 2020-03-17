@@ -94,7 +94,6 @@ namespace Opm {
         bool operator!=( const Segment& ) const;
 
         const std::shared_ptr<SpiralICD>& spiralICD() const;
-        const std::shared_ptr<Valve>& getValve() const;
         const Valve* valve() const;
 
         void updateSpiralICD(const SpiralICD& spiral_icd);
