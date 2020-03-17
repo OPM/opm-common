@@ -27,14 +27,18 @@
 #include <limits>
 #include <tuple>
 #include <cmath>
+#include <numeric>
 
 #include <opm/io/eclipse/EclFile.hpp>
+#include <opm/io/eclipse/EclUtil.hpp>
 #include "WorkArea.cpp"
 
 #include <opm/io/eclipse/EclOutput.hpp>
 
 #define BOOST_TEST_MODULE Test EclIO
 #include <boost/test/unit_test.hpp>
+
+
 
 using namespace Opm::EclIO;
 
@@ -70,6 +74,59 @@ bool operator==(const std::vector<T> & t1, const std::vector<T> & t2)
 {
     return std::equal(t1.begin(), t1.end(), t2.begin(), t2.end());
 }
+
+void write_header(std::ofstream& ofileH, std::string& arrName, int size, std::string arrtype){
+
+    int bhead = flipEndianInt(16);
+    int fsize = flipEndianInt(size);
+
+    ofileH.write(reinterpret_cast<char*>(&bhead), sizeof(bhead));
+    ofileH.write(arrName.c_str(), 8);
+    ofileH.write(reinterpret_cast<char*>(&fsize), sizeof(fsize));
+    ofileH.write(arrtype.c_str(), 4);
+    ofileH.write(reinterpret_cast<char*>(&bhead), sizeof(bhead));
+}
+
+
+BOOST_AUTO_TEST_CASE(TestEclFile_X231) {
+
+    std::string filename = "TEST.DAT";
+    std::string arrName = "TESTX231";
+
+    std::vector<int> ivect(10);
+    std::iota(ivect.begin(), ivect.end(), -4);    
+
+    {
+        std::ofstream ofileH;
+        ofileH.open(filename, std::ios_base::binary);    
+
+        int size = static_cast<int>((-1) * std::pow(2,31) + 10); 
+
+        write_header(ofileH, arrName, -1, std::string("X231"));
+        write_header(ofileH, arrName, size, std::string("INTE"));
+
+        int sizeData = ivect.size()*sizeof(int);
+        sizeData = flipEndianInt(sizeData);
+        
+        ofileH.write(reinterpret_cast<char*>(&sizeData), sizeof(sizeData));
+
+        for (auto v : ivect){
+            int fval = flipEndianInt(v); 
+            ofileH.write(reinterpret_cast<char*>(&fval), sizeof(fval));
+        }
+        
+        ofileH.write(reinterpret_cast<char*>(&sizeData), sizeof(sizeData));
+        ofileH.close();
+    }
+    
+    EclFile test1(filename);
+    auto array = test1.get<int>(arrName);
+    
+    for (size_t n = 0; n < 10; n++){
+        BOOST_CHECK_EQUAL(array[n], ivect[n]);
+    }
+}
+
 
 BOOST_AUTO_TEST_CASE(TestEclFile_BINARY) {
 

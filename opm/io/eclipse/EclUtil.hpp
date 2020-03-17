@@ -27,6 +27,7 @@
 namespace Opm { namespace EclIO {
 
     int flipEndianInt(int num);
+    long int flipEndianLongInt(long int num);
     float flipEndianFloat(float num);
     double flipEndianDouble(double num);
 

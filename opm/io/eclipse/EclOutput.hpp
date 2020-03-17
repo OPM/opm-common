@@ -26,6 +26,7 @@
 
 #include <opm/io/eclipse/EclIOdata.hpp>
 #include <opm/io/eclipse/PaddedOutputString.hpp>
+#include <iostream>
 
 namespace Opm { namespace EclIO { namespace OutputStream {
     class Restart;
@@ -78,7 +79,7 @@ public:
     friend class OutputStream::SummarySpecification;
 
 private:
-    void writeBinaryHeader(const std::string& arrName, int size, eclArrType arrType);
+    void writeBinaryHeader(const std::string& arrName, long int size, eclArrType arrType);
 
     template <typename T>
     void writeBinaryArray(const std::vector<T>& data);
@@ -94,6 +95,7 @@ private:
     void writeFormattedCharArray(const std::vector<std::string>& data);
     void writeFormattedCharArray(const std::vector<PaddedOutputString<8>>& data);
 
+    void writeArrayType(const eclArrType arrType);
     std::string make_real_string(float value) const;
     std::string make_doub_string(double value) const;
 

@@ -91,12 +91,28 @@ void EclOutput::flushStream()
     this->ofileH.flush();
 }
 
-void EclOutput::writeBinaryHeader(const std::string&arrName, int size, eclArrType arrType)
+void EclOutput::writeBinaryHeader(const std::string&arrName, long int size, eclArrType arrType)
 {
+    int bhead = flipEndianInt(16);
     std::string name = arrName + std::string(8 - arrName.size(),' ');
 
+    // write X231 header if size larger that limits for 4 byte integers
+    if (size > std::numeric_limits<int>::max()) {
+        long int val231 = std::pow(2,31);
+        long int x231 = size / val231;
+
+        int flippedx231 = flipEndianInt(static_cast<int>( (-1)*x231 ));
+        
+        ofileH.write(reinterpret_cast<char*>(&bhead), sizeof(bhead));
+        ofileH.write(name.c_str(), 8);
+        ofileH.write(reinterpret_cast<char*>(&flippedx231), sizeof(flippedx231));
+        ofileH.write("X231", 4);
+        ofileH.write(reinterpret_cast<char*>(&bhead), sizeof(bhead));
+        
+        size = size - (x231 * val231);
+    }
+
     int flippedSize = flipEndianInt(size);
-    int bhead = flipEndianInt(16);
 
     ofileH.write(reinterpret_cast<char*>(&bhead), sizeof(bhead));
 
@@ -127,18 +143,18 @@ void EclOutput::writeBinaryHeader(const std::string&arrName, int size, eclArrTyp
     ofileH.write(reinterpret_cast<char *>(&bhead), sizeof(bhead));
 }
 
-
 template <typename T>
 void EclOutput::writeBinaryArray(const std::vector<T>& data)
 {
-    int rest,num,rval;
+    int num, rval;
+    long int rest;
     int dhead;
     float value_f;
     double value_d;
     int intVal;
 
-    int n = 0;
-    int size = data.size();
+    long int n = 0;
+    long int size = data.size();
 
     eclArrType arrType = MESS;
 
@@ -162,13 +178,13 @@ void EclOutput::writeBinaryArray(const std::vector<T>& data)
         OPM_THROW(std::runtime_error, "fstream fileH not open for writing");
     }
 
-    rest = size * sizeOfElement;
+    rest = size * static_cast<long int>(sizeOfElement);
     while (rest > 0) {
         if (rest > maxBlockSize) {
             rest -= maxBlockSize;
             num = maxNumberOfElements;
         } else {
-            num = rest / sizeOfElement;
+            num = static_cast<int>(rest) / sizeOfElement;
             rest = 0;
         }
 

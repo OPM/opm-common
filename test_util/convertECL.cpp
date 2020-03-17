@@ -9,7 +9,7 @@
 #include <opm/io/eclipse/EclOutput.hpp>
 
 using namespace Opm::EclIO;
-using EclEntry = std::tuple<std::string, eclArrType, int>;
+using EclEntry = std::tuple<std::string, eclArrType, long int>;
 
 template <typename T>
 void write(EclOutput& outFile, EclFile& file1,
