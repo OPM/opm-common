@@ -45,6 +45,14 @@ namespace Opm {
 
         bool operator==(const PvtwsaltTable& data) const;
 
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(m_pRefValues);
+            serializer(m_saltConsRefValues);
+            serializer(m_tableValues);
+        }
+
     protected:
 
         double m_pRefValues;
