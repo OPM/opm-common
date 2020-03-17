@@ -58,6 +58,15 @@ namespace Opm {
 
         bool operator==(const PolyInjTable& data) const;
 
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(m_throughputs);
+            serializer(m_velocities);
+            serializer(m_table_number);
+            serializer(m_data);
+        }
+
     protected:
         std::vector<double> m_throughputs;
         std::vector<double> m_velocities;
