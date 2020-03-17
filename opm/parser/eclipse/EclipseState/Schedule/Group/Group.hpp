@@ -213,14 +213,8 @@ struct ProductionControls {
 
     bool defined(std::size_t timeStep) const;
     std::size_t insert_index() const;
-    std::size_t initStep() const;
-    double udqUndefined() const;
-    const UnitSystem& units() const;
     const std::string& name() const;
-    GroupType type() const;
     int getGroupNetVFPTable() const;
-    const IOrderSet<std::string>& iwells() const;
-    const IOrderSet<std::string>& igroups() const;
 
     bool updateNetVFPTable(int vfp_arg);
     bool update_gefac(double gefac, bool transfer_gefac);

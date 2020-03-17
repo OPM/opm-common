@@ -85,22 +85,6 @@ std::size_t Group::insert_index() const {
     return this->m_insert_index;
 }
 
-std::size_t Group::initStep() const {
-    return this->init_step;
-}
-
-double Group::udqUndefined() const {
-    return this->udq_undefined;
-}
-
-const UnitSystem& Group::units() const {
-    return this->unit_system;
-}
-
-Group::GroupType Group::type() const {
-    return this->group_type;
-}
-
 bool Group::defined(size_t timeStep) const {
     return (timeStep >= this->init_step);
 }
@@ -119,14 +103,6 @@ const std::map<Phase, Group::GroupInjectionProperties>& Group::injectionProperti
 
 int Group::getGroupNetVFPTable() const {
     return this->vfp_table;
-}
-
-const IOrderSet<std::string>& Group::iwells() const {
-    return m_wells;
-}
-
-const IOrderSet<std::string>& Group::igroups() const {
-    return m_groups;
 }
 
 bool Group::updateNetVFPTable(int vfp_arg) {
@@ -617,16 +593,16 @@ bool Group::operator==(const Group& data) const
 {
     return this->name() == data.name() &&
            this->insert_index() == data.insert_index() &&
-           this->initStep() == data.initStep() &&
-           this->udqUndefined() == data.udqUndefined() &&
-           this->units() == data.units() &&
-           this->type() == data.type() &&
+           this->init_step == data.init_step &&
+           this->udq_undefined == data.udq_undefined &&
+           this->unit_system == data.unit_system &&
+           this->group_type == data.group_type &&
            this->getGroupEfficiencyFactor() == data.getGroupEfficiencyFactor() &&
            this->getTransferGroupEfficiencyFactor() == data.getTransferGroupEfficiencyFactor() &&
            this->getGroupNetVFPTable() == data.getGroupNetVFPTable() &&
            this->parent() == data.parent() &&
-           this->iwells() == data.iwells() &&
-           this->igroups() == data.igroups() &&
+           this->m_wells == data.m_wells &&
+           this->m_groups == data.m_groups &&
            this->m_topup_phase == data.m_topup_phase &&
            this->injection_properties == data.injection_properties &&
            this->productionProperties() == data.productionProperties();
