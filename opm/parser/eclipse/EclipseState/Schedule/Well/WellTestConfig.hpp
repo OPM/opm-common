@@ -79,8 +79,6 @@ public:
     const WTESTWell& get(const std::string& well, Reason reason) const;
     size_t size() const;
 
-    const std::vector<WTESTWell>& getWells() const;
-
     static std::string reasonToString(const Reason reason);
 
     bool operator==(const WellTestConfig& data) const;
