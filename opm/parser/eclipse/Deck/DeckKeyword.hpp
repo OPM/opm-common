@@ -63,13 +63,11 @@ namespace Opm {
         void addRecord(DeckRecord&& record);
         const DeckRecord& getRecord(size_t index) const;
         DeckRecord& getRecord(size_t index);
-        const std::vector<DeckRecord>& records() const;
         const DeckRecord& getDataRecord() const;
         void setDataKeyword(bool isDataKeyword = true);
         void setDoubleRecordKeyword(bool isDoubleRecordKeyword = true);
         bool isDataKeyword() const;
         bool isDoubleRecordKeyword() const;
-        bool isSlashTerminated() const;
 
         const std::vector<int>& getIntData() const;
         const std::vector<double>& getRawDoubleData() const;
