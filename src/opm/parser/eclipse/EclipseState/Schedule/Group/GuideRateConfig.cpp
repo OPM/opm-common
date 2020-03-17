@@ -97,27 +97,15 @@ bool GuideRateConfig::has_group(const std::string& group) const {
     return (this->groups.count(group) > 0);
 }
 
-std::shared_ptr<GuideRateModel> GuideRateConfig::getModel() const {
-    return m_model;
-}
-
-const std::unordered_map<std::string, GuideRateConfig::WellTarget>& GuideRateConfig::getWells() const {
-    return wells;
-}
-
-const std::unordered_map<std::string, GuideRateConfig::GroupTarget>& GuideRateConfig::getGroups() const {
-    return groups;
-}
-
 bool GuideRateConfig::operator==(const GuideRateConfig& data) const {
-    if ((m_model && !data.m_model) || (!m_model && data.m_model))
+    if ((this->m_model && !data.m_model) || (!this->m_model && data.m_model))
         return false;
 
-    if (m_model && !(*m_model == *data.m_model))
+    if (this->m_model && !(*this->m_model == *data.m_model))
         return false;
 
-    return getWells() == data.getWells() &&
-           getGroups() == data.getGroups();
+    return this->wells == data.wells &&
+           this->groups == data.groups;
 }
 
 }
