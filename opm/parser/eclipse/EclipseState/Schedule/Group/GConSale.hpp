@@ -82,8 +82,6 @@ namespace Opm {
         void add(const std::string& name, const UDAValue& sales_target, const UDAValue& max_rate, const UDAValue& min_rate, const std::string& procedure, double udq_undefined_arg, const UnitSystem& unit_system);
         size_t size() const;
 
-        const std::map<std::string, GCONSALEGroup>& getGroups() const;
-
         bool operator==(const GConSale& data) const;
 
         template<class Serializer>

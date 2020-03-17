@@ -83,12 +83,8 @@ size_t GConSale::size() const {
     return groups.size();
 }
 
-const std::map<std::string, GConSale::GCONSALEGroup>& GConSale::getGroups() const {
-    return groups;
-}
-
 bool GConSale::operator==(const GConSale& data) const {
-    return this->getGroups() == data.getGroups();
+    return this->groups == data.groups;
 }
 
 }
