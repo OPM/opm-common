@@ -290,7 +290,7 @@ namespace Opm
             serializer(splitGroups.first);
             serializer(splitGroups.second);
             m_oilvaporizationproperties.serializeOp(serializer);
-            serializer(m_events);
+            m_events.serializeOp(serializer);
             serializer(m_modifierDeck);
             serializer(m_tuning);
             serializer(m_messageLimits);
@@ -313,7 +313,7 @@ namespace Opm
             rft_config.serializeOp(serializer);
             m_nupcol.template serializeOp<Serializer, false>(serializer);
             restart_config.serializeOp(serializer);
-            serializer(wellgroup_events);
+            serializer.map(wellgroup_events);
             if (wells_static.size() == 0)
                 reconstructDynMap(splitWells.first, splitWells.second, wells_static);
             if (groups.size() == 0)
