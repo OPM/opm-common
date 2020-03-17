@@ -29,10 +29,6 @@ public:
     size_t size() const;
     std::string func;
 
-    const std::vector<std::string>& argList() const;
-    const std::vector<ASTNode>& childrens() const;
-    double getNumber() const;
-
     bool operator==(const ASTNode& data) const;
 
     template<class Serializer>
