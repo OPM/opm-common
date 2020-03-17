@@ -311,7 +311,7 @@ namespace Opm
             serializer(global_whistctl_mode);
             serializer(m_actions);
             rft_config.serializeOp(serializer);
-            serializer(m_nupcol);
+            m_nupcol.template serializeOp<Serializer, false>(serializer);
             restart_config.serializeOp(serializer);
             serializer(wellgroup_events);
             if (wells_static.size() == 0)
