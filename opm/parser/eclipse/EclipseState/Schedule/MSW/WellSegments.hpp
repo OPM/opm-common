@@ -101,6 +101,7 @@ namespace Opm {
         void process(LengthDepth length_depth, double depth_top, double length_top);
         void addSegment(const Segment& new_segment);
         void loadWELSEGS( const DeckKeyword& welsegsKeyword);
+        const Segment& topSegment() const;
 
         // components of the pressure drop to be included
         CompPressureDrop m_comp_pressure_drop;

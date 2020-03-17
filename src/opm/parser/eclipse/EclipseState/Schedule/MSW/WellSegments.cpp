@@ -54,16 +54,20 @@ namespace Opm {
         return m_segments.size();
     }
 
+    const Segment& WellSegments::topSegment() const {
+        return this->m_segments[0];
+    }
+
     double WellSegments::depthTopSegment() const {
-        return this->m_segments[0].depth();
+        return this->topSegment().depth();
     }
 
     double WellSegments::lengthTopSegment() const {
-        return this->m_segments[0].totalLength();
+        return this->topSegment().totalLength();
     }
 
     double WellSegments::volumeTopSegment() const {
-        return this->m_segments[0].volume();
+        return this->topSegment().volume();
     }
 
 
