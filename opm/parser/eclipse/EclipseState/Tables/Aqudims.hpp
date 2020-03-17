@@ -127,6 +127,19 @@ namespace Opm {
                    m_mxaaql == data.m_mxaaql;
         }
 
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(m_mxnaqn);
+            serializer(m_mxnaqc);
+            serializer(m_niftbl);
+            serializer(m_nriftb);
+            serializer(m_nanaqu);
+            serializer(m_ncamax);
+            serializer(m_mxnali);
+            serializer(m_mxaaql);
+        }
+
     private:
         size_t m_mxnaqn , m_mxnaqc , m_niftbl , m_nriftb , m_nanaqu , m_ncamax , m_mxnali , m_mxaaql;
 
