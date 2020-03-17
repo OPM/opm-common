@@ -47,8 +47,6 @@ public:
     AST(const std::shared_ptr<ASTNode>& cond);
     Result eval(const Context& context) const;
 
-    std::shared_ptr<ASTNode> getCondition() const;
-
     bool operator==(const AST& data) const;
 
     template<class Serializer>
