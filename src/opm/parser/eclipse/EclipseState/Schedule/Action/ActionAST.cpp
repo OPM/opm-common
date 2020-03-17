@@ -51,11 +51,6 @@ Action::Result AST::eval(const Action::Context& context) const {
 }
 
 
-std::shared_ptr<ASTNode> AST::getCondition() const {
-    return condition;
-}
-
-
 bool AST::operator==(const AST& data) const {
     if ((condition && !data.condition) ||
         (!condition && data.condition))
