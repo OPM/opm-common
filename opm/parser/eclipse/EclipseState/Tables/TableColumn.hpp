@@ -73,6 +73,16 @@ namespace Opm {
 
         bool operator==(const TableColumn& data) const;
 
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            m_schema.serializeOp(serializer);
+            serializer(m_name);
+            serializer(m_values);
+            serializer(m_default);
+            serializer(m_defaultCount);
+        }
+
     private:
         void assertUpdate(size_t index, double value) const;
         void assertPrevious(size_t index , double value) const;
