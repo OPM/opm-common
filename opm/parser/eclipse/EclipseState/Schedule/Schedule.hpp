@@ -292,7 +292,7 @@ namespace Opm
             m_oilvaporizationproperties.serializeOp(serializer);
             m_events.serializeOp(serializer);
             serializer(m_modifierDeck);
-            serializer(m_tuning);
+            m_tuning.serializeOp(serializer);
             serializer(m_messageLimits);
             m_runspec.serializeOp(serializer);
             auto splitvfpprod = splitDynMap(vfpprod_tables);

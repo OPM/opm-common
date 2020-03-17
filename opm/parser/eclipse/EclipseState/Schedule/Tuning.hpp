@@ -111,6 +111,49 @@ namespace Opm {
         bool operator !=(const Tuning& data) const {
             return !(*this == data);
         }
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(TSINIT);
+            serializer(TSMAXZ);
+            serializer(TSMINZ);
+            serializer(TSMCHP);
+            serializer(TSFMAX);
+            serializer(TSFMIN);
+            serializer(TFDIFF);
+            serializer(TSFCNV);
+            serializer(THRUPT);
+            serializer(TMAXWC);
+            serializer(TMAXWC_has_value);
+
+            serializer(TRGTTE);
+            serializer(TRGCNV);
+            serializer(TRGMBE);
+            serializer(TRGLCV);
+            serializer(XXXTTE);
+            serializer(XXXCNV);
+            serializer(XXXMBE);
+            serializer(XXXLCV);
+            serializer(XXXWFL);
+            serializer(TRGFIP);
+            serializer(TRGSFT);
+            serializer(TRGSFT_has_value);
+            serializer(THIONX);
+            serializer(TRWGHT);
+
+            serializer(NEWTMX);
+            serializer(NEWTMN);
+            serializer(LITMAX);
+            serializer(LITMIN);
+            serializer(MXWSIT);
+            serializer(MXWPIT);
+            serializer(DDPLIM);
+            serializer(DDSLIM);
+            serializer(TRGDPR);
+            serializer(XXXDPR);
+            serializer(XXXDPR_has_value);
+        }
     };
 
 } //namespace Opm
