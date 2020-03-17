@@ -289,7 +289,7 @@ namespace Opm
             auto splitGroups = splitDynMap(groups);
             serializer(splitGroups.first);
             serializer(splitGroups.second);
-            serializer(m_oilvaporizationproperties);
+            m_oilvaporizationproperties.serializeOp(serializer);
             serializer(m_events);
             serializer(m_modifierDeck);
             serializer(m_tuning);
