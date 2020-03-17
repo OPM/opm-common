@@ -668,6 +668,9 @@ namespace {
                 // Treat the top segment individually
                 rSeg[iS + Ix::DistOutlet]      = units.from_si(M::length, welSegSet.lengthTopSegment());
                 rSeg[iS + Ix::OutletDepthDiff] = units.from_si(M::length, welSegSet.depthTopSegment());
+                rSeg[iS + Ix::SegDiam]         = units.from_si(M::length, (segment0.internalDiameter()));
+                rSeg[iS + Ix::SegRough]        = units.from_si(M::length, (segment0.roughness()));
+                rSeg[iS + Ix::SegArea]         = areaFromLengthUnitConv *  segment0.crossArea();
                 rSeg[iS + Ix::SegVolume]       = volFromLengthUnitConv*welSegSet.volumeTopSegment();
                 rSeg[iS + Ix::DistBHPRef]      = rSeg[iS + Ix::DistOutlet];
                 rSeg[iS + Ix::DepthBHPRef]     = rSeg[iS + Ix::OutletDepthDiff];
