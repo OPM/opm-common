@@ -57,6 +57,11 @@ public:
     using PLTMap = std::unordered_map<std::string,
                                       DynamicState<std::pair<PLT, std::size_t>>>;
 
+    template <typename Value>
+    using ConfigMap = std::unordered_map<
+        std::string, DynamicState<std::pair<Value, std::size_t>>
+    >;
+
     using WellOpenTimeMap = std::unordered_map<std::string, std::size_t>;
 
     RFTConfig();
@@ -90,12 +95,19 @@ public:
 
     bool operator==(const RFTConfig& data) const;
 
-private:
-    template <typename Value>
-    using ConfigMap = std::unordered_map<
-        std::string, DynamicState<std::pair<Value, std::size_t>>
-    >;
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        tm.serializeOp(serializer);
+        serializer(first_rft_event);
+        serializer(well_open_rft_time);
+        serializer(well_open_rft_name);
+        serializer(well_open);
+        serializer.template map<ConfigMap<RFT>,false>(rft_config);
+        serializer.template map<ConfigMap<PLT>,false>(plt_config);
+    }
 
+private:
     TimeMap tm;
     std::size_t first_rft_event;
     std::pair<bool, std::size_t> well_open_rft_time;
