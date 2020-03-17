@@ -121,7 +121,6 @@ namespace Opm {
         void setErrorStopLimit(size_t timestep, int value);
         void setBugStopLimit(size_t timestep, int value);
 
-        const DynamicState<MLimits>& getLimits() const;
         bool operator==(const MessageLimits& data) const;
 
         template<class Serializer>
