@@ -74,6 +74,17 @@ namespace Opm
         bool operator==( const OilVaporizationProperties& ) const;
         bool operator!=( const OilVaporizationProperties& ) const;
 
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(m_type);
+            serializer(m_vap1);
+            serializer(m_vap2);
+            serializer(m_maxDRSDT);
+            serializer(m_maxDRSDT_allCells);
+            serializer(m_maxDRVDT);
+        }
+
     private:
         OilVaporization m_type = OilVaporization::UNDEF;
         double m_vap1;
