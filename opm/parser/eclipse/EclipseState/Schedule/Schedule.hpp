@@ -301,7 +301,7 @@ namespace Opm
             auto splitvfpinj = splitDynMap(vfpinj_tables);
             serializer(splitvfpinj.first);
             serializer(splitvfpinj.second);
-            serializer(wtest_config);
+            wtest_config.serializeOp(serializer);
             serializer(wlist_manager);
             udq_config.serializeOp(serializer);
             udq_active.serializeOp(serializer);
