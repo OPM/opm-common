@@ -142,6 +142,18 @@ The first row actually corresponds to saturated values.
         std::vector< SimpleTable >::const_iterator end()   const;
 
         bool operator==(const PvtxTable& data) const;
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            m_outerColumnSchema.serializeOp(serializer);
+            m_outerColumn.serializeOp(serializer);
+            m_underSaturatedSchema.serializeOp(serializer);
+            m_saturatedSchema.serializeOp(serializer);
+            serializer.vector(m_underSaturatedTables);
+            m_saturatedTable.serializeOp(serializer);
+        }
+
     protected:
         ColumnSchema m_outerColumnSchema;
         TableColumn m_outerColumn;
