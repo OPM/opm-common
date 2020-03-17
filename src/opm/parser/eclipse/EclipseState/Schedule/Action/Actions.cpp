@@ -97,11 +97,6 @@ std::vector<ActionX>::const_iterator Actions::end() const {
 }
 
 
-const std::vector<ActionX>& Actions::getActions() const {
-    return actions;
-}
-
-
 bool Actions::operator==(const Actions& data) const {
     return actions == data.actions;
 }
