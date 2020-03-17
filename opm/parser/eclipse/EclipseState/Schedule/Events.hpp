@@ -131,6 +131,12 @@ namespace Opm
 
         bool operator==(const Events& data) const;
 
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            m_events.template serializeOp<Serializer,false>(serializer);
+        }
+
     private:
         DynamicVector<uint64_t> m_events;
     };
