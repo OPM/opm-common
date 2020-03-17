@@ -49,6 +49,18 @@ class Aquifetp {
                 V0, // initial volume of water in aquifer
                 d0; // aquifer datum depth
         std::pair<bool, double> p0;
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(aquiferID);
+            serializer(pvttableID);
+            serializer(J);
+            serializer(C_t);
+            serializer(V0);
+            serializer(d0);
+            serializer(p0);
+        }
     };
 
     Aquifetp() = default;
@@ -60,6 +72,13 @@ class Aquifetp {
     std::vector<Aquifetp::AQUFETP_data>::const_iterator begin() const;
     std::vector<Aquifetp::AQUFETP_data>::const_iterator end() const;
     bool operator==(const Aquifetp& other) const;
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer.vector(m_aqufetp);
+    }
+
 private:
     std::vector<Aquifetp::AQUFETP_data> m_aqufetp;
 };
