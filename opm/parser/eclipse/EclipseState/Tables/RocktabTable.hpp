@@ -46,6 +46,13 @@ namespace Opm {
 
         bool operator==(const RocktabTable& data) const;
 
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            this->SimpleTable::serializeOp(serializer);
+            serializer(m_isDirectional);
+        }
+
     private:
         bool m_isDirectional = false;
     };
