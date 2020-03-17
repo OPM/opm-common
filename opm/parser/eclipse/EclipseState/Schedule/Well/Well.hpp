@@ -582,10 +582,6 @@ public:
     int vfp_table_number() const;
     double alq_value() const;
     double temperature() const;
-    const UnitSystem& units() const;
-    double udqUndefined() const;
-    bool hasSegments() const;
-    const WellGuideRate& wellGuideRate() const;
 
     bool operator==(const Well& data) const;
     void setInsertIndex(std::size_t index);
