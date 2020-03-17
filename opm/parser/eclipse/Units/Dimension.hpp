@@ -31,7 +31,6 @@ namespace Opm {
                   double SIoffset = 0.0);
 
         double getSIScaling() const;
-        double getSIScalingRaw() const;
         double getSIOffset() const;
 
         double convertRawToSi(double rawValue) const;
