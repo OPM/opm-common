@@ -310,23 +310,4 @@ GuideRateModel::Target GuideRateModel::convert_target(Group::GuideRateTarget gro
     throw std::logic_error("Can not convert this .... ");
 }
 
-double GuideRateModel::timeInterval() const {
-    return time_interval;
-}
-
-std::array<double,6> GuideRateModel::coefs() const {
-    return {A, B, C, D, E, F};
-}
-
-bool GuideRateModel::free_gas() const {
-    return use_free_gas;
-}
-
-bool GuideRateModel::defaultModel() const {
-    return default_model;
-}
-
-std::array<UDAValue,3> GuideRateModel::udaCoefs() const {
-    return {alpha, beta, gamma};
-}
 }

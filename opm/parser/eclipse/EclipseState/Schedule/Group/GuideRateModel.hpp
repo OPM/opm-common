@@ -82,12 +82,6 @@ public:
     static Target convert_target(Well::GuideRateTarget well_target);
     static double pot(Target target, double oil_pot, double gas_pot, double wat_pot);
 
-    double timeInterval() const;
-    std::array<double, 6> coefs() const;
-    bool free_gas() const;
-    bool defaultModel() const;
-    std::array<UDAValue,3> udaCoefs() const;
-
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {
