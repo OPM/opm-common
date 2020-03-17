@@ -56,12 +56,8 @@ WList::storage::const_iterator WList::end() const {
     return this->well_list.end();
 }
 
-const WList::storage& WList::wellList() const {
-    return this->well_list;
-}
-
 bool WList::operator==(const WList& data) const {
-    return this->wellList() == data.wellList();
+    return this->well_list == data.well_list;
 }
 
 }
