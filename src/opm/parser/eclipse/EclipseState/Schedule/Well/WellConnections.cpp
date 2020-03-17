@@ -523,23 +523,4 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
         m_connections.erase(new_end, m_connections.end());
     }
 
-
-    int WellConnections::getHeadI() const {
-        return headI;
-    }
-
-
-    int WellConnections::getHeadJ() const {
-        return headJ;
-    }
-
-
-    size_t WellConnections::getNumRemoved() const {
-        return num_removed;
-    }
-
-
-    const std::vector<Connection>& WellConnections::getConnections() const {
-        return m_connections;
-    }
 }

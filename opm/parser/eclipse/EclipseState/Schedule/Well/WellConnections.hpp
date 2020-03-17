@@ -88,10 +88,6 @@ namespace Opm {
         bool operator==( const WellConnections& ) const;
         bool operator!=( const WellConnections& ) const;
 
-        int getHeadI() const;
-        int getHeadJ() const;
-        size_t getNumRemoved() const;
-        const std::vector<Connection>& getConnections() const;
         Connection::Order ordering() const { return this->m_ordering; }
 
         template<class Serializer>
