@@ -83,7 +83,29 @@ namespace Opm {
             std::vector<int> cell_id;
 
             bool operator==(const AQUCT_data& other) const;
+
+            template<class Serializer>
+            void serializeOp(Serializer& serializer)
+            {
+                serializer(aquiferID);
+                serializer(inftableID);
+                serializer(pvttableID);
+                serializer(phi_aq);
+                serializer(d0);
+                serializer(C_t);
+                serializer(r_o);
+                serializer(k_a);
+                serializer(c1);
+                serializer(h);
+                serializer(theta);
+                serializer(c2);
+                serializer(p0);
+                serializer(td);
+                serializer(pi);
+                serializer(cell_id);
+            }
         };
+
         AquiferCT() = default;
         AquiferCT(const TableManager& tables, const Deck& deck);
         AquiferCT(const std::vector<AquiferCT::AQUCT_data>& data);
@@ -93,6 +115,13 @@ namespace Opm {
         std::vector<AquiferCT::AQUCT_data>::const_iterator end() const;
         const std::vector<AquiferCT::AQUCT_data>& data() const;
         bool operator==(const AquiferCT& other) const;
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer.vector(m_aquct);
+        }
+
     private:
         std::vector<AquiferCT::AQUCT_data> m_aquct;
     };
