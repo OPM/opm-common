@@ -173,8 +173,4 @@ namespace Opm {
         return !(*this == other);
     }
 
-    const std::vector<DeckItem>& DeckRecord::getItems() const {
-        return m_items;
-    }
-
 }
