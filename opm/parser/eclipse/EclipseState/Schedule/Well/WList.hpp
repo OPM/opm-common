@@ -40,6 +40,13 @@ public:
     storage::const_iterator end() const;
 
     bool operator==(const WList& data) const;
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(well_list);
+    }
+
 private:
     storage well_list;
 };
