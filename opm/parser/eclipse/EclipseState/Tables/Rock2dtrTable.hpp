@@ -36,13 +36,14 @@ namespace Opm {
         double getPressureValue(size_t index) const;
         double getTransMultValue(size_t pressureIndex, size_t saturationIndex ) const;
 
-        const std::vector<std::vector<double>>& transMultValues() const
-        { return m_transMultValues; }
-
-        const std::vector<double>& pressureValues() const
-        { return m_pressureValues; }
-
         bool operator==(const Rock2dtrTable& data) const;
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(m_transMultValues);
+            serializer(m_pressureValues);
+        }
 
     protected:
         std::vector< std::vector <double> > m_transMultValues;

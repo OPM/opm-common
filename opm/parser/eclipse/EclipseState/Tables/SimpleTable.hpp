@@ -42,9 +42,6 @@ namespace Opm {
                     bool jfunc);
         explicit SimpleTable( TableSchema );
 
-        const TableSchema& schema() const;
-        const OrderedMap<std::string, TableColumn>& columns() const;
-        bool jfunc() const;
         void addColumns();
         void init(const DeckItem& deckItem );
         size_t numColumns() const;
@@ -71,6 +68,14 @@ namespace Opm {
         void assertJFuncPressure(const bool jf) const;
 
         bool operator==(const SimpleTable& data) const;
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            m_schema.serializeOp(serializer);
+            m_columns.serializeOp(serializer);
+            serializer(m_jfunc);
+        }
 
     protected:
         TableSchema m_schema;

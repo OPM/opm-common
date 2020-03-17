@@ -51,20 +51,6 @@ namespace Opm {
     }
 
 
-    const TableSchema& SimpleTable::schema() const {
-        return m_schema;
-    }
-
-
-    const OrderedMap<std::string, TableColumn>& SimpleTable::columns() const {
-        return m_columns;
-    }
-
-
-    bool SimpleTable::jfunc() const {
-        return m_jfunc;
-    }
-
     void SimpleTable::addRow( const std::vector<double>& row) {
         if (row.size() == numColumns()) {
             for (size_t colIndex  = 0; colIndex < numColumns(); colIndex++) {
@@ -184,8 +170,8 @@ namespace Opm {
 
 
     bool SimpleTable::operator==(const SimpleTable& data) const {
-        return this->schema() == data.schema() &&
-               this->columns() == data.columns() &&
-               this->jfunc() == data.jfunc();
+        return this->m_schema == data.m_schema &&
+               this->m_columns == data.m_columns &&
+               this->m_jfunc == data.m_jfunc;
     }
 }

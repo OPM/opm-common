@@ -66,6 +66,15 @@ namespace Opm {
                        this->face_dir == other.face_dir;
             }
 
+            template<class Serializer>
+            void serializeOp(Serializer& serializer)
+            {
+                serializer(aquiferID);
+                serializer(global_index);
+                serializer(influx_coeff);
+                serializer(influx_mult);
+                serializer(face_dir);
+            }
         };
 
 
@@ -78,8 +87,14 @@ namespace Opm {
             bool active() const;
 
             const std::vector<Aquancon::AquancCell> operator[](int aquiferID) const;
-        private:
 
+            template<class Serializer>
+            void serializeOp(Serializer& serializer)
+            {
+                serializer.map(cells);
+            }
+
+        private:
             static bool cellInsideReservoirAndActive(const EclipseGrid& grid, int i, int j, int k);
             static bool neighborCellInsideReservoirAndActive(const EclipseGrid& grid, int i, int j, int k, FaceDir::DirEnum faceDir);
 

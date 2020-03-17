@@ -41,6 +41,15 @@ public:
     const Aquifetp& fetp() const;
     const Aquancon& connections() const;
     bool operator==(const AquiferConfig& other);
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        aquifetp.serializeOp(serializer);
+        aquiferct.serializeOp(serializer);
+        aqconn.serializeOp(serializer);
+    }
+
 private:
     Aquifetp aquifetp;
     AquiferCT aquiferct;

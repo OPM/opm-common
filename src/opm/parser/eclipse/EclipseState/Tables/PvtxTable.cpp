@@ -165,37 +165,12 @@ namespace Opm {
     }
 
 
-    const ColumnSchema& PvtxTable::getOuterColumnSchema() const {
-        return m_outerColumnSchema;
-    }
-
-
-    const TableColumn& PvtxTable::getOuterColumn() const {
-        return m_outerColumn;
-    }
-
-
-    const TableSchema& PvtxTable::getUnderSaturatedSchema() const {
-        return m_underSaturatedSchema;
-    }
-
-
-    const TableSchema& PvtxTable::getSaturatedSchema() const {
-        return m_saturatedSchema;
-    }
-
-
-    const std::vector<SimpleTable>& PvtxTable::getUnderSaturatedTables() const {
-        return m_underSaturatedTables;
-    }
-
-
     bool PvtxTable::operator==(const PvtxTable& data) const {
-        return this->getOuterColumnSchema() == data.getOuterColumnSchema() &&
-               this->getOuterColumn() == data.getOuterColumn() &&
-               this->getUnderSaturatedSchema() == data.getUnderSaturatedSchema() &&
-               this->getSaturatedSchema() == data.getSaturatedSchema() &&
-               this->getUnderSaturatedTables() == data.getUnderSaturatedTables() &&
-               this->getSaturatedTable() == data.getSaturatedTable();
+        return this->m_outerColumnSchema == data.m_outerColumnSchema &&
+               this->m_outerColumn == data.m_outerColumn &&
+               this->m_underSaturatedSchema == data.m_underSaturatedSchema &&
+               this->m_saturatedSchema == data.m_saturatedSchema &&
+               this->m_underSaturatedTables == data.m_underSaturatedTables &&
+               this->m_saturatedTable == data.m_saturatedTable;
     }
 }

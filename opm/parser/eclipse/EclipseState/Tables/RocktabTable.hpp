@@ -42,9 +42,14 @@ namespace Opm {
         const TableColumn& getTransmissibilityMultiplierYColumn() const;
         const TableColumn& getTransmissibilityMultiplierZColumn() const;
 
-        bool isDirectional() const;
-
         bool operator==(const RocktabTable& data) const;
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            this->SimpleTable::serializeOp(serializer);
+            serializer(m_isDirectional);
+        }
 
     private:
         bool m_isDirectional = false;

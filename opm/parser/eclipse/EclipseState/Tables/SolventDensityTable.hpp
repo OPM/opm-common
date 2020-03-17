@@ -45,6 +45,12 @@ namespace Opm {
             return this->m_tableValues.size();
         }
 
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(m_tableValues);
+        }
+
     private:
         std::vector<double> m_tableValues;
     };

@@ -1194,6 +1194,35 @@ namespace Opm {
             solventtables[lineIdx].init(keyword.getRecord(lineIdx));
         }
     }
+
+    TableManager::SplitSimpleTables TableManager::splitSimpleTable(std::map<std::string,TableContainer>& simpleTables)
+    {
+        SplitSimpleTables result;
+
+        // PlyshlogTable need special treatment
+        auto it = simpleTables.find("PLYSHLOG");
+        if (it != simpleTables.end()) {
+            result.plyshMax = it->second.max();
+            for (const auto& mapIt : it->second.tables()) {
+                auto ptr = std::static_pointer_cast<PlyshlogTable>(mapIt.second);
+                result.plyshMap.insert(std::make_pair(mapIt.first, ptr));
+            }
+            simpleTables.erase(it);
+        }
+
+        // RocktabTable need special treatment
+        it = simpleTables.find("ROCKMAP");
+        if (it != simpleTables.end()) {
+            result.rockMax = it->second.max();
+            for (const auto& mapIt : it->second.tables()) {
+                auto ptr = std::static_pointer_cast<RocktabTable>(mapIt.second);
+                result.rockMap.insert(std::make_pair(mapIt.first,  ptr));
+            }
+            simpleTables.erase(it);
+        }
+
+        return result;
+    }
 }
 
 

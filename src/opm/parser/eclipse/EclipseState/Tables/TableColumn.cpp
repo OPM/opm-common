@@ -62,24 +62,8 @@ namespace Opm {
             throw std::invalid_argument("Incorrect ordering of values in column: " + m_schema.name());
     }
 
-    const ColumnSchema& TableColumn::schema() const {
-        return m_schema;
-    }
-
     const std::string& TableColumn::name() const {
         return m_name;
-    }
-
-    const std::vector<double>& TableColumn::values() const {
-        return m_values;
-    }
-
-    const std::vector<bool>& TableColumn::defaults() const {
-        return m_default;
-    }
-
-    size_t TableColumn::defaultCount() const {
-        return m_defaultCount;
     }
 
     void TableColumn::assertNext(size_t index , double value) const {
@@ -359,11 +343,11 @@ namespace Opm {
     }
 
     bool TableColumn::operator==(const TableColumn& data) const {
-        return this->schema() == data.schema() &&
+        return this->m_schema == data.m_schema &&
                this->name() == data.name() &&
-               this->values() == data.values() &&
-               this->defaults() == data.defaults() &&
-               this->defaultCount() == data.defaultCount();
+               this->m_values == data.m_values &&
+               this->m_default == data.m_default &&
+               this->m_defaultCount == data.m_defaultCount;
     }
 
 }

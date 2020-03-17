@@ -92,6 +92,13 @@ namespace Opm {
 
         bool operator==(const TableContainer& data) const;
 
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(m_maxTables);
+            serializer.map(m_tables);
+        }
+
     private:
         size_t m_maxTables;
         TableMap m_tables;

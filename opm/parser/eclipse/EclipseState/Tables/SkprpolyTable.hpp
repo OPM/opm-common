@@ -37,11 +37,17 @@ namespace Opm {
         explicit SkprpolyTable(const DeckKeyword& table);
 
         double referenceConcentration() const;
-        void setReferenceConcentration(double refConcentration);
 
         const std::vector<std::vector<double>>& getSkinPressures() const;
 
         bool operator==(const SkprpolyTable& data) const;
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            this->PolyInjTable::serializeOp(serializer);
+            serializer(m_ref_polymer_concentration);
+        }
 
     private:
         double m_ref_polymer_concentration;

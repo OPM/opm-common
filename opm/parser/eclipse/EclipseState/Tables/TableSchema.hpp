@@ -37,12 +37,17 @@ namespace Opm {
         const ColumnSchema& getColumn( size_t columnIndex ) const;
         bool hasColumn(const std::string&) const;
 
-        const OrderedMap<std::string, ColumnSchema>& getColumns() const;
-
         /* Number of columns */
         size_t size() const;
 
         bool operator==(const TableSchema& data) const;
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            m_columns.serializeOp(serializer);
+        }
+
     private:
         OrderedMap<std::string, ColumnSchema> m_columns;
     };

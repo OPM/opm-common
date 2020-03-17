@@ -118,7 +118,7 @@ namespace Opm {
         void serializeOp(Serializer& serializer)
         {
             // FieldPropsManager is handled otherwise, do not add
-            serializer(m_tables);
+            m_tables.serializeOp(serializer);
             m_runspec.serializeOp(serializer);
             m_eclipseConfig.serializeOp(serializer);
             serializer(m_deckUnitSystem);
@@ -129,7 +129,7 @@ namespace Opm {
             m_transMult.serializeOp(serializer);
             m_faults.serializeOp(serializer);
             serializer(m_title);
-            serializer(aquifer_config);
+            aquifer_config.serializeOp(serializer);
         }
 
     private:

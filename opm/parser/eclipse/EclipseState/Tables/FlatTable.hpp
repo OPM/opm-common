@@ -12,6 +12,12 @@ struct FlatTable : public std::vector< T > {
     explicit FlatTable(const std::vector<T>& data) :
         std::vector<T>(data)
     {}
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer.vector(*this);
+    }
 };
 
 struct DENSITYRecord {
@@ -25,6 +31,14 @@ struct DENSITYRecord {
         return oil == data.oil &&
                water == data.water &&
                gas == data.gas;
+    }
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(oil);
+        serializer(water);
+        serializer(gas);
     }
 };
 
@@ -48,6 +62,16 @@ struct PVTWRecord {
                viscosity == data.viscosity &&
                viscosibility == data.viscosibility;
     }
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(reference_pressure);
+        serializer(volume_factor);
+        serializer(compressibility);
+        serializer(viscosity);
+        serializer(viscosibility);
+    }
 };
 
 struct PvtwTable : public FlatTable< PVTWRecord > {
@@ -65,6 +89,12 @@ struct ROCKRecord {
                compressibility == data.compressibility;
     }
 
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(reference_pressure);
+        serializer(compressibility);
+    }
 };
 
 struct RockTable : public FlatTable< ROCKRecord > {
@@ -87,6 +117,16 @@ struct PVCDORecord {
                viscosity == data.viscosity &&
                viscosibility == data.viscosibility;
     }
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(reference_pressure);
+        serializer(volume_factor);
+        serializer(compressibility);
+        serializer(viscosity);
+        serializer(viscosibility);
+    }
 };
 
 struct PvcdoTable : public FlatTable< PVCDORecord > {
@@ -100,6 +140,12 @@ struct PlmixparRecord {
 
     bool operator==(const PlmixparRecord& data) const {
         return todd_langstaff == data.todd_langstaff;
+    }
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(todd_langstaff);
     }
 };
 
@@ -121,6 +167,15 @@ struct PlyvmhRecord {
                gamma == data.gamma &&
                kappa == data.kappa;
     }
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(k_mh);
+        serializer(a_mh);
+        serializer(gamma);
+        serializer(kappa);
+    }
 };
 
 struct PlyvmhTable : public FlatTable<PlyvmhRecord> {
@@ -135,6 +190,12 @@ struct ShrateRecord {
     bool operator==(const ShrateRecord& data) const {
         return rate == data.rate;
     }
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(rate);
+    }
 };
 
 struct ShrateTable : public FlatTable<ShrateRecord> {
@@ -148,6 +209,12 @@ struct Stone1exRecord {
 
     bool operator==(const Stone1exRecord& data) const {
         return eta == data.eta;
+    }
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(eta);
     }
 };
 
@@ -165,6 +232,13 @@ struct TlmixparRecord {
         return viscosity == data.viscosity &&
                density == data.density;
     }
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(viscosity);
+        serializer(density);
+    }
 };
 
 struct TlmixparTable : public FlatTable< TlmixparRecord> {
@@ -180,6 +254,13 @@ struct VISCREFRecord {
     bool operator==(const VISCREFRecord& data) const {
         return reference_pressure == data.reference_pressure &&
               reference_rs == data.reference_rs;
+    }
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(reference_pressure);
+        serializer(reference_rs);
     }
 };
 
@@ -198,6 +279,14 @@ struct WATDENTRecord {
         return reference_temperature == data.reference_temperature &&
                first_coefficient == data.first_coefficient &&
                second_coefficient == data.second_coefficient;
+    }
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(reference_temperature);
+        serializer(first_coefficient);
+        serializer(second_coefficient);
     }
 };
 

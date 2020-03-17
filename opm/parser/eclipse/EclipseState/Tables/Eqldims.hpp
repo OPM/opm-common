@@ -82,6 +82,17 @@ namespace Opm {
                    this->getNumTracerTables() == data.getNumTracerTables() &&
                    this->getNumDepthNodesTracer() == data.getNumDepthNodesTracer();
         }
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(m_ntequl);
+            serializer(m_depth_nodes_p);
+            serializer(m_depth_nodes_tab);
+            serializer(m_nttrvd);
+            serializer(m_nstrvd);
+        }
+
     private:
         size_t m_ntequl , m_depth_nodes_p , m_depth_nodes_tab , m_nttrvd , m_nstrvd;
 

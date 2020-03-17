@@ -34,8 +34,10 @@
 #include <opm/parser/eclipse/EclipseState/Tables/DenT.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvtgTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvtoTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/RocktabTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/Rock2dTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/Rock2dtrTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/PlyshlogTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvtwsaltTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/BrineDensityTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SolventDensityTable.hpp>
@@ -213,6 +215,72 @@ namespace Opm {
         double rtemp() const;
 
         bool operator==(const TableManager& data) const;
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            auto simpleTables = m_simpleTables;
+            auto split = splitSimpleTable(simpleTables);
+            serializer.map(simpleTables);
+            serializer(split.plyshMax);
+            serializer.map(split.plyshMap);
+            serializer(split.rockMax);
+            serializer.map(split.rockMap);
+            serializer.vector(m_pvtgTables);
+            serializer.vector(m_pvtoTables);
+            serializer.vector(m_rock2dTables);
+            serializer.vector(m_rock2dtrTables);
+            m_pvtwTable.serializeOp(serializer);
+            m_pvcdoTable.serializeOp(serializer);
+            m_densityTable.serializeOp(serializer);
+            m_plyvmhTable.serializeOp(serializer);
+            m_rockTable.serializeOp(serializer);
+            m_plmixparTable.serializeOp(serializer);
+            m_shrateTable.serializeOp(serializer);
+            m_stone1exTable.serializeOp(serializer);
+            m_tlmixparTable.serializeOp(serializer);
+            m_viscrefTable.serializeOp(serializer);
+            m_watdentTable.serializeOp(serializer);
+            serializer.vector(m_pvtwsaltTables);
+            serializer.vector(m_bdensityTables);
+            serializer.vector(m_sdensityTables);
+            serializer.map(m_plymwinjTables);
+            serializer.map(m_skprwatTables);
+            serializer.map(m_skprpolyTables);
+            m_tabdims.serializeOp(serializer);
+            m_regdims.serializeOp(serializer);
+            m_eqldims.serializeOp(serializer);
+            m_aqudims.serializeOp(serializer);
+            serializer(hasImptvd);
+            serializer(hasEnptvd);
+            serializer(hasEqlnum);
+            serializer(hasShrate);
+            serializer(jfunc);
+            oilDenT.serializeOp(serializer);
+            gasDenT.serializeOp(serializer);
+            watDenT.serializeOp(serializer);
+            stcond.serializeOp(serializer);
+            serializer(m_gas_comp_index);
+            serializer(m_rtemp);
+            if (!serializer.isSerializing()) {
+                m_simpleTables = simpleTables;
+                if (split.plyshMax > 0) {
+                    TableContainer container(split.plyshMax);
+                    for (const auto& it : split.plyshMap) {
+                        container.addTable(it.first, it.second);
+                    }
+                    m_simpleTables.insert(std::make_pair("PLYSHLOG", container));
+                }
+                if (split.rockMax > 0) {
+                    TableContainer container(split.rockMax);
+                    for (const auto& it : split.rockMap) {
+                        container.addTable(it.first, it.second);
+                    }
+                    m_simpleTables.insert(std::make_pair("ROCKTAB", container));
+                }
+            }
+        }
+
     private:
         TableContainer& forceGetTables( const std::string& tableName , size_t numTables);
 
@@ -469,6 +537,15 @@ namespace Opm {
         StandardCond stcond;
         std::size_t m_gas_comp_index;
         double m_rtemp;
+
+        struct SplitSimpleTables {
+          size_t plyshMax = 0;
+          size_t rockMax = 0;
+          std::map<size_t, std::shared_ptr<PlyshlogTable>> plyshMap;
+          std::map<size_t, std::shared_ptr<RocktabTable>> rockMap;
+        };
+
+        SplitSimpleTables splitSimpleTable(std::map<std::string,TableContainer>& simpleTables);
     };
 }
 

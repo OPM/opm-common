@@ -34,7 +34,6 @@ namespace Opm {
         ColumnSchema(const std::string& name , Table::ColumnOrderEnum order, Table::DefaultAction defaultAction);
         ColumnSchema(const std::string& name , Table::ColumnOrderEnum order, double defaultValue);
         const std::string& name() const;
-        Table::ColumnOrderEnum order() const;
         bool validOrder( double value1 , double value2) const;
         bool lookupValid( ) const;
         bool acceptsDefault( ) const;
@@ -44,6 +43,15 @@ namespace Opm {
         double getDefaultValue( ) const;
 
         bool operator==(const ColumnSchema& data) const;
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(m_name);
+            serializer(m_order);
+            serializer(m_defaultAction);
+            serializer(m_defaultValue);
+        }
 
     private:
         std::string m_name;
