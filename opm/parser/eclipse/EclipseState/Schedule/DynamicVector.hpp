@@ -64,12 +64,8 @@ namespace Opm {
             (*this)[index] = std::move( value );
         }
 
-        const std::vector<T>& data() const {
-            return m_data;
-        }
-
         bool operator==(const DynamicVector<T>& data) const {
-            return this->data() == data.data();
+            return this->m_data == data.m_data;
         }
 
         template<class Serializer, bool complexType = true>
