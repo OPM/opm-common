@@ -310,7 +310,7 @@ namespace Opm
             serializer(gconsump);
             serializer(global_whistctl_mode);
             serializer(m_actions);
-            serializer(rft_config);
+            rft_config.serializeOp(serializer);
             serializer(m_nupcol);
             restart_config.serializeOp(serializer);
             serializer(wellgroup_events);

@@ -90,7 +90,24 @@ public:
 
     bool operator==(const RFTConfig& data) const;
 
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        tm.serializeOp(serializer);
+        serializer(first_rft_event);
+        serializer(well_open_rft_time);
+        serializer(well_open_rft_name);
+        serializer(well_open);
+        serializer.template map<UnorderedMap2,std::string,
+                       DynamicState<std::pair<RFT, std::size_t>>,false>(rft_config);
+        serializer.template map<UnorderedMap2,std::string,
+                       DynamicState<std::pair<PLT, std::size_t>>,false>(plt_config);
+    }
+
 private:
+    template<class Key, class Value>
+    using UnorderedMap2 = std::unordered_map<Key,Value>;
+
     template <typename Value>
     using ConfigMap = std::unordered_map<
         std::string, DynamicState<std::pair<Value, std::size_t>>
