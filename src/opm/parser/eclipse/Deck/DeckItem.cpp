@@ -491,39 +491,6 @@ bool DeckItem::to_bool(std::string string_value) {
     throw std::invalid_argument("Could not convert string " + string_value + " to bool ");
 }
 
-const std::vector<double>& DeckItem::dVal() const {
-    return dval;
-}
-
-const std::vector<int>& DeckItem::iVal() const {
-    return ival;
-}
-
-const std::vector<std::string>& DeckItem::sVal() const {
-    return sval;
-}
-
-const std::vector<UDAValue>& DeckItem::uVal() const {
-    return uval;
-}
-
-const std::vector<value::status>& DeckItem::valueStatus() const {
-    return value_status;
-}
-
-bool DeckItem::rawData() const {
-    return raw_data;
-}
-
-const std::vector<Dimension>& DeckItem::activeDimensions() const {
-    return active_dimensions;
-}
-
-const std::vector<Dimension>& DeckItem::defaultDimensions() const {
-    return default_dimensions;
-}
-
-
 /*
  * Explicit template instantiations. These must be manually maintained and
  * updated with changes in DeckItem so that code is emitted.

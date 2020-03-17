@@ -127,16 +127,6 @@ namespace Opm {
         bool operator!=(const DeckItem& other) const;
         static bool to_bool(std::string string_value);
 
-        const std::vector<double>& dVal() const;
-        const std::vector<int>& iVal() const;
-        const std::vector<std::string>& sVal() const;
-        const std::vector<UDAValue>& uVal() const;
-
-        const std::vector<value::status>& valueStatus() const;
-        bool rawData() const;
-        const std::vector<Dimension>& activeDimensions() const;
-        const std::vector<Dimension>& defaultDimensions() const;
-
         bool is_uda() { return  (type == get_type< UDAValue >()); };
         bool is_double() { return  type == get_type< double >(); };
         bool is_int() { return  type == get_type< int >() ; };
