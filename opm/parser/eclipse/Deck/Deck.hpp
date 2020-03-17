@@ -155,10 +155,6 @@ namespace Opm {
             void write( DeckOutput& output ) const ;
             friend std::ostream& operator<<(std::ostream& os, const Deck& deck);
 
-            const std::vector<DeckKeyword>& keywords() const;
-            std::size_t unitSystemAccessCount() const;
-            const std::unique_ptr<UnitSystem>& activeUnitSystem() const;
-
             template<class Serializer>
             void serializeOp(Serializer& serializer)
             {
