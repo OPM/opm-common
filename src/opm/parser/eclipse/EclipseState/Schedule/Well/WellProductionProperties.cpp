@@ -385,8 +385,4 @@ namespace Opm {
         return (update_count > 0);
     }
 
-    int Well::WellProductionProperties::getNumProductionControls() const {
-        return m_productionControls;
-    }
-
 } // namespace Opm

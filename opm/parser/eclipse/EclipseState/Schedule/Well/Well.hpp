@@ -374,7 +374,6 @@ public:
         ProductionControls controls(const SummaryState& st, double udq_default) const;
         bool updateUDQActive(const UDQConfig& udq_config, UDQActive& active) const;
 
-        int getNumProductionControls() const;
         void setBHPLimit(const double limit);
         int productionControls() const { return this->m_productionControls; }
 
