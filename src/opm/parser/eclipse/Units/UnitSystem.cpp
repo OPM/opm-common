@@ -1255,10 +1255,6 @@ namespace {
         return system;
      }
 
-    const std::map<std::string,Dimension>& UnitSystem::getDimensions() const {
-        return m_dimensions;
-    }
-
     void UnitSystem::init()
     {
         switch(m_unittype) {
