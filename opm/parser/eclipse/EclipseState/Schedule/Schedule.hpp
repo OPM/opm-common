@@ -312,7 +312,7 @@ namespace Opm
             serializer(m_actions);
             serializer(rft_config);
             serializer(m_nupcol);
-            serializer(restart_config);
+            restart_config.serializeOp(serializer);
             serializer(wellgroup_events);
             if (wells_static.size() == 0)
                 reconstructDynMap(splitWells.first, splitWells.second, wells_static);
