@@ -103,6 +103,17 @@ namespace Opm {
                    this->getNumRSNodes() == data.getNumRSNodes();
         }
 
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(m_ntsfun);
+            serializer(m_ntpvt);
+            serializer(m_nssfun);
+            serializer(m_nppvt);
+            serializer(m_ntfip);
+            serializer(m_nrpvt);
+        }
+
     private:
         size_t m_ntsfun,m_ntpvt,m_nssfun,m_nppvt,m_ntfip,m_nrpvt;
     };

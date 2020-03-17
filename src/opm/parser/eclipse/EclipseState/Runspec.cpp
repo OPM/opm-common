@@ -79,10 +79,6 @@ Phases::Phases(const std::bitset<NUM_PHASES_IN_ENUM>& bset) :
 {
 }
 
-unsigned long Phases::getBits() const {
-    return bits.to_ulong();
-}
-
 bool Phases::active( Phase p ) const noexcept {
     return this->bits[ static_cast< int >( p ) ];
 }

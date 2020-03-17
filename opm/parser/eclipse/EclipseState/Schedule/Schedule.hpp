@@ -294,7 +294,7 @@ namespace Opm
             serializer(m_modifierDeck);
             serializer(m_tuning);
             serializer(m_messageLimits);
-            serializer(m_runspec);
+            m_runspec.serializeOp(serializer);
             auto splitvfpprod = splitDynMap(vfpprod_tables);
             serializer(splitvfpprod.first);
             serializer(splitvfpprod.second);
@@ -303,8 +303,8 @@ namespace Opm
             serializer(splitvfpinj.second);
             serializer(wtest_config);
             serializer(wlist_manager);
-            serializer(udq_config);
-            serializer(udq_active);
+            udq_config.serializeOp(serializer);
+            udq_active.serializeOp(serializer);
             serializer(guide_rate_config);
             serializer(gconsale);
             serializer(gconsump);

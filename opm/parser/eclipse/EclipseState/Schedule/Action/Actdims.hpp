@@ -38,6 +38,15 @@ public:
 
     bool operator==(const Actdims& data) const;
 
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(keywords);
+        serializer(line_count);
+        serializer(characters);
+        serializer(conditions);
+    }
+
 private:
     std::size_t keywords;
     std::size_t line_count;

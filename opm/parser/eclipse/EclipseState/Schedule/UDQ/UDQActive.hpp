@@ -70,6 +70,18 @@ public:
             return !(*this == other);
         }
 
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(udq);
+            serializer(input_index);
+            serializer(use_index);
+            serializer(wgname);
+            serializer(control);
+            serializer(uad_code);
+            serializer(use_count);
+        }
+
         std::string udq;
         std::size_t input_index;
         std::size_t use_index = 0;
@@ -100,6 +112,15 @@ public:
                    this->control == other.control;
         }
 
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(input_index);
+            serializer(udq);
+            serializer(wgname);
+            serializer(control);
+        }
+
         std::size_t input_index;
         std::string udq;
         std::string wgname;
@@ -119,12 +140,16 @@ public:
     const std::vector<Record>& get_iuad() const;
     std::vector<InputRecord> get_iuap() const;
 
-    const std::vector<InputRecord>& getInputRecords() const;
-    const std::vector<Record>& getOutputRecords() const;
-    const std::unordered_map<std::string, std::size_t>& getUdqKeys() const;
-    const std::unordered_map<std::string, std::size_t>& getWgKeys() const;
-
     bool operator==(const UDQActive& data) const;
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer.vector(input_data);
+        serializer.vector(output_data);
+        serializer(udq_keys);
+        serializer(wg_keys);
+    }
 
 private:
     std::string udq_hash(const std::string& udq, UDAControl control);

@@ -62,11 +62,6 @@ namespace Opm {
         void add_define(const std::string& quantity, const std::vector<std::string>& expression);
 
         std::vector<UDQDefine> definitions() const;
-        const std::unordered_map<std::string, UDQDefine>& definitionMap() const;
-        const std::unordered_map<std::string, UDQAssign>& assignmentMap() const;
-        const std::unordered_map<std::string, std::string>& unitsMap() const;
-        const OrderedMap<std::string, UDQIndex>& inputIndex() const;
-        const std::map<UDQVarType, std::size_t>& typeCount() const;
         std::vector<UDQDefine> definitions(UDQVarType var_type) const;
         std::vector<UDQInput> input() const;
 
@@ -83,6 +78,21 @@ namespace Opm {
         const UDQFunctionTable& function_table() const;
 
         bool operator==(const UDQConfig& config) const;
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            udq_params.serializeOp(serializer);
+            serializer.map(m_definitions);
+            serializer.map(m_assignments);
+            serializer(units);
+            input_index.serializeOp(serializer);
+            serializer(type_count);
+            // The UDQFunction table is constant up to udq_params.
+            // So we can just construct a new instance here.
+            if (!serializer.isSerializing())
+                udqft = UDQFunctionTable(udq_params);
+        }
 
     private:
         void add_node(const std::string& quantity, UDQAction action);

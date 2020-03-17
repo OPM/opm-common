@@ -183,28 +183,11 @@ UDQActive::Record UDQActive::operator[](std::size_t index) const {
     return output_record;
 }   
 
-const std::vector<UDQActive::InputRecord>& UDQActive::getInputRecords() const {
-    return input_data;
-}
-
-const std::vector<UDQActive::Record>& UDQActive::getOutputRecords() const {
-    return output_data;
-}
-
-const std::unordered_map<std::string, std::size_t>& UDQActive::getUdqKeys() const {
-    return udq_keys;
-}
-
-const std::unordered_map<std::string, std::size_t>& UDQActive::getWgKeys() const {
-    return wg_keys;
-}
-
-
 bool UDQActive::operator==(const UDQActive& data) const {
-    return this->getInputRecords() == data.getInputRecords() &&
-           this->getOutputRecords() == data.getOutputRecords() &&
-           this->getUdqKeys() == data.getUdqKeys() &&
-           this->getWgKeys() == data.getWgKeys();
+    return this->input_data == data.input_data &&
+           this->output_data == data.output_data &&
+           this->udq_keys == data.udq_keys &&
+           this->wg_keys == data.wg_keys;
 }
 
 

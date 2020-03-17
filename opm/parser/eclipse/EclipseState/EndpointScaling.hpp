@@ -41,9 +41,19 @@ class EndpointScaling {
         bool twopoint() const noexcept;
         bool threepoint() const noexcept;
 
-        unsigned long getBits() const;
-
         bool operator==(const EndpointScaling& data) const;
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            if (serializer.isSerializing())
+                serializer(options.to_ulong());
+            else {
+                unsigned long bits;
+                serializer(bits);
+                options = std::bitset<4>(bits);
+            }
+        }
 
     private:
         enum class option {

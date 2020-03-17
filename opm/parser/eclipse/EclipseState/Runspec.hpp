@@ -55,12 +55,23 @@ class Phases {
         Phases( bool oil, bool gas, bool wat, bool solvent = false, bool polymer = false, bool energy = false,
                 bool polymw = false, bool foam = false, bool brine = false ) noexcept;
         Phases(const std::bitset<NUM_PHASES_IN_ENUM>& bbits);
-        unsigned long getBits() const;
 
         bool active( Phase ) const noexcept;
         size_t size() const noexcept;
 
         bool operator==(const Phases& data) const;
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            if (serializer.isSerializing())
+                serializer(bits.to_ulong());
+            else {
+              unsigned long Bits;
+              serializer(Bits);
+              bits = std::bitset<NUM_PHASES_IN_ENUM>(Bits);
+            }
+        }
 
     private:
         std::bitset< NUM_PHASES_IN_ENUM > bits;
@@ -89,7 +100,7 @@ public:
         return this->nGMax;
     }
 
-        int maxWellsInField() const
+    int maxWellsInField() const
     {
         return this->nWMax;
     }
@@ -99,6 +110,15 @@ public:
                this->maxWellsPerGroup() == data.maxWellsPerGroup() &&
                this->maxGroupsInField() == data.maxGroupsInField() &&
                this->maxWellsInField() == data.maxWellsInField();
+    }
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(nWMax);
+        serializer(nCWMax);
+        serializer(nWGMax);
+        serializer(nGMax);
     }
 
 private:
@@ -131,6 +151,14 @@ public:
     }
 
     bool operator==(const WellSegmentDims& data) const;
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(nSegWellMax);
+        serializer(nSegmentMax);
+        serializer(nLatBranchMax);
+    }
 
 private:
     int nSegWellMax;
@@ -174,6 +202,14 @@ public:
 
     bool operator==(const EclHysterConfig& data) const;
 
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(activeHyst);
+        serializer(pcHystMod);
+        serializer(krHystMod);
+    }
+
 private:
     // enable hysteresis at all
     bool activeHyst  { false };
@@ -208,6 +244,13 @@ public:
 
     bool operator==(const SatFuncControls& rhs) const;
 
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(tolcrit);
+        serializer(krmodel);
+    }
+
 private:
     double tolcrit;
     ThreePhaseOilKrModel krmodel = ThreePhaseOilKrModel::Default;
@@ -239,6 +282,20 @@ public:
     const SatFuncControls& saturationFunctionControls() const noexcept;
 
     bool operator==(const Runspec& data) const;
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        active_phases.serializeOp(serializer);
+        m_tabdims.serializeOp(serializer);
+        endscale.serializeOp(serializer);
+        welldims.serializeOp(serializer);
+        wsegdims.serializeOp(serializer);
+        udq_params.serializeOp(serializer);
+        hystpar.serializeOp(serializer);
+        m_actdims.serializeOp(serializer);
+        m_sfuncctrl.serializeOp(serializer);
+    }
 
 private:
     Phases active_phases;

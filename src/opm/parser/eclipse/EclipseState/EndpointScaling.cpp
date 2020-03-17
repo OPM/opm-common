@@ -32,10 +32,6 @@ bool EndpointScaling::threepoint() const noexcept {
     return this->options[ static_cast< ue >( option::threepoint ) ];
 }
 
-unsigned long EndpointScaling::getBits() const {
-    return options.to_ulong();
-}
-
 bool EndpointScaling::operator==(const EndpointScaling& data) const {
     return options == data.options;
 }

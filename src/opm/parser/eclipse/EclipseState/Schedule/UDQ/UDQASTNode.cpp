@@ -294,18 +294,18 @@ void UDQASTNode::set_right(const UDQASTNode& arg) {
 }
 
 bool UDQASTNode::operator==(const UDQASTNode& data) const {
-    if ((this->getLeft() && !data.getLeft()) ||
-        (!this->getLeft() && data.getLeft()))
+    if ((this->left && !data.left) ||
+        (!this->left && data.left))
         return false;
 
-    if (this->getLeft() && !(*this->getLeft() == *data.getLeft()))
+    if (this->left && !(*this->left == *data.left))
         return false;
 
-    if ((this->getRight() && !data.getRight()) ||
-        (!this->getRight() && data.getRight()))
+    if ((this->right && !data.right) ||
+        (!this->right && data.right))
         return false;
 
-    if (this->getRight() && !(*this->getRight() == *data.getRight()))
+    if (this->right && !(*this->right == *data.right))
         return false;
 
     return type == data.type &&
@@ -313,30 +313,6 @@ bool UDQASTNode::operator==(const UDQASTNode& data) const {
            string_value == data.string_value &&
            scalar_value == data.scalar_value &&
            selector == data.selector;
-}
-
-const std::string& UDQASTNode::stringValue() const {
-    return string_value;
-}
-
-double UDQASTNode::scalarValue() const {
-    return scalar_value;
-}
-
-const std::vector<std::string>& UDQASTNode::getSelectors() const {
-    return selector;
-}
-
-const std::shared_ptr<UDQASTNode>& UDQASTNode::getLeft() const {
-    return left;
-}
-
-const std::shared_ptr<UDQASTNode>& UDQASTNode::getRight() const {
-    return right;
-}
-
-UDQTokenType UDQASTNode::getType() const {
-    return type;
 }
 
 }

@@ -67,9 +67,17 @@ public:
     const std::string& input_string() const;
     UDQVarType  var_type() const;
     std::set<UDQTokenType> func_tokens() const;
-    std::shared_ptr<UDQASTNode> getAst() const;
 
     bool operator==(const UDQDefine& data) const;
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(m_keyword);
+        serializer(ast);
+        serializer(m_var_type);
+        serializer(string_data);
+    }
 
 private:
     std::string m_keyword;
