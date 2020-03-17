@@ -72,6 +72,12 @@ namespace Opm {
             return this->data() == data.data();
         }
 
+        template<class Serializer, bool complexType = true>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer.template vector<T, complexType>(m_data);
+        }
+
     private:
         std::vector<T> m_data;
     };
