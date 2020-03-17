@@ -37,7 +37,6 @@ namespace Opm {
         explicit SkprpolyTable(const DeckKeyword& table);
 
         double referenceConcentration() const;
-        void setReferenceConcentration(double refConcentration);
 
         const std::vector<std::vector<double>>& getSkinPressures() const;
 
