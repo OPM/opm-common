@@ -916,6 +916,12 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "CWPR", crate< rt::wat, producer > },
     { "COPR", crate< rt::oil, producer > },
     { "CGPR", crate< rt::gas, producer > },
+    { "CGFR", sub(crate<rt::gas, producer>, crate<rt::gas, injector>) },
+    { "COFR", sub(crate<rt::oil, producer>, crate<rt::oil, injector>) },
+    { "CWFR", sub(crate<rt::wat, producer>, crate<rt::wat, injector>) },
+    { "CWCT", div( crate< rt::wat, producer >,
+                   sum( crate< rt::wat, producer >, crate< rt::oil, producer > ) ) },
+    { "CGOR", div( crate< rt::gas, producer >, crate< rt::oil, producer > ) },
     // Minus for injection rates and pluss for production rate
     { "CNFR", sub( crate< rt::solvent, producer >, crate<rt::solvent, injector >) },
     { "CWPT", mul( crate< rt::wat, producer >, duration ) },
