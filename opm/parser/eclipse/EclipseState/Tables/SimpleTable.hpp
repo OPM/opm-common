@@ -72,6 +72,14 @@ namespace Opm {
 
         bool operator==(const SimpleTable& data) const;
 
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            m_schema.serializeOp(serializer);
+            m_columns.serializeOp(serializer);
+            serializer(m_jfunc);
+        }
+
     protected:
         TableSchema m_schema;
         OrderedMap<std::string, TableColumn> m_columns;
