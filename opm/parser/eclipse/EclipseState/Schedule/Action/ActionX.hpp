@@ -94,12 +94,8 @@ public:
       The conditions() and keyword_strings() methods, and their underlying data
       members are only present to support writing formatted restart files.
     */
-    const std::vector<DeckKeyword>& getKeywords() const;
     const std::vector<Condition>& conditions() const;
-    const Action::AST& getCondition() const;
     std::vector<std::string> keyword_strings() const;
-    size_t getRunCount() const;
-    std::time_t getLastRun() const;
 
     bool operator==(const ActionX& data) const;
 

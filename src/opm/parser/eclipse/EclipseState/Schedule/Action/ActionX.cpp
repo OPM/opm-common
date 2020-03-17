@@ -180,34 +180,16 @@ const std::vector<Condition>& ActionX::conditions() const {
 }
 
 
-const std::vector<DeckKeyword>& ActionX::getKeywords() const {
-    return this->keywords;
-}
-
-
-size_t ActionX::getRunCount() const {
-    return run_count;
-}
-
-std::time_t ActionX::getLastRun() const {
-    return last_run;
-}
-
-const AST& ActionX::getCondition() const {
-    return condition;
-}
-
-
 bool ActionX::operator==(const ActionX& data) const {
     return this->name() == data.name() &&
            this->max_run() == data.max_run() &&
            this->min_wait() == data.min_wait() &&
            this->start_time() == data.start_time() &&
-           this->getKeywords() == data.getKeywords() &&
-           this->getCondition() == data.getCondition() &&
+           this->keywords == data.keywords &&
+           this->condition == data.condition &&
            this->conditions() == data.conditions() &&
-           this->getRunCount() == data.getRunCount() &&
-           this->getLastRun() == data.getLastRun();
+           this->run_count == data.run_count &&
+           this->last_run == data.last_run;
 }
 
 }
