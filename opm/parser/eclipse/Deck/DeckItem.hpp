@@ -144,6 +144,21 @@ namespace Opm {
 
         UDAValue& get_uda() { return uval[0]; };
 
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(dval);
+            serializer(ival);
+            serializer(sval);
+            serializer.vector(uval);
+            serializer(type);
+            serializer(item_name);
+            serializer.template vector<value::status, false>(value_status);
+            serializer(raw_data);
+            serializer.vector(active_dimensions);
+            serializer.vector(default_dimensions);
+        }
+
     private:
         mutable std::vector< double > dval;
         std::vector< int > ival;
