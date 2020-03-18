@@ -2,7 +2,7 @@ import unittest
 import sys
 import numpy as np
 
-from opm.io.ecl import EclFile
+from opm.io.ecl import EclFile, eclArrType
 try:
     from tests.utils import test_path
 except ImportError:
@@ -21,6 +21,7 @@ def array_index(ecl_file, target_kw):
 
 class TestEclFile(unittest.TestCase):
 
+
     def test_arrays(self):
 
         refList=["INTEHEAD","LOGIHEAD","DOUBHEAD","PORV","DEPTH","DX","DY","DZ","PORO",
@@ -32,12 +33,22 @@ class TestEclFile(unittest.TestCase):
         file2uf = EclFile(test_path("data/SPE9.INIT"), preload=False)
         self.assertEqual(len(file2uf), 24)
 
-        arrList = [ x[0] for x in file2uf.arrays ]
-        self.assertEqual(arrList, refList)
+        arr_string_list = [ x[0] for x in file2uf.arrays ]
+        self.assertEqual(arr_string_list, refList)
 
         file2f = EclFile(test_path("data/SPE9.FINIT"))
         self.assertEqual(len(file2f), 24)
+        self.assertTrue(isinstance(file2uf.arrays, list))
+        self.assertEqual(len(file2uf.arrays), len(refList))
 
+        for str1, str2 in zip(file2uf.arrays, refList):
+            self.assertEqual(str1[0], str2)
+
+        self.assertEqual( file2uf.arrays[3] , ("PORV", eclArrType.REAL, 9000) )
+        self.assertEqual( file2uf.arrays[16] , ("TABDIMS", eclArrType.INTE,100) )
+        self.assertEqual( file2uf.arrays[17] , ("TAB", eclArrType.DOUB, 885) )
+
+        
     def test_get_function(self):
 
         file1 = EclFile(test_path("data/SPE9.INIT"), preload=True)
@@ -125,7 +136,7 @@ class TestEclFile(unittest.TestCase):
         self.assertEqual(len(logih), 121)
         self.assertEqual(logih[0], True)
         self.assertEqual(logih[2], False)
-        self.assertEqual(logih[8], True)
+        self.assertEqual(logih[8], False)
 
     def test_get_function_char(self):
 
@@ -138,6 +149,43 @@ class TestEclFile(unittest.TestCase):
         self.assertEqual(len(keyw), 312)
         self.assertEqual(keyw[0], "TIME")
         self.assertEqual(keyw[16], "FWCT")
+
+
+    def test_get_occurence(self):
+
+        file1 = EclFile(test_path("data/SPE9.UNRST"))
+
+        self.assertTrue("PRESSURE" in file1)
+
+        with self.assertRaises(RuntimeError):
+            test = file1["PRESSURE", int(10)]
+
+        #first occurence of pressure
+        pres = file1["PRESSURE"]
+        pres0 = file1["PRESSURE", 0]
+
+        self.assertEqual(len(pres), len(pres0))
+
+        for v1, v2 in zip(pres, pres0):
+            self.assertEqual(v1, v2)
+
+        #occurence number 2 of pressure
+        pres2 = file1["PRESSURE", 1]
+
+        self.assertTrue(isinstance(pres2, np.ndarray))
+        self.assertEqual(pres2.dtype, "float32")
+
+        self.assertEqual(len(pres2), 9000)
+
+        seqn0 = file1["SEQNUM", 0]
+        self.assertEqual(seqn0[0], 37)
+
+        seqn1 = file1["SEQNUM", 1]
+        self.assertEqual(seqn1[0], 74)
+
+        self.assertEqual(file1.count("PRESSURE"), 2)
+        self.assertEqual(file1.count("XXXX"), 0)
+
 
 if __name__ == "__main__":
 
