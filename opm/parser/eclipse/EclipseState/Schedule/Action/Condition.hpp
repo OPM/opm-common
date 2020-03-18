@@ -87,6 +87,16 @@ enum class Comparator {
     std::string cmp_string;
 
     bool operator==(const Condition& data) const;
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        lhs.serializeOp(serializer);
+        rhs.serializeOp(serializer);
+        serializer(logic);
+        serializer(cmp);
+        serializer(cmp_string);
+    }
 };
 
 
