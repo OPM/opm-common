@@ -1,10 +1,12 @@
 from opm._common import eclArrType
 from opm._common import EclFile
 from opm._common import ERst
+from opm._common import ESmry
 
 import sys
 import datetime
 import numpy as np
+import datetime
 
 # When extracting the strings from CHAR keywords we get a character array, in
 # Python this becomes a list of bytes. This desperate monkey-patching is to
@@ -80,6 +82,40 @@ def contains_erst(self, arg):
         raise ValueError("expecting tuple (array name , report step number) or \
                           or report step number")
 
+@property
+def esmry_start_date(self):
+
+    startd = self.__get_startdat()
+
+    if len(startd) < 6:
+        for n in range(len(startd), 6):
+            startd.append(0)
+
+
+    sec = startd[5] // 1000000
+    microseconds = startd[5] % 1000000
+
+    return datetime.datetime( startd[2], startd[1], startd[0], startd[3],
+                              startd[4], sec, microseconds )
+
+@property
+def esmry_end_date(self):
+
+    start = self.start_date
+    time = self.__get_all("TIME")
+
+    return start + datetime.timedelta(days = float(time[-1]))
+
+
+def getitem_esmry(self, arg):
+
+    if isinstance(arg, tuple):
+        if arg[1] == True:
+            return self.__get_at_rstep(arg[0])
+        else:
+            return self.__get_all(arg[0])
+    else:
+        return self.__get_all(arg)
 
 
 setattr(EclFile, "__getitem__", getitem_eclfile)
@@ -89,4 +125,6 @@ setattr(ERst, "__contains__", contains_erst)
 setattr(ERst, "arrays", erst_get_list_of_arrays)
 setattr(ERst, "__getitem__", getitem_erst)
 
-
+setattr(ESmry, "start_date", esmry_start_date)
+setattr(ESmry, "end_date", esmry_end_date)
+setattr(ESmry, "__getitem__", getitem_esmry)

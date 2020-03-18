@@ -47,7 +47,7 @@ public:
 
     int timestepIdxAtReportstepStart(const int reportStep) const;
 
-    int numberOfTimeSteps() const { return param[0].size(); }
+    size_t numberOfTimeSteps() const { return param[0].size(); }
 
     const std::string& get_unit(const std::string& name) const;
 

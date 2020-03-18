@@ -5,6 +5,7 @@
 #include <opm/io/eclipse/EclFile.hpp>
 #include <opm/io/eclipse/EclIOdata.hpp>
 #include <src/opm/io/eclipse/ERst.cpp>
+#include <src/opm/io/eclipse/ESmry.cpp>
 
 #include "export.hpp"
 #include "converters.hpp"
@@ -124,6 +125,17 @@ npArray get_erst_vector(Opm::EclIO::ERst * file_ptr, const std::string& key, siz
 }
 
 
+py::array get_smry_vector(Opm::EclIO::ESmry * file_ptr, const std::string& key)
+{
+    return convert::numpy_array( file_ptr->get(key) );
+}
+
+
+py::array get_smry_vector_at_rsteps(Opm::EclIO::ESmry * file_ptr, const std::string& key)
+{
+    return convert::numpy_array( file_ptr->get_at_rstep(key) );
+}
+
 }
 
 
@@ -162,4 +174,12 @@ void python::common::export_IO(py::module& m) {
         .def("__get_data", &get_erst_by_index)
         .def("__get_data", &get_erst_vector);
 
+   py::class_<Opm::EclIO::ESmry>(m, "ESmry")
+        .def(py::init<const std::string &, const bool>(), py::arg("filename"), py::arg("load_base_run") = false)
+        .def("__contains__", &Opm::EclIO::ESmry::hasKey)
+        .def("__len__", &Opm::EclIO::ESmry::numberOfTimeSteps)
+        .def("__get_all", &get_smry_vector)
+        .def("__get_at_rstep", &get_smry_vector_at_rsteps)
+        .def("__get_startdat", &Opm::EclIO::ESmry::get_startdat)
+        .def_property_readonly("list_of_keys", &Opm::EclIO::ESmry::keywordList);
 }
