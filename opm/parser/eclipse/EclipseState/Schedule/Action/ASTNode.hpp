@@ -35,6 +35,17 @@ public:
 
     bool operator==(const ASTNode& data) const;
 
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(type);
+        serializer(func_type);
+        serializer(func);
+        serializer(arg_list);
+        serializer(number);
+        serializer.vector(children);
+    }
+
 private:
     std::vector<std::string> arg_list;
     double number = 0.0;
