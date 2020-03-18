@@ -64,7 +64,7 @@ namespace Opm {
             buffer.write(size);
             for (const auto& witr : *this) {
                 const std::string& name = witr.first;
-                buffer.write(witr);
+                buffer.write(name);
                 const auto& pi_constr = witr.second;
                 pi_constr.write(buffer);
             }
