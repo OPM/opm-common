@@ -299,7 +299,7 @@ namespace Opm
             serializer(splitvfpprod.first);
             serializer(splitvfpprod.second);
             auto splitvfpinj = splitDynMap(vfpinj_tables);
-            serializer(splitvfpinj.first);
+            serializer.vector(splitvfpinj.first);
             serializer(splitvfpinj.second);
             wtest_config.serializeOp(serializer);
             wlist_manager.serializeOp(serializer);

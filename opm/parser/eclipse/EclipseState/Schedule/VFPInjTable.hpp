@@ -94,6 +94,17 @@ public:
 
     double operator()(size_t thp_idx, size_t flo_idx) const;
 
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(m_table_num);
+        serializer(m_datum_depth);
+        serializer(m_flo_type);
+        serializer(m_flo_data);
+        serializer(m_thp_data);
+        serializer(m_data);
+    }
+
 private:
     int m_table_num;
     double m_datum_depth;
