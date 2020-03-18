@@ -131,6 +131,18 @@ bool ERft::hasArray(const std::string& arrayName, const std::string& wellName,
 }
 
 
+bool ERft::hasArray(const std::string& arrayName, int reportInd) const
+{
+    auto searchInd = arrIndexRange.find(reportInd);
+
+    int fromInd = std::get<0>(searchInd->second);
+    int toInd = std::get<1>(searchInd->second);
+
+    auto it = std::find(array_name.begin()+fromInd,array_name.begin()+toInd,arrayName);
+    return it != array_name.begin() + toInd;
+}
+
+
 int ERft::getArrayIndex(const std::string& name, const std::string& wellName,
                         const RftDate& date) const
 {

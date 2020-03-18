@@ -7,6 +7,7 @@
 #include <src/opm/io/eclipse/ERst.cpp>
 #include <src/opm/io/eclipse/ESmry.cpp>
 #include <src/opm/io/eclipse/EGrid.cpp>
+#include <src/opm/io/eclipse/ERft.cpp>
 
 #include <opm/common/utility/numeric/calculateCellVol.hpp>
 
@@ -191,8 +192,59 @@ py::array get_cellvolumes(Opm::EclIO::EGrid * file_ptr)
     return get_cellvolumes_mask(file_ptr, mask);
 }
 
+npArray get_rft_vector_WellDate(Opm::EclIO::ERft * file_ptr,const std::string& name,
+                                  const std::string& well, int y, int m, int d)
+{
+    auto arrList = file_ptr->listOfRftArrays(well, y, m, d);
+    size_t array_index = get_array_index(arrList, name, 0);
+    Opm::EclIO::eclArrType array_type = std::get<1>(arrList[array_index]);
+
+    if (array_type == Opm::EclIO::INTE)
+        return std::make_tuple (convert::numpy_array( file_ptr->getRft<int>(name, well, y, m, d) ), array_type);
+
+    if (array_type == Opm::EclIO::REAL)
+        return std::make_tuple (convert::numpy_array( file_ptr->getRft<float>(name, well, y, m, d) ), array_type);
+
+    if (array_type == Opm::EclIO::DOUB)
+        return std::make_tuple (convert::numpy_array( file_ptr->getRft<double>(name, well, y, m, d) ), array_type);
+
+    if (array_type == Opm::EclIO::CHAR)
+        return std::make_tuple (convert::numpy_string_array( file_ptr->getRft<std::string>(name, well, y, m, d) ), array_type);
+
+    if (array_type == Opm::EclIO::LOGI)
+        return std::make_tuple (convert::numpy_array( file_ptr->getRft<bool>(name, well, y, m, d) ), array_type);
+
+    throw std::logic_error("Data type not supported");
+}
+
+npArray get_rft_vector_Index(Opm::EclIO::ERft * file_ptr,const std::string& name, int reportIndex)
+{
+    auto arrList = file_ptr->listOfRftArrays(reportIndex);
+    size_t array_index = get_array_index(arrList, name, 0);
+    Opm::EclIO::eclArrType array_type = std::get<1>(arrList[array_index]);
+
+    if (array_type == Opm::EclIO::INTE)
+        return std::make_tuple (convert::numpy_array( file_ptr->getRft<int>(name, reportIndex) ), array_type);
+
+    if (array_type == Opm::EclIO::REAL)
+        return std::make_tuple (convert::numpy_array( file_ptr->getRft<float>(name, reportIndex) ), array_type);
+
+    if (array_type == Opm::EclIO::DOUB)
+        return std::make_tuple (convert::numpy_array( file_ptr->getRft<double>(name, reportIndex) ), array_type);
+
+    if (array_type == Opm::EclIO::CHAR)
+        return std::make_tuple (convert::numpy_string_array( file_ptr->getRft<std::string>(name, reportIndex) ), array_type);
+
+    if (array_type == Opm::EclIO::LOGI)
+        return std::make_tuple (convert::numpy_array( file_ptr->getRft<bool>(name, reportIndex) ), array_type);
+
+    throw std::logic_error("Data type not supported");
+}
+
 
 }
+
+
 
 
 
@@ -250,4 +302,25 @@ void python::common::export_IO(py::module& m) {
         .def("xyz_from_active_index", &get_xyz_from_active_index)
         .def("cellvolumes", &get_cellvolumes)
         .def("cellvolumes", &get_cellvolumes_mask);
+
+   py::class_<Opm::EclIO::ERft>(m, "ERft")
+        .def(py::init<const std::string &>())
+        .def("__get_list_of_rfts", &Opm::EclIO::ERft::listOfRftReports)
+
+        .def("__get_list_of_arrays", (std::vector< std::tuple<std::string, Opm::EclIO::eclArrType, long int> >
+                                     (Opm::EclIO::ERft::*)(int) const) &Opm::EclIO::ERft::listOfRftArrays)
+
+        .def("__get_list_of_arrays", (std::vector< std::tuple<std::string, Opm::EclIO::eclArrType, long int> >
+                                     (Opm::EclIO::ERft::*)(const std::string&, int, int, int) const)
+                                      &Opm::EclIO::ERft::listOfRftArrays)
+
+        .def("__get_data", &get_rft_vector_WellDate)
+        .def("__get_data", &get_rft_vector_Index)
+
+        .def("__has_rft", (bool (Opm::EclIO::ERft::*)(const std::string&, int, int, int) const) &Opm::EclIO::ERft::hasRft)
+        .def("__has_array", (bool (Opm::EclIO::ERft::*)(const std::string&, int) const) &Opm::EclIO::ERft::hasArray)
+        .def("__has_array", (bool (Opm::EclIO::ERft::*)(const std::string&, const std::string&, const
+                             std::tuple<int,int,int>&) const) &Opm::EclIO::ERft::hasArray)
+
+       .def("__len__", &Opm::EclIO::ERft::numberOfReports);
 }

@@ -67,6 +67,8 @@ public:
     bool hasArray(const std::string& arrayName, const std::string& wellName,
                   const RftDate& date) const;
 
+    bool hasArray(const std::string& arrayName, int reportInd) const;
+
     int numberOfReports() { return numReports; }
 
 private:

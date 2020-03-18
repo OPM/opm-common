@@ -3,6 +3,7 @@ from opm._common import EclFile
 from opm._common import ERst
 from opm._common import ESmry
 from opm._common import EGrid
+from opm._common import ERft
 
 import sys
 import datetime
@@ -119,6 +120,63 @@ def getitem_esmry(self, arg):
         return self.__get_all(arg)
 
 
+def contains_erft(self, arg):
+
+    if isinstance(arg, tuple):
+        if len(arg) == 4:
+            return self.__has_rft(arg[0], arg[1], arg[2], arg[3])
+        elif len(arg) == 5:
+            return self.__has_array(arg[0], arg[1], (arg[2], arg[3], arg[4]))
+        elif len(arg) == 2:
+            return self.__has_array(arg[0], arg[1])
+        else:
+            raise ValueError("expecting tuple (wellname, year, month, day) or \
+                (arrayName, wellname, year, month, day) or (arrayName, report_index)")
+    else:
+        raise ValueError("expecting tuple (wellname, year, month, day) or \
+                (arrayName, wellname, year, month, day) or (arrayName, report_index)")
+
+@property
+def erft_list_of_rfts(self):
+
+    if sys.version_info.major==2:
+        data = self.__get_list_of_rfts()
+        return [ ( x[0].encode("utf-8"), x[1], x[2] ) for x in data ]
+    else:
+        return self.__get_list_of_rfts()
+
+
+def erft_list_of_arrays(self, arg1, arg2 = None):
+
+    if not arg2:
+        data = self.__get_list_of_arrays(int(arg1))
+    else:
+        data = self.__get_list_of_arrays(str(arg1), int(arg2[0]), int(arg2[1]), int(arg2[2]))
+
+    if sys.version_info.major==2:
+        return [ ( x[0].encode("utf-8"), x[1], x[2] ) for x in data ]
+    else:
+        return data
+
+
+def getitem_erft(self, arg):
+
+    if isinstance(arg, tuple):
+        if len(arg) == 2:
+            data, array_type = self.__get_data(arg[0], arg[1])
+        elif len(arg) == 5:
+            data, array_type = self.__get_data(arg[0], arg[1], arg[2], arg[3], arg[4])
+        else:
+           raise ValueError("ERft.__getitem__, expecting tuple (name, index) or (name, well, y, m, d)")
+    else:
+        raise ValueError("ERft.__getitem__, expecting tuple (name, index) or (name, well, y, m, d)")
+
+    if array_type == eclArrType.CHAR:
+        return np.array([ x.decode("utf-8") for x in data ])
+    else:
+        return data
+
+
 setattr(EclFile, "__getitem__", getitem_eclfile)
 setattr(EclFile, "arrays", eclfile_get_list_of_arrays)
 
@@ -129,3 +187,8 @@ setattr(ERst, "__getitem__", getitem_erst)
 setattr(ESmry, "start_date", esmry_start_date)
 setattr(ESmry, "end_date", esmry_end_date)
 setattr(ESmry, "__getitem__", getitem_esmry)
+
+setattr(ERft, "__contains__", contains_erft)
+setattr(ERft, "list_of_rfts", erft_list_of_rfts)
+setattr(ERft, "arrays", erft_list_of_arrays)
+setattr(ERft, "__getitem__",getitem_erft)
