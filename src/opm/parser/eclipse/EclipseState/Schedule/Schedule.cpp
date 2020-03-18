@@ -2967,7 +2967,7 @@ void Schedule::load_rst(const RestartIO::RstState& rst_state, const EclipseGrid&
         }
 
         {
-            std::shared_ptr<Opm::WellConnections> well_connections = std::make_shared<Opm::WellConnections>(order_from_int(rst_well.completion_ordering), rst_well.ij[0], rst_well.ij[1], 0, connections);
+            std::shared_ptr<Opm::WellConnections> well_connections = std::make_shared<Opm::WellConnections>(order_from_int(rst_well.completion_ordering), rst_well.ij[0], rst_well.ij[1], connections);
             well.updateConnections( std::move(well_connections) );
         }
 

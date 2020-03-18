@@ -117,8 +117,7 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
 
     WellConnections::WellConnections() :
         headI(0),
-        headJ(0),
-        num_removed(0)
+        headJ(0)
     {
     }
 
@@ -132,12 +131,10 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
 
     WellConnections::WellConnections(Connection::Order order,
                                      int headIArg, int headJArg,
-                                     size_t numRemoved,
                                      const std::vector<Connection>& connections) :
         m_ordering(order),
         headI(headIArg),
         headJ(headJArg),
-        num_removed(numRemoved),
         m_connections(connections)
     {
     }
@@ -500,7 +497,6 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
 
     bool WellConnections::operator==( const WellConnections& rhs ) const {
         return this->size() == rhs.size() &&
-            this->num_removed == rhs.num_removed &&
             this->m_ordering == rhs.m_ordering &&
             std::equal( this->begin(), this->end(), rhs.begin() );
     }
@@ -514,7 +510,6 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
         auto new_end = std::remove_if(m_connections.begin(),
                                       m_connections.end(),
                                       [&grid](const Connection& c) { return !grid.cellActive(c.getI(), c.getJ(), c.getK()); });
-        this->num_removed += std::distance(new_end, m_connections.end());
         m_connections.erase(new_end, m_connections.end());
     }
 
@@ -526,11 +521,6 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
 
     int WellConnections::getHeadJ() const {
         return headJ;
-    }
-
-
-    size_t WellConnections::getNumRemoved() const {
-        return num_removed;
     }
 
 
