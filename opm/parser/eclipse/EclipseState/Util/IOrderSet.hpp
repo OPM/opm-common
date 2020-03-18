@@ -122,6 +122,12 @@ public:
                this->data() == data.data();
     }
 
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(m_index);
+        serializer(m_data);
+    }
 };
 }
 
