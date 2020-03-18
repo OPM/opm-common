@@ -117,6 +117,20 @@ struct GroupInjectionProperties {
     int injection_controls = 0;
     bool operator==(const GroupInjectionProperties& other) const;
     bool operator!=(const GroupInjectionProperties& other) const;
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(phase);
+        serializer(cmode);
+        surface_max_rate.serializeOp(serializer);
+        resv_max_rate.serializeOp(serializer);
+        target_reinj_fraction.serializeOp(serializer);
+        target_void_fraction.serializeOp(serializer);
+        serializer(reinj_group);
+        serializer(voidage_group);
+        serializer(injection_controls);
+    }
 };
 
 struct InjectionControls {
