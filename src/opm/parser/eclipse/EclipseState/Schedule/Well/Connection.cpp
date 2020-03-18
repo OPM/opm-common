@@ -77,7 +77,6 @@ namespace Opm {
 
 namespace {
 constexpr bool defaultSatTabId = true;
-constexpr int compseg_seqIndex = 1;
 constexpr double def_wellPi = 1.0;
 }
 
@@ -98,7 +97,6 @@ Connection::Connection(const RestartIO::RstConnection& rst_connection, std::size
         m_segDistStart(rst_connection.segdist_start),
         m_segDistEnd(rst_connection.segdist_end),
         m_defaultSatTabId(defaultSatTabId),
-        m_compSeg_seqIndex(compseg_seqIndex),
         segment_number(rst_connection.segment),
         wPi(def_wellPi)
     {
@@ -117,7 +115,7 @@ Connection::Connection(const RestartIO::RstConnection& rst_connection, std::size
                            const std::array<int,3>& IJK,
                            CTFKind kind, std::size_t seqIndex,
                            double segDistStart, double segDistEnd,
-                           bool defaultSatTabId, std::size_t compSegSeqIndex,
+                           bool defaultSatTabId,
                            int segment, double wellPi)
         : direction(dir)
         , center_depth(depth)
@@ -135,7 +133,6 @@ Connection::Connection(const RestartIO::RstConnection& rst_connection, std::size
         , m_segDistStart(segDistStart)
         , m_segDistEnd(segDistEnd)
         , m_defaultSatTabId(defaultSatTabId)
-        , m_compSeg_seqIndex(compSegSeqIndex)
         , segment_number(segment)
         , wPi(wellPi)
     {}
@@ -143,7 +140,7 @@ Connection::Connection(const RestartIO::RstConnection& rst_connection, std::size
     Connection::Connection()
           : Connection(Direction::X, 1.0, State::SHUT,
                        0, 0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                       {0,0,0}, CTFKind::Defaulted, 0, 0.0, 0.0, false, 0, 0, 0.0)
+                       {0,0,0}, CTFKind::Defaulted, 0, 0.0, 0.0, false, 0, 0.0)
     {}
 
     bool Connection::sameCoordinate(const int i, const int j, const int k) const {
@@ -176,10 +173,6 @@ Connection::Connection(const RestartIO::RstConnection& rst_connection, std::size
 
     const bool& Connection::getDefaultSatTabId() const {
         return m_defaultSatTabId;
-    }
-
-    const std::size_t& Connection::getCompSegSeqIndex() const {
-        return m_compSeg_seqIndex;
     }
 
     Connection::Direction Connection::dir() const {
@@ -245,12 +238,10 @@ Connection::Connection(const RestartIO::RstConnection& rst_connection, std::size
 
     void Connection::updateSegment(int segment_number_arg,
                                    double center_depth_arg,
-                                   std::size_t compseg_insert_index,
                                    double start,
                                    double end) {
         this->segment_number = segment_number_arg;
         this->center_depth = center_depth_arg;
-        this->m_compSeg_seqIndex = compseg_insert_index;
         this->m_segDistStart = start;
         this->m_segDistEnd = end;
     }

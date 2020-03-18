@@ -74,7 +74,7 @@ namespace {
                 //sort connections according to input sequence in COMPSEGS
                 std::sort(connSI.begin(), connSI.end(), [](const Opm::Connection* conn1, const Opm::Connection* conn2)
                                                             {
-                                                                return conn1->getCompSegSeqIndex() < conn2->getCompSegSeqIndex();
+                                                                return conn1->segment() < conn2->segment();
                                                             });
             } else {
                 std::sort(connSI.begin(), connSI.end(), [](const Opm::Connection* conn1, const Opm::Connection* conn2)

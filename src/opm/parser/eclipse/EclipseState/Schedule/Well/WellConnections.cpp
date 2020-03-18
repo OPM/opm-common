@@ -351,7 +351,6 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
                                     direction, ctf_kind,
                                     noConn, 0., 0., defaultSatTable);
             } else {
-                std::size_t css_ind = prev->getCompSegSeqIndex();
                 int conSegNo = prev->segment();
                 double conSDStart = prev->getSegDistStart();
                 double conSDEnd = prev->getSegDistEnd();
@@ -371,7 +370,6 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
 
                 prev->updateSegment(conSegNo,
                                     depth,
-                                    css_ind,
                                     conSDStart,
                                     conSDEnd);
             }

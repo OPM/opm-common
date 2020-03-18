@@ -113,7 +113,6 @@ namespace RestartIO {
                    double segDistStart,
                    double segDistEnd,
                    bool defaultSatTabId,
-                   std::size_t compSegSeqIndex,
                    int segment,
                    double wellPi);
 
@@ -143,12 +142,10 @@ namespace RestartIO {
         void scaleWellPi(double wellPi);
         void updateSegment(int segment_number_arg,
                            double center_depth_arg,
-                           std::size_t compseg_insert_index,
                            double start,
                            double end);
         const std::size_t& getSeqIndex() const;
         const bool& getDefaultSatTabId() const;
-        const std::size_t& getCompSegSeqIndex() const;
         void setDefaultSatTabId(bool id);
         const double& getSegDistStart() const;
         const double& getSegDistEnd() const;
@@ -178,7 +175,6 @@ namespace RestartIO {
         double m_segDistStart;
         double m_segDistEnd;
         bool m_defaultSatTabId;
-        std::size_t m_compSeg_seqIndex=0;
 
         // related segment number
         // 0 means the completion is not related to segment
