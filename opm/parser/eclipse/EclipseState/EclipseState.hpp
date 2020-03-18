@@ -121,7 +121,7 @@ namespace Opm {
             m_tables.serializeOp(serializer);
             m_runspec.serializeOp(serializer);
             m_eclipseConfig.serializeOp(serializer);
-            serializer(m_deckUnitSystem);
+            m_deckUnitSystem.serializeOp(serializer);
             m_inputNnc.serializeOp(serializer);
             m_inputEditNnc.serializeOp(serializer);
             m_gridDims.serializeOp(serializer);
