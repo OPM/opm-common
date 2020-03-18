@@ -40,6 +40,12 @@ namespace Opm {
 
         const ConcentrationMap& getConcentrations() const;
 
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(m_tracerConcentrations);
+        }
+
     private:
         ConcentrationMap m_tracerConcentrations;
     };
