@@ -116,20 +116,25 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
 } // anonymous namespace
 
     WellConnections::WellConnections() :
-      headI(0), headJ(0), num_removed(0)
+        headI(0),
+        headJ(0),
+        num_removed(0)
     {
     }
 
-    WellConnections::WellConnections(int headIArg, int headJArg) :
+    WellConnections::WellConnections(Connection::Order order,int headIArg, int headJArg) :
+        m_ordering(order),
         headI(headIArg),
         headJ(headJArg)
     {
     }
 
 
-    WellConnections::WellConnections(int headIArg, int headJArg,
+    WellConnections::WellConnections(Connection::Order order,
+                                     int headIArg, int headJArg,
                                      size_t numRemoved,
                                      const std::vector<Connection>& connections) :
+        m_ordering(order),
         headI(headIArg),
         headJ(headJArg),
         num_removed(numRemoved),
@@ -140,6 +145,7 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
 
 
     WellConnections::WellConnections(const WellConnections& src, const EclipseGrid& grid) :
+        m_ordering(src.ordering()),
         headI(src.headI),
         headJ(src.headJ)
     {
@@ -437,11 +443,13 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
 
 
 
-    void WellConnections::orderTRACK(size_t well_i, size_t well_j)
+    void WellConnections::order(size_t well_i, size_t well_j)
     {
-        if (m_connections.empty()) {
+        if (m_connections.empty())
             return;
-        }
+
+        if (this->m_ordering != Connection::Order::TRACK)
+            return;
 
         // Find the first connection and swap it into the 0-position.
         const double surface_z = 0.0;
@@ -498,6 +506,7 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
     bool WellConnections::operator==( const WellConnections& rhs ) const {
         return this->size() == rhs.size() &&
             this->num_removed == rhs.num_removed &&
+            this->m_ordering == rhs.m_ordering &&
             std::equal( this->begin(), this->end(), rhs.begin() );
     }
 

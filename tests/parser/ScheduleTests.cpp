@@ -3317,7 +3317,7 @@ BOOST_AUTO_TEST_CASE(WELL_STATIC) {
 
     const auto& connections = ws.getConnections();
     BOOST_CHECK_EQUAL(connections.size(), 0);
-    auto c2 = std::make_shared<WellConnections>(1,1);
+    auto c2 = std::make_shared<WellConnections>(Connection::Order::TRACK, 1,1);
     c2->addConnection(1,1,1,
                       100,
                       Connection::State::OPEN,
