@@ -2986,9 +2986,6 @@ BOOST_AUTO_TEST_CASE(FilterCompletions2) {
         const auto& c1_3 = schedule.getWell("OP_1", 3).getConnections();
         BOOST_CHECK_EQUAL(1, c1_1.size());
         BOOST_CHECK_EQUAL(8, c1_3.size());
-
-        BOOST_CHECK_EQUAL(2, c1_1.inputSize());
-        BOOST_CHECK_EQUAL(9, c1_3.inputSize());
     }
 }
 

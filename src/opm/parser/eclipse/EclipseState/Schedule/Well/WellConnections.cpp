@@ -385,11 +385,6 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
     }
 
 
-
-    size_t WellConnections::inputSize() const {
-        return m_connections.size() + this->num_removed;
-    }
-
     size_t WellConnections::size() const {
         return m_connections.size();
     }

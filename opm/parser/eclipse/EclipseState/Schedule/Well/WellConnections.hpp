@@ -61,7 +61,6 @@ namespace Opm {
 
         void add( Connection );
         size_t size() const;
-        size_t inputSize() const;
         const Connection& operator[](size_t index) const;
         const Connection& get(size_t index) const;
         const Connection& getFromIJK(const int i, const int j, const int k) const;
