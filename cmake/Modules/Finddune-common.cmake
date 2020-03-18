@@ -75,6 +75,8 @@ if(MPI_C_FOUND)
   set(CMAKE_REQUIRED_INCLUDES ${CMAKE_REQUIRED_INCLUDES};${MPI_C_INCLUDES})
   check_function_exists(MPI_Finalized MPI_2)
   cmake_pop_check_state()
+  # actively deactivate CXX bindings
+  add_definitions(-DMPICH_SKIP_MPICXX -DMPIPP_H -DMPI_NO_CPPBIND)
 endif(MPI_C_FOUND)
 
 # make version number available in config.h

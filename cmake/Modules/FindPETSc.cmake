@@ -82,11 +82,11 @@ set(PETSC_MPI_LIBRARY "")
 set(PETSC_MPI_INCLUDE_DIRS "")
 
 find_package(MPI)
-if(MPI_FOUND)
-    list(APPEND PETSC_MPI_LIBRARY "${MPI_LIBRARIES}")
-    set(PETSC_MPI_INCLUDE_DIRS ${MPI_INCLUDE_PATH})
+if(MPI_C_FOUND)
+    list(APPEND PETSC_MPI_LIBRARY "${MPI_C_LIBRARIES}")
+    set(PETSC_MPI_INCLUDE_DIRS ${MPI_C_INCLUDE_PATH})
 
-else(MPI_FOUND)
+else(MPI_C_FOUND)
 # if a system MPI wasn't found, look for PETSc's serial implementation. This
 # won't be available if PETSc was compiled with --with-mpi=0, so not finding
 # this won't be an error. This only needs to find the header, as the MPI
@@ -98,7 +98,7 @@ else(MPI_FOUND)
         PATH_SUFFIXES "mpiuni"
         ${_no_default_path}
         )
-endif(MPI_FOUND)
+endif(MPI_C_FOUND)
 
 if(NOT PETSC_MPI_INCLUDE_DIRS)
     message(WARNING "Could not find any MPI implementation. If PETSc is compiled with --with-mpi=0 this is ok. Otherwise you will get linker errors or (possibly subtle) runtime errors. Continuing.")
