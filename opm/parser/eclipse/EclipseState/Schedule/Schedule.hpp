@@ -291,7 +291,7 @@ namespace Opm
             serializer(splitGroups.second);
             m_oilvaporizationproperties.serializeOp(serializer);
             m_events.serializeOp(serializer);
-            serializer(m_modifierDeck);
+            m_modifierDeck.serializeOp(serializer);
             m_tuning.serializeOp(serializer);
             m_messageLimits.serializeOp(serializer);
             m_runspec.serializeOp(serializer);
