@@ -296,7 +296,7 @@ namespace Opm
             m_messageLimits.serializeOp(serializer);
             m_runspec.serializeOp(serializer);
             auto splitvfpprod = splitDynMap(vfpprod_tables);
-            serializer(splitvfpprod.first);
+            serializer.vector(splitvfpprod.first);
             serializer(splitvfpprod.second);
             auto splitvfpinj = splitDynMap(vfpinj_tables);
             serializer.vector(splitvfpinj.first);
