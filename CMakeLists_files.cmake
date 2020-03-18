@@ -412,6 +412,7 @@ if(ENABLE_ECL_OUTPUT)
           tests/SOFR_TEST.DATA
           tests/UDQ_TEST_WCONPROD_IUAD-2.DATA
           tests/UDQ_ACTIONX_TEST1.DATA
+          tests/UDQ_ACTIONX_TEST1_U.DATA
           tests/include_example_pvt.txt
           tests/include_example_summary.txt
           tests/include_sgof.txt
