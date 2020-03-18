@@ -97,6 +97,18 @@ namespace Opm {
         bool operator!=(const DeckKeyword& other) const;
 
         friend std::ostream& operator<<(std::ostream& os, const DeckKeyword& keyword);
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(m_keywordName);
+            m_location.serializeOp(serializer);
+            serializer.vector(m_recordList);
+            serializer(m_isDataKeyword);
+            serializer(m_slashTerminated);
+            serializer(m_isDoubleRecordKeyword);
+        }
+
     private:
         std::string m_keywordName;
         Location m_location;
