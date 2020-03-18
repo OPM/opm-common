@@ -799,31 +799,7 @@ namespace {
     UnitSystem::UnitSystem(const UnitType unit) :
         m_unittype( unit )
     {
-        switch(unit) {
-            case(UnitType::UNIT_TYPE_METRIC):
-                this->initMETRIC();
-                break;
-
-            case(UnitType::UNIT_TYPE_FIELD):
-                this->initFIELD();
-                break;
-
-            case(UnitType::UNIT_TYPE_LAB):
-                this->initLAB();
-                break;
-
-            case(UnitType::UNIT_TYPE_PVT_M):
-                this->initPVT_M();
-                break;
-
-            case(UnitType::UNIT_TYPE_INPUT):
-                this->initINPUT();
-                break;
-
-            default:
-                throw std::runtime_error("Tried to construct UnitSystem with unknown unit family.");
-                break;
-        };
+        init();
     }
 
     UnitSystem::UnitSystem(const std::string& name, UnitType unit,
@@ -834,31 +810,7 @@ namespace {
         , m_dimensions(dimensions)
         , m_use_count(use_count)
     {
-        switch(unit) {
-            case(UnitType::UNIT_TYPE_METRIC):
-                this->initMETRIC();
-                break;
-
-            case(UnitType::UNIT_TYPE_FIELD):
-                this->initFIELD();
-                break;
-
-            case(UnitType::UNIT_TYPE_LAB):
-                this->initLAB();
-                break;
-
-            case(UnitType::UNIT_TYPE_PVT_M):
-                this->initPVT_M();
-                break;
-
-            case(UnitType::UNIT_TYPE_INPUT):
-                this->initINPUT();
-                break;
-
-            default:
-                throw std::runtime_error("Tried to construct UnitSystem with unknown unit family.");
-                break;
-        };
+        init();
     }
 
     void UnitSystem::initINPUT() {
@@ -1307,5 +1259,33 @@ namespace {
         return m_dimensions;
     }
 
+    void UnitSystem::init()
+    {
+        switch(m_unittype) {
+            case(UnitType::UNIT_TYPE_METRIC):
+                this->initMETRIC();
+                break;
+
+            case(UnitType::UNIT_TYPE_FIELD):
+                this->initFIELD();
+                break;
+
+            case(UnitType::UNIT_TYPE_LAB):
+                this->initLAB();
+                break;
+
+            case(UnitType::UNIT_TYPE_PVT_M):
+                this->initPVT_M();
+                break;
+
+            case(UnitType::UNIT_TYPE_INPUT):
+                this->initINPUT();
+                break;
+
+            default:
+                throw std::runtime_error("Tried to construct UnitSystem with unknown unit family.");
+                break;
+        };
+    }
 
 }

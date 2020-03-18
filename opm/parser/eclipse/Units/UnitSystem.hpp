@@ -119,6 +119,7 @@ namespace Opm {
         static UnitSystem newINPUT();
     private:
         Dimension parseFactor( const std::string& ) const;
+        void init();
         void initINPUT();
         void initMETRIC();
         void initFIELD();
