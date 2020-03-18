@@ -284,7 +284,7 @@ namespace Opm
         {
             m_timeMap.serializeOp(serializer);
             auto splitWells = splitDynMap(wells_static);
-            serializer(splitWells.first);
+            serializer.vector(splitWells.first);
             serializer(splitWells.second);
             auto splitGroups = splitDynMap(groups);
             serializer(splitGroups.first);
