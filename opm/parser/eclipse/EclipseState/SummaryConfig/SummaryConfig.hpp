@@ -73,7 +73,7 @@ namespace Opm {
         {
             serializer(keyword_);
             serializer(category_);
-            serializer(loc);
+            loc.serializeOp(serializer);
             serializer(type_);
             serializer(name_);
             serializer(number_);
