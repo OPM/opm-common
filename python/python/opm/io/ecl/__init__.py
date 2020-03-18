@@ -2,6 +2,7 @@ from opm._common import eclArrType
 from opm._common import EclFile
 from opm._common import ERst
 from opm._common import ESmry
+from opm._common import EGrid
 
 import sys
 import datetime

@@ -6,6 +6,9 @@
 #include <opm/io/eclipse/EclIOdata.hpp>
 #include <src/opm/io/eclipse/ERst.cpp>
 #include <src/opm/io/eclipse/ESmry.cpp>
+#include <src/opm/io/eclipse/EGrid.cpp>
+
+#include <opm/common/utility/numeric/calculateCellVol.hpp>
 
 #include "export.hpp"
 #include "converters.hpp"
@@ -136,6 +139,59 @@ py::array get_smry_vector_at_rsteps(Opm::EclIO::ESmry * file_ptr, const std::str
     return convert::numpy_array( file_ptr->get_at_rstep(key) );
 }
 
+
+std::tuple<std::array<double,8>, std::array<double,8>, std::array<double,8>>
+get_xyz_from_ijk(Opm::EclIO::EGrid * file_ptr,int i, int j, int k)
+{
+    std::array<double,8> X = {0.0};
+    std::array<double,8> Y = {0.0};
+    std::array<double,8> Z = {0.0};
+
+    std::array<int, 3> ijk = {i, j, k };
+
+    file_ptr->getCellCorners(ijk, X, Y, Z);
+
+    return std::make_tuple( X, Y, Z);
+}
+
+std::tuple<std::array<double,8>, std::array<double,8>, std::array<double,8>>
+get_xyz_from_active_index(Opm::EclIO::EGrid * file_ptr, int actIndex)
+{
+    std::array<int, 3> ijk = file_ptr->ijk_from_active_index(actIndex);
+    return get_xyz_from_ijk(file_ptr,ijk[0], ijk[1], ijk[2]);
+}
+
+py::array get_cellvolumes_mask(Opm::EclIO::EGrid * file_ptr, std::vector<int> mask)
+{
+    size_t totCells = static_cast<size_t>(file_ptr->totalNumberOfCells());
+    std::vector<double> celvol(totCells, 0.0);
+
+    if (totCells != mask.size())
+        throw std::logic_error("size of input mask doesn't match size of grid");
+
+    std::array<double,8> X = {0.0};
+    std::array<double,8> Y = {0.0};
+    std::array<double,8> Z = {0.0};
+
+    for (size_t globInd = 0; globInd < totCells; globInd++){
+        if (mask[globInd] > 0){
+            file_ptr->getCellCorners(globInd, X, Y, Z);
+            celvol[globInd] = calculateCellVol(X, Y, Z);
+        }
+    }
+
+    return convert::numpy_array( celvol );
+}
+
+py::array get_cellvolumes(Opm::EclIO::EGrid * file_ptr)
+{
+    int totCells = file_ptr->totalNumberOfCells();
+    std::vector<int> mask(totCells, 1);
+
+    return get_cellvolumes_mask(file_ptr, mask);
+}
+
+
 }
 
 
@@ -150,7 +206,6 @@ void python::common::export_IO(py::module& m) {
         .value("LOGI", Opm::EclIO::LOGI)
         .value("MESS", Opm::EclIO::MESS)
         .export_values();
-
 
     py::class_<Opm::EclIO::EclFile>(m, "EclFile")
         .def(py::init<const std::string &, bool>(), py::arg("filename"), py::arg("preload") = false)
@@ -182,4 +237,17 @@ void python::common::export_IO(py::module& m) {
         .def("__get_at_rstep", &get_smry_vector_at_rsteps)
         .def("__get_startdat", &Opm::EclIO::ESmry::get_startdat)
         .def_property_readonly("list_of_keys", &Opm::EclIO::ESmry::keywordList);
+
+   py::class_<Opm::EclIO::EGrid>(m, "EGrid")
+        .def(py::init<const std::string &>())
+        .def_property_readonly("active_cells", &Opm::EclIO::EGrid::activeCells)
+        .def_property_readonly("dimension", &Opm::EclIO::EGrid::dimension)
+        .def("ijk_from_global_index", &Opm::EclIO::EGrid::ijk_from_global_index)
+        .def("ijk_from_active_index", &Opm::EclIO::EGrid::ijk_from_active_index)
+        .def("active_index", &Opm::EclIO::EGrid::active_index)
+        .def("global_index", &Opm::EclIO::EGrid::global_index)
+        .def("xyz_from_ijk", &get_xyz_from_ijk)
+        .def("xyz_from_active_index", &get_xyz_from_active_index)
+        .def("cellvolumes", &get_cellvolumes)
+        .def("cellvolumes", &get_cellvolumes_mask);
 }
