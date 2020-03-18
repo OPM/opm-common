@@ -76,6 +76,19 @@ namespace Opm {
 
         bool operator==(const Valve& data) const;
 
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(m_con_flow_coeff);
+            serializer(m_con_cross_area);
+            serializer(m_con_max_cross_area);
+            serializer(m_pipe_additional_length);
+            serializer(m_pipe_diameter);
+            serializer(m_pipe_roughness);
+            serializer(m_pipe_cross_area);
+            serializer(m_status);
+        }
+
     private:
         double m_con_flow_coeff;
         double m_con_cross_area;
