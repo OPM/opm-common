@@ -93,6 +93,17 @@ namespace Opm {
         size_t getNumRemoved() const;
         const std::vector<Connection>& getConnections() const;
         Connection::Order ordering() const { return this->m_ordering; }
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(m_ordering);
+            serializer(headI);
+            serializer(headJ);
+            serializer(num_removed);
+            serializer.vector(m_connections);
+        }
+
     private:
         void addConnection(int i, int j , int k ,
                            int complnum,
