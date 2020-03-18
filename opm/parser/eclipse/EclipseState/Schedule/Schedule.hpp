@@ -308,7 +308,7 @@ namespace Opm
             guide_rate_config.serializeOp(serializer);
             gconsale.serializeOp(serializer);
             gconsump.serializeOp(serializer);
-            serializer(global_whistctl_mode);
+            global_whistctl_mode.template serializeOp<Serializer, false>(serializer);
             serializer(m_actions);
             rft_config.serializeOp(serializer);
             m_nupcol.template serializeOp<Serializer, false>(serializer);
