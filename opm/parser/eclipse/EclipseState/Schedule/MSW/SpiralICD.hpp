@@ -72,6 +72,22 @@ namespace Opm {
         int ecl_status() const;
         bool operator==(const SpiralICD& data) const;
 
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(m_strength);
+            serializer(m_length);
+            serializer(m_density_calibration);
+            serializer(m_viscosity_calibration);
+            serializer(m_critical_value);
+            serializer(m_width_transition_region);
+            serializer(m_max_viscosity_ratio);
+            serializer(m_method_flow_scaling);
+            serializer(m_max_absolute_rate);
+            serializer(m_status);
+            serializer(m_scaling_factor);
+        }
+
     private:
         double m_strength;
         double m_length;
