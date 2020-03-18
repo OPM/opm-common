@@ -57,6 +57,15 @@ public:
     Phase preferred_phase() const;
     InjectorType injector_type() const;
     bool operator==(const WellType& other) const;
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(m_producer);
+        serializer(injection_phase);
+        serializer(m_welspecs_phase);
+    }
+
 private:
     bool  m_producer;
     /*
