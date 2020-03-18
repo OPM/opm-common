@@ -31,6 +31,12 @@ struct WellFoamProperties
     void handleWFOAM(const DeckRecord& rec);
     bool operator==(const WellFoamProperties& other) const;
     bool operator!=(const WellFoamProperties& other) const;
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(m_foamConcentration);
+    }
 };
 
 } // namespace Opm
