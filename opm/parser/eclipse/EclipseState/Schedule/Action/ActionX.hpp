@@ -103,6 +103,20 @@ public:
 
     bool operator==(const ActionX& data) const;
 
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(m_name);
+        serializer(m_max_run);
+        serializer(m_min_wait);
+        serializer(m_start_time);
+        serializer.vector(keywords);
+        condition.serializeOp(serializer);
+        serializer.vector(m_conditions);
+        serializer(run_count);
+        serializer(last_run);
+    }
+
 private:
     std::string m_name;
     size_t m_max_run = 0;
