@@ -4,6 +4,7 @@ from opm._common import ERst
 from opm._common import ESmry
 from opm._common import EGrid
 from opm._common import ERft
+from opm._common import EclOutput
 
 import sys
 import datetime
@@ -177,6 +178,47 @@ def getitem_erft(self, arg):
         return data
 
 
+'''
+  EclOutput supports writing of numpy arrays. Data types
+  (CHAR, LOGI, REAL, DOUB and INTE) is derived from the numpy dtype property
+  EclOutput partly supports writing of python lists
+  (CHAR, LOGI, INTE)
+'''
+
+def ecloutput_write(self, name, array):
+
+    if isinstance(array, list):
+        if all(isinstance(element, str) for element in array):
+            array = np.array(array)
+        elif all(isinstance(element, bool) for element in array):
+            array = np.array(array)
+        elif all(isinstance(element, int) for element in array):
+            array = np.array(array, dtype = "int32")
+        elif sys.version_info.major == 2 and all(isinstance(element, unicode) for element in array):
+            array = np.array(array)
+        else:
+            raise ValueError("!!array {} is python list, type {}, not supported".format(name, type(array[0])))
+
+    if not isinstance(array, np.ndarray):
+        raise ValueError("EclOutput - write function works only for numpy arrays")
+
+    if array.dtype == "float32":
+        self.__write_real_array(name, array)
+    elif array.dtype == "int32":
+        self.__write_inte_array(name, array)
+    elif array.dtype == "int64":
+        print ("!Warning, writing numpy dtype=int64 to 32 bit integer format")
+        self.__write_inte_array(name, array)
+    elif array.dtype == "float64":
+        self.__write_doub_array(name, array)
+    elif array.dtype == "bool":
+        self.__write_logi_array(name, array)
+    elif  array.dtype.kind in {'U', 'S'}:
+        self.__write_char_array(name, array)
+    else:
+        raise ValueError("unknown array type for array {}".format(name))
+
+
 setattr(EclFile, "__getitem__", getitem_eclfile)
 setattr(EclFile, "arrays", eclfile_get_list_of_arrays)
 
@@ -192,3 +234,5 @@ setattr(ERft, "__contains__", contains_erft)
 setattr(ERft, "list_of_rfts", erft_list_of_rfts)
 setattr(ERft, "arrays", erft_list_of_arrays)
 setattr(ERft, "__getitem__",getitem_erft)
+
+setattr(EclOutput, "write", ecloutput_write)

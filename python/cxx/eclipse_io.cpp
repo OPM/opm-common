@@ -8,6 +8,7 @@
 #include <src/opm/io/eclipse/ESmry.cpp>
 #include <src/opm/io/eclipse/EGrid.cpp>
 #include <src/opm/io/eclipse/ERft.cpp>
+#include <src/opm/io/eclipse/EclOutput.cpp>
 
 #include <opm/common/utility/numeric/calculateCellVol.hpp>
 
@@ -21,6 +22,35 @@ namespace {
 
 using npArray = std::tuple<py::array, Opm::EclIO::eclArrType>;
 using EclEntry = std::tuple<std::string, Opm::EclIO::eclArrType, long int>;
+
+class EclOutputBind {
+
+public:
+
+    EclOutputBind(const std::string& filename,const bool formatted, const bool append)
+    {
+        if (append == true)
+            m_output = std::make_unique<Opm::EclIO::EclOutput>(filename, formatted, std::ios::app);
+        else
+            m_output = std::make_unique<Opm::EclIO::EclOutput>(filename, formatted, std::ios::out);
+    }
+
+    template<class T>
+    void writeArray(const std::string& name, const std::vector<T>& data){
+        m_output->write<T>(name, data);
+        m_output->flushStream();
+    }
+
+    void writeMessage(const std::string& name)
+    {
+        m_output->message(name);
+        m_output->flushStream();
+    }
+
+private:
+    std::unique_ptr<Opm::EclIO::EclOutput> m_output;
+};
+
 
 npArray get_vector_index(Opm::EclIO::EclFile * file_ptr, std::size_t array_index)
 {
@@ -323,4 +353,19 @@ void python::common::export_IO(py::module& m) {
                              std::tuple<int,int,int>&) const) &Opm::EclIO::ERft::hasArray)
 
        .def("__len__", &Opm::EclIO::ERft::numberOfReports);
+
+   py::class_<EclOutputBind>(m, "EclOutput")
+        .def(py::init<const std::string &, const bool, const bool>(), py::arg("filename"),
+             py::arg("formatted") = false, py::arg("append") = false)
+        .def("write_message", &EclOutputBind::writeMessage)
+        .def("__write_char_array", (void (EclOutputBind::*)(const std::string&,
+                                  const std::vector<std::string>&)) &EclOutputBind::writeArray)
+        .def("__write_logi_array", (void (EclOutputBind::*)(const std::string&,
+                                  const std::vector<bool>&)) &EclOutputBind::writeArray)
+        .def("__write_inte_array", (void (EclOutputBind::*)(const std::string&,
+                                  const std::vector<int>&)) &EclOutputBind::writeArray)
+        .def("__write_real_array", (void (EclOutputBind::*)(const std::string&,
+                                  const std::vector<float>&)) &EclOutputBind::writeArray)
+        .def("__write_doub_array", (void (EclOutputBind::*)(const std::string&,
+                                  const std::vector<double>&)) &EclOutputBind::writeArray);
 }
