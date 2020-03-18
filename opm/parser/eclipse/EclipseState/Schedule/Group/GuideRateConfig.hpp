@@ -44,6 +44,14 @@ public:
                target == data.target &&
                scaling_factor == data.scaling_factor;
     }
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(guide_rate);
+        serializer(target);
+        serializer(scaling_factor);
+    }
 };
 
 struct GroupTarget {
@@ -53,6 +61,13 @@ struct GroupTarget {
     bool operator==(const GroupTarget& data) const {
         return guide_rate == data.guide_rate &&
                target == data.target;
+    }
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(guide_rate);
+        serializer(target);
     }
 };
 
@@ -76,6 +91,14 @@ struct GroupTarget {
     const std::unordered_map<std::string, GroupTarget>& getGroups() const;
 
     bool operator==(const GuideRateConfig& data) const;
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(m_model);
+        serializer.map(wells);
+        serializer.map(groups);
+    }
 
 private:
     std::shared_ptr<GuideRateModel> m_model;

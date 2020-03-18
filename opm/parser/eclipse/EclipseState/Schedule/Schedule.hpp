@@ -305,7 +305,7 @@ namespace Opm
             wlist_manager.serializeOp(serializer);
             udq_config.serializeOp(serializer);
             udq_active.serializeOp(serializer);
-            serializer(guide_rate_config);
+            guide_rate_config.serializeOp(serializer);
             serializer(gconsale);
             serializer(gconsump);
             serializer(global_whistctl_mode);
