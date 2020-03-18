@@ -268,6 +268,26 @@ public:
         void setBHPLimit(const double limit);
         InjectionControls controls(const UnitSystem& unit_system, const SummaryState& st, double udq_default) const;
         bool updateUDQActive(const UDQConfig& udq_config, UDQActive& active) const;
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(name);
+            surfaceInjectionRate.serializeOp(serializer);
+            reservoirInjectionRate.serializeOp(serializer);
+            BHPTarget.serializeOp(serializer);
+            THPTarget.serializeOp(serializer);
+            serializer(bhp_hist_limit);
+            serializer(thp_hist_limit);
+            serializer(temperature);
+            serializer(BHPH);
+            serializer(THPH);
+            serializer(VFPTableNumber);
+            serializer(predictionMode);
+            serializer(injectionControls);
+            serializer(injectorType);
+            serializer(controlMode);
+        }
     };
 
     struct ProductionControls {
