@@ -378,6 +378,29 @@ public:
         void setBHPLimit(const double limit);
         int productionControls() const { return this->m_productionControls; }
 
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(name);
+            OilRate.serializeOp(serializer);
+            WaterRate.serializeOp(serializer);
+            GasRate.serializeOp(serializer);
+            LiquidRate.serializeOp(serializer);
+            ResVRate.serializeOp(serializer);
+            BHPTarget.serializeOp(serializer);
+            THPTarget.serializeOp(serializer);
+            serializer(bhp_hist_limit);
+            serializer(thp_hist_limit);
+            serializer(BHPH);
+            serializer(THPH);
+            serializer(VFPTableNumber);
+            serializer(ALQValue);
+            serializer(predictionMode);
+            serializer(controlMode);
+            serializer(whistctl_cmode);
+            serializer(m_productionControls);
+        }
+
     private:
         int m_productionControls = 0;
         void init_rates( const DeckRecord& record );
