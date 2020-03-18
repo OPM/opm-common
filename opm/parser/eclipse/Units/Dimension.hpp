@@ -43,6 +43,13 @@ namespace Opm {
         bool operator==( const Dimension& ) const;
         bool operator!=( const Dimension& ) const;
 
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(m_SIfactor);
+            serializer(m_SIoffset);
+        }
+
     private:
         double m_SIfactor;
         double m_SIoffset;
