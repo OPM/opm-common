@@ -87,6 +87,27 @@ public:
     bool free_gas() const;
     bool defaultModel() const;
     std::array<UDAValue,3> udaCoefs() const;
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(time_interval);
+        serializer(m_target),
+        serializer(A);
+        serializer(B);
+        serializer(C);
+        serializer(D);
+        serializer(E);
+        serializer(F);
+        serializer(allow_increase_);
+        serializer(damping_factor_);
+        serializer(use_free_gas);
+        serializer(default_model);
+        alpha.serializeOp(serializer);
+        beta.serializeOp(serializer);
+        gamma.serializeOp(serializer);
+    }
+
 private:
     double pot(double oil_pot, double gas_pot, double wat_pot) const;
     /*
