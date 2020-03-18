@@ -41,9 +41,13 @@ public:
 
     std::vector<float> get_at_rstep(const std::string& name) const;
 
+    const std::vector<int>& get_startdat() const { return startdat; }
+
     const std::vector<std::string>& keywordList() const { return keyword; }
 
     int timestepIdxAtReportstepStart(const int reportStep) const;
+
+    int numberOfTimeSteps() const { return param[0].size(); }
 
     const std::string& get_unit(const std::string& name) const;
 
@@ -57,6 +61,9 @@ private:
 
     std::vector<int> seqIndex;
     std::vector<float> seqTime;
+
+    // start of simulation year, month, day, hr, min, microsec*1000000
+    std::vector<int> startdat;
 
     std::vector<std::string> checkForMultipleResultFiles(const Opm::filesystem::path& rootN, bool formatted) const;
 
