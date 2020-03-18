@@ -160,6 +160,21 @@ struct GroupProductionProperties {
     int production_controls = 0;
     bool operator==(const GroupProductionProperties& other) const;
     bool operator!=(const GroupProductionProperties& other) const;
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(cmode);
+        serializer(exceed_action);
+        oil_target.serializeOp(serializer);
+        water_target.serializeOp(serializer);
+        gas_target.serializeOp(serializer);
+        liquid_target.serializeOp(serializer);
+        serializer(guide_rate);
+        serializer(guide_rate_def);
+        serializer(resv_target);
+        serializer(production_controls);
+    }
 };
 
 struct ProductionControls {
