@@ -287,7 +287,7 @@ namespace Opm
             serializer.vector(splitWells.first);
             serializer(splitWells.second);
             auto splitGroups = splitDynMap(groups);
-            serializer(splitGroups.first);
+            serializer.vector(splitGroups.first);
             serializer(splitGroups.second);
             m_oilvaporizationproperties.serializeOp(serializer);
             m_events.serializeOp(serializer);

@@ -269,6 +269,27 @@ struct ProductionControls {
     const Phase& topup_phase() const;
     bool has_topup_phase() const;
 
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(m_name);
+        serializer(m_insert_index);
+        serializer(init_step);
+        serializer(udq_undefined);
+        unit_system.serializeOp(serializer);
+        serializer(group_type);
+        serializer(gefac);
+        serializer(transfer_gefac);
+        serializer(available_for_group_control);
+        serializer(vfp_table);
+        serializer(parent_group);
+        m_wells.serializeOp(serializer);
+        m_groups.serializeOp(serializer);
+        serializer.map(injection_properties);
+        production_properties.serializeOp(serializer);
+        serializer(m_topup_phase);
+    }
+
 private:
     bool hasType(GroupType gtype) const;
     void addType(GroupType new_gtype);
