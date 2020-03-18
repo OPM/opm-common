@@ -589,6 +589,39 @@ public:
 
     bool operator==(const Well& data) const;
     void setInsertIndex(std::size_t index);
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(wname);
+        serializer(group_name);
+        serializer(init_step);
+        serializer(insert_index);
+        serializer(headI);
+        serializer(headJ);
+        serializer(ref_depth);
+        unit_system.serializeOp(serializer);
+        serializer(udq_undefined);
+        serializer(status);
+        serializer(drainage_radius);
+        serializer(allow_cross_flow);
+        serializer(automatic_shutin);
+        wtype.serializeOp(serializer);
+        guide_rate.serializeOp(serializer);
+        serializer(efficiency_factor);
+        serializer(solvent_fraction);
+        serializer(prediction_mode);
+        serializer(econ_limits);
+        serializer(foam_properties);
+        serializer(polymer_properties);
+        serializer(brine_properties);
+        serializer(tracer_properties);
+        serializer(connections);
+        serializer(production);
+        serializer(injection);
+        serializer(segments);
+    }
+
 private:
     void switchToInjector();
     void switchToProducer();
