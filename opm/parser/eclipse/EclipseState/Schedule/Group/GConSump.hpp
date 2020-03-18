@@ -45,6 +45,16 @@ namespace Opm {
                        udq_undefined == data.udq_undefined &&
                        unit_system == data.unit_system;
             }
+
+            template<class Serializer>
+            void serializeOp(Serializer& serializer)
+            {
+                consumption_rate.serializeOp(serializer);
+                import_rate.serializeOp(serializer);
+                serializer(network_node);
+                serializer(udq_undefined);
+                unit_system.serializeOp(serializer);
+            }
         };
 
         struct GCONSUMPGroupProp {
@@ -65,6 +75,12 @@ namespace Opm {
         const std::map<std::string, GCONSUMPGroup>& getGroups() const;
 
         bool operator==(const GConSump& data) const;
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer.map(groups);
+        }
 
     private:
         std::map<std::string, GCONSUMPGroup> groups;
