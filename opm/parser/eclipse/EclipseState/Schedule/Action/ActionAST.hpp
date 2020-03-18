@@ -50,6 +50,13 @@ public:
     std::shared_ptr<ASTNode> getCondition() const;
 
     bool operator==(const AST& data) const;
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(condition);
+    }
+
 private:
     /*
       The use of a pointer here is to be able to create this class with only a
