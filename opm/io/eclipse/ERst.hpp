@@ -51,6 +51,7 @@ public:
     }
 
     int count(const std::string& name, int reportStepNumber) const; 
+    size_t numberOfReportSteps() const { return seqnum.size(); };
 
     const std::vector<int>& listOfReportStepNumbers() const { return seqnum; }
     
