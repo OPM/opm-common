@@ -106,6 +106,27 @@ namespace Opm {
         double minReservoirFluidRate() const;
         bool operator==(const WellEconProductionLimits& other) const;
         bool operator!=(const WellEconProductionLimits& other) const;
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(m_min_oil_rate);
+            serializer(m_min_gas_rate);
+            serializer(m_max_water_cut);
+            serializer(m_max_gas_oil_ratio);
+            serializer(m_max_water_gas_ratio);
+            serializer(m_workover);
+            serializer(m_end_run);
+            serializer(m_followon_well);
+            serializer(m_quantity_limit);
+            serializer(m_secondary_max_water_cut);
+            serializer(m_workover_secondary);
+            serializer(m_max_gas_liquid_ratio);
+            serializer(m_min_liquid_rate);
+            serializer(m_max_temperature);
+            serializer(m_min_reservoir_fluid_rate);
+        }
+
     private:
         double m_min_oil_rate;
         double m_min_gas_rate;
