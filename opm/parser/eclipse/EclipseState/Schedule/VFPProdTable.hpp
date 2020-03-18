@@ -153,8 +153,24 @@ public:
 
     double operator()(size_t thp_idx, size_t wfr_idx, size_t gfr_idx, size_t alq_idx, size_t flo_idx) const;
 
-private:
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(m_table_num);
+        serializer(m_datum_depth);
+        serializer(m_flo_type);
+        serializer(m_wfr_type);
+        serializer(m_gfr_type);
+        serializer(m_alq_type);
+        serializer(m_flo_data);
+        serializer(m_thp_data);
+        serializer(m_wfr_data);
+        serializer(m_gfr_data);
+        serializer(m_alq_data);
+        serializer(m_data);
+    }
 
+private:
     int m_table_num;
     double m_datum_depth;
     FLO_TYPE m_flo_type;
