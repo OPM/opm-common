@@ -87,7 +87,7 @@ namespace Opm {
             serializer.map(m_assignments);
             serializer(units);
             input_index.serializeOp(serializer);
-            serializer(type_count);
+            serializer.template map<std::map,UDQVarType,std::size_t,false>(type_count);
             // The UDQFunction table is constant up to udq_params.
             // So we can just construct a new instance here.
             if (!serializer.isSerializing())
