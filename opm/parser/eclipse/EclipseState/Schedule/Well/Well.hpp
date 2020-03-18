@@ -161,6 +161,15 @@ public:
                    guide_phase == data.guide_phase &&
                    scale_factor == data.scale_factor;
         }
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(available);
+            serializer(guide_rate);
+            serializer(guide_phase);
+            serializer(scale_factor);
+        }
     };
 
 
