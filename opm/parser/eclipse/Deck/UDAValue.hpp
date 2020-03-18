@@ -66,6 +66,15 @@ public:
 
     bool is_numeric() { return numeric_value; }
 
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(numeric_value);
+        serializer(double_value);
+        serializer(string_value);
+        dim.serializeOp(serializer);
+    }
+
 private:
     bool numeric_value;
     double double_value;
