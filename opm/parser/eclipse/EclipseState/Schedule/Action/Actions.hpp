@@ -55,6 +55,12 @@ public:
 
     bool operator==(const Actions& data) const;
 
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer.vector(actions);
+    }
+
 private:
     std::vector<ActionX> actions;
 };

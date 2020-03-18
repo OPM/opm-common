@@ -309,7 +309,7 @@ namespace Opm
             gconsale.serializeOp(serializer);
             gconsump.serializeOp(serializer);
             global_whistctl_mode.template serializeOp<Serializer, false>(serializer);
-            serializer(m_actions);
+            m_actions.serializeOp(serializer);
             rft_config.serializeOp(serializer);
             m_nupcol.template serializeOp<Serializer, false>(serializer);
             restart_config.serializeOp(serializer);
