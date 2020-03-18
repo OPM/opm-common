@@ -448,50 +448,28 @@ namespace Opm
         void addWellGroupEvent(const std::string& wellGroup, ScheduleEvents::Events event, size_t reportStep);
 
         template<template<class, class> class Map, class Type, class Key>
-        std::pair<std::vector<Type>, std::vector<std::pair<Key, std::vector<int>>>>
+        std::pair<std::vector<Type>, std::vector<std::pair<Key, std::vector<size_t>>>>
         splitDynMap(const Map<Key, Opm::DynamicState<Type>>& map)
         {
             // we have to pack the unique ptrs separately, and use an index map
             // to allow reconstructing the appropriate structures.
-            std::vector<std::pair<Key, std::vector<int>>> asMap;
+            std::vector<std::pair<Key, std::vector<size_t>>> asMap;
             std::vector<Type> unique;
             for (const auto& it : map) {
-                std::vector<int> idxVec;
-                for (const auto& w : it.second.data()) {
-                    auto candidate = std::find(unique.begin(), unique.end(), w);
-                    auto idx = candidate - unique.begin();
-                    if (candidate == unique.end()) {
-                        unique.push_back(w);
-                        idx = unique.size()-1;
-                    }
-                    idxVec.push_back(idx);
-                }
-                idxVec.push_back(it.second.initialRange());
-                asMap.push_back(std::make_pair(it.first, idxVec));
+                auto indices = it.second.split(unique);
+                asMap.push_back(std::make_pair(it.first, indices));
             }
 
             return std::make_pair(unique, asMap);
         }
 
-        template<class Type>
-        void reconstructDynState(const std::vector<Type>& unique,
-                                 const std::vector<int>& idxVec,
-                                 Opm::DynamicState<Type>& result)
-        {
-            std::vector<Type> ptrData;
-            for (size_t i = 0; i < idxVec.size()-1; ++i) {
-                ptrData.push_back(unique[idxVec[i]]);
-            }
-            result = Opm::DynamicState<Type>(ptrData, idxVec.back());
-        }
-
         template<template<class, class> class Map, class Type, class Key>
         void reconstructDynMap(const std::vector<Type>& unique,
-                               const std::vector<std::pair<Key, std::vector<int>>>& asMap,
+                               const std::vector<std::pair<Key, std::vector<size_t>>>& asMap,
                                Map<Key, Opm::DynamicState<Type>>& result)
         {
             for (const auto& it : asMap) {
-                reconstructDynState(unique, it.second, result[it.first]);
+                result[it.first].reconstruct(unique, it.second);
             }
         }
     };
