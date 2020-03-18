@@ -79,7 +79,6 @@ Well::Well() :
     headI(0),
     headJ(0),
     ref_depth(0.0),
-    ordering(Connection::Order::DEPTH),
     udq_undefined(0.0),
     status(Status::STOP),
     drainage_radius(0.0),
@@ -131,7 +130,6 @@ Well::Well(const RestartIO::RstWell& rst_well,
     headI(rst_well.ij[0]),
     headJ(rst_well.ij[1]),
     ref_depth(rst_well.datum_depth),
-    ordering(order_from_int(rst_well.completion_ordering)),
     unit_system(unit_system_arg),
     udq_undefined(udq_undefined_arg),
     status(rst_well.active_control == def_well_closed_control ? Well::Status::SHUT : Well::Status::OPEN),
@@ -148,7 +146,7 @@ Well::Well(const RestartIO::RstWell& rst_well,
     polymer_properties(std::make_shared<WellPolymerProperties>()),
     brine_properties(std::make_shared<WellBrineProperties>()),
     tracer_properties(std::make_shared<WellTracerProperties>()),
-    connections(std::make_shared<WellConnections>(headI, headJ)),
+    connections(std::make_shared<WellConnections>(order_from_int(rst_well.completion_ordering), headI, headJ)),
     production(std::make_shared<WellProductionProperties>(unit_system_arg, wname)),
     injection(std::make_shared<WellInjectionProperties>(unit_system_arg, wname))
 {
@@ -288,7 +286,6 @@ Well::Well(const std::string& wname_arg,
     headI(headI_arg),
     headJ(headJ_arg),
     ref_depth(ref_depth_arg),
-    ordering(ordering_arg),
     unit_system(unit_system_arg),
     udq_undefined(udq_undefined_arg),
     status(Status::SHUT),
@@ -304,7 +301,7 @@ Well::Well(const std::string& wname_arg,
     polymer_properties(std::make_shared<WellPolymerProperties>()),
     brine_properties(std::make_shared<WellBrineProperties>()),
     tracer_properties(std::make_shared<WellTracerProperties>()),
-    connections(std::make_shared<WellConnections>(headI, headJ)),
+    connections(std::make_shared<WellConnections>(ordering_arg, headI, headJ)),
     production(std::make_shared<WellProductionProperties>(unit_system, wname)),
     injection(std::make_shared<WellInjectionProperties>(unit_system, wname))
 {
@@ -321,7 +318,6 @@ Well::Well(const std::string& wname_arg,
           int headJ_arg,
           double ref_depth_arg,
           const WellType& wtype_arg,
-          Connection::Order ordering_arg,
           const UnitSystem& units,
           double udq_undefined_arg,
           Status status_arg,
@@ -348,7 +344,6 @@ Well::Well(const std::string& wname_arg,
     headI(headI_arg),
     headJ(headJ_arg),
     ref_depth(ref_depth_arg),
-    ordering(ordering_arg),
     unit_system(units),
     udq_undefined(udq_undefined_arg),
     status(status_arg),
@@ -568,7 +563,7 @@ bool Well::updateStatus(Status well_state, bool update_connections) {
             throw std::logic_error("Bug - should not be here");
         }
 
-        auto new_connections = std::make_shared<WellConnections>(this->headI, this->headJ);
+        auto new_connections = std::make_shared<WellConnections>(this->connections->ordering(), this->headI, this->headJ);
         for (auto c : *this->connections) {
             c.setState(connection_state);
             new_connections->add(c);
@@ -625,9 +620,7 @@ bool Well::updateAutoShutin(bool auto_shutin) {
 
 
 bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg) {
-    if( this->ordering  == Connection::Order::TRACK)
-        connections_arg->orderTRACK( this->headI, this->headJ );
-
+    connections_arg->order( this->headI, this->headJ );
     if (*this->connections != *connections_arg) {
         this->connections = connections_arg;
         //if (this->connections->allConnectionsShut()) {}
@@ -856,7 +849,7 @@ bool Well::handleWELOPEN(const DeckRecord& record, Connection::State state_arg, 
         return true;
     };
 
-    auto new_connections = std::make_shared<WellConnections>(this->headI, this->headJ);
+    auto new_connections = std::make_shared<WellConnections>(this->connections->ordering(), this->headI, this->headJ);
 
     for (auto c : *this->connections) {
         if (match(c))
@@ -887,7 +880,7 @@ bool Well::handleCOMPLUMP(const DeckRecord& record) {
         return true;
     };
 
-    auto new_connections = std::make_shared<WellConnections>(this->headI, this->headJ);
+    auto new_connections = std::make_shared<WellConnections>(this->connections->ordering(), this->headI, this->headJ);
     const int complnum = record.getItem("N").get<int>(0);
     if (complnum <= 0)
         throw std::invalid_argument("Completion number must be >= 1. COMPLNUM=" + std::to_string(complnum) + "is invalid");
@@ -916,7 +909,7 @@ bool Well::handleWPIMULT(const DeckRecord& record) {
         return true;
     };
 
-    auto new_connections = std::make_shared<WellConnections>(this->headI, this->headJ);
+    auto new_connections = std::make_shared<WellConnections>(this->connections->ordering(), this->headI, this->headJ);
     double wellPi = record.getItem("WELLPI").get< double >(0);
 
     for (auto c : *this->connections) {
@@ -1036,10 +1029,6 @@ bool Well::updatePrediction(bool prediction_mode_arg) {
     return false;
 }
 
-
-Connection::Order Well::getWellConnectionOrdering() const {
-    return this->ordering;
-}
 
 double Well::production_rate(const SummaryState& st, Phase prod_phase) const {
     if( !this->isProducer() ) return 0.0;
@@ -1380,7 +1369,6 @@ bool Well::operator==(const Well& data) const {
            this->getHeadJ() == data.getHeadJ() &&
            this->getRefDepth() == data.getRefDepth() &&
            this->getPreferredPhase() == data.getPreferredPhase() &&
-           this->getWellConnectionOrdering() == data.getWellConnectionOrdering() &&
            this->units() == data.units() &&
            this->udqUndefined() == data.udqUndefined() &&
            this->getStatus() == data.getStatus() &&

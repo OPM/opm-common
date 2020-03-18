@@ -2913,7 +2913,22 @@ void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t 
                this->restart_config == data.restart_config &&
                this->wellgroup_events == data.wellgroup_events;
      }
+namespace {
+// Duplicated from Well.cpp
+Connection::Order order_from_int(int int_value) {
+    switch(int_value) {
+    case 0:
+        return Connection::Order::TRACK;
+    case 1:
+        return Connection::Order::DEPTH;
+    case 2:
+        return Connection::Order::INPUT;
+    default:
+        throw std::invalid_argument("Invalid integer value: " + std::to_string(int_value) + " encountered when determining connection ordering");
+    }
+}
 
+}
 
 void Schedule::load_rst(const RestartIO::RstState& rst_state, const EclipseGrid& grid, const FieldPropsManager& fp, const UnitSystem& unit_system)
 {
@@ -2952,7 +2967,7 @@ void Schedule::load_rst(const RestartIO::RstState& rst_state, const EclipseGrid&
         }
 
         {
-            std::shared_ptr<Opm::WellConnections> well_connections = std::make_shared<Opm::WellConnections>(rst_well.ij[0], rst_well.ij[1], 0, connections);
+            std::shared_ptr<Opm::WellConnections> well_connections = std::make_shared<Opm::WellConnections>(order_from_int(rst_well.completion_ordering), rst_well.ij[0], rst_well.ij[1], 0, connections);
             well.updateConnections( std::move(well_connections) );
         }
 
@@ -3069,6 +3084,7 @@ bool Schedule::cmp(const Schedule& sched1, const Schedule& sched2, std::size_t r
             const auto& connections2 = well2.getConnections();
             const auto& connections1 = well1.getConnections();
 
+            well_count += not_equal( connections1.ordering(), connections2.ordering(), well_msg(well1.name(), "Connection: ordering"));
             for (std::size_t icon = 0; icon < connections1.size(); icon++) {
                 const auto& conn1 = connections1[icon];
                 const auto& conn2 = connections2[icon];
@@ -3183,7 +3199,6 @@ bool Schedule::cmp(const Schedule& sched1, const Schedule& sched2, std::size_t r
             well_count += not_equal( well1.seqIndex(), well2.seqIndex(), well_msg(well1.name(), "Well: seqIndex"));
             well_count += not_equal( well1.getAutomaticShutIn(), well2.getAutomaticShutIn(), well_msg(well1.name(), "Well: getAutomaticShutIn"));
             well_count += not_equal( well1.getAllowCrossFlow(), well2.getAllowCrossFlow(), well_msg(well1.name(), "Well: getAllowCrossFlow"));
-            well_count += not_equal( well1.getWellConnectionOrdering(), well2.getWellConnectionOrdering(), well_msg(well1.name(), "Well: getWellConnectionOrdering"));
             well_count += not_equal( well1.getSolventFraction(), well2.getSolventFraction(), well_msg(well1.name(), "Well: getSolventFraction"));
             well_count += not_equal( well1.getStatus(), well2.getStatus(), well_msg(well1.name(), "Well: getStatus"));
             //well_count += not_equal( well1.getInjectionProperties(), well2.getInjectionProperties(), "Well: getInjectionProperties");

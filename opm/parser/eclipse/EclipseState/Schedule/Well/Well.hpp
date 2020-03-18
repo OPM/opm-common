@@ -411,7 +411,6 @@ public:
          int headJ,
          double ref_depth,
          const WellType& wtype_arg,
-         Connection::Order ordering,
          const UnitSystem& unit_system,
          double udq_undefined,
          Status status,
@@ -455,7 +454,6 @@ public:
     double getRefDepth() const;
     double getDrainageRadius() const;
     double getEfficiencyFactor() const;
-    Connection::Order getWellConnectionOrdering() const;
     double getSolventFraction() const;
     Status getStatus() const;
     const std::string& groupName() const;
@@ -551,7 +549,6 @@ private:
     int headI;
     int headJ;
     double ref_depth;
-    Connection::Order ordering;
     UnitSystem unit_system;
     double udq_undefined;
 
