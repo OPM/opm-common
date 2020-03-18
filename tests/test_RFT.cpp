@@ -325,7 +325,7 @@ namespace {
         >{};
 
         for (const auto& wellDate : rft.listOfRftReports()) {
-            dates[wellDate.first].push_back(wellDate.second);
+            dates[std::get<0>(wellDate)].push_back(std::get<1>(wellDate));
         }
 
         // Well OP_1
