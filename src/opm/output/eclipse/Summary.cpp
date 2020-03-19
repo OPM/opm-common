@@ -1407,60 +1407,52 @@ void updateValue(const Opm::EclIO::SummaryNode& node, const double value, Opm::S
  * rates and accumulated values.
  *
  */
-struct EfficiencyFactor
-{
+struct EfficiencyFactor {
     using Factor  = std::pair<std::string, double>;
     using FacColl = std::vector<Factor>;
 
-    FacColl factors{};
+    FacColl factors {} ;
 
-    void setFactors(const Opm::SummaryConfigNode&        node,
+    void setFactors(const Opm::EclIO::SummaryNode& node,
                     const Opm::Schedule&           schedule,
-                    const std::vector<Opm::Well>& schedule_wells,
-                    const int                      sim_step);
-};
+                    const std::vector<Opm::Well>&  schedule_wells,
+                    const int                      sim_step) {
+        this->factors.clear();
 
-void EfficiencyFactor::setFactors(const Opm::SummaryConfigNode&        node,
-                                  const Opm::Schedule&           schedule,
-                                  const std::vector<Opm::Well>& schedule_wells,
-                                  const int                      sim_step)
-{
-    this->factors.clear();
+        const bool is_field  { node.category == Opm::EclIO::SummaryNode::Category::Field  } ;
+        const bool is_group  { node.category == Opm::EclIO::SummaryNode::Category::Group  } ;
+        const bool is_region { node.category == Opm::EclIO::SummaryNode::Category::Region } ;
+        const bool is_rate   { node.type     != Opm::EclIO::SummaryNode::Type::Total      } ;
 
-    if (schedule_wells.empty()) { return; }
+        if (!is_field && !is_group && !is_region && is_rate)
+            return;
 
-    const auto cat = node.category();
-    if(    cat != Opm::SummaryConfigNode::Category::Group
-        && cat != Opm::SummaryConfigNode::Category::Field
-        && cat != Opm::SummaryConfigNode::Category::Region
-           && (node.type() != Opm::SummaryConfigNode::Type::Total))
-        return;
+        for (const auto& well : schedule_wells) {
+            if (!well.hasBeenDefined(sim_step))
+                continue;
 
-    const bool is_group = (cat == Opm::SummaryConfigNode::Category::Group);
-    const bool is_rate = (node.type() != Opm::SummaryConfigNode::Type::Total);
+            double eff_factor = well.getEfficiencyFactor();
+            const auto* group_ptr = std::addressof(schedule.getGroup(well.groupName(), sim_step));
 
-    for( const auto& well : schedule_wells ) {
-        if (!well.hasBeenDefined(sim_step))
-            continue;
+            while (group_ptr) {
+                if (is_group && is_rate && group_ptr->name() == node.wgname )
+                    break;
 
-        double eff_factor = well.getEfficiencyFactor();
-        const auto* group_ptr = std::addressof(schedule.getGroup(well.groupName(), sim_step));
+                eff_factor *= group_ptr->getGroupEfficiencyFactor();
 
-        while(true){
-            if((   is_group
-                && is_rate
-                && group_ptr->name() == node.namedEntity() ))
-                break;
-            eff_factor *= group_ptr->getGroupEfficiencyFactor();
+                const auto parent_group = group_ptr->flow_group();
 
-            if (group_ptr->name() == "FIELD")
-                break;
-            group_ptr = std::addressof( schedule.getGroup( group_ptr->parent(), sim_step ) );
+                if (parent_group)
+                    group_ptr = std::addressof(schedule.getGroup( parent_group.value(), sim_step ));
+                else
+                    group_ptr = nullptr;
+            }
+
+            this->factors.emplace_back( well.name(), eff_factor );
         }
-
-        this->factors.emplace_back( well.name(), eff_factor );
     }
-}
+
+};
 
 namespace Evaluator {
     struct InputData
