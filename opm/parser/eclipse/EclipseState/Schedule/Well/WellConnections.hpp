@@ -84,12 +84,13 @@ namespace Opm {
         /// \param[in] well_i  logical cartesian i-coordinate of well head
         /// \param[in] well_j  logical cartesian j-coordinate of well head
         /// \param[in] grid    EclipseGrid object, used for cell depths
-        void order(size_t well_i, size_t well_j);
+        void order();
 
         bool operator==( const WellConnections& ) const;
         bool operator!=( const WellConnections& ) const;
 
         Connection::Order ordering() const { return this->m_ordering; }
+        std::vector<const Connection *> output(const EclipseGrid& grid) const;
 
         template<class Serializer>
         void serializeOp(Serializer& serializer)
@@ -128,6 +129,8 @@ namespace Opm {
                          const std::vector<double>& ntg);
 
         size_t findClosestConnection(int oi, int oj, double oz, size_t start_pos);
+        void orderTRACK();
+        void orderMSW();
 
         Connection::Order m_ordering = Connection::Order::TRACK;
         int headI, headJ;
