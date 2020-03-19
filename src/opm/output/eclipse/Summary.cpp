@@ -102,35 +102,36 @@ namespace {
 
         return {
             // Production
-            ParamCTorArgs{ "OPR" , Type::Rate },
-            ParamCTorArgs{ "WPR" , Type::Rate },
-            ParamCTorArgs{ "GPR" , Type::Rate },
-            ParamCTorArgs{ "VPR" , Type::Rate },
-            ParamCTorArgs{ "OPP" , Type::Rate },
-            ParamCTorArgs{ "WPP" , Type::Rate },
-            ParamCTorArgs{ "GPP" , Type::Rate },
-            ParamCTorArgs{ "OPT" , Type::Total },
-            ParamCTorArgs{ "WPT" , Type::Total },
-            ParamCTorArgs{ "GPT" , Type::Total },
-            ParamCTorArgs{ "VPT" , Type::Total },
-            ParamCTorArgs{ "OPTH", Type::Total },
-            ParamCTorArgs{ "WPTH", Type::Total },
-            ParamCTorArgs{ "GPTH", Type::Total },
+            { "OPR" , Type::Rate },
+            { "WPR" , Type::Rate },
+            { "GPR" , Type::Rate },
+            { "VPR" , Type::Rate },
+            { "OPP" , Type::Rate },
+            { "WPP" , Type::Rate },
+            { "GPP" , Type::Rate },
+            { "OPT" , Type::Total },
+            { "WPT" , Type::Total },
+            { "GPT" , Type::Total },
+            { "VPT" , Type::Total },
+            { "OPTH", Type::Total },
+            { "WPTH", Type::Total },
+            { "GPTH", Type::Total },
 
             // Flow rate ratios (production)
-            ParamCTorArgs{ "WCT" , Type::Ratio },
-            ParamCTorArgs{ "GOR" , Type::Ratio },
+            { "WCT" , Type::Ratio },
+            { "GOR" , Type::Ratio },
 
             // injection
-            ParamCTorArgs{ "WIR" , Type::Rate },
-            ParamCTorArgs{ "GIR" , Type::Rate },
-            ParamCTorArgs{ "OPI" , Type::Rate },
-            ParamCTorArgs{ "WPI" , Type::Rate },
-            ParamCTorArgs{ "GPI" , Type::Rate },
-            ParamCTorArgs{ "WIT" , Type::Total },
-            ParamCTorArgs{ "GIT" , Type::Total },
-            ParamCTorArgs{ "WITH", Type::Total },
-            ParamCTorArgs{ "GITH", Type::Total }
+
+            { "WIR" , Type::Rate },
+            { "GIR" , Type::Rate },
+            { "OPI" , Type::Rate },
+            { "WPI" , Type::Rate },
+            { "GPI" , Type::Rate },
+            { "WIT" , Type::Total },
+            { "GIT" , Type::Total },
+            { "WITH", Type::Total },
+            { "GITH", Type::Total },
         };
     }
 
