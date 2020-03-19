@@ -140,20 +140,20 @@ namespace {
     requiredRestartVectors(const ::Opm::Schedule& sched)
     {
         std::vector<Opm::SummaryConfigNode> entities {} ;
-        const auto& vectors { requiredRestartVectors() } ;
+        const auto& restartVectors { requiredRestartVectors() } ;
 
         using SN = ::Opm::SummaryConfigNode;
 
-        auto makeEntities = [&vectors, &entities]
+        auto makeEntities = [&restartVectors, &entities]
             (const char         kwpref,
              const SN::Category cat,
              const std::string& name) -> void
         {
-            for (const auto& vector : vectors) {
-                entities.emplace_back(kwpref + vector.first, cat, ::Opm::Location());
+            for (const auto& restartVector : restartVectors) {
+                entities.emplace_back(kwpref + restartVector.first, cat, ::Opm::Location());
 
                 entities.back().namedEntity(name)
-                .parameterType(vector.second);
+                .parameterType(restartVector.second);
             }
         };
 
