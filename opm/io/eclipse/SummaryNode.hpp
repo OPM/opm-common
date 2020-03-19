@@ -18,7 +18,7 @@
 
 #include <string>
 
-namespace Opm { namespace EclIO {
+namespace Opm::EclIO {
 
 struct SummaryNode {
     enum class Category {
@@ -51,4 +51,4 @@ struct SummaryNode {
     std::string unique_key() const;
 };
 
-} } // namespace Opm::EclIO
+} // namespace Opm::EclIO
