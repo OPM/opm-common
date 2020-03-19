@@ -1249,40 +1249,37 @@ static const std::unordered_map< std::string, Opm::UnitSystem::measure> block_un
 };
 
 inline std::vector<Opm::Well> find_wells( const Opm::Schedule& schedule,
-                                           const Opm::SummaryConfigNode& node,
-                                           const int sim_step,
-                                           const Opm::out::RegionCache& regionCache ) {
+                                          const Opm::EclIO::SummaryNode& node,
+                                          const int sim_step,
+                                          const Opm::out::RegionCache& regionCache ) {
+    switch (node.category) {
+    case Opm::SummaryConfigNode::Category::Well: [[fallthrough]];
+    case Opm::SummaryConfigNode::Category::Connection: [[fallthrough]];
+    case Opm::SummaryConfigNode::Category::Segment: {
+        const auto& name = node.wgname;
 
-    const auto cat = node.category();
-
-    if ((cat == Opm::SummaryConfigNode::Category::Well) ||
-        (cat == Opm::SummaryConfigNode::Category::Connection) ||
-        (cat == Opm::SummaryConfigNode::Category::Segment))
-    {
-        const auto& name = node.namedEntity();
-
-        if (schedule.hasWell(name, sim_step)) {
-            const auto& well = schedule.getWell( name, sim_step );
-            return { well };
-        } else
+        if (schedule.hasWell(node.wgname, sim_step)) {
+            return { schedule.getWell( name, sim_step ) };
+        } else {
             return {};
+        }
     }
 
-    if( cat == Opm::SummaryConfigNode::Category::Group ) {
-        const auto& name = node.namedEntity();
+    case Opm::SummaryConfigNode::Category::Group: {
+        const auto& name = node.wgname;
 
         if( !schedule.hasGroup( name ) ) return {};
 
         return schedule.getChildWells2( name, sim_step);
     }
 
-    if( cat == Opm::SummaryConfigNode::Category::Field )
+    case Opm::SummaryConfigNode::Category::Field:
         return schedule.getWells(sim_step);
 
-    if( cat == Opm::SummaryConfigNode::Category::Region ) {
+    case Opm::SummaryConfigNode::Category::Region: {
         std::vector<Opm::Well> wells;
 
-        const auto region = node.number();
+        const auto region = node.number;
 
         for ( const auto& connection : regionCache.connections( region ) ){
             const auto& w_name = connection.first;
@@ -1298,9 +1295,12 @@ inline std::vector<Opm::Well> find_wells( const Opm::Schedule& schedule,
         }
 
         return wells;
+
     }
 
-    return {};
+    default:
+        return {};
+    }
 }
 
 bool need_wells(const Opm::EclIO::SummaryNode& node) {
