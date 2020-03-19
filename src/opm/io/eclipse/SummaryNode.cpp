@@ -53,7 +53,7 @@ std::string Opm::EclIO::SummaryNode::unique_key() const {
     std::vector<std::string> key_parts { keyword } ;
 
     if (use_name(category))
-        key_parts.emplace_back(name);
+        key_parts.emplace_back(wgname);
 
     if (use_number(category))
         key_parts.emplace_back(std::to_string(number));

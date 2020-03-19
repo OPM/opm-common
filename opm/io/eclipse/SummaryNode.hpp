@@ -45,7 +45,7 @@ struct SummaryNode {
     const std::string keyword;
     const Category category;
     const Type type;
-    const std::string name;
+    const std::string wgname;
     const int number;
 
     std::string unique_key() const;
