@@ -380,6 +380,7 @@ if(ENABLE_ECL_OUTPUT)
           tests/test_rst.cpp
           tests/test_Solution.cpp
           tests/test_Summary.cpp
+          tests/test_Summary_Group.cpp
           tests/test_Tables.cpp
           tests/test_Wells.cpp
           tests/test_WindowedArray.cpp
@@ -411,6 +412,7 @@ if(ENABLE_ECL_OUTPUT)
           tests/SOFR_TEST.DATA
           tests/UDQ_TEST_WCONPROD_IUAD-2.DATA
           tests/UDQ_ACTIONX_TEST1.DATA
+          tests/UDQ_ACTIONX_TEST1_U.DATA
           tests/include_example_pvt.txt
           tests/include_example_summary.txt
           tests/include_sgof.txt
@@ -727,6 +729,7 @@ if(ENABLE_ECL_OUTPUT)
         opm/output/data/Cells.hpp
         opm/output/data/Solution.hpp
         opm/output/data/Wells.hpp
+        opm/output/data/Groups.hpp
         opm/output/eclipse/VectorItems/aquifer.hpp
         opm/output/eclipse/VectorItems/connection.hpp
         opm/output/eclipse/VectorItems/group.hpp

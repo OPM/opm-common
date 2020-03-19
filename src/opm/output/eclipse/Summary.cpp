@@ -42,6 +42,7 @@
 #include <opm/io/eclipse/OutputStream.hpp>
 
 #include <opm/output/data/Wells.hpp>
+#include <opm/output/data/Groups.hpp>
 #include <opm/output/eclipse/RegionCache.hpp>
 
 #include <algorithm>
@@ -68,6 +69,31 @@ namespace {
     {
         std::string kw;
         Opm::SummaryConfigNode::Type type;
+    };
+
+    using p_cmode = Opm::Group::ProductionCMode;
+    const std::map<p_cmode, int> pCModeToPCntlMode = {
+                                                    {p_cmode::NONE,       0},
+                                                    {p_cmode::ORAT,       1},
+                                                    {p_cmode::WRAT,       2},
+                                                    {p_cmode::GRAT,       3},
+                                                    {p_cmode::LRAT,       4},
+                                                    {p_cmode::CRAT,       9},
+                                                    {p_cmode::RESV,       5},
+                                                    {p_cmode::PRBL,       6},
+                                                    {p_cmode::FLD,        0}, // same as NONE
+
+    };
+
+    using i_cmode = Opm::Group::InjectionCMode;
+    const std::map<i_cmode, int> iCModeToICntlMode = {
+                                                    {i_cmode::NONE,       0},
+                                                    {i_cmode::RATE,       1},
+                                                    {i_cmode::RESV,       2},
+                                                    {i_cmode::REIN,       3},
+                                                    {i_cmode::VREP,       4},
+                                                    {i_cmode::FLD,        0},  // same as NONE
+                                                    {i_cmode::SALE,       0},  // not used in E100
     };
 
     std::vector<ParamCTorArgs> requiredRestartVectors()
@@ -104,7 +130,7 @@ namespace {
             ParamCTorArgs{ "WIT" , Type::Total },
             ParamCTorArgs{ "GIT" , Type::Total },
             ParamCTorArgs{ "WITH", Type::Total },
-            ParamCTorArgs{ "GITH", Type::Total },
+            ParamCTorArgs{ "GITH", Type::Total }
         };
     }
 
@@ -147,11 +173,36 @@ namespace {
         }
 
         for (const auto& grp_name : sched.groupNames()) {
-            if (grp_name != "FIELD")
+            if (grp_name != "FIELD") {
                 makeEntities('G', SN::Category::Group, grp_name);
+
+                entities.emplace_back("GMCTP", SN::Category::Group, ::Opm::Location());
+                entities.back().namedEntity(grp_name)
+                .parameterType(SN::Type::Mode);
+
+                entities.emplace_back("GMCTW", SN::Category::Group, ::Opm::Location());
+                entities.back().namedEntity(grp_name)
+                .parameterType(SN::Type::Mode);
+
+                entities.emplace_back("GMCTG", SN::Category::Group, ::Opm::Location());
+                entities.back().namedEntity(grp_name)
+                .parameterType(SN::Type::Mode);
+            }
         }
 
         makeEntities('F', SN::Category::Field, "FIELD");
+
+        entities.emplace_back("FMCTP", SN::Category::Field, ::Opm::Location());
+        entities.back().namedEntity("FIELD")
+        .parameterType(SN::Type::Mode);
+
+        entities.emplace_back("FMCTW", SN::Category::Field, ::Opm::Location());
+        entities.back().namedEntity("FIELD")
+        .parameterType(SN::Type::Mode);
+
+        entities.emplace_back("FMCTG", SN::Category::Field, ::Opm::Location());
+        entities.back().namedEntity("FIELD")
+        .parameterType(SN::Type::Mode);
 
         return entities;
     }
@@ -310,6 +361,7 @@ struct quantity {
     }
 };
 
+
 /*
  * All functions must have the same parameters, so they're gathered in a struct
  * and functions use whatever information they care about.
@@ -319,11 +371,13 @@ struct quantity {
  */
 struct fn_args {
     const std::vector<Opm::Well>& schedule_wells;
+    const std::string group_name;
     double duration;
     const int sim_step;
     int  num;
     const Opm::SummaryState& st;
     const Opm::data::Wells& wells;
+    const Opm::data::Group& group;
     const Opm::out::RegionCache& regionCache;
     const Opm::EclipseGrid& grid;
     const std::vector< std::pair< std::string, double > > eff_factors;
@@ -688,6 +742,70 @@ inline quantity potential_rate( const fn_args& args ) {
     return { sum, rate_unit< phase >() };
 }
 
+template < bool isGroup, bool Producer, bool waterInjector, bool gasInjector>
+inline quantity group_control( const fn_args& args ) {
+
+    std::string g_name = "";
+    if (isGroup) {
+        const quantity zero = { static_cast<double>(0), Opm::UnitSystem::measure::identity};
+        if( args.group_name.empty() ) return zero;
+
+        g_name = args.group_name;
+    }
+    else {
+        g_name = "FIELD";
+    }
+
+    int cntl_mode = 0;
+
+    // production control
+    if (Producer) {
+        const auto it_g = args.group.find(g_name);
+        if (it_g != args.group.end()) {
+            const auto& value = it_g->second.currentProdConstraint;
+            auto it_c = pCModeToPCntlMode.find(value);
+            if (it_c == pCModeToPCntlMode.end()) {
+                std::stringstream str;
+                str << "unknown control CMode: " << static_cast<int>(value);
+                throw std::invalid_argument(str.str());
+            }
+            cntl_mode = it_c->second;
+        }
+    }
+    // water injection control
+    else if (waterInjector){
+        const auto it_g = args.group.find(g_name);
+        if (it_g != args.group.end()) {
+            const auto& value = it_g->second.currentWaterInjectionConstraint;
+            auto it_c = iCModeToICntlMode.find(value);
+            if (it_c == iCModeToICntlMode.end()) {
+                std::stringstream str;
+                str << "unknown control CMode: " << static_cast<int>(value);
+                throw std::invalid_argument(str.str());
+            }
+            cntl_mode = it_c->second;
+        }
+    }
+
+    // gas injection control
+    else if (gasInjector){
+        const auto it_g = args.group.find(g_name);
+        if (it_g != args.group.end()) {
+            const auto& value = it_g->second.currentGasInjectionConstraint;
+            auto it_c = iCModeToICntlMode.find(value);
+            if (it_c == iCModeToICntlMode.end()) {
+                std::stringstream str;
+                str << "unknown control CMode: " << static_cast<int>(value);
+                throw std::invalid_argument(str.str());
+            }
+            cntl_mode = it_c->second;
+        }
+    }
+
+    return {static_cast<double>(cntl_mode), Opm::UnitSystem::measure::identity};
+}
+
+
 /*
  * A small DSL, really poor man's function composition, to avoid massive
  * repetition when declaring the handlers for each individual keyword. bin_op
@@ -830,6 +948,11 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "GWPI", potential_rate< rt::well_potential_water , false, true>},
     { "GOPI", potential_rate< rt::well_potential_oil , false, true>},
     { "GGPI", potential_rate< rt::well_potential_gas , false, true>},
+
+    //Group control mode
+    { "GMCTP", group_control< true, true,  false, false >},
+    { "GMCTW", group_control< true, false, true,  false >},
+    { "GMCTG", group_control< true, false, false, true  >},
 
     { "WWPRH", production_history< Opm::Phase::WATER > },
     { "WOPRH", production_history< Opm::Phase::OIL > },
@@ -1023,6 +1146,11 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "FMWIN", flowing< injector > },
     { "FMWPR", flowing< producer > },
     { "FVPRT", res_vol_production_target },
+
+    //Field control mode
+    { "FMCTP", group_control< false, true,  false, false >},
+    { "FMCTW", group_control< false, false, true,  false >},
+    { "FMCTG", group_control< false, false, false, true  >},
 
     /* Region properties */
     { "ROIR"  , region_rate< rt::oil, injector > },
@@ -1358,6 +1486,7 @@ namespace Evaluator {
     struct SimulatorResults
     {
         const Opm::data::WellRates& wellSol;
+        const Opm::data::Group&  groupSol;
         const std::map<std::string, double>& single;
         const std::map<std::string, std::vector<double>>& region;
         const std::map<std::pair<std::string, int>, double>& block;
@@ -1402,13 +1531,15 @@ namespace Evaluator {
                 // wells apply at this sim_step.  Nothing to do.
                 return;
 
+            std::string group_name = this->node_.category() == Opm::SummaryConfigNode::Category::Group ? this->node_.namedEntity() : "";
+
             EfficiencyFactor efac{};
             efac.setFactors(this->node_, input.sched, wells, sim_step);
 
             const fn_args args {
-                wells, stepSize, static_cast<int>(sim_step),
+                wells, group_name, stepSize, static_cast<int>(sim_step),
                 std::max(0, this->node_.number()),
-                st, simRes.wellSol, input.reg, input.grid,
+                st, simRes.wellSol, simRes.groupSol, input.reg, input.grid,
                 std::move(efac.factors)
             };
 
@@ -1798,8 +1929,8 @@ namespace Evaluator {
         const auto reg = Opm::out::RegionCache{};
 
         const fn_args args {
-            {}, 0.0, 0, std::max(0, this->node_->number()),
-            this->st_, {}, reg, this->grid_,
+            {}, "", 0.0, 0, std::max(0, this->node_->number()),
+            this->st_, {}, {}, reg, this->grid_,
             {}
         };
 
@@ -2028,6 +2159,7 @@ public:
               const int                      sim_step,
               const double                   duration,
               const data::WellRates&         well_solution,
+              const data::Group&             group_solution,
               const GlobalProcessParameters& single_values,
               const RegionParameters&        region_values,
               const BlockValues&             block_values,
@@ -2129,6 +2261,7 @@ eval(const EclipseState&            es,
      const int                      sim_step,
      const double                   duration,
      const data::WellRates&         well_solution,
+     const data::Group&             group_solution,
      const GlobalProcessParameters& single_values,
      const RegionParameters&        region_values,
      const BlockValues&             block_values,
@@ -2139,7 +2272,7 @@ eval(const EclipseState&            es,
     };
 
     const Evaluator::SimulatorResults simRes {
-        well_solution, single_values, region_values, block_values
+        well_solution, group_solution, single_values, region_values, block_values
     };
 
     for (auto& evalPtr : this->outputParameters_.getEvaluators()) {
@@ -2404,6 +2537,7 @@ void Summary::eval(SummaryState&                  st,
                    const EclipseState&            es,
                    const Schedule&                schedule,
                    const data::WellRates&         well_solution,
+                   const data::Group&             group_solution,
                    const GlobalProcessParameters& single_values,
                    const RegionParameters&        region_values,
                    const BlockValues&             block_values) const
@@ -2419,7 +2553,7 @@ void Summary::eval(SummaryState&                  st,
     const auto sim_step = std::max( 0, report_step - 1 );
 
     this->pImpl_->eval(es, schedule, sim_step, duration,
-                       well_solution, single_values,
+                       well_solution, group_solution, single_values,
                        region_values, block_values, st);
 
     eval_udq(schedule, sim_step, st);

@@ -24,6 +24,7 @@
 #include <opm/output/eclipse/Summary.hpp>
 #include <opm/output/data/Solution.hpp>
 #include <opm/output/data/Wells.hpp>
+#include <opm/output/data/Groups.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionContext.hpp>
@@ -91,6 +92,8 @@ void msim::run_step(const Schedule& schedule, SummaryState& st, data::Solution& 
 
         this->simulate(schedule, st, sol, well_data, report_step, seconds_elapsed, time_step);
 
+        Opm::data::Group group_data;
+
         seconds_elapsed += time_step;
 
         io.summary().eval(st,
@@ -99,6 +102,7 @@ void msim::run_step(const Schedule& schedule, SummaryState& st, data::Solution& 
                           this->state,
                           schedule,
                           well_data,
+                          group_data,
                           {});
 
         this->output(st,
