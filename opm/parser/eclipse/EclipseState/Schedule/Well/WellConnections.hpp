@@ -40,6 +40,7 @@ namespace Opm {
         // cppcheck-suppress noExplicitConstructor
         WellConnections(const WellConnections& src, const EclipseGrid& grid);
         void addConnection(int i, int j , int k ,
+                           std::size_t global_index,
                            double depth,
                            Connection::State state ,
                            double CF,
@@ -99,6 +100,7 @@ namespace Opm {
 
     private:
         void addConnection(int i, int j , int k ,
+                           std::size_t global_index,
                            int complnum,
                            double depth,
                            Connection::State state ,

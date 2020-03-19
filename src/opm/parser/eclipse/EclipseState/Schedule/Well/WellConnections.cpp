@@ -153,6 +153,7 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
     }
 
     void WellConnections::addConnection(int i, int j , int k ,
+                                        std::size_t global_index,
                                         int complnum,
                                         double depth,
                                         Connection::State state,
@@ -171,7 +172,7 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
     {
         int conn_i = (i < 0) ? this->headI : i;
         int conn_j = (j < 0) ? this->headJ : j;
-        Connection conn(conn_i, conn_j, k, complnum, depth, state, CF, Kh, rw, r0,
+        Connection conn(conn_i, conn_j, k, global_index, complnum, depth, state, CF, Kh, rw, r0,
                         skin_factor, satTableId, direction, ctf_kind,
                         seqIndex, segDistStart, segDistEnd, defaultSatTabId);
         this->add(conn);
@@ -180,6 +181,7 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
 
 
     void WellConnections::addConnection(int i, int j , int k ,
+                                        std::size_t global_index,
                                         double depth,
                                         Connection::State state ,
                                         double CF,
@@ -199,6 +201,7 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
         this->addConnection(i,
                             j,
                             k,
+                            global_index,
                             complnum,
                             depth,
                             state,
@@ -343,6 +346,7 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
             if (prev == this->m_connections.end()) {
                 std::size_t noConn = this->m_connections.size();
                 this->addConnection(I,J,k,
+                                    grid.getGlobalIndex(I,J,k),
                                     grid.getCellDepth( I,J,k ),
                                     state,
                                     CF,
@@ -360,6 +364,7 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
                 double conSDEnd = prev->getSegDistEnd();
                 double depth = grid.getCellDepth(I,J,k);
                 *prev = Connection(I,J,k,
+                                   grid.getGlobalIndex(I,J,k),
                                    prev->complnum(),
                                    depth,
                                    state,
