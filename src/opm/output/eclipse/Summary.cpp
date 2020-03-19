@@ -1307,10 +1307,10 @@ bool need_wells(const Opm::EclIO::SummaryNode& node) {
     static const std::regex region_keyword_regex { "R[OGW][IP][RT]" };
 
     switch (node.category) {
-    case Opm::EclIO::SummaryNode::Category::Connection:
-    case Opm::EclIO::SummaryNode::Category::Field:
-    case Opm::EclIO::SummaryNode::Category::Group:
-    case Opm::EclIO::SummaryNode::Category::Segment:
+    case Opm::EclIO::SummaryNode::Category::Connection: [[fallthrough]];
+    case Opm::EclIO::SummaryNode::Category::Field:      [[fallthrough]];
+    case Opm::EclIO::SummaryNode::Category::Group:      [[fallthrough]];
+    case Opm::EclIO::SummaryNode::Category::Segment:    [[fallthrough]];
     case Opm::EclIO::SummaryNode::Category::Well:
        return true;
     case Opm::EclIO::SummaryNode::Category::Region:
