@@ -47,6 +47,8 @@ struct SummaryNode {
     const Type type;
     const std::string name;
     const int number;
+
+    std::string unique_key() const;
 };
 
 } } // namespace Opm::EclIO
