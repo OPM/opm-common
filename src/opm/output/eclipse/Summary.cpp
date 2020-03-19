@@ -139,11 +139,10 @@ namespace {
     std::vector<Opm::SummaryConfigNode>
     requiredRestartVectors(const ::Opm::Schedule& sched)
     {
-        auto entities = std::vector<Opm::SummaryConfigNode>{};
+        std::vector<Opm::SummaryConfigNode> entities {} ;
+        const auto& vectors { requiredRestartVectors() } ;
 
         using SN = ::Opm::SummaryConfigNode;
-
-        const auto& vectors = requiredRestartVectors();
 
         auto makeEntities = [&vectors, &entities]
             (const char         kwpref,
