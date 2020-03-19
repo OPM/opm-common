@@ -58,6 +58,7 @@
 #include <iterator>
 #include <memory>
 #include <numeric>
+#include <regex>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
@@ -1302,36 +1303,21 @@ inline std::vector<Opm::Well> find_wells( const Opm::Schedule& schedule,
     return {};
 }
 
+bool need_wells(const Opm::EclIO::SummaryNode& node) {
+    static const std::regex region_keyword_regex { "R[OGW][IP][RT]" };
 
-bool need_wells(Opm::SummaryConfigNode::Category cat, const std::string& keyword) {
-    static const std::set<std::string> region_keywords{"ROIR", "RGIR", "RWIR", "ROPR", "RGPR", "RWPR", "ROIT", "RWIT", "RGIT", "ROPT", "RGPT", "RWPT"};
-    if (cat == Opm::SummaryConfigNode::Category::Well)
-        return true;
-
-    if (cat == Opm::SummaryConfigNode::Category::Group)
-        return true;
-
-    if (cat == Opm::SummaryConfigNode::Category::Field)
-        return true;
-
-    if (cat == Opm::SummaryConfigNode::Category::Connection)
-        return true;
-
-    if (cat == Opm::SummaryConfigNode::Category::Segment)
-        return true;
-
-    /*
-      Some of the region keywords are based on summing over all the connections
-      which fall in the region; i.e. RGIR is the total gas injection rate in the
-      region and consequently the list of defined wells is required, other
-      region keywords like 'ROIP' do not require well information.
-    */
-    if (cat == Opm::SummaryConfigNode::Category::Region) {
-        if (region_keywords.count(keyword) > 0)
-            return true;
+    switch (node.category) {
+    case Opm::EclIO::SummaryNode::Category::Connection:
+    case Opm::EclIO::SummaryNode::Category::Field:
+    case Opm::EclIO::SummaryNode::Category::Group:
+    case Opm::EclIO::SummaryNode::Category::Segment:
+    case Opm::EclIO::SummaryNode::Category::Well:
+       return true;
+    case Opm::EclIO::SummaryNode::Category::Region:
+        return std::regex_match(node.keyword, region_keyword_regex);
+    default:
+        return false;
     }
-
-    return false;
 }
 
 void eval_udq(const Opm::Schedule& schedule, std::size_t sim_step, Opm::SummaryState& st)
@@ -1520,7 +1506,7 @@ namespace Evaluator {
                     Opm::SummaryState&      st) const override
         {
             const auto get_wells =
-                need_wells(this->node_.category(), this->node_.keyword());
+                need_wells(node_);
 
             const auto wells = get_wells
                 ? find_wells(input.sched, this->node_,

@@ -60,7 +60,7 @@ namespace Opm {
         std::string uniqueNodeKey() const;
         const Location& location( ) const { return this->loc; }
 
-        operator Opm::EclIO::SummaryNode() {
+        operator Opm::EclIO::SummaryNode() const {
             return { keyword_, category_, type_, name_, number_ };
         }
 
