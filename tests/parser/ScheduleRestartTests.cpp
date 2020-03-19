@@ -47,7 +47,7 @@ void compare_connections(const RestartIO::RstConnection& rst_conn, const Connect
     BOOST_CHECK_EQUAL(rst_conn.ijk[2], sched_conn.getK());
 
     BOOST_CHECK_EQUAL(rst_conn.segment, sched_conn.segment());
-    BOOST_CHECK_EQUAL(rst_conn.insert_index, static_cast<int>(sched_conn.getSeqIndex()));
+    BOOST_CHECK_EQUAL(rst_conn.insert_index, static_cast<int>(sched_conn.sort_value()));
     BOOST_CHECK(rst_conn.state == sched_conn.state());
     BOOST_CHECK(rst_conn.dir == sched_conn.dir());
     BOOST_CHECK_CLOSE( rst_conn.cf, sched_conn.CF() , 1e-6);
