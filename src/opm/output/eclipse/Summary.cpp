@@ -1253,9 +1253,9 @@ inline std::vector<Opm::Well> find_wells( const Opm::Schedule& schedule,
                                           const int sim_step,
                                           const Opm::out::RegionCache& regionCache ) {
     switch (node.category) {
-    case Opm::SummaryConfigNode::Category::Well: [[fallthrough]];
-    case Opm::SummaryConfigNode::Category::Connection: [[fallthrough]];
-    case Opm::SummaryConfigNode::Category::Segment: {
+    case Opm::EclIO::SummaryNode::Category::Well: [[fallthrough]];
+    case Opm::EclIO::SummaryNode::Category::Connection: [[fallthrough]];
+    case Opm::EclIO::SummaryNode::Category::Segment: {
         const auto& name = node.wgname;
 
         if (schedule.hasWell(node.wgname, sim_step)) {
@@ -1265,7 +1265,7 @@ inline std::vector<Opm::Well> find_wells( const Opm::Schedule& schedule,
         }
     }
 
-    case Opm::SummaryConfigNode::Category::Group: {
+    case Opm::EclIO::SummaryNode::Category::Group: {
         const auto& name = node.wgname;
 
         if( !schedule.hasGroup( name ) ) return {};
@@ -1273,10 +1273,10 @@ inline std::vector<Opm::Well> find_wells( const Opm::Schedule& schedule,
         return schedule.getChildWells2( name, sim_step);
     }
 
-    case Opm::SummaryConfigNode::Category::Field:
+    case Opm::EclIO::SummaryNode::Category::Field:
         return schedule.getWells(sim_step);
 
-    case Opm::SummaryConfigNode::Category::Region: {
+    case Opm::EclIO::SummaryNode::Category::Region: {
         std::vector<Opm::Well> wells;
 
         const auto region = node.number;
@@ -1383,7 +1383,7 @@ void updateValue(const Opm::EclIO::SummaryNode& node, const double value, Opm::S
     case Opm::EclIO::SummaryNode::Category::Well:
         return st.update_well_var(node.wgname, node.keyword, value);
 
-    case Opm::SummaryConfigNode::Category::Group:
+    case Opm::EclIO::SummaryNode::Category::Group:
         return st.update_group_var(node.wgname, node.keyword, value);
 
     default:
