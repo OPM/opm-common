@@ -41,6 +41,9 @@ public:
 
     PyAction() = default;
     PyAction(const std::string& name, RunCount run_count, const std::string& code);
+
+    static PyAction serializeObject();
+
     const std::string& code() const;
     const std::string& name() const;
     bool operator==(const PyAction& other) const;

@@ -51,24 +51,9 @@ namespace Opm {
         Segment(const Segment& src, double new_volume);
         Segment(int segment_number_in, int branch_in, int outlet_segment_in, double length_in, double depth_in,
                 double internal_diameter_in, double roughness_in, double cross_area_in, double volume_in, bool data_ready_in, SegmentType segment_type_in);
-
-
-        Segment(int segmentNumber,
-                int branchNumber,
-                int outlegSegment,
-                const std::vector<int>& inletSegments,
-                double totalLength,
-                double depth,
-                double internalDiameter,
-                double roughness,
-                double crossArea,
-                double volume,
-                bool dataReady,
-                SegmentType segmentType,
-                std::shared_ptr<SpiralICD> spiralICD,
-                std::shared_ptr<Valve> valv);
-
         Segment(const RestartIO::RstSegment& rst_segment);
+
+        static Segment serializeObject();
 
         int segmentNumber() const;
         int branchNumber() const;

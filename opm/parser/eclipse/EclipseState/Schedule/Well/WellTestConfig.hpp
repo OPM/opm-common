@@ -68,7 +68,8 @@ public:
     };
 
     WellTestConfig();
-    WellTestConfig(const std::vector<WTESTWell>& well);
+
+    static WellTestConfig serializeObject();
 
     void add_well(const std::string& well, Reason reason, double test_interval, int num_test, double startup_time, int current_step);
     void add_well(const std::string& well, const std::string& reasons, double test_interval,

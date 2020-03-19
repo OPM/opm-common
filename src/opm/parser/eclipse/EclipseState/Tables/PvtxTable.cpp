@@ -34,22 +34,18 @@ namespace Opm {
 
     }
 
-
-    PvtxTable::PvtxTable(const ColumnSchema& outer_schema,
-                         const TableColumn& outer_column,
-                         const TableSchema& undersat_schema,
-                         const TableSchema& sat_schema,
-                         const std::vector<SimpleTable>& undersat_tables,
-                         const SimpleTable& sat_table) :
-        m_outerColumnSchema(outer_schema),
-        m_outerColumn(outer_column),
-        m_underSaturatedSchema(undersat_schema),
-        m_saturatedSchema(sat_schema),
-        m_underSaturatedTables(undersat_tables),
-        m_saturatedTable(sat_table)
+    PvtxTable PvtxTable::serializeObject()
     {
-    }
+        PvtxTable result;
+        result.m_outerColumnSchema = ColumnSchema::serializeObject();
+        result.m_outerColumn = TableColumn::serializeObject();
+        result.m_underSaturatedSchema = TableSchema::serializeObject();
+        result.m_saturatedSchema = TableSchema::serializeObject();
+        result.m_underSaturatedTables = {SimpleTable::serializeObject()};
+        result.m_saturatedTable = SimpleTable::serializeObject();
 
+        return result;
+    }
 
     /*
       The Schema pointers m_saturatedSchema and m_underSaturatedSchema must

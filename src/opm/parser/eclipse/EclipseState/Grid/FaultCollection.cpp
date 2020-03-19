@@ -56,11 +56,13 @@ namespace Opm {
         }
     }
 
-    FaultCollection::FaultCollection(const OrderedMap<std::string, Fault>& faults) :
-        m_faults(faults)
+    FaultCollection FaultCollection::serializeObject()
     {
-    }
+        FaultCollection result;
+        result.m_faults.insert({"test", Fault::serializeObject()});
 
+        return result;
+    }
 
     void FaultCollection::addFaultFaces(const GridDims& grid,
                                         const DeckRecord& faultRecord,

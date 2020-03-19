@@ -52,17 +52,10 @@ public:
                    bool allow_increase_arg,
                    double damping_factor_arg,
                    bool use_free_gas_arg);
-
-    GuideRateModel(double time_interval_arg,
-                   Target target_arg,
-                   const std::array<double,6>& coefs_arg,
-                   bool allow_increase_arg,
-                   double damping_factor_arg,
-                   bool use_free_gas_arg,
-                   bool use_default_model_arg,
-                   const std::array<UDAValue,3>& udaCoefs_arg);
-
     GuideRateModel() = default;
+
+    static GuideRateModel serializeObject();
+
     bool updateLINCOM(const UDAValue& alpha, const UDAValue& beta, const UDAValue& gamma);
     double eval(double oil_pot, double gas_pot, double wat_pot) const;
     double update_delay() const;

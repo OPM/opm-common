@@ -44,13 +44,16 @@ Actdims::Actdims(const Deck& deck)
     }
 }
 
-Actdims::Actdims(std::size_t keyw, std::size_t line_cnt,
-                 std::size_t chars, std::size_t conds) :
-    keywords(keyw),
-    line_count(line_cnt),
-    characters(chars),
-    conditions(conds)
-{}
+Actdims Actdims::serializeObject()
+{
+    Actdims result;
+    result.keywords = 1;
+    result.line_count = 2;
+    result.characters = 3;
+    result.conditions = 4;
+
+    return result;
+}
 
 std::size_t Actdims::max_keywords() const {
     return this->keywords;

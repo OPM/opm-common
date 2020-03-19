@@ -32,27 +32,25 @@ RFTConfig::RFTConfig()
 {
 }
 
-RFTConfig::RFTConfig(const TimeMap& tmap,
-                     const std::size_t first_rft,
-                     const std::pair<bool, std::size_t>& rftTime,
-                     const WellOpenTimeMap& rftName,
-                     const WellOpenTimeMap& wellOpen,
-                     const ConfigMap<RFT>& rconfig, const ConfigMap<PLT>& pconfig)
-    : tm(tmap)
-    , first_rft_event(first_rft)
-    , well_open_rft_time(rftTime)
-    , well_open_rft_name(rftName)
-    , well_open(wellOpen)
-    , rft_config(rconfig)
-    , plt_config(pconfig)
-{
-}
-
 RFTConfig::RFTConfig(const TimeMap& time_map) :
     tm(time_map),
     first_rft_event(tm.size()),
     well_open_rft_time{false, 0}
 {
+}
+
+RFTConfig RFTConfig::serializeObject()
+{
+    RFTConfig result;
+    result.tm = TimeMap::serializeObject();
+    result.first_rft_event = 1;
+    result.well_open_rft_time = {true, 2};
+    result.well_open_rft_name = {{"test1", 3}};
+    result.well_open = {{"test2", 4}};
+    result.rft_config = {{"test3", {{{RFT::TIMESTEP, 5}}, 6}}};
+    result.plt_config = {{"test3", {{{PLT::REPT, 7}}, 8}}};
+
+    return result;
 }
 
 bool RFTConfig::rft(const std::string& well_name, std::size_t report_step) const {

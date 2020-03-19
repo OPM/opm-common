@@ -29,7 +29,8 @@ class EndpointScaling {
     public:
         EndpointScaling() noexcept = default;
         explicit EndpointScaling( const Deck& );
-        EndpointScaling(const std::bitset<4>& opts);
+
+        static EndpointScaling serializeObject();
 
         /* true if endpoint scaling is enabled, otherwise false */
         operator bool() const noexcept;

@@ -27,6 +27,51 @@ namespace Opm {
     struct Tuning {
         using TuningKw = ParserKeywords::TUNING;
 
+        static Tuning serializeObject()
+        {
+            Tuning result;
+            result.TSINIT = 1.0;
+            result.TSMAXZ = 2.0;
+            result.TSMINZ = 3.0;
+            result.TSMCHP = 4.0;
+            result.TSFMAX = 5.0;
+            result.TSFMIN = 6.0;
+            result.TFDIFF = 7.0;
+            result.TSFCNV = 8.0;
+            result.THRUPT = 9.0;
+            result.TMAXWC = 10.0;
+            result.TMAXWC_has_value = true;
+
+            result.TRGTTE = 11.0;
+            result.TRGCNV = 12.0;
+            result.TRGMBE = 13.0;
+            result.TRGLCV = 14.0;
+            result.XXXTTE = 15.0;
+            result.XXXCNV = 16.0;
+            result.XXXMBE = 17.0;
+            result.XXXLCV = 18.0;
+            result.XXXWFL = 19.0;
+            result.TRGFIP = 20.0;
+            result.TRGSFT = 21.0;
+            result.TRGSFT_has_value = true;
+            result.THIONX = 22.0;
+            result.TRWGHT = 23.0;
+
+            result.NEWTMX = 24;
+            result.NEWTMN = 25;
+            result.LITMAX = 26;
+            result.LITMIN = 27;
+            result.MXWSIT = 28;
+            result.MXWPIT = 29;
+            result.DDPLIM = 30.0;
+            result.DDSLIM = 31.0;
+            result.TRGDPR = 32.0;
+            result.XXXDPR = 33.0;
+            result.XXXDPR_has_value = true;
+
+            return result;
+        }
+
         // Record1
         double TSINIT = TuningKw::TSINIT::defaultValue * Metric::Time;
         double TSMAXZ = TuningKw::TSMAXZ::defaultValue * Metric::Time;

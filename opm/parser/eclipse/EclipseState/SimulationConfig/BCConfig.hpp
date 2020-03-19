@@ -58,16 +58,11 @@ public:
         BCComponent component;
         double rate;
 
-
         BCFace() = default;
         BCFace(const DeckRecord& record);
-        BCFace(std::size_t i1_arg, std::size_t i2_arg,
-               std::size_t j1_arg, std::size_t j2_arg,
-               std::size_t k1_arg, std::size_t k2_arg,
-               BCType type_arg,
-               FaceDir::DirEnum dir_arg,
-               BCComponent comp_arg,
-               double rate_arg);
+
+        static BCFace serializeObject();
+
         bool operator==(const BCFace& other) const;
 
         template<class Serializer>
@@ -88,9 +83,10 @@ public:
 
 
     BCConfig() = default;
-    explicit BCConfig(const std::vector<BCFace>& input_faces);
     explicit BCConfig(const Deck& deck);
-    const std::vector<BCConfig::BCFace>& faces() const;
+
+    static BCConfig serializeObject();
+
     std::size_t size() const;
     std::vector<BCFace>::const_iterator begin() const;
     std::vector<BCFace>::const_iterator end() const;

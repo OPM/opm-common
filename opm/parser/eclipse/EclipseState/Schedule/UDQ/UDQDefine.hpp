@@ -62,6 +62,8 @@ public:
               UDQVarType type,
               const std::string& string_data);
 
+    static UDQDefine serializeObject();
+
     UDQSet eval(const UDQContext& context) const;
     const std::string& keyword() const;
     const std::string& input_string() const;

@@ -24,14 +24,12 @@
 #include <opm/parser/eclipse/EclipseState/Tables/BrineDensityTable.hpp>
 
 namespace Opm {
-
-        BrineDensityTable::BrineDensityTable()
+        BrineDensityTable BrineDensityTable::serializeObject()
         {
-        }
+            BrineDensityTable result;
+            result.m_tableValues = {1.0, 2.0, 3.0};
 
-        BrineDensityTable::BrineDensityTable(const std::vector<double>& tableValues)
-            : m_tableValues(tableValues)
-        {
+            return result;
         }
 
         void BrineDensityTable::init(const Opm::DeckRecord& record )

@@ -51,9 +51,9 @@ namespace Opm {
 
         DenT() = default;
         explicit DenT(const DeckKeyword& keyword);
-        explicit DenT(const std::vector<DenT::entry>& records_arg);
 
-        const std::vector<DenT::entry>& records() const;
+        static DenT serializeObject();
+
         const entry& operator[](const std::size_t index) const;
         bool operator==(const DenT& other) const;
         std::size_t size() const;

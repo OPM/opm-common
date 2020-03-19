@@ -155,6 +155,17 @@ public:
         GuideRateTarget guide_phase;
         double scale_factor;
 
+        static WellGuideRate serializeObject()
+        {
+            WellGuideRate result;
+            result.available = true;
+            result.guide_rate = 1.0;
+            result.guide_phase = GuideRateTarget::COMB;
+            result.scale_factor = 2.0;
+
+            return result;
+        }
+
         bool operator==(const WellGuideRate& data) const {
             return available == data.available &&
                    guide_rate == data.guide_rate &&
@@ -225,21 +236,8 @@ public:
 
         WellInjectionProperties();
         WellInjectionProperties(const UnitSystem& units, const std::string& wname);
-        WellInjectionProperties(const std::string& wname,
-                                const UDAValue& surfaceInjRate,
-                                const UDAValue& reservoirInjRate,
-                                const UDAValue& BHP,
-                                const UDAValue& THP,
-                                double bhp_hist,
-                                double thp_hist,
-                                double temp,
-                                double bhph,
-                                double thph,
-                                int vfpTableNum,
-                                bool predMode,
-                                int injControls,
-                                InjectorType injType,
-                                InjectorCMode ctrlMode);
+
+        static WellInjectionProperties serializeObject();
 
         void handleWELTARG(WELTARGCMode cmode, double newValue, double SIFactorP);
         void handleWCONINJE(const DeckRecord& record, bool availableForGroupControl, const std::string& well_name);
@@ -351,24 +349,8 @@ public:
 
         WellProductionProperties();
         WellProductionProperties(const UnitSystem& units, const std::string& name_arg);
-        WellProductionProperties(const std::string& wname,
-                                 const UDAValue& oilRate,
-                                 const UDAValue& waterRate,
-                                 const UDAValue& gasRate,
-                                 const UDAValue& liquidRate,
-                                 const UDAValue& resvRate,
-                                 const UDAValue& BHP,
-                                 const UDAValue& THP,
-                                 double bhp_hist,
-                                 double thp_hist,
-                                 double bhph,
-                                 double thph,
-                                 int vfpTableNum,
-                                 double alqValue,
-                                 bool predMode,
-                                 ProducerCMode ctrlMode,
-                                 ProducerCMode whistctlMode,
-                                 int prodCtrls);
+
+        static WellProductionProperties serializeObject();
 
         bool hasProductionControl(ProducerCMode controlModeArg) const {
             return (m_productionControls & static_cast<int>(controlModeArg)) != 0;
@@ -454,33 +436,7 @@ public:
          const UnitSystem& unit_system,
          double udq_undefined);
 
-    Well(const std::string& wname,
-         const std::string& gname,
-         std::size_t init_step,
-         std::size_t insert_index,
-         int headI,
-         int headJ,
-         double ref_depth,
-         const WellType& wtype_arg,
-         const UnitSystem& unit_system,
-         double udq_undefined,
-         Status status,
-         double drainageRadius,
-         bool allowCrossFlow,
-         bool automaticShutIn,
-         const WellGuideRate& guideRate,
-         double efficiencyFactor,
-         double solventFraction,
-         bool prediction_mode,
-         std::shared_ptr<WellEconProductionLimits> econLimits,
-         std::shared_ptr<WellFoamProperties> foamProperties,
-         std::shared_ptr<WellPolymerProperties> polymerProperties,
-         std::shared_ptr<WellBrineProperties> brineProperties,
-         std::shared_ptr<WellTracerProperties> tracerProperties,
-         std::shared_ptr<WellConnections> connections,
-         std::shared_ptr<WellProductionProperties> production,
-         std::shared_ptr<WellInjectionProperties> injection,
-         std::shared_ptr<WellSegments> segments);
+    static Well serializeObject();
 
     bool isMultiSegment() const;
     bool isAvailableForGroupControl() const;

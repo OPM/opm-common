@@ -28,9 +28,8 @@ namespace Opm {
     class PvtwsaltTable {
     public:
         PvtwsaltTable();
-        PvtwsaltTable(double refPressValue,
-                      double refSaltConValue,
-                      const std::vector<double>& tableValues);
+
+        static PvtwsaltTable serializeObject();
 
         void init(const Opm::DeckRecord& record0, const Opm::DeckRecord& record1);
         size_t size() const;

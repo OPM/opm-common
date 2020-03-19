@@ -48,6 +48,17 @@ namespace Opm {
     {
     }
 
+    ColumnSchema ColumnSchema::serializeObject()
+    {
+        ColumnSchema result;
+        result.m_name = "test1";
+        result.m_order = Table::INCREASING;
+        result.m_defaultAction = Table::DEFAULT_LINEAR;
+        result.m_defaultValue = 1.0;
+
+        return result;
+    }
+
     const std::string& ColumnSchema::name() const {
         return m_name;
     }

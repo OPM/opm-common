@@ -48,7 +48,10 @@
 namespace Opm {
 
     SimulationConfig::SimulationConfig() :
-        SimulationConfig(ThresholdPressure(), BCConfig(), RockConfig(), false, false, false, false)
+        m_useCPR(false),
+        m_DISGAS(false),
+        m_VAPOIL(false),
+        m_isThermal(false)
     {
     }
 
@@ -84,19 +87,18 @@ namespace Opm {
         }
     }
 
-    SimulationConfig::SimulationConfig(const ThresholdPressure& thresholdPressure,
-                                       const BCConfig& bcconfig,
-                                       const RockConfig& rock_config,
-                                       bool useCPR, bool DISGAS,
-                                       bool VAPOIL, bool isThermal) :
-        m_ThresholdPressure(thresholdPressure),
-        m_bcconfig(bcconfig),
-        m_rock_config(rock_config),
-        m_useCPR(useCPR),
-        m_DISGAS(DISGAS),
-        m_VAPOIL(VAPOIL),
-        m_isThermal(isThermal)
+    SimulationConfig SimulationConfig::serializeObject()
     {
+        SimulationConfig result;
+        result.m_ThresholdPressure = ThresholdPressure::serializeObject();
+        result.m_bcconfig = BCConfig::serializeObject();
+        result.m_rock_config = RockConfig::serializeObject();
+        result.m_useCPR = false;
+        result.m_DISGAS = true;
+        result.m_VAPOIL = false;
+        result.m_isThermal = true;
+
+        return result;
     }
 
     const ThresholdPressure& SimulationConfig::getThresholdPressure() const {

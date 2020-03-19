@@ -41,6 +41,24 @@ namespace Opm {
         int error_stop_limit    = ParserKeywords::MESSAGES::ERROR_STOP_LIMIT::defaultValue;
         int bug_stop_limit      = ParserKeywords::MESSAGES::BUG_STOP_LIMIT::defaultValue;
 
+        static MLimits serializeObject()
+        {
+            MLimits result;
+            result.message_print_limit = 1;
+            result.comment_print_limit = 2;
+            result.warning_print_limit = 3;
+            result.problem_print_limit = 4;
+            result.error_print_limit = 5;
+            result.bug_print_limit = 6;
+            result.message_stop_limit = 7;
+            result.comment_stop_limit = 8;
+            result.warning_stop_limit = 9;
+            result.problem_stop_limit = 10;
+            result.error_stop_limit = 11;
+            result.bug_stop_limit = 12;
+
+            return result;
+        }
 
         bool operator==(const MLimits& other) const {
             return  ((this->message_print_limit == other.message_print_limit) &&
@@ -92,7 +110,8 @@ namespace Opm {
         */
 
         explicit MessageLimits( const TimeMap& );
-        explicit MessageLimits( const DynamicState<MLimits>& );
+
+        static MessageLimits serializeObject();
 
         ///Get all the value from MESSAGES keyword.
         int getMessagePrintLimit(size_t timestep) const;

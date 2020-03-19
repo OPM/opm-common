@@ -25,15 +25,16 @@
 
 namespace Opm {
 
-UDQActive::UDQActive(const std::vector<InputRecord>& inputRecs,
-                     const std::vector<Record>& outputRecs,
-                     const std::unordered_map<std::string,std::size_t>& udqkeys,
-                     const std::unordered_map<std::string,std::size_t>& wgkeys)
-    : input_data(inputRecs)
-    , output_data(outputRecs)
-    , udq_keys(udqkeys)
-    , wg_keys(wgkeys)
-{}
+UDQActive UDQActive::serializeObject()
+{
+    UDQActive result;
+    result.input_data = {{1, "test1", "test2", UDAControl::WCONPROD_ORAT}};
+    result.output_data = {{"test1", 1, 2, "test2", UDAControl::WCONPROD_ORAT}};
+    result.udq_keys = {{"test1", 1}};
+    result.wg_keys = {{"test2", 2}};
+
+    return result;
+}
 
 std::size_t UDQActive::IUAD_size() const {
     const auto& output = this->get_iuad();

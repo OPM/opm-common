@@ -32,13 +32,21 @@ AquiferConfig::AquiferConfig(const TableManager& tables, const EclipseGrid& grid
     aqconn(grid,deck)
 {}
 
-
 AquiferConfig::AquiferConfig(const Aquifetp& fetp, const AquiferCT& ct, const Aquancon& conn) :
     aquifetp(fetp),
     aquiferct(ct),
     aqconn(conn)
 {}
 
+AquiferConfig AquiferConfig::serializeObject()
+{
+    AquiferConfig result;
+    result.aquifetp = Aquifetp::serializeObject();
+    result.aquiferct = AquiferCT::serializeObject();
+    result.aqconn = Aquancon::serializeObject();
+
+    return result;
+}
 
 bool AquiferConfig::active() const {
     return this->aqconn.active();

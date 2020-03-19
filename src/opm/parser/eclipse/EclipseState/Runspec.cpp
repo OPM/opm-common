@@ -74,9 +74,9 @@ Phases::Phases( bool oil, bool gas, bool wat, bool sol, bool pol, bool energy, b
 
 {}
 
-Phases::Phases(const std::bitset<NUM_PHASES_IN_ENUM>& bset) :
-    bits(bset)
+Phases Phases::serializeObject()
 {
+    return Phases(true, true, true, false, true, false, true, false);
 }
 
 bool Phases::active( Phase p ) const noexcept {
@@ -105,8 +105,19 @@ Welldims::Welldims(const Deck& deck)
         //
         // i.e., the maximum of item 1 and item 4 here.
         this->nGMax = wd.getItem("MAXGROUPS").get<int>(0);
-	this->nWMax = wd.getItem("MAXWELLS").get<int>(0);
+	      this->nWMax = wd.getItem("MAXWELLS").get<int>(0);
     }
+}
+
+Welldims Welldims::serializeObject()
+{
+    Welldims result;
+    result.nWMax = 1;
+    result.nCWMax = 2;
+    result.nWGMax = 3;
+    result.nGMax = 4;
+
+    return result;
 }
 
 WellSegmentDims::WellSegmentDims() :
@@ -126,11 +137,14 @@ WellSegmentDims::WellSegmentDims(const Deck& deck) : WellSegmentDims()
     }
 }
 
-WellSegmentDims::WellSegmentDims(int segWellMax, int segMax, int latBranchMax) :
-    nSegWellMax(segWellMax),
-    nSegmentMax(segMax),
-    nLatBranchMax(latBranchMax)
+WellSegmentDims WellSegmentDims::serializeObject()
 {
+    WellSegmentDims result;
+    result.nSegWellMax = 1;
+    result.nSegmentMax = 2;
+    result.nLatBranchMax = 3;
+
+    return result;
 }
 
 bool WellSegmentDims::operator==(const WellSegmentDims& data) const
@@ -211,11 +225,15 @@ EclHysterConfig::EclHysterConfig(const Opm::Deck& deck)
         }
     }
 
-EclHysterConfig::EclHysterConfig(bool active, int pcMod, int krMod) :
-    activeHyst(active), pcHystMod(pcMod), krHystMod(krMod)
-    {
-    }
-    
+EclHysterConfig EclHysterConfig::serializeObject()
+{
+    EclHysterConfig result;
+    result.activeHyst = true;
+    result.pcHystMod = 1;
+    result.krHystMod = 2;
+
+    return result;
+}
 
 bool EclHysterConfig::active() const 
     { return activeHyst; }
@@ -261,6 +279,15 @@ SatFuncControls::SatFuncControls(const double tolcritArg,
     , krmodel(model)
 {}
 
+SatFuncControls SatFuncControls::serializeObject()
+{
+    SatFuncControls result;
+    result.tolcrit = 1.0;
+    result.krmodel = ThreePhaseOilKrModel::Stone2;
+
+    return result;
+}
+
 bool SatFuncControls::operator==(const SatFuncControls& rhs) const
 {
     return this->minimumRelpermMobilityThreshold() == rhs.minimumRelpermMobilityThreshold() &&
@@ -287,25 +314,21 @@ Runspec::Runspec( const Deck& deck ) :
     m_sfuncctrl( deck )
 {}
 
-Runspec::Runspec(const Phases& act_phases,
-                 const Tabdims& tabdims,
-                 const EndpointScaling& endScale,
-                 const Welldims& wellDims,
-                 const WellSegmentDims& wsegDims,
-                 const UDQParams& udqparams,
-                 const EclHysterConfig& hystPar,
-                 const Actdims& actDims,
-                 const SatFuncControls& sfuncctrl) :
-    active_phases(act_phases),
-    m_tabdims(tabdims),
-    endscale(endScale),
-    welldims(wellDims),
-    wsegdims(wsegDims),
-    udq_params(udqparams),
-    hystpar(hystPar),
-    m_actdims(actDims),
-    m_sfuncctrl(sfuncctrl)
-{}
+Runspec Runspec::serializeObject()
+{
+    Runspec result;
+    result.active_phases = Phases::serializeObject();
+    result.m_tabdims = Tabdims::serializeObject();
+    result.endscale = EndpointScaling::serializeObject();
+    result.welldims = Welldims::serializeObject();
+    result.wsegdims = WellSegmentDims::serializeObject();
+    result.udq_params = UDQParams::serializeObject();
+    result.hystpar = EclHysterConfig::serializeObject();
+    result.m_actdims = Actdims::serializeObject();
+    result.m_sfuncctrl = SatFuncControls::serializeObject();
+
+    return result;
+}
 
 const Phases& Runspec::phases() const noexcept {
     return this->active_phases;

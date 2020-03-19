@@ -36,6 +36,8 @@ public:
     AquiferConfig(const TableManager& tables, const EclipseGrid& grid, const Deck& deck);
     AquiferConfig(const Aquifetp& fetp, const AquiferCT& ct, const Aquancon& conn);
 
+    static AquiferConfig serializeObject();
+
     bool active() const;
     const AquiferCT& ct() const;
     const Aquifetp& fetp() const;

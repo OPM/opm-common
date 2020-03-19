@@ -44,16 +44,8 @@ namespace Opm {
         DeckItem( const std::string&, UDAValue) = delete;
         DeckItem( const std::string&, UDAValue, const std::vector<Dimension>& active_dim, const std::vector<Dimension>& default_dim);
         DeckItem( const std::string&, double, const std::vector<Dimension>& active_dim, const std::vector<Dimension>& default_dim);
-        DeckItem(const std::vector<double>& dVec,
-                 const std::vector<int>& iVec,
-                 const std::vector<std::string>& sVec,
-                 const std::vector<UDAValue>& uVec,
-                 type_tag type,
-                 const std::string& itemName,
-                 const std::vector<value::status>& valueStat,
-                 bool rawdata,
-                 const std::vector<Dimension>& activeDim,
-                 const std::vector<Dimension>& defDim);
+
+        static DeckItem serializeObject();
 
         const std::string& name() const;
 

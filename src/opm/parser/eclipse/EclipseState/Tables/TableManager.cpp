@@ -95,85 +95,6 @@
 
 namespace Opm {
 
-    TableManager::TableManager(const std::map<std::string, TableContainer>& simpleTables,
-                               const std::vector<PvtgTable>& pvtgTables,
-                               const std::vector<PvtoTable>& pvtoTables,
-                               const std::vector<Rock2dTable>& rock2dTables,
-                               const std::vector<Rock2dtrTable>& rock2dtrTables,
-                               const PvtwTable& pvtwTable,
-                               const PvcdoTable& pvcdoTable,
-                               const DensityTable& densityTable,
-                               const PlyvmhTable& plyvmhTable,
-                               const RockTable& rockTable,
-                               const PlmixparTable& plmixparTable,
-                               const ShrateTable& shrateTable,
-                               const Stone1exTable& stone1exTable,
-                               const TlmixparTable& tlmixparTable,
-                               const ViscrefTable& viscrefTable,
-                               const WatdentTable& watdentTable,
-                               const std::vector<PvtwsaltTable>& pvtwsaltTables,
-                               const std::vector<BrineDensityTable>& bdensityTables,
-                               const std::vector<SolventDensityTable>& sdensityTables,
-                               const std::map<int, PlymwinjTable>& plymwinjTables,
-                               const std::map<int, SkprwatTable>& skprwatTables,
-                               const std::map<int, SkprpolyTable>& skprpolyTables,
-                               const Tabdims& tabdims,
-                               const Regdims& regdims,
-                               const Eqldims& eqldims,
-                               const Aqudims& aqudims,
-                               bool useImptvd,
-                               bool useEnptvd,
-                               bool useEqlnum,
-                               bool useShrate,
-                               std::shared_ptr<JFunc> jfunc_param,
-                               const DenT& oilDenT_,
-                               const DenT& gasDenT_,
-                               const DenT& watDenT_,
-                               const StandardCond& stcond_,
-                               std::size_t gas_comp_index,
-                               double rtemp)
-        :
-        m_simpleTables(simpleTables),
-        m_pvtgTables(pvtgTables),
-        m_pvtoTables(pvtoTables),
-        m_rock2dTables(rock2dTables),
-        m_rock2dtrTables(rock2dtrTables),
-        m_pvtwTable(pvtwTable),
-        m_pvcdoTable(pvcdoTable),
-        m_densityTable(densityTable),
-        m_plyvmhTable(plyvmhTable),
-        m_rockTable(rockTable),
-        m_plmixparTable(plmixparTable),
-        m_shrateTable(shrateTable),
-        m_stone1exTable(stone1exTable),
-        m_tlmixparTable(tlmixparTable),
-        m_viscrefTable(viscrefTable),
-        m_watdentTable(watdentTable),
-        m_pvtwsaltTables(pvtwsaltTables),
-        m_bdensityTables(bdensityTables),
-        m_sdensityTables(sdensityTables),
-        m_plymwinjTables(plymwinjTables),
-        m_skprwatTables(skprwatTables),
-        m_skprpolyTables(skprpolyTables),
-        m_tabdims(tabdims),
-        m_regdims(regdims),
-        m_eqldims(eqldims),
-        m_aqudims(aqudims),
-        hasImptvd(useImptvd),
-        hasEnptvd(useEnptvd),
-        hasEqlnum(useEqlnum),
-        hasShrate(useShrate),
-        jfunc(std::move(jfunc_param)),
-        oilDenT(oilDenT_),
-        gasDenT(gasDenT_),
-        watDenT(watDenT_),
-        stcond(stcond_),
-        m_gas_comp_index(gas_comp_index),
-        m_rtemp(rtemp)
-    {
-    }
-
-
     TableManager::TableManager( const Deck& deck )
         :
         m_tabdims( Tabdims(deck)),
@@ -314,6 +235,49 @@ namespace Opm {
         m_gas_comp_index = data.m_gas_comp_index;
 
         return *this;
+    }
+
+    TableManager TableManager::serializeObject()
+    {
+        TableManager result;
+        result.m_simpleTables = {{"test", TableContainer::serializeObject()}};
+        result.m_pvtgTables = {PvtgTable::serializeObject()};
+        result.m_pvtoTables = {PvtoTable::serializeObject()};
+        result.m_rock2dTables = {Rock2dTable::serializeObject()};
+        result.m_rock2dtrTables = {Rock2dtrTable::serializeObject()};
+        result.m_pvtwTable = PvtwTable::serializeObject();
+        result.m_pvcdoTable = PvcdoTable::serializeObject();
+        result.m_densityTable = DensityTable::serializeObject();
+        result.m_plyvmhTable = PlyvmhTable::serializeObject();
+        result.m_rockTable = RockTable::serializeObject();
+        result.m_plmixparTable = PlmixparTable::serializeObject();
+        result.m_shrateTable = ShrateTable::serializeObject();
+        result.m_stone1exTable = Stone1exTable::serializeObject();
+        result.m_tlmixparTable = TlmixparTable::serializeObject();
+        result.m_viscrefTable = ViscrefTable::serializeObject();
+        result.m_watdentTable = WatdentTable::serializeObject();
+        result.m_pvtwsaltTables = {PvtwsaltTable::serializeObject()};
+        result.m_bdensityTables = {BrineDensityTable::serializeObject()};
+        result.m_sdensityTables = {SolventDensityTable::serializeObject()};
+        result.m_plymwinjTables = {{1, Opm::PlymwinjTable::serializeObject()}};
+        result.m_skprwatTables =  {{2, Opm::SkprwatTable::serializeObject()}};
+        result.m_skprpolyTables = {{3, Opm::SkprpolyTable::serializeObject()}};
+        result.m_tabdims = Tabdims::serializeObject();
+        result.m_regdims = Regdims::serializeObject();
+        result.m_eqldims = Eqldims::serializeObject();
+        result.hasImptvd = true;
+        result.hasEnptvd = true;
+        result.hasEqlnum = true;
+        result.hasShrate = true;
+        result.jfunc = std::make_shared<Opm::JFunc>(Opm::JFunc::serializeObject());
+        result.oilDenT = DenT::serializeObject();
+        result.gasDenT = DenT::serializeObject();
+        result.watDenT = DenT::serializeObject();
+        result.stcond = StandardCond::serializeObject();
+        result.m_gas_comp_index = 77;
+        result.m_rtemp = 1.0;
+
+        return result;
     }
 
     void TableManager::initDims(const Deck& deck) {

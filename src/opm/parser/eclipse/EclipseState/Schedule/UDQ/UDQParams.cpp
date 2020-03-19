@@ -76,22 +76,17 @@ namespace Opm {
         this->m_sim_rng.seed( this->random_seed );
     }
 
-
-    UDQParams::UDQParams(bool reseed, int seed,
-                         double range, double undefined,
-                         double cmp) :
-        reseed_rng(reseed),
-        random_seed(seed),
-        value_range(range),
-        undefined_value(undefined),
-        cmp_eps(cmp)
+    UDQParams UDQParams::serializeObject()
     {
-        auto now = std::chrono::high_resolution_clock::now();
-        auto ns = std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch());
-        this->m_true_rng.seed( ns.count() );
-        this->m_sim_rng.seed( this->random_seed );
-    }
+        UDQParams result;
+        result.reseed_rng = true;
+        result.random_seed = 1;
+        result.value_range = 2.0;
+        result.undefined_value = 3.0;
+        result.cmp_eps = 4.0;
 
+        return result;
+    }
 
     /*
       If the internal flag reseed_rng is set to true, this method will reset the

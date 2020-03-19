@@ -29,11 +29,14 @@ namespace Opm {
         {
         }
 
-        Rock2dtrTable::Rock2dtrTable(const std::vector<std::vector<double>>& transMultValues,
-                                     const std::vector<double>& pressureValues)
-            : m_transMultValues(transMultValues)
-            , m_pressureValues(pressureValues)
+        Rock2dtrTable  Rock2dtrTable::serializeObject()
         {
+            Rock2dtrTable result;
+
+            result.m_transMultValues = {{1.0,2.0},{3.0,4.0}};
+            result.m_pressureValues = {1.0, 2.0, 3.0};
+
+            return result;
         }
 
         void Rock2dtrTable::init(const DeckRecord& record, size_t /* tableIdx */)

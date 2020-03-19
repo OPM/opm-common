@@ -131,30 +131,6 @@ static constexpr double invalid_value = -1.e100;
     {
     }
 
-    Segment::Segment(int segmentNum, int branchNum, int outletSeg,
-                     const std::vector<int>& inletSegs,
-                     double totalLen, double dept, double internalDiam,
-                     double rough, double crossA, double vol,
-                     bool dr, SegmentType segment,
-                     std::shared_ptr<SpiralICD> spiralIcd,
-                     std::shared_ptr<Valve> valv)
-    : m_segment_number(segmentNum),
-      m_branch(branchNum),
-      m_outlet_segment(outletSeg),
-      m_inlet_segments(inletSegs),
-      m_total_length(totalLen),
-      m_depth(dept),
-      m_internal_diameter(internalDiam),
-      m_roughness(rough),
-      m_cross_area(crossA),
-      m_volume(vol),
-      m_data_ready(dr),
-      m_segment_type(segment),
-      m_spiral_icd(spiralIcd),
-      m_valve(valv)
-  {
-  }
-
   Segment::Segment(const Segment& src, double new_depth, double new_length):
       Segment(src)
   {
@@ -169,12 +145,31 @@ static constexpr double invalid_value = -1.e100;
        this->m_volume = new_volume;
    }
 
-
-
   Segment::Segment(const Segment& src, double new_volume):
       Segment(src)
   {
       this->m_volume = new_volume;
+  }
+
+  Segment Segment::serializeObject()
+  {
+      Segment result;
+      result.m_segment_number = 1;
+      result.m_branch = 2;
+      result.m_outlet_segment = 3;
+      result.m_inlet_segments = {4, 5};
+      result.m_total_length = 6.0;
+      result.m_depth = 7.0;
+      result.m_internal_diameter = 8.0;
+      result.m_roughness = 9.0;
+      result.m_cross_area = 10.0;
+      result.m_volume = 11.0;
+      result.m_data_ready = true;
+      result.m_segment_type = SegmentType::SICD;
+      result.m_spiral_icd = std::make_shared<SpiralICD>(SpiralICD::serializeObject());
+      result.m_valve = std::make_shared<Valve>(Valve::serializeObject());
+
+      return result;
   }
 
     int Segment::segmentNumber() const {

@@ -28,8 +28,9 @@ namespace Opm {
     class Rock2dTable {
     public:
         Rock2dTable();
-        Rock2dTable(const std::vector<std::vector<double>>& pvmultValues,
-                    const std::vector<double>& pressureValues);
+
+        static Rock2dTable serializeObject();
+
         void init(const Opm::DeckRecord& record, size_t tableIdx);
         size_t size() const;
         size_t sizeMultValues() const;

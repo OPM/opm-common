@@ -38,11 +38,8 @@ public:
     FoamData();
     FoamData(const DeckRecord& FOAMFSC_record, const DeckRecord& FOAMROCK_record);
     explicit FoamData(const DeckRecord& FOAMROCK_record);
-    FoamData(double reference_surfactant_concentration,
-             double exponent,
-             double minimum_surfactant_concentration,
-             bool allow_desorption,
-             double rock_density);
+
+    static FoamData serializeObject();
 
     double referenceSurfactantConcentration() const;
     double exponent() const;
@@ -82,9 +79,8 @@ public:
 
     FoamConfig() = default;
     explicit FoamConfig(const Deck&);
-    FoamConfig(const std::vector<FoamData>& data,
-               Phase transport_phase,
-               MobilityModel mobility_model);
+
+    static FoamConfig serializeObject();
 
     const FoamData& getRecord(std::size_t index) const;
 

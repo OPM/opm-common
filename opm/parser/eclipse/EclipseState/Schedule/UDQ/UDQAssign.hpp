@@ -58,9 +58,8 @@ public:
 
     UDQAssign();
     UDQAssign(const std::string& keyword, const std::vector<std::string>& selector, double value);
-    UDQAssign(const std::string& keyword,
-              UDQVarType varType,
-              const std::vector<AssignRecord>& records);
+
+    static UDQAssign serializeObject();
 
     const std::string& keyword() const;
     UDQVarType var_type() const;

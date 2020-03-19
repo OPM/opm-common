@@ -24,14 +24,12 @@
 #include <opm/parser/eclipse/EclipseState/Tables/SolventDensityTable.hpp>
 
 namespace Opm {
-
-        SolventDensityTable::SolventDensityTable()
+        SolventDensityTable SolventDensityTable::serializeObject()
         {
-        }
+            SolventDensityTable result;
+            result.m_tableValues = {1.0, 2.0, 3.0};
 
-        SolventDensityTable::SolventDensityTable(const std::vector<double>& tableValues)
-            : m_tableValues(tableValues)
-        {
+            return result;
         }
 
         void SolventDensityTable::init(const Opm::DeckRecord& record )

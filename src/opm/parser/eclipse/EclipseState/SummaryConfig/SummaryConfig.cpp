@@ -848,6 +848,20 @@ SummaryConfigNode::SummaryConfigNode(std::string keyword, const Category cat, Lo
     loc(std::move(loc_arg))
 {}
 
+SummaryConfigNode SummaryConfigNode::serializeObject()
+{
+    SummaryConfigNode result;
+    result.keyword_ = "test1";
+    result.category_ = Category::Region;
+    result.loc = Location::serializeObject();
+    result.type_ = Type::Pressure;
+    result.name_ = "test2";
+    result.number_ = 2;
+    result.userDefined_ = true;
+
+    return result;
+}
+
 SummaryConfigNode& SummaryConfigNode::parameterType(const Type type)
 {
     this->type_ = type;
@@ -1045,6 +1059,15 @@ SummaryConfig::SummaryConfig(const keyword_list& kwds,
     keywords(kwds), short_keywords(shortKwds), summary_keywords(smryKwds)
 {}
 
+SummaryConfig SummaryConfig::serializeObject()
+{
+    SummaryConfig result;
+    result.keywords = {SummaryConfigNode::serializeObject()};
+    result.short_keywords = {"test1"};
+    result.summary_keywords = {"test2"};
+
+    return result;
+}
 
 SummaryConfig::const_iterator SummaryConfig::begin() const {
     return this->keywords.cbegin();

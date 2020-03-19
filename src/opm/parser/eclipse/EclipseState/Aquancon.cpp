@@ -106,6 +106,15 @@ namespace Opm {
     }
 
 
+    Aquancon Aquancon::serializeObject()
+    {
+        Aquancon result;
+        result.cells = {{1, {{2, 3, {true, 4.0}, 5.0, FaceDir::XPlus}}}};
+
+        return result;
+    }
+
+
     const std::vector<Aquancon::AquancCell> Aquancon::operator[](int aquiferID) const {
         return this->cells.at( aquiferID );
     }
@@ -145,7 +154,6 @@ namespace Opm {
             throw std::runtime_error("Unknown FaceDir enum " + std::to_string(faceDir));
         }
     }
-
 
     Aquancon::Aquancon(const std::unordered_map<int, std::vector<Aquancon::AquancCell>>& data) :
         cells(data)

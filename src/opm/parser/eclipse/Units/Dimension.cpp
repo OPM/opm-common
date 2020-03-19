@@ -39,6 +39,11 @@ namespace Opm {
         m_SIoffset = SIoffset;
     }
 
+    Dimension Dimension::serializeObject()
+    {
+        return Dimension(1.0, 2.0);
+    }
+
     double Dimension::getSIScaling() const {
         if (!std::isfinite(m_SIfactor))
             throw std::logic_error("The DeckItem contains a field with a context dependent unit. "

@@ -43,14 +43,8 @@ namespace Opm {
         UDQConfig() = default;
         explicit UDQConfig(const Deck& deck);
         explicit UDQConfig(const UDQParams& params);
-        UDQConfig(const UDQParams& params,
-                  const UDQFunctionTable& funcTable,
-                  const std::unordered_map<std::string, UDQDefine>& definition,
-                  const std::unordered_map<std::string, UDQAssign>& assignment,
-                  const std::unordered_map<std::string, std::string>& unit,
-                  const OrderedMap<std::string, UDQIndex>& inputIdx,
-                  const std::map<UDQVarType, std::size_t>& tCount);
 
+        static UDQConfig serializeObject();
 
         const std::string& unit(const std::string& key) const;
         bool has_unit(const std::string& keyword) const;

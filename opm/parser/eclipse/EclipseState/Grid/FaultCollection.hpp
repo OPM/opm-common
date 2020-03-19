@@ -36,7 +36,8 @@ class FaultCollection {
 public:
     FaultCollection();
     FaultCollection(const GRIDSection& gridSection, const GridDims& grid);
-    FaultCollection(const OrderedMap<std::string, Fault>& faults);
+
+    static FaultCollection serializeObject();
 
     size_t size() const;
     bool hasFault(const std::string& faultName) const;

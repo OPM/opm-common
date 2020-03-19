@@ -33,11 +33,9 @@ namespace Opm {
     public:
         TableColumn();
         explicit TableColumn( const ColumnSchema& schema );
-        TableColumn(const ColumnSchema& schema,
-                    const std::string& name,
-                    const std::vector<double>& values,
-                    const std::vector<bool>& defaults,
-                    size_t defaultCount);
+
+        static TableColumn serializeObject();
+
         size_t size( ) const;
         const std::string& name() const;
         void assertOrder(double value1 , double value2) const;

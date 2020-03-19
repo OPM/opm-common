@@ -23,10 +23,8 @@ namespace Opm {
 
     struct StandardCond {
         StandardCond();
-        StandardCond(double temp, double press)
-            : temperature(temp)
-            , pressure(press)
-        {}
+
+        static StandardCond serializeObject();
 
         bool operator==(const StandardCond& data) const {
             return temperature == data.temperature &&

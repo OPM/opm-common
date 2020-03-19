@@ -34,4 +34,14 @@ StandardCond::StandardCond() {
 }
 
 
+StandardCond StandardCond::serializeObject()
+{
+    StandardCond result;
+    result.temperature = 1.0;
+    result.pressure = 2.0;
+
+    return result;
+}
+
+
 }

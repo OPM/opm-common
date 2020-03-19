@@ -44,7 +44,9 @@ class AST{
 public:
     AST() = default;
     explicit AST(const std::vector<std::string>& tokens);
-    AST(const std::shared_ptr<ASTNode>& cond);
+
+    static AST serializeObject();
+
     Result eval(const Context& context) const;
 
     bool operator==(const AST& data) const;

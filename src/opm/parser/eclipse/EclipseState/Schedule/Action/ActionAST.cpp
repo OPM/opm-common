@@ -38,10 +38,13 @@ AST::AST(const std::vector<std::string>& tokens) {
     this->condition.reset( new Action::ASTNode(condition_node) );
 }
 
-AST::AST(const std::shared_ptr<ASTNode>& cond)
-    : condition(cond)
-{}
+AST AST::serializeObject()
+{
+    AST result;
+    result.condition = std::make_shared<ASTNode>(ASTNode::serializeObject());
 
+    return result;
+}
 
 Action::Result AST::eval(const Action::Context& context) const {
     if (this->condition)

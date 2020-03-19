@@ -58,6 +58,17 @@ UDAValue::UDAValue(const std::string& value, const Dimension& dim_):
 {
 }
 
+UDAValue UDAValue::serializeObject()
+{
+    UDAValue result;
+    result.numeric_value = true;
+    result.double_value = 1.0;
+    result.string_value = "test";
+    result.dim = Dimension::serializeObject();
+
+    return result;
+}
+
 
 void UDAValue::assert_numeric() const {
     std::string msg = "Internal error: The support for use of UDQ/UDA is not complete in opm/flow. The string: '" + this->string_value + "' must be numeric";

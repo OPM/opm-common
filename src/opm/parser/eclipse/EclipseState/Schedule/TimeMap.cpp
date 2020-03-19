@@ -166,6 +166,15 @@ namespace {
         }
     }
 
+    TimeMap TimeMap::serializeObject()
+    {
+        TimeMap result({123});
+        result.m_skiprest = true;
+        result.m_restart_offset = 4;
+
+        return result;
+    }
+
 
     size_t TimeMap::numTimesteps() const {
         return m_timeList.size() - 1;

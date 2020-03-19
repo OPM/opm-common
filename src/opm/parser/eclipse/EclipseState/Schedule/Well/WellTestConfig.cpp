@@ -28,9 +28,13 @@ WellTestConfig::WellTestConfig() {
 
 }
 
-WellTestConfig::WellTestConfig(const std::vector<WTESTWell>& well)
-    : wells(well)
+
+WellTestConfig WellTestConfig::serializeObject()
 {
+    WellTestConfig result;
+    result.wells = {{"test", ECONOMIC, 1.0, 2, 3.0, 4}};
+
+    return result;
 }
 
 

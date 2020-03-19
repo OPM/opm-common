@@ -22,9 +22,12 @@
 
 namespace Opm {
 
-    WListManager::WListManager(const std::map<std::string,WList>& list)
-        : wlists(list)
+    WListManager WListManager::serializeObject()
     {
+        WListManager result;
+        result.wlists = {{"test1", WList({"test2", "test3"})}};
+
+        return result;
     }
 
     bool WListManager::hasList(const std::string& name) const {

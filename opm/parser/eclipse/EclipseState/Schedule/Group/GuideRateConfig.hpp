@@ -71,10 +71,7 @@ struct GroupTarget {
     }
 };
 
-    GuideRateConfig() = default;
-    GuideRateConfig(std::shared_ptr<GuideRateModel> model,
-                    const std::unordered_map<std::string,WellTarget>& well,
-                    const std::unordered_map<std::string,GroupTarget>& group);
+    static GuideRateConfig serializeObject();
 
     const GuideRateModel& model() const;
     bool has_model() const;

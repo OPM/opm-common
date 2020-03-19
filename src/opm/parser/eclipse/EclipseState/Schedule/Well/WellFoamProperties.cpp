@@ -22,6 +22,14 @@
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Deck/UDAValue.hpp>
 
+Opm::WellFoamProperties Opm::WellFoamProperties::serializeObject()
+{
+    Opm::WellFoamProperties result;
+    result.m_foamConcentration = 1.0;
+
+    return result;
+}
+
 void Opm::WellFoamProperties::handleWFOAM(const DeckRecord& rec)
 {
     this->m_foamConcentration = rec.getItem("FOAM_CONCENTRATION").get<UDAValue>(0).getSI();

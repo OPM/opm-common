@@ -66,6 +66,8 @@ namespace Opm {
                      const std::vector<Segment>& segments);
         explicit WellSegments(const DeckKeyword& keyword);
 
+        static WellSegments serializeObject();
+
         std::size_t size() const;
         double depthTopSegment() const;
         double lengthTopSegment() const;

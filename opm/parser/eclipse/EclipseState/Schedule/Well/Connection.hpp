@@ -98,28 +98,9 @@ namespace RestartIO {
                    const double segDistEnd,
                    const bool defaultSatTabId);
 
-        Connection(Direction dir,
-                   double depth,
-                   State state,
-                   int satTableId,
-                   int complnum,
-                   double CF,
-                   double Kh,
-                   double rw,
-                   double r0,
-                   double skinFactor,
-                   const std::array<int,3>& IJK,
-                   std::size_t global_index,
-                   CTFKind kind,
-                   std::size_t seqIndex,
-                   double segDistStart,
-                   double segDistEnd,
-                   bool defaultSatTabId,
-                   std::size_t compSegSeqIndex,
-                   int segment,
-                   double wellPi);
-
         Connection(const RestartIO::RstConnection& rst_connection, std::size_t insert_index, const EclipseGrid& grid, const FieldPropsManager& fp);
+
+        static Connection serializeObject();
 
         bool attachedToSegment() const;
         bool sameCoordinate(const int i, const int j, const int k) const;

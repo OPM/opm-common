@@ -38,18 +38,31 @@ namespace Opm {
     {
     }
 
-    DeckKeyword::DeckKeyword() :
-        m_isDataKeyword(false),
-        m_slashTerminated(false)
-    {
-    }
-
     DeckKeyword::DeckKeyword(const Location& location, const std::string& keywordName) :
         m_keywordName(keywordName),
         m_location(location),
         m_isDataKeyword(false),
         m_slashTerminated(true)
     {
+    }
+
+    DeckKeyword::DeckKeyword() :
+        m_isDataKeyword(false),
+        m_slashTerminated(false)
+    {
+    }
+
+    DeckKeyword DeckKeyword::serializeObject()
+    {
+        DeckKeyword result;
+        result.m_keywordName = "test";
+        result.m_location = Location::serializeObject();
+        result.m_recordList = {DeckRecord::serializeObject()};
+        result.m_isDataKeyword = true;
+        result.m_slashTerminated = true;
+        result.m_isDoubleRecordKeyword = true;
+
+        return result;
     }
 
     namespace {
@@ -179,20 +192,6 @@ namespace Opm {
         deck_record.addItem( std::move(item) );
         addRecord( std::move(deck_record) );
     }
-
-    DeckKeyword::DeckKeyword(const std::string& kwName,
-                             const Location& loc,
-                             const std::vector<DeckRecord>& record,
-                             bool dataKw,
-                             bool slashTerminated) :
-       m_keywordName(kwName),
-       m_location(loc),
-       m_recordList(record),
-       m_isDataKeyword(dataKw),
-       m_slashTerminated(slashTerminated)
-    {
-    }
-
 
 
     void DeckKeyword::setFixedSize() {

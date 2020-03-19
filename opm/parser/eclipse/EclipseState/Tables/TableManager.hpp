@@ -64,43 +64,8 @@ namespace Opm {
     public:
         explicit TableManager( const Deck& deck );
         TableManager() = default;
-        TableManager(const std::map<std::string, TableContainer>& simpleTables,
-                     const std::vector<PvtgTable>& pvtgTables,
-                     const std::vector<PvtoTable>& pvtoTables,
-                     const std::vector<Rock2dTable>& rock2dTables,
-                     const std::vector<Rock2dtrTable>& rock2dtrTables,
-                     const PvtwTable& pvtwTable,
-                     const PvcdoTable& pvcdoTable,
-                     const DensityTable& densityTable,
-                     const PlyvmhTable& plyvmhTable,
-                     const RockTable& rockTable,
-                     const PlmixparTable& plmixparTable,
-                     const ShrateTable& shrateTable,
-                     const Stone1exTable& stone1exTable,
-                     const TlmixparTable& tlmixparTable,
-                     const ViscrefTable& viscrefTable,
-                     const WatdentTable& watdentTable,
-                     const std::vector<PvtwsaltTable>& pvtwsaltTables,
-                     const std::vector<BrineDensityTable>& bdensityTables,
-                     const std::vector<SolventDensityTable>& sdensityTables,
-                     const std::map<int, PlymwinjTable>& plymwinjTables,
-                     const std::map<int, SkprwatTable>& skprwatTables,
-                     const std::map<int, SkprpolyTable>& skprpolyTables,
-                     const Tabdims& tabdims,
-                     const Regdims& regdims,
-                     const Eqldims& eqldims,
-                     const Aqudims& aqudims,
-                     bool useImptvd,
-                     bool useEnptvd,
-                     bool useEqlnum,
-                     bool useShrate,
-                     std::shared_ptr<JFunc> jfunc_param,
-                     const DenT& oilDenT,
-                     const DenT& gasDenT,
-                     const DenT& watDenT,
-                     const StandardCond& stcond,
-                     std::size_t gas_comp_index,
-                     double rtemp);
+
+        static TableManager serializeObject();
 
         TableManager& operator=(const TableManager& data);
 

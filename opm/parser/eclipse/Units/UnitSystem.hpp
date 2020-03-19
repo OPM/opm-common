@@ -79,9 +79,8 @@ namespace Opm {
         explicit UnitSystem(int ecl_id);
         explicit UnitSystem(UnitType unit = UnitType::UNIT_TYPE_METRIC);
         explicit UnitSystem(const std::string& deck_name);
-        UnitSystem(const std::string& name, UnitType unit,
-                   const std::map<std::string,Dimension>& dimensions,
-                   size_t use_count);
+
+        static UnitSystem serializeObject();
 
         const std::string& getName() const;
         UnitType getType() const;

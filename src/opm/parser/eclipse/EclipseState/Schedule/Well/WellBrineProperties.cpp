@@ -22,6 +22,14 @@
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Deck/UDAValue.hpp>
 
+Opm::WellBrineProperties Opm::WellBrineProperties::serializeObject()
+{
+    Opm::WellBrineProperties result;
+    result.m_saltConcentration = 1.0;
+
+    return result;
+}
+
 void Opm::WellBrineProperties::handleWSALT(const DeckRecord& rec)
 {
     this->m_saltConcentration = rec.getItem("CONCENTRATION").get<UDAValue>(0).get<double>();

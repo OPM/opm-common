@@ -32,9 +32,14 @@ namespace Opm {
         limits( timemap , MLimits())
     { }
 
-    MessageLimits::MessageLimits(const DynamicState<MLimits>& limits_) :
-        limits(limits_)
-    { }
+
+    MessageLimits MessageLimits::serializeObject()
+    {
+       MessageLimits result;
+       result.limits = {{MLimits::serializeObject()}, 2};
+
+        return result;
+    }
 
 
     int MessageLimits::getMessagePrintLimit(size_t timestep) const

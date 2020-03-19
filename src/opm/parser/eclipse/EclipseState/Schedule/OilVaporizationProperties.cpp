@@ -34,19 +34,18 @@ namespace Opm {
          m_maxDRVDT(numPvtRegionIdx, -1.0)
     {  }
 
-    OilVaporizationProperties::OilVaporizationProperties(OilVaporization type,
-                                                         double vap1,
-                                                         double vap2,
-                                                         const std::vector<double>& maxDRSDT,
-                                                         const std::vector<bool>& maxDRSDT_allCells,
-                                                         const std::vector<double>& maxDRVDT):
-        m_type(type),
-        m_vap1(vap1),
-        m_vap2(vap2),
-        m_maxDRSDT(maxDRSDT),
-        m_maxDRSDT_allCells(maxDRSDT_allCells),
-        m_maxDRVDT(maxDRVDT)
-    {  }
+    OilVaporizationProperties OilVaporizationProperties::serializeObject()
+    {
+        OilVaporizationProperties result;
+        result.m_type = OilVaporization::VAPPARS;
+        result.m_vap1 = 1.0;
+        result.m_vap2 = 2.0;
+        result.m_maxDRSDT = {3.0};
+        result.m_maxDRSDT_allCells = {4.0};
+        result.m_maxDRVDT = {5.0};
+
+        return result;
+    }
 
     double OilVaporizationProperties::getMaxDRVDT(const size_t pvtRegionIdx) const{
         if (drvdtActive()){

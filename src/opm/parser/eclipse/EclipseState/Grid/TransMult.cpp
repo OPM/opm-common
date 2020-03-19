@@ -56,18 +56,17 @@ R"(This deck has the MULTREGT keyword located in the EDIT section. Note that:
         }
     }
 
-
-    TransMult::TransMult(const std::array<size_t,3>& size,
-                         const std::map<FaceDir::DirEnum, std::vector<double>>& trans,
-                         const std::map<FaceDir::DirEnum, std::string>& names,
-                         const MULTREGTScanner& scanner) :
-        m_nx(size[0]),
-        m_ny(size[1]),
-        m_nz(size[2]),
-        m_trans(trans),
-        m_names(names),
-        m_multregtScanner(scanner)
+    TransMult TransMult::serializeObject()
     {
+        TransMult result;
+        result.m_nx = 1;
+        result.m_ny = 2;
+        result.m_nz = 3;
+        result.m_trans = {{FaceDir::YPlus, {4.0, 5.0}}};
+        result.m_names = {{FaceDir::ZPlus, "test1"}};
+        result.m_multregtScanner = MULTREGTScanner::serializeObject();
+
+        return result;
     }
 
     void TransMult::assertIJK(size_t i , size_t j , size_t k) const {

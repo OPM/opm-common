@@ -59,24 +59,6 @@ VFPInjTable::VFPInjTable()
     m_flo_type = FLO_INVALID;
 }
 
-VFPInjTable::VFPInjTable(int table_num,
-                         double datum_depth,
-                         FLO_TYPE flo_type,
-                         const std::vector<double>& flo_data,
-                         const std::vector<double>& thp_data,
-                         const array_type& data) {
-    m_table_num = table_num;
-    m_datum_depth = datum_depth;
-    m_flo_type = flo_type;
-    m_flo_data = flo_data;
-    m_thp_data = thp_data;
-
-    m_data = data;
-
-    check();
-}
-
-
 
 VFPInjTable::VFPInjTable( const DeckKeyword& table, const UnitSystem& deck_unit_system) {
     using ParserKeywords::VFPINJ;
@@ -193,7 +175,18 @@ VFPInjTable::VFPInjTable( const DeckKeyword& table, const UnitSystem& deck_unit_
 }
 
 
+VFPInjTable VFPInjTable::serializeObject()
+{
+    VFPInjTable result;
+    result.m_table_num = 1;
+    result.m_datum_depth = 2.0;
+    result.m_flo_type = FLO_WAT;
+    result.m_flo_data = {3.0, 4.0};
+    result.m_thp_data = {5.0, 6.0};
+    result.m_data = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0};
 
+    return result;
+}
 
 
 

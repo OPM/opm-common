@@ -94,11 +94,8 @@ namespace Opm {
         MULTREGTScanner(const GridDims& grid,
                         const FieldPropsManager* fp_arg,
                         const std::vector< const DeckKeyword* >& keywords);
-        MULTREGTScanner(const std::array<size_t,3>& size,
-                        const std::vector<MULTREGTRecord>& records,
-                        const ExternalSearchMap& searchMap,
-                        const std::map<std::string, std::vector<int>>& region,
-                        const std::string& defaultRegion);
+
+        static MULTREGTScanner serializeObject();
 
         double getRegionMultiplier(size_t globalCellIdx1, size_t globalCellIdx2, FaceDir::DirEnum faceDir) const;
 

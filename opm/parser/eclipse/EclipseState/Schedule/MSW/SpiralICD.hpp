@@ -49,6 +49,8 @@ namespace Opm {
                   ICDStatus status,
                   double scalingFactor);
 
+        static SpiralICD serializeObject();
+
         // the function will return a map
         // [
         //     "WELL1" : [<seg1, sicd1>, <seg2, sicd2> ...]

@@ -23,9 +23,14 @@
 
 namespace Opm {
 
-GConSump::GConSump(const std::map<std::string,GCONSUMPGroup>& group)
-    : groups(group)
-{}
+GConSump GConSump::serializeObject()
+{
+    GConSump result;
+    result.groups = {{"test1", {UDAValue(1.0), UDAValue(2.0), "test2", 3.0,
+                                UnitSystem::serializeObject()}}};
+
+    return result;
+}
 
 bool GConSump::has(const std::string& name) const {
     return (groups.find(name) != groups.end());

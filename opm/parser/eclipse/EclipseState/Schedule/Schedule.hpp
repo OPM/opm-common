@@ -156,30 +156,7 @@ namespace Opm
                  const EclipseState& es,
                  const RestartIO::RstState* rst = nullptr);
 
-        Schedule(const TimeMap& timeMap,
-                 const WellMap& wellsStatic,
-                 const GroupMap& group,
-                 const DynamicState<OilVaporizationProperties>& oilVapProps,
-                 const Events& events,
-                 const DynamicVector<Deck>& modifierDeck,
-                 const DynamicState<Tuning>& tuning,
-                 const MessageLimits& messageLimits,
-                 const Runspec& runspec,
-                 const VFPProdMap& vfpProdTables,
-                 const VFPInjMap& vfpInjTables,
-                 const DynamicState<std::shared_ptr<WellTestConfig>>& wtestConfig,
-                 const DynamicState<std::shared_ptr<WListManager>>& wListManager,
-                 const DynamicState<std::shared_ptr<UDQConfig>>& udqConfig,
-                 const DynamicState<std::shared_ptr<UDQActive>>& udqActive,
-                 const DynamicState<std::shared_ptr<GuideRateConfig>>& guideRateConfig,
-                 const DynamicState<std::shared_ptr<GConSale>>& gconSale,
-                 const DynamicState<std::shared_ptr<GConSump>>& gconSump,
-                 const DynamicState<Well::ProducerCMode>& globalWhistCtlMode,
-                 const DynamicState<std::shared_ptr<Action::Actions>>& actions,
-                 const RFTConfig& rftconfig,
-                 const DynamicState<int>& nupCol,
-                 const RestartConfig& rst_config,
-                 const std::map<std::string,Events>& wellGroupEvents);
+        static Schedule serializeObject();
 
         /*
          * If the input deck does not specify a start time, Eclipse's 1. Jan

@@ -41,15 +41,15 @@ namespace Opm {
     }
 
 
-    SimpleTable::SimpleTable(const TableSchema& schema,
-                             const OrderedMap<std::string, TableColumn>& columns,
-                             bool jf) :
-        m_schema(schema),
-        m_columns(columns),
-        m_jfunc(jf)
+    SimpleTable SimpleTable::serializeObject()
     {
-    }
+        SimpleTable result;
+        result.m_schema = Opm::TableSchema::serializeObject();
+        result.m_columns.insert({"test3", Opm::TableColumn::serializeObject()});
+        result.m_jfunc = true;
 
+        return result;
+    }
 
     void SimpleTable::addRow( const std::vector<double>& row) {
         if (row.size() == numColumns()) {

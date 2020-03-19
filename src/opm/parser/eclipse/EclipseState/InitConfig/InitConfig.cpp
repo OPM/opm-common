@@ -78,17 +78,18 @@ namespace Opm {
             this->setRestart( input_path + "/" + root, step );
     }
 
-    InitConfig::InitConfig(const Equil& equils, const FoamConfig& foam,
-                           bool filleps, bool gravity, bool restartReq, int restartStep,
-                           const std::string& restartRootName)
-        : equil(equils)
-        , foamconfig(foam)
-        , m_filleps(filleps)
-        , m_gravity(gravity)
-        , m_restartRequested(restartReq)
-        , m_restartStep(restartStep)
-        , m_restartRootName(restartRootName)
+    InitConfig InitConfig::serializeObject()
     {
+        InitConfig result;
+        result.equil = Equil::serializeObject();
+        result.foamconfig = FoamConfig::serializeObject();
+        result.m_filleps = true;
+        result.m_gravity = false;
+        result.m_restartRequested = true;
+        result.m_restartStep = 20;
+        result.m_restartRootName = "test1";
+
+        return result;
     }
 
     void InitConfig::setRestart( const std::string& root, int step) {

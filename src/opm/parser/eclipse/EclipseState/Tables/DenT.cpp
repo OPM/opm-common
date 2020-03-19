@@ -34,9 +34,13 @@ DenT::entry::entry(const DeckRecord& record) :
 {
 }
 
-DenT::DenT(const std::vector<DenT::entry>& records) :
-    m_records(records)
-{}
+DenT DenT::serializeObject()
+{
+    DenT result;
+    result.m_records = {{1,2,3}, {4,5,6}};
+
+    return result;
+}
 
 std::size_t DenT::size() const {
     return this->m_records.size();
@@ -63,10 +67,5 @@ bool DenT::operator==(const DenT& other) const {
 const DenT::entry& DenT::operator[](const std::size_t index) const {
     return this->m_records.at(index);
 }
-
-const std::vector<DenT::entry>& DenT::records() const {
-    return this->m_records;
-}
-
 
 }

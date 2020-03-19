@@ -38,6 +38,8 @@ public:
     UDAValue(double data, const Dimension& dim);
     UDAValue(const std::string& data, const Dimension& dim);
 
+    static UDAValue serializeObject();
+
     /*
       The get<double>() and get<std::string>() methods will throw an
       exception if the internal type and the template parameter disagree.

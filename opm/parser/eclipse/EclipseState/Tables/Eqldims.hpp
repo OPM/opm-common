@@ -48,6 +48,11 @@ namespace Opm {
             m_nstrvd( nstrvd )
         { }
 
+        static Eqldims serializeObject()
+        {
+            return Eqldims(1, 2, 3, 4, 5);
+        }
+
         size_t getNumEquilRegions() const
         {
             return m_ntequl;

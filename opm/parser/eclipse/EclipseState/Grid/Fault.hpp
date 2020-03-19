@@ -34,9 +34,8 @@ class Fault {
 public:
     Fault() = default;
     explicit Fault(const std::string& faultName);
-    Fault(const std::string& name,
-           double transMult,
-           const std::vector<FaultFace>& faceList);
+
+    static Fault serializeObject();
 
     const  std::string& getName() const;
     void   setTransMult(double transMult);
