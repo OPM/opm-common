@@ -35,7 +35,6 @@ namespace Opm {
         WellConnections();
         WellConnections(Connection::Order ordering, int headI, int headJ);
         WellConnections(Connection::Order ordering, int headI, int headJ,
-                        size_t numRemoved,
                         const std::vector<Connection>& connections);
 
         // cppcheck-suppress noExplicitConstructor
@@ -61,7 +60,6 @@ namespace Opm {
 
         void add( Connection );
         size_t size() const;
-        size_t inputSize() const;
         const Connection& operator[](size_t index) const;
         const Connection& get(size_t index) const;
         const Connection& getFromIJK(const int i, const int j, const int k) const;
@@ -90,7 +88,6 @@ namespace Opm {
 
         int getHeadI() const;
         int getHeadJ() const;
-        size_t getNumRemoved() const;
         const std::vector<Connection>& getConnections() const;
         Connection::Order ordering() const { return this->m_ordering; }
     private:
@@ -123,7 +120,6 @@ namespace Opm {
 
         Connection::Order m_ordering = Connection::Order::TRACK;
         int headI, headJ;
-        size_t num_removed = 0;
         std::vector< Connection > m_connections;
     };
 }
