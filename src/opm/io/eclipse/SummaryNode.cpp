@@ -25,9 +25,9 @@ namespace {
 
 constexpr bool use_number(Opm::EclIO::SummaryNode::Category category) {
     switch (category) {
-    case Opm::EclIO::SummaryNode::Category::Block:
-    case Opm::EclIO::SummaryNode::Category::Connection:
-    case Opm::EclIO::SummaryNode::Category::Region:
+    case Opm::EclIO::SummaryNode::Category::Block:      [[fallthrough]];
+    case Opm::EclIO::SummaryNode::Category::Connection: [[fallthrough]];
+    case Opm::EclIO::SummaryNode::Category::Region:     [[fallthrough]];
     case Opm::EclIO::SummaryNode::Category::Segment:
         return true;
     default:
@@ -37,9 +37,9 @@ constexpr bool use_number(Opm::EclIO::SummaryNode::Category category) {
 
 constexpr bool use_name(Opm::EclIO::SummaryNode::Category category) {
     switch (category) {
-    case Opm::EclIO::SummaryNode::Category::Connection:
-    case Opm::EclIO::SummaryNode::Category::Group:
-    case Opm::EclIO::SummaryNode::Category::Segment:
+    case Opm::EclIO::SummaryNode::Category::Connection: [[fallthrough]];
+    case Opm::EclIO::SummaryNode::Category::Group:      [[fallthrough]];
+    case Opm::EclIO::SummaryNode::Category::Segment:    [[fallthrough]];
     case Opm::EclIO::SummaryNode::Category::Well:
         return true;
     default:
