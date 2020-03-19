@@ -1378,16 +1378,17 @@ void eval_udq(const Opm::Schedule& schedule, std::size_t sim_step, Opm::SummaryS
     }
 }
 
-void updateValue(const Opm::SummaryConfigNode& node, const double value, Opm::SummaryState& st)
-{
-    if (node.category() == Opm::SummaryConfigNode::Category::Well)
-        st.update_well_var(node.namedEntity(), node.keyword(), value);
+void updateValue(const Opm::EclIO::SummaryNode& node, const double value, Opm::SummaryState& st) {
+    switch (node.category) {
+    case Opm::EclIO::SummaryNode::Category::Well:
+        return st.update_well_var(node.wgname, node.keyword, value);
 
-    else if (node.category() == Opm::SummaryConfigNode::Category::Group)
-        st.update_group_var(node.namedEntity(), node.keyword(), value);
+    case Opm::SummaryConfigNode::Category::Group:
+        return st.update_group_var(node.wgname, node.keyword, value);
 
-    else
-        st.update(node.uniqueNodeKey(), value);
+    default:
+        return st.update(node.unique_key(), value);
+    }
 }
 
 /*
