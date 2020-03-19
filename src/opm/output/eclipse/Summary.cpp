@@ -65,6 +65,7 @@
 #include <vector>
 
 namespace {
+
     struct ParamCTorArgs
     {
         std::string kw;
@@ -150,10 +151,10 @@ namespace {
              const std::string& name) -> void
         {
             for (const auto& vector : vectors) {
-                entities.emplace_back(kwpref + vector.kw, cat, ::Opm::Location());
+                entities.emplace_back(kwpref + vector.first, cat, ::Opm::Location());
 
                 entities.back().namedEntity(name)
-                .parameterType(vector.type);
+                .parameterType(vector.second);
             }
         };
 
