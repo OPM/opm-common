@@ -51,7 +51,7 @@ public:
     const std::string& get_unit(const std::string& name) const;
 
 private:
-    Opm::filesystem::path rootName;
+    Opm::filesystem::path inputFileName;
     int nVect, nI, nJ, nK;
 
     void ijk_from_global_index(int glob, int &i, int &j, int &k) const;

@@ -52,10 +52,9 @@
 namespace Opm { namespace EclIO {
 
 ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
+    : inputFileName { filename }
 {
-
-    Opm::filesystem::path inputFileName(filename);
-    rootName = inputFileName.parent_path() / inputFileName.stem();
+    Opm::filesystem::path rootName { inputFileName.parent_path() / inputFileName.stem() } ;
 
     // if root name (without any extension) given as first argument in constructor, binary will then be assumed
     if (inputFileName.extension()==""){
@@ -420,9 +419,9 @@ void ESmry::updatePathAndRootName(Opm::filesystem::path& dir, Opm::filesystem::p
 }
 
 void ESmry::write_rsm(const std::optional<std::string>& o_filename) const {
-    const std::string filename = o_filename.value_or(std::string(rootName) + ".RSM");
+    const Opm::filesystem::path rsm_file { o_filename.value_or(Opm::filesystem::path(inputFileName).replace_extension("RSM")) } ;
 
-    OPM_THROW(std::runtime_error, "Could not write file " + filename);
+    OPM_THROW(std::runtime_error, "Could not write file " + rsm_file.string());
 }
 
 bool ESmry::hasKey(const std::string &key) const
