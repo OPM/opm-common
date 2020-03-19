@@ -58,9 +58,9 @@ std::string Opm::EclIO::SummaryNode::unique_key() const {
     if (use_name(category))
         key_parts.emplace_back(name);
 
-    auto compose_key = [](std::string &key, const std::string &key_part) -> std::string {
-      constexpr auto delimiter { ':' };
-      return key.empty() ? key_part : key + delimiter + key_part;
+    auto compose_key = [](std::string& key, const std::string& key_part) -> std::string {
+        constexpr auto delimiter { ':' } ;
+        return key.empty() ? key_part : key + delimiter + key_part;
     };
 
     return std::accumulate(std::begin(key_parts), std::end(key_parts), std::string(), compose_key);
