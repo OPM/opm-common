@@ -104,13 +104,13 @@ namespace {
 
         return {
             // Production
-            { "OPR" , Type::Rate },
-            { "WPR" , Type::Rate },
-            { "GPR" , Type::Rate },
-            { "VPR" , Type::Rate },
-            { "OPP" , Type::Rate },
-            { "WPP" , Type::Rate },
-            { "GPP" , Type::Rate },
+            { "OPR" , Type::Rate  },
+            { "WPR" , Type::Rate  },
+            { "GPR" , Type::Rate  },
+            { "VPR" , Type::Rate  },
+            { "OPP" , Type::Rate  },
+            { "WPP" , Type::Rate  },
+            { "GPP" , Type::Rate  },
             { "OPT" , Type::Total },
             { "WPT" , Type::Total },
             { "GPT" , Type::Total },
@@ -125,11 +125,11 @@ namespace {
 
             // injection
 
-            { "WIR" , Type::Rate },
-            { "GIR" , Type::Rate },
-            { "OPI" , Type::Rate },
-            { "WPI" , Type::Rate },
-            { "GPI" , Type::Rate },
+            { "WIR" , Type::Rate  },
+            { "GIR" , Type::Rate  },
+            { "OPI" , Type::Rate  },
+            { "WPI" , Type::Rate  },
+            { "GPI" , Type::Rate  },
             { "WIT" , Type::Total },
             { "GIT" , Type::Total },
             { "WITH", Type::Total },
