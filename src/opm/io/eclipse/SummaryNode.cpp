@@ -52,11 +52,11 @@ constexpr bool use_name(Opm::EclIO::SummaryNode::Category category) {
 std::string Opm::EclIO::SummaryNode::unique_key() const {
     std::vector<std::string> key_parts { keyword } ;
 
-    if (use_number(category))
-        key_parts.emplace_back(std::to_string(number));
-
     if (use_name(category))
         key_parts.emplace_back(name);
+
+    if (use_number(category))
+        key_parts.emplace_back(std::to_string(number));
 
     auto compose_key = [](std::string& key, const std::string& key_part) -> std::string {
         constexpr auto delimiter { ':' } ;
