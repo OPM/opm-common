@@ -247,18 +247,6 @@ namespace Opm {
         return this->input_path;
     }
 
-    const std::unique_ptr<UnitSystem>& Deck::activeUnitSystem() const {
-        return this->activeUnits;
-    }
-
-    const std::vector<DeckKeyword>& Deck::keywords() const {
-        return keywordList;
-    }
-
-    std::size_t Deck::unitSystemAccessCount() const {
-        return unit_system_access_count;
-    }
-
     std::string Deck::makeDeckPath(const std::string& path) const {
         if (path.size() > 0 && path[0] == '/')
             return path;
@@ -314,17 +302,17 @@ namespace Opm {
     }
 
     bool Deck::operator==(const Deck& data) const {
-        if ((activeUnitSystem() && !data.activeUnitSystem()) ||
-            (!activeUnitSystem() && data.activeUnitSystem()))
+        if ((activeUnits && !data.activeUnits) ||
+            (!activeUnits && data.activeUnits))
             return false;
 
-        if (activeUnitSystem() && *activeUnitSystem() != *data.activeUnitSystem())
+        if (activeUnits && *activeUnits != *data.activeUnits)
             return false;
-        return this->keywords() == data.keywords() &&
-               this->getDefaultUnitSystem() == data.getDefaultUnitSystem() &&
-               this->getDataFile() == data.getDataFile() &&
-               this->getInputPath() == data.getInputPath() &&
-               this->unitSystemAccessCount() == data.unitSystemAccessCount();
+        return this->keywordList == data.keywordList &&
+               this->defaultUnits == data.defaultUnits &&
+               this->m_dataFile == data.m_dataFile &&
+               this->input_path == data.input_path &&
+               this->unit_system_access_count == data.unit_system_access_count;
     }
 
     std::ostream& operator<<(std::ostream& os, const Deck& deck) {

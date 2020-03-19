@@ -735,38 +735,12 @@ void RestartConfig::handleScheduleSection(const SCHEDULESection& schedule, const
     }
 
 
-    const TimeMap& RestartConfig::timeMap() const {
-        return m_timemap;
-    }
-
-
-    bool RestartConfig::writeInitialRst() const {
-        return m_write_initial_RST_file;
-    }
-
-
-    const DynamicState<RestartSchedule>& RestartConfig::restartSchedule() const {
-        return restart_schedule;
-    }
-
-
-    const DynamicState<std::map<std::string,int>>&
-    RestartConfig::restartKeywords() const {
-        return restart_keywords;
-    }
-
-
-    const std::vector<bool>& RestartConfig::saveKeywords() const {
-        return save_keywords;
-    }
-
-
     bool RestartConfig::operator==(const RestartConfig& data) const {
-        return this->timeMap() == data.timeMap() &&
-               this->getFirstRestartStep() == data.getFirstRestartStep() &&
-               this->writeInitialRst() == data.writeInitialRst() &&
-               this->restartSchedule() == data.restartSchedule() &&
-               this->restartKeywords() == data.restartKeywords() &&
-               this->saveKeywords() == data.saveKeywords();
+        return this->m_timemap == data.m_timemap &&
+               this->m_first_restart_step == data.m_first_restart_step &&
+               this->m_write_initial_RST_file == data.m_write_initial_RST_file &&
+               this->restart_schedule == data.restart_schedule &&
+               this->restart_keywords == data.restart_keywords &&
+               this->save_keywords == data.save_keywords;
     }
 }

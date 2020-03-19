@@ -160,6 +160,31 @@ namespace RestartIO {
 
         bool operator==( const Connection& ) const;
         bool operator!=( const Connection& ) const;
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(direction);
+            serializer(center_depth);
+            serializer(open_state);
+            serializer(sat_tableId);
+            serializer(m_complnum);
+            serializer(m_CF);
+            serializer(m_Kh);
+            serializer(m_rw);
+            serializer(m_r0);
+            serializer(m_skin_factor);
+            serializer(ijk);
+            serializer(m_ctfkind);
+            serializer(m_seqIndex);
+            serializer(m_segDistStart);
+            serializer(m_segDistEnd);
+            serializer(m_defaultSatTabId);
+            serializer(m_compSeg_seqIndex);
+            serializer(segment_number);
+            serializer(wPi);
+        }
+
     private:
         Direction direction;
         double center_depth;

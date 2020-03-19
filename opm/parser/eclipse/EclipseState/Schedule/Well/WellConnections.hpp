@@ -86,10 +86,17 @@ namespace Opm {
         bool operator==( const WellConnections& ) const;
         bool operator!=( const WellConnections& ) const;
 
-        int getHeadI() const;
-        int getHeadJ() const;
-        const std::vector<Connection>& getConnections() const;
         Connection::Order ordering() const { return this->m_ordering; }
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(m_ordering);
+            serializer(headI);
+            serializer(headJ);
+            serializer.vector(m_connections);
+        }
+
     private:
         void addConnection(int i, int j , int k ,
                            int complnum,

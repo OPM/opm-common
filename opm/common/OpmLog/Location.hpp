@@ -37,6 +37,13 @@ public:
         return filename == data.filename &&
                lineno == data.lineno;
     }
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(filename);
+        serializer(lineno);
+    }
 };
 
 }

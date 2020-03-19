@@ -94,14 +94,24 @@ public:
       The conditions() and keyword_strings() methods, and their underlying data
       members are only present to support writing formatted restart files.
     */
-    const std::vector<DeckKeyword>& getKeywords() const;
     const std::vector<Condition>& conditions() const;
-    const Action::AST& getCondition() const;
     std::vector<std::string> keyword_strings() const;
-    size_t getRunCount() const;
-    std::time_t getLastRun() const;
 
     bool operator==(const ActionX& data) const;
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(m_name);
+        serializer(m_max_run);
+        serializer(m_min_wait);
+        serializer(m_start_time);
+        serializer.vector(keywords);
+        condition.serializeOp(serializer);
+        serializer.vector(m_conditions);
+        serializer(run_count);
+        serializer(last_run);
+    }
 
 private:
     std::string m_name;

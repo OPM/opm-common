@@ -565,9 +565,4 @@ WellSegments::MultiPhaseModel WellSegments::MultiPhaseModelFromString(const std:
     }
 }
 
-const std::vector<Segment>& WellSegments::segments() const {
-    return m_segments;
-}
-
-
 }

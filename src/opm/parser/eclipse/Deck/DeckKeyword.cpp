@@ -344,13 +344,5 @@ namespace Opm {
         return !(*this == other);
     }
 
-    const std::vector<DeckRecord>& DeckKeyword::records() const {
-        return m_recordList;
-    }
-
-    bool DeckKeyword::isSlashTerminated() const {
-        return m_slashTerminated;
-    }
-
 }
 

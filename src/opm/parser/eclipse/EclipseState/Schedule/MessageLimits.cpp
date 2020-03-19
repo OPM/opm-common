@@ -206,11 +206,6 @@ namespace Opm {
         this->update( timestep , mlimit );
     }
 
-    const DynamicState<MLimits>& MessageLimits::getLimits() const
-    {
-        return limits;
-    }
-
     bool MessageLimits::operator==(const MessageLimits& data) const
     {
         return limits == data.limits;

@@ -51,9 +51,13 @@ public:
     std::vector<ActionX>::const_iterator begin() const;
     std::vector<ActionX>::const_iterator end() const;
 
-    const std::vector<ActionX>& getActions() const;
-
     bool operator==(const Actions& data) const;
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer.vector(actions);
+    }
 
 private:
     std::vector<ActionX> actions;

@@ -328,15 +328,15 @@ Well::Well(const std::string& wname_arg,
           double efficiencyFactor,
           double solventFraction,
           bool predictionMode,
-          std::shared_ptr<const WellEconProductionLimits> econLimits,
-          std::shared_ptr<const WellFoamProperties> foamProperties,
-          std::shared_ptr<const WellPolymerProperties> polymerProperties,
-          std::shared_ptr<const WellBrineProperties> brineProperties,
-          std::shared_ptr<const WellTracerProperties> tracerProperties,
+          std::shared_ptr<WellEconProductionLimits> econLimits,
+          std::shared_ptr<WellFoamProperties> foamProperties,
+          std::shared_ptr<WellPolymerProperties> polymerProperties,
+          std::shared_ptr<WellBrineProperties> brineProperties,
+          std::shared_ptr<WellTracerProperties> tracerProperties,
           std::shared_ptr<WellConnections> connections_arg,
-          std::shared_ptr<const WellProductionProperties> production_arg,
-          std::shared_ptr<const WellInjectionProperties> injection_arg,
-          std::shared_ptr<const WellSegments> segments_arg) :
+          std::shared_ptr<WellProductionProperties> production_arg,
+          std::shared_ptr<WellInjectionProperties> injection_arg,
+          std::shared_ptr<WellSegments> segments_arg) :
     wname(wname_arg),
     group_name(gname),
     init_step(init_step_arg),
@@ -1335,29 +1335,13 @@ Well::GuideRateTarget Well::GuideRateTargetFromString( const std::string& string
         throw std::invalid_argument("Unknown enum state string: " + stringValue );
 }
 
-const Well::WellGuideRate& Well::wellGuideRate() const {
-    return guide_rate;
-}
-
-const UnitSystem& Well::units() const {
-    return unit_system;
-}
-
-double Well::udqUndefined() const {
-    return udq_undefined;
-}
-
-bool Well::hasSegments() const {
-    return segments != nullptr;
-}
-
 
 bool Well::operator==(const Well& data) const {
-    if (this->hasSegments() != data.hasSegments()) {
+    if ((segments && !data.segments) || (!segments && data.segments)) {
         return false;
     }
 
-    if (this->hasSegments() && (this->getSegments() != data.getSegments()))  {
+    if (segments && (this->getSegments() != data.getSegments()))  {
         return false;
     }
 
@@ -1369,14 +1353,14 @@ bool Well::operator==(const Well& data) const {
            this->getHeadJ() == data.getHeadJ() &&
            this->getRefDepth() == data.getRefDepth() &&
            this->getPreferredPhase() == data.getPreferredPhase() &&
-           this->units() == data.units() &&
-           this->udqUndefined() == data.udqUndefined() &&
+           this->unit_system == data.unit_system &&
+           this->udq_undefined == data.udq_undefined &&
            this->getStatus() == data.getStatus() &&
            this->getDrainageRadius() == data.getDrainageRadius() &&
            this->getAllowCrossFlow() == data.getAllowCrossFlow() &&
            this->getAutomaticShutIn() == data.getAutomaticShutIn() &&
            this->isProducer() == data.isProducer() &&
-           this->wellGuideRate() == data.wellGuideRate() &&
+           this->guide_rate == data.guide_rate &&
            this->getEfficiencyFactor() == data.getEfficiencyFactor() &&
            this->getSolventFraction() == data.getSolventFraction() &&
            this->getEconLimits() == data.getEconLimits() &&

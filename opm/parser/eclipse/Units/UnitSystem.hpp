@@ -96,7 +96,6 @@ namespace Opm {
 
         bool hasDimension(const std::string& dimension) const;
         bool equal(const UnitSystem& other) const;
-        const std::map<std::string,Dimension>& getDimensions() const;
 
         bool operator==( const UnitSystem& ) const;
         bool operator!=( const UnitSystem& ) const;
@@ -117,8 +116,21 @@ namespace Opm {
         static UnitSystem newLAB();
         static UnitSystem newPVT_M();
         static UnitSystem newINPUT();
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(m_name);
+            serializer(m_unittype);
+            serializer.map(m_dimensions);
+            serializer(m_use_count);
+            if (!serializer.isSerializing())
+                init();
+        }
+
     private:
         Dimension parseFactor( const std::string& ) const;
+        void init();
         void initINPUT();
         void initMETRIC();
         void initFIELD();

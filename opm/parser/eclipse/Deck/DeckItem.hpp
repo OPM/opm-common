@@ -127,22 +127,27 @@ namespace Opm {
         bool operator!=(const DeckItem& other) const;
         static bool to_bool(std::string string_value);
 
-        const std::vector<double>& dVal() const;
-        const std::vector<int>& iVal() const;
-        const std::vector<std::string>& sVal() const;
-        const std::vector<UDAValue>& uVal() const;
-
-        const std::vector<value::status>& valueStatus() const;
-        bool rawData() const;
-        const std::vector<Dimension>& activeDimensions() const;
-        const std::vector<Dimension>& defaultDimensions() const;
-
         bool is_uda() { return  (type == get_type< UDAValue >()); };
         bool is_double() { return  type == get_type< double >(); };
         bool is_int() { return  type == get_type< int >() ; };
         bool is_string() { return  type == get_type< std::string >(); };
 
         UDAValue& get_uda() { return uval[0]; };
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(dval);
+            serializer(ival);
+            serializer(sval);
+            serializer.vector(uval);
+            serializer(type);
+            serializer(item_name);
+            serializer.template vector<value::status, false>(value_status);
+            serializer(raw_data);
+            serializer.vector(active_dimensions);
+            serializer.vector(default_dimensions);
+        }
 
     private:
         mutable std::vector< double > dval;

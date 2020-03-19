@@ -117,6 +117,20 @@ struct GroupInjectionProperties {
     int injection_controls = 0;
     bool operator==(const GroupInjectionProperties& other) const;
     bool operator!=(const GroupInjectionProperties& other) const;
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(phase);
+        serializer(cmode);
+        surface_max_rate.serializeOp(serializer);
+        resv_max_rate.serializeOp(serializer);
+        target_reinj_fraction.serializeOp(serializer);
+        target_void_fraction.serializeOp(serializer);
+        serializer(reinj_group);
+        serializer(voidage_group);
+        serializer(injection_controls);
+    }
 };
 
 struct InjectionControls {
@@ -146,6 +160,21 @@ struct GroupProductionProperties {
     int production_controls = 0;
     bool operator==(const GroupProductionProperties& other) const;
     bool operator!=(const GroupProductionProperties& other) const;
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(cmode);
+        serializer(exceed_action);
+        oil_target.serializeOp(serializer);
+        water_target.serializeOp(serializer);
+        gas_target.serializeOp(serializer);
+        liquid_target.serializeOp(serializer);
+        serializer(guide_rate);
+        serializer(guide_rate_def);
+        serializer(resv_target);
+        serializer(production_controls);
+    }
 };
 
 struct ProductionControls {
@@ -184,14 +213,8 @@ struct ProductionControls {
 
     bool defined(std::size_t timeStep) const;
     std::size_t insert_index() const;
-    std::size_t initStep() const;
-    double udqUndefined() const;
-    const UnitSystem& units() const;
     const std::string& name() const;
-    GroupType type() const;
     int getGroupNetVFPTable() const;
-    const IOrderSet<std::string>& iwells() const;
-    const IOrderSet<std::string>& igroups() const;
 
     bool updateNetVFPTable(int vfp_arg);
     bool update_gefac(double gefac, bool transfer_gefac);
@@ -239,6 +262,27 @@ struct ProductionControls {
     bool operator==(const Group& data) const;
     const Phase& topup_phase() const;
     bool has_topup_phase() const;
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(m_name);
+        serializer(m_insert_index);
+        serializer(init_step);
+        serializer(udq_undefined);
+        unit_system.serializeOp(serializer);
+        serializer(group_type);
+        serializer(gefac);
+        serializer(transfer_gefac);
+        serializer(available_for_group_control);
+        serializer(vfp_table);
+        serializer(parent_group);
+        m_wells.serializeOp(serializer);
+        m_groups.serializeOp(serializer);
+        serializer.map(injection_properties);
+        production_properties.serializeOp(serializer);
+        serializer(m_topup_phase);
+    }
 
 private:
     bool hasType(GroupType gtype) const;

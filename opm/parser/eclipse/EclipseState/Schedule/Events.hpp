@@ -127,9 +127,13 @@ namespace Opm
         void addEvent(ScheduleEvents::Events event, size_t reportStep);
         bool hasEvent(uint64_t eventMask, size_t reportStep) const;
 
-        const DynamicVector<uint64_t>& events() const;
-
         bool operator==(const Events& data) const;
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            m_events.template serializeOp<Serializer,false>(serializer);
+        }
 
     private:
         DynamicVector<uint64_t> m_events;

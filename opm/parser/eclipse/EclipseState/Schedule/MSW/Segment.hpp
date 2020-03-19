@@ -94,12 +94,31 @@ namespace Opm {
         bool operator!=( const Segment& ) const;
 
         const std::shared_ptr<SpiralICD>& spiralICD() const;
-        const std::shared_ptr<Valve>& getValve() const;
         const Valve* valve() const;
 
         void updateSpiralICD(const SpiralICD& spiral_icd);
         void updateValve(const Valve& valve, const double segment_length);
         void addInletSegment(const int segment_number);
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(m_segment_number);
+            serializer(m_branch);
+            serializer(m_outlet_segment);
+            serializer(m_inlet_segments);
+            serializer(m_total_length);
+            serializer(m_depth);
+            serializer(m_internal_diameter);
+            serializer(m_roughness);
+            serializer(m_cross_area);
+            serializer(m_volume);
+            serializer(m_data_ready);
+            serializer(m_segment_type);
+            serializer(m_spiral_icd);
+            serializer(m_valve);
+        }
+
     private:
         // segment number
         // it should work as a ID.

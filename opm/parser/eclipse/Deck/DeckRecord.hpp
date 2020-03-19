@@ -70,7 +70,11 @@ namespace Opm {
         bool operator==(const DeckRecord& other) const;
         bool operator!=(const DeckRecord& other) const;
 
-        const std::vector<DeckItem>& getItems() const;
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer.vector(m_items);
+        }
 
     private:
         std::vector< DeckItem > m_items;

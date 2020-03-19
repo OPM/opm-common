@@ -56,7 +56,7 @@ namespace Opm {
 
 template< class T >
 class DynamicState {
-
+    friend class Schedule;
     public:
         typedef typename std::vector< T >::iterator iterator;
 
@@ -227,22 +227,23 @@ class DynamicState {
                initial_range == data.initial_range;
     }
 
-    template<class Serializer>
+    // complexType=true if contained type has a serializeOp
+    template<class Serializer, bool complexType = true>
     void serializeOp(Serializer& serializer)
     {
-        auto split = Split();
-        serializer.vector(split.first);
-        serializer(split.second);
-        if (m_data.empty())
-            reconstruct(split.first, split.second);
+        std::vector<T> unique;
+        auto indices = split(unique);
+        serializer.template vector<T,complexType>(unique);
+        serializer(indices);
+        if (!serializer.isSerializing())
+            reconstruct(unique, indices);
     }
 
     private:
         std::vector< T > m_data;
         size_t initial_range;
 
-        std::pair<std::vector<T>,std::vector<size_t>> Split() {
-            std::vector<T> unique;
+        std::vector<size_t> split(std::vector<T>& unique) const {
             std::vector<size_t> idxVec;
             idxVec.reserve(m_data.size() + 1);
             for (const auto& w : m_data) {
@@ -256,7 +257,7 @@ class DynamicState {
             }
             idxVec.push_back(initial_range);
 
-            return std::make_pair(unique, idxVec);
+            return idxVec;
         }
 
         void reconstruct(const std::vector<T>& unique,

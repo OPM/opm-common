@@ -302,7 +302,15 @@ namespace Opm {
             bool operator!=(const RestartSchedule& rhs) const;
             bool operator==( const RestartSchedule& rhs ) const;
 
-
+            template<class Serializer>
+            void serializeOp(Serializer& serializer)
+            {
+                serializer(timestep);
+                serializer(basic);
+                serializer(frequency);
+                serializer(rptsched_restart_set);
+                serializer(rptsched_restart);
+            }
 
         //private:
             size_t timestep = 0;
@@ -341,17 +349,20 @@ namespace Opm {
         RestartSchedule getNode( size_t timestep ) const;
         static std::string getRestartFileName(const std::string& restart_base, int report_step, bool unified, bool fmt_file);
 
-        const TimeMap& timeMap() const;
-        bool writeInitialRst() const;
-        const DynamicState<RestartSchedule>& restartSchedule() const;
-        const DynamicState<std::map<std::string,int>>& restartKeywords() const;
-        const std::vector<bool>& saveKeywords() const;
-
         bool operator==(const RestartConfig& data) const;
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            m_timemap.serializeOp(serializer);
+            serializer(m_first_restart_step);
+            serializer(m_write_initial_RST_file);
+            restart_schedule.serializeOp(serializer);
+            restart_keywords.serializeOp<Serializer, false>(serializer);
+            serializer(save_keywords);
+        }
+
     private:
-
-
-
         /// This method will internalize variables with information of
         /// the first report step with restart and rft output
         /// respectively. This information is important because right

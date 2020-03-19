@@ -54,6 +54,17 @@ public:
                    startup_time == data.startup_time &&
                    begin_report_step == data.begin_report_step;
         }
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(name);
+            serializer(shut_reason);
+            serializer(test_interval);
+            serializer(num_test);
+            serializer(startup_time);
+            serializer(begin_report_step);
+        }
     };
 
     WellTestConfig();
@@ -68,11 +79,15 @@ public:
     const WTESTWell& get(const std::string& well, Reason reason) const;
     size_t size() const;
 
-    const std::vector<WTESTWell>& getWells() const;
-
     static std::string reasonToString(const Reason reason);
 
     bool operator==(const WellTestConfig& data) const;
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer.vector(wells);
+    }
 
 private:
     std::vector<WTESTWell> wells;

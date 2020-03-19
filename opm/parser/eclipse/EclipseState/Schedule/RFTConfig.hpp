@@ -51,11 +51,10 @@ public:
     static std::string PLT2String(PLT enumValue);
     static PLT PLTFromString( const std::string& stringValue);
 
-    using RFTMap = std::unordered_map<std::string,
-                                      DynamicState<std::pair<RFT, std::size_t>>>;
-
-    using PLTMap = std::unordered_map<std::string,
-                                      DynamicState<std::pair<PLT, std::size_t>>>;
+    template <typename Value>
+    using ConfigMap = std::unordered_map<
+        std::string, DynamicState<std::pair<Value, std::size_t>>
+    >;
 
     using WellOpenTimeMap = std::unordered_map<std::string, std::size_t>;
 
@@ -65,8 +64,8 @@ public:
               const std::pair<bool, std::size_t>& rftTime,
               const WellOpenTimeMap& rftName,
               const WellOpenTimeMap& wellOpen,
-              const RFTMap& rconfig,
-              const PLTMap& pconfig);
+              const ConfigMap<RFT>& rconfig,
+              const ConfigMap<PLT>& pconfig);
 
     explicit RFTConfig(const TimeMap& time_map);
     bool rft(const std::string& well, std::size_t report_step) const;
@@ -82,27 +81,29 @@ public:
     void addWellOpen(const std::string& well, std::size_t report_step);
 
     const TimeMap& timeMap() const;
-    const std::pair<bool, std::size_t>& wellOpenRftTime() const;
-    const WellOpenTimeMap& wellOpenRftName() const;
-    const WellOpenTimeMap& wellOpen() const;
-    const RFTMap& rftConfig() const;
-    const PLTMap& pltConfig() const;
 
     bool operator==(const RFTConfig& data) const;
 
-private:
-    template <typename Value>
-    using ConfigMap = std::unordered_map<
-        std::string, DynamicState<std::pair<Value, std::size_t>>
-    >;
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        tm.serializeOp(serializer);
+        serializer(first_rft_event);
+        serializer(well_open_rft_time);
+        serializer(well_open_rft_name);
+        serializer(well_open);
+        serializer.template map<ConfigMap<RFT>,false>(rft_config);
+        serializer.template map<ConfigMap<PLT>,false>(plt_config);
+    }
 
+private:
     TimeMap tm;
     std::size_t first_rft_event;
     std::pair<bool, std::size_t> well_open_rft_time;
     WellOpenTimeMap well_open_rft_name;
     WellOpenTimeMap well_open;
-    RFTMap rft_config;
-    PLTMap plt_config;
+    ConfigMap<RFT> rft_config;
+    ConfigMap<PLT> plt_config;
 
     bool outputRftAtWellopen(WellOpenTimeMap::const_iterator well, const std::size_t report_step) const;
     std::size_t firstWellopenStepNotBefore(const std::size_t report_step) const;

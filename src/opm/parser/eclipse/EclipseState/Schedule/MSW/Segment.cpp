@@ -307,10 +307,6 @@ static constexpr double invalid_value = -1.e100;
         return m_valve.get();
     }
 
-    const std::shared_ptr<Valve>& Segment::getValve() const {
-        return m_valve;
-    }
-
     int Segment::ecl_type_id() const {
         switch (this->m_segment_type) {
         case SegmentType::REGULAR:

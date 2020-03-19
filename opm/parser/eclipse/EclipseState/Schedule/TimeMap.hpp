@@ -74,6 +74,17 @@ namespace Opm {
         static std::time_t mkdate(int year, int month, int day);
         static std::time_t mkdatetime(int year, int month, int day, int hour, int minute, int second);
         static const std::map<std::string, int>& eclipseMonthIndices();
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(m_timeList);
+            serializer.vector(m_first_timestep_years);
+            serializer.vector(m_first_timestep_months);
+            serializer(m_skiprest);
+            serializer(m_restart_offset);
+        }
+
     private:
         struct StepData
         {
@@ -84,6 +95,13 @@ namespace Opm {
             {
                 return stepnumber == data.stepnumber &&
                        timestamp == data.timestamp;
+            }
+
+            template<class Serializer>
+            void serializeOp(Serializer& serializer)
+            {
+                serializer(stepnumber);
+                timestamp.serializeOp(serializer);
             }
         };
 

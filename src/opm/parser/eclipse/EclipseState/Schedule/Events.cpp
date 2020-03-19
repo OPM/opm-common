@@ -44,12 +44,8 @@ namespace Opm {
         m_events[reportStep] |= event;
     }
 
-    const DynamicVector<uint64_t>& Events::events() const {
-        return m_events;
-    }
-
     bool Events::operator==(const Events& data) const {
-        return this->events().data() == data.events().data();
+        return this->m_events == data.m_events;
     }
 
 }

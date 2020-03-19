@@ -161,6 +161,15 @@ public:
                    guide_phase == data.guide_phase &&
                    scale_factor == data.scale_factor;
         }
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(available);
+            serializer(guide_rate);
+            serializer(guide_phase);
+            serializer(scale_factor);
+        }
     };
 
 
@@ -259,6 +268,26 @@ public:
         void setBHPLimit(const double limit);
         InjectionControls controls(const UnitSystem& unit_system, const SummaryState& st, double udq_default) const;
         bool updateUDQActive(const UDQConfig& udq_config, UDQActive& active) const;
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(name);
+            surfaceInjectionRate.serializeOp(serializer);
+            reservoirInjectionRate.serializeOp(serializer);
+            BHPTarget.serializeOp(serializer);
+            THPTarget.serializeOp(serializer);
+            serializer(bhp_hist_limit);
+            serializer(thp_hist_limit);
+            serializer(temperature);
+            serializer(BHPH);
+            serializer(THPH);
+            serializer(VFPTableNumber);
+            serializer(predictionMode);
+            serializer(injectionControls);
+            serializer(injectorType);
+            serializer(controlMode);
+        }
     };
 
     struct ProductionControls {
@@ -365,9 +394,31 @@ public:
         ProductionControls controls(const SummaryState& st, double udq_default) const;
         bool updateUDQActive(const UDQConfig& udq_config, UDQActive& active) const;
 
-        int getNumProductionControls() const;
         void setBHPLimit(const double limit);
         int productionControls() const { return this->m_productionControls; }
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(name);
+            OilRate.serializeOp(serializer);
+            WaterRate.serializeOp(serializer);
+            GasRate.serializeOp(serializer);
+            LiquidRate.serializeOp(serializer);
+            ResVRate.serializeOp(serializer);
+            BHPTarget.serializeOp(serializer);
+            THPTarget.serializeOp(serializer);
+            serializer(bhp_hist_limit);
+            serializer(thp_hist_limit);
+            serializer(BHPH);
+            serializer(THPH);
+            serializer(VFPTableNumber);
+            serializer(ALQValue);
+            serializer(predictionMode);
+            serializer(controlMode);
+            serializer(whistctl_cmode);
+            serializer(m_productionControls);
+        }
 
     private:
         int m_productionControls = 0;
@@ -421,15 +472,15 @@ public:
          double efficiencyFactor,
          double solventFraction,
          bool prediction_mode,
-         std::shared_ptr<const WellEconProductionLimits> econLimits,
-         std::shared_ptr<const WellFoamProperties> foamProperties,
-         std::shared_ptr<const WellPolymerProperties> polymerProperties,
-         std::shared_ptr<const WellBrineProperties> brineProperties,
-         std::shared_ptr<const WellTracerProperties> tracerProperties,
+         std::shared_ptr<WellEconProductionLimits> econLimits,
+         std::shared_ptr<WellFoamProperties> foamProperties,
+         std::shared_ptr<WellPolymerProperties> polymerProperties,
+         std::shared_ptr<WellBrineProperties> brineProperties,
+         std::shared_ptr<WellTracerProperties> tracerProperties,
          std::shared_ptr<WellConnections> connections,
-         std::shared_ptr<const WellProductionProperties> production,
-         std::shared_ptr<const WellInjectionProperties> injection,
-         std::shared_ptr<const WellSegments> segments);
+         std::shared_ptr<WellProductionProperties> production,
+         std::shared_ptr<WellInjectionProperties> injection,
+         std::shared_ptr<WellSegments> segments);
 
     bool isMultiSegment() const;
     bool isAvailableForGroupControl() const;
@@ -531,13 +582,42 @@ public:
     int vfp_table_number() const;
     double alq_value() const;
     double temperature() const;
-    const UnitSystem& units() const;
-    double udqUndefined() const;
-    bool hasSegments() const;
-    const WellGuideRate& wellGuideRate() const;
 
     bool operator==(const Well& data) const;
     void setInsertIndex(std::size_t index);
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(wname);
+        serializer(group_name);
+        serializer(init_step);
+        serializer(insert_index);
+        serializer(headI);
+        serializer(headJ);
+        serializer(ref_depth);
+        unit_system.serializeOp(serializer);
+        serializer(udq_undefined);
+        serializer(status);
+        serializer(drainage_radius);
+        serializer(allow_cross_flow);
+        serializer(automatic_shutin);
+        wtype.serializeOp(serializer);
+        guide_rate.serializeOp(serializer);
+        serializer(efficiency_factor);
+        serializer(solvent_fraction);
+        serializer(prediction_mode);
+        serializer(econ_limits);
+        serializer(foam_properties);
+        serializer(polymer_properties);
+        serializer(brine_properties);
+        serializer(tracer_properties);
+        serializer(connections);
+        serializer(production);
+        serializer(injection);
+        serializer(segments);
+    }
+
 private:
     void switchToInjector();
     void switchToProducer();
@@ -562,15 +642,15 @@ private:
     double solvent_fraction;
     bool prediction_mode = true;
 
-    std::shared_ptr<const WellEconProductionLimits> econ_limits;
-    std::shared_ptr<const WellFoamProperties> foam_properties;
-    std::shared_ptr<const WellPolymerProperties> polymer_properties;
-    std::shared_ptr<const WellBrineProperties> brine_properties;
-    std::shared_ptr<const WellTracerProperties> tracer_properties;
+    std::shared_ptr<WellEconProductionLimits> econ_limits;
+    std::shared_ptr<WellFoamProperties> foam_properties;
+    std::shared_ptr<WellPolymerProperties> polymer_properties;
+    std::shared_ptr<WellBrineProperties> brine_properties;
+    std::shared_ptr<WellTracerProperties> tracer_properties;
     std::shared_ptr<WellConnections> connections; // The WellConnections object can not be const because of the filterConnections method - would be beneficial to rewrite to enable const
-    std::shared_ptr<const WellProductionProperties> production;
-    std::shared_ptr<const WellInjectionProperties> injection;
-    std::shared_ptr<const WellSegments> segments;
+    std::shared_ptr<WellProductionProperties> production;
+    std::shared_ptr<WellInjectionProperties> injection;
+    std::shared_ptr<WellSegments> segments;
 };
 
 std::ostream& operator<<( std::ostream&, const Well::WellInjectionProperties& );

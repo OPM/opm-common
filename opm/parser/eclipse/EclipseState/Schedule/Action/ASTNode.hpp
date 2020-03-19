@@ -29,11 +29,18 @@ public:
     size_t size() const;
     std::string func;
 
-    const std::vector<std::string>& argList() const;
-    const std::vector<ASTNode>& childrens() const;
-    double getNumber() const;
-
     bool operator==(const ASTNode& data) const;
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(type);
+        serializer(func_type);
+        serializer(func);
+        serializer(arg_list);
+        serializer(number);
+        serializer.vector(children);
+    }
 
 private:
     std::vector<std::string> arg_list;

@@ -282,46 +282,44 @@ namespace Opm
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
-            serializer(m_timeMap);
+            m_timeMap.serializeOp(serializer);
             auto splitWells = splitDynMap(wells_static);
-            serializer(splitWells.first);
+            serializer.vector(splitWells.first);
             serializer(splitWells.second);
             auto splitGroups = splitDynMap(groups);
-            serializer(splitGroups.first);
+            serializer.vector(splitGroups.first);
             serializer(splitGroups.second);
-            serializer(m_oilvaporizationproperties);
-            serializer(m_events);
-            serializer(m_modifierDeck);
-            serializer(m_tuning);
-            serializer(m_messageLimits);
+            m_oilvaporizationproperties.serializeOp(serializer);
+            m_events.serializeOp(serializer);
+            m_modifierDeck.serializeOp(serializer);
+            m_tuning.serializeOp(serializer);
+            m_messageLimits.serializeOp(serializer);
             m_runspec.serializeOp(serializer);
             auto splitvfpprod = splitDynMap(vfpprod_tables);
-            serializer(splitvfpprod.first);
+            serializer.vector(splitvfpprod.first);
             serializer(splitvfpprod.second);
             auto splitvfpinj = splitDynMap(vfpinj_tables);
-            serializer(splitvfpinj.first);
+            serializer.vector(splitvfpinj.first);
             serializer(splitvfpinj.second);
-            serializer(wtest_config);
-            serializer(wlist_manager);
+            wtest_config.serializeOp(serializer);
+            wlist_manager.serializeOp(serializer);
             udq_config.serializeOp(serializer);
             udq_active.serializeOp(serializer);
-            serializer(guide_rate_config);
-            serializer(gconsale);
-            serializer(gconsump);
-            serializer(global_whistctl_mode);
-            serializer(m_actions);
-            serializer(rft_config);
-            serializer(m_nupcol);
-            serializer(restart_config);
-            serializer(wellgroup_events);
-            if (wells_static.size() == 0)
+            guide_rate_config.serializeOp(serializer);
+            gconsale.serializeOp(serializer);
+            gconsump.serializeOp(serializer);
+            global_whistctl_mode.template serializeOp<Serializer, false>(serializer);
+            m_actions.serializeOp(serializer);
+            rft_config.serializeOp(serializer);
+            m_nupcol.template serializeOp<Serializer, false>(serializer);
+            restart_config.serializeOp(serializer);
+            serializer.map(wellgroup_events);
+            if (!serializer.isSerializing()) {
                 reconstructDynMap(splitWells.first, splitWells.second, wells_static);
-            if (groups.size() == 0)
                 reconstructDynMap(splitGroups.first, splitGroups.second, groups);
-            if (vfpprod_tables.empty())
                 reconstructDynMap(splitvfpprod.first, splitvfpprod.second, vfpprod_tables);
-            if (vfpinj_tables.empty())
                 reconstructDynMap(splitvfpinj.first, splitvfpinj.second, vfpinj_tables);
+            }
         }
 
     private:
@@ -450,50 +448,28 @@ namespace Opm
         void addWellGroupEvent(const std::string& wellGroup, ScheduleEvents::Events event, size_t reportStep);
 
         template<template<class, class> class Map, class Type, class Key>
-        std::pair<std::vector<Type>, std::vector<std::pair<Key, std::vector<int>>>>
+        std::pair<std::vector<Type>, std::vector<std::pair<Key, std::vector<size_t>>>>
         splitDynMap(const Map<Key, Opm::DynamicState<Type>>& map)
         {
             // we have to pack the unique ptrs separately, and use an index map
             // to allow reconstructing the appropriate structures.
-            std::vector<std::pair<Key, std::vector<int>>> asMap;
+            std::vector<std::pair<Key, std::vector<size_t>>> asMap;
             std::vector<Type> unique;
             for (const auto& it : map) {
-                std::vector<int> idxVec;
-                for (const auto& w : it.second.data()) {
-                    auto candidate = std::find(unique.begin(), unique.end(), w);
-                    auto idx = candidate - unique.begin();
-                    if (candidate == unique.end()) {
-                        unique.push_back(w);
-                        idx = unique.size()-1;
-                    }
-                    idxVec.push_back(idx);
-                }
-                idxVec.push_back(it.second.initialRange());
-                asMap.push_back(std::make_pair(it.first, idxVec));
+                auto indices = it.second.split(unique);
+                asMap.push_back(std::make_pair(it.first, indices));
             }
 
             return std::make_pair(unique, asMap);
         }
 
-        template<class Type>
-        void reconstructDynState(const std::vector<Type>& unique,
-                                 const std::vector<int>& idxVec,
-                                 Opm::DynamicState<Type>& result)
-        {
-            std::vector<Type> ptrData;
-            for (size_t i = 0; i < idxVec.size()-1; ++i) {
-                ptrData.push_back(unique[idxVec[i]]);
-            }
-            result = Opm::DynamicState<Type>(ptrData, idxVec.back());
-        }
-
         template<template<class, class> class Map, class Type, class Key>
         void reconstructDynMap(const std::vector<Type>& unique,
-                               const std::vector<std::pair<Key, std::vector<int>>>& asMap,
+                               const std::vector<std::pair<Key, std::vector<size_t>>>& asMap,
                                Map<Key, Opm::DynamicState<Type>>& result)
         {
             for (const auto& it : asMap) {
-                reconstructDynState(unique, it.second, result[it.first]);
+                result[it.first].reconstruct(unique, it.second);
             }
         }
     };

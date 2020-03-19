@@ -63,9 +63,6 @@ namespace Opm
 
         double vap1() const;
         double vap2() const;
-        const std::vector<double>& maxDRSDT() const;
-        const std::vector<bool>& maxDRSDT_allCells() const;
-        const std::vector<double>& maxDRVDT() const;
 
         /*
          * if either argument was default constructed == will always be false
@@ -73,6 +70,17 @@ namespace Opm
          */
         bool operator==( const OilVaporizationProperties& ) const;
         bool operator!=( const OilVaporizationProperties& ) const;
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(m_type);
+            serializer(m_vap1);
+            serializer(m_vap2);
+            serializer(m_maxDRSDT);
+            serializer(m_maxDRSDT_allCells);
+            serializer(m_maxDRVDT);
+        }
 
     private:
         OilVaporization m_type = OilVaporization::UNDEF;

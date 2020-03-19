@@ -39,6 +39,14 @@ namespace Opm {
                        month == data.month &&
                        day == data.day;
             }
+
+            template<class Serializer>
+            void serializeOp(Serializer& serializer)
+            {
+                serializer(year);
+                serializer(month);
+                serializer(day);
+            }
         };
 
         TimeStampUTC() = default;
@@ -67,6 +75,16 @@ namespace Opm {
         int minutes()      const { return this->minutes_;   }
         int seconds()      const { return this->seconds_;   }
         int microseconds() const { return this->usec_;      }
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            ymd_.serializeOp(serializer);
+            serializer(hour_);
+            serializer(minutes_);
+            serializer(seconds_);
+            serializer(usec_);
+        }
 
     private:
         YMD ymd_{};

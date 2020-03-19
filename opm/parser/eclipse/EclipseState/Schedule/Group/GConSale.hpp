@@ -52,6 +52,17 @@ namespace Opm {
                        udq_undefined == data.udq_undefined &&
                        unit_system == data.unit_system;
             }
+
+            template<class Serializer>
+            void serializeOp(Serializer& serializer)
+            {
+                sales_target.serializeOp(serializer);
+                max_sales_rate.serializeOp(serializer);
+                min_sales_rate.serializeOp(serializer);
+                serializer(max_proc);
+                serializer(udq_undefined);
+                unit_system.serializeOp(serializer);
+            }
         };
 
         struct GCONSALEGroupProp {
@@ -71,9 +82,13 @@ namespace Opm {
         void add(const std::string& name, const UDAValue& sales_target, const UDAValue& max_rate, const UDAValue& min_rate, const std::string& procedure, double udq_undefined_arg, const UnitSystem& unit_system);
         size_t size() const;
 
-        const std::map<std::string, GCONSALEGroup>& getGroups() const;
-
         bool operator==(const GConSale& data) const;
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer.map(groups);
+        }
 
     private:
         std::map<std::string, GCONSALEGroup> groups;
