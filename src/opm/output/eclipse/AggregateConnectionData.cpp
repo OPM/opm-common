@@ -306,7 +306,11 @@ captureDeclaredConnData(const Schedule&        sched,
                 const auto& connection_rates = rates_iter->second.connections;
 
                 if (rCInd < connection_rates.size()) {
-                    well_rates[connID] = &(connection_rates[rCInd]);
+                    const auto& crates = connection_rates[rCInd];
+                    if (conn.global_index() != crates.index)
+                        throw std::logic_error("Internal error connection object and connection rates not in sync");
+
+                    well_rates[connID] = &crates;
                     rCInd += 1;
                 } else
                     throw std::invalid_argument {
