@@ -290,6 +290,12 @@ list (APPEND TEST_SOURCE_FILES
       tests/test_sparsevector.cpp
       tests/test_uniformtablelinear.cpp
 )
+if(ENABLE_ECL_INPUT OR ENABLE_ECL_OUTPUT)
+  list(APPEND TEST_SOURCE_FILES
+      tests/test_SummaryNode.cpp
+)
+endif()
+
 if(ENABLE_ECL_INPUT)
   list(APPEND TEST_SOURCE_FILES
     tests/rst_test.cpp
