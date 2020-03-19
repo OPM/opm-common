@@ -60,6 +60,10 @@ namespace Opm {
         std::string uniqueNodeKey() const;
         const Location& location( ) const { return this->loc; }
 
+        operator Opm::EclIO::SummaryNode() {
+            return { keyword_, category_, type_, name_, number_ };
+        }
+
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
