@@ -39,9 +39,11 @@ public:
     static RunCount from_string(std::string run_count);
     static std::string load(const std::string& input_path, const std::string& fname);
 
+    PyAction() = default;
     PyAction(const std::string& name, RunCount run_count, const std::string& code);
     const std::string& code() const;
     const std::string& name() const;
+    bool operator==(const PyAction& other) const;
     PyAction::RunCount run_count() const;
     ~PyAction();
 
@@ -56,11 +58,20 @@ public:
       between invocations.
     */
     void * storage() const;
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(m_name);
+        serializer(m_run_count);
+        serializer(input_code);
+    }
+
 private:
     std::string m_name;
     RunCount m_run_count;
     std::string input_code;
-    void * m_storage;
+    void * m_storage = nullptr;
 };
 }
 

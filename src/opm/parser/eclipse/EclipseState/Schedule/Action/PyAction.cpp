@@ -103,6 +103,12 @@ PyAction::~PyAction() {
 #endif
 }
 
+bool PyAction::operator==(const PyAction& other) const {
+    return this->m_name == other.m_name &&
+           this->m_run_count == other.m_run_count &&
+           this->input_code == other.input_code;
+}
+
 
 
 void * PyAction::storage() const {
