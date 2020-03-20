@@ -295,10 +295,10 @@ namespace Opm
             m_tuning.serializeOp(serializer);
             m_messageLimits.serializeOp(serializer);
             m_runspec.serializeOp(serializer);
-            auto splitvfpprod = splitDynMap(vfpprod_tables);
+            auto splitvfpprod = splitDynMap<Map2>(vfpprod_tables);
             serializer.vector(splitvfpprod.first);
             serializer(splitvfpprod.second);
-            auto splitvfpinj = splitDynMap(vfpinj_tables);
+            auto splitvfpinj = splitDynMap<Map2>(vfpinj_tables);
             serializer.vector(splitvfpinj.first);
             serializer(splitvfpinj.second);
             wtest_config.serializeOp(serializer);
@@ -317,12 +317,13 @@ namespace Opm
             if (!serializer.isSerializing()) {
                 reconstructDynMap(splitWells.first, splitWells.second, wells_static);
                 reconstructDynMap(splitGroups.first, splitGroups.second, groups);
-                reconstructDynMap(splitvfpprod.first, splitvfpprod.second, vfpprod_tables);
-                reconstructDynMap(splitvfpinj.first, splitvfpinj.second, vfpinj_tables);
+                reconstructDynMap<Map2>(splitvfpprod.first, splitvfpprod.second, vfpprod_tables);
+                reconstructDynMap<Map2>(splitvfpinj.first, splitvfpinj.second, vfpinj_tables);
             }
         }
 
     private:
+        template<class Key, class Value> using Map2 = std::map<Key,Value>;
         TimeMap m_timeMap;
         WellMap wells_static;
         GroupMap groups;
