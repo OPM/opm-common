@@ -25,8 +25,9 @@ namespace Opm {
 namespace Action {
 
 
-Actions::Actions(const std::vector<ActionX>& action)
-    : actions(action)
+Actions::Actions(const std::vector<ActionX>& action, const std::vector<PyAction>& pyactions)
+    : actions(action),
+      pyactions(pyactions)
 {}
 
 
@@ -46,6 +47,14 @@ void Actions::add(const ActionX& action) {
         this->actions.push_back(action);
     else
         *iter = action;
+}
+
+void Actions::add(const PyAction& pyaction) {
+    auto iter = std::find_if( this->pyactions.begin(), this->pyactions.end(), [&pyaction](const PyAction& arg) { return arg.name() == pyaction.name(); });
+    if (iter == this->pyactions.end())
+        this->pyactions.push_back(pyaction);
+    else
+        *iter = pyaction;
 }
 
 
@@ -98,7 +107,8 @@ std::vector<ActionX>::const_iterator Actions::end() const {
 
 
 bool Actions::operator==(const Actions& data) const {
-    return actions == data.actions;
+    return this->actions == data.actions &&
+           this->pyactions == data.pyactions;
 }
 
 }

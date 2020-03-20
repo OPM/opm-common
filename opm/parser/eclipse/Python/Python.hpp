@@ -59,7 +59,8 @@ public:
     Python();
     bool exec(const std::string& python_code) const;
     bool exec(const std::string& python_code, const Parser& parser, Deck& deck) const;
-    bool exec(const PyAction& py_action, EclipseState& ecl_state, Schedule& schedule, std::size_t report_step, SummaryState& st) const;
+    bool exec(const Action::PyAction& py_action, EclipseState& ecl_state, Schedule& schedule, std::size_t report_step, SummaryState& st) const;
+    static bool enabled();
     explicit operator bool() const;
 private:
     std::shared_ptr<PythonInterp> interp;

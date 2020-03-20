@@ -50,7 +50,7 @@ class __attribute__ ((visibility("hidden"))) PythonInterp {
 public:
     bool exec(const std::string& python_code);
     bool exec(const std::string& python_code, const Parser& parser, Deck& deck);
-    bool exec(const PyAction& py_action, EclipseState& ecl_state, Schedule& schedule, std::size_t report_step, SummaryState& st);
+    bool exec(const Action::PyAction& py_action, EclipseState& ecl_state, Schedule& schedule, std::size_t report_step, SummaryState& st);
     explicit operator bool() const { return true; }
 private:
     py::scoped_interpreter guard = {};
@@ -69,7 +69,7 @@ public:
         return this->fail();
     }
 
-    bool exec(const PyAction&, EclipseState&, Schedule&, std::size_t, SummaryState& ) {
+    bool exec(const Action::PyAction&, EclipseState&, Schedule&, std::size_t, SummaryState& ) {
         return this->fail();
     }
 

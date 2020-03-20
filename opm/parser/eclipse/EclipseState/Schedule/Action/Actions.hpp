@@ -26,6 +26,7 @@
 #include <vector>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionX.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/PyAction.hpp>
 
 namespace Opm {
 namespace Action {
@@ -38,11 +39,12 @@ namespace Action {
 class Actions {
 public:
     Actions() = default;
-    Actions(const std::vector<ActionX>& action);
+    Actions(const std::vector<ActionX>& action, const std::vector<PyAction>& pyactions);
     size_t size() const;
     int max_input_lines() const;
     bool empty() const;
     void add(const ActionX& action);
+    void add(const PyAction& pyaction);
     bool ready(std::time_t sim_time) const;
     const ActionX& get(const std::string& name) const;
     const ActionX& get(std::size_t index) const;
@@ -57,10 +59,12 @@ public:
     void serializeOp(Serializer& serializer)
     {
         serializer.vector(actions);
+        serializer.vector(pyactions);
     }
 
 private:
     std::vector<ActionX> actions;
+    std::vector<PyAction> pyactions;
 };
 }
 }

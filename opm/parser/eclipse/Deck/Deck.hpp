@@ -77,6 +77,10 @@ namespace Opm {
             const DeckKeyword& getKeyword( size_t index ) const {
                 return getKeyword( Keyword::keywordName, index );
             }
+            template< class Keyword >
+            std::size_t count() const {
+                return count( Keyword::keywordName );
+            }
 
             const std::vector< const DeckKeyword* > getKeywordList( const std::string& keyword ) const;
             template< class Keyword >
