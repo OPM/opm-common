@@ -66,11 +66,10 @@
 #include <vector>
 
 namespace {
-
     struct ParamCTorArgs
     {
-        const std::string keyword;
-        const Opm::EclIO::SummaryNode::Type type;
+        std::string kw;
+        Opm::EclIO::SummaryNode::Type type;
     };
 
     using p_cmode = Opm::Group::ProductionCMode;
@@ -100,48 +99,47 @@ namespace {
 
     std::vector<ParamCTorArgs> requiredRestartVectors()
     {
-        using Type = Opm::EclIO::SummaryNode::Type;
+        using Type = ::Opm::EclIO::SummaryNode::Type;
 
         return {
             // Production
-            { "OPR" , Type::Rate  },
-            { "WPR" , Type::Rate  },
-            { "GPR" , Type::Rate  },
-            { "VPR" , Type::Rate  },
-            { "OPP" , Type::Rate  },
-            { "WPP" , Type::Rate  },
-            { "GPP" , Type::Rate  },
-            { "OPT" , Type::Total },
-            { "WPT" , Type::Total },
-            { "GPT" , Type::Total },
-            { "VPT" , Type::Total },
-            { "OPTH", Type::Total },
-            { "WPTH", Type::Total },
-            { "GPTH", Type::Total },
+            ParamCTorArgs{ "OPR" , Type::Rate },
+            ParamCTorArgs{ "WPR" , Type::Rate },
+            ParamCTorArgs{ "GPR" , Type::Rate },
+            ParamCTorArgs{ "VPR" , Type::Rate },
+            ParamCTorArgs{ "OPP" , Type::Rate },
+            ParamCTorArgs{ "WPP" , Type::Rate },
+            ParamCTorArgs{ "GPP" , Type::Rate },
+            ParamCTorArgs{ "OPT" , Type::Total },
+            ParamCTorArgs{ "WPT" , Type::Total },
+            ParamCTorArgs{ "GPT" , Type::Total },
+            ParamCTorArgs{ "VPT" , Type::Total },
+            ParamCTorArgs{ "OPTH", Type::Total },
+            ParamCTorArgs{ "WPTH", Type::Total },
+            ParamCTorArgs{ "GPTH", Type::Total },
 
             // Flow rate ratios (production)
-            { "WCT" , Type::Ratio },
-            { "GOR" , Type::Ratio },
+            ParamCTorArgs{ "WCT" , Type::Ratio },
+            ParamCTorArgs{ "GOR" , Type::Ratio },
 
             // injection
 
-            { "WIR" , Type::Rate  },
-            { "GIR" , Type::Rate  },
-            { "OPI" , Type::Rate  },
-            { "WPI" , Type::Rate  },
-            { "GPI" , Type::Rate  },
-            { "WIT" , Type::Total },
-            { "GIT" , Type::Total },
-            { "WITH", Type::Total },
-            { "GITH", Type::Total },
+            ParamCTorArgs{ "WIR" , Type::Rate },
+            ParamCTorArgs{ "GIR" , Type::Rate },
+            ParamCTorArgs{ "OPI" , Type::Rate },
+            ParamCTorArgs{ "WPI" , Type::Rate },
+            ParamCTorArgs{ "GPI" , Type::Rate },
+            ParamCTorArgs{ "WIT" , Type::Total },
+            ParamCTorArgs{ "GIT" , Type::Total },
+            ParamCTorArgs{ "WITH", Type::Total },
+            ParamCTorArgs{ "GITH", Type::Total }
         };
     }
 
     std::vector<Opm::EclIO::SummaryNode>
     requiredRestartVectors(const ::Opm::Schedule& sched)
     {
-        std::vector<Opm::EclIO::SummaryNode> entities {} ;
-        const auto restartVectors { requiredRestartVectors() } ;
+        const auto& vectors = requiredRestartVectors();
         static const std::vector<ParamCTorArgs> extra_well_vectors {
             { "WBHP",  Opm::EclIO::SummaryNode::Type::Pressure },
             { "WGVIR", Opm::EclIO::SummaryNode::Type::Rate     },
@@ -158,13 +156,15 @@ namespace {
             { "FMCTW", Opm::EclIO::SummaryNode::Type::Mode },
         };
 
-        auto makeEntities = [&restartVectors, &entities]
+        std::vector<Opm::EclIO::SummaryNode> entities {} ;
+
+        auto makeEntities = [&vectors, &entities]
             (const char         kwpref,
              const Opm::EclIO::SummaryNode::Category cat,
              const std::string& name) -> void
         {
-            for (const auto& restartVector : restartVectors) {
-                entities.push_back({kwpref + restartVector.keyword, cat, restartVector.type, name, Opm::EclIO::SummaryNode::default_number });
+            for (const auto& vector : vectors) {
+                entities.push_back({kwpref + vector.kw, cat, vector.type, name, Opm::EclIO::SummaryNode::default_number });
             }
         };
 
@@ -174,7 +174,7 @@ namespace {
              const std::string& wgname) -> void
         {
             for (const auto &extra_vector : extra_vectors) {
-                entities.push_back({ extra_vector.keyword, category, extra_vector.type, wgname, Opm::EclIO::SummaryNode::default_number });
+                entities.push_back({ extra_vector.kw, category, extra_vector.type, wgname, Opm::EclIO::SummaryNode::default_number });
             }
         };
 
@@ -197,7 +197,7 @@ namespace {
     }
 
     std::vector<Opm::EclIO::SummaryNode>
-    requiredSegmentVectors(const Opm::Schedule& sched)
+    requiredSegmentVectors(const ::Opm::Schedule& sched)
     {
         std::vector<Opm::EclIO::SummaryNode> ret {};
 
@@ -226,9 +226,9 @@ namespace {
                 continue;
             }
 
-            const auto nSeg { well.getSegments().size() } ;
+            const auto nSeg = well.getSegments().size();
 
-            for (size_t segID { 0 } ; segID < nSeg; ++segID) {
+            for (auto segID = 0*nSeg; segID < nSeg; ++segID) {
                 makeVectors(wname, segID + 1); // One-based
             }
         }
@@ -1213,14 +1213,14 @@ static const std::unordered_map< std::string, Opm::UnitSystem::measure> block_un
   {"BSGAS"      , Opm::UnitSystem::measure::identity},
   {"BGSAT"      , Opm::UnitSystem::measure::identity},
   {"BOSAT"      , Opm::UnitSystem::measure::identity},
-  {"BWKR"       , Opm::UnitSystem::measure::identity},
-  {"BOKR"       , Opm::UnitSystem::measure::identity},
-  {"BKRO"       , Opm::UnitSystem::measure::identity},
-  {"BGKR"       , Opm::UnitSystem::measure::identity},
-  {"BKRG"       , Opm::UnitSystem::measure::identity},
-  {"BKRW"       , Opm::UnitSystem::measure::identity},
-  {"BWPC"       , Opm::UnitSystem::measure::pressure},
-  {"BGPC"       , Opm::UnitSystem::measure::pressure},
+  {"BWKR"      , Opm::UnitSystem::measure::identity},
+  {"BOKR"      , Opm::UnitSystem::measure::identity},
+  {"BKRO"      , Opm::UnitSystem::measure::identity},
+  {"BGKR"      , Opm::UnitSystem::measure::identity},
+  {"BKRG"      , Opm::UnitSystem::measure::identity},
+  {"BKRW"      , Opm::UnitSystem::measure::identity},
+  {"BWPC"      , Opm::UnitSystem::measure::pressure},
+  {"BGPC"      , Opm::UnitSystem::measure::pressure},
   {"BVWAT"      , Opm::UnitSystem::measure::viscosity},
   {"BWVIS"      , Opm::UnitSystem::measure::viscosity},
   {"BVGAS"      , Opm::UnitSystem::measure::viscosity},
@@ -1230,10 +1230,12 @@ static const std::unordered_map< std::string, Opm::UnitSystem::measure> block_un
 };
 
 inline std::vector<Opm::Well> find_wells( const Opm::Schedule& schedule,
-                                          const Opm::EclIO::SummaryNode& node,
-                                          const int sim_step,
-                                          const Opm::out::RegionCache& regionCache ) {
-    switch (node.category) {
+                                           const Opm::EclIO::SummaryNode& node,
+                                           const int sim_step,
+                                           const Opm::out::RegionCache& regionCache ) {
+    const auto cat = node.category;
+
+    switch (cat) {
     case Opm::EclIO::SummaryNode::Category::Well: [[fallthrough]];
     case Opm::EclIO::SummaryNode::Category::Connection: [[fallthrough]];
     case Opm::EclIO::SummaryNode::Category::Segment: {
@@ -1276,7 +1278,6 @@ inline std::vector<Opm::Well> find_wells( const Opm::Schedule& schedule,
         }
 
         return wells;
-
     }
 
     case Opm::EclIO::SummaryNode::Category::Block:
@@ -1297,7 +1298,7 @@ bool need_wells(const Opm::EclIO::SummaryNode& node) {
        return true;
     case Opm::EclIO::SummaryNode::Category::Region:
         return std::regex_match(node.keyword, region_keyword_regex);
-    case Opm::EclIO::SummaryNode::Category::Miscellaneous:
+    case Opm::EclIO::SummaryNode::Category::Miscellaneous: [[fallthrough]];
     case Opm::EclIO::SummaryNode::Category::Block:
         return false;
     }
@@ -1361,7 +1362,8 @@ void eval_udq(const Opm::Schedule& schedule, std::size_t sim_step, Opm::SummaryS
     }
 }
 
-void updateValue(const Opm::EclIO::SummaryNode& node, const double value, Opm::SummaryState& st) {
+void updateValue(const Opm::EclIO::SummaryNode& node, const double value, Opm::SummaryState& st)
+{
     if (node.category == Opm::EclIO::SummaryNode::Category::Well)
         st.update_well_var(node.wgname, node.keyword, value);
 
@@ -1388,16 +1390,23 @@ void updateValue(const Opm::EclIO::SummaryNode& node, const double value, Opm::S
  * rates and accumulated values.
  *
  */
-struct EfficiencyFactor {
+struct EfficiencyFactor
+{
     using Factor  = std::pair<std::string, double>;
     using FacColl = std::vector<Factor>;
 
-    FacColl factors {} ;
+    FacColl factors{};
 
     void setFactors(const Opm::EclIO::SummaryNode& node,
                     const Opm::Schedule&           schedule,
-                    const std::vector<Opm::Well>&  schedule_wells,
-                    const int                      sim_step)
+                    const std::vector<Opm::Well>& schedule_wells,
+                    const int                      sim_step);
+};
+
+void EfficiencyFactor::setFactors(const Opm::EclIO::SummaryNode& node,
+                                  const Opm::Schedule&           schedule,
+                                  const std::vector<Opm::Well>&  schedule_wells,
+                                  const int                      sim_step)
 {
     this->factors.clear();
 
@@ -1409,7 +1418,7 @@ struct EfficiencyFactor {
     if (!is_field && !is_group && !is_region && is_rate)
         return;
 
-    for (const auto& well : schedule_wells) {
+    for( const auto& well : schedule_wells ) {
         if (!well.hasBeenDefined(sim_step))
             continue;
 
@@ -1433,8 +1442,6 @@ struct EfficiencyFactor {
         this->factors.emplace_back( well.name(), eff_factor );
     }
 }
-
-};
 
 namespace Evaluator {
     struct InputData
@@ -1469,9 +1476,9 @@ namespace Evaluator {
     class FunctionRelation : public Base
     {
     public:
-        explicit FunctionRelation(const Opm::EclIO::SummaryNode& node, const ofun& fcn)
-            : node_(node)
-            , fcn_ (fcn)
+        explicit FunctionRelation(Opm::EclIO::SummaryNode node, ofun fcn)
+            : node_(std::move(node))
+            , fcn_ (std::move(fcn))
         {}
 
         void update(const std::size_t       sim_step,
@@ -1512,15 +1519,16 @@ namespace Evaluator {
         }
 
     private:
-        const Opm::EclIO::SummaryNode node_;
-        const ofun                    fcn_;
+        Opm::EclIO::SummaryNode node_;
+        ofun             fcn_;
     };
 
     class BlockValue : public Base
     {
     public:
-        explicit BlockValue(const Opm::EclIO::SummaryNode& node, const Opm::UnitSystem::measure& m)
-            : node_(node)
+        explicit BlockValue(Opm::EclIO::SummaryNode node,
+                            const Opm::UnitSystem::measure m)
+            : node_(std::move(node))
             , m_   (m)
         {}
 
@@ -1540,8 +1548,8 @@ namespace Evaluator {
         }
 
     private:
-        const Opm::EclIO::SummaryNode  node_;
-        const Opm::UnitSystem::measure m_;
+        Opm::EclIO::SummaryNode  node_;
+        Opm::UnitSystem::measure m_;
 
         Opm::out::Summary::BlockValues::key_type lookupKey() const
         {
@@ -1552,8 +1560,9 @@ namespace Evaluator {
     class RegionValue : public Base
     {
     public:
-        explicit RegionValue(const Opm::EclIO::SummaryNode node, const Opm::UnitSystem::measure& m)
-            : node_(node)
+        explicit RegionValue(Opm::EclIO::SummaryNode node,
+                             const Opm::UnitSystem::measure m)
+            : node_(std::move(node))
             , m_   (m)
         {}
 
@@ -1581,8 +1590,8 @@ namespace Evaluator {
         }
 
     private:
-        const Opm::EclIO::SummaryNode  node_;
-        const Opm::UnitSystem::measure m_;
+        Opm::EclIO::SummaryNode  node_;
+        Opm::UnitSystem::measure m_;
 
         std::vector<double>::size_type index() const
         {
@@ -1593,8 +1602,9 @@ namespace Evaluator {
     class GlobalProcessValue : public Base
     {
     public:
-        explicit GlobalProcessValue(const Opm::EclIO::SummaryNode& node, const Opm::UnitSystem::measure& m)
-            : node_(node)
+        explicit GlobalProcessValue(Opm::EclIO::SummaryNode node,
+                                    const Opm::UnitSystem::measure m)
+            : node_(std::move(node))
             , m_   (m)
         {}
 
@@ -1615,8 +1625,8 @@ namespace Evaluator {
         }
 
     private:
-        const Opm::EclIO::SummaryNode  node_;
-        const Opm::UnitSystem::measure m_;
+        Opm::EclIO::SummaryNode  node_;
+        Opm::UnitSystem::measure m_;
     };
 
     class UserDefinedValue : public Base
@@ -2330,7 +2340,7 @@ configureSummaryInput(const EclipseState&  es,
                       const EclipseGrid&   grid,
                       const Schedule&      sched)
 {
-    const SummaryState st {
+    const auto st = SummaryState {
         std::chrono::system_clock::from_time_t(sched.getStartTime())
     };
 
@@ -2338,7 +2348,7 @@ configureSummaryInput(const EclipseState&  es,
         es, grid, st, sched.getUDQConfig(sched.size() - 1)
     };
 
-    std::vector<SummaryConfigNode> unsuppkw {};
+    auto unsuppkw = std::vector<SummaryConfigNode>{};
     for (const auto& node : sumcfg) {
         auto prmDescr = fact.create(node);
 
