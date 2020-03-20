@@ -147,15 +147,15 @@ namespace {
             { "WGVIR", Opm::EclIO::SummaryNode::Type::Rate     },
             { "WWVIR", Opm::EclIO::SummaryNode::Type::Rate     },
         };
-        static const std::vector<std::string> extra_group_vectors {
-            "GMCTG",
-            "GMCTP",
-            "GMCTW",
+        static const std::vector<ParamCTorArgs> extra_group_vectors {
+            { "GMCTG", Opm::EclIO::SummaryNode::Type::Mode },
+            { "GMCTP", Opm::EclIO::SummaryNode::Type::Mode },
+            { "GMCTW", Opm::EclIO::SummaryNode::Type::Mode },
         };
-        static const std::vector<std::string> extra_field_vectors {
-            "FMCTG",
-            "FMCTP",
-            "FMCTW",
+        static const std::vector<ParamCTorArgs> extra_field_vectors {
+            { "FMCTG", Opm::EclIO::SummaryNode::Type::Mode },
+            { "FMCTP", Opm::EclIO::SummaryNode::Type::Mode },
+            { "FMCTW", Opm::EclIO::SummaryNode::Type::Mode },
         };
 
         auto makeEntities = [&restartVectors, &entities]
@@ -168,29 +168,30 @@ namespace {
             }
         };
 
+        auto makeExtraEntities = [&entities]
+            (const std::vector<ParamCTorArgs>& extra_vectors,
+             const Opm::EclIO::SummaryNode::Category category,
+             const std::string& wgname) -> void
+        {
+            for (const auto &extra_vector : extra_vectors) {
+                entities.push_back({ extra_vector.keyword, category, extra_vector.type, wgname, Opm::EclIO::SummaryNode::default_number });
+            }
+        };
+
         for (const auto& well_name : sched.wellNames()) {
             makeEntities('W', Opm::EclIO::SummaryNode::Category::Well, well_name);
-
-            for (const auto &well_vector : extra_well_vectors) {
-                entities.push_back({ well_vector.keyword, Opm::EclIO::SummaryNode::Category::Well, well_vector.type, well_name, Opm::EclIO::SummaryNode::default_number });
-            }
+            makeExtraEntities(extra_well_vectors, Opm::EclIO::SummaryNode::Category::Well, well_name);
         }
 
         for (const auto& grp_name : sched.groupNames()) {
             if (grp_name != "FIELD") {
                 makeEntities('G', Opm::EclIO::SummaryNode::Category::Group, grp_name);
-
-                for (const auto &group_vector : extra_group_vectors) {
-                    entities.push_back({ group_vector, Opm::EclIO::SummaryNode::Category::Group, Opm::EclIO::SummaryNode::Type::Mode, grp_name, Opm::EclIO::SummaryNode::default_number });
-                }
+                makeExtraEntities(extra_group_vectors, Opm::EclIO::SummaryNode::Category::Group, grp_name);
             }
         }
 
         makeEntities('F', Opm::EclIO::SummaryNode::Category::Field, "FIELD");
-
-        for (const auto &field_vector : extra_field_vectors) {
-            entities.push_back({ field_vector, Opm::EclIO::SummaryNode::Category::Group, Opm::EclIO::SummaryNode::Type::Mode, "FIELD", Opm::EclIO::SummaryNode::default_number });
-        }
+        makeExtraEntities(extra_field_vectors, Opm::EclIO::SummaryNode::Category::Field, "FIELD");
 
         return entities;
     }
