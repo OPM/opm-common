@@ -100,7 +100,7 @@ namespace {
 
     std::vector<ParamCTorArgs> requiredRestartVectors()
     {
-        using Type = ::Opm::SummaryConfigNode::Type;
+        using Type = Opm::EclIO::SummaryNode::Type;
 
         return {
             // Production
@@ -1379,10 +1379,10 @@ void eval_udq(const Opm::Schedule& schedule, std::size_t sim_step, Opm::SummaryS
 }
 
 void updateValue(const Opm::EclIO::SummaryNode& node, const double value, Opm::SummaryState& st) {
-    if (node.category() == Opm::SummaryConfigNode::Category::Well)
+    if (node.category == Opm::EclIO::SummaryNode::Category::Well)
         st.update_well_var(node.wgname, node.keyword, value);
 
-    else if (node.category() == Opm::SummaryConfigNode::Category::Group)
+    else if (node.category == Opm::EclIO::SummaryNode::Category::Group)
         st.update_group_var(node.wgname, node.keyword, value);
 
     else
