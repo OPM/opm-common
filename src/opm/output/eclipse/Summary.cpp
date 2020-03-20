@@ -209,32 +209,26 @@ namespace {
         return entities;
     }
 
-    std::vector<Opm::SummaryConfigNode>
-    requiredSegmentVectors(const ::Opm::Schedule& sched)
+    std::vector<Opm::EclIO::SummaryNode>
+    requiredSegmentVectors(const Opm::Schedule& sched)
     {
-        using SN = Opm::SummaryConfigNode;
-        auto ret = std::vector<SN>{};
+        std::vector<Opm::EclIO::SummaryNode> ret {};
 
-        auto sofr = SN{ "SOFR", SN::Category::Segment, ::Opm::Location() }
-            .parameterType(SN::Type::Rate);
-
-        auto sgfr = SN{ "SGFR", SN::Category::Segment, ::Opm::Location() }
-            .parameterType(SN::Type::Rate);
-
-        auto swfr = SN{ "SWFR", SN::Category::Segment, ::Opm::Location() }
-            .parameterType(SN::Type::Rate);
-
-        auto spr = SN{ "SPR", SN::Category::Segment, ::Opm::Location() }
-            .parameterType(SN::Type::Pressure);
+        static const Opm::EclIO::SummaryNode::Category category { Opm::EclIO::SummaryNode::Category::Segment };
+        static const std::vector<std::pair<std::string,Opm::EclIO::SummaryNode::Type>> requiredVectors {
+            { "SOFR", Opm::EclIO::SummaryNode::Type::Rate     },
+            { "SGFR", Opm::EclIO::SummaryNode::Type::Rate     },
+            { "SWFR", Opm::EclIO::SummaryNode::Type::Rate     },
+            { "SPR",  Opm::EclIO::SummaryNode::Type::Pressure },
+        };
 
         auto makeVectors =
             [&](const std::string& well,
                 const int          segNumber) -> void
         {
-            ret.push_back(sofr.namedEntity(well).number(segNumber));
-            ret.push_back(sgfr.namedEntity(well).number(segNumber));
-            ret.push_back(swfr.namedEntity(well).number(segNumber));
-            ret.push_back(spr .namedEntity(well).number(segNumber));
+            for (const auto &requiredVector : requiredVectors) {
+                ret.push_back({requiredVector.first, category, requiredVector.second, well, segNumber});
+            }
         };
 
         for (const auto& wname : sched.wellNames()) {
@@ -245,9 +239,9 @@ namespace {
                 continue;
             }
 
-            const auto nSeg = well.getSegments().size();
+            const auto nSeg { well.getSegments().size() } ;
 
-            for (auto segID = 0*nSeg; segID < nSeg; ++segID) {
+            for (size_t segID { 0 } ; segID < nSeg; ++segID) {
                 makeVectors(wname, segID + 1); // One-based
             }
         }
@@ -2388,13 +2382,13 @@ Opm::out::Summary::SummaryImplementation::
 configureRequiredRestartParameters(const SummaryConfig& sumcfg,
                                    const Schedule&      sched)
 {
-    auto makeEvaluator = [&sumcfg, this](const SummaryConfigNode& node) -> void
+    auto makeEvaluator = [&sumcfg, this](const Opm::EclIO::SummaryNode& node) -> void
     {
-        if (sumcfg.hasSummaryKey(node.uniqueNodeKey()))
+        if (sumcfg.hasSummaryKey(node.unique_key()))
             // Handler already exists.  Don't add second evaluation.
             return;
 
-        auto fcnPos = funs.find(node.keyword());
+        auto fcnPos = funs.find(node.keyword);
         assert ((fcnPos != funs.end()) &&
                 "Internal error creating required restart vectors");
 
