@@ -172,8 +172,8 @@ static data::Wells result_wells() {
         { { segment.segNumber, segment } },
         data::CurrentControl{}
     };
-    well1.current_control.isProducer = false;
-    well1.current_control.inj =::Opm::Well::InjectorCMode::BHP;
+    well1.current_control.isProducer = true;
+    well1.current_control.prod = ::Opm::Well::ProducerCMode::BHP;
 
     data::Wells wellrates;
 

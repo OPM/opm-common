@@ -31,6 +31,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQContext.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellProductionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
@@ -805,6 +806,52 @@ inline quantity group_control( const fn_args& args ) {
     return {static_cast<double>(cntl_mode), Opm::UnitSystem::measure::identity};
 }
 
+namespace {
+    bool well_control_mode_defined(const ::Opm::data::Well& xw)
+    {
+        using PMode = ::Opm::Well::ProducerCMode;
+        using IMode = ::Opm::Well::InjectorCMode;
+
+        const auto& curr = xw.current_control;
+
+        return (curr.isProducer && (curr.prod != PMode::CMODE_UNDEFINED))
+            || (!curr.isProducer && (curr.inj != IMode::CMODE_UNDEFINED));
+    }
+}
+
+inline quantity well_control_mode( const fn_args& args ) {
+    const auto unit = Opm::UnitSystem::measure::identity;
+
+    if (args.schedule_wells.empty()) {
+        // No wells.  Possibly determining pertinent unit of measure
+        // during SMSPEC configuration.
+        return { 0.0, unit };
+    }
+
+    const auto& well = args.schedule_wells.front();
+    auto xwPos = args.wells.find(well.name());
+    if (xwPos == args.wells.end()) {
+        // No dynamic results for 'well'.  Treat as shut/stopped.
+        return { 0.0, unit };
+    }
+
+    if (! well_control_mode_defined(xwPos->second)) {
+        // No dynamic control mode defined.  Use input control.
+        const auto wmctl = ::Opm::eclipseControlMode(well, args.st);
+
+        return { static_cast<double>(wmctl), unit };
+    }
+
+    // Well has simulator-provided active control mode.  Pick the
+    // appropriate value depending on well type (producer/injector).
+    const auto& curr = xwPos->second.current_control;
+    const auto wmctl = curr.isProducer
+        ? ::Opm::eclipseControlMode(curr.prod, well.getStatus())
+        : ::Opm::eclipseControlMode(curr.inj, well.injectorType(),
+                                    well.getStatus());
+
+    return { static_cast<double>(wmctl), unit };
+}
 
 /*
  * A small DSL, really poor man's function composition, to avoid massive
@@ -901,6 +948,8 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "WBHP", bhp },
     { "WTHP", thp },
     { "WVPRT", res_vol_production_target },
+
+    { "WMCTL", well_control_mode },
 
     { "GWIR", rate< rt::wat, injector > },
     { "WGVIR", rate< rt::reservoir_gas, injector >},
