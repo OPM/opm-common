@@ -1493,7 +1493,7 @@ namespace Evaluator {
                 // wells apply at this sim_step.  Nothing to do.
                 return;
 
-            std::string group_name = this->node_.category == Opm::SummaryConfigNode::Category::Group ? this->node_.wgname : "";
+            std::string group_name = this->node_.category == Opm::EclIO::SummaryNode::Category::Group ? this->node_.wgname : "";
 
             EfficiencyFactor efac{};
             efac.setFactors(this->node_, input.sched, wells, sim_step);
