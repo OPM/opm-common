@@ -226,6 +226,15 @@ namespace {
         return is_in_set(countkw, keyword);
     }
 
+    bool is_control_mode(const std::string& keyword) {
+        static const keyword_set countkw {
+            "MCTP", "MCTW", "MCTG"
+        };
+
+        return (keyword == "WMCTL")
+            || is_in_set(countkw, keyword.substr(1));
+    }
+
     bool is_region_to_region(const std::string& keyword) {
         using sz_t = std::string::size_type;
         if ((keyword.size() == sz_t{3}) && keyword[2] == 'F') return true;
@@ -246,6 +255,7 @@ namespace {
         if (is_ratio(keyword)) return SummaryConfigNode::Type::Ratio;
         if (is_pressure(keyword)) return SummaryConfigNode::Type::Pressure;
         if (is_count(keyword)) return SummaryConfigNode::Type::Count;
+        if (is_control_mode(keyword)) return SummaryConfigNode::Type::Mode;
 
         return SummaryConfigNode::Type::Undefined;
     }
@@ -295,18 +305,17 @@ inline void keywordW( SummaryConfig::keyword_list& list,
                       const DeckKeyword& keyword,
                       const Schedule& schedule ) {
     /*
-      Here is a two step check whether this keyword should be discarded as not
-      supported:
+      Two step check for whether to discard this keyword as unsupported:
 
-      1. Well keywords ending with 'L' represent completions, they are not
-      supported.
+      1. Completion quantity keywords are currently not supported.  These are
+      well summary keywords, apart from "WMCTL", that end in 'L'.
 
       2. If the keyword is a UDQ keyword there is no convention enforced to
       the last character, and in that case it is treated as a normal well
       keyword anyways.
     */
     if (keyword.name().back() == 'L') {
-        if (!is_udq(keyword.name())) {
+        if (! (is_control_mode(keyword.name()) || is_udq(keyword.name()))) {
             const auto& location = keyword.location();
             std::string msg = std::string("The completion keywords like: " + keyword.name() + " are not supported at: " + location.filename + ", line " + std::to_string(location.lineno));
             parseContext.handleError( ParseContext::SUMMARY_UNHANDLED_KEYWORD, msg, errors);
