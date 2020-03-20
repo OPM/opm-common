@@ -471,67 +471,63 @@ END
     }
 
 
-    Opm::data::WellRates wr()
+    Opm::data::WellRates
+    wr()
     {
         using o = ::Opm::data::Rates::opt;
 
-        auto xw = ::Opm::data::WellRates{};
+        auto xw = ::Opm::data::WellRates {};
 
         {
-            xw["PROD"].rates
-                .set(o::wat, 1.0)
-                .set(o::oil, 2.0)
-                .set(o::gas, 3.0);
-	    xw["PROD"].bhp = 213.0;
-	    double qo = 5.;
-	    double qw = 4.;
-	    double qg = 50.;
+            xw["PROD"].rates.set(o::wat, 1.0).set(o::oil, 2.0).set(o::gas, 3.0);
+            xw["PROD"].bhp = 213.0;
+            double qo = 5.;
+            double qw = 4.;
+            double qg = 50.;
             for (int i = 0; i < 5; i++) {
-		xw["PROD"].connections.emplace_back();
-		auto& c = xw["PROD"].connections.back();
+                xw["PROD"].connections.emplace_back();
+                auto& c = xw["PROD"].connections.back();
 
-		c.rates.set(o::wat, qw*(float(i)+1.))
-                   .set(o::oil, qo*(float(i)+1.))
-                   .set(o::gas, qg*(float(i)+1.));
-		c.pressure = 215.;
-	    }
-	    auto seg = Opm::data::Segment{};
-	    for (std::size_t i = 1; i < 5; i++) {
-		xw["PROD"].segments.insert(std::pair<std::size_t,Opm::data::Segment>(i,seg));
-	    }
+                c.rates.set(o::wat, qw * (float(i) + 1.))
+                    .set(o::oil, qo * (float(i) + 1.))
+                    .set(o::gas, qg * (float(i) + 1.));
+                c.pressure = 215.;
+            }
+            auto seg = Opm::data::Segment {};
+            for (std::size_t i = 1; i < 5; i++) {
+                xw["PROD"].segments.insert(std::pair<std::size_t, Opm::data::Segment>(i, seg));
+            }
             xw["WINJ"].bhp = 234.0;
 
             xw["WINJ"].rates.set(o::wat, 5.0);
-	    xw["WINJ"].rates.set(o::oil, 0.0);
-	    xw["WINJ"].rates.set(o::gas, 0.0);
-	    qw = 7.;
+            xw["WINJ"].rates.set(o::oil, 0.0);
+            xw["WINJ"].rates.set(o::gas, 0.0);
+            qw = 7.;
             for (int i = 0; i < 5; i++) {
-		xw["WINJ"].connections.emplace_back();
-		auto& c = xw["WINJ"].connections.back();
+                xw["WINJ"].connections.emplace_back();
+                auto& c = xw["WINJ"].connections.back();
 
-		c.rates.set(o::wat, qw*(float(i)+1.))
-		       .set(o::oil, 0.)
-		       .set(o::gas, 0.);
-		c.pressure = 218.;
-	    }
+                c.rates.set(o::wat, qw * (float(i) + 1.)).set(o::oil, 0.).set(o::gas, 0.);
+                c.pressure = 218.;
+            }
         }
         return xw;
     }
-}
+    } // namespace
 
-struct SimulationCase
-{
-    explicit SimulationCase(const Opm::Deck& deck)
-        : es   ( deck )
-        , grid(deck)
-        , sched( deck, es )
-    {}
+    struct SimulationCase {
+        explicit SimulationCase(const Opm::Deck& deck)
+            : es(deck)
+            , grid(deck)
+            , sched(deck, es)
+        {
+        }
 
-    // Order requirement: 'es' must be declared/initialised before 'sched'.
-    Opm::EclipseState es;
-    Opm::EclipseGrid grid;
-    Opm::Schedule     sched;
-};
+        // Order requirement: 'es' must be declared/initialised before 'sched'.
+        Opm::EclipseState es;
+        Opm::EclipseGrid grid;
+        Opm::Schedule sched;
+    };
 
 // =====================================================================
 
@@ -551,165 +547,173 @@ BOOST_AUTO_TEST_CASE (Constructor)
 }
 
 
-BOOST_AUTO_TEST_CASE (Declared_Connection_Data)
+BOOST_AUTO_TEST_CASE(Declared_Connection_Data)
 {
-    const auto simCase = SimulationCase{first_sim()};
+    const auto simCase = SimulationCase {first_sim()};
 
     // Report Step 1: 2115-01-01 --> 2015-01-03
-    const auto rptStep = std::size_t{1};
+    const auto rptStep = std::size_t {1};
 
-    const auto ih = MockIH {
-        static_cast<int>(simCase.sched.getWells(rptStep).size())
-    };
+    const auto ih = MockIH {static_cast<int>(simCase.sched.getWells(rptStep).size())};
 
-    BOOST_CHECK_EQUAL(ih.nwells, MockIH::Sz{2});
+    BOOST_CHECK_EQUAL(ih.nwells, MockIH::Sz {2});
 
     const Opm::data::WellRates wrc = wr();
-    auto amconn = Opm::RestartIO::Helpers::AggregateConnectionData{ih.value};
-    amconn.captureDeclaredConnData(simCase.sched,
-				  simCase.grid,
-				  simCase.es.getUnits(),
-				  wrc,
-				  rptStep
-				  );
+    auto amconn = Opm::RestartIO::Helpers::AggregateConnectionData {ih.value};
+    amconn.captureDeclaredConnData(simCase.sched, simCase.grid, simCase.es.getUnits(), wrc, rptStep);
 
     // ICONN (PROD)
     {
-	using Ix = ::Opm::RestartIO::Helpers::VectorItems::IConn::index;
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::IConn::index;
 
-        auto start = 0*ih.niconz;
+        auto start = 0 * ih.niconz;
 
         const auto& iConn = amconn.getIConn();
-	BOOST_CHECK_EQUAL(iConn[start +  Ix::SeqIndex  ] ,  1); // PROD-connection 1, sequence number
-	BOOST_CHECK_EQUAL(iConn[start +  Ix::CellI     ] ,  1); // PROD-connection 1, Cell I
-	BOOST_CHECK_EQUAL(iConn[start +  Ix::CellJ     ] ,  5); // PROD-connection 1, Cell J
-	BOOST_CHECK_EQUAL(iConn[start +  Ix::CellK     ] ,  2); // PROD-connection 1, Cell K
-	BOOST_CHECK_EQUAL(iConn[start +  Ix::ConnStat  ] ,  1); // PROD-connection 1, ConnStat
-	BOOST_CHECK_EQUAL(iConn[start +  Ix::Drainage  ] ,  0); // PROD-connection 1, Drainage saturation table
-	BOOST_CHECK_EQUAL(iConn[start +  Ix::Imbibition] ,  0); // PROD-connection 1, Imbibition saturation table
-	BOOST_CHECK_EQUAL(iConn[start +  Ix::ComplNum  ] ,  1); // PROD-connection 1, Complum number
-	BOOST_CHECK_EQUAL(iConn[start +  Ix::ConnDir   ] ,  1); // PROD-connection 1, Connection direction
-	BOOST_CHECK_EQUAL(iConn[start +  Ix::Segment   ] , 13); // PROD-connection 1, Segment ID for direction
+        BOOST_CHECK_EQUAL(iConn[start + Ix::SeqIndex], 1); // PROD-connection 1, sequence number
+        BOOST_CHECK_EQUAL(iConn[start + Ix::CellI], 1); // PROD-connection 1, Cell I
+        BOOST_CHECK_EQUAL(iConn[start + Ix::CellJ], 5); // PROD-connection 1, Cell J
+        BOOST_CHECK_EQUAL(iConn[start + Ix::CellK], 2); // PROD-connection 1, Cell K
+        BOOST_CHECK_EQUAL(iConn[start + Ix::ConnStat], 1); // PROD-connection 1, ConnStat
+        BOOST_CHECK_EQUAL(iConn[start + Ix::Drainage], 0); // PROD-connection 1, Drainage saturation table
+        BOOST_CHECK_EQUAL(iConn[start + Ix::Imbibition], 0); // PROD-connection 1, Imbibition saturation table
+        BOOST_CHECK_EQUAL(iConn[start + Ix::ComplNum], 1); // PROD-connection 1, Complum number
+        BOOST_CHECK_EQUAL(iConn[start + Ix::ConnDir], 1); // PROD-connection 1, Connection direction
+        BOOST_CHECK_EQUAL(iConn[start + Ix::Segment], 13); // PROD-connection 1, Segment ID for direction
 
-	start = 3*ih.niconz;
-	BOOST_CHECK_EQUAL(iConn[start +  Ix::SeqIndex  ] ,  4); // PROD-connection 4, sequence number
-	BOOST_CHECK_EQUAL(iConn[start +  Ix::CellI     ] ,  4); // PROD-connection 4, Cell I
-	BOOST_CHECK_EQUAL(iConn[start +  Ix::CellJ     ] ,  5); // PROD-connection 4, Cell J
-	BOOST_CHECK_EQUAL(iConn[start +  Ix::CellK     ] ,  2); // PROD-connection 4, Cell K
-	BOOST_CHECK_EQUAL(iConn[start +  Ix::ConnStat  ] ,  1); // PROD-connection 4, ConnStat
-	BOOST_CHECK_EQUAL(iConn[start +  Ix::Drainage  ] ,  0); // PROD-connection 4, Drainage saturation table
-	BOOST_CHECK_EQUAL(iConn[start +  Ix::Imbibition] ,  0); // PROD-connection 4, Imbibition saturation table
-	BOOST_CHECK_EQUAL(iConn[start +  Ix::ComplNum  ] ,  4); // PROD-connection 4, Complum number
-	BOOST_CHECK_EQUAL(iConn[start +  Ix::ConnDir   ] ,  1); // PROD-connection 4, Connection direction
-	BOOST_CHECK_EQUAL(iConn[start +  Ix::Segment   ] , 16); // PROD-connection 4, Segment ID for direction
+        start = 3 * ih.niconz;
+        BOOST_CHECK_EQUAL(iConn[start + Ix::SeqIndex], 4); // PROD-connection 4, sequence number
+        BOOST_CHECK_EQUAL(iConn[start + Ix::CellI], 4); // PROD-connection 4, Cell I
+        BOOST_CHECK_EQUAL(iConn[start + Ix::CellJ], 5); // PROD-connection 4, Cell J
+        BOOST_CHECK_EQUAL(iConn[start + Ix::CellK], 2); // PROD-connection 4, Cell K
+        BOOST_CHECK_EQUAL(iConn[start + Ix::ConnStat], 1); // PROD-connection 4, ConnStat
+        BOOST_CHECK_EQUAL(iConn[start + Ix::Drainage], 0); // PROD-connection 4, Drainage saturation table
+        BOOST_CHECK_EQUAL(iConn[start + Ix::Imbibition], 0); // PROD-connection 4, Imbibition saturation table
+        BOOST_CHECK_EQUAL(iConn[start + Ix::ComplNum], 4); // PROD-connection 4, Complum number
+        BOOST_CHECK_EQUAL(iConn[start + Ix::ConnDir], 1); // PROD-connection 4, Connection direction
+        BOOST_CHECK_EQUAL(iConn[start + Ix::Segment], 16); // PROD-connection 4, Segment ID for direction
 
-    // ICONN (WINJ)
-        start = ih.ncwmax*ih.niconz;
-	BOOST_CHECK_EQUAL(iConn[start +  Ix::SeqIndex  ] ,  1); // WINJ-connection 1, sequence number
-	BOOST_CHECK_EQUAL(iConn[start +  Ix::CellI     ] , 10); // WINJ-connection 1, Cell I
-	BOOST_CHECK_EQUAL(iConn[start +  Ix::CellJ     ] ,  1); // WINJ-connection 1, Cell J
-	BOOST_CHECK_EQUAL(iConn[start +  Ix::CellK     ] ,  9); // WINJ-connection 1, Cell K
-	BOOST_CHECK_EQUAL(iConn[start +  Ix::ConnStat  ] ,  1); // WINJ-connection 1, ConnStat
-	BOOST_CHECK_EQUAL(iConn[start +  Ix::Drainage  ] ,  0); // WINJ-connection 1, Drainage saturation table
-	BOOST_CHECK_EQUAL(iConn[start +  Ix::Imbibition] ,  0); // WINJ-connection 1, Imbibition saturation table
-	BOOST_CHECK_EQUAL(iConn[start +  Ix::ComplNum  ] ,  1); // WINJ-connection 1, Complum number
-	BOOST_CHECK_EQUAL(iConn[start +  Ix::ConnDir   ] ,  1); // WINJ-connection 1, Connection direction
-	BOOST_CHECK_EQUAL(iConn[start +  Ix::Segment   ] ,  0); // WINJ-connection 1, Segment ID for direction
+        // ICONN (WINJ)
+        start = ih.ncwmax * ih.niconz;
+        BOOST_CHECK_EQUAL(iConn[start + Ix::SeqIndex], 1); // WINJ-connection 1, sequence number
+        BOOST_CHECK_EQUAL(iConn[start + Ix::CellI], 10); // WINJ-connection 1, Cell I
+        BOOST_CHECK_EQUAL(iConn[start + Ix::CellJ], 1); // WINJ-connection 1, Cell J
+        BOOST_CHECK_EQUAL(iConn[start + Ix::CellK], 9); // WINJ-connection 1, Cell K
+        BOOST_CHECK_EQUAL(iConn[start + Ix::ConnStat], 1); // WINJ-connection 1, ConnStat
+        BOOST_CHECK_EQUAL(iConn[start + Ix::Drainage], 0); // WINJ-connection 1, Drainage saturation table
+        BOOST_CHECK_EQUAL(iConn[start + Ix::Imbibition], 0); // WINJ-connection 1, Imbibition saturation table
+        BOOST_CHECK_EQUAL(iConn[start + Ix::ComplNum], 1); // WINJ-connection 1, Complum number
+        BOOST_CHECK_EQUAL(iConn[start + Ix::ConnDir], 1); // WINJ-connection 1, Connection direction
+        BOOST_CHECK_EQUAL(iConn[start + Ix::Segment], 0); // WINJ-connection 1, Segment ID for direction
 
-	start = ih.ncwmax*ih.niconz + 2*ih.niconz;
-	BOOST_CHECK_EQUAL(iConn[start +  Ix::SeqIndex  ] ,  3); // WINJ-connection 3, sequence number
-	BOOST_CHECK_EQUAL(iConn[start +  Ix::CellI     ] ,  8); // WINJ-connection 3, Cell I
-	BOOST_CHECK_EQUAL(iConn[start +  Ix::CellJ     ] ,  1); // WINJ-connection 3, Cell J
-	BOOST_CHECK_EQUAL(iConn[start +  Ix::CellK     ] ,  9); // WINJ-connection 3, Cell K
-	BOOST_CHECK_EQUAL(iConn[start +  Ix::ConnStat  ] ,  1); // WINJ-connection 3, ConnStat
-	BOOST_CHECK_EQUAL(iConn[start +  Ix::Drainage  ] ,  0); // WINJ-connection 3, Drainage saturation table
-	BOOST_CHECK_EQUAL(iConn[start +  Ix::Imbibition] ,  0); // WINJ-connection 3, Imbibition saturation table
-	BOOST_CHECK_EQUAL(iConn[start +  Ix::ComplNum  ] ,  3); // WINJ-connection 3, Complum number
-	BOOST_CHECK_EQUAL(iConn[start +  Ix::ConnDir   ] ,  1); // WINJ-connection 3, Connection direction
-	BOOST_CHECK_EQUAL(iConn[start +  Ix::Segment   ] ,  0); // WINJ-connection 3, Segment ID for direction
+        start = ih.ncwmax * ih.niconz + 2 * ih.niconz;
+        BOOST_CHECK_EQUAL(iConn[start + Ix::SeqIndex], 3); // WINJ-connection 3, sequence number
+        BOOST_CHECK_EQUAL(iConn[start + Ix::CellI], 8); // WINJ-connection 3, Cell I
+        BOOST_CHECK_EQUAL(iConn[start + Ix::CellJ], 1); // WINJ-connection 3, Cell J
+        BOOST_CHECK_EQUAL(iConn[start + Ix::CellK], 9); // WINJ-connection 3, Cell K
+        BOOST_CHECK_EQUAL(iConn[start + Ix::ConnStat], 1); // WINJ-connection 3, ConnStat
+        BOOST_CHECK_EQUAL(iConn[start + Ix::Drainage], 0); // WINJ-connection 3, Drainage saturation table
+        BOOST_CHECK_EQUAL(iConn[start + Ix::Imbibition], 0); // WINJ-connection 3, Imbibition saturation table
+        BOOST_CHECK_EQUAL(iConn[start + Ix::ComplNum], 3); // WINJ-connection 3, Complum number
+        BOOST_CHECK_EQUAL(iConn[start + Ix::ConnDir], 1); // WINJ-connection 3, Connection direction
+        BOOST_CHECK_EQUAL(iConn[start + Ix::Segment], 0); // WINJ-connection 3, Segment ID for direction
 
-	start = ih.ncwmax*ih.niconz + 3*ih.niconz;
-	BOOST_CHECK_EQUAL(iConn[start +  Ix::SeqIndex  ] ,  4); // WINJ-connection 4, sequence number
-	BOOST_CHECK_EQUAL(iConn[start +  Ix::CellI     ] ,  6); // WINJ-connection 4, Cell I
-	BOOST_CHECK_EQUAL(iConn[start +  Ix::CellJ     ] ,  1); // WINJ-connection 4, Cell J
-	BOOST_CHECK_EQUAL(iConn[start +  Ix::CellK     ] ,  9); // WINJ-connection 4, Cell K
-	BOOST_CHECK_EQUAL(iConn[start +  Ix::ConnStat  ] ,  1); // WINJ-connection 4, ConnStat
-	BOOST_CHECK_EQUAL(iConn[start +  Ix::Drainage  ] ,  0); // WINJ-connection 4, Drainage saturation table
-	BOOST_CHECK_EQUAL(iConn[start +  Ix::Imbibition] ,  0); // WINJ-connection 4, Imbibition saturation table
-	BOOST_CHECK_EQUAL(iConn[start +  Ix::ComplNum  ] ,  4); // WINJ-connection 4, Complum number
-	BOOST_CHECK_EQUAL(iConn[start +  Ix::ConnDir   ] ,  1); // WINJ-connection 4, Connection direction
-	BOOST_CHECK_EQUAL(iConn[start +  Ix::Segment   ] ,  0); // WINJ-connection 4, Segment ID for direction
-
+        start = ih.ncwmax * ih.niconz + 3 * ih.niconz;
+        BOOST_CHECK_EQUAL(iConn[start + Ix::SeqIndex], 4); // WINJ-connection 4, sequence number
+        BOOST_CHECK_EQUAL(iConn[start + Ix::CellI], 6); // WINJ-connection 4, Cell I
+        BOOST_CHECK_EQUAL(iConn[start + Ix::CellJ], 1); // WINJ-connection 4, Cell J
+        BOOST_CHECK_EQUAL(iConn[start + Ix::CellK], 9); // WINJ-connection 4, Cell K
+        BOOST_CHECK_EQUAL(iConn[start + Ix::ConnStat], 1); // WINJ-connection 4, ConnStat
+        BOOST_CHECK_EQUAL(iConn[start + Ix::Drainage], 0); // WINJ-connection 4, Drainage saturation table
+        BOOST_CHECK_EQUAL(iConn[start + Ix::Imbibition], 0); // WINJ-connection 4, Imbibition saturation table
+        BOOST_CHECK_EQUAL(iConn[start + Ix::ComplNum], 4); // WINJ-connection 4, Complum number
+        BOOST_CHECK_EQUAL(iConn[start + Ix::ConnDir], 1); // WINJ-connection 4, Connection direction
+        BOOST_CHECK_EQUAL(iConn[start + Ix::Segment], 0); // WINJ-connection 4, Segment ID for direction
     }
 
     // SCONN (PROD)  + (WINJ)
     {
-	// well no 1 - PROD
-	using Ix = ::Opm::RestartIO::Helpers::VectorItems::SConn::index;
-	const auto& sconn = amconn.getSConn();
+        // well no 1 - PROD
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::SConn::index;
+        const auto& sconn = amconn.getSConn();
         int connNo = 1;
-	auto  i0 = (connNo-1)*ih.nsconz;
-	BOOST_CHECK_CLOSE(sconn[i0 + Ix::ConnTrans   ],        2.55826545 , 1.0e-5);  // PROD - conn 1 : Transmissibility factor
-	BOOST_CHECK_CLOSE(sconn[i0 + Ix::Depth       ], 	     7050.  , 1.0e-5);	// PROD - conn 1 : Centre depth
-	BOOST_CHECK_CLOSE(sconn[i0 + Ix::Diameter    ],             0.20  , 1.0e-5);  // PROD - conn 1 : diameter
-	BOOST_CHECK_CLOSE(sconn[i0 + Ix::EffectiveKH ],       1581.13879  , 1.0e-5);  // PROD - conn 1 : effective kh-product
-	BOOST_CHECK_CLOSE(sconn[i0 + Ix::item12      ],       2.55826545  , 1.0e-5);  // PROD - conn 1 : Transmissibility factor
-	BOOST_CHECK_CLOSE(sconn[i0 + Ix::SegDistEnd  ], 	      130.  , 1.0e-5);  // PROD - conn 1 : Distance to end of connection in segment
-	BOOST_CHECK_CLOSE(sconn[i0 + Ix::SegDistStart], 	       30.  , 1.0e-5);	// PROD - conn 1 : Distance to start of connection in segment
+        auto i0 = (connNo - 1) * ih.nsconz;
+        BOOST_CHECK_CLOSE(sconn[i0 + Ix::ConnTrans], 2.55826545, 1.0e-5); // PROD - conn 1 : Transmissibility factor
+        BOOST_CHECK_CLOSE(sconn[i0 + Ix::Depth], 7050., 1.0e-5); // PROD - conn 1 : Centre depth
+        BOOST_CHECK_CLOSE(sconn[i0 + Ix::Diameter], 0.20, 1.0e-5); // PROD - conn 1 : diameter
+        BOOST_CHECK_CLOSE(sconn[i0 + Ix::EffectiveKH], 1581.13879, 1.0e-5); // PROD - conn 1 : effective kh-product
+        BOOST_CHECK_CLOSE(sconn[i0 + Ix::item12], 2.55826545, 1.0e-5); // PROD - conn 1 : Transmissibility factor
+        BOOST_CHECK_CLOSE(
+            sconn[i0 + Ix::SegDistEnd], 130., 1.0e-5); // PROD - conn 1 : Distance to end of connection in segment
+        BOOST_CHECK_CLOSE(
+            sconn[i0 + Ix::SegDistStart], 30., 1.0e-5); // PROD - conn 1 : Distance to start of connection in segment
 
-	// Well no 2 - WINJ well
-	connNo = 3;
-	i0 = ih.ncwmax*ih.nsconz + (connNo-1)*ih.nsconz;
-	BOOST_CHECK_CLOSE(sconn[i0 + Ix::ConnTrans   ],        2.55826545 , 1.0e-5);  // WINJ - conn 3 : Transmissibility factor
-	BOOST_CHECK_CLOSE(sconn[i0 + Ix::Depth       ], 	     7250.  , 1.0e-5);	// WINJ - conn 3 : Centre depth
-	BOOST_CHECK_CLOSE(sconn[i0 + Ix::Diameter    ],             0.20  , 1.0e-5);  // WINJ - conn 3 : diameter
-	BOOST_CHECK_CLOSE(sconn[i0 + Ix::EffectiveKH ],       1581.13879  , 1.0e-5);  // WINJ - conn 3 : effective kh-product
-	BOOST_CHECK_CLOSE(sconn[i0 + Ix::item12      ],       2.55826545  , 1.0e-5);  // WINJ - conn 3 : Transmissibility factor
-	BOOST_CHECK_CLOSE(sconn[i0 + Ix::SegDistEnd  ], 	        0.  , 1.0e-5);  // WINJ - conn 3 : Distance to end of connection in segment
-	BOOST_CHECK_CLOSE(sconn[i0 + Ix::SegDistStart], 	        0.  , 1.0e-5);	// WINJ - conn 3 : Distance to start of connection in segment
+        // Well no 2 - WINJ well
+        connNo = 3;
+        i0 = ih.ncwmax * ih.nsconz + (connNo - 1) * ih.nsconz;
+        BOOST_CHECK_CLOSE(sconn[i0 + Ix::ConnTrans], 2.55826545, 1.0e-5); // WINJ - conn 3 : Transmissibility factor
+        BOOST_CHECK_CLOSE(sconn[i0 + Ix::Depth], 7250., 1.0e-5); // WINJ - conn 3 : Centre depth
+        BOOST_CHECK_CLOSE(sconn[i0 + Ix::Diameter], 0.20, 1.0e-5); // WINJ - conn 3 : diameter
+        BOOST_CHECK_CLOSE(sconn[i0 + Ix::EffectiveKH], 1581.13879, 1.0e-5); // WINJ - conn 3 : effective kh-product
+        BOOST_CHECK_CLOSE(sconn[i0 + Ix::item12], 2.55826545, 1.0e-5); // WINJ - conn 3 : Transmissibility factor
+        BOOST_CHECK_CLOSE(
+            sconn[i0 + Ix::SegDistEnd], 0., 1.0e-5); // WINJ - conn 3 : Distance to end of connection in segment
+        BOOST_CHECK_CLOSE(
+            sconn[i0 + Ix::SegDistStart], 0., 1.0e-5); // WINJ - conn 3 : Distance to start of connection in segment
 
-	connNo = 4;
-	i0 = ih.ncwmax*ih.nsconz + (connNo-1)*ih.nsconz;
-	BOOST_CHECK_CLOSE(sconn[i0 + Ix::ConnTrans   ],        2.55826545 , 1.0e-5);  // WINJ - conn 4 : Transmissibility factor
-	BOOST_CHECK_CLOSE(sconn[i0 + Ix::Depth       ], 	     7250.  , 1.0e-5);	// WINJ - conn 4 : Centre depth
-	BOOST_CHECK_CLOSE(sconn[i0 + Ix::Diameter    ],             0.20  , 1.0e-5);  // WINJ - conn 4 : diameter
-	BOOST_CHECK_CLOSE(sconn[i0 + Ix::EffectiveKH ],       1581.13879  , 1.0e-5);  // WINJ - conn 4 : effective kh-product
-	BOOST_CHECK_CLOSE(sconn[i0 + Ix::item12      ],       2.55826545  , 1.0e-5);  // WINJ - conn 4 : Transmissibility factor
-	BOOST_CHECK_CLOSE(sconn[i0 + Ix::SegDistEnd  ], 	        0.  , 1.0e-5);  // WINJ - conn 4 : Distance to end of connection in segment
-	BOOST_CHECK_CLOSE(sconn[i0 + Ix::SegDistStart], 	        0.  , 1.0e-5);	// WINJ - conn 4 : Distance to start of connection in segment
-
-
+        connNo = 4;
+        i0 = ih.ncwmax * ih.nsconz + (connNo - 1) * ih.nsconz;
+        BOOST_CHECK_CLOSE(sconn[i0 + Ix::ConnTrans], 2.55826545, 1.0e-5); // WINJ - conn 4 : Transmissibility factor
+        BOOST_CHECK_CLOSE(sconn[i0 + Ix::Depth], 7250., 1.0e-5); // WINJ - conn 4 : Centre depth
+        BOOST_CHECK_CLOSE(sconn[i0 + Ix::Diameter], 0.20, 1.0e-5); // WINJ - conn 4 : diameter
+        BOOST_CHECK_CLOSE(sconn[i0 + Ix::EffectiveKH], 1581.13879, 1.0e-5); // WINJ - conn 4 : effective kh-product
+        BOOST_CHECK_CLOSE(sconn[i0 + Ix::item12], 2.55826545, 1.0e-5); // WINJ - conn 4 : Transmissibility factor
+        BOOST_CHECK_CLOSE(
+            sconn[i0 + Ix::SegDistEnd], 0., 1.0e-5); // WINJ - conn 4 : Distance to end of connection in segment
+        BOOST_CHECK_CLOSE(
+            sconn[i0 + Ix::SegDistStart], 0., 1.0e-5); // WINJ - conn 4 : Distance to start of connection in segment
     }
 
     // XCONN (PROD)  + (WINJ)
     {
-	using Ix = ::Opm::RestartIO::Helpers::VectorItems::XConn::index;
-	const auto&  units = simCase.es.getUnits();
-	using M = ::Opm::UnitSystem::measure;
-      	const auto& xconn = amconn.getXConn();
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::XConn::index;
+        const auto& units = simCase.es.getUnits();
+        using M = ::Opm::UnitSystem::measure;
+        const auto& xconn = amconn.getXConn();
 
-	// PROD well
-	int connNo = 1;
-	auto  i0 = (connNo-1)*ih.nxconz;
-	BOOST_CHECK_CLOSE(xconn[i0 + Ix::OilRate  ],        -units.from_si(M::liquid_surface_rate,5.*(float(connNo))) , 1.0e-5);   // PROD - conn 1 : Surface oil rate
-	BOOST_CHECK_CLOSE(xconn[i0 + Ix::WaterRate], 	 -units.from_si(M::liquid_surface_rate,4.*(float(connNo))) , 1.0e-5);	// PROD - conn 1 : Surface water rate
-	BOOST_CHECK_CLOSE(xconn[i0 + Ix::GasRate  ],        -units.from_si(M::gas_surface_rate,  50.*(float(connNo))) , 1.0e-5);   // PROD - conn 1 : Surface gas rate
-	BOOST_CHECK_CLOSE(xconn[i0 + Ix::Pressure ],         units.from_si(M::pressure,                         215.) , 1.0e-5);   // PROD - conn 1 : Connection pressure
-	BOOST_CHECK_CLOSE(xconn[i0 + Ix::ResVRate ],                                                              0.  , 1.0e-5);  // PROD - conn 1 : Reservoir volume rate
+        // PROD well
+        int connNo = 1;
+        auto i0 = (connNo - 1) * ih.nxconz;
+        BOOST_CHECK_CLOSE(xconn[i0 + Ix::OilRate],
+                          -units.from_si(M::liquid_surface_rate, 5. * (float(connNo))),
+                          1.0e-5); // PROD - conn 1 : Surface oil rate
+        BOOST_CHECK_CLOSE(xconn[i0 + Ix::WaterRate],
+                          -units.from_si(M::liquid_surface_rate, 4. * (float(connNo))),
+                          1.0e-5); // PROD - conn 1 : Surface water rate
+        BOOST_CHECK_CLOSE(xconn[i0 + Ix::GasRate],
+                          -units.from_si(M::gas_surface_rate, 50. * (float(connNo))),
+                          1.0e-5); // PROD - conn 1 : Surface gas rate
+        BOOST_CHECK_CLOSE(
+            xconn[i0 + Ix::Pressure], units.from_si(M::pressure, 215.), 1.0e-5); // PROD - conn 1 : Connection pressure
+        BOOST_CHECK_CLOSE(xconn[i0 + Ix::ResVRate], 0., 1.0e-5); // PROD - conn 1 : Reservoir volume rate
 
-	// WINJ well
-	connNo = 3;
-	i0 = ih.ncwmax*ih.nxconz + (connNo-1)*ih.nxconz;
-	BOOST_CHECK_CLOSE(xconn[i0 + Ix::WaterRate], 	 -units.from_si(M::liquid_surface_rate,7.*(float(connNo))) , 1.0e-5);	// WINJ - conn 3 : Surface water rate
-	BOOST_CHECK_CLOSE(xconn[i0 + Ix::Pressure ],         units.from_si(M::pressure,                         218.) , 1.0e-5);   // WINJ - conn 3 : Connection pressure
-	BOOST_CHECK_CLOSE(xconn[i0 + Ix::ResVRate ],                                                              0.  , 1.0e-5);  // WINJ - conn 3 : Reservoir volume rate
+        // WINJ well
+        connNo = 3;
+        i0 = ih.ncwmax * ih.nxconz + (connNo - 1) * ih.nxconz;
+        BOOST_CHECK_CLOSE(xconn[i0 + Ix::WaterRate],
+                          -units.from_si(M::liquid_surface_rate, 7. * (float(connNo))),
+                          1.0e-5); // WINJ - conn 3 : Surface water rate
+        BOOST_CHECK_CLOSE(
+            xconn[i0 + Ix::Pressure], units.from_si(M::pressure, 218.), 1.0e-5); // WINJ - conn 3 : Connection pressure
+        BOOST_CHECK_CLOSE(xconn[i0 + Ix::ResVRate], 0., 1.0e-5); // WINJ - conn 3 : Reservoir volume rate
 
-	connNo = 4;
-	i0 = ih.ncwmax*ih.nxconz + (connNo-1)*ih.nxconz;
-	BOOST_CHECK_CLOSE(xconn[i0 + Ix::WaterRate], 	 -units.from_si(M::liquid_surface_rate,7.*(float(connNo))) , 1.0e-5);	// WINJ - conn 3 : Surface water rate
-	BOOST_CHECK_CLOSE(xconn[i0 + Ix::Pressure ],         units.from_si(M::pressure,                         218.) , 1.0e-5);   // WINJ - conn 3 : Connection pressure
-	BOOST_CHECK_CLOSE(xconn[i0 + Ix::ResVRate ],                                                              0.  , 1.0e-5);  // WINJ - conn 3 : Reservoir volume rate
-
+        connNo = 4;
+        i0 = ih.ncwmax * ih.nxconz + (connNo - 1) * ih.nxconz;
+        BOOST_CHECK_CLOSE(xconn[i0 + Ix::WaterRate],
+                          -units.from_si(M::liquid_surface_rate, 7. * (float(connNo))),
+                          1.0e-5); // WINJ - conn 3 : Surface water rate
+        BOOST_CHECK_CLOSE(
+            xconn[i0 + Ix::Pressure], units.from_si(M::pressure, 218.), 1.0e-5); // WINJ - conn 3 : Connection pressure
+        BOOST_CHECK_CLOSE(xconn[i0 + Ix::ResVRate], 0., 1.0e-5); // WINJ - conn 3 : Reservoir volume rate
     }
 }
 
