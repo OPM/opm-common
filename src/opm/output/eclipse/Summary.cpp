@@ -137,41 +137,33 @@ namespace {
         };
     }
 
-    std::vector<Opm::SummaryConfigNode>
+    std::vector<Opm::EclIO::SummaryNode>
     requiredRestartVectors(const ::Opm::Schedule& sched)
     {
-        std::vector<Opm::SummaryConfigNode> entities {} ;
+        std::vector<Opm::EclIO::SummaryNode> entities {} ;
         const auto restartVectors { requiredRestartVectors() } ;
-
-        using SN = ::Opm::SummaryConfigNode;
+        static const std::vector<ParamCTorArgs> extra_well_vectors {
+            { "WBHP",  Opm::EclIO::SummaryNode::Type::Pressure },
+            { "WGVIR", Opm::EclIO::SummaryNode::Type::Rate     },
+            { "WWVIR", Opm::EclIO::SummaryNode::Type::Rate     },
+        };
 
         auto makeEntities = [&restartVectors, &entities]
             (const char         kwpref,
-             const SN::Category cat,
+             const Opm::EclIO::SummaryNode::Category cat,
              const std::string& name) -> void
         {
             for (const auto& restartVector : restartVectors) {
-                entities.emplace_back(kwpref + restartVector.keyword, cat, ::Opm::Location());
-
-                entities.back().namedEntity(name)
-                .parameterType(restartVector.type);
+                entities.push_back({kwpref + restartVector.keyword, cat, restartVector.type, name, Opm::EclIO::SummaryNode::default_number });
             }
         };
 
         for (const auto& well_name : sched.wellNames()) {
-            makeEntities('W', SN::Category::Well, well_name);
+            makeEntities('W', Opm::EclIO::SummaryNode::Category::Well, well_name);
 
-            entities.emplace_back("WBHP", SN::Category::Well, ::Opm::Location());
-            entities.back().namedEntity(well_name)
-            .parameterType(SN::Type::Pressure);
-
-            entities.emplace_back("WGVIR", SN::Category::Well, ::Opm::Location());
-            entities.back().namedEntity(well_name)
-            .parameterType(SN::Type::Rate);
-
-            entities.emplace_back("WWVIR", SN::Category::Well, ::Opm::Location());
-            entities.back().namedEntity(well_name)
-            .parameterType(SN::Type::Rate);
+            for (const auto &well_vector : extra_well_vectors) {
+                entities.push_back({ well_vector.keyword, Opm::EclIO::SummaryNode::Category::Well, well_vector.type, well_name, Opm::EclIO::SummaryNode::default_number });
+            }
         }
 
         for (const auto& grp_name : sched.groupNames()) {
@@ -192,7 +184,7 @@ namespace {
             }
         }
 
-        makeEntities('F', SN::Category::Field, "FIELD");
+        makeEntities('F', Opm::EclIO::SummaryNode::Category::Field, "FIELD");
 
         entities.emplace_back("FMCTP", SN::Category::Field, ::Opm::Location());
         entities.back().namedEntity("FIELD")

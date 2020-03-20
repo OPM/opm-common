@@ -48,6 +48,8 @@ struct SummaryNode {
     const std::string wgname;
     const int number;
 
+    constexpr static int default_number { std::numeric_limits<int>::min() };
+
     std::string unique_key() const;
 };
 
