@@ -406,10 +406,10 @@ COMPDAT
  'PROD' 4 5 2 2   3*  0.2   3*  'X' /
  'PROD' 5 5 2 2   3*  0.2   3*  'X' /
  'WINJ' 10 1  9 9   3*  0.2   3*  'X' /
- 'WINJ'   9 1  9 9   3*  0.2   3*  'X' /
- 'WINJ'   8 1  9 9   3*  0.2   3*  'X' /
- 'WINJ'   7 1  9 9   3*  0.2   3*  'X' /
- 'WINJ'   6 1  9 9   3*  0.2   3*  'X' /
+ 'WINJ'  9 1  9 9   3*  0.2   3*  'X' /
+ 'WINJ'  8 1  9 9   3*  0.2   3*  'X' /
+ 'WINJ'  7 1  9 9   3*  0.2   3*  'X' /
+ 'WINJ'  6 1  9 9   3*  0.2   3*  'X' /
 /
 
 WELSEGS
@@ -472,7 +472,7 @@ END
 
 
     Opm::data::WellRates
-    wr()
+    wr(const Opm::Schedule& sched)
     {
         using o = ::Opm::data::Rates::opt;
 
@@ -484,31 +484,41 @@ END
             double qo = 5.;
             double qw = 4.;
             double qg = 50.;
-            for (int i = 0; i < 5; i++) {
-                xw["PROD"].connections.emplace_back();
-                auto& c = xw["PROD"].connections.back();
+            {
+                const auto& well = sched.getWell("PROD", 0);
+                const auto& connections = well.getConnections();
+                for (int i = 0; i < 5; i++) {
+                    xw["PROD"].connections.emplace_back();
+                    auto& c = xw["PROD"].connections.back();
 
-                c.rates.set(o::wat, qw * (float(i) + 1.))
-                    .set(o::oil, qo * (float(i) + 1.))
-                    .set(o::gas, qg * (float(i) + 1.));
-                c.pressure = 215.;
+                    c.rates.set(o::wat, qw * (float(i) + 1.))
+                        .set(o::oil, qo * (float(i) + 1.))
+                        .set(o::gas, qg * (float(i) + 1.));
+                    c.pressure = 215.;
+                    c.index = connections[i].global_index();
+                }
+                auto seg = Opm::data::Segment {};
+                for (std::size_t i = 1; i < 5; i++) {
+                    xw["PROD"].segments.insert(std::pair<std::size_t, Opm::data::Segment>(i, seg));
+                }
             }
-            auto seg = Opm::data::Segment {};
-            for (std::size_t i = 1; i < 5; i++) {
-                xw["PROD"].segments.insert(std::pair<std::size_t, Opm::data::Segment>(i, seg));
-            }
-            xw["WINJ"].bhp = 234.0;
+            {
+                const auto& well = sched.getWell("WINJ", 0);
+                const auto& connections = well.getConnections();
+                xw["WINJ"].bhp = 234.0;
 
-            xw["WINJ"].rates.set(o::wat, 5.0);
-            xw["WINJ"].rates.set(o::oil, 0.0);
-            xw["WINJ"].rates.set(o::gas, 0.0);
-            qw = 7.;
-            for (int i = 0; i < 5; i++) {
-                xw["WINJ"].connections.emplace_back();
-                auto& c = xw["WINJ"].connections.back();
+                xw["WINJ"].rates.set(o::wat, 5.0);
+                xw["WINJ"].rates.set(o::oil, 0.0);
+                xw["WINJ"].rates.set(o::gas, 0.0);
+                qw = 7.;
+                for (int i = 0; i < 4; i++) {
+                    xw["WINJ"].connections.emplace_back();
+                    auto& c = xw["WINJ"].connections.back();
 
-                c.rates.set(o::wat, qw * (float(i) + 1.)).set(o::oil, 0.).set(o::gas, 0.);
-                c.pressure = 218.;
+                    c.rates.set(o::wat, qw * (float(i) + 1.)).set(o::oil, 0.).set(o::gas, 0.);
+                    c.pressure = 218.;
+                    c.index = connections[i].global_index();
+                }
             }
         }
         return xw;
@@ -558,7 +568,7 @@ BOOST_AUTO_TEST_CASE(Declared_Connection_Data)
 
     BOOST_CHECK_EQUAL(ih.nwells, MockIH::Sz {2});
 
-    const Opm::data::WellRates wrc = wr();
+    const Opm::data::WellRates wrc = wr(simCase.sched);
     auto amconn = Opm::RestartIO::Helpers::AggregateConnectionData {ih.value};
     amconn.captureDeclaredConnData(simCase.sched, simCase.grid, simCase.es.getUnits(), wrc, rptStep);
 
@@ -722,7 +732,7 @@ BOOST_AUTO_TEST_CASE(InactiveCell) {
     auto simCase = SimulationCase{first_sim()};
     const auto rptStep = std::size_t{1};
     const auto ih = MockIH {static_cast<int>(simCase.sched.getWells(rptStep).size())};
-    const Opm::data::WellRates wrc = wr();
+    const Opm::data::WellRates wrc = wr(simCase.sched);
     auto conn0 = Opm::RestartIO::Helpers::AggregateConnectionData{ih.value};
     conn0.captureDeclaredConnData(simCase.sched,
                                   simCase.grid,
