@@ -17,6 +17,9 @@
    */
 
 #include <numeric>
+#include <regex>
+#include <string>
+#include <unordered_set>
 #include <vector>
 
 #include <opm/io/eclipse/SummaryNode.hpp>
@@ -70,4 +73,40 @@ std::string Opm::EclIO::SummaryNode::unique_key() const {
     };
 
     return std::accumulate(std::begin(key_parts), std::end(key_parts), std::string(), compose_key);
+}
+
+bool Opm::EclIO::SummaryNode::is_user_defined() const {
+    static const std::unordered_set<std::string> udq_blacklist {
+        "AUTOCOAR",
+        "AUTOREF",
+        "FULLIMP",
+        "GUIDECAL",
+        "GUIDERAT",
+        "GUPFREQ",
+        "RUNSPEC",
+        "RUNSUM",
+        "SUMMARY",
+        "SUMTHIN",
+        "SURF",
+        "SURFACT",
+        "SURFACTW",
+        "SURFADDW",
+        "SURFADS",
+        "SURFCAPD",
+        "SURFESAL",
+        "SURFNUM",
+        "SURFOPTS",
+        "SURFROCK",
+        "SURFST",
+        "SURFSTES",
+        "SURFVISC",
+        "SURFWNUM",
+    } ;
+
+    static const std::regex user_defined_regex { "[ABCFGRSW]U[A-Z]+" } ;
+
+    const bool matched     { std::regex_match(keyword, user_defined_regex) } ;
+    const bool blacklisted { udq_blacklist.find(keyword) != udq_blacklist.end() } ;
+
+    return matched && !blacklisted;
 }

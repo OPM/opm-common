@@ -51,6 +51,7 @@ struct SummaryNode {
     constexpr static int default_number { std::numeric_limits<int>::min() };
 
     std::string unique_key() const;
+    bool is_user_defined() const;
 };
 
 } // namespace Opm::EclIO
