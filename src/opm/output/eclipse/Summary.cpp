@@ -1298,7 +1298,8 @@ inline std::vector<Opm::Well> find_wells( const Opm::Schedule& schedule,
 
     }
 
-    default:
+    case Opm::EclIO::SummaryNode::Category::Block:
+    case Opm::EclIO::SummaryNode::Category::Miscellaneous:
         return {};
     }
 }
@@ -1315,7 +1316,8 @@ bool need_wells(const Opm::EclIO::SummaryNode& node) {
        return true;
     case Opm::EclIO::SummaryNode::Category::Region:
         return std::regex_match(node.keyword, region_keyword_regex);
-    default:
+    case Opm::EclIO::SummaryNode::Category::Miscellaneous:
+    case Opm::EclIO::SummaryNode::Category::Block:
         return false;
     }
 }
