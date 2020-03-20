@@ -1710,7 +1710,7 @@ namespace Evaluator {
         Factory& operator=(const Factory&) = delete;
         Factory& operator=(Factory&&) = delete;
 
-        Descriptor create(const Opm::SummaryConfigNode&);
+        Descriptor create(const Opm::EclIO::SummaryNode&);
 
     private:
         const Opm::EclipseState& es_;
@@ -1718,7 +1718,7 @@ namespace Evaluator {
         const Opm::SummaryState& st_;
         const Opm::UDQConfig&    udq_;
 
-        const Opm::SummaryConfigNode* node_;
+        const Opm::EclIO::SummaryNode* node_;
 
         Opm::UnitSystem::measure paramUnit_;
         ofun paramFunction_;
@@ -1741,7 +1741,7 @@ namespace Evaluator {
         std::string userDefinedUnit() const;
     };
 
-    Factory::Descriptor Factory::create(const Opm::SummaryConfigNode& node)
+    Factory::Descriptor Factory::create(const Opm::EclIO::SummaryNode& node)
     {
         this->node_ = &node;
 
@@ -1825,18 +1825,18 @@ namespace Evaluator {
     {
         auto desc = Descriptor{};
 
-        desc.uniquekey = this->node_->uniqueNodeKey();
+        desc.uniquekey = this->node_->unique_key();
 
         return desc;
     }
 
     bool Factory::isBlockValue()
     {
-        auto pos = block_units.find(this->node_->keyword());
+        auto pos = block_units.find(this->node_->keyword);
         if (pos == block_units.end())
             return false;
 
-        if (! this->grid_.cellActive(this->node_->number() - 1))
+        if (! this->grid_.cellActive(this->node_->number - 1))
             // 'node_' is a block value, but it is configured in a
             // deactivated cell.  Don't create an evaluation function.
             return false;
@@ -1849,7 +1849,7 @@ namespace Evaluator {
 
     bool Factory::isRegionValue()
     {
-        auto pos = region_units.find(this->node_->keyword());
+        auto pos = region_units.find(this->node_->keyword);
         if (pos == region_units.end())
             return false;
 
@@ -1861,7 +1861,7 @@ namespace Evaluator {
 
     bool Factory::isGlobalProcessValue()
     {
-        auto pos = single_values_units.find(this->node_->keyword());
+        auto pos = single_values_units.find(this->node_->keyword);
         if (pos == single_values_units.end())
             return false;
 
@@ -1873,7 +1873,7 @@ namespace Evaluator {
 
     bool Factory::isFunctionRelation()
     {
-        auto pos = funs.find(this->node_->keyword());
+        auto pos = funs.find(this->node_->keyword);
         if (pos == funs.end())
             return false;
 
@@ -1885,7 +1885,7 @@ namespace Evaluator {
 
     bool Factory::isUserDefined()
     {
-        return this->node_->isUserDefined();
+        return this->node_->is_user_defined();
     }
 
     std::string Factory::functionUnitString() const
@@ -1893,7 +1893,7 @@ namespace Evaluator {
         const auto reg = Opm::out::RegionCache{};
 
         const fn_args args {
-            {}, "", 0.0, 0, std::max(0, this->node_->number()),
+            {}, "", 0.0, 0, std::max(0, this->node_->number),
             this->st_, {}, {}, reg, this->grid_,
             {}
         };
@@ -1910,7 +1910,7 @@ namespace Evaluator {
 
     std::string Factory::userDefinedUnit() const
     {
-        const auto& kw = this->node_->keyword();
+        const auto& kw = this->node_->keyword;
 
         return this->udq_.has_unit(kw)
             ?  this->udq_.unit(kw) : "?????";
@@ -2335,7 +2335,7 @@ configureSummaryInput(const EclipseState&  es,
                       const EclipseGrid&   grid,
                       const Schedule&      sched)
 {
-    const auto st = SummaryState {
+    const SummaryState st {
         std::chrono::system_clock::from_time_t(sched.getStartTime())
     };
 
@@ -2343,7 +2343,7 @@ configureSummaryInput(const EclipseState&  es,
         es, grid, st, sched.getUDQConfig(sched.size() - 1)
     };
 
-    auto unsuppkw = std::vector<SummaryConfigNode>{};
+    std::vector<SummaryConfigNode> unsuppkw {};
     for (const auto& node : sumcfg) {
         auto prmDescr = fact.create(node);
 
