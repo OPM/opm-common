@@ -25,24 +25,30 @@ namespace {
 
 constexpr bool use_number(Opm::EclIO::SummaryNode::Category category) {
     switch (category) {
-    case Opm::EclIO::SummaryNode::Category::Block:      [[fallthrough]];
-    case Opm::EclIO::SummaryNode::Category::Connection: [[fallthrough]];
-    case Opm::EclIO::SummaryNode::Category::Region:     [[fallthrough]];
+    case Opm::EclIO::SummaryNode::Category::Block:         [[fallthrough]];
+    case Opm::EclIO::SummaryNode::Category::Connection:    [[fallthrough]];
+    case Opm::EclIO::SummaryNode::Category::Region:        [[fallthrough]];
     case Opm::EclIO::SummaryNode::Category::Segment:
         return true;
-    default:
+    case Opm::EclIO::SummaryNode::Category::Field:         [[fallthrough]];
+    case Opm::EclIO::SummaryNode::Category::Group:         [[fallthrough]];
+    case Opm::EclIO::SummaryNode::Category::Miscellaneous: [[fallthrough]];
+    case Opm::EclIO::SummaryNode::Category::Well:
         return false;
     }
 }
 
 constexpr bool use_name(Opm::EclIO::SummaryNode::Category category) {
     switch (category) {
-    case Opm::EclIO::SummaryNode::Category::Connection: [[fallthrough]];
-    case Opm::EclIO::SummaryNode::Category::Group:      [[fallthrough]];
-    case Opm::EclIO::SummaryNode::Category::Segment:    [[fallthrough]];
+    case Opm::EclIO::SummaryNode::Category::Connection:    [[fallthrough]];
+    case Opm::EclIO::SummaryNode::Category::Group:         [[fallthrough]];
+    case Opm::EclIO::SummaryNode::Category::Segment:       [[fallthrough]];
     case Opm::EclIO::SummaryNode::Category::Well:
         return true;
-    default:
+    case Opm::EclIO::SummaryNode::Category::Block:         [[fallthrough]];
+    case Opm::EclIO::SummaryNode::Category::Field:         [[fallthrough]];
+    case Opm::EclIO::SummaryNode::Category::Miscellaneous: [[fallthrough]];
+    case Opm::EclIO::SummaryNode::Category::Region:
         return false;
     }
 }
