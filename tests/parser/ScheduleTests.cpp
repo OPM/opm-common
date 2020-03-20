@@ -3615,3 +3615,148 @@ DATES             -- 4
 
     gr.compute("XYZ",1, 1.0, oil_pot, gas_pot, wat_pot);
 }
+
+BOOST_AUTO_TEST_CASE(Injection_Control_Mode_From_Well) {
+    const auto deck = ::Opm::Parser{}.parseString(R"(RUNSPEC
+DIMENS
+  10 10 10
+/
+
+START             -- 0
+20 MAR 2020 /
+
+GRID
+
+DXV
+  10*100 /
+DYV
+  10*100 /
+DZV
+  10*1 /
+
+TOPS
+  100*2000 /
+
+PERMX
+  1000*300 /
+PERMY
+  1000*300 /
+PERMZ
+  1000*3 /
+
+PORO
+  1000*0.25 /
+
+SCHEDULE
+WELSPECS
+     'W1'    'G1'   1 2  3.33       'OIL'  7*/
+     'W2'    'G2'   1 3  3.33       'OIL'  3*  YES /
+     'W3'    'G3'   1 4  3.92       'OIL'  3*  NO /
+     'W4'    'G3'   2 2  3.92       'OIL'  3*  NO /
+     'W5'    'G3'   2 3  3.92       'OIL'  3*  NO /
+     'W6'    'G3'   2 4  3.92       'OIL'  3*  NO /
+     'W7'    'G3'   3 2  3.92       'OIL'  3*  NO /
+/
+
+WCONINJE
+  'W1' 'WATER'  'OPEN'  'GRUP' /
+  'W2' 'GAS'  'OPEN'  'RATE'  200  1*  450.0 /
+  'W3' 'OIL'  'OPEN'  'RATE'  200  1*  450.0 /
+  'W4' 'WATER'  'OPEN'  'RATE'  200  1*  450.0 /
+  'W5' 'WATER'  'OPEN'  'RESV'  200  175  450.0 /
+  'W6' 'GAS'  'OPEN'  'BHP'  200  1*  450.0 /
+  'W7' 'GAS'  'OPEN'  'THP'  200  1*  450.0 150 /
+/
+
+TSTEP
+  30*30 /
+
+END
+)");
+
+    const auto st = ::Opm::SummaryState{ std::chrono::system_clock::now() };
+    const auto es = ::Opm::EclipseState{ deck };
+    const auto sched = ::Opm::Schedule{ deck, es };
+
+    BOOST_CHECK_EQUAL(eclipseControlMode(sched.getWell("W1", 10), st), -1);
+    BOOST_CHECK_EQUAL(eclipseControlMode(sched.getWell("W2", 10), st), 3);
+    BOOST_CHECK_EQUAL(eclipseControlMode(sched.getWell("W3", 10), st), 1);
+    BOOST_CHECK_EQUAL(eclipseControlMode(sched.getWell("W4", 10), st), 2);
+    BOOST_CHECK_EQUAL(eclipseControlMode(sched.getWell("W5", 10), st), 5);
+    BOOST_CHECK_EQUAL(eclipseControlMode(sched.getWell("W6", 10), st), 7);
+    BOOST_CHECK_EQUAL(eclipseControlMode(sched.getWell("W7", 10), st), 6);
+}
+
+BOOST_AUTO_TEST_CASE(Production_Control_Mode_From_Well) {
+    const auto deck = ::Opm::Parser{}.parseString(R"(RUNSPEC
+DIMENS
+  10 10 10
+/
+
+START             -- 0
+20 MAR 2020 /
+
+GRID
+
+DXV
+  10*100 /
+DYV
+  10*100 /
+DZV
+  10*1 /
+
+TOPS
+  100*2000 /
+
+PERMX
+  1000*300 /
+PERMY
+  1000*300 /
+PERMZ
+  1000*3 /
+
+PORO
+  1000*0.25 /
+
+SCHEDULE
+WELSPECS
+     'W1'    'G1'   1 2  3.33       'OIL'  7*/
+     'W2'    'G2'   1 3  3.33       'OIL'  3*  YES /
+     'W3'    'G3'   1 4  3.92       'OIL'  3*  NO /
+     'W4'    'G3'   2 2  3.92       'OIL'  3*  NO /
+     'W5'    'G3'   2 3  3.92       'OIL'  3*  NO /
+     'W6'    'G3'   2 4  3.92       'OIL'  3*  NO /
+     'W7'    'G3'   3 2  3.92       'OIL'  3*  NO /
+     'W8'    'G3'   3 3  3.92       'OIL'  3*  NO /
+/
+
+WCONPROD
+  'W1' 'OPEN'  'GRUP' /
+  'W2' 'OPEN'  'ORAT' 1000.0 /
+  'W3' 'OPEN'  'WRAT' 1000.0 250.0 /
+  'W4' 'OPEN'  'GRAT' 1000.0 250.0 30.0e3 /
+  'W5' 'OPEN'  'LRAT' 1000.0 250.0 30.0e3 1500.0 /
+  'W6' 'OPEN'  'RESV' 1000.0 250.0 30.0e3 1500.0 314.15 /
+  'W7' 'OPEN'  'BHP' 1000.0 250.0 30.0e3 1500.0 314.15 27.1828 /
+  'W8' 'OPEN'  'THP' 1000.0 250.0 30.0e3 1500.0 314.15 27.1828 31.415 /
+/
+
+TSTEP
+  30*30 /
+
+END
+)");
+
+    const auto st = ::Opm::SummaryState{ std::chrono::system_clock::now() };
+    const auto es = ::Opm::EclipseState{ deck };
+    const auto sched = ::Opm::Schedule{ deck, es };
+
+    BOOST_CHECK_EQUAL(eclipseControlMode(sched.getWell("W1", 10), st), -1);
+    BOOST_CHECK_EQUAL(eclipseControlMode(sched.getWell("W2", 10), st), 1);
+    BOOST_CHECK_EQUAL(eclipseControlMode(sched.getWell("W3", 10), st), 2);
+    BOOST_CHECK_EQUAL(eclipseControlMode(sched.getWell("W4", 10), st), 3);
+    BOOST_CHECK_EQUAL(eclipseControlMode(sched.getWell("W5", 10), st), 4);
+    BOOST_CHECK_EQUAL(eclipseControlMode(sched.getWell("W6", 10), st), 5);
+    BOOST_CHECK_EQUAL(eclipseControlMode(sched.getWell("W7", 10), st), 7);
+    BOOST_CHECK_EQUAL(eclipseControlMode(sched.getWell("W8", 10), st), 6);
+}
