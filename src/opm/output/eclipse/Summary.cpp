@@ -147,6 +147,16 @@ namespace {
             { "WGVIR", Opm::EclIO::SummaryNode::Type::Rate     },
             { "WWVIR", Opm::EclIO::SummaryNode::Type::Rate     },
         };
+        static const std::vector<std::string> extra_group_vectors {
+            "GMCTG",
+            "GMCTP",
+            "GMCTW",
+        };
+        static const std::vector<std::string> extra_field_vectors {
+            "FMCTG",
+            "FMCTP",
+            "FMCTW",
+        };
 
         auto makeEntities = [&restartVectors, &entities]
             (const char         kwpref,
@@ -168,35 +178,19 @@ namespace {
 
         for (const auto& grp_name : sched.groupNames()) {
             if (grp_name != "FIELD") {
-                makeEntities('G', SN::Category::Group, grp_name);
+                makeEntities('G', Opm::EclIO::SummaryNode::Category::Group, grp_name);
 
-                entities.emplace_back("GMCTP", SN::Category::Group, ::Opm::Location());
-                entities.back().namedEntity(grp_name)
-                .parameterType(SN::Type::Mode);
-
-                entities.emplace_back("GMCTW", SN::Category::Group, ::Opm::Location());
-                entities.back().namedEntity(grp_name)
-                .parameterType(SN::Type::Mode);
-
-                entities.emplace_back("GMCTG", SN::Category::Group, ::Opm::Location());
-                entities.back().namedEntity(grp_name)
-                .parameterType(SN::Type::Mode);
+                for (const auto &group_vector : extra_group_vectors) {
+                    entities.push_back({ group_vector, Opm::EclIO::SummaryNode::Category::Group, Opm::EclIO::SummaryNode::Type::Mode, grp_name, Opm::EclIO::SummaryNode::default_number });
+                }
             }
         }
 
         makeEntities('F', Opm::EclIO::SummaryNode::Category::Field, "FIELD");
 
-        entities.emplace_back("FMCTP", SN::Category::Field, ::Opm::Location());
-        entities.back().namedEntity("FIELD")
-        .parameterType(SN::Type::Mode);
-
-        entities.emplace_back("FMCTW", SN::Category::Field, ::Opm::Location());
-        entities.back().namedEntity("FIELD")
-        .parameterType(SN::Type::Mode);
-
-        entities.emplace_back("FMCTG", SN::Category::Field, ::Opm::Location());
-        entities.back().namedEntity("FIELD")
-        .parameterType(SN::Type::Mode);
+        for (const auto &field_vector : extra_field_vectors) {
+            entities.push_back({ field_vector, Opm::EclIO::SummaryNode::Category::Group, Opm::EclIO::SummaryNode::Type::Mode, "FIELD", Opm::EclIO::SummaryNode::default_number });
+        }
 
         return entities;
     }
@@ -1498,7 +1492,7 @@ namespace Evaluator {
                 // wells apply at this sim_step.  Nothing to do.
                 return;
 
-            std::string group_name = this->node_.category() == Opm::SummaryConfigNode::Category::Group ? this->node_.namedEntity() : "";
+            std::string group_name = this->node_.category == Opm::SummaryConfigNode::Category::Group ? this->node_.wgname : "";
 
             EfficiencyFactor efac{};
             efac.setFactors(this->node_, input.sched, wells, sim_step);
