@@ -1488,9 +1488,9 @@ namespace Evaluator {
     class FunctionRelation : public Base
     {
     public:
-        explicit FunctionRelation(Opm::SummaryConfigNode node, ofun fcn)
-            : node_(std::move(node))
-            , fcn_ (std::move(fcn))
+        explicit FunctionRelation(const Opm::EclIO::SummaryNode& node, const ofun& fcn)
+            : node_(node)
+            , fcn_ (fcn)
         {}
 
         void update(const std::size_t       sim_step,
@@ -1519,7 +1519,7 @@ namespace Evaluator {
 
             const fn_args args {
                 wells, group_name, stepSize, static_cast<int>(sim_step),
-                std::max(0, this->node_.number()),
+                std::max(0, this->node_.number),
                 st, simRes.wellSol, simRes.groupSol, input.reg, input.grid,
                 std::move(efac.factors)
             };
@@ -1531,16 +1531,15 @@ namespace Evaluator {
         }
 
     private:
-        Opm::SummaryConfigNode node_;
-        ofun             fcn_;
+        const Opm::EclIO::SummaryNode node_;
+        const ofun                    fcn_;
     };
 
     class BlockValue : public Base
     {
     public:
-        explicit BlockValue(Opm::SummaryConfigNode               node,
-                            const Opm::UnitSystem::measure m)
-            : node_(std::move(node))
+        explicit BlockValue(const Opm::EclIO::SummaryNode& node, const Opm::UnitSystem::measure& m)
+            : node_(node)
             , m_   (m)
         {}
 
@@ -1560,21 +1559,20 @@ namespace Evaluator {
         }
 
     private:
-        Opm::SummaryConfigNode node_;
-        Opm::UnitSystem::measure m_;
+        const Opm::EclIO::SummaryNode  node_;
+        const Opm::UnitSystem::measure m_;
 
         Opm::out::Summary::BlockValues::key_type lookupKey() const
         {
-            return { this->node_.keyword(), this->node_.number() };
+            return { this->node_.keyword, this->node_.number };
         }
     };
 
     class RegionValue : public Base
     {
     public:
-        explicit RegionValue(Opm::SummaryConfigNode               node,
-                             const Opm::UnitSystem::measure m)
-            : node_(std::move(node))
+        explicit RegionValue(const Opm::EclIO::SummaryNode node, const Opm::UnitSystem::measure& m)
+            : node_(node)
             , m_   (m)
         {}
 
@@ -1584,10 +1582,10 @@ namespace Evaluator {
                     const SimulatorResults& simRes,
                     Opm::SummaryState&      st) const override
         {
-            if (this->node_.number() < 0)
+            if (this->node_.number < 0)
                 return;
 
-            auto xPos = simRes.region.find(this->node_.keyword());
+            auto xPos = simRes.region.find(this->node_.keyword);
             if (xPos == simRes.region.end())
                 return;
 
@@ -1602,21 +1600,20 @@ namespace Evaluator {
         }
 
     private:
-        Opm::SummaryConfigNode node_;
-        Opm::UnitSystem::measure m_;
+        const Opm::EclIO::SummaryNode  node_;
+        const Opm::UnitSystem::measure m_;
 
         std::vector<double>::size_type index() const
         {
-            return this->node_.number() - 1;
+            return this->node_.number - 1;
         }
     };
 
     class GlobalProcessValue : public Base
     {
     public:
-        explicit GlobalProcessValue(Opm::SummaryConfigNode               node,
-                                    const Opm::UnitSystem::measure m)
-            : node_(std::move(node))
+        explicit GlobalProcessValue(const Opm::EclIO::SummaryNode& node, const Opm::UnitSystem::measure& m)
+            : node_(node)
             , m_   (m)
         {}
 
@@ -1626,7 +1623,7 @@ namespace Evaluator {
                     const SimulatorResults& simRes,
                     Opm::SummaryState&      st) const override
         {
-            auto xPos = simRes.single.find(this->node_.keyword());
+            auto xPos = simRes.single.find(this->node_.keyword);
             if (xPos == simRes.single.end())
                 return;
 
@@ -1637,8 +1634,8 @@ namespace Evaluator {
         }
 
     private:
-        Opm::SummaryConfigNode node_;
-        Opm::UnitSystem::measure m_;
+        const Opm::EclIO::SummaryNode  node_;
+        const Opm::UnitSystem::measure m_;
     };
 
     class UserDefinedValue : public Base
