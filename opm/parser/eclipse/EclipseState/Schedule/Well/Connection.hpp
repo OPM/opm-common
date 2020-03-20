@@ -81,6 +81,7 @@ namespace RestartIO {
 
         Connection();
         Connection(int i, int j , int k ,
+                   std::size_t global_index,
                    int complnum,
                    double depth,
                    State state,
@@ -108,6 +109,7 @@ namespace RestartIO {
                    double r0,
                    double skinFactor,
                    const std::array<int,3>& IJK,
+                   std::size_t global_index,
                    CTFKind kind,
                    std::size_t seqIndex,
                    double segDistStart,
@@ -124,6 +126,7 @@ namespace RestartIO {
         int getI() const;
         int getJ() const;
         int getK() const;
+        std::size_t global_index() const;
         State state() const;
         Direction dir() const;
         double depth() const;
@@ -175,6 +178,7 @@ namespace RestartIO {
             serializer(m_r0);
             serializer(m_skin_factor);
             serializer(ijk);
+            serializer(m_global_index);
             serializer(m_ctfkind);
             serializer(m_seqIndex);
             serializer(m_segDistStart);
@@ -199,6 +203,7 @@ namespace RestartIO {
 
         std::array<int,3> ijk;
         CTFKind m_ctfkind;
+        std::size_t m_global_index;
         std::size_t m_seqIndex;
         double m_segDistStart;
         double m_segDistEnd;

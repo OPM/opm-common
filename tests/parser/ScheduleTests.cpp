@@ -3316,6 +3316,7 @@ BOOST_AUTO_TEST_CASE(WELL_STATIC) {
     BOOST_CHECK_EQUAL(connections.size(), 0);
     auto c2 = std::make_shared<WellConnections>(Connection::Order::TRACK, 1,1);
     c2->addConnection(1,1,1,
+                      grid1.getGlobalIndex(1,1,1),
                       100,
                       Connection::State::OPEN,
                       10,
