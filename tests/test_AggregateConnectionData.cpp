@@ -793,15 +793,15 @@ BOOST_AUTO_TEST_CASE(InactiveCell) {
         }
     }
 
-    // The XCON data consults the open/shut status of the connection. That
-    // should already be correct, i.e. shut, for an inactive cell. Hence no
-    // change in the XCON vector.
     {
         const auto xconn0 = conn0.getXConn();
         const auto xconn1 = conn1.getXConn();
         for (std::size_t conn_index = 0; conn_index < num_test_connections; conn_index++) {
             std::size_t offset1 = conn_index * ih.nxconz;
             std::size_t offset0 = offset1;
+
+            if (conn_index >= 2)
+                offset0 += ih.nxconz;
 
             for (std::size_t elm_index = 0; elm_index < ih.nxconz; elm_index++)
                 BOOST_CHECK_EQUAL(xconn1[offset1 + elm_index], xconn0[offset0 + elm_index]);
