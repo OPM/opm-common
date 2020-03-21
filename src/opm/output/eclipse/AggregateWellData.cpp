@@ -145,81 +145,6 @@ namespace {
             return well.productionControls(st).vfp_table_number;
         }
 
-        int ctrlMode(const Opm::Well& well, const Opm::SummaryState& st)
-        {
-            using WMCtrlVal = VI::IWell::Value::WellCtrlMode;
-
-            if (well.isInjector()) {
-                const auto& controls = well.injectionControls(st);
-
-                const auto wmctl = controls.cmode;
-                const auto wtype = controls.injector_type;
-
-                using CMode = ::Opm::Well::InjectorCMode;
-                using WType = ::Opm::InjectorType;
-
-                switch (wmctl) {
-                case CMode::RATE: {
-                    switch (wtype) {
-                    case WType::OIL:   return WMCtrlVal::OilRate;
-                    case WType::WATER: return WMCtrlVal::WatRate;
-                    case WType::GAS:   return WMCtrlVal::GasRate;
-                    case WType::MULTI: return WMCtrlVal::WMCtlUnk;
-                    }
-                }
-                    break;
-
-                case CMode::RESV: return WMCtrlVal::ResVRate;
-                case CMode::THP:  return WMCtrlVal::THP;
-                case CMode::BHP:  return WMCtrlVal::BHP;
-                case CMode::GRUP: return WMCtrlVal::Group;
-
-                default:
-                {
-                    const auto stat = well.getStatus();
-
-                    using WStat = ::Opm::Well::Status;
-
-                    if (stat == WStat::SHUT) {
-                        return WMCtrlVal::Shut;
-                    }
-                }
-                return WMCtrlVal::WMCtlUnk;
-                }
-            }
-            else if (well.isProducer()) {
-                const auto& controls = well.productionControls(st);
-
-                using CMode = ::Opm::Well::ProducerCMode;
-
-                switch (controls.cmode) {
-                case CMode::ORAT: return WMCtrlVal::OilRate;
-                case CMode::WRAT: return WMCtrlVal::WatRate;
-                case CMode::GRAT: return WMCtrlVal::GasRate;
-                case CMode::LRAT: return WMCtrlVal::LiqRate;
-                case CMode::RESV: return WMCtrlVal::ResVRate;
-                case CMode::THP:  return WMCtrlVal::THP;
-                case CMode::BHP:  return WMCtrlVal::BHP;
-                case CMode::CRAT: return WMCtrlVal::CombRate;
-                case CMode::GRUP: return WMCtrlVal::Group;
-
-                default:
-                {
-                    const auto stat = well.getStatus();
-
-                    using WStat = ::Opm::Well::Status;
-
-                    if (stat == WStat::SHUT) {
-                        return WMCtrlVal::Shut;
-                    }
-                }
-                return WMCtrlVal::WMCtlUnk;
-                }
-            }
-
-            return WMCtrlVal::WMCtlUnk;
-        }
-
         bool wellControlDefined(const Opm::data::Well& xw)
         {
             using PMode = ::Opm::Well::ProducerCMode;
@@ -233,56 +158,15 @@ namespace {
 
         int ctrlMode(const Opm::Well& well, const Opm::data::Well& xw)
         {
-            using PMode = ::Opm::Well::ProducerCMode;
-            using IMode = ::Opm::Well::InjectorCMode;
-            using Val   = VI::IWell::Value::WellCtrlMode;
-
             const auto& curr = xw.current_control;
 
             if (curr.isProducer) {
-                switch (curr.prod) {
-                case PMode::ORAT: return Val::OilRate;
-                case PMode::WRAT: return Val::WatRate;
-                case PMode::GRAT: return Val::GasRate;
-                case PMode::LRAT: return Val::LiqRate;
-                case PMode::RESV: return Val::ResVRate;
-                case PMode::THP:  return Val::THP;
-                case PMode::BHP:  return Val::BHP;
-                case PMode::CRAT: return Val::CombRate;
-                case PMode::GRUP: return Val::Group;
-
-                default:
-                    if (well.getStatus() == ::Opm::Well::Status::SHUT) {
-                        return Val::Shut;
-                    }
-                }
+                return ::Opm::eclipseControlMode(curr.prod, well.getStatus());
             }
             else { // injector
-                using IType = ::Opm::InjectorType;
-
-                switch (curr.inj) {
-                case IMode::RATE: {
-                    switch (well.injectorType()) {
-                    case IType::OIL:   return Val::OilRate;
-                    case IType::WATER: return Val::WatRate;
-                    case IType::GAS:   return Val::GasRate;
-                    case IType::MULTI: return Val::WMCtlUnk;
-                    }}
-                    break;
-
-                case IMode::RESV: return Val::ResVRate;
-                case IMode::THP:  return Val::THP;
-                case IMode::BHP:  return Val::BHP;
-                case IMode::GRUP: return Val::Group;
-
-                default:
-                    if (well.getStatus() == ::Opm::Well::Status::SHUT) {
-                        return Val::Shut;
-                    }
-                }
+                return ::Opm::eclipseControlMode(curr.inj, well.injectorType(),
+                                                 well.getStatus());
             }
-
-            return Val::WMCtlUnk;
         }
 
         int compOrder(const Opm::Well& well)
@@ -370,11 +254,11 @@ namespace {
             iWell[Ix::item32] =    7;
             iWell[Ix::item48] = -  1;
 
-            // Deliberate misrepresentation.  Function 'ctrlMode()' returns
-            // the target control mode requested in the simulation deck.
-            // This item is supposed to be the well's actual, active target
-            // control mode in the simulator.
-            setCurrentControl(well, ctrlMode(well, st), iWell);
+            // Deliberate misrepresentation.  Function 'eclipseControlMode'
+            // returns the target control mode requested in the simulation
+            // deck.  This item is supposed to be the well's actual, active
+            // target control mode in the simulator.
+            setCurrentControl(well, eclipseControlMode(well, st), iWell);
 
             // Multi-segmented well information
             iWell[Ix::MsWID] = 0;  // MS Well ID (0 or 1..#MS wells)

@@ -245,8 +245,8 @@ static data::Wells result_wells() {
         { { segment.segNumber, segment } },
         data::CurrentControl{}
     };
-    well1.current_control.isProducer = false;
-    well1.current_control.inj =::Opm::Well::InjectorCMode::BHP;
+    well1.current_control.isProducer = true;
+    well1.current_control.prod = ::Opm::Well::ProducerCMode::THP;
 
     using SegRes = decltype(well1.segments);
     using Ctrl = data::CurrentControl;
@@ -255,7 +255,8 @@ static data::Wells result_wells() {
     well2.current_control.prod = ::Opm::Well::ProducerCMode::ORAT;
 
     data::Well well3 { rates3, 2.1 * ps, 2.2 * ps, 2.3 * ps, 3, { {well3_comp1} }, SegRes{}, Ctrl{} };
-    well2.current_control.prod = ::Opm::Well::ProducerCMode::RESV;
+    well3.current_control.isProducer = false;
+    well3.current_control.inj = ::Opm::Well::InjectorCMode::BHP;
 
     data::Well well6 { rates6, 2.1 * ps, 2.2 * ps, 2.3 * ps, 3, { {well6_comp1} }, SegRes{}, Ctrl{} };
     well6.current_control.isProducer = false;

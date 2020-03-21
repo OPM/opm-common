@@ -20,6 +20,7 @@
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/io/eclipse/rst/well.hpp>
+#include <opm/output/eclipse/VectorItems/well.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/W.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/updatingConnectionsWithSegments.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
@@ -1370,4 +1371,78 @@ bool Well::operator==(const Well& data) const {
            this->getInjectionProperties() == data.getInjectionProperties();
 }
 
+}
+
+int Opm::eclipseControlMode(const Opm::Well::InjectorCMode imode,
+                            const Opm::InjectorType        itype,
+                            const Opm::Well::Status        wellStatus)
+{
+    using IMode = ::Opm::Well::InjectorCMode;
+    using Val   = ::Opm::RestartIO::Helpers::VectorItems::IWell::Value::WellCtrlMode;
+
+    using IType = ::Opm::InjectorType;
+
+    switch (imode) {
+        case IMode::RATE: {
+            switch (itype) {
+            case IType::OIL:   return Val::OilRate;
+            case IType::WATER: return Val::WatRate;
+            case IType::GAS:   return Val::GasRate;
+            case IType::MULTI: return Val::WMCtlUnk;
+            }}
+            break;
+
+        case IMode::RESV: return Val::ResVRate;
+        case IMode::THP:  return Val::THP;
+        case IMode::BHP:  return Val::BHP;
+        case IMode::GRUP: return Val::Group;
+
+        default:
+            if (wellStatus == ::Opm::Well::Status::SHUT) {
+                return Val::Shut;
+            }
+    }
+
+    return Val::WMCtlUnk;
+}
+
+int Opm::eclipseControlMode(const Opm::Well::ProducerCMode pmode,
+                            const Opm::Well::Status        wellStatus)
+{
+    using PMode = ::Opm::Well::ProducerCMode;
+    using Val   = ::Opm::RestartIO::Helpers::VectorItems::IWell::Value::WellCtrlMode;
+
+    switch (pmode) {
+        case PMode::ORAT: return Val::OilRate;
+        case PMode::WRAT: return Val::WatRate;
+        case PMode::GRAT: return Val::GasRate;
+        case PMode::LRAT: return Val::LiqRate;
+        case PMode::RESV: return Val::ResVRate;
+        case PMode::THP:  return Val::THP;
+        case PMode::BHP:  return Val::BHP;
+        case PMode::CRAT: return Val::CombRate;
+        case PMode::GRUP: return Val::Group;
+
+        default:
+            if (wellStatus == ::Opm::Well::Status::SHUT) {
+                return Val::Shut;
+            }
+    }
+
+    return Val::WMCtlUnk;
+}
+
+int Opm::eclipseControlMode(const Well&         well,
+                            const SummaryState& st)
+{
+    if (well.isProducer()) {
+        const auto& ctrl = well.productionControls(st);
+
+        return eclipseControlMode(ctrl.cmode, well.getStatus());
+    }
+    else { // Injector
+        const auto& ctrl = well.injectionControls(st);
+
+        return eclipseControlMode(ctrl.cmode, well.injectorType(), well.getStatus());
+    }
 }
