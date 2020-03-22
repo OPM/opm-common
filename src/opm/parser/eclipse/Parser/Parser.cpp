@@ -22,6 +22,10 @@
 #include <iterator>
 #include <iomanip>
 #include <iostream>
+#include <stack>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include <opm/common/utility/FileSystem.hpp>
 

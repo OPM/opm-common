@@ -21,11 +21,15 @@
 #define OPM_PARSER_HPP
 
 #include <iosfwd>
+#include <list>
 #include <map>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
-#include <list>
+
+#include <stddef.h>
+
 #include <opm/common/utility/FileSystem.hpp>
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
