@@ -168,6 +168,12 @@ BOOST_AUTO_TEST_CASE(TestActions) {
 
         Opm::Action::ActionX action3("NAME3", 1000000, 0, asTimeT(TimeStampUTC(TimeStampUTC::YMD{ 2000, 7, 1 })) );
         config.add(action3);
+
+        Opm::Action::PyAction py_action1("PYTHON1", Opm::Action::PyAction::RunCount::single, "import sys");
+        config.add(py_action1);
+
+        Opm::Action::PyAction py_action2("PYTHON2", Opm::Action::PyAction::RunCount::single, "import sys");
+        config.add(py_action2);
     }
     const Opm::Action::ActionX& action2 = config.get("NAME");
     // The action2 instance has an empty condition, so it will never evaluate to true.
@@ -182,6 +188,10 @@ BOOST_AUTO_TEST_CASE(TestActions) {
         BOOST_CHECK( !ptr->eval(asTimeT(TimeStampUTC(TimeStampUTC::YMD{ 2000, 8, 7 })), context));
     }
     BOOST_CHECK(!action2.eval(asTimeT(TimeStampUTC(TimeStampUTC::YMD{ 2000, 8, 7 })), context));
+
+
+    const auto& python_actions = config.pending_python();
+    BOOST_CHECK_EQUAL(python_actions.size(), 2);
 }
 
 
