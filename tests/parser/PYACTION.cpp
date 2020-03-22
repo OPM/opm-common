@@ -17,18 +17,21 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "config.h"
+#include <iostream>
+#include <memory>
 
 #define BOOST_TEST_MODULE PY_ACTION_TESTER
 #include <boost/test/unit_test.hpp>
-#include <iostream>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/P.hpp>
+#include <opm/parser/eclipse/Python/Python.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/PyAction.hpp>
 
 using namespace Opm;
 
 BOOST_AUTO_TEST_CASE(ParsePYACTION) {
     Parser parser;
+    auto python = std::make_shared<Python>();
     auto deck = parser.parseFile("PYACTION.DATA");
 
     auto keyword = deck.getKeyword<ParserKeywords::PYACTION>(0);
@@ -36,23 +39,34 @@ BOOST_AUTO_TEST_CASE(ParsePYACTION) {
     const auto& record1 = keyword.getRecord(1);
 
     auto run_count = Action::PyAction::from_string(record0.getItem(1).get<std::string>(0));
-    std::string code = Action::PyAction::load(deck.getInputPath(), record1.getItem(0).get<std::string>(0));
-
-    std::string literal_code =R"(from math import sin
-import random
-print("sin(0) = {}".format(sin(0)))
-#---
-if random.random() > 0.25:
-    print("Large outcome")
-else:
-    print("Small result")
-A = 100
-B = A / 10
-C = B * 20
-)";
-
-    Action::PyAction pyaction("ACT1", run_count, code);
+    const std::string& ok_module = deck.makeDeckPath(record1.getItem(0).get<std::string>(0));
+    Action::PyAction pyaction(python, "ACT1", run_count, ok_module);
     BOOST_CHECK_EQUAL(pyaction.name(), "ACT1");
-    BOOST_CHECK_EQUAL(pyaction.code(), literal_code);
-    BOOST_CHECK(pyaction.run_count() == Action::PyAction::RunCount::single);
 }
+
+
+#ifdef EMBEDDED_PYTHON
+BOOST_AUTO_TEST_CASE(ParsePYACTION_Modules) {
+    Parser parser;
+    auto python = std::make_shared<Python>();
+    auto deck = parser.parseFile("PYACTION.DATA");
+    auto keyword = deck.getKeyword<ParserKeywords::PYACTION>(0);
+    const auto& record0 = keyword.getRecord(0);
+    const auto& record1 = keyword.getRecord(1);
+
+    const auto& name = record0.getItem(0).get<std::string>(0);
+    auto run_count = Action::PyAction::from_string(record0.getItem(1).get<std::string>(0));
+    const std::string& ok_module = deck.makeDeckPath(record1.getItem(0).get<std::string>(0));
+    Action::PyAction pyaction(python, "ACT1", run_count, ok_module);
+
+    const std::string& broken_module = deck.makeDeckPath("action_missing_run.py");
+    BOOST_CHECK_THROW(Action::PyAction(python , "ACT2", run_count, broken_module), std::runtime_error);
+
+    const std::string& broken_module2 = deck.makeDeckPath("action_syntax_error.py");
+    BOOST_CHECK_THROW(Action::PyAction(python , "ACT2", run_count, broken_module2), std::runtime_error);
+
+    const std::string& missing_module = deck.makeDeckPath("no_such_module.py");
+    BOOST_CHECK_THROW(Action::PyAction(python , "ACT2", run_count, missing_module), std::invalid_argument);
+}
+#endif
+

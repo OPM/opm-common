@@ -47,7 +47,7 @@ size_t Actions::size() const {
 
 
 bool Actions::empty() const {
-    return this->actions.empty();
+    return this->actions.empty() && this->pyactions.empty();
 }
 
 

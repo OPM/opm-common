@@ -35,7 +35,6 @@
 
 #include <pybind11/embed.h>
 namespace py = pybind11;
-
 #endif
 
 
@@ -52,10 +51,12 @@ public:
     explicit PythonInterp(bool enable);
     bool exec(const std::string& python_code);
     bool exec(const std::string& python_code, const Parser& parser, Deck& deck);
-    bool exec(const Action::PyAction& py_action, EclipseState& ecl_state, Schedule& schedule, std::size_t report_step, SummaryState& st);
     static bool supported() { return true; };
     explicit operator bool() const { return bool(this->guard); }
 private:
+    void load_module(const std::string& python_file);
+    bool exec(const std::string& python_code, py::module& context);
+
     std::unique_ptr<py::scoped_interpreter> guard;
 };
 
@@ -73,7 +74,7 @@ public:
         return this->fail();
     };
 
-    bool exec(const std::string& /* python_code*/ , const Parser& /* parser */, Deck& /* deck */) {
+    bool exec(const std::string&, const Parser&, Deck&) {
         return this->fail();
     }
 

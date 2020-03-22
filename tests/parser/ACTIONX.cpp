@@ -27,7 +27,6 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <opm/common/utility/TimeService.hpp>
-#include <opm/parser/eclipse/Python/Python.hpp>
 
 #include <opm/common/OpmLog/Location.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
@@ -153,6 +152,7 @@ BOOST_AUTO_TEST_CASE(TestActions) {
     Opm::Action::Context context(st);
     Opm::Action::Actions config;
     std::vector<std::string> matching_wells;
+    auto python = std::make_shared<Opm::Python>();
     BOOST_CHECK_EQUAL(config.size(), 0);
     BOOST_CHECK(config.empty());
 
@@ -172,10 +172,10 @@ BOOST_AUTO_TEST_CASE(TestActions) {
         Opm::Action::ActionX action3("NAME3", 1000000, 0, asTimeT(TimeStampUTC(TimeStampUTC::YMD{ 2000, 7, 1 })) );
         config.add(action3);
 
-        Opm::Action::PyAction py_action1("PYTHON1", Opm::Action::PyAction::RunCount::single, "import sys");
+        Opm::Action::PyAction py_action1(python, "PYTHON1", Opm::Action::PyAction::RunCount::single, "act1.py");
         config.add(py_action1);
 
-        Opm::Action::PyAction py_action2("PYTHON2", Opm::Action::PyAction::RunCount::single, "import sys");
+        Opm::Action::PyAction py_action2(python, "PYTHON2", Opm::Action::PyAction::RunCount::single, "act1.py");
         config.add(py_action2);
     }
     const Opm::Action::ActionX& action2 = config.get("NAME");

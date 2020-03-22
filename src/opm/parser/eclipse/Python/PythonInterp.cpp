@@ -21,9 +21,12 @@
 #ifdef EMBEDDED_PYTHON
 #include <pybind11/embed.h>
 #include <pybind11/pybind11.h>
+#include <pybind11/pytypes.h>
+#include <pybind11/pytypes.h>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/common/utility/FileSystem.hpp>
 
 #include "python/cxx/export.hpp"
 #include "PythonInterp.hpp"
@@ -32,35 +35,35 @@
 namespace py = pybind11;
 namespace Opm {
 
-OPM_EMBEDDED_MODULE(context, module) {
+
+/*
+  OPM_EMBEDDED_MODULE create a Python of all the Python/C++ classes which are
+  generated in the python::common::export_all() function in the wrapping code.
+*/
+
+OPM_EMBEDDED_MODULE(opm_embedded, module) {
     python::common::export_all(module);
 }
+
+
+bool PythonInterp::exec(const std::string& python_code, py::module& context) {
+    py::bool_ def_result = false;
+    context.attr("result") = &def_result;
+    py::exec(python_code, py::globals() , py::dict(py::arg("context") = context));
+    const auto& result = static_cast<py::bool_>(context.attr("result"));
+    return result;
+}
+
 
 
 bool PythonInterp::exec(const std::string& python_code, const Parser& parser, Deck& deck) {
     if (!this->guard)
         throw std::logic_error("Python interpreter not enabled");
 
-    auto context = py::module::import("context");
+    auto context = py::module::import("opm_embedded");
     context.attr("deck") = &deck;
     context.attr("parser") = &parser;
-    py::exec(python_code, py::globals(), py::dict(py::arg("context") = context));
-    return true;
-}
-
-
-bool PythonInterp::exec(const Action::PyAction& py_action, EclipseState& ecl_state, Schedule& schedule, std::size_t report_step, SummaryState& st) {
-    if (!this->guard)
-        throw std::logic_error("Python interpreter not enabled");
-
-    auto context = py::module::import("context");
-    context.attr("schedule") = &schedule;
-    context.attr("sim") = &st;
-    context.attr("state") = &ecl_state;
-    context.attr("report_step") = report_step;
-    context.attr("storage") = static_cast<py::dict*>(py_action.storage());
-    py::exec(py_action.code(), py::globals(), py::dict(py::arg("context") = context));
-    return true;
+    return this->exec(python_code, context);
 }
 
 
@@ -69,8 +72,8 @@ bool PythonInterp::exec(const std::string& python_code) {
     if (!this->guard)
         throw std::logic_error("Python interpreter not enabled");
 
-    py::exec(python_code, py::globals());
-    return true;
+    auto context = py::module::import("opm_embedded");
+    return this->exec(python_code, context);
 }
 
 PythonInterp::PythonInterp(bool enable) {
@@ -83,5 +86,4 @@ PythonInterp::PythonInterp(bool enable) {
 }
 
 }
-
 #endif

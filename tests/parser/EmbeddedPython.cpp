@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(INSTANTIATE) {
     auto python = std::make_shared<Python>();
     BOOST_CHECK(Python::supported());
     BOOST_CHECK(python->enabled());
-    BOOST_CHECK_NO_THROW(python->exec("print('Hello world')"));
+    BOOST_CHECK_NO_THROW(python->exec("import sys"));
 
     Parser parser;
     Deck deck;
@@ -69,6 +69,8 @@ context.deck.add(kw)
     BOOST_CHECK_NO_THROW( python->exec(python_code, parser, deck));
     BOOST_CHECK( deck.hasKeyword("FIELD") );
 }
+
+
 
 BOOST_AUTO_TEST_CASE(PYINPUT_BASIC) {
 
@@ -108,9 +110,10 @@ BOOST_AUTO_TEST_CASE(PYINPUT_BASIC) {
 
 }
 
+
 BOOST_AUTO_TEST_CASE(PYACTION) {
     Parser parser;
-    auto python = std::make_shared<Python>();
+    auto python = std::make_shared<Python>(Python::Enable::ON);
     auto deck = parser.parseFile("EMBEDDED_PYTHON.DATA");
     auto ecl_state = EclipseState(deck);
     auto schedule = Schedule(deck, ecl_state, python);
@@ -118,16 +121,17 @@ BOOST_AUTO_TEST_CASE(PYACTION) {
     SummaryState st(std::chrono::system_clock::now());
     const auto& pyaction_kw = deck.getKeyword<ParserKeywords::PYACTION>(0);
     const std::string& fname = pyaction_kw.getRecord(1).getItem(0).get<std::string>(0);
-    Action::PyAction py_action("WCLOSE", Action::PyAction::RunCount::unlimited, Action::PyAction::load(deck.getInputPath(), fname));
+    Action::PyAction py_action(python, "WCLOSE", Action::PyAction::RunCount::unlimited, deck.makeDeckPath(fname));
     st.update_well_var("PROD1", "WWCT", 0);
-    python->exec(py_action, ecl_state, schedule, 10, st);
+    py_action.run(ecl_state, schedule, 10, st);
 
     st.update("FOPR", 0);
-    python->exec(py_action, ecl_state, schedule, 10, st);
+    py_action.run(ecl_state, schedule, 10, st);
 
     st.update("FOPR", 100);
     st.update_well_var("PROD1", "WWCT", 0.90);
-    python->exec(py_action, ecl_state, schedule, 10, st);
+    py_action.run(ecl_state, schedule, 10, st);
+
     const auto& well1 = schedule.getWell("PROD1", 10);
     const auto& well2 = schedule.getWell("PROD2", 10);
     BOOST_CHECK( well1.getStatus() == Well::Status::SHUT );
@@ -154,7 +158,6 @@ BOOST_AUTO_TEST_CASE(Python_Constructor2) {
     Python python_cond2(Python::Enable::TRY);
     BOOST_CHECK(!python_cond2.enabled());
 }
-
 
 #endif
 

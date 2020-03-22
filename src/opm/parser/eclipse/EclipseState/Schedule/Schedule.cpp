@@ -128,6 +128,7 @@ std::pair<std::time_t, std::size_t> restart_info(const RestartIO::RstState * rst
                         ErrorGuard& errors,
                         [[maybe_unused]] std::shared_ptr<const Python> python,
                         const RestartIO::RstState * rst) :
+        python_handle(python),
         m_timeMap( deck , restart_info( rst )),
         m_oilvaporizationproperties( this->m_timeMap, OilVaporizationProperties(runspec.tabdims().getNumPVTTables()) ),
         m_events( this->m_timeMap ),
@@ -168,7 +169,7 @@ std::pair<std::time_t, std::size_t> restart_info(const RestartIO::RstState * rst
         }
 
         if (DeckSection::hasSCHEDULE(deck))
-            iterateScheduleSection( deck.getInputPath(), parseContext, errors, SCHEDULESection( deck ), grid, fp);
+            iterateScheduleSection( python, deck.getInputPath(), parseContext, errors, SCHEDULESection( deck ), grid, fp);
     }
 
 
@@ -285,7 +286,8 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
     }
 
 
-    void Schedule::handleKeyword(const std::string& input_path,
+    void Schedule::handleKeyword(std::shared_ptr<const Python> python,
+                                 const std::string& input_path,
                                  size_t currentStep,
                                  const SCHEDULESection& section,
                                  size_t keywordIdx,
@@ -480,7 +482,7 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
             handleNUPCOL(keyword, currentStep);
 
         else if (keyword.name() == "PYACTION")
-            handlePYACTION(input_path, keyword, currentStep);
+            handlePYACTION(python, input_path, keyword, currentStep);
 
         else if (geoModifiers.find( keyword.name() ) != geoModifiers.end()) {
             bool supported = geoModifiers.at( keyword.name() );
@@ -495,7 +497,7 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
     }
 
 
-void Schedule::iterateScheduleSection(const std::string& input_path, const ParseContext& parseContext , ErrorGuard& errors, const SCHEDULESection& section , const EclipseGrid& grid,
+    void Schedule::iterateScheduleSection(std::shared_ptr<const Opm::Python> python, const std::string& input_path, const ParseContext& parseContext , ErrorGuard& errors, const SCHEDULESection& section , const EclipseGrid& grid,
                                           const FieldPropsManager& fp) {
         const auto& unit_system = section.unitSystem();
         std::vector<std::pair< const DeckKeyword* , size_t> > rftProperties;
@@ -549,7 +551,7 @@ void Schedule::iterateScheduleSection(const std::string& input_path, const Parse
 
             else {
                 if (currentStep >= this->m_timeMap.restart_offset() || skiprest_whitelist.count(keyword.name()))
-                    this->handleKeyword(input_path, currentStep, section, keywordIdx, keyword, parseContext, errors, grid, fp, unit_system, rftProperties);
+                    this->handleKeyword(python, input_path, currentStep, section, keywordIdx, keyword, parseContext, errors, grid, fp, unit_system, rftProperties);
                 else
                     OpmLog::info("Skipping keyword: " + keyword.name() + " while loading SCHEDULE section");
             }
@@ -647,8 +649,9 @@ void Schedule::iterateScheduleSection(const std::string& input_path, const Parse
         }
     }
 
-    void Schedule::handlePYACTION( const std::string& input_path, const DeckKeyword& keyword, size_t currentStep) {
-        if (!Python::supported()) {
+    void Schedule::handlePYACTION( std::shared_ptr<const Python> python, const std::string& input_path, const DeckKeyword& keyword, size_t currentStep) {
+        if (!python->enabled()) {
+            //Must have a real Python instance here - to ensure that IMPORT works
             const auto& loc = keyword.location();
             OpmLog::warning("This version of flow is built without support for Python. Keyword PYACTION in file: " + loc.filename + " line: " + std::to_string(loc.lineno) + " is ignored.");
             return;
@@ -657,9 +660,14 @@ void Schedule::iterateScheduleSection(const std::string& input_path, const Parse
         using PY = ParserKeywords::PYACTION;
         const auto& name = keyword.getRecord(0).getItem<PY::NAME>().get<std::string>(0);
         const auto& run_count = Action::PyAction::from_string( keyword.getRecord(0).getItem<PY::RUN_COUNT>().get<std::string>(0) );
-        const auto& code = Action::PyAction::load( input_path, keyword.getRecord(1).getItem<PY::FILENAME>().get<std::string>(0) );
+        const auto& module_arg = keyword.getRecord(1).getItem<PY::FILENAME>().get<std::string>(0);
+        std::string module;
+        if (input_path.empty())
+            module = module_arg;
+        else
+            module = input_path + "/" + module_arg;
 
-        Action::PyAction pyaction(name, run_count, code);
+        Action::PyAction pyaction(python, name, run_count, module);
         auto new_actions = std::make_shared<Action::Actions>( this->actions(currentStep) );
         new_actions->add(pyaction);
         this->m_actions.update(currentStep, new_actions);
@@ -3073,6 +3081,11 @@ void Schedule::load_rst(const RestartIO::RstState& rst_state, const EclipseGrid&
 
     m_tuning.update(report_step, rst_state.tuning);
     m_events.addEvent( ScheduleEvents::TUNING_CHANGE , report_step);
+}
+
+std::shared_ptr<const Python> Schedule::python() const
+{
+    return this->python_handle;
 }
 
 namespace {
