@@ -93,6 +93,10 @@ PyAction::RunCount PyAction::run_count() const {
     return this->m_run_count;
 }
 
+bool PyAction::active() const {
+    return this->m_active;
+}
+
 /*
   The python variables are reference counted and when the Python dictionary
   stored in this->m_storage is destroyed the Python runtime system is involved.

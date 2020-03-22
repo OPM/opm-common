@@ -48,6 +48,7 @@ public:
     const std::string& name() const;
     bool operator==(const PyAction& other) const;
     PyAction::RunCount run_count() const;
+    bool active() const;
     ~PyAction();
 
     /*
@@ -75,6 +76,7 @@ private:
     RunCount m_run_count;
     std::string input_code;
     void * m_storage = nullptr;
+    mutable bool m_active = true;
 };
 }
 
