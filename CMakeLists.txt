@@ -163,15 +163,17 @@ if (ENABLE_MOCKSIM)
   add_executable(msim examples/msim.cpp)
   target_link_libraries(msim mocksim)
 
-  set(_libs mocksim opmcommon
-    ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+  if (Boost_UNIT_TEST_FRAMEWORK_FOUND)
+    set(_libs mocksim opmcommon
+      ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 
-  foreach( test test_msim test_msim_ACTIONX )
-    opm_add_test(${test} SOURCES tests/msim/${test}.cpp
-                         LIBRARIES ${_libs}
-                         WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/tests
-                         CONDITION HAVE_ECL_INPUT AND Boost_UNIT_TEST_FRAMEWORK_FOUND)
-  endforeach()
+    foreach( test test_msim test_msim_ACTIONX )
+      opm_add_test(${test} SOURCES tests/msim/${test}.cpp
+        LIBRARIES ${_libs}
+        WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/tests
+        CONDITION ${HAVE_ECL_INPUT})
+    endforeach()
+  endif()
 endif()
 
 # Build the compare utilities
