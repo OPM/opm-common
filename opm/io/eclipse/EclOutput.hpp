@@ -79,7 +79,7 @@ public:
     friend class OutputStream::SummarySpecification;
 
 private:
-    void writeBinaryHeader(const std::string& arrName, long int size, eclArrType arrType);
+    void writeBinaryHeader(const std::string& arrName, int64_t size, eclArrType arrType);
 
     template <typename T>
     void writeBinaryArray(const std::vector<T>& data);
