@@ -138,8 +138,8 @@ double GuideRateModel::eval(double oil_pot, double gas_pot, double wat_pot) cons
         break;
 
     case Target::LIQ:
-        R1 = oil_pot / (oil_pot + wat_pot);
-        R2 = wat_pot / (oil_pot + wat_pot);
+        R1 = wat_pot / (oil_pot + wat_pot);
+        R2 = gas_pot / (oil_pot + wat_pot);
         break;
 
     case Target::GAS:
