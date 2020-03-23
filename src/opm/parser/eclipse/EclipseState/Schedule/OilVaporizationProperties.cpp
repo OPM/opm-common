@@ -41,7 +41,7 @@ namespace Opm {
         result.m_vap1 = 1.0;
         result.m_vap2 = 2.0;
         result.m_maxDRSDT = {3.0};
-        result.m_maxDRSDT_allCells = {4.0};
+        result.m_maxDRSDT_allCells = {true};
         result.m_maxDRVDT = {5.0};
 
         return result;
