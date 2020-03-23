@@ -76,6 +76,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/SwfnTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SwofTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableContainer.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/TracerVdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/WatvisctTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/AqutabTable.hpp>
 
@@ -1262,6 +1263,20 @@ const TableColumn& OverburdTable::getDepthColumn() const {
 }
 
 const TableColumn& OverburdTable::getOverburdenPressureColumn() const {
+    return SimpleTable::getColumn(1);
+}
+
+TracerVdTable::TracerVdTable(const Opm::DeckItem& item) {
+    m_schema.addColumn(Opm::ColumnSchema("DEPTH", Table::STRICTLY_INCREASING, Table::DEFAULT_NONE));
+    m_schema.addColumn(Opm::ColumnSchema("TRACER_CONCENTRATION", Table::RANDOM, Table::DEFAULT_NONE));
+    SimpleTable::init(item);
+}
+
+const TableColumn& TracerVdTable::getDepthColumn() const {
+    return SimpleTable::getColumn(0);
+}
+
+const TableColumn& TracerVdTable::getTracerConcentration() const {
     return SimpleTable::getColumn(1);
 }
 

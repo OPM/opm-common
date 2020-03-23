@@ -620,6 +620,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Tables/ImkrvdTable.hpp
        opm/parser/eclipse/EclipseState/Tables/Sof3Table.hpp
        opm/parser/eclipse/EclipseState/Tables/SgofTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/TracerVdTable.hpp
        opm/parser/eclipse/EclipseState/EclipseState.hpp
        opm/parser/eclipse/EclipseState/EclipseConfig.hpp
        opm/parser/eclipse/EclipseState/Aquancon.hpp
