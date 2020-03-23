@@ -77,27 +77,33 @@ GuideRate::GuideRate(const Schedule& schedule_arg) :
 
 
 
-double GuideRate::get(const std::string& well, Well::GuideRateTarget target) const {
+double GuideRate::get(const std::string& well, Well::GuideRateTarget target, const RateVector& rates) const {
     auto model_target = GuideRateModel::convert_target(target);
-    return get(well, model_target);
+    return get(well, model_target, rates);
 }
 
-double GuideRate::get(const std::string& group, Group::GuideRateTarget target) const {
+double GuideRate::get(const std::string& group, Group::GuideRateTarget target, const RateVector& rates) const {
     auto model_target = GuideRateModel::convert_target(target);
-    return get(group, model_target);
+    return get(group, model_target, rates);
 }
 
-double GuideRate::get(const std::string& name, GuideRateModel::Target model_target) const {
+double GuideRate::get(const std::string& name, GuideRateModel::Target model_target, const RateVector& rates) const {
     const auto iter = this->values.find(name);
     if (iter != this->values.end()) {
         const auto& value = iter->second;
         if (value.target == model_target)
             return value.value;
         else {
-            const auto& pot = this->potentials.at(name);
-            return value.value * GuideRateModel::pot(model_target, pot.oil_rat, pot.gas_rat, pot.wat_rat) /
-                    std::max(1e-12, GuideRateModel::pot(value.target, pot.oil_rat, pot.gas_rat, pot.wat_rat));
+            double model_target_rate = rates.eval(model_target);
+            double value_target_rate = rates.eval(value.target);        
+                    
+            if (model_target_rate < 1e-6)
+                return value.value;
+            if (value_target_rate < 1e-6)
+                return value.value; 
 
+            // scale with the current production ratio when the control target differs from the guide rate target.
+            return value.value * model_target_rate / value_target_rate;
         }
     } else {
         const auto& pot = this->potentials.at(name);
