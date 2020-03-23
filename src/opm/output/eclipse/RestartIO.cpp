@@ -479,7 +479,8 @@ namespace {
         vectors.reserve(value.solution.size());
 
         for (const auto& [name, vector] : value.solution) {
-            if (vector.target == data::TargetType::RESTART_AUXILIARY)
+            if ((vector.target == data::TargetType::RESTART_AUXILIARY) ||
+                (vector.target == data::TargetType::RESTART_OPM_EXTENDED))
             {
                 vectors.push_back(name);
             }
