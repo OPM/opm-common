@@ -722,7 +722,7 @@ namespace {
         act_res_stat(const Opm::Schedule& sched, const Opm::SummaryState&  smry, const std::size_t sim_step) {
             std::vector<Opm::Action::Result> act_res;
             std::vector<std::string> act_name;
-            const auto acts = sched.actions(sim_step);
+            const auto& acts = sched.actions(sim_step);
             Opm::Action::Context context(smry);
             auto sim_time = sched.simTime(sim_step);
             for (const auto& action : acts.pending(sim_time)) {
