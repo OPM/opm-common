@@ -176,6 +176,10 @@ namespace Opm {
         return this->aquifer_config;
     }
 
+    const TracerConfig& EclipseState::tracer() const {
+        return this->tracer_config;
+    }
+
     void EclipseState::initTransMult() {
         const auto& fp = this->field_props;
         if (fp.has_double("MULTX"))  this->m_transMult.applyMULT(fp.get_global_double("MULTX") , FaceDir::XPlus);

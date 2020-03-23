@@ -83,6 +83,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/IOConfig/IOConfig.cpp
     src/opm/parser/eclipse/EclipseState/IOConfig/RestartConfig.cpp
     src/opm/parser/eclipse/EclipseState/Runspec.cpp
+    src/opm/parser/eclipse/EclipseState/TracerConfig.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Action/ActionAST.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Action/ActionContext.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Action/ActionResult.cpp
@@ -547,6 +548,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Grid/FaceDir.hpp
        opm/parser/eclipse/EclipseState/Grid/MinpvMode.hpp
        opm/parser/eclipse/EclipseState/EndpointScaling.hpp
+       opm/parser/eclipse/EclipseState/TracerConfig.hpp
        opm/parser/eclipse/EclipseState/Tables/DenT.hpp
        opm/parser/eclipse/EclipseState/Tables/SimpleTable.hpp
        opm/parser/eclipse/EclipseState/Tables/StandardCond.hpp
