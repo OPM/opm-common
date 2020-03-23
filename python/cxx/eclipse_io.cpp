@@ -4,11 +4,11 @@
 
 #include <opm/io/eclipse/EclFile.hpp>
 #include <opm/io/eclipse/EclIOdata.hpp>
-#include <src/opm/io/eclipse/ERst.cpp>
-#include <src/opm/io/eclipse/ESmry.cpp>
-#include <src/opm/io/eclipse/EGrid.cpp>
-#include <src/opm/io/eclipse/ERft.cpp>
-#include <src/opm/io/eclipse/EclOutput.cpp>
+#include <opm/io/eclipse/ERst.hpp>
+#include <opm/io/eclipse/ESmry.hpp>
+#include <opm/io/eclipse/EGrid.hpp>
+#include <opm/io/eclipse/ERft.hpp>
+#include <opm/io/eclipse/EclOutput.hpp>
 
 #include <opm/common/utility/numeric/calculateCellVol.hpp>
 
