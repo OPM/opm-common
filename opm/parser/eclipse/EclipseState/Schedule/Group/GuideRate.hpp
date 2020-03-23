@@ -57,12 +57,13 @@ struct GuideRateValue {
     GuideRateModel::Target target;
 };
 
-struct Potential {
-    Potential() = default;
-    Potential(double op, double gp, double wp) :
-        oil_pot(op),
-        gas_pot(gp),
-        wat_pot(wp)
+// used for potentials and well rates
+struct RateVector {
+    RateVector () = default;
+    RateVector (double orat, double grat, double wrat) :
+        oil_rat(orat),
+        gas_rat(grat),
+        wat_rat(wrat)
     {}
 
 
@@ -71,9 +72,9 @@ struct Potential {
     double eval(GuideRateModel::Target target) const;
 
 
-    double oil_pot;
-    double gas_pot;
-    double wat_pot;
+    double oil_rat;
+    double gas_rat;
+    double wat_rat;
 };
 
 public:
@@ -91,8 +92,8 @@ private:
     double eval_group_pot() const;
     double eval_group_resvinj() const;
 
-    std::unordered_map<std::string,GuideRateValue> values;
-    std::unordered_map<std::string,Potential> potentials;
+    std::unordered_map<std::string, GuideRateValue> values;
+    std::unordered_map<std::string, RateVector > potentials;
     const Schedule& schedule;
 };
 

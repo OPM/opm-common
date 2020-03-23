@@ -22,50 +22,50 @@
 
 namespace Opm {
 
-double GuideRate::Potential::eval(Well::GuideRateTarget target) const {
+double GuideRate::RateVector::eval(Well::GuideRateTarget target) const {
     if (target == Well::GuideRateTarget::OIL)
-        return this->oil_pot;
+        return this->oil_rat;
 
     if (target == Well::GuideRateTarget::GAS)
-        return this->gas_pot;
+        return this->gas_rat;
 
     if (target == Well::GuideRateTarget::LIQ)
-        return this->oil_pot + this->wat_pot;
+        return this->oil_rat + this->wat_rat;
 
     if (target == Well::GuideRateTarget::WAT)
-        return this->wat_pot;
+        return this->wat_rat;
 
     throw std::logic_error("Don't know how to convert .... ");
 }
 
-double GuideRate::Potential::eval(Group::GuideRateTarget target) const {
+double GuideRate::RateVector::eval(Group::GuideRateTarget target) const {
     if (target == Group::GuideRateTarget::OIL)
-        return this->oil_pot;
+        return this->oil_rat;
 
     if (target == Group::GuideRateTarget::GAS)
-        return this->gas_pot;
+        return this->gas_rat;
 
     if (target == Group::GuideRateTarget::LIQ)
-        return this->oil_pot + this->wat_pot;
+        return this->oil_rat + this->wat_rat;
 
     if (target == Group::GuideRateTarget::WAT)
-        return this->wat_pot;
+        return this->wat_rat;
 
     throw std::logic_error("Don't know how to convert .... ");
 }
 
-double GuideRate::Potential::eval(GuideRateModel::Target target) const {
+double GuideRate::RateVector::eval(GuideRateModel::Target target) const {
     if (target == GuideRateModel::Target::OIL)
-        return this->oil_pot;
+        return this->oil_rat;
 
     if (target == GuideRateModel::Target::GAS)
-        return this->gas_pot;
+        return this->gas_rat;
 
     if (target == GuideRateModel::Target::LIQ)
-        return this->oil_pot + this->wat_pot;
+        return this->oil_rat + this->wat_rat;
 
     if (target == GuideRateModel::Target::WAT)
-        return this->wat_pot;
+        return this->wat_rat;
 
     throw std::logic_error("Don't know how to convert .... ");
 }
@@ -95,8 +95,8 @@ double GuideRate::get(const std::string& name, GuideRateModel::Target model_targ
             return value.value;
         else {
             const auto& pot = this->potentials.at(name);
-            return value.value * GuideRateModel::pot(model_target, pot.oil_pot, pot.gas_pot, pot.wat_pot) /
-                    std::max(1e-12, GuideRateModel::pot(value.target, pot.oil_pot, pot.gas_pot, pot.wat_pot));
+            return value.value * GuideRateModel::pot(model_target, pot.oil_rat, pot.gas_rat, pot.wat_rat) /
+                    std::max(1e-12, GuideRateModel::pot(value.target, pot.oil_rat, pot.gas_rat, pot.wat_rat));
 
         }
     } else {
@@ -114,7 +114,7 @@ bool GuideRate::has(const std::string& name) const
 
 void GuideRate::compute(const std::string& wgname, size_t report_step, double sim_time, double oil_pot, double gas_pot, double wat_pot) {
     const auto& config = this->schedule.guideRateConfig(report_step);
-    this->potentials[wgname] = Potential{oil_pot, gas_pot, wat_pot};
+    this->potentials[wgname] = RateVector{oil_pot, gas_pot, wat_pot};
 
     if (config.has_group(wgname))
         this->group_compute(wgname, report_step, sim_time, oil_pot, gas_pot, wat_pot);
