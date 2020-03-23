@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_CASE(TestERst_1) {
 
 
     // try to get a list of vectors from non-existing report step, should throw exception
-    std::vector<std::tuple<std::string, eclArrType, long int>> rstArrays; // = rst1.listOfRstArrays(4);
+    std::vector<std::tuple<std::string, eclArrType, int64_t>> rstArrays; // = rst1.listOfRstArrays(4);
     BOOST_CHECK_THROW(rstArrays = rst1.listOfRstArrays(4), std::invalid_argument);
 
     // non exising report step number, should throw exception

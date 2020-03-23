@@ -21,7 +21,7 @@ namespace py = pybind11;
 namespace {
 
 using npArray = std::tuple<py::array, Opm::EclIO::eclArrType>;
-using EclEntry = std::tuple<std::string, Opm::EclIO::eclArrType, long int>;
+using EclEntry = std::tuple<std::string, Opm::EclIO::eclArrType, int64_t>;
 
 class EclOutputBind {
 
@@ -337,10 +337,10 @@ void python::common::export_IO(py::module& m) {
         .def(py::init<const std::string &>())
         .def("__get_list_of_rfts", &Opm::EclIO::ERft::listOfRftReports)
 
-        .def("__get_list_of_arrays", (std::vector< std::tuple<std::string, Opm::EclIO::eclArrType, long int> >
+        .def("__get_list_of_arrays", (std::vector< std::tuple<std::string, Opm::EclIO::eclArrType, int64_t> >
                                      (Opm::EclIO::ERft::*)(int) const) &Opm::EclIO::ERft::listOfRftArrays)
 
-        .def("__get_list_of_arrays", (std::vector< std::tuple<std::string, Opm::EclIO::eclArrType, long int> >
+        .def("__get_list_of_arrays", (std::vector< std::tuple<std::string, Opm::EclIO::eclArrType, int64_t> >
                                      (Opm::EclIO::ERft::*)(const std::string&, int, int, int) const)
                                       &Opm::EclIO::ERft::listOfRftArrays)
 
