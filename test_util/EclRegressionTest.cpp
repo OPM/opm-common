@@ -1006,16 +1006,16 @@ void ECLRegressionTest::results_rft()
         if (rftReportList1 != rftReportList2) {
             std::vector<std::string> rftList1;
             for (auto& report : rftReportList1) {
-                std::string well =  report.first;
-                std::tuple<int, int, int> date =  report.second;
+                std::string well =  std::get<0>(report);
+                std::tuple<int, int, int> date =  std::get<1>(report);
                 std::string str1 = well +" (" + std::to_string(std::get<0>(date)) + "/" + std::to_string(std::get<1>(date)) + "/"  +   std::to_string(std::get<2>(date)) + ")";
                 rftList1.push_back(str1);
             }
 
             std::vector<std::string> rftList2;
             for (auto& report : rftReportList2) {
-                std::string well =  report.first;
-                std::tuple<int, int, int> date =  report.second;
+                std::string well =  std::get<0>(report);
+                std::tuple<int, int, int> date =  std::get<1>(report);
                 std::string str2 = well +" (" + std::to_string(std::get<0>(date)) + "/" + std::to_string(std::get<1>(date)) + "/"  +   std::to_string(std::get<2>(date)) + ")";
                 rftList2.push_back(str2);
             }
@@ -1026,8 +1026,8 @@ void ECLRegressionTest::results_rft()
         }
 
         for (auto& report : rftReportList2) {
-            std::string well =  report.first;
-            std::tuple<int, int, int> date =  report.second;
+            std::string well =  std::get<0>(report);
+            std::tuple<int, int, int> date =  std::get<1>(report);
 
             std::string dateStr = std::to_string(std::get<0>(date)) + "/" + std::to_string(std::get<1>(date)) + "/" + std::to_string(std::get<2>(date));
 

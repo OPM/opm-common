@@ -44,15 +44,19 @@ public:
     template <typename T>
     const std::vector<T>& getRft(const std::string& name, const std::string& wellName,
                                  int year, int month, int day) const;
+    template <typename T>
+    const std::vector<T>& getRft(const std::string& name, int reportIndex) const;
 
     std::vector<std::string> listOfWells() const;
     std::vector<RftDate> listOfdates() const;
 
-    using RftReportList = std::vector<std::pair<std::string, RftDate>>;
+    using RftReportList = std::vector<std::tuple<std::string, RftDate, float>>;
     const RftReportList& listOfRftReports() const { return rftReportList; }
 
     bool hasRft(const std::string& wellName, const RftDate& date) const;
     bool hasRft(const std::string& wellName, int year, int month, int day) const;
+
+    std::vector<EclEntry> listOfRftArrays(int reportIndex ) const;
 
     std::vector<EclEntry> listOfRftArrays(const std::string& wellName,
                                           const RftDate& date) const;
@@ -63,8 +67,12 @@ public:
     bool hasArray(const std::string& arrayName, const std::string& wellName,
                   const RftDate& date) const;
 
+    bool hasArray(const std::string& arrayName, int reportInd) const;
+
+    int numberOfReports() { return numReports; }
+
 private:
-    std::map<int, std::pair<int,int>> arrIndexRange;
+    std::map<int, std::tuple<int,int>> arrIndexRange;
     int numReports;
     std::vector<float> timeList;
 
@@ -72,9 +80,11 @@ private:
     std::set<RftDate> dateList;
     RftReportList rftReportList;
 
-    std::map<std::pair<std::string,RftDate>,int> reportIndex;  //  mapping report index to wellName and date (tupe)
+    std::map<std::tuple<std::string,RftDate>,int> reportIndices;  //  mapping report index to wellName and date (tupe)
 
     int getReportIndex(const std::string& wellName, const RftDate& date) const;
+
+    int getArrayIndex(const std::string& name, int reportIndex) const;
     int getArrayIndex(const std::string& name, const std::string& wellName,
                       const RftDate& date) const;
 };

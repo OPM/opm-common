@@ -21,6 +21,11 @@ from .libopmcommon_python import Schedule
 from .libopmcommon_python import OpmLog
 from .libopmcommon_python import SummaryConfig
 from .libopmcommon_python import EclFile, eclArrType
+from .libopmcommon_python import ERst
+from .libopmcommon_python import ESmry
+from .libopmcommon_python import EGrid
+from .libopmcommon_python import ERft
+from .libopmcommon_python import EclOutput
 from .libopmcommon_python import SummaryState
 
 #from .schedule            import Well, Connection, Schedule

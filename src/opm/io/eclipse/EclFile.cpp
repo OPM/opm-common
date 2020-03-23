@@ -823,6 +823,12 @@ bool EclFile::hasKey(const std::string &name) const
     return search != array_index.end();
 }
 
+size_t EclFile::count(const std::string &name) const
+{
+    return std::count (array_name.begin(), array_name.end(), name);
+}
+
+
 std::streampos
 EclFile::seekPosition(const std::vector<std::string>::size_type arrIndex) const
 {

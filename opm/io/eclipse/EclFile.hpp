@@ -62,6 +62,7 @@ public:
     const std::vector<T>& get(const std::string& name);
 
     bool hasKey(const std::string &name) const;
+    std::size_t count(const std::string& name) const;
 
     const std::vector<std::string>& arrayNames() const { return array_name; }
     std::size_t size() const;

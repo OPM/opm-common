@@ -90,12 +90,12 @@ BOOST_AUTO_TEST_CASE(TestERft_1) {
         Date{2017,7,31},
     };
 
-    const std::vector<std::pair<std::string,Date>> ref_rftList = {
-        {"PROD", Date{2015,1, 1}},
-        {"INJ" , Date{2015,1, 1}},
-        {"A-1H", Date{2015,9, 1}},
-        {"B-2H", Date{2016,5,31}},
-        {"PROD", Date{2017,7,31}}
+    const std::vector<std::tuple<std::string, Date, float>> ref_rftList = {
+        {"PROD", Date{2015,1, 1}, 0.00000000e+00},
+        {"INJ" , Date{2015,1, 1}, 0.00000000e+00},
+        {"A-1H", Date{2015,9, 1}, 0.24300000E+03},
+        {"B-2H", Date{2016,5,31}, 0.51600000E+03},
+        {"PROD", Date{2017,7,31}, 0.94200000E+03}
     };
 
     std::string testFile="SPE1CASE1.RFT";
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(TestERft_1) {
 
     std::vector<std::string> wellList = rft1.listOfWells();
     std::vector<Date> rftDates = rft1.listOfdates();
-    std::vector<std::pair<std::string,Date>> rftList = rft1.listOfRftReports();
+    std::vector<std::tuple<std::string, Date, float>> rftList = rft1.listOfRftReports();
 
     BOOST_CHECK_EQUAL(wellList==ref_wellList, true);
     BOOST_CHECK_EQUAL(rftDates==ref_dates, true);
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(TestERft_1) {
     BOOST_CHECK_THROW(rft1.hasArray("SGAS","C-2H", Date{2016,5,30}),std::invalid_argument);
     BOOST_CHECK_THROW(rft1.hasArray("XXXX","C-2H", Date{2016,5,30}),std::invalid_argument);
 
-   // test member function getRft
+   //    // test member function getRft(name, wellName, date)
 
     std::vector<int> vect1=rft1.getRft<int>("CONIPOS","B-2H", Date{2016,5,31});
     std::vector<float> vect2=rft1.getRft<float>("PRESSURE","B-2H", Date{2016,5,31});
@@ -138,6 +138,25 @@ BOOST_AUTO_TEST_CASE(TestERft_1) {
     BOOST_CHECK_EQUAL(vect1.size(), 3);
     BOOST_CHECK_EQUAL(vect2.size(), 3);
     BOOST_CHECK_EQUAL(vect3.size(), 16);
+
+   // test member function getRft(name, reportIndex)
+
+    std::vector<int> vect1a=rft1.getRft<int>("CONIPOS", 3);
+    BOOST_CHECK_EQUAL(vect1.size(), vect1a.size());
+
+    std::vector<float> vect2a = rft1.getRft<float>("PRESSURE", 3);
+    BOOST_CHECK_EQUAL(vect2.size(), vect2a.size());
+
+    for (size_t t = 0; t < vect2.size(); t++){
+        BOOST_CHECK_EQUAL(vect2[t], vect2a[t]);
+    }
+
+    std::vector<std::string> vect3a = rft1.getRft<std::string>("WELLETC", 3);
+    BOOST_CHECK_EQUAL(vect2.size(), vect2a.size());
+
+    for (size_t t = 0; t < vect3.size(); t++){
+        BOOST_CHECK_EQUAL(vect3[t], vect3a[t]);
+    }
 
     // called with invalid argument, array not existing, wrong well name or wrong date
     BOOST_CHECK_THROW(std::vector<int> vect11=rft1.getRft<int>("CONIPOS","C-2H", Date{2016,5,31}),std::invalid_argument);

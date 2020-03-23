@@ -100,8 +100,9 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
         const std::vector<std::string> keywords = smspec.get<std::string>("KEYWORDS");
         const std::vector<std::string> wgnames = smspec.get<std::string>("WGNAMES");
         const std::vector<int> nums = smspec.get<int>("NUMS");
-
         const std::vector<std::string> units = smspec.get<std::string>("UNITS");
+
+        startdat = smspec.get<int>("STARTDAT");
 
         for (unsigned int i=0; i<keywords.size(); i++) {
             const std::string keyString = makeKeyString(keywords[i], wgnames[i], nums[i]);
@@ -142,8 +143,9 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
         const std::vector<std::string> keywords = smspec_rst.get<std::string>("KEYWORDS");
         const std::vector<std::string> wgnames = smspec_rst.get<std::string>("WGNAMES");
         const std::vector<int> nums = smspec_rst.get<int>("NUMS");
-
         const std::vector<std::string> units = smspec_rst.get<std::string>("UNITS");
+
+        startdat = smspec_rst.get<int>("STARTDAT");
 
         for (size_t i = 0; i < keywords.size(); i++) {
             const std::string keyString = makeKeyString(keywords[i], wgnames[i], nums[i]);
