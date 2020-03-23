@@ -58,8 +58,8 @@ namespace {
                                                            {"D",  10},
                                                            {"M",  11},
                                                            {"Y",  12},
-    }; 
-    
+    };
+
     /*const std::map<std::string, int> lhsQuantityToItem_12 = {
                                                            {"F",   0},
                                                            {"W",   0},
@@ -67,8 +67,8 @@ namespace {
                                                            {"D",   0},
                                                            {"M",   1},
                                                            {"Y",   0},
-    };*/ 
-    
+    };*/
+
     using cmp_enum = Opm::Action::Condition::Comparator;
     const std::map<cmp_enum, int> cmpToIacn_12 = {
                                                     {cmp_enum::GREATER,       0},
@@ -92,15 +92,15 @@ namespace {
                                                            {"OCT",  10.},
                                                            {"NOV",  11.},
                                                            {"DEC",  12.},
-    }; 
+    };
 
-    
+
 const std::map<std::string, int> rhsQuantityToIndex = {
                                                 {"F",   1},
                                                 {"W",   2},
                                                 {"G",   3},
-}; 
-        
+};
+
 using logic_enum = Opm::Action::Condition::Logical;
 const std::map<logic_enum, int> logicalToIndex_13 = {
                                                     {logic_enum::AND,   1},
@@ -112,7 +112,7 @@ const std::map<logic_enum, int> logicalToIndex_17 = {
                                                     {logic_enum::AND,   1},
                                                     {logic_enum::OR,    0},
                                                     {logic_enum::END,   0},
-}; 
+};
 
 
 using cmp_enum = Opm::Action::Condition::Comparator;
@@ -149,7 +149,7 @@ const std::map<cmp_enum, int> cmpToIndex = {
             //item [1]: The number of lines of schedule data including ENDACTIO
             iAct[1] = actx.keyword_strings().size();
             //item [2]: is = 1 for condition and previous condition = AND, and combinations OR/AND
-            //          is = 2 for all conditions and previous conditions = OR  
+            //          is = 2 for all conditions and previous conditions = OR
             //          This is not implemented yet - only use 1 for all cases
             const auto& actx_cond = actx.conditions();
             int i_temp = 2;
@@ -212,7 +212,7 @@ const std::map<cmp_enum, int> cmpToIndex = {
             using WV = Opm::RestartIO::Helpers::WindowedArray<
                 Opm::EclIO::PaddedOutputString<8>
             >;
-            
+
             int nwin = std::max(actDims[0], 1);
             int nitPrWin = std::max(actDims[3], 1);
             return WV {
@@ -246,7 +246,7 @@ const std::map<cmp_enum, int> cmpToIndex = {
                 WV::WindowSize{ static_cast<std::size_t>(nitPrWin) }
             };
         }
-        
+
     template <class ZLACTArray>
     void staticContrib(const Opm::Action::ActionX& actx, int noEPrZlact, ZLACTArray& zLact)
         {
@@ -271,9 +271,9 @@ const std::map<cmp_enum, int> cmpToIndex = {
                 }
                 ind += static_cast<std::size_t>(noEPrZlact);
             }
-        }      
+        }
     } // zLact
-    
+
     namespace zACN {
 
          Opm::RestartIO::Helpers::WindowedArray<
@@ -292,7 +292,7 @@ const std::map<cmp_enum, int> cmpToIndex = {
                 WV::WindowSize{ static_cast<std::size_t>(nitPrWin) }
             };
         }
-  
+
     template <class ZACNArray>
     void staticContrib(const Opm::Action::ActionX& actx, ZACNArray& zAcn)
         {
@@ -304,7 +304,7 @@ const std::map<cmp_enum, int> cmpToIndex = {
                 // left hand quantity
                 if ((z_data.lhs.quantity.substr(0,1) != "D") &&
                     (z_data.lhs.quantity.substr(0,1) != "M") &&
-                    (z_data.lhs.quantity.substr(0,1) != "Y")) 
+                    (z_data.lhs.quantity.substr(0,1) != "Y"))
                     zAcn[ind + 0] = z_data.lhs.quantity;
                 // right hand quantity
                 if ((z_data.rhs.quantity.substr(0,1) == "W") ||
@@ -320,7 +320,7 @@ const std::map<cmp_enum, int> cmpToIndex = {
                 if (z_data.rhs.quantity.substr(0,1) == "W") {
                     zAcn[ind + 4] = z_data.rhs.args[0];
                 }
-                
+
                 // group-name if left hand quantity is a group quantity
                 if (z_data.lhs.quantity.substr(0,1) == "G") {
                     zAcn[ind + 5] = z_data.lhs.args[0];
@@ -329,11 +329,11 @@ const std::map<cmp_enum, int> cmpToIndex = {
                 if (z_data.rhs.quantity.substr(0,1) == "G") {
                     zAcn[ind + 6] = z_data.rhs.args[0];
                 }
-                
+
                 //increment index according to no of items pr condition
                 ind += static_cast<std::size_t>(noEPZacn);
             }
-        }      
+        }
     } // zAcn
 
     namespace iACN {
@@ -351,21 +351,21 @@ const std::map<cmp_enum, int> cmpToIndex = {
             };
         }
 
-       
-        
+
+
         template <class IACNArray>
         void staticContrib(const Opm::Action::ActionX& actx, IACNArray& iAcn)
         {
             //item [0 - 9]: are unknown, (=0)
-            
+
             /*item [10] type of quantity for condition
                 1 for a field quantity (number of flowing producing wells)
-                2 for a well quantity 
+                2 for a well quantity
                 3 for a (node) group quantity
                 //9 for a well group quantity
                 10 for DAY
                 11 for MNTH
-                12 for YEAR 
+                12 for YEAR
             */
             std::size_t ind = 0;
             int noEPZacn = 26;
@@ -373,7 +373,7 @@ const std::map<cmp_enum, int> cmpToIndex = {
             const auto& actx_cond = actx.conditions();
             for (auto cond_it = actx_cond.begin(); cond_it < actx_cond.end(); cond_it++) {
                 auto z_data = *cond_it;
-                // left hand quantity 
+                // left hand quantity
                 std::string lhsQtype = z_data.lhs.quantity.substr(0,1);
                 const auto it_lhsq = lhsQuantityToIndex.find(lhsQtype);
                 if (it_lhsq != lhsQuantityToIndex.end()) {
@@ -383,11 +383,11 @@ const std::map<cmp_enum, int> cmpToIndex = {
                     std::cout << "Unknown condition type: " << z_data.lhs.quantity << std::endl;
                     throw std::invalid_argument("Actionx: " + actx.name());
                 }
-                
+
                 /*item[11] - quantity type for rhs quantity
                     1 - for field variables
                     2 - for well variables?
-                    3 - for group variables 
+                    3 - for group variables
                     8 - for constant values
                 */
                 iAcn[ind + 11] = 8;
@@ -396,7 +396,7 @@ const std::map<cmp_enum, int> cmpToIndex = {
                 if (it_rhsq != rhsQuantityToIndex.end()) {
                     iAcn[ind + 11] = it_rhsq->second;
                 }
-                
+
                  /*item[12] - index for relational operator (<, =, > )
                  0 - for LHS quantity greater RHS quantity
                  1 - for LHS quantity less than or equal to RHS quantity
@@ -405,10 +405,10 @@ const std::map<cmp_enum, int> cmpToIndex = {
                 if (it_lhs_it != cmpToIacn_12.end()) {
                     iAcn[ind + 12] = it_lhs_it->second;
                 }
-                
+
                 /*item [13] - relates to operator
                     OR   is 2
-                    AND is 1 
+                    AND is 1
                 */
                 const auto it_logic_13 = logicalToIndex_13.find(z_data.logic);
                 if (it_logic_13 != logicalToIndex_13.end()) {
@@ -418,7 +418,7 @@ const std::map<cmp_enum, int> cmpToIndex = {
                     std::cout << "Unknown Boolean operator type for condition: " << z_data.lhs.quantity << std::endl;
                     throw std::invalid_argument("Actionx: " + actx.name());
                 }
-                
+
                 /*item [16] - related to the operater used in ACTIONX for defined quantities
                     >     is  1
                     <     is  2
@@ -434,12 +434,12 @@ const std::map<cmp_enum, int> cmpToIndex = {
                     std::cout << "Unknown operator type for condition: " << z_data.lhs.quantity << std::endl;
                     throw std::invalid_argument("Actionx: " + actx.name());
                 }
-                
+
                 /*item [17] - relates to operator and if the right hand condition is a constant or not
                  * First condition => [17] =  0
                  * Second+ conditions
                     *If the previous condition has a constant rhs => [17] =  0
-                    *If rhs is {W,G, F} and 
+                    *If rhs is {W,G, F} and
                         *If previous condition is AND => [17] =  1
                         *If previous condition is OR  => [17] =  0
                 */
@@ -457,7 +457,7 @@ const std::map<cmp_enum, int> cmpToIndex = {
                         }
                     }
                 }
-                //increment index according to no of items pr condition                    
+                //increment index according to no of items pr condition
                 ind += static_cast<std::size_t>(noEPZacn);
             }
         }
@@ -469,7 +469,7 @@ const std::map<cmp_enum, int> cmpToIndex = {
         allocate(const std::vector<int>& actDims)
         {
             using WV = Opm::RestartIO::Helpers::WindowedArray<double>;
-            
+
             int nwin = std::max(actDims[0], 1);
             int nitPrWin = std::max(actDims[7], 1);
             return WV {
@@ -477,7 +477,7 @@ const std::map<cmp_enum, int> cmpToIndex = {
                 WV::WindowSize{ static_cast<std::size_t>(nitPrWin) }
             };
         }
-        
+
         Opm::Action::Result
         act_res(const Opm::Schedule& sched, const Opm::SummaryState&  smry, const std::size_t sim_step, std::vector<Opm::Action::ActionX>::const_iterator act_x) {
             Opm::Action::Result ar(false);
@@ -490,7 +490,7 @@ const std::map<cmp_enum, int> cmpToIndex = {
         }
 
         template <class SACNArray>
-        void staticContrib(std::vector<Opm::Action::ActionX>::const_iterator    actx_it, 
+        void staticContrib(std::vector<Opm::Action::ActionX>::const_iterator    actx_it,
                            const Opm::SummaryState&                             st,
                            const Opm::Schedule&                                 sched,
                            const std::size_t                                    simStep,
@@ -500,25 +500,25 @@ const std::map<cmp_enum, int> cmpToIndex = {
             int noEPZacn = 16;
             double undef_high_val = 1.0E+20;
             const auto& wells = sched.getWells(simStep);
-            const auto ar = sACN::act_res(sched, st, simStep, actx_it); 
+            const auto ar = sACN::act_res(sched, st, simStep, actx_it);
             // write out the schedule Actionx conditions
             const auto& actx_cond = actx_it->conditions();
             for (const auto&  z_data : actx_cond) {
-                
+
                 // item [0 - 1] = 0 (unknown)
                 sAcn[ind + 0] = 0.;
                 sAcn[ind + 1] = 0.;
-                
+
                 const std::string& lhsQtype = z_data.lhs.quantity.substr(0,1);
                 const std::string& rhsQtype = z_data.rhs.quantity.substr(0,1);
-                
+
                 //item  [2, 5, 7, 9]: value of condition 1 (zero if well, group or field variable
                 const auto& it_rhsq = rhsQuantityToIndex.find(rhsQtype);
                 if (it_rhsq == rhsQuantityToIndex.end()) {
                     //come here if constant value condition
                     double t_val = 0.;
                     if (lhsQtype == "M") {
-                       const auto& it_mnth = monthToNo.find(z_data.rhs.quantity); 
+                       const auto& it_mnth = monthToNo.find(z_data.rhs.quantity);
                        if (it_mnth != monthToNo.end()) {
                            t_val = it_mnth->second;
                        }
@@ -536,7 +536,7 @@ const std::map<cmp_enum, int> cmpToIndex = {
                     sAcn[ind + 9] = sAcn[ind + 2];
                 }
 
-                
+
                                 //Treat well, group and field right hand side conditions
                 if (it_rhsq != rhsQuantityToIndex.end()) {
                     //Well variable
@@ -559,8 +559,8 @@ const std::map<cmp_enum, int> cmpToIndex = {
                     }
                 }
 
-                
-                
+
+
                 //treat cases with left hand side condition being: DAY, MNTH og YEAR variable
                 const auto& it_lhsq = lhsQuantityToIndex.find(lhsQtype);
                 if ((it_lhsq->first == "D") || (it_lhsq->first == "M") || (it_lhsq->first == "Y")) {
@@ -571,23 +571,23 @@ const std::map<cmp_enum, int> cmpToIndex = {
                     sAcn[ind + 8] = undef_high_val;
                     sAcn[ind + 9] = undef_high_val;
                 }
-                
+
                 //Treat well, group and field left hand side conditions
                 if (it_lhsq != lhsQuantityToIndex.end()) {
                     std::string wn = "";
                     //Well variable
-                    if (it_lhsq->first == "W") {                        
+                    if (it_lhsq->first == "W") {
                         //find the well that violates action if relevant
-                        for (const auto& well : wells) 
+                        for (const auto& well : wells)
                         {
-                            if (ar.has_well(well.name())) {                    
+                            if (ar.has_well(well.name())) {
                                 //set well name
                                 wn = well.name();
                                 break;
                             }
                         }
 
-                        if ((it_lhsq->first == "W") && (st.has_well_var(wn, z_data.lhs.quantity)) ) {    
+                        if ((it_lhsq->first == "W") && (st.has_well_var(wn, z_data.lhs.quantity)) ) {
                             sAcn[ind + 4] = st.get_well_var(wn, z_data.lhs.quantity);
                             sAcn[ind + 6] = st.get_well_var(wn, z_data.lhs.quantity);
                             sAcn[ind + 8] = st.get_well_var(wn, z_data.lhs.quantity);
@@ -606,8 +606,8 @@ const std::map<cmp_enum, int> cmpToIndex = {
                         sAcn[ind + 8] = st.get(z_data.lhs.quantity);
                     }
                 }
-                
-                //increment index according to no of items pr condition                    
+
+                //increment index according to no of items pr condition
                 ind += static_cast<std::size_t>(noEPZacn);
             }
         }
@@ -637,29 +637,29 @@ captureDeclaredActionxData( const Opm::Schedule&    sched,
                             const std::vector<int>& actDims,
                             const std::size_t       simStep)
 {
-    const auto acts = sched.actions(simStep);
+    const auto& acts = sched.actions(simStep);
     std::size_t act_ind = 0;
     for (auto actx_it = acts.begin(); actx_it < acts.end(); actx_it++) {
         {
             auto i_act = this->iACT_[act_ind];
             iACT::staticContrib(*actx_it, i_act);
         }
-        
+
         {
             auto s_act = this->sACT_[act_ind];
             sACT::staticContrib(s_act);
         }
-         
+
         {
             auto z_act = this->zACT_[act_ind];
             zACT::staticContrib(*actx_it, z_act);
         }
-        
+
         {
             auto z_lact = this->zLACT_[act_ind];
             zLACT::staticContrib(*actx_it, actDims[8], z_lact);
         }
-        
+
         {
             auto z_acn = this->zACN_[act_ind];
             zACN::staticContrib(*actx_it, z_acn);
@@ -676,6 +676,6 @@ captureDeclaredActionxData( const Opm::Schedule&    sched,
         }
 
         act_ind +=1;
-    }    
+    }
 }
 

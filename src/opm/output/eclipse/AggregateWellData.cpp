@@ -718,11 +718,11 @@ namespace {
             };
         }
 
-        Opm::RestartIO::Helpers::ActionResStatus 
+        Opm::RestartIO::Helpers::ActionResStatus
         act_res_stat(const Opm::Schedule& sched, const Opm::SummaryState&  smry, const std::size_t sim_step) {
             std::vector<Opm::Action::Result> act_res;
             std::vector<std::string> act_name;
-            const auto acts = sched.actions(sim_step);
+            const auto& acts = sched.actions(sim_step);
             Opm::Action::Context context(smry);
             auto sim_time = sched.simTime(sim_step);
             for (const auto& action : acts.pending(sim_time)) {
@@ -731,7 +731,7 @@ namespace {
             }
             return {act_res, act_name};
         }
-        
+
         template <class ZWellArray>
         void staticContrib(const Opm::Well& well, const Opm::RestartIO::Helpers::ActionResStatus& actResStat, ZWellArray& zWell)
         {
@@ -741,7 +741,7 @@ namespace {
             for (std::size_t ind = 0; ind < actResStat.result.size(); ind++) {
                 if (actResStat.result[ind].has_well(well.name())) {
                     zWell[Ix::ActionX] = actResStat.name[ind];
-                }                
+                }
             }
         }
     } // ZWell
