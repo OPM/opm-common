@@ -905,29 +905,6 @@ namespace {
         return wells;
     }
 
-    std::map<
-        std::tuple<int, int, int>,
-        boost::iterator_range<const double*>::size_type
-    >
-    ijk_to_resID(const std::size_t  wellID,
-                 const std::size_t  nConn,
-                 const WellVectors& wellData)
-    {
-        using SizeT    = boost::iterator_range<const double*>::size_type;
-        auto  ijkToRes = std::map<std::tuple<int, int, int>, SizeT>{};
-
-        for (auto connID = 0*nConn; connID < nConn; ++connID) {
-            const auto icon = wellData.icon(wellID, connID);
-
-            const auto i = icon[VI::IConn::index::CellI] - 1;
-            const auto j = icon[VI::IConn::index::CellJ] - 1;
-            const auto k = icon[VI::IConn::index::CellK] - 1;
-
-            ijkToRes.emplace(std::make_tuple(i, j, k), connID);
-        }
-
-        return ijkToRes;
-    }
 
     void restoreConnRates(const WellVectors::Window<double>& xcon,
                           const Opm::UnitSystem&             usys,
@@ -977,19 +954,24 @@ namespace {
     {
         using M  = ::Opm::UnitSystem::measure;
         using Ix = ::Opm::RestartIO::Helpers::VectorItems::XConn::index;
-
         const auto iwel  = wellData.iwel(wellID);
-        const auto nConn = static_cast<std::size_t>(
-            iwel[VI::IWell::index::NConn]);
-
-        xw.connections.resize(nConn, Opm::data::Connection{});
+        const auto nConn = static_cast<std::size_t>(iwel[VI::IWell::index::NConn]);
 
         const auto oil = phases.active(Opm::Phase::OIL);
         const auto gas = phases.active(Opm::Phase::GAS);
         const auto wat = phases.active(Opm::Phase::WATER);
 
-        for (auto& xc : xw.connections) {
-            zeroConnRates(oil, gas, wat, xc);
+        {
+            const auto& connections = well.getConnections();
+            xw.connections.resize(connections.size(), Opm::data::Connection{});
+            std::size_t simConnID{0};
+            for (const auto& conn : connections) {
+                auto& xc = xw.connections[simConnID];
+                zeroConnRates(oil, gas, wat, xc);
+
+                xc.index = conn.global_index();
+                simConnID++;
+            }
         }
 
         if (! wellData.hasDefinedConnectionValues()) {
@@ -999,33 +981,18 @@ namespace {
             return;
         }
 
-        const auto& conn0 = well.getConnections();
-        const auto conns = Opm::WellConnections(conn0, grid);
-        const auto ijk_to_res = ijk_to_resID(wellID, nConn, wellData);
+        for (std::size_t rstConnID = 0; rstConnID < nConn; rstConnID++) {
+            const auto icon = wellData.icon(wellID, rstConnID);
+            const auto i = icon[VI::IConn::index::CellI] - 1;
+            const auto j = icon[VI::IConn::index::CellJ] - 1;
+            const auto k = icon[VI::IConn::index::CellK] - 1;
+            auto * xc = xw.find_connection(grid.getGlobalIndex(i,j,k));
+            if (!xc)
+                continue;
 
-        auto linConnID = std::size_t{0};
-        for (const auto& conn : conns) {
-            if (++linConnID > nConn) { continue; }
-
-            auto& xc = xw.connections[linConnID - 1];
-
-            const auto ijk =
-                std::make_tuple(conn.getI(), conn.getJ(), conn.getK());
-
-            auto resPos = ijk_to_res.find(ijk);
-
-            if (resPos != std::end(ijk_to_res)) {
-                const auto connID = resPos->second;
-                const auto xcon   = wellData.xcon(wellID, connID);
-
-                restoreConnRates(xcon, usys, oil, gas, wat, xc);
-
-                xc.index = grid.getGlobalIndex(std::get<0>(ijk),
-                                               std::get<1>(ijk),
-                                               std::get<2>(ijk));
-
-                xc.pressure = usys.to_si(M::pressure, xcon[Ix::Pressure]);
-            }
+            const auto xcon = wellData.xcon(wellID, rstConnID);
+            restoreConnRates(xcon, usys, oil, gas, wat, *xc);
+            xc->pressure = usys.to_si(M::pressure, xcon[Ix::Pressure]);
         }
     }
 
