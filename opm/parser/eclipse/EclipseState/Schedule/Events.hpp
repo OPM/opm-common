@@ -123,7 +123,9 @@ namespace Opm
     public:
         Events() = default;
         explicit Events(const TimeMap& timeMap);
-        explicit Events(const DynamicVector<uint64_t>& events);
+
+        static Events serializeObject();
+
         void addEvent(ScheduleEvents::Events event, size_t reportStep);
         bool hasEvent(uint64_t eventMask, size_t reportStep) const;
 

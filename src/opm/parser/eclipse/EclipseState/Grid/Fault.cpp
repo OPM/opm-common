@@ -27,13 +27,14 @@ namespace Opm {
     {
     }
 
-    Fault::Fault(const std::string& name,
-                 double transMult,
-                 const std::vector<FaultFace>& faceList) :
-        m_name(name),
-        m_transMult(transMult),
-        m_faceList(faceList)
+    Fault Fault::serializeObject()
     {
+        Fault result;
+        result.m_name = "test";
+        result.m_transMult = 1.0;
+        result.m_faceList = {FaultFace::serializeObject()};
+
+        return result;
     }
 
 

@@ -28,9 +28,12 @@ class DeckRecord;
 struct WellBrineProperties
 {
     double m_saltConcentration = 0.0;
+
     void handleWSALT(const DeckRecord& rec);
     bool operator!=(const WellBrineProperties& other) const;
     bool operator==(const WellBrineProperties& other) const;
+
+    static WellBrineProperties serializeObject();
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)

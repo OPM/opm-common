@@ -47,40 +47,6 @@ namespace Opm {
     {
     }
 
-    WellEconProductionLimits::WellEconProductionLimits(double minOilRate,
-                                                       double minGasRate,
-                                                       double maxWaterCut,
-                                                       double maxGasOilRatio,
-                                                       double maxWaterGasRatio,
-                                                       EconWorkover workover,
-                                                       bool endRun,
-                                                       const std::string& followonWell,
-                                                       QuantityLimit quantityLimit,
-                                                       double secondaryMaxWaterCut,
-                                                       EconWorkover workoverSecondary,
-                                                       double maxGasLiquidRatio,
-                                                       double minLiquidRate,
-                                                       double maxTemperature,
-                                                       double minReservoirFluidRate)
-        : m_min_oil_rate(minOilRate)
-        , m_min_gas_rate(minGasRate)
-        , m_max_water_cut(maxWaterCut)
-        , m_max_gas_oil_ratio(maxGasOilRatio)
-        , m_max_water_gas_ratio(maxWaterGasRatio)
-        , m_workover(workover)
-        , m_end_run(endRun)
-        , m_followon_well(followonWell)
-        , m_quantity_limit(quantityLimit)
-        , m_secondary_max_water_cut(secondaryMaxWaterCut)
-        , m_workover_secondary(workoverSecondary)
-        , m_max_gas_liquid_ratio(maxGasLiquidRatio)
-        , m_min_liquid_rate(minLiquidRate)
-        , m_max_temperature(maxTemperature)
-        , m_min_reservoir_fluid_rate(minReservoirFluidRate)
-    {
-    }
-
-
 
     WellEconProductionLimits::WellEconProductionLimits(const DeckRecord& record)
         : m_min_oil_rate(record.getItem("MIN_OIL_PRODUCTION").get<UDAValue>(0).getSI())
@@ -122,6 +88,28 @@ namespace Opm {
                 throw std::invalid_argument("Unknown input: " + string_endrun + " for END_RUN_FLAG in WECON");
             }
         }
+    }
+
+    WellEconProductionLimits WellEconProductionLimits::serializeObject()
+    {
+        WellEconProductionLimits result;
+        result.m_min_oil_rate = 1.0;
+        result.m_min_gas_rate = 2.0;
+        result.m_max_water_cut = 3.0;
+        result.m_max_gas_oil_ratio = 4.0;
+        result.m_max_water_gas_ratio = 5.0;
+        result.m_workover = EconWorkover::CONP;
+        result.m_end_run = true;
+        result.m_followon_well = "test";
+        result.m_quantity_limit = QuantityLimit::POTN;
+        result.m_secondary_max_water_cut = 6.0;
+        result.m_workover_secondary = EconWorkover::WELL;
+        result.m_max_gas_liquid_ratio = 7.0;
+        result.m_min_liquid_rate = 8.0;
+        result.m_max_temperature = 9.0;
+        result.m_min_reservoir_fluid_rate = 10.0;
+
+        return result;
     }
 
 

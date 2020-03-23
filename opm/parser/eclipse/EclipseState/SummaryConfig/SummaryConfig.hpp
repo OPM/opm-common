@@ -53,6 +53,8 @@ namespace Opm {
         SummaryConfigNode() = default;
         explicit SummaryConfigNode(std::string keyword, const Category cat, Location loc_arg);
 
+        static SummaryConfigNode serializeObject();
+
         SummaryConfigNode& parameterType(const Type type);
         SummaryConfigNode& namedEntity(std::string name);
         SummaryConfigNode& number(const int num);
@@ -150,6 +152,7 @@ namespace Opm {
                           const std::set<std::string>& shortKwds,
                           const std::set<std::string>& smryKwds);
 
+            static SummaryConfig serializeObject();
 
             const_iterator begin() const;
             const_iterator end() const;

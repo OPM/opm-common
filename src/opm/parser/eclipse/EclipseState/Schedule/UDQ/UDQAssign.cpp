@@ -34,13 +34,14 @@ UDQAssign::UDQAssign(const std::string& keyword, const std::vector<std::string>&
     this->add_record(selector, value);
 }
 
-UDQAssign::UDQAssign(const std::string& keyword,
-                     UDQVarType varType,
-                     const std::vector<AssignRecord>& record) :
-    m_keyword(keyword),
-    m_var_type(varType),
-    records(record)
+UDQAssign UDQAssign::serializeObject()
 {
+    UDQAssign result;
+    result.m_keyword = "test";
+    result.m_var_type = UDQVarType::CONNECTION_VAR;
+    result.records = {{{"test1"}, 1.0}};
+
+    return result;
 }
 
 void UDQAssign::add_record(const std::vector<std::string>& selector, double value) {

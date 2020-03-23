@@ -42,6 +42,16 @@ namespace Opm {
     }
 
 
+    EclipseConfig EclipseConfig::serializeObject()
+    {
+        EclipseConfig result;
+        result.m_initConfig = InitConfig::serializeObject();
+        result.io_config = IOConfig::serializeObject();
+
+        return result;
+    }
+
+
     const InitConfig& EclipseConfig::init() const {
         return m_initConfig;
     }

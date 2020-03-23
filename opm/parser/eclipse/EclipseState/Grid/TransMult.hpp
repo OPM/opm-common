@@ -49,10 +49,8 @@ namespace Opm {
     public:
         TransMult() = default;
         TransMult(const GridDims& dims, const Deck& deck, const FieldPropsManager& fp);
-        TransMult(const std::array<size_t,3>& size,
-                  const std::map<FaceDir::DirEnum, std::vector<double>>& trans,
-                  const std::map<FaceDir::DirEnum, std::string>& names,
-                  const MULTREGTScanner& scanner);
+
+        static TransMult serializeObject();
 
         double getMultiplier(size_t globalIndex, FaceDir::DirEnum faceDir) const;
         double getMultiplier(size_t i , size_t j , size_t k, FaceDir::DirEnum faceDir) const;

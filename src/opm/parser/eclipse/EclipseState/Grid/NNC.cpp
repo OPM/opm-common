@@ -54,6 +54,15 @@ namespace Opm
             }
         }
     }
+
+    NNC NNC::serializeObject()
+    {
+        NNC result;
+        result.m_nnc = {{1,2,1.0},{2,3,2.0}};
+
+        return result;
+    }
+
     void NNC::addNNC(const size_t cell1, const size_t cell2, const double trans) {
         NNCdata tmp;
         tmp.cell1 = cell1;

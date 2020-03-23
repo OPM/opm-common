@@ -27,14 +27,10 @@ namespace Opm {
 
     class SkprpolyTable : public PolyInjTable {
     public:
-
         SkprpolyTable() = default;
-        SkprpolyTable(const std::vector<double>& throughputs,
-                     const std::vector<double>& velocities,
-                     int tableNumber,
-                     const std::vector<std::vector<double>>& data,
-                     double ref_polymer_concentration);
         explicit SkprpolyTable(const DeckKeyword& table);
+
+        static SkprpolyTable serializeObject();
 
         double referenceConcentration() const;
 

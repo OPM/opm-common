@@ -67,16 +67,19 @@ ASTNode::ASTNode(TokenType type_arg, FuncType func_type_arg, const std::string& 
     arg_list(strip_quotes(arg_list_arg))
 {}
 
-ASTNode::ASTNode(TokenType type_arg, FuncType ftype, const std::string& func_arg,
-                 const std::vector<std::string>& args, double num,
-                 const std::vector<ASTNode>& childs):
-    type(type_arg),
-    func_type(ftype),
-    func(func_arg),
-    arg_list(args),
-    number(num),
-    children(childs)
-{}
+ASTNode ASTNode::serializeObject()
+{
+    ASTNode result;
+    result.type = ::number;
+    result.func_type = FuncType::field;
+    result.func = "test1";
+    result.arg_list = {"test2"};
+    result.number = 1.0;
+    ASTNode child = result;
+    result.children = {child};
+
+    return result;
+}
 
 size_t ASTNode::size() const {
     return this->children.size();

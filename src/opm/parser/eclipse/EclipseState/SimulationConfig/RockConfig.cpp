@@ -77,15 +77,18 @@ RockConfig::RockComp::RockComp(double pref_arg, double comp_arg) :
     compressibility(comp_arg)
 {}
 
+RockConfig RockConfig::serializeObject()
+{
+    RockConfig result;
+    result.m_active = true;
+    result.m_comp = {{100, 0.25}, {200, 0.30}};
+    result.num_property = "ROCKNUM";
+    result.num_tables = 10;
+    result.m_water_compaction = false;
+    result.hyst_mode = Hysteresis::HYSTER;
 
-RockConfig::RockConfig(bool active_arg, const std::vector<RockComp>& comp, const std::string& num_prop, std::size_t num_rock_tables, bool water_compaction, RockConfig::Hysteresis hyst):
-    m_active(active_arg),
-    m_comp(comp),
-    num_property(num_prop),
-    num_tables(num_rock_tables),
-    m_water_compaction(water_compaction),
-    hyst_mode(hyst)
-{}
+    return result;
+}
 
 bool RockConfig::water_compaction() const {
     return this->m_water_compaction;

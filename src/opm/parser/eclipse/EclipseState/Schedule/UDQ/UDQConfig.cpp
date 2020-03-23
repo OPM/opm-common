@@ -45,23 +45,19 @@ namespace Opm {
         udqft(this->udq_params)
     {}
 
+    UDQConfig UDQConfig::serializeObject()
+    {
+        UDQConfig result;
+        result.udq_params = UDQParams::serializeObject();
+        result.udqft = UDQFunctionTable(result.udq_params);
+        result.m_definitions = {{"test1", UDQDefine::serializeObject()}};
+        result.m_assignments = {{"test2", UDQAssign::serializeObject()}};
+        result.units = {{"test3", "test4"}};
+        result.input_index.insert({"test5", UDQIndex::serializeObject()});
+        result.type_count = {{UDQVarType::SCALAR, 5}};
 
-    UDQConfig::UDQConfig(const UDQParams& params,
-                         const UDQFunctionTable& funcTable,
-                         const std::unordered_map<std::string, UDQDefine>& definition,
-                         const std::unordered_map<std::string, UDQAssign>& assignment,
-                         const std::unordered_map<std::string, std::string>& unit,
-                         const OrderedMap<std::string, UDQIndex>& inputIdx,
-                         const std::map<UDQVarType, std::size_t>& tCount) :
-        udq_params(params),
-        udqft(funcTable),
-        m_definitions(definition),
-        m_assignments(assignment),
-        units(unit),
-        input_index(inputIdx),
-        type_count(tCount)
-    {}
-
+        return result;
+    }
 
     const UDQParams& UDQConfig::params() const {
         return this->udq_params;

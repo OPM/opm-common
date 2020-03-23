@@ -47,39 +47,28 @@ Group::Group(const std::string& name, std::size_t insert_index_arg, std::size_t 
         this->parent_group = "FIELD";
 }
 
-Group::Group(const std::string& gname,
-             std::size_t insert_idx,
-             std::size_t initstep,
-             double udqUndef,
-             const UnitSystem& units,
-             GroupType gtype,
-             double groupEF,
-             bool transferGroupEF,
-             bool availableForGroupControl,
-             int vfp,
-             const std::string& parentName,
-             const IOrderSet<std::string>& well,
-             const IOrderSet<std::string>& group,
-             const std::map<Phase, GroupInjectionProperties>& injProps,
-             const GroupProductionProperties& prodProps) :
-    m_name(gname),
-    m_insert_index(insert_idx),
-    init_step(initstep),
-    udq_undefined(udqUndef),
-    unit_system(units),
-    group_type(gtype),
-    gefac(groupEF),
-    transfer_gefac(transferGroupEF),
-    available_for_group_control(availableForGroupControl),
-    vfp_table(vfp),
-    parent_group(parentName),
-    m_wells(well),
-    m_groups(group),
-    injection_properties(injProps),
-    production_properties(prodProps)
+Group Group::serializeObject()
 {
-}
+    Group result;
+    result.m_name = "test1";
+    result.m_insert_index = 1;
+    result.init_step = 2;
+    result.udq_undefined = 3.0;
+    result.unit_system = UnitSystem::serializeObject();
+    result.group_type = GroupType::PRODUCTION;
+    result.gefac = 4.0;
+    result.transfer_gefac = true;
+    result.available_for_group_control = false;
+    result.vfp_table = 5;
+    result.parent_group = "test2";
+    result.m_wells = {{"test3", "test4"}, {"test5", "test6"}};
+    result.m_groups = {{"test7", "test8"}, {"test9", "test10"}};
+    result.injection_properties = {{Opm::Phase::OIL, GroupInjectionProperties::serializeObject()}};
+    result.production_properties = GroupProductionProperties::serializeObject();
+    result.m_topup_phase = {Phase::OIL, true};
 
+    return result;
+}
 
 std::size_t Group::insert_index() const {
     return this->m_insert_index;
@@ -178,6 +167,23 @@ bool Group::updateProduction(const GroupProductionProperties& production) {
 }
 
 
+Group::GroupInjectionProperties Group::GroupInjectionProperties::serializeObject()
+{
+    Group::GroupInjectionProperties result;
+    result.phase = Phase::OIL;
+    result.cmode = InjectionCMode::REIN;
+    result.surface_max_rate = UDAValue(1.0);
+    result.resv_max_rate = UDAValue(2.0);
+    result.target_reinj_fraction = UDAValue(3.0);
+    result.target_void_fraction = UDAValue(4.0);
+    result.reinj_group = "test1";
+    result.voidage_group = "test2";
+    result.injection_controls = 5;
+
+    return result;
+}
+
+
 bool Group::GroupInjectionProperties::operator==(const GroupInjectionProperties& other) const {
     return
         this->phase                 == other.phase &&
@@ -194,6 +200,24 @@ bool Group::GroupInjectionProperties::operator==(const GroupInjectionProperties&
 
 bool Group::GroupInjectionProperties::operator!=(const GroupInjectionProperties& other) const {
     return !(*this == other);
+}
+
+
+Group::GroupProductionProperties Group::GroupProductionProperties::serializeObject()
+{
+    Group::GroupProductionProperties result;
+    result.cmode = ProductionCMode::PRBL;
+    result.exceed_action = ExceedAction::WELL;
+    result.oil_target = UDAValue(1.0);
+    result.water_target = UDAValue(2.0);
+    result.gas_target = UDAValue(3.0);
+    result.liquid_target = UDAValue(4.0);
+    result.guide_rate = 5.0;
+    result.guide_rate_def = GuideRateTarget::COMB;
+    result.resv_target = 6.0;
+    result.production_controls = 7;
+
+    return result;
 }
 
 

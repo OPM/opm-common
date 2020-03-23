@@ -151,15 +151,8 @@ namespace Opm {
         IOConfig() = default;
         explicit IOConfig( const Deck& );
         explicit IOConfig( const std::string& input_path );
-        IOConfig(bool write_init, bool write_egrid,
-                 bool unifin, bool unifout,
-                 bool fmtin, bool fmtout,
-                 const std::string& deck_name,
-                 bool output_enabled,
-                 const std::string& output_dir,
-                 bool no_sim,
-                 const std::string& base_name,
-                 bool ecl_compatible_rst);
+
+        static IOConfig serializeObject();
 
         void setEclCompatibleRST(bool ecl_rst);
         bool getEclCompatibleRST() const;

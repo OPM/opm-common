@@ -46,19 +46,6 @@ namespace Opm {
             
         { }
 
-        Aqudims(size_t mxnaqn, size_t mxnaqc, size_t niftbl, size_t nriftb,
-                size_t nanaqu, size_t ncamax, size_t mxnali, size_t mxaaql) :
-            m_mxnaqn(mxnaqn),
-            m_mxnaqc(mxnaqc),
-            m_niftbl(niftbl),
-            m_nriftb(nriftb),
-            m_nanaqu(nanaqu),
-            m_ncamax(ncamax),
-            m_mxnali(mxnali),
-            m_mxaaql(mxaaql)
-
-        { }
-
         explicit Aqudims(const Deck& deck) :
             Aqudims()
         {
@@ -73,6 +60,21 @@ namespace Opm {
                 m_mxnali  = record.getItem("MXNALI").get<int>(0);
                 m_mxaaql  = record.getItem("MXAAQL").get<int>(0);
             }
+        }
+
+        static Aqudims serializeObject()
+        {
+            Aqudims result;
+            result.m_mxnaqn = 1;
+            result.m_mxnaqc = 2;
+            result.m_niftbl = 3;
+            result.m_nriftb = 4;
+            result.m_nanaqu = 5;
+            result.m_ncamax = 6;
+            result.m_mxnali = 7;
+            result.m_mxaaql = 8;
+
+            return result;
         }
 
         size_t getNumAqunum() const

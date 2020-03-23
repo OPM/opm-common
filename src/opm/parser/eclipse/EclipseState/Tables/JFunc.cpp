@@ -24,7 +24,12 @@
 namespace Opm {
 
     JFunc::JFunc()
-        : JFunc(Flag::BOTH, 0.0, 0.0, 0.0, 0.0, Direction::XY)
+        : m_flag(Flag::BOTH)
+        , m_owSurfaceTension(0.0)
+        , m_goSurfaceTension(0.0)
+        , m_alphaFactor(0.5)
+        , m_betaFactor(0.5)
+        , m_direction(Direction::XY)
     {
     }
 
@@ -64,15 +69,17 @@ namespace Opm {
             throw std::invalid_argument("Illegal JFUNC DIRECTION, must be XY, X, Y, or Z.  Was \"" + kw_dir + "\".");
     }
 
-    JFunc::JFunc(Flag flag, double ow, double go,
-                 double alpha, double beta, Direction dir)
-        : m_flag(flag)
-        , m_owSurfaceTension(ow)
-        , m_goSurfaceTension(go)
-        , m_alphaFactor(alpha)
-        , m_betaFactor(beta)
-        , m_direction(dir)
+    JFunc JFunc::serializeObject()
     {
+        JFunc result;
+        result.m_flag = Flag::BOTH;
+        result.m_owSurfaceTension = 1.0;
+        result.m_goSurfaceTension = 2.0;
+        result.m_alphaFactor = 3.0;
+        result.m_betaFactor = 4.0;
+        result.m_direction = Direction::X;
+
+        return result;
     }
 
     double JFunc::alphaFactor() const {

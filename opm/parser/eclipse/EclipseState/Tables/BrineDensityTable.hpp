@@ -26,8 +26,7 @@ namespace Opm {
 
     class BrineDensityTable {
     public:
-        BrineDensityTable();
-        BrineDensityTable(const std::vector<double>& tableValues);
+        static BrineDensityTable serializeObject();
 
         void init(const Opm::DeckRecord& record);
         const std::vector<double>& getBrineDensityColumn() const;

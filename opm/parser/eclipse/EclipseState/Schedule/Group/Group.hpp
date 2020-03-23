@@ -114,6 +114,8 @@ struct GroupInjectionProperties {
     std::string reinj_group;
     std::string voidage_group;
 
+    static GroupInjectionProperties serializeObject();
+
     int injection_controls = 0;
     bool operator==(const GroupInjectionProperties& other) const;
     bool operator!=(const GroupInjectionProperties& other) const;
@@ -157,6 +159,8 @@ struct GroupProductionProperties {
     GuideRateTarget guide_rate_def;
     double resv_target = 0;
 
+    static GroupProductionProperties serializeObject();
+
     int production_controls = 0;
     bool operator==(const GroupProductionProperties& other) const;
     bool operator!=(const GroupProductionProperties& other) const;
@@ -194,22 +198,8 @@ struct ProductionControls {
 
     Group();
     Group(const std::string& group_name, std::size_t insert_index_arg, std::size_t init_step_arg, double udq_undefined_arg, const UnitSystem& unit_system);
-    Group(const std::string& gname,
-          std::size_t insert_idx,
-          std::size_t initstep,
-          double udqUndef,
-          const UnitSystem& units,
-          GroupType gtype,
-          double groupEF,
-          bool transferGroupEF,
-          bool availableForGroupControl,
-          int vfp,
-          const std::string& parent,
-          const IOrderSet<std::string>& well,
-          const IOrderSet<std::string>& group,
-          const std::map<Phase, GroupInjectionProperties> &injProps,
-          const GroupProductionProperties& prodProps);
 
+    static Group serializeObject();
 
     bool defined(std::size_t timeStep) const;
     std::size_t insert_index() const;

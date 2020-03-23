@@ -54,7 +54,8 @@ class Phases {
         Phases() noexcept = default;
         Phases( bool oil, bool gas, bool wat, bool solvent = false, bool polymer = false, bool energy = false,
                 bool polymw = false, bool foam = false, bool brine = false ) noexcept;
-        Phases(const std::bitset<NUM_PHASES_IN_ENUM>& bbits);
+
+        static Phases serializeObject();
 
         bool active( Phase ) const noexcept;
         size_t size() const noexcept;
@@ -82,8 +83,8 @@ class Welldims {
 public:
     Welldims() = default;
     explicit Welldims(const Deck& deck);
-    Welldims(int WMax, int CWMax, int WGMax, int GMax) :
-      nWMax(WMax), nCWMax(CWMax), nWGMax(WGMax), nGMax(GMax) {}
+
+    static Welldims serializeObject();
 
     int maxConnPerWell() const
     {
@@ -132,7 +133,8 @@ class WellSegmentDims {
 public:
     WellSegmentDims();
     explicit WellSegmentDims(const Deck& deck);
-    WellSegmentDims(int segWellMax, int segMax, int latBranchMax);
+
+    static WellSegmentDims serializeObject();
 
 
     int maxSegmentedWells() const
@@ -171,8 +173,8 @@ class EclHysterConfig
 public:
     EclHysterConfig() = default;
     explicit EclHysterConfig(const Deck& deck);
-    EclHysterConfig(bool active, int pcMod, int krMod);
 
+    static EclHysterConfig serializeObject();
 
     /*!
      * \brief Specify whether hysteresis is enabled or not.
@@ -232,6 +234,9 @@ public:
     SatFuncControls(const double tolcritArg,
                     ThreePhaseOilKrModel model);
 
+
+    static SatFuncControls serializeObject();
+
     double minimumRelpermMobilityThreshold() const
     {
         return this->tolcrit;
@@ -260,15 +265,8 @@ class Runspec {
 public:
     Runspec() = default;
     explicit Runspec( const Deck& );
-    Runspec(const Phases& act_phases,
-            const Tabdims& tabdims,
-            const EndpointScaling& endScale,
-            const Welldims& wellDims,
-            const WellSegmentDims& wsegDims,
-            const UDQParams& udqparams,
-            const EclHysterConfig& hystPar,
-            const Actdims& actDims,
-            const SatFuncControls& sfuncctrl);
+
+    static Runspec serializeObject();
 
     const UDQParams& udqParams() const noexcept;
     const Phases& phases() const noexcept;

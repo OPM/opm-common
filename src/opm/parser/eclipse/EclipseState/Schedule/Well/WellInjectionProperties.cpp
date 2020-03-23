@@ -59,39 +59,27 @@ namespace Opm {
     {
     }
 
-    Well::WellInjectionProperties::WellInjectionProperties(const std::string& wname,
-                                                           const UDAValue& surfaceInjRate,
-                                                           const UDAValue& reservoirInjRate,
-                                                           const UDAValue& BHP,
-                                                           const UDAValue& THP,
-                                                           double bhp_hist,
-                                                           double thp_hist,
-                                                           double temp,
-                                                           double bhph,
-                                                           double thph,
-                                                           int vfpTableNum,
-                                                           bool predMode,
-                                                           int injControls,
-                                                           InjectorType injType,
-                                                           InjectorCMode ctrlMode)
-        : name(wname),
-          surfaceInjectionRate(surfaceInjRate),
-          reservoirInjectionRate(reservoirInjRate),
-          BHPTarget(BHP),
-          THPTarget(THP),
-          bhp_hist_limit(bhp_hist),
-          thp_hist_limit(thp_hist),
-          temperature(temp),
-          BHPH(bhph),
-          THPH(thph),
-          VFPTableNumber(vfpTableNum),
-          predictionMode(predMode),
-          injectionControls(injControls),
-          injectorType(injType),
-          controlMode(ctrlMode)
+    Well::WellInjectionProperties Well::WellInjectionProperties::serializeObject()
     {
-    }
+        Well::WellInjectionProperties result;
+        result.name = "test";
+        result.surfaceInjectionRate = UDAValue(1.0);
+        result.reservoirInjectionRate = UDAValue("test");
+        result.BHPTarget = UDAValue(2.0);
+        result.THPTarget = UDAValue(3.0);
+        result.bhp_hist_limit = 4.0;
+        result.thp_hist_limit = 5.0;
+        result.temperature = 6.0;
+        result.BHPH = 7.0;
+        result.THPH = 8.0;
+        result.VFPTableNumber = 9;
+        result.predictionMode = true;
+        result.injectionControls = 10;
+        result.injectorType = InjectorType::OIL;
+        result.controlMode = InjectorCMode::BHP;
 
+        return result;
+    }
 
     void Well::WellInjectionProperties::handleWCONINJE(const DeckRecord& record, bool availableForGroupControl, const std::string& well_name) {
         this->injectorType = InjectorTypeFromString( record.getItem("TYPE").getTrimmedString(0) );

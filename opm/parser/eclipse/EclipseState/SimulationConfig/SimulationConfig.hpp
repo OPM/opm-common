@@ -37,10 +37,8 @@ namespace Opm {
         SimulationConfig(bool restart,
                          const Deck& deck,
                          const FieldPropsManager& fp);
-        SimulationConfig(const ThresholdPressure& thresholdPressure,
-                         const BCConfig& bc,
-                         const RockConfig& rock_config,
-                         bool useCPR, bool DISGAS, bool VAPOIL, bool isThermal);
+
+        static SimulationConfig serializeObject();
 
         const RockConfig& rock_config() const;
         const ThresholdPressure& getThresholdPressure() const;

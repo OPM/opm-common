@@ -67,15 +67,8 @@ public:
     ActionX(const std::string& name, size_t max_run, double max_wait, std::time_t start_time);
     ActionX(const DeckKeyword& kw, std::time_t start_time);
     ActionX(const DeckRecord& record, std::time_t start_time);
-    ActionX(const std::string& nam,
-            size_t maxRun,
-            double minWait,
-            std::time_t startTime,
-            const std::vector<DeckKeyword>& keyword,
-            const AST& cond,
-            const std::vector<Condition>& conditions,
-            size_t runCount,
-            std::time_t lastRun);
+
+    static ActionX serializeObject();
 
     void addKeyword(const DeckKeyword& kw);
     bool ready(std::time_t sim_time) const;

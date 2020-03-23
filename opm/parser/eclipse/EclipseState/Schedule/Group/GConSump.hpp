@@ -63,8 +63,7 @@ namespace Opm {
             std::string network_node;
         };
 
-        GConSump() = default;
-        GConSump(const std::map<std::string, GCONSUMPGroup>& group);
+        static GConSump serializeObject();
 
         bool has(const std::string& name) const;
         const GCONSUMPGroup& get(const std::string& name) const;

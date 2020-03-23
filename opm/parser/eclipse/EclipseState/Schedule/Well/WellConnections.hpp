@@ -37,6 +37,8 @@ namespace Opm {
         WellConnections(Connection::Order ordering, int headI, int headJ,
                         const std::vector<Connection>& connections);
 
+        static WellConnections serializeObject();
+
         // cppcheck-suppress noExplicitConstructor
         WellConnections(const WellConnections& src, const EclipseGrid& grid);
         void addConnection(int i, int j , int k ,

@@ -23,13 +23,15 @@
 
 namespace Opm {
 
-GuideRateConfig::GuideRateConfig(std::shared_ptr<GuideRateModel> model,
-                                 const std::unordered_map<std::string,WellTarget>& well,
-                                 const std::unordered_map<std::string,GroupTarget>& group)
-    : m_model(model)
-    , wells(well)
-    , groups(group)
-{}
+GuideRateConfig GuideRateConfig::serializeObject()
+{
+    GuideRateConfig result;
+    result.m_model = std::make_shared<GuideRateModel>(GuideRateModel::serializeObject());
+    result.wells = {{"test1", WellTarget{1.0, Well::GuideRateTarget::COMB, 2.0}}};
+    result.groups = {{"test2", GroupTarget{1.0, Group::GuideRateTarget::COMB}}};
+
+    return result;
+}
 
 
 const GuideRateModel& GuideRateConfig::model() const {

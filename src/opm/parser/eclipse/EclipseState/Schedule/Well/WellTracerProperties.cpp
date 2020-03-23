@@ -24,13 +24,13 @@
 
 namespace Opm {
 
-    WellTracerProperties::WellTracerProperties() {
+    WellTracerProperties WellTracerProperties::serializeObject()
+    {
+        WellTracerProperties result;
+        result.m_tracerConcentrations = {{"test", 1.0}, {"test2", 2.0}};
+
+        return result;
     }
-
-    WellTracerProperties::WellTracerProperties(const ConcentrationMap& concentrations)
-        : m_tracerConcentrations(concentrations)
-    { }
-
 
     bool WellTracerProperties::operator==(const WellTracerProperties& other) const {
         if (m_tracerConcentrations == other.m_tracerConcentrations)

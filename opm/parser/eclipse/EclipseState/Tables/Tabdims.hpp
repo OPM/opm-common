@@ -63,12 +63,18 @@ namespace Opm {
             }
         }
 
-        Tabdims(size_t ntsfun, size_t ntpvt, size_t nssfun, size_t nppvt,
-                size_t ntfip, size_t nrpvt) :
-            m_ntsfun(ntsfun), m_ntpvt(ntpvt), m_nssfun(nssfun),
-            m_nppvt(nppvt), m_ntfip(ntfip), m_nrpvt(nrpvt)
-        { }
+        static Tabdims serializeObject()
+        {
+            Tabdims result;
+            result.m_ntsfun = 1;
+            result.m_ntpvt = 2;
+            result.m_nssfun = 3;
+            result.m_nppvt = 4;
+            result.m_ntfip = 5;
+            result.m_nrpvt = 6;
 
+            return result;
+        }
 
         size_t getNumSatTables() const {
             return m_ntsfun;

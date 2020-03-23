@@ -127,11 +127,8 @@ public:
         UDAControl control;
     };
 
-    UDQActive() = default;
-    UDQActive(const std::vector<InputRecord>& inputRecs,
-              const std::vector<Record>& outputRecs,
-              const std::unordered_map<std::string,std::size_t>& udqkeys,
-              const std::unordered_map<std::string,std::size_t>& wgkeys);
+    static UDQActive serializeObject();
+
     int update(const UDQConfig& udq_config, const UDAValue& uda, const std::string& wgname, UDAControl control);
     std::size_t IUAD_size() const;
     std::size_t IUAP_size() const;

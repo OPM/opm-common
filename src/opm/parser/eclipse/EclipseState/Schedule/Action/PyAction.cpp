@@ -51,6 +51,15 @@ PyAction::RunCount PyAction::from_string(std::string run_count) {
     throw std::invalid_argument("RunCount string: " + run_count + " not recognized ");
 }
 
+PyAction PyAction::serializeObject()
+{
+    PyAction result;
+    result.m_name = "name";
+    result.m_run_count = RunCount::unlimited;
+    result.input_code = "import opm";
+
+    return result;
+}
 
 std::string PyAction::load(const std::string& input_path, const std::string& fname) {
     namespace fs = Opm::filesystem;

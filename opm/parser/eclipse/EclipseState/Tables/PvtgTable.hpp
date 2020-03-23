@@ -29,12 +29,8 @@ namespace Opm {
     public:
         PvtgTable() = default;
         PvtgTable( const DeckKeyword& keyword, size_t tableIdx);
-        PvtgTable(const ColumnSchema& outer_schema,
-                  const TableColumn& outer_column,
-                  const TableSchema& undersat_schema,
-                  const TableSchema& sat_schema,
-                  const std::vector<SimpleTable>& undersat_tables,
-                  const SimpleTable& sat_table);
+
+        static PvtgTable serializeObject();
 
         bool operator==(const PvtgTable& data) const;
     };

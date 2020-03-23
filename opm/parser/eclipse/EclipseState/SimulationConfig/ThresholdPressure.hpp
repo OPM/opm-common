@@ -39,11 +39,10 @@ namespace Opm {
                           const Deck& deck,
                           const FieldPropsManager& fp);
 
-        ThresholdPressure(bool active, bool restart,
-                          const ThresholdPressureTable& thpTable,
-                          const PressureTable& pTable);
-
         ThresholdPressure() { m_active = m_restart = false; }
+
+        //! \brief Returns an instance for serialization tests.
+        static ThresholdPressure serializeObject();
 
         /*
           The hasRegionBarrier() method checks if a threshold pressure

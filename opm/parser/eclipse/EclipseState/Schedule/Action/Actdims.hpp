@@ -28,8 +28,8 @@ class Actdims {
 public:
     Actdims();
     explicit Actdims(const Deck& deck);
-    Actdims(std::size_t keyw, std::size_t line_cnt,
-            std::size_t chars, std::size_t conds);
+
+    static Actdims serializeObject();
 
     std::size_t max_keywords() const;
     std::size_t max_line_count() const;

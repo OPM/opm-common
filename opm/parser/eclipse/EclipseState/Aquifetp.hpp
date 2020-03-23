@@ -66,6 +66,9 @@ class Aquifetp {
     Aquifetp() = default;
     Aquifetp(const Deck& deck);
     Aquifetp(const std::vector<Aquifetp::AQUFETP_data>& data);
+
+    static Aquifetp serializeObject();
+
     const std::vector<Aquifetp::AQUFETP_data>& data() const;
 
     std::size_t size() const;

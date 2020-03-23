@@ -76,27 +76,30 @@ ActionX::ActionX(const DeckKeyword& kw, std::time_t start_time) :
 }
 
 
-ActionX::ActionX(const std::string& nam,
-                 size_t maxRun,
-                 double minWait,
-                 std::time_t startTime,
-                 const std::vector<DeckKeyword>& keyword,
-                 const AST& cond,
-                 const std::vector<Condition>& conditions,
-                 size_t runCount,
-                 std::time_t lastRun) :
-    m_name(nam),
-    m_max_run(maxRun),
-    m_min_wait(minWait),
-    m_start_time(startTime),
-    keywords(keyword),
-    condition(cond),
-    m_conditions(conditions),
-    run_count(runCount),
-    last_run(lastRun)
+ActionX ActionX::serializeObject()
 {
-}
+    ActionX result;
+    result.m_name = "test";
+    result.m_max_run = 1;
+    result.m_min_wait = 2;
+    result.m_start_time = 3;
+    result.keywords = {DeckKeyword::serializeObject()};
+    result.condition = Action::AST::serializeObject();
+    Quantity quant;
+    quant.quantity = "test1";
+    quant.args = {"test2"};
+    Condition cond;
+    cond.lhs = quant;
+    cond.rhs = quant;
+    cond.logic = Condition::Logical::AND;
+    cond.cmp = Condition::Comparator::GREATER_EQUAL;
+    cond.cmp_string = "test3";
+    result.m_conditions = {cond};
+    result.run_count = 4;
+    result.last_run = 5;
 
+    return result;
+}
 
 
 void ActionX::addKeyword(const DeckKeyword& kw) {

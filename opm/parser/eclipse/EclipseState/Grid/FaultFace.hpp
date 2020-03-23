@@ -35,7 +35,8 @@ public:
               size_t J1 , size_t J2,
               size_t K1 , size_t K2,
               FaceDir::DirEnum faceDir);
-    FaultFace(const std::vector<size_t>& indices, FaceDir::DirEnum faceDir);
+
+    static FaultFace serializeObject();
 
     std::vector<size_t>::const_iterator begin() const;
     std::vector<size_t>::const_iterator end() const;

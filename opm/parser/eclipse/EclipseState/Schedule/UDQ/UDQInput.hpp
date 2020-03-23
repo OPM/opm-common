@@ -42,6 +42,17 @@ public:
     {
     }
 
+    static UDQIndex serializeObject()
+    {
+        UDQIndex result;
+        result.insert_index = 1;
+        result.typed_insert_index = 2;
+        result.action = UDQAction::ASSIGN;
+        result.var_type = UDQVarType::WELL_VAR;
+
+        return result;
+    }
+
     bool operator==(const UDQIndex& data) const {
         return insert_index == data.insert_index &&
                typed_insert_index == data.typed_insert_index &&

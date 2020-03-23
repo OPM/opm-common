@@ -38,17 +38,16 @@ namespace Opm {
     }
 
 
-    TableColumn::TableColumn(const ColumnSchema& schema,
-                             const std::string& name,
-                             const std::vector<double>& values,
-                             const std::vector<bool>& defaults,
-                             size_t defaultCount) :
-        m_schema(schema),
-        m_name(name),
-        m_values(values),
-        m_default(defaults),
-        m_defaultCount(defaultCount)
+    TableColumn TableColumn::serializeObject()
     {
+        TableColumn result;
+        result.m_schema = Opm::ColumnSchema::serializeObject();
+        result.m_name = "test2";
+        result.m_values = {1.0, 2.0};
+        result.m_default = {false, true};
+        result.m_defaultCount = 2;
+
+        return result;
     }
 
 

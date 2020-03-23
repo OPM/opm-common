@@ -78,9 +78,12 @@ EDITNNC::EDITNNC(const Deck& deck)
     std::sort(m_editnnc.begin(), m_editnnc.end(), compare);
 }
 
-EDITNNC::EDITNNC(const std::vector<NNCdata>& data)
-    : m_editnnc(data)
+EDITNNC EDITNNC::serializeObject()
 {
+    EDITNNC result;
+    result.m_editnnc = {{1,2,1.0},{2,3,2.0}};
+
+    return result;
 }
 
 size_t EDITNNC::size() const {

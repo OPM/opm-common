@@ -57,47 +57,30 @@ namespace Opm {
     {}
 
 
-    Well::WellProductionProperties::WellProductionProperties(const std::string& wname,
-                                                             const UDAValue& oilRate,
-                                                             const UDAValue& waterRate,
-                                                             const UDAValue& gasRate,
-                                                             const UDAValue& liquidRate,
-                                                             const UDAValue& resvRate,
-                                                             const UDAValue& BHP,
-                                                             const UDAValue& THP,
-                                                             double bhp_hist,
-                                                             double thp_hist,
-                                                             double bhph,
-                                                             double thph,
-                                                             int vfpTableNum,
-                                                             double alqValue,
-                                                             bool predMode,
-                                                             ProducerCMode ctrlMode,
-                                                             ProducerCMode whistctlMode,
-                                                             int prodCtrls)
-        : name(wname),
-          OilRate(oilRate),
-          WaterRate(waterRate),
-          GasRate(gasRate),
-          LiquidRate(liquidRate),
-          ResVRate(resvRate),
-          BHPTarget(BHP),
-          THPTarget(THP),
-          bhp_hist_limit(bhp_hist),
-          thp_hist_limit(thp_hist),
-          BHPH(bhph),
-          THPH(thph),
-          VFPTableNumber(vfpTableNum),
-          ALQValue(alqValue),
-          predictionMode(predMode),
-          controlMode(ctrlMode),
-          whistctl_cmode(whistctlMode),
-          m_productionControls(prodCtrls)
+    Well::WellProductionProperties Well::WellProductionProperties::serializeObject()
     {
+        Well::WellProductionProperties result;
+        result.name = "test";
+        result.OilRate = UDAValue(1.0);
+        result.WaterRate = UDAValue("test");
+        result.GasRate = UDAValue(2.0);
+        result.LiquidRate = UDAValue(3.0);
+        result.ResVRate = UDAValue(4.0);
+        result.BHPTarget = UDAValue(5.0);
+        result.THPTarget = UDAValue(6.0);
+        result.bhp_hist_limit = 7.0;
+        result.thp_hist_limit = 8.0;
+        result.BHPH = 9.0;
+        result.THPH = 10.0;
+        result.VFPTableNumber = 11;
+        result.ALQValue = 12.0;
+        result.predictionMode = true;
+        result.controlMode = ProducerCMode::CRAT;
+        result.whistctl_cmode = ProducerCMode::BHP;
+        result.m_productionControls = 13;
+
+        return result;
     }
-
-
-
 
     void Well::WellProductionProperties::init_rates( const DeckRecord& record ) {
         this->OilRate    = record.getItem("ORAT").get<UDAValue>(0);

@@ -140,6 +140,17 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
     }
 
 
+    WellConnections WellConnections::serializeObject()
+    {
+        WellConnections result;
+        result.m_ordering = Connection::Order::DEPTH;
+        result.headI = 1;
+        result.headJ = 2;
+        result.m_connections = {Connection::serializeObject()};
+
+        return result;
+    }
+
 
     WellConnections::WellConnections(const WellConnections& src, const EclipseGrid& grid) :
         m_ordering(src.ordering()),

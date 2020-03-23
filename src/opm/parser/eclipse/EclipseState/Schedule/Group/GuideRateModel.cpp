@@ -68,32 +68,27 @@ GuideRateModel::GuideRateModel(double time_interval_arg,
         throw std::logic_error("Sorry - the 'COMB' mode is not supported");
 }
 
-GuideRateModel::GuideRateModel(double time_interval_arg,
-                               Target target_arg,
-                               const std::array<double, 6>& coefs_arg,
-                               bool allow_increase_arg,
-                               double damping_factor_arg,
-                               bool use_free_gas_arg,
-                               bool use_default_model_arg,
-                               const std::array<UDAValue,3>& udaCoefs_arg) :
-    time_interval(time_interval_arg),
-    m_target(target_arg),
-    A(coefs_arg[0]),
-    B(coefs_arg[1]),
-    C(coefs_arg[2]),
-    D(coefs_arg[3]),
-    E(coefs_arg[4]),
-    F(coefs_arg[5]),
-    allow_increase_(allow_increase_arg),
-    damping_factor_(damping_factor_arg),
-    use_free_gas(use_free_gas_arg),
-    default_model(use_default_model_arg),
-    alpha(udaCoefs_arg[0]),
-    beta(udaCoefs_arg[1]),
-    gamma(udaCoefs_arg[2])
+GuideRateModel GuideRateModel::serializeObject()
 {
-}
+    GuideRateModel result;
+    result.time_interval = 1.0;
+    result.m_target = Target::WAT;
+    result.A = 2.0;
+    result.B = 3.0;
+    result.C = 4.0;
+    result.D = 5.0;
+    result.E = 6.0;
+    result.F = 7.0;
+    result.allow_increase_ = false;
+    result.damping_factor_ = 8.0;
+    result.use_free_gas = true;
+    result.default_model = false;
+    result.alpha = UDAValue(9.0);
+    result.beta = UDAValue(10.0);
+    result.gamma = UDAValue(11.0);
 
+    return result;
+}
 
 double GuideRateModel::pot(double oil_pot, double gas_pot, double wat_pot) const {
     return pot(this->target(), oil_pot, gas_pot, wat_pot);

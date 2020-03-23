@@ -298,6 +298,9 @@ namespace Opm {
             RestartSchedule() = default;
             explicit RestartSchedule( size_t sched_restart);
             RestartSchedule( size_t step, size_t b, size_t freq);
+
+            static RestartSchedule serializeObject();
+
             bool writeRestartFile( size_t timestep , const TimeMap& timemap) const;
             bool operator!=(const RestartSchedule& rhs) const;
             bool operator==( const RestartSchedule& rhs ) const;
@@ -330,12 +333,8 @@ namespace Opm {
         RestartConfig( const TimeMap& time_map, const Deck&, const ParseContext& parseContext, T&& errors );
         RestartConfig( const TimeMap& time_map, const Deck&, const ParseContext& parseContext, ErrorGuard& errors );
         RestartConfig( const TimeMap& time_map, const Deck& );
-        RestartConfig(const TimeMap& timeMap,
-                      int firstRestartStep,
-                      bool writeInitial,
-                      const DynamicState<RestartSchedule>& restart_sched,
-                      const DynamicState<std::map<std::string,int>>& restart_keyw,
-                      const std::vector<bool>& save_keyw);
+
+        static RestartConfig serializeObject();
 
         int  getFirstRestartStep() const;
         bool getWriteRestartFile(size_t timestep, bool log=true) const;

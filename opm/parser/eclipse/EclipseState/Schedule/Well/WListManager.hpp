@@ -28,7 +28,9 @@ class WList;
 class WListManager {
 public:
     WListManager() = default;
-    WListManager(const std::map<std::string,WList>& list);
+
+    static WListManager serializeObject();
+
     bool hasList(const std::string&) const;
     WList& getList(const std::string& name);
     const WList& getList(const std::string& name) const;

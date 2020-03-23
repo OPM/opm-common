@@ -44,6 +44,11 @@ struct DENSITYRecord {
 
 struct DensityTable : public FlatTable< DENSITYRecord > {
     using FlatTable< DENSITYRecord >::FlatTable;
+
+    static DensityTable serializeObject()
+    {
+        return DensityTable({{1.0, 2.0, 3.0}});
+    }
 };
 
 struct PVTWRecord {
@@ -76,6 +81,11 @@ struct PVTWRecord {
 
 struct PvtwTable : public FlatTable< PVTWRecord > {
     using FlatTable< PVTWRecord >::FlatTable;
+
+    static PvtwTable serializeObject()
+    {
+        return PvtwTable({{1.0, 2.0, 3.0, 4.0, 5.0}});
+    }
 };
 
 struct ROCKRecord {
@@ -99,6 +109,11 @@ struct ROCKRecord {
 
 struct RockTable : public FlatTable< ROCKRecord > {
     using FlatTable< ROCKRecord >::FlatTable;
+
+    static RockTable serializeObject()
+    {
+        return RockTable({{1.0, 2.0}});
+    }
 };
 
 struct PVCDORecord {
@@ -131,6 +146,11 @@ struct PVCDORecord {
 
 struct PvcdoTable : public FlatTable< PVCDORecord > {
     using FlatTable< PVCDORecord >::FlatTable;
+
+    static PvcdoTable serializeObject()
+    {
+        return PvcdoTable({{1.0, 2.0, 3.0, 4.0, 5.0}});
+    }
 };
 
 struct PlmixparRecord {
@@ -151,6 +171,11 @@ struct PlmixparRecord {
 
 struct PlmixparTable : public FlatTable< PlmixparRecord> {
     using FlatTable< PlmixparRecord >::FlatTable;
+
+    static PlmixparTable serializeObject()
+    {
+        return PlmixparTable({PlmixparRecord{1.0}});
+    }
 };
 
 struct PlyvmhRecord {
@@ -180,6 +205,11 @@ struct PlyvmhRecord {
 
 struct PlyvmhTable : public FlatTable<PlyvmhRecord> {
     using FlatTable< PlyvmhRecord >::FlatTable;
+
+    static PlyvmhTable serializeObject()
+    {
+        return PlyvmhTable({{1.0, 2.0, 3.0, 4.0}});
+    }
 };
 
 struct ShrateRecord {
@@ -200,6 +230,11 @@ struct ShrateRecord {
 
 struct ShrateTable : public FlatTable<ShrateRecord> {
     using FlatTable< ShrateRecord >::FlatTable;
+
+    static ShrateTable serializeObject()
+    {
+        return ShrateTable({ShrateRecord{1.0}});
+    }
 };
 
 struct Stone1exRecord {
@@ -220,6 +255,11 @@ struct Stone1exRecord {
 
 struct Stone1exTable : public FlatTable<Stone1exRecord> {
     using FlatTable< Stone1exRecord >::FlatTable;
+
+    static Stone1exTable serializeObject()
+    {
+        return Stone1exTable({Stone1exRecord{1.0}});
+    }
 };
 
 struct TlmixparRecord {
@@ -243,6 +283,11 @@ struct TlmixparRecord {
 
 struct TlmixparTable : public FlatTable< TlmixparRecord> {
     using FlatTable< TlmixparRecord >::FlatTable;
+
+    static TlmixparTable serializeObject()
+    {
+        return TlmixparTable({{1.0, 2.0}});
+    }
 };
 
 struct VISCREFRecord {
@@ -266,6 +311,11 @@ struct VISCREFRecord {
 
 struct ViscrefTable : public FlatTable< VISCREFRecord > {
     using FlatTable< VISCREFRecord >::FlatTable;
+
+    static ViscrefTable serializeObject()
+    {
+        return ViscrefTable({{1.0, 2.0}});
+    }
 };
 
 struct WATDENTRecord {
@@ -292,6 +342,11 @@ struct WATDENTRecord {
 
 struct WatdentTable : public FlatTable< WATDENTRecord > {
     using FlatTable< WATDENTRecord >::FlatTable;
+
+    static WatdentTable serializeObject()
+    {
+        return WatdentTable({{1.0, 2.0, 3.0}});
+    }
 };
 
 }

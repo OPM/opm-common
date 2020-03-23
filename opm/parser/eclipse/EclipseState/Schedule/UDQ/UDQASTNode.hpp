@@ -42,12 +42,8 @@ public:
     UDQASTNode(UDQTokenType type_arg, const std::string& func_name, const UDQASTNode& left, const UDQASTNode& right);
     UDQASTNode(UDQTokenType type_arg, const std::string& func_name);
     UDQASTNode(UDQTokenType type_arg, const std::string& string_value, const std::vector<std::string>& selector);
-    UDQASTNode(UDQVarType varType, UDQTokenType typ,
-               const std::string& stringVal,
-               double scalarVal,
-               const std::vector<std::string>& selectors,
-               const std::shared_ptr<UDQASTNode>& left_arg,
-               const std::shared_ptr<UDQASTNode>& right_arg);
+
+    static UDQASTNode serializeObject();
 
     UDQSet eval(UDQVarType eval_target, const UDQContext& context) const;
 
@@ -65,6 +61,7 @@ public:
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {
+        serializer(var_type);
         serializer(type);
         serializer(string_value);
         serializer(selector);

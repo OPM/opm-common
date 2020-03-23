@@ -34,14 +34,8 @@ namespace Opm {
 
         PlyshlogTable() = default;
         PlyshlogTable(const DeckRecord& indexRecord, const DeckRecord& dataRecord);
-        PlyshlogTable(const TableSchema& schema,
-                      const OrderedMap<std::string, TableColumn>& columns,
-                      bool jfunc,
-                      double refPolymerConcentration,
-                      double refSalinity,
-                      double refTemperature,
-                      bool hasRefSalinity,
-                      bool hasRefTemperature);
+
+        static PlyshlogTable serializeObject();
 
         double getRefPolymerConcentration() const;
         double getRefSalinity() const;

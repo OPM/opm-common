@@ -87,31 +87,24 @@ namespace Opm {
         this->setBaseName(basename(input_path));
     }
 
-    IOConfig::IOConfig(bool write_init, bool write_egrid,
-                       bool unifin, bool unifout,
-                       bool fmtin, bool fmtout,
-                       const std::string& deck_name,
-                       bool output_enabled,
-                       const std::string& output_dir,
-                       bool no_sim,
-                       const std::string& base_name,
-                       bool ecl_compatible_r) :
-        m_write_INIT_file(write_init),
-        m_write_EGRID_file(write_egrid),
-        m_UNIFIN(unifin),
-        m_UNIFOUT(unifout),
-        m_FMTIN(fmtin),
-        m_FMTOUT(fmtout),
-        m_deck_filename(deck_name),
-        m_output_enabled(output_enabled),
-        m_output_dir(output_dir),
-        m_nosim(no_sim),
-        m_base_name(base_name),
-        ecl_compatible_rst(ecl_compatible_r)
+    IOConfig IOConfig::serializeObject()
     {
+        IOConfig result;
+        result.m_write_INIT_file = true;
+        result.m_write_EGRID_file = false;
+        result.m_UNIFIN = true;
+        result.m_UNIFOUT = true;
+        result.m_FMTIN = true;
+        result.m_FMTOUT = true;
+        result.m_deck_filename = "test1";
+        result.m_output_enabled = false;
+        result.m_output_dir = "test2";
+        result.m_nosim = true;
+        result.m_base_name = "test3";
+        result.ecl_compatible_rst = false;
+
+        return result;
     }
-
-
 
     static inline bool write_egrid_file( const GRIDSection& grid ) {
         if( grid.hasKeyword( "NOGGF" ) ) return false;

@@ -55,17 +55,8 @@ namespace Opm {
 
         explicit WellEconProductionLimits(const DeckRecord& record);
         WellEconProductionLimits();
-        WellEconProductionLimits(double minOilRate, double minGasRate,
-                                 double maxWaterCut, double maxGasOilRatio,
-                                 double maxWaterGasRatio,
-                                 EconWorkover workover, bool endRun,
-                                 const std::string& followonWell,
-                                 QuantityLimit quantityLimit,
-                                 double secondaryMaxWaterCut,
-                                 EconWorkover workoverSecondary,
-                                 double maxGasLiquidRatio,
-                                 double minLiquidRate, double maxTemperature,
-                                 double minReservoirFluidRate);
+
+        static WellEconProductionLimits serializeObject();
 
         // TODO: not handling things related to m_secondary_max_water_cut
         // for the moment.

@@ -61,7 +61,8 @@ struct RockComp {
 
     RockConfig() = default;
     RockConfig(const Deck& deck, const FieldPropsManager& fp);
-    RockConfig(bool active, const std::vector<RockComp>& comp, const std::string& num_prop, std::size_t num_rock_tables, bool water_compaction, Hysteresis hyst);
+
+    static RockConfig serializeObject();
 
     bool active() const;
     const std::vector<RockConfig::RockComp>& comp() const;

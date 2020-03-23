@@ -104,21 +104,19 @@ UDQASTNode::UDQASTNode(UDQTokenType type_arg,
 }
 
 
-UDQASTNode::UDQASTNode(UDQVarType varType, UDQTokenType typ,
-                       const std::string& stringVal,
-                       double scalarVal,
-                       const std::vector<std::string>& selectors,
-                       const std::shared_ptr<UDQASTNode>& left_arg,
-                       const std::shared_ptr<UDQASTNode>& right_arg) :
-    var_type(varType),
-    type(typ),
-    string_value(stringVal),
-    selector(selectors),
-    scalar_value(scalarVal),
-    left(left_arg),
-    right(right_arg)
-{}
+UDQASTNode UDQASTNode::serializeObject()
+{
+    UDQASTNode result;
+    result.var_type = UDQVarType::REGION_VAR;
+    result.type = UDQTokenType::error;
+    result.string_value = "test1";
+    result.selector = {"test2"};
+    result.scalar_value = 1.0;
+    UDQASTNode left = result;
+    result.left = std::make_shared<UDQASTNode>(left);
 
+    return result;
+}
 
 UDQASTNode::UDQASTNode(UDQTokenType type_arg,
                        const std::string& string_value_arg,

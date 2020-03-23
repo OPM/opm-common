@@ -40,6 +40,9 @@ class Actions {
 public:
     Actions() = default;
     Actions(const std::vector<ActionX>& action, const std::vector<PyAction>& pyactions);
+
+    static Actions serializeObject();
+
     size_t size() const;
     int max_input_lines() const;
     bool empty() const;

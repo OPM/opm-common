@@ -34,9 +34,8 @@ namespace Opm {
     public:
         InitConfig();
         explicit InitConfig(const Deck& deck);
-        InitConfig(const Equil& equil, const FoamConfig& foam,
-                   bool filleps, bool gravity, bool restartReq, int restartStep,
-                   const std::string& restartRootName);
+
+        static InitConfig serializeObject();
 
         void setRestart( const std::string& root, int step);
         bool restartRequested() const;

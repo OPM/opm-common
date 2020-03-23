@@ -32,7 +32,8 @@ public:
     /// Construct from input deck
     explicit EDITNNC(const Deck& deck);
 
-    explicit EDITNNC(const std::vector<NNCdata>& data);
+    /// Returns an instance used for serialization test
+    static EDITNNC serializeObject();
 
     /// \brief Get an ordered set of EDITNNC
     const std::vector<NNCdata>& data() const

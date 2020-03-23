@@ -154,22 +154,19 @@ std::vector<int> unique(const std::vector<int> data) {
         }
     }
 
-
-    MULTREGTScanner::MULTREGTScanner(const std::array<size_t,3>& size,
-                                     const std::vector<MULTREGTRecord>& records,
-                                     const ExternalSearchMap& searchMap,
-                                     const std::map<std::string, std::vector<int>>& region,
-                                     const std::string& defaultRegion) :
-        nx(size[0]),
-        ny(size[1]),
-        nz(size[2]),
-        m_records(records),
-        regions(region),
-        default_region(defaultRegion)
+    MULTREGTScanner MULTREGTScanner::serializeObject()
     {
-        constructSearchMap(searchMap);
-    }
+        MULTREGTScanner result;
+        result.nx = 1;
+        result.ny = 2;
+        result.nz = 3;
+        result.m_records = {{4, 5, 6.0, 7, MULTREGT::ALL, "test1"}};
+        result.constructSearchMap({{"test2", {{{8, 9}, 10}}}});
+        result.regions = {{"test3", {11}}};
+        result.default_region = "test4";
 
+        return result;
+    }
 
     MULTREGTScanner::MULTREGTScanner(const MULTREGTScanner& data) {
         *this = data;

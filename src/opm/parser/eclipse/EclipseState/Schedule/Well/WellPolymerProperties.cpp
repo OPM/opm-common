@@ -26,25 +26,17 @@
 
 namespace Opm {
 
-    WellPolymerProperties::WellPolymerProperties() {
-        m_polymerConcentration = 0.0;
-        m_saltConcentration = 0.0;
-        m_plymwinjtable = -1; // unusable table number
-        m_skprwattable = -1;
-        m_skprpolytable = -1;
-    }
+    WellPolymerProperties WellPolymerProperties::serializeObject()
+    {
+        WellPolymerProperties result;
+        result.m_polymerConcentration = 1.0;
+        result.m_saltConcentration = 2.0;
+        result.m_plymwinjtable = 3;
+        result.m_skprwattable = 4;
+        result.m_skprpolytable = 5;
 
-    WellPolymerProperties::WellPolymerProperties(double polymerConcentration,
-                                                 double saltConcentration,
-                                                 int plymwinjtable,
-                                                 int skprwattable,
-                                                 int skprpolytable)
-        : m_polymerConcentration(polymerConcentration)
-        , m_saltConcentration(saltConcentration)
-        , m_plymwinjtable(plymwinjtable)
-        , m_skprwattable(skprwattable)
-        , m_skprpolytable(skprpolytable)
-    { }
+        return result;
+    }
 
     bool WellPolymerProperties::operator==(const WellPolymerProperties& other) const {
         if ((m_polymerConcentration == other.m_polymerConcentration) &&

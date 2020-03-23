@@ -236,6 +236,15 @@ bool is_RPTSCHED_mnemonic( const std::string& kw ) {
          */
     }
 
+    RestartSchedule RestartSchedule::serializeObject()
+    {
+        RestartSchedule result(1, 2, 3);
+        result.rptsched_restart_set = true;
+        result.rptsched_restart = 4;
+
+        return result;
+    }
+
     bool RestartSchedule::operator!=(const RestartSchedule & rhs) const {
         return !( *this == rhs );
     }
@@ -536,22 +545,18 @@ void RestartConfig::handleScheduleSection(const SCHEDULESection& schedule, const
         initFirstOutput( );
     }
 
-
-    RestartConfig::RestartConfig(const TimeMap& timeMap,
-                                 int firstRestartStep,
-                                 bool writeInitial,
-                                 const DynamicState<RestartSchedule>& restart_sched,
-                                 const DynamicState<std::map<std::string,int>>& restart_keyw,
-                                 const std::vector<bool>& save_keyw) :
-        m_timemap(timeMap),
-        m_first_restart_step(firstRestartStep),
-        m_write_initial_RST_file(writeInitial),
-        restart_schedule(restart_sched),
-        restart_keywords(restart_keyw),
-        save_keywords(save_keyw)
+    RestartConfig RestartConfig::serializeObject()
     {
-    }
+        RestartConfig result;
+        result.m_timemap = TimeMap::serializeObject();
+        result.m_first_restart_step = 2;
+        result.m_write_initial_RST_file = true;
+        result.restart_schedule = {{RestartSchedule::serializeObject()}, 2};
+        result.restart_keywords = {{{{"test",3}}}, 3};
+        result.save_keywords = {false, true};
 
+        return result;
+    }
 
     RestartSchedule RestartConfig::getNode( size_t timestep ) const{
         return restart_schedule.get(timestep);

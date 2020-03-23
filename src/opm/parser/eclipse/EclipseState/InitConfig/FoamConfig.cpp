@@ -30,10 +30,11 @@ namespace Opm
 // FoamData member functions.
 
 FoamData::FoamData()
-    : FoamData(0.0,
-               ParserKeywords::FOAMFSC::EXPONENT::defaultValue,
-               ParserKeywords::FOAMFSC::MIN_SURF_CONC::defaultValue,
-               false, 1.0)
+    : reference_surfactant_concentration_(0.0)
+    , exponent_(ParserKeywords::FOAMFSC::EXPONENT::defaultValue)
+    , minimum_surfactant_concentration_(ParserKeywords::FOAMFSC::MIN_SURF_CONC::defaultValue)
+    , allow_desorption_(false)
+    , rock_density_(1.0)
 {
 }
 
@@ -67,17 +68,17 @@ FoamData::FoamData(const DeckRecord& FOAMROCK_record)
     allow_desorption_ = (ads_ind == 1);
 }
 
-FoamData::FoamData(double reference_surfactant_concentration,
-                   double exponent,
-                   double minimum_surfactant_concentration,
-                   bool allow_desorption,
-                   double rock_density)
-    : reference_surfactant_concentration_(reference_surfactant_concentration)
-    , exponent_(exponent)
-    , minimum_surfactant_concentration_(minimum_surfactant_concentration)
-    , allow_desorption_(allow_desorption)
-    , rock_density_(rock_density)
+FoamData
+FoamData::serializeObject()
 {
+    FoamData result;
+    result.reference_surfactant_concentration_ = 1.0;
+    result.exponent_ = 2.0;
+    result.minimum_surfactant_concentration_ = 3.0;
+    result.allow_desorption_ = true;
+    result.rock_density_ = 4.0;
+
+    return result;
 }
 
 double
@@ -168,13 +169,15 @@ FoamConfig::FoamConfig(const Deck& deck)
     }
 }
 
-FoamConfig::FoamConfig(const std::vector<FoamData>& data,
-                       Phase transport_phase,
-                       MobilityModel mobility_model)
-    : data_(data)
-    , transport_phase_(transport_phase)
-    , mobility_model_(mobility_model)
+FoamConfig
+FoamConfig::serializeObject()
 {
+    FoamConfig result;
+    result.data_ = {Opm::FoamData::serializeObject()};
+    result.transport_phase_ = Phase::GAS;
+    result.mobility_model_ = MobilityModel::TAB;
+
+    return result;
 }
 
 const FoamData&

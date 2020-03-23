@@ -96,6 +96,21 @@ namespace Opm {
         }
     }
 
+    Valve Valve::serializeObject()
+    {
+        Valve result;
+        result.m_con_flow_coeff = 1.0;
+        result.m_con_cross_area = 2.0;
+        result.m_con_max_cross_area = 3.0;
+        result.m_pipe_additional_length = 4.0;
+        result.m_pipe_diameter = 5.0;
+        result.m_pipe_roughness = 6.0;
+        result.m_pipe_cross_area = 7.0;
+        result.m_status = ICDStatus::OPEN;
+
+        return result;
+    }
+
     std::map<std::string, std::vector<std::pair<int, Valve> > >
     Valve::fromWSEGVALV(const DeckKeyword& keyword)
     {

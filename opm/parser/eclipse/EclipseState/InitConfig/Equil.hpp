@@ -58,7 +58,8 @@ namespace Opm {
 
             Equil() = default;
             explicit Equil( const DeckKeyword& );
-            Equil(const std::vector<EquilRecord>& records);
+
+            static Equil serializeObject();
 
             const EquilRecord& getRecord( size_t id ) const;
 

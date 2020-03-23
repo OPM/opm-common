@@ -127,14 +127,14 @@ namespace Opm {
         }
     }
 
-    ThresholdPressure::ThresholdPressure(bool active, bool restart,
-                                         const ThresholdPressureTable& thpTable,
-                                         const PressureTable& pTable)
-      : m_active(active)
-      , m_restart(restart)
-      , m_thresholdPressureTable(thpTable)
-      , m_pressureTable(pTable)
+    ThresholdPressure ThresholdPressure::serializeObject()
     {
+        ThresholdPressure result;
+        result.m_active = false;
+        result.m_restart = true;
+        result.m_thresholdPressureTable = {{true, 1.0}, {false, 2.0}};
+        result.m_pressureTable = {{{1,2},{false,3.0}},{{2,3},{true,4.0}}};
+        return result;
     }
 
     bool ThresholdPressure::hasRegionBarrier(int r1 , int r2) const {

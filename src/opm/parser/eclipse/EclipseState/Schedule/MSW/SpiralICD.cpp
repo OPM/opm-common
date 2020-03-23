@@ -80,6 +80,25 @@ namespace Opm {
         }
     }
 
+
+    SpiralICD SpiralICD::serializeObject()
+    {
+        SpiralICD result;
+        result.m_strength = 1.0;
+        result.m_length = 2.0;
+        result.m_density_calibration = 3.0;
+        result.m_viscosity_calibration = 4.0;
+        result.m_critical_value = 5.0;
+        result.m_width_transition_region = 6.0;
+        result.m_max_viscosity_ratio = 7.0;
+        result.m_method_flow_scaling = 8;
+        result.m_max_absolute_rate = 9.0;
+        result.m_status = ICDStatus::OPEN;
+        result.m_scaling_factor = 10.0;
+
+        return result;
+    }
+
     std::map<std::string, std::vector<std::pair<int, SpiralICD> > >
     SpiralICD::fromWSEGSICD(const DeckKeyword& wsegsicd)
     {

@@ -89,9 +89,12 @@ namespace Opm {
         }
     }
 
-    Equil::Equil(const std::vector<EquilRecord>& records) :
-        m_records(records)
+    Equil Equil::serializeObject()
     {
+        Equil result;
+        result.m_records = {{1.0, 2.0, 3.0, 4.0, 5.0, 6.0, true, false, 1}};
+
+        return result;
     }
 
     const EquilRecord& Equil::getRecord( size_t id ) const {

@@ -122,6 +122,16 @@ WellType::WellType(Phase phase) :
     WellType(true, phase)
 {}
 
+WellType WellType::serializeObject()
+{
+    WellType result;
+    result.m_producer = true;
+    result.injection_phase = Phase::OIL;
+    result.m_welspecs_phase = Phase::WATER;
+
+    return result;
+}
+
 bool WellType::update(bool producer_arg) {
     if (this->m_producer != producer_arg) {
         this->m_producer = producer_arg;

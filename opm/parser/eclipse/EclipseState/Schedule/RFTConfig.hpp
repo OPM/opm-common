@@ -59,15 +59,10 @@ public:
     using WellOpenTimeMap = std::unordered_map<std::string, std::size_t>;
 
     RFTConfig();
-    RFTConfig(const TimeMap& tm,
-              const std::size_t first_rft,
-              const std::pair<bool, std::size_t>& rftTime,
-              const WellOpenTimeMap& rftName,
-              const WellOpenTimeMap& wellOpen,
-              const ConfigMap<RFT>& rconfig,
-              const ConfigMap<PLT>& pconfig);
-
     explicit RFTConfig(const TimeMap& time_map);
+
+    static RFTConfig serializeObject();
+
     bool rft(const std::string& well, std::size_t report_step) const;
     bool plt(const std::string& well, std::size_t report_step) const;
     bool getWellOpenRFT(const std::string& well_name, std::size_t report_step) const;

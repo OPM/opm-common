@@ -33,6 +33,15 @@ public:
         lineno(lno)
     {}
 
+    static Location serializeObject()
+    {
+        Location result;
+        result.filename = "test";
+        result.lineno = 1;
+
+        return result;
+    }
+
     bool operator==(const Location& data) const {
         return filename == data.filename &&
                lineno == data.lineno;

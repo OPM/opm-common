@@ -47,6 +47,12 @@ namespace Opm {
             m_NPLMIX( nplmix )
         {}
 
+        static Regdims serializeObject()
+        {
+            return Regdims(1, 2, 3, 4, 5);
+        }
+
+
         size_t getNTFIP() const {
             return m_NTFIP;
         }

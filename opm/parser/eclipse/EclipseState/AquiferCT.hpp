@@ -110,6 +110,8 @@ namespace Opm {
         AquiferCT(const TableManager& tables, const Deck& deck);
         AquiferCT(const std::vector<AquiferCT::AQUCT_data>& data);
 
+        static AquiferCT serializeObject();
+
         std::size_t size() const;
         std::vector<AquiferCT::AQUCT_data>::const_iterator begin() const;
         std::vector<AquiferCT::AQUCT_data>::const_iterator end() const;

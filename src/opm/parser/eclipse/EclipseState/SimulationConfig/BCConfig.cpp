@@ -78,26 +78,22 @@ BCConfig::BCFace::BCFace(const DeckRecord& record) :
 {
 }
 
+BCConfig::BCFace BCConfig::BCFace::serializeObject()
+{
+    BCFace result;
+    result.i1 = 10;
+    result.i2 = 11;
+    result.j1 = 12;
+    result.j2 = 13;
+    result.k1 = 14;
+    result.k2 = 15;
+    result.bctype = BCType::RATE;
+    result.dir = FaceDir::XPlus;
+    result.component = BCComponent::GAS;
+    result.rate = 100.0;
 
-BCConfig::BCFace::BCFace(std::size_t i1_arg, std::size_t i2_arg,
-                         std::size_t j1_arg, std::size_t j2_arg,
-                         std::size_t k1_arg, std::size_t k2_arg,
-                         BCType type_arg,
-                         FaceDir::DirEnum dir_arg,
-                         BCComponent comp_arg,
-                         double rate_arg) :
-    i1(i1_arg),
-    i2(i2_arg),
-    j1(j1_arg),
-    j2(j2_arg),
-    k1(k1_arg),
-    k2(k2_arg),
-    bctype(type_arg),
-    dir(dir_arg),
-    component(comp_arg),
-    rate(rate_arg)
-{}
-
+    return result;
+}
 
 
 bool BCConfig::BCFace::operator==(const BCConfig::BCFace& other) const {
@@ -123,14 +119,12 @@ BCConfig::BCConfig(const Deck& deck) {
 }
 
 
-BCConfig::BCConfig(const std::vector<BCFace>& input_faces):
-    m_faces(input_faces)
-{}
+BCConfig BCConfig::serializeObject()
+{
+    BCConfig result;
+    result.m_faces = {BCFace::serializeObject()};
 
-
-
-const std::vector<BCConfig::BCFace>& BCConfig::faces() const {
-    return this->m_faces;
+    return result;
 }
 
 

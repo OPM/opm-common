@@ -64,7 +64,9 @@ public:
 
     /// Construct from input deck.
     explicit NNC(const Deck& deck);
-    explicit NNC(const std::vector<NNCdata>& nncdata) : m_nnc(nncdata) {}
+
+    static NNC serializeObject();
+
     void addNNC(const size_t cell1, const size_t cell2, const double trans);
     const std::vector<NNCdata>& data() const { return m_nnc; }
     size_t numNNC() const;

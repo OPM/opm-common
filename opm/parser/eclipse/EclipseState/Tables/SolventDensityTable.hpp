@@ -25,8 +25,7 @@ namespace Opm {
 
     class SolventDensityTable {
     public:
-        SolventDensityTable();
-        SolventDensityTable(const std::vector<double>& tableValues);
+        static SolventDensityTable serializeObject();
 
         void init(const Opm::DeckRecord& record);
         const std::vector<double>& getSolventDensityColumn() const;

@@ -802,15 +802,9 @@ namespace {
         init();
     }
 
-    UnitSystem::UnitSystem(const std::string& name, UnitType unit,
-                           const std::map<std::string,Dimension>& dimensions,
-                           size_t use_count)
-        : m_name(name)
-        , m_unittype(unit)
-        , m_dimensions(dimensions)
-        , m_use_count(use_count)
+    UnitSystem UnitSystem::serializeObject()
     {
-        init();
+        return UnitSystem(UnitType::UNIT_TYPE_METRIC);
     }
 
     void UnitSystem::initINPUT() {

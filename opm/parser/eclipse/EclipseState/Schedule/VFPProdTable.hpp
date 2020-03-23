@@ -70,6 +70,7 @@ public:
     };
 
     VFPProdTable();
+    VFPProdTable( const DeckKeyword& table, const UnitSystem& deck_unit_system);
     VFPProdTable(int table_num,
                  double datum_depth,
                  FLO_TYPE flo_type,
@@ -83,7 +84,7 @@ public:
                  const std::vector<double>& alq_data,
                  const array_type& data);
 
-    VFPProdTable( const DeckKeyword& table, const UnitSystem& deck_unit_system);
+    static VFPProdTable serializeObject();
 
     inline int getTableNum() const {
         return m_table_num;
