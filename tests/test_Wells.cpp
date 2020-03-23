@@ -122,4 +122,10 @@ BOOST_AUTO_TEST_CASE(get_completions) {
 
     BOOST_CHECK_EQUAL( 0.0, wellRates.get("OP_2" , 10000 , data::Rates::opt::wat) );
     BOOST_CHECK_EQUAL( 26.41 , wellRates.get( "OP_2" , 188 , data::Rates::opt::wat));
+
+
+    BOOST_CHECK(w1.find_connection(1234567) == nullptr);
+    const auto& conn = w1.find_connection(88);
+    BOOST_CHECK_EQUAL( 20.41, conn->rates.get(data::Rates::opt::wat));
+    BOOST_CHECK_EQUAL( 22.41, conn->rates.get(data::Rates::opt::gas));
 }
