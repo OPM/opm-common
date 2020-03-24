@@ -210,6 +210,30 @@ namespace Opm {
         template <class MessageBufferType>
         void read(MessageBufferType& buffer);
 
+        const Connection* find_connection(Connection::global_index connection_grid_index) const {
+            const auto connection = std::find_if( this->connections.begin() ,
+                                                  this->connections.end() ,
+                                                  [=]( const Connection& c ) {
+                                                      return c.index == connection_grid_index; });
+
+            if( connection == this->connections.end() )
+                return nullptr;
+
+            return &*connection;
+        }
+
+        Connection* find_connection(Connection::global_index connection_grid_index) {
+            auto connection = std::find_if( this->connections.begin() ,
+                                            this->connections.end() ,
+                                            [=]( const Connection& c ) {
+                                                return c.index == connection_grid_index; });
+
+            if( connection == this->connections.end() )
+                return nullptr;
+
+            return &*connection;
+        }
+
         bool operator==(const Well& well2) const
         {
           return rates == well2.rates &&
