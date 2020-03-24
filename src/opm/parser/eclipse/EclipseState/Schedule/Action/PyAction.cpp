@@ -22,10 +22,6 @@
 #include <pybind11/embed.h>
 #include <pybind11/pybind11.h>
 namespace py = pybind11;
-#else
-namespace py {
-using dict = int;
-}
 #endif
 
 
@@ -57,7 +53,7 @@ PyAction PyAction::serializeObject()
     result.m_name = "name";
     result.m_run_count = RunCount::unlimited;
     result.input_code = "import opm";
-
+    result.m_active = false;
     return result;
 }
 
@@ -76,10 +72,20 @@ std::string PyAction::load(const std::string& input_path, const std::string& fna
 PyAction::PyAction(const std::string& name, RunCount run_count, const std::string& code) :
     m_name(name),
     m_run_count(run_count),
-    input_code(code),
-    m_storage( new py::dict() )
+    input_code(code)
+{
+#ifdef EMBEDDED_PYTHON
+    this->m_storage = new py::dict();
+#endif
+}
+
+PyAction::PyAction(const PyAction& other) :
+    PyAction(other.name(), other.run_count(), other.code())
 {}
 
+PyAction PyAction::operator=(const PyAction& other) {
+    return PyAction(other);
+}
 
 const std::string& PyAction::code() const {
     return this->input_code;
@@ -93,28 +99,31 @@ PyAction::RunCount PyAction::run_count() const {
     return this->m_run_count;
 }
 
+bool PyAction::active() const {
+    return this->m_active;
+}
+
 /*
   The python variables are reference counted and when the Python dictionary
   stored in this->m_storage is destroyed the Python runtime system is involved.
-  This will fail hard id the Python runtime system has not been initialized. If
+  This will fail hard if the Python runtime system has not been initialized. If
   the python runtime has not been initialized the Python dictionary object will
   leak - the leakage is quite harmless, using the PyAction object without a
   Python runtime system does not make any sense after all.
 */
 
 PyAction::~PyAction() {
-    auto dict = static_cast<py::dict *>(this->m_storage);
 #ifdef EMBEDDED_PYTHON
+    auto dict = static_cast<py::dict *>(this->m_storage);
     if (Py_IsInitialized())
         delete dict;
-#else
-    delete dict;
 #endif
 }
 
 bool PyAction::operator==(const PyAction& other) const {
     return this->m_name == other.m_name &&
            this->m_run_count == other.m_run_count &&
+           this->m_active == other.m_active &&
            this->input_code == other.input_code;
 }
 

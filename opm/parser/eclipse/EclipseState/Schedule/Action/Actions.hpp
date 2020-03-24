@@ -52,6 +52,7 @@ public:
     const ActionX& get(const std::string& name) const;
     const ActionX& get(std::size_t index) const;
     std::vector<const ActionX *> pending(std::time_t sim_time) const;
+    std::vector<const PyAction *> pending_python() const;
 
     std::vector<ActionX>::const_iterator begin() const;
     std::vector<ActionX>::const_iterator end() const;
