@@ -26,6 +26,7 @@
 namespace Opm {
 
 class Deck;
+class UnitSystem;
 
 class TracerConfig {
 public:
@@ -36,10 +37,16 @@ public:
         TracerVdTable tvdpf;
 
         TracerEntry() = default;
-        TracerEntry(const std::string& name_, Phase phase_, const std::vector<double>& concentration_)
+        TracerEntry(const std::string& name_, Phase phase_, std::vector<double> concentration_)
             : name(name_)
             , phase(phase_)
-            , concentration(concentration_)
+            , concentration(std::move(concentration_))
+        {}
+
+        TracerEntry(const std::string& name_, Phase phase_, TracerVdTable tvdpf_)
+            : name(name_)
+            , phase(phase_)
+            , tvdpf(std::move(tvdpf_))
         {}
 
         bool operator==(const TracerEntry& data) const {
@@ -60,7 +67,7 @@ public:
     };
 
     TracerConfig() = default;
-    TracerConfig(const Deck& deck);
+    TracerConfig(const UnitSystem& unit_system, const Deck& deck);
 
     static TracerConfig serializeObject();
 
