@@ -348,6 +348,7 @@ if(ENABLE_ECL_INPUT)
     tests/parser/TableSchemaTests.cpp
     tests/parser/ThresholdPressureTest.cpp
     tests/parser/TimeMapTest.cpp
+    tests/parser/TracerTests.cpp
     tests/parser/TransMultTests.cpp
     tests/parser/TuningTests.cpp
     tests/parser/UDQTests.cpp
