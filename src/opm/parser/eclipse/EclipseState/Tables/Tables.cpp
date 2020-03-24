@@ -1266,10 +1266,10 @@ const TableColumn& OverburdTable::getOverburdenPressureColumn() const {
     return SimpleTable::getColumn(1);
 }
 
-TracerVdTable::TracerVdTable(const Opm::DeckItem& item) {
+TracerVdTable::TracerVdTable(const Opm::DeckItem& item, double inv_volume) {
     m_schema.addColumn(Opm::ColumnSchema("DEPTH", Table::STRICTLY_INCREASING, Table::DEFAULT_NONE));
     m_schema.addColumn(Opm::ColumnSchema("TRACER_CONCENTRATION", Table::RANDOM, Table::DEFAULT_NONE));
-    SimpleTable::init(item);
+    SimpleTable::init(item, inv_volume);
 }
 
 const TableColumn& TracerVdTable::getDepthColumn() const {
