@@ -71,6 +71,7 @@ public:
         serializer(m_name);
         serializer(m_run_count);
         serializer(input_code);
+        serializer(m_active);
     }
 
 private:

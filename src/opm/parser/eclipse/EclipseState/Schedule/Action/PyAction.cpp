@@ -53,7 +53,7 @@ PyAction PyAction::serializeObject()
     result.m_name = "name";
     result.m_run_count = RunCount::unlimited;
     result.input_code = "import opm";
-
+    result.m_active = false;
     return result;
 }
 
@@ -123,6 +123,7 @@ PyAction::~PyAction() {
 bool PyAction::operator==(const PyAction& other) const {
     return this->m_name == other.m_name &&
            this->m_run_count == other.m_run_count &&
+           this->m_active == other.m_active &&
            this->input_code == other.input_code;
 }
 
