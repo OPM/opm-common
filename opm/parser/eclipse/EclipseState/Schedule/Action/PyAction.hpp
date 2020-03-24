@@ -41,6 +41,9 @@ public:
 
     PyAction() = default;
     PyAction(const std::string& name, RunCount run_count, const std::string& code);
+    PyAction(const PyAction& other);
+    PyAction operator=(const PyAction& other);
+    ~PyAction();
 
     static PyAction serializeObject();
 
@@ -49,7 +52,6 @@ public:
     bool operator==(const PyAction& other) const;
     PyAction::RunCount run_count() const;
     bool active() const;
-    ~PyAction();
 
     /*
       Storage is a void pointer to a Python dictionary: py::dict. It is represented
