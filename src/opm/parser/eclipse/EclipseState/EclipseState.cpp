@@ -65,6 +65,7 @@ namespace Opm {
             OpmLog::info("Only " + std::to_string( this->runspec().phases().size() )
                                                                 + " fluid phases are enabled" );
         this->aquifer_config = AquiferConfig(this->m_tables, this->m_inputGrid, deck);
+        this->tracer_config = TracerConfig(this->m_deckUnitSystem, deck);
 
         if (deck.hasKeyword( "TITLE" )) {
             const auto& titleKeyword = deck.getKeyword( "TITLE" );
