@@ -66,13 +66,14 @@ TracerConfig::TracerConfig(const UnitSystem& unit_system, const Deck& deck)
                     c *= inv_volume;
 
                 this->tracers.emplace_back(name, phase, std::move(concentration)) ;
-                return;
+                continue;
             }
 
             std::string tracer_table = "TVDPF" + name;
             if (deck.hasKeyword(tracer_table)) {
                 const auto& deck_item = deck.getKeyword(tracer_table).getRecord(0).getItem(0);
                 this->tracers.emplace_back(name, phase, TracerVdTable(deck_item, inv_volume));
+                continue;
             }
 
             throw std::runtime_error("Uninitialized tracer concentration for tracer " + name);
