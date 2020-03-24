@@ -96,6 +96,7 @@ Connection::Connection(const RestartIO::RstConnection& rst_connection, std::size
         m_skin_factor(rst_connection.skin_factor),
         ijk(rst_connection.ijk),
         m_ctfkind(rst_connection.cf_kind),
+        m_global_index(grid.getGlobalIndex(this->ijk[0], this->ijk[1], this->ijk[2])),
         m_seqIndex(insert_index),
         m_segDistStart(rst_connection.segdist_start),
         m_segDistEnd(rst_connection.segdist_end),
