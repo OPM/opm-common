@@ -55,8 +55,9 @@ namespace {
 
     template <class ConnOp>
     void connectionLoop(const std::vector<Opm::Well>& wells,
-                        const Opm::EclipseGrid&        grid,
-                        ConnOp&&                       connOp)
+                        const Opm::EclipseGrid&       grid,
+                        const Opm::data::WellRates&   xw,
+                        ConnOp&&                      connOp)
     {
         for (auto nWell = wells.size(), wellID = 0*nWell;
              wellID < nWell; ++wellID)
@@ -83,11 +84,15 @@ namespace {
                                                         });
             }
 
-
-            for (auto nConn = connSI.size(), connID = 0*nConn;
-                 connID < nConn; ++connID)
+            const auto well_iter = xw.find(well.name());
+            const Opm::data::Well * well_rates = (well_iter == xw.end()) ? nullptr : &well_iter->second;
+            for (auto nConn = connSI.size(), connID = 0*nConn; connID < nConn; ++connID)
             {
-                connOp(well, wellID, *(connSI[connID]), connID);
+                const auto& conn = *(connSI[connID]);
+                if (well_rates)
+                    connOp(wellID, conn, connID, well_rates->find_connection(conn.global_index()));
+                else
+                    connOp(wellID, conn, connID, nullptr);
             }
         }
     }
@@ -281,61 +286,20 @@ captureDeclaredConnData(const Schedule&        sched,
                         const data::WellRates& xw,
                         const std::size_t      sim_step)
 {
-    using ConnectionRates = std::vector<const Opm::data::Connection*>;
     const auto& wells = sched.getWells(sim_step);
-    //
-    // construct a composite vector of connection objects  holding
-    // rates for all open connectons
-    //
-    std::map<std::string, ConnectionRates> allRates;
-    for (const auto& wl : wells) {
-        const auto conns = WellConnections(wl.getConnections(), grid);
-
-        allRates[wl.name()] = ConnectionRates{conns.size(), nullptr};
-        const auto rates_iter = xw.find(wl.name());
-        size_t rCInd = 0;
-        if (rates_iter != xw.end()) {
-            auto& well_rates = allRates[wl.name()];
-            for (auto nConn = conns.size(), connID = 0*nConn; connID < nConn; connID++) {
-                const auto& conn = conns[connID];
-
-                // WellRates connections are only defined for OPEN connections
-                if (conn.state() != Opm::Connection::State::OPEN)
-                    continue;
-
-                const auto& connection_rates = rates_iter->second.connections;
-
-                if (rCInd < connection_rates.size()) {
-                    well_rates[connID] = &(connection_rates[rCInd]);
-                    rCInd += 1;
-                } else
-                    throw std::invalid_argument {
-                        "Inconsistent number of open connections I in vector<Opm::data::Connection*> (" +
-                            std::to_string(connection_rates.size()) + ") in Well " + wl.name()
-                    };
-            }
-        }
-    }
-
-    connectionLoop(wells, grid, [&units, &allRates, this]
-        (const Well&      well, const std::size_t wellID,
-         const Connection& conn, const std::size_t connID) -> void
+    connectionLoop(wells, grid, xw, [&units, this]
+        (const std::size_t wellID,
+         const Connection& conn, const std::size_t connID,
+         const Opm::data::Connection* conn_rates) -> void
     {
         auto ic = this->iConn_(wellID, connID);
         auto sc = this->sConn_(wellID, connID);
 
         IConn::staticContrib(conn, connID, ic);
         SConn::staticContrib(conn, units, sc);
-
-        auto xi = allRates.find(well.name());
-        if ((xi != allRates.end()) &&
-            (connID < xi->second.size()))
-            //(connID < xi->second.connections.size()))
-        {
+        if (conn_rates) {
             auto xc = this->xConn_(wellID, connID);
-
-            //XConn::dynamicContrib(xi->second.connections[connID],
-            if (xi->second[connID]) XConn::dynamicContrib(*(xi->second[connID]), units, xc);
+            XConn::dynamicContrib(*conn_rates, units, xc);
         }
     });
 }
