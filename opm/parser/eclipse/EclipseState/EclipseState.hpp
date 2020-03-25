@@ -26,6 +26,7 @@
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/EclipseState/AquiferConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/TracerConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Edit/EDITNNC.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
@@ -113,6 +114,7 @@ namespace Opm {
 
         const Runspec& runspec() const;
         const AquiferConfig& aquifer() const;
+        const TracerConfig& tracer() const;
 
         template<class Serializer>
         void serializeOp(Serializer& serializer)
@@ -130,6 +132,7 @@ namespace Opm {
             m_faults.serializeOp(serializer);
             serializer(m_title);
             aquifer_config.serializeOp(serializer);
+            tracer_config.serializeOp(serializer);
         }
 
     private:
@@ -158,6 +161,7 @@ namespace Opm {
         FaultCollection m_faults;
         std::string m_title;
         AquiferConfig aquifer_config;
+        TracerConfig tracer_config;
     };
 }
 

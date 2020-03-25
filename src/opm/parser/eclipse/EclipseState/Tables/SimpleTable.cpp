@@ -107,6 +107,31 @@ namespace Opm {
         }
     }
 
+    void SimpleTable::init( const DeckItem& deckItem, double scaling_factor) {
+        this->addColumns();
+
+        if ( (deckItem.data_size() % numColumns()) != 0)
+            throw std::runtime_error("Number of columns in the data file is"
+                    "inconsistent with the ones specified");
+
+        size_t rows = deckItem.data_size() / numColumns();
+        for (size_t colIdx = 0; colIdx < numColumns(); ++colIdx) {
+            auto& column = getColumn( colIdx );
+            for (size_t rowIdx = 0; rowIdx < rows; rowIdx++) {
+                size_t deckItemIdx = rowIdx*numColumns() + colIdx;
+                if (deckItem.defaultApplied(deckItemIdx))
+                    column.addDefault( );
+                else if (m_jfunc) {
+                    column.addValue( deckItem.getData<double>()[deckItemIdx] );
+                }
+                else
+                    column.addValue( scaling_factor * deckItem.get<double>(deckItemIdx) );
+            }
+            if (colIdx > 0)
+                column.applyDefaults(getColumn( 0 ));
+        }
+    }
+
     size_t SimpleTable::numColumns() const {
         return m_schema.size();
     }

@@ -43,6 +43,7 @@ namespace Opm {
 
         void addColumns();
         void init(const DeckItem& deckItem );
+        void init( const DeckItem& deckItem, double scaling_factor);
         size_t numColumns() const;
         size_t numRows() const;
         void addRow( const std::vector<double>& row);
