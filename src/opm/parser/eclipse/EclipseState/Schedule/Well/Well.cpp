@@ -598,7 +598,7 @@ bool Well::updateAutoShutin(bool auto_shutin) {
 
 
 bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg) {
-    connections_arg->order( this->headI, this->headJ );
+    connections_arg->order(  );
     if (*this->connections != *connections_arg) {
         this->connections = connections_arg;
         //if (this->connections->allConnectionsShut()) {}

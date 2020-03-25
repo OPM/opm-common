@@ -102,6 +102,12 @@ BOOST_AUTO_TEST_CASE(WellCOMPDATtestTRACK) {
     for (size_t k = 0; k < completions.size(); ++k) {
         BOOST_CHECK_EQUAL(completions.get( k ).getK(), k);
     }
+
+    // Output / input ordering
+    const auto& output_connections = completions.output(grid);
+    std::vector<int> expected = {0,2,3,4,5,6,7,8,1};
+    for (size_t k = 0; k < completions.size(); ++k)
+        BOOST_CHECK_EQUAL( expected[k], output_connections[k]->getK());
 }
 
 

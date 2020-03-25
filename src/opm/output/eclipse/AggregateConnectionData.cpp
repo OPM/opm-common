@@ -63,36 +63,16 @@ namespace {
              wellID < nWell; ++wellID)
         {
             const auto& well = wells[wellID];
-            std::vector<const Opm::Connection*> connSI;
-            for (const auto& conn : well.getConnections()) {
-                if (grid.cellActive(conn.getI(), conn.getJ(), conn.getK()))
-                    connSI.push_back( &conn );
-            }
-
-            //Branch according to MSW well or not and
-            //sort active connections according to appropriate seqIndex
-            if (well.isMultiSegment()) {
-                //sort connections according to input sequence in COMPSEGS
-                std::sort(connSI.begin(), connSI.end(), [](const Opm::Connection* conn1, const Opm::Connection* conn2)
-                                                            {
-                                                                return conn1->getCompSegSeqIndex() < conn2->getCompSegSeqIndex();
-                                                            });
-            } else {
-                std::sort(connSI.begin(), connSI.end(), [](const Opm::Connection* conn1, const Opm::Connection* conn2)
-                                                        {
-                                                            return conn1->getSeqIndex() < conn2->getSeqIndex();
-                                                        });
-            }
-
             const auto well_iter = xw.find(well.name());
             const Opm::data::Well * well_rates = (well_iter == xw.end()) ? nullptr : &well_iter->second;
-            for (auto nConn = connSI.size(), connID = 0*nConn; connID < nConn; ++connID)
-            {
-                const auto& conn = *(connSI[connID]);
+            const auto& connections = well.getConnections().output(grid);
+            std::size_t connID = 0;
+            for (const auto& conn : connections) {
                 if (well_rates)
-                    connOp(wellID, conn, connID, well_rates->find_connection(conn.global_index()));
+                    connOp(wellID, *conn, connID, well_rates->find_connection(conn->global_index()));
                 else
-                    connOp(wellID, conn, connID, nullptr);
+                    connOp(wellID, *conn, connID, nullptr);
+                connID++;
             }
         }
     }
