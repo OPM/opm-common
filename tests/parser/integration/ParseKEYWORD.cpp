@@ -18,7 +18,6 @@
  */
 
 #define BOOST_TEST_MODULE ParserKeywordsIntegrationTests
-#include <boost/algorithm/string/join.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
@@ -1081,9 +1080,8 @@ BOOST_AUTO_TEST_CASE( TITLE ) {
     const auto& item = record.getItem(0);
 
     std::vector<std::string> itemValue = item.getData< std::string >();
-    std::string itemValueString = boost::algorithm::join(itemValue, " ");
-
-    BOOST_CHECK_EQUAL(0, itemValueString.compare("This is the title of the model."));
+    std::vector<std::string> expected = {"This", "is", "the", "title", "of", "the", "model."};
+    BOOST_CHECK(itemValue == expected);
     BOOST_CHECK_EQUAL(true, deck.hasKeyword("START"));
 }
 
