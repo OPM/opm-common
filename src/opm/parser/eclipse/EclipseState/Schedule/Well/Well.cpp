@@ -29,6 +29,8 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellProductionProperties.hpp>
 #include <fnmatch.h>
 
+#include <cmath>
+
 namespace Opm {
 
 namespace {
@@ -254,10 +256,25 @@ Well::Well(const RestartIO::RstWell& rst_well,
         default:
             throw std::invalid_argument("What ...");
         }
+
+        if ((std::abs(rst_well.wrat_target) > 0.0f) ||
+            (std::abs(rst_well.grat_target) > 0.0f))
+            i->addInjectionControl(Well::InjectorCMode::RATE);
+
+        if (std::abs(rst_well.resv_target) > 0.0f) {
+            i->reservoirInjectionRate = rst_well.resv_target;
+            i->addInjectionControl(Well::InjectorCMode::RESV);
+        }
+
         i->addInjectionControl(Well::InjectorCMode::BHP);
         i->BHPTarget = rst_well.bhp_target_float;
         if (this->isAvailableForGroupControl())
             i->addInjectionControl(Well::InjectorCMode::GRUP);
+
+        if (std::abs(rst_well.thp_target) < 1.0e+20f) {
+            i->THPTarget = rst_well.thp_target;
+            i->addInjectionControl(Well::InjectorCMode::THP);
+        }
 
         this->updateInjection(std::move(i));
     }
