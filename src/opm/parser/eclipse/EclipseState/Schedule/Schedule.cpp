@@ -616,7 +616,7 @@ void Schedule::iterateScheduleSection(const std::string& input_path, const Parse
     }
 
     void Schedule::handlePYACTION( const std::string& input_path, const DeckKeyword& keyword, size_t currentStep) {
-        if (!Python::enabled()) {
+        if (!Python::supported()) {
             const auto& loc = keyword.location();
             OpmLog::warning("This version of flow is built without support for Python. Keyword PYACTION in file: " + loc.filename + " line: " + std::to_string(loc.lineno) + " is ignored.");
             return;

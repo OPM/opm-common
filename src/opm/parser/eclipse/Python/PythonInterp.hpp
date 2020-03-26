@@ -23,6 +23,7 @@
 
 #include <string>
 #include <stdexcept>
+#include <memory>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
@@ -48,12 +49,14 @@ class Deck;
 
 class __attribute__ ((visibility("hidden"))) PythonInterp {
 public:
+    explicit PythonInterp(bool enable);
     bool exec(const std::string& python_code);
     bool exec(const std::string& python_code, const Parser& parser, Deck& deck);
     bool exec(const Action::PyAction& py_action, EclipseState& ecl_state, Schedule& schedule, std::size_t report_step, SummaryState& st);
-    explicit operator bool() const { return true; }
+    static bool supported() { return true; };
+    explicit operator bool() const { return bool(this->guard); }
 private:
-    py::scoped_interpreter guard = {};
+    std::unique_ptr<py::scoped_interpreter> guard;
 };
 
 
@@ -61,6 +64,11 @@ private:
 
 class PythonInterp {
 public:
+    explicit PythonInterp(bool enable) {
+        if (enable)
+            this->fail();
+    }
+
     bool exec(const std::string&) {
         return this->fail();
     };
@@ -73,6 +81,7 @@ public:
         return this->fail();
     }
 
+    static bool supported() { return false; };
     explicit operator bool() const { return false; }
 private:
     bool fail() { throw std::logic_error("The current opm code has been built without Python support;"); }

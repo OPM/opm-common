@@ -416,7 +416,7 @@ ParserState::ParserState(const std::vector<std::pair<std::string, std::string>>&
                          const ParseContext& __parseContext,
                          ErrorGuard& errors_arg) :
     code_keywords(code_keywords_arg),
-    python( PythonInstance() ),
+    python( std::make_unique<Python>() ),
     parseContext( __parseContext ),
     errors( errors_arg )
 {}
@@ -427,7 +427,7 @@ ParserState::ParserState( const std::vector<std::pair<std::string, std::string>>
                           Opm::filesystem::path p ) :
     code_keywords(code_keywords_arg),
     rootPath( Opm::filesystem::canonical( p ).parent_path() ),
-    python( PythonInstance() ),
+    python( std::make_unique<Python>() ),
     parseContext( context ),
     errors( errors_arg )
 {

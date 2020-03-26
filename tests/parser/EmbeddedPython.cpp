@@ -38,26 +38,24 @@ using namespace Opm;
 
 BOOST_AUTO_TEST_CASE(INSTANTIATE) {
     Python python;
-    BOOST_CHECK(!python);
-    /*
-      BOOST_CHECK_THROW(python.exec("print('Hello world')"), std::logic_error);
-    */
-    BOOST_CHECK(! Python::enabled() );
+    BOOST_CHECK(!python.enabled());
+    BOOST_CHECK_THROW(python.exec("print('Hello world')"), std::logic_error);
+    BOOST_CHECK(! Python::supported() );
 
     BOOST_CHECK_THROW( Python{Python::Enable::ON}, std::logic_error );
-    Python python_cond(Python::Enable::COND);
-    BOOST_CHECK(!python_cond);
+    Python python_cond(Python::Enable::TRY);
+    BOOST_CHECK(!python_cond.enabled());
 
     Python python_off(Python::Enable::OFF);
-    BOOST_CHECK(!python_off);
+    BOOST_CHECK(!python_off.enabled());
 }
 
 #else
 
 BOOST_AUTO_TEST_CASE(INSTANTIATE) {
     Python python;
-    BOOST_CHECK(Python::enabled());
-    BOOST_CHECK(python);
+    BOOST_CHECK(Python::supported());
+    BOOST_CHECK(python.enabled());
     BOOST_CHECK_NO_THROW(python.exec("print('Hello world')"));
 
     Parser parser;
@@ -140,21 +138,21 @@ BOOST_AUTO_TEST_CASE(PYACTION) {
 
 BOOST_AUTO_TEST_CASE(Python_Constructor) {
     Python python_off(Python::Enable::OFF);
-    BOOST_CHECK(!python_off);
+    BOOST_CHECK(!python_off.enabled());
 
     Python python_on(Python::Enable::ON);
-    BOOST_CHECK(python_on);
+    BOOST_CHECK(python_on.enabled());
 
-    // Can only have one Python interpreter active at any time
+    //.enabled() Can only have one Python interpreter active at any time
     BOOST_CHECK_THROW(Python(Python::Enable::ON), std::logic_error);
 }
 
 BOOST_AUTO_TEST_CASE(Python_Constructor2) {
-    Python python_cond1(Python::Enable::COND);
-    BOOST_CHECK(python_cond1);
+    Python python_cond1(Python::Enable::TRY);
+    BOOST_CHECK(python_cond1.enabled());
 
-    Python python_cond2(Python::Enable::COND);
-    BOOST_CHECK(!python_cond2);
+    Python python_cond2(Python::Enable::TRY);
+    BOOST_CHECK(!python_cond2.enabled());
 }
 
 
