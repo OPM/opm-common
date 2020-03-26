@@ -1597,7 +1597,8 @@ void Schedule::iterateScheduleSection(const std::string& input_path, const Parse
                 if (!record.getItem("VOIDAGE_GROUP").defaultApplied(0))
                     voidage_group = record.getItem("VOIDAGE_GROUP").getTrimmedString(0);;
 
-                bool availableForGroupControl = DeckItem::to_bool(record.getItem("FREE").getTrimmedString(0));
+                bool availableForGroupControl = DeckItem::to_bool(record.getItem("FREE").getTrimmedString(0))
+                    && (group_name != "FIELD");
                 //surfaceInjectionRate = injection::rateToSI(surfaceInjectionRate, phase, section.unitSystem());
                 {
                     auto group_ptr = std::make_shared<Group>(this->getGroup(group_name, currentStep));
@@ -1672,7 +1673,8 @@ void Schedule::iterateScheduleSection(const std::string& input_path, const Parse
                     }
                 }
                 auto resv_target = record.getItem("RESERVOIR_FLUID_TARGET").getSIDouble(0);
-                bool availableForGroupControl = DeckItem::to_bool(record.getItem("RESPOND_TO_PARENT").getTrimmedString(0));
+                bool availableForGroupControl = DeckItem::to_bool(record.getItem("RESPOND_TO_PARENT").getTrimmedString(0))
+                    && (group_name != "FIELD");
                 {
                     auto group_ptr = std::make_shared<Group>(this->getGroup(group_name, currentStep));
                     Group::GroupProductionProperties production;
