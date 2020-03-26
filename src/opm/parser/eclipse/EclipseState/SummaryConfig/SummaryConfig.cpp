@@ -712,6 +712,7 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
 
     std::string to_string(const SummaryConfigNode::Category cat) {
         switch( cat ) {
+            case SummaryConfigNode::Category::Aquifer: return "Aquifer";
             case SummaryConfigNode::Category::Well: return "Well";
             case SummaryConfigNode::Category::Group: return "Group";
             case SummaryConfigNode::Category::Field: return "Field";
@@ -828,6 +829,7 @@ SummaryConfigNode::Category parseKeywordCategory(const std::string& keyword) {
     if (is_special(keyword)) { return Cat::Miscellaneous; }
 
     switch (keyword[0]) {
+        case 'A': return Cat::Aquifer;
         case 'W': return Cat::Well;
         case 'G': return Cat::Group;
         case 'F': return Cat::Field;
@@ -897,6 +899,7 @@ std::string SummaryConfigNode::uniqueNodeKey() const
     case SummaryConfigNode::Category::Miscellaneous:
         return this->keyword();
 
+    case SummaryConfigNode::Category::Aquifer: [[fallthrough]];
     case SummaryConfigNode::Category::Region: [[fallthrough]];
     case SummaryConfigNode::Category::Block:
         return this->keyword() + ':' + std::to_string(this->number());
@@ -929,6 +932,7 @@ bool operator==(const SummaryConfigNode& lhs, const SummaryConfigNode& rhs)
             // Equal if associated to same named entity
             return lhs.namedEntity() == rhs.namedEntity();
 
+        case SummaryConfigNode::Category::Aquifer: [[fallthrough]];
         case SummaryConfigNode::Category::Region: [[fallthrough]];
         case SummaryConfigNode::Category::Block:
             // Equal if associated to same numeric entity
@@ -964,6 +968,7 @@ bool operator<(const SummaryConfigNode& lhs, const SummaryConfigNode& rhs)
             // Ordering determined by namedEntityd entity
             return lhs.namedEntity() < rhs.namedEntity();
 
+        case SummaryConfigNode::Category::Aquifer: [[fallthrough]];
         case SummaryConfigNode::Category::Region: [[fallthrough]];
         case SummaryConfigNode::Category::Block:
             // Ordering determined by numeric entity

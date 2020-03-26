@@ -23,6 +23,7 @@ namespace Opm::EclIO {
 
 struct SummaryNode {
     enum class Category {
+        Aquifer,
         Well,
         Group,
         Field,

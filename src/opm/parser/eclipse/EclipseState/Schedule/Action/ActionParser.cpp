@@ -93,6 +93,7 @@ FuncType Parser::get_func(const std::string& arg) {
     using Cat = SummaryConfigNode::Category;
     SummaryConfigNode::Category cat = parseKeywordCategory(arg);
     switch (cat) {
+        case Cat::Aquifer:    return FuncType::aquifer;
         case Cat::Well:       return FuncType::well;
         case Cat::Group:      return FuncType::group;
         case Cat::Connection: return FuncType::well_connection;
