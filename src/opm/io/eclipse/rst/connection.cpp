@@ -75,8 +75,8 @@ double RstConnection::inverse_peaceman(double cf, double kh, double rw, double s
 
 using M  = ::Opm::UnitSystem::measure;
 
-RstConnection::RstConnection(const ::Opm::UnitSystem& unit_system, const int* icon, const float* scon, const double* xcon) :
-    insert_index(                                            icon[VI::IConn::SeqIndex] - 1),
+RstConnection::RstConnection(const ::Opm::UnitSystem& unit_system, std::size_t rst_index_, const int* icon, const float* scon, const double* xcon) :
+    rst_index(                                               rst_index_),
     ijk(                                                    {icon[VI::IConn::CellI] - 1, icon[VI::IConn::CellJ] - 1, icon[VI::IConn::CellK] - 1}),
     state(                                                   from_int<Connection::State>(icon[VI::IConn::ConnStat])),
     drain_sat_table(                                         icon[VI::IConn::Drainage]),
@@ -103,10 +103,6 @@ RstConnection::RstConnection(const ::Opm::UnitSystem& unit_system, const int* ic
           file. If the r0 value is given explicitly in the deck it is possible
           to give a value which is not consistent with the Peaceman formula -
           that value will be lost when loading back from a restart file.
-
-      insert_index: The insert index property is used internally to keep track
-          of the order the connections have been specified in the deck. It seems
-          that in some cases (MSW ?) eclipse only outputs 0 here.
     */
 { }
 

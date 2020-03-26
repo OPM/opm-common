@@ -2958,7 +2958,7 @@ void Schedule::load_rst(const RestartIO::RstState& rst_state, const EclipseGrid&
         std::unordered_map<int, Opm::Segment> segments;
 
         for (const auto& rst_conn : rst_well.connections)
-            connections.emplace_back(rst_conn, connections.size(), grid, fp);
+            connections.emplace_back(rst_conn, grid, fp);
 
         for (const auto& rst_segment : rst_well.segments) {
             Opm::Segment segment(rst_segment);

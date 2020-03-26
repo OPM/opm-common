@@ -98,7 +98,7 @@ namespace RestartIO {
                    const double segDistEnd,
                    const bool defaultSatTabId);
 
-        Connection(const RestartIO::RstConnection& rst_connection, std::size_t insert_index, const EclipseGrid& grid, const FieldPropsManager& fp);
+        Connection(const RestartIO::RstConnection& rst_connection, const EclipseGrid& grid, const FieldPropsManager& fp);
 
         static Connection serializeObject();
 
