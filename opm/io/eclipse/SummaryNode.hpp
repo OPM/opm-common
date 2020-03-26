@@ -20,6 +20,7 @@
 #ifndef OPM_IO_SUMMARYNODE_HPP
 #define OPM_IO_SUMMARYNODE_HPP
 
+#include <functional>
 #include <string>
 #include <unordered_set>
 
