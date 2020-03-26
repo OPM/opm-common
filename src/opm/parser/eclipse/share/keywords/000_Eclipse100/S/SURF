@@ -1,3 +1,10 @@
-{"name" : "SURF",
-"sections" : ["SOLUTION"],
-"data" : {"value_type" : "DOUBLE", "dimension" : "Mass/ReservoirVolume"}}
+{
+  "name": "SURF",
+  "sections": [
+    "SOLUTION"
+  ],
+  "data": {
+    "value_type": "DOUBLE",
+    "dimension": "Mass/ReservoirVolume"
+  }
+}

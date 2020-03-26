@@ -1,1 +1,6 @@
-{"name" : "SIMULATE", "sections" : ["SCHEDULE"]}
+{
+  "name": "SIMULATE",
+  "sections": [
+    "SCHEDULE"
+  ]
+}

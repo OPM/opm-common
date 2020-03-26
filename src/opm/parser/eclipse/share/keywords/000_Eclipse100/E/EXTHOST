@@ -1,1 +1,9 @@
-{"name" : "EXTHOST" , "sections" : ["GRID"], "data" : {"value_type" : "INT"}}
+{
+  "name": "EXTHOST",
+  "sections": [
+    "GRID"
+  ],
+  "data": {
+    "value_type": "INT"
+  }
+}

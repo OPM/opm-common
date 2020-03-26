@@ -1,2 +1,11 @@
-{"name" : "RHO" , "sections" : ["GRID"], "data" : {"value_type" : "DOUBLE" , "default" : 0 , "dimension":"Density"}}
-
+{
+  "name": "RHO",
+  "sections": [
+    "GRID"
+  ],
+  "data": {
+    "value_type": "DOUBLE",
+    "default": 0,
+    "dimension": "Density"
+  }
+}

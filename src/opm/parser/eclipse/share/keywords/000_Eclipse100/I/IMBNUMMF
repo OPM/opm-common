@@ -1,1 +1,9 @@
-{"name" : "IMBNUMMF" , "sections" : ["REGIONS"], "data" : {"value_type" : "INT"}}
+{
+  "name": "IMBNUMMF",
+  "sections": [
+    "REGIONS"
+  ],
+  "data": {
+    "value_type": "INT"
+  }
+}

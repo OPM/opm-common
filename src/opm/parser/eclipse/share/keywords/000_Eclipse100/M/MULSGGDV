@@ -1,1 +1,10 @@
-{"name" : "MULSGGDV" , "sections" : ["SCHEDULE"], "data" : {"value_type" : "DOUBLE", "dimension" : "1"}}
+{
+  "name": "MULSGGDV",
+  "sections": [
+    "SCHEDULE"
+  ],
+  "data": {
+    "value_type": "DOUBLE",
+    "dimension": "1"
+  }
+}

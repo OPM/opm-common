@@ -1,1 +1,6 @@
-{"name" : "API" , "sections" : ["RUNSPEC"]}
+{
+  "name": "API",
+  "sections": [
+    "RUNSPEC"
+  ]
+}

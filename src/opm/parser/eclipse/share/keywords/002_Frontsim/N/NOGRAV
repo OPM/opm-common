@@ -1,1 +1,6 @@
-{"name" : "NOGRAV", "sections" : [ "RUNSPEC" ] }
+{
+  "name": "NOGRAV",
+  "sections": [
+    "RUNSPEC"
+  ]
+}

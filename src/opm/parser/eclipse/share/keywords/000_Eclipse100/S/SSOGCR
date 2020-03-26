@@ -1,3 +1,9 @@
-{"name" : "SSOGCR",
- "sections" : ["PROPS"],
- "data" : {"value_type" : "DOUBLE"}}
+{
+  "name": "SSOGCR",
+  "sections": [
+    "PROPS"
+  ],
+  "data": {
+    "value_type": "DOUBLE"
+  }
+}

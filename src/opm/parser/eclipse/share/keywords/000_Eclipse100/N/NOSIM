@@ -1,1 +1,7 @@
-{"name" : "NOSIM", "sections" : ["RUNSPEC", "SCHEDULE"]}
+{
+  "name": "NOSIM",
+  "sections": [
+    "RUNSPEC",
+    "SCHEDULE"
+  ]
+}

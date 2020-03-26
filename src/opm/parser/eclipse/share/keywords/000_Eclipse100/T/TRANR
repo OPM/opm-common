@@ -1,8 +1,10 @@
 {
- "name": "TRANR",
- "sections": ["EDIT"],
- "data": {
-  "value_type": "DOUBLE",
-  "dimension" : "Transmissibility"
- }
+  "name": "TRANR",
+  "sections": [
+    "EDIT"
+  ],
+  "data": {
+    "value_type": "DOUBLE",
+    "dimension": "Transmissibility"
+  }
 }

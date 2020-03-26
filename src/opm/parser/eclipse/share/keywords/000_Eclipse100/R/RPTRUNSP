@@ -1,1 +1,7 @@
-{"name" : "RPTRUNSP", "size" : 0 , "sections" : ["RUNSPEC"]}
+{
+  "name": "RPTRUNSP",
+  "size": 0,
+  "sections": [
+    "RUNSPEC"
+  ]
+}

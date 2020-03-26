@@ -1,1 +1,9 @@
-{"name" : "KRNUMMF" , "sections" : ["REGIONS"], "data" : {"value_type" : "INT"}}
+{
+  "name": "KRNUMMF",
+  "sections": [
+    "REGIONS"
+  ],
+  "data": {
+    "value_type": "INT"
+  }
+}

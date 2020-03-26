@@ -1,1 +1,10 @@
-{"name" : "HWKRW" , "sections" : ["PROPS"], "data" : {"value_type" : "DOUBLE" , "dimension":"1"}}
+{
+  "name": "HWKRW",
+  "sections": [
+    "PROPS"
+  ],
+  "data": {
+    "value_type": "DOUBLE",
+    "dimension": "1"
+  }
+}

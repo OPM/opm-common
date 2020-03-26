@@ -1,1 +1,6 @@
-{"name" : "FIPOWG", "sections" : ["REGIONS"]}
+{
+  "name": "FIPOWG",
+  "sections": [
+    "REGIONS"
+  ]
+}

@@ -1,4 +1,6 @@
 {
-  "name" : "CIRCLE",
-  "sections" : ["GRID"]
+  "name": "CIRCLE",
+  "sections": [
+    "GRID"
+  ]
 }

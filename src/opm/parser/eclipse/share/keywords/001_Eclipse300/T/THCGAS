@@ -1,8 +1,10 @@
 {
   "name": "THCGAS",
-  "sections": ["GRID"],
+  "sections": [
+    "GRID"
+  ],
   "data": {
     "value_type": "DOUBLE",
     "dimension": "Energy/AbsoluteTemperature*Length*Time"
-   }
+  }
 }

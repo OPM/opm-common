@@ -1,5 +1,12 @@
-{"name" : "HMWPIMLT" , "sections" : ["SCHEDULE"],
-"items" : [
-        {"name" : "WELL" , "value_type" : "STRING"}
-
-]}
+{
+  "name": "HMWPIMLT",
+  "sections": [
+    "SCHEDULE"
+  ],
+  "items": [
+    {
+      "name": "WELL",
+      "value_type": "STRING"
+    }
+  ]
+}

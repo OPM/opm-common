@@ -1,1 +1,6 @@
-{"name" : "UNIFOUT", "sections" : ["RUNSPEC"]}
+{
+  "name": "UNIFOUT",
+  "sections": [
+    "RUNSPEC"
+  ]
+}

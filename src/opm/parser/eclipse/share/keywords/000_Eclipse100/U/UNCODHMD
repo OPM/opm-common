@@ -1,1 +1,6 @@
-{"name" : "UNCODHMD" , "sections" : ["RUNSPEC"]}
+{
+  "name": "UNCODHMD",
+  "sections": [
+    "RUNSPEC"
+  ]
+}

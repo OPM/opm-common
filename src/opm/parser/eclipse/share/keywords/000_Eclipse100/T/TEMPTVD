@@ -1,1 +1,6 @@
-{"name" : "TEMPTVD", "sections" : ["PROPS"]}
+{
+  "name": "TEMPTVD",
+  "sections": [
+    "PROPS"
+  ]
+}

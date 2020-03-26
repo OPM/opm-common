@@ -1,1 +1,6 @@
-{"name" : "GIMODEL" , "sections" : ["RUNSPEC"]}
+{
+  "name": "GIMODEL",
+  "sections": [
+    "RUNSPEC"
+  ]
+}

@@ -1,1 +1,9 @@
-{"name" : "NZFIN" , "sections" : ["GRID"], "data" : {"value_type" : "INT"}}
+{
+  "name": "NZFIN",
+  "sections": [
+    "GRID"
+  ],
+  "data": {
+    "value_type": "INT"
+  }
+}

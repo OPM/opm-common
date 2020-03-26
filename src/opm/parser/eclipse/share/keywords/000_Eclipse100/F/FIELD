@@ -1,1 +1,6 @@
-{"name":"FIELD", "sections" : ["RUNSPEC"]}
+{
+  "name": "FIELD",
+  "sections": [
+    "RUNSPEC"
+  ]
+}

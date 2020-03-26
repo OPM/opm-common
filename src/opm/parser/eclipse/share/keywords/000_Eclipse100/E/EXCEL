@@ -1,1 +1,6 @@
-{"name" : "EXCEL" , "sections" : ["SUMMARY"] }
+{
+  "name": "EXCEL",
+  "sections": [
+    "SUMMARY"
+  ]
+}

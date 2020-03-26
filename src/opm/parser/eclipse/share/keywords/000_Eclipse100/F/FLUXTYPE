@@ -1,5 +1,7 @@
-{"name" : "FLUXTYPE",
- "sections" : ["GRID"],
- "size" : 1}
-
-
+{
+  "name": "FLUXTYPE",
+  "sections": [
+    "GRID"
+  ],
+  "size": 1
+}

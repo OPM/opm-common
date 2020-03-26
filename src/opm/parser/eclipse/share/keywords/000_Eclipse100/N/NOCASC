@@ -1,1 +1,6 @@
-{"name" : "NOCASC" , "sections" : ["RUNSPEC"]}
+{
+  "name": "NOCASC",
+  "sections": [
+    "RUNSPEC"
+  ]
+}

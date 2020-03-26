@@ -1,8 +1,13 @@
 {
   "name": "GCOMPIDX",
-  "sections": ["RUNSPEC"],
+  "sections": [
+    "RUNSPEC"
+  ],
   "size": 1,
   "items": [
-    {"name" : "GAS_COMPONENT_INDEX" , "value_type" : "INT"}
+    {
+      "name": "GAS_COMPONENT_INDEX",
+      "value_type": "INT"
+    }
   ]
 }

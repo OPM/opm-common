@@ -1,1 +1,6 @@
-{"name" : "NINEPOIN" , "sections" : ["RUNSPEC"]}
+{
+  "name": "NINEPOIN",
+  "sections": [
+    "RUNSPEC"
+  ]
+}

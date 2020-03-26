@@ -1,3 +1,9 @@
-{"name" : "SMULTY",
- "sections" : ["GRID"],
- "data" : {"value_type" : "DOUBLE"}}
+{
+  "name": "SMULTY",
+  "sections": [
+    "GRID"
+  ],
+  "data": {
+    "value_type": "DOUBLE"
+  }
+}

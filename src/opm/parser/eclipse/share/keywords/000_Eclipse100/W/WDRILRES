@@ -1,4 +1,6 @@
 {
-  "name" : "WDRILRES",
-  "sections" : ["SCHEDULE"]
+  "name": "WDRILRES",
+  "sections": [
+    "SCHEDULE"
+  ]
 }

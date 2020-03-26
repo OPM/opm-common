@@ -1,1 +1,6 @@
-{"name" : "PINCHOUT" , "sections" : ["GRID"]}
+{
+  "name": "PINCHOUT",
+  "sections": [
+    "GRID"
+  ]
+}

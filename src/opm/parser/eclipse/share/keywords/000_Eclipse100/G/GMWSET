@@ -1,4 +1,6 @@
 {
-  "name" : "GMWSET",
-  "sections" : [ "SUMMARY" ]
+  "name": "GMWSET",
+  "sections": [
+    "SUMMARY"
+  ]
 }

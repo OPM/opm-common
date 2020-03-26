@@ -1,1 +1,6 @@
-{"name" : "DSPDEINT", "sections" : ["PROPS"]}
+{
+  "name": "DSPDEINT",
+  "sections": [
+    "PROPS"
+  ]
+}

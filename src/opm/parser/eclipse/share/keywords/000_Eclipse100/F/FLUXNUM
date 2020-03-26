@@ -1,1 +1,9 @@
-{"name" : "FLUXNUM" , "sections" : ["GRID"], "data" : {"value_type" : "INT"}}
+{
+  "name": "FLUXNUM",
+  "sections": [
+    "GRID"
+  ],
+  "data": {
+    "value_type": "INT"
+  }
+}

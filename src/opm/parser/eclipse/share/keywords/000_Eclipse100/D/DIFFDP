@@ -1,1 +1,6 @@
-{"name" : "DIFFDP", "sections" : ["PROPS"]}
+{
+  "name": "DIFFDP",
+  "sections": [
+    "PROPS"
+  ]
+}

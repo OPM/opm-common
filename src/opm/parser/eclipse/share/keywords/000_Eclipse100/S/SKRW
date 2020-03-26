@@ -1,3 +1,9 @@
-{"name" : "SKRW",
- "sections" : ["PROPS"],
- "data" : {"value_type" : "DOUBLE"}}
+{
+  "name": "SKRW",
+  "sections": [
+    "PROPS"
+  ],
+  "data": {
+    "value_type": "DOUBLE"
+  }
+}

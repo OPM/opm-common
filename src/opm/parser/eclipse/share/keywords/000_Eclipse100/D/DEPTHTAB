@@ -1,5 +1,17 @@
-{"name" : "DEPTHTAB" , "sections" : ["PROPS"] , "size" : {"keyword" : "RIVRDIMS" , "item" : "NMDEPT"} , "items" :
-        [
-        {"name" : "DATA" , "value_type":"STRING","size_type":"ALL"}
-        ]
+{
+  "name": "DEPTHTAB",
+  "sections": [
+    "PROPS"
+  ],
+  "size": {
+    "keyword": "RIVRDIMS",
+    "item": "NMDEPT"
+  },
+  "items": [
+    {
+      "name": "DATA",
+      "value_type": "STRING",
+      "size_type": "ALL"
+    }
+  ]
 }

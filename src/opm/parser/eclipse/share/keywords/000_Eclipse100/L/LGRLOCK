@@ -1,5 +1,12 @@
-{"name" : "LGRLOCK" , "sections" : ["SCHEDULE"], "items" : [
-        {"name" : "LOCAL_GRID_REFINMENT" , "value_type" : "STRING"}
-
-
-]}
+{
+  "name": "LGRLOCK",
+  "sections": [
+    "SCHEDULE"
+  ],
+  "items": [
+    {
+      "name": "LOCAL_GRID_REFINMENT",
+      "value_type": "STRING"
+    }
+  ]
+}

@@ -1,3 +1,9 @@
-{"name" : "VEFRACV" , "sections" : ["PROPS"], 
-   "data" : {"value_type" : "DOUBLE"}}
-
+{
+  "name": "VEFRACV",
+  "sections": [
+    "PROPS"
+  ],
+  "data": {
+    "value_type": "DOUBLE"
+  }
+}

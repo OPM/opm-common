@@ -1,15 +1,21 @@
 {
   "name": "WATVISCT",
-  "sections": ["PROPS"],
-  "size" : {
+  "sections": [
+    "PROPS"
+  ],
+  "size": {
     "keyword": "TABDIMS",
-    "item" : "NTPVT"
+    "item": "NTPVT"
   },
-  "items" : [{
-    "name":"DATA",
-    "value_type": "DOUBLE",
-    "size_type": "ALL",
-
-    "dimension" : ["Temperature", "Viscosity"]
-  }]
+  "items": [
+    {
+      "name": "DATA",
+      "value_type": "DOUBLE",
+      "size_type": "ALL",
+      "dimension": [
+        "Temperature",
+        "Viscosity"
+      ]
+    }
+  ]
 }

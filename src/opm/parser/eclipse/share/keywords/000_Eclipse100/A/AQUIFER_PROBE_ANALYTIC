@@ -1,7 +1,9 @@
 {
- "name"     : "AQUIFER_PROBE_ANALYTIC" ,
- "sections" : ["SUMMARY"],
- "deck_names" : [
+  "name": "AQUIFER_PROBE_ANALYTIC",
+  "sections": [
+    "SUMMARY"
+  ],
+  "deck_names": [
     "AAQP",
     "AAQR",
     "AAQT",
@@ -9,8 +11,10 @@
     "AAQTG",
     "AAQTD",
     "AAQPD"
- ],
- "comment" : "Analytical aquifiers",
- "data"    : { "value_type" : "INT" },
- "deck_name_regex" : "AA.+"
+  ],
+  "comment": "Analytical aquifiers",
+  "data": {
+    "value_type": "INT"
+  },
+  "deck_name_regex": "AA.+"
 }

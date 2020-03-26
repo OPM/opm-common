@@ -1,5 +1,12 @@
-{"name" : "HMFAULTS" , "sections" : ["GRID"], "items" : [
-        {"name" : "FAULT_SEGMENT" , "value_type" : "STRING"}
-
-
-]}
+{
+  "name": "HMFAULTS",
+  "sections": [
+    "GRID"
+  ],
+  "items": [
+    {
+      "name": "FAULT_SEGMENT",
+      "value_type": "STRING"
+    }
+  ]
+}

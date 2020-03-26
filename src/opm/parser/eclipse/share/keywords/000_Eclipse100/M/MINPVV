@@ -1,1 +1,11 @@
-{"name" : "MINPVV" , "sections" : ["GRID"], "data" : {"value_type" : "DOUBLE" , "default" : 0.000001, "dimension" : "ReservoirVolume"}}
+{
+  "name": "MINPVV",
+  "sections": [
+    "GRID"
+  ],
+  "data": {
+    "value_type": "DOUBLE",
+    "default": 1e-06,
+    "dimension": "ReservoirVolume"
+  }
+}

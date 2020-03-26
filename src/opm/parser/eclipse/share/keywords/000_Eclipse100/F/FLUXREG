@@ -1,1 +1,9 @@
-{"name" : "FLUXREG" , "sections" : ["GRID"], "data" : {"value_type" : "INT"}}
+{
+  "name": "FLUXREG",
+  "sections": [
+    "GRID"
+  ],
+  "data": {
+    "value_type": "INT"
+  }
+}

@@ -1,3 +1,9 @@
-{"name" : "PSWRG",
-"sections" : ["PROPS"],
-"data" : {"value_type" : "DOUBLE"}}
+{
+  "name": "PSWRG",
+  "sections": [
+    "PROPS"
+  ],
+  "data": {
+    "value_type": "DOUBLE"
+  }
+}

@@ -1,1 +1,6 @@
-{"name" : "GETGLOB", "sections" : ["SOLUTION"]}
+{
+  "name": "GETGLOB",
+  "sections": [
+    "SOLUTION"
+  ]
+}

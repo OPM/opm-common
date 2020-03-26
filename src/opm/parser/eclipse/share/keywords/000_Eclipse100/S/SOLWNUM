@@ -1,3 +1,9 @@
-{"name" : "SOLWNUM",
- "sctions" : ["GRID"],
- "data" : {"value_type" : "INT"}}
+{
+  "name": "SOLWNUM",
+  "sctions": [
+    "GRID"
+  ],
+  "data": {
+    "value_type": "INT"
+  }
+}

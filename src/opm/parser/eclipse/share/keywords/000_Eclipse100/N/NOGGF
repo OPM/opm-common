@@ -1,1 +1,6 @@
-{"name" : "NOGGF", "sections" : ["GRID"]}
+{
+  "name": "NOGGF",
+  "sections": [
+    "GRID"
+  ]
+}

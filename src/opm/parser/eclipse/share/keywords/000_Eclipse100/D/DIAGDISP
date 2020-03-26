@@ -1,1 +1,6 @@
-{"name" : "DIAGDISP", "sections" : ["PROPS"]}
+{
+  "name": "DIAGDISP",
+  "sections": [
+    "PROPS"
+  ]
+}

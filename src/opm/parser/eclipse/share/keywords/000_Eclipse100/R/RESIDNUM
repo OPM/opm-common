@@ -1,3 +1,9 @@
-{"name" : "RESIDNUM",
-"sections" : ["REGIONS"],
-"data" : {"value_type" : "INT"}}
+{
+  "name": "RESIDNUM",
+  "sections": [
+    "REGIONS"
+  ],
+  "data": {
+    "value_type": "INT"
+  }
+}

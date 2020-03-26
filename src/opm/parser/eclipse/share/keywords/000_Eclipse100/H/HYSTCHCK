@@ -1,1 +1,8 @@
-{"name" : "HYSTCHCK" , "sections" : ["PROPS"], "size" : 1, "items" : [] }
+{
+  "name": "HYSTCHCK",
+  "sections": [
+    "PROPS"
+  ],
+  "size": 1,
+  "items": []
+}
