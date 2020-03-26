@@ -45,7 +45,8 @@ public:
 
     const std::vector<int>& get_startdat() const { return startdat; }
 
-    const std::vector<std::string>& keywordList() const { return keyword; }
+    const std::vector<std::string>& keywordList() const;
+    const std::vector<SummaryNode>& summaryNodeList() const;
 
     int timestepIdxAtReportstepStart(const int reportStep) const;
 

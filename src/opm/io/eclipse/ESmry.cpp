@@ -566,4 +566,12 @@ const std::string& ESmry::get_unit(const std::string& name) const {
     return kwunits.at(name);
 }
 
+const std::vector<std::string>& ESmry::keywordList() const {
+    return keyword;
+}
+
+const std::vector<SummaryNode>& ESmry::summaryNodeList() const {
+    return summaryNodes;
+}
+
 }} // namespace Opm::ecl
