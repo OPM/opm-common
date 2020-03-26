@@ -40,6 +40,7 @@ public:
     bool hasKey(const std::string& key) const;
 
     const std::vector<float>& get(const std::string& name) const;
+    const std::vector<float>& get(const SummaryNode& node) const;
 
     std::vector<float> get_at_rstep(const std::string& name) const;
 

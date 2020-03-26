@@ -17,6 +17,7 @@
    along with OPM.  If not, see <http://www.gnu.org/licenses/>.
    */
 
+#include <array>
 #include <numeric>
 #include <regex>
 #include <string>
@@ -59,6 +60,37 @@ constexpr bool use_name(Opm::EclIO::SummaryNode::Category category) {
     }
 }
 
+std::string compose_key(std::string& key, const std::string& key_part) {
+    constexpr auto delimiter { ':' } ;
+
+    return key.empty() ? key_part : key + delimiter + key_part;
+}
+
+std::string compose_ijk(std::string& ijk, const int& element) {
+    constexpr auto delimiter { ',' } ;
+
+    return ijk.empty() ? std::to_string(element) : ijk + delimiter + std::to_string(element);
+}
+
+inline std::array<int, 3> unpack_ijk(int num, int nI, int nJ, int /* nK */) {
+    const int index { num - 1 } ;
+    const int nIJ { nI * nJ };
+
+    const int k { 1 + index / nIJ } ;
+
+    const int remainder { index % nIJ } ;
+    const int j { 1 + remainder / nI } ;
+    const int i { 1 + remainder % nI } ;
+
+    return { i, j, k } ;
+}
+
+inline std::string num_as_ijk(int num, int nI, int nJ, int nK) {
+    const auto ijk { unpack_ijk(num, nI, nJ, nK) } ;
+
+    return std::accumulate(std::begin(ijk), std::end(ijk), std::string(), compose_ijk);
+}
+
 };
 
 std::string Opm::EclIO::SummaryNode::unique_key() const {
@@ -70,10 +102,17 @@ std::string Opm::EclIO::SummaryNode::unique_key() const {
     if (use_number(category))
         key_parts.emplace_back(std::to_string(number));
 
-    auto compose_key = [](std::string& key, const std::string& key_part) -> std::string {
-        constexpr auto delimiter { ':' } ;
-        return key.empty() ? key_part : key + delimiter + key_part;
-    };
+    return std::accumulate(std::begin(key_parts), std::end(key_parts), std::string(), compose_key);
+}
+
+std::string Opm::EclIO::SummaryNode::unique_key(int nI, int nJ, int nK) const {
+    std::vector<std::string> key_parts { keyword } ;
+
+    if (use_name(category))
+        key_parts.emplace_back(wgname);
+
+    if (use_number(category))
+        key_parts.emplace_back(num_as_ijk(number, nI, nJ, nK));
 
     return std::accumulate(std::begin(key_parts), std::end(key_parts), std::string(), compose_key);
 }

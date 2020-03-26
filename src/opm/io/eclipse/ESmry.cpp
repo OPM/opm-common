@@ -519,6 +519,9 @@ std::string ESmry::makeKeyString(const std::string& keywordArg, const std::strin
     return keyStr;
 }
 
+const std::vector<float>& ESmry::get(const SummaryNode& node) const {
+    return get(node.unique_key(nI, nJ, nK));
+}
 
 const std::vector<float>& ESmry::get(const std::string& name) const
 {

@@ -57,6 +57,8 @@ struct SummaryNode {
     constexpr static int default_number { std::numeric_limits<int>::min() };
 
     std::string unique_key() const;
+    std::string unique_key(int nI, int nJ, int nK) const;
+
     bool is_user_defined() const;
 
     static Category category_from_keyword(const std::string&, const std::unordered_set<std::string> &miscellaneous_keywords = {});
