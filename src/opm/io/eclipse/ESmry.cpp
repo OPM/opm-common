@@ -519,8 +519,35 @@ std::string ESmry::makeKeyString(const std::string& keywordArg, const std::strin
     return keyStr;
 }
 
+std::string ESmry::unpackNumber(const SummaryNode& node) const {
+    if (node.category == SummaryNode::Category::Block ||
+        node.category == SummaryNode::Category::Connection) {
+        int _i,_j,_k;
+        ijk_from_global_index(node.number, _i, _j, _k);
+
+        return std::to_string(_i) + "," + std::to_string(_j) + "," + std::to_string(_k);
+    } else if (node.category == SummaryNode::Category::Region && node.keyword[2] == 'F') {
+        // NUMS = R1 + 32768*(R2 + 10)
+        int r2 = 0;
+        int y = 32768 * (r2 + 10) - node.number;
+
+        while (y < 0) {
+            r2++;
+            y = 32768 * (r2 + 10) - node.number;
+        }
+
+        r2--;
+
+        const int r1 = node.number - 32768 * (r2 + 10);
+
+        return std::to_string(r1) + "-" + std::to_string(r2);
+    } else {
+        return std::to_string(node.number);
+    }
+}
+
 const std::vector<float>& ESmry::get(const SummaryNode& node) const {
-    return get(node.unique_key(nI, nJ, nK));
+    return get(node.unique_key(std::bind( &ESmry::unpackNumber, this, std::placeholders::_1 )));
 }
 
 const std::vector<float>& ESmry::get(const std::string& name) const

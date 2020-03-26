@@ -79,6 +79,8 @@ private:
     void updatePathAndRootName(Opm::filesystem::path& dir, Opm::filesystem::path& rootN) const;
 
     std::string makeKeyString(const std::string& keyword, const std::string& wgname, int num) const;
+
+    std::string unpackNumber(const SummaryNode&) const;
 };
 
 }} // namespace Opm::EclIO

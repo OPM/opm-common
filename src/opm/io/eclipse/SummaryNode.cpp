@@ -66,53 +66,24 @@ std::string compose_key(std::string& key, const std::string& key_part) {
     return key.empty() ? key_part : key + delimiter + key_part;
 }
 
-std::string compose_ijk(std::string& ijk, const int& element) {
-    constexpr auto delimiter { ',' } ;
-
-    return ijk.empty() ? std::to_string(element) : ijk + delimiter + std::to_string(element);
-}
-
-inline std::array<int, 3> unpack_ijk(int num, int nI, int nJ, int /* nK */) {
-    const int index { num - 1 } ;
-    const int nIJ { nI * nJ };
-
-    const int k { 1 + index / nIJ } ;
-
-    const int remainder { index % nIJ } ;
-    const int j { 1 + remainder / nI } ;
-    const int i { 1 + remainder % nI } ;
-
-    return { i, j, k } ;
-}
-
-inline std::string num_as_ijk(int num, int nI, int nJ, int nK) {
-    const auto ijk { unpack_ijk(num, nI, nJ, nK) } ;
-
-    return std::accumulate(std::begin(ijk), std::end(ijk), std::string(), compose_ijk);
+std::string default_number_renderer(const Opm::EclIO::SummaryNode& node) {
+    return std::to_string(node.number);
 }
 
 };
 
 std::string Opm::EclIO::SummaryNode::unique_key() const {
-    std::vector<std::string> key_parts { keyword } ;
-
-    if (use_name(category))
-        key_parts.emplace_back(wgname);
-
-    if (use_number(category))
-        key_parts.emplace_back(std::to_string(number));
-
-    return std::accumulate(std::begin(key_parts), std::end(key_parts), std::string(), compose_key);
+    return unique_key(default_number_renderer);
 }
 
-std::string Opm::EclIO::SummaryNode::unique_key(int nI, int nJ, int nK) const {
+std::string Opm::EclIO::SummaryNode::unique_key(number_renderer render_number) const {
     std::vector<std::string> key_parts { keyword } ;
 
     if (use_name(category))
         key_parts.emplace_back(wgname);
 
     if (use_number(category))
-        key_parts.emplace_back(num_as_ijk(number, nI, nJ, nK));
+        key_parts.emplace_back(render_number(*this));
 
     return std::accumulate(std::begin(key_parts), std::end(key_parts), std::string(), compose_key);
 }

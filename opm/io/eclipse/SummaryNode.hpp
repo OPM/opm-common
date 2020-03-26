@@ -57,7 +57,9 @@ struct SummaryNode {
     constexpr static int default_number { std::numeric_limits<int>::min() };
 
     std::string unique_key() const;
-    std::string unique_key(int nI, int nJ, int nK) const;
+
+    using number_renderer = std::function<std::string(const SummaryNode&)>;
+    std::string unique_key(number_renderer) const;
 
     bool is_user_defined() const;
 
