@@ -51,7 +51,8 @@
 
 namespace Opm { namespace EclIO {
 
-ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
+ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
+    summaryNodes { }
 {
 
     Opm::filesystem::path inputFileName(filename);
@@ -108,6 +109,13 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
             const std::string keyString = makeKeyString(keywords[i], wgnames[i], nums[i]);
             if (keyString.length() > 0) {
                 keywList.insert(keyString);
+                summaryNodes.push_back({
+                    keywords[i],
+                    SummaryNode::Category::Miscellaneous,
+                    SummaryNode::Type::Undefined,
+                    wgnames[i],
+                    nums[i]
+                });
                 kwunits[keyString] = units[i];
             }
         }
@@ -151,6 +159,13 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
             const std::string keyString = makeKeyString(keywords[i], wgnames[i], nums[i]);
             if (keyString.length() > 0) {
                 keywList.insert(keyString);
+                summaryNodes.push_back({
+                    keywords[i],
+                    SummaryNode::Category::Miscellaneous,
+                    SummaryNode::Type::Undefined,
+                    wgnames[i],
+                    nums[i]
+                });
                 kwunits[keyString] = units[i];
             }
         }

@@ -22,7 +22,9 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+
 #include <opm/common/utility/FileSystem.hpp>
+#include <opm/io/eclipse/SummaryNode.hpp>
 
 namespace Opm { namespace EclIO {
 
@@ -57,6 +59,7 @@ private:
     void ijk_from_global_index(int glob, int &i, int &j, int &k) const;
     std::vector<std::vector<float>> param;
     std::vector<std::string> keyword;
+    std::vector<SummaryNode> summaryNodes;
     std::unordered_map<std::string, std::string> kwunits;
 
     std::vector<int> seqIndex;
