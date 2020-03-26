@@ -2968,13 +2968,9 @@ void Schedule::load_rst(const RestartIO::RstState& rst_state, const EclipseGrid&
         for (auto& connection : connections) {
             int segment_id = connection.segment();
             if (segment_id > 0) {
-                double segment_start = 0;
-                double segment_end = 0;
                 const auto& segment = segments.at(segment_id);
                 connection.updateSegmentRST(segment.segmentNumber(),
-                                            segment.depth(),
-                                            segment_start,
-                                            segment_end);
+                                            segment.depth());
             }
         }
 

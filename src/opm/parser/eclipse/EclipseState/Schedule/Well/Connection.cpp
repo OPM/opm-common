@@ -251,13 +251,9 @@ Connection::Connection(const RestartIO::RstConnection& rst_connection, const Ecl
     }
 
     void Connection::updateSegmentRST(int segment_number_arg,
-                                      double center_depth_arg,
-                                      double start,
-                                      double end) {
+                                      double center_depth_arg) {
         this->segment_number = segment_number_arg;
         this->center_depth = center_depth_arg;
-        this->m_segDistStart = start;
-        this->m_segDistEnd = end;
     }
 
     int Connection::segment() const {
