@@ -41,6 +41,14 @@ BOOST_AUTO_TEST_CASE(INSTANTIATE) {
     BOOST_CHECK(!python);
     BOOST_CHECK_THROW(python.exec("print('Hello world')"), std::logic_error);
     BOOST_CHECK(! Python::enabled() );
+
+
+    BOOST_CHECK_THROW( Python(Python::Enable::ON), std::logic_error );
+    Python python_cond(Python::Enable::COND);
+    BOOST_CHECK(!python_cond);
+
+    Python python_off(Python::Enable::OFF);
+    BOOST_CHECK(!python_off);
 }
 
 #else
@@ -129,6 +137,29 @@ BOOST_AUTO_TEST_CASE(PYACTION) {
 }
 
 
+BOOST_AUTO_TEST_CASE(Python_Constructor) {
+    Python python_off(Python::Enable::OFF);
+    BOOST_CHECK(!python_off);
+
+    Python python_on(Python::Enable::ON);
+    BOOST_CHECK(python_on);
+
+    // Can only have one Python interpreter active at any time
+    BOOST_CHECK_THROW(Python(Python::Enable::ON), std::logic_error);
+}
+
+BOOST_AUTO_TEST_CASE(Python_Constructor2) {
+    Python python_cond1(Python::Enable::COND);
+    BOOST_CHECK(python_cond1);
+
+    Python python_cond2(Python::Enable::COND);
+    BOOST_CHECK(!python_cond2);
+}
+
 
 #endif
+
+
+
+
 
