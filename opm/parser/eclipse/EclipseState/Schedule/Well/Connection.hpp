@@ -125,6 +125,10 @@ namespace RestartIO {
         void setState(State state);
         void setComplnum(int compnum);
         void scaleWellPi(double wellPi);
+        void updateSegmentRST(int segment_number_arg,
+                              double center_depth_arg,
+                              double start,
+                              double end);
         void updateSegment(int segment_number_arg,
                            double center_depth_arg,
                            std::size_t compseg_insert_index,
