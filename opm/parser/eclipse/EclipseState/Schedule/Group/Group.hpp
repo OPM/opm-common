@@ -21,8 +21,9 @@
 #define GROUP2_HPP
 
 
-#include <string>
 #include <map>
+#include <optional>
+#include <string>
 
 #include <opm/parser/eclipse/Deck/UDAValue.hpp>
 #include <opm/parser/eclipse/EclipseState/Util/IOrderSet.hpp>
@@ -211,8 +212,8 @@ struct ProductionControls {
 
     // [[deprecated("use Group::control_group() or Group::flow_group()")]]
     const std::string& parent() const;
-    const std::string& control_group() const;
-    const std::string& flow_group() const;
+    std::optional<std::string> control_group() const;
+    std::optional<std::string> flow_group() const;
 
     bool updateParent(const std::string& parent);
     bool updateInjection(const GroupInjectionProperties& injection);

@@ -41,6 +41,7 @@ list (APPEND MAIN_SOURCE_FILES
 )
 if(ENABLE_ECL_INPUT)
   list(APPEND MAIN_SOURCE_FILES
+    src/opm/io/eclipse/SummaryNode.cpp
     src/opm/json/JsonObject.cpp
     src/opm/parser/eclipse/Deck/Deck.cpp
     src/opm/parser/eclipse/Deck/DeckItem.cpp
@@ -240,6 +241,7 @@ if(ENABLE_ECL_OUTPUT)
           src/opm/io/eclipse/ERst.cpp
           src/opm/io/eclipse/ESmry.cpp
           src/opm/io/eclipse/OutputStream.cpp
+          src/opm/io/eclipse/SummaryNode.cpp
           src/opm/io/eclipse/rst/connection.cpp
           src/opm/io/eclipse/rst/group.cpp
           src/opm/io/eclipse/rst/header.cpp
@@ -506,6 +508,7 @@ list( APPEND PUBLIC_HEADER_FILES
 )
 if(ENABLE_ECL_INPUT)
   list(APPEND PUBLIC_HEADER_FILES
+       opm/io/eclipse/SummaryNode.hpp
        opm/json/JsonObject.hpp
        opm/parser/eclipse/Utility/Stringview.hpp
        opm/parser/eclipse/Utility/Functional.hpp
@@ -727,6 +730,7 @@ if(ENABLE_ECL_OUTPUT)
         opm/io/eclipse/ESmry.hpp
         opm/io/eclipse/PaddedOutputString.hpp
         opm/io/eclipse/OutputStream.hpp
+        opm/io/eclipse/SummaryNode.hpp
         opm/io/eclipse/rst/connection.hpp
         opm/io/eclipse/rst/group.hpp
         opm/io/eclipse/rst/header.hpp
@@ -770,4 +774,10 @@ if(ENABLE_ECL_OUTPUT)
         opm/output/eclipse/WriteRestartHelpers.hpp
         opm/output/OutputWriter.hpp
         )
+endif()
+
+if(ENABLE_ECL_INPUT OR ENABLE_ECL_OUTPUT)
+  list(APPEND TEST_SOURCE_FILES
+      tests/test_SummaryNode.cpp
+)
 endif()

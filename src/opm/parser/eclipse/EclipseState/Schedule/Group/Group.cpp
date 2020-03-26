@@ -360,12 +360,18 @@ const std::string& Group::parent() const {
     return this->parent_group;
 }
 
-const std::string& Group::control_group() const {
-    return this->parent();
+std::optional<std::string> Group::control_group() const {
+    if (m_name == "FIELD")
+        return std::nullopt;
+    else
+        return this->parent();
 }
 
-const std::string& Group::flow_group() const {
-    return this->parent();
+std::optional<std::string> Group::flow_group() const {
+    if (m_name == "FIELD")
+        return std::nullopt;
+    else
+        return this->parent();
 }
 
 const Phase& Group::topup_phase() const {
