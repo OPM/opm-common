@@ -113,3 +113,28 @@ bool Opm::EclIO::SummaryNode::is_user_defined() const {
 
     return matched && !blacklisted;
 }
+
+Opm::EclIO::SummaryNode::Category Opm::EclIO::SummaryNode::category_from_keyword(
+    const std::string& keyword,
+    const std::unordered_set<std::string>& miscellaneous_keywords
+) {
+    if (keyword.length() == 0) {
+        return Category::Miscellaneous;
+    }
+
+    if (miscellaneous_keywords.find(keyword) != miscellaneous_keywords.end()) {
+        return Category::Miscellaneous;
+    }
+
+    switch (keyword[0]) {
+    case 'A': return Category::Aquifer;
+    case 'B': return Category::Block;
+    case 'C': return Category::Connection;
+    case 'F': return Category::Field;
+    case 'G': return Category::Group;
+    case 'R': return Category::Region;
+    case 'S': return Category::Segment;
+    case 'W': return Category::Well;
+    default:  return Category::Miscellaneous;
+    }
+}

@@ -85,6 +85,12 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
     std::set<std::string> keywList;
     std::vector<std::pair<std::string,int>> smryArray;
 
+    const std::unordered_set<std::string> segmentExceptions {
+        "SEPARATE",
+        "STEPTYPE",
+        "SUMTHIN",
+    } ;
+
     // Read data from the summary into local data members.
     {
         EclFile smspec(smspec_file.string());
@@ -109,14 +115,15 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
             const std::string keyString = makeKeyString(keywords[i], wgnames[i], nums[i]);
             if (keyString.length() > 0) {
                 keywList.insert(keyString);
+                kwunits[keyString] = units[i];
+
                 summaryNodes.push_back({
                     keywords[i],
-                    SummaryNode::Category::Miscellaneous,
+                    SummaryNode::category_from_keyword(keywords[i], segmentExceptions),
                     SummaryNode::Type::Undefined,
                     wgnames[i],
                     nums[i]
                 });
-                kwunits[keyString] = units[i];
             }
         }
 
@@ -159,14 +166,15 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
             const std::string keyString = makeKeyString(keywords[i], wgnames[i], nums[i]);
             if (keyString.length() > 0) {
                 keywList.insert(keyString);
+                kwunits[keyString] = units[i];
+
                 summaryNodes.push_back({
                     keywords[i],
-                    SummaryNode::Category::Miscellaneous,
+                    SummaryNode::category_from_keyword(keywords[i], segmentExceptions),
                     SummaryNode::Type::Undefined,
                     wgnames[i],
                     nums[i]
                 });
-                kwunits[keyString] = units[i];
             }
         }
 
