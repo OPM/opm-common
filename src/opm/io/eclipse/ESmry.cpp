@@ -114,9 +114,6 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
         for (unsigned int i=0; i<keywords.size(); i++) {
             const std::string keyString = makeKeyString(keywords[i], wgnames[i], nums[i]);
             if (keyString.length() > 0) {
-                keywList.insert(keyString);
-                kwunits[keyString] = units[i];
-
                 summaryNodes.push_back({
                     keywords[i],
                     SummaryNode::category_from_keyword(keywords[i], segmentExceptions),
@@ -124,6 +121,9 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
                     wgnames[i],
                     nums[i]
                 });
+
+                keywList.insert(keyString);
+                kwunits[keyString] = units[i];
             }
         }
 
@@ -165,9 +165,6 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
         for (size_t i = 0; i < keywords.size(); i++) {
             const std::string keyString = makeKeyString(keywords[i], wgnames[i], nums[i]);
             if (keyString.length() > 0) {
-                keywList.insert(keyString);
-                kwunits[keyString] = units[i];
-
                 summaryNodes.push_back({
                     keywords[i],
                     SummaryNode::category_from_keyword(keywords[i], segmentExceptions),
@@ -175,6 +172,9 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
                     wgnames[i],
                     nums[i]
                 });
+
+                keywList.insert(keyString);
+                kwunits[keyString] = units[i];
             }
         }
 
