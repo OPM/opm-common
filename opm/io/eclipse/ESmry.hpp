@@ -43,6 +43,7 @@ public:
     const std::vector<float>& get(const SummaryNode& node) const;
 
     std::vector<float> get_at_rstep(const std::string& name) const;
+    std::vector<float> get_at_rstep(const SummaryNode& node) const;
 
     const std::vector<int>& get_startdat() const { return startdat; }
 
@@ -54,6 +55,7 @@ public:
     size_t numberOfTimeSteps() const { return param[0].size(); }
 
     const std::string& get_unit(const std::string& name) const;
+    const std::string& get_unit(const SummaryNode& node) const;
 
 private:
     int nVect, nI, nJ, nK;
@@ -81,6 +83,7 @@ private:
     std::string makeKeyString(const std::string& keyword, const std::string& wgname, int num) const;
 
     std::string unpackNumber(const SummaryNode&) const;
+    std::string lookupKey(const SummaryNode&) const;
 };
 
 }} // namespace Opm::EclIO

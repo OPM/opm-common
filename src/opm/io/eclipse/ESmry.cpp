@@ -546,8 +546,20 @@ std::string ESmry::unpackNumber(const SummaryNode& node) const {
     }
 }
 
+std::string ESmry::lookupKey(const SummaryNode& node) const {
+    return node.unique_key(std::bind( &ESmry::unpackNumber, this, std::placeholders::_1 ));
+}
+
 const std::vector<float>& ESmry::get(const SummaryNode& node) const {
-    return get(node.unique_key(std::bind( &ESmry::unpackNumber, this, std::placeholders::_1 )));
+    return get(lookupKey(node));
+}
+
+std::vector<float> ESmry::get_at_rstep(const SummaryNode& node) const {
+    return get_at_rstep(lookupKey(node));
+}
+
+const std::string& ESmry::get_unit(const SummaryNode& node) const {
+    return get_unit(lookupKey(node));
 }
 
 const std::vector<float>& ESmry::get(const std::string& name) const
