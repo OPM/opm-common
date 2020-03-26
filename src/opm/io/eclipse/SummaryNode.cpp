@@ -59,21 +59,11 @@ constexpr bool use_name(Opm::EclIO::SummaryNode::Category category) {
     }
 }
 
-std::string compose_key(std::string& key, const std::string& key_part) {
-    constexpr auto delimiter { ':' } ;
-
-    return key.empty() ? key_part : key + delimiter + key_part;
-}
-
 std::string default_number_renderer(const Opm::EclIO::SummaryNode& node) {
     return std::to_string(node.number);
 }
 
 };
-
-std::string Opm::EclIO::SummaryNode::unique_key() const {
-    return unique_key(default_number_renderer);
-}
 
 std::string Opm::EclIO::SummaryNode::unique_key(number_renderer render_number) const {
     std::vector<std::string> key_parts { keyword } ;
@@ -84,7 +74,16 @@ std::string Opm::EclIO::SummaryNode::unique_key(number_renderer render_number) c
     if (use_number(category))
         key_parts.emplace_back(render_number(*this));
 
+    auto compose_key = [](std::string& key, const std::string& key_part) -> std::string {
+        constexpr auto delimiter { ':' } ;
+        return key.empty() ? key_part : key + delimiter + key_part;
+    };
+
     return std::accumulate(std::begin(key_parts), std::end(key_parts), std::string(), compose_key);
+}
+
+std::string Opm::EclIO::SummaryNode::unique_key() const {
+    return unique_key(default_number_renderer);
 }
 
 bool Opm::EclIO::SummaryNode::is_user_defined() const {
