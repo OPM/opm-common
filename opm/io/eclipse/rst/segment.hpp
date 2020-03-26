@@ -30,7 +30,7 @@ class UnitSystem;
 namespace RestartIO {
 
 struct RstSegment {
-    RstSegment(const ::Opm::UnitSystem& unit_system, const int* iseg, const double * rseg);
+    RstSegment(const ::Opm::UnitSystem& unit_system, int segment_number, const int* iseg, const double * rseg);
 
     int segment;
     int outlet_segment;

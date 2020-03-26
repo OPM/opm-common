@@ -2985,9 +2985,19 @@ void Schedule::load_rst(const RestartIO::RstState& rst_state, const EclipseGrid&
 
         if (!segments.empty()) {
             std::vector<Segment> segments_list;
+            /*
+              The ordering of the segments in the WellSegments structure seems a
+              bit random; in some parts of the code the segment_number seems to
+              be treated like a random integer ID, whereas in other parts it
+              seems to be treated like a running index. Here the segments in
+              WellSegments are sorted according to the segment number - observe
+              that this is somewhat important because the first top segment is
+              treated differently from the other segment.
+            */
             for (const auto& segment_pair : segments)
                 segments_list.push_back( std::move(segment_pair.second) );
 
+            std::sort( segments_list.begin(), segments_list.end(),[](const Segment& seg1, const Segment& seg2) { return seg1.segmentNumber() < seg2.segmentNumber(); } );
             auto comp_pressure_drop = WellSegments::CompPressureDrop::HFA;
             std::shared_ptr<Opm::WellSegments> well_segments = std::make_shared<Opm::WellSegments>(comp_pressure_drop, segments_list);
             well.updateSegments( std::move(well_segments) );

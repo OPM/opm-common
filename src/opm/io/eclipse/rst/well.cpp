@@ -135,10 +135,11 @@ RstWell::RstWell(const ::Opm::UnitSystem& unit_system,
         for (int is=0; is < header.nsegmx; is++) {
             std::size_t iseg_offset = header.nisegz * (is + (this->msw_index - 1) * header.nsegmx);
             std::size_t rseg_offset = header.nrsegz * (is + (this->msw_index - 1) * header.nsegmx);
-            auto segment_number = iseg[iseg_offset + VI::ISeg::SegNo];
-            if (segment_number != 0) {
+            auto other_segment_number = iseg[iseg_offset + VI::ISeg::SegNo];
+            if (other_segment_number != 0) {
+                auto segment_number = is + 1;
                 segment_map.insert({segment_number, this->segments.size()});
-                this->segments.emplace_back( unit_system, iseg.data() + iseg_offset, rseg.data() + rseg_offset);
+                this->segments.emplace_back( unit_system, segment_number, iseg.data() + iseg_offset, rseg.data() + rseg_offset);
             }
         }
 
