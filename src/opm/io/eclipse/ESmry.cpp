@@ -527,18 +527,8 @@ std::string ESmry::unpackNumber(const SummaryNode& node) const {
 
         return std::to_string(_i) + "," + std::to_string(_j) + "," + std::to_string(_k);
     } else if (node.category == SummaryNode::Category::Region && node.keyword[2] == 'F') {
-        // NUMS = R1 + 32768*(R2 + 10)
-        int r2 = 0;
-        int y = 32768 * (r2 + 10) - node.number;
-
-        while (y < 0) {
-            r2++;
-            y = 32768 * (r2 + 10) - node.number;
-        }
-
-        r2--;
-
-        const int r1 = node.number - 32768 * (r2 + 10);
+        const auto r1 =  node.number % (1 << 15);
+        const auto r2 = (node.number / (1 << 15)) - 10;
 
         return std::to_string(r1) + "-" + std::to_string(r2);
     } else {
