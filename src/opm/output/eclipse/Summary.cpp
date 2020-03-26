@@ -123,7 +123,6 @@ namespace {
             ParamCTorArgs{ "GOR" , Type::Ratio },
 
             // injection
-
             ParamCTorArgs{ "WIR" , Type::Rate },
             ParamCTorArgs{ "GIR" , Type::Rate },
             ParamCTorArgs{ "OPI" , Type::Rate },
@@ -140,17 +139,17 @@ namespace {
     requiredRestartVectors(const ::Opm::Schedule& sched)
     {
         const auto& vectors = requiredRestartVectors();
-        static const std::vector<ParamCTorArgs> extra_well_vectors {
+        const std::vector<ParamCTorArgs> extra_well_vectors {
             { "WBHP",  Opm::EclIO::SummaryNode::Type::Pressure },
             { "WGVIR", Opm::EclIO::SummaryNode::Type::Rate     },
             { "WWVIR", Opm::EclIO::SummaryNode::Type::Rate     },
         };
-        static const std::vector<ParamCTorArgs> extra_group_vectors {
+        const std::vector<ParamCTorArgs> extra_group_vectors {
             { "GMCTG", Opm::EclIO::SummaryNode::Type::Mode },
             { "GMCTP", Opm::EclIO::SummaryNode::Type::Mode },
             { "GMCTW", Opm::EclIO::SummaryNode::Type::Mode },
         };
-        static const std::vector<ParamCTorArgs> extra_field_vectors {
+        const std::vector<ParamCTorArgs> extra_field_vectors {
             { "FMCTG", Opm::EclIO::SummaryNode::Type::Mode },
             { "FMCTP", Opm::EclIO::SummaryNode::Type::Mode },
             { "FMCTW", Opm::EclIO::SummaryNode::Type::Mode },
@@ -201,8 +200,8 @@ namespace {
     {
         std::vector<Opm::EclIO::SummaryNode> ret {};
 
-        static const Opm::EclIO::SummaryNode::Category category { Opm::EclIO::SummaryNode::Category::Segment };
-        static const std::vector<std::pair<std::string,Opm::EclIO::SummaryNode::Type>> requiredVectors {
+        constexpr Opm::EclIO::SummaryNode::Category category { Opm::EclIO::SummaryNode::Category::Segment };
+        const std::vector<std::pair<std::string,Opm::EclIO::SummaryNode::Type>> requiredVectors {
             { "SOFR", Opm::EclIO::SummaryNode::Type::Rate     },
             { "SGFR", Opm::EclIO::SummaryNode::Type::Rate     },
             { "SWFR", Opm::EclIO::SummaryNode::Type::Rate     },

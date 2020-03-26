@@ -43,11 +43,11 @@ struct SummaryNode {
         Undefined,
     };
 
-    const std::string keyword;
-    const Category category;
-    const Type type;
-    const std::string wgname;
-    const int number;
+    std::string keyword;
+    Category    category;
+    Type        type;
+    std::string wgname;
+    int         number;
 
     constexpr static int default_number { std::numeric_limits<int>::min() };
 
