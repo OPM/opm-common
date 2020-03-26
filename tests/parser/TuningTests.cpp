@@ -22,6 +22,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <opm/parser/eclipse/Python/Python.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
@@ -70,11 +71,12 @@ static Deck createDeck(const std::string& input) {
 BOOST_AUTO_TEST_CASE(TuningTest) {
 
   auto deck = createDeck(deckStr);
+  Python python;
   EclipseGrid grid(10,10,10);
   TableManager table ( deck );
   FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
   Runspec runspec (deck);
-  Schedule schedule( deck, grid , fp, runspec);
+  Schedule schedule( deck, grid , fp, runspec, python);
   const auto& tuning = schedule.getTuning();
   auto event = schedule.getEvents();
 

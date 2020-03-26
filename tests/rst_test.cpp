@@ -17,16 +17,14 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <iostream>
-#include <vector>
 #include <unordered_map>
-
-
-#include <iostream>
+#include <vector>
 
 #include <opm/io/eclipse/rst/state.hpp>
 #include <opm/io/eclipse/ERst.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
+#include <opm/parser/eclipse/Python/Python.hpp>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
@@ -68,7 +66,7 @@ void initLogging() {
 */
 
 
-Opm::Schedule load_schedule(const std::string& fname, int& report_step) {
+Opm::Schedule load_schedule(const Opm::Python& python, const std::string& fname, int& report_step) {
     Opm::Parser parser;
     auto deck = parser.parseFile(fname);
     Opm::EclipseState state(deck);
@@ -80,26 +78,27 @@ Opm::Schedule load_schedule(const std::string& fname, int& report_step) {
         Opm::EclIO::ERst rst_file(rst_filename);
 
         const auto& rst = Opm::RestartIO::RstState::load(rst_file, report_step);
-        return Opm::Schedule(deck, state, &rst);
+        return Opm::Schedule(deck, state, python, &rst);
     } else
-        return Opm::Schedule(deck, state);
+        return Opm::Schedule(deck, state, python);
 }
 
-Opm::Schedule load_schedule(const std::string& fname) {
+Opm::Schedule load_schedule(const Opm::Python& python, const std::string& fname) {
     int report_step;
-    return load_schedule(fname, report_step);
+    return load_schedule(python, fname, report_step);
 }
 
 
 
 int main(int argc, char ** argv) {
+    Opm::Python python;
     initLogging();
     if (argc == 2)
-        load_schedule(argv[1]);
+        load_schedule(python, argv[1]);
     else {
         int report_step;
-        const auto& sched = load_schedule(argv[1]);
-        const auto& rst_sched = load_schedule(argv[2], report_step);
+        const auto& sched = load_schedule(python, argv[1]);
+        const auto& rst_sched = load_schedule(python, argv[2], report_step);
 
         if (Opm::Schedule::cmp(sched, rst_sched, report_step) ) {
             std::cout << "Schedule objects were equal!" << std::endl;

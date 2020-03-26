@@ -25,13 +25,15 @@
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
+#include <opm/parser/eclipse/Python/Python.hpp>
 
 inline void loadDeck( const char * deck_file) {
     Opm::Parser parser;
+    Opm::Python python;
 
     auto deck = parser.parseFile(deck_file);
     Opm::EclipseState state( deck);
-    Opm::Schedule schedule( deck, state);
+    Opm::Schedule schedule( deck, state, python);
     Opm::SummaryConfig summary( deck, schedule, state.getTableManager( ));
     {
         std::stringstream ss;

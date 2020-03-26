@@ -98,6 +98,7 @@ namespace Opm
     class EclipseGrid;
     class EclipseState;
     class FieldPropsManager;
+    class Python;
     class Runspec;
     class SCHEDULESection;
     class SummaryState;
@@ -122,6 +123,7 @@ namespace Opm
                  const Runspec &runspec,
                  const ParseContext& parseContext,
                  ErrorGuard& errors,
+                 const Python& python,
                  const RestartIO::RstState* rst = nullptr);
 
         template<typename T>
@@ -131,18 +133,21 @@ namespace Opm
                  const Runspec &runspec,
                  const ParseContext& parseContext,
                  T&& errors,
+                 const Python& python,
                  const RestartIO::RstState* rst = nullptr);
 
         Schedule(const Deck& deck,
                  const EclipseGrid& grid,
                  const FieldPropsManager& fp,
                  const Runspec &runspec,
+                 const Python& python,
                  const RestartIO::RstState* rst = nullptr);
 
         Schedule(const Deck& deck,
                  const EclipseState& es,
                  const ParseContext& parseContext,
                  ErrorGuard& errors,
+                 const Python& python,
                  const RestartIO::RstState* rst = nullptr);
 
         template <typename T>
@@ -150,8 +155,15 @@ namespace Opm
                  const EclipseState& es,
                  const ParseContext& parseContext,
                  T&& errors,
+                 const Python& python,
                  const RestartIO::RstState* rst = nullptr);
 
+        Schedule(const Deck& deck,
+                 const EclipseState& es,
+                 const Python& python,
+                 const RestartIO::RstState* rst = nullptr);
+
+        // The constructor *without* the Python arg should really only be used from Python itself
         Schedule(const Deck& deck,
                  const EclipseState& es,
                  const RestartIO::RstState* rst = nullptr);

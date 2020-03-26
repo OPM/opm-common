@@ -24,6 +24,7 @@
 #define BOOST_TEST_MODULE ParseContextTests
 #include <boost/test/unit_test.hpp>
 
+#include <opm/parser/eclipse/Python/Python.hpp>
 #include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/D.hpp>
@@ -335,14 +336,15 @@ BOOST_AUTO_TEST_CASE( CheckUnsupportedInSCHEDULE ) {
     TableManager table ( deckSupported );
     FieldPropsManager fp(deckSupported, Phases{true, true, true}, grid, table);
     Runspec runspec(deckSupported);
+    Python python;
 
     parseContext.update( ParseContext::UNSUPPORTED_SCHEDULE_GEO_MODIFIER , InputError::IGNORE );
-    BOOST_CHECK_NO_THROW( Schedule( deckSupported  , grid , fp, runspec, parseContext, errors  ));
-    BOOST_CHECK_NO_THROW( Schedule( deckUnSupported, grid , fp, runspec, parseContext, errors  ));
+    BOOST_CHECK_NO_THROW( Schedule( deckSupported  , grid , fp, runspec, parseContext, errors, python  ));
+    BOOST_CHECK_NO_THROW( Schedule( deckUnSupported, grid , fp, runspec, parseContext, errors, python  ));
 
     parseContext.update( ParseContext::UNSUPPORTED_SCHEDULE_GEO_MODIFIER , InputError::THROW_EXCEPTION );
-    BOOST_CHECK_THROW( Schedule( deckUnSupported , grid , fp, runspec , parseContext , errors), std::invalid_argument );
-    BOOST_CHECK_NO_THROW( Schedule( deckSupported , grid , fp, runspec , parseContext, errors));
+    BOOST_CHECK_THROW( Schedule( deckUnSupported , grid , fp, runspec , parseContext , errors, python), std::invalid_argument );
+    BOOST_CHECK_NO_THROW( Schedule( deckSupported , grid , fp, runspec , parseContext, errors, python));
 }
 
 
@@ -413,12 +415,13 @@ BOOST_AUTO_TEST_CASE(TestCOMPORD) {
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
     Runspec runspec(deck);
+    Python python;
 
     parseContext.update( ParseContext::UNSUPPORTED_COMPORD_TYPE , InputError::IGNORE);
-    BOOST_CHECK_NO_THROW( Schedule( deck , grid , fp, runspec, parseContext, errors ));
+    BOOST_CHECK_NO_THROW( Schedule( deck , grid , fp, runspec, parseContext, errors, python ));
 
     parseContext.update( ParseContext::UNSUPPORTED_COMPORD_TYPE , InputError::THROW_EXCEPTION);
-    BOOST_CHECK_THROW( Schedule( deck,  grid , fp, runspec , parseContext, errors), std::invalid_argument );
+    BOOST_CHECK_THROW( Schedule( deck,  grid , fp, runspec , parseContext, errors, python), std::invalid_argument );
 }
 
 
@@ -753,18 +756,18 @@ BOOST_AUTO_TEST_CASE( test_invalid_wtemplate_config ) {
     testSamples.push_back(testSample);
 
     std::string deckinput;
-
     for (std::string sample : testSamples) {
 
         deckinput = defDeckString + sample;
         auto deckUnSupported = parser.parseString( deckinput , parseContext, errors );
 
+        Python python;
         EclipseGrid grid( deckUnSupported );
         TableManager table ( deckUnSupported );
         FieldPropsManager fp( deckUnSupported, Phases{true, true, true}, grid, table);
         Runspec runspec( deckUnSupported);
 
-        BOOST_CHECK_THROW( Schedule( deckUnSupported , grid , fp, runspec , parseContext, errors), std::invalid_argument );
+        BOOST_CHECK_THROW( Schedule( deckUnSupported , grid , fp, runspec , parseContext, errors, python), std::invalid_argument );
     }
 }
 

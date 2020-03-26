@@ -124,6 +124,7 @@ std::pair<std::time_t, std::size_t> restart_info(const RestartIO::RstState * rst
                         const Runspec &runspec,
                         const ParseContext& parseContext,
                         ErrorGuard& errors,
+                        const Python& python,
                         const RestartIO::RstState * rst) :
         m_timeMap( deck , restart_info( rst )),
         m_oilvaporizationproperties( this->m_timeMap, OilVaporizationProperties(runspec.tabdims().getNumPVTTables()) ),
@@ -175,8 +176,9 @@ std::pair<std::time_t, std::size_t> restart_info(const RestartIO::RstState * rst
                         const Runspec &runspec,
                         const ParseContext& parseContext,
                         T&& errors,
+                        const Python& python,
                         const RestartIO::RstState * rst) :
-        Schedule(deck, grid, fp, runspec, parseContext, errors, rst)
+        Schedule(deck, grid, fp, runspec, parseContext, errors, python, rst)
     {}
 
 
@@ -184,39 +186,46 @@ std::pair<std::time_t, std::size_t> restart_info(const RestartIO::RstState * rst
                         const EclipseGrid& grid,
                         const FieldPropsManager& fp,
                         const Runspec &runspec,
+                        const Python& python,
                         const RestartIO::RstState * rst) :
-        Schedule(deck, grid, fp, runspec, ParseContext(), ErrorGuard(), rst)
+        Schedule(deck, grid, fp, runspec, ParseContext(), ErrorGuard(), python, rst)
     {}
 
 
-    Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext& parse_context, ErrorGuard& errors, const RestartIO::RstState * rst) :
+    Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext& parse_context, ErrorGuard& errors, const Python& python, const RestartIO::RstState * rst) :
         Schedule(deck,
                  es.getInputGrid(),
                  es.fieldProps(),
                  es.runspec(),
                  parse_context,
                  errors,
+                 python,
                  rst)
     {}
 
 
 
     template <typename T>
-    Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext& parse_context, T&& errors, const RestartIO::RstState * rst) :
+    Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext& parse_context, T&& errors, const Python& python, const RestartIO::RstState * rst) :
         Schedule(deck,
                  es.getInputGrid(),
                  es.fieldProps(),
                  es.runspec(),
                  parse_context,
                  errors,
+                 python,
                  rst)
     {}
 
 
-    Schedule::Schedule(const Deck& deck, const EclipseState& es, const RestartIO::RstState * rst) :
-        Schedule(deck, es, ParseContext(), ErrorGuard(), rst)
+    Schedule::Schedule(const Deck& deck, const EclipseState& es, const Python& python, const RestartIO::RstState * rst) :
+        Schedule(deck, es, ParseContext(), ErrorGuard(), python, rst)
     {}
 
+
+    Schedule::Schedule(const Deck& deck, const EclipseState& es, const RestartIO::RstState * rst) :
+        Schedule(deck, es, ParseContext(), ErrorGuard(), Python(), rst)
+    {}
 
     Schedule Schedule::serializeObject()
     {

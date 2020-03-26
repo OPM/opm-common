@@ -29,6 +29,7 @@
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 
+#include <opm/parser/eclipse/Python/Python.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
@@ -86,11 +87,12 @@ BOOST_AUTO_TEST_CASE(WellCOMPDATtestTRACK) {
 
 
     auto deck = parser.parseString(input);
+    Opm::Python python;
     Opm::EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
     Opm::Runspec runspec (deck);
-    Opm::Schedule schedule(deck, grid , fp, runspec);
+    Opm::Schedule schedule(deck, grid , fp, runspec, python);
     const auto& op_1 = schedule.getWell("OP_1", 2);
 
     const auto& completions = op_1.getConnections();
@@ -132,11 +134,12 @@ BOOST_AUTO_TEST_CASE(WellCOMPDATtestDefaultTRACK) {
 
 
     auto deck = parser.parseString(input);
+    Opm::Python python;
     Opm::EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
     Opm::Runspec runspec (deck);
-    Opm::Schedule schedule(deck, grid , fp, runspec);
+    Opm::Schedule schedule(deck, grid , fp, runspec, python);
     const auto& op_1 = schedule.getWell("OP_1", 2);
 
     const auto& completions = op_1.getConnections();
@@ -179,7 +182,8 @@ BOOST_AUTO_TEST_CASE(WellCOMPDATtestINPUT) {
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
     Opm::Runspec runspec (deck);
-    Opm::Schedule schedule(deck, grid , fp, runspec, Opm::ParseContext(), errors);
+    Opm::Python python;
+    Opm::Schedule schedule(deck, grid , fp, runspec, Opm::ParseContext(), errors, python);
     const auto& op_1 = schedule.getWell("OP_1", 2);
 
     const auto& completions = op_1.getConnections();
@@ -852,11 +856,12 @@ BOOST_AUTO_TEST_CASE(WELOPEN) {
 
 
     auto deck = parser.parseString(input);
+    Python python;
     Opm::EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     Opm::Runspec runspec (deck);
-    Opm::Schedule schedule(deck, grid , fp, runspec);
+    Opm::Schedule schedule(deck, grid , fp, runspec, python);
     {
         const auto& op_1 = schedule.getWell("OP_1", 1);
         BOOST_CHECK(op_1.getStatus() == Well::Status::OPEN);

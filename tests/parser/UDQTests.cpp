@@ -16,6 +16,7 @@ Copyright 2018 Statoil ASA.
 #define BOOST_TEST_MODULE UDQTests
 #include <boost/test/unit_test.hpp>
 
+#include <opm/parser/eclipse/Python/Python.hpp>
 #include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
@@ -139,17 +140,18 @@ BOOST_AUTO_TEST_CASE(TEST)
 
 Schedule make_schedule(const std::string& input) {
     Parser parser;
+    Python python;
 
     auto deck = parser.parseString(input);
     if (deck.hasKeyword("DIMENS")) {
         EclipseState es(deck);
-        return Schedule(deck, es);
+        return Schedule(deck, es, python);
     } else {
         EclipseGrid grid(10,10,10);
         TableManager table ( deck );
         FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
         Runspec runspec (deck);
-        return Schedule(deck, grid , fp, runspec);
+        return Schedule(deck, grid , fp, runspec, python);
     }
 }
 

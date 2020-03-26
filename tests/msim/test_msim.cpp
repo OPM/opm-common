@@ -27,6 +27,7 @@
 
 #include <opm/common/utility/FileSystem.hpp>
 
+#include <opm/parser/eclipse/Python/Python.hpp>
 #include <opm/io/eclipse/ERst.hpp>
 #include <opm/io/eclipse/ESmry.hpp>
 
@@ -69,9 +70,10 @@ bool is_file(const Opm::filesystem::path& name)
 
 BOOST_AUTO_TEST_CASE(RUN) {
     Parser parser;
+    Python python;
     Deck deck = parser.parseFile("SPE1CASE1.DATA");
     EclipseState state(deck);
-    Schedule schedule(deck, state);
+    Schedule schedule(deck, state, python);
     SummaryConfig summary_config(deck, schedule, state.getTableManager());
     msim msim(state);
 

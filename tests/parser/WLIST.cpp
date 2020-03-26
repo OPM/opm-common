@@ -24,6 +24,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <opm/parser/eclipse/Python/Python.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
@@ -145,7 +146,8 @@ static Opm::Schedule createSchedule(const std::string& schedule) {
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
     Runspec runspec (deck);
-    return Schedule(deck, grid , fp, runspec );
+    Python python;
+    return Schedule(deck, grid , fp, runspec, python );
 }
 
 

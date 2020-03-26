@@ -26,6 +26,7 @@
 
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
 #include <opm/output/eclipse/VectorItems/well.hpp>
+#include <opm/parser/eclipse/Python/Python.hpp>
 
 #include <opm/output/data/Wells.hpp>
 
@@ -457,10 +458,11 @@ struct SimulationCase
 {
     explicit SimulationCase(const Opm::Deck& deck)
         : es   ( deck )
-        , sched (deck, es )
+        , sched (deck, es, python )
     {}
 
     // Order requirement: 'es' must be declared/initialised before 'sched'.
+    Opm::Python       python;
     Opm::EclipseState es;
     Opm::Schedule     sched;
 };

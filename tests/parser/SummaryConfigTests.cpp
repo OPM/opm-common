@@ -21,6 +21,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <opm/parser/eclipse/Python/Python.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
@@ -148,8 +149,9 @@ static std::vector< std::string > sorted_key_names( const SummaryConfig& summary
 static SummaryConfig createSummary( std::string input , const ParseContext& parseContext = ParseContext()) {
     ErrorGuard errors;
     auto deck = createDeck( input );
+    Python python;
     EclipseState state( deck );
-    Schedule schedule(deck, state, parseContext, errors);
+    Schedule schedule(deck, state, parseContext, errors, python);
     return SummaryConfig( deck, schedule, state.getTableManager( ), parseContext, errors );
 }
 
@@ -167,20 +169,22 @@ BOOST_AUTO_TEST_CASE(wells_all) {
 
 BOOST_AUTO_TEST_CASE(EMPTY) {
     auto deck = createDeck_no_wells( "" );
+    Python python;
     EclipseState state( deck );
-    Schedule schedule(deck, state);
+    Schedule schedule(deck, state, python);
     SummaryConfig conf(deck, schedule, state.getTableManager());
     BOOST_CHECK_EQUAL( conf.size(), 0 );
 }
 
 BOOST_AUTO_TEST_CASE(wells_missingI) {
+    Python python;
     ParseContext parseContext;
     ErrorGuard errors;
     const auto input = "WWCT\n/\n";
     auto deck = createDeck_no_wells( input );
     parseContext.update(ParseContext::SUMMARY_UNKNOWN_WELL, InputError::THROW_EXCEPTION);
     EclipseState state( deck );
-    Schedule schedule(deck, state, parseContext, errors );
+    Schedule schedule(deck, state, parseContext, errors, python );
     BOOST_CHECK_NO_THROW( SummaryConfig( deck, schedule, state.getTableManager( ), parseContext, errors ));
 }
 
@@ -715,11 +719,12 @@ BOOST_AUTO_TEST_CASE( SUMMARY_MISC) {
 
 BOOST_AUTO_TEST_CASE(Summary_Segment)
 {
+    Python python;
     const auto input = std::string { "SOFR_TEST.DATA" };
     const auto deck  = Parser{}.parseFile(input);
     const auto state = EclipseState { deck };
 
-    const auto schedule = Schedule { deck, state};
+    const auto schedule = Schedule { deck, state, python};
     const auto summary  = SummaryConfig {
         deck, schedule, state.getTableManager()
     };

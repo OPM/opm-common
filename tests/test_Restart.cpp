@@ -27,6 +27,7 @@
 #include <opm/output/eclipse/RestartValue.hpp>
 #include <opm/output/data/Cells.hpp>
 #include <opm/output/data/Wells.hpp>
+#include <opm/parser/eclipse/Python/Python.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Tables/Eqldims.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
@@ -338,12 +339,13 @@ struct Setup {
     const EclipseGrid& grid;
     Schedule schedule;
     SummaryConfig summary_config;
+    Python python;
 
     Setup( const char* path) :
         deck( Parser().parseFile( path) ),
         es( deck),
         grid( es.getInputGrid( ) ),
-        schedule( deck, es ),
+        schedule( deck, es, python ),
         summary_config( deck, schedule, es.getTableManager( ))
     {
         auto& io_config = es.getIOConfig();

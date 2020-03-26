@@ -22,6 +22,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/RFTConfig.hpp>
+#include <opm/parser/eclipse/Python/Python.hpp>
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
@@ -39,13 +40,14 @@ namespace {
     {
         Setup(const ::Opm::Deck& deck);
 
+        ::Opm::Python       python;
         ::Opm::EclipseState es;
         ::Opm::Schedule     sched;
     };
 
     Setup::Setup(const ::Opm::Deck& deck)
         : es   (deck)
-        , sched(deck, es)
+        , sched(deck, es, python)
     {}
 
     Setup parseDeckString(const std::string& input)

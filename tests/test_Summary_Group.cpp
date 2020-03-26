@@ -35,6 +35,7 @@
 #include <opm/output/data/Groups.hpp>
 #include <opm/output/eclipse/Summary.hpp>
 
+#include <opm/parser/eclipse/Python/Python.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
@@ -204,6 +205,7 @@ static data::Group result_groups() {
 
 
 struct setup {
+    Python python;
     Deck deck;
     EclipseState es;
     const EclipseGrid& grid;
@@ -220,7 +222,7 @@ struct setup {
         deck( Parser().parseFile( path) ),
         es( deck ),
         grid( es.getInputGrid() ),
-        schedule( deck, es),
+        schedule( deck, es, python),
         config( deck, schedule, es.getTableManager()),
         wells( result_wells() ),
         groups( result_groups() ),

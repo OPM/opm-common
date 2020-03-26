@@ -26,7 +26,7 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 
-
+#include <opm/parser/eclipse/Python/Python.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
@@ -205,8 +205,9 @@ BOOST_AUTO_TEST_CASE(loadCOMPDATTESTSPE1) {
     Opm::Parser parser;
 
     const auto deck = parser.parseFile("SPE1CASE1.DATA");
+    Opm::Python python;
     Opm::EclipseState state(deck);
-    Opm::Schedule sched(deck, state);
+    Opm::Schedule sched(deck, state, python);
     const auto& units = deck.getActiveUnitSystem();
 
     const auto& prod = sched.getWell("PROD", 0);
@@ -230,8 +231,9 @@ BOOST_AUTO_TEST_CASE(loadCOMPDATTESTSPE9) {
     Opm::Parser parser;
 
     const auto deck = parser.parseFile("SPE9_CP_PACKED.DATA");
+    Opm::Python python;
     Opm::EclipseState state(deck);
-    Opm::Schedule sched(deck, state);
+    Opm::Schedule sched(deck, state, python);
     const auto& units = deck.getActiveUnitSystem();
 /*
   The list of the expected values come from the PRT file in an ECLIPSE simulation.

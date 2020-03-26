@@ -24,6 +24,7 @@
 
 #include <opm/parser/eclipse/EclipseState/Schedule/ArrayDimChecker.hpp>
 
+#include <opm/parser/eclipse/Python/Python.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
@@ -344,6 +345,7 @@ struct CaseObjects
     CaseObjects& operator=(const CaseObjects& rhs) = delete;
     CaseObjects& operator=(CaseObjects&& rhs) = delete;
 
+    Opm::Python       python;
     Opm::ErrorGuard   guard;
     Opm::EclipseState es;
     Opm::Schedule     sched;
@@ -352,7 +354,7 @@ struct CaseObjects
 CaseObjects::CaseObjects(const Opm::Deck& deck, const Opm::ParseContext& ctxt)
     : guard{}
     , es   (deck)
-    , sched(deck, es, ctxt, guard)
+    , sched(deck, es, ctxt, guard, python)
 {
 }
 

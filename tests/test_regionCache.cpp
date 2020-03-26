@@ -24,6 +24,7 @@
 
 #include <stdexcept>
 
+#include <opm/parser/eclipse/Python/Python.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
@@ -39,11 +40,12 @@ const char* path = "summary_deck.DATA";
 
 
 BOOST_AUTO_TEST_CASE(create) {
+    Python python;
     Parser parser;
     Deck deck( parser.parseFile( path ));
     EclipseState es(deck);
     const EclipseGrid& grid = es.getInputGrid();
-    Schedule schedule( deck, es);
+    Schedule schedule( deck, es, python);
     out::RegionCache rc(es.fieldProps().get_int("FIPNUM"), grid, schedule);
     {
         const auto& empty = rc.connections( 4 );

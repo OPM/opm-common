@@ -24,6 +24,7 @@
 #include <opm/output/eclipse/VectorItems/connection.hpp>
 #include <opm/io/eclipse/rst/header.hpp>
 #include <opm/io/eclipse/rst/connection.hpp>
+#include <opm/parser/eclipse/Python/Python.hpp>
 
 #include <boost/test/unit_test.hpp>
 
@@ -528,13 +529,15 @@ END
     struct SimulationCase {
         explicit SimulationCase(const Opm::Deck& deck)
             : es(deck)
+            , python()
             , grid(deck)
-            , sched(deck, es)
+            , sched(deck, es, python)
         {
         }
 
         // Order requirement: 'es' must be declared/initialised before 'sched'.
         Opm::EclipseState es;
+        Opm::Python python;
         Opm::EclipseGrid grid;
         Opm::Schedule sched;
     };

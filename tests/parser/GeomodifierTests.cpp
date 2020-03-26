@@ -29,6 +29,7 @@
 #include <opm/parser/eclipse/Parser/InputErrorAction.hpp>
 #include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
 
+#include <opm/parser/eclipse/Python/Python.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
@@ -72,6 +73,7 @@ BOOST_AUTO_TEST_CASE( CheckUnsoppertedInSCHEDULE ) {
         "   10 10/\n"
         "\n";
 
+    Python python;
     Parser parser(true);
     ParseContext parseContext;
     ErrorGuard errors;
@@ -83,7 +85,7 @@ BOOST_AUTO_TEST_CASE( CheckUnsoppertedInSCHEDULE ) {
     parseContext.update( ParseContext::UNSUPPORTED_SCHEDULE_GEO_MODIFIER , InputError::IGNORE );
     {
         Runspec runspec ( deck );
-        Schedule schedule( deck, grid , fp, runspec , parseContext, errors);
+        Schedule schedule( deck, grid , fp, runspec , parseContext, errors, python);
         auto events = schedule.getEvents( );
         BOOST_CHECK_EQUAL( false , events.hasEvent( ScheduleEvents::GEO_MODIFIER , 1 ));
         BOOST_CHECK_EQUAL( true  , events.hasEvent( ScheduleEvents::GEO_MODIFIER , 2 ));
