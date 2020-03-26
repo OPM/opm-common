@@ -17,6 +17,9 @@
    along with OPM.  If not, see <http://www.gnu.org/licenses/>.
    */
 
+#ifndef OPM_IO_SUMMARYNODE_HPP
+#define OPM_IO_SUMMARYNODE_HPP
+
 #include <string>
 
 namespace Opm::EclIO {
@@ -57,3 +60,5 @@ struct SummaryNode {
 };
 
 } // namespace Opm::EclIO
+
+#endif // OPM_IO_SUMMARYNODE_HPP
