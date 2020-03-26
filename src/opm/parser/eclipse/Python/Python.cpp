@@ -24,8 +24,25 @@
 
 namespace Opm {
 
-Python::Python() :
-    interp(std::make_shared<PythonInterp>())
+Python::Python(Enable enable) {
+    if (enable == Enable::OFF)
+        return;
+
+#ifdef EMBEDDED_PYTHON
+    if (!Py_IsInitialized())
+        this->interp = std::make_shared<PythonInterp>();
+    else if (enable == Enable::ON)
+        throw std::logic_error("An instance of the Python interpreter is already running");
+
+    return;
+#endif
+
+    if (enable == Enable::ON)
+        throw std::logic_error("The version has been built without Python support");
+}
+
+
+Python::Python() : Python(Enable::COND)
 {
 }
 

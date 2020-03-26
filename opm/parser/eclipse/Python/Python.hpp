@@ -52,10 +52,45 @@ class EclipseState;
      else
          OpmLog::Error("This version of opmcommon has been built with support for embedded Python");
 
+
+  The default constructor will enable the Python interpreter if the current
+  version of opm-common has been built support for embedded Python, by using the
+  alternative Python(Enable enable) constructor you can explicitly say if you
+  want Python support or not; if that request can not be satisfied you will get
+  std::logic_error().
+
+  Observe that the real underlying Python interpreter is essentially a singleton
+  - i.e. only a one interpreter can be active at any time. The details of the
+  interaction between build configuration, constructor arg and multiple
+  instances is as follows:
+
+
+  Build:   |  Constructor arg   |  Existing instance  | Result
+  ---------|--------------------|---------------------|-------
+  True     |  OFF               |  *                  | { }
+  True     |  ON                |  False              | { Python }
+  True     |  ON                |  True               | std::logic_error
+  True     |  COND              |  True               | { }
+  True     |  COND              |  False              | { Python }
+  False    |  OFF               |  *                  | { }
+  False    |  ON                |  *                  | std::logic_error
+  False    |  COND              |  *                  | { }
+  ---------|--------------------|---------------------|-------
+
+
 */
+
 
 class Python {
 public:
+
+    enum class Enable {
+        ON,    /* Enable the Python extensions - throw std::logic_error() if it fails. */
+        COND,  /* Try to enable Python extensions*/
+        OFF    /* Do not enable Python */
+    };
+
+    explicit Python(Enable enable);
     Python();
     bool exec(const std::string& python_code) const;
     bool exec(const std::string& python_code, const Parser& parser, Deck& deck) const;
