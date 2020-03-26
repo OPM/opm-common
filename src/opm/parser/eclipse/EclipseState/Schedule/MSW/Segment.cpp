@@ -47,6 +47,17 @@ static constexpr double invalid_value = -1.e100;
     {
     }
 
+namespace {
+
+    double if_invalid_value(double rst_value) {
+        if (rst_value == 0)
+            return invalid_value;
+
+        return rst_value;
+    }
+
+}
+
 
     Segment::Segment(const RestartIO::RstSegment& rst_segment):
         m_segment_number(rst_segment.segment),
@@ -54,9 +65,9 @@ static constexpr double invalid_value = -1.e100;
         m_outlet_segment(rst_segment.outlet_segment),
         m_total_length( rst_segment.dist_bhp_ref ),
         m_depth(rst_segment.bhp_ref_dz),
-        m_internal_diameter(rst_segment.diameter),
-        m_roughness(rst_segment.roughness),
-        m_cross_area(rst_segment.area),
+        m_internal_diameter(if_invalid_value(rst_segment.diameter)),
+        m_roughness(if_invalid_value(rst_segment.roughness)),
+        m_cross_area(if_invalid_value(rst_segment.area)),
         m_volume(rst_segment.volume),
         m_data_ready(true),
         m_segment_type(rst_segment.segment_type)
