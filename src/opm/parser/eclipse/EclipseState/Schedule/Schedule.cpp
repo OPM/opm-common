@@ -3077,6 +3077,9 @@ std::string well_msg(const std::string& well, const std::string& msg) {
     return "Well: " + well + " " + msg;
 }
 
+std::string well_segment_msg(const std::string& well, int segment_number, const std::string& msg) {
+    return "Well: " + well + " Segment: " + std::to_string(segment_number) + " " + msg;
+}
 
 }
 
@@ -3146,15 +3149,16 @@ bool Schedule::cmp(const Schedule& sched1, const Schedule& sched2, std::size_t r
             for (std::size_t iseg=0; iseg < segments1.size(); iseg++) {
                 const auto& segment1 = segments1[iseg];
                 const auto& segment2 = segments2[iseg];
-                well_count += not_equal(segment1.segmentNumber(), segment2.segmentNumber(), well_msg(well1.name(), "Segment: segmentNumber"));
-                well_count += not_equal(segment1.branchNumber(), segment2.segmentNumber(), well_msg(well1.name(), "Segment: segmentNumber"));
-                well_count += not_equal(segment1.outletSegment(), segment2.outletSegment(), well_msg(well1.name(), "Segments: outletSegment"));
-                well_count += not_equal(segment1.totalLength(), segment2.totalLength(), well_msg(well1.name(), "Segments: totalLength"));
-                well_count += not_equal(segment1.depth(), segment2.depth(), well_msg(well1.name(), "Segments: depth"));
-                well_count += not_equal(segment1.internalDiameter(), segment2.internalDiameter(), well_msg(well1.name(), "Segments: internalDiameter"));
-                well_count += not_equal(segment1.roughness(), segment2.roughness(), well_msg(well1.name(), "Segments: roughness"));
-                well_count += not_equal(segment1.crossArea(), segment2.crossArea(), well_msg(well1.name(), "Segments: crossArea"));
-                well_count += not_equal(segment1.volume(), segment2.volume(), well_msg(well1.name(), "Segments: volume"));
+                //const auto& segment2 = segments2.getFromSegmentNumber(segment1.segmentNumber());
+                well_count += not_equal(segment1.segmentNumber(), segment2.segmentNumber(), well_segment_msg(well1.name(), segment1.segmentNumber(), "segmentNumber"));
+                well_count += not_equal(segment1.branchNumber(), segment2.branchNumber(), well_segment_msg(well1.name(), segment1.segmentNumber(), "branchNumber"));
+                well_count += not_equal(segment1.outletSegment(), segment2.outletSegment(), well_segment_msg(well1.name(), segment1.segmentNumber(), "outletSegment"));
+                well_count += not_equal(segment1.totalLength(), segment2.totalLength(), well_segment_msg(well1.name(), segment1.segmentNumber(), "totalLength"));
+                well_count += not_equal(segment1.depth(), segment2.depth(), well_segment_msg(well1.name(), segment1.segmentNumber(), "depth"));
+                well_count += not_equal(segment1.internalDiameter(), segment2.internalDiameter(), well_segment_msg(well1.name(), segment1.segmentNumber(), "internalDiameter"));
+                well_count += not_equal(segment1.roughness(), segment2.roughness(), well_segment_msg(well1.name(), segment1.segmentNumber(), "roughness"));
+                well_count += not_equal(segment1.crossArea(), segment2.crossArea(), well_segment_msg(well1.name(), segment1.segmentNumber(), "crossArea"));
+                well_count += not_equal(segment1.volume(), segment2.volume(), well_segment_msg(well1.name(), segment1.segmentNumber(), "volume"));
             }
         }
 
