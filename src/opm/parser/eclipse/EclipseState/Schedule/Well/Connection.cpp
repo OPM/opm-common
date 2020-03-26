@@ -53,7 +53,7 @@ namespace Opm {
                            const int satTableId,
                            const Direction directionArg,
                            const CTFKind ctf_kind,
-			   const std::size_t seqIndex,
+			   const std::size_t sort_value,
 			   const double segDistStart,
 			   const double segDistEnd,
 			   const bool defaultSatTabId)
@@ -70,7 +70,7 @@ namespace Opm {
           ijk({i,j,k}),
           m_ctfkind(ctf_kind),
           m_global_index(global_index),
-          m_seqIndex(seqIndex),
+          m_sort_value(sort_value),
           m_segDistStart(segDistStart),
           m_segDistEnd(segDistEnd),
           m_defaultSatTabId(defaultSatTabId)
@@ -79,7 +79,6 @@ namespace Opm {
 
 namespace {
 constexpr bool defaultSatTabId = true;
-constexpr int compseg_seqIndex = 1;
 constexpr double def_wellPi = 1.0;
 }
 
@@ -97,11 +96,10 @@ Connection::Connection(const RestartIO::RstConnection& rst_connection, std::size
         ijk(rst_connection.ijk),
         m_ctfkind(rst_connection.cf_kind),
         m_global_index(grid.getGlobalIndex(this->ijk[0], this->ijk[1], this->ijk[2])),
-        m_seqIndex(insert_index),
+        m_sort_value(insert_index),
         m_segDistStart(rst_connection.segdist_start),
         m_segDistEnd(rst_connection.segdist_end),
         m_defaultSatTabId(defaultSatTabId),
-        m_compSeg_seqIndex(compseg_seqIndex),
         segment_number(rst_connection.segment),
         wPi(def_wellPi)
     {
@@ -134,11 +132,9 @@ Connection::Connection(const RestartIO::RstConnection& rst_connection, std::size
         result.ijk = {9, 10, 11};
         result.m_ctfkind = CTFKind::Defaulted;
         result.m_global_index = 12;
-        result.m_seqIndex = 13;
-        result.m_segDistStart = 14.0;
+        result.m_sort_value = 14;
         result.m_segDistEnd = 15.0;
         result.m_defaultSatTabId = true;
-        result.m_compSeg_seqIndex = 15;
         result.segment_number = 16;
         result.wPi = 17.0;
 
@@ -173,16 +169,12 @@ Connection::Connection(const RestartIO::RstConnection& rst_connection, std::size
         return (segment_number > 0);
     }
 
-    const std::size_t& Connection::getSeqIndex() const {
-        return m_seqIndex;
+    std::size_t Connection::sort_value() const {
+        return m_sort_value;
     }
 
     const bool& Connection::getDefaultSatTabId() const {
         return m_defaultSatTabId;
-    }
-
-    const std::size_t& Connection::getCompSegSeqIndex() const {
-        return m_compSeg_seqIndex;
     }
 
     Connection::Direction Connection::dir() const {
@@ -253,7 +245,7 @@ Connection::Connection(const RestartIO::RstConnection& rst_connection, std::size
                                    double end) {
         this->segment_number = segment_number_arg;
         this->center_depth = center_depth_arg;
-        this->m_compSeg_seqIndex = compseg_insert_index;
+        this->m_sort_value = compseg_insert_index;
         this->m_segDistStart = start;
         this->m_segDistEnd = end;
     }
@@ -288,7 +280,7 @@ Connection::Connection(const RestartIO::RstConnection& rst_connection, std::size
         ss << "CTF Source " << Connection::CTFKindToString(this->m_ctfkind) << '\n';
         ss << "segment_nr " << this->segment_number << std::endl;
         ss << "center_depth " << this->center_depth << std::endl;
-        ss << "seqIndex " << this->m_seqIndex << std::endl;
+        ss << "sort_value" << this->m_sort_value<< std::endl;
 
         return ss.str();
 }
@@ -308,7 +300,7 @@ Connection::Connection(const RestartIO::RstConnection& rst_connection, std::size
             && this->direction == rhs.direction
             && this->segment_number == rhs.segment_number
             && this->center_depth == rhs.center_depth
-            && this->m_seqIndex == rhs.m_seqIndex;
+            && this->m_sort_value == rhs.m_sort_value;
     }
 
     bool Connection::operator!=( const Connection& rhs ) const {

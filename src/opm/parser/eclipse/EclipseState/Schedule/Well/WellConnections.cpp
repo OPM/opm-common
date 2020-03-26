@@ -175,7 +175,7 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
         if (!this->m_connections[0].attachedToSegment() && (this->m_ordering != Connection::Order::INPUT)) {
             std::sort(out.begin(), out.end(), [](const Opm::Connection* conn1, const Opm::Connection* conn2)
                                                 {
-                                                    return conn1->getSeqIndex() < conn2->getSeqIndex();
+                                                    return conn1->sort_value() < conn2->sort_value();
                                                 });
         }
         return out;
@@ -388,7 +388,7 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
                                     direction, ctf_kind,
                                     noConn, 0., 0., defaultSatTable);
             } else {
-                std::size_t css_ind = prev->getCompSegSeqIndex();
+                std::size_t css_ind = prev->sort_value();
                 int conSegNo = prev->segment();
                 double conSDStart = prev->getSegDistStart();
                 double conSDEnd = prev->getSegDistEnd();
@@ -405,7 +405,7 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
                                    skin_factor,
                                    satTableId,
                                    direction, ctf_kind,
-                                   prev->getSeqIndex(), conSDStart, conSDEnd, defaultSatTable);
+                                   prev->sort_value(), conSDStart, conSDEnd, defaultSatTable);
 
                 prev->updateSegment(conSegNo,
                                     depth,
@@ -486,7 +486,7 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
     void WellConnections::orderMSW() {
         std::sort(this->m_connections.begin(), this->m_connections.end(), [](const Opm::Connection& conn1, const Opm::Connection& conn2)
                   {
-                      return conn1.getCompSegSeqIndex() < conn2.getCompSegSeqIndex();
+                      return conn1.sort_value() < conn2.sort_value();
                   });
     }
 
