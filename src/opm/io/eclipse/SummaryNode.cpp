@@ -41,6 +41,9 @@ constexpr bool use_number(Opm::EclIO::SummaryNode::Category category) {
     case Opm::EclIO::SummaryNode::Category::Well:
         return false;
     }
+
+    static_assert("Unhandled category in use_number");
+    return false; // Never reached, but quells compiler warning
 }
 
 constexpr bool use_name(Opm::EclIO::SummaryNode::Category category) {
@@ -57,6 +60,9 @@ constexpr bool use_name(Opm::EclIO::SummaryNode::Category category) {
     case Opm::EclIO::SummaryNode::Category::Region:
         return false;
     }
+
+    static_assert("Unhandled category in use_name");
+    return false; // Never reached, but quells compiler warning
 }
 
 };

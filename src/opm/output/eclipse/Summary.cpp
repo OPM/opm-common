@@ -1333,6 +1333,8 @@ inline std::vector<Opm::Well> find_wells( const Opm::Schedule& schedule,
     case Opm::EclIO::SummaryNode::Category::Miscellaneous:
         return {};
     }
+
+    throw std::runtime_error("Unhandled summary node category in find_wells");
 }
 
 bool need_wells(const Opm::EclIO::SummaryNode& node) {
@@ -1352,6 +1354,8 @@ bool need_wells(const Opm::EclIO::SummaryNode& node) {
     case Opm::EclIO::SummaryNode::Category::Block:
         return false;
     }
+
+    throw std::runtime_error("Unhandled summary node category in need_wells");
 }
 
 void eval_udq(const Opm::Schedule& schedule, std::size_t sim_step, Opm::SummaryState& st)
