@@ -18,6 +18,8 @@
 
 #include <opm/io/eclipse/ESmry.hpp>
 
+#include <iomanip>
+#include <ostream>
 #include <string>
 
 namespace {
@@ -30,16 +32,33 @@ constexpr size_t column_count { 10 } ;
 constexpr size_t total_column { column_width + column_space } ;
 constexpr size_t total_width  { total_column * column_count } ;
 
-const std::string version_line { "1" + std::string(total_width,     ' ') + "\n" } ;
+const std::string version_line { } ;
 // the fact that the dashed header line has 127 rather than 130 dashes has no provenance
-const std::string divider_line { " " + std::string(total_width - 3, '-') + "\n" } ;
+const std::string divider_line { std::string(total_width - 3, '-') } ;
+
+const std::string block_header_line(const std::string& run_name, const std::string& comment) {
+    return "SUMMARY OF RUN " + run_name + " OPM FLOW VERSION 1910 " + comment;
+}
+
+void write_line(std::ostream& os, const std::string& line, char prefix = ' ') {
+    os << prefix << std::setw(total_width) << std::left << line << '\n';
+}
 
 }
 
 namespace Opm::EclIO {
 
 void ESmry::write_rsm(std::ostream& os) const {
-    os << version_line << divider_line;
+    write_line(os, version_line, '1');
+    write_line(os, divider_line);
+    write_line(os, block_header_line("nor01-temp01-rsm-date", "ANYTHING CAN GO HERE: USER, MACHINE ETC."));
+    write_line(os, divider_line);
+
+    // write headers
+
+    write_line(os, divider_line);
+
+    // write data
 }
 
 } // namespace Opm::EclIO
