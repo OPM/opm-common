@@ -110,11 +110,11 @@ BOOST_AUTO_TEST_CASE(PYINPUT_BASIC) {
 
 BOOST_AUTO_TEST_CASE(PYACTION) {
     Parser parser;
+    Python python;
     auto deck = parser.parseFile("EMBEDDED_PYTHON.DATA");
     auto ecl_state = EclipseState(deck);
-    auto schedule = Schedule(deck, ecl_state);
+    auto schedule = Schedule(deck, ecl_state, python);
 
-    Python python;
     SummaryState st(std::chrono::system_clock::now());
     const auto& pyaction_kw = deck.getKeyword<ParserKeywords::PYACTION>(0);
     const std::string& fname = pyaction_kw.getRecord(1).getItem(0).get<std::string>(0);

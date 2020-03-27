@@ -22,6 +22,7 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
+#include <opm/parser/eclipse/Python/Python.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
@@ -76,9 +77,9 @@ BOOST_AUTO_TEST_CASE(LoadRST) {
     EclIO::ERst rst_file("SPE1CASE2.X0060");
     auto rst_state = RestartIO::RstState::load(rst_file, 60);
     BOOST_REQUIRE_THROW( rst_state.get_well("NO_SUCH_WELL"), std::out_of_range);
-
+    Python python;
     EclipseState ecl_state(deck);
-    Schedule sched(deck, ecl_state);
+    Schedule sched(deck, ecl_state, python);
     const auto& well_names = sched.wellNames(60);
     BOOST_CHECK_EQUAL(well_names.size(), rst_state.wells.size());
 
@@ -90,16 +91,17 @@ BOOST_AUTO_TEST_CASE(LoadRST) {
 }
 
 BOOST_AUTO_TEST_CASE(LoadRestartSim) {
+    Python python;
     Parser parser;
     auto deck = parser.parseFile("SPE1CASE2.DATA");
     EclipseState ecl_state(deck);
-    Schedule sched(deck, ecl_state);
+    Schedule sched(deck, ecl_state, python);
 
     auto restart_deck = parser.parseFile("SPE1CASE2_RESTART.DATA");
     EclIO::ERst rst_file("SPE1CASE2.X0060");
     auto rst_state = RestartIO::RstState::load(rst_file, 60);
     EclipseState ecl_state_restart(restart_deck);
-    Schedule restart_sched(restart_deck, ecl_state_restart, &rst_state);
+    Schedule restart_sched(restart_deck, ecl_state_restart, python, &rst_state);
 
     // Verify that sched and restart_sched are identical from report_step 60 and onwords.
 }

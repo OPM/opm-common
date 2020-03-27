@@ -25,6 +25,7 @@
 #include <vector>
 #include <boost/date_time.hpp>
 
+#include <opm/parser/eclipse/Python/Python.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
@@ -303,10 +304,11 @@ BOOST_AUTO_TEST_CASE( NorneRestartConfig ) {
     rptConfig.push_back( std::make_tuple(240 , true , boost::gregorian::date( 2006,10,1)) );
     rptConfig.push_back( std::make_tuple(241 , true , boost::gregorian::date( 2006,10,10)) );
 
+    Python python;
     Parser parser;
     auto deck = parser.parseFile( path_prefix() + "IOConfig/RPTRST_DECK.DATA");
     EclipseState state(deck);
-    Schedule schedule(deck, state);
+    Schedule schedule(deck, state, python);
 
     verifyRestartConfig(schedule.getTimeMap(), schedule.restart(), rptConfig);
 }
@@ -349,10 +351,11 @@ BOOST_AUTO_TEST_CASE( RestartConfig2 ) {
     }
 
 
+    Python python;
     Parser parser;
     auto deck = parser.parseFile(path_prefix() + "IOConfig/RPT_TEST2.DATA");
     EclipseState state( deck);
-    Schedule schedule(deck, state);
+    Schedule schedule(deck, state, python);
     const auto& rstConfig = schedule.restart();
     verifyRestartConfig(schedule.getTimeMap(), rstConfig, rptConfig);
 

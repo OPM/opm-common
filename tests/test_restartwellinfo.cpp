@@ -32,6 +32,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellConnections.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Python/Python.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellProductionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp>
@@ -194,11 +195,12 @@ BOOST_AUTO_TEST_CASE(EclipseWriteRestartWellInfo) {
 
     std::string eclipse_data_filename    = "testblackoilstate3.DATA";
 
+    Opm::Python python;
     Opm::Parser parser;
     Opm::Deck deck( parser.parseFile( eclipse_data_filename ));
     Opm::EclipseState es(deck);
     const Opm::EclipseGrid& grid = es.getInputGrid();
-    Opm::Schedule schedule( deck, es);
+    Opm::Schedule schedule( deck, es, python);
     Opm::SummaryConfig summary_config( deck, schedule, es.getTableManager( ));
     const auto num_cells = grid.getCartesianSize();
     Opm::EclipseIO eclipseWriter( es,  grid , schedule, summary_config);

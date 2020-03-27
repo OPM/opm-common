@@ -32,6 +32,7 @@
 
 #include <opm/io/eclipse/rst/well.hpp>
 #include <opm/io/eclipse/rst/header.hpp>
+#include <opm/parser/eclipse/Python/Python.hpp>
 
 #include <opm/output/data/Wells.hpp>
 
@@ -353,10 +354,11 @@ struct SimulationCase
     explicit SimulationCase(const Opm::Deck& deck)
         : es   { deck }
         , grid { deck }
-        , sched{ deck, es }
+        , sched{ deck, es, python }
     {}
 
     // Order requirement: 'es' must be declared/initialised before 'sched'.
+    Opm::Python       python;
     Opm::EclipseState es;
     Opm::EclipseGrid  grid;
     Opm::Schedule     sched;

@@ -24,6 +24,7 @@
 #include <opm/output/eclipse/EclipseIO.hpp>
 #include <opm/output/data/Cells.hpp>
 
+#include <opm/parser/eclipse/Python/Python.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
@@ -280,7 +281,8 @@ BOOST_AUTO_TEST_CASE(EclipseIOIntegration) {
         auto deck = Parser().parseString( deckString);
         auto es = EclipseState( deck );
         auto& eclGrid = es.getInputGrid();
-        Schedule schedule(deck, es);
+        Python python;
+        Schedule schedule(deck, es, python);
         SummaryConfig summary_config( deck, schedule, es.getTableManager( ));
         SummaryState st(std::chrono::system_clock::now());
         es.getIOConfig().setBaseName( "FOO" );

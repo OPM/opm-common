@@ -23,6 +23,7 @@
 
 #include <vector>
 
+#include <opm/parser/eclipse/Python/Python.hpp>
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
 #include <opm/output/eclipse/AggregateWellData.hpp>
 #include <opm/output/eclipse/AggregateConnectionData.hpp>
@@ -190,12 +191,14 @@ TSTEP            -- 8
 struct SimulationCase
 {
     explicit SimulationCase(const Opm::Deck& deck)
-        : es   { deck }
-        , grid { deck }
-        , sched{ deck, es }
+        : python{ }
+        , es    { deck }
+        , grid  { deck }
+        , sched { deck, es, python}
     {}
 
     // Order requirement: 'es' must be declared/initialised before 'sched'.
+    Opm::Python       python;
     Opm::EclipseState es;
     Opm::EclipseGrid  grid;
     Opm::Schedule     sched;

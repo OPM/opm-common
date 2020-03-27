@@ -24,6 +24,7 @@
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/parser/eclipse/Python/Python.hpp>
 
 using namespace Opm;
 
@@ -33,12 +34,13 @@ inline std::string pathprefix() {
 
 BOOST_AUTO_TEST_CASE(MULTFLT_IN_SCHEDULE) {
     Parser parser;
+    Python python;
     std::string scheduleFile(pathprefix() + "TRANS/Deck1");
     ParseContext parseContext;
     auto deck = parser.parseFile(scheduleFile);
     EclipseState state(deck);
     const auto& trans = state.getTransMult();
-    Schedule schedule(deck, state);
+    Schedule schedule(deck, state, python);
     const Events& events = schedule.getEvents();
 
     BOOST_CHECK_EQUAL( 0.10 , trans.getMultiplier( 3,2,0,FaceDir::XPlus ));

@@ -29,6 +29,7 @@
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/parser/eclipse/Python/Python.hpp>
 
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/OpmLog/StreamLog.hpp>
@@ -44,6 +45,7 @@ inline void loadDeck( const char * deck_file) {
     Opm::ParseContext parseContext;
     Opm::ErrorGuard errors;
     Opm::Parser parser;
+    Opm::Python python;
 
     std::cout << "Loading deck: " << deck_file << " ..... "; std::cout.flush();
 
@@ -62,7 +64,7 @@ inline void loadDeck( const char * deck_file) {
     std::cout << "creating Schedule .... ";  std::cout.flush();
 
     start = std::chrono::system_clock::now();
-    Opm::Schedule schedule( deck, state);
+    Opm::Schedule schedule( deck, state, python);
     auto schedule_time = std::chrono::system_clock::now() - start;
 
     std::cout << "creating SummaryConfig .... ";  std::cout.flush();

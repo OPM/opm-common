@@ -23,6 +23,7 @@
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
 
+#include <opm/parser/eclipse/Python/Python.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
@@ -35,10 +36,11 @@ int main(int /* argc */, char** argv) {
     Opm::Parser parser;
     Opm::ParseContext parse_context;
     Opm::ErrorGuard error_guard;
+    Opm::Python python;
 
     Opm::Deck deck = parser.parseFile(deck_file, parse_context, error_guard);
     Opm::EclipseState state(deck);
-    Opm::Schedule schedule(deck, state, parse_context, error_guard);
+    Opm::Schedule schedule(deck, state, parse_context, error_guard, python);
     Opm::SummaryConfig summary_config(deck, schedule, state.getTableManager(), parse_context, error_guard);
 
     if (error_guard) {

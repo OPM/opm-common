@@ -22,6 +22,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include <opm/parser/eclipse/Python/Python.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
@@ -175,31 +176,34 @@ static Deck createDeckWithWaterInjector() {
 }
 BOOST_AUTO_TEST_CASE(TestNoSolvent) {
     auto deck = createDeckWithOutSolvent();
+    Python python;
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     Runspec runspec(deck);
-    Schedule schedule(deck, grid , fp, runspec);
+    Schedule schedule(deck, grid , fp, runspec, python);
     BOOST_CHECK(!deck.hasKeyword("WSOLVENT"));
 }
 
 BOOST_AUTO_TEST_CASE(TestGasInjector) {
     auto deck = createDeckWithGasInjector();
+    Python python;
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     Runspec runspec(deck);
-    Schedule schedule(deck, grid , fp, runspec);
+    Schedule schedule(deck, grid , fp, runspec, python);
     BOOST_CHECK(deck.hasKeyword("WSOLVENT"));
 }
 
 BOOST_AUTO_TEST_CASE(TestDynamicWSOLVENT) {
     auto deck = createDeckWithDynamicWSOLVENT();
+    Python python;
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     Runspec runspec(deck);
-    Schedule schedule(deck, grid , fp, runspec);
+    Schedule schedule(deck, grid , fp, runspec, python);
     BOOST_CHECK(deck.hasKeyword("WSOLVENT"));
     const auto& keyword = deck.getKeyword("WSOLVENT");
     BOOST_CHECK_EQUAL(keyword.size(),1);
@@ -214,18 +218,20 @@ BOOST_AUTO_TEST_CASE(TestDynamicWSOLVENT) {
 
 BOOST_AUTO_TEST_CASE(TestOilInjector) {
     auto deck = createDeckWithOilInjector();
+    Python python;
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     Runspec runspec(deck);
-    BOOST_CHECK_THROW (Schedule(deck , grid , fp, runspec), std::invalid_argument);
+    BOOST_CHECK_THROW (Schedule(deck , grid , fp, runspec, python), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(TestWaterInjector) {
     auto deck = createDeckWithWaterInjector();
+    Python python;
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     Runspec runspec(deck);
-    BOOST_CHECK_THROW (Schedule(deck, grid , fp, runspec), std::invalid_argument);
+    BOOST_CHECK_THROW (Schedule(deck, grid , fp, runspec, python), std::invalid_argument);
 }

@@ -23,6 +23,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <opm/output/eclipse/AggregateWellData.hpp>
+#include <opm/parser/eclipse/Python/Python.hpp>
 
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
 #include <opm/output/eclipse/VectorItems/well.hpp>
@@ -586,12 +587,13 @@ struct SimulationCase
     explicit SimulationCase(const Opm::Deck& deck)
         : es   ( deck )
         , grid ( deck )
-        , sched( deck, es )
+        , sched( deck, es, python )
     {}
 
     // Order requirement: 'es' must be declared/initialised before 'sched'.
+    Opm::Python       python;
     Opm::EclipseState es;
-    Opm::EclipseGrid grid;
+    Opm::EclipseGrid  grid;
     Opm::Schedule     sched;
 };
 

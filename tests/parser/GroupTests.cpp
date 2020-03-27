@@ -24,6 +24,7 @@
 #define BOOST_TEST_MODULE GroupTests
 #include <boost/test/unit_test.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <opm/parser/eclipse/Python/Python.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
@@ -112,11 +113,12 @@ BOOST_AUTO_TEST_CASE(createDeckWithGEFAC) {
             "/\n";
 
     auto deck = parser.parseString(input);
+    Python python;
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     Runspec runspec (deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
-    Opm::Schedule schedule(deck,  grid, fp, runspec);
+    Opm::Schedule schedule(deck,  grid, fp, runspec, python);
 
     auto group_names = schedule.groupNames("PRODUC");
     BOOST_CHECK_EQUAL(group_names.size(), 1);
@@ -165,11 +167,12 @@ BOOST_AUTO_TEST_CASE(createDeckWithWGRUPCONandWCONPROD) {
 
 
     auto deck = parser.parseString(input);
+    Python python;
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
     Runspec runspec (deck );
-    Opm::Schedule schedule(deck,  grid, fp, runspec);
+    Opm::Schedule schedule(deck,  grid, fp, runspec, python);
     const auto& currentWell = schedule.getWell("B-37T2", 0);
     const Opm::Well::WellProductionProperties& wellProductionProperties = currentWell.getProductionProperties();
     BOOST_CHECK(wellProductionProperties.controlMode == Opm::Well::ProducerCMode::GRUP);
@@ -209,11 +212,12 @@ BOOST_AUTO_TEST_CASE(createDeckWithGRUPNET) {
         "/\n";
 
         auto deck = parser.parseString(input);
+        Python python;
         EclipseGrid grid(10,10,10);
         TableManager table ( deck );
         FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
         Runspec runspec (deck );
-        Opm::Schedule schedule(deck,  grid, fp, runspec);
+        Opm::Schedule schedule(deck,  grid, fp, runspec, python);
 
         const auto& group1 = schedule.getGroup("PROD", 0);
         const auto& group2 = schedule.getGroup("MANI-E2", 0);
@@ -267,11 +271,12 @@ BOOST_AUTO_TEST_CASE(createDeckWithGCONPROD) {
         /)";
 
     auto deck = parser.parseString(input);
+    Python python;
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
     Runspec runspec (deck );
-    Opm::Schedule schedule(deck,  grid, fp, runspec);
+    Opm::Schedule schedule(deck,  grid, fp, runspec, python);
     SummaryState st(std::chrono::system_clock::now());
 
     const auto& group1 = schedule.getGroup("G1", 0);
@@ -320,13 +325,14 @@ BOOST_AUTO_TEST_CASE(TESTGuideRateLINCOM) {
         )";
 
     auto deck = parser.parseString(input);
+    Python python;
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
     Runspec runspec (deck );
 
     /* The 'COMB' target mode is not supported */
-    BOOST_CHECK_THROW(Opm::Schedule schedule(deck, grid, fp, runspec), std::logic_error);
+    BOOST_CHECK_THROW(Opm::Schedule schedule(deck, grid, fp, runspec, python), std::logic_error);
 }
 
 BOOST_AUTO_TEST_CASE(TESTGuideRate) {
@@ -357,11 +363,12 @@ BOOST_AUTO_TEST_CASE(TESTGuideRate) {
         )";
 
     auto deck = parser.parseString(input);
+    Python python;
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
     Runspec runspec (deck );
-    Schedule schedule(deck, grid, fp, runspec);
+    Schedule schedule(deck, grid, fp, runspec, python);
 
     GuideRate gr(schedule);
 }
@@ -390,11 +397,12 @@ BOOST_AUTO_TEST_CASE(TESTGCONSALE) {
         )";
 
     auto deck = parser.parseString(input);
+    Python python;
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
     Runspec runspec (deck );
-    Schedule schedule(deck, grid, fp, runspec);
+    Schedule schedule(deck, grid, fp, runspec, python);
 
     double metric_to_si = 1.0 / (24.0 * 3600.0);  //cubic meters / day
 
@@ -459,11 +467,12 @@ BOOST_AUTO_TEST_CASE(GCONINJE_MULTIPLE_PHASES) {
         )";
 
     auto deck = parser.parseString(input);
+    Python python;
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck , Phases{true, true, true}, grid, table);
     Runspec runspec (deck );
-    Schedule schedule(deck, grid, fp, runspec);
+    Schedule schedule(deck, grid, fp, runspec, python);
     SummaryState st(std::chrono::system_clock::now());
     // Step 0
     {
