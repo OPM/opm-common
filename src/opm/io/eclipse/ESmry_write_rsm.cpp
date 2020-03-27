@@ -18,6 +18,8 @@
 
 #include <opm/io/eclipse/ESmry.hpp>
 
+#include <cmath>
+
 #include <algorithm>
 #include <fstream>
 #include <functional>
@@ -68,11 +70,26 @@ namespace {
         os << '\n';
     }
 
-    void write_data_row(std::ostream& os, const std::vector<std::vector<float>>& data, std::size_t index, char prefix = ' ') {
+    void write_data_row(std::ostream& os, const std::vector<std::pair<std::vector<float>, int>>& data, std::size_t index, char prefix = ' ') {
         os << prefix;
 
-        for (const auto& vector: data) {
-            print_float_element(os, vector[index]);
+        for (const auto& vector : data) {
+            print_float_element(os, vector.first[index] * std::pow(10.0, -vector.second));
+        }
+
+        os << '\n';
+    }
+
+    void write_scale_columns(std::ostream& os, const std::vector<std::pair<std::vector<float>, int>> data, char prefix = ' ') {
+        os << prefix;
+
+        for (const auto& vector : data) {
+            const auto scale_factor { vector.second } ;
+            if (scale_factor) {
+                print_text_element(os, "*10**" + std::to_string(scale_factor));
+            } else {
+                print_text_element(os, "");
+            }
         }
 
         os << '\n';
@@ -88,20 +105,32 @@ void ESmry::write_block(std::ostream& os, const std::vector<SummaryNode>& vector
     write_line(os, block_header_line(inputFileName.stem(), "ANYTHING CAN GO HERE: USER, MACHINE ETC."));
     write_line(os, divider_line);
 
+    std::vector<std::pair<std::vector<float>, int>> data;
+
+    for (const auto& vector : vectors) {
+        int scale_factor { 0 } ;
+        const auto& vector_data { get(vector) } ;
+
+        auto max = *std::max_element(vector_data.begin(), vector_data.end());
+
+        if (max >= 10'000'000'000) {
+            scale_factor = 6;
+        } else if (max >= 10'000'000) {
+            scale_factor = 3;
+        }
+
+        data.emplace_back(vector_data, scale_factor);
+    }
+
+    std::size_t rows { data[0].first.size() };
+
     write_header_columns(os, vectors, [](std::ostream& os, const SummaryNode& node) { print_text_element(os, node.keyword); });
     write_header_columns(os, vectors, [this](std::ostream& os, const SummaryNode& node) { print_text_element(os, this->get_unit(node)); });
+    write_scale_columns(os, data);
     write_header_columns(os, vectors, [](std::ostream& os, const SummaryNode& node) { print_text_element(os, node.display_name().value_or("")); });
     write_header_columns(os, vectors, [](std::ostream& os, const SummaryNode& node) { print_text_element(os, node.display_number().value_or("")); });
 
     write_line(os, divider_line);
-
-    std::vector<std::vector<float>> data;
-
-    for (const auto& vector : vectors) {
-        data.push_back(get(vector));
-    }
-
-    std::size_t rows { data[0].size() };
 
     for (std::size_t i { 0 } ; i < rows; i++) {
         write_data_row(os, data, i);
