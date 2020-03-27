@@ -68,6 +68,16 @@ namespace {
         os << '\n';
     }
 
+    void write_data_row(std::ostream& os, const std::vector<std::vector<float>>& data, std::size_t index, char prefix = ' ') {
+        os << prefix;
+
+        for (const auto& vector: data) {
+            print_float_element(os, vector[index]);
+        }
+
+        os << '\n';
+    }
+
 }
 
 namespace Opm::EclIO {
@@ -94,11 +104,7 @@ void ESmry::write_block(std::ostream& os, const std::vector<SummaryNode>& vector
     std::size_t rows { data[0].size() };
 
     for (std::size_t i { 0 } ; i < rows; i++) {
-        os << ' ';
-        for (const auto& data_vector : data) {
-            os << std::setw(8) << std::right << data_vector[i] << std::setw(5) << "";
-        }
-        os << '\n';
+        write_data_row(os, data, i);
     }
 
     os << std::flush;
