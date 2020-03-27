@@ -58,7 +58,7 @@ public:
     const std::string& get_unit(const std::string& name) const;
     const std::string& get_unit(const SummaryNode& node) const;
 
-    void write_rsm_file(std::ostream&) const;
+    void write_rsm(std::ostream&) const;
 
 private:
     int nVect, nI, nJ, nK;
@@ -92,7 +92,7 @@ private:
 }} // namespace Opm::EclIO
 
 inline std::ostream& operator<<(std::ostream& os, const Opm::EclIO::ESmry& smry) {
-    smry.write_rsm_file(os);
+    smry.write_rsm(os);
 
     return os;
 }

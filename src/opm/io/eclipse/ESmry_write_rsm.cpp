@@ -38,7 +38,7 @@ const std::string divider_line { " " + std::string(total_width - 3, '-') + "\n" 
 
 namespace Opm::EclIO {
 
-void ESmry::write_rsm_file(std::ostream& os) const {
+void ESmry::write_rsm(std::ostream& os) const {
     os << version_line << divider_line;
 }
 
