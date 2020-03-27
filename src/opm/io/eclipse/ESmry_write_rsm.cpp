@@ -26,13 +26,13 @@
 
 namespace {
 
-constexpr size_t column_width { 8 } ;
-constexpr size_t column_space { 5 } ;
+constexpr std::size_t column_width { 8 } ;
+constexpr std::size_t column_space { 5 } ;
 
-constexpr size_t column_count { 10 } ;
+constexpr std::size_t column_count { 10 } ;
 
-constexpr size_t total_column { column_width + column_space } ;
-constexpr size_t total_width  { total_column * column_count } ;
+constexpr std::size_t total_column { column_width + column_space } ;
+constexpr std::size_t total_width  { total_column * column_count } ;
 
 const std::string version_line { } ;
 // the fact that the dashed header line has 127 rather than 130 dashes has no provenance
@@ -80,11 +80,25 @@ void ESmry::write_block(std::ostream& os, const std::vector<SummaryNode>& vector
     }
     os << '\n';
 
-    // write headers
-
     write_line(os, divider_line);
 
-    // write data
+    std::vector<std::vector<float>> data;
+
+    for (const auto& vector : vectors) {
+        data.push_back(get(vector));
+    }
+
+    std::size_t rows { data[0].size() };
+
+    for (std::size_t i { 0 } ; i < rows; i++) {
+        os << ' ';
+        for (const auto& data_vector : data) {
+            os << std::setw(8) << std::right << data_vector[i] << std::setw(5) << "";
+        }
+        os << '\n';
+    }
+
+    os << std::flush;
 }
 
 void ESmry::write_rsm(std::ostream& os) const {
@@ -103,8 +117,8 @@ void ESmry::write_rsm(std::ostream& os) const {
 
     std::vector<std::list<SummaryNode>> data_vector_blocks;
 
-    constexpr size_t data_column_count { column_count - 1 } ;
-    for (size_t i { 0 } ; i < data_vectors.size(); i += data_column_count) {
+    constexpr std::size_t data_column_count { column_count - 1 } ;
+    for (std::size_t i { 0 } ; i < data_vectors.size(); i += data_column_count) {
         auto last = std::min(data_vectors.size(), i + data_column_count);
         data_vector_blocks.emplace_back(data_vectors.begin() + i, data_vectors.begin() + last);
         data_vector_blocks.back().push_front(date_vector);
