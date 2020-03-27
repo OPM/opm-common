@@ -19,10 +19,13 @@
 #include <opm/io/eclipse/ESmry.hpp>
 
 #include <algorithm>
+#include <fstream>
 #include <iomanip>
 #include <list>
 #include <ostream>
 #include <string>
+
+#include <opm/common/ErrorMacros.hpp>
 
 namespace {
 
@@ -127,6 +130,21 @@ void ESmry::write_rsm(std::ostream& os) const {
     for (const auto& data_vector_block : data_vector_blocks) {
         write_block(os, { data_vector_block.begin(), data_vector_block.end() });
     }
+}
+
+void ESmry::write_rsm_file() const {
+    Opm::filesystem::path summary_file_name { inputFileName } ;
+    summary_file_name.replace_extension("RSM");
+
+    std::ofstream rsm_file { summary_file_name } ;
+
+    if (!rsm_file.is_open()) {
+        OPM_THROW(std::runtime_error, "Could not open file " + std::string(summary_file_name));
+    }
+
+    write_rsm(rsm_file);
+
+    rsm_file.close();
 }
 
 } // namespace Opm::EclIO

@@ -364,5 +364,5 @@ BOOST_AUTO_TEST_CASE(TestUnits) {
 BOOST_AUTO_TEST_CASE(WriteRSM) {
     ESmry smry("SPE1CASE1.SMSPEC");
 
-    std::cout << smry;
+    smry.write_rsm_file();
 }

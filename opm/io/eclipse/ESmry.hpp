@@ -59,6 +59,7 @@ public:
     const std::string& get_unit(const SummaryNode& node) const;
 
     void write_rsm(std::ostream&) const;
+    void write_rsm_file() const;
 
 private:
     Opm::filesystem::path inputFileName;
