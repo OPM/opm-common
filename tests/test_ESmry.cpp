@@ -357,10 +357,10 @@ namespace fs = Opm::filesystem;
 BOOST_AUTO_TEST_CASE(TestCreateRSM) {
     ESmry smry1("SPE1CASE1.SMSPEC");
 
-    smry1.write_rsm();
+    smry1.write_rsm_file();
     BOOST_CHECK(fs::exists("SPE1CASE1.RSM"));
 
-    smry1.write_rsm("TEST.RSM");
+    smry1.write_rsm_file("TEST.RSM");
     BOOST_CHECK(fs::exists("TEST.RSM"));
 }
 
@@ -370,10 +370,4 @@ BOOST_AUTO_TEST_CASE(TestUnits) {
     BOOST_CHECK_THROW( smry.get_unit("NO_SUCH_KEY"), std::out_of_range);
     BOOST_CHECK_EQUAL( smry.get_unit("TIME"), "DAYS");
     BOOST_CHECK_EQUAL( smry.get_unit("WOPR:PROD"), "STB/DAY");
-}
-
-BOOST_AUTO_TEST_CASE(WriteRSM) {
-    ESmry smry("SPE1CASE1.SMSPEC");
-
-    smry.write_rsm_file();
 }

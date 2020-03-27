@@ -132,8 +132,8 @@ void ESmry::write_rsm(std::ostream& os) const {
     }
 }
 
-void ESmry::write_rsm_file() const {
-    Opm::filesystem::path summary_file_name { inputFileName } ;
+void ESmry::write_rsm_file(std::optional<Opm::filesystem::path> filename) const {
+    Opm::filesystem::path summary_file_name { filename.value_or(inputFileName) } ;
     summary_file_name.replace_extension("RSM");
 
     std::ofstream rsm_file { summary_file_name } ;
