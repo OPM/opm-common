@@ -360,3 +360,9 @@ BOOST_AUTO_TEST_CASE(TestUnits) {
     BOOST_CHECK_EQUAL( smry.get_unit("TIME"), "DAYS");
     BOOST_CHECK_EQUAL( smry.get_unit("WOPR:PROD"), "STB/DAY");
 }
+
+BOOST_AUTO_TEST_CASE(WriteRSM) {
+    ESmry smry("SPE1CASE1.SMSPEC");
+
+    std::cout << smry;
+}
