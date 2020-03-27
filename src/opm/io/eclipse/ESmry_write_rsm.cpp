@@ -62,6 +62,24 @@ void ESmry::write_block(std::ostream& os, const std::vector<SummaryNode>& vector
     }
     os << '\n';
 
+    os << ' ';
+    for (const auto& vector : vectors) {
+        os << std::setw(8) << std::left << get_unit(vector) << std::setw(5) << "";
+    }
+    os << '\n';
+
+    os << ' ';
+    for (const auto& vector : vectors) {
+        os << std::setw(8) << std::left << vector.wgname << std::setw(5) << "";
+    }
+    os << '\n';
+
+    os << ' ';
+    for (const auto& vector : vectors) {
+        os << std::setw(8) << std::left << vector.number << std::setw(5) << "";
+    }
+    os << '\n';
+
     // write headers
 
     write_line(os, divider_line);
