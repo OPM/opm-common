@@ -109,7 +109,7 @@ RstWell::RstWell(const ::Opm::UnitSystem& unit_system,
         std::size_t icon_offset = ic * header.niconz;
         std::size_t scon_offset = ic * header.nsconz;
         std::size_t xcon_offset = ic * header.nxconz;
-        this->connections.emplace_back( unit_system, ic, icon + icon_offset, scon + scon_offset, xcon + xcon_offset);
+        this->connections.emplace_back( unit_system, ic, header.nsconz, icon + icon_offset, scon + scon_offset, xcon + xcon_offset);
     }
 }
 
