@@ -26,6 +26,7 @@
 #include <iomanip>
 #include <list>
 #include <ostream>
+#include <regex>
 #include <string>
 
 #include <opm/common/ErrorMacros.hpp>
@@ -57,7 +58,16 @@ namespace {
     }
 
     void print_float_element(std::ostream& os, float element) {
-        os << std::setw(8) << std::right << element << std::setw(5) << "";
+        static const std::regex integer_regex { "\\.0*$" };
+
+        auto element_string = std::to_string(element);
+        element_string = std::regex_replace(element_string, integer_regex, "");
+
+        if (element_string.size() > 8) {
+            element_string = element_string.substr(0, 8);
+        }
+
+        os << std::setw(8) << std::right << element_string << std::setw(5) << "";
     }
 
     void write_header_columns(std::ostream& os, const std::vector<Opm::EclIO::SummaryNode>& vectors, std::function<void(std::ostream&, const Opm::EclIO::SummaryNode&)> print_element, char prefix = ' ') {
