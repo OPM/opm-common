@@ -48,17 +48,28 @@ void write_line(std::ostream& os, const std::string& line, char prefix = ' ') {
 
 namespace Opm::EclIO {
 
-void ESmry::write_rsm(std::ostream& os) const {
+void ESmry::write_block(std::ostream& os, const std::vector<SummaryNode>& vectors) const {
     write_line(os, version_line, '1');
     write_line(os, divider_line);
-    write_line(os, block_header_line("nor01-temp01-rsm-date", "ANYTHING CAN GO HERE: USER, MACHINE ETC."));
+    write_line(os, block_header_line(inputFileName.stem(), "ANYTHING CAN GO HERE: USER, MACHINE ETC."));
     write_line(os, divider_line);
+
+    os << ' ';
+    for (const auto& vector : vectors) {
+        os << std::setw(8) << std::left << vector.keyword << std::setw(5) << "";
+    }
+    os << '\n';
 
     // write headers
 
     write_line(os, divider_line);
 
     // write data
+}
+
+void ESmry::write_rsm(std::ostream& os) const {
+    os << "Writing for " << summaryNodes.size() << " vectors." << std::endl;
+    write_block(os, { summaryNodes[0], summaryNodes[1], summaryNodes[2] });
 }
 
 } // namespace Opm::EclIO

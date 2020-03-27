@@ -61,6 +61,7 @@ public:
     void write_rsm(std::ostream&) const;
 
 private:
+    Opm::filesystem::path inputFileName;
     int nVect, nI, nJ, nK;
 
     void ijk_from_global_index(int glob, int &i, int &j, int &k) const;
@@ -87,6 +88,8 @@ private:
 
     std::string unpackNumber(const SummaryNode&) const;
     std::string lookupKey(const SummaryNode&) const;
+
+    void write_block(std::ostream &, const std::vector<SummaryNode>&) const;
 };
 
 }} // namespace Opm::EclIO
