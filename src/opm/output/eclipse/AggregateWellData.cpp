@@ -596,6 +596,7 @@ namespace {
             // case of well alternating between injecting water and gas.
             xWell[Ix::WatInjTotal]     = get("WWIT");
             xWell[Ix::GasInjTotal]     = get("WGIT");
+            xWell[Ix::VoidInjTotal]    = get("WVIT");
             xWell[Ix::HistWatInjTotal] = get("WWITH");
             xWell[Ix::HistGasInjTotal] = get("WGITH");
         }

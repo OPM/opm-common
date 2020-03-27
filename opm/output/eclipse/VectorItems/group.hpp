@@ -67,8 +67,9 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
             VoidPrTotal = 13, // Group's total cumulative reservoir
                               // voidage production
 
-            WatInjTotal = 15, // Group's total cumulative water injection
-            GasInjTotal = 16, // Group's total cumulative gas injection
+            WatInjTotal  = 15, // Group's total cumulative water injection
+            GasInjTotal  = 16, // Group's total cumulative gas injection
+            VoidInjTotal = 17, // Group's total cumulative reservoir volume injection
 
             OilPrPot = 22, // Group's oil production potential
             WatPrPot = 23, // Group's water production potential

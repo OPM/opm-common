@@ -65,6 +65,7 @@ struct RstGroup {
     double voidage_production_total;
     double water_injection_total;
     double gas_injection_total;
+    double voidage_injection_total;
     double oil_production_potential;
     double water_production_potential;
     double history_total_oil_production;

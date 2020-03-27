@@ -131,8 +131,9 @@ namespace {
             ParamCTorArgs{ "GPI" , Type::Rate },
             ParamCTorArgs{ "WIT" , Type::Total },
             ParamCTorArgs{ "GIT" , Type::Total },
+            ParamCTorArgs{ "VIT" , Type::Total },
             ParamCTorArgs{ "WITH", Type::Total },
-            ParamCTorArgs{ "GITH", Type::Total }
+            ParamCTorArgs{ "GITH", Type::Total },
         };
     }
 

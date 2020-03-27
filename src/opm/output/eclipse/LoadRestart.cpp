@@ -1336,6 +1336,7 @@ namespace {
 
         smry.update(key("WWIT"), xwel[VI::XWell::index::WatInjTotal]);
         smry.update(key("WGIT"), xwel[VI::XWell::index::GasInjTotal]);
+        smry.update(key("WVIT"), xwel[VI::XWell::index::VoidInjTotal]);
 
         smry.update(key("WOPTH"), xwel[VI::XWell::index::HistOilPrTotal]);
         smry.update(key("WWPTH"), xwel[VI::XWell::index::HistWatPrTotal]);
@@ -1373,6 +1374,7 @@ namespace {
 
         smry.update(key("WIT"), xgrp[VI::XGroup::index::WatInjTotal]);
         smry.update(key("GIT"), xgrp[VI::XGroup::index::GasInjTotal]);
+        smry.update(key("VIT"), xgrp[VI::XGroup::index::VoidInjTotal]);
 
         smry.update(key("OPTH"), xgrp[VI::XGroup::index::HistOilPrTotal]);
         smry.update(key("WPTH"), xgrp[VI::XGroup::index::HistWatPrTotal]);
