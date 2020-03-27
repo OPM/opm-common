@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(INSTANTIATE) {
     */
     BOOST_CHECK(! Python::enabled() );
 
-    BOOST_CHECK_THROW( Python(Python::Enable::ON), std::logic_error );
+    BOOST_CHECK_THROW( Python{Python::Enable::ON}, std::logic_error );
     Python python_cond(Python::Enable::COND);
     BOOST_CHECK(!python_cond);
 
