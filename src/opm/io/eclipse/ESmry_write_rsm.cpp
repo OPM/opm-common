@@ -155,8 +155,6 @@ void ESmry::write_block(std::ostream& os, const std::vector<SummaryNode>& vector
 }
 
 void ESmry::write_rsm(std::ostream& os) const {
-    os << "Writing for " << summaryNodes.size() << " vectors." << std::endl;
-
     SummaryNode date_vector;
     std::vector<SummaryNode> data_vectors;
     std::remove_copy_if(summaryNodes.begin(), summaryNodes.end(), std::back_inserter(data_vectors), [&date_vector](const SummaryNode& node){
