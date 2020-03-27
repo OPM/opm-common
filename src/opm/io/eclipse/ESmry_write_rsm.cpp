@@ -20,6 +20,7 @@
 
 #include <algorithm>
 #include <fstream>
+#include <functional>
 #include <iomanip>
 #include <list>
 #include <ostream>
@@ -29,25 +30,43 @@
 
 namespace {
 
-constexpr std::size_t column_width { 8 } ;
-constexpr std::size_t column_space { 5 } ;
+    constexpr std::size_t column_width { 8 } ;
+    constexpr std::size_t column_space { 5 } ;
 
-constexpr std::size_t column_count { 10 } ;
+    constexpr std::size_t column_count { 10 } ;
 
-constexpr std::size_t total_column { column_width + column_space } ;
-constexpr std::size_t total_width  { total_column * column_count } ;
+    constexpr std::size_t total_column { column_width + column_space } ;
+    constexpr std::size_t total_width  { total_column * column_count } ;
 
-const std::string version_line { } ;
-// the fact that the dashed header line has 127 rather than 130 dashes has no provenance
-const std::string divider_line { std::string(total_width - 3, '-') } ;
+    const std::string version_line { } ;
+    // the fact that the dashed header line has 127 rather than 130 dashes has no provenance
+    const std::string divider_line { std::string(total_width - 3, '-') } ;
 
-const std::string block_header_line(const std::string& run_name, const std::string& comment) {
-    return "SUMMARY OF RUN " + run_name + " OPM FLOW VERSION 1910 " + comment;
-}
+    const std::string block_header_line(const std::string& run_name, const std::string& comment) {
+        return "SUMMARY OF RUN " + run_name + " OPM FLOW VERSION 1910 " + comment;
+    }
 
-void write_line(std::ostream& os, const std::string& line, char prefix = ' ') {
-    os << prefix << std::setw(total_width) << std::left << line << '\n';
-}
+    void write_line(std::ostream& os, const std::string& line, char prefix = ' ') {
+        os << prefix << std::setw(total_width) << std::left << line << '\n';
+    }
+
+    void print_text_element(std::ostream& os, const std::string& element) {
+        os << std::setw(8) << std::left << element << std::setw(5) << "";
+    }
+
+    void print_float_element(std::ostream& os, float element) {
+        os << std::setw(8) << std::right << element << std::setw(5) << "";
+    }
+
+    void write_header_columns(std::ostream& os, const std::vector<Opm::EclIO::SummaryNode>& vectors, std::function<void(std::ostream&, const Opm::EclIO::SummaryNode&)> print_element, char prefix = ' ') {
+        os << prefix;
+
+        for (const auto& vector : vectors) {
+            print_element(os, vector);
+        }
+
+        os << '\n';
+    }
 
 }
 
@@ -59,29 +78,10 @@ void ESmry::write_block(std::ostream& os, const std::vector<SummaryNode>& vector
     write_line(os, block_header_line(inputFileName.stem(), "ANYTHING CAN GO HERE: USER, MACHINE ETC."));
     write_line(os, divider_line);
 
-    os << ' ';
-    for (const auto& vector : vectors) {
-        os << std::setw(8) << std::left << vector.keyword << std::setw(5) << "";
-    }
-    os << '\n';
-
-    os << ' ';
-    for (const auto& vector : vectors) {
-        os << std::setw(8) << std::left << get_unit(vector) << std::setw(5) << "";
-    }
-    os << '\n';
-
-    os << ' ';
-    for (const auto& vector : vectors) {
-        os << std::setw(8) << std::left << vector.display_name().value_or("") << std::setw(5) << "";
-    }
-    os << '\n';
-
-    os << ' ';
-    for (const auto& vector : vectors) {
-        os << std::setw(8) << std::left << vector.display_number().value_or("") << std::setw(5) << "";
-    }
-    os << '\n';
+    write_header_columns(os, vectors, [](std::ostream& os, const SummaryNode& node) { print_text_element(os, node.keyword); });
+    write_header_columns(os, vectors, [this](std::ostream& os, const SummaryNode& node) { print_text_element(os, this->get_unit(node)); });
+    write_header_columns(os, vectors, [](std::ostream& os, const SummaryNode& node) { print_text_element(os, node.display_name().value_or("")); });
+    write_header_columns(os, vectors, [](std::ostream& os, const SummaryNode& node) { print_text_element(os, node.display_number().value_or("")); });
 
     write_line(os, divider_line);
 
