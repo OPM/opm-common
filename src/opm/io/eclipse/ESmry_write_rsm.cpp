@@ -107,6 +107,7 @@ void ESmry::write_block(std::ostream& os, const std::vector<SummaryNode>& vector
 
     std::vector<std::pair<std::vector<float>, int>> data;
 
+    bool has_scale_factors { false } ;
     for (const auto& vector : vectors) {
         int scale_factor { 0 } ;
         const auto& vector_data { get(vector) } ;
@@ -115,8 +116,10 @@ void ESmry::write_block(std::ostream& os, const std::vector<SummaryNode>& vector
 
         if (max >= 10'000'000'000) {
             scale_factor = 6;
+            has_scale_factors = true;
         } else if (max >= 10'000'000) {
             scale_factor = 3;
+            has_scale_factors = true;
         }
 
         data.emplace_back(vector_data, scale_factor);
@@ -126,7 +129,9 @@ void ESmry::write_block(std::ostream& os, const std::vector<SummaryNode>& vector
 
     write_header_columns(os, vectors, [](std::ostream& os, const SummaryNode& node) { print_text_element(os, node.keyword); });
     write_header_columns(os, vectors, [this](std::ostream& os, const SummaryNode& node) { print_text_element(os, this->get_unit(node)); });
-    write_scale_columns(os, data);
+    if (has_scale_factors) {
+        write_scale_columns(os, data);
+    }
     write_header_columns(os, vectors, [](std::ostream& os, const SummaryNode& node) { print_text_element(os, node.display_name().value_or("")); });
     write_header_columns(os, vectors, [](std::ostream& os, const SummaryNode& node) { print_text_element(os, node.display_number().value_or("")); });
 
