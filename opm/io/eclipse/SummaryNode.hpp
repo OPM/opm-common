@@ -21,6 +21,7 @@
 #define OPM_IO_SUMMARYNODE_HPP
 
 #include <functional>
+#include <optional>
 #include <string>
 #include <unordered_set>
 
@@ -65,6 +66,10 @@ struct SummaryNode {
     bool is_user_defined() const;
 
     static Category category_from_keyword(const std::string&, const std::unordered_set<std::string> &miscellaneous_keywords = {});
+
+    std::optional<std::string> display_name() const;
+    std::optional<std::string> display_number() const;
+    std::optional<std::string> display_number(number_renderer) const;
 };
 
 } // namespace Opm::EclIO

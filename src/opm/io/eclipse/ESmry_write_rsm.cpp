@@ -70,13 +70,13 @@ void ESmry::write_block(std::ostream& os, const std::vector<SummaryNode>& vector
 
     os << ' ';
     for (const auto& vector : vectors) {
-        os << std::setw(8) << std::left << vector.wgname << std::setw(5) << "";
+        os << std::setw(8) << std::left << vector.display_name().value_or("") << std::setw(5) << "";
     }
     os << '\n';
 
     os << ' ';
     for (const auto& vector : vectors) {
-        os << std::setw(8) << std::left << vector.number << std::setw(5) << "";
+        os << std::setw(8) << std::left << vector.display_number().value_or("") << std::setw(5) << "";
     }
     os << '\n';
 

@@ -74,11 +74,11 @@ std::string default_number_renderer(const Opm::EclIO::SummaryNode& node) {
 std::string Opm::EclIO::SummaryNode::unique_key(number_renderer render_number) const {
     std::vector<std::string> key_parts { keyword } ;
 
-    if (use_name(category))
-        key_parts.emplace_back(wgname);
+    if (auto opt = display_name())
+        key_parts.emplace_back(opt.value());
 
-    if (use_number(category))
-        key_parts.emplace_back(render_number(*this));
+    if (auto opt = display_number(render_number))
+        key_parts.emplace_back(opt.value());
 
     auto compose_key = [](std::string& key, const std::string& key_part) -> std::string {
         constexpr auto delimiter { ':' } ;
@@ -150,5 +150,25 @@ Opm::EclIO::SummaryNode::Category Opm::EclIO::SummaryNode::category_from_keyword
     case 'S': return Category::Segment;
     case 'W': return Category::Well;
     default:  return Category::Miscellaneous;
+    }
+}
+
+std::optional<std::string> Opm::EclIO::SummaryNode::display_name() const {
+    if (use_name(category)) {
+        return wgname;
+    } else {
+        return std::nullopt;
+    }
+}
+
+std::optional<std::string> Opm::EclIO::SummaryNode::display_number() const {
+    return display_number(default_number_renderer);
+}
+
+std::optional<std::string> Opm::EclIO::SummaryNode::display_number(number_renderer render_number) const {
+    if (use_number(category)) {
+        return render_number(*this);
+    } else {
+        return std::nullopt;
     }
 }
