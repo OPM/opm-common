@@ -17,7 +17,12 @@
    along with OPM.  If not, see <http://www.gnu.org/licenses/>.
    */
 
+#ifndef OPM_IO_SUMMARYNODE_HPP
+#define OPM_IO_SUMMARYNODE_HPP
+
+#include <functional>
 #include <string>
+#include <unordered_set>
 
 namespace Opm::EclIO {
 
@@ -53,7 +58,15 @@ struct SummaryNode {
     constexpr static int default_number { std::numeric_limits<int>::min() };
 
     std::string unique_key() const;
+
+    using number_renderer = std::function<std::string(const SummaryNode&)>;
+    std::string unique_key(number_renderer) const;
+
     bool is_user_defined() const;
+
+    static Category category_from_keyword(const std::string&, const std::unordered_set<std::string> &miscellaneous_keywords = {});
 };
 
 } // namespace Opm::EclIO
+
+#endif // OPM_IO_SUMMARYNODE_HPP

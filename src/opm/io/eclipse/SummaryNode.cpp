@@ -65,16 +65,20 @@ constexpr bool use_name(Opm::EclIO::SummaryNode::Category category) {
     return false; // Never reached, but quells compiler warning
 }
 
+std::string default_number_renderer(const Opm::EclIO::SummaryNode& node) {
+    return std::to_string(node.number);
+}
+
 };
 
-std::string Opm::EclIO::SummaryNode::unique_key() const {
+std::string Opm::EclIO::SummaryNode::unique_key(number_renderer render_number) const {
     std::vector<std::string> key_parts { keyword } ;
 
     if (use_name(category))
         key_parts.emplace_back(wgname);
 
     if (use_number(category))
-        key_parts.emplace_back(std::to_string(number));
+        key_parts.emplace_back(render_number(*this));
 
     auto compose_key = [](std::string& key, const std::string& key_part) -> std::string {
         constexpr auto delimiter { ':' } ;
@@ -82,6 +86,10 @@ std::string Opm::EclIO::SummaryNode::unique_key() const {
     };
 
     return std::accumulate(std::begin(key_parts), std::end(key_parts), std::string(), compose_key);
+}
+
+std::string Opm::EclIO::SummaryNode::unique_key() const {
+    return unique_key(default_number_renderer);
 }
 
 bool Opm::EclIO::SummaryNode::is_user_defined() const {
@@ -118,4 +126,29 @@ bool Opm::EclIO::SummaryNode::is_user_defined() const {
     const bool blacklisted { udq_blacklist.find(keyword) != udq_blacklist.end() } ;
 
     return matched && !blacklisted;
+}
+
+Opm::EclIO::SummaryNode::Category Opm::EclIO::SummaryNode::category_from_keyword(
+    const std::string& keyword,
+    const std::unordered_set<std::string>& miscellaneous_keywords
+) {
+    if (keyword.length() == 0) {
+        return Category::Miscellaneous;
+    }
+
+    if (miscellaneous_keywords.find(keyword) != miscellaneous_keywords.end()) {
+        return Category::Miscellaneous;
+    }
+
+    switch (keyword[0]) {
+    case 'A': return Category::Aquifer;
+    case 'B': return Category::Block;
+    case 'C': return Category::Connection;
+    case 'F': return Category::Field;
+    case 'G': return Category::Group;
+    case 'R': return Category::Region;
+    case 'S': return Category::Segment;
+    case 'W': return Category::Well;
+    default:  return Category::Miscellaneous;
+    }
 }

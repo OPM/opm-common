@@ -45,4 +45,32 @@ BOOST_AUTO_TEST_CASE(UniqueKey) {
     expect_key( { "KEYW", Category::Miscellaneous, Type::Rate, "NORA", 8 }, "KEYW" );
 }
 
+BOOST_AUTO_TEST_CASE(InjectedNumberRenderer) {
+    using Category = Opm::EclIO::SummaryNode::Category;
+    using Type = Opm::EclIO::SummaryNode::Type;
+
+    Opm::EclIO::SummaryNode positiveNode {
+      "SIGN",
+      Category::Region,
+      Type::Undefined,
+      "-",
+      2
+    };
+
+    Opm::EclIO::SummaryNode negativeNode {
+      "SIGN",
+      Category::Region,
+      Type::Undefined,
+      "-",
+      -2
+    };
+
+    auto chooseSign = [](const Opm::EclIO::SummaryNode& node) -> std::string {
+        return node.number > 0 ? "+" : "-";
+    };
+
+    BOOST_CHECK_EQUAL(positiveNode.unique_key(chooseSign), "SIGN:+");
+    BOOST_CHECK_EQUAL(negativeNode.unique_key(chooseSign), "SIGN:-");
+}
+
 BOOST_AUTO_TEST_SUITE_END() // UniqueKey
