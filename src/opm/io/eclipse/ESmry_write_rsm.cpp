@@ -18,7 +18,9 @@
 
 #include <opm/io/eclipse/ESmry.hpp>
 
+#include <algorithm>
 #include <iomanip>
+#include <list>
 #include <ostream>
 #include <string>
 
@@ -69,7 +71,30 @@ void ESmry::write_block(std::ostream& os, const std::vector<SummaryNode>& vector
 
 void ESmry::write_rsm(std::ostream& os) const {
     os << "Writing for " << summaryNodes.size() << " vectors." << std::endl;
-    write_block(os, { summaryNodes[0], summaryNodes[1], summaryNodes[2] });
+
+    SummaryNode date_vector;
+    std::vector<SummaryNode> data_vectors;
+    std::remove_copy_if(summaryNodes.begin(), summaryNodes.end(), std::back_inserter(data_vectors), [&date_vector](const SummaryNode& node){
+        if (node.keyword == "TIME" || node.keyword == "DATE") {
+            date_vector = node;
+            return true;
+        } else {
+            return false;
+        }
+    });
+
+    std::vector<std::list<SummaryNode>> data_vector_blocks;
+
+    constexpr size_t data_column_count { column_count - 1 } ;
+    for (size_t i { 0 } ; i < data_vectors.size(); i += data_column_count) {
+        auto last = std::min(data_vectors.size(), i + data_column_count);
+        data_vector_blocks.emplace_back(data_vectors.begin() + i, data_vectors.begin() + last);
+        data_vector_blocks.back().push_front(date_vector);
+    }
+
+    for (const auto& data_vector_block : data_vector_blocks) {
+        write_block(os, { data_vector_block.begin(), data_vector_block.end() });
+    }
 }
 
 } // namespace Opm::EclIO
