@@ -60,12 +60,6 @@ public:
 
     void write_rsm_file(std::ostream&) const;
 
-    std::ostream& operator<<(std::ostream& os) const {
-        write_rsm_file(os);
-
-        return os;
-    }
-
 private:
     int nVect, nI, nJ, nK;
 
@@ -96,5 +90,11 @@ private:
 };
 
 }} // namespace Opm::EclIO
+
+inline std::ostream& operator<<(std::ostream& os, const Opm::EclIO::ESmry& smry) {
+    smry.write_rsm_file(os);
+
+    return os;
+}
 
 #endif // OPM_IO_ESMRY_HPP
