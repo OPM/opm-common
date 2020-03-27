@@ -240,6 +240,7 @@ if(ENABLE_ECL_OUTPUT)
           src/opm/io/eclipse/ERft.cpp
           src/opm/io/eclipse/ERst.cpp
           src/opm/io/eclipse/ESmry.cpp
+          src/opm/io/eclipse/ESmry_write_rsm_file.cpp
           src/opm/io/eclipse/OutputStream.cpp
           src/opm/io/eclipse/SummaryNode.cpp
           src/opm/io/eclipse/rst/connection.cpp

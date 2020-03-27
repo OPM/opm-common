@@ -19,6 +19,7 @@
 #ifndef OPM_IO_ESMRY_HPP
 #define OPM_IO_ESMRY_HPP
 
+#include <ostream>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -56,6 +57,14 @@ public:
 
     const std::string& get_unit(const std::string& name) const;
     const std::string& get_unit(const SummaryNode& node) const;
+
+    void write_rsm_file(std::ostream&) const;
+
+    std::ostream& operator<<(std::ostream& os) const {
+        write_rsm_file(os);
+
+        return os;
+    }
 
 private:
     int nVect, nI, nJ, nK;
