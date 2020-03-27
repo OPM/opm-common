@@ -1,4 +1,6 @@
-{"name" : "TRACTVD", "sections" : ["PROPS"]}
-
-
-
+{
+  "name": "TRACTVD",
+  "sections": [
+    "PROPS"
+  ]
+}

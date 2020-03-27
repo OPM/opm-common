@@ -1,5 +1,13 @@
-{"name" : "RESVNUM",
-"sections" : ["GRID"],
-"size" : 1,
-"items" : [
-{"name" : "NEXT_RES", "value_type" : "INT"}]}
+{
+  "name": "RESVNUM",
+  "sections": [
+    "GRID"
+  ],
+  "size": 1,
+  "items": [
+    {
+      "name": "NEXT_RES",
+      "value_type": "INT"
+    }
+  ]
+}

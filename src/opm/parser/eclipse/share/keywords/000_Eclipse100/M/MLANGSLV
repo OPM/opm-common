@@ -1,1 +1,10 @@
-{"name" : "MLANGSLV" , "sections" : ["PROPS"], "data" : {"value_type" : "DOUBLE" , "dimension":"GasSurfaceVolume/Length*Length*Length"}}
+{
+  "name": "MLANGSLV",
+  "sections": [
+    "PROPS"
+  ],
+  "data": {
+    "value_type": "DOUBLE",
+    "dimension": "GasSurfaceVolume/Length*Length*Length"
+  }
+}

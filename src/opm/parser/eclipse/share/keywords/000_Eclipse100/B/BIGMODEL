@@ -1,1 +1,6 @@
-{"name" : "BIGMODEL", "sections" : ["RUNSPEC"]}
+{
+  "name": "BIGMODEL",
+  "sections": [
+    "RUNSPEC"
+  ]
+}

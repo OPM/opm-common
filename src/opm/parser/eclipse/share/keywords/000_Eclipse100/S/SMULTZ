@@ -1,3 +1,9 @@
-{"name" : "SMULTZ",
- "sections" : ["GRID"],
- "data" : {"value_type" : "DOUBLE"}}
+{
+  "name": "SMULTZ",
+  "sections": [
+    "GRID"
+  ],
+  "data": {
+    "value_type": "DOUBLE"
+  }
+}

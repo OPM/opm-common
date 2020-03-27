@@ -1,1 +1,11 @@
-{"name" : "DZMTRX" , "sections" : ["GRID"], "data" : {"value_type" : "DOUBLE" , "default" : 0 , "dimension":"Length"}}
+{
+  "name": "DZMTRX",
+  "sections": [
+    "GRID"
+  ],
+  "data": {
+    "value_type": "DOUBLE",
+    "default": 0,
+    "dimension": "Length"
+  }
+}

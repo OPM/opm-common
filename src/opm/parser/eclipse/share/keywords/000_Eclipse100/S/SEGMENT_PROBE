@@ -1,21 +1,26 @@
 {
- "name" : "SEGMENT_PROBE" ,
- "sections" : ["SUMMARY"],
-
- "deck_names" : [
-  "SGFR",
-  "SOFR",
-  "SPR",
-  "SWFR",
-  "SPRD",
-  "SPRDF",
-  "SPRDH"
- ],
-
- "comment" : "This list is incomplete",
-
- "items" : [
-  {"name": "Well"   , "value_type" : "STRING"},
-  {"name": "Segment", "value_type" : "INT"}
- ]
+  "name": "SEGMENT_PROBE",
+  "sections": [
+    "SUMMARY"
+  ],
+  "deck_names": [
+    "SGFR",
+    "SOFR",
+    "SPR",
+    "SWFR",
+    "SPRD",
+    "SPRDF",
+    "SPRDH"
+  ],
+  "comment": "This list is incomplete",
+  "items": [
+    {
+      "name": "Well",
+      "value_type": "STRING"
+    },
+    {
+      "name": "Segment",
+      "value_type": "INT"
+    }
+  ]
 }

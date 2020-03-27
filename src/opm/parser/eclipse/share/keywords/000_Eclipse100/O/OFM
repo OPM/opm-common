@@ -1,1 +1,6 @@
-{"name" : "OFM" , "sections" : ["SUMMARY"]}
+{
+  "name": "OFM",
+  "sections": [
+    "SUMMARY"
+  ]
+}

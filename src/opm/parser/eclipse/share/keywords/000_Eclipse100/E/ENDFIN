@@ -1,1 +1,11 @@
-{"name" : "ENDFIN", "sections" : ["GRID", "EDIT", "PROPS", "REGIONS", "SOLUTION", "SCHEDULE"]}
+{
+  "name": "ENDFIN",
+  "sections": [
+    "GRID",
+    "EDIT",
+    "PROPS",
+    "REGIONS",
+    "SOLUTION",
+    "SCHEDULE"
+  ]
+}

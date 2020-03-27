@@ -1,1 +1,10 @@
-{"name" : "PERMX" , "sections" : ["GRID"], "data" : {"value_type" : "DOUBLE" , "dimension" : "Permeability"}}
+{
+  "name": "PERMX",
+  "sections": [
+    "GRID"
+  ],
+  "data": {
+    "value_type": "DOUBLE",
+    "dimension": "Permeability"
+  }
+}

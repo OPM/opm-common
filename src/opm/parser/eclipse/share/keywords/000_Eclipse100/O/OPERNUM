@@ -1,5 +1,10 @@
 {
- "name" : "OPERNUM",
- "sections" : [ "GRID", "REGIONS" ],
- "data" : {"value_type" : "INT" }
+  "name": "OPERNUM",
+  "sections": [
+    "GRID",
+    "REGIONS"
+  ],
+  "data": {
+    "value_type": "INT"
+  }
 }

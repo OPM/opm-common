@@ -1,1 +1,9 @@
-{"name" : "HWSNUM" , "sections" : ["REGIONS"], "data" : {"value_type" : "INT"}}
+{
+  "name": "HWSNUM",
+  "sections": [
+    "REGIONS"
+  ],
+  "data": {
+    "value_type": "INT"
+  }
+}

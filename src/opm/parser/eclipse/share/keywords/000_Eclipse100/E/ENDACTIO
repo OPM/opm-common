@@ -1,3 +1,7 @@
 {
-    "name" : "ENDACTIO", "sections" : ["SCHEDULE"], "size" : 0
+  "name": "ENDACTIO",
+  "sections": [
+    "SCHEDULE"
+  ],
+  "size": 0
 }

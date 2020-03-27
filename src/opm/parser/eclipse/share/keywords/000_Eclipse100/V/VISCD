@@ -1,3 +1,6 @@
-{"name" : "VISCD" , "sections" : ["RUNSPEC"]}
-
-
+{
+  "name": "VISCD",
+  "sections": [
+    "RUNSPEC"
+  ]
+}

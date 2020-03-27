@@ -1,1 +1,7 @@
-{"name" : "ENDDYN", "sections" : ["SOLUTION", "SCHEDULE"]}
+{
+  "name": "ENDDYN",
+  "sections": [
+    "SOLUTION",
+    "SCHEDULE"
+  ]
+}

@@ -1,8 +1,10 @@
 {
   "name": "THCONSF",
-  "sections": ["GRID"],
+  "sections": [
+    "GRID"
+  ],
   "data": {
     "value_type": "DOUBLE",
     "dimension": "1"
-   }
+  }
 }

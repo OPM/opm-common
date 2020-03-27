@@ -1,1 +1,6 @@
-{"name" : "GRAVDR" , "sections" : ["RUNSPEC"]}
+{
+  "name": "GRAVDR",
+  "sections": [
+    "RUNSPEC"
+  ]
+}

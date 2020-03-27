@@ -1,2 +1,7 @@
-{"name" : "BRINE" , "sections" : ["RUNSPEC"], "comment" : "Multi-Component Brine Model not supported"
+{
+  "name": "BRINE",
+  "sections": [
+    "RUNSPEC"
+  ],
+  "comment": "Multi-Component Brine Model not supported"
 }

@@ -1,8 +1,10 @@
 {
-  "name" : "HEATCRT",
-  "sections" : ["GRID"],
-  "data" : {
+  "name": "HEATCRT",
+  "sections": [
+    "GRID"
+  ],
+  "data": {
     "value_type": "DOUBLE",
-    "dimension" : "Energy/Length*Length*Length*AbsoluteTemperature*AbsoluteTemperature"
+    "dimension": "Energy/Length*Length*Length*AbsoluteTemperature*AbsoluteTemperature"
   }
 }

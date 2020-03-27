@@ -1,3 +1,10 @@
-{"name" : "SOLVDIMS",
-"sections" : ["RUNSPEC", "GRID"],
-"data" : {"value_type" : "INT"}}
+{
+  "name": "SOLVDIMS",
+  "sections": [
+    "RUNSPEC",
+    "GRID"
+  ],
+  "data": {
+    "value_type": "INT"
+  }
+}

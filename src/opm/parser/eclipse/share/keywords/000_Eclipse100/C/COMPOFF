@@ -1,1 +1,6 @@
-{"name" : "COMPOFF", "sections" : ["SCHEDULE"]}
+{
+  "name": "COMPOFF",
+  "sections": [
+    "SCHEDULE"
+  ]
+}

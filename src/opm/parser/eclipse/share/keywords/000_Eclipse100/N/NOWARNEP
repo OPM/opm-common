@@ -1,1 +1,6 @@
-{"name":"NOWARNEP", "sections" : ["PROPS"]}
+{
+  "name": "NOWARNEP",
+  "sections": [
+    "PROPS"
+  ]
+}

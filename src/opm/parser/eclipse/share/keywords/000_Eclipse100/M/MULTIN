@@ -1,1 +1,6 @@
-{"name" : "MULTIN", "sections" : ["RUNSPEC"]}
+{
+  "name": "MULTIN",
+  "sections": [
+    "RUNSPEC"
+  ]
+}

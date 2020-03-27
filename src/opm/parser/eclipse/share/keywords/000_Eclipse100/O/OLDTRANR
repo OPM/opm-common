@@ -1,1 +1,6 @@
-{"name" : "OLDTRANR", "sections" : ["GRID"]}
+{
+  "name": "OLDTRANR",
+  "sections": [
+    "GRID"
+  ]
+}

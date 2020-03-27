@@ -1,1 +1,6 @@
-{"name" : "DPGRID", "sections" : ["GRID"]}
+{
+  "name": "DPGRID",
+  "sections": [
+    "GRID"
+  ]
+}

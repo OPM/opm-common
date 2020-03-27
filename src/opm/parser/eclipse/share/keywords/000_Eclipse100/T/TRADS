@@ -1,5 +1,17 @@
-{"name" : "TRADS",
- "sections" : ["PROPS"],
- "size" : {"keyword" : "TABDIMS", "item" : "NTSFUN"},
- "items" : [
- {"name" : "DATA", "size_type" : "ALL", "value_type" : "DOUBLE"}]}
+{
+  "name": "TRADS",
+  "sections": [
+    "PROPS"
+  ],
+  "size": {
+    "keyword": "TABDIMS",
+    "item": "NTSFUN"
+  },
+  "items": [
+    {
+      "name": "DATA",
+      "size_type": "ALL",
+      "value_type": "DOUBLE"
+    }
+  ]
+}

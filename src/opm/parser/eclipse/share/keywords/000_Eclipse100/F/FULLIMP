@@ -1,1 +1,6 @@
-{"name" : "FULLIMP", "sections" : ["RUNSPEC"]}
+{
+  "name": "FULLIMP",
+  "sections": [
+    "RUNSPEC"
+  ]
+}

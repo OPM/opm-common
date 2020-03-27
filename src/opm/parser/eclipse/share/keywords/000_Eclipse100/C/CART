@@ -1,1 +1,6 @@
-{"name" : "CART", "sections" : ["RUNSPEC"]}
+{
+  "name": "CART",
+  "sections": [
+    "RUNSPEC"
+  ]
+}

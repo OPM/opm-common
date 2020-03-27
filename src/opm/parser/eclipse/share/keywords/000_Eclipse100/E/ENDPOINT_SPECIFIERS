@@ -1,7 +1,9 @@
 {
-  "name" : "ENDPOINT_SPECIFIERS",
-  "sections" : ["PROPS"],
-  "deck_names" : [
+  "name": "ENDPOINT_SPECIFIERS",
+  "sections": [
+    "PROPS"
+  ],
+  "deck_names": [
     "KRG",
     "KRGX",
     "KRGY",
@@ -196,8 +198,8 @@
     "ISWCRZ",
     "ISWCRZ-"
   ],
-  "data" : {
-    "value_type" : "DOUBLE",
-    "dimension":"1"
+  "data": {
+    "value_type": "DOUBLE",
+    "dimension": "1"
   }
 }

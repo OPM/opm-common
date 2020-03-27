@@ -1,1 +1,10 @@
-{"name" : "IPCW" , "sections" : ["PROPS"], "data" : {"value_type" : "DOUBLE", "dimension" : "Pressure"}}
+{
+  "name": "IPCW",
+  "sections": [
+    "PROPS"
+  ],
+  "data": {
+    "value_type": "DOUBLE",
+    "dimension": "Pressure"
+  }
+}

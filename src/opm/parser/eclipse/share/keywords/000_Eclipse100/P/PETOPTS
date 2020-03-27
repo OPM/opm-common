@@ -1,8 +1,14 @@
 {
   "name": "PETOPTS",
-  "sections" : ["RUNSPEC"],
+  "sections": [
+    "RUNSPEC"
+  ],
   "size": 1,
   "items": [
-    { "name": "OPTIONS", "size_type": "ALL", "value_type": "STRING" }
+    {
+      "name": "OPTIONS",
+      "size_type": "ALL",
+      "value_type": "STRING"
+    }
   ]
 }

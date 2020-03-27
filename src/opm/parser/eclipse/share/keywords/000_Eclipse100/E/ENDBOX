@@ -1,1 +1,11 @@
-{"name" : "ENDBOX", "sections" : ["GRID", "EDIT", "PROPS", "REGIONS", "SOLUTION", "SCHEDULE"]}
+{
+  "name": "ENDBOX",
+  "sections": [
+    "GRID",
+    "EDIT",
+    "PROPS",
+    "REGIONS",
+    "SOLUTION",
+    "SCHEDULE"
+  ]
+}

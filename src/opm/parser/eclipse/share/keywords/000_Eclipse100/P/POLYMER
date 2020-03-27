@@ -1,4 +1,6 @@
 {
-  "name" : "POLYMER",
-  "sections" : [ "RUNSPEC" ]
+  "name": "POLYMER",
+  "sections": [
+    "RUNSPEC"
+  ]
 }

@@ -1,1 +1,6 @@
-{"name" : "HYMOBGDR" , "sections" : ["PROPS"] }
+{
+  "name": "HYMOBGDR",
+  "sections": [
+    "PROPS"
+  ]
+}

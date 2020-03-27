@@ -1,17 +1,31 @@
 {
   "name": "WATDENT",
-  "sections": ["PROPS"],
-  "size" : {
+  "sections": [
+    "PROPS"
+  ],
+  "size": {
     "keyword": "TABDIMS",
-    "item" : "NTPVT"
+    "item": "NTPVT"
   },
-
-  "comment": "The default for the second item is different from the value given by the Eclipse RM, but for this",
-  "comment": "item, the RM is _very_ inconsistent. (it says that the default for the second item is 1.67/degR in",
   "comment": "FIELD units which is the same the 3e-4/K for METRIC but four orders of magnitude off!)",
-  "items" : [
-    {"name" : "REFERENCE_TEMPERATURE" , "value_type" : "DOUBLE", "dimension" : "AbsoluteTemperature", "default": 293.15 },
-    {"name" : "EXPANSION_COEFF_LINEAR" , "value_type" : "DOUBLE", "dimension" : "1/AbsoluteTemperature", "default": 3.0e-4 },
-    {"name" : "EXPANSION_COEFF_QUADRATIC" , "value_type" : "DOUBLE", "dimension" : "1/AbsoluteTemperature*AbsoluteTemperature", "default": 3.0e-6 }
+  "items": [
+    {
+      "name": "REFERENCE_TEMPERATURE",
+      "value_type": "DOUBLE",
+      "dimension": "AbsoluteTemperature",
+      "default": 293.15
+    },
+    {
+      "name": "EXPANSION_COEFF_LINEAR",
+      "value_type": "DOUBLE",
+      "dimension": "1/AbsoluteTemperature",
+      "default": 0.0003
+    },
+    {
+      "name": "EXPANSION_COEFF_QUADRATIC",
+      "value_type": "DOUBLE",
+      "dimension": "1/AbsoluteTemperature*AbsoluteTemperature",
+      "default": 3e-06
+    }
   ]
 }

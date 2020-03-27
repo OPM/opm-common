@@ -1,1 +1,9 @@
-{"name" : "COALNUM" , "sections" : ["GRID"], "data" : {"value_type" : "INT"}}
+{
+  "name": "COALNUM",
+  "sections": [
+    "GRID"
+  ],
+  "data": {
+    "value_type": "INT"
+  }
+}

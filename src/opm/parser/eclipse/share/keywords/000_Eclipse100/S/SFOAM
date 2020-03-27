@@ -1,1 +1,10 @@
-{"name" : "SFOAM" , "sections" : ["SOLUTION"], "data" : {"value_type" : "DOUBLE", "dimension" : "Mass/Length*Length*Length"}}
+{
+  "name": "SFOAM",
+  "sections": [
+    "SOLUTION"
+  ],
+  "data": {
+    "value_type": "DOUBLE",
+    "dimension": "Mass/Length*Length*Length"
+  }
+}

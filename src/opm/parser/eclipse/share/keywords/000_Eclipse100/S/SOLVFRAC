@@ -1,3 +1,9 @@
-{"name" : "SOLVFRAC",
- "sections" : ["SOLUTION"],
- "data" : {"value_type" : "DOUBLE"}}
+{
+  "name": "SOLVFRAC",
+  "sections": [
+    "SOLUTION"
+  ],
+  "data": {
+    "value_type": "DOUBLE"
+  }
+}

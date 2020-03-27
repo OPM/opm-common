@@ -1,3 +1,9 @@
-{"name" : "SIGMAV" ,
- "sections" : ["GRID"],
- "data" : {"value_type" : "DOUBLE"}}
+{
+  "name": "SIGMAV",
+  "sections": [
+    "GRID"
+  ],
+  "data": {
+    "value_type": "DOUBLE"
+  }
+}

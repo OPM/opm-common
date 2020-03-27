@@ -1,10 +1,22 @@
 {
   "name": "VISCREF",
-  "sections" : ["PROPS"],
-  "size" : {"keyword":"TABDIMS" , "item":"NTPVT"},
+  "sections": [
+    "PROPS"
+  ],
+  "size": {
+    "keyword": "TABDIMS",
+    "item": "NTPVT"
+  },
   "items": [
-    {"name":"REFERENCE_PRESSURE", "value_type" : "DOUBLE", "dimension":"Pressure" },
-    {"name":"REFERENCE_RS", "value_type" : "DOUBLE", "dimension":"GasDissolutionFactor" }
+    {
+      "name": "REFERENCE_PRESSURE",
+      "value_type": "DOUBLE",
+      "dimension": "Pressure"
+    },
+    {
+      "name": "REFERENCE_RS",
+      "value_type": "DOUBLE",
+      "dimension": "GasDissolutionFactor"
+    }
   ]
 }
-

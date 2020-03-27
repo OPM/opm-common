@@ -1,1 +1,6 @@
-{"name" : "RUNSUM" , "sections" : ["SUMMARY"]}
+{
+  "name": "RUNSUM",
+  "sections": [
+    "SUMMARY"
+  ]
+}

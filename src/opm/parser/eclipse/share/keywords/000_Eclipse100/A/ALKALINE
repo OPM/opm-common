@@ -1,1 +1,6 @@
-{"name":"ALKALINE", "sections" : ["RUNSPEC"]}
+{
+  "name": "ALKALINE",
+  "sections": [
+    "RUNSPEC"
+  ]
+}

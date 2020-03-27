@@ -1,9 +1,13 @@
-{"name" : "DUMPCUPL" , "sections" : ["SCHEDULE"] , "size" : 1,
-"items" : 
-   [
-        {"name" : "VALUE" , "value_type" : "STRING"}
-
-
-   ]
+{
+  "name": "DUMPCUPL",
+  "sections": [
+    "SCHEDULE"
+  ],
+  "size": 1,
+  "items": [
+    {
+      "name": "VALUE",
+      "value_type": "STRING"
+    }
+  ]
 }
-  

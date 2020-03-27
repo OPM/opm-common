@@ -1,5 +1,12 @@
-{"name" : "SOLVDIRS",
- "sections" : ["GRID"],
- "items" : [
- {"name" : "DIRECTION",
-  "value_type" : "STRING"}]}
+{
+  "name": "SOLVDIRS",
+  "sections": [
+    "GRID"
+  ],
+  "items": [
+    {
+      "name": "DIRECTION",
+      "value_type": "STRING"
+    }
+  ]
+}

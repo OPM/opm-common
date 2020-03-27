@@ -1,1 +1,7 @@
-{"name":"AITSOFF", "sections" : ["RUNSPEC", "SCHEDULE"]}
+{
+  "name": "AITSOFF",
+  "sections": [
+    "RUNSPEC",
+    "SCHEDULE"
+  ]
+}

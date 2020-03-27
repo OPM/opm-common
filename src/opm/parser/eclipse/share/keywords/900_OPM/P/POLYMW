@@ -1,4 +1,6 @@
 {
-  "name" : "POLYMW",
-  "sections" : [ "RUNSPEC" ]
+  "name": "POLYMW",
+  "sections": [
+    "RUNSPEC"
+  ]
 }

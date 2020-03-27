@@ -1,3 +1,9 @@
-{"name" : "SIGMAGDV" ,
- "sections" : ["GRID"],
- "data" : {"value_type" : "DOUBLE"}}
+{
+  "name": "SIGMAGDV",
+  "sections": [
+    "GRID"
+  ],
+  "data": {
+    "value_type": "DOUBLE"
+  }
+}

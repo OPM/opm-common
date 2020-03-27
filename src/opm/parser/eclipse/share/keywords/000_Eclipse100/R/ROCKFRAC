@@ -1,3 +1,9 @@
-{"name" : "ROCKFRAC",
-"sections" : ["GRID"],
-"data" : {"value_type" : "DOUBLE"}}
+{
+  "name": "ROCKFRAC",
+  "sections": [
+    "GRID"
+  ],
+  "data": {
+    "value_type": "DOUBLE"
+  }
+}

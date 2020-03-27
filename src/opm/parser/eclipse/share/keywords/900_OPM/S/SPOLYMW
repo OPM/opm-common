@@ -1,8 +1,10 @@
 {
-  "name" : "SPOLYMW" ,
-  "sections" : ["SOLUTION"],
-  "data" : {
-    "value_type" : "DOUBLE",
-    "dimension" : "1"
+  "name": "SPOLYMW",
+  "sections": [
+    "SOLUTION"
+  ],
+  "data": {
+    "value_type": "DOUBLE",
+    "dimension": "1"
   }
 }

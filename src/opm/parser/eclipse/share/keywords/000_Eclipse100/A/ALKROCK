@@ -1,6 +1,16 @@
-{"name" : "ALKROCK" , "sections" : ["PROPS"], "size" : {"keyword" : "TABDIMS" , "item" : "NTSFUN"},
+{
+  "name": "ALKROCK",
+  "sections": [
+    "PROPS"
+  ],
+  "size": {
+    "keyword": "TABDIMS",
+    "item": "NTSFUN"
+  },
   "items": [
-                {"name": "ROCK_ADS_INDEX", "value_type" : "INT"}
-           ]
+    {
+      "name": "ROCK_ADS_INDEX",
+      "value_type": "INT"
+    }
+  ]
 }
-

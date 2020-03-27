@@ -1,1 +1,6 @@
-{"name" : "HYST" , "sections" : ["RUNSPEC"] }
+{
+  "name": "HYST",
+  "sections": [
+    "RUNSPEC"
+  ]
+}

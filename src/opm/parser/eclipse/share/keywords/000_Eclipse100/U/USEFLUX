@@ -1,1 +1,6 @@
-{"name" : "USEFLUX", "sections" : ["GRID"]}
+{
+  "name": "USEFLUX",
+  "sections": [
+    "GRID"
+  ]
+}

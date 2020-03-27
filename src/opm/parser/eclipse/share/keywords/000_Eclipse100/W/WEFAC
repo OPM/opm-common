@@ -1,9 +1,22 @@
 {
-    "name" : "WEFAC",
-    "sections" : ["SCHEDULE"],
-    "items" : [
-        { "name" : "WELLNAME",              "value_type" : "STRING" },
-        { "name" : "EFFICIENCY_FACTOR",     "value_type" : "DOUBLE", "default": 1.0 },
-        { "name" : "EXTENDED_NETWORK_OPT",  "value_type" : "STRING", "default": "YES" }
-    ]
+  "name": "WEFAC",
+  "sections": [
+    "SCHEDULE"
+  ],
+  "items": [
+    {
+      "name": "WELLNAME",
+      "value_type": "STRING"
+    },
+    {
+      "name": "EFFICIENCY_FACTOR",
+      "value_type": "DOUBLE",
+      "default": 1
+    },
+    {
+      "name": "EXTENDED_NETWORK_OPT",
+      "value_type": "STRING",
+      "default": "YES"
+    }
+  ]
 }

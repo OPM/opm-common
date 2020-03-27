@@ -1,1 +1,10 @@
-{"name":"DZV", "sections" : ["GRID"], "data" : {"value_type" : "DOUBLE", "dimension":"Length" }}
+{
+  "name": "DZV",
+  "sections": [
+    "GRID"
+  ],
+  "data": {
+    "value_type": "DOUBLE",
+    "dimension": "Length"
+  }
+}

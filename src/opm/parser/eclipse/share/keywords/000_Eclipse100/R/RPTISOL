@@ -1,4 +1,6 @@
 {
-  "name" : "RPTISOL",
-  "sections" : ["GRID"]
+  "name": "RPTISOL",
+  "sections": [
+    "GRID"
+  ]
 }
