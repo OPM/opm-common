@@ -102,6 +102,7 @@ struct RstWell {
     double void_total;
     double water_inj_total;
     double gas_inj_total;
+    double void_inj_total;
     double gas_fvf;
     double bhp_target_double;
     double hist_oil_total;

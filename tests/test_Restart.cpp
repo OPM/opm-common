@@ -229,6 +229,7 @@ Opm::SummaryState sim_state()
     state.update("WGIR:OP_1" ,    0.0);
     state.update("WWIT:OP_1" ,    0.0);
     state.update("WGIT:OP_1" ,    0.0);
+    state.update("WVIT:OP_1" ,    0.0);
     state.update("WWCT:OP_1" ,    0.625);
     state.update("WGOR:OP_1" ,  234.5);
     state.update("WBHP:OP_1" ,  314.15);
@@ -252,6 +253,7 @@ Opm::SummaryState sim_state()
     state.update("WGIR:OP_2" ,  200.0);
     state.update("WWIT:OP_2" , 1000.0);
     state.update("WGIT:OP_2" , 2000.0);
+    state.update("WVIT:OP_2" , 1234.5);
     state.update("WWCT:OP_2" ,    0.0);
     state.update("WGOR:OP_2" ,    0.0);
     state.update("WBHP:OP_2" ,  400.6);
@@ -275,6 +277,7 @@ Opm::SummaryState sim_state()
     state.update("WGIR:OP_3" ,    0.0);
     state.update("WWIT:OP_3" ,    0.0);
     state.update("WGIT:OP_3" ,    0.0);
+    state.update("WVIT:OP_3" ,    0.0);
     state.update("WWCT:OP_3" ,    0.0625);
     state.update("WGOR:OP_3" , 1234.5);
     state.update("WBHP:OP_3" ,  314.15);
@@ -298,6 +301,7 @@ Opm::SummaryState sim_state()
     state.update("GGIR:OP" , - 65536.0);
     state.update("GWIT:OP" ,   31415.9);
     state.update("GGIT:OP" ,   27182.8);
+    state.update("GVIT:OP" ,   44556.6);
     state.update("GWCT:OP" ,       0.625);
     state.update("GGOR:OP" ,    1234.5);
     state.update("GGVIR:OP",     123.45);
@@ -320,6 +324,7 @@ Opm::SummaryState sim_state()
     state.update("FGIR" , - 655360.0);
     state.update("FWIT" ,   314159.2);
     state.update("FGIT" ,   271828.1);
+    state.update("FVIT" ,   445566.77);
     state.update("FWCT" ,        0.625);
     state.update("FGOR" ,     1234.5);
     state.update("FOPTH",    56789.01);
@@ -829,6 +834,7 @@ BOOST_AUTO_TEST_CASE(Restore_Cumulatives)
     BOOST_CHECK(rstSumState.has("WVPT:OP_1"));
     BOOST_CHECK(rstSumState.has("WWIT:OP_1"));
     BOOST_CHECK(rstSumState.has("WGIT:OP_1"));
+    BOOST_CHECK(rstSumState.has("WVIT:OP_1"));
     BOOST_CHECK(rstSumState.has("WOPTH:OP_1"));
     BOOST_CHECK(rstSumState.has("WGPTH:OP_1"));
     BOOST_CHECK(rstSumState.has("WWPTH:OP_1"));
@@ -841,6 +847,7 @@ BOOST_AUTO_TEST_CASE(Restore_Cumulatives)
     BOOST_CHECK_CLOSE(rstSumState.get("WVPT:OP_1"), 40.0, 1.0e-10);
     BOOST_CHECK_CLOSE(rstSumState.get("WWIT:OP_1"),  0.0, 1.0e-10);
     BOOST_CHECK_CLOSE(rstSumState.get("WGIT:OP_1"),  0.0, 1.0e-10);
+    BOOST_CHECK_CLOSE(rstSumState.get("WVIT:OP_1"),  0.0, 1.0e-10);
     BOOST_CHECK_CLOSE(rstSumState.get("WOPTH:OP_1"), 345.6, 1.0e-10);
     BOOST_CHECK_CLOSE(rstSumState.get("WWPTH:OP_1"), 456.7, 1.0e-10);
     BOOST_CHECK_CLOSE(rstSumState.get("WGPTH:OP_1"), 567.8, 1.0e-10);
@@ -854,6 +861,7 @@ BOOST_AUTO_TEST_CASE(Restore_Cumulatives)
     BOOST_CHECK(rstSumState.has("WVPT:OP_2"));
     BOOST_CHECK(rstSumState.has("WWIT:OP_2"));
     BOOST_CHECK(rstSumState.has("WGIT:OP_2"));
+    BOOST_CHECK(rstSumState.has("WVIT:OP_2"));
     BOOST_CHECK(rstSumState.has("WOPTH:OP_2"));
     BOOST_CHECK(rstSumState.has("WGPTH:OP_2"));
     BOOST_CHECK(rstSumState.has("WWPTH:OP_2"));
@@ -866,6 +874,7 @@ BOOST_AUTO_TEST_CASE(Restore_Cumulatives)
     BOOST_CHECK_CLOSE(rstSumState.get("WVPT:OP_2"),    0.0, 1.0e-10);
     BOOST_CHECK_CLOSE(rstSumState.get("WWIT:OP_2"), 1000.0, 1.0e-10);
     BOOST_CHECK_CLOSE(rstSumState.get("WGIT:OP_2"), 2000.0, 1.0e-10);
+    BOOST_CHECK_CLOSE(rstSumState.get("WVIT:OP_2"), 1234.5, 1.0e-10);
     BOOST_CHECK_CLOSE(rstSumState.get("WOPTH:OP_2"),    0.0, 1.0e-10);
     BOOST_CHECK_CLOSE(rstSumState.get("WGPTH:OP_2"),    0.0, 1.0e-10);
     BOOST_CHECK_CLOSE(rstSumState.get("WWPTH:OP_2"),    0.0, 1.0e-10);
@@ -879,6 +888,7 @@ BOOST_AUTO_TEST_CASE(Restore_Cumulatives)
     BOOST_CHECK(rstSumState.has("GVPT:OP"));
     BOOST_CHECK(rstSumState.has("GWIT:OP"));
     BOOST_CHECK(rstSumState.has("GGIT:OP"));
+    BOOST_CHECK(rstSumState.has("GVIT:OP"));
     BOOST_CHECK(rstSumState.has("GOPTH:OP"));
     BOOST_CHECK(rstSumState.has("GGPTH:OP"));
     BOOST_CHECK(rstSumState.has("GWPTH:OP"));
@@ -891,6 +901,7 @@ BOOST_AUTO_TEST_CASE(Restore_Cumulatives)
     BOOST_CHECK_CLOSE(rstSumState.get("GVPT:OP"),  1400.0, 1.0e-10);
     BOOST_CHECK_CLOSE(rstSumState.get("GWIT:OP"), 31415.9, 1.0e-10);
     BOOST_CHECK_CLOSE(rstSumState.get("GGIT:OP"), 27182.8, 1.0e-10);
+    BOOST_CHECK_CLOSE(rstSumState.get("GVIT:OP"), 44556.6, 1.0e-10);
 
     BOOST_CHECK_CLOSE(rstSumState.get("GOPTH:OP"), 5678.90, 1.0e-10);
     BOOST_CHECK_CLOSE(rstSumState.get("GGPTH:OP"), 7890.12, 1.0e-10);
@@ -905,6 +916,7 @@ BOOST_AUTO_TEST_CASE(Restore_Cumulatives)
     BOOST_CHECK(rstSumState.has("FVPT"));
     BOOST_CHECK(rstSumState.has("FWIT"));
     BOOST_CHECK(rstSumState.has("FGIT"));
+    BOOST_CHECK(rstSumState.has("FVIT"));
     BOOST_CHECK(rstSumState.has("FOPTH"));
     BOOST_CHECK(rstSumState.has("FGPTH"));
     BOOST_CHECK(rstSumState.has("FWPTH"));
@@ -917,6 +929,7 @@ BOOST_AUTO_TEST_CASE(Restore_Cumulatives)
     BOOST_CHECK_CLOSE(rstSumState.get("FVPT"),  14000.0, 1.0e-10);
     BOOST_CHECK_CLOSE(rstSumState.get("FWIT"), 314159.2, 1.0e-10);
     BOOST_CHECK_CLOSE(rstSumState.get("FGIT"), 271828.1, 1.0e-10);
+    BOOST_CHECK_CLOSE(rstSumState.get("FVIT"), 445566.77, 1.0e-10);
 
     BOOST_CHECK_CLOSE(rstSumState.get("FOPTH"), 56789.01, 1.0e-10);
     BOOST_CHECK_CLOSE(rstSumState.get("FGPTH"), 78901.23, 1.0e-10);

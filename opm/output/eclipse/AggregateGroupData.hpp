@@ -72,14 +72,14 @@ public:
     const std::vector<std::string> restart_group_keys = {"GOPP", "GWPP", "GOPR", "GWPR", "GGPR",
                                                          "GVPR", "GWIR", "GGIR", "GWCT", "GGOR",
                                                          "GOPT", "GWPT", "GGPT", "GVPT", "GWIT",
-                                                         "GGIT",
+                                                         "GGIT", "GVIT",
                                                          "GOPTH", "GWPTH", "GGPTH",
                                                          "GWITH", "GGITH"};
 
     const std::vector<std::string> restart_field_keys = {"FOPP", "FWPP", "FOPR", "FWPR", "FGPR",
                                                          "FVPR", "FWIR", "FGIR", "FWCT", "FGOR",
                                                          "FOPT", "FWPT", "FGPT", "FVPT", "FWIT",
-                                                         "FGIT",
+                                                         "FGIT", "FVIT",
                                                          "FOPTH", "FWPTH", "FGPTH",
                                                          "FWITH", "FGITH"};
 
@@ -98,6 +98,7 @@ public:
                                                            {"GVPT", 13},
                                                            {"GWIT", 15},
                                                            {"GGIT", 16},
+                                                           {"GVIT", 17},
                                                            {"GOPP", 22},
                                                            {"GWPP", 23},
                                                            {"GOPTH", 135},
@@ -135,6 +136,7 @@ public:
                                                            {"FVPT", 13},
                                                            {"FWIT", 15},
                                                            {"FGIT", 16},
+                                                           {"FVIT", 17},
                                                            {"FOPP", 22},
                                                            {"FWPP", 23},
                                                            {"FOPTH", 135},

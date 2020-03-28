@@ -233,6 +233,7 @@ TSTEP            -- 8
         state.update("WGIR:OP_1" ,    0.0);
         state.update("WWIT:OP_1" ,    0.0);
         state.update("WGIT:OP_1" ,    0.0);
+        state.update("WVIT:OP_1" ,    0.0);
         state.update("WWCT:OP_1" ,    0.625);
         state.update("WGOR:OP_1" ,  234.5);
         state.update("WBHP:OP_1" ,  314.15);
@@ -256,6 +257,7 @@ TSTEP            -- 8
         state.update("WGIR:OP_2" ,  200.0);
         state.update("WWIT:OP_2" , 1000.0);
         state.update("WGIT:OP_2" , 2000.0);
+        state.update("WVIT:OP_2" , 1234.5);
         state.update("WWCT:OP_2" ,    0.0);
         state.update("WGOR:OP_2" ,    0.0);
         state.update("WBHP:OP_2" ,  400.6);
@@ -279,6 +281,7 @@ TSTEP            -- 8
         state.update("WGIR:OP_3" ,    0.0);
         state.update("WWIT:OP_3" ,    0.0);
         state.update("WGIT:OP_3" ,    0.0);
+        state.update("WVIT:OP_3" ,    0.0);
         state.update("WWCT:OP_3" ,    0.0625);
         state.update("WGOR:OP_3" , 1234.5);
         state.update("WBHP:OP_3" ,  314.15);
@@ -621,6 +624,7 @@ BOOST_AUTO_TEST_CASE (Dynamic_Well_Data_Step1)
 
         BOOST_CHECK_CLOSE(xwell[i1 + Ix::WatInjTotal], 1000.0, 1.0e-10);
         BOOST_CHECK_CLOSE(xwell[i1 + Ix::GasInjTotal], 2000.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i1 + Ix::VoidInjTotal], 1234.5, 1.0e-10);
 
         // Bg = VGIR / GIR = 1234.0 / 200.0
         BOOST_CHECK_CLOSE(xwell[i1 + Ix::GasFVF], 6.17, 1.0e-10);
@@ -730,6 +734,7 @@ BOOST_AUTO_TEST_CASE (Dynamic_Well_Data_Step2)
 
         BOOST_CHECK_CLOSE(xwell[i1 + Ix::WatInjTotal], 1000.0, 1.0e-10);
         BOOST_CHECK_CLOSE(xwell[i1 + Ix::GasInjTotal], 2000.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i1 + Ix::VoidInjTotal], 1234.5, 1.0e-10);
 
         // Copy of WWIR
         BOOST_CHECK_CLOSE(xwell[i1 + Ix::item37],
