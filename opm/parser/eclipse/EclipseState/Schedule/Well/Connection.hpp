@@ -98,7 +98,7 @@ namespace RestartIO {
                    const double segDistEnd,
                    const bool defaultSatTabId);
 
-        Connection(const RestartIO::RstConnection& rst_connection, std::size_t insert_index, const EclipseGrid& grid, const FieldPropsManager& fp);
+        Connection(const RestartIO::RstConnection& rst_connection, const EclipseGrid& grid, const FieldPropsManager& fp);
 
         static Connection serializeObject();
 
@@ -125,6 +125,8 @@ namespace RestartIO {
         void setState(State state);
         void setComplnum(int compnum);
         void scaleWellPi(double wellPi);
+        void updateSegmentRST(int segment_number_arg,
+                              double center_depth_arg);
         void updateSegment(int segment_number_arg,
                            double center_depth_arg,
                            std::size_t compseg_insert_index,

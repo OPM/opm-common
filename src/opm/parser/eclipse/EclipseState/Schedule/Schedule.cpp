@@ -2958,7 +2958,7 @@ void Schedule::load_rst(const RestartIO::RstState& rst_state, const EclipseGrid&
         std::unordered_map<int, Opm::Segment> segments;
 
         for (const auto& rst_conn : rst_well.connections)
-            connections.emplace_back(rst_conn, connections.size(), grid, fp);
+            connections.emplace_back(rst_conn, grid, fp);
 
         for (const auto& rst_segment : rst_well.segments) {
             Opm::Segment segment(rst_segment);
@@ -2968,15 +2968,9 @@ void Schedule::load_rst(const RestartIO::RstState& rst_state, const EclipseGrid&
         for (auto& connection : connections) {
             int segment_id = connection.segment();
             if (segment_id > 0) {
-                std::size_t compsegs_insert_index = 0;
-                double segment_start = 0;
-                double segment_end = 0;
                 const auto& segment = segments.at(segment_id);
-                connection.updateSegment(segment.segmentNumber(),
-                                         segment.depth(),
-                                         compsegs_insert_index,
-                                         segment_start,
-                                         segment_end);
+                connection.updateSegmentRST(segment.segmentNumber(),
+                                            segment.depth());
             }
         }
 
@@ -2987,9 +2981,19 @@ void Schedule::load_rst(const RestartIO::RstState& rst_state, const EclipseGrid&
 
         if (!segments.empty()) {
             std::vector<Segment> segments_list;
+            /*
+              The ordering of the segments in the WellSegments structure seems a
+              bit random; in some parts of the code the segment_number seems to
+              be treated like a random integer ID, whereas in other parts it
+              seems to be treated like a running index. Here the segments in
+              WellSegments are sorted according to the segment number - observe
+              that this is somewhat important because the first top segment is
+              treated differently from the other segment.
+            */
             for (const auto& segment_pair : segments)
                 segments_list.push_back( std::move(segment_pair.second) );
 
+            std::sort( segments_list.begin(), segments_list.end(),[](const Segment& seg1, const Segment& seg2) { return seg1.segmentNumber() < seg2.segmentNumber(); } );
             auto comp_pressure_drop = WellSegments::CompPressureDrop::HFA;
             std::shared_ptr<Opm::WellSegments> well_segments = std::make_shared<Opm::WellSegments>(comp_pressure_drop, segments_list);
             well.updateSegments( std::move(well_segments) );
@@ -3069,6 +3073,13 @@ std::string well_msg(const std::string& well, const std::string& msg) {
     return "Well: " + well + " " + msg;
 }
 
+std::string well_segment_msg(const std::string& well, int segment_number, const std::string& msg) {
+    return "Well: " + well + " Segment: " + std::to_string(segment_number) + " " + msg;
+}
+
+std::string well_connection_msg(const std::string& well, const Connection& conn, const std::string& msg) {
+    return "Well: " + well + " Connection: " + std::to_string(conn.getI()) + ", " + std::to_string(conn.getJ()) + ", " + std::to_string(conn.getK()) + "  " + msg;
+}
 
 }
 
@@ -3102,26 +3113,25 @@ bool Schedule::cmp(const Schedule& sched1, const Schedule& sched2, std::size_t r
             for (std::size_t icon = 0; icon < connections1.size(); icon++) {
                 const auto& conn1 = connections1[icon];
                 const auto& conn2 = connections2[icon];
-                well_count += not_equal( conn1.getI(), conn2.getI(), well_msg(well1.name(), "Connection: I"));
-                well_count += not_equal( conn1.getI() , conn2.getI() , well_msg(well1.name(), "Connection: I"));
-                well_count += not_equal( conn1.getJ() , conn2.getJ() , well_msg(well1.name(), "Connection: J"));
-                well_count += not_equal( conn1.getK() , conn2.getK() , well_msg(well1.name(), "Connection: K"));
-                well_count += not_equal( conn1.state() , conn2.state(), well_msg(well1.name(), "Connection: State"));
-                well_count += not_equal( conn1.dir() , conn2.dir(), well_msg(well1.name(), "Connection: dir"));
-                well_count += not_equal( conn1.complnum() , conn2.complnum(), well_msg(well1.name(), "connection: complnum"));
-                well_count += not_equal( conn1.segment() , conn2.segment(), well_msg(well1.name(), "Connection: segment"));
-                well_count += not_equal( conn1.kind() , conn2.kind(), well_msg(well1.name(), "Connection: CFKind"));
-                well_count += not_equal( conn1.sort_value(), conn2.sort_value(), well_msg(well1.name(), "Connection: sort_value"));
+                well_count += not_equal( conn1.getI(), conn2.getI(), well_connection_msg(well1.name(), conn1, "I"));
+                well_count += not_equal( conn1.getJ() , conn2.getJ() , well_connection_msg(well1.name(), conn1, "J"));
+                well_count += not_equal( conn1.getK() , conn2.getK() , well_connection_msg(well1.name(), conn1, "K"));
+                well_count += not_equal( conn1.state() , conn2.state(), well_connection_msg(well1.name(), conn1, "State"));
+                well_count += not_equal( conn1.dir() , conn2.dir(), well_connection_msg(well1.name(), conn1, "dir"));
+                well_count += not_equal( conn1.complnum() , conn2.complnum(), well_connection_msg(well1.name(), conn1, "complnum"));
+                well_count += not_equal( conn1.segment() , conn2.segment(), well_connection_msg(well1.name(), conn1, "segment"));
+                well_count += not_equal( conn1.kind() , conn2.kind(), well_connection_msg(well1.name(), conn1, "CFKind"));
+                well_count += not_equal( conn1.sort_value(), conn2.sort_value(), well_connection_msg(well1.name(), conn1, "sort_value"));
 
 
-                well_count += not_equal( conn1.CF(), conn2.CF(), well_msg(well1.name(), "Connection: CF"));
-                well_count += not_equal( conn1.Kh(), conn2.Kh(), well_msg(well1.name(), "Connection: Kh"));
-                well_count += not_equal( conn1.rw(), conn2.rw(), well_msg(well1.name(), "Connection: rw"));
-                well_count += not_equal( conn1.depth(), conn2.depth(), well_msg(well1.name(), "Connection: depth"));
+                well_count += not_equal( conn1.CF(), conn2.CF(), well_connection_msg(well1.name(), conn1, "CF"));
+                well_count += not_equal( conn1.Kh(), conn2.Kh(), well_connection_msg(well1.name(), conn1, "Kh"));
+                well_count += not_equal( conn1.rw(), conn2.rw(), well_connection_msg(well1.name(), conn1, "rw"));
+                well_count += not_equal( conn1.depth(), conn2.depth(), well_connection_msg(well1.name(), conn1, "depth"));
 
-                well_count += not_equal( conn1.r0(), conn2.r0(), well_msg(well1.name(), "Connection: r0"));
-                well_count += not_equal( conn1.skinFactor(), conn2.skinFactor(), well_msg(well1.name(), "Connection: skinFactor"));
-                well_count += not_equal( conn1.wellPi(), conn2.wellPi(), well_msg(well1.name(), "Connection: PI"));
+                //well_count += not_equal( conn1.r0(), conn2.r0(), well_connection_msg(well1.name(), conn1, "r0"));
+                well_count += not_equal( conn1.skinFactor(), conn2.skinFactor(), well_connection_msg(well1.name(), conn1, "skinFactor"));
+                well_count += not_equal( conn1.wellPi(), conn2.wellPi(), well_connection_msg(well1.name(), conn1, "PI"));
 
             }
         }
@@ -3138,15 +3148,16 @@ bool Schedule::cmp(const Schedule& sched1, const Schedule& sched2, std::size_t r
             for (std::size_t iseg=0; iseg < segments1.size(); iseg++) {
                 const auto& segment1 = segments1[iseg];
                 const auto& segment2 = segments2[iseg];
-                well_count += not_equal(segment1.segmentNumber(), segment2.segmentNumber(), well_msg(well1.name(), "Segment: segmentNumber"));
-                well_count += not_equal(segment1.branchNumber(), segment2.segmentNumber(), well_msg(well1.name(), "Segment: segmentNumber"));
-                well_count += not_equal(segment1.outletSegment(), segment2.outletSegment(), well_msg(well1.name(), "Segments: outletSegment"));
-                well_count += not_equal(segment1.totalLength(), segment2.totalLength(), well_msg(well1.name(), "Segments: totalLength"));
-                well_count += not_equal(segment1.depth(), segment2.depth(), well_msg(well1.name(), "Segments: depth"));
-                well_count += not_equal(segment1.internalDiameter(), segment2.internalDiameter(), well_msg(well1.name(), "Segments: internalDiameter"));
-                well_count += not_equal(segment1.roughness(), segment2.roughness(), well_msg(well1.name(), "Segments: roughness"));
-                well_count += not_equal(segment1.crossArea(), segment2.crossArea(), well_msg(well1.name(), "Segments: crossArea"));
-                well_count += not_equal(segment1.volume(), segment2.volume(), well_msg(well1.name(), "Segments: volume"));
+                //const auto& segment2 = segments2.getFromSegmentNumber(segment1.segmentNumber());
+                well_count += not_equal(segment1.segmentNumber(), segment2.segmentNumber(), well_segment_msg(well1.name(), segment1.segmentNumber(), "segmentNumber"));
+                well_count += not_equal(segment1.branchNumber(), segment2.branchNumber(), well_segment_msg(well1.name(), segment1.segmentNumber(), "branchNumber"));
+                well_count += not_equal(segment1.outletSegment(), segment2.outletSegment(), well_segment_msg(well1.name(), segment1.segmentNumber(), "outletSegment"));
+                well_count += not_equal(segment1.totalLength(), segment2.totalLength(), well_segment_msg(well1.name(), segment1.segmentNumber(), "totalLength"));
+                well_count += not_equal(segment1.depth(), segment2.depth(), well_segment_msg(well1.name(), segment1.segmentNumber(), "depth"));
+                well_count += not_equal(segment1.internalDiameter(), segment2.internalDiameter(), well_segment_msg(well1.name(), segment1.segmentNumber(), "internalDiameter"));
+                well_count += not_equal(segment1.roughness(), segment2.roughness(), well_segment_msg(well1.name(), segment1.segmentNumber(), "roughness"));
+                well_count += not_equal(segment1.crossArea(), segment2.crossArea(), well_segment_msg(well1.name(), segment1.segmentNumber(), "crossArea"));
+                well_count += not_equal(segment1.volume(), segment2.volume(), well_segment_msg(well1.name(), segment1.segmentNumber(), "volume"));
             }
         }
 
@@ -3162,14 +3173,16 @@ bool Schedule::cmp(const Schedule& sched1, const Schedule& sched2, std::size_t r
             well_count += not_equal(prod1.ResVRate, prod2.ResVRate, well_msg(well1.name(), "Prod: ResVRate"));
             well_count += not_equal(prod1.BHPTarget, prod2.BHPTarget, well_msg(well1.name(), "Prod: BHPTarget"));
             well_count += not_equal(prod1.THPTarget, prod2.THPTarget, well_msg(well1.name(), "Prod: THPTarget"));
-            well_count += not_equal(prod1.bhp_hist_limit, prod2.bhp_hist_limit, well_msg(well1.name(), "Prod: bhp_hist_limit"));
-            well_count += not_equal(prod1.thp_hist_limit, prod2.thp_hist_limit, well_msg(well1.name(), "Prod: thp_hist_limit"));
-            well_count += not_equal(prod1.BHPH, prod2.BHPH, well_msg(well1.name(), "Prod: BHPH"));
-            well_count += not_equal(prod1.THPH, prod2.THPH, well_msg(well1.name(), "Prod: THPH"));
+            well_count += not_equal(prod1.predictionMode, prod2.predictionMode, well_msg(well1.name(), "Prod: predictionMode"));
+            if (!prod1.predictionMode) {
+                well_count += not_equal(prod1.bhp_hist_limit, prod2.bhp_hist_limit, well_msg(well1.name(), "Prod: bhp_hist_limit"));
+                well_count += not_equal(prod1.thp_hist_limit, prod2.thp_hist_limit, well_msg(well1.name(), "Prod: thp_hist_limit"));
+                well_count += not_equal(prod1.BHPH, prod2.BHPH, well_msg(well1.name(), "Prod: BHPH"));
+                well_count += not_equal(prod1.THPH, prod2.THPH, well_msg(well1.name(), "Prod: THPH"));
+            }
             well_count += not_equal(prod1.VFPTableNumber, prod2.VFPTableNumber, well_msg(well1.name(), "Prod: VFPTableNumber"));
             well_count += not_equal(prod1.ALQValue, prod2.ALQValue, well_msg(well1.name(), "Prod: ALQValue"));
             well_count += not_equal(prod1.productionControls(), prod2.productionControls(), well_msg(well1.name(), "Prod: productionControls"));
-            well_count += not_equal(prod1.predictionMode, prod2.predictionMode, well_msg(well1.name(), "Prod: predictionMode"));
             well_count += not_equal(prod1.controlMode, prod2.controlMode, well_msg(well1.name(), "Prod: controlMode"));
             well_count += not_equal(prod1.whistctl_cmode, prod2.whistctl_cmode, well_msg(well1.name(), "Prod: whistctl_cmode"));
         }

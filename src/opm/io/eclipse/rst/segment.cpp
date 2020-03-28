@@ -50,8 +50,8 @@ double area_to_si(const UnitSystem& unit_system, double raw_value) {
 }
 
 
-RstSegment::RstSegment(const ::Opm::UnitSystem& unit_system, const int * iseg, const double * rseg) :
-    segment(                                                    iseg[VI::ISeg::SegNo]),
+RstSegment::RstSegment(const ::Opm::UnitSystem& unit_system, int segment_number, const int * iseg, const double * rseg) :
+    segment(                                                    segment_number),
     outlet_segment(                                             iseg[VI::ISeg::OutSeg]),
     branch(                                                     iseg[VI::ISeg::BranchNo]),
     segment_type(                                               from_ecl<Segment::SegmentType>(iseg[VI::ISeg::SegmentType])),

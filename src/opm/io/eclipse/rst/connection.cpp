@@ -75,8 +75,8 @@ double RstConnection::inverse_peaceman(double cf, double kh, double rw, double s
 
 using M  = ::Opm::UnitSystem::measure;
 
-RstConnection::RstConnection(const ::Opm::UnitSystem& unit_system, const int* icon, const float* scon, const double* xcon) :
-    insert_index(                                            icon[VI::IConn::SeqIndex] - 1),
+RstConnection::RstConnection(const ::Opm::UnitSystem& unit_system, std::size_t rst_index_, int nsconz, const int* icon, const float* scon, const double* xcon) :
+    rst_index(                                               rst_index_),
     ijk(                                                    {icon[VI::IConn::CellI] - 1, icon[VI::IConn::CellJ] - 1, icon[VI::IConn::CellK] - 1}),
     state(                                                   from_int<Connection::State>(icon[VI::IConn::ConnStat])),
     drain_sat_table(                                         icon[VI::IConn::Drainage]),
@@ -84,7 +84,7 @@ RstConnection::RstConnection(const ::Opm::UnitSystem& unit_system, const int* ic
     completion(                                              icon[VI::IConn::ComplNum]),
     dir(                                                     from_int<Connection::Direction>(icon[VI::IConn::ConnDir])),
     segment(                                                 icon[VI::IConn::Segment]),
-    cf_kind(                                                 from_float(scon[VI::SConn::CFInDeck])),
+    cf_kind(                                                 from_float(1.0)),
     skin_factor(                                             scon[VI::SConn::SkinFactor]),
     cf(            unit_system.to_si(M::transmissibility,    scon[VI::SConn::ConnTrans])),
     depth(         unit_system.to_si(M::length,              scon[VI::SConn::Depth])),
@@ -103,12 +103,11 @@ RstConnection::RstConnection(const ::Opm::UnitSystem& unit_system, const int* ic
           file. If the r0 value is given explicitly in the deck it is possible
           to give a value which is not consistent with the Peaceman formula -
           that value will be lost when loading back from a restart file.
-
-      insert_index: The insert index property is used internally to keep track
-          of the order the connections have been specified in the deck. It seems
-          that in some cases (MSW ?) eclipse only outputs 0 here.
     */
-{ }
+{
+    if (nsconz > VI::SConn::CFInDeck)
+        this->cf_kind = from_float(scon[VI::SConn::CFInDeck]);
+}
 
 }
 }

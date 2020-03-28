@@ -31,10 +31,10 @@ namespace RestartIO {
 class Header;
 
 struct RstConnection {
-    RstConnection(const ::Opm::UnitSystem& unit_system, const int* icon, const float* scon, const double *xcon);
+    RstConnection(const ::Opm::UnitSystem& unit_system, std::size_t rst_index, int nsconz, const int* icon, const float* scon, const double *xcon);
     static double inverse_peaceman(double cf, double kh, double rw, double skin);
 
-    int insert_index;
+    std::size_t rst_index;
     std::array<int,3> ijk;
     Connection::State state;
     int drain_sat_table;

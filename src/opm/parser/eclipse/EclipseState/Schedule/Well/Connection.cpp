@@ -82,7 +82,7 @@ constexpr bool defaultSatTabId = true;
 constexpr double def_wellPi = 1.0;
 }
 
-Connection::Connection(const RestartIO::RstConnection& rst_connection, std::size_t insert_index, const EclipseGrid& grid, const FieldPropsManager& fp) :
+Connection::Connection(const RestartIO::RstConnection& rst_connection, const EclipseGrid& grid, const FieldPropsManager& fp) :
         direction(rst_connection.dir),
         center_depth(rst_connection.depth),
         open_state(rst_connection.state),
@@ -96,7 +96,7 @@ Connection::Connection(const RestartIO::RstConnection& rst_connection, std::size
         ijk(rst_connection.ijk),
         m_ctfkind(rst_connection.cf_kind),
         m_global_index(grid.getGlobalIndex(this->ijk[0], this->ijk[1], this->ijk[2])),
-        m_sort_value(insert_index),
+        m_sort_value(rst_connection.rst_index),
         m_segDistStart(rst_connection.segdist_start),
         m_segDistEnd(rst_connection.segdist_end),
         m_defaultSatTabId(defaultSatTabId),
@@ -248,6 +248,12 @@ Connection::Connection(const RestartIO::RstConnection& rst_connection, std::size
         this->m_sort_value = compseg_insert_index;
         this->m_segDistStart = start;
         this->m_segDistEnd = end;
+    }
+
+    void Connection::updateSegmentRST(int segment_number_arg,
+                                      double center_depth_arg) {
+        this->segment_number = segment_number_arg;
+        this->center_depth = center_depth_arg;
     }
 
     int Connection::segment() const {
