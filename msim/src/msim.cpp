@@ -117,11 +117,11 @@ void msim::run_step(const Schedule& schedule, SummaryState& st, data::Solution& 
 
 
 
-void msim::output(SummaryState& st, size_t report_step, bool /* substep */, double seconds_elapsed, const data::Solution& sol, const data::Wells& well_data, EclipseIO& io) const {
+void msim::output(SummaryState& st, size_t report_step, bool substep, double seconds_elapsed, const data::Solution& sol, const data::Wells& well_data, EclipseIO& io) const {
     RestartValue value(sol, well_data);
     io.writeTimeStep(st,
                      report_step,
-                     false,
+                     substep,
                      seconds_elapsed,
                      value);
 }
