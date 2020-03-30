@@ -457,14 +457,14 @@ namespace {
 
         explicit Setup(const ::Opm::Deck& deck)
             : es    { deck }
-            , sched { deck, es , python }
             , python{ }
+            , sched { deck, es , python }
         {
         }
 
         ::Opm::EclipseState es;
-        ::Opm::Schedule     sched;
         ::Opm::Python       python;
+        ::Opm::Schedule     sched;
     };
 
     std::vector<Opm::data::Connection>
