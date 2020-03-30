@@ -27,9 +27,10 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQActive.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellProductionProperties.hpp>
-#include <fnmatch.h>
 
+#include <fnmatch.h>
 #include <cmath>
+#include <ostream>
 
 namespace Opm {
 
@@ -1135,6 +1136,10 @@ double Well::temperature() const {
     throw std::runtime_error("Can not ask for temperature in a producer");
 }
 
+std::ostream& operator<<(std::ostream& os, const Well::Status& st) {
+    os << Well::Status2String(st);
+    return os;
+}
 
 std::string Well::Status2String(Well::Status enumValue) {
     switch( enumValue ) {

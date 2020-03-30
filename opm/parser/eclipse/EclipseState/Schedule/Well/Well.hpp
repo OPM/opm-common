@@ -22,6 +22,7 @@
 #define WELL2_HPP
 
 #include <string>
+#include <iosfwd>
 
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
@@ -621,6 +622,8 @@ int eclipseControlMode(const Well::ProducerCMode pmode,
 
 int eclipseControlMode(const Well&         well,
                        const SummaryState& st);
-}
 
+std::ostream& operator<<(std::ostream& os, const Well::Status& st);
+
+}
 #endif
