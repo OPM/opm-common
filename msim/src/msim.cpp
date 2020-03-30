@@ -42,11 +42,11 @@ msim::msim(const EclipseState& state_arg) :
 void msim::run(Schedule& schedule, EclipseIO& io, bool report_only) {
     const double week = 7 * 86400;
     data::Solution sol;
-    data::Wells well_data;
     SummaryState st(std::chrono::system_clock::from_time_t(schedule.getStartTime()));
 
     io.writeInitial();
     for (size_t report_step = 1; report_step < schedule.size(); report_step++) {
+        data::Wells well_data;
         if (report_only)
             run_step(schedule, st, sol, well_data, report_step, io);
         else {
