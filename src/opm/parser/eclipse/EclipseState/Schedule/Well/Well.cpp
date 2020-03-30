@@ -1186,7 +1186,7 @@ const std::string Well::InjectorCMode2String( InjectorCMode enumValue ) {
     case InjectorCMode::GRUP:
         return "GRUP";
     default:
-        throw std::invalid_argument("unhandled enum value");
+        throw std::invalid_argument("Unhandled enum value: " + std::to_string(static_cast<int>(enumValue)) + " in InjectorCMode2String");
     }
 }
 
@@ -1278,7 +1278,7 @@ const std::string Well::ProducerCMode2String( ProducerCMode enumValue ) {
     case ProducerCMode::GRUP:
         return "GRUP";
     default:
-        throw std::invalid_argument("unhandled enum value");
+        throw std::invalid_argument("Unhandled enum value: " + std::to_string(static_cast<int>(enumValue)) + " in ProducerCMode2String");
     }
 }
 
