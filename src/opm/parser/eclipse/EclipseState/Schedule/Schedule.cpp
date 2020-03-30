@@ -124,7 +124,7 @@ std::pair<std::time_t, std::size_t> restart_info(const RestartIO::RstState * rst
                         const Runspec &runspec,
                         const ParseContext& parseContext,
                         ErrorGuard& errors,
-                        const Python& python,
+                        [[maybe_unused]] const Python& python,
                         const RestartIO::RstState * rst) :
         m_timeMap( deck , restart_info( rst )),
         m_oilvaporizationproperties( this->m_timeMap, OilVaporizationProperties(runspec.tabdims().getNumPVTTables()) ),

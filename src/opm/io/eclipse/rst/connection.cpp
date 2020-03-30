@@ -105,7 +105,7 @@ RstConnection::RstConnection(const ::Opm::UnitSystem& unit_system, std::size_t r
           that value will be lost when loading back from a restart file.
     */
 {
-    if (nsconz > VI::SConn::CFInDeck)
+    if (static_cast<std::size_t>(nsconz) > VI::SConn::CFInDeck)
         this->cf_kind = from_float(scon[VI::SConn::CFInDeck]);
 }
 

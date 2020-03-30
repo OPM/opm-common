@@ -457,8 +457,8 @@ namespace {
 
         explicit Setup(const ::Opm::Deck& deck)
             : es    { deck }
-            , python{ }
             , sched { deck, es , python }
+            , python{ }
         {
         }
 
