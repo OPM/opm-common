@@ -1206,6 +1206,11 @@ Well::InjectorCMode Well::InjectorCModeFromString(const std::string &stringValue
         throw std::invalid_argument("Unknown enum state string: " + stringValue);
 }
 
+std::ostream& operator<<(std::ostream& os, const Well::InjectorCMode& cm) {
+    os << Well::InjectorCMode2String(cm);
+    return os;
+}
+
 Well::WELTARGCMode Well::WELTARGCModeFromString(const std::string& string_value) {
     if (string_value == "ORAT")
         return WELTARGCMode::ORAT;
@@ -1243,6 +1248,14 @@ Well::WELTARGCMode Well::WELTARGCModeFromString(const std::string& string_value)
     throw std::invalid_argument("WELTARG control mode: " + string_value + " not recognized.");
 }
 
+
+std::ostream& operator<<(std::ostream& os, const Well::ProducerCMode& cm) {
+    if (cm == Well::ProducerCMode::CMODE_UNDEFINED)
+        os << "UNDEFINED";
+    else
+        os << Well::ProducerCMode2String(cm);
+    return os;
+}
 
 const std::string Well::ProducerCMode2String( ProducerCMode enumValue ) {
     switch( enumValue ) {

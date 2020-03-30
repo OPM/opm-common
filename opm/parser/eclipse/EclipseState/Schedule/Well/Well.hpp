@@ -624,6 +624,8 @@ int eclipseControlMode(const Well&         well,
                        const SummaryState& st);
 
 std::ostream& operator<<(std::ostream& os, const Well::Status& st);
+std::ostream& operator<<(std::ostream& os, const Well::ProducerCMode& cm);
+std::ostream& operator<<(std::ostream& os, const Well::InjectorCMode& cm);
 
 }
 #endif
