@@ -135,6 +135,10 @@ void msim::simulate(const Schedule& schedule, const SummaryState& st, data::Solu
 
     for (const auto& well_pair : this->well_rates) {
         const std::string& well_name = well_pair.first;
+        const auto& sched_well = schedule.getWell(well_name, report_step);
+        if (sched_well.getStatus() != Well::Status::OPEN)
+            continue;
+
         data::Well& well = well_data[well_name];
         for (const auto& rate_pair : well_pair.second) {
             auto rate = rate_pair.first;
