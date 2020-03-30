@@ -214,7 +214,7 @@ Well::Well(const RestartIO::RstWell& rst_well,
                 p->addProductionControl(Well::ProducerCMode::BHP);
                 break;
             default:
-                throw std::invalid_argument("Can convert integer value: " + std::to_string(rst_well.active_control)
+                throw std::invalid_argument("Can not convert integer value: " + std::to_string(rst_well.active_control)
                                             + " to control type");
             }
         }
@@ -1384,9 +1384,11 @@ int Opm::eclipseControlMode(const Opm::Well::InjectorCMode imode,
 {
     using IMode = ::Opm::Well::InjectorCMode;
     using Val   = ::Opm::RestartIO::Helpers::VectorItems::IWell::Value::WellCtrlMode;
-
     using IType = ::Opm::InjectorType;
 
+    if (wellStatus == ::Opm::Well::Status::SHUT) {
+        return Val::Shut;
+    }
     switch (imode) {
         case IMode::RATE: {
             switch (itype) {
@@ -1417,6 +1419,9 @@ int Opm::eclipseControlMode(const Opm::Well::ProducerCMode pmode,
     using PMode = ::Opm::Well::ProducerCMode;
     using Val   = ::Opm::RestartIO::Helpers::VectorItems::IWell::Value::WellCtrlMode;
 
+    if (wellStatus == ::Opm::Well::Status::SHUT) {
+        return Val::Shut;
+    }
     switch (pmode) {
         case PMode::ORAT: return Val::OilRate;
         case PMode::WRAT: return Val::WatRate;
@@ -1436,6 +1441,19 @@ int Opm::eclipseControlMode(const Opm::Well::ProducerCMode pmode,
 
     return Val::WMCtlUnk;
 }
+
+/*
+  The purpose of this function is to convert OPM well status to an integer value
+  suitable for output in the eclipse restart file. In OPM we have different
+  variables for the wells status and the active control, when this is written to
+  a restart file they are combined to one integer. In OPM a well can have an
+  active control while still being shut, when this is converted to an integer
+  value suitable for the eclipse formatted restart file the value 0 will be used
+  to signal a SHUT well and the active control will be lost.
+
+  In the case of a well which is in state 'STOP' or 'AUTO' an integer
+  corresponding to the currently active control is writte to the restart file.
+*/
 
 int Opm::eclipseControlMode(const Well&         well,
                             const SummaryState& st)
