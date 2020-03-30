@@ -78,6 +78,7 @@ BOOST_AUTO_TEST_CASE(RUN) {
     msim msim(state);
 
     msim.well_rate("PROD", data::Rates::opt::oil, prod_opr);
+    msim.well_rate("RFT", data::Rates::opt::oil, prod_opr);
     msim.solution("PRESSURE", pressure);
     {
         const WorkArea work_area("test_msim");
@@ -109,6 +110,12 @@ BOOST_AUTO_TEST_CASE(RUN) {
                 // DOUBHEAD[0] is elapsed time in days since start of simulation.
                 BOOST_CHECK_CLOSE( press[0], dh[0] * 86400, 1e-3 );
             }
+
+            const int report_step = 50;
+            const auto& rst_state = Opm::RestartIO::RstState::load(rst, report_step);
+            Schedule sched_rst(deck, state, python, &rst_state);
+            const auto& rft_well = sched_rst.getWell("RFT", report_step);
+            BOOST_CHECK(rft_well.getStatus() == Well::Status::SHUT);
         }
     }
 }
