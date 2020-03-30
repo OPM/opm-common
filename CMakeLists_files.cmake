@@ -448,6 +448,8 @@ if(ENABLE_ECL_INPUT)
     tests/SPE1CASE1A.UNSMRY
     tests/SPE1CASE1_RST60.SMSPEC
     tests/SPE1CASE1_RST60.UNSMRY
+    tests/MODEL2_RESTART.DATA
+    tests/restart/MODEL2.UNRST
   )
   list (APPEND EXAMPLE_SOURCE_FILES
     examples/opmi.cpp
