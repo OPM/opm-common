@@ -1191,20 +1191,18 @@ BOOST_AUTO_TEST_CASE(createDeckWithWPIMULT) {
     Runspec runspec (deck);
     Schedule schedule(deck, grid , fp, runspec, python);
 
+    const auto& cs1 = schedule.getWell("OP_1", 1).getConnections();
     const auto& cs2 = schedule.getWell("OP_1", 2).getConnections();
     const auto& cs3 = schedule.getWell("OP_1", 3).getConnections();
     const auto& cs4 = schedule.getWell("OP_1", 4).getConnections();
     for(size_t i = 0; i < cs2.size(); i++)
-        BOOST_CHECK_EQUAL(cs2.get( i ).wellPi(), 1.3);
+        BOOST_CHECK_EQUAL(cs2.get( i ).CF() / cs1.get(i).CF(), 1.3);
 
     for(size_t i = 0; i < cs3.size(); i++ )
-        BOOST_CHECK_EQUAL(cs3.get( i ).wellPi(), (1.3*1.3));
+        BOOST_CHECK_EQUAL(cs3.get( i ).CF() / cs1.get(i).CF(), (1.3*1.3));
 
     for(size_t i = 0; i < cs4.size(); i++ )
-        BOOST_CHECK_EQUAL(cs4.get( i ).wellPi(), 1.0);
-
-    for(size_t i = 0; i < cs4.size(); i++ )
-        BOOST_CHECK_EQUAL(cs4.get( i ).wellPi(), 1.0);
+        BOOST_CHECK_EQUAL(cs4.get( i ).CF(), cs1.get(i).CF());
 
     BOOST_CHECK_THROW(schedule.simTime(10000), std::invalid_argument);
     auto sim_time1 = TimeStampUTC{ schedule.simTime(1) };

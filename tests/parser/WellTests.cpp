@@ -1093,3 +1093,122 @@ BOOST_AUTO_TEST_CASE(Producer_Control_Mode) {
     BOOST_CHECK_EQUAL(eclipseControlMode(static_cast<PMode>(271828), WStat::SHUT),   0);
     BOOST_CHECK_EQUAL(eclipseControlMode(static_cast<PMode>(271828), WStat::AUTO), -10);
 }
+
+
+BOOST_AUTO_TEST_CASE(WPIMULT) {
+    Opm::Parser parser;
+    std::string input = R"(
+START             -- 0
+19 JUN 2007 /
+SCHEDULE
+
+WELSPECS
+    'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+/
+COMPDAT
+ 'OP_1'  9  9   1   1 'OPEN' 1*   1.0 0.311  3047.839 1*  1*  'X'  22.100 /
+ 'OP_1'  9  9   2   2 'OPEN' 1*   2.0 0.311  3047.839 1*  1*  'X'  22.100 /
+ 'OP_1'  9  9   3   3 'OPEN' 1*   3.0 0.311  4332.346 1*  1*  'X'  22.123 /
+/
+DATES             -- 1
+ 20  JAN 2010 /
+/
+
+-- Should not hit any connections
+WPIMULT
+  'OP_1'  2  5  /
+/
+
+DATES             -- 2
+ 20  FEB 2010 /
+/
+
+--
+WPIMULT
+  'OP_1'  2  9  9 1 /
+/
+
+DATES             -- 3
+ 20  MAR 2010 /
+/
+
+--
+WPIMULT
+  'OP_1'  2  9  9 2 /
+/
+
+DATES             -- 4
+ 20  APR 2010 /
+/
+
+--
+WPIMULT
+  'OP_1'  2  9  9  3 /
+/
+
+DATES             -- 5
+ 20  JUN 2010 /
+/
+
+--
+WPIMULT
+  'OP_1'  0.5 /
+/
+
+)";
+
+
+    auto deck = parser.parseString(input);
+    const auto& units = deck.getActiveUnitSystem();
+    auto python = std::make_shared<Opm::Python>();
+    Opm::EclipseGrid grid(10,10,10);
+    TableManager table ( deck );
+    FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
+    Opm::Runspec runspec (deck);
+    Opm::Schedule schedule(deck, grid , fp, runspec, python);
+    const auto CF0 = units.to_si(Opm::UnitSystem::measure::transmissibility, 1.0);
+    {
+        const auto& well = schedule.getWell("OP_1", 0);
+        const auto& connections = well.getConnections();
+        BOOST_CHECK_CLOSE( connections[0].CF(), 1.0 * CF0, 1e-6);
+        BOOST_CHECK_CLOSE( connections[1].CF(), 2.0 * CF0, 1e-6);
+        BOOST_CHECK_CLOSE( connections[2].CF(), 3.0 * CF0, 1e-6);
+    }
+    {
+        const auto& well = schedule.getWell("OP_1", 1);
+        const auto& connections = well.getConnections();
+        BOOST_CHECK_CLOSE( connections[0].CF(), 1.0 * CF0, 1e-6);
+        BOOST_CHECK_CLOSE( connections[1].CF(), 2.0 * CF0, 1e-6);
+        BOOST_CHECK_CLOSE( connections[2].CF(), 3.0 * CF0, 1e-6);
+    }
+    {
+        const auto& well = schedule.getWell("OP_1", 2);
+        const auto& connections = well.getConnections();
+        BOOST_CHECK_CLOSE( connections[0].CF(), 2.0 * CF0, 1e-6);
+        BOOST_CHECK_CLOSE( connections[1].CF(), 2.0 * CF0, 1e-6);
+        BOOST_CHECK_CLOSE( connections[2].CF(), 3.0 * CF0, 1e-6);
+    }
+    {
+        const auto& well = schedule.getWell("OP_1", 3);
+        const auto& connections = well.getConnections();
+        BOOST_CHECK_CLOSE( connections[0].CF(), 2.0 * CF0, 1e-6);
+        BOOST_CHECK_CLOSE( connections[1].CF(), 4.0 * CF0, 1e-6);
+        BOOST_CHECK_CLOSE( connections[2].CF(), 3.0 * CF0, 1e-6);
+    }
+    {
+        const auto& well = schedule.getWell("OP_1", 4);
+        const auto& connections = well.getConnections();
+        BOOST_CHECK_CLOSE( connections[0].CF(), 2.0 * CF0, 1e-6);
+        BOOST_CHECK_CLOSE( connections[1].CF(), 4.0 * CF0, 1e-6);
+        BOOST_CHECK_CLOSE( connections[2].CF(), 6.0 * CF0, 1e-6);
+    }
+    {
+        const auto& well = schedule.getWell("OP_1", 5);
+        const auto& connections = well.getConnections();
+        BOOST_CHECK_CLOSE( connections[0].CF(), 1.0 * CF0, 1e-6);
+        BOOST_CHECK_CLOSE( connections[1].CF(), 2.0 * CF0, 1e-6);
+        BOOST_CHECK_CLOSE( connections[2].CF(), 3.0 * CF0, 1e-6);
+    }
+}
+
+
