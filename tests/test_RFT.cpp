@@ -245,7 +245,7 @@ BOOST_AUTO_TEST_SUITE(Using_EclipseIO)
 
 BOOST_AUTO_TEST_CASE(test_RFT)
 {
-    Python python;
+    auto python = std::make_shared<Python>();
     const auto rset = RSet{ "TESTRFT" };
 
     const auto eclipse_data_filename = std::string{ "testrft.DATA" };
@@ -367,7 +367,7 @@ namespace {
 
 BOOST_AUTO_TEST_CASE(test_RFT2)
 {
-    Python python;
+    auto python = std::make_shared<Python>();
     const auto rset = RSet{ "TESTRFT" };
 
     const auto eclipse_data_filename = std::string{ "testrft.DATA" };
@@ -457,13 +457,13 @@ namespace {
 
         explicit Setup(const ::Opm::Deck& deck)
             : es    { deck }
-            , python{ }
+            , python{ std::make_shared<::Opm::Python>() }
             , sched { deck, es , python }
         {
         }
 
         ::Opm::EclipseState es;
-        ::Opm::Python       python;
+        std::shared_ptr<::Opm::Python> python;
         ::Opm::Schedule     sched;
     };
 

@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(MESSAGES) {
         ;
 
     auto deck = parser.parseString(input);
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);

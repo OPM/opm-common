@@ -47,7 +47,7 @@ inline std::string pathprefix() {
 
 BOOST_AUTO_TEST_CASE(CreateSchedule) {
     Parser parser;
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
     std::string scheduleFile(pathprefix() + "SCHEDULE/SCHEDULE1");
     auto deck1 =  parser.parseFile(scheduleFile);
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(CreateSchedule_Comments_After_Keywords) {
     TableManager table ( deck );
     FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     Runspec runspec (deck);
-    Python python;
+    auto python = std::make_shared<Python>();
     Schedule sched(deck,  grid , fp, runspec, python);
     const auto& timeMap = sched.getTimeMap();
     BOOST_CHECK_EQUAL(TimeMap::mkdate(2007, 5 , 10) , sched.getStartTime());
@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(WCONPROD_MissingCmode) {
     EclipseGrid grid(10,10,3);
     TableManager table ( deck );
     FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
-    Python python;
+    auto python = std::make_shared<Python>();
     Runspec runspec (deck);
     BOOST_CHECK_NO_THROW( Schedule(deck, grid , fp, runspec, python) );
 }
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(WCONPROD_Missing_DATA) {
     TableManager table ( deck );
     FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     Runspec runspec (deck);
-    Python python;
+    auto python = std::make_shared<Python>();
     BOOST_CHECK_THROW( Schedule(deck, grid , fp, runspec, python) , std::invalid_argument );
 }
 
@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE(WellTestRefDepth) {
     TableManager table ( deck );
     FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     Runspec runspec (deck);
-    Python python;
+    auto python = std::make_shared<Python>();
     Schedule sched(deck , grid , fp, runspec, python);
 
     const auto& well1 = sched.getWellatEnd("W_1");
@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
     TableManager table ( deck );
     FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     Runspec runspec (deck);
-    Python python;
+    auto python = std::make_shared<Python>();
     Schedule sched(deck,  grid , fp, runspec, python);
 
     BOOST_CHECK_EQUAL(4U, sched.numWells());
@@ -286,7 +286,7 @@ BOOST_AUTO_TEST_CASE(WellTestCOMPDAT_DEFAULTED_ITEMS) {
     TableManager table ( deck );
     FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     Runspec runspec (deck);
-    Python python;
+    auto python = std::make_shared<Python>();
     Schedule sched(deck,  grid , fp, runspec, python);
 }
 
@@ -299,7 +299,7 @@ BOOST_AUTO_TEST_CASE(WellTestCOMPDAT) {
     TableManager table ( deck );
     FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     Runspec runspec (deck);
-    Python python;
+    auto python = std::make_shared<Python>();
     Schedule sched(deck,  grid , fp, runspec, python);
 
     BOOST_CHECK_EQUAL(4U, sched.numWells());
@@ -335,7 +335,7 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_GRUPTREE_correct) {
     TableManager table ( deck );
     FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     Runspec runspec (deck);
-    Python python;
+    auto python = std::make_shared<Python>();
     Schedule schedule(deck,  grid , fp, runspec, python);
 
     BOOST_CHECK( schedule.hasGroup( "FIELD" ));
@@ -358,7 +358,7 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_GRUPTREE_WITH_REPARENT_correct_tree) {
     TableManager table ( deck );
     FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     Runspec runspec (deck);
-    Python python;
+    auto python = std::make_shared<Python>();
     Schedule sched(deck,  grid , fp, runspec, python);
 
     const auto& field_group = sched.getGroup("FIELD", 1);
@@ -382,7 +382,7 @@ BOOST_AUTO_TEST_CASE( WellTestGroups ) {
     TableManager table ( deck );
     FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     Runspec runspec (deck);
-    Python python;
+    auto python = std::make_shared<Python>();
     Schedule sched(deck,  grid , fp, runspec, python);
     SummaryState st(std::chrono::system_clock::now());
 
@@ -434,7 +434,7 @@ BOOST_AUTO_TEST_CASE( WellTestGroupAndWellRelation ) {
     TableManager table ( deck );
     FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     Runspec runspec (deck);
-    Python python;
+    auto python = std::make_shared<Python>();
     Schedule sched(deck,  grid , fp, runspec, python);
 
     {
@@ -493,7 +493,7 @@ BOOST_AUTO_TEST_CASE(WellTestWGRUPCONWellPropertiesSet) {
     Parser parser;
     std::string scheduleFile(pathprefix() + "SCHEDULE/SCHEDULE_WGRUPCON");
     auto deck =  parser.parseFile(scheduleFile);
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
@@ -542,7 +542,7 @@ COMPDAT \n\
      'W1'   2*    1    1      'OPEN'  1*     32.948      0.311   3047.839  2*         'X'     22.100 /\n\
 /\n";
     auto deck =  parser.parseString(deckString);
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid(30,30,10);
     TableManager table ( deck );
     FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
@@ -562,7 +562,7 @@ BOOST_AUTO_TEST_CASE(OpmCode) {
     Parser parser;
     std::string scheduleFile(pathprefix() + "SCHEDULE/wells_group.data");
     auto deck =  parser.parseFile(scheduleFile);
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,5);
     TableManager table ( deck );
     Runspec runspec (deck);
@@ -574,7 +574,7 @@ BOOST_AUTO_TEST_CASE(OpmCode) {
 
 BOOST_AUTO_TEST_CASE(WELLS_SHUT) {
     Parser parser;
-    Python python;
+    auto python = std::make_shared<Python>();
     std::string scheduleFile(pathprefix() + "SCHEDULE/SCHEDULE_SHUT_WELL");
     auto deck =  parser.parseFile(scheduleFile);
     EclipseGrid grid(20,40,1);
@@ -611,7 +611,7 @@ BOOST_AUTO_TEST_CASE(WellTestWPOLYMER) {
     TableManager table ( deck );
     FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     Runspec runspec (deck);
-    Python python;
+    auto python = std::make_shared<Python>();
     Schedule sched(deck,  grid , fp, runspec, python);
 
 
@@ -679,7 +679,7 @@ BOOST_AUTO_TEST_CASE(WellTestWFOAM) {
     TableManager table ( deck );
     FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     Runspec runspec (deck);
-    Python python;
+    auto python = std::make_shared<Python>();
     Schedule sched(deck,  grid , fp, runspec, python);
 
 
@@ -747,7 +747,7 @@ BOOST_AUTO_TEST_CASE(WellTestWECON) {
     TableManager table ( deck );
     FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     Runspec runspec (deck);
-    Python python;
+    auto python = std::make_shared<Python>();
     Schedule sched(deck,  grid , fp, runspec, python);
 
     BOOST_CHECK_EQUAL(3U, sched.numWells());
@@ -858,7 +858,7 @@ BOOST_AUTO_TEST_CASE(TestEvents) {
     TableManager table ( deck );
     FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     Runspec runspec (deck);
-    Python python;
+    auto python = std::make_shared<Python>();
     Schedule sched(deck , grid , fp, runspec, python);
     const Events& events = sched.getEvents();
 
@@ -893,7 +893,7 @@ BOOST_AUTO_TEST_CASE(TestWellEvents) {
     TableManager table ( deck );
     FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     Runspec runspec(deck);
-    Python python;
+    auto python = std::make_shared<Python>();
     Schedule sched(deck , grid , fp, runspec, python);
 
     BOOST_CHECK(  sched.hasWellGroupEvent( "W_1", ScheduleEvents::NEW_WELL , 0 ));

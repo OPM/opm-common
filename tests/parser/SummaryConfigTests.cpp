@@ -149,7 +149,7 @@ static std::vector< std::string > sorted_key_names( const SummaryConfig& summary
 static SummaryConfig createSummary( std::string input , const ParseContext& parseContext = ParseContext()) {
     ErrorGuard errors;
     auto deck = createDeck( input );
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseState state( deck );
     Schedule schedule(deck, state, parseContext, errors, python);
     return SummaryConfig( deck, schedule, state.getTableManager( ), parseContext, errors );
@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE(wells_all) {
 
 BOOST_AUTO_TEST_CASE(EMPTY) {
     auto deck = createDeck_no_wells( "" );
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseState state( deck );
     Schedule schedule(deck, state, python);
     SummaryConfig conf(deck, schedule, state.getTableManager());
@@ -177,7 +177,7 @@ BOOST_AUTO_TEST_CASE(EMPTY) {
 }
 
 BOOST_AUTO_TEST_CASE(wells_missingI) {
-    Python python;
+    auto python = std::make_shared<Python>();
     ParseContext parseContext;
     ErrorGuard errors;
     const auto input = "WWCT\n/\n";
@@ -719,7 +719,7 @@ BOOST_AUTO_TEST_CASE( SUMMARY_MISC) {
 
 BOOST_AUTO_TEST_CASE(Summary_Segment)
 {
-    Python python;
+    auto python = std::make_shared<Python>();
     const auto input = std::string { "SOFR_TEST.DATA" };
     const auto deck  = Parser{}.parseFile(input);
     const auto state = EclipseState { deck };

@@ -70,7 +70,7 @@ bool is_file(const Opm::filesystem::path& name)
 
 BOOST_AUTO_TEST_CASE(RUN) {
     Parser parser;
-    Python python;
+    auto python = std::make_shared<Python>();
     Deck deck = parser.parseFile("SPE1CASE1.DATA");
     EclipseState state(deck);
     Schedule schedule(deck, state, python);

@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithGEFAC) {
             "/\n";
 
     auto deck = parser.parseString(input);
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     Runspec runspec (deck );
@@ -167,7 +167,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithWGRUPCONandWCONPROD) {
 
 
     auto deck = parser.parseString(input);
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
@@ -212,7 +212,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithGRUPNET) {
         "/\n";
 
         auto deck = parser.parseString(input);
-        Python python;
+        auto python = std::make_shared<Python>();
         EclipseGrid grid(10,10,10);
         TableManager table ( deck );
         FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
@@ -271,7 +271,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithGCONPROD) {
         /)";
 
     auto deck = parser.parseString(input);
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
@@ -325,7 +325,7 @@ BOOST_AUTO_TEST_CASE(TESTGuideRateLINCOM) {
         )";
 
     auto deck = parser.parseString(input);
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
@@ -363,7 +363,7 @@ BOOST_AUTO_TEST_CASE(TESTGuideRate) {
         )";
 
     auto deck = parser.parseString(input);
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
@@ -397,7 +397,7 @@ BOOST_AUTO_TEST_CASE(TESTGCONSALE) {
         )";
 
     auto deck = parser.parseString(input);
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
@@ -467,7 +467,7 @@ BOOST_AUTO_TEST_CASE(GCONINJE_MULTIPLE_PHASES) {
         )";
 
     auto deck = parser.parseString(input);
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck , Phases{true, true, true}, grid, table);

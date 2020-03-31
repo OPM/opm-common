@@ -281,7 +281,7 @@ BOOST_AUTO_TEST_CASE(EclipseIOIntegration) {
         auto deck = Parser().parseString( deckString);
         auto es = EclipseState( deck );
         auto& eclGrid = es.getInputGrid();
-        Python python;
+        auto python = std::make_shared<Python>();
         Schedule schedule(deck, es, python);
         SummaryConfig summary_config( deck, schedule, es.getTableManager( ));
         SummaryState st(std::chrono::system_clock::now());

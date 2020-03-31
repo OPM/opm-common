@@ -136,7 +136,7 @@ BOOST_AUTO_TEST_CASE(TestNoTracer) {
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
-    Python python;
+    auto python = std::make_shared<Python>();
     Runspec runspec ( deck );
     Schedule schedule(deck, grid , fp, runspec, python);
     BOOST_CHECK(!deck.hasKeyword("WTRACER"));
@@ -145,7 +145,7 @@ BOOST_AUTO_TEST_CASE(TestNoTracer) {
 
 BOOST_AUTO_TEST_CASE(TestDynamicWTRACER) {
     auto deck = createDeckWithDynamicWTRACER();
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
@@ -168,7 +168,7 @@ BOOST_AUTO_TEST_CASE(TestDynamicWTRACER) {
 
 BOOST_AUTO_TEST_CASE(TestTracerInProducerTHROW) {
     auto deck = createDeckWithTracerInProducer();
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);

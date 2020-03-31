@@ -45,7 +45,7 @@ inline void loadDeck( const char * deck_file) {
     Opm::ParseContext parseContext;
     Opm::ErrorGuard errors;
     Opm::Parser parser;
-    Opm::Python python;
+    auto python = std::make_shared<Opm::Python>();
 
     std::cout << "Loading deck: " << deck_file << " ..... "; std::cout.flush();
 

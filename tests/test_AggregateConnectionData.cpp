@@ -529,7 +529,7 @@ END
     struct SimulationCase {
         explicit SimulationCase(const Opm::Deck& deck)
             : es(deck)
-            , python()
+            , python(std::make_shared<Opm::Python>())
             , grid(deck)
             , sched(deck, es, python)
         {
@@ -537,7 +537,7 @@ END
 
         // Order requirement: 'es' must be declared/initialised before 'sched'.
         Opm::EclipseState es;
-        Opm::Python python;
+        std::shared_ptr<Opm::Python> python;
         Opm::EclipseGrid grid;
         Opm::Schedule sched;
     };

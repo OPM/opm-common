@@ -45,7 +45,7 @@ class EclipseState;
   this Python manager indeed has a valid Python runtime:
 
 
-     Python python;
+     auto python = std::make_shared<Python>();
 
      if (python)
          python.exec("print('Hello world')")

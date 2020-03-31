@@ -342,14 +342,15 @@ struct Setup {
     Deck deck;
     EclipseState es;
     const EclipseGrid& grid;
+    std::shared_ptr<Python> python;
     Schedule schedule;
     SummaryConfig summary_config;
-    Python python;
 
     Setup( const char* path) :
         deck( Parser().parseFile( path) ),
         es( deck),
         grid( es.getInputGrid( ) ),
+        python( std::make_shared<Python>() ),
         schedule( deck, es, python ),
         summary_config( deck, schedule, es.getTableManager( ))
     {

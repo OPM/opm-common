@@ -345,15 +345,16 @@ struct CaseObjects
     CaseObjects& operator=(const CaseObjects& rhs) = delete;
     CaseObjects& operator=(CaseObjects&& rhs) = delete;
 
-    Opm::Python       python;
     Opm::ErrorGuard   guard;
     Opm::EclipseState es;
+    std::shared_ptr<Opm::Python> python;
     Opm::Schedule     sched;
 };
 
 CaseObjects::CaseObjects(const Opm::Deck& deck, const Opm::ParseContext& ctxt)
     : guard{}
     , es   (deck)
+    , python( std::make_shared<Opm::Python>())
     , sched(deck, es, ctxt, guard, python)
 {
 }

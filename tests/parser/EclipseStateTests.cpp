@@ -200,7 +200,7 @@ const char *deckData =
 
 BOOST_AUTO_TEST_CASE(CreateSchedule) {
     auto deck = createDeck();
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseState state(deck);
     Schedule schedule(deck, state, python);
     BOOST_CHECK_EQUAL(schedule.getStartTime(), TimeMap::mkdate( 1998 , 3 , 8));
