@@ -3131,7 +3131,6 @@ bool Schedule::cmp(const Schedule& sched1, const Schedule& sched2, std::size_t r
 
                 //well_count += not_equal( conn1.r0(), conn2.r0(), well_connection_msg(well1.name(), conn1, "r0"));
                 well_count += not_equal( conn1.skinFactor(), conn2.skinFactor(), well_connection_msg(well1.name(), conn1, "skinFactor"));
-                well_count += not_equal( conn1.wellPi(), conn2.wellPi(), well_connection_msg(well1.name(), conn1, "PI"));
 
             }
         }

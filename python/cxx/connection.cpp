@@ -36,6 +36,5 @@ void python::common::export_Connection(py::module& module) {
     .def_property_readonly( "sat_table_id",        &Connection::satTableId)
     .def_property_readonly( "segment_number",      &Connection::segment)
     .def_property_readonly( "cf",                  &Connection::CF)
-    .def_property_readonly( "kh",                  &Connection::Kh)
-    .def_property_readonly( "well_pi",             &Connection::wellPi );
+    .def_property_readonly( "kh",                  &Connection::Kh);
 }

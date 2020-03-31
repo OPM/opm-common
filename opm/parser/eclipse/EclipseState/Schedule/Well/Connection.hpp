@@ -119,7 +119,6 @@ namespace RestartIO {
         double rw() const;
         double r0() const;
         double skinFactor() const;
-        double wellPi() const;
         CTFKind kind() const;
 
         void setState(State state);
@@ -167,7 +166,6 @@ namespace RestartIO {
             serializer(m_segDistEnd);
             serializer(m_defaultSatTabId);
             serializer(segment_number);
-            serializer(wPi);
         }
 
     private:
@@ -245,7 +243,6 @@ namespace RestartIO {
         // related segment number
         // 0 means the completion is not related to segment
         int segment_number = 0;
-        double wPi = 1.0;
 
         static std::string CTFKindToString(const CTFKind);
     };

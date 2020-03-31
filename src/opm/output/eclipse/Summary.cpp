@@ -556,7 +556,7 @@ inline quantity trans_factors ( const fn_args& args ) {
 
     if( connection == connections.end() ) return zero;
 
-    const auto& v = connection->CF() * connection->wellPi();
+    const auto& v = connection->CF();
     return { v, measure::transmissibility };
 }
 
