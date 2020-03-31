@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE( CheckUnsoppertedInSCHEDULE ) {
         "   10 10/\n"
         "\n";
 
-    Python python;
+    auto python = std::make_shared<Python>();
     Parser parser(true);
     ParseContext parseContext;
     ErrorGuard errors;

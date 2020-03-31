@@ -595,7 +595,7 @@ BOOST_AUTO_TEST_CASE( MULTISEGMENT_ABS ) {
     const EclipseState state(deck);
     const TableManager table ( deck );
     Runspec runspec (deck);
-    Python python;
+    auto python = std::make_shared<Python>();
     const Schedule sched(deck, state, python);
 
     // checking the relation between segments and completions
@@ -1370,7 +1370,7 @@ BOOST_AUTO_TEST_CASE( WCONPROD ) {
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
     Runspec runspec (deck);
-    Python python;
+    auto python = std::make_shared<Python>();
     Schedule sched(deck, grid, fp, runspec, python);
 
     BOOST_CHECK_EQUAL(5U, sched.numWells());
@@ -1413,7 +1413,7 @@ BOOST_AUTO_TEST_CASE( WCONINJE ) {
     Parser parser;
     std::string wconprodFile(pathprefix() + "WellWithWildcards/WCONINJE1");
     auto deck = parser.parseFile(wconprodFile);
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid(30,30,30);
     TableManager table ( deck );
     FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);

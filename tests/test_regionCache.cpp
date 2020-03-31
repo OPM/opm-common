@@ -40,7 +40,7 @@ const char* path = "summary_deck.DATA";
 
 
 BOOST_AUTO_TEST_CASE(create) {
-    Python python;
+    auto python = std::make_shared<Python>();
     Parser parser;
     Deck deck( parser.parseFile( path ));
     EclipseState es(deck);

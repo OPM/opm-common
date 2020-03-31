@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE(TEST)
 
 Schedule make_schedule(const std::string& input) {
     Parser parser;
-    Python python;
+    auto python = std::make_shared<Python>();
 
     auto deck = parser.parseString(input);
     if (deck.hasKeyword("DIMENS")) {

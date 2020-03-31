@@ -195,7 +195,7 @@ BOOST_AUTO_TEST_CASE(EclipseWriteRestartWellInfo) {
 
     std::string eclipse_data_filename    = "testblackoilstate3.DATA";
 
-    Opm::Python python;
+    auto python = std::make_shared<Opm::Python>();
     Opm::Parser parser;
     Opm::Deck deck( parser.parseFile( eclipse_data_filename ));
     Opm::EclipseState es(deck);

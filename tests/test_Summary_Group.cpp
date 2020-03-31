@@ -205,10 +205,10 @@ static data::Group result_groups() {
 
 
 struct setup {
-    Python python;
     Deck deck;
     EclipseState es;
     const EclipseGrid& grid;
+    std::shared_ptr<Python> python;
     Schedule schedule;
     SummaryConfig config;
     data::Wells wells;
@@ -222,6 +222,7 @@ struct setup {
         deck( Parser().parseFile( path) ),
         es( deck ),
         grid( es.getInputGrid() ),
+        python( std::make_shared<Python>() ),
         schedule( deck, es, python),
         config( deck, schedule, es.getTableManager()),
         wells( result_wells() ),

@@ -25,6 +25,7 @@
 
 #include <stdexcept>
 #include <iostream>
+#include <memory>
 
 #include <opm/parser/eclipse/Python/Python.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
@@ -54,12 +55,12 @@ struct test_data {
     EclipseState state;
     Schedule schedule;
     SummaryConfig summary_config;
-    Python python;
+    std::shared_ptr<Python> python = std::make_shared<Python>();
 
     test_data(const std::string& deck_string) :
         deck( Parser().parseString(deck_string)),
         state( this->deck ),
-        schedule( this->deck, this->state, python),
+        schedule( this->deck, this->state, this->python),
         summary_config( this->deck, this->schedule, this->state.getTableManager())
     {
         auto& ioconfig = this->state.getIOConfig();

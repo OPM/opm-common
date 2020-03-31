@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(LoadRST) {
     EclIO::ERst rst_file("SPE1CASE2.X0060");
     auto rst_state = RestartIO::RstState::load(rst_file, 60);
     BOOST_REQUIRE_THROW( rst_state.get_well("NO_SUCH_WELL"), std::out_of_range);
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseState ecl_state(deck);
     Schedule sched(deck, ecl_state, python);
     const auto& well_names = sched.wellNames(60);
@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(LoadRST) {
 }
 
 BOOST_AUTO_TEST_CASE(LoadRestartSim) {
-    Python python;
+    auto python = std::make_shared<Python>();
     Parser parser;
     auto deck = parser.parseFile("SPE1CASE2.DATA");
     EclipseState ecl_state(deck);

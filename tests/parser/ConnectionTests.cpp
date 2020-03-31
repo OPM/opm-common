@@ -205,7 +205,7 @@ BOOST_AUTO_TEST_CASE(loadCOMPDATTESTSPE1) {
     Opm::Parser parser;
 
     const auto deck = parser.parseFile("SPE1CASE1.DATA");
-    Opm::Python python;
+    auto python = std::make_shared<Opm::Python>();
     Opm::EclipseState state(deck);
     Opm::Schedule sched(deck, state, python);
     const auto& units = deck.getActiveUnitSystem();
@@ -231,7 +231,7 @@ BOOST_AUTO_TEST_CASE(loadCOMPDATTESTSPE9) {
     Opm::Parser parser;
 
     const auto deck = parser.parseFile("SPE9_CP_PACKED.DATA");
-    Opm::Python python;
+    auto python = std::make_shared<Opm::Python>();
     Opm::EclipseState state(deck);
     Opm::Schedule sched(deck, state, python);
     const auto& units = deck.getActiveUnitSystem();

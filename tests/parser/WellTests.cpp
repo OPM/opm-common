@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(WellCOMPDATtestTRACK) {
 
 
     auto deck = parser.parseString(input);
-    Opm::Python python;
+    auto python = std::make_shared<Python>();
     Opm::EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE(WellCOMPDATtestDefaultTRACK) {
 
 
     auto deck = parser.parseString(input);
-    Opm::Python python;
+    auto python = std::make_shared<Python>();
     Opm::EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
@@ -182,7 +182,7 @@ BOOST_AUTO_TEST_CASE(WellCOMPDATtestINPUT) {
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
     Opm::Runspec runspec (deck);
-    Opm::Python python;
+    auto python = std::make_shared<Python>();
     Opm::Schedule schedule(deck, grid , fp, runspec, Opm::ParseContext(), errors, python);
     const auto& op_1 = schedule.getWell("OP_1", 2);
 
@@ -856,7 +856,7 @@ BOOST_AUTO_TEST_CASE(WELOPEN) {
 
 
     auto deck = parser.parseString(input);
-    Python python;
+    auto python = std::make_shared<Python>();
     Opm::EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);

@@ -336,7 +336,7 @@ BOOST_AUTO_TEST_CASE( CheckUnsupportedInSCHEDULE ) {
     TableManager table ( deckSupported );
     FieldPropsManager fp(deckSupported, Phases{true, true, true}, grid, table);
     Runspec runspec(deckSupported);
-    Python python;
+    auto python = std::make_shared<Python>();
 
     parseContext.update( ParseContext::UNSUPPORTED_SCHEDULE_GEO_MODIFIER , InputError::IGNORE );
     BOOST_CHECK_NO_THROW( Schedule( deckSupported  , grid , fp, runspec, parseContext, errors, python  ));
@@ -415,7 +415,7 @@ BOOST_AUTO_TEST_CASE(TestCOMPORD) {
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
     Runspec runspec(deck);
-    Python python;
+    auto python = std::make_shared<Python>();
 
     parseContext.update( ParseContext::UNSUPPORTED_COMPORD_TYPE , InputError::IGNORE);
     BOOST_CHECK_NO_THROW( Schedule( deck , grid , fp, runspec, parseContext, errors, python ));
@@ -761,7 +761,7 @@ BOOST_AUTO_TEST_CASE( test_invalid_wtemplate_config ) {
         deckinput = defDeckString + sample;
         auto deckUnSupported = parser.parseString( deckinput , parseContext, errors );
 
-        Python python;
+        auto python = std::make_shared<Python>();
         EclipseGrid grid( deckUnSupported );
         TableManager table ( deckUnSupported );
         FieldPropsManager fp( deckUnSupported, Phases{true, true, true}, grid, table);

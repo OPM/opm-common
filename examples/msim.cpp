@@ -36,7 +36,7 @@ int main(int /* argc */, char** argv) {
     Opm::Parser parser;
     Opm::ParseContext parse_context;
     Opm::ErrorGuard error_guard;
-    Opm::Python python;
+    auto python = std::make_shared<Opm::Python>();
 
     Opm::Deck deck = parser.parseFile(deck_file, parse_context, error_guard);
     Opm::EclipseState state(deck);

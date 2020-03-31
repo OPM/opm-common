@@ -146,7 +146,7 @@ static Opm::Schedule createSchedule(const std::string& schedule) {
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
     Runspec runspec (deck);
-    Python python;
+    auto python = std::make_shared<Python>();
     return Schedule(deck, grid , fp, runspec, python );
 }
 

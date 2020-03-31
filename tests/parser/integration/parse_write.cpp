@@ -29,7 +29,7 @@
 
 inline void loadDeck( const char * deck_file) {
     Opm::Parser parser;
-    Opm::Python python;
+    auto python = std::make_shared<Opm::Python>();
 
     auto deck = parser.parseFile(deck_file);
     Opm::EclipseState state( deck);

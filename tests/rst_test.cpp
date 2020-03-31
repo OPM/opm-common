@@ -66,7 +66,7 @@ void initLogging() {
 */
 
 
-Opm::Schedule load_schedule(const Opm::Python& python, const std::string& fname, int& report_step) {
+Opm::Schedule load_schedule(std::shared_ptr<const Opm::Python> python, const std::string& fname, int& report_step) {
     Opm::Parser parser;
     auto deck = parser.parseFile(fname);
     Opm::EclipseState state(deck);
@@ -83,7 +83,7 @@ Opm::Schedule load_schedule(const Opm::Python& python, const std::string& fname,
         return Opm::Schedule(deck, state, python);
 }
 
-Opm::Schedule load_schedule(const Opm::Python& python, const std::string& fname) {
+Opm::Schedule load_schedule(std::shared_ptr<const Opm::Python> python, const std::string& fname) {
     int report_step;
     return load_schedule(python, fname, report_step);
 }
@@ -91,7 +91,7 @@ Opm::Schedule load_schedule(const Opm::Python& python, const std::string& fname)
 
 
 int main(int argc, char ** argv) {
-    Opm::Python python;
+    auto python = std::make_shared<Opm::Python>();
     initLogging();
     if (argc == 2)
         load_schedule(python, argv[1]);

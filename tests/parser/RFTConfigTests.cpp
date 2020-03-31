@@ -40,13 +40,14 @@ namespace {
     {
         Setup(const ::Opm::Deck& deck);
 
-        ::Opm::Python       python;
         ::Opm::EclipseState es;
+        std::shared_ptr<::Opm::Python> python;
         ::Opm::Schedule     sched;
     };
 
     Setup::Setup(const ::Opm::Deck& deck)
         : es   (deck)
+        , python(std::make_shared<::Opm::Python>() )
         , sched(deck, es, python)
     {}
 

@@ -34,7 +34,7 @@ inline std::string pathprefix() {
 
 BOOST_AUTO_TEST_CASE(MULTFLT_IN_SCHEDULE) {
     Parser parser;
-    Python python;
+    auto python = std::make_shared<Python>();
     std::string scheduleFile(pathprefix() + "TRANS/Deck1");
     ParseContext parseContext;
     auto deck = parser.parseFile(scheduleFile);

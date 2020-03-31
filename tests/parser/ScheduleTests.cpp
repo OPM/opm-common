@@ -364,7 +364,7 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckMissingReturnsDefaults) {
     Deck deck;
     Parser parser;
     deck.addKeyword( DeckKeyword( parser.getKeyword("SCHEDULE" )));
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
@@ -375,7 +375,7 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckMissingReturnsDefaults) {
 
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsOrdered) {
     auto deck = createDeckWithWellsOrdered();
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid(100,100,100);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
@@ -405,7 +405,7 @@ bool has_well( const std::vector<Well>& wells, const std::string& well_name) {
 
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsOrderedGRUPTREE) {
     auto deck = createDeckWithWellsOrderedGRUPTREE();
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid(100,100,100);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
@@ -457,7 +457,7 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsOrderedGRUPTREE) {
 
 BOOST_AUTO_TEST_CASE(GroupTree2TEST) {
     auto deck = createDeckWithWellsOrderedGRUPTREE();
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid(100,100,100);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
@@ -488,7 +488,7 @@ BOOST_AUTO_TEST_CASE(GroupTree2TEST) {
 
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithStart) {
     auto deck = createDeck();
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
@@ -501,7 +501,7 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithStart) {
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithSCHEDULENoThrow) {
     Parser parser;
     Deck deck;
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
@@ -512,7 +512,7 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithSCHEDULENoThrow) {
 }
 
 BOOST_AUTO_TEST_CASE(EmptyScheduleHasNoWells) {
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
     auto deck = createDeck();
     TableManager table ( deck );
@@ -527,7 +527,7 @@ BOOST_AUTO_TEST_CASE(EmptyScheduleHasNoWells) {
 
 
 BOOST_AUTO_TEST_CASE(EmptyScheduleHasFIELDGroup) {
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
     auto deck = createDeck();
     TableManager table ( deck );
@@ -599,7 +599,7 @@ END
 )"
     };
 
-    ::Opm::Python python;
+    auto python = std::make_shared<::Opm::Python>();
     const auto deck = ::Opm::Parser{}.parseString(input);
     const auto es = ::Opm::EclipseState{deck};
     const auto sched = ::Opm::Schedule{ deck, es, python };
@@ -624,7 +624,7 @@ END
 }
 
 BOOST_AUTO_TEST_CASE(WellsIterator_Empty_EmptyVectorReturned) {
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
     auto deck = createDeck();
     TableManager table ( deck );
@@ -643,7 +643,7 @@ BOOST_AUTO_TEST_CASE(WellsIterator_Empty_EmptyVectorReturned) {
 }
 
 BOOST_AUTO_TEST_CASE(WellsIterator_HasWells_WellsReturned) {
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
     auto deck = createDeckWithWells();
     TableManager table ( deck );
@@ -663,7 +663,7 @@ BOOST_AUTO_TEST_CASE(WellsIterator_HasWells_WellsReturned) {
 
 
 BOOST_AUTO_TEST_CASE(ReturnNumWellsTimestep) {
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
     auto deck = createDeckWithWells();
     TableManager table ( deck );
@@ -678,7 +678,7 @@ BOOST_AUTO_TEST_CASE(ReturnNumWellsTimestep) {
 }
 
 BOOST_AUTO_TEST_CASE(TestCrossFlowHandling) {
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
     auto deck = createDeckForTestingCrossFlow();
     TableManager table ( deck );
@@ -752,7 +752,7 @@ static Deck createDeckWithWellsAndConnectionDataWithWELOPEN() {
 }
 
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsAndConnectionDataWithWELOPEN) {
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
     auto deck = createDeckWithWellsAndConnectionDataWithWELOPEN();
     TableManager table ( deck );
@@ -837,7 +837,7 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWELOPEN_TryToOpenWellWithShutCompleti
         " 'OP_1' OPEN / \n "
         "/\n";
 
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
     auto deck = parser.parseString(input);
     TableManager table ( deck );
@@ -898,7 +898,7 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWELOPEN_CombineShutCompletionsAndAddN
                   " 12  NOV 2008 / \n"
                   "/\n";
 
-  Python python;
+  auto python = std::make_shared<Python>();
   EclipseGrid grid(10,10,10);
   auto deck = parser.parseString(input);
   TableManager table ( deck );
@@ -957,7 +957,7 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWRFT) {
                     "/\n";
 
 
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
     auto deck = parser.parseString(input);
     TableManager table ( deck );
@@ -1016,7 +1016,7 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWRFTPLT) {
                     "DATES             -- 5\n"
                     " 10  NOV 2008 / \n"
                     "/\n";
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
     auto deck = parser.parseString(input);
     TableManager table ( deck );
@@ -1068,7 +1068,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithWeltArg) {
             "/\n";
 
     auto deck = parser.parseString(input);
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
@@ -1117,7 +1117,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithWeltArgException) {
             "/\n";
 
     auto deck = parser.parseString(input);
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
@@ -1137,7 +1137,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithWeltArgException2) {
             "/\n";
 
     auto deck = parser.parseString(input);
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
@@ -1184,7 +1184,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithWPIMULT) {
                     "/\n";
 
     auto deck = parser.parseString(input);
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
@@ -1256,7 +1256,7 @@ BOOST_AUTO_TEST_CASE(WELSPECS_WGNAME_SPACE) {
         )";
 
         auto deck = parser.parseString(input);
-        Python python;
+        auto python = std::make_shared<Python>();
         EclipseGrid grid( deck );
         TableManager table ( deck );
         FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
@@ -1309,7 +1309,7 @@ BOOST_AUTO_TEST_CASE(createDeckModifyMultipleGCONPROD) {
         )";
 
         auto deck = parser.parseString(input);
-        Python python;
+        auto python = std::make_shared<Python>();
         EclipseGrid grid( deck );
         TableManager table ( deck );
         FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
@@ -1359,7 +1359,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithDRSDT) {
             "/\n";
 
     auto deck = parser.parseString(input);
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
@@ -1394,7 +1394,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithDRSDTR) {
             "2 /\n";
 
     auto deck = parser.parseString(input);
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
@@ -1442,7 +1442,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithDRSDTthenDRVDT) {
             "/\n";
 
     auto deck = parser.parseString(input);
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
@@ -1484,7 +1484,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithVAPPARS) {
             "/\n";
 
     auto deck = parser.parseString(input);
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
@@ -1516,7 +1516,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithOutOilVaporizationProperties) {
 
 
     auto deck = parser.parseString(input);
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
@@ -1578,7 +1578,7 @@ BOOST_AUTO_TEST_CASE(changeBhpLimitInHistoryModeWithWeltarg) {
             ;
 
     auto deck = parser.parseString(input);
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
@@ -1676,7 +1676,7 @@ BOOST_AUTO_TEST_CASE(changeModeWithWHISTCTL) {
             ;
 
     auto deck = parser.parseString(input);
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
@@ -1783,7 +1783,7 @@ BOOST_AUTO_TEST_CASE(fromWCONHISTtoWCONPROD) {
             ;
 
     auto deck = parser.parseString(input);
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
@@ -1872,7 +1872,7 @@ BOOST_AUTO_TEST_CASE(WHISTCTL_NEW_WELL) {
             ;
 
     auto deck = parser.parseString(input);
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
@@ -1949,7 +1949,7 @@ BOOST_AUTO_TEST_CASE(unsupportedOptionWHISTCTL) {
             ;
 
     auto deck = parser.parseString(input);
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
@@ -1979,7 +1979,7 @@ BOOST_AUTO_TEST_CASE(move_HEAD_I_location) {
     )";
 
     auto deck = Parser().parseString(input);
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
@@ -2011,7 +2011,7 @@ BOOST_AUTO_TEST_CASE(change_ref_depth) {
     )";
 
     auto deck = Parser().parseString(input);
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
@@ -2051,7 +2051,7 @@ BOOST_AUTO_TEST_CASE(WTEMP_well_template) {
     )";
 
     auto deck = Parser().parseString(input);
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
@@ -2098,7 +2098,7 @@ BOOST_AUTO_TEST_CASE(WTEMPINJ_well_template) {
     )";
 
         auto deck = Parser().parseString(input);
-        Python python;
+        auto python = std::make_shared<Python>();
         EclipseGrid grid(10,10,10);
         TableManager table ( deck );
         FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
@@ -2151,7 +2151,7 @@ BOOST_AUTO_TEST_CASE( COMPDAT_sets_automatic_complnum ) {
     )";
 
     auto deck = Parser().parseString(input);
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
@@ -2202,7 +2202,7 @@ BOOST_AUTO_TEST_CASE( COMPDAT_multiple_wells ) {
     )";
 
     auto deck = Parser().parseString( input);
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid( 10, 10, 10 );
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
@@ -2272,7 +2272,7 @@ BOOST_AUTO_TEST_CASE( COMPDAT_multiple_records_same_completion ) {
     )";
 
     auto deck = Parser().parseString(input);
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
@@ -2313,7 +2313,7 @@ BOOST_AUTO_TEST_CASE( complump_less_than_1 ) {
     )";
 
     auto deck = Parser().parseString( input);
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid( 10, 10, 10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
@@ -2366,7 +2366,7 @@ BOOST_AUTO_TEST_CASE( complump ) {
     constexpr auto shut = Connection::State::SHUT;
 
     auto deck = Parser().parseString(input);
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
@@ -2457,7 +2457,7 @@ BOOST_AUTO_TEST_CASE( COMPLUMP_specific_coordinates ) {
     constexpr auto shut = Connection::State::SHUT;
 
     auto deck = Parser().parseString( input);
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid( 10, 10, 10 );
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
@@ -2928,7 +2928,7 @@ BOOST_AUTO_TEST_CASE(handleWEFAC) {
             ;
 
     auto deck = parser.parseString(input);
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
@@ -2974,7 +2974,7 @@ BOOST_AUTO_TEST_CASE(historic_BHP_and_THP) {
         ;
 
     auto deck = parser.parseString(input);
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
@@ -3009,7 +3009,7 @@ BOOST_AUTO_TEST_CASE(FilterCompletions2) {
     EclipseGrid grid1(10,10,10);
     std::vector<int> actnum(1000,1);
     auto deck = createDeckWithWellsAndCompletionData();
-    Python python;
+    auto python = std::make_shared<Python>();
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid1, table);
     Runspec runspec (deck);
@@ -3099,7 +3099,7 @@ VFPINJ \n                                       \
 
     Opm::Parser parser;
     auto deck = parser.parseString(deckData);
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid1(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid1, table);
@@ -3226,7 +3226,7 @@ BOOST_AUTO_TEST_CASE(POLYINJ_TEST) {
 
     Opm::Parser parser;
     auto deck = parser.parseString(deckData);
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid1(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid1, table);
@@ -3287,7 +3287,7 @@ BOOST_AUTO_TEST_CASE(WFOAM_TEST) {
 
     Opm::Parser parser;
     auto deck = parser.parseString(deckData);
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid1(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid1, table);
@@ -3306,7 +3306,7 @@ BOOST_AUTO_TEST_CASE(WFOAM_TEST) {
 
 BOOST_AUTO_TEST_CASE(WTEST_CONFIG) {
     auto deck = createDeckWTEST();
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid1(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid1, table);
@@ -3336,7 +3336,7 @@ bool has(const std::vector<std::string>& l, const std::string& s) {
 
 BOOST_AUTO_TEST_CASE(WELL_STATIC) {
     auto deck = createDeckWithWells();
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid1(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid1, table);
@@ -3386,7 +3386,7 @@ BOOST_AUTO_TEST_CASE(WELL_STATIC) {
 
 BOOST_AUTO_TEST_CASE(WellNames) {
     auto deck = createDeckWTEST();
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid1(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid1, table);
@@ -3504,7 +3504,7 @@ BOOST_AUTO_TEST_CASE(RFT_CONFIG) {
 
 BOOST_AUTO_TEST_CASE(RFT_CONFIG2) {
     auto deck = createDeckRFTConfig();
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid1(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid1, table);
@@ -3539,7 +3539,7 @@ BOOST_AUTO_TEST_CASE(nupcol) {
         ;
 
     auto deck = parser.parseString(input);
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
@@ -3632,7 +3632,7 @@ DATES             -- 4
      )";
 
     auto deck = parser.parseString(input);
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
@@ -3731,7 +3731,7 @@ TSTEP
 END
 )");
 
-    ::Opm::Python python;
+    auto python = std::make_shared<::Opm::Python>();
     const auto st = ::Opm::SummaryState{ std::chrono::system_clock::now() };
     const auto es = ::Opm::EclipseState{ deck };
     const auto sched = ::Opm::Schedule{ deck, es, python };
@@ -3805,7 +3805,7 @@ TSTEP
 END
 )");
 
-    ::Opm::Python python;
+    auto python = std::make_shared<::Opm::Python>();
     const auto st = ::Opm::SummaryState{ std::chrono::system_clock::now() };
     const auto es = ::Opm::EclipseState{ deck };
     const auto sched = ::Opm::Schedule{ deck, es, python };

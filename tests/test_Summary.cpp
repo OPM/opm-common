@@ -369,10 +369,10 @@ double ecl_sum_get_well_completion_var( const EclIO::ESmry* smry,
 }
 
 struct setup {
-    Python python;
     Deck deck;
     EclipseState es;
     const EclipseGrid& grid;
+    std::shared_ptr<Python> python;
     Schedule schedule;
     SummaryConfig config;
     data::Wells wells;
@@ -386,6 +386,7 @@ struct setup {
         deck( Parser().parseFile( path) ),
         es( deck ),
         grid( es.getInputGrid() ),
+        python( std::make_shared<Python>() ),
         schedule( deck, es, python),
         config( deck, schedule, es.getTableManager()),
         wells( result_wells() ),

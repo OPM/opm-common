@@ -124,7 +124,7 @@ ENDACTIO
 TSTEP
    10 /
 )"};
-    Opm::Python python;
+    auto python = std::make_shared<Python>();
     Opm::Parser parser;
     auto deck1 = parser.parseString(MISSING_END);
     auto deck2 = parser.parseString(WITH_WELSPECS);
@@ -233,7 +233,7 @@ TSTEP
     std::string deck_string = start + action_string + end;
     Opm::Parser parser;
     auto deck = parser.parseString(deck_string);
-    Python python;
+    auto python = std::make_shared<Python>();
     EclipseGrid grid1(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid1, table);
@@ -707,7 +707,7 @@ TSTEP
     EclipseGrid grid1(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid1, table);
-    Python python;
+    auto python = std::make_shared<Python>();
 
     Runspec runspec (deck);
     Schedule sched(deck, grid1, fp, runspec, python);
