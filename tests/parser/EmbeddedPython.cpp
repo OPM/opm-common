@@ -37,7 +37,7 @@ using namespace Opm;
 #ifndef EMBEDDED_PYTHON
 
 BOOST_AUTO_TEST_CASE(INSTANTIATE) {
-    auto python = std::make_shared<Python>();
+    Python python;
     BOOST_CHECK(!python.enabled());
     BOOST_CHECK_THROW(python.exec("print('Hello world')"), std::logic_error);
     BOOST_CHECK(! Python::supported() );
