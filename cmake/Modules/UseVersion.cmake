@@ -14,6 +14,7 @@
 # makes changes to any of the unit tests.
 
 message("-- Writing version information to local header project-version.h")
+string (TIMESTAMP build_timestamp "%Y-%m-%d at %H:%M:%S hrs")
 
 string (TOUPPER "${CMAKE_BUILD_TYPE}" cmake_build_type_upper_)
 if (cmake_build_type_upper_ MATCHES DEBUG)
@@ -23,6 +24,7 @@ if (cmake_build_type_upper_ MATCHES DEBUG)
         "#define PROJECT_VERSION_NAME \"${${project}_LABEL}\"\n"
         "#define PROJECT_VERSION_HASH \"debug\"\n"
         "#define PROJECT_VERSION \"${${project}_LABEL} (debug)\"\n"
+        "#define BUILD_TIMESTAMP \"${build_timestamp}\"\n"
         "#endif // OPM_GENERATED_OPM_VERSION_HEADER_INCLUDED\n"
 	)
 else ()
@@ -41,6 +43,7 @@ else ()
               "#define PROJECT_VERSION_NAME \"${${project}_LABEL}\"\n"
               "#define PROJECT_VERSION_HASH \"unknown git version\"\n"
               "#define PROJECT_VERSION \"${${project}_LABEL} (unknown git version)\"\n"
+              "#define BUILD_TIMESTAMP \"${build_timestamp}\"\n"
               "#endif // OPM_GENERATED_OPM_VERSION_HEADER_INCLUDED\n"
               )
   else ()
