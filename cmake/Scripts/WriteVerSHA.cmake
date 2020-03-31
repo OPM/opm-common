@@ -47,6 +47,8 @@ if (sha1)
   endif ()
 endif ()
 
+string (TIMESTAMP build_timestamp "%Y-%m-%d at %H:%M:%S hrs")
+
 # write the content to a temporary file in a C compatible format
 file (WRITE "${PROJECT_BINARY_DIR}/project-version.tmp"
       "#ifndef OPM_GENERATED_OPM_VERSION_HEADER_INCLUDED\n"
@@ -54,6 +56,7 @@ file (WRITE "${PROJECT_BINARY_DIR}/project-version.tmp"
       "#define PROJECT_VERSION_NAME \"${PROJECT_LABEL}\"\n"
       "#define PROJECT_VERSION_HASH \"${sha1}\"\n"
       "#define PROJECT_VERSION \"${PROJECT_LABEL} (${sha1})\"\n"
+      "#define BUILD_TIMESTAMP \"${build_timestamp}\"\n"
       "#endif // OPM_GENERATED_OPM_VERSION_HEADER_INCLUDED\n"
       )
 
