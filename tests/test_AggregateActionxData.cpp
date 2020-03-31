@@ -121,8 +121,10 @@ BOOST_AUTO_TEST_CASE (Declared_Actionx_data)
         };
 
     double secs_elapsed = 3.1536E07;
-    const auto ih = Opm::RestartIO::Helpers::createInteHead(es, grid, sched,
-                                                secs_elapsed, rptStep, rptStep);
+    const auto ih = Opm::RestartIO::Helpers::
+        createInteHead(es, grid, sched, secs_elapsed,
+                       rptStep, rptStep, rptStep);
+
     //set dummy value for next_step_size 
     const double next_step_size= 0.1;
     const auto dh = Opm::RestartIO::Helpers::createDoubHead(es, sched, rptStep, 
@@ -150,7 +152,7 @@ BOOST_AUTO_TEST_CASE (Declared_Actionx_data)
         */
         const auto rptStep_1 = std::size_t{0};
         const auto ih_1 = Opm::RestartIO::Helpers::createInteHead(es, grid, sched,
-                                                secs_elapsed, rptStep, rptStep_1);   
+                                                secs_elapsed, rptStep, rptStep_1 + 1, rptStep_1);
         
         BOOST_CHECK_EQUAL(ih_1[156] ,       2); 
         BOOST_CHECK_EQUAL(ih_1[157] ,       7); 
@@ -158,13 +160,13 @@ BOOST_AUTO_TEST_CASE (Declared_Actionx_data)
         
         const auto rptStep_2 = std::size_t{1};
         const auto ih_2 = Opm::RestartIO::Helpers::createInteHead(es, grid, sched,
-                                                secs_elapsed, rptStep, rptStep_2);        
+                                                secs_elapsed, rptStep, rptStep_2 + 1, rptStep_2);
         BOOST_CHECK_EQUAL(ih_2[156] ,       3); 
         BOOST_CHECK_EQUAL(ih_2[157] ,      10); 
 
         const auto rptStep_3 = std::size_t{2};
         const auto ih_3 = Opm::RestartIO::Helpers::createInteHead(es, grid, sched,
-                                                secs_elapsed, rptStep, rptStep_3);
+                                                secs_elapsed, rptStep, rptStep_3 + 1, rptStep_3);
         
         BOOST_CHECK_EQUAL(ih_3[156] ,       3); 
         BOOST_CHECK_EQUAL(ih_3[157] ,      10); 

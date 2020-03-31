@@ -591,10 +591,10 @@ params_NAAQZ(const int ncamax,
 
 Opm::RestartIO::InteHEAD&
 Opm::RestartIO::InteHEAD::
-stepParam(const int num_solver_steps, const int sim_step)
+stepParam(const int num_solver_steps, const int report_step)
 {
     this -> data_[NUM_SOLVER_STEPS] = num_solver_steps;
-    this -> data_[REPORT_STEP]      = sim_step + 1;
+    this -> data_[REPORT_STEP]      = report_step;
 
     return *this;
 }

@@ -801,6 +801,7 @@ BOOST_AUTO_TEST_CASE(WELL_POD) {
                                                             simCase.sched,
                                                             0,
                                                             sim_step,
+                                                            sim_step,
                                                             sim_step);
 
     auto wellData = Opm::RestartIO::Helpers::AggregateWellData(ih);
@@ -846,6 +847,7 @@ BOOST_AUTO_TEST_CASE(WELL_POD) {
                            xcon.data() + xcon_offset);
 
     }
+
     // Well OP2
     const auto& well2 = wells[1];
     BOOST_CHECK_EQUAL(well2.k1k2.first, 1);
