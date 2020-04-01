@@ -1,6 +1,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
+#include <pybind11/chrono.h>
 
 #include <opm/io/eclipse/EclFile.hpp>
 #include <opm/io/eclipse/EclIOdata.hpp>
@@ -9,6 +10,7 @@
 #include <opm/io/eclipse/EGrid.hpp>
 #include <opm/io/eclipse/ERft.hpp>
 #include <opm/io/eclipse/EclOutput.hpp>
+#include <opm/common/utility/TimeService.hpp>
 
 #include <opm/common/utility/numeric/calculateCellVol.hpp>
 
@@ -272,6 +274,27 @@ npArray get_rft_vector_Index(Opm::EclIO::ERft * file_ptr,const std::string& name
 }
 
 
+
+/*
+  This insane time based trickery is to address the following situation:
+
+  1. OPM uses UTC times internally - so the ESmry::startdate() method will
+     return a timepoint which should be interpreted in UTC.
+
+  2. The pybind11 std::chrono <-> datetime mapping uses localtime. We therefor
+     convert the timepoint returned from UTC to localtime before proceeding to
+     the pybind11 conversion.
+*/
+
+std::chrono::system_clock::time_point esmry_start_date(const Opm::EclIO::ESmry * esmry) {
+    auto utc_chrono   = esmry->startdate();
+    auto utc_time_t   = std::chrono::system_clock::to_time_t( utc_chrono );
+    auto utc_ts       = Opm::TimeStampUTC( utc_time_t );
+    auto local_time_t = Opm::asLocalTimeT( utc_ts );
+    return std::chrono::system_clock::from_time_t( local_time_t );
+}
+
+
 }
 
 
@@ -317,7 +340,7 @@ void python::common::export_IO(py::module& m) {
         .def("__len__", &Opm::EclIO::ESmry::numberOfTimeSteps)
         .def("__get_all", &get_smry_vector)
         .def("__get_at_rstep", &get_smry_vector_at_rsteps)
-        .def("__get_startdat", &Opm::EclIO::ESmry::get_startdat)
+        .def_property_readonly("start_date", &esmry_start_date)
         .def_property_readonly("list_of_keys", &Opm::EclIO::ESmry::keywordList);
 
    py::class_<Opm::EclIO::EGrid>(m, "EGrid")

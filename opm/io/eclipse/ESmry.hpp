@@ -19,6 +19,7 @@
 #ifndef OPM_IO_ESMRY_HPP
 #define OPM_IO_ESMRY_HPP
 
+#include <chrono>
 #include <ostream>
 #include <string>
 #include <unordered_map>
@@ -46,7 +47,7 @@ public:
     std::vector<float> get_at_rstep(const std::string& name) const;
     std::vector<float> get_at_rstep(const SummaryNode& node) const;
 
-    const std::vector<int>& get_startdat() const { return startdat; }
+    std::chrono::system_clock::time_point startdate() const { return startdat; }
 
     const std::vector<std::string>& keywordList() const;
     const std::vector<SummaryNode>& summaryNodeList() const;
@@ -72,7 +73,7 @@ private:
     std::unordered_map<std::string, std::string> kwunits;
 
     std::vector<int> seqIndex;
-    std::vector<int> startdat;
+    std::chrono::system_clock::time_point startdat;
 
     std::vector<std::string> checkForMultipleResultFiles(const Opm::filesystem::path& rootN, bool formatted) const;
 
