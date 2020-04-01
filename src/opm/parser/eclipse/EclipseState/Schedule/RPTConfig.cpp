@@ -19,10 +19,43 @@
 
 #include <opm/parser/eclipse/EclipseState/Schedule/RPTConfig.hpp>
 
+#include <opm/common/ErrorMacros.hpp>
+
 namespace {
+
+    std::pair<std::string, unsigned> parse_mnemonic(const std::string& mnemonic) {
+        const auto pivot { mnemonic.find('=') } ;
+
+        if (pivot == std::string::npos) {
+            return { mnemonic, 1 } ;
+        } else {
+            const auto int_value { std::stoi(mnemonic.substr(pivot + 1)) } ;
+
+            if (!(int_value >= 0)) {
+                OPM_THROW(std::invalid_argument, "RPTSCHED - " + mnemonic + " - mnemonic value must be an integer greater than 1");
+            }
+
+            return { mnemonic.substr(0, pivot), int_value } ;
+        }
+    }
 
 }
 
+Opm::RPTConfig::RPTConfig(const DeckKeyword& keyword) :
+    std::unordered_map<std::string,unsigned> {}
+{
+    const auto& mnemonics { keyword.getStringData() } ;
+    for (const auto& mnemonic : mnemonics) {
+        if (mnemonic == "NOTHING") {
+            clear();
+        } else {
+            emplace(parse_mnemonic(mnemonic));
+        }
+    }
+}
+
+#if __cplusplus <= 201703L
 bool Opm::RPTConfig::contains(const std::string& key) const {
     return find(key) != end();
 }
+#endif

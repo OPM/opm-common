@@ -22,11 +22,20 @@
 #include <string>
 #include <unordered_map>
 
+#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
+
 namespace Opm {
 
 class RPTConfig: public std::unordered_map<std::string,unsigned> {
+#if __cplusplus <= 201703L
 public:
     bool contains(const std::string&) const;
+#endif
+
+public:
+    using std::unordered_map<std::string,unsigned>::unordered_map;
+
+    RPTConfig(const DeckKeyword&);
 };
 
 }

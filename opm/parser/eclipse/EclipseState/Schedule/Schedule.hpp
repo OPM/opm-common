@@ -38,7 +38,6 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/MessageLimits.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/RFTConfig.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/RPTConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/VFPInjTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/VFPProdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
@@ -101,6 +100,7 @@ namespace Opm
     class FieldPropsManager;
     class Python;
     class Runspec;
+    class RPTConfig;
     class SCHEDULESection;
     class SummaryState;
     class TimeMap;
@@ -428,6 +428,7 @@ namespace Opm
         void handleWECON( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
         void handleWHISTCTL(const DeckKeyword& keyword, std::size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
         void handleMESSAGES(const DeckKeyword& keyword, size_t currentStep);
+        void handleRPTSCHED(const DeckKeyword& keyword, size_t currentStep);
         void handleVFPPROD(const DeckKeyword& vfpprodKeyword, const UnitSystem& unit_system, size_t currentStep);
         void handleVFPINJ(const DeckKeyword& vfpprodKeyword, const UnitSystem& unit_system, size_t currentStep);
         void checkUnhandledKeywords( const SCHEDULESection& ) const;

@@ -57,6 +57,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQActive.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/RPTConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
@@ -452,6 +453,9 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
 
         else if (keyword.name() == "MESSAGES")
             handleMESSAGES(keyword, currentStep);
+
+        else if (keyword.name() == "RPTSCHED")
+            handleRPTSCHED(keyword, currentStep);
 
         else if (keyword.name() == "WEFAC")
             handleWEFAC(keyword, currentStep, parseContext, errors);
@@ -1946,6 +1950,10 @@ void Schedule::iterateScheduleSection(const std::string& input_path, const Parse
                 fptr( this->m_messageLimits , currentStep , value );
             }
         }
+    }
+
+    void Schedule::handleRPTSCHED( const DeckKeyword& keyword, size_t currentStep) {
+        this->rpt_config.update(currentStep, std::make_shared<RPTConfig>(keyword));
     }
 
     void Schedule::handleCOMPDAT( const DeckKeyword& keyword, size_t currentStep, const EclipseGrid& grid, const FieldPropsManager& fp, const ParseContext& parseContext, ErrorGuard& errors) {
