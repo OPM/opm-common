@@ -1212,8 +1212,10 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "WOPP", potential_rate< rt::well_potential_oil , true, false>},
     { "WGPP", potential_rate< rt::well_potential_gas , true, false>},
     { "WWPI", potential_rate< rt::well_potential_water , false, true>},
+    { "WWIP", potential_rate< rt::well_potential_water , false, true>}, // Alias for 'WWPI'
     { "WOPI", potential_rate< rt::well_potential_oil , false, true>},
     { "WGPI", potential_rate< rt::well_potential_gas , false, true>},
+    { "WGIP", potential_rate< rt::well_potential_gas , false, true>}, // Alias for 'WGPI'
 };
 
 
