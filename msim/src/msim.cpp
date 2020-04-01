@@ -42,11 +42,11 @@ msim::msim(const EclipseState& state_arg) :
 void msim::run(Schedule& schedule, EclipseIO& io, bool report_only) {
     const double week = 7 * 86400;
     data::Solution sol;
-    data::Wells well_data;
     SummaryState st(std::chrono::system_clock::from_time_t(schedule.getStartTime()));
 
     io.writeInitial();
     for (size_t report_step = 1; report_step < schedule.size(); report_step++) {
+        data::Wells well_data;
         if (report_only)
             run_step(schedule, st, sol, well_data, report_step, io);
         else {
@@ -117,11 +117,11 @@ void msim::run_step(const Schedule& schedule, SummaryState& st, data::Solution& 
 
 
 
-void msim::output(SummaryState& st, size_t report_step, bool /* substep */, double seconds_elapsed, const data::Solution& sol, const data::Wells& well_data, EclipseIO& io) const {
+void msim::output(SummaryState& st, size_t report_step, bool substep, double seconds_elapsed, const data::Solution& sol, const data::Wells& well_data, EclipseIO& io) const {
     RestartValue value(sol, well_data);
     io.writeTimeStep(st,
                      report_step,
-                     false,
+                     substep,
                      seconds_elapsed,
                      value);
 }
@@ -135,6 +135,10 @@ void msim::simulate(const Schedule& schedule, const SummaryState& st, data::Solu
 
     for (const auto& well_pair : this->well_rates) {
         const std::string& well_name = well_pair.first;
+        const auto& sched_well = schedule.getWell(well_name, report_step);
+        if (sched_well.getStatus() != Well::Status::OPEN)
+            continue;
+
         data::Well& well = well_data[well_name];
         for (const auto& rate_pair : well_pair.second) {
             auto rate = rate_pair.first;

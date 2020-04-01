@@ -258,6 +258,9 @@ namespace {
             // returns the target control mode requested in the simulation
             // deck.  This item is supposed to be the well's actual, active
             // target control mode in the simulator.
+            //
+            // Observe that the setupCurrentContro() function is called again
+            // for open wells in the dynamicContrib() function.
             setCurrentControl(well, eclipseControlMode(well, st), iWell);
 
             // Multi-segmented well information
