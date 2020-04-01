@@ -133,13 +133,13 @@ void ESmry::write_block(std::ostream& os, const std::vector<SummaryNode>& vector
 
     std::size_t rows { data[0].first.size() };
 
-    write_header_columns(os, vectors, [](std::ostream& os, const SummaryNode& node) { print_text_element(os, node.keyword); });
-    write_header_columns(os, vectors, [this](std::ostream& os, const SummaryNode& node) { print_text_element(os, this->get_unit(node)); });
+    write_header_columns(os, vectors, [](std::ostream& oss, const SummaryNode& node) { print_text_element(oss, node.keyword); });
+    write_header_columns(os, vectors, [this](std::ostream& oss, const SummaryNode& node) { print_text_element(oss, this->get_unit(node)); });
     if (has_scale_factors) {
         write_scale_columns(os, data);
     }
-    write_header_columns(os, vectors, [](std::ostream& os, const SummaryNode& node) { print_text_element(os, node.display_name().value_or("")); });
-    write_header_columns(os, vectors, [](std::ostream& os, const SummaryNode& node) { print_text_element(os, node.display_number().value_or("")); });
+    write_header_columns(os, vectors, [](std::ostream& oss, const SummaryNode& node) { print_text_element(oss, node.display_name().value_or("")); });
+    write_header_columns(os, vectors, [](std::ostream& oss, const SummaryNode& node) { print_text_element(oss, node.display_number().value_or("")); });
 
     write_line(os, divider_line);
 
