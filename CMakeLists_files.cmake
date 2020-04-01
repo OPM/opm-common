@@ -329,6 +329,7 @@ if(ENABLE_ECL_INPUT)
     tests/parser/ParseDATAWithDefault.cpp
     tests/parser/PYACTION.cpp
     tests/parser/RawKeywordTests.cpp
+    tests/parser/test_ReportConfig.cpp
     tests/parser/ResinsightTest.cpp
     tests/parser/RestartConfigTests.cpp
     tests/parser/RFTConfigTests.cpp
