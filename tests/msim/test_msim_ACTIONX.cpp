@@ -53,13 +53,14 @@ namespace {
 struct test_data {
     Deck deck;
     EclipseState state;
+    std::shared_ptr<Python> python;
     Schedule schedule;
     SummaryConfig summary_config;
-    std::shared_ptr<Python> python = std::make_shared<Python>();
 
     test_data(const std::string& deck_string) :
         deck( Parser().parseString(deck_string)),
         state( this->deck ),
+        python( std::make_shared<Python>() ),
         schedule( this->deck, this->state, this->python),
         summary_config( this->deck, this->schedule, this->state.getTableManager())
     {
