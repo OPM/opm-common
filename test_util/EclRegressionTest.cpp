@@ -335,13 +335,13 @@ void ECLRegressionTest::loadGrids()
         grid1 = new EGrid(fileName1);
         std::cout << " done." << std::endl;
     }
-    
+
     if (foundEGrid2) {
         std::cout << "Loading EGrid " << fileName2 << "  .... ";
         grid2 = new EGrid(fileName2);
         std::cout << " done." << std::endl;
     }
-    
+
     if ((not foundEGrid1) || (not foundEGrid2)) {
         std::cout << "\nWarning! Both grids could not be loaded. Not possible to reference cell values to grid indices." << std::endl;
         std::cout << "Grid compare may also fail. SMRY, RFT, UNRST and INIT files can be checked \n" << std::endl;
@@ -352,17 +352,17 @@ void ECLRegressionTest::loadGrids()
 void ECLRegressionTest::gridCompare()
 {
     deviations.clear();
-    
+
     if ((grid1) && (not grid2)){
         std::string message ="test case egrid file " + rootName2 + ".EGRID could not be loaded";
 	std::cout << message << std::endl;
         OPM_THROW(std::runtime_error, message);
     }
-    
+
     if (grid1 && grid2) {
 
         std::cout << "comparing grids " << std::endl;
-    
+
         const auto& dim1 = grid1->dimension();
         const auto& dim2 = grid2->dimension();
 
@@ -519,11 +519,11 @@ void ECLRegressionTest::gridCompare()
         if (!deviations.empty()) {
             printDeviationReport();
         }
-        
+
     } else {
         std::cout << "\n!Warning, grid files not found, hence not compared. \n" << std::endl;
     }
-    
+
 }
 
 
@@ -539,7 +539,7 @@ void ECLRegressionTest::results_init()
 	std::cout << message << std::endl;
         OPM_THROW(std::runtime_error, message);
     }
-    
+
     if (foundInit1 && foundInit2) {
         EclFile init1(fileName1);
         std::cout << "\nLoading INIT file " << fileName1 << "  .... done" << std::endl;
@@ -614,10 +614,10 @@ void ECLRegressionTest::results_init()
                 }
 
                 auto it = std::find(keywordsBlackList.begin(), keywordsBlackList.end(), keywords1[i]);
-                
+
                 if (it != keywordsBlackList.end()){
                     std::cout << "Skipping  " << keywords1[i] << std::endl;
-                } else {    
+                } else {
                     std::cout << "Comparing " << keywords1[i] << " ... ";
 
                     if (arrayType1[i] == INTE) {
@@ -658,7 +658,7 @@ void ECLRegressionTest::results_init()
     } else {
         std::cout << "\n!Warning, init files not found, hence not compared. \n" << std::endl;
     }
-    
+
 }
 
 
@@ -673,7 +673,7 @@ void ECLRegressionTest::results_rst()
 	std::cout << message << std::endl;
         OPM_THROW(std::runtime_error, message);
     }
-    
+
     if (foundRst1 && foundRst2) {
         ERst rst1(fileName1);
         std::cout << "\nLoading restart file " << fileName1 << "  .... done" << std::endl;
@@ -703,7 +703,7 @@ void ECLRegressionTest::results_rst()
 
             seqnums2.clear();
             seqnums2.push_back(spesificSequence);
-            
+
         } else if (onlyLastSequence) {
 
             if (seqnums1.back() != seqnums2.back()) {
@@ -754,7 +754,7 @@ void ECLRegressionTest::results_rst()
 
             std::vector<std::string> keywords2;
             std::vector<eclArrType> arrayType2;
-            
+
             for (const auto& array : arrays2) {
                 keywords2.push_back(std::get<0>(array));
                 arrayType2.push_back(std::get<1>(array));
@@ -801,10 +801,10 @@ void ECLRegressionTest::results_rst()
                     }
 
                     auto it = std::find(keywordsBlackList.begin(), keywordsBlackList.end(), keywords1[i]);
-                
+
                     if (it != keywordsBlackList.end()){
                         std::cout << "Skipping  " << keywords1[i] << std::endl;
-                    } else {    
+                    } else {
 
                         std::cout << "Comparing " << keywords1[i] << " ... ";
 
@@ -868,12 +868,14 @@ void ECLRegressionTest::results_smry()
 	std::cout << message << std::endl;
         OPM_THROW(std::runtime_error, message);
     }
-    
+
     if (foundSmspec1 && foundSmspec2) {
         ESmry smry1(fileName1, loadBaseRunData);
+        smry1.LoadData();
         std::cout << "\nLoading summary file " << fileName1 << "  .... done" << std::endl;
 
         ESmry smry2(fileName2, loadBaseRunData);
+        smry2.LoadData();
         std::cout << "\nLoading summary file " << fileName2 << "  .... done" << std::endl;
 
         deviations.clear();
@@ -881,11 +883,11 @@ void ECLRegressionTest::results_smry()
         std::string reference = "Summary file";
 
         std::cout << "\nComparing summary files " << std::endl;
-        
+
         if (reportStepOnly){
             std::cout << " -- Values at report steps will be compared. Time steps in between reports are ignored " << std::endl;
         }
-        
+
         std::vector<std::string> keywords1 = smry1.keywordList();
         std::vector<std::string> keywords2 = smry2.keywordList();
 
@@ -930,10 +932,10 @@ void ECLRegressionTest::results_smry()
             }
 
             std::vector<std::string> blackListed;
-            
+
             for (std::vector<std::string>::iterator keywit = keywords1.begin(); keywit != keywords1.end(); ++keywit) {
                 auto it = std::find(keywordsBlackList.begin(), keywordsBlackList.end(), *keywit );
-                
+
                 if (it != keywordsBlackList.end()){
                     blackListed.push_back(*keywit);
                     keywit = keywords1.erase(keywit);
@@ -941,14 +943,14 @@ void ECLRegressionTest::results_smry()
                       --keywit;
                 }
              }
-             
+
             std::cout << "\nChecking " << keywords1.size() << "  vectors  ... ";
 
             for (size_t i = 0; i < keywords1.size(); i++) {
 
                 std::vector<float> vect1;
                 std::vector<float> vect2;
-                
+
                 if (reportStepOnly){
                     vect1 = smry1.get_at_rstep( keywords1[i]);
                     vect2 = smry2.get_at_rstep( keywords1[i]);
@@ -956,7 +958,7 @@ void ECLRegressionTest::results_smry()
                     vect1 = smry1.get( keywords1[i]);
                     vect2 = smry2.get( keywords1[i]);
                 }
-                
+
                 if (vect1.size() != vect2.size()) {
                     OPM_THROW(std::runtime_error, "\nKeyword " << keywords1[i] << " summary vector of different length ("
                               << vect1.size() << " != " << vect2.size() <<")");
@@ -966,7 +968,7 @@ void ECLRegressionTest::results_smry()
             }
 
             std::cout << " done." << std::endl;
-            
+
             if (blackListed.size()>0){
                 std::cout << "Number of black listed vectors " << blackListed.size() << " (not compared) " << std::endl;
             }
@@ -987,7 +989,7 @@ void ECLRegressionTest::results_smry()
     } else {
         std::cout << "\n!Warning, summary files not found, hence not compared. \n" << std::endl;
     }
-    
+
 }
 
 
@@ -1078,10 +1080,10 @@ void ECLRegressionTest::results_rft()
                     eclArrType arrayType = std::get<1>(array);
 
                     auto it = std::find(keywordsBlackList.begin(), keywordsBlackList.end(), keyword);
-                
+
                     if (it != keywordsBlackList.end()){
                         std::cout << "Skipping  " << keyword << std::endl;
-                    } else {    
+                    } else {
                         std::cout << "Comparing: " << keyword << " ... ";
 
                         if (arrayType == INTE) {
