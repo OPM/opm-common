@@ -179,6 +179,11 @@ Well::Well(const RestartIO::RstWell& rst_well,
         if (rst_well.resv_target != 0)
             p->addProductionControl( Well::ProducerCMode::RESV );
 
+        if (rst_well.thp_target != 0) {
+            p->THPTarget = rst_well.thp_target;
+            p->addProductionControl( Well::ProducerCMode::THP );
+        }
+
         if (this->status == Well::Status::OPEN) {
             switch (rst_well.active_control) {
             case 1:
@@ -277,7 +282,7 @@ Well::Well(const RestartIO::RstWell& rst_well,
         if (this->isAvailableForGroupControl())
             i->addInjectionControl(Well::InjectorCMode::GRUP);
 
-        if (std::abs(rst_well.thp_target) < 1.0e+20f) {
+        if (rst_well.thp_target != 0) {
             i->THPTarget = rst_well.thp_target;
             i->addInjectionControl(Well::InjectorCMode::THP);
         }
