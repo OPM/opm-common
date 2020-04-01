@@ -211,9 +211,7 @@ void EclipseIO::writeTimeStep(const SummaryState& st,
         this->impl->summary.write();
     }
 
-    auto length { this->impl->schedule.posixEndTime() - this->impl->schedule.posixStartTime() } ;
-    auto timeStep { this->impl->schedule.stepLength(report_step) } ;
-    bool final_step { secs_elapsed >= length - timeStep } ;
+    bool final_step { report_step == static_cast<int>(this->impl->schedule.size()) - 1 };
 
     if (final_step && this->impl->summaryConfig.createRunSummary()) {
         Opm::filesystem::path outputDir { this->impl->outputDir } ;

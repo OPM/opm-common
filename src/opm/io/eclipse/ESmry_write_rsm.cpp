@@ -41,12 +41,12 @@ namespace {
     constexpr std::size_t total_column { column_width + column_space } ;
     constexpr std::size_t total_width  { total_column * column_count } ;
 
-    const std::string version_line { } ;
+    const std::string block_separator_line { } ;
     // the fact that the dashed header line has 127 rather than 130 dashes has no provenance
     const std::string divider_line { std::string(total_width - 3, '-') } ;
 
     const std::string block_header_line(const std::string& run_name, const std::string& comment) {
-        return "SUMMARY OF RUN " + run_name + " OPM FLOW VERSION 1910 " + comment;
+        return "SUMMARY OF RUN " + run_name + " OPM FLOW " + comment;
     }
 
     void write_line(std::ostream& os, const std::string& line, char prefix = ' ') {
@@ -61,11 +61,12 @@ namespace {
         static const std::regex integer_regex { "\\.0*$" };
 
         auto element_string = std::to_string(element);
-        element_string = std::regex_replace(element_string, integer_regex, "");
 
         if (element_string.size() > 8) {
             element_string = element_string.substr(0, 8);
         }
+
+        element_string = std::regex_replace(element_string, integer_regex, "");
 
         os << std::setw(8) << std::right << element_string << std::setw(5) << "";
     }
@@ -110,25 +111,20 @@ namespace {
 namespace Opm::EclIO {
 
 void ESmry::write_block(std::ostream& os, const std::vector<SummaryNode>& vectors) const {
-    write_line(os, version_line, '1');
+    write_line(os, block_separator_line, '1');
     write_line(os, divider_line);
-    write_line(os, block_header_line(inputFileName.stem(), "ANYTHING CAN GO HERE: USER, MACHINE ETC."));
+    write_line(os, block_header_line(inputFileName.stem(), "VERSION 1910 ANYTHING CAN GO HERE: USER, MACHINE ETC."));
     write_line(os, divider_line);
 
     std::vector<std::pair<std::vector<float>, int>> data;
 
     bool has_scale_factors { false } ;
     for (const auto& vector : vectors) {
-        int scale_factor { 0 } ;
         const auto& vector_data { get(vector) } ;
 
         auto max = *std::max_element(vector_data.begin(), vector_data.end());
-
-        if (max >= 10'000'000'000) {
-            scale_factor = 6;
-            has_scale_factors = true;
-        } else if (max >= 10'000'000) {
-            scale_factor = 3;
+        int scale_factor { std::max(0, 3 * static_cast<int>(std::floor(( std::log10(max) - 4 ) / 3 ))) } ;
+        if (scale_factor) {
             has_scale_factors = true;
         }
 
