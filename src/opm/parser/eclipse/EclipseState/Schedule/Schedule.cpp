@@ -145,7 +145,8 @@ std::pair<std::time_t, std::size_t> restart_info(const RestartIO::RstState * rst
         m_actions(this->m_timeMap, std::make_shared<Action::Actions>()),
         rft_config(this->m_timeMap),
         m_nupcol(this->m_timeMap, ParserKeywords::NUPCOL::NUM_ITER::defaultValue),
-        restart_config(m_timeMap, deck, parseContext, errors)
+        restart_config(m_timeMap, deck, parseContext, errors),
+        rpt_config(this->m_timeMap, std::make_shared<RPTConfig>())
     {
         addGroup( "FIELD", 0, deck.getActiveUnitSystem());
         if (rst)
@@ -2826,6 +2827,11 @@ void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t 
         return *ptr;
     }
 
+    const RPTConfig& Schedule::report_config(size_t timeStep) const {
+        const auto& ptr = this->rpt_config.get(timeStep);
+        return *ptr;
+    }
+
 
     size_t Schedule::size() const {
         return this->m_timeMap.size();
@@ -2930,6 +2936,7 @@ void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t 
                compareDynState(this->gconsump, data.gconsump) &&
                this->global_whistctl_mode == data.global_whistctl_mode &&
                compareDynState(this->m_actions, data.m_actions) &&
+               compareDynState(this->rpt_config, data.rpt_config) &&
                rft_config  == data.rft_config &&
                this->m_nupcol == data.m_nupcol &&
                this->restart_config == data.restart_config &&

@@ -127,8 +127,8 @@ RPTSCHED
         auto report_config = sched.report_config(0);
         BOOST_CHECK_EQUAL(report_config.size(), 0);
 
-        BOOST_CHECK(!report_config.has("FIPFOAM"));
-        BOOST_CHECK_THROW( report_config.get("FIPFOAM"), std::out_of_range);
+        BOOST_CHECK(!report_config.contains("FIPFOAM"));
+        BOOST_CHECK_THROW( report_config.at("FIPFOAM"), std::out_of_range);
     }
 
     // Configuration at step 1
@@ -144,10 +144,10 @@ RPTSCHED
                 BOOST_CHECK_EQUAL(p.second, 3);
         }
 
-        BOOST_CHECK(!report_config.has("FIPFOAM"));
-        BOOST_CHECK(report_config.has("FIP"));
-        BOOST_CHECK_EQUAL(report_config.get("FIP"), 3);
-        BOOST_CHECK_EQUAL(report_config.get("FIPSOL"), 1);
+        BOOST_CHECK(!report_config.contains("FIPFOAM"));
+        BOOST_CHECK(report_config.contains("FIP"));
+        BOOST_CHECK_EQUAL(report_config.at("FIP"), 3);
+        BOOST_CHECK_EQUAL(report_config.at("FIPSOL"), 1);
     }
 
     // Configuration at step 2 - the special 'NOTHING' has cleared everything
@@ -155,7 +155,7 @@ RPTSCHED
         auto report_config = sched.report_config(2);
         BOOST_CHECK_EQUAL(report_config.size(), 0);
 
-        BOOST_CHECK(!report_config.has("FIPFOAM"));
-        BOOST_CHECK_THROW( report_config.get("FIPFOAM"), std::out_of_range);
+        BOOST_CHECK(!report_config.contains("FIPFOAM"));
+        BOOST_CHECK_THROW( report_config.at("FIPFOAM"), std::out_of_range);
     }
 }

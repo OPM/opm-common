@@ -38,6 +38,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/MessageLimits.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/RFTConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/RPTConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/VFPInjTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/VFPProdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
@@ -221,6 +222,8 @@ namespace Opm
         const Action::Actions& actions(std::size_t timeStep) const;
         void evalAction(const SummaryState& summary_state, size_t timeStep);
 
+        const RPTConfig& report_config(std::size_t timeStep) const;
+
         GTNode groupTree(std::size_t report_step) const;
         GTNode groupTree(const std::string& root_node, std::size_t report_step) const;
         size_t numGroups() const;
@@ -355,6 +358,8 @@ namespace Opm
                      size_t timeStep,
                      Connection::Order wellConnectionOrder,
                      const UnitSystem& unit_system);
+
+        DynamicState<std::shared_ptr<RPTConfig>> rpt_config;
 
         GTNode groupTree(const std::string& root_node, std::size_t report_step, const GTNode * parent) const;
         void updateGroup(std::shared_ptr<Group> group, size_t reportStep);
