@@ -42,6 +42,7 @@
 #include <opm/output/eclipse/WriteInit.hpp>
 #include <opm/output/eclipse/WriteRFT.hpp>
 
+#include <opm/io/eclipse/ESmry.hpp>
 #include <opm/io/eclipse/OutputStream.hpp>
 
 #include <algorithm>
@@ -105,6 +106,7 @@ class EclipseIO::Impl {
         const Schedule& schedule;
         std::string outputDir;
         std::string baseName;
+        SummaryConfig summaryConfig;
         out::Summary summary;
         bool output_enabled;
 };
@@ -118,7 +120,8 @@ EclipseIO::Impl::Impl( const EclipseState& eclipseState,
     , schedule( schedule_ )
     , outputDir( eclipseState.getIOConfig().getOutputDir() )
     , baseName( uppercase( eclipseState.getIOConfig().getBaseName() ) )
-    , summary( eclipseState, summary_config, grid , schedule )
+    , summaryConfig( summary_config )
+    , summary( eclipseState, summaryConfig, grid , schedule )
     , output_enabled( eclipseState.getIOConfig().getOutputEnabled() )
 {}
 
@@ -206,6 +209,14 @@ void EclipseIO::writeTimeStep(const SummaryState& st,
         this->impl->summary.add_timestep( st,
                                           report_step);
         this->impl->summary.write();
+    }
+
+    bool final_step { report_step == static_cast<int>(this->impl->schedule.size()) - 1 };
+
+    if (final_step && this->impl->summaryConfig.createRunSummary()) {
+        Opm::filesystem::path outputDir { this->impl->outputDir } ;
+        Opm::filesystem::path outputFile { outputDir / this->impl->baseName } ;
+        EclIO::ESmry(outputFile).write_rsm_file();
     }
 
     /*
