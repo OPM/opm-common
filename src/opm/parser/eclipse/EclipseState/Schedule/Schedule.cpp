@@ -18,10 +18,11 @@
  */
 
 #include <fnmatch.h>
-#include <string>
-#include <vector>
-#include <stdexcept>
 #include <iostream>
+#include <stdexcept>
+#include <string>
+#include <unordered_set>
+#include <vector>
 
 #include <opm/common/OpmLog/LogUtil.hpp>
 #include <opm/common/utility/numeric/cmp.hpp>
@@ -484,6 +485,13 @@ void Schedule::iterateScheduleSection(const std::string& input_path, const Parse
         const auto& unit_system = section.unitSystem();
         std::vector<std::pair< const DeckKeyword* , size_t> > rftProperties;
         size_t keywordIdx = 0;
+        /*
+          The keywords in the skiprest_whitelist set are loaded from the
+          SCHEDULE section even though the SKIPREST keyword is in action. The
+          full list includes some additional keywords which we do not support at
+          all.
+        */
+        std::unordered_set<std::string> skiprest_whitelist = {"VFPPROD", "VFPINJ", "RPTSCHED", "RPTRST", "TUNING", "MESSAGES"};
 
         size_t currentStep;
         if (this->m_timeMap.skiprest())
@@ -525,7 +533,7 @@ void Schedule::iterateScheduleSection(const std::string& input_path, const Parse
             }
 
             else {
-                if (currentStep >= this->m_timeMap.restart_offset())
+                if (currentStep >= this->m_timeMap.restart_offset() || skiprest_whitelist.count(keyword.name()))
                     this->handleKeyword(input_path, currentStep, section, keywordIdx, keyword, parseContext, errors, grid, fp, unit_system, rftProperties);
                 else
                     OpmLog::info("Skipping keyword: " + keyword.name() + " while loading SCHEDULE section");
