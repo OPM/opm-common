@@ -98,6 +98,18 @@ BOOST_AUTO_TEST_CASE(RUN) {
                 double seconds_elapsed = time[time_index] * 86400;
                 BOOST_CHECK_CLOSE(seconds_elapsed, press[time_index], 1e-3);
             }
+
+            const auto& dates = smry.dates();
+            const auto& day   = smry.get("DAY");
+            const auto& month = smry.get("MONTH");
+            const auto& year  = smry.get("YEAR");
+
+            for (auto nstep = dates.size(), time_index=0*nstep; time_index < nstep; time_index++) {
+                auto ts = TimeStampUTC( std::chrono::system_clock::to_time_t( dates[time_index]) );
+                BOOST_CHECK_EQUAL( ts.day(), day[time_index]);
+                BOOST_CHECK_EQUAL( ts.month(), month[time_index]);
+                BOOST_CHECK_EQUAL( ts.year(), year[time_index]);
+            }
         }
 
         {

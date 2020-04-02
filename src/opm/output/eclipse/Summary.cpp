@@ -237,6 +237,14 @@ namespace {
         return ret;
     }
 
+
+Opm::TimeStampUTC make_sim_time(const Opm::Schedule& sched, const Opm::SummaryState& st, double sim_step) {
+    auto elapsed = st.get_elapsed() + sim_step;
+    return Opm::TimeStampUTC( sched.getStartTime() )  + std::chrono::duration<double>(elapsed);
+}
+
+
+
 /*
  * This class takes simulator state and parser-provided information and
  * orchestrates ert to write simulation results as requested by the SUMMARY
@@ -1724,6 +1732,69 @@ namespace Evaluator {
         std::string saveKey_;
     };
 
+    class Day : public Base
+    {
+    public:
+        explicit Day(std::string saveKey)
+            : saveKey_(std::move(saveKey))
+        {}
+
+        void update(const std::size_t       /* sim_step */,
+                    const double               stepSize,
+                    const InputData&           input,
+                    const SimulatorResults& /* simRes */,
+                    Opm::SummaryState&         st) const override
+        {
+            auto sim_time = make_sim_time(input.sched, st, stepSize);
+            st.update(this->saveKey_, sim_time.day());
+        }
+
+    private:
+        std::string saveKey_;
+    };
+
+    class Month : public Base
+    {
+    public:
+        explicit Month(std::string saveKey)
+            : saveKey_(std::move(saveKey))
+        {}
+
+        void update(const std::size_t       /* sim_step */,
+                    const double               stepSize,
+                    const InputData&           input,
+                    const SimulatorResults& /* simRes */,
+                    Opm::SummaryState&         st) const override
+        {
+            auto sim_time = make_sim_time(input.sched, st, stepSize);
+            st.update(this->saveKey_, sim_time.month());
+        }
+
+    private:
+        std::string saveKey_;
+    };
+
+    class Year : public Base
+    {
+    public:
+        explicit Year(std::string saveKey)
+            : saveKey_(std::move(saveKey))
+        {}
+
+        void update(const std::size_t       /* sim_step */,
+                    const double               stepSize,
+                    const InputData&           input,
+                    const SimulatorResults& /* simRes */,
+                    Opm::SummaryState&         st) const override
+        {
+            auto sim_time = make_sim_time(input.sched, st, stepSize);
+            st.update(this->saveKey_, sim_time.year());
+        }
+
+    private:
+        std::string saveKey_;
+    };
+
     class Years : public Base
     {
     public:
@@ -2226,7 +2297,7 @@ private:
     std::unique_ptr<Opm::EclIO::OutputStream::SummarySpecification> smspec_{};
     std::unique_ptr<Opm::EclIO::EclOutput> stream_{};
 
-    void configureTimeVectors(const EclipseState& es);
+    void configureTimeVectors(const EclipseState& es, const SummaryConfig& sumcfg);
 
     void configureSummaryInput(const EclipseState&  es,
                                const SummaryConfig& sumcfg,
@@ -2258,7 +2329,7 @@ SummaryImplementation(const EclipseState&  es,
     , fmt_           { es.cfg().io().getFMTOUT() }
     , unif_          { es.cfg().io().getUNIFOUT() }
 {
-    this->configureTimeVectors(es);
+    this->configureTimeVectors(es, sumcfg);
     this->configureSummaryInput(es, sumcfg, grid, sched);
     this->configureRequiredRestartParameters(sumcfg, sched);
 }
@@ -2351,7 +2422,7 @@ void Opm::out::Summary::SummaryImplementation::write(const MiniStep& ms)
 
 void
 Opm::out::Summary::SummaryImplementation::
-configureTimeVectors(const EclipseState& es)
+configureTimeVectors(const EclipseState& es, const SummaryConfig& sumcfg)
 {
     const auto dfltwgname = std::string(":+:+:+:+");
     const auto dfltnum    = 0;
@@ -2369,11 +2440,38 @@ configureTimeVectors(const EclipseState& es)
         const auto& kw = std::string("TIME");
         makeKey(kw);
 
-        const auto* utime = es.getUnits().name(UnitSystem::measure::time);
+        const std::string& unit_string = es.getUnits().name(UnitSystem::measure::time);
         auto eval = std::make_unique<Evaluator::Time>(this->valueKeys_.back());
 
         this->outputParameters_
-            .makeParameter(kw, dfltwgname, dfltnum, utime, std::move(eval));
+            .makeParameter(kw, dfltwgname, dfltnum, unit_string, std::move(eval));
+    }
+
+    if (sumcfg.hasKeyword("DAY")) {
+        const auto& kw = std::string("DAY");
+        makeKey(kw);
+
+        auto eval = std::make_unique<Evaluator::Day>(this->valueKeys_.back());
+        this->outputParameters_
+            .makeParameter(kw, dfltwgname, dfltnum, "", std::move(eval));
+    }
+
+    if (sumcfg.hasKeyword("MONTH")) {
+        const auto& kw = std::string("MONTH");
+        makeKey(kw);
+
+        auto eval = std::make_unique<Evaluator::Month>(this->valueKeys_.back());
+        this->outputParameters_
+            .makeParameter(kw, dfltwgname, dfltnum, "", std::move(eval));
+    }
+
+    if (sumcfg.hasKeyword("YEAR")) {
+        const auto& kw = std::string("YEAR");
+        makeKey(kw);
+
+        auto eval = std::make_unique<Evaluator::Year>(this->valueKeys_.back());
+        this->outputParameters_
+            .makeParameter(kw, dfltwgname, dfltnum, "", std::move(eval));
     }
 
 #if NOT_YET
