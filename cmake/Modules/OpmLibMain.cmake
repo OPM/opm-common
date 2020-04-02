@@ -15,45 +15,6 @@
 #	tests_hook      Do special processing before tests are compiled
 #	files_hook      Do special processing before final targets are added
 
-# for CMake >= 3.0, we need to change a few policies:
-#
-#   - CMP0026 to allow access to the LOCATION target property
-#   - CMP0048 to indicate that we want to deal with the *VERSION*
-#     variables ourselves
-#   - CMP0064 to indicate that we want TEST if conditions to be evaluated
-if (POLICY CMP0026)
-	cmake_policy(SET CMP0026 OLD)
-endif()
-
-if (POLICY CMP0048)
-	cmake_policy(SET CMP0048 OLD)
-endif()
-
-if(POLICY CMP0064)
-  cmake_policy(SET CMP0064 NEW)
-endif()
-
-# set the behavior of the policy 0054 to NEW. (i.e. do not implicitly
-# expand variables in if statements)
-if (POLICY CMP0054)
-  cmake_policy(SET CMP0054 NEW)
-endif()
-
-# include special
-if (CMAKE_VERSION VERSION_LESS "2.8.3")
-	message (STATUS "Enabling compatibility modules for CMake 2.8.3")
-	list (APPEND CMAKE_MODULE_PATH "${OPM_MACROS_ROOT}/cmake/Modules/compat-2.8.3")
-endif (CMAKE_VERSION VERSION_LESS "2.8.3")
-
-if (CMAKE_VERSION VERSION_LESS "2.8.5")
-	message (STATUS "Enabling compatibility modules for CMake 2.8.5")
-	list (APPEND CMAKE_MODULE_PATH "${OPM_MACROS_ROOT}/cmake/Modules/compat-2.8.5")
-endif (CMAKE_VERSION VERSION_LESS "2.8.5")
-
-if (CMAKE_VERSION VERSION_LESS "2.8.7")
-	message (STATUS "Enabling compatibility modules for CMake 2.8.7")
-	list (APPEND CMAKE_MODULE_PATH "${OPM_MACROS_ROOT}/cmake/Modules/compat-2.8.7")
-endif (CMAKE_VERSION VERSION_LESS "2.8.7")
 
 # don't write default flags into the cache, preserve that for user set values
 include (AddOptions)
