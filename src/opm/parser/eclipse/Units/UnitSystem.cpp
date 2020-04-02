@@ -153,7 +153,7 @@ namespace {
         Metric::Pressure / Opm::unit::square(Metric::GeomVolume / Metric::Time),
     };
 
-    static constexpr const char* metric_names[] = {
+    static constexpr const char* metric_names[static_cast<int>(UnitSystem::measure::_count)] = {
         "",
         "M",
         "DAYS",
@@ -189,6 +189,11 @@ namespace {
         "KJ", /* energy */
         "BARS/(RM3/DAY)2", /* ICD strength parameter */
     };
+
+    static_assert(
+        metric_names[static_cast<int>(UnitSystem::measure::_count) - 1] != nullptr,
+        "Name missing from ::metric_names"
+    );
 
     // =================================================================
     // FIELD Unit Conventions
@@ -304,7 +309,7 @@ namespace {
          Field::Pressure / Opm::unit::square(Field::GeomVolume / Field::Time),
     };
 
-    static constexpr const char* field_names[] = {
+    static constexpr const char* field_names[static_cast<int>(UnitSystem::measure::_count)] = {
         "",
         "FT",
         "DAYS",
@@ -340,6 +345,11 @@ namespace {
         "BTU", /* energy */
         "PSI/(RFT3/DAY)2", /* ICD strength parameter */
     };
+
+    static_assert(
+        field_names[static_cast<int>(UnitSystem::measure::_count) - 1] != nullptr,
+        "Name missing from ::field_names"
+    );
 
     // =================================================================
     // LAB Unit Conventions
@@ -455,7 +465,7 @@ namespace {
         Lab::Pressure / Opm::unit::square(Lab::GeomVolume / Lab::Time),
     };
 
-    static constexpr const char* lab_names[] = {
+    static constexpr const char* lab_names[static_cast<int>(UnitSystem::measure::_count)] = {
         "",
         "CM",
         "HRS",
@@ -491,6 +501,11 @@ namespace {
         "J", /* energy */
         "ATM/(RCC/H)2", /* ICD strength parameter */
     };
+
+    static_assert(
+        lab_names[static_cast<int>(UnitSystem::measure::_count) - 1] != nullptr,
+        "Name missing from ::lab_names"
+    );
 
     // =================================================================
     // PVT-M Unit Conventions
@@ -606,7 +621,7 @@ namespace {
         PVT_M::Pressure / Opm::unit::square(PVT_M::GeomVolume / PVT_M::Time),
     };
 
-    static constexpr const char* pvt_m_names[] = {
+    static constexpr const char* pvt_m_names[static_cast<int>(UnitSystem::measure::_count)] = {
         "",
         "M",
         "DAYS",
@@ -642,6 +657,11 @@ namespace {
         "KJ" /* energy */,
         "ATM/(RM3/DAY)2" /* ICD strength parameter */,
     };
+
+    static_assert(
+        pvt_m_names[static_cast<int>(UnitSystem::measure::_count) - 1] != nullptr,
+        "Name missing from ::pvt_m_names"
+    );
 
     // =================================================================
     // INPUT Unit Conventions
@@ -757,7 +777,7 @@ namespace {
         1,
     };
 
-    static constexpr const char* input_names[] = {
+    static constexpr const char* input_names[static_cast<int>(UnitSystem::measure::_count)] = {
         "",
         "M",
         "DAY",
@@ -793,6 +813,11 @@ namespace {
         "KJ", /* energy */
         "BARS/(RM3/DAY)2", /* ICD strength parameter */
     };
+
+    static_assert(
+        input_names[static_cast<int>(UnitSystem::measure::_count) - 1] != nullptr,
+        "Name missing from ::input_names"
+    );
 
 } // namespace Anonymous
 

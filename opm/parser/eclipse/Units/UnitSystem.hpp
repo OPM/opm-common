@@ -74,6 +74,7 @@ namespace Opm {
             gas_productivity_index,
             energy,
             icd_strength,
+            _count // New entries must be added *before* this
         };
 
         explicit UnitSystem(int ecl_id);
