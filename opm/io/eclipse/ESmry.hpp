@@ -72,9 +72,6 @@ private:
     std::unordered_map<std::string, std::string> kwunits;
 
     std::vector<int> seqIndex;
-    std::vector<float> seqTime;
-
-    // start of simulation year, month, day, hr, min, microsec*1000000
     std::vector<int> startdat;
 
     std::vector<std::string> checkForMultipleResultFiles(const Opm::filesystem::path& rootN, bool formatted) const;
@@ -91,6 +88,19 @@ private:
     std::string lookupKey(const SummaryNode&) const;
 
     void write_block(std::ostream &, const std::vector<SummaryNode>&) const;
+
+
+    template <typename T>
+    std::vector<T> rstep_vector(const std::vector<T>& full_vector) const {
+        std::vector<T> rstep_vector;
+        rstep_vector.reserve(seqIndex.size());
+
+        for (const auto& ind : seqIndex){
+            rstep_vector.push_back(full_vector[ind]);
+        }
+
+        return rstep_vector;
+    }
 };
 
 }} // namespace Opm::EclIO

@@ -346,7 +346,6 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
             time = tmpData[0];
 
             if (time == 0.0) {
-                seqTime.push_back(time);
                 seqIndex.push_back(step);
             }
 
@@ -356,12 +355,10 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
                 if (std::get<0>(arraySourceList[i]) == "SEQHDR") {
                     i++;
                     reportStepNumber++;
-                    seqTime.push_back(time);
                     seqIndex.push_back(step);
                 }
             } else {
                 reportStepNumber++;
-                seqTime.push_back(time);
                 seqIndex.push_back(step);
             }
 
@@ -568,16 +565,7 @@ const std::vector<float>& ESmry::get(const std::string& name) const
 
 std::vector<float> ESmry::get_at_rstep(const std::string& name) const
 {
-    const std::vector<float> full_vector= this->get(name);
-
-    std::vector<float> rstep_vector;
-    rstep_vector.reserve(seqIndex.size());
-
-    for (const auto& ind : seqIndex){
-        rstep_vector.push_back(full_vector[ind]);
-    }
-
-    return rstep_vector;
+    return this->rstep_vector( this->get(name) );
 }
 
 int ESmry::timestepIdxAtReportstepStart(const int reportStep) const
