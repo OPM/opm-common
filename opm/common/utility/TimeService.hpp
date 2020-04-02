@@ -87,6 +87,7 @@ namespace Opm {
         }
 
     private:
+
         YMD ymd_{};
         int hour_{0};
         int minutes_{0};
@@ -96,6 +97,7 @@ namespace Opm {
 
     TimeStampUTC operator+(const TimeStampUTC& lhs, std::chrono::duration<double> delta);
     std::time_t asTimeT(const TimeStampUTC& tp);
+    std::time_t asLocalTimeT(const TimeStampUTC& tp);
 
 } // namespace Opm
 
