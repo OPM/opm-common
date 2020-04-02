@@ -43,9 +43,11 @@ public:
 
     const std::vector<float>& get(const std::string& name) const;
     const std::vector<float>& get(const SummaryNode& node) const;
+    std::vector<std::chrono::system_clock::time_point> dates() const;
 
     std::vector<float> get_at_rstep(const std::string& name) const;
     std::vector<float> get_at_rstep(const SummaryNode& node) const;
+    std::vector<std::chrono::system_clock::time_point> dates_at_rstep() const;
 
     std::chrono::system_clock::time_point startdate() const { return startdat; }
 
@@ -87,6 +89,7 @@ private:
 
     std::string unpackNumber(const SummaryNode&) const;
     std::string lookupKey(const SummaryNode&) const;
+
 
     void write_block(std::ostream &, const std::vector<SummaryNode>&) const;
 

@@ -598,6 +598,7 @@ std::vector<float> ESmry::get_at_rstep(const std::string& name) const
     return this->rstep_vector( this->get(name) );
 }
 
+
 int ESmry::timestepIdxAtReportstepStart(const int reportStep) const
 {
     const auto nReport = static_cast<int>(seqIndex.size());
@@ -623,5 +624,25 @@ const std::vector<std::string>& ESmry::keywordList() const {
 const std::vector<SummaryNode>& ESmry::summaryNodeList() const {
     return summaryNodes;
 }
+
+std::vector<std::chrono::system_clock::time_point> ESmry::dates() const {
+    double time_unit = 24 * 3600;
+    std::vector<std::chrono::system_clock::time_point> d;
+
+    using namespace std::chrono;
+    using TP      = time_point<system_clock>;
+    using DoubSec = duration<double, seconds::period>;
+
+    for (const auto& t : this->get("TIME"))
+        d.push_back( this->startdat + duration_cast<TP::duration>(DoubSec(t * time_unit)));
+
+    return d;
+}
+
+std::vector<std::chrono::system_clock::time_point> ESmry::dates_at_rstep() const {
+    const auto& full_vector = this->dates();
+    return this->rstep_vector(full_vector);
+}
+
 
 }} // namespace Opm::ecl
