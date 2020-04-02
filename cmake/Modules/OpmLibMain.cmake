@@ -59,11 +59,6 @@ endif (CMAKE_VERSION VERSION_LESS "2.8.7")
 include (AddOptions)
 no_default_options ()
 
-# C++ project
-project (${${project}_NAME})
-enable_language (C)
-enable_language (CXX)
-
 # Languages and global compiler settings
 if(CMAKE_VERSION VERSION_LESS 3.8)
   message(WARNING "CMake version does not support c++17, guessing -std=c++17")
