@@ -18,6 +18,8 @@
 #   - CMP0048 to indicate that we want to deal with the *VERSION*
 #     variables ourselves
 #   - CMP0064 to indicate that we want TEST if conditions to be evaluated
+#   - CMP0074 to indicate that <PackageName>_ROOT can be used to find package
+#             config files
 macro(OpmSetPolicies)
   if (POLICY CMP0026)
     cmake_policy(SET CMP0026 OLD)
@@ -35,6 +37,12 @@ macro(OpmSetPolicies)
   # expand variables in if statements)
   if (POLICY CMP0054)
     cmake_policy(SET CMP0054 NEW)
+  endif()
+
+  # set the behavior of policy 0074 to new as we always used <PackageName>_ROOT as the
+  # root of the installation
+  if(POLICY CMP0074)
+    cmake_policy(SET CMP0074 NEW)
   endif()
 
   # include special
