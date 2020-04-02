@@ -51,6 +51,22 @@ namespace {
         // have the same broken-down elements as 'tp'.
         return advance(ltime, offset);
     }
+
+
+    std::tm makeTm(const Opm::TimeStampUTC& tp) {
+        auto timePoint = std::tm{};
+
+        timePoint.tm_year = tp.year()  - 1900;
+        timePoint.tm_mon  = tp.month() -    1;
+        timePoint.tm_mday = tp.day();
+        timePoint.tm_hour = tp.hour();
+        timePoint.tm_min  = tp.minutes();
+        timePoint.tm_sec  = tp.seconds();
+
+        return timePoint;
+    }
+
+
 }
 
 Opm::TimeStampUTC::TimeStampUTC(const std::time_t tp)
@@ -121,19 +137,16 @@ Opm::TimeStampUTC& Opm::TimeStampUTC::microseconds(const int us)
     return *this;
 }
 
+
 std::time_t Opm::asTimeT(const TimeStampUTC& tp)
 {
-    auto timePoint = std::tm{};
+    return makeUTCTime(makeTm(tp));
+}
 
-    timePoint.tm_year = tp.year()  - 1900;
-    timePoint.tm_mon  = tp.month() -    1;
-    timePoint.tm_mday = tp.day();
-
-    timePoint.tm_hour = tp.hour();
-    timePoint.tm_min  = tp.minutes();
-    timePoint.tm_sec  = tp.seconds();
-
-    return makeUTCTime(timePoint);
+std::time_t Opm::asLocalTimeT(const TimeStampUTC& tp)
+{
+    auto tm = makeTm(tp);
+    return std::mktime(&tm);
 }
 
 Opm::TimeStampUTC Opm::operator+(const Opm::TimeStampUTC& lhs, std::chrono::duration<double> delta) {

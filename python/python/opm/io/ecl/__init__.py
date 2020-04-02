@@ -86,22 +86,6 @@ def contains_erst(self, arg):
                           or report step number")
 
 @property
-def esmry_start_date(self):
-
-    startd = self.__get_startdat()
-
-    if len(startd) < 6:
-        for n in range(len(startd), 6):
-            startd.append(0)
-
-
-    sec = startd[5] // 1000000
-    microseconds = startd[5] % 1000000
-
-    return datetime.datetime( startd[2], startd[1], startd[0], startd[3],
-                              startd[4], sec, microseconds )
-
-@property
 def esmry_end_date(self):
 
     start = self.start_date
@@ -226,7 +210,6 @@ setattr(ERst, "__contains__", contains_erst)
 setattr(ERst, "arrays", erst_get_list_of_arrays)
 setattr(ERst, "__getitem__", getitem_erst)
 
-setattr(ESmry, "start_date", esmry_start_date)
 setattr(ESmry, "end_date", esmry_end_date)
 setattr(ESmry, "__getitem__", getitem_esmry)
 

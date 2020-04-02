@@ -19,6 +19,7 @@
 #ifndef OPM_IO_ESMRY_HPP
 #define OPM_IO_ESMRY_HPP
 
+#include <chrono>
 #include <ostream>
 #include <string>
 #include <unordered_map>
@@ -42,11 +43,13 @@ public:
 
     const std::vector<float>& get(const std::string& name) const;
     const std::vector<float>& get(const SummaryNode& node) const;
+    std::vector<std::chrono::system_clock::time_point> dates() const;
 
     std::vector<float> get_at_rstep(const std::string& name) const;
     std::vector<float> get_at_rstep(const SummaryNode& node) const;
+    std::vector<std::chrono::system_clock::time_point> dates_at_rstep() const;
 
-    const std::vector<int>& get_startdat() const { return startdat; }
+    std::chrono::system_clock::time_point startdate() const { return startdat; }
 
     const std::vector<std::string>& keywordList() const;
     const std::vector<SummaryNode>& summaryNodeList() const;
@@ -72,7 +75,7 @@ private:
     std::unordered_map<std::string, std::string> kwunits;
 
     std::vector<int> seqIndex;
-    std::vector<int> startdat;
+    std::chrono::system_clock::time_point startdat;
 
     std::vector<std::string> checkForMultipleResultFiles(const Opm::filesystem::path& rootN, bool formatted) const;
 
@@ -86,6 +89,7 @@ private:
 
     std::string unpackNumber(const SummaryNode&) const;
     std::string lookupKey(const SummaryNode&) const;
+
 
     void write_block(std::ostream &, const std::vector<SummaryNode>&) const;
 

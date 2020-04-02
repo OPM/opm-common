@@ -27,6 +27,7 @@
 #include <opm/io/eclipse/EclFile.hpp>
 
 #include <algorithm>
+#include <chrono>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -155,6 +156,14 @@ BOOST_AUTO_TEST_CASE(TestESmry_1) {
 
     std::vector<float> smryVect = smry1.get("TIME");
     BOOST_CHECK_EQUAL(smryVect==time_ref, true);
+    const auto dates = smry1.dates();
+    for (std::size_t index = 0; index < dates.size(); index++) {
+        auto diff = dates[index]- smry1.startdate();
+        auto diff_seconds = std::chrono::duration_cast<std::chrono::seconds>(diff).count();
+        BOOST_CHECK_CLOSE(diff_seconds, 24*3600 * smryVect[index], 1e-6);
+    }
+
+
 
     smryVect = smry1.get("WGPR:PROD");
 
