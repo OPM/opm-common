@@ -19,6 +19,7 @@
 
 #include <opm/output/eclipse/WriteRPT.hpp>
 
+#include <algorithm>
 #include <functional>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
@@ -75,11 +76,43 @@ namespace {
 
             os << ':' << ' ' << header_line << ' ';
         }
+
+        constexpr std::size_t total_width() const {
+            return internal_width + 2;
+        }
     };
 
     template<typename T, std::size_t header_height>
     struct table: std::vector<column<T, header_height>> {
         using std::vector<column<T, header_height>>::vector;
+
+        std::size_t divider_width() const {
+            std::size_t r { 1 + this->size() } ;
+
+            for (const auto& column : *this) {
+                r += column.total_width();
+            }
+
+            return r;
+        }
+
+        void print_divider(std::ostream& os) const {
+            os << std::string(divider_width(), '-') << '\n';
+        }
+
+        void print_header(std::ostream& os) const {
+            print_divider(os);
+
+            for (size_t i { 0 }; i < header_height; ++i) {
+                for (const auto& column : *this) {
+                    column.print_header(os, i);
+                }
+
+                os << ':' << '\n';
+            }
+
+            print_divider(os);
+        }
     };
 
 }
@@ -163,13 +196,7 @@ namespace {
 
         os << "WELL SPECIFICATION DATA\n" << "-----------------------\n" << std::endl;
 
-        for (size_t i { 0 }; i < well_spec_header_height; ++i) {
-            for (const auto& col : well_specification_columns) {
-                col.print_header(os, i);
-            }
-
-            os << ':' << '\n';
-        }
+        well_specification_columns.print_header(os);
 
         for (const auto& well : schedule.getWells(report_step)) {
             for (const auto& col : well_specification_columns) {
@@ -178,6 +205,8 @@ namespace {
 
             os << ':' << '\n';
         }
+
+        well_specification_columns.print_divider(os);
 
         os << std::endl;
     }
