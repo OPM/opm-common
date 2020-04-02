@@ -56,6 +56,7 @@ namespace {
                                                       {"NOV", 11},
                                                       {"DEC", 12},
                                                       {"DES", 12}};
+
 }
 
     void TimeMap::init_start(std::time_t start_time) {
