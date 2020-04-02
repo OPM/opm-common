@@ -346,7 +346,6 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
             time = tmpData[0];
 
             if (time == 0.0) {
-                seqTime.push_back(time);
                 seqIndex.push_back(step);
             }
 
@@ -356,12 +355,10 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
                 if (std::get<0>(arraySourceList[i]) == "SEQHDR") {
                     i++;
                     reportStepNumber++;
-                    seqTime.push_back(time);
                     seqIndex.push_back(step);
                 }
             } else {
                 reportStepNumber++;
-                seqTime.push_back(time);
                 seqIndex.push_back(step);
             }
 

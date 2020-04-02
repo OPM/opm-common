@@ -72,9 +72,6 @@ private:
     std::unordered_map<std::string, std::string> kwunits;
 
     std::vector<int> seqIndex;
-    std::vector<float> seqTime;
-
-    // start of simulation year, month, day, hr, min, microsec*1000000
     std::vector<int> startdat;
 
     std::vector<std::string> checkForMultipleResultFiles(const Opm::filesystem::path& rootN, bool formatted) const;
