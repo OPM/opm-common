@@ -325,7 +325,7 @@ namespace {
         "CPRB/DAY/PSI",
         "MDFT",
         "LB",
-        "LB/DAY"
+        "LB/DAY",
         "MSCF/STB",
         "STB/MSCF",
         "STB/STB",
