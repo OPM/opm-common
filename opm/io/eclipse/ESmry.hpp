@@ -88,6 +88,19 @@ private:
     std::string lookupKey(const SummaryNode&) const;
 
     void write_block(std::ostream &, const std::vector<SummaryNode>&) const;
+
+
+    template <typename T>
+    std::vector<T> rstep_vector(const std::vector<T>& full_vector) const {
+        std::vector<T> rstep_vector;
+        rstep_vector.reserve(seqIndex.size());
+
+        for (const auto& ind : seqIndex){
+            rstep_vector.push_back(full_vector[ind]);
+        }
+
+        return rstep_vector;
+    }
 };
 
 }} // namespace Opm::EclIO

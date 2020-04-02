@@ -565,16 +565,7 @@ const std::vector<float>& ESmry::get(const std::string& name) const
 
 std::vector<float> ESmry::get_at_rstep(const std::string& name) const
 {
-    const std::vector<float> full_vector= this->get(name);
-
-    std::vector<float> rstep_vector;
-    rstep_vector.reserve(seqIndex.size());
-
-    for (const auto& ind : seqIndex){
-        rstep_vector.push_back(full_vector[ind]);
-    }
-
-    return rstep_vector;
+    return this->rstep_vector( this->get(name) );
 }
 
 int ESmry::timestepIdxAtReportstepStart(const int reportStep) const
