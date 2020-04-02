@@ -275,6 +275,8 @@ if(ENABLE_ECL_OUTPUT)
           src/opm/output/eclipse/RestartValue.cpp
           src/opm/output/eclipse/WriteInit.cpp
           src/opm/output/eclipse/WriteRFT.cpp
+          src/opm/output/eclipse/WriteRPT.cpp
+          src/opm/output/eclipse/WriteRPT_WELSPECS.cpp
           src/opm/output/data/Solution.cpp
       )
 endif()
@@ -777,6 +779,7 @@ if(ENABLE_ECL_OUTPUT)
         opm/output/eclipse/WindowedArray.hpp
         opm/output/eclipse/WriteInit.hpp
         opm/output/eclipse/WriteRFT.hpp
+        opm/output/eclipse/WriteRPT.hpp
         opm/output/eclipse/WriteRestartHelpers.hpp
         opm/output/OutputWriter.hpp
         )
