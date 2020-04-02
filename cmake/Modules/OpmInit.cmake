@@ -22,11 +22,13 @@
 #             config files
 macro(OpmSetPolicies)
   if (POLICY CMP0026)
+    # Needed as we query LOCATION in OpmCompile.cmake and OpmSatellites.cmake
     cmake_policy(SET CMP0026 OLD)
   endif()
 
   if (POLICY CMP0048)
-    cmake_policy(SET CMP0048 OLD)
+    # We do not set version. Hence NEW should work and this can be removed later
+    cmake_policy(SET CMP0048 NEW)
   endif()
 
   if(POLICY CMP0064)
