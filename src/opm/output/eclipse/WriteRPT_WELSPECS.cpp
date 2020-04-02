@@ -19,8 +19,171 @@
 
 #include <opm/output/eclipse/WriteRPT.hpp>
 
+#include <functional>
+
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 
-void Opm::RptIO::workers::write_WELSPECS(std::ostream& os, unsigned value, const Opm::Schedule& schedule, std::size_t report_step) {
-    os << "Writing WELSPECS report." << std::endl;
+namespace {
+
+    void left_align(std::string& string, std::size_t internal_width) {
+        if (string.size() < internal_width) {
+            string.append(std::string(internal_width - string.size(), ' '));
+        }
+    }
+
+    void right_align(std::string& string, std::size_t internal_width) {
+        if (string.size() < internal_width) {
+            string = std::string(internal_width - string.size(), ' ') + string;
+        }
+    }
+
+    void centre_align(std::string& string, std::size_t internal_width) {
+        if (string.size() < internal_width) {
+            std::size_t extra_space { internal_width - string.size() } ;
+            std::size_t shift_one { extra_space % 2 } ;
+
+            if (shift_one)
+                extra_space--;
+
+            std::size_t left { shift_one + extra_space / 2 }, right { extra_space / 2 } ;
+
+            string = std::string(left, ' ') + string + std::string(right, ' ');
+        }
+    }
+
+    template<typename T, std::size_t header_height>
+    struct column {
+        using fetch_function = std::function<std::string(const T&)>;
+        using format_function = std::function<void(std::string&, std::size_t)>;
+
+        std::size_t internal_width;
+        std::array<std::string, header_height> header;
+
+        fetch_function fetch;
+        format_function format = centre_align;
+
+        void print(std::ostream& os, const T& data) const {
+            std::string string_data { fetch(data) } ;
+            format(string_data, internal_width);
+
+            os << ':' << ' ' << string_data << ' ';
+        }
+
+        void print_header(std::ostream& os, std::size_t row) const {
+            std::string header_line { header[row] } ;
+            centre_align(header_line, internal_width);
+
+            os << ':' << ' ' << header_line << ' ';
+        }
+    };
+
+    template<typename T, std::size_t header_height>
+    struct table: std::vector<column<T, header_height>> {
+        using std::vector<column<T, header_height>>::vector;
+    };
+
+}
+
+namespace {
+
+    std::string wellhead_location(const Opm::Well& well) {
+        auto i { std::to_string(well.getHeadI()) }, j { std::to_string(well.getHeadJ()) } ;
+
+        right_align(i, 3);
+        right_align(j, 3);
+
+        return i + ", " + j;
+    }
+
+    std::string reference_depth(const Opm::Well& well) {
+        return std::to_string(well.getRefDepth()).substr(0,6);
+    }
+
+    std::string preferred_phase(const Opm::Well& well) {
+        std::ostringstream ss;
+
+        ss << well.getPreferredPhase();
+
+        return ss.str();
+    }
+
+    std::string drainage_radius(const Opm::Well&) {
+        return "P.EQIV.R"; // From `well.getDrainageRadius()` somehow
+    }
+
+    std::string gas_infl_equn(const Opm::Well&) {
+        return "STD";
+    }
+
+    std::string shut_status(const Opm::Well& well) {
+        return Opm::Well::Status2String(well.getStatus());
+    }
+
+    std::string cross_flow(const Opm::Well& well) {
+        return well.getAllowCrossFlow()
+            ? "YES"
+            : "NO";
+    }
+
+    std::string pvt_tab(const Opm::Well&) {
+        return "1";
+    }
+
+    std::string dens_calc(const Opm::Well&) {
+        return "SEG";
+    }
+
+    std::string fip_reg(const Opm::Well&) {
+        return "0";
+    }
+
+    std::string d_factor(const Opm::Well&) {
+        return "0";
+    }
+
+    constexpr std::size_t well_spec_header_height { 3 } ;
+
+    static const table<Opm::Well, well_spec_header_height> well_specification_columns {
+        {  8, { "WELL"       , "NAME"       ,               }, &Opm::Well::name     , left_align  },
+        {  8, { "GROUP"      , "NAME"       ,               }, &Opm::Well::groupName, left_align  },
+        {  8, { "WELLHEAD"   , "LOCATION"   , "( I, J )"    }, wellhead_location    , left_align  },
+        {  8, { "B.H.REF"    , "DEPTH"      , "METRES"      }, reference_depth      , right_align },
+        {  5, { "PREF-"      , "ERRED"      , "PHASE"       }, preferred_phase      ,             },
+        {  8, { "DRAINAGE"   , "RADIUS"     , "METRES"      }, drainage_radius      ,             },
+        {  4, { "GAS"        , "INFL"       , "EQUN"        }, gas_infl_equn        ,             },
+        {  7, { "SHUT-IN"    , "INSTRCT"    ,               }, shut_status          ,             },
+        {  5, { "CROSS"      , "FLOW"       , "ABLTY"       }, cross_flow           ,             },
+        {  3, { "PVT"        , "TAB"        ,               }, pvt_tab              ,             },
+        {  4, { "WELL"       , "DENS"       , "CALC"        }, dens_calc            ,             },
+        {  3, { "FIP"        , "REG"        ,               }, fip_reg              ,             },
+        { 11, { "WELL"       , "D-FACTOR"   , "DAY/SM3"     }, d_factor             , right_align },
+    } ;
+
+    void subreport_well_specification_data(std::ostream& os, const Opm::Schedule& schedule, std::size_t report_step) {
+
+        os << "WELL SPECIFICATION DATA\n" << "-----------------------\n" << std::endl;
+
+        for (size_t i { 0 }; i < well_spec_header_height; ++i) {
+            for (const auto& col : well_specification_columns) {
+                col.print_header(os, i);
+            }
+
+            os << ':' << '\n';
+        }
+
+        for (const auto& well : schedule.getWells(report_step)) {
+            for (const auto& col : well_specification_columns) {
+                col.print(os, well);
+            }
+
+            os << ':' << '\n';
+        }
+
+        os << std::endl;
+    }
+
+}
+
+void Opm::RptIO::workers::write_WELSPECS(std::ostream& os, unsigned, const Opm::Schedule& schedule, std::size_t report_step) {
+    subreport_well_specification_data(os, schedule, report_step);
 }
