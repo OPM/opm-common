@@ -118,6 +118,9 @@ class DynamicState {
             return result;
         }
 
+        bool is_new_data(size_t index) const {
+            return index == 0 || (at(index) != at(index - 1));
+        }
 
         /**
            If the current value has been changed the method will
