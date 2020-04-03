@@ -49,8 +49,9 @@ namespace {
             std::size_t extra_space { width - string.size() } ;
             std::size_t shift_one { extra_space % 2 } ;
 
-            if (shift_one)
+            if (shift_one) {
                 extra_space--;
+            }
 
             std::size_t left { shift_one + extra_space / 2 }, right { extra_space / 2 } ;
 
@@ -74,14 +75,14 @@ namespace {
             format(string_data, internal_width);
             centre_align(string_data, total_width());
 
-            os << field_separator << string_data;
+            os << string_data;
         }
 
         void print_header(std::ostream& os, std::size_t row) const {
             std::string header_line { header[row] } ;
             centre_align(header_line, total_width());
 
-            os << field_separator << header_line;
+            os << header_line;
         }
 
         constexpr std::size_t total_width() const {
@@ -112,6 +113,8 @@ namespace {
 
             for (size_t i { 0 }; i < header_height; ++i) {
                 for (const auto& column : *this) {
+                    os << field_separator;
+
                     column.print_header(os, i);
                 }
 
@@ -124,6 +127,8 @@ namespace {
         void print_data(std::ostream& os, const std::vector<T>& lines) const {
             for (const auto& line : lines) {
                 for (const auto& column : *this) {
+                    os << field_separator;
+
                     column.print(os, line);
                 }
 
@@ -194,12 +199,12 @@ namespace {
         return r;
     }
 
-    const std::string header_days_string     { "WELSPECS AT       0.00 DAYS" } ;
+    const std::string header_days_string { "WELSPECS AT       0.00 DAYS" } ;
     std::string header_days(const Opm::Schedule& schedule, std::size_t report_step) {
         return wrap_string_for_header(header_days_string);
     }
 
-    const std::string report_line_string     { "REPORT   0     31 DEC 2007"  } ;
+    const std::string report_line_string { "REPORT   0     31 DEC 2007"  } ;
     std::string report_line(const Opm::Schedule& schedule, std::size_t report_step) {
         return wrap_string_for_header(report_line_string);
     }
@@ -278,9 +283,7 @@ namespace {
         }
 
         std::string cross_flow() const {
-            return well.getAllowCrossFlow()
-                ? "YES"
-                : "NO";
+            return well.getAllowCrossFlow() ? "YES" : "NO";
         }
     };
 
@@ -297,7 +300,7 @@ namespace {
         {  3, { "PVT"        , "TAB"        ,               }, &WellWrapper::unimplemented    ,             },
         {  4, { "WELL"       , "DENS"       , "CALC"        }, &WellWrapper::unimplemented    ,             },
         {  3, { "FIP"        , "REG"        ,               }, &WellWrapper::unimplemented    ,             },
-        { 11, { "WELL"       , "D-FACTOR"   , "DAY/SM3"     }, &WellWrapper::unimplemented    , right_align },
+        { 11, { "WELL"       , "D-FACTOR"   , "DAY/SM3"     }, &WellWrapper::unimplemented    ,             },
     }};
 
     void subreport_well_specification_data(std::ostream& os, const std::vector<Opm::Well>& data) {
@@ -367,7 +370,7 @@ namespace {
         }
 
         const std::string &unimplemented() const {
-            static const std::string s {};
+            static const std::string s { };
             return s;
         }
 
