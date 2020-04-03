@@ -143,12 +143,13 @@ namespace {
         std::string title;
         std::string decor;
         table<OutputType, header_height> column_definition;
-        transform_function transform = &subreport::noop_transform;
+        transform_function transform;
 
-        subreport(const std::string& _title, const table<OutputType, header_height>& _coldef)
-            : title             { _title           }
-            , decor             { underline(title) }
-            , column_definition { _coldef          }
+        subreport(const std::string& _title, const table<OutputType, header_height>& _coldef, transform_function _tf = &subreport::noop_transform)
+            : title              { _title           }
+            , decor              { underline(title) }
+            , column_definition  { _coldef          }
+            , transform          { _tf              }
         {
             centre_align(title, column_definition.total_width());
             centre_align(decor, column_definition.total_width());
@@ -233,9 +234,7 @@ namespace {
         return "0";
     }
 
-    constexpr std::size_t well_spec_header_height { 3 } ;
-
-    static const subreport<Opm::Well, well_spec_header_height> well_specification { "WELL SPECIFICATION DATA", {
+    const subreport<Opm::Well, 3> well_specification { "WELL SPECIFICATION DATA", {
         {  8, { "WELL"       , "NAME"       ,               }, &Opm::Well::name     , left_align  },
         {  8, { "GROUP"      , "NAME"       ,               }, &Opm::Well::groupName, left_align  },
         {  8, { "WELLHEAD"   , "LOCATION"   , "( I, J )"    }, wellhead_location    , left_align  },
@@ -259,6 +258,77 @@ namespace {
 
 }
 
+namespace {
+
+    struct WellConnection {
+        const Opm::Well& well;
+        const Opm::Connection& connection;
+
+        const std::string& well_name() const {
+            return well.name();
+        }
+
+        std::string grid_block() const {
+            const std::array<int,3> ijk { connection.getI(), connection.getJ(), connection.getK() } ;
+
+            auto compose_coordinates = [](std::string& out, int in) -> std::string {
+                constexpr auto delimiter { ',' } ;
+                std::string coordinate_part { std::to_string(in) } ;
+                right_align(coordinate_part, 3);
+
+                return out.empty()
+                    ? coordinate_part
+                    : out + delimiter + coordinate_part;
+            };
+
+            return std::accumulate(std::begin(ijk), std::end(ijk), std::string {}, compose_coordinates);
+        }
+
+        const std::string &noop() const {
+            static const std::string s {};
+            return s;
+        }
+
+        static std::vector<std::reference_wrapper<const WellConnection>> transform(const Opm::Well& well, std::vector<WellConnection>& out) {
+            const auto &connections { well.getConnections() } ;
+
+            for (const auto& connection : connections) {
+                out.push_back({ well, connection });
+            }
+
+            return { out.begin(), out.end() } ;
+        }
+    };
+
+    const table<WellConnection, 3> well_connection_columns {
+        { 7, { "WELL", "NAME", }, &WellConnection::well_name, left_align },
+        { 12, {"GRID", "BLOCK", }, &WellConnection::grid_block, },
+        { 3, {"CMPL", "NO#", }, &WellConnection::noop, },
+        { 7, {"CENTRE", "DEPTH", "METRES" }, &WellConnection::noop, },
+        { 3, {"OPEN", "SHUT", }, &WellConnection::noop, },
+        { 3, {"SAT", "TAB", }, &WellConnection::noop, },
+        { 8, {"CONNECTION", "FACTOR*", "CPM3/D/B" }, &WellConnection::noop, },
+        { 6, {"INT", "DIAM", "METRES"}, &WellConnection::noop, },
+        { 7, {"K  H", "VALUE", "MD.METRE"}, &WellConnection::noop, },
+        { 6, {"SKIN", "FACTOR", }, &WellConnection::noop, },
+        { 10, {"CONNECTION", "D-FACTOR", "DAY/SM3"}, &WellConnection::noop, },
+        { 23, {"SATURATION SCALING DATA", "SWMIN SWMAX SGMIN SGMAX", }, &WellConnection::noop, },
+    };
+
+    void subreport_well_connection_data(std::ostream& os, const std::vector<Opm::Well>& data) {
+        subreport<WellConnection, 3, Opm::Well> well_connection {
+            "WELL CONNECTION DATA",
+            well_connection_columns,
+            std::bind(&WellConnection::transform, std::placeholders::_1, std::vector<WellConnection> { })
+        };
+
+        well_connection.print(os, data);
+
+        os << std::endl;
+    }
+}
+
 void Opm::RptIO::workers::write_WELSPECS(std::ostream& os, unsigned, const Opm::Schedule& schedule, std::size_t report_step) {
     subreport_well_specification_data(os, schedule.getWells(report_step));
+    subreport_well_connection_data(os, schedule.getWells(report_step));
 }
