@@ -179,6 +179,18 @@ namespace {
 
 namespace {
 
+    void write_report_header(std::ostream& os, const Opm::Schedule& schedule, std::size_t report_step) {
+        os <<
+            "                             **************************************************************************                            " << record_separator <<
+            " WELSPECS AT       0.00 DAYS *2010a Volve Simulation Model                                            * ECLIPSE  VERSION 2015.1    " << record_separator <<
+            " REPORT   0     31 DEC 2007  *                                                                        * RUN AT 12:41 ON 12 SEP 2016" << record_separator <<
+            "                             **************************************************************************                            " << record_separator << section_separator;
+    }
+
+}
+
+namespace {
+
     std::string wellhead_location(const Opm::Well& well) {
         auto i { std::to_string(well.getHeadI()) }, j { std::to_string(well.getHeadJ()) } ;
 
@@ -343,6 +355,8 @@ namespace {
 }
 
 void Opm::RptIO::workers::write_WELSPECS(std::ostream& os, unsigned, const Opm::Schedule& schedule, std::size_t report_step) {
+    write_report_header(os, schedule, report_step);
+
     subreport_well_specification_data(os, schedule.getWells(report_step));
     subreport_well_connection_data(os, schedule.getWells(report_step));
 }
