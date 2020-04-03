@@ -301,18 +301,18 @@ namespace {
     };
 
     const table<WellConnection, 3> well_connection_columns {
-        { 7, { "WELL", "NAME", }, &WellConnection::well_name, left_align },
-        { 12, {"GRID", "BLOCK", }, &WellConnection::grid_block, },
-        { 3, {"CMPL", "NO#", }, &WellConnection::noop, },
-        { 7, {"CENTRE", "DEPTH", "METRES" }, &WellConnection::noop, },
-        { 3, {"OPEN", "SHUT", }, &WellConnection::noop, },
-        { 3, {"SAT", "TAB", }, &WellConnection::noop, },
-        { 8, {"CONNECTION", "FACTOR*", "CPM3/D/B" }, &WellConnection::noop, },
-        { 6, {"INT", "DIAM", "METRES"}, &WellConnection::noop, },
-        { 7, {"K  H", "VALUE", "MD.METRE"}, &WellConnection::noop, },
-        { 6, {"SKIN", "FACTOR", }, &WellConnection::noop, },
-        { 10, {"CONNECTION", "D-FACTOR", "DAY/SM3"}, &WellConnection::noop, },
-        { 23, {"SATURATION SCALING DATA", "SWMIN SWMAX SGMIN SGMAX", }, &WellConnection::noop, },
+        {  7, {"WELL"                   ,"NAME"                   ,                         }, &WellConnection::well_name       , left_align  },
+        { 12, {"GRID"                   ,"BLOCK"                  ,                         }, &WellConnection::grid_block      ,             },
+        {  3, {"CMPL"                   ,"NO#"                    ,                         }, &WellConnection::noop            ,             },
+        {  7, {"CENTRE"                 ,"DEPTH"                  ,"METRES"                 }, &WellConnection::noop            , right_align },
+        {  3, {"OPEN"                   ,"SHUT"                   ,                         }, &WellConnection::noop            ,             },
+        {  3, {"SAT"                    ,"TAB"                    ,                         }, &WellConnection::noop            ,             },
+        {  8, {"CONNECTION"             ,"FACTOR*"                ,"CPM3/D/B"               }, &WellConnection::noop            ,             },
+        {  6, {"INT"                    ,"DIAM"                   ,"METRES"                 }, &WellConnection::noop            ,             },
+        {  7, {"K  H"                   ,"VALUE"                  ,"MD.METRE"               }, &WellConnection::noop            ,             },
+        {  6, {"SKIN"                   ,"FACTOR"                 ,                         }, &WellConnection::noop            ,             },
+        { 10, {"CONNECTION"             ,"D-FACTOR"               ,"DAY/SM3"                }, &WellConnection::noop            ,             },
+        { 23, {"SATURATION SCALING DATA","SWMIN SWMAX SGMIN SGMAX",                         }, &WellConnection::noop            ,             },
     };
 
     void subreport_well_connection_data(std::ostream& os, const std::vector<Opm::Well>& data) {
