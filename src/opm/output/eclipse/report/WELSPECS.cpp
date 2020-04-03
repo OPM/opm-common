@@ -26,15 +26,21 @@
 
 namespace {
 
+    constexpr char field_separator   {  ':' } ;
+    constexpr char field_padding     {  ' ' } ;
+    constexpr char record_separator  { '\n' } ;
+    constexpr char section_separator { '\n' } ;
+    constexpr char divider_character {  '-' } ;
+
     void left_align(std::string& string, std::size_t internal_width) {
         if (string.size() < internal_width) {
-            string.append(std::string(internal_width - string.size(), ' '));
+            string.append(std::string(internal_width - string.size(), field_padding));
         }
     }
 
     void right_align(std::string& string, std::size_t internal_width) {
         if (string.size() < internal_width) {
-            string = std::string(internal_width - string.size(), ' ') + string;
+            string = std::string(internal_width - string.size(), field_padding) + string;
         }
     }
 
@@ -48,7 +54,7 @@ namespace {
 
             std::size_t left { shift_one + extra_space / 2 }, right { extra_space / 2 } ;
 
-            string = std::string(left, ' ') + string + std::string(right, ' ');
+            string = std::string(left, field_padding) + string + std::string(right, field_padding);
         }
     }
 
@@ -67,14 +73,14 @@ namespace {
             std::string string_data { fetch(data) } ;
             format(string_data, internal_width);
 
-            os << ':' << ' ' << string_data << ' ';
+            os << field_separator << field_padding << string_data << field_padding;
         }
 
         void print_header(std::ostream& os, std::size_t row) const {
             std::string header_line { header[row] } ;
             centre_align(header_line, internal_width);
 
-            os << ':' << ' ' << header_line << ' ';
+            os << field_separator << field_padding << header_line << field_padding;
         }
 
         constexpr std::size_t total_width() const {
@@ -86,7 +92,7 @@ namespace {
     struct table: std::vector<column<T, header_height>> {
         using std::vector<column<T, header_height>>::vector;
 
-        std::size_t divider_width() const {
+        std::size_t total_width() const {
             std::size_t r { 1 + this->size() } ;
 
             for (const auto& column : *this) {
@@ -96,8 +102,8 @@ namespace {
             return r;
         }
 
-        void print_divider(std::ostream& os) const {
-            os << std::string(divider_width(), '-') << '\n';
+        void print_divider(std::ostream& os, char padding = divider_character) const {
+            os << std::string(total_width(), padding) << record_separator;
         }
 
         void print_header(std::ostream& os) const {
@@ -108,10 +114,57 @@ namespace {
                     column.print_header(os, i);
                 }
 
-                os << ':' << '\n';
+                os << field_separator << record_separator;
             }
 
             print_divider(os);
+        }
+
+        void print_data(std::ostream& os, const std::vector<T>& lines) const {
+            for (const auto& line : lines) {
+                for (const auto& column : *this) {
+                    column.print(os, line);
+                }
+
+                os << field_separator << record_separator;
+            }
+        }
+
+        void print(std::ostream& os, const std::vector<T>& lines) const {
+            print_header(os);
+            print_data(os, lines);
+            print_divider(os);
+        }
+    };
+
+    template<typename T, std::size_t header_height>
+    struct subreport {
+        std::string title;
+        std::string decor;
+        table<T, header_height> column_definition;
+
+        subreport(const std::string& _title, const table<T, header_height>& _coldef)
+            : title             { _title           }
+            , decor             { underline(title) }
+            , column_definition { _coldef          }
+        {
+            centre_align(title, column_definition.total_width());
+            centre_align(decor, column_definition.total_width());
+        }
+
+        std::string underline(const std::string& string) const {
+            return std::string(string.size(), divider_character);
+        }
+
+        void print(std::ostream& os, const std::vector<T>& data) const {
+            os << title << record_separator;
+            os << decor << record_separator;
+
+            os << section_separator;
+
+            column_definition.print(os, data);
+
+            os << section_separator << std::flush;
         }
     };
 
@@ -176,7 +229,7 @@ namespace {
 
     constexpr std::size_t well_spec_header_height { 3 } ;
 
-    static const table<Opm::Well, well_spec_header_height> well_specification_columns {
+    static const subreport<Opm::Well, well_spec_header_height> well_specification { "WELL SPECIFICATION DATA", {
         {  8, { "WELL"       , "NAME"       ,               }, &Opm::Well::name     , left_align  },
         {  8, { "GROUP"      , "NAME"       ,               }, &Opm::Well::groupName, left_align  },
         {  8, { "WELLHEAD"   , "LOCATION"   , "( I, J )"    }, wellhead_location    , left_align  },
@@ -190,23 +243,10 @@ namespace {
         {  4, { "WELL"       , "DENS"       , "CALC"        }, dens_calc            ,             },
         {  3, { "FIP"        , "REG"        ,               }, fip_reg              ,             },
         { 11, { "WELL"       , "D-FACTOR"   , "DAY/SM3"     }, d_factor             , right_align },
-    } ;
+    }};
 
-    void subreport_well_specification_data(std::ostream& os, const Opm::Schedule& schedule, std::size_t report_step) {
-
-        os << "WELL SPECIFICATION DATA\n" << "-----------------------\n" << std::endl;
-
-        well_specification_columns.print_header(os);
-
-        for (const auto& well : schedule.getWells(report_step)) {
-            for (const auto& col : well_specification_columns) {
-                col.print(os, well);
-            }
-
-            os << ':' << '\n';
-        }
-
-        well_specification_columns.print_divider(os);
+    void subreport_well_specification_data(std::ostream& os, const std::vector<Opm::Well>& data) {
+        well_specification.print(os, data);
 
         os << std::endl;
     }
@@ -214,5 +254,5 @@ namespace {
 }
 
 void Opm::RptIO::workers::write_WELSPECS(std::ostream& os, unsigned, const Opm::Schedule& schedule, std::size_t report_step) {
-    subreport_well_specification_data(os, schedule, report_step);
+    subreport_well_specification_data(os, schedule.getWells(report_step));
 }
