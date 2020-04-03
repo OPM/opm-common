@@ -27,9 +27,10 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQActive.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellProductionProperties.hpp>
-#include <fnmatch.h>
 
+#include <fnmatch.h>
 #include <cmath>
+#include <ostream>
 
 namespace Opm {
 
@@ -163,6 +164,7 @@ Well::Well(const RestartIO::RstWell& rst_well,
         p->GasRate = rst_well.grat_target ;
         p->LiquidRate = rst_well.lrat_target ;
         p->ResVRate = rst_well.resv_target ;
+        p->VFPTableNumber = rst_well.vfp_table;
 
         if (rst_well.orat_target != 0)
             p->addProductionControl( Well::ProducerCMode::ORAT );
@@ -225,7 +227,7 @@ Well::Well(const RestartIO::RstWell& rst_well,
         this->updateProduction(std::move(p));
     } else {
         auto i = std::make_shared<WellInjectionProperties>(this->unit_system, wname);
-        // Reverse of function ctrlMode() in AggregateWellData.cpp
+        i->VFPTableNumber = rst_well.vfp_table;
 
         if (this->status == Well::Status::OPEN) {
             switch (rst_well.active_control) {
@@ -1134,6 +1136,10 @@ double Well::temperature() const {
     throw std::runtime_error("Can not ask for temperature in a producer");
 }
 
+std::ostream& operator<<(std::ostream& os, const Well::Status& st) {
+    os << Well::Status2String(st);
+    return os;
+}
 
 std::string Well::Status2String(Well::Status enumValue) {
     switch( enumValue ) {
@@ -1180,7 +1186,7 @@ const std::string Well::InjectorCMode2String( InjectorCMode enumValue ) {
     case InjectorCMode::GRUP:
         return "GRUP";
     default:
-        throw std::invalid_argument("unhandled enum value");
+        throw std::invalid_argument("Unhandled enum value: " + std::to_string(static_cast<int>(enumValue)) + " in InjectorCMode2String");
     }
 }
 
@@ -1198,6 +1204,11 @@ Well::InjectorCMode Well::InjectorCModeFromString(const std::string &stringValue
         return InjectorCMode::GRUP;
     else
         throw std::invalid_argument("Unknown enum state string: " + stringValue);
+}
+
+std::ostream& operator<<(std::ostream& os, const Well::InjectorCMode& cm) {
+    os << Well::InjectorCMode2String(cm);
+    return os;
 }
 
 Well::WELTARGCMode Well::WELTARGCModeFromString(const std::string& string_value) {
@@ -1238,6 +1249,14 @@ Well::WELTARGCMode Well::WELTARGCModeFromString(const std::string& string_value)
 }
 
 
+std::ostream& operator<<(std::ostream& os, const Well::ProducerCMode& cm) {
+    if (cm == Well::ProducerCMode::CMODE_UNDEFINED)
+        os << "UNDEFINED";
+    else
+        os << Well::ProducerCMode2String(cm);
+    return os;
+}
+
 const std::string Well::ProducerCMode2String( ProducerCMode enumValue ) {
     switch( enumValue ) {
     case ProducerCMode::ORAT:
@@ -1259,7 +1278,7 @@ const std::string Well::ProducerCMode2String( ProducerCMode enumValue ) {
     case ProducerCMode::GRUP:
         return "GRUP";
     default:
-        throw std::invalid_argument("unhandled enum value");
+        throw std::invalid_argument("Unhandled enum value: " + std::to_string(static_cast<int>(enumValue)) + " in ProducerCMode2String");
     }
 }
 
