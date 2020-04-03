@@ -300,6 +300,10 @@ namespace {
             return std::to_string(connection.satTableId());
         }
 
+        std::string conn_factor() const {
+            return std::to_string(connection.CF()).substr(0, 10);
+        }
+
         const std::string &noop() const {
             static const std::string s {};
             return s;
@@ -323,7 +327,7 @@ namespace {
         {  7, {"CENTRE"                 ,"DEPTH"                  ,"METRES"                 }, &WellConnection::centre_depth    , right_align },
         {  3, {"OPEN"                   ,"SHUT"                   ,                         }, &WellConnection::open_shut       ,             },
         {  3, {"SAT"                    ,"TAB"                    ,                         }, &WellConnection::sat_tab         ,             },
-        {  8, {"CONNECTION"             ,"FACTOR*"                ,"CPM3/D/B"               }, &WellConnection::noop            ,             },
+        {  8, {"CONNECTION"             ,"FACTOR*"                ,"CPM3/D/B"               }, &WellConnection::conn_factor     , right_align },
         {  6, {"INT"                    ,"DIAM"                   ,"METRES"                 }, &WellConnection::noop            ,             },
         {  7, {"K  H"                   ,"VALUE"                  ,"MD.METRE"               }, &WellConnection::noop            ,             },
         {  6, {"SKIN"                   ,"FACTOR"                 ,                         }, &WellConnection::noop            ,             },
