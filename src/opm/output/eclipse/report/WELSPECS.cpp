@@ -179,12 +179,56 @@ namespace {
 
 namespace {
 
+    inline std::string box_line(const std::pair<std::string,std::string>& textp, std::size_t line) {
+        if (line == 1 || line == 2) {
+            std::string text { line == 1 ? textp.first : textp.second } ;
+            left_align(text, 72);
+
+            return "*" + text + "*";
+        } else {
+            return std::string(74, '*');
+        }
+    }
+
+    std::string wrap_string_for_header(const std::string& string) {
+        std::string r { string } ;
+        left_align(r, 27);
+        centre_align(r, 29);
+
+        return r;
+    }
+
+    const std::string header_days_string     { "WELSPECS AT       0.00 DAYS" } ;
+    std::string header_days(const Opm::Schedule& schedule, std::size_t report_step) {
+        return wrap_string_for_header(header_days_string);
+    }
+
+    const std::string report_line_string     { "REPORT   0     31 DEC 2007"  } ;
+    std::string report_line(const Opm::Schedule& schedule, std::size_t report_step) {
+        return wrap_string_for_header(report_line_string);
+    }
+
+    const std::string header_version_string { "FLOW" } ;
+    std::string version_string() {
+        return wrap_string_for_header(header_version_string);
+    }
+
+    const std::string header_run_time_string { "RUN AT 12:41 ON 12 SEP 2016" } ;
+    std::string run_time() {
+        return wrap_string_for_header(header_run_time_string);
+    }
+
+
     void write_report_header(std::ostream& os, const Opm::Schedule& schedule, std::size_t report_step) {
+        const static std::string filler { std::string(29, ' ') } ;
+
+        const std::pair<std::string,std::string> box_text { "", "" } ;
         os <<
-            "                             **************************************************************************                            " << record_separator <<
-            " WELSPECS AT       0.00 DAYS *2010a Volve Simulation Model                                            * ECLIPSE  VERSION 2015.1    " << record_separator <<
-            " REPORT   0     31 DEC 2007  *                                                                        * RUN AT 12:41 ON 12 SEP 2016" << record_separator <<
-            "                             **************************************************************************                            " << record_separator << section_separator;
+            filler                             << box_line(box_text, 0) << filler           << record_separator <<
+            header_days(schedule, report_step) << box_line(box_text, 1) << version_string() << record_separator <<
+            report_line(schedule, report_step) << box_line(box_text, 2) << run_time()       << record_separator <<
+            filler                             << box_line(box_text, 3) << filler           << record_separator <<
+            section_separator;
     }
 
 }
