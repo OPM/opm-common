@@ -287,7 +287,7 @@ namespace {
         }
 
         std::string int_diam() const {
-            return std::to_string(std::min(connection.r0(), connection.rw()) * 2).substr(0, 8);
+            return std::to_string(connection.rw() * 2).substr(0, 8);
         }
 
         std::string kh_value() const {
