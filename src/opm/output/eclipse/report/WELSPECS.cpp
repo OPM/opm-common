@@ -121,7 +121,7 @@ namespace {
             print_divider(os);
         }
 
-        void print_data(std::ostream& os, const std::vector<std::reference_wrapper<const T>> lines) const {
+        void print_data(std::ostream& os, const std::vector<T>& lines) const {
             for (const auto& line : lines) {
                 for (const auto& column : *this) {
                     column.print(os, line);
@@ -132,20 +132,16 @@ namespace {
         }
     };
 
-    template<typename OutputType, std::size_t header_height, typename InputType = OutputType>
+    template<typename InputType, typename OutputType, std::size_t header_height>
     struct subreport {
-        using transform_function = std::function<const std::vector<std::reference_wrapper<const OutputType>>(const InputType&)>;
-
-        static std::vector<std::reference_wrapper<const OutputType>> noop_transform(const InputType&in) {
-            return { in };
-        }
+        using transform_function = std::function<std::vector<OutputType>(const InputType&)>;
 
         std::string title;
         std::string decor;
         table<OutputType, header_height> column_definition;
         transform_function transform;
 
-        subreport(const std::string& _title, const table<OutputType, header_height>& _coldef, transform_function _tf = &subreport::noop_transform)
+        subreport(const std::string& _title, const table<OutputType, header_height>& _coldef, transform_function _tf = &OutputType::transform)
             : title              { _title           }
             , decor              { underline(title) }
             , column_definition  { _coldef          }
@@ -235,57 +231,73 @@ namespace {
 
 namespace {
 
-    std::string wellhead_location(const Opm::Well& well) {
-        auto i { std::to_string(well.getHeadI()) }, j { std::to_string(well.getHeadJ()) } ;
+    struct WellWrapper {
+        const Opm::Well& well;
 
-        right_align(i, 3);
-        right_align(j, 3);
+        static std::vector<WellWrapper> transform(const Opm::Well& well) {
+            return {{ well }} ;
+        }
 
-        return i + ", " + j;
-    }
+        std::string well_name() const {
+            return well.name();
+        }
 
-    std::string reference_depth(const Opm::Well& well) {
-        return std::to_string(well.getRefDepth()).substr(0,6);
-    }
+        std::string group_name() const {
+            return well.groupName();
+        }
 
-    std::string preferred_phase(const Opm::Well& well) {
-        std::ostringstream ss;
+        std::string wellhead_location() const {
+            auto i { std::to_string(well.getHeadI()) }, j { std::to_string(well.getHeadJ()) } ;
 
-        ss << well.getPreferredPhase();
+            right_align(i, 3);
+            right_align(j, 3);
 
-        return ss.str();
-    }
+            return i + ", " + j;
+        }
 
-    const std::string& well_unimplemented(const Opm::Well&) {
-        const static std::string s { } ;
+        std::string reference_depth() const {
+            return std::to_string(well.getRefDepth()).substr(0,6);
+        }
 
-        return s;
-    }
+        std::string preferred_phase() const {
+            std::ostringstream ss;
 
-    std::string shut_status(const Opm::Well& well) {
-        return Opm::Well::Status2String(well.getStatus());
-    }
+            ss << well.getPreferredPhase();
 
-    std::string cross_flow(const Opm::Well& well) {
-        return well.getAllowCrossFlow()
-            ? "YES"
-            : "NO";
-    }
+            return ss.str();
+        }
 
-    const subreport<Opm::Well, 3> well_specification { "WELL SPECIFICATION DATA", {
-        {  8, { "WELL"       , "NAME"       ,               }, &Opm::Well::name     , left_align  },
-        {  8, { "GROUP"      , "NAME"       ,               }, &Opm::Well::groupName, left_align  },
-        {  8, { "WELLHEAD"   , "LOCATION"   , "( I, J )"    }, wellhead_location    , left_align  },
-        {  8, { "B.H.REF"    , "DEPTH"      , "METRES"      }, reference_depth      , right_align },
-        {  5, { "PREF-"      , "ERRED"      , "PHASE"       }, preferred_phase      ,             },
-        {  8, { "DRAINAGE"   , "RADIUS"     , "METRES"      }, well_unimplemented   ,             },
-        {  4, { "GAS"        , "INFL"       , "EQUN"        }, well_unimplemented   ,             },
-        {  7, { "SHUT-IN"    , "INSTRCT"    ,               }, shut_status          ,             },
-        {  5, { "CROSS"      , "FLOW"       , "ABLTY"       }, cross_flow           ,             },
-        {  3, { "PVT"        , "TAB"        ,               }, well_unimplemented   ,             },
-        {  4, { "WELL"       , "DENS"       , "CALC"        }, well_unimplemented   ,             },
-        {  3, { "FIP"        , "REG"        ,               }, well_unimplemented   ,             },
-        { 11, { "WELL"       , "D-FACTOR"   , "DAY/SM3"     }, well_unimplemented   , right_align },
+        const std::string& unimplemented() const {
+            const static std::string s { } ;
+
+            return s;
+        }
+
+        std::string shut_status() const {
+            return Opm::Well::Status2String(well.getStatus());
+        }
+
+        std::string cross_flow() const {
+            return well.getAllowCrossFlow()
+                ? "YES"
+                : "NO";
+        }
+    };
+
+    const subreport<Opm::Well, WellWrapper, 3> well_specification { "WELL SPECIFICATION DATA", {
+        {  8, { "WELL"       , "NAME"       ,               }, &WellWrapper::well_name        , left_align  },
+        {  8, { "GROUP"      , "NAME"       ,               }, &WellWrapper::group_name       , left_align  },
+        {  8, { "WELLHEAD"   , "LOCATION"   , "( I, J )"    }, &WellWrapper::wellhead_location, left_align  },
+        {  8, { "B.H.REF"    , "DEPTH"      , "METRES"      }, &WellWrapper::reference_depth  , right_align },
+        {  5, { "PREF-"      , "ERRED"      , "PHASE"       }, &WellWrapper::preferred_phase  ,             },
+        {  8, { "DRAINAGE"   , "RADIUS"     , "METRES"      }, &WellWrapper::unimplemented    ,             },
+        {  4, { "GAS"        , "INFL"       , "EQUN"        }, &WellWrapper::unimplemented    ,             },
+        {  7, { "SHUT-IN"    , "INSTRCT"    ,               }, &WellWrapper::shut_status      ,             },
+        {  5, { "CROSS"      , "FLOW"       , "ABLTY"       }, &WellWrapper::cross_flow       ,             },
+        {  3, { "PVT"        , "TAB"        ,               }, &WellWrapper::unimplemented    ,             },
+        {  4, { "WELL"       , "DENS"       , "CALC"        }, &WellWrapper::unimplemented    ,             },
+        {  3, { "FIP"        , "REG"        ,               }, &WellWrapper::unimplemented    ,             },
+        { 11, { "WELL"       , "D-FACTOR"   , "DAY/SM3"     }, &WellWrapper::unimplemented    , right_align },
     }};
 
     void subreport_well_specification_data(std::ostream& os, const std::vector<Opm::Well>& data) {
@@ -359,39 +371,34 @@ namespace {
             return s;
         }
 
-        static std::vector<std::reference_wrapper<const WellConnection>> transform(const Opm::Well& well, std::vector<WellConnection>& out) {
+        static std::vector<WellConnection> transform(const Opm::Well& well) {
             const auto &connections { well.getConnections() } ;
+            std::vector<WellConnection> out;
 
             for (const auto& connection : connections) {
                 out.push_back({ well, connection });
             }
 
-            return { out.begin(), out.end() } ;
+            return out;
         }
     };
 
-    const table<WellConnection, 3> well_connection_columns {
-        {  7, {"WELL"                   ,"NAME"                   ,                         }, &WellConnection::well_name       , left_align  },
-        { 12, {"GRID"                   ,"BLOCK"                  ,                         }, &WellConnection::grid_block      ,             },
-        {  3, {"CMPL"                   ,"NO#"                    ,                         }, &WellConnection::cmpl_no         , right_align },
-        {  7, {"CENTRE"                 ,"DEPTH"                  ,"METRES"                 }, &WellConnection::centre_depth    , right_align },
-        {  3, {"OPEN"                   ,"SHUT"                   ,                         }, &WellConnection::open_shut       ,             },
-        {  3, {"SAT"                    ,"TAB"                    ,                         }, &WellConnection::sat_tab         ,             },
-        {  8, {"CONNECTION"             ,"FACTOR*"                ,"CPM3/D/B"               }, &WellConnection::conn_factor     , right_align },
-        {  6, {"INT"                    ,"DIAM"                   ,"METRES"                 }, &WellConnection::int_diam        , right_align },
-        {  7, {"K  H"                   ,"VALUE"                  ,"MD.METRE"               }, &WellConnection::kh_value        , right_align },
-        {  6, {"SKIN"                   ,"FACTOR"                 ,                         }, &WellConnection::skin_factor     , right_align },
-        { 10, {"CONNECTION"             ,"D-FACTOR"               ,"DAY/SM3"                }, &WellConnection::unimplemented   ,             },
-        { 23, {"SATURATION SCALING DATA","SWMIN SWMAX SGMIN SGMAX",                         }, &WellConnection::unimplemented   ,             },
-    };
+    const subreport<Opm::Well, WellConnection, 3> well_connection { "WELL CONNECTION DATA", {
+       {  7, {"WELL"                   ,"NAME"                   ,                         }, &WellConnection::well_name       , left_align  },
+       { 12, {"GRID"                   ,"BLOCK"                  ,                         }, &WellConnection::grid_block      ,             },
+       {  3, {"CMPL"                   ,"NO#"                    ,                         }, &WellConnection::cmpl_no         , right_align },
+       {  7, {"CENTRE"                 ,"DEPTH"                  ,"METRES"                 }, &WellConnection::centre_depth    , right_align },
+       {  3, {"OPEN"                   ,"SHUT"                   ,                         }, &WellConnection::open_shut       ,             },
+       {  3, {"SAT"                    ,"TAB"                    ,                         }, &WellConnection::sat_tab         ,             },
+       {  8, {"CONNECTION"             ,"FACTOR*"                ,"CPM3/D/B"               }, &WellConnection::conn_factor     , right_align },
+       {  6, {"INT"                    ,"DIAM"                   ,"METRES"                 }, &WellConnection::int_diam        , right_align },
+       {  7, {"K  H"                   ,"VALUE"                  ,"MD.METRE"               }, &WellConnection::kh_value        , right_align },
+       {  6, {"SKIN"                   ,"FACTOR"                 ,                         }, &WellConnection::skin_factor     , right_align },
+       { 10, {"CONNECTION"             ,"D-FACTOR"               ,"DAY/SM3"                }, &WellConnection::unimplemented   ,             },
+       { 23, {"SATURATION SCALING DATA","SWMIN SWMAX SGMIN SGMAX",                         }, &WellConnection::unimplemented   ,             },
+    }};
 
     void subreport_well_connection_data(std::ostream& os, const std::vector<Opm::Well>& data) {
-        subreport<WellConnection, 3, Opm::Well> well_connection {
-            "WELL CONNECTION DATA",
-            well_connection_columns,
-            std::bind(&WellConnection::transform, std::placeholders::_1, std::vector<WellConnection> { })
-        };
-
         well_connection.print(os, data);
 
         os << std::endl;
