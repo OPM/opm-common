@@ -201,22 +201,22 @@ namespace {
 
     const std::string header_days_string { "WELSPECS AT       0.00 DAYS" } ;
     std::string header_days(const Opm::Schedule& schedule, std::size_t report_step) {
-        return wrap_string_for_header(header_days_string);
+        return wrap_string_for_header(header_days_string); // TODO: Calculate properly
     }
 
     const std::string report_line_string { "REPORT   0     31 DEC 2007"  } ;
     std::string report_line(const Opm::Schedule& schedule, std::size_t report_step) {
-        return wrap_string_for_header(report_line_string);
+        return wrap_string_for_header(report_line_string); // TODO: Calculate properly
     }
 
     const std::string header_version_string { "FLOW" } ;
     std::string version_string() {
-        return wrap_string_for_header(header_version_string);
+        return wrap_string_for_header(header_version_string); // TODO: Include in build setup and fetch
     }
 
     const std::string header_run_time_string { "RUN AT 12:41 ON 12 SEP 2016" } ;
     std::string run_time() {
-        return wrap_string_for_header(header_run_time_string);
+        return wrap_string_for_header(header_run_time_string); // TODO: Calculate properly
     }
 
 
