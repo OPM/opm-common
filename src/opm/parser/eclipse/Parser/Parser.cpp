@@ -49,7 +49,7 @@
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
 #include <opm/parser/eclipse/Utility/Stringview.hpp>
-#include <opm/parser/eclipse/Utility/String.hpp>
+#include <opm/common/utility/String.hpp>
 
 #include "raw/RawConsts.hpp"
 #include "raw/RawEnums.hpp"

@@ -18,14 +18,14 @@
 */
 
 #include <opm/parser/eclipse/EclipseState/Grid/PinchMode.hpp>
-#include <opm/parser/eclipse/Utility/String.hpp>
+#include <opm/common/utility/String.hpp>
 
 #include <stdexcept>
 
 namespace Opm {
 
     namespace PinchMode {
-        
+
         const std::string PinchMode2String(const ModeEnum enumValue) {
             std::string stringValue;
             switch (enumValue) {
@@ -56,7 +56,7 @@ namespace Opm {
                 std::string msg = "Unsupported pinchout mode " + s;
                 throw std::invalid_argument(msg);
             }
-            
+
             return mode;
         }
     }

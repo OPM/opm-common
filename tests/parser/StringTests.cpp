@@ -2,7 +2,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <opm/parser/eclipse/Utility/String.hpp>
+#include <opm/common/utility/String.hpp>
 #include <opm/parser/eclipse/Utility/Stringview.hpp>
 
 using namespace Opm;

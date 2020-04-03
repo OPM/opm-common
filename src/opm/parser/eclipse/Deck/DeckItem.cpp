@@ -20,7 +20,7 @@
 #include <opm/parser/eclipse/Deck/DeckOutput.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Units/Dimension.hpp>
-#include <opm/parser/eclipse/Utility/String.hpp>
+#include <opm/common/utility/String.hpp>
 
 #include <algorithm>
 #include <string>

@@ -21,7 +21,7 @@
 #include <iostream>
 #include <stdexcept>
 
-#include <opm/parser/eclipse/Utility/String.hpp>
+#include <opm/common/utility/String.hpp>
 #include <opm/parser/eclipse/Units/Dimension.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
