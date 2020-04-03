@@ -24,6 +24,8 @@
 
 #include <cassert>
 
+#include <string>
+
 namespace Opm {
 namespace {
 
