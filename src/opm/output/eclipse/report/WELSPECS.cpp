@@ -304,6 +304,10 @@ namespace {
             return std::to_string(connection.CF()).substr(0, 10);
         }
 
+        std::string int_diam() const {
+            return std::to_string(std::min(connection.r0(), connection.rw()) * 2).substr(0, 8);
+        }
+
         const std::string &noop() const {
             static const std::string s {};
             return s;
@@ -328,7 +332,7 @@ namespace {
         {  3, {"OPEN"                   ,"SHUT"                   ,                         }, &WellConnection::open_shut       ,             },
         {  3, {"SAT"                    ,"TAB"                    ,                         }, &WellConnection::sat_tab         ,             },
         {  8, {"CONNECTION"             ,"FACTOR*"                ,"CPM3/D/B"               }, &WellConnection::conn_factor     , right_align },
-        {  6, {"INT"                    ,"DIAM"                   ,"METRES"                 }, &WellConnection::noop            ,             },
+        {  6, {"INT"                    ,"DIAM"                   ,"METRES"                 }, &WellConnection::int_diam        ,             },
         {  7, {"K  H"                   ,"VALUE"                  ,"MD.METRE"               }, &WellConnection::noop            ,             },
         {  6, {"SKIN"                   ,"FACTOR"                 ,                         }, &WellConnection::noop            ,             },
         { 10, {"CONNECTION"             ,"D-FACTOR"               ,"DAY/SM3"                }, &WellConnection::noop            ,             },
