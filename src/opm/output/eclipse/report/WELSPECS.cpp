@@ -284,6 +284,22 @@ namespace {
             return std::accumulate(std::begin(ijk), std::end(ijk), std::string {}, compose_coordinates);
         }
 
+        std::string cmpl_no() const {
+            return std::to_string(connection.complnum());
+        }
+
+        std::string centre_depth() const {
+            return std::to_string(connection.depth()).substr(0, 6);
+        }
+
+        std::string open_shut() const {
+            return Opm::Connection::State2String(connection.state());
+        }
+
+        std::string sat_tab() const {
+            return std::to_string(connection.satTableId());
+        }
+
         const std::string &noop() const {
             static const std::string s {};
             return s;
@@ -303,10 +319,10 @@ namespace {
     const table<WellConnection, 3> well_connection_columns {
         {  7, {"WELL"                   ,"NAME"                   ,                         }, &WellConnection::well_name       , left_align  },
         { 12, {"GRID"                   ,"BLOCK"                  ,                         }, &WellConnection::grid_block      ,             },
-        {  3, {"CMPL"                   ,"NO#"                    ,                         }, &WellConnection::noop            ,             },
-        {  7, {"CENTRE"                 ,"DEPTH"                  ,"METRES"                 }, &WellConnection::noop            , right_align },
-        {  3, {"OPEN"                   ,"SHUT"                   ,                         }, &WellConnection::noop            ,             },
-        {  3, {"SAT"                    ,"TAB"                    ,                         }, &WellConnection::noop            ,             },
+        {  3, {"CMPL"                   ,"NO#"                    ,                         }, &WellConnection::cmpl_no         , right_align },
+        {  7, {"CENTRE"                 ,"DEPTH"                  ,"METRES"                 }, &WellConnection::centre_depth    , right_align },
+        {  3, {"OPEN"                   ,"SHUT"                   ,                         }, &WellConnection::open_shut       ,             },
+        {  3, {"SAT"                    ,"TAB"                    ,                         }, &WellConnection::sat_tab         ,             },
         {  8, {"CONNECTION"             ,"FACTOR*"                ,"CPM3/D/B"               }, &WellConnection::noop            ,             },
         {  6, {"INT"                    ,"DIAM"                   ,"METRES"                 }, &WellConnection::noop            ,             },
         {  7, {"K  H"                   ,"VALUE"                  ,"MD.METRE"               }, &WellConnection::noop            ,             },
