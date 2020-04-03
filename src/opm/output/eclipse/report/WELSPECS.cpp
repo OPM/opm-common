@@ -200,12 +200,10 @@ namespace {
         return ss.str();
     }
 
-    std::string drainage_radius(const Opm::Well&) {
-        return "P.EQIV.R"; // From `well.getDrainageRadius()` somehow
-    }
+    const std::string& well_noop(const Opm::Well&) {
+        const static std::string s { } ;
 
-    std::string gas_infl_equn(const Opm::Well&) {
-        return "STD";
+        return s;
     }
 
     std::string shut_status(const Opm::Well& well) {
@@ -218,36 +216,20 @@ namespace {
             : "NO";
     }
 
-    std::string pvt_tab(const Opm::Well&) {
-        return "1";
-    }
-
-    std::string dens_calc(const Opm::Well&) {
-        return "SEG";
-    }
-
-    std::string fip_reg(const Opm::Well&) {
-        return "0";
-    }
-
-    std::string d_factor(const Opm::Well&) {
-        return "0";
-    }
-
     const subreport<Opm::Well, 3> well_specification { "WELL SPECIFICATION DATA", {
         {  8, { "WELL"       , "NAME"       ,               }, &Opm::Well::name     , left_align  },
         {  8, { "GROUP"      , "NAME"       ,               }, &Opm::Well::groupName, left_align  },
         {  8, { "WELLHEAD"   , "LOCATION"   , "( I, J )"    }, wellhead_location    , left_align  },
         {  8, { "B.H.REF"    , "DEPTH"      , "METRES"      }, reference_depth      , right_align },
         {  5, { "PREF-"      , "ERRED"      , "PHASE"       }, preferred_phase      ,             },
-        {  8, { "DRAINAGE"   , "RADIUS"     , "METRES"      }, drainage_radius      ,             },
-        {  4, { "GAS"        , "INFL"       , "EQUN"        }, gas_infl_equn        ,             },
+        {  8, { "DRAINAGE"   , "RADIUS"     , "METRES"      }, well_noop            ,             },
+        {  4, { "GAS"        , "INFL"       , "EQUN"        }, well_noop            ,             },
         {  7, { "SHUT-IN"    , "INSTRCT"    ,               }, shut_status          ,             },
         {  5, { "CROSS"      , "FLOW"       , "ABLTY"       }, cross_flow           ,             },
-        {  3, { "PVT"        , "TAB"        ,               }, pvt_tab              ,             },
-        {  4, { "WELL"       , "DENS"       , "CALC"        }, dens_calc            ,             },
-        {  3, { "FIP"        , "REG"        ,               }, fip_reg              ,             },
-        { 11, { "WELL"       , "D-FACTOR"   , "DAY/SM3"     }, d_factor             , right_align },
+        {  3, { "PVT"        , "TAB"        ,               }, well_noop            ,             },
+        {  4, { "WELL"       , "DENS"       , "CALC"        }, well_noop            ,             },
+        {  3, { "FIP"        , "REG"        ,               }, well_noop            ,             },
+        { 11, { "WELL"       , "D-FACTOR"   , "DAY/SM3"     }, well_noop            , right_align },
     }};
 
     void subreport_well_specification_data(std::ostream& os, const std::vector<Opm::Well>& data) {
