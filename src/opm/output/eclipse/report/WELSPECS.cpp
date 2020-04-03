@@ -212,7 +212,7 @@ namespace {
         return ss.str();
     }
 
-    const std::string& well_noop(const Opm::Well&) {
+    const std::string& well_unimplemented(const Opm::Well&) {
         const static std::string s { } ;
 
         return s;
@@ -234,14 +234,14 @@ namespace {
         {  8, { "WELLHEAD"   , "LOCATION"   , "( I, J )"    }, wellhead_location    , left_align  },
         {  8, { "B.H.REF"    , "DEPTH"      , "METRES"      }, reference_depth      , right_align },
         {  5, { "PREF-"      , "ERRED"      , "PHASE"       }, preferred_phase      ,             },
-        {  8, { "DRAINAGE"   , "RADIUS"     , "METRES"      }, well_noop            ,             },
-        {  4, { "GAS"        , "INFL"       , "EQUN"        }, well_noop            ,             },
+        {  8, { "DRAINAGE"   , "RADIUS"     , "METRES"      }, well_unimplemented   ,             },
+        {  4, { "GAS"        , "INFL"       , "EQUN"        }, well_unimplemented   ,             },
         {  7, { "SHUT-IN"    , "INSTRCT"    ,               }, shut_status          ,             },
         {  5, { "CROSS"      , "FLOW"       , "ABLTY"       }, cross_flow           ,             },
-        {  3, { "PVT"        , "TAB"        ,               }, well_noop            ,             },
-        {  4, { "WELL"       , "DENS"       , "CALC"        }, well_noop            ,             },
-        {  3, { "FIP"        , "REG"        ,               }, well_noop            ,             },
-        { 11, { "WELL"       , "D-FACTOR"   , "DAY/SM3"     }, well_noop            , right_align },
+        {  3, { "PVT"        , "TAB"        ,               }, well_unimplemented   ,             },
+        {  4, { "WELL"       , "DENS"       , "CALC"        }, well_unimplemented   ,             },
+        {  3, { "FIP"        , "REG"        ,               }, well_unimplemented   ,             },
+        { 11, { "WELL"       , "D-FACTOR"   , "DAY/SM3"     }, well_unimplemented   , right_align },
     }};
 
     void subreport_well_specification_data(std::ostream& os, const std::vector<Opm::Well>& data) {
