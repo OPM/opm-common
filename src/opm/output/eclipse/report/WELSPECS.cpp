@@ -121,7 +121,7 @@ namespace {
             print_divider(os);
         }
 
-        void print_data(std::ostream& os, const std::vector<T>& lines) const {
+        void print_data(std::ostream& os, const std::vector<std::reference_wrapper<const T>> lines) const {
             for (const auto& line : lines) {
                 for (const auto& column : *this) {
                     column.print(os, line);
@@ -130,21 +130,22 @@ namespace {
                 os << field_separator << record_separator;
             }
         }
-
-        void print(std::ostream& os, const std::vector<T>& lines) const {
-            print_header(os);
-            print_data(os, lines);
-            print_divider(os);
-        }
     };
 
-    template<typename T, std::size_t header_height>
+    template<typename OutputType, std::size_t header_height, typename InputType = OutputType>
     struct subreport {
+        using transform_function = std::function<const std::vector<std::reference_wrapper<const OutputType>>(const InputType&)>;
+
+        static std::vector<std::reference_wrapper<const OutputType>> noop_transform(const InputType&in) {
+            return { in };
+        }
+
         std::string title;
         std::string decor;
-        table<T, header_height> column_definition;
+        table<OutputType, header_height> column_definition;
+        transform_function transform = &subreport::noop_transform;
 
-        subreport(const std::string& _title, const table<T, header_height>& _coldef)
+        subreport(const std::string& _title, const table<OutputType, header_height>& _coldef)
             : title             { _title           }
             , decor             { underline(title) }
             , column_definition { _coldef          }
@@ -157,13 +158,17 @@ namespace {
             return std::string(string.size(), divider_character);
         }
 
-        void print(std::ostream& os, const std::vector<T>& data) const {
+        void print(std::ostream& os, const std::vector<InputType>& data) const {
             os << title << record_separator;
             os << decor << record_separator;
 
             os << section_separator;
 
-            column_definition.print(os, data);
+            column_definition.print_header(os);
+            for (const auto element : data) {
+                column_definition.print_data(os, transform(element));
+            }
+            column_definition.print_divider(os);
 
             os << section_separator << std::flush;
         }
