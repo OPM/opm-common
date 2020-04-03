@@ -354,7 +354,7 @@ namespace {
             return std::to_string(connection.skinFactor()).substr(0, 8);
         }
 
-        const std::string &noop() const {
+        const std::string &unimplemented() const {
             static const std::string s {};
             return s;
         }
@@ -381,8 +381,8 @@ namespace {
         {  6, {"INT"                    ,"DIAM"                   ,"METRES"                 }, &WellConnection::int_diam        , right_align },
         {  7, {"K  H"                   ,"VALUE"                  ,"MD.METRE"               }, &WellConnection::kh_value        , right_align },
         {  6, {"SKIN"                   ,"FACTOR"                 ,                         }, &WellConnection::skin_factor     , right_align },
-        { 10, {"CONNECTION"             ,"D-FACTOR"               ,"DAY/SM3"                }, &WellConnection::noop            ,             },
-        { 23, {"SATURATION SCALING DATA","SWMIN SWMAX SGMIN SGMAX",                         }, &WellConnection::noop            ,             },
+        { 10, {"CONNECTION"             ,"D-FACTOR"               ,"DAY/SM3"                }, &WellConnection::unimplemented   ,             },
+        { 23, {"SATURATION SCALING DATA","SWMIN SWMAX SGMIN SGMAX",                         }, &WellConnection::unimplemented   ,             },
     };
 
     void subreport_well_connection_data(std::ostream& os, const std::vector<Opm::Well>& data) {
