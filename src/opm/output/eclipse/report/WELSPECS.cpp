@@ -312,6 +312,10 @@ namespace {
             return std::to_string(connection.Kh()).substr(0, 9);
         }
 
+        std::string skin_factor() const {
+            return std::to_string(connection.skinFactor()).substr(0, 8);
+        }
+
         const std::string &noop() const {
             static const std::string s {};
             return s;
@@ -338,7 +342,7 @@ namespace {
         {  8, {"CONNECTION"             ,"FACTOR*"                ,"CPM3/D/B"               }, &WellConnection::conn_factor     , right_align },
         {  6, {"INT"                    ,"DIAM"                   ,"METRES"                 }, &WellConnection::int_diam        , right_align },
         {  7, {"K  H"                   ,"VALUE"                  ,"MD.METRE"               }, &WellConnection::kh_value        , right_align },
-        {  6, {"SKIN"                   ,"FACTOR"                 ,                         }, &WellConnection::noop            ,             },
+        {  6, {"SKIN"                   ,"FACTOR"                 ,                         }, &WellConnection::skin_factor     , right_align },
         { 10, {"CONNECTION"             ,"D-FACTOR"               ,"DAY/SM3"                }, &WellConnection::noop            ,             },
         { 23, {"SATURATION SCALING DATA","SWMIN SWMAX SGMIN SGMAX",                         }, &WellConnection::noop            ,             },
     };
