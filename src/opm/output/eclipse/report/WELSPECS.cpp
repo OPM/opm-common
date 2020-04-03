@@ -32,21 +32,21 @@ namespace {
     constexpr char section_separator { '\n' } ;
     constexpr char divider_character {  '-' } ;
 
-    void left_align(std::string& string, std::size_t internal_width) {
-        if (string.size() < internal_width) {
-            string.append(std::string(internal_width - string.size(), field_padding));
+    void left_align(std::string& string, std::size_t width) {
+        if (string.size() < width) {
+            string.append(std::string(width - string.size(), field_padding));
         }
     }
 
-    void right_align(std::string& string, std::size_t internal_width) {
-        if (string.size() < internal_width) {
-            string = std::string(internal_width - string.size(), field_padding) + string;
+    void right_align(std::string& string, std::size_t width) {
+        if (string.size() < width) {
+            string = std::string(width - string.size(), field_padding) + string;
         }
     }
 
-    void centre_align(std::string& string, std::size_t internal_width) {
-        if (string.size() < internal_width) {
-            std::size_t extra_space { internal_width - string.size() } ;
+    void centre_align(std::string& string, std::size_t width) {
+        if (string.size() < width) {
+            std::size_t extra_space { width - string.size() } ;
             std::size_t shift_one { extra_space % 2 } ;
 
             if (shift_one)
@@ -72,15 +72,16 @@ namespace {
         void print(std::ostream& os, const T& data) const {
             std::string string_data { fetch(data) } ;
             format(string_data, internal_width);
+            centre_align(string_data, total_width());
 
-            os << field_separator << field_padding << string_data << field_padding;
+            os << field_separator << string_data;
         }
 
         void print_header(std::ostream& os, std::size_t row) const {
             std::string header_line { header[row] } ;
-            centre_align(header_line, internal_width);
+            centre_align(header_line, total_width());
 
-            os << field_separator << field_padding << header_line << field_padding;
+            os << field_separator << header_line;
         }
 
         constexpr std::size_t total_width() const {
