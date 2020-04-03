@@ -910,6 +910,43 @@ BOOST_AUTO_TEST_CASE(completion_kewords) {
     BOOST_CHECK_CLOSE(  200.3,     ecl_sum_get_well_completion_var( resp, 1, "W_2", "CNFR", 2, 1, 1 ), 1e-5 );
 }
 
+BOOST_AUTO_TEST_CASE(DATE) {
+    setup cfg( "test_summary_DATE" );
+
+    out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule, cfg.name );
+    SummaryState st(std::chrono::system_clock::now());
+    writer.eval( st, 1, 1 * day, cfg.es, cfg.schedule, cfg.wells , cfg.groups, {});
+    writer.add_timestep( st, 1);
+    writer.eval( st, 2, 2 * day, cfg.es, cfg.schedule, cfg.wells , cfg.groups, {});
+    writer.add_timestep( st, 2);
+    writer.eval( st, 3, 18 * day, cfg.es, cfg.schedule, cfg.wells , cfg.groups, {});
+    writer.add_timestep( st, 3);
+    writer.eval( st, 4, 22 * day, cfg.es, cfg.schedule, cfg.wells , cfg.groups, {});
+    writer.add_timestep( st, 4);
+    writer.write();
+
+    auto res = readsum( cfg.name );
+    const auto* resp = res.get();
+
+    const auto& days = resp->get_at_rstep("DAY");
+    BOOST_CHECK_EQUAL(days[0], 11);
+    BOOST_CHECK_EQUAL(days[1], 12);
+    BOOST_CHECK_EQUAL(days[2], 28);
+    BOOST_CHECK_EQUAL(days[3],  1);
+
+    const auto& month = resp->get_at_rstep("MONTH");
+    BOOST_CHECK_EQUAL(month[0], 5);
+    BOOST_CHECK_EQUAL(month[1], 5);
+    BOOST_CHECK_EQUAL(month[2], 5);
+    BOOST_CHECK_EQUAL(month[3], 6);
+
+    const auto& year = resp->get_at_rstep("YEAR");
+    BOOST_CHECK_EQUAL(year[0], 2007);
+    BOOST_CHECK_EQUAL(year[1], 2007);
+    BOOST_CHECK_EQUAL(year[2], 2007);
+    BOOST_CHECK_EQUAL(year[3], 2007);
+}
+
 BOOST_AUTO_TEST_CASE(field_keywords) {
     setup cfg( "test_summary_field" );
 

@@ -60,14 +60,12 @@ std::chrono::system_clock::time_point make_date(const std::vector<int>& datetime
     auto hour = 0;
     auto minute = 0;
     auto second = 0;
-    auto usec = 0;
 
     if (datetime.size() == 6) {
         hour = datetime[3];
         minute = datetime[4];
         auto total_usec = datetime[5];
         second = total_usec / 1000000;
-        usec = total_usec - second * 1000000;
     }
 
 

@@ -82,6 +82,11 @@ namespace {
         "MSUMLINS","MSUMNEWT","TIMESTEP","TCPUTS","TCPUDAY","STEPTYPE","TELAPLIN"
     };
 
+    const std::vector<std::string> DATE_keywords = {
+         "DAY", "MONTH", "YEAR"
+    };
+
+
     /*
       The variable type 'ECL_SMSPEC_MISC_TYPE' is a catch-all variable
       type, and will by default internalize keywords like 'ALL' and
@@ -89,6 +94,7 @@ namespace {
       be included.
     */
     const std::map<std::string, std::vector<std::string>> meta_keywords = {{"PERFORMA", PERFORMA_keywords},
+                                                                           {"DATE", DATE_keywords},
                                                                            {"ALL", ALL_keywords},
                                                                            {"FMWSET", FMWSET_keywords},
                                                                            {"GMWSET", GMWSET_keywords}};
