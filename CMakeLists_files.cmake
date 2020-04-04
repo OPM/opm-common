@@ -509,6 +509,7 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/common/utility/parameters/ParameterStrings.hpp
       opm/common/utility/parameters/ParameterTools.hpp
       opm/common/utility/numeric/calculateCellVol.hpp
+      opm/common/utility/String.hpp
       opm/common/utility/TimeService.hpp
 )
 if(ENABLE_ECL_INPUT)
@@ -518,7 +519,6 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/Utility/Stringview.hpp
        opm/parser/eclipse/Utility/Functional.hpp
        opm/parser/eclipse/Utility/Typetools.hpp
-       opm/parser/eclipse/Utility/String.hpp
        opm/parser/eclipse/Generator/KeywordGenerator.hpp
        opm/parser/eclipse/Generator/KeywordLoader.hpp
        opm/parser/eclipse/Units/UnitSystem.hpp

@@ -19,7 +19,7 @@
 #include <stdexcept>
 
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
-#include <opm/parser/eclipse/Utility/String.hpp>
+#include <opm/common/utility/String.hpp>
 
 #include "RawConsts.hpp"
 #include "RawKeyword.hpp"

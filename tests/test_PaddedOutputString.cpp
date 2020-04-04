@@ -3,7 +3,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <opm/io/eclipse/PaddedOutputString.hpp>
-#include <opm/parser/eclipse/Utility/String.hpp>
+#include <opm/common/utility/String.hpp>
 
 // Convenience alias.
 template <std::size_t N>

@@ -25,7 +25,7 @@ namespace py = pybind11;
 #endif
 
 
-#include <opm/parser/eclipse/Utility/String.hpp>
+#include <opm/common/utility/String.hpp>
 #include <opm/common/utility/FileSystem.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/PyAction.hpp>
 

@@ -16,7 +16,7 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <opm/parser/eclipse/Utility/String.hpp>
+#include <opm/common/utility/String.hpp>
 
 #include <opm/io/eclipse/rst/header.hpp>
 #include <opm/io/eclipse/rst/group.hpp>

@@ -26,9 +26,9 @@
 
 #include <opm/common/OpmLog/LogUtil.hpp>
 #include <opm/common/utility/numeric/cmp.hpp>
+#include <opm/common/utility/String.hpp>
 
 #include <opm/parser/eclipse/Python/Python.hpp>
-#include <opm/parser/eclipse/Utility/String.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
