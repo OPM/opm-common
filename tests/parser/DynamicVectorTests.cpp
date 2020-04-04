@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(DynamicVectorSet) {
     const std::time_t startDate = Opm::TimeMap::mkdate(2010, 1, 1);
     std::vector<std::time_t> tp = { startDate };
     for (int i = 0; i < 4; i++)
-        tp.push_back( Opm::asTimeT(Opm::TimeStampUTC({2010,1,i+2})));
+        tp.push_back( Opm::asTimeT(Opm::TimeStampUTC(2010,1,i+2)));
 
     Opm::TimeMap timeMap{ tp };
     Opm::DynamicVector<int> state(timeMap , 137);
@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(DynamicVectorPtr) {
     const std::time_t startDate = Opm::TimeMap::mkdate(2010, 1, 1);
     std::vector<std::time_t> tp = { startDate };
     for (int i = 0; i < 4; i++)
-        tp.push_back( Opm::asTimeT(Opm::TimeStampUTC({2010,1,i+2})));
+        tp.push_back( Opm::asTimeT(Opm::TimeStampUTC(2010,1,i+2)));
 
     Opm::TimeMap timeMap{ tp };
     Opm::DynamicVector<int> state( timeMap , 137 );
