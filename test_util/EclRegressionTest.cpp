@@ -22,7 +22,9 @@
 #include <opm/io/eclipse/ERft.hpp>
 #include <opm/io/eclipse/ERst.hpp>
 #include <opm/io/eclipse/ESmry.hpp>
+#include <opm/io/eclipse/ERsm.hpp>
 
+#include <opm/common/utility/FileSystem.hpp>
 #include <opm/common/ErrorMacros.hpp>
 
 #include <algorithm>
@@ -972,6 +974,15 @@ void ECLRegressionTest::results_smry()
                 printDeviationReport();
             }
         }
+
+        namespace fs = Opm::filesystem;
+        std::string rsm_file = rootName2 + ".RSM";
+        if (fs::is_regular_file(fs::path(rsm_file))) {
+            auto rsm = ERsm(rsm_file);
+            if (!cmp(smry2, rsm))
+                HANDLE_ERROR(std::runtime_error, "The RSM file did not compare equal to the summary file");
+        }
+
     } else {
         std::cout << "\n!Warning, summary files not found, hence not compared. \n" << std::endl;
     }
