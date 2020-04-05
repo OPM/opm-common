@@ -16,11 +16,11 @@
    along with OPM.  If not, see <http://www.gnu.org/licenses/>.
    */
 
-#include <opm/io/eclipse/ESmry.hpp>
 
-#include <cmath>
 
 #include <algorithm>
+#include <chrono>
+#include <cmath>
 #include <fstream>
 #include <functional>
 #include <iomanip>
@@ -30,6 +30,8 @@
 #include <string>
 
 #include <opm/common/ErrorMacros.hpp>
+#include <opm/common/utility/TimeService.hpp>
+#include <opm/io/eclipse/ESmry.hpp>
 
 namespace {
 
@@ -49,6 +51,8 @@ namespace {
         return "SUMMARY OF RUN " + run_name + " OPM FLOW " + comment;
     }
 
+    const std::vector<std::string> month_names = {"JAN", "FEB", "MAR", "APR", "MAI", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"};
+
     void write_line(std::ostream& os, const std::string& line, char prefix = ' ') {
         os << prefix << std::setw(total_width) << std::left << line << '\n';
     }
@@ -57,23 +61,30 @@ namespace {
         os << std::setw(8) << std::left << element << std::setw(5) << "";
     }
 
-    void print_float_element(std::ostream& os, float element) {
+    void print_time_element(std::ostream& os, const std::string& element) {
+        os << std::setw(11) << element << std::setw(2) << "";
+    }
+
+    std::string format_float_element(float element) {
+        std::stringstream ss;
         static const std::regex integer_regex { "\\.0*$" };
-
         auto element_string = std::to_string(element);
-
         if (element_string.size() > 8) {
             element_string = element_string.substr(0, 8);
         }
-
         element_string = std::regex_replace(element_string, integer_regex, "");
-
-        os << std::setw(8) << std::right << element_string << std::setw(5) << "";
+        ss << std::setw(8) << std::right << element_string;
+        return ss.str();
     }
 
-    void write_header_columns(std::ostream& os, const std::vector<Opm::EclIO::SummaryNode>& vectors, std::function<void(std::ostream&, const Opm::EclIO::SummaryNode&)> print_element, char prefix = ' ') {
+    void print_float_element(std::ostream& os, float element) {
+        os << format_float_element(element) << std::setw(5) << "";
+    }
+
+    void write_header_columns(std::ostream& os, const std::string& time_column, const std::vector<Opm::EclIO::SummaryNode>& vectors, std::function<void(std::ostream&, const Opm::EclIO::SummaryNode&)> print_element, char prefix = ' ') {
         os << prefix;
 
+        print_text_element(os, time_column);
         for (const auto& vector : vectors) {
             print_element(os, vector);
         }
@@ -81,9 +92,10 @@ namespace {
         os << '\n';
     }
 
-    void write_data_row(std::ostream& os, const std::vector<std::pair<std::vector<float>, int>>& data, std::size_t index, char prefix = ' ') {
+    void write_data_row(std::ostream& os, const std::vector<std::string>& time_column, const std::vector<std::pair<std::vector<float>, int>>& data, std::size_t index, char prefix = ' ') {
         os << prefix;
 
+        print_time_element( os, time_column[index] );
         for (const auto& vector : data) {
             print_float_element(os, vector.first[index] * std::pow(10.0, -vector.second));
         }
@@ -106,11 +118,19 @@ namespace {
         os << '\n';
     }
 
+
+    std::string format_date(const std::chrono::system_clock::time_point& tp) {
+        auto ts = Opm::TimeStampUTC( std::chrono::system_clock::to_time_t(tp) );
+        char buffer[12];
+        std::snprintf(buffer, 12, "%2d-%3s-%4d", ts.day(), month_names[ts.month() - 1].c_str(), ts.year());
+        return std::string(buffer, 11);
+    }
+
 }
 
 namespace Opm::EclIO {
 
-void ESmry::write_block(std::ostream& os, const std::vector<SummaryNode>& vectors) const {
+void ESmry::write_block(std::ostream& os, bool write_dates, const std::vector<std::string>& time_column, const std::vector<SummaryNode>& vectors) const {
     write_line(os, block_separator_line, '1');
     write_line(os, divider_line);
     write_line(os, block_header_line(inputFileName.stem(), "VERSION 1910 ANYTHING CAN GO HERE: USER, MACHINE ETC."));
@@ -131,31 +151,38 @@ void ESmry::write_block(std::ostream& os, const std::vector<SummaryNode>& vector
         data.emplace_back(vector_data, scale_factor);
     }
 
-    std::size_t rows { data[0].first.size() };
+    {
+        std::size_t rows { data[0].first.size() };
+        std::string time_header = "TIME";
+        std::string time_unit = "DAYS";
 
-    write_header_columns(os, vectors, [](std::ostream& oss, const SummaryNode& node) { print_text_element(oss, node.keyword); });
-    write_header_columns(os, vectors, [this](std::ostream& oss, const SummaryNode& node) { print_text_element(oss, this->get_unit(node)); });
-    if (has_scale_factors) {
-        write_scale_columns(os, data);
-    }
-    write_header_columns(os, vectors, [](std::ostream& oss, const SummaryNode& node) { print_text_element(oss, node.display_name().value_or("")); });
-    write_header_columns(os, vectors, [](std::ostream& oss, const SummaryNode& node) { print_text_element(oss, node.display_number().value_or("")); });
+        if (write_dates) {
+            time_header = "DATE";
+            time_unit = "";
+        }
+        write_header_columns(os, time_header, vectors, [](std::ostream& oss, const SummaryNode& node) { print_text_element(oss, node.keyword); });
+        write_header_columns(os, time_unit, vectors, [this](std::ostream& oss, const SummaryNode& node) { print_text_element(oss, this->get_unit(node)); });
+        if (has_scale_factors) {
+            write_scale_columns(os, data);
+        }
+        write_header_columns(os, "", vectors, [](std::ostream& oss, const SummaryNode& node) { print_text_element(oss, node.display_name().value_or("")); });
+        write_header_columns(os, "", vectors, [](std::ostream& oss, const SummaryNode& node) { print_text_element(oss, node.display_number().value_or("")); });
 
-    write_line(os, divider_line);
+        write_line(os, divider_line);
 
-    for (std::size_t i { 0 } ; i < rows; i++) {
-        write_data_row(os, data, i);
+        for (std::size_t i { 0 } ; i < rows; i++) {
+            write_data_row(os, time_column, data, i);
+        }
     }
 
     os << std::flush;
 }
 
 void ESmry::write_rsm(std::ostream& os) const {
-    SummaryNode date_vector;
+    bool write_dates = false;
     std::vector<SummaryNode> data_vectors;
-    std::remove_copy_if(summaryNodes.begin(), summaryNodes.end(), std::back_inserter(data_vectors), [&date_vector](const SummaryNode& node){
-        if (node.keyword == "TIME" || node.keyword == "DATE") {
-            date_vector = node;
+    std::remove_copy_if(summaryNodes.begin(), summaryNodes.end(), std::back_inserter(data_vectors), [](const SummaryNode& node){
+        if (node.keyword == "TIME" || node.keyword == "DAY" || node.keyword == "MONTH" || node.keyword == "YEAR") {
             return true;
         } else {
             return false;
@@ -163,16 +190,26 @@ void ESmry::write_rsm(std::ostream& os) const {
     });
 
     std::vector<std::list<SummaryNode>> data_vector_blocks;
-
     constexpr std::size_t data_column_count { column_count - 1 } ;
     for (std::size_t i { 0 } ; i < data_vectors.size(); i += data_column_count) {
         auto last = std::min(data_vectors.size(), i + data_column_count);
         data_vector_blocks.emplace_back(data_vectors.begin() + i, data_vectors.begin() + last);
-        data_vector_blocks.back().push_front(date_vector);
+    }
+
+    std::vector<std::string> time_column;
+    if (this->hasKey("DAY") && this->hasKey("MONTH") && this->hasKey("YEAR")) {
+        write_dates = true;
+        for (const auto& t : this->dates()) {
+            time_column.push_back(format_date(t));
+        }
+    } else {
+        const auto& time_data = this->get("TIME");
+        for (const auto& t : time_data)
+            time_column.push_back(format_float_element(t));
     }
 
     for (const auto& data_vector_block : data_vector_blocks) {
-        write_block(os, { data_vector_block.begin(), data_vector_block.end() });
+        write_block(os, write_dates, time_column, {data_vector_block.begin(), data_vector_block.end() });
     }
 }
 

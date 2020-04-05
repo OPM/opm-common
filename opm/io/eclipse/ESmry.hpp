@@ -91,7 +91,7 @@ private:
     std::string lookupKey(const SummaryNode&) const;
 
 
-    void write_block(std::ostream &, const std::vector<SummaryNode>&) const;
+    void write_block(std::ostream &, bool write_dates, const std::vector<std::string>& time_column, const std::vector<SummaryNode>&) const;
 
 
     template <typename T>
