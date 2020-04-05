@@ -57,6 +57,11 @@ namespace {
         os << prefix << std::setw(total_width) << std::left << line << '\n';
     }
 
+    void write_padding(std::ostream& os, std::size_t columns) {
+        for (std::size_t icol = columns + 1; icol < column_count; icol++)
+            os << std::setw(column_width + column_space) << " ";
+    }
+
     void print_text_element(std::ostream& os, const std::string& element) {
         os << std::setw(8) << std::left << element << std::setw(5) << "";
     }
@@ -88,6 +93,7 @@ namespace {
         for (const auto& vector : vectors) {
             print_element(os, vector);
         }
+        write_padding(os, vectors.size());
 
         os << '\n';
     }
@@ -99,6 +105,7 @@ namespace {
         for (const auto& vector : data) {
             print_float_element(os, vector.first[index] * std::pow(10.0, -vector.second));
         }
+        write_padding(os, data.size());
 
         os << '\n';
     }
@@ -106,6 +113,7 @@ namespace {
     void write_scale_columns(std::ostream& os, const std::vector<std::pair<std::vector<float>, int>> data, char prefix = ' ') {
         os << prefix;
 
+        print_text_element(os, "");
         for (const auto& vector : data) {
             const auto scale_factor { vector.second } ;
             if (scale_factor) {
