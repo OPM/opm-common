@@ -23,8 +23,10 @@
 #include <chrono>
 
 #include <opm/io/eclipse/ERsm.hpp>
+#include <opm/io/eclipse/ESmry.hpp>
 #include <opm/common/utility/FileSystem.hpp>
 #include <opm/common/utility/String.hpp>
+#include <opm/common/utility/numeric/cmp.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 
 namespace Opm {
@@ -246,6 +248,74 @@ ERsm::ERsm(const std::string& fname) {
         load_block(lines, vector_length);
 }
 
+
+
+bool cmp(const ESmry& smry, const ERsm& rsm) {
+    const auto& summary_dates = smry.dates();
+    if (rsm.has_dates()) {
+        const auto& rsm_dates = rsm.dates();
+        if (rsm_dates.size() != summary_dates.size())
+            return false;
+
+        for (std::size_t time_index = 0; time_index < rsm_dates.size(); time_index++) {
+            const auto smry_ts = TimeStampUTC( std::chrono::system_clock::to_time_t(summary_dates[time_index]) );
+            const auto rsm_ts = rsm_dates[time_index];
+
+            if (smry_ts.year() != rsm_ts.year())
+                return false;
+
+            if (smry_ts.month() != rsm_ts.month())
+                return false;
+
+            if (smry_ts.day() != rsm_ts.day())
+                return false;
+        }
+    } else {
+        const auto& rsm_days = rsm.days();
+        if (rsm_days.size() != summary_dates.size())
+            return false;
+
+        for (std::size_t time_index = 0; time_index < rsm_days.size(); time_index++) {
+            using namespace std::chrono;
+            using TP      = time_point<system_clock>;
+            auto smry_days = duration_cast<TP::duration>(summary_dates[time_index] - summary_dates[0]).count() / 86400.0 ;
+
+            if (!cmp::scalar_equal(smry_days, rsm_days[time_index]))
+                return false;
+        }
+    }
+
+    for (const auto& node : smry.summaryNodeList()) {
+        const auto& key = node.unique_key();
+
+        if (key == "TIME")
+            continue;
+
+        if (key == "DAY")
+            continue;
+
+        if (key == "MONTH")
+            continue;
+
+        if (key == "YEAR")
+            continue;
+
+        /*
+          The ESmry class and the ERsm class treat block vector keys
+          differently, the ESmry class uses only the key Bxxx:i,j,k whereas the
+          ERsm class uses only the key Bxxxx:g. Therefor the ESmry lookup is
+          based on nodes, whereas the ERsm lookup is based on key.
+        */
+        const auto& smry_vector = smry.get(node);
+        const auto& rsm_vector = rsm.get(key);
+        for (std::size_t index = 0; index < smry_vector.size(); index++) {
+            if (!cmp::scalar_equal(static_cast<double>(smry_vector[index]), rsm_vector[index]))
+                return false;
+        }
+    }
+
+    return true;
+}
 
 }
 }

@@ -71,6 +71,8 @@ private:
     std::variant<std::vector<double>, std::vector<TimeStampUTC>> time;
 };
 
+bool cmp(const ESmry& esmr, const ERsm& ersm);
+
 }
 }
 

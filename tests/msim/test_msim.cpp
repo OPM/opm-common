@@ -30,6 +30,7 @@
 #include <opm/parser/eclipse/Python/Python.hpp>
 #include <opm/io/eclipse/ERst.hpp>
 #include <opm/io/eclipse/ESmry.hpp>
+#include <opm/io/eclipse/ERsm.hpp>
 
 #include <opm/output/data/Wells.hpp>
 #include <opm/output/eclipse/EclipseIO.hpp>
@@ -110,6 +111,9 @@ BOOST_AUTO_TEST_CASE(RUN) {
                 BOOST_CHECK_EQUAL( ts.month(), month[time_index]);
                 BOOST_CHECK_EQUAL( ts.year(), year[time_index]);
             }
+
+            const auto rsm = EclIO::ERsm("SPE1CASE1.RSM");
+            BOOST_CHECK( EclIO::cmp( smry, rsm ));
         }
 
         {
