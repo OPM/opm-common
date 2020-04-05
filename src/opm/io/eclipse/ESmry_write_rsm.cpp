@@ -113,6 +113,7 @@ namespace {
     void write_scale_columns(std::ostream& os, const std::vector<std::pair<std::vector<float>, int>> data, char prefix = ' ') {
         os << prefix;
 
+        print_text_element(os, "");
         for (const auto& vector : data) {
             const auto scale_factor { vector.second } ;
             if (scale_factor) {
