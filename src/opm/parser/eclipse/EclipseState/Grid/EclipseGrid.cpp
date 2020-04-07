@@ -87,12 +87,8 @@ EclipseGrid::EclipseGrid(const std::string& fileName )
 {
 
     Opm::EclIO::EclFile egridfile(fileName);
-
     m_useActnumFromGdfile=true;
-
     initGridFromEGridFile(egridfile, fileName);
-
-    resetACTNUM(m_actnum);
 }
 
 
@@ -258,31 +254,30 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
     }
 
     if (actnum != nullptr) {
-
-        size_t nCells = dims[0]*dims[1]*dims[2];
-        std::vector<int> actnumVector(actnum, actnum + nCells);
-
-        resetACTNUM( actnumVector);
+        resetACTNUM(actnum);
     } else {
-
         if (m_useActnumFromGdfile){
             // actnum already reset in initBinaryGrid
-        } else if (deck.hasKeyword<ParserKeywords::ACTNUM>()) {
-
-            const auto& actnumData = deck.getKeyword<ParserKeywords::ACTNUM>().getIntData();
-
-            if (actnumData.size() == getCartesianSize()) {
-                resetACTNUM( actnumData);
-            } else {
-                const std::string msg = "The ACTNUM keyword has " + std::to_string( actnumData.size() ) + " elements - expected : " + std::to_string( getCartesianSize()) + " - ignored.";
-                OpmLog::warning(msg);
-
-                resetACTNUM( );
-            }
-
         } else {
+            if (deck.hasKeyword<ParserKeywords::ACTNUM>()) {
+                const auto& actnumData = deck.getKeyword<ParserKeywords::ACTNUM>().getIntData();
+                /*
+                  Would have liked to fail hard in the case where the size of the
+                  ACTNUM array disagrees with nx*ny*nz; but it is possible to embed
+                  the ACTNUM keyword in a BOX / ENDBOX pair and in that case it is
+                  legitimate with size(ACTNUM) < nx*ny*nz.
 
-            resetACTNUM();
+                  If size(actnum) != nx*ny*nz it is ignored here, however it is
+                  taken into account when creating an final actnum in the field
+                  property manager.
+                */
+                if (actnumData.size() == getCartesianSize())
+                    resetACTNUM( actnumData);
+                else
+                    resetACTNUM();
+            } else {
+                resetACTNUM();
+            }
         }
     }
 }
@@ -1025,26 +1020,12 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
 
 
     {
-        size_t nCells=dims[0]*dims[1]*dims[2];
-
         m_coord = coord;
         m_zcorn = zcorn;
 
         ZcornMapper mapper( getNX(), getNY(), getNZ());
         zcorn_fixed = mapper.fixupZCORN( m_zcorn );
-
-        m_actnum.clear();
-
-        if (actnum != nullptr){
-            m_actnum.resize(nCells);
-
-            for (size_t n = 0; n < nCells; n++){
-                m_actnum[n] = actnum[n];
-            }
-
-        } else {
-            m_actnum.assign(nCells, 1);
-        }
+        this->resetACTNUM(actnum);
 
         if (mapaxes != nullptr){
             m_mapaxes.resize(6);
@@ -1070,10 +1051,10 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
                 const auto& actnumKeyword = deck.getKeyword<ParserKeywords::ACTNUM>();
                 actnumVector = actnumKeyword.getIntData();
 
-                const auto nGlobCells = dims[0] * dims[1] * dims[2];
-                if (actnumVector.size() == static_cast<decltype(actnumVector.size())>(nGlobCells)) {
-                    actnum=actnumVector.data();
-                }
+                if (actnumVector.size() != this->getCartesianSize())
+                    throw std::invalid_argument("ACTNUM vector has wrong size");
+
+                actnum = actnumVector.data();
              }
 
             initCornerPointGrid( dims, coord , zcorn, actnum, nullptr );
@@ -1648,42 +1629,46 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
     }
 
     void EclipseGrid::resetACTNUM() {
+        std::size_t global_size = this->getCartesianSize();
+        this->m_actnum.assign(global_size, 1);
+        this->m_nactive = global_size;
 
-        const std::array<int, 3> dims = getNXYZ();
-        m_nactive = dims[0]*dims[1]*dims[2];
-
-        std::vector<int> all_active(m_nactive, 1);
-
-        m_actnum.clear();
-        m_actnum = all_active;
-
-        m_global_to_active = all_active;
-        std::iota(m_global_to_active.begin(), m_global_to_active.end(), 0);
-
-        m_active_to_global = m_global_to_active;
+        this->m_global_to_active.resize(global_size);
+        std::iota(this->m_global_to_active.begin(), this->m_global_to_active.end(), 0);
+        this->m_active_to_global = this->m_global_to_active;
     }
 
-    void EclipseGrid::resetACTNUM( const std::vector<int>& actnum) {
+    void EclipseGrid::resetACTNUM(const int* actnum) {
+        if (actnum == nullptr)
+            this->resetACTNUM();
+        else {
+            auto global_size = this->getCartesianSize();
+            if (this->m_actnum.empty() || std::memcmp(actnum, this->m_actnum.data(), global_size * sizeof * actnum) != 0) {
+            }
 
+            this->m_global_to_active.clear();
+            this->m_active_to_global.clear();
+            this->m_actnum.resize(global_size);
+            this->m_nactive = 0;
+
+            for (size_t n = 0; n < global_size; n++) {
+                this->m_actnum[n] = actnum[n];
+                if (actnum[n] > 0) {
+                    this->m_global_to_active.push_back(this->m_nactive);
+                    this->m_active_to_global.push_back(n);
+                    this->m_nactive++;
+                } else {
+                    this->m_global_to_active.push_back(-1);
+                }
+            }
+        }
+    }
+
+    void EclipseGrid::resetACTNUM(const std::vector<int>& actnum) {
         if (actnum.size() != getCartesianSize()) {
             throw std::runtime_error("resetACTNUM(): actnum vector size differs from logical cartesian size of grid.");
         }
-
-        m_actnum = actnum;
-        m_global_to_active.clear();
-        m_active_to_global.clear();
-        m_global_to_active.reserve(actnum.size());
-        m_nactive = 0;
-
-        for (size_t n = 0; n < actnum.size() ; n++) {
-            if (actnum[n] > 0) {
-                m_global_to_active.push_back(m_nactive);
-                m_active_to_global.push_back(n);
-                ++m_nactive;
-            } else {
-                m_global_to_active.push_back(-1);
-            }
-        }
+        this->resetACTNUM(actnum.data());
     }
 
     ZcornMapper EclipseGrid::zcornMapper() const {

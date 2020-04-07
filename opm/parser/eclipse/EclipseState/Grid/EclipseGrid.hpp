@@ -214,6 +214,7 @@ namespace Opm {
         std::vector<int> m_global_to_active;
 
         void initGridFromEGridFile(Opm::EclIO::EclFile& egridfile, std::string fileName);
+        void resetACTNUM( const int* actnum);
 
         void initBinaryGrid(const Deck& deck);
 
