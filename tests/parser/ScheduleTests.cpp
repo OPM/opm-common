@@ -3453,12 +3453,12 @@ BOOST_AUTO_TEST_CASE(WellNames) {
 
 
 BOOST_AUTO_TEST_CASE(RFT_CONFIG) {
-    std::vector<std::time_t> tp = { asTimeT( TimeStampUTC({2010, 1, 1})),
-                                    asTimeT( TimeStampUTC({2010, 1, 2})),
-                                    asTimeT( TimeStampUTC({2010, 1, 3})),
-                                    asTimeT( TimeStampUTC({2010, 1, 4})),
-                                    asTimeT( TimeStampUTC({2010, 1, 5})),
-                                    asTimeT( TimeStampUTC({2010, 1, 6}))};
+    std::vector<std::time_t> tp = { asTimeT( TimeStampUTC(2010, 1, 1)),
+                                    asTimeT( TimeStampUTC(2010, 1, 2)),
+                                    asTimeT( TimeStampUTC(2010, 1, 3)),
+                                    asTimeT( TimeStampUTC(2010, 1, 4)),
+                                    asTimeT( TimeStampUTC(2010, 1, 5)),
+                                    asTimeT( TimeStampUTC(2010, 1, 6))};
 
 
 

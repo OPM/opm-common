@@ -113,6 +113,10 @@ Opm::TimeStampUTC::TimeStampUTC(const YMD& ymd)
     : ymd_{ std::move(ymd) }
 {}
 
+Opm::TimeStampUTC::TimeStampUTC(int year, int month, int day)
+    : ymd_{ year, month, day }
+{}
+
 Opm::TimeStampUTC& Opm::TimeStampUTC::hour(const int h)
 {
     this->hour_ = h;

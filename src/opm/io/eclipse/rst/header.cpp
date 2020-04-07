@@ -115,7 +115,7 @@ RstHeader::RstHeader(const std::vector<int>& intehead, const std::vector<bool>& 
 }
 
 std::pair<std::time_t, std::size_t> RstHeader::restart_info() const {
-    return std::make_pair(asTimeT(TimeStampUTC({this->year, this->month, this->mday})),
+    return std::make_pair(asTimeT(TimeStampUTC(this->year, this->month, this->mday)),
                           std::size_t(this->report_step));
 }
 
