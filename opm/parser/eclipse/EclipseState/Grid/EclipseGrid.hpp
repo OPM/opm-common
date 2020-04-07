@@ -218,40 +218,38 @@ namespace Opm {
 
         void initBinaryGrid(const Deck& deck);
 
-        void initCornerPointGrid(const std::array<int,3>& dims ,
-                                 const std::vector<double>& coord ,
+        void initCornerPointGrid(const std::vector<double>& coord ,
                                  const std::vector<double>& zcorn ,
                                  const int * actnum,
                                  const double * mapaxes);
 
         bool keywInputBeforeGdfile(const Deck& deck, const std::string keyword) const;
 
-        void initCylindricalGrid(       const std::array<int, 3>&, const Deck&);
-        void initCartesianGrid(         const std::array<int, 3>&, const Deck&);
-        void initCornerPointGrid(       const std::array<int, 3>&, const Deck&);
-        void initDTOPSGrid(             const std::array<int, 3>&, const Deck&);
-        void initDVDEPTHZGrid(          const std::array<int, 3>&, const Deck&);
-        void initGrid(                  const std::array<int, 3>&, const Deck&);
-        void assertCornerPointKeywords( const std::array<int, 3>&, const Deck&);
+        void initCylindricalGrid(const Deck&);
+        void initCartesianGrid(const Deck&);
+        void initDTOPSGrid(const Deck&);
+        void initDVDEPTHZGrid(const Deck&);
+        void initGrid(const Deck&);
+        void initCornerPointGrid(const Deck&);
+        void assertCornerPointKeywords(const Deck&);
 
         static bool hasDVDEPTHZKeywords(const Deck&);
-        static bool hasDTOPSKeywords(   const Deck&);
-        static void assertVectorSize(   const std::vector<double>& vector, size_t expectedSize, const std::string& msg);
-        static std::vector<double> createTOPSVector(const std::array<int, 3>& dims, const std::vector<double>& DZ,
-                const Deck&);
-        static std::vector<double> createDVector(const std::array<int, 3>& dims, size_t dim, const std::string& DKey,
-                const std::string& DVKey, const Deck&);
+        static bool hasDTOPSKeywords(const Deck&);
+        static void assertVectorSize(const std::vector<double>& vector, size_t expectedSize, const std::string& msg);
+
+        static std::vector<double> createTOPSVector(const std::array<int, 3>& dims, const std::vector<double>& DZ, const Deck&);
+        static std::vector<double> createDVector(const std::array<int, 3>& dims, std::size_t dim, const std::string& DKey, const std::string& DVKey, const Deck&);
         static void scatterDim(const std::array<int, 3>& dims , size_t dim , const std::vector<double>& DV , std::vector<double>& D);
 
 
-        std::vector<double> makeCoordDxDyDzTops(const std::array<int, 3>& dims, const std::vector<double>& dx, const std::vector<double>& dy, const std::vector<double>& dz, const std::vector<double>& tops) const;
-        std::vector<double> makeZcornDzTops(const std::array<int, 3>& dims, const std::vector<double>& dz, const std::vector<double>& tops) const ;
-        std::vector<double> makeZcornDzvDepthz(const std::array<int, 3>& dims, const std::vector<double>& dzv, const std::vector<double>& depthz) const;
-        std::vector<double> makeCoordDxvDyvDzvDepthz(const std::array<int, 3>& dims, const std::vector<double>& dxv, const std::vector<double>& dyv, const std::vector<double>& dzv, const std::vector<double>& depthz) const;
+        std::vector<double> makeCoordDxDyDzTops(const std::vector<double>& dx, const std::vector<double>& dy, const std::vector<double>& dz, const std::vector<double>& tops) const;
+        std::vector<double> makeZcornDzTops(const std::vector<double>& dz, const std::vector<double>& tops) const ;
+        std::vector<double> makeZcornDzvDepthz(const std::vector<double>& dzv, const std::vector<double>& depthz) const;
+        std::vector<double> makeCoordDxvDyvDzvDepthz(const std::vector<double>& dxv, const std::vector<double>& dyv, const std::vector<double>& dzv, const std::vector<double>& depthz) const;
 
-        double sumIdir(int j, int k, int i1, const std::array<int, 3>& dims, const std::vector<double>& dx) const;
-        double sumJdir(int i, int k, int j1, const std::array<int, 3>& dims, const std::vector<double>& dy) const;
-        double sumKdir(int i, int j, const std::array<int, 3>& dims, const std::vector<double>& dz) const;
+        double sumIdir(int j, int k, int i1, const std::vector<double>& dx) const;
+        double sumJdir(int i, int k, int j1, const std::vector<double>& dy) const;
+        double sumKdir(int i, int j, const std::vector<double>& dz) const;
 
         void getCellCorners(const std::array<int, 3>& ijk, const std::array<int, 3>& dims, std::array<double,8>& X, std::array<double,8>& Y, std::array<double,8>& Z) const;
         void getCellCorners(const std::size_t globalIndex,
