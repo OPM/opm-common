@@ -1343,8 +1343,23 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         assertIJK(i,j,k);
 
         size_t globalIndex = getGlobalIndex(i,j,k);
+        return this->cellActive(globalIndex);
+    }
 
-        return m_actnum[globalIndex]>0;
+    std::vector<double> EclipseGrid::activeVolume() const {
+        std::vector<double> active_volume( this->m_nactive );
+
+        #pragma omp parallel for schedule(static)
+        for (std::size_t active_index = 0; active_index < this->m_active_to_global.size(); active_index++) {
+            std::array<double,8> X;
+            std::array<double,8> Y;
+            std::array<double,8> Z;
+            auto global_index = this->m_active_to_global[active_index];
+            this->getCellCorners(global_index, X, Y, Z );
+            active_volume[active_index] = calculateCellVol(X, Y, Z);
+        }
+
+        return active_volume;
     }
 
 
@@ -1666,9 +1681,6 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
             this->resetACTNUM();
         else {
             auto global_size = this->getCartesianSize();
-            if (this->m_actnum.empty() || std::memcmp(actnum, this->m_actnum.data(), global_size * sizeof * actnum) != 0) {
-            }
-
             this->m_global_to_active.clear();
             this->m_active_to_global.clear();
             this->m_actnum.resize(global_size);
@@ -1682,15 +1694,16 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
                     this->m_nactive++;
                 } else {
                     this->m_global_to_active.push_back(-1);
+
                 }
             }
         }
     }
 
     void EclipseGrid::resetACTNUM(const std::vector<int>& actnum) {
-        if (actnum.size() != getCartesianSize()) {
+        if (actnum.size() != getCartesianSize())
             throw std::runtime_error("resetACTNUM(): actnum vector size differs from logical cartesian size of grid.");
-        }
+
         this->resetACTNUM(actnum.data());
     }
 
