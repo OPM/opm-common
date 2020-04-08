@@ -125,7 +125,7 @@ EclipseGrid::EclipseGrid(size_t nx, size_t ny , size_t nz,
             for (size_t i = 0; i < nx ; i++) {
 
                 // top face of cell
-                int zind = i*2 + j*nx*4 + k*nx*ny*8;
+                std::size_t zind = i*2 + j*nx*4 + k*nx*ny*8;
 
                 double zt = k*dz;
                 double zb = (k+1)*dz;
@@ -579,22 +579,22 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         zind[2] = z_offset + dims[0]*2;
         zind[3] = zind[2] + 1;
 
-        for (int n = 0; n < 4; n++)
+        for (std::size_t n = 0; n < 4; n++)
             zind[n+4] = zind[n] + dims[0]*dims[1]*4;
 
 
-        for (int n = 0; n< 8; n++)
+        for (std::size_t n = 0; n< 8; n++)
            Z[n] = m_zcorn[zind[n]];
 
 
-        for (int  n=0; n<4; n++) {
+        for (std::size_t n=0; n<4; n++) {
             double xt = m_coord[pind[n]];
             double yt = m_coord[pind[n] + 1];
             double zt = m_coord[pind[n] + 2];
 
             double xb = m_coord[pind[n] + 3];
             double yb = m_coord[pind[n] + 4];
-            double zb = m_coord[pind[n]+5];
+            double zb = m_coord[pind[n] + 5];
 
             if (zt == zb) {
                 X[n] = xt;
@@ -639,8 +639,8 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         std::partial_sum(dzv.begin(), dzv.end(), z.begin() + 1);
 
 
-        for (int j = 0; j < dims[1] + 1; j++) {
-            for (int i = 0; i<dims[0] + 1; i++) {
+        for (std::size_t j = 0; j < dims[1] + 1; j++) {
+            for (std::size_t i = 0; i<dims[0] + 1; i++) {
 
                 const double x0 = x[i];
                 const double y0 = y[j];
@@ -672,14 +672,14 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         std::partial_sum(dzv.begin(), dzv.end(), z.begin() + 1);
 
 
-        for (int k = 0; k < dims[2]; k++) {
-            for (int j = 0; j < dims[1]; j++) {
-                for (int i = 0; i < dims[0]; i++) {
+        for (std::size_t k = 0; k < dims[2]; k++) {
+            for (std::size_t j = 0; j < dims[1]; j++) {
+                for (std::size_t i = 0; i < dims[0]; i++) {
 
                     const double z0 = z[k];
 
                     // top face of cell
-                    int zind = i*2 + j*dims[0]*4 + k*dims[0]*dims[1]*8;
+                    std::size_t zind = i*2 + j*dims[0]*4 + k*dims[0]*dims[1]*8;
 
                     zcorn[zind] = depthz[i+j*(dims[0]+1)] + z0;
                     zcorn[zind + 1] = depthz[i+j*(dims[0]+1) +1 ] + z0;
@@ -711,7 +711,7 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         std::vector<double> coord;
         coord.reserve((dims[0]+1)*(dims[1]+1)*6);
 
-        for (int j = 0; j < dims[1]; j++) {
+        for (std::size_t j = 0; j < dims[1]; j++) {
 
             double y0 = 0;
             double zt = tops[0];
@@ -727,7 +727,7 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
                 coord.push_back(y0);
                 coord.push_back(zb);
 
-                for (int i = 0; i < dims[0]; i++) {
+                for (std::size_t i = 0; i < dims[0]; i++) {
 
                     size_t ind = i+j*dims[0]+1;
 
@@ -752,7 +752,7 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
                 }
             }
 
-            int ind = (j+1)*dims[0];
+            std::size_t ind = (j+1)*dims[0];
 
             if (j == (dims[1]-1) ) {
                 ind = j*dims[0];
@@ -773,7 +773,7 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
             coord.push_back(yb);
             coord.push_back(zb);
 
-            for (int i=0; i < dims[0]; i++) {
+            for (std::size_t i=0; i < dims[0]; i++) {
 
                 ind = i+(j+1)*dims[0]+1;
 
@@ -826,15 +826,15 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
 
         zcorn.assign (sizeZcorn, 0.0);
 
-        for (int j = 0; j < dims[1]; j++) {
-            for (int i = 0; i < dims[0]; i++) {
-                int ind = i + j*dims[0];
+        for (std::size_t j = 0; j < dims[1]; j++) {
+            for (std::size_t i = 0; i < dims[0]; i++) {
+                std::size_t ind = i + j*dims[0];
                 double z = tops[ind];
 
-                for (int k = 0; k < dims[2]; k++) {
+                for (std::size_t k = 0; k < dims[2]; k++) {
 
                     // top face of cell
-                    int zind = i*2 + j*dims[0]*4 + k*dims[0]*dims[1]*8;
+                    std::size_t zind = i*2 + j*dims[0]*4 + k*dims[0]*dims[1]*8;
 
                     zcorn[zind] = z;
                     zcorn[zind + 1] = z;
@@ -867,7 +867,7 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
 
         double sum = 0.0;
 
-        for (int i = 0; i <= i1; i++) {
+        for (std::size_t i = 0; i <= i1; i++) {
             sum = sum + dx[i + j*dims[0] + k*dims[0]*dims[1]];
         }
 
@@ -878,7 +878,7 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
 
         double sum = 0.0;
 
-        for (int j = 0; j <= j1; j++) {
+        for (std::size_t j = 0; j <= j1; j++) {
             sum=sum + dy[i + j*dims[0] + k*dims[0]*dims[1]];
         }
 
@@ -889,7 +889,7 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
 
         double sum = 0.0;
 
-        for (int k = 0; k < dims[2]; k++) {
+        for (std::size_t k = 0; k < dims[2]; k++) {
             sum = sum + dz[i + j*dims[0] + k*dims[0]*dims[1]];
         }
 
@@ -961,12 +961,12 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
             {
                 std::vector<double> zk(dims[2]);
                 zk[0] = 0;
-                for (int k = 1; k < dims[2]; k++)
+                for (std::size_t k = 1; k < dims[2]; k++)
                     zk[k] = zk[k - 1] + dzv[k - 1];
 
-                for (int k = 0; k < dims[2]; k++) {
-                    for (int j = 0; j < dims[1]; j++) {
-                        for (int i = 0; i < dims[0]; i++) {
+                for (std::size_t k = 0; k < dims[2]; k++) {
+                    for (std::size_t j = 0; j < dims[1]; j++) {
+                        for (std::size_t i = 0; i < dims[0]; i++) {
                             size_t tops_value = tops[ i + dims[0] * j];
                             for (size_t c=0; c < 4; c++) {
                                 zcorn[ zm.index(i,j,k,c) ]     = zk[k] + tops_value;
@@ -982,22 +982,22 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
                 double z1 = *std::min_element( zcorn.begin() , zcorn.end());
                 double z2 = *std::max_element( zcorn.begin() , zcorn.end());
                 ri[0] = deck.getKeyword<ParserKeywords::INRAD>().getRecord(0).getItem(0).getSIDouble( 0 );
-                for (int i = 1; i <= dims[0]; i++)
+                for (std::size_t i = 1; i <= dims[0]; i++)
                     ri[i] = ri[i - 1] + drv[i - 1];
 
                 tj[0] = 0;
-                for (int j = 1; j <= dims[1]; j++)
+                for (std::size_t j = 1; j <= dims[1]; j++)
                     tj[j] = tj[j - 1] + dthetav[j - 1];
 
 
-                for (int j = 0; j <= dims[1]; j++) {
+                for (std::size_t j = 0; j <= dims[1]; j++) {
                     /*
                       The theta value is supposed to go counterclockwise, starting at 'twelve o clock'.
                     */
                     double t = M_PI * (90 - tj[j]) / 180;
                     double c = cos( t );
                     double s = sin( t );
-                    for (int i = 0; i <= dims[0]; i++) {
+                    for (std::size_t i = 0; i <= dims[0]; i++) {
                         double r = ri[i];
                         double x = r*c;
                         double y = r*s;
