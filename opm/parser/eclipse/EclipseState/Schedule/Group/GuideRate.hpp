@@ -33,6 +33,29 @@ namespace Opm {
 
 class Schedule;
 class GuideRate {
+
+public:
+// used for potentials and well rates
+struct RateVector {
+    RateVector () = default;
+    RateVector (double orat, double grat, double wrat) :
+        oil_rat(orat),
+        gas_rat(grat),
+        wat_rat(wrat)
+    {}
+
+
+    double eval(Group::GuideRateTarget target) const;
+    double eval(Well::GuideRateTarget target) const;
+    double eval(GuideRateModel::Target target) const;
+
+
+    double oil_rat;
+    double gas_rat;
+    double wat_rat;
+};
+
+
 private:
 
 struct GuideRateValue {
@@ -57,31 +80,13 @@ struct GuideRateValue {
     GuideRateModel::Target target;
 };
 
-struct Potential {
-    Potential() = default;
-    Potential(double op, double gp, double wp) :
-        oil_pot(op),
-        gas_pot(gp),
-        wat_pot(wp)
-    {}
-
-
-    double eval(Group::GuideRateTarget target) const;
-    double eval(Well::GuideRateTarget target) const;
-    double eval(GuideRateModel::Target target) const;
-
-
-    double oil_pot;
-    double gas_pot;
-    double wat_pot;
-};
 
 public:
     GuideRate(const Schedule& schedule);
     void   compute(const std::string& wgname, size_t report_step, double sim_time, double oil_pot, double gas_pot, double wat_pot);
-    double get(const std::string& well, Well::GuideRateTarget target) const;
-    double get(const std::string& group, Group::GuideRateTarget target) const;
-    double get(const std::string& name, GuideRateModel::Target model_target) const;
+    double get(const std::string& well, Well::GuideRateTarget target, const RateVector& rates) const;
+    double get(const std::string& group, Group::GuideRateTarget target, const RateVector& rates) const;
+    double get(const std::string& name, GuideRateModel::Target model_target, const RateVector& rates) const;
     bool has(const std::string& name) const;
 
 private:
@@ -91,8 +96,8 @@ private:
     double eval_group_pot() const;
     double eval_group_resvinj() const;
 
-    std::unordered_map<std::string,GuideRateValue> values;
-    std::unordered_map<std::string,Potential> potentials;
+    std::unordered_map<std::string, GuideRateValue> values;
+    std::unordered_map<std::string, RateVector > potentials;
     const Schedule& schedule;
 };
 
