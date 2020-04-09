@@ -240,6 +240,7 @@ if(ENABLE_ECL_OUTPUT)
           src/opm/io/eclipse/EGrid.cpp
           src/opm/io/eclipse/ERft.cpp
           src/opm/io/eclipse/ERst.cpp
+          src/opm/io/eclipse/ERsm.cpp
           src/opm/io/eclipse/ESmry.cpp
           src/opm/io/eclipse/ESmry_write_rsm.cpp
           src/opm/io/eclipse/OutputStream.cpp
@@ -296,6 +297,7 @@ list (APPEND TEST_SOURCE_FILES
 if(ENABLE_ECL_INPUT)
   list(APPEND TEST_SOURCE_FILES
     tests/rst_test.cpp
+    tests/test_ERsm.cpp
     tests/parser/ACTIONX.cpp
     tests/parser/ADDREGTests.cpp
     tests/parser/AquiferTests.cpp
@@ -733,6 +735,7 @@ if(ENABLE_ECL_OUTPUT)
         opm/io/eclipse/EGrid.hpp
         opm/io/eclipse/ERft.hpp
         opm/io/eclipse/ERst.hpp
+        opm/io/eclipse/ERsm.hpp
         opm/io/eclipse/ESmry.hpp
         opm/io/eclipse/PaddedOutputString.hpp
         opm/io/eclipse/OutputStream.hpp
