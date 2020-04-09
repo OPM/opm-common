@@ -26,6 +26,7 @@
 #include <set>
 #include <stdexcept>
 #include <string>
+#include <fnmatch.h>
 
 #include <opm/common/utility/FileSystem.hpp>
 #include <opm/common/utility/TimeService.hpp>
@@ -615,9 +616,23 @@ const std::string& ESmry::get_unit(const std::string& name) const {
     return kwunits.at(name);
 }
 
-const std::vector<std::string>& ESmry::keywordList() const {
+const std::vector<std::string>& ESmry::keywordList() const
+{
     return keyword;
 }
+
+std::vector<std::string> ESmry::keywordList(const std::string& pattern) const
+{
+    std::vector<std::string> list;
+
+    for (auto key : keyword)
+        if (fnmatch( pattern.c_str(), key.c_str(), 0 ) == 0 )
+            list.push_back(key);
+
+    return list;
+}
+
+
 
 const std::vector<SummaryNode>& ESmry::summaryNodeList() const {
     return summaryNodes;

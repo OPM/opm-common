@@ -298,9 +298,6 @@ std::chrono::system_clock::time_point esmry_start_date(const Opm::EclIO::ESmry *
 }
 
 
-
-
-
 void python::common::export_IO(py::module& m) {
 
     py::enum_<Opm::EclIO::eclArrType>(m, "eclArrType", py::arithmetic())
@@ -341,7 +338,11 @@ void python::common::export_IO(py::module& m) {
         .def("__get_all", &get_smry_vector)
         .def("__get_at_rstep", &get_smry_vector_at_rsteps)
         .def_property_readonly("start_date", &esmry_start_date)
-        .def_property_readonly("list_of_keys", &Opm::EclIO::ESmry::keywordList);
+
+        .def("keys", (const std::vector<std::string>& (Opm::EclIO::ESmry::*) (void) const)
+            &Opm::EclIO::ESmry::keywordList)
+        .def("keys", (std::vector<std::string> (Opm::EclIO::ESmry::*) (const std::string&) const)
+            &Opm::EclIO::ESmry::keywordList);
 
    py::class_<Opm::EclIO::EGrid>(m, "EGrid")
         .def(py::init<const std::string &>())
