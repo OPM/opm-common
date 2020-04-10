@@ -230,9 +230,19 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
         Schedule(deck, es, ParseContext(), ErrorGuard(), std::make_shared<const Python>(), rst)
     {}
 
+
+    /*
+      In general the serializeObject() instances are used as targets for
+      deserialization, i.e. the serialized buffer is unpacked into this
+      instance. However the Schedule object is a top level object, and the
+      simulator will instantiate and manage a Schedule object to unpack into, so
+      the instance created here is only for testing.
+    */
     Schedule Schedule::serializeObject()
     {
-        Schedule result;
+        auto python = std::make_shared<Python>(Python::Enable::OFF);
+        Schedule result(python);
+
         result.m_timeMap = TimeMap::serializeObject();
         result.wells_static.insert({"test1", {{std::make_shared<Opm::Well>(Opm::Well::serializeObject())},1}});
         result.groups.insert({"test2", {{std::make_shared<Opm::Group>(Opm::Group::serializeObject())},1}});
