@@ -41,7 +41,7 @@ void printHeader(const std::vector<std::string>& keyList){
     std::cout << "--" << std::setw(14) << keyList[0];
 
     for (size_t n= 1; n < keyList.size(); n++){
-        std::cout << std::setw(16) << keyList[n]; 
+        std::cout << std::setw(16) << keyList[n];
     }
 
     std::cout << std::endl;
@@ -50,14 +50,14 @@ void printHeader(const std::vector<std::string>& keyList){
 std::string formatString(float data){
 
     std::stringstream stream;
-    
+
     if (std::fabs(data) < 1e6){
        stream << std::fixed << std::setw(16) << std::setprecision(6) << data;
     } else {
        stream << std::scientific << std::setw(16) << std::setprecision(6)  << data;
     }
-    
-    return stream.str();    
+
+    return stream.str();
 }
 
 int main(int argc, char **argv) {
@@ -81,62 +81,67 @@ int main(int argc, char **argv) {
             return EXIT_FAILURE;
         }
     }
-    
+
     int argOffset = optind;
 
     std::string filename = argv[argOffset];
     Opm::EclIO::ESmry smryFile(filename);
-    
+
     if (listKeys){
         auto list = smryFile.keywordList();
-        
+
         for (size_t n = 0; n < list.size(); n++){
             std::cout << std::setw(20) << list[n];
-            
+
             if (((n+1) % 5)==0){
                 std::cout << std::endl;
             }
         }
-        
+
         std::cout << std::endl;
 
         return 0;
     }
 
     std::vector<std::string> smryList;
-    for (int i=0; i<argc - argOffset-1;i++){
-       smryList.push_back(argv[i+argOffset+1]);
+    for (int i=0; i<argc - argOffset-1; i++) {
+        if (smryFile.hasKey(argv[i+argOffset+1])) {
+            smryList.push_back(argv[i+argOffset+1]);
+        } else {
+            auto list = smryFile.keywordList(argv[i+argOffset+1]);
+
+            if (list.size()==0) {
+                std::string message = "Key " + std::string(argv[i+argOffset+1]) + " not found in summary file " + filename;
+                std::cout << "\n!Runtime Error \n >> " << message << "\n\n";
+                return EXIT_FAILURE;
+            }
+
+            for (auto vect : list)
+                smryList.push_back(vect);
+        }
     }
-    
+
     if (smryList.size()==0){
         std::string message = "No summary keys specified on command line";
         std::cout << "\n!Runtime Error \n >> " << message << "\n\n";
         return EXIT_FAILURE;
     }
-    
+
     std::vector<std::vector<float>> smryData;
 
-    for (auto key : smryList){
-        
-        if (!smryFile.hasKey(key)){
-            std::string message = "Key " + key + " not found in summary file " + filename;
-            std::cout << "\n!Runtime Error \n >> " << message << "\n\n";
-            return EXIT_FAILURE;
-        }
-        
+    for (auto key : smryList) {
         std::vector<float> vect = reportStepsOnly ? smryFile.get_at_rstep(key) : smryFile.get(key);
-
         smryData.push_back(vect);
     }
-    
+
     printHeader(smryList);
- 
+
     for (size_t s=0; s<smryData[0].size(); s++){
         for (size_t n=0; n < smryData.size(); n++){
             std::cout << formatString(smryData[n][s]);
         }
         std::cout << std::endl;
-    }   
-     
+    }
+
     return 0;
 }

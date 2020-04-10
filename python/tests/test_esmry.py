@@ -79,17 +79,26 @@ class TestEclFile(unittest.TestCase):
                         "WWIR:PROD", "WWIT:INJ", "WWIT:PROD", "WWPR:INJ", "WWPR:PROD", "WWPT:INJ",
                         "WWPT:PROD"]
 
+        ref_keys_pattern = ["WGPR:INJ", "WGPR:PROD", "WOPR:INJ", "WOPR:PROD", "WWPR:INJ", "WWPR:PROD"]
+
         smry1 = ESmry(test_path("data/SPE1CASE1.SMSPEC"))
 
-        self.assertEqual(len(smry1.list_of_keys), len(ref_key_list))
+        list_of_keys = smry1.keys()
+        self.assertEqual(len(list_of_keys), len(ref_key_list))
 
-        for key, ref_key in zip(smry1.list_of_keys, ref_key_list):
+        for key, ref_key in zip(list_of_keys, ref_key_list):
             self.assertEqual(key, ref_key)
 
-        for key in smry1.list_of_keys:
+        for key in list_of_keys:
             data = smry1[key]
             self.assertEqual(len(smry1), len(data))
 
+        list_of_keys2 = smry1.keys("W?PR:*")
+
+        self.assertEqual(len(list_of_keys2), len(ref_keys_pattern))
+
+        for key, ref in zip(list_of_keys2, ref_keys_pattern):
+            self.assertEqual(key, ref)
 
 if __name__ == "__main__":
 

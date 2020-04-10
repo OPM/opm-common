@@ -52,6 +52,7 @@ public:
     std::chrono::system_clock::time_point startdate() const { return startdat; }
 
     const std::vector<std::string>& keywordList() const;
+    std::vector<std::string> keywordList(const std::string& pattern) const;
     const std::vector<SummaryNode>& summaryNodeList() const;
 
     int timestepIdxAtReportstepStart(const int reportStep) const;
