@@ -118,6 +118,7 @@ namespace Opm
         using VFPInjMap = std::map<int, DynamicState<std::shared_ptr<VFPInjTable>>>;
 
         Schedule() = default;
+        Schedule(std::shared_ptr<const Python>) {}
         Schedule(const Deck& deck,
                  const EclipseGrid& grid,
                  const FieldPropsManager& fp,
