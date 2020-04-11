@@ -259,8 +259,12 @@ void EclipseIO::writeTimeStep(const SummaryState& st,
                      grid, schedule, value.wells, rftFile);
     }
 
-    for (const auto& report : schedule.report_config(report_step)) {
-        RptIO::write_report(std::cout, report.first, report.second, schedule, report_step);
+
+    if (!isSubstep) {
+        for (const auto& report : schedule.report_config(report_step)) {
+            std::stringstream ss;
+            RptIO::write_report(ss, report.first, report.second, schedule, report_step);
+        }
     }
  }
 
