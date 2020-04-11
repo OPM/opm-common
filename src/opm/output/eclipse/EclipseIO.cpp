@@ -30,6 +30,7 @@
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/RFTConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/RPTConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellConnections.hpp>
 #include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
@@ -41,6 +42,7 @@
 #include <opm/output/eclipse/Summary.hpp>
 #include <opm/output/eclipse/WriteInit.hpp>
 #include <opm/output/eclipse/WriteRFT.hpp>
+#include <opm/output/eclipse/WriteRPT.hpp>
 
 #include <opm/io/eclipse/ESmry.hpp>
 #include <opm/io/eclipse/OutputStream.hpp>
@@ -255,6 +257,10 @@ void EclipseIO::writeTimeStep(const SummaryState& st,
 
         RftIO::write(report_step, secs_elapsed, es.getUnits(),
                      grid, schedule, value.wells, rftFile);
+    }
+
+    for (const auto& report : schedule.report_config(report_step)) {
+        RptIO::write_report(std::cout, report.first, report.second, schedule, report_step);
     }
  }
 
