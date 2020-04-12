@@ -181,6 +181,7 @@ namespace Opm
         time_t simTime(size_t timeStep) const;
         double seconds(size_t timeStep) const;
         double stepLength(size_t timeStep) const;
+        std::optional<int> exitStatus() const;
 
         const TimeMap& getTimeMap() const;
 
@@ -339,6 +340,7 @@ namespace Opm
         RFTConfig rft_config;
         DynamicState<int> m_nupcol;
         RestartConfig restart_config;
+        std::optional<int> exit_status;
 
         std::map<std::string,Events> wellgroup_events;
         void load_rst(const RestartIO::RstState& rst,
@@ -374,6 +376,7 @@ namespace Opm
         void addGroupToGroup( const std::string& parent_group, const Group& child_group, size_t timeStep);
         void addGroup(const std::string& groupName , size_t timeStep, const UnitSystem& unit_system);
         void addWell(const std::string& wellName, const DeckRecord& record, size_t timeStep, Connection::Order connection_order, const UnitSystem& unit_system);
+        void handleEXIT(const DeckKeyword& keyword , size_t report_step);
         void handleUDQ(const DeckKeyword& keyword, size_t currentStep);
         void handleWLIST(const DeckKeyword& keyword, size_t currentStep);
         void handleCOMPORD(const ParseContext& parseContext, ErrorGuard& errors, const DeckKeyword& compordKeyword, size_t currentStep);

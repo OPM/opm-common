@@ -666,6 +666,13 @@ void Schedule::iterateScheduleSection(const std::string& input_path, const Parse
     }
 
 
+    void Schedule::handleEXIT(const DeckKeyword& keyword, std::size_t report_step ) {
+        using ex = ParserKeywords::EXIT;
+        int status = keyword.getRecord(0).getItem<ex::STATUS_CODE>().get<int>(0);
+        OpmLog::info("Simulation exit with status: " + std::to_string(status) + " requested as part of ACTIONX at report_step: " + std::to_string(report_step));
+        this->exit_status = status;
+    }
+
 
     /*
       The COMPORD keyword is handled together with the WELSPECS keyword in the
@@ -2840,6 +2847,9 @@ void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t 
         return *ptr;
     }
 
+    std::optional<int> Schedule::exitStatus() const {
+        return this->exit_status;
+    }
 
     size_t Schedule::size() const {
         return this->m_timeMap.size();
@@ -2875,6 +2885,9 @@ void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t 
 
             if (keyword.name() == "WELOPEN")
                 this->handleWELOPEN(keyword, reportStep, parseContext, errors, result.wells());
+
+            if (keyword.name() == "EXIT")
+                this->handleEXIT(keyword, reportStep);
         }
 
     }
