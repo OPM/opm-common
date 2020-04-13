@@ -200,12 +200,12 @@ namespace {
     }
 
     const std::string header_days_string { "WELSPECS AT       0.00 DAYS" } ;
-    std::string header_days(const Opm::Schedule& schedule, std::size_t report_step) {
+    std::string header_days(const Opm::Schedule& , std::size_t ) {
         return wrap_string_for_header(header_days_string); // TODO: Calculate properly
     }
 
     const std::string report_line_string { "REPORT   0     31 DEC 2007"  } ;
-    std::string report_line(const Opm::Schedule& schedule, std::size_t report_step) {
+    std::string report_line(const Opm::Schedule& , std::size_t ) {
         return wrap_string_for_header(report_line_string); // TODO: Calculate properly
     }
 
