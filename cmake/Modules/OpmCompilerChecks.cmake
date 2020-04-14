@@ -97,3 +97,8 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     list(APPEND ${project}_LIBRARIES stdc++fs)
   endif()
 endif()
+
+option(OPM_CLANG_WITH_STDC++FS "Using libstdc++ with clang and we want to link to stdc++fs" OFF)
+if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND OPM_CLANG_WITH_STDC++FS)
+  list(APPEND ${project}_LIBRARIES stdc++fs)
+endif()
