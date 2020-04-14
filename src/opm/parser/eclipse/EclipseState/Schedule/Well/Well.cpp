@@ -97,9 +97,6 @@ Well::Well() :
 
 namespace {
 
-constexpr Phase def_phase = Phase::OIL;
-constexpr Well::Status def_status = Well::Status::OPEN;
-constexpr int def_ecl_phase = 1;
 constexpr int def_well_closed_control = 0;
 
 
