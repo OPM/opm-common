@@ -97,14 +97,14 @@ private:
 
     template <typename T>
     std::vector<T> rstep_vector(const std::vector<T>& full_vector) const {
-        std::vector<T> rstep_vector;
-        rstep_vector.reserve(seqIndex.size());
+        std::vector<T> result;
+        result.reserve(seqIndex.size());
 
         for (const auto& ind : seqIndex){
-            rstep_vector.push_back(full_vector[ind]);
+            result.push_back(full_vector[ind]);
         }
 
-        return rstep_vector;
+        return result;
     }
 };
 
