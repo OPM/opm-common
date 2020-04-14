@@ -153,12 +153,20 @@ namespace Opm {
     struct Segment {
         Rates rates;
         double pressure;
+        double pressure_drop;
+        double pressure_drop_hydrostatic;
+        double pressure_drop_acceleration;
+        double pressure_drop_friction;
         std::size_t segNumber;
 
         bool operator==(const Segment& seg2) const
         {
           return rates == seg2.rates &&
                  pressure == seg2.pressure &&
+                 pressure_drop == seg2.pressure_drop &&
+                 pressure_drop_hydrostatic == seg2.pressure_drop_hydrostatic &&
+                 pressure_drop_friction == seg2.pressure_drop_friction &&
+                 pressure_drop_acceleration == seg2.pressure_drop_acceleration &&
                  segNumber == seg2.segNumber;
         }
 
@@ -453,6 +461,10 @@ namespace Opm {
         buffer.write(this->segNumber);
         this->rates.write(buffer);
         buffer.write(this->pressure);
+        buffer.write(this->pressure_drop);
+        buffer.write(this->pressure_drop_hydrostatic);
+        buffer.write(this->pressure_drop_friction);
+        buffer.write(this->pressure_drop_acceleration);
     }
 
     template <class MessageBufferType>
@@ -531,6 +543,10 @@ namespace Opm {
         buffer.read(this->segNumber);
         this->rates.read(buffer);
         buffer.read(this->pressure);
+        buffer.read(this->pressure_drop);
+        buffer.read(this->pressure_drop_hydrostatic);
+        buffer.read(this->pressure_drop_friction);
+        buffer.read(this->pressure_drop_acceleration);
     }
 
     template <class MessageBufferType>

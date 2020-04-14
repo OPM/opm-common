@@ -178,7 +178,7 @@ namespace {
 
     bool is_pressure(const std::string& keyword) {
         static const keyword_set presskw {
-            "BHP", "BHPH", "THP", "THPH", "PR"
+            "BHP", "BHPH", "THP", "THPH", "PR", "PRD", "PRDH", "PRDF", "PRDA",
         };
 
         return is_in_set(presskw, keyword.substr(1));
@@ -557,13 +557,13 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
     {
         const auto& kw = keyword.name();
 
-        if (kw.size() > 4) {
+        if (kw.size() > 5) {
             // Easy check first--handles SUMMARY and SUMTHIN &c.
             return false;
         }
 
         const auto kw_whitelist = std::vector<const char*> {
-            "SOFR", "SGFR", "SWFR", "SPR",
+            "SOFR", "SGFR", "SWFR", "SPR", "SPRD", "SPRDH", "SPRDF", "SPRDA",
         };
 
         return std::any_of(kw_whitelist.begin(), kw_whitelist.end(),
