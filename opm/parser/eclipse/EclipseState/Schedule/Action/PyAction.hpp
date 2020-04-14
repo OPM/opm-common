@@ -25,6 +25,10 @@
 #include <string>
 
 namespace Opm {
+class EclipseState;
+class Schedule;
+class SummaryState;
+
 namespace Action {
 
 class PyAction {
@@ -42,6 +46,7 @@ public:
     PyAction() = default;
     PyAction(const std::string& name, RunCount run_count, const std::string& code);
     PyAction(const PyAction& other);
+    bool run(EclipseState&, Schedule&, std::size_t, SummaryState& ) const { return false; };
     PyAction operator=(const PyAction& other);
     ~PyAction();
 
