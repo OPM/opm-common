@@ -247,10 +247,6 @@ namespace Opm {
         std::vector<double> makeZcornDzvDepthz(const std::vector<double>& dzv, const std::vector<double>& depthz) const;
         std::vector<double> makeCoordDxvDyvDzvDepthz(const std::vector<double>& dxv, const std::vector<double>& dyv, const std::vector<double>& dzv, const std::vector<double>& depthz) const;
 
-        double sumIdir(int j, int k, int i1, const std::vector<double>& dx) const;
-        double sumJdir(int i, int k, int j1, const std::vector<double>& dy) const;
-        double sumKdir(int i, int j, const std::vector<double>& dz) const;
-
         void getCellCorners(const std::array<int, 3>& ijk, const std::array<int, 3>& dims, std::array<double,8>& X, std::array<double,8>& Y, std::array<double,8>& Z) const;
         void getCellCorners(const std::size_t globalIndex,
                             std::array<double,8>& X,

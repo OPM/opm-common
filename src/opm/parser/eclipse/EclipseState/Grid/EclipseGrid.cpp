@@ -705,6 +705,51 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         return zcorn;
     }
 
+    namespace
+    {
+        std::vector<double> makeSumIdirAtK(const int nx, const int ny, const int k, const std::vector<double>& dx)
+        {
+            std::vector<double> s(nx * ny, 0.0);
+            for (int j = 0; j < ny; ++j) {
+                double sum = 0.0;
+                for (int i = 0; i < nx; ++i) {
+                    sum += dx[i + j*nx + k*nx*ny];
+                    s[i + j*nx] = sum;
+                }
+            }
+            return s;
+        }
+
+        std::vector<double> makeSumJdirAtK(const int nx, const int ny, const int k, const std::vector<double>& dy)
+        {
+            std::vector<double> s(nx * ny, 0.0);
+            for (int i = 0; i < nx; ++i) {
+                double sum = 0.0;
+                for (int j = 0; j < ny; ++j) {
+                    sum += dy[i + j*nx + k*nx*ny];
+                    s[i + j*nx] = sum;
+                }
+            }
+            return s;
+        }
+
+        std::vector<double> makeSumKdir(const int nx, const int ny, const int nz, const std::vector<double>& dz)
+        {
+            std::vector<double> s(nx * ny, 0.0);
+            for (int i = 0; i < nx; ++i) {
+                for (int j = 0; j < ny; ++j) {
+                    double sum = 0.0;
+                    for (int k = 0; k < nz; ++k) {
+                        sum += dz[i + j*nx + k*nx*ny];
+                    }
+                    s[i + j*nx] = sum;
+                }
+            }
+            return s;
+        }
+
+    } // anonymous namespace
+
     std::vector<double> EclipseGrid::makeCoordDxDyDzTops(const std::vector<double>& dx, const std::vector<double>& dy, const std::vector<double>& dz, const std::vector<double>& tops) const {
         auto nx = this->getNX();
         auto ny = this->getNY();
@@ -713,11 +758,17 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         std::vector<double> coord;
         coord.reserve((nx+1)*(ny+1)*6);
 
+        std::vector<double> sum_idir_top = makeSumIdirAtK(nx, ny, 0, dx);
+        std::vector<double> sum_idir_bot = makeSumIdirAtK(nx, ny, nz - 1, dx);
+        std::vector<double> sum_jdir_top = makeSumJdirAtK(nx, ny, 0, dy);
+        std::vector<double> sum_jdir_bot = makeSumJdirAtK(nx, ny, nz - 1, dy);
+        std::vector<double> sum_kdir = makeSumKdir(nx, ny, nz, dz);
+
         for (std::size_t j = 0; j < ny; j++) {
 
             double y0 = 0;
             double zt = tops[0];
-            double zb = zt + sumKdir(0, 0, dz);
+            double zb = zt + sum_kdir[0 + 0*nx];
 
             if (j == 0) {
                 double x0 = 0.0;
@@ -738,10 +789,10 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
                     }
 
                     zt = tops[ind];
-                    zb = zt + sumKdir(i, j, dz);
+                    zb = zt + sum_kdir[i + j*nx];
 
-                    double xt = x0 + dx[i+j*nx];
-                    double xb = sumIdir(i, j, nz - 1, dx);
+                    double xt = x0 + dx[i + j*nx];
+                    double xb = sum_idir_bot[i + j*nx];
 
                     coord.push_back(xt);
                     coord.push_back(y0);
@@ -762,11 +813,11 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
 
             double x0 = 0.0;
 
-            double yt = sumJdir(0, j, 0,  dy);
-            double yb = sumJdir(0, j, nz-1, dy);
+            double yt = sum_jdir_top[0 + j*nx];
+            double yb = sum_jdir_bot[0 + j*nx];
 
             zt = tops[ind];
-            zb = zt + sumKdir(0, j, dz);
+            zb = zt + sum_kdir[0 + j*nx];
 
             coord.push_back(x0);
             coord.push_back(yt);
@@ -788,25 +839,25 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
                 }
 
                 zt = tops[ind];
-                zb = zt + sumKdir(i, j, dz);
+                zb = zt + sum_kdir[i + j*nx];
 
                 double xt=-999;
                 double xb;
 
                 if (j == (ny-1) ) {
-                    xt = sumIdir(i, j, 0, dx);
-                    xb = sumIdir(i, j, nz-1, dx);
+                    xt = sum_idir_top[i + j*nx];
+                    xb = sum_idir_bot[i + j*nx];
                 } else {
-                    xt = sumIdir(i, j+1, 0, dx);
-                    xb = sumIdir(i, j+1, nz-1, dx);
+                    xt = sum_idir_top[i + (j+1)*nx];
+                    xb = sum_idir_bot[i + (j+1)*nx];
                 }
 
                 if (i == (nx - 1) ) {
-                    yt = sumJdir(i, j, 0, dy);
-                    yb = sumJdir(i, j, nz-1, dy);
+                    yt = sum_jdir_top[i + j*nx];
+                    yb = sum_jdir_bot[i + j*nx];
                 } else {
-                    yt = sumJdir(i+1, j, 0, dy);
-                    yb = sumJdir(i+1, j, nz-1, dy);
+                    yt = sum_jdir_top[(i + 1) + j*nx];
+                    yb = sum_jdir_bot[(i + 1) + j*nx];
                 }
 
                 coord.push_back(xt);
@@ -865,39 +916,6 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         }
 
         return zcorn;
-    }
-
-    double EclipseGrid::sumIdir(int i1, int j, int k, const std::vector<double>& dx) const {
-
-        double sum = 0.0;
-
-        for (int i = 0; i <= i1; i++) {
-            sum = sum + dx[i + j*this->getNX() + k*this->getNX() * this->getNY()];
-        }
-
-        return sum;
-    }
-
-    double EclipseGrid::sumJdir(int i, int j1, int k, const std::vector<double>& dy) const {
-
-        double sum = 0.0;
-
-        for (int j = 0; j <= j1; j++) {
-            sum=sum + dy[i + j*this->getNX() + k*this->getNX()*this->getNY()];
-        }
-
-        return sum;
-    }
-
-    double EclipseGrid::sumKdir(int i, int j, const std::vector<double>& dz) const {
-
-        double sum = 0.0;
-
-        for (std::size_t k = 0; k < this->getNZ(); k++) {
-            sum = sum + dz[i + j*this->getNX() + k*this->getNX()*this->getNY()];
-        }
-
-        return sum;
     }
 
     /*
