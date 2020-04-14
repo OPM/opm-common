@@ -68,7 +68,7 @@ class Phases {
             if (serializer.isSerializing())
                 serializer(bits.to_ulong());
             else {
-              unsigned long Bits;
+              unsigned long Bits = 0;
               serializer(Bits);
               bits = std::bitset<NUM_PHASES_IN_ENUM>(Bits);
             }
