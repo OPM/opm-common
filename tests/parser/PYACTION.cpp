@@ -35,7 +35,6 @@ BOOST_AUTO_TEST_CASE(ParsePYACTION) {
     const auto& record0 = keyword.getRecord(0);
     const auto& record1 = keyword.getRecord(1);
 
-    const auto& name = record0.getItem(0).get<std::string>(0);
     auto run_count = Action::PyAction::from_string(record0.getItem(1).get<std::string>(0));
     std::string code = Action::PyAction::load(deck.getInputPath(), record1.getItem(0).get<std::string>(0));
 

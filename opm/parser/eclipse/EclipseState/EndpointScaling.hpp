@@ -50,7 +50,7 @@ class EndpointScaling {
             if (serializer.isSerializing())
                 serializer(options.to_ulong());
             else {
-                unsigned long bits;
+                unsigned long bits = 0;
                 serializer(bits);
                 options = std::bitset<4>(bits);
             }
