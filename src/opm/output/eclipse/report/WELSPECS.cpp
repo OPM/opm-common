@@ -475,11 +475,15 @@ namespace {
         }
 
         std::string connection_depth(std::size_t) const {
-            return std::to_string(connection.depth()).substr(0, 11);
+            return std::to_string(connection.depth()).substr(0, 10);
         }
 
         std::string segment_depth(std::size_t) const {
             return std::to_string(segment.depth()).substr(0, 10);
+        }
+
+        std::string grid_block_depth(std::size_t) const {
+            return std::to_string(segment.depth()).substr(0, 11);
         }
 
         const std::string& unimplemented(std::size_t) const {
@@ -509,9 +513,9 @@ namespace {
         { 11, {"TUB LENGTH" , "END PERFS"  , "METRES"     }, &WellSegment::unimplemented   , right_align },
         { 11, {"TUB LENGTH" , "CENTR PERFS", "METRES"     }, &WellSegment::unimplemented   , right_align },
         { 11, {"TUB LENGTH" , "END SEGMT"  , "METRES"     }, &WellSegment::unimplemented   , right_align },
-        { 10, {"CONNECTION" , "DEPTH"      , "METRES"     }, &WellSegment::segment_depth   , right_align },
+        { 10, {"CONNECTION" , "DEPTH"      , "METRES"     }, &WellSegment::connection_depth, right_align },
         { 10, {"SEGMENT"    , "DEPTH"      , "METRES"     }, &WellSegment::segment_depth   , right_align },
-        { 11, {"GRID BLOCK" , "DEPTH"      , "METRES"     }, &WellSegment::connection_depth, right_align },
+        { 11, {"GRID BLOCK" , "DEPTH"      , "METRES"     }, &WellSegment::grid_block_depth, right_align },
     }};
 
 }
