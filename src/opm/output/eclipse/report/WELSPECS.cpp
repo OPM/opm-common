@@ -38,6 +38,14 @@ namespace {
         }
     }
 
+    void left_header(std::string& string, std::size_t width, std::size_t line_number) {
+        if (line_number == 0) {
+            left_align(string, width, line_number);
+        } else {
+            string = std::string(field_padding, width);
+        }
+    }
+
     void right_align(std::string& string, std::size_t width, std::size_t = 0) {
         if (string.size() < width) {
             string = std::string(width - string.size(), field_padding) + string;
@@ -425,12 +433,67 @@ namespace {
        { 10, {"CONNECTION"             ,"D-FACTOR"               ,"DAY/SM3"                }, &WellConnection::unimplemented   ,             },
        { 23, {"SATURATION SCALING DATA","SWMIN SWMAX SGMIN SGMAX",                         }, &WellConnection::unimplemented   ,             },
     }};
+}
+
+namespace {
+
+    struct WellSegment {
+        const Opm::Well& well;
+        const Opm::Connection& connection;
+        const Opm::Segment& segment;
+
+        const std::string& well_name(std::size_t) const {
+            return well.name();
+        }
+
+        const std::string& unimplemented(std::size_t) const {
+            static const std::string s { } ;
+
+            return s;
+        }
+
+        static std::vector<WellSegment> transform(const Opm::Well& well) {
+            const auto &connections { well.getConnections() } ;
+            std::vector<WellSegment> out;
+
+            for (const auto& connection : connections) {
+                out.push_back({ well, connection, well.getSegments().getFromSegmentNumber(connection.segment()) });
+            }
+
+            return out;
+        }
+    };
+
+    const subreport<Opm::Well, WellSegment, 3> well_multisegment_connection { "MULTI-SEGMENT WELL: CONNECTION DATA", {
+        {  8, {"WELL"       , "NAME"       ,              }, &WellSegment::well_name,     left_header },
+        { 11, {"CONNECTION" , ""           ,              }, &WellSegment::unimplemented,             },
+        {  7, {"SEGMENT"    , "NUMBER"     ,              }, &WellSegment::unimplemented,             },
+        { 10, {"BRANCH"     , "ID"         ,              }, &WellSegment::unimplemented,             },
+        { 11, {"TUB LENGTH" , "START PERFS", "METRES"     }, &WellSegment::unimplemented, right_align },
+        { 11, {"TUB LENGTH" , "END PERFS"  , "METRES"     }, &WellSegment::unimplemented, right_align },
+        { 11, {"TUB LENGTH" , "CENTR PERFS", "METRES"     }, &WellSegment::unimplemented, right_align },
+        { 11, {"TUB LENGTH" , "END SEGMT"  , "METRES"     }, &WellSegment::unimplemented, right_align },
+        { 10, {"CONNECTION" , "DEPTH"      , "METRES"     }, &WellSegment::unimplemented, right_align },
+        { 10, {"SEGMENT"    , "DEPTH"      , "METRES"     }, &WellSegment::unimplemented, right_align },
+        { 11, {"GRID BLOCK" , "DEPTH"      , "METRES"     }, &WellSegment::unimplemented, right_align },
+    }};
+
+}
+
+namespace {
 
     void subreport_well_connection_data(std::ostream& os, const std::vector<Opm::Well>& data) {
         well_connection.print(os, data);
 
+        for (const auto& well : data) {
+            if (well.isMultiSegment()) {
+                well_multisegment_connection.print(os, { well });
+            }
+        }
+
         os << std::endl;
     }
+
 }
 
 void Opm::RptIO::workers::write_WELSPECS(std::ostream& os, unsigned, const Opm::Schedule& schedule, std::size_t report_step) {
