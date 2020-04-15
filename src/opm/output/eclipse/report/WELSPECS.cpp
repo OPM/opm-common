@@ -67,6 +67,13 @@ namespace {
         }
     }
 
+    template<typename T>
+    const std::string& unimplemented(const T&, std::size_t) {
+        static const std::string s { } ;
+
+        return s;
+    }
+
     template<typename T, std::size_t header_height>
     struct column {
         using fetch_function = std::function<std::string(const T&, std::size_t)>;
@@ -285,12 +292,6 @@ namespace {
             return ss.str();
         }
 
-        const std::string& unimplemented(std::size_t) const {
-            const static std::string s { } ;
-
-            return s;
-        }
-
         std::string pvt_tab(std::size_t) const {
             return std::to_string( well.pvt_table_number() );
         }
@@ -328,8 +329,8 @@ namespace {
         {  8, { "WELLHEAD"   , "LOCATION"   , "( I, J )"    }, &WellWrapper::wellhead_location, left_align  },
         {  8, { "B.H.REF"    , "DEPTH"      , "METRES"      }, &WellWrapper::reference_depth  , right_align },
         {  5, { "PREF-"      , "ERRED"      , "PHASE"       }, &WellWrapper::preferred_phase  ,             },
-        {  8, { "DRAINAGE"   , "RADIUS"     , "METRES"      }, &WellWrapper::unimplemented    ,             },
-        {  4, { "GAS"        , "INFL"       , "EQUN"        }, &WellWrapper::unimplemented    ,             },
+        {  8, { "DRAINAGE"   , "RADIUS"     , "METRES"      }, unimplemented<WellWrapper>     ,             },
+        {  4, { "GAS"        , "INFL"       , "EQUN"        }, unimplemented<WellWrapper>     ,             },
         {  7, { "SHUT-IN"    , "INSTRCT"    ,               }, &WellWrapper::shut_status      ,             },
         {  5, { "CROSS"      , "FLOW"       , "ABLTY"       }, &WellWrapper::cross_flow       ,             },
         {  3, { "PVT"        , "TAB"        ,               }, &WellWrapper::pvt_tab          ,             },
@@ -404,11 +405,6 @@ namespace {
             return std::to_string(connection.skinFactor()).substr(0, 8);
         }
 
-        const std::string &unimplemented(std::size_t) const {
-            static const std::string s { };
-            return s;
-        }
-
         static std::vector<WellConnection> transform(const Opm::Well& well) {
             const auto &connections { well.getConnections() } ;
             std::vector<WellConnection> out;
@@ -432,8 +428,8 @@ namespace {
        {  6, {"INT"                    ,"DIAM"                   ,"METRES"                 }, &WellConnection::int_diam        , right_align },
        {  7, {"K  H"                   ,"VALUE"                  ,"MD.METRE"               }, &WellConnection::kh_value        , right_align },
        {  6, {"SKIN"                   ,"FACTOR"                 ,                         }, &WellConnection::skin_factor     , right_align },
-       { 10, {"CONNECTION"             ,"D-FACTOR"               ,"DAY/SM3"                }, &WellConnection::unimplemented   ,             },
-       { 23, {"SATURATION SCALING DATA","SWMIN SWMAX SGMIN SGMAX",                         }, &WellConnection::unimplemented   ,             },
+       { 10, {"CONNECTION"             ,"D-FACTOR"               ,"DAY/SM3"                }, unimplemented<WellConnection>    ,             },
+       { 23, {"SATURATION SCALING DATA","SWMIN SWMAX SGMIN SGMAX",                         }, unimplemented<WellConnection>    ,             },
     }};
 
 }
@@ -479,12 +475,6 @@ namespace {
             return std::to_string(segment.totalLength()).substr(0, 9);
         }
 
-        const std::string& unimplemented(std::size_t) const {
-            static const std::string s { } ;
-
-            return s;
-        }
-
         static std::vector<WellSegment> transform(const Opm::Well& well) {
             const auto &connections { well.getConnections() } ;
             std::vector<WellSegment> out;
@@ -502,9 +492,9 @@ namespace {
         { 11, {"CONNECTION" , ""           ,              }, &WellSegment::connection_grid ,             },
         {  7, {"SEGMENT"    , "NUMBER"     ,              }, &WellSegment::segment_number  ,             },
         { 10, {"BRANCH"     , "ID"         ,              }, &WellSegment::branch_id       ,             },
-        { 11, {"TUB LENGTH" , "START PERFS", "METRES"     }, &WellSegment::unimplemented   , right_align },
-        { 11, {"TUB LENGTH" , "END PERFS"  , "METRES"     }, &WellSegment::unimplemented   , right_align },
-        { 11, {"TUB LENGTH" , "CENTR PERFS", "METRES"     }, &WellSegment::unimplemented   , right_align },
+        { 11, {"TUB LENGTH" , "START PERFS", "METRES"     }, unimplemented<WellSegment>    , right_align },
+        { 11, {"TUB LENGTH" , "END PERFS"  , "METRES"     }, unimplemented<WellSegment>    , right_align },
+        { 11, {"TUB LENGTH" , "CENTR PERFS", "METRES"     }, unimplemented<WellSegment>    , right_align },
         { 11, {"TUB LENGTH" , "END SEGMT"  , "METRES"     }, &WellSegment::length_end_segmt, right_align },
         { 10, {"CONNECTION" , "DEPTH"      , "METRES"     }, &WellSegment::connection_depth, right_align },
         { 10, {"SEGMENT"    , "DEPTH"      , "METRES"     }, &WellSegment::segment_depth   , right_align },
