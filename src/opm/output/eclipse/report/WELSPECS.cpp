@@ -463,15 +463,15 @@ namespace {
         }
 
         std::string connection_depth(std::size_t) const {
-            return std::to_string(connection.depth()).substr(0, 10);
+            return std::to_string(connection.depth()).substr(0, 8);
         }
 
         std::string segment_depth(std::size_t) const {
-            return std::to_string(segment.depth()).substr(0, 10);
+            return std::to_string(segment.depth()).substr(0, 8);
         }
 
         std::string grid_block_depth(std::size_t) const {
-            return std::to_string(segment.depth()).substr(0, 11);
+            return std::to_string(segment.depth()).substr(0, 9);
         }
 
         const std::string& unimplemented(std::size_t) const {
