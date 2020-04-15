@@ -12,6 +12,59 @@
 # This module should be the first to be included in the project,
 # because most of the others (OpmXxx.cmake) use these variables.
 
+# for CMake >= 3.0, we need to change a few policies:
+#
+#   - CMP0026 to allow access to the LOCATION target property
+#   - CMP0048 to indicate that we want to deal with the *VERSION*
+#     variables ourselves
+#   - CMP0064 to indicate that we want TEST if conditions to be evaluated
+#   - CMP0074 to indicate that <PackageName>_ROOT can be used to find package
+#             config files
+macro(OpmSetPolicies)
+  if (POLICY CMP0026)
+    # Needed as we query LOCATION in OpmCompile.cmake and OpmSatellites.cmake
+    cmake_policy(SET CMP0026 OLD)
+  endif()
+
+  if (POLICY CMP0048)
+    # We do not set version. Hence NEW should work and this can be removed later
+    cmake_policy(SET CMP0048 NEW)
+  endif()
+
+  if(POLICY CMP0064)
+    cmake_policy(SET CMP0064 NEW)
+  endif()
+
+  # set the behavior of the policy 0054 to NEW. (i.e. do not implicitly
+  # expand variables in if statements)
+  if (POLICY CMP0054)
+    cmake_policy(SET CMP0054 NEW)
+  endif()
+
+  # set the behavior of policy 0074 to new as we always used <PackageName>_ROOT as the
+  # root of the installation
+  if(POLICY CMP0074)
+    cmake_policy(SET CMP0074 NEW)
+  endif()
+
+  # include special
+  if (CMAKE_VERSION VERSION_LESS "2.8.3")
+    message (STATUS "Enabling compatibility modules for CMake 2.8.3")
+    list (APPEND CMAKE_MODULE_PATH "${OPM_MACROS_ROOT}/cmake/Modules/compat-2.8.3")
+  endif (CMAKE_VERSION VERSION_LESS "2.8.3")
+
+  if (CMAKE_VERSION VERSION_LESS "2.8.5")
+    message (STATUS "Enabling compatibility modules for CMake 2.8.5")
+    list (APPEND CMAKE_MODULE_PATH "${OPM_MACROS_ROOT}/cmake/Modules/compat-2.8.5")
+  endif (CMAKE_VERSION VERSION_LESS "2.8.5")
+
+  if (CMAKE_VERSION VERSION_LESS "2.8.7")
+    message (STATUS "Enabling compatibility modules for CMake 2.8.7")
+    list (APPEND CMAKE_MODULE_PATH "${OPM_MACROS_ROOT}/cmake/Modules/compat-2.8.7")
+  endif (CMAKE_VERSION VERSION_LESS "2.8.7")
+endmacro()
+
+
 # helper macro to retrieve a single field of a dune.module file
 macro(OpmGetDuneModuleDirective field variable contents)
   string (REGEX MATCH ".*${field}:[ ]*([^\n]+).*" ${variable} "${contents}")

@@ -54,17 +54,6 @@ foreach (name IN LISTS _opm_proj_vars)
   endif (NOT DEFINED ${CMAKE_PROJECT_NAME}_${name})
 endforeach (name)
 
-# these dependencies needs special treatment
-set (_opm_proj_exemptions
-  dune-common
-  dune-istl
-  dune-grid
-  dune-geometry
-  dune-uggrid
-  dune-alugrid
-  dune-localfunctions
-  dune-fem
-  )
 
 # insert this boilerplate whenever we are going to find a new package
 macro (find_and_append_package_to prefix name)
@@ -115,21 +104,6 @@ macro (find_and_append_package_to prefix name)
 	endif (EXISTS ${${NAME}_ROOT}/${name}-config.cmake OR EXISTS ${${NAME}_ROOT}/${name}Config.cmake)
   endif (NOT DEFINED ${name}_DIR AND (DEFINED ${name}_ROOT OR DEFINED ${NAME}_ROOT))
 
-  # these libraries need special handling which is not provided in
-  # the -config.cmake file, but which must be provided by this project,
-  # something which is done in our find module
-  list (FIND _opm_proj_exemptions "${name}" _${name}_exempted)
-  if ((NOT (_${name}_exempted EQUAL -1)) AND (DEFINED ${name}_DIR))
-	set (${name}_ROOT "${${name}_DIR}")
-	# store this for later, in case we reconfigure
-	set (${name}_ROOT "${${name}_ROOT}" CACHE LOCATION "Path to ${name}")
-	# clear this to not use config mode
-	unset (${name}_DIR)
-	# variables that are given on the command-line is also put in the cache
-	# removing the local copy only "unshadows" this one
-	unset (${name}_DIR CACHE)
-  endif ((NOT (_${name}_exempted EQUAL -1)) AND (DEFINED ${name}_DIR))
-
   # if we're told not to look for the package, pretend it was never found
   if (CMAKE_DISABLE_FIND_PACKAGE_${name})
 	set (${name}_FOUND FALSE)
@@ -151,10 +125,8 @@ macro (find_and_append_package_to prefix name)
     # and the likes which is only done via opm_find_package
     if ( (NOT DEFINED ${name}_FOUND AND NOT DEFINED ${NAME}_FOUND )
          OR _search_components GREATER -1)
-      string(REGEX MATCH "(dune|opm)-.*" _is_opm ${name})
-      if(_${name}_exempted LESS 0 AND NOT _is_opm)
-        find_package (${name} ${ARGN})
-      elseif(_${name}_exempted GREATER -1)
+       string(REGEX MATCH "(opm)-.*" _is_opm ${name})
+      if(NOT _is_opm)
         find_package (${name} ${ARGN})
       else()
         if(${name}_DIR)
