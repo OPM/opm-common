@@ -155,12 +155,14 @@ namespace {
         std::string title;
         std::string decor;
         table<OutputType, header_height> column_definition;
+        char bottom_border;
         transform_function transform;
 
-        subreport(const std::string& _title, const table<OutputType, header_height>& _coldef, transform_function _tf = &OutputType::transform)
+        subreport(const std::string& _title, const table<OutputType, header_height>& _coldef, char _bottom_border = '-', transform_function _tf = &OutputType::transform)
             : title              { _title           }
             , decor              { underline(title) }
             , column_definition  { _coldef          }
+            , bottom_border      { _bottom_border   }
             , transform          { _tf              }
         {
             centre_align(title, column_definition.total_width());
@@ -502,7 +504,7 @@ namespace {
         { 10, {"CONNECTION" , "DEPTH"      , "METRES"     }, &WellSegment::connection_depth, right_align },
         { 10, {"SEGMENT"    , "DEPTH"      , "METRES"     }, &WellSegment::segment_depth   , right_align },
         { 11, {"GRID BLOCK" , "DEPTH"      , "METRES"     }, &WellSegment::grid_block_depth, right_align },
-    }};
+    }, '='};
 
 }
 
