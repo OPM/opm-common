@@ -82,7 +82,7 @@ namespace {
         std::size_t internal_width;
         std::array<std::string, header_height> header;
 
-        fetch_function fetch;
+        fetch_function fetch = unimplemented<T>;
         format_function format = centre_align;
 
         void print(std::ostream& os, const T& data, std::size_t line_number) const {
@@ -465,7 +465,7 @@ namespace {
         }
 
         std::string connection_grid(std::size_t n) const {
-            const WellConnection wc { well, connection };
+            const WellConnection wc { well, connection } ;
 
             return wc.grid_block(n);
         }
