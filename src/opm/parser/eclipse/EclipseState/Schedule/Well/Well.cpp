@@ -831,6 +831,10 @@ int Well::pvt_table_number() const {
     return this->pvt_table;
 }
 
+int Well::fip_region_number() const {
+    return ParserKeywords::WELSPECS::FIP_REGION::defaultValue;
+}
+
 /*
   When all connections of a well are closed with the WELOPEN keywords, the well
   itself should also be SHUT. In the main parsing code this is handled by the

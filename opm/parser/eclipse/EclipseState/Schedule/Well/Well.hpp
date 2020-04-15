@@ -541,6 +541,8 @@ public:
     InjectionControls injectionControls(const SummaryState& st) const;
     int vfp_table_number() const;
     int pvt_table_number() const;
+    int fip_region_number() const;
+    bool segmented_density_calculation() const { return true; }
     double alq_value() const;
     double temperature() const;
 

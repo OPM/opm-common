@@ -745,6 +745,20 @@ void Schedule::iterateScheduleSection(const std::string& input_path, const Parse
             const auto& record = keyword.getRecord(recordNr);
             const std::string& wellName = trim_wgname(keyword, record.getItem<WS::WELL>().get<std::string>(0), parseContext, errors);
             const std::string& groupName = trim_wgname(keyword, record.getItem<WS::GROUP>().get<std::string>(0), parseContext, errors);
+            auto density_calc_type = record.getItem<WS::DENSITY_CALC>().get<std::string>(0);
+            auto fip_region_number = record.getItem<WS::FIP_REGION>().get<int>(0);
+
+            if (fip_region_number != 0) {
+                const auto& location = keyword.location();
+                std::string msg = "The FIP_REGION item in the WELSPECS keyword in file: " + location.filename + " line: " + std::to_string(location.lineno) + " using default value: " + std::to_string(WS::FIP_REGION::defaultValue);
+                OpmLog::warning(msg);
+            }
+
+            if (density_calc_type != "SEG") {
+                const auto& location = keyword.location();
+                std::string msg = "The DENSITY_CALC item in the WELSPECS keyword in file: " + location.filename + " line: " + std::to_string(location.lineno) + " using default value: " + WS::DENSITY_CALC::defaultValue;
+                OpmLog::warning(msg);
+            }
 
             if (!hasGroup(groupName))
                 addGroup(groupName , currentStep, unit_system);
