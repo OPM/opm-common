@@ -460,7 +460,7 @@ namespace {
             return well.name();
         }
 
-        std::string grid_block(std::size_t n) const {
+        std::string connection_grid(std::size_t n) const {
             const WellConnection wc { well, connection };
 
             return wc.grid_block(n);
@@ -468,6 +468,14 @@ namespace {
 
         std::string segment_number(std::size_t) const {
             return std::to_string(connection.segment());
+        }
+
+        std::string connection_depth(std::size_t) const {
+            return std::to_string(connection.depth());
+        }
+
+        std::string segment_depth(std::size_t) const {
+            return std::to_string(connection.depth());
         }
 
         const std::string& unimplemented(std::size_t) const {
@@ -489,17 +497,17 @@ namespace {
     };
 
     const subreport<Opm::Well, WellSegment, 3> well_multisegment_connection { "MULTI-SEGMENT WELL: CONNECTION DATA", {
-        {  8, {"WELL"       , "NAME"       ,              }, &WellSegment::well_name,      left_header },
-        { 11, {"CONNECTION" , ""           ,              }, &WellSegment::grid_block    ,             },
-        {  7, {"SEGMENT"    , "NUMBER"     ,              }, &WellSegment::segment_number,             },
-        { 10, {"BRANCH"     , "ID"         ,              }, &WellSegment::unimplemented ,             },
-        { 11, {"TUB LENGTH" , "START PERFS", "METRES"     }, &WellSegment::unimplemented , right_align },
-        { 11, {"TUB LENGTH" , "END PERFS"  , "METRES"     }, &WellSegment::unimplemented , right_align },
-        { 11, {"TUB LENGTH" , "CENTR PERFS", "METRES"     }, &WellSegment::unimplemented , right_align },
-        { 11, {"TUB LENGTH" , "END SEGMT"  , "METRES"     }, &WellSegment::unimplemented , right_align },
-        { 10, {"CONNECTION" , "DEPTH"      , "METRES"     }, &WellSegment::unimplemented , right_align },
-        { 10, {"SEGMENT"    , "DEPTH"      , "METRES"     }, &WellSegment::unimplemented , right_align },
-        { 11, {"GRID BLOCK" , "DEPTH"      , "METRES"     }, &WellSegment::unimplemented , right_align },
+        {  8, {"WELL"       , "NAME"       ,              }, &WellSegment::well_name       , left_header },
+        { 11, {"CONNECTION" , ""           ,              }, &WellSegment::connection_grid ,             },
+        {  7, {"SEGMENT"    , "NUMBER"     ,              }, &WellSegment::segment_number  ,             },
+        { 10, {"BRANCH"     , "ID"         ,              }, &WellSegment::unimplemented   ,             },
+        { 11, {"TUB LENGTH" , "START PERFS", "METRES"     }, &WellSegment::unimplemented   , right_align },
+        { 11, {"TUB LENGTH" , "END PERFS"  , "METRES"     }, &WellSegment::unimplemented   , right_align },
+        { 11, {"TUB LENGTH" , "CENTR PERFS", "METRES"     }, &WellSegment::unimplemented   , right_align },
+        { 11, {"TUB LENGTH" , "END SEGMT"  , "METRES"     }, &WellSegment::unimplemented   , right_align },
+        { 10, {"CONNECTION" , "DEPTH"      , "METRES"     }, &WellSegment::connection_depth, right_align },
+        { 10, {"SEGMENT"    , "DEPTH"      , "METRES"     }, &WellSegment::segment_depth   , right_align },
+        { 11, {"GRID BLOCK" , "DEPTH"      , "METRES"     }, &WellSegment::unimplemented   , right_align },
     }};
 
 }
