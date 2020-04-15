@@ -21,7 +21,7 @@
     {
       "name": "V0",
       "value_type": "DOUBLE",
-      "dimension": "Length*Length*Length"
+      "dimension": "LiquidSurfaceVolume"
     },
     {
       "name": "C_T",
@@ -31,7 +31,7 @@
     {
       "name": "PI",
       "value_type": "DOUBLE",
-      "dimension": "ReservoirVolume/Pressure*Time"
+      "dimension": "LiquidSurfaceVolume/Pressure*Time"
     },
     {
       "name": "TABLE_NUM_WATER_PRESS",
@@ -69,7 +69,7 @@
     {
       "name": "SC_0",
       "value_type": "DOUBLE",
-      "dimension": "Density",
+      "dimension": "Salinity",
       "default": 0
     }
   ]
