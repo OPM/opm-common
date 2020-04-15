@@ -435,6 +435,7 @@ namespace {
        { 10, {"CONNECTION"             ,"D-FACTOR"               ,"DAY/SM3"                }, &WellConnection::unimplemented   ,             },
        { 23, {"SATURATION SCALING DATA","SWMIN SWMAX SGMIN SGMAX",                         }, &WellConnection::unimplemented   ,             },
     }};
+
 }
 
 namespace {
