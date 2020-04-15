@@ -61,7 +61,7 @@ namespace {
 
     template<typename T, std::size_t header_height>
     struct column {
-        using fetch_function = std::function<std::string(const T&)>;
+        using fetch_function = std::function<std::string(const T&, std::size_t)>;
         using format_function = std::function<void(std::string&, std::size_t)>;
 
         std::size_t internal_width;
@@ -70,8 +70,8 @@ namespace {
         fetch_function fetch;
         format_function format = centre_align;
 
-        void print(std::ostream& os, const T& data) const {
-            std::string string_data { fetch(data) } ;
+        void print(std::ostream& os, const T& data, std::size_t line_number) const {
+            std::string string_data { fetch(data, line_number) } ;
             format(string_data, internal_width);
             centre_align(string_data, total_width());
 
@@ -125,14 +125,17 @@ namespace {
         }
 
         void print_data(std::ostream& os, const std::vector<T>& lines) const {
+            std::size_t line_number { 0 } ;
             for (const auto& line : lines) {
                 for (const auto& column : *this) {
                     os << field_separator;
 
-                    column.print(os, line);
+                    column.print(os, line, line_number);
                 }
 
                 os << field_separator << record_separator;
+
+                ++line_number;
             }
         }
     };
@@ -243,15 +246,15 @@ namespace {
             return {{ well }} ;
         }
 
-        std::string well_name() const {
+        std::string well_name(std::size_t) const {
             return well.name();
         }
 
-        std::string group_name() const {
+        std::string group_name(std::size_t) const {
             return well.groupName();
         }
 
-        std::string wellhead_location() const {
+        std::string wellhead_location(std::size_t) const {
             auto i { std::to_string(well.getHeadI()) }, j { std::to_string(well.getHeadJ()) } ;
 
             right_align(i, 3);
@@ -260,11 +263,11 @@ namespace {
             return i + ", " + j;
         }
 
-        std::string reference_depth() const {
+        std::string reference_depth(std::size_t) const {
             return std::to_string(well.getRefDepth()).substr(0,6);
         }
 
-        std::string preferred_phase() const {
+        std::string preferred_phase(std::size_t) const {
             std::ostringstream ss;
 
             ss << well.getPreferredPhase();
@@ -272,17 +275,17 @@ namespace {
             return ss.str();
         }
 
-        const std::string& unimplemented() const {
+        const std::string& unimplemented(std::size_t) const {
             const static std::string s { } ;
 
             return s;
         }
 
-        std::string shut_status() const {
+        std::string shut_status(std::size_t) const {
             return Opm::Well::Status2String(well.getStatus());
         }
 
-        std::string cross_flow() const {
+        std::string cross_flow(std::size_t) const {
             return well.getAllowCrossFlow() ? "YES" : "NO";
         }
     };
@@ -317,11 +320,11 @@ namespace {
         const Opm::Well& well;
         const Opm::Connection& connection;
 
-        const std::string& well_name() const {
+        const std::string& well_name(std::size_t) const {
             return well.name();
         }
 
-        std::string grid_block() const {
+        std::string grid_block(std::size_t) const {
             const std::array<int,3> ijk { connection.getI(), connection.getJ(), connection.getK() } ;
 
             auto compose_coordinates = [](std::string& out, int in) -> std::string {
@@ -337,39 +340,39 @@ namespace {
             return std::accumulate(std::begin(ijk), std::end(ijk), std::string {}, compose_coordinates);
         }
 
-        std::string cmpl_no() const {
+        std::string cmpl_no(std::size_t) const {
             return std::to_string(connection.complnum());
         }
 
-        std::string centre_depth() const {
+        std::string centre_depth(std::size_t) const {
             return std::to_string(connection.depth()).substr(0, 6);
         }
 
-        std::string open_shut() const {
+        std::string open_shut(std::size_t) const {
             return Opm::Connection::State2String(connection.state());
         }
 
-        std::string sat_tab() const {
+        std::string sat_tab(std::size_t) const {
             return std::to_string(connection.satTableId());
         }
 
-        std::string conn_factor() const {
+        std::string conn_factor(std::size_t) const {
             return std::to_string(connection.CF()).substr(0, 10);
         }
 
-        std::string int_diam() const {
+        std::string int_diam(std::size_t) const {
             return std::to_string(connection.rw() * 2).substr(0, 8);
         }
 
-        std::string kh_value() const {
+        std::string kh_value(std::size_t) const {
             return std::to_string(connection.Kh()).substr(0, 9);
         }
 
-        std::string skin_factor() const {
+        std::string skin_factor(std::size_t) const {
             return std::to_string(connection.skinFactor()).substr(0, 8);
         }
 
-        const std::string &unimplemented() const {
+        const std::string &unimplemented(std::size_t) const {
             static const std::string s { };
             return s;
         }
