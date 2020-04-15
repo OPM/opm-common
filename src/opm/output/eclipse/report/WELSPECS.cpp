@@ -446,6 +446,12 @@ namespace {
             return well.name();
         }
 
+        std::string grid_block(std::size_t n) const {
+            const WellConnection wc { well, connection };
+
+            return wc.grid_block(n);
+        }
+
         const std::string& unimplemented(std::size_t) const {
             static const std::string s { } ;
 
@@ -466,7 +472,7 @@ namespace {
 
     const subreport<Opm::Well, WellSegment, 3> well_multisegment_connection { "MULTI-SEGMENT WELL: CONNECTION DATA", {
         {  8, {"WELL"       , "NAME"       ,              }, &WellSegment::well_name,     left_header },
-        { 11, {"CONNECTION" , ""           ,              }, &WellSegment::unimplemented,             },
+        { 11, {"CONNECTION" , ""           ,              }, &WellSegment::grid_block   ,             },
         {  7, {"SEGMENT"    , "NUMBER"     ,              }, &WellSegment::unimplemented,             },
         { 10, {"BRANCH"     , "ID"         ,              }, &WellSegment::unimplemented,             },
         { 11, {"TUB LENGTH" , "START PERFS", "METRES"     }, &WellSegment::unimplemented, right_align },
