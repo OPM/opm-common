@@ -162,22 +162,18 @@ if (ENABLE_MOCKSIM)
   target_link_libraries(mocksim opmcommon)
   target_include_directories(mocksim PUBLIC msim/include)
   add_executable(msim examples/msim.cpp)
-  add_executable(msim_exit_status tests/msim/msim_exit_status.cpp)
   target_link_libraries(msim mocksim)
-  target_link_libraries(msim_exit_status mocksim)
 
   if (Boost_UNIT_TEST_FRAMEWORK_FOUND)
     set(_libs mocksim opmcommon
       ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 
-    foreach( test test_msim test_msim_ACTIONX)
+    foreach( test test_msim test_msim_ACTIONX test_msim_EXIT)
       opm_add_test(${test} SOURCES tests/msim/${test}.cpp
         LIBRARIES ${_libs}
         WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/tests
         CONDITION ${HAVE_ECL_INPUT})
     endforeach()
-    add_test( NAME exit_test
-              COMMAND ${PROJECT_SOURCE_DIR}/tests/test_exit_status.sh ${PROJECT_SOURCE_DIR}/tests/EXIT_TEST.DATA ${PROJECT_BINARY_DIR}/bin/msim_exit_status 99 )
   endif()
 endif()
 

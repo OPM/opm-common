@@ -56,7 +56,7 @@ void msim::run(Schedule& schedule, EclipseIO& io, bool report_only) {
         post_step(schedule, st, sol, well_data, report_step);
         const auto& exit_status = schedule.exitStatus();
         if (exit_status.has_value())
-            std::exit( exit_status.value() );
+            return;
     }
 }
 
