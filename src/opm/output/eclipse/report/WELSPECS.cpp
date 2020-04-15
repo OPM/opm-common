@@ -281,8 +281,30 @@ namespace {
             return s;
         }
 
+        std::string pvt_tab(std::size_t) const {
+            return std::to_string( well.pvt_table_number() );
+        }
+
         std::string shut_status(std::size_t) const {
             return Opm::Well::Status2String(well.getStatus());
+        }
+
+        std::string region_number(std::size_t) const {
+            return std::to_string( well.fip_region_number() );
+        }
+
+        std::string dens_calc(std::size_t) const {
+            if (well.segmented_density_calculation())
+                return "SEG";
+            return "AVG";
+        }
+
+        /*
+          Don't know what the D-FACTOR represents, but all examples just show 0;
+          we have therefor hardcoded that for now.
+        */
+        std::string D_factor(std::size_t) const {
+            return "0?";
         }
 
         std::string cross_flow(std::size_t) const {
@@ -300,10 +322,10 @@ namespace {
         {  4, { "GAS"        , "INFL"       , "EQUN"        }, &WellWrapper::unimplemented    ,             },
         {  7, { "SHUT-IN"    , "INSTRCT"    ,               }, &WellWrapper::shut_status      ,             },
         {  5, { "CROSS"      , "FLOW"       , "ABLTY"       }, &WellWrapper::cross_flow       ,             },
-        {  3, { "PVT"        , "TAB"        ,               }, &WellWrapper::unimplemented    ,             },
-        {  4, { "WELL"       , "DENS"       , "CALC"        }, &WellWrapper::unimplemented    ,             },
-        {  3, { "FIP"        , "REG"        ,               }, &WellWrapper::unimplemented    ,             },
-        { 11, { "WELL"       , "D-FACTOR"   , "DAY/SM3"     }, &WellWrapper::unimplemented    ,             },
+        {  3, { "PVT"        , "TAB"        ,               }, &WellWrapper::pvt_tab          ,             },
+        {  4, { "WELL"       , "DENS"       , "CALC"        }, &WellWrapper::dens_calc        ,             },
+        {  3, { "FIP"        , "REG"        ,               }, &WellWrapper::region_number    ,             },
+        { 11, { "WELL"       , "D-FACTOR"   , "DAY/SM3"     }, &WellWrapper::D_factor         ,             },
     }};
 
     void subreport_well_specification_data(std::ostream& os, const std::vector<Opm::Well>& data) {
