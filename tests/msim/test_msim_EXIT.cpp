@@ -17,6 +17,11 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#define BOOST_TEST_MODULE ACTIONX_SIM
+
+#include <boost/test/unit_test.hpp>
+
+#include <stdexcept>
 #include <opm/output/eclipse/EclipseIO.hpp>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
@@ -28,6 +33,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 
+#include <tests/WorkArea.cpp>
 #include <opm/msim/msim.hpp>
 
 namespace Opm {
@@ -70,33 +76,32 @@ double prod_wpr_P4(const EclipseState&  es, const Schedule& /* sched */, const S
 }
 }
 
-int main(int , char **argv) {
-    std::string deck_file = argv[1];
+BOOST_AUTO_TEST_CASE(MSIM_EXIT_TEST) {
+    std::string deck_file = "EXIT_TEST.DATA";
     Opm::Parser parser;
-    Opm::ParseContext parse_context;
-    Opm::ErrorGuard error_guard;
     auto python = std::make_shared<Opm::Python>();
 
-    Opm::Deck deck = parser.parseFile(deck_file, parse_context, error_guard);
+    Opm::Deck deck = parser.parseFile(deck_file);
     Opm::EclipseState state(deck);
-    Opm::Schedule schedule(deck, state, parse_context, error_guard, python);
-    Opm::SummaryConfig summary_config(deck, schedule, state.getTableManager(), parse_context, error_guard);
+    Opm::Schedule schedule(deck, state, python);
+    Opm::SummaryConfig summary_config(deck, schedule, state.getTableManager());
 
-    if (error_guard) {
-        error_guard.dump();
-        error_guard.terminate();
+    {
+        WorkArea work_area("test_msim");
+        Opm::msim msim(state);
+        Opm::EclipseIO io(state, state.getInputGrid(), schedule, summary_config);
+        msim.well_rate("P1", Opm::data::Rates::opt::oil, Opm::prod_opr);
+        msim.well_rate("P2", Opm::data::Rates::opt::oil, Opm::prod_opr);
+        msim.well_rate("P3", Opm::data::Rates::opt::oil, Opm::prod_opr);
+        msim.well_rate("P4", Opm::data::Rates::opt::oil, Opm::prod_opr);
+
+        msim.well_rate("P1", Opm::data::Rates::opt::wat, Opm::prod_wpr_P1);
+        msim.well_rate("P2", Opm::data::Rates::opt::wat, Opm::prod_wpr_P2);
+        msim.well_rate("P3", Opm::data::Rates::opt::wat, Opm::prod_wpr_P3);
+        msim.well_rate("P4", Opm::data::Rates::opt::wat, Opm::prod_wpr_P4);
+        msim.run(schedule, io, false);
     }
-
-    Opm::msim msim(state);
-    Opm::EclipseIO io(state, state.getInputGrid(), schedule, summary_config);
-    msim.well_rate("P1", Opm::data::Rates::opt::oil, Opm::prod_opr);
-    msim.well_rate("P2", Opm::data::Rates::opt::oil, Opm::prod_opr);
-    msim.well_rate("P3", Opm::data::Rates::opt::oil, Opm::prod_opr);
-    msim.well_rate("P4", Opm::data::Rates::opt::oil, Opm::prod_opr);
-
-    msim.well_rate("P1", Opm::data::Rates::opt::wat, Opm::prod_wpr_P1);
-    msim.well_rate("P2", Opm::data::Rates::opt::wat, Opm::prod_wpr_P2);
-    msim.well_rate("P3", Opm::data::Rates::opt::wat, Opm::prod_wpr_P3);
-    msim.well_rate("P4", Opm::data::Rates::opt::wat, Opm::prod_wpr_P4);
-    msim.run(schedule, io, false);
+    auto exit_status = schedule.exitStatus();
+    BOOST_CHECK( exit_status.has_value() );
+    BOOST_CHECK_EQUAL(exit_status.value(), 99);
 }
