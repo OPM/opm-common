@@ -17,10 +17,7 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if !defined(WIN32)
-    #define _POSIX_C_SOURCE 200112L
-    #include <stdlib.h>
-#endif
+#include <cstdlib>
 
 #include <iostream>
 #include <fstream>
@@ -31,21 +28,6 @@
 
 
 int main(int , char ** argv) {
-    try {
-        /* sometimes the local env's locales are broken on POSIX. Boost <=
-         * 1.56 uses the std::locale("") constructor which respects user
-         * preferred locales, and might crash. If this is the case, and
-         * we're on a non-windows system (assuming POSIX), in case of an
-         * exception, set the environment to "C" and keep going.
-         *
-         * Can be removed once boost < 1.57 is no longer supported
-         */
-        std::locale( "" );
-    } catch( const std::runtime_error& ) {
-        #if !defined(WIN32)
-        setenv( "LC_ALL", "C", 1 );
-        #endif
-    }
     const char * keyword_list_file = argv[1];
     const char * source_file_path = argv[2];
     const char * init_file_name = argv[3];
