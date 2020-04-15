@@ -434,6 +434,7 @@ if(ENABLE_ECL_OUTPUT)
           tests/SPE1CASE2.X0060
           tests/PYACTION.DATA
           tests/act1.py
+          tests/EXIT_TEST.DATA
           tests/EMBEDDED_PYTHON.DATA
           tests/wclose.py
       )
