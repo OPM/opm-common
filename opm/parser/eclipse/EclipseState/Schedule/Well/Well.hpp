@@ -415,7 +415,7 @@ public:
     };
 
 
-    Well();
+    Well() = default;
     Well(const std::string& wname,
          const std::string& gname,
          std::size_t init_step,
@@ -430,7 +430,8 @@ public:
          double udq_undefined,
          double dr,
          bool allow_xflow,
-         bool auto_shutin);
+         bool auto_shutin,
+         int pvt_table);
 
     Well(const RestartIO::RstWell& rst_well,
          int report_step,
@@ -506,11 +507,13 @@ public:
     bool updatePrediction(bool prediction_mode);
     bool updateAutoShutin(bool auto_shutin);
     bool updateCrossFlow(bool allow_cross_flow);
+    bool updatePVTTable(int pvt_table);
     bool updateHead(int I, int J);
     bool updateRefDepth(double ref_dpeth);
     bool updateDrainageRadius(double drainage_radius);
     void updateSegments(std::shared_ptr<WellSegments> segments_arg);
     bool updateConnections(std::shared_ptr<WellConnections> connections);
+    bool updateConnections(std::shared_ptr<WellConnections> connections, const EclipseGrid& grid, const std::vector<int>& pvtnum);
     bool updateStatus(Status status, bool update_connections);
     bool updateGroup(const std::string& group);
     bool updateWellGuideRate(bool available, double guide_rate, GuideRateTarget guide_phase, double scale_factor);
@@ -537,6 +540,7 @@ public:
     ProductionControls productionControls(const SummaryState& st) const;
     InjectionControls injectionControls(const SummaryState& st) const;
     int vfp_table_number() const;
+    int pvt_table_number() const;
     double alq_value() const;
     double temperature() const;
 
@@ -559,6 +563,7 @@ public:
         serializer(drainage_radius);
         serializer(allow_cross_flow);
         serializer(automatic_shutin);
+        serializer(pvt_table);
         wtype.serializeOp(serializer);
         guide_rate.serializeOp(serializer);
         serializer(efficiency_factor);
@@ -586,13 +591,13 @@ private:
     int headI;
     int headJ;
     double ref_depth;
-    UnitSystem unit_system;
-    double udq_undefined;
-
-    Status status;
     double drainage_radius;
     bool allow_cross_flow;
     bool automatic_shutin;
+    int pvt_table;
+    UnitSystem unit_system;
+    double udq_undefined;
+    Status status;
     WellType wtype;
     WellGuideRate guide_rate;
     double efficiency_factor;

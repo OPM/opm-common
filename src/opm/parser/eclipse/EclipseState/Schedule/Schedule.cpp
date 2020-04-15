@@ -739,11 +739,12 @@ void Schedule::iterateScheduleSection(const std::string& input_path, const Parse
         };
 
         const auto& keyword = section.getKeyword( index );
+        using WS = ParserKeywords::WELSPECS;
 
         for (size_t recordNr = 0; recordNr < keyword.size(); recordNr++) {
             const auto& record = keyword.getRecord(recordNr);
-            const std::string& wellName = trim_wgname(keyword, record.getItem("WELL").get<std::string>(0), parseContext, errors);
-            const std::string& groupName = trim_wgname(keyword, record.getItem("GROUP").get<std::string>(0), parseContext, errors);
+            const std::string& wellName = trim_wgname(keyword, record.getItem<WS::WELL>().get<std::string>(0), parseContext, errors);
+            const std::string& groupName = trim_wgname(keyword, record.getItem<WS::GROUP>().get<std::string>(0), parseContext, errors);
 
             if (!hasGroup(groupName))
                 addGroup(groupName , currentStep, unit_system);
@@ -767,10 +768,11 @@ void Schedule::iterateScheduleSection(const std::string& input_path, const Parse
                 this->addWell(wellName, record, currentStep, wellConnectionOrder, unit_system);
                 this->addWellToGroup(groupName, wellName, currentStep);
             } else {
-                const auto headI = record.getItem( "HEAD_I" ).get< int >( 0 ) - 1;
-                const auto headJ = record.getItem( "HEAD_J" ).get< int >( 0 ) - 1;
-                const auto& refDepthItem = record.getItem( "REF_DEPTH" );
-                double drainageRadius = record.getItem( "D_RADIUS" ).getSIDouble(0);
+                const auto headI = record.getItem<WS::HEAD_I>().get< int >( 0 ) - 1;
+                const auto headJ = record.getItem<WS::HEAD_J>().get< int >( 0 ) - 1;
+                const auto& refDepthItem = record.getItem<WS::REF_DEPTH>();
+                int pvt_table = record.getItem<WS::P_TABLE>().get<int>(0);
+                double drainageRadius = record.getItem<WS::D_RADIUS>().getSIDouble(0);
                 double refDepth = refDepthItem.hasValue( 0 )
                     ? refDepthItem.getSIDouble( 0 )
                     : -1.0;
@@ -780,6 +782,7 @@ void Schedule::iterateScheduleSection(const std::string& input_path, const Parse
                     update = well2->updateHead(headI, headJ);
                     update |= well2->updateRefDepth(refDepth);
                     update |= well2->updateDrainageRadius(drainageRadius);
+                    update |= well2->updatePVTTable(pvt_table);
 
                     if (update) {
                         this->updateWell(std::move(well2), currentStep);
@@ -2001,7 +2004,7 @@ void Schedule::iterateScheduleSection(const std::string& input_path, const Parse
                         }
                     }
                     */
-                    if (well2->updateConnections(connections))
+                    if (well2->updateConnections(connections, grid, fp.get_int("PVTNUM")))
                         this->updateWell(well2, currentStep);
 
                     if (well2->getStatus() == Well::Status::SHUT) {
@@ -2219,6 +2222,7 @@ void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t 
                            Connection::Order wellConnectionOrder,
                            const UnitSystem& unit_system)
     {
+        using WS = ParserKeywords::WELSPECS;
         // We change from eclipse's 1 - n, to a 0 - n-1 solution
         int headI = record.getItem("HEAD_I").get< int >(0) - 1;
         int headJ = record.getItem("HEAD_J").get< int >(0) - 1;
@@ -2254,6 +2258,7 @@ void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t 
         }
 
         const std::string& group = record.getItem<ParserKeywords::WELSPECS::GROUP>().getTrimmedString(0);
+        auto pvt_table = record.getItem<WS::P_TABLE>().get<int>(0);
 
         this->addWell(wellName,
                       group,
@@ -2264,6 +2269,7 @@ void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t 
                       drainageRadius,
                       allowCrossFlow,
                       automaticShutIn,
+                      pvt_table,
                       timeStep,
                       wellConnectionOrder,
                       unit_system);
@@ -2293,6 +2299,7 @@ void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t 
                            double drainageRadius,
                            bool allowCrossFlow,
                            bool automaticShutIn,
+                           int pvt_table,
                            size_t timeStep,
                            Connection::Order wellConnectionOrder,
                            const UnitSystem& unit_system) {
@@ -2310,7 +2317,8 @@ void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t 
                   this->getUDQConfig(timeStep).params().undefinedValue(),
                   drainageRadius,
                   allowCrossFlow,
-                  automaticShutIn);
+                  automaticShutIn,
+                  pvt_table);
 
         this->addWell( std::move(well), timeStep );
     }
@@ -3009,7 +3017,7 @@ void Schedule::load_rst(const RestartIO::RstState& rst_state, const EclipseGrid&
 
         {
             std::shared_ptr<Opm::WellConnections> well_connections = std::make_shared<Opm::WellConnections>(order_from_int(rst_well.completion_ordering), rst_well.ij[0], rst_well.ij[1], connections);
-            well.updateConnections( std::move(well_connections) );
+            well.updateConnections( std::move(well_connections), grid, fp.get_int("PVTNUM") );
         }
 
         if (!segments.empty()) {

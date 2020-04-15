@@ -77,24 +77,6 @@ namespace {
 
 }
 
-Well::Well() :
-    init_step(0),
-    insert_index(0),
-    headI(0),
-    headJ(0),
-    ref_depth(0.0),
-    udq_undefined(0.0),
-    status(Status::STOP),
-    drainage_radius(0.0),
-    allow_cross_flow(false),
-    automatic_shutin(false),
-    wtype(false, Phase::OIL),
-    efficiency_factor(0.0),
-    solvent_fraction(0.0)
-{
-}
-
-
 namespace {
 
 constexpr Phase def_phase = Phase::OIL;
@@ -134,12 +116,13 @@ Well::Well(const RestartIO::RstWell& rst_well,
     headI(rst_well.ij[0]),
     headJ(rst_well.ij[1]),
     ref_depth(rst_well.datum_depth),
-    unit_system(unit_system_arg),
-    udq_undefined(udq_undefined_arg),
-    status(rst_well.active_control == def_well_closed_control ? Well::Status::SHUT : Well::Status::OPEN),
     drainage_radius(rst_well.drainage_radius),
     allow_cross_flow(rst_well.allow_xflow == 1),
     automatic_shutin(def_automatic_shutin),
+    pvt_table(rst_well.pvt_table),
+    unit_system(unit_system_arg),
+    udq_undefined(udq_undefined_arg),
+    status(rst_well.active_control == def_well_closed_control ? Well::Status::SHUT : Well::Status::OPEN),
     wtype(rst_well.wtype),
     guide_rate(def_guide_rate),
     efficiency_factor(rst_well.efficiency_factor),
@@ -309,7 +292,8 @@ Well::Well(const std::string& wname_arg,
            double udq_undefined_arg,
            double dr,
            bool allow_xflow,
-           bool auto_shutin):
+           bool auto_shutin,
+           int pvt_table_):
     wname(wname_arg),
     group_name(gname),
     init_step(init_step_arg),
@@ -317,12 +301,13 @@ Well::Well(const std::string& wname_arg,
     headI(headI_arg),
     headJ(headJ_arg),
     ref_depth(ref_depth_arg),
-    unit_system(unit_system_arg),
-    udq_undefined(udq_undefined_arg),
-    status(Status::SHUT),
     drainage_radius(dr),
     allow_cross_flow(allow_xflow),
     automatic_shutin(auto_shutin),
+    pvt_table(pvt_table_),
+    unit_system(unit_system_arg),
+    udq_undefined(udq_undefined_arg),
+    status(Status::SHUT),
     wtype(wtype_arg),
     guide_rate({true, -1, Well::GuideRateTarget::UNDEFINED,ParserKeywords::WGRUPCON::SCALING_FACTOR::defaultValue}),
     efficiency_factor(1.0),
@@ -357,6 +342,7 @@ Well Well::serializeObject()
     result.drainage_radius = 7.0;
     result.allow_cross_flow = true;
     result.automatic_shutin = false;
+    result.pvt_table = 77;
     result.wtype = WellType(Phase::WATER);
     result.guide_rate = WellGuideRate::serializeObject();
     result.efficiency_factor = 8.0;
@@ -640,6 +626,16 @@ bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg) {
     return false;
 }
 
+bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg, const EclipseGrid& grid, const std::vector<int>& pvtnum) {
+    bool update = this->updateConnections(connections_arg);
+    if (this->pvt_table == 0) {
+        const auto& lowest = this->connections->lowest();
+        auto active_index = grid.activeIndex(lowest.global_index());
+        this->pvt_table = pvtnum[active_index];
+        update = true;
+    }
+    return update;
+}
 
 bool Well::updateSolventFraction(double solvent_fraction_arg) {
     if (this->solvent_fraction != solvent_fraction_arg) {
@@ -830,6 +826,11 @@ Phase Well::getPreferredPhase() const {
     return this->wtype.preferred_phase();
 }
 
+
+int Well::pvt_table_number() const {
+    return this->pvt_table;
+}
+
 /*
   When all connections of a well are closed with the WELOPEN keywords, the well
   itself should also be SHUT. In the main parsing code this is handled by the
@@ -945,6 +946,14 @@ bool Well::handleWELSEGS(const DeckKeyword& keyword) {
     return true;
 }
 
+
+bool Well::updatePVTTable(int pvt_table_) {
+    if (this->pvt_table != pvt_table_) {
+        this->pvt_table = pvt_table_;
+        return true;
+    } else
+        return false;
+}
 
 
 bool Well::updateWSEGSICD(const std::vector<std::pair<int, SpiralICD> >& sicd_pairs) {

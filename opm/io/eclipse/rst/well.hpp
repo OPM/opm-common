@@ -73,6 +73,7 @@ struct RstWell {
     int hist_requested_control;
     int msw_index;
     int completion_ordering;
+    int pvt_table;
 
     float orat_target;
     float wrat_target;
