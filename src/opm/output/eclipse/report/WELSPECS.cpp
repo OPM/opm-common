@@ -467,7 +467,11 @@ namespace {
         }
 
         std::string segment_number(std::size_t) const {
-            return std::to_string(connection.segment());
+            return std::to_string(segment.segmentNumber());
+        }
+
+        std::string branch_id(std::size_t) const {
+            return std::to_string(segment.branchNumber());
         }
 
         std::string connection_depth(std::size_t) const {
@@ -500,7 +504,7 @@ namespace {
         {  8, {"WELL"       , "NAME"       ,              }, &WellSegment::well_name       , left_header },
         { 11, {"CONNECTION" , ""           ,              }, &WellSegment::connection_grid ,             },
         {  7, {"SEGMENT"    , "NUMBER"     ,              }, &WellSegment::segment_number  ,             },
-        { 10, {"BRANCH"     , "ID"         ,              }, &WellSegment::unimplemented   ,             },
+        { 10, {"BRANCH"     , "ID"         ,              }, &WellSegment::branch_id       ,             },
         { 11, {"TUB LENGTH" , "START PERFS", "METRES"     }, &WellSegment::unimplemented   , right_align },
         { 11, {"TUB LENGTH" , "END PERFS"  , "METRES"     }, &WellSegment::unimplemented   , right_align },
         { 11, {"TUB LENGTH" , "CENTR PERFS", "METRES"     }, &WellSegment::unimplemented   , right_align },
