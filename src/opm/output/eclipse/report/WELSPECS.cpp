@@ -32,19 +32,19 @@ namespace {
     constexpr char section_separator { '\n' } ;
     constexpr char divider_character {  '-' } ;
 
-    void left_align(std::string& string, std::size_t width) {
+    void left_align(std::string& string, std::size_t width, std::size_t = 0) {
         if (string.size() < width) {
             string.append(std::string(width - string.size(), field_padding));
         }
     }
 
-    void right_align(std::string& string, std::size_t width) {
+    void right_align(std::string& string, std::size_t width, std::size_t = 0) {
         if (string.size() < width) {
             string = std::string(width - string.size(), field_padding) + string;
         }
     }
 
-    void centre_align(std::string& string, std::size_t width) {
+    void centre_align(std::string& string, std::size_t width, std::size_t = 0) {
         if (string.size() < width) {
             std::size_t extra_space { width - string.size() } ;
             std::size_t shift_one { extra_space % 2 } ;
@@ -62,7 +62,7 @@ namespace {
     template<typename T, std::size_t header_height>
     struct column {
         using fetch_function = std::function<std::string(const T&, std::size_t)>;
-        using format_function = std::function<void(std::string&, std::size_t)>;
+        using format_function = std::function<void(std::string&, std::size_t, std::size_t)>;
 
         std::size_t internal_width;
         std::array<std::string, header_height> header;
@@ -72,7 +72,7 @@ namespace {
 
         void print(std::ostream& os, const T& data, std::size_t line_number) const {
             std::string string_data { fetch(data, line_number) } ;
-            format(string_data, internal_width);
+            format(string_data, internal_width, line_number);
             centre_align(string_data, total_width());
 
             os << string_data;
