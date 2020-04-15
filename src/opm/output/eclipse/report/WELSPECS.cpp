@@ -457,11 +457,11 @@ namespace {
         }
 
         std::string connection_depth(std::size_t) const {
-            return std::to_string(connection.depth());
+            return std::to_string(connection.depth()).substr(0, 11);
         }
 
         std::string segment_depth(std::size_t) const {
-            return std::to_string(segment.depth());
+            return std::to_string(segment.depth()).substr(0, 10);
         }
 
         const std::string& unimplemented(std::size_t) const {
