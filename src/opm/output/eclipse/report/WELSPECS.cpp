@@ -488,17 +488,17 @@ namespace {
     };
 
     const subreport<Opm::Well, WellSegment, 3> well_multisegment_connection { "MULTI-SEGMENT WELL: CONNECTION DATA", {
-        {  8, {"WELL"       , "NAME"       ,              }, &WellSegment::well_name       , left_header },
-        { 11, {"CONNECTION" , ""           ,              }, &WellSegment::connection_grid ,             },
-        {  7, {"SEGMENT"    , "NUMBER"     ,              }, &WellSegment::segment_number  ,             },
-        { 10, {"BRANCH"     , "ID"         ,              }, &WellSegment::branch_id       ,             },
-        { 11, {"TUB LENGTH" , "START PERFS", "METRES"     }, unimplemented<WellSegment>    , right_align },
-        { 11, {"TUB LENGTH" , "END PERFS"  , "METRES"     }, unimplemented<WellSegment>    , right_align },
-        { 11, {"TUB LENGTH" , "CENTR PERFS", "METRES"     }, unimplemented<WellSegment>    , right_align },
-        { 11, {"TUB LENGTH" , "END SEGMT"  , "METRES"     }, &WellSegment::length_end_segmt, right_align },
-        { 10, {"CONNECTION" , "DEPTH"      , "METRES"     }, &WellSegment::connection_depth, right_align },
-        { 10, {"SEGMENT"    , "DEPTH"      , "METRES"     }, &WellSegment::segment_depth   , right_align },
-        { 11, {"GRID BLOCK" , "DEPTH"      , "METRES"     }, &WellSegment::grid_block_depth, right_align },
+        { 8, {"WELL"       , "NAME"       ,              }, &WellSegment::well_name       , left_header },
+        { 9, {"CONNECTION" , ""           ,              }, &WellSegment::connection_grid ,             },
+        { 5, {"SEGMENT"    , "NUMBER"     ,              }, &WellSegment::segment_number  ,             },
+        { 8, {"BRANCH"     , "ID"         ,              }, &WellSegment::branch_id       ,             },
+        { 9, {"TUB LENGTH" , "START PERFS", "METRES"     }, unimplemented<WellSegment>    , right_align },
+        { 9, {"TUB LENGTH" , "END PERFS"  , "METRES"     }, unimplemented<WellSegment>    , right_align },
+        { 9, {"TUB LENGTH" , "CENTR PERFS", "METRES"     }, unimplemented<WellSegment>    , right_align },
+        { 9, {"TUB LENGTH" , "END SEGMT"  , "METRES"     }, &WellSegment::length_end_segmt, right_align },
+        { 8, {"CONNECTION" , "DEPTH"      , "METRES"     }, &WellSegment::connection_depth, right_align },
+        { 8, {"SEGMENT"    , "DEPTH"      , "METRES"     }, &WellSegment::segment_depth   , right_align },
+        { 9, {"GRID BLOCK" , "DEPTH"      , "METRES"     }, &WellSegment::grid_block_depth, right_align },
     }, '='};
 
 }
