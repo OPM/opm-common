@@ -502,6 +502,10 @@ namespace {
             return std::to_string(segment.internalDiameter()).substr(0, 6);
         }
 
+        std::string roughness(std::size_t) const {
+            return std::to_string(segment.roughness()).substr(0, 8);
+        }
+
         std::string cross_section(std::size_t) const {
             return std::to_string(segment.crossArea()).substr(0, 7);
         }
@@ -565,7 +569,7 @@ namespace {
         { 9, { "DEPTH"     , "CHANGE"     , "METRES"     }, unimplemented<WellSegment>     , right_align             },
         { 8, { "T.V. DEPTH", "AT END"     , "METRES"     }, unimplemented<WellSegment>     , right_align             },
         { 6, { "DIAMETER"  , ""           , "METRES"     }, &WellSegment::internal_diameter, right_align             },
-        { 8, { "VFP TAB OR", "ABS ROUGHN" , "METRES"     }, unimplemented<WellSegment>     , right_align             },
+        { 8, { "VFP TAB OR", "ABS ROUGHN" , "METRES"     }, &WellSegment::roughness        , right_align             },
         { 7, { "AREA"      , "X-SECTN"    , "M**2"       }, &WellSegment::cross_section    , right_align             },
         { 7, { "VOLUME"    , ""           , "M3"         }, &WellSegment::volume           , right_align             },
         { 8, { "P DROP"    , "MULT"       , "FACTOR"     }, unimplemented<WellSegment>     , right_align             },
