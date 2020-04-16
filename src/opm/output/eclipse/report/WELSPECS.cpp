@@ -554,6 +554,7 @@ namespace {
         for (const auto& well : data) {
             if (well.isMultiSegment()) {
                 well_multisegment_connection.print(os, { well });
+                well_multisegment_data.print(os, { well });
             }
         }
 
