@@ -564,7 +564,7 @@ namespace {
         { 3, { "BRN"       , "NO"         , ""           }, &WellSegment::branch_id        , right_header            },
         { 5, { "MAIN"      , "INLET"      , "SEGMENT"    }, &WellSegment::main_inlet       , right_align             },
         { 5, { ""          , "OUTLET"     , "SEGMENT"    }, &WellSegment::outlet           , right_align             },
-        { 7, { "SEGMENT"   , "LENGTH"     , "METRES"     }, unimplemented<WellSegment>     , right_align             },
+        { 7, { "SEGMENT"   , "LENGTH"     , "METRES"     }, &WellSegment::length_end_segmt , right_align             },
         { 8, { "TOT LENGTH", "TO END"     , "METRES"     }, unimplemented<WellSegment>     , right_align             },
         { 9, { "DEPTH"     , "CHANGE"     , "METRES"     }, unimplemented<WellSegment>     , right_align             },
         { 8, { "T.V. DEPTH", "AT END"     , "METRES"     }, unimplemented<WellSegment>     , right_align             },
