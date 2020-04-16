@@ -224,7 +224,10 @@ static data::Wells result_wells() {
     segment.rates.set(rt::wat,  123.45*sm3_pr_day());
     segment.rates.set(rt::oil,  543.21*sm3_pr_day());
     segment.rates.set(rt::gas, 1729.496*sm3_pr_day());
-    segment.pressure = 314.159*unit::barsa;
+    {
+        const auto pres_idx = Opm::data::SegmentPressures::Value::Pressure;
+        segment.pressures[pres_idx] = 314.159*unit::barsa;
+    }
     segment.segNumber = 1;
 
     /*
@@ -1561,7 +1564,8 @@ BOOST_AUTO_TEST_CASE(READ_WRITE_WELLDATA) {
             BOOST_CHECK_CLOSE(seg.rates.get(rt::wat),  123.45*sm3_pr_day(), 1.0e-10);
             BOOST_CHECK_CLOSE(seg.rates.get(rt::oil),  543.21*sm3_pr_day(), 1.0e-10);
             BOOST_CHECK_CLOSE(seg.rates.get(rt::gas), 1729.496*sm3_pr_day(), 1.0e-10);
-            BOOST_CHECK_CLOSE(seg.pressure, 314.159*unit::barsa, 1.0e-10);
+            const auto pres_idx = Opm::data::SegmentPressures::Value::Pressure;
+            BOOST_CHECK_CLOSE(seg.pressures[pres_idx], 314.159*unit::barsa, 1.0e-10);
             BOOST_CHECK_EQUAL(seg.segNumber, 1);
 
             // No data for segment 10 of well W_2 (or no such segment).
@@ -2462,7 +2466,8 @@ namespace {
 
         fill_surface_rates(segID, sign, res.rates);
 
-        res.pressure = (100.0 + segID)*unit::barsa;
+        const auto pres_idx = Opm::data::SegmentPressures::Value::Pressure;
+        res.pressures[pres_idx] = (100.0 + segID)*unit::barsa;
 
         res.segNumber = segID;
 

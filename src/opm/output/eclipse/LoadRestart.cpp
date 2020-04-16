@@ -1098,7 +1098,7 @@ namespace {
             auto& segment = xw.segments[segNumber];
 
             segment.segNumber = segNumber;
-            segment.pressure  =
+            segment.pressures[Opm::data::SegmentPressures::Value::Pressure]  =
                 usys.to_si(M::pressure, rseg[VI::RSeg::index::Pressure]);
 
             const auto totFlow     = rseg[VI::RSeg::index::TotFlowRate];

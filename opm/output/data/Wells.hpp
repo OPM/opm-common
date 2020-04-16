@@ -150,23 +150,63 @@ namespace Opm {
         void read(MessageBufferType& buffer);
     };
 
+    class SegmentPressures {
+    public:
+        enum class Value : std::size_t {
+            Pressure, PDrop, PDropHydrostatic, PDropAccel, PDropFriction,
+        };
+
+        double& operator[](const Value i)
+        {
+            return this->values_[this->index(i)];
+        }
+
+        double operator[](const Value i) const
+        {
+            return this->values_[this->index(i)];
+        }
+
+        bool operator==(const SegmentPressures& segpres2) const
+        {
+            return this->values_ == segpres2.values_;
+        }
+
+        template <class MessageBufferType>
+        void write(MessageBufferType& buffer) const
+        {
+            for (const auto& value : this->values_) {
+                buffer.write(value);
+            }
+        }
+
+        template <class MessageBufferType>
+        void read(MessageBufferType& buffer)
+        {
+            for (auto& value : this->values_) {
+                buffer.read(value);
+            }
+        }
+
+    private:
+        constexpr static std::size_t numvals = 5;
+
+        std::array<double, numvals> values_;
+
+        std::size_t index(const Value ix) const
+        {
+            return static_cast<std::size_t>(ix);
+        }
+    };
+
     struct Segment {
         Rates rates;
-        double pressure;
-        double pressure_drop;
-        double pressure_drop_hydrostatic;
-        double pressure_drop_acceleration;
-        double pressure_drop_friction;
+        SegmentPressures pressures;
         std::size_t segNumber;
 
         bool operator==(const Segment& seg2) const
         {
           return rates == seg2.rates &&
-                 pressure == seg2.pressure &&
-                 pressure_drop == seg2.pressure_drop &&
-                 pressure_drop_hydrostatic == seg2.pressure_drop_hydrostatic &&
-                 pressure_drop_friction == seg2.pressure_drop_friction &&
-                 pressure_drop_acceleration == seg2.pressure_drop_acceleration &&
+                 pressures == seg2.pressures &&
                  segNumber == seg2.segNumber;
         }
 
@@ -460,11 +500,7 @@ namespace Opm {
     void Segment::write(MessageBufferType& buffer) const {
         buffer.write(this->segNumber);
         this->rates.write(buffer);
-        buffer.write(this->pressure);
-        buffer.write(this->pressure_drop);
-        buffer.write(this->pressure_drop_hydrostatic);
-        buffer.write(this->pressure_drop_friction);
-        buffer.write(this->pressure_drop_acceleration);
+        this->pressures.write(buffer);
     }
 
     template <class MessageBufferType>
@@ -542,11 +578,7 @@ namespace Opm {
     void Segment::read(MessageBufferType& buffer) {
         buffer.read(this->segNumber);
         this->rates.read(buffer);
-        buffer.read(this->pressure);
-        buffer.read(this->pressure_drop);
-        buffer.read(this->pressure_drop_hydrostatic);
-        buffer.read(this->pressure_drop_friction);
-        buffer.read(this->pressure_drop_acceleration);
+        this->pressures.read(buffer);
     }
 
     template <class MessageBufferType>

@@ -568,7 +568,8 @@ inline quantity trans_factors ( const fn_args& args ) {
     return { v, measure::transmissibility };
 }
 
-inline quantity spr ( const fn_args& args ) {
+template <Opm::data::SegmentPressures::Value ix>
+inline quantity segpress ( const fn_args& args ) {
     const quantity zero = { 0, measure::pressure };
 
     if( args.schedule_wells.empty() ) return zero;
@@ -588,104 +589,7 @@ inline quantity spr ( const fn_args& args ) {
     if( segment == well_data.segments.end() ) return zero;
 
 
-    const auto& v = segment->second.pressure;
-    return { v, measure::pressure };
-}
-
-inline quantity sprd ( const fn_args& args ) {
-    const quantity zero = { 0, measure::pressure };
-
-    if( args.schedule_wells.empty() ) return zero;
-    // Like completion rate we need to look
-    // up a connection with offset 0.
-    const size_t segNumber = args.num;
-    if( args.schedule_wells.empty() ) return zero;
-
-    const auto& well = args.schedule_wells.front();
-    const auto& name = well.name();
-    if( args.wells.count( name ) == 0 ) return zero;
-
-    const auto& well_data = args.wells.at( name );
-
-    const auto& segment = well_data.segments.find(segNumber);
-
-    if( segment == well_data.segments.end() ) return zero;
-
-
-    const auto& v = segment->second.pressure_drop;
-    return { v, measure::pressure };
-}
-
-inline quantity sprdh ( const fn_args& args ) {
-    const quantity zero = { 0, measure::pressure };
-
-    if( args.schedule_wells.empty() ) return zero;
-    // Like completion rate we need to look
-    // up a connection with offset 0.
-    const size_t segNumber = args.num;
-    if( args.schedule_wells.empty() ) return zero;
-
-    const auto& well = args.schedule_wells.front();
-    const auto& name = well.name();
-    if( args.wells.count( name ) == 0 ) return zero;
-
-    const auto& well_data = args.wells.at( name );
-
-    const auto& segment = well_data.segments.find(segNumber);
-
-    if( segment == well_data.segments.end() ) return zero;
-
-
-    const auto& v = segment->second.pressure_drop_hydrostatic;
-    return { v, measure::pressure };
-}
-
-inline quantity sprdf ( const fn_args& args ) {
-    const quantity zero = { 0, measure::pressure };
-
-    if( args.schedule_wells.empty() ) return zero;
-    // Like completion rate we need to look
-    // up a connection with offset 0.
-    const size_t segNumber = args.num;
-    if( args.schedule_wells.empty() ) return zero;
-
-    const auto& well = args.schedule_wells.front();
-    const auto& name = well.name();
-    if( args.wells.count( name ) == 0 ) return zero;
-
-    const auto& well_data = args.wells.at( name );
-
-    const auto& segment = well_data.segments.find(segNumber);
-
-    if( segment == well_data.segments.end() ) return zero;
-
-
-    const auto& v = segment->second.pressure_drop_friction;
-    return { v, measure::pressure };
-}
-
-inline quantity sprda ( const fn_args& args ) {
-    const quantity zero = { 0, measure::pressure };
-
-    if( args.schedule_wells.empty() ) return zero;
-    // Like completion rate we need to look
-    // up a connection with offset 0.
-    const size_t segNumber = args.num;
-    if( args.schedule_wells.empty() ) return zero;
-
-    const auto& well = args.schedule_wells.front();
-    const auto& name = well.name();
-    if( args.wells.count( name ) == 0 ) return zero;
-
-    const auto& well_data = args.wells.at( name );
-
-    const auto& segment = well_data.segments.find(segNumber);
-
-    if( segment == well_data.segments.end() ) return zero;
-
-
-    const auto& v = segment->second.pressure_drop_acceleration;
-    return { v, measure::pressure };
+    return { segment->second.pressures[ix], measure::pressure };
 }
 
 inline quantity bhp( const fn_args& args ) {
@@ -1304,11 +1208,11 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "SOFR", srate< rt::oil > },
     { "SWFR", srate< rt::wat > },
     { "SGFR", srate< rt::gas > },
-    { "SPR",  spr },
-    { "SPRD", sprd },
-    { "SPRDH", sprdh },
-    { "SPRDF", sprdf },
-    { "SPRDA", sprda },
+    { "SPR", segpress<Opm::data::SegmentPressures::Value::Pressure> },
+    { "SPRD", segpress<Opm::data::SegmentPressures::Value::PDrop> },
+    { "SPRDH", segpress<Opm::data::SegmentPressures::Value::PDropHydrostatic> },
+    { "SPRDF", segpress<Opm::data::SegmentPressures::Value::PDropFriction> },
+    { "SPRDA", segpress<Opm::data::SegmentPressures::Value::PDropAccel> },
     // Well productivity index
     { "WPIW", potential_rate< rt::productivity_index_water >},
     { "WPIO", potential_rate< rt::productivity_index_oil >},
