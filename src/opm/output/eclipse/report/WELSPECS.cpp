@@ -489,24 +489,53 @@ namespace {
             return std::to_string(segment.totalLength()).substr(0, 9);
         }
 
+        std::string length(std::size_t) const {
+            return std::to_string(segment.totalLength()).substr(0, 7);
+        }
+
         std::string internal_diameter(std::size_t) const {
-            return std::to_string(segment.internalDiameter()).substr(0, 6);
+            const auto number { segment.internalDiameter() } ;
+
+            if (number != Opm::Segment::invalidValue()) {
+                return std::to_string(number).substr(0, 6);
+            } else {
+                return "0";
+            }
         }
 
         std::string roughness(std::size_t) const {
-            return std::to_string(segment.roughness()).substr(0, 8);
+            const auto number { segment.roughness() } ;
+
+            if (number != Opm::Segment::invalidValue()) {
+                return std::to_string(number).substr(0, 8);
+            } else {
+                return "0";
+            }
         }
 
         std::string cross_section(std::size_t) const {
-            return std::to_string(segment.crossArea()).substr(0, 7);
+            const auto number { segment.crossArea() } ;
+
+            if (number != Opm::Segment::invalidValue()) {
+                return std::to_string(number).substr(0, 7);
+            } else {
+                return "0";
+            }
         }
 
         std::string volume(std::size_t) const {
-            return std::to_string(segment.volume()).substr(0, 7);
+            return std::to_string(segment.volume()).substr(0, 5);
         }
 
         std::string main_inlet(std::size_t) const {
-            return std::to_string(segment.inletSegments().front());
+            const auto& inlets { segment.inletSegments() } ;
+
+            if (inlets.size() != 0) {
+                return std::to_string(segment.inletSegments().front());
+            } else {
+                return "0";
+            }
+
         }
 
         std::string outlet(std::size_t) const {
@@ -553,11 +582,11 @@ namespace {
         { 3, { "BRN"       , "NO"         , ""           }, &WellSegment::branch_id        , right_header            },
         { 5, { "MAIN"      , "INLET"      , "SEGMENT"    }, &WellSegment::main_inlet       , right_align             },
         { 5, { ""          , "OUTLET"     , "SEGMENT"    }, &WellSegment::outlet           , right_align             },
-        { 7, { "SEGMENT"   , "LENGTH"     , "METRES"     }, &WellSegment::length_end_segmt , right_align             },
+        { 7, { "SEGMENT"   , "LENGTH"     , "METRES"     }, &WellSegment::length           , right_align             },
         { 8, { "TOT LENGTH", "TO END"     , "METRES"     }, unimplemented<WellSegment>     , right_align             },
         { 9, { "DEPTH"     , "CHANGE"     , "METRES"     }, unimplemented<WellSegment>     , right_align             },
         { 8, { "T.V. DEPTH", "AT END"     , "METRES"     }, unimplemented<WellSegment>     , right_align             },
-        { 6, { "DIAMETER"  , ""           , "METRES"     }, &WellSegment::internal_diameter, right_align             },
+        { 6, { "DIA OR F"  , "SCALING"    , "METRES"     }, &WellSegment::internal_diameter, right_align             },
         { 8, { "VFP TAB OR", "ABS ROUGHN" , "METRES"     }, &WellSegment::roughness        , right_align             },
         { 7, { "AREA"      , "X-SECTN"    , "M**2"       }, &WellSegment::cross_section    , right_align             },
         { 7, { "VOLUME"    , ""           , "M3"         }, &WellSegment::volume           , right_align             },
