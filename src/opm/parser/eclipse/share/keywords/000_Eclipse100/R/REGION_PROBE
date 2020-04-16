@@ -103,8 +103,10 @@
     "RTFTTSUR",
     "RTADSUR"
   ],
-  "deck_name_regex": "R[OGW]?[IP][PRT]_.+|RU.+|RTIPF.+|RTIPS.+|RTFTF.+|RTFTS.+|RTFTT.+|RTIPT.+|RTIPF.+|RTIPS.+|RTIP[1-9][0-9]*.+|RTFTT.+|RTFTF.+|RTFTS.+|RTFT[1-9][0-9]*.+|RTADS.+|RTDCY.+",
-  "data": {
-    "value_type": "INT"
-  }
+    "CommentFip": "This regexp should work for region output of arbitrary named FIPxxxx regions. Current implementation is not entirely correct",
+    "CommentTracer": "???",
+    "deck_name_regex": "R[OGW]?[OIP][EPRT]_.+|RU.+|RTIPF.+|RTIPS.+|RTFTF.+|RTFTS.+|RTFTT.+|RTIPT.+|RTIPF.+|RTIPS.+|RTIP[1-9][0-9]*.+|RTFTT.+|RTFTF.+|RTFTS.+|RTFT[1-9][0-9]*.+|RTADS.+|RTDCY.+",
+    "data": {
+        "value_type": "INT"
+    }
 }
