@@ -498,6 +498,14 @@ namespace {
             return std::to_string(segment.totalLength()).substr(0, 9);
         }
 
+        std::string main_inlet(std::size_t) const {
+            return std::to_string(segment.inletSegments().front());
+        }
+
+        std::string outlet(std::size_t) const {
+            return std::to_string(segment.outletSegment());
+        }
+
         static std::vector<WellSegment> transform(const Opm::Well& well) {
             const auto &connections { well.getConnections() } ;
             std::vector<WellSegment> out;
@@ -538,8 +546,8 @@ namespace {
         { 6, { "WELLNAME"  , "AND"        , "SEG TYPE"   }, unimplemented<WellSegment>    , &WellSegment::ws_format },
         { 3, { "SEG"       , "NO"         , ""           }, &WellSegment::segment_number  , right_align             },
         { 3, { "BRN"       , "NO"         , ""           }, &WellSegment::branch_id       , right_header            },
-        { 5, { "MAIN"      , "INLET"      , "SEGMENT"    }, unimplemented<WellSegment>    , right_align             },
-        { 5, { ""          , "OUTLET"     , "SEGMENT"    }, unimplemented<WellSegment>    , right_align             },
+        { 5, { "MAIN"      , "INLET"      , "SEGMENT"    }, &WellSegment::main_inlet      , right_align             },
+        { 5, { ""          , "OUTLET"     , "SEGMENT"    }, &WellSegment::outlet          , right_align             },
         { 7, { "SEGMENT"   , "LENGTH"     , "METRES"     }, unimplemented<WellSegment>    , right_align             },
         { 8, { "TOT LENGTH", "TO END"     , "METRES"     }, unimplemented<WellSegment>    , right_align             },
         { 9, { "DEPTH"     , "CHANGE"     , "METRES"     }, unimplemented<WellSegment>    , right_align             },
