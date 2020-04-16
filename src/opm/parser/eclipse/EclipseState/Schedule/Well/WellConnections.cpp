@@ -430,6 +430,17 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
     }
 
 
+    const Connection& WellConnections::lowest() const {
+        const auto max_iter = std::max_element(this->m_connections.begin(),
+                                               this->m_connections.end(),
+                                               [](const Connection& c1, const Connection& c2)
+                                               {
+                                                   return c1.depth() < c2.depth();
+                                               });
+        return *max_iter;
+    }
+
+
     const Connection& WellConnections::getFromIJK(const int i, const int j, const int k) const {
         for (size_t ic = 0; ic < size(); ++ic) {
             if (get(ic).sameCoordinate(i, j, k)) {

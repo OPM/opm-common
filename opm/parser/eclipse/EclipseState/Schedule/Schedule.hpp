@@ -358,6 +358,7 @@ namespace Opm
                      double drainageRadius,
                      bool allowCrossFlow,
                      bool automaticShutIn,
+                     int pvt_table,
                      size_t timeStep,
                      Connection::Order wellConnectionOrder,
                      const UnitSystem& unit_system);
