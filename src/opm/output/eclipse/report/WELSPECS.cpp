@@ -479,6 +479,18 @@ namespace {
             return std::to_string(segment.totalLength()).substr(0, 9);
         }
 
+        std::string internal_diameter(std::size_t) const {
+            return std::to_string(segment.internalDiameter()).substr(0, 6);
+        }
+
+        std::string cross_section(std::size_t) const {
+            return std::to_string(segment.crossArea()).substr(0, 7);
+        }
+
+        std::string volume(std::size_t) const {
+            return std::to_string(segment.volume()).substr(0, 7);
+        }
+
         std::string main_inlet(std::size_t) const {
             return std::to_string(segment.inletSegments().front());
         }
@@ -524,20 +536,20 @@ namespace {
 
 
     const subreport<Opm::Well, WellSegment, 3> well_multisegment_data { "MULTI-SEGMENT WELL: SEGMENT STRUCTURE", {
-        { 6, { "WELLNAME"  , "AND"        , "SEG TYPE"   }, unimplemented<WellSegment>    , &WellSegment::ws_format },
-        { 3, { "SEG"       , "NO"         , ""           }, &WellSegment::segment_number  , right_align             },
-        { 3, { "BRN"       , "NO"         , ""           }, &WellSegment::branch_id       , right_header            },
-        { 5, { "MAIN"      , "INLET"      , "SEGMENT"    }, &WellSegment::main_inlet      , right_align             },
-        { 5, { ""          , "OUTLET"     , "SEGMENT"    }, &WellSegment::outlet          , right_align             },
-        { 7, { "SEGMENT"   , "LENGTH"     , "METRES"     }, unimplemented<WellSegment>    , right_align             },
-        { 8, { "TOT LENGTH", "TO END"     , "METRES"     }, unimplemented<WellSegment>    , right_align             },
-        { 9, { "DEPTH"     , "CHANGE"     , "METRES"     }, unimplemented<WellSegment>    , right_align             },
-        { 8, { "T.V. DEPTH", "AT END"     , "METRES"     }, unimplemented<WellSegment>    , right_align             },
-        { 6, { "DIAMETER"  , ""           , "METRES"     }, unimplemented<WellSegment>    , right_align             },
-        { 8, { "VFP TAB OR", "ABS ROUGHN" , "METRES"     }, unimplemented<WellSegment>    , right_align             },
-        { 7, { "AREA"      , "X-SECTN"    , "M**2"       }, unimplemented<WellSegment>    , right_align             },
-        { 7, { "VOLUME"    , ""           , "M3"         }, unimplemented<WellSegment>    , right_align             },
-        { 8, { "P DROP"    , "MULT"       , "FACTOR"     }, unimplemented<WellSegment>    , right_align             },
+        { 6, { "WELLNAME"  , "AND"        , "SEG TYPE"   }, unimplemented<WellSegment>     , &WellSegment::ws_format },
+        { 3, { "SEG"       , "NO"         , ""           }, &WellSegment::segment_number   , right_align             },
+        { 3, { "BRN"       , "NO"         , ""           }, &WellSegment::branch_id        , right_header            },
+        { 5, { "MAIN"      , "INLET"      , "SEGMENT"    }, &WellSegment::main_inlet       , right_align             },
+        { 5, { ""          , "OUTLET"     , "SEGMENT"    }, &WellSegment::outlet           , right_align             },
+        { 7, { "SEGMENT"   , "LENGTH"     , "METRES"     }, unimplemented<WellSegment>     , right_align             },
+        { 8, { "TOT LENGTH", "TO END"     , "METRES"     }, unimplemented<WellSegment>     , right_align             },
+        { 9, { "DEPTH"     , "CHANGE"     , "METRES"     }, unimplemented<WellSegment>     , right_align             },
+        { 8, { "T.V. DEPTH", "AT END"     , "METRES"     }, unimplemented<WellSegment>     , right_align             },
+        { 6, { "DIAMETER"  , ""           , "METRES"     }, &WellSegment::internal_diameter, right_align             },
+        { 8, { "VFP TAB OR", "ABS ROUGHN" , "METRES"     }, unimplemented<WellSegment>     , right_align             },
+        { 7, { "AREA"      , "X-SECTN"    , "M**2"       }, &WellSegment::cross_section    , right_align             },
+        { 7, { "VOLUME"    , ""           , "M3"         }, &WellSegment::volume           , right_align             },
+        { 8, { "P DROP"    , "MULT"       , "FACTOR"     }, unimplemented<WellSegment>     , right_align             },
     }, '='};
 
 }
