@@ -431,7 +431,10 @@ BOOST_AUTO_TEST_CASE(GCONINJE_MULTIPLE_PHASES) {
         BOOST_CHECK(  g1.hasInjectionControl(Phase::WATER));
         BOOST_CHECK(  g1.hasInjectionControl(Phase::GAS));
         BOOST_CHECK( !g1.hasInjectionControl(Phase::OIL));
-        BOOST_CHECK(  g1.isAvailableForGroupControl() );
+
+        BOOST_CHECK(  g1.injectionGroupControlAvailable(Phase::WATER) );
+        BOOST_CHECK(  g1.injectionGroupControlAvailable(Phase::GAS) );
+        BOOST_CHECK(  g1.productionGroupControlAvailable() );
 
         g1.injectionControls(Phase::WATER, st);
         g1.injectionControls(Phase::GAS, st);
@@ -444,7 +447,7 @@ BOOST_AUTO_TEST_CASE(GCONINJE_MULTIPLE_PHASES) {
         const auto& g2 = schedule.getGroup("G2", 0);
         BOOST_CHECK(!g2.has_topup_phase());
         BOOST_CHECK_THROW(g2.topup_phase(), std::logic_error);
-        BOOST_CHECK(  g2.isAvailableForGroupControl() );
+        BOOST_CHECK(  g2.injectionGroupControlAvailable(Phase::WATER) );
     }
     // Step 1
     {
@@ -452,7 +455,7 @@ BOOST_AUTO_TEST_CASE(GCONINJE_MULTIPLE_PHASES) {
         BOOST_CHECK(  g2.hasInjectionControl(Phase::WATER));
         BOOST_CHECK(  g2.hasInjectionControl(Phase::GAS));
         BOOST_CHECK( !g2.hasInjectionControl(Phase::OIL));
-        BOOST_CHECK( !g2.isAvailableForGroupControl() );
+        BOOST_CHECK( !g2.injectionGroupControlAvailable(Phase::GAS) );
 
         g2.injectionControls(Phase::WATER, st);
         g2.injectionControls(Phase::GAS, st);
@@ -465,6 +468,72 @@ BOOST_AUTO_TEST_CASE(GCONINJE_MULTIPLE_PHASES) {
         const auto& g1 = schedule.getGroup("G1", 1);
         BOOST_CHECK(!g1.has_topup_phase());
         BOOST_CHECK_THROW(g1.topup_phase(), std::logic_error);
-        BOOST_CHECK(  g1.isAvailableForGroupControl() );
+    }
+}
+
+BOOST_AUTO_TEST_CASE(GCONINJE_GCONPROD) {
+    std::string input = R"(
+        START             -- 0
+        31 AUG 1993 /
+        SCHEDULE
+
+        GRUPTREE
+           'G1'  'FIELD' /
+           'G2'  'FIELD' /
+        /
+
+        GCONPROD
+            'G1' 'ORAT' 10000 3* 'CON' 'NO'/
+            'G2' 'ORAT' 10000 3* 'CON' /
+        /
+
+        GCONINJE
+           'G1'   'WATER'     1*  1000      /
+           'G2'   'WATER'     1*  1*   2000 1*  1*  'NO'/
+        /
+
+
+        TSTEP
+           1 /
+
+        GCONPROD
+            'G1' 'ORAT' 10000 3* 'CON' /
+            'G2' 'ORAT' 10000 3* 'CON' 'NO'/
+        /
+
+        GCONINJE
+           'G1'   'WATER'     1*  1000 3* 'NO'     /
+           'G2'   'WATER'     1*  1*   2000 /
+        /
+
+        )";
+
+    auto schedule = create_schedule(input);
+    {
+        const auto& f  = schedule.getGroup("FIELD", 0);
+        const auto& g1 = schedule.getGroup("G1", 0);
+        const auto& g2 = schedule.getGroup("G2", 0);
+
+        BOOST_CHECK(!f.productionGroupControlAvailable() );
+        BOOST_CHECK(!f.injectionGroupControlAvailable(Phase::WATER));
+        BOOST_CHECK(!f.injectionGroupControlAvailable(Phase::GAS));
+
+        BOOST_CHECK(!g1.productionGroupControlAvailable() );
+        BOOST_CHECK( g2.productionGroupControlAvailable() );
+        BOOST_CHECK( g1.injectionGroupControlAvailable(Phase::WATER));
+        BOOST_CHECK(!g2.injectionGroupControlAvailable(Phase::WATER));
+        BOOST_CHECK( g1.injectionGroupControlAvailable(Phase::GAS));
+        BOOST_CHECK( g2.injectionGroupControlAvailable(Phase::GAS));
+    }
+    {
+        const auto& g1 = schedule.getGroup("G1", 1);
+        const auto& g2 = schedule.getGroup("G2", 1);
+
+        BOOST_CHECK( g1.productionGroupControlAvailable() );
+        BOOST_CHECK(!g2.productionGroupControlAvailable() );
+        BOOST_CHECK(!g1.injectionGroupControlAvailable(Phase::WATER));
+        BOOST_CHECK( g2.injectionGroupControlAvailable(Phase::WATER));
+        BOOST_CHECK( g1.injectionGroupControlAvailable(Phase::GAS));
+        BOOST_CHECK( g2.injectionGroupControlAvailable(Phase::GAS));
     }
 }
