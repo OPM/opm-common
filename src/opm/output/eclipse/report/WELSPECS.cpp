@@ -42,7 +42,7 @@ namespace {
         if (line_number == 0) {
             left_align(string, width, line_number);
         } else {
-            string = std::string(field_padding, width);
+            string.clear();
         }
     }
 
@@ -56,7 +56,7 @@ namespace {
         if (line_number == 0) {
             right_align(string, width, line_number);
         } else {
-            string = std::string(field_padding, width);
+            string.clear();
         }
     }
 
