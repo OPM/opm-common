@@ -300,7 +300,7 @@ namespace {
 
             ss << well.getPreferredPhase();
 
-            return ss.str();
+            return ss.str().substr(0, 3);
         }
 
         std::string pvt_tab(std::size_t) const {
