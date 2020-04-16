@@ -481,6 +481,14 @@ namespace {
 
             return out;
         }
+
+        static void ws_format(std::string& string, std::size_t, std::size_t i) {
+            if (i == 1) {
+                return left_align(string, 8, i);
+            } else {
+                return right_align(string, 8, i);
+            }
+        }
     };
 
     const subreport<Opm::Well, WellSegment, 3> well_multisegment_connection { "MULTI-SEGMENT WELL: CONNECTION DATA", {
@@ -495,6 +503,25 @@ namespace {
         { 8, {"CONNECTION" , "DEPTH"      , "METRES"     }, &WellSegment::connection_depth, right_align },
         { 8, {"SEGMENT"    , "DEPTH"      , "METRES"     }, &WellSegment::segment_depth   , right_align },
         { 9, {"GRID BLOCK" , "DEPTH"      , "METRES"     }, unimplemented<WellSegment>    , right_align },
+    }, '='};
+
+
+
+    const subreport<Opm::Well, WellSegment, 3> well_multisegment_data { "MULTI-SEGMENT WELL: SEGMENT STRUCTURE", {
+        { 6, { "WELLNAME"  , "AND"        , "SEG TYPE"   }, unimplemented<WellSegment>    , &WellSegment::ws_format },
+        { 3, { "SEG"       , "NO"         , ""           }, unimplemented<WellSegment>    , right_align             },
+        { 3, { "BRN"       , "NO"         , ""           }, unimplemented<WellSegment>    , right_align             },
+        { 5, { "MAIN"      , "INLET"      , "SEGMENT"    }, unimplemented<WellSegment>    , right_align             },
+        { 5, { ""          , "OUTLET"     , "SEGMENT"    }, unimplemented<WellSegment>    , right_align             },
+        { 7, { "SEGMENT"   , "LENGTH"     , "METRES"     }, unimplemented<WellSegment>    , right_align             },
+        { 8, { "TOT LENGTH", "TO END"     , "METRES"     }, unimplemented<WellSegment>    , right_align             },
+        { 9, { "DEPTH"     , "CHANGE"     , "METRES"     }, unimplemented<WellSegment>    , right_align             },
+        { 8, { "T.V. DEPTH", "AT END"     , "METRES"     }, unimplemented<WellSegment>    , right_align             },
+        { 6, { "DIAMETER"  , ""           , "METRES"     }, unimplemented<WellSegment>    , right_align             },
+        { 8, { "VFP TAB OR", "ABS ROUGHN" , "METRES"     }, unimplemented<WellSegment>    , right_align             },
+        { 7, { "AREA"      , "X-SECTN"    , "M**2"       }, unimplemented<WellSegment>    , right_align             },
+        { 7, { "VOLUME"    , ""           , "M3"         }, unimplemented<WellSegment>    , right_align             },
+        { 8, { "P DROP"    , "MULT"       , "FACTOR"     }, unimplemented<WellSegment>    , right_align             },
     }, '='};
 
 }
