@@ -66,7 +66,8 @@ ext_modules = [
         language='c++',
         undef_macros=["NDEBUG"],
         include_dirs=["pybind11/include"],
-        extra_compile_args=['-std=c++17']
+        extra_compile_args=['-std=c++17', '-fopenmp'],
+        extra_link_args=['-fopenmp']
     )
 ]
 

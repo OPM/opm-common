@@ -388,10 +388,7 @@ void handle_box_keyword(const DeckKeyword& deckKeyword,  Box& box) {
 
 
 std::vector<double> extract_cell_volume(const EclipseGrid& grid) {
-    std::vector<double> cell_volume(grid.getNumActive());
-    for (std::size_t active_index = 0; active_index < grid.getNumActive(); active_index++)
-        cell_volume[active_index] = grid.getCellVolume( grid.getGlobalIndex(active_index));
-    return cell_volume;
+    return grid.activeVolume();
 }
 
 std::vector<double> extract_cell_depth(const EclipseGrid& grid) {
