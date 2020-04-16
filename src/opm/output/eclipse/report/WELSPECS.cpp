@@ -369,7 +369,7 @@ namespace {
         }
 
         std::string grid_block(std::size_t) const {
-            const std::array<int,3> ijk { connection.getI(), connection.getJ(), connection.getK() } ;
+            const std::array<int,3> ijk { connection.getI() + 1, connection.getJ() + 1, connection.getK() + 1 } ;
 
             auto compose_coordinates = [](std::string& out, int in) -> std::string {
                 constexpr auto delimiter { ',' } ;
