@@ -510,15 +510,15 @@ namespace {
         }
 
         std::string connection_depth(std::size_t) const {
-            return std::to_string(connection.depth()).substr(0, 8);
+            return std::to_string(connection.depth()).substr(0, 6);
         }
 
         std::string segment_depth(std::size_t) const {
-            return std::to_string(segment.depth()).substr(0, 8);
+            return std::to_string(segment.depth()).substr(0, 6);
         }
 
         std::string length_end_segmt(std::size_t) const {
-            return std::to_string(segment.totalLength()).substr(0, 9);
+            return std::to_string(segment.totalLength()).substr(0, 6);
         }
 
         std::string total_length(std::size_t) const {
