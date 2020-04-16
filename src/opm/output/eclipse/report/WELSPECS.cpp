@@ -623,7 +623,7 @@ namespace {
         {  5, { ""          , "OUTLET"     , "SEGMENT"    }, &WellSegment::outlet           , right_align             },
         {  7, { "SEGMENT"   , "LENGTH"     , "METRES"     }, unimplemented<WellSegment>     , right_align             },
         {  8, { "TOT LENGTH", "TO END"     , "METRES"     }, &WellSegment::total_length     , right_align             },
-        { 10, { "DEPTH"     , "CHANGE"     , "METRES"     }, unimplemented<WellSegment>     , right_align             },
+        {  8, { "DEPTH"     , "CHANGE"     , "METRES"     }, unimplemented<WellSegment>     , right_align             },
         {  8, { "T.V. DEPTH", "AT END"     , "METRES"     }, unimplemented<WellSegment>     , right_align             },
         {  6, { "DIA OR F"  , "SCALING"    , "METRES"     }, &WellSegment::internal_diameter, right_align             },
         {  8, { "VFP TAB OR", "ABS ROUGHN" , "METRES"     }, &WellSegment::roughness        , right_align             },
