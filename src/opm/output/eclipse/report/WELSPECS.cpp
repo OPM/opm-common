@@ -201,7 +201,7 @@ namespace {
             for (const auto element : data) {
                 column_definition.print_data(os, transform(element), separator);
             }
-            column_definition.print_divider(os);
+            column_definition.print_divider(os, bottom_border);
 
             os << section_separator << std::flush;
         }
@@ -602,34 +602,34 @@ namespace {
     };
 
     const subreport<Opm::Well, WellSegment, 3> well_multisegment_connection { "MULTI-SEGMENT WELL: CONNECTION DATA", {
-        { 8, {"WELL"       , "NAME"       ,              }, &WellSegment::well_name       , left_header },
-        { 9, {"CONNECTION" , ""           ,              }, &WellSegment::connection_grid ,             },
-        { 5, {"SEGMENT"    , "NUMBER"     ,              }, &WellSegment::segment_number  ,             },
-        { 8, {"BRANCH"     , "ID"         ,              }, &WellSegment::branch_id       ,             },
-        { 9, {"TUB LENGTH" , "START PERFS", "METRES"     }, unimplemented<WellSegment>    , right_align },
-        { 9, {"TUB LENGTH" , "END PERFS"  , "METRES"     }, unimplemented<WellSegment>    , right_align },
-        { 9, {"TUB LENGTH" , "CENTR PERFS", "METRES"     }, unimplemented<WellSegment>    , right_align },
-        { 9, {"TUB LENGTH" , "END SEGMT"  , "METRES"     }, &WellSegment::length_end_segmt, right_align },
-        { 8, {"CONNECTION" , "DEPTH"      , "METRES"     }, &WellSegment::connection_depth, right_align },
-        { 8, {"SEGMENT"    , "DEPTH"      , "METRES"     }, &WellSegment::segment_depth   , right_align },
-        { 9, {"GRID BLOCK" , "DEPTH"      , "METRES"     }, unimplemented<WellSegment>    , right_align },
+        {  8, {"WELL"       , "NAME"       ,              }, &WellSegment::well_name       , left_header },
+        {  9, {"CONNECTION" , ""           ,              }, &WellSegment::connection_grid ,             },
+        {  5, {"SEGMENT"    , "NUMBER"     ,              }, &WellSegment::segment_number  ,             },
+        {  8, {"BRANCH"     , "ID"         ,              }, &WellSegment::branch_id       ,             },
+        {  9, {"TUB LENGTH" , "START PERFS", "METRES"     }, unimplemented<WellSegment>    , right_align },
+        {  9, {"TUB LENGTH" , "END PERFS"  , "METRES"     }, unimplemented<WellSegment>    , right_align },
+        {  9, {"TUB LENGTH" , "CENTR PERFS", "METRES"     }, unimplemented<WellSegment>    , right_align },
+        {  9, {"TUB LENGTH" , "END SEGMT"  , "METRES"     }, &WellSegment::length_end_segmt, right_align },
+        {  8, {"CONNECTION" , "DEPTH"      , "METRES"     }, &WellSegment::connection_depth, right_align },
+        {  8, {"SEGMENT"    , "DEPTH"      , "METRES"     }, &WellSegment::segment_depth   , right_align },
+        {  9, {"GRID BLOCK" , "DEPTH"      , "METRES"     }, unimplemented<WellSegment>    , right_align },
     }, '='};
 
     const subreport<Opm::Well, WellSegment, 3> well_multisegment_data { "MULTI-SEGMENT WELL: SEGMENT STRUCTURE", {
-        { 6, { "WELLNAME"  , "AND"        , "SEG TYPE"   }, &WellSegment::well_name_seg    , &WellSegment::ws_format },
-        { 3, { "SEG"       , "NO"         , ""           }, &WellSegment::segment_number   , right_align             },
-        { 3, { "BRN"       , "NO"         , ""           }, &WellSegment::branch_id        , right_align             },
-        { 5, { "MAIN"      , "INLET"      , "SEGMENT"    }, &WellSegment::main_inlet       , right_align             },
-        { 5, { ""          , "OUTLET"     , "SEGMENT"    }, &WellSegment::outlet           , right_align             },
-        { 7, { "SEGMENT"   , "LENGTH"     , "METRES"     }, unimplemented<WellSegment>     , right_align             },
-        { 8, { "TOT LENGTH", "TO END"     , "METRES"     }, &WellSegment::total_length     , right_align             },
-        { 9, { "DEPTH"     , "CHANGE"     , "METRES"     }, unimplemented<WellSegment>     , right_align             },
-        { 8, { "T.V. DEPTH", "AT END"     , "METRES"     }, unimplemented<WellSegment>     , right_align             },
-        { 6, { "DIA OR F"  , "SCALING"    , "METRES"     }, &WellSegment::internal_diameter, right_align             },
-        { 8, { "VFP TAB OR", "ABS ROUGHN" , "METRES"     }, &WellSegment::roughness        , right_align             },
-        { 7, { "AREA"      , "X-SECTN"    , "M**2"       }, &WellSegment::cross_section    , right_align             },
-        { 7, { "VOLUME"    , ""           , "M3"         }, &WellSegment::volume           , right_align             },
-        { 8, { "P DROP"    , "MULT"       , "FACTOR"     }, unimplemented<WellSegment>     , right_align             },
+        {  6, { "WELLNAME"  , "AND"        , "SEG TYPE"   }, &WellSegment::well_name_seg    , &WellSegment::ws_format },
+        {  3, { "SEG"       , "NO"         , ""           }, &WellSegment::segment_number   , right_align             },
+        {  3, { "BRN"       , "NO"         , ""           }, &WellSegment::branch_id        , right_align             },
+        {  5, { "MAIN"      , "INLET"      , "SEGMENT"    }, &WellSegment::main_inlet       , right_align             },
+        {  5, { ""          , "OUTLET"     , "SEGMENT"    }, &WellSegment::outlet           , right_align             },
+        {  7, { "SEGMENT"   , "LENGTH"     , "METRES"     }, unimplemented<WellSegment>     , right_align             },
+        {  8, { "TOT LENGTH", "TO END"     , "METRES"     }, &WellSegment::total_length     , right_align             },
+        { 10, { "DEPTH"     , "CHANGE"     , "METRES"     }, unimplemented<WellSegment>     , right_align             },
+        {  8, { "T.V. DEPTH", "AT END"     , "METRES"     }, unimplemented<WellSegment>     , right_align             },
+        {  6, { "DIA OR F"  , "SCALING"    , "METRES"     }, &WellSegment::internal_diameter, right_align             },
+        {  8, { "VFP TAB OR", "ABS ROUGHN" , "METRES"     }, &WellSegment::roughness        , right_align             },
+        {  7, { "AREA"      , "X-SECTN"    , "M**2"       }, &WellSegment::cross_section    , right_align             },
+        {  7, { "VOLUME"    , ""           , "M3"         }, &WellSegment::volume           , right_align             },
+        {  8, { "P DROP"    , "MULT"       , "FACTOR"     }, unimplemented<WellSegment>     , right_align             },
     }, '=', &WellSegment::segment_structure_separator};
 
 }
