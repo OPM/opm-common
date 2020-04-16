@@ -283,7 +283,7 @@ namespace {
         }
 
         std::string wellhead_location(std::size_t) const {
-            auto i { std::to_string(well.getHeadI()) }, j { std::to_string(well.getHeadJ()) } ;
+            auto i { std::to_string(well.getHeadI() + 1) }, j { std::to_string(well.getHeadJ() + 1) } ;
 
             right_align(i, 3);
             right_align(j, 3);
