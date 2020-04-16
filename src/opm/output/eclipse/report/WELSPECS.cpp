@@ -52,14 +52,6 @@ namespace {
         }
     }
 
-    void right_header(std::string& string, std::size_t width, std::size_t line_number) {
-        if (line_number == 0) {
-            right_align(string, width, line_number);
-        } else {
-            string.clear();
-        }
-    }
-
     void centre_align(std::string& string, std::size_t width, std::size_t = 0) {
         if (string.size() < width) {
             std::size_t extra_space { width - string.size() } ;
@@ -80,6 +72,11 @@ namespace {
         static const std::string s { } ;
 
         return s;
+    }
+
+    template<typename T>
+    bool add_separator(const T&, std::size_t line_number) {
+        return line_number == 0;
     }
 
     template<typename T, std::size_t header_height>
@@ -116,6 +113,7 @@ namespace {
     template<typename T, std::size_t header_height>
     struct table: std::vector<column<T, header_height>> {
         using std::vector<column<T, header_height>>::vector;
+        using separator_function = std::function<bool(const T&, std::size_t)>;
 
         std::size_t total_width() const {
             std::size_t r { 1 + this->size() } ;
@@ -143,13 +141,15 @@ namespace {
 
                 os << field_separator << record_separator;
             }
-
-            print_divider(os);
         }
 
-        void print_data(std::ostream& os, const std::vector<T>& lines) const {
+        void print_data(std::ostream& os, const std::vector<T>& lines, const separator_function& separator) const {
             std::size_t line_number { 0 } ;
             for (const auto& line : lines) {
+                if (separator(line, line_number)) {
+                    print_divider(os);
+                }
+
                 for (const auto& column : *this) {
                     os << field_separator;
 
@@ -166,19 +166,22 @@ namespace {
     template<typename InputType, typename OutputType, std::size_t header_height>
     struct subreport {
         using transform_function = std::function<std::vector<OutputType>(const InputType&)>;
+        using separator_function = typename table<OutputType, header_height>::separator_function;
 
         std::string title;
         std::string decor;
         table<OutputType, header_height> column_definition;
         char bottom_border;
         transform_function transform;
+        separator_function separator;
 
-        subreport(const std::string& _title, const table<OutputType, header_height>& _coldef, char _bottom_border = '-', transform_function _tf = &OutputType::transform)
+        subreport(const std::string& _title, const table<OutputType, header_height>& _coldef, char _bottom_border = '-', separator_function _sf = add_separator<OutputType>, transform_function _tf = &OutputType::transform)
             : title              { _title           }
             , decor              { underline(title) }
             , column_definition  { _coldef          }
             , bottom_border      { _bottom_border   }
             , transform          { _tf              }
+            , separator          { _sf              }
         {
             centre_align(title, column_definition.total_width());
             centre_align(decor, column_definition.total_width());
@@ -196,7 +199,7 @@ namespace {
 
             column_definition.print_header(os);
             for (const auto element : data) {
-                column_definition.print_data(os, transform(element));
+                column_definition.print_data(os, transform(element), separator);
             }
             column_definition.print_divider(os);
 
@@ -449,6 +452,8 @@ namespace {
         const Opm::Connection& connection;
         const Opm::Segment& segment;
 
+        bool branch_separator;
+
         const std::string& well_name(std::size_t) const {
             return well.name();
         }
@@ -473,8 +478,12 @@ namespace {
             return std::to_string(segment.segmentNumber());
         }
 
-        std::string branch_id(std::size_t) const {
-            return std::to_string(segment.branchNumber());
+        std::string branch_id(std::size_t n) const {
+            if (branch_separator) {
+                return std::to_string(segment.branchNumber());
+            } else {
+                return unimplemented(this, n);
+            }
         }
 
         std::string connection_depth(std::size_t) const {
@@ -546,8 +555,15 @@ namespace {
             const auto &connections { well.getConnections() } ;
             std::vector<WellSegment> out;
 
+            int branch_number { 0 } ;
+
             for (const auto& connection : connections) {
-                out.push_back({ well, connection, well.getSegments().getFromSegmentNumber(connection.segment()) });
+                const auto& segment { well.getSegments().getFromSegmentNumber(connection.segment()) } ;
+                const auto& separator { branch_number != segment.branchNumber() } ;
+
+                out.push_back({ well, connection, segment, separator });
+
+                branch_number = segment.branchNumber();
             }
 
             return out;
@@ -555,10 +571,14 @@ namespace {
 
         static void ws_format(std::string& string, std::size_t, std::size_t i) {
             if (i == 1) {
-                return left_align(string, 8, i);
+                left_align(string, 8, i);
             } else {
-                return right_align(string, 8, i);
+                right_align(string, 8, i);
             }
+        }
+
+        static bool segment_structure_separator(const WellSegment& segment, std::size_t) {
+            return segment.branch_separator;
         }
     };
 
@@ -579,7 +599,7 @@ namespace {
     const subreport<Opm::Well, WellSegment, 3> well_multisegment_data { "MULTI-SEGMENT WELL: SEGMENT STRUCTURE", {
         { 6, { "WELLNAME"  , "AND"        , "SEG TYPE"   }, &WellSegment::well_name_seg    , &WellSegment::ws_format },
         { 3, { "SEG"       , "NO"         , ""           }, &WellSegment::segment_number   , right_align             },
-        { 3, { "BRN"       , "NO"         , ""           }, &WellSegment::branch_id        , right_header            },
+        { 3, { "BRN"       , "NO"         , ""           }, &WellSegment::branch_id        , right_align             },
         { 5, { "MAIN"      , "INLET"      , "SEGMENT"    }, &WellSegment::main_inlet       , right_align             },
         { 5, { ""          , "OUTLET"     , "SEGMENT"    }, &WellSegment::outlet           , right_align             },
         { 7, { "SEGMENT"   , "LENGTH"     , "METRES"     }, &WellSegment::length           , right_align             },
@@ -591,7 +611,7 @@ namespace {
         { 7, { "AREA"      , "X-SECTN"    , "M**2"       }, &WellSegment::cross_section    , right_align             },
         { 7, { "VOLUME"    , ""           , "M3"         }, &WellSegment::volume           , right_align             },
         { 8, { "P DROP"    , "MULT"       , "FACTOR"     }, unimplemented<WellSegment>     , right_align             },
-    }, '='};
+    }, '=', &WellSegment::segment_structure_separator};
 
 }
 
