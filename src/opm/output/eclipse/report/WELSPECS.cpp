@@ -478,9 +478,13 @@ namespace {
             return std::to_string(segment.segmentNumber());
         }
 
-        std::string branch_id(std::size_t n) const {
+        std::string branch_id(std::size_t) const {
+            return std::to_string(segment.branchNumber());
+        }
+
+        std::string branch_number(std::size_t n) const {
             if (branch_separator) {
-                return std::to_string(segment.branchNumber());
+                return branch_id(n);
             } else {
                 return unimplemented(this, n);
             }
@@ -585,7 +589,7 @@ namespace {
     const subreport<Opm::Well, WellSegment, 3> well_multisegment_connection { "MULTI-SEGMENT WELL: CONNECTION DATA", {
         {  8, {"WELL"       , "NAME"       ,              }, &WellSegment::well_name       , left_header },
         {  9, {"CONNECTION" , ""           ,              }, &WellSegment::connection_grid ,             },
-        {  5, {"SEGMENT"    , "NUMBER"     ,              }, &WellSegment::segment_number  ,             },
+        {  5, {"SEGMENT"    , "NUMBER"     ,              }, &WellSegment::segment_number  , right_align },
         {  8, {"BRANCH"     , "ID"         ,              }, &WellSegment::branch_id       ,             },
         {  9, {"TUB LENGTH" , "START PERFS", "METRES"     }, unimplemented<WellSegment>    , right_align },
         {  9, {"TUB LENGTH" , "END PERFS"  , "METRES"     }, unimplemented<WellSegment>    , right_align },
@@ -599,7 +603,7 @@ namespace {
     const subreport<Opm::Well, WellSegment, 3> well_multisegment_data { "MULTI-SEGMENT WELL: SEGMENT STRUCTURE", {
         {  6, { "WELLNAME"  , "AND"        , "SEG TYPE"   }, &WellSegment::well_name_seg    , &WellSegment::ws_format },
         {  3, { "SEG"       , "NO"         , ""           }, &WellSegment::segment_number   , right_align             },
-        {  3, { "BRN"       , "NO"         , ""           }, &WellSegment::branch_id        , right_align             },
+        {  3, { "BRN"       , "NO"         , ""           }, &WellSegment::branch_number    , right_align             },
         {  5, { "MAIN"      , "INLET"      , "SEGMENT"    }, &WellSegment::main_inlet       , right_align             },
         {  5, { ""          , "OUTLET"     , "SEGMENT"    }, &WellSegment::outlet           , right_align             },
         {  7, { "SEGMENT"   , "LENGTH"     , "METRES"     }, unimplemented<WellSegment>     , right_align             },
