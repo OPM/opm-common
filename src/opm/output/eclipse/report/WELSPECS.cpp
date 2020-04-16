@@ -517,8 +517,8 @@ namespace {
             return std::to_string(segment.totalLength()).substr(0, 9);
         }
 
-        std::string length(std::size_t) const {
-            return std::to_string(segment.totalLength()).substr(0, 7);
+        std::string total_length(std::size_t) const {
+            return std::to_string(segment.totalLength()).substr(0, 6);
         }
 
         std::string internal_diameter(std::size_t) const {
@@ -621,8 +621,8 @@ namespace {
         { 3, { "BRN"       , "NO"         , ""           }, &WellSegment::branch_id        , right_align             },
         { 5, { "MAIN"      , "INLET"      , "SEGMENT"    }, &WellSegment::main_inlet       , right_align             },
         { 5, { ""          , "OUTLET"     , "SEGMENT"    }, &WellSegment::outlet           , right_align             },
-        { 7, { "SEGMENT"   , "LENGTH"     , "METRES"     }, &WellSegment::length           , right_align             },
-        { 8, { "TOT LENGTH", "TO END"     , "METRES"     }, unimplemented<WellSegment>     , right_align             },
+        { 7, { "SEGMENT"   , "LENGTH"     , "METRES"     }, unimplemented<WellSegment>     , right_align             },
+        { 8, { "TOT LENGTH", "TO END"     , "METRES"     }, &WellSegment::total_length     , right_align             },
         { 9, { "DEPTH"     , "CHANGE"     , "METRES"     }, unimplemented<WellSegment>     , right_align             },
         { 8, { "T.V. DEPTH", "AT END"     , "METRES"     }, unimplemented<WellSegment>     , right_align             },
         { 6, { "DIA OR F"  , "SCALING"    , "METRES"     }, &WellSegment::internal_diameter, right_align             },
