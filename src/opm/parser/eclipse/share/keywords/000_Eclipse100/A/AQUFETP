@@ -48,7 +48,7 @@
     {
       "name": "TEMP",
       "value_type": "DOUBLE",
-      "                      dimension": "Temperature"
+      "dimension": "Temperature"
     }
   ]
 }
