@@ -459,6 +459,16 @@ namespace {
             return wc.grid_block(n);
         }
 
+        std::string well_name_seg(std::size_t n) const {
+            if (n == 0) {
+                return well_name(n);
+            } else if (n == 1) {
+                return unimplemented(this, n);
+            } else {
+                return unimplemented(this, n);
+            }
+        }
+
         std::string segment_number(std::size_t) const {
             return std::to_string(segment.segmentNumber());
         }
@@ -537,10 +547,8 @@ namespace {
         { 9, {"GRID BLOCK" , "DEPTH"      , "METRES"     }, unimplemented<WellSegment>    , right_align },
     }, '='};
 
-
-
     const subreport<Opm::Well, WellSegment, 3> well_multisegment_data { "MULTI-SEGMENT WELL: SEGMENT STRUCTURE", {
-        { 6, { "WELLNAME"  , "AND"        , "SEG TYPE"   }, unimplemented<WellSegment>     , &WellSegment::ws_format },
+        { 6, { "WELLNAME"  , "AND"        , "SEG TYPE"   }, &WellSegment::well_name_seg    , &WellSegment::ws_format },
         { 3, { "SEG"       , "NO"         , ""           }, &WellSegment::segment_number   , right_align             },
         { 3, { "BRN"       , "NO"         , ""           }, &WellSegment::branch_id        , right_header            },
         { 5, { "MAIN"      , "INLET"      , "SEGMENT"    }, &WellSegment::main_inlet       , right_align             },
