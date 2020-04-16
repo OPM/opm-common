@@ -52,6 +52,14 @@ namespace {
         }
     }
 
+    void right_header(std::string& string, std::size_t width, std::size_t line_number) {
+        if (line_number == 0) {
+            right_align(string, width, line_number);
+        } else {
+            string = std::string(field_padding, width);
+        }
+    }
+
     void centre_align(std::string& string, std::size_t width, std::size_t = 0) {
         if (string.size() < width) {
             std::size_t extra_space { width - string.size() } ;
@@ -528,8 +536,8 @@ namespace {
 
     const subreport<Opm::Well, WellSegment, 3> well_multisegment_data { "MULTI-SEGMENT WELL: SEGMENT STRUCTURE", {
         { 6, { "WELLNAME"  , "AND"        , "SEG TYPE"   }, unimplemented<WellSegment>    , &WellSegment::ws_format },
-        { 3, { "SEG"       , "NO"         , ""           }, unimplemented<WellSegment>    , right_align             },
-        { 3, { "BRN"       , "NO"         , ""           }, unimplemented<WellSegment>    , right_align             },
+        { 3, { "SEG"       , "NO"         , ""           }, &WellSegment::segment_number  , right_align             },
+        { 3, { "BRN"       , "NO"         , ""           }, &WellSegment::branch_id       , right_header            },
         { 5, { "MAIN"      , "INLET"      , "SEGMENT"    }, unimplemented<WellSegment>    , right_align             },
         { 5, { ""          , "OUTLET"     , "SEGMENT"    }, unimplemented<WellSegment>    , right_align             },
         { 7, { "SEGMENT"   , "LENGTH"     , "METRES"     }, unimplemented<WellSegment>    , right_align             },
