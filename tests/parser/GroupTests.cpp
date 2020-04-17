@@ -45,6 +45,17 @@
 using namespace Opm;
 
 
+Opm::Schedule create_schedule(const std::string& deck_string) {
+    Opm::Parser parser;
+    auto python = std::make_shared<Python>();
+    auto deck = parser.parseString(deck_string);
+    EclipseGrid grid(10,10,10);
+    TableManager table ( deck );
+    FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
+    Runspec runspec (deck );
+    return Opm::Schedule(deck,  grid, fp, runspec, python);
+}
+
 
 BOOST_AUTO_TEST_CASE(CreateGroup_CorrectNameAndDefaultValues) {
     Opm::Group group("G1" , 1, 0, 0, UnitSystem::newMETRIC());
@@ -92,7 +103,6 @@ BOOST_AUTO_TEST_CASE(GroupDoesNotHaveWell) {
 
 
 BOOST_AUTO_TEST_CASE(createDeckWithGEFAC) {
-    Opm::Parser parser;
     std::string input =
             "START             -- 0 \n"
             "19 JUN 2007 / \n"
@@ -112,13 +122,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithGEFAC) {
             " 'PRODUC' 0.85   / \n"
             "/\n";
 
-    auto deck = parser.parseString(input);
-    auto python = std::make_shared<Python>();
-    EclipseGrid grid(10,10,10);
-    TableManager table ( deck );
-    Runspec runspec (deck );
-    FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
-    Opm::Schedule schedule(deck,  grid, fp, runspec, python);
+    auto schedule = create_schedule(input);
 
     auto group_names = schedule.groupNames("PRODUC");
     BOOST_CHECK_EQUAL(group_names.size(), 1);
@@ -136,8 +140,6 @@ BOOST_AUTO_TEST_CASE(createDeckWithWGRUPCONandWCONPROD) {
     /* Test deck with well guide rates for group control:
        GRUPCON (well guide rates for group control)
        WCONPROD (conrol data for production wells) with GRUP control mode */
-
-    Opm::Parser parser;
     std::string input =
             "START             -- 0 \n"
             "19 JUN 2007 / \n"
@@ -166,13 +168,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithWGRUPCONandWCONPROD) {
 
 
 
-    auto deck = parser.parseString(input);
-    auto python = std::make_shared<Python>();
-    EclipseGrid grid(10,10,10);
-    TableManager table ( deck );
-    FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
-    Runspec runspec (deck );
-    Opm::Schedule schedule(deck,  grid, fp, runspec, python);
+    auto schedule = create_schedule(input);
     const auto& currentWell = schedule.getWell("B-37T2", 0);
     const Opm::Well::WellProductionProperties& wellProductionProperties = currentWell.getProductionProperties();
     BOOST_CHECK(wellProductionProperties.controlMode == Opm::Well::ProducerCMode::GRUP);
@@ -181,8 +177,6 @@ BOOST_AUTO_TEST_CASE(createDeckWithWGRUPCONandWCONPROD) {
     BOOST_CHECK_EQUAL(currentWell.getGuideRate(), 30);
     BOOST_CHECK(currentWell.getGuideRatePhase() == Opm::Well::GuideRateTarget::OIL);
     BOOST_CHECK_EQUAL(currentWell.getGuideRateScalingFactor(), 1.0);
-
-
 }
 
 
@@ -190,8 +184,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithWGRUPCONandWCONPROD) {
 
 
 BOOST_AUTO_TEST_CASE(createDeckWithGRUPNET) {
-        Opm::Parser parser;
-        std::string input =
+    std::string input =
         "START             -- 0 \n"
         "31 AUG 1993 / \n"
         "SCHEDULE\n"
@@ -211,20 +204,15 @@ BOOST_AUTO_TEST_CASE(createDeckWithGRUPNET) {
         " 'MANI-E2'  1*    9  4* / \n"
         "/\n";
 
-        auto deck = parser.parseString(input);
-        auto python = std::make_shared<Python>();
-        EclipseGrid grid(10,10,10);
-        TableManager table ( deck );
-        FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
-        Runspec runspec (deck );
-        Opm::Schedule schedule(deck,  grid, fp, runspec, python);
 
-        const auto& group1 = schedule.getGroup("PROD", 0);
-        const auto& group2 = schedule.getGroup("MANI-E2", 0);
-        const auto& group3 = schedule.getGroup("MANI-K1", 0);
-        BOOST_CHECK_EQUAL(group1.getGroupNetVFPTable(), 0);
-        BOOST_CHECK_EQUAL(group2.getGroupNetVFPTable(), 9);
-        BOOST_CHECK_EQUAL(group3.getGroupNetVFPTable(), 9999);
+    auto schedule = create_schedule(input);
+
+    const auto& group1 = schedule.getGroup("PROD", 0);
+    const auto& group2 = schedule.getGroup("MANI-E2", 0);
+    const auto& group3 = schedule.getGroup("MANI-K1", 0);
+    BOOST_CHECK_EQUAL(group1.getGroupNetVFPTable(), 0);
+    BOOST_CHECK_EQUAL(group2.getGroupNetVFPTable(), 9);
+    BOOST_CHECK_EQUAL(group3.getGroupNetVFPTable(), 9999);
 }
 
 
@@ -254,7 +242,6 @@ BOOST_AUTO_TEST_CASE(GroupCreate) {
 }
 
 BOOST_AUTO_TEST_CASE(createDeckWithGCONPROD) {
-    Opm::Parser parser;
     std::string input = R"(
         START             -- 0
         31 AUG 1993 /
@@ -270,13 +257,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithGCONPROD) {
             'G2' 'RESV' 10000 3* 'CON' /
         /)";
 
-    auto deck = parser.parseString(input);
-    auto python = std::make_shared<Python>();
-    EclipseGrid grid(10,10,10);
-    TableManager table ( deck );
-    FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
-    Runspec runspec (deck );
-    Opm::Schedule schedule(deck,  grid, fp, runspec, python);
+    auto schedule = create_schedule(input);
     SummaryState st(std::chrono::system_clock::now());
 
     const auto& group1 = schedule.getGroup("G1", 0);
@@ -300,7 +281,6 @@ BOOST_AUTO_TEST_CASE(TESTGuideRateModel) {
 }
 
 BOOST_AUTO_TEST_CASE(TESTGuideRateLINCOM) {
-    Parser parser;
     std::string input = R"(
         START             -- 0
         31 AUG 1993 /
@@ -324,19 +304,12 @@ BOOST_AUTO_TEST_CASE(TESTGuideRateLINCOM) {
 
         )";
 
-    auto deck = parser.parseString(input);
-    auto python = std::make_shared<Python>();
-    EclipseGrid grid(10,10,10);
-    TableManager table ( deck );
-    FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
-    Runspec runspec (deck );
 
     /* The 'COMB' target mode is not supported */
-    BOOST_CHECK_THROW(Opm::Schedule schedule(deck, grid, fp, runspec, python), std::logic_error);
+    BOOST_CHECK_THROW(create_schedule(input), std::logic_error);
 }
 
 BOOST_AUTO_TEST_CASE(TESTGuideRate) {
-    Parser parser;
     std::string input = R"(
         START             -- 0
         31 AUG 1993 /
@@ -362,19 +335,11 @@ BOOST_AUTO_TEST_CASE(TESTGuideRate) {
            1 1 1 1 1 1 1 1 1 1 1 /
         )";
 
-    auto deck = parser.parseString(input);
-    auto python = std::make_shared<Python>();
-    EclipseGrid grid(10,10,10);
-    TableManager table ( deck );
-    FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
-    Runspec runspec (deck );
-    Schedule schedule(deck, grid, fp, runspec, python);
-
+    auto schedule = create_schedule(input);
     GuideRate gr(schedule);
 }
 
 BOOST_AUTO_TEST_CASE(TESTGCONSALE) {
-    Parser parser;
     std::string input = R"(
         START             -- 0
         31 AUG 1993 /
@@ -396,14 +361,7 @@ BOOST_AUTO_TEST_CASE(TESTGCONSALE) {
 
         )";
 
-    auto deck = parser.parseString(input);
-    auto python = std::make_shared<Python>();
-    EclipseGrid grid(10,10,10);
-    TableManager table ( deck );
-    FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
-    Runspec runspec (deck );
-    Schedule schedule(deck, grid, fp, runspec, python);
-
+    auto schedule = create_schedule(input);
     double metric_to_si = 1.0 / (24.0 * 3600.0);  //cubic meters / day
 
     const auto& gconsale = schedule.gConSale(0);
@@ -438,7 +396,6 @@ BOOST_AUTO_TEST_CASE(TESTGCONSALE) {
 }
 
 BOOST_AUTO_TEST_CASE(GCONINJE_MULTIPLE_PHASES) {
-    Parser parser;
     std::string input = R"(
         START             -- 0
         31 AUG 1993 /
@@ -466,13 +423,7 @@ BOOST_AUTO_TEST_CASE(GCONINJE_MULTIPLE_PHASES) {
 
         )";
 
-    auto deck = parser.parseString(input);
-    auto python = std::make_shared<Python>();
-    EclipseGrid grid(10,10,10);
-    TableManager table ( deck );
-    FieldPropsManager fp( deck , Phases{true, true, true}, grid, table);
-    Runspec runspec (deck );
-    Schedule schedule(deck, grid, fp, runspec, python);
+    auto schedule = create_schedule(input);
     SummaryState st(std::chrono::system_clock::now());
     // Step 0
     {
@@ -480,7 +431,10 @@ BOOST_AUTO_TEST_CASE(GCONINJE_MULTIPLE_PHASES) {
         BOOST_CHECK(  g1.hasInjectionControl(Phase::WATER));
         BOOST_CHECK(  g1.hasInjectionControl(Phase::GAS));
         BOOST_CHECK( !g1.hasInjectionControl(Phase::OIL));
-        BOOST_CHECK(  g1.isAvailableForGroupControl() );
+
+        BOOST_CHECK(  g1.injectionGroupControlAvailable(Phase::WATER) );
+        BOOST_CHECK(  g1.injectionGroupControlAvailable(Phase::GAS) );
+        BOOST_CHECK(  g1.productionGroupControlAvailable() );
 
         g1.injectionControls(Phase::WATER, st);
         g1.injectionControls(Phase::GAS, st);
@@ -493,7 +447,7 @@ BOOST_AUTO_TEST_CASE(GCONINJE_MULTIPLE_PHASES) {
         const auto& g2 = schedule.getGroup("G2", 0);
         BOOST_CHECK(!g2.has_topup_phase());
         BOOST_CHECK_THROW(g2.topup_phase(), std::logic_error);
-        BOOST_CHECK(  g2.isAvailableForGroupControl() );
+        BOOST_CHECK(  g2.injectionGroupControlAvailable(Phase::WATER) );
     }
     // Step 1
     {
@@ -501,7 +455,7 @@ BOOST_AUTO_TEST_CASE(GCONINJE_MULTIPLE_PHASES) {
         BOOST_CHECK(  g2.hasInjectionControl(Phase::WATER));
         BOOST_CHECK(  g2.hasInjectionControl(Phase::GAS));
         BOOST_CHECK( !g2.hasInjectionControl(Phase::OIL));
-        BOOST_CHECK( !g2.isAvailableForGroupControl() );
+        BOOST_CHECK( !g2.injectionGroupControlAvailable(Phase::GAS) );
 
         g2.injectionControls(Phase::WATER, st);
         g2.injectionControls(Phase::GAS, st);
@@ -514,6 +468,72 @@ BOOST_AUTO_TEST_CASE(GCONINJE_MULTIPLE_PHASES) {
         const auto& g1 = schedule.getGroup("G1", 1);
         BOOST_CHECK(!g1.has_topup_phase());
         BOOST_CHECK_THROW(g1.topup_phase(), std::logic_error);
-        BOOST_CHECK(  g1.isAvailableForGroupControl() );
+    }
+}
+
+BOOST_AUTO_TEST_CASE(GCONINJE_GCONPROD) {
+    std::string input = R"(
+        START             -- 0
+        31 AUG 1993 /
+        SCHEDULE
+
+        GRUPTREE
+           'G1'  'FIELD' /
+           'G2'  'FIELD' /
+        /
+
+        GCONPROD
+            'G1' 'ORAT' 10000 3* 'CON' 'NO'/
+            'G2' 'ORAT' 10000 3* 'CON' /
+        /
+
+        GCONINJE
+           'G1'   'WATER'     1*  1000      /
+           'G2'   'WATER'     1*  1*   2000 1*  1*  'NO'/
+        /
+
+
+        TSTEP
+           1 /
+
+        GCONPROD
+            'G1' 'ORAT' 10000 3* 'CON' /
+            'G2' 'ORAT' 10000 3* 'CON' 'NO'/
+        /
+
+        GCONINJE
+           'G1'   'WATER'     1*  1000 3* 'NO'     /
+           'G2'   'WATER'     1*  1*   2000 /
+        /
+
+        )";
+
+    auto schedule = create_schedule(input);
+    {
+        const auto& f  = schedule.getGroup("FIELD", 0);
+        const auto& g1 = schedule.getGroup("G1", 0);
+        const auto& g2 = schedule.getGroup("G2", 0);
+
+        BOOST_CHECK(!f.productionGroupControlAvailable() );
+        BOOST_CHECK(!f.injectionGroupControlAvailable(Phase::WATER));
+        BOOST_CHECK(!f.injectionGroupControlAvailable(Phase::GAS));
+
+        BOOST_CHECK(!g1.productionGroupControlAvailable() );
+        BOOST_CHECK( g2.productionGroupControlAvailable() );
+        BOOST_CHECK( g1.injectionGroupControlAvailable(Phase::WATER));
+        BOOST_CHECK(!g2.injectionGroupControlAvailable(Phase::WATER));
+        BOOST_CHECK( g1.injectionGroupControlAvailable(Phase::GAS));
+        BOOST_CHECK( g2.injectionGroupControlAvailable(Phase::GAS));
+    }
+    {
+        const auto& g1 = schedule.getGroup("G1", 1);
+        const auto& g2 = schedule.getGroup("G2", 1);
+
+        BOOST_CHECK( g1.productionGroupControlAvailable() );
+        BOOST_CHECK(!g2.productionGroupControlAvailable() );
+        BOOST_CHECK(!g1.injectionGroupControlAvailable(Phase::WATER));
+        BOOST_CHECK( g2.injectionGroupControlAvailable(Phase::WATER));
+        BOOST_CHECK( g1.injectionGroupControlAvailable(Phase::GAS));
+        BOOST_CHECK( g2.injectionGroupControlAvailable(Phase::GAS));
     }
 }

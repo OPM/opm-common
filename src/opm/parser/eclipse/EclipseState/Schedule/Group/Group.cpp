@@ -39,7 +39,6 @@ Group::Group(const std::string& name, std::size_t insert_index_arg, std::size_t 
     group_type(GroupType::NONE),
     gefac(1),
     transfer_gefac(true),
-    available_for_group_control(name == "FIELD" ? false : true),
     vfp_table(0)
 {
     // All groups are initially created as children of the "FIELD" group.
@@ -58,7 +57,6 @@ Group Group::serializeObject()
     result.group_type = GroupType::PRODUCTION;
     result.gefac = 4.0;
     result.transfer_gefac = true;
-    result.available_for_group_control = false;
     result.vfp_table = 5;
     result.parent_group = "test2";
     result.m_wells = {{"test3", "test4"}, {"test5", "test6"}};
@@ -186,15 +184,16 @@ Group::GroupInjectionProperties Group::GroupInjectionProperties::serializeObject
 
 bool Group::GroupInjectionProperties::operator==(const GroupInjectionProperties& other) const {
     return
-        this->phase                 == other.phase &&
-        this->cmode                 == other.cmode &&
-        this->surface_max_rate      == other.surface_max_rate &&
-        this->resv_max_rate         == other.resv_max_rate &&
-        this->target_reinj_fraction == other.target_reinj_fraction &&
-        this->injection_controls    == other.injection_controls &&
-        this->target_void_fraction  == other.target_void_fraction &&
-        this->reinj_group           == other.reinj_group &&
-        this->voidage_group         == other.voidage_group;
+        this->phase                   == other.phase &&
+        this->cmode                   == other.cmode &&
+        this->surface_max_rate        == other.surface_max_rate &&
+        this->resv_max_rate           == other.resv_max_rate &&
+        this->target_reinj_fraction   == other.target_reinj_fraction &&
+        this->injection_controls      == other.injection_controls &&
+        this->target_void_fraction    == other.target_void_fraction &&
+        this->reinj_group             == other.reinj_group &&
+        this->available_group_control == other.available_group_control &&
+        this->voidage_group           == other.voidage_group;
 }
 
 
@@ -223,18 +222,35 @@ Group::GroupProductionProperties Group::GroupProductionProperties::serializeObje
 
 bool Group::GroupProductionProperties::operator==(const GroupProductionProperties& other) const {
     return
-        this->cmode               == other.cmode &&
-        this->exceed_action       == other.exceed_action &&
-        this->oil_target          == other.oil_target &&
-        this->water_target        == other.water_target &&
-        this->gas_target          == other.gas_target &&
-        this->liquid_target       == other.liquid_target &&
-        this->guide_rate          == other.guide_rate &&
-        this->guide_rate_def      == other.guide_rate_def &&
-        this->production_controls == other.production_controls &&
-        this->resv_target         == other.resv_target;
+        this->cmode                   == other.cmode &&
+        this->exceed_action           == other.exceed_action &&
+        this->oil_target              == other.oil_target &&
+        this->water_target            == other.water_target &&
+        this->gas_target              == other.gas_target &&
+        this->liquid_target           == other.liquid_target &&
+        this->guide_rate              == other.guide_rate &&
+        this->guide_rate_def          == other.guide_rate_def &&
+        this->production_controls     == other.production_controls &&
+        this->available_group_control == other.available_group_control &&
+        this->resv_target             == other.resv_target;
 }
 
+bool Group::productionGroupControlAvailable() const {
+    if (this->m_name == "FIELD")
+        return false;
+    return this->production_properties.available_group_control;
+}
+
+bool Group::injectionGroupControlAvailable(const Phase phase) const {
+    if (this->m_name == "FIELD")
+        return false;
+
+    auto inj_iter = this->injection_properties.find(phase);
+    if (inj_iter == this->injection_properties.end())
+        return true;
+
+    return inj_iter->second.available_group_control;
+}
 
 bool Group::GroupProductionProperties::operator!=(const GroupProductionProperties& other) const {
     return !(*this == other);
@@ -346,14 +362,6 @@ double Group::getGroupEfficiencyFactor() const {
 
 bool Group::getTransferGroupEfficiencyFactor() const {
     return this->transfer_gefac;
-}
-
-bool Group::isAvailableForGroupControl() const {
-    return this->available_for_group_control;
-}
-
-void Group::setAvailableForGroupControl(const bool available) {
-    this->available_for_group_control = available;
 }
 
 const std::string& Group::parent() const {

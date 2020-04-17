@@ -1676,6 +1676,7 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
                     injection.injection_controls = 0;
                     injection.reinj_group = reinj_group;
                     injection.voidage_group = voidage_group;
+                    injection.available_group_control = availableForGroupControl;
 
                     if (!record.getItem("SURFACE_TARGET").defaultApplied(0))
                         injection.injection_controls += static_cast<int>(Group::InjectionCMode::RATE);
@@ -1689,9 +1690,7 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
                     if (!record.getItem("VOIDAGE_TARGET").defaultApplied(0))
                         injection.injection_controls += static_cast<int>(Group::InjectionCMode::VREP);
 
-                    const bool must_update_avail = group_ptr->isAvailableForGroupControl() != availableForGroupControl;
-                    if (group_ptr->updateInjection(injection) ||  must_update_avail) {
-                        group_ptr->setAvailableForGroupControl(availableForGroupControl);
+                    if (group_ptr->updateInjection(injection)) {
                         this->updateGroup(std::move(group_ptr), currentStep);
                         m_events.addEvent( ScheduleEvents::GROUP_INJECTION_UPDATE , currentStep);
                         this->addWellGroupEvent(group_name, ScheduleEvents::GROUP_INJECTION_UPDATE, currentStep);
@@ -1750,6 +1749,8 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
                     production.guide_rate = guide_rate;
                     production.guide_rate_def = guide_rate_def;
                     production.resv_target = resv_target;
+                    production.available_group_control = availableForGroupControl;
+
                     if ((production.cmode == Group::ProductionCMode::ORAT) ||
                         (production.cmode == Group::ProductionCMode::WRAT) ||
                         (production.cmode == Group::ProductionCMode::GRAT) ||
@@ -1775,9 +1776,7 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
                     if (!record.getItem("RESERVOIR_FLUID_TARGET").defaultApplied(0))
                         production.production_controls += static_cast<int>(Group::ProductionCMode::RESV);
 
-                    const bool must_update_avail = group_ptr->isAvailableForGroupControl() != availableForGroupControl;
-                    if (group_ptr->updateProduction(production) || must_update_avail) {
-                        group_ptr->setAvailableForGroupControl(availableForGroupControl);
+                    if (group_ptr->updateProduction(production)) {
                         auto new_config = std::make_shared<GuideRateConfig>( this->guideRateConfig(currentStep) );
                         new_config->update_group(*group_ptr);
                         this->guide_rate_config.update( currentStep, std::move(new_config) );
