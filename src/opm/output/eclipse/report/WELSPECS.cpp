@@ -514,6 +514,10 @@ namespace {
             return std::to_string(segment.totalLength()).substr(0, 6);
         }
 
+        std::string t_v_depth(std::size_t) const {
+            return std::to_string(segment.depth()).substr(0, 6);
+        }
+
         std::string internal_diameter(std::size_t) const {
             const auto number { segment.internalDiameter() } ;
 
@@ -617,7 +621,7 @@ namespace {
         {  7, { "SEGMENT"   , "LENGTH"     , "METRES"     }, unimplemented<WellSegment>     , right_align             },
         {  8, { "TOT LENGTH", "TO END"     , "METRES"     }, &WellSegment::total_length     , right_align             },
         {  8, { "DEPTH"     , "CHANGE"     , "METRES"     }, unimplemented<WellSegment>     , right_align             },
-        {  8, { "T.V. DEPTH", "AT END"     , "METRES"     }, unimplemented<WellSegment>     , right_align             },
+        {  8, { "T.V. DEPTH", "AT END"     , "METRES"     }, &WellSegment::t_v_depth        , right_align             },
         {  6, { "DIA OR F"  , "SCALING"    , "METRES"     }, &WellSegment::internal_diameter, right_align             },
         {  8, { "VFP TAB OR", "ABS ROUGHN" , "METRES"     }, &WellSegment::roughness        , right_align             },
         {  7, { "AREA"      , "X-SECTN"    , "M**2"       }, &WellSegment::cross_section    , right_align             },
