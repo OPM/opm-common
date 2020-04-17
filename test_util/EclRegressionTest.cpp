@@ -899,7 +899,8 @@ void ECLRegressionTest::results_smry()
                 if (keywords1[i].substr(0,5) == "WOPR:" ||
                     keywords1[i].substr(0,5) == "WWPR:" ||
                     keywords1[i].substr(0,5) == "WGPR:" ||
-                    keywords1[i].substr(0,5 )== "WBHP:") {
+                    keywords1[i].substr(0,5) == "WBHP:" ||
+                    keywords1[i].substr(0,4) == "SPR:")  {
                     auto search2 = std::find(keywords2.begin(), keywords2.end(), keywords1[i]);
                     if (search2 != keywords2.end()) {
                         keywords.push_back(keywords1[i]);

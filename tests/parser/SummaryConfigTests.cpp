@@ -870,6 +870,136 @@ BOOST_AUTO_TEST_CASE(Summary_Segment)
     BOOST_CHECK(summary.hasSummaryKey("SWFR:PROD01:26"));
 
     BOOST_CHECK(!summary.hasSummaryKey("SWFR:INJE01:1"));
+
+    // SPRD for all segments in all MS wells.
+    BOOST_CHECK(deck.hasKeyword("SPRD"));
+    BOOST_CHECK(summary.hasKeyword("SPRD"));
+    BOOST_CHECK(summary.hasSummaryKey("SPRD:PROD01:1"));
+    BOOST_CHECK(summary.hasSummaryKey("SPRD:PROD01:2"));
+    BOOST_CHECK(summary.hasSummaryKey("SPRD:PROD01:3"));
+    BOOST_CHECK(summary.hasSummaryKey("SPRD:PROD01:4"));
+    BOOST_CHECK(summary.hasSummaryKey("SPRD:PROD01:5"));
+    BOOST_CHECK(summary.hasSummaryKey("SPRD:PROD01:6"));
+    BOOST_CHECK(summary.hasSummaryKey("SPRD:PROD01:7"));
+    BOOST_CHECK(summary.hasSummaryKey("SPRD:PROD01:8"));
+    BOOST_CHECK(summary.hasSummaryKey("SPRD:PROD01:9"));
+    BOOST_CHECK(summary.hasSummaryKey("SPRD:PROD01:10"));
+    BOOST_CHECK(summary.hasSummaryKey("SPRD:PROD01:11"));
+    BOOST_CHECK(summary.hasSummaryKey("SPRD:PROD01:12"));
+    BOOST_CHECK(summary.hasSummaryKey("SPRD:PROD01:13"));
+    BOOST_CHECK(summary.hasSummaryKey("SPRD:PROD01:14"));
+    BOOST_CHECK(summary.hasSummaryKey("SPRD:PROD01:15"));
+    BOOST_CHECK(summary.hasSummaryKey("SPRD:PROD01:16"));
+    BOOST_CHECK(summary.hasSummaryKey("SPRD:PROD01:17"));
+    BOOST_CHECK(summary.hasSummaryKey("SPRD:PROD01:18"));
+    BOOST_CHECK(summary.hasSummaryKey("SPRD:PROD01:19"));
+    BOOST_CHECK(summary.hasSummaryKey("SPRD:PROD01:20"));
+    BOOST_CHECK(summary.hasSummaryKey("SPRD:PROD01:21"));
+    BOOST_CHECK(summary.hasSummaryKey("SPRD:PROD01:22"));
+    BOOST_CHECK(summary.hasSummaryKey("SPRD:PROD01:23"));
+    BOOST_CHECK(summary.hasSummaryKey("SPRD:PROD01:24"));
+    BOOST_CHECK(summary.hasSummaryKey("SPRD:PROD01:25"));
+    BOOST_CHECK(summary.hasSummaryKey("SPRD:PROD01:26"));
+
+    BOOST_CHECK(!summary.hasSummaryKey("SPRD:INJE01:1"));
+
+    // SPRDH for all segments of MS well PROD01.
+    BOOST_CHECK(deck.hasKeyword("SPRDH"));
+    BOOST_CHECK(summary.hasKeyword("SPRDH"));
+    BOOST_CHECK(summary.hasSummaryKey("SPRDH:PROD01:1"));
+    BOOST_CHECK(summary.hasSummaryKey("SPRDH:PROD01:2"));
+    BOOST_CHECK(summary.hasSummaryKey("SPRDH:PROD01:3"));
+    BOOST_CHECK(summary.hasSummaryKey("SPRDH:PROD01:4"));
+    BOOST_CHECK(summary.hasSummaryKey("SPRDH:PROD01:5"));
+    BOOST_CHECK(summary.hasSummaryKey("SPRDH:PROD01:6"));
+    BOOST_CHECK(summary.hasSummaryKey("SPRDH:PROD01:7"));
+    BOOST_CHECK(summary.hasSummaryKey("SPRDH:PROD01:8"));
+    BOOST_CHECK(summary.hasSummaryKey("SPRDH:PROD01:9"));
+    BOOST_CHECK(summary.hasSummaryKey("SPRDH:PROD01:10"));
+    BOOST_CHECK(summary.hasSummaryKey("SPRDH:PROD01:11"));
+    BOOST_CHECK(summary.hasSummaryKey("SPRDH:PROD01:12"));
+    BOOST_CHECK(summary.hasSummaryKey("SPRDH:PROD01:13"));
+    BOOST_CHECK(summary.hasSummaryKey("SPRDH:PROD01:14"));
+    BOOST_CHECK(summary.hasSummaryKey("SPRDH:PROD01:15"));
+    BOOST_CHECK(summary.hasSummaryKey("SPRDH:PROD01:16"));
+    BOOST_CHECK(summary.hasSummaryKey("SPRDH:PROD01:17"));
+    BOOST_CHECK(summary.hasSummaryKey("SPRDH:PROD01:18"));
+    BOOST_CHECK(summary.hasSummaryKey("SPRDH:PROD01:19"));
+    BOOST_CHECK(summary.hasSummaryKey("SPRDH:PROD01:20"));
+    BOOST_CHECK(summary.hasSummaryKey("SPRDH:PROD01:21"));
+    BOOST_CHECK(summary.hasSummaryKey("SPRDH:PROD01:22"));
+    BOOST_CHECK(summary.hasSummaryKey("SPRDH:PROD01:23"));
+    BOOST_CHECK(summary.hasSummaryKey("SPRDH:PROD01:24"));
+    BOOST_CHECK(summary.hasSummaryKey("SPRDH:PROD01:25"));
+    BOOST_CHECK(summary.hasSummaryKey("SPRDH:PROD01:26"));
+
+    BOOST_CHECK(!summary.hasSummaryKey("SPRDH:INJE01:1"));
+
+    // SPRDF for segments 10 and 16 of MS well PROD01.
+    BOOST_CHECK(deck.hasKeyword("SPRDF"));
+    BOOST_CHECK(summary.hasKeyword("SPRDF"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPRDF:PROD01:1"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPRDF:PROD01:2"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPRDF:PROD01:3"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPRDF:PROD01:4"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPRDF:PROD01:5"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPRDF:PROD01:6"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPRDF:PROD01:7"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPRDF:PROD01:8"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPRDF:PROD01:9"));
+    BOOST_CHECK(summary.hasSummaryKey("SPRDF:PROD01:10"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPRDF:PROD01:11"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPRDF:PROD01:12"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPRDF:PROD01:13"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPRDF:PROD01:14"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPRDF:PROD01:15"));
+    BOOST_CHECK(summary.hasSummaryKey("SPRDF:PROD01:16"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPRDF:PROD01:17"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPRDF:PROD01:18"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPRDF:PROD01:19"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPRDF:PROD01:20"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPRDF:PROD01:21"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPRDF:PROD01:22"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPRDF:PROD01:23"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPRDF:PROD01:24"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPRDF:PROD01:25"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPRDF:PROD01:26"));
+
+    BOOST_CHECK(!summary.hasSummaryKey("SPRDF:INJE01:1"));
+
+    // SPRDA for segments 10 and 16 of all MS wells
+    BOOST_CHECK(deck.hasKeyword("SPRDA"));
+    BOOST_CHECK(summary.hasKeyword("SPRDA"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPRDA:PROD01:1"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPRDA:PROD01:2"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPRDA:PROD01:3"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPRDA:PROD01:4"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPRDA:PROD01:5"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPRDA:PROD01:6"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPRDA:PROD01:7"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPRDA:PROD01:8"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPRDA:PROD01:9"));
+    BOOST_CHECK(summary.hasSummaryKey("SPRDA:PROD01:10"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPRDA:PROD01:11"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPRDA:PROD01:12"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPRDA:PROD01:13"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPRDA:PROD01:14"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPRDA:PROD01:15"));
+    BOOST_CHECK(summary.hasSummaryKey("SPRDA:PROD01:16"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPRDA:PROD01:17"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPRDA:PROD01:18"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPRDA:PROD01:19"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPRDA:PROD01:20"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPRDA:PROD01:21"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPRDA:PROD01:22"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPRDA:PROD01:23"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPRDA:PROD01:24"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPRDA:PROD01:25"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPRDA:PROD01:26"));
+
+    BOOST_CHECK(!summary.hasSummaryKey("SPRDA:INJE01:1"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPRDA:INJE01:10"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPRDA:INJE01:16"));
 }
 
 BOOST_AUTO_TEST_CASE(ProcessingInstructions) {

@@ -154,7 +154,10 @@ static data::Wells result_wells() {
     segment.rates.set(rt::wat,  123.45*sm3_pr_day());
     segment.rates.set(rt::oil,  543.21*sm3_pr_day());
     segment.rates.set(rt::gas, 1729.496*sm3_pr_day());
-    segment.pressure = 314.159*unit::barsa;
+    {
+        const auto pres_idx = Opm::data::SegmentPressures::Value::Pressure;
+        segment.pressures[pres_idx] = 314.159*unit::barsa;
+    }
     segment.segNumber = 1;
 
     /*
