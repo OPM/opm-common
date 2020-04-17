@@ -396,20 +396,8 @@ namespace {
             return Opm::Connection::State2String(connection.state());
         }
 
-        std::string sat_tab(std::size_t) const {
-            return std::to_string(connection.satTableId());
-        }
-
-        std::string conn_factor(std::size_t) const {
-            return std::to_string(connection.CF()).substr(0, 10);
-        }
-
         std::string int_diam(std::size_t) const {
             return std::to_string(connection.rw() * 2).substr(0, 8);
-        }
-
-        std::string kh_value(std::size_t) const {
-            return std::to_string(connection.Kh()).substr(0, 9);
         }
 
         std::string skin_factor(std::size_t) const {
@@ -434,10 +422,10 @@ namespace {
        {  3, {"CMPL"                   ,"NO#"                    ,                         }, &WellConnection::cmpl_no         , right_align },
        {  7, {"CENTRE"                 ,"DEPTH"                  ,"METRES"                 }, &WellConnection::centre_depth    , right_align },
        {  3, {"OPEN"                   ,"SHUT"                   ,                         }, &WellConnection::open_shut       ,             },
-       {  3, {"SAT"                    ,"TAB"                    ,                         }, &WellConnection::sat_tab         ,             },
-       {  8, {"CONNECTION"             ,"FACTOR*"                ,"CPM3/D/B"               }, &WellConnection::conn_factor     , right_align },
+       {  3, {"SAT"                    ,"TAB"                    ,                         }, unimplemented<WellConnection>    ,             },
+       {  8, {"CONNECTION"             ,"FACTOR*"                ,"CPM3/D/B"               }, unimplemented<WellConnection>    , right_align },
        {  6, {"INT"                    ,"DIAM"                   ,"METRES"                 }, &WellConnection::int_diam        , right_align },
-       {  7, {"K  H"                   ,"VALUE"                  ,"MD.METRE"               }, &WellConnection::kh_value        , right_align },
+       {  7, {"K  H"                   ,"VALUE"                  ,"MD.METRE"               }, unimplemented<WellConnection>    , right_align },
        {  6, {"SKIN"                   ,"FACTOR"                 ,                         }, &WellConnection::skin_factor     , right_align },
        { 10, {"CONNECTION"             ,"D-FACTOR"               ,"DAY/SM3"                }, unimplemented<WellConnection>    ,             },
        { 23, {"SATURATION SCALING DATA","SWMIN SWMAX SGMIN SGMAX",                         }, unimplemented<WellConnection>    ,             },
