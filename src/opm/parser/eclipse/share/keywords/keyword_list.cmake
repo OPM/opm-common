@@ -109,6 +109,8 @@ set( keywords
      000_Eclipse100/C/COPYBOX
      000_Eclipse100/C/COPYREG
      000_Eclipse100/C/CPR
+     000_Eclipse100/C/CPIFACT
+     000_Eclipse100/C/CPIFACTL
      000_Eclipse100/C/CRITPERM
      000_Eclipse100/C/CSKIN
      000_Eclipse100/D/DATE
@@ -283,6 +285,7 @@ set( keywords
      000_Eclipse100/G/GECON
      000_Eclipse100/G/GECONT
      000_Eclipse100/G/GEFAC
+     000_Eclipse100/G/GETDATA
      000_Eclipse100/G/GETGLOB
      000_Eclipse100/G/GI
      000_Eclipse100/G/GIALL
@@ -453,8 +456,11 @@ set( keywords
      000_Eclipse100/L/LWSWLPC
      000_Eclipse100/L/LWSWU
      000_Eclipse100/L/LX
+     000_Eclipse100/L/LXFIN
      000_Eclipse100/L/LY
+     000_Eclipse100/L/LYFIN
      000_Eclipse100/L/LZ
+     000_Eclipse100/L/LZFIN
      000_Eclipse100/M/MAPAXES
      000_Eclipse100/M/MAPUNITS
      000_Eclipse100/M/MASSFLOW
@@ -550,6 +556,7 @@ set( keywords
      000_Eclipse100/O/OPERNUM
      000_Eclipse100/O/OPTIONS
      000_Eclipse100/O/OUTRAD
+     000_Eclipse100/O/OUTSOL
      000_Eclipse100/O/OVERBURD
      000_Eclipse100/P/PARALLEL
      000_Eclipse100/P/PARAOPTS
@@ -571,6 +578,7 @@ set( keywords
      000_Eclipse100/P/PENUM
      000_Eclipse100/P/PERFORMANCE_PROBE
      000_Eclipse100/P/PERMAVE
+     000_Eclipse100/P/PERMJFUN
      000_Eclipse100/P/PERMR
      000_Eclipse100/P/PERMTHT
      000_Eclipse100/P/PERMX
@@ -596,6 +604,8 @@ set( keywords
      000_Eclipse100/P/PLYATEMP
      000_Eclipse100/P/PLYCAMAX
      000_Eclipse100/P/PLYDHFLF
+     000_Eclipse100/P/PLYESAL
+     000_Eclipse100/P/PLYKRRF
      000_Eclipse100/P/PLYMAX
      000_Eclipse100/P/PLYOPTS
      000_Eclipse100/P/PLYRMDEN
@@ -637,6 +647,7 @@ set( keywords
      000_Eclipse100/Q/QDRILL
      000_Eclipse100/Q/QHRATING
      000_Eclipse100/Q/QMOBIL
+     000_Eclipse100/R/RADFIN
      000_Eclipse100/R/RADFIN4
      000_Eclipse100/R/RADIAL
      000_Eclipse100/R/RAINFALL
@@ -712,6 +723,7 @@ set( keywords
      000_Eclipse100/S/SALTNODE
      000_Eclipse100/S/SALTREST
      000_Eclipse100/S/SALTVD
+     000_Eclipse100/S/SAMG
      000_Eclipse100/S/SATNUM
      000_Eclipse100/S/SATOPTS
      000_Eclipse100/S/SAVE
@@ -944,6 +956,7 @@ set( keywords
      000_Eclipse100/W/WELLDIMS
      000_Eclipse100/W/WELL_PROBE
      000_Eclipse100/W/WELL_COMPLETION_PROBE
+     000_Eclipse100/W/WELMOVEL
      000_Eclipse100/W/WELOPEN
      000_Eclipse100/W/WELOPENL
      000_Eclipse100/W/WELPI
