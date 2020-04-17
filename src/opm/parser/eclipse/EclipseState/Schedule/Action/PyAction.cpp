@@ -17,8 +17,10 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <fstream>
+#include <memory>
 
 #ifdef EMBEDDED_PYTHON
+#include "src/opm/parser/eclipse/Python/PyRunModule.hpp"
 #include <pybind11/embed.h>
 #include <pybind11/pybind11.h>
 namespace py = pybind11;
@@ -26,8 +28,11 @@ namespace py = pybind11;
 
 
 #include <opm/common/utility/String.hpp>
-#include <opm/common/utility/FileSystem.hpp>
+#include <opm/parser/eclipse/Python/Python.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/PyAction.hpp>
+#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+
 
 namespace Opm {
 namespace Action {
@@ -50,88 +55,83 @@ PyAction::RunCount PyAction::from_string(std::string run_count) {
 PyAction PyAction::serializeObject()
 {
     PyAction result;
+
     result.m_name = "name";
-    result.m_run_count = RunCount::unlimited;
-    result.input_code = "import opm";
+    result.m_run_count = RunCount::first_true;
     result.m_active = false;
+    result.module_file = "no.such.file.py";
+
     return result;
-}
-
-std::string PyAction::load(const std::string& input_path, const std::string& fname) {
-    namespace fs = Opm::filesystem;
-    fs::path code_path = fs::path(input_path) / fs::path(fname);
-    if (fs::exists(code_path)) {
-        std::ifstream ifs(code_path);
-        return std::string{ std::istreambuf_iterator<char>{ifs}, {} };
-    } else
-        throw std::invalid_argument("No such file: " + fname);
-}
-
-
-
-PyAction::PyAction(const std::string& name, RunCount run_count, const std::string& code) :
-    m_name(name),
-    m_run_count(run_count),
-    input_code(code)
-{
-#ifdef EMBEDDED_PYTHON
-    this->m_storage = new py::dict();
-#endif
-}
-
-PyAction::PyAction(const PyAction& other) :
-    PyAction(other.name(), other.run_count(), other.code())
-{}
-
-PyAction PyAction::operator=(const PyAction& other) {
-    return PyAction(other);
-}
-
-const std::string& PyAction::code() const {
-    return this->input_code;
-}
-
-const std::string& PyAction::name() const {
-    return this->m_name;
-}
-
-PyAction::RunCount PyAction::run_count() const {
-    return this->m_run_count;
 }
 
 bool PyAction::active() const {
     return this->m_active;
 }
 
-/*
-  The python variables are reference counted and when the Python dictionary
-  stored in this->m_storage is destroyed the Python runtime system is involved.
-  This will fail hard if the Python runtime system has not been initialized. If
-  the python runtime has not been initialized the Python dictionary object will
-  leak - the leakage is quite harmless, using the PyAction object without a
-  Python runtime system does not make any sense after all.
-*/
 
-PyAction::~PyAction() {
-#ifdef EMBEDDED_PYTHON
-    auto dict = static_cast<py::dict *>(this->m_storage);
-    if (Py_IsInitialized())
-        delete dict;
-#endif
+const std::string& PyAction::name() const {
+    return this->m_name;
+}
+
+void PyAction::update(bool result) const {
+    if (this->m_run_count == RunCount::single)
+        this->m_active = false;
+
+    if (this->m_run_count == RunCount::first_true && result)
+        this->m_active = false;
 }
 
 bool PyAction::operator==(const PyAction& other) const {
     return this->m_name == other.m_name &&
-           this->m_run_count == other.m_run_count &&
-           this->m_active == other.m_active &&
-           this->input_code == other.input_code;
+        this->m_run_count == other.m_run_count &&
+        this->m_active == other.m_active &&
+        this->module_file == other.module_file;
+}
+
+
+#ifndef EMBEDDED_PYTHON
+
+bool PyAction::run(EclipseState&, Schedule&, std::size_t, SummaryState&) const
+{
+    return false;
+}
+
+PyAction::PyAction(std::shared_ptr<const Python>, const std::string& name, RunCount run_count, const std::string& fname) :
+    m_name(name),
+    m_run_count(run_count),
+    module_file(fname)
+{}
+
+#else
+
+PyAction::PyAction(std::shared_ptr<const Python> python, const std::string& name, RunCount run_count, const std::string& fname) :
+    run_module( std::make_shared<Opm::PyRunModule>(python, fname)),
+    m_name(name),
+    m_run_count(run_count),
+    module_file(fname)
+{
+}
+
+
+bool PyAction::run(EclipseState& ecl_state, Schedule& schedule, std::size_t report_step, SummaryState& st) const
+{
+    /*
+      For PyAction instances which have been constructed the 'normal' way
+      through the four argument constructor the run_module member variable has
+      already been correctly initialized, however if this instance lives on a
+      rank != 0 process and has been created through deserialization it was
+      created without access to a Python handle and we must import the module
+      now.
+     */
+    if (!this->run_module)
+        this->run_module = std::make_shared<Opm::PyRunModule>(schedule.python(), this->module_file);
+
+    return this->run_module->run(ecl_state, schedule, report_step, st);
 }
 
 
 
-void * PyAction::storage() const {
-    return this->m_storage;
-}
+#endif
 
 }
 }

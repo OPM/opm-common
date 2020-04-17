@@ -21,6 +21,7 @@ namespace Opm {
 class EclipseIO;
 class ParseContext;
 class Parser;
+class Python;
 class SummaryState;
 class msim {
 
@@ -33,7 +34,7 @@ public:
     void well_rate(const std::string& well, data::Rates::opt rate, std::function<well_rate_function> func);
     void solution(const std::string& field, std::function<solution_function> func);
     void run(Schedule& schedule, EclipseIO& io, bool report_only);
-    void post_step(Schedule& schedule, const SummaryState& st, data::Solution& sol, data::Wells& well_data, size_t report_step) const;
+    void post_step(Schedule& schedule, SummaryState& st, data::Solution& sol, data::Wells& well_data, size_t report_step);
 private:
 
     void run_step(const Schedule& schedule, SummaryState& st, data::Solution& sol, data::Wells& well_data, size_t report_step, EclipseIO& io) const;

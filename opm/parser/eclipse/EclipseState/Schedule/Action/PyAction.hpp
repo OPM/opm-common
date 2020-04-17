@@ -23,11 +23,16 @@
 
 
 #include <string>
+#include <memory>
+
 
 namespace Opm {
+
+class Python;
 class EclipseState;
 class Schedule;
 class SummaryState;
+class PyRunModule;
 
 namespace Action {
 
@@ -41,49 +46,30 @@ public:
 
 
     static RunCount from_string(std::string run_count);
-    static std::string load(const std::string& input_path, const std::string& fname);
-
-    PyAction() = default;
-    PyAction(const std::string& name, RunCount run_count, const std::string& code);
-    PyAction(const PyAction& other);
-    bool run(EclipseState&, Schedule&, std::size_t, SummaryState& ) const { return false; };
-    PyAction operator=(const PyAction& other);
-    ~PyAction();
-
     static PyAction serializeObject();
-
-    const std::string& code() const;
+    PyAction() = default;
+    PyAction(std::shared_ptr<const Python> python, const std::string& name, RunCount run_count, const std::string& module_file);
+    bool run(EclipseState& ecl_state, Schedule& schedule, std::size_t report_step, SummaryState& st) const;
     const std::string& name() const;
-    bool operator==(const PyAction& other) const;
-    PyAction::RunCount run_count() const;
     bool active() const;
-
-    /*
-      Storage is a void pointer to a Python dictionary: py::dict. It is represented
-      with a void pointer in this way to avoid adding the Pybind11 headers to this
-      file. Calling scope must do a cast before using the storage pointer:
-
-          py::dict * storage = static_cast<py::dict *>(py_action.storage());
-
-      The purpose of this dictionary is to allow PYACTION scripts to store state
-      between invocations.
-    */
-    void * storage() const;
+    bool operator==(const PyAction& other) const;
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {
         serializer(m_name);
         serializer(m_run_count);
-        serializer(input_code);
+        serializer(module_file);
         serializer(m_active);
     }
 
 private:
+    void update(bool result) const;
+
+    mutable std::shared_ptr< PyRunModule > run_module;
     std::string m_name;
     RunCount m_run_count;
-    std::string input_code;
-    void * m_storage = nullptr;
+    std::string module_file;
     mutable bool m_active = true;
 };
 }

@@ -45,21 +45,13 @@ bool Python::supported() {
 
 
 bool Python::exec(const std::string& python_code) const {
-    this->interp->exec(python_code);
-    return true;
+    return this->interp->exec(python_code);
 }
 
 
 bool Python::exec(const std::string& python_code, const Parser& parser, Deck& deck) const {
-    this->interp->exec(python_code, parser, deck);
-    return true;
+    return this->interp->exec(python_code, parser, deck);
 }
-
-bool Python::exec(const Action::PyAction& py_action, EclipseState& ecl_state, Schedule& schedule, std::size_t report_step, SummaryState& st) const {
-    this->interp->exec(py_action, ecl_state, schedule, report_step, st);
-    return true;
-}
-
 
 bool Python::enabled() const {
     return bool( *this->interp );

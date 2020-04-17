@@ -57,8 +57,8 @@ struct test_data {
     Schedule schedule;
     SummaryConfig summary_config;
 
-    test_data(const std::string& deck_string) :
-        deck( Parser().parseString(deck_string)),
+    test_data(const Deck& deck_arg) :
+        deck(deck_arg),
         state( this->deck ),
         python( std::make_shared<Python>() ),
         schedule( this->deck, this->state, this->python),
@@ -67,6 +67,12 @@ struct test_data {
         auto& ioconfig = this->state.getIOConfig();
         ioconfig.setBaseName("MSIM");
     }
+
+    test_data(const std::string& deck_string) :
+        test_data( Parser().parseString(deck_string) )
+    {}
+
+
 };
 
 
@@ -240,6 +246,8 @@ BOOST_AUTO_TEST_CASE(WELL_CLOSE_EXAMPLE) {
     }
 }
 
+
+
 BOOST_AUTO_TEST_CASE(UDQ_ASSIGN) {
 #include "actionx1.include"
 
@@ -365,3 +373,61 @@ BOOST_AUTO_TEST_CASE(UDA) {
         }
     }
 }
+
+#ifdef EMBEDDED_PYTHON
+
+BOOST_AUTO_TEST_CASE(PYTHON_WELL_CLOSE_EXAMPLE) {
+    const auto& deck = Parser().parseFile("msim/MSIM_PYACTION.DATA");
+    test_data td( deck );
+    msim sim(td.state);
+    {
+        WorkArea work_area("test_msim");
+        EclipseIO io(td.state, td.state.getInputGrid(), td.schedule, td.summary_config);
+
+        sim.well_rate("P1", data::Rates::opt::oil, prod_opr);
+        sim.well_rate("P2", data::Rates::opt::oil, prod_opr);
+        sim.well_rate("P3", data::Rates::opt::oil, prod_opr);
+        sim.well_rate("P4", data::Rates::opt::oil, prod_opr);
+
+        sim.well_rate("P1", data::Rates::opt::wat, prod_wpr_P1);
+        sim.well_rate("P2", data::Rates::opt::wat, prod_wpr_P2);
+        sim.well_rate("P3", data::Rates::opt::wat, prod_wpr_P3);
+        sim.well_rate("P4", data::Rates::opt::wat, prod_wpr_P4);
+
+        {
+            const auto& w1 = td.schedule.getWell("P1", 15);
+            const auto& w2 = td.schedule.getWell("P2", 15);
+            const auto& w3 = td.schedule.getWell("P3", 15);
+            const auto& w4 = td.schedule.getWell("P4", 15);
+
+            BOOST_CHECK(w1.getStatus() == Well::Status::OPEN );
+            BOOST_CHECK(w2.getStatus() == Well::Status::OPEN );
+            BOOST_CHECK(w3.getStatus() == Well::Status::OPEN );
+            BOOST_CHECK(w4.getStatus() == Well::Status::OPEN );
+        }
+
+
+        sim.run(td.schedule, io, false);
+        {
+            const auto& w1 = td.schedule.getWell("P1", 15);
+            const auto& w3 = td.schedule.getWell("P3", 15);
+            BOOST_CHECK(w1.getStatus() ==  Well::Status::OPEN );
+            BOOST_CHECK(w3.getStatus() ==  Well::Status::OPEN );
+        }
+        {
+            const auto& w2_5 = td.schedule.getWell("P2", 5);
+            const auto& w2_6 = td.schedule.getWell("P2", 6);
+            BOOST_CHECK(w2_5.getStatus() == Well::Status::OPEN );
+            BOOST_CHECK(w2_6.getStatus() == Well::Status::SHUT );
+        }
+        {
+            const auto& w4_10 = td.schedule.getWell("P4", 10);
+            const auto& w4_11 = td.schedule.getWell("P4", 11);
+            BOOST_CHECK(w4_10.getStatus() == Well::Status::OPEN );
+            BOOST_CHECK(w4_11.getStatus() == Well::Status::SHUT );
+        }
+    }
+}
+
+#endif
+

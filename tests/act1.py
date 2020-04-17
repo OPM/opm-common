@@ -1,5 +1,9 @@
 from math import sin
 import random
+
+def run():
+    pass
+
 print("sin(0) = {}".format(sin(0)))
 #---
 if random.random() > 0.25:

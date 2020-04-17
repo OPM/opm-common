@@ -17,13 +17,11 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef OPM_EMBEDDED_PYTHON
-#define OPM_EMBEDDED_PYTHON
+#ifndef OPM_PYTHON_HPP
+#define OPM_PYTHON_HPP
 
 #include <memory>
 #include <string>
-
-#include <opm/parser/eclipse/EclipseState/Schedule/Action/PyAction.hpp>
 
 namespace Opm {
 class PythonInterp;
@@ -33,6 +31,9 @@ class SummaryState;
 class Schedule;
 class EclipseState;
 
+namespace Action {
+    class PyAction;
+}
 /*
   This class is a thin wrapper around the PythonInterp class. The Python class
   can always be safely instantiated, but the actual PythonInterp implementation
@@ -136,6 +137,7 @@ public:
       compiled with support for Python.
     */
     static bool supported();
+    bool run_module(const std::string& path);
 private:
     std::shared_ptr<PythonInterp> interp;
 };

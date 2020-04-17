@@ -52,6 +52,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/Deck/DeckSection.cpp
     src/opm/parser/eclipse/Deck/UDAValue.cpp
     src/opm/parser/eclipse/Python/Python.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/Action/PyAction.cpp
     src/opm/parser/eclipse/EclipseState/AquiferConfig.cpp
     src/opm/parser/eclipse/EclipseState/AquiferCT.cpp
     src/opm/parser/eclipse/EclipseState/Aquifetp.cpp
@@ -95,7 +96,6 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Schedule/Action/ActionValue.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Action/ASTNode.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Action/Condition.cpp
-    src/opm/parser/eclipse/EclipseState/Schedule/Action/PyAction.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/ArrayDimChecker.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Events.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Group/Group.cpp
@@ -221,7 +221,10 @@ if(ENABLE_ECL_INPUT)
     set_source_files_properties(${PYTHON_CXX_SOURCE_FILES} PROPERTIES COMPILE_FLAGS -Wno-shadow)
     set_source_files_properties(src/opm/parser/eclipse/Python/PythonInterp.cpp PROPERTIES COMPILE_FLAGS -Wno-shadow)
     set_source_files_properties(src/opm/parser/eclipse/EclipseState/Schedule/Action/PyAction.cpp PROPERTIES COMPILE_FLAGS -Wno-shadow)
-    list( APPEND MAIN_SOURCE_FILES src/opm/parser/eclipse/Python/PythonInterp.cpp ${PYTHON_CXX_SOURCE_FILES})
+    list( APPEND MAIN_SOURCE_FILES
+      src/opm/parser/eclipse/Python/PythonInterp.cpp
+      src/opm/parser/eclipse/Python/PyRunModule.cpp
+      ${PYTHON_CXX_SOURCE_FILES})
   endif()
 
   list( APPEND PYTHON_CXX_DEPENDS ${PYTHON_CXX_SOURCE_FILES}
@@ -435,8 +438,13 @@ if(ENABLE_ECL_OUTPUT)
           tests/PYACTION.DATA
           tests/act1.py
           tests/EXIT_TEST.DATA
+          tests/action_syntax_error.py
+          tests/action_missing_run.py
           tests/EMBEDDED_PYTHON.DATA
           tests/wclose.py
+          tests/msim/MSIM_PYACTION.DATA
+          tests/msim/action1.py
+          tests/msim/action2.py
       )
 endif()
 

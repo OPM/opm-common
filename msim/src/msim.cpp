@@ -25,6 +25,7 @@
 #include <opm/output/data/Solution.hpp>
 #include <opm/output/data/Wells.hpp>
 #include <opm/output/data/Groups.hpp>
+#include <opm/parser/eclipse/Python/Python.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionContext.hpp>
@@ -43,6 +44,7 @@ void msim::run(Schedule& schedule, EclipseIO& io, bool report_only) {
     const double week = 7 * 86400;
     data::Solution sol;
     SummaryState st(std::chrono::system_clock::from_time_t(schedule.getStartTime()));
+    Python python;
 
     io.writeInitial();
     for (size_t report_step = 1; report_step < schedule.size(); report_step++) {
@@ -61,7 +63,7 @@ void msim::run(Schedule& schedule, EclipseIO& io, bool report_only) {
 }
 
 
-void msim::post_step(Schedule& schedule, const SummaryState& st, data::Solution& /* sol */, data::Wells& /* well_data */, size_t report_step) const {
+void msim::post_step(Schedule& schedule, SummaryState& st, data::Solution& /* sol */, data::Wells& /* well_data */, size_t report_step) {
     const auto& actions = schedule.actions(report_step);
     if (actions.empty())
         return;
@@ -74,6 +76,9 @@ void msim::post_step(Schedule& schedule, const SummaryState& st, data::Solution&
         if (result)
             schedule.applyAction(report_step, *action, result);
     }
+
+    for (const auto& pyaction : actions.pending_python())
+        pyaction->run(this->state, schedule, report_step, st);
 }
 
 

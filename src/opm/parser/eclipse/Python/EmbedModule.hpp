@@ -45,7 +45,7 @@ struct python_module {
         if (result == -1)
             pybind11::pybind11_fail("Insufficient memory to add a new module");
     }
-};  
+};
 
 }
 }
