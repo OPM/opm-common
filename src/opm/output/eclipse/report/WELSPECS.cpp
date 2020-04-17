@@ -143,8 +143,7 @@ namespace {
             }
         }
 
-        void print_data(std::ostream& os, const std::vector<T>& lines, const separator_function& separator) const {
-            std::size_t line_number { 0 } ;
+        void print_data(std::ostream& os, const std::vector<T>& lines, const separator_function& separator, std::size_t& line_number) const {
             for (const auto& line : lines) {
                 if (separator(line, line_number)) {
                     print_divider(os);
@@ -195,11 +194,13 @@ namespace {
             os << title << record_separator;
             os << decor << record_separator;
 
+            std::size_t line_number { 0 } ;
+
             os << section_separator;
 
             column_definition.print_header(os);
             for (const auto element : data) {
-                column_definition.print_data(os, transform(element), separator);
+                column_definition.print_data(os, transform(element), separator, line_number);
             }
             column_definition.print_divider(os, bottom_border);
 
