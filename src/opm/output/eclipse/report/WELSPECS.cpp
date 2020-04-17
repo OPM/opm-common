@@ -563,7 +563,7 @@ namespace {
         }
 
         static void ws_format(std::string& string, std::size_t, std::size_t i) {
-            if (i == 1) {
+            if (i == 0) {
                 left_align(string, 8, i);
             } else {
                 right_align(string, 8, i);
