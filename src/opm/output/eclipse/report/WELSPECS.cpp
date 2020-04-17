@@ -476,7 +476,7 @@ namespace {
             if (n == 0) {
                 return well_name(n);
             } else if (n == 1) {
-                return unimplemented(this, n);
+                return Opm::WellSegments::CompPressureDropToString(well.getSegments().compPressureDrop());
             } else {
                 return unimplemented(this, n);
             }
