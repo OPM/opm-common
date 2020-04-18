@@ -1061,6 +1061,7 @@ set( keywords
      001_Eclipse300/O/OILCOMPR
      001_Eclipse300/O/OILMW
      001_Eclipse300/O/OILVTIM
+     001_Eclipse300/O/OPTIONS3
      001_Eclipse300/P/PREF
      001_Eclipse300/P/PREFS
      001_Eclipse300/S/STCOND
