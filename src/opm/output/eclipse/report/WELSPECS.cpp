@@ -304,7 +304,7 @@ namespace {
           we have therefor hardcoded that for now.
         */
         std::string D_factor(std::size_t) const {
-            return "0?";
+            return "0";
         }
 
         std::string cross_flow(std::size_t) const {
@@ -335,12 +335,12 @@ namespace {
         {  3, { "PVT"        , "TAB"        ,               }, &WellWrapper::pvt_tab          ,             },
         {  4, { "WELL"       , "DENS"       , "CALC"        }, &WellWrapper::dens_calc        ,             },
         {  3, { "FIP"        , "REG"        ,               }, &WellWrapper::region_number    ,             },
-        { 11, { "WELL"       , "D-FACTOR"   , "DAY/SM3"     }, &WellWrapper::D_factor         ,             },
+        { 11, { "WELL"       , "D-FACTOR?"  , "DAY/SM3"     }, &WellWrapper::D_factor         ,             },
     }};
 
     void subreport_well_specification_data(std::ostream& os, const std::vector<Opm::Well>& data) {
         well_specification.print(os, data);
-
+        os << "? The WELL D-FACTOR is not implemented - and the report will always show the default value 0." << std::endl;
         os << std::endl;
     }
 
