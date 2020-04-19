@@ -310,6 +310,16 @@ namespace {
         std::string cross_flow(std::size_t) const {
             return well.getAllowCrossFlow() ? "YES" : "NO";
         }
+
+        std::string drainage_radius(std::size_t) const {
+            if (well.getDrainageRadius() == 0)
+                return "P.EQUIV.R";
+            return std::to_string(well.getDrainageRadius()).substr(0,6);
+        }
+
+        std::string gas_inflow(std::size_t) const {
+            return Opm::Well::GasInflowEquation2String( well.gas_inflow_equation() );
+        }
     };
 
     const subreport<Opm::Well, WellWrapper, 3> well_specification { "WELL SPECIFICATION DATA", {
@@ -318,8 +328,8 @@ namespace {
         {  8, { "WELLHEAD"   , "LOCATION"   , "( I, J )"    }, &WellWrapper::wellhead_location, left_align  },
         {  8, { "B.H.REF"    , "DEPTH"      , "METRES"      }, &WellWrapper::reference_depth  , right_align },
         {  5, { "PREF-"      , "ERRED"      , "PHASE"       }, &WellWrapper::preferred_phase  ,             },
-        {  8, { "DRAINAGE"   , "RADIUS"     , "METRES"      }, &WellWrapper::unimplemented    ,             },
-        {  4, { "GAS"        , "INFL"       , "EQUN"        }, &WellWrapper::unimplemented    ,             },
+        {  8, { "DRAINAGE"   , "RADIUS"     , "METRES"      }, &WellWrapper::drainage_radius  ,             },
+        {  4, { "GAS"        , "INFL"       , "EQUN"        }, &WellWrapper::gas_inflow       ,             },
         {  7, { "SHUT-IN"    , "INSTRCT"    ,               }, &WellWrapper::shut_status      ,             },
         {  5, { "CROSS"      , "FLOW"       , "ABLTY"       }, &WellWrapper::cross_flow       ,             },
         {  3, { "PVT"        , "TAB"        ,               }, &WellWrapper::pvt_tab          ,             },

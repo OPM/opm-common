@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(WTEST_STATE2) {
 
     const UnitSystem us{};
     std::vector<Well> wells;
-    wells.emplace_back("WELL_NAME", "A", 0, 0, 1, 1, 200., WellType(Phase::OIL), Well::ProducerCMode::NONE, Connection::Order::TRACK, us, 0., 1.0, true, true, 0);
+    wells.emplace_back("WELL_NAME", "A", 0, 0, 1, 1, 200., WellType(Phase::OIL), Well::ProducerCMode::NONE, Connection::Order::TRACK, us, 0., 1.0, true, true, 0, Well::GasInflowEquation::STD);
     {
         wells[0].updateStatus(Well::Status::SHUT, false);
         auto shut_wells = st.updateWells(wc, wells, 5000);
@@ -111,8 +111,8 @@ BOOST_AUTO_TEST_CASE(WTEST_STATE) {
 
     const UnitSystem us{};
     std::vector<Well> wells;
-    wells.emplace_back("WELL_NAME", "A", 0, 0, 1, 1, 200., WellType(Phase::OIL), Well::ProducerCMode::NONE, Connection::Order::TRACK, us, 0., 1.0, true, true, 0);
-    wells.emplace_back("WELLX", "A", 0, 0, 2, 2, 200.,     WellType(Phase::OIL), Well::ProducerCMode::NONE, Connection::Order::TRACK, us, 0., 1.0, true, true, 0);
+    wells.emplace_back("WELL_NAME", "A", 0, 0, 1, 1, 200., WellType(Phase::OIL), Well::ProducerCMode::NONE, Connection::Order::TRACK, us, 0., 1.0, true, true, 0, Well::GasInflowEquation::STD);
+    wells.emplace_back("WELLX", "A", 0, 0, 2, 2, 200.,     WellType(Phase::OIL), Well::ProducerCMode::NONE, Connection::Order::TRACK, us, 0., 1.0, true, true, 0, Well::GasInflowEquation::STD);
 
     WellTestConfig wc;
     {
@@ -182,9 +182,9 @@ BOOST_AUTO_TEST_CASE(WTEST_STATE_COMPLETIONS) {
 
     const UnitSystem us{};
     std::vector<Well> wells;
-    wells.emplace_back("WELL_NAME", "A", 0, 0, 1, 1, 200., WellType(Phase::OIL), Well::ProducerCMode::NONE, Connection::Order::TRACK, us, 0., 1.0, true, true, 0);
+    wells.emplace_back("WELL_NAME", "A", 0, 0, 1, 1, 200., WellType(Phase::OIL), Well::ProducerCMode::NONE, Connection::Order::TRACK, us, 0., 1.0, true, true, 0, Well::GasInflowEquation::STD);
     wells[0].updateStatus(Well::Status::OPEN, false);
-    wells.emplace_back("WELLX", "A", 0, 0, 2, 2, 200., WellType(Phase::OIL), Well::ProducerCMode::NONE, Connection::Order::TRACK, us, 0., 1.0, true, true, 0);
+    wells.emplace_back("WELLX", "A", 0, 0, 2, 2, 200., WellType(Phase::OIL), Well::ProducerCMode::NONE, Connection::Order::TRACK, us, 0., 1.0, true, true, 0, Well::GasInflowEquation::STD);
     wells[1].updateStatus(Well::Status::OPEN, false);
 
     auto closed_completions = st.updateWells(wc, wells, 5000);

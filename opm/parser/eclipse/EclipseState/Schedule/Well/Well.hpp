@@ -149,6 +149,16 @@ public:
     static GuideRateTarget GuideRateTargetFromString( const std::string& stringValue );
 
 
+    enum class GasInflowEquation {
+        STD = 0,
+        R_G = 1,
+        P_P = 2,
+        GPP = 3
+    };
+    static const std::string GasInflowEquation2String(GasInflowEquation enumValue);
+    static GasInflowEquation GasInflowEquationFromString(const std::string& stringValue);
+
+
 
     struct WellGuideRate {
         bool available;
@@ -431,7 +441,8 @@ public:
          double dr,
          bool allow_xflow,
          bool auto_shutin,
-         int pvt_table);
+         int pvt_table,
+         GasInflowEquation inflow_eq);
 
     Well(const RestartIO::RstWell& rst_well,
          int report_step,
@@ -542,6 +553,7 @@ public:
     int vfp_table_number() const;
     int pvt_table_number() const;
     int fip_region_number() const;
+    GasInflowEquation gas_inflow_equation() const;
     bool segmented_density_calculation() const { return true; }
     double alq_value() const;
     double temperature() const;
@@ -566,6 +578,7 @@ public:
         serializer(allow_cross_flow);
         serializer(automatic_shutin);
         serializer(pvt_table);
+        serializer(gas_inflow);
         wtype.serializeOp(serializer);
         guide_rate.serializeOp(serializer);
         serializer(efficiency_factor);
@@ -597,6 +610,7 @@ private:
     bool allow_cross_flow;
     bool automatic_shutin;
     int pvt_table;
+    GasInflowEquation gas_inflow = GasInflowEquation::STD;  // Will NOT be loaded/assigned from restart file
     UnitSystem unit_system;
     double udq_undefined;
     Status status;
@@ -605,6 +619,7 @@ private:
     double efficiency_factor;
     double solvent_fraction;
     bool prediction_mode = true;
+
 
     std::shared_ptr<WellEconProductionLimits> econ_limits;
     std::shared_ptr<WellFoamProperties> foam_properties;
