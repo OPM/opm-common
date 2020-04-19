@@ -290,7 +290,8 @@ Well::Well(const std::string& wname_arg,
            double dr,
            bool allow_xflow,
            bool auto_shutin,
-           int pvt_table_):
+           int pvt_table_,
+           GasInflowEquation inflow_eq):
     wname(wname_arg),
     group_name(gname),
     init_step(init_step_arg),
@@ -302,6 +303,7 @@ Well::Well(const std::string& wname_arg,
     allow_cross_flow(allow_xflow),
     automatic_shutin(auto_shutin),
     pvt_table(pvt_table_),
+    gas_inflow(inflow_eq),
     unit_system(unit_system_arg),
     udq_undefined(udq_undefined_arg),
     status(Status::SHUT),
@@ -340,6 +342,7 @@ Well Well::serializeObject()
     result.allow_cross_flow = true;
     result.automatic_shutin = false;
     result.pvt_table = 77;
+    result.gas_inflow = GasInflowEquation::GPP;
     result.wtype = WellType(Phase::WATER);
     result.guide_rate = WellGuideRate::serializeObject();
     result.efficiency_factor = 8.0;
@@ -992,6 +995,40 @@ bool Well::hasBeenDefined(size_t timeStep) const {
         return true;
 }
 
+Well::GasInflowEquation Well::gas_inflow_equation() const {
+    return this->gas_inflow;
+}
+
+const std::string Well::GasInflowEquation2String(GasInflowEquation enumValue) {
+    switch(enumValue) {
+    case GasInflowEquation::STD:
+        return "STD";
+    case GasInflowEquation::R_G:
+        return "R-G";
+    case GasInflowEquation::P_P:
+        return "P-P";
+    case GasInflowEquation::GPP:
+        return "GPP";
+    default:
+        throw std::invalid_argument("Unhandled enum value");
+    }
+}
+
+Well::GasInflowEquation Well::GasInflowEquationFromString(const std::string& stringValue) {
+    if (stringValue == "STD" || stringValue == "NO")
+        return GasInflowEquation::STD;
+
+    if (stringValue == "R-G" || stringValue == "YES")
+        return GasInflowEquation::R_G;
+
+    if (stringValue == "P-P")
+        return GasInflowEquation::P_P;
+
+    if (stringValue == "GPP")
+        return GasInflowEquation::GPP;
+
+    throw std::invalid_argument("Gas inflow equation type: " + stringValue + " not recognized");
+}
 
 
 bool Well::canOpen() const {

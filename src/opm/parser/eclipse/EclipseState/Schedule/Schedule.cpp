@@ -2287,6 +2287,7 @@ void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t 
 
         const std::string& group = record.getItem<ParserKeywords::WELSPECS::GROUP>().getTrimmedString(0);
         auto pvt_table = record.getItem<WS::P_TABLE>().get<int>(0);
+        auto gas_inflow = Well::GasInflowEquationFromString( record.getItem<WS::INFLOW_EQ>().get<std::string>(0) );
 
         this->addWell(wellName,
                       group,
@@ -2298,6 +2299,7 @@ void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t 
                       allowCrossFlow,
                       automaticShutIn,
                       pvt_table,
+                      gas_inflow,
                       timeStep,
                       wellConnectionOrder,
                       unit_system);
@@ -2328,6 +2330,7 @@ void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t 
                            bool allowCrossFlow,
                            bool automaticShutIn,
                            int pvt_table,
+                           Well::GasInflowEquation gas_inflow,
                            size_t timeStep,
                            Connection::Order wellConnectionOrder,
                            const UnitSystem& unit_system) {
@@ -2346,7 +2349,8 @@ void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t 
                   drainageRadius,
                   allowCrossFlow,
                   automaticShutIn,
-                  pvt_table);
+                  pvt_table,
+                  gas_inflow);
 
         this->addWell( std::move(well), timeStep );
     }

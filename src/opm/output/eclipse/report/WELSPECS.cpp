@@ -304,11 +304,21 @@ namespace {
           we have therefor hardcoded that for now.
         */
         std::string D_factor(std::size_t) const {
-            return "0?";
+            return "0";
         }
 
         std::string cross_flow(std::size_t) const {
             return well.getAllowCrossFlow() ? "YES" : "NO";
+        }
+
+        std::string drainage_radius(std::size_t) const {
+            if (well.getDrainageRadius() == 0)
+                return "P.EQUIV.R";
+            return std::to_string(well.getDrainageRadius()).substr(0,6);
+        }
+
+        std::string gas_inflow(std::size_t) const {
+            return Opm::Well::GasInflowEquation2String( well.gas_inflow_equation() );
         }
     };
 
@@ -318,19 +328,19 @@ namespace {
         {  8, { "WELLHEAD"   , "LOCATION"   , "( I, J )"    }, &WellWrapper::wellhead_location, left_align  },
         {  8, { "B.H.REF"    , "DEPTH"      , "METRES"      }, &WellWrapper::reference_depth  , right_align },
         {  5, { "PREF-"      , "ERRED"      , "PHASE"       }, &WellWrapper::preferred_phase  ,             },
-        {  8, { "DRAINAGE"   , "RADIUS"     , "METRES"      }, &WellWrapper::unimplemented    ,             },
-        {  4, { "GAS"        , "INFL"       , "EQUN"        }, &WellWrapper::unimplemented    ,             },
+        {  8, { "DRAINAGE"   , "RADIUS"     , "METRES"      }, &WellWrapper::drainage_radius  ,             },
+        {  4, { "GAS"        , "INFL"       , "EQUN"        }, &WellWrapper::gas_inflow       ,             },
         {  7, { "SHUT-IN"    , "INSTRCT"    ,               }, &WellWrapper::shut_status      ,             },
         {  5, { "CROSS"      , "FLOW"       , "ABLTY"       }, &WellWrapper::cross_flow       ,             },
         {  3, { "PVT"        , "TAB"        ,               }, &WellWrapper::pvt_tab          ,             },
         {  4, { "WELL"       , "DENS"       , "CALC"        }, &WellWrapper::dens_calc        ,             },
         {  3, { "FIP"        , "REG"        ,               }, &WellWrapper::region_number    ,             },
-        { 11, { "WELL"       , "D-FACTOR"   , "DAY/SM3"     }, &WellWrapper::D_factor         ,             },
+        { 11, { "WELL"       , "D-FACTOR?"  , "DAY/SM3"     }, &WellWrapper::D_factor         ,             },
     }};
 
     void subreport_well_specification_data(std::ostream& os, const std::vector<Opm::Well>& data) {
         well_specification.print(os, data);
-
+        os << "? The WELL D-FACTOR is not implemented - and the report will always show the default value 0." << std::endl;
         os << std::endl;
     }
 
@@ -394,6 +404,10 @@ namespace {
             return std::to_string(connection.skinFactor()).substr(0, 8);
         }
 
+        std::string sat_scaling(std::size_t) const {
+            return "";
+        }
+
         const std::string &unimplemented(std::size_t) const {
             static const std::string s { };
             return s;
@@ -423,12 +437,12 @@ namespace {
        {  7, {"K  H"                   ,"VALUE"                  ,"MD.METRE"               }, &WellConnection::kh_value        , right_align },
        {  6, {"SKIN"                   ,"FACTOR"                 ,                         }, &WellConnection::skin_factor     , right_align },
        { 10, {"CONNECTION"             ,"D-FACTOR"               ,"DAY/SM3"                }, &WellConnection::unimplemented   ,             },
-       { 23, {"SATURATION SCALING DATA","SWMIN SWMAX SGMIN SGMAX",                         }, &WellConnection::unimplemented   ,             },
+       { 23, {"SATURATION SCALING DATA","SWMIN SWMAX SGMIN SGMAX","&"                      }, &WellConnection::sat_scaling     ,             },
     }};
 
     void subreport_well_connection_data(std::ostream& os, const std::vector<Opm::Well>& data) {
         well_connection.print(os, data);
-
+        os << "&: The saturation scaling data has not been implemented in the report and will show blank" << std::endl;
         os << std::endl;
     }
 }

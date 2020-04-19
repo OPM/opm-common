@@ -360,6 +360,7 @@ namespace Opm
                      bool allowCrossFlow,
                      bool automaticShutIn,
                      int pvt_table,
+                     Well::GasInflowEquation gas_inflow,
                      size_t timeStep,
                      Connection::Order wellConnectionOrder,
                      const UnitSystem& unit_system);
