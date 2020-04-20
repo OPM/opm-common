@@ -30,6 +30,11 @@ if(NOT @opm-project_NAME@_FOUND)
   set (@opm-project_NAME@_LINKER_FLAGS "@opm-project_LINKER_FLAGS@")
   set (@opm-project_NAME@_CONFIG_VARS "@opm-project_CONFIG_VARS@")
 
+  # The flag whether embedded Python is supported or not is passed to downstream modules,
+  # it is only used to enable/disable regression testing with Python enabled input. The
+  # actual code is self contained - and can be used downstream without awareness of this.
+  set (@opm-project_NAME@_EMBEDDED_PYTHON @OPM_ENABLE_EMBEDDED_PYTHON@)
+
   # libraries come from the build tree where this file was generated
   set (@opm-project_NAME@_LIBRARY "@opm-project_LIBRARY@")
   set (@opm-project_NAME@_LIBRARIES ${@opm-project_NAME@_LIBRARY} "@opm-project_LIBRARIES@")
