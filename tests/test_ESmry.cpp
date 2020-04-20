@@ -153,6 +153,7 @@ BOOST_AUTO_TEST_CASE(TestESmry_1) {
     getRefSmryVect(time_ref, wgpr_prod_ref, wbhp_prod_ref, wbhp_inj_ref,fgor_ref, bpr_111_ref, bpr_10103_ref);
 
     ESmry smry1("SPE1CASE1.SMSPEC");
+    smry1.LoadData();
 
     std::vector<float> smryVect = smry1.get("TIME");
     BOOST_CHECK_EQUAL(smryVect==time_ref, true);
@@ -229,6 +230,7 @@ BOOST_AUTO_TEST_CASE(TestESmry_2) {
     // will be loaded. No data from base run (SPE1CASE1 in this case)
 
     ESmry smry1("SPE1CASE1_RST60.SMSPEC");    // equivalent to  smry1("SPE1CASE1_RST60.SMSPEC",false)
+    smry1.LoadData();
 
     std::vector<float> smryVect = smry1.get("TIME");
     std::vector<float> time_ref_rst60 = getFrom(time_ref,63);
@@ -306,6 +308,7 @@ BOOST_AUTO_TEST_CASE(TestESmry_3) {
     // vectors should be equal to reference vectors (from SPE1CASE1)
 
     ESmry smry1("SPE1CASE1_RST60.SMSPEC",true);
+    smry1.LoadData();
 
     std::vector<float> smryVect = smry1.get("TIME");
     BOOST_CHECK_EQUAL(smryVect==time_ref, true);
@@ -352,6 +355,7 @@ BOOST_AUTO_TEST_CASE(TestESmry_4) {
     std::vector<float> time_ref = {31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365, 396, 424, 455, 485, 516, 546, 577, 608, 638, 669, 699, 730, 761, 789, 820, 850, 881, 911, 942, 973, 1003, 1034, 1064, 1095, 1126, 1154, 1185, 1215, 1246, 1276, 1307, 1338, 1368, 1399, 1429, 1460, 1491, 1519, 1550, 1580, 1611, 1641, 1672, 1703, 1733, 1764, 1794, 1825, 1856, 1884, 1915, 1945, 1976, 2006, 2037, 2068, 2098, 2129, 2159, 2190, 2221, 2249, 2280, 2310, 2341, 2371, 2402, 2433, 2463, 2494, 2524, 2555, 2586, 2614, 2645, 2675, 2706, 2736, 2767, 2798, 2828, 2859, 2889, 2920, 2951, 2979, 3010, 3040, 3071, 3101, 3132, 3163, 3193, 3224, 3254, 3285, 3316, 3344, 3375, 3405, 3436, 3466, 3497, 3528, 3558, 3589, 3619, 3650};
 
     ESmry smry1("SPE1CASE1.SMSPEC");
+    smry1.LoadData();
 
     std::vector<float> smryVect = smry1.get("TIME");
     std::vector<float> smryVect_rstep = smry1.get_at_rstep("TIME");
@@ -365,6 +369,7 @@ BOOST_AUTO_TEST_CASE(TestESmry_4) {
 namespace fs = Opm::filesystem;
 BOOST_AUTO_TEST_CASE(TestCreateRSM) {
     ESmry smry1("SPE1CASE1.SMSPEC");
+    smry1.LoadData();
 
     smry1.write_rsm_file();
     BOOST_CHECK(fs::exists("SPE1CASE1.RSM"));
@@ -375,6 +380,7 @@ BOOST_AUTO_TEST_CASE(TestCreateRSM) {
 
 BOOST_AUTO_TEST_CASE(TestUnits) {
     ESmry smry("SPE1CASE1.SMSPEC");
+    smry.LoadData();
 
     BOOST_CHECK_THROW( smry.get_unit("NO_SUCH_KEY"), std::out_of_range);
     BOOST_CHECK_EQUAL( smry.get_unit("TIME"), "DAYS");
