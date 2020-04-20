@@ -22,6 +22,9 @@
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp>
 
+// TODO: following the convention here, it should be removed.
+#include <opm/output/data/Aquifer.hpp>
+
 #include <map>
 #include <memory>
 #include <string>
@@ -68,7 +71,8 @@ public:
               const data::GroupAndNetworkValues& group_and_nwrk_solution,
               GlobalProcessParameters            single_values,
               const RegionParameters&            region_values = {},
-              const BlockValues&                 block_values  = {}) const;
+              const BlockValues&                 block_values  = {},
+              const data::Aquifers&              aquifers_values = {}) const;
 
     void write() const;
 

@@ -43,6 +43,7 @@ public:
     const Aquifetp& fetp() const;
     const Aquancon& connections() const;
     bool operator==(const AquiferConfig& other);
+    bool hasAquifer(const int aquID) const;
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)

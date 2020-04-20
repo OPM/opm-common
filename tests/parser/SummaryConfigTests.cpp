@@ -156,7 +156,7 @@ static SummaryConfig createSummary( std::string input , const ParseContext& pars
     auto python = std::make_shared<Python>();
     EclipseState state( deck );
     Schedule schedule(deck, state, parseContext, errors, python);
-    return SummaryConfig( deck, schedule, state.getTableManager( ), parseContext, errors );
+    return SummaryConfig(deck, schedule, state.getTableManager(), <#initializer#>, parseContext, errors);
 }
 
 BOOST_AUTO_TEST_CASE(wells_all) {
@@ -189,7 +189,7 @@ BOOST_AUTO_TEST_CASE(wells_missingI) {
     parseContext.update(ParseContext::SUMMARY_UNKNOWN_WELL, InputError::THROW_EXCEPTION);
     EclipseState state( deck );
     Schedule schedule(deck, state, parseContext, errors, python );
-    BOOST_CHECK_NO_THROW( SummaryConfig( deck, schedule, state.getTableManager( ), parseContext, errors ));
+    BOOST_CHECK_NO_THROW(SummaryConfig(deck, schedule, state.getTableManager(), <#initializer#>, parseContext, errors));
 }
 
 
@@ -1077,7 +1077,7 @@ END
     const auto parseContext = ParseContext{};
     const auto state = EclipseState (deck);
     const auto schedule = Schedule (deck, state, parseContext, errors, std::make_shared<const Python>());
-    const auto smry = SummaryConfig(deck, schedule, state.getTableManager(), parseContext, errors );
+    const auto smry = SummaryConfig(deck, schedule, state.getTableManager(), <#initializer#>, parseContext, errors);
 
     BOOST_CHECK_MESSAGE(deck.hasKeyword("GPR"), R"(Deck must have "GPR" keyword)");
     BOOST_CHECK_MESSAGE(smry.hasKeyword("GPR"), R"(SummaryConfig must have "GPR" keyword)");
