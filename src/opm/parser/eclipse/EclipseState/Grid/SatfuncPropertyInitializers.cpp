@@ -918,6 +918,20 @@ namespace {
         return value;
     }
 
+    void checkSatRegions(const std::size_t  cellIdx,
+                         const int          satfunc,
+                         const int          endfunc,
+                         const std::string& satregname)
+    {
+        if ((satfunc < 0) || (endfunc < 0)) {
+            throw std::invalid_argument {
+                "Region Index Out of Bounds in Active Cell "
+                + std::to_string(cellIdx) + ". " + satregname + " = "
+                + std::to_string(satfunc + 1) + ", ENDNUM = "
+                + std::to_string(endfunc + 1)
+            };
+        }
+    }
 
     std::vector< double >
     satnumApply(size_t size,
@@ -952,14 +966,7 @@ namespace {
             }
 
             // Active cell better have {SAT,END}NUM > 0.
-            if ((satTableIdx < 0) || (endNum < 0)) {
-                throw std::invalid_argument {
-                    "Region Index Out of Bounds in Active Cell "
-                    + std::to_string(cellIdx) + ". SATNUM = "
-                    + std::to_string(satTableIdx + 1) + ", ENDNUM = "
-                    + std::to_string(endNum + 1)
-                };
-            }
+            checkSatRegions(cellIdx, satTableIdx, endNum, "SATNUM");
 
             values[cellIdx] = selectValue(enptvdTables,
                                           (useEnptvd && endNum >= 0) ? endNum : -1,
@@ -1005,14 +1012,7 @@ namespace {
             }
 
             // Active cell better have {IMB,END}NUM > 0.
-            if ((imbTableIdx < 0) || (endNum < 0)) {
-                throw std::invalid_argument {
-                    "Region Index Out of Bounds in Active Cell "
-                    + std::to_string(cellIdx) + ". IMBNUM = "
-                    + std::to_string(imbTableIdx + 1) + ", ENDNUM = "
-                    + std::to_string(endNum + 1)
-                };
-            }
+            checkSatRegions(cellIdx, imbTableIdx, endNum, "IMBNUM");
 
             values[cellIdx] = selectValue(imptvdTables,
                                           (useImptvd && endNum >= 0) ? endNum : -1,
