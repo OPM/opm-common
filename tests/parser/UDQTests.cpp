@@ -16,6 +16,7 @@ Copyright 2018 Statoil ASA.
 #define BOOST_TEST_MODULE UDQTests
 #include <boost/test/unit_test.hpp>
 
+#include <opm/parser/eclipse/Utility/Typetools.hpp>
 #include <opm/parser/eclipse/Python/Python.hpp>
 #include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
@@ -484,7 +485,7 @@ UDQ
     const auto& udq = deck.getKeyword("UDQ");
     const auto& record = udq.getRecord(0);
     const auto& data_item = record.getItem("DATA");
-    const auto& data = data_item.getData<std::string>();
+    const auto& data = RawString::strings( data_item.getData<RawString>() );
     std::vector<std::string> exp = {"WWPR", "/", "(", "WWPR", "+", "WOPR", ")"};
     BOOST_CHECK_EQUAL_COLLECTIONS(data.begin(), data.end(),
                                   exp.begin(), exp.end());

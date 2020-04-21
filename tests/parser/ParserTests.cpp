@@ -23,6 +23,7 @@
 #include <opm/json/JsonObject.hpp>
 #include <iostream>
 
+#include <opm/parser/eclipse/Utility/Typetools.hpp>
 #include <opm/common/utility/FileSystem.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
@@ -1920,22 +1921,25 @@ AQUTAB
 
 
 BOOST_AUTO_TEST_CASE(ParseRAW_STRING) {
-    const std::string deck_string = R"(
-UDQ
-   DEFINE WUBHP 'P*X*' /
-   DEFINE WUBHP 'P*X*' 5*(1 + LOG(WBHP)) /
+    const std::string deck_string = R"(UDQ
+   DEFINE 'WUBHP' 'P*X*' /
+   DEFINE 'WUBHP' 'P*X*' 5*(1 + LOG(WBHP)) /
 /
 )";
     Parser parser;
     const auto deck = parser.parseString( deck_string);
     const auto& udq = deck.getKeyword("UDQ");
-    const auto& data0 = udq.getRecord(0).getItem("DATA").getData<std::string>();
-    const auto& data1 = udq.getRecord(1).getItem("DATA").getData<std::string>();
     const std::vector<std::string> expected0 = {"'P*X*'"};
     const std::vector<std::string> expected1 = {"'P*X*'", "5*(1", "+", "LOG(WBHP))"};
+    const auto& data0 = RawString::strings( udq.getRecord(0).getItem("DATA").getData<RawString>() );
+    const auto& data1 = RawString::strings( udq.getRecord(1).getItem("DATA").getData<RawString>() );
     BOOST_CHECK_EQUAL_COLLECTIONS( data0.begin(), data0.end(), expected0.begin(), expected0.end());
     BOOST_CHECK_EQUAL_COLLECTIONS( data1.begin(), data1.end(), expected1.begin(), expected1.end());
- }
+
+    std::stringstream ss;
+    ss << udq;
+    BOOST_CHECK_EQUAL(ss.str(), deck_string);
+}
 
 
 BOOST_AUTO_TEST_CASE(ParseThreePhaseRelpermModels) {

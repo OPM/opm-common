@@ -106,6 +106,7 @@ namespace Opm {
         double dval;
         int ival;
         std::string sval;
+        RawString rsval;
         UDAValue uval;
         std::vector< std::string > m_dimensions;
 

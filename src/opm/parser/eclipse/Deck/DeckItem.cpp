@@ -62,6 +62,14 @@ const std::vector< std::string >& DeckItem::value_ref< std::string >() const {
 }
 
 template<>
+const std::vector< RawString >& DeckItem::value_ref< RawString >() const {
+    if( this->type != get_type< RawString >() )
+        throw std::invalid_argument( "DeckItem::value_ref<RawString> Item of wrong type. this->type: " + tag_name(this->type) + " " + this->name());
+
+    return this->rsval;
+}
+
+template<>
 const std::vector< UDAValue >& DeckItem::value_ref< UDAValue >() const {
     if( this->type != get_type< UDAValue >() )
         throw std::invalid_argument( "DeckItem::value_ref<UDAValue> Item of wrong type. this->type: " + tag_name(this->type) + " " + this->name());
@@ -81,6 +89,13 @@ DeckItem::DeckItem( const std::string& nm, std::string) :
     item_name( nm )
 {
 }
+
+DeckItem::DeckItem( const std::string& nm, RawString) :
+    type( get_type< RawString >() ),
+    item_name( nm )
+{
+}
+
 
 DeckItem::DeckItem( const std::string& nm, double, const std::vector<Dimension>& active_dim, const std::vector<Dimension>& default_dim) :
     type( get_type< double >() ),
@@ -200,6 +215,10 @@ void DeckItem::push_back( std::string x ) {
     this->push( std::move( x ) );
 }
 
+void DeckItem::push_back( RawString x ) {
+    this->push( std::move( x ) );
+}
+
 void DeckItem::push_back( UDAValue x ) {
     this->push( std::move( x ) );
 }
@@ -248,6 +267,10 @@ void DeckItem::push_backDefault( double x ) {
 }
 
 void DeckItem::push_backDefault( std::string x ) {
+    this->push_default( std::move( x ) );
+}
+
+void DeckItem::push_backDefault( RawString x ) {
     this->push_default( std::move( x ) );
 }
 
@@ -355,6 +378,9 @@ void DeckItem::write(DeckOutput& stream) const {
         }
     case type_tag::string:
         this->write_vector( stream,  this->sval );
+        break;
+    case type_tag::raw_string:
+        this->write_vector( stream,  this->rsval );
         break;
     case type_tag::uda:
         this->write_vector( stream,  this->uval );
@@ -493,13 +519,16 @@ bool DeckItem::to_bool(std::string string_value) {
 template int DeckItem::get< int >( size_t ) const;
 template double DeckItem::get< double >( size_t ) const;
 template std::string DeckItem::get< std::string >( size_t ) const;
+template RawString DeckItem::get< RawString >( size_t ) const;
 
 template void DeckItem::push_backDummyDefault<int>();
 template void DeckItem::push_backDummyDefault<double>();
 template void DeckItem::push_backDummyDefault<std::string>();
+template void DeckItem::push_backDummyDefault<RawString>();
 template void DeckItem::push_backDummyDefault<UDAValue>();
 
 template const std::vector< int >& DeckItem::getData< int >() const;
 template const std::vector< UDAValue >& DeckItem::getData< UDAValue >() const;
 template const std::vector< std::string >& DeckItem::getData< std::string >() const;
+template const std::vector<RawString>& DeckItem::getData<RawString>() const;
 }

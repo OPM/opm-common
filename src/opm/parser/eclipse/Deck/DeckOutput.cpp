@@ -21,6 +21,7 @@
 
 #include <opm/parser/eclipse/Deck/DeckOutput.hpp>
 #include <opm/parser/eclipse/Deck/UDAValue.hpp>
+#include <opm/parser/eclipse/Utility/Typetools.hpp>
 
 
 namespace Opm {
@@ -71,6 +72,11 @@ namespace Opm {
     template <>
     void DeckOutput::write_value( const std::string& value ) {
         this->os << "'" << value << "'";
+    }
+
+    template <>
+    void DeckOutput::write_value( const RawString& value ) {
+        this->os << value;
     }
 
     template <>
@@ -143,5 +149,6 @@ namespace Opm {
     template void DeckOutput::write( const int& value);
     template void DeckOutput::write( const double& value);
     template void DeckOutput::write( const std::string& value);
+    template void DeckOutput::write( const RawString& value);
     template void DeckOutput::write( const UDAValue& value);
 }

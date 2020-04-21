@@ -39,6 +39,7 @@ namespace Opm {
         explicit RawRecord( const string_view&);
 
         inline string_view pop_front();
+        inline string_view front() const;
         void push_front( string_view token );
         void prepend( size_t count, string_view token );
         inline size_t size() const;
@@ -61,6 +62,10 @@ namespace Opm {
         auto front = m_recordItems.front();
         this->m_recordItems.pop_front();
         return front;
+    }
+
+    string_view RawRecord::front() const {
+        return this->m_recordItems.front();
     }
 
     size_t RawRecord::size() const {

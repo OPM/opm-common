@@ -41,7 +41,7 @@ type_tag get_data_type_json( const std::string& str ) {
     if( str == "INT" )       return type_tag::integer;
     if( str == "DOUBLE" )    return type_tag::fdouble;
     if( str == "STRING" )    return type_tag::string;
-    if( str == "RAW_STRING") return type_tag::string;
+    if( str == "RAW_STRING") return type_tag::raw_string;
     if( str == "UDA")        return type_tag::uda;
     throw std::invalid_argument( str + " cannot be converted to enum 'tag'" );
 }
@@ -98,8 +98,14 @@ template<> const double& ParserItem::value_ref< double >() const {
 
 template<> const std::string& ParserItem::value_ref< std::string >() const {
     if( this->data_type != get_type< std::string >() )
-        throw std::invalid_argument( "ValueRef<String> Wrong type." );
+        throw std::invalid_argument( "ValueRef<std::string> Wrong type." );
     return this->sval;
+}
+
+template<> const RawString& ParserItem::value_ref< RawString >() const {
+    if( this->data_type != get_type<RawString>() )
+        throw std::invalid_argument( "ValueRef<RawString> Wrong type." );
+    return this->rsval;
 }
 
 template< typename T >
@@ -194,7 +200,7 @@ void ParserItem::setInputType(ParserItem::itype input_type_arg) {
         this->setDataType( std::string() );
 
     else if (input_type == itype::RAW_STRING)
-        this->setDataType( std::string() );
+        this->setDataType( RawString() );
 
     else if (input_type == itype::UDA)
         this->setDataType( UDAValue(0) );
@@ -255,9 +261,9 @@ void ParserItem::push_backDimension( const std::string& dim ) {
     }
 
 
-type_tag ParserItem::dataType() const {
-    return this->data_type;
-}
+    type_tag ParserItem::dataType() const {
+        return this->data_type;
+    }
 
 
     ParserItem::item_size ParserItem::sizeType() const {
@@ -294,7 +300,8 @@ type_tag ParserItem::dataType() const {
         m_description = description;
     }
 
-bool ParserItem::operator==( const ParserItem& rhs ) const {
+
+    bool ParserItem::operator==( const ParserItem& rhs ) const {
     if( !( this->data_type      == rhs.data_type
            && this->m_name         == rhs.m_name
            && this->m_description  == rhs.m_description
@@ -320,6 +327,10 @@ bool ParserItem::operator==( const ParserItem& rhs ) const {
 
             case type_tag::string:
                 if( this->sval != rhs.sval ) return false;
+                break;
+
+            case type_tag::raw_string:
+                if( this->rsval != rhs.rsval ) return false;
                 break;
 
             case type_tag::uda:
@@ -423,6 +434,10 @@ std::string ParserItem::createCode(const std::string& indent) const {
             stream << "std::string(\"" << this->getDefault< std::string >() << "\")";
             break;
 
+        case type_tag::raw_string:
+            stream << "RawString(\"" << this->getDefault< RawString >() << "\")";
+            break;
+
         default:
             throw std::logic_error( "Item of unknown type." );
         }
@@ -448,7 +463,8 @@ void scan_item( DeckItem& deck_item, const ParserItem& parser_item, RawRecord& r
         if (parse_raw) {
             while (record.size()) {
                 auto token = record.pop_front();
-                deck_item.push_back( token.string() );
+                auto raw_string = RawString{ token.string() };
+                deck_item.push_back( raw_string );
             }
             return;
         }
@@ -499,7 +515,9 @@ void scan_item( DeckItem& deck_item, const ParserItem& parser_item, RawRecord& r
     }
 
     if (parse_raw) {
-        deck_item.push_back( record.pop_front().string());
+        auto token = record.pop_front();
+        auto raw_string = RawString{ token.string() };
+        deck_item.push_back( raw_string );
         return;
     }
 
@@ -570,6 +588,13 @@ DeckItem ParserItem::scan( RawRecord& record, UnitSystem& active_unitsystem, Uni
         {
             DeckItem item(this->name(), std::string());
             scan_item< std::string >( item, *this, record );
+            return item;
+        }
+        break;
+    case type_tag::raw_string:
+        {
+            DeckItem item(this->name(), RawString());
+            scan_item<RawString>( item, *this, record );
             return item;
         }
         break;

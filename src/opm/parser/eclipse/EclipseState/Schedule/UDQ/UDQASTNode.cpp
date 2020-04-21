@@ -241,7 +241,7 @@ UDQSet UDQASTNode::eval(UDQVarType target_type, const UDQContext& context) const
         }
     }
 
-    throw std::invalid_argument("Should not be here ... this->type: " + std::to_string(static_cast<int>(this->type)));
+    throw std::invalid_argument("Should not be here ... this->type: " + std::to_string(static_cast<int>(this->type)) + " string_value: <" + this->string_value + ">");
 }
 
 void UDQASTNode::func_tokens(std::set<UDQTokenType>& tokens) const {
