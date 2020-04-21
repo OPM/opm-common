@@ -558,6 +558,7 @@ public:
     double alq_value() const;
     double temperature() const;
 
+    bool cmp_structure(const Well& other) const;
     bool operator==(const Well& data) const;
     void setInsertIndex(std::size_t index);
 
