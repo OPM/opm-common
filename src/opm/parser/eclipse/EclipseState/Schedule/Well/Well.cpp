@@ -1427,6 +1427,7 @@ bool Well::cmp_structure(const Well& other) const {
         this->getPreferredPhase() == other.getPreferredPhase() &&
         this->unit_system == other.unit_system &&
         this->udq_undefined == other.udq_undefined &&
+        this->getConnections() == other.getConnections() &&
         this->getDrainageRadius() == other.getDrainageRadius() &&
         this->getAllowCrossFlow() == other.getAllowCrossFlow() &&
         this->getAutomaticShutIn() == other.getAutomaticShutIn() &&
