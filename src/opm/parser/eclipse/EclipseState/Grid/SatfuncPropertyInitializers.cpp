@@ -14,16 +14,10 @@
   OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <stddef.h>
-
-#include <array>
-#include <exception>
-#include <stdexcept>
-#include <string>
+#include <opm/parser/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.hpp>
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgfnTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgofTable.hpp>
@@ -35,9 +29,17 @@
 #include <opm/parser/eclipse/EclipseState/Tables/Tabdims.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableContainer.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
+
 #include <opm/parser/eclipse/Utility/Functional.hpp>
 
-namespace Opm {
+#include <array>
+#include <exception>
+#include <stdexcept>
+#include <string>
+
+#include <stddef.h>
+
+namespace {
 
     /*
      * See the "Saturation Functions" chapter in the Eclipse Technical
@@ -50,9 +52,9 @@ namespace Opm {
      */
     enum class SatfuncFamily { none = 0, I = 1, II = 2 };
 
-    static SatfuncFamily
-    getSaturationFunctionFamily(const TableManager& tm,
-                                const Phases&       ph)
+    SatfuncFamily
+    getSaturationFunctionFamily(const Opm::TableManager& tm,
+                                const Opm::Phases&       ph)
     {
         const auto wat    = ph.active(::Opm::Phase::WATER);
         const auto oil    = ph.active(::Opm::Phase::OIL);
@@ -89,11 +91,11 @@ namespace Opm {
         return SatfuncFamily::none;
     }
 
-    enum class limit { min, max };
+    // enum class limit { min, max };
 
-    static std::vector< double >
-    findMinWaterSaturation(const TableManager& tm,
-                           const Phases&       ph)
+    std::vector< double >
+    findMinWaterSaturation(const Opm::TableManager& tm,
+                           const Opm::Phases&       ph)
     {
         const auto num_tables = tm.getTabdims().getNumSatTables();
 
@@ -104,24 +106,24 @@ namespace Opm {
         const auto& swfnTables = tm.getSwfnTables();
 
         const auto famI = [&swofTables]( int i ) {
-            return swofTables.getTable< SwofTable >( i ).getSwColumn().front();
+            return swofTables.getTable<Opm::SwofTable>( i ).getSwColumn().front();
         };
 
         const auto famII = [&swfnTables]( int i ) {
-            return swfnTables.getTable< SwfnTable >( i ).getSwColumn().front();
+            return swfnTables.getTable<Opm::SwfnTable>( i ).getSwColumn().front();
         };
 
         switch( getSaturationFunctionFamily( tm, ph ) ) {
-            case SatfuncFamily::I: return map( famI, fun::iota( num_tables ) );
-            case SatfuncFamily::II: return map( famII, fun::iota( num_tables ) );
+            case SatfuncFamily::I: return map( famI, Opm::fun::iota( num_tables ) );
+            case SatfuncFamily::II: return map( famII, Opm::fun::iota( num_tables ) );
             default:
                 throw std::domain_error("No valid saturation keyword family specified");
         }
     }
 
-    static std::vector< double >
-    findMaxWaterSaturation(const TableManager& tm,
-                           const Phases&       ph)
+    std::vector< double >
+    findMaxWaterSaturation(const Opm::TableManager& tm,
+                           const Opm::Phases&       ph)
     {
         const auto num_tables = tm.getTabdims().getNumSatTables();
 
@@ -132,24 +134,24 @@ namespace Opm {
         const auto& swfnTables = tm.getSwfnTables();
 
         const auto famI = [&swofTables]( int i ) {
-            return swofTables.getTable< SwofTable >( i ).getSwColumn().back();
+            return swofTables.getTable<Opm::SwofTable>( i ).getSwColumn().back();
         };
 
         const auto famII = [&swfnTables]( int i ) {
-            return swfnTables.getTable< SwfnTable >( i ).getSwColumn().back();
+            return swfnTables.getTable<Opm::SwfnTable>( i ).getSwColumn().back();
         };
 
         switch( getSaturationFunctionFamily( tm, ph ) ) {
-            case SatfuncFamily::I: return map( famI, fun::iota( num_tables ) );
-            case SatfuncFamily::II: return map( famII, fun::iota( num_tables ) );
+            case SatfuncFamily::I: return map( famI, Opm::fun::iota( num_tables ) );
+            case SatfuncFamily::II: return map( famII, Opm::fun::iota( num_tables ) );
             default:
                 throw std::domain_error("No valid saturation keyword family specified");
         }
     }
 
-    static std::vector< double >
-    findMinGasSaturation(const TableManager& tm,
-                         const Phases&       ph)
+    std::vector< double >
+    findMinGasSaturation(const Opm::TableManager& tm,
+                         const Opm::Phases&       ph)
     {
         const auto num_tables = tm.getTabdims().getNumSatTables();
 
@@ -161,15 +163,15 @@ namespace Opm {
         const auto& sgfnTables = tm.getSgfnTables();
 
         const auto famI_sgof = [&sgofTables]( int i ) {
-            return sgofTables.getTable< SgofTable >( i ).getSgColumn().front();
+            return sgofTables.getTable<Opm::SgofTable>( i ).getSgColumn().front();
         };
 
         const auto famI_slgof = [&slgofTables]( int i ) {
-            return 1.0 - slgofTables.getTable< SlgofTable >( i ).getSlColumn().back();
+            return 1.0 - slgofTables.getTable<Opm::SlgofTable>( i ).getSlColumn().back();
         };
 
         const auto famII = [&sgfnTables]( int i ) {
-            return sgfnTables.getTable< SgfnTable >( i ).getSgColumn().front();
+            return sgfnTables.getTable<Opm::SgfnTable>( i ).getSgColumn().front();
         };
 
         switch( getSaturationFunctionFamily( tm, ph ) ) {
@@ -178,21 +180,21 @@ namespace Opm {
                     throw std::runtime_error( "Saturation keyword family I requires either sgof or slgof non-empty" );
 
                 if( !sgofTables.empty() )
-                    return fun::map( famI_sgof, fun::iota( num_tables ) );
+                    return Opm::fun::map( famI_sgof, Opm::fun::iota( num_tables ) );
                 else
-                    return fun::map( famI_slgof, fun::iota( num_tables ) );
+                    return Opm::fun::map( famI_slgof, Opm::fun::iota( num_tables ) );
 
             case SatfuncFamily::II:
-                return fun::map( famII, fun::iota( num_tables ) );
+                return Opm::fun::map( famII, Opm::fun::iota( num_tables ) );
 
             default:
                 throw std::domain_error("No valid saturation keyword family specified");
         }
     }
 
-    static std::vector< double >
-    findMaxGasSaturation(const TableManager& tm,
-                         const Phases&       ph)
+    std::vector< double >
+    findMaxGasSaturation(const Opm::TableManager& tm,
+                         const Opm::Phases&       ph)
     {
         const auto num_tables = tm.getTabdims().getNumSatTables();
 
@@ -204,15 +206,15 @@ namespace Opm {
         const auto& sgfnTables = tm.getSgfnTables();
 
         const auto famI_sgof = [&sgofTables]( int i ) {
-            return sgofTables.getTable< SgofTable >( i ).getSgColumn().back();
+            return sgofTables.getTable<Opm::SgofTable>( i ).getSgColumn().back();
         };
 
         const auto famI_slgof = [&slgofTables]( int i ) {
-            return 1.0 - slgofTables.getTable< SlgofTable >( i ).getSlColumn().front();
+            return 1.0 - slgofTables.getTable<Opm::SlgofTable>( i ).getSlColumn().front();
         };
 
         const auto famII = [&sgfnTables]( int i ) {
-            return sgfnTables.getTable< SgfnTable >( i ).getSgColumn().back();
+            return sgfnTables.getTable<Opm::SgfnTable>( i ).getSgColumn().back();
         };
 
         switch( getSaturationFunctionFamily( tm, ph ) ) {
@@ -221,12 +223,12 @@ namespace Opm {
                     throw std::runtime_error( "Saturation keyword family I requires either sgof or slgof non-empty" );
 
                 if( !sgofTables.empty() )
-                    return fun::map( famI_sgof, fun::iota( num_tables ) );
+                    return Opm::fun::map( famI_sgof, Opm::fun::iota( num_tables ) );
                 else
-                    return fun::map( famI_slgof, fun::iota( num_tables ) );
+                    return Opm::fun::map( famI_slgof, Opm::fun::iota( num_tables ) );
 
             case SatfuncFamily::II:
-                return fun::map( famII, fun::iota( num_tables ) );
+                return Opm::fun::map( famII, Opm::fun::iota( num_tables ) );
 
             default:
                 throw std::domain_error("No valid saturation keyword family specified");
@@ -250,9 +252,9 @@ namespace Opm {
      *
      */
 
-    template< typename T >
-    static inline double critical_water( const T& table ) {
-
+    template <typename T>
+    double critical_water( const T& table )
+    {
         const auto& col = table.getKrwColumn();
         const auto end = col.begin() + table.numRows();
         const auto critical = std::upper_bound( col.begin(), end, 0.0 );
@@ -263,9 +265,9 @@ namespace Opm {
         return table.getSwColumn()[ index - 1 ];
     }
 
-    static std::vector< double >
-    findCriticalWater(const TableManager& tm,
-                      const Phases&       ph)
+    std::vector< double >
+    findCriticalWater(const Opm::TableManager& tm,
+                      const Opm::Phases&       ph)
     {
         const auto num_tables = tm.getTabdims().getNumSatTables();
 
@@ -276,22 +278,22 @@ namespace Opm {
         const auto& swfnTables = tm.getSwfnTables();
 
         const auto famI = [&swofTables]( int i ) {
-            return critical_water( swofTables.getTable< SwofTable >( i ) );
+            return critical_water( swofTables.getTable<Opm::SwofTable>( i ) );
         };
 
         const auto famII = [&swfnTables]( int i ) {
-            return critical_water( swfnTables.getTable< SwfnTable >( i ) );
+            return critical_water( swfnTables.getTable<Opm::SwfnTable>( i ) );
         };
 
         switch( getSaturationFunctionFamily( tm, ph ) ) {
-            case SatfuncFamily::I: return fun::map( famI, fun::iota( num_tables ) );
-            case SatfuncFamily::II: return fun::map( famII, fun::iota( num_tables ) );
+            case SatfuncFamily::I: return Opm::fun::map( famI, Opm::fun::iota( num_tables ) );
+            case SatfuncFamily::II: return Opm::fun::map( famII, Opm::fun::iota( num_tables ) );
             default: throw std::domain_error("No valid saturation keyword family specified");
         }
     }
 
     template< typename T >
-    static inline double critical_gas( const T& table ) {
+    double critical_gas( const T& table ) {
         const auto& col = table.getKrgColumn();
         const auto end = col.begin() + table.numRows();
         const auto critical = std::upper_bound( col.begin(), end, 0.0 );
@@ -302,7 +304,7 @@ namespace Opm {
         return table.getSgColumn()[ index - 1 ];
     }
 
-    static inline double critical_gas( const SlgofTable& slgofTable ) {
+    double critical_gas( const Opm::SlgofTable& slgofTable ) {
         const auto& col = slgofTable.getKrgColumn();
         const auto critical = std::upper_bound( col.begin(), col.end(), 0.0 );
         const auto index = std::distance( col.begin(), critical );
@@ -312,9 +314,9 @@ namespace Opm {
         return slgofTable.getSlColumn()[ index - 1 ];
     }
 
-    static std::vector< double >
-    findCriticalGas(const TableManager& tm,
-                    const Phases&       ph)
+    std::vector< double >
+    findCriticalGas(const Opm::TableManager& tm,
+                    const Opm::Phases&       ph)
     {
         const auto num_tables = tm.getTabdims().getNumSatTables();
 
@@ -326,15 +328,15 @@ namespace Opm {
         const auto& slgofTables = tm.getSlgofTables();
 
         const auto famI_sgof = [&sgofTables]( int i ) {
-            return critical_gas( sgofTables.getTable< SgofTable >( i ) );
+            return critical_gas( sgofTables.getTable<Opm::SgofTable>( i ) );
         };
 
         const auto famI_slgof = [&slgofTables]( int i ) {
-            return critical_gas( slgofTables.getTable< SlgofTable >( i ) );
+            return critical_gas( slgofTables.getTable<Opm::SlgofTable>( i ) );
         };
 
         const auto famII = [&sgfnTables]( int i ) {
-            return critical_gas( sgfnTables.getTable< SgfnTable >( i ) );
+            return critical_gas( sgfnTables.getTable<Opm::SgfnTable>( i ) );
         };
 
         switch( getSaturationFunctionFamily( tm, ph ) ) {
@@ -343,19 +345,19 @@ namespace Opm {
                     throw std::runtime_error( "Saturation keyword family I requires either sgof or slgof non-empty" );
 
                 if( !sgofTables.empty() )
-                    return fun::map( famI_sgof, fun::iota( num_tables ) );
+                    return Opm::fun::map( famI_sgof, Opm::fun::iota( num_tables ) );
                 else
-                    return fun::map( famI_slgof, fun::iota( num_tables ) );
+                    return Opm::fun::map( famI_slgof, Opm::fun::iota( num_tables ) );
 
             case SatfuncFamily::II:
-                return fun::map( famII, fun::iota( num_tables ) );
+                return Opm::fun::map( famII, Opm::fun::iota( num_tables ) );
 
             default:
                 throw std::domain_error("No valid saturation keyword family specified");
         }
     }
 
-    static inline double critical_oil_water( const SwofTable& swofTable ) {
+    double critical_oil_water( const Opm::SwofTable& swofTable ) {
         const auto& col = swofTable.getKrowColumn();
 
         using reverse = std::reverse_iterator< decltype( col.begin() ) >;
@@ -369,7 +371,7 @@ namespace Opm {
         return 1 - swofTable.getSwColumn()[ index + 1 ];
     }
 
-    static inline double critical_oil( const Sof2Table& sof2Table ) {
+    double critical_oil( const Opm::Sof2Table& sof2Table ) {
         const auto& col = sof2Table.getKroColumn();
         const auto critical = std::upper_bound( col.begin(), col.end(), 0.0 );
         const auto index = std::distance( col.begin(), critical );
@@ -379,7 +381,7 @@ namespace Opm {
         return sof2Table.getSoColumn()[ index - 1 ];
     }
 
-    static inline double critical_oil( const Sof3Table& sof3Table, const TableColumn& col ) {
+    double critical_oil( const Opm::Sof3Table& sof3Table, const Opm::TableColumn& col ) {
         const auto critical = std::upper_bound( col.begin(), col.end(), 0.0 );
         const auto index = std::distance( col.begin(), critical );
 
@@ -388,9 +390,9 @@ namespace Opm {
         return sof3Table.getSoColumn()[ index - 1 ];
     }
 
-    static std::vector< double >
-    findCriticalOilWater(const TableManager& tm,
-                         const Phases&       ph)
+    std::vector< double >
+    findCriticalOilWater(const Opm::TableManager& tm,
+                         const Opm::Phases&       ph)
     {
         const auto num_tables = tm.getTabdims().getNumSatTables();
 
@@ -403,30 +405,31 @@ namespace Opm {
         const auto& sof3Tables = tm.getSof3Tables();
 
         const auto famI = [&swofTables]( int i ) {
-            return critical_oil_water( swofTables.getTable< SwofTable >( i ) );
+            return critical_oil_water( swofTables.getTable<Opm::SwofTable>( i ) );
         };
 
         const auto famII_2p = [&sof2Tables]( int i ) {
-            return critical_oil( sof2Tables.getTable< Sof2Table >( i ) );
+            return critical_oil( sof2Tables.getTable<Opm::Sof2Table>( i ) );
         };
 
         const auto famII_3p = [&sof3Tables]( int i ) {
-            const auto& tb = sof3Tables.getTable< Sof3Table >( i );
+            const auto& tb = sof3Tables.getTable<Opm::Sof3Table>( i );
             return critical_oil( tb, tb.getKrowColumn() );
         };
 
         switch( getSaturationFunctionFamily( tm, ph ) ) {
-            case SatfuncFamily::I: return fun::map( famI, fun::iota( num_tables ) );
+            case SatfuncFamily::I: return Opm::fun::map( famI, Opm::fun::iota( num_tables ) );
             case SatfuncFamily::II:
                 return ph.active(::Opm::Phase::GAS)
-                    ? fun::map( famII_3p, fun::iota( num_tables ) )
-                    : fun::map( famII_2p, fun::iota( num_tables ) );
+                    ? Opm::fun::map( famII_3p, Opm::fun::iota( num_tables ) )
+                    : Opm::fun::map( famII_2p, Opm::fun::iota( num_tables ) );
 
             default: throw std::domain_error("No valid saturation keyword family specified");
         }
     }
 
-    static inline double critical_oil_gas( const SgofTable& sgofTable ) {
+    double critical_oil_gas( const Opm::SgofTable& sgofTable )
+    {
         const auto& col = sgofTable.getKrogColumn();
 
         using reverse = std::reverse_iterator< decltype( col.begin() ) >;
@@ -440,8 +443,8 @@ namespace Opm {
         return 1.0 - sgofTable.getSgColumn()[ index + 1 ];
     }
 
-    static inline double critical_oil_gas( const SlgofTable& sgofTable ) {
-
+    double critical_oil_gas( const Opm::SlgofTable& sgofTable )
+    {
         const auto& col = sgofTable.getKrogColumn();
         const auto critical = std::upper_bound( col.begin(), col.end(), 0.0 );
         if (critical == col.end()) {
@@ -451,9 +454,9 @@ namespace Opm {
         return sgofTable.getSlColumn()[ index ];
     }
 
-    static std::vector< double >
-    findCriticalOilGas(const TableManager& tm,
-                       const Phases&       ph)
+    std::vector< double >
+    findCriticalOilGas(const Opm::TableManager& tm,
+                       const Opm::Phases&       ph)
     {
         const auto num_tables = tm.getTabdims().getNumSatTables();
 
@@ -467,19 +470,19 @@ namespace Opm {
         const auto& sof3Tables = tm.getSof3Tables();
 
         const auto famI_sgof = [&sgofTables]( int i ) {
-            return critical_oil_gas( sgofTables.getTable< SgofTable >( i ) );
+            return critical_oil_gas( sgofTables.getTable<Opm::SgofTable>( i ) );
         };
 
         const auto famI_slgof = [&slgofTables]( int i ) {
-            return critical_oil_gas( slgofTables.getTable< SlgofTable >( i ) );
+            return critical_oil_gas( slgofTables.getTable<Opm::SlgofTable>( i ) );
         };
 
         const auto famII_2p = [&sof2Tables]( int i ) {
-            return critical_oil( sof2Tables.getTable< Sof2Table >( i ) );
+            return critical_oil( sof2Tables.getTable<Opm::Sof2Table>( i ) );
         };
 
         const auto famII_3p = [&sof3Tables]( int i ) {
-            const auto& tb = sof3Tables.getTable< Sof3Table >( i );
+            const auto& tb = sof3Tables.getTable<Opm::Sof3Table>( i );
             return critical_oil( tb, tb.getKrogColumn() );
         };
 
@@ -489,23 +492,23 @@ namespace Opm {
                     throw std::runtime_error( "Saturation keyword family I requires either sgof or slgof non-empty" );
 
                 if( !sgofTables.empty() )
-                    return fun::map( famI_sgof, fun::iota( num_tables ) );
+                    return Opm::fun::map( famI_sgof, Opm::fun::iota( num_tables ) );
                 else
-                    return fun::map( famI_slgof, fun::iota( num_tables ) );
+                    return Opm::fun::map( famI_slgof, Opm::fun::iota( num_tables ) );
 
             case SatfuncFamily::II:
                 return ph.active(::Opm::Phase::WATER)
-                    ? fun::map( famII_3p, fun::iota( num_tables ) )
-                    : fun::map( famII_2p, fun::iota( num_tables ) );
+                    ? Opm::fun::map( famII_3p, Opm::fun::iota( num_tables ) )
+                    : Opm::fun::map( famII_2p, Opm::fun::iota( num_tables ) );
 
             default:
                 throw std::domain_error("No valid saturation keyword family specified");
         }
     }
 
-    static std::vector< double >
-    findMaxKrg(const TableManager& tm,
-               const Phases&       ph)
+    std::vector< double >
+    findMaxKrg(const Opm::TableManager& tm,
+               const Opm::Phases&       ph)
     {
         const auto num_tables = tm.getTabdims().getNumSatTables();
 
@@ -517,15 +520,15 @@ namespace Opm {
         const auto& sgfnTables = tm.getSgfnTables();
 
         const auto& famI_sgof = [&sgofTables]( int i ) {
-            return sgofTables.getTable< SgofTable >( i ).getKrgColumn().back();
+            return sgofTables.getTable<Opm::SgofTable>( i ).getKrgColumn().back();
         };
 
         const auto& famI_slgof = [&slgofTables]( int i ) {
-            return slgofTables.getTable< SlgofTable >( i ).getKrgColumn().front();
+            return slgofTables.getTable<Opm::SlgofTable>( i ).getKrgColumn().front();
         };
 
         const auto& famII = [&sgfnTables]( int i ) {
-            return sgfnTables.getTable< SgfnTable >( i ).getKrgColumn().back();
+            return sgfnTables.getTable<Opm::SgfnTable>( i ).getKrgColumn().back();
         };
 
         switch( getSaturationFunctionFamily( tm, ph ) ) {
@@ -533,19 +536,19 @@ namespace Opm {
                 if( sgofTables.empty() && slgofTables.empty() )
                     throw std::runtime_error( "Saturation keyword family I requires either sgof or slgof non-empty" );
                 if( !sgofTables.empty() )
-                    return fun::map( famI_sgof, fun::iota( num_tables ) );
+                    return Opm::fun::map( famI_sgof, Opm::fun::iota( num_tables ) );
                 else
-                    return fun::map( famI_slgof, fun::iota( num_tables ) );
+                    return Opm::fun::map( famI_slgof, Opm::fun::iota( num_tables ) );
             case SatfuncFamily::II:
-                return fun::map( famII, fun::iota( num_tables ) );
+                return Opm::fun::map( famII, Opm::fun::iota( num_tables ) );
             default:
                 throw std::domain_error("No valid saturation keyword family specified");
         }
     }
 
-    static std::vector< double >
-    findKrgr(const TableManager& tm,
-             const Phases&       ph)
+    std::vector< double >
+    findKrgr(const Opm::TableManager& tm,
+             const Opm::Phases&       ph)
     {
         const auto num_tables = tm.getTabdims().getNumSatTables();
 
@@ -557,15 +560,15 @@ namespace Opm {
         const auto& sgfnTables = tm.getSgfnTables();
 
         const auto& famI_sgof = [&sgofTables]( int i ) {
-            return sgofTables.getTable< SgofTable >( i ).getKrgColumn().front();
+            return sgofTables.getTable<Opm::SgofTable>( i ).getKrgColumn().front();
         };
 
         const auto& famI_slgof = [&slgofTables]( int i ) {
-            return slgofTables.getTable< SlgofTable >( i ).getKrgColumn().back();
+            return slgofTables.getTable<Opm::SlgofTable>( i ).getKrgColumn().back();
         };
 
         const auto& famII = [&sgfnTables]( int i ) {
-            return sgfnTables.getTable< SgfnTable >( i ).getKrgColumn().back();
+            return sgfnTables.getTable<Opm::SgfnTable>( i ).getKrgColumn().back();
         };
 
         switch( getSaturationFunctionFamily( tm, ph ) ) {
@@ -573,19 +576,19 @@ namespace Opm {
                 if( sgofTables.empty() && slgofTables.empty() )
                     throw std::runtime_error( "Saturation keyword family I requires either sgof or slgof non-empty" );
                 if( !sgofTables.empty() )
-                    return fun::map( famI_sgof, fun::iota( num_tables ) );
+                    return Opm::fun::map( famI_sgof, Opm::fun::iota( num_tables ) );
                 else
-                    return fun::map( famI_slgof, fun::iota( num_tables ) );
+                    return Opm::fun::map( famI_slgof, Opm::fun::iota( num_tables ) );
             case SatfuncFamily::II:
-                return fun::map( famII, fun::iota( num_tables ) );
+                return Opm::fun::map( famII, Opm::fun::iota( num_tables ) );
             default:
                 throw std::domain_error("No valid saturation keyword family specified");
         }
     }
 
-    static std::vector< double >
-    findKrwr(const TableManager& tm,
-             const Phases&       ph)
+    std::vector< double >
+    findKrwr(const Opm::TableManager& tm,
+             const Opm::Phases&       ph)
     {
         const auto num_tables = tm.getTabdims().getNumSatTables();
 
@@ -596,26 +599,26 @@ namespace Opm {
         const auto& swfnTables = tm.getSwfnTables();
 
         const auto& famI = [&swofTables]( int i ) {
-            return swofTables.getTable< SwofTable >( i ).getKrwColumn().front();
+            return swofTables.getTable<Opm::SwofTable>( i ).getKrwColumn().front();
         };
 
         const auto& famII = [&swfnTables]( int i ) {
-            return swfnTables.getTable< SwfnTable >( i ).getKrwColumn().front();
+            return swfnTables.getTable<Opm::SwfnTable>( i ).getKrwColumn().front();
         };
 
         switch( getSaturationFunctionFamily( tm, ph ) ) {
             case SatfuncFamily::I:
-                return fun::map( famI, fun::iota( num_tables ) );
+                return Opm::fun::map( famI, Opm::fun::iota( num_tables ) );
             case SatfuncFamily::II:
-                return fun::map( famII, fun::iota( num_tables ) );
+                return Opm::fun::map( famII, Opm::fun::iota( num_tables ) );
             default:
                 throw std::domain_error("No valid saturation keyword family specified");
         }
     }
 
-    static std::vector< double >
-    findKrorw(const TableManager& tm,
-              const Phases&       ph)
+    std::vector< double >
+    findKrorw(const Opm::TableManager& tm,
+              const Opm::Phases&       ph)
     {
         const auto num_tables = tm.getTabdims().getNumSatTables();
 
@@ -628,7 +631,7 @@ namespace Opm {
         const auto& sof3Tables = tm.getSof3Tables();
 
         const auto& famI = [&swofTables]( int i ) {
-            const auto& swofTable = swofTables.getTable< SwofTable >( i );
+            const auto& swofTable = swofTables.getTable<Opm::SwofTable>( i );
             const auto& krwCol = swofTable.getKrwColumn();
             const auto crit = std::upper_bound( krwCol.begin(), krwCol.end(), 0.0 );
             const auto index = std::distance( krwCol.begin(), crit );
@@ -642,31 +645,31 @@ namespace Opm {
         const auto min_gas = findMinGasSaturation( tm, ph );
         const auto& famII_3p = [&sof3Tables,&crit_water,&min_gas]( int i ) {
             const double OilSatAtcritialWaterSat = 1.0 - crit_water[ i ] - min_gas[ i ];
-            return sof3Tables.getTable< Sof3Table >( i )
+            return sof3Tables.getTable<Opm::Sof3Table>( i )
                 .evaluate("KROW", OilSatAtcritialWaterSat);
         };
 
         const auto famII_2p = [&sof2Tables,&crit_water,&min_gas]( int i ) {
             const double OilSatAtcritialWaterSat = 1.0 - crit_water[ i ] - min_gas[ i ];
-            return sof2Tables.getTable< Sof2Table >( i )
+            return sof2Tables.getTable<Opm::Sof2Table>( i )
                 .evaluate("KRO", OilSatAtcritialWaterSat);
         };
 
         switch( getSaturationFunctionFamily( tm, ph ) ) {
             case SatfuncFamily::I:
-                return fun::map( famI, fun::iota( num_tables ) );
+                return Opm::fun::map( famI, Opm::fun::iota( num_tables ) );
             case SatfuncFamily::II:
                 return ph.active(::Opm::Phase::GAS)
-                    ? fun::map( famII_3p, fun::iota( num_tables ) )
-                    : fun::map( famII_2p, fun::iota( num_tables ) );
+                    ? Opm::fun::map( famII_3p, Opm::fun::iota( num_tables ) )
+                    : Opm::fun::map( famII_2p, Opm::fun::iota( num_tables ) );
             default:
                 throw std::domain_error("No valid saturation keyword family specified");
         }
     }
 
-    static std::vector< double >
-    findKrorg(const TableManager& tm,
-              const Phases&       ph)
+    std::vector< double >
+    findKrorg(const Opm::TableManager& tm,
+              const Opm::Phases&       ph)
     {
         const auto num_tables = tm.getTabdims().getNumSatTables();
 
@@ -680,7 +683,7 @@ namespace Opm {
         const auto& sof3Tables = tm.getSof3Tables();
 
         const auto& famI_sgof = [&sgofTables]( int i ) {
-            const auto& sgofTable = sgofTables.getTable< SgofTable >( i );
+            const auto& sgofTable = sgofTables.getTable<Opm::SgofTable>( i );
             const auto& krgCol = sgofTable.getKrgColumn();
             const auto crit = std::upper_bound( krgCol.begin(), krgCol.end(), 0.0 );
             const auto index = std::distance( krgCol.begin(), crit );
@@ -691,7 +694,7 @@ namespace Opm {
         };
 
         const auto& famI_slgof = [&slgofTables]( int i ) {
-            const auto& slgofTable = slgofTables.getTable< SlgofTable >( i );
+            const auto& slgofTable = slgofTables.getTable<Opm::SlgofTable>( i );
             const auto& col = slgofTable.getKrgColumn();
             using reverse = std::reverse_iterator< decltype( col.begin() ) >;
             auto rbegin = reverse( col.begin() + slgofTable.numRows() );
@@ -709,13 +712,13 @@ namespace Opm {
         const auto min_water = findMinWaterSaturation( tm, ph );
         const auto& famII_3p = [&sof3Tables,&crit_gas,&min_water]( int i ) {
             const double OilSatAtcritialGasSat = 1.0 - crit_gas[ i ] - min_water[ i ];
-            return sof3Tables.getTable< Sof3Table >( i )
+            return sof3Tables.getTable<Opm::Sof3Table>( i )
                 .evaluate("KROG", OilSatAtcritialGasSat);
         };
 
         const auto famII_2p = [&sof2Tables,&crit_gas,&min_water]( int i ) {
             const double OilSatAtcritialGasSat = 1.0 - crit_gas[ i ] - min_water[ i ];
-            return sof2Tables.getTable< Sof2Table >( i )
+            return sof2Tables.getTable<Opm::Sof2Table>( i )
                 .evaluate("KRO", OilSatAtcritialGasSat);
         };
 
@@ -724,13 +727,13 @@ namespace Opm {
                 if( sgofTables.empty() && slgofTables.empty() )
                     throw std::runtime_error( "Saturation keyword family I requires either sgof or slgof non-empty" );
                 if( !sgofTables.empty() )
-                    return fun::map( famI_sgof, fun::iota( num_tables ) );
+                    return Opm::fun::map( famI_sgof, Opm::fun::iota( num_tables ) );
                 else
-                    return fun::map( famI_slgof, fun::iota( num_tables ) );
+                    return Opm::fun::map( famI_slgof, Opm::fun::iota( num_tables ) );
             case SatfuncFamily::II:
                 return ph.active(::Opm::Phase::WATER)
-                    ? fun::map( famII_3p, fun::iota( num_tables ) )
-                    : fun::map( famII_2p, fun::iota( num_tables ) );
+                    ? Opm::fun::map( famII_3p, Opm::fun::iota( num_tables ) )
+                    : Opm::fun::map( famII_2p, Opm::fun::iota( num_tables ) );
             default:
                 throw std::domain_error("No valid saturation keyword family specified");
         }
@@ -745,9 +748,9 @@ namespace Opm {
      * is not taken into account which means that some twophase quantity must be
      * scaled.
      */
-    static std::vector< double >
-    findMaxPcog(const TableManager& tm,
-                const Phases&       ph)
+    std::vector< double >
+    findMaxPcog(const Opm::TableManager& tm,
+                const Opm::Phases&       ph)
     {
         const auto num_tables = tm.getTabdims().getNumSatTables();
 
@@ -760,15 +763,15 @@ namespace Opm {
         const auto& sgfnTables = tm.getSgfnTables();
 
         const auto& famI_sgof = [&sgofTables]( int i ) {
-            return sgofTables.getTable< SgofTable >( i ).getPcogColumn().back();
+            return sgofTables.getTable<Opm::SgofTable>( i ).getPcogColumn().back();
         };
 
         const auto& famI_slgof = [&slgofTables]( int i ) {
-            return slgofTables.getTable< SlgofTable >( i ).getPcogColumn().front();
+            return slgofTables.getTable<Opm::SlgofTable>( i ).getPcogColumn().front();
         };
 
         const auto& famII = [&sgfnTables]( int i ) {
-            return sgfnTables.getTable< SgfnTable >( i ).getPcogColumn().back();
+            return sgfnTables.getTable<Opm::SgfnTable>( i ).getPcogColumn().back();
         };
 
         switch( getSaturationFunctionFamily( tm, ph ) ) {
@@ -776,19 +779,19 @@ namespace Opm {
                 if( sgofTables.empty() && slgofTables.empty() )
                     throw std::runtime_error( "Saturation keyword family I requires either sgof or slgof non-empty" );
                 if( !sgofTables.empty() )
-                    return fun::map( famI_sgof, fun::iota( num_tables ) );
+                    return Opm::fun::map( famI_sgof, Opm::fun::iota( num_tables ) );
                 else
-                    return fun::map( famI_slgof, fun::iota( num_tables ) );
+                    return Opm::fun::map( famI_slgof, Opm::fun::iota( num_tables ) );
             case SatfuncFamily::II:
-                return fun::map( famII, fun::iota( num_tables ) );
+                return Opm::fun::map( famII, Opm::fun::iota( num_tables ) );
             default:
                 throw std::domain_error("No valid saturation keyword family specified");
         }
     }
 
-    static std::vector< double >
-    findMaxPcow(const TableManager& tm,
-                const Phases&       ph)
+    std::vector< double >
+    findMaxPcow(const Opm::TableManager& tm,
+                const Opm::Phases&       ph)
     {
         const auto num_tables  = tm.getTabdims().getNumSatTables();
 
@@ -800,26 +803,26 @@ namespace Opm {
         const auto& swfnTables = tm.getSwfnTables();
 
         const auto& famI = [&swofTables]( int i ) {
-            return swofTables.getTable< SwofTable >( i ).getPcowColumn().front();
+            return swofTables.getTable<Opm::SwofTable>( i ).getPcowColumn().front();
         };
 
         const auto& famII = [&swfnTables]( int i ) {
-            return swfnTables.getTable< SwfnTable >( i ).getPcowColumn().front();
+            return swfnTables.getTable<Opm::SwfnTable>( i ).getPcowColumn().front();
         };
 
         switch( getSaturationFunctionFamily( tm, ph ) ) {
             case SatfuncFamily::I:
-                return fun::map( famI, fun::iota( num_tables ) );
+                return Opm::fun::map( famI, Opm::fun::iota( num_tables ) );
             case SatfuncFamily::II:
-                return fun::map( famII, fun::iota( num_tables ) );
+                return Opm::fun::map( famII, Opm::fun::iota( num_tables ) );
             default:
                 throw std::domain_error("No valid saturation keyword family specified");
         }
     }
 
-    static std::vector< double >
-    findMaxKro(const TableManager& tm,
-               const Phases&       ph)
+    std::vector< double >
+    findMaxKro(const Opm::TableManager& tm,
+               const Opm::Phases&       ph)
     {
         const auto num_tables = tm.getTabdims().getNumSatTables();
 
@@ -837,33 +840,33 @@ namespace Opm {
             // meaning that the first entry in the KRO column--in each
             // saturation region--is equal in keywords SGOF and SWOF.
             return wat
-                ? other_f1.getTable< SwofTable >( i ).getKrowColumn().front()
-                : other_f1.getTable< SgofTable >( i ).getKrogColumn().front();
+                ? other_f1.getTable<Opm::SwofTable>( i ).getKrowColumn().front()
+                : other_f1.getTable<Opm::SgofTable>( i ).getKrogColumn().front();
         };
 
         const auto& famII_2p = [&sof2Tables]( int i ) {
-            return sof2Tables.getTable< Sof2Table >( i ).getKroColumn().back();
+            return sof2Tables.getTable<Opm::Sof2Table>( i ).getKroColumn().back();
         };
 
         const auto& famII_3p = [&sof3Tables]( int i ) {
-            return sof3Tables.getTable< Sof3Table >( i ).getKrowColumn().back();
+            return sof3Tables.getTable<Opm::Sof3Table>( i ).getKrowColumn().back();
         };
 
         switch( getSaturationFunctionFamily( tm, ph ) ) {
             case SatfuncFamily::I:
-                return fun::map( famI, fun::iota( num_tables ) );
+                return Opm::fun::map( famI, Opm::fun::iota( num_tables ) );
             case SatfuncFamily::II:
                 return ph.active(::Opm::Phase::GAS) && ph.active(::Opm::Phase::WATER)
-                    ? fun::map( famII_3p, fun::iota( num_tables ) )
-                    : fun::map( famII_2p, fun::iota( num_tables ) );
+                    ? Opm::fun::map( famII_3p, Opm::fun::iota( num_tables ) )
+                    : Opm::fun::map( famII_2p, Opm::fun::iota( num_tables ) );
             default:
                 throw std::domain_error("No valid saturation keyword family specified");
         }
     }
 
-    static std::vector< double >
-    findMaxKrw(const TableManager& tm,
-               const Phases&       ph)
+    std::vector< double >
+    findMaxKrw(const Opm::TableManager& tm,
+               const Opm::Phases&       ph)
     {
         const auto num_tables = tm.getTabdims().getNumSatTables();
 
@@ -874,30 +877,30 @@ namespace Opm {
         const auto& swfnTables = tm.getSwfnTables();
 
         const auto& famI = [&swofTables]( int i ) {
-            return swofTables.getTable< SwofTable >( i ).getKrwColumn().back();
+            return swofTables.getTable<Opm::SwofTable>( i ).getKrwColumn().back();
         };
 
         const auto& famII = [&swfnTables]( int i ) {
-            return swfnTables.getTable< SwfnTable >( i ).getKrwColumn().back();
+            return swfnTables.getTable<Opm::SwfnTable>( i ).getKrwColumn().back();
         };
 
         switch( getSaturationFunctionFamily( tm, ph ) ) {
             case SatfuncFamily::I:
-                return fun::map( famI, fun::iota( num_tables ) );
+                return Opm::fun::map( famI, Opm::fun::iota( num_tables ) );
             case SatfuncFamily::II:
-                return fun::map( famII, fun::iota( num_tables ) );
+                return Opm::fun::map( famII, Opm::fun::iota( num_tables ) );
             default:
                 throw std::domain_error("No valid saturation keyword family specified");
         }
     }
 
-    static double selectValue( const TableContainer& depthTables,
-                               int tableIdx,
-                               const std::string& columnName,
-                               double cellDepth,
-                               double fallbackValue,
-                               bool useOneMinusTableValue) {
-
+    double selectValue(const Opm::TableContainer& depthTables,
+                       int tableIdx,
+                       const std::string& columnName,
+                       double cellDepth,
+                       double fallbackValue,
+                       bool useOneMinusTableValue)
+    {
         if( tableIdx < 0 ) return fallbackValue;
 
         const auto& table = depthTables.getTable( tableIdx );
@@ -916,18 +919,19 @@ namespace Opm {
     }
 
 
-    static std::vector< double > satnumApply( size_t size,
-                                              const std::string& columnName,
-                                              const std::vector< double >& fallbackValues,
-                                              const TableManager& tableManager,
-                                              const std::vector<double>& cell_depth,
-                                              const std::vector<int> * actnum,
-                                              const std::vector<int>& satnum_data,
-                                              const std::vector<int>& endnum_data,
-                                              bool useOneMinusTableValue ) {
-
-
+    std::vector< double >
+    satnumApply(size_t size,
+                const std::string& columnName,
+                const std::vector< double >& fallbackValues,
+                const Opm::TableManager& tableManager,
+                const std::vector<double>& cell_depth,
+                const std::vector<int> * actnum,
+                const std::vector<int>& satnum_data,
+                const std::vector<int>& endnum_data,
+                bool useOneMinusTableValue)
+    {
         std::vector< double > values( size, 0 );
+
         // Actually assign the defaults. If the ENPVD keyword was specified in the deck,
         // this currently cannot be done because we would need the Z-coordinate of the
         // cell and we would need to know how the simulator wants to interpolate between
@@ -968,18 +972,17 @@ namespace Opm {
         return values;
     }
 
-
-
-    static std::vector< double > imbnumApply( size_t size,
-                                              const std::string& columnName,
-                                              const std::vector< double >& fallBackValues,
-                                              const TableManager& tableManager,
-                                              const std::vector<double>& cell_depth,
-                                              const std::vector<int> * actnum,
-                                              const std::vector<int>& imbnum_data,
-                                              const std::vector<int>& endnum_data,
-                                              bool useOneMinusTableValue ) {
-
+    std::vector< double >
+    imbnumApply(size_t size,
+                const std::string& columnName,
+                const std::vector< double >& fallBackValues,
+                const Opm::TableManager& tableManager,
+                const std::vector<double>& cell_depth,
+                const std::vector<int> * actnum,
+                const std::vector<int>& imbnum_data,
+                const std::vector<int>& endnum_data,
+                bool useOneMinusTableValue )
+    {
         std::vector< double > values( size, 0 );
 
         // Actually assign the defaults. if the ENPVD keyword was specified in the deck,
@@ -988,7 +991,7 @@ namespace Opm {
         // sampling points. Both of these are outside the scope of opm-parser, so we just
         // assign a NaN in this case...
         const bool useImptvd = tableManager.useImptvd();
-        const TableContainer& imptvdTables = tableManager.getImptvdTables();
+        const Opm::TableContainer& imptvdTables = tableManager.getImptvdTables();
         for( size_t cellIdx = 0; cellIdx < values.size(); cellIdx++ ) {
             int imbTableIdx = imbnum_data[ cellIdx ] - 1;
             int endNum = endnum_data[ cellIdx ] - 1;
@@ -1022,12 +1025,8 @@ namespace Opm {
         return values;
     }
 
-
-namespace satfunc {
-
-
-    std::vector< double > SGLEndpoint( const TableManager & tableManager,
-                                       const Phases& phases,
+    std::vector< double > SGLEndpoint( const Opm::TableManager & tableManager,
+                                       const Opm::Phases& phases,
                                        const std::vector<double>& cell_depth,
                                        const std::vector<int>& satnum,
                                        const std::vector<int>& endnum)
@@ -1037,8 +1036,8 @@ namespace satfunc {
                             cell_depth, nullptr, satnum, endnum, false );
     }
 
-    std::vector< double > ISGLEndpoint( const TableManager & tableManager,
-                                        const Phases& phases,
+    std::vector< double > ISGLEndpoint( const Opm::TableManager & tableManager,
+                                        const Opm::Phases& phases,
                                         const std::vector<double>& cell_depth,
                                         const std::vector<int>& imbnum,
                                         const std::vector<int>& endnum)
@@ -1048,8 +1047,8 @@ namespace satfunc {
                             cell_depth, nullptr, imbnum, endnum, false );
     }
 
-    std::vector< double > SGUEndpoint( const TableManager & tableManager,
-                                       const Phases& phases,
+    std::vector< double > SGUEndpoint( const Opm::TableManager & tableManager,
+                                       const Opm::Phases& phases,
                                        const std::vector<double>& cell_depth,
                                        const std::vector<int>& satnum,
                                        const std::vector<int>& endnum)
@@ -1059,8 +1058,8 @@ namespace satfunc {
                             cell_depth, nullptr, satnum, endnum, false );
     }
 
-    std::vector< double > ISGUEndpoint( const TableManager & tableManager,
-                                        const Phases& phases,
+    std::vector< double > ISGUEndpoint( const Opm::TableManager & tableManager,
+                                        const Opm::Phases& phases,
                                         const std::vector<double>& cell_depth,
                                         const std::vector<int>& imbnum,
                                         const std::vector<int>& endnum)
@@ -1070,8 +1069,8 @@ namespace satfunc {
                             cell_depth, nullptr, imbnum, endnum, false );
     }
 
-    std::vector< double > SWLEndpoint( const TableManager & tableManager,
-                                       const Phases& phases,
+    std::vector< double > SWLEndpoint( const Opm::TableManager & tableManager,
+                                       const Opm::Phases& phases,
                                        const std::vector<double>& cell_depth,
                                        const std::vector<int>& satnum,
                                        const std::vector<int>& endnum)
@@ -1081,8 +1080,8 @@ namespace satfunc {
                             cell_depth, nullptr, satnum, endnum, false );
     }
 
-    std::vector< double > ISWLEndpoint( const TableManager & tableManager,
-                                        const Phases& phases,
+    std::vector< double > ISWLEndpoint( const Opm::TableManager & tableManager,
+                                        const Opm::Phases& phases,
                                         const std::vector<double>& cell_depth,
                                         const std::vector<int>& imbnum,
                                         const std::vector<int>& endnum)
@@ -1092,8 +1091,8 @@ namespace satfunc {
                             cell_depth, nullptr, imbnum, endnum, false );
     }
 
-    std::vector< double > SWUEndpoint( const TableManager & tableManager,
-                                       const Phases& phases,
+    std::vector< double > SWUEndpoint( const Opm::TableManager & tableManager,
+                                       const Opm::Phases& phases,
                                        const std::vector<double>& cell_depth,
                                        const std::vector<int>& satnum,
                                        const std::vector<int>& endnum)
@@ -1103,8 +1102,8 @@ namespace satfunc {
                             cell_depth, nullptr, satnum, endnum, true );
     }
 
-    std::vector< double > ISWUEndpoint( const TableManager & tableManager,
-                                        const Phases& phases,
+    std::vector< double > ISWUEndpoint( const Opm::TableManager & tableManager,
+                                        const Opm::Phases& phases,
                                         const std::vector<double>& cell_depth,
                                         const std::vector<int>& imbnum,
                                         const std::vector<int>& endnum)
@@ -1114,8 +1113,8 @@ namespace satfunc {
                             cell_depth, nullptr, imbnum, endnum, true);
     }
 
-    std::vector< double > SGCREndpoint( const TableManager & tableManager,
-                                        const Phases& phases,
+    std::vector< double > SGCREndpoint( const Opm::TableManager & tableManager,
+                                        const Opm::Phases& phases,
                                         const std::vector<double>& cell_depth,
                                         const std::vector<int>& satnum,
                                         const std::vector<int>& endnum)
@@ -1125,8 +1124,8 @@ namespace satfunc {
                             cell_depth, nullptr, satnum, endnum, false );
     }
 
-    std::vector< double > ISGCREndpoint( const TableManager & tableManager,
-                                         const Phases& phases,
+    std::vector< double > ISGCREndpoint( const Opm::TableManager & tableManager,
+                                         const Opm::Phases& phases,
                                          const std::vector<double>& cell_depth,
                                          const std::vector<int>& imbnum,
                                          const std::vector<int>& endnum)
@@ -1136,8 +1135,8 @@ namespace satfunc {
                             cell_depth, nullptr, imbnum, endnum, false );
     }
 
-    std::vector< double > SOWCREndpoint( const TableManager & tableManager,
-                                         const Phases& phases,
+    std::vector< double > SOWCREndpoint( const Opm::TableManager & tableManager,
+                                         const Opm::Phases& phases,
                                          const std::vector<double>& cell_depth,
                                          const std::vector<int>& satnum,
                                          const std::vector<int>& endnum)
@@ -1147,8 +1146,8 @@ namespace satfunc {
                             cell_depth, nullptr, satnum, endnum, false );
     }
 
-    std::vector< double > ISOWCREndpoint( const TableManager & tableManager,
-                                          const Phases& phases,
+    std::vector< double > ISOWCREndpoint( const Opm::TableManager & tableManager,
+                                          const Opm::Phases& phases,
                                           const std::vector<double>& cell_depth,
                                           const std::vector<int>& imbnum,
                                           const std::vector<int>& endnum)
@@ -1158,8 +1157,8 @@ namespace satfunc {
                             cell_depth, nullptr, imbnum, endnum, false );
     }
 
-    std::vector< double > SOGCREndpoint( const TableManager & tableManager,
-                                         const Phases& phases,
+    std::vector< double > SOGCREndpoint( const Opm::TableManager & tableManager,
+                                         const Opm::Phases& phases,
                                          const std::vector<double>& cell_depth,
                                          const std::vector<int>& satnum,
                                          const std::vector<int>& endnum)
@@ -1169,8 +1168,8 @@ namespace satfunc {
                             cell_depth, nullptr, satnum, endnum, false );
     }
 
-    std::vector< double > ISOGCREndpoint( const TableManager & tableManager,
-                                          const Phases& phases,
+    std::vector< double > ISOGCREndpoint( const Opm::TableManager & tableManager,
+                                          const Opm::Phases& phases,
                                           const std::vector<double>& cell_depth,
                                           const std::vector<int>& imbnum,
                                           const std::vector<int>& endnum)
@@ -1180,8 +1179,8 @@ namespace satfunc {
                             cell_depth, nullptr, imbnum, endnum, false );
     }
 
-    std::vector< double > SWCREndpoint( const TableManager & tableManager,
-                                        const Phases& phases,
+    std::vector< double > SWCREndpoint( const Opm::TableManager & tableManager,
+                                        const Opm::Phases& phases,
                                         const std::vector<double>& cell_depth,
                                         const std::vector<int>& satnum,
                                         const std::vector<int>& endnum)
@@ -1191,8 +1190,8 @@ namespace satfunc {
                             cell_depth, nullptr, satnum, endnum, false );
     }
 
-    std::vector< double > ISWCREndpoint( const TableManager & tableManager,
-                                         const Phases& phases,
+    std::vector< double > ISWCREndpoint( const Opm::TableManager & tableManager,
+                                         const Opm::Phases& phases,
                                          const std::vector<double>& cell_depth,
                                          const std::vector<int>& imbnum,
                                          const std::vector<int>& endnum)
@@ -1202,8 +1201,8 @@ namespace satfunc {
                             cell_depth, nullptr, imbnum, endnum, false );
     }
 
-    std::vector< double > PCWEndpoint( const TableManager & tableManager,
-                                       const Phases& phases,
+    std::vector< double > PCWEndpoint( const Opm::TableManager & tableManager,
+                                       const Opm::Phases& phases,
                                        const std::vector<double>& cell_depth,
                                        const std::vector<int>& satnum,
                                        const std::vector<int>& endnum)
@@ -1213,8 +1212,8 @@ namespace satfunc {
                             cell_depth, nullptr, satnum, endnum, false );
     }
 
-    std::vector< double > IPCWEndpoint( const TableManager & tableManager,
-                                        const Phases& phases,
+    std::vector< double > IPCWEndpoint( const Opm::TableManager & tableManager,
+                                        const Opm::Phases& phases,
                                         const std::vector<double>& cell_depth,
                                         const std::vector<int>& imbnum,
                                         const std::vector<int>& endnum)
@@ -1224,8 +1223,8 @@ namespace satfunc {
                             cell_depth, nullptr, imbnum, endnum, false );
     }
 
-    std::vector< double > PCGEndpoint( const TableManager & tableManager,
-                                       const Phases& phases,
+    std::vector< double > PCGEndpoint( const Opm::TableManager & tableManager,
+                                       const Opm::Phases& phases,
                                        const std::vector<double>& cell_depth,
                                        const std::vector<int>& satnum,
                                        const std::vector<int>& imbnum)
@@ -1235,8 +1234,8 @@ namespace satfunc {
                             cell_depth, nullptr, satnum, imbnum, false );
     }
 
-    std::vector< double > IPCGEndpoint( const TableManager & tableManager,
-                                        const Phases& phases,
+    std::vector< double > IPCGEndpoint( const Opm::TableManager & tableManager,
+                                        const Opm::Phases& phases,
                                         const std::vector<double>& cell_depth,
                                         const std::vector<int>& imbnum,
                                         const std::vector<int>& endnum)
@@ -1246,8 +1245,8 @@ namespace satfunc {
                             cell_depth, nullptr, imbnum, endnum, false );
     }
 
-    std::vector< double > KRWEndpoint( const TableManager & tableManager,
-                                       const Phases& phases,
+    std::vector< double > KRWEndpoint( const Opm::TableManager & tableManager,
+                                       const Opm::Phases& phases,
                                        const std::vector<double>& cell_depth,
                                        const std::vector<int>& satnum,
                                        const std::vector<int>& endnum)
@@ -1257,8 +1256,8 @@ namespace satfunc {
                             cell_depth, nullptr, satnum, endnum, false );
     }
 
-    std::vector< double > IKRWEndpoint( const TableManager & tableManager,
-                                        const Phases& phases,
+    std::vector< double > IKRWEndpoint( const Opm::TableManager & tableManager,
+                                        const Opm::Phases& phases,
                                         const std::vector<double>& cell_depth,
                                         const std::vector<int>& imbnum,
                                         const std::vector<int>& endnum)
@@ -1268,8 +1267,8 @@ namespace satfunc {
                             cell_depth, nullptr, imbnum, endnum, false );
     }
 
-    std::vector< double > KRWREndpoint( const TableManager & tableManager,
-                                        const Phases& phases,
+    std::vector< double > KRWREndpoint( const Opm::TableManager & tableManager,
+                                        const Opm::Phases& phases,
                                         const std::vector<double>& cell_depth,
                                         const std::vector<int>& satnum,
                                         const std::vector<int>& endnum)
@@ -1279,8 +1278,8 @@ namespace satfunc {
                             cell_depth, nullptr, satnum, endnum, false );
     }
 
-    std::vector< double > IKRWREndpoint( const TableManager & tableManager,
-                                         const Phases& phases,
+    std::vector< double > IKRWREndpoint( const Opm::TableManager & tableManager,
+                                         const Opm::Phases& phases,
                                          const std::vector<double>& cell_depth,
                                          const std::vector<int>& imbnum,
                                          const std::vector<int>& endnum)
@@ -1290,8 +1289,8 @@ namespace satfunc {
                             cell_depth, nullptr, imbnum, endnum, false );
     }
 
-    std::vector< double > KROEndpoint( const TableManager & tableManager,
-                                       const Phases& phases,
+    std::vector< double > KROEndpoint( const Opm::TableManager & tableManager,
+                                       const Opm::Phases& phases,
                                        const std::vector<double>& cell_depth,
                                        const std::vector<int>& satnum,
                                        const std::vector<int>& endnum)
@@ -1301,8 +1300,8 @@ namespace satfunc {
                             cell_depth, nullptr, satnum, endnum, false );
     }
 
-    std::vector< double > IKROEndpoint( const TableManager & tableManager,
-                                        const Phases& phases,
+    std::vector< double > IKROEndpoint( const Opm::TableManager & tableManager,
+                                        const Opm::Phases& phases,
                                         const std::vector<double>& cell_depth,
                                         const std::vector<int>& imbnum,
                                         const std::vector<int>& endnum)
@@ -1312,8 +1311,8 @@ namespace satfunc {
                             cell_depth, nullptr, imbnum, endnum, false );
     }
 
-    std::vector< double > KRORWEndpoint( const TableManager & tableManager,
-                                         const Phases& phases,
+    std::vector< double > KRORWEndpoint( const Opm::TableManager & tableManager,
+                                         const Opm::Phases& phases,
                                          const std::vector<double>& cell_depth,
                                          const std::vector<int>& satnum,
                                          const std::vector<int>& endnum)
@@ -1323,8 +1322,8 @@ namespace satfunc {
                             cell_depth, nullptr, satnum, endnum, false );
     }
 
-    std::vector< double > IKRORWEndpoint( const TableManager & tableManager,
-                                          const Phases& phases,
+    std::vector< double > IKRORWEndpoint( const Opm::TableManager & tableManager,
+                                          const Opm::Phases& phases,
                                           const std::vector<double>& cell_depth,
                                           const std::vector<int>& imbnum,
                                           const std::vector<int>& endnum)
@@ -1334,8 +1333,8 @@ namespace satfunc {
                             cell_depth, nullptr, imbnum, endnum, false );
     }
 
-    std::vector< double > KRORGEndpoint( const TableManager & tableManager,
-                                         const Phases& phases,
+    std::vector< double > KRORGEndpoint( const Opm::TableManager & tableManager,
+                                         const Opm::Phases& phases,
                                          const std::vector<double>& cell_depth,
                                          const std::vector<int>& satnum,
                                          const std::vector<int>& endnum)
@@ -1345,8 +1344,8 @@ namespace satfunc {
                             cell_depth, nullptr, satnum, endnum, false );
     }
 
-    std::vector< double > IKRORGEndpoint( const TableManager & tableManager,
-                                          const Phases& phases,
+    std::vector< double > IKRORGEndpoint( const Opm::TableManager & tableManager,
+                                          const Opm::Phases& phases,
                                           const std::vector<double>& cell_depth,
                                           const std::vector<int>& imbnum,
                                           const std::vector<int>& endnum)
@@ -1356,8 +1355,8 @@ namespace satfunc {
                             cell_depth, nullptr, imbnum, endnum, false );
     }
 
-    std::vector< double > KRGEndpoint( const TableManager & tableManager,
-                                       const Phases& phases,
+    std::vector< double > KRGEndpoint( const Opm::TableManager & tableManager,
+                                       const Opm::Phases& phases,
                                        const std::vector<double>& cell_depth,
                                        const std::vector<int>& satnum,
                                        const std::vector<int>& endnum)
@@ -1367,8 +1366,8 @@ namespace satfunc {
                             cell_depth, nullptr, satnum, endnum, false );
     }
 
-    std::vector< double > IKRGEndpoint( const TableManager & tableManager,
-                                        const Phases& phases,
+    std::vector< double > IKRGEndpoint( const Opm::TableManager & tableManager,
+                                        const Opm::Phases& phases,
                                         const std::vector<double>& cell_depth,
                                         const std::vector<int>& imbnum,
                                         const std::vector<int>& endnum)
@@ -1378,8 +1377,8 @@ namespace satfunc {
                             cell_depth, nullptr, imbnum, endnum, false );
     }
 
-    std::vector< double > KRGREndpoint( const TableManager & tableManager,
-                                        const Phases& phases,
+    std::vector< double > KRGREndpoint( const Opm::TableManager & tableManager,
+                                        const Opm::Phases& phases,
                                         const std::vector<double>& cell_depth,
                                         const std::vector<int>& satnum,
                                         const std::vector<int>& endnum)
@@ -1389,8 +1388,8 @@ namespace satfunc {
                             cell_depth, nullptr, satnum, endnum, false );
     }
 
-    std::vector< double > IKRGREndpoint( const TableManager & tableManager,
-                                         const Phases& phases,
+    std::vector< double > IKRGREndpoint( const Opm::TableManager & tableManager,
+                                         const Opm::Phases& phases,
                                          const std::vector<double>& cell_depth,
                                          const std::vector<int>& imbnum,
                                          const std::vector<int>& endnum)
@@ -1400,58 +1399,59 @@ namespace satfunc {
                             cell_depth, nullptr, imbnum, endnum, false );
     }
 
+} // namespace Anonymous
 
-    std::vector<double> init(const std::string& keyword,
-                             const TableManager& tables,
-                             const Phases& phases,
-                             const std::vector<double>& cell_depth,
-                             const std::vector<int>& num,
-                             const std::vector<int>& endnum)
-    {
-        using func_type = decltype(&IKRGEndpoint);
+std::vector<double>
+Opm::satfunc::init(const std::string&         keyword,
+                   const TableManager&        tables,
+                   const Phases&              phases,
+                   const std::vector<double>& cell_depth,
+                   const std::vector<int>&    num,
+                   const std::vector<int>&    endnum)
+{
+    using func_type = decltype(&IKRGEndpoint);
 
-#define dirfunc(base, func) {base, func}, \
-                            {base "X", func}, {base "X-", func},  \
-                            {base "Y", func}, {base "Y-", func},  \
-                            {base "Z", func}, {base "Z-", func}
+#define dirfunc(base, func) \
+    {base, func}, \
+    {base "X", func}, {base "X-", func},  \
+    {base "Y", func}, {base "Y-", func},  \
+    {base "Z", func}, {base "Z-", func}
 
-        static const std::map<std::string, func_type> func_table = {
-            // Drainage                      Imbibition
-            {"SGLPC", SGLEndpoint},          {"ISGLPC", ISGLEndpoint},
-            {"SWLPC", SWLEndpoint},          {"ISWLPC", ISWLEndpoint},
+    static const std::map<std::string, func_type> func_table = {
+        // Drainage                      Imbibition
+        {"SGLPC", SGLEndpoint},          {"ISGLPC", ISGLEndpoint},
+        {"SWLPC", SWLEndpoint},          {"ISWLPC", ISWLEndpoint},
 
-            dirfunc("SGL",   SGLEndpoint),   dirfunc("ISGL",   ISGLEndpoint),
-            dirfunc("SGU",   SGUEndpoint),   dirfunc("ISGU",   ISGUEndpoint),
-            dirfunc("SWL",   SWLEndpoint),   dirfunc("ISWL",   ISWLEndpoint),
-            dirfunc("SWU",   SWUEndpoint),   dirfunc("ISWU",   ISWUEndpoint),
+        dirfunc("SGL",   SGLEndpoint),   dirfunc("ISGL",   ISGLEndpoint),
+        dirfunc("SGU",   SGUEndpoint),   dirfunc("ISGU",   ISGUEndpoint),
+        dirfunc("SWL",   SWLEndpoint),   dirfunc("ISWL",   ISWLEndpoint),
+        dirfunc("SWU",   SWUEndpoint),   dirfunc("ISWU",   ISWUEndpoint),
 
-            dirfunc("SGCR",  SGCREndpoint),  dirfunc("ISGCR",  ISGCREndpoint),
-            dirfunc("SOGCR", SOGCREndpoint), dirfunc("ISOGCR", ISOGCREndpoint),
-            dirfunc("SOWCR", SOWCREndpoint), dirfunc("ISOWCR", ISOWCREndpoint),
-            dirfunc("SWCR",  SWCREndpoint),  dirfunc("ISWCR",  ISWCREndpoint),
+        dirfunc("SGCR",  SGCREndpoint),  dirfunc("ISGCR",  ISGCREndpoint),
+        dirfunc("SOGCR", SOGCREndpoint), dirfunc("ISOGCR", ISOGCREndpoint),
+        dirfunc("SOWCR", SOWCREndpoint), dirfunc("ISOWCR", ISOWCREndpoint),
+        dirfunc("SWCR",  SWCREndpoint),  dirfunc("ISWCR",  ISWCREndpoint),
 
-            dirfunc("PCG",   PCGEndpoint),   dirfunc("IPCG",   IPCGEndpoint),
-            dirfunc("PCW",   PCWEndpoint),   dirfunc("IPCW",   IPCWEndpoint),
+        dirfunc("PCG",   PCGEndpoint),   dirfunc("IPCG",   IPCGEndpoint),
+        dirfunc("PCW",   PCWEndpoint),   dirfunc("IPCW",   IPCWEndpoint),
 
-            dirfunc("KRG",   KRGEndpoint),   dirfunc("IKRG",   IKRGEndpoint),
-            dirfunc("KRGR",  KRGREndpoint),  dirfunc("IKRGR",  IKRGREndpoint),
-            dirfunc("KRO",   KROEndpoint),   dirfunc("IKRO",   IKROEndpoint),
-            dirfunc("KRORW", KRORWEndpoint), dirfunc("IKRORW", IKRORWEndpoint),
-            dirfunc("KRORG", KRORGEndpoint), dirfunc("IKRORG", IKRORGEndpoint),
-            dirfunc("KRW",   KRWEndpoint),   dirfunc("IKRW",   IKRWEndpoint),
-            dirfunc("KRWR",  KRWREndpoint),  dirfunc("IKRWR",  IKRWREndpoint),
-        };
+        dirfunc("KRG",   KRGEndpoint),   dirfunc("IKRG",   IKRGEndpoint),
+        dirfunc("KRGR",  KRGREndpoint),  dirfunc("IKRGR",  IKRGREndpoint),
+        dirfunc("KRO",   KROEndpoint),   dirfunc("IKRO",   IKROEndpoint),
+        dirfunc("KRORW", KRORWEndpoint), dirfunc("IKRORW", IKRORWEndpoint),
+        dirfunc("KRORG", KRORGEndpoint), dirfunc("IKRORG", IKRORGEndpoint),
+        dirfunc("KRW",   KRWEndpoint),   dirfunc("IKRW",   IKRWEndpoint),
+        dirfunc("KRWR",  KRWREndpoint),  dirfunc("IKRWR",  IKRWREndpoint),
+    };
 
 #undef dirfunc
 
-        auto func = func_table.find(keyword);
-        if (func == func_table.end())
-            throw std::invalid_argument {
-                "Unsupported saturation function scaling '"
-                + keyword + '\''
-            };
+    auto func = func_table.find(keyword);
+    if (func == func_table.end())
+        throw std::invalid_argument {
+            "Unsupported saturation function scaling '"
+            + keyword + '\''
+        };
 
-        return func->second(tables, phases, cell_depth, num, endnum);
-    }
-} // namespace satfunc
-} // namespace Opm
+    return func->second(tables, phases, cell_depth, num, endnum);
+}
