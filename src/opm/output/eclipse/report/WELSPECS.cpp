@@ -94,14 +94,12 @@ namespace {
             std::string string_data { fetch(data, line_number) } ;
             format(string_data, internal_width, line_number);
             centre_align(string_data, total_width());
-
             os << string_data;
         }
 
         void print_header(std::ostream& os, std::size_t row) const {
             std::string header_line { header[row] } ;
             centre_align(header_line, total_width());
-
             os << header_line;
         }
 
@@ -190,7 +188,7 @@ namespace {
             return std::string(string.size(), divider_character);
         }
 
-        void print(std::ostream& os, const std::vector<InputType>& data) const {
+        void print(std::ostream& os, const std::vector<InputType>& data, const std::vector<std::pair<int, std::string>>& footnotes) const {
             os << title << record_separator;
             os << decor << record_separator;
 
@@ -203,8 +201,10 @@ namespace {
                 column_definition.print_data(os, transform(element), separator, line_number);
             }
             column_definition.print_divider(os, bottom_border);
+            for (const auto& fnote: footnotes)
+                os << fnote.first << ": " << fnote.second << std::endl;
 
-            os << section_separator << std::flush;
+            os << std::endl << std::endl;
         }
     };
 
@@ -358,13 +358,11 @@ namespace {
         {  3, { "PVT"        , "TAB"        ,               }, &WellWrapper::pvt_tab          ,             },
         {  4, { "WELL"       , "DENS"       , "CALC"        }, &WellWrapper::dens_calc        ,             },
         {  3, { "FIP"        , "REG"        ,               }, &WellWrapper::region_number    ,             },
-        { 11, { "WELL"       , "D-FACTOR?"  , "DAY/SM3"     }, &WellWrapper::D_factor         ,             },
+        { 11, { "WELL"       , "D-FACTOR 1" , "DAY/SM3"     }, &WellWrapper::D_factor         ,             },
     }};
 
     void subreport_well_specification_data(std::ostream& os, const std::vector<Opm::Well>& data) {
-        well_specification.print(os, data);
-        os << "? The WELL D-FACTOR is not implemented - and the report will always show the default value 0." << std::endl;
-        os << std::endl;
+        well_specification.print(os, data, {{1, "The WELL D-FACTOR is not implemented - and the report will always show the default value 0."}});
     }
 
 }
@@ -431,9 +429,8 @@ namespace {
             return "";
         }
 
-        const std::string &dfactor(std::size_t) const {
-            static const std::string s { };
-            return s;
+        const std::string dfactor(std::size_t) const {
+            return "0";
         }
 
         static std::vector<WellConnection> transform(const Opm::Well& well) {
@@ -460,7 +457,7 @@ namespace {
        {  7, {"K  H"                   ,"VALUE"                    ,"MD.METRE"               }, &WellConnection::kh_value        , right_align },
        {  6, {"SKIN"                   ,"FACTOR"                   ,                         }, &WellConnection::skin_factor     , right_align },
        { 10, {"CONNECTION"             ,"D-FACTOR 1"               ,"DAY/SM3"                }, &WellConnection::dfactor         ,             },
-       { 23, {"SATURATION SCALING DATA","SWMIN SWMAX SGMIN SGMAX 2","&"                      }, &WellConnection::sat_scaling     ,             },
+       { 23, {"SATURATION SCALING DATA","SWMIN SWMAX SGMIN SGMAX 2",                         }, &WellConnection::sat_scaling     ,             },
     }};
 
 }
@@ -646,14 +643,28 @@ namespace {
 namespace {
 
     void subreport_well_connection_data(std::ostream& os, const std::vector<Opm::Well>& data) {
-        well_connection.print(os, data {{1, "The saturation scaling data has not been implemented in the report and will show blank"}});
+        well_connection.print(os, data, {{1, "The well connection D-FACTOR is not implemented in opm and the report will always show 0."},
+                                         {2, "The saturation scaling data has not been implemented in the report and will show blank"}});
     }
 
 }
 
 void Opm::RptIO::workers::write_WELSPECS(std::ostream& os, unsigned, const Opm::Schedule& schedule, std::size_t report_step) {
-    write_report_header(os, schedule, report_step);
+    auto well_names = schedule.changed_wells(report_step);
+    if (well_names.empty())
+        return;
 
-    subreport_well_specification_data(os, schedule.getWells(report_step));
-    subreport_well_connection_data(os, schedule.getWells(report_step));
+    std::vector<Well> changed_wells;
+    std::transform(well_names.begin(), well_names.end(), std::back_inserter(changed_wells), [&report_step, &schedule](const std::string& wname) { return schedule.getWell(wname, report_step); });
+
+    write_report_header(os, schedule, report_step);
+    subreport_well_specification_data(os, changed_wells);
+    subreport_well_connection_data(os, changed_wells);
+
+    for (const auto& well : changed_wells) {
+        if (well.isMultiSegment()) {
+            well_multisegment_data.print(os, { well }, {});
+            well_multisegment_connection.print(os, { well }, {});
+        }
+    }
 }
