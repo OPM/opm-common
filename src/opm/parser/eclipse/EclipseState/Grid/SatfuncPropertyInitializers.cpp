@@ -939,7 +939,6 @@ namespace {
                 const std::vector< double >& fallbackValues,
                 const Opm::TableManager& tableManager,
                 const std::vector<double>& cell_depth,
-                const std::vector<int> * actnum,
                 const std::vector<int>& satnum_data,
                 const std::vector<int>& endnum_data,
                 bool useOneMinusTableValue)
@@ -956,14 +955,6 @@ namespace {
         for( size_t cellIdx = 0; cellIdx < values.size(); cellIdx++ ) {
             int satTableIdx = satnum_data[cellIdx] - 1;
             int endNum = endnum_data[cellIdx] - 1;
-
-            if (actnum && ((*actnum)[cellIdx] == 0)) {
-                // Pick from appropriate saturation region if defined
-                // in this cell, else use region 1 (satTableIdx == 0).
-                values[cellIdx] = (satTableIdx >= 0)
-                    ? fallbackValues[satTableIdx] : fallbackValues[0];
-                continue;
-            }
 
             // Active cell better have {SAT,END}NUM > 0.
             checkSatRegions(cellIdx, satTableIdx, endNum, "SATNUM");
@@ -985,7 +976,6 @@ namespace {
                 const std::vector< double >& fallBackValues,
                 const Opm::TableManager& tableManager,
                 const std::vector<double>& cell_depth,
-                const std::vector<int> * actnum,
                 const std::vector<int>& imbnum_data,
                 const std::vector<int>& endnum_data,
                 bool useOneMinusTableValue )
@@ -1002,14 +992,6 @@ namespace {
         for( size_t cellIdx = 0; cellIdx < values.size(); cellIdx++ ) {
             int imbTableIdx = imbnum_data[ cellIdx ] - 1;
             int endNum = endnum_data[ cellIdx ] - 1;
-
-            if (actnum && ((*actnum)[cellIdx] == 0)) {
-                // Pick from appropriate saturation region if defined
-                // in this cell, else use region 1 (imbTableIdx == 0).
-                values[cellIdx] = (imbTableIdx >= 0)
-                    ? fallBackValues[imbTableIdx] : fallBackValues[0];
-                continue;
-            }
 
             // Active cell better have {IMB,END}NUM > 0.
             checkSatRegions(cellIdx, imbTableIdx, endNum, "IMBNUM");
@@ -1033,7 +1015,7 @@ namespace {
     {
         const auto min_gas = findMinGasSaturation( tableManager, phases );
         return satnumApply( cell_depth.size(), "SGCO", min_gas, tableManager,
-                            cell_depth, nullptr, satnum, endnum, false );
+                            cell_depth, satnum, endnum, false );
     }
 
     std::vector< double > ISGLEndpoint( const Opm::TableManager & tableManager,
@@ -1044,7 +1026,7 @@ namespace {
     {
         const auto min_gas = findMinGasSaturation( tableManager, phases );
         return imbnumApply( cell_depth.size(), "SGCO", min_gas, tableManager,
-                            cell_depth, nullptr, imbnum, endnum, false );
+                            cell_depth, imbnum, endnum, false );
     }
 
     std::vector< double > SGUEndpoint( const Opm::TableManager & tableManager,
@@ -1055,7 +1037,7 @@ namespace {
     {
         const auto max_gas = findMaxGasSaturation( tableManager, phases );
         return satnumApply( cell_depth.size(), "SGMAX", max_gas, tableManager,
-                            cell_depth, nullptr, satnum, endnum, false );
+                            cell_depth, satnum, endnum, false );
     }
 
     std::vector< double > ISGUEndpoint( const Opm::TableManager & tableManager,
@@ -1066,7 +1048,7 @@ namespace {
     {
         const auto max_gas = findMaxGasSaturation( tableManager, phases );
         return imbnumApply( cell_depth.size(), "SGMAX", max_gas, tableManager,
-                            cell_depth, nullptr, imbnum, endnum, false );
+                            cell_depth, imbnum, endnum, false );
     }
 
     std::vector< double > SWLEndpoint( const Opm::TableManager & tableManager,
@@ -1077,7 +1059,7 @@ namespace {
     {
         const auto min_water = findMinWaterSaturation( tableManager, phases );
         return satnumApply( cell_depth.size(), "SWCO", min_water, tableManager,
-                            cell_depth, nullptr, satnum, endnum, false );
+                            cell_depth, satnum, endnum, false );
     }
 
     std::vector< double > ISWLEndpoint( const Opm::TableManager & tableManager,
@@ -1088,7 +1070,7 @@ namespace {
     {
         const auto min_water = findMinWaterSaturation( tableManager, phases );
         return imbnumApply( cell_depth.size(), "SWCO", min_water, tableManager,
-                            cell_depth, nullptr, imbnum, endnum, false );
+                            cell_depth, imbnum, endnum, false );
     }
 
     std::vector< double > SWUEndpoint( const Opm::TableManager & tableManager,
@@ -1099,7 +1081,7 @@ namespace {
     {
         const auto max_water = findMaxWaterSaturation( tableManager, phases );
         return satnumApply( cell_depth.size(), "SWMAX", max_water, tableManager,
-                            cell_depth, nullptr, satnum, endnum, true );
+                            cell_depth, satnum, endnum, true );
     }
 
     std::vector< double > ISWUEndpoint( const Opm::TableManager & tableManager,
@@ -1110,7 +1092,7 @@ namespace {
     {
         const auto max_water = findMaxWaterSaturation( tableManager, phases );
         return imbnumApply( cell_depth.size(), "SWMAX", max_water, tableManager,
-                            cell_depth, nullptr, imbnum, endnum, true);
+                            cell_depth, imbnum, endnum, true);
     }
 
     std::vector< double > SGCREndpoint( const Opm::TableManager & tableManager,
@@ -1121,7 +1103,7 @@ namespace {
     {
         const auto crit_gas = findCriticalGas( tableManager, phases );
         return satnumApply( cell_depth.size(), "SGCRIT", crit_gas, tableManager,
-                            cell_depth, nullptr, satnum, endnum, false );
+                            cell_depth, satnum, endnum, false );
     }
 
     std::vector< double > ISGCREndpoint( const Opm::TableManager & tableManager,
@@ -1132,7 +1114,7 @@ namespace {
     {
         const auto crit_gas = findCriticalGas( tableManager, phases );
         return imbnumApply( cell_depth.size(), "SGCRIT", crit_gas, tableManager,
-                            cell_depth, nullptr, imbnum, endnum, false );
+                            cell_depth, imbnum, endnum, false );
     }
 
     std::vector< double > SOWCREndpoint( const Opm::TableManager & tableManager,
@@ -1143,7 +1125,7 @@ namespace {
     {
         const auto oil_water = findCriticalOilWater( tableManager, phases );
         return satnumApply( cell_depth.size(), "SOWCRIT", oil_water, tableManager,
-                            cell_depth, nullptr, satnum, endnum, false );
+                            cell_depth, satnum, endnum, false );
     }
 
     std::vector< double > ISOWCREndpoint( const Opm::TableManager & tableManager,
@@ -1154,7 +1136,7 @@ namespace {
     {
         const auto oil_water = findCriticalOilWater( tableManager, phases );
         return imbnumApply( cell_depth.size(), "SOWCRIT", oil_water, tableManager,
-                            cell_depth, nullptr, imbnum, endnum, false );
+                            cell_depth, imbnum, endnum, false );
     }
 
     std::vector< double > SOGCREndpoint( const Opm::TableManager & tableManager,
@@ -1165,7 +1147,7 @@ namespace {
     {
         const auto crit_oil_gas = findCriticalOilGas( tableManager, phases );
         return satnumApply( cell_depth.size(), "SOGCRIT", crit_oil_gas, tableManager,
-                            cell_depth, nullptr, satnum, endnum, false );
+                            cell_depth, satnum, endnum, false );
     }
 
     std::vector< double > ISOGCREndpoint( const Opm::TableManager & tableManager,
@@ -1176,7 +1158,7 @@ namespace {
     {
         const auto crit_oil_gas = findCriticalOilGas( tableManager, phases );
         return imbnumApply( cell_depth.size(), "SOGCRIT", crit_oil_gas, tableManager,
-                            cell_depth, nullptr, imbnum, endnum, false );
+                            cell_depth, imbnum, endnum, false );
     }
 
     std::vector< double > SWCREndpoint( const Opm::TableManager & tableManager,
@@ -1187,7 +1169,7 @@ namespace {
     {
         const auto crit_water = findCriticalWater( tableManager, phases );
         return satnumApply( cell_depth.size(), "SWCRIT", crit_water, tableManager,
-                            cell_depth, nullptr, satnum, endnum, false );
+                            cell_depth, satnum, endnum, false );
     }
 
     std::vector< double > ISWCREndpoint( const Opm::TableManager & tableManager,
@@ -1198,7 +1180,7 @@ namespace {
     {
         const auto crit_water = findCriticalWater( tableManager, phases );
         return imbnumApply( cell_depth.size(), "SWCRIT", crit_water, tableManager,
-                            cell_depth, nullptr, imbnum, endnum, false );
+                            cell_depth, imbnum, endnum, false );
     }
 
     std::vector< double > PCWEndpoint( const Opm::TableManager & tableManager,
@@ -1209,7 +1191,7 @@ namespace {
     {
         const auto max_pcow = findMaxPcow( tableManager, phases );
         return satnumApply( cell_depth.size(), "PCW", max_pcow, tableManager,
-                            cell_depth, nullptr, satnum, endnum, false );
+                            cell_depth, satnum, endnum, false );
     }
 
     std::vector< double > IPCWEndpoint( const Opm::TableManager & tableManager,
@@ -1220,7 +1202,7 @@ namespace {
     {
         const auto max_pcow = findMaxPcow( tableManager, phases );
         return imbnumApply( cell_depth.size(), "IPCW", max_pcow, tableManager,
-                            cell_depth, nullptr, imbnum, endnum, false );
+                            cell_depth, imbnum, endnum, false );
     }
 
     std::vector< double > PCGEndpoint( const Opm::TableManager & tableManager,
@@ -1231,7 +1213,7 @@ namespace {
     {
         const auto max_pcog = findMaxPcog( tableManager, phases );
         return satnumApply( cell_depth.size(), "PCG", max_pcog, tableManager,
-                            cell_depth, nullptr, satnum, imbnum, false );
+                            cell_depth, satnum, imbnum, false );
     }
 
     std::vector< double > IPCGEndpoint( const Opm::TableManager & tableManager,
@@ -1242,7 +1224,7 @@ namespace {
     {
         const auto max_pcog = findMaxPcog( tableManager, phases );
         return imbnumApply( cell_depth.size(), "IPCG", max_pcog, tableManager,
-                            cell_depth, nullptr, imbnum, endnum, false );
+                            cell_depth, imbnum, endnum, false );
     }
 
     std::vector< double > KRWEndpoint( const Opm::TableManager & tableManager,
@@ -1253,7 +1235,7 @@ namespace {
     {
         const auto max_krw = findMaxKrw( tableManager, phases );
         return satnumApply( cell_depth.size(), "KRW", max_krw, tableManager,
-                            cell_depth, nullptr, satnum, endnum, false );
+                            cell_depth, satnum, endnum, false );
     }
 
     std::vector< double > IKRWEndpoint( const Opm::TableManager & tableManager,
@@ -1264,7 +1246,7 @@ namespace {
     {
         const auto krwr = findKrwr( tableManager, phases );
         return imbnumApply( cell_depth.size(), "IKRW", krwr, tableManager,
-                            cell_depth, nullptr, imbnum, endnum, false );
+                            cell_depth, imbnum, endnum, false );
     }
 
     std::vector< double > KRWREndpoint( const Opm::TableManager & tableManager,
@@ -1275,7 +1257,7 @@ namespace {
     {
         const auto krwr = findKrwr( tableManager, phases );
         return satnumApply( cell_depth.size(), "KRWR", krwr, tableManager,
-                            cell_depth, nullptr, satnum, endnum, false );
+                            cell_depth, satnum, endnum, false );
     }
 
     std::vector< double > IKRWREndpoint( const Opm::TableManager & tableManager,
@@ -1286,7 +1268,7 @@ namespace {
     {
         const auto krwr = findKrwr( tableManager, phases );
         return imbnumApply( cell_depth.size(), "IKRWR", krwr, tableManager,
-                            cell_depth, nullptr, imbnum, endnum, false );
+                            cell_depth, imbnum, endnum, false );
     }
 
     std::vector< double > KROEndpoint( const Opm::TableManager & tableManager,
@@ -1297,7 +1279,7 @@ namespace {
     {
         const auto max_kro = findMaxKro( tableManager, phases );
         return satnumApply( cell_depth.size(), "KRO", max_kro, tableManager,
-                            cell_depth, nullptr, satnum, endnum, false );
+                            cell_depth, satnum, endnum, false );
     }
 
     std::vector< double > IKROEndpoint( const Opm::TableManager & tableManager,
@@ -1308,7 +1290,7 @@ namespace {
     {
         const auto max_kro = findMaxKro( tableManager,phases );
         return imbnumApply( cell_depth.size(), "IKRO", max_kro, tableManager,
-                            cell_depth, nullptr, imbnum, endnum, false );
+                            cell_depth, imbnum, endnum, false );
     }
 
     std::vector< double > KRORWEndpoint( const Opm::TableManager & tableManager,
@@ -1319,7 +1301,7 @@ namespace {
     {
         const auto krorw = findKrorw( tableManager, phases );
         return satnumApply( cell_depth.size(), "KRORW", krorw, tableManager,
-                            cell_depth, nullptr, satnum, endnum, false );
+                            cell_depth, satnum, endnum, false );
     }
 
     std::vector< double > IKRORWEndpoint( const Opm::TableManager & tableManager,
@@ -1330,7 +1312,7 @@ namespace {
     {
         const auto krorw = findKrorw( tableManager, phases );
         return imbnumApply( cell_depth.size(), "IKRORW", krorw, tableManager,
-                            cell_depth, nullptr, imbnum, endnum, false );
+                            cell_depth, imbnum, endnum, false );
     }
 
     std::vector< double > KRORGEndpoint( const Opm::TableManager & tableManager,
@@ -1341,7 +1323,7 @@ namespace {
     {
         const auto krorg = findKrorg( tableManager, phases );
         return satnumApply( cell_depth.size(), "KRORG", krorg, tableManager,
-                            cell_depth, nullptr, satnum, endnum, false );
+                            cell_depth, satnum, endnum, false );
     }
 
     std::vector< double > IKRORGEndpoint( const Opm::TableManager & tableManager,
@@ -1352,7 +1334,7 @@ namespace {
     {
         const auto krorg = findKrorg( tableManager, phases );
         return imbnumApply( cell_depth.size(), "IKRORG", krorg, tableManager,
-                            cell_depth, nullptr, imbnum, endnum, false );
+                            cell_depth, imbnum, endnum, false );
     }
 
     std::vector< double > KRGEndpoint( const Opm::TableManager & tableManager,
@@ -1363,7 +1345,7 @@ namespace {
     {
         const auto max_krg = findMaxKrg( tableManager, phases );
         return satnumApply( cell_depth.size(), "KRG", max_krg, tableManager,
-                            cell_depth, nullptr, satnum, endnum, false );
+                            cell_depth, satnum, endnum, false );
     }
 
     std::vector< double > IKRGEndpoint( const Opm::TableManager & tableManager,
@@ -1374,7 +1356,7 @@ namespace {
     {
         const auto max_krg = findMaxKrg( tableManager, phases );
         return imbnumApply( cell_depth.size(), "IKRG", max_krg, tableManager,
-                            cell_depth, nullptr, imbnum, endnum, false );
+                            cell_depth, imbnum, endnum, false );
     }
 
     std::vector< double > KRGREndpoint( const Opm::TableManager & tableManager,
@@ -1385,7 +1367,7 @@ namespace {
     {
         const auto krgr = findKrgr( tableManager, phases );
         return satnumApply( cell_depth.size(), "KRGR", krgr, tableManager,
-                            cell_depth, nullptr, satnum, endnum, false );
+                            cell_depth, satnum, endnum, false );
     }
 
     std::vector< double > IKRGREndpoint( const Opm::TableManager & tableManager,
@@ -1396,7 +1378,7 @@ namespace {
     {
         const auto krgr = findKrgr( tableManager, phases );
         return imbnumApply( cell_depth.size(), "IKRGR", krgr, tableManager,
-                            cell_depth, nullptr, imbnum, endnum, false );
+                            cell_depth, imbnum, endnum, false );
     }
 
 } // namespace Anonymous
