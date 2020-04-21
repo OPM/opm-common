@@ -38,7 +38,7 @@ class Schedule;
 class SummaryState;
 
 
-class  PyRunModule {
+class __attribute__((visibility("default"))) PyRunModule {
 public:
     PyRunModule(std::shared_ptr<const Python> python, const std::string& fname);
 
