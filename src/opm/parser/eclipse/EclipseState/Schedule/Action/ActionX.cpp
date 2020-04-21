@@ -20,6 +20,7 @@
 #include <sstream>
 #include <unordered_set>
 
+#include <opm/parser/eclipse/Utility/Typetools.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionValue.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionX.hpp>
@@ -65,7 +66,7 @@ ActionX::ActionX(const DeckKeyword& kw, std::time_t start_time) :
     std::vector<std::string> tokens;
     for (size_t record_index = 1; record_index < kw.size(); record_index++) {
         const auto& record = kw.getRecord(record_index);
-        const auto& cond_tokens = record.getItem("CONDITION").getData<std::string>();
+        const auto& cond_tokens = RawString::strings( record.getItem("CONDITION").getData<RawString>() );
 
         for (const auto& token : cond_tokens)
             tokens.push_back(token);

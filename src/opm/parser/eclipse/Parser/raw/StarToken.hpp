@@ -24,6 +24,7 @@
 #include <string>
 
 #include <opm/parser/eclipse/Utility/Stringview.hpp>
+#include <opm/parser/eclipse/Utility/Typetools.hpp>
 
 namespace Opm {
     bool isStarToken(const string_view& token,

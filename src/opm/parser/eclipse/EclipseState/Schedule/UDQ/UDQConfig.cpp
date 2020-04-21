@@ -117,9 +117,9 @@ namespace Opm {
 
 
     void UDQConfig::add_record(const DeckRecord& record) {
-        auto action = UDQ::actionType(record.getItem("ACTION").get<std::string>(0));
+        auto action = UDQ::actionType(record.getItem("ACTION").get<RawString>(0));
         const auto& quantity = record.getItem("QUANTITY").get<std::string>(0);
-        const auto& data = record.getItem("DATA").getData<std::string>();
+        const auto& data = RawString::strings( record.getItem("DATA").getData<RawString>() );
 
         if (action == UDQAction::UPDATE)
             throw std::invalid_argument("The UDQ action UPDATE is not yet implemented in opm/flow");

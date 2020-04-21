@@ -6,7 +6,7 @@
   "items": [
     {
       "name": "ACTION",
-      "value_type": "STRING"
+      "value_type": "RAW_STRING"
     },
     {
       "name": "QUANTITY",
