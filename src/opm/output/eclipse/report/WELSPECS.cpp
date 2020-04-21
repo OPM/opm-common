@@ -408,7 +408,7 @@ namespace {
             return "";
         }
 
-        const std::string &unimplemented(std::size_t) const {
+        const std::string &dfactor(std::size_t) const {
             static const std::string s { };
             return s;
         }
@@ -436,13 +436,14 @@ namespace {
        {  6, {"INT"                    ,"DIAM"                   ,"METRES"                 }, &WellConnection::int_diam        , right_align },
        {  7, {"K  H"                   ,"VALUE"                  ,"MD.METRE"               }, &WellConnection::kh_value        , right_align },
        {  6, {"SKIN"                   ,"FACTOR"                 ,                         }, &WellConnection::skin_factor     , right_align },
-       { 10, {"CONNECTION"             ,"D-FACTOR"               ,"DAY/SM3"                }, &WellConnection::unimplemented   ,             },
+       { 10, {"CONNECTION"             ,"D-FACTOR§"               ,"DAY/SM3"               }, &WellConnection::dfactor         ,             },
        { 23, {"SATURATION SCALING DATA","SWMIN SWMAX SGMIN SGMAX","&"                      }, &WellConnection::sat_scaling     ,             },
     }};
 
     void subreport_well_connection_data(std::ostream& os, const std::vector<Opm::Well>& data) {
         well_connection.print(os, data);
         os << "&: The saturation scaling data has not been implemented in the report and will show blank" << std::endl;
+        os << "§: Entering the D-FAACTOR with compdat is not supported in opm/flow - the report will always show blank" << std::endl;
         os << std::endl;
     }
 }
