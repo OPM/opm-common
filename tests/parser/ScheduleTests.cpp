@@ -3623,8 +3623,20 @@ DATES             -- 4
 /
 
 
-DATES             -- 4
+DATES             -- 5
  10  NOV 2007 /
+/
+
+WELSPECS
+     'W4'    'G1'   1 2  3.33       'OIL'  7*/
+/
+
+DATES       -- 6
+    10 DEC 2007 /
+/
+
+COMPDAT
+  'W4'  1  1   1   1 'OPEN' 1*    1.168   0.311   107.872 1*  1*  'Z'  21.925 /
 /
 
      )";
@@ -3662,13 +3674,40 @@ DATES             -- 4
         BOOST_CHECK(!grc.has_group("G2"));
     }
 
-    GuideRate gr(schedule);
+    {
+        GuideRate gr(schedule);
+        double oil_pot = 1;
+        double gas_pot = 1;
+        double wat_pot = 1;
 
-    double oil_pot = 1;
-    double gas_pot = 1;
-    double wat_pot = 1;
-
-    gr.compute("XYZ",1, 1.0, oil_pot, gas_pot, wat_pot);
+        gr.compute("XYZ",1, 1.0, oil_pot, gas_pot, wat_pot);
+    }
+    {
+        const auto& changed_wells = schedule.changed_wells(0);
+        BOOST_CHECK_EQUAL( changed_wells.size() , 3);
+        for (const auto& wname : {"W1", "W2", "W2"}) {
+            auto find_well = std::find(changed_wells.begin(), changed_wells.end(), wname);
+            BOOST_CHECK(find_well != changed_wells.end());
+        }
+    }
+    {
+        const auto& changed_wells = schedule.changed_wells(2);
+        BOOST_CHECK_EQUAL( changed_wells.size(), 0);
+    }
+    {
+        const auto& changed_wells = schedule.changed_wells(4);
+        BOOST_CHECK_EQUAL( changed_wells.size(), 0);
+    }
+    {
+        const auto& changed_wells = schedule.changed_wells(5);
+        BOOST_CHECK_EQUAL( changed_wells.size(), 1);
+        BOOST_CHECK_EQUAL( changed_wells[0], "W4");
+    }
+    {
+        const auto& changed_wells = schedule.changed_wells(6);
+        BOOST_CHECK_EQUAL( changed_wells.size(), 1);
+        BOOST_CHECK_EQUAL( changed_wells[0], "W4");
+    }
 }
 
 BOOST_AUTO_TEST_CASE(Injection_Control_Mode_From_Well) {
