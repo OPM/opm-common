@@ -24,9 +24,9 @@
 
 namespace Opm::RptIO {
 
-    using report_function = std::function<void(std::ostream&, unsigned, const Schedule&, std::size_t)>;
+    using report_function = std::function<void(std::ostream&, unsigned, const Schedule&, const EclipseGrid&, std::size_t)>;
 
-    static const std::unordered_map<std::string,report_function> report_functions {
+    static const std::unordered_map<std::string, report_function> report_functions {
         { "WELSPECS", workers::write_WELSPECS },
     };
 
@@ -35,11 +35,12 @@ namespace Opm::RptIO {
         const std::string& report,
         unsigned value,
         const Opm::Schedule& schedule,
+        const Opm::EclipseGrid& grid,
         std::size_t report_step
     ) {
         const auto function { report_functions.find(report) } ;
         if (function != report_functions.end()) {
-            function->second(os, value, schedule, report_step);
+            function->second(os, value, schedule, grid, report_step);
         }
     }
 }
