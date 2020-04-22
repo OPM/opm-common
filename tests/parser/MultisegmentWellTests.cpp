@@ -33,6 +33,7 @@
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 
+#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/SpiralICD.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/Valve.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Connection.hpp>
@@ -438,4 +439,25 @@ BOOST_AUTO_TEST_CASE(testwsegvalv) {
     BOOST_CHECK_EQUAL(segment2.internalDiameter(), valv2->pipeDiameter());
     BOOST_CHECK_EQUAL(segment2.roughness(), valv2->pipeRoughness());
     BOOST_CHECK_EQUAL(segment2.crossArea(), valv2->pipeCrossArea());
+}
+
+
+BOOST_AUTO_TEST_CASE(MSW_SEGMENT_LENGTH) {
+    Opm::Parser parser;
+    Opm::Deck deck = parser.parseFile("MSW.DATA");
+    Opm::EclipseState st(deck);
+    Opm::Schedule sched(deck, st);
+
+
+    const auto& well = sched.getWell("PROD01", 0);
+    const auto& segments = well.getSegments();
+    BOOST_CHECK_CLOSE( segments.segmentLength(1), 2512.50, 1e-5);
+    BOOST_CHECK_CLOSE( segments.segmentLength(2), 25, 1e-5);
+    BOOST_CHECK_CLOSE( segments.segmentLength(6), 25, 1e-5);
+    BOOST_CHECK_CLOSE( segments.segmentLength(7), 200, 1e-5);
+
+    BOOST_CHECK_CLOSE( segments.segmentDepthChange(1), 2512.50, 1e-5);
+    BOOST_CHECK_CLOSE( segments.segmentDepthChange(2), 22, 1e-5);
+    BOOST_CHECK_CLOSE( segments.segmentDepthChange(6), 21, 1e-5);
+    BOOST_CHECK_CLOSE( segments.segmentDepthChange(7),  4, 1e-5);
 }

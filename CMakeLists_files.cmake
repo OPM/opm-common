@@ -437,6 +437,7 @@ if(ENABLE_ECL_OUTPUT)
           tests/SPE1CASE2.X0060
           tests/PYACTION.DATA
           tests/act1.py
+          tests/MSW.DATA
           tests/EXIT_TEST.DATA
           tests/action_syntax_error.py
           tests/action_missing_run.py

@@ -442,25 +442,31 @@ namespace Opm {
     }
 
     double WellSegments::segmentLength(const int segment_number) const {
-        double segment_length;
+        const Segment& segment = this->getFromSegmentNumber(segment_number);
+        if (segment_number == 1) // top segment
+            return segment.totalLength();
 
-        const Segment& segment = getFromSegmentNumber(segment_number);
-        if (segment_number == 1) {// top segment
-            segment_length = segment.totalLength();
-        } else {
-            // other segments
-            const int outlet_segment_number = segment.outletSegment();
-            const Segment &outlet_segment = getFromSegmentNumber(outlet_segment_number);
-
-            segment_length = segment.totalLength() - outlet_segment.totalLength();
-        }
-
+        // other segments
+        const Segment &outlet_segment = getFromSegmentNumber(segment.outletSegment());
+        const double segment_length = segment.totalLength() - outlet_segment.totalLength();
         if (segment_length <= 0.)
             throw std::runtime_error(" non positive segment length is obtained for segment "
                                      + std::to_string(segment_number));
 
         return segment_length;
     }
+
+
+    double WellSegments::segmentDepthChange(const int segment_number) const {
+        const Segment& segment = getFromSegmentNumber(segment_number);
+        if (segment_number == 1) // top segment
+            return segment.depth();
+
+        // other segments
+        const Segment &outlet_segment = this->getFromSegmentNumber(segment.outletSegment());
+        return segment.depth() - outlet_segment.depth();
+    }
+
 
     bool WellSegments::updateWSEGSICD(const std::vector<std::pair<int, SpiralICD> >& sicd_pairs) {
         if (m_comp_pressure_drop == CompPressureDrop::H__) {
