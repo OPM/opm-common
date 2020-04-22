@@ -263,7 +263,7 @@ void EclipseIO::writeTimeStep(const SummaryState& st,
     if (!isSubstep) {
         for (const auto& report : schedule.report_config(report_step)) {
             std::stringstream ss;
-            RptIO::write_report(ss, report.first, report.second, schedule, report_step);
+            RptIO::write_report(ss, report.first, report.second, schedule, grid, report_step);
             auto log_string = ss.str();
             if (!log_string.empty())
                 OpmLog::note(log_string);
