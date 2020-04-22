@@ -33,6 +33,7 @@
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 
+#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/SpiralICD.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/Valve.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Connection.hpp>
@@ -439,3 +440,62 @@ BOOST_AUTO_TEST_CASE(testwsegvalv) {
     BOOST_CHECK_EQUAL(segment2.roughness(), valv2->pipeRoughness());
     BOOST_CHECK_EQUAL(segment2.crossArea(), valv2->pipeCrossArea());
 }
+
+
+BOOST_AUTO_TEST_CASE(MSW_SEGMENT_LENGTH) {
+    Opm::Parser parser;
+    Opm::Deck deck = parser.parseFile("MSW.DATA");
+    Opm::EclipseState st(deck);
+    Opm::Schedule sched(deck, st);
+
+
+    const auto& well = sched.getWell("PROD01", 0);
+    const auto& segments = well.getSegments();
+    BOOST_CHECK_CLOSE( segments.segmentLength(1), 2512.50, 1e-5);
+    BOOST_CHECK_CLOSE( segments.segmentLength(2), 25, 1e-5);
+    BOOST_CHECK_CLOSE( segments.segmentLength(6), 25, 1e-5);
+    BOOST_CHECK_CLOSE( segments.segmentLength(7), 200, 1e-5);
+
+    BOOST_CHECK_CLOSE( segments.segmentDepthChange(1), 2512.50, 1e-5);
+    BOOST_CHECK_CLOSE( segments.segmentDepthChange(2), 22, 1e-5);
+    BOOST_CHECK_CLOSE( segments.segmentDepthChange(6), 21, 1e-5);
+    BOOST_CHECK_CLOSE( segments.segmentDepthChange(7),  4, 1e-5);
+}
+
+BOOST_AUTO_TEST_CASE(MSW_BRANCH_SEGMENTS) {
+    Opm::Parser parser;
+    Opm::Deck deck = parser.parseFile("MSW.DATA");
+    Opm::EclipseState st(deck);
+    Opm::Schedule sched(deck, st);
+
+
+    const auto& well = sched.getWell("PROD01", 0);
+    const auto& segments = well.getSegments();
+    {
+        auto seg100 = segments.branchSegments(100);
+        BOOST_CHECK(seg100.empty());
+    }
+    {
+        auto seg1 = segments.branchSegments(1);
+        BOOST_CHECK_EQUAL( seg1.size(), 6 );
+        const std::vector<int> expected = {1,2,3,4,5,6};
+        for (std::size_t index = 0; index < seg1.size(); index++)
+            BOOST_CHECK_EQUAL( expected[index], seg1[index].segmentNumber());
+    }
+    {
+        auto seg2 = segments.branchSegments(2);
+        const std::vector<int> expected = {7,8,9,10,11};
+        BOOST_CHECK_EQUAL( seg2.size(), 5 );
+        for (std::size_t index = 0; index < seg2.size(); index++)
+            BOOST_CHECK_EQUAL( expected[index], seg2[index].segmentNumber());
+    }
+    {
+        auto seg5 = segments.branchSegments(5);
+        const std::vector<int> expected = {22,23,24,25,26};
+        BOOST_CHECK_EQUAL( seg5.size(), 5 );
+        for (std::size_t index = 0; index < seg5.size(); index++)
+            BOOST_CHECK_EQUAL( expected[index], seg5[index].segmentNumber());
+    }
+}
+
+

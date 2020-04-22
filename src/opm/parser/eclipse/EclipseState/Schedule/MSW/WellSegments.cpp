@@ -16,10 +16,11 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <iostream>
 #include <cassert>
 #include <cmath>
+#include <iostream>
 #include <map>
+#include <unordered_set>
 
 #ifdef _WIN32
 #define _USE_MATH_DEFINES
@@ -442,24 +443,56 @@ namespace Opm {
     }
 
     double WellSegments::segmentLength(const int segment_number) const {
-        double segment_length;
+        const Segment& segment = this->getFromSegmentNumber(segment_number);
+        if (segment_number == 1) // top segment
+            return segment.totalLength();
 
-        const Segment& segment = getFromSegmentNumber(segment_number);
-        if (segment_number == 1) {// top segment
-            segment_length = segment.totalLength();
-        } else {
-            // other segments
-            const int outlet_segment_number = segment.outletSegment();
-            const Segment &outlet_segment = getFromSegmentNumber(outlet_segment_number);
-
-            segment_length = segment.totalLength() - outlet_segment.totalLength();
-        }
-
+        // other segments
+        const Segment &outlet_segment = getFromSegmentNumber(segment.outletSegment());
+        const double segment_length = segment.totalLength() - outlet_segment.totalLength();
         if (segment_length <= 0.)
             throw std::runtime_error(" non positive segment length is obtained for segment "
                                      + std::to_string(segment_number));
 
         return segment_length;
+    }
+
+
+    double WellSegments::segmentDepthChange(const int segment_number) const {
+        const Segment& segment = getFromSegmentNumber(segment_number);
+        if (segment_number == 1) // top segment
+            return segment.depth();
+
+        // other segments
+        const Segment &outlet_segment = this->getFromSegmentNumber(segment.outletSegment());
+        return segment.depth() - outlet_segment.depth();
+    }
+
+
+    std::vector<Segment> WellSegments::branchSegments(int branch) const {
+        std::vector<Segment> segments;
+        std::unordered_set<int> segment_set;
+        for (const auto& segment : this->m_segments) {
+            if (segment.branchNumber() == branch) {
+                segments.push_back(segment);
+                segment_set.insert( segment.segmentNumber() );
+            }
+        }
+
+        std::size_t head_index = 0;
+        while (head_index < segments.size()) {
+            auto head_iter = std::find_if(segments.begin() + head_index, segments.end(),
+                                          [&segment_set] (const Segment& segment) { return (segment_set.count(segment.outletSegment()) == 0); });
+
+            if (head_iter == segments.end())
+                throw std::logic_error("Loop detected in branch/segment structure");
+
+            segment_set.erase( head_iter->segmentNumber() );
+            std::swap( segments[head_index], *head_iter);
+            head_index++;
+        }
+
+        return segments;
     }
 
     bool WellSegments::updateWSEGSICD(const std::vector<std::pair<int, SpiralICD> >& sicd_pairs) {
