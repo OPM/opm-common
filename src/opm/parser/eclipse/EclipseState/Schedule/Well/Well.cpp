@@ -628,7 +628,7 @@ bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg) {
 
 bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg, const EclipseGrid& grid, const std::vector<int>& pvtnum) {
     bool update = this->updateConnections(connections_arg);
-    if (this->pvt_table == 0) {
+    if (this->pvt_table == 0 && this->connections->size() > 0) {
         const auto& lowest = this->connections->lowest();
         auto active_index = grid.activeIndex(lowest.global_index());
         this->pvt_table = pvtnum[active_index];
