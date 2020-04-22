@@ -16,10 +16,11 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <iostream>
 #include <cassert>
 #include <cmath>
+#include <iostream>
 #include <map>
+#include <unordered_set>
 
 #ifdef _WIN32
 #define _USE_MATH_DEFINES
@@ -467,6 +468,32 @@ namespace Opm {
         return segment.depth() - outlet_segment.depth();
     }
 
+
+    std::vector<Segment> WellSegments::branchSegments(int branch) const {
+        std::vector<Segment> segments;
+        std::unordered_set<int> segment_set;
+        for (const auto& segment : this->m_segments) {
+            if (segment.branchNumber() == branch) {
+                segments.push_back(segment);
+                segment_set.insert( segment.segmentNumber() );
+            }
+        }
+
+        std::size_t head_index = 0;
+        while (head_index < segments.size()) {
+            auto head_iter = std::find_if(segments.begin() + head_index, segments.end(),
+                                          [&segment_set] (const Segment& segment) { return (segment_set.count(segment.outletSegment()) == 0); });
+
+            if (head_iter == segments.end())
+                throw std::logic_error("Loop detected in branch/segment structure");
+
+            segment_set.erase( head_iter->segmentNumber() );
+            std::swap( segments[head_index], *head_iter);
+            head_index++;
+        }
+
+        return segments;
+    }
 
     bool WellSegments::updateWSEGSICD(const std::vector<std::pair<int, SpiralICD> >& sicd_pairs) {
         if (m_comp_pressure_drop == CompPressureDrop::H__) {

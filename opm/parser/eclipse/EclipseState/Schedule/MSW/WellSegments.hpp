@@ -90,6 +90,7 @@ namespace Opm {
 
         double segmentLength(const int segment_number) const;
         double segmentDepthChange(const int segment_number) const;
+        std::vector<Segment> branchSegments(int branch) const;
 
         // it returns true if there is no error encountered during the update
         bool updateWSEGSICD(const std::vector<std::pair<int, SpiralICD> >& sicd_pairs);
