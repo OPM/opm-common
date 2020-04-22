@@ -469,6 +469,14 @@ namespace Opm {
     }
 
 
+    std::set<int> WellSegments::branches() const {
+        std::set<int> bset;
+        for (const auto& segment : this->m_segments)
+            bset.insert( segment.branchNumber() );
+        return bset;
+    }
+
+
     std::vector<Segment> WellSegments::branchSegments(int branch) const {
         std::vector<Segment> segments;
         std::unordered_set<int> segment_set;
