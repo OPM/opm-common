@@ -359,6 +359,7 @@ private:
     const UnitSystem unit_system;
     std::size_t nx,ny,nz;
     Phases m_phases;
+    SatFuncControls m_satfuncctrl;
     std::vector<int> m_actnum;
     std::vector<double> cell_volume;
     std::vector<double> cell_depth;

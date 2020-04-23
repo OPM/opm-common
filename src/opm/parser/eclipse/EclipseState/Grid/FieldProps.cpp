@@ -409,6 +409,7 @@ FieldProps::FieldProps(const Deck& deck, const Phases& phases, const EclipseGrid
     ny(grid.getNY()),
     nz(grid.getNZ()),
     m_phases(phases),
+    m_satfuncctrl(deck),
     m_actnum(grid.getACTNUM()),
     cell_volume(extract_cell_volume(grid)),
     cell_depth(extract_cell_depth(grid)),
