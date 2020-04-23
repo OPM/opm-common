@@ -20,6 +20,7 @@
 #include <cmath>
 #include <iostream>
 #include <map>
+#include <iterator>
 #include <unordered_set>
 
 #ifdef _WIN32
@@ -479,16 +480,19 @@ namespace Opm {
             }
         }
 
+
         std::size_t head_index = 0;
         while (head_index < segments.size()) {
-            auto head_iter = std::find_if(segments.begin() + head_index, segments.end(),
-                                          [&segment_set] (const Segment& segment) { return (segment_set.count(segment.outletSegment()) == 0); });
+            const auto& head_segment = segments[head_index];
+            if (segment_set.count(head_segment.outletSegment()) != 0) {
+                auto head_iter = std::find_if(std::next(segments.begin(), head_index), segments.end(),
+                                              [&segment_set] (const Segment& segment) { return (segment_set.count(segment.outletSegment()) == 0); });
 
-            if (head_iter == segments.end())
-                throw std::logic_error("Loop detected in branch/segment structure");
-
-            segment_set.erase( head_iter->segmentNumber() );
-            std::swap( segments[head_index], *head_iter);
+                if (head_iter == segments.end())
+                    throw std::logic_error("Loop detected in branch/segment structure");
+                std::swap( segments[head_index], *head_iter);
+            }
+            segment_set.erase( segments[head_index].segmentNumber() );
             head_index++;
         }
 
