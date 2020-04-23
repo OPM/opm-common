@@ -1055,210 +1055,194 @@ namespace {
 
     std::vector<double>
     SGLEndpoint(const Opm::TableManager&   tableManager,
-                const Opm::Phases&         phases,
+                const Opm::Phases&         /* phases */,
                 const RawTableEndPoints&   ep,
                 const std::vector<double>& cell_depth,
                 const std::vector<int>&    satnum,
                 const std::vector<int>&    endnum)
     {
-        const auto min_gas = findMinGasSaturation( tableManager, phases );
-        return satnumApply( cell_depth.size(), "SGCO", min_gas, tableManager,
-                            cell_depth, satnum, endnum, false );
+        return satnumApply(cell_depth.size(), "SGCO", ep.connate.gas,
+                           tableManager, cell_depth, satnum, endnum, false);
     }
 
     std::vector<double>
     ISGLEndpoint(const Opm::TableManager&   tableManager,
-                 const Opm::Phases&         phases,
+                 const Opm::Phases&         /* phases */,
                  const RawTableEndPoints&   ep,
                  const std::vector<double>& cell_depth,
                  const std::vector<int>&    imbnum,
                  const std::vector<int>&    endnum)
     {
-        const auto min_gas = findMinGasSaturation( tableManager, phases );
-        return imbnumApply( cell_depth.size(), "SGCO", min_gas, tableManager,
-                            cell_depth, imbnum, endnum, false );
+        return imbnumApply(cell_depth.size(), "SGCO", ep.connate.gas,
+                           tableManager, cell_depth, imbnum, endnum, false);
     }
 
     std::vector<double>
     SGUEndpoint(const Opm::TableManager&   tableManager,
-                const Opm::Phases&         phases,
+                const Opm::Phases&         /* phases */,
                 const RawTableEndPoints&   ep,
                 const std::vector<double>& cell_depth,
                 const std::vector<int>&    satnum,
                 const std::vector<int>&    endnum)
     {
-        const auto max_gas = findMaxGasSaturation( tableManager, phases );
-        return satnumApply( cell_depth.size(), "SGMAX", max_gas, tableManager,
-                            cell_depth, satnum, endnum, false );
+        return satnumApply(cell_depth.size(), "SGMAX", ep.maximum.gas,
+                           tableManager, cell_depth, satnum, endnum, false);
     }
 
     std::vector<double>
     ISGUEndpoint(const Opm::TableManager&   tableManager,
-                 const Opm::Phases&         phases,
+                 const Opm::Phases&         /* phases */,
                  const RawTableEndPoints&   ep,
                  const std::vector<double>& cell_depth,
                  const std::vector<int>&    imbnum,
                  const std::vector<int>&    endnum)
     {
-        const auto max_gas = findMaxGasSaturation( tableManager, phases );
-        return imbnumApply( cell_depth.size(), "SGMAX", max_gas, tableManager,
-                            cell_depth, imbnum, endnum, false );
+        return imbnumApply(cell_depth.size(), "SGMAX", ep.maximum.gas,
+                           tableManager, cell_depth, imbnum, endnum, false);
     }
 
     std::vector<double>
     SWLEndpoint(const Opm::TableManager&   tableManager,
-                const Opm::Phases&         phases,
+                const Opm::Phases&         /* phases */,
                 const RawTableEndPoints&   ep,
                 const std::vector<double>& cell_depth,
                 const std::vector<int>&    satnum,
                 const std::vector<int>&    endnum)
     {
-        const auto min_water = findMinWaterSaturation( tableManager, phases );
-        return satnumApply( cell_depth.size(), "SWCO", min_water, tableManager,
-                            cell_depth, satnum, endnum, false );
+        return satnumApply(cell_depth.size(), "SWCO", ep.connate.water,
+                           tableManager, cell_depth, satnum, endnum, false);
     }
 
     std::vector<double>
     ISWLEndpoint(const Opm::TableManager&   tableManager,
-                 const Opm::Phases&         phases,
+                 const Opm::Phases&         /* phases */,
                  const RawTableEndPoints&   ep,
                  const std::vector<double>& cell_depth,
                  const std::vector<int>&    imbnum,
                  const std::vector<int>&    endnum)
     {
-        const auto min_water = findMinWaterSaturation( tableManager, phases );
-        return imbnumApply( cell_depth.size(), "SWCO", min_water, tableManager,
-                            cell_depth, imbnum, endnum, false );
+        return imbnumApply(cell_depth.size(), "SWCO", ep.connate.water,
+                           tableManager, cell_depth, imbnum, endnum, false);
     }
 
     std::vector<double>
     SWUEndpoint(const Opm::TableManager&   tableManager,
-                const Opm::Phases&         phases,
+                const Opm::Phases&         /* phases */,
                 const RawTableEndPoints&   ep,
                 const std::vector<double>& cell_depth,
                 const std::vector<int>&    satnum,
                 const std::vector<int>&    endnum)
     {
-        const auto max_water = findMaxWaterSaturation( tableManager, phases );
-        return satnumApply( cell_depth.size(), "SWMAX", max_water, tableManager,
-                            cell_depth, satnum, endnum, true );
+        return satnumApply(cell_depth.size(), "SWMAX", ep.maximum.water,
+                           tableManager, cell_depth, satnum, endnum, true);
     }
 
     std::vector<double>
     ISWUEndpoint(const Opm::TableManager&   tableManager,
-                 const Opm::Phases&         phases,
+                 const Opm::Phases&         /* phases */,
                  const RawTableEndPoints&   ep,
                  const std::vector<double>& cell_depth,
                  const std::vector<int>&    imbnum,
                  const std::vector<int>&    endnum)
     {
-        const auto max_water = findMaxWaterSaturation( tableManager, phases );
-        return imbnumApply( cell_depth.size(), "SWMAX", max_water, tableManager,
-                            cell_depth, imbnum, endnum, true);
+        return imbnumApply(cell_depth.size(), "SWMAX", ep.maximum.water,
+                           tableManager, cell_depth, imbnum, endnum, true);
     }
 
     std::vector<double>
     SGCREndpoint(const Opm::TableManager&   tableManager,
-                 const Opm::Phases&         phases,
+                 const Opm::Phases&         /* phases */,
                  const RawTableEndPoints&   ep,
                  const std::vector<double>& cell_depth,
                  const std::vector<int>&    satnum,
                  const std::vector<int>&    endnum)
     {
-        const auto crit_gas = findCriticalGas( tableManager, phases );
-        return satnumApply( cell_depth.size(), "SGCRIT", crit_gas, tableManager,
-                            cell_depth, satnum, endnum, false );
+        return satnumApply(cell_depth.size(), "SGCRIT", ep.critical.gas,
+                           tableManager, cell_depth, satnum, endnum, false);
     }
 
     std::vector<double>
     ISGCREndpoint(const Opm::TableManager&   tableManager,
-                  const Opm::Phases&         phases,
+                  const Opm::Phases&         /* phases */,
                   const RawTableEndPoints&   ep,
                   const std::vector<double>& cell_depth,
                   const std::vector<int>&    imbnum,
                   const std::vector<int>&    endnum)
     {
-        const auto crit_gas = findCriticalGas( tableManager, phases );
-        return imbnumApply( cell_depth.size(), "SGCRIT", crit_gas, tableManager,
-                            cell_depth, imbnum, endnum, false );
+        return imbnumApply(cell_depth.size(), "SGCRIT", ep.critical.gas,
+                           tableManager, cell_depth, imbnum, endnum, false);
     }
 
     std::vector<double>
     SOWCREndpoint(const Opm::TableManager&   tableManager,
-                  const Opm::Phases&         phases,
+                  const Opm::Phases&         /* phases */,
                   const RawTableEndPoints&   ep,
                   const std::vector<double>& cell_depth,
                   const std::vector<int>&    satnum,
                   const std::vector<int>&    endnum)
     {
-        const auto oil_water = findCriticalOilWater( tableManager, phases );
-        return satnumApply( cell_depth.size(), "SOWCRIT", oil_water, tableManager,
-                            cell_depth, satnum, endnum, false );
+        return satnumApply(cell_depth.size(), "SOWCRIT", ep.critical.oil_in_water,
+                           tableManager, cell_depth, satnum, endnum, false);
     }
 
     std::vector<double>
     ISOWCREndpoint(const Opm::TableManager&   tableManager,
-                   const Opm::Phases&         phases,
+                   const Opm::Phases&         /* phases */,
                    const RawTableEndPoints&   ep,
                    const std::vector<double>& cell_depth,
                    const std::vector<int>&    imbnum,
                    const std::vector<int>&    endnum)
     {
-        const auto oil_water = findCriticalOilWater( tableManager, phases );
-        return imbnumApply( cell_depth.size(), "SOWCRIT", oil_water, tableManager,
-                            cell_depth, imbnum, endnum, false );
+        return imbnumApply(cell_depth.size(), "SOWCRIT", ep.critical.oil_in_water,
+                           tableManager, cell_depth, imbnum, endnum, false);
     }
 
     std::vector<double>
     SOGCREndpoint(const Opm::TableManager&   tableManager,
-                  const Opm::Phases&         phases,
+                  const Opm::Phases&         /* phases */,
                   const RawTableEndPoints&   ep,
                   const std::vector<double>& cell_depth,
                   const std::vector<int>&    satnum,
                   const std::vector<int>&    endnum)
     {
-        const auto crit_oil_gas = findCriticalOilGas( tableManager, phases );
-        return satnumApply( cell_depth.size(), "SOGCRIT", crit_oil_gas, tableManager,
-                            cell_depth, satnum, endnum, false );
+        return satnumApply(cell_depth.size(), "SOGCRIT", ep.critical.oil_in_gas,
+                           tableManager, cell_depth, satnum, endnum, false);
     }
 
     std::vector<double>
     ISOGCREndpoint(const Opm::TableManager&   tableManager,
-                   const Opm::Phases&         phases,
+                   const Opm::Phases&         /* phases */,
                    const RawTableEndPoints&   ep,
                    const std::vector<double>& cell_depth,
                    const std::vector<int>&    imbnum,
                    const std::vector<int>&    endnum)
     {
-        const auto crit_oil_gas = findCriticalOilGas( tableManager, phases );
-        return imbnumApply( cell_depth.size(), "SOGCRIT", crit_oil_gas, tableManager,
-                            cell_depth, imbnum, endnum, false );
+        return imbnumApply(cell_depth.size(), "SOGCRIT", ep.critical.oil_in_gas,
+                           tableManager, cell_depth, imbnum, endnum, false);
     }
 
     std::vector<double>
     SWCREndpoint(const Opm::TableManager&   tableManager,
-                 const Opm::Phases&         phases,
+                 const Opm::Phases&         /* phases */,
                  const RawTableEndPoints&   ep,
                  const std::vector<double>& cell_depth,
                  const std::vector<int>&    satnum,
                  const std::vector<int>&    endnum)
     {
-        const auto crit_water = findCriticalWater( tableManager, phases );
-        return satnumApply( cell_depth.size(), "SWCRIT", crit_water, tableManager,
-                            cell_depth, satnum, endnum, false );
+        return satnumApply(cell_depth.size(), "SWCRIT", ep.critical.water,
+                           tableManager, cell_depth, satnum, endnum, false);
     }
 
     std::vector<double>
     ISWCREndpoint(const Opm::TableManager&   tableManager,
-                  const Opm::Phases&         phases,
+                  const Opm::Phases&         /* phases */,
                   const RawTableEndPoints&   ep,
                   const std::vector<double>& cell_depth,
                   const std::vector<int>&    imbnum,
                   const std::vector<int>&    endnum)
     {
-        const auto crit_water = findCriticalWater( tableManager, phases );
-        return imbnumApply( cell_depth.size(), "SWCRIT", crit_water, tableManager,
-                            cell_depth, imbnum, endnum, false );
+        return imbnumApply(cell_depth.size(), "SWCRIT", ep.critical.water,
+                           tableManager, cell_depth, imbnum, endnum, false);
     }
 
     std::vector<double>
