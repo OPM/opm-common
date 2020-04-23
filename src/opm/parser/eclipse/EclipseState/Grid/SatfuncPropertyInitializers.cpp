@@ -708,44 +708,39 @@ namespace {
         const auto& sof2Tables = tm.getSof2Tables();
         const auto& sof3Tables = tm.getSof3Tables();
 
-        const auto& famI_sgof = [&sgofTables]( int i ) {
-            const auto& sgofTable = sgofTables.getTable<Opm::SgofTable>( i );
-            const auto& krgCol = sgofTable.getKrgColumn();
-            const auto crit = std::upper_bound( krgCol.begin(), krgCol.end(), 0.0 );
-            const auto index = std::distance( krgCol.begin(), crit );
+        const auto famI_sgof = [&sgofTables, &ep](const int i) -> double
+        {
+            const auto& sgof = sgofTables.getTable<Opm::SgofTable>(i);
+            const auto  ix   = sgof.getSgColumn().lookup(ep.critical.gas[i]);
 
-            if( crit == krgCol.end() ) return 0.0;
-
-            return sgofTable.getKrogColumn()[ index - 1 ];
+            // So = 1 - Sgcr - Swl
+            return sgof.getKrogColumn().eval(ix);
         };
 
-        const auto& famI_slgof = [&slgofTables]( int i ) {
-            const auto& slgofTable = slgofTables.getTable<Opm::SlgofTable>( i );
-            const auto& col = slgofTable.getKrgColumn();
-            using reverse = std::reverse_iterator< decltype( col.begin() ) >;
-            auto rbegin = reverse( col.begin() + slgofTable.numRows() );
-            auto rend = reverse( col.begin() );
-            const auto crit = std::upper_bound( rbegin, rend, 0.0 );
-            // base() points to the next element in the forward order
-            const auto index = std::distance( col.begin(), crit.base());
+        const auto famI_slgof = [&slgofTables, &ep](const int i) -> double
+        {
+            const auto& slgof = slgofTables.getTable<Opm::SlgofTable>(i);
+            const auto  ix    = slgof.getSlColumn().lookup(1.0 - ep.critical.gas[i]);
 
-            if( crit == rend ) return 0.0;
-
-            return slgofTable.getKrogColumn()[ index ];
+            return slgof.getKrogColumn().eval(ix);
         };
 
-        const auto crit_gas = findCriticalGas( tm, ph );
-        const auto min_water = findMinWaterSaturation( tm, ph );
-        const auto& famII_3p = [&sof3Tables,&crit_gas,&min_water]( int i ) {
-            const double OilSatAtcritialGasSat = 1.0 - crit_gas[ i ] - min_water[ i ];
-            return sof3Tables.getTable<Opm::Sof3Table>( i )
-                .evaluate("KROG", OilSatAtcritialGasSat);
+        const auto famII_3p = [&sof3Tables, &ep](const int i) -> double
+        {
+            const auto& sof3 = sof3Tables.getTable<Opm::Sof3Table>(i);
+            const auto  sr   = 1.0 - ep.critical.gas[i] - ep.connate.water[i];
+            const auto  ix   = sof3.getSoColumn().lookup(sr);
+
+            return sof3.getKrogColumn().eval(ix);
         };
 
-        const auto famII_2p = [&sof2Tables,&crit_gas,&min_water]( int i ) {
-            const double OilSatAtcritialGasSat = 1.0 - crit_gas[ i ] - min_water[ i ];
-            return sof2Tables.getTable<Opm::Sof2Table>( i )
-                .evaluate("KRO", OilSatAtcritialGasSat);
+        const auto famII_2p = [&sof2Tables, &ep](const int i) -> double
+        {
+            const auto& sof2 = sof2Tables.getTable<Opm::Sof2Table>(i);
+            const auto  sr   = 1.0 - ep.critical.gas[i] - ep.connate.water[i];
+            const auto  ix   = sof2.getSoColumn().lookup(sr);
+
+            return sof2.getKroColumn().eval(ix);
         };
 
         switch( getSaturationFunctionFamily( tm, ph ) ) {
