@@ -32,8 +32,10 @@
 
 #include <opm/parser/eclipse/Utility/Functional.hpp>
 
+#include <algorithm>
 #include <array>
 #include <exception>
+#include <iterator>
 #include <stdexcept>
 #include <string>
 
