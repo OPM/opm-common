@@ -115,7 +115,7 @@ namespace {
 
     // enum class limit { min, max };
 
-    std::vector< double >
+    std::vector<double>
     findMinWaterSaturation(const Opm::TableManager& tm,
                            const Opm::Phases&       ph)
     {
@@ -143,7 +143,7 @@ namespace {
         }
     }
 
-    std::vector< double >
+    std::vector<double>
     findMaxWaterSaturation(const Opm::TableManager& tm,
                            const Opm::Phases&       ph)
     {
@@ -171,7 +171,7 @@ namespace {
         }
     }
 
-    std::vector< double >
+    std::vector<double>
     findMinGasSaturation(const Opm::TableManager& tm,
                          const Opm::Phases&       ph)
     {
@@ -214,7 +214,7 @@ namespace {
         }
     }
 
-    std::vector< double >
+    std::vector<double>
     findMaxGasSaturation(const Opm::TableManager& tm,
                          const Opm::Phases&       ph)
     {
@@ -336,7 +336,7 @@ namespace {
         return slgofTable.getSlColumn()[ index - 1 ];
     }
 
-    std::vector< double >
+    std::vector<double>
     findCriticalGas(const Opm::TableManager& tm,
                     const Opm::Phases&       ph)
     {
@@ -412,7 +412,7 @@ namespace {
         return sof3Table.getSoColumn()[ index - 1 ];
     }
 
-    std::vector< double >
+    std::vector<double>
     findCriticalOilWater(const Opm::TableManager& tm,
                          const Opm::Phases&       ph)
     {
@@ -476,7 +476,7 @@ namespace {
         return sgofTable.getSlColumn()[ index ];
     }
 
-    std::vector< double >
+    std::vector<double>
     findCriticalOilGas(const Opm::TableManager& tm,
                        const Opm::Phases&       ph)
     {
@@ -528,7 +528,7 @@ namespace {
         }
     }
 
-    std::vector< double >
+    std::vector<double>
     findMaxKrg(const Opm::TableManager& tm,
                const Opm::Phases&       ph)
     {
@@ -609,7 +609,7 @@ namespace {
         }
     }
 
-    std::vector< double >
+    std::vector<double>
     findKrwr(const Opm::TableManager& tm,
              const Opm::Phases&       ph,
              const RawTableEndPoints& ep)
@@ -640,7 +640,7 @@ namespace {
         }
     }
 
-    std::vector< double >
+    std::vector<double>
     findKrorw(const Opm::TableManager& tm,
               const Opm::Phases&       ph,
               const RawTableEndPoints& ep)
@@ -692,7 +692,7 @@ namespace {
         }
     }
 
-    std::vector< double >
+    std::vector<double>
     findKrorg(const Opm::TableManager& tm,
               const Opm::Phases&       ph,
               const RawTableEndPoints& ep)
@@ -774,7 +774,7 @@ namespace {
      * is not taken into account which means that some twophase quantity must be
      * scaled.
      */
-    std::vector< double >
+    std::vector<double>
     findMaxPcog(const Opm::TableManager& tm,
                 const Opm::Phases&       ph)
     {
@@ -815,7 +815,7 @@ namespace {
         }
     }
 
-    std::vector< double >
+    std::vector<double>
     findMaxPcow(const Opm::TableManager& tm,
                 const Opm::Phases&       ph)
     {
@@ -846,7 +846,7 @@ namespace {
         }
     }
 
-    std::vector< double >
+    std::vector<double>
     findMaxKro(const Opm::TableManager& tm,
                const Opm::Phases&       ph)
     {
@@ -890,7 +890,7 @@ namespace {
         }
     }
 
-    std::vector< double >
+    std::vector<double>
     findMaxKrw(const Opm::TableManager& tm,
                const Opm::Phases&       ph)
     {
@@ -979,7 +979,7 @@ namespace {
         }
     }
 
-    std::vector< double >
+    std::vector<double>
     satnumApply(size_t size,
                 const std::string& columnName,
                 const std::vector< double >& fallbackValues,
@@ -1016,7 +1016,7 @@ namespace {
         return values;
     }
 
-    std::vector< double >
+    std::vector<double>
     imbnumApply(size_t size,
                 const std::string& columnName,
                 const std::vector< double >& fallBackValues,
@@ -1253,9 +1253,9 @@ namespace {
                 const std::vector<int>&    satnum,
                 const std::vector<int>&    endnum)
     {
-        const auto max_pcow = findMaxPcow( tableManager, phases );
-        return satnumApply( cell_depth.size(), "PCW", max_pcow, tableManager,
-                            cell_depth, satnum, endnum, false );
+        const auto max_pcow = findMaxPcow(tableManager, phases);
+        return satnumApply(cell_depth.size(), "PCW", max_pcow, tableManager,
+                           cell_depth, satnum, endnum, false);
     }
 
     std::vector<double>
@@ -1266,9 +1266,9 @@ namespace {
                  const std::vector<int>&    imbnum,
                  const std::vector<int>&    endnum)
     {
-        const auto max_pcow = findMaxPcow( tableManager, phases );
-        return imbnumApply( cell_depth.size(), "IPCW", max_pcow, tableManager,
-                            cell_depth, imbnum, endnum, false );
+        const auto max_pcow = findMaxPcow(tableManager, phases);
+        return imbnumApply(cell_depth.size(), "IPCW", max_pcow, tableManager,
+                           cell_depth, imbnum, endnum, false);
     }
 
     std::vector<double>
@@ -1279,9 +1279,9 @@ namespace {
                 const std::vector<int>&    satnum,
                 const std::vector<int>&    imbnum)
     {
-        const auto max_pcog = findMaxPcog( tableManager, phases );
-        return satnumApply( cell_depth.size(), "PCG", max_pcog, tableManager,
-                            cell_depth, satnum, imbnum, false );
+        const auto max_pcog = findMaxPcog(tableManager, phases);
+        return satnumApply(cell_depth.size(), "PCG", max_pcog, tableManager,
+                           cell_depth, satnum, imbnum, false );
     }
 
     std::vector<double>
@@ -1292,9 +1292,9 @@ namespace {
                  const std::vector<int>&    imbnum,
                  const std::vector<int>&    endnum)
     {
-        const auto max_pcog = findMaxPcog( tableManager, phases );
-        return imbnumApply( cell_depth.size(), "IPCG", max_pcog, tableManager,
-                            cell_depth, imbnum, endnum, false );
+        const auto max_pcog = findMaxPcog(tableManager, phases);
+        return imbnumApply(cell_depth.size(), "IPCG", max_pcog, tableManager,
+                           cell_depth, imbnum, endnum, false);
     }
 
     std::vector<double>
@@ -1305,9 +1305,9 @@ namespace {
                 const std::vector<int>&    satnum,
                 const std::vector<int>&    endnum)
     {
-        const auto max_krw = findMaxKrw( tableManager, phases );
-        return satnumApply( cell_depth.size(), "KRW", max_krw, tableManager,
-                            cell_depth, satnum, endnum, false );
+        const auto max_krw = findMaxKrw(tableManager, phases);
+        return satnumApply(cell_depth.size(), "KRW", max_krw, tableManager,
+                           cell_depth, satnum, endnum, false);
     }
 
     std::vector<double>
@@ -1318,9 +1318,9 @@ namespace {
                  const std::vector<int>&    imbnum,
                  const std::vector<int>&    endnum)
     {
-        const auto krwr = findKrwr( tableManager, phases );
-        return imbnumApply( cell_depth.size(), "IKRW", krwr, tableManager,
-                            cell_depth, imbnum, endnum, false );
+        const auto max_krw = findMaxKrw(tableManager, phases);
+        return imbnumApply(cell_depth.size(), "IKRW", max_krw, tableManager,
+                           cell_depth, imbnum, endnum, false );
     }
 
     std::vector<double>
@@ -1357,9 +1357,9 @@ namespace {
                 const std::vector<int>&    satnum,
                 const std::vector<int>&    endnum)
     {
-        const auto max_kro = findMaxKro( tableManager, phases );
-        return satnumApply( cell_depth.size(), "KRO", max_kro, tableManager,
-                            cell_depth, satnum, endnum, false );
+        const auto max_kro = findMaxKro(tableManager, phases);
+        return satnumApply(cell_depth.size(), "KRO", max_kro, tableManager,
+                           cell_depth, satnum, endnum, false);
     }
 
     std::vector<double>
@@ -1370,9 +1370,9 @@ namespace {
                  const std::vector<int>&    imbnum,
                  const std::vector<int>&    endnum)
     {
-        const auto max_kro = findMaxKro( tableManager,phases );
-        return imbnumApply( cell_depth.size(), "IKRO", max_kro, tableManager,
-                            cell_depth, imbnum, endnum, false );
+        const auto max_kro = findMaxKro(tableManager, phases);
+        return imbnumApply(cell_depth.size(), "IKRO", max_kro, tableManager,
+                           cell_depth, imbnum, endnum, false);
     }
 
     std::vector<double>
@@ -1435,9 +1435,9 @@ namespace {
                 const std::vector<int>&    satnum,
                 const std::vector<int>&    endnum)
     {
-        const auto max_krg = findMaxKrg( tableManager, phases );
-        return satnumApply( cell_depth.size(), "KRG", max_krg, tableManager,
-                            cell_depth, satnum, endnum, false );
+        const auto max_krg = findMaxKrg(tableManager, phases);
+        return satnumApply(cell_depth.size(), "KRG", max_krg, tableManager,
+                           cell_depth, satnum, endnum, false);
     }
 
     std::vector<double>
@@ -1448,9 +1448,9 @@ namespace {
                  const std::vector<int>&    imbnum,
                  const std::vector<int>&    endnum)
     {
-        const auto max_krg = findMaxKrg( tableManager, phases );
-        return imbnumApply( cell_depth.size(), "IKRG", max_krg, tableManager,
-                            cell_depth, imbnum, endnum, false );
+        const auto max_krg = findMaxKrg(tableManager, phases);
+        return imbnumApply(cell_depth.size(), "IKRG", max_krg, tableManager,
+                           cell_depth, imbnum, endnum, false);
     }
 
     std::vector<double>
