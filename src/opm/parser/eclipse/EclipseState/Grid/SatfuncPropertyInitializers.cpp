@@ -582,16 +582,43 @@ namespace {
         const auto& slgofTables = tm.getSlgofTables();
         const auto& sgfnTables = tm.getSgfnTables();
 
-        const auto& famI_sgof = [&sgofTables]( int i ) {
-            return sgofTables.getTable<Opm::SgofTable>( i ).getKrgColumn().front();
+        auto sr = std::vector<double>(num_tables, 0.0);
+        if (ph.active(Opm::Phase::OIL)) {
+            // G/O or G/O/W system
+            for (auto tblID = 0*num_tables; tblID < num_tables; ++tblID) {
+                sr[tblID] = 1.0 - (ep.critical.oil_in_gas[tblID] +
+                                   ep.connate .water     [tblID]);
+            }
+        }
+        else {
+            // G/W system
+            for (auto tblID = 0*num_tables; tblID < num_tables; ++tblID) {
+                sr[tblID] = 1.0 - ep.critical.water[tblID];
+            }
+        }
+
+        const auto famI_sgof = [&sgofTables, &sr](const int i) -> double
+        {
+            const auto& sgof = sgofTables.getTable<Opm::SgofTable>(i);
+            const auto  ix   = sgof.getSgColumn().lookup(sr[i]);
+
+            return sgof.getKrgColumn().eval(ix);
         };
 
-        const auto& famI_slgof = [&slgofTables]( int i ) {
-            return slgofTables.getTable<Opm::SlgofTable>( i ).getKrgColumn().back();
+        const auto famI_slgof = [&slgofTables, &sr](const int i) -> double
+        {
+            const auto& slgof = slgofTables.getTable<Opm::SlgofTable>(i);
+            const auto  ix    = slgof.getSlColumn().lookup(1.0 - sr[i]); // Sg -> Sl
+
+            return slgof.getKrgColumn().eval(ix);
         };
 
-        const auto& famII = [&sgfnTables]( int i ) {
-            return sgfnTables.getTable<Opm::SgfnTable>( i ).getKrgColumn().back();
+        const auto famII = [&sgfnTables, &sr](const int i) -> double
+        {
+            const auto& sgfn = sgfnTables.getTable<Opm::SgfnTable>(i);
+            const auto  ix   = sgfn.getSgColumn().lookup(sr[i]);
+
+            return sgfn.getKrgColumn().eval(ix);
         };
 
         switch( getSaturationFunctionFamily( tm, ph ) ) {
