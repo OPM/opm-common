@@ -622,12 +622,35 @@ namespace {
         const auto& swofTables = tm.getSwofTables();
         const auto& swfnTables = tm.getSwfnTables();
 
-        const auto& famI = [&swofTables]( int i ) {
-            return swofTables.getTable<Opm::SwofTable>( i ).getKrwColumn().front();
+        auto sr = std::vector<double>(num_tables, 0.0);
+        if (ph.active(Opm::Phase::OIL)) {
+            // O/W or G/O/W system
+            for (auto tblID = 0*num_tables; tblID < num_tables; ++tblID) {
+                sr[tblID] = 1.0 - (ep.critical.oil_in_water[tblID] +
+                                   ep.connate .gas         [tblID]);
+            }
+        }
+        else {
+            // G/W system
+            for (auto tblID = 0*num_tables; tblID < num_tables; ++tblID) {
+                sr[tblID] = 1.0 - ep.critical.gas[tblID];
+            }
+        }
+
+        const auto& famI = [&swofTables, &sr](const int i) -> double
+        {
+            const auto& swof = swofTables.getTable<Opm::SwofTable>(i);
+            const auto  ix   = swof.getSwColumn().lookup(sr[i]);
+
+            return swof.getKrwColumn().eval(ix);
         };
 
-        const auto& famII = [&swfnTables]( int i ) {
-            return swfnTables.getTable<Opm::SwfnTable>( i ).getKrwColumn().front();
+        const auto& famII = [&swfnTables, &sr](const int i) -> double
+        {
+            const auto& swfn = swfnTables.getTable<Opm::SwfnTable>(i);
+            const auto  ix   = swfn.getSwColumn().lookup(sr[i]);
+
+            return swfn.getKrwColumn().eval(ix);
         };
 
         switch( getSaturationFunctionFamily( tm, ph ) ) {
