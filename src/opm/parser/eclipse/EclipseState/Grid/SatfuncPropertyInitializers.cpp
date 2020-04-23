@@ -655,29 +655,31 @@ namespace {
         const auto& sof2Tables = tm.getSof2Tables();
         const auto& sof3Tables = tm.getSof3Tables();
 
-        const auto& famI = [&swofTables]( int i ) {
-            const auto& swofTable = swofTables.getTable<Opm::SwofTable>( i );
-            const auto& krwCol = swofTable.getKrwColumn();
-            const auto crit = std::upper_bound( krwCol.begin(), krwCol.end(), 0.0 );
-            const auto index = std::distance( krwCol.begin(), crit );
+        const auto famI = [&swofTables, &ep](const int i) -> double
+        {
+            const auto& swof = swofTables.getTable<Opm::SwofTable>(i);
+            const auto  sr   = ep.critical.water[i] + ep.connate.gas[i];
+            const auto  ix   = swof.getSwColumn().lookup(sr);
 
-            if( crit == krwCol.end() ) return 0.0;
-
-            return swofTable.getKrowColumn()[ index - 1 ];
+            return swof.getKrowColumn().eval(ix);
         };
 
-        const auto crit_water = findCriticalWater( tm, ph );
-        const auto min_gas = findMinGasSaturation( tm, ph );
-        const auto& famII_3p = [&sof3Tables,&crit_water,&min_gas]( int i ) {
-            const double OilSatAtcritialWaterSat = 1.0 - crit_water[ i ] - min_gas[ i ];
-            return sof3Tables.getTable<Opm::Sof3Table>( i )
-                .evaluate("KROW", OilSatAtcritialWaterSat);
+        const auto famII_3p = [&sof3Tables, &ep](const int i) -> double
+        {
+            const auto& sof3 = sof3Tables.getTable<Opm::Sof3Table>(i);
+            const auto  sr   = 1.0 - ep.critical.water[i] - ep.connate.gas[i];
+            const auto  ix   = sof3.getSoColumn().lookup(sr);
+
+            return sof3.getKrowColumn().eval(ix);
         };
 
-        const auto famII_2p = [&sof2Tables,&crit_water,&min_gas]( int i ) {
-            const double OilSatAtcritialWaterSat = 1.0 - crit_water[ i ] - min_gas[ i ];
-            return sof2Tables.getTable<Opm::Sof2Table>( i )
-                .evaluate("KRO", OilSatAtcritialWaterSat);
+        const auto famII_2p = [&sof2Tables, &ep](const int i) -> double
+        {
+            const auto& sof2 = sof2Tables.getTable<Opm::Sof2Table>(i);
+            const auto  sr   = 1.0 - ep.critical.water[i] - ep.connate.gas[i];
+            const auto  ix   = sof2.getSoColumn().lookup(sr);
+
+            return sof2.getKroColumn().eval(ix);
         };
 
         switch( getSaturationFunctionFamily( tm, ph ) ) {
