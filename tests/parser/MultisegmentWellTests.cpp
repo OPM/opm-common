@@ -20,6 +20,7 @@
 #include <iostream>
 #include <memory>
 #include <stdexcept>
+#include <set>
 
 #include <boost/filesystem.hpp>
 
@@ -442,13 +443,16 @@ BOOST_AUTO_TEST_CASE(testwsegvalv) {
 }
 
 
-BOOST_AUTO_TEST_CASE(MSW_SEGMENT_LENGTH) {
+Opm::Schedule make_schedule(const std::string& fname) {
     Opm::Parser parser;
-    Opm::Deck deck = parser.parseFile("MSW.DATA");
+    Opm::Deck deck = parser.parseFile(fname);
     Opm::EclipseState st(deck);
-    Opm::Schedule sched(deck, st);
+    return Opm::Schedule(deck, st);
+}
 
 
+BOOST_AUTO_TEST_CASE(MSW_SEGMENT_LENGTH) {
+    const auto& sched = make_schedule("MSW.DATA");
     const auto& well = sched.getWell("PROD01", 0);
     const auto& segments = well.getSegments();
     BOOST_CHECK_CLOSE( segments.segmentLength(1), 2512.50, 1e-5);
@@ -463,12 +467,7 @@ BOOST_AUTO_TEST_CASE(MSW_SEGMENT_LENGTH) {
 }
 
 BOOST_AUTO_TEST_CASE(MSW_BRANCH_SEGMENTS) {
-    Opm::Parser parser;
-    Opm::Deck deck = parser.parseFile("MSW.DATA");
-    Opm::EclipseState st(deck);
-    Opm::Schedule sched(deck, st);
-
-
+    const auto& sched = make_schedule("MSW.DATA");
     const auto& well = sched.getWell("PROD01", 0);
     const auto& segments = well.getSegments();
     {
@@ -499,3 +498,10 @@ BOOST_AUTO_TEST_CASE(MSW_BRANCH_SEGMENTS) {
 }
 
 
+BOOST_AUTO_TEST_CASE(Branches) {
+    const auto& sched = make_schedule("MSW.DATA");
+    const auto& well = sched.getWell("PROD01", 0);
+    const auto& segments = well.getSegments();
+    std::set<int> expected = {1,2,3,4,5};
+    BOOST_CHECK( expected == segments.branches() );
+}
