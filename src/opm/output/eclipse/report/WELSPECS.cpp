@@ -75,6 +75,10 @@ namespace {
         const Opm::EclipseGrid& grid;
     };
 
+    std::string format_number(const Opm::UnitSystem& unit_system, Opm::UnitSystem::measure measure, double number, std::size_t width) {
+        return std::to_string(unit_system.from_si(measure, number)).substr(0, width);
+    }
+
     template<typename T>
     const std::string& unimplemented(const T&, const context&, std::size_t, std::size_t) {
         static const std::string s { } ;
@@ -295,7 +299,7 @@ namespace {
         }
 
         std::string reference_depth(const context& ctx, std::size_t, std::size_t) const {
-            return std::to_string(ctx.unit_system.from_si(Opm::UnitSystem::measure::length, well.getRefDepth())).substr(0,6);
+            return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, well.getRefDepth(), 6);
         }
 
         std::string preferred_phase(const context&, std::size_t, std::size_t) const {
@@ -339,7 +343,7 @@ namespace {
         std::string drainage_radius(const context& ctx, std::size_t, std::size_t) const {
             if (well.getDrainageRadius() == 0)
                 return "P.EQUIV.R";
-            return std::to_string(ctx.unit_system.from_si(Opm::UnitSystem::measure::length, well.getDrainageRadius())).substr(0,6);
+            return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, well.getDrainageRadius(), 6);
         }
 
         std::string gas_inflow(const context&, std::size_t, std::size_t) const {
@@ -413,7 +417,7 @@ namespace {
         }
 
         std::string centre_depth(const context& ctx, std::size_t, std::size_t) const {
-            return std::to_string(ctx.unit_system.from_si(Opm::UnitSystem::measure::length, connection.depth())).substr(0, 6);
+            return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, connection.depth(), 6);
         }
 
         std::string open_shut(const context&, std::size_t, std::size_t) const {
@@ -425,11 +429,11 @@ namespace {
         }
 
         std::string conn_factor(const context& ctx, std::size_t, std::size_t) const {
-            return std::to_string(ctx.unit_system.from_si(Opm::UnitSystem::measure::transmissibility, connection.CF())).substr(0, 10);
+            return format_number(ctx.unit_system, Opm::UnitSystem::measure::transmissibility, connection.CF(), 10);
         }
 
         std::string int_diam(const context& ctx, std::size_t, std::size_t) const {
-            return std::to_string(ctx.unit_system.from_si(Opm::UnitSystem::measure::length, connection.rw()) * 2).substr(0, 8);
+            return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, connection.rw() * 2, 8);
         }
 
         std::string kh_value(const context&, std::size_t, std::size_t) const {
@@ -499,19 +503,19 @@ namespace {
         }
 
         std::string length_end_segmt(const context& ctx, std::size_t, std::size_t) const {
-            return std::to_string(ctx.unit_system.from_si(Opm::UnitSystem::measure::length, segment.totalLength())).substr(0, 6);
+            return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, segment.totalLength(), 6);
         }
 
         std::string connection_depth(const context& ctx, std::size_t, std::size_t) const {
-            return std::to_string(ctx.unit_system.from_si(Opm::UnitSystem::measure::length, connection.depth())).substr(0, 6);
+            return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, connection.depth(), 6);
         }
 
         std::string segment_depth(const context& ctx, std::size_t, std::size_t) const {
-            return std::to_string(ctx.unit_system.from_si(Opm::UnitSystem::measure::length, segment.depth())).substr(0, 6);
+            return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, segment.depth(), 6);
         }
 
         std::string grid_block_depth(const context& ctx, std::size_t, std::size_t) const {
-            return std::to_string( ctx.unit_system.from_si(Opm::UnitSystem::measure::length, ctx.grid.getCellDepth( connection.global_index() ) )).substr(0,6);
+            return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, ctx.grid.getCellDepth( connection.global_index() ), 6);
         }
 
 
@@ -574,7 +578,7 @@ namespace {
         }
 
         std::string total_length(const context& ctx, std::size_t, std::size_t) const {
-            return std::to_string(ctx.unit_system.from_si(Opm::UnitSystem::measure::length, segment.totalLength())).substr(0, 6);
+            return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, segment.totalLength(), 6);
         }
 
         std::string length(const context& ctx, std::size_t sub_report, std::size_t line_number) const {
@@ -583,11 +587,11 @@ namespace {
 
             const auto& segments { well.getSegments() } ;
             const auto& outlet_segment { segments.getFromSegmentNumber( segment.outletSegment() ) } ;
-            return std::to_string( ctx.unit_system.from_si(Opm::UnitSystem::measure::length, segment.totalLength() - outlet_segment.totalLength()) ).substr(0, 6);
+            return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, segment.totalLength() - outlet_segment.totalLength(), 6);
         }
 
         std::string t_v_depth(const context& ctx, std::size_t, std::size_t) const {
-            return std::to_string(ctx.unit_system.from_si(Opm::UnitSystem::measure::length, segment.depth())).substr(0, 6);
+            return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, segment.depth(), 6);
         }
 
         std::string depth_change(const context& ctx, std::size_t sub_report, std::size_t line_number) const {
@@ -596,14 +600,14 @@ namespace {
 
             const auto& segments { well.getSegments() } ;
             const auto& outlet_segment { segments.getFromSegmentNumber( segment.outletSegment() ) } ;
-            return std::to_string( ctx.unit_system.from_si(Opm::UnitSystem::measure::length, segment.depth() - outlet_segment.depth()) ).substr(0, 6);
+            return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, segment.depth() - outlet_segment.depth(), 6);
         }
 
         std::string internal_diameter(const context& ctx, std::size_t, std::size_t) const {
             const auto number { segment.internalDiameter() } ;
 
             if (number != Opm::Segment::invalidValue()) {
-                return std::to_string(ctx.unit_system.from_si(Opm::UnitSystem::measure::length, number)).substr(0, 6);
+                return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, number, 6);
             } else {
                 return "0";
             }
@@ -613,7 +617,7 @@ namespace {
             const auto number { segment.roughness() } ;
 
             if (number != Opm::Segment::invalidValue()) {
-                return std::to_string(ctx.unit_system.from_si(Opm::UnitSystem::measure::length, number)).substr(0, 8);
+                return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, number, 8);
             } else {
                 return "0";
             }
@@ -630,7 +634,7 @@ namespace {
         }
 
         std::string volume(const context& ctx, std::size_t, std::size_t) const {
-            return std::to_string(ctx.unit_system.from_si(Opm::UnitSystem::measure::volume, segment.volume())).substr(0, 5);
+            return format_number(ctx.unit_system, Opm::UnitSystem::measure::volume, segment.volume(), 5);
         }
 
         std::string pressure_drop_mult(const context&, std::size_t, std::size_t) const {
