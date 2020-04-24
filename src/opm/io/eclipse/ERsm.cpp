@@ -309,7 +309,10 @@ bool cmp(const ESmry& smry, const ERsm& rsm) {
         const auto& smry_vector = smry.get(node);
         const auto& rsm_vector = rsm.get(key);
         for (std::size_t index = 0; index < smry_vector.size(); index++) {
-            if (!cmp::scalar_equal(static_cast<double>(smry_vector[index]), rsm_vector[index]))
+            const double diff = static_cast<double>(smry_vector[index]) - rsm_vector[index];
+            const double sum = std::fabs(static_cast<double>(smry_vector[index])) + std::fabs(rsm_vector[index]);
+
+            if (diff > 1e-5 * sum)
                 return false;
         }
     }
