@@ -21,6 +21,7 @@
 
 #include <algorithm>
 #include <functional>
+#include <optional>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
@@ -81,7 +82,7 @@ namespace {
         return s;
     }
 
-    template<typename T, std::size_t header_height, Opm::UnitSystem::UnitType unit_type>
+    template<typename T, std::size_t header_height>
     struct column {
         using fetch_function = std::function<std::string(const T&, const context&, std::size_t, std::size_t)>;
         using format_function = std::function<void(std::string&, std::size_t, std::size_t)>;
@@ -91,6 +92,8 @@ namespace {
 
         fetch_function fetch = unimplemented<T>;
         format_function format = centre_align;
+
+        std::optional<Opm::UnitSystem::measure> dimension = std::nullopt;
 
         void print(std::ostream& os, const T& data, const context& ctx, std::size_t sub_report, std::size_t line_number) const {
             std::string string_data { fetch(data, ctx, sub_report, line_number) } ;
@@ -110,9 +113,9 @@ namespace {
         }
     };
 
-    template<typename T, std::size_t header_height, Opm::UnitSystem::UnitType unit_type = Opm::UnitSystem::UnitType::UNIT_TYPE_METRIC>
-    struct table: std::vector<column<T, header_height, unit_type>> {
-        using std::vector<column<T, header_height, unit_type>>::vector;
+    template<typename T, std::size_t header_height>
+    struct table: std::vector<column<T, header_height>> {
+        using std::vector<column<T, header_height>>::vector;
 
         std::size_t total_width() const {
             std::size_t r { 1 + this->size() } ;
@@ -159,15 +162,15 @@ namespace {
     };
 
 
-    template<typename InputType, typename OutputType, std::size_t header_height, Opm::UnitSystem::UnitType unit_type = Opm::UnitSystem::UnitType::UNIT_TYPE_METRIC>
+    template<typename InputType, typename OutputType, std::size_t header_height>
     struct report {
 
         std::string title;
         std::string decor;
-        table<OutputType, header_height, unit_type> column_definition;
+        table<OutputType, header_height> column_definition;
         const context ctx;
 
-        report(const std::string& _title, const table<OutputType, header_height, unit_type>& _coldef, const context& _ctx)
+        report(const std::string& _title, const table<OutputType, header_height>& _coldef, const context& _ctx)
             : title              { _title           }
             , decor              { underline(title) }
             , column_definition  { _coldef          }
