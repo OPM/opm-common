@@ -21,6 +21,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cmath>
+#include <ctime>
 #include <fstream>
 #include <functional>
 #include <iomanip>
@@ -32,6 +33,8 @@
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/common/utility/TimeService.hpp>
 #include <opm/io/eclipse/ESmry.hpp>
+
+#include "project-version.h"
 
 namespace {
 
@@ -47,11 +50,20 @@ namespace {
     // the fact that the dashed header line has 127 rather than 130 dashes has no provenance
     const std::string divider_line { std::string(total_width - 3, '-') } ;
 
-    const std::string block_header_line(const std::string& run_name, const std::string& comment) {
-        return "SUMMARY OF RUN " + run_name + " OPM FLOW " + comment;
+    const std::vector<std::string> month_names = {"JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"};
+
+    std::string format_date(const std::chrono::system_clock::time_point& tp) {
+        auto ts = Opm::TimeStampUTC( std::chrono::system_clock::to_time_t(tp) );
+        char buffer[12];
+        std::snprintf(buffer, 12, "%2d-%3s-%4d", ts.day(), month_names[ts.month() - 1].c_str(), ts.year());
+        return std::string(buffer, 11);
     }
 
-    const std::vector<std::string> month_names = {"JAN", "FEB", "MAR", "APR", "MAI", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"};
+    const std::string block_header_line(const std::string& run_name) {
+        std::string date_string = format_date( std::chrono::system_clock::from_time_t( std::time(nullptr)));
+        return "SUMMARY OF RUN " + run_name + " at: " + date_string + "  OPM FLOW " + PROJECT_VERSION_NAME;
+    }
+
 
     void write_line(std::ostream& os, const std::string& line, char prefix = ' ') {
         os << prefix << std::setw(total_width) << std::left << line << '\n';
@@ -127,12 +139,6 @@ namespace {
     }
 
 
-    std::string format_date(const std::chrono::system_clock::time_point& tp) {
-        auto ts = Opm::TimeStampUTC( std::chrono::system_clock::to_time_t(tp) );
-        char buffer[12];
-        std::snprintf(buffer, 12, "%2d-%3s-%4d", ts.day(), month_names[ts.month() - 1].c_str(), ts.year());
-        return std::string(buffer, 11);
-    }
 
 }
 
@@ -141,7 +147,7 @@ namespace Opm::EclIO {
 void ESmry::write_block(std::ostream& os, bool write_dates, const std::vector<std::string>& time_column, const std::vector<SummaryNode>& vectors) const {
     write_line(os, block_separator_line, '1');
     write_line(os, divider_line);
-    write_line(os, block_header_line(inputFileName.stem(), "VERSION 1910 ANYTHING CAN GO HERE: USER, MACHINE ETC."));
+    write_line(os, block_header_line(inputFileName.stem()));
     write_line(os, divider_line);
 
     std::vector<std::pair<std::vector<float>, int>> data;
@@ -196,6 +202,16 @@ void ESmry::write_rsm(std::ostream& os) const {
             return false;
         }
     });
+
+    /*
+      Ensure that the YEARS vector is the first in the data_vectors; could in
+      principle embark on a more general sorting here.
+    */
+    if (data_vectors[0].keyword != "YEARS") {
+        auto years_iter = std::find_if(data_vectors.begin(), data_vectors.end(), [](const SummaryNode& node) { return (node.keyword == "YEARS"); });
+        if (years_iter != data_vectors.end())
+            std::swap(data_vectors[0], *years_iter);
+    }
 
     std::vector<std::list<SummaryNode>> data_vector_blocks;
     constexpr std::size_t data_column_count { column_count - 1 } ;
