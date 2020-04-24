@@ -90,10 +90,10 @@ namespace {
         std::size_t internal_width;
         std::array<std::string, header_height> header;
 
-        fetch_function fetch = unimplemented<T>;
-        format_function format = centre_align;
+        fetch_function fetch { unimplemented<T> } ;
+        format_function format { centre_align } ;
 
-        std::optional<Opm::UnitSystem::measure> dimension = std::nullopt;
+        std::optional<Opm::UnitSystem::measure> dimension { std::nullopt } ;
 
         void print(std::ostream& os, const T& data, const context& ctx, std::size_t sub_report, std::size_t line_number) const {
             std::string string_data { fetch(data, ctx, sub_report, line_number) } ;
@@ -154,7 +154,7 @@ namespace {
         }
 
         void print_data(std::ostream& os, const std::vector<T>& lines, const context& ctx, std::size_t sub_report) const {
-            std::size_t line_number = 0;
+            std::size_t line_number { 0 } ;
             for (const auto& line : lines) {
 
                 for (const auto& column : *this) {
@@ -581,8 +581,8 @@ namespace {
             if (segment.segmentNumber() == 1)
                 return total_length(ctx, sub_report, line_number);
 
-            const auto& segments = well.getSegments();
-            const auto& outlet_segment = segments.getFromSegmentNumber( segment.outletSegment() );
+            const auto& segments { well.getSegments() } ;
+            const auto& outlet_segment { segments.getFromSegmentNumber( segment.outletSegment() ) } ;
             return std::to_string( segment.totalLength() - outlet_segment.totalLength() ).substr(0, 6);
         }
 
@@ -594,8 +594,8 @@ namespace {
             if (segment.segmentNumber() == 1)
                 return t_v_depth(ctx, sub_report, line_number);
 
-            const auto& segments = well.getSegments();
-            const auto& outlet_segment = segments.getFromSegmentNumber( segment.outletSegment() );
+            const auto& segments { well.getSegments() } ;
+            const auto& outlet_segment { segments.getFromSegmentNumber( segment.outletSegment() ) } ;
             return std::to_string( segment.depth() - outlet_segment.depth() ).substr(0, 6);
         }
 
@@ -649,7 +649,7 @@ namespace {
     };
 
 
-    const table<SegmentConnection, 3> msw_connection_table = {
+    const table<SegmentConnection, 3> msw_connection_table {
         {  8, {"WELL"       , "NAME"       ,              }, &SegmentConnection::well_name        , left_header },
         {  9, {"CONNECTION" , ""           ,              }, &SegmentConnection::connection_grid  ,             },
         {  5, {"SEGMENT"    , "NUMBER"     ,              }, &SegmentConnection::segment_number   , right_align },
@@ -663,7 +663,7 @@ namespace {
         {  9, {"GRID BLOCK" , "DEPTH"      , "METRES"     }, &SegmentConnection::grid_block_depth , right_align, Opm::UnitSystem::measure::length },
     };
 
-    const table<WellSegment, 3> msw_well_table = {
+    const table<WellSegment, 3> msw_well_table {
         {  6, { "WELLNAME"  , "AND"        , "SEG TYPE"   }, &WellSegment::well_name_seg       , &WellSegment::ws_format },
         {  3, { "SEG"       , "NO"         , ""           }, &WellSegment::segment_number      , right_align             },
         {  3, { "BRN"       , "NO"         , ""           }, &WellSegment::branch_number       , right_align             },
@@ -687,10 +687,10 @@ void report_well_connection_data(std::ostream& os, const std::vector<Opm::Well>&
     const report<Opm::Well, WellConnection, 3> well_connection { "WELL CONNECTION DATA", connection_table, ctx};
     well_connection.print_header(os);
 
-    std::size_t sub_report = 0;
+    std::size_t sub_report { 0 } ;
     for (const auto& well : data) {
         std::vector<WellConnection> wrapper_data;
-        const auto& connections = well.getConnections();
+        const auto& connections { well.getConnections() } ;
         std::transform(connections.begin(), connections.end(), std::back_inserter(wrapper_data), [&well]( const Opm::Connection& connection) { return WellConnection(well, connection); });
 
         well_connection.print_data(os, wrapper_data, sub_report);
@@ -703,11 +703,11 @@ void report_well_connection_data(std::ostream& os, const std::vector<Opm::Well>&
 }
 
 void Opm::RptIO::workers::write_WELSPECS(std::ostream& os, unsigned, const Opm::Schedule& schedule, const Opm::EclipseGrid& grid, std::size_t report_step) {
-    auto well_names = schedule.changed_wells(report_step);
+    auto well_names { schedule.changed_wells(report_step) } ;
     if (well_names.empty())
         return;
 
-    context ctx{schedule, grid};
+    context ctx { schedule, grid, unit_system } ;
     std::vector<Well> changed_wells;
     std::transform(well_names.begin(), well_names.end(), std::back_inserter(changed_wells), [&report_step, &schedule](const std::string& wname) { return schedule.getWell(wname, report_step); });
 
@@ -720,11 +720,11 @@ void Opm::RptIO::workers::write_WELSPECS(std::ostream& os, unsigned, const Opm::
             {
                 const report<Opm::Well, WellSegment, 3> msw_data { "MULTI-SEGMENT WELL: SEGMENT STRUCTURE", msw_well_table, ctx};
                 msw_data.print_header(os);
-                std::size_t sub_report = 0;
-                const auto& segments = well.getSegments();
+                std::size_t sub_report { 0 } ;
+                const auto& segments { well.getSegments() } ;
                 for (const auto& branch : segments.branches()) {
                     std::vector<WellSegment> wrapper_data;
-                    const auto& branch_segments = segments.branchSegments(branch);
+                    const auto& branch_segments { segments.branchSegments(branch) } ;
                     std::transform(branch_segments.begin(), branch_segments.end(), std::back_inserter(wrapper_data), [&well](const Opm::Segment& segment) { return WellSegment(well, segment); });
 
                     sub_report++;
@@ -740,8 +740,8 @@ void Opm::RptIO::workers::write_WELSPECS(std::ostream& os, unsigned, const Opm::
                 msw_connection.print_header(os);
                 {
                     std::vector<SegmentConnection> wrapper_data;
-                    const auto& connections = well.getConnections();
-                    const auto& segments = well.getSegments();
+                    const auto& connections { well.getConnections() } ;
+                    const auto& segments { well.getSegments() } ;
                     std::transform(connections.begin(), connections.end(), std::back_inserter(wrapper_data),
                                    [&well, &segments] (const Opm::Connection& connection) { return SegmentConnection(well, connection, segments.getFromSegmentNumber(connection.segment())); });
                     msw_connection.print_data(os, wrapper_data, 0, '=');
