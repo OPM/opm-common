@@ -722,11 +722,11 @@ inline quantity potential_rate( const fn_args& args ) {
 
         if (sched_well.isInjector() && outputInjector) {
 	    const auto v = args.wells.at(name).rates.get(phase, 0.0);
-	    sum += v;
+	    sum += v * efac(args.eff_factors, name);
 	}
 	else if (sched_well.isProducer() && outputProducer) {
 	    const auto v = args.wells.at(name).rates.get(phase, 0.0);
-	    sum += v;
+	    sum += v * efac(args.eff_factors, name);
 	}
     }
 
