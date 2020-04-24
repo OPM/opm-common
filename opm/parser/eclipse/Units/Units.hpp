@@ -101,11 +101,12 @@ namespace Opm {
 
         /// \name Time
         /// @{
-        constexpr const double second =   1;
-        constexpr const double minute =  60 * second;
-        constexpr const double hour   =  60 * minute;
-        constexpr const double day    =  24 * hour;
-        constexpr const double year   = 365 * day;
+        constexpr const double second   =   1;
+        constexpr const double minute   =  60    * second;
+        constexpr const double hour     =  60    * minute;
+        constexpr const double day      =  24    * hour;
+        constexpr const double year     = 365    * day;
+        constexpr const double ecl_year = 365.25 * day;
         /// @}
 
         /// \name Volume
