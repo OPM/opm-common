@@ -104,7 +104,7 @@ namespace {
 
         std::string header_line(std::size_t row, context ctx) const {
             if (row == header_height && dimension) {
-                return "";
+                return ctx.unit_system.name(dimension.value());
             } else {
                 return header[row];
             }
@@ -351,9 +351,9 @@ namespace {
        {  8, { "WELL"       , "NAME"       ,               }, &WellWrapper::well_name        , left_align  },
        {  8, { "GROUP"      , "NAME"       ,               }, &WellWrapper::group_name       , left_align  },
        {  8, { "WELLHEAD"   , "LOCATION"   , "( I, J )"    }, &WellWrapper::wellhead_location, left_align  },
-       {  8, { "B.H.REF"    , "DEPTH"      , "METRES"      }, &WellWrapper::reference_depth  , right_align },
+       {  8, { "B.H.REF"    , "DEPTH"      , "METRES"      }, &WellWrapper::reference_depth  , right_align, Opm::UnitSystem::measure::length },
        {  5, { "PREF-"      , "ERRED"      , "PHASE"       }, &WellWrapper::preferred_phase  ,             },
-       {  8, { "DRAINAGE"   , "RADIUS"     , "METRES"      }, &WellWrapper::drainage_radius  ,             },
+       {  8, { "DRAINAGE"   , "RADIUS"     , "METRES"      }, &WellWrapper::drainage_radius  , right_align, Opm::UnitSystem::measure::length },
        {  4, { "GAS"        , "INFL"       , "EQUN"        }, &WellWrapper::gas_inflow       ,             },
        {  7, { "SHUT-IN"    , "INSTRCT"    ,               }, &WellWrapper::shut_status      ,             },
        {  5, { "CROSS"      , "FLOW"       , "ABLTY"       }, &WellWrapper::cross_flow       ,             },
@@ -454,11 +454,11 @@ namespace {
        {  7, {"WELL"                   ,"NAME"                     ,                         }, &WellConnection::well_name       , left_align  },
        { 12, {"GRID"                   ,"BLOCK"                    ,                         }, &WellConnection::grid_block      ,             },
        {  3, {"CMPL"                   ,"NO#"                      ,                         }, &WellConnection::cmpl_no         , right_align },
-       {  7, {"CENTRE"                 ,"DEPTH"                    ,"METRES"                 }, &WellConnection::centre_depth    , right_align },
+       {  7, {"CENTRE"                 ,"DEPTH"                    ,"METRES"                 }, &WellConnection::centre_depth    , right_align, Opm::UnitSystem::measure::length },
        {  3, {"OPEN"                   ,"SHUT"                     ,                         }, &WellConnection::open_shut       ,             },
        {  3, {"SAT"                    ,"TAB"                      ,                         }, &WellConnection::sat_tab         ,             },
        {  8, {"CONNECTION"             ,"FACTOR*"                  ,"CPM3/D/B"               }, &WellConnection::conn_factor     , right_align },
-       {  6, {"INT"                    ,"DIAM"                     ,"METRES"                 }, &WellConnection::int_diam        , right_align },
+       {  6, {"INT"                    ,"DIAM"                     ,"METRES"                 }, &WellConnection::int_diam        , right_align, Opm::UnitSystem::measure::length },
        {  7, {"K  H"                   ,"VALUE"                    ,"MD.METRE"               }, &WellConnection::kh_value        , right_align },
        {  6, {"SKIN"                   ,"FACTOR"                   ,                         }, &WellConnection::skin_factor     , right_align },
        { 10, {"CONNECTION"             ,"D-FACTOR 1"               ,"DAY/SM3"                }, &WellConnection::dfactor         ,             },
@@ -654,13 +654,13 @@ namespace {
         {  9, {"CONNECTION" , ""           ,              }, &SegmentConnection::connection_grid  ,             },
         {  5, {"SEGMENT"    , "NUMBER"     ,              }, &SegmentConnection::segment_number   , right_align },
         {  8, {"BRANCH"     , "ID"         ,              }, &SegmentConnection::branch_id        ,             },
-        {  9, {"TUB LENGTH" , "START PERFS", "METRES"     }, unimplemented<SegmentConnection>     , right_align },
-        {  9, {"TUB LENGTH" , "END PERFS"  , "METRES"     }, unimplemented<SegmentConnection>     , right_align },
-        {  9, {"TUB LENGTH" , "CENTR PERFS", "METRES"     }, unimplemented<SegmentConnection>     , right_align },
-        {  9, {"TUB LENGTH" , "END SEGMT"  , "METRES"     }, &SegmentConnection::length_end_segmt , right_align },
-        {  8, {"CONNECTION" , "DEPTH"      , "METRES"     }, &SegmentConnection::connection_depth , right_align },
-        {  8, {"SEGMENT"    , "DEPTH"      , "METRES"     }, &SegmentConnection::segment_depth    , right_align },
-        {  9, {"GRID BLOCK" , "DEPTH"      , "METRES"     }, &SegmentConnection::grid_block_depth , right_align },
+        {  9, {"TUB LENGTH" , "START PERFS", "METRES"     }, unimplemented<SegmentConnection>     , right_align, Opm::UnitSystem::measure::length },
+        {  9, {"TUB LENGTH" , "END PERFS"  , "METRES"     }, unimplemented<SegmentConnection>     , right_align, Opm::UnitSystem::measure::length },
+        {  9, {"TUB LENGTH" , "CENTR PERFS", "METRES"     }, unimplemented<SegmentConnection>     , right_align, Opm::UnitSystem::measure::length },
+        {  9, {"TUB LENGTH" , "END SEGMT"  , "METRES"     }, &SegmentConnection::length_end_segmt , right_align, Opm::UnitSystem::measure::length },
+        {  8, {"CONNECTION" , "DEPTH"      , "METRES"     }, &SegmentConnection::connection_depth , right_align, Opm::UnitSystem::measure::length },
+        {  8, {"SEGMENT"    , "DEPTH"      , "METRES"     }, &SegmentConnection::segment_depth    , right_align, Opm::UnitSystem::measure::length },
+        {  9, {"GRID BLOCK" , "DEPTH"      , "METRES"     }, &SegmentConnection::grid_block_depth , right_align, Opm::UnitSystem::measure::length },
     };
 
     const table<WellSegment, 3> msw_well_table = {
@@ -669,14 +669,14 @@ namespace {
         {  3, { "BRN"       , "NO"         , ""           }, &WellSegment::branch_number       , right_align             },
         {  5, { "MAIN"      , "INLET"      , "SEGMENT"    }, &WellSegment::main_inlet          , right_align             },
         {  5, { ""          , "OUTLET"     , "SEGMENT"    }, &WellSegment::outlet              , right_align             },
-        {  7, { "SEGMENT"   , "LENGTH"     , "METRES"     }, &WellSegment::length              , right_align             },
-        {  8, { "TOT LENGTH", "TO END"     , "METRES"     }, &WellSegment::total_length        , right_align             },
-        {  8, { "DEPTH"     , "CHANGE"     , "METRES"     }, &WellSegment::depth_change        , right_align             },
-        {  8, { "T.V. DEPTH", "AT END"     , "METRES"     }, &WellSegment::t_v_depth           , right_align             },
-        {  6, { "DIA OR F"  , "SCALING"    , "METRES"     }, &WellSegment::internal_diameter   , right_align             },
-        {  8, { "VFP TAB OR", "ABS ROUGHN" , "METRES"     }, &WellSegment::roughness           , right_align             },
-        {  7, { "AREA"      , "X-SECTN"    , "M**2"       }, &WellSegment::cross_section       , right_align             },
-        {  7, { "VOLUME"    , ""           , "M3"         }, &WellSegment::volume              , right_align             },
+        {  7, { "SEGMENT"   , "LENGTH"     , "METRES"     }, &WellSegment::length              , right_align            , Opm::UnitSystem::measure::length },
+        {  8, { "TOT LENGTH", "TO END"     , "METRES"     }, &WellSegment::total_length        , right_align            , Opm::UnitSystem::measure::length },
+        {  8, { "DEPTH"     , "CHANGE"     , "METRES"     }, &WellSegment::depth_change        , right_align            , Opm::UnitSystem::measure::length },
+        {  8, { "T.V. DEPTH", "AT END"     , "METRES"     }, &WellSegment::t_v_depth           , right_align            , Opm::UnitSystem::measure::length },
+        {  6, { "DIA OR F"  , "SCALING"    , "METRES"     }, &WellSegment::internal_diameter   , right_align            , Opm::UnitSystem::measure::length },
+        {  8, { "VFP TAB OR", "ABS ROUGHN" , "METRES"     }, &WellSegment::roughness           , right_align            , Opm::UnitSystem::measure::length },
+        {  7, { "AREA"      , "X-SECTN"    , "M**2"       }, &WellSegment::cross_section       , right_align            },
+        {  7, { "VOLUME"    , ""           , "M3"         }, &WellSegment::volume              , right_align            , Opm::UnitSystem::measure::volume },
         {  8, { "P DROP"    , "MULT"       , "FACTOR 1"   }, &WellSegment::pressure_drop_mult  , right_align             },
     };
 }
