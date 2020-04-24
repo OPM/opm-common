@@ -209,9 +209,11 @@ namespace {
         }
 
         void print_footer(std::ostream& os, const std::vector<std::pair<int, std::string>>& footnotes) const {
-            for (const auto& fnote: footnotes)
-                os << fnote.first << ": " << fnote.second << std::endl;
-            os << std::endl << std::endl;
+            for (const auto& fnote: footnotes) {
+                os << fnote.first << ": " << fnote.second << record_separator;
+            }
+
+            os << section_separator;
         }
     };
 }
@@ -323,9 +325,7 @@ namespace {
         }
 
         std::string dens_calc(const context&, std::size_t, std::size_t) const {
-            if (well.segmented_density_calculation())
-                return "SEG";
-            return "AVG";
+            return well.segmented_density_calculation() ? "SEG" : "AVG";
         }
 
         /*
