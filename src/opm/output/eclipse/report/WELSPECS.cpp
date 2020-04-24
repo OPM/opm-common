@@ -102,10 +102,18 @@ namespace {
             os << string_data;
         }
 
-        void print_header(std::ostream& os, std::size_t row) const {
-            std::string header_line { header[row] } ;
-            centre_align(header_line, total_width());
-            os << header_line;
+        std::string header_line(std::size_t row, context ctx) const {
+            if (row == header_height && dimension) {
+                return "";
+            } else {
+                return header[row];
+            }
+        }
+
+        void print_header(std::ostream& os, std::size_t row, context ctx) const {
+            std::string line { header_line(row, ctx) } ;
+            centre_align(line, total_width());
+            os << line;
         }
 
         constexpr std::size_t total_width() const {
@@ -131,13 +139,13 @@ namespace {
             os << std::string(total_width(), padding) << record_separator;
         }
 
-        void print_header(std::ostream& os) const {
+        void print_header(std::ostream& os, context ctx) const {
             print_divider(os);
             for (size_t i { 0 }; i < header_height; ++i) {
                 for (const auto& column : *this) {
                     os << field_separator;
 
-                    column.print_header(os, i);
+                    column.print_header(os, i, ctx);
                 }
 
                 os << field_separator << record_separator;
@@ -188,7 +196,7 @@ namespace {
             os << title << record_separator;
             os << decor << record_separator;
             os << section_separator;
-            column_definition.print_header(os);
+            column_definition.print_header(os, ctx);
         }
 
         void print_data(std::ostream& os, const std::vector<OutputType>& data, std::size_t sub_report, char bottom_border = '-') const {
