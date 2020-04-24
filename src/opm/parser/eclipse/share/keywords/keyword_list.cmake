@@ -345,6 +345,7 @@ set( keywords
      000_Eclipse100/H/HMMLTWCN
      000_Eclipse100/H/HMMULTxx
      000_Eclipse100/H/HMMULTFT
+     000_Eclipse100/H/HMMULTSG
      000_Eclipse100/H/HMPROPS
      000_Eclipse100/H/HMROCK
      000_Eclipse100/H/HMROCKT
