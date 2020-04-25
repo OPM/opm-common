@@ -630,6 +630,7 @@ set( keywords
      000_Eclipse100/P/PROPS
      000_Eclipse100/P/PRIORITY
      000_Eclipse100/P/PRORDER
+     000_Eclipse100/P/PRVD
      000_Eclipse100/P/PSTEADY
      000_Eclipse100/P/PSWRG
      000_Eclipse100/P/PSWRO
