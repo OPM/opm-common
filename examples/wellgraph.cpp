@@ -43,7 +43,7 @@ inline void createDot(const Opm::Schedule& schedule, const std::string& casename
     os << "// This file was written by the 'wellgraph' utility from OPM.\n";
     os << "// Find the source code at github.com/OPM.\n";
     os << "// Convert output to PDF with 'dot -Tpdf " << casename << ".gv > " << casename << ".pdf'\n";
-    os << "strict digraph " << casename << "\n{\n";
+    os << "strict digraph \"" << casename << "\"\n{\n";
     const auto groupnames = schedule.groupNames();
     const std::size_t last = schedule.getTimeMap().last();
     // Group -> Group relations.
@@ -51,9 +51,9 @@ inline void createDot(const Opm::Schedule& schedule, const std::string& casename
         const auto& g = schedule.getGroup(gn, last);
         const auto& children = g.groups();
         if (!children.empty()) {
-            os << "    " << gn << " -> {";
+            os << "    \"" << gn << "\" -> {";
             for (const auto& child : children) {
-                os << ' ' << child;
+                os << " \"" << child << '"';
             }
             os << " }\n";
         }
@@ -64,16 +64,16 @@ inline void createDot(const Opm::Schedule& schedule, const std::string& casename
         const auto& g = schedule.getGroup(gn, last);
         const auto& children = g.wells();
         if (!children.empty()) {
-            os << "    " << gn << " -> {";
+            os << "    \"" << gn << "\" -> {";
             for (const auto& child : children) {
-                os << ' ' << child;
+                os << " \"" << child << '"';
             }
             os << " }\n";
         }
     }
     // Color wells by injector or producer.
     for (const auto& w : schedule.getWellsatEnd()) {
-        os << "    " << w.name();
+        os << "    \"" << w.name() << '"';
         if (w.isProducer() && w.isInjector()) {
             os << " [color=purple]\n";
         } else if (w.isProducer()) {
