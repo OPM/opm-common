@@ -19,6 +19,7 @@
 
 #include <fnmatch.h>
 #include <iostream>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <unordered_set>
@@ -35,6 +36,7 @@
 #include <opm/parser/eclipse/Deck/DeckSection.hpp>
 #include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/B.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/C.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/G.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/L.hpp>
@@ -61,6 +63,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Network/Node.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WList.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WListManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellFoamProperties.hpp>
@@ -145,6 +148,7 @@ std::pair<std::time_t, std::size_t> restart_info(const RestartIO::RstState * rst
         gconsump(this->m_timeMap, std::make_shared<GConSump>() ),
         global_whistctl_mode(this->m_timeMap, Well::ProducerCMode::CMODE_UNDEFINED),
         m_actions(this->m_timeMap, std::make_shared<Action::Actions>()),
+        m_network(this->m_timeMap, std::make_shared<Network::ExtNetwork>()),
         rft_config(this->m_timeMap),
         m_nupcol(this->m_timeMap, ParserKeywords::NUPCOL::NUM_ITER::defaultValue),
         restart_config(m_timeMap, deck, parseContext, errors),
@@ -480,6 +484,12 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
 
         else if (keyword.name() == "NUPCOL")
             handleNUPCOL(keyword, currentStep);
+
+        else if (keyword.name() == "NODEPROP")
+            handleNODEPROP(keyword, currentStep);
+
+        else if (keyword.name() == "BRANPROP")
+            handleBRANPROP(keyword, currentStep);
 
         else if (keyword.name() == "PYACTION")
             handlePYACTION(python, input_path, keyword, currentStep);
@@ -3115,6 +3125,70 @@ std::shared_ptr<const Python> Schedule::python() const
 {
     return this->python_handle;
 }
+
+
+void Schedule::updateNetwork(std::shared_ptr<Network::ExtNetwork> network, std::size_t report_step) {
+    this->m_network.update(report_step, std::move(network));
+}
+
+const Network::ExtNetwork& Schedule::network(std::size_t report_step) const {
+    return *this->m_network[report_step];
+}
+
+
+void Schedule::handleNODEPROP(const DeckKeyword& keyword, std::size_t report_step) {
+    using NP = ParserKeywords::NODEPROP;
+    auto ext_network = std::make_shared<Network::ExtNetwork>( this->network(report_step) );
+    for (const auto& record : keyword) {
+        const auto& name = record.getItem<NP::NAME>().get<std::string>(0);
+        const auto& pressure_item = record.getItem<NP::PRESSURE>();
+        bool as_choke = DeckItem::to_bool( record.getItem<NP::AS_CHOKE>().get<std::string>(0));
+        bool add_gas_lift_gas = DeckItem::to_bool( record.getItem<NP::ADD_GAS_LIFT_GAS>().get<std::string>(0));
+        Network::Node node{ name };
+
+        if (pressure_item.hasValue(0) && (pressure_item.get<double>(0) > 0))
+            node.terminal_pressure( pressure_item.getSIDouble(0) );
+
+        if (as_choke) {
+            std::string target_group = name;
+            const auto& target_item = record.getItem<NP::CHOKE_GROUP>();
+            if (target_item.hasValue(0))
+                target_group = target_item.get<std::string>(0);
+
+            if (target_group != name) {
+                if (this->hasGroup(name, report_step)) {
+                    const auto& group = this->getGroup(name, report_step);
+                    if (group.numWells() > 0)
+                        throw std::invalid_argument("A manifold group must respond to its own target");
+                }
+            }
+            node.as_choke( target_group );
+        }
+        node.add_gas_lift_gas( add_gas_lift_gas );
+        ext_network->add_node( node );
+    }
+    this->updateNetwork(ext_network, report_step);
+}
+
+
+void Schedule::handleBRANPROP(const DeckKeyword& keyword, std::size_t report_step) {
+    using BP = ParserKeywords::BRANPROP;
+    auto ext_network = std::make_shared<Network::ExtNetwork>( this->network(report_step) );
+    for (const auto& record : keyword) {
+        const auto& downtree_node = record.getItem<BP::DOWNTREE_NODE>().get<std::string>(0);
+        const auto& uptree_node = record.getItem<BP::UPTREE_NODE>().get<std::string>(0);
+        int vfp_table = record.getItem<BP::VFP_TABLE>().get<int>(0);
+        auto alq_eq = Network::Branch::AlqEqfromString( record.getItem<BP::ALQ_SURFACE_DENSITY>().get<std::string>(0));
+        if (alq_eq == Network::Branch::AlqEQ::ALQ_INPUT) {
+            double alq_value = record.getItem<BP::ALQ>().get<double>(0);
+            ext_network->add_branch( Network::Branch(downtree_node, uptree_node, vfp_table, alq_value));
+        } else
+            ext_network->add_branch( Network::Branch(downtree_node, uptree_node, vfp_table, alq_eq));
+    }
+    this->updateNetwork(ext_network, report_step);
+}
+
+
 
 namespace {
 /*

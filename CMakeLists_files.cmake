@@ -114,6 +114,9 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Schedule/MSW/updatingConnectionsWithSegments.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/MSW/SpiralICD.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/MSW/Valve.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/Network/Branch.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/Network/ExtNetwork.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/Network/Node.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/RFTConfig.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/RPTConfig.cpp
@@ -332,6 +335,7 @@ if(ENABLE_ECL_INPUT)
     tests/parser/MultiRegTests.cpp
     tests/parser/MultisegmentWellTests.cpp
     tests/parser/MULTREGTScannerTests.cpp
+    tests/parser/NetworkTests.cpp
     tests/parser/OrderedMapTests.cpp
     tests/parser/ParseContextTests.cpp
     tests/parser/ParseContext_EXIT1.cpp
@@ -664,6 +668,9 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Schedule/Action/ASTNode.hpp
        opm/parser/eclipse/EclipseState/Schedule/Action/PyAction.hpp
        opm/parser/eclipse/EclipseState/Schedule/ArrayDimChecker.hpp
+       opm/parser/eclipse/EclipseState/Schedule/Network/Branch.hpp
+       opm/parser/eclipse/EclipseState/Schedule/Network/ExtNetwork.hpp
+       opm/parser/eclipse/EclipseState/Schedule/Network/Node.hpp
        opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp
        opm/parser/eclipse/EclipseState/Schedule/VFPInjTable.hpp
        opm/parser/eclipse/EclipseState/Schedule/VFPProdTable.hpp
