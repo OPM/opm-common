@@ -120,28 +120,38 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
         "SUMTHIN",
     } ;
 
+    std::vector<EclFile> smspecList;
+    std::vector<std::string> vectList = {"DIMENS", "RESTART", "KEYWORDS", "NUMS", "UNITS"};
+
     // Read data from the summary into local data members.
     {
-        EclFile smspec(smspec_file.string());
+        smspecList.emplace_back(EclFile(smspec_file.string()));
 
-        smspec.loadData();   // loading all data
+        auto arrays = smspecList.back().getList();
+        std::vector<int> vectIndices;
 
-        const std::vector<int> dimens = smspec.get<int>("DIMENS");
+        for (size_t n = 0; n < arrays.size(); n++)
+            if(std::find(vectList.begin(), vectList.end(), std::get<0>(arrays[n])) != vectList.end())
+               vectIndices.push_back(static_cast<int>(n));
+
+        smspecList.back().loadData(vectIndices);
+
+        const std::vector<int> dimens = smspecList.back().get<int>("DIMENS");
 
         nI = dimens[1]; // This is correct -- dimens[0] is something else!
         nJ = dimens[2];
         nK = dimens[3];
 
-        const std::vector<std::string> restartArray = smspec.get<std::string>("RESTART");
-        const std::vector<std::string> keywords = smspec.get<std::string>("KEYWORDS");
-        const std::vector<std::string> wgnames = smspec.get<std::string>("WGNAMES");
-        const std::vector<int> nums = smspec.get<int>("NUMS");
-        const std::vector<std::string> units = smspec.get<std::string>("UNITS");
+        const std::vector<std::string> restartArray = smspecList.back().get<std::string>("RESTART");
+        const std::vector<std::string> keywords = smspecList.back().get<std::string>("KEYWORDS");
+        const std::vector<std::string> wgnames = smspecList.back().get<std::string>("WGNAMES");
+        const std::vector<int> nums = smspecList.back().get<int>("NUMS");
+        const std::vector<std::string> units = smspecList.back().get<std::string>("UNITS");
 
         std::vector<std::string> combindKeyList;
         combindKeyList.reserve(dimens[0]);
 
-        this->startdat = make_date(smspec.get<int>("STARTDAT"));
+        this->startdat = make_date(smspecList.back().get<int>("STARTDAT"));
 
         for (unsigned int i=0; i<keywords.size(); i++) {
             const std::string keyString = makeKeyString(keywords[i], wgnames[i], nums[i]);
@@ -185,20 +195,28 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
             baseRunFmt = true;
         }
 
-        EclFile smspec_rst(rstFile.string());
-        smspec_rst.loadData();
+        smspecList.emplace_back(EclFile(rstFile.string()));
 
-        const std::vector<int> dimens = smspec_rst.get<int>("DIMENS");
-        const std::vector<std::string> restartArray = smspec_rst.get<std::string>("RESTART");
-        const std::vector<std::string> keywords = smspec_rst.get<std::string>("KEYWORDS");
-        const std::vector<std::string> wgnames = smspec_rst.get<std::string>("WGNAMES");
-        const std::vector<int> nums = smspec_rst.get<int>("NUMS");
-        const std::vector<std::string> units = smspec_rst.get<std::string>("UNITS");
+        auto arrays = smspecList.back().getList();
+        std::vector<int> vectIndices;
+
+        for (size_t n = 0; n < arrays.size(); n++)
+            if(std::find(vectList.begin(), vectList.end(), std::get<0>(arrays[n])) != vectList.end())
+               vectIndices.push_back(static_cast<int>(n));
+
+        smspecList.back().loadData(vectIndices);
+
+        const std::vector<int> dimens = smspecList.back().get<int>("DIMENS");
+        const std::vector<std::string> restartArray = smspecList.back().get<std::string>("RESTART");
+        const std::vector<std::string> keywords = smspecList.back().get<std::string>("KEYWORDS");
+        const std::vector<std::string> wgnames = smspecList.back().get<std::string>("WGNAMES");
+        const std::vector<int> nums = smspecList.back().get<int>("NUMS");
+        const std::vector<std::string> units = smspecList.back().get<std::string>("UNITS");
 
         std::vector<std::string> combindKeyList;
         combindKeyList.reserve(dimens[0]);
 
-        this->startdat = make_date(smspec_rst.get<int>("STARTDAT"));
+        this->startdat = make_date(smspecList.back().get<int>("STARTDAT"));
 
         for (size_t i = 0; i < keywords.size(); i++) {
             const std::string keyString = makeKeyString(keywords[i], wgnames[i], nums[i]);
@@ -243,10 +261,7 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
 
         auto smry = smryArray[specInd];
 
-        EclFile smspec(std::get<0>(smry));
-        smspec.loadData();
-
-        const std::vector<int> dimens = smspec.get<int>("DIMENS");
+        const std::vector<int> dimens = smspecList[specInd].get<int>("DIMENS");
 
         nI = dimens[1];
         nJ = dimens[2];
@@ -254,9 +269,9 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
 
         nParamsSpecFile[specInd] = dimens[0];
 
-        const std::vector<std::string> keywords = smspec.get<std::string>("KEYWORDS");
-        const std::vector<std::string> wgnames = smspec.get<std::string>("WGNAMES");
-        const std::vector<int> nums = smspec.get<int>("NUMS");
+        const std::vector<std::string> keywords = smspecList[specInd].get<std::string>("KEYWORDS");
+        const std::vector<std::string> wgnames = smspecList[specInd].get<std::string>("WGNAMES");
+        const std::vector<int> nums = smspecList[specInd].get<int>("NUMS");
 
         for (size_t i=0; i < keywords.size(); i++) {
             const std::string keyw = makeKeyString(keywords[i], wgnames[i], nums[i]);
