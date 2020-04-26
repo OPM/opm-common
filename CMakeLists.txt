@@ -193,11 +193,7 @@ if(ENABLE_ECL_INPUT)
     test_util/summary.cpp
     )
 
-  add_executable(test_esmry_lod
-    test_util/test_esmry_lod.cpp
-    )
-
-  foreach(target compareECL convertECL summary test_esmry_lod)
+  foreach(target compareECL convertECL summary)
     target_link_libraries(${target} opmcommon)
     install(TARGETS ${target} DESTINATION bin)
   endforeach()
