@@ -477,8 +477,9 @@ namespace {
     }
 
     std::vector<double>
-    findCriticalOilGas(const Opm::TableManager& tm,
-                       const Opm::Phases&       ph)
+    findCriticalOilGas(const Opm::TableManager&   tm,
+                       const Opm::Phases&         ph,
+                       const std::vector<double>& swco)
     {
         const auto num_tables = tm.getTabdims().getNumSatTables();
 
@@ -491,12 +492,14 @@ namespace {
         const auto& sof2Tables = tm.getSof2Tables();
         const auto& sof3Tables = tm.getSof3Tables();
 
-        const auto famI_sgof = [&sgofTables]( int i ) {
-            return critical_oil_gas( sgofTables.getTable<Opm::SgofTable>( i ) );
+        const auto famI_sgof = [&sgofTables, &swco](const int i) -> double
+        {
+            return critical_oil_gas(sgofTables.getTable<Opm::SgofTable>(i)) - swco[i];
         };
 
-        const auto famI_slgof = [&slgofTables]( int i ) {
-            return critical_oil_gas( slgofTables.getTable<Opm::SlgofTable>( i ) );
+        const auto famI_slgof = [&slgofTables, &swco](const int i) -> double
+        {
+            return critical_oil_gas(slgofTables.getTable<Opm::SlgofTable>(i)) - swco[i];
         };
 
         const auto famII_2p = [&sof2Tables]( int i ) {
@@ -976,7 +979,7 @@ namespace {
         ep.connate.gas   = findMinGasSaturation(tm, phases);
         ep.connate.water = findMinWaterSaturation(tm, phases);
 
-        ep.critical.oil_in_gas   = findCriticalOilGas(tm, phases);
+        ep.critical.oil_in_gas   = findCriticalOilGas(tm, phases, ep.connate.water);
         ep.critical.oil_in_water = findCriticalOilWater(tm, phases);
         ep.critical.gas          = findCriticalGas(tm, phases);
         ep.critical.water        = findCriticalWater(tm, phases);

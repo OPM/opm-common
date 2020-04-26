@@ -578,15 +578,8 @@ FieldProps::FieldData<double>& FieldProps::init_get(const std::string& keyword) 
     if (keyword == ParserKeywords::TEMPI::keywordName)
         this->init_tempi(this->double_data[keyword]);
 
-    if (keywords::PROPS::satfunc.count(keyword) == 1) {
+    if (keywords::PROPS::satfunc.count(keyword) == 1)
         this->init_satfunc(keyword, this->double_data[keyword]);
-
-        if (this->tables.hasTables("SGOF")) {
-            const auto shift_iter = keywords::PROPS::sogcr_shift.find(keyword);
-            if (shift_iter != keywords::PROPS::sogcr_shift.end())
-                this->subtract_swl(this->double_data[keyword], shift_iter->second);
-        }
-    }
 
     return this->double_data[keyword];
 }
@@ -1056,23 +1049,6 @@ void FieldProps::init_satfunc(const std::string& keyword, FieldData<double>& sat
     } else {
         const auto& satnum = this->get<int>("SATNUM");
         satfunc.default_update(satfunc::init(keyword, this->tables, this->m_phases, this->cell_depth, satnum, endnum));
-    }
-}
-
-/**
- * Special purpose operation to make various *SOGCR* data elements
- * account for (scaled) connate water saturation.
- *
- * Must only be called if run uses SGOF, because that table is implicitly
- * defined in terms of connate water saturation.  Subtracts SWL only
- * if the data item was defaulted (i.e., extracted from unscaled table).
- */
-void FieldProps::subtract_swl(FieldProps::FieldData<double>& sogcr, const std::string& swl_kw)
-{
-    const auto& swl = this->init_get<double>(swl_kw);
-    for (std::size_t i = 0; i < sogcr.size(); i++) {
-        if (value::defaulted(sogcr.value_status[i]))
-            sogcr.data[i] -= swl.data[i];
     }
 }
 
