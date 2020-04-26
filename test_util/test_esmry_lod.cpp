@@ -1,4 +1,5 @@
 #include <chrono>
+#include <cmath>
 #include <iomanip>
 #include <iostream>
 #include <tuple>
@@ -110,7 +111,7 @@ int main(int argc, char **argv) {
 
             for (size_t m = 0; m < v1.size(); m++) {
 
-                float absDiff = abs( v1[m]- v2[m]);
+                float absDiff = std::abs( v1[m]- v2[m]);
 
                 if (v2[m] > 0.0)
                     absDiff = absDiff / v2[m];
