@@ -1049,7 +1049,6 @@ set( keywords
      001_Eclipse300/C/COMPS
      001_Eclipse300/C/CREF
      001_Eclipse300/C/CREFS
-     001_Eclipse300/D/DEADOIL
      001_Eclipse300/D/DREF
      001_Eclipse300/D/DREFS
      001_Eclipse300/D/DZV
@@ -1075,7 +1074,6 @@ set( keywords
      001_Eclipse300/T/THCROCK
      001_Eclipse300/T/THCWATER
      001_Eclipse300/T/THERMAL
-     001_Eclipse300/T/THERMEX1
      001_Eclipse300/T/TREF
      001_Eclipse300/T/TREFS
      001_Eclipse300/W/WINJTEMP
