@@ -19,8 +19,10 @@
 
 #include <stdexcept>
 #include <iostream>
+#include <iomanip>
 #include <memory>
 #include <numeric>
+#include <sstream>
 #include <string>
 
 #define BOOST_TEST_MODULE FieldPropsTests
@@ -39,6 +41,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 
 #include "src/opm/parser/eclipse/EclipseState/Grid/FieldProps.hpp"
@@ -869,6 +872,15 @@ SOF3
 / )" };
     }
 
+    std::string tolCrit(const double t)
+    {
+        std::ostringstream os;
+
+        os << "TOLCRIT\n  " << std::scientific << std::setw(11) << t << "\n/\n";
+
+        return os.str();
+    }
+
     std::string end()
     {
         return { R"(
@@ -877,9 +889,49 @@ END
     }
 } // namespace Anonymous
 
-BOOST_AUTO_TEST_CASE(SatFunc_EndPts_Family_I) {
+BOOST_AUTO_TEST_CASE(RawTableEndPoints_Family_I_TolCrit_Zero) {
     const auto es = ::Opm::EclipseState {
         ::Opm::Parser{}.parseString(satfunc_model_setup() + satfunc_family_I() + end())
+    };
+
+    const auto& tm      = es.getTableManager();
+    const auto& ph      = es.runspec().phases();
+    const auto  tolcrit = 0.0;
+
+    auto rtepPtr = satfunc::getRawTableEndpoints(tm, ph, tolcrit);
+
+    // Water end-points
+    {
+        const auto swl  = rtepPtr->connate .water;
+        const auto swcr = rtepPtr->critical.water;
+        const auto swu  = rtepPtr->maximum .water;
+        BOOST_CHECK_CLOSE(swl [0], 0.071004, 1.0e-10);
+        BOOST_CHECK_CLOSE(swcr[0], 0.071004, 1.0e-10);  // == SWL.  TOLCRIT = 0.0
+        BOOST_CHECK_CLOSE(swu [0], 1.0     , 1.0e-10);
+    }
+
+    // Oil end-points
+    {
+        const auto sowcr = rtepPtr->critical.oil_in_water;
+        const auto sogcr = rtepPtr->critical.oil_in_gas;
+        BOOST_CHECK_CLOSE(sowcr[0], 1.0 - 0.791004, 1.0e-10);  // TOLCRIT = 0.0
+        BOOST_CHECK_CLOSE(sogcr[0], 1.0 - 0.858996 - 0.071004, 1.0e-10);  // Include SWL
+    }
+
+    // Gas end-points
+    {
+        const auto sgl  = rtepPtr->connate .gas;
+        const auto sgcr = rtepPtr->critical.gas;
+        const auto sgu  = rtepPtr->maximum .gas;
+        BOOST_CHECK_CLOSE(sgl [0], 0.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(sgcr[0], 0.03, 1.0e-10);
+        BOOST_CHECK_CLOSE(sgu [0], 0.928996, 1.0e-10);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(SatFunc_EndPts_Family_I_TolCrit_Zero) {
+    const auto es = ::Opm::EclipseState {
+        ::Opm::Parser{}.parseString(satfunc_model_setup() + tolCrit(0.0) + satfunc_family_I() + end())
     };
 
     auto fp = es.fieldProps();
@@ -890,7 +942,7 @@ BOOST_AUTO_TEST_CASE(SatFunc_EndPts_Family_I) {
         const auto swcr = fp.get_double("SWCR");
         const auto swu  = fp.get_double("SWU");
         BOOST_CHECK_CLOSE(swl [0], 0.071004, 1.0e-10);
-        BOOST_CHECK_CLOSE(swcr[0], 0.071004, 1.0e-10);  // == SWL.  TOLCRIT not currently implemented.
+        BOOST_CHECK_CLOSE(swcr[0], 0.071004, 1.0e-10);  // == SWL.  TOLCRIT = 0.0
         BOOST_CHECK_CLOSE(swu [0], 1.0     , 1.0e-10);
 
         const auto krwr = fp.get_double("KRWR"); // Krw(Sw=1-Sowcr-Sgl) = Krw(Sw=0.791004)
@@ -906,13 +958,13 @@ BOOST_AUTO_TEST_CASE(SatFunc_EndPts_Family_I) {
     {
         const auto sowcr = fp.get_double("SOWCR");
         const auto sogcr = fp.get_double("SOGCR");
-        BOOST_CHECK_CLOSE(sowcr[0], 1.0 - 0.791004, 1.0e-10);  // TOLCRIT currently not supported.
+        BOOST_CHECK_CLOSE(sowcr[0], 1.0 - 0.791004, 1.0e-10);  // TOLCRIT = 0.0
         BOOST_CHECK_CLOSE(sogcr[0], 1.0 - 0.858996 - 0.071004, 1.0e-10);  // Include SWL
 
         const auto krorw = fp.get_double("KRORW");  // Krow(So=1-Swcr-Sgl) = Krow(So=0.928996)
         const auto krorg = fp.get_double("KRORG");  // Krog(So=1-Sgcr-Swl) = Krog(So=0.898996)
         const auto kro   = fp.get_double("KRO");    // Krow(So=Somax) = Krog(So=Somax)
-        BOOST_CHECK_CLOSE(krorw[0], 1.0, 1.0e-10);  // TOLCRIT currently not supported.
+        BOOST_CHECK_CLOSE(krorw[0], 1.0, 1.0e-10);  // TOLCRIT = 0.0
         BOOST_CHECK_CLOSE(krorg[0], 0.896942, 1.0e-10);
         BOOST_CHECK_CLOSE(kro  [0], 1.0, 1.0e-10);
     }
@@ -936,9 +988,9 @@ BOOST_AUTO_TEST_CASE(SatFunc_EndPts_Family_I) {
     }
 }
 
-BOOST_AUTO_TEST_CASE(SatFunc_EndPts_Family_II) {
+BOOST_AUTO_TEST_CASE(SatFunc_EndPts_Family_II_TolCrit_Zero) {
     const auto es = ::Opm::EclipseState {
-        ::Opm::Parser{}.parseString(satfunc_model_setup() + satfunc_family_II() + end())
+        ::Opm::Parser{}.parseString(satfunc_model_setup() + tolCrit(0.0) + satfunc_family_II() + end())
     };
 
     auto fp = es.fieldProps();
@@ -949,7 +1001,7 @@ BOOST_AUTO_TEST_CASE(SatFunc_EndPts_Family_II) {
         const auto swcr = fp.get_double("SWCR");
         const auto swu  = fp.get_double("SWU");
         BOOST_CHECK_CLOSE(swl [0], 0.071004, 1.0e-10);
-        BOOST_CHECK_CLOSE(swcr[0], 0.071004, 1.0e-10);  // == SWL.  TOLCRIT not currently implemented.
+        BOOST_CHECK_CLOSE(swcr[0], 0.071004, 1.0e-10);  // == SWL.  TOLCRIT = 0.0
         BOOST_CHECK_CLOSE(swu [0], 1.0     , 1.0e-10);
 
         const auto krwr = fp.get_double("KRWR"); // Krw(Sw=1-Sowcr-Sgl) = Krw(Sw=0.791004)
@@ -965,13 +1017,13 @@ BOOST_AUTO_TEST_CASE(SatFunc_EndPts_Family_II) {
     {
         const auto sowcr = fp.get_double("SOWCR");
         const auto sogcr = fp.get_double("SOGCR");
-        BOOST_CHECK_CLOSE(sowcr[0], 1.0 - 0.791004, 1.0e-10);  // TOLCRIT currently not supported.
+        BOOST_CHECK_CLOSE(sowcr[0], 1.0 - 0.791004, 1.0e-10);  // TOLCRIT = 0.0
         BOOST_CHECK_CLOSE(sogcr[0], 1.0 - 0.858996 - 0.071004, 1.0e-10);  // Include SWL
 
         const auto krorw = fp.get_double("KRORW");  // Krow(So=1-Swcr-Sgl) = Krow(So=0.928996)
         const auto krorg = fp.get_double("KRORG");  // Krog(So=1-Sgcr-Swl) = Krog(So=0.898996)
         const auto kro   = fp.get_double("KRO");    // Krow(So=Somax) = Krog(So=Somax)
-        BOOST_CHECK_CLOSE(krorw[0], 1.0, 1.0e-10);  // TOLCRIT currently not supported.
+        BOOST_CHECK_CLOSE(krorw[0], 1.0, 1.0e-10);  // TOLCRIT = 0.0
         BOOST_CHECK_CLOSE(krorg[0], 0.896942, 1.0e-10);
         BOOST_CHECK_CLOSE(kro  [0], 1.0, 1.0e-10);
     }

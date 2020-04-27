@@ -261,7 +261,7 @@ namespace {
      */
 
     template <typename T>
-    double critical_water( const T& table )
+    double critical_water(const T& table, const double tolcrit)
     {
         const auto& col = table.getKrwColumn();
         const auto end = col.begin() + table.numRows();
@@ -275,7 +275,8 @@ namespace {
 
     std::vector< double >
     findCriticalWater(const Opm::TableManager& tm,
-                      const Opm::Phases&       ph)
+                      const Opm::Phases&       ph,
+                      const double             tolcrit)
     {
         const auto num_tables = tm.getTabdims().getNumSatTables();
 
@@ -285,12 +286,14 @@ namespace {
         const auto& swofTables = tm.getSwofTables();
         const auto& swfnTables = tm.getSwfnTables();
 
-        const auto famI = [&swofTables]( int i ) {
-            return critical_water( swofTables.getTable<Opm::SwofTable>( i ) );
+        const auto famI = [&swofTables, tolcrit](const int i) -> double
+        {
+            return critical_water(swofTables.getTable<Opm::SwofTable>(i), tolcrit);
         };
 
-        const auto famII = [&swfnTables]( int i ) {
-            return critical_water( swfnTables.getTable<Opm::SwfnTable>( i ) );
+        const auto famII = [&swfnTables, tolcrit](const int i) -> double
+        {
+            return critical_water(swfnTables.getTable<Opm::SwfnTable>(i), tolcrit);
         };
 
         switch( getSaturationFunctionFamily( tm, ph ) ) {
@@ -301,7 +304,8 @@ namespace {
     }
 
     template< typename T >
-    double critical_gas( const T& table ) {
+    double critical_gas(const T& table, const double tolcrit)
+    {
         const auto& col = table.getKrgColumn();
         const auto end = col.begin() + table.numRows();
         const auto critical = std::upper_bound( col.begin(), end, 0.0 );
@@ -312,7 +316,9 @@ namespace {
         return table.getSgColumn()[ index - 1 ];
     }
 
-    double critical_gas( const Opm::SlgofTable& slgofTable ) {
+    double critical_gas(const Opm::SlgofTable& slgofTable,
+                        const double           tolcrit)
+    {
         const auto& col = slgofTable.getKrgColumn();
         const auto critical = std::upper_bound( col.begin(), col.end(), 0.0 );
         const auto index = std::distance( col.begin(), critical );
@@ -324,7 +330,8 @@ namespace {
 
     std::vector<double>
     findCriticalGas(const Opm::TableManager& tm,
-                    const Opm::Phases&       ph)
+                    const Opm::Phases&       ph,
+                    const double             tolcrit)
     {
         const auto num_tables = tm.getTabdims().getNumSatTables();
 
@@ -335,16 +342,19 @@ namespace {
         const auto& sgofTables = tm.getSgofTables();
         const auto& slgofTables = tm.getSlgofTables();
 
-        const auto famI_sgof = [&sgofTables]( int i ) {
-            return critical_gas( sgofTables.getTable<Opm::SgofTable>( i ) );
+        const auto famI_sgof = [&sgofTables, tolcrit](const int i) -> double
+        {
+            return critical_gas(sgofTables.getTable<Opm::SgofTable>(i), tolcrit);
         };
 
-        const auto famI_slgof = [&slgofTables]( int i ) {
-            return critical_gas( slgofTables.getTable<Opm::SlgofTable>( i ) );
+        const auto famI_slgof = [&slgofTables, tolcrit](const int i) -> double
+        {
+            return critical_gas(slgofTables.getTable<Opm::SlgofTable>(i), tolcrit);
         };
 
-        const auto famII = [&sgfnTables]( int i ) {
-            return critical_gas( sgfnTables.getTable<Opm::SgfnTable>( i ) );
+        const auto famII = [&sgfnTables, tolcrit](const int i) -> double
+        {
+            return critical_gas(sgfnTables.getTable<Opm::SgfnTable>(i), tolcrit);
         };
 
         switch( getSaturationFunctionFamily( tm, ph ) ) {
@@ -365,7 +375,9 @@ namespace {
         }
     }
 
-    double critical_oil_water( const Opm::SwofTable& swofTable ) {
+    double critical_oil_water(const Opm::SwofTable& swofTable,
+                              const double          tolcrit)
+    {
         const auto& col = swofTable.getKrowColumn();
 
         using reverse = std::reverse_iterator< decltype( col.begin() ) >;
@@ -379,7 +391,9 @@ namespace {
         return 1 - swofTable.getSwColumn()[ index + 1 ];
     }
 
-    double critical_oil( const Opm::Sof2Table& sof2Table ) {
+    double critical_oil(const Opm::Sof2Table& sof2Table,
+                        const double          tolcrit)
+    {
         const auto& col = sof2Table.getKroColumn();
         const auto critical = std::upper_bound( col.begin(), col.end(), 0.0 );
         const auto index = std::distance( col.begin(), critical );
@@ -389,7 +403,10 @@ namespace {
         return sof2Table.getSoColumn()[ index - 1 ];
     }
 
-    double critical_oil( const Opm::Sof3Table& sof3Table, const Opm::TableColumn& col ) {
+    double critical_oil(const Opm::Sof3Table&   sof3Table,
+                        const Opm::TableColumn& col,
+                        const double            tolcrit)
+    {
         const auto critical = std::upper_bound( col.begin(), col.end(), 0.0 );
         const auto index = std::distance( col.begin(), critical );
 
@@ -400,7 +417,8 @@ namespace {
 
     std::vector<double>
     findCriticalOilWater(const Opm::TableManager& tm,
-                         const Opm::Phases&       ph)
+                         const Opm::Phases&       ph,
+                         const double             tolcrit)
     {
         const auto num_tables = tm.getTabdims().getNumSatTables();
 
@@ -412,17 +430,20 @@ namespace {
         const auto& sof2Tables = tm.getSof2Tables();
         const auto& sof3Tables = tm.getSof3Tables();
 
-        const auto famI = [&swofTables]( int i ) {
-            return critical_oil_water( swofTables.getTable<Opm::SwofTable>( i ) );
+        const auto famI = [&swofTables, tolcrit](const int i) -> double
+        {
+            return critical_oil_water(swofTables.getTable<Opm::SwofTable>(i), tolcrit);
         };
 
-        const auto famII_2p = [&sof2Tables]( int i ) {
-            return critical_oil( sof2Tables.getTable<Opm::Sof2Table>( i ) );
+        const auto famII_2p = [&sof2Tables, tolcrit](const int i) -> double
+        {
+            return critical_oil(sof2Tables.getTable<Opm::Sof2Table>(i), tolcrit);
         };
 
-        const auto famII_3p = [&sof3Tables]( int i ) {
-            const auto& tb = sof3Tables.getTable<Opm::Sof3Table>( i );
-            return critical_oil( tb, tb.getKrowColumn() );
+        const auto famII_3p = [&sof3Tables, tolcrit](const int i) -> double
+        {
+            const auto& tb = sof3Tables.getTable<Opm::Sof3Table>(i);
+            return critical_oil(tb, tb.getKrowColumn(), tolcrit);
         };
 
         switch( getSaturationFunctionFamily( tm, ph ) ) {
@@ -436,7 +457,8 @@ namespace {
         }
     }
 
-    double critical_oil_gas( const Opm::SgofTable& sgofTable )
+    double critical_oil_gas(const Opm::SgofTable& sgofTable,
+                            const double          tolcrit)
     {
         const auto& col = sgofTable.getKrogColumn();
 
@@ -451,7 +473,8 @@ namespace {
         return 1.0 - sgofTable.getSgColumn()[ index + 1 ];
     }
 
-    double critical_oil_gas( const Opm::SlgofTable& sgofTable )
+    double critical_oil_gas(const Opm::SlgofTable& sgofTable,
+                            const double           tolcrit)
     {
         const auto& col = sgofTable.getKrogColumn();
         const auto critical = std::upper_bound( col.begin(), col.end(), 0.0 );
@@ -465,7 +488,8 @@ namespace {
     std::vector<double>
     findCriticalOilGas(const Opm::TableManager&   tm,
                        const Opm::Phases&         ph,
-                       const std::vector<double>& swco)
+                       const std::vector<double>& swco,
+                       const double               tolcrit)
     {
         const auto num_tables = tm.getTabdims().getNumSatTables();
 
@@ -478,23 +502,25 @@ namespace {
         const auto& sof2Tables = tm.getSof2Tables();
         const auto& sof3Tables = tm.getSof3Tables();
 
-        const auto famI_sgof = [&sgofTables, &swco](const int i) -> double
+        const auto famI_sgof = [&sgofTables, &swco, tolcrit](const int i) -> double
         {
-            return critical_oil_gas(sgofTables.getTable<Opm::SgofTable>(i)) - swco[i];
+            return critical_oil_gas(sgofTables.getTable<Opm::SgofTable>(i), tolcrit) - swco[i];
         };
 
-        const auto famI_slgof = [&slgofTables, &swco](const int i) -> double
+        const auto famI_slgof = [&slgofTables, &swco, tolcrit](const int i) -> double
         {
-            return critical_oil_gas(slgofTables.getTable<Opm::SlgofTable>(i)) - swco[i];
+            return critical_oil_gas(slgofTables.getTable<Opm::SlgofTable>(i), tolcrit) - swco[i];
         };
 
-        const auto famII_2p = [&sof2Tables]( int i ) {
-            return critical_oil( sof2Tables.getTable<Opm::Sof2Table>( i ) );
+        const auto famII_2p = [&sof2Tables, tolcrit](const int i) -> double
+        {
+            return critical_oil(sof2Tables.getTable<Opm::Sof2Table>(i), tolcrit);
         };
 
-        const auto famII_3p = [&sof3Tables]( int i ) {
-            const auto& tb = sof3Tables.getTable<Opm::Sof3Table>( i );
-            return critical_oil( tb, tb.getKrogColumn() );
+        const auto famII_3p = [&sof3Tables, tolcrit](const int i) -> double
+        {
+            const auto& tb = sof3Tables.getTable<Opm::Sof3Table>(i);
+            return critical_oil(tb, tb.getKrogColumn(), tolcrit);
         };
 
         switch( getSaturationFunctionFamily( tm, ph ) ) {
@@ -1499,17 +1525,18 @@ namespace {
 
 std::shared_ptr<Opm::satfunc::RawTableEndPoints>
 Opm::satfunc::getRawTableEndpoints(const Opm::TableManager& tm,
-                                   const Opm::Phases&       phases)
+                                   const Opm::Phases&       phases,
+                                   const double             tolcrit)
 {
     auto ep = std::make_shared<RawTableEndPoints>();
 
     ep->connate.gas   = findMinGasSaturation(tm, phases);
     ep->connate.water = findMinWaterSaturation(tm, phases);
 
-    ep->critical.oil_in_gas   = findCriticalOilGas(tm, phases, ep->connate.water);
-    ep->critical.oil_in_water = findCriticalOilWater(tm, phases);
-    ep->critical.gas          = findCriticalGas(tm, phases);
-    ep->critical.water        = findCriticalWater(tm, phases);
+    ep->critical.oil_in_gas   = findCriticalOilGas(tm, phases, ep->connate.water, tolcrit);
+    ep->critical.oil_in_water = findCriticalOilWater(tm, phases, tolcrit);
+    ep->critical.gas          = findCriticalGas(tm, phases, tolcrit);
+    ep->critical.water        = findCriticalWater(tm, phases, tolcrit);
 
     ep->maximum.gas   = findMaxGasSaturation(tm, phases);
     ep->maximum.water = findMaxWaterSaturation(tm, phases);

@@ -52,7 +52,8 @@ namespace Opm { namespace satfunc {
 
     std::shared_ptr<RawTableEndPoints>
     getRawTableEndpoints(const Opm::TableManager& tm,
-                         const Opm::Phases&       phases);
+                         const Opm::Phases&       phases,
+                         const double             tolcrit);
 
     std::vector<double> init(const std::string& kewyord,
                              const TableManager& tables,
