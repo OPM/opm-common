@@ -42,7 +42,13 @@ macro (find_openmp opm)
   # enabling OpenMP is supposedly enough to make the compiler link with
   # the appropriate libraries
   find_package (OpenMP ${${opm}_QUIET})
-  list (APPEND ${opm}_LIBRARIES ${OpenMP_LIBRARIES})
+
+  if(OpenMP_CXX_FOUND)
+    list (APPEND ${opm}_LIBRARIES OpenMP::OpenMP_CXX)
+  else()
+    list (APPEND ${opm}_LIBRARIES ${OpenMP_LIBRARIES})
+  endif()
+
   if (OPENMP_FOUND)
 	add_options (C ALL_BUILDS "${OpenMP_C_FLAGS}")
 	add_options (CXX ALL_BUILDS "${OpenMP_CXX_FLAGS}")
