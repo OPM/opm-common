@@ -88,6 +88,17 @@ GWCT
 GGOR
 /
 
+GOPP
+/
+GWPP
+/
+GGPP
+/
+GGPI
+/
+GWPI
+/
+
 FOPR
 
 FOPT
@@ -95,6 +106,12 @@ FOPT
 FOIR
 
 FOIT
+
+FOPP
+FWPP
+FGPP
+FGPI
+FWPI
 
 COPR
 'W_2' /
