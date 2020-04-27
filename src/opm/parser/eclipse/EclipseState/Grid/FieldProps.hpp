@@ -19,6 +19,7 @@
 #ifndef FIELDPROPS_HPP
 #define FIELDPROPS_HPP
 
+#include <memory>
 #include <string>
 #include <unordered_set>
 #include <vector>
@@ -27,6 +28,7 @@
 #include <opm/parser/eclipse/Deck/DeckSection.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/Box.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 
 namespace Opm {
@@ -363,6 +365,7 @@ private:
     const std::string m_default_region;
     const EclipseGrid * grid_ptr;      // A bit undecided whether to properly use the grid or not ...
     const TableManager& tables;
+    std::shared_ptr<satfunc::RawTableEndPoints> m_rtep;
     std::vector<MultregpRecord> multregp;
     std::unordered_map<std::string, FieldData<int>> int_data;
     std::unordered_map<std::string, FieldData<double>> double_data;

@@ -36,6 +36,7 @@
 #include <array>
 #include <exception>
 #include <iterator>
+#include <memory>
 #include <stdexcept>
 #include <string>
 
@@ -43,25 +44,7 @@
 
 namespace {
 
-    struct RawTableEndPoints
-    {
-        struct {
-            std::vector<double> gas;
-            std::vector<double> water;
-        } connate;
-
-        struct {
-            std::vector<double> oil_in_gas;
-            std::vector<double> oil_in_water;
-            std::vector<double> gas;
-            std::vector<double> water;
-        } critical;
-
-        struct {
-            std::vector<double> gas;
-            std::vector<double> water;
-        } maximum;
-    };
+    using ::Opm::satfunc::RawTableEndPoints;
 
     /*
      * See the "Saturation Functions" chapter in the Eclipse Technical
@@ -973,26 +956,6 @@ namespace {
         }
     }
 
-    RawTableEndPoints
-    getRawTableEndpoints(const Opm::TableManager& tm,
-                         const Opm::Phases&       phases)
-    {
-        auto ep = RawTableEndPoints{};
-
-        ep.connate.gas   = findMinGasSaturation(tm, phases);
-        ep.connate.water = findMinWaterSaturation(tm, phases);
-
-        ep.critical.oil_in_gas   = findCriticalOilGas(tm, phases, ep.connate.water);
-        ep.critical.oil_in_water = findCriticalOilWater(tm, phases);
-        ep.critical.gas          = findCriticalGas(tm, phases);
-        ep.critical.water        = findCriticalWater(tm, phases);
-
-        ep.maximum.gas   = findMaxGasSaturation(tm, phases);
-        ep.maximum.water = findMaxWaterSaturation(tm, phases);
-
-        return ep;
-    }
-
     double selectValue(const Opm::TableContainer& depthTables,
                        int tableIdx,
                        const std::string& columnName,
@@ -1533,10 +1496,32 @@ namespace {
     }
 } // namespace Anonymous
 
+
+std::shared_ptr<Opm::satfunc::RawTableEndPoints>
+Opm::satfunc::getRawTableEndpoints(const Opm::TableManager& tm,
+                                   const Opm::Phases&       phases)
+{
+    auto ep = std::make_shared<RawTableEndPoints>();
+
+    ep->connate.gas   = findMinGasSaturation(tm, phases);
+    ep->connate.water = findMinWaterSaturation(tm, phases);
+
+    ep->critical.oil_in_gas   = findCriticalOilGas(tm, phases, ep->connate.water);
+    ep->critical.oil_in_water = findCriticalOilWater(tm, phases);
+    ep->critical.gas          = findCriticalGas(tm, phases);
+    ep->critical.water        = findCriticalWater(tm, phases);
+
+    ep->maximum.gas   = findMaxGasSaturation(tm, phases);
+    ep->maximum.water = findMaxWaterSaturation(tm, phases);
+
+    return ep;
+}
+
 std::vector<double>
 Opm::satfunc::init(const std::string&         keyword,
                    const TableManager&        tables,
                    const Phases&              phases,
+                   const RawTableEndPoints&   ep,
                    const std::vector<double>& cell_depth,
                    const std::vector<int>&    num,
                    const std::vector<int>&    endnum)
@@ -1584,8 +1569,6 @@ Opm::satfunc::init(const std::string&         keyword,
             "Unsupported saturation function scaling '"
             + keyword + '\''
         };
-
-    const auto ep = getRawTableEndpoints(tables, phases);
 
     return func->second(tables, phases, ep, cell_depth, num, endnum);
 }
