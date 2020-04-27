@@ -16,6 +16,9 @@ if(ZOLTAN_ROOT)
   set(ZOLTAN_NO_DEFAULT_PATH "NO_DEFAULT_PATH")
 endif()
 
+# We only need zoltan with MPI. Otherwise usage of alugrid is broken.
+find_package(MPI)
+
 # Make sure we have checked for the underlying partitioners.
 find_package(PTScotch)
 #find_package(ParMETIS)
@@ -39,20 +42,23 @@ find_library(ZOLTAN_LIBRARIES
   ${ZOLTAN_NO_DEFAULT_PATH})
 
 set (ZOLTAN_FOUND FALSE)
-if (ZOLTAN_INCLUDE_DIRS OR ZOLTAN_LIBRARIES)
-  set(ZOLTAN_FOUND TRUE)
+
+set (ZOLTAN_CONFIG_VAR HAVE_ZOLTAN)
+
+# print a message to indicate status of this package
+include (FindPackageHandleStandardArgs)
+
+find_package_handle_standard_args(ZOLTAN
+  DEFAULT_MSG
+  ZOLTAN_LIBRARIES
+  ZOLTAN_INCLUDE_DIRS
+  MPI_FOUND
+  )
+
+if (ZOLTAN_FOUND)
   set(HAVE_ZOLTAN 1)
   set(ZOLTAN_LIBRARIES ${ZOLTAN_LIBRARIES} ${PARMETIS_LIBRARIES} ${PTSCOTCH_LIBRARIES})
   set(ZOLTAN_INCLUDE_DIRS ${ZOLTAN_INCLUDE_DIRS} ${PARMETIS_INCLUDE_DIRS}
       ${PTSCOTCH_INCLUDE_DIRS})
 endif()
 
-set (ZOLTAN_CONFIG_VAR HAVE_ZOLTAN)
-
-# print a message to indicate status of this package
-include (FindPackageHandleStandardArgs)
-find_package_handle_standard_args(ZOLTAN
-  DEFAULT_MSG
-  ZOLTAN_LIBRARIES
-  ZOLTAN_INCLUDE_DIRS
-  )
