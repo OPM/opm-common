@@ -1,5 +1,5 @@
 {
-  "name": "PERMRED",
+  "name": "PERMFACT",
   "sections": [
     "PROPS"
   ],
@@ -10,7 +10,7 @@
       "dimension": "1"
     },
     {
-      "name": "PERMREDMULT",
+      "name": "PERMFACTMULT",
       "value_type": "DOUBLE",
       "dimension": "1"
     }
