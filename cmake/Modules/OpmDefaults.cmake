@@ -5,6 +5,8 @@ is_compiler_gcc_compatible ()
 include(TestCXXAcceptsFlag)
 
 macro (opm_defaults opm)
+
+  message("Processing opm_defaults ${opm}")
   # if we are installing a development version (default when checking out of
   # VCS), then remember which directories were used when configuring. package
   # distribution should disable this option.
