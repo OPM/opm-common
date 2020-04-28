@@ -49,9 +49,6 @@ namespace Opm {
         inline currentGroupConstraints& set(  Opm::Group::ProductionCMode cpc,
         Opm::Group::InjectionCMode  cgic,
         Opm::Group::InjectionCMode  cwic);
-
-        inline bool has();
-
     };
 
 
@@ -109,12 +106,6 @@ namespace Opm {
         this->currentProdConstraint = cpc;
         return *this;
     }
-
-    inline bool currentGroupConstraints::has() {
-        return ((&this->currentGasInjectionConstraint != nullptr) && (&this->currentGasInjectionConstraint != nullptr)
-        && (&this->currentProdConstraint != nullptr));
-    }
-
 
 }} // Opm::data
 
