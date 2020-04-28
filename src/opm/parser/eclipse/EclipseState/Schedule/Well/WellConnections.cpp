@@ -196,15 +196,13 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
                                         const Connection::Direction direction,
                                         const Connection::CTFKind ctf_kind,
                                         const std::size_t seqIndex,
-                                        const double segDistStart,
-                                        const double segDistEnd,
                                         const bool defaultSatTabId)
     {
         int conn_i = (i < 0) ? this->headI : i;
         int conn_j = (j < 0) ? this->headJ : j;
         Connection conn(conn_i, conn_j, k, global_index, complnum, depth, state, CF, Kh, rw, r0,
                         skin_factor, satTableId, direction, ctf_kind,
-                        seqIndex, segDistStart, segDistEnd, defaultSatTabId);
+                        seqIndex, defaultSatTabId);
         this->add(conn);
     }
 
@@ -223,8 +221,6 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
                                         const Connection::Direction direction,
                                         const Connection::CTFKind ctf_kind,
                                         const std::size_t seqIndex,
-                                        const double segDistStart,
-                                        const double segDistEnd,
                                         const bool defaultSatTabId)
     {
         int complnum = (this->m_connections.size() + 1);
@@ -244,8 +240,6 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
                             direction,
                             ctf_kind,
                             seqIndex,
-                            segDistStart,
-                            segDistEnd,
                             defaultSatTabId);
     }
 
@@ -385,13 +379,14 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
                                     r0,
                                     skin_factor,
                                     satTableId,
-                                    direction, ctf_kind,
-                                    noConn, 0., 0., defaultSatTable);
+                                    direction,
+                                    ctf_kind,
+                                    noConn,
+                                    defaultSatTable);
             } else {
                 std::size_t css_ind = prev->sort_value();
                 int conSegNo = prev->segment();
-                double conSDStart = prev->getSegDistStart();
-                double conSDEnd = prev->getSegDistEnd();
+                const auto& perf_range = prev->perf_range();
                 double depth = grid.getCellDepth(I,J,k);
                 *prev = Connection(I,J,k,
                                    grid.getGlobalIndex(I,J,k),
@@ -404,14 +399,15 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
                                    r0,
                                    skin_factor,
                                    satTableId,
-                                   direction, ctf_kind,
-                                   prev->sort_value(), conSDStart, conSDEnd, defaultSatTable);
+                                   direction,
+                                   ctf_kind,
+                                   prev->sort_value(),
+                                   defaultSatTable);
 
                 prev->updateSegment(conSegNo,
                                     depth,
                                     css_ind,
-                                    conSDStart,
-                                    conSDEnd);
+                                    *perf_range);
             }
         }
     }
