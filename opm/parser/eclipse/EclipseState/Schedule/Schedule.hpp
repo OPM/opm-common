@@ -40,6 +40,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/RFTConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/VFPInjTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/VFPProdTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Network/ExtNetwork.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellTestConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/Actions.hpp>
@@ -263,6 +264,9 @@ namespace Opm
         void applyAction(size_t reportStep, const Action::ActionX& action, const Action::Result& result);
         int getNupcol(size_t reportStep) const;
 
+
+        const Network::ExtNetwork& network(std::size_t report_step) const;
+
         bool operator==(const Schedule& data) const;
         std::shared_ptr<const Python> python() const;
 
@@ -305,6 +309,7 @@ namespace Opm
             gconsump.serializeOp(serializer);
             global_whistctl_mode.template serializeOp<Serializer, false>(serializer);
             m_actions.serializeOp(serializer);
+            m_network.serializeOp(serializer);
             rft_config.serializeOp(serializer);
             m_nupcol.template serializeOp<Serializer, false>(serializer);
             restart_config.serializeOp(serializer);
@@ -340,6 +345,7 @@ namespace Opm
         DynamicState<std::shared_ptr<GConSump>> gconsump;
         DynamicState<Well::ProducerCMode> global_whistctl_mode;
         DynamicState<std::shared_ptr<Action::Actions>> m_actions;
+        DynamicState<std::shared_ptr<Network::ExtNetwork>> m_network;
         RFTConfig rft_config;
         DynamicState<int> m_nupcol;
         RestartConfig restart_config;
@@ -367,6 +373,8 @@ namespace Opm
                      const UnitSystem& unit_system);
 
         DynamicState<std::shared_ptr<RPTConfig>> rpt_config;
+        void updateNetwork(std::shared_ptr<Network::ExtNetwork> network, std::size_t report_step);
+
 
         GTNode groupTree(const std::string& root_node, std::size_t report_step, const GTNode * parent) const;
         void updateGroup(std::shared_ptr<Group> group, size_t reportStep);
@@ -418,6 +426,9 @@ namespace Opm
         void handleGUIDERAT( const DeckKeyword& keyword, size_t currentStep);
         void handleLINCOM( const DeckKeyword& keyword, size_t currentStep);
         void handleWEFAC( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
+
+        void handleBRANPROP( const DeckKeyword& keyword, size_t currentStep);
+        void handleNODEPROP( const DeckKeyword& keyword, size_t currentStep);
 
         void handleTUNING( const DeckKeyword& keyword, size_t currentStep);
         void handlePYACTION( std::shared_ptr<const Python> python, const std::string& input_path, const DeckKeyword& keyword, size_t currentStep);
