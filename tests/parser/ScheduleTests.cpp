@@ -967,6 +967,73 @@ BOOST_AUTO_TEST_CASE(createDeckWithWeltArg) {
 
 }
 
+BOOST_AUTO_TEST_CASE(createDeckWithWeltArg_UDA) {
+    std::string input = R"(
+START             -- 0
+19 JUN 2007 /
+SCHEDULE
+DATES             -- 1
+ 10  OKT 2008 /
+/
+
+UDQ
+   ASSIGN WUORAT 10 /
+   ASSIGN WUWRAT 20 /
+/
+
+
+WELSPECS
+    'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+/
+COMPDAT
+ 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+ 'OP_1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 /
+ 'OP_1'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+/
+WCONPROD
+ 'OP_1'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
+/
+DATES             -- 2
+ 20  JAN 2010 /
+/
+WELTARG
+ OP_1     ORAT        WUORAT /
+ OP_1     WRAT        WUWRAT /
+/
+)";
+
+    const auto& schedule = make_schedule(input);
+    SummaryState st(std::chrono::system_clock::now());
+    Opm::UnitSystem unitSystem = UnitSystem( UnitSystem::UnitType::UNIT_TYPE_METRIC );
+    double siFactorL = unitSystem.parse("LiquidSurfaceVolume/Time").getSIScaling();
+
+    st.update_well_var("OP_1", "WUORAT", 10);
+    st.update_well_var("OP_1", "WUWRAT", 20);
+
+    const auto& well_1 = schedule.getWell("OP_1", 1);
+    const auto wpp_1 = well_1.getProductionProperties();
+    BOOST_CHECK_EQUAL(wpp_1.OilRate.get<double>(), 0);
+    BOOST_CHECK_EQUAL(wpp_1.WaterRate.get<double>(), 0);
+    BOOST_CHECK (wpp_1.hasProductionControl( Opm::Well::ProducerCMode::ORAT) );
+    BOOST_CHECK (!wpp_1.hasProductionControl( Opm::Well::ProducerCMode::RESV) );
+
+
+
+    const auto& well_2 = schedule.getWell("OP_1", 2);
+    const auto wpp_2 = well_2.getProductionProperties();
+    BOOST_CHECK( wpp_2.OilRate.is<std::string>() );
+    BOOST_CHECK_EQUAL( wpp_2.OilRate.get<std::string>(), "WUORAT" );
+    BOOST_CHECK_EQUAL( wpp_2.WaterRate.get<std::string>(), "WUWRAT" );
+    const auto prod_controls = wpp_2.controls(st, 0);
+
+    BOOST_CHECK_EQUAL(prod_controls.oil_rate, 10 * siFactorL);
+    BOOST_CHECK_EQUAL(prod_controls.water_rate, 20 * siFactorL);
+
+    BOOST_CHECK (wpp_2.hasProductionControl( Opm::Well::ProducerCMode::ORAT) );
+    BOOST_CHECK (wpp_2.hasProductionControl( Opm::Well::ProducerCMode::WRAT) );
+}
+
+
 BOOST_AUTO_TEST_CASE(createDeckWithWeltArgException) {
     std::string input =
             "SCHEDULE\n"

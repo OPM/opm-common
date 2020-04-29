@@ -250,7 +250,7 @@ public:
 
         static WellInjectionProperties serializeObject();
 
-        void handleWELTARG(WELTARGCMode cmode, double newValue, double SIFactorP);
+        void handleWELTARG(WELTARGCMode cmode, const UDAValue& new_arg, double SIFactorP);
         void handleWCONINJE(const DeckRecord& record, bool availableForGroupControl, const std::string& well_name);
         void handleWCONINJH(const DeckRecord& record, bool is_producer, const std::string& well_name);
         bool hasInjectionControl(InjectorCMode controlModeArg) const {
@@ -381,7 +381,7 @@ public:
         static bool effectiveHistoryProductionControl(ProducerCMode cmode);
         void handleWCONPROD( const std::string& well, const DeckRecord& record);
         void handleWCONHIST( const DeckRecord& record);
-        void handleWELTARG( WELTARGCMode cmode, double newValue, double SiFactorP);
+        void handleWELTARG( WELTARGCMode cmode, const UDAValue& new_arg, double SiFactorP);
         void resetDefaultBHPLimit();
         void clearControls();
         ProductionControls controls(const SummaryState& st, double udq_default) const;

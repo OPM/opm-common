@@ -218,47 +218,40 @@ namespace Opm {
 
 
 
-    void Well::WellProductionProperties::handleWELTARG(Well::WELTARGCMode cmode, double newValue, double SiFactorP) {
+    void Well::WellProductionProperties::handleWELTARG(Well::WELTARGCMode cmode, const UDAValue& new_arg, double SiFactorP) {
         if (cmode == WELTARGCMode::ORAT){
-            this->OilRate.assert_numeric("Can not combine UDA and WELTARG");
-            this->OilRate = newValue;
+            this->OilRate.update_value( new_arg );
             this->addProductionControl( ProducerCMode::ORAT );
         }
         else if (cmode == WELTARGCMode::WRAT){
-            this->WaterRate.assert_numeric("Can not combine UDA and WELTARG");
-            this->WaterRate = newValue;
+            this->WaterRate.update_value( new_arg );
             this->addProductionControl( ProducerCMode::WRAT );
         }
         else if (cmode == WELTARGCMode::GRAT){
-            this->GasRate.assert_numeric("Can not combine UDA and WELTARG");
-            this->GasRate = newValue;
+            this->GasRate.update_value( new_arg );
             this->addProductionControl( ProducerCMode::GRAT );
         }
         else if (cmode == WELTARGCMode::LRAT){
-            this->LiquidRate.assert_numeric("Can not combine UDA and WELTARG");
-            this->LiquidRate = newValue;
+            this->LiquidRate.update_value( new_arg );
             this->addProductionControl( ProducerCMode::LRAT );
         }
         else if (cmode == WELTARGCMode::RESV){
-            this->ResVRate.assert_numeric("Can not combine UDA and WELTARG");
-            this->ResVRate = newValue;
+            this->ResVRate.update_value( new_arg );
             this->addProductionControl( ProducerCMode::RESV );
         }
         else if (cmode == WELTARGCMode::BHP){
-            if (this->predictionMode) {
-                this->BHPTarget.assert_numeric("Can not combine UDA and WELTARG");
-                this->BHPTarget = newValue;
-            } else
-                this->bhp_hist_limit = newValue * SiFactorP;
+            if (this->predictionMode)
+                this->BHPTarget.update_value( new_arg );
+            else
+                this->bhp_hist_limit = new_arg.get<double>() * SiFactorP;
             this->addProductionControl( ProducerCMode::BHP );
         }
         else if (cmode == WELTARGCMode::THP){
-            this->THPTarget.assert_numeric("Can not combine UDA and WELTARG");
-            this->THPTarget = newValue;
+            this->THPTarget.update_value( new_arg );
             this->addProductionControl( ProducerCMode::THP );
         }
         else if (cmode == WELTARGCMode::VFP)
-            this->VFPTableNumber = static_cast<int> (newValue);
+            this->VFPTableNumber = static_cast<int>(new_arg.get<double>());
         else if (cmode != WELTARGCMode::GUID)
             throw std::invalid_argument("Invalid keyword (MODE) supplied");
     }

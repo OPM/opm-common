@@ -1616,8 +1616,7 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
 
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto cmode = Well::WELTARGCModeFromString(record.getItem("CMODE").getTrimmedString(0));
-            double newValue = record.getItem("NEW_VALUE").get< double >(0);
-
+            const auto new_arg = record.getItem("NEW_VALUE").get< UDAValue >(0);
             const auto well_names = wellNames( wellNamePattern, currentStep );
 
             if( well_names.empty() )
@@ -1630,16 +1629,16 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
                     bool update = false;
                     if (well2->isProducer()) {
                         auto prop = std::make_shared<Well::WellProductionProperties>(well2->getProductionProperties());
-                        prop->handleWELTARG(cmode, newValue, SiFactorP);
+                        prop->handleWELTARG(cmode, new_arg, SiFactorP);
                         update = well2->updateProduction(prop);
                         if (cmode == Well::WELTARGCMode::GUID)
-                            update |= well2->updateWellGuideRate(newValue);
+                            update |= well2->updateWellGuideRate(new_arg.get<double>());
                     } else {
                         auto inj = std::make_shared<Well::WellInjectionProperties>(well2->getInjectionProperties());
-                        inj->handleWELTARG(cmode, newValue, SiFactorP);
+                        inj->handleWELTARG(cmode, new_arg, SiFactorP);
                         update = well2->updateInjection(inj);
                         if (cmode == Well::WELTARGCMode::GUID)
-                            update |= well2->updateWellGuideRate(newValue);
+                            update |= well2->updateWellGuideRate(new_arg.get<double>());
                     }
                     if (update)
                         this->updateWell(std::move(well2), currentStep);

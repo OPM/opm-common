@@ -120,6 +120,8 @@ UDAValue& UDAValue::operator=(const std::string& value) {
     return *this;
 }
 
+
+
 template<>
 std::string UDAValue::get() const {
     if (!this->numeric_value)
@@ -162,6 +164,16 @@ std::ostream& operator<<( std::ostream& stream, const UDAValue& uda_value ) {
     else
         stream << "'" << uda_value.get<std::string>() << "'";
     return stream;
+}
+
+void UDAValue::update_value(const UDAValue& other) {
+    if (other.is<double>()) {
+        this->double_value = other.get<double>();
+        this->numeric_value = true;
+    } else {
+        this->string_value = other.get<std::string>();
+        this->numeric_value = false;
+    }
 }
 
 
