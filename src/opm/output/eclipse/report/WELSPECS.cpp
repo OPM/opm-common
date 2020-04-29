@@ -73,6 +73,7 @@ namespace {
     struct context {
         const Opm::Schedule& sched;
         const Opm::EclipseGrid& grid;
+        const Opm::UnitSystem& unit_system;
     };
 
     std::string format_number(const Opm::UnitSystem& unit_system, Opm::UnitSystem::measure measure, double number, std::size_t width) {
@@ -706,7 +707,7 @@ void report_well_connection_data(std::ostream& os, const std::vector<Opm::Well>&
 
 }
 
-void Opm::RptIO::workers::write_WELSPECS(std::ostream& os, unsigned, const Opm::Schedule& schedule, const Opm::EclipseGrid& grid, std::size_t report_step) {
+void Opm::RptIO::workers::write_WELSPECS(std::ostream& os, unsigned, const Opm::Schedule& schedule, const Opm::EclipseGrid& grid, const Opm::UnitSystem& unit_system, std::size_t report_step) {
     auto well_names { schedule.changed_wells(report_step) } ;
     if (well_names.empty())
         return;
