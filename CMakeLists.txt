@@ -247,7 +247,11 @@ install(FILES etc/opm_bash_completion.sh.in DESTINATION share/opm/etc)
 if (OPM_ENABLE_PYTHON)
   # -------------------------------------------------------------------------
   # 1: Wrap C++ functionality in Python
-  set(PYTHON_PACKAGE_PATH "site-packages")
+  if (EXISTS "/etc/debian_version")
+    set(PYTHON_PACKAGE_PATH "dist-packages")
+  else()
+    set(PYTHON_PACKAGE_PATH "site-packages")
+  endif()
   set(PYTHON_INSTALL_PREFIX "lib/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/${PYTHON_PACKAGE_PATH}" CACHE STRING "Subdirectory to install Python modules in")
 
   make_directory(${PROJECT_BINARY_DIR}/python)
