@@ -23,8 +23,9 @@
 #include <functional>
 #include <optional>
 
-#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Group/GTNode.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 namespace {
@@ -204,7 +205,7 @@ namespace {
             column_definition.print_header(os, ctx);
         }
 
-        void print_data(std::ostream& os, const std::vector<OutputType>& data, std::size_t sub_report, char bottom_border = '-') const {
+        void print_data(std::ostream& os, const std::vector<OutputType>& data, std::size_t sub_report = 0, char bottom_border = '-') const {
             column_definition.print_data(os, data, this->ctx, sub_report);
             column_definition.print_divider(os, bottom_border);
         }
@@ -371,10 +372,49 @@ void report_well_specification_data(std::ostream& os, const std::vector<Opm::Wel
     std::transform(data.begin(), data.end(), std::back_inserter(wrapper_data), [](const Opm::Well& well) { return WellWrapper { well } ; });
 
     well_specification.print_header(os);
-    well_specification.print_data(os, wrapper_data, 0);
+    well_specification.print_data(os, wrapper_data);
     well_specification.print_footer(os, {{1, "The WELL D-FACTOR is not implemented - and the report will always show the default value 0."}});
 }
 
+}
+
+namespace {
+
+    struct GroupWrapper {
+        const Opm::GTNode& node;
+
+        const std::string& group_name(const context&, std::size_t, std::size_t) const {
+            return node.group().name();
+        }
+
+        std::string group_level(const context&, std::size_t, std::size_t) const {
+            return std::to_string(node.level());
+        }
+
+        const std::string& group_parent(const context&, std::size_t, std::size_t) const {
+            return node.parent().group().name();
+        }
+    };
+
+    const table<GroupWrapper, 2> group_levels_table {
+        { 8, { "GROUP"   , "NAME"     }, &GroupWrapper::group_name  , left_align },
+        { 5, { "LEVEL"   ,            }, &GroupWrapper::group_level ,            },
+        { 8, { "PARENT"  , "GROUP"    }, &GroupWrapper::group_parent, left_align },
+    };
+
+    void report_group_levels_data(std::ostream& os, const context& ctx, std::size_t report_step) {
+        const report<Opm::GTNode, GroupWrapper, 2> group_levels { "GROUP LEVELS", group_levels_table, ctx } ;
+        group_levels.print_header(os);
+
+        std::vector<GroupWrapper> data { } ;
+        const Opm::GTNode root { ctx.sched.groupTree(report_step) } ;
+        std::vector<const Opm::GTNode*> nodes { root.all_nodes() } ;
+
+        std::transform(++nodes.begin(), nodes.end(), std::back_inserter(data), [](const Opm::GTNode* node) { return GroupWrapper { *node } ; });
+
+        group_levels.print_data(os, data);
+        group_levels.print_footer(os, {});
+    }
 }
 
 namespace {
@@ -748,4 +788,6 @@ void Opm::RptIO::workers::write_WELSPECS(std::ostream& os, unsigned, const Opm::
             }
         }
     }
+
+    report_group_levels_data(os, ctx, report_step);
 }
