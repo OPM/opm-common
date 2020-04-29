@@ -478,11 +478,13 @@ namespace {
         const Opm::Connection& connection;
         const Opm::Segment& segment;
 
+        const std::pair<double,double>& perf_range;
 
-        SegmentConnection(const Opm::Well& well_arg, const Opm::Connection& conn_arg, const Opm::Segment& segment_arg) :
+        SegmentConnection(const Opm::Well& well_arg, const Opm::Connection& conn_arg, const Opm::Segment& segment_arg, const std::pair<double,double>& perf_range_arg) :
             well(well_arg),
             connection(conn_arg),
-            segment(segment_arg)
+            segment(segment_arg),
+            perf_range(perf_range_arg)
         {}
 
         const std::string& well_name(const context&, std::size_t, std::size_t) const {
@@ -501,6 +503,18 @@ namespace {
 
         std::string branch_id(const context&, std::size_t, std::size_t) const {
             return std::to_string(segment.branchNumber());
+        }
+
+        std::string perf_start_length(const context& ctx, std::size_t, std::size_t) const {
+            return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, perf_range.first, 6);
+        }
+
+        std::string perf_mid_length(const context& ctx, std::size_t, std::size_t) const {
+            return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, (perf_range.first + perf_range.second) / 2.0, 6);
+        }
+
+        std::string perf_end_length(const context& ctx, std::size_t, std::size_t) const {
+            return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, perf_range.second, 6);
         }
 
         std::string length_end_segmt(const context& ctx, std::size_t, std::size_t) const {
@@ -659,9 +673,9 @@ namespace {
         {  9, {"CONNECTION" , ""           ,              }, &SegmentConnection::connection_grid  ,             },
         {  5, {"SEGMENT"    , "NUMBER"     ,              }, &SegmentConnection::segment_number   , right_align },
         {  8, {"BRANCH"     , "ID"         ,              }, &SegmentConnection::branch_id        ,             },
-        {  9, {"TUB LENGTH" , "START PERFS", "METRES"     }, unimplemented<SegmentConnection>     , right_align, Opm::UnitSystem::measure::length },
-        {  9, {"TUB LENGTH" , "END PERFS"  , "METRES"     }, unimplemented<SegmentConnection>     , right_align, Opm::UnitSystem::measure::length },
-        {  9, {"TUB LENGTH" , "CENTR PERFS", "METRES"     }, unimplemented<SegmentConnection>     , right_align, Opm::UnitSystem::measure::length },
+        {  9, {"TUB LENGTH" , "START PERFS", "METRES"     }, &SegmentConnection::perf_start_length, right_align, Opm::UnitSystem::measure::length },
+        {  9, {"TUB LENGTH" , "END PERFS"  , "METRES"     }, &SegmentConnection::perf_end_length  , right_align, Opm::UnitSystem::measure::length },
+        {  9, {"TUB LENGTH" , "CENTR PERFS", "METRES"     }, &SegmentConnection::perf_mid_length  , right_align, Opm::UnitSystem::measure::length },
         {  9, {"TUB LENGTH" , "END SEGMT"  , "METRES"     }, &SegmentConnection::length_end_segmt , right_align, Opm::UnitSystem::measure::length },
         {  8, {"CONNECTION" , "DEPTH"      , "METRES"     }, &SegmentConnection::connection_depth , right_align, Opm::UnitSystem::measure::length },
         {  8, {"SEGMENT"    , "DEPTH"      , "METRES"     }, &SegmentConnection::segment_depth    , right_align, Opm::UnitSystem::measure::length },
@@ -747,8 +761,9 @@ void Opm::RptIO::workers::write_WELSPECS(std::ostream& os, unsigned, const Opm::
                     std::vector<SegmentConnection> wrapper_data;
                     const auto& connections { well.getConnections() } ;
                     const auto& segments { well.getSegments() } ;
+                    const std::pair<double,double> perf_range { } ; // TODO: connect with #1759
                     std::transform(connections.begin(), connections.end(), std::back_inserter(wrapper_data),
-                                   [&well, &segments] (const Opm::Connection& connection) { return SegmentConnection(well, connection, segments.getFromSegmentNumber(connection.segment())); });
+                                   [&well, &segments, &perf_range] (const Opm::Connection& connection) { return SegmentConnection(well, connection, segments.getFromSegmentNumber(connection.segment()), perf_range); });
                     msw_connection.print_data(os, wrapper_data, 0, '=');
                 }
                 msw_connection.print_footer(os, {});
