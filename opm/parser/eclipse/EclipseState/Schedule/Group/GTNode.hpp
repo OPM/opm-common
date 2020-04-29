@@ -39,6 +39,9 @@ public:
     const std::string& name() const;
     const GTNode& parent() const;
     const Group& group() const;
+    std::size_t level() const;
+
+    std::vector<const GTNode*> all_nodes() const;
 private:
     const Group m_group;
     const GTNode * m_parent;
