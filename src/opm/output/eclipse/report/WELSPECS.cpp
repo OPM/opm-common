@@ -280,10 +280,6 @@ namespace {
     struct WellWrapper {
         const Opm::Well& well;
 
-        WellWrapper(const Opm::Well& well_arg) :
-            well(well_arg)
-        { }
-
         std::string well_name(const context&, std::size_t, std::size_t) const {
             return well.name();
         }
@@ -372,7 +368,7 @@ namespace {
 void report_well_specification_data(std::ostream& os, const std::vector<Opm::Well>& data, const context& ctx) {
     report<Opm::Well, WellWrapper, 3> well_specification { "WELL SPECIFICATION DATA", well_specification_table, ctx};
     std::vector<WellWrapper> wrapper_data;
-    std::transform(data.begin(), data.end(), std::back_inserter(wrapper_data), [](const Opm::Well& well) { return WellWrapper(well); });
+    std::transform(data.begin(), data.end(), std::back_inserter(wrapper_data), [](const Opm::Well& well) { return WellWrapper { well } ; });
 
     well_specification.print_header(os);
     well_specification.print_data(os, wrapper_data, 0);
@@ -387,12 +383,6 @@ namespace {
         const Opm::Well& well;
         const Opm::Connection& connection;
 
-        WellConnection(const Opm::Well& well_arg, const Opm::Connection& connection_arg) :
-            well(well_arg),
-            connection(connection_arg)
-        {}
-
-
         const std::string& well_name(const context&, std::size_t, std::size_t) const {
             return well.name();
         }
@@ -400,7 +390,7 @@ namespace {
         std::string grid_block(const context&, std::size_t, std::size_t) const {
             const std::array<int,3> ijk { connection.getI() + 1, connection.getJ() + 1, connection.getK() + 1 } ;
 
-            auto compose_coordinates = [](std::string& out, int in) -> std::string {
+            auto compose_coordinates { [](std::string& out, int in) -> std::string {
                 constexpr auto delimiter { ',' } ;
                 std::string coordinate_part { std::to_string(in) } ;
                 right_align(coordinate_part, 3);
@@ -408,7 +398,7 @@ namespace {
                 return out.empty()
                     ? coordinate_part
                     : out + delimiter + coordinate_part;
-            };
+            } };
 
             return std::accumulate(std::begin(ijk), std::end(ijk), std::string {}, compose_coordinates);
         }
@@ -480,13 +470,6 @@ namespace {
 
         const std::pair<double,double>& perf_range;
 
-        SegmentConnection(const Opm::Well& well_arg, const Opm::Connection& conn_arg, const Opm::Segment& segment_arg, const std::pair<double,double>& perf_range_arg) :
-            well(well_arg),
-            connection(conn_arg),
-            segment(segment_arg),
-            perf_range(perf_range_arg)
-        {}
-
         const std::string& well_name(const context&, std::size_t, std::size_t) const {
             return well.name();
         }
@@ -549,11 +532,6 @@ namespace {
     struct WellSegment {
         const Opm::Well& well;
         const Opm::Segment& segment;
-
-        WellSegment(const Opm::Well& well_arg, const Opm::Segment& segment_arg) :
-            well(well_arg),
-            segment(segment_arg)
-        {}
 
         std::string well_name_seg(const context&, std::size_t sub_report, std::size_t n) const {
             if (sub_report > 0)
@@ -710,7 +688,7 @@ void report_well_connection_data(std::ostream& os, const std::vector<Opm::Well>&
     for (const auto& well : data) {
         std::vector<WellConnection> wrapper_data;
         const auto& connections { well.getConnections() } ;
-        std::transform(connections.begin(), connections.end(), std::back_inserter(wrapper_data), [&well]( const Opm::Connection& connection) { return WellConnection(well, connection); });
+        std::transform(connections.begin(), connections.end(), std::back_inserter(wrapper_data), [&well](const Opm::Connection& connection) { return WellConnection { well, connection } ; });
 
         well_connection.print_data(os, wrapper_data, sub_report);
         sub_report++;
@@ -744,7 +722,7 @@ void Opm::RptIO::workers::write_WELSPECS(std::ostream& os, unsigned, const Opm::
                 for (const auto& branch : segments.branches()) {
                     std::vector<WellSegment> wrapper_data;
                     const auto& branch_segments { segments.branchSegments(branch) } ;
-                    std::transform(branch_segments.begin(), branch_segments.end(), std::back_inserter(wrapper_data), [&well](const Opm::Segment& segment) { return WellSegment(well, segment); });
+                    std::transform(branch_segments.begin(), branch_segments.end(), std::back_inserter(wrapper_data), [&well](const Opm::Segment& segment) { return WellSegment { well, segment } ; });
 
                     sub_report++;
                     if (sub_report == (segments.branches().size()))
@@ -763,7 +741,7 @@ void Opm::RptIO::workers::write_WELSPECS(std::ostream& os, unsigned, const Opm::
                     const auto& segments { well.getSegments() } ;
                     const std::pair<double,double> perf_range { } ; // TODO: connect with #1759
                     std::transform(connections.begin(), connections.end(), std::back_inserter(wrapper_data),
-                                   [&well, &segments, &perf_range] (const Opm::Connection& connection) { return SegmentConnection(well, connection, segments.getFromSegmentNumber(connection.segment()), perf_range); });
+                                   [&well, &segments, &perf_range] (const Opm::Connection& connection) { return SegmentConnection { well, connection, segments.getFromSegmentNumber(connection.segment()), perf_range } ; });
                     msw_connection.print_data(os, wrapper_data, 0, '=');
                 }
                 msw_connection.print_footer(os, {});
