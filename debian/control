@@ -16,7 +16,7 @@ Vcs-Browser: https://github.com/OPM/opm-common
 
 Package: libopm-common1
 Section: libs
-Pre-Depends: ${misc:Pre-Depends}, multiarch-support
+Pre-Depends: ${misc:Pre-Depends}
 Architecture: any
 Multi-Arch: same
 Depends: ${shlibs:Depends}, ${misc:Depends}
@@ -56,7 +56,7 @@ Description: OPM common library -- documentation
 
 Package: python3-opm-common
 Section: libs
-Pre-Depends: ${misc:Pre-Depends}, multiarch-support
+Pre-Depends: ${misc:Pre-Depends}
 Architecture: any
 Multi-Arch: same
 Depends: ${shlibs:Depends}, ${misc:Depends}, libopm-common1, python3-numpy, python3-decorator
