@@ -22,6 +22,7 @@
 #define NETWORK_BRANCH_HPP
 
 #include <optional>
+#include <string>
 
 namespace Opm {
 namespace Network {
