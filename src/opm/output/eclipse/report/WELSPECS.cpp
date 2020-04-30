@@ -70,6 +70,10 @@ namespace {
         }
     }
 
+    std::string underline(const std::string& string) {
+        return std::string(string.size(), divider_character);
+    }
+
     struct context {
         const Opm::Schedule& sched;
         const Opm::EclipseGrid& grid;
@@ -191,10 +195,6 @@ namespace {
         {
             centre_align(title, column_definition.total_width());
             centre_align(decor, column_definition.total_width());
-        }
-
-        std::string underline(const std::string& string) const {
-            return std::string(string.size(), divider_character);
         }
 
         void print_header(std::ostream& os) const {
@@ -680,6 +680,24 @@ namespace {
 
 namespace {
 
+    const std::string hierarchy_title     { "HIERARCHICAL DESCRIPTION OF GROUP CONTROL STRUCTURE" } ;
+    const std::string hierarchy_underline { underline(hierarchy_title)                            } ;
+
+    constexpr char horizontal_line { '-' } ;
+    constexpr char vertical_line   { '|' } ;
+
+    void report_group_hierarchy_data(std::ostream& os, const context& ctx) {
+        os << hierarchy_title     << record_separator
+           << hierarchy_underline << record_separator
+           << section_separator;
+
+        
+    }
+
+}
+
+namespace {
+
 void report_well_connection_data(std::ostream& os, const std::vector<Opm::Well>& data, const context& ctx) {
     const report<Opm::Well, WellConnection, 3> well_connection { "WELL CONNECTION DATA", connection_table, ctx};
     well_connection.print_header(os);
@@ -748,4 +766,6 @@ void Opm::RptIO::workers::write_WELSPECS(std::ostream& os, unsigned, const Opm::
             }
         }
     }
+
+    report_group_hierarchy_data(os, ctx);
 }
