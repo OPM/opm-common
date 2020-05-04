@@ -21,9 +21,11 @@
 
 #include <algorithm>
 #include <functional>
+#include <optional>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 namespace {
 
@@ -71,7 +73,12 @@ namespace {
     struct context {
         const Opm::Schedule& sched;
         const Opm::EclipseGrid& grid;
+        const Opm::UnitSystem& unit_system;
     };
+
+    std::string format_number(const Opm::UnitSystem& unit_system, Opm::UnitSystem::measure measure, double number, std::size_t width) {
+        return std::to_string(unit_system.from_si(measure, number)).substr(0, width);
+    }
 
     template<typename T>
     const std::string& unimplemented(const T&, const context&, std::size_t, std::size_t) {
@@ -88,8 +95,10 @@ namespace {
         std::size_t internal_width;
         std::array<std::string, header_height> header;
 
-        fetch_function fetch = unimplemented<T>;
-        format_function format = centre_align;
+        fetch_function fetch { unimplemented<T> } ;
+        format_function format { centre_align } ;
+
+        std::optional<Opm::UnitSystem::measure> dimension { std::nullopt } ;
 
         void print(std::ostream& os, const T& data, const context& ctx, std::size_t sub_report, std::size_t line_number) const {
             std::string string_data { fetch(data, ctx, sub_report, line_number) } ;
@@ -98,10 +107,18 @@ namespace {
             os << string_data;
         }
 
-        void print_header(std::ostream& os, std::size_t row) const {
-            std::string header_line { header[row] } ;
-            centre_align(header_line, total_width());
-            os << header_line;
+        std::string header_line(std::size_t row, context ctx) const {
+            if (row == header_height && dimension) {
+                return ctx.unit_system.name(dimension.value());
+            } else {
+                return header[row];
+            }
+        }
+
+        void print_header(std::ostream& os, std::size_t row, context ctx) const {
+            std::string line { header_line(row, ctx) } ;
+            centre_align(line, total_width());
+            os << line;
         }
 
         constexpr std::size_t total_width() const {
@@ -127,13 +144,13 @@ namespace {
             os << std::string(total_width(), padding) << record_separator;
         }
 
-        void print_header(std::ostream& os) const {
+        void print_header(std::ostream& os, context ctx) const {
             print_divider(os);
             for (size_t i { 0 }; i < header_height; ++i) {
                 for (const auto& column : *this) {
                     os << field_separator;
 
-                    column.print_header(os, i);
+                    column.print_header(os, i, ctx);
                 }
 
                 os << field_separator << record_separator;
@@ -142,7 +159,7 @@ namespace {
         }
 
         void print_data(std::ostream& os, const std::vector<T>& lines, const context& ctx, std::size_t sub_report) const {
-            std::size_t line_number = 0;
+            std::size_t line_number { 0 } ;
             for (const auto& line : lines) {
 
                 for (const auto& column : *this) {
@@ -184,7 +201,7 @@ namespace {
             os << title << record_separator;
             os << decor << record_separator;
             os << section_separator;
-            column_definition.print_header(os);
+            column_definition.print_header(os, ctx);
         }
 
         void print_data(std::ostream& os, const std::vector<OutputType>& data, std::size_t sub_report, char bottom_border = '-') const {
@@ -193,9 +210,11 @@ namespace {
         }
 
         void print_footer(std::ostream& os, const std::vector<std::pair<int, std::string>>& footnotes) const {
-            for (const auto& fnote: footnotes)
-                os << fnote.first << ": " << fnote.second << std::endl;
-            os << std::endl << std::endl;
+            for (const auto& fnote: footnotes) {
+                os << fnote.first << ": " << fnote.second << record_separator;
+            }
+
+            os << section_separator;
         }
     };
 }
@@ -261,10 +280,6 @@ namespace {
     struct WellWrapper {
         const Opm::Well& well;
 
-        WellWrapper(const Opm::Well& well_arg) :
-            well(well_arg)
-        { }
-
         std::string well_name(const context&, std::size_t, std::size_t) const {
             return well.name();
         }
@@ -282,8 +297,8 @@ namespace {
             return i + ", " + j;
         }
 
-        std::string reference_depth(const context&, std::size_t, std::size_t) const {
-            return std::to_string(well.getRefDepth()).substr(0,6);
+        std::string reference_depth(const context& ctx, std::size_t, std::size_t) const {
+            return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, well.getRefDepth(), 6);
         }
 
         std::string preferred_phase(const context&, std::size_t, std::size_t) const {
@@ -307,9 +322,7 @@ namespace {
         }
 
         std::string dens_calc(const context&, std::size_t, std::size_t) const {
-            if (well.segmented_density_calculation())
-                return "SEG";
-            return "AVG";
+            return well.segmented_density_calculation() ? "SEG" : "AVG";
         }
 
         /*
@@ -324,10 +337,10 @@ namespace {
             return well.getAllowCrossFlow() ? "YES" : "NO";
         }
 
-        std::string drainage_radius(const context&, std::size_t, std::size_t) const {
+        std::string drainage_radius(const context& ctx, std::size_t, std::size_t) const {
             if (well.getDrainageRadius() == 0)
                 return "P.EQUIV.R";
-            return std::to_string(well.getDrainageRadius()).substr(0,6);
+            return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, well.getDrainageRadius(), 6);
         }
 
         std::string gas_inflow(const context&, std::size_t, std::size_t) const {
@@ -339,9 +352,9 @@ namespace {
        {  8, { "WELL"       , "NAME"       ,               }, &WellWrapper::well_name        , left_align  },
        {  8, { "GROUP"      , "NAME"       ,               }, &WellWrapper::group_name       , left_align  },
        {  8, { "WELLHEAD"   , "LOCATION"   , "( I, J )"    }, &WellWrapper::wellhead_location, left_align  },
-       {  8, { "B.H.REF"    , "DEPTH"      , "METRES"      }, &WellWrapper::reference_depth  , right_align },
+       {  8, { "B.H.REF"    , "DEPTH"      , "METRES"      }, &WellWrapper::reference_depth  , right_align, Opm::UnitSystem::measure::length },
        {  5, { "PREF-"      , "ERRED"      , "PHASE"       }, &WellWrapper::preferred_phase  ,             },
-       {  8, { "DRAINAGE"   , "RADIUS"     , "METRES"      }, &WellWrapper::drainage_radius  ,             },
+       {  8, { "DRAINAGE"   , "RADIUS"     , "METRES"      }, &WellWrapper::drainage_radius  , right_align, Opm::UnitSystem::measure::length },
        {  4, { "GAS"        , "INFL"       , "EQUN"        }, &WellWrapper::gas_inflow       ,             },
        {  7, { "SHUT-IN"    , "INSTRCT"    ,               }, &WellWrapper::shut_status      ,             },
        {  5, { "CROSS"      , "FLOW"       , "ABLTY"       }, &WellWrapper::cross_flow       ,             },
@@ -355,7 +368,7 @@ namespace {
 void report_well_specification_data(std::ostream& os, const std::vector<Opm::Well>& data, const context& ctx) {
     report<Opm::Well, WellWrapper, 3> well_specification { "WELL SPECIFICATION DATA", well_specification_table, ctx};
     std::vector<WellWrapper> wrapper_data;
-    std::transform(data.begin(), data.end(), std::back_inserter(wrapper_data), [](const Opm::Well& well) { return WellWrapper(well); });
+    std::transform(data.begin(), data.end(), std::back_inserter(wrapper_data), [](const Opm::Well& well) { return WellWrapper { well } ; });
 
     well_specification.print_header(os);
     well_specification.print_data(os, wrapper_data, 0);
@@ -370,12 +383,6 @@ namespace {
         const Opm::Well& well;
         const Opm::Connection& connection;
 
-        WellConnection(const Opm::Well& well_arg, const Opm::Connection& connection_arg) :
-            well(well_arg),
-            connection(connection_arg)
-        {}
-
-
         const std::string& well_name(const context&, std::size_t, std::size_t) const {
             return well.name();
         }
@@ -383,7 +390,7 @@ namespace {
         std::string grid_block(const context&, std::size_t, std::size_t) const {
             const std::array<int,3> ijk { connection.getI() + 1, connection.getJ() + 1, connection.getK() + 1 } ;
 
-            auto compose_coordinates = [](std::string& out, int in) -> std::string {
+            auto compose_coordinates { [](std::string& out, int in) -> std::string {
                 constexpr auto delimiter { ',' } ;
                 std::string coordinate_part { std::to_string(in) } ;
                 right_align(coordinate_part, 3);
@@ -391,7 +398,7 @@ namespace {
                 return out.empty()
                     ? coordinate_part
                     : out + delimiter + coordinate_part;
-            };
+            } };
 
             return std::accumulate(std::begin(ijk), std::end(ijk), std::string {}, compose_coordinates);
         }
@@ -400,8 +407,8 @@ namespace {
             return std::to_string(connection.complnum());
         }
 
-        std::string centre_depth(const context&, std::size_t, std::size_t) const {
-            return std::to_string(connection.depth()).substr(0, 6);
+        std::string centre_depth(const context& ctx, std::size_t, std::size_t) const {
+            return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, connection.depth(), 6);
         }
 
         std::string open_shut(const context&, std::size_t, std::size_t) const {
@@ -412,12 +419,12 @@ namespace {
             return std::to_string(connection.satTableId());
         }
 
-        std::string conn_factor(const context&, std::size_t, std::size_t) const {
-            return std::to_string(connection.CF()).substr(0, 10);
+        std::string conn_factor(const context& ctx, std::size_t, std::size_t) const {
+            return format_number(ctx.unit_system, Opm::UnitSystem::measure::transmissibility, connection.CF(), 10);
         }
 
-        std::string int_diam(const context&, std::size_t, std::size_t) const {
-            return std::to_string(connection.rw() * 2).substr(0, 8);
+        std::string int_diam(const context& ctx, std::size_t, std::size_t) const {
+            return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, connection.rw() * 2, 8);
         }
 
         std::string kh_value(const context&, std::size_t, std::size_t) const {
@@ -442,11 +449,11 @@ namespace {
        {  7, {"WELL"                   ,"NAME"                     ,                         }, &WellConnection::well_name       , left_align  },
        { 12, {"GRID"                   ,"BLOCK"                    ,                         }, &WellConnection::grid_block      ,             },
        {  3, {"CMPL"                   ,"NO#"                      ,                         }, &WellConnection::cmpl_no         , right_align },
-       {  7, {"CENTRE"                 ,"DEPTH"                    ,"METRES"                 }, &WellConnection::centre_depth    , right_align },
+       {  7, {"CENTRE"                 ,"DEPTH"                    ,"METRES"                 }, &WellConnection::centre_depth    , right_align, Opm::UnitSystem::measure::length           },
        {  3, {"OPEN"                   ,"SHUT"                     ,                         }, &WellConnection::open_shut       ,             },
        {  3, {"SAT"                    ,"TAB"                      ,                         }, &WellConnection::sat_tab         ,             },
-       {  8, {"CONNECTION"             ,"FACTOR*"                  ,"CPM3/D/B"               }, &WellConnection::conn_factor     , right_align },
-       {  6, {"INT"                    ,"DIAM"                     ,"METRES"                 }, &WellConnection::int_diam        , right_align },
+       { 11, {"CONNECTION"             ,"FACTOR*"                  ,"CPM3/D/B"               }, &WellConnection::conn_factor     , right_align, Opm::UnitSystem::measure::transmissibility },
+       {  6, {"INT"                    ,"DIAM"                     ,"METRES"                 }, &WellConnection::int_diam        , right_align, Opm::UnitSystem::measure::length           },
        {  7, {"K  H"                   ,"VALUE"                    ,"MD.METRE"               }, &WellConnection::kh_value        , right_align },
        {  6, {"SKIN"                   ,"FACTOR"                   ,                         }, &WellConnection::skin_factor     , right_align },
        { 10, {"CONNECTION"             ,"D-FACTOR 1"               ,"DAY/SM3"                }, &WellConnection::dfactor         ,             },
@@ -461,12 +468,7 @@ namespace {
         const Opm::Connection& connection;
         const Opm::Segment& segment;
 
-
-        SegmentConnection(const Opm::Well& well_arg, const Opm::Connection& conn_arg, const Opm::Segment& segment_arg) :
-            well(well_arg),
-            connection(conn_arg),
-            segment(segment_arg)
-        {}
+        const std::pair<double,double>& perf_range;
 
         const std::string& well_name(const context&, std::size_t, std::size_t) const {
             return well.name();
@@ -486,20 +488,32 @@ namespace {
             return std::to_string(segment.branchNumber());
         }
 
-        std::string length_end_segmt(const context&, std::size_t, std::size_t) const {
-            return std::to_string(segment.totalLength()).substr(0, 6);
+        std::string perf_start_length(const context& ctx, std::size_t, std::size_t) const {
+            return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, perf_range.first, 6);
         }
 
-        std::string connection_depth(const context&, std::size_t, std::size_t) const {
-            return std::to_string(connection.depth()).substr(0, 6);
+        std::string perf_mid_length(const context& ctx, std::size_t, std::size_t) const {
+            return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, (perf_range.first + perf_range.second) / 2.0, 6);
         }
 
-        std::string segment_depth(const context&, std::size_t, std::size_t) const {
-            return std::to_string(segment.depth()).substr(0, 6);
+        std::string perf_end_length(const context& ctx, std::size_t, std::size_t) const {
+            return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, perf_range.second, 6);
+        }
+
+        std::string length_end_segmt(const context& ctx, std::size_t, std::size_t) const {
+            return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, segment.totalLength(), 6);
+        }
+
+        std::string connection_depth(const context& ctx, std::size_t, std::size_t) const {
+            return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, connection.depth(), 6);
+        }
+
+        std::string segment_depth(const context& ctx, std::size_t, std::size_t) const {
+            return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, segment.depth(), 6);
         }
 
         std::string grid_block_depth(const context& ctx, std::size_t, std::size_t) const {
-            return std::to_string( ctx.grid.getCellDepth( connection.global_index() )).substr(0,6);
+            return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, ctx.grid.getCellDepth( connection.global_index() ), 6);
         }
 
 
@@ -518,11 +532,6 @@ namespace {
     struct WellSegment {
         const Opm::Well& well;
         const Opm::Segment& segment;
-
-        WellSegment(const Opm::Well& well_arg, const Opm::Segment& segment_arg) :
-            well(well_arg),
-            segment(segment_arg)
-        {}
 
         std::string well_name_seg(const context&, std::size_t sub_report, std::size_t n) const {
             if (sub_report > 0)
@@ -561,47 +570,47 @@ namespace {
             return std::to_string(segment.outletSegment());
         }
 
-        std::string total_length(const context&, std::size_t, std::size_t) const {
-            return std::to_string(segment.totalLength()).substr(0, 6);
+        std::string total_length(const context& ctx, std::size_t, std::size_t) const {
+            return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, segment.totalLength(), 6);
         }
 
         std::string length(const context& ctx, std::size_t sub_report, std::size_t line_number) const {
             if (segment.segmentNumber() == 1)
                 return total_length(ctx, sub_report, line_number);
 
-            const auto& segments = well.getSegments();
-            const auto& outlet_segment = segments.getFromSegmentNumber( segment.outletSegment() );
-            return std::to_string( segment.totalLength() - outlet_segment.totalLength() ).substr(0, 6);
+            const auto& segments { well.getSegments() } ;
+            const auto& outlet_segment { segments.getFromSegmentNumber( segment.outletSegment() ) } ;
+            return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, segment.totalLength() - outlet_segment.totalLength(), 6);
         }
 
-        std::string t_v_depth(const context&, std::size_t, std::size_t) const {
-            return std::to_string(segment.depth()).substr(0, 6);
+        std::string t_v_depth(const context& ctx, std::size_t, std::size_t) const {
+            return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, segment.depth(), 6);
         }
 
         std::string depth_change(const context& ctx, std::size_t sub_report, std::size_t line_number) const {
             if (segment.segmentNumber() == 1)
                 return t_v_depth(ctx, sub_report, line_number);
 
-            const auto& segments = well.getSegments();
-            const auto& outlet_segment = segments.getFromSegmentNumber( segment.outletSegment() );
-            return std::to_string( segment.depth() - outlet_segment.depth() ).substr(0, 6);
+            const auto& segments { well.getSegments() } ;
+            const auto& outlet_segment { segments.getFromSegmentNumber( segment.outletSegment() ) } ;
+            return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, segment.depth() - outlet_segment.depth(), 6);
         }
 
-        std::string internal_diameter(const context&, std::size_t, std::size_t) const {
+        std::string internal_diameter(const context& ctx, std::size_t, std::size_t) const {
             const auto number { segment.internalDiameter() } ;
 
             if (number != Opm::Segment::invalidValue()) {
-                return std::to_string(number).substr(0, 6);
+                return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, number, 6);
             } else {
                 return "0";
             }
         }
 
-        std::string roughness(const context&, std::size_t, std::size_t) const {
+        std::string roughness(const context& ctx, std::size_t, std::size_t) const {
             const auto number { segment.roughness() } ;
 
             if (number != Opm::Segment::invalidValue()) {
-                return std::to_string(number).substr(0, 8);
+                return format_number(ctx.unit_system, Opm::UnitSystem::measure::length, number, 8);
             } else {
                 return "0";
             }
@@ -617,8 +626,8 @@ namespace {
             }
         }
 
-        std::string volume(const context&, std::size_t, std::size_t) const {
-            return std::to_string(segment.volume()).substr(0, 5);
+        std::string volume(const context& ctx, std::size_t, std::size_t) const {
+            return format_number(ctx.unit_system, Opm::UnitSystem::measure::volume, segment.volume(), 5);
         }
 
         std::string pressure_drop_mult(const context&, std::size_t, std::size_t) const {
@@ -637,34 +646,34 @@ namespace {
     };
 
 
-    const table<SegmentConnection, 3> msw_connection_table = {
+    const table<SegmentConnection, 3> msw_connection_table {
         {  8, {"WELL"       , "NAME"       ,              }, &SegmentConnection::well_name        , left_header },
         {  9, {"CONNECTION" , ""           ,              }, &SegmentConnection::connection_grid  ,             },
         {  5, {"SEGMENT"    , "NUMBER"     ,              }, &SegmentConnection::segment_number   , right_align },
         {  8, {"BRANCH"     , "ID"         ,              }, &SegmentConnection::branch_id        ,             },
-        {  9, {"TUB LENGTH" , "START PERFS", "METRES"     }, unimplemented<SegmentConnection>     , right_align },
-        {  9, {"TUB LENGTH" , "END PERFS"  , "METRES"     }, unimplemented<SegmentConnection>     , right_align },
-        {  9, {"TUB LENGTH" , "CENTR PERFS", "METRES"     }, unimplemented<SegmentConnection>     , right_align },
-        {  9, {"TUB LENGTH" , "END SEGMT"  , "METRES"     }, &SegmentConnection::length_end_segmt , right_align },
-        {  8, {"CONNECTION" , "DEPTH"      , "METRES"     }, &SegmentConnection::connection_depth , right_align },
-        {  8, {"SEGMENT"    , "DEPTH"      , "METRES"     }, &SegmentConnection::segment_depth    , right_align },
-        {  9, {"GRID BLOCK" , "DEPTH"      , "METRES"     }, &SegmentConnection::grid_block_depth , right_align },
+        {  9, {"TUB LENGTH" , "START PERFS", "METRES"     }, &SegmentConnection::perf_start_length, right_align, Opm::UnitSystem::measure::length },
+        {  9, {"TUB LENGTH" , "END PERFS"  , "METRES"     }, &SegmentConnection::perf_end_length  , right_align, Opm::UnitSystem::measure::length },
+        {  9, {"TUB LENGTH" , "CENTR PERFS", "METRES"     }, &SegmentConnection::perf_mid_length  , right_align, Opm::UnitSystem::measure::length },
+        {  9, {"TUB LENGTH" , "END SEGMT"  , "METRES"     }, &SegmentConnection::length_end_segmt , right_align, Opm::UnitSystem::measure::length },
+        {  8, {"CONNECTION" , "DEPTH"      , "METRES"     }, &SegmentConnection::connection_depth , right_align, Opm::UnitSystem::measure::length },
+        {  8, {"SEGMENT"    , "DEPTH"      , "METRES"     }, &SegmentConnection::segment_depth    , right_align, Opm::UnitSystem::measure::length },
+        {  9, {"GRID BLOCK" , "DEPTH"      , "METRES"     }, &SegmentConnection::grid_block_depth , right_align, Opm::UnitSystem::measure::length },
     };
 
-    const table<WellSegment, 3> msw_well_table = {
+    const table<WellSegment, 3> msw_well_table {
         {  6, { "WELLNAME"  , "AND"        , "SEG TYPE"   }, &WellSegment::well_name_seg       , &WellSegment::ws_format },
         {  3, { "SEG"       , "NO"         , ""           }, &WellSegment::segment_number      , right_align             },
         {  3, { "BRN"       , "NO"         , ""           }, &WellSegment::branch_number       , right_align             },
         {  5, { "MAIN"      , "INLET"      , "SEGMENT"    }, &WellSegment::main_inlet          , right_align             },
         {  5, { ""          , "OUTLET"     , "SEGMENT"    }, &WellSegment::outlet              , right_align             },
-        {  7, { "SEGMENT"   , "LENGTH"     , "METRES"     }, &WellSegment::length              , right_align             },
-        {  8, { "TOT LENGTH", "TO END"     , "METRES"     }, &WellSegment::total_length        , right_align             },
-        {  8, { "DEPTH"     , "CHANGE"     , "METRES"     }, &WellSegment::depth_change        , right_align             },
-        {  8, { "T.V. DEPTH", "AT END"     , "METRES"     }, &WellSegment::t_v_depth           , right_align             },
-        {  6, { "DIA OR F"  , "SCALING"    , "METRES"     }, &WellSegment::internal_diameter   , right_align             },
-        {  8, { "VFP TAB OR", "ABS ROUGHN" , "METRES"     }, &WellSegment::roughness           , right_align             },
-        {  7, { "AREA"      , "X-SECTN"    , "M**2"       }, &WellSegment::cross_section       , right_align             },
-        {  7, { "VOLUME"    , ""           , "M3"         }, &WellSegment::volume              , right_align             },
+        {  7, { "SEGMENT"   , "LENGTH"     , "METRES"     }, &WellSegment::length              , right_align            , Opm::UnitSystem::measure::length },
+        {  8, { "TOT LENGTH", "TO END"     , "METRES"     }, &WellSegment::total_length        , right_align            , Opm::UnitSystem::measure::length },
+        {  8, { "DEPTH"     , "CHANGE"     , "METRES"     }, &WellSegment::depth_change        , right_align            , Opm::UnitSystem::measure::length },
+        {  8, { "T.V. DEPTH", "AT END"     , "METRES"     }, &WellSegment::t_v_depth           , right_align            , Opm::UnitSystem::measure::length },
+        {  6, { "DIA OR F"  , "SCALING"    , "METRES"     }, &WellSegment::internal_diameter   , right_align            , Opm::UnitSystem::measure::length },
+        {  8, { "VFP TAB OR", "ABS ROUGHN" , "METRES"     }, &WellSegment::roughness           , right_align            , Opm::UnitSystem::measure::length },
+        {  7, { "AREA"      , "X-SECTN"    , "M**2"       }, &WellSegment::cross_section       , right_align            },
+        {  7, { "VOLUME"    , ""           , "M3"         }, &WellSegment::volume              , right_align            , Opm::UnitSystem::measure::volume },
         {  8, { "P DROP"    , "MULT"       , "FACTOR 1"   }, &WellSegment::pressure_drop_mult  , right_align             },
     };
 }
@@ -675,11 +684,11 @@ void report_well_connection_data(std::ostream& os, const std::vector<Opm::Well>&
     const report<Opm::Well, WellConnection, 3> well_connection { "WELL CONNECTION DATA", connection_table, ctx};
     well_connection.print_header(os);
 
-    std::size_t sub_report = 0;
+    std::size_t sub_report { 0 } ;
     for (const auto& well : data) {
         std::vector<WellConnection> wrapper_data;
-        const auto& connections = well.getConnections();
-        std::transform(connections.begin(), connections.end(), std::back_inserter(wrapper_data), [&well]( const Opm::Connection& connection) { return WellConnection(well, connection); });
+        const auto& connections { well.getConnections() } ;
+        std::transform(connections.begin(), connections.end(), std::back_inserter(wrapper_data), [&well](const Opm::Connection& connection) { return WellConnection { well, connection } ; });
 
         well_connection.print_data(os, wrapper_data, sub_report);
         sub_report++;
@@ -690,12 +699,12 @@ void report_well_connection_data(std::ostream& os, const std::vector<Opm::Well>&
 
 }
 
-void Opm::RptIO::workers::write_WELSPECS(std::ostream& os, unsigned, const Opm::Schedule& schedule, const Opm::EclipseGrid& grid, std::size_t report_step) {
-    auto well_names = schedule.changed_wells(report_step);
+void Opm::RptIO::workers::write_WELSPECS(std::ostream& os, unsigned, const Opm::Schedule& schedule, const Opm::EclipseGrid& grid, const Opm::UnitSystem& unit_system, std::size_t report_step) {
+    auto well_names { schedule.changed_wells(report_step) } ;
     if (well_names.empty())
         return;
 
-    context ctx{schedule, grid};
+    context ctx { schedule, grid, unit_system } ;
     std::vector<Well> changed_wells;
     std::transform(well_names.begin(), well_names.end(), std::back_inserter(changed_wells), [&report_step, &schedule](const std::string& wname) { return schedule.getWell(wname, report_step); });
 
@@ -708,12 +717,12 @@ void Opm::RptIO::workers::write_WELSPECS(std::ostream& os, unsigned, const Opm::
             {
                 const report<Opm::Well, WellSegment, 3> msw_data { "MULTI-SEGMENT WELL: SEGMENT STRUCTURE", msw_well_table, ctx};
                 msw_data.print_header(os);
-                std::size_t sub_report = 0;
-                const auto& segments = well.getSegments();
+                std::size_t sub_report { 0 } ;
+                const auto& segments { well.getSegments() } ;
                 for (const auto& branch : segments.branches()) {
                     std::vector<WellSegment> wrapper_data;
-                    const auto& branch_segments = segments.branchSegments(branch);
-                    std::transform(branch_segments.begin(), branch_segments.end(), std::back_inserter(wrapper_data), [&well](const Opm::Segment& segment) { return WellSegment(well, segment); });
+                    const auto& branch_segments { segments.branchSegments(branch) } ;
+                    std::transform(branch_segments.begin(), branch_segments.end(), std::back_inserter(wrapper_data), [&well](const Opm::Segment& segment) { return WellSegment { well, segment } ; });
 
                     sub_report++;
                     if (sub_report == (segments.branches().size()))
@@ -728,10 +737,11 @@ void Opm::RptIO::workers::write_WELSPECS(std::ostream& os, unsigned, const Opm::
                 msw_connection.print_header(os);
                 {
                     std::vector<SegmentConnection> wrapper_data;
-                    const auto& connections = well.getConnections();
-                    const auto& segments = well.getSegments();
+                    const auto& connections { well.getConnections() } ;
+                    const auto& segments { well.getSegments() } ;
+                    const std::pair<double,double> perf_range { } ; // TODO: connect with #1759
                     std::transform(connections.begin(), connections.end(), std::back_inserter(wrapper_data),
-                                   [&well, &segments] (const Opm::Connection& connection) { return SegmentConnection(well, connection, segments.getFromSegmentNumber(connection.segment())); });
+                                   [&well, &segments, &perf_range] (const Opm::Connection& connection) { return SegmentConnection { well, connection, segments.getFromSegmentNumber(connection.segment()), perf_range } ; });
                     msw_connection.print_data(os, wrapper_data, 0, '=');
                 }
                 msw_connection.print_footer(os, {});
