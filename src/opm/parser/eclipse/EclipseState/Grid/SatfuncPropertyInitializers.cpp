@@ -81,16 +81,19 @@ namespace {
         const auto wat    = ph.active(::Opm::Phase::WATER);
         const auto oil    = ph.active(::Opm::Phase::OIL);
         const auto gas    = ph.active(::Opm::Phase::GAS);
+
         const auto threeP = gas && oil && wat;
+        const auto twoP = (!gas && oil && wat) || (gas && oil && !wat) ;
 
         const auto family1 =       // SGOF/SLGOF and/or SWOF
             (gas && (tm.hasTables("SGOF") || tm.hasTables("SLGOF"))) ||
             (wat && tm.hasTables("SWOF"));
+        // note: we allow for SOF2 to be part of family1 for threeP + solvent simulations.
 
         const auto family2 =      // SGFN, SOF{2,3}, SWFN
             (gas && tm.hasTables("SGFN")) ||
             (oil && ((threeP && tm.hasTables("SOF3")) ||
-                     tm.hasTables("SOF2"))) ||
+                     (twoP && tm.hasTables("SOF2")))) ||
             (wat && tm.hasTables("SWFN"));
 
         if (gas && tm.hasTables("SGOF") && tm.hasTables("SLGOF")) {
