@@ -70,6 +70,10 @@ namespace {
         }
     }
 
+    std::string underline(const std::string& string) {
+        return std::string(string.size(), divider_character);
+    }
+
     struct context {
         const Opm::Schedule& sched;
         const Opm::EclipseGrid& grid;
@@ -191,10 +195,6 @@ namespace {
         {
             centre_align(title, column_definition.total_width());
             centre_align(decor, column_definition.total_width());
-        }
-
-        std::string underline(const std::string& string) const {
-            return std::string(string.size(), divider_character);
         }
 
         void print_header(std::ostream& os) const {
@@ -680,6 +680,64 @@ namespace {
 
 namespace {
 
+    const std::string hierarchy_title     { "HIERARCHICAL DESCRIPTION OF GROUP CONTROL STRUCTURE" } ;
+    const std::string hierarchy_underline { underline(hierarchy_title)                            } ;
+
+    constexpr char horizontal_line  { '-' } ;
+    constexpr char vertical_line    { '|' } ;
+    constexpr char indent_character { ' ' } ;
+
+    std::string decorate_hierarchy_name(const std::string& name, bool first_line, bool last_child) {
+        if (first_line) {
+            return std::string(vertical_line, 1) + std::string(horizontal_line,  3) + name;
+        } else if (last_child) {
+            return                                 std::string(indent_character, 4) + name;
+        } else {
+            return std::string(vertical_line, 1) + std::string(indent_character, 3) + name;
+        }
+    }
+
+    std::vector<std::string> lines_for_node(const Opm::GTNode& node) {
+        std::vector<std::string> lines { node.group().name() } ;
+
+        const std::vector<Opm::GTNode>& children { node.groups() } ;
+
+        if (children.size()) {
+            lines.push_back(std::string(vertical_line, 1));
+
+            std::size_t i { 0 } ;
+            for (const auto& child : children) {
+                ++i;
+                std::vector<std::string> child_lines { lines_for_node(child) } ;
+
+                bool first_line { true } ;
+                for (const auto& line : child_lines) {
+                    lines.push_back(decorate_hierarchy_name(line, first_line, i == children.size()));
+
+                    first_line = false;
+                }
+            }
+        }
+
+        return lines;
+    }
+
+    void report_group_hierarchy_data(std::ostream& os, const context& ctx, std::size_t report_step = 0) {
+        os << hierarchy_title     << record_separator
+           << hierarchy_underline << record_separator
+           << section_separator;
+
+        for (const auto& line : lines_for_node(ctx.sched.groupTree(report_step))) {
+            os << line << record_separator;
+        }
+
+        os << section_separator << std::flush;
+    }
+
+}
+
+namespace {
+
 void report_well_connection_data(std::ostream& os, const std::vector<Opm::Well>& data, const context& ctx) {
     const report<Opm::Well, WellConnection, 3> well_connection { "WELL CONNECTION DATA", connection_table, ctx};
     well_connection.print_header(os);
@@ -747,4 +805,6 @@ void Opm::RptIO::workers::write_WELSPECS(std::ostream& os, unsigned, const Opm::
             }
         }
     }
+
+    report_group_hierarchy_data(os, ctx);
 }
