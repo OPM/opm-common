@@ -58,5 +58,23 @@ const std::vector<GTNode>& GTNode::groups() const {
     return this->m_child_groups;
 }
 
+std::vector<const GTNode*> GTNode::all_nodes() const {
+    std::vector<const GTNode*> nodes { this };
+
+    for (const auto& child_group : m_child_groups) {
+        const auto child_nodes { child_group.all_nodes() } ;
+        nodes.insert(nodes.end(), child_nodes.begin(), child_nodes.end());
+    }
+
+    return nodes;
+}
+
+std::size_t GTNode::level() const {
+    if (!m_parent) {
+        return 0;
+    } else {
+        return m_parent->level() + 1;
+    }
+}
 
 }
