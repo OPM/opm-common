@@ -1633,6 +1633,10 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
                         update = well2->updateProduction(prop);
                         if (cmode == Well::WELTARGCMode::GUID)
                             update |= well2->updateWellGuideRate(new_arg.get<double>());
+
+                        auto udq = std::make_shared<UDQActive>(this->udqActive(currentStep));
+                        if (prop->updateUDQActive(this->getUDQConfig(currentStep), *udq))
+                            this->updateUDQActive(currentStep, udq);
                     } else {
                         auto inj = std::make_shared<Well::WellInjectionProperties>(well2->getInjectionProperties());
                         inj->handleWELTARG(cmode, new_arg, SiFactorP);
