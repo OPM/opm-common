@@ -529,7 +529,7 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
         while (true) {
             const auto& keyword = section.getKeyword(keywordIdx);
             if (keyword.name() == "ACTIONX") {
-                Action::ActionX action(keyword, this->m_timeMap.getStartTime(currentStep + 1));
+                Action::ActionX action(keyword, this->m_timeMap.getStartTime(currentStep));
                 while (true) {
                     keywordIdx++;
                     if (keywordIdx == section.size())
