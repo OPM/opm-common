@@ -144,6 +144,10 @@ const std::vector<UDQActive::Record>& UDQActive::get_iuad() const {
                 this->output_data.emplace_back(input_record.udq, input_record.input_index, 0, input_record.wgname, input_record.control);
         }
 
+        std::sort(this->output_data.begin(), this->output_data.end(),
+                  [](const UDQActive::Record& rec1, const UDQActive::Record& rec2) { return rec1.input_index < rec2.input_index;});
+
+
         if (!output_data.empty()) {
             for (std::size_t index = 1; index < output_data.size(); index++) {
                 const auto& prev_record = this->output_data[index - 1];

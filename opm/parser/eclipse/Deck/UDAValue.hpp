@@ -65,6 +65,7 @@ public:
     bool operator!=(const UDAValue& other) const;
     UDAValue& operator=(double value);
     UDAValue& operator=(const std::string& value);
+    void update_value(const UDAValue& other);
 
     bool is_numeric() { return numeric_value; }
 
