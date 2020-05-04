@@ -739,9 +739,8 @@ void Opm::RptIO::workers::write_WELSPECS(std::ostream& os, unsigned, const Opm::
                     std::vector<SegmentConnection> wrapper_data;
                     const auto& connections { well.getConnections() } ;
                     const auto& segments { well.getSegments() } ;
-                    const std::pair<double,double> perf_range { } ; // TODO: connect with #1759
                     std::transform(connections.begin(), connections.end(), std::back_inserter(wrapper_data),
-                                   [&well, &segments, &perf_range] (const Opm::Connection& connection) { return SegmentConnection { well, connection, segments.getFromSegmentNumber(connection.segment()), perf_range } ; });
+                                   [&well, &segments] (const Opm::Connection& connection) { return SegmentConnection { well, connection, segments.getFromSegmentNumber(connection.segment()), *connection.perf_range() } ; });
                     msw_connection.print_data(os, wrapper_data, 0, '=');
                 }
                 msw_connection.print_footer(os, {});
