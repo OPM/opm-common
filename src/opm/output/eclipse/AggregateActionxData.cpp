@@ -575,23 +575,16 @@ const std::map<cmp_enum, int> cmpToIndex = {
                 //Treat well, group and field left hand side conditions
                 if (it_lhsq != lhsQuantityToIndex.end()) {
                     //Well variable
-                    if (it_lhsq->first == "W") {
+                    if (it_lhsq->first == "W" && ar) {
                         //find the well that violates action if relevant
-                        if (ar) {
-                            std::optional<std::string> wn;
-                            for (const auto& well : wells)
-                            {
-                                if (ar.has_well(well.name())) {
-                                    //set well name
-                                    wn = well.name();
-                                    break;
-                                }
-                            }
+                        auto well_iter = std::find_if(wells.begin(), wells.end(), [&ar](const Opm::Well& well) { return ar.has_well(well.name()); });
+                        if (well_iter != wells.end()) {
+                            const auto& wn = well_iter->name();
 
-                            if (wn.has_value() && st.has_well_var(*wn, z_data.lhs.quantity)) {
-                                sAcn[ind + 4] = st.get_well_var(*wn, z_data.lhs.quantity);
-                                sAcn[ind + 6] = st.get_well_var(*wn, z_data.lhs.quantity);
-                                sAcn[ind + 8] = st.get_well_var(*wn, z_data.lhs.quantity);
+                            if (st.has_well_var(wn, z_data.lhs.quantity)) {
+                                sAcn[ind + 4] = st.get_well_var(wn, z_data.lhs.quantity);
+                                sAcn[ind + 6] = st.get_well_var(wn, z_data.lhs.quantity);
+                                sAcn[ind + 8] = st.get_well_var(wn, z_data.lhs.quantity);
                             }
                         }
                     }

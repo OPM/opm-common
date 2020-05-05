@@ -53,6 +53,9 @@ Result::operator bool() const {
 }
 
 std::vector<std::string> Result::wells() const {
+    if (!this->result)
+        throw std::logic_error("Programming error: trying to check wells in ActionResult which is false");
+
     if (this->matching_wells)
         return this->matching_wells->wells();
     else
@@ -102,6 +105,9 @@ void Result::add_well(const std::string& well) {
 }
 
 bool Result::has_well(const std::string& well) const {
+    if (!this->result)
+        throw std::logic_error("Programming error: trying to check wells in ActionResult which is false");
+
     if (!this->matching_wells)
         return false;
 
