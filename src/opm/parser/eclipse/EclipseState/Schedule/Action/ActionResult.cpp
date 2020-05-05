@@ -44,7 +44,7 @@ Result::Result(bool result_arg, const WellSet& wells) :
 Result::Result(const Result& src)
 {
     this->result = src.result;
-    if (src.matching_wells) 
+    if (src.matching_wells)
         this->matching_wells.reset( new WellSet(*src.matching_wells) );
 }
 
@@ -83,11 +83,11 @@ Result& Result::operator&=(const Result& other) {
     return *this;
 }
 
-Result& Result::operator=(const Result& src) 
+Result& Result::operator=(const Result& src)
 {
     this->result = src.result;
     if (src.matching_wells) this->matching_wells.reset( new WellSet(*src.matching_wells) );
-    
+
     return *this;
 }
 
