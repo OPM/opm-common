@@ -27,8 +27,8 @@
 #include <opm/parser/eclipse/EclipseState/Tables/SwfnTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SwofTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/Tabdims.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/TableContainer.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableColumn.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/TableContainer.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 
 #include <opm/parser/eclipse/Utility/Functional.hpp>
@@ -42,6 +42,8 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
+#include <utility>
 
 #include <stddef.h>
 
@@ -112,8 +114,6 @@ namespace {
         if( family2 ) return SatfuncFamily::II;
         return SatfuncFamily::none;
     }
-
-    // enum class limit { min, max };
 
     std::vector<double>
     findMinWaterSaturation(const Opm::TableManager& tm,
@@ -257,6 +257,50 @@ namespace {
         }
     }
 
+    template <typename Predicate>
+    auto crit_sat_index(const Opm::TableColumn& col,
+                        const double            tolcrit,
+                        Predicate&&             pred)
+    {
+        using SizeT = std::remove_const_t<
+            std::remove_reference_t<decltype(col.size())>
+        >;
+
+        auto begin = col.begin();
+        auto pos   = std::lower_bound(begin, col.end(), tolcrit,
+                                      std::forward<Predicate>(pred));
+
+        assert ((pos != col.end()) &&
+                "Detected relative permeability function "
+                "without immobile state");
+
+        return static_cast<SizeT>(std::distance(begin, pos));
+    }
+
+    double crit_sat_increasing_KR(const Opm::TableColumn& sat,
+                                  const Opm::TableColumn& kr,
+                                  const double            tolcrit)
+    {
+        // First position for which Kr(S) > tolcrit.
+        const auto i = crit_sat_index(kr, tolcrit,
+            [](const double kr1, const double kr2)
+        {
+            // kr1 <= kr2.  Kr2 is 'tolcrit'.
+            return ! (kr2 < kr1);
+        });
+
+        return sat[i - 1]; // Last saturation for which Kr(S) <= tolcrit
+    }
+
+    double crit_sat_decreasing_KR(const Opm::TableColumn& sat,
+                                  const Opm::TableColumn& kr,
+                                  const double            tolcrit)
+    {
+        // First position for which Kr(S) <= tolcrit.
+        const auto i = crit_sat_index(kr, tolcrit, std::greater<>{});
+        return sat[i];
+    }
+
     /// Maximum water saturation for which Krw(Sw) <= tolcrit.
     ///
     /// Expected Table Format:
@@ -266,24 +310,8 @@ namespace {
     template <typename T>
     double critical_water(const T& table, const double tolcrit)
     {
-        const auto& col = table.getKrwColumn();
-        auto begin = col.begin();
-        auto end   = col.end();
-
-        // Locate first position for which Krw(Sw) > tolcrit.
-        auto critPos = std::lower_bound(begin, end, tolcrit,
-            [](const double kr1, const double kr2) -> bool
-        {
-            // kr1 <= kr2.  Kr2 is 'tolcrit'.
-            return ! (kr2 < kr1);
-        });
-
-        assert ((critPos != begin) &&
-                "Detected Krw(Sw) Without Immobile Water Saturation");
-
-        const auto index = std::distance(begin, critPos);
-
-        return table.getSwColumn()[index - 1];
+        return crit_sat_increasing_KR(table.getSwColumn(),
+                                      table.getKrwColumn(), tolcrit);
     }
 
     std::vector<double>
@@ -325,24 +353,8 @@ namespace {
     template <typename T>
     double critical_gas(const T& table, const double tolcrit)
     {
-        const auto& col = table.getKrgColumn();
-        auto begin = col.begin();
-        auto end   = col.end();
-
-        // Locate first position for which Krg(Sg) > tolcrit.
-        auto critPos = std::lower_bound(begin, end, tolcrit,
-            [](const double kr1, const double kr2) -> bool
-        {
-            // kr1 <= kr2.  Kr2 is 'tolcrit'.
-            return ! (kr2 < kr1);
-        });
-
-        assert ((critPos != begin) &&
-                "Detected Krg(Sg) Without Immobile Gas Saturation");
-
-        const auto index = std::distance(begin, critPos);
-
-        return table.getSgColumn()[index - 1];
+        return crit_sat_increasing_KR(table.getSgColumn(),
+                                      table.getKrgColumn(), tolcrit);
     }
 
     /// Maximum gas saturation for which Krg(Sg) <= tolcrit.
@@ -354,20 +366,12 @@ namespace {
     double critical_gas(const Opm::SlgofTable& slgofTable,
                         const double           tolcrit)
     {
-        const auto& col = slgofTable.getKrgColumn();
-        auto begin = col.begin();
-        auto end   = col.end();
-
-        // Locate first position for which Krg(Sl) <= tolcrit.
-        auto critPos = std::lower_bound(begin, end, tolcrit, std::greater<>{});
-
-        assert ((critPos != end) &&
-                "Detected Krg(Sl) Without Immobile Gas Saturation");
-
-        const auto index = std::distance(begin, critPos);
+        const auto sl_at_crit_gas =
+            crit_sat_decreasing_KR(slgofTable.getSlColumn(),
+                                   slgofTable.getKrgColumn(), tolcrit);
 
         // Sg = 1 - Sl
-        return 1.0 - slgofTable.getSlColumn()[index]; // Not "index - 1"
+        return 1.0 - sl_at_crit_gas;
     }
 
     std::vector<double>
@@ -426,20 +430,12 @@ namespace {
     double critical_oil_water(const Opm::SwofTable& swofTable,
                               const double          tolcrit)
     {
-        const auto& col = swofTable.getKrowColumn();
-        auto begin = col.begin();
-        auto end   = col.end();
-
-        // Locate first position for which Krow(So) <= tolcrit.
-        auto critPos = std::lower_bound(begin, end, tolcrit, std::greater<>{});
-
-        assert ((critPos != end) &&
-                "Detected Krow(So) Without Immobile Oil Saturation");
-
-        const auto index = std::distance(begin, critPos);
+        const auto sw_at_crit_oil =
+            crit_sat_decreasing_KR(swofTable.getSwColumn(),
+                                   swofTable.getKrowColumn(), tolcrit);
 
         // So = 1 - Sw
-        return 1.0 - swofTable.getSwColumn()[index]; // Not "index - 1"
+        return 1.0 - sw_at_crit_oil;
     }
 
     /// Maximum oil saturation for which Kro(So) <= tolcrit.
@@ -451,24 +447,8 @@ namespace {
     double critical_oil(const Opm::Sof2Table& sof2Table,
                         const double          tolcrit)
     {
-        const auto& col = sof2Table.getKroColumn();
-        auto begin = col.begin();
-        auto end   = col.end();
-
-        // Locate first position for which Kro(So) > tolcrit.
-        auto critPos = std::lower_bound(begin, end, tolcrit,
-            [](const double kr1, const double kr2) -> bool
-        {
-            // kr1 <= kr2.  Kr2 is 'tolcrit'.
-            return ! (kr2 < kr1);
-        });
-
-        assert ((critPos != begin) &&
-                "Detected Kro(So) Without Immobile Oil Saturation");
-
-        const auto index = std::distance(begin, critPos);
-
-        return sof2Table.getSoColumn()[index - 1];
+        return crit_sat_increasing_KR(sof2Table.getSoColumn(),
+                                      sof2Table.getKroColumn(), tolcrit);
     }
 
     /// Maximum oil saturation for which Kro(So) <= tolcrit.
@@ -481,23 +461,7 @@ namespace {
                         const Opm::TableColumn& col,
                         const double            tolcrit)
     {
-        auto begin = col.begin();
-        auto end   = col.end();
-
-        // Locate first position for which Kro(So) > tolcrit.
-        auto critPos = std::lower_bound(begin, end, tolcrit,
-            [](const double kr1, const double kr2) -> bool
-        {
-            // kr1 <= kr2.  Kr2 is 'tolcrit'.
-            return ! (kr2 < kr1);
-        });
-
-        assert ((critPos != begin) &&
-                "Detected Kro(So) Without Immobile Oil Saturation");
-
-        const auto index = std::distance(begin, critPos);
-
-        return sof3Table.getSoColumn()[index - 1];
+        return crit_sat_increasing_KR(sof3Table.getSoColumn(), col, tolcrit);
     }
 
     std::vector<double>
@@ -551,20 +515,12 @@ namespace {
     double critical_oil_gas(const Opm::SgofTable& sgofTable,
                             const double          tolcrit)
     {
-        const auto& col = sgofTable.getKrogColumn();
-        auto begin = col.begin();
-        auto end   = col.end();
-
-        // Locate first position for which Krog(So) <= tolcrit.
-        auto critPos = std::lower_bound(begin, end, tolcrit, std::greater<>{});
-
-        assert ((critPos != end) &&
-                "Detected Krog(So) Without Immobile Oil Saturation");
-
-        const auto index = std::distance(begin, critPos);
+        const auto sg_at_crit_oil =
+            crit_sat_decreasing_KR(sgofTable.getSgColumn(),
+                                   sgofTable.getKrogColumn(), tolcrit);
 
         // So = 1 - Sg
-        return 1.0 - sgofTable.getSgColumn()[index]; // Not "index - 1"
+        return 1.0 - sg_at_crit_oil;
     }
 
     /// Maximum oil saturation for which Krog(So) <= tolcrit.
@@ -576,24 +532,8 @@ namespace {
     double critical_oil_gas(const Opm::SlgofTable& slgofTable,
                             const double           tolcrit)
     {
-        const auto& col = slgofTable.getKrogColumn();
-        auto begin = col.begin();
-        auto end   = col.end();
-
-        // Locate first position for which Krog(So) > tolcrit.
-        auto critPos = std::lower_bound(begin, end, tolcrit,
-            [](const double kr1, const double kr2) -> bool
-        {
-            // kr1 <= kr2.  Kr2 is tolcrit'.
-            return ! (kr2 < kr1);
-        });
-
-        assert ((critPos != end) &&
-                "Detected Krog(So) Without Immobile Oil Saturation");
-
-        const auto index = std::distance(begin, critPos);
-
-        return slgofTable.getSlColumn()[index - 1];
+        return crit_sat_increasing_KR(slgofTable.getSlColumn(),
+                                      slgofTable.getKrogColumn(), tolcrit);
     }
 
     std::vector<double>
