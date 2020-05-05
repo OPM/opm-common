@@ -41,11 +41,6 @@ namespace Opm { namespace data {
 
 namespace Opm { namespace RestartIO { namespace Helpers {
     
-    struct ActionResStatus {
-        std::vector<Opm::Action::Result> result;
-        std::vector<std::string> name;
-    };
-
     class AggregateWellData
     {
     public:
