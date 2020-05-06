@@ -39,6 +39,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellConnections.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/GasLiftOpt.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
@@ -3604,3 +3605,85 @@ BOOST_AUTO_TEST_CASE(SKIPREST_VFP) {
     const auto& tables = sched.getVFPProdTables(3);
     BOOST_CHECK( !tables.empty() );
 }
+
+
+
+
+BOOST_AUTO_TEST_CASE(GASLIFT_OPT) {
+    GasLiftOpt glo;
+    BOOST_CHECK(!glo.active());
+    BOOST_CHECK_THROW(glo.group("NO_SUCH_GROUP"), std::out_of_range);
+    BOOST_CHECK_THROW(glo.well("NO_SUCH_WELL"), std::out_of_range);
+}
+
+
+BOOST_AUTO_TEST_CASE(GASLIFT_OPT_DECK) {
+    const auto input = R"(-- Turns on gas lift optimization
+SCHEDULE
+
+GRUPTREE
+ 'PROD'    'FIELD' /
+
+ 'M5S'    'PLAT-A'  /
+ 'M5N'    'PLAT-A'  /
+
+ 'C1'     'M5N'  /
+ 'F1'     'M5N'  /
+ 'B1'     'M5S'  /
+ 'G1'     'M5S'  /
+ /
+
+LIFTOPT
+ 12500 5E-3 0.0 YES /
+
+
+-- Group lift gas limits for gas lift optimization
+GLIFTOPT
+ 'PLAT-A'  200000 /  --
+/
+
+WELSPECS
+--WELL     GROUP  IHEEL JHEEL   DREF PHASE   DRAD INFEQ SIINS XFLOW PRTAB  DENS
+ 'B-1H'  'B1'   11    3      1*   OIL     1*   1*   SHUT 1* 1* 1* /
+ 'B-2H'  'B1'    4    7      1*   OIL     1*   1*   SHUT 1* 1* 1* /
+ 'B-3H'  'B1'   11   12      1*   OIL     1*   1*   SHUT 1* 1* 1* /
+ 'C-1H'  'C1'   13   20      1*   OIL     1*   1*   SHUT 1* 1* 1* /
+ 'C-2H'  'C1'   12   27      1*   OIL     1*   1*   SHUT 1* 1* 1* /
+/
+
+-- well savailable for gass lift
+-- minimum gas lift rate, enough to keep well flowing
+WLIFTOPT
+ 'B-1H'   YES   150000   1.01   -1.0  /
+ 'B-2H'   YES   150000   1.01   -1.0  /
+ 'B-3H'   YES   150000   1.01   -1.0  /
+ 'C-1H'   YES   150000   1.01   -1.0  1.0 YES/
+ 'C-2H'   NO    150000   1.01   -1.0  /
+/
+)";
+    Opm::UnitSystem unitSystem = UnitSystem( UnitSystem::UnitType::UNIT_TYPE_METRIC );
+    double siFactorG = unitSystem.parse("GasSurfaceVolume/Time").getSIScaling();
+    const auto sched = make_schedule(input);
+    const auto& glo = sched.glo(0);
+    const auto& plat_group = glo.group("PLAT-A");
+    BOOST_CHECK_EQUAL( *plat_group.max_lift_gas(), siFactorG * 200000);
+    BOOST_CHECK(!plat_group.max_total_gas().has_value());
+
+
+    const auto& w1 = glo.well("B-1H");
+    BOOST_CHECK(w1.use_glo());
+    BOOST_CHECK_EQUAL(*w1.max_rate(), 150000 * siFactorG);
+    BOOST_CHECK_EQUAL(w1.weight_factor(), 1.01);
+
+    const auto& w2 = glo.well("C-2H");
+    BOOST_CHECK_EQUAL(w2.weight_factor(), 1.00);
+    BOOST_CHECK_EQUAL(w2.min_rate(), 0.00);
+    BOOST_CHECK_EQUAL(w2.inc_weight_factor(), 0.00);
+    BOOST_CHECK(!w2.alloc_extra_gas());
+
+    const auto& w3 = glo.well("C-1H");
+    BOOST_CHECK_EQUAL(w3.min_rate(), -1.00 * siFactorG);
+    BOOST_CHECK_EQUAL(w3.inc_weight_factor(), 1.00);
+    BOOST_CHECK(w3.alloc_extra_gas());
+}
+

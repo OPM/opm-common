@@ -149,6 +149,7 @@ std::pair<std::time_t, std::size_t> restart_info(const RestartIO::RstState * rst
         global_whistctl_mode(this->m_timeMap, Well::ProducerCMode::CMODE_UNDEFINED),
         m_actions(this->m_timeMap, std::make_shared<Action::Actions>()),
         m_network(this->m_timeMap, std::make_shared<Network::ExtNetwork>()),
+        m_glo(this->m_timeMap, std::make_shared<GasLiftOpt>()),
         rft_config(this->m_timeMap),
         m_nupcol(this->m_timeMap, ParserKeywords::NUPCOL::NUM_ITER::defaultValue),
         restart_config(m_timeMap, deck, parseContext, errors),
@@ -263,6 +264,7 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
         result.wlist_manager = {{std::make_shared<WListManager>(WListManager::serializeObject())}, 1};
         result.udq_config = {{std::make_shared<UDQConfig>(UDQConfig::serializeObject())}, 1};
         result.m_network  = {{std::make_shared<Network::ExtNetwork>(Network::ExtNetwork::serializeObject())}, 1};
+        result.m_glo = {{std::make_shared<GasLiftOpt>(GasLiftOpt::serializeObject())}, 1};
         result.udq_active = {{std::make_shared<UDQActive>(UDQActive::serializeObject())}, 1};
         result.guide_rate_config = {{std::make_shared<GuideRateConfig>(GuideRateConfig::serializeObject())}, 1};
         result.gconsale = {{std::make_shared<GConSale>(GConSale::serializeObject())}, 1};
@@ -491,6 +493,15 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
 
         else if (keyword.name() == "BRANPROP")
             handleBRANPROP(keyword, currentStep);
+
+        else if (keyword.name() == "LIFTOPT")
+            handleLIFTOPT(keyword, currentStep);
+
+        else if (keyword.name() == "GLIFTOPT")
+            handleGLIFTOPT(keyword, currentStep, parseContext, errors);
+
+        else if (keyword.name() == "WLIFTOPT")
+            handleWLIFTOPT(keyword, currentStep, parseContext, errors);
 
         else if (keyword.name() == "PYACTION")
             handlePYACTION(python, input_path, keyword, currentStep);
@@ -3031,6 +3042,7 @@ void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t 
                compareMap(this->vfpprod_tables, data.vfpprod_tables) &&
                compareMap(this->vfpinj_tables, data.vfpinj_tables) &&
                compareDynState(this->m_network, data.m_network) &&
+               compareDynState(this->m_glo, data.m_glo) &&
                compareDynState(this->wtest_config, data.wtest_config) &&
                compareDynState(this->wlist_manager, data.wlist_manager) &&
                compareDynState(this->udq_config, data.udq_config) &&
@@ -3175,6 +3187,93 @@ void Schedule::handleNODEPROP(const DeckKeyword& keyword, std::size_t report_ste
     this->updateNetwork(ext_network, report_step);
 }
 
+const GasLiftOpt& Schedule::glo(std::size_t report_step) const {
+    return *this->m_glo[report_step];
+}
+
+void Schedule::handleLIFTOPT(const DeckKeyword& keyword, std::size_t report_step) {
+    using LO  = ParserKeywords::LIFTOPT;
+    auto glo = std::make_shared<GasLiftOpt>( this->glo(report_step) );
+    const auto& record = keyword.getRecord(0);
+    double gaslift_increment = record.getItem<LO::INCREMENT_SIZE>().getSIDouble(0);
+    double min_eco_gradient = record.getItem<LO::MIN_ECONOMIC_GRADIENT>().getSIDouble(0);
+    double min_wait = record.getItem<LO::MIN_INTERVAL_BETWEEN_GAS_LIFT_OPTIMIZATIONS>().getSIDouble(0);
+    bool all_newton = DeckItem::to_bool( record.getItem<LO::OPTIMISE_GAS_LIFT>().get<std::string>(0) );
+
+    glo->gaslift_increment(gaslift_increment);
+    glo->min_eco_gradient(min_eco_gradient);
+    glo->min_wait(min_wait);
+    glo->all_newton(all_newton);
+
+    this->m_glo.update(report_step, std::move(glo));
+}
+
+
+void Schedule::handleGLIFTOPT(const DeckKeyword& keyword, std::size_t report_step, const ParseContext& parseContext, ErrorGuard& errors) {
+    using GLO  = ParserKeywords::GLIFTOPT;
+    auto glo = std::make_shared<GasLiftOpt>( this->glo(report_step) );
+    for (const auto& record : keyword) {
+        const std::string& groupNamePattern = record.getItem<GLO::GROUP_NAME>().getTrimmedString(0);
+        const auto group_names = this->groupNames(groupNamePattern);
+        if (group_names.empty())
+            invalidNamePattern(groupNamePattern, report_step, parseContext, errors, keyword);
+
+        const auto& max_total_item = record.getItem<GLO::MAX_TOTAL_GAS_RATE>();
+        const auto& max_gas_item = record.getItem<GLO::MAX_LIFT_GAS_SUPPLY>();
+        double max_lift_gas_value = -1;
+        double max_total_gas_value = -1;
+
+        if (max_gas_item.hasValue(0))
+            max_lift_gas_value = max_gas_item.getSIDouble(0);
+
+        if (max_total_item.hasValue(0))
+            max_total_gas_value = max_total_item.getSIDouble(0);
+
+        for (const auto& gname : group_names) {
+            auto group = GasLiftOpt::Group(gname);
+            group.max_lift_gas(max_lift_gas_value);
+            group.max_total_gas(max_total_gas_value);
+
+            glo->add_group(group);
+        }
+    }
+    this->m_glo.update(report_step, std::move(glo));
+}
+
+void Schedule::handleWLIFTOPT(const DeckKeyword& keyword, std::size_t report_step, const ParseContext& parseContext, ErrorGuard& errors) {
+    using WLO  = ParserKeywords::WLIFTOPT;
+    auto glo = std::make_shared<GasLiftOpt>( this->glo(report_step) );
+
+    for (const auto& record : keyword) {
+        const std::string& wellNamePattern = record.getItem<WLO::WELL>().getTrimmedString(0);
+        bool use_glo = DeckItem::to_bool( record.getItem<WLO::USE_OPTIMIZER>().get<std::string>(0));
+        bool alloc_extra_gas = DeckItem::to_bool( record.getItem<WLO::ALLOCATE_EXTRA_LIFT_GAS>().get<std::string>(0));
+        double weight_factor = record.getItem<WLO::WEIGHT_FACTOR>().get<double>(0);
+        double inc_weight_factor = record.getItem<WLO::DELTA_GAS_RATE_WEIGHT_FACTOR>().get<double>(0);
+        double min_rate = record.getItem<WLO::MIN_LIFT_GAS_RATE>().getSIDouble(0);
+        const auto& max_rate_item = record.getItem<WLO::MAX_LIFT_GAS_RATE>();
+
+        const auto well_names = this->wellNames(wellNamePattern);
+        if (well_names.empty())
+            invalidNamePattern(wellNamePattern, report_step, parseContext, errors, keyword);
+
+        for (const auto& wname : well_names) {
+            auto well = GasLiftOpt::Well(wname, use_glo);
+
+            if (max_rate_item.hasValue(0))
+                well.max_rate( max_rate_item.getSIDouble(0) );
+
+            well.weight_factor(weight_factor);
+            well.inc_weight_factor(inc_weight_factor);
+            well.min_rate(min_rate);
+            well.alloc_extra_gas(alloc_extra_gas);
+
+            glo->add_well(well);
+        }
+    }
+
+    this->m_glo.update(report_step, std::move(glo));
+}
 
 void Schedule::handleBRANPROP(const DeckKeyword& keyword, std::size_t report_step) {
     using BP = ParserKeywords::BRANPROP;

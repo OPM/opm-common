@@ -24,6 +24,7 @@
 
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/RestartConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/GasLiftOpt.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicVector.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Events.hpp>
@@ -266,6 +267,7 @@ namespace Opm
 
 
         const Network::ExtNetwork& network(std::size_t report_step) const;
+        const GasLiftOpt& glo(std::size_t report_step) const;
 
         bool operator==(const Schedule& data) const;
         std::shared_ptr<const Python> python() const;
@@ -310,6 +312,7 @@ namespace Opm
             global_whistctl_mode.template serializeOp<Serializer, false>(serializer);
             m_actions.serializeOp(serializer);
             m_network.serializeOp(serializer);
+            m_glo.serializeOp(serializer);
             rft_config.serializeOp(serializer);
             m_nupcol.template serializeOp<Serializer, false>(serializer);
             restart_config.serializeOp(serializer);
@@ -346,6 +349,7 @@ namespace Opm
         DynamicState<Well::ProducerCMode> global_whistctl_mode;
         DynamicState<std::shared_ptr<Action::Actions>> m_actions;
         DynamicState<std::shared_ptr<Network::ExtNetwork>> m_network;
+        DynamicState<std::shared_ptr<GasLiftOpt>> m_glo;
         RFTConfig rft_config;
         DynamicState<int> m_nupcol;
         RestartConfig restart_config;
@@ -429,7 +433,9 @@ namespace Opm
 
         void handleBRANPROP( const DeckKeyword& keyword, size_t currentStep);
         void handleNODEPROP( const DeckKeyword& keyword, size_t currentStep);
-
+        void handleLIFTOPT(const DeckKeyword& keyword, std::size_t currentStep);
+        void handleGLIFTOPT(const DeckKeyword& keyword, std::size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
+        void handleWLIFTOPT(const DeckKeyword& keyword, std::size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
         void handleTUNING( const DeckKeyword& keyword, size_t currentStep);
         void handlePYACTION( std::shared_ptr<const Python> python, const std::string& input_path, const DeckKeyword& keyword, size_t currentStep);
         void handleNUPCOL( const DeckKeyword& keyword, size_t currentStep);
