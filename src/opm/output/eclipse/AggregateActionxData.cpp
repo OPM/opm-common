@@ -42,8 +42,9 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstring>
-#include <string>
+#include <optional>
 #include <iostream>
+#include <string>
 
 // #####################################################################
 // Class Opm::RestartIO::Helpers
@@ -480,13 +481,12 @@ const std::map<cmp_enum, int> cmpToIndex = {
 
         Opm::Action::Result
         act_res(const Opm::Schedule& sched, const Opm::SummaryState&  smry, const std::size_t sim_step, std::vector<Opm::Action::ActionX>::const_iterator act_x) {
-            Opm::Action::Result ar(false);
-            Opm::Action::Context context(smry);
             auto sim_time = sched.simTime(sim_step);
             if (act_x->ready(sim_time)) {
-                    ar = act_x->eval(sim_time, context);
-            }
-            return {ar};
+                Opm::Action::Context context(smry);
+                return act_x->eval(sim_time, context);
+            } else
+                return Opm::Action::Result(false);
         }
 
         template <class SACNArray>
@@ -574,23 +574,18 @@ const std::map<cmp_enum, int> cmpToIndex = {
 
                 //Treat well, group and field left hand side conditions
                 if (it_lhsq != lhsQuantityToIndex.end()) {
-                    std::string wn = "";
                     //Well variable
-                    if (it_lhsq->first == "W") {
+                    if (it_lhsq->first == "W" && ar) {
                         //find the well that violates action if relevant
-                        for (const auto& well : wells)
-                        {
-                            if (ar.has_well(well.name())) {
-                                //set well name
-                                wn = well.name();
-                                break;
-                            }
-                        }
+                        auto well_iter = std::find_if(wells.begin(), wells.end(), [&ar](const Opm::Well& well) { return ar.has_well(well.name()); });
+                        if (well_iter != wells.end()) {
+                            const auto& wn = well_iter->name();
 
-                        if ((it_lhsq->first == "W") && (st.has_well_var(wn, z_data.lhs.quantity)) ) {
-                            sAcn[ind + 4] = st.get_well_var(wn, z_data.lhs.quantity);
-                            sAcn[ind + 6] = st.get_well_var(wn, z_data.lhs.quantity);
-                            sAcn[ind + 8] = st.get_well_var(wn, z_data.lhs.quantity);
+                            if (st.has_well_var(wn, z_data.lhs.quantity)) {
+                                sAcn[ind + 4] = st.get_well_var(wn, z_data.lhs.quantity);
+                                sAcn[ind + 6] = st.get_well_var(wn, z_data.lhs.quantity);
+                                sAcn[ind + 8] = st.get_well_var(wn, z_data.lhs.quantity);
+                            }
                         }
                     }
                     //group variable

@@ -608,8 +608,9 @@ BOOST_AUTO_TEST_CASE(TestFieldAND) {
     st.update("FMWPR", 1);
     {
         auto res = ast.eval(context);
-        auto wells = res.wells();
         BOOST_CHECK(!res);
+        BOOST_CHECK_THROW(res.wells(), std::logic_error);
+        BOOST_CHECK_THROW(res.has_well("ABC"), std::logic_error);
     }
 
     st.update("FMWPR", 4);
@@ -782,19 +783,6 @@ TSTEP
 }
 
 
-
-BOOST_AUTO_TEST_CASE(ACTIONRESULT_COPY_EMPTY) {
-    Action::Result res1(false);
-    auto res2 = res1;
-
-    BOOST_CHECK(!res1);
-    BOOST_CHECK(!res2);
-    BOOST_CHECK(res1.wells() == std::vector<std::string>());
-    BOOST_CHECK(res2.wells() == std::vector<std::string>());
-
-    BOOST_CHECK(!res1.has_well("NO"));
-    BOOST_CHECK(!res2.has_well("NO"));
-}
 
 BOOST_AUTO_TEST_CASE(ACTIONRESULT_COPY_WELLS) {
     Action::Result res1(true, {"W1", "W2", "W3"});
