@@ -7,15 +7,18 @@
   "items": [
     {
       "name": "INCREMENT_SIZE",
-      "value_type": "DOUBLE"
+      "value_type": "DOUBLE",
+      "dimension" : "GasSurfaceVolume/Time"
     },
     {
       "name": "MIN_ECONOMIC_GRADIENT",
-      "value_type": "DOUBLE"
+      "value_type": "DOUBLE",
+      "dimension" : "LiquidSurfaceVolume/GasSurfaceVolume"
     },
     {
       "name": "MIN_INTERVAL_BETWEEN_GAS_LIFT_OPTIMIZATIONS",
       "value_type": "DOUBLE",
+      "dimension" : "Time",
       "default": 0
     },
     {

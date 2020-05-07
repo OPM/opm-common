@@ -98,6 +98,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Schedule/Action/Condition.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/ArrayDimChecker.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Events.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/GasLiftOpt.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Group/Group.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Group/GuideRate.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Group/GuideRateConfig.cpp
@@ -668,6 +669,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Schedule/Action/ASTNode.hpp
        opm/parser/eclipse/EclipseState/Schedule/Action/PyAction.hpp
        opm/parser/eclipse/EclipseState/Schedule/ArrayDimChecker.hpp
+       opm/parser/eclipse/EclipseState/Schedule/GasLiftOpt.hpp
        opm/parser/eclipse/EclipseState/Schedule/Network/Branch.hpp
        opm/parser/eclipse/EclipseState/Schedule/Network/ExtNetwork.hpp
        opm/parser/eclipse/EclipseState/Schedule/Network/Node.hpp
