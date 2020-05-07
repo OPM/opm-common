@@ -262,6 +262,7 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
         result.wtest_config = {{std::make_shared<WellTestConfig>(WellTestConfig::serializeObject())}, 1};
         result.wlist_manager = {{std::make_shared<WListManager>(WListManager::serializeObject())}, 1};
         result.udq_config = {{std::make_shared<UDQConfig>(UDQConfig::serializeObject())}, 1};
+        result.m_network  = {{std::make_shared<Network::ExtNetwork>(Network::ExtNetwork::serializeObject())}, 1};
         result.udq_active = {{std::make_shared<UDQActive>(UDQActive::serializeObject())}, 1};
         result.guide_rate_config = {{std::make_shared<GuideRateConfig>(GuideRateConfig::serializeObject())}, 1};
         result.gconsale = {{std::make_shared<GConSale>(GConSale::serializeObject())}, 1};
@@ -3029,6 +3030,7 @@ void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t 
                this->m_runspec == data.m_runspec &&
                compareMap(this->vfpprod_tables, data.vfpprod_tables) &&
                compareMap(this->vfpinj_tables, data.vfpinj_tables) &&
+               compareDynState(this->m_network, data.m_network) &&
                compareDynState(this->wtest_config, data.wtest_config) &&
                compareDynState(this->wlist_manager, data.wlist_manager) &&
                compareDynState(this->udq_config, data.udq_config) &&
