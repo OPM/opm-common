@@ -392,7 +392,7 @@ namespace {
         }
 
         const std::string& group_parent(const context&, std::size_t, std::size_t) const {
-            return node.parent().group().name();
+            return node.parent_name();
         }
     };
 
