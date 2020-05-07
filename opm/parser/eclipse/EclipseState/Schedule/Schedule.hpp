@@ -367,8 +367,7 @@ namespace Opm
                      const UnitSystem& unit_system);
 
         DynamicState<std::shared_ptr<RPTConfig>> rpt_config;
-
-        GTNode groupTree(const std::string& root_node, std::size_t report_step, const GTNode * parent) const;
+        GTNode groupTree(const std::string& root_node, std::size_t report_step, std::size_t level, const std::optional<std::string>& parent_name) const;
         void updateGroup(std::shared_ptr<Group> group, size_t reportStep);
         bool checkGroups(const ParseContext& parseContext, ErrorGuard& errors);
         void updateUDQActive( std::size_t timeStep, std::shared_ptr<UDQActive> udq );

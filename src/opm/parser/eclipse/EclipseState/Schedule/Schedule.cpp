@@ -2218,9 +2218,9 @@ void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t 
     }
 
 
-    GTNode Schedule::groupTree(const std::string& root_node, std::size_t report_step, const GTNode * parent) const {
+    GTNode Schedule::groupTree(const std::string& root_node, std::size_t report_step, std::size_t level, const std::optional<std::string>& parent_name) const {
         auto root_group = this->getGroup(root_node, report_step);
-        GTNode tree(root_group, parent);
+        GTNode tree(root_group, level, parent_name);
 
         for (const auto& wname : root_group.wells()) {
             const auto& well = this->getWell(wname, report_step);
@@ -2228,7 +2228,7 @@ void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t 
         }
 
         for (const auto& gname : root_group.groups()) {
-            auto child_group = this->groupTree(gname, report_step, std::addressof(tree));
+            auto child_group = this->groupTree(gname, report_step, level + 1, root_node);
             tree.add_group(child_group);
         }
 
@@ -2236,7 +2236,7 @@ void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t 
     }
 
     GTNode Schedule::groupTree(const std::string& root_node, std::size_t report_step) const {
-        return this->groupTree(root_node, report_step, nullptr);
+        return this->groupTree(root_node, report_step, 0, {});
     }
 
 

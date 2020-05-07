@@ -21,10 +21,12 @@
 
 namespace Opm {
 
-GTNode::GTNode(const Group& group_arg, const GTNode * parent_arg) :
+GTNode::GTNode(const Group& group_arg, std::size_t level, const std::optional<std::string>& parent_name) :
     m_group(group_arg),
-    m_parent(parent_arg)
-{}
+    m_level(level),
+    m_parent_name(parent_name)
+{
+}
 
 const std::string& GTNode::name() const {
     return this->m_group.name();
@@ -34,9 +36,9 @@ const Group& GTNode::group() const {
     return this->m_group;
 }
 
-const GTNode& GTNode::parent() const {
-    if (this->m_parent)
-        return *this->m_parent;
+const std::string& GTNode::parent_name() const {
+    if (this->m_parent_name.has_value())
+        return *this->m_parent_name;
 
     throw std::invalid_argument("Tried to access parent of root in GroupTree. Root: " + this->name());
 }
