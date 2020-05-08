@@ -462,13 +462,13 @@ BOOST_AUTO_TEST_CASE(GroupTree2TEST) {
     auto gt = schedule.groupTree(0);
     BOOST_CHECK_EQUAL(gt.wells().size(), 0);
     BOOST_CHECK_EQUAL(gt.group().name(), "FIELD");
-    BOOST_CHECK_THROW(gt.parent(), std::invalid_argument);
+    BOOST_CHECK_THROW(gt.parent_name(), std::invalid_argument);
 
     auto cg = gt.groups();
     auto pg = cg[0];
     BOOST_CHECK_EQUAL(cg.size(), 1);
     BOOST_CHECK_EQUAL(pg.group().name(), "PLATFORM");
-    BOOST_CHECK_EQUAL(pg.parent().name(), "FIELD");
+    BOOST_CHECK_EQUAL(pg.parent_name(), "FIELD");
 }
 
 
