@@ -2,7 +2,7 @@
 # spec file for package opm-common
 #
 
-%define tag rc3
+%define tag rc4
 
 Name:           opm-common
 Version:        2020.04
