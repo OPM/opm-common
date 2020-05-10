@@ -33,6 +33,7 @@
 #include <fnmatch.h>
 #include <fstream>
 #include <cmath>
+#include <cstring>
 
 /*
 
@@ -444,32 +445,44 @@ void ESmry::LoadData(const std::vector<std::string>& vectList) const
     for (auto ind : keywIndVect)
         vectorData[ind].reserve(ntstep);
 
-    std::fstream fileH;
+    FILE *ptr;
 
     auto specInd = std::get<0>(timeStepList[0]);
     auto dataFileIndex = std::get<1>(timeStepList[0]);
     uint64_t stepFilePos = std::get<2>(timeStepList[0]);
+    uint64_t blockSize_f;
+
+    {
+        int nLinesBlock = MaxBlockSizeReal / numColumnsReal;
+        int rest = MaxBlockSizeReal % numColumnsReal;
+
+        if (rest > 0)
+            nLinesBlock++;
+
+        blockSize_f= static_cast<uint64_t>(MaxNumBlockReal * numColumnsReal * columnWidthReal + nLinesBlock);
+    }
 
     if (formattedFiles[specInd])
-        fileH.open(dataFileList[dataFileIndex], std::ios::in);
+        ptr = fopen(dataFileList[dataFileIndex].c_str(),"r");  // r for read, opening as text files
     else
-        fileH.open(dataFileList[dataFileIndex], std::ios::in |  std::ios::binary);
+        ptr = fopen(dataFileList[dataFileIndex].c_str(),"rb");  // r for read, b for binary
 
     for (auto ministep : timeStepList) {
         if (dataFileIndex != std::get<1>(ministep)) {
-            fileH.close();
+            fclose(ptr);
             specInd = std::get<0>(ministep);
             dataFileIndex = std::get<1>(ministep);
 
             if (formattedFiles[specInd])
-                fileH.open(dataFileList[dataFileIndex], std::ios::in );
+                ptr = fopen(dataFileList[dataFileIndex].c_str(),"r");
             else
-                fileH.open(dataFileList[dataFileIndex], std::ios::in |  std::ios::binary);
+                ptr = fopen(dataFileList[dataFileIndex].c_str(),"rb");
         }
 
         stepFilePos = std::get<2>(ministep);;
 
         for (auto ind : keywIndVect) {
+
             auto it = arrayPos[specInd].find(ind);
 
             if (it == arrayPos[specInd].end()) {
@@ -481,29 +494,26 @@ void ESmry::LoadData(const std::vector<std::string>& vectList) const
 
                 if (formattedFiles[specInd]) {
                     uint64_t elementPos = 0;
-                    int nBlocks = paramPos /MaxBlockSizeReal;
+                    int nBlocks = paramPos / MaxBlockSizeReal;
                     int sizeOfLastBlock = paramPos %  MaxBlockSizeReal;
 
-                    if (nBlocks > 0) {
-                        int nLinesBlock = MaxNumBlockReal / numColumnsReal;
-                        int rest = MaxNumBlockReal % numColumnsReal;
-
-                        if (rest > 0)
-                            nLinesBlock++;
-
-                        uint64_t blockSize = static_cast<uint64_t>(MaxNumBlockReal * numColumnsReal + nLinesBlock);
-                        elementPos = static_cast<uint64_t>(nBlocks * blockSize);
-                    }
+                    if (nBlocks > 0)
+                        elementPos = static_cast<uint64_t>(nBlocks * blockSize_f);
 
                     int nLines = sizeOfLastBlock / numColumnsReal;
                     elementPos = stepFilePos + elementPos + static_cast<uint64_t>(sizeOfLastBlock * columnWidthReal + nLines);
 
-                    fileH.seekg (elementPos, fileH.beg);
+                    fseek(ptr, elementPos, SEEK_SET);
 
                     char* buffer;
                     size_t size = columnWidthReal;
                     buffer = new char [size];
-                    fileH.read (buffer, size);
+
+                    if (fread(buffer, size, 1, ptr) != 1)
+                        throw std::runtime_error("fread error when loading summary data");
+
+                    buffer[size]='\0';
+
                     double dtmpv = std::stod(std::string(buffer, size));
                     vectorData[ind].push_back(static_cast<float>(dtmpv));
 
@@ -514,17 +524,20 @@ void ESmry::LoadData(const std::vector<std::string>& vectList) const
                     uint64_t nFullBlocks = static_cast<uint64_t>(paramPos/(MaxBlockSizeReal / sizeOfReal));
                     uint64_t elementPos = ((2 * nFullBlocks) + 1)*static_cast<uint64_t>(sizeOfInte);
                     elementPos += static_cast<uint64_t>(paramPos)* static_cast<uint64_t>(sizeOfReal) + stepFilePos;
-                    fileH.seekg (elementPos, fileH.beg);
 
+                    fseek(ptr, elementPos, SEEK_SET);
                     float value;
-                    fileH.read(reinterpret_cast<char*>(&value), sizeOfReal);
+
+                    if (fread(&value, 4, 1, ptr) != 1)
+                        throw std::runtime_error("fread error when loading summary data");
+
                     vectorData[ind].push_back(Opm::EclIO::flipEndianFloat(value));
                 }
             }
         }
     }
 
-    fileH.close();
+    fclose(ptr);
 
     for (auto ind : keywIndVect)
         vectorLoaded[ind] = true;
@@ -662,24 +675,79 @@ std::vector<std::tuple <std::string, uint64_t>>
 ESmry::getListOfArrays(std::string filename, bool formatted)
 {
     std::vector<std::tuple <std::string, uint64_t>> resultVect;
-    std::fstream fileH;
+
+    FILE *ptr;
+    char* arrName  = new char[9];
+    char* numstr  = new char[12];
+    int64_t num;
 
     if (formatted)
-        fileH.open(filename, std::ios::in);
+        ptr = fopen(filename.c_str(),"r");  // r for read, files opened as text files
     else
-        fileH.open(filename, std::ios::in |  std::ios::binary);
+        ptr = fopen(filename.c_str(),"rb");  // r for read, b for binary
 
-    while (!Opm::EclIO::isEOF(&fileH)) {
-        std::string arrName(8,' ');
+    bool endOfFile = false;
+
+    while (!endOfFile)
+    {
         Opm::EclIO::eclArrType arrType;
 
-        int64_t num;
         if (formatted)
-            Opm::EclIO::readFormattedHeader(fileH,arrName,num,arrType);
-        else
-            Opm::EclIO::readBinaryHeader(fileH,arrName,num,arrType);
+        {
+            fseek(ptr, 2, SEEK_CUR);
 
-        uint64_t filePos = fileH.tellg();
+            if (fread(arrName, 8, 1, ptr) != 1 )
+                throw std::runtime_error("fread error when loading summary data");
+
+            arrName[8]='\0';
+
+            fseek(ptr, 1, SEEK_CUR);
+
+            if (fread(numstr, 12, 1, ptr) != 1)
+                throw std::runtime_error("fread error when loading summary data");
+
+            numstr[12]='\0';
+
+            int num_int = std::stoi(numstr);
+            num = static_cast<int64_t>(num_int);
+
+            fseek(ptr, 8, SEEK_CUR);
+
+            if ((strcmp(arrName, "SEQHDR  ") == 0) || (strcmp(arrName, "MINISTEP") == 0))
+                arrType = Opm::EclIO::INTE;
+            else if (strcmp(arrName, "PARAMS  ") == 0)
+                arrType = Opm::EclIO::REAL;
+            else {
+                throw std::invalid_argument("unknown array in summary data file ");
+            }
+
+        } else {
+            int num_int;
+
+            fseek(ptr, 4, SEEK_CUR);
+
+            if (fread(arrName, 8, 1, ptr) != 1)
+                throw std::runtime_error("fread error when loading summary data");
+
+            arrName[8]='\0';
+
+            if (fread(&num_int, 4, 1, ptr) != 1)
+                throw std::runtime_error("fread error when loading summary data");
+
+            num = static_cast<int64_t>(Opm::EclIO::flipEndianInt(num_int));
+            fseek(ptr, 8, SEEK_CUR);
+
+            if ((strcmp(arrName, "SEQHDR  ") == 0) || (strcmp(arrName, "MINISTEP") == 0))
+                arrType = Opm::EclIO::INTE;
+            else if (strcmp(arrName, "PARAMS  ") == 0)
+                arrType = Opm::EclIO::REAL;
+            else {
+                arrName[8]='\0';
+                throw std::invalid_argument("unknown array in UNSMRY file ");
+            }
+        }
+
+        uint64_t filePos = static_cast<uint64_t>(ftell(ptr));
 
         std::tuple <std::string, uint64_t> t1;
         t1 = std::make_tuple(Opm::EclIO::trimr(arrName), filePos);
@@ -688,16 +756,23 @@ ESmry::getListOfArrays(std::string filename, bool formatted)
         if (num > 0) {
             if (formatted) {
                 uint64_t sizeOfNextArray = sizeOnDiskFormatted(num, arrType);
-                fileH.seekg(static_cast<std::streamoff>(sizeOfNextArray), std::ios_base::cur);
-
+                fseek(ptr, static_cast<long int>(sizeOfNextArray), SEEK_CUR);
             } else {
                 uint64_t sizeOfNextArray = sizeOnDiskBinary(num, arrType);
-                fileH.seekg(static_cast<std::streamoff>(sizeOfNextArray), std::ios_base::cur);
+                fseek(ptr, static_cast<long int>(sizeOfNextArray), SEEK_CUR);
             }
         }
+
+        if (fgetc(ptr) == EOF)
+            endOfFile = true;
+        else
+            fseek(ptr, -1, SEEK_CUR);
     }
 
-    fileH.close();
+    delete[] arrName;
+    delete[] numstr;
+
+    fclose(ptr);
 
     return resultVect;
 }
