@@ -159,7 +159,7 @@ struct GroupProductionProperties {
     UDAValue gas_target;
     UDAValue liquid_target;
     double guide_rate;
-    GuideRateTarget guide_rate_def;
+    GuideRateTarget guide_rate_def = GuideRateTarget::NO_GUIDE_RATE;
     double resv_target = 0;
     bool available_group_control = true;
     static GroupProductionProperties serializeObject();
@@ -194,7 +194,7 @@ struct ProductionControls {
     double gas_target;
     double liquid_target;
     double guide_rate;
-    GuideRateTarget guide_rate_def;
+    GuideRateTarget guide_rate_def = GuideRateTarget::NO_GUIDE_RATE;
     double resv_target = 0;
     int production_controls = 0;
     bool has_control(ProductionCMode control) const;
