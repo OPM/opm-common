@@ -994,3 +994,62 @@ BOOST_AUTO_TEST_CASE(SatFunc_EndPts_Family_II) {
         BOOST_CHECK_CLOSE(pcg[0], 0.0, 1.0e-10);
     }
 }
+
+BOOST_AUTO_TEST_CASE(OPERATE) {
+    std::string deck_string = R"(
+GRID
+
+PORO
+   6*1.0 /
+
+OPERATE
+    PORO   1  3   1  1   1   1  'MAXLIM'   PORO 0.50 /
+    PORO   1  3   2  2   1   1  'MAXLIM'   PORO 0.25 /
+/
+
+
+PERMX
+   6*1/
+
+PERMY
+   6*1000/
+
+OPERATE
+    PERMX   1  3   1  1   1   1  'MINLIM'   PERMX 2 /
+    PERMX   1  3   2  2   1   1  'MINLIM'   PERMX 4 /
+    PERMY   1  3   1  1   1   1  'MAXLIM'   PERMY 100 /
+    PERMY   1  3   2  2   1   1  'MAXLIM'   PERMY 200 /
+    PERMZ   1  3   1  1   1   1  'MULTA'    PERMY 2 1000 /
+    PERMZ   1  3   2  2   1   1  'MULTA'    PERMX 3  300 /
+/
+
+
+
+
+)";
+
+    UnitSystem unit_system(UnitSystem::UnitType::UNIT_TYPE_METRIC);
+    auto to_si = [&unit_system](double raw_value) { return unit_system.to_si(UnitSystem::measure::permeability, raw_value); };
+    EclipseGrid grid(3,2,1);
+    Deck deck = Parser{}.parseString(deck_string);
+    FieldPropsManager fpm(deck, Phases{true, true, true}, grid, TableManager());
+    const auto& poro = fpm.get_double("PORO");
+    BOOST_CHECK_EQUAL(poro[0], 0.50);
+    BOOST_CHECK_EQUAL(poro[3], 0.25);
+
+    const auto& permx = fpm.get_double("PERMX");
+    BOOST_CHECK_EQUAL(permx[0], to_si(2));
+    BOOST_CHECK_EQUAL(permx[3], to_si(4));
+
+    const auto& permy = fpm.get_double("PERMY");
+    BOOST_CHECK_EQUAL(permy[0], to_si(100));
+    BOOST_CHECK_EQUAL(permy[3], to_si(200));
+
+    const auto& permz = fpm.get_double("PERMZ");
+    for (std::size_t i = 0; i < 3; i++) {
+        BOOST_CHECK_EQUAL(permz[i]  , 2*permy[i]   + to_si(1000));
+        BOOST_CHECK_EQUAL(permz[i+3], 3*permx[i+3] + to_si(300));
+    }
+}
+
+
