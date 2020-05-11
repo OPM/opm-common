@@ -57,7 +57,6 @@ static const std::map<std::string, std::string> unit_string = {{"PERMX", "Permea
                                                                {"TRANX", "Transmissibility"},
                                                                {"TRANY", "Transmissibility"},
                                                                {"TRANZ", "Transmissibility"},
-                                                               {"NTG", "1"},
                                                                {"RS", "GasDissolutionFactor"},
                                                                {"RV", "OilDissolutionFactor"},
                                                                {"TEMPI", "Temperature"},
