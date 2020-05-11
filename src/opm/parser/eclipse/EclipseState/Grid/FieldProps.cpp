@@ -57,7 +57,6 @@ static const std::map<std::string, std::string> unit_string = {{"PERMX", "Permea
                                                                {"TRANX", "Transmissibility"},
                                                                {"TRANY", "Transmissibility"},
                                                                {"TRANZ", "Transmissibility"},
-                                                               {"NTG", "1"},
                                                                {"RS", "GasDissolutionFactor"},
                                                                {"RV", "OilDissolutionFactor"},
                                                                {"TEMPI", "Temperature"},
@@ -757,11 +756,26 @@ void FieldProps::apply(ScalarOperation op, FieldData<T>& data, T scalar_value, c
         max_value(data, scalar_value, index_list);
 }
 
+double FieldProps::get_alpha(const std::string& func_name, const std::string& target_array, double raw_alpha) {
+    if ( !(func_name == "ADDX" || func_name == "MAXLIM" || func_name == "MINLIM") )
+        return raw_alpha;
+
+    return this->getSIValue(target_array, raw_alpha);
+}
+
+double FieldProps::get_beta(const std::string& func_name, const std::string& target_array, double raw_beta) {
+    if ( func_name != "MULTA")
+        return raw_beta;
+
+    return this->getSIValue(target_array, raw_beta);
+}
+
 template <typename T>
 void FieldProps::apply(const DeckRecord& record, FieldData<T>& target_data, const FieldData<T>& src_data, const std::vector<Box::cell_index>& index_list) {
     const std::string& func_name = record.getItem("OPERATION").get< std::string >(0);
-    const double alpha           = record.getItem("PARAM1").get< double >(0);
-    const double beta            = record.getItem("PARAM2").get< double >(0);
+    const std::string& target_array = record.getItem("TARGET_ARRAY").get<std::string>(0);
+    const double alpha           = this->get_alpha(func_name, target_array, record.getItem("PARAM1").get< double >(0));
+    const double beta            = this->get_beta( func_name, target_array, record.getItem("PARAM2").get< double >(0));
     Operate::function func       = Operate::get( func_name, alpha, beta );
     bool check_target            = (func_name == "MULTIPLY" || func_name == "POLY");
 

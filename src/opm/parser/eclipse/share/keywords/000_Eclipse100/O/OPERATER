@@ -9,7 +9,7 @@
   ],
   "items": [
     {
-      "name": "RESULT_ARRAY",
+      "name": "TARGET_ARRAY",
       "value_type": "STRING"
     },
     {
