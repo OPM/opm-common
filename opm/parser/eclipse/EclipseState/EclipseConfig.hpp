@@ -38,9 +38,10 @@ namespace Opm {
 
         static EclipseConfig serializeObject();
 
-        const InitConfig& init() const;
+        InitConfig& init();
         IOConfig& io();
         const IOConfig& io() const;
+        const InitConfig& init() const;
         const InitConfig& getInitConfig() const;
 
         bool operator==(const EclipseConfig& data) const;
