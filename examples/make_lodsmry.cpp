@@ -20,9 +20,12 @@
 
 #include <iostream>
 #include <getopt.h>
-#include <omp.h>
 #include <string.h>
 #include <stdio.h>
+
+#if HAVE_OPENMP
+#include <omp.h>
+#endif
 
 #include <opm/io/eclipse/ESmry.hpp>
 #include <opm/io/eclipse/EclUtil.hpp>
@@ -64,6 +67,7 @@ int main(int argc, char **argv) {
 
     int argOffset = optind;
 
+#if HAVE_OPENMP
     int available_threads = omp_get_max_threads();
 
     if (max_threads < 0)
@@ -75,6 +79,7 @@ int main(int argc, char **argv) {
         max_threads = argc-argOffset;
 
     omp_set_num_threads(max_threads);
+#endif
 
     auto lap0 = std::chrono::system_clock::now();
 
