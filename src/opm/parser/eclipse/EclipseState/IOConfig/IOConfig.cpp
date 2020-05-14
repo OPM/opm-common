@@ -195,7 +195,7 @@ namespace Opm {
 
     void IOConfig::consistentFileFlags(){
         m_UNIFIN = getUNIFOUT();
-        m_FMTIN = getFMTOUT;
+        m_FMTIN = getFMTOUT();
     }
 
     bool IOConfig::getFMTIN() const {
