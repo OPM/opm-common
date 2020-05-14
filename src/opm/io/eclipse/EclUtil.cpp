@@ -21,6 +21,7 @@
 #include <opm/common/ErrorMacros.hpp>
 
 #include <algorithm>
+#include <array>
 #include <stdexcept>
 #include <cmath>
 #include <fstream>
