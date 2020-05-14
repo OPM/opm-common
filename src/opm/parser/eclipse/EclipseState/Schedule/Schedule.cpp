@@ -1760,12 +1760,12 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
                         }
                     }
                 }
-                auto resv_target = record.getItem("RESERVOIR_FLUID_TARGET").getSIDouble(0);
-                bool availableForGroupControl = DeckItem::to_bool(record.getItem("RESPOND_TO_PARENT").getTrimmedString(0))
-                    && (group_name != "FIELD");
+                bool availableForGroupControl = DeckItem::to_bool(record.getItem("RESPOND_TO_PARENT").getTrimmedString(0)) && (group_name != "FIELD");
+
                 {
                     auto group_ptr = std::make_shared<Group>(this->getGroup(group_name, currentStep));
-                    Group::GroupProductionProperties production;
+                    Group::GroupProductionProperties production(group_name);
+                    auto resv_target = record.getItem("RESERVOIR_FLUID_TARGET").getSIDouble(0);
                     production.cmode = controlMode;
                     production.oil_target = oil_target;
                     production.gas_target = gas_target;
@@ -1809,6 +1809,10 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
                         this->updateGroup(std::move(group_ptr), currentStep);
                         m_events.addEvent( ScheduleEvents::GROUP_PRODUCTION_UPDATE , currentStep);
                         this->addWellGroupEvent(group_name, ScheduleEvents::GROUP_PRODUCTION_UPDATE, currentStep);
+
+                        auto udq = std::make_shared<UDQActive>(this->udqActive(currentStep));
+                        if (production.updateUDQActive(this->getUDQConfig(currentStep), *udq))
+                            this->updateUDQActive(currentStep, udq);
                     }
                 }
             }

@@ -20,6 +20,8 @@
 
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQActive.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
 
 #include "../eval_uda.hpp"
 
@@ -39,7 +41,8 @@ Group::Group(const std::string& name, std::size_t insert_index_arg, std::size_t 
     group_type(GroupType::NONE),
     gefac(1),
     transfer_gefac(true),
-    vfp_table(0)
+    vfp_table(0),
+    production_properties(name)
 {
     // All groups are initially created as children of the "FIELD" group.
     if (name != "FIELD")
@@ -204,7 +207,8 @@ bool Group::GroupInjectionProperties::operator!=(const GroupInjectionProperties&
 
 Group::GroupProductionProperties Group::GroupProductionProperties::serializeObject()
 {
-    Group::GroupProductionProperties result;
+    Group::GroupProductionProperties result("Group123");
+    result.name = "Group123";
     result.cmode = ProductionCMode::PRBL;
     result.exceed_action = ExceedAction::WELL;
     result.oil_target = UDAValue(1.0);
@@ -222,6 +226,7 @@ Group::GroupProductionProperties Group::GroupProductionProperties::serializeObje
 
 bool Group::GroupProductionProperties::operator==(const GroupProductionProperties& other) const {
     return
+        this->name                    == other.name &&
         this->cmode                   == other.cmode &&
         this->exceed_action           == other.exceed_action &&
         this->oil_target              == other.oil_target &&
@@ -234,6 +239,18 @@ bool Group::GroupProductionProperties::operator==(const GroupProductionPropertie
         this->available_group_control == other.available_group_control &&
         this->resv_target             == other.resv_target;
 }
+
+bool Group::GroupProductionProperties::updateUDQActive(const UDQConfig& udq_config, UDQActive& active) const {
+    int update_count = 0;
+
+    update_count += active.update(udq_config, this->oil_target, this->name, UDAControl::GCONPROD_OIL_TARGET);
+    update_count += active.update(udq_config, this->water_target, this->name, UDAControl::GCONPROD_WATER_TARGET);
+    update_count += active.update(udq_config, this->gas_target, this->name, UDAControl::GCONPROD_GAS_TARGET);
+    update_count += active.update(udq_config, this->liquid_target, this->name, UDAControl::GCONPROD_LIQUID_TARGET);
+
+    return (update_count > 0);
+}
+
 
 bool Group::productionGroupControlAvailable() const {
     if (this->m_name == "FIELD")
@@ -255,6 +272,8 @@ bool Group::injectionGroupControlAvailable(const Phase phase) const {
 bool Group::GroupProductionProperties::operator!=(const GroupProductionProperties& other) const {
     return !(*this == other);
 }
+
+
 
 bool Group::hasType(GroupType gtype) const {
     return ((this->group_type & gtype) == gtype);
@@ -419,6 +438,9 @@ Group::ProductionControls Group::productionControls(const SummaryState& st) cons
 
     return pc;
 }
+
+
+
 
 Group::InjectionControls Group::injectionControls(Phase phase, const SummaryState& st) const {
     Group::InjectionControls ic;
