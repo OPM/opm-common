@@ -284,7 +284,7 @@ RestartValue EclipseIO::loadRestart(SummaryState& summary_state, const std::vect
     const int report_step                = initConfig.getRestartStep();
     const std::string filename           = ioConfig.getRestartFileName( initConfig.getRestartRootName(),
                                                                         report_step,
-                                                                        true );
+                                                                        false );
 
     return RestartIO::load(filename, report_step, summary_state, solution_keys,
                            es, grid, schedule, extra_keys);
