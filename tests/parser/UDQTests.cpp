@@ -1374,7 +1374,6 @@ BOOST_AUTO_TEST_CASE(UDQ_USAGE) {
     BOOST_CHECK_EQUAL( usage[1].use_count, 1);
 
     const auto& rec = usage[0];
-    BOOST_CHECK_EQUAL(rec.wgname, "W1");
     BOOST_CHECK_EQUAL(rec.udq, "WUX");
     BOOST_CHECK(rec.control == UDAControl::WCONPROD_ORAT);
 
@@ -1382,7 +1381,6 @@ BOOST_AUTO_TEST_CASE(UDQ_USAGE) {
     for (std::size_t index = 0; index < usage.IUAD_size(); index++) {
         const auto& record = usage[index];
         BOOST_CHECK_EQUAL(record.input_index, 0);
-        BOOST_CHECK_EQUAL(record.wgname, "W1");
 
         if (index == 0)
             BOOST_CHECK(record.control == UDAControl::WCONPROD_ORAT);
@@ -1400,32 +1398,35 @@ BOOST_AUTO_TEST_CASE(IntegrationTest) {
     auto schedule = make_schedule(deck_string);
     {
         const auto& active = schedule.udqActive(1);
-        BOOST_CHECK_EQUAL(active.IUAD_size(), 4);
+        BOOST_CHECK_EQUAL(active.IUAD_size(), 6);
 
         BOOST_CHECK(active[0].control == UDAControl::WCONPROD_ORAT);
         BOOST_CHECK(active[1].control == UDAControl::WCONPROD_LRAT);
         BOOST_CHECK(active[2].control == UDAControl::WCONPROD_ORAT);
         BOOST_CHECK(active[3].control == UDAControl::WCONPROD_LRAT);
-
-        BOOST_CHECK(active[0].wgname == "OPL02");
-        BOOST_CHECK(active[1].wgname == "OPL02");
-        BOOST_CHECK(active[2].wgname == "OPU02");
-        BOOST_CHECK(active[3].wgname == "OPU02");
+        BOOST_CHECK(active[4].control == UDAControl::GCONPROD_LIQUID_TARGET);
+        BOOST_CHECK(active[5].control == UDAControl::GCONPROD_LIQUID_TARGET);
 
         BOOST_CHECK(active[0].udq == "WUOPRL");
         BOOST_CHECK(active[1].udq == "WULPRL");
         BOOST_CHECK(active[2].udq == "WUOPRU");
         BOOST_CHECK(active[3].udq == "WULPRU");
+        BOOST_CHECK(active[4].udq == "GULPR1");
+        BOOST_CHECK(active[5].udq == "GUOPR1");
 
         BOOST_CHECK(active[0].input_index == 0);
         BOOST_CHECK(active[1].input_index == 1);
         BOOST_CHECK(active[2].input_index == 2);
         BOOST_CHECK(active[3].input_index == 3);
+        BOOST_CHECK(active[4].input_index == 4);
+        BOOST_CHECK(active[5].input_index == 5);
 
         BOOST_CHECK(active[0].use_count == 1);
         BOOST_CHECK(active[1].use_count == 1);
         BOOST_CHECK(active[2].use_count == 1);
         BOOST_CHECK(active[3].use_count == 1);
+        BOOST_CHECK(active[4].use_count == 2);
+        BOOST_CHECK(active[5].use_count == 1);
     }
 }
 
