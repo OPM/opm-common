@@ -189,40 +189,80 @@ NODEPROP
      B1    1*  YES      NO    1*  /
      C1    1*  YES     NO     'GROUP' /
 /
+
+TSTEP
+  10 /
+
+BRANPROP
+--  Downtree  Uptree   #VFP    ALQ
+    C1         PLAT-A    0 1*      /
+/
+
+
 )";
 
     auto sched = make_schedule(deck_string);
-    const auto& network = sched.network(0);
-    const auto& b1 = network.node("B1");
-    BOOST_CHECK( b1.as_choke() );
-    BOOST_CHECK(!b1.add_gas_lift_gas());
-    BOOST_CHECK( b1.name() == b1.target_group());
-    BOOST_CHECK(!b1.terminal_pressure());
+    {
+        const auto& network = sched.network(0);
+        const auto& b1 = network.node("B1");
+        BOOST_CHECK(b1.as_choke());
+        BOOST_CHECK(!b1.add_gas_lift_gas());
+        BOOST_CHECK(b1.name() == b1.target_group());
+        BOOST_CHECK(!b1.terminal_pressure());
 
-    const auto& p = network.node("PLAT-A");
-    BOOST_CHECK( p.terminal_pressure() );
-    BOOST_CHECK_EQUAL( p.terminal_pressure().value() , 21 * 100000 );
-    BOOST_CHECK( p == network.root() );
+        const auto& p = network.node("PLAT-A");
+        BOOST_CHECK(p.terminal_pressure());
+        BOOST_CHECK_EQUAL(p.terminal_pressure().value(), 21 * 100000);
+        BOOST_CHECK(p == network.root());
 
-    BOOST_CHECK_THROW( network.node("NO_SUCH_NODE"), std::out_of_range);
+        BOOST_CHECK_THROW(network.node("NO_SUCH_NODE"), std::out_of_range);
 
 
 
-    BOOST_CHECK_EQUAL( network.downtree_branches("PLAT-A").size(), 2);
-    for (const auto& b : network.downtree_branches("PLAT-A")) {
-        BOOST_CHECK_EQUAL(b.uptree_node(), "PLAT-A");
-        BOOST_CHECK(b.downtree_node() == "B1" || b.downtree_node() == "C1");
+        BOOST_CHECK_EQUAL(network.downtree_branches("PLAT-A").size(), 2);
+        for (const auto& b : network.downtree_branches("PLAT-A")) {
+            BOOST_CHECK_EQUAL(b.uptree_node(), "PLAT-A");
+            BOOST_CHECK(b.downtree_node() == "B1" || b.downtree_node() == "C1");
+        }
+
+
+        const auto& platform_uptree = network.uptree_branch("PLAT-A");
+        BOOST_CHECK(!platform_uptree.has_value());
+
+        const auto& B1_uptree = network.uptree_branch("B1");
+        BOOST_CHECK(B1_uptree.has_value());
+        BOOST_CHECK_EQUAL(B1_uptree->downtree_node(), "B1");
+        BOOST_CHECK_EQUAL(B1_uptree->uptree_node(), "PLAT-A");
+
+        BOOST_CHECK(network.active());
     }
+    {
+        const auto& network = sched.network(1);
+        const auto& b1 = network.node("B1");
+        BOOST_CHECK(b1.as_choke());
+        BOOST_CHECK(!b1.add_gas_lift_gas());
+        BOOST_CHECK(b1.name() == b1.target_group());
+        BOOST_CHECK(!b1.terminal_pressure());
+
+        BOOST_CHECK_EQUAL(network.downtree_branches("PLAT-A").size(), 1);
+        for (const auto& b : network.downtree_branches("PLAT-A")) {
+            BOOST_CHECK_EQUAL(b.uptree_node(), "PLAT-A");
+            BOOST_CHECK(b.downtree_node() == "B1");
+        }
 
 
-    const auto& platform_uptree = network.uptree_branch("PLAT-A");
-    BOOST_CHECK( !platform_uptree.has_value() );
+        const auto& platform_uptree = network.uptree_branch("PLAT-A");
+        BOOST_CHECK(!platform_uptree.has_value());
 
-    const auto& B1_uptree = network.uptree_branch("B1");
-    BOOST_CHECK( B1_uptree.has_value() );
-    BOOST_CHECK_EQUAL( B1_uptree->downtree_node(), "B1" );
-    BOOST_CHECK_EQUAL( B1_uptree->uptree_node(), "PLAT-A" );
+        const auto& B1_uptree = network.uptree_branch("B1");
+        BOOST_CHECK(B1_uptree.has_value());
+        BOOST_CHECK_EQUAL(B1_uptree->downtree_node(), "B1");
+        BOOST_CHECK_EQUAL(B1_uptree->uptree_node(), "PLAT-A");
 
-    BOOST_CHECK( network.active() );
+        BOOST_CHECK_THROW( network.uptree_branch("C1"), std::out_of_range);
+        BOOST_CHECK_THROW( network.node("C1"), std::out_of_range);
+
+        BOOST_CHECK(network.active());
+    }
 }
 
