@@ -445,7 +445,7 @@ const std::vector<int> iuap_data(const Opm::Schedule& sched,
         }
         else if ((wg_key == Opm::UDAKeyword::GCONPROD) || (wg_key == Opm::UDAKeyword::GCONINJE)) {
             const auto& group = sched.getGroup(iuap[ind].wgname, simStep);
-            wg_no.push_back(group.insert_index());
+            wg_no.push_back(group.insert_index() - 1);
         }
         else {
             std::cout << "Invalid Control keyword: " << static_cast<int>(ctrl) << std::endl;
