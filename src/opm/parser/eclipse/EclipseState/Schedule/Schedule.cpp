@@ -3286,12 +3286,16 @@ void Schedule::handleBRANPROP(const DeckKeyword& keyword, std::size_t report_ste
         const auto& downtree_node = record.getItem<BP::DOWNTREE_NODE>().get<std::string>(0);
         const auto& uptree_node = record.getItem<BP::UPTREE_NODE>().get<std::string>(0);
         int vfp_table = record.getItem<BP::VFP_TABLE>().get<int>(0);
-        auto alq_eq = Network::Branch::AlqEqfromString( record.getItem<BP::ALQ_SURFACE_DENSITY>().get<std::string>(0));
-        if (alq_eq == Network::Branch::AlqEQ::ALQ_INPUT) {
-            double alq_value = record.getItem<BP::ALQ>().get<double>(0);
-            ext_network->add_branch( Network::Branch(downtree_node, uptree_node, vfp_table, alq_value));
-        } else
-            ext_network->add_branch( Network::Branch(downtree_node, uptree_node, vfp_table, alq_eq));
+        if (vfp_table == 0)
+            ext_network->drop_branch( uptree_node, downtree_node );
+        else {
+            auto alq_eq = Network::Branch::AlqEqfromString( record.getItem<BP::ALQ_SURFACE_DENSITY>().get<std::string>(0));
+            if (alq_eq == Network::Branch::AlqEQ::ALQ_INPUT) {
+                double alq_value = record.getItem<BP::ALQ>().get<double>(0);
+                ext_network->add_branch( Network::Branch(downtree_node, uptree_node, vfp_table, alq_value));
+            } else
+                ext_network->add_branch( Network::Branch(downtree_node, uptree_node, vfp_table, alq_eq));
+        }
     }
     this->updateNetwork(ext_network, report_step);
 }
