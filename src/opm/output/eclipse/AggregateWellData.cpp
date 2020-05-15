@@ -29,6 +29,7 @@
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/VFPProdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
@@ -496,6 +497,11 @@ namespace {
                     : swprop(M::pressure, 1.0*::Opm::unit::atm);
                 sWell[Ix::HistBHPTarget] = sWell[Ix::BHPTarget];
                 
+                //alq_value - has no unit conversion according to parser code
+                if (pc.alq_value != 0.0) {
+                    sWell[Ix::Alq_value] = pc.alq_value;
+                }
+
                 if (predMode) {
                     //if (well.getStatus() == Opm::Well::Status::OPEN) {
                     sWell[Ix::OilRateTarget]   = getRateLimit(units, M::liquid_surface_rate, pc.oil_rate);
@@ -903,7 +909,7 @@ captureDeclaredWellData(const Schedule&   sched,
 
 void
 Opm::RestartIO::Helpers::AggregateWellData::
-captureDynamicWellData(const Schedule&             sched,
+captureDynamicWellData(const Opm::Schedule&        sched,
                        const std::size_t           sim_step,
                        const Opm::data::WellRates& xw,
                        const ::Opm::SummaryState&  smry)

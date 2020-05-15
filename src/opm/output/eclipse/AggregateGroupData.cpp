@@ -230,9 +230,6 @@ int higherLevelProdControlGroupSeqIndex(const Opm::Schedule& sched,
                 cur_prod_ctrl = sumState.get(group_key);
             }
             else {
-                //std::stringstream str;
-                //str << "Current group control is not defined for group: " << current.name() << " at timestep: " << simStep;
-                //throw std::invalid_argument(str.str());
                 std::cout << "Current group control is not defined for group: " << current.name() << " at timestep: " << simStep  << std::endl;
                 cur_prod_ctrl = 0.;
             }
@@ -269,9 +266,6 @@ int higherLevelProdControlMode(const Opm::Schedule& sched,
                 cur_prod_ctrl = sumState.get(group_key);
             }
             else {
-                //std::stringstream str;
-                //str << "Current group control is not defined for group: " << current.name() << " at timestep: " << simStep;
-                //throw std::invalid_argument(str.str());
                 std::cout << "Current group control is not defined for group: " << current.name() << " at timestep: " << simStep  << std::endl;
                 cur_prod_ctrl = 0.;
             }
@@ -313,9 +307,6 @@ int higherLevelInjControlGroupSeqIndex(const Opm::Schedule& sched,
                 cur_inj_ctrl = sumState.get(group_key);
             }
             else {
-                //std::stringstream str;
-                //str << "Current injection group control: " << curInjCtrlKey << " is not defined for group: " << current.name() << " at timestep: " << simStep;
-                //throw std::invalid_argument(str.str());
                 std::cout << "Current injection group control: " << curInjCtrlKey << " is not defined for group: " << current.name() << " at timestep: " << simStep << std::endl;
                 cur_inj_ctrl = 0.;
             }
@@ -353,9 +344,6 @@ int higherLevelInjControlMode(const Opm::Schedule& sched,
                 cur_inj_ctrl = sumState.get(group_key);
             }
             else {
-                //std::stringstream str;
-                //str << "Current injection group control: " << curInjCtrlKey << " is not defined for group: " << current.name() << " at timestep: " << simStep;
-                //throw std::invalid_argument(str.str());
                 std::cout << "Current injection group control: " << curInjCtrlKey << " is not defined for group: " << current.name() << " at timestep: " << simStep << std::endl;
                 cur_inj_ctrl = 0.;
             }
@@ -519,6 +507,33 @@ void staticContrib(const Opm::Schedule&     sched,
     // location nwgmax
     iGrp[nwgmax] = groupSize(group);
 
+            // Find number of active production wells and injection wells for group
+    std::string group_key_1;
+    group_key_1 = gf_key("GMWPR", group.name());
+    double g_act_pwells = -1.;
+    if (sumState.has(group_key_1)) {
+        g_act_pwells = sumState.get(group_key_1);
+    }
+    else {
+        g_act_pwells = 0.;
+    }
+
+    group_key_1 = gf_key("GMWIN", group.name());
+    double g_act_iwells = -1.;
+    if (sumState.has(group_key_1)) {
+        g_act_iwells = sumState.get(group_key_1);
+    }
+    else {
+        g_act_iwells = 0.;
+    }
+    // set the number of active wells for a group
+    if (g_act_pwells >= 0 && g_act_iwells >= 0) {
+        iGrp[nwgmax + 33] = g_act_pwells + g_act_iwells;
+    }
+    else {
+        iGrp[nwgmax + 33] = 0;
+    }
+
     //Treat groups that have production
     if ((group.getGroupType() == Opm::Group::GroupType::NONE) || (group.getGroupType() == Opm::Group::GroupType::PRODUCTION) 
          || (group.getGroupType() == Opm::Group::GroupType::MIXED)) {
@@ -527,7 +542,6 @@ void staticContrib(const Opm::Schedule&     sched,
         const auto& prod_guide_rate_def = group.productionControls(sumState).guide_rate_def;
         const auto& p_exceed_act = group.productionControls(sumState).exceed_action;
         // Find production control mode for group
-        std::string group_key_1;
         group_key_1 = gf_key("GMCTP", group.name());
         double cur_prod_ctrl = -1.;
         Opm::Group::ProductionCMode pctl_mode = Opm::Group::ProductionCMode::NONE;
@@ -543,34 +557,6 @@ void staticContrib(const Opm::Schedule&     sched,
             //str << "Current group production control is not defined for group: " << group.name() << " at timestep: " << simStep;
             std::cout << "Current group production control is not defined for group: " << group.name() << " at timestep: " << simStep << std::endl;
             //throw std::invalid_argument(str.str());
-        }
-
-        // Find number of active production wells and injection wells for group
-
-        group_key_1 = gf_key("GMWPR", group.name());
-        double g_act_pwells = -1.;
-        if (sumState.has(group_key_1)) {
-            g_act_pwells = sumState.get(group_key_1);
-        }
-        else {
-            //std::stringstream str;
-            //str << "Number of flowing production wells is not defined for group: " << group.name() << " at timestep: " << simStep;
-            //throw std::invalid_argument(str.str());
-            std::cout << "Number of flowing production wells is not defined for group: " << group.name() << " at timestep: " << simStep << std::endl;
-            g_act_pwells = 0.;
-        }
-
-        group_key_1 = gf_key("GMWIN", group.name());
-        double g_act_iwells = -1.;
-        if (sumState.has(group_key_1)) {
-            g_act_iwells = sumState.get(group_key_1);
-        }
-        else {
-            //std::stringstream str;
-            //str << "Number of flowing injection wells is not defined for group: " << group.name() << " at timestep: " << simStep;
-            //throw std::invalid_argument(str.str());
-            std::cout << "Number of flowing injection wells is not defined for group: " << group.name() << " at timestep: " << simStep << std::endl;
-            g_act_iwells = 0.;
         }
 
         /*IGRP[NWGMAX + 5]
@@ -762,15 +748,6 @@ void staticContrib(const Opm::Schedule&     sched,
                     iGrp[nwgmax + 10] = 0;
             }
         }
-
-        // set the number of active wells for a group
-
-        if (g_act_pwells >= 0 && g_act_iwells >= 0) {
-            iGrp[nwgmax + 33] = g_act_pwells + g_act_iwells;
-        }
-        else {
-            iGrp[nwgmax + 33] = 0;
-        }
     }
     //default value -
     iGrp[nwgmax + 17] = -1;
@@ -800,9 +777,6 @@ void staticContrib(const Opm::Schedule&     sched,
                     }
                     }
                 else {
-                    //std::stringstream str;
-                    //str << "Current group water injection control is not defined for group: " << group.name() << " at timestep: " << simStep;
-                    //throw std::invalid_argument(str.str());
                     std::cout << "Current group water injection control is not defined for group: " << group.name() << " at timestep: " << simStep << std::endl;
                 }
                 if (group.name() != "FIELD") {
@@ -900,9 +874,6 @@ void staticContrib(const Opm::Schedule&     sched,
                     }
                 }
                 else {
-                    //std::stringstream str;
-                    //str << "Current group gas injection control is not defined for group: " << group.name() << " at timestep: " << simStep;
-                    //throw std::invalid_argument(str.str());
                     std::cout << "Current group gas injection control is not defined for group: " << group.name() << " at timestep: " << simStep << std::endl;
                 }
 
@@ -1109,12 +1080,10 @@ void staticContrib(const Opm::Group&        group,
         
         if (prod_cntl.oil_target > 0.) {
             sGrp[Isp::OilRateLimit] = sgprop(M::liquid_surface_rate, prod_cntl.oil_target);
-            //sGrp[37] = sGrp[Isp::OilRateLimit];
             sGrp[52] = sGrp[Isp::OilRateLimit];  // "ORAT" control
         }
         if (prod_cntl.water_target > 0.) {
             sGrp[Isp::WatRateLimit] = sgprop(M::liquid_surface_rate, prod_cntl.water_target);
-            //sGrp[38] = sGrp[Isp::WatRateLimit];
             sGrp[53] = sGrp[Isp::WatRateLimit];  //"WRAT" control
         }
         if (prod_cntl.gas_target > 0.) {
@@ -1123,7 +1092,6 @@ void staticContrib(const Opm::Group&        group,
         }
         if (prod_cntl.liquid_target > 0.) {
             sGrp[Isp::LiqRateLimit] = sgprop(M::liquid_surface_rate, prod_cntl.liquid_target);
-            //sGrp[40] = sGrp[Isp::LiqRateLimit];
             sGrp[54] = sGrp[Isp::LiqRateLimit];  //"LRAT" control
         }
     }

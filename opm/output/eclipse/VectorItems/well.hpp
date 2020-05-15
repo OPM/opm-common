@@ -113,6 +113,7 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
             BHPTarget      = 6, // Well's bottom hole pressure target
 
             DatumDepth     = 9, // Well's reference depth for BHP
+            Alq_value      = 10, // Well's artificial lift quantity
 
             DrainageRadius = 17, // Well's drainage radius - item 7 from WELSPECS
             EfficiencyFactor1 = 24, // Item2 from WEFAC; this value is repeated at two locations.
