@@ -441,6 +441,8 @@ void dynamicContrib(const std::vector<std::string>&      restart_group_keys,
                     const Opm::SummaryState&             sumState,
                     XGrpArray&                           xGrp)
 {
+    using Ix = ::Opm::RestartIO::Helpers::VectorItems::XGroup::index;
+
     std::string groupName = group.name();
     const std::vector<std::string>& keys = (groupName == "FIELD")
         ? restart_field_keys : restart_group_keys;
@@ -457,6 +459,13 @@ void dynamicContrib(const std::vector<std::string>&      restart_group_keys,
             xGrp[itr->second] = keyValue;
         }
     }
+
+    xGrp[Ix::OilPrGuideRate_2]  = xGrp[Ix::OilPrGuideRate];
+    xGrp[Ix::WatPrGuideRate_2]  = xGrp[Ix::WatPrGuideRate];
+    xGrp[Ix::GasPrGuideRate_2]  = xGrp[Ix::GasPrGuideRate];
+    xGrp[Ix::VoidPrGuideRate_2] = xGrp[Ix::VoidPrGuideRate];
+
+    xGrp[Ix::WatInjGuideRate_2] = xGrp[Ix::WatInjGuideRate];
 }
 } // XGrp
 

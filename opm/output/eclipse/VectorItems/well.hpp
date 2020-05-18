@@ -157,6 +157,12 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
 
             BHPTarget   = 41,   // Well's current BHP Target/Limit
 
+            PrimGuideRate   = 48, // Well's "primary" guide rate (oil for producers,
+                                  // preferred phase for injectors)
+            WatPrGuideRate  = 49, // Well's producer guide rate for water
+            GasPrGuideRate  = 50, // Well's producer guide rate for gas
+            VoidPrGuideRate = 68, // Well's producer guide rate for reservoir voidag volume
+
             HistOilPrTotal  = 75, // Well's total cumulative oil production
                                   // (observed/historical rates)
             HistWatPrTotal  = 76, // Well's total cumulative water
@@ -168,6 +174,15 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
                                   // (observed/historical rates)
             HistGasInjTotal = 82, // Well's total cumulative gas injection
                                   // (observed/historical rates)
+
+            PrimGuideRate_2   = 91, // Second copy of well's primary guide rate.
+                                    // Not fully characterised.
+            WatPrGuideRate_2  = 92, // Second copy of well's producer guide rate for water.
+                                    // Not fully characterised.
+            GasPrGuideRate_2  = 93, // Second copy of well's producer guide rate for gas
+                                    // Not fully characterised.
+            VoidPrGuideRate_2 = 94, // Second copy of well's producer guide rate for reservoir voidage
+                                    // Not fully characterised.
 
             WatVoidPrRate = 122, // Well's voidage production rate
             GasVoidPrRate = 123, // Well's voidage production rate
