@@ -74,6 +74,26 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
             OilPrPot = 22, // Group's oil production potential
             WatPrPot = 23, // Group's water production potential
 
+            OilPrGuideRate  = 85, // Group's producer guide rate for oil.
+            WatPrGuideRate  = 86, // Group's producer guide rate for water.
+            GasPrGuideRate  = 87, // Group's producer guide rate for gas.
+            VoidPrGuideRate = 88, // Group's producer guide rate for reservoir voidage volume.
+
+            OilInjGuideRate   = 89, // Group's injection guide rate for oil.
+            WatInjGuideRate   = 91, // Group's injection guide rate for water.
+            WatInjGuideRate_2 = 92, // Second copy of group's injection guide rate for water.
+                                    // Not fully characterised.
+            GasInjGuideRate   = 93, // Groups injection guide rate for gas.
+
+            OilPrGuideRate_2  = 127, // Second copy of group's producer guide rate for oil.
+                                     // Not fully characterised.
+            WatPrGuideRate_2  = 128, // Second copy of group's producer guide rate for water.
+                                     // Not fully characterised.
+            GasPrGuideRate_2  = 129, // Second copy of group's producer guide rate for gas.
+                                     // Not fully characterised.
+            VoidPrGuideRate_2 = 130, // Second copy of group's producer guide rate for
+                                     // reservoir voidage volume.  Not fully characterised.
+
             HistOilPrTotal  = 135, // Group's total cumulative oil
                                    // production (observed/historical rates)
             HistWatPrTotal  = 139, // Group's total cumulative water

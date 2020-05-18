@@ -582,6 +582,11 @@ namespace {
             xWell[Ix::item37] = xWell[Ix::WatPrRate];
             xWell[Ix::item38] = xWell[Ix::GasPrRate];
 
+            xWell[Ix::PrimGuideRate]   = xWell[Ix::PrimGuideRate_2]   = get("WOPGR");
+            xWell[Ix::WatPrGuideRate]  = xWell[Ix::WatPrGuideRate_2]  = get("WWPGR");
+            xWell[Ix::GasPrGuideRate]  = xWell[Ix::GasPrGuideRate_2]  = get("WGPGR");
+            xWell[Ix::VoidPrGuideRate] = xWell[Ix::VoidPrGuideRate_2] = get("WVPGR");
+
             xWell[Ix::HistOilPrTotal] = get("WOPTH");
             xWell[Ix::HistWatPrTotal] = get("WWPTH");
             xWell[Ix::HistGasPrTotal] = get("WGPTH");
@@ -627,6 +632,8 @@ namespace {
             // Not fully characterised.
             xWell[Ix::item37] = xWell[Ix::WatPrRate];
 
+            xWell[Ix::PrimGuideRate] = xWell[Ix::PrimGuideRate_2] = -get("WWIGR");
+
             xWell[Ix::WatVoidPrRate] = -get("WWVIR");
         }
 
@@ -661,7 +668,28 @@ namespace {
             // Not fully characterised.
             xWell[Ix::item38] = xWell[Ix::GasPrRate];
 
+            xWell[Ix::PrimGuideRate] = xWell[Ix::PrimGuideRate_2] = -get("WGIGR");
+
             xWell[Ix::GasVoidPrRate] = xWell[Ix::VoidPrRate];
+        }
+
+        template <class XWellArray>
+        void assignOilInjector(const std::string&         well,
+                               const ::Opm::SummaryState& smry,
+                               XWellArray&                xWell)
+        {
+            using Ix = ::Opm::RestartIO::Helpers::VectorItems::XWell::index;
+
+            auto get = [&smry, &well](const std::string& vector)
+            {
+                const auto key = vector + ':' + well;
+
+                return smry.has(key) ? smry.get(key) : 0.0;
+            };
+
+            xWell[Ix::FlowBHP] = get("WBHP");
+
+            xWell[Ix::PrimGuideRate] = xWell[Ix::PrimGuideRate_2] = -get("WOIGR");
         }
 
         template <class XWellArray>
@@ -678,7 +706,7 @@ namespace {
 
                 switch (itype) {
                 case IType::OIL:
-                    // Do nothing.
+                    assignOilInjector(well.name(), smry, xWell);
                     break;
 
                 case IType::WATER:
