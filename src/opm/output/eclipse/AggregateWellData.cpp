@@ -568,7 +568,7 @@ namespace {
                                  + xWell[Ix::WatPrRate];
 
             xWell[Ix::VoidPrRate] = get("WVPR");
-
+            xWell[Ix::TubHeadPr] = get("WTHP");
             xWell[Ix::FlowBHP] = get("WBHP");
             xWell[Ix::WatCut]  = get("WWCT");
             xWell[Ix::GORatio] = get("WGOR");
@@ -598,6 +598,7 @@ namespace {
         {
             using Ix = ::Opm::RestartIO::Helpers::VectorItems::XWell::index;
 
+            xWell[Ix::TubHeadPr] = get("WTHP");
             xWell[Ix::FlowBHP] = get("WBHP");
 
             // Note: Assign both water and gas cumulatives to support
@@ -687,6 +688,7 @@ namespace {
                 return smry.has(key) ? smry.get(key) : 0.0;
             };
 
+            xWell[Ix::TubHeadPr] = get("WTHP");
             xWell[Ix::FlowBHP] = get("WBHP");
 
             xWell[Ix::PrimGuideRate] = xWell[Ix::PrimGuideRate_2] = -get("WOIGR");

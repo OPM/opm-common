@@ -94,6 +94,7 @@ struct RstWell {
     double gas_rate;
     double liquid_rate;
     double void_rate;
+    double thp;
     double flow_bhp;
     double wct;
     double gor;

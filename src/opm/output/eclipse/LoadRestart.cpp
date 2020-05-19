@@ -1171,7 +1171,8 @@ namespace {
 
         // 2) Restore other well quantities (really only xw.bhp)
         xw.bhp = usys.to_si(M::pressure, xwel[VI::XWell::index::FlowBHP]);
-        xw.thp = xw.temperature = 0.0;
+        xw.thp = usys.to_si(M::pressure, xwel[VI::XWell::index::TubHeadPr]);
+        xw.temperature = 0.0;
 
         // 3) Restore connection flow rates (xw.connections[i].rates)
         //    and pressure values (xw.connections[i].pressure).
