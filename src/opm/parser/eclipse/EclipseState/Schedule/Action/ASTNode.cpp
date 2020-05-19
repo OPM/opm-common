@@ -23,6 +23,8 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionValue.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ASTNode.hpp>
 
+#include <stdexcept>
+
 namespace {
     std::string strip_quotes(const std::string& s) {
         if (s[0] == '\'')

@@ -23,6 +23,7 @@
 #include <map>
 #include <utility>
 #include <vector>
+#include <string>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/icd.hpp>
 

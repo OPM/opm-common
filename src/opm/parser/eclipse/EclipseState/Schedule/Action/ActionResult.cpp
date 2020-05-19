@@ -19,6 +19,7 @@
 
 #include <vector>
 #include <algorithm>
+#include <stdexcept>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionResult.hpp>
 
