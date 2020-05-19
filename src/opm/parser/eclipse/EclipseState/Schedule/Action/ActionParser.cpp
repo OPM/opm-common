@@ -20,6 +20,7 @@
 #include <algorithm>
 #include <cstring>
 #include <cstdlib>
+#include <stdexcept>
 
 #include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 

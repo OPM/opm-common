@@ -20,6 +20,8 @@
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Network/Branch.hpp>
 
+#include <stdexcept>
+
 namespace Opm {
 namespace Network {
 
