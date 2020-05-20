@@ -237,6 +237,7 @@ TSTEP            -- 8
         state.update("WWCT:OP_1" ,    0.625);
         state.update("WGOR:OP_1" ,  234.5);
         state.update("WBHP:OP_1" ,  314.15);
+        state.update("WTHP:OP_1" ,  123.45);
         state.update("WOPTH:OP_1",  345.6);
         state.update("WWPTH:OP_1",  456.7);
         state.update("WGPTH:OP_1",  567.8);
@@ -265,6 +266,7 @@ TSTEP            -- 8
         state.update("WWCT:OP_2" ,    0.0);
         state.update("WGOR:OP_2" ,    0.0);
         state.update("WBHP:OP_2" ,  400.6);
+        state.update("WTHP:OP_2" ,  234.5);
         state.update("WOPTH:OP_2",    0.0);
         state.update("WWPTH:OP_2",    0.0);
         state.update("WGPTH:OP_2",    0.0);
@@ -293,6 +295,7 @@ TSTEP            -- 8
         state.update("WWCT:OP_3" ,    0.0625);
         state.update("WGOR:OP_3" , 1234.5);
         state.update("WBHP:OP_3" ,  314.15);
+        state.update("WTHP:OP_3" ,  246.9);
         state.update("WOPTH:OP_3", 2345.6);
         state.update("WWPTH:OP_3", 3456.7);
         state.update("WGPTH:OP_3", 4567.8);
@@ -601,6 +604,7 @@ BOOST_AUTO_TEST_CASE (Dynamic_Well_Data_Step1)
         BOOST_CHECK_CLOSE(xwell[i0 + Ix::LiqPrRate], 1.0 + 2.0, 1.0e-10);
         BOOST_CHECK_CLOSE(xwell[i0 + Ix::VoidPrRate], 4.0, 1.0e-10);
 
+        BOOST_CHECK_CLOSE(xwell[i0 + Ix::TubHeadPr], 123.45, 1.0e-10);
         BOOST_CHECK_CLOSE(xwell[i0 + Ix::FlowBHP], 314.15 , 1.0e-10);
         BOOST_CHECK_CLOSE(xwell[i0 + Ix::WatCut] ,   0.625, 1.0e-10);
         BOOST_CHECK_CLOSE(xwell[i0 + Ix::GORatio], 234.5  , 1.0e-10);
@@ -645,6 +649,7 @@ BOOST_AUTO_TEST_CASE (Dynamic_Well_Data_Step1)
 
         BOOST_CHECK_CLOSE(xwell[i1 + Ix::GasPrRate], -200.0, 1.0e-10);
         BOOST_CHECK_CLOSE(xwell[i1 + Ix::VoidPrRate], -1234.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i1 + Ix::TubHeadPr], 234.5, 1.0e-10);
         BOOST_CHECK_CLOSE(xwell[i1 + Ix::FlowBHP], 400.6, 1.0e-10);
 
         BOOST_CHECK_CLOSE(xwell[i1 + Ix::WatInjTotal], 1000.0, 1.0e-10);
@@ -736,6 +741,7 @@ BOOST_AUTO_TEST_CASE (Dynamic_Well_Data_Step2)
         BOOST_CHECK_CLOSE(xwell[i0 + Ix::LiqPrRate], 1.0 + 2.0, 1.0e-10);
         BOOST_CHECK_CLOSE(xwell[i0 + Ix::VoidPrRate], 4.0, 1.0e-10);
 
+        BOOST_CHECK_CLOSE(xwell[i0 + Ix::TubHeadPr], 123.45, 1.0e-10);
         BOOST_CHECK_CLOSE(xwell[i0 + Ix::FlowBHP], 314.15, 1.0e-10);
         BOOST_CHECK_CLOSE(xwell[i0 + Ix::WatCut] , 0.625, 1.0e-10);
         BOOST_CHECK_CLOSE(xwell[i0 + Ix::GORatio], 234.5, 1.0e-10);
@@ -781,6 +787,7 @@ BOOST_AUTO_TEST_CASE (Dynamic_Well_Data_Step2)
         BOOST_CHECK_CLOSE(xwell[i1 + Ix::LiqPrRate],
                           xwell[i1 + Ix::WatPrRate], 1.0e-10);
 
+        BOOST_CHECK_CLOSE(xwell[i1 + Ix::TubHeadPr], 234.5, 1.0e-10);
         BOOST_CHECK_CLOSE(xwell[i1 + Ix::FlowBHP], 400.6, 1.0e-10);
 
         BOOST_CHECK_CLOSE(xwell[i1 + Ix::WatInjTotal], 1000.0, 1.0e-10);
@@ -829,6 +836,7 @@ BOOST_AUTO_TEST_CASE (Dynamic_Well_Data_Step2)
         BOOST_CHECK_CLOSE(xwell[i2 + Ix::LiqPrRate], 11.0 + 12.0, 1.0e-10); // LPR
         BOOST_CHECK_CLOSE(xwell[i2 + Ix::VoidPrRate], 14.0, 1.0e-10);
 
+        BOOST_CHECK_CLOSE(xwell[i2 + Ix::TubHeadPr], 246.9, 1.0e-10);
         BOOST_CHECK_CLOSE(xwell[i2 + Ix::FlowBHP], 314.15, 1.0e-10);
         BOOST_CHECK_CLOSE(xwell[i2 + Ix::WatCut] , 0.0625, 1.0e-10);
         BOOST_CHECK_CLOSE(xwell[i2 + Ix::GORatio], 1234.5, 1.0e-10);

@@ -142,6 +142,7 @@ namespace {
     {
         const auto& vectors = requiredRestartVectors();
         const std::vector<ParamCTorArgs> extra_well_vectors {
+            { "WTHP",  Opm::EclIO::SummaryNode::Type::Pressure },
             { "WBHP",  Opm::EclIO::SummaryNode::Type::Pressure },
             { "WGVIR", Opm::EclIO::SummaryNode::Type::Rate     },
             { "WWVIR", Opm::EclIO::SummaryNode::Type::Rate     },

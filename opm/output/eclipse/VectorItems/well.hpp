@@ -135,7 +135,7 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
             GasPrRate  =  2, // Well's gas production rate
             LiqPrRate  =  3, // Well's liquid production rate
             VoidPrRate =  4, // Well's reservoir voidage production rate
-
+            TubHeadPr  =  5, // Well's tubing head pressure
             FlowBHP    =  6, // Well's flowing/producing bottom hole pressure
             WatCut     =  7, // Well's producing water cut
             GORatio    =  8, // Well's producing gas/oil ratio
