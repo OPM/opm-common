@@ -28,6 +28,7 @@
 #include <opm/parser/eclipse/Deck/UDAValue.hpp>
 #include <opm/parser/eclipse/EclipseState/Util/IOrderSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Group/GPMaint.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 namespace Opm {
@@ -263,6 +264,9 @@ struct ProductionControls {
     bool has_control(InjectionCMode control) const;
     bool productionGroupControlAvailable() const;
     bool injectionGroupControlAvailable(const Phase phase) const;
+    const std::optional<GPMaint>& gpmaint() const;
+    void set_gpmaint(GPMaint gpmaint);
+    void set_gpmaint();
 
     bool operator==(const Group& data) const;
     const Phase& topup_phase() const;
@@ -286,6 +290,7 @@ struct ProductionControls {
         serializer.map(injection_properties);
         production_properties.serializeOp(serializer);
         serializer(m_topup_phase);
+        serializer(m_gpmaint);
     }
 
 private:
@@ -309,6 +314,7 @@ private:
     std::map<Phase, GroupInjectionProperties> injection_properties;
     GroupProductionProperties production_properties;
     std::pair<Phase, bool> m_topup_phase{Phase::WATER, false};
+    std::optional<GPMaint> m_gpmaint;
 };
 
 Group::GroupType operator |(Group::GroupType lhs, Group::GroupType rhs);

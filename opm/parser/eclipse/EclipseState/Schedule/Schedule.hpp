@@ -438,6 +438,7 @@ namespace Opm
         void handleTUNING( const DeckKeyword& keyword, size_t currentStep);
         void handlePYACTION( std::shared_ptr<const Python> python, const std::string& input_path, const DeckKeyword& keyword, size_t currentStep);
         void handleNUPCOL( const DeckKeyword& keyword, size_t currentStep);
+        void handleGPMAINT( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
         void handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, const UnitSystem& unit_system, const ParseContext& parseContext, ErrorGuard& errors);
         void handleGRUPNET( const DeckKeyword& keyword, size_t currentStep, const UnitSystem& unit_system);
         void handleWRFT( const DeckKeyword& keyword, size_t currentStep);

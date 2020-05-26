@@ -486,6 +486,18 @@ bool Group::has_control(Group::ProductionCMode control) const {
     return detail::has_control(production_properties.production_controls, control);
 }
 
+const std::optional<GPMaint>& Group::gpmaint() const {
+    return this->m_gpmaint;
+}
+
+void Group::set_gpmaint(GPMaint gpmaint) {
+    this->m_gpmaint = std::move(gpmaint);
+}
+
+void Group::set_gpmaint() {
+    this->m_gpmaint = std::nullopt;
+}
+
 
 const std::string Group::ExceedAction2String( ExceedAction enumValue ) {
     switch(enumValue) {
@@ -665,6 +677,7 @@ bool Group::operator==(const Group& data) const
            this->m_groups == data.m_groups &&
            this->m_topup_phase == data.m_topup_phase &&
            this->injection_properties == data.injection_properties &&
+           this->m_gpmaint == data.m_gpmaint &&
            this->productionProperties() == data.productionProperties();
 }
 

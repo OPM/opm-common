@@ -410,6 +410,9 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
         else if (keyword.name() == "GRUPTREE")
             handleGRUPTREE(keyword, currentStep, unit_system, parseContext, errors);
 
+        else if (keyword.name() == "GPMAINT")
+            handleGPMAINT(keyword, currentStep, parseContext, errors);
+
         else if (keyword.name() == "GRUPNET")
             handleGRUPNET(keyword, currentStep, unit_system);
 
@@ -2145,7 +2148,7 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
         }
     }
 
-void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, const UnitSystem& unit_system, const ParseContext& parseContext, ErrorGuard& errors) {
+    void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, const UnitSystem& unit_system, const ParseContext& parseContext, ErrorGuard& errors) {
         for( const auto& record : keyword ) {
             const std::string& childName = trim_wgname(keyword, record.getItem("CHILD_GROUP").get<std::string>(0), parseContext, errors);
             const std::string& parentName = trim_wgname(keyword, record.getItem("PARENT_GROUP").get<std::string>(0), parseContext, errors);
@@ -2157,6 +2160,30 @@ void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, c
                 addGroup( childName , currentStep, unit_system );
 
             this->addGroupToGroup(parentName, childName, currentStep);
+        }
+    }
+
+
+    void Schedule::handleGPMAINT( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
+        for( const auto& record : keyword ) {
+            const std::string& groupNamePattern = record.getItem("GROUP").getTrimmedString(0);
+            const auto group_names = this->groupNames(groupNamePattern);
+
+            if (group_names.empty())
+                invalidNamePattern(groupNamePattern, currentStep, parseContext, errors, keyword);
+
+            using GP = ParserKeywords::GPMAINT;
+            for (const auto& group_name : group_names) {
+                auto group_ptr = std::make_shared<Group>(this->getGroup(group_name, currentStep));
+                const auto& target_string = record.getItem<GP::FLOW_TARGET>().get<std::string>(0);
+                if (target_string == "NONE")
+                    group_ptr->set_gpmaint();
+                else {
+                    GPMaint gpmaint(record);
+                    group_ptr->set_gpmaint(std::move(gpmaint));
+                }
+                this->updateGroup(std::move(group_ptr), currentStep);
+            }
         }
     }
 
