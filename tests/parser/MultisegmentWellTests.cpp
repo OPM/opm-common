@@ -35,7 +35,7 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/MSW/SpiralICD.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/MSW/SICD.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/Valve.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Connection.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellConnections.hpp>
@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(MultisegmentWellTest) {
     BOOST_CHECK_EQUAL(8, start_segment);
     BOOST_CHECK_EQUAL(8, end_segment);
 
-    const auto sicd_map = Opm::SpiralICD::fromWSEGSICD(wsegsicd);
+    const auto sicd_map = Opm::SICD::fromWSEGSICD(wsegsicd);
 
     BOOST_CHECK_EQUAL(1U, sicd_map.size());
 
@@ -126,7 +126,7 @@ BOOST_AUTO_TEST_CASE(MultisegmentWellTest) {
     const auto& sicd_vector = it->second;
     BOOST_CHECK_EQUAL(1U, sicd_vector.size());
     const int segment_number = sicd_vector[0].first;
-    const Opm::SpiralICD& sicd = sicd_vector[0].second;
+    const Opm::SICD& sicd = sicd_vector[0].second;
 
     BOOST_CHECK_EQUAL(8, segment_number);
 
@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(MultisegmentWellTest) {
 
     BOOST_CHECK(Opm::Segment::SegmentType::SICD==segment.segmentType());
 
-    const std::shared_ptr<Opm::SpiralICD> sicd_ptr = segment.spiralICD();
+    const std::shared_ptr<Opm::SICD> sicd_ptr = segment.spiralICD();
     BOOST_CHECK_GT(sicd_ptr->maxAbsoluteRate(), 1.e99);
     BOOST_CHECK(sicd_ptr->status()==Opm::ICDStatus::SHUT);
     // 0.002 bars*day*day/Volume^2

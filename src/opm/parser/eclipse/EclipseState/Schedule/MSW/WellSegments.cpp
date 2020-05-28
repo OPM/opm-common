@@ -32,7 +32,7 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/Segment.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/MSW/SpiralICD.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/MSW/SICD.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/Valve.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/WellSegments.hpp>
 
@@ -507,7 +507,7 @@ namespace Opm {
         return segments;
     }
 
-    bool WellSegments::updateWSEGSICD(const std::vector<std::pair<int, SpiralICD> >& sicd_pairs) {
+    bool WellSegments::updateWSEGSICD(const std::vector<std::pair<int, SICD> >& sicd_pairs) {
         if (m_comp_pressure_drop == CompPressureDrop::H__) {
             const std::string msg = "to use spiral ICD segment you have to activate the frictional pressure drop calculation";
             throw std::runtime_error(msg);
@@ -515,7 +515,7 @@ namespace Opm {
 
         for (const auto& pair_elem : sicd_pairs) {
             const int segment_number = pair_elem.first;
-            const SpiralICD& spiral_icd = pair_elem.second;
+            const SICD& spiral_icd = pair_elem.second;
             Segment segment = this->getFromSegmentNumber(segment_number);
             segment.updateSpiralICD(spiral_icd);
             this->addSegment(segment);
