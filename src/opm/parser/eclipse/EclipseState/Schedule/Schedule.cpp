@@ -51,7 +51,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicVector.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Events.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/MSW/SpiralICD.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/MSW/SICD.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/updatingConnectionsWithSegments.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/Valve.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/WellSegments.hpp>
@@ -2105,13 +2105,12 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
 
     void Schedule::handleWSEGSICD( const DeckKeyword& keyword, size_t currentStep) {
 
-        const std::map<std::string, std::vector<std::pair<int, SpiralICD> > > spiral_icds =
-                                SpiralICD::fromWSEGSICD(keyword);
+        const std::map<std::string, std::vector<std::pair<int, SICD> > > spiral_icds = SICD::fromWSEGSICD(keyword);
 
         for (const auto& map_elem : spiral_icds) {
             const std::string& well_name_pattern = map_elem.first;
             const auto well_names = this->wellNames(well_name_pattern, currentStep);
-            const std::vector<std::pair<int, SpiralICD> >& sicd_pairs = map_elem.second;
+            const std::vector<std::pair<int, SICD> >& sicd_pairs = map_elem.second;
 
             for (const auto& well_name : well_names) {
                 auto& dynamic_state = this->wells_static.at(well_name);

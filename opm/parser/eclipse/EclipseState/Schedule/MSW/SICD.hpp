@@ -33,12 +33,12 @@ namespace Opm {
     class DeckRecord;
     class DeckKeyword;
 
-    class SpiralICD {
+    class SICD {
     public:
 
-        SpiralICD();
-        explicit SpiralICD(const DeckRecord& record);
-        SpiralICD(double strength,
+        SICD();
+        explicit SICD(const DeckRecord& record);
+        SICD(double strength,
                   double length,
                   double densityCalibration,
                   double viscosityCalibration,
@@ -50,13 +50,13 @@ namespace Opm {
                   ICDStatus status,
                   double scalingFactor);
 
-        static SpiralICD serializeObject();
+        static SICD serializeObject();
 
         // the function will return a map
         // [
         //     "WELL1" : [<seg1, sicd1>, <seg2, sicd2> ...]
         //     ....
-        static std::map<std::string, std::vector<std::pair<int, SpiralICD> > >
+        static std::map<std::string, std::vector<std::pair<int, SICD> > >
         fromWSEGSICD(const DeckKeyword& wsegsicd);
 
         double maxAbsoluteRate() const;
@@ -73,7 +73,7 @@ namespace Opm {
         void updateScalingFactor(const double segment_length, const double completion_length);
         double scalingFactor() const;
         int ecl_status() const;
-        bool operator==(const SpiralICD& data) const;
+        bool operator==(const SICD& data) const;
 
         template<class Serializer>
         void serializeOp(Serializer& serializer)

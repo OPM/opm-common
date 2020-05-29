@@ -49,6 +49,7 @@ struct WellInjectionProperties;
 class WellProductionProperties;
 class UDQActive;
 class UDQConfig;
+class SICD;
 
 namespace RestartIO {
 struct RstWell;
@@ -538,7 +539,7 @@ public:
     bool updateEconLimits(std::shared_ptr<WellEconProductionLimits> econ_limits);
     bool updateProduction(std::shared_ptr<WellProductionProperties> production);
     bool updateInjection(std::shared_ptr<WellInjectionProperties> injection);
-    bool updateWSEGSICD(const std::vector<std::pair<int, SpiralICD> >& sicd_pairs);
+    bool updateWSEGSICD(const std::vector<std::pair<int, SICD> >& sicd_pairs);
     bool updateWSEGVALV(const std::vector<std::pair<int, Valve> >& valve_pairs);
 
     bool handleWELSEGS(const DeckKeyword& keyword);
