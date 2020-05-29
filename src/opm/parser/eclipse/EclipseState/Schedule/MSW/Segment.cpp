@@ -71,10 +71,9 @@ namespace {
         m_roughness(if_invalid_value(rst_segment.roughness)),
         m_cross_area(if_invalid_value(rst_segment.area)),
         m_volume(rst_segment.volume),
-        m_data_ready(true),
-        m_segment_type(rst_segment.segment_type)
+        m_data_ready(true)
     {
-        if (this->m_segment_type == SegmentType::SICD) {
+        if (rst_segment.segment_type == SegmentType::SICD) {
             double scalingFactor = -1;  // The scaling factor will be and updated from the simulator.
 
             SICD icd(rst_segment.base_strength,
@@ -92,7 +91,7 @@ namespace {
             this->updateSpiralICD(icd);
         }
 
-        if (this->m_segment_type == SegmentType::VALVE) {
+        if (rst_segment.segment_type == SegmentType::VALVE) {
             /*
               These three variables are currently not stored in the restart
               file; here we initialize with the default values, but if they have
@@ -121,7 +120,7 @@ namespace {
 
     Segment::Segment(int segment_number_in, int branch_in, int outlet_segment_in, double length_in, double depth_in,
                      double internal_diameter_in, double roughness_in, double cross_area_in,
-                     double volume_in, bool data_ready_in, SegmentType segment_type_in)
+                     double volume_in, bool data_ready_in)
     : m_segment_number(segment_number_in),
       m_branch(branch_in),
       m_outlet_segment(outlet_segment_in),
@@ -131,8 +130,7 @@ namespace {
       m_roughness(roughness_in),
       m_cross_area(cross_area_in),
       m_volume(volume_in),
-      m_data_ready(data_ready_in),
-      m_segment_type(segment_type_in)
+      m_data_ready(data_ready_in)
     {
     }
 
@@ -170,10 +168,7 @@ namespace {
       result.m_cross_area = 10.0;
       result.m_volume = 11.0;
       result.m_data_ready = true;
-      result.m_segment_type = SegmentType::SICD;
-      result.m_spiral_icd = std::make_shared<SICD>(SICD::serializeObject());
-      result.m_valve = std::make_shared<Valve>(Valve::serializeObject());
-
+      result.m_icd = SICD::serializeObject();
       return result;
   }
 
@@ -228,7 +223,16 @@ namespace {
     }
 
     Segment::SegmentType Segment::segmentType() const {
-        return m_segment_type;
+        if (this->isRegular())
+            return SegmentType::REGULAR;
+
+        if (this->isSpiralICD())
+            return SegmentType::SICD;
+
+        if (this->isValve())
+            return SegmentType::VALVE;
+
+        throw std::logic_error("This just should not happen ");
     }
 
     const std::vector<int>& Segment::inletSegments() const {
@@ -254,6 +258,7 @@ namespace {
             && this->m_cross_area        == rhs.m_cross_area
             && this->m_volume            == rhs.m_volume
             && this->m_perf_length       == rhs.m_perf_length
+            && this->m_icd               == rhs.m_icd
             && this->m_data_ready        == rhs.m_data_ready;
     }
 
@@ -262,46 +267,48 @@ namespace {
     }
 
     void Segment::updateSpiralICD(const SICD& spiral_icd) {
-        m_segment_type = SegmentType::SICD;
-        m_spiral_icd = std::make_shared<SICD>(spiral_icd);
+        this->m_icd = spiral_icd;
     }
 
-    const std::shared_ptr<SICD>& Segment::spiralICD() const {
-        return m_spiral_icd;
+    const SICD& Segment::spiralICD() const {
+        return std::get<SICD>(this->m_icd);
     }
 
     void Segment::updateValve(const Valve& valve) {
         if (valve.pipeAdditionalLength() < 0)
             throw std::logic_error("Bug in handling of pipe length for valves");
 
+    void Segment::updateValve(const Valve& input_valve, const double segment_length) {
         // we need to update some values for the vale
-        auto valve_ptr = std::make_shared<Valve>(valve);
+        auto valve = input_valve;
 
-        if (valve_ptr->pipeDiameter() < 0.) {
-            valve_ptr->setPipeDiameter(m_internal_diameter);
+        if (valve.pipeAdditionalLength() < 0.) { // defaulted for this
+            valve.setPipeAdditionalLength(segment_length);
+        }
+
+        if (valve.pipeDiameter() < 0.) {
+            valve.setPipeDiameter(m_internal_diameter);
         } else {
-            this->m_internal_diameter = valve_ptr->pipeDiameter();
+            this->m_internal_diameter = valve.pipeDiameter();
         }
 
-        if (valve_ptr->pipeRoughness() < 0.) {
-            valve_ptr->setPipeRoughness(m_roughness);
+        if (valve.pipeRoughness() < 0.) {
+            valve.setPipeRoughness(m_roughness);
         } else {
-            this->m_roughness = valve_ptr->pipeRoughness();
+            this->m_roughness = valve.pipeRoughness();
         }
 
-        if (valve_ptr->pipeCrossArea() < 0.) {
-            valve_ptr->setPipeCrossArea(m_cross_area);
+        if (valve.pipeCrossArea() < 0.) {
+            valve.setPipeCrossArea(m_cross_area);
         } else {
-            this->m_cross_area = valve_ptr->pipeCrossArea();
+            this->m_cross_area = valve.pipeCrossArea();
         }
 
-        if (valve_ptr->conMaxCrossArea() < 0.) {
-            valve_ptr->setConMaxCrossArea(valve_ptr->pipeCrossArea());
+        if (valve.conMaxCrossArea() < 0.) {
+            valve.setConMaxCrossArea(valve.pipeCrossArea());
         }
 
-        this->m_valve = valve_ptr;
-
-        m_segment_type = SegmentType::VALVE;
+        this->m_icd= valve;
     }
 
 
@@ -324,11 +331,12 @@ namespace {
 
 
     const Valve* Segment::valve() const {
-        return m_valve.get();
+        return &std::get<Valve>(this->m_icd);
+        //return m_valve.get();
     }
 
     int Segment::ecl_type_id() const {
-        switch (this->m_segment_type) {
+        switch (this->segmentType()) {
         case SegmentType::REGULAR:
             return -1;
         case SegmentType::SICD:

@@ -424,8 +424,8 @@ namespace {
                 VectorItems::ISeg::index;
 
             const auto& sicd = segment.spiralICD();
-            iSeg[baseIndex + Ix::ICDScalingMode] = sicd->methodFlowScaling();
-            iSeg[baseIndex + Ix::ICDOpenShutFlag] = sicd->ecl_status();
+            iSeg[baseIndex + Ix::ICDScalingMode] = sicd.methodFlowScaling();
+            iSeg[baseIndex + Ix::ICDOpenShutFlag] = sicd.ecl_status();
         }
 
         template <class ISegArray>
@@ -433,7 +433,7 @@ namespace {
                                               const std::size_t   baseIndex,
                                               ISegArray&          iSeg)
         {
-            if (isSpiralICD(segment)) {
+            if (segment.isSpiralICD()) {
                 assignSpiralICDCharacteristics(segment, baseIndex, iSeg);
             }
         }
@@ -474,7 +474,7 @@ namespace {
                     iSeg[iS + 8] = seg_reorder[ind];
 
                     iSeg[iS + Ix::SegmentType] = segment.ecl_type_id();
-                    if (! isRegular(segment)) {
+                    if (! segment.isRegular()) {
                         assignSegmentTypeCharacteristics(segment, iS, iSeg);
                     }
                 }
@@ -577,27 +577,27 @@ namespace {
             const auto& sicd = segment.spiralICD();
 
             rSeg[baseIndex + Ix::DeviceBaseStrength] =
-                usys.from_si(M::icd_strength, sicd->strength());
+                usys.from_si(M::icd_strength, sicd.strength());
 
             rSeg[baseIndex + Ix::CalibrFluidDensity] =
-                usys.from_si(M::density, sicd->densityCalibration());
+                usys.from_si(M::density, sicd.densityCalibration());
 
             rSeg[baseIndex + Ix::CalibrFluidViscosity] =
-                usys.from_si(M::viscosity, sicd->viscosityCalibration());
+                usys.from_si(M::viscosity, sicd.viscosityCalibration());
 
-            rSeg[baseIndex + Ix::CriticalWaterFraction] = sicd->criticalValue();
+            rSeg[baseIndex + Ix::CriticalWaterFraction] = sicd.criticalValue();
 
             rSeg[baseIndex + Ix::TransitionRegWidth] =
-                sicd->widthTransitionRegion();
+                sicd.widthTransitionRegion();
 
             rSeg[baseIndex + Ix::MaxEmulsionRatio] =
-                sicd->maxViscosityRatio();
+                sicd.maxViscosityRatio();
 
             rSeg[baseIndex + Ix::MaxValidFlowRate] =
-                usys.from_si(M::geometric_volume_rate, sicd->maxAbsoluteRate());
+                usys.from_si(M::geometric_volume_rate, sicd.maxAbsoluteRate());
 
             rSeg[baseIndex + Ix::ICDLength] =
-                usys.from_si(M::length, sicd->length());
+                usys.from_si(M::length, sicd.length());
         }
 
         template <class RSegArray>
@@ -606,11 +606,11 @@ namespace {
                                               const int                baseIndex,
                                               RSegArray&               rSeg)
         {
-            if (isSpiralICD(segment)) {
+            if (segment.isSpiralICD()) {
                 assignSpiralICDCharacteristics(segment, usys, baseIndex, rSeg);
             }
 
-            if (isValve(segment)) {
+            if (segment.isValve()) {
                 assignValveCharacteristics(segment, usys, baseIndex, rSeg);
             }
         }
@@ -760,7 +760,7 @@ namespace {
                     rSeg[iS + Ix::item110] = 1.0;
                     rSeg[iS + Ix::item111] = 1.0;
 
-                    if (! isRegular(segment)) {
+                    if (! segment.isRegular()) {
                         assignSegmentTypeCharacteristics(segment, units, iS, rSeg);
                     }
                 }

@@ -126,30 +126,30 @@ BOOST_AUTO_TEST_CASE(MultisegmentWellTest) {
     const auto& sicd_vector = it->second;
     BOOST_CHECK_EQUAL(1U, sicd_vector.size());
     const int segment_number = sicd_vector[0].first;
-    const Opm::SICD& sicd = sicd_vector[0].second;
+    const Opm::SICD& sicd0 = sicd_vector[0].second;
 
     BOOST_CHECK_EQUAL(8, segment_number);
 
     Opm::Segment segment = segment_set.getFromSegmentNumber(segment_number);
-    segment.updateSpiralICD(sicd);
+    segment.updateSpiralICD(sicd0);
 
     BOOST_CHECK(Opm::Segment::SegmentType::SICD==segment.segmentType());
 
-    const std::shared_ptr<Opm::SICD> sicd_ptr = segment.spiralICD();
-    BOOST_CHECK_GT(sicd_ptr->maxAbsoluteRate(), 1.e99);
-    BOOST_CHECK(sicd_ptr->status()==Opm::ICDStatus::SHUT);
+    auto sicd = segment.spiralICD();
+    BOOST_CHECK_GT(sicd.maxAbsoluteRate(), 1.e99);
+    BOOST_CHECK(sicd.status()==Opm::ICDStatus::SHUT);
     // 0.002 bars*day*day/Volume^2
-    BOOST_CHECK_EQUAL(sicd_ptr->strength(), 0.002*1.e5*86400.*86400.);
-    BOOST_CHECK_EQUAL(sicd_ptr->length(), -0.7);
-    BOOST_CHECK_EQUAL(sicd_ptr->densityCalibration(), 1000.25);
+    BOOST_CHECK_EQUAL(sicd.strength(), 0.002*1.e5*86400.*86400.);
+    BOOST_CHECK_EQUAL(sicd.length(), -0.7);
+    BOOST_CHECK_EQUAL(sicd.densityCalibration(), 1000.25);
     // 1.45 cp
-    BOOST_CHECK_EQUAL(sicd_ptr->viscosityCalibration(), 1.45 * 0.001);
-    BOOST_CHECK_EQUAL(sicd_ptr->criticalValue(), 0.6);
-    BOOST_CHECK_EQUAL(sicd_ptr->widthTransitionRegion(), 0.05);
-    BOOST_CHECK_EQUAL(sicd_ptr->maxViscosityRatio(), 5.0);
-    BOOST_CHECK_EQUAL(sicd_ptr->methodFlowScaling(), -1);
+    BOOST_CHECK_EQUAL(sicd.viscosityCalibration(), 1.45 * 0.001);
+    BOOST_CHECK_EQUAL(sicd.criticalValue(), 0.6);
+    BOOST_CHECK_EQUAL(sicd.widthTransitionRegion(), 0.05);
+    BOOST_CHECK_EQUAL(sicd.maxViscosityRatio(), 5.0);
+    BOOST_CHECK_EQUAL(sicd.methodFlowScaling(), -1);
     // the scaling factor has not been updated properly, so it will throw
-    BOOST_CHECK_THROW(sicd_ptr->scalingFactor(), std::runtime_error);
+    BOOST_CHECK_THROW(sicd.scalingFactor(), std::runtime_error);
 
     const int outlet_segment_number = segment.outletSegment();
     const double outlet_segment_length = segment_set.segmentLength(outlet_segment_number);
@@ -157,11 +157,11 @@ BOOST_AUTO_TEST_CASE(MultisegmentWellTest) {
     const Opm::Connection& connection = new_connection_set.getFromIJK(15, 0, 1);
     const auto& perf_range = connection.perf_range();
     const auto connection_length = perf_range->second - perf_range->first;
-    sicd_ptr->updateScalingFactor(outlet_segment_length, connection_length);
+    sicd.updateScalingFactor(outlet_segment_length, connection_length);
 
     // updated, so it should not throw
-    BOOST_CHECK_NO_THROW(sicd_ptr->scalingFactor());
-    BOOST_CHECK_EQUAL(0.7, sicd_ptr->scalingFactor());
+    BOOST_CHECK_NO_THROW(sicd.scalingFactor());
+    BOOST_CHECK_EQUAL(0.7, sicd.scalingFactor());
 
     BOOST_CHECK_EQUAL(7U, new_connection_set.size());
 
