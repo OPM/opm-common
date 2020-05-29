@@ -20,7 +20,7 @@
 #define OPM_FILESYSTEM_HPP
 
 #if __cplusplus < 201703L || \
-    (defined(__GNUC__) && __GNUC__ < 8)
+    (defined(__GNUC__) && __GNUC__ < 8 && !defined(__clang__))
 #include <experimental/filesystem>
 #else
 #include <filesystem>
@@ -32,7 +32,7 @@
 namespace Opm
 {
 #if __cplusplus < 201703L || \
-    (defined(__GNUC__) && __GNUC__ < 8)
+    (defined(__GNUC__) && __GNUC__ < 8 && !defined(__clang__))
     namespace filesystem = std::experimental::filesystem;
 #else
     namespace filesystem = std::filesystem;
