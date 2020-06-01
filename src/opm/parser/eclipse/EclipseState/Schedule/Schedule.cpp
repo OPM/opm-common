@@ -2038,29 +2038,6 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
                     auto well2 = std::shared_ptr<Well>(new Well( this->getWell(name, currentStep)));
                     auto connections = std::shared_ptr<WellConnections>( new WellConnections( well2->getConnections()));
                     connections->loadCOMPDAT(record, grid, fp);
-                    /*
-                      This block implements the following dubious logic.
-
-                        1. All competions are shut.
-                        2. A new open completion is added.
-                        3. A currently SHUT well is opened.
-
-                      This code assumes that the reason the well is initially
-                      shut is due to all the shut completions, if the well was
-                      explicitly shut for another reason the explicit opening of
-                      the well might be in error?
-                    */
-                    /*if (all_shut0) {
-                        if (!connections->allConnectionsShut()) {
-                            if (well2->getStatus() == WellCommon::StatusEnum::SHUT) {
-                                printf("Running all_shut inner loop\n");
-                                if (this->updateWellStatus(well2->name(), currentStep, WellCommon::StatusEnum::OPEN))
-                                    // Refresh pointer if the status has updated current slot. Ugly
-                                    well2 = std::shared_ptr<Well>(new Well(this->getWell(name, currentStep)));
-                            }
-                        }
-                    }
-                    */
                     if (well2->updateConnections(connections, grid, fp.get_int("PVTNUM")))
                         this->updateWell(well2, currentStep);
 
