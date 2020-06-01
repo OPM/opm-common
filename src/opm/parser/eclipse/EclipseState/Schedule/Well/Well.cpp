@@ -617,9 +617,6 @@ bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg) {
     connections_arg->order(  );
     if (*this->connections != *connections_arg) {
         this->connections = connections_arg;
-        //if (this->connections->allConnectionsShut()) {}
-        // This status update breaks line 825 in ScheduleTests
-        //this->status = WellCommon::StatusEnum::SHUT;
         return true;
     }
 
