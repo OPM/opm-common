@@ -2041,12 +2041,6 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
                     if (well2->updateConnections(connections, grid, fp.get_int("PVTNUM")))
                         this->updateWell(well2, currentStep);
 
-                    if (well2->getStatus() == Well::Status::SHUT) {
-                        std::string msg =
-                            "All completions in well " + well2->name() + " is shut at " + std::to_string ( m_timeMap.getTimePassedUntil(currentStep) / (60*60*24) ) + " days. \n" +
-                            "The well is therefore also shut.";
-                        OpmLog::note(msg);
-                    }
                 }
                 this->addWellGroupEvent(name, ScheduleEvents::COMPLETION_CHANGE, currentStep);
             }
@@ -2801,8 +2795,13 @@ void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t 
         for (const auto& wname : well_names) {
             const auto& well = this->getWell(wname, timeStep);
             const auto& connections = well.getConnections();
-            if (connections.allConnectionsShut())
+            if (connections.allConnectionsShut() && well.getStatus() != Well::Status::SHUT) {
                 this->updateWellStatus( well.name(), timeStep, Well::Status::SHUT, false);
+                std::string msg =
+                    "All completions in well " + well.name() + " is shut at " + std::to_string ( m_timeMap.getTimePassedUntil(timeStep) / (60*60*24) ) + " days. \n" +
+                    "The well is therefore also shut.";
+                OpmLog::note(msg);
+            }
         }
     }
 
