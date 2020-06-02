@@ -31,7 +31,7 @@ void GasLiftOpt::gaslift_increment(double gaslift_increment) {
     this->m_increment = gaslift_increment;
 }
 
-double GasLiftOpt::gaslift_increment() {
+double GasLiftOpt::gaslift_increment() const {
     return this->m_increment;
 }
 
@@ -39,7 +39,7 @@ void GasLiftOpt::min_eco_gradient(double min_eco_gradient) {
     this->m_min_eco_gradient = min_eco_gradient;
 }
 
-double GasLiftOpt::min_eco_gradient() {
+double GasLiftOpt::min_eco_gradient() const {
     return this->m_min_eco_gradient;
 }
 
