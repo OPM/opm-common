@@ -215,7 +215,9 @@ public:
     const Group& group(const std::string& gname) const;
     const Well& well(const std::string& wname) const;
 
+    double gaslift_increment() const;
     void gaslift_increment(double gaslift_increment);
+    double min_eco_gradient() const;
     void min_eco_gradient(double min_eco_gradient);
     void min_wait(double min_wait);
     void all_newton(double all_newton);
