@@ -626,8 +626,6 @@ WellSegments::MultiPhaseModel WellSegments::MultiPhaseModelFromString(const std:
 void WellSegments::updatePerfLength(const WellConnections& connections) {
     for (auto& segment : this->m_segments) {
         auto perf_length = connections.segment_perf_length( segment.segmentNumber() );
-        if (perf_length == 0)
-            throw std::logic_error("This seems suspicious - segment is not connected to any connection");
         segment.updatePerfLength(perf_length);
     }
 }
