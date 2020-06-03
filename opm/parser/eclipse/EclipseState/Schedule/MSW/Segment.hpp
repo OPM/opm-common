@@ -20,6 +20,7 @@
 #ifndef SEGMENT_HPP_HEADER_INCLUDED
 #define SEGMENT_HPP_HEADER_INCLUDED
 
+#include <optional>
 #include <memory>
 #include <vector>
 
@@ -58,6 +59,7 @@ namespace Opm {
         int segmentNumber() const;
         int branchNumber() const;
         int outletSegment() const;
+        double perfLength() const;
         double totalLength() const;
         double depth() const;
         double internalDiameter() const;
@@ -81,6 +83,7 @@ namespace Opm {
         const std::shared_ptr<SICD>& spiralICD() const;
         const Valve* valve() const;
 
+        void updatePerfLength(double perf_length);
         void updateSpiralICD(const SICD& spiral_icd);
         void updateValve(const Valve& valve, const double segment_length);
         void addInletSegment(const int segment_number);
@@ -99,6 +102,7 @@ namespace Opm {
             serializer(m_cross_area);
             serializer(m_volume);
             serializer(m_data_ready);
+            serializer(m_perf_length);
             serializer(m_segment_type);
             serializer(m_spiral_icd);
             serializer(m_valve);
@@ -150,6 +154,7 @@ namespace Opm {
         // the volume will be updated at a final step.
         bool m_data_ready;
 
+        std::optional<double> m_perf_length;
         // indicate the type of the segment
         // regular, spiral ICD, or Valve.
         SegmentType m_segment_type;
