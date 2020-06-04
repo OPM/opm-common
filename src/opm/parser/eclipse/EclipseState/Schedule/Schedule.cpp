@@ -2796,11 +2796,11 @@ void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t 
             const auto& well = this->getWell(wname, timeStep);
             const auto& connections = well.getConnections();
             if (connections.allConnectionsShut() && well.getStatus() != Well::Status::SHUT) {
-                this->updateWellStatus( well.name(), timeStep, Well::Status::SHUT, false);
                 std::string msg =
                     "All completions in well " + well.name() + " is shut at " + std::to_string ( m_timeMap.getTimePassedUntil(timeStep) / (60*60*24) ) + " days. \n" +
                     "The well is therefore also shut.";
                 OpmLog::note(msg);
+                this->updateWellStatus( well.name(), timeStep, Well::Status::SHUT, false);
             }
         }
     }
