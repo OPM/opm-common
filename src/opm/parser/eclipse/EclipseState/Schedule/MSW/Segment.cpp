@@ -209,6 +209,9 @@ namespace {
         return m_depth;
     }
 
+    double Segment::perfLength() const {
+        return *this->m_perf_length;
+    }
 
     double Segment::internalDiameter() const {
         return m_internal_diameter;
@@ -258,6 +261,7 @@ namespace {
             && this->m_roughness         == rhs.m_roughness
             && this->m_cross_area        == rhs.m_cross_area
             && this->m_volume            == rhs.m_volume
+            && this->m_perf_length       == rhs.m_perf_length
             && this->m_data_ready        == rhs.m_data_ready;
     }
 
@@ -309,6 +313,11 @@ namespace {
 
         m_segment_type = SegmentType::VALVE;
     }
+
+
+   void Segment::updatePerfLength(double perf_length) {
+       this->m_perf_length = perf_length;
+   }
 
 
     const Valve* Segment::valve() const {

@@ -31,6 +31,7 @@
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/WellConnections.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/Segment.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/SICD.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/Valve.hpp>
@@ -618,6 +619,16 @@ WellSegments::MultiPhaseModel WellSegments::MultiPhaseModelFromString(const std:
         return MultiPhaseModel::DF;
     } else {
         throw std::invalid_argument("Unknown enum string_value: " + string_value + " for MultiPhaseModel");
+    }
+}
+
+
+void WellSegments::updatePerfLength(const WellConnections& connections) {
+    for (auto& segment : this->m_segments) {
+        auto perf_length = connections.segment_perf_length( segment.segmentNumber() );
+        if (perf_length == 0)
+            throw std::logic_error("This seems suspicious - segment is not connected to any connection");
+        segment.updatePerfLength(perf_length);
     }
 }
 

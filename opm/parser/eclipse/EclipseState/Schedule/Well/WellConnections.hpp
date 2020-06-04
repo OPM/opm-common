@@ -66,6 +66,7 @@ namespace Opm {
         const Connection& getFromIJK(const int i, const int j, const int k) const;
         const Connection& lowest() const;
         Connection& getFromIJK(const int i, const int j, const int k);
+        double segment_perf_length(int segment) const;
 
         const_iterator begin() const { return this->m_connections.begin(); }
         const_iterator end() const { return this->m_connections.end(); }
