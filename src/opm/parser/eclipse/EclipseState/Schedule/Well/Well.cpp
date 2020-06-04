@@ -22,11 +22,13 @@
 #include <opm/io/eclipse/rst/well.hpp>
 #include <opm/output/eclipse/VectorItems/well.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/W.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/MSW/updatingConnectionsWithSegments.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQActive.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellProductionProperties.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+
+#include "../MSW/Compsegs.hpp"
 
 #include <fnmatch.h>
 #include <cmath>
@@ -646,9 +648,12 @@ bool Well::updateSolventFraction(double solvent_fraction_arg) {
 
 bool Well::handleCOMPSEGS(const DeckKeyword& keyword, const EclipseGrid& grid,
                            const ParseContext& parseContext, ErrorGuard& errors) {
-    std::shared_ptr<WellConnections> new_connection_set( newConnectionsWithSegments(keyword, *this->connections, *this->segments , grid,
-                                                                                    parseContext, errors) );
-    return this->updateConnections(std::move(new_connection_set));
+    auto [new_connections, new_segments] = Compsegs::processCOMPSEGS(keyword, *this->connections, *this->segments , grid,
+                                                                     parseContext, errors);
+
+    this->updateConnections( std::make_shared<WellConnections>(std::move(new_connections)) );
+    this->updateSegments( std::make_shared<WellSegments>( std::move(new_segments)) );
+    return true;
 }
 
 const std::string& Well::groupName() const {

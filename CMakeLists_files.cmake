@@ -112,7 +112,6 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Schedule/MSW/Compsegs.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/MSW/Segment.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/MSW/WellSegments.cpp
-    src/opm/parser/eclipse/EclipseState/Schedule/MSW/updatingConnectionsWithSegments.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/MSW/SICD.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/MSW/Valve.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Network/Branch.cpp
@@ -716,7 +715,6 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Schedule/MSW/Segment.hpp
        opm/parser/eclipse/EclipseState/Schedule/MSW/Segment.hpp
        opm/parser/eclipse/EclipseState/Schedule/MSW/WellSegments.hpp
-       opm/parser/eclipse/EclipseState/Schedule/MSW/updatingConnectionsWithSegments.hpp
        opm/parser/eclipse/EclipseState/Schedule/MSW/SICD.hpp
        opm/parser/eclipse/EclipseState/SimulationConfig/ThresholdPressure.hpp
        opm/parser/eclipse/EclipseState/SimulationConfig/BCConfig.hpp

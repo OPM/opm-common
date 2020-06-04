@@ -39,12 +39,13 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/Valve.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Connection.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellConnections.hpp>
+#include "src/opm/parser/eclipse/EclipseState/Schedule/MSW/Compsegs.hpp"
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 
-#include <opm/parser/eclipse/EclipseState/Schedule/MSW/updatingConnectionsWithSegments.hpp>
+
 
 BOOST_AUTO_TEST_CASE(MultisegmentWellTest) {
 
@@ -103,8 +104,7 @@ BOOST_AUTO_TEST_CASE(MultisegmentWellTest) {
     Opm::ParseContext parseContext;
     parseContext.update(Opm::ParseContext::SCHEDULE_COMPSEGS_INVALID, Opm::InputError::THROW_EXCEPTION);
     parseContext.update(Opm::ParseContext::SCHEDULE_COMPSEGS_NOT_SUPPORTED, Opm::InputError::THROW_EXCEPTION);
-    std::unique_ptr<Opm::WellConnections> new_connection_set{nullptr};
-    BOOST_CHECK_NO_THROW(new_connection_set.reset(Opm::newConnectionsWithSegments(compsegs, connection_set, segment_set, grid, parseContext, errorGuard)));
+    const auto& [new_connection_set, new_segment_set] = Opm::Compsegs::processCOMPSEGS(compsegs, connection_set, segment_set, grid, parseContext, errorGuard);
 
     // checking the ICD segment
     const Opm::DeckKeyword wsegsicd = deck.getKeyword("WSEGSICD");
@@ -154,7 +154,7 @@ BOOST_AUTO_TEST_CASE(MultisegmentWellTest) {
     const int outlet_segment_number = segment.outletSegment();
     const double outlet_segment_length = segment_set.segmentLength(outlet_segment_number);
     // only one connection attached to the outlet segment in this case
-    const Opm::Connection& connection = new_connection_set->getFromIJK(15, 0, 1);
+    const Opm::Connection& connection = new_connection_set.getFromIJK(15, 0, 1);
     const auto& perf_range = connection.perf_range();
     const auto connection_length = perf_range->second - perf_range->first;
     sicd_ptr->updateScalingFactor(outlet_segment_length, connection_length);
@@ -163,33 +163,33 @@ BOOST_AUTO_TEST_CASE(MultisegmentWellTest) {
     BOOST_CHECK_NO_THROW(sicd_ptr->scalingFactor());
     BOOST_CHECK_EQUAL(0.7, sicd_ptr->scalingFactor());
 
-    BOOST_CHECK_EQUAL(7U, new_connection_set->size());
+    BOOST_CHECK_EQUAL(7U, new_connection_set.size());
 
-    const Opm::Connection& connection1 = new_connection_set->get(0);
+    const Opm::Connection& connection1 = new_connection_set.get(0);
     const int segment_number_connection1 = connection1.segment();
     const double center_depth_connection1 = connection1.depth();
     BOOST_CHECK_EQUAL(segment_number_connection1, 1);
     BOOST_CHECK_EQUAL(center_depth_connection1, 2512.5);
 
-    const Opm::Connection& connection3 = new_connection_set->get(2);
+    const Opm::Connection& connection3 = new_connection_set.get(2);
     const int segment_number_connection3 = connection3.segment();
     const double center_depth_connection3 = connection3.depth();
     BOOST_CHECK_EQUAL(segment_number_connection3, 3);
     BOOST_CHECK_EQUAL(center_depth_connection3, 2562.5);
 
-    const Opm::Connection& connection5 = new_connection_set->get(4);
+    const Opm::Connection& connection5 = new_connection_set.get(4);
     const int segment_number_connection5 = connection5.segment();
     const double center_depth_connection5 = connection5.depth();
     BOOST_CHECK_EQUAL(segment_number_connection5, 6);
     BOOST_CHECK_CLOSE(center_depth_connection5, 2538.83, 0.001);
 
-    const Opm::Connection& connection6 = new_connection_set->get(5);
+    const Opm::Connection& connection6 = new_connection_set.get(5);
     const int segment_number_connection6 = connection6.segment();
     const double center_depth_connection6 = connection6.depth();
     BOOST_CHECK_EQUAL(segment_number_connection6, 6);
     BOOST_CHECK_CLOSE(center_depth_connection6,  2537.83, 0.001);
 
-    const Opm::Connection& connection7 = new_connection_set->get(6);
+    const Opm::Connection& connection7 = new_connection_set.get(6);
     const int segment_number_connection7 = connection7.segment();
     const double center_depth_connection7 = connection7.depth();
     BOOST_CHECK_EQUAL(segment_number_connection7, 8);
@@ -248,10 +248,10 @@ BOOST_AUTO_TEST_CASE(WrongDistanceCOMPSEGS) {
     Opm::ErrorGuard   errorGuard;
     Opm::ParseContext parseContext;
     parseContext.update(Opm::ParseContext::SCHEDULE_COMPSEGS_INVALID, Opm::InputError::THROW_EXCEPTION);
-    BOOST_CHECK_THROW(std::unique_ptr<Opm::WellConnections>(Opm::newConnectionsWithSegments(compsegs, connection_set, segment_set, grid, parseContext, errorGuard)), std::invalid_argument);
+    BOOST_CHECK_THROW(Opm::Compsegs::processCOMPSEGS(compsegs, connection_set, segment_set, grid, parseContext, errorGuard), std::invalid_argument);
 
     parseContext.update(Opm::ParseContext::SCHEDULE_COMPSEGS_INVALID, Opm::InputError::IGNORE);
-    BOOST_CHECK_NO_THROW(std::unique_ptr<Opm::WellConnections>(Opm::newConnectionsWithSegments(compsegs, connection_set, segment_set, grid, parseContext, errorGuard)));
+    BOOST_CHECK_NO_THROW(Opm::Compsegs::processCOMPSEGS(compsegs, connection_set, segment_set, grid, parseContext, errorGuard));
 }
 
 BOOST_AUTO_TEST_CASE(NegativeDepthCOMPSEGS) {
@@ -304,12 +304,11 @@ BOOST_AUTO_TEST_CASE(NegativeDepthCOMPSEGS) {
 
     Opm::ErrorGuard   errorGuard;
     Opm::ParseContext parseContext;
-    std::unique_ptr<Opm::WellConnections> wconns{nullptr};
     parseContext.update(Opm::ParseContext::SCHEDULE_COMPSEGS_NOT_SUPPORTED, Opm::InputError::THROW_EXCEPTION);
-    BOOST_CHECK_THROW(wconns.reset(Opm::newConnectionsWithSegments(compsegs, connection_set, segment_set, grid, parseContext, errorGuard)), std::invalid_argument);
+    BOOST_CHECK_THROW(Opm::Compsegs::processCOMPSEGS(compsegs, connection_set, segment_set, grid, parseContext, errorGuard), std::invalid_argument);
 
     parseContext.update(Opm::ParseContext::SCHEDULE_COMPSEGS_NOT_SUPPORTED, Opm::InputError::IGNORE);
-    BOOST_CHECK_NO_THROW(wconns.reset(Opm::newConnectionsWithSegments(compsegs, connection_set, segment_set, grid, parseContext, errorGuard)));
+    BOOST_CHECK_NO_THROW( Opm::Compsegs::processCOMPSEGS(compsegs, connection_set, segment_set, grid, parseContext, errorGuard) );
 }
 
 BOOST_AUTO_TEST_CASE(testwsegvalv) {
@@ -370,8 +369,7 @@ BOOST_AUTO_TEST_CASE(testwsegvalv) {
     Opm::ParseContext parseContext;
     parseContext.update(Opm::ParseContext::SCHEDULE_COMPSEGS_INVALID, Opm::InputError::THROW_EXCEPTION);
     parseContext.update(Opm::ParseContext::SCHEDULE_COMPSEGS_NOT_SUPPORTED, Opm::InputError::THROW_EXCEPTION);
-    std::unique_ptr<Opm::WellConnections> new_connection_set{nullptr};
-    BOOST_CHECK_NO_THROW(new_connection_set.reset(Opm::newConnectionsWithSegments(compsegs, connection_set, segment_set, grid, parseContext, errorGuard)));
+    BOOST_CHECK_NO_THROW( Opm::Compsegs::processCOMPSEGS(compsegs, connection_set, segment_set, grid, parseContext, errorGuard));
 
     // checking the WSEGVALV segment
     const Opm::DeckKeyword wsegvalv = deck.getKeyword("WSEGVALV");
