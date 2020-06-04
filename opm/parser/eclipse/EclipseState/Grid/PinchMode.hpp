@@ -28,7 +28,9 @@ namespace Opm {
         enum ModeEnum {
             ALL = 1,
             TOPBOT = 2,
-            TOP = 3
+            TOP = 3,
+            GAP = 4,
+            NOGAP = 5,
         };
 
         const std::string PinchMode2String(const ModeEnum enumValue);
