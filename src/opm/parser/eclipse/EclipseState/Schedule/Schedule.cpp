@@ -2075,16 +2075,24 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
 
     void Schedule::handleWSEGSICD( const DeckKeyword& keyword, size_t currentStep) {
 
-        const std::map<std::string, std::vector<std::pair<int, SICD> > > spiral_icds = SICD::fromWSEGSICD(keyword);
+        std::map<std::string, std::vector<std::pair<int, SICD> > > spiral_icds = SICD::fromWSEGSICD(keyword);
 
-        for (const auto& map_elem : spiral_icds) {
+        for (auto& map_elem : spiral_icds) {
             const std::string& well_name_pattern = map_elem.first;
             const auto well_names = this->wellNames(well_name_pattern, currentStep);
-            const std::vector<std::pair<int, SICD> >& sicd_pairs = map_elem.second;
+            std::vector<std::pair<int, SICD> >& sicd_pairs = map_elem.second;
 
             for (const auto& well_name : well_names) {
                 auto& dynamic_state = this->wells_static.at(well_name);
                 auto well_ptr = std::make_shared<Well>( *dynamic_state[currentStep] );
+
+                const auto& connections = well_ptr->getConnections();
+                const auto& segments = well_ptr->getSegments();
+                for (auto& [segment_nr, sicd] : sicd_pairs) {
+                    const auto& outlet_segment_length = segments.segmentLength( segments.getFromSegmentNumber(segment_nr).outletSegment() );
+                    sicd.updateScalingFactor(outlet_segment_length, connections.segment_perf_length(segment_nr));
+                }
+
                 if (well_ptr -> updateWSEGSICD(sicd_pairs) )
                     this->updateWell(std::move(well_ptr), currentStep);
             }
