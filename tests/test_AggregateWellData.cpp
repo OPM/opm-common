@@ -92,30 +92,178 @@ OIL
 GAS
 WATER
 DISGAS
-VAPOIL
 UNIFOUT
 UNIFIN
 DIMENS
  10 10 10 /
+WELLDIMS
+ 6  20  1  6  /
+TABDIMS
+ 1  1  15  15  2  15  /
+FIELD
+EQLDIMS
+ 1  /
 
 GRID
 DXV
-10*0.25 /
+10*100. /
 DYV
-10*0.25 /
+10*100. /
 DZV
-10*0.25 /
+10*100. /
 TOPS
-100*0.25 /
+100*7000. /
 
 PORO
 1000*0.2 /
 
-SOLUTION
+PERMX
+1000*100. /
+
+PERMY
+1000*100. /
+
+PERMZ
+1000*10. /
 
 
-START             -- 0
-1 NOV 1979 /
+PROPS       ==========================================================
+
+-- WATER RELATIVE PERMEABILITY AND CAPILLARY PRESSURE ARE TABULATED AS
+-- A FUNCTION OF WATER SATURATION.
+--
+--  SWAT   KRW   PCOW
+SWFN
+
+    0.12  0       0
+    1.0   0.00001 0  /
+
+-- SIMILARLY FOR GAS
+--
+--  SGAS   KRG   PCOG
+SGFN
+
+    0     0       0
+    0.02  0       0
+    0.05  0.005   0
+    0.12  0.025   0
+    0.2   0.075   0
+    0.25  0.125   0
+    0.3   0.19    0
+    0.4   0.41    0
+    0.45  0.6     0
+    0.5   0.72    0
+    0.6   0.87    0
+    0.7   0.94    0
+    0.85  0.98    0
+    1.0   1.0     0
+/
+
+-- OIL RELATIVE PERMEABILITY IS TABULATED AGAINST OIL SATURATION
+-- FOR OIL-WATER AND OIL-GAS-CONNATE WATER CASES
+--
+--  SOIL     KROW     KROG
+SOF3
+
+    0        0        0
+    0.18     0        0
+    0.28     0.0001   0.0001
+    0.38     0.001    0.001
+    0.43     0.01     0.01
+    0.48     0.021    0.021
+    0.58     0.09     0.09
+    0.63     0.2      0.2
+    0.68     0.35     0.35
+    0.76     0.7      0.7
+    0.83     0.98     0.98
+    0.86     0.997    0.997
+    0.879    1        1
+    0.88     1        1    /
+
+
+-- PVT PROPERTIES OF WATER
+--
+--    REF. PRES. REF. FVF  COMPRESSIBILITY  REF VISCOSITY  VISCOSIBILITY
+PVTW
+       4014.7     1.029        3.13D-6           0.31            0 /
+
+-- ROCK COMPRESSIBILITY
+--
+--    REF. PRES   COMPRESSIBILITY
+ROCK
+        14.7          3.0D-6          /
+
+-- SURFACE DENSITIES OF RESERVOIR FLUIDS
+--
+--        OIL   WATER   GAS
+DENSITY
+         49.1   64.79  0.06054  /
+
+-- PVT PROPERTIES OF DRY GAS (NO VAPOURISED OIL)
+-- WE WOULD USE PVTG TO SPECIFY THE PROPERTIES OF WET GAS
+--
+--   PGAS   BGAS   VISGAS
+PVDG
+     14.7 166.666   0.008
+    264.7  12.093   0.0096
+    514.7   6.274   0.0112
+   1014.7   3.197   0.014
+   2014.7   1.614   0.0189
+   2514.7   1.294   0.0208
+   3014.7   1.080   0.0228
+   4014.7   0.811   0.0268
+   5014.7   0.649   0.0309
+   9014.7   0.386   0.047   /
+
+-- PVT PROPERTIES OF LIVE OIL (WITH DISSOLVED GAS)
+-- WE WOULD USE PVDO TO SPECIFY THE PROPERTIES OF DEAD OIL
+--
+-- FOR EACH VALUE OF RS THE SATURATION PRESSURE, FVF AND VISCOSITY
+-- ARE SPECIFIED. FOR RS=1.27 AND 1.618, THE FVF AND VISCOSITY OF
+-- UNDERSATURATED OIL ARE DEFINED AS A FUNCTION OF PRESSURE. DATA
+-- FOR UNDERSATURATED OIL MAY BE SUPPLIED FOR ANY RS, BUT MUST BE
+-- SUPPLIED FOR THE HIGHEST RS (1.618).
+--
+--   RS      POIL  FVFO  VISO
+PVTO
+    0.001    14.7 1.062  1.04    /
+    0.0905  264.7 1.15   0.975   /
+    0.18    514.7 1.207  0.91    /
+    0.371  1014.7 1.295  0.83    /
+    0.636  2014.7 1.435  0.695   /
+    0.775  2514.7 1.5    0.641   /
+    0.93   3014.7 1.565  0.594   /
+    1.270  4014.7 1.695  0.51
+           5014.7 1.671  0.549
+           9014.7 1.579  0.74    /
+    1.618  5014.7 1.827  0.449
+           9014.7 1.726  0.605   /
+/
+
+
+REGIONS    ===========================================================
+
+
+FIPNUM
+
+  1000*1
+/
+
+EQLNUM
+
+  1000*1
+/
+
+
+SOLUTION    ============================================================
+
+EQUIL
+7020.00 2700.00 7990.00  .00000 7200.00  .00000     0      0       5 /
+
+RSVD       2 TABLES    3 NODES IN EACH           FIELD   12:00 17 AUG 83
+   7000.0  1.0000
+   7990.0  1.0000
+/
 
 SCHEDULE
 RPTRST
@@ -511,7 +659,7 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data)
         // No THP limit
         BOOST_CHECK_CLOSE(swell[i0 + Ix::THPTarget] ,    0.0f, 1.0e-7f);
         BOOST_CHECK_CLOSE(swell[i0 + Ix::BHPTarget] , 1000.0f, 1.0e-7f);
-        BOOST_CHECK_CLOSE(swell[i0 + Ix::DatumDepth],  0.375f, 1.0e-7f);
+        BOOST_CHECK_CLOSE(swell[i0 + Ix::DatumDepth], 7050.00049f, 1.0e-7f);
     }
 
     // SWEL (OP_2)
@@ -524,7 +672,7 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data)
         BOOST_CHECK_CLOSE(swell[i1 + Ix::THPTarget], 1.0e20f, 1.0e-7f);
         BOOST_CHECK_CLOSE(swell[i1 + Ix::BHPTarget],  400.0f, 1.0e-7f);
 
-        BOOST_CHECK_CLOSE(swell[i1 + Ix::DatumDepth], 0.625f, 1.0e-7f);
+        BOOST_CHECK_CLOSE(swell[i1 + Ix::DatumDepth], 7150.0f, 1.0e-7f);
     }
 
     // XWEL (OP_1)

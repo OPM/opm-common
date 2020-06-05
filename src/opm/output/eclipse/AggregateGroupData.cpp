@@ -1,7 +1,7 @@
 /*
   Copyright 2018 Statoil ASA
 
-  This file is part of the Open Porous Media project (OPM).
+  This file is part of the|| Open Porous Media project (OPM).
 
   OPM is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -323,45 +323,7 @@ int higherLevelInjControlGroupSeqIndex(const Opm::Schedule& sched,
     }
 }
 
-int higherLevelInjControlMode(const Opm::Schedule& sched,
-                       const Opm::SummaryState& sumState,
-                       const Opm::Group& group,
-                       const std::string curInjCtrlKey,
-                       const size_t simStep)
-//
-// returns the sequence number of higher (highest) level group with active control different from (NONE or FLD)
-//
-{
-    int ctrl_mode = -1;
-    if (group.defined( simStep )) {
-        auto current = group;
-        double cur_inj_ctrl = -1.;
-        while (current.name() != "FIELD" && ctrl_mode < 0) {
-            current = sched.getGroup(current.parent(), simStep);
-            cur_inj_ctrl = -1.;
-            std::string group_key = gf_key(curInjCtrlKey, current.name());
-            if (sumState.has(group_key)) {
-                cur_inj_ctrl = sumState.get(group_key);
-            }
-            else {
-                std::cout << "Current injection group control: " << curInjCtrlKey << " is not defined for group: " << current.name() << " at timestep: " << simStep << std::endl;
-                cur_inj_ctrl = 0.;
-            }
-            if (cur_inj_ctrl > 0. && ctrl_mode < 0) {
-                ctrl_mode = static_cast<int>(cur_inj_ctrl);
-            }
-        }
-        return ctrl_mode;
-    }
-    else {
-        std::stringstream str;
-        str << "actual group has not been defined at report time: " << simStep;
-        throw std::invalid_argument(str.str());
-    }
-}
-
 std::vector<std::size_t> groupParentSeqIndex(const Opm::Schedule& sched,
-                       const Opm::SummaryState& sumState,
                        const Opm::Group& group,
                        const size_t simStep)
 //
@@ -479,10 +441,8 @@ void staticContrib(const Opm::Schedule&     sched,
                    const int                ngmaxz,
                    const std::size_t        simStep,
                    const Opm::SummaryState& sumState,
-                   const std::map<int, Opm::Group::InjectionCMode>& iCtrlToICMode,
                    const std::map<int, Opm::Group::ProductionCMode>& pCtrlToPCmode,
                    const std::map<Opm::Group::InjectionCMode, int>& cmodeToNum,
-                   const Opm::UnitSystem& units,
                    IGrpArray&               iGrp)
 {
     if (group.wellgroup()) {
@@ -743,7 +703,8 @@ void staticContrib(const Opm::Schedule&     sched,
                     iGrp[nwgmax + 10] = 5;
                     break;
                 case Opm::Group::ProductionCMode::FLD:
-                    iGrp[nwgmax + 10] = 0;   // need to be checked!!
+                    iGrp[nwgmax + 10] = 0;
+                    break;
                 default:
                     iGrp[nwgmax + 10] = 0;
             }
@@ -753,7 +714,7 @@ void staticContrib(const Opm::Schedule&     sched,
     iGrp[nwgmax + 17] = -1;
     iGrp[nwgmax + 22] = -1;
     if (group.isInjectionGroup() || (group.getGroupType() == Opm::Group::GroupType::MIXED) || (group.getGroupType() == Opm::Group::GroupType::NONE)) {
-        auto group_parent_list = groupParentSeqIndex(sched, sumState, group, simStep);
+        auto group_parent_list = groupParentSeqIndex(sched, group, simStep);
 
         //set "default value" in case a group is only injection group
         if (group.isInjectionGroup() && !group.isProductionGroup()) {
@@ -768,13 +729,8 @@ void staticContrib(const Opm::Schedule&     sched,
                 double cur_winj_ctrl = -1.;
                 const auto& winj_cmode = (group.hasInjectionControl(Opm::Phase::WATER))?
                 group.injectionControls(Opm::Phase::WATER, sumState).cmode : Opm::Group::InjectionCMode::NONE;
-                Opm::Group::InjectionCMode wictl_mode = Opm::Group::InjectionCMode::NONE;
                 if (sumState.has(group_key_w)) {
                     cur_winj_ctrl = sumState.get(group_key_w);
-                    const auto it_ctrl = iCtrlToICMode.find(cur_winj_ctrl);
-                    if (it_ctrl != iCtrlToICMode.end()) {
-                        wictl_mode = it_ctrl->second;
-                    }
                     }
                 else {
                     std::cout << "Current group water injection control is not defined for group: " << group.name() << " at timestep: " << simStep << std::endl;
@@ -865,13 +821,8 @@ void staticContrib(const Opm::Schedule&     sched,
                 double cur_ginj_ctrl = -1.;
                 const auto& ginj_cmode = (group.hasInjectionControl(Opm::Phase::GAS))?
                 group.injectionControls(Opm::Phase::GAS, sumState).cmode : Opm::Group::InjectionCMode::NONE;
-                Opm::Group::InjectionCMode gictl_mode = Opm::Group::InjectionCMode::NONE;
                 if (sumState.has(group_key_g)) {
                     cur_ginj_ctrl = sumState.get(group_key_g);
-                    const auto it_ctrl = iCtrlToICMode.find(cur_ginj_ctrl);
-                    if (it_ctrl != iCtrlToICMode.end()) {
-                        gictl_mode = it_ctrl->second;
-                    }
                 }
                 else {
                     std::cout << "Current group gas injection control is not defined for group: " << group.name() << " at timestep: " << simStep << std::endl;
@@ -1286,13 +1237,13 @@ captureDeclaredGroupData(const Opm::Schedule&                 sched,
         curGroups[ind] = std::addressof(group);
     }
 
-    groupLoop(curGroups, [&sched, &units, simStep, sumState, this]
+    groupLoop(curGroups, [&sched, simStep, sumState, this]
               (const Group& group, const std::size_t groupID) -> void
                          {
                              auto ig = this->iGroup_[groupID];
 
                              IGrp::staticContrib(sched, group, this->nWGMax_, this->nGMaxz_,
-                                                 simStep, sumState, this->ICntlModeToiCMode, this->PCntlModeToPCMode, this->cmodeToNum, units, ig);
+                                                 simStep, sumState, this->PCntlModeToPCMode, this->cmodeToNum, ig);
                          });
 
     // Define Static Contributions to SGrp Array.

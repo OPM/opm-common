@@ -316,7 +316,6 @@ namespace {
         }
 
         const auto& udq_par = rspec.udqParams();
-        const auto& udqActive = sched.udqActive(simStep);
         const auto r_seed   = udq_par.rand_seed();
         const auto no_wudq  = noWellUdqs(sched, rptStep, simStep);
         const auto no_gudq  = noGroupUdqs(sched, rptStep, simStep);
