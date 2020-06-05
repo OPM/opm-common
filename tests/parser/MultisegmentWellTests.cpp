@@ -402,15 +402,15 @@ BOOST_AUTO_TEST_CASE(testwsegvalv) {
     segment1.updateValve(valve1, segment_length1);
     BOOST_CHECK(Opm::Segment::SegmentType::VALVE==segment1.segmentType());
 
-    const Opm::Valve* valv1 = segment1.valve();
-    BOOST_CHECK_EQUAL(valv1->conFlowCoefficient(), 0.002);
-    BOOST_CHECK_EQUAL(valv1->conCrossArea(), 5.);
-    BOOST_CHECK_EQUAL(valv1->conMaxCrossArea(), 0.031415926535897934);
-    BOOST_CHECK_CLOSE(valv1->pipeAdditionalLength(), 0.1, 1.e-10);
-    BOOST_CHECK_EQUAL(valv1->pipeDiameter(), 0.2);
-    BOOST_CHECK_EQUAL(valv1->pipeRoughness(), 0.00015);
-    BOOST_CHECK_EQUAL(valv1->pipeCrossArea(), 0.031415926535897934);
-    BOOST_CHECK(valv1->status()==Opm::ICDStatus::OPEN);
+    const Opm::Valve& valv1 = segment1.valve();
+    BOOST_CHECK_EQUAL(valv1.conFlowCoefficient(), 0.002);
+    BOOST_CHECK_EQUAL(valv1.conCrossArea(), 5.);
+    BOOST_CHECK_EQUAL(valv1.conMaxCrossArea(), 0.031415926535897934);
+    BOOST_CHECK_CLOSE(valv1.pipeAdditionalLength(), 0.1, 1.e-10);
+    BOOST_CHECK_EQUAL(valv1.pipeDiameter(), 0.2);
+    BOOST_CHECK_EQUAL(valv1.pipeRoughness(), 0.00015);
+    BOOST_CHECK_EQUAL(valv1.pipeCrossArea(), 0.031415926535897934);
+    BOOST_CHECK(valv1.status()==Opm::ICDStatus::OPEN);
 
     const int segment_number2 = segvalv_vector[1].first;
     BOOST_CHECK_EQUAL(9, segment_number2);
@@ -425,20 +425,20 @@ BOOST_AUTO_TEST_CASE(testwsegvalv) {
     segment2.updateValve(valve2, segment_length2);
     BOOST_CHECK(Opm::Segment::SegmentType::VALVE ==segment2.segmentType());
 
-    const Opm::Valve* valv2 = segment2.valve();
-    BOOST_CHECK_EQUAL(valv2->conFlowCoefficient(), 0.001);
-    BOOST_CHECK_EQUAL(valv2->conCrossArea(), 6.);
-    BOOST_CHECK_EQUAL(valv2->conMaxCrossArea(), 9.);
-    BOOST_CHECK_EQUAL(valv2->pipeAdditionalLength(), 0.0);
-    BOOST_CHECK_EQUAL(valv2->pipeDiameter(), 1.2);
-    BOOST_CHECK_EQUAL(valv2->pipeRoughness(), 0.1);
-    BOOST_CHECK_EQUAL(valv2->pipeCrossArea(), 8.);
-    BOOST_CHECK(valv2->status()==Opm::ICDStatus::SHUT);
+    const Opm::Valve& valv2 = segment2.valve();
+    BOOST_CHECK_EQUAL(valv2.conFlowCoefficient(), 0.001);
+    BOOST_CHECK_EQUAL(valv2.conCrossArea(), 6.);
+    BOOST_CHECK_EQUAL(valv2.conMaxCrossArea(), 9.);
+    BOOST_CHECK_EQUAL(valv2.pipeAdditionalLength(), 0.0);
+    BOOST_CHECK_EQUAL(valv2.pipeDiameter(), 1.2);
+    BOOST_CHECK_EQUAL(valv2.pipeRoughness(), 0.1);
+    BOOST_CHECK_EQUAL(valv2.pipeCrossArea(), 8.);
+    BOOST_CHECK(valv2.status()==Opm::ICDStatus::SHUT);
 
     // valve changes the segment data
-    BOOST_CHECK_EQUAL(segment2.internalDiameter(), valv2->pipeDiameter());
-    BOOST_CHECK_EQUAL(segment2.roughness(), valv2->pipeRoughness());
-    BOOST_CHECK_EQUAL(segment2.crossArea(), valv2->pipeCrossArea());
+    BOOST_CHECK_EQUAL(segment2.internalDiameter(), valv2.pipeDiameter());
+    BOOST_CHECK_EQUAL(segment2.roughness(), valv2.pipeRoughness());
+    BOOST_CHECK_EQUAL(segment2.crossArea(), valv2.pipeCrossArea());
 }
 
 

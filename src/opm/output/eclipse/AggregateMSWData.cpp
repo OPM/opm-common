@@ -543,17 +543,17 @@ namespace {
             using Ix = ::Opm::RestartIO::Helpers::VectorItems::RSeg::index;
             using M  = ::Opm::UnitSystem::measure;
 
-            const auto* valve = segment.valve();
+            const auto& valve = segment.valve();
 
             rSeg[baseIndex + Ix::ValveLength] =
-                usys.from_si(M::length, valve->pipeAdditionalLength());
+                usys.from_si(M::length, valve.pipeAdditionalLength());
 
             rSeg[baseIndex + Ix::ValveArea] =
-                usys.from_si(M::length, usys.from_si(M::length, valve->conCrossArea()));
+                usys.from_si(M::length, usys.from_si(M::length, valve.conCrossArea()));
 
-            rSeg[baseIndex + Ix::ValveFlowCoeff] = valve->conFlowCoefficient();
+            rSeg[baseIndex + Ix::ValveFlowCoeff] = valve.conFlowCoefficient();
             rSeg[baseIndex + Ix::ValveMaxArea]   =
-                usys.from_si(M::length, usys.from_si(M::length, valve->conMaxCrossArea()));
+                usys.from_si(M::length, usys.from_si(M::length, valve.conMaxCrossArea()));
 
             const auto Cu   = valveFlowUnitCoefficient(usys.getType());
             const auto CvAc = rSeg[baseIndex + Ix::ValveFlowCoeff]

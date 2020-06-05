@@ -274,17 +274,12 @@ namespace {
         return std::get<SICD>(this->m_icd);
     }
 
-    void Segment::updateValve(const Valve& valve) {
-        if (valve.pipeAdditionalLength() < 0)
-            throw std::logic_error("Bug in handling of pipe length for valves");
 
-    void Segment::updateValve(const Valve& input_valve, const double segment_length) {
+    void Segment::updateValve(const Valve& input_valve) {
         // we need to update some values for the vale
         auto valve = input_valve;
-
-        if (valve.pipeAdditionalLength() < 0.) { // defaulted for this
-            valve.setPipeAdditionalLength(segment_length);
-        }
+        if (valve.pipeAdditionalLength() < 0)
+            throw std::logic_error("Bug in handling of pipe length for valves");
 
         if (valve.pipeDiameter() < 0.) {
             valve.setPipeDiameter(m_internal_diameter);
@@ -330,9 +325,8 @@ namespace {
    }
 
 
-    const Valve* Segment::valve() const {
-        return &std::get<Valve>(this->m_icd);
-        //return m_valve.get();
+    const Valve& Segment::valve() const {
+        return std::get<Valve>(this->m_icd);
     }
 
     int Segment::ecl_type_id() const {

@@ -105,7 +105,7 @@ namespace Opm {
         bool operator!=( const Segment& ) const;
 
         const SICD& spiralICD() const;
-        const Valve* valve() const;
+        const Valve& valve() const;
 
         void updatePerfLength(double perf_length);
         void updateSpiralICD(const SICD& spiral_icd);
