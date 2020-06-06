@@ -77,6 +77,7 @@
 #include <opm/parser/eclipse/Units/Units.hpp>
 
 #include "Well/injection.hpp"
+#include "MSW/Compsegs.hpp"
 
 namespace Opm {
 
@@ -3044,6 +3045,7 @@ void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t 
                this->restart_config == data.restart_config &&
                this->wellgroup_events == data.wellgroup_events;
      }
+
 namespace {
 // Duplicated from Well.cpp
 Connection::Order order_from_int(int int_value) {
@@ -3058,7 +3060,6 @@ Connection::Order order_from_int(int int_value) {
         throw std::invalid_argument("Invalid integer value: " + std::to_string(int_value) + " encountered when determining connection ordering");
     }
 }
-
 }
 
 void Schedule::load_rst(const RestartIO::RstState& rst_state, const EclipseGrid& grid, const FieldPropsManager& fp, const UnitSystem& unit_system)
@@ -3071,50 +3072,27 @@ void Schedule::load_rst(const RestartIO::RstState& rst_state, const EclipseGrid&
 
     for (const auto& rst_well : rst_state.wells) {
         Opm::Well well(rst_well, report_step, unit_system, udq_undefined);
-        std::vector<Opm::Connection> connections;
-        std::unordered_map<int, Opm::Segment> segments;
+        std::vector<Opm::Connection> rst_connections;
 
         for (const auto& rst_conn : rst_well.connections)
-            connections.emplace_back(rst_conn, grid, fp);
+            rst_connections.emplace_back(rst_conn, grid, fp);
 
-        for (const auto& rst_segment : rst_well.segments) {
-            Opm::Segment segment(rst_segment);
-            segments.insert(std::make_pair(rst_segment.segment, std::move(segment)));
-        }
-
-        for (auto& connection : connections) {
-            int segment_id = connection.segment();
-            if (segment_id > 0) {
-                const auto& segment = segments.at(segment_id);
-                connection.updateSegmentRST(segment.segmentNumber(),
-                                            segment.depth());
+        if (rst_well.segments.empty()) {
+            Opm::WellConnections connections(order_from_int(rst_well.completion_ordering),
+                                             rst_well.ij[0],
+                                             rst_well.ij[1],
+                                             rst_connections);
+            well.updateConnections( std::make_shared<WellConnections>( std::move(connections) ), grid, fp.get_int("PVTNUM"));
+        } else {
+            std::unordered_map<int, Opm::Segment> rst_segments;
+            for (const auto& rst_segment : rst_well.segments) {
+                Opm::Segment segment(rst_segment);
+                rst_segments.insert(std::make_pair(rst_segment.segment, std::move(segment)));
             }
-        }
 
-        {
-            std::shared_ptr<Opm::WellConnections> well_connections = std::make_shared<Opm::WellConnections>(order_from_int(rst_well.completion_ordering), rst_well.ij[0], rst_well.ij[1], connections);
-            well.updateConnections( std::move(well_connections), grid, fp.get_int("PVTNUM") );
-        }
-
-        if (!segments.empty()) {
-            std::vector<Segment> segments_list;
-            /*
-              The ordering of the segments in the WellSegments structure seems a
-              bit random; in some parts of the code the segment_number seems to
-              be treated like a random integer ID, whereas in other parts it
-              seems to be treated like a running index. Here the segments in
-              WellSegments are sorted according to the segment number - observe
-              that this is somewhat important because the first top segment is
-              treated differently from the other segment.
-            */
-            for (const auto& segment_pair : segments)
-                segments_list.push_back( std::move(segment_pair.second) );
-
-            std::sort( segments_list.begin(), segments_list.end(),[](const Segment& seg1, const Segment& seg2) { return seg1.segmentNumber() < seg2.segmentNumber(); } );
-            auto comp_pressure_drop = WellSegments::CompPressureDrop::HFA;
-            std::shared_ptr<Opm::WellSegments> well_segments = std::make_shared<Opm::WellSegments>(comp_pressure_drop, segments_list);
-            well_segments->updatePerfLength( well.getConnections() );
-            well.updateSegments( std::move(well_segments) );
+            auto [connections, segments] = Compsegs::rstUpdate(rst_well, rst_connections, rst_segments);
+            well.updateConnections( std::make_shared<WellConnections>(std::move(connections)), grid, fp.get_int("PVTNUM"));
+            well.updateSegments( std::make_shared<WellSegments>(std::move(segments) ));
         }
 
         this->addWell(well, report_step);
