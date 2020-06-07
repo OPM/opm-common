@@ -86,6 +86,7 @@ namespace Opm {
         void updatePerfLength(double perf_length);
         void updateSpiralICD(const SICD& spiral_icd);
         void updateValve(const Valve& valve, const double segment_length);
+        void updateValve(const Valve& valve);
         void addInletSegment(const int segment_number);
 
         template<class Serializer>
@@ -109,6 +110,7 @@ namespace Opm {
         }
 
     private:
+        void updateValve__(Valve& valve, const double segment_length);
         // segment number
         // it should work as a ID.
         int m_segment_number;
