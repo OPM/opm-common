@@ -24,6 +24,7 @@
 
 #include <array>
 #include <vector>
+#include <string>
 
 namespace Opm {
 
