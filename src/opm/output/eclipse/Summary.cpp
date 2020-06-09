@@ -2050,7 +2050,7 @@ namespace Evaluator {
         const auto& kw = this->node_->keyword;
 
         return this->udq_.has_unit(kw)
-            ?  this->udq_.unit(kw) : "?????";
+            ?  this->udq_.unit(kw) : "";
     }
 } // namespace Evaluator
 
