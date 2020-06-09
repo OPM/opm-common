@@ -14,6 +14,7 @@
 
 #include <opm/output/data/Solution.hpp>
 #include <opm/output/data/Wells.hpp>
+#include <opm/parser/eclipse/Deck/UDAValue.hpp>
 
 
 namespace Opm {
@@ -30,6 +31,8 @@ public:
     using solution_function = void(const EclipseState&, const Schedule&, data::Solution&, size_t report_step, double seconds_elapsed);
 
     msim(const EclipseState& state);
+
+    const UDAValue uda_val;
 
     void well_rate(const std::string& well, data::Rates::opt rate, std::function<well_rate_function> func);
     void solution(const std::string& field, std::function<solution_function> func);

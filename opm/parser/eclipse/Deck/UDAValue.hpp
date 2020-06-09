@@ -54,6 +54,9 @@ public:
     double getSI() const;
     bool zero() const;
 
+    //constant - epsilon limit ~= 0.
+    const double epsilonLimit = 1.E-20;
+
     template<typename T>
     bool is() const;
 

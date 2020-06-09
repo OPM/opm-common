@@ -641,7 +641,9 @@ namespace {
                 const auto& wname     = well.name();
                 const auto wPKey = "WBHP:"  + wname;
                 const auto& wRatesIt =  wr.find(wname);
-                bool haveWellRes = wRatesIt != wr.end();
+                //
+                //Do not calculate well segment rates for shut wells
+                bool haveWellRes = (well.getStatus() != Opm::Well::Status::SHUT) ? (wRatesIt != wr.end()) : false;
                 const auto volFromLengthUnitConv = units.from_si(M::length, units.from_si(M::length, units.from_si(M::length, 1.)));
                 const auto areaFromLengthUnitConv =  units.from_si(M::length, units.from_si(M::length, 1.));
                 //

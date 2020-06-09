@@ -1059,6 +1059,7 @@ BOOST_AUTO_TEST_CASE(WELL_POD) {
     const auto rptStep = std::size_t{2};
     const auto sim_step = rptStep - 1;
     Opm::SummaryState sumState(std::chrono::system_clock::now());
+    const auto xw   = well_rates_1();
 
     const auto ih = Opm::RestartIO::Helpers::createInteHead(simCase.es,
                                                             simCase.grid,
@@ -1070,10 +1071,10 @@ BOOST_AUTO_TEST_CASE(WELL_POD) {
 
     auto wellData = Opm::RestartIO::Helpers::AggregateWellData(ih);
     wellData.captureDeclaredWellData(simCase.sched, units, sim_step, sumState, ih);
-    wellData.captureDynamicWellData(simCase.sched, sim_step, {} , sumState);
+    wellData.captureDynamicWellData(simCase.sched, sim_step, xw , sumState);
 
     auto connectionData = Opm::RestartIO::Helpers::AggregateConnectionData(ih);
-    connectionData.captureDeclaredConnData(simCase.sched, simCase.grid, units, {} , sim_step);
+    connectionData.captureDeclaredConnData(simCase.sched, simCase.grid, units, xw , sim_step);
 
     const auto& iwel = wellData.getIWell();
     const auto& swel = wellData.getSWell();
