@@ -21,15 +21,23 @@
 #ifndef COMPSEGS_HPP_
 #define COMPSEGS_HPP_
 
+#include <unordered_map>
+#include <vector>
 
 namespace Opm {
 
+    class Segment;
+    class Connection;
     class WellConnections;
     class DeckKeyword;
     class WellSegments;
     class EclipseGrid;
     class ParseContext;
     class ErrorGuard;
+
+namespace RestartIO {
+    class RstWell;
+}
 
 namespace Compsegs {
 
@@ -50,6 +58,11 @@ namespace Compsegs {
                     const ParseContext& parseContext,
                     ErrorGuard& errors);
 
+
+    std::pair<WellConnections, WellSegments>
+    rstUpdate(const RestartIO::RstWell& rst_well,
+              std::vector<Connection> input_connections,
+              const std::unordered_map<int, Segment>& input_segments);
 }
 }
 

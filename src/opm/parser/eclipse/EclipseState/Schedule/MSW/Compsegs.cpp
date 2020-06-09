@@ -26,6 +26,7 @@
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
+#include <opm/io/eclipse/rst/well.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellConnections.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/WellSegments.hpp>
@@ -306,7 +307,7 @@ namespace {
                     const EclipseGrid& grid,
                     const ParseContext& parseContext,
                     ErrorGuard& errors)
-        {
+    {
             const auto& compsegs_vector = Compsegs::compsegsFromCOMPSEGSKeyword( compsegs, input_segments, grid, parseContext, errors);
             WellSegments new_segment_set = input_segments;
             WellConnections new_connection_set = input_connections;
@@ -333,6 +334,64 @@ namespace {
 
             return std::make_pair( WellConnections( std::move( new_connection_set ) ),
                                    WellSegments( std::move(new_segment_set)));
+    }
+
+namespace {
+    // Duplicated from Well.cpp
+    Connection::Order order_from_int(int int_value) {
+        switch(int_value) {
+        case 0:
+            return Connection::Order::TRACK;
+        case 1:
+            return Connection::Order::DEPTH;
+        case 2:
+            return Connection::Order::INPUT;
+        default:
+            throw std::invalid_argument("Invalid integer value: " + std::to_string(int_value) + " encountered when determining connection ordering");
         }
     }
+
+}
+
+    std::pair<WellConnections, WellSegments>
+    rstUpdate(const RestartIO::RstWell& rst_well,
+              std::vector<Connection> rst_connections,
+              const std::unordered_map<int, Segment>& rst_segments)
+    {
+        for (auto& connection : rst_connections) {
+            int segment_id = connection.segment();
+            if (segment_id > 0) {
+                const auto& segment = rst_segments.at(segment_id);
+                connection.updateSegmentRST(segment.segmentNumber(),
+                                            segment.depth());
+            }
+        }
+        WellConnections connections(order_from_int(rst_well.completion_ordering),
+                                    rst_well.ij[0],
+                                    rst_well.ij[1],
+                                    rst_connections);
+
+
+        std::vector<Segment> segments_list;
+        /*
+          The ordering of the segments in the WellSegments structure seems a
+          bit random; in some parts of the code the segment_number seems to
+          be treated like a random integer ID, whereas in other parts it
+          seems to be treated like a running index. Here the segments in
+          WellSegments are sorted according to the segment number - observe
+          that this is somewhat important because the first top segment is
+          treated differently from the other segment.
+        */
+        for (const auto& segment_pair : rst_segments)
+            segments_list.push_back( std::move(segment_pair.second) );
+
+        std::sort( segments_list.begin(), segments_list.end(),[](const Segment& seg1, const Segment& seg2) { return seg1.segmentNumber() < seg2.segmentNumber(); } );
+        auto comp_pressure_drop = WellSegments::CompPressureDrop::HFA;
+
+        WellSegments segments( comp_pressure_drop, segments_list);
+        segments.updatePerfLength( connections );
+
+        return std::make_pair( std::move(connections), std::move(segments));
+    }
+}
 }
