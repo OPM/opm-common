@@ -8,9 +8,16 @@ set(OPM_MACROS_ROOT ${PROJECT_SOURCE_DIR})
 option(ENABLE_ECL_INPUT "Enable eclipse input support?" ON)
 option(ENABLE_ECL_OUTPUT "Enable eclipse output support?" ON)
 option(ENABLE_MOCKSIM "Build the mock simulator for io testing" ON)
+option(OPM_ENABLE_DYNAMIC_BOOST "Link the boost libraries dynamically" ON)
 option(OPM_ENABLE_PYTHON "Enable python bindings?" OFF)
+option(OPM_ENABLE_DYNAMIC_PYTHON_LINKING, "Link Python-module dynamically" ON)
 option(OPM_INSTALL_PYTHON "Enable python bindings?" OFF)
 option(OPM_ENABLE_EMBEDDED_PYTHON "Enable python bindings?" OFF)
+
+# Static Python linking implies static Boost
+if (OPM_ENABLE_PYTHON AND NOT OPM_ENABLE_DYNAMIC_PYTHON_LINKING)
+  set(OPM_ENABLE_DYNAMIC_BOOST OFF)
+endif()
 
 # Output implies input
 if(ENABLE_ECL_OUTPUT)
@@ -283,6 +290,15 @@ if (OPM_ENABLE_PYTHON)
   else()
     set( _rpath_arg "")
   endif()
+
+  if (OPM_ENABLE_PYTHON_DYNAMIC_LINKING)
+    set(opm-common_PYTHON_LINKAGE "'-Bdynamic'")
+  else()
+    set(opm-common_PYTHON_LINKAGE "'-Bstatic'")
+  endif()
+
+  # Generate versioned setup.py
+  configure_file (${PROJECT_SOURCE_DIR}/python/setup.py.in ${PROJECT_BINARY_DIR}/python/setup.py)
 
   execute_process(COMMAND ${PYTHON_EXECUTABLE} target_name.py
                   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/python
