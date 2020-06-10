@@ -73,6 +73,7 @@ ext_modules = [
 
 setup(
     name='Opm',
+    version = '@opm-common_VERSION@',
     package_dir = {'': 'python'},
     packages=[
                 'opm',
