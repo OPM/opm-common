@@ -32,7 +32,7 @@ public:
 
     msim(const EclipseState& state);
 
-    const UDAValue uda_val;
+    Opm::UDAValue uda_val();
 
     void well_rate(const std::string& well, data::Rates::opt rate, std::function<well_rate_function> func);
     void solution(const std::string& field, std::function<solution_function> func);

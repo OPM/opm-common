@@ -343,7 +343,7 @@ BOOST_AUTO_TEST_CASE(UDA) {
 #include "uda.include"
     test_data td( uda_deck );
     msim sim(td.state);
-    const auto eps_lim = msim::uda_val.epsilonLimit;
+    auto eps_lim = sim.uda_val().epsilonLimit();
 
     EclipseIO io(td.state, td.state.getInputGrid(), td.schedule, td.summary_config);
 

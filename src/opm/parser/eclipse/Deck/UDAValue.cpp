@@ -82,6 +82,9 @@ void UDAValue::assert_numeric(const std::string& error_msg) const {
 
     throw std::invalid_argument(error_msg);
 }
+double UDAValue::epsilonLimit() const {
+        return 1.E-20;
+}
 
 template<>
 bool UDAValue::is<double>() const {
