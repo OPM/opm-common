@@ -409,6 +409,7 @@ FieldProps::FieldProps(const Deck& deck, const Phases& phases, const EclipseGrid
     ny(grid.getNY()),
     nz(grid.getNZ()),
     m_phases(phases),
+    m_satfuncctrl(deck),
     m_actnum(grid.getACTNUM()),
     cell_volume(extract_cell_volume(grid)),
     cell_depth(extract_cell_depth(grid)),
@@ -1056,14 +1057,16 @@ void FieldProps::scanEDITSection(const EDITSection& edit_section) {
 
 
 void FieldProps::init_satfunc(const std::string& keyword, FieldData<double>& satfunc) {
+    if (this->m_rtep == nullptr)
+        this->m_rtep = satfunc::getRawTableEndpoints(this->tables, this->m_phases,
+                                                     this->m_satfuncctrl.minimumRelpermMobilityThreshold());
+
     const auto& endnum = this->get<int>("ENDNUM");
-    if (keyword[0] == 'I') {
-        const auto& imbnum = this->get<int>("IMBNUM");
-        satfunc.default_update(satfunc::init(keyword, this->tables, this->m_phases, this->cell_depth, imbnum, endnum));
-    } else {
-        const auto& satnum = this->get<int>("SATNUM");
-        satfunc.default_update(satfunc::init(keyword, this->tables, this->m_phases, this->cell_depth, satnum, endnum));
-    }
+    const auto& satreg = (keyword[0] == 'I')
+        ? this->get<int>("IMBNUM")
+        : this->get<int>("SATNUM");
+
+    satfunc.default_update(satfunc::init(keyword, this->tables, this->m_phases, *this->m_rtep, this->cell_depth, satreg, endnum));
 }
 
 
