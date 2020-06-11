@@ -357,6 +357,11 @@ if (OPM_ENABLE_PYTHON)
         DESTINATION ${PROJECT_BINARY_DIR}
         FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE )
 
+  configure_file(python/setup-package.sh.in tmp/setup-package.sh)
+  file( COPY ${PROJECT_BINARY_DIR}/tmp/setup-package.sh
+        DESTINATION ${PROJECT_BINARY_DIR}
+        FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE )
+
   configure_file(python/setup-test.sh.in tmp/setup-test.sh)
   file( COPY ${PROJECT_BINARY_DIR}/tmp/setup-test.sh
         DESTINATION ${PROJECT_BINARY_DIR}
