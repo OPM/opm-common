@@ -26,6 +26,8 @@
 #include <limits>
 #include <cmath>
 
+#include "src/opm/parser/eclipse/EclipseState/Schedule/MSW/icd_convert.hpp"
+
 
 namespace Opm {
 
