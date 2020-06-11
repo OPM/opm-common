@@ -1389,6 +1389,8 @@ void eval_udq(const Opm::Schedule& schedule, std::size_t sim_step, Opm::SummaryS
                 const auto& udq_value = ws[well];
                 if (udq_value)
                     st.update_well_var(well, ws.name(), udq_value.value());
+                else
+                    st.del_well_var(well, ws.name());
             }
         }
 
@@ -1398,6 +1400,8 @@ void eval_udq(const Opm::Schedule& schedule, std::size_t sim_step, Opm::SummaryS
                 const auto& udq_value = ws[well];
                 if (udq_value)
                     st.update_well_var(well, def.keyword(), udq_value.value());
+                else
+                    st.del_well_var(well, ws.name());
             }
         }
     }
@@ -1411,6 +1415,8 @@ void eval_udq(const Opm::Schedule& schedule, std::size_t sim_step, Opm::SummaryS
                 const auto& udq_value = ws[group];
                 if (udq_value)
                     st.update_group_var(group, ws.name(), udq_value.value());
+                else
+                    st.del_group_var(group, ws.name());
             }
         }
 
@@ -1420,6 +1426,8 @@ void eval_udq(const Opm::Schedule& schedule, std::size_t sim_step, Opm::SummaryS
                 const auto& udq_value = ws[group];
                 if (udq_value)
                     st.update_group_var(group, def.keyword(), udq_value.value());
+                else
+                    st.del_group_var(group, ws.name());
             }
         }
     }
@@ -1428,6 +1436,8 @@ void eval_udq(const Opm::Schedule& schedule, std::size_t sim_step, Opm::SummaryS
         auto field_udq = def.eval(context);
         if (field_udq[0])
             st.update(def.keyword(), field_udq[0].value());
+        else
+            st.del(def.keyword());
     }
 }
 
