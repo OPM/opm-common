@@ -110,6 +110,10 @@ const std::string& UDQSet::name() const {
     return this->m_name;
 }
 
+void UDQSet::name(const std::string& name) {
+    this->m_name = name;
+}
+
 UDQSet::UDQSet(const std::string& name, UDQVarType var_type, const std::vector<std::string>& wgnames) :
     m_name(name),
     m_var_type(var_type)

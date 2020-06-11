@@ -1034,6 +1034,8 @@ BOOST_AUTO_TEST_CASE(UDQ_SCALAR_SET) {
         auto well4 = res["P4"];
         BOOST_CHECK( well4.defined() );
         BOOST_CHECK_EQUAL(well4.value() , 1);
+
+        BOOST_CHECK_EQUAL( "WUOPR", res.name() );
     }
 }
 
