@@ -132,7 +132,10 @@ namespace {
             this->values[key] = value;
             this->group_values[var][group] = value;
         }
-        this->m_groups.insert(group);
+        if (this->m_groups.count(group) == 0) {
+            this->m_groups.insert(group);
+            this->group_names.reset();
+        }
     }
 
     void SummaryState::update_well_var(const std::string& well, const std::string& var, double value) {
@@ -144,7 +147,10 @@ namespace {
             this->values[key] = value;
             this->well_values[var][well] = value;
         }
-        this->m_wells.insert(well);
+        if (this->m_wells.count(well) == 0) {
+            this->m_wells.insert(well);
+            this->well_names.reset();
+        }
     }
 
     void SummaryState::update_udq(const UDQSet& udq_set) {
@@ -189,6 +195,7 @@ namespace {
             return false;
 
         erase_var(this->well_values, var, well);
+        this->well_names.reset();
         return true;
     }
 
@@ -198,6 +205,7 @@ namespace {
             return false;
 
         erase_var(this->group_values, var, group);
+        this->group_names.reset();
         return true;
     }
 
@@ -245,8 +253,11 @@ namespace {
     }
 
 
-    std::vector<std::string> SummaryState::wells() const {
-        return std::vector<std::string>(this->m_wells.begin(), this->m_wells.end());
+    const std::vector<std::string>& SummaryState::wells() const {
+        if (!this->well_names)
+            this->well_names = std::vector<std::string>(this->m_wells.begin(), this->m_wells.end());
+
+        return *this->well_names;
     }
 
 
@@ -255,8 +266,11 @@ namespace {
     }
 
 
-    std::vector<std::string> SummaryState::groups() const {
-        return std::vector<std::string>(this->m_groups.begin(), this->m_groups.end());
+    const std::vector<std::string>& SummaryState::groups() const {
+        if (!this->group_names)
+            this->group_names = std::vector<std::string>(this->m_groups.begin(), this->m_groups.end());
+
+        return *this->group_names;
     }
 
     std::size_t SummaryState::num_wells() const {
