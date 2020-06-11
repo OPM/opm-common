@@ -78,6 +78,7 @@ setup(
     url='http://www.opm-project.org',
     author='The Open Porous Media Project',
     author_email='opmuser@gmail.com',
+    description='OPM-Common Python bindings',
     packages=[
                 'opm',
                 'opm.io',
