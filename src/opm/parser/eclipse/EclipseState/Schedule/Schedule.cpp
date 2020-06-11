@@ -151,7 +151,7 @@ std::pair<std::time_t, std::size_t> restart_info(const RestartIO::RstState * rst
         m_network(this->m_timeMap, std::make_shared<Network::ExtNetwork>()),
         m_glo(this->m_timeMap, std::make_shared<GasLiftOpt>()),
         rft_config(this->m_timeMap),
-        m_nupcol(this->m_timeMap, ParserKeywords::NUPCOL::NUM_ITER::defaultValue),
+        m_nupcol(this->m_timeMap, runspec.nupcol()),
         restart_config(m_timeMap, deck, parseContext, errors),
         rpt_config(this->m_timeMap, std::make_shared<RPTConfig>())
     {

@@ -278,6 +278,7 @@ public:
     const EclHysterConfig& hysterPar() const noexcept;
     const Actdims& actdims() const noexcept;
     const SatFuncControls& saturationFunctionControls() const noexcept;
+    int nupcol() const noexcept;
 
     bool operator==(const Runspec& data) const;
 
@@ -305,6 +306,7 @@ private:
     EclHysterConfig hystpar;
     Actdims m_actdims;
     SatFuncControls m_sfuncctrl;
+    int m_nupcol;
 };
 
 
