@@ -1815,6 +1815,19 @@ BOOST_AUTO_TEST_CASE(Test_SummaryState) {
     // The well 'OP_2' which was indirectly added with the
     // st.update("WWCT:OP_2", 100) call is *not* counted as a well!
     BOOST_CHECK_EQUAL(st.num_wells(), 3);
+
+
+    BOOST_CHECK( st.erase("WWCT:OP2") );
+    BOOST_CHECK( !st.has("WWCT:OP2") );
+    BOOST_CHECK( !st.erase("WWCT:OP2") );
+
+    BOOST_CHECK( st.erase_well_var("OP1", "WWCT") );
+    BOOST_CHECK( !st.has_well_var("OP1", "WWCT"));
+    BOOST_CHECK( !st.has("WWCT:OP1") );
+
+    BOOST_CHECK( st.erase_group_var("G1", "GWCT") );
+    BOOST_CHECK( !st.has_group_var("G1", "GWCT"));
+    BOOST_CHECK( !st.has("GWCT:G1") );
 }
 
 BOOST_AUTO_TEST_SUITE_END()

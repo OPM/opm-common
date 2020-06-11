@@ -51,7 +51,41 @@ namespace {
             return is_total(key.substr(0,sep_pos));
     }
 
+
+    using map2 = std::unordered_map<std::string, std::unordered_map<std::string, double>>;
+
+    bool has_var(const map2& values, const std::string& var1, const std::string var2) {
+        const auto& var1_iter = values.find(var1);
+        if (var1_iter == values.end())
+            return false;
+
+        const auto& var2_iter = var1_iter->second.find(var2);
+        if (var2_iter == var1_iter->second.end())
+            return false;
+
+        return true;
+    }
+
+    bool erase_var(map2& values, const std::string& var1, const std::string var2) {
+        const auto& var1_iter = values.find(var1);
+        if (var1_iter == values.end())
+            return false;
+
+        return (var1_iter->second.erase(var2) > 0);
+    }
+
+    std::vector<std::string> var2_list(const map2& values, const std::string& var1) {
+        const auto& var1_iter = values.find(var1);
+        if (var1_iter == values.end())
+            return {};
+
+        std::vector<std::string> l;
+        for (const auto& pair : var1_iter->second)
+            l.push_back(pair.first);
+        return l;
+    }
 }
+
 
     SummaryState::SummaryState(std::chrono::system_clock::time_point sim_start_arg):
         sim_start(sim_start_arg)
@@ -117,6 +151,27 @@ namespace {
         this->values[key] = value;
     }
 
+    bool SummaryState::erase(const std::string& key) {
+        return (this->values.erase(key) > 0);
+    }
+
+    bool SummaryState::erase_well_var(const std::string& well, const std::string& var) {
+        std::string key = var + ":" + well;
+        if (!this->erase(key))
+            return false;
+
+        erase_var(this->well_values, var, well);
+        return true;
+    }
+
+    bool SummaryState::erase_group_var(const std::string& group, const std::string& var) {
+        std::string key = var + ":" + group;
+        if (!this->erase(key))
+            return false;
+
+        erase_var(this->group_values, var, group);
+        return true;
+    }
 
     bool SummaryState::has(const std::string& key) const {
         return (this->values.find(key) != this->values.end());
@@ -132,15 +187,7 @@ namespace {
     }
 
     bool SummaryState::has_well_var(const std::string& well, const std::string& var) const {
-        const auto& var_iter = this->well_values.find(var);
-        if (var_iter == this->well_values.end())
-            return false;
-
-        const auto& well_iter = var_iter->second.find(well);
-        if (well_iter == var_iter->second.end())
-            return false;
-
-        return true;
+        return has_var(this->well_values, var, well);
     }
 
     double SummaryState::get_well_var(const std::string& well, const std::string& var) const {
@@ -148,15 +195,7 @@ namespace {
     }
 
     bool SummaryState::has_group_var(const std::string& group, const std::string& var) const {
-        const auto& var_iter = this->group_values.find(var);
-        if (var_iter == this->group_values.end())
-            return false;
-
-        const auto& group_iter = var_iter->second.find(group);
-        if (group_iter == var_iter->second.end())
-            return false;
-
-        return true;
+        return has_var(this->group_values, var, group);
     }
 
     double SummaryState::get_group_var(const std::string& group, const std::string& var) const {
@@ -174,14 +213,7 @@ namespace {
 
 
     std::vector<std::string> SummaryState::wells(const std::string& var) const {
-        const auto& var_iter = this->well_values.find(var);
-        if (var_iter == this->well_values.end())
-            return {};
-
-        std::vector<std::string> wells;
-        for (const auto& pair : var_iter->second)
-            wells.push_back(pair.first);
-        return wells;
+        return var2_list(this->well_values, var);
     }
 
 
@@ -191,14 +223,7 @@ namespace {
 
 
     std::vector<std::string> SummaryState::groups(const std::string& var) const {
-        const auto& var_iter = this->group_values.find(var);
-        if (var_iter == this->group_values.end())
-            return {};
-
-        std::vector<std::string> groups;
-        for (const auto& pair : var_iter->second)
-            groups.push_back(pair.first);
-        return groups;
+        return var2_list(this->group_values, var);
     }
 
 

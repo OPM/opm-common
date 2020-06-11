@@ -73,6 +73,10 @@ public:
     */
     void set(const std::string& key, double value);
 
+    bool erase(const std::string& key);
+    bool erase_well_var(const std::string& well, const std::string& var);
+    bool erase_group_var(const std::string& group, const std::string& var);
+
     bool has(const std::string& key) const;
     bool has_well_var(const std::string& well, const std::string& var) const;
     bool has_group_var(const std::string& group, const std::string& var) const;
