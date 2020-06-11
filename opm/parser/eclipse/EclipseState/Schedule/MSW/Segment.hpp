@@ -26,6 +26,7 @@
 
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/Valve.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/SICD.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/MSW/AICD.hpp>
 
 
 namespace Opm {
@@ -105,10 +106,12 @@ namespace Opm {
         bool operator!=( const Segment& ) const;
 
         const SICD& spiralICD() const;
+        const AutoICD& autoICD() const;
         const Valve& valve() const;
 
         void updatePerfLength(double perf_length);
         void updateSpiralICD(const SICD& spiral_icd);
+        void updateAutoICD(const AutoICD& aicd);
         void updateValve(const Valve& valve, const double segment_length);
         void updateValve(const Valve& valve);
         void addInletSegment(const int segment_number);
@@ -121,6 +124,11 @@ namespace Opm {
         inline bool isSpiralICD() const
         {
             return std::holds_alternative<SICD>(this->m_icd);
+        }
+
+        inline bool isAICD() const
+        {
+            return std::holds_alternative<AutoICD>(this->m_icd);
         }
 
         inline bool isValve() const
@@ -194,7 +202,7 @@ namespace Opm {
         bool m_data_ready;
 
         std::optional<double> m_perf_length;
-        std::variant<RegularSegment, SICD, Valve> m_icd;
+        std::variant<RegularSegment, SICD, AutoICD, Valve> m_icd;
 
         // We are not handling the length of segment projected onto the X-axis and Y-axis.
         // They are not used in the simulations and we are not supporting the plotting.

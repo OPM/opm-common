@@ -229,6 +229,9 @@ namespace {
         if (this->isSpiralICD())
             return SegmentType::SICD;
 
+        if (this->isAICD())
+            return SegmentType::AICD;
+
         if (this->isValve())
             return SegmentType::VALVE;
 
@@ -273,6 +276,15 @@ namespace {
     const SICD& Segment::spiralICD() const {
         return std::get<SICD>(this->m_icd);
     }
+
+    void Segment::updateAutoICD(const AutoICD& aicd) {
+        this->m_icd = aicd;
+    }
+
+    const AutoICD& Segment::autoICD() const {
+        return std::get<AutoICD>(this->m_icd);
+    }
+
 
 
     void Segment::updateValve(const Valve& input_valve) {
