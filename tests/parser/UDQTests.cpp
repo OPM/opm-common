@@ -15,6 +15,7 @@ Copyright 2018 Statoil ASA.
 
 #define BOOST_TEST_MODULE UDQTests
 #include <boost/test/unit_test.hpp>
+#include <limits>
 
 #include <opm/parser/eclipse/Utility/Typetools.hpp>
 #include <opm/parser/eclipse/Python/Python.hpp>
@@ -203,6 +204,20 @@ BOOST_AUTO_TEST_CASE(UDQFieldSetTest) {
         auto fopr_res = def_fopr.eval(context);
         BOOST_CHECK_EQUAL( fopr_res[0].value(), 10.0 );
     }
+}
+
+BOOST_AUTO_TEST_CASE(UDQWellSetNANTest) {
+    std::vector<std::string> wells = {"P1", "P2", "I1", "I2"};
+    UDQSet ws = UDQSet::wells("NAME", wells);
+
+    for (std::size_t i = 0; i < 4; i++)
+        ws.assign(i, i*1.0);
+
+    BOOST_CHECK_EQUAL(ws.defined_size(), 4);
+
+    ws.assign(1,std::numeric_limits<double>::quiet_NaN());
+    ws.assign(3,std::numeric_limits<double>::quiet_NaN());
+    BOOST_CHECK_EQUAL(ws.defined_size(), 2);
 }
 
 
@@ -887,10 +902,11 @@ BOOST_AUTO_TEST_CASE(FUNCTIONS_INVALID_ARGUMENT) {
 }
 
 BOOST_AUTO_TEST_CASE(UDQ_SET_DIV) {
-    UDQSet s("NAME", 5);
+    UDQSet s("NAME", 6);
     s.assign(0,1);
     s.assign(2,2);
     s.assign(4,5);
+    s.assign(5,0);
 
     auto result = 10 / s;
     BOOST_CHECK_EQUAL( result.defined_size(), 3);
@@ -1042,7 +1058,7 @@ BOOST_AUTO_TEST_CASE(UDQ_SCALAR_SET) {
 BOOST_AUTO_TEST_CASE(UDQ_SORTD_NAN) {
     UDQParams udqp;
     UDQFunctionTable udqft;
-    UDQDefine def1(udqp, "WUPR1" , {"1", "/", "(", "WWIR", "'OP*'" , ")"});
+    UDQDefine def(udqp, "WUPR1" , {"1", "/", "(", "WWIR", "'OP*'" , ")"});
     UDQDefine def_sort(udqp , "WUPR3", {"SORTD", "(", "WUPR1", ")" });
     SummaryState st(std::chrono::system_clock::now());
     UDQContext context(udqft, st);
@@ -1052,14 +1068,33 @@ BOOST_AUTO_TEST_CASE(UDQ_SORTD_NAN) {
     st.update_well_var("OP3", "WWIR", 3.0);
     st.update_well_var("OP4", "WWIR", 4.0);
 
-    auto res1 = def1.eval(context);
+    auto res1 = def.eval(context);
     st.update_udq( res1 );
 
-    auto res_sort = def_sort.eval(context);
-    BOOST_CHECK_EQUAL(res_sort["OP1"].value(), 1.0);
-    BOOST_CHECK_EQUAL(res_sort["OP2"].value(), 2.0);
-    BOOST_CHECK_EQUAL(res_sort["OP3"].value(), 3.0);
-    BOOST_CHECK_EQUAL(res_sort["OP4"].value(), 4.0);
+    auto res_sort1 = def_sort.eval(context);
+    st.update_udq( res_sort1 );
+    BOOST_CHECK_EQUAL(res_sort1["OP1"].value(), 1.0);
+    BOOST_CHECK_EQUAL(res_sort1["OP2"].value(), 2.0);
+    BOOST_CHECK_EQUAL(res_sort1["OP3"].value(), 3.0);
+    BOOST_CHECK_EQUAL(res_sort1["OP4"].value(), 4.0);
+    BOOST_CHECK( st.has_well_var("OP1", "WUPR3"));
+    BOOST_CHECK( st.has_well_var("OP4", "WUPR3"));
+
+    st.update_well_var("OP1", "WWIR", 0);
+    auto res2 = def.eval(context);
+    BOOST_CHECK_EQUAL(res2.defined_size(), 3);
+    st.update_udq( res2 );
+    BOOST_CHECK( !st.has_well_var("OP1", "WUPR1"));
+    BOOST_CHECK( st.has_well_var("OP4", "WUPR1"));
+
+    auto res_sort2 = def_sort.eval(context);
+    st.update_udq( res_sort2 );
+    BOOST_CHECK_EQUAL(res_sort2.defined_size(), 3);
+    BOOST_CHECK_EQUAL(res_sort2["OP2"].value(), 1.0);
+    BOOST_CHECK_EQUAL(res_sort2["OP3"].value(), 2.0);
+    BOOST_CHECK_EQUAL(res_sort2["OP4"].value(), 3.0);
+    BOOST_CHECK( !st.has_well_var("OP1", "WUPR3"));
+    BOOST_CHECK( st.has_well_var("OP4", "WUPR3"));
 }
 
 
