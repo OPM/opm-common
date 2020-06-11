@@ -1039,6 +1039,30 @@ BOOST_AUTO_TEST_CASE(UDQ_SCALAR_SET) {
     }
 }
 
+BOOST_AUTO_TEST_CASE(UDQ_SORTD_NAN) {
+    UDQParams udqp;
+    UDQFunctionTable udqft;
+    UDQDefine def1(udqp, "WUPR1" , {"1", "/", "(", "WWIR", "'OP*'" , ")"});
+    UDQDefine def_sort(udqp , "WUPR3", {"SORTD", "(", "WUPR1", ")" });
+    SummaryState st(std::chrono::system_clock::now());
+    UDQContext context(udqft, st);
+
+    st.update_well_var("OP1", "WWIR", 1.0);
+    st.update_well_var("OP2", "WWIR", 2.0);
+    st.update_well_var("OP3", "WWIR", 3.0);
+    st.update_well_var("OP4", "WWIR", 4.0);
+
+    auto res1 = def1.eval(context);
+    st.update_udq( res1 );
+
+    auto res_sort = def_sort.eval(context);
+    BOOST_CHECK_EQUAL(res_sort["OP1"].value(), 1.0);
+    BOOST_CHECK_EQUAL(res_sort["OP2"].value(), 2.0);
+    BOOST_CHECK_EQUAL(res_sort["OP3"].value(), 3.0);
+    BOOST_CHECK_EQUAL(res_sort["OP4"].value(), 4.0);
+}
+
+
 
 BOOST_AUTO_TEST_CASE(UDQ_SORTA) {
     UDQParams udqp;

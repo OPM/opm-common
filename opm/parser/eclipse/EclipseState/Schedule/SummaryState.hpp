@@ -62,6 +62,8 @@ namespace Opm{
       st.has_well_var("OPY", "WGOR") => False
 */
 
+class UDQSet;
+
 class SummaryState {
 public:
     typedef std::unordered_map<std::string, double>::const_iterator const_iterator;
@@ -85,6 +87,7 @@ public:
     void update_well_var(const std::string& well, const std::string& var, double value);
     void update_group_var(const std::string& group, const std::string& var, double value);
     void update_elapsed(double delta);
+    void update_udq(const UDQSet& udq_set);
 
     double get(const std::string&) const;
     double get_elapsed() const;

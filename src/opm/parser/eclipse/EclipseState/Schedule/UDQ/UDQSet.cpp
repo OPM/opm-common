@@ -38,7 +38,7 @@ bool UDQScalar::defined() const {
 
 double UDQScalar::value() const {
     if (!this->m_defined)
-        throw std::invalid_argument("UDQSCalar: Value not defined");
+        throw std::invalid_argument("UDQSCalar: Value not defined  wgname:" + this->m_wgname);
 
     return this->m_value;
 }
