@@ -59,6 +59,7 @@
 #include <sstream>
 #include <string>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 namespace Opm { namespace RestartIO {
@@ -456,6 +457,81 @@ namespace {
         return smax;
     }
 
+    std::vector<std::string>
+    solutionVectorNames(const RestartValue& value)
+    {
+        auto vectors = std::vector<std::string>{};
+        vectors.reserve(value.solution.size());
+
+        for (const auto& [name, vector] : value.solution) {
+            if (vector.target == data::TargetType::RESTART_SOLUTION) {
+                vectors.push_back(name);
+            }
+        }
+
+        return vectors;
+    }
+
+    std::vector<std::string>
+    extendedSolutionVectorNames(const RestartValue& value)
+    {
+        auto vectors = std::vector<std::string>{};
+        vectors.reserve(value.solution.size());
+
+        for (const auto& [name, vector] : value.solution) {
+            if ((vector.target == data::TargetType::RESTART_AUXILIARY) ||
+                (vector.target == data::TargetType::RESTART_OPM_EXTENDED))
+            {
+                vectors.push_back(name);
+            }
+        }
+
+        return vectors;
+    }
+
+    template <class OutputVector>
+    void writeSolutionVectors(const RestartValue&             value,
+                              const std::vector<std::string>& vectors,
+                              const bool                      write_double,
+                              OutputVector&&                  writeVector)
+    {
+        for (const auto& vector : vectors) {
+            writeVector(vector, value.solution.data(vector), write_double);
+        }
+    }
+
+    template <class OutputVector>
+    void writeRegularSolutionVectors(const RestartValue& value,
+                                     const bool          write_double,
+                                     OutputVector&&      writeVector)
+    {
+        writeSolutionVectors(value, solutionVectorNames(value), write_double,
+                             std::forward<OutputVector>(writeVector));
+    }
+
+    template <class OutputVector>
+    void writeExtendedSolutionVectors(const RestartValue& value,
+                                      const bool          write_double,
+                                      OutputVector&&      writeVector)
+    {
+        writeSolutionVectors(value, extendedSolutionVectorNames(value), write_double,
+                             std::forward<OutputVector>(writeVector));
+    }
+
+    template <class OutputVector>
+    void writeExtraVectors(const RestartValue& value,
+                           OutputVector&&      writeVector)
+    {
+        for (const auto& elm : value.extra) {
+            const std::string& key = elm.first.key;
+            if (extraInSolution(key)) {
+                // Observe that the extra data is unconditionally
+                // output as double precision.
+                writeVector(key, elm.second, true);
+            }
+        }
+    }
+
     template <class OutputVector>
     void writeEclipseCompatHysteresis(const RestartValue& value,
                                       const bool          write_double,
@@ -496,8 +572,6 @@ namespace {
                        const std::vector<int>&       inteHD,
                        EclIO::OutputStream::Restart& rstFile)
     {
-        rstFile.message("STARTSOL");
-
         auto write = [&rstFile]
             (const std::string&         key,
              const std::vector<double>& data,
@@ -513,39 +587,23 @@ namespace {
             }
         };
 
-        for (const auto& elm : value.solution) {
-            if (elm.second.target == data::TargetType::RESTART_SOLUTION)
-            {
-                write(elm.first, elm.second.data, write_double_arg);
-            }
-        }
+        rstFile.message("STARTSOL");
+
+        writeRegularSolutionVectors(value, write_double_arg, write);
 
         writeUDQ(report_step, sim_step, schedule, sum_state, inteHD, rstFile);
-        
-        for (const auto& elm : value.extra) {
-            const std::string& key = elm.first.key;
-            if (extraInSolution(key)) {
-                // Observe that the extra data is unconditionally
-                // output as double precision.
-                write(key, elm.second, true);
-            }
-        }
+
+        writeExtraVectors(value, write);
 
         if (ecl_compatible_rst && haveHysteresis(value)) {
             writeEclipseCompatHysteresis(value, write_double_arg, write);
         }
 
+        if (! ecl_compatible_rst) {
+            writeExtendedSolutionVectors(value, write_double_arg, write);
+        }
+
         rstFile.message("ENDSOL");
-
-        if (ecl_compatible_rst) {
-            return;
-        }
-
-        for (const auto& elm : value.solution) {
-            if (elm.second.target == data::TargetType::RESTART_AUXILIARY) {
-                write(elm.first, elm.second.data, write_double_arg);
-            }
-        }
     }
 
     void writeExtraData(const RestartValue::ExtraVector& extra_data,
