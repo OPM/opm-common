@@ -924,7 +924,7 @@ captureDynamicWellData(const Opm::Schedule&        sched,
 
         auto i = xw.find(well.name());
         if ((i == std::end(xw)) || (well.getStatus() != Opm::Well::Status::OPEN)) {
-            if (well.getStatus() == Opm::Well::Status::SHUT) {
+            if ((i == std::end(xw)) || (well.getStatus() == Opm::Well::Status::SHUT))  {
                 IWell::dynamicContribShut(iWell);
             }
             else {
