@@ -101,32 +101,13 @@ namespace Opm {
         return result;
     }
 
+
+
+
     std::map<std::string, std::vector<std::pair<int, SICD> > >
     SICD::fromWSEGSICD(const DeckKeyword& wsegsicd)
     {
-        std::map<std::string, std::vector<std::pair<int, SICD> > > res;
-
-        for (const DeckRecord &record : wsegsicd) {
-            const std::string well_name = record.getItem("WELL").getTrimmedString(0);
-
-            const int start_segment = record.getItem("SEG1").get<int>(0);
-            const int end_segment = record.getItem("SEG2").get<int>(0);
-
-            if (start_segment < 2 || end_segment < 2 || end_segment < start_segment) {
-                const std::string message = "Segment numbers " + std::to_string(start_segment) + " and "
-                                            + std::to_string(end_segment) + " specified in WSEGSICD for well " +
-                                            well_name
-                                            + " are illegal ";
-                throw std::invalid_argument(message);
-            }
-
-            const SICD spiral_icd(record);
-            for (int seg = start_segment; seg <= end_segment; seg++) {
-                res[well_name].push_back(std::make_pair(seg, spiral_icd));
-            }
-        }
-
-        return res;
+        return SICD::fromWSEG<SICD>(wsegsicd);
     }
 
     double SICD::maxAbsoluteRate() const {

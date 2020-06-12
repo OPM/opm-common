@@ -9,62 +9,63 @@
       "value_type": "STRING"
     },
     {
-      "name": "SEGMENT1",
-      "value_type": "INT",
-      "default": 0
+      "name": "SEG1",
+      "value_type": "INT"
     },
     {
-      "name": "SEGMENT2",
-      "value_type": "INT",
-      "default": 0
+      "name": "SEG2",
+      "value_type": "INT"
     },
     {
-      "name": "AICD_STRENGTH",
+      "name": "STRENGTH",
       "value_type": "DOUBLE",
-      "default": 0
+      "dimension": "Pressure*Time*Time/GeometricVolume*GeometricVolume"
     },
     {
-      "name": "ICD_LENGTH",
+      "name": "LENGTH",
       "value_type": "DOUBLE",
       "dimension": "Length",
       "default": 12
     },
     {
-      "name": "RHO",
+      "name": "DENSITY_CALI",
       "value_type": "DOUBLE",
-      "dimension": "Mass/Length*Length*Length",
+      "dimension": "Density",
       "default": 1000.25
     },
     {
-      "name": "VISCOSITY",
+      "name": "VISCOSITY_CALI",
       "value_type": "DOUBLE",
       "dimension": "Viscosity",
       "default": 1.45
     },
     {
-      "name": "WATER_LIMIT",
+      "name": "CRITICAL_VALUE",
       "value_type": "DOUBLE",
+      "dimension": "1",
       "default": 0.5
     },
     {
-      "name": "TRANSITION_WIDTH",
+      "name": "WIDTH_TRANS",
       "value_type": "DOUBLE",
+      "dimension": "1",
       "default": 0.05
     },
     {
-      "name": "MAX_SOMETHING",
+      "name": "MAX_VISC_RATIO",
       "value_type": "DOUBLE",
+      "dimension": "1",
       "default": 5
     },
     {
-      "name": "SCALING_METHOD",
+      "name": "METHOD_SCALING_FACTOR",
       "value_type": "INT",
       "default": -1
     },
     {
-      "name": "MAX_QICD",
+      "name": "MAX_ABS_RATE",
       "value_type": "DOUBLE",
-      "dimension": "ReservoirVolume/Time"
+      "dimension": "GeometricVolume/Time"
     },
     {
       "name": "FLOW_RATE_EXPONENT",
@@ -75,7 +76,7 @@
       "value_type": "DOUBLE"
     },
     {
-      "name": "ICD_FLAG",
+      "name": "STATUS",
       "value_type": "STRING",
       "default": "OPEN"
     },
@@ -95,7 +96,7 @@
       "default": 1
     },
     {
-      "name": "OIL_VSIC_FRACTION",
+      "name": "OIL_VISC_FRACTION",
       "value_type": "DOUBLE",
       "default": 1
     },
