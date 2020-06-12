@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Needs to be done beforehand:
+# docker run -e PLAT=manylinux2014_x86_64 -it quay.io/pypa/manylinux2014_x86_64
 #cd /tmp
 #git clone https://github.com/CeetronSolutions/opm-common.git
 #cd opm-common
@@ -21,4 +22,7 @@ python3 -m pip install twine
 mkdir build && cd build
 cmake3 -DPYTHON_EXECUTABLE=/usr/bin/python3 -DBOOST_INCLUDEDIR=/usr/include/boost169 -DBOOST_LIBRARYDIR=/usr/lib64/boost169 \
 -DOPM_ENABLE_PYTHON=ON -DOPM_ENABLE_DYNAMIC_BOOST=OFF -DOPM_ENABLE_DYNAMIC_PYTHON_LINKING=OFF ..
+# make step is necessary until the generated ParserKeywords/*.hpp
+# are generated in the Python step
+make -2
 ./setup-package.sh

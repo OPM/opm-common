@@ -295,7 +295,7 @@ if (OPM_ENABLE_PYTHON)
   if (OPM_ENABLE_PYTHON_DYNAMIC_LINKING)
     set(opm-common_PYTHON_LINKAGE "'-Bdynamic'")
   else()
-    set(opm-common_PYTHON_LINKAGE "'-static-libstdc++', '-Bstatic'")
+    set(opm-common_PYTHON_LINKAGE "'-Bstatic', '-static-libstdc++'")
   endif()
 
   # Generate versioned setup.py

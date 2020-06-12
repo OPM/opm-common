@@ -10,7 +10,7 @@
 
 cp -r @PROJECT_SOURCE_DIR@/python @PROJECT_BINARY_DIR@
 cd @PROJECT_BINARY_DIR@/python
-rm -f python/opm/libopmcommon_python*
+rm -rf python/opm/libopmcommon_python*
 
 export CC=@CMAKE_CXX_COMPILER@
 
