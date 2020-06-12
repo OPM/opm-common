@@ -24,5 +24,5 @@ cmake3 -DPYTHON_EXECUTABLE=/usr/bin/python3 -DBOOST_INCLUDEDIR=/usr/include/boos
 -DOPM_ENABLE_PYTHON=ON -DOPM_ENABLE_DYNAMIC_BOOST=OFF -DOPM_ENABLE_DYNAMIC_PYTHON_LINKING=OFF ..
 # make step is necessary until the generated ParserKeywords/*.hpp
 # are generated in the Python step
-make -2
+make -j2
 ./setup-package.sh
