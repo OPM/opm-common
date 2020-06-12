@@ -20,12 +20,13 @@
 #ifndef SUMMARY_STATE_H
 #define SUMMARY_STATE_H
 
-#include <string>
 #include <chrono>
-#include <vector>
+#include <iosfwd>
+#include <optional>
+#include <string>
 #include <unordered_map>
 #include <unordered_set>
-#include <iosfwd>
+#include <vector>
 
 namespace Opm{
 
@@ -62,6 +63,8 @@ namespace Opm{
       st.has_well_var("OPY", "WGOR") => False
 */
 
+class UDQSet;
+
 class SummaryState {
 public:
     typedef std::unordered_map<std::string, double>::const_iterator const_iterator;
@@ -73,6 +76,10 @@ public:
     */
     void set(const std::string& key, double value);
 
+    bool erase(const std::string& key);
+    bool erase_well_var(const std::string& well, const std::string& var);
+    bool erase_group_var(const std::string& group, const std::string& var);
+
     bool has(const std::string& key) const;
     bool has_well_var(const std::string& well, const std::string& var) const;
     bool has_group_var(const std::string& group, const std::string& var) const;
@@ -81,15 +88,16 @@ public:
     void update_well_var(const std::string& well, const std::string& var, double value);
     void update_group_var(const std::string& group, const std::string& var, double value);
     void update_elapsed(double delta);
+    void update_udq(const UDQSet& udq_set);
 
     double get(const std::string&) const;
     double get_elapsed() const;
     double get_well_var(const std::string& well, const std::string& var) const;
     double get_group_var(const std::string& group, const std::string& var) const;
 
-    std::vector<std::string> wells() const;
+    const std::vector<std::string>& wells() const;
     std::vector<std::string> wells(const std::string& var) const;
-    std::vector<std::string> groups() const;
+    const std::vector<std::string>& groups() const;
     std::vector<std::string> groups(const std::string& var) const;
     std::vector<char> serialize() const;
     void deserialize(const std::vector<char>& buffer);
@@ -105,10 +113,12 @@ private:
     // The first key is the variable and the second key is the well.
     std::unordered_map<std::string, std::unordered_map<std::string, double>> well_values;
     std::unordered_set<std::string> m_wells;
+    mutable std::optional<std::vector<std::string>> well_names;
 
     // The first key is the variable and the second key is the group.
     std::unordered_map<std::string, std::unordered_map<std::string, double>> group_values;
     std::unordered_set<std::string> m_groups;
+    mutable std::optional<std::vector<std::string>> group_names;
 };
 
 

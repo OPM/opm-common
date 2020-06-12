@@ -95,6 +95,7 @@ public:
     std::vector<double> defined_values() const;
     std::size_t defined_size() const;
     const std::string& name() const;
+    void name(const std::string& name);
     UDQVarType var_type() const;
 private:
     UDQSet() = default;
