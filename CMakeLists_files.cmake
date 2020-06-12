@@ -99,6 +99,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Schedule/ArrayDimChecker.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Events.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/GasLiftOpt.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/Group/GPMaint.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Group/Group.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Group/GuideRate.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Group/GuideRateConfig.cpp
@@ -701,6 +702,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp
        opm/parser/eclipse/EclipseState/Schedule/ScheduleTypes.hpp
        opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp
+       opm/parser/eclipse/EclipseState/Schedule/Group/GPMaint.hpp
        opm/parser/eclipse/EclipseState/Schedule/Group/GTNode.hpp
        opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp
        opm/parser/eclipse/EclipseState/Schedule/Group/GuideRate.hpp
