@@ -74,7 +74,7 @@ ext_modules = [
 setup(
     name='CeeSolOpm',
     version = '@opm-common_VERSION@',
-    package_dir = {'': 'python'},
+#    package_dir = {'': 'python'},
     url='http://www.opm-project.org',
     author='The Open Porous Media Project',
     author_email='opmuser@gmail.com',
