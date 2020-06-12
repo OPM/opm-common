@@ -26,3 +26,4 @@ cmake3 -DPYTHON_EXECUTABLE=/usr/bin/python3 -DBOOST_INCLUDEDIR=/usr/include/boos
 # are generated in the Python step
 make -j2
 ./setup-package.sh
+

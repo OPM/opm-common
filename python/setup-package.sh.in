@@ -11,6 +11,8 @@
 cp -r @PROJECT_SOURCE_DIR@/python @PROJECT_BINARY_DIR@
 cd @PROJECT_BINARY_DIR@/python
 rm -rf opm/libopmcommon_python*
+rm -rf dist
+rm -rf wheelhouse
 
 export CC=@CMAKE_CXX_COMPILER@
 
@@ -18,3 +20,6 @@ export CC=@CMAKE_CXX_COMPILER@
 --library-dirs=@_setup_lib_dirs@ \
 @_rpath_arg@ \
 --include-dirs=@_setup_include_dirs@
+@PYTHON_EXECUTABLE@ -m auditwheel repair dist/*.whl
+# Example of upload
+#@PYTHON_EXECUTABLE@ -m twine upload --repository testpypi wheelhouse/*
