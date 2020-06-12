@@ -777,7 +777,6 @@ if(ENABLE_ECL_OUTPUT)
         opm/output/data/Groups.hpp
         opm/output/data/Solution.hpp
         opm/output/data/Wells.hpp
-        opm/output/data/Groups.hpp
         opm/output/eclipse/VectorItems/aquifer.hpp
         opm/output/eclipse/VectorItems/connection.hpp
         opm/output/eclipse/VectorItems/group.hpp
