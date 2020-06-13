@@ -468,7 +468,7 @@ namespace {
     static constexpr const char* lab_names[static_cast<int>(UnitSystem::measure::_count)] = {
         "",
         "CM",
-        "HRS",
+        "HOURS",
         "G/CC",
         "ATM",
         "K",
