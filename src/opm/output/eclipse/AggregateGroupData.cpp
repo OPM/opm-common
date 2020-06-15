@@ -1062,7 +1062,7 @@ void staticContrib(const Opm::Group&        group,
                 sGrp[65] =  sGrp[Isi::gasSurfRateLimit];
             }
             if (inj_cntl.resv_max_rate > 0.) {
-                sGrp[Isi::gasResRateLimit > 0.] = sgprop(M::rate, inj_cntl.resv_max_rate);
+                sGrp[Isi::gasResRateLimit] = sgprop(M::rate, inj_cntl.resv_max_rate);
                 sGrp[66] =  sGrp[Isi::gasResRateLimit];
             }
             if (inj_cntl.target_reinj_fraction > 0.) {
@@ -1082,7 +1082,7 @@ void staticContrib(const Opm::Group&        group,
                 sGrp[61] =  sGrp[Isi::waterSurfRateLimit];
             }
             if (inj_cntl.resv_max_rate > 0.) {
-                sGrp[Isi::waterResRateLimit > 0.] = sgprop(M::rate, inj_cntl.resv_max_rate);
+                sGrp[Isi::waterResRateLimit] = sgprop(M::rate, inj_cntl.resv_max_rate);
                 sGrp[62] =  sGrp[Isi::waterResRateLimit];
             }
             if (inj_cntl.target_reinj_fraction > 0.) {
@@ -1102,7 +1102,7 @@ void staticContrib(const Opm::Group&        group,
                 sGrp[57] =  sGrp[Isi::oilSurfRateLimit];
             }
             if (inj_cntl.resv_max_rate > 0.) {
-                sGrp[Isi::oilResRateLimit > 0.] = sgprop(M::rate, inj_cntl.resv_max_rate);
+                sGrp[Isi::oilResRateLimit] = sgprop(M::rate, inj_cntl.resv_max_rate);
                 sGrp[58] =  sGrp[Isi::oilResRateLimit];
             }
             if (inj_cntl.target_reinj_fraction > 0.) {
