@@ -40,7 +40,7 @@ if 'build' in sys.argv:
 
 ext_modules = [
     Extension(
-        'libopmcommon_python',
+        'opm.libopmcommon_python',
         [
                 'cxx/unit_system.cpp',
                 'cxx/connection.cpp',
@@ -73,7 +73,7 @@ ext_modules = [
 
 setup(
     name='Opm',
-    version = '@opm-common_VERSION@',
+    version = '@opm-common_VERSION@' + '@opm-common_PYTHON_PACKAGE_VERSION@',
     url='http://www.opm-project.org',
     author='The Open Porous Media Project',
     author_email='opmuser@gmail.com',
@@ -89,7 +89,6 @@ setup(
                 'opm.tools'
             ],
     ext_modules=ext_modules,
-    package_data={'opm': ['libopmcommon_python{}'.format(suffix)]},
     include_package_data=True,
     license='Open Source',
     zip_safe=False,

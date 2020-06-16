@@ -15,8 +15,10 @@ option(OPM_INSTALL_PYTHON "Enable python bindings?" OFF)
 option(OPM_ENABLE_EMBEDDED_PYTHON "Enable python bindings?" OFF)
 
 # Static Python linking implies static Boost
-if (OPM_ENABLE_PYTHON AND NOT OPM_ENABLE_DYNAMIC_PYTHON_LINKING)
-  set(OPM_ENABLE_DYNAMIC_BOOST OFF)
+if (OPM_ENABLE_PYTHON)
+  if (NOT OPM_ENABLE_DYNAMIC_PYTHON_LINKING)
+    set(OPM_ENABLE_DYNAMIC_BOOST OFF)
+  endif()
 endif()
 
 # Output implies input
@@ -297,6 +299,8 @@ if (OPM_ENABLE_PYTHON)
   else()
     set(opm-common_PYTHON_LINKAGE "'-Bstatic', '-static-libstdc++'")
   endif()
+
+  set(opm-common_PYTHON_PACKAGE_VERSION ${OPM_PYTHON_PACKAGE_VERSION_TAG})
 
   # Generate versioned setup.py
   configure_file (${PROJECT_SOURCE_DIR}/python/setup.py.in ${PROJECT_BINARY_DIR}/python/setup.py)
