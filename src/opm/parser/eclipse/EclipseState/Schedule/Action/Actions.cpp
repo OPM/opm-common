@@ -55,8 +55,11 @@ void Actions::add(const ActionX& action) {
     auto iter = std::find_if( this->actions.begin(), this->actions.end(), [&action](const ActionX& arg) { return arg.name() == action.name(); });
     if (iter == this->actions.end())
         this->actions.push_back(action);
-    else
+    else {
+        auto id = iter->id() + 1;
         *iter = action;
+        iter->update_id(id);
+    }
 }
 
 void Actions::add(const PyAction& pyaction) {

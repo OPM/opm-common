@@ -124,8 +124,9 @@ Action::Result ActionX::eval(std::time_t sim_time, const Action::Context& contex
 }
 
 
-bool ActionX::ready(std::time_t sim_time) const {
-  if (this->run_count >= this->max_run())
+bool ActionX::ready(const State& state, std::time_t sim_time) const {
+    auto run_count = state.run_count(*this);
+    if (run_count >= this->max_run())
         return false;
 
     if (sim_time < this->start_time())
@@ -137,7 +138,8 @@ bool ActionX::ready(std::time_t sim_time) const {
     if (this->min_wait() <= 0)
         return true;
 
-    return std::difftime(sim_time, this->last_run) > this->min_wait();
+    auto last_run = state.run_time(*this);
+    return std::difftime(sim_time, last_run) > this->min_wait();
 }
 
 

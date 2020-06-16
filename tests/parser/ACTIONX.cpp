@@ -37,6 +37,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionAST.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionContext.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/Actions.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/State.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionX.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
@@ -801,17 +802,30 @@ BOOST_AUTO_TEST_CASE(ACTIONRESULT_COPY_WELLS) {
 
 BOOST_AUTO_TEST_CASE(ActionState) {
     Action::State st;
+    Action::ActionX action1("NAME", 100, 100, 100); action1.update_id(100);
+    Action::ActionX action2("NAME", 100, 100, 100); action1.update_id(200);
 
-    BOOST_CHECK_EQUAL(0, st.run_count("NO_SUCH_ACTION"));
-    BOOST_CHECK_THROW( st.run_time("NO_SUCH_ACTION"), std::out_of_range);
+    BOOST_CHECK_EQUAL(0, st.run_count(action1));
+    BOOST_CHECK_THROW( st.run_time(action1), std::out_of_range);
 
-    st.add_run("ACT02", 100);
-    BOOST_CHECK_EQUAL(1, st.run_count("ACT02"));
-    BOOST_CHECK_EQUAL(100, st.run_time("ACT02"));
+    st.add_run(action1, 100);
+    BOOST_CHECK_EQUAL(1, st.run_count(action1));
+    BOOST_CHECK_EQUAL(100, st.run_time(action1));
 
-    st.add_run("ACT02", 1000);
-    BOOST_CHECK_EQUAL(2, st.run_count("ACT02"));
-    BOOST_CHECK_EQUAL(1000, st.run_time("ACT02"));
+    st.add_run(action1, 1000);
+    BOOST_CHECK_EQUAL(2, st.run_count(action1));
+    BOOST_CHECK_EQUAL(1000, st.run_time(action1));
+
+    BOOST_CHECK_EQUAL(0, st.run_count(action2));
+    BOOST_CHECK_THROW( st.run_time(action2), std::out_of_range);
+
+    st.add_run(action2, 100);
+    BOOST_CHECK_EQUAL(1, st.run_count(action2));
+    BOOST_CHECK_EQUAL(100, st.run_time(action2));
+
+    st.add_run(action2, 1000);
+    BOOST_CHECK_EQUAL(2, st.run_count(action2));
+    BOOST_CHECK_EQUAL(1000, st.run_time(action2));
 }
 
 BOOST_AUTO_TEST_CASE(ActionID) {
@@ -859,4 +873,9 @@ ENDACTIO
     const auto& action2 = sched.actions(2).get("A");
 
     BOOST_CHECK(action1.id() != action2.id());
+
+    Action::State st;
+    st.add_run(action1, 1000);
+    BOOST_CHECK_EQUAL( st.run_count(action1), 1);
+    BOOST_CHECK_EQUAL( st.run_count(action2), 0);
 }
