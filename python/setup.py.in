@@ -74,7 +74,10 @@ ext_modules = [
 setup(
     name='Opm',
     version = '@opm-common_VERSION@',
-    package_dir = {'': 'python'},
+    url='http://www.opm-project.org',
+    author='The Open Porous Media Project',
+    author_email='opmuser@gmail.com',
+    description='OPM-Common Python bindings',
     packages=[
                 'opm',
                 'opm.io',
