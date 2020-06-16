@@ -262,10 +262,11 @@ if (OPM_ENABLE_PYTHON)
   list(APPEND _opmcommon_include_dirs ${_ecl_include_dirs})
   string(REPLACE ";" ":" _setup_include_dirs "${_opmcommon_include_dirs}")
 
+  get_target_property(_opmcommon_lib_dirs opmcommon LINK_DIRECTORIES)
   if (CMAKE_PREFIX_PATH)
-    set(_opmcommon_lib_dirs ${PROJECT_BINARY_DIR}/lib ${CMAKE_PREFIX_PATH}/${CMAKE_INSTALL_LIBDIR})
+    list(APPEND _opmcommon_lib_dirs ${PROJECT_BINARY_DIR}/lib ${CMAKE_PREFIX_PATH}/${CMAKE_INSTALL_LIBDIR})
   else()
-    set(_opmcommon_lib_dirs ${PROJECT_BINARY_DIR}/lib)
+    list(APPEND _opmcommon_lib_dirs ${PROJECT_BINARY_DIR}/lib)
   endif()
   string(REPLACE ";" ":" _setup_lib_dirs "${_opmcommon_lib_dirs}")
 
