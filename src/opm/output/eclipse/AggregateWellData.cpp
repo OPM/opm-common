@@ -38,6 +38,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/Actions.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionX.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionResult.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/State.hpp>
 
 #include <algorithm>
 #include <cassert>
@@ -807,13 +808,13 @@ namespace {
         }
 
         std::vector<std::pair<std::string, Opm::Action::Result>>
-        act_res_stat(const Opm::Schedule& sched, const Opm::SummaryState&  smry, const std::size_t sim_step) {
+        act_res_stat(const Opm::Schedule& sched, const Opm::Action::State& action_state, const Opm::SummaryState&  smry, const std::size_t sim_step) {
             std::vector<std::pair<std::string, Opm::Action::Result>> results;
             const auto& acts = sched.actions(sim_step);
             Opm::Action::Context context(smry);
             auto sim_time = sched.simTime(sim_step);
-            for (const auto& action : acts.pending(sim_time)) {
-                auto result = action->eval(sim_time, context);
+            for (const auto& action : acts.pending(action_state, sim_time)) {
+                auto result = action->eval(context);
                 if (result)
                     results.emplace_back( action->name(), std::move(result) );
             }
@@ -854,6 +855,7 @@ Opm::RestartIO::Helpers::AggregateWellData::
 captureDeclaredWellData(const Schedule&   sched,
                         const UnitSystem& units,
                         const std::size_t sim_step,
+                        const ::Opm::Action::State& action_state,
                         const ::Opm::SummaryState&  smry,
                         const std::vector<int>& inteHead)
 {
@@ -894,7 +896,7 @@ captureDeclaredWellData(const Schedule&   sched,
     });
 
     {
-        const auto actResStat = ZWell::act_res_stat(sched, smry, sim_step);
+        const auto actResStat = ZWell::act_res_stat(sched, action_state, smry, sim_step);
         // Static contributions to ZWEL array.
         wellLoop(wells,
             [&actResStat, this](const Well& well, const std::size_t wellID) -> void

@@ -180,18 +180,19 @@ BOOST_AUTO_TEST_CASE(TestActions) {
         config.add(py_action2);
     }
     const Opm::Action::ActionX& action2 = config.get("NAME");
+    Opm::Action::State action_state;
     // The action2 instance has an empty condition, so it will never evaluate to true.
-    BOOST_CHECK(action2.ready(  asTimeT(TimeStampUTC(TimeStampUTC::YMD{ 2000, 7, 1 }))  ));
-    BOOST_CHECK(!action2.ready(  asTimeT(TimeStampUTC(TimeStampUTC::YMD{ 2000, 6, 1 }))   ));
-    BOOST_CHECK(!action2.eval(asTimeT(TimeStampUTC(TimeStampUTC::YMD{ 2000, 6, 1 })), context));
+    BOOST_CHECK(action2.ready(  action_state, asTimeT(TimeStampUTC(TimeStampUTC::YMD{ 2000, 7, 1 }))  ));
+    BOOST_CHECK(!action2.ready(  action_state, asTimeT(TimeStampUTC(TimeStampUTC::YMD{ 2000, 6, 1 }))   ));
+    BOOST_CHECK(!action2.eval(context));
 
-    auto pending = config.pending( asTimeT(TimeStampUTC(TimeStampUTC::YMD{ 2000, 8, 7 }))  );
+    auto pending = config.pending( action_state, asTimeT(TimeStampUTC(TimeStampUTC::YMD{ 2000, 8, 7 }))  );
     BOOST_CHECK_EQUAL( pending.size(), 2);
     for (auto& ptr : pending) {
-        BOOST_CHECK( ptr->ready(  asTimeT(TimeStampUTC(TimeStampUTC::YMD{ 2000, 8, 7 }))  ));
-        BOOST_CHECK( !ptr->eval(asTimeT(TimeStampUTC(TimeStampUTC::YMD{ 2000, 8, 7 })), context));
+        BOOST_CHECK( ptr->ready( action_state, asTimeT(TimeStampUTC(TimeStampUTC::YMD{ 2000, 8, 7 }))  ));
+        BOOST_CHECK( !ptr->eval( context));
     }
-    BOOST_CHECK(!action2.eval(asTimeT(TimeStampUTC(TimeStampUTC::YMD{ 2000, 8, 7 })), context));
+    BOOST_CHECK(!action2.eval(context));
 
 
     const auto& python_actions = config.pending_python();

@@ -41,6 +41,10 @@ namespace Opm {
     class Schedule;
     class UDQInput;
     class UDQActive;
+
+    namespace Action {
+        class State;
+    }
 } // Opm
 
 
@@ -52,10 +56,11 @@ class AggregateActionxData
 public:
     explicit AggregateActionxData(const std::vector<int>& actDims);
 
-    void captureDeclaredActionxData(    const Opm::Schedule&    sched,
-                                        const Opm::SummaryState& st,
-                                        const std::vector<int>& actDims,
-                                        const std::size_t       simStep);
+    void captureDeclaredActionxData(    const Opm::Schedule&      sched,
+                                        const Opm::Action::State& action_state,
+                                        const Opm::SummaryState&  st,
+                                        const std::vector<int>&   actDims,
+                                        const std::size_t         simStep);
 
     const std::vector<int>& getIACT() const
     {

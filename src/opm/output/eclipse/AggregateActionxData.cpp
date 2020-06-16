@@ -480,17 +480,18 @@ const std::map<cmp_enum, int> cmpToIndex = {
         }
 
         Opm::Action::Result
-        act_res(const Opm::Schedule& sched, const Opm::SummaryState&  smry, const std::size_t sim_step, std::vector<Opm::Action::ActionX>::const_iterator act_x) {
+        act_res(const Opm::Schedule& sched, const Opm::Action::State& action_state, const Opm::SummaryState&  smry, const std::size_t sim_step, std::vector<Opm::Action::ActionX>::const_iterator act_x) {
             auto sim_time = sched.simTime(sim_step);
-            if (act_x->ready(sim_time)) {
+            if (act_x->ready(action_state, sim_time)) {
                 Opm::Action::Context context(smry);
-                return act_x->eval(sim_time, context);
+                return act_x->eval(context);
             } else
                 return Opm::Action::Result(false);
         }
 
         template <class SACNArray>
         void staticContrib(std::vector<Opm::Action::ActionX>::const_iterator    actx_it,
+                           const Opm::Action::State&                            action_state,
                            const Opm::SummaryState&                             st,
                            const Opm::Schedule&                                 sched,
                            const std::size_t                                    simStep,
@@ -500,7 +501,7 @@ const std::map<cmp_enum, int> cmpToIndex = {
             int noEPZacn = 16;
             double undef_high_val = 1.0E+20;
             const auto& wells = sched.getWells(simStep);
-            const auto ar = sACN::act_res(sched, st, simStep, actx_it);
+            const auto ar = sACN::act_res(sched, action_state, st, simStep, actx_it);
             // write out the schedule Actionx conditions
             const auto& actx_cond = actx_it->conditions();
             for (const auto&  z_data : actx_cond) {
@@ -627,10 +628,11 @@ AggregateActionxData(const std::vector<int>& actDims)
 
 void
 Opm::RestartIO::Helpers::AggregateActionxData::
-captureDeclaredActionxData( const Opm::Schedule&    sched,
-                            const Opm::SummaryState& st,
-                            const std::vector<int>& actDims,
-                            const std::size_t       simStep)
+captureDeclaredActionxData( const Opm::Schedule&      sched,
+                            const Opm::Action::State& action_state,
+                            const Opm::SummaryState&  st,
+                            const std::vector<int>&   actDims,
+                            const std::size_t         simStep)
 {
     const auto& acts = sched.actions(simStep);
     std::size_t act_ind = 0;
@@ -667,7 +669,7 @@ captureDeclaredActionxData( const Opm::Schedule&    sched,
 
         {
             auto s_acn = this->sACN_[act_ind];
-            sACN::staticContrib(actx_it, st, sched, simStep, s_acn);
+            sACN::staticContrib(actx_it, action_state, st, sched, simStep, s_acn);
         }
 
         act_ind +=1;

@@ -24,6 +24,7 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionValue.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionX.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/State.hpp>
 
 #include "ActionParser.hpp"
 
@@ -96,8 +97,6 @@ ActionX ActionX::serializeObject()
     cond.cmp = Condition::Comparator::GREATER_EQUAL;
     cond.cmp_string = "test3";
     result.m_conditions = {cond};
-    result.run_count = 4;
-    result.last_run = 5;
 
     return result;
 }
@@ -109,18 +108,8 @@ void ActionX::addKeyword(const DeckKeyword& kw) {
 
 
 
-Action::Result ActionX::eval(std::time_t sim_time, const Action::Context& context) const {
-    if (!this->ready(sim_time))
-        return Action::Result(false);
-
-    auto result = this->condition.eval(context);
-
-    if (result) {
-        this->run_count += 1;
-        this->last_run = sim_time;
-    }
-
-    return result;
+Action::Result ActionX::eval(const Action::Context& context) const {
+    return this->condition.eval(context);
 }
 
 
@@ -132,7 +121,7 @@ bool ActionX::ready(const State& state, std::time_t sim_time) const {
     if (sim_time < this->start_time())
         return false;
 
-    if (this->run_count == 0)
+    if (run_count == 0)
         return true;
 
     if (this->min_wait() <= 0)
@@ -202,9 +191,7 @@ bool ActionX::operator==(const ActionX& data) const {
            this->id() == data.id() &&
            this->keywords == data.keywords &&
            this->condition == data.condition &&
-           this->conditions() == data.conditions() &&
-           this->run_count == data.run_count &&
-           this->last_run == data.last_run;
+           this->conditions() == data.conditions();
 }
 
 }

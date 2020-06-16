@@ -37,6 +37,7 @@
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/State.hpp>
 
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
@@ -274,6 +275,7 @@ BOOST_AUTO_TEST_CASE(test_RFT)
         const auto step_time  = timeStamp(::Opm::EclIO::ERft::RftDate{ 2008, 10, 10 });
 
         SummaryState st(std::chrono::system_clock::now());
+        Action::State action_state;
 
         data::Rates r1, r2;
         r1.set( data::Rates::opt::wat, 4.11 );
@@ -306,7 +308,8 @@ BOOST_AUTO_TEST_CASE(test_RFT)
 
         RestartValue restart_value(std::move(solution), std::move(wells));
 
-        eclipseWriter.writeTimeStep( st,
+        eclipseWriter.writeTimeStep( action_state,
+                                     st,
                                      2,
                                      false,
                                      step_time - start_time,
@@ -390,6 +393,7 @@ BOOST_AUTO_TEST_CASE(test_RFT2)
         Schedule schedule(deck, eclipseState, python);
         SummaryConfig summary_config( deck, schedule, eclipseState.getTableManager( ));
         SummaryState st(std::chrono::system_clock::now());
+        Action::State action_state;
 
         const auto  start_time = schedule.posixStartTime();
         const auto& time_map   = schedule.getTimeMap( );
@@ -430,7 +434,8 @@ BOOST_AUTO_TEST_CASE(test_RFT2)
 
                 RestartValue restart_value(std::move(solution), std::move(wells));
 
-                eclipseWriter.writeTimeStep( st,
+                eclipseWriter.writeTimeStep( action_state,
+                                             st,
                                              step,
                                              false,
                                              step_time - start_time,

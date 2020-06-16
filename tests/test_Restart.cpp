@@ -38,6 +38,7 @@
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Utility/Functional.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/State.hpp>
 
 #include <opm/io/eclipse/OutputStream.hpp>
 #include <opm/io/eclipse/EclIOdata.hpp>
@@ -361,7 +362,7 @@ struct Setup {
 };
 
 
-RestartValue first_sim(const Setup& setup, SummaryState& st, bool write_double) {
+RestartValue first_sim(const Setup& setup, Action::State& action_state, SummaryState& st, bool write_double) {
     EclipseIO eclWriter( setup.es, setup.grid, setup.schedule, setup.summary_config);
     auto num_cells = setup.grid.getNumActive( );
     int report_step = 1;
@@ -372,7 +373,8 @@ RestartValue first_sim(const Setup& setup, SummaryState& st, bool write_double) 
     auto wells = mkWells();
     RestartValue restart_value(sol, wells);
 
-    eclWriter.writeTimeStep( st,
+    eclWriter.writeTimeStep( action_state,
+                             st,
                              report_step,
                              false,
                              std::difftime(first_step, start_time),
@@ -382,9 +384,9 @@ RestartValue first_sim(const Setup& setup, SummaryState& st, bool write_double) 
     return restart_value;
 }
 
-RestartValue second_sim(const Setup& setup, SummaryState& summary_state, const std::vector<RestartKey>& solution_keys) {
+RestartValue second_sim(const Setup& setup, Action::State& action_state, SummaryState& summary_state, const std::vector<RestartKey>& solution_keys) {
     EclipseIO writer(setup.es, setup.grid, setup.schedule, setup.summary_config);
-    return writer.loadRestart( summary_state, solution_keys );
+    return writer.loadRestart( action_state, summary_state, solution_keys );
 }
 
 
@@ -422,14 +424,15 @@ BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData) {
 
     Setup base_setup("BASE_SIM.DATA");
     SummaryState st(std::chrono::system_clock::now());
-    auto state1 = first_sim( base_setup , st, false );
+    Action::State action_state;
+    auto state1 = first_sim( base_setup , action_state, st, false );
 
     Setup restart_setup("RESTART_SIM.DATA");
-    auto state2 = second_sim( restart_setup , st , keys );
+    auto state2 = second_sim( restart_setup , action_state, st , keys );
     compare(state1, state2 , keys);
 
-    BOOST_CHECK_THROW( second_sim( restart_setup, st, {{"SOIL", UnitSystem::measure::pressure}} ) , std::runtime_error );
-    BOOST_CHECK_THROW( second_sim( restart_setup, st, {{"SOIL", UnitSystem::measure::pressure, true}}) , std::runtime_error );
+    BOOST_CHECK_THROW( second_sim( restart_setup, action_state, st, {{"SOIL", UnitSystem::measure::pressure}} ) , std::runtime_error );
+    BOOST_CHECK_THROW( second_sim( restart_setup, action_state, st, {{"SOIL", UnitSystem::measure::pressure, true}}) , std::runtime_error );
 }
 
 
@@ -446,6 +449,7 @@ BOOST_AUTO_TEST_CASE(ECL_FORMATTED) {
         auto cells = mkSolution( num_cells );
         auto wells = mkWells();
         auto sumState = sim_state();
+        Action::State action_state;
         {
             RestartValue restart_value(cells, wells);
 
@@ -467,6 +471,7 @@ BOOST_AUTO_TEST_CASE(ECL_FORMATTED) {
                                 base_setup.es,
                                 base_setup.grid,
                                 base_setup.schedule,
+                                action_state,
                                 sumState,
                                 true);
             }
@@ -495,6 +500,7 @@ BOOST_AUTO_TEST_CASE(ECL_FORMATTED) {
                                 base_setup.es,
                                 base_setup.grid,
                                 base_setup.schedule,
+                                action_state,
                                 sumState,
                                 true);
             }
@@ -552,11 +558,12 @@ BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData_double) {
     test_area.copyIn("BASE_SIM.DATA");
     Setup base_setup("BASE_SIM.DATA");
     SummaryState st(std::chrono::system_clock::now());
+    Action::State action_state;
 
-    auto state1 = first_sim( base_setup , st, true);
+    auto state1 = first_sim( base_setup , action_state, st, true);
     Setup restart_setup("RESTART_SIM.DATA");
 
-    auto state2 = second_sim( restart_setup, st, solution_keys );
+    auto state2 = second_sim( restart_setup, action_state, st, solution_keys );
     compare_equal( state1 , state2 , solution_keys);
 }
 
@@ -573,6 +580,7 @@ BOOST_AUTO_TEST_CASE(WriteWrongSOlutionSize) {
         auto cells = mkSolution( num_cells );
         auto wells = mkWells();
         Opm::SummaryState sumState(std::chrono::system_clock::now());
+        Opm::Action::State action_state;
 
         const auto seqnum = 1;
         auto rstFile = OS::Restart {
@@ -586,6 +594,7 @@ BOOST_AUTO_TEST_CASE(WriteWrongSOlutionSize) {
                                            setup.es,
                                            setup.grid ,
                                            setup.schedule,
+                                           action_state,
                                            sumState),
                            std::runtime_error);
     }
@@ -620,6 +629,7 @@ BOOST_AUTO_TEST_CASE(ExtraData_content) {
     test_area.copyIn("RESTART_SIM.DATA");
     Setup setup("BASE_SIM.DATA");
     {
+        Action::State action_state;
         auto num_cells = setup.grid.getNumActive( );
         auto cells = mkSolution( num_cells );
         auto wells = mkWells();
@@ -646,6 +656,7 @@ BOOST_AUTO_TEST_CASE(ExtraData_content) {
                                 setup.es,
                                 setup.grid,
                                 setup.schedule,
+                                action_state,
                                 sumState);
             }
 
@@ -661,10 +672,10 @@ BOOST_AUTO_TEST_CASE(ExtraData_content) {
                 BOOST_CHECK_CLOSE( units.from_si( UnitSystem::measure::pressure, 3), ex[3], 0.00001);
             }
 
-            BOOST_CHECK_THROW( RestartIO::load( rstFile , 1 , st, {}, setup.es, setup.grid , setup.schedule,
+            BOOST_CHECK_THROW( RestartIO::load( rstFile , 1 , action_state, st, {}, setup.es, setup.grid , setup.schedule,
                                                 {{"NOT-THIS", UnitSystem::measure::identity, true}}) , std::runtime_error );
             {
-                const auto rst_value = RestartIO::load(rstFile , 1 , st,
+                const auto rst_value = RestartIO::load(rstFile , 1 , action_state, st,
                                                        /* solution_keys = */ {
                                                                               RestartKey("SWAT", UnitSystem::measure::identity),
                                                                               RestartKey("NO"  , UnitSystem::measure::identity, false)
@@ -720,6 +731,7 @@ BOOST_AUTO_TEST_CASE(STORE_THPRES) {
 
             restart_value.addExtra("THRESHPR", UnitSystem::measure::pressure, {0,1});
             const auto sumState = sim_state();
+            Action::State action_state;
 
             /* THPRES data has wrong size in extra container. */
             {
@@ -735,6 +747,7 @@ BOOST_AUTO_TEST_CASE(STORE_THPRES) {
                                                    base_setup.es,
                                                    base_setup.grid,
                                                    base_setup.schedule,
+                                                   action_state,
                                                    sumState),
                                    std::runtime_error);
             }
@@ -756,7 +769,9 @@ BOOST_AUTO_TEST_CASE(STORE_THPRES) {
                                 restart_value2,
                                 base_setup.es,
                                 base_setup.grid,
-                                base_setup.schedule, sumState);
+                                base_setup.schedule,
+                                action_state,
+                                sumState);
             }
 
             {
@@ -808,16 +823,18 @@ BOOST_AUTO_TEST_CASE(Restore_Cumulatives)
     const auto rset   = OS::ResultSet{ wa.currentWorkingDirectory(), "FILE" };
     const auto seqnum = 1;
     {
+        Action::State action_state;
         auto rstFile = OS::Restart {
             rset, seqnum, OS::Formatted{ false }, OS::Unified{ true }
         };
 
         RestartIO::save(rstFile, seqnum, 100, restart_value,
-                        setup.es, setup.grid, setup.schedule, sumState);
+                        setup.es, setup.grid, setup.schedule, action_state, sumState);
     }
 
+    Action::State action_state;
     SummaryState rstSumState(std::chrono::system_clock::now());
-    RestartIO::load(OS::outputFileName(rset, "UNRST"), seqnum, rstSumState,
+    RestartIO::load(OS::outputFileName(rset, "UNRST"), seqnum, action_state, rstSumState,
                     /* solution_keys = */ {
                                            RestartKey("SWAT", UnitSystem::measure::identity),
                     },
