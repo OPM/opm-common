@@ -300,6 +300,7 @@ if (OPM_ENABLE_PYTHON)
 
   # Generate versioned setup.py
   configure_file (${PROJECT_SOURCE_DIR}/python/setup.py.in ${PROJECT_BINARY_DIR}/python/setup.py)
+  configure_file (${PROJECT_SOURCE_DIR}/python/README.md ${PROJECT_BINARY_DIR}/python/README.md COPYONLY)
 
   execute_process(COMMAND ${PYTHON_EXECUTABLE} target_name.py
                   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/python
