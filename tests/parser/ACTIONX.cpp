@@ -797,3 +797,66 @@ BOOST_AUTO_TEST_CASE(ACTIONRESULT_COPY_WELLS) {
         BOOST_CHECK(res2.has_well(w));
     }
 }
+
+
+BOOST_AUTO_TEST_CASE(ActionState) {
+    Action::State st;
+
+    BOOST_CHECK_EQUAL(0, st.run_count("NO_SUCH_ACTION"));
+    BOOST_CHECK_THROW( st.run_time("NO_SUCH_ACTION"), std::out_of_range);
+
+    st.add_run("ACT02", 100);
+    BOOST_CHECK_EQUAL(1, st.run_count("ACT02"));
+    BOOST_CHECK_EQUAL(100, st.run_time("ACT02"));
+
+    st.add_run("ACT02", 1000);
+    BOOST_CHECK_EQUAL(2, st.run_count("ACT02"));
+    BOOST_CHECK_EQUAL(1000, st.run_time("ACT02"));
+}
+
+BOOST_AUTO_TEST_CASE(ActionID) {
+    const auto deck_string = std::string{ R"(
+SCHEDULE
+
+TSTEP
+10 /
+
+ACTIONX
+'A' /
+WWCT 'OPX'     > 0.75    AND /
+FPR < 100 /
+/
+
+WELSPECS
+'W1'  'OP'  1 1 3.33  'OIL' 7*/
+/
+
+ENDACTIO
+
+TSTEP
+10 /
+
+
+ACTIONX
+'A' /
+WOPR 'OPX'  = 1000 /
+/
+
+ENDACTIO
+
+        )"};
+
+    Opm::Parser parser;
+    auto deck = parser.parseString(deck_string);
+    EclipseGrid grid1(10,10,10);
+    TableManager table ( deck );
+    FieldPropsManager fp( deck, Phases{true, true, true}, grid1, table);
+    auto python = std::make_shared<Python>();
+
+    Runspec runspec (deck);
+    Schedule sched(deck, grid1, fp, runspec, python);
+    const auto& action1 = sched.actions(1).get("A");
+    const auto& action2 = sched.actions(2).get("A");
+
+    BOOST_CHECK(action1.id() != action2.id());
+}

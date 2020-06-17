@@ -183,12 +183,21 @@ const std::vector<Condition>& ActionX::conditions() const {
     return this->m_conditions;
 }
 
+std::size_t ActionX::id() const {
+    return this->m_id;
+}
+
+void ActionX::update_id(std::size_t id) {
+    this->m_id = id;
+}
+
 
 bool ActionX::operator==(const ActionX& data) const {
     return this->name() == data.name() &&
            this->max_run() == data.max_run() &&
            this->min_wait() == data.min_wait() &&
            this->start_time() == data.start_time() &&
+           this->id() == data.id() &&
            this->keywords == data.keywords &&
            this->condition == data.condition &&
            this->conditions() == data.conditions() &&
