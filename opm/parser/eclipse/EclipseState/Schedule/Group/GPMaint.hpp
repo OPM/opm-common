@@ -53,12 +53,12 @@ enum class FlowTarget {
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {
-        serializeOp(m_flow_target);
-        serializeOp(m_region_number);
-        serializeOp(m_region_name);
-        serializeOp(m_pressure_target);
-        serializeOp(m_prop_constant);
-        serializeOp(m_time_constant);
+        serializer(m_flow_target);
+        serializer(m_region_number);
+        serializer(m_region_name);
+        serializer(m_pressure_target);
+        serializer(m_prop_constant);
+        serializer(m_time_constant);
     }
 
 private:
