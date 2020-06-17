@@ -117,7 +117,7 @@ struct GroupInjectionProperties {
     UDAValue target_void_fraction;
     std::string reinj_group;
     std::string voidage_group;
-    bool available_group_control;
+    bool available_group_control = true;
 
     static GroupInjectionProperties serializeObject();
 
