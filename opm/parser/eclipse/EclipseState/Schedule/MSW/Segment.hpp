@@ -46,7 +46,7 @@ namespace Opm {
     struct RegularSegment : std::monostate {
 
         template<class Serializer>
-        void serializeOp(Serializer& serializer) {
+        void serializeOp(Serializer&) {
         }
 
         static RegularSegment serializeObject() {
