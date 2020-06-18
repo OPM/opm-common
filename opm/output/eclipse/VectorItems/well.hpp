@@ -43,7 +43,7 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
                                // simulation deck (WCONINJE, WCONPROD).
 
             item18 = 17, // Unknown
-	    XFlow  = 22,
+            XFlow  = 22,
             item25 = 24, // Unknown
             item32 = 31, // Unknown
             item48 = 47, // Unknown
@@ -113,10 +113,11 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
             BHPTarget      = 6, // Well's bottom hole pressure target
 
             DatumDepth     = 9, // Well's reference depth for BHP
+            Alq_value      = 10, // Well's artificial lift quantity
 
             DrainageRadius = 17, // Well's drainage radius - item 7 from WELSPECS
             EfficiencyFactor1 = 24, // Item2 from WEFAC; this value is repeated at two locations.
-            EfficiencyFactor2 = 31, //
+            EfficiencyFactor2 = 31, // Item2 from WEFAC
             HistLiqRateTarget = 33, // Well's historical/observed liquid
                                     // rate target/limit
 

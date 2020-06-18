@@ -87,6 +87,7 @@ public:
         std::size_t use_index = 0;
         UDAControl  control;
         int uad_code;
+        std::string wg_name() const;
         std::size_t use_count;
     private:
         // The wgname is need in the update process, but it should

@@ -146,16 +146,21 @@ namespace {
             { "WBHP",  Opm::EclIO::SummaryNode::Type::Pressure },
             { "WGVIR", Opm::EclIO::SummaryNode::Type::Rate     },
             { "WWVIR", Opm::EclIO::SummaryNode::Type::Rate     },
+            { "WMCTL", Opm::EclIO::SummaryNode::Type::Mode     },
         };
         const std::vector<ParamCTorArgs> extra_group_vectors {
             { "GMCTG", Opm::EclIO::SummaryNode::Type::Mode },
             { "GMCTP", Opm::EclIO::SummaryNode::Type::Mode },
             { "GMCTW", Opm::EclIO::SummaryNode::Type::Mode },
+            { "GMWPR", Opm::EclIO::SummaryNode::Type::Mode },
+            { "GMWIN", Opm::EclIO::SummaryNode::Type::Mode },
         };
         const std::vector<ParamCTorArgs> extra_field_vectors {
             { "FMCTG", Opm::EclIO::SummaryNode::Type::Mode },
             { "FMCTP", Opm::EclIO::SummaryNode::Type::Mode },
             { "FMCTW", Opm::EclIO::SummaryNode::Type::Mode },
+            { "FMWPR", Opm::EclIO::SummaryNode::Type::Mode },
+            { "FMWIN", Opm::EclIO::SummaryNode::Type::Mode },
         };
 
         std::vector<Opm::EclIO::SummaryNode> entities {} ;
@@ -189,6 +194,7 @@ namespace {
             if (grp_name != "FIELD") {
                 makeEntities('G', Opm::EclIO::SummaryNode::Category::Group, grp_name);
                 makeExtraEntities(extra_group_vectors, Opm::EclIO::SummaryNode::Category::Group, grp_name);
+
             }
         }
 

@@ -62,6 +62,10 @@ void msim::run(Schedule& schedule, EclipseIO& io, bool report_only) {
     }
 }
 
+UDAValue msim::uda_val() {
+ return UDAValue();
+}
+
 
 void msim::post_step(Schedule& schedule, SummaryState& st, data::Solution& /* sol */, data::Wells& /* well_data */, size_t report_step) {
     const auto& actions = schedule.actions(report_step);

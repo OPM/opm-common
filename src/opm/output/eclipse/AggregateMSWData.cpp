@@ -641,7 +641,9 @@ namespace {
                 const auto& wname     = well.name();
                 const auto wPKey = "WBHP:"  + wname;
                 const auto& wRatesIt =  wr.find(wname);
-                bool haveWellRes = wRatesIt != wr.end();
+                //
+                //Do not calculate well segment rates for shut wells
+                bool haveWellRes = (well.getStatus() != Opm::Well::Status::SHUT) ? (wRatesIt != wr.end()) : false;
                 const auto volFromLengthUnitConv = units.from_si(M::length, units.from_si(M::length, units.from_si(M::length, 1.)));
                 const auto areaFromLengthUnitConv =  units.from_si(M::length, units.from_si(M::length, 1.));
                 //
@@ -698,6 +700,9 @@ namespace {
                 rSeg[iS + Ix::WatFlowFract] = (std::abs(temp_w) > 0) ? temp_w / rSeg[8] : 0.;
                 rSeg[iS + Ix::GasFlowFract] = (std::abs(temp_g) > 0) ? temp_g / rSeg[8] : 0.;
 
+
+                rSeg[iS + Ix::item31] = rSeg[iS + Ix::WatFlowFract];
+
                 //  value is 1. based on tests on several data sets
                 rSeg[iS + Ix::item40] = 1.;
 
@@ -750,6 +755,8 @@ namespace {
                     rSeg[iS + Ix::TotFlowRate] = temp_o + temp_w + temp_g;
                     rSeg[iS + Ix::WatFlowFract] = (std::abs(temp_w) > 0) ? temp_w / rSeg[iS + 8] : 0.;
                     rSeg[iS + Ix::GasFlowFract] = (std::abs(temp_g) > 0) ? temp_g / rSeg[iS + 8] : 0.;
+
+                    rSeg[iS + Ix::item31] = rSeg[iS + Ix::WatFlowFract];
 
                     rSeg[iS +  Ix::item40] = 1.;
 

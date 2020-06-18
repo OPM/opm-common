@@ -50,6 +50,11 @@ UDQActive::operator bool() const {
     return this->input_data.size() > 0;
 }
 
+
+std::string UDQActive::Record::wg_name()  const {
+    return this->wgname;
+}
+
 std::string UDQActive::udq_hash(const std::string& udq, UDAControl control) {
   return udq + std::to_string(static_cast<int64_t>(control));
 }
@@ -143,10 +148,6 @@ const std::vector<UDQActive::Record>& UDQActive::get_iuad() const {
             if (!found)
                 this->output_data.emplace_back(input_record.udq, input_record.input_index, 0, input_record.wgname, input_record.control);
         }
-
-        std::sort(this->output_data.begin(), this->output_data.end(),
-                  [](const UDQActive::Record& rec1, const UDQActive::Record& rec2) { return rec1.input_index < rec2.input_index;});
-
 
         if (!output_data.empty()) {
             for (std::size_t index = 1; index < output_data.size(); index++) {

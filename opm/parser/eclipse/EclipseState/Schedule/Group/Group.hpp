@@ -24,6 +24,7 @@
 #include <map>
 #include <optional>
 #include <string>
+#include <algorithm>
 
 #include <opm/parser/eclipse/Deck/UDAValue.hpp>
 #include <opm/parser/eclipse/EclipseState/Util/IOrderSet.hpp>
