@@ -72,7 +72,7 @@ ext_modules = [
 ]
 
 setup(
-    name='Opm',
+    name='opm',
     version = '@opm-common_VERSION@' + '@opm-common_PYTHON_PACKAGE_VERSION@',
     url='http://www.opm-project.org',
     author='The Open Porous Media Project',
