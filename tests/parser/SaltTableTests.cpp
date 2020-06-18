@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE( Brine ) {
         "0.5 0.5 \n"
         "1 1 \n"
         "1.5 1.5/\n"
-        "\n"
+        "/ \n"
         "BDENSITY\n"
         " 1000 1050 /\n"
         "\n"
