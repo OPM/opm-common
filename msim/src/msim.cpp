@@ -29,6 +29,7 @@
 
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionContext.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/State.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
@@ -44,18 +45,19 @@ void msim::run(Schedule& schedule, EclipseIO& io, bool report_only) {
     const double week = 7 * 86400;
     data::Solution sol;
     SummaryState st(std::chrono::system_clock::from_time_t(schedule.getStartTime()));
+    Action::State action_state;
     Python python;
 
     io.writeInitial();
     for (size_t report_step = 1; report_step < schedule.size(); report_step++) {
         data::Wells well_data;
         if (report_only)
-            run_step(schedule, st, sol, well_data, report_step, io);
+            run_step(schedule, action_state, st, sol, well_data, report_step, io);
         else {
             double time_step = std::min(week, 0.5*schedule.stepLength(report_step - 1));
-            run_step(schedule, st, sol, well_data, report_step, time_step, io);
+            run_step(schedule, action_state, st, sol, well_data, report_step, time_step, io);
         }
-        post_step(schedule, st, sol, well_data, report_step);
+        post_step(schedule, action_state, st, sol, well_data, report_step);
         const auto& exit_status = schedule.exitStatus();
         if (exit_status.has_value())
             return;
@@ -67,7 +69,7 @@ UDAValue msim::uda_val() {
 }
 
 
-void msim::post_step(Schedule& schedule, SummaryState& st, data::Solution& /* sol */, data::Wells& /* well_data */, size_t report_step) {
+void msim::post_step(Schedule& schedule, Action::State& action_state, SummaryState& st, data::Solution& /* sol */, data::Wells& /* well_data */, size_t report_step) {
     const auto& actions = schedule.actions(report_step);
     if (actions.empty())
         return;
@@ -75,8 +77,8 @@ void msim::post_step(Schedule& schedule, SummaryState& st, data::Solution& /* so
     Action::Context context( st );
 
     auto sim_time = schedule.simTime(report_step);
-    for (const auto& action : actions.pending(sim_time)) {
-        auto result = action->eval(sim_time, context);
+    for (const auto& action : actions.pending(action_state, sim_time)) {
+        auto result = action->eval(context);
         if (result)
             schedule.applyAction(report_step, *action, result);
     }
@@ -87,12 +89,12 @@ void msim::post_step(Schedule& schedule, SummaryState& st, data::Solution& /* so
 
 
 
-void msim::run_step(const Schedule& schedule, SummaryState& st, data::Solution& sol, data::Wells& well_data, size_t report_step, EclipseIO& io) const {
-    this->run_step(schedule, st, sol, well_data, report_step, schedule.stepLength(report_step - 1), io);
+void msim::run_step(const Schedule& schedule, Action::State& action_state, SummaryState& st, data::Solution& sol, data::Wells& well_data, size_t report_step, EclipseIO& io) const {
+    this->run_step(schedule, action_state, st, sol, well_data, report_step, schedule.stepLength(report_step - 1), io);
 }
 
 
-void msim::run_step(const Schedule& schedule, SummaryState& st, data::Solution& sol, data::Wells& well_data, size_t report_step, double dt, EclipseIO& io) const {
+void msim::run_step(const Schedule& schedule, Action::State& action_state, SummaryState& st, data::Solution& sol, data::Wells& well_data, size_t report_step, double dt, EclipseIO& io) const {
     double start_time = schedule.seconds(report_step - 1);
     double end_time = schedule.seconds(report_step);
     double seconds_elapsed = start_time;
@@ -117,7 +119,8 @@ void msim::run_step(const Schedule& schedule, SummaryState& st, data::Solution& 
                           group_data,
                           {});
 
-        this->output(st,
+        this->output(action_state,
+                     st,
                      report_step,
                      (seconds_elapsed < end_time),
                      seconds_elapsed,
@@ -129,9 +132,10 @@ void msim::run_step(const Schedule& schedule, SummaryState& st, data::Solution& 
 
 
 
-void msim::output(SummaryState& st, size_t report_step, bool substep, double seconds_elapsed, const data::Solution& sol, const data::Wells& well_data, EclipseIO& io) const {
+void msim::output(Action::State& action_state, SummaryState& st, size_t report_step, bool substep, double seconds_elapsed, const data::Solution& sol, const data::Wells& well_data, EclipseIO& io) const {
     RestartValue value(sol, well_data);
-    io.writeTimeStep(st,
+    io.writeTimeStep(action_state,
+                     st,
                      report_step,
                      substep,
                      seconds_elapsed,

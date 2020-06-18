@@ -36,6 +36,7 @@ namespace Opm {
 class DeckKeyword;
 
 namespace Action {
+class State;
 
 /*
   The ActionX class internalizes the ACTIONX keyword. This keyword represents a
@@ -71,13 +72,15 @@ public:
     static ActionX serializeObject();
 
     void addKeyword(const DeckKeyword& kw);
-    bool ready(std::time_t sim_time) const;
-    Action::Result eval(std::time_t sim_time, const Action::Context& context) const;
+    bool ready(const State& state, std::time_t sim_time) const;
+    Action::Result eval(const Action::Context& context) const;
 
 
     std::string name() const { return this->m_name; }
     size_t max_run() const { return this->m_max_run; }
     double min_wait() const { return this->m_min_wait; }
+    std::size_t id() const;
+    void update_id(std::size_t id);
     std::time_t start_time() const { return this->m_start_time; }
     std::vector<DeckKeyword>::const_iterator begin() const;
     std::vector<DeckKeyword>::const_iterator end() const;
@@ -99,11 +102,10 @@ public:
         serializer(m_max_run);
         serializer(m_min_wait);
         serializer(m_start_time);
+        serializer(m_id);
         serializer.vector(keywords);
         condition.serializeOp(serializer);
         serializer.vector(m_conditions);
-        serializer(run_count);
-        serializer(last_run);
     }
 
 private:
@@ -111,12 +113,11 @@ private:
     size_t m_max_run = 0;
     double m_min_wait = 0.0;
     std::time_t m_start_time;
+    std::size_t m_id = 0;
 
     std::vector<DeckKeyword> keywords;
     Action::AST condition;
     std::vector<Condition> m_conditions;
-    mutable size_t run_count = 0;
-    mutable std::time_t last_run = 0;
 };
 
 }

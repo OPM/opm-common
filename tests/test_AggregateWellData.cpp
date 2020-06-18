@@ -25,6 +25,7 @@
 #include <opm/output/eclipse/AggregateWellData.hpp>
 #include <opm/output/eclipse/AggregateConnectionData.hpp>
 
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/State.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
 #include <opm/output/eclipse/VectorItems/well.hpp>
@@ -40,6 +41,7 @@
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/State.hpp>
 
 #include <exception>
 #include <stdexcept>
@@ -574,7 +576,7 @@ BOOST_AUTO_TEST_CASE (Constructor)
 BOOST_AUTO_TEST_CASE (Declared_Well_Data)
 {
     const auto simCase = SimulationCase{first_sim()};
-
+    Opm::Action::State action_state;
     // Report Step 1: 2008-10-10 --> 2011-01-20
     const auto rptStep = std::size_t{1};
 
@@ -587,7 +589,7 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data)
     const auto smry = sim_state();
     auto awd = Opm::RestartIO::Helpers::AggregateWellData{ih.value};
     awd.captureDeclaredWellData(simCase.sched,
-                                simCase.es.getUnits(), rptStep, smry, ih.value);
+                                simCase.es.getUnits(), rptStep, action_state, smry, ih.value);
 
     // IWEL (OP_1)
     {
@@ -1060,6 +1062,7 @@ BOOST_AUTO_TEST_CASE(WELL_POD) {
     const auto sim_step = rptStep - 1;
     Opm::SummaryState sumState(std::chrono::system_clock::now());
     const auto xw   = well_rates_1();
+    Opm::Action::State action_state;
 
     const auto ih = Opm::RestartIO::Helpers::createInteHead(simCase.es,
                                                             simCase.grid,
@@ -1070,7 +1073,7 @@ BOOST_AUTO_TEST_CASE(WELL_POD) {
                                                             sim_step);
 
     auto wellData = Opm::RestartIO::Helpers::AggregateWellData(ih);
-    wellData.captureDeclaredWellData(simCase.sched, units, sim_step, sumState, ih);
+    wellData.captureDeclaredWellData(simCase.sched, units, sim_step, action_state, sumState, ih);
     wellData.captureDynamicWellData(simCase.sched, sim_step, xw , sumState);
 
     auto connectionData = Opm::RestartIO::Helpers::AggregateConnectionData(ih);

@@ -187,7 +187,8 @@ void EclipseIO::writeInitial( data::Solution simProps, std::map<std::string, std
 }
 
 // implementation of the writeTimeStep method
-void EclipseIO::writeTimeStep(const SummaryState& st,
+void EclipseIO::writeTimeStep(const Action::State& action_state,
+                              const SummaryState& st,
                               int report_step,
                               bool  isSubstep,
                               double secs_elapsed,
@@ -237,7 +238,7 @@ void EclipseIO::writeTimeStep(const SummaryState& st,
         };
 
         RestartIO::save(rstFile, report_step, secs_elapsed, value,
-                        es, grid, schedule, st, write_double);
+                        es, grid, schedule, action_state, st, write_double);
     }
 
     // RFT file written only if requested and never for substeps.
@@ -275,7 +276,7 @@ void EclipseIO::writeTimeStep(const SummaryState& st,
  }
 
 
-RestartValue EclipseIO::loadRestart(SummaryState& summary_state, const std::vector<RestartKey>& solution_keys, const std::vector<RestartKey>& extra_keys) const {
+RestartValue EclipseIO::loadRestart(Action::State& action_state, SummaryState& summary_state, const std::vector<RestartKey>& solution_keys, const std::vector<RestartKey>& extra_keys) const {
     const auto& es                       = this->impl->es;
     const auto& grid                     = this->impl->grid;
     const auto& schedule                 = this->impl->schedule;
@@ -286,7 +287,7 @@ RestartValue EclipseIO::loadRestart(SummaryState& summary_state, const std::vect
                                                                         report_step,
                                                                         false );
 
-    return RestartIO::load(filename, report_step, summary_state, solution_keys,
+    return RestartIO::load(filename, report_step, action_state, summary_state, solution_keys,
                            es, grid, schedule, extra_keys);
 }
 

@@ -37,6 +37,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionAST.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionContext.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/Actions.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/State.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionX.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
@@ -179,18 +180,19 @@ BOOST_AUTO_TEST_CASE(TestActions) {
         config.add(py_action2);
     }
     const Opm::Action::ActionX& action2 = config.get("NAME");
+    Opm::Action::State action_state;
     // The action2 instance has an empty condition, so it will never evaluate to true.
-    BOOST_CHECK(action2.ready(  asTimeT(TimeStampUTC(TimeStampUTC::YMD{ 2000, 7, 1 }))  ));
-    BOOST_CHECK(!action2.ready(  asTimeT(TimeStampUTC(TimeStampUTC::YMD{ 2000, 6, 1 }))   ));
-    BOOST_CHECK(!action2.eval(asTimeT(TimeStampUTC(TimeStampUTC::YMD{ 2000, 6, 1 })), context));
+    BOOST_CHECK(action2.ready(  action_state, asTimeT(TimeStampUTC(TimeStampUTC::YMD{ 2000, 7, 1 }))  ));
+    BOOST_CHECK(!action2.ready(  action_state, asTimeT(TimeStampUTC(TimeStampUTC::YMD{ 2000, 6, 1 }))   ));
+    BOOST_CHECK(!action2.eval(context));
 
-    auto pending = config.pending( asTimeT(TimeStampUTC(TimeStampUTC::YMD{ 2000, 8, 7 }))  );
+    auto pending = config.pending( action_state, asTimeT(TimeStampUTC(TimeStampUTC::YMD{ 2000, 8, 7 }))  );
     BOOST_CHECK_EQUAL( pending.size(), 2);
     for (auto& ptr : pending) {
-        BOOST_CHECK( ptr->ready(  asTimeT(TimeStampUTC(TimeStampUTC::YMD{ 2000, 8, 7 }))  ));
-        BOOST_CHECK( !ptr->eval(asTimeT(TimeStampUTC(TimeStampUTC::YMD{ 2000, 8, 7 })), context));
+        BOOST_CHECK( ptr->ready( action_state, asTimeT(TimeStampUTC(TimeStampUTC::YMD{ 2000, 8, 7 }))  ));
+        BOOST_CHECK( !ptr->eval( context));
     }
-    BOOST_CHECK(!action2.eval(asTimeT(TimeStampUTC(TimeStampUTC::YMD{ 2000, 8, 7 })), context));
+    BOOST_CHECK(!action2.eval(context));
 
 
     const auto& python_actions = config.pending_python();
@@ -796,4 +798,85 @@ BOOST_AUTO_TEST_CASE(ACTIONRESULT_COPY_WELLS) {
         BOOST_CHECK(res1.has_well(w));
         BOOST_CHECK(res2.has_well(w));
     }
+}
+
+
+BOOST_AUTO_TEST_CASE(ActionState) {
+    Action::State st;
+    Action::ActionX action1("NAME", 100, 100, 100); action1.update_id(100);
+    Action::ActionX action2("NAME", 100, 100, 100); action1.update_id(200);
+
+    BOOST_CHECK_EQUAL(0, st.run_count(action1));
+    BOOST_CHECK_THROW( st.run_time(action1), std::out_of_range);
+
+    st.add_run(action1, 100);
+    BOOST_CHECK_EQUAL(1, st.run_count(action1));
+    BOOST_CHECK_EQUAL(100, st.run_time(action1));
+
+    st.add_run(action1, 1000);
+    BOOST_CHECK_EQUAL(2, st.run_count(action1));
+    BOOST_CHECK_EQUAL(1000, st.run_time(action1));
+
+    BOOST_CHECK_EQUAL(0, st.run_count(action2));
+    BOOST_CHECK_THROW( st.run_time(action2), std::out_of_range);
+
+    st.add_run(action2, 100);
+    BOOST_CHECK_EQUAL(1, st.run_count(action2));
+    BOOST_CHECK_EQUAL(100, st.run_time(action2));
+
+    st.add_run(action2, 1000);
+    BOOST_CHECK_EQUAL(2, st.run_count(action2));
+    BOOST_CHECK_EQUAL(1000, st.run_time(action2));
+}
+
+BOOST_AUTO_TEST_CASE(ActionID) {
+    const auto deck_string = std::string{ R"(
+SCHEDULE
+
+TSTEP
+10 /
+
+ACTIONX
+'A' /
+WWCT 'OPX'     > 0.75    AND /
+FPR < 100 /
+/
+
+WELSPECS
+'W1'  'OP'  1 1 3.33  'OIL' 7*/
+/
+
+ENDACTIO
+
+TSTEP
+10 /
+
+
+ACTIONX
+'A' /
+WOPR 'OPX'  = 1000 /
+/
+
+ENDACTIO
+
+        )"};
+
+    Opm::Parser parser;
+    auto deck = parser.parseString(deck_string);
+    EclipseGrid grid1(10,10,10);
+    TableManager table ( deck );
+    FieldPropsManager fp( deck, Phases{true, true, true}, grid1, table);
+    auto python = std::make_shared<Python>();
+
+    Runspec runspec (deck);
+    Schedule sched(deck, grid1, fp, runspec, python);
+    const auto& action1 = sched.actions(1).get("A");
+    const auto& action2 = sched.actions(2).get("A");
+
+    BOOST_CHECK(action1.id() != action2.id());
+
+    Action::State st;
+    st.add_run(action1, 1000);
+    BOOST_CHECK_EQUAL( st.run_count(action1), 1);
+    BOOST_CHECK_EQUAL( st.run_count(action2), 0);
 }

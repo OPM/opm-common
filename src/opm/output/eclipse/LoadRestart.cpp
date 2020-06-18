@@ -1441,6 +1441,7 @@ namespace Opm { namespace RestartIO  {
     RestartValue
     load(const std::string&             filename,
          int                            report_step,
+         Action::State&                 /*  action_state  */,
          SummaryState&                  summary_state,
          const std::vector<RestartKey>& solution_keys,
          const EclipseState&            es,
