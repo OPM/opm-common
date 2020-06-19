@@ -568,7 +568,6 @@ GPMAINT
 
 )";
     Opm::UnitSystem unitSystem = UnitSystem( UnitSystem::UnitType::UNIT_TYPE_METRIC );
-    double siFactorG = unitSystem.parse("GasSurfaceVolume/Time").getSIScaling();
     const auto sched = create_schedule(input);
     {
         const auto& prod_group = sched.getGroup("PROD", 0);
