@@ -23,6 +23,8 @@
 #include <string.h>
 #include <stdio.h>
 
+#include "config.h"
+
 #if HAVE_OPENMP
 #include <omp.h>
 #endif
