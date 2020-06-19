@@ -59,6 +59,7 @@ BOOST_AUTO_TEST_CASE(construction_and_queries)
     // 3 4 5 6
     // 7 8 9
     // ----------------
+    std::vector<std::vector<int>> expected = { {0}, {}, {1, 2}, {3, 4, 5, 6}, {7, 8, 9} };
     const int num_elem = 10;
     const int elem[num_elem] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
     const int num_rows = 5;
@@ -115,6 +116,14 @@ BOOST_AUTO_TEST_CASE(construction_and_queries)
 
     // Need at least one row.
     BOOST_CHECK_THROW(const SparseTable<int> st5(elem, elem + num_elem, rowsizes, rowsizes), std::exception);
+
+    // Test iteration over rows with a range-for loop.
+    int row_index = 0;
+    for (const auto& row : st2) {
+        BOOST_CHECK_EQUAL(row.size(), expected[row_index].size());
+        ++row_index;
+    }
+
 
     // Tests that only run in debug mode.
 #ifndef NDEBUG

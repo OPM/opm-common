@@ -182,6 +182,49 @@ namespace Opm
             return mutable_row_type(start_ptr + row_start_[row], start_ptr + row_start_[row + 1]);
         }
 
+        /// Iterator for iterating over the container as a whole,
+        /// i.e. row by row.
+        class Iterator
+        {
+        public:
+            Iterator(const SparseTable& table, const int begin_row_index)
+                : table_(table)
+                , row_index_(begin_row_index)
+            {
+            }
+            Iterator& operator++()
+            {
+                ++row_index_;
+                return *this;
+            }
+            row_type operator*() const
+            {
+                return table_[row_index_];
+            }
+            bool operator==(const Iterator& other)
+            {
+                assert(&table_ == &other.table_);
+                return row_index_ == other.row_index_;
+            }
+            bool operator!=(const Iterator& other)
+            {
+                return !(*this == other);
+            }
+        private:
+            const SparseTable& table_;
+            int row_index_;
+        };
+
+        /// Iterator access.
+        Iterator begin() const
+        {
+            return Iterator(*this, 0);
+        }
+        Iterator end() const
+        {
+            return Iterator(*this, size());
+        }
+
         /// Equality.
         bool operator==(const SparseTable& other) const
         {
