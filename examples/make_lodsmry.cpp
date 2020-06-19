@@ -46,7 +46,7 @@ static void printHelp() {
 int main(int argc, char **argv) {
 
     int c                          = 0;
-    int max_threads                = -1;
+    int max_threads [[maybe_unused]] = -1;
     bool force                     = false;
 
     while ((c = getopt(argc, argv, "fn:h")) != -1) {
