@@ -36,7 +36,7 @@ namespace Opm {
     class ErrorGuard;
 
 namespace RestartIO {
-    class RstWell;
+    struct RstWell;
 }
 
 namespace Compsegs {

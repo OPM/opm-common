@@ -151,6 +151,8 @@ WSEGAICD
     const auto connection_length = perf_range->second - perf_range->first;
     aicd.updateScalingFactor(outlet_segment_length, connection_length);
 
+    BOOST_CHECK_EQUAL(7U, new_segment_set.size());
+
     // updated, so it should not throw
     BOOST_CHECK_NO_THROW(aicd.scalingFactor());
     BOOST_CHECK_EQUAL(0.7, aicd.scalingFactor());
@@ -305,6 +307,8 @@ WSEGSICD
     // updated, so it should not throw
     BOOST_CHECK_NO_THROW(sicd.scalingFactor());
     BOOST_CHECK_EQUAL(0.7, sicd.scalingFactor());
+
+    BOOST_CHECK_EQUAL(7U, new_segment_set.size());
 
     BOOST_CHECK_EQUAL(7U, new_connection_set.size());
 
