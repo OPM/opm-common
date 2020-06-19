@@ -71,6 +71,9 @@ ext_modules = [
     )
 ]
 
+with open("README.md", "r") as fh:
+    long_description = fh.read()
+
 setup(
     name='opm',
     version = '@opm-common_VERSION@' + '@opm-common_PYTHON_PACKAGE_VERSION@',
@@ -78,6 +81,8 @@ setup(
     author='The Open Porous Media Project',
     author_email='opmuser@gmail.com',
     description='OPM-Common Python bindings',
+    long_description=long_description,
+    long_description_content_type="text/markdown",
     packages=[
                 'opm',
                 'opm.io',
@@ -94,4 +99,9 @@ setup(
     zip_safe=False,
     test_suite='tests',
     setup_requires=["pytest-runner", 'setuptools_scm'],
+    python_requires='>=3.5',
+    classifiers=[
+        "Programming Language :: Python :: 3",
+        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    ],
 )
