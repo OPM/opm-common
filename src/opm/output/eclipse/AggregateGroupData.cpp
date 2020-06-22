@@ -33,9 +33,14 @@
 #include <cstddef>
 #include <cstring>
 #include <exception>
-#include <iostream>
 #include <string>
 #include <stdexcept>
+
+#define ENABLE_GCNTL_DEBUG_OUTPUT 0
+
+#if ENABLE_GCNTL_DEBUG_OUTPUT
+#include <iostream>
+#endif // ENABLE_GCNTL_DEBUG_OUTPUT
 
 // #####################################################################
 // Class Opm::RestartIO::Helpers::AggregateGroupData
@@ -230,7 +235,9 @@ int higherLevelProdControlGroupSeqIndex(const Opm::Schedule& sched,
                 cur_prod_ctrl = sumState.get(group_key);
             }
             else {
+#if ENABLE_GCNTL_DEBUG_OUTPUT
                 std::cout << "Current group control is not defined for group: " << current.name() << " at timestep: " << simStep  << std::endl;
+#endif // ENABLE_GCNTL_DEBUG_OUTPUT
                 cur_prod_ctrl = 0.;
             }
             if (cur_prod_ctrl > 0. && ctrl_grup_seq_no < 0) {
@@ -266,7 +273,9 @@ int higherLevelProdControlMode(const Opm::Schedule& sched,
                 cur_prod_ctrl = sumState.get(group_key);
             }
             else {
+#if ENABLE_GCNTL_DEBUG_OUTPUT
                 std::cout << "Current group control is not defined for group: " << current.name() << " at timestep: " << simStep  << std::endl;
+#endif // ENABLE_GCNTL_DEBUG_OUTPUT
                 cur_prod_ctrl = 0.;
             }
             if (cur_prod_ctrl > 0. && ctrl_mode < 0) {
@@ -307,7 +316,9 @@ int higherLevelInjControlGroupSeqIndex(const Opm::Schedule& sched,
                 cur_inj_ctrl = sumState.get(group_key);
             }
             else {
+#if ENABLE_GCNTL_DEBUG_OUTPUT
                 std::cout << "Current injection group control: " << curInjCtrlKey << " is not defined for group: " << current.name() << " at timestep: " << simStep << std::endl;
+#endif // ENABLE_GCNTL_DEBUG_OUTPUT
                 cur_inj_ctrl = 0.;
             }
             if (cur_inj_ctrl > 0. && ctrl_grup_seq_no < 0) {
@@ -512,12 +523,14 @@ void staticContrib(const Opm::Schedule&     sched,
                 pctl_mode = it_ctrl->second;
             }
         }
+#if ENABLE_GCNTL_DEBUG_OUTPUT
         else {
             //std::stringstream str;
             //str << "Current group production control is not defined for group: " << group.name() << " at timestep: " << simStep;
             std::cout << "Current group production control is not defined for group: " << group.name() << " at timestep: " << simStep << std::endl;
             //throw std::invalid_argument(str.str());
         }
+#endif // ENABLE_GCNTL_DEBUG_OUTPUT
 
         /*IGRP[NWGMAX + 5]
          - the value is determined by a relatively complex logic, a pseudo code scetch follows:
@@ -731,10 +744,14 @@ void staticContrib(const Opm::Schedule&     sched,
                 group.injectionControls(Opm::Phase::WATER, sumState).cmode : Opm::Group::InjectionCMode::NONE;
                 if (sumState.has(group_key_w)) {
                     cur_winj_ctrl = sumState.get(group_key_w);
-                    }
+                }
+
+#if ENABLE_GCNTL_DEBUG_OUTPUT
                 else {
                     std::cout << "Current group water injection control is not defined for group: " << group.name() << " at timestep: " << simStep << std::endl;
                 }
+#endif // ENABLE_GCNTL_DEBUG_OUTPUT
+
                 if (group.name() != "FIELD") {
                     int higher_lev_winj_ctrl = higherLevelInjControlGroupSeqIndex(sched, sumState, group, "GMCTW", simStep);
                     int higher_lev_winj_cmode = higherLevelInjCMode_NotNoneFld_SeqIndex(sched, sumState, group, Opm::Phase::WATER, simStep);
@@ -824,9 +841,11 @@ void staticContrib(const Opm::Schedule&     sched,
                 if (sumState.has(group_key_g)) {
                     cur_ginj_ctrl = sumState.get(group_key_g);
                 }
+#if ENABLE_GCNTL_DEBUG_OUTPUT
                 else {
                     std::cout << "Current group gas injection control is not defined for group: " << group.name() << " at timestep: " << simStep << std::endl;
                 }
+#endif // ENABLE_GCNTL_DEBUG_OUTPUT
 
                 if (group.name() != "FIELD") {
                     int higher_lev_ginj_ctrl = higherLevelInjControlGroupSeqIndex(sched, sumState, group, "GMCTG", simStep);
