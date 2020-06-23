@@ -202,6 +202,7 @@ namespace Opm
         std::vector<std::string> groupNames(size_t timeStep) const;
         std::vector<std::string> groupNames(const std::string& pattern) const;
         std::vector<std::string> groupNames() const;
+        std::vector<const Group*> restart_groups(size_t timeStep) const;
 
         void updateWell(std::shared_ptr<Well> well, size_t reportStep);
         std::vector<std::string> changed_wells(size_t reportStep) const;
