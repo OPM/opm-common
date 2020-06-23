@@ -39,6 +39,8 @@
 #include <opm/parser/eclipse/Utility/Functional.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/State.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
 
 #include <opm/io/eclipse/OutputStream.hpp>
 #include <opm/io/eclipse/EclIOdata.hpp>
@@ -362,6 +364,22 @@ struct Setup {
 };
 
 
+void init_st(SummaryState& st) {
+    st.update_well_var("PROD1", "WOPR", 100);
+    st.update_well_var("PROD1", "WLPR", 100);
+    st.update_well_var("PROD2", "WOPR", 100);
+    st.update_well_var("PROD2", "WLPR", 100);
+    st.update_well_var("WINJ1", "WOPR", 100);
+    st.update_well_var("WINJ1", "WLPR", 100);
+    st.update_well_var("WINJ2", "WOPR", 100);
+    st.update_well_var("WINJ2", "WLPR", 100);
+
+    st.update_group_var("GRP1", "GOPR", 100);
+    st.update_group_var("WGRP1", "GOPR", 100);
+    st.update_group_var("WGRP1", "GOPR", 100);
+    st.update("FLPR", 100);
+}
+
 RestartValue first_sim(const Setup& setup, Action::State& action_state, SummaryState& st, bool write_double) {
     EclipseIO eclWriter( setup.es, setup.grid, setup.schedule, setup.summary_config);
     auto num_cells = setup.grid.getNumActive( );
@@ -371,8 +389,11 @@ RestartValue first_sim(const Setup& setup, Action::State& action_state, SummaryS
 
     auto sol = mkSolution( num_cells );
     auto wells = mkWells();
+    const auto& udq = setup.schedule.getUDQConfig(report_step);
     RestartValue restart_value(sol, wells);
 
+    init_st(st);
+    udq.eval(st);
     eclWriter.writeTimeStep( action_state,
                              st,
                              report_step,
@@ -957,4 +978,74 @@ BOOST_AUTO_TEST_CASE(Restore_Cumulatives)
 }
 
 
+BOOST_AUTO_TEST_CASE(UDQ_RESTART) {
+    std::vector<RestartKey> keys {{"PRESSURE" , UnitSystem::measure::pressure},
+        {"SWAT" , UnitSystem::measure::identity},
+        {"SGAS" , UnitSystem::measure::identity}};
+    WorkArea test_area("test_udq_restart");
+    test_area.copyIn("UDQ_BASE.DATA");
+    test_area.copyIn("UDQ_RESTART.DATA");
+
+    Setup base_setup("UDQ_BASE.DATA");
+    SummaryState st1(std::chrono::system_clock::now());
+    SummaryState st2(std::chrono::system_clock::now());
+    Action::State action_state;
+    auto state1 = first_sim( base_setup , action_state, st1, false );
+
+    Setup restart_setup("UDQ_RESTART.DATA");
+    auto state2 = second_sim( restart_setup , action_state, st2 , keys );
+    BOOST_CHECK(st1.wells() == st2.wells());
+    BOOST_CHECK(st1.groups() == st2.groups());
+
+    const auto& udq = base_setup.schedule.getUDQConfig(1);
+    for (const auto& well : st1.wells()) {
+        for (const auto& def : udq.definitions(UDQVarType::WELL_VAR)) {
+            const auto& kw = def.keyword();
+            BOOST_CHECK_EQUAL( st1.has_well_var(well, kw), st2.has_well_var(well, kw));
+            if (st1.has_well_var(well, def.keyword()))
+                BOOST_CHECK_EQUAL(st1.get_well_var(well, kw), st2.get_well_var(well, kw));
+        }
+    }
+
+    for (const auto& group : st1.groups()) {
+        for (const auto& def : udq.definitions(UDQVarType::GROUP_VAR)) {
+            const auto& kw = def.keyword();
+            BOOST_CHECK_EQUAL( st1.has_group_var(group, kw), st2.has_group_var(group, kw));
+            if (st1.has_group_var(group, def.keyword()))
+                BOOST_CHECK_EQUAL(st1.get_group_var(group, kw), st2.get_group_var(group, kw));
+        }
+    }
+
+    for (const auto& well : st1.wells()) {
+        for (const auto& def : udq.assignments(UDQVarType::WELL_VAR)) {
+            const auto& kw = def.keyword();
+            BOOST_CHECK_EQUAL( st1.has_well_var(well, kw), st2.has_well_var(well, kw));
+            if (st1.has_well_var(well, def.keyword()))
+                BOOST_CHECK_EQUAL(st1.get_well_var(well, kw), st2.get_well_var(well, kw));
+        }
+    }
+
+    for (const auto& group : st1.groups()) {
+        for (const auto& def : udq.assignments(UDQVarType::GROUP_VAR)) {
+            const auto& kw = def.keyword();
+            BOOST_CHECK_EQUAL( st1.has_group_var(group, kw), st2.has_group_var(group, kw));
+            if (st1.has_group_var(group, def.keyword()))
+                BOOST_CHECK_EQUAL(st1.get_group_var(group, kw), st2.get_group_var(group, kw));
+        }
+    }
+
+    for (const auto& def : udq.assignments(UDQVarType::FIELD_VAR)) {
+        const auto& kw = def.keyword();
+        BOOST_CHECK_EQUAL( st1.has(kw), st2.has(kw));
+            if (st1.has(kw))
+                BOOST_CHECK_EQUAL(st1.get(kw), st2.get(kw));
+    }
+
+    for (const auto& def : udq.definitions(UDQVarType::FIELD_VAR)) {
+        const auto& kw = def.keyword();
+        BOOST_CHECK_EQUAL( st1.has(kw), st2.has(kw));
+        if (st1.has(kw))
+            BOOST_CHECK_EQUAL(st1.get(kw), st2.get(kw));
+    }
+}
 }
