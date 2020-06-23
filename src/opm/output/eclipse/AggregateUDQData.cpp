@@ -281,7 +281,7 @@ namespace {
             }
             for (std::size_t ind = 0; ind < wnames.size(); ind++) {
                 if (st.has_well_var(wnames[ind], udq)) {
-                    dUdw[ind] = st.get_well_var(wnames[ind], udq);        
+                    dUdw[ind] = st.get_well_var(wnames[ind], udq);
                 }
             }
         }
@@ -313,11 +313,11 @@ namespace {
                     dUdg[ind] = -0.3E+21;
                 }
                 else {
-                    if (st.has_group_var((*groups[ind]).name(), udq)) {                        
-                        dUdg[ind] = st.get_group_var((*groups[ind]).name(), udq); 
+                    if (st.has_group_var((*groups[ind]).name(), udq)) {
+                        dUdg[ind] = st.get_group_var((*groups[ind]).name(), udq);
                     }
                     else {
-                        dUdg[ind] = -0.3E+21; 
+                        dUdg[ind] = -0.3E+21;
                     }
                 }
             }
@@ -343,14 +343,14 @@ namespace {
                            DUDFArray&   dUdf)
         {
             //set value for group name "FIELD"
-            if (st.has(udq)) {    
-                dUdf[0] = st.get(udq); 
+            if (st.has(udq)) {
+                dUdf[0] = st.get(udq);
             }
             else {
-                dUdf[0] = -0.3E+21; 
+                dUdf[0] = -0.3E+21;
             }
         }
-    } // dUdf    
+    } // dUdf
 }
 
 
@@ -386,14 +386,14 @@ const std::vector<const Opm::Group*> currentGroups(const Opm::Schedule& sched,
     std::vector<const Opm::Group*> curGroups(ngmaxz(inteHead), nullptr);
     for (const auto& group_name : sched.groupNames(simStep)) {
         const auto& group = sched.getGroup(group_name, simStep);
-        
+
         //The FIELD group is the first group according to the insert_index()
         //In the Eclipse compatible restart file, the FILED group is put at the end of the list of groups (ngmaxz(inteHead)-1)
         int ind = (group.name() == "FIELD")
             ? ngmaxz(inteHead)-1 : group.insert_index()-1;
         curGroups[ind] = std::addressof(group);
 
-    }   
+    }
     return curGroups;
 }
 
@@ -433,7 +433,7 @@ const std::vector<int> iuap_data(const Opm::Schedule& sched,
     //construct the current list of well or group sequence numbers to output the IUAP array
     std::vector<int> wg_no;
     Opm::UDAKeyword wg_key;
-    
+
     for (std::size_t ind = 0; ind < iuap.size(); ind++) {
         auto& ctrl = iuap[ind].control;
         wg_key = Opm::UDQ::keyword(ctrl);
@@ -451,12 +451,12 @@ const std::vector<int> iuap_data(const Opm::Schedule& sched,
             std::cout << "Invalid Control keyword: " << static_cast<int>(ctrl) << std::endl;
             throw std::invalid_argument("UDQ - variable: " + iuap[ind].udq );
         }
-            
+
     }
 
     return wg_no;
 }
-            
+
 Opm::RestartIO::Helpers::AggregateUDQData::
 AggregateUDQData(const std::vector<int>& udqDims)
     : iUDQ_ (iUdq::allocate(udqDims)),
@@ -503,8 +503,8 @@ captureDeclaredUDQData(const Opm::Schedule&                 sched,
         str << "Inconsistent total number of udqs: " << cnt_udq << " and sum of well, group and field udqs: " << nudq;
         OpmLog::error(str.str());
     }
-    
-    
+
+
     auto udq_active = sched.udqActive(simStep);
     if (udq_active) {
         const auto& udq_records = udq_active.get_iuad();
@@ -525,7 +525,7 @@ captureDeclaredUDQData(const Opm::Schedule&                 sched,
             str << "Inconsistent number of iuad's: " << cnt_iuad << " number of iuad's from intehead " << inteHead[VI::intehead::NO_IUADS];
             OpmLog::error(str.str());
         }
-        
+
         const auto& iuap_records = udq_active.get_iuap();
         int cnt_iuap = 0;
         const auto iuap_vect = iuap_data(sched, simStep,iuap_records);
@@ -558,7 +558,7 @@ captureDeclaredUDQData(const Opm::Schedule&                 sched,
             OpmLog::error(str.str());
         }
     }
-        
+
     std::size_t i_wudq = 0;
     const auto& wnames = sched.wellNames(simStep);
     const auto nwmax = nwmaxz(inteHead);
@@ -577,7 +577,7 @@ captureDeclaredUDQData(const Opm::Schedule&                 sched,
         str << "Inconsistent number of dudw's: " << cnt_dudw << " number of dudw's from intehead " << inteHead[VI::intehead::NO_WELL_UDQS];
         OpmLog::error(str.str());
     }
-    
+
     std::size_t i_gudq = 0;
     const auto curGroups = currentGroups(sched, simStep, inteHead);
     const auto ngmax = ngmaxz(inteHead);
@@ -596,7 +596,7 @@ captureDeclaredUDQData(const Opm::Schedule&                 sched,
         str << "Inconsistent number of dudg's: " << cnt_dudg << " number of dudg's from intehead " << inteHead[VI::intehead::NO_GROUP_UDQS];
         OpmLog::error(str.str());
     }
-   
+
     std::size_t i_fudq = 0;
     int cnt_dudf = 0;
     for (const auto& udq_input : udqCfg.input()) {
@@ -614,6 +614,6 @@ captureDeclaredUDQData(const Opm::Schedule&                 sched,
         OpmLog::error(str.str());
     }
 
-   
+
 }
 
