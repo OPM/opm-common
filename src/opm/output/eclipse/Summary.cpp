@@ -1379,38 +1379,6 @@ bool need_wells(const Opm::EclIO::SummaryNode& node) {
     throw std::runtime_error("Unhandled summary node category in need_wells");
 }
 
-void eval_udq(const Opm::Schedule& schedule, std::size_t sim_step, Opm::SummaryState& st)
-{
-    using namespace Opm;
-
-    const UDQConfig& udq = schedule.getUDQConfig(sim_step);
-    const auto& func_table = udq.function_table();
-    UDQContext context(func_table, st);
-    for (const auto& assign : udq.assignments(UDQVarType::WELL_VAR)) {
-        auto ws = assign.eval(st.wells());
-        st.update_udq(ws);
-    }
-
-    for (const auto& def : udq.definitions(UDQVarType::WELL_VAR)) {
-        auto ws = def.eval(context);
-        st.update_udq(ws);
-    }
-
-    for (const auto& assign : udq.assignments(UDQVarType::GROUP_VAR)) {
-        auto ws = assign.eval(st.groups());
-        st.update_udq(ws);
-    }
-
-    for (const auto& def : udq.definitions(UDQVarType::GROUP_VAR)) {
-        auto ws = def.eval(context);
-        st.update_udq(ws);
-    }
-
-    for (const auto& def : udq.definitions(UDQVarType::FIELD_VAR)) {
-        auto field_udq = def.eval(context);
-        st.update_udq(field_udq);
-    }
-}
 
 void updateValue(const Opm::EclIO::SummaryNode& node, const double value, Opm::SummaryState& st)
 {
@@ -2668,8 +2636,8 @@ void Summary::eval(SummaryState&                  st,
                        well_solution, group_solution, single_values,
                        region_values, block_values, st);
 
-    eval_udq(schedule, sim_step, st);
-
+    const auto& udq = schedule.getUDQConfig(sim_step);
+    udq.eval(st);
     st.update_elapsed(duration);
 }
 
