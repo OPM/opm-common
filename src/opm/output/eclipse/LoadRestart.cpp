@@ -94,9 +94,16 @@ namespace {
         static Opm::EclIO::eclArrType T;
     };
 
-    Opm::EclIO::eclArrType ArrayType<int>::T    = ::Opm::EclIO::eclArrType::INTE;
-    Opm::EclIO::eclArrType ArrayType<float>::T  = ::Opm::EclIO::eclArrType::REAL;
-    Opm::EclIO::eclArrType ArrayType<double>::T = ::Opm::EclIO::eclArrType::DOUB;
+    template<>
+    struct ArrayType<std::string>
+    {
+        static Opm::EclIO::eclArrType T;
+    };
+
+    Opm::EclIO::eclArrType ArrayType<int>::T         = ::Opm::EclIO::eclArrType::INTE;
+    Opm::EclIO::eclArrType ArrayType<float>::T       = ::Opm::EclIO::eclArrType::REAL;
+    Opm::EclIO::eclArrType ArrayType<double>::T      = ::Opm::EclIO::eclArrType::DOUB;
+    Opm::EclIO::eclArrType ArrayType<std::string>::T = ::Opm::EclIO::eclArrType::CHAR;
 }
 
 class RestartFileView
@@ -183,7 +190,6 @@ RestartFileView::RestartFileView(const std::string& filename,
         const auto& type = std::get<1>(vector);
 
         switch (type) {
-        case ::Opm::EclIO::eclArrType::CHAR:
         case ::Opm::EclIO::eclArrType::LOGI:
         case ::Opm::EclIO::eclArrType::MESS:
             // Currently ignored
