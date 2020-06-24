@@ -2682,7 +2682,8 @@ void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t 
     }
 
     std::vector<const Group*> Schedule::restart_groups(std::size_t timeStep) const {
-        std::vector<const Group*> rst_groups( this->numGroups(timeStep), nullptr );
+        std::size_t wdmax = this->m_runspec.wellDimensions().maxGroupsInField();
+        std::vector<const Group*> rst_groups(wdmax + 1 , nullptr );
         for (const auto& group_name : this->groupNames(timeStep)) {
             const auto& group = this->getGroup(group_name, timeStep);
 

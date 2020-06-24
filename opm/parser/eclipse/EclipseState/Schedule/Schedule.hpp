@@ -202,6 +202,15 @@ namespace Opm
         std::vector<std::string> groupNames(size_t timeStep) const;
         std::vector<std::string> groupNames(const std::string& pattern) const;
         std::vector<std::string> groupNames() const;
+        /*
+          The restart_groups function returns a vector of groups pointers which
+          is organized as follows:
+
+            1. The number of elements is WELLDIMS::MAXGROUPS + 1
+            2. The elements are sorted according to group.insert_index().
+            3. If there are less than WELLDIMS::MAXGROUPS nullptr is used.
+            4. The very last element corresponds to the FIELD group.
+        */
         std::vector<const Group*> restart_groups(size_t timeStep) const;
 
         void updateWell(std::shared_ptr<Well> well, size_t reportStep);
