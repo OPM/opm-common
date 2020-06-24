@@ -94,10 +94,20 @@ namespace {
         static Opm::EclIO::eclArrType T;
     };
 
-    Opm::EclIO::eclArrType ArrayType<int>::T    = ::Opm::EclIO::eclArrType::INTE;
-    Opm::EclIO::eclArrType ArrayType<float>::T  = ::Opm::EclIO::eclArrType::REAL;
-    Opm::EclIO::eclArrType ArrayType<double>::T = ::Opm::EclIO::eclArrType::DOUB;
+    template<>
+    struct ArrayType<std::string>
+    {
+        static Opm::EclIO::eclArrType T;
+    };
+
+    Opm::EclIO::eclArrType ArrayType<int>::T         = ::Opm::EclIO::eclArrType::INTE;
+    Opm::EclIO::eclArrType ArrayType<float>::T       = ::Opm::EclIO::eclArrType::REAL;
+    Opm::EclIO::eclArrType ArrayType<double>::T      = ::Opm::EclIO::eclArrType::DOUB;
+    Opm::EclIO::eclArrType ArrayType<std::string>::T = ::Opm::EclIO::eclArrType::CHAR;
 }
+
+
+
 
 class RestartFileView
 {
@@ -128,8 +138,8 @@ public:
     {
         if (this->rst_file_ == nullptr) { return false; }
 
-        return this->vectors_
-            .at(ArrayType<ElmType>::T).count(vector) > 0;
+        const auto& coll_iter = this->vectors_.find(ArrayType<ElmType>::T);
+        return (coll_iter != this->vectors_.end() && this->collectionContains(coll_iter->second, vector));
     }
 
     template <typename ElmType>
@@ -164,6 +174,13 @@ private:
     int         report_step_;
     std::size_t sim_step_;
     TypedColl   vectors_;
+
+    bool collectionContains(const VectorColl&  coll,
+                            const std::string& vector) const
+    {
+        return coll.find(vector) != coll.end();
+    }
+
 };
 
 RestartFileView::RestartFileView(const std::string& filename,
@@ -183,7 +200,6 @@ RestartFileView::RestartFileView(const std::string& filename,
         const auto& type = std::get<1>(vector);
 
         switch (type) {
-        case ::Opm::EclIO::eclArrType::CHAR:
         case ::Opm::EclIO::eclArrType::LOGI:
         case ::Opm::EclIO::eclArrType::MESS:
             // Currently ignored
