@@ -391,6 +391,16 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsOrdered) {
     BOOST_CHECK_EQUAL( "CG", group_names[1]);
     BOOST_CHECK_EQUAL( "BG", group_names[2]);
     BOOST_CHECK_EQUAL( "AG", group_names[3]);
+
+    auto restart_groups = schedule.restart_groups(0);
+    BOOST_REQUIRE_EQUAL(restart_groups.size(), 4);
+    for (std::size_t group_index = 0; group_index < restart_groups.size() - 1; group_index++) {
+        const auto& group_ptr = restart_groups[group_index];
+        BOOST_CHECK_EQUAL(group_ptr->insert_index(), group_index + 1);
+    }
+    const auto& field_ptr = restart_groups.back();
+    BOOST_CHECK_EQUAL(field_ptr->insert_index(), 0);
+    BOOST_CHECK_EQUAL(field_ptr->name(), "FIELD");
 }
 
 
