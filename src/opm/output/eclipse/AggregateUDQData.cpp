@@ -277,7 +277,7 @@ namespace {
         {
             //initialize array to the default value for the array
             for (std::size_t ind = 0; ind < nwmaxz; ind++) {
-                dUdw[ind] = -0.3E+21;
+                dUdw[ind] = Opm::UDQ::restart_default;
             }
             for (std::size_t ind = 0; ind < wnames.size(); ind++) {
                 if (st.has_well_var(wnames[ind], udq)) {
@@ -310,14 +310,14 @@ namespace {
             //initialize array to the default value for the array
             for (std::size_t ind = 0; ind < groups.size(); ind++) {
                 if ((groups[ind] == nullptr) || (ind == ngmaxz-1)) {
-                    dUdg[ind] = -0.3E+21;
+                    dUdg[ind] = Opm::UDQ::restart_default;
                 }
                 else {
                     if (st.has_group_var((*groups[ind]).name(), udq)) {
                         dUdg[ind] = st.get_group_var((*groups[ind]).name(), udq);
                     }
                     else {
-                        dUdg[ind] = -0.3E+21;
+                        dUdg[ind] = Opm::UDQ::restart_default;
                     }
                 }
             }
@@ -347,7 +347,7 @@ namespace {
                 dUdf[0] = st.get(udq);
             }
             else {
-                dUdf[0] = -0.3E+21;
+                dUdf[0] = Opm::UDQ::restart_default;
             }
         }
     } // dUdf
