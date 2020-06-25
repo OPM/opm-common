@@ -265,7 +265,6 @@ using rt = Opm::data::Rates::opt;
 using measure = Opm::UnitSystem::measure;
 constexpr const bool injector = true;
 constexpr const bool producer = false;
-constexpr const bool polymer = true;
 
 /* Some numerical value with its unit tag embedded to enable caller to apply
  * unit conversion. This removes a lot of boilerplate. ad-hoc solution to poor
@@ -436,7 +435,7 @@ double efac( const std::vector<std::pair<std::string,double>>& eff_factors, cons
     return (it != eff_factors.end()) ? it->second : 1;
 }
 
-template< rt phase, bool injection = true, bool polymer = false >
+template< rt phase, bool injection = true >
 inline quantity rate( const fn_args& args ) {
     double sum = 0.0;
 
@@ -446,11 +445,7 @@ inline quantity rate( const fn_args& args ) {
 
         double eff_fac = efac( args.eff_factors, name );
 
-        double concentration = polymer
-                             ? sched_well.getPolymerProperties().m_polymerConcentration
-                             : 1;
-
-        const auto v = args.wells.at(name).rates.get(phase, 0.0) * eff_fac * concentration;
+        const auto v = args.wells.at(name).rates.get(phase, 0.0) * eff_fac;
 
         if( ( v > 0 ) == injection )
             sum += v;
@@ -458,7 +453,7 @@ inline quantity rate( const fn_args& args ) {
 
     if( !injection ) sum *= -1;
 
-    if( polymer ) return { sum, measure::mass_rate };
+    if (phase == rt::polymer) return { sum, measure::mass_rate };
     return { sum, rate_unit< phase >() };
 }
 
@@ -478,7 +473,7 @@ inline quantity flowing( const fn_args& args ) {
              measure::identity };
 }
 
-template< rt phase, bool injection = true, bool polymer = false >
+template< rt phase, bool injection = true>
 inline quantity crate( const fn_args& args ) {
     const quantity zero = { 0, rate_unit< phase >() };
     // The args.num value is the literal value which will go to the
@@ -502,19 +497,15 @@ inline quantity crate( const fn_args& args ) {
     if( completion == well_data.connections.end() ) return zero;
 
     double eff_fac = efac( args.eff_factors, name );
-    double concentration = polymer
-                           ? well.getPolymerProperties().m_polymerConcentration
-                           : 1;
-
-    auto v = completion->rates.get( phase, 0.0 ) * eff_fac * concentration;
+    auto v = completion->rates.get( phase, 0.0 ) * eff_fac;
     if( ( v > 0 ) != injection ) return zero;
     if( !injection ) v *= -1;
 
-    if( polymer ) return { v, measure::mass_rate };
+    if( phase == rt::polymer ) return { v, measure::mass_rate };
     return { v, rate_unit< phase >() };
 }
 
-template< rt phase, bool polymer = false >
+template< rt phase>
 inline quantity srate( const fn_args& args ) {
     const quantity zero = { 0, rate_unit< phase >() };
     // The args.num value is the literal value which will go to the
@@ -535,15 +526,11 @@ inline quantity srate( const fn_args& args ) {
     if( segment == well_data.segments.end() ) return zero;
 
     double eff_fac = efac( args.eff_factors, name );
-    double concentration = polymer
-                           ? well.getPolymerProperties().m_polymerConcentration
-                           : 1;
-
-    auto v = segment->second.rates.get( phase, 0.0 ) * eff_fac * concentration;
+    auto v = segment->second.rates.get( phase, 0.0 ) * eff_fac;
     //switch sign of rate - opposite convention in flow vs eclipse
     v *= -1;
 
-    if( polymer ) return { v, measure::mass_rate };
+    if( phase == rt::polymer ) return { v, measure::mass_rate };
     return { v, rate_unit< phase >() };
 }
 
@@ -891,7 +878,7 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "WOIR", rate< rt::oil, injector > },
     { "WGIR", rate< rt::gas, injector > },
     { "WNIR", rate< rt::solvent, injector > },
-    { "WCIR", rate< rt::wat, injector, polymer > },
+    { "WCIR", rate< rt::polymer, injector > },
     { "WVIR", sum( sum( rate< rt::reservoir_water, injector >, rate< rt::reservoir_oil, injector > ),
                        rate< rt::reservoir_gas, injector > ) },
 
@@ -899,7 +886,7 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "WOIT", mul( rate< rt::oil, injector >, duration ) },
     { "WGIT", mul( rate< rt::gas, injector >, duration ) },
     { "WNIT", mul( rate< rt::solvent, injector >, duration ) },
-    { "WCIT", mul( rate< rt::wat, injector, polymer >, duration ) },
+    { "WCIT", mul( rate< rt::polymer, injector >, duration ) },
     { "WVIT", mul( sum( sum( rate< rt::reservoir_water, injector >, rate< rt::reservoir_oil, injector > ),
                         rate< rt::reservoir_gas, injector > ), duration ) },
 
@@ -957,14 +944,14 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "GOIR", rate< rt::oil, injector > },
     { "GGIR", rate< rt::gas, injector > },
     { "GNIR", rate< rt::solvent, injector > },
-    { "GCIR", rate< rt::wat, injector, polymer > },
+    { "GCIR", rate< rt::polymer, injector > },
     { "GVIR", sum( sum( rate< rt::reservoir_water, injector >, rate< rt::reservoir_oil, injector > ),
                         rate< rt::reservoir_gas, injector > ) },
     { "GWIT", mul( rate< rt::wat, injector >, duration ) },
     { "GOIT", mul( rate< rt::oil, injector >, duration ) },
     { "GGIT", mul( rate< rt::gas, injector >, duration ) },
     { "GNIT", mul( rate< rt::solvent, injector >, duration ) },
-    { "GCIT", mul( rate< rt::wat, injector, polymer >, duration ) },
+    { "GCIT", mul( rate< rt::polymer, injector >, duration ) },
     { "GVIT", mul( sum( sum( rate< rt::reservoir_water, injector >, rate< rt::reservoir_oil, injector > ),
                         rate< rt::reservoir_gas, injector > ), duration ) },
 
@@ -1083,7 +1070,7 @@ static const std::unordered_map< std::string, ofun > funs = {
 
     { "CWIR", crate< rt::wat, injector > },
     { "CGIR", crate< rt::gas, injector > },
-    { "CCIR", crate< rt::wat, injector, polymer > },
+    { "CCIR", crate< rt::polymer, injector > },
     { "CWIT", mul( crate< rt::wat, injector >, duration ) },
     { "CGIT", mul( crate< rt::gas, injector >, duration ) },
     { "CNIT", mul( crate< rt::solvent, injector >, duration ) },
@@ -1103,8 +1090,8 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "COPT", mul( crate< rt::oil, producer >, duration ) },
     { "CGPT", mul( crate< rt::gas, producer >, duration ) },
     { "CNPT", mul( crate< rt::solvent, producer >, duration ) },
-    { "CCIT", mul( crate< rt::wat, injector, polymer >, duration ) },
-    { "CCPT", mul( crate< rt::wat, producer, polymer >, duration ) },
+    { "CCIT", mul( crate< rt::polymer, injector >, duration ) },
+    { "CCPT", mul( crate< rt::polymer, producer >, duration ) },
     { "CTFAC", trans_factors },
 
     { "FWPR", rate< rt::wat, producer > },
@@ -1141,8 +1128,8 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "FOIR", rate< rt::oil, injector > },
     { "FGIR", rate< rt::gas, injector > },
     { "FNIR", rate< rt::solvent, injector > },
-    { "FCIR", rate< rt::wat, injector, polymer > },
-    { "FCPR", rate< rt::wat, producer, polymer > },
+    { "FCIR", rate< rt::polymer, injector > },
+    { "FCPR", rate< rt::polymer, producer > },
     { "FVIR", sum( sum( rate< rt::reservoir_water, injector>, rate< rt::reservoir_oil, injector >),
                    rate< rt::reservoir_gas, injector>)},
 
@@ -1151,8 +1138,8 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "FOIT", mul( rate< rt::oil, injector >, duration ) },
     { "FGIT", mul( rate< rt::gas, injector >, duration ) },
     { "FNIT", mul( rate< rt::solvent, injector >, duration ) },
-    { "FCIT", mul( rate< rt::wat, injector, polymer >, duration ) },
-    { "FCPT", mul( rate< rt::wat, producer, polymer >, duration ) },
+    { "FCIT", mul( rate< rt::polymer, injector >, duration ) },
+    { "FCPT", mul( rate< rt::polymer, producer >, duration ) },
     { "FLIT", mul( sum( rate< rt::wat, injector >, rate< rt::oil, injector > ),
                    duration ) },
     { "FVIT", mul( sum( sum( rate< rt::reservoir_water, injector>, rate< rt::reservoir_oil, injector >),
