@@ -258,6 +258,8 @@ static std::string createDeckWithWellsOrdered() {
     std::string input =
             "START             -- 0 \n"
             "10 MAI 2007 / \n"
+            "WELLDIMS\n"
+            "   *  *   3 /\n"
             "SCHEDULE\n"
             "WELSPECS\n"
             "     \'CW_1\'        \'CG\'   3   3  3.33       \'OIL\'  7* /   \n"
@@ -326,6 +328,7 @@ static std::string createDeckRFTConfig() {
     return R"(RUNSPEC
 START             -- 0
   1 NOV 1979 /
+
 SCHEDULE
 DATES             -- 1  (sim step = 0)
  1 DES 1979/

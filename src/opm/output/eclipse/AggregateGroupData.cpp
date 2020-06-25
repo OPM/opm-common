@@ -1248,13 +1248,7 @@ captureDeclaredGroupData(const Opm::Schedule&                 sched,
                          const Opm::SummaryState&             sumState,
                          const std::vector<int>&              inteHead)
 {
-    std::vector<const Opm::Group*> curGroups(ngmaxz(inteHead), nullptr);
-    for (const auto& group_name : sched.groupNames(simStep)) {
-        const auto& group = sched.getGroup(group_name, simStep);
-        int ind = (group.name() == "FIELD")
-            ? ngmaxz(inteHead)-1 : group.insert_index()-1;
-        curGroups[ind] = std::addressof(group);
-    }
+    const auto& curGroups = sched.restart_groups(simStep);
 
     groupLoop(curGroups, [&sched, simStep, sumState, this]
               (const Group& group, const std::size_t groupID) -> void
