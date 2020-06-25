@@ -431,6 +431,8 @@ if(ENABLE_ECL_OUTPUT)
           tests/SPE1CASE1A.SMSPEC
           tests/SPE9_CP_PACKED.DATA
           tests/SOFR_TEST.DATA
+          tests/UDQ_BASE.DATA
+          tests/UDQ_RESTART.DATA
           tests/UDQ_TEST_WCONPROD_IUAD-2.DATA
           tests/UDQ_ACTIONX_TEST1.DATA
           tests/UDQ_ACTIONX_TEST1_U.DATA
