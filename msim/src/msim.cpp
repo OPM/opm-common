@@ -106,7 +106,7 @@ void msim::run_step(const Schedule& schedule, Action::State& action_state, Summa
 
         this->simulate(schedule, st, sol, well_data, report_step, seconds_elapsed, time_step);
 
-        Opm::data::Group group_data;
+        Opm::data::GroupValues group_data;
 
         seconds_elapsed += time_step;
 
