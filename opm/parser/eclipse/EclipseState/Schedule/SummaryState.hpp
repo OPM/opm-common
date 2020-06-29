@@ -91,9 +91,12 @@ public:
     void update_udq(const UDQSet& udq_set);
 
     double get(const std::string&) const;
+    double get(const std::string&, double) const;
     double get_elapsed() const;
     double get_well_var(const std::string& well, const std::string& var) const;
     double get_group_var(const std::string& group, const std::string& var) const;
+    double get_well_var(const std::string& well, const std::string& var, double) const;
+    double get_group_var(const std::string& group, const std::string& var, double) const;
 
     const std::vector<std::string>& wells() const;
     std::vector<std::string> wells(const std::string& var) const;

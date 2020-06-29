@@ -1776,7 +1776,7 @@ BOOST_AUTO_TEST_CASE(Test_SummaryState) {
     BOOST_CHECK_THROW(st.get("NO_SUCH_KEY"), std::out_of_range);
     BOOST_CHECK(st.has("WWCT:OP_2"));
     BOOST_CHECK(!st.has("NO_SUCH_KEY"));
-
+    BOOST_CHECK_EQUAL(st.get("WWCT:OP_99", -1), -1);
 
     st.update_well_var("OP1", "WWCT", 0.75);
     st.update_well_var("OP2", "WWCT", 0.75);
@@ -1788,6 +1788,9 @@ BOOST_AUTO_TEST_CASE(Test_SummaryState) {
     const auto& wopr_wells = st.wells("WOPR");
     BOOST_CHECK_EQUAL( wopr_wells.size() , 0);
 
+    BOOST_CHECK_EQUAL( st.get_well_var("OP99", "WWCT", 0.50), 0.50);
+
+
     const auto& wwct_wells = st.wells("WWCT");
     BOOST_CHECK_EQUAL( wwct_wells.size(), 2);
 
@@ -1797,6 +1800,7 @@ BOOST_AUTO_TEST_CASE(Test_SummaryState) {
     BOOST_CHECK( st.has_group_var("G1", "GWCT"));
     BOOST_CHECK_EQUAL( st.get_group_var("G1", "GWCT"), 0.25);
     BOOST_CHECK_EQUAL( st.get_group_var("G1", "GWCT"), st.get("GWCT:G1"));
+    BOOST_CHECK_EQUAL( st.get_group_var("G99", "GWCT", 1.00), 1.00);
     const auto& gopr_groups = st.groups("GOPR");
     BOOST_CHECK_EQUAL( gopr_groups.size() , 0);
 
