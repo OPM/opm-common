@@ -230,9 +230,8 @@ int higherLevelProdControlGroupSeqIndex(const Opm::Schedule& sched,
         while (current.name() != "FIELD" && ctrl_grup_seq_no < 0) {
             current = sched.getGroup(current.parent(), simStep);
             cur_prod_ctrl = -1.;
-            std::string group_key = gf_key("GMCTP", current.name());
-            if (sumState.has(group_key)) {
-                cur_prod_ctrl = sumState.get(group_key);
+            if (sumState.has_group_var(current.name(), "GMCTP")) {
+                cur_prod_ctrl = sumState.get_group_var(current.name(), "GMCTP");
             }
             else {
 #if ENABLE_GCNTL_DEBUG_OUTPUT
@@ -268,9 +267,8 @@ int higherLevelProdControlMode(const Opm::Schedule& sched,
         while (current.name() != "FIELD" && ctrl_mode < 0.) {
             current = sched.getGroup(current.parent(), simStep);
             cur_prod_ctrl = -1.;
-            std::string group_key = gf_key("GMCTP", current.name());
-            if (sumState.has(group_key)) {
-                cur_prod_ctrl = sumState.get(group_key);
+            if (sumState.has_group_var(current.name(), "GMCTP")) {
+                cur_prod_ctrl = sumState.get_group_var(current.name(), "GMCTP");
             }
             else {
 #if ENABLE_GCNTL_DEBUG_OUTPUT
@@ -311,9 +309,8 @@ int higherLevelInjControlGroupSeqIndex(const Opm::Schedule& sched,
         while (current.name() != "FIELD" && ctrl_grup_seq_no < 0) {
             current = sched.getGroup(current.parent(), simStep);
             cur_inj_ctrl = -1.;
-            std::string group_key = gf_key(curInjCtrlKey, current.name());
-            if (sumState.has(group_key)) {
-                cur_inj_ctrl = sumState.get(group_key);
+            if (sumState.has_group_var(current.name(), curInjCtrlKey)) {
+                cur_inj_ctrl = sumState.get_group_var(current.name(), curInjCtrlKey);
             }
             else {
 #if ENABLE_GCNTL_DEBUG_OUTPUT
