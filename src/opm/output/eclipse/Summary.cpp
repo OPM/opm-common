@@ -295,6 +295,10 @@ measure div_unit( measure denom, measure div ) {
         div   == measure::time )
         return measure::mass;
 
+    if( denom == measure::mass_rate &&
+        div   == measure::liquid_surface_rate )
+        return measure::polymer_density;
+
     return measure::identity;
 }
 
