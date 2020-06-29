@@ -97,6 +97,7 @@ FGPRF
 FGPRS
 FOPRF
 FOPRS
+FCPR
 --FTPRSEA
 -- Injection Rates
 FVIR
@@ -124,6 +125,7 @@ FGPTF
 FOPTF
 FOPTS
 FVPRT
+FCPT
 -- Injection Cummulatives
 FVIT
 FWIT
@@ -423,6 +425,11 @@ GMWPR
 /
 GMWIN
 /
+
+GCPR
+/
+GCPT
+/
 -- Well Data
 -- Production Rates
 WWPR
@@ -609,6 +616,12 @@ WVIR
 WVIT
 /
 WMCTL
+/
+
+WCPR
+/
+
+WCPT
 /
 
 -- Water injection per connection
