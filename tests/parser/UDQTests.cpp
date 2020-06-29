@@ -1626,6 +1626,7 @@ SCHEDULE
 UDQ
    DEFINE FU 0 -1.25E-2*(1.0E-1 + 2E-1) /
 /
+
 )";
     auto schedule = make_schedule(deck_string);
     const auto& udq = schedule.getUDQConfig(0);
@@ -1639,3 +1640,36 @@ UDQ
     BOOST_CHECK_CLOSE( res0[0].value(), -0.00125*3, 1e-6);
 }
 
+
+BOOST_AUTO_TEST_CASE(UDQ_NEGATIVE_PREFIX_BASIC) {
+    std::string deck_string = R"(
+SCHEDULE
+UDQ
+   DEFINE FUMIN0 - 1.5*FWPR /
+   DEFINE FUMIN1 - 1.5*FWPR*(FGPR + FOPR)^3 - 2*FLPR /
+/
+)";
+
+    auto schedule = make_schedule(deck_string);
+    const auto& udq = schedule.getUDQConfig(0);
+    UDQParams udqp;
+    auto def0 = udq.definitions()[0];
+    auto def1 = udq.definitions()[1];
+    SummaryState st(std::chrono::system_clock::now());
+    UDQFunctionTable udqft(udqp);
+    UDQContext context(udqft, st);
+    const double fwpr = 7;
+    const double fopr = 4;
+    const double fgpr = 7;
+    const double flpr = 13;
+    st.update("FWPR", fwpr);
+    st.update("FOPR", fopr);
+    st.update("FGPR", fgpr);
+    st.update("FLPR", flpr);
+
+    auto res0 = def0.eval(context);
+    BOOST_CHECK_EQUAL( res0[0].value(), -1.5*fwpr);
+
+    auto res1 = def1.eval(context);
+    BOOST_CHECK_EQUAL( res1[0].value(), -1.5*fwpr*std::pow(fgpr+fopr, 3) - 2*flpr );
+}

@@ -142,6 +142,14 @@ UDQDefine::UDQDefine(const UDQParams& udq_params,
             }
         }
     }
+    /*
+      This is hysterical special casing; the parser does not correctly handle a
+      leading '-' to change sign; we just hack it up by adding a fictious '0'
+      token in front.
+    */
+    if (tokens[0] == "-")
+        tokens.insert( tokens.begin(), "0" );
+
     this->ast = std::make_shared<UDQASTNode>( UDQParser::parse(udq_params, this->m_var_type, this->m_keyword, tokens, parseContext, errors) );
     this->string_data = "";
     for (std::size_t index = 0; index < deck_data.size(); index++) {
