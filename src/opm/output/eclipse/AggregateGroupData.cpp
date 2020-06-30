@@ -201,20 +201,6 @@ bool groupInjectionControllable(const Opm::Schedule& sched, const Opm::SummarySt
 
 
 
-std::string gf_key(const std::string& key, const std::string& name)
-{
-    std::string comp_key = "";
-    if (name != "FIELD") {
-        //group key
-         comp_key = key + ":" + name;
-    }
-    else {
-        //FIELD key
-        comp_key = "F" + key.substr(1);
-    }
-    return comp_key;
-}
-
 int higherLevelProdControlGroupSeqIndex(const Opm::Schedule& sched,
                        const Opm::SummaryState& sumState,
                        const Opm::Group& group,
@@ -453,6 +439,7 @@ void staticContrib(const Opm::Schedule&     sched,
                    const std::map<Opm::Group::InjectionCMode, int>& cmodeToNum,
                    IGrpArray&               iGrp)
 {
+    const bool is_field = group.name() == "FIELD";
     if (group.wellgroup()) {
         int igrpCount = 0;
         //group has child wells
@@ -475,46 +462,22 @@ void staticContrib(const Opm::Schedule&     sched,
     // location nwgmax
     iGrp[nwgmax] = groupSize(group);
 
-            // Find number of active production wells and injection wells for group
-    std::string group_key_1;
-    group_key_1 = gf_key("GMWPR", group.name());
-    double g_act_pwells = -1.;
-    if (sumState.has(group_key_1)) {
-        g_act_pwells = sumState.get(group_key_1);
-    }
-    else {
-        g_act_pwells = 0.;
-    }
-
-    group_key_1 = gf_key("GMWIN", group.name());
-    double g_act_iwells = -1.;
-    if (sumState.has(group_key_1)) {
-        g_act_iwells = sumState.get(group_key_1);
-    }
-    else {
-        g_act_iwells = 0.;
-    }
-    // set the number of active wells for a group
-    if (g_act_pwells >= 0 && g_act_iwells >= 0) {
-        iGrp[nwgmax + 33] = g_act_pwells + g_act_iwells;
-    }
-    else {
-        iGrp[nwgmax + 33] = 0;
-    }
+    // Find number of active production wells and injection wells for group
+    const double g_act_pwells = is_field ? sumState.get("FMWPR", 0) : sumState.get_group_var(group.name(), "GMWPR", 0);
+    const double g_act_iwells = is_field ? sumState.get("FMWIN", 0) : sumState.get_group_var(group.name(), "GMWIN", 0);
+    iGrp[nwgmax + 33] = g_act_pwells + g_act_iwells;
 
     //Treat groups that have production
-    if ((group.getGroupType() == Opm::Group::GroupType::NONE) || (group.getGroupType() == Opm::Group::GroupType::PRODUCTION) 
+    if ((group.getGroupType() == Opm::Group::GroupType::NONE) || (group.getGroupType() == Opm::Group::GroupType::PRODUCTION)
          || (group.getGroupType() == Opm::Group::GroupType::MIXED)) {
 
         const auto& prod_cmode = group.productionControls(sumState).cmode;
         const auto& prod_guide_rate_def = group.productionControls(sumState).guide_rate_def;
         const auto& p_exceed_act = group.productionControls(sumState).exceed_action;
         // Find production control mode for group
-        group_key_1 = gf_key("GMCTP", group.name());
-        double cur_prod_ctrl = -1.;
+        const double cur_prod_ctrl = is_field ? sumState.get("FMCTP", -1) : sumState.get_group_var(group.name(), "GMCTP", -1);
         Opm::Group::ProductionCMode pctl_mode = Opm::Group::ProductionCMode::NONE;
-        if (sumState.has(group_key_1)) {
-            cur_prod_ctrl = sumState.get(group_key_1);
+        if (cur_prod_ctrl >= 0) {
             const auto it_ctrl = pCtrlToPCmode.find(cur_prod_ctrl);
             if (it_ctrl != pCtrlToPCmode.end()) {
                 pctl_mode = it_ctrl->second;
@@ -733,23 +696,10 @@ void staticContrib(const Opm::Schedule&     sched,
         //use default value if group is not available for group control
         if (groupInjectionControllable(sched, sumState, group, Opm::Phase::WATER, simStep)) {
             if ((group.hasInjectionControl(Opm::Phase::WATER))  || (group.getGroupType() == Opm::Group::GroupType::NONE)){
-                std::string key_w;
-                std::string group_key_w;
-                group_key_w = gf_key("GMCTW", group.name());
-                double cur_winj_ctrl = -1.;
+                const double cur_winj_ctrl = is_field ? sumState.get("FMCTW", -1) : sumState.get_group_var(group.name(), "GMCTW", -1);
                 const auto& winj_cmode = (group.hasInjectionControl(Opm::Phase::WATER))?
                 group.injectionControls(Opm::Phase::WATER, sumState).cmode : Opm::Group::InjectionCMode::NONE;
-                if (sumState.has(group_key_w)) {
-                    cur_winj_ctrl = sumState.get(group_key_w);
-                }
-
-#if ENABLE_GCNTL_DEBUG_OUTPUT
-                else {
-                    std::cout << "Current group water injection control is not defined for group: " << group.name() << " at timestep: " << simStep << std::endl;
-                }
-#endif // ENABLE_GCNTL_DEBUG_OUTPUT
-
-                if (group.name() != "FIELD") {
+                if (!is_field) {
                     int higher_lev_winj_ctrl = higherLevelInjControlGroupSeqIndex(sched, sumState, group, "GMCTW", simStep);
                     int higher_lev_winj_cmode = higherLevelInjCMode_NotNoneFld_SeqIndex(sched, sumState, group, Opm::Phase::WATER, simStep);
                     std::size_t winj_control_ind = 0;
@@ -829,22 +779,10 @@ void staticContrib(const Opm::Schedule&     sched,
         //use default value if group is not available for group control
         if (groupInjectionControllable(sched, sumState, group, Opm::Phase::GAS, simStep)) {
             if ((group.hasInjectionControl(Opm::Phase::GAS)) || (group.getGroupType() == Opm::Group::GroupType::NONE)) {
-                std::string key_g;
-                std::string group_key_g;
-                group_key_g = gf_key("GMCTG", group.name());
-                double cur_ginj_ctrl = -1.;
+                const double cur_ginj_ctrl = is_field ? sumState.get("FMCTG", -1) : sumState.get_group_var(group.name(), "GMCTG", -1);
                 const auto& ginj_cmode = (group.hasInjectionControl(Opm::Phase::GAS))?
                 group.injectionControls(Opm::Phase::GAS, sumState).cmode : Opm::Group::InjectionCMode::NONE;
-                if (sumState.has(group_key_g)) {
-                    cur_ginj_ctrl = sumState.get(group_key_g);
-                }
-#if ENABLE_GCNTL_DEBUG_OUTPUT
-                else {
-                    std::cout << "Current group gas injection control is not defined for group: " << group.name() << " at timestep: " << simStep << std::endl;
-                }
-#endif // ENABLE_GCNTL_DEBUG_OUTPUT
-
-                if (group.name() != "FIELD") {
+                if (!is_field) {
                     int higher_lev_ginj_ctrl = higherLevelInjControlGroupSeqIndex(sched, sumState, group, "GMCTG", simStep);
                     int higher_lev_ginj_cmode = higherLevelInjCMode_NotNoneFld_SeqIndex(sched, sumState, group, Opm::Phase::GAS, simStep);
                     std::size_t ginj_control_ind = 0;
