@@ -83,6 +83,26 @@ UDQDefine::UDQDefine(const UDQParams& udq_params_arg,
 {}
 
 
+std::optional<std::string> next_token(const std::string& item, std::size_t offset, const std::vector<std::string>& splitters) {
+    if (offset == item.size())
+        return {};
+
+    std::optional<std::string> token = item.substr(offset);
+    std::size_t min_pos = std::string::npos;
+    for (const auto& splitter : splitters) {
+        auto pos = item.find(splitter, offset);
+        if (pos < min_pos) {
+            min_pos = pos;
+            if (pos == offset)
+                token = splitter;
+            else
+                token = item.substr(offset, pos - offset);
+        }
+    }
+    return token;
+}
+
+
 UDQDefine::UDQDefine(const UDQParams& udq_params,
                      const std::string& keyword,
                      const std::vector<std::string>& deck_data,
@@ -101,32 +121,17 @@ UDQDefine::UDQDefine(const UDQParams& udq_params,
 
             const std::vector<std::string> splitters = {"TU*[]", "(", ")", "[", "]", ",", "+", "-", "/", "*", "==", "!=", "^", ">=", "<=", ">", "<"};
             size_t offset = 0;
-            size_t pos = 0;
-            while (pos < item.size()) {
-                size_t splitter_index = 0;
-                while (splitter_index < splitters.size()) {
-                    const std::string& splitter = splitters[splitter_index];
-                    size_t find_pos = item.find(splitter, pos);
-                    if (find_pos == pos) {
-                        if (pos > offset)
-                            tokens.push_back(item.substr(offset, pos - offset));
-                        tokens.push_back(splitter);
-                        pos = find_pos + splitter.size();
-                        offset = pos;
-                        break;
-                    }
-                    splitter_index++;
-                }
-                if (splitter_index == splitters.size())
-                    pos += 1;
+            while (true) {
+                auto token = next_token(item, offset, splitters);
+                if (token) {
+                    tokens.push_back( *token );
+                    offset += token->size();
+                } else
+                    break;
             }
-            if (pos > offset)
-                tokens.push_back(item.substr(offset, pos - offset));
-
         }
     }
     this->ast = std::make_shared<UDQASTNode>( UDQParser::parse(udq_params, this->m_var_type, this->m_keyword, tokens, parseContext, errors) );
-
     this->string_data = "";
     for (std::size_t index = 0; index < deck_data.size(); index++) {
         this->string_data += deck_data[index];
