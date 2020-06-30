@@ -43,7 +43,8 @@ std::vector<std::string> quote_split(const std::string& item) {
     while (true) {
         auto quote_pos1 = item.find(quote_char, offset);
         if (quote_pos1 == std::string::npos) {
-            items.push_back(item.substr(offset));
+            if (offset < item.size())
+                items.push_back(item.substr(offset));
             break;
         }
 
