@@ -110,7 +110,7 @@ UDQDefine::UDQDefine(const UDQParams& udq_params,
                         if (pos > offset)
                             tokens.push_back(item.substr(offset, pos - offset));
                         tokens.push_back(splitter);
-                        pos = find_pos + 1;
+                        pos = find_pos + splitter.size();
                         offset = pos;
                         break;
                     }
