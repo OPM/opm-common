@@ -33,7 +33,7 @@ namespace {
         static const std::vector<std::string> totals = {"OPT"  , "GPT"  , "WPT" , "GIT", "WIT", "OPTF" , "OPTS" , "OIT"  , "OVPT" , "OVIT" , "MWT" ,
                                                         "WVPT" , "WVIT" , "GMT"  , "GPTF" , "SGT"  , "GST" , "FGT" , "GCT" , "GIMT" ,
                                                         "WGPT" , "WGIT" , "EGT"  , "EXGT" , "GVPT" , "GVIT" , "LPT" , "VPT" , "VIT" , "NPT" , "NIT",
-                                                        "CPT", "CIT"};
+                                                        "CPT", "CIT", "SPT", "SIT"};
 
         auto sep_pos = key.find(':');
 
