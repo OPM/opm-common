@@ -92,7 +92,6 @@ BOOST_AUTO_TEST_CASE(SUBTRACT)
     BOOST_CHECK_EQUAL( res2[0].value(), 16.0);
 }
 
-
 BOOST_AUTO_TEST_CASE(TEST)
 {
     UDQParams udqp;
@@ -1618,5 +1617,25 @@ WCONPROD
         BOOST_CHECK_EQUAL( tokens.count( UDQTokenType::binary_op_sub), 1);
         BOOST_CHECK_EQUAL( tokens.count( UDQTokenType::binary_op_mul), 1);
     }
+}
+
+
+BOOST_AUTO_TEST_CASE(UDQ_SCIENTIFIC_LITERAL) {
+    std::string deck_string = R"(
+SCHEDULE
+UDQ
+   DEFINE FU 0 -1.25E-2*(1.0E-1 + 2E-1) /
+/
+)";
+    auto schedule = make_schedule(deck_string);
+    const auto& udq = schedule.getUDQConfig(0);
+    UDQParams udqp;
+    auto def0 = udq.definitions()[0];
+    SummaryState st(std::chrono::system_clock::now());
+    UDQFunctionTable udqft(udqp);
+    UDQContext context(udqft, st);
+
+    auto res0 = def0.eval(context);
+    BOOST_CHECK_CLOSE( res0[0].value(), -0.00125*3, 1e-6);
 }
 

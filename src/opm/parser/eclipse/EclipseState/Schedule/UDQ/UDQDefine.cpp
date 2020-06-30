@@ -87,6 +87,17 @@ std::optional<std::string> next_token(const std::string& item, std::size_t offse
     if (offset == item.size())
         return {};
 
+    if (std::isdigit(item[offset])) {
+        std::size_t token_size = 0;
+        try {
+            auto substring = item.substr(offset);
+            double value = std::stod(substring, &token_size);
+        } catch (const std::invalid_argument &) {}
+
+        if (token_size > 0)
+            return item.substr(offset, token_size);
+    }
+
     std::optional<std::string> token = item.substr(offset);
     std::size_t min_pos = std::string::npos;
     for (const auto& splitter : splitters) {
