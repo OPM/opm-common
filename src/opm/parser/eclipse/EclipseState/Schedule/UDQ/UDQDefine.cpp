@@ -18,7 +18,7 @@
  */
 #include <iostream>
 #include <cstring>
-
+#include <tuple>
 
 
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
@@ -82,7 +82,7 @@ UDQDefine::UDQDefine(const UDQParams& udq_params_arg,
     UDQDefine(udq_params_arg, keyword, deck_data, ParseContext(), ErrorGuard())
 {}
 
-
+namespace {
 std::optional<std::string> next_token(const std::string& item, std::size_t offset, const std::vector<std::string>& splitters) {
     if (offset == item.size())
         return {};
@@ -91,7 +91,7 @@ std::optional<std::string> next_token(const std::string& item, std::size_t offse
         std::size_t token_size = 0;
         try {
             auto substring = item.substr(offset);
-            double value = std::stod(substring, &token_size);
+            std::ignore = std::stod(substring, &token_size);
         } catch (const std::invalid_argument &) {}
 
         if (token_size > 0)
@@ -112,7 +112,7 @@ std::optional<std::string> next_token(const std::string& item, std::size_t offse
     }
     return token;
 }
-
+} // Anonymous namespace
 
 UDQDefine::UDQDefine(const UDQParams& udq_params,
                      const std::string& keyword,
