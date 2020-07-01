@@ -1518,6 +1518,9 @@ private:
 
             if (keyword.name() == "GLIFTOPT")
                 this->handleGLIFTOPT(keyword, reportStep, parseContext, errors);
+
+            if (keyword.name() == "WELPI")
+                this->handleWELPI(keyword, reportStep, parseContext, errors);
         }
     }
 

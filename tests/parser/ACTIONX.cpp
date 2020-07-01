@@ -119,6 +119,27 @@ TSTEP
    10 /
 )"};
 
+    const auto WITH_WELPI = std::string{ R"(
+SCHEDULE
+
+WELSPECS
+  'W2'  'OP'  1 1 3.33  'OIL' 7*/
+/
+
+ACTIONX
+   'ACTION' /
+   WWCT OPX  > 0.75 /
+/
+
+WELPI
+  'W2' 2.5 /
+/
+
+ENDACTIO
+
+TSTEP
+   10 /
+)"};
     const auto WITH_GRID = std::string{ R"(
 SCHEDULE
 
@@ -148,6 +169,8 @@ TSTEP
     // The deck3 contains the 'GRID' keyword in the ACTIONX block - that is not a whitelisted keyword.
     ParseContext parseContext( {{ParseContext::ACTIONX_ILLEGAL_KEYWORD, InputError::THROW_EXCEPTION}} );
     BOOST_CHECK_THROW( make_schedule(WITH_GRID, parseContext), OpmInputError );
+
+    BOOST_CHECK_NO_THROW( make_schedule(WITH_WELPI) );
 }
 
 
