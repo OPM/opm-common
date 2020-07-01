@@ -255,10 +255,11 @@ if (OPM_ENABLE_PYTHON)
   list(APPEND _opmcommon_include_dirs ${_ecl_include_dirs})
   string(REPLACE ";" ":" _setup_include_dirs "${_opmcommon_include_dirs}")
 
+  get_target_property(_opmcommon_lib_dirs opmcommon LINK_DIRECTORIES)
   if (CMAKE_PREFIX_PATH)
-    set(_opmcommon_lib_dirs ${PROJECT_BINARY_DIR}/lib ${CMAKE_PREFIX_PATH}/${CMAKE_INSTALL_LIBDIR})
+    list(APPEND _opmcommon_lib_dirs ${PROJECT_BINARY_DIR}/lib ${CMAKE_PREFIX_PATH}/${CMAKE_INSTALL_LIBDIR})
   else()
-    set(_opmcommon_lib_dirs ${PROJECT_BINARY_DIR}/lib)
+    list(APPEND _opmcommon_lib_dirs ${PROJECT_BINARY_DIR}/lib)
   endif()
   string(REPLACE ";" ":" _setup_lib_dirs "${_opmcommon_lib_dirs}")
 
@@ -284,6 +285,11 @@ if (OPM_ENABLE_PYTHON)
     set( _rpath_arg "")
   endif()
 
+  set(opm-common_PYTHON_PACKAGE_VERSION ${OPM_PYTHON_PACKAGE_VERSION_TAG})
+
+  # Generate versioned setup.py
+  configure_file (${PROJECT_SOURCE_DIR}/python/setup.py.in ${PROJECT_BINARY_DIR}/python/setup.py)
+  file(COPY ${PROJECT_SOURCE_DIR}/python/README.md DESTINATION ${PROJECT_BINARY_DIR}/python)
   execute_process(COMMAND ${PYTHON_EXECUTABLE} target_name.py
                   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/python
                   OUTPUT_VARIABLE python_lib_target)
@@ -291,19 +297,19 @@ if (OPM_ENABLE_PYTHON)
   add_custom_target(copy_python ALL
     COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/python/install.py ${PROJECT_SOURCE_DIR}/python ${PROJECT_BINARY_DIR} 0)
 
-  add_custom_command(OUTPUT python/python/opm/${python_lib_target}
+  add_custom_command(OUTPUT python/opm/${python_lib_target}
                      DEPENDS ${PYTHON_CXX_DEPENDS}
                      DEPENDS copy_python
                      COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_BINARY_DIR}/python/setup.py
                                                       build
                                                       build_ext
-                                                      --build-lib=${PROJECT_BINARY_DIR}/python/python/opm
+                                                      --build-lib=${PROJECT_BINARY_DIR}/python
                                                       --library-dirs=${_setup_lib_dirs}
                                                       ${_rpath_arg}
                                                       --include-dirs=${_setup_include_dirs}
                      WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/python
-                     COMMENT "Building python bindings")
-  add_custom_target(opmcommon_python ALL DEPENDS python/python/opm/${python_lib_target})
+                     COMMENT "Building python bindings at python/opm/${python_lib_target}")
+  add_custom_target(opmcommon_python ALL DEPENDS python/opm/${python_lib_target})
   add_dependencies(opmcommon_python opmcommon)
 
   # The install target is based on manually copying the python file tree to the
@@ -318,7 +324,7 @@ if (OPM_ENABLE_PYTHON)
   # setup.py install manually - optionally with the generated script
   # setup-install.sh - and completely bypass cmake in the installation phase.
   if (OPM_INSTALL_PYTHON)
-    install( CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_BINARY_DIR}/python/install.py ${PROJECT_BINARY_DIR}/python/python/opm ${DEST_PREFIX}${CMAKE_INSTALL_PREFIX}/${PYTHON_INSTALL_PREFIX} 1)")
+    install( CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_BINARY_DIR}/python/install.py ${PROJECT_BINARY_DIR}/python/opm ${DEST_PREFIX}${CMAKE_INSTALL_PREFIX}/${PYTHON_INSTALL_PREFIX} 1)")
   endif()
 
   # Observe that if the opmcommon library has been built as a shared library the
@@ -326,17 +332,22 @@ if (OPM_ENABLE_PYTHON)
   # testing.
   add_test(NAME python_tests
            WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/python
-           COMMAND ${CMAKE_COMMAND} -E env LD_LIBRARY_PATH=${PROJECT_BINARY_DIR}/lib ${PYTHON_EXECUTABLE} setup.py build_ext --dry-run --build-lib ${PROJECT_BINARY_DIR}/python/python/opm test
+           COMMAND ${CMAKE_COMMAND} -E env LD_LIBRARY_PATH=${PROJECT_BINARY_DIR}/lib ${PYTHON_EXECUTABLE} setup.py build_ext --dry-run --build-lib ${PROJECT_BINARY_DIR}/python test
            )
 
   set_target_properties(opmcommon PROPERTIES POSITION_INDEPENDENT_CODE ON)
-  set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${PROJECT_BINARY_DIR}/python/python)
+  set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${PROJECT_BINARY_DIR}/python)
 
   # -------------------------------------------------------------------------
   # Let cmake configure some small shell scripts which can be used to simplify
   # building, testing and installation of the Python extensions.
   configure_file(python/setup-build.sh.in tmp/setup-build.sh)
   file( COPY ${PROJECT_BINARY_DIR}/tmp/setup-build.sh
+        DESTINATION ${PROJECT_BINARY_DIR}
+        FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE )
+
+  configure_file(python/setup-package.sh.in tmp/setup-package.sh)
+  file( COPY ${PROJECT_BINARY_DIR}/tmp/setup-package.sh
         DESTINATION ${PROJECT_BINARY_DIR}
         FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE )
 
