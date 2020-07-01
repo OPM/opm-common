@@ -40,6 +40,24 @@ Copyright 2018 Statoil ASA.
 
 using namespace Opm;
 
+Schedule make_schedule(const std::string& input) {
+    Parser parser;
+    auto python = std::make_shared<Python>();
+
+    auto deck = parser.parseString(input);
+    if (deck.hasKeyword("DIMENS")) {
+        EclipseState es(deck);
+        return Schedule(deck, es, python);
+    } else {
+        EclipseGrid grid(10,10,10);
+        TableManager table ( deck );
+        FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
+        Runspec runspec (deck);
+        return Schedule(deck, grid , fp, runspec, python);
+    }
+}
+
+
 BOOST_AUTO_TEST_CASE(TYPE_COERCION) {
     BOOST_CHECK( UDQVarType::SCALAR == UDQ::coerce(UDQVarType::SCALAR, UDQVarType::SCALAR) );
 
@@ -92,7 +110,6 @@ BOOST_AUTO_TEST_CASE(SUBTRACT)
     BOOST_CHECK_EQUAL( res2[0].value(), 16.0);
 }
 
-
 BOOST_AUTO_TEST_CASE(TEST)
 {
     UDQParams udqp;
@@ -138,23 +155,6 @@ BOOST_AUTO_TEST_CASE(TEST)
       UDQVarType == BLOCK is not yet supported.
     */
     BOOST_CHECK_THROW( UDQDefine(udqp, "WUWI2", {"BPR", "1","1", "1", "*", "2.0"}), std::logic_error);
-}
-
-Schedule make_schedule(const std::string& input) {
-    Parser parser;
-    auto python = std::make_shared<Python>();
-
-    auto deck = parser.parseString(input);
-    if (deck.hasKeyword("DIMENS")) {
-        EclipseState es(deck);
-        return Schedule(deck, es, python);
-    } else {
-        EclipseGrid grid(10,10,10);
-        TableManager table ( deck );
-        FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
-        Runspec runspec (deck);
-        return Schedule(deck, grid , fp, runspec, python);
-    }
 }
 
 
@@ -1618,5 +1618,69 @@ WCONPROD
         BOOST_CHECK_EQUAL( tokens.count( UDQTokenType::binary_op_sub), 1);
         BOOST_CHECK_EQUAL( tokens.count( UDQTokenType::binary_op_mul), 1);
     }
+}
+
+
+BOOST_AUTO_TEST_CASE(UDQ_SCIENTIFIC_LITERAL) {
+    std::string deck_string = R"(
+SCHEDULE
+UDQ
+   DEFINE FU 0 -1.25E-2*(1.0E-1 + 2E-1) /
+/
+
+)";
+    auto schedule = make_schedule(deck_string);
+    const auto& udq = schedule.getUDQConfig(0);
+    UDQParams udqp;
+    auto def0 = udq.definitions()[0];
+    SummaryState st(std::chrono::system_clock::now());
+    UDQFunctionTable udqft(udqp);
+    UDQContext context(udqft, st);
+
+    auto res0 = def0.eval(context);
+    BOOST_CHECK_CLOSE( res0[0].value(), -0.00125*3, 1e-6);
+}
+
+
+BOOST_AUTO_TEST_CASE(UDQ_NEGATIVE_PREFIX_BASIC) {
+    std::string deck_string = R"(
+SCHEDULE
+UDQ
+   DEFINE FUMIN0 - 1.5*FWPR /
+   DEFINE FUMIN1 - 1.5*FWPR*(FGPR + FOPR)^3 - 2*FLPR /
+   DEFINE FU -2.539E-14 * (FUP1+FUP2)^3 + 1.4464E-8 *(FUP1+FUP2)^2 +0.00028875*(FUP1+FUP2)+2.8541 /
+/
+)";
+
+    auto schedule = make_schedule(deck_string);
+    const auto& udq = schedule.getUDQConfig(0);
+    UDQParams udqp;
+    auto def0 = udq.definitions()[0];
+    auto def1 = udq.definitions()[1];
+    auto def2 = udq.definitions()[2];
+    SummaryState st(std::chrono::system_clock::now());
+    UDQFunctionTable udqft(udqp);
+    UDQContext context(udqft, st);
+    const double fwpr = 7;
+    const double fopr = 4;
+    const double fgpr = 7;
+    const double flpr = 13;
+    const double fup1 = 1025;
+    const double fup2 = 107;
+    st.update("FWPR", fwpr);
+    st.update("FOPR", fopr);
+    st.update("FGPR", fgpr);
+    st.update("FLPR", flpr);
+    st.update("FUP1", fup1);
+    st.update("FUP2", fup2);
+
+    auto res0 = def0.eval(context);
+    BOOST_CHECK_EQUAL( res0[0].value(), -1.5*fwpr);
+
+    auto res1 = def1.eval(context);
+    BOOST_CHECK_EQUAL( res1[0].value(), -1.5*fwpr*std::pow(fgpr+fopr, 3) - 2*flpr );
+
+    auto res2 = def2.eval(context);
+    BOOST_CHECK_CLOSE( res2[0].value(), -2.5394E-14 * std::pow(fup1 + fup2, 3) + 1.4464E-8*std::pow(fup1 + fup2, 2) + 0.00028875*(fup1 + fup2) + 2.8541, 1e-6);
 }
 
