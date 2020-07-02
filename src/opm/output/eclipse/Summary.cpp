@@ -42,8 +42,9 @@
 #include <opm/io/eclipse/EclOutput.hpp>
 #include <opm/io/eclipse/OutputStream.hpp>
 
-#include <opm/output/data/Wells.hpp>
 #include <opm/output/data/Groups.hpp>
+#include <opm/output/data/Wells.hpp>
+
 #include <opm/output/eclipse/RegionCache.hpp>
 
 #include <algorithm>
@@ -379,7 +380,7 @@ struct fn_args {
     int  num;
     const Opm::SummaryState& st;
     const Opm::data::Wells& wells;
-    const Opm::data::Group& group;
+    const Opm::data::GroupValues& groups;
     const Opm::out::RegionCache& regionCache;
     const Opm::EclipseGrid& grid;
     const std::vector< std::pair< std::string, double > > eff_factors;
@@ -749,9 +750,9 @@ inline quantity group_control( const fn_args& args ) {
 
     // production control
     if (Producer) {
-        const auto it_g = args.group.find(g_name);
-        if (it_g != args.group.end()) {
-            const auto& value = it_g->second.currentProdConstraint;
+        auto it_g = args.groups.find(g_name);
+        if (it_g != args.groups.end()) {
+            const auto& value = it_g->second.currentControl.currentProdConstraint;
             auto it_c = pCModeToPCntlMode.find(value);
             if (it_c == pCModeToPCntlMode.end()) {
                 std::stringstream str;
@@ -763,9 +764,9 @@ inline quantity group_control( const fn_args& args ) {
     }
     // water injection control
     else if (waterInjector){
-        const auto it_g = args.group.find(g_name);
-        if (it_g != args.group.end()) {
-            const auto& value = it_g->second.currentWaterInjectionConstraint;
+        auto it_g = args.groups.find(g_name);
+        if (it_g != args.groups.end()) {
+            const auto& value = it_g->second.currentControl.currentWaterInjectionConstraint;
             auto it_c = iCModeToICntlMode.find(value);
             if (it_c == iCModeToICntlMode.end()) {
                 std::stringstream str;
@@ -778,9 +779,9 @@ inline quantity group_control( const fn_args& args ) {
 
     // gas injection control
     else if (gasInjector){
-        const auto it_g = args.group.find(g_name);
-        if (it_g != args.group.end()) {
-            const auto& value = it_g->second.currentGasInjectionConstraint;
+        auto it_g = args.groups.find(g_name);
+        if (it_g != args.groups.end()) {
+            const auto& value = it_g->second.currentControl.currentGasInjectionConstraint;
             auto it_c = iCModeToICntlMode.find(value);
             if (it_c == iCModeToICntlMode.end()) {
                 std::stringstream str;
@@ -1493,7 +1494,7 @@ namespace Evaluator {
     struct SimulatorResults
     {
         const Opm::data::WellRates& wellSol;
-        const Opm::data::Group&  groupSol;
+        const Opm::data::GroupValues& groupSol;
         const std::map<std::string, double>& single;
         const std::map<std::string, std::vector<double>>& region;
         const std::map<std::pair<std::string, int>, double>& block;
@@ -2229,7 +2230,7 @@ public:
               const int                      sim_step,
               const double                   duration,
               const data::WellRates&         well_solution,
-              const data::Group&             group_solution,
+              const data::GroupValues&       group_solution,
               const GlobalProcessParameters& single_values,
               const RegionParameters&        region_values,
               const BlockValues&             block_values,
@@ -2331,7 +2332,7 @@ eval(const EclipseState&            es,
      const int                      sim_step,
      const double                   duration,
      const data::WellRates&         well_solution,
-     const data::Group&             group_solution,
+     const data::GroupValues&       group_solution,
      const GlobalProcessParameters& single_values,
      const RegionParameters&        region_values,
      const BlockValues&             block_values,
@@ -2632,7 +2633,7 @@ void Summary::eval(SummaryState&                  st,
                    const EclipseState&            es,
                    const Schedule&                schedule,
                    const data::WellRates&         well_solution,
-                   const data::Group&             group_solution,
+                   const data::GroupValues&       group_solution,
                    const GlobalProcessParameters& single_values,
                    const RegionParameters&        region_values,
                    const BlockValues&             block_values) const
