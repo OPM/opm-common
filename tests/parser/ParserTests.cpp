@@ -2318,3 +2318,23 @@ auto record = kw.getRecord(1);
 BOOST_CHECK_EQUAL( record.getItem(5).get<double>(0), 0.9 );
 BOOST_CHECK( !deck.hasKeyword("LANGMUIR") );
 }
+
+
+
+
+BOOST_AUTO_TEST_CASE(ParseLONGKeywords) {
+   Parser parser;
+   ParseContext parseContext;
+   ErrorGuard errors;
+   const auto deck_string = R"(
+GUIDERATE
+/
+)";
+
+   parseContext.update(ParseContext::PARSE_LONG_KEYWORD, Opm::InputError::THROW_EXCEPTION);
+   BOOST_CHECK_THROW(parser.parseString(deck_string, parseContext, errors), std::invalid_argument);
+
+   parseContext.update(ParseContext::PARSE_LONG_KEYWORD, Opm::InputError::IGNORE);
+   auto deck = parser.parseString(deck_string, parseContext, errors);
+   BOOST_CHECK( deck.hasKeyword("GUIDERAT") );
+}
