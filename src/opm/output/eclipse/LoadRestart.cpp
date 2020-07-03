@@ -965,6 +965,16 @@ namespace {
         return wells;
     }
 
+    Opm::data::GroupValues
+    restore_groups(const ::Opm::Schedule& schedule,
+                   std::shared_ptr<RestartFileView>& rst_view)
+    {
+        GroupVectors group_vectors(rst_view->intehead(), rst_view);
+        Opm::data::GroupValues group_values;
+
+        return group_values;
+    }
+
     void restoreConnRates(const WellVectors::Window<double>& xcon,
                           const Opm::UnitSystem&             usys,
                           const bool                         oil,
@@ -1562,7 +1572,8 @@ namespace Opm { namespace RestartIO  {
         auto xw = rst_view->hasKeyword<double>("OPM_XWEL")
             ? restore_wells_opm(es, grid, schedule, *rst_view)
             : restore_wells_ecl(es, grid, schedule,  rst_view);
-        data::GroupValues xg;
+
+        auto xg = restore_groups(schedule, rst_view);
 
         auto rst_value = RestartValue{ std::move(xr), std::move(xw) , std::move(xg)};
 
