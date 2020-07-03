@@ -21,6 +21,7 @@
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
 #include <opm/output/eclipse/VectorItems/group.hpp>
 #include <opm/output/eclipse/VectorItems/well.hpp>
+#include <opm/output/eclipse/VectorItems/intehead.hpp>
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
@@ -52,13 +53,13 @@ namespace {
 // maximum number of groups
 std::size_t ngmaxz(const std::vector<int>& inteHead)
 {
-    return inteHead[20];
+    return inteHead[Opm::RestartIO::Helpers::VectorItems::NGMAXZ];
 }
 
 // maximum number of wells in any group
 int nwgmax(const std::vector<int>& inteHead)
 {
-    return inteHead[19];
+    return inteHead[Opm::RestartIO::Helpers::VectorItems::NWGMAX];
 }
 
 
@@ -413,8 +414,7 @@ std::size_t groupSize(const Opm::Group& group) {
 namespace IGrp {
 std::size_t entriesPerGroup(const std::vector<int>& inteHead)
 {
-    // INTEHEAD[36] = NIGRPZ
-    return inteHead[36];
+    return inteHead[Opm::RestartIO::Helpers::VectorItems::NIGRPZ];
 }
 
 Opm::RestartIO::Helpers::WindowedArray<int>
@@ -909,8 +909,7 @@ void staticContrib(const Opm::Schedule&     sched,
 namespace SGrp {
 std::size_t entriesPerGroup(const std::vector<int>& inteHead)
 {
-    // INTEHEAD[37] = NSGRPZ
-    return inteHead[37];
+    return inteHead[Opm::RestartIO::Helpers::VectorItems::NSGRPZ];
 }
 
 Opm::RestartIO::Helpers::WindowedArray<float>
@@ -1076,8 +1075,7 @@ void staticContrib(const Opm::Group&        group,
 namespace XGrp {
 std::size_t entriesPerGroup(const std::vector<int>& inteHead)
 {
-    // INTEHEAD[38] = NXGRPZ
-    return inteHead[38];
+    return inteHead[Opm::RestartIO::Helpers::VectorItems::NXGRPZ];
 }
 
 Opm::RestartIO::Helpers::WindowedArray<double>
@@ -1132,8 +1130,7 @@ void dynamicContrib(const std::vector<std::string>&      restart_group_keys,
 namespace ZGrp {
 std::size_t entriesPerGroup(const std::vector<int>& inteHead)
 {
-    // INTEHEAD[39] = NZGRPZ
-    return inteHead[39];
+    return inteHead[Opm::RestartIO::Helpers::VectorItems::NZGRPZ];
 }
 
 Opm::RestartIO::Helpers::WindowedArray<
