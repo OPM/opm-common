@@ -762,7 +762,9 @@ inline quantity group_control( const fn_args& args ) {
                 throw std::invalid_argument(str.str());
             }
             cntl_mode = it_c->second;
-        }
+            printf("XXXXX found %s=%d in data::Groups \n", g_name.c_str(), cntl_mode);
+        } else
+            printf("XXXXX could not find %s in data::Groups \n", g_name.c_str());
     }
     // water injection control
     else if (waterInjector){
