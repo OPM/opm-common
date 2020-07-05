@@ -637,12 +637,6 @@ RawKeyword * newRawKeyword(const ParserKeyword& parserKeyword, const std::string
 
 
 RawKeyword * newRawKeyword( const std::string& deck_name, ParserState& parserState, const Parser& parser, const string_view& line ) {
-    if (parser.isRecognizedKeyword(deck_name)) {
-        parserState.unknown_keyword = false;
-        const auto& parserKeyword = parser.getParserKeywordFromDeckName(deck_name);
-        return newRawKeyword(parserKeyword, deck_name, parserState, parser);
-    }
-
     if (deck_name.size() > RawConsts::maxKeywordLength) {
         const std::string keyword8 = deck_name.substr(0, RawConsts::maxKeywordLength);
         if (parser.isRecognizedKeyword(keyword8)) {
@@ -652,7 +646,17 @@ RawKeyword * newRawKeyword( const std::string& deck_name, ParserState& parserSta
             parserState.unknown_keyword = false;
             const auto& parserKeyword = parser.getParserKeywordFromDeckName( keyword8 );
             return newRawKeyword(parserKeyword, keyword8, parserState, parser);
+        } else {
+            parserState.parseContext.handleUnknownKeyword( deck_name, parserState.errors );
+            parserState.unknown_keyword = true;
+            return nullptr;
         }
+    }
+
+    if (parser.isRecognizedKeyword(deck_name)) {
+        parserState.unknown_keyword = false;
+        const auto& parserKeyword = parser.getParserKeywordFromDeckName(deck_name);
+        return newRawKeyword(parserKeyword, deck_name, parserState, parser);
     }
 
     if( ParserKeyword::validDeckName(deck_name) ) {
