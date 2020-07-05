@@ -27,6 +27,7 @@
 #include <opm/output/eclipse/RestartValue.hpp>
 #include <opm/output/data/Cells.hpp>
 #include <opm/output/data/Wells.hpp>
+#include <opm/output/data/Groups.hpp>
 #include <opm/parser/eclipse/Python/Python.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Tables/Eqldims.hpp>
@@ -135,6 +136,9 @@ std::ostream& operator<<( std::ostream& stream,
 
 }
 
+data::GroupValues mkGroups() {
+    return {};
+}
 
 data::Wells mkWells() {
     data::Rates r1, r2, rc1, rc2, rc3;
@@ -389,8 +393,9 @@ RestartValue first_sim(const Setup& setup, Action::State& action_state, SummaryS
 
     auto sol = mkSolution( num_cells );
     auto wells = mkWells();
+    auto groups = mkGroups();
     const auto& udq = setup.schedule.getUDQConfig(report_step);
-    RestartValue restart_value(sol, wells);
+    RestartValue restart_value(sol, wells, groups);
 
     init_st(st);
     udq.eval(st);
@@ -469,10 +474,11 @@ BOOST_AUTO_TEST_CASE(ECL_FORMATTED) {
         auto num_cells = base_setup.grid.getNumActive( );
         auto cells = mkSolution( num_cells );
         auto wells = mkWells();
+        auto groups = mkGroups();
         auto sumState = sim_state();
         Action::State action_state;
         {
-            RestartValue restart_value(cells, wells);
+            RestartValue restart_value(cells, wells, groups);
 
             io_config.setEclCompatibleRST( false );
             restart_value.addExtra("EXTRA", UnitSystem::measure::pressure, {10,1,2,3});
@@ -600,6 +606,7 @@ BOOST_AUTO_TEST_CASE(WriteWrongSOlutionSize) {
         auto num_cells = setup.grid.getNumActive( ) + 1;
         auto cells = mkSolution( num_cells );
         auto wells = mkWells();
+        auto groups = mkGroups();
         Opm::SummaryState sumState(std::chrono::system_clock::now());
         Opm::Action::State action_state;
 
@@ -611,7 +618,7 @@ BOOST_AUTO_TEST_CASE(WriteWrongSOlutionSize) {
 
         BOOST_CHECK_THROW( RestartIO::save(rstFile, seqnum,
                                            100,
-                                           RestartValue(cells, wells),
+                                           RestartValue(cells, wells, groups),
                                            setup.es,
                                            setup.grid ,
                                            setup.schedule,
@@ -627,7 +634,8 @@ BOOST_AUTO_TEST_CASE(ExtraData_KEYS) {
     auto num_cells = setup.grid.getNumActive( );
     auto cells = mkSolution( num_cells );
     auto wells = mkWells();
-    RestartValue restart_value(cells, wells);
+    auto groups = mkGroups();
+    RestartValue restart_value(cells, wells, groups);
 
     BOOST_CHECK_THROW( restart_value.addExtra("TOO-LONG-KEY", {0,1,2}), std::runtime_error);
 
@@ -654,9 +662,10 @@ BOOST_AUTO_TEST_CASE(ExtraData_content) {
         auto num_cells = setup.grid.getNumActive( );
         auto cells = mkSolution( num_cells );
         auto wells = mkWells();
+        auto groups = mkGroups();
         const auto& units = setup.es.getUnits();
         {
-            RestartValue restart_value(cells, wells);
+            RestartValue restart_value(cells, wells, groups);
             SummaryState st(std::chrono::system_clock::now());
             const auto sumState = sim_state();
 
@@ -732,10 +741,11 @@ BOOST_AUTO_TEST_CASE(STORE_THPRES) {
         auto num_cells = base_setup.grid.getNumActive( );
         auto cells = mkSolution( num_cells );
         auto wells = mkWells();
+        auto groups = mkGroups();
         const auto outputDir = test_area.currentWorkingDirectory();
         {
-            RestartValue restart_value(cells, wells);
-            RestartValue restart_value2(cells, wells);
+            RestartValue restart_value(cells, wells, groups);
+            RestartValue restart_value2(cells, wells, groups);
 
             /* Missing THPRES data in extra container. */
             /* Because it proved to difficult to update the legacy simulators
@@ -835,7 +845,8 @@ BOOST_AUTO_TEST_CASE(Restore_Cumulatives)
 
     const auto restart_value = RestartValue {
         mkSolution(setup.grid.getNumActive()),
-        mkWells()
+        mkWells(),
+        mkGroups()
     };
     const auto sumState = sim_state();
 

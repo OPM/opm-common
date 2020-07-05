@@ -28,6 +28,7 @@
 
 #include <opm/output/data/Solution.hpp>
 #include <opm/output/data/Wells.hpp>
+#include <opm/output/data/Groups.hpp>
 #include <opm/output/eclipse/EclipseIO.hpp>
 #include <opm/output/eclipse/InteHEAD.hpp>
 #include <opm/output/eclipse/WriteRFT.hpp>
@@ -299,6 +300,7 @@ BOOST_AUTO_TEST_CASE(test_RFT)
 
         Opm::data::Solution solution = createBlackoilState(2, numCells);
         Opm::data::Wells wells;
+        Opm::data::GroupValues groups;
 
         using SegRes = decltype(wells["w"].segments);
         using Ctrl = decltype(wells["w"].current_control);
@@ -306,7 +308,7 @@ BOOST_AUTO_TEST_CASE(test_RFT)
         wells["OP_1"] = { std::move(r1), 1.0, 1.1, 3.1, 1, std::move(well1_comps), SegRes{}, Ctrl{} };
         wells["OP_2"] = { std::move(r2), 1.0, 1.1, 3.2, 1, std::move(well2_comps), SegRes{}, Ctrl{} };
 
-        RestartValue restart_value(std::move(solution), std::move(wells));
+        RestartValue restart_value(std::move(solution), std::move(wells), std::move(groups));
 
         eclipseWriter.writeTimeStep( action_state,
                                      st,
@@ -432,7 +434,7 @@ BOOST_AUTO_TEST_CASE(test_RFT2)
                 wells["OP_1"] = { std::move(r1), 1.0, 1.1, 3.1, 1, std::move(well1_comps), SegRes{}, Ctrl{} };
                 wells["OP_2"] = { std::move(r2), 1.0, 1.1, 3.2, 1, std::move(well2_comps), SegRes{}, Ctrl{} };
 
-                RestartValue restart_value(std::move(solution), std::move(wells));
+                RestartValue restart_value(std::move(solution), std::move(wells), data::GroupValues());
 
                 eclipseWriter.writeTimeStep( action_state,
                                              st,

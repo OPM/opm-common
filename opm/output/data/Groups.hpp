@@ -42,6 +42,13 @@ namespace Opm { namespace data {
         template <class MessageBufferType>
         void read(MessageBufferType& buffer);
 
+        bool operator==(const GroupConstraints& other) const
+        {
+            return this->currentProdConstraint == other.currentProdConstraint &&
+                   this->currentGasInjectionConstraint == other.currentGasInjectionConstraint &&
+                   this->currentWaterInjectionConstraint == other.currentWaterInjectionConstraint;
+        }
+
         inline GroupConstraints& set(Opm::Group::ProductionCMode cpc,
                                      Opm::Group::InjectionCMode  cgic,
                                      Opm::Group::InjectionCMode  cwic);
@@ -62,6 +69,11 @@ namespace Opm { namespace data {
         void read(MessageBufferType& buffer)
         {
             this->currentControl.read(buffer);
+        }
+
+        bool operator==(const GroupData& other) const
+        {
+            return this->currentControl == other.currentControl;
         }
     };
 

@@ -315,6 +315,7 @@ BOOST_AUTO_TEST_CASE(EclipseIOIntegration) {
         eclWriter.writeInitial( eGridProps , int_data );
 
         data::Wells wells;
+        data::GroupValues groups;
 
         for( int i = first; i < last; ++i ) {
             data::Solution sol = createBlackoilState( i, 3 * 3 * 3 );
@@ -322,7 +323,7 @@ BOOST_AUTO_TEST_CASE(EclipseIOIntegration) {
             sol.insert("KRG", measure::identity , std::vector<double>(3*3*3 , i*10), TargetType::RESTART_AUXILIARY);
 
             Action::State action_state;
-            RestartValue restart_value(sol, wells);
+            RestartValue restart_value(sol, wells, groups);
             auto first_step = ecl_util_make_date( 10 + i, 11, 2008 );
             eclWriter.writeTimeStep( action_state,
                                      st,

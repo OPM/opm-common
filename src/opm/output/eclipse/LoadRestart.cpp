@@ -31,6 +31,7 @@
 #include <opm/output/data/Cells.hpp>
 #include <opm/output/data/Solution.hpp>
 #include <opm/output/data/Wells.hpp>
+#include <opm/output/data/Groups.hpp>
 
 #include <opm/output/eclipse/VectorItems/aquifer.hpp>
 #include <opm/output/eclipse/VectorItems/connection.hpp>
@@ -1561,8 +1562,9 @@ namespace Opm { namespace RestartIO  {
         auto xw = rst_view->hasKeyword<double>("OPM_XWEL")
             ? restore_wells_opm(es, grid, schedule, *rst_view)
             : restore_wells_ecl(es, grid, schedule,  rst_view);
+        data::GroupValues xg;
 
-        auto rst_value = RestartValue{ std::move(xr), std::move(xw) };
+        auto rst_value = RestartValue{ std::move(xr), std::move(xw) , std::move(xg)};
 
         if (! extra_keys.empty()) {
             restoreExtra(extra_keys, es.getUnits(), *rst_view, rst_value);
