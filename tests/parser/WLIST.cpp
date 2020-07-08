@@ -216,6 +216,9 @@ BOOST_AUTO_TEST_CASE(Wlist) {
       " \'*LIST1\' \'NEW\' W1 W2 /\n"
       " \'*LIST1\' \'ADD\' W3 W4 /\n"
       " \'*LIST2\' \'NEW\' W1 W3 /\n"
+      " \'*LIST4\' \'NEW\' \'*LIST1\' /\n"
+      " \'*LIST5\' \'NEW\' \'W*\' /\n"
+      " \'*LIST6\' \'NEW\' \'I*\' /\n"
       "/\n"
       "DATES\n"
       "10 JLY 2007 /\n"
@@ -231,9 +234,15 @@ BOOST_AUTO_TEST_CASE(Wlist) {
       const auto& wlm = sched.getWListManager(1);
       const auto& wl1 = wlm.getList("*LIST1");
       const auto& wl2 = wlm.getList("*LIST2");
+      const auto& wl4 = wlm.getList("*LIST4");
+      const auto& wl5 = wlm.getList("*LIST5");
+      const auto& wl6 = wlm.getList("*LIST6");
 
       BOOST_CHECK_EQUAL(wl1.wells().size(), 4 );
       BOOST_CHECK_EQUAL(wl2.wells().size(), 2 );
+      BOOST_CHECK_EQUAL(wl4.wells().size(), 4 );
+      BOOST_CHECK_EQUAL(wl5.wells().size(), 4 );
+      BOOST_CHECK_EQUAL(wl6.wells().size(), 0 );
   }
   {
       const auto& wlm = sched.getWListManager(2);
