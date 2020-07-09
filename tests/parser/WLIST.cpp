@@ -113,6 +113,8 @@ static std::string WELSPECS() {
         "  \'W2\'  \'OP\'  2 1 1.0 \'OIL\' 7* /\n"
         "  \'W3\'  \'OP\'  3 1 1.0 \'OIL\' 7* /\n"
         "  \'W4\'  \'OP\'  4 1 1.0 \'OIL\' 7* /\n"
+        "  \'C1\'  \'OP\'  3 1 1.0 \'OIL\' 7* /\n"
+        "  \'C2\'  \'OP\'  4 1 1.0 \'OIL\' 7* /\n"
         "/\n";
 }
 
@@ -262,5 +264,37 @@ BOOST_AUTO_TEST_CASE(Wlist) {
 
       BOOST_CHECK( wl3.has("W1"));
       BOOST_CHECK( wl3.has("W3"));
+
+      const auto& wells1 = wlm.wells("*LIST1");
+      BOOST_CHECK( wells1 == wl1.wells() );
   }
+}
+
+template <typename T>
+bool vector_equal(const std::vector<T>& v1, const std::vector<T>& v2) {
+    std::unordered_set<T> s1(v1.begin(), v1.end());
+    std::unordered_set<T> s2(v2.begin(), v2.end());
+    return s1 == s2;
+}
+
+
+BOOST_AUTO_TEST_CASE(WlistPattern) {
+  std::string wlist = WELSPECS() +
+      "WLIST\n"
+      " \'*LIST1\' \'NEW\' W1 W2 /\n"
+      " \'*COLL1\' \'NEW\' C1 /\n"
+      " \'*BOLL2\' \'NEW\' C2 /\n"
+      " \'*LIST2\' \'NEW\' W1 W3 /\n"
+      "/\n"
+      "DATES\n"
+      "10 JLY 2007 /\n"
+      "10 AUG 2007 /\n"
+      "/\n";
+
+  auto sched = createSchedule(wlist);
+  const auto& wlm = sched.getWListManager(1);
+  BOOST_CHECK( vector_equal(wlm.wells("*LIST1"), {"W1", "W2"}));
+  BOOST_CHECK( vector_equal(wlm.wells("*LIST2"), {"W1", "W3"}));
+  BOOST_CHECK( vector_equal(wlm.wells("*LIST*"), {"W1", "W2", "W3"}));
+  BOOST_CHECK( vector_equal(wlm.wells("**OLL*"), {"C1", "C2"}));
 }
