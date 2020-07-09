@@ -1331,19 +1331,22 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
 
     void Schedule::handleWLIST(const DeckKeyword& keyword, size_t currentStep) {
         const std::string legal_actions = "NEW:ADD:DEL:MOV";
-        const auto& current = *this->wlist_manager.get(currentStep);
-        std::shared_ptr<WListManager> new_wlm(new WListManager(current));
         for (const auto& record : keyword) {
             const std::string& name = record.getItem("NAME").getTrimmedString(0);
             const std::string& action = record.getItem("ACTION").getTrimmedString(0);
-            const std::vector<std::string>& wells = record.getItem("WELLS").getData<std::string>();
+            const std::vector<std::string>& well_args = record.getItem("WELLS").getData<std::string>();
+            std::vector<std::string> wells;
+            std::shared_ptr<WListManager> new_wlm = std::make_shared<WListManager>( *this->wlist_manager.get(currentStep) );
 
             if (legal_actions.find(action) == std::string::npos)
                 throw std::invalid_argument("The action:" + action + " is not recognized.");
 
-            for (const auto& well : wells) {
-                if (!this->hasWell(well))
-                    throw std::invalid_argument("The well: " + well + " has not been defined in the WELSPECS");
+            for (const auto& well_arg : well_args) {
+                const auto& names = this->wellNames(well_arg, currentStep);
+                if (names.empty() && well_arg.find("*") == std::string::npos)
+                    throw std::invalid_argument("The well: " + well_arg + " has not been defined in the WELSPECS");
+
+                std::move(names.begin(), names.end(), std::back_inserter(wells));
             }
 
             if (name[0] != '*')
@@ -1369,8 +1372,8 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
                     wlist.add(well);
             }
 
+            this->wlist_manager.update(currentStep, new_wlm);
         }
-        this->wlist_manager.update(currentStep, new_wlm);
     }
 
     void Schedule::handleUDQ(const DeckKeyword& keyword, size_t currentStep) {
