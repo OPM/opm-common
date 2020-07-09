@@ -41,7 +41,7 @@ public:
     void delWell(const std::string& well);
 
     bool operator==(const WListManager& data) const;
-
+    std::vector<std::string> wells(const std::string& wlist_pattern) const;
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {

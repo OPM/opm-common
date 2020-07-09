@@ -16,10 +16,12 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include <fnmatch.h>
+
+#include <unordered_set>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WList.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WListManager.hpp>
-
 namespace Opm {
 
     WListManager WListManager::serializeObject()
@@ -59,6 +61,23 @@ namespace Opm {
 
     bool WListManager::operator==(const WListManager& data) const {
         return this->wlists == data.wlists;
+    }
+
+    std::vector<std::string> WListManager::wells(const std::string& wlist_pattern) const {
+        if (this->hasList(wlist_pattern)) {
+            const auto& wlist = this->getList(wlist_pattern);
+            return { wlist.begin(), wlist.end() };
+        } else {
+            std::unordered_set<std::string> well_set;
+            auto pattern = wlist_pattern.substr(1);
+            for (const auto& [name, wlist] : this->wlists) {
+                auto wlist_name = name.substr(1);
+                int flags = 0;
+                if (fnmatch(pattern.c_str(), wlist_name.c_str(), flags) == 0)
+                    well_set.insert(wlist.begin(), wlist.end());
+            }
+            return { well_set.begin(), well_set.end() };
+        }
     }
 
 }

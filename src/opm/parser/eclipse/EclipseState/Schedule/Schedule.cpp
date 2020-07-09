@@ -2555,11 +2555,7 @@ void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t 
         // WLIST
         if (pattern[0] == '*' && pattern.size() > 1) {
             const auto& wlm = this->getWListManager(timeStep);
-            if (wlm.hasList(pattern)) {
-                const auto& wlist = wlm.getList(pattern);
-                return { wlist.begin(), wlist.end() };
-            } else
-                return {};
+            return wlm.wells(pattern);
         }
 
         // Normal pattern matching
