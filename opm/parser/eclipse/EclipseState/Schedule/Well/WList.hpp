@@ -16,6 +16,9 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
+#ifndef WLIST_HPP
+#define WLIST_HPP
+
 #include <cstddef>
 #include <unordered_set>
 #include <vector>
@@ -51,3 +54,5 @@ private:
 };
 
 }
+
+#endif
