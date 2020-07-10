@@ -388,6 +388,7 @@ if(ENABLE_ECL_OUTPUT)
           tests/test_AggregateConnectionData.cpp
           tests/test_AggregateUDQData.cpp
           tests/test_ArrayDimChecker.cpp
+          tests/test_data_GuideRateValue.cpp
           tests/test_EclipseIO.cpp
           tests/test_DoubHEAD.cpp
           tests/test_InteHEAD.cpp
@@ -778,6 +779,7 @@ if(ENABLE_ECL_OUTPUT)
         opm/io/eclipse/rst/well.hpp
         opm/output/data/Aquifer.hpp
         opm/output/data/Cells.hpp
+        opm/output/data/GuideRateValue.hpp
         opm/output/data/Groups.hpp
         opm/output/data/Solution.hpp
         opm/output/data/Wells.hpp
