@@ -193,7 +193,6 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/Units/Dimension.cpp
     src/opm/parser/eclipse/Units/UnitSystem.cpp
     src/opm/parser/eclipse/Utility/Functional.cpp
-    src/opm/parser/eclipse/Utility/Stringview.cpp
   )
 
 
@@ -543,7 +542,6 @@ if(ENABLE_ECL_INPUT)
   list(APPEND PUBLIC_HEADER_FILES
        opm/io/eclipse/SummaryNode.hpp
        opm/json/JsonObject.hpp
-       opm/parser/eclipse/Utility/Stringview.hpp
        opm/parser/eclipse/Utility/Functional.hpp
        opm/parser/eclipse/Utility/Typetools.hpp
        opm/parser/eclipse/Generator/KeywordGenerator.hpp

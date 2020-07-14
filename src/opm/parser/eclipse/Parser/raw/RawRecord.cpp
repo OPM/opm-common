@@ -23,8 +23,6 @@
 #include <vector>
 #include <deque>
 
-#include <opm/parser/eclipse/Utility/Stringview.hpp>
-
 #include "RawRecord.hpp"
 #include "RawConsts.hpp"
 
@@ -36,23 +34,25 @@ namespace Opm {
 
 namespace {
 
-std::deque< string_view > splitSingleRecordString( const string_view& record ) {
-    auto first_nonspace = []( string_view::const_iterator begin,
-                              string_view::const_iterator end ) {
+std::deque< std::string_view > splitSingleRecordString( const std::string_view& record ) {
+    auto first_nonspace = []( std::string_view::const_iterator begin,
+                              std::string_view::const_iterator end ) {
         return std::find_if_not( begin, end, RawConsts::is_separator() );
     };
 
-    std::deque< string_view > dst;
+    std::deque< std::string_view > dst;
     auto current = record.begin();
     while( (current = first_nonspace( current, record.end() )) != record.end() )
     {
         if( *current == RawConsts::quote ) {
             auto quote_end = std::find( current + 1, record.end(), RawConsts::quote ) + 1;
-            dst.push_back( { current, quote_end } );
+            std::size_t size = std::distance(current, quote_end);
+            dst.push_back( { current, size} );
             current = quote_end;
         } else {
             auto token_end = std::find_if( current, record.end(), RawConsts::is_separator() );
-            dst.push_back( { current, token_end } );
+            std::size_t size = std::distance(current, token_end);
+            dst.push_back( { current, size } );
             current = token_end;
         }
     }
@@ -77,7 +77,7 @@ inline bool even_quotes( const T& str ) {
 
 }
 
-    RawRecord::RawRecord(const string_view& singleRecordString, bool text) :
+    RawRecord::RawRecord(const std::string_view& singleRecordString, bool text) :
         m_sanitizedRecordString( singleRecordString )
     {
 
@@ -88,29 +88,19 @@ inline bool even_quotes( const T& str ) {
 
             if( !even_quotes( singleRecordString ) )
                 throw std::invalid_argument("Input string is not a complete record string, "
-                                            "offending string: '" + singleRecordString + "'");
+                                            "offending string: '" + std::string(singleRecordString) + "'");
         }
     }
 
-    RawRecord::RawRecord(const string_view& singleRecordString) :
+    RawRecord::RawRecord(const std::string_view& singleRecordString) :
         RawRecord(singleRecordString, false)
     {}
 
-    void RawRecord::prepend( size_t count, string_view tok ) {
+    void RawRecord::prepend( size_t count, std::string_view tok ) {
         this->m_recordItems.insert( this->m_recordItems.begin(), count, tok );
     }
 
-    void RawRecord::dump() const {
-        std::cout << "RecordDump: ";
-        for (size_t i = 0; i < m_recordItems.size(); i++) {
-            std::cout
-                << this->m_recordItems[i] << "/"
-                << getItem( i ) << " ";
-        }
-        std::cout << std::endl;
-    }
-
     std::string RawRecord::getRecordString() const {
-        return m_sanitizedRecordString.string();
+        return std::string(m_sanitizedRecordString);
     }
 }
