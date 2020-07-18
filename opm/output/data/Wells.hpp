@@ -30,6 +30,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include <opm/output/data/GuideRateValue.hpp>
+
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
 
 namespace Opm {
@@ -253,6 +255,7 @@ namespace Opm {
         std::vector< Connection > connections;
         std::unordered_map<std::size_t, Segment> segments;
         CurrentControl current_control;
+        GuideRateValue guide_rates{};
 
         inline bool flowing() const noexcept;
         template <class MessageBufferType>
@@ -293,7 +296,8 @@ namespace Opm {
                  control == well2.control &&
                  connections == well2.connections &&
                  segments == well2.segments &&
-                 current_control == well2.current_control;
+                 current_control == well2.current_control &&
+                 guide_rates == well2.guide_rates;
         }
     };
 
@@ -543,6 +547,7 @@ namespace Opm {
         }
 
         this->current_control.write(buffer);
+        this->guide_rates.write(buffer);
     }
 
     template <class MessageBufferType>
@@ -635,6 +640,7 @@ namespace Opm {
         }
 
         this->current_control.read(buffer);
+        this->guide_rates.read(buffer);
     }
 
 }} // Opm::data

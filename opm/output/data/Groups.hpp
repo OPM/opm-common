@@ -26,6 +26,7 @@
 #include <string>
 #include <vector>
 
+#include <opm/output/data/GuideRateValue.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp>
 
@@ -54,26 +55,53 @@ namespace Opm { namespace data {
                                      Opm::Group::InjectionCMode  cwic);
     };
 
+    struct GroupGuideRates {
+        GuideRateValue production{};
+        GuideRateValue injection{};
 
+        template <class MessageBufferType>
+        void write(MessageBufferType& buffer) const
+        {
+            this->production.write(buffer);
+            this->injection .write(buffer);
+        }
+
+        template <class MessageBufferType>
+        void read(MessageBufferType& buffer)
+        {
+            this->production.read(buffer);
+            this->injection .read(buffer);
+        }
+
+        bool operator==(const GroupGuideRates& other) const
+        {
+            return this->production == other.production
+                && this->injection  == other.injection;
+        }
+    };
 
     struct GroupData {
         GroupConstraints currentControl;
+        GroupGuideRates  guideRates{};
 
         template <class MessageBufferType>
         void write(MessageBufferType& buffer) const
         {
             this->currentControl.write(buffer);
+            this->guideRates    .write(buffer);
         }
 
         template <class MessageBufferType>
         void read(MessageBufferType& buffer)
         {
             this->currentControl.read(buffer);
+            this->guideRates    .read(buffer);
         }
 
         bool operator==(const GroupData& other) const
         {
-            return this->currentControl == other.currentControl;
+            return this->currentControl == other.currentControl
+                && this->guideRates     == other.guideRates;
         }
     };
 
