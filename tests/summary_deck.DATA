@@ -443,6 +443,27 @@ GSPR
 /
 GSPT
 /
+
+-- Production and injection guide rates (group level)
+
+GOPGR
+ G_1 /
+
+GGPGR
+ G_1 /
+
+GWPGR
+ G_1 /
+
+GVPGR
+ G_1 /
+
+GGIGR
+ G_1 /
+
+GWIGR
+ G_1 /
+
 -- Well Data
 -- Production Rates
 WWPR
@@ -648,6 +669,26 @@ WSPR
 
 WSPT
 /
+
+-- Production and injection guide rates (well level)
+WOPGR
+/
+
+WGPGR
+/
+
+WWPGR
+/
+
+WVPGR
+/
+
+WGIGR
+/
+
+WWIGR
+/
+
 -- Water injection per connection
 CWIR
   * /

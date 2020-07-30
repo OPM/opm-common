@@ -43,6 +43,7 @@
 #include <opm/io/eclipse/OutputStream.hpp>
 
 #include <opm/output/data/Groups.hpp>
+#include <opm/output/data/GuideRateValue.hpp>
 #include <opm/output/data/Wells.hpp>
 
 #include <opm/output/eclipse/RegionCache.hpp>
@@ -396,6 +397,9 @@ measure rate_unit() { return measure::liquid_surface_rate; }
 template< Opm::Phase > constexpr
 measure rate_unit() { return measure::liquid_surface_rate; }
 
+template <Opm::data::GuideRateValue::Item>
+measure rate_unit() { return measure::liquid_surface_rate; }
+
 template<> constexpr
 measure rate_unit< rt::gas >() { return measure::gas_surface_rate; }
 template<> constexpr
@@ -430,6 +434,12 @@ measure rate_unit< rt::well_potential_oil >() { return measure::liquid_surface_r
 
 template<> constexpr
 measure rate_unit< rt::well_potential_gas >() { return measure::gas_surface_rate; }
+
+template <> constexpr
+measure rate_unit<Opm::data::GuideRateValue::Item::Gas>() { return measure::gas_surface_rate; }
+
+template <> constexpr
+measure rate_unit<Opm::data::GuideRateValue::Item::ResV>() { return measure::rate; }
 
 double efac( const std::vector<std::pair<std::string,double>>& eff_factors, const std::string& name ) {
     auto it = std::find_if( eff_factors.begin(), eff_factors.end(),
@@ -842,6 +852,45 @@ inline quantity well_control_mode( const fn_args& args ) {
     return { static_cast<double>(wmctl), unit };
 }
 
+template <Opm::data::GuideRateValue::Item i>
+quantity guiderate_value(const ::Opm::data::GuideRateValue& grvalue)
+{
+    return { !grvalue.has(i) ? 0.0 : grvalue.get(i), rate_unit<i>() };
+}
+
+template <bool injection, Opm::data::GuideRateValue::Item i>
+quantity group_guiderate(const fn_args& args)
+{
+    auto xgPos = args.groups.find(args.group_name);
+    if (xgPos == args.groups.end()) {
+        return { 0.0, rate_unit<i>() };
+    }
+
+    return injection
+        ? guiderate_value<i>(xgPos->second.guideRates.injection)
+        : guiderate_value<i>(xgPos->second.guideRates.production);
+}
+
+template <bool injection, Opm::data::GuideRateValue::Item i>
+quantity well_guiderate(const fn_args& args)
+{
+    if (args.schedule_wells.empty()) {
+        return { 0.0, rate_unit<i>() };
+    }
+
+    const auto& well = args.schedule_wells.front();
+    if (well.isInjector() != injection) {
+        return { 0.0, rate_unit<i>() };
+    }
+
+    auto xwPos = args.wells.find(well.name());
+    if (xwPos == args.wells.end()) {
+        return { 0.0, rate_unit<i>() };
+    }
+
+    return guiderate_value<i>(xwPos->second.guide_rates);
+}
+
 /*
  * A small DSL, really poor man's function composition, to avoid massive
  * repetition when declaring the handlers for each individual keyword. bin_op
@@ -887,6 +936,8 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "WSIR", rate< rt::brine, injector > },
     { "WVIR", sum( sum( rate< rt::reservoir_water, injector >, rate< rt::reservoir_oil, injector > ),
                        rate< rt::reservoir_gas, injector > ) },
+    { "WGIGR", well_guiderate<injector, Opm::data::GuideRateValue::Item::Gas> },
+    { "WWIGR", well_guiderate<injector, Opm::data::GuideRateValue::Item::Water> },
 
     { "WWIT", mul( rate< rt::wat, injector >, duration ) },
     { "WOIT", mul( rate< rt::oil, injector >, duration ) },
@@ -905,6 +956,11 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "WSPR", rate< rt::brine, producer > },
     { "WCPC", div( rate< rt::polymer, producer >, rate< rt::wat, producer >) },
     { "WSPC", div( rate< rt::brine, producer >, rate< rt::wat, producer >) },
+
+    { "WOPGR", well_guiderate<producer, Opm::data::GuideRateValue::Item::Oil> },
+    { "WGPGR", well_guiderate<producer, Opm::data::GuideRateValue::Item::Gas> },
+    { "WWPGR", well_guiderate<producer, Opm::data::GuideRateValue::Item::Water> },
+    { "WVPGR", well_guiderate<producer, Opm::data::GuideRateValue::Item::ResV> },
 
     { "WGPRS", rate< rt::dissolved_gas, producer > },
     { "WGPRF", sub( rate< rt::gas, producer >, rate< rt::dissolved_gas, producer > ) },
@@ -957,6 +1013,10 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "GSIR", rate< rt::brine, injector > },
     { "GVIR", sum( sum( rate< rt::reservoir_water, injector >, rate< rt::reservoir_oil, injector > ),
                         rate< rt::reservoir_gas, injector > ) },
+
+    { "GGIGR", group_guiderate<injector, Opm::data::GuideRateValue::Item::Gas> },
+    { "GWIGR", group_guiderate<injector, Opm::data::GuideRateValue::Item::Water> },
+
     { "GWIT", mul( rate< rt::wat, injector >, duration ) },
     { "GOIT", mul( rate< rt::oil, injector >, duration ) },
     { "GGIT", mul( rate< rt::gas, injector >, duration ) },
@@ -979,6 +1039,11 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "GLPR", sum( rate< rt::wat, producer >, rate< rt::oil, producer > ) },
     { "GVPR", sum( sum( rate< rt::reservoir_water, producer >, rate< rt::reservoir_oil, producer > ),
                         rate< rt::reservoir_gas, producer > ) },
+
+    { "GOPGR", group_guiderate<producer, Opm::data::GuideRateValue::Item::Oil> },
+    { "GGPGR", group_guiderate<producer, Opm::data::GuideRateValue::Item::Gas> },
+    { "GWPGR", group_guiderate<producer, Opm::data::GuideRateValue::Item::Water> },
+    { "GVPGR", group_guiderate<producer, Opm::data::GuideRateValue::Item::ResV> },
 
     { "GWPT", mul( rate< rt::wat, producer >, duration ) },
     { "GOPT", mul( rate< rt::oil, producer >, duration ) },
@@ -1379,21 +1444,31 @@ inline std::vector<Opm::Well> find_wells( const Opm::Schedule& schedule,
     throw std::runtime_error("Unhandled summary node category in find_wells");
 }
 
-bool need_wells(const Opm::EclIO::SummaryNode& node) {
+bool need_wells(const Opm::EclIO::SummaryNode& node)
+{
     static const std::regex region_keyword_regex { "R[OGW][IP][RT]" };
+    static const std::regex group_guiderate_regex { "G[OGWV][IP]GR" };
+
+    using Cat = Opm::EclIO::SummaryNode::Category;
 
     switch (node.category) {
-    case Opm::EclIO::SummaryNode::Category::Connection: [[fallthrough]];
-    case Opm::EclIO::SummaryNode::Category::Field:      [[fallthrough]];
-    case Opm::EclIO::SummaryNode::Category::Group:      [[fallthrough]];
-    case Opm::EclIO::SummaryNode::Category::Segment:    [[fallthrough]];
-    case Opm::EclIO::SummaryNode::Category::Well:
-       return true;
-    case Opm::EclIO::SummaryNode::Category::Region:
+    case Cat::Connection: [[fallthrough]];
+    case Cat::Field:      [[fallthrough]];
+    case Cat::Group:      [[fallthrough]];
+    case Cat::Segment:    [[fallthrough]];
+    case Cat::Well:
+        // Need to capture wells for anything other than guiderates at group
+        // level.  Those are directly available in the solution values from
+        // the simulator and don't need aggregation from well level.
+        return (node.category != Cat::Group)
+            || !std::regex_match(node.keyword, group_guiderate_regex);
+
+    case Cat::Region:
         return std::regex_match(node.keyword, region_keyword_regex);
-    case Opm::EclIO::SummaryNode::Category::Aquifer:       [[fallthrough]];
-    case Opm::EclIO::SummaryNode::Category::Miscellaneous: [[fallthrough]];
-    case Opm::EclIO::SummaryNode::Category::Block:
+
+    case Cat::Aquifer:       [[fallthrough]];
+    case Cat::Miscellaneous: [[fallthrough]];
+    case Cat::Block:
         return false;
     }
 

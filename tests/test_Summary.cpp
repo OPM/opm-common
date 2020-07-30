@@ -32,6 +32,7 @@
 #include <ctime>
 
 #include <opm/output/data/Groups.hpp>
+#include <opm/output/data/GuideRateValue.hpp>
 #include <opm/output/data/Wells.hpp>
 #include <opm/output/eclipse/Summary.hpp>
 
@@ -89,7 +90,8 @@ static const int day = 24 * 60 * 60;
   This is quite misleading, because the values prepared in the test
   input deck are NOT used.
 */
-static data::Wells result_wells(const bool w3_injector = true) {
+data::Wells result_wells(const bool w3_injector = true)
+{
     /* populate with the following pattern:
      *
      * Wells are named W_1, W_2 etc, i.e. wells are 1 indexed.
@@ -257,18 +259,23 @@ static data::Wells result_wells(const bool w3_injector = true) {
         rates1, 0.1 * ps, 0.2 * ps, 0.3 * ps, 1,
         { {well1_comp1} },
         { { segment.segNumber, segment } },
-        data::CurrentControl{}
+        data::CurrentControl{},
+        data::GuideRateValue{}
     };
     well1.current_control.isProducer = true;
     well1.current_control.prod = ::Opm::Well::ProducerCMode::THP;
+    well1.guide_rates.set(data::GuideRateValue::Item::Oil, 123.456*sm3_pr_day())
+                     .set(data::GuideRateValue::Item::Gas, 2345.67*sm3_pr_day());
 
     using SegRes = decltype(well1.segments);
     using Ctrl = data::CurrentControl;
+    using GRValue = data::GuideRateValue;
 
-    data::Well well2 { rates2, 1.1 * ps, 1.2 * ps, 1.3 * ps, 2, { {well2_comp1 , well2_comp2} }, SegRes{}, Ctrl{} };
+    data::Well well2 { rates2, 1.1 * ps, 1.2 * ps, 1.3 * ps, 2, { {well2_comp1 , well2_comp2} }, SegRes{}, Ctrl{}, GRValue{} };
     well2.current_control.prod = ::Opm::Well::ProducerCMode::ORAT;
+    well2.guide_rates.set(GRValue::Item::Water, 654.321*sm3_pr_day());
 
-    data::Well well3 { rates3, 2.1 * ps, 2.2 * ps, 2.3 * ps, 3, { {well3_comp1} }, SegRes{}, Ctrl{} };
+    data::Well well3 { rates3, 2.1 * ps, 2.2 * ps, 2.3 * ps, 3, { {well3_comp1} }, SegRes{}, Ctrl{}, GRValue{} };
     well3.current_control.isProducer = !w3_injector;
     if (! well3.current_control.isProducer) { // W_3 is injector
         well3.current_control.inj = ::Opm::Well::InjectorCMode::BHP;
@@ -277,9 +284,13 @@ static data::Wells result_wells(const bool w3_injector = true) {
         well3.current_control.prod = ::Opm::Well::ProducerCMode::BHP;
     }
 
-    data::Well well6 { rates6, 2.1 * ps, 2.2 * ps, 2.3 * ps, 3, { {well6_comp1} }, SegRes{}, Ctrl{} };
+    well3.guide_rates.set(GRValue::Item::ResV, 355.113*sm3_pr_day());
+
+    data::Well well6 { rates6, 2.1 * ps, 2.2 * ps, 2.3 * ps, 3, { {well6_comp1} }, SegRes{}, Ctrl{}, GRValue{} };
     well6.current_control.isProducer = false;
     well6.current_control.inj = ::Opm::Well::InjectorCMode::GRUP;
+    well6.guide_rates.set(GRValue::Item::Gas, 222.333*sm3_pr_day())
+                     .set(GRValue::Item::Water, 333.444*sm3_pr_day());
 
     data::Wells wellrates;
 
@@ -294,13 +305,28 @@ static data::Wells result_wells(const bool w3_injector = true) {
     return wellrates;
 }
 
-static data::GroupValues result_groups() {
+data::GroupValues result_groups()
+{
+    using GRValue = data::GuideRateValue;
 
     data::GroupValues groups;
     data::GroupConstraints cgc_group;
 
     cgc_group.set(p_cmode::NONE, i_cmode::VREP, i_cmode::RATE);
-    groups["G_1"].currentControl = cgc_group;
+    {
+        auto& grp = groups["G_1"];
+        grp.currentControl = cgc_group;
+
+        grp.guideRates.production
+            .set(GRValue::Item::Oil, 1111.2222*sm3_pr_day())
+            .set(GRValue::Item::Gas, 2222.3333*sm3_pr_day())
+            .set(GRValue::Item::Water, 3333.4444*sm3_pr_day())
+            .set(GRValue::Item::ResV, 4444.5555*sm3_pr_day());
+
+        grp.guideRates.injection
+            .set(GRValue::Item::Gas, 9999.8888*sm3_pr_day())
+            .set(GRValue::Item::Water, 8888.7777*sm3_pr_day());
+    }
 
     cgc_group.set(p_cmode::ORAT, i_cmode::RESV, i_cmode::FLD);
     groups["G_2"].currentControl = cgc_group;
@@ -312,7 +338,6 @@ static data::GroupValues result_groups() {
     groups["FIELD"].currentControl = cgc_group;
 
     return groups;
-
 }
 
 std::unique_ptr< EclIO::ESmry > readsum( const std::string& base ) {
@@ -488,6 +513,12 @@ BOOST_AUTO_TEST_CASE(well_keywords) {
     BOOST_CHECK_CLOSE( -20.15, ecl_sum_get_well_var( resp, 1, "W_2", "WGPP" ), 1e-5 );
     BOOST_CHECK_CLOSE(  30.13, ecl_sum_get_well_var( resp, 1, "W_3", "WWPI" ), 1e-5 );
     BOOST_CHECK_CLOSE(  60.15, ecl_sum_get_well_var( resp, 1, "W_6", "WGPI" ), 1e-5 );
+
+    BOOST_CHECK_CLOSE( 123.456, ecl_sum_get_well_var(resp, 1, "W_1", "WOPGR"), 1.0e-5);
+    BOOST_CHECK_CLOSE(2345.67 , ecl_sum_get_well_var(resp, 1, "W_1", "WGPGR"), 1.0e-5);
+    BOOST_CHECK_CLOSE( 654.321, ecl_sum_get_well_var(resp, 1, "W_2", "WWPGR"), 1.0e-5);
+    BOOST_CHECK_CLOSE( 222.333, ecl_sum_get_well_var(resp, 1, "W_6", "WGIGR"), 1.0e-5);
+    BOOST_CHECK_CLOSE( 333.444, ecl_sum_get_well_var(resp, 1, "W_6", "WWIGR"), 1.0e-5);
 
     /* Production totals */
     BOOST_CHECK_CLOSE( 10.0, ecl_sum_get_well_var( resp, 1, "W_1", "WWPT" ), 1e-5 );
@@ -711,6 +742,14 @@ BOOST_AUTO_TEST_CASE(group_keywords) {
 
     BOOST_CHECK_CLOSE( 10.16 + 20.16, ecl_sum_get_group_var( resp, 1, "G_1", "GCPR" ), 1e-5 );
     BOOST_CHECK_CLOSE( 10.17 + 20.17, ecl_sum_get_group_var( resp, 1, "G_1", "GSPR" ), 1e-5 );
+
+    BOOST_CHECK_CLOSE(1111.2222, ecl_sum_get_group_var(resp, 1, "G_1", "GOPGR"), 1.0e-5);
+    BOOST_CHECK_CLOSE(2222.3333, ecl_sum_get_group_var(resp, 1, "G_1", "GGPGR"), 1.0e-5);
+    BOOST_CHECK_CLOSE(3333.4444, ecl_sum_get_group_var(resp, 1, "G_1", "GWPGR"), 1.0e-5);
+    BOOST_CHECK_CLOSE(4444.5555, ecl_sum_get_group_var(resp, 1, "G_1", "GVPGR"), 1.0e-5);
+
+    BOOST_CHECK_CLOSE(9999.8888, ecl_sum_get_group_var(resp, 1, "G_1", "GGIGR"), 1.0e-5);
+    BOOST_CHECK_CLOSE(8888.7777, ecl_sum_get_group_var(resp, 1, "G_1", "GWIGR"), 1.0e-5);
 
     /* Production totals */
     BOOST_CHECK_CLOSE( 10.0 + 20.0, ecl_sum_get_group_var( resp, 1, "G_1", "GWPT" ), 1e-5 );
