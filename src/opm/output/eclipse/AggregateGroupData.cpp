@@ -884,7 +884,7 @@ void staticContrib(const Opm::Schedule&     sched,
     }
     else
     {
-        //assign values to group number (according to group sequence)
+        //the maximum number of groups in the model
         iGrp[nwgmax+88] = ngmaxz;
         iGrp[nwgmax+89] = ngmaxz;
         iGrp[nwgmax+95] = ngmaxz;
