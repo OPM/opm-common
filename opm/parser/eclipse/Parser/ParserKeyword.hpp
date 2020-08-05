@@ -39,7 +39,6 @@ namespace Opm {
     class ErrorGuard;
     class ParserDoubleItem;
     class RawKeyword;
-    class string_view;
     class ErrorGuard;
 
     /*
@@ -91,10 +90,10 @@ namespace Opm {
 
 
         static bool validInternalName(const std::string& name);
-        static bool validDeckName(const string_view& name);
+        static bool validDeckName(const std::string_view& name);
         bool hasMatchRegex() const;
         void setMatchRegex(const std::string& deckNameRegexp);
-        bool matches(const string_view& ) const;
+        bool matches(const std::string_view& ) const;
         bool hasDimension() const;
         void addRecord( ParserRecord );
         void addDataRecord( ParserRecord );
@@ -159,7 +158,7 @@ namespace Opm {
         bool double_records = false;
         std::string code_end;
 
-        static bool validNameStart(const string_view& name);
+        static bool validNameStart(const std::string_view& name);
         void initDeckNames( const Json::JsonObject& jsonConfig );
         void initSectionNames( const Json::JsonObject& jsonConfig );
         void initMatchRegex( const Json::JsonObject& jsonObject );

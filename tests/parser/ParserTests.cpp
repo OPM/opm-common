@@ -1054,14 +1054,14 @@ BOOST_AUTO_TEST_CASE(parse_validRecord_noThrow) {
     auto record = createSimpleParserRecord();
     ParseContext parseContext;
     ErrorGuard errors;
-    RawRecord raw( string_view( "100 443" ) );
+    RawRecord raw( std::string_view( "100 443" ) );
     UnitSystem unit_system;
     BOOST_CHECK_NO_THROW(record.parse(parseContext, errors, raw , unit_system, unit_system, "KEYWORD", "filename") );
 }
 
 BOOST_AUTO_TEST_CASE(parse_validRecord_deckRecordCreated) {
     auto record = createSimpleParserRecord();
-    RawRecord rawRecord( string_view( "100 443" ) );
+    RawRecord rawRecord( std::string_view( "100 443" ) );
     ParseContext parseContext;
     ErrorGuard errors;
     UnitSystem unit_system;
@@ -1093,7 +1093,7 @@ static ParserRecord createMixedParserRecord() {
 
 BOOST_AUTO_TEST_CASE(parse_validMixedRecord_noThrow) {
     auto record = createMixedParserRecord();
-    RawRecord rawRecord( string_view( "1 2 10.0 20.0 4 90.0") );
+    RawRecord rawRecord( std::string_view( "1 2 10.0 20.0 4 90.0") );
     ParseContext parseContext;
     ErrorGuard errors;
     UnitSystem unit_system;
