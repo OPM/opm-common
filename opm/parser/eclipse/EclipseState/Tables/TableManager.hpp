@@ -57,6 +57,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/SkprpolyTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/Eqldims.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/Regdims.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/TLMixpar.hpp>
 
 namespace Opm {
 
@@ -77,7 +78,7 @@ namespace Opm {
         const Eqldims& getEqldims() const;
         const Aqudims& getAqudims() const;
         const Regdims& getRegdims() const;
-
+        const TLMixpar& getTLMixpar() const;
         /*
           WIll return max{ Tabdims::NTFIP , Regdims::NTFIP }.
         */
@@ -155,7 +156,6 @@ namespace Opm {
         const PlmixparTable& getPlmixparTable() const;
         const ShrateTable& getShrateTable() const;
         const Stone1exTable& getStone1exTable() const;
-        const TlmixparTable& getTlmixparTable() const;
         const WatdentTable& getWatdentTable() const;
         const std::map<int, PlymwinjTable>& getPlymwinjTables() const;
         const std::map<int, SkprwatTable>& getSkprwatTables() const;
@@ -203,7 +203,6 @@ namespace Opm {
             m_plmixparTable.serializeOp(serializer);
             m_shrateTable.serializeOp(serializer);
             m_stone1exTable.serializeOp(serializer);
-            m_tlmixparTable.serializeOp(serializer);
             m_viscrefTable.serializeOp(serializer);
             m_watdentTable.serializeOp(serializer);
             serializer.vector(m_pvtwsaltTables);
@@ -227,6 +226,7 @@ namespace Opm {
             stcond.serializeOp(serializer);
             serializer(m_gas_comp_index);
             serializer(m_rtemp);
+            m_tlmixpar.serializeOp(serializer);
             if (!serializer.isSerializing()) {
                 m_simpleTables = simpleTables;
                 if (split.plyshMax > 0) {
@@ -475,7 +475,6 @@ namespace Opm {
         PlmixparTable m_plmixparTable;
         ShrateTable m_shrateTable;
         Stone1exTable m_stone1exTable;
-        TlmixparTable m_tlmixparTable;
         ViscrefTable m_viscrefTable;
         WatdentTable m_watdentTable;
         std::vector<PvtwsaltTable> m_pvtwsaltTables;
@@ -489,6 +488,7 @@ namespace Opm {
         Regdims m_regdims;
         Eqldims m_eqldims;
         Aqudims m_aqudims;
+        TLMixpar m_tlmixpar;
 
         bool hasImptvd = false;// if deck has keyword IMPTVD
         bool hasEnptvd = false;// if deck has keyword ENPTVD
