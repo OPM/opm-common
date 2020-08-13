@@ -68,7 +68,7 @@ namespace Opm {
 
         std::vector<double> RwgsaltTable::getSaltConcentrationColumn() const
         {
-            size_t tableindex = 0;
+            size_t tableindex = 1;
             std::vector<double> saltConc(this->size());
             for(size_t i=0; i<this->size(); ++i){
                 saltConc[i] = m_tableValues[tableindex];
@@ -80,7 +80,7 @@ namespace Opm {
 
         std::vector<double> RwgsaltTable::getVaporizedWaterGasRatioColumn() const
         {
-            size_t tableindex = 1;
+            size_t tableindex = 2;
             std::vector<double> vaporizedwatergasratio(this->size());
             for(size_t i=0; i<this->size(); ++i){
                 vaporizedwatergasratio[i] = m_tableValues[tableindex];

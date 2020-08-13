@@ -3,27 +3,16 @@
   "sections": [
     "PROPS"
   ],
-  "num_tables": {
+  "size": {
     "keyword": "TABDIMS",
     "item": "NTPVT"
   },
   "items": [
     {
-      "name": "RESERVOIR_PRESSURE",
-      "value_type": "DOUBLE",
-      "dimension": "Pressure"
-    },
-    {
-      "name": "SALT_CONCENTRATION",
-      "value_type": "DOUBLE",
-      "size_type": "ALL",
-      "dimension": "Mass/Length*Length*Length"
-    },
-    {
       "name": "DATA",
+      "value_type": "DOUBLE",
       "size_type": "ALL",
-      "value_type":"DOUBLE",
-      "dimension": "OilDissolutionFactor"
+      "dimension": ["Pressure","Mass/Length*Length*Length", "OilDissolutionFactor"]
     }
   ]
 }
