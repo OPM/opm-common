@@ -59,11 +59,11 @@ BOOST_AUTO_TEST_CASE( Brine ) {
         " 1000 0.0/\n"
         " 0 1 2 3 4 \n"
         " 10 11 12 13 14/\n"
-        "\n"  
+        "\n"
         "RWGSALT\n"
         " 300 0.0 0.00013/ \n"
         " 600 0.5 0.000132/ \n"
-        "/ \n"  
+        "/ \n"
         "PERMFACT\n"
         "0 0 \n"
         "0.5 0.5 \n"
@@ -106,7 +106,7 @@ BOOST_AUTO_TEST_CASE( Brine ) {
     BOOST_CHECK_CLOSE (PvtwsaltTable1.getViscosityColumn()[1], 13*0.001, 1e-5);
 
     BOOST_CHECK_CLOSE (PvtwsaltTable1.getReferencePressureValue(), 1000*1e5, 1e-5);
- 
+
     const auto& RwgsaltTables = tables.getRwgSaltTables( );
     BOOST_CHECK_EQUAL(2 , RwgsaltTables.size() );
     BOOST_CHECK_EQUAL(3, RwgsaltTables[0].size());
@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE( Brine ) {
     BOOST_CHECK_CLOSE (RwgsaltTable1.getSaltConcentrationColumn()[1], 0.5, 1e-5);
 
     BOOST_CHECK_EQUAL (RwgsaltTable1.getVaporizedWaterGasRatioColumn().size(), 2);
-    BOOST_CHECK_CLOSE (RwgsaltTable1.getVaporizedWaterGasRatioColumn()[0], 0.00013, 1e-5); 
+    BOOST_CHECK_CLOSE (RwgsaltTable1.getVaporizedWaterGasRatioColumn()[0], 0.00013, 1e-5);
 
     const auto& BdensityTables = tables.getBrineDensityTables( );
     const auto& BdensityTable1 = BdensityTables[0];
