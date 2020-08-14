@@ -164,6 +164,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Tables/Rock2dtrTable.cpp
     src/opm/parser/eclipse/EclipseState/Tables/PvtwsaltTable.cpp
     src/opm/parser/eclipse/EclipseState/Tables/BrineDensityTable.cpp
+    src/opm/parser/eclipse/EclipseState/Tables/RwgsaltTable.cpp
     src/opm/parser/eclipse/EclipseState/Tables/SolventDensityTable.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQASTNode.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQParams.cpp
@@ -597,8 +598,11 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Tables/SpecrockTable.hpp
        opm/parser/eclipse/EclipseState/Tables/PvtwsaltTable.hpp
        opm/parser/eclipse/EclipseState/Tables/BrineDensityTable.hpp
-       opm/parser/eclipse/EclipseState/Tables/SolventDensityTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/PermfactTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/RwgsaltTable.hpp
        opm/parser/eclipse/EclipseState/Tables/SaltvdTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/SaltpvdTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/SolventDensityTable.hpp
        opm/parser/eclipse/EclipseState/Tables/PlydhflfTable.hpp
        opm/parser/eclipse/EclipseState/Tables/PlymwinjTable.hpp
        opm/parser/eclipse/EclipseState/Tables/PlyshlogTable.hpp
@@ -617,6 +621,8 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Tables/JFunc.hpp
        opm/parser/eclipse/EclipseState/Tables/TableIndex.hpp
        opm/parser/eclipse/EclipseState/Tables/PvtgTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/PvtgwTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/PvtgwoTable.hpp
        opm/parser/eclipse/EclipseState/Tables/Tabdims.hpp
        opm/parser/eclipse/EclipseState/Tables/TableSchema.hpp
        opm/parser/eclipse/EclipseState/Tables/RocktabTable.hpp

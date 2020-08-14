@@ -33,12 +33,15 @@
 
 #include <opm/parser/eclipse/EclipseState/Tables/DenT.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvtgTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/PvtgwTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/PvtgwoTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvtoTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/RocktabTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/Rock2dTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/Rock2dtrTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PlyshlogTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvtwsaltTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/RwgsaltTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/BrineDensityTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SolventDensityTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/StandardCond.hpp>
@@ -97,6 +100,8 @@ namespace Opm {
         const TableContainer& getPbvdTables() const;
         const TableContainer& getPdvdTables() const;
         const TableContainer& getSaltvdTables() const;
+        const TableContainer& getSaltpvdTables() const;
+        const TableContainer& getPermfactTables() const;
         const TableContainer& getEnkrvdTables() const;
         const TableContainer& getEnptvdTables() const;
         const TableContainer& getImkrvdTables() const;
@@ -131,6 +136,8 @@ namespace Opm {
         const JFunc& getJFunc() const;
 
         const std::vector<PvtgTable>& getPvtgTables() const;
+        const std::vector<PvtgwTable>& getPvtgwTables() const;
+        const std::vector<PvtgwoTable>& getPvtgwoTables() const;
         const std::vector<PvtoTable>& getPvtoTables() const;
         const std::vector<Rock2dTable>& getRock2dTables() const;
         const std::vector<Rock2dtrTable>& getRock2dtrTables() const;
@@ -144,6 +151,7 @@ namespace Opm {
         std::size_t gas_comp_index() const;
         const PvtwTable& getPvtwTable() const;
         const std::vector<PvtwsaltTable>& getPvtwSaltTables() const;
+        const std::vector<RwgsaltTable>& getRwgSaltTables() const;
         const std::vector<BrineDensityTable>& getBrineDensityTables() const;
         const std::vector<SolventDensityTable>& getSolventDensityTables() const;
 
@@ -192,6 +200,8 @@ namespace Opm {
             serializer(split.rockMax);
             serializer.map(split.rockMap);
             serializer.vector(m_pvtgTables);
+            serializer.vector(m_pvtgwTables);
+            serializer.vector(m_pvtgwoTables);
             serializer.vector(m_pvtoTables);
             serializer.vector(m_rock2dTables);
             serializer.vector(m_rock2dtrTables);
@@ -207,6 +217,7 @@ namespace Opm {
             m_viscrefTable.serializeOp(serializer);
             m_watdentTable.serializeOp(serializer);
             serializer.vector(m_pvtwsaltTables);
+            serializer.vector(m_rwgsaltTables);
             serializer.vector(m_bdensityTables);
             serializer.vector(m_sdensityTables);
             serializer.map(m_plymwinjTables);
@@ -319,6 +330,22 @@ namespace Opm {
             }
             assert(regionIdx == numTables);
         }
+
+        template <class TableType>
+        void initRwgsaltTables(const Deck& deck,  std::vector<TableType>& rwgtables ) {
+
+            size_t numTables = m_tabdims.getNumPVTTables();
+            rwgtables.resize(numTables);
+
+            const auto& keyword = deck.getKeyword("RWGSALT");
+            size_t regionIdx = 0;
+            for (const auto& record : keyword) {
+                rwgtables[regionIdx].init(record);
+                ++regionIdx;
+            }
+            assert(regionIdx == numTables);
+        }
+
 
         template <class TableType>
         void initBrineTables(const Deck& deck,  std::vector<TableType>& brinetables ) {
@@ -464,6 +491,8 @@ namespace Opm {
 
         std::map<std::string , TableContainer> m_simpleTables;
         std::vector<PvtgTable> m_pvtgTables;
+        std::vector<PvtgwTable> m_pvtgwTables;
+        std::vector<PvtgwoTable> m_pvtgwoTables;
         std::vector<PvtoTable> m_pvtoTables;
         std::vector<Rock2dTable> m_rock2dTables;
         std::vector<Rock2dtrTable> m_rock2dtrTables;
@@ -479,6 +508,7 @@ namespace Opm {
         ViscrefTable m_viscrefTable;
         WatdentTable m_watdentTable;
         std::vector<PvtwsaltTable> m_pvtwsaltTables;
+        std::vector<RwgsaltTable> m_rwgsaltTables;
         std::vector<BrineDensityTable> m_bdensityTables;
         std::vector<SolventDensityTable> m_sdensityTables;
         std::map<int, PlymwinjTable> m_plymwinjTables;

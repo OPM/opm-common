@@ -3,16 +3,19 @@
   "sections": [
     "PROPS"
   ],
+  "size": {
+    "keyword": "EQLDIMS",
+    "item": "NTEQUL"
+  },
   "items": [
-    {
-      "name": "POROSITY",
+   {
+      "name": "DATA",
       "value_type": "DOUBLE",
-      "dimension": "1"
-    },
-    {
-      "name": "PERMFACTMULT",
-      "value_type": "DOUBLE",
-      "dimension": "1"
-    }
+      "size_type": "ALL",
+      "dimension": [
+        "1",
+        "1"
+      ]
+   }
   ]
 }

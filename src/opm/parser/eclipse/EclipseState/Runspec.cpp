@@ -41,7 +41,7 @@ Phase get_phase( const std::string& str ) {
     if( str == "POLYMW" ) return Phase::POLYMW;
     if( str == "FOAM" ) return Phase::FOAM;
     if( str == "BRINE" ) return Phase::BRINE;
-
+ 
     throw std::invalid_argument( "Unknown phase '" + str + "'" );
 }
 
