@@ -338,10 +338,9 @@ namespace Opm {
             rwgtables.resize(numTables);
 
             const auto& keyword = deck.getKeyword("RWGSALT");
-            size_t numEntries = keyword.size();
             size_t regionIdx = 0;
-            for (unsigned lineIdx = 0; lineIdx < numEntries; lineIdx += 2) {
-                rwgtables[regionIdx].init(keyword.getRecord(lineIdx+1));
+            for (const auto& record : keyword) {
+                rwgtables[regionIdx].init(record);
                 ++regionIdx;
             }
             assert(regionIdx == numTables);

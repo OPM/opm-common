@@ -476,8 +476,8 @@ namespace Opm {
         initSimpleTableContainer<RvvdTable>(deck, "RVVD" , m_eqldims.getNumEquilRegions());
         initSimpleTableContainer<PbvdTable>(deck, "PBVD" , m_eqldims.getNumEquilRegions());
         initSimpleTableContainer<PdvdTable>(deck, "PDVD" , m_eqldims.getNumEquilRegions());
+        initSimpleTableContainer<SaltpvdTable>(deck, "SALTPVD" , m_eqldims.getNumEquilRegions());
         initSimpleTableContainer<SaltvdTable>(deck, "SALTVD" , m_eqldims.getNumEquilRegions());
-        initSimpleTableContainer<SaltvdTable>(deck, "SALTRVD" , m_eqldims.getNumEquilRegions());
         initSimpleTableContainer<SaltvdTable>(deck, "PERMFACT" , m_eqldims.getNumEquilRegions());
         initSimpleTableContainer<AqutabTable>(deck, "AQUTAB" , m_aqudims.getNumInfluenceTablesCT());
         {
