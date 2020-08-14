@@ -31,6 +31,7 @@
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Deck/DeckSection.hpp>
 
+#include <opm/parser/eclipse/Parser/ParserKeywords/R.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
 
@@ -500,7 +501,7 @@ void RestartConfig::handleScheduleSection(const SCHEDULESection& schedule, const
         if (this->rptsched_restart_set && (this->rptsched_restart > 0))
             return true;
 
-        switch (basic) {
+        switch (this->basic) {
          //Do not write restart files
         case 0:  return false;
 
@@ -623,12 +624,14 @@ void RestartConfig::handleScheduleSection(const SCHEDULESection& schedule, const
 
 
     void RestartConfig::handleSolutionSection(const SOLUTIONSection& solutionSection, const ParseContext& parseContext, ErrorGuard& errors) {
-        if (solutionSection.hasKeyword("RPTRST")) {
-            const auto& rptrstkeyword        = solutionSection.getKeyword("RPTRST");
+        using RST = ParserKeywords::RPTRST;
+        if (solutionSection.hasKeyword<RST>()) {
+            std::size_t step = 1;
+            const auto& rptrstkeyword        = solutionSection.getKeyword<RST>();
 
-            const auto rptrst = RPTRST( rptrstkeyword, parseContext, errors, {}, 0 );
-            this->restart_keywords.updateInitial( rptrst.first );
-            this->restart_schedule.updateInitial( rptrst.second );
+            const auto rptrst = RPTRST( rptrstkeyword, parseContext, errors, {}, step );
+            this->restart_keywords.update( step, rptrst.first );
+            this->restart_schedule.update( step, rptrst.second );
             setWriteInitialRestartFile(true); // Guessing on eclipse rules for write of initial RESTART file (at time 0):
                                               // Write of initial restart file is (due to the eclipse reference manual)
                                               // governed by RPTSOL RESTART in solution section,
