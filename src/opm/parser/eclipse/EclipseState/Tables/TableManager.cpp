@@ -101,6 +101,7 @@ namespace Opm {
         :
         m_tabdims( Tabdims(deck)),
         m_aqudims( Aqudims(deck)),
+        m_tlmixpar( deck ),
         hasImptvd (deck.hasKeyword("IMPTVD")),
         hasEnptvd (deck.hasKeyword("ENPTVD")),
         hasEqlnum (deck.hasKeyword("EQLNUM"))
@@ -189,10 +190,6 @@ namespace Opm {
             hasShrate = true;
         }
 
-        if (deck.hasKeyword<ParserKeywords::TLMIXPAR>()) {
-            this->m_tlmixparTable = TlmixparTable(deck.getKeyword("TLMIXPAR"));
-        }
-
         if (deck.hasKeyword<ParserKeywords::PLYVMH>()) {
             this->m_plyvmhTable = PlyvmhTable(deck.getKeyword("PLYVMH"));
         }
@@ -217,7 +214,6 @@ namespace Opm {
         m_plmixparTable = data.m_plmixparTable;
         m_shrateTable = data.m_shrateTable;
         m_stone1exTable = data.m_stone1exTable;
-        m_tlmixparTable = data.m_tlmixparTable;
         m_viscrefTable = data.m_viscrefTable;
         m_watdentTable = data.m_watdentTable;
         m_pvtwsaltTables = data.m_pvtwsaltTables;
@@ -243,6 +239,7 @@ namespace Opm {
         watDenT = data.watDenT;
         stcond = data.stcond;
         m_gas_comp_index = data.m_gas_comp_index;
+        m_tlmixpar = data.m_tlmixpar;
 
         return *this;
     }
@@ -265,7 +262,6 @@ namespace Opm {
         result.m_plmixparTable = PlmixparTable::serializeObject();
         result.m_shrateTable = ShrateTable::serializeObject();
         result.m_stone1exTable = Stone1exTable::serializeObject();
-        result.m_tlmixparTable = TlmixparTable::serializeObject();
         result.m_viscrefTable = ViscrefTable::serializeObject();
         result.m_watdentTable = WatdentTable::serializeObject();
         result.m_pvtwsaltTables = {PvtwsaltTable::serializeObject()};
@@ -289,7 +285,7 @@ namespace Opm {
         result.stcond = StandardCond::serializeObject();
         result.m_gas_comp_index = 77;
         result.m_rtemp = 1.0;
-
+        result.m_tlmixpar = TLMixpar::serializeObject();
         return result;
     }
 
@@ -1068,8 +1064,8 @@ namespace Opm {
         return m_stone1exTable;
     }
 
-    const TlmixparTable& TableManager::getTlmixparTable() const {
-        return m_tlmixparTable;
+    const TLMixpar& TableManager::getTLMixpar() const {
+        return m_tlmixpar;
     }
 
     const JFunc& TableManager::getJFunc() const {
@@ -1160,7 +1156,6 @@ namespace Opm {
                m_plyvmhTable == data.m_plyvmhTable &&
                m_shrateTable == data.m_shrateTable &&
                m_stone1exTable == data.m_stone1exTable &&
-               m_tlmixparTable == data.m_tlmixparTable &&
                m_viscrefTable == data.m_viscrefTable &&
                m_watdentTable == data.m_watdentTable &&
                m_pvtwsaltTables == data.m_pvtwsaltTables &&
@@ -1170,6 +1165,7 @@ namespace Opm {
                m_plymwinjTables == data.m_plymwinjTables &&
                m_skprwatTables == data.m_skprwatTables &&
                m_skprpolyTables == data.m_skprpolyTables &&
+               m_tlmixpar == data.m_tlmixpar &&
                m_tabdims == data.m_tabdims &&
                m_regdims == data.m_regdims &&
                m_eqldims == data.m_eqldims &&
