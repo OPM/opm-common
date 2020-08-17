@@ -1,5 +1,5 @@
 /*
-  Copyright 2019 Equinor ASA.
+  Copyright 2019, 2020 Equinor ASA.
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -20,14 +20,16 @@
 #ifndef GUIDE_RATE_HPP
 #define GUIDE_RATE_HPP
 
-#include <string>
 #include <cstddef>
 #include <ctime>
+#include <string>
 #include <unordered_map>
 
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
+#include <stddef.h>
+
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GuideRateModel.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
 
 namespace Opm {
 

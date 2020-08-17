@@ -1,5 +1,5 @@
 /*
-  Copyright 2019 Equinor ASA.
+  Copyright 2019, 2020 Equinor ASA.
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -22,39 +22,21 @@
 
 namespace Opm {
 
-double GuideRate::RateVector::eval(Well::GuideRateTarget target) const {
-    if (target == Well::GuideRateTarget::OIL)
-        return this->oil_rat;
 
-    if (target == Well::GuideRateTarget::GAS)
-        return this->gas_rat;
 
-    if (target == Well::GuideRateTarget::LIQ)
-        return this->oil_rat + this->wat_rat;
 
-    if (target == Well::GuideRateTarget::WAT)
-        return this->wat_rat;
-
-    throw std::logic_error("Don't know how to convert .... ");
+double GuideRate::RateVector::eval(Well::GuideRateTarget target) const
+{
+    return this->eval(GuideRateModel::convert_target(target));
 }
 
-double GuideRate::RateVector::eval(Group::GuideRateTarget target) const {
-    if (target == Group::GuideRateTarget::OIL)
-        return this->oil_rat;
-
-    if (target == Group::GuideRateTarget::GAS)
-        return this->gas_rat;
-
-    if (target == Group::GuideRateTarget::LIQ)
-        return this->oil_rat + this->wat_rat;
-
-    if (target == Group::GuideRateTarget::WAT)
-        return this->wat_rat;
-
-    throw std::logic_error("Don't know how to convert .... ");
+double GuideRate::RateVector::eval(Group::GuideRateTarget target) const
+{
+    return this->eval(GuideRateModel::convert_target(target));
 }
 
-double GuideRate::RateVector::eval(GuideRateModel::Target target) const {
+double GuideRate::RateVector::eval(GuideRateModel::Target target) const
+{
     if (target == GuideRateModel::Target::OIL)
         return this->oil_rat;
 
@@ -67,7 +49,9 @@ double GuideRate::RateVector::eval(GuideRateModel::Target target) const {
     if (target == GuideRateModel::Target::WAT)
         return this->wat_rat;
 
-    throw std::logic_error("Don't know how to convert .... ");
+    throw std::logic_error {
+        "Don't know how to convert target type " + std::to_string(static_cast<int>(target))
+    };
 }
 
 
