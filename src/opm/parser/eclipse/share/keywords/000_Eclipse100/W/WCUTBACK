@@ -10,15 +10,23 @@
     },
     {
       "name": "WCT_LIMIT",
-      "value_type": "DOUBLE"
+      "value_type": "DOUBLE",
+      "dimension": "LiquidSurfaceVolume/LiquidSurfaceVolume"
     },
     {
       "name": "GOR_LIMIT",
-      "value_type": "DOUBLE"
+      "value_type": "DOUBLE",
+      "dimension": "GasDissolutionFactor"
+    },
+    {
+      "name": "GLR_LIMIT",
+      "value_type": "DOUBLE",
+      "dimension": "GasDissolutionFactor"
     },
     {
       "name": "WGR_LIMIT",
-      "value_type": "DOUBLE"
+      "value_type": "DOUBLE",
+      "dimension": "OilDissolutionFactor"
     },
     {
       "name": "RATE_CUTBACK",
@@ -44,22 +52,26 @@
     {
       "name": "WCT_LIMIT_REVERSE",
       "value_type": "DOUBLE",
-      "default": 0
+      "default": 0,
+      "dimension": "LiquidSurfaceVolume/LiquidSurfaceVolume"
     },
     {
       "name": "GOR_LIMIT_REVERSE",
       "value_type": "DOUBLE",
-      "default": 0
+      "default": 0,
+      "dimension": "GasDissolutionFactor"
     },
     {
       "name": "GLR_LIMIT_REVERSE",
       "value_type": "DOUBLE",
-      "default": 0
+      "default": 0,
+      "dimension": "GasDissolutionFactor"
     },
     {
       "name": "WGR_LIMIT_REVERSE",
       "value_type": "DOUBLE",
-      "default": 0
+      "default": 0,
+      "dimension": "OilDissolutionFactor"
     },
     {
       "name": "WORKOVER_REMOVE",
