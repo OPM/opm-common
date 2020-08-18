@@ -171,7 +171,7 @@ const std::map<cmp_enum, int> cmpToIndex = {
             iAct[6] = 0;
             //item [7]: is unknown, (=0)
             iAct[7] = 0;
-            //item [8]: The number of times the action is triggered
+            //item [8]: The number of conditions in an ACTIONX keyword
             iAct[8] = actx.conditions().size();
         }
 
@@ -420,7 +420,7 @@ const std::map<cmp_enum, int> cmpToIndex = {
                     throw std::invalid_argument("Actionx: " + actx.name());
                 }
 
-                /*item [16] - related to the operater used in ACTIONX for defined quantities
+                /*item [16] - related to the operator used in ACTIONX for defined quantities
                     >     is  1
                     <     is  2
                     >=    is  3
