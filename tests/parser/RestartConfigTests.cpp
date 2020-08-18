@@ -37,6 +37,152 @@ inline std::string fst( const std::pair< std::string, int >& p ) {
 
 using namespace Opm;
 
+BOOST_AUTO_TEST_CASE(RPTRST_AND_RPTSOL_SOLUTION)
+{
+    const auto input = std::string { R"(RUNSPEC
+DIMENS
+  10 10 10 /
+START
+  6 JLY 2020 /
+SOLUTION
+RPTSOL
+  'RESTART=2' 'FIP=3' 'FIPRESV' 'THPRES' /
+SCHEDULE
+RPTRST
+  'BASIC=5' 'FREQ=6' 'CONV=10' /
+--SCHEDULE
+DATES
+  7 'JLY' 2020 /          ( 1)
+ 10 'JLY' 2020 /          ( 2)
+ 20 'JLY' 2020 /          ( 3)
+ 30 'JLY' 2020 /          ( 4)
+  5 'AUG' 2020 /          ( 5)
+ 20 'AUG' 2020 /          ( 6)
+  5 'SEP' 2020 /          ( 7)
+  1 'OCT' 2020 /          ( 8)
+  1 'NOV' 2020 /          ( 9)
+  1 'DEC' 2020 /          (10)
+  5 'JAN' 2021 / -- WRITE (11)
+  1 'FEB' 2021 /          (12)
+ 17 'MAY' 2021 /          (13)
+  6 'JLY' 2021 / -- WRITE (14)
+  1 'DEC' 2021 /          (15)
+ 31 'DEC' 2021 /          (16)
+ 21 'JAN' 2022 / -- WRITE (17)
+ 31 'JAN' 2022 /          (18)
+/
+END
+)" };
+
+    const auto deck   = Parser{}.parseString(input);
+    const auto tm     = TimeMap { deck };
+    const auto rstcfg = RestartConfig { tm, deck };
+
+    BOOST_REQUIRE_EQUAL(tm.size(), std::size_t{19});
+    BOOST_REQUIRE_EQUAL(tm.last(), std::size_t{18});
+
+    for (const std::size_t stepID : { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 15, 16, 18 }) {
+        BOOST_CHECK_MESSAGE(! rstcfg.getWriteRestartFile(stepID),
+                            "Must not write restart information for excluded step " << stepID);
+    }
+
+    for (const std::size_t stepID : { 0, 11, 14, 17 }) {
+        BOOST_CHECK_MESSAGE(rstcfg.getWriteRestartFile(stepID),
+                            "Must write restart information for included step " << stepID);
+    }
+}
+
+
+BOOST_AUTO_TEST_CASE(RPTRST_AND_RPTSOL_SOLUTION2)
+{
+    const auto input = std::string { R"(RUNSPEC
+DIMENS
+  10 10 10 /
+START
+  6 JLY 2019 /
+SOLUTION
+-- basic = 5, every month
+RPTRST
+ 'BASIC=5'  'FREQ=6'   'CONV=10' /
+
+RPTSOL
+ 'RESTART=2'  'FIP=3'  'FIPRESV'  'THPRES' /
+
+SCHEDULE
+
+DATES
+  1 AUG 2019 /        ( 1)
+  2 AUG 2019 /        ( 2)
+  3 AUG 2019 /        ( 3)
+  4 AUG 2019 /        ( 4)
+ 12 AUG 2019 /        ( 5)
+ 13 AUG 2019 /        ( 6)
+ 14 AUG 2019 /        ( 7)
+ 22 AUG 2019 /        ( 8)
+ 23 AUG 2019 /        ( 9)
+ 24 AUG 2019 /        (10)
+  1 SEP 2019 /        (11)
+ 11 SEP 2019 /        (12)
+ 21 SEP 2019 /        (13)
+ 22 SEP 2019 /        (14)
+ 23 SEP 2019 /        (15)
+  1 OCT 2019 /        (16)
+  2 OCT 2019 /        (17)
+  3 OCT 2019 /        (18)
+ 11 OCT 2019 /        (19)
+ 12 OCT 2019 /        (20)
+ 13 OCT 2019 /        (21)
+ 21 OCT 2019 /        (22)
+ 31 OCT 2019 /        (23)
+  1 NOV 2019 /        (24)
+  2 NOV 2019 /        (25)
+ 10 NOV 2019 /        (26)
+ 20 NOV 2019 /        (27)
+ 21 NOV 2019 /        (28)
+ 22 NOV 2019 /        (29)
+ 30 NOV 2019 /        (30)
+  1 DEC 2019 /        (31)
+ 11 DEC 2019 /        (32)
+ 12 DEC 2019 /        (33)
+ 13 DEC 2019 /        (34)
+ 22 DEC 2019 /        (35)
+ 23 DEC 2019 /        (36)
+ 24 DEC 2019 /        (37)
+  1 JAN 2020 / Write  (38)
+  2 JAN 2020 /        (39)
+ 12 JAN 2020 /        (40)
+ 13 JAN 2020 /        (41)
+ 14 JAN 2020 /        (42)
+ 23 JAN 2020 /        (43)
+ 24 JAN 2020 /        (44)
+ 25 JAN 2020 /        (45)
+  1 FEB 2020 /        (46)
+  1 MAR 2020 /        (47)
+  1 APR 2020 /        (48)
+  1 MAY 2020 /        (49)
+  1 JUN 2020 /        (50)
+  1 JUL 2020 / Write  (51)
+  1 AUG 2020 /        (52)
+  1 SEP 2020 /        (53)
+  1 OCT 2020 /        (54)
+  1 NOV 2020 /        (55)
+/
+
+END
+)" };
+
+    const auto deck   = Parser{}.parseString(input);
+    const auto tm     = TimeMap { deck };
+    const auto rstcfg = RestartConfig { tm, deck };
+
+    for (std::size_t step = 0; step < tm.size(); step++) {
+        if (step == 0 || step == 38 || step == 51)
+            BOOST_CHECK_MESSAGE( rstcfg.getWriteRestartFile(step), "Restart file expected for step: " << step );
+        else
+            BOOST_CHECK_MESSAGE( !rstcfg.getWriteRestartFile(step), "Should *not* have restart file for step: " << step );
+    }
+}
+
 
 BOOST_AUTO_TEST_CASE(RPTSCHED_INTEGER) {
 
@@ -80,7 +226,7 @@ BOOST_AUTO_TEST_CASE(RPTSCHED_INTEGER) {
     BOOST_CHECK(  !rstConfig1.getWriteRestartFile( 3 ) );
 
     std::vector< std::string > kw_list1;
-    for( const auto& pair : rstConfig1.getRestartKeywords( 0 ) )
+    for( const auto& pair : rstConfig1.getRestartKeywords( 1 ) )
         if( pair.second != 0 ) kw_list1.push_back( pair.first );
 
     const auto expected1 = {"BG","BO","BW","COMPRESS","DEN","KRG","KRO","KRW","PCOG","PCOW","PRES","RK","VELOCITY","VGAS","VOIL","VWAT"};
@@ -88,10 +234,10 @@ BOOST_AUTO_TEST_CASE(RPTSCHED_INTEGER) {
                                    kw_list1.begin(), kw_list1.end() );
 
     // ACIP is a valid mneonic - but not in this deck.
-    BOOST_CHECK_EQUAL( rstConfig1.getKeyword( "ACIP" , 0) , 0 );
-    BOOST_CHECK_EQUAL( rstConfig1.getKeyword( "COMPRESS" , 0) , 1 );
-    BOOST_CHECK_EQUAL( rstConfig1.getKeyword( "PCOG", 0) , 1 );
-    BOOST_CHECK_THROW( rstConfig1.getKeyword( "UNKNOWN_KW", 0) , std::invalid_argument);
+    BOOST_CHECK_EQUAL( rstConfig1.getKeyword( "ACIP" , 1) , 0 );
+    BOOST_CHECK_EQUAL( rstConfig1.getKeyword( "COMPRESS" , 1) , 1 );
+    BOOST_CHECK_EQUAL( rstConfig1.getKeyword( "PCOG", 1) , 1 );
+    BOOST_CHECK_THROW( rstConfig1.getKeyword( "UNKNOWN_KW", 1) , std::invalid_argument);
 
     std::vector< std::string > kw_list2;
     for( const auto& pair : rstConfig1.getRestartKeywords( 3 ) )
@@ -1082,4 +1228,3 @@ BOOST_AUTO_TEST_CASE(RESTART_SAVE) {
     BOOST_CHECK( ioConfig.getWriteRestartFile( 12 ) );
 
 }
-
