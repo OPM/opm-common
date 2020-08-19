@@ -354,7 +354,7 @@ bool higherLevelProdCMode_NotNoneFld(const Opm::Schedule& sched,
         while (current.name() != "FIELD" && ctrl_mode_not_none_fld == false) {
             current = sched.getGroup(current.parent(), simStep);
             const auto& prod_cmode = current.productionControls(sumState).cmode;
-            if ((prod_cmode != Opm::Group::ProductionCMode::FLD) || (prod_cmode!= Opm::Group::ProductionCMode::NONE)) {
+            if ((prod_cmode != Opm::Group::ProductionCMode::FLD) && (prod_cmode!= Opm::Group::ProductionCMode::NONE)) {
                 ctrl_mode_not_none_fld = true;
             }
         }
@@ -380,7 +380,7 @@ int higherLevelInjCMode_NotNoneFld_SeqIndex(const Opm::Schedule& sched,
             current = sched.getGroup(current.parent(), simStep);
             const auto& inj_cmode = (current.hasInjectionControl(phase)) ?
             current.injectionControls(phase, sumState).cmode : Opm::Group::InjectionCMode::NONE;
-            if ((inj_cmode != Opm::Group::InjectionCMode::FLD) || (inj_cmode!= Opm::Group::InjectionCMode::NONE)) {
+            if ((inj_cmode != Opm::Group::InjectionCMode::FLD) && (inj_cmode != Opm::Group::InjectionCMode::NONE)) {
                 if (ctrl_mode_not_none_fld == -1) {
                      ctrl_mode_not_none_fld = current.insert_index();
                 }
@@ -542,7 +542,7 @@ void staticContrib(const Opm::Schedule&     sched,
                     }
                 }
                 else if (higherLevelProdCMode_NotNoneFld(sched, sumState, group, simStep)) {
-                    if ((prod_cmode != Opm::Group::ProductionCMode::FLD) || (prod_cmode!= Opm::Group::ProductionCMode::NONE)) {
+                    if (!((prod_cmode == Opm::Group::ProductionCMode::FLD) || (prod_cmode == Opm::Group::ProductionCMode::NONE))) {
                         iGrp[nwgmax + 5] = -1;
                     }
                     else {
@@ -716,7 +716,7 @@ void staticContrib(const Opm::Schedule&     sched,
                         iGrp[nwgmax + 17] = 0;
                     }
                     else if (higher_lev_winj_ctrl > 0 || higher_lev_winj_cmode > 0) {
-                        if ((winj_cmode != Opm::Group::InjectionCMode::FLD) || (winj_cmode!= Opm::Group::InjectionCMode::NONE)) {
+                        if (!((winj_cmode == Opm::Group::InjectionCMode::FLD) || (winj_cmode == Opm::Group::InjectionCMode::NONE))) {
                             if (!(higher_lev_winj_ctrl == higher_lev_winj_cmode)) {
 
                                 auto result = findInVector<std::size_t>(group_parent_list, higher_lev_winj_ctrl);
@@ -797,7 +797,7 @@ void staticContrib(const Opm::Schedule&     sched,
                         iGrp[nwgmax + 22] = 0;
                     }
                     else if (higher_lev_ginj_ctrl > 0 || higher_lev_ginj_cmode > 0) {
-                        if ((ginj_cmode != Opm::Group::InjectionCMode::FLD) || (ginj_cmode!= Opm::Group::InjectionCMode::NONE)) {
+                        if (!((ginj_cmode == Opm::Group::InjectionCMode::FLD) || (ginj_cmode == Opm::Group::InjectionCMode::NONE))) {
                             if (!(higher_lev_ginj_ctrl == higher_lev_ginj_cmode)) {
 
                                 auto result = findInVector<std::size_t>(group_parent_list, higher_lev_ginj_ctrl);
@@ -884,7 +884,7 @@ void staticContrib(const Opm::Schedule&     sched,
     }
     else
     {
-        //assign values to group number (according to group sequence)
+        //the maximum number of groups in the model
         iGrp[nwgmax+88] = ngmaxz;
         iGrp[nwgmax+89] = ngmaxz;
         iGrp[nwgmax+95] = ngmaxz;
