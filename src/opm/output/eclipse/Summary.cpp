@@ -142,8 +142,10 @@ namespace {
     std::vector<Opm::EclIO::SummaryNode>
     requiredRestartVectors(const ::Opm::Schedule& sched)
     {
-        const auto& vectors = requiredRestartVectors();
-        const std::vector<ParamCTorArgs> extra_well_vectors {
+        auto entities = std::vector<Opm::EclIO::SummaryNode> {};
+
+        const auto vectors = requiredRestartVectors();
+        const auto extra_well_vectors = std::vector<ParamCTorArgs> {
             { "WTHP",  Opm::EclIO::SummaryNode::Type::Pressure },
             { "WBHP",  Opm::EclIO::SummaryNode::Type::Pressure },
             { "WGVIR", Opm::EclIO::SummaryNode::Type::Rate     },
@@ -155,7 +157,7 @@ namespace {
             { "WWIGR", Opm::EclIO::SummaryNode::Type::Rate     },
             { "WMCTL", Opm::EclIO::SummaryNode::Type::Mode     },
         };
-        const std::vector<ParamCTorArgs> extra_group_vectors {
+        const auto extra_group_vectors = std::vector<ParamCTorArgs> {
             { "GOPGR", Opm::EclIO::SummaryNode::Type::Rate },
             { "GGPGR", Opm::EclIO::SummaryNode::Type::Rate },
             { "GWPGR", Opm::EclIO::SummaryNode::Type::Rate },
@@ -167,7 +169,7 @@ namespace {
             { "GMWPR", Opm::EclIO::SummaryNode::Type::Mode },
             { "GMWIN", Opm::EclIO::SummaryNode::Type::Mode },
         };
-        const std::vector<ParamCTorArgs> extra_field_vectors {
+        const auto extra_field_vectors = std::vector<ParamCTorArgs> {
             { "FMCTG", Opm::EclIO::SummaryNode::Type::Mode },
             { "FMCTP", Opm::EclIO::SummaryNode::Type::Mode },
             { "FMCTW", Opm::EclIO::SummaryNode::Type::Mode },
@@ -175,43 +177,39 @@ namespace {
             { "FMWIN", Opm::EclIO::SummaryNode::Type::Mode },
         };
 
-        std::vector<Opm::EclIO::SummaryNode> entities {} ;
+        using Cat = Opm::EclIO::SummaryNode::Category;
 
         auto makeEntities = [&vectors, &entities]
-            (const char         kwpref,
-             const Opm::EclIO::SummaryNode::Category cat,
-             const std::string& name) -> void
+            (const char                        kwpref,
+             const Cat                         cat,
+             const std::vector<ParamCTorArgs>& extra_vectors,
+             const std::string&                name) -> void
         {
-            for (const auto& vector : vectors) {
-                entities.push_back({kwpref + vector.kw, cat, vector.type, name, Opm::EclIO::SummaryNode::default_number, "" });
-            }
-        };
+            const auto dflt_num = Opm::EclIO::SummaryNode::default_number;
 
-        auto makeExtraEntities = [&entities]
-            (const std::vector<ParamCTorArgs>& extra_vectors,
-             const Opm::EclIO::SummaryNode::Category category,
-             const std::string& wgname) -> void
-        {
-            for (const auto &extra_vector : extra_vectors) {
-                entities.push_back({ extra_vector.kw, category, extra_vector.type, wgname, Opm::EclIO::SummaryNode::default_number, "" });
+            // Recall: Cannot use emplace_back() for PODs.
+            for (const auto& vector : vectors) {
+                entities.push_back({ kwpref + vector.kw, cat,
+                                     vector.type, name, dflt_num, "" });
+            }
+
+            for (const auto& extra_vector : extra_vectors) {
+                entities.push_back({ extra_vector.kw, cat,
+                                     extra_vector.type, name, dflt_num, "" });
             }
         };
 
         for (const auto& well_name : sched.wellNames()) {
-            makeEntities('W', Opm::EclIO::SummaryNode::Category::Well, well_name);
-            makeExtraEntities(extra_well_vectors, Opm::EclIO::SummaryNode::Category::Well, well_name);
+            makeEntities('W', Cat::Well, extra_well_vectors, well_name);
         }
 
         for (const auto& grp_name : sched.groupNames()) {
-            if (grp_name != "FIELD") {
-                makeEntities('G', Opm::EclIO::SummaryNode::Category::Group, grp_name);
-                makeExtraEntities(extra_group_vectors, Opm::EclIO::SummaryNode::Category::Group, grp_name);
+            if (grp_name == "FIELD") { continue; }
 
-            }
+            makeEntities('G', Cat::Group, extra_group_vectors, grp_name);
         }
 
-        makeEntities('F', Opm::EclIO::SummaryNode::Category::Field, "FIELD");
-        makeExtraEntities(extra_field_vectors, Opm::EclIO::SummaryNode::Category::Field, "FIELD");
+        makeEntities('F', Cat::Field, extra_field_vectors, "FIELD");
 
         return entities;
     }
