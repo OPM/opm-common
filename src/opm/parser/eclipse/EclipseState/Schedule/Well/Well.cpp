@@ -136,6 +136,8 @@ Well::Well(const RestartIO::RstWell& rst_well,
     production(std::make_shared<WellProductionProperties>(unit_system_arg, wname)),
     injection(std::make_shared<WellInjectionProperties>(unit_system_arg, wname))
 {
+    using CModeVal = ::Opm::RestartIO::Helpers::VectorItems::IWell::Value::WellCtrlMode;
+
     if (this->wtype.producer()) {
         auto p = std::make_shared<WellProductionProperties>(this->unit_system, wname);
         // Reverse of function ctrlMode() in AggregateWellData.cpp
@@ -170,30 +172,34 @@ Well::Well(const RestartIO::RstWell& rst_well,
 
         if (this->status == Well::Status::OPEN) {
             switch (rst_well.active_control) {
-            case 1:
+            case CModeVal::Group:
+                p->controlMode = Well::ProducerCMode::GRUP;
+                p->addProductionControl(Well::ProducerCMode::GRUP);
+                break;
+            case CModeVal::OilRate:
                 p->controlMode = Well::ProducerCMode::ORAT;
                 break;
-            case 2:
+            case CModeVal::WatRate:
                 p->controlMode = Well::ProducerCMode::WRAT;
                 p->addProductionControl(Well::ProducerCMode::WRAT);
                 break;
-            case 3:
+            case CModeVal::GasRate:
                 p->controlMode = Well::ProducerCMode::GRAT;
                 p->addProductionControl(Well::ProducerCMode::GRAT);
                 break;
-            case 4:
+            case CModeVal::LiqRate:
                 p->controlMode = Well::ProducerCMode::LRAT;
                 p->addProductionControl(Well::ProducerCMode::LRAT);
                 break;
-            case 5:
+            case CModeVal::ResVRate:
                 p->controlMode = Well::ProducerCMode::RESV;
                 p->addProductionControl(Well::ProducerCMode::RESV);
                 break;
-            case 6:
+            case CModeVal::THP:
                 p->controlMode = Well::ProducerCMode::THP;
                 p->addProductionControl(Well::ProducerCMode::THP);
                 break;
-            case 7:
+            case CModeVal::BHP:
                 p->controlMode = Well::ProducerCMode::BHP;
                 p->addProductionControl(Well::ProducerCMode::BHP);
                 break;
@@ -213,26 +219,26 @@ Well::Well(const RestartIO::RstWell& rst_well,
 
         if (this->status == Well::Status::OPEN) {
             switch (rst_well.active_control) {
-            case 1:
-            case 2:
-            case 3:
-            case 4:
+            case CModeVal::Group:
+                i->controlMode = Well::InjectorCMode::GRUP;
+                break;
+            case CModeVal::OilRate: [[fallthrough]];
+            case CModeVal::WatRate: [[fallthrough]];
+            case CModeVal::GasRate: [[fallthrough]];
+            case CModeVal::LiqRate:
                 i->controlMode = Well::InjectorCMode::RATE;
                 i->addInjectionControl(Well::InjectorCMode::RATE);
                 break;
-            case 5:
+            case CModeVal::ResVRate:
                 i->controlMode = Well::InjectorCMode::RESV;
                 i->addInjectionControl(Well::InjectorCMode::RESV);
                 break;
-            case 6:
+            case CModeVal::THP:
                 i->controlMode = Well::InjectorCMode::THP;
                 i->addInjectionControl(Well::InjectorCMode::THP);
                 break;
-            case 7:
+            case CModeVal::BHP:
                 i->controlMode = Well::InjectorCMode::BHP;
-                break;
-            case -1:
-                i->controlMode = Well::InjectorCMode::GRUP;
                 break;
             default:
                 throw std::invalid_argument(
