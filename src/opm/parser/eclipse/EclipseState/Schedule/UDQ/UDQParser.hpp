@@ -82,6 +82,7 @@ private:
         tokens(tokens_)
     {}
 
+    UDQASTNode parse_set();
     UDQASTNode parse_cmp();
     UDQASTNode parse_add();
     UDQASTNode parse_factor();

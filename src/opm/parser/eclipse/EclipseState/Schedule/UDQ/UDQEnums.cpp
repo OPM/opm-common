@@ -54,6 +54,10 @@ namespace {
                                                  UDQTokenType::binary_cmp_lt,
                                                  UDQTokenType::binary_cmp_gt};
 
+    const std::set<UDQTokenType> set_func = {UDQTokenType::binary_op_uadd,
+                                             UDQTokenType::binary_op_umul,
+                                             UDQTokenType::binary_op_umin,
+                                             UDQTokenType::binary_op_umax};
 
     const std::set<UDQTokenType> scalar_func = {UDQTokenType::scalar_func_sum,
                                                 UDQTokenType::scalar_func_avea,
@@ -236,6 +240,10 @@ bool elementalUnaryFunc(UDQTokenType token_type) {
 
 bool cmpFunc(UDQTokenType token_type) {
     return (cmp_func.count(token_type) > 0);
+}
+
+bool setFunc(UDQTokenType token_type) {
+    return (set_func.count(token_type) > 0);
 }
 
 

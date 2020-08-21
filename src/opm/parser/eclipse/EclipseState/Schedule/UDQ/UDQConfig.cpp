@@ -139,6 +139,10 @@ namespace Opm {
         }
     }
 
+    const UDQDefine& UDQConfig::define(const std::string& key) const {
+        return this->m_definitions.at(key);
+    }
+
 
     std::vector<UDQDefine> UDQConfig::definitions() const {
         std::vector<UDQDefine> ret;
@@ -309,6 +313,11 @@ namespace Opm {
 
         for (const auto& def : this->definitions(UDQVarType::GROUP_VAR)) {
             auto ws = def.eval(context);
+            st.update_udq(ws);
+        }
+
+        for (const auto& assign : this->assignments(UDQVarType::FIELD_VAR)) {
+            auto ws = assign.eval();
             st.update_udq(ws);
         }
 
