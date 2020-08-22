@@ -250,6 +250,25 @@ UDQTokenType funcType(const std::string& func_name) {
     return UDQTokenType::error;
 }
 
+UDQTokenType tokenType(const std::string& token) {
+    auto token_type = funcType(token);
+    if (token_type == UDQTokenType::error) {
+        if (token == "(")
+            token_type = UDQTokenType::open_paren;
+        else if (token == ")")
+            token_type = UDQTokenType::close_paren;
+        else {
+            try {
+                std::stod(token);
+                token_type = UDQTokenType::number;
+            } catch(const std::invalid_argument& exc) {
+                token_type = UDQTokenType::ecl_expr;
+            }
+        }
+    }
+    return token_type;
+}
+
 
 UDQVarType coerce(UDQVarType t1, UDQVarType t2) {
     if (t1 == t2)
