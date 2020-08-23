@@ -32,6 +32,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQParams.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunctionTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Util/OrderedMap.hpp>
+#include <opm/parser/eclipse/EclipseState/Util/IOrderSet.hpp>
 
 
 namespace Opm {
@@ -111,6 +112,7 @@ namespace Opm {
         std::unordered_map<std::string, UDQAssign> m_assignments;
         std::unordered_map<std::string, std::string> units;
 
+        IOrderSet<std::string> define_order;
         OrderedMap<std::string, UDQIndex> input_index;
         std::map<UDQVarType, std::size_t> type_count;
     };

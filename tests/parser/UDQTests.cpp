@@ -1749,6 +1749,25 @@ UDQ
 }
 
 
+BOOST_AUTO_TEST_CASE(UDQ_DEFINE_ORDER) {
+    std::string deck_string = R"(
+SCHEDULE
+UDQ
+ASSIGN FU_PAR1 1.0 /
+ASSIGN FU_PAR2 0.0 /
+DEFINE FU_PAR3 FMWPR /
+DEFINE FU_PAR2 FU_PAR3 /
+/
+)";
+    auto schedule = make_schedule(deck_string);
+    const auto& udq = schedule.getUDQConfig(0);
+    SummaryState st(std::chrono::system_clock::now());
+    st.update("FMWPR", 100);
+    udq.eval(st);
+
+    BOOST_CHECK_EQUAL(st.get("FU_PAR2"), 100);
+}
+
 
 BOOST_AUTO_TEST_CASE(UDQ_UADD_PARSER2) {
     std::string deck_string = R"(
@@ -1798,5 +1817,18 @@ DEFINE FU_PAR24 FU_PAR24 UADD (FU_PAR14 + FU_PAR15) /
 DEFINE WUGASRA  750000 - WGLIR '*' /
 /
 )";
-    BOOST_CHECK_NO_THROW( make_schedule(deck_string) );
+    auto schedule = make_schedule(deck_string);
+    const auto& udq = schedule.getUDQConfig(0);
+    SummaryState st(std::chrono::system_clock::now());
+    st.update("FMWPR", 100);
+    st.update("FMWIN", 100);
+    st.update("FMWPA", 100);
+    st.update("FMWIA", 100);
+    st.update("FOPR", 100);
+    st.update_well_var("W1", "WGLIR", 1);
+    st.update_well_var("W2", "WGLIR", 2);
+    st.update_well_var("W3", "WGLIR", 3);
+
+    // The current testcase has some ordering & defined / undefined issues which
+    // are not yet solved; therefor no udq.eval() here.
 }
