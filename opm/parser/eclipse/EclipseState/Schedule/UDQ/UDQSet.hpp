@@ -20,10 +20,11 @@
 #ifndef UDQSET_HPP
 #define UDQSET_HPP
 
+#include <optional>
 #include <stdexcept>
-#include <vector>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
 
@@ -51,9 +52,8 @@ public:
     double value() const;
     const std::string& wgname() const;
 public:
-    double m_value;
+    std::optional<double> m_value;
     std::string m_wgname;
-    bool m_defined = false;
 };
 
 
