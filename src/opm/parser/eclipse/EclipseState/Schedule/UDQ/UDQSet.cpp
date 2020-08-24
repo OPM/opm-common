@@ -34,14 +34,14 @@ UDQScalar::UDQScalar(const std::string& wgname) :
 {}
 
 bool UDQScalar::defined() const {
-    return this->m_defined;
+    return this->m_value.has_value();
 }
 
 double UDQScalar::value() const {
-    if (!this->m_defined)
+    if (!this->m_value.has_value())
         throw std::invalid_argument("UDQSCalar: Value not defined  wgname: " + this->m_wgname);
 
-    return this->m_value;
+    return *this->m_value;
 }
 
 const std::string& UDQScalar::wgname() const {
@@ -49,61 +49,63 @@ const std::string& UDQScalar::wgname() const {
 }
 
 void UDQScalar::assign(double value) {
-    this->m_value = value;
-    this->m_defined = std::isfinite(value);
+    if (std::isfinite(value))
+        this->m_value = value;
+    else
+        this->m_value = std::nullopt;
 }
 
 void UDQScalar::operator-=(const UDQScalar& rhs) {
-    if (this->m_defined && rhs.m_defined)
-        this->assign(this->m_value - rhs.m_value);
+    if (this->defined() && rhs.defined())
+        this->assign(*this->m_value - *rhs.m_value);
     else
-        this->m_defined = false;
+        this->m_value = std::nullopt;
 }
 
 void UDQScalar::operator-=(double rhs) {
-    if (this->m_defined)
-        this->assign(this->m_value - rhs);
+    if (this->defined())
+        this->assign(*this->m_value - rhs);
 }
 
 void UDQScalar::operator/=(const UDQScalar& rhs) {
-    if (this->m_defined && rhs.m_defined)
-        this->assign(this->m_value / rhs.m_value);
+    if (this->defined() && rhs.defined())
+        this->assign(*this->m_value / *rhs.m_value);
     else
-        this->m_defined = false;
+        this->m_value = std::nullopt;
 }
 
 void UDQScalar::operator/=(double rhs) {
-    if (this->m_defined)
-        this->assign(this->m_value / rhs);
+    if (this->defined())
+        this->assign(*this->m_value / rhs);
 }
 
 void UDQScalar::operator+=(const UDQScalar& rhs) {
-    if (this->m_defined && rhs.m_defined)
-        this->assign(this->m_value + rhs.m_value);
+    if (this->defined() && rhs.defined())
+        this->assign(*this->m_value + *rhs.m_value);
     else
-        this->m_defined = false;
+        this->m_value = std::nullopt;
 }
 
 void UDQScalar::operator+=(double rhs) {
-    if (this->m_defined)
-        this->assign(this->m_value + rhs);
+    if (this->defined())
+        this->assign(*this->m_value + rhs);
 }
 
 void UDQScalar::operator*=(const UDQScalar& rhs) {
-    if (this->m_defined && rhs.m_defined)
-        this->assign(this->m_value * rhs.m_value);
+    if (this->defined() && rhs.defined())
+        this->assign(*this->m_value * *rhs.m_value);
     else
-        this->m_defined = false;
+        this->m_value = std::nullopt;
 }
 
 void UDQScalar::operator*=(double rhs) {
-    if (this->m_defined)
-        this->assign(this->m_value * rhs);
+    if (this->defined())
+        this->assign(*this->m_value * rhs);
 }
 
 
 UDQScalar::operator bool() const {
-    return this->m_defined;
+    return this->defined();
 }
 
 
