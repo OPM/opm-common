@@ -58,6 +58,18 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
                          //   Value 0 for regular wells
                          //   Value #segments for MS wells
 
+            MSW_PlossMod  = 81, // Pressure loss model for well segments
+                         //   = 0 for regular wells
+                         //   = 0 for MSW wells and HFA (WELSEGS item 6)
+                         //   = 1 for MSW wells and HF- (WELSEGS item 6)
+                         //   = 2 for MSW wells and H-- (WELSEGS item 6)
+
+            MSW_MulPhaseMod  = 85, // Multiphase flow model for well segments - NOTE DF - model is not implemented yet!!
+                         //   = 0 for regular wells
+                         //   = 1 for MSW wells and HO (WELSEGS item 7)
+                         //   = 2 for MSW wells and DF (WELSEGS item 7)
+
+
             CompOrd = 98, // Well's completion ordering scheme.
         };
 
@@ -97,6 +109,22 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
                            // appearance in simulation model's
                            // COMPDAT keyword.
             };
+
+            enum PLossMod : int {
+                HFA = 0, // Components of pressure loss in MSW model for well (WELSEGS item 6)
+                         // Hydrostatic, Friction, Acceleration
+
+                HF_ = 1, // Hydrostatic, Friction,
+
+                H__ = 2, // Hydrostatic
+            };
+
+            /*enum MPMod : int {
+                HO = 1, // Multiphase flow model for MSW well
+                         // Homogeneous flow
+
+                DF = 2, // Drift flux model
+            };*/
         } // Value
     } // IWell
 
