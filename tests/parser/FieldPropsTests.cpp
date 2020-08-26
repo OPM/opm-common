@@ -1547,3 +1547,28 @@ BOOST_AUTO_TEST_CASE(SatFunc_EndPts_Family_II_TolCrit_Large) {
         BOOST_CHECK_CLOSE(pcg[0], 0.0, 1.0e-10);
     }
 }
+
+BOOST_AUTO_TEST_CASE(GET_FIPXYZ) {
+    std::string deck_string = R"(
+GRID
+
+PORO
+   200*0.15 /
+
+REGIONS
+
+FIPNUM
+  200*1 /
+
+FIPXYZ
+  100*1 100*2 /
+)";
+
+    EclipseGrid grid(10,10, 2);
+    Deck deck = Parser{}.parseString(deck_string);
+    BOOST_CHECK(deck.hasKeyword("FIPXYZ"));
+    FieldPropsManager fpm(deck, Phases{true, true, true}, grid, TableManager());
+    const auto& fipxyz = fpm.get_int("FIPXYZ");
+    BOOST_CHECK_EQUAL(fipxyz[0],   1);
+    BOOST_CHECK_EQUAL(fipxyz[100], 2);
+}
