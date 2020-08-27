@@ -379,6 +379,7 @@ struct fn_args {
     double duration;
     const int sim_step;
     int  num;
+    const std::string fip_region;
     const Opm::SummaryState& st;
     const Opm::data::Wells& wells;
     const Opm::data::GroupValues& groups;
@@ -1640,6 +1641,7 @@ namespace Evaluator {
             const fn_args args {
                 wells, group_name, stepSize, static_cast<int>(sim_step),
                 std::max(0, this->node_.number),
+                this->node_.fip_region,
                 st, simRes.wellSol, simRes.groupSol, input.reg, input.grid,
                 std::move(efac.factors)
             };
@@ -2094,6 +2096,7 @@ namespace Evaluator {
 
         const fn_args args {
             {}, "", 0.0, 0, std::max(0, this->node_->number),
+            this->node_->fip_region,
             this->st_, {}, {}, reg, this->grid_,
             {}
         };
