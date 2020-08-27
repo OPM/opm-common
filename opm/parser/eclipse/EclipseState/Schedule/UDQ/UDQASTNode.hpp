@@ -20,10 +20,11 @@
 #ifndef UDQASTNODE_HPP
 #define UDQASTNODE_HPP
 
-#include <string>
-#include <set>
-#include <vector>
 #include <memory>
+#include <set>
+#include <string>
+#include <variant>
+#include <vector>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQContext.hpp>
@@ -38,10 +39,10 @@ public:
     UDQASTNode();
     explicit UDQASTNode(UDQTokenType type_arg);
     explicit UDQASTNode(double scalar_value);
-    UDQASTNode(UDQTokenType type_arg, const std::string& func_name, const UDQASTNode& arg);
-    UDQASTNode(UDQTokenType type_arg, const std::string& func_name, const UDQASTNode& left, const UDQASTNode& right);
-    UDQASTNode(UDQTokenType type_arg, const std::string& func_name);
-    UDQASTNode(UDQTokenType type_arg, const std::string& string_value, const std::vector<std::string>& selector);
+    UDQASTNode(UDQTokenType type_arg, const std::variant<std::string, double>& value_arg, const UDQASTNode& arg);
+    UDQASTNode(UDQTokenType type_arg, const std::variant<std::string, double>& value_arg, const UDQASTNode& left, const UDQASTNode& right);
+    UDQASTNode(UDQTokenType type_arg, const std::variant<std::string, double>& value_arg);
+    UDQASTNode(UDQTokenType type_arg, const std::variant<std::string, double>& value_arg, const std::vector<std::string>& selector);
 
     static UDQASTNode serializeObject();
 
@@ -63,9 +64,8 @@ public:
     {
         serializer(var_type);
         serializer(type);
-        serializer(string_value);
+        serializer(value);
         serializer(selector);
-        serializer(scalar_value);
         serializer(left);
         serializer(right);
     }
@@ -74,9 +74,8 @@ private:
     UDQTokenType type;
     void func_tokens(std::set<UDQTokenType>& tokens) const;
 
-    std::string string_value;
+    std::variant<std::string, double> value;
     std::vector<std::string> selector;
-    double scalar_value;
     std::shared_ptr<UDQASTNode> left;
     std::shared_ptr<UDQASTNode> right;
 };

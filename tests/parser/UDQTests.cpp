@@ -1681,6 +1681,43 @@ UDQ
     BOOST_CHECK_EQUAL( res1[0].value(), -1.5*fwpr*std::pow(fgpr+fopr, 3) - 2*flpr );
 
     auto res2 = def2.eval(context);
-    BOOST_CHECK_CLOSE( res2[0].value(), -2.5394E-14 * std::pow(fup1 + fup2, 3) + 1.4464E-8*std::pow(fup1 + fup2, 2) + 0.00028875*(fup1 + fup2) + 2.8541, 1e-6);
+    auto right = -2.5394E-14 * std::pow(fup1 + fup2, 3) + 1.4464E-8*std::pow(fup1 + fup2, 2) + 0.00028875*(fup1 + fup2) + 2.8541;
+    BOOST_CHECK_CLOSE( res2[0].value(), right, 1e-6);
+}
+
+BOOST_AUTO_TEST_CASE(UDQ_STARSTAR) {
+    std::string deck_string = R"(
+SCHEDULE
+UDQ
+   DEFINE WUOPR2   WOPR '*' * WOPR '*' /
+   DEFINE WUGASRA  3 - WGLIR '*' /
+/
+)";
+
+    auto schedule = make_schedule(deck_string);
+    const auto& udq = schedule.getUDQConfig(0);
+    UDQParams udqp;
+    auto def0 = udq.definitions()[0];
+    auto def1 = udq.definitions()[1];
+    SummaryState st(std::chrono::system_clock::now());
+    UDQFunctionTable udqft(udqp);
+    UDQContext context(udqft, st);
+    st.update_well_var("W1", "WOPR", 1);
+    st.update_well_var("W2", "WOPR", 2);
+    st.update_well_var("W3", "WOPR", 3);
+
+    st.update_well_var("W1", "WGLIR", 1);
+    st.update_well_var("W2", "WGLIR", 2);
+    st.update_well_var("W3", "WGLIR", 3);
+
+    auto res0 = def0.eval(context);
+    BOOST_CHECK_EQUAL( res0["W1"].value(), 1);
+    BOOST_CHECK_EQUAL( res0["W2"].value(), 4);
+    BOOST_CHECK_EQUAL( res0["W3"].value(), 9);
+
+    auto res1 = def1.eval(context);
+    BOOST_CHECK_EQUAL( res1["W1"].value(), 2);
+    BOOST_CHECK_EQUAL( res1["W2"].value(), 1);
+    BOOST_CHECK_EQUAL( res1["W3"].value(), 0);
 }
 

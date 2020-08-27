@@ -63,25 +63,25 @@ UDQVarType init_type(UDQTokenType token_type)
 }
 
 
-UDQASTNode::UDQASTNode(double scalar_value_arg) :
+UDQASTNode::UDQASTNode(double numeric_value) :
     var_type(init_type(UDQTokenType::number)),
     type(UDQTokenType::number),
-    scalar_value(scalar_value_arg)
+    value(numeric_value)
 {}
 
 
-UDQASTNode::UDQASTNode(UDQTokenType type_arg, const std::string& func_name) :
+UDQASTNode::UDQASTNode(UDQTokenType type_arg, const std::variant<std::string, double>& value_arg) :
     var_type(init_type(type_arg)),
     type(type_arg),
-    string_value(func_name)
+    value(value_arg)
 {
 }
 
 
 UDQASTNode::UDQASTNode(UDQTokenType type_arg,
-                       const std::string& func_name,
+                       const std::variant<std::string, double>& value_arg,
                        const UDQASTNode& left_arg)
-    : UDQASTNode(type_arg, func_name)
+    : UDQASTNode(type_arg, value_arg)
 {
     if (UDQ::scalarFunc(type_arg))
         this->var_type = UDQVarType::SCALAR;
@@ -92,12 +92,12 @@ UDQASTNode::UDQASTNode(UDQTokenType type_arg,
 
 
 UDQASTNode::UDQASTNode(UDQTokenType type_arg,
-                       const std::string& func_name,
+                       const std::variant<std::string, double>& value_arg,
                        const UDQASTNode& left_arg,
                        const UDQASTNode& right_arg) :
     var_type(init_type(type_arg)),
     type(type_arg),
-    string_value(func_name)
+    value(value_arg)
 {
     this->set_left(left_arg);
     this->set_right(right_arg);
@@ -109,9 +109,8 @@ UDQASTNode UDQASTNode::serializeObject()
     UDQASTNode result;
     result.var_type = UDQVarType::REGION_VAR;
     result.type = UDQTokenType::error;
-    result.string_value = "test1";
+    result.value = "test1";
     result.selector = {"test2"};
-    result.scalar_value = 1.0;
     UDQASTNode left = result;
     result.left = std::make_shared<UDQASTNode>(left);
 
@@ -119,20 +118,15 @@ UDQASTNode UDQASTNode::serializeObject()
 }
 
 UDQASTNode::UDQASTNode(UDQTokenType type_arg,
-                       const std::string& string_value_arg,
+                       const std::variant<std::string, double>& value_arg,
                        const std::vector<std::string>& selector_arg) :
     var_type(init_type(type_arg)),
     type(type_arg),
-    string_value(string_value_arg),
+    value(value_arg),
     selector(selector_arg)
 {
-    if (type_arg == UDQTokenType::number)
-        this->scalar_value = std::stod(this->string_value);
-
-    if (type_arg == UDQTokenType::ecl_expr) {
-        this->var_type = UDQ::targetType(this->string_value, this->selector);
-
-    }
+    if (type_arg == UDQTokenType::ecl_expr)
+        this->var_type = UDQ::targetType(std::get<std::string>(this->value), this->selector);
 
     if (this->var_type == UDQVarType::CONNECTION_VAR ||
         this->var_type == UDQVarType::REGION_VAR ||
@@ -147,30 +141,31 @@ UDQASTNode::UDQASTNode(UDQTokenType type_arg,
 
 UDQSet UDQASTNode::eval(UDQVarType target_type, const UDQContext& context) const {
     if (this->type == UDQTokenType::ecl_expr) {
-        auto data_type = UDQ::targetType(this->string_value);
+        const auto& string_value = std::get<std::string>( this->value );
+        auto data_type = UDQ::targetType(string_value);
         if (data_type == UDQVarType::WELL_VAR) {
             const auto& wells = context.wells();
 
             if (this->selector.size() > 0) {
                 const std::string& well_pattern = this->selector[0];
                 if (well_pattern.find("*") == std::string::npos)
-                    return UDQSet::scalar(this->string_value, context.get_well_var(well_pattern, this->string_value));
+                    return UDQSet::scalar(string_value, context.get_well_var(well_pattern, string_value));
                 else {
-                    auto res = UDQSet::wells(this->string_value, wells);
+                    auto res = UDQSet::wells(string_value, wells);
                     int fnmatch_flags = 0;
                     for (const auto& well : wells) {
                         if (fnmatch(well_pattern.c_str(), well.c_str(), fnmatch_flags) == 0) {
-                            if (context.has_well_var(well, this->string_value))
-                                res.assign(well, context.get_well_var(well, this->string_value));
+                            if (context.has_well_var(well, string_value))
+                                res.assign(well, context.get_well_var(well, string_value));
                         }
                     }
                     return res;
                 }
             } else {
-                auto res = UDQSet::wells(this->string_value, wells);
+                auto res = UDQSet::wells(string_value, wells);
                 for (const auto& well : wells) {
-                    if (context.has_well_var(well, this->string_value))
-                        res.assign(well, context.get_well_var(well, this->string_value));
+                    if (context.has_well_var(well, string_value))
+                        res.assign(well, context.get_well_var(well, string_value));
                 }
                 return res;
             }
@@ -180,68 +175,73 @@ UDQSet UDQASTNode::eval(UDQVarType target_type, const UDQContext& context) const
             if (this->selector.size() > 0) {
                 const std::string& group_pattern = this->selector[0];
                 if (group_pattern.find("*") == std::string::npos)
-                    return UDQSet::scalar(this->string_value, context.get_group_var(group_pattern, this->string_value));
+                    return UDQSet::scalar(string_value, context.get_group_var(group_pattern, string_value));
                 else
                     throw std::logic_error("Group names with wildcards is not yet supported");
             } else {
                 const auto& groups = context.groups();
-                auto res = UDQSet::groups(this->string_value, groups);
+                auto res = UDQSet::groups(string_value, groups);
                 for (const auto& group : groups) {
-                    if (context.has_group_var(group, this->string_value))
-                        res.assign(group, context.get_group_var(group, this->string_value));
+                    if (context.has_group_var(group, string_value))
+                        res.assign(group, context.get_group_var(group, string_value));
                 }
                 return res;
             }
         }
 
         if (data_type == UDQVarType::FIELD_VAR)
-            return UDQSet::scalar(this->string_value, context.get(this->string_value));
+            return UDQSet::scalar(string_value, context.get(string_value));
 
         throw std::logic_error("Should not be here: var_type: " + UDQ::typeName(data_type));
     }
 
 
     if (UDQ::scalarFunc(this->type)) {
+        const auto& string_value = std::get<std::string>( this->value );
         const auto& udqft = context.function_table();
-        const UDQScalarFunction& func = dynamic_cast<const UDQScalarFunction&>(udqft.get(this->string_value));
+        const UDQScalarFunction& func = dynamic_cast<const UDQScalarFunction&>(udqft.get(string_value));
         return func.eval( this->left->eval(target_type, context) );
     }
 
 
     if (UDQ::elementalUnaryFunc(this->type)) {
+        const auto& string_value = std::get<std::string>( this->value );
         auto func_arg = this->left->eval(target_type, context);
 
         const auto& udqft = context.function_table();
-        const UDQUnaryElementalFunction& func = dynamic_cast<const UDQUnaryElementalFunction&>(udqft.get(this->string_value));
+        const UDQUnaryElementalFunction& func = dynamic_cast<const UDQUnaryElementalFunction&>(udqft.get(string_value));
         return func.eval(func_arg);
     }
 
     if (UDQ::binaryFunc(this->type)) {
         auto left_arg = this->left->eval(target_type, context);
         auto right_arg = this->right->eval(target_type, context);
+        const auto& string_value = std::get<std::string>( this->value );
 
         const auto& udqft = context.function_table();
-        const UDQBinaryFunction& func = dynamic_cast<const UDQBinaryFunction&>(udqft.get(this->string_value));
+        const UDQBinaryFunction& func = dynamic_cast<const UDQBinaryFunction&>(udqft.get(string_value));
         auto res = func.eval(left_arg, right_arg);
         return res;
     }
 
     if (this->type == UDQTokenType::number) {
+        const std::string dummy_name = "DUMMY";
+        double numeric_value = std::get<double>(this->value);
         switch(target_type) {
         case UDQVarType::WELL_VAR:
-            return UDQSet::wells(this->string_value, context.wells(), this->scalar_value);
+            return UDQSet::wells(dummy_name, context.wells(), numeric_value);
         case UDQVarType::GROUP_VAR:
-            return UDQSet::groups(this->string_value, context.groups(), this->scalar_value);
+            return UDQSet::groups(dummy_name, context.groups(), numeric_value);
         case UDQVarType::SCALAR:
-            return UDQSet::scalar(this->string_value, this->scalar_value);
+            return UDQSet::scalar(dummy_name, numeric_value);
         case UDQVarType::FIELD_VAR:
-            return UDQSet::field(this->string_value, this->scalar_value);
+            return UDQSet::field(dummy_name, numeric_value);
         default:
             throw std::invalid_argument("Unsupported target_type: " + std::to_string(static_cast<int>(target_type)));
         }
     }
 
-    throw std::invalid_argument("Should not be here ... this->type: " + std::to_string(static_cast<int>(this->type)) + " string_value: <" + this->string_value + ">");
+    throw std::invalid_argument("Should not be here ... this->type: " + std::to_string(static_cast<int>(this->type)));
 }
 
 void UDQASTNode::func_tokens(std::set<UDQTokenType>& tokens) const {
@@ -308,8 +308,7 @@ bool UDQASTNode::operator==(const UDQASTNode& data) const {
 
     return type == data.type &&
            var_type == data.var_type &&
-           string_value == data.string_value &&
-           scalar_value == data.scalar_value &&
+           value == data.value &&
            selector == data.selector;
 }
 
