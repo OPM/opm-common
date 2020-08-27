@@ -460,19 +460,25 @@ inline void keywordR2R( SummaryConfig::keyword_list& /* list */,
 }
 
 
-  inline void keywordR( SummaryConfig::keyword_list& list,
-                        const DeckKeyword& keyword,
-                        const TableManager& tables,
-                        const ParseContext& parseContext,
-                        ErrorGuard& errors ) {
+inline void keywordR( SummaryConfig::keyword_list& list,
+                      const DeckKeyword& deck_keyword,
+                      const TableManager& tables,
+                      const ParseContext& parseContext,
+                      ErrorGuard& errors ) {
 
-    if( is_region_to_region(keyword.name()) ) {
-        keywordR2R( list, parseContext, errors, keyword );
+    auto keyword = deck_keyword.name();
+    if( is_region_to_region(keyword) ) {
+        keywordR2R( list, parseContext, errors, deck_keyword );
         return;
+    }
+    std::string region_name = "FIPNUM";
+    if (keyword.size() > 5) {
+        auto dash_pos = keyword.find("_");
+        region_name = "FIP" + keyword.substr(5,3);
     }
 
     const size_t numfip = tables.numFIPRegions( );
-    const auto& item = keyword.getDataRecord().getDataItem();
+    const auto& item = deck_keyword.getDataRecord().getDataItem();
     std::vector<int> regions;
 
     if (item.data_size() > 0)
@@ -482,11 +488,11 @@ inline void keywordR2R( SummaryConfig::keyword_list& /* list */,
             regions.push_back( region );
     }
 
-    // Don't (currently) need parameter type for region keywords
     auto param = SummaryConfigNode {
-        keyword.name(), SummaryConfigNode::Category::Region, keyword.location()
+        keyword, SummaryConfigNode::Category::Region, deck_keyword.location()
     }
-    .isUserDefined( is_udq(keyword.name()) );
+    .fip_region( region_name )
+    .isUserDefined( is_udq(keyword) );
 
     for( const int region : regions ) {
         if (region >= 1 && region <= static_cast<int>(numfip))
@@ -870,6 +876,12 @@ SummaryConfigNode SummaryConfigNode::serializeObject()
     result.userDefined_ = true;
 
     return result;
+}
+
+SummaryConfigNode& SummaryConfigNode::fip_region(const std::string& fip_region)
+{
+    this->fip_region_ = fip_region;
+    return *this;
 }
 
 SummaryConfigNode& SummaryConfigNode::parameterType(const Type type)
