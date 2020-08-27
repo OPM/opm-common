@@ -173,7 +173,7 @@ namespace {
              const std::string& name) -> void
         {
             for (const auto& vector : vectors) {
-                entities.push_back({kwpref + vector.kw, cat, vector.type, name, Opm::EclIO::SummaryNode::default_number });
+                entities.push_back({kwpref + vector.kw, cat, vector.type, name, Opm::EclIO::SummaryNode::default_number, "" });
             }
         };
 
@@ -183,7 +183,7 @@ namespace {
              const std::string& wgname) -> void
         {
             for (const auto &extra_vector : extra_vectors) {
-                entities.push_back({ extra_vector.kw, category, extra_vector.type, wgname, Opm::EclIO::SummaryNode::default_number });
+                entities.push_back({ extra_vector.kw, category, extra_vector.type, wgname, Opm::EclIO::SummaryNode::default_number, "" });
             }
         };
 
@@ -224,7 +224,7 @@ namespace {
                 const int          segNumber) -> void
         {
             for (const auto &requiredVector : requiredVectors) {
-                ret.push_back({requiredVector.first, category, requiredVector.second, well, segNumber});
+                ret.push_back({requiredVector.first, category, requiredVector.second, well, segNumber, ""});
             }
         };
 

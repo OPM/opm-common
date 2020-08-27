@@ -55,6 +55,7 @@ struct SummaryNode {
     Type        type;
     std::string wgname;
     int         number;
+    std::string fip_region;
 
     constexpr static int default_number { std::numeric_limits<int>::min() };
 
