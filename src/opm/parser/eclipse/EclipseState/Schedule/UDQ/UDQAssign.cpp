@@ -74,6 +74,15 @@ UDQSet UDQAssign::eval(const std::vector<std::string>& wells) const {
     throw std::invalid_argument("Not yet implemented");
 }
 
+UDQSet UDQAssign::eval() const {
+    if (this->m_var_type == UDQVarType::FIELD_VAR || this->m_var_type == UDQVarType::SCALAR ) {
+        const auto& record = this->records.back();
+        return UDQSet::scalar(this->m_keyword, record.value);
+    }
+    throw std::invalid_argument("Not yet implemented");
+}
+
+
 bool UDQAssign::operator==(const UDQAssign& data) const {
     return this->keyword() == data.keyword() &&
            this->var_type() == data.var_type() &&

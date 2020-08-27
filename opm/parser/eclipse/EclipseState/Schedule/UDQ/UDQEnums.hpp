@@ -176,6 +176,7 @@ namespace UDQ {
     bool elementalUnaryFunc(UDQTokenType token_type);
     bool scalarFunc(UDQTokenType token_type);
     bool cmpFunc(UDQTokenType token_type);
+    bool setFunc(UDQTokenType token_type);
 
     std::string typeName(UDQVarType var_type);
     UDAKeyword keyword(UDAControl control);

@@ -65,6 +65,7 @@ public:
     UDQVarType var_type() const;
     void add_record(const std::vector<std::string>& selector, double value);
     UDQSet eval(const std::vector<std::string>& wells) const;
+    UDQSet eval() const;
 
     bool operator==(const UDQAssign& data) const;
 

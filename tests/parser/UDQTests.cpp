@@ -1721,3 +1721,114 @@ UDQ
     BOOST_CHECK_EQUAL( res1["W3"].value(), 0);
 }
 
+
+BOOST_AUTO_TEST_CASE(UDQ_UADD_PARSER) {
+    std::string deck_string = R"(
+SCHEDULE
+UDQ
+   ASSIGN FU_PAR1 10.0 /
+   ASSIGN FU_PAR2 2.0 /
+   ASSIGN FU_PAR3 3.0 /
+   DEFINE FU_UADD FU_PAR1 UADD FU_PAR2 /
+   DEFINE FU_UMUL FU_PAR1 UMUL FU_PAR2 + FU_PAR3 /
+   DEFINE FU_UMIN FU_PAR1 UMIN FU_PAR2 + FU_PAR3 /
+/
+)";
+
+    auto schedule = make_schedule(deck_string);
+    const auto& udq = schedule.getUDQConfig(0);
+    SummaryState st(std::chrono::system_clock::now());
+    udq.eval(st);
+
+    BOOST_CHECK_EQUAL( st.get("FU_UADD"), 12);   // 10 + 2
+
+    // The Uxxx binary set functions have absolutely lowest priority; i.e. the
+    // FU_PAR2 + FU_PAR3 expression is evaluated *before* the UMUL and UMIN operations.
+    BOOST_CHECK_EQUAL( st.get("FU_UMUL"), 50);   // 10 * (2 + 3)
+    BOOST_CHECK_EQUAL( st.get("FU_UMIN"), 5);    // min(10, 2+3)
+}
+
+
+BOOST_AUTO_TEST_CASE(UDQ_DEFINE_ORDER) {
+    std::string deck_string = R"(
+SCHEDULE
+UDQ
+ASSIGN FU_PAR1 1.0 /
+ASSIGN FU_PAR2 0.0 /
+DEFINE FU_PAR3 FMWPR /
+DEFINE FU_PAR2 FU_PAR3 /
+/
+)";
+    auto schedule = make_schedule(deck_string);
+    const auto& udq = schedule.getUDQConfig(0);
+    SummaryState st(std::chrono::system_clock::now());
+    st.update("FMWPR", 100);
+    udq.eval(st);
+
+    BOOST_CHECK_EQUAL(st.get("FU_PAR2"), 100);
+}
+
+
+BOOST_AUTO_TEST_CASE(UDQ_UADD_PARSER2) {
+    std::string deck_string = R"(
+SCHEDULE
+UDQ
+ASSIGN FU_PAR1 1.0 / -- xxxxxxxxxxxxxxxxxxxxxx
+ASSIGN FU_PAR2 0.0 /
+ASSIGN FU_PAR3 0.0 /
+ASSIGN FU_PAR4 0.0 /
+ASSIGN FU_PAR5 0.0 /
+-- xxxxx xxxx
+DEFINE FU_PAR6  FMWPR /
+-- xxxxxxxxxxxxxxxxxxxx
+DEFINE FU_PAR7 FMWIN /
+DEFINE FU_PAR8 FMWPA /
+DEFINE FU_PAR9 FMWIA /
+-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+DEFINE FU_PAR10 (FU_PAR6 - FU_PAR2) + (FU_PAR8 - FU_PAR4) /
+DEFINE FU_PAR11 (FU_PAR7 - FU_PAR3) + (FU_PAR9 - FU_PAR5) /
+DEFINE FU_PAR12 FU_PAR10 > 0 /
+DEFINE FU_PAR13 FU_PAR11 > 0 /
+DEFINE FU_PAR14 FU_PAR12 * FU_PAR10  /
+DEFINE FU_PAR15 FU_PAR13 * FU_PAR11  /
+DEFINE FU_PAR2 FU_PAR6 /
+DEFINE FU_PAR3 FU_PAR7 /
+DEFINE FU_PAR4 FU_PAR8 /
+DEFINE FU_PAR5 FU_PAR9 /
+-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+ASSIGN FU_PAR16 0.08 /
+ASSIGN FU_PAR17 100.0 /
+ASSIGN FU_PAR18 6.0 /
+ASSIGN FU_PAR19 0.0 /
+-- xxxxxxxxxxxxx
+DEFINE FU_PAR19 FU_PAR19 + TIMESTEP /
+ASSIGN FU_PAR20 800.0 /
+ASSIGN FU_PAR21 0.0 /
+-- xxxxxxxxxxxxxxxxx
+DEFINE FU_PAR21 FU_PAR21 UADD FU_PAR20 * (FU_PAR14 + FU_PAR15) / ((1.0 + 0.08 ) ^ (FU_PAR19 /365)) /
+-- xxxxxxxxxxxxxxxxxxxx
+ASSIGN FU_PAR22 0.0 /
+DEFINE FU_PAR22 FU_PAR22 + FOPR * TIMESTEP * 1E-06 * 6.29 * FU_PAR17 * FU_PAR18 / ((1.0 + 0.08 ) ^ (FU_PAR19 /365)) /
+DEFINE FU_PAR23 FU_PAR22 - FU_PAR21 /
+-- xxxxxxxxxxxxxxxxxxxxxxxx
+ASSIGN FU_PAR24 0.9 /
+DEFINE FU_PAR24 FU_PAR24 UADD (FU_PAR14 + FU_PAR15) /
+-- xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+DEFINE WUGASRA  750000 - WGLIR '*' /
+/
+)";
+    auto schedule = make_schedule(deck_string);
+    const auto& udq = schedule.getUDQConfig(0);
+    SummaryState st(std::chrono::system_clock::now());
+    st.update("FMWPR", 100);
+    st.update("FMWIN", 100);
+    st.update("FMWPA", 100);
+    st.update("FMWIA", 100);
+    st.update("FOPR", 100);
+    st.update_well_var("W1", "WGLIR", 1);
+    st.update_well_var("W2", "WGLIR", 2);
+    st.update_well_var("W3", "WGLIR", 3);
+
+    // The current testcase has some ordering & defined / undefined issues which
+    // are not yet solved; therefor no udq.eval() here.
+}

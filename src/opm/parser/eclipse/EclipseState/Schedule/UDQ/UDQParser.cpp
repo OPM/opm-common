@@ -83,7 +83,7 @@ UDQASTNode UDQParser::parse_factor() {
 
     if (current.type == UDQTokenType::open_paren) {
         this->next();
-        auto inner_expr = this->parse_cmp();
+        auto inner_expr = this->parse_set();
 
         current = this->current();
         if (current.type != UDQTokenType::close_paren)
@@ -98,7 +98,7 @@ UDQASTNode UDQParser::parse_factor() {
         auto next = this->next();
         if (next.type == UDQTokenType::open_paren) {
             this->next();
-            auto arg_expr = this->parse_cmp();
+            auto arg_expr = this->parse_set();
 
             current = this->current();
             if (current.type != UDQTokenType::close_paren)
@@ -175,7 +175,7 @@ UDQASTNode UDQParser::parse_add() {
                 this->next();
                 if (this->empty())
                     return UDQASTNode( UDQTokenType::error );
-            } else if (current_token.type == UDQTokenType::close_paren || UDQ::cmpFunc(current_token.type))
+            } else if (current_token.type == UDQTokenType::close_paren || UDQ::cmpFunc(current_token.type) || UDQ::setFunc(current_token.type))
                 break;
             else
                 return UDQASTNode( UDQTokenType::error );
@@ -225,6 +225,26 @@ UDQASTNode UDQParser::parse_cmp() {
     return left;
 }
 
+
+UDQASTNode UDQParser::parse_set() {
+    auto left = this->parse_cmp();
+    if (this->empty())
+        return left;
+
+    auto current = this->current();
+    if (UDQ::setFunc(current.type)) {
+        auto func_node = current;
+        this->next();
+        if (this->empty())
+            return UDQASTNode(UDQTokenType::error);
+
+        auto right = this->parse_set();
+        return UDQASTNode(current.type, current.value, left, right);
+    }
+    return left;
+}
+
+
 namespace {
     void dump_tokens(const std::string& target_var, const std::vector<UDQToken>& tokens) {
         std::cout << target_var << " = ";
@@ -267,7 +287,7 @@ UDQASTNode UDQParser::parse(const UDQParams& udq_params, UDQVarType target_type,
 {
     UDQParser parser(udq_params, tokens);
     parser.next();
-    auto tree = parser.parse_cmp();
+    auto tree = parser.parse_set();
 
     if (!parser.empty()) {
         size_t index = parser.current_pos;
