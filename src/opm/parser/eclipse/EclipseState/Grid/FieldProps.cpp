@@ -93,8 +93,8 @@ static const std::map<std::string, int> int_scalar_init = {{"SATNUM", 1},
                                                            {"ACTNUM", 1}};
 
 
-/*
-bool isFipxxx< int >(const std::string& keyword) {
+
+bool isFipxxx(const std::string& keyword) {
     // FIPxxxx can be any keyword, e.g. FIPREG or FIPXYZ that has the pattern "FIP.+"
     // However, it can not be FIPOWG as that is an actual keyword.
     if (keyword.size() < 4 || keyword == "FIPOWG") {
@@ -102,7 +102,7 @@ bool isFipxxx< int >(const std::string& keyword) {
     }
     return keyword[0] == 'F' && keyword[1] == 'I' && keyword[2] == 'P';
 }
-*/
+
 
 namespace GRID {
 static const std::set<std::string> double_keywords = {"MULTPV", "NTG", "PORO", "PERMX", "PERMY", "PERMZ", "THCONR", "MULTX", "MULTX-", "MULTY-", "MULTY", "MULTZ", "MULTZ-",
@@ -558,7 +558,7 @@ bool FieldProps::supported<int>(const std::string& keyword) {
     if (keywords::SCHEDULE::int_keywords.count(keyword) != 0)
         return true;
 
-    return false;
+    return keywords::isFipxxx(keyword);
 }
 
 template <>
@@ -1101,7 +1101,7 @@ void FieldProps::scanREGIONSSection(const REGIONSSection& regions_section) {
 
     for (const auto& keyword : regions_section) {
         const std::string& name = keyword.name();
-        if (keywords::REGIONS::int_keywords.count(name) == 1) {
+        if (keywords::REGIONS::int_keywords.count(name) == 1 || keywords::isFipxxx(name)) {
             this->handle_int_keyword(keyword, box);
             continue;
         }
