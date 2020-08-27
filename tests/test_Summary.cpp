@@ -1479,8 +1479,6 @@ BOOST_AUTO_TEST_CASE( require3D )
     BOOST_CHECK( summaryConfig.require3DField( "OIPG" ));
     BOOST_CHECK( summaryConfig.require3DField( "GIPL" ));
     BOOST_CHECK( summaryConfig.require3DField( "GIPG" ));
-
-    BOOST_CHECK( summaryConfig.requireFIPNUM( ));
 }
 
 
