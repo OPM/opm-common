@@ -178,6 +178,7 @@ namespace Opm {
               is required to calculate the summary variables.
             */
             bool require3DField( const std::string& keyword) const;
+            std::set<std::string> fip_regions() const;
 
             bool operator==(const SummaryConfig& data) const;
 

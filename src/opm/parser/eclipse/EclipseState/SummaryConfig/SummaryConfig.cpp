@@ -1161,6 +1161,18 @@ bool SummaryConfig::require3DField( const std::string& keyword ) const {
 }
 
 
+
+std::set<std::string> SummaryConfig::fip_regions() const {
+    std::set<std::string> reg_set;
+    for (const auto& node : this->keywords) {
+        const auto& fip_region = node.fip_region();
+        if (fip_region.size() > 0)
+            reg_set.insert( fip_region );
+    }
+    return reg_set;
+}
+
+
 bool SummaryConfig::operator==(const Opm::SummaryConfig& data) const {
     return this->keywords == data.keywords &&
            this->short_keywords == data.short_keywords &&

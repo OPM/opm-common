@@ -717,7 +717,7 @@ inline quantity duration( const fn_args& args ) {
 template<rt phase , bool injection>
 quantity region_rate( const fn_args& args ) {
     double sum = 0;
-    const auto& well_connections = args.regionCache.connections( args.num );
+    const auto& well_connections = args.regionCache.connections( args.fip_region, args.num );
 
     for (const auto& pair : well_connections) {
 
@@ -1438,7 +1438,7 @@ inline std::vector<Opm::Well> find_wells( const Opm::Schedule& schedule,
 
         const auto region = node.number;
 
-        for ( const auto& connection : regionCache.connections( region ) ){
+        for ( const auto& connection : regionCache.connections( node.fip_region, region ) ){
             const auto& w_name = connection.first;
             if (schedule.hasWell(w_name, sim_step)) {
                 const auto& well = schedule.getWell( w_name, sim_step );
@@ -2393,7 +2393,7 @@ SummaryImplementation(const EclipseState&  es,
                       const Schedule&      sched,
                       const std::string&   basename)
     : grid_          (std::cref(grid))
-    , regCache_      (es.globalFieldProps().get_int("FIPNUM"), grid, sched)
+    , regCache_      (sumcfg.fip_regions(), es.globalFieldProps(), grid, sched)
     , deferredSMSpec_(makeDeferredSMSpecCreation(es, grid, sched))
     , rset_          (makeResultSet(es.cfg().io(), basename))
     , fmt_           { es.cfg().io().getFMTOUT() }

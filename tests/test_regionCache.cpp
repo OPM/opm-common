@@ -46,14 +46,14 @@ BOOST_AUTO_TEST_CASE(create) {
     EclipseState es(deck);
     const EclipseGrid& grid = es.getInputGrid();
     Schedule schedule( deck, es, python);
-    out::RegionCache rc(es.fieldProps().get_int("FIPNUM"), grid, schedule);
+    out::RegionCache rc({"FIPNUM"}, es.fieldProps(), grid, schedule);
     {
-        const auto& empty = rc.connections( 4 );
+        const auto& empty = rc.connections( "FIPNUM", 4 );
         BOOST_CHECK_EQUAL( empty.size() , 0 );
     }
 
     {
-        const auto& top_layer = rc.connections( 1 );
+        const auto& top_layer = rc.connections(  "FIPNUM", 1 );
         BOOST_CHECK_EQUAL( top_layer.size() , 3 );
         {
             auto pair = top_layer[0];
