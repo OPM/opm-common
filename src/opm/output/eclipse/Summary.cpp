@@ -2657,8 +2657,6 @@ void Summary::eval(SummaryState&                  st,
                        well_solution, group_solution, single_values,
                        region_values, block_values, st);
 
-    const auto& udq = schedule.getUDQConfig(sim_step);
-    udq.eval(st);
     st.update_elapsed(duration);
 }
 

@@ -30,6 +30,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionContext.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/State.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
@@ -117,6 +118,8 @@ void msim::run_step(const Schedule& schedule, Action::State& action_state, Summa
                           well_data,
                           group_data,
                           {});
+
+        schedule.getUDQConfig( report_step ).eval(st);
 
         this->output(action_state,
                      st,
