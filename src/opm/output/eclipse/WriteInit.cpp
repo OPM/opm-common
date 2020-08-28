@@ -411,7 +411,7 @@ namespace {
             {
                 units.from_si(prop.unit, value);
 
-                for (auto n = dflt.size(), i = decltype(n){}; i < n; ++i) {
+                for (auto n = dflt.size(), i = 0*n; i < n; ++i) {
                     if (dflt[i]) {
                         // Element defaulted.  Output sentinel value
                         // (-1.0e+20) to signify defaulted element.
@@ -426,7 +426,7 @@ namespace {
             });
         }
         else {
-            writeCellPropertiesValuesOnly(propList, fp, 
+            writeCellPropertiesValuesOnly(propList, fp,
                 [&units, &initFile](const CellProperty&   prop,
                                     std::vector<double>&& value)
             {
