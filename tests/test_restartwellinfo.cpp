@@ -37,6 +37,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellProductionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/State.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQState.hpp>
 
 #include <opm/io/eclipse/EclFile.hpp>
 
@@ -208,6 +209,7 @@ BOOST_AUTO_TEST_CASE(EclipseWriteRestartWellInfo) {
     int countTimeStep = schedule.getTimeMap().numTimesteps();
     Opm::SummaryState st(std::chrono::system_clock::from_time_t(schedule.getStartTime()));
     Opm::Action::State action_state;
+    Opm::UDQState udq_state(123);
 
     Opm::data::Solution solution;
     solution.insert( "PRESSURE", Opm::UnitSystem::measure::pressure , std::vector< double >( num_cells, 1 ) , Opm::data::TargetType::RESTART_SOLUTION);
@@ -220,6 +222,7 @@ BOOST_AUTO_TEST_CASE(EclipseWriteRestartWellInfo) {
 
         eclipseWriter.writeTimeStep( action_state,
                                      st,
+                                     udq_state,
                                      timestep,
                                      false,
                                      schedule.seconds(timestep),

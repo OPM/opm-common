@@ -36,6 +36,7 @@
 #include <opm/parser/eclipse/Units/Units.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/State.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQState.hpp>
 
 #include <opm/io/eclipse/EclFile.hpp>
 #include <opm/io/eclipse/EGrid.hpp>
@@ -323,10 +324,12 @@ BOOST_AUTO_TEST_CASE(EclipseIOIntegration) {
             sol.insert("KRG", measure::identity , std::vector<double>(3*3*3 , i*10), TargetType::RESTART_AUXILIARY);
 
             Action::State action_state;
+            UDQState udq_state(1);
             RestartValue restart_value(sol, wells, groups);
             auto first_step = ecl_util_make_date( 10 + i, 11, 2008 );
             eclWriter.writeTimeStep( action_state,
                                      st,
+                                     udq_state,
                                      i,
                                      false,
                                      first_step - start_time,

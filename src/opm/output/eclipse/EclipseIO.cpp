@@ -189,6 +189,7 @@ void EclipseIO::writeInitial( data::Solution simProps, std::map<std::string, std
 // implementation of the writeTimeStep method
 void EclipseIO::writeTimeStep(const Action::State& action_state,
                               const SummaryState& st,
+                              const UDQState& /* udq_state */,
                               int report_step,
                               bool  isSubstep,
                               double secs_elapsed,

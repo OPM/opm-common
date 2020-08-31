@@ -42,6 +42,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/State.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQState.hpp>
 
 #include <opm/io/eclipse/OutputStream.hpp>
 #include <opm/io/eclipse/EclIOdata.hpp>
@@ -384,7 +385,7 @@ void init_st(SummaryState& st) {
     st.update("FLPR", 100);
 }
 
-RestartValue first_sim(const Setup& setup, Action::State& action_state, SummaryState& st, bool write_double) {
+RestartValue first_sim(const Setup& setup, Action::State& action_state, SummaryState& st, UDQState& udq_state, bool write_double) {
     EclipseIO eclWriter( setup.es, setup.grid, setup.schedule, setup.summary_config);
     auto num_cells = setup.grid.getNumActive( );
     int report_step = 1;
@@ -401,6 +402,7 @@ RestartValue first_sim(const Setup& setup, Action::State& action_state, SummaryS
     udq.eval(st);
     eclWriter.writeTimeStep( action_state,
                              st,
+                             udq_state,
                              report_step,
                              false,
                              std::difftime(first_step, start_time),
@@ -451,7 +453,8 @@ BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData) {
     Setup base_setup("BASE_SIM.DATA");
     SummaryState st(std::chrono::system_clock::now());
     Action::State action_state;
-    auto state1 = first_sim( base_setup , action_state, st, false );
+    UDQState udq_state(19);
+    auto state1 = first_sim( base_setup , action_state, st, udq_state, false );
 
     Setup restart_setup("RESTART_SIM.DATA");
     auto state2 = second_sim( restart_setup , action_state, st , keys );
@@ -586,8 +589,9 @@ BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData_double) {
     Setup base_setup("BASE_SIM.DATA");
     SummaryState st(std::chrono::system_clock::now());
     Action::State action_state;
+    UDQState udq_state(1);
 
-    auto state1 = first_sim( base_setup , action_state, st, true);
+    auto state1 = first_sim( base_setup , action_state, st, udq_state, true);
     Setup restart_setup("RESTART_SIM.DATA");
 
     auto state2 = second_sim( restart_setup, action_state, st, solution_keys );
@@ -1001,7 +1005,8 @@ BOOST_AUTO_TEST_CASE(UDQ_RESTART) {
     SummaryState st1(std::chrono::system_clock::now());
     SummaryState st2(std::chrono::system_clock::now());
     Action::State action_state;
-    auto state1 = first_sim( base_setup , action_state, st1, false );
+    UDQState udq_state(1);
+    auto state1 = first_sim( base_setup , action_state, st1, udq_state, false );
 
     Setup restart_setup("UDQ_RESTART.DATA");
     auto state2 = second_sim( restart_setup , action_state, st2 , keys );

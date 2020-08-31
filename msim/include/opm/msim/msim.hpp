@@ -25,6 +25,7 @@ class ParseContext;
 class Parser;
 class Python;
 class SummaryState;
+class UDQState;
 
 namespace Action {
 class State;
@@ -46,9 +47,9 @@ public:
     void post_step(Schedule& schedule, Action::State& action_state, SummaryState& st, data::Solution& sol, data::Wells& well_data, data::GroupValues& group_data, size_t report_step);
 private:
 
-    void run_step(const Schedule& schedule, Action::State& action_state, SummaryState& st, data::Solution& sol, data::Wells& well_data, data::GroupValues& group_data, size_t report_step, EclipseIO& io) const;
-    void run_step(const Schedule& schedule, Action::State& action_state, SummaryState& st, data::Solution& sol, data::Wells& well_data, data::GroupValues& group_data, size_t report_step, double dt, EclipseIO& io) const;
-    void output(Action::State& action_state, SummaryState& st, size_t report_step, bool substep, double seconds_elapsed, const data::Solution& sol, const data::Wells& well_data, const data::GroupValues& group_data, EclipseIO& io) const;
+    void run_step(const Schedule& schedule, Action::State& action_state, SummaryState& st, UDQState& udq_state, data::Solution& sol, data::Wells& well_data, data::GroupValues& group_data, size_t report_step, EclipseIO& io) const;
+    void run_step(const Schedule& schedule, Action::State& action_state, SummaryState& st, UDQState& udq_state, data::Solution& sol, data::Wells& well_data, data::GroupValues& group_data, size_t report_step, double dt, EclipseIO& io) const;
+    void output(Action::State& action_state, SummaryState& st, const UDQState& udq_state, size_t report_step, bool substep, double seconds_elapsed, const data::Solution& sol, const data::Wells& well_data, const data::GroupValues& group_data, EclipseIO& io) const;
     void simulate(const Schedule& schedule, const SummaryState& st, data::Solution& sol, data::Wells& well_data, data::GroupValues& group_data, size_t report_step, double seconds_elapsed, double time_step) const;
 
     EclipseState state;
