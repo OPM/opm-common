@@ -228,7 +228,7 @@ enum index : std::vector<int>::size_type {
   ih_205       =      205       ,              //       0
   IHOURZ       =      VI::intehead::IHOURZ,
   IMINTS       =      VI::intehead::IMINTS,
-  ih_208       =      208       ,              //       0
+  WSEGITER_I2  =      VI::intehead::IMINTS,
   ih_209       =      209       ,              //       0
   ih_210       =      210       ,              //       0
   ih_211       =      211       ,              //       0
