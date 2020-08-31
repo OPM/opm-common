@@ -71,13 +71,13 @@ bool UDQState::has_group_var(const std::string& group, const std::string& key) c
 }
 
 
-void UDQState::add(const UDQSet& result) {
-    if (!is_udq(result.name()))
-        throw std::logic_error("Key is not a UDQ variable:" + result.name());
+void UDQState::add(const std::string& udq_key, const UDQSet& result) {
+    if (!is_udq(udq_key))
+        throw std::logic_error("Key is not a UDQ variable:" + udq_key);
 
-    auto res_iter = this->values.find(result.name());
+    auto res_iter = this->values.find(udq_key);
     if (res_iter == this->values.end())
-        this->values.insert( std::make_pair( result.name(), result ));
+        this->values.insert( std::make_pair( udq_key, result ));
     else
         res_iter->second = result;
 }
@@ -88,7 +88,7 @@ double UDQState::get(const std::string& key) const {
 
     const auto& result = this->values.at(key)[0];
     if (result.defined())
-        return result.value();
+        return result.get();
     else
         return this->undefined_value;
 }
@@ -107,7 +107,7 @@ double UDQState::get_wg_var(const std::string& wgname, const std::string& key, U
 
     const auto& result = result_set[wgname];
     if (result.defined())
-        return result.value();
+        return result.get();
     else
         return this->undefined_value;
 }

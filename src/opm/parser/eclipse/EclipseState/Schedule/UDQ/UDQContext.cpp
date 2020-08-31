@@ -20,13 +20,30 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQContext.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQState.hpp>
 
 
 namespace Opm {
 
-    UDQContext::UDQContext(const UDQFunctionTable& udqft_arg, const SummaryState& summary_state_arg) :
+namespace {
+
+bool is_udq(const std::string& key) {
+    if (key.size() < 2)
+        return false;
+
+    if (key[1] != 'U')
+        return false;
+
+    return true;
+}
+
+}
+
+
+    UDQContext::UDQContext(const UDQFunctionTable& udqft_arg, SummaryState& summary_state_arg, UDQState& udq_state_arg) :
         udqft(udqft_arg),
-        summary_state(summary_state_arg)
+        summary_state(summary_state_arg),
+        udq_state(udq_state_arg)
     {
         for (const auto& pair : TimeMap::eclipseMonthIndices())
             this->add(pair.first, pair.second);
@@ -46,33 +63,56 @@ namespace Opm {
         this->add("TIMESTEP", 0.0);
     }
 
+    void UDQContext::update(const std::string& keyword, const UDQSet& udq_result) {
+        this->udq_state.add(keyword, udq_result);
+    }
 
     void UDQContext::add(const std::string& key, double value) {
         this->values[key] = value;
     }
 
-    double UDQContext::get(const std::string& key) const {
+    std::optional<double> UDQContext::get(const std::string& key) const {
+        if (is_udq(key)) {
+            if (this->udq_state.has(key))
+                return this->udq_state.get(key);
+
+            return std::nullopt;
+        }
+
         const auto& pair_ptr = this->values.find(key);
-        if (pair_ptr == this->values.end())
+        if (pair_ptr != this->values.end())
+            return pair_ptr->second;
+
+        if (this->summary_state.has(key))
             return this->summary_state.get(key);
 
-        return pair_ptr->second;
+        return std::nullopt;
     }
 
-    double UDQContext::get_well_var(const std::string& well, const std::string& var) const {
-        return this->summary_state.get_well_var(well, var);
+    std::optional<double> UDQContext::get_well_var(const std::string& well, const std::string& var) const {
+        if (is_udq(var)) {
+            if (this->udq_state.has_well_var(well, var))
+                return this->udq_state.get_well_var(well, var);
+
+            return std::nullopt;
+        }
+        if (this->summary_state.has_well_var(well, var))
+            return this->summary_state.get_well_var(well, var);
+
+        return std::nullopt;
     }
 
-    bool UDQContext::has_well_var(const std::string& well, const std::string& var) const {
-        return this->summary_state.has_well_var(well, var);
-    }
+    std::optional<double> UDQContext::get_group_var(const std::string& group, const std::string& var) const {
+        if (is_udq(var)) {
+            if (this->udq_state.has_group_var(group, var))
+                return this->udq_state.get_group_var(group, var);
 
-    double UDQContext::get_group_var(const std::string& group, const std::string& var) const {
-        return this->summary_state.get_group_var(group, var);
-    }
+            return std::nullopt;
+        }
+        if (this->summary_state.has_group_var(group, var))
+            return this->summary_state.get_group_var(group, var);
 
-    bool UDQContext::has_group_var(const std::string& group, const std::string& var) const {
-        return this->summary_state.has_group_var(group, var);
+        return std::nullopt;
     }
 
     std::vector<std::string> UDQContext::wells() const {

@@ -21,6 +21,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQInput.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQActive.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQParams.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionX.hpp>
 
@@ -105,6 +106,7 @@ BOOST_AUTO_TEST_CASE (Declared_Actionx_data)
     Opm::EclipseState es = simCase.es;
     Opm::Runspec rspec   = es.runspec();
     Opm::SummaryState st = sum_state_TEST1();
+    Opm::UDQState udq_state(1);
     Opm::Action::State action_state;
     Opm::Schedule     sched = simCase.sched;
     Opm::EclipseGrid  grid = simCase.grid;
@@ -135,7 +137,7 @@ BOOST_AUTO_TEST_CASE (Declared_Actionx_data)
 
     const auto udqDims = Opm::RestartIO::Helpers::createUdqDims(sched, rptStep, ih);
     auto  udqData = Opm::RestartIO::Helpers::AggregateUDQData(udqDims);
-    udqData.captureDeclaredUDQData(sched, rptStep, st, ih);
+    udqData.captureDeclaredUDQData(sched, rptStep, udq_state, ih);
 
     const auto actDims = Opm::RestartIO::Helpers::createActionxDims(rspec, sched, rptStep);
     auto  actionxData = Opm::RestartIO::Helpers::AggregateActionxData(actDims);

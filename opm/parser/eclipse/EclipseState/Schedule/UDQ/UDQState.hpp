@@ -39,7 +39,7 @@ public:
     double get(const std::string& key) const;
     double get_group_var(const std::string& well, const std::string& var) const;
     double get_well_var(const std::string& well, const std::string& var) const;
-    void add(const UDQSet& result);
+    void add(const std::string& udq_key, const UDQSet& result);
 
     std::vector<char> serialize() const;
     void deserialize(const std::vector<char>& buffer);

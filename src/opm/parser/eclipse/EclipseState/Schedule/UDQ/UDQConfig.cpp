@@ -289,37 +289,45 @@ namespace Opm {
                this->type_count == data.type_count;
     }
 
-    void UDQConfig::eval(SummaryState& st) const {
+    void UDQConfig::eval(SummaryState& st, UDQState& udq_state) const {
         const auto& func_table = this->function_table();
-        UDQContext context(func_table, st);
+        auto undefined_value = this->params().undefinedValue();
+        UDQContext context(func_table, st, udq_state);
+
         for (const auto& assign : this->assignments(UDQVarType::WELL_VAR)) {
             auto ws = assign.eval(st.wells());
-            st.update_udq(ws);
+            context.update(assign.keyword(), ws);
+            st.update_udq(ws, undefined_value);
         }
 
         for (const auto& def : this->definitions(UDQVarType::WELL_VAR)) {
             auto ws = def.eval(context);
-            st.update_udq(ws);
+            context.update(def.keyword(), ws);
+            st.update_udq(ws, undefined_value);
         }
 
         for (const auto& assign : this->assignments(UDQVarType::GROUP_VAR)) {
             auto ws = assign.eval(st.groups());
-            st.update_udq(ws);
+            context.update(assign.keyword(), ws);
+            st.update_udq(ws, undefined_value);
         }
 
         for (const auto& def : this->definitions(UDQVarType::GROUP_VAR)) {
             auto ws = def.eval(context);
-            st.update_udq(ws);
+            context.update(def.keyword(), ws);
+            st.update_udq(ws, undefined_value);
         }
 
         for (const auto& assign : this->assignments(UDQVarType::FIELD_VAR)) {
             auto ws = assign.eval();
-            st.update_udq(ws);
+            context.update(assign.keyword(), ws);
+            st.update_udq(ws, undefined_value);
         }
 
         for (const auto& def : this->definitions(UDQVarType::FIELD_VAR)) {
             auto field_udq = def.eval(context);
-            st.update_udq(field_udq);
+            context.update(def.keyword(), field_udq);
+            st.update_udq(field_udq, undefined_value);
         }
     }
 }

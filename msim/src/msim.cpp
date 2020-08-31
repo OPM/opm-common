@@ -121,7 +121,7 @@ void msim::run_step(const Schedule& schedule, Action::State& action_state, Summa
                           group_data,
                           {});
 
-        schedule.getUDQConfig( report_step ).eval(st);
+        schedule.getUDQConfig( report_step ).eval(st, udq_state);
 
         this->output(action_state,
                      st,
