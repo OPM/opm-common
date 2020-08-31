@@ -36,6 +36,7 @@ Copyright 2018 Statoil ASA.
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunction.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunctionTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQActive.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 
 using namespace Opm;
@@ -57,6 +58,43 @@ Schedule make_schedule(const std::string& input) {
     }
 }
 
+BOOST_AUTO_TEST_CASE(UDQSTATE) {
+    double undefined_value = 1234;
+    UDQState st(undefined_value);
+    BOOST_CHECK(!st.has("FUXX"));
+    BOOST_CHECK(!st.has_well_var("OP1", "WUXX"));
+    BOOST_CHECK(!st.has_group_var("G1", "GUXX"));
+
+    // Try to get from symbol which is not UDQ -> logic_error
+    BOOST_CHECK_THROW(st.get("FOPR"), std::logic_error);
+
+    // Try to get from a UDQ which has not registered -> out_of_range
+    BOOST_CHECK_THROW(st.get("FUPR"), std::out_of_range);
+
+    auto fxpr = UDQSet::scalar("FXPR", 100);
+    BOOST_CHECK_THROW(st.add(fxpr), std::logic_error);
+
+    BOOST_CHECK_THROW(st.get_well_var("OP1", "WUPR"), std::out_of_range);
+
+    auto fupr = UDQSet::scalar("FUPR", 100);
+    st.add(fupr);
+
+    // This is not a well quantity
+    BOOST_CHECK_THROW(st.get_well_var("OP1", "FUPR"), std::logic_error);
+    BOOST_CHECK_EQUAL(100, st.get("FUPR"));
+
+
+    auto wupr = UDQSet::wells("WUPR", {"P1", "P2"});
+    wupr.assign("P1", 75);
+    st.add(wupr);
+
+    BOOST_CHECK(st.has_well_var("P1", "WUPR"));
+    // We have a well P2 - but we have not assigned a value to it!
+    BOOST_CHECK(!st.has_well_var("P2", "WUPR"));
+
+    BOOST_CHECK_EQUAL(st.get_well_var("P1", "WUPR"), 75);
+    BOOST_CHECK_EQUAL(st.get_well_var("P2", "WUPR"), undefined_value);
+}
 
 BOOST_AUTO_TEST_CASE(TYPE_COERCION) {
     BOOST_CHECK( UDQVarType::SCALAR == UDQ::coerce(UDQVarType::SCALAR, UDQVarType::SCALAR) );
@@ -218,6 +256,9 @@ BOOST_AUTO_TEST_CASE(UDQWellSetNANTest) {
     ws.assign(1,std::numeric_limits<double>::quiet_NaN());
     ws.assign(3,std::numeric_limits<double>::quiet_NaN());
     BOOST_CHECK_EQUAL(ws.defined_size(), 2);
+
+    BOOST_CHECK(ws.has("P1"));
+    BOOST_CHECK(ws.has("P2"));
 }
 
 

@@ -76,6 +76,7 @@ public:
     void assign(std::size_t index, double value);
     void assign(const std::string& wgname, double value);
 
+    bool has(const std::string& name) const;
     std::size_t size() const;
     void operator+=(const UDQSet& rhs);
     void operator+=(double rhs);

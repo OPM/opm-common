@@ -189,6 +189,13 @@ UDQSet UDQSet::groups(const std::string& name, const std::vector<std::string>& g
 }
 
 
+bool UDQSet::has(const std::string& name) const {
+    for (const auto& res : this->values) {
+        if (res.wgname() == name)
+            return true;
+    }
+    return false;
+}
 
 std::size_t UDQSet::size() const {
     return this->values.size();
