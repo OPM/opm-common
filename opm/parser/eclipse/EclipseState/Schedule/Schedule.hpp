@@ -460,6 +460,7 @@ namespace Opm
         void handleDRVDTR( const DeckKeyword& keyword, size_t currentStep);
         void handleVAPPARS( const DeckKeyword& keyword, size_t currentStep);
         void handleWECON( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
+        void handleWSEGITER( const DeckKeyword& keyword, size_t currentStep);
         void handleWHISTCTL(const DeckKeyword& keyword, std::size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
         void handleMESSAGES(const DeckKeyword& keyword, size_t currentStep);
         void handleRPTSCHED(const DeckKeyword& keyword, size_t currentStep);

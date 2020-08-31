@@ -327,5 +327,7 @@ BOOST_AUTO_TEST_CASE(TuningTest) {
       BOOST_CHECK(event.hasEvent(ScheduleEvents::TUNING_CHANGE, timestep));
       BOOST_CHECK_EQUAL(true, tuning.TMAXWC_has_value);
       BOOST_CHECK_CLOSE(tuning.TMAXWC, 10.0 * Metric::Time, diff);
+
+      BOOST_CHECK_EQUAL(tuning.MXWSIT, ParserKeywords::WSEGITER::MAX_WELL_ITERATIONS::defaultValue);
   }
 }
