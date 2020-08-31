@@ -2788,10 +2788,6 @@ void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t 
         return this->m_tuning.get( timeStep );
     }
 
-    const DynamicState<Tuning>& Schedule::getTuning() const {
-        return this->m_tuning;
-    }
-
     const Deck& Schedule::getModifierDeck(size_t timeStep) const {
         return m_modifierDeck.iget( timeStep );
     }
