@@ -94,7 +94,14 @@ BOOST_AUTO_TEST_CASE(UDQSTATE) {
 
     BOOST_CHECK_EQUAL(st.get_well_var("P1", "WUPR"), 75);
     BOOST_CHECK_EQUAL(st.get_well_var("P2", "WUPR"), undefined_value);
+
+
+    const auto buffer = st.serialize();
+    UDQState st2(1067);
+    st2.deserialize( buffer );
+    BOOST_CHECK(st == st2);
 }
+
 
 BOOST_AUTO_TEST_CASE(TYPE_COERCION) {
     BOOST_CHECK( UDQVarType::SCALAR == UDQ::coerce(UDQVarType::SCALAR, UDQVarType::SCALAR) );
@@ -247,6 +254,9 @@ BOOST_AUTO_TEST_CASE(UDQFieldSetTest) {
 BOOST_AUTO_TEST_CASE(UDQWellSetNANTest) {
     std::vector<std::string> wells = {"P1", "P2", "I1", "I2"};
     UDQSet ws = UDQSet::wells("NAME", wells);
+    UDQSet ws2 = UDQSet::wells("NAME", wells);
+
+    BOOST_CHECK(ws == ws2);
 
     for (std::size_t i = 0; i < 4; i++)
         ws.assign(i, i*1.0);
