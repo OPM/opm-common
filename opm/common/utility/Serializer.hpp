@@ -73,7 +73,7 @@ public:
             auto value = this->get<T>();
             values.insert( std::make_pair(key,value) );
         }
-        return std::move(values);
+        return values;
     }
 
 
