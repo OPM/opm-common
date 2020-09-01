@@ -69,6 +69,8 @@ namespace Opm {
         explicit TableManager( const Deck& deck );
         TableManager() = default;
 
+        TableManager(const TableManager& t2) { *this = t2; }
+
         static TableManager serializeObject();
 
         TableManager& operator=(const TableManager& data);

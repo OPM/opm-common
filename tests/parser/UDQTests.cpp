@@ -1869,7 +1869,6 @@ DEFINE WUGASRA  750000 - WGLIR '*' /
 /
 )";
     auto schedule = make_schedule(deck_string);
-    const auto& udq = schedule.getUDQConfig(0);
     SummaryState st(std::chrono::system_clock::now());
     st.update("FMWPR", 100);
     st.update("FMWIN", 100);

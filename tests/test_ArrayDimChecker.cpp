@@ -20,7 +20,11 @@
 #define BOOST_TEST_MODULE Array_Dimension_Checker
 
 #include <boost/test/unit_test.hpp>
+#if BOOST_VERSION / 100000 == 1 && BOOST_VERSION / 100 % 1000 < 71
 #include <boost/test/output_test_stream.hpp>
+#else
+#include <boost/test/tools/output_test_stream.hpp>
+#endif
 
 #include <opm/parser/eclipse/EclipseState/Schedule/ArrayDimChecker.hpp>
 

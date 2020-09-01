@@ -34,6 +34,8 @@ namespace Opm {
         TableColumn();
         explicit TableColumn( const ColumnSchema& schema );
 
+        TableColumn(const TableColumn& c2) { *this = c2; }
+
         static TableColumn serializeObject();
 
         size_t size( ) const;
