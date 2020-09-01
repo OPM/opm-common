@@ -45,6 +45,7 @@ class EclipseState;
 class Schedule;
 class SummaryConfig;
 class SummaryState;
+class UDQState;
 namespace Action { class State; }
 /*!
  * \brief A class to write the reservoir state and the well state of a
@@ -176,6 +177,7 @@ public:
 
     void writeTimeStep( const Action::State& action_state,
                         const SummaryState& st,
+                        const UDQState& udq_state,
                         int report_step,
                         bool isSubstep,
                         double seconds_elapsed,

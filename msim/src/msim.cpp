@@ -30,6 +30,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionContext.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/State.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
@@ -46,6 +47,7 @@ void msim::run(Schedule& schedule, EclipseIO& io, bool report_only) {
     const double week = 7 * 86400;
     data::Solution sol;
     SummaryState st(std::chrono::system_clock::from_time_t(schedule.getStartTime()));
+    UDQState udq_state(schedule.getUDQConfig(0).params().undefinedValue());
     Action::State action_state;
     Python python;
 
@@ -54,10 +56,10 @@ void msim::run(Schedule& schedule, EclipseIO& io, bool report_only) {
         data::Wells well_data;
         data::GroupValues group_data;
         if (report_only)
-            run_step(schedule, action_state, st, sol, well_data, group_data, report_step, io);
+            run_step(schedule, action_state, st, udq_state, sol, well_data, group_data, report_step, io);
         else {
             double time_step = std::min(week, 0.5*schedule.stepLength(report_step - 1));
-            run_step(schedule, action_state, st, sol, well_data, group_data, report_step, time_step, io);
+            run_step(schedule, action_state, st, udq_state, sol, well_data, group_data, report_step, time_step, io);
         }
         post_step(schedule, action_state, st, sol, well_data, group_data, report_step);
         const auto& exit_status = schedule.exitStatus();
@@ -91,12 +93,12 @@ void msim::post_step(Schedule& schedule, Action::State& action_state, SummarySta
 
 
 
-void msim::run_step(const Schedule& schedule, Action::State& action_state, SummaryState& st, data::Solution& sol, data::Wells& well_data, data::GroupValues& group_data, size_t report_step, EclipseIO& io) const {
-    this->run_step(schedule, action_state, st, sol, well_data, group_data, report_step, schedule.stepLength(report_step - 1), io);
+void msim::run_step(const Schedule& schedule, Action::State& action_state, SummaryState& st, UDQState& udq_state, data::Solution& sol, data::Wells& well_data, data::GroupValues& group_data, size_t report_step, EclipseIO& io) const {
+    this->run_step(schedule, action_state, st, udq_state, sol, well_data, group_data, report_step, schedule.stepLength(report_step - 1), io);
 }
 
 
-void msim::run_step(const Schedule& schedule, Action::State& action_state, SummaryState& st, data::Solution& sol, data::Wells& well_data, data::GroupValues& group_data, size_t report_step, double dt, EclipseIO& io) const {
+void msim::run_step(const Schedule& schedule, Action::State& action_state, SummaryState& st, UDQState& udq_state, data::Solution& sol, data::Wells& well_data, data::GroupValues& group_data, size_t report_step, double dt, EclipseIO& io) const {
     double start_time = schedule.seconds(report_step - 1);
     double end_time = schedule.seconds(report_step);
     double seconds_elapsed = start_time;
@@ -123,6 +125,7 @@ void msim::run_step(const Schedule& schedule, Action::State& action_state, Summa
 
         this->output(action_state,
                      st,
+                     udq_state,
                      report_step,
                      (seconds_elapsed < end_time),
                      seconds_elapsed,
@@ -135,10 +138,11 @@ void msim::run_step(const Schedule& schedule, Action::State& action_state, Summa
 
 
 
-void msim::output(Action::State& action_state, SummaryState& st, size_t report_step, bool substep, double seconds_elapsed, const data::Solution& sol, const data::Wells& well_data, const data::GroupValues& group_data, EclipseIO& io) const {
+void msim::output(Action::State& action_state, SummaryState& st, const UDQState& udq_state, size_t report_step, bool substep, double seconds_elapsed, const data::Solution& sol, const data::Wells& well_data, const data::GroupValues& group_data, EclipseIO& io) const {
     RestartValue value(sol, well_data, group_data);
     io.writeTimeStep(action_state,
                      st,
+                     udq_state,
                      report_step,
                      substep,
                      seconds_elapsed,
