@@ -22,6 +22,7 @@
 
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQSet.hpp>
 
@@ -40,6 +41,9 @@ public:
     double get_well_var(const std::string& well, const std::string& var) const;
     void add(const UDQSet& result);
 
+    std::vector<char> serialize() const;
+    void deserialize(const std::vector<char>& buffer);
+    bool operator==(const UDQState& other) const;
 private:
     double get_wg_var(const std::string& well, const std::string& key, UDQVarType var_type) const;
     double undefined_value;

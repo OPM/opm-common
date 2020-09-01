@@ -24,6 +24,29 @@
 
 namespace Opm {
 
+UDQScalar UDQScalar::deserialize(Serializer& ser) {
+    std::string wgname = ser.get<std::string>();
+    UDQScalar scalar(wgname);
+
+    bool has_value = ser.get<bool>();
+    if (has_value) {
+        double value = ser.get<double>();
+        scalar.assign(value);
+    }
+
+    return scalar;
+}
+
+void UDQScalar::serialize(Serializer& ser) const {
+    ser.put<std::string>(this->m_wgname);
+    if (this->m_value.has_value()) {
+        ser.put<bool>(true);
+        ser.put<double>(*this->m_value);
+    } else
+        ser.put<bool>(false);
+}
+
+
 UDQScalar::UDQScalar(double value)
 {
     this->assign(value);
@@ -106,6 +129,11 @@ void UDQScalar::operator*=(double rhs) {
 
 UDQScalar::operator bool() const {
     return this->defined();
+}
+
+bool UDQScalar::operator==(const UDQScalar& other) const {
+    return this->m_value == other.m_value &&
+           this->m_wgname == other.m_wgname;
 }
 
 
@@ -510,5 +538,36 @@ UDQSet operator/(double lhs, const UDQSet&rhs) {
     }
     return result;
 }
+
+bool UDQSet::operator==(const UDQSet& other) const {
+    return this->m_name == other.m_name &&
+           this->m_var_type == other.m_var_type &&
+           this->values == other.values;
+}
+
+UDQSet UDQSet::deserialize(Serializer& ser)
+{
+    auto name = ser.get<std::string>();
+    auto var_type = ser.get<UDQVarType>();
+    auto size = ser.get<std::size_t>();
+
+    UDQSet udq_set(name, var_type, size);
+    for (std::size_t index = 0; index < size; index++) {
+        auto value = UDQScalar::deserialize(ser);
+        udq_set.values[index] = std::move(value);
+    }
+    return udq_set;
+}
+
+
+void UDQSet::serialize(Serializer& ser) const {
+    ser.put<std::string>(this->m_name);
+    ser.put<UDQVarType>(this->m_var_type);
+    ser.put<std::size_t>(this->values.size());
+
+    for (const auto& value : this->values)
+        value.serialize(ser);
+}
+
 
 }

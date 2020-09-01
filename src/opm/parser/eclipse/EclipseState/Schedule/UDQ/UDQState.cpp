@@ -20,6 +20,7 @@
 
 #include <stdexcept>
 
+#include <opm/common/utility/Serializer.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQState.hpp>
 
 namespace Opm {
@@ -119,6 +120,38 @@ double UDQState::get_group_var(const std::string& group, const std::string& key)
     return this->get_wg_var(group, key, UDQVarType::GROUP_VAR);
 }
 
+bool UDQState::operator==(const UDQState& other) const {
+    return this->undefined_value == other.undefined_value &&
+           this->values == other.values;
+}
+
+std::vector<char> UDQState::serialize() const {
+    Serializer ser;
+    ser.put(this->undefined_value);
+    ser.put(this->values.size());
+    for (const auto& set_pair : this->values) {
+        ser.put( set_pair.first );
+        set_pair.second.serialize( ser );
+    }
+    return std::move(ser.buffer);
+}
+
+
+void UDQState::deserialize(const std::vector<char>& buffer) {
+    Serializer ser(buffer);
+    this->undefined_value = ser.get<double>();
+    this->values.clear();
+
+    {
+        std::size_t size = ser.get<std::size_t>();
+        for (std::size_t index = 0; index < size; index++) {
+            auto key = ser.get<std::string>();
+            auto udq_set = UDQSet::deserialize(ser);
+
+            this->values.insert( std::make_pair(key, udq_set) );
+        }
+    }
+}
 }
 
 
