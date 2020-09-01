@@ -22,10 +22,12 @@
 
 #include <opm/parser/eclipse/Units/Units.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/T.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/W.hpp>
 
 namespace Opm {
     struct Tuning {
         using TuningKw = ParserKeywords::TUNING;
+        using WsegIterKW = ParserKeywords::WSEGITER;
 
         static Tuning serializeObject()
         {
@@ -114,6 +116,19 @@ namespace Opm {
         double XXXDPR = 0.0 * Metric::Pressure;
         bool XXXDPR_has_value = false;
 
+        /*
+          In addition to the values set in the TUNING keyword this Tuning
+          implementation also contains the result of the WSEGITER keyword, which
+          is special tuning parameters to be applied to the multisegment well
+          model. Observe that the maximum number of well iterations - MXWSIT -
+          is specified by both the TUNING keyword and the WSEGITER keyword, but
+          with different defaults.
+        */
+        int WSEG_MAX_RESTART = WsegIterKW::MAX_TIMES_REDUCED::defaultValue;
+        double WSEG_REDUCTION_FACTOR = WsegIterKW::REDUCTION_FACTOR::defaultValue;
+        double WSEG_INCREASE_FACTOR = WsegIterKW::INCREASING_FACTOR::defaultValue;
+
+
         bool operator==(const Tuning& data) const {
             return TSINIT == data.TSINIT &&
                    TSMAXZ == data.TSMAXZ &&
@@ -150,7 +165,10 @@ namespace Opm {
                    DDSLIM == data.DDSLIM &&
                    TRGDPR == data.TRGDPR &&
                    XXXDPR == data.XXXDPR &&
-                   XXXDPR_has_value == data.XXXDPR_has_value;
+                   XXXDPR_has_value == data.XXXDPR_has_value &&
+                   WSEG_MAX_RESTART == data.WSEG_MAX_RESTART &&
+                   WSEG_REDUCTION_FACTOR == data.WSEG_REDUCTION_FACTOR &&
+                   WSEG_INCREASE_FACTOR == data.WSEG_INCREASE_FACTOR;
         }
 
         bool operator !=(const Tuning& data) const {
@@ -198,6 +216,10 @@ namespace Opm {
             serializer(TRGDPR);
             serializer(XXXDPR);
             serializer(XXXDPR_has_value);
+
+            serializer(WSEG_MAX_RESTART);
+            serializer(WSEG_REDUCTION_FACTOR);
+            serializer(WSEG_INCREASE_FACTOR);
         }
     };
 

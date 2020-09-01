@@ -248,7 +248,6 @@ namespace Opm
         const Group& getGroup(const std::string& groupName, size_t timeStep) const;
 
         const Tuning& getTuning(size_t timeStep) const;
-        const DynamicState<Tuning>& getTuning() const;
         const MessageLimits& getMessageLimits() const;
         void invalidNamePattern (const std::string& namePattern, std::size_t report_step, const ParseContext& parseContext, ErrorGuard& errors, const DeckKeyword& keyword) const;
         const GuideRateConfig& guideRateConfig(size_t timeStep) const;
@@ -461,6 +460,7 @@ namespace Opm
         void handleDRVDTR( const DeckKeyword& keyword, size_t currentStep);
         void handleVAPPARS( const DeckKeyword& keyword, size_t currentStep);
         void handleWECON( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
+        void handleWSEGITER( const DeckKeyword& keyword, size_t currentStep);
         void handleWHISTCTL(const DeckKeyword& keyword, std::size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
         void handleMESSAGES(const DeckKeyword& keyword, size_t currentStep);
         void handleRPTSCHED(const DeckKeyword& keyword, size_t currentStep);

@@ -440,6 +440,9 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
         else if (keyword.name() == "TUNING")
             handleTUNING(keyword, currentStep);
 
+        else if (keyword.name() == "WSEGITER")
+            handleWSEGITER(keyword, currentStep);
+
         else if (keyword.name() == "WRFT")
             rftProperties.push_back( std::make_pair( &keyword , currentStep ));
 
@@ -1928,10 +1931,24 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
     }
 
 
+    void Schedule::handleWSEGITER( const DeckKeyword& keyword, size_t currentStep) {
+        using WI = ParserKeywords::WSEGITER;
+        Tuning tuning(m_tuning.get(currentStep));
+        {
+            const auto& record = keyword.getRecord(0);
+            tuning.MXWSIT = record.getItem<WI::MAX_WELL_ITERATIONS>().get<int>(0);
+            tuning.WSEG_MAX_RESTART = record.getItem<WI::MAX_TIMES_REDUCED>().get<int>(0);
+            tuning.WSEG_REDUCTION_FACTOR = record.getItem<WI::REDUCTION_FACTOR>().get<double>(0);
+            tuning.WSEG_INCREASE_FACTOR = record.getItem<WI::INCREASING_FACTOR>().get<double>(0);
+        }
+        m_tuning.update(currentStep, tuning);
+        m_events.addEvent( ScheduleEvents::TUNING_CHANGE , currentStep);
+    }
+
+
     void Schedule::handleTUNING( const DeckKeyword& keyword, size_t currentStep) {
-
-        int numrecords = keyword.size();
-
+        using TU = ParserKeywords::TUNING;
+        auto numrecords = keyword.size();
         Tuning tuning(m_tuning.get(currentStep));
         if (numrecords > 0) {
             const auto& record1 = keyword.getRecord(0);
@@ -1994,10 +2011,11 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
                 tuning.XXXDPR_has_value = true;
                 tuning.XXXDPR = XXXDPRdeckItem.getSIDouble(0);
             }
-        }
+        } else
+            tuning.MXWSIT = TU::MXWSIT::defaultValue;
+
         m_tuning.update(currentStep, tuning);
         m_events.addEvent( ScheduleEvents::TUNING_CHANGE , currentStep);
-
     }
 
 
@@ -2786,10 +2804,6 @@ void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t 
 
     const Tuning& Schedule::getTuning(size_t timeStep) const {
         return this->m_tuning.get( timeStep );
-    }
-
-    const DynamicState<Tuning>& Schedule::getTuning() const {
-        return this->m_tuning;
     }
 
     const Deck& Schedule::getModifierDeck(size_t timeStep) const {
