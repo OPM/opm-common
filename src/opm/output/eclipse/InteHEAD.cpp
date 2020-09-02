@@ -228,7 +228,7 @@ enum index : std::vector<int>::size_type {
   ih_205       =      205       ,              //       0
   IHOURZ       =      VI::intehead::IHOURZ,
   IMINTS       =      VI::intehead::IMINTS,
-  WSEGITER_I2  =      VI::intehead::IMINTS,
+  WSEGITER_I2  =      VI::intehead::WSEGITR_IT2,
   ih_209       =      209       ,              //       0
   ih_210       =      210       ,              //       0
   ih_211       =      211       ,              //       0
@@ -608,6 +608,7 @@ Opm::RestartIO::InteHEAD::tuningParam(const TuningPar& tunpar)
     this->data_[LITMIN] = tunpar.litmin;
     this->data_[MXWSIT] = tunpar.mxwsit;
     this->data_[MXWPIT] = tunpar.mxwpit;
+    this->data_[WSEGITER_I2] = tunpar.wseg_mx_rst;
 
     return *this;
 }

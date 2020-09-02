@@ -59,6 +59,8 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
         TrgFIP  = 101,
         TrgSFT  = 102,
         GRpar_damp = 144,     // Guiderate parameter damping factor
+        WsegRedFac = 145,     // WSEGITER parameter (item 3) Reduction factor (F_R)
+        WsegIncFac = 146,     // WSEGITER parameter (item 4) Increas factor (F_I)
         UdqPar_2 = 212,		// UDQPARAM item number 2 (Permitted range (+/-) of user-defined quantities)
         UdqPar_3 = 213,		// UDQPARAM item number 3 (Value given to undefined elements when outputting data)
         UdqPar_4 = 214,		// UDQPARAM item number 4 (fractional equality tolerance used in ==, <= etc. functions)

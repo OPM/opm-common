@@ -86,6 +86,7 @@ namespace RestartIO {
             int litmin;
             int mxwsit;
             int mxwpit;
+            int wseg_mx_rst;
         };
 	
 	struct Group {
