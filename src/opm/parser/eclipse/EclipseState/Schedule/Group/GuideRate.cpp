@@ -252,14 +252,19 @@ void GuideRate::assign_grvalue(const std::string&    wgname,
                                const GuideRateModel& model,
                                GuideRateValue&&      value)
 {
-    using std::swap;
-
     auto& v = this->values[wgname];
     if (v == nullptr) {
         v = std::make_unique<GRValState>();
     }
 
-    swap(v->prev, v->curr);
+    if (value.sim_time > v->curr.sim_time) {
+        // We've advanced in time since we previously calculated/stored this
+        // guiderate value.  Push current value into the past and prepare to
+        // capture new value.
+        using std::swap;
+
+        swap(v->prev, v->curr);
+    }
 
     v->curr = std::move(value);
 
