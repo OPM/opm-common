@@ -48,10 +48,15 @@ public:
     }
 
     template <typename T>
+    void put(const T* ) {
+        throw std::logic_error("Serializer can not pack pointers");
+    }
+
+    template <typename T>
     T get() {
         T value;
-        std::memcpy(&value, &this->buffer[pos], sizeof(T));
-        this->pos += sizeof(T);
+        std::memcpy(&value, &this->buffer[this->read_pos], sizeof(T));
+        this->read_pos += sizeof(T);
         return value;
     }
 
@@ -86,20 +91,26 @@ private:
         std::memcpy(&this->buffer[write_pos], ptr, value_size);
     }
 
-    std::size_t pos = 0;
+    std::size_t read_pos = 0;
 };
 
 template <>
 void inline Serializer::put(const std::string& value) {
-    this->put<std::string::size_type>(value.size());
+    this->put(value.size());
+    if (value.empty())
+        return;
+
     this->pack(value.c_str(), value.size());
 }
 
 template<>
 std::string inline Serializer::get<std::string>() {
     std::string::size_type length = this->get<std::string::size_type>();
-    this->pos += length;
-    return {std::addressof(this->buffer[this->pos - length]), length};
+    if (length == 0)
+        return std::string{};
+
+    this->read_pos += length;
+    return {std::addressof(this->buffer[this->read_pos - length]), length};
 }
 
 }

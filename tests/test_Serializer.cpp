@@ -48,3 +48,12 @@ BOOST_AUTO_TEST_CASE(SERIALIZER) {
     BOOST_CHECK(m2 == m);
 }
 
+BOOST_AUTO_TEST_CASE(EMPTY_STRING) {
+    Opm::Serializer ser;
+    ser.put(std::string{});
+    BOOST_CHECK_THROW( ser.put(""), std::logic_error);
+
+    Opm::Serializer ser2(ser.buffer);
+    BOOST_CHECK_EQUAL(ser2.get<std::string>(), "");
+}
+
