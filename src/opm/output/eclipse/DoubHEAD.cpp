@@ -426,8 +426,6 @@ Opm::RestartIO::DoubHEAD::DoubHEAD()
     this->data_[Index::dh_141] = 1.013;
     this->data_[Index::dh_142] = 0.0;
     this->data_[Index::dh_143] = 1.0;
-    //this->data_[Index::wseg_red_fac] = 0.3;
-    //this->data_[Index::wseg_inc_fac] = 2.0;
     this->data_[Index::dh_147] = 0.0;
     this->data_[Index::dh_148] = 0.0;
     this->data_[Index::dh_149] = 0.0;
