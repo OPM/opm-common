@@ -154,30 +154,24 @@ namespace {
         }
     }
 
-    void SummaryState::update_udq(const UDQSet& udq_set) {
+
+    void SummaryState::update_udq(const UDQSet& udq_set, double undefined_value) {
         auto var_type = udq_set.var_type();
         if (var_type == UDQVarType::WELL_VAR) {
             const std::vector<std::string> wells = this->wells();
             for (const auto& well : wells) {
-                const auto& udq_value = udq_set[well];
-                if (udq_value)
-                    this->update_well_var(well, udq_set.name(), udq_value.value());
-                else
-                    this->erase_well_var(well, udq_set.name());
+                const auto& udq_value = udq_set[well].value();
+                this->update_well_var(well, udq_set.name(), udq_value.value_or(undefined_value));
             }
         } else if (var_type == UDQVarType::GROUP_VAR) {
             const std::vector<std::string> groups = this->groups();
             for (const auto& group : groups) {
-                const auto& udq_value = udq_set[group];
-                if (udq_value)
-                    this->update_group_var(group, udq_set.name(), udq_value.value());
-                else
-                    this->erase_group_var(group, udq_set.name());
+                const auto& udq_value = udq_set[group].value();
+                this->update_group_var(group, udq_set.name(), udq_value.value_or(undefined_value));
             }
         } else {
-            const auto& udq_var = udq_set[0];
-            if (udq_var)
-                this->update(udq_set.name(), udq_var.value());
+            const auto& udq_var = udq_set[0].value();
+            this->update(udq_set.name(), udq_var.value_or(undefined_value));
         }
     }
 

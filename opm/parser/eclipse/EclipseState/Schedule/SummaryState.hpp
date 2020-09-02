@@ -88,7 +88,7 @@ public:
     void update_well_var(const std::string& well, const std::string& var, double value);
     void update_group_var(const std::string& group, const std::string& var, double value);
     void update_elapsed(double delta);
-    void update_udq(const UDQSet& udq_set);
+    void update_udq(const UDQSet& udq_set, double undefined_value);
 
     double get(const std::string&) const;
     double get(const std::string&, double) const;

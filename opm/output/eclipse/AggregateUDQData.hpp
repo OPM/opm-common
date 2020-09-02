@@ -41,6 +41,7 @@ namespace Opm {
     class Schedule;
     class UDQInput;
     class UDQActive;
+    class UDQState;
 } // Opm
 
 namespace Opm { namespace RestartIO { namespace Helpers {
@@ -57,7 +58,7 @@ public:
 
 void captureDeclaredUDQData(const Opm::Schedule&                 sched,
                        const std::size_t                    simStep,
-                       const Opm::SummaryState&             st,
+                       const Opm::UDQState&                 udqState,
                        const std::vector<int>&              inteHead);
 
     const std::vector<int>& getIUDQ() const

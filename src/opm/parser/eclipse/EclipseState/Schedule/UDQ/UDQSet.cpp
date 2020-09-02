@@ -60,7 +60,11 @@ bool UDQScalar::defined() const {
     return this->m_value.has_value();
 }
 
-double UDQScalar::value() const {
+const std::optional<double>& UDQScalar::value() const {
+    return this->m_value;
+}
+
+double UDQScalar::get() const {
     if (!this->m_value.has_value())
         throw std::invalid_argument("UDQSCalar: Value not defined  wgname: " + this->m_wgname);
 
@@ -69,6 +73,16 @@ double UDQScalar::value() const {
 
 const std::string& UDQScalar::wgname() const {
     return this->m_wgname;
+}
+
+void UDQScalar::assign(const std::optional<double>& value) {
+    if (value.has_value()) {
+        if (std::isfinite(*value))
+            this->m_value = value;
+        else
+            this->m_value = std::nullopt;
+    } else
+        this->m_value = std::nullopt;
 }
 
 void UDQScalar::assign(double value) {
@@ -180,6 +194,13 @@ UDQSet UDQSet::scalar(const std::string& name, double scalar_value)
     return us;
 }
 
+UDQSet UDQSet::scalar(const std::string& name, const std::optional<double>& scalar_value)
+{
+    UDQSet us(name, UDQVarType::SCALAR);
+    us.assign(scalar_value);
+    return us;
+}
+
 UDQSet UDQSet::empty(const std::string& name)
 {
     return UDQSet(name, 0);
@@ -243,7 +264,25 @@ void UDQSet::assign(const std::string& wgname, double value) {
         throw std::out_of_range("No well/group matching: " + wgname);
 }
 
+void UDQSet::assign(const std::string& wgname, const std::optional<double>& value) {
+    bool assigned = false;
+    for (auto& udq_value : this->values) {
+        int flags = 0;
+        if (fnmatch(wgname.c_str(), udq_value.wgname().c_str(), flags) == 0) {
+            udq_value.assign( value );
+            assigned = true;
+        }
+    }
+    if (!assigned)
+        throw std::out_of_range("No well/group matching: " + wgname);
+}
+
 void UDQSet::assign(double value) {
+    for (auto& v : this->values)
+        v.assign(value);
+}
+
+void UDQSet::assign(const std::optional<double>& value) {
     for (auto& v : this->values)
         v.assign(value);
 }
@@ -321,7 +360,7 @@ std::vector<double> UDQSet::defined_values() const {
     std::vector<double> dv;
     for (const auto& v : this->values) {
         if (v)
-            dv.push_back(v.value());
+            dv.push_back(v.get());
     }
     return dv;
 }
@@ -429,7 +468,7 @@ UDQScalar operator/(const UDQScalar&lhs, double rhs) {
 UDQScalar operator/(double lhs, const UDQScalar& rhs) {
     UDQScalar result = rhs;
     if (result)
-        result.assign(lhs / result.value());
+        result.assign(lhs / result.get());
 
     return result;
 }
@@ -451,10 +490,10 @@ UDQSet udq_cast(const UDQSet& lhs, const UDQSet& rhs)
         }
 
         if (rhs.var_type() == UDQVarType::WELL_VAR)
-            return UDQSet::wells(lhs.name(), rhs.wgnames(), lhs[0].value());
+            return UDQSet::wells(lhs.name(), rhs.wgnames(), lhs[0].get());
 
         if (rhs.var_type() == UDQVarType::GROUP_VAR)
-            return UDQSet::groups(lhs.name(), rhs.wgnames(), lhs[0].value());
+            return UDQSet::groups(lhs.name(), rhs.wgnames(), lhs[0].get());
 
         throw std::logic_error("Don't have a clue");
     } else
@@ -534,7 +573,7 @@ UDQSet operator/(double lhs, const UDQSet&rhs) {
     for (std::size_t index = 0; index < rhs.size(); index++) {
         const auto& elm = rhs[index];
         if (elm)
-            result.assign(index, lhs / elm.value());
+            result.assign(index, lhs / elm.get());
     }
     return result;
 }

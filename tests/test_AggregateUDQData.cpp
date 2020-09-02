@@ -20,6 +20,9 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQActive.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQParams.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQState.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQSet.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
 
 //#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 //#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
@@ -70,6 +73,48 @@ namespace {
     } 
     */
 }
+
+
+Opm::UDQSet make_udq_set(const std::string& name, Opm::UDQVarType var_type, const std::vector<std::string>& wgnames, const std::vector<double>& values) {
+    Opm::UDQSet s(name, var_type, wgnames);
+    for (std::size_t i=0; i < values.size(); i++)
+        s.assign(i , values[i]);
+
+    return s;
+}
+
+    Opm::UDQState make_udq_state()
+    {
+        auto state = Opm::UDQState{0};
+
+        state.add("WUOPRL", make_udq_set("WUOPRL",
+                                         Opm::UDQVarType::WELL_VAR,
+                                         {"PROD1", "PROD2", "WINJ1", "WINJ2"},
+                                         {210, 211, 212, 213}));
+
+        state.add("WUOPRU", make_udq_set("WUOPRU",
+                                         Opm::UDQVarType::WELL_VAR,
+                                         {"PROD1", "PROD2", "WINJ1", "WINJ2"},
+                                         {220, 221, 222, 223}));
+
+        state.add("WULPRL", make_udq_set("WULPRL",
+                                         Opm::UDQVarType::WELL_VAR,
+                                         {"PROD1", "PROD2", "WINJ1", "WINJ2"},
+                                         {230, 231, 232, 233}));
+
+        state.add("WULPRU", make_udq_set("WULPRU",
+                                         Opm::UDQVarType::WELL_VAR,
+                                         {"PROD1", "PROD2", "WINJ1", "WINJ2"},
+                                         {160, 161, 162, 163}));
+
+        state.add("GUOPRU", make_udq_set("GUOPRU",
+                                         Opm::UDQVarType::GROUP_VAR,
+                                         {"WGRP1", "WGRP2", "GRP1"},
+                                         {360, 361, 362}));
+
+        state.add("FULPR", Opm::UDQSet::scalar("FULPR", 460));
+        return state;
+    }
 
     Opm::SummaryState sum_state()
     {
@@ -133,6 +178,7 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data)
         
     Opm::EclipseState es = simCase.es;
     Opm::SummaryState st = sum_state();
+    Opm::UDQState     udq_state = make_udq_state();
     Opm::Schedule     sched = simCase.sched;
     Opm::EclipseGrid  grid = simCase.grid;
     const auto& ioConfig = es.getIOConfig();
@@ -162,7 +208,7 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data)
        
     const auto udqDims = Opm::RestartIO::Helpers::createUdqDims(sched, rptStep, ih);
     auto  udqData = Opm::RestartIO::Helpers::AggregateUDQData(udqDims);
-    udqData.captureDeclaredUDQData(sched, rptStep, st, ih);
+    udqData.captureDeclaredUDQData(sched, rptStep, udq_state, ih);
      
         rstFile.write("ZUDN", udqData.getZUDN());
         rstFile.write("ZUDL", udqData.getZUDL());

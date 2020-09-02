@@ -58,51 +58,6 @@ Schedule make_schedule(const std::string& input) {
     }
 }
 
-BOOST_AUTO_TEST_CASE(UDQSTATE) {
-    double undefined_value = 1234;
-    UDQState st(undefined_value);
-    BOOST_CHECK(!st.has("FUXX"));
-    BOOST_CHECK(!st.has_well_var("OP1", "WUXX"));
-    BOOST_CHECK(!st.has_group_var("G1", "GUXX"));
-
-    // Try to get from symbol which is not UDQ -> logic_error
-    BOOST_CHECK_THROW(st.get("FOPR"), std::logic_error);
-
-    // Try to get from a UDQ which has not registered -> out_of_range
-    BOOST_CHECK_THROW(st.get("FUPR"), std::out_of_range);
-
-    auto fxpr = UDQSet::scalar("FXPR", 100);
-    BOOST_CHECK_THROW(st.add(fxpr), std::logic_error);
-
-    BOOST_CHECK_THROW(st.get_well_var("OP1", "WUPR"), std::out_of_range);
-
-    auto fupr = UDQSet::scalar("FUPR", 100);
-    st.add(fupr);
-
-    // This is not a well quantity
-    BOOST_CHECK_THROW(st.get_well_var("OP1", "FUPR"), std::logic_error);
-    BOOST_CHECK_EQUAL(100, st.get("FUPR"));
-
-
-    auto wupr = UDQSet::wells("WUPR", {"P1", "P2"});
-    wupr.assign("P1", 75);
-    st.add(wupr);
-
-    BOOST_CHECK(st.has_well_var("P1", "WUPR"));
-    // We have a well P2 - but we have not assigned a value to it!
-    BOOST_CHECK(!st.has_well_var("P2", "WUPR"));
-
-    BOOST_CHECK_EQUAL(st.get_well_var("P1", "WUPR"), 75);
-    BOOST_CHECK_EQUAL(st.get_well_var("P2", "WUPR"), undefined_value);
-
-
-    const auto buffer = st.serialize();
-    UDQState st2(1067);
-    st2.deserialize( buffer );
-    BOOST_CHECK(st == st2);
-}
-
-
 BOOST_AUTO_TEST_CASE(TYPE_COERCION) {
     BOOST_CHECK( UDQVarType::SCALAR == UDQ::coerce(UDQVarType::SCALAR, UDQVarType::SCALAR) );
 
@@ -123,7 +78,8 @@ BOOST_AUTO_TEST_CASE(GROUP_VARIABLES)
     UDQFunctionTable udqft;
     UDQDefine def_group(udqp, "GUOPRL",{"(", "5000",  "-",  "GOPR",  "LOWER",  "*", "0.13",  "-",  "GOPR",  "UPPER",  "*", "0.15", ")" , "*",  "0.89"});
     SummaryState st(std::chrono::system_clock::now());
-    UDQContext context(udqft, st);
+    UDQState udq_state(udqp.undefinedValue());
+    UDQContext context(udqft, st, udq_state);
     double gopr_lower = 1234;
     double gopr_upper = 4321;
 
@@ -131,8 +87,8 @@ BOOST_AUTO_TEST_CASE(GROUP_VARIABLES)
     st.update_group_var("UPPER", "GOPR", gopr_upper);
 
     auto res_group = def_group.eval(context);
-    BOOST_CHECK_EQUAL( res_group["UPPER"].value(), (5000 - gopr_lower*0.13 - gopr_upper*0.15)*0.89);
-    BOOST_CHECK_EQUAL( res_group["UPPER"].value(), (5000 - gopr_lower*0.13 - gopr_upper*0.15)*0.89);
+    BOOST_CHECK_EQUAL( res_group["UPPER"].get(), (5000 - gopr_lower*0.13 - gopr_upper*0.15)*0.89);
+    BOOST_CHECK_EQUAL( res_group["UPPER"].get(), (5000 - gopr_lower*0.13 - gopr_upper*0.15)*0.89);
 }
 
 
@@ -145,14 +101,15 @@ BOOST_AUTO_TEST_CASE(SUBTRACT)
     UDQDefine scalar(udqp, "WU", {"16"});
 
     SummaryState st(std::chrono::system_clock::now());
-    UDQContext context(udqft, st);
+    UDQState udq_state(udqp.undefinedValue());
+    UDQContext context(udqft, st, udq_state);
 
     st.update_well_var("P1", "WOPR", 4);
     auto res = def.eval(context);
-    BOOST_CHECK_EQUAL( res[0].value(), 1.0);
+    BOOST_CHECK_EQUAL( res[0].get(), 1.0);
 
     auto res2 = scalar.eval(context);
-    BOOST_CHECK_EQUAL( res2[0].value(), 16.0);
+    BOOST_CHECK_EQUAL( res2[0].get(), 16.0);
 }
 
 BOOST_AUTO_TEST_CASE(TEST)
@@ -165,7 +122,8 @@ BOOST_AUTO_TEST_CASE(TEST)
     UDQDefine def4(udqp, "WUWI3", {"FOPR" , "/",  "2"});
 
     SummaryState st(std::chrono::system_clock::now());
-    UDQContext context(udqft, st);
+    UDQState udq_state(udqp.undefinedValue());
+    UDQContext context(udqft, st, udq_state);
 
     st.update_group_var("MAU", "GOPR", 4);
     st.update_group_var("XXX", "GOPR", 5);
@@ -175,20 +133,20 @@ BOOST_AUTO_TEST_CASE(TEST)
     st.update("FOPR", 2);
 
     auto res1 = def1.eval(context);
-    BOOST_CHECK_EQUAL( res1["P1"].value(), 20 );
-    BOOST_CHECK_EQUAL( res1["P2"].value(), 20 );
+    BOOST_CHECK_EQUAL( res1["P1"].get(), 20 );
+    BOOST_CHECK_EQUAL( res1["P2"].get(), 20 );
 
     auto res2 = def2.eval(context);
-    BOOST_CHECK_EQUAL( res2["P1"].value(), 1.50 );
-    BOOST_CHECK_EQUAL( res2["P2"].value(), 1.50 );
+    BOOST_CHECK_EQUAL( res2["P1"].get(), 1.50 );
+    BOOST_CHECK_EQUAL( res2["P2"].get(), 1.50 );
 
     auto res3 = def3.eval(context);
-    BOOST_CHECK_EQUAL( res3["P1"].value(), 0.00 );
-    BOOST_CHECK_EQUAL( res3["P2"].value(), 0.00 );
+    BOOST_CHECK_EQUAL( res3["P1"].get(), 0.00 );
+    BOOST_CHECK_EQUAL( res3["P2"].get(), 0.00 );
 
     auto res4 = def4.eval(context);
-    BOOST_CHECK_EQUAL( res4["P1"].value(), 1.00 );
-    BOOST_CHECK_EQUAL( res4["P2"].value(), 1.00 );
+    BOOST_CHECK_EQUAL( res4["P1"].get(), 1.00 );
+    BOOST_CHECK_EQUAL( res4["P2"].get(), 1.00 );
 
     /*
       This expression has a well set as target type, and involves group with
@@ -208,12 +166,13 @@ BOOST_AUTO_TEST_CASE(MIX_SCALAR) {
     UDQParams udqp;
     UDQDefine def_add(udqp, "WU", {"WOPR", "+", "1"});
     SummaryState st(std::chrono::system_clock::now());
-    UDQContext context(udqft, st);
+    UDQState udq_state(udqp.undefinedValue());
+    UDQContext context(udqft, st, udq_state);
 
     st.update_well_var("P1", "WOPR", 1);
 
     auto res_add = def_add.eval(context);
-    BOOST_CHECK_EQUAL( res_add["P1"].value() , 2);
+    BOOST_CHECK_EQUAL( res_add["P1"].get() , 2);
 }
 
 
@@ -229,7 +188,8 @@ BOOST_AUTO_TEST_CASE(UDQFieldSetTest) {
     UDQParams udqp;
     UDQFunctionTable udqft(udqp);
     SummaryState st(std::chrono::system_clock::now());
-    UDQContext context(udqft, st);
+    UDQState udq_state(udqp.undefinedValue());
+    UDQContext context(udqft, st, udq_state);
 
     st.update_well_var("P1", "WOPR", 1.0);
     st.update_well_var("P2", "WOPR", 2.0);
@@ -239,7 +199,7 @@ BOOST_AUTO_TEST_CASE(UDQFieldSetTest) {
     /*{
         UDQDefine def_fxxx(udqp, "FU_SCALAR", {"123"});
         auto fxxx_res = def_fxxx.eval(context);
-        BOOST_CHECK_EQUAL( fxxx_res[0].value(), 123.0 );
+        BOOST_CHECK_EQUAL( fxxx_res[0].get(), 123.0 );
         BOOST_CHECK( fxxx_res.var_type() == UDQVarType::FIELD_VAR);
     }
     */
@@ -247,7 +207,7 @@ BOOST_AUTO_TEST_CASE(UDQFieldSetTest) {
     {
         UDQDefine def_fopr(udqp, "FUOPR", {"SUM", "(", "WOPR", ")"});
         auto fopr_res = def_fopr.eval(context);
-        BOOST_CHECK_EQUAL( fopr_res[0].value(), 10.0 );
+        BOOST_CHECK_EQUAL( fopr_res[0].get(), 10.0 );
     }
 }
 
@@ -281,8 +241,8 @@ BOOST_AUTO_TEST_CASE(UDQWellSetTest) {
     ws.assign("P1", 1.0);
 
     const auto& value = ws["P1"];
-    BOOST_CHECK_EQUAL(value.value(), 1.0);
-    BOOST_CHECK_EQUAL(ws["P1"].value(), 1.0);
+    BOOST_CHECK_EQUAL(value.get(), 1.0);
+    BOOST_CHECK_EQUAL(ws["P1"].get(), 1.0);
 
     BOOST_REQUIRE_THROW(ws.assign("NO_SUCH_WELL", 1.0), std::out_of_range);
     BOOST_REQUIRE_THROW(ws[10], std::out_of_range);
@@ -290,26 +250,26 @@ BOOST_AUTO_TEST_CASE(UDQWellSetTest) {
 
     ws.assign("*", 2.0);
     for (const auto& w : wells)
-        BOOST_CHECK_EQUAL(ws[w].value(), 2.0);
+        BOOST_CHECK_EQUAL(ws[w].get(), 2.0);
 
     ws.assign(3.0);
     for (const auto& w : wells)
-        BOOST_CHECK_EQUAL(ws[w].value(), 3.0);
+        BOOST_CHECK_EQUAL(ws[w].get(), 3.0);
 
     ws.assign("P*", 4.0);
-    BOOST_CHECK_EQUAL(ws["P1"].value(), 4.0);
-    BOOST_CHECK_EQUAL(ws["P2"].value(), 4.0);
+    BOOST_CHECK_EQUAL(ws["P1"].get(), 4.0);
+    BOOST_CHECK_EQUAL(ws["P2"].get(), 4.0);
 
     ws.assign("I2", 5.0);
-    BOOST_CHECK_EQUAL(ws["I2"].value(), 5.0);
+    BOOST_CHECK_EQUAL(ws["I2"].get(), 5.0);
 
 
     for (const auto& w : wells)
-        BOOST_CHECK_EQUAL(ws2[w].value(), 100.0);
+        BOOST_CHECK_EQUAL(ws2[w].get(), 100.0);
 
     UDQSet scalar = UDQSet::scalar("NAME", 1.0);
     BOOST_CHECK_EQUAL(scalar.size() , 1);
-    BOOST_CHECK_EQUAL(scalar[0].value(), 1.0);
+    BOOST_CHECK_EQUAL(scalar[0].get(), 1.0);
 
     UDQSet empty = UDQSet::empty("EMPTY");
     BOOST_CHECK_EQUAL(empty.size() , 0);
@@ -324,13 +284,14 @@ BOOST_AUTO_TEST_CASE(UDQ_GROUP_TEST) {
     gs.assign("G1", 1.0);
 
     const auto& value = gs["G1"];
-    BOOST_CHECK_EQUAL(value.value(), 1.0);
+    BOOST_CHECK_EQUAL(value.get(), 1.0);
     {
         UDQParams udqp;
         UDQFunctionTable udqft(udqp);
         UDQDefine def_fopr(udqp, "FUOPR", {"SUM", "(", "GOPR", ")"});
         SummaryState st(std::chrono::system_clock::now());
-        UDQContext context(udqft, st);
+        UDQState udq_state(udqp.undefinedValue());
+        UDQContext context(udqft, st, udq_state);
 
         st.update_group_var("G1", "GOPR", 1.0);
         st.update_group_var("G2", "GOPR", 2.0);
@@ -339,7 +300,7 @@ BOOST_AUTO_TEST_CASE(UDQ_GROUP_TEST) {
 
 
         auto res = def_fopr.eval(context);
-        BOOST_CHECK_EQUAL(res[0].value(), 10.0);
+        BOOST_CHECK_EQUAL(res[0].get(), 10.0);
     }
 }
 
@@ -351,21 +312,23 @@ BOOST_AUTO_TEST_CASE(UDQ_DEFINETEST) {
     {
         UDQDefine def(udqp, "WUBHP", {"WBHP"});
         SummaryState st(std::chrono::system_clock::now());
-        UDQContext context(udqft, st);
+        UDQState udq_state(udqp.undefinedValue());
+        UDQContext context(udqft, st, udq_state);
 
         st.update_well_var("W1", "WBHP", 11);
         st.update_well_var("W2", "WBHP", 2);
         st.update_well_var("W3", "WBHP", 3);
         auto res = def.eval(context);
         BOOST_CHECK_EQUAL(res.size(), 3);
-        BOOST_CHECK_EQUAL( res["W1"].value(), 11 );
-        BOOST_CHECK_EQUAL( res["W2"].value(), 2 );
-        BOOST_CHECK_EQUAL( res["W3"].value(), 3 );
+        BOOST_CHECK_EQUAL( res["W1"].get(), 11 );
+        BOOST_CHECK_EQUAL( res["W2"].get(), 2 );
+        BOOST_CHECK_EQUAL( res["W3"].get(), 3 );
     }
     {
         UDQDefine def(udqp, "WUBHP", {"WBHP" , "'P*'"});
         SummaryState st(std::chrono::system_clock::now());
-        UDQContext context(udqft, st);
+        UDQState udq_state(udqp.undefinedValue());
+        UDQContext context(udqft, st, udq_state);
 
 
         st.update_well_var("P1", "WBHP", 1);
@@ -374,25 +337,26 @@ BOOST_AUTO_TEST_CASE(UDQ_DEFINETEST) {
         st.update_well_var("I2", "WBHP", 2);
         auto res = def.eval(context);
         BOOST_CHECK_EQUAL(res.size(), 4);
-        BOOST_CHECK_EQUAL( res["P1"].value(), 1 );
-        BOOST_CHECK_EQUAL( res["P2"].value(), 2 );
+        BOOST_CHECK_EQUAL( res["P1"].get(), 1 );
+        BOOST_CHECK_EQUAL( res["P2"].get(), 2 );
         BOOST_CHECK_EQUAL( res["I1"].defined(), false);
         BOOST_CHECK_EQUAL( res["I1"].defined(), false);
     }
     {
         UDQDefine def(udqp, "WUBHP", {"NINT" , "(", "WBHP", ")"});
         SummaryState st(std::chrono::system_clock::now());
-        UDQContext context(udqft, st);
+        UDQState udq_state(udqp.undefinedValue());
+        UDQContext context(udqft, st, udq_state);
         st.update_well_var("P1", "WBHP", 4);
         st.update_well_var("P2", "WBHP", 3);
         st.update_well_var("I1", "WBHP", 2);
         st.update_well_var("I2", "WBHP", 1);
 
         auto res = def.eval(context);
-        BOOST_CHECK_EQUAL( res["P1"].value(), 4 );
-        BOOST_CHECK_EQUAL( res["P2"].value(), 3 );
-        BOOST_CHECK_EQUAL( res["I1"].value(), 2 );
-        BOOST_CHECK_EQUAL( res["I2"].value(), 1 );
+        BOOST_CHECK_EQUAL( res["P1"].get(), 4 );
+        BOOST_CHECK_EQUAL( res["P2"].get(), 3 );
+        BOOST_CHECK_EQUAL( res["I1"].get(), 2 );
+        BOOST_CHECK_EQUAL( res["I2"].get(), 1 );
     }
 }
 
@@ -581,13 +545,13 @@ ASSIGN WU2 8.0 /
     BOOST_CHECK_EQUAL(w1.name(), "WU1");
     BOOST_CHECK_EQUAL(w2.name(), "WU2");
 
-    BOOST_CHECK_EQUAL( w1["P12"].value(), 4.0 );
+    BOOST_CHECK_EQUAL( w1["P12"].get(), 4.0 );
     BOOST_CHECK_EQUAL( w1["P1"].defined(), false );
     BOOST_CHECK_EQUAL( w1["P2"].defined(), false );
 
-    BOOST_CHECK_EQUAL( w2["P12"].value(), 8.0 );
-    BOOST_CHECK_EQUAL( w2["P1"].value(), 8.0 );
-    BOOST_CHECK_EQUAL( w2["P2"].value(), 8.0 );
+    BOOST_CHECK_EQUAL( w2["P12"].get(), 8.0 );
+    BOOST_CHECK_EQUAL( w2["P1"].get(), 8.0 );
+    BOOST_CHECK_EQUAL( w2["P2"].get(), 8.0 );
 }
 
 
@@ -597,16 +561,18 @@ BOOST_AUTO_TEST_CASE(UDQ_CONTEXT) {
     SummaryState st(std::chrono::system_clock::now());
     UDQFunctionTable func_table;
     UDQParams udqp;
-    UDQContext ctx(func_table, st);
-    BOOST_CHECK_EQUAL(ctx.get("JAN"), 1.0);
+    UDQState udq_state(udqp.undefinedValue());
+    UDQContext ctx(func_table, st, udq_state);
+    BOOST_CHECK_EQUAL(*ctx.get("JAN"), 1.0);
 
-    BOOST_REQUIRE_THROW(ctx.get("NO_SUCH_KEY"), std::out_of_range);
+    auto invalid = ctx.get("NO_SUCH_KEY");
+    BOOST_CHECK(!invalid.has_value());
 
     for (std::string& key : std::vector<std::string>({"ELAPSED", "MSUMLINS", "MSUMNEWT", "NEWTON", "TCPU", "TIME", "TIMESTEP"}))
         BOOST_CHECK_NO_THROW( ctx.get(key) );
 
-    st.update("SUMMARY:KEY", 1.0);
-    BOOST_CHECK_EQUAL(ctx.get("SUMMARY:KEY") , 1.0 );
+    st.update("SX:KEY", 1.0);
+    BOOST_CHECK_EQUAL(*ctx.get("SX:KEY") , 1.0 );
 }
 
 BOOST_AUTO_TEST_CASE(UDQ_SET) {
@@ -614,14 +580,14 @@ BOOST_AUTO_TEST_CASE(UDQ_SET) {
 
     for (const auto& v : s1) {
         BOOST_CHECK_EQUAL(false, v.defined());
-        BOOST_REQUIRE_THROW( v.value(), std::invalid_argument);
+        BOOST_REQUIRE_THROW( v.get(), std::invalid_argument);
     }
     BOOST_CHECK_EQUAL(s1.defined_size(), 0);
 
     s1.assign(1);
     for (const auto& v : s1) {
         BOOST_CHECK_EQUAL(true, v.defined());
-        BOOST_CHECK_EQUAL( v.value(), 1.0);
+        BOOST_CHECK_EQUAL( v.get(), 1.0);
     }
     BOOST_CHECK_EQUAL(s1.defined_size(), s1.size());
 
@@ -636,7 +602,7 @@ BOOST_AUTO_TEST_CASE(UDQ_SET) {
         auto s3 = s1 + s2;
 
         auto v0 = s3[0];
-        BOOST_CHECK_EQUAL(v0.value(), 25);
+        BOOST_CHECK_EQUAL(v0.get(), 25);
 
         auto v4 = s3[4];
         BOOST_CHECK( !v4.defined() );
@@ -648,17 +614,17 @@ BOOST_AUTO_TEST_CASE(UDQ_SET) {
         UDQSet s4 = s1 - 1.0;
         for (const auto& v : s2) {
             BOOST_CHECK_EQUAL(true, v.defined());
-            BOOST_CHECK_EQUAL( v.value(), 2.0);
+            BOOST_CHECK_EQUAL( v.get(), 2.0);
         }
 
         for (const auto& v : s3) {
             BOOST_CHECK_EQUAL(true, v.defined());
-            BOOST_CHECK_EQUAL( v.value(), 4.0);
+            BOOST_CHECK_EQUAL( v.get(), 4.0);
         }
 
         for (const auto& v : s4) {
             BOOST_CHECK_EQUAL(true, v.defined());
-            BOOST_CHECK_EQUAL( v.value(), 0);
+            BOOST_CHECK_EQUAL( v.get(), 0);
         }
     }
 }
@@ -675,47 +641,47 @@ BOOST_AUTO_TEST_CASE(UDQ_FUNCTION_TABLE) {
     {
         const auto& func = dynamic_cast<const UDQScalarFunction&>(udqft.get("SUM"));
         auto result = func.eval(arg);
-        BOOST_CHECK_EQUAL(result[0].value(), 7);
+        BOOST_CHECK_EQUAL(result[0].get(), 7);
     }
     {
         const auto& func = dynamic_cast<const UDQScalarFunction&>(udqft.get("NORM1"));
         auto result = func.eval(arg);
-        BOOST_CHECK_EQUAL(result[0].value(), 7);
+        BOOST_CHECK_EQUAL(result[0].get(), 7);
     }
     {
         const auto& func = dynamic_cast<const UDQScalarFunction&>(udqft.get("NORM2"));
         auto result = func.eval(arg);
-        BOOST_CHECK_EQUAL(result[0].value(), std::sqrt(1 + 4+ 16));
+        BOOST_CHECK_EQUAL(result[0].get(), std::sqrt(1 + 4+ 16));
     }
     {
         const auto& func = dynamic_cast<const UDQScalarFunction&>(udqft.get("NORMI"));
         auto result = func.eval(arg);
-        BOOST_CHECK_EQUAL(result[0].value(), 4);
+        BOOST_CHECK_EQUAL(result[0].get(), 4);
     }
     {
         const auto& func = dynamic_cast<const UDQScalarFunction&>(udqft.get("MIN"));
         auto result = func.eval(arg);
-        BOOST_CHECK_EQUAL(result[0].value(), 1);
+        BOOST_CHECK_EQUAL(result[0].get(), 1);
     }
     {
         const auto& func = dynamic_cast<const UDQScalarFunction&>(udqft.get("MAX"));
         auto result = func.eval(arg);
-        BOOST_CHECK_EQUAL(result[0].value(), 4);
+        BOOST_CHECK_EQUAL(result[0].get(), 4);
     }
     {
         const auto& func = dynamic_cast<const UDQScalarFunction&>(udqft.get("AVEA"));
         auto result = func.eval(arg);
-        BOOST_CHECK_EQUAL(result[0].value(), 7.0/3);
+        BOOST_CHECK_EQUAL(result[0].get(), 7.0/3);
     }
     {
         const auto& func = dynamic_cast<const UDQScalarFunction&>(udqft.get("AVEG"));
         auto result = func.eval(arg);
-        BOOST_CHECK_EQUAL(result[0].value(), std::exp((std::log(1) + std::log(2.0) + std::log(4))/3));
+        BOOST_CHECK_EQUAL(result[0].get(), std::exp((std::log(1) + std::log(2.0) + std::log(4))/3));
     }
     {
         const auto& func = dynamic_cast<const UDQScalarFunction&>(udqft.get("PROD"));
         auto result = func.eval(arg);
-        BOOST_CHECK_EQUAL(result[0].value(), 8.0);
+        BOOST_CHECK_EQUAL(result[0].get(), 8.0);
     }
     {
         UDQSet arg2("NAME", 4);
@@ -724,7 +690,7 @@ BOOST_AUTO_TEST_CASE(UDQ_FUNCTION_TABLE) {
         arg2.assign(3,4);
         const auto& func = dynamic_cast<const UDQScalarFunction&>(udqft.get("AVEH"));
         auto result = func.eval(arg2);
-        BOOST_CHECK_EQUAL(result[0].value(), 2.0);
+        BOOST_CHECK_EQUAL(result[0].get(), 2.0);
     }
 }
 
@@ -748,36 +714,36 @@ BOOST_AUTO_TEST_CASE(CMP_FUNCTIONS) {
         auto result = UDQBinaryFunction::EQ(0, arg1, arg2);
 
         BOOST_CHECK_EQUAL( result.defined_size(), 3 );
-        BOOST_CHECK_EQUAL( result[0].value(), 0);
-        BOOST_CHECK_EQUAL( result[2].value(), 0);
-        BOOST_CHECK_EQUAL( result[4].value(), 1);
+        BOOST_CHECK_EQUAL( result[0].get(), 0);
+        BOOST_CHECK_EQUAL( result[2].get(), 0);
+        BOOST_CHECK_EQUAL( result[4].get(), 1);
 
         result = UDQBinaryFunction::EQ(0.20, arg1, arg2);
-        BOOST_CHECK_EQUAL( result[0].value(), 1);
-        BOOST_CHECK_EQUAL( result[2].value(), 0);
-        BOOST_CHECK_EQUAL( result[4].value(), 1);
+        BOOST_CHECK_EQUAL( result[0].get(), 1);
+        BOOST_CHECK_EQUAL( result[2].get(), 0);
+        BOOST_CHECK_EQUAL( result[4].get(), 1);
 
         const auto& func = dynamic_cast<const UDQBinaryFunction&>(udqft.get("=="));
         result = func.eval(arg1, arg2);
-        BOOST_CHECK_EQUAL( result[0].value(), 0);
-        BOOST_CHECK_EQUAL( result[2].value(), 0);
-        BOOST_CHECK_EQUAL( result[4].value(), 1);
+        BOOST_CHECK_EQUAL( result[0].get(), 0);
+        BOOST_CHECK_EQUAL( result[2].get(), 0);
+        BOOST_CHECK_EQUAL( result[4].get(), 1);
     }
     {
         const auto& func = dynamic_cast<const UDQBinaryFunction&>(udqft.get("<"));
         auto result = func.eval(arg1, arg2);
         BOOST_CHECK_EQUAL( result.defined_size(), 3 );
-        BOOST_CHECK_EQUAL( result[0].value(), 0);
-        BOOST_CHECK_EQUAL( result[2].value(), 1);
-        BOOST_CHECK_EQUAL( result[4].value(), 0);
+        BOOST_CHECK_EQUAL( result[0].get(), 0);
+        BOOST_CHECK_EQUAL( result[2].get(), 1);
+        BOOST_CHECK_EQUAL( result[4].get(), 0);
     }
     {
         const auto& func = dynamic_cast<const UDQBinaryFunction&>(udqft.get(">"));
         auto result = func.eval(arg1, arg2);
         BOOST_CHECK_EQUAL( result.defined_size(), 3 );
-        BOOST_CHECK_EQUAL( result[0].value(), 1);
-        BOOST_CHECK_EQUAL( result[2].value(), 0);
-        BOOST_CHECK_EQUAL( result[4].value(), 0);
+        BOOST_CHECK_EQUAL( result[0].get(), 1);
+        BOOST_CHECK_EQUAL( result[2].get(), 0);
+        BOOST_CHECK_EQUAL( result[4].get(), 0);
     }
     {
         const auto& func = dynamic_cast<const UDQBinaryFunction&>(udqft.get("^"));
@@ -790,28 +756,37 @@ BOOST_AUTO_TEST_CASE(CMP_FUNCTIONS) {
         }
         auto result = func.eval(arg1_local, arg2_local);
         for (std::size_t i=0; i < arg1_local.size(); i++)
-            BOOST_CHECK_EQUAL( result[i].value(), (i+1)*(i+1));
+            BOOST_CHECK_EQUAL( result[i].get(), (i+1)*(i+1));
     }
     {
         auto result = UDQBinaryFunction::GE(1.0, arg1, arg2);
-        BOOST_CHECK_EQUAL( result[0].value(), 1);
+        BOOST_CHECK_EQUAL( result[0].get(), 1);
 
         // This is bisarre - but due to the large epsilon 2 and 2.5 compare as
         // equal; and then we evaluate 2 >= 2.5 as TRUE!
-        BOOST_CHECK_EQUAL( result[2].value(), 1);
-        BOOST_CHECK_EQUAL( result[4].value(), 1);
+        BOOST_CHECK_EQUAL( result[2].get(), 1);
+        BOOST_CHECK_EQUAL( result[4].get(), 1);
     }
     {
         const auto& func = dynamic_cast<const UDQBinaryFunction&>(udqft.get("<="));
         auto result = func.eval(arg1, arg2);
-        BOOST_CHECK_EQUAL( result[0].value(), 0);
-        BOOST_CHECK_EQUAL( result[2].value(), 1);
-        BOOST_CHECK_EQUAL( result[4].value(), 1);
+        BOOST_CHECK_EQUAL( result[0].get(), 0);
+        BOOST_CHECK_EQUAL( result[2].get(), 1);
+        BOOST_CHECK_EQUAL( result[4].get(), 1);
 
 
     }
 }
 
+
+BOOST_AUTO_TEST_CASE(CMP_FUNCTIONS2) {
+    UDQFunctionTable udqft;
+    auto arg1 = UDQSet::scalar("NAME", 0);
+    auto arg2 = UDQSet::scalar("NAME", 0);
+
+    auto eq = UDQBinaryFunction::EQ(0, arg1, arg2);
+    BOOST_CHECK_EQUAL(eq[0].get(), 1);
+}
 
 
 BOOST_AUTO_TEST_CASE(ELEMENTAL_UNARY_FUNCTIONS) {
@@ -828,39 +803,39 @@ BOOST_AUTO_TEST_CASE(ELEMENTAL_UNARY_FUNCTIONS) {
         arg2.assign(2,-2);
         arg2.assign(4,4);
         auto result = func.eval(arg2);
-        BOOST_CHECK_EQUAL( result[0].value(), 1);
-        BOOST_CHECK_EQUAL( result[2].value(), 2);
-        BOOST_CHECK_EQUAL( result[4].value(), 4);
+        BOOST_CHECK_EQUAL( result[0].get(), 1);
+        BOOST_CHECK_EQUAL( result[2].get(), 2);
+        BOOST_CHECK_EQUAL( result[4].get(), 4);
     }
     {
         const auto& func = dynamic_cast<const UDQUnaryElementalFunction&>(udqft.get("DEF"));
         auto result = func.eval(arg);
-        BOOST_CHECK_EQUAL( result[0].value(), 1);
-        BOOST_CHECK_EQUAL( result[2].value(), 1);
-        BOOST_CHECK_EQUAL( result[4].value(), 1);
+        BOOST_CHECK_EQUAL( result[0].get(), 1);
+        BOOST_CHECK_EQUAL( result[2].get(), 1);
+        BOOST_CHECK_EQUAL( result[4].get(), 1);
     }
     {
         const auto& func = dynamic_cast<const UDQUnaryElementalFunction&>(udqft.get("UNDEF"));
         auto result = func.eval(arg);
-        BOOST_CHECK_EQUAL( result[1].value(), 1);
-        BOOST_CHECK_EQUAL( result[3].value(), 1);
+        BOOST_CHECK_EQUAL( result[1].get(), 1);
+        BOOST_CHECK_EQUAL( result[3].get(), 1);
         BOOST_CHECK_EQUAL( result.defined_size(), 2);
     }
     {
         const auto& func = dynamic_cast<const UDQUnaryElementalFunction&>(udqft.get("EXP"));
         auto result = func.eval(arg);
-        BOOST_CHECK_EQUAL( result[0].value(), std::exp(1));
-        BOOST_CHECK_EQUAL( result[2].value(), std::exp(2));
-        BOOST_CHECK_EQUAL( result[4].value(), std::exp(4));
+        BOOST_CHECK_EQUAL( result[0].get(), std::exp(1));
+        BOOST_CHECK_EQUAL( result[2].get(), std::exp(2));
+        BOOST_CHECK_EQUAL( result[4].get(), std::exp(4));
     }
     {
         const auto& func = dynamic_cast<const UDQUnaryElementalFunction&>(udqft.get("IDV"));
         auto result = func.eval(arg);
-        BOOST_CHECK_EQUAL( result[0].value(), 1);
-        BOOST_CHECK_EQUAL( result[1].value(), 0);
-        BOOST_CHECK_EQUAL( result[2].value(), 1);
-        BOOST_CHECK_EQUAL( result[3].value(), 0);
-        BOOST_CHECK_EQUAL( result[4].value(), 1);
+        BOOST_CHECK_EQUAL( result[0].get(), 1);
+        BOOST_CHECK_EQUAL( result[1].get(), 0);
+        BOOST_CHECK_EQUAL( result[2].get(), 1);
+        BOOST_CHECK_EQUAL( result[3].get(), 0);
+        BOOST_CHECK_EQUAL( result[4].get(), 1);
     }
     {
         const auto& func = dynamic_cast<const UDQUnaryElementalFunction&>(udqft.get("LOG"));
@@ -869,9 +844,9 @@ BOOST_AUTO_TEST_CASE(ELEMENTAL_UNARY_FUNCTIONS) {
         arg_local.assign(2,1000);
 
         auto result = func.eval(arg_local);
-        BOOST_CHECK_EQUAL( result[0].value(), 1);
+        BOOST_CHECK_EQUAL( result[0].get(), 1);
         BOOST_CHECK( !result[1] );
-        BOOST_CHECK_EQUAL( result[2].value(), 3);
+        BOOST_CHECK_EQUAL( result[2].get(), 3);
     }
     {
         const auto& func = dynamic_cast<const UDQUnaryElementalFunction&>(udqft.get("NINT"));
@@ -880,9 +855,9 @@ BOOST_AUTO_TEST_CASE(ELEMENTAL_UNARY_FUNCTIONS) {
         arg_local.assign(2, 1.25);
 
         auto result = func.eval(arg_local);
-        BOOST_CHECK_EQUAL( result[0].value(), 1);
+        BOOST_CHECK_EQUAL( result[0].get(), 1);
         BOOST_CHECK( !result[1] );
-        BOOST_CHECK_EQUAL( result[2].value(), 1);
+        BOOST_CHECK_EQUAL( result[2].get(), 1);
     }
     {
         const auto& func = dynamic_cast<const UDQUnaryElementalFunction&>(udqft.get("RANDN"));
@@ -892,32 +867,32 @@ BOOST_AUTO_TEST_CASE(ELEMENTAL_UNARY_FUNCTIONS) {
 
         auto result1 = func.eval(arg_local);
         auto result2 = func.eval(arg_local);
-        BOOST_CHECK( result1[0].value() != -1.0);
+        BOOST_CHECK( result1[0].get() != -1.0);
         BOOST_CHECK( !result1[1] );
-        BOOST_CHECK( result1[2].value() != -1.0);
+        BOOST_CHECK( result1[2].get() != -1.0);
 
-        BOOST_CHECK( result1[0].value() != result2[0].value());
-        BOOST_CHECK( result1[2].value() != result2[2].value());
+        BOOST_CHECK( result1[0].get() != result2[0].get());
+        BOOST_CHECK( result1[2].get() != result2[2].get());
     }
     {
         const auto& func = dynamic_cast<const UDQUnaryElementalFunction&>(udqft.get("SORTA"));
         auto result = func.eval(arg);
 
-        BOOST_CHECK_EQUAL( result[0].value(), 1);
+        BOOST_CHECK_EQUAL( result[0].get(), 1);
         BOOST_CHECK( !result[1] );
-        BOOST_CHECK_EQUAL( result[2].value(), 2);
+        BOOST_CHECK_EQUAL( result[2].get(), 2);
         BOOST_CHECK( !result[3] );
-        BOOST_CHECK_EQUAL( result[4].value(), 3);
+        BOOST_CHECK_EQUAL( result[4].get(), 3);
     }
     {
         const auto& func = dynamic_cast<const UDQUnaryElementalFunction&>(udqft.get("SORTD"));
         auto result = func.eval(arg);
 
-        BOOST_CHECK_EQUAL( result[0].value(), 3);
+        BOOST_CHECK_EQUAL( result[0].get(), 3);
         BOOST_CHECK( !result[1] );
-        BOOST_CHECK_EQUAL( result[2].value(), 2);
+        BOOST_CHECK_EQUAL( result[2].get(), 2);
         BOOST_CHECK( !result[3] );
-        BOOST_CHECK_EQUAL( result[4].value(), 1);
+        BOOST_CHECK_EQUAL( result[4].get(), 1);
     }
 }
 
@@ -936,9 +911,9 @@ BOOST_AUTO_TEST_CASE(UNION_FUNCTIONS) {
     const auto& func = dynamic_cast<const UDQBinaryFunction&>(udqft.get("UADD"));
     auto result = func.eval(arg1, arg2);
     BOOST_CHECK_EQUAL( 3, result.defined_size() );
-    BOOST_CHECK_EQUAL( 2, result[0].value() );
-    BOOST_CHECK_EQUAL( 2, result[2].value() );
-    BOOST_CHECK_EQUAL( 3, result[3].value() );
+    BOOST_CHECK_EQUAL( 2, result[0].get() );
+    BOOST_CHECK_EQUAL( 2, result[2].get() );
+    BOOST_CHECK_EQUAL( 3, result[3].get() );
 }
 
 
@@ -961,9 +936,9 @@ BOOST_AUTO_TEST_CASE(UDQ_SET_DIV) {
 
     auto result = 10 / s;
     BOOST_CHECK_EQUAL( result.defined_size(), 3);
-    BOOST_CHECK_EQUAL( result[0].value(), 10);
-    BOOST_CHECK_EQUAL( result[2].value(), 5);
-    BOOST_CHECK_EQUAL( result[4].value(), 2);
+    BOOST_CHECK_EQUAL( result[0].get(), 10);
+    BOOST_CHECK_EQUAL( result[2].get(), 5);
+    BOOST_CHECK_EQUAL( result[4].get(), 2);
 }
 
 
@@ -976,17 +951,17 @@ BOOST_AUTO_TEST_CASE(UDQASSIGN_TEST) {
 
     auto res1 = as1.eval(ws1);
     BOOST_CHECK_EQUAL(res1.size(), 4);
-    BOOST_CHECK_EQUAL(res1["P1"].value(), 1.0);
-    BOOST_CHECK_EQUAL(res1["I2"].value(), 1.0);
+    BOOST_CHECK_EQUAL(res1["P1"].get(), 1.0);
+    BOOST_CHECK_EQUAL(res1["I2"].get(), 1.0);
 
     auto res2 = as2.eval(ws1);
-    BOOST_CHECK_EQUAL(res2["P1"].value(), 2.0);
-    BOOST_CHECK_EQUAL(res2["P2"].value(), 2.0);
+    BOOST_CHECK_EQUAL(res2["P1"].get(), 2.0);
+    BOOST_CHECK_EQUAL(res2["P2"].get(), 2.0);
     BOOST_CHECK(!res2["I1"].defined());
     BOOST_CHECK(!res2["I2"].defined());
 
     auto res3 = as3.eval(ws1);
-    BOOST_CHECK_EQUAL(res3["P1"].value(), 4.0);
+    BOOST_CHECK_EQUAL(res3["P1"].get(), 4.0);
     BOOST_CHECK(!res3["P2"].defined());
     BOOST_CHECK(!res3["I1"].defined());
     BOOST_CHECK(!res3["I2"].defined());
@@ -998,7 +973,8 @@ BOOST_AUTO_TEST_CASE(UDQ_POW_TEST) {
     UDQDefine def_pow1(udqp, "WU", {"WOPR", "+", "WWPR", "*", "WGOR", "^", "WWIR"});
     UDQDefine def_pow2(udqp, "WU", {"(", "WOPR", "+", "WWPR", ")", "^", "(", "WOPR", "+" , "WGOR", "*", "WWIR", "-", "WOPT", ")"});
     SummaryState st(std::chrono::system_clock::now());
-    UDQContext context(udqft, st);
+    UDQState udq_state(udqp.undefinedValue());
+    UDQContext context(udqft, st, udq_state);
 
     st.update_well_var("P1", "WOPR", 1);
     st.update_well_var("P1", "WWPR", 2);
@@ -1008,8 +984,8 @@ BOOST_AUTO_TEST_CASE(UDQ_POW_TEST) {
 
     auto res_pow1 = def_pow1.eval(context);
     auto res_pow2 = def_pow2.eval(context);
-    BOOST_CHECK_EQUAL( res_pow1["P1"].value() , 1 + 2 * std::pow(3,4));
-    BOOST_CHECK_EQUAL( res_pow2["P1"].value() , std::pow(1 + 2, 1 + 3*4 - 7));
+    BOOST_CHECK_EQUAL( res_pow1["P1"].get() , 1 + 2 * std::pow(3,4));
+    BOOST_CHECK_EQUAL( res_pow2["P1"].get() , std::pow(1 + 2, 1 + 3*4 - 7));
 }
 
 BOOST_AUTO_TEST_CASE(UDQ_CMP_TEST) {
@@ -1017,7 +993,8 @@ BOOST_AUTO_TEST_CASE(UDQ_CMP_TEST) {
     UDQParams udqp;
     UDQDefine def_cmp(udqp, "WU", {"WOPR", ">", "WWPR", "+", "WGOR", "*", "WWIR"});
     SummaryState st(std::chrono::system_clock::now());
-    UDQContext context(udqft, st);
+    UDQState udq_state(udqp.undefinedValue());
+    UDQContext context(udqft, st, udq_state);
 
     st.update_well_var("P1", "WOPR",  0);
     st.update_well_var("P1", "WWPR", 10);
@@ -1030,8 +1007,8 @@ BOOST_AUTO_TEST_CASE(UDQ_CMP_TEST) {
     st.update_well_var("P2", "WWIR",  1);
 
     auto res_cmp = def_cmp.eval(context);
-    BOOST_CHECK_EQUAL( res_cmp["P1"].value() , 1.0);
-    BOOST_CHECK_EQUAL( res_cmp["P2"].value() , 0.0);
+    BOOST_CHECK_EQUAL( res_cmp["P1"].get() , 1.0);
+    BOOST_CHECK_EQUAL( res_cmp["P2"].get() , 0.0);
 }
 
 /*BOOST_AUTO_TEST_CASE(UDQPARSE_ERROR) {
@@ -1044,7 +1021,8 @@ BOOST_AUTO_TEST_CASE(UDQ_SCALAR_SET) {
     UDQParams udqp;
     UDQFunctionTable udqft;
     SummaryState st(std::chrono::system_clock::now());
-    UDQContext context(udqft, st);
+    UDQState udq_state(udqp.undefinedValue());
+    UDQContext context(udqft, st, udq_state);
 
     st.update_well_var("P1", "WOPR", 1);
     st.update_well_var("P2", "WOPR", 2);
@@ -1062,7 +1040,7 @@ BOOST_AUTO_TEST_CASE(UDQ_SCALAR_SET) {
         BOOST_CHECK_EQUAL(4, res.size());
         auto well1 = res["P1"];
         BOOST_CHECK( well1.defined() );
-        BOOST_CHECK_EQUAL(well1.value() , 1);
+        BOOST_CHECK_EQUAL(well1.get() , 1);
 
         auto well2 = res["P2"];
         BOOST_CHECK( !well2.defined() );
@@ -1076,15 +1054,15 @@ BOOST_AUTO_TEST_CASE(UDQ_SCALAR_SET) {
         BOOST_CHECK_EQUAL(4, res.size());
         auto well1 = res["P1"];
         BOOST_CHECK( well1.defined() );
-        BOOST_CHECK_EQUAL(well1.value() , 1);
+        BOOST_CHECK_EQUAL(well1.get() , 1);
 
         auto well2 = res["P2"];
         BOOST_CHECK( well2.defined() );
-        BOOST_CHECK_EQUAL(well2.value() , 1);
+        BOOST_CHECK_EQUAL(well2.get() , 1);
 
         auto well4 = res["P4"];
         BOOST_CHECK( well4.defined() );
-        BOOST_CHECK_EQUAL(well4.value() , 1);
+        BOOST_CHECK_EQUAL(well4.get() , 1);
     }
     {
         UDQDefine def(udqp, "WUOPR", {"WOPR", "'P1'"});
@@ -1092,15 +1070,15 @@ BOOST_AUTO_TEST_CASE(UDQ_SCALAR_SET) {
         BOOST_CHECK_EQUAL(4, res.size());
         auto well1 = res["P1"];
         BOOST_CHECK( well1.defined() );
-        BOOST_CHECK_EQUAL(well1.value() , 1);
+        BOOST_CHECK_EQUAL(well1.get() , 1);
 
         auto well2 = res["P2"];
         BOOST_CHECK( well2.defined() );
-        BOOST_CHECK_EQUAL(well2.value() , 1);
+        BOOST_CHECK_EQUAL(well2.get() , 1);
 
         auto well4 = res["P4"];
         BOOST_CHECK( well4.defined() );
-        BOOST_CHECK_EQUAL(well4.value() , 1);
+        BOOST_CHECK_EQUAL(well4.get() , 1);
 
         BOOST_CHECK_EQUAL( "WUOPR", res.name() );
     }
@@ -1112,7 +1090,8 @@ BOOST_AUTO_TEST_CASE(UDQ_SORTD_NAN) {
     UDQDefine def(udqp, "WUPR1" , {"1", "/", "(", "WWIR", "'OP*'" , ")"});
     UDQDefine def_sort(udqp , "WUPR3", {"SORTD", "(", "WUPR1", ")" });
     SummaryState st(std::chrono::system_clock::now());
-    UDQContext context(udqft, st);
+    UDQState udq_state(udqp.undefinedValue());
+    UDQContext context(udqft, st, udq_state);
 
     st.update_well_var("OP1", "WWIR", 1.0);
     st.update_well_var("OP2", "WWIR", 2.0);
@@ -1120,31 +1099,29 @@ BOOST_AUTO_TEST_CASE(UDQ_SORTD_NAN) {
     st.update_well_var("OP4", "WWIR", 4.0);
 
     auto res1 = def.eval(context);
-    st.update_udq( res1 );
+    st.update_udq( res1, 0 );
 
     auto res_sort1 = def_sort.eval(context);
-    st.update_udq( res_sort1 );
-    BOOST_CHECK_EQUAL(res_sort1["OP1"].value(), 1.0);
-    BOOST_CHECK_EQUAL(res_sort1["OP2"].value(), 2.0);
-    BOOST_CHECK_EQUAL(res_sort1["OP3"].value(), 3.0);
-    BOOST_CHECK_EQUAL(res_sort1["OP4"].value(), 4.0);
+    st.update_udq( res_sort1 , 0);
+    BOOST_CHECK_EQUAL(res_sort1["OP1"].get(), 1.0);
+    BOOST_CHECK_EQUAL(res_sort1["OP2"].get(), 2.0);
+    BOOST_CHECK_EQUAL(res_sort1["OP3"].get(), 3.0);
+    BOOST_CHECK_EQUAL(res_sort1["OP4"].get(), 4.0);
     BOOST_CHECK( st.has_well_var("OP1", "WUPR3"));
     BOOST_CHECK( st.has_well_var("OP4", "WUPR3"));
 
     st.update_well_var("OP1", "WWIR", 0);
     auto res2 = def.eval(context);
     BOOST_CHECK_EQUAL(res2.defined_size(), 3);
-    st.update_udq( res2 );
-    BOOST_CHECK( !st.has_well_var("OP1", "WUPR1"));
+    st.update_udq( res2, 0 );
     BOOST_CHECK( st.has_well_var("OP4", "WUPR1"));
 
     auto res_sort2 = def_sort.eval(context);
-    st.update_udq( res_sort2 );
+    st.update_udq( res_sort2, 0 );
     BOOST_CHECK_EQUAL(res_sort2.defined_size(), 3);
-    BOOST_CHECK_EQUAL(res_sort2["OP2"].value(), 1.0);
-    BOOST_CHECK_EQUAL(res_sort2["OP3"].value(), 2.0);
-    BOOST_CHECK_EQUAL(res_sort2["OP4"].value(), 3.0);
-    BOOST_CHECK( !st.has_well_var("OP1", "WUPR3"));
+    BOOST_CHECK_EQUAL(res_sort2["OP2"].get(), 1.0);
+    BOOST_CHECK_EQUAL(res_sort2["OP3"].get(), 2.0);
+    BOOST_CHECK_EQUAL(res_sort2["OP4"].get(), 3.0);
     BOOST_CHECK( st.has_well_var("OP4", "WUPR3"));
 }
 
@@ -1156,7 +1133,8 @@ BOOST_AUTO_TEST_CASE(UDQ_SORTA) {
     UDQDefine def1(udqp, "WUPR1" , {"1", "/", "(", "WWCT", "'OP*'", "+", "0.00001", ")"});
     UDQDefine def_sort(udqp , "WUPR3", {"SORTA", "(", "WUPR1", ")" });
     SummaryState st(std::chrono::system_clock::now());
-    UDQContext context(udqft, st);
+    UDQState udq_state(udqp.undefinedValue());
+    UDQContext context(udqft, st, udq_state);
 
     st.update_well_var("OPL01", "WWCT", 0.7);
     st.update_well_var("OPL02", "WWCT", 0.8);
@@ -1164,15 +1142,15 @@ BOOST_AUTO_TEST_CASE(UDQ_SORTA) {
     st.update_well_var("OPU02", "WWCT", 0.0);
 
     auto res1 = def1.eval(context);
-    st.update_well_var("OPL01", "WUPR1", res1["OPL01"].value());
-    st.update_well_var("OPL02", "WUPR1", res1["OPL02"].value());
-    st.update_well_var("OPU01", "WUPR1", res1["OPU01"].value());
-    st.update_well_var("OPU02", "WUPR1", res1["OPU02"].value());
+    st.update_well_var("OPL01", "WUPR1", res1["OPL01"].get());
+    st.update_well_var("OPL02", "WUPR1", res1["OPL02"].get());
+    st.update_well_var("OPU01", "WUPR1", res1["OPU01"].get());
+    st.update_well_var("OPU02", "WUPR1", res1["OPU02"].get());
 
     auto res_sort = def_sort.eval(context);
-    BOOST_CHECK_EQUAL(res_sort["OPL02"].value(), 1.0);
-    BOOST_CHECK_EQUAL(res_sort["OPL01"].value(), 2.0);
-    BOOST_CHECK_EQUAL(res_sort["OPU01"].value() + res_sort["OPU02"].value(), 7.0);
+    BOOST_CHECK_EQUAL(res_sort["OPL02"].get(), 1.0);
+    BOOST_CHECK_EQUAL(res_sort["OPL01"].get(), 2.0);
+    BOOST_CHECK_EQUAL(res_sort["OPU01"].get() + res_sort["OPU02"].get(), 7.0);
 }
 
 
@@ -1187,7 +1165,8 @@ BOOST_AUTO_TEST_CASE(UDQ_BASIC_MATH_TEST) {
     UDQDefine def_muladd(udqp , "WUX", {"WOPR", "+", "WOPR", "*", "WOPR"});
     UDQDefine def_wuwct(udqp , "WUWCT", {"WWPR", "/", "(", "WOPR", "+", "WWPR", ")"});
     SummaryState st(std::chrono::system_clock::now());
-    UDQContext context(udqft, st);
+    UDQState udq_state(udqp.undefinedValue());
+    UDQContext context(udqft, st, udq_state);
 
     st.update_well_var("P1", "WOPR", 1);
     st.update_well_var("P2", "WOPR", 2);
@@ -1201,45 +1180,45 @@ BOOST_AUTO_TEST_CASE(UDQ_BASIC_MATH_TEST) {
 
     auto res_add = def_add.eval(context);
     BOOST_CHECK_EQUAL( res_add.size(), 4);
-    BOOST_CHECK_EQUAL( res_add["P1"].value(), 2);
-    BOOST_CHECK_EQUAL( res_add["P2"].value(), 4);
-    BOOST_CHECK_EQUAL( res_add["P3"].value(), 6);
-    BOOST_CHECK_EQUAL( res_add["P4"].value(), 8);
+    BOOST_CHECK_EQUAL( res_add["P1"].get(), 2);
+    BOOST_CHECK_EQUAL( res_add["P2"].get(), 4);
+    BOOST_CHECK_EQUAL( res_add["P3"].get(), 6);
+    BOOST_CHECK_EQUAL( res_add["P4"].get(), 8);
 
     auto res_sub = def_sub.eval(context);
     BOOST_CHECK_EQUAL( res_sub.size(), 4);
-    BOOST_CHECK_EQUAL( res_sub["P1"].value(), 0);
-    BOOST_CHECK_EQUAL( res_sub["P2"].value(), 0);
-    BOOST_CHECK_EQUAL( res_sub["P3"].value(), 0);
-    BOOST_CHECK_EQUAL( res_sub["P4"].value(), 0);
+    BOOST_CHECK_EQUAL( res_sub["P1"].get(), 0);
+    BOOST_CHECK_EQUAL( res_sub["P2"].get(), 0);
+    BOOST_CHECK_EQUAL( res_sub["P3"].get(), 0);
+    BOOST_CHECK_EQUAL( res_sub["P4"].get(), 0);
 
     auto res_div = def_div.eval(context);
     BOOST_CHECK_EQUAL( res_div.size(), 4);
-    BOOST_CHECK_EQUAL( res_div["P1"].value(), 1);
-    BOOST_CHECK_EQUAL( res_div["P2"].value(), 1);
-    BOOST_CHECK_EQUAL( res_div["P3"].value(), 1);
-    BOOST_CHECK_EQUAL( res_div["P4"].value(), 1);
+    BOOST_CHECK_EQUAL( res_div["P1"].get(), 1);
+    BOOST_CHECK_EQUAL( res_div["P2"].get(), 1);
+    BOOST_CHECK_EQUAL( res_div["P3"].get(), 1);
+    BOOST_CHECK_EQUAL( res_div["P4"].get(), 1);
 
     auto res_mul = def_mul.eval(context);
     BOOST_CHECK_EQUAL( res_mul.size(), 4);
-    BOOST_CHECK_EQUAL( res_mul["P1"].value(), 1);
-    BOOST_CHECK_EQUAL( res_mul["P2"].value(), 4);
-    BOOST_CHECK_EQUAL( res_mul["P3"].value(), 9);
-    BOOST_CHECK_EQUAL( res_mul["P4"].value(),16);
+    BOOST_CHECK_EQUAL( res_mul["P1"].get(), 1);
+    BOOST_CHECK_EQUAL( res_mul["P2"].get(), 4);
+    BOOST_CHECK_EQUAL( res_mul["P3"].get(), 9);
+    BOOST_CHECK_EQUAL( res_mul["P4"].get(),16);
 
     auto res_muladd = def_muladd.eval(context);
     BOOST_CHECK_EQUAL( res_muladd.size(), 4);
-    BOOST_CHECK_EQUAL( res_muladd["P1"].value(), 1 + 1);
-    BOOST_CHECK_EQUAL( res_muladd["P2"].value(), 4 + 2);
-    BOOST_CHECK_EQUAL( res_muladd["P3"].value(), 9 + 3);
-    BOOST_CHECK_EQUAL( res_muladd["P4"].value(),16 + 4);
+    BOOST_CHECK_EQUAL( res_muladd["P1"].get(), 1 + 1);
+    BOOST_CHECK_EQUAL( res_muladd["P2"].get(), 4 + 2);
+    BOOST_CHECK_EQUAL( res_muladd["P3"].get(), 9 + 3);
+    BOOST_CHECK_EQUAL( res_muladd["P4"].get(),16 + 4);
 
     auto res_wuwct= def_wuwct.eval(context);
     BOOST_CHECK_EQUAL( res_wuwct.size(), 4);
-    BOOST_CHECK_EQUAL( res_wuwct["P1"].value(),0.50);
-    BOOST_CHECK_EQUAL( res_wuwct["P2"].value(),0.50);
-    BOOST_CHECK_EQUAL( res_wuwct["P3"].value(),0.50);
-    BOOST_CHECK_EQUAL( res_wuwct["P4"].value(),0.50);
+    BOOST_CHECK_EQUAL( res_wuwct["P1"].get(),0.50);
+    BOOST_CHECK_EQUAL( res_wuwct["P2"].get(),0.50);
+    BOOST_CHECK_EQUAL( res_wuwct["P3"].get(),0.50);
+    BOOST_CHECK_EQUAL( res_wuwct["P4"].get(),0.50);
 }
 
 BOOST_AUTO_TEST_CASE(DECK_TEST) {
@@ -1247,7 +1226,8 @@ BOOST_AUTO_TEST_CASE(DECK_TEST) {
     UDQFunctionTable udqft(udqp);
     UDQDefine def(udqp, "WUOPRL", {"(", "WOPR", "OP1", "-", "150", ")", "*", "0.90"});
     SummaryState st(std::chrono::system_clock::now());
-    UDQContext context(udqft, st);
+    UDQState udq_state(udqp.undefinedValue());
+    UDQContext context(udqft, st, udq_state);
 
     st.update_well_var("OP1", "WOPR", 300);
     st.update_well_var("OP2", "WOPR", 3000);
@@ -1256,7 +1236,7 @@ BOOST_AUTO_TEST_CASE(DECK_TEST) {
     auto res = def.eval(context);
     BOOST_CHECK_EQUAL(res.size(), 3);
     for (std::size_t index = 0; index < res.size(); index++)
-        BOOST_CHECK( res[index].value() == (300 - 150)*0.90);
+        BOOST_CHECK( res[index].get() == (300 - 150)*0.90);
 }
 
 
@@ -1280,11 +1260,12 @@ BOOST_AUTO_TEST_CASE(UDQ_PARSE_ERROR) {
         UDQDefine def1(udqp, "WUBHP", tokens, parseContext, errors);
         SummaryState st(std::chrono::system_clock::now());
         UDQFunctionTable udqft(udqp);
-        UDQContext context(udqft, st);
+        UDQState udq_state(udqp.undefinedValue());
+        UDQContext context(udqft, st, udq_state);
         st.update_well_var("P1", "WBHP", 1);
 
         auto res = def1.eval(context);
-        BOOST_CHECK_EQUAL(res["P1"].value(), udqp.undefinedValue());
+        BOOST_CHECK_EQUAL(res["P1"].get(), udqp.undefinedValue());
     }
 
     parseContext.update(ParseContext::UDQ_PARSE_ERROR, InputError::THROW_EXCEPTION);
@@ -1304,17 +1285,18 @@ BOOST_AUTO_TEST_CASE(UDQ_TYPE_ERROR) {
 
         SummaryState st(std::chrono::system_clock::now());
         UDQFunctionTable udqft(udqp);
-        UDQContext context(udqft, st);
+        UDQState udq_state(udqp.undefinedValue());
+        UDQContext context(udqft, st, udq_state);
         st.update_well_var("P1", "WBHP", 1);
         st.update_well_var("P2", "WBHP", 2);
 
         auto res1 = def1.eval(context);
-        BOOST_CHECK_EQUAL(res1[0].value(), udqp.undefinedValue());
+        BOOST_CHECK_EQUAL(res1[0].get(), udqp.undefinedValue());
 
         auto res2 = def2.eval(context);
         BOOST_CHECK_EQUAL(res2.size(), st.num_wells());
         for (std::size_t index = 0; index < res2.size(); index++)
-            BOOST_CHECK_EQUAL(res2[index].value(), 3);
+            BOOST_CHECK_EQUAL(res2[index].get(), 3);
     }
 
     parseContext.update(ParseContext::UDQ_TYPE_ERROR, InputError::THROW_EXCEPTION);
@@ -1686,10 +1668,11 @@ UDQ
     auto def0 = udq.definitions()[0];
     SummaryState st(std::chrono::system_clock::now());
     UDQFunctionTable udqft(udqp);
-    UDQContext context(udqft, st);
+    UDQState udq_state(udqp.undefinedValue());
+    UDQContext context(udqft, st, udq_state);
 
     auto res0 = def0.eval(context);
-    BOOST_CHECK_CLOSE( res0[0].value(), -0.00125*3, 1e-6);
+    BOOST_CHECK_CLOSE( res0[0].get(), -0.00125*3, 1e-6);
 }
 
 
@@ -1699,7 +1682,7 @@ SCHEDULE
 UDQ
    DEFINE FUMIN0 - 1.5*FWPR /
    DEFINE FUMIN1 - 1.5*FWPR*(FGPR + FOPR)^3 - 2*FLPR /
-   DEFINE FU -2.539E-14 * (FUP1+FUP2)^3 + 1.4464E-8 *(FUP1+FUP2)^2 +0.00028875*(FUP1+FUP2)+2.8541 /
+   DEFINE FU -2.539E-14 * (FXP1+FXP2)^3 + 1.4464E-8 *(FXP1+FXP2)^2 +0.00028875*(FXP1+FXP2)+2.8541 /
 /
 )";
 
@@ -1711,29 +1694,30 @@ UDQ
     auto def2 = udq.definitions()[2];
     SummaryState st(std::chrono::system_clock::now());
     UDQFunctionTable udqft(udqp);
-    UDQContext context(udqft, st);
+    UDQState udq_state(udqp.undefinedValue());
+    UDQContext context(udqft, st, udq_state);
     const double fwpr = 7;
     const double fopr = 4;
     const double fgpr = 7;
     const double flpr = 13;
-    const double fup1 = 1025;
-    const double fup2 = 107;
+    const double fxp1 = 1025;
+    const double fxp2 = 107;
     st.update("FWPR", fwpr);
     st.update("FOPR", fopr);
     st.update("FGPR", fgpr);
     st.update("FLPR", flpr);
-    st.update("FUP1", fup1);
-    st.update("FUP2", fup2);
+    st.update("FXP1", fxp1);
+    st.update("FXP2", fxp2);
 
     auto res0 = def0.eval(context);
-    BOOST_CHECK_EQUAL( res0[0].value(), -1.5*fwpr);
+    BOOST_CHECK_EQUAL( res0[0].get(), -1.5*fwpr);
 
     auto res1 = def1.eval(context);
-    BOOST_CHECK_EQUAL( res1[0].value(), -1.5*fwpr*std::pow(fgpr+fopr, 3) - 2*flpr );
+    BOOST_CHECK_EQUAL( res1[0].get(), -1.5*fwpr*std::pow(fgpr+fopr, 3) - 2*flpr );
 
     auto res2 = def2.eval(context);
-    auto right = -2.5394E-14 * std::pow(fup1 + fup2, 3) + 1.4464E-8*std::pow(fup1 + fup2, 2) + 0.00028875*(fup1 + fup2) + 2.8541;
-    BOOST_CHECK_CLOSE( res2[0].value(), right, 1e-6);
+    auto right = -2.5394E-14 * std::pow(fxp1 + fxp2, 3) + 1.4464E-8*std::pow(fxp1 + fxp2, 2) + 0.00028875*(fxp1 + fxp2) + 2.8541;
+    BOOST_CHECK_CLOSE( res2[0].get(), right, 1e-6);
 }
 
 BOOST_AUTO_TEST_CASE(UDQ_STARSTAR) {
@@ -1752,7 +1736,8 @@ UDQ
     auto def1 = udq.definitions()[1];
     SummaryState st(std::chrono::system_clock::now());
     UDQFunctionTable udqft(udqp);
-    UDQContext context(udqft, st);
+    UDQState udq_state(udqp.undefinedValue());
+    UDQContext context(udqft, st, udq_state);
     st.update_well_var("W1", "WOPR", 1);
     st.update_well_var("W2", "WOPR", 2);
     st.update_well_var("W3", "WOPR", 3);
@@ -1762,14 +1747,14 @@ UDQ
     st.update_well_var("W3", "WGLIR", 3);
 
     auto res0 = def0.eval(context);
-    BOOST_CHECK_EQUAL( res0["W1"].value(), 1);
-    BOOST_CHECK_EQUAL( res0["W2"].value(), 4);
-    BOOST_CHECK_EQUAL( res0["W3"].value(), 9);
+    BOOST_CHECK_EQUAL( res0["W1"].get(), 1);
+    BOOST_CHECK_EQUAL( res0["W2"].get(), 4);
+    BOOST_CHECK_EQUAL( res0["W3"].get(), 9);
 
     auto res1 = def1.eval(context);
-    BOOST_CHECK_EQUAL( res1["W1"].value(), 2);
-    BOOST_CHECK_EQUAL( res1["W2"].value(), 1);
-    BOOST_CHECK_EQUAL( res1["W3"].value(), 0);
+    BOOST_CHECK_EQUAL( res1["W1"].get(), 2);
+    BOOST_CHECK_EQUAL( res1["W2"].get(), 1);
+    BOOST_CHECK_EQUAL( res1["W3"].get(), 0);
 }
 
 
@@ -1789,7 +1774,9 @@ UDQ
     auto schedule = make_schedule(deck_string);
     const auto& udq = schedule.getUDQConfig(0);
     SummaryState st(std::chrono::system_clock::now());
-    udq.eval(st);
+    auto undefined_value =  udq.params().undefinedValue();
+    UDQState udq_state(undefined_value);
+    udq.eval(st, udq_state);
 
     BOOST_CHECK_EQUAL( st.get("FU_UADD"), 12);   // 10 + 2
 
@@ -1813,11 +1800,79 @@ DEFINE FU_PAR2 FU_PAR3 /
     auto schedule = make_schedule(deck_string);
     const auto& udq = schedule.getUDQConfig(0);
     SummaryState st(std::chrono::system_clock::now());
+    auto undefined_value =  udq.params().undefinedValue();
+    UDQState udq_state(undefined_value);
     st.update("FMWPR", 100);
-    udq.eval(st);
+    udq.eval(st, udq_state);
 
     BOOST_CHECK_EQUAL(st.get("FU_PAR2"), 100);
 }
+
+BOOST_AUTO_TEST_CASE(UDQ_UNDEFINED2) {
+    std::string deck_string = R"(
+SCHEDULE
+UDQ
+DEFINE FU_PAR2 FU_PAR1 + 1/
+DEFINE FU_PAR3 FU_PAR2 + 1/
+/
+)";
+    auto schedule = make_schedule(deck_string);
+    const auto& udq = schedule.getUDQConfig(0);
+    SummaryState st(std::chrono::system_clock::now());
+    auto undefined_value =  udq.params().undefinedValue();
+    UDQState udq_state(undefined_value);
+    udq.eval(st, udq_state);
+
+    BOOST_CHECK_EQUAL(st.get("FU_PAR2"), undefined_value);
+    BOOST_CHECK_EQUAL(st.get("FU_PAR3"), undefined_value);
+}
+
+
+
+
+BOOST_AUTO_TEST_CASE(UDQSTATE) {
+    double undefined_value = 1234;
+    UDQState st(undefined_value);
+    BOOST_CHECK(!st.has("FUXX"));
+    BOOST_CHECK(!st.has_well_var("OP1", "WUXX"));
+    BOOST_CHECK(!st.has_group_var("G1", "GUXX"));
+
+    // Try to get from symbol which is not UDQ -> logic_error
+    BOOST_CHECK_THROW(st.get("FOPR"), std::logic_error);
+
+    // Try to get from a UDQ which has not registered -> out_of_range
+    BOOST_CHECK_THROW(st.get("FUPR"), std::out_of_range);
+
+    auto fxpr = UDQSet::scalar("FXPR", 100);
+    BOOST_CHECK_THROW(st.add("FXPR", fxpr), std::logic_error);
+
+    BOOST_CHECK_THROW(st.get_well_var("OP1", "WUPR"), std::out_of_range);
+
+    auto fupr = UDQSet::scalar("FUPR", 100);
+    st.add("FUPR", fupr);
+
+    // This is not a well quantity
+    BOOST_CHECK_THROW(st.get_well_var("OP1", "FUPR"), std::logic_error);
+    BOOST_CHECK_EQUAL(100, st.get("FUPR"));
+
+
+    auto wupr = UDQSet::wells("WUPR", {"P1", "P2"});
+    wupr.assign("P1", 75);
+    st.add("WUPR", wupr);
+
+    BOOST_CHECK(st.has_well_var("P1", "WUPR"));
+    // We have a well P2 - but we have not assigned a value to it!
+    BOOST_CHECK(!st.has_well_var("P2", "WUPR"));
+
+    BOOST_CHECK_EQUAL(st.get_well_var("P1", "WUPR"), 75);
+    BOOST_CHECK_EQUAL(st.get_well_var("P2", "WUPR"), undefined_value);
+
+    const auto buffer = st.serialize();
+    UDQState st2(1067);
+    st2.deserialize( buffer );
+    BOOST_CHECK(st == st2);
+}
+
 
 
 BOOST_AUTO_TEST_CASE(UDQ_UADD_PARSER2) {
@@ -1869,6 +1924,202 @@ DEFINE WUGASRA  750000 - WGLIR '*' /
 /
 )";
     auto schedule = make_schedule(deck_string);
+    const auto& udq = schedule.getUDQConfig(0);
+    auto undefined_value =  udq.params().undefinedValue();
+    UDQState udq_state(undefined_value);
+    SummaryState st(std::chrono::system_clock::now());
+
+    st.update("FMWPR", 100);
+    st.update("FMWIN", 100);
+    st.update("FMWPA", 100);
+    st.update("FMWIA", 100);
+    st.update("FOPR", 100);
+    st.update_well_var("W1", "WGLIR", 1);
+    st.update_well_var("W2", "WGLIR", 2);
+    st.update_well_var("W3", "WGLIR", 3);
+
+    udq.eval(st, udq_state);
+
+    // The current testcase has some ordering & defined / undefined issues which
+    // are not yet solved; therefor no udq.eval() here.
+}
+
+
+BOOST_AUTO_TEST_CASE(UDQ_UNDEFINED) {
+    std::string deck_string = R"(
+-- udq #2
+UDQ
+----XX xxxx xxx
+--xxxx xxxx xxxx xxxx
+ASSIGN FU_VAR1 0  /
+DEFINE FU_VAR1 -2.539E-14 * (FU_VAR91+FU_VAR90)^3 + 1.4464E-8 *(FU_VAR91+FU_VAR90)^2 +0.00028875*(FU_VAR91+FU_VAR90)+2.8541 /
+--xxxx xx xxxx xxx xxxx xxxx
+ASSIGN FU_VAR2 0  /
+DEFINE FU_VAR3 FU_VAR1 > 10 /
+DEFINE FU_VAR2 NINT(FU_VAR91 / 35000 + 0.499) * FU_VAR3 /
+--xxxx xxx XX xxx xxxx xxxx
+ASSIGN FU_VAR4 0  /
+--Xxxx xxx XX xxx xxxx, xxxx
+ASSIGN FU_VAR5 0  /
+DEFINE FU_VAR6 FU_VAR2 != 0 /
+DEFINE FU_VAR7 FU_VAR6 * FU_VAR2  - 999 * (1 - FU_VAR6)  /  --Avoiding div by 0
+DEFINE FU_VAR5 FU_VAR6 * FU_VAR91 / FU_VAR7 / 24 / 0.95 /
+--Xxx xxx XX xxx xxx, xxxxx
+DEFINE FU_VAR8 FU_VAR4 != 0 /
+ASSIGN FU_VAR9 0  /
+--XX Xxx xxxxx xxxxx xxxxx
+ASSIGN FU_VAR10 0  /
+DEFINE FU_VAR10  -0.00000041232 * FU_VAR5 ^ 2 + 0.0010395 * FU_VAR5 + 0.16504 /
+--XX xxx xxxxx xxxxx xxxxx
+ASSIGN FU_VAR11 0  /
+--xxxxx xxxxx xxxxx xxxxx, xX
+ASSIGN FU_VAR12 0  /
+ASSIGN FU_VAR13 0  /
+ASSIGN FU_VAR14 0  /
+DEFINE FU_VAR12 FU_VAR2 * FU_VAR5 * 1E5 * ((FU_VAR1 - 10) / 3600) / 1000 / FU_VAR10 / 0.8938  /
+DEFINE FU_VAR14 FU_VAR12 + FU_VAR13  /
+
+-----Xxxxx xxxxx xxxxx
+--xxxxx xx XX xxxxx xxxxx xxxxx
+ASSIGN FU_VAR15 0  /
+DEFINE FU_VAR15 NINT((FU_P1SWI + FU_P1WPR) / 30000 + 0.499) /
+--xxxxx xx XX xxxxx xxxxx xxxxx
+ASSIGN FU_VAR16 0  /
+--xxxx xx  XX XZ, xx/x
+ASSIGN FU_VAR17 0  /
+DEFINE FU_VAR18 FU_VAR15 != 0  /
+DEFINE FU_VAR17 FU_P1WPB * (FU_P1WPR + FU_P1SWI) / (FU_VAR15 + 0.0001) / 24 / 0.95  /
+--xxxx xxx xxxx xxxx xxxx, xxxx
+DEFINE FU_VAR19 FU_VAR16 != 0  /
+ASSIGN FU_VAR20 0  /
+--xxxx xxxx xxxx xxxx
+ASSIGN FU_VAR21 0  /
+DEFINE FU_VAR21 -0.00000035417*FU_VAR17^2 +0.0010673*FU_VAR17 + 0.029286  /
+--XX xxxx xxxx xxxx
+ASSIGN FU_VAR22 0  /
+--XX XX xxxx xxxx, xX
+ASSIGN FU_VAR23 0  /
+DEFINE FU_VAR23 FU_VAR15 * FU_VAR17 * 1E5 * ((150-10)/3600) / 1000 / FU_VAR21 / 0.8938  /
+--xx XX xx xx, xX
+ASSIGN FU_VAR24 0  /
+--xxxx xxxx xxxx xxxx, xxxx
+DEFINE FU_VAR25 FU_VAR23 + FU_VAR24  /
+
+-----xxxx xxxx
+--xxxx xxxx xxxx, X xxxx xxxx xxxx xxxx xxxx xxxx xxxx xxxx
+ASSIGN FU_VAR26 0 /
+--xxxx xxxx xxxx xxxx
+ASSIGN FU_VAR27 0  /
+DEFINE FU_VAR27 ((FU_P1TGP/1E6*4546.667)/0.9215+1474) * (1-FU_VAR26) + ((FU_P1TGP/1E6*4911)/0.9215+1474) * FU_VAR26  /
+--xxxx xxxx xxxx xxxx
+ASSIGN FU_VAR28 0  /
+--xxxx xxxx xxxx
+ASSIGN FU_VAR29 0  /
+DEFINE FU_VAR29 FU_VAR27 + FU_VAR28  /
+
+-----xxxx xxxx
+ASSIGN FU_VAR30 6682  /
+ASSIGN FU_VAR31 0  /
+ASSIGN FU_VAR32 4155  /  --xxxx xx xxxx xxxx XX xxxx
+ASSIGN FU_VAR33 9685  /
+ASSIGN FU_VAR34 4000  /
+ASSIGN FU_VAR35 1230  /   --xxxx xx xxxx xxxx XX xxxx
+--Total base load
+ASSIGN FU_VAR36 0  /
+DEFINE FU_VAR36 FU_P1BL + FU_P2BL + FU_VAR32 + FU_VAR33 + FU_VAR34 + FU_VAR35  /
+
+-----XX xxxx xxxx
+ASSIGN FU_VAR37 2300 /
+ASSIGN FU_VAR38 0 /   --  xxxxxx  xx xxxx  xxxx  XX  xxxx 
+ASSIGN FU_VAR39 2300  /  -- xxxx * Y  xxxx xx Z xxxx XX  xxxx 
+-- xxxx  xxxx xxxx xxxx
+ASSIGN FU_VAR40 0  /
+DEFINE FU_VAR40 FU_VAR37 + FU_VAR38 + FU_VAR39 /
+
+-----xxxx xxxx xxxx xxxx
+--xxxx xxxx
+ASSIGN FU_VAR41 0  /
+DEFINE FU_VAR41 0.005 * FU_VAR90  /
+DEFINE FU_VAR42 FU_P2WPR < FU_VAR41 /
+ASSIGN FU_VAR43 0  /
+--xxxx xxxx
+ASSIGN FU_VAR44 0  /
+--xxxx xxxx xxxx
+ASSIGN FU_VAR45 0  /
+DEFINE FU_VAR45 FU_VAR43 + FU_VAR44  /
+
+-----xxxx xxxx xxxx
+ASSIGN FU_VAR46 0  /
+DEFINE FU_VAR47 FU_P1SWI > 10 /
+DEFINE FU_VAR46 NINT(FU_P1SWI / 36000 + 0.499) * 761 / 0.9025 * FU_VAR47  /
+ASSIGN FU_VAR48 0  /
+DEFINE FU_VAR49 FU_P1WPR > 10 /
+DEFINE FU_VAR48 NINT(FU_P1WPR / 30576 + 0.499) * 864 / 0.9025 * FU_VAR49  /
+DEFINE FU_VAR50 FU_P2SWI > 10 /
+ASSIGN FU_VAR51 0  /
+DEFINE FU_VAR52 FU_P2WPR > 10 /
+ASSIGN FU_VAR53 0  /
+--xxxx xxxx xxxx
+ASSIGN FU_VAR54 0  /
+DEFINE FU_VAR54 FU_VAR46 + FU_VAR48 + FU_VAR51 + FU_VAR53  /
+
+-----xxxx xxxx loadxxxxs
+--xxxx xxxx xxxx xxxx xxxx, xxxxxxxx
+ASSIGN FU_VAR55 0  /
+DEFINE FU_VAR55 FU_VAR91 * 30.6571 / 1000 / 0.8754  /
+--xxxx xxxx xxxx xxxx xxxx, xxxx
+ASSIGN FU_VAR56 0  /
+--xxxx
+ASSIGN FU_VAR57 0  /
+DEFINE FU_VAR57 FU_VAR91 * 61.4286 / 1000 / 0.9215 + 280  /
+--xxxx
+ASSIGN FU_VAR58 0  /
+--xxxx
+ASSIGN FU_VAR59 0  /
+DEFINE FU_VAR59 FU_P1TGP * 120 / 1E6   /
+--xxxx xxxx xxxx xxxx, xxxx
+ASSIGN FU_VAR60 0  /
+DEFINE FU_VAR60 (FU_VAR91 + FU_VAR90) * 5.52 / 1000  /
+--xxxx xxxx xxxx xxxx, xxxx
+ASSIGN FU_VAR61 0  /
+DEFINE FU_VAR61 FU_VAR60 + FU_VAR59 + FU_VAR58 + FU_VAR57 + FU_VAR56 + FU_VAR55  /
+
+-----xxxx-xxxx, xxxx
+ASSIGN FU_VAR62 0  /
+DEFINE FU_VAR62  (FU_VAR61 + FU_VAR54 + FU_VAR45 + FU_VAR40 + FU_VAR36 + FU_VAR29 + FU_VAR25 + FU_VAR14)/1000  /
+
+--xxxx xxxx, xxxx
+ASSIGN FU_VAR63 0  /  -- xxxx xxxx xxxx xxxx xxxx xxxx xxxx
+--Allowance, MW
+ASSIGN FU_VAR64 5  /  --xxxx xxxx xxxx MxxxxW xxxx xxxx XX xxxx
+--xxxx
+ASSIGN FU_VAR65 0  /
+DEFINE FU_VAR65 0.02 * FU_VAR62  /
+
+-----xxxx xxxx xxxx xxxx, xxxx
+ASSIGN FU_VAR66 0  /
+DEFINE FU_VAR66 FU_VAR65 + FU_VAR64 + FU_VAR63 + FU_VAR62  /
+
+---- xxxx xxxx xxxx
+DEFINE FU_VAR67 0  /
+DEFINE FU_VAR67 FU_VAR66 * 0.79  /
+
+---- xxxx xxxx xxxx xxxx
+DEFINE FU_VAR68 0  /
+DEFINE FU_VAR68 FU_VAR67 * 1.08  /
+/
+
+-- udq #6
+
+UDQ
+ASSIGN FU_VAR90 0.0  /
+DEFINE FU_VAR91 GOPR TEST  /
+/
+)";
+    auto schedule = make_schedule(deck_string);
+    const auto& udq = schedule.getUDQConfig(0);
+    auto undefined_value =  udq.params().undefinedValue();
+    UDQState udq_state(undefined_value);
     SummaryState st(std::chrono::system_clock::now());
     st.update("FMWPR", 100);
     st.update("FMWIN", 100);
@@ -1879,6 +2130,7 @@ DEFINE WUGASRA  750000 - WGLIR '*' /
     st.update_well_var("W2", "WGLIR", 2);
     st.update_well_var("W3", "WGLIR", 3);
 
+    udq.eval(st, udq_state);
+
     // The current testcase has some ordering & defined / undefined issues which
-    // are not yet solved; therefor no udq.eval() here.
 }

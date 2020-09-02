@@ -248,12 +248,13 @@ bool dynamic_type_check(UDQVarType lhs, UDQVarType rhs) {
 
 }
 
-UDQSet UDQDefine::eval(const UDQContext& context) const {
+UDQSet UDQDefine::eval(UDQContext& context) const {
     UDQSet res = this->ast->eval(this->m_var_type, context);
     if (!dynamic_type_check(this->var_type(), res.var_type())) {
         std::string msg = "Invalid runtime type conversion detected when evaluating UDQ";
         throw std::invalid_argument(msg);
     }
+    context.update(this->keyword(), res);
 
     if (res.var_type() == UDQVarType::SCALAR) {
         /*
@@ -272,7 +273,7 @@ UDQSet UDQDefine::eval(const UDQContext& context) const {
           regarding the semantics of group sets.
         */
 
-        double scalar_value = res[0].value();
+        const auto& scalar_value = res[0].value();
         if (this->var_type() == UDQVarType::WELL_VAR) {
             const std::vector<std::string> wells = context.wells();
             UDQSet well_res = UDQSet::wells(this->m_keyword, wells);

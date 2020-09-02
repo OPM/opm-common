@@ -154,19 +154,16 @@ UDQSet UDQASTNode::eval(UDQVarType target_type, const UDQContext& context) const
                     auto res = UDQSet::wells(string_value, wells);
                     int fnmatch_flags = 0;
                     for (const auto& well : wells) {
-                        if (fnmatch(well_pattern.c_str(), well.c_str(), fnmatch_flags) == 0) {
-                            if (context.has_well_var(well, string_value))
-                                res.assign(well, context.get_well_var(well, string_value));
-                        }
+                        if (fnmatch(well_pattern.c_str(), well.c_str(), fnmatch_flags) == 0)
+                            res.assign(well, context.get_well_var(well, string_value));
                     }
                     return res;
                 }
             } else {
                 auto res = UDQSet::wells(string_value, wells);
-                for (const auto& well : wells) {
-                    if (context.has_well_var(well, string_value))
-                        res.assign(well, context.get_well_var(well, string_value));
-                }
+                for (const auto& well : wells)
+                    res.assign(well, context.get_well_var(well, string_value));
+
                 return res;
             }
         }
@@ -181,10 +178,8 @@ UDQSet UDQASTNode::eval(UDQVarType target_type, const UDQContext& context) const
             } else {
                 const auto& groups = context.groups();
                 auto res = UDQSet::groups(string_value, groups);
-                for (const auto& group : groups) {
-                    if (context.has_group_var(group, string_value))
-                        res.assign(group, context.get_group_var(group, string_value));
-                }
+                for (const auto& group : groups)
+                    res.assign(group, context.get_group_var(group, string_value));
                 return res;
             }
         }
@@ -192,7 +187,11 @@ UDQSet UDQASTNode::eval(UDQVarType target_type, const UDQContext& context) const
         if (data_type == UDQVarType::FIELD_VAR)
             return UDQSet::scalar(string_value, context.get(string_value));
 
-        throw std::logic_error("Should not be here: var_type: " + UDQ::typeName(data_type));
+        auto scalar = context.get(string_value);
+        if (scalar.has_value())
+            return UDQSet::scalar(string_value, scalar.value());
+
+        throw std::logic_error("Should not be here: var_type: " + UDQ::typeName(data_type) + " stringvalue:" + string_value);
     }
 
 

@@ -189,7 +189,7 @@ void EclipseIO::writeInitial( data::Solution simProps, std::map<std::string, std
 // implementation of the writeTimeStep method
 void EclipseIO::writeTimeStep(const Action::State& action_state,
                               const SummaryState& st,
-                              const UDQState& /* udq_state */,
+                              const UDQState& udq_state,
                               int report_step,
                               bool  isSubstep,
                               double secs_elapsed,
@@ -239,7 +239,7 @@ void EclipseIO::writeTimeStep(const Action::State& action_state,
         };
 
         RestartIO::save(rstFile, report_step, secs_elapsed, value,
-                        es, grid, schedule, action_state, st, write_double);
+                        es, grid, schedule, action_state, st, udq_state, write_double);
     }
 
     // RFT file written only if requested and never for substeps.

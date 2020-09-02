@@ -26,7 +26,6 @@
 
 #include <opm/output/eclipse/RestartValue.hpp>
 
-#include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 
 #include <string>
 #include <utility>
@@ -37,6 +36,8 @@ namespace Opm {
     class EclipseGrid;
     class EclipseState;
     class Schedule;
+    class UDQState;
+    class SummaryState;
 
 } // namespace Opm
 
@@ -84,6 +85,7 @@ namespace Opm { namespace RestartIO {
               const Schedule&               schedule,
               const Action::State&          action_state,
               const SummaryState&           sumState,
+              const UDQState&               udqState,
               bool                          write_double = false);
 
 

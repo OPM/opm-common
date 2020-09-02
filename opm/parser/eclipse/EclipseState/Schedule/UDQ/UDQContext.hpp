@@ -21,32 +21,36 @@
 #ifndef UDQ_CONTEXT_HPP
 #define UDQ_CONTEXT_HPP
 
-#include <vector>
+#include <optional>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQParams.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQSet.hpp>
 
 namespace Opm {
     class SummaryState;
     class UDQFunctionTable;
+    class UDQState;
 
     class UDQContext{
     public:
-        UDQContext(const UDQFunctionTable& udqft, const SummaryState& summary_state);
-        double get(const std::string& key) const;
-        bool has_well_var(const std::string& well, const std::string& var) const;
-        double get_well_var(const std::string& well, const std::string& var) const;
-        bool has_group_var(const std::string& group, const std::string& var) const;
-        double get_group_var(const std::string& group, const std::string& var) const;
+        UDQContext(const UDQFunctionTable& udqft, SummaryState& summary_state, UDQState& udq_state);
+        std::optional<double> get(const std::string& key) const;
+        std::optional<double> get_well_var(const std::string& well, const std::string& var) const;
+        std::optional<double> get_group_var(const std::string& group, const std::string& var) const;
         void add(const std::string& key, double value);
+        void update(const std::string& keyword, const UDQSet& udq_result);
         const UDQFunctionTable& function_table() const;
         std::vector<std::string> wells() const;
         std::vector<std::string> groups() const;
     private:
         const UDQFunctionTable& udqft;
-        const SummaryState& summary_state;
+        SummaryState& summary_state;
+        UDQState& udq_state;
+        //std::unordered_map<std::string, UDQSet> udq_results;
         std::unordered_map<std::string, double> values;
     };
 }
