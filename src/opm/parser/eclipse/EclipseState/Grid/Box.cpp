@@ -143,12 +143,18 @@ namespace Opm {
 
 
     const std::vector<Box::cell_index>& Box::index_list() const {
-        return m_index_list;
+        return this->m_active_index_list;
+    }
+
+    const std::vector<Box::cell_index>& Box::global_index_list() const {
+        return this->m_global_index_list;
     }
 
 
+
     void Box::initIndexList() {
-        m_index_list.clear();
+        m_active_index_list.clear();
+        m_global_index_list.clear();
 
         size_t ii,ij,ik;
         for (ik=0; ik < m_dims[2]; ik++) {
@@ -156,15 +162,16 @@ namespace Opm {
             for (ij=0; ij < m_dims[1]; ij++) {
                 size_t j = ij + m_offset[1];
                 for (ii=0; ii < m_dims[0]; ii++) {
-                    size_t i = ii + m_offset[0];
-                    size_t g = i * m_stride[0] + j*m_stride[1] + k*m_stride[2];
+                    std::size_t i = ii + m_offset[0];
+                    std::size_t global_index = i * m_stride[0] + j*m_stride[1] + k*m_stride[2];
+                    std::size_t data_index = ii + ij*this->m_dims[0] + ik*this->m_dims[0]*this->m_dims[1];
 
-                    if (this->grid.cellActive(g)) {
-                        std::size_t global_index = g;
-                        std::size_t active_index = this->grid.activeIndex(g);
-                        std::size_t data_index = ii + ij*this->m_dims[0] + ik*this->m_dims[0]*this->m_dims[1];
-                        m_index_list.push_back({global_index, active_index, data_index});
+                    if (this->grid.cellActive(global_index)) {
+                        std::size_t active_index = this->grid.activeIndex(global_index);
+                        m_active_index_list.emplace_back(global_index, active_index, data_index);
                     }
+
+                    this->m_global_index_list.emplace_back( global_index, data_index );
                 }
             }
         }

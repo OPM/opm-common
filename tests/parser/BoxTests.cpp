@@ -161,6 +161,12 @@ BOOST_AUTO_TEST_CASE(TestKeywordBox2) {
         BOOST_CHECK_EQUAL(p.active_index + 1, p.global_index);
     BOOST_CHECK_EQUAL(box.index_list().size() + 1, grid.getCartesianSize());
 
+    const auto& global_index_list = box.global_index_list();
+    BOOST_CHECK_EQUAL( global_index_list.size(), grid.getCartesianSize());
+    const auto& c0 = global_index_list[0];
+    BOOST_CHECK_EQUAL(c0.global_index, 0);
+    BOOST_CHECK_EQUAL(c0.active_index, c0.global_index);
+    BOOST_CHECK_EQUAL(c0.data_index, 0);
 
     Opm::Box box2(grid,9,9,9,9,0,9);
     const auto& il = box2.index_list();
