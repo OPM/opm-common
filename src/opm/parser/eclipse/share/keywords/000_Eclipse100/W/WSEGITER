@@ -8,7 +8,7 @@
     {
       "name": "MAX_WELL_ITERATIONS",
       "value_type": "INT",
-      "default": 20
+      "default": 40
     },
     {
       "name": "MAX_TIMES_REDUCED",
