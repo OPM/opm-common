@@ -40,22 +40,6 @@ BOOST_AUTO_TEST_CASE(CreateBox) {
     BOOST_CHECK_EQUAL( 2 , box.getDim(2) );
 
     BOOST_CHECK_THROW( box.getDim(5) , std::invalid_argument);
-
-
-    {
-        size_t i,j,k;
-        const std::vector<size_t>& indexList = box.getIndexList();
-
-        for (k=0; k < box.getDim(2); k++) {
-            for (j=0; j < box.getDim(1); j++) {
-                for (i=0; i < box.getDim(0); i++) {
-                    size_t g = i + j*box.getDim(0) + k*box.getDim(0)*box.getDim(1);
-                    BOOST_CHECK_EQUAL( indexList[g] , g);
-
-                }
-            }
-        }
-    }
 }
 
 
@@ -75,21 +59,6 @@ BOOST_AUTO_TEST_CASE(CreateSubBox) {
     Opm::Box subBox2(grid, 1,3,1,4,1,5);
     BOOST_CHECK( !subBox2.isGlobal());
     BOOST_CHECK_EQUAL( 60U , subBox2.size() );
-
-    size_t i,j,k;
-    size_t d = 0;
-    const std::vector<size_t>& indexList = subBox2.getIndexList();
-
-    for (k=0; k < subBox2.getDim(2); k++) {
-        for (j=0; j < subBox2.getDim(1); j++) {
-            for (i=0; i < subBox2.getDim(0); i++) {
-
-                size_t g = (i + 1) + (j + 1)*globalBox.getDim(0) + (k + 1)*globalBox.getDim(0)*globalBox.getDim(1);
-                BOOST_CHECK_EQUAL( indexList[d] , g);
-                d++;
-            }
-        }
-    }
 }
 
 
@@ -192,6 +161,12 @@ BOOST_AUTO_TEST_CASE(TestKeywordBox2) {
         BOOST_CHECK_EQUAL(p.active_index + 1, p.global_index);
     BOOST_CHECK_EQUAL(box.index_list().size() + 1, grid.getCartesianSize());
 
+    const auto& global_index_list = box.global_index_list();
+    BOOST_CHECK_EQUAL( global_index_list.size(), grid.getCartesianSize());
+    const auto& c0 = global_index_list[0];
+    BOOST_CHECK_EQUAL(c0.global_index, 0);
+    BOOST_CHECK_EQUAL(c0.active_index, c0.global_index);
+    BOOST_CHECK_EQUAL(c0.data_index, 0);
 
     Opm::Box box2(grid,9,9,9,9,0,9);
     const auto& il = box2.index_list();
