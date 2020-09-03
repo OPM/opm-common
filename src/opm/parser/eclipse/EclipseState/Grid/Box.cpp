@@ -142,17 +142,12 @@ namespace Opm {
 
 
 
-    const std::vector<size_t>& Box::getIndexList() const {
-        return global_index_list;
-    }
-
     const std::vector<Box::cell_index>& Box::index_list() const {
         return m_index_list;
     }
 
 
     void Box::initIndexList() {
-        global_index_list.clear();
         m_index_list.clear();
 
         size_t ii,ij,ik;
@@ -164,7 +159,6 @@ namespace Opm {
                     size_t i = ii + m_offset[0];
                     size_t g = i * m_stride[0] + j*m_stride[1] + k*m_stride[2];
 
-                    global_index_list.push_back(g);
                     if (this->grid.cellActive(g)) {
                         std::size_t global_index = g;
                         std::size_t active_index = this->grid.activeIndex(g);

@@ -53,7 +53,6 @@ namespace Opm {
         bool   isGlobal() const;
         size_t getDim(size_t idim) const;
         const std::vector<cell_index>& index_list() const;
-        const std::vector<size_t>& getIndexList() const;
         bool equal(const Box& other) const;
 
 
@@ -73,7 +72,6 @@ namespace Opm {
         size_t m_offset[3];
 
         bool   m_isGlobal;
-        std::vector<size_t> global_index_list;
         std::vector<cell_index> m_index_list;
 
         int lower(int dim) const;
