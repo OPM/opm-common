@@ -457,6 +457,15 @@ public:
         return data.data();
     }
 
+    template <typename T>
+    std::vector<T> get_global(const std::string& keyword) {
+        const auto& managed_field_data = this->try_get<T>(keyword);
+        const auto& field_data = managed_field_data.field_data();
+        if (field_data.global_data)
+            return *field_data.global_data;
+        else
+            return this->global_copy(field_data.data);
+    }
 
 
     template <typename T>

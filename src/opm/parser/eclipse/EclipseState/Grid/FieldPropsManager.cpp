@@ -57,8 +57,7 @@ const std::vector<T>* FieldPropsManager::try_get(const std::string& keyword) con
 
 template <typename T>
 std::vector<T> FieldPropsManager::get_global(const std::string& keyword) const {
-    const auto& data = this->get<T>(keyword);
-    return this->fp->global_copy(data);
+    return this->fp->get_global<T>(keyword);
 }
 
 template <typename T>
