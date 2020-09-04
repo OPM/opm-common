@@ -217,8 +217,8 @@ private:
 
     /*
       This is exactly like the get() method, but the returned vector will have
-      global cartesian size, where all inactive cells have been filled with
-      zeros.
+      global cartesian size. If the field has a default value that value will be
+      used for filling in in the inactive cells, otherwise zero is used.
     */
     template <typename T>
     std::vector<T> get_global(const std::string& keyword) const;

@@ -98,11 +98,11 @@ std::vector<int> FieldPropsManager::actnum() const {
 }
 
 std::vector<double> FieldPropsManager::porv(bool global) const {
-    const auto& data = this->get<double>("PORV");
+    const auto& field_data = this->fp->try_get<double>("PORV").field_data();
     if (global)
-        return this->fp->global_copy(data);
+        return this->fp->global_copy(field_data.data, field_data.kw_info.scalar_init);
     else
-        return data;
+        return field_data.data;
 }
 
 std::size_t FieldPropsManager::active_size() const {

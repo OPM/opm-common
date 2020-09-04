@@ -289,15 +289,19 @@ public:
     struct FieldData {
         std::vector<T> data;
         std::vector<value::status> value_status;
+        keywords::keyword_info<T> kw_info;
         mutable bool all_set;
 
         FieldData() = default;
 
-        FieldData(std::size_t active_size) :
+        FieldData(const keywords::keyword_info<T>& info, std::size_t active_size) :
             data(std::vector<T>(active_size)),
             value_status(active_size, value::status::uninitialized),
+            kw_info(info),
             all_set(false)
         {
+            if (info.scalar_init)
+                this->default_assign( *info.scalar_init );
         }
 
 
@@ -461,27 +465,26 @@ public:
     std::vector<T> get_global(const std::string& keyword) {
         const auto& managed_field_data = this->try_get<T>(keyword);
         const auto& field_data = managed_field_data.field_data();
-        if (field_data.global_data)
-            return *field_data.global_data;
-        else
-            return this->global_copy(field_data.data);
+        const auto& kw_info = keywords::global_kw_info<T>(keyword);
+        return this->global_copy(field_data.data, kw_info.scalar_init);
     }
 
 
     template <typename T>
     std::vector<T> get_copy(const std::string& keyword, bool global) {
         bool has0 = this->has<T>(keyword);
-        const auto& data = this->get<T>(keyword);
+        const auto& field_data = this->try_get<T>(keyword).field_data();
 
         if (has0) {
             if (global)
-                return this->global_copy(data);
+                return this->global_copy(field_data.data, field_data.kw_info.scalar_init);
             else
-                return data;
+                return field_data.data;
         } else {
-            if (global)
-                return this->global_copy(this->extract<T>(keyword));
-            else
+            if (global) {
+                const auto& kw_info = keywords::global_kw_info<T>(keyword);
+                return this->global_copy(this->extract<T>(keyword), kw_info.scalar_init);
+            } else
                 return this->extract<T>(keyword);
         }
     }
@@ -500,8 +503,9 @@ public:
 
 
     template <typename T>
-    std::vector<T> global_copy(const std::vector<T>& data) const {
-        std::vector<T> global_data(this->global_size);
+    std::vector<T> global_copy(const std::vector<T>& data, const std::optional<T>& default_value) const {
+        T fill_value = default_value.has_value() ? *default_value : 0;
+        std::vector<T> global_data(this->global_size, fill_value);
         std::size_t i = 0;
         for (std::size_t g = 0; g < this->global_size; g++) {
             if (this->m_actnum[g]) {

@@ -208,7 +208,7 @@ ADDREG
 
 
 BOOST_AUTO_TEST_CASE(ASSIGN) {
-    FieldProps::FieldData<int> data(100);
+    FieldProps::FieldData<int> data({}, 100);
     std::vector<int> wrong_size(50);
 
     BOOST_CHECK_THROW( data.default_assign( wrong_size ), std::invalid_argument );
@@ -221,8 +221,7 @@ BOOST_AUTO_TEST_CASE(ASSIGN) {
     BOOST_CHECK(data.data == ext_data);
 }
 
-
-BOOST_AUTO_TEST_CASE(Defaulted) {
+BOOST_AUTO_TEST_CASE(Defaulted1) {
     std::string deck_string = R"(
 GRID
 
@@ -246,6 +245,34 @@ NTG
 
         BOOST_CHECK_EQUAL(ntg[g + 100], 1);
         BOOST_CHECK_EQUAL(defaulted[g + 100], true);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Defaulted2) {
+    std::string deck_string = R"(
+GRID
+
+BOX
+  1 10 1 10 1 1 /
+
+NTG
+  100*2 /
+
+)";
+
+    std::vector<int> actnum(150, 1);
+    {
+        for (std::size_t i = 0; i < 50; i++)
+            actnum.push_back(0);
+    }
+    EclipseGrid grid(EclipseGrid(10,10, 2), actnum);
+    Deck deck = Parser{}.parseString(deck_string);
+    FieldPropsManager fpm(deck, Phases{true, true, true}, grid, TableManager());
+    const auto& ntg = fpm.get_global_double("NTG");
+
+    for (std::size_t g=0; g < 100; g++) {
+        BOOST_CHECK_EQUAL(ntg[g], 2);
+        BOOST_CHECK_EQUAL(ntg[g + 100], 1);
     }
 }
 

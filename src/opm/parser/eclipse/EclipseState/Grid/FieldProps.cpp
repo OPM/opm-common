@@ -404,7 +404,7 @@ void FieldProps::reset_actnum(const std::vector<int>& new_actnum) {
 
 void FieldProps::distribute_toplayer(FieldProps::FieldData<double>& field_data, const std::vector<double>& deck_data, const Box& box) {
     const std::size_t layer_size = this->nx * this->ny;
-    FieldProps::FieldData<double> toplayer(layer_size);
+    FieldProps::FieldData<double> toplayer(field_data.kw_info, layer_size);
     for (const auto& cell_index : box.index_list()) {
         if (cell_index.global_index < layer_size) {
             toplayer.data[cell_index.global_index] = deck_data[cell_index.data_index];
@@ -474,10 +474,8 @@ FieldProps::FieldData<double>& FieldProps::init_get(const std::string& keyword) 
     if (iter != this->double_data.end())
         return iter->second;
 
-    this->double_data[keyword] = FieldData<double>(this->active_size);
     const keywords::keyword_info<double>& kw_info = keywords::global_kw_info<double>(keyword);
-    if (kw_info.scalar_init)
-        this->double_data[keyword].default_assign(*kw_info.scalar_init);
+    this->double_data[keyword] = FieldData<double>(kw_info, this->active_size);
 
     if (keyword == ParserKeywords::PORV::keywordName)
         this->init_porv(this->double_data[keyword]);
@@ -500,14 +498,12 @@ FieldProps::FieldData<int>& FieldProps::init_get(const std::string& keyword) {
     if (iter != this->int_data.end())
         return iter->second;
 
-    this->int_data[keyword] = FieldData<int>(this->active_size);
     if (keywords::isFipxxx(keyword)) {
         int default_value = 1;
         this->int_data[keyword].default_assign(default_value);
     } else {
         const keywords::keyword_info<int>& kw_info = keywords::global_kw_info<int>(keyword);
-        if (kw_info.scalar_init)
-            this->int_data[keyword].default_assign(*kw_info.scalar_init);
+        this->int_data[keyword] = FieldData<int>(kw_info, this->active_size);
     }
 
 
