@@ -151,7 +151,7 @@ void verify_deck_data(const DeckKeyword& keyword, const std::vector<T>& deck_dat
 
 
 template <typename T>
-void assign_deck(const DeckKeyword& keyword, FieldProps::FieldData<T>& field_data, const std::vector<T>& deck_data, const std::vector<value::status>& deck_status, const Box& box) {
+void assign_deck(const keywords::keyword_info<T>& kw_info, const DeckKeyword& keyword, FieldProps::FieldData<T>& field_data, const std::vector<T>& deck_data, const std::vector<value::status>& deck_status, const Box& box) {
     verify_deck_data(keyword, deck_data, box);
     for (const auto& cell_index : box.index_list()) {
         auto active_index = cell_index.active_index;
@@ -164,11 +164,24 @@ void assign_deck(const DeckKeyword& keyword, FieldProps::FieldData<T>& field_dat
             }
         }
     }
+
+    if (kw_info.global) {
+        auto& global_data = field_data.global_data.value();
+        auto& global_status = field_data.global_value_status.value();
+        const auto& index_list = box.global_index_list();
+
+        for (const auto& cell : index_list) {
+            if (deck_status[cell.data_index] == value::status::deck_value || global_status[cell.global_index] == value::status::uninitialized) {
+                global_data[cell.global_index] = deck_data[cell.data_index];
+                global_status[cell.global_index] = deck_status[cell.data_index];
+            }
+        }
+    }
 }
 
 
 template <typename T>
-void multiply_deck(const DeckKeyword& keyword, FieldProps::FieldData<T>& field_data, const std::vector<T>& deck_data, const std::vector<value::status>& deck_status, const Box& box) {
+void multiply_deck(const keywords::keyword_info<T>& kw_info, const DeckKeyword& keyword, FieldProps::FieldData<T>& field_data, const std::vector<T>& deck_data, const std::vector<value::status>& deck_status, const Box& box) {
     verify_deck_data(keyword, deck_data, box);
     for (const auto& cell_index : box.index_list()) {
         auto active_index = cell_index.active_index;
@@ -179,49 +192,86 @@ void multiply_deck(const DeckKeyword& keyword, FieldProps::FieldData<T>& field_d
             field_data.value_status[active_index] = deck_status[data_index];
         }
     }
+
+    if (kw_info.global) {
+        auto& global_data = field_data.global_data.value();
+        auto& global_status = field_data.global_value_status.value();
+        const auto& index_list = box.global_index_list();
+
+        for (const auto& cell : index_list) {
+            if (deck_status[cell.data_index] == value::status::deck_value || global_status[cell.global_index] == value::status::uninitialized) {
+                global_data[cell.global_index] *= deck_data[cell.data_index];
+                global_status[cell.global_index] = deck_status[cell.data_index];
+            }
+        }
+    }
+}
+
+
+void distribute_toplayer(const EclipseGrid& grid, FieldProps::FieldData<double>& field_data, const std::vector<double>& deck_data, const Box& box) {
+    const std::size_t layer_size = grid.getNX() * grid.getNY();
+    FieldProps::FieldData<double> toplayer(keywords::keyword_info<double>(), grid.getNX() * grid.getNY(), 0);
+    for (const auto& cell_index : box.index_list()) {
+        if (cell_index.global_index < layer_size) {
+            toplayer.data[cell_index.global_index] = deck_data[cell_index.data_index];
+            toplayer.value_status[cell_index.global_index] = value::status::deck_value;
+        }
+    }
+
+    for (std::size_t active_index = 0; active_index < field_data.size(); active_index++) {
+        if (field_data.value_status[active_index] == value::status::uninitialized) {
+            std::size_t global_index = grid.getGlobalIndex(active_index);
+            const auto ijk = grid.getIJK(global_index);
+            std::size_t layer_index = ijk[0] + ijk[1] * grid.getNX();
+            if (toplayer.value_status[layer_index] == value::status::deck_value) {
+                field_data.data[active_index] = toplayer.data[layer_index];
+                field_data.value_status[active_index] = value::status::valid_default;
+            }
+        }
+    }
 }
 
 
 template <typename T>
-void assign_scalar(FieldProps::FieldData<T>& field_data, T value, const std::vector<Box::cell_index>& index_list) {
+void assign_scalar(std::vector<T>& data, std::vector<value::status>& value_status, T value, const std::vector<Box::cell_index>& index_list) {
     for (const auto& cell_index : index_list) {
-        field_data.data[cell_index.active_index] = value;
-        field_data.value_status[cell_index.active_index] = value::status::deck_value;
+        data[cell_index.active_index] = value;
+        value_status[cell_index.active_index] = value::status::deck_value;
     }
 }
 
 template <typename T>
-void multiply_scalar(FieldProps::FieldData<T>& field_data, T value, const std::vector<Box::cell_index>& index_list) {
+void multiply_scalar(std::vector<T>& data, std::vector<value::status>& value_status, T value, const std::vector<Box::cell_index>& index_list) {
     for (const auto& cell_index : index_list) {
-        if (value::has_value(field_data.value_status[cell_index.active_index]))
-            field_data.data[cell_index.active_index] *= value;
+        if (value::has_value(value_status[cell_index.active_index]))
+            data[cell_index.active_index] *= value;
     }
 }
 
 template <typename T>
-void add_scalar(FieldProps::FieldData<T>& field_data, T value, const std::vector<Box::cell_index>& index_list) {
+void add_scalar(std::vector<T>& data, std::vector<value::status>& value_status, T value, const std::vector<Box::cell_index>& index_list) {
     for (const auto& cell_index : index_list) {
-        if (value::has_value(field_data.value_status[cell_index.active_index]))
-            field_data.data[cell_index.active_index] += value;
+        if (value::has_value(value_status[cell_index.active_index]))
+            data[cell_index.active_index] += value;
     }
 }
 
 template <typename T>
-void min_value(FieldProps::FieldData<T>& field_data, T min_value, const std::vector<Box::cell_index>& index_list) {
+void min_value(std::vector<T>& data, std::vector<value::status>& value_status, T min_value, const std::vector<Box::cell_index>& index_list) {
     for (const auto& cell_index : index_list) {
-        if (value::has_value(field_data.value_status[cell_index.active_index])) {
-            T value = field_data.data[cell_index.active_index];
-            field_data.data[cell_index.active_index] = std::max(value, min_value);
+        if (value::has_value(value_status[cell_index.active_index])) {
+            T value = data[cell_index.active_index];
+            data[cell_index.active_index] = std::max(value, min_value);
         }
     }
 }
 
 template <typename T>
-void max_value(FieldProps::FieldData<T>& field_data, T max_value, const std::vector<Box::cell_index>& index_list) {
+void max_value(std::vector<T>& data, std::vector<value::status>& value_status, T max_value, const std::vector<Box::cell_index>& index_list) {
     for (const auto& cell_index : index_list) {
-        if (value::has_value(field_data.value_status[cell_index.active_index])) {
-            T value = field_data.data[cell_index.active_index];
-            field_data.data[cell_index.active_index] = std::min(value, max_value);
+        if (value::has_value(value_status[cell_index.active_index])) {
+            T value = data[cell_index.active_index];
+            data[cell_index.active_index] = std::min(value, max_value);
         }
     }
 }
@@ -379,7 +429,7 @@ void FieldProps::reset_actnum(const std::vector<int>& new_actnum) {
 
 void FieldProps::distribute_toplayer(FieldProps::FieldData<double>& field_data, const std::vector<double>& deck_data, const Box& box) {
     const std::size_t layer_size = this->nx * this->ny;
-    FieldProps::FieldData<double> toplayer(field_data.kw_info, layer_size);
+    FieldProps::FieldData<double> toplayer(field_data.kw_info, layer_size, 0);
     for (const auto& cell_index : box.index_list()) {
         if (cell_index.global_index < layer_size) {
             toplayer.data[cell_index.global_index] = deck_data[cell_index.data_index];
@@ -450,7 +500,7 @@ FieldProps::FieldData<double>& FieldProps::init_get(const std::string& keyword) 
         return iter->second;
 
     const keywords::keyword_info<double>& kw_info = keywords::global_kw_info<double>(keyword);
-    this->double_data[keyword] = FieldData<double>(kw_info, this->active_size);
+    this->double_data[keyword] = FieldData<double>(kw_info, this->active_size, kw_info.global ? this->global_size : 0);
 
     if (keyword == ParserKeywords::PORV::keywordName)
         this->init_porv(this->double_data[keyword]);
@@ -476,15 +526,16 @@ FieldProps::FieldData<int>& FieldProps::init_get(const std::string& keyword) {
     if (keywords::isFipxxx(keyword)) {
         auto kw_info = keywords::keyword_info<int>{};
         kw_info.init(1);
-        this->int_data[keyword] = FieldData<int>(kw_info, this->active_size);
+        this->int_data[keyword] = FieldData<int>(kw_info, this->active_size, 0);
     } else {
         const keywords::keyword_info<int>& kw_info = keywords::global_kw_info<int>(keyword);
-        this->int_data[keyword] = FieldData<int>(kw_info, this->active_size);
+        this->int_data[keyword] = FieldData<int>(kw_info, this->active_size, kw_info.global ? this->global_size : 0);
     }
 
 
     return this->int_data[keyword];
 }
+
 
 std::vector<Box::cell_index> FieldProps::region_index( const std::string& region_name, int region_value ) {
     const auto& region = this->init_get<int>(region_name);
@@ -504,11 +555,11 @@ std::vector<Box::cell_index> FieldProps::region_index( const std::string& region
     return index_list;
 }
 
-std::vector<Box::cell_index> FieldProps::region_index( const DeckItem& region_item, int region_value ) {
-    std::string region_name = region_item.defaultApplied(0) ? this->m_default_region : make_region_name(region_item.get<std::string>(0));
-    return this->region_index(region_name, region_value);
-}
 
+
+std::string FieldProps::region_name(const DeckItem& region_item) {
+    return region_item.defaultApplied(0) ? this->m_default_region : make_region_name(region_item.get<std::string>(0));
+}
 
 template <>
 bool FieldProps::has<double>(const std::string& keyword) const {
@@ -594,11 +645,11 @@ double FieldProps::getSIValue(const std::string& keyword, double raw_value) cons
 
 
 
-void FieldProps::handle_int_keyword(const DeckKeyword& keyword, const Box& box) {
+void FieldProps::handle_int_keyword(const keywords::keyword_info<int>& kw_info, const DeckKeyword& keyword, const Box& box) {
     auto& field_data = this->init_get<int>(keyword.name());
     const auto& deck_data = keyword.getIntData();
     const auto& deck_status = keyword.getValueStatus();
-    assign_deck(keyword, field_data, deck_data, deck_status, box);
+    assign_deck(kw_info, keyword, field_data, deck_data, deck_status, box);
 }
 
 
@@ -608,9 +659,9 @@ void FieldProps::handle_double_keyword(Section section, const keywords::keyword_
     const auto& deck_status = keyword.getValueStatus();
 
     if (section == Section::EDIT && kw_info.multiplier)
-        multiply_deck(keyword, field_data, deck_data, deck_status, box);
+        multiply_deck(kw_info, keyword, field_data, deck_data, deck_status, box);
     else
-        assign_deck(keyword, field_data, deck_data, deck_status, box);
+        assign_deck(kw_info, keyword, field_data, deck_data, deck_status, box);
 
 
     if (section == Section::GRID) {
@@ -626,21 +677,21 @@ void FieldProps::handle_double_keyword(Section section, const keywords::keyword_
 
 
 template <typename T>
-void FieldProps::apply(ScalarOperation op, FieldData<T>& data, T scalar_value, const std::vector<Box::cell_index>& index_list) {
+void FieldProps::apply(ScalarOperation op, std::vector<T>& data, std::vector<value::status>& value_status, T scalar_value, const std::vector<Box::cell_index>& index_list) {
     if (op == ScalarOperation::EQUAL)
-        assign_scalar(data, scalar_value, index_list);
+        assign_scalar(data, value_status, scalar_value, index_list);
 
     else if (op == ScalarOperation::MUL)
-        multiply_scalar(data, scalar_value, index_list);
+        multiply_scalar(data, value_status, scalar_value, index_list);
 
     else if (op == ScalarOperation::ADD)
-        add_scalar(data, scalar_value, index_list);
+        add_scalar(data, value_status, scalar_value, index_list);
 
     else if (op == ScalarOperation::MIN)
-        min_value(data, scalar_value, index_list);
+        min_value(data, value_status, scalar_value, index_list);
 
     else if (op == ScalarOperation::MAX)
-        max_value(data, scalar_value, index_list);
+        max_value(data, value_status, scalar_value, index_list);
 }
 
 double FieldProps::get_alpha(const std::string& func_name, const std::string& target_array, double raw_alpha) {
@@ -658,13 +709,16 @@ double FieldProps::get_beta(const std::string& func_name, const std::string& tar
 }
 
 template <typename T>
-void FieldProps::apply(const DeckRecord& record, FieldData<T>& target_data, const FieldData<T>& src_data, const std::vector<Box::cell_index>& index_list) {
+void FieldProps::operate(const DeckRecord& record, FieldData<T>& target_data, const FieldData<T>& src_data, const std::vector<Box::cell_index>& index_list) {
     const std::string& func_name = record.getItem("OPERATION").get< std::string >(0);
     const std::string& target_array = record.getItem("TARGET_ARRAY").get<std::string>(0);
     const double alpha           = this->get_alpha(func_name, target_array, record.getItem("PARAM1").get< double >(0));
     const double beta            = this->get_beta( func_name, target_array, record.getItem("PARAM2").get< double >(0));
     Operate::function func       = Operate::get( func_name, alpha, beta );
     bool check_target            = (func_name == "MULTIPLY" || func_name == "POLY");
+
+    if (target_data.global_data)
+        throw std::logic_error("The OPERATE and OPERATER keywords are not supported for keywords with global storage");
 
     for (const auto& cell_index : index_list) {
         if (value::has_value(src_data.value_status[cell_index.active_index])) {
@@ -685,20 +739,34 @@ void FieldProps::handle_region_operation(const DeckKeyword& keyword) {
 
         if (FieldProps::supported<double>(target_kw)) {
             auto& field_data = this->init_get<double>(target_kw);
+            /*
+              To support region operations on keywords with global storage we
+              would need to also have global storage for the xxxNUM region
+              keywords involved. To avoid a situation where a significant
+              fraction of the keywords have global storage the implementation
+              has stopped here - there are no principle problems with extending
+              the implementation to also support region operations on fields
+              with global storage.
+            */
+            if (field_data.global_data)
+                throw std::logic_error("Region operations on 3D fields with global storage is not implemented");
 
             if (keyword.name() == ParserKeywords::OPERATER::keywordName) {
                 // For the OPERATER keyword we fetch the region name from the deck record
                 // with no extra hoops.
-                const auto& index_list = this->region_index(record.getItem("REGION_NAME").get<std::string>(0), region_value);
+                std::string region_name = record.getItem("REGION_NAME").get<std::string>(0);
+                const auto& index_list = this->region_index(region_name, region_value);
                 const std::string& src_kw = record.getItem("ARRAY_PARAMETER").get<std::string>(0);
                 const auto& src_data = this->init_get<double>(src_kw);
-                FieldProps::apply(record, field_data, src_data, index_list);
+                FieldProps::operate(record, field_data, src_data, index_list);
             } else {
                 double value = record.getItem(1).get<double>(0);
-                const auto& index_list = this->region_index(record.getItem("REGION_NAME"), region_value);
+                std::string region_name = this->region_name( record.getItem("REGION_NAME") );
+                const auto& index_list = this->region_index( region_name, region_value);
                 if (keyword.name() != ParserKeywords::MULTIPLY::keywordName)
                     value = this->getSIValue(target_kw, value);
-                FieldProps::apply(fromString(keyword.name()), field_data, value, index_list);
+
+                FieldProps::apply(fromString(keyword.name()), field_data.data, field_data.value_status, value, index_list);
             }
 
             continue;
@@ -724,12 +792,14 @@ void FieldProps::handle_operation(const DeckKeyword& keyword, Box box) {
             if (keyword.name() == ParserKeywords::OPERATE::keywordName) {
                 const std::string& src_kw = record.getItem("ARRAY").get<std::string>(0);
                 const auto& src_data = this->init_get<double>(src_kw);
-                FieldProps::apply(record, field_data, src_data, box.index_list());
+                FieldProps::operate(record, field_data, src_data, box.index_list());
             } else {
                 double scalar_value = record.getItem(1).get<double>(0);
                 if (keyword.name() != ParserKeywords::MULTIPLY::keywordName)
                     scalar_value = this->getSIValue(target_kw, scalar_value);
-                FieldProps::apply(fromString(keyword.name()), field_data, scalar_value, box.index_list());
+                FieldProps::apply(fromString(keyword.name()), field_data.data, field_data.value_status, scalar_value, box.index_list());
+                if (field_data.global_data)
+                    FieldProps::apply(fromString(keyword.name()), *field_data.global_data, *field_data.global_value_status, scalar_value, box.global_index_list());
             }
 
             continue;
@@ -739,7 +809,7 @@ void FieldProps::handle_operation(const DeckKeyword& keyword, Box box) {
         if (FieldProps::supported<int>(target_kw)) {
             int scalar_value = static_cast<int>(record.getItem(1).get<double>(0));
             auto& field_data = this->init_get<int>(target_kw);
-            FieldProps::apply(fromString(keyword.name()), field_data, scalar_value, box.index_list());
+            FieldProps::apply(fromString(keyword.name()), field_data.data, field_data.value_status, scalar_value, box.index_list());
             continue;
         }
 
@@ -757,7 +827,8 @@ void FieldProps::handle_COPY(const DeckKeyword& keyword, Box box, bool region) {
         if (region) {
             int region_value = record.getItem(2).get<int>(0);
             const auto& region_item = record.getItem(4);
-            index_list = this->region_index(region_item, region_value);
+            const auto& region_name = this->region_name( region_item );
+            index_list = this->region_index(region_name, region_value);
         } else {
             box.update(record);
             index_list = box.index_list();
@@ -915,7 +986,7 @@ void FieldProps::scanGRIDSection(const GRIDSection& grid_section) {
         }
 
         if (keywords::GRID::int_keywords.count(name) == 1) {
-            this->handle_int_keyword(keyword, box);
+            this->handle_int_keyword(keywords::GRID::int_keywords.at(name), keyword, box);
             continue;
         }
 
@@ -933,7 +1004,7 @@ void FieldProps::scanEDITSection(const EDITSection& edit_section) {
         }
 
         if (keywords::EDIT::int_keywords.count(name) == 1) {
-            this->handle_int_keyword(keyword, box);
+            this->handle_int_keyword(keywords::GRID::int_keywords.at(name), keyword, box);
             continue;
         }
 
@@ -973,7 +1044,7 @@ void FieldProps::scanPROPSSection(const PROPSSection& props_section) {
         }
 
         if (keywords::PROPS::int_keywords.count(name) == 1) {
-            this->handle_int_keyword(keyword, box);
+            this->handle_int_keyword(keywords::PROPS::int_keywords.at(name), keyword, box);
             continue;
         }
 
@@ -987,8 +1058,15 @@ void FieldProps::scanREGIONSSection(const REGIONSSection& regions_section) {
 
     for (const auto& keyword : regions_section) {
         const std::string& name = keyword.name();
-        if (keywords::REGIONS::int_keywords.count(name) == 1 || keywords::isFipxxx(name)) {
-            this->handle_int_keyword(keyword, box);
+        if (keywords::REGIONS::int_keywords.count(name)) {
+            this->handle_int_keyword(keywords::REGIONS::int_keywords.at(name), keyword, box);
+            continue;
+        }
+
+        if (keywords::isFipxxx(name)) {
+            auto kw_info = keywords::keyword_info<int>{};
+            kw_info.init(1);
+            this->handle_int_keyword(kw_info, keyword, box);
             continue;
         }
 
@@ -1020,7 +1098,7 @@ void FieldProps::scanSCHEDULESection(const SCHEDULESection& schedule_section) {
         }
 
         if (keywords::SCHEDULE::int_keywords.count(name) == 1) {
-            this->handle_int_keyword(keyword, box);
+            this->handle_int_keyword(keywords::SCHEDULE::int_keywords.at(name), keyword, box);
             continue;
         }
 

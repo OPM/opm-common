@@ -40,6 +40,48 @@ class TableManager;
 
 namespace keywords {
 
+/*
+  Regarding global keywords
+  =========================
+
+  It turns out that when the option 'ALL' is used for the PINCH keyword we
+  require the MULTZ keyword specified for all cells, also the inactive cells.
+  The premise for the FieldProps implementation has all the way been that only
+  the active cells should be stored.
+
+  In order to support the ALL option of the PINCH keyword we have bolted on a
+  limited support for global storage. By setting .global = true in the
+  keyword_info describing the keyword you get:
+
+  1. Normal deck assignment like
+
+       MULTZ
+           ..... /
+
+  2. Scalar operations like EQUALS and MULTIPLY.
+
+  These operations also support the full details of the BOX behavior.
+
+  The following operations do not work
+  ------------------------------------
+
+  1. Operations involving multiple keywords like
+
+       COPY
+         MULTX  MULTZ /
+       /
+
+    this also includes the OPERATE which involves multiple keywords for some
+    of its operations.
+
+  2. All region operatins like EQUALREG and MULTREG.
+
+  The operations which are not properly implemented will be intercepted and a
+  std::logic_error() exception will be thrown.
+*/
+
+
+
 template <typename T>
 struct keyword_info {
     std::optional<std::string> unit = std::nullopt;
@@ -105,7 +147,7 @@ static const std::unordered_map<std::string, keyword_info<double>> double_keywor
                                                                                       {"MULTX-",  keyword_info<double>{}.init(1.0).mult(true)},
                                                                                       {"MULTY",   keyword_info<double>{}.init(1.0).mult(true)},
                                                                                       {"MULTY-",  keyword_info<double>{}.init(1.0).mult(true)},
-                                                                                      {"MULTZ",   keyword_info<double>{}.init(1.0).mult(true)},
+                                                                                      {"MULTZ",   keyword_info<double>{}.init(1.0).mult(true).global_kw(true)},
                                                                                       {"MULTZ-",  keyword_info<double>{}.init(1.0).mult(true)}};
 
 static const std::unordered_map<std::string, keyword_info<int>> int_keywords = {{"ACTNUM",  keyword_info<int>{}.init(1)},
@@ -127,7 +169,7 @@ static const std::unordered_map<std::string, keyword_info<double>> double_keywor
                                                                                       {"MULTX-",  keyword_info<double>{}.init(1.0).mult(true)},
                                                                                       {"MULTY",   keyword_info<double>{}.init(1.0).mult(true)},
                                                                                       {"MULTY-",  keyword_info<double>{}.init(1.0).mult(true)},
-                                                                                      {"MULTZ",   keyword_info<double>{}.init(1.0).mult(true)},
+                                                                                      {"MULTZ",   keyword_info<double>{}.init(1.0).mult(true).global_kw(true)},
                                                                                       {"MULTZ-",  keyword_info<double>{}.init(1.0).mult(true)}};
 
 static const std::unordered_map<std::string, keyword_info<int>> int_keywords = {};
@@ -290,16 +332,23 @@ public:
         std::vector<T> data;
         std::vector<value::status> value_status;
         keywords::keyword_info<T> kw_info;
+        std::optional<std::vector<T>> global_data;
+        std::optional<std::vector<value::status>> global_value_status;
         mutable bool all_set;
 
         FieldData() = default;
 
-        FieldData(const keywords::keyword_info<T>& info, std::size_t active_size) :
+        FieldData(const keywords::keyword_info<T>& info, std::size_t active_size, std::size_t global_size) :
             data(std::vector<T>(active_size)),
             value_status(active_size, value::status::uninitialized),
             kw_info(info),
             all_set(false)
         {
+            if (global_size != 0) {
+                this->global_data = std::vector<T>(global_size);
+                this->global_value_status = std::vector<value::status>(global_size, value::status::uninitialized);
+            }
+
             if (info.scalar_init)
                 this->default_assign( *info.scalar_init );
         }
@@ -335,6 +384,11 @@ public:
         void default_assign(T value) {
             std::fill(this->data.begin(), this->data.end(), value);
             std::fill(this->value_status.begin(), this->value_status.end(), value::status::valid_default);
+
+            if (this->global_data) {
+                std::fill(this->global_data->begin(), this->global_data->end(), value);
+                std::fill(this->global_value_status->begin(), this->global_value_status->end(), value::status::valid_default);
+            }
         }
 
         void default_assign(const std::vector<T>& src) {
@@ -466,7 +520,10 @@ public:
         const auto& managed_field_data = this->try_get<T>(keyword);
         const auto& field_data = managed_field_data.field_data();
         const auto& kw_info = keywords::global_kw_info<T>(keyword);
-        return this->global_copy(field_data.data, kw_info.scalar_init);
+        if (kw_info.global)
+            return *field_data.global_data;
+        else
+            return this->global_copy(field_data.data, kw_info.scalar_init);
     }
 
 
@@ -542,15 +599,15 @@ private:
     std::vector<T> extract(const std::string& keyword);
 
     template <typename T>
-    void apply(const DeckRecord& record, FieldData<T>& target_data, const FieldData<T>& src_data, const std::vector<Box::cell_index>& index_list);
+    void operate(const DeckRecord& record, FieldData<T>& target_data, const FieldData<T>& src_data, const std::vector<Box::cell_index>& index_list);
 
     template <typename T>
-    static void apply(ScalarOperation op, FieldData<T>& data, T scalar_value, const std::vector<Box::cell_index>& index_list);
+    static void apply(ScalarOperation op, std::vector<T>& data, std::vector<value::status>& value_status, T scalar_value, const std::vector<Box::cell_index>& index_list);
 
     template <typename T>
     FieldData<T>& init_get(const std::string& keyword);
 
-    std::vector<Box::cell_index> region_index( const DeckItem& regionItem, int region_value );
+    std::string region_name(const DeckItem& region_item);
     std::vector<Box::cell_index> region_index( const std::string& region_name, int region_value );
     void handle_operation(const DeckKeyword& keyword, Box box);
     void handle_region_operation(const DeckKeyword& keyword);
@@ -561,7 +618,7 @@ private:
 
     void handle_keyword(const DeckKeyword& keyword, Box& box);
     void handle_double_keyword(Section section, const keywords::keyword_info<double>& kw_info, const DeckKeyword& keyword, const Box& box);
-    void handle_int_keyword(const DeckKeyword& keyword, const Box& box);
+    void handle_int_keyword(const keywords::keyword_info<int>& kw_info, const DeckKeyword& keyword, const Box& box);
     void init_satfunc(const std::string& keyword, FieldData<double>& satfunc);
     void init_porv(FieldData<double>& porv);
     void init_tempi(FieldData<double>& tempi);

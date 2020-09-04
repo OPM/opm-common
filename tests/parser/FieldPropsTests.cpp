@@ -208,7 +208,7 @@ ADDREG
 
 
 BOOST_AUTO_TEST_CASE(ASSIGN) {
-    FieldProps::FieldData<int> data({}, 100);
+    FieldProps::FieldData<int> data({}, 100, 0);
     std::vector<int> wrong_size(50);
 
     BOOST_CHECK_THROW( data.default_assign( wrong_size ), std::invalid_argument );
@@ -1598,4 +1598,183 @@ FIPXYZ
     const auto& fipxyz = fpm.get_int("FIPXYZ");
     BOOST_CHECK_EQUAL(fipxyz[0],   1);
     BOOST_CHECK_EQUAL(fipxyz[100], 2);
+}
+
+BOOST_AUTO_TEST_CASE(GLOBAL_FIELD1) {
+    std::string deck_string = R"(
+GRID
+
+PORO
+   27*0.10 /
+
+ACTNUM
+   9*1 9*0 9*1 /
+
+MULTZ
+  0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 /
+
+)";
+    std::vector<int> actnum(27, 1);
+    for (std::size_t i=9; i< 18; i++)
+        actnum[i] = 0;
+    EclipseGrid grid(EclipseGrid(3,3,3), actnum);
+    Deck deck = Parser{}.parseString(deck_string);
+    FieldPropsManager fpm(deck, Phases{true, true, true}, grid, TableManager());
+
+    auto multz = fpm.get_double("MULTZ");
+    auto multz_global = fpm.get_global_double("MULTZ");
+    for (std::size_t index = 0; index < multz_global.size(); index++)
+        BOOST_CHECK_EQUAL(index * 1.0, multz_global[index]);
+}
+
+
+
+BOOST_AUTO_TEST_CASE(GLOBAL_FIELD2)
+{
+    std::string deck_string = R"(
+GRID
+
+PORO
+   27*0.10 /
+
+ACTNUM
+   9*1 9*0 9*1 /
+
+MULTZ
+  0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 /
+
+EDIT
+
+MULTZ
+  0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 /
+
+)";
+    std::vector<int> actnum(27, 1);
+    for (std::size_t i=9; i< 18; i++)
+        actnum[i] = 0;
+    EclipseGrid grid(EclipseGrid(3,3,3), actnum);
+    Deck deck = Parser{}.parseString(deck_string);
+    FieldPropsManager fpm(deck, Phases{true, true, true}, grid, TableManager());
+
+    auto multz = fpm.get_double("MULTZ");
+    auto multz_global = fpm.get_global_double("MULTZ");
+    for (std::size_t index = 0; index < multz_global.size(); index++)
+        BOOST_CHECK_EQUAL(index * index * 1.0, multz_global[index]);
+}
+
+BOOST_AUTO_TEST_CASE(GLOBAL_FIELD3)
+{
+    std::string deck_string = R"(
+GRID
+
+PORO
+   27*0.10 /
+
+ACTNUM
+   9*1 9*0 9*1 /
+
+MULTZ
+  0   1  2  3  4  5  6  7  8
+  9*0
+  18 19 20 21 22 23 24 25 26 /
+
+EQUALS
+   MULTZ 99 1 3 1 3 2 2 /
+/
+
+
+)";
+    std::vector<int> actnum(27, 1);
+    for (std::size_t i=9; i< 18; i++)
+        actnum[i] = 0;
+    EclipseGrid grid(EclipseGrid(3,3,3), actnum);
+    Deck deck = Parser{}.parseString(deck_string);
+    FieldPropsManager fpm(deck, Phases{true, true, true}, grid, TableManager());
+
+    auto multz = fpm.get_double("MULTZ");
+    auto multz_global = fpm.get_global_double("MULTZ");
+    for (std::size_t index = 0; index < multz_global.size(); index++) {
+        if (index <= 8 || index >= 18)
+            BOOST_CHECK_EQUAL(index * 1.0, multz_global[index]);
+        else
+            BOOST_CHECK_EQUAL(99, multz_global[index]);
+    }
+}
+
+FieldPropsManager make_fp(const std::string& deck_string) {
+    std::vector<int> actnum(27, 1);
+    for (std::size_t i=9; i< 18; i++)
+        actnum[i] = 0;
+    EclipseGrid grid(EclipseGrid(3,3,3), actnum);
+    Deck deck = Parser{}.parseString(deck_string);
+    return FieldPropsManager(deck, Phases{true, true, true}, grid, TableManager());
+}
+
+
+BOOST_AUTO_TEST_CASE(GLOBAL_UNSUPPORTED) {
+    // Operations involving two keywords can not update a global keyword.
+    std::string invalid_copy = R"(
+GRID
+
+PORO
+   27*0.10 /
+
+ACTNUM
+   9*1 9*0 9*1 /
+
+MULTX
+ 27*1.0 /
+
+COPY
+   MULTX MULTZ
+/
+
+)";
+
+    // Can not update a global keyword with xxxxREG operations
+    std::string invalid_region = R"(
+GRID
+
+PORO
+   27*0.10 /
+
+ACTNUM
+   9*1 9*0 9*1 /
+
+MULTZ
+ 27*1.0 /
+
+EQUALREG
+   MULTZ  2.0 1 /
+/
+
+)";
+
+    // Can not update a global keyword with the OPERATE keyword
+    std::string invalid_operate = R"(
+GRID
+
+PORO
+   27*0.10 /
+
+ACTNUM
+   9*1 9*0 9*1 /
+
+MULTZ
+ 27*1.0 /
+
+OPERATE
+   MULTZ 1  3   1  1   1   1  'MAXLIM'   MULTZ 0.50 /
+/
+
+)";
+
+
+
+
+
+
+    BOOST_CHECK_THROW(make_fp(invalid_copy), std::logic_error);
+    BOOST_CHECK_THROW(make_fp(invalid_region), std::logic_error);
+    BOOST_CHECK_THROW(make_fp(invalid_operate), std::logic_error);
 }
