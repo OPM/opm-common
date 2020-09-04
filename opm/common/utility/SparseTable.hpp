@@ -56,6 +56,7 @@ namespace Opm
     public:
         /// Default constructor. Yields an empty SparseTable.
         SparseTable()
+            : row_start_(1, 0)
         {
         }
 
@@ -107,23 +108,19 @@ namespace Opm
         void appendRow(DataIter row_beg, DataIter row_end)
         {
             data_.insert(data_.end(), row_beg, row_end);
-            if (row_start_.empty()) {
-                row_start_.reserve(2);
-                row_start_.push_back(0);
-            }
             row_start_.push_back(data_.size());
         }
 
         /// True if the table contains no rows.
         bool empty() const
         {
-            return row_start_.empty();
+            return row_start_.size()==1;
         }
 
         /// Returns the number of rows in the table.
         int size() const
         {
-            return empty() ? 0 : row_start_.size() - 1;
+            return row_start_.size() - 1;
         }
 
         /// Allocate storage for table of expected size
@@ -159,7 +156,7 @@ namespace Opm
         void clear()
         {
             data_.clear();
-            row_start_.clear();
+            row_start_.resize(1);
         }
 
         /// Defining the row type, returned by operator[].
@@ -170,7 +167,7 @@ namespace Opm
         row_type operator[](int row) const
         {
             assert(row >= 0 && row < size());
-            const T* start_ptr = data_.empty() ? 0 : &data_[0];
+            const T* start_ptr = data_.data();
             return row_type(start_ptr + row_start_[row], start_ptr + row_start_[row + 1]);
         }
 
@@ -178,7 +175,7 @@ namespace Opm
         mutable_row_type operator[](int row)
         {
             assert(row >= 0 && row < size());
-            T* start_ptr = data_.empty() ? 0 : &data_[0];
+            T* start_ptr = data_.data();
             return mutable_row_type(start_ptr + row_start_[row], start_ptr + row_start_[row + 1]);
         }
 
@@ -262,14 +259,6 @@ namespace Opm
             // Since we do not store the row sizes, but cumulative row sizes,
             // we have to create the cumulative ones.
             int num_rows = rowsize_end - rowsize_beg;
-            if (num_rows < 1) {
-                OPM_THROW(std::runtime_error, "Must have at least one row. Got " << num_rows << " rows.");
-            }
-#ifndef NDEBUG
-            if (*std::min_element(rowsize_beg, rowsize_end) < 0) {
-                OPM_THROW(std::runtime_error, "All row sizes must be at least 0.");
-            }
-#endif
             row_start_.resize(num_rows + 1);
             row_start_[0] = 0;
             std::partial_sum(rowsize_beg, rowsize_end, row_start_.begin() + 1);
