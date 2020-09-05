@@ -499,8 +499,9 @@ FieldProps::FieldData<int>& FieldProps::init_get(const std::string& keyword) {
         return iter->second;
 
     if (keywords::isFipxxx(keyword)) {
-        int default_value = 1;
-        this->int_data[keyword].default_assign(default_value);
+        auto kw_info = keywords::keyword_info<int>{};
+        kw_info.init(1);
+        this->int_data[keyword] = FieldData<int>(kw_info, this->active_size);
     } else {
         const keywords::keyword_info<int>& kw_info = keywords::global_kw_info<int>(keyword);
         this->int_data[keyword] = FieldData<int>(kw_info, this->active_size);
