@@ -502,9 +502,8 @@ FieldProps::FieldData<int>& FieldProps::init_get(const std::string& keyword) {
 
     this->int_data[keyword] = FieldData<int>(this->active_size);
     if (keywords::isFipxxx(keyword)) {
-        keywords::keyword_info<int> kw_info{.scalar_init = 1};
-        if (kw_info.scalar_init)
-            this->int_data[keyword].default_assign(*kw_info.scalar_init);
+        int default_value = 1;
+        this->int_data[keyword].default_assign(default_value);
     } else {
         const keywords::keyword_info<int>& kw_info = keywords::global_kw_info<int>(keyword);
         if (kw_info.scalar_init)
