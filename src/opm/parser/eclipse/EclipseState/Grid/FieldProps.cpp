@@ -17,6 +17,7 @@
 */
 #include <functional>
 #include <algorithm>
+#include <unordered_map>
 
 #include <opm/parser/eclipse/Parser/ParserKeywords/A.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/B.hpp>
@@ -40,156 +41,61 @@
 
 namespace Opm {
 
-namespace {
-
 namespace keywords {
-
-
-/*
-  If a keyword is not mentioned here the getSIValue() function will silently
-  assume the keyword is dimensionless.
-*/
-static const std::map<std::string, std::string> unit_string = {{"PERMX", "Permeability"},
-                                                               {"PERMY", "Permeability"},
-                                                               {"PERMZ", "Permeability"},
-                                                               {"PORV",  "ReservoirVolume"},
-                                                               {"SPOLY", "Density"},
-                                                               {"TRANX", "Transmissibility"},
-                                                               {"TRANY", "Transmissibility"},
-                                                               {"TRANZ", "Transmissibility"},
-                                                               {"RS", "GasDissolutionFactor"},
-                                                               {"RV", "OilDissolutionFactor"},
-                                                               {"TEMPI", "Temperature"},
-                                                               {"THCROCK", "Energy/AnsoluteTemperature*Length*Time"},
-                                                               {"THCOIL", "Energy/AnsoluteTemperature*Length*Time"},
-                                                               {"THCGAS", "Energy/AnsoluteTemperature*Length*Time"},
-                                                               {"THCWATER", "Energy/AnsoluteTemperature*Length*Time"}};
-
-static const std::set<std::string> multiplier_keywords = {"MULTX", "MULTX-", "MULTY-", "MULTY", "MULTZ", "MULTZ-"};
 
 static const std::set<std::string> oper_keywords = {"ADD", "EQUALS", "MAXVALUE", "MINVALUE", "MULTIPLY", "OPERATE"};
 static const std::set<std::string> region_oper_keywords = {"ADDREG", "EQUALREG", "OPERATER"};
 static const std::set<std::string> box_keywords = {"BOX", "ENDBOX"};
-static const std::map<std::string, double> double_scalar_init = {{"NTG", 1},
-                                                                 {"TRANX", 1},    // The default scalar init for TRAN is a hack to support
-                                                                 {"TRANY", 1},    // TRAN modification in the deck. downstream implementation
-                                                                 {"TRANZ", 1},    // in ecltransmissibility.hh - quite broken.
-                                                                 {"MULTPV", 1},
-                                                                 {"MULTX", 1},
-                                                                 {"MULTX-", 1},
-                                                                 {"MULTY", 1},
-                                                                 {"MULTY-", 1},
-                                                                 {"MULTZ", 1},
-                                                                 {"MULTZ-", 1}};
 
-static const std::map<std::string, int> int_scalar_init = {{"SATNUM", 1},
-                                                           {"ENDNUM", 1},
-                                                           {"EQLNUM", 1},
-                                                           {"IMBNUM", 1},
-                                                           {"ISOLNUM",1},
-                                                           {"FIPNUM", 1},   // All FIPxxx keywords should (probably) be added with init==1
-                                                           {"EQLNUM", 1},
-                                                           {"PVTNUM", 1},
-                                                           {"ACTNUM", 1}};
+template <>
+keyword_info<double> global_kw_info(const std::string& name) {
+    if (GRID::double_keywords.count(name))
+        return GRID::double_keywords.at(name);
 
+    if (EDIT::double_keywords.count(name))
+        return EDIT::double_keywords.at(name);
 
+    if (PROPS::double_keywords.count(name))
+        return PROPS::double_keywords.at(name);
 
-bool isFipxxx(const std::string& keyword) {
-    // FIPxxxx can be any keyword, e.g. FIPREG or FIPXYZ that has the pattern "FIP.+"
-    // However, it can not be FIPOWG as that is an actual keyword.
-    if (keyword.size() < 4 || keyword == "FIPOWG") {
-        return false;
-    }
-    return keyword[0] == 'F' && keyword[1] == 'I' && keyword[2] == 'P';
+    if (PROPS::satfunc.count(name))
+        return keyword_info<double>{};
+
+    if (SOLUTION::double_keywords.count(name))
+        return SOLUTION::double_keywords.at(name);
+
+    if (SCHEDULE::double_keywords.count(name))
+        return SCHEDULE::double_keywords.at(name);
+
+    throw std::out_of_range("INFO: No such keyword: " + name);
 }
 
 
-namespace GRID {
-static const std::set<std::string> double_keywords = {"MULTPV", "NTG", "PORO", "PERMX", "PERMY", "PERMZ", "THCONR", "MULTX", "MULTX-", "MULTY-", "MULTY", "MULTZ", "MULTZ-",
-                                                      "THCONSF", "THCROCK", "THCOIL", "THCGAS", "THCWATER"};    // The THxxxx keywords are related to thermal properties - they are all E300 keywords.
-static const std::set<std::string> int_keywords    = {"ACTNUM", "FLUXNUM", "ISOLNUM", "MULTNUM", "OPERNUM", "ROCKNUM"};
-static const std::set<std::string> top_keywords    = {"PORO", "PERMX", "PERMY", "PERMZ"};
+template <>
+keyword_info<int> global_kw_info(const std::string& name) {
+    if (GRID::int_keywords.count(name))
+        return GRID::int_keywords.at(name);
+
+    if (EDIT::int_keywords.count(name))
+        return EDIT::int_keywords.at(name);
+
+    if (PROPS::int_keywords.count(name))
+        return PROPS::int_keywords.at(name);
+
+    if (REGIONS::int_keywords.count(name))
+        return REGIONS::int_keywords.at(name);
+
+    if (SCHEDULE::int_keywords.count(name))
+        return SCHEDULE::int_keywords.at(name);
+
+    throw std::out_of_range("No such keyword: " + name);
 }
 
-namespace EDIT {
-static const std::set<std::string> double_keywords = {"MULTPV", "PORV","MULTX", "MULTX-", "MULTY-", "MULTY", "MULTZ", "MULTZ-", "TRANX", "TRANY", "TRANZ"};
-static const std::set<std::string> int_keywords = {};
-}
-
-namespace PROPS {
-static const std::set<std::string> double_keywords = {"SWATINIT"};
-static const std::set<std::string> int_keywords = {};
-
-#define dirfunc(base) base, base "X", base "X-", base "Y", base "Y-", base "Z", base "Z-"
-
-static const std::set<std::string> satfunc = {"SWLPC", "ISWLPC", "SGLPC", "ISGLPC",
-                                              dirfunc("SGL"),
-                                              dirfunc("ISGL"),
-                                              dirfunc("SGU"),
-                                              dirfunc("ISGU"),
-                                              dirfunc("SWL"),
-                                              dirfunc("ISWL"),
-                                              dirfunc("SWU"),
-                                              dirfunc("ISWU"),
-                                              dirfunc("SGCR"),
-                                              dirfunc("ISGCR"),
-                                              dirfunc("SOWCR"),
-                                              dirfunc("ISOWCR"),
-                                              dirfunc("SOGCR"),
-                                              dirfunc("ISOGCR"),
-                                              dirfunc("SWCR"),
-                                              dirfunc("ISWCR"),
-                                              dirfunc("PCW"),
-                                              dirfunc("IPCW"),
-                                              dirfunc("PCG"),
-                                              dirfunc("IPCG"),
-                                              dirfunc("KRW"),
-                                              dirfunc("IKRW"),
-                                              dirfunc("KRWR"),
-                                              dirfunc("IKRWR"),
-                                              dirfunc("KRO"),
-                                              dirfunc("IKRO"),
-                                              dirfunc("KRORW"),
-                                              dirfunc("IKRORW"),
-                                              dirfunc("KRORG"),
-                                              dirfunc("IKRORG"),
-                                              dirfunc("KRG"),
-                                              dirfunc("IKRG"),
-                                              dirfunc("KRGR"),
-                                              dirfunc("IKRGR")};
-
-static const std::map<std::string,std::string> sogcr_shift = {{"SOGCR",    "SWL"},
-                                                              {"SOGCRX",   "SWLX"},
-                                                              {"SOGCRX-",  "SWLX-"},
-                                                              {"SOGCRY",   "SWLY"},
-                                                              {"SOGCRY-",  "SWLY-"},
-                                                              {"SOGCRZ",   "SWLZ"},
-                                                              {"SOGCRZ-",  "SWLZ-"},
-                                                              {"ISOGCR",   "ISWL"},
-                                                              {"ISOGCRX",  "ISWLX"},
-                                                              {"ISOGCRX-", "ISWLX-"},
-                                                              {"ISOGCRY",  "ISWLY"},
-                                                              {"ISOGCRY-", "ISWLY-"},
-                                                              {"ISOGCRZ",  "ISWLZ"},
-                                                              {"ISOGCRZ-", "ISWLZ-"}};
 
 }
 
-namespace REGIONS {
-static const std::set<std::string> int_keywords = {"ENDNUM", "EQLNUM", "FIPNUM", "IMBNUM", "MISCNUM", "OPERNUM", "PVTNUM", "SATNUM", "LWSLTNUM", "ROCKNUM"};
-}
 
-namespace SOLUTION {
-static const std::set<std::string> double_keywords = {"PRESSURE", "SPOLY", "SPOLYMW", "SSOL", "SWAT", "SGAS", "TEMPI", "RS", "RV"};
-static const std::set<std::string> int_keywords = {};
-}
-
-namespace SCHEDULE {
-static const std::set<std::string> int_keywords = {"ROCKNUM"};
-static const std::set<std::string> double_keywords = {};
-}
-}
-
+namespace {
 /*
  * The EQUALREG, MULTREG, COPYREG, ... keywords are used to manipulate
  * vectors based on region values; for instance the statement
@@ -230,6 +136,7 @@ std::string default_region_keyword(const Deck& deck) {
     }
     return "FLUXNUM";
 }
+
 
 template <typename T>
 void verify_deck_data(const DeckKeyword& keyword, const std::vector<T>& deck_data, const Box& box) {
@@ -400,7 +307,6 @@ std::vector<double> extract_cell_depth(const EclipseGrid& grid) {
 }
 
 
-
 FieldProps::FieldProps(const Deck& deck, const Phases& phases, const EclipseGrid& grid, const TableManager& tables_arg) :
     active_size(grid.getNumActive()),
     global_size(grid.getCartesianSize()),
@@ -561,6 +467,7 @@ bool FieldProps::supported<int>(const std::string& keyword) {
     return keywords::isFipxxx(keyword);
 }
 
+
 template <>
 FieldProps::FieldData<double>& FieldProps::init_get(const std::string& keyword) {
     auto iter = this->double_data.find(keyword);
@@ -568,9 +475,9 @@ FieldProps::FieldData<double>& FieldProps::init_get(const std::string& keyword) 
         return iter->second;
 
     this->double_data[keyword] = FieldData<double>(this->active_size);
-    auto init_iter = keywords::double_scalar_init.find(keyword);
-    if (init_iter != keywords::double_scalar_init.end())
-        this->double_data[keyword].default_assign(init_iter->second);
+    const keywords::keyword_info<double>& kw_info = keywords::global_kw_info<double>(keyword);
+    if (kw_info.scalar_init)
+        this->double_data[keyword].default_assign(*kw_info.scalar_init);
 
     if (keyword == ParserKeywords::PORV::keywordName)
         this->init_porv(this->double_data[keyword]);
@@ -586,6 +493,7 @@ FieldProps::FieldData<double>& FieldProps::init_get(const std::string& keyword) 
 
 
 
+
 template <>
 FieldProps::FieldData<int>& FieldProps::init_get(const std::string& keyword) {
     auto iter = this->int_data.find(keyword);
@@ -593,9 +501,16 @@ FieldProps::FieldData<int>& FieldProps::init_get(const std::string& keyword) {
         return iter->second;
 
     this->int_data[keyword] = FieldData<int>(this->active_size);
-    auto init_iter = keywords::int_scalar_init.find(keyword);
-    if (init_iter != keywords::int_scalar_init.end())
-        this->int_data[keyword].default_assign(init_iter->second);
+    if (keywords::isFipxxx(keyword)) {
+        keywords::keyword_info<int> kw_info{.scalar_init = 1};
+        if (kw_info.scalar_init)
+            this->int_data[keyword].default_assign(*kw_info.scalar_init);
+    } else {
+        const keywords::keyword_info<int>& kw_info = keywords::global_kw_info<int>(keyword);
+        if (kw_info.scalar_init)
+            this->int_data[keyword].default_assign(*kw_info.scalar_init);
+    }
+
 
     return this->int_data[keyword];
 }
@@ -696,13 +611,12 @@ std::vector<double> FieldProps::extract<double>(const std::string& keyword) {
 
 
 double FieldProps::getSIValue(const std::string& keyword, double raw_value) const {
-    const auto& iter = keywords::unit_string.find(keyword);
-    std::string dim_string = "1";
-    if (iter != keywords::unit_string.end())
-        dim_string = iter->second;
-
-    const auto& dim = this->unit_system.parse( dim_string );
-    return dim.convertRawToSi(raw_value);
+    const auto& kw_info = keywords::global_kw_info<double>(keyword);
+    if (kw_info.unit) {
+        const auto& dim = this->unit_system.parse( *kw_info.unit );
+        return dim.convertRawToSi(raw_value);
+    }
+    return raw_value;
 }
 
 
@@ -717,12 +631,12 @@ void FieldProps::handle_int_keyword(const DeckKeyword& keyword, const Box& box) 
 }
 
 
-void FieldProps::handle_double_keyword(Section section, const DeckKeyword& keyword, const Box& box) {
+void FieldProps::handle_double_keyword(Section section, const keywords::keyword_info<double>& kw_info, const DeckKeyword& keyword, const Box& box) {
     auto& field_data = this->init_get<double>(keyword.name());
     const auto& deck_data = keyword.getSIDoubleData();
     const auto& deck_status = keyword.getValueStatus();
 
-    if (section == Section::EDIT && keywords::multiplier_keywords.count(keyword.name()) == 1)
+    if (section == Section::EDIT && kw_info.multiplier)
         multiply_deck(keyword, field_data, deck_data, deck_status, box);
     else
         assign_deck(keyword, field_data, deck_data, deck_status, box);
@@ -732,10 +646,11 @@ void FieldProps::handle_double_keyword(Section section, const DeckKeyword& keywo
         if (field_data.valid())
             return;
 
-        if (keywords::GRID::top_keywords.count(keyword.name()) == 1)
+        if (kw_info.top)
             this->distribute_toplayer(field_data, deck_data, box);
     }
 }
+
 
 
 
@@ -1024,7 +939,7 @@ void FieldProps::scanGRIDSection(const GRIDSection& grid_section) {
         const std::string& name = keyword.name();
 
         if (keywords::GRID::double_keywords.count(name) == 1) {
-            this->handle_double_keyword(Section::GRID, keyword, box);
+            this->handle_double_keyword(Section::GRID, keywords::GRID::double_keywords.at(name), keyword, box);
             continue;
         }
 
@@ -1042,7 +957,7 @@ void FieldProps::scanEDITSection(const EDITSection& edit_section) {
     for (const auto& keyword : edit_section) {
         const std::string& name = keyword.name();
         if (keywords::EDIT::double_keywords.count(name) == 1) {
-            this->handle_double_keyword(Section::EDIT, keyword, box);
+            this->handle_double_keyword(Section::EDIT, keywords::EDIT::double_keywords.at(name), keyword, box);
             continue;
         }
 
@@ -1070,19 +985,19 @@ void FieldProps::init_satfunc(const std::string& keyword, FieldData<double>& sat
 }
 
 
-
 void FieldProps::scanPROPSSection(const PROPSSection& props_section) {
     Box box(*this->grid_ptr);
 
     for (const auto& keyword : props_section) {
         const std::string& name = keyword.name();
         if (keywords::PROPS::satfunc.count(name) == 1) {
-            this->handle_double_keyword(Section::PROPS, keyword, box);
+            keywords::keyword_info<double> sat_info{};
+            this->handle_double_keyword(Section::PROPS, sat_info, keyword, box);
             continue;
         }
 
         if (keywords::PROPS::double_keywords.count(name) == 1) {
-            this->handle_double_keyword(Section::PROPS, keyword, box);
+            this->handle_double_keyword(Section::PROPS, keywords::PROPS::double_keywords.at(name), keyword, box);
             continue;
         }
 
@@ -1116,7 +1031,7 @@ void FieldProps::scanSOLUTIONSection(const SOLUTIONSection& solution_section) {
     for (const auto& keyword : solution_section) {
         const std::string& name = keyword.name();
         if (keywords::SOLUTION::double_keywords.count(name) == 1) {
-            this->handle_double_keyword(Section::SOLUTION, keyword, box);
+            this->handle_double_keyword(Section::SOLUTION, keywords::SOLUTION::double_keywords.at(name), keyword, box);
             continue;
         }
 
@@ -1129,7 +1044,7 @@ void FieldProps::scanSCHEDULESection(const SCHEDULESection& schedule_section) {
     for (const auto& keyword : schedule_section) {
         const std::string& name = keyword.name();
         if (keywords::SCHEDULE::double_keywords.count(name) == 1) {
-            this->handle_double_keyword(Section::SCHEDULE, keyword, box);
+            this->handle_double_keyword(Section::SCHEDULE, keywords::SCHEDULE::double_keywords.at(name), keyword, box);
             continue;
         }
 
