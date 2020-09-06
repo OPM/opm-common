@@ -73,4 +73,9 @@ BOOST_AUTO_TEST_CASE(InjectedNumberRenderer) {
     BOOST_CHECK_EQUAL(negativeNode.unique_key(chooseSign), "SIGN:-");
 }
 
+BOOST_AUTO_TEST_CASE(user_defined) {
+    auto summary_node = Opm::EclIO::SummaryNode{"FU_VAR1", Opm::EclIO::SummaryNode::Category::Field, Opm::EclIO::SummaryNode::Type::Undefined, "", -1 };
+    BOOST_CHECK( summary_node.is_user_defined() );
+}
+
 BOOST_AUTO_TEST_SUITE_END() // UniqueKey

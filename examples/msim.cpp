@@ -27,6 +27,7 @@
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
+#include <opm/common/OpmLog/OpmLog.hpp>
 
 #include <opm/msim/msim.hpp>
 
@@ -38,6 +39,7 @@ int main(int /* argc */, char** argv) {
     Opm::ErrorGuard error_guard;
     auto python = std::make_shared<Opm::Python>();
 
+    Opm::OpmLog::setupSimpleDefaultLogging();
     Opm::Deck deck = parser.parseFile(deck_file, parse_context, error_guard);
     Opm::EclipseState state(deck);
     Opm::Schedule schedule(deck, state, parse_context, error_guard, python);
