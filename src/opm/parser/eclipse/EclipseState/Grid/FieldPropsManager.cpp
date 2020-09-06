@@ -57,8 +57,7 @@ const std::vector<T>* FieldPropsManager::try_get(const std::string& keyword) con
 
 template <typename T>
 std::vector<T> FieldPropsManager::get_global(const std::string& keyword) const {
-    const auto& data = this->get<T>(keyword);
-    return this->fp->global_copy(data);
+    return this->fp->get_global<T>(keyword);
 }
 
 template <typename T>
@@ -99,11 +98,11 @@ std::vector<int> FieldPropsManager::actnum() const {
 }
 
 std::vector<double> FieldPropsManager::porv(bool global) const {
-    const auto& data = this->get<double>("PORV");
+    const auto& field_data = this->fp->try_get<double>("PORV").field_data();
     if (global)
-        return this->fp->global_copy(data);
+        return this->fp->global_copy(field_data.data, field_data.kw_info.scalar_init);
     else
-        return data;
+        return field_data.data;
 }
 
 std::size_t FieldPropsManager::active_size() const {
