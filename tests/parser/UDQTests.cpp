@@ -1776,7 +1776,7 @@ UDQ
     SummaryState st(std::chrono::system_clock::now());
     auto undefined_value =  udq.params().undefinedValue();
     UDQState udq_state(undefined_value);
-    udq.eval(st, udq_state);
+    udq.eval(0, st, udq_state);
 
     BOOST_CHECK_EQUAL( st.get("FU_UADD"), 12);   // 10 + 2
 
@@ -1803,7 +1803,7 @@ DEFINE FU_PAR2 FU_PAR3 /
     auto undefined_value =  udq.params().undefinedValue();
     UDQState udq_state(undefined_value);
     st.update("FMWPR", 100);
-    udq.eval(st, udq_state);
+    udq.eval(0, st, udq_state);
 
     BOOST_CHECK_EQUAL(st.get("FU_PAR2"), 100);
 }
@@ -1821,7 +1821,7 @@ DEFINE FU_PAR3 FU_PAR2 + 1/
     SummaryState st(std::chrono::system_clock::now());
     auto undefined_value =  udq.params().undefinedValue();
     UDQState udq_state(undefined_value);
-    udq.eval(st, udq_state);
+    udq.eval(0, st, udq_state);
 
     BOOST_CHECK_EQUAL(st.get("FU_PAR2"), undefined_value);
     BOOST_CHECK_EQUAL(st.get("FU_PAR3"), undefined_value);
@@ -1938,7 +1938,7 @@ DEFINE WUGASRA  750000 - WGLIR '*' /
     st.update_well_var("W2", "WGLIR", 2);
     st.update_well_var("W3", "WGLIR", 3);
 
-    udq.eval(st, udq_state);
+    udq.eval(0, st, udq_state);
 
     // The current testcase has some ordering & defined / undefined issues which
     // are not yet solved; therefor no udq.eval() here.
@@ -2130,7 +2130,30 @@ DEFINE FU_VAR91 GOPR TEST  /
     st.update_well_var("W2", "WGLIR", 2);
     st.update_well_var("W3", "WGLIR", 3);
 
-    udq.eval(st, udq_state);
+    udq.eval(0, st, udq_state);
 
     // The current testcase has some ordering & defined / undefined issues which
+}
+
+
+
+BOOST_AUTO_TEST_CASE(UDQ_ASSIGN) {
+    std::string deck_string = R"(
+-- udq #2
+SCHEDULE
+
+UDQ
+  ASSIGN FU_VAR1 5  /
+  DEFINE FU_VAR1 FU_VAR1 + 5 /
+/
+)";
+
+    auto schedule = make_schedule(deck_string);
+    const auto& udq = schedule.getUDQConfig(0);
+    auto undefined_value =  udq.params().undefinedValue();
+    UDQState udq_state(undefined_value);
+    SummaryState st(std::chrono::system_clock::now());
+
+    udq.eval(0, st, udq_state);
+    BOOST_CHECK_EQUAL(st.get("FU_VAR1"), 10);
 }
