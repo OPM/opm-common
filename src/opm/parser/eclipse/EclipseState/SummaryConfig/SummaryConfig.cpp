@@ -16,6 +16,8 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include <fnmatch.h>
+
 #include <algorithm>
 #include <array>
 #include <iostream>
@@ -1130,6 +1132,17 @@ bool SummaryConfig::hasKeyword( const std::string& keyword ) const {
 bool SummaryConfig::hasSummaryKey(const std::string& keyword ) const {
     return summary_keywords.find(keyword) != summary_keywords.end();
 }
+
+
+bool SummaryConfig::match(const std::string& keywordPattern) const {
+    int flags = 0;
+    for (const auto& keyword : this->short_keywords) {
+        if (fnmatch(keywordPattern.c_str(), keyword.c_str(), flags) == 0)
+            return true;
+    }
+    return false;
+}
+
 
 
 size_t SummaryConfig::size() const {

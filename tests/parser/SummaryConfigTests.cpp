@@ -1053,6 +1053,9 @@ ROPT_REG
     const auto& summary_config = createSummary(deck_string);
     BOOST_CHECK(summary_config.hasKeyword("RPR__REG"));
     BOOST_CHECK(summary_config.hasKeyword("ROPT_REG"));
+    BOOST_CHECK(!summary_config.hasKeyword("RPR"));
+    BOOST_CHECK(!summary_config.match("BPR*"));
+    BOOST_CHECK(summary_config.match("RPR*"));
     for (const auto& node : summary_config) {
         if (node.category() == EclIO::SummaryNode::Category::Region)
             BOOST_CHECK_EQUAL( node.fip_region(), "FIPREG" );

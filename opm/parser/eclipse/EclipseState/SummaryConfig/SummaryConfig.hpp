@@ -168,6 +168,14 @@ namespace Opm {
             */
             bool hasKeyword( const std::string& keyword ) const;
 
+
+            /*
+              Will check if the SummaryConfig object contains any keyword
+              matching the pattern argument. The matching is done with
+              fnmatch().
+            */
+            bool match(const std::string& keywordPattern) const;
+
             /*
                The hasSummaryKey() method will look for fully
                qualified keys like 'RPR:3' and 'BPR:10,15,20.
