@@ -183,31 +183,6 @@ void multiply_deck(const DeckKeyword& keyword, FieldProps::FieldData<T>& field_d
 
 
 template <typename T>
-void distribute_toplayer(const EclipseGrid& grid, FieldProps::FieldData<T>& field_data, const std::vector<T>& deck_data, const Box& box) {
-    const std::size_t layer_size = grid.getNX() * grid.getNY();
-    FieldProps::FieldData<double> toplayer(grid.getNX() * grid.getNY());
-    for (const auto& cell_index : box.index_list()) {
-        if (cell_index.global_index < layer_size) {
-            toplayer.data[cell_index.global_index] = deck_data[cell_index.data_index];
-            toplayer.value_status[cell_index.global_index] = value::status::deck_value;
-        }
-    }
-
-    for (std::size_t active_index = 0; active_index < field_data.size(); active_index++) {
-        if (field_data.value_status[active_index] == value::status::uninitialized) {
-            std::size_t global_index = grid.getGlobalIndex(active_index);
-            const auto ijk = grid.getIJK(global_index);
-            std::size_t layer_index = ijk[0] + ijk[1] * grid.getNX();
-            if (toplayer.value_status[layer_index] == value::status::deck_value) {
-                field_data.data[active_index] = toplayer.data[layer_index];
-                field_data.value_status[active_index] = value::status::valid_default;
-            }
-        }
-    }
-}
-
-
-template <typename T>
 void assign_scalar(FieldProps::FieldData<T>& field_data, T value, const std::vector<Box::cell_index>& index_list) {
     for (const auto& cell_index : index_list) {
         field_data.data[cell_index.active_index] = value;
