@@ -566,7 +566,7 @@ BOOST_AUTO_TEST_CASE(UDQ_CONTEXT) {
     BOOST_CHECK_EQUAL(*ctx.get("JAN"), 1.0);
     BOOST_CHECK_THROW(ctx.get("NO_SUCH_KEY"), std::out_of_range);
 
-    for (std::string& key : std::vector<std::string>({"ELAPSED", "MSUMLINS", "MSUMNEWT", "NEWTON", "TCPU", "TIME", "TIMESTEP"}))
+    for (std::string& key : std::vector<std::string>({"ELAPSED", "MSUMLINS", "MSUMNEWT", "NEWTON", "TCPU", "TIME"}))
         BOOST_CHECK_NO_THROW( ctx.get(key) );
 
     st.update("SX:KEY", 1.0);
@@ -1927,6 +1927,7 @@ DEFINE WUGASRA  750000 - WGLIR '*' /
     UDQState udq_state(undefined_value);
     SummaryState st(std::chrono::system_clock::now());
 
+    st.update("TIMESTEP", 100);
     st.update("FMWPR", 100);
     st.update("FMWIN", 100);
     st.update("FMWPA", 100);
@@ -2124,6 +2125,7 @@ DEFINE FU_VAR91 GOPR TEST  /
     st.update("FMWPA", 100);
     st.update("FMWIA", 100);
     st.update("FOPR", 100);
+    st.update("TIMESTEP", 100);
     st.update_well_var("W1", "WGLIR", 1);
     st.update_well_var("W2", "WGLIR", 2);
     st.update_well_var("W3", "WGLIR", 3);
