@@ -564,9 +564,7 @@ BOOST_AUTO_TEST_CASE(UDQ_CONTEXT) {
     UDQState udq_state(udqp.undefinedValue());
     UDQContext ctx(func_table, st, udq_state);
     BOOST_CHECK_EQUAL(*ctx.get("JAN"), 1.0);
-
-    auto invalid = ctx.get("NO_SUCH_KEY");
-    BOOST_CHECK(!invalid.has_value());
+    BOOST_CHECK_THROW(ctx.get("NO_SUCH_KEY"), std::out_of_range);
 
     for (std::string& key : std::vector<std::string>({"ELAPSED", "MSUMLINS", "MSUMNEWT", "NEWTON", "TCPU", "TIME", "TIMESTEP"}))
         BOOST_CHECK_NO_THROW( ctx.get(key) );
@@ -2137,14 +2135,14 @@ DEFINE FU_VAR91 GOPR TEST  /
 
 
 
-BOOST_AUTO_TEST_CASE(UDQ_ASSIGN) {
+
+BOOST_AUTO_TEST_CASE(UDQ_KEY_ERROR) {
     std::string deck_string = R"(
 -- udq #2
 SCHEDULE
 
 UDQ
-  ASSIGN FU_VAR1 5  /
-  DEFINE FU_VAR1 FU_VAR1 + 5 /
+  DEFINE FU_VAR1 FOPR * 5 /
 /
 )";
 
@@ -2154,6 +2152,5 @@ UDQ
     UDQState udq_state(undefined_value);
     SummaryState st(std::chrono::system_clock::now());
 
-    udq.eval(0, st, udq_state);
-    BOOST_CHECK_EQUAL(st.get("FU_VAR1"), 10);
+    BOOST_CHECK_THROW(udq.eval(0, st, udq_state), std::out_of_range);
 }
