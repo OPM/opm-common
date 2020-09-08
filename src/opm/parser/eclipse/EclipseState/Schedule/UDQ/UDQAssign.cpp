@@ -27,11 +27,11 @@ UDQAssign::UDQAssign() :
 {
 }
 
-UDQAssign::UDQAssign(const std::string& keyword, const std::vector<std::string>& selector, double value) :
+UDQAssign::UDQAssign(const std::string& keyword, const std::vector<std::string>& selector, double value, std::size_t report_step) :
     m_keyword(keyword),
     m_var_type(UDQ::varType(keyword))
 {
-    this->add_record(selector, value);
+    this->add_record(selector, value, report_step);
 }
 
 UDQAssign UDQAssign::serializeObject()
@@ -39,13 +39,13 @@ UDQAssign UDQAssign::serializeObject()
     UDQAssign result;
     result.m_keyword = "test";
     result.m_var_type = UDQVarType::CONNECTION_VAR;
-    result.records = {{{"test1"}, 1.0}};
+    result.records = {{{"test1"}, 1.0, 0}};
 
     return result;
 }
 
-void UDQAssign::add_record(const std::vector<std::string>& selector, double value) {
-    this->records.push_back({selector, value});
+void UDQAssign::add_record(const std::vector<std::string>& selector, double value, std::size_t report_step) {
+    this->records.push_back({selector, value, report_step});
 }
 
 const std::string& UDQAssign::keyword() const {
@@ -55,6 +55,12 @@ const std::string& UDQAssign::keyword() const {
 UDQVarType UDQAssign::var_type() const {
     return this->m_var_type;
 }
+
+
+std::size_t UDQAssign::report_step() const {
+    return this->records.back().report_step;
+}
+
 
 UDQSet UDQAssign::eval(const std::vector<std::string>& wells) const {
     if (this->m_var_type == UDQVarType::WELL_VAR) {

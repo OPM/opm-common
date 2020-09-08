@@ -942,9 +942,9 @@ BOOST_AUTO_TEST_CASE(UDQ_SET_DIV) {
 
 
 BOOST_AUTO_TEST_CASE(UDQASSIGN_TEST) {
-    UDQAssign as1("WUPR", {}, 1.0);
-    UDQAssign as2("WUPR", {"P*"}, 2.0);
-    UDQAssign as3("WUPR", {"P1"}, 4.0);
+    UDQAssign as1("WUPR", {}, 1.0, 1);
+    UDQAssign as2("WUPR", {"P*"}, 2.0, 2);
+    UDQAssign as3("WUPR", {"P1"}, 4.0, 3);
     std::vector<std::string> ws1 = {"P1", "P2", "I1", "I2"};
 
     auto res1 = as1.eval(ws1);
@@ -1455,7 +1455,7 @@ BOOST_AUTO_TEST_CASE(UDQ_USAGE) {
     BOOST_CHECK_EQUAL( usage.IUAD_size(), 0 );
 
     UDAValue uda1("WUX");
-    conf.add_assign(uda1.get<std::string>(), {}, 100);
+    conf.add_assign(uda1.get<std::string>(), {}, 100, 0);
 
     usage.update(conf, uda1, "W1", UDAControl::WCONPROD_ORAT);
     BOOST_CHECK_EQUAL( usage.IUAD_size(), 1 );
@@ -1842,12 +1842,12 @@ BOOST_AUTO_TEST_CASE(UDQSTATE) {
     BOOST_CHECK_THROW(st.get("FUPR"), std::out_of_range);
 
     auto fxpr = UDQSet::scalar("FXPR", 100);
-    BOOST_CHECK_THROW(st.add("FXPR", fxpr), std::logic_error);
+    BOOST_CHECK_THROW(st.add_define("FXPR", fxpr), std::logic_error);
 
     BOOST_CHECK_THROW(st.get_well_var("OP1", "WUPR"), std::out_of_range);
 
     auto fupr = UDQSet::scalar("FUPR", 100);
-    st.add("FUPR", fupr);
+    st.add_define("FUPR", fupr);
 
     // This is not a well quantity
     BOOST_CHECK_THROW(st.get_well_var("OP1", "FUPR"), std::logic_error);
@@ -1856,7 +1856,7 @@ BOOST_AUTO_TEST_CASE(UDQSTATE) {
 
     auto wupr = UDQSet::wells("WUPR", {"P1", "P2"});
     wupr.assign("P1", 75);
-    st.add("WUPR", wupr);
+    st.add_define("WUPR", wupr);
 
     BOOST_CHECK(st.has_well_var("P1", "WUPR"));
     // We have a well P2 - but we have not assigned a value to it!
@@ -1946,6 +1946,8 @@ DEFINE WUGASRA  750000 - WGLIR '*' /
 
 BOOST_AUTO_TEST_CASE(UDQ_UNDEFINED) {
     std::string deck_string = R"(
+SCHEDULE
+
 -- udq #2
 UDQ
 ----XX xxxx xxx
@@ -2129,12 +2131,10 @@ DEFINE FU_VAR91 GOPR TEST  /
     st.update_well_var("W1", "WGLIR", 1);
     st.update_well_var("W2", "WGLIR", 2);
     st.update_well_var("W3", "WGLIR", 3);
+    st.update_group_var("TEST", "GOPR", 1);
 
     udq.eval(0, st, udq_state);
-
-    // The current testcase has some ordering & defined / undefined issues which
 }
-
 
 
 
@@ -2156,3 +2156,85 @@ UDQ
 
     BOOST_CHECK_THROW(udq.eval(0, st, udq_state), std::out_of_range);
 }
+
+
+BOOST_AUTO_TEST_CASE(UDQ_ASSIGN) {
+    std::string deck_string = R"(
+-- udq #2
+SCHEDULE
+
+UDQ
+  ASSIGN FU_VAR1 5  /
+  DEFINE FU_VAR1 FU_VAR1 + 5 /
+/
+)";
+
+    auto schedule = make_schedule(deck_string);
+    const auto& udq = schedule.getUDQConfig(0);
+    auto undefined_value =  udq.params().undefinedValue();
+    UDQState udq_state(undefined_value);
+    SummaryState st(std::chrono::system_clock::now());
+
+    udq.eval(0, st, udq_state);
+    BOOST_CHECK_EQUAL(st.get("FU_VAR1"), 10);
+}
+
+BOOST_AUTO_TEST_CASE(UDQ_ASSIGN_REASSIGN) {
+    std::string deck_string = R"(
+-- udq #2
+SCHEDULE
+
+UDQ
+  ASSIGN FU_VAR1 0  /
+  DEFINE FU_VAR1 FU_VAR1 + 1 /
+/
+
+TSTEP
+   1 1 1 1 1 /
+
+UDQ
+  ASSIGN FU_VAR1 0  /
+  DEFINE FU_VAR1 FU_VAR1 + 1 /
+/
+
+TSTEP
+   1 1 1 1 1 /
+
+UDQ
+  ASSIGN FU_VAR1 0  /
+/
+
+TSTEP
+   1 1 1 1 1 /
+
+)";
+
+    auto schedule = make_schedule(deck_string);
+    UDQState udq_state(0);
+    SummaryState st(std::chrono::system_clock::now());
+
+    // Counting: 1,2,3,4,5
+    for (std::size_t report_step = 0; report_step < 5; report_step++) {
+        const auto& udq = schedule.getUDQConfig(report_step);
+        udq.eval(report_step, st, udq_state);
+        auto fu_var1 = st.get("FU_VAR1");
+        BOOST_CHECK_EQUAL(fu_var1, report_step + 1);
+    }
+
+    // Reset to zero and count: 1,2,3,4,5
+    for (std::size_t report_step = 5; report_step < 10; report_step++) {
+        const auto& udq = schedule.getUDQConfig(report_step);
+        udq.eval(report_step, st, udq_state);
+        auto fu_var1 = st.get("FU_VAR1");
+        BOOST_CHECK_EQUAL(fu_var1, report_step - 4);
+    }
+
+    // Reset to zero and stay there.
+    for (std::size_t report_step = 10; report_step < 15; report_step++) {
+        const auto& udq = schedule.getUDQConfig(report_step);
+        udq.eval(report_step, st, udq_state);
+        auto fu_var1 = st.get("FU_VAR1");
+        BOOST_CHECK_EQUAL(fu_var1, 0);
+    }
+}
+

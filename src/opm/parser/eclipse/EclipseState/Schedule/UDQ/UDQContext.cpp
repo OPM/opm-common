@@ -62,9 +62,6 @@ bool is_udq(const std::string& key) {
         this->add("TIME", 0.0);
     }
 
-    void UDQContext::update(const std::string& keyword, const UDQSet& udq_result) {
-        this->udq_state.add(keyword, udq_result);
-    }
 
     void UDQContext::add(const std::string& key, double value) {
         this->values[key] = value;
@@ -115,5 +112,13 @@ bool is_udq(const std::string& key) {
 
     const UDQFunctionTable& UDQContext::function_table() const {
         return this->udqft;
+    }
+
+    void UDQContext::update_assign(std::size_t report_step, const std::string& keyword, const UDQSet& udq_result) {
+        this->udq_state.add_assign(report_step, keyword, udq_result);
+    }
+
+    void UDQContext::update_define(const std::string& keyword, const UDQSet& udq_result) {
+        this->udq_state.add_define(keyword, udq_result);
     }
 }

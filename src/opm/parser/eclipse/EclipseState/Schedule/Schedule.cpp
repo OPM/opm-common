@@ -1389,7 +1389,7 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
         const auto& current = *this->udq_config.get(currentStep);
         std::shared_ptr<UDQConfig> new_udq = std::make_shared<UDQConfig>(current);
         for (const auto& record : keyword)
-            new_udq->add_record(record);
+            new_udq->add_record(record, currentStep);
 
         this->udq_config.update(currentStep, new_udq);
     }
