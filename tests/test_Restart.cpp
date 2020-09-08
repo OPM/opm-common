@@ -399,7 +399,7 @@ RestartValue first_sim(const Setup& setup, Action::State& action_state, SummaryS
     RestartValue restart_value(sol, wells, groups);
 
     init_st(st);
-    udq.eval(st, udq_state);
+    udq.eval(report_step, st, udq_state);
     eclWriter.writeTimeStep( action_state,
                              st,
                              udq_state,

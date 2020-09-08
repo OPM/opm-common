@@ -289,7 +289,7 @@ namespace Opm {
                this->type_count == data.type_count;
     }
 
-    void UDQConfig::eval(SummaryState& st, UDQState& udq_state) const {
+    void UDQConfig::eval(std::size_t report_step, SummaryState& st, UDQState& udq_state) const {
         const auto& func_table = this->function_table();
         auto undefined_value = this->params().undefinedValue();
         UDQContext context(func_table, st, udq_state);

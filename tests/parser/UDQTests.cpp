@@ -564,9 +564,7 @@ BOOST_AUTO_TEST_CASE(UDQ_CONTEXT) {
     UDQState udq_state(udqp.undefinedValue());
     UDQContext ctx(func_table, st, udq_state);
     BOOST_CHECK_EQUAL(*ctx.get("JAN"), 1.0);
-
-    auto invalid = ctx.get("NO_SUCH_KEY");
-    BOOST_CHECK(!invalid.has_value());
+    BOOST_CHECK_THROW(ctx.get("NO_SUCH_KEY"), std::out_of_range);
 
     for (std::string& key : std::vector<std::string>({"ELAPSED", "MSUMLINS", "MSUMNEWT", "NEWTON", "TCPU", "TIME", "TIMESTEP"}))
         BOOST_CHECK_NO_THROW( ctx.get(key) );
@@ -1776,7 +1774,7 @@ UDQ
     SummaryState st(std::chrono::system_clock::now());
     auto undefined_value =  udq.params().undefinedValue();
     UDQState udq_state(undefined_value);
-    udq.eval(st, udq_state);
+    udq.eval(0, st, udq_state);
 
     BOOST_CHECK_EQUAL( st.get("FU_UADD"), 12);   // 10 + 2
 
@@ -1803,7 +1801,7 @@ DEFINE FU_PAR2 FU_PAR3 /
     auto undefined_value =  udq.params().undefinedValue();
     UDQState udq_state(undefined_value);
     st.update("FMWPR", 100);
-    udq.eval(st, udq_state);
+    udq.eval(0, st, udq_state);
 
     BOOST_CHECK_EQUAL(st.get("FU_PAR2"), 100);
 }
@@ -1821,7 +1819,7 @@ DEFINE FU_PAR3 FU_PAR2 + 1/
     SummaryState st(std::chrono::system_clock::now());
     auto undefined_value =  udq.params().undefinedValue();
     UDQState udq_state(undefined_value);
-    udq.eval(st, udq_state);
+    udq.eval(0, st, udq_state);
 
     BOOST_CHECK_EQUAL(st.get("FU_PAR2"), undefined_value);
     BOOST_CHECK_EQUAL(st.get("FU_PAR3"), undefined_value);
@@ -1938,7 +1936,7 @@ DEFINE WUGASRA  750000 - WGLIR '*' /
     st.update_well_var("W2", "WGLIR", 2);
     st.update_well_var("W3", "WGLIR", 3);
 
-    udq.eval(st, udq_state);
+    udq.eval(0, st, udq_state);
 
     // The current testcase has some ordering & defined / undefined issues which
     // are not yet solved; therefor no udq.eval() here.
@@ -2130,7 +2128,29 @@ DEFINE FU_VAR91 GOPR TEST  /
     st.update_well_var("W2", "WGLIR", 2);
     st.update_well_var("W3", "WGLIR", 3);
 
-    udq.eval(st, udq_state);
+    udq.eval(0, st, udq_state);
 
     // The current testcase has some ordering & defined / undefined issues which
+}
+
+
+
+
+BOOST_AUTO_TEST_CASE(UDQ_KEY_ERROR) {
+    std::string deck_string = R"(
+-- udq #2
+SCHEDULE
+
+UDQ
+  DEFINE FU_VAR1 FOPR * 5 /
+/
+)";
+
+    auto schedule = make_schedule(deck_string);
+    const auto& udq = schedule.getUDQConfig(0);
+    auto undefined_value =  udq.params().undefinedValue();
+    UDQState udq_state(undefined_value);
+    SummaryState st(std::chrono::system_clock::now());
+
+    BOOST_CHECK_THROW(udq.eval(0, st, udq_state), std::out_of_range);
 }

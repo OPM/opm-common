@@ -83,10 +83,7 @@ bool is_udq(const std::string& key) {
         if (pair_ptr != this->values.end())
             return pair_ptr->second;
 
-        if (this->summary_state.has(key))
-            return this->summary_state.get(key);
-
-        return std::nullopt;
+        return this->summary_state.get(key);
     }
 
     std::optional<double> UDQContext::get_well_var(const std::string& well, const std::string& var) const {
@@ -96,10 +93,7 @@ bool is_udq(const std::string& key) {
 
             return std::nullopt;
         }
-        if (this->summary_state.has_well_var(well, var))
-            return this->summary_state.get_well_var(well, var);
-
-        return std::nullopt;
+        return this->summary_state.get_well_var(well, var);
     }
 
     std::optional<double> UDQContext::get_group_var(const std::string& group, const std::string& var) const {
@@ -109,10 +103,7 @@ bool is_udq(const std::string& key) {
 
             return std::nullopt;
         }
-        if (this->summary_state.has_group_var(group, var))
-            return this->summary_state.get_group_var(group, var);
-
-        return std::nullopt;
+        return this->summary_state.get_group_var(group, var);
     }
 
     std::vector<std::string> UDQContext::wells() const {
