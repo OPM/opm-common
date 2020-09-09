@@ -60,7 +60,6 @@ bool is_udq(const std::string& key) {
         this->add("NEWTON", 0.0);
         this->add("TCPU", 0.0);
         this->add("TIME", 0.0);
-        this->add("TIMESTEP", 0.0);
     }
 
     void UDQContext::update(const std::string& keyword, const UDQSet& udq_result) {

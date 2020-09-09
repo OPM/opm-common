@@ -2734,6 +2734,7 @@ void Summary::eval(SummaryState&                  st,
     validateElapsedTime(secs_elapsed, es, st);
 
     const double duration = secs_elapsed - st.get_elapsed();
+    single_values["TIMESTEP"] = duration;
 
     /* Report_step is the one-based sequence number of the containing report.
      * Report_step = 0 for the initial condition, before simulation starts.
