@@ -51,6 +51,11 @@ double prod_opr(const EclipseState&  es, const Schedule& /* sched */, const Summ
     return -units.to_si(UnitSystem::measure::rate, seconds_elapsed);
 }
 
+double prod_rft(const EclipseState&  es, const Schedule& /* sched */, const SummaryState&, const data::Solution& /* sol */, size_t /* report_step */, double /* seconds_elapsed */) {
+    const auto& units = es.getUnits();
+    return -units.to_si(UnitSystem::measure::rate, 0.0);
+}
+
 void pressure(const EclipseState& es, const Schedule& /* sched */, data::Solution& sol, size_t /* report_step */, double seconds_elapsed) {
     const auto& grid = es.getInputGrid();
     const auto& units = es.getUnits();
@@ -79,7 +84,7 @@ BOOST_AUTO_TEST_CASE(RUN) {
     msim msim(state);
 
     msim.well_rate("PROD", data::Rates::opt::oil, prod_opr);
-    msim.well_rate("RFT", data::Rates::opt::oil, prod_opr);
+    msim.well_rate("RFT", data::Rates::opt::oil, prod_rft);
     msim.solution("PRESSURE", pressure);
     {
         const WorkArea work_area("test_msim");
@@ -100,6 +105,7 @@ BOOST_AUTO_TEST_CASE(RUN) {
                 BOOST_CHECK_CLOSE(seconds_elapsed, press[time_index], 1e-3);
             }
 
+            const auto& fmwpa = smry.get("FMWPA");
             const auto& dates = smry.dates();
             const auto& day   = smry.get("DAY");
             const auto& month = smry.get("MONTH");
@@ -111,6 +117,10 @@ BOOST_AUTO_TEST_CASE(RUN) {
                 BOOST_CHECK_EQUAL( ts.month(), month[time_index]);
                 BOOST_CHECK_EQUAL( ts.year(), year[time_index]);
             }
+
+            BOOST_CHECK_EQUAL( fmwpa[0], 0.0 );
+            // The RFT well will appear as an abondoned well.
+            BOOST_CHECK_EQUAL( fmwpa[dates.size() - 1], 1.0 );
 
             const auto rsm = EclIO::ERsm("SPE1CASE1.RSM");
             BOOST_CHECK( EclIO::cmp( smry, rsm ));
