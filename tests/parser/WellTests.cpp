@@ -1220,3 +1220,75 @@ WPIMULT
 }
 
 
+BOOST_AUTO_TEST_CASE(FIRST_OPEN) {
+    Opm::Parser parser;
+    std::string input = R"(
+START             -- 0
+19 JUN 2007 /
+
+REGIONS
+
+PVTNUM
+ 1000*77 /
+
+SCHEDULE
+
+WELSPECS
+    'P'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+    'I'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  66 /
+/
+
+COMPDAT
+ 'P'  9  9   2   2 'OPEN' 1*   2.0 0.311  3047.839 1*  1*  'X'  22.100 /
+ 'I'  9  9   3   3 'OPEN' 1*   3.0 0.311  4332.346 1*  1*  'X'  22.123 /
+/
+
+DATES             -- 1
+ 20  JAN 2010 /
+/
+
+DATES             -- 2
+ 20  FEB 2010 /
+/
+
+WCONPROD
+ 'P' 'OPEN' 'BHP' 1 2 3 2* 20. 10. 8 13 /
+/
+
+WCONINJE
+ 'I' 'GAS' 'OPEN' 'RATE'  1000 /
+/
+
+
+)";
+
+
+    auto deck = parser.parseString(input);
+    const auto& units = deck.getActiveUnitSystem();
+    auto python = std::make_shared<Opm::Python>();
+    Opm::EclipseGrid grid(10,10,10);
+    TableManager table ( deck );
+    FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
+    Opm::Runspec runspec (deck);
+    Opm::Schedule schedule(deck, grid , fp, runspec, python);
+    {
+        const auto& iwell = schedule.getWell("I", 0);
+        const auto& pwell = schedule.getWell("P", 0);
+
+        BOOST_CHECK( iwell.getStatus() == Well::Status::SHUT );
+        BOOST_CHECK( pwell.getStatus() == Well::Status::SHUT );
+        BOOST_CHECK( !iwell.hasProduced() );
+        BOOST_CHECK( !pwell.hasProduced() );
+    }
+    {
+        const auto& iwell = schedule.getWell("I", 2);
+        const auto& pwell = schedule.getWell("P", 2);
+
+        BOOST_CHECK( iwell.getStatus() == Well::Status::OPEN );
+        BOOST_CHECK( pwell.getStatus() == Well::Status::OPEN );
+        BOOST_CHECK( !iwell.hasProduced() );
+        BOOST_CHECK( pwell.hasProduced() );
+    }
+}
+
+

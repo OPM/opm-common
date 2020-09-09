@@ -951,6 +951,9 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
                     if (well2->updatePrediction(false))
                         update_well = true;
 
+                    if (well2->updateHasProduced())
+                        update_well = true;
+
                     if (update_well) {
                         m_events.addEvent( ScheduleEvents::PRODUCTION_UPDATE , currentStep);
                         this->addWellGroupEvent( well2->name(), ScheduleEvents::PRODUCTION_UPDATE, currentStep);
@@ -1008,6 +1011,9 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
                         update_well = true;
 
                     if (well2->updatePrediction(true))
+                        update_well = true;
+
+                    if (well2->updateHasProduced())
                         update_well = true;
 
                     if (update_well) {
