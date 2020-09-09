@@ -87,32 +87,32 @@ Opm::UDQSet make_udq_set(const std::string& name, Opm::UDQVarType var_type, cons
     {
         auto state = Opm::UDQState{0};
 
-        state.add("WUOPRL", make_udq_set("WUOPRL",
-                                         Opm::UDQVarType::WELL_VAR,
-                                         {"PROD1", "PROD2", "WINJ1", "WINJ2"},
-                                         {210, 211, 212, 213}));
+        state.add_define("WUOPRL", make_udq_set("WUOPRL",
+                                                Opm::UDQVarType::WELL_VAR,
+                                                {"PROD1", "PROD2", "WINJ1", "WINJ2"},
+                                                {210, 211, 212, 213}));
 
-        state.add("WUOPRU", make_udq_set("WUOPRU",
-                                         Opm::UDQVarType::WELL_VAR,
-                                         {"PROD1", "PROD2", "WINJ1", "WINJ2"},
-                                         {220, 221, 222, 223}));
+        state.add_define("WUOPRU", make_udq_set("WUOPRU",
+                                                Opm::UDQVarType::WELL_VAR,
+                                                {"PROD1", "PROD2", "WINJ1", "WINJ2"},
+                                                {220, 221, 222, 223}));
 
-        state.add("WULPRL", make_udq_set("WULPRL",
-                                         Opm::UDQVarType::WELL_VAR,
-                                         {"PROD1", "PROD2", "WINJ1", "WINJ2"},
-                                         {230, 231, 232, 233}));
+        state.add_define("WULPRL", make_udq_set("WULPRL",
+                                                Opm::UDQVarType::WELL_VAR,
+                                                {"PROD1", "PROD2", "WINJ1", "WINJ2"},
+                                                {230, 231, 232, 233}));
 
-        state.add("WULPRU", make_udq_set("WULPRU",
-                                         Opm::UDQVarType::WELL_VAR,
-                                         {"PROD1", "PROD2", "WINJ1", "WINJ2"},
-                                         {160, 161, 162, 163}));
+        state.add_define("WULPRU", make_udq_set("WULPRU",
+                                                Opm::UDQVarType::WELL_VAR,
+                                                {"PROD1", "PROD2", "WINJ1", "WINJ2"},
+                                                {160, 161, 162, 163}));
 
-        state.add("GUOPRU", make_udq_set("GUOPRU",
-                                         Opm::UDQVarType::GROUP_VAR,
-                                         {"WGRP1", "WGRP2", "GRP1"},
-                                         {360, 361, 362}));
+        state.add_define("GUOPRU", make_udq_set("GUOPRU",
+                                                Opm::UDQVarType::GROUP_VAR,
+                                                {"WGRP1", "WGRP2", "GRP1"},
+                                                {360, 361, 362}));
 
-        state.add("FULPR", Opm::UDQSet::scalar("FULPR", 460));
+        state.add_define("FULPR", Opm::UDQSet::scalar("FULPR", 460));
         return state;
     }
 

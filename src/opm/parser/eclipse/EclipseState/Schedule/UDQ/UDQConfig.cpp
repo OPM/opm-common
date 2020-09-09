@@ -22,6 +22,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQInput.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQState.hpp>
 
 namespace Opm {
 
@@ -75,13 +76,13 @@ namespace Opm {
             index_iter->second.action = action;
     }
 
-    void UDQConfig::add_assign(const std::string& quantity, const std::vector<std::string>& selector, double value) {
+    void UDQConfig::add_assign(const std::string& quantity, const std::vector<std::string>& selector, double value, std::size_t report_step) {
         this->add_node(quantity, UDQAction::ASSIGN);
         auto assignment = this->m_assignments.find(quantity);
         if (assignment == this->m_assignments.end())
-            this->m_assignments.insert( std::make_pair(quantity, UDQAssign(quantity, selector, value )));
+            this->m_assignments.insert( std::make_pair(quantity, UDQAssign(quantity, selector, value, report_step )));
         else
-            assignment->second.add_record(selector, value);
+            assignment->second.add_record(selector, value, report_step);
     }
 
 
@@ -113,12 +114,12 @@ namespace Opm {
           keyword.
         */
         if (!this->has_keyword(keyword))
-            this->add_assign(keyword, {}, 0);
+            this->add_assign(keyword, {}, 0, 0);
         this->units[keyword] = unit;
     }
 
 
-    void UDQConfig::add_record(const DeckRecord& record) {
+    void UDQConfig::add_record(const DeckRecord& record, std::size_t report_step) {
         auto action = UDQ::actionType(record.getItem("ACTION").get<RawString>(0));
         const auto& quantity = record.getItem("QUANTITY").get<std::string>(0);
         const auto& data = RawString::strings( record.getItem("DATA").getData<RawString>() );
@@ -132,7 +133,7 @@ namespace Opm {
             if (action == UDQAction::ASSIGN) {
                 std::vector<std::string> selector(data.begin(), data.end() - 1);
                 double value = std::stod(data.back());
-                this->add_assign(quantity, selector, value);
+                this->add_assign(quantity, selector, value, report_step);
             } else if (action == UDQAction::DEFINE)
                 this->add_define(quantity, data);
             else
@@ -144,13 +145,18 @@ namespace Opm {
         return this->m_definitions.at(key);
     }
 
+    UDQAction UDQConfig::action_type(const std::string& udq_key) const {
+        auto action_iter = this->input_index.find(udq_key);
+        return action_iter->second.action;
+    }
 
     std::vector<UDQDefine> UDQConfig::definitions() const {
         std::vector<UDQDefine> ret;
 
-        for (const auto& key : this->define_order)
-            ret.push_back(this->m_definitions.at(key));
-
+        for (const auto& key : this->define_order) {
+            if (this->action_type(key) == UDQAction::DEFINE)
+                ret.push_back(this->m_definitions.at(key));
+        }
         return ret;
     }
 
@@ -159,7 +165,7 @@ namespace Opm {
         std::vector<UDQDefine> filtered_defines;
         for (const auto& key : this->define_order) {
             const auto& udq_define = this->m_definitions.at(key);
-            if (udq_define.var_type() == var_type)
+            if (udq_define.var_type() == var_type && this->action_type(key) == UDQAction::DEFINE)
                 filtered_defines.push_back(udq_define);
         }
         return filtered_defines;
@@ -210,16 +216,16 @@ namespace Opm {
 
 
     std::vector<UDQAssign> UDQConfig::assignments(UDQVarType var_type) const {
-        std::vector<UDQAssign> filtered_defines;
+        std::vector<UDQAssign> filtered_assigns;
         for (const auto& index_pair : this->input_index) {
-            if (index_pair.second.action == UDQAction::ASSIGN) {
-                const std::string& key = index_pair.first;
-                const auto& udq_define = this->m_assignments.at(key);
-                if (udq_define.var_type() == var_type)
-                    filtered_defines.push_back(udq_define);
+            const std::string& key = index_pair.first;
+            const auto& assign_iter = this->m_assignments.find(key);
+            if (assign_iter != this->m_assignments.end()) {
+                if (assign_iter->second.var_type() == var_type)
+                    filtered_assigns.push_back(assign_iter->second);
             }
         }
-        return filtered_defines;
+        return filtered_assigns;
     }
 
 
@@ -295,38 +301,44 @@ namespace Opm {
         UDQContext context(func_table, st, udq_state);
 
         for (const auto& assign : this->assignments(UDQVarType::WELL_VAR)) {
-            auto ws = assign.eval(st.wells());
-            context.update(assign.keyword(), ws);
-            st.update_udq(ws, undefined_value);
+            if (udq_state.assign(report_step, assign.keyword())) {
+                auto ws = assign.eval(st.wells());
+                context.update_assign(report_step, assign.keyword(), ws);
+                st.update_udq(ws, undefined_value);
+            }
         }
 
         for (const auto& def : this->definitions(UDQVarType::WELL_VAR)) {
             auto ws = def.eval(context);
-            context.update(def.keyword(), ws);
+            context.update_define(def.keyword(), ws);
             st.update_udq(ws, undefined_value);
         }
 
         for (const auto& assign : this->assignments(UDQVarType::GROUP_VAR)) {
-            auto ws = assign.eval(st.groups());
-            context.update(assign.keyword(), ws);
-            st.update_udq(ws, undefined_value);
+            if (udq_state.assign(report_step, assign.keyword())) {
+                auto ws = assign.eval(st.groups());
+                context.update_assign(report_step, assign.keyword(), ws);
+                st.update_udq(ws, undefined_value);
+            }
         }
 
         for (const auto& def : this->definitions(UDQVarType::GROUP_VAR)) {
             auto ws = def.eval(context);
-            context.update(def.keyword(), ws);
+            context.update_define(def.keyword(), ws);
             st.update_udq(ws, undefined_value);
         }
 
         for (const auto& assign : this->assignments(UDQVarType::FIELD_VAR)) {
-            auto ws = assign.eval();
-            context.update(assign.keyword(), ws);
-            st.update_udq(ws, undefined_value);
+            if (udq_state.assign(assign.report_step(), assign.keyword())) {
+                auto ws = assign.eval();
+                context.update_assign(report_step, assign.keyword(), ws);
+                st.update_udq(ws, undefined_value);
+            }
         }
 
         for (const auto& def : this->definitions(UDQVarType::FIELD_VAR)) {
             auto field_udq = def.eval(context);
-            context.update(def.keyword(), field_udq);
+            context.update_define(def.keyword(), field_udq);
             st.update_udq(field_udq, undefined_value);
         }
     }

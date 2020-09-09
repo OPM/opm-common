@@ -42,10 +42,12 @@ public:
     struct AssignRecord {
         std::vector<std::string> selector;
         double value;
+        std::size_t report_step;
 
         bool operator==(const AssignRecord& data) const {
             return selector == data.selector &&
-                   value == data.value;
+                report_step == data.report_step &&
+                      value == data.value;
         }
 
         template<class Serializer>
@@ -53,19 +55,21 @@ public:
         {
             serializer(selector);
             serializer(value);
+            serializer(report_step);
         }
     };
 
     UDQAssign();
-    UDQAssign(const std::string& keyword, const std::vector<std::string>& selector, double value);
+    UDQAssign(const std::string& keyword, const std::vector<std::string>& selector, double value, std::size_t report_step);
 
     static UDQAssign serializeObject();
 
     const std::string& keyword() const;
     UDQVarType var_type() const;
-    void add_record(const std::vector<std::string>& selector, double value);
+    void add_record(const std::vector<std::string>& selector, double value, std::size_t report_step);
     UDQSet eval(const std::vector<std::string>& wells) const;
     UDQSet eval() const;
+    std::size_t report_step() const;
 
     bool operator==(const UDQAssign& data) const;
 

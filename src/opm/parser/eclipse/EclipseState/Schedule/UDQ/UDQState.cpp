@@ -82,6 +82,15 @@ void UDQState::add(const std::string& udq_key, const UDQSet& result) {
         res_iter->second = result;
 }
 
+void UDQState::add_define(const std::string& udq_key, const UDQSet& result) {
+    this->add(udq_key, result);
+}
+
+void UDQState::add_assign(std::size_t report_step, const std::string& udq_key, const UDQSet& result) {
+    this->assignments[udq_key] = report_step;
+    this->add(udq_key, result);
+}
+
 double UDQState::get(const std::string& key) const {
     if (!is_udq(key))
         throw std::logic_error("Key is not a UDQ variable:" + key);
@@ -125,6 +134,16 @@ bool UDQState::operator==(const UDQState& other) const {
            this->values == other.values;
 }
 
+
+
+bool UDQState::assign(std::size_t report_step, const std::string& udq_key) const {
+    auto assign_iter = this->assignments.find(udq_key);
+    if (assign_iter == this->assignments.end())
+        return true;
+    else
+        return report_step > assign_iter->second;
+}
+
 std::vector<char> UDQState::serialize() const {
     Serializer ser;
     ser.put(this->undefined_value);
@@ -133,7 +152,8 @@ std::vector<char> UDQState::serialize() const {
         ser.put( set_pair.first );
         set_pair.second.serialize( ser );
     }
-    return std::move(ser.buffer);
+    ser.put(this->assignments);
+    return ser.buffer;
 }
 
 
@@ -151,6 +171,7 @@ void UDQState::deserialize(const std::vector<char>& buffer) {
             this->values.insert( std::make_pair(key, udq_set) );
         }
     }
+    this->assignments = ser.get<std::string, std::size_t>();
 }
 }
 

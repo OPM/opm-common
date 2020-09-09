@@ -53,10 +53,10 @@ namespace Opm {
         const std::string& unit(const std::string& key) const;
         bool has_unit(const std::string& keyword) const;
         bool has_keyword(const std::string& keyword) const;
-        void add_record(const DeckRecord& record);
+        void add_record(const DeckRecord& record, std::size_t report_step);
 
         void add_unit(const std::string& keyword, const std::string& unit);
-        void add_assign(const std::string& quantity, const std::vector<std::string>& selector, double value);
+        void add_assign(const std::string& quantity, const std::vector<std::string>& selector, double value, std::size_t report_step);
         void add_define(const std::string& quantity, const std::vector<std::string>& expression);
 
         void eval(std::size_t report_step, SummaryState& st, UDQState& udq_state) const;
@@ -96,6 +96,8 @@ namespace Opm {
 
     private:
         void add_node(const std::string& quantity, UDQAction action);
+        UDQAction action_type(const std::string& udq_key) const;
+
 
         UDQParams udq_params;
         UDQFunctionTable udqft;

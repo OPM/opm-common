@@ -254,7 +254,7 @@ UDQSet UDQDefine::eval(UDQContext& context) const {
         std::string msg = "Invalid runtime type conversion detected when evaluating UDQ";
         throw std::invalid_argument(msg);
     }
-    context.update(this->keyword(), res);
+    context.update_define(this->keyword(), res);
 
     if (res.var_type() == UDQVarType::SCALAR) {
         /*
