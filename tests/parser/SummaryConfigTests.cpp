@@ -597,6 +597,12 @@ BOOST_AUTO_TEST_CASE( summary_FMWSET ) {
     BOOST_CHECK( !summary.hasKeyword("NO-NOT-THIS") );
 }
 
+BOOST_AUTO_TEST_CASE(FMWPA) {
+    const auto input = "FMWPA\n";
+    const auto summary = createSummary( input );
+    BOOST_CHECK_EQUAL(1 , summary.size() );
+}
+
 
 
 BOOST_AUTO_TEST_CASE( WOPRL ) {
