@@ -1258,7 +1258,7 @@ Well::InjectorCMode Well::InjectorCModeFromString(const std::string &stringValue
     else if (stringValue == "GRUP")
         return InjectorCMode::GRUP;
     else
-        throw std::invalid_argument("Unknown enum state string: " + stringValue);
+        throw std::invalid_argument("Unknown control mode string: " + stringValue);
 }
 
 std::ostream& operator<<(std::ostream& os, const Well::InjectorCMode& cm) {
