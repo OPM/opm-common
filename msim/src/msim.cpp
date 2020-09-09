@@ -159,15 +159,17 @@ void msim::simulate(const Schedule& schedule, const SummaryState& st, data::Solu
     for (const auto& well_pair : this->well_rates) {
         const std::string& well_name = well_pair.first;
         const auto& sched_well = schedule.getWell(well_name, report_step);
-        if (sched_well.getStatus() != Well::Status::OPEN)
-            continue;
+        bool well_open = (sched_well.getStatus() == Well::Status::OPEN);
 
         data::Well& well = well_data[well_name];
         for (const auto& rate_pair : well_pair.second) {
             auto rate = rate_pair.first;
             auto func = rate_pair.second;
 
-            well.rates.set(rate, func(this->state, schedule, st, sol, report_step, seconds_elapsed + time_step));
+            if (well_open)
+                well.rates.set(rate, func(this->state, schedule, st, sol, report_step, seconds_elapsed + time_step));
+            else
+                well.rates.set(rate, 0.0);
         }
 
         // This is complete bogus; a temporary fix to pass an assert() in the
