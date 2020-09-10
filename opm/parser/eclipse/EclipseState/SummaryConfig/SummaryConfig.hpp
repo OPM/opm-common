@@ -51,6 +51,7 @@ namespace Opm {
         SummaryConfigNode& namedEntity(std::string name);
         SummaryConfigNode& number(const int num);
         SummaryConfigNode& isUserDefined(const bool userDefined);
+        SummaryConfigNode& fip_region(const std::string& fip_region);
 
         const std::string& keyword() const { return this->keyword_; }
         Category category() const { return this->category_; }
@@ -58,12 +59,13 @@ namespace Opm {
         const std::string& namedEntity() const { return this->name_; }
         int number() const { return this->number_; }
         bool isUserDefined() const { return this->userDefined_; }
+        const std::string& fip_region() const { return this->fip_region_; }
 
         std::string uniqueNodeKey() const;
         const Location& location( ) const { return this->loc; }
 
         operator Opm::EclIO::SummaryNode() const {
-            return { keyword_, category_, type_, name_, number_ };
+            return { keyword_, category_, type_, name_, number_, fip_region_ };
         }
 
         template<class Serializer>
@@ -75,6 +77,7 @@ namespace Opm {
             serializer(type_);
             serializer(name_);
             serializer(number_);
+            serializer(fip_region_);
             serializer(userDefined_);
         }
 
@@ -85,6 +88,7 @@ namespace Opm {
         Type        type_{ Type::Undefined };
         std::string name_{};
         int         number_{std::numeric_limits<int>::min()};
+        std::string fip_region_;
         bool        userDefined_{false};
     };
 
@@ -164,6 +168,14 @@ namespace Opm {
             */
             bool hasKeyword( const std::string& keyword ) const;
 
+
+            /*
+              Will check if the SummaryConfig object contains any keyword
+              matching the pattern argument. The matching is done with
+              fnmatch().
+            */
+            bool match(const std::string& keywordPattern) const;
+
             /*
                The hasSummaryKey() method will look for fully
                qualified keys like 'RPR:3' and 'BPR:10,15,20.
@@ -174,6 +186,7 @@ namespace Opm {
               is required to calculate the summary variables.
             */
             bool require3DField( const std::string& keyword) const;
+            std::set<std::string> fip_regions() const;
 
             bool operator==(const SummaryConfig& data) const;
 

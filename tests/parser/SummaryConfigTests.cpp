@@ -21,6 +21,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <opm/io/eclipse/SummaryNode.hpp>
 #include <opm/parser/eclipse/Python/Python.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
@@ -96,6 +97,8 @@ static Deck createDeck( const std::string& summary ) {
             "REGIONS\n"
             "FIPNUM\n"
             "200*1 300*2 500*3 /\n"
+            "FIPREG\n"
+            "200*10 300*20 500*30 /\n"
             "SCHEDULE\n"
             "WELSPECS\n"
             "     \'W_1\'        \'OP\'   1   1  3.33       \'OIL\'  7* /   \n"
@@ -1036,4 +1039,31 @@ RUNSUM
 
     BOOST_CHECK( summary_config2.createRunSummary());
     BOOST_CHECK(!summary_config2.hasKeyword("RUNSUM"));
+}
+
+
+BOOST_AUTO_TEST_CASE(FIPREG) {
+    std::string deck_string = R"(
+RPR__REG
+/
+
+ROPT_REG
+/
+)";
+    const auto& summary_config = createSummary(deck_string);
+    BOOST_CHECK(summary_config.hasKeyword("RPR__REG"));
+    BOOST_CHECK(summary_config.hasKeyword("ROPT_REG"));
+    BOOST_CHECK(!summary_config.hasKeyword("RPR"));
+    BOOST_CHECK(!summary_config.match("BPR*"));
+    BOOST_CHECK(summary_config.match("RPR*"));
+    for (const auto& node : summary_config) {
+        if (node.category() == EclIO::SummaryNode::Category::Region)
+            BOOST_CHECK_EQUAL( node.fip_region(), "FIPREG" );
+    }
+
+    const auto& fip_regions = summary_config.fip_regions();
+    BOOST_CHECK_EQUAL(fip_regions.size(), 1);
+
+    auto reg_iter = fip_regions.find("FIPREG");
+    BOOST_CHECK( reg_iter != fip_regions.end() );
 }

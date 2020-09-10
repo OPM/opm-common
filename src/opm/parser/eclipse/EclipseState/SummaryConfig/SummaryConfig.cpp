@@ -16,6 +16,8 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include <fnmatch.h>
+
 #include <algorithm>
 #include <array>
 #include <iostream>
@@ -460,19 +462,25 @@ inline void keywordR2R( SummaryConfig::keyword_list& /* list */,
 }
 
 
-  inline void keywordR( SummaryConfig::keyword_list& list,
-                        const DeckKeyword& keyword,
-                        const TableManager& tables,
-                        const ParseContext& parseContext,
-                        ErrorGuard& errors ) {
+inline void keywordR( SummaryConfig::keyword_list& list,
+                      const DeckKeyword& deck_keyword,
+                      const TableManager& tables,
+                      const ParseContext& parseContext,
+                      ErrorGuard& errors ) {
 
-    if( is_region_to_region(keyword.name()) ) {
-        keywordR2R( list, parseContext, errors, keyword );
+    auto keyword = deck_keyword.name();
+    if( is_region_to_region(keyword) ) {
+        keywordR2R( list, parseContext, errors, deck_keyword );
         return;
+    }
+    std::string region_name = "FIPNUM";
+    if (keyword.size() > 5) {
+        auto dash_pos = keyword.find("_");
+        region_name = "FIP" + keyword.substr(5,3);
     }
 
     const size_t numfip = tables.numFIPRegions( );
-    const auto& item = keyword.getDataRecord().getDataItem();
+    const auto& item = deck_keyword.getDataRecord().getDataItem();
     std::vector<int> regions;
 
     if (item.data_size() > 0)
@@ -482,11 +490,11 @@ inline void keywordR2R( SummaryConfig::keyword_list& /* list */,
             regions.push_back( region );
     }
 
-    // Don't (currently) need parameter type for region keywords
     auto param = SummaryConfigNode {
-        keyword.name(), SummaryConfigNode::Category::Region, keyword.location()
+        keyword, SummaryConfigNode::Category::Region, deck_keyword.location()
     }
-    .isUserDefined( is_udq(keyword.name()) );
+    .fip_region( region_name )
+    .isUserDefined( is_udq(keyword) );
 
     for( const int region : regions ) {
         if (region >= 1 && region <= static_cast<int>(numfip))
@@ -872,6 +880,12 @@ SummaryConfigNode SummaryConfigNode::serializeObject()
     return result;
 }
 
+SummaryConfigNode& SummaryConfigNode::fip_region(const std::string& fip_region)
+{
+    this->fip_region_ = fip_region;
+    return *this;
+}
+
 SummaryConfigNode& SummaryConfigNode::parameterType(const Type type)
 {
     this->type_ = type;
@@ -1120,6 +1134,17 @@ bool SummaryConfig::hasSummaryKey(const std::string& keyword ) const {
 }
 
 
+bool SummaryConfig::match(const std::string& keywordPattern) const {
+    int flags = 0;
+    for (const auto& keyword : this->short_keywords) {
+        if (fnmatch(keywordPattern.c_str(), keyword.c_str(), flags) == 0)
+            return true;
+    }
+    return false;
+}
+
+
+
 size_t SummaryConfig::size() const {
     return this->keywords.size();
 }
@@ -1146,6 +1171,18 @@ bool SummaryConfig::require3DField( const std::string& keyword ) const {
     }
 
     return false;
+}
+
+
+
+std::set<std::string> SummaryConfig::fip_regions() const {
+    std::set<std::string> reg_set;
+    for (const auto& node : this->keywords) {
+        const auto& fip_region = node.fip_region();
+        if (fip_region.size() > 0)
+            reg_set.insert( fip_region );
+    }
+    return reg_set;
 }
 
 
