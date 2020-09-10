@@ -291,6 +291,8 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
 
         if (deck.hasKeyword<ParserKeywords::RADIAL>()) {
             initCylindricalGrid(deck );
+        } else if (deck.hasKeyword<ParserKeywords::SPIDERWEB>()) {
+            initSpiderwebGrid(deck );
         } else {
             if (hasCornerPointKeywords(deck)) {
                 initCornerPointGrid(deck);
@@ -1047,6 +1049,123 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
             initCornerPointGrid( coord, zcorn, nullptr, nullptr);
         }
     }
+
+    void EclipseGrid::initSpiderwebGrid(const Deck& deck)
+    {
+        // The hasSpiderKeywords( ) checks according to the
+        // eclipse specification for RADIAL grid. We currently do not support all
+        // aspects of cylindrical grids, we therefor have an
+        // additional test here, which checks if we have the keywords
+        // required by the current implementation.
+        if (!hasCylindricalKeywords(deck))
+            throw std::invalid_argument("Not all keywords required for spiderweb grids present");
+
+        if (!deck.hasKeyword<ParserKeywords::DTHETAV>())
+            throw std::logic_error("The current implementation *must* have theta values specified using the DTHETAV keyword");
+
+        if (!deck.hasKeyword<ParserKeywords::DRV>())
+            throw std::logic_error("The current implementation *must* have radial values specified using the DRV keyword");
+
+        if (!deck.hasKeyword<ParserKeywords::DZV>() || !deck.hasKeyword<ParserKeywords::TOPS>())
+            throw std::logic_error("The current implementation *must* have vertical cell size specified using the DZV and TOPS keywords");
+
+        const std::vector<double>& drv     = deck.getKeyword<ParserKeywords::DRV>().getSIDoubleData();
+        const std::vector<double>& dthetav = deck.getKeyword<ParserKeywords::DTHETAV>().getSIDoubleData();
+        const std::vector<double>& dzv     = deck.getKeyword<ParserKeywords::DZV>().getSIDoubleData();
+        const std::vector<double>& tops    = deck.getKeyword<ParserKeywords::TOPS>().getSIDoubleData();
+
+        if (drv.size() != this->getNX())
+            throw std::invalid_argument("DRV keyword should have exactly " + std::to_string( this->getNX() ) + " elements");
+
+        if (dthetav.size() != this->getNY())
+            throw std::invalid_argument("DTHETAV keyword should have exactly " + std::to_string( this->getNY() ) + " elements");
+
+        if (dzv.size() != this->getNZ())
+            throw std::invalid_argument("DZV keyword should have exactly " + std::to_string( this->getNZ() ) + " elements");
+
+        if (tops.size() != (this->getNX() * this->getNY()))
+            throw std::invalid_argument("TOPS keyword should have exactly " + std::to_string( this->getNX() * this->getNY() ) + " elements");
+
+        {
+            double total_angle = 0;
+            for (auto theta : dthetav)
+                total_angle += theta;
+
+            if (std::abs( total_angle - 360 ) < 0.01)
+                m_circle = deck.hasKeyword<ParserKeywords::CIRCLE>();
+            else {
+                if (total_angle > 360)
+                    throw std::invalid_argument("More than 360 degrees rotation - cells will be double covered");
+            }
+        }
+
+        /*
+          Now the data has been validated, now we continue to create
+          ZCORN and COORD vectors, and we are partially done.
+        */
+        {
+            ZcornMapper zm( this->getNX(), this->getNY(), this->getNZ());
+            CoordMapper cm(this->getNX(), this->getNY());
+            std::vector<double> zcorn( zm.size() );
+            std::vector<double> coord( cm.size() );
+            {
+                std::vector<double> zk(this->getNZ());
+                zk[0] = 0;
+                for (std::size_t k = 1; k < this->getNZ(); k++)
+                    zk[k] = zk[k - 1] + dzv[k - 1];
+
+                for (std::size_t k = 0; k < this->getNZ(); k++) {
+                    for (std::size_t j = 0; j < this->getNY(); j++) {
+                        for (std::size_t i = 0; i < this->getNX(); i++) {
+                            size_t tops_value = tops[ i + this->getNX() * j];
+                            for (size_t c=0; c < 4; c++) {
+                                zcorn[ zm.index(i,j,k,c) ]     = zk[k] + tops_value;
+                                zcorn[ zm.index(i,j,k,c + 4) ] = zk[k] + tops_value + dzv[k];
+                            }
+                        }
+                    }
+                }
+            }
+            {
+                std::vector<double> ri(this->getNX() + 1);
+                std::vector<double> tj(this->getNY() + 1);
+                double z1 = *std::min_element( zcorn.begin() , zcorn.end());
+                double z2 = *std::max_element( zcorn.begin() , zcorn.end());
+                ri[0] = deck.getKeyword<ParserKeywords::INRAD>().getRecord(0).getItem(0).getSIDouble( 0 );
+                for (std::size_t i = 1; i <= this->getNX(); i++)
+                    ri[i] = ri[i - 1] + drv[i - 1];
+
+                tj[0] = 0;
+                for (std::size_t j = 1; j <= this->getNY(); j++)
+                    tj[j] = tj[j - 1] + dthetav[j - 1];
+
+
+                for (std::size_t j = 0; j <= this->getNY(); j++) {
+                    /*
+                      The theta value is supposed to go counterclockwise, starting at 'twelve o clock'.
+                    */
+                    double t = M_PI * (90 - tj[j]) / 180;
+                    double c = cos( t );
+                    double s = sin( t );
+                    for (std::size_t i = 0; i <= this->getNX(); i++) {
+                        double r = ri[i];
+                        double x = r*c;
+                        double y = r*s;
+
+                        coord[ cm.index(i,j,0,0) ] = x;
+                        coord[ cm.index(i,j,1,0) ] = y;
+                        coord[ cm.index(i,j,2,0) ] = z1;
+
+                        coord[ cm.index(i,j,0,1) ] = x;
+                        coord[ cm.index(i,j,1,1) ] = y;
+                        coord[ cm.index(i,j,2,1) ] = z2;
+                    }
+                }
+            }
+            initCornerPointGrid( coord, zcorn, nullptr, nullptr);
+        }
+    }
+
 
 
     void EclipseGrid::initCornerPointGrid(const std::vector<double>& coord ,
