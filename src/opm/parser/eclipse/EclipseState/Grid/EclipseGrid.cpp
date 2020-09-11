@@ -291,7 +291,7 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
 
         if (deck.hasKeyword<ParserKeywords::RADIAL>()) {
             initCylindricalGrid(deck );
-        } else if (deck.hasKeyword<ParserKeywords::SPIDERWEB>()) {
+        } else if (deck.hasKeyword<ParserKeywords::SPIDER>()) {
             initSpiderwebGrid(deck );
         } else {
             if (hasCornerPointKeywords(deck)) {
@@ -936,6 +936,8 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
 
     void EclipseGrid::initCylindricalGrid(const Deck& deck)
     {
+        throw std::invalid_argument("Cylindrical grid not implemented yet, use SPIDER web grid keyword instead for radial flow modeling");
+
         // The hasCyindricalKeywords( ) checks according to the
         // eclipse specification. We currently do not support all
         // aspects of cylindrical grids, we therefor have an
@@ -983,71 +985,6 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
             }
         }
 
-        /*
-          Now the data has been validated, now we continue to create
-          ZCORN and COORD vectors, and we are done.
-        */
-        {
-            ZcornMapper zm( this->getNX(), this->getNY(), this->getNZ());
-            CoordMapper cm(this->getNX(), this->getNY());
-            std::vector<double> zcorn( zm.size() );
-            std::vector<double> coord( cm.size() );
-            {
-                std::vector<double> zk(this->getNZ());
-                zk[0] = 0;
-                for (std::size_t k = 1; k < this->getNZ(); k++)
-                    zk[k] = zk[k - 1] + dzv[k - 1];
-
-                for (std::size_t k = 0; k < this->getNZ(); k++) {
-                    for (std::size_t j = 0; j < this->getNY(); j++) {
-                        for (std::size_t i = 0; i < this->getNX(); i++) {
-                            size_t tops_value = tops[ i + this->getNX() * j];
-                            for (size_t c=0; c < 4; c++) {
-                                zcorn[ zm.index(i,j,k,c) ]     = zk[k] + tops_value;
-                                zcorn[ zm.index(i,j,k,c + 4) ] = zk[k] + tops_value + dzv[k];
-                            }
-                        }
-                    }
-                }
-            }
-            {
-                std::vector<double> ri(this->getNX() + 1);
-                std::vector<double> tj(this->getNY() + 1);
-                double z1 = *std::min_element( zcorn.begin() , zcorn.end());
-                double z2 = *std::max_element( zcorn.begin() , zcorn.end());
-                ri[0] = deck.getKeyword<ParserKeywords::INRAD>().getRecord(0).getItem(0).getSIDouble( 0 );
-                for (std::size_t i = 1; i <= this->getNX(); i++)
-                    ri[i] = ri[i - 1] + drv[i - 1];
-
-                tj[0] = 0;
-                for (std::size_t j = 1; j <= this->getNY(); j++)
-                    tj[j] = tj[j - 1] + dthetav[j - 1];
-
-
-                for (std::size_t j = 0; j <= this->getNY(); j++) {
-                    /*
-                      The theta value is supposed to go counterclockwise, starting at 'twelve o clock'.
-                    */
-                    double t = M_PI * (90 - tj[j]) / 180;
-                    double c = cos( t );
-                    double s = sin( t );
-                    for (std::size_t i = 0; i <= this->getNX(); i++) {
-                        double r = ri[i];
-                        double x = r*c;
-                        double y = r*s;
-
-                        coord[ cm.index(i,j,0,0) ] = x;
-                        coord[ cm.index(i,j,1,0) ] = y;
-                        coord[ cm.index(i,j,2,0) ] = z1;
-
-                        coord[ cm.index(i,j,0,1) ] = x;
-                        coord[ cm.index(i,j,1,1) ] = y;
-                        coord[ cm.index(i,j,2,1) ] = z2;
-                    }
-                }
-            }
-            initCornerPointGrid( coord, zcorn, nullptr, nullptr);
-        }
     }
 
     void EclipseGrid::initSpiderwebGrid(const Deck& deck)
@@ -1101,7 +1038,7 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
 
         /*
           Now the data has been validated, now we continue to create
-          ZCORN and COORD vectors, and we are partially done.
+          ZCORN and COORD vectors, and we are almost done.
         */
         {
             ZcornMapper zm( this->getNX(), this->getNY(), this->getNZ());
