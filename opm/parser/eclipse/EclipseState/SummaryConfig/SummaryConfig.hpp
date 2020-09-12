@@ -176,6 +176,9 @@ namespace Opm {
             */
             bool match(const std::string& keywordPattern) const;
 
+
+            keyword_list keywords(const std::string& keywordPattern) const;
+
             /*
                The hasSummaryKey() method will look for fully
                qualified keys like 'RPR:3' and 'BPR:10,15,20.
@@ -193,7 +196,7 @@ namespace Opm {
             template<class Serializer>
             void serializeOp(Serializer& serializer)
             {
-               serializer.vector(keywords);
+               serializer.vector(m_keywords);
                serializer(short_keywords);
                serializer(summary_keywords);
             }
@@ -215,7 +218,7 @@ namespace Opm {
               part, e.g. "WWCT", and not the qualification with
               well/group name or a numerical value.
             */
-            keyword_list keywords;
+            keyword_list m_keywords;
             std::set<std::string> short_keywords;
             std::set<std::string> summary_keywords;
 
