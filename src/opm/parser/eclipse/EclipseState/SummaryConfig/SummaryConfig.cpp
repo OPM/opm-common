@@ -474,10 +474,8 @@ inline void keywordR( SummaryConfig::keyword_list& list,
         return;
     }
     std::string region_name = "FIPNUM";
-    if (keyword.size() > 5) {
-        auto dash_pos = keyword.find("_");
+    if (keyword.size() > 5)
         region_name = "FIP" + keyword.substr(5,3);
-    }
 
     const size_t numfip = tables.numFIPRegions( );
     const auto& item = deck_keyword.getDataRecord().getDataItem();
