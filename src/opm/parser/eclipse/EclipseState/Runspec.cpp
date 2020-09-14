@@ -21,6 +21,7 @@
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckSection.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/C.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/N.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/S.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/T.hpp>
@@ -315,7 +316,8 @@ Runspec::Runspec( const Deck& deck ) :
     hystpar( deck ),
     m_actdims( deck ),
     m_sfuncctrl( deck ),
-    m_nupcol( ParserKeywords::NUPCOL::NUM_ITER::defaultValue )
+    m_nupcol( ParserKeywords::NUPCOL::NUM_ITER::defaultValue ),
+    m_co2storage (false)
 {
     if (DeckSection::hasRUNSPEC(deck)) {
         const RUNSPECSection runspecSection{deck};
@@ -327,6 +329,11 @@ Runspec::Runspec( const Deck& deck ) :
                 std::string msg = "OPM Flow uses 12 as default NUPCOL value";
                 OpmLog::note(msg);
             }
+        }
+        if (runspecSection.hasKeyword<ParserKeywords::CO2STOR>()) {
+            m_co2storage = true;
+            std::string msg = "The CO2 storage option is given. PVT properties from the Brine-CO2 system is used";
+            OpmLog::note(msg);
         }
     }
 }
@@ -344,6 +351,7 @@ Runspec Runspec::serializeObject()
     result.m_actdims = Actdims::serializeObject();
     result.m_sfuncctrl = SatFuncControls::serializeObject();
     result.m_nupcol = 2;
+    result.m_co2storage = true;
 
     return result;
 }
@@ -389,6 +397,11 @@ int Runspec::nupcol() const noexcept
     return this->m_nupcol;
 }
 
+bool Runspec::co2Storage() const noexcept
+{
+    return this->m_co2storage;
+}
+
 /*
   Returns an integer in the range 0...7 which can be used to indicate
   available phases in Eclipse restart and init files.
@@ -417,7 +430,8 @@ bool Runspec::operator==(const Runspec& data) const {
            this->hysterPar() == data.hysterPar() &&
            this->actdims() == data.actdims() &&
            this->saturationFunctionControls() == data.saturationFunctionControls() &&
-           this->m_nupcol == data.m_nupcol;
+           this->m_nupcol == data.m_nupcol &&
+           this->m_co2storage == data.m_co2storage;
 }
 
 }
