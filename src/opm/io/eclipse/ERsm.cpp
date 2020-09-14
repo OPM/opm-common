@@ -174,7 +174,8 @@ void ERsm::load_block(std::deque<std::string>& lines, std::size_t& vector_length
                                  SummaryNode::category_from_keyword(kw_list[kw_index]),
                                  SummaryNode::Type::Undefined,
                                  wgnames[kw_index],
-                                 make_num(nums_list[kw_index])};
+                                 make_num(nums_list[kw_index]),
+                                 ""};
         block_data.emplace_back( node, vector_length );
     }
 

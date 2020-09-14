@@ -1264,7 +1264,6 @@ WCONINJE
 
 
     auto deck = parser.parseString(input);
-    const auto& units = deck.getActiveUnitSystem();
     auto python = std::make_shared<Opm::Python>();
     Opm::EclipseGrid grid(10,10,10);
     TableManager table ( deck );
