@@ -32,7 +32,7 @@ Opm::WellBrineProperties Opm::WellBrineProperties::serializeObject()
 
 void Opm::WellBrineProperties::handleWSALT(const DeckRecord& rec)
 {
-    this->m_saltConcentration = rec.getItem("CONCENTRATION").get<UDAValue>(0).get<double>();
+    this->m_saltConcentration = rec.getItem("CONCENTRATION").get<UDAValue>(0).getSI();
 }
 
 bool Opm::WellBrineProperties::operator!=(const WellBrineProperties& other) const
