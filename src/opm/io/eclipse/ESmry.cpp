@@ -177,7 +177,8 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
                     SummaryNode::category_from_keyword(keywords[i], segmentExceptions),
                     SummaryNode::Type::Undefined,
                     wgnames[i],
-                    nums[i]
+                    nums[i],
+                    ""
                 });
 
                 keywList.insert(keyString);
@@ -240,7 +241,8 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
                     SummaryNode::category_from_keyword(keywords[i], segmentExceptions),
                     SummaryNode::Type::Undefined,
                     wgnames[i],
-                    nums[i]
+                    nums[i],
+                    ""
                 });
 
                 keywList.insert(keyString);
