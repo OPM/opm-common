@@ -99,6 +99,7 @@ BOOST_AUTO_TEST_CASE(RUN) {
             const auto  smry  = EclIO::ESmry("SPE1CASE1");
             const auto& time  = smry.get("TIME");
             const auto& press = smry.get("WOPR:PROD");
+            BOOST_CHECK( smry.hasKey("RPR__NUM:1"));
 
             for (auto nstep = time.size(), time_index=0*nstep; time_index < nstep; time_index++) {
                 double seconds_elapsed = time[time_index] * 86400;
