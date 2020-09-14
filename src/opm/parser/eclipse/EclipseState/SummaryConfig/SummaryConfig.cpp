@@ -474,10 +474,8 @@ inline void keywordR( SummaryConfig::keyword_list& list,
         return;
     }
     std::string region_name = "FIPNUM";
-    if (keyword.size() > 5) {
-        auto dash_pos = keyword.find("_");
+    if (keyword.size() > 5)
         region_name = "FIP" + keyword.substr(5,3);
-    }
 
     const size_t numfip = tables.numFIPRegions( );
     const auto& item = deck_keyword.getDataRecord().getDataItem();
@@ -1030,7 +1028,7 @@ SummaryConfig::SummaryConfig( const Deck& deck,
         if (is_processing_instruction(kw.name())) {
             handleProcessingInstruction(kw.name());
         } else  {
-            handleKW( this->keywords, kw, schedule, tables, parseContext, errors, dims);
+            handleKW( this->m_keywords, kw, schedule, tables, parseContext, errors, dims);
         }
     }
 
@@ -1039,13 +1037,13 @@ SummaryConfig::SummaryConfig( const Deck& deck,
             const auto& deck_keyword = section.getKeyword(meta_pair.first);
             for (const auto& kw : meta_pair.second) {
                 if (!this->hasKeyword(kw))
-                    handleKW(this->keywords, kw, deck_keyword.location(), schedule, parseContext, errors);
+                    handleKW(this->m_keywords, kw, deck_keyword.location(), schedule, parseContext, errors);
             }
         }
     }
 
-    uniq( this->keywords );
-    for (const auto& kw: this->keywords) {
+    uniq( this->m_keywords );
+    for (const auto& kw: this->m_keywords) {
         this->short_keywords.insert( kw.keyword() );
         this->summary_keywords.insert( kw.uniqueNodeKey() );
     }
@@ -1083,13 +1081,13 @@ SummaryConfig::SummaryConfig( const Deck& deck,
 SummaryConfig::SummaryConfig(const keyword_list& kwds,
                              const std::set<std::string>& shortKwds,
                              const std::set<std::string>& smryKwds) :
-    keywords(kwds), short_keywords(shortKwds), summary_keywords(smryKwds)
+    m_keywords(kwds), short_keywords(shortKwds), summary_keywords(smryKwds)
 {}
 
 SummaryConfig SummaryConfig::serializeObject()
 {
     SummaryConfig result;
-    result.keywords = {SummaryConfigNode::serializeObject()};
+    result.m_keywords = {SummaryConfigNode::serializeObject()};
     result.short_keywords = {"test1"};
     result.summary_keywords = {"test2"};
 
@@ -1097,29 +1095,29 @@ SummaryConfig SummaryConfig::serializeObject()
 }
 
 SummaryConfig::const_iterator SummaryConfig::begin() const {
-    return this->keywords.cbegin();
+    return this->m_keywords.cbegin();
 }
 
 SummaryConfig::const_iterator SummaryConfig::end() const {
-    return this->keywords.cend();
+    return this->m_keywords.cend();
 }
 
 SummaryConfig& SummaryConfig::merge( const SummaryConfig& other ) {
-    this->keywords.insert( this->keywords.end(),
-                            other.keywords.begin(),
-                            other.keywords.end() );
+    this->m_keywords.insert( this->m_keywords.end(),
+                             other.m_keywords.begin(),
+                             other.m_keywords.end() );
 
-    uniq( this->keywords );
+    uniq( this->m_keywords );
     return *this;
 }
 
 SummaryConfig& SummaryConfig::merge( SummaryConfig&& other ) {
-    auto fst = std::make_move_iterator( other.keywords.begin() );
-    auto lst = std::make_move_iterator( other.keywords.end() );
-    this->keywords.insert( this->keywords.end(), fst, lst );
-    other.keywords.clear();
+    auto fst = std::make_move_iterator( other.m_keywords.begin() );
+    auto lst = std::make_move_iterator( other.m_keywords.end() );
+    this->m_keywords.insert( this->m_keywords.end(), fst, lst );
+    other.m_keywords.clear();
 
-    uniq( this->keywords );
+    uniq( this->m_keywords );
     return *this;
 }
 
@@ -1143,10 +1141,19 @@ bool SummaryConfig::match(const std::string& keywordPattern) const {
     return false;
 }
 
+SummaryConfig::keyword_list SummaryConfig::keywords(const std::string& keywordPattern) const {
+    keyword_list kw_list;
+    int flags = 0;
+    for (const auto& keyword : this->m_keywords) {
+        if (fnmatch(keywordPattern.c_str(), keyword.keyword().c_str(), flags) == 0)
+            kw_list.push_back(keyword);
+    }
+    return kw_list;
+}
 
 
 size_t SummaryConfig::size() const {
-    return this->keywords.size();
+    return this->m_keywords.size();
 }
 
 /*
@@ -1177,7 +1184,7 @@ bool SummaryConfig::require3DField( const std::string& keyword ) const {
 
 std::set<std::string> SummaryConfig::fip_regions() const {
     std::set<std::string> reg_set;
-    for (const auto& node : this->keywords) {
+    for (const auto& node : this->m_keywords) {
         const auto& fip_region = node.fip_region();
         if (fip_region.size() > 0)
             reg_set.insert( fip_region );
@@ -1187,7 +1194,7 @@ std::set<std::string> SummaryConfig::fip_regions() const {
 
 
 bool SummaryConfig::operator==(const Opm::SummaryConfig& data) const {
-    return this->keywords == data.keywords &&
+    return this->m_keywords == data.m_keywords &&
            this->short_keywords == data.short_keywords &&
            this->summary_keywords == data.summary_keywords;
 }

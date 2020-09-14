@@ -1044,6 +1044,8 @@ RUNSUM
 
 BOOST_AUTO_TEST_CASE(FIPREG) {
     std::string deck_string = R"(
+-- The FIPREG region has three distinct values, i.e.
+-- there will be three different RPR__REG keywords.
 RPR__REG
 /
 
@@ -1051,6 +1053,7 @@ ROPT_REG
 /
 )";
     const auto& summary_config = createSummary(deck_string);
+    BOOST_CHECK_EQUAL(summary_config.size(), 6);
     BOOST_CHECK(summary_config.hasKeyword("RPR__REG"));
     BOOST_CHECK(summary_config.hasKeyword("ROPT_REG"));
     BOOST_CHECK(!summary_config.hasKeyword("RPR"));
@@ -1066,4 +1069,11 @@ ROPT_REG
 
     auto reg_iter = fip_regions.find("FIPREG");
     BOOST_CHECK( reg_iter != fip_regions.end() );
+
+
+    auto wkeywords = summary_config.keywords("W*");
+    BOOST_CHECK(wkeywords.empty());
+
+    auto rpr = summary_config.keywords("RP*");
+    BOOST_CHECK_EQUAL(rpr.size(), 3);
 }
