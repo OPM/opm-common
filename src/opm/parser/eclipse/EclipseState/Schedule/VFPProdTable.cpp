@@ -285,7 +285,7 @@ VFPProdTable::VFPProdTable( const DeckKeyword& table, const UnitSystem& deck_uni
 
     //Get actual gas fraction values
     m_alq_data = table.getRecord(5).getItem<VFPPROD::ALQ_VALUES>().getData< double >();
-
+    convertAlqToSI(m_alq_type, m_alq_data, deck_unit_system);
     //Finally, read the actual table itself.
     size_t nt = m_thp_data.size();
     size_t nw = m_wfr_data.size();
@@ -520,6 +520,35 @@ void VFPProdTable::convertGFRToSI(const GFR_TYPE& type,
             break;
         default:
             throw std::logic_error("Invalid FLO type");
+    }
+    scaleValues(values, scaling_factor);
+}
+
+
+void VFPProdTable::convertAlqToSI(const ALQ_TYPE& type,
+                                  std::vector<double>& values,
+                                  const UnitSystem& unit_system) {
+    double scaling_factor = 1.0;
+    switch (type) {
+        case ALQ_IGLR:
+            scaling_factor = unit_system.parse("GasSurfaceVolume/LiquidSurfaceVolume * Time").getSIScaling();
+            break;
+        case ALQ_TGLR:
+            scaling_factor = unit_system.parse("GasSurfaceVolume/LiquidSurfaceVolume").getSIScaling();
+            break;
+        case ALQ_GRAT:
+            scaling_factor = unit_system.parse("GasSurfaceVolume/Time").getSIScaling();
+            break;
+        case ALQ_UNDEF:
+            break;
+        case ALQ_PUMP:
+        case ALQ_COMP:
+        case ALQ_INVALID:
+        case ALQ_BEAN:
+            std::logic_error("scaling of the given ALQ type, not implemented ");
+            break;
+        default:
+            throw std::logic_error("Invalid ALQ type");
     }
     scaleValues(values, scaling_factor);
 }
