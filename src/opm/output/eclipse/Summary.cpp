@@ -2051,7 +2051,12 @@ namespace Evaluator {
 
     bool Factory::isRegionValue()
     {
-        auto pos = region_units.find(this->node_->keyword);
+        auto keyword = this->node_->keyword;
+        auto dash_pos = keyword.find("_");
+        if (dash_pos != std::string::npos)
+            keyword = keyword.substr(0, dash_pos);
+
+        auto pos = region_units.find(keyword);
         if (pos == region_units.end())
             return false;
 
