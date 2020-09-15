@@ -34,6 +34,7 @@
 #include <opm/parser/eclipse/EclipseState/Grid/Box.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
+#include <opm/common/utility/Serializer.hpp>
 
 #include "FieldProps.hpp"
 #include "Operate.hpp"
@@ -1157,6 +1158,42 @@ void FieldProps::apply_tran(const std::string& keyword, std::vector<double>& dat
         }
     }
 }
+
+std::vector<char> FieldProps::serialize_tran() const {
+    Serializer ser;
+    ser.put(this->tran.size());
+    for (const auto& tran_pair : this->tran) {
+        const auto& calc = tran_pair.second;
+        ser.put(calc.name());
+        ser.put(calc.size());
+        for (const auto& action : calc) {
+            ser.put(static_cast<int>(action.op));
+            ser.put(action.field);
+        }
+    }
+    return std::move(ser.buffer);
+}
+
+void FieldProps::deserialize_tran(const std::vector<char>& buffer) {
+    this->tran.clear();
+
+    Serializer ser(buffer);
+    std::size_t size = ser.get<std::size_t>();
+    for (std::size_t calc_index = 0; calc_index < size; calc_index++) {
+        std::string calc_name = ser.get<std::string>();
+        TranCalculator calc(calc_name);
+        std::size_t calc_size = ser.get<std::size_t>();
+        for (std::size_t action_index = 0; action_index < calc_size; action_index++) {
+            auto op = static_cast<ScalarOperation>(ser.get<int>());
+            auto field = ser.get<std::string>();
+
+            calc.add_action(op, field);
+        }
+        this->tran.emplace(calc_name, std::move(calc));
+    }
+}
+
+
 
 
 template std::vector<bool> FieldProps::defaulted<int>(const std::string& keyword);
