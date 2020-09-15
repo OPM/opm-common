@@ -186,6 +186,7 @@ public:
 
     virtual bool has_int(const std::string& keyword) const { return this->has<int>(keyword); }
     virtual bool has_double(const std::string& keyword) const { return this->has<double>(keyword); }
+    virtual void apply_tran(const std::string& keyword, std::vector<double>& tranx) const;
 
 private:
     /*

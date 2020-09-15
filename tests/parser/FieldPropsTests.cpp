@@ -1778,3 +1778,67 @@ OPERATE
     BOOST_CHECK_THROW(make_fp(invalid_region), std::logic_error);
     BOOST_CHECK_THROW(make_fp(invalid_operate), std::logic_error);
 }
+
+
+
+BOOST_AUTO_TEST_CASE(TRAN_Calculator) {
+    std::string deck_string = R"(
+GRID
+
+PORO
+   1000*0.10 /
+
+EDIT
+
+TRANX
+  1000*0.10 /
+
+BOX
+  1 10 1 10 1 1 /
+
+TRANX
+   100*0.20 /
+
+ENDBOX
+
+MULTIPLY
+  TRANY  2.0 /
+/
+
+MAXVALUE
+  TRANZ 0 1 10 1 10 1 1 /
+/
+
+
+)";
+    UnitSystem unit_system(UnitSystem::UnitType::UNIT_TYPE_METRIC);
+    auto to_si = [&unit_system](double raw_value) { return unit_system.to_si(UnitSystem::measure::transmissibility, raw_value); };
+    std::vector<int> actnum(1000, 1);
+    for (std::size_t i=0; i< 1000; i += 2)
+        actnum[i] = 0;
+    EclipseGrid grid(EclipseGrid(10,10,10), actnum);
+    Deck deck = Parser{}.parseString(deck_string);
+    FieldPropsManager fpm(deck, Phases{true, true, true}, grid, TableManager());
+    std::vector<double> tranx( grid.getNumActive() );
+    std::vector<double> trany( grid.getNumActive(), to_si(1.0) );
+    std::vector<double> tranz( grid.getNumActive(), to_si(1.0) );
+    BOOST_CHECK(!fpm.has_double("TRANX"));
+
+    BOOST_CHECK_THROW(fpm.apply_tran("TRANA", tranx), std::out_of_range);
+
+    fpm.apply_tran("TRANX", tranx);
+    fpm.apply_tran("TRANY", trany);
+    fpm.apply_tran("TRANZ", tranz);
+
+
+    for (std::size_t i=0; i < 50; i++)
+        BOOST_CHECK_EQUAL(tranx[i], to_si(0.20));
+
+    for (std::size_t i=100; i < tranx.size(); i++)
+        BOOST_CHECK_EQUAL(tranx[i], to_si(0.10));
+
+    BOOST_CHECK_EQUAL(trany[0], to_si(2.0));
+    for (std::size_t i=0; i < trany.size(); i++)
+        BOOST_CHECK_EQUAL(trany[i], to_si(2.0));
+
+}
