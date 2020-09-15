@@ -265,21 +265,21 @@ std::string make_region_name(const std::string& deck_value) {
     throw std::invalid_argument("The input string: " + deck_value + " was invalid. Expected: O/F/M");
 }
 
-FieldProps::ScalarOperation fromString(const std::string& keyword) {
+ScalarOperation fromString(const std::string& keyword) {
     if (keyword == ParserKeywords::ADD::keywordName || keyword == ParserKeywords::ADDREG::keywordName)
-        return FieldProps::ScalarOperation::ADD;
+        return ScalarOperation::ADD;
 
     if (keyword == ParserKeywords::EQUALS::keywordName || keyword == ParserKeywords::EQUALREG::keywordName)
-        return FieldProps::ScalarOperation::EQUAL;
+        return ScalarOperation::EQUAL;
 
     if (keyword == ParserKeywords::MULTIPLY::keywordName || keyword == ParserKeywords::MULTIREG::keywordName)
-        return FieldProps::ScalarOperation::MUL;
+        return ScalarOperation::MUL;
 
     if (keyword == ParserKeywords::MINVALUE::keywordName)
-        return FieldProps::ScalarOperation::MIN;
+        return ScalarOperation::MIN;
 
     if (keyword == ParserKeywords::MAXVALUE::keywordName)
-        return FieldProps::ScalarOperation::MAX;
+        return ScalarOperation::MAX;
 
     throw std::invalid_argument("Keyword operation not recognized");
 }
@@ -324,6 +324,10 @@ FieldProps::FieldProps(const Deck& deck, const Phases& phases, const EclipseGrid
     grid_ptr(&grid),
     tables(tables_arg)
 {
+    this->tran.emplace( "TRANX", TranCalculator("TRANX") );
+    this->tran.emplace( "TRANY", TranCalculator("TRANY") );
+    this->tran.emplace( "TRANZ", TranCalculator("TRANZ") );
+
     if (deck.hasKeyword<ParserKeywords::MULTREGP>()) {
         const DeckKeyword& multregpKeyword = deck.getKeyword("MULTREGP");
         for (const auto& record : multregpKeyword) {
@@ -470,12 +474,11 @@ bool FieldProps::supported<int>(const std::string& keyword) {
 
 
 template <>
-FieldProps::FieldData<double>& FieldProps::init_get(const std::string& keyword) {
+FieldProps::FieldData<double>& FieldProps::init_get(const std::string& keyword, const keywords::keyword_info<double>& kw_info) {
     auto iter = this->double_data.find(keyword);
     if (iter != this->double_data.end())
         return iter->second;
 
-    const keywords::keyword_info<double>& kw_info = keywords::global_kw_info<double>(keyword);
     this->double_data[keyword] = FieldData<double>(kw_info, this->active_size, kw_info.global ? this->global_size : 0);
 
     if (keyword == ParserKeywords::PORV::keywordName)
@@ -490,26 +493,33 @@ FieldProps::FieldData<double>& FieldProps::init_get(const std::string& keyword) 
     return this->double_data[keyword];
 }
 
-
+template <>
+FieldProps::FieldData<double>& FieldProps::init_get(const std::string& keyword) {
+    keywords::keyword_info<double> kw_info = keywords::global_kw_info<double>(keyword);
+    return this->init_get(keyword, kw_info);
+}
 
 
 template <>
-FieldProps::FieldData<int>& FieldProps::init_get(const std::string& keyword) {
+FieldProps::FieldData<int>& FieldProps::init_get(const std::string& keyword, const keywords::keyword_info<int>& kw_info) {
     auto iter = this->int_data.find(keyword);
     if (iter != this->int_data.end())
         return iter->second;
 
+    this->int_data[keyword] = FieldData<int>(kw_info, this->active_size, kw_info.global ? this->global_size : 0);
+    return this->int_data[keyword];
+}
+
+template <>
+FieldProps::FieldData<int>& FieldProps::init_get(const std::string& keyword) {
     if (keywords::isFipxxx(keyword)) {
         auto kw_info = keywords::keyword_info<int>{};
         kw_info.init(1);
-        this->int_data[keyword] = FieldData<int>(kw_info, this->active_size, 0);
+        return this->init_get(keyword, kw_info);
     } else {
         const keywords::keyword_info<int>& kw_info = keywords::global_kw_info<int>(keyword);
-        this->int_data[keyword] = FieldData<int>(kw_info, this->active_size, kw_info.global ? this->global_size : 0);
+        return this->init_get(keyword, kw_info);
     }
-
-
-    return this->int_data[keyword];
 }
 
 
@@ -629,8 +639,8 @@ void FieldProps::handle_int_keyword(const keywords::keyword_info<int>& kw_info, 
 }
 
 
-void FieldProps::handle_double_keyword(Section section, const keywords::keyword_info<double>& kw_info, const DeckKeyword& keyword, const Box& box) {
-    auto& field_data = this->init_get<double>(keyword.name());
+void FieldProps::handle_double_keyword(Section section, const keywords::keyword_info<double>& kw_info, const DeckKeyword& keyword, const std::string& keyword_name, const Box& box) {
+    auto& field_data = this->init_get<double>(keyword_name, kw_info);
     const auto& deck_data = keyword.getSIDoubleData();
     const auto& deck_status = keyword.getValueStatus();
 
@@ -649,6 +659,9 @@ void FieldProps::handle_double_keyword(Section section, const keywords::keyword_
     }
 }
 
+void FieldProps::handle_double_keyword(Section section, const keywords::keyword_info<double>& kw_info, const DeckKeyword& keyword, const Box& box) {
+    this->handle_double_keyword(section, kw_info, keyword, keyword.name(), box );
+}
 
 
 
@@ -762,20 +775,37 @@ void FieldProps::handle_operation(const DeckKeyword& keyword, Box box) {
         const std::string& target_kw = record.getItem(0).get<std::string>(0);
         box.update(record);
 
-        if (FieldProps::supported<double>(target_kw)) {
-            auto& field_data = this->init_get<double>(target_kw);
-
+        if (FieldProps::supported<double>(target_kw) || this->tran.count(target_kw) > 0) {
             if (keyword.name() == ParserKeywords::OPERATE::keywordName) {
+                auto& field_data = this->init_get<double>(target_kw);
                 const std::string& src_kw = record.getItem("ARRAY").get<std::string>(0);
                 const auto& src_data = this->init_get<double>(src_kw);
                 FieldProps::operate(record, field_data, src_data, box.index_list());
             } else {
+                std::string unique_name = target_kw;
+                auto operation = fromString(keyword.name());
                 double scalar_value = record.getItem(1).get<double>(0);
+                keywords::keyword_info<double> kw_info;
+                auto tran_iter = this->tran.find(target_kw);
+                if (tran_iter != this->tran.end()) {
+                    kw_info = tran_iter->second.make_kw_info(operation);
+                    unique_name = tran_iter->second.next_name();
+                    tran_iter->second.add_action(operation, unique_name);
+                } else
+                    kw_info = keywords::global_kw_info<double>(target_kw);
+
+                auto& field_data = this->init_get<double>(unique_name, kw_info);
+
                 if (keyword.name() != ParserKeywords::MULTIPLY::keywordName)
                     scalar_value = this->getSIValue(target_kw, scalar_value);
-                FieldProps::apply(fromString(keyword.name()), field_data.data, field_data.value_status, scalar_value, box.index_list());
-                if (field_data.global_data)
-                    FieldProps::apply(fromString(keyword.name()), *field_data.global_data, *field_data.global_value_status, scalar_value, box.global_index_list());
+
+                if (tran_iter != this->tran.end()) {
+                    assign_scalar(field_data.data, field_data.value_status, scalar_value, box.index_list());
+                } else {
+                    FieldProps::apply(operation, field_data.data, field_data.value_status, scalar_value, box.index_list());
+                    if (field_data.global_data)
+                        FieldProps::apply(operation, *field_data.global_data, *field_data.global_value_status, scalar_value, box.global_index_list());
+                }
             }
 
             continue;
@@ -974,6 +1004,17 @@ void FieldProps::scanEDITSection(const EDITSection& edit_section) {
     Box box(*this->grid_ptr);
     for (const auto& keyword : edit_section) {
         const std::string& name = keyword.name();
+
+        auto tran_iter = this->tran.find(name);
+        if (tran_iter!= this->tran.end()) {
+            auto& tran_calc = tran_iter->second;
+            auto unique_name = tran_calc.next_name();
+            keywords::keyword_info<double> kw_info;
+            this->handle_double_keyword(Section::EDIT, kw_info, keyword, unique_name, box);
+            tran_calc.add_action( ScalarOperation::EQUAL, unique_name );
+            continue;
+        }
+
         if (keywords::EDIT::double_keywords.count(name) == 1) {
             this->handle_double_keyword(Section::EDIT, keywords::EDIT::double_keywords.at(name), keyword, box);
             continue;
@@ -1084,6 +1125,37 @@ void FieldProps::scanSCHEDULESection(const SCHEDULESection& schedule_section) {
 
 const std::string& FieldProps::default_region() const {
     return this->m_default_region;
+}
+
+
+void FieldProps::apply_tran(const std::string& keyword, std::vector<double>& data) {
+    const auto& calculator = this->tran.at(keyword);
+    for (const auto& action : calculator) {
+        const auto& action_data = this->double_data.at(action.field);
+
+        for (std::size_t index = 0; index < this->active_size; index++) {
+
+            if (action_data.value_status[index] != value::status::deck_value)
+                continue;
+
+            switch (action.op) {
+            case ScalarOperation::EQUAL:
+                data[index] = action_data.data[index];
+                break;
+
+            case ScalarOperation::MUL:
+                data[index] *= action_data.data[index];
+                break;
+
+            case ScalarOperation::MAX:
+                data[index] = std::max(action_data.data[index], data[index]);
+                break;
+
+            default:
+                throw std::logic_error("Unhandled value in switch");
+            }
+        }
+    }
 }
 
 

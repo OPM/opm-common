@@ -109,6 +109,11 @@ std::size_t FieldPropsManager::active_size() const {
     return this->fp->active_size;
 }
 
+void FieldPropsManager::apply_tran(const std::string& keyword, std::vector<double>& data) const {
+    this->fp->apply_tran(keyword, data);
+}
+
+
 template bool FieldPropsManager::supported<int>(const std::string&);
 template bool FieldPropsManager::supported<double>(const std::string&);
 

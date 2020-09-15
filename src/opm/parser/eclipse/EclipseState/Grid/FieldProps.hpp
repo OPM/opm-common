@@ -20,6 +20,7 @@
 #define FIELDPROPS_HPP
 
 #include <memory>
+#include <limits>
 #include <optional>
 #include <string>
 #include <unordered_set>
@@ -162,9 +163,9 @@ static const std::unordered_map<std::string, keyword_info<int>> int_keywords = {
 namespace EDIT {
 static const std::unordered_map<std::string, keyword_info<double>> double_keywords = {{"MULTPV",  keyword_info<double>{}.init(1.0)},
                                                                                       {"PORV",    keyword_info<double>{}.unit_string("ReservoirVolume")},
-                                                                                      {"TRANX",   keyword_info<double>{}.unit_string("Transmissibility").init(1.0)},
-                                                                                      {"TRANY",   keyword_info<double>{}.unit_string("Transmissibility").init(1.0)},
-                                                                                      {"TRANZ",   keyword_info<double>{}.unit_string("Transmissibility").init(1.0)},
+                                                                                      {"TRANX",   keyword_info<double>{}.unit_string("Transmissibility")},
+                                                                                      {"TRANY",   keyword_info<double>{}.unit_string("Transmissibility")},
+                                                                                      {"TRANZ",   keyword_info<double>{}.unit_string("Transmissibility")},
                                                                                       {"MULTX",   keyword_info<double>{}.init(1.0).mult(true)},
                                                                                       {"MULTX-",  keyword_info<double>{}.init(1.0).mult(true)},
                                                                                       {"MULTY",   keyword_info<double>{}.init(1.0).mult(true)},
@@ -275,9 +276,86 @@ keyword_info<T> global_kw_info(const std::string& name);
 
 }
 
+enum class ScalarOperation {
+    ADD = 1,
+    EQUAL = 2,
+    MUL = 3,
+    MIN = 4,
+    MAX = 5
+};
+
+
+class TranCalculator {
+public:
+
+    struct TranAction {
+        ScalarOperation op;
+        std::string field;
+    };
+
+
+    TranCalculator(const std::string& name_arg) :
+        m_name(name_arg)
+    {}
+
+    std::string next_name() const {
+        return this->m_name + std::to_string( this->actions.size() );
+    }
+
+    std::vector<TranAction>::const_iterator begin() const {
+        return this->actions.begin();
+    }
+
+    std::vector<TranAction>::const_iterator end() const {
+        return this->actions.end();
+    }
+
+    void add_action(ScalarOperation op, const std::string& field) {
+        this->actions.push_back(TranAction{op, field});
+    }
+
+    std::size_t size() const {
+        return this->actions.size();
+    }
+
+    const std::string& name() const {
+        return this->m_name;
+    }
+
+
+    keywords::keyword_info<double> make_kw_info(ScalarOperation op) {
+        keywords::keyword_info<double> kw_info;
+        switch (op) {
+        case ScalarOperation::MUL:
+            kw_info.init(1);
+            break;
+        case ScalarOperation::ADD:
+            kw_info.init(0);
+            break;
+        case ScalarOperation::MAX:
+            kw_info.init(std::numeric_limits<double>::min());
+            break;
+        case ScalarOperation::MIN:
+            kw_info.init(std::numeric_limits<double>::max());
+            break;
+        default:
+            break;
+        }
+        return kw_info;
+    }
+
+private:
+    std::string m_name;
+    std::vector<TranAction> actions;
+};
+
+
+
 
 class FieldProps {
 public:
+
+
 
     struct MultregpRecord {
         int region_value;
@@ -293,13 +371,6 @@ public:
 
     };
 
-    enum class ScalarOperation {
-         ADD = 1,
-         EQUAL = 2,
-         MUL = 3,
-         MIN = 4,
-         MAX = 5
-    };
 
     template<typename T>
     static void compress(std::vector<T>& data, const std::vector<bool>& active_map) {
@@ -584,6 +655,8 @@ public:
         return this->double_data.size();
     }
 
+    void apply_tran(const std::string& keyword, std::vector<double>& data);
+
 private:
     void scanGRIDSection(const GRIDSection& grid_section);
     void scanEDITSection(const EDITSection& edit_section);
@@ -607,6 +680,9 @@ private:
     template <typename T>
     FieldData<T>& init_get(const std::string& keyword);
 
+    template <typename T>
+    FieldData<T>& init_get(const std::string& keyword, const keywords::keyword_info<T>& kw_info);
+
     std::string region_name(const DeckItem& region_item);
     std::vector<Box::cell_index> region_index( const std::string& region_name, int region_value );
     void handle_operation(const DeckKeyword& keyword, Box box);
@@ -617,6 +693,7 @@ private:
     double get_alpha(const std::string& func_name, const std::string& target_array, double raw_alpha);
 
     void handle_keyword(const DeckKeyword& keyword, Box& box);
+    void handle_double_keyword(Section section, const keywords::keyword_info<double>& kw_info, const DeckKeyword& keyword, const std::string& keyword_name, const Box& box);
     void handle_double_keyword(Section section, const keywords::keyword_info<double>& kw_info, const DeckKeyword& keyword, const Box& box);
     void handle_int_keyword(const keywords::keyword_info<int>& kw_info, const DeckKeyword& keyword, const Box& box);
     void init_satfunc(const std::string& keyword, FieldData<double>& satfunc);
@@ -637,6 +714,8 @@ private:
     std::vector<MultregpRecord> multregp;
     std::unordered_map<std::string, FieldData<int>> int_data;
     std::unordered_map<std::string, FieldData<double>> double_data;
+
+    std::unordered_map<std::string, TranCalculator> tran;
 };
 
 }
