@@ -1,5 +1,5 @@
 /*
-  Copyright 2019 Equinor ASA.
+  Copyright 2019, 2020 Equinor ASA.
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -20,14 +20,18 @@
 #ifndef GUIDE_RATE_HPP
 #define GUIDE_RATE_HPP
 
-#include <string>
 #include <cstddef>
 #include <ctime>
+#include <limits>
+#include <memory>
+#include <string>
 #include <unordered_map>
 
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
+#include <stddef.h>
+
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GuideRateModel.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
 
 namespace Opm {
 
@@ -75,11 +79,15 @@ struct GuideRateValue {
         return !(*this == other);
     }
 
-    double sim_time;
-    double value;
-    GuideRateModel::Target target;
+    double sim_time { std::numeric_limits<double>::lowest() };
+    double value { std::numeric_limits<double>::lowest() };
+    GuideRateModel::Target target { GuideRateModel::Target::NONE };
 };
 
+struct GRValState {
+    GuideRateValue curr{};
+    GuideRateValue prev{};
+};
 
 public:
     GuideRate(const Schedule& schedule);
@@ -92,11 +100,16 @@ public:
 private:
     void well_compute(const std::string& wgname, size_t report_step, double sim_time, double oil_pot, double gas_pot, double wat_pot);
     void group_compute(const std::string& wgname, size_t report_step, double sim_time, double oil_pot, double gas_pot, double wat_pot);
-    double eval_form(const GuideRateModel& model, double oil_pot, double gas_pot, double wat_pot, const GuideRateValue * prev) const;
+    double eval_form(const GuideRateModel& model, double oil_pot, double gas_pot, double wat_pot) const;
     double eval_group_pot() const;
     double eval_group_resvinj() const;
 
-    std::unordered_map<std::string, GuideRateValue> values;
+    void assign_grvalue(const std::string& wgname, const GuideRateModel& model, GuideRateValue&& value);
+    double get_grvalue_result(const GRValState& gr) const;
+
+    using GRValPtr = std::unique_ptr<GRValState>;
+
+    std::unordered_map<std::string, GRValPtr> values;
     std::unordered_map<std::string, RateVector > potentials;
     const Schedule& schedule;
 };
