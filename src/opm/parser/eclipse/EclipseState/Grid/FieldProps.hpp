@@ -656,7 +656,8 @@ public:
     }
 
     void apply_tran(const std::string& keyword, std::vector<double>& data);
-
+    std::vector<char> serialize_tran() const;
+    void deserialize_tran(const std::vector<char>& buffer);
 private:
     void scanGRIDSection(const GRIDSection& grid_section);
     void scanEDITSection(const EDITSection& edit_section);

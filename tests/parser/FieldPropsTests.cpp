@@ -1841,4 +1841,6 @@ MAXVALUE
     for (std::size_t i=0; i < trany.size(); i++)
         BOOST_CHECK_EQUAL(trany[i], to_si(2.0));
 
+    auto buffer = fpm.serialize_tran();
+    fpm.deserialize_tran(buffer);
 }

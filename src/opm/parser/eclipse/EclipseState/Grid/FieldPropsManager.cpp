@@ -113,6 +113,14 @@ void FieldPropsManager::apply_tran(const std::string& keyword, std::vector<doubl
     this->fp->apply_tran(keyword, data);
 }
 
+std::vector<char> FieldPropsManager::serialize_tran() const {
+    return this->fp->serialize_tran();
+}
+
+void FieldPropsManager::deserialize_tran(const std::vector<char>& buffer) {
+    this->fp->deserialize_tran(buffer);
+}
+
 
 template bool FieldPropsManager::supported<int>(const std::string&);
 template bool FieldPropsManager::supported<double>(const std::string&);
