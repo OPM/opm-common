@@ -516,7 +516,7 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/common/OpmLog/LogUtil.hpp
       opm/common/OpmLog/MessageFormatter.hpp
       opm/common/OpmLog/MessageLimiter.hpp
-      opm/common/OpmLog/Location.hpp
+      opm/common/OpmLog/KeywordLocation.hpp
       opm/common/OpmLog/OpmLog.hpp
       opm/common/OpmLog/StreamLog.hpp
       opm/common/OpmLog/TimerLog.hpp

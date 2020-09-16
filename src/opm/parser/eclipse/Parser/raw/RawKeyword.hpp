@@ -25,7 +25,7 @@
 #include <vector>
 #include <cstddef>
 
-#include <opm/common/OpmLog/Location.hpp>
+#include <opm/common/OpmLog/KeywordLocation.hpp>
 
 #include "RawEnums.hpp"
 #include "RawConsts.hpp"
@@ -51,7 +51,7 @@ namespace Opm {
         bool isFinished() const;
         bool unKnownSize() const;
         bool rawStringKeyword() const;
-        const Location& location() const;
+        const KeywordLocation& location() const;
 
         using const_iterator = std::vector< RawRecord >::const_iterator;
         using iterator = std::vector< RawRecord >::iterator;
@@ -63,7 +63,7 @@ namespace Opm {
         std::size_t size() const;
     private:
         std::string m_name;
-        Location m_location;
+        KeywordLocation m_location;
         bool raw_string_keyword;
         Raw::KeywordSizeEnum m_sizeType;
 

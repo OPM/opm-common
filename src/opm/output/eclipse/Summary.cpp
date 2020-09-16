@@ -21,7 +21,7 @@
 #include <opm/output/eclipse/Summary.hpp>
 
 #include <opm/common/OpmLog/OpmLog.hpp>
-#include <opm/common/OpmLog/Location.hpp>
+#include <opm/common/OpmLog/KeywordLocation.hpp>
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>

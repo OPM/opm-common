@@ -27,7 +27,7 @@
 #include <vector>
 
 #include <opm/io/eclipse/SummaryNode.hpp>
-#include <opm/common/OpmLog/Location.hpp>
+#include <opm/common/OpmLog/KeywordLocation.hpp>
 
 namespace Opm {
 
@@ -43,7 +43,7 @@ namespace Opm {
         using Type = Opm::EclIO::SummaryNode::Type;
 
         SummaryConfigNode() = default;
-        explicit SummaryConfigNode(std::string keyword, const Category cat, Location loc_arg);
+        explicit SummaryConfigNode(std::string keyword, const Category cat, KeywordLocation loc_arg);
 
         static SummaryConfigNode serializeObject();
 
@@ -62,7 +62,7 @@ namespace Opm {
         const std::string& fip_region() const { return this->fip_region_; }
 
         std::string uniqueNodeKey() const;
-        const Location& location( ) const { return this->loc; }
+        const KeywordLocation& location( ) const { return this->loc; }
 
         operator Opm::EclIO::SummaryNode() const {
             return { keyword_, category_, type_, name_, number_, fip_region_ };
@@ -84,7 +84,7 @@ namespace Opm {
     private:
         std::string keyword_;
         Category    category_;
-        Location    loc;
+        KeywordLocation loc;
         Type        type_{ Type::Undefined };
         std::string name_{};
         int         number_{std::numeric_limits<int>::min()};

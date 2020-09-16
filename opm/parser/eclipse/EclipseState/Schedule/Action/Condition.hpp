@@ -23,7 +23,7 @@
 #include <string>
 #include <vector>
 
-#include <opm/common/OpmLog/Location.hpp>
+#include <opm/common/OpmLog/KeywordLocation.hpp>
 
 namespace Opm {
 
@@ -77,7 +77,7 @@ enum class Comparator {
 
 
     Condition() = default;
-    Condition(const std::vector<std::string>& tokens, const Location& location);
+    Condition(const std::vector<std::string>& tokens, const KeywordLocation& location);
 
 
     Quantity lhs;

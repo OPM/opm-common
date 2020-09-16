@@ -45,7 +45,7 @@ namespace {
 
     RawKeyword::RawKeyword(const std::string& name, const std::string& filename, std::size_t lineNR, bool raw_string, Raw::KeywordSizeEnum sizeType, std::size_t size_arg) :
         m_name(keyword_name(name)),
-        m_location(filename, lineNR),
+        m_location(name, filename, lineNR),
         raw_string_keyword(raw_string),
         m_sizeType(sizeType)
     {
@@ -136,7 +136,7 @@ namespace {
         return m_isFinished;
     }
 
-    const Location& RawKeyword::location() const {
+    const KeywordLocation& RawKeyword::location() const {
         return this->m_location;
     }
 

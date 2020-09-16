@@ -38,7 +38,7 @@ namespace Opm {
     {
     }
 
-    DeckKeyword::DeckKeyword(const Location& location, const std::string& keywordName) :
+    DeckKeyword::DeckKeyword(const KeywordLocation& location, const std::string& keywordName) :
         m_keywordName(keywordName),
         m_location(location),
         m_isDataKeyword(false),
@@ -56,7 +56,7 @@ namespace Opm {
     {
         DeckKeyword result;
         result.m_keywordName = "test";
-        result.m_location = Location::serializeObject();
+        result.m_location = KeywordLocation::serializeObject();
         result.m_recordList = {DeckRecord::serializeObject()};
         result.m_isDataKeyword = true;
         result.m_slashTerminated = true;
@@ -153,7 +153,7 @@ namespace Opm {
         setDataKeyword();
         if (parser_item.dataType() != type_tag::integer)
             throw std::invalid_argument("Input to DeckKeyword '" + name() + "': cannot be std::vector<int>.");
-      
+
         DeckItem item(parser_item.name(), int() );
         for (int val : data)
             item.push_back(val);
@@ -199,7 +199,7 @@ namespace Opm {
     }
 
 
-    const Location& DeckKeyword::location() const {
+    const KeywordLocation& DeckKeyword::location() const {
         return this->m_location;
     }
 

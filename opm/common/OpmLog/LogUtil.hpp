@@ -23,7 +23,7 @@
 #include <cstdint>
 #include <string>
 
-#include <opm/common/OpmLog/Location.hpp>
+#include <opm/common/OpmLog/KeywordLocation.hpp>
 
 namespace Opm {
 
@@ -59,8 +59,8 @@ namespace Log {
 
 
     bool isPower2(int64_t x);
-    std::string fileMessage(const Location& location, const std::string& msg);
-    std::string fileMessage(int64_t messageType , const Location& location , const std::string& msg);
+    std::string fileMessage(const KeywordLocation& location, const std::string& msg);
+    std::string fileMessage(int64_t messageType , const KeywordLocation& location , const std::string& msg);
     std::string prefixMessage(int64_t messageType , const std::string& msg);
     std::string colorCodeMessage(int64_t messageType , const std::string& msg);
 
