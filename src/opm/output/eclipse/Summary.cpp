@@ -2743,6 +2743,8 @@ void Summary::eval(SummaryState&                  st,
 
     const double duration = secs_elapsed - st.get_elapsed();
     single_values["TIMESTEP"] = duration;
+    st.update("TIMESTEP", es.getUnits().from_si(Opm::UnitSystem::measure::time, duration));
+
 
     /* Report_step is the one-based sequence number of the containing report.
      * Report_step = 0 for the initial condition, before simulation starts.
