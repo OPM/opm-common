@@ -265,15 +265,21 @@ BOOST_AUTO_TEST_CASE( update_equal ) {
     BOOST_CHECK_EQUAL(state[4], 50);
     BOOST_CHECK_EQUAL(state[5], 100);
 
-    state.update_equal(4,50);
-    BOOST_CHECK_EQUAL(state[4], 50);
-    BOOST_CHECK_EQUAL(state[5], 100);
+    {
+        auto next_index = state.update_equal(4,50);
+        BOOST_CHECK_EQUAL(state[4], 50);
+        BOOST_CHECK_EQUAL(state[5], 100);
+        BOOST_CHECK_EQUAL(next_index.value() , 5);
+    }
 
 
-    state.update_equal(9,200);
-    BOOST_CHECK_EQUAL(state[8] , 100);
-    BOOST_CHECK_EQUAL(state[9] , 200);
-    BOOST_CHECK_EQUAL(state[10], 200);
+    {
+        auto next_index = state.update_equal(9,200);
+        BOOST_CHECK_EQUAL(state[8] , 100);
+        BOOST_CHECK_EQUAL(state[9] , 200);
+        BOOST_CHECK_EQUAL(state[10], 200);
+        BOOST_CHECK(!next_index);
+    }
 }
 
 
