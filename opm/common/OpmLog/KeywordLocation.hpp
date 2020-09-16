@@ -24,11 +24,13 @@ namespace Opm {
 
 class KeywordLocation {
 public:
+    std::string keyword;
     std::string filename = "<memory string>";
     std::size_t lineno = 0;
 
     KeywordLocation() = default;
-    KeywordLocation(std::string fname, std::size_t lno) :
+    KeywordLocation(std::string kw, std::string fname, std::size_t lno) :
+        keyword(std::move(kw)),
         filename(std::move(fname)),
         lineno(lno)
     {}
@@ -36,6 +38,7 @@ public:
     static KeywordLocation serializeObject()
     {
         KeywordLocation result;
+        result.keyword = "KW";
         result.filename = "test";
         result.lineno = 1;
 
@@ -43,13 +46,15 @@ public:
     }
 
     bool operator==(const KeywordLocation& data) const {
-        return filename == data.filename &&
+        return keyword == data.keyword &&
+               filename == data.filename &&
                lineno == data.lineno;
     }
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {
+        serializer(keyword);
         serializer(filename);
         serializer(lineno);
     }

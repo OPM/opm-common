@@ -674,7 +674,7 @@ BOOST_AUTO_TEST_CASE(TestFieldAND) {
 
 
 BOOST_AUTO_TEST_CASE(Conditions) {
-    auto location = KeywordLocation("File", 100);
+    auto location = KeywordLocation("Keyword", "File", 100);
 
     // Missing comparator
     BOOST_CHECK_THROW(Action::Condition cond({"WWCT", "OPX"}, location), std::invalid_argument);
