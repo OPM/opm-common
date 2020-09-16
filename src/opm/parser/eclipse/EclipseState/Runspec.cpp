@@ -343,6 +343,7 @@ Runspec Runspec::serializeObject()
     result.hystpar = EclHysterConfig::serializeObject();
     result.m_actdims = Actdims::serializeObject();
     result.m_sfuncctrl = SatFuncControls::serializeObject();
+    result.m_nupcol = 2;
 
     return result;
 }
@@ -415,7 +416,8 @@ bool Runspec::operator==(const Runspec& data) const {
            this->wellSegmentDimensions() == data.wellSegmentDimensions() &&
            this->hysterPar() == data.hysterPar() &&
            this->actdims() == data.actdims() &&
-           this->saturationFunctionControls() == data.saturationFunctionControls();
+           this->saturationFunctionControls() == data.saturationFunctionControls() &&
+           this->m_nupcol == data.m_nupcol;
 }
 
 }
