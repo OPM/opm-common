@@ -202,28 +202,29 @@ BOOST_AUTO_TEST_CASE( find ) {
     Opm::TimeMap timeMap = make_timemap(6);
     Opm::DynamicState<int> state(timeMap , 137);
 
-    BOOST_CHECK_EQUAL( state.find( 137 ) , 0 );
-    BOOST_CHECK_EQUAL( state.find( 200 ) , -1 );
-    BOOST_CHECK_EQUAL( state.find_not(137), -1);
-    BOOST_CHECK_EQUAL( state.find_not(200), 0);
+    BOOST_CHECK_EQUAL( state.find( 137 ).value() , 0 );
+    BOOST_CHECK_EQUAL( state.find_not(200).value(), 0);
+    BOOST_CHECK( !state.find( 200 ));
+    BOOST_CHECK( !state.find_not(137));
+
     state.update( 0 , 200 );
-    BOOST_CHECK_EQUAL( state.find( 137 ) , -1 );
-    BOOST_CHECK_EQUAL( state.find( 200 ) ,  0 );
+    BOOST_CHECK( !state.find( 137 ) );
+    BOOST_CHECK_EQUAL( state.find( 200 ).value() ,  0 );
 
     state.update( 2 , 300 );
-    BOOST_CHECK_EQUAL( state.find( 200 ) ,  0 );
-    BOOST_CHECK_EQUAL( state.find( 300 ) ,  2 );
-    BOOST_CHECK_EQUAL( state.find_not( 200 ) ,  2 );
+    BOOST_CHECK_EQUAL( state.find( 200 ).value() ,  0 );
+    BOOST_CHECK_EQUAL( state.find( 300 ).value() ,  2 );
+    BOOST_CHECK_EQUAL( state.find_not( 200 ).value() ,  2 );
 
     state.update( 4 , 400 );
-    BOOST_CHECK_EQUAL( state.find( 200 ) ,  0 );
-    BOOST_CHECK_EQUAL( state.find( 300 ) ,  2 );
-    BOOST_CHECK_EQUAL( state.find( 400 ) ,  4 );
-    BOOST_CHECK_EQUAL( state.find( 500 ) ,  -1 );
+    BOOST_CHECK_EQUAL( state.find( 200 ).value() ,  0 );
+    BOOST_CHECK_EQUAL( state.find( 300 ).value() ,  2 );
+    BOOST_CHECK_EQUAL( state.find( 400 ).value() ,  4 );
+    BOOST_CHECK( !state.find( 500 ));
 
 
     auto pred = [] (const int& elm) { return elm == 400 ;};
-    BOOST_CHECK_EQUAL( state.find_if(pred), 4);
+    BOOST_CHECK_EQUAL( state.find_if(pred).value(), 4);
 }
 
 

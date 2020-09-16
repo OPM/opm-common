@@ -2618,8 +2618,8 @@ void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t 
         for (const auto& well_pair : this->wells_static) {
             const auto& well_name = well_pair.first;
             const auto& dynamic_state = well_pair.second;
-            auto open_step = static_cast<std::size_t>(dynamic_state.find_not(nullptr));
-            if (open_step <= timeStep)
+            auto open_step = dynamic_state.find_not(nullptr);
+            if (open_step.value() <= timeStep)
                 names.push_back(well_name);
         }
         return names;

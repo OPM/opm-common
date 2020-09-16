@@ -179,28 +179,26 @@ class DynamicState {
         }
     }
 
-    /// Will return the index of the first occurence of @value, or
-    /// -1 if @value is not found.
-    int find(const T& value) const {
+    /// Will return the index of the first occurence of @value
+    std::optional<std::size_t> find(const T& value) const {
         auto iter = std::find( m_data.begin() , m_data.end() , value);
-        if( iter == this->m_data.end() ) return -1;
+        if( iter == this->m_data.end() ) return {};
 
         return std::distance( m_data.begin() , iter );
     }
 
     template<typename P>
-    int find_if(P&& pred) const {
+    std::optional<std::size_t> find_if(P&& pred) const {
         auto iter = std::find_if(m_data.begin(), m_data.end(), std::forward<P>(pred));
-        if( iter == this->m_data.end() ) return -1;
+        if( iter == this->m_data.end() ) return {};
 
         return std::distance( m_data.begin() , iter );
     }
 
-    /// Will return the index of the first value which is != @value, or -1
-    /// if all values are == @value
-    int find_not(const T& value) const {
+    /// Will return the index of the first value which is != @value
+    std::optional<std::size_t> find_not(const T& value) const {
         auto iter = std::find_if_not( m_data.begin() , m_data.end() , [&value] (const T& elm) { return value == elm; });
-        if( iter == this->m_data.end() ) return -1;
+        if( iter == this->m_data.end() ) return {};
 
         return std::distance( m_data.begin() , iter );
     }
