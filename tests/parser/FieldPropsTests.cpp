@@ -17,11 +17,12 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdexcept>
+#include <algorithm>
 #include <iostream>
 #include <iomanip>
 #include <memory>
 #include <numeric>
+#include <stdexcept>
 #include <sstream>
 #include <string>
 
@@ -114,7 +115,7 @@ PERMX
     BOOST_CHECK_THROW(fpm.get_double("PERMX"), std::runtime_error);
     {
         const auto& keys = fpm.keys<double>();
-        BOOST_CHECK_EQUAL(keys.size(), 1);
+        BOOST_CHECK_EQUAL(keys.size(), decltype(keys.size()){1});
         BOOST_CHECK(std::find(keys.begin(), keys.end(), "PORO")  != keys.end());
         BOOST_CHECK(std::find(keys.begin(), keys.end(), "PERMX") == keys.end());
 
@@ -124,7 +125,7 @@ PERMX
     }
     {
         const auto& keys = fpm.keys<int>();
-        BOOST_CHECK_EQUAL(keys.size(), 0);
+        BOOST_CHECK_EQUAL(keys.size(), decltype(keys.size()){0});
 
         BOOST_CHECK(std::find(keys.begin(), keys.end(), "ACTNUM") == keys.end());
     }
@@ -158,24 +159,24 @@ SATNUM
     Deck deck = Parser{}.parseString(deck_string);
     FieldPropsManager fpm(deck, Phases{true, true, true}, grid, TableManager());
     const auto& s1 = fpm.get_int("SATNUM");
-    BOOST_CHECK_EQUAL(s1.size(), 6);
+    BOOST_CHECK_EQUAL(s1.size(), decltype(s1.size()){6});
     BOOST_CHECK_EQUAL(s1[0], 0);
     BOOST_CHECK_EQUAL(s1[1], 1);
     BOOST_CHECK_EQUAL(s1[2], 2);
     BOOST_CHECK_EQUAL(s1[3], 6);
     BOOST_CHECK_EQUAL(s1[4], 7);
     BOOST_CHECK_EQUAL(s1[5], 8);
-    BOOST_CHECK_EQUAL(fpm.active_size(), 6);
+    BOOST_CHECK_EQUAL(fpm.active_size(), decltype(fpm.active_size()){6});
 
     std::vector<int> actnum2 = {1,0,1,0,0,0,1,0,1};
     fpm.reset_actnum(actnum2);
 
-    BOOST_CHECK_EQUAL(s1.size(), 4);
+    BOOST_CHECK_EQUAL(s1.size(), decltype(s1.size()){4});
     BOOST_CHECK_EQUAL(s1[0], 0);
     BOOST_CHECK_EQUAL(s1[1], 2);
     BOOST_CHECK_EQUAL(s1[2], 6);
     BOOST_CHECK_EQUAL(s1[3], 8);
-    BOOST_CHECK_EQUAL(fpm.active_size(), 4);
+    BOOST_CHECK_EQUAL(fpm.active_size(), decltype(fpm.active_size()){4});
 
     BOOST_CHECK_THROW(fpm.reset_actnum(actnum1), std::logic_error);
 }
@@ -200,7 +201,7 @@ ADDREG
     Deck deck = Parser{}.parseString(deck_string);
     FieldPropsManager fpm(deck, Phases{true, true, true}, grid, TableManager());
     const auto& poro = fpm.get_double("PORO");
-    BOOST_CHECK_EQUAL(poro.size(), 4);
+    BOOST_CHECK_EQUAL(poro.size(), decltype(poro.size()){4});
     BOOST_CHECK_EQUAL(poro[0], 0.10);
     BOOST_CHECK_EQUAL(poro[3], 1.10);
 }
@@ -1627,8 +1628,6 @@ MULTZ
         BOOST_CHECK_EQUAL(index * 1.0, multz_global[index]);
 }
 
-
-
 BOOST_AUTO_TEST_CASE(GLOBAL_FIELD2)
 {
     std::string deck_string = R"(
@@ -1701,6 +1700,7 @@ EQUALS
     }
 }
 
+namespace {
 FieldPropsManager make_fp(const std::string& deck_string) {
     std::vector<int> actnum(27, 1);
     for (std::size_t i=9; i< 18; i++)
@@ -1709,7 +1709,7 @@ FieldPropsManager make_fp(const std::string& deck_string) {
     Deck deck = Parser{}.parseString(deck_string);
     return FieldPropsManager(deck, Phases{true, true, true}, grid, TableManager());
 }
-
+}
 
 BOOST_AUTO_TEST_CASE(GLOBAL_UNSUPPORTED) {
     // Operations involving two keywords can not update a global keyword.
