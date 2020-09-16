@@ -936,7 +936,7 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
             }
         } else {
             const std::string msg = "The keyword " + rawKeyword->getKeywordName() + " is not recognized - ignored";
-            Location location(parserState.current_path().string(), parserState.line());
+            KeywordLocation location(parserState.current_path().string(), parserState.line());
             OpmLog::warning(Log::fileMessage(location, msg));
         }
     }

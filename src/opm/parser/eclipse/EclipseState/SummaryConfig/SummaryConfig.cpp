@@ -293,7 +293,7 @@ inline void keywordW( SummaryConfig::keyword_list& list,
 
 inline void keywordW( SummaryConfig::keyword_list& list,
                       const std::string& keyword,
-                      Location loc,
+                      KeywordLocation loc,
                       const Schedule& schedule) {
     auto param = SummaryConfigNode {
         keyword, SummaryConfigNode::Category::Well , std::move(loc)
@@ -350,7 +350,7 @@ inline void keywordW( SummaryConfig::keyword_list& list,
 
 inline void keywordG( SummaryConfig::keyword_list& list,
                       const std::string& keyword,
-                      Location loc,
+                      KeywordLocation loc,
                       const Schedule& schedule ) {
     auto param = SummaryConfigNode {
         keyword, SummaryConfigNode::Category::Group, std::move(loc)
@@ -401,7 +401,7 @@ inline void keywordG( SummaryConfig::keyword_list& list,
 
 inline void keywordF( SummaryConfig::keyword_list& list,
                       const std::string& keyword,
-                      Location loc) {
+                      KeywordLocation loc) {
     auto param = SummaryConfigNode {
         keyword, SummaryConfigNode::Category::Field, std::move(loc)
     }
@@ -497,7 +497,7 @@ inline void keywordR2R( SummaryConfig::keyword_list& /* list */,
 
 inline void keywordMISC( SummaryConfig::keyword_list& list,
                          const std::string& keyword,
-                         Location loc)
+                         KeywordLocation loc)
 {
     if (meta_keywords.find(keyword) == meta_keywords.end())
         list.emplace_back( keyword, SummaryConfigNode::Category::Miscellaneous , std::move(loc));
@@ -790,7 +790,7 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
 
 inline void handleKW( SummaryConfig::keyword_list& list,
                       const std::string& keyword,
-                      Location loc,
+                      KeywordLocation loc,
                       const Schedule& schedule,
                       const ParseContext& parseContext,
                       ErrorGuard& errors) {
@@ -850,7 +850,7 @@ SummaryConfigNode::Category parseKeywordCategory(const std::string& keyword) {
 }
 
 
-SummaryConfigNode::SummaryConfigNode(std::string keyword, const Category cat, Location loc_arg) :
+SummaryConfigNode::SummaryConfigNode(std::string keyword, const Category cat, KeywordLocation loc_arg) :
     keyword_(std::move(keyword)),
     category_(cat),
     loc(std::move(loc_arg))
@@ -861,7 +861,7 @@ SummaryConfigNode SummaryConfigNode::serializeObject()
     SummaryConfigNode result;
     result.keyword_ = "test1";
     result.category_ = Category::Region;
-    result.loc = Location::serializeObject();
+    result.loc = KeywordLocation::serializeObject();
     result.type_ = Type::Pressure;
     result.name_ = "test2";
     result.number_ = 2;

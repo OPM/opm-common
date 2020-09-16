@@ -28,7 +28,7 @@
 
 #include <opm/common/utility/TimeService.hpp>
 
-#include <opm/common/OpmLog/Location.hpp>
+#include <opm/common/OpmLog/KeywordLocation.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
@@ -674,7 +674,7 @@ BOOST_AUTO_TEST_CASE(TestFieldAND) {
 
 
 BOOST_AUTO_TEST_CASE(Conditions) {
-    auto location = Location("File", 100);
+    auto location = KeywordLocation("File", 100);
 
     // Missing comparator
     BOOST_CHECK_THROW(Action::Condition cond({"WWCT", "OPX"}, location), std::invalid_argument);

@@ -29,7 +29,7 @@
 #include <opm/parser/eclipse/Deck/DeckValue.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Deck/value_status.hpp>
-#include <opm/common/OpmLog/Location.hpp>
+#include <opm/common/OpmLog/KeywordLocation.hpp>
 
 namespace Opm {
     class DeckOutput;
@@ -43,7 +43,7 @@ namespace Opm {
 
         DeckKeyword();
         explicit DeckKeyword(const ParserKeyword& parserKeyword);
-        DeckKeyword(const Location& location, const std::string& keywordName);
+        DeckKeyword(const KeywordLocation& location, const std::string& keywordName);
         DeckKeyword(const ParserKeyword& parserKeyword, const std::vector<std::vector<DeckValue>>& record_list, UnitSystem& system_active, UnitSystem& system_default);
         DeckKeyword(const ParserKeyword& parserKeyword, const std::vector<int>& data);
         DeckKeyword(const ParserKeyword& parserKeyword, const std::vector<double>& data, UnitSystem& system_active, UnitSystem& system_default);
@@ -52,7 +52,7 @@ namespace Opm {
 
         const std::string& name() const;
         void setFixedSize();
-        const Location& location() const;
+        const KeywordLocation& location() const;
 
 
         size_t size() const;
@@ -105,7 +105,7 @@ namespace Opm {
 
     private:
         std::string m_keywordName;
-        Location m_location;
+        KeywordLocation m_location;
 
         std::vector< DeckRecord > m_recordList;
         bool m_isDataKeyword;

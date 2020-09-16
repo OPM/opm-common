@@ -36,7 +36,7 @@
 #include <opm/common/OpmLog/TimerLog.hpp>
 #include <opm/common/OpmLog/StreamLog.hpp>
 #include <opm/common/OpmLog/LogUtil.hpp>
-#include <opm/common/OpmLog/Location.hpp>
+#include <opm/common/OpmLog/KeywordLocation.hpp>
 
 using namespace Opm;
 
@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE(DoLogging) {
 
 
 BOOST_AUTO_TEST_CASE(Test_Format) {
-    BOOST_CHECK_EQUAL( "There is an error here?\nIn file /path/to/file, line 100\n" , Log::fileMessage(Location("/path/to/file" , 100) , "There is an error here?"));
+    BOOST_CHECK_EQUAL( "There is an error here?\nIn file /path/to/file, line 100\n" , Log::fileMessage(KeywordLocation("/path/to/file" , 100) , "There is an error here?"));
 
     BOOST_CHECK_EQUAL( "\nError: This is the error" ,     Log::prefixMessage(Log::MessageType::Error , "This is the error"));
     BOOST_CHECK_EQUAL( "\nWarning: This is the warning" , Log::prefixMessage(Log::MessageType::Warning , "This is the warning"));
@@ -252,8 +252,8 @@ BOOST_AUTO_TEST_CASE(TestHelperFunctions)
     BOOST_CHECK(isPower2(1ul << 62));
 
     // fileMessage
-    BOOST_CHECK_EQUAL(fileMessage(Location("foo/bar", 1), "message"), "message\nIn file foo/bar, line 1\n");
-    BOOST_CHECK_EQUAL(fileMessage(MessageType::Error, Location("foo/bar", 1), "message"), "\nError: message\nIn file foo/bar, line 1\n");
+    BOOST_CHECK_EQUAL(fileMessage(KeywordLocation("foo/bar", 1), "message"), "message\nIn file foo/bar, line 1\n");
+    BOOST_CHECK_EQUAL(fileMessage(MessageType::Error, KeywordLocation("foo/bar", 1), "message"), "\nError: message\nIn file foo/bar, line 1\n");
 
     // prefixMessage
     BOOST_CHECK_EQUAL(prefixMessage(MessageType::Error, "message"), "\nError: message");

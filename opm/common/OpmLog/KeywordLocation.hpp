@@ -17,32 +17,32 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef LOCATION_HPP
-#define LOCATION_HPP
+#ifndef KEYWORD_LOCATION_HPP
+#define KEYWORD_LOCATION_HPP
 
 namespace Opm {
 
-class Location {
+class KeywordLocation {
 public:
     std::string filename = "<memory string>";
     std::size_t lineno = 0;
 
-    Location() = default;
-    Location(std::string fname, std::size_t lno) :
+    KeywordLocation() = default;
+    KeywordLocation(std::string fname, std::size_t lno) :
         filename(std::move(fname)),
         lineno(lno)
     {}
 
-    static Location serializeObject()
+    static KeywordLocation serializeObject()
     {
-        Location result;
+        KeywordLocation result;
         result.filename = "test";
         result.lineno = 1;
 
         return result;
     }
 
-    bool operator==(const Location& data) const {
+    bool operator==(const KeywordLocation& data) const {
         return filename == data.filename &&
                lineno == data.lineno;
     }

@@ -136,7 +136,7 @@ namespace {
         return m_isFinished;
     }
 
-    const Location& RawKeyword::location() const {
+    const KeywordLocation& RawKeyword::location() const {
         return this->m_location;
     }
 
