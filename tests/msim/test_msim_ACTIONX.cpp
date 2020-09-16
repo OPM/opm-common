@@ -35,6 +35,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionContext.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/Actions.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionX.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
@@ -338,6 +339,51 @@ BOOST_AUTO_TEST_CASE(UDQ_WUWCT) {
     }
 }
 
+BOOST_AUTO_TEST_CASE(UDQ_IN_ACTIONX) {
+#include "udq_in_actionx.include"
+    test_data td( actionx1 );
+    msim sim(td.state);
+    {
+        WorkArea work_area("test_msim");
+        EclipseIO io(td.state, td.state.getInputGrid(), td.schedule, td.summary_config);
+
+        sim.well_rate("P1", data::Rates::opt::oil, prod_opr);
+        sim.well_rate("P2", data::Rates::opt::oil, prod_opr);
+        sim.well_rate("P3", data::Rates::opt::oil, prod_opr);
+        sim.well_rate("P4", data::Rates::opt::oil, prod_opr);
+
+        sim.well_rate("P1", data::Rates::opt::wat, prod_wpr_P1);
+        sim.well_rate("P2", data::Rates::opt::wat, prod_wpr_P2);
+        sim.well_rate("P3", data::Rates::opt::wat, prod_wpr_P3);
+        sim.well_rate("P4", data::Rates::opt::wat, prod_wpr_P4);
+
+        {
+            const auto& w1 = td.schedule.getWell("P1", 15);
+            BOOST_CHECK(w1.getStatus() == Well::Status::OPEN );
+
+            const auto& udq1 = td.schedule.getUDQConfig(15);
+            BOOST_CHECK(!udq1.has_keyword("FUNEW"));
+
+            const auto& udq2 = td.schedule.getUDQConfig(25);
+            BOOST_CHECK(udq2.has_keyword("FUPROD"));
+        }
+
+
+        sim.run(td.schedule, io, false);
+        {
+            const auto& w1 = td.schedule.getWell("P1", 15);
+            BOOST_CHECK(w1.getStatus() ==  Well::Status::OPEN );
+
+            const auto& udq1 = td.schedule.getUDQConfig(15);
+            BOOST_CHECK(udq1.has_keyword("FUNEW"));
+
+            const auto& udq2 = td.schedule.getUDQConfig(25);
+            BOOST_CHECK(udq2.has_keyword("FUPROD"));
+            BOOST_CHECK(udq2.has_keyword("FUNEW"));
+        }
+    }
+
+}
 
 BOOST_AUTO_TEST_CASE(UDA) {
 #include "uda.include"

@@ -401,9 +401,9 @@ namespace Opm
         void addGroupToGroup( const std::string& parent_group, const Group& child_group, size_t timeStep);
         void addGroup(const std::string& groupName , size_t timeStep, const UnitSystem& unit_system);
         void addWell(const std::string& wellName, const DeckRecord& record, size_t timeStep, Connection::Order connection_order, const UnitSystem& unit_system);
-
         void checkUnhandledKeywords( const SCHEDULESection& ) const;
         void checkIfAllConnectionsIsShut(size_t currentStep);
+        void updateUDQ(const DeckKeyword& keyword, std::size_t current_step);
         void handleKeyword(std::shared_ptr<const Python> python,
                            const std::string& input_path,
                            size_t currentStep,
@@ -442,7 +442,7 @@ namespace Opm
             }
         }
 
-        void applyEXIT(const DeckKeyword&, std::size_t currentStep);
+        void handleEXIT(const DeckKeyword&, std::size_t currentStep);
         void applyMESSAGES(const DeckKeyword&, std::size_t currentStep);
         void applyWELOPEN(const DeckKeyword&, std::size_t currentStep, const ParseContext&, ErrorGuard&, const std::vector<std::string>& matching_wells = {});
         void applyWRFT(const DeckKeyword&, std::size_t currentStep);
