@@ -51,6 +51,10 @@ void GasLiftOpt::all_newton(double all_newton) {
     this->m_all_newton = all_newton;
 }
 
+bool GasLiftOpt::all_newton() const {
+    return this->m_all_newton;
+}
+
 const GasLiftOpt::Group& GasLiftOpt::group(const std::string& gname) const {
     const auto iter = this->m_groups.find(gname);
     if (iter == this->m_groups.end())

@@ -221,6 +221,7 @@ public:
     void min_eco_gradient(double min_eco_gradient);
     void min_wait(double min_wait);
     void all_newton(double all_newton);
+    bool all_newton() const;
     void add_group(const Group& group);
     void add_well(const Well& well);
     bool active() const;
