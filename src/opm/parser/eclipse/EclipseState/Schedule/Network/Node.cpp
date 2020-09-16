@@ -68,5 +68,16 @@ bool Node::operator==(const Node& other) const {
 }
 
 
+Node Node::serializeObject()
+{
+  Node result;
+  result.m_name = "test";
+  result.m_terminal_pressure = 1.0;
+  result.m_add_gas_lift_gas = true;
+
+  return result;
+}
+
+
 }
 }
