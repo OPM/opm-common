@@ -37,7 +37,7 @@
 #include <string>
 #include <stdexcept>
 
-#define ENABLE_GCNTL_DEBUG_OUTPUT 0
+#define ENABLE_GCNTL_DEBUG_OUTPUT 1
 
 #if ENABLE_GCNTL_DEBUG_OUTPUT
 #include <iostream>
@@ -210,19 +210,22 @@ int higherLevelProdControlGroupSeqIndex(const Opm::Schedule& sched,
 // returns the sequence number of higher (highest) level group with active control different from (NONE or FLD)
 //
 {
+    printf("XXXXX  Group: %s \n", group.name().c_str());
     int ctrl_grup_seq_no = -1;
     if (group.defined( simStep )) {
         auto current = group;
         double cur_prod_ctrl = -1.;
         while (current.name() != "FIELD" && ctrl_grup_seq_no < 0) {
             current = sched.getGroup(current.parent(), simStep);
+            printf("XXXXX  ParentGroup: %s \n", current.name().c_str());
             cur_prod_ctrl = -1.;
             if (sumState.has_group_var(current.name(), "GMCTP")) {
                 cur_prod_ctrl = sumState.get_group_var(current.name(), "GMCTP");
+                printf("XXXXX: Get: %s:%s = %lg \n", "GMCTP", current.name().c_str(), cur_prod_ctrl);
             }
             else {
 #if ENABLE_GCNTL_DEBUG_OUTPUT
-                std::cout << "Current group control is not defined for group: " << current.name() << " at timestep: " << simStep  << std::endl;
+                std::cout << "XXXXX Current group control is not defined for group: " << current.name() << " at timestep: " << simStep  << std::endl;
 #endif // ENABLE_GCNTL_DEBUG_OUTPUT
                 cur_prod_ctrl = 0.;
             }
@@ -230,6 +233,7 @@ int higherLevelProdControlGroupSeqIndex(const Opm::Schedule& sched,
                 ctrl_grup_seq_no = current.insert_index();
             }
         }
+        printf("XXXXX Return: %d \n", ctrl_grup_seq_no);
         return ctrl_grup_seq_no;
     }
     else {
@@ -414,6 +418,7 @@ std::size_t groupSize(const Opm::Group& group) {
 namespace IGrp {
 std::size_t entriesPerGroup(const std::vector<int>& inteHead)
 {
+    printf("Entries per group: %d \n",inteHead[Opm::RestartIO::Helpers::VectorItems::NIGRPZ]);
     return inteHead[Opm::RestartIO::Helpers::VectorItems::NIGRPZ];
 }
 
@@ -439,6 +444,7 @@ void staticContrib(const Opm::Schedule&     sched,
                    const std::map<Opm::Group::InjectionCMode, int>& cmodeToNum,
                    IGrpArray&               iGrp)
 {
+    printf("nwgmax: %d \n", nwgmax);
     const bool is_field = group.name() == "FIELD";
     if (group.wellgroup()) {
         int igrpCount = 0;
@@ -576,12 +582,15 @@ void staticContrib(const Opm::Schedule&     sched,
             Other reduction options are currently not covered in the code
             */
 
+            printf("XXXXX higher_lev_ctrl: %d    higher_lev_ctrl_mode: %d \n", higher_lev_ctrl, higher_lev_ctrl_mode);
             if (higher_lev_ctrl > 0 && (group.getGroupType() != Opm::Group::GroupType::NONE)) {
                 iGrp[nwgmax + 1] = ( prod_guide_rate_def != Opm::Group::GuideRateTarget::NO_GUIDE_RATE ) ? higher_lev_ctrl_mode : 0;
+                printf("XXXXX Setter igrp[nwgmax+1] = 0-0\n");
             }
             else {
                 switch (pctl_mode) {
                     case Opm::Group::ProductionCMode::NONE:
+                        printf("XXXXX Setter igrp[nwgmax+1] = 0-1\n");
                         iGrp[nwgmax + 1] = 0;
                         break;
                     case Opm::Group::ProductionCMode::ORAT:
@@ -595,6 +604,7 @@ void staticContrib(const Opm::Schedule&     sched,
                         break;
                     case Opm::Group::ProductionCMode::LRAT:
                         iGrp[nwgmax + 1] = 4;
+                        printf("XXXXX Setter igrp[nwgmax+1] = 4\n");
                         break;
                     case Opm::Group::ProductionCMode::RESV:
                         iGrp[nwgmax + 1] = 5;
@@ -1182,11 +1192,11 @@ captureDeclaredGroupData(const Opm::Schedule&                 sched,
 {
     const auto& curGroups = sched.restart_groups(simStep);
 
+    printf("XXXXX: REPORT_STEP:%ld  \n",simStep);
     groupLoop(curGroups, [&sched, simStep, sumState, this]
               (const Group& group, const std::size_t groupID) -> void
                          {
                              auto ig = this->iGroup_[groupID];
-
                              IGrp::staticContrib(sched, group, this->nWGMax_, this->nGMaxz_,
                                                  simStep, sumState, this->PCntlModeToPCMode, this->cmodeToNum, ig);
                          });
@@ -1221,4 +1231,5 @@ captureDeclaredGroupData(const Opm::Schedule&                 sched,
 
                              ZGrp::staticContrib(group, zg);
                          });
+    printf("XXXXX \n");
 }

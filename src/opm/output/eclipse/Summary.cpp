@@ -763,6 +763,7 @@ inline quantity potential_rate( const fn_args& args ) {
 template < bool isGroup, bool Producer, bool waterInjector, bool gasInjector>
 inline quantity group_control( const fn_args& args ) {
 
+    bool debug = (isGroup == true && Producer == true);
     std::string g_name = "";
     if (isGroup) {
         const quantity zero = { static_cast<double>(0), Opm::UnitSystem::measure::identity};
@@ -774,6 +775,7 @@ inline quantity group_control( const fn_args& args ) {
         g_name = "FIELD";
     }
 
+    if (debug) printf("XXXXX group_countrol<> g_name: %s \n", g_name.c_str());
     int cntl_mode = 0;
 
     // production control
@@ -788,7 +790,9 @@ inline quantity group_control( const fn_args& args ) {
                 throw std::invalid_argument(str.str());
             }
             cntl_mode = it_c->second;
-        }
+            printf("XXXXX found %s=%d in data::Groups \n", g_name.c_str(), cntl_mode);
+        } else
+            printf("XXXXX could not find %s in data::Groups \n", g_name.c_str());
     }
     // water injection control
     else if (waterInjector){
