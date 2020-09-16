@@ -186,8 +186,58 @@ public:
 
     virtual bool has_int(const std::string& keyword) const { return this->has<int>(keyword); }
     virtual bool has_double(const std::string& keyword) const { return this->has<double>(keyword); }
+
+    /*
+      The transmissibility keywords TRANX, TRANY and TRANZ do not really fit
+      well in the FieldProps system. The opm codebase is based on a full
+      internalization in the parse phase, and then passing fully assembled
+      objects to the simulator. When it comes to the transmissibilities this
+      model breaks down because the input code in opm-common is not capable of
+      calculating the transmissibility, that is performed in the simulator.
+
+      The EDIT section can have modifiers on TRAN, these must be applied *after*
+      the initial transmissibilities are calculated. To support this all the
+      modifiers to the TRAN{XYZ} fields are assembled in "transmissibility
+      calculators", and then these modifiers can be applied to a TRAN vector
+      after it has been calculated in the simulator. Usage from the simulator
+      could look like:
+
+
+          const auto& fp = eclState.fieldProps();
+
+          // Calculate transmissibilities using grid and permeability
+          std::vector<double> tranx = ....
+
+          // Check if there are any active TRANX modifiers and apply them
+          if (fp.tran_active("TRANX"))
+               fp.apply_tran("TRANX", tranx);
+
+
+    */
+
+    /*
+      Will check if there are any TRAN{XYZ} modifiers active in the deck.
+    */
     virtual bool tran_active(const std::string& keyword) const;
+
+
+    /*
+      Will apply all the TRAN modifiers which are present in the deck on the
+      already initialized vector tran_data. The vector tran_data should be
+      organised as the data vectors in the fieldpropsmanager - i.e. one element
+      for each active cell - in lexicographical order. The operations which are
+      supported by the transmissibility calculator are those given by the enum
+      ScalarOperation in FieldProps.hpp.
+    */
     virtual void apply_tran(const std::string& keyword, std::vector<double>& tran_data) const;
+
+    /*
+      When using MPI the FieldPropsManager is typically only assembled on the
+      root node and then distributed to the other nodes afterwards. These
+      methods are support methods for that, the real data used by the
+      transmissibility calculators is in the form of custom 3D fields, they are
+      distributed the same way the rest of the 3D fields are distributed.
+    */
     virtual std::vector<char> serialize_tran() const;
     virtual void deserialize_tran(const std::vector<char>& buffer);
 private:
