@@ -218,7 +218,7 @@ public:
     /*
       Will check if there are any TRAN{XYZ} modifiers active in the deck.
     */
-    virtual bool tran_active(const std::string& keyword) const;
+    bool tran_active(const std::string& keyword) const;
 
 
     /*
@@ -229,7 +229,7 @@ public:
       supported by the transmissibility calculator are those given by the enum
       ScalarOperation in FieldProps.hpp.
     */
-    virtual void apply_tran(const std::string& keyword, std::vector<double>& tran_data) const;
+    void apply_tran(const std::string& keyword, std::vector<double>& tran_data) const;
 
     /*
       When using MPI the FieldPropsManager is typically only assembled on the
@@ -238,8 +238,8 @@ public:
       transmissibility calculators is in the form of custom 3D fields, they are
       distributed the same way the rest of the 3D fields are distributed.
     */
-    virtual std::vector<char> serialize_tran() const;
-    virtual void deserialize_tran(const std::vector<char>& buffer);
+    std::vector<char> serialize_tran() const;
+    void deserialize_tran(const std::vector<char>& buffer);
 private:
     /*
       Return the keyword values as a std::vector<>. All elements in the return
