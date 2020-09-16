@@ -121,6 +121,10 @@ void FieldPropsManager::deserialize_tran(const std::vector<char>& buffer) {
     this->fp->deserialize_tran(buffer);
 }
 
+bool FieldPropsManager::tran_active(const std::string& keyword) const {
+    return this->fp->tran_active(keyword);
+}
+
 
 template bool FieldPropsManager::supported<int>(const std::string&);
 template bool FieldPropsManager::supported<double>(const std::string&);
