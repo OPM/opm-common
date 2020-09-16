@@ -35,6 +35,10 @@ public:
         lineno(lno)
     {}
 
+    std::string message() const {
+        return this->keyword + " in " + this->filename + " at line " + std::to_string(this->lineno);
+    }
+
     static KeywordLocation serializeObject()
     {
         KeywordLocation result;
