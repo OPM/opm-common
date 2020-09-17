@@ -90,17 +90,23 @@ inline bool even_quotes( const T& str ) {
                 throw std::invalid_argument("Input string is not a complete record string, "
                                             "offending string: '" + std::string(singleRecordString) + "'");
         }
+        this->m_max_size = this->m_recordItems.size();
     }
 
     RawRecord::RawRecord(const std::string_view& singleRecordString) :
         RawRecord(singleRecordString, false)
     {}
 
-    void RawRecord::prepend( size_t count, std::string_view tok ) {
+    void RawRecord::push_front( std::string_view tok, std::size_t count ) {
         this->m_recordItems.insert( this->m_recordItems.begin(), count, tok );
+        this->m_max_size += count;
     }
 
     std::string RawRecord::getRecordString() const {
         return std::string(m_sanitizedRecordString);
+    }
+
+    std::size_t RawRecord::max_size() const {
+        return this->m_max_size;
     }
 }
