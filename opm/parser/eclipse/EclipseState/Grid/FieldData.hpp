@@ -29,6 +29,7 @@
 #include<vector>
 #include<optional>
 #include<array>
+#include<algorithm>
 
 namespace Opm
 {
