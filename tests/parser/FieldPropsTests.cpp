@@ -1835,15 +1835,22 @@ MAXVALUE
     for (std::size_t i=0; i < 50; i++)
         BOOST_CHECK_EQUAL(tranx[i], to_si(0.20));
 
-    for (std::size_t i=100; i < tranx.size(); i++)
+    for (std::size_t i=50; i < tranx.size(); i++)
         BOOST_CHECK_EQUAL(tranx[i], to_si(0.10));
 
     BOOST_CHECK_EQUAL(trany[0], to_si(2.0));
     for (std::size_t i=0; i < trany.size(); i++)
         BOOST_CHECK_EQUAL(trany[i], to_si(2.0));
 
+    for (std::size_t i=0; i < 50; i++)
+        BOOST_CHECK(tranz[i]>=to_si(0));
+
+    for (std::size_t i=50; i < tranz.size(); i++)
+        BOOST_CHECK_EQUAL(tranz[i], to_si(1.0));
     auto buffer = fpm.serialize_tran();
     fpm.deserialize_tran(buffer);
 
     BOOST_CHECK(fpm.tran_active("TRANX"));
+    BOOST_CHECK(fpm.tran_active("TRANY"));
+    BOOST_CHECK(fpm.tran_active("TRANZ"));
 }
