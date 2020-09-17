@@ -17,6 +17,9 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+#include <fmt/core.h>
+
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
@@ -127,9 +130,15 @@ namespace {
             items.emplace_back( parserItem.scan( rawRecord, active_unitsystem, default_unitsystem ) );
 
         if (rawRecord.size() > 0) {
-            std::string msg = "The RawRecord for keyword \""  + keyword + "\" in file\"" + filename + "\" contained " +
-                std::to_string(rawRecord.size()) +
-                " too many items according to the spec. RawRecord was: " + rawRecord.getRecordString();
+            auto msg = fmt::format("Reading keyword {} in file {} at line {},{}record \"{}\" contained {} items, expected {}.",
+                                   location.keyword,
+                                   location.filename,
+                                   location.lineno,
+                                   "\n       ",
+                                   rawRecord.getRecordString(),
+                                   rawRecord.max_size(),
+                                   this->size());
+
             parseContext.handleError(ParseContext::PARSE_EXTRA_DATA , msg, errors);
         }
 
