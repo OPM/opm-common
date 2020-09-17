@@ -12,7 +12,7 @@ License:        GPL-3.0
 Group:          Development/Libraries/C and C++
 Url:            http://www.opm-project.org/
 Source0:        https://github.com/OPM/%{name}/archive/release/%{version}/%{tag}.tar.gz#/%{name}-%{version}.tar.gz
-BuildRequires:  git doxygen bc openmpi-devel mpich-devel
+BuildRequires:  git doxygen bc openmpi-devel mpich-devel format-devel
 %{?!el8:BuildRequires: devtoolset-8-toolchain}
 %{?el8:BuildRequires: boost-devel}
 %{?!el8:BuildRequires: boost148-devel}
