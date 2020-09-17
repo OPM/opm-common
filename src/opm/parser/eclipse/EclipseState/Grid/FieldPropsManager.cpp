@@ -167,6 +167,10 @@ void apply_tran(const std::unordered_map<std::string, TranCalculator>& tran,
                 data[index] *= action_data.data[index];
                 break;
 
+            case ScalarOperation::ADD:
+                data[index] += action_data.data[index];
+                break;
+
             case ScalarOperation::MAX:
                 data[index] = std::min(action_data.data[index], data[index]);
                 break;
@@ -174,6 +178,7 @@ void apply_tran(const std::unordered_map<std::string, TranCalculator>& tran,
             case ScalarOperation::MIN:
                 data[index] = std::max(action_data.data[index], data[index]);
                 break;
+
             default:
                 throw std::logic_error("Unhandled value in switch");
             }

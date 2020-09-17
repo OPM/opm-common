@@ -1805,12 +1805,18 @@ MULTIPLY
   TRANY  2.0 /
 /
 
+ADD
+  TRANY 3 1 10 1 10 2 2 /
+/
+
 MAXVALUE
   TRANZ 0 1 10 1 10 1 1 /
 /
+
 MINVALUE
   TRANZ 3 1 10 1 10 2 2 /
 /
+
 )";
     UnitSystem unit_system(UnitSystem::UnitType::UNIT_TYPE_METRIC);
     auto to_si = [&unit_system](double raw_value) { return unit_system.to_si(UnitSystem::measure::transmissibility, raw_value); };
@@ -1840,7 +1846,14 @@ MINVALUE
         BOOST_CHECK_EQUAL(tranx[i], to_si(0.10));
 
     BOOST_CHECK_EQUAL(trany[0], to_si(2.0));
-    for (std::size_t i=0; i < trany.size(); i++)
+
+    for (std::size_t i=0; i < 50; i++)
+        BOOST_CHECK_EQUAL(trany[i], to_si(2.0));
+
+    for (std::size_t i=50; i < 100; i++)
+        BOOST_CHECK_EQUAL(trany[i], to_si(5.0));
+
+    for (std::size_t i=100; i < trany.size(); i++)
         BOOST_CHECK_EQUAL(trany[i], to_si(2.0));
 
     for (std::size_t i=0; i < 50; i++)
