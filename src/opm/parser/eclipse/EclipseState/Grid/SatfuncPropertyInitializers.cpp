@@ -1,4 +1,7 @@
 /*
+  Copyright 2019-2020 Equinor ASA
+  Copyright 2014 Andreas Lauser
+
   This file is part of the Open Porous Media project (OPM).
 
   OPM is free software: you can redistribute it and/or modify it under the terms
@@ -1593,6 +1596,29 @@ Opm::satfunc::getRawTableEndpoints(const Opm::TableManager& tm,
     ep->maximum.water = findMaxWaterSaturation(tm, phases);
 
     return ep;
+}
+
+std::shared_ptr<Opm::satfunc::RawFunctionValues>
+Opm::satfunc::getRawFunctionValues(const Opm::TableManager& tm,
+                                   const Opm::Phases&       phases,
+                                   const RawTableEndPoints& ep)
+{
+    auto fval = std::make_shared<RawFunctionValues>();
+
+    fval->kro.max = findMaxKro(tm, phases);
+    fval->kro.rg  = findKrorg(tm, phases, ep);
+    fval->kro.rw  = findKrorw(tm, phases, ep);
+
+    fval->krg.max = findMaxKrg(tm, phases);
+    fval->krg.r   = findKrgr(tm, phases, ep);
+
+    fval->krw.max = findMaxKrw(tm, phases);
+    fval->krw.r   = findKrwr(tm, phases, ep);
+
+    fval->pc.g = findMaxPcog(tm, phases);
+    fval->pc.w = findMaxPcow(tm, phases);
+
+    return fval;
 }
 
 std::vector<double>

@@ -17,11 +17,12 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdexcept>
+#include <algorithm>
 #include <iostream>
 #include <iomanip>
 #include <memory>
 #include <numeric>
+#include <stdexcept>
 #include <sstream>
 #include <string>
 
@@ -114,7 +115,7 @@ PERMX
     BOOST_CHECK_THROW(fpm.get_double("PERMX"), std::runtime_error);
     {
         const auto& keys = fpm.keys<double>();
-        BOOST_CHECK_EQUAL(keys.size(), 1);
+        BOOST_CHECK_EQUAL(keys.size(), decltype(keys.size()){1});
         BOOST_CHECK(std::find(keys.begin(), keys.end(), "PORO")  != keys.end());
         BOOST_CHECK(std::find(keys.begin(), keys.end(), "PERMX") == keys.end());
 
@@ -124,7 +125,7 @@ PERMX
     }
     {
         const auto& keys = fpm.keys<int>();
-        BOOST_CHECK_EQUAL(keys.size(), 0);
+        BOOST_CHECK_EQUAL(keys.size(), decltype(keys.size()){0});
 
         BOOST_CHECK(std::find(keys.begin(), keys.end(), "ACTNUM") == keys.end());
     }
@@ -158,24 +159,24 @@ SATNUM
     Deck deck = Parser{}.parseString(deck_string);
     FieldPropsManager fpm(deck, Phases{true, true, true}, grid, TableManager());
     const auto& s1 = fpm.get_int("SATNUM");
-    BOOST_CHECK_EQUAL(s1.size(), 6);
+    BOOST_CHECK_EQUAL(s1.size(), decltype(s1.size()){6});
     BOOST_CHECK_EQUAL(s1[0], 0);
     BOOST_CHECK_EQUAL(s1[1], 1);
     BOOST_CHECK_EQUAL(s1[2], 2);
     BOOST_CHECK_EQUAL(s1[3], 6);
     BOOST_CHECK_EQUAL(s1[4], 7);
     BOOST_CHECK_EQUAL(s1[5], 8);
-    BOOST_CHECK_EQUAL(fpm.active_size(), 6);
+    BOOST_CHECK_EQUAL(fpm.active_size(), decltype(fpm.active_size()){6});
 
     std::vector<int> actnum2 = {1,0,1,0,0,0,1,0,1};
     fpm.reset_actnum(actnum2);
 
-    BOOST_CHECK_EQUAL(s1.size(), 4);
+    BOOST_CHECK_EQUAL(s1.size(), decltype(s1.size()){4});
     BOOST_CHECK_EQUAL(s1[0], 0);
     BOOST_CHECK_EQUAL(s1[1], 2);
     BOOST_CHECK_EQUAL(s1[2], 6);
     BOOST_CHECK_EQUAL(s1[3], 8);
-    BOOST_CHECK_EQUAL(fpm.active_size(), 4);
+    BOOST_CHECK_EQUAL(fpm.active_size(), decltype(fpm.active_size()){4});
 
     BOOST_CHECK_THROW(fpm.reset_actnum(actnum1), std::logic_error);
 }
@@ -200,7 +201,7 @@ ADDREG
     Deck deck = Parser{}.parseString(deck_string);
     FieldPropsManager fpm(deck, Phases{true, true, true}, grid, TableManager());
     const auto& poro = fpm.get_double("PORO");
-    BOOST_CHECK_EQUAL(poro.size(), 4);
+    BOOST_CHECK_EQUAL(poro.size(), decltype(poro.size()){4});
     BOOST_CHECK_EQUAL(poro[0], 0.10);
     BOOST_CHECK_EQUAL(poro[3], 1.10);
 }
@@ -1217,6 +1218,166 @@ BOOST_AUTO_TEST_CASE(RawTableEndPoints_Family_II_TolCrit_Large) {
 
 // =====================================================================
 
+BOOST_AUTO_TEST_CASE(RawFunctionValues_Family_I_Tolcrit_Zero) {
+    const auto es = ::Opm::EclipseState {
+        ::Opm::Parser{}.parseString(satfunc_model_setup() + satfunc_family_I() + end())
+    };
+
+    const auto& tm      = es.getTableManager();
+    const auto& ph      = es.runspec().phases();
+    const auto  tolcrit = 0.0;
+
+    const auto rtepPtr  = satfunc::getRawTableEndpoints(tm, ph, tolcrit);
+    const auto rfuncPtr = satfunc::getRawFunctionValues(tm, ph, *rtepPtr);
+
+    // Oil values (TOLCRIT = 0.0)
+    BOOST_CHECK_CLOSE(rfuncPtr->kro.rw [0], 1.0, 1.0e-10);       // Krow(So=1-Swcr-Sgl) = Krow(So=0.928996)
+    BOOST_CHECK_CLOSE(rfuncPtr->kro.rg [0], 0.896942, 1.0e-10);  // Krog(So=1-Sgcr-Swl) = Krog(So=0.898996)
+    BOOST_CHECK_CLOSE(rfuncPtr->kro.max[0], 1.0, 1.0e-10);       // Krow(So=Somax) = Krog(So=Somax)
+
+    // Gas values
+    BOOST_CHECK_CLOSE(rfuncPtr->krg.r  [0], 0.866135, 1.0e-10); // Krg(Sg=1-Sogcr-Swl) = Krg(Sg=0.858996)
+    BOOST_CHECK_CLOSE(rfuncPtr->krg.max[0], 1.0     , 1.0e-10); // Krg(Sgmax) = Krg(Sg=0.928996)
+
+    // Water values
+    BOOST_CHECK_CLOSE(rfuncPtr->krw.r  [0], 0.911429, 1.0e-10); // Krw(Sw=1-Sowcr-Sgl) = Krw(Sw=0.791004)
+    BOOST_CHECK_CLOSE(rfuncPtr->krw.max[0], 1.0     , 1.0e-10); // Krw(Swmax) = Krw(Sw=1)
+}
+
+BOOST_AUTO_TEST_CASE(RawFunctionValues_Family_II_Tolcrit_Zero) {
+    const auto es = ::Opm::EclipseState {
+        ::Opm::Parser{}.parseString(satfunc_model_setup() + satfunc_family_II() + end())
+    };
+
+    const auto& tm      = es.getTableManager();
+    const auto& ph      = es.runspec().phases();
+    const auto  tolcrit = 0.0;
+
+    const auto rtepPtr  = satfunc::getRawTableEndpoints(tm, ph, tolcrit);
+    const auto rfuncPtr = satfunc::getRawFunctionValues(tm, ph, *rtepPtr);
+
+    // Oil values
+    BOOST_CHECK_CLOSE(rfuncPtr->kro.rw [0], 1.0, 1.0e-10);      // Krow(So=1-Swcr-Sgl) = Krow(So=0.928996)
+    BOOST_CHECK_CLOSE(rfuncPtr->kro.rg [0], 0.896942, 1.0e-10); // Krog(So=1-Sgcr-Swl) = Krog(So=0.898996)
+    BOOST_CHECK_CLOSE(rfuncPtr->kro.max[0], 1.0, 1.0e-10);      // Krow(So=Somax) = Krog(So=Somax)
+
+    // Gas values
+    BOOST_CHECK_CLOSE(rfuncPtr->krg.r  [0], 0.866135, 1.0e-10); // Krg(Sg=1-Sogcr-Swl) = Krg(Sg=0.858996)
+    BOOST_CHECK_CLOSE(rfuncPtr->krg.max[0], 1.0     , 1.0e-10); // Krg(Sgmax) = Krg(Sg=0.928996)
+
+    // Water values
+    BOOST_CHECK_CLOSE(rfuncPtr->krw.r  [0], 0.911429, 1.0e-10); // Krw(Sw=1-Sowcr-Sgl) = Krw(Sw=0.791004)
+    BOOST_CHECK_CLOSE(rfuncPtr->krw.max[0], 1.0     , 1.0e-10); // Krw(Swmax) = Krw(Sw=1)
+}
+
+BOOST_AUTO_TEST_CASE(RawFunctionValues_Family_I_Tolcrit_Default) {
+    const auto es = ::Opm::EclipseState {
+        ::Opm::Parser{}.parseString(satfunc_model_setup() + satfunc_family_I() + end())
+    };
+
+    const auto& tm      = es.getTableManager();
+    const auto& ph      = es.runspec().phases();
+    const auto  tolcrit = es.runspec().saturationFunctionControls()
+        .minimumRelpermMobilityThreshold(); // 1.0e-6.
+
+    const auto rtepPtr  = satfunc::getRawTableEndpoints(tm, ph, tolcrit);
+    const auto rfuncPtr = satfunc::getRawFunctionValues(tm, ph, *rtepPtr);
+
+    // Oil values
+    BOOST_CHECK_CLOSE(rfuncPtr->kro.rw [0], 0.882459, 1.0e-10); // Krow(So=1-Swcr-Sgl) = Krow(So=0.908996)
+    BOOST_CHECK_CLOSE(rfuncPtr->kro.rg [0], 0.896942, 1.0e-10); // Krog(So=1-Sgcr-Swl) = Krog(So=0.898996)
+    BOOST_CHECK_CLOSE(rfuncPtr->kro.max[0], 1.0, 1.0e-10);      // Krow(So=Somax) = Krog(So=Somax)
+
+    // Gas values
+    BOOST_CHECK_CLOSE(rfuncPtr->krg.r  [0], 0.866135, 1.0e-10); // Krg(Sg=1-Sogcr-Swl) = Krg(Sg=0.858996)
+    BOOST_CHECK_CLOSE(rfuncPtr->krg.max[0], 1.0     , 1.0e-10); // Krg(Sgmax) = Krg(Sg=0.928996)
+
+    // Water values
+    BOOST_CHECK_CLOSE(rfuncPtr->krw.r  [0], 0.835916, 1.0e-10); // Krw(Sw=1-Sowcr-Sgl) = Krw(Sw=0.771004)
+    BOOST_CHECK_CLOSE(rfuncPtr->krw.max[0], 1.0     , 1.0e-10); // Krw(Swmax) = Krw(Sw=1)
+}
+
+BOOST_AUTO_TEST_CASE(RawFunctionValues_Family_II_Tolcrit_Default) {
+    const auto es = ::Opm::EclipseState {
+        ::Opm::Parser{}.parseString(satfunc_model_setup() + satfunc_family_II() + end())
+    };
+
+    const auto& tm      = es.getTableManager();
+    const auto& ph      = es.runspec().phases();
+    const auto  tolcrit = es.runspec().saturationFunctionControls()
+        .minimumRelpermMobilityThreshold(); // 1.0e-6.
+
+    const auto rtepPtr  = satfunc::getRawTableEndpoints(tm, ph, tolcrit);
+    const auto rfuncPtr = satfunc::getRawFunctionValues(tm, ph, *rtepPtr);
+
+    // Oil values
+    BOOST_CHECK_CLOSE(rfuncPtr->kro.rw [0], 0.882459, 1.0e-10); // Krow(So=1-Swcr-Sgl) = Krow(So=0.908996)
+    BOOST_CHECK_CLOSE(rfuncPtr->kro.rg [0], 0.896942, 1.0e-10); // Krog(So=1-Sgcr-Swl) = Krog(So=0.898996)
+    BOOST_CHECK_CLOSE(rfuncPtr->kro.max[0], 1.0     , 1.0e-10); // Krow(So=Somax) = Krog(So=Somax)
+
+    // Gas values
+    BOOST_CHECK_CLOSE(rfuncPtr->krg.r  [0], 0.866135, 1.0e-10); // Krg(Sg=1-Sogcr-Swl) = Krg(Sg=0.858996)
+    BOOST_CHECK_CLOSE(rfuncPtr->krg.max[0], 1.0     , 1.0e-10); // Krg(Sgmax) = Krg(Sg=0.928996)
+
+    // Water values
+    BOOST_CHECK_CLOSE(rfuncPtr->krw.r  [0], 0.835916, 1.0e-10); // Krw(Sw=1-Sowcr-Sgl) = Krw(Sw=0.771004)
+    BOOST_CHECK_CLOSE(rfuncPtr->krw.max[0], 1.0     , 1.0e-10); // Krw(Swmax) = Krw(Sw=1)
+}
+
+BOOST_AUTO_TEST_CASE(RawFunctionValues_Family_I_Tolcrit_Large) {
+    const auto es = ::Opm::EclipseState {
+        ::Opm::Parser{}.parseString(satfunc_model_setup() + satfunc_family_I() + end())
+    };
+
+    const auto& tm      = es.getTableManager();
+    const auto& ph      = es.runspec().phases();
+    const auto  tolcrit = 0.01;
+
+    const auto rtepPtr  = satfunc::getRawTableEndpoints(tm, ph, tolcrit);
+    const auto rfuncPtr = satfunc::getRawFunctionValues(tm, ph, *rtepPtr);
+
+    // Oil values
+    BOOST_CHECK_CLOSE(rfuncPtr->kro.rw [0], 0.328347, 1.0e-10); // Krow(So=1-Swcr-Sgl) = Krow(So=0.768996)
+    BOOST_CHECK_CLOSE(rfuncPtr->kro.rg [0], 0.712749, 1.0e-10); // Krog(So=1-Sgcr-Swl) = Krog(So=0.838996)
+    BOOST_CHECK_CLOSE(rfuncPtr->kro.max[0], 1.0, 1.0e-10);      // Krow(So=Somax) = Krog(So=Somax)
+
+    // Gas values
+    BOOST_CHECK_CLOSE(rfuncPtr->krg.r  [0], 0.578171, 1.0e-10); // Krg(Sg=1-Sogcr-Swl) = Krg(Sg=0.690000)
+    BOOST_CHECK_CLOSE(rfuncPtr->krg.max[0], 1.0     , 1.0e-10); // Krg(Sgmax) = Krg(Sg=0.928996)
+
+    // Water values
+    BOOST_CHECK_CLOSE(rfuncPtr->krw.r  [0], 0.261115, 1.0e-10); // Krw(Sw=1-Sowcr-Sgl) = Krw(Sw=0.551004)
+    BOOST_CHECK_CLOSE(rfuncPtr->krw.max[0], 1.0     , 1.0e-10); // Krw(Swmax) = Krw(Sw=1)
+}
+
+BOOST_AUTO_TEST_CASE(RawFunctionValues_Family_II_Tolcrit_Large) {
+    const auto es = ::Opm::EclipseState {
+        ::Opm::Parser{}.parseString(satfunc_model_setup() + satfunc_family_II() + end())
+    };
+
+    const auto& tm      = es.getTableManager();
+    const auto& ph      = es.runspec().phases();
+    const auto  tolcrit = 0.01;
+
+    const auto rtepPtr  = satfunc::getRawTableEndpoints(tm, ph, tolcrit);
+    const auto rfuncPtr = satfunc::getRawFunctionValues(tm, ph, *rtepPtr);
+
+    // Oil values
+    BOOST_CHECK_CLOSE(rfuncPtr->kro.rw [0], 0.328347, 1.0e-10); // Krow(So=1-Swcr-Sgl) = Krow(So=0.768996)
+    BOOST_CHECK_CLOSE(rfuncPtr->kro.rg [0], 0.712749, 1.0e-10); // Krog(So=1-Sgcr-Swl) = Krog(So=0.838996)
+    BOOST_CHECK_CLOSE(rfuncPtr->kro.max[0], 1.0, 1.0e-10);      // Krow(So=Somax) = Krog(So=Somax)
+
+    // Gas values
+    BOOST_CHECK_CLOSE(rfuncPtr->krg.r  [0], 0.562914, 1.0e-10); // Krg(Sg=1-Sogcr-Swl) = Krg(Sg=0.680000)
+    BOOST_CHECK_CLOSE(rfuncPtr->krg.max[0], 1.0     , 1.0e-10); // Krg(Sgmax) = Krg(Sg=0.928996)
+
+    // Water values
+    BOOST_CHECK_CLOSE(rfuncPtr->krw.r  [0], 0.261115, 1.0e-10); // Krw(Sw=1-Sowcr-Sgl) = Krw(Sw=0.551004)
+    BOOST_CHECK_CLOSE(rfuncPtr->krw.max[0], 1.0     , 1.0e-10); // Krw(Swmax) = Krw(Sw=1)
+}
+
+// =====================================================================
+
 BOOST_AUTO_TEST_CASE(SatFunc_EndPts_Family_I_TolCrit_Zero) {
     const auto es = ::Opm::EclipseState {
         ::Opm::Parser{}.parseString(satfunc_model_setup() + tolCrit(0.0) + satfunc_family_I() + end())
@@ -1575,6 +1736,8 @@ BOOST_AUTO_TEST_CASE(SatFunc_EndPts_Family_II_TolCrit_Large) {
     }
 }
 
+// =====================================================================
+
 BOOST_AUTO_TEST_CASE(GET_FIPXYZ) {
     std::string deck_string = R"(
 GRID
@@ -1626,8 +1789,6 @@ MULTZ
     for (std::size_t index = 0; index < multz_global.size(); index++)
         BOOST_CHECK_EQUAL(index * 1.0, multz_global[index]);
 }
-
-
 
 BOOST_AUTO_TEST_CASE(GLOBAL_FIELD2)
 {
@@ -1701,6 +1862,7 @@ EQUALS
     }
 }
 
+namespace {
 FieldPropsManager make_fp(const std::string& deck_string) {
     std::vector<int> actnum(27, 1);
     for (std::size_t i=9; i< 18; i++)
@@ -1709,7 +1871,7 @@ FieldPropsManager make_fp(const std::string& deck_string) {
     Deck deck = Parser{}.parseString(deck_string);
     return FieldPropsManager(deck, Phases{true, true, true}, grid, TableManager());
 }
-
+}
 
 BOOST_AUTO_TEST_CASE(GLOBAL_UNSUPPORTED) {
     // Operations involving two keywords can not update a global keyword.
