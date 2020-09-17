@@ -168,7 +168,7 @@ void apply_tran(const std::unordered_map<std::string, TranCalculator>& tran,
                 break;
 
             case ScalarOperation::MAX:
-                data[index] = std::max(action_data.data[index], data[index]);
+                data[index] = std::min(action_data.data[index], data[index]);
                 break;
 
             default:

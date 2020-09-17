@@ -86,10 +86,10 @@ public:
             kw_info.init(0);
             break;
         case ScalarOperation::MAX:
-            kw_info.init(std::numeric_limits<double>::min());
+            kw_info.init(std::numeric_limits<double>::max());
             break;
         case ScalarOperation::MIN:
-            kw_info.init(std::numeric_limits<double>::max());
+            kw_info.init(std::numeric_limits<double>::lowest());
             break;
         default:
             break;
