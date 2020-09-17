@@ -33,6 +33,7 @@
 #include <opm/parser/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/Keywords.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/TranCalculator.hpp>
 
 namespace Opm {
 
@@ -240,82 +241,6 @@ template <typename T>
 keyword_info<T> global_kw_info(const std::string& name);
 
 }
-
-enum class ScalarOperation {
-    ADD = 1,
-    EQUAL = 2,
-    MUL = 3,
-    MIN = 4,
-    MAX = 5
-};
-
-
-class TranCalculator {
-public:
-
-    struct TranAction {
-        ScalarOperation op;
-        std::string field;
-    };
-
-
-    TranCalculator(const std::string& name_arg) :
-        m_name(name_arg)
-    {}
-
-    std::string next_name() const {
-        return this->m_name + std::to_string( this->actions.size() );
-    }
-
-    std::vector<TranAction>::const_iterator begin() const {
-        return this->actions.begin();
-    }
-
-    std::vector<TranAction>::const_iterator end() const {
-        return this->actions.end();
-    }
-
-    void add_action(ScalarOperation op, const std::string& field) {
-        this->actions.push_back(TranAction{op, field});
-    }
-
-    std::size_t size() const {
-        return this->actions.size();
-    }
-
-    const std::string& name() const {
-        return this->m_name;
-    }
-
-
-    keywords::keyword_info<double> make_kw_info(ScalarOperation op) {
-        keywords::keyword_info<double> kw_info;
-        switch (op) {
-        case ScalarOperation::MUL:
-            kw_info.init(1);
-            break;
-        case ScalarOperation::ADD:
-            kw_info.init(0);
-            break;
-        case ScalarOperation::MAX:
-            kw_info.init(std::numeric_limits<double>::min());
-            break;
-        case ScalarOperation::MIN:
-            kw_info.init(std::numeric_limits<double>::max());
-            break;
-        default:
-            break;
-        }
-        return kw_info;
-    }
-
-private:
-    std::string m_name;
-    std::vector<TranAction> actions;
-};
-
-
-
 
 class FieldProps {
 public:
