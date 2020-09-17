@@ -1843,7 +1843,7 @@ MAXVALUE
         BOOST_CHECK_EQUAL(trany[i], to_si(2.0));
 
     for (std::size_t i=0; i < 50; i++)
-        BOOST_CHECK(tranz[i]>=to_si(0));
+        BOOST_CHECK(tranz[i]<=to_si(0));
 
     for (std::size_t i=50; i < tranz.size(); i++)
         BOOST_CHECK_EQUAL(tranz[i], to_si(1.0));
