@@ -532,8 +532,7 @@ void set_dimensions( ParserItem& item,
                                      ErrorGuard& errors,
                                      RawKeyword& rawKeyword,
                                      UnitSystem& active_unitsystem,
-                                     UnitSystem& default_unitsystem,
-                                     const std::string& filename) const {
+                                     UnitSystem& default_unitsystem) const {
 
         if( !rawKeyword.isFinished() )
             throw std::invalid_argument("Tried to create a deck keyword from an incomplete raw keyword " + rawKeyword.getKeywordName());
@@ -555,8 +554,8 @@ void set_dimensions( ParserItem& item,
                      record_nr = 0;
                 }
                 else {
-                     keyword.addRecord( this->getRecord( record_nr ).parse( parseContext, errors, rawRecord, active_unitsystem, default_unitsystem, rawKeyword.getKeywordName(), filename ) );
-                     record_nr++;
+                    keyword.addRecord( this->getRecord( record_nr ).parse( parseContext, errors, rawRecord, active_unitsystem, default_unitsystem, rawKeyword.location() ) );
+                    record_nr++;
                 }
             }
         }
@@ -566,7 +565,7 @@ void set_dimensions( ParserItem& item,
                 if( m_records.size() == 0 && rawRecord.size() > 0 )
                     throw std::invalid_argument("Missing item information " + rawKeyword.getKeywordName());
 
-                keyword.addRecord( this->getRecord( record_nr ).parse( parseContext, errors, rawRecord, active_unitsystem, default_unitsystem, rawKeyword.getKeywordName(), filename ) );
+                keyword.addRecord( this->getRecord( record_nr ).parse( parseContext, errors, rawRecord, active_unitsystem, default_unitsystem, rawKeyword.location() ) );
                 record_nr++;
             }
         }

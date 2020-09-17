@@ -123,7 +123,7 @@ namespace Opm {
         SectionNameSet::const_iterator validSectionNamesBegin() const;
         SectionNameSet::const_iterator validSectionNamesEnd() const;
 
-        DeckKeyword parse(const ParseContext& parseContext, ErrorGuard& errors, RawKeyword& rawKeyword, UnitSystem& active_unitsystem, UnitSystem& default_unitsystem, const std::string& filename) const;
+        DeckKeyword parse(const ParseContext& parseContext, ErrorGuard& errors, RawKeyword& rawKeyword, UnitSystem& active_unitsystem, UnitSystem& default_unitsystem) const;
         enum ParserKeywordSizeEnum getSizeType() const;
         const KeywordSize& getKeywordSize() const;
         bool isDataKeyword() const;

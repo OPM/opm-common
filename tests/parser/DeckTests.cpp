@@ -485,10 +485,11 @@ BOOST_AUTO_TEST_CASE(StringsWithSpaceOK) {
     ParseContext parseContext;
     ErrorGuard errors;
     UnitSystem active_unitsystem(UnitSystem::UnitType::UNIT_TYPE_LAB);
+    KeywordLocation loc;
     record1.addItem( itemString );
 
 
-    const auto deckRecord = record1.parse( parseContext, errors , rawRecord, active_unitsystem, active_unitsystem, "KEYWORD", "filename" );
+    const auto deckRecord = record1.parse( parseContext, errors , rawRecord, active_unitsystem, active_unitsystem, loc);
     BOOST_CHECK_EQUAL(" VALUE " , deckRecord.getItem(0).get< std::string >(0));
 }
 
