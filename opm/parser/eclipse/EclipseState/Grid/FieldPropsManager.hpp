@@ -180,6 +180,10 @@ public:
     template <typename T>
     std::vector<std::string> keys() const;
 
+    const FieldData<int>&
+    get_int_field_data(const std::string& keyword) const;
+    const FieldData<double>&
+    get_double_field_data(const std::string& keyword) const;
     virtual const std::vector<int>& get_int(const std::string& keyword) const { return this->get<int>(keyword); }
     virtual std::vector<int> get_global_int(const std::string& keyword) const { return this->get_global<int>(keyword); }
 

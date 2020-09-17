@@ -54,6 +54,23 @@ const std::vector<T>* FieldPropsManager::try_get(const std::string& keyword) con
     return nullptr;
 }
 
+const FieldData<int>&
+FieldPropsManager::get_int_field_data(const std::string& keyword) const
+{
+    const auto& data = this->fp->try_get<int>(keyword);
+    if (!data.valid())
+        throw std::out_of_range("Invalid field data requested.");
+    return data.field_data();
+}
+
+const FieldData<double>&
+FieldPropsManager::get_double_field_data(const std::string& keyword) const
+{
+    const auto& data = this->fp->try_get<double>(keyword);
+    if (!data.valid())
+        throw std::out_of_range("Invalid field data requested.");
+    return data.field_data();
+}
 
 template <typename T>
 std::vector<T> FieldPropsManager::get_global(const std::string& keyword) const {
