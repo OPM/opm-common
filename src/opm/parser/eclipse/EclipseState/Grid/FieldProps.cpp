@@ -32,6 +32,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/RtempvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/Box.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/common/utility/Serializer.hpp>
@@ -1128,36 +1129,10 @@ const std::string& FieldProps::default_region() const {
     return this->m_default_region;
 }
 
-
 void FieldProps::apply_tran(const std::string& keyword, std::vector<double>& data) {
-    const auto& calculator = this->tran.at(keyword);
-    for (const auto& action : calculator) {
-        const auto& action_data = this->double_data.at(action.field);
-
-        for (std::size_t index = 0; index < this->active_size; index++) {
-
-            if (action_data.value_status[index] != value::status::deck_value)
-                continue;
-
-            switch (action.op) {
-            case ScalarOperation::EQUAL:
-                data[index] = action_data.data[index];
-                break;
-
-            case ScalarOperation::MUL:
-                data[index] *= action_data.data[index];
-                break;
-
-            case ScalarOperation::MAX:
-                data[index] = std::max(action_data.data[index], data[index]);
-                break;
-
-            default:
-                throw std::logic_error("Unhandled value in switch");
-            }
-        }
-    }
+    Opm::apply_tran(this->tran, this->double_data, this->active_size, keyword, data);
 }
+
 
 std::vector<char> FieldProps::serialize_tran() const {
     Serializer ser;
@@ -1175,22 +1150,7 @@ std::vector<char> FieldProps::serialize_tran() const {
 }
 
 void FieldProps::deserialize_tran(const std::vector<char>& buffer) {
-    this->tran.clear();
-
-    Serializer ser(buffer);
-    std::size_t size = ser.get<std::size_t>();
-    for (std::size_t calc_index = 0; calc_index < size; calc_index++) {
-        std::string calc_name = ser.get<std::string>();
-        TranCalculator calc(calc_name);
-        std::size_t calc_size = ser.get<std::size_t>();
-        for (std::size_t action_index = 0; action_index < calc_size; action_index++) {
-            auto op = static_cast<ScalarOperation>(ser.get<int>());
-            auto field = ser.get<std::string>();
-
-            calc.add_action(op, field);
-        }
-        this->tran.emplace(calc_name, std::move(calc));
-    }
+    Opm::deserialize_tran(this->tran, buffer);
 }
 
 bool FieldProps::tran_active(const std::string& keyword) const {

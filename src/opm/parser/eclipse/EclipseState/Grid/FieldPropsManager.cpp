@@ -21,6 +21,7 @@
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
+#include <opm/common/utility/Serializer.hpp>
 
 #include "FieldProps.hpp"
 
@@ -142,6 +143,70 @@ bool FieldPropsManager::tran_active(const std::string& keyword) const {
     return this->fp->tran_active(keyword);
 }
 
+template<class MapType>
+void apply_tran(const std::unordered_map<std::string, TranCalculator>& tran,
+                const MapType& double_data,
+                std::size_t active_size,
+                const std::string& keyword, std::vector<double>& data)
+{
+    const auto& calculator = tran.at(keyword);
+    for (const auto& action : calculator) {
+        const auto& action_data = double_data.at(action.field);
+
+        for (std::size_t index = 0; index < active_size; index++) {
+
+            if (action_data.value_status[index] != value::status::deck_value)
+                continue;
+
+            switch (action.op) {
+            case ScalarOperation::EQUAL:
+                data[index] = action_data.data[index];
+                break;
+
+            case ScalarOperation::MUL:
+                data[index] *= action_data.data[index];
+                break;
+
+            case ScalarOperation::MAX:
+                data[index] = std::max(action_data.data[index], data[index]);
+                break;
+
+            default:
+                throw std::logic_error("Unhandled value in switch");
+            }
+        }
+    }
+}
+
+void deserialize_tran(std::unordered_map<std::string, TranCalculator>& tran, const std::vector<char>& buffer) {
+    tran.clear();
+
+    Serializer ser(buffer);
+    std::size_t size = ser.get<std::size_t>();
+    for (std::size_t calc_index = 0; calc_index < size; calc_index++) {
+        std::string calc_name = ser.get<std::string>();
+        TranCalculator calc(calc_name);
+        std::size_t calc_size = ser.get<std::size_t>();
+        for (std::size_t action_index = 0; action_index < calc_size; action_index++) {
+            auto op = static_cast<ScalarOperation>(ser.get<int>());
+            auto field = ser.get<std::string>();
+
+            calc.add_action(op, field);
+        }
+        tran.emplace(calc_name, std::move(calc));
+    }
+}
+
+
+template
+void apply_tran(const std::unordered_map<std::string, TranCalculator>&,
+                const std::unordered_map<std::string, FieldData<double>>&,
+                std::size_t, const std::string&, std::vector<double>&);
+
+template
+void apply_tran(const std::unordered_map<std::string, TranCalculator>&,
+                const std::map<std::string, FieldData<double>>&,
+                std::size_t, const std::string&, std::vector<double>&);
 
 template bool FieldPropsManager::supported<int>(const std::string&);
 template bool FieldPropsManager::supported<double>(const std::string&);

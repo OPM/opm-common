@@ -21,6 +21,7 @@
 
 #include <memory>
 #include <vector>
+#include <unordered_map>
 #include <opm/parser/eclipse/EclipseState/Grid/TranCalculator.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FieldData.hpp>
 
@@ -285,6 +286,16 @@ private:
 
     std::shared_ptr<FieldProps> fp;
 };
+
+
+void deserialize_tran(std::unordered_map<std::string, TranCalculator>& tran,
+                      const std::vector<char>& buffer);
+
+template<class MapType>
+void apply_tran(const std::unordered_map<std::string, TranCalculator>& tran,
+                const MapType& double_data,
+                std::size_t active_size,
+                const std::string& keyword, std::vector<double>& data);
 
 }
 
