@@ -21,10 +21,11 @@
 #ifndef DYNAMICSTATE_HPP_
 #define DYNAMICSTATE_HPP_
 
-#include <stdexcept>
-#include <vector>
 #include <algorithm>
+#include <optional>
+#include <stdexcept>
 #include <utility>
+#include <vector>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 
@@ -155,50 +156,49 @@ class DynamicState {
       Schedule object, if e.g. a well is initially closed in the interval
       [T1,T2] and then opened at time T1 < Tx < T2 then the open should be
       applied for all times in the range [Tx,T2].
+
+      The return value is the index of the first element different from value,
+      or an empty optional if there is no such element.
     */
-    void update_equal(size_t index, const T& value) {
+    std::optional<std::size_t> update_equal(size_t index, const T& value) {
         if (this->m_data.size() <= index)
             throw std::out_of_range("Invalid index for update_equal()");
 
         const T prev_value = this->m_data[index];
-        if (prev_value == value)
-            return;
-
+        //if (prev_value == value)
+        //    return {};
         while (true) {
             if (this->m_data[index] != prev_value)
-                break;
+                return index;
 
             this->m_data[index] = value;
 
             index++;
             if (index == this->m_data.size())
-                break;
-
+                return {};
         }
     }
 
-    /// Will return the index of the first occurence of @value, or
-    /// -1 if @value is not found.
-    int find(const T& value) const {
+    /// Will return the index of the first occurence of @value
+    std::optional<std::size_t> find(const T& value) const {
         auto iter = std::find( m_data.begin() , m_data.end() , value);
-        if( iter == this->m_data.end() ) return -1;
+        if( iter == this->m_data.end() ) return {};
 
         return std::distance( m_data.begin() , iter );
     }
 
     template<typename P>
-    int find_if(P&& pred) const {
+    std::optional<std::size_t> find_if(P&& pred) const {
         auto iter = std::find_if(m_data.begin(), m_data.end(), std::forward<P>(pred));
-        if( iter == this->m_data.end() ) return -1;
+        if( iter == this->m_data.end() ) return {};
 
         return std::distance( m_data.begin() , iter );
     }
 
-    /// Will return the index of the first value which is != @value, or -1
-    /// if all values are == @value
-    int find_not(const T& value) const {
+    /// Will return the index of the first value which is != @value
+    std::optional<std::size_t> find_not(const T& value) const {
         auto iter = std::find_if_not( m_data.begin() , m_data.end() , [&value] (const T& elm) { return value == elm; });
-        if( iter == this->m_data.end() ) return -1;
+        if( iter == this->m_data.end() ) return {};
 
         return std::distance( m_data.begin() , iter );
     }
