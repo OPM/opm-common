@@ -1154,8 +1154,8 @@ void FieldProps::deserialize_tran(const std::vector<char>& buffer) {
 }
 
 bool FieldProps::tran_active(const std::string& keyword) const {
-    const auto& calculator = this->tran.at(keyword);
-    return calculator.size() > 0;
+    auto calculator = this->tran.find(keyword);
+    return calculator != this->tran.end() && calculator->second.size() > 0;
 }
 
 

@@ -1825,7 +1825,7 @@ MAXVALUE
     BOOST_CHECK(!fpm.has_double("TRANX"));
 
     BOOST_CHECK_THROW(fpm.apply_tran("TRANA", tranx), std::out_of_range);
-    BOOST_CHECK_THROW(fpm.tran_active("TRANA"), std::out_of_range);
+    BOOST_CHECK(!fpm.tran_active("TRANA"));
 
     fpm.apply_tran("TRANX", tranx);
     fpm.apply_tran("TRANY", trany);
