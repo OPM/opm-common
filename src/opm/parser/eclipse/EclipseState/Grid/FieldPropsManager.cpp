@@ -65,9 +65,10 @@ FieldPropsManager::get_int_field_data(const std::string& keyword) const
 }
 
 const FieldData<double>&
-FieldPropsManager::get_double_field_data(const std::string& keyword) const
+FieldPropsManager::get_double_field_data(const std::string& keyword,
+                                         bool allow_unsupported) const
 {
-    const auto& data = this->fp->try_get<double>(keyword);
+    const auto& data = this->fp->try_get<double>(keyword, allow_unsupported);
     if (!data.valid())
         throw std::out_of_range("Invalid field data requested.");
     return data.field_data();

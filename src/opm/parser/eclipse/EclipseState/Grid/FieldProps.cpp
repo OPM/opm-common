@@ -50,7 +50,8 @@ static const std::set<std::string> region_oper_keywords = {"ADDREG", "EQUALREG",
 static const std::set<std::string> box_keywords = {"BOX", "ENDBOX"};
 
 template <>
-keyword_info<double> global_kw_info(const std::string& name) {
+keyword_info<double> global_kw_info(const std::string& name,
+                                    bool allow_unsupported) {
     if (GRID::double_keywords.count(name))
         return GRID::double_keywords.at(name);
 
@@ -69,12 +70,15 @@ keyword_info<double> global_kw_info(const std::string& name) {
     if (SCHEDULE::double_keywords.count(name))
         return SCHEDULE::double_keywords.at(name);
 
+    if (allow_unsupported)
+        return keyword_info<double>{};
+
     throw std::out_of_range("INFO: No such keyword: " + name);
 }
 
 
 template <>
-keyword_info<int> global_kw_info(const std::string& name) {
+keyword_info<int> global_kw_info(const std::string& name, bool) {
     if (GRID::int_keywords.count(name))
         return GRID::int_keywords.at(name);
 
@@ -496,8 +500,9 @@ FieldData<double>& FieldProps::init_get(const std::string& keyword, const keywor
 }
 
 template <>
-FieldData<double>& FieldProps::init_get(const std::string& keyword) {
-    keywords::keyword_info<double> kw_info = keywords::global_kw_info<double>(keyword);
+FieldData<double>& FieldProps::init_get(const std::string& keyword,
+                                        bool allow_unsupported) {
+    keywords::keyword_info<double> kw_info = keywords::global_kw_info<double>(keyword, allow_unsupported);
     return this->init_get(keyword, kw_info);
 }
 
@@ -513,7 +518,7 @@ FieldData<int>& FieldProps::init_get(const std::string& keyword, const keywords:
 }
 
 template <>
-FieldData<int>& FieldProps::init_get(const std::string& keyword) {
+FieldData<int>& FieldProps::init_get(const std::string& keyword, bool) {
     if (keywords::isFipxxx(keyword)) {
         auto kw_info = keywords::keyword_info<int>{};
         kw_info.init(1);

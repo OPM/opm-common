@@ -183,8 +183,12 @@ public:
 
     const FieldData<int>&
     get_int_field_data(const std::string& keyword) const;
+
+    /// \brief Get double field data associated with a keyword
+    /// \param allow_unsupported If true we deactivate some checks on the
+    ///        keyword and thus allow getting FieldData used by the TranCalculator.
     const FieldData<double>&
-    get_double_field_data(const std::string& keyword) const;
+    get_double_field_data(const std::string& keyword, bool allow_unsupported=false) const;
     virtual const std::vector<int>& get_int(const std::string& keyword) const { return this->get<int>(keyword); }
     virtual std::vector<int> get_global_int(const std::string& keyword) const { return this->get_global<int>(keyword); }
 

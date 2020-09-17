@@ -239,7 +239,7 @@ static const std::unordered_map<std::string, keyword_info<int>> int_keywords = {
 }
 
 template <typename T>
-keyword_info<T> global_kw_info(const std::string& name);
+keyword_info<T> global_kw_info(const std::string& name, bool allow_unsupported = false);
 
 }
 
@@ -343,14 +343,16 @@ public:
 
 
     template <typename T>
-    FieldDataManager<T> try_get(const std::string& keyword) {
-        if (!FieldProps::supported<T>(keyword))
+    FieldDataManager<T> try_get(const std::string& keyword,
+                                bool allow_unsupported=false) {
+        if (!allow_unsupported && !FieldProps::supported<T>(keyword))
             return FieldDataManager<T>(keyword, GetStatus::NOT_SUPPPORTED_KEYWORD, nullptr);
 
         const FieldData<T> * field_data;
         bool has0 = this->has<T>(keyword);
 
-        field_data = std::addressof(this->init_get<T>(keyword));
+        field_data = std::addressof(this->init_get<T>(keyword,
+                                                      std::is_same<T,double>::value && allow_unsupported));
         if (field_data->valid())
             return FieldDataManager<T>(keyword, GetStatus::OK, field_data);
 
@@ -463,7 +465,7 @@ private:
     static void apply(ScalarOperation op, std::vector<T>& data, std::vector<value::status>& value_status, T scalar_value, const std::vector<Box::cell_index>& index_list);
 
     template <typename T>
-    FieldData<T>& init_get(const std::string& keyword);
+    FieldData<T>& init_get(const std::string& keyword, bool allow_unsupported = false);
 
     template <typename T>
     FieldData<T>& init_get(const std::string& keyword, const keywords::keyword_info<T>& kw_info);
