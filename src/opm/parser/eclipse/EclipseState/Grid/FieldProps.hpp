@@ -32,6 +32,7 @@
 #include <opm/parser/eclipse/EclipseState/Grid/Box.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/Keywords.hpp>
 
 namespace Opm {
 
@@ -80,42 +81,6 @@ namespace keywords {
   The operations which are not properly implemented will be intercepted and a
   std::logic_error() exception will be thrown.
 */
-
-
-
-template <typename T>
-struct keyword_info {
-    std::optional<std::string> unit = std::nullopt;
-    std::optional<T> scalar_init = std::nullopt;
-    bool multiplier = false;
-    bool top = false;
-    bool global = false;
-
-    keyword_info<T>& init(T init_value) {
-        this->scalar_init = init_value;
-        return *this;
-    }
-
-    keyword_info<T>& unit_string(const std::string& unit_string) {
-        this->unit = unit_string;
-        return *this;
-    }
-
-    keyword_info<T>& distribute_top(bool dtop) {
-        this->top = dtop;
-        return *this;
-    }
-
-    keyword_info<T>& mult(bool m) {
-        this->multiplier = m;
-        return *this;
-    }
-
-    keyword_info<T>& global_kw(bool g) {
-        this->global = g;
-        return *this;
-    }
-};
 
 
 
