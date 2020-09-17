@@ -152,7 +152,7 @@ void verify_deck_data(const DeckKeyword& keyword, const std::vector<T>& deck_dat
 
 
 template <typename T>
-void assign_deck(const keywords::keyword_info<T>& kw_info, const DeckKeyword& keyword, FieldProps::FieldData<T>& field_data, const std::vector<T>& deck_data, const std::vector<value::status>& deck_status, const Box& box) {
+void assign_deck(const keywords::keyword_info<T>& kw_info, const DeckKeyword& keyword, FieldData<T>& field_data, const std::vector<T>& deck_data, const std::vector<value::status>& deck_status, const Box& box) {
     verify_deck_data(keyword, deck_data, box);
     for (const auto& cell_index : box.index_list()) {
         auto active_index = cell_index.active_index;
@@ -182,7 +182,7 @@ void assign_deck(const keywords::keyword_info<T>& kw_info, const DeckKeyword& ke
 
 
 template <typename T>
-void multiply_deck(const keywords::keyword_info<T>& kw_info, const DeckKeyword& keyword, FieldProps::FieldData<T>& field_data, const std::vector<T>& deck_data, const std::vector<value::status>& deck_status, const Box& box) {
+void multiply_deck(const keywords::keyword_info<T>& kw_info, const DeckKeyword& keyword, FieldData<T>& field_data, const std::vector<T>& deck_data, const std::vector<value::status>& deck_status, const Box& box) {
     verify_deck_data(keyword, deck_data, box);
     for (const auto& cell_index : box.index_list()) {
         auto active_index = cell_index.active_index;
@@ -400,17 +400,17 @@ void FieldProps::reset_actnum(const std::vector<int>& new_actnum) {
     for (auto& data : this->int_data)
         data.second.compress(active_map);
 
-    FieldProps::compress(this->cell_volume, active_map);
-    FieldProps::compress(this->cell_depth, active_map);
+    fieldprops_compress(this->cell_volume, active_map);
+    fieldprops_compress(this->cell_depth, active_map);
 
     this->m_actnum = std::move(new_actnum);
     this->active_size = new_active_size;
 }
 
 
-void FieldProps::distribute_toplayer(FieldProps::FieldData<double>& field_data, const std::vector<double>& deck_data, const Box& box) {
+void FieldProps::distribute_toplayer(FieldData<double>& field_data, const std::vector<double>& deck_data, const Box& box) {
     const std::size_t layer_size = this->nx * this->ny;
-    FieldProps::FieldData<double> toplayer(field_data.kw_info, layer_size, 0);
+    FieldData<double> toplayer(field_data.kw_info, layer_size, 0);
     for (const auto& cell_index : box.index_list()) {
         if (cell_index.global_index < layer_size) {
             toplayer.data[cell_index.global_index] = deck_data[cell_index.data_index];
@@ -475,7 +475,7 @@ bool FieldProps::supported<int>(const std::string& keyword) {
 
 
 template <>
-FieldProps::FieldData<double>& FieldProps::init_get(const std::string& keyword, const keywords::keyword_info<double>& kw_info) {
+FieldData<double>& FieldProps::init_get(const std::string& keyword, const keywords::keyword_info<double>& kw_info) {
     auto iter = this->double_data.find(keyword);
     if (iter != this->double_data.end())
         return iter->second;
@@ -495,14 +495,14 @@ FieldProps::FieldData<double>& FieldProps::init_get(const std::string& keyword, 
 }
 
 template <>
-FieldProps::FieldData<double>& FieldProps::init_get(const std::string& keyword) {
+FieldData<double>& FieldProps::init_get(const std::string& keyword) {
     keywords::keyword_info<double> kw_info = keywords::global_kw_info<double>(keyword);
     return this->init_get(keyword, kw_info);
 }
 
 
 template <>
-FieldProps::FieldData<int>& FieldProps::init_get(const std::string& keyword, const keywords::keyword_info<int>& kw_info) {
+FieldData<int>& FieldProps::init_get(const std::string& keyword, const keywords::keyword_info<int>& kw_info) {
     auto iter = this->int_data.find(keyword);
     if (iter != this->int_data.end())
         return iter->second;
@@ -512,7 +512,7 @@ FieldProps::FieldData<int>& FieldProps::init_get(const std::string& keyword, con
 }
 
 template <>
-FieldProps::FieldData<int>& FieldProps::init_get(const std::string& keyword) {
+FieldData<int>& FieldProps::init_get(const std::string& keyword) {
     if (keywords::isFipxxx(keyword)) {
         auto kw_info = keywords::keyword_info<int>{};
         kw_info.init(1);
