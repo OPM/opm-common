@@ -174,7 +174,7 @@ PvtoTable::PvtoTable( const DeckKeyword& keyword, size_t tableIdx) :
 
         m_saturatedSchema.addColumn( ColumnSchema( "RS" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));
         m_saturatedSchema.addColumn( ColumnSchema( "P"  , Table::RANDOM , Table::DEFAULT_NONE ));
-        m_saturatedSchema.addColumn( ColumnSchema( "BO" , Table::STRICTLY_INCREASING, Table::DEFAULT_LINEAR ));
+        m_saturatedSchema.addColumn( ColumnSchema( "BO" , Table::RANDOM , Table::DEFAULT_LINEAR ));
         m_saturatedSchema.addColumn( ColumnSchema( "MU" , Table::RANDOM , Table::DEFAULT_LINEAR ));
 
         PvtxTable::init(keyword , tableIdx);
