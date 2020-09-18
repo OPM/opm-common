@@ -18,9 +18,9 @@
 */
 #include <getopt.h>
 
-#include <iostream>
-#include <iomanip>
 #include <vector>
+
+#include <fmt/format.h>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
@@ -85,12 +85,11 @@ std::size_t deck_hash(const std::vector<keyword>& keywords) {
 void print_keywords(const std::vector<keyword>& keywords, bool location_info) {
     for (const auto& kw : keywords) {
         if (location_info)
-            std::cout << std::setw(8) << std::left << kw.name << " : " << kw.filename << ":" << kw.line_number << " " << kw.content_hash << std::endl;
+            fmt::print("{:8s} : {}:{} {} \n", kw.name, kw.filename, kw.line_number, kw.content_hash);
         else
-            std::cout << std::setw(8) << std::left << kw.name << " : " << kw.content_hash << std::endl;
+            fmt::print("{:8s} : {} \n", kw.name, kw.content_hash);
     }
-    std::cout << std::endl;
-    std::cout << std::setw(8) << std::left << "Total" << " : " << deck_hash(keywords) << std::endl;
+    fmt::print("\n{:8s} : {}\n", "Total", deck_hash(keywords));
 }
 
 
