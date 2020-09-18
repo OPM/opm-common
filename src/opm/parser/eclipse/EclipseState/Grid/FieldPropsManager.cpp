@@ -55,7 +55,7 @@ const std::vector<T>* FieldPropsManager::try_get(const std::string& keyword) con
     return nullptr;
 }
 
-const FieldData<int>&
+const Fieldprops::FieldData<int>&
 FieldPropsManager::get_int_field_data(const std::string& keyword) const
 {
     const auto& data = this->fp->try_get<int>(keyword);
@@ -64,7 +64,7 @@ FieldPropsManager::get_int_field_data(const std::string& keyword) const
     return data.field_data();
 }
 
-const FieldData<double>&
+const Fieldprops::FieldData<double>&
 FieldPropsManager::get_double_field_data(const std::string& keyword,
                                          bool allow_unsupported) const
 {
@@ -145,7 +145,7 @@ bool FieldPropsManager::tran_active(const std::string& keyword) const {
 }
 
 template<class MapType>
-void apply_tran(const std::unordered_map<std::string, TranCalculator>& tran,
+void apply_tran(const std::unordered_map<std::string, Fieldprops::TranCalculator>& tran,
                 const MapType& double_data,
                 std::size_t active_size,
                 const std::string& keyword, std::vector<double>& data)
@@ -160,23 +160,23 @@ void apply_tran(const std::unordered_map<std::string, TranCalculator>& tran,
                 continue;
 
             switch (action.op) {
-            case ScalarOperation::EQUAL:
+            case Fieldprops::ScalarOperation::EQUAL:
                 data[index] = action_data.data[index];
                 break;
 
-            case ScalarOperation::MUL:
+            case Fieldprops::ScalarOperation::MUL:
                 data[index] *= action_data.data[index];
                 break;
 
-            case ScalarOperation::ADD:
+            case Fieldprops::ScalarOperation::ADD:
                 data[index] += action_data.data[index];
                 break;
 
-            case ScalarOperation::MAX:
+            case Fieldprops::ScalarOperation::MAX:
                 data[index] = std::min(action_data.data[index], data[index]);
                 break;
 
-            case ScalarOperation::MIN:
+            case Fieldprops::ScalarOperation::MIN:
                 data[index] = std::max(action_data.data[index], data[index]);
                 break;
 
@@ -187,17 +187,17 @@ void apply_tran(const std::unordered_map<std::string, TranCalculator>& tran,
     }
 }
 
-void deserialize_tran(std::unordered_map<std::string, TranCalculator>& tran, const std::vector<char>& buffer) {
+void deserialize_tran(std::unordered_map<std::string, Fieldprops::TranCalculator>& tran, const std::vector<char>& buffer) {
     tran.clear();
 
     Serializer ser(buffer);
     std::size_t size = ser.get<std::size_t>();
     for (std::size_t calc_index = 0; calc_index < size; calc_index++) {
         std::string calc_name = ser.get<std::string>();
-        TranCalculator calc(calc_name);
+        Fieldprops::TranCalculator calc(calc_name);
         std::size_t calc_size = ser.get<std::size_t>();
         for (std::size_t action_index = 0; action_index < calc_size; action_index++) {
-            auto op = static_cast<ScalarOperation>(ser.get<int>());
+            auto op = static_cast<Fieldprops::ScalarOperation>(ser.get<int>());
             auto field = ser.get<std::string>();
 
             calc.add_action(op, field);
@@ -208,13 +208,13 @@ void deserialize_tran(std::unordered_map<std::string, TranCalculator>& tran, con
 
 
 template
-void apply_tran(const std::unordered_map<std::string, TranCalculator>&,
-                const std::unordered_map<std::string, FieldData<double>>&,
+void apply_tran(const std::unordered_map<std::string, Fieldprops::TranCalculator>&,
+                const std::unordered_map<std::string, Fieldprops::FieldData<double>>&,
                 std::size_t, const std::string&, std::vector<double>&);
 
 template
-void apply_tran(const std::unordered_map<std::string, TranCalculator>&,
-                const std::map<std::string, FieldData<double>>&,
+void apply_tran(const std::unordered_map<std::string, Fieldprops::TranCalculator>&,
+                const std::map<std::string, Fieldprops::FieldData<double>>&,
                 std::size_t, const std::string&, std::vector<double>&);
 
 template bool FieldPropsManager::supported<int>(const std::string&);

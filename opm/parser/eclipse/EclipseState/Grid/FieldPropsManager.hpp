@@ -181,13 +181,13 @@ public:
     template <typename T>
     std::vector<std::string> keys() const;
 
-    const FieldData<int>&
+    const Fieldprops::FieldData<int>&
     get_int_field_data(const std::string& keyword) const;
 
     /// \brief Get double field data associated with a keyword
     /// \param allow_unsupported If true we deactivate some checks on the
     ///        keyword and thus allow getting FieldData used by the TranCalculator.
-    const FieldData<double>&
+    const Fieldprops::FieldData<double>&
     get_double_field_data(const std::string& keyword, bool allow_unsupported=false) const;
     virtual const std::vector<int>& get_int(const std::string& keyword) const { return this->get<int>(keyword); }
     virtual std::vector<int> get_global_int(const std::string& keyword) const { return this->get_global<int>(keyword); }
@@ -292,11 +292,11 @@ private:
 };
 
 
-void deserialize_tran(std::unordered_map<std::string, TranCalculator>& tran,
+void deserialize_tran(std::unordered_map<std::string, Fieldprops::TranCalculator>& tran,
                       const std::vector<char>& buffer);
 
 template<class MapType>
-void apply_tran(const std::unordered_map<std::string, TranCalculator>& tran,
+void apply_tran(const std::unordered_map<std::string, Fieldprops::TranCalculator>& tran,
                 const MapType& double_data,
                 std::size_t active_size,
                 const std::string& keyword, std::vector<double>& data);

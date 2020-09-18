@@ -42,6 +42,9 @@ class Deck;
 class EclipseGrid;
 class TableManager;
 
+namespace Fieldprops
+{
+
 namespace keywords {
 
 /*
@@ -241,12 +244,14 @@ static const std::unordered_map<std::string, keyword_info<int>> int_keywords = {
 template <typename T>
 keyword_info<T> global_kw_info(const std::string& name, bool allow_unsupported = false);
 
-}
+} // end namespace keywords
+
+} // end namespace FieldProps
 
 class FieldProps {
 public:
 
-
+    using ScalarOperation = Fieldprops::ScalarOperation;
 
     struct MultregpRecord {
         int region_value;
@@ -277,9 +282,10 @@ public:
     struct FieldDataManager {
         const std::string& keyword;
         GetStatus status;
-        const FieldData<T> * data_ptr;
+        using Data = Fieldprops::FieldData<T>;
+        const Data * data_ptr;
 
-        FieldDataManager(const std::string& k, GetStatus s, const FieldData<T> * d) :
+        FieldDataManager(const std::string& k, GetStatus s, const Data * d) :
             keyword(k),
             status(s),
             data_ptr(d)
@@ -311,7 +317,7 @@ public:
             return this->data_ptr->data;
         }
 
-        const FieldData<T>& field_data() const {
+        const Data& field_data() const {
             this->verify_status();
             return *this->data_ptr;
         }
@@ -348,7 +354,7 @@ public:
         if (!allow_unsupported && !FieldProps::supported<T>(keyword))
             return FieldDataManager<T>(keyword, GetStatus::NOT_SUPPPORTED_KEYWORD, nullptr);
 
-        const FieldData<T> * field_data;
+        const Fieldprops::FieldData<T> * field_data;
         bool has0 = this->has<T>(keyword);
 
         field_data = std::addressof(this->init_get<T>(keyword,
@@ -375,7 +381,7 @@ public:
     std::vector<T> get_global(const std::string& keyword) {
         const auto& managed_field_data = this->try_get<T>(keyword);
         const auto& field_data = managed_field_data.field_data();
-        const auto& kw_info = keywords::global_kw_info<T>(keyword);
+        const auto& kw_info = Fieldprops::keywords::global_kw_info<T>(keyword);
         if (kw_info.global)
             return *field_data.global_data;
         else
@@ -395,7 +401,7 @@ public:
                 return field_data.data;
         } else {
             if (global) {
-                const auto& kw_info = keywords::global_kw_info<T>(keyword);
+                const auto& kw_info = Fieldprops::keywords::global_kw_info<T>(keyword);
                 return this->global_copy(this->extract<T>(keyword), kw_info.scalar_init);
             } else
                 return this->extract<T>(keyword);
@@ -459,33 +465,33 @@ private:
     std::vector<T> extract(const std::string& keyword);
 
     template <typename T>
-    void operate(const DeckRecord& record, FieldData<T>& target_data, const FieldData<T>& src_data, const std::vector<Box::cell_index>& index_list);
+    void operate(const DeckRecord& record, Fieldprops::FieldData<T>& target_data, const Fieldprops::FieldData<T>& src_data, const std::vector<Box::cell_index>& index_list);
 
     template <typename T>
     static void apply(ScalarOperation op, std::vector<T>& data, std::vector<value::status>& value_status, T scalar_value, const std::vector<Box::cell_index>& index_list);
 
     template <typename T>
-    FieldData<T>& init_get(const std::string& keyword, bool allow_unsupported = false);
+    Fieldprops::FieldData<T>& init_get(const std::string& keyword, bool allow_unsupported = false);
 
     template <typename T>
-    FieldData<T>& init_get(const std::string& keyword, const keywords::keyword_info<T>& kw_info);
+    Fieldprops::FieldData<T>& init_get(const std::string& keyword, const Fieldprops::keywords::keyword_info<T>& kw_info);
 
     std::string region_name(const DeckItem& region_item);
     std::vector<Box::cell_index> region_index( const std::string& region_name, int region_value );
     void handle_operation(const DeckKeyword& keyword, Box box);
     void handle_region_operation(const DeckKeyword& keyword);
     void handle_COPY(const DeckKeyword& keyword, Box box, bool region);
-    void distribute_toplayer(FieldData<double>& field_data, const std::vector<double>& deck_data, const Box& box);
+    void distribute_toplayer(Fieldprops::FieldData<double>& field_data, const std::vector<double>& deck_data, const Box& box);
     double get_beta(const std::string& func_name, const std::string& target_array, double raw_beta);
     double get_alpha(const std::string& func_name, const std::string& target_array, double raw_alpha);
 
     void handle_keyword(const DeckKeyword& keyword, Box& box);
-    void handle_double_keyword(Section section, const keywords::keyword_info<double>& kw_info, const DeckKeyword& keyword, const std::string& keyword_name, const Box& box);
-    void handle_double_keyword(Section section, const keywords::keyword_info<double>& kw_info, const DeckKeyword& keyword, const Box& box);
-    void handle_int_keyword(const keywords::keyword_info<int>& kw_info, const DeckKeyword& keyword, const Box& box);
-    void init_satfunc(const std::string& keyword, FieldData<double>& satfunc);
-    void init_porv(FieldData<double>& porv);
-    void init_tempi(FieldData<double>& tempi);
+    void handle_double_keyword(Section section, const Fieldprops::keywords::keyword_info<double>& kw_info, const DeckKeyword& keyword, const std::string& keyword_name, const Box& box);
+    void handle_double_keyword(Section section, const Fieldprops::keywords::keyword_info<double>& kw_info, const DeckKeyword& keyword, const Box& box);
+    void handle_int_keyword(const Fieldprops::keywords::keyword_info<int>& kw_info, const DeckKeyword& keyword, const Box& box);
+    void init_satfunc(const std::string& keyword, Fieldprops::FieldData<double>& satfunc);
+    void init_porv(Fieldprops::FieldData<double>& porv);
+    void init_tempi(Fieldprops::FieldData<double>& tempi);
 
     const UnitSystem unit_system;
     std::size_t nx,ny,nz;
@@ -499,10 +505,10 @@ private:
     const TableManager& tables;
     std::shared_ptr<satfunc::RawTableEndPoints> m_rtep;
     std::vector<MultregpRecord> multregp;
-    std::unordered_map<std::string, FieldData<int>> int_data;
-    std::unordered_map<std::string, FieldData<double>> double_data;
+    std::unordered_map<std::string, Fieldprops::FieldData<int>> int_data;
+    std::unordered_map<std::string, Fieldprops::FieldData<double>> double_data;
 
-    std::unordered_map<std::string, TranCalculator> tran;
+    std::unordered_map<std::string, Fieldprops::TranCalculator> tran;
 };
 
 }

@@ -33,8 +33,10 @@
 
 namespace Opm
 {
+namespace Fieldprops
+{
    template<typename T>
-    static void fieldprops_compress(std::vector<T>& data, const std::vector<bool>& active_map) {
+    static void compress(std::vector<T>& data, const std::vector<bool>& active_map) {
         std::size_t shift = 0;
         for (std::size_t g = 0; g < active_map.size(); g++) {
             if (active_map[g] && shift > 0) {
@@ -92,8 +94,8 @@ namespace Opm
         }
 
         void compress(const std::vector<bool>& active_map) {
-            fieldprops_compress(this->data, active_map);
-            fieldprops_compress(this->value_status, active_map);
+            Fieldprops::compress(this->data, active_map);
+            Fieldprops::compress(this->value_status, active_map);
         }
 
         void copy(const FieldData<T>& src, const std::vector<Box::cell_index>& index_list) {
@@ -139,6 +141,6 @@ namespace Opm
         }
 
     };
-
+} // end namespace Fieldprops
 } // end namespace Opm
 #endif // FIELD_DATA_HPP

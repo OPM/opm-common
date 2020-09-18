@@ -208,7 +208,7 @@ ADDREG
 
 
 BOOST_AUTO_TEST_CASE(ASSIGN) {
-    FieldData<int> data({}, 100, 0);
+    Fieldprops::FieldData<int> data({}, 100, 0);
     std::vector<int> wrong_size(50);
 
     BOOST_CHECK_THROW( data.default_assign( wrong_size ), std::invalid_argument );

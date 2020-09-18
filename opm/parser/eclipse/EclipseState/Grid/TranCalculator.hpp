@@ -27,7 +27,8 @@
 namespace Opm
 {
 
-
+namespace Fieldprops
+{
 
 enum class ScalarOperation {
     ADD = 1,
@@ -101,6 +102,6 @@ private:
     std::vector<TranAction> actions;
 };
 
-
+} // namespace Fieldprops
 } // end namespace Opm
 #endif // TRAN_CALCULATOR_HPP

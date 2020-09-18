@@ -43,6 +43,9 @@
 
 namespace Opm {
 
+namespace Fieldprops
+{
+
 namespace keywords {
 
 static const std::set<std::string> oper_keywords = {"ADD", "EQUALS", "MAXVALUE", "MINVALUE", "MULTIPLY", "OPERATE"};
@@ -97,8 +100,9 @@ keyword_info<int> global_kw_info(const std::string& name, bool) {
     throw std::out_of_range("No such keyword: " + name);
 }
 
+} // end namespace keywords
 
-}
+} // end namespace Fieldprops
 
 
 namespace {
@@ -157,7 +161,7 @@ void verify_deck_data(const DeckKeyword& keyword, const std::vector<T>& deck_dat
 
 
 template <typename T>
-void assign_deck(const keywords::keyword_info<T>& kw_info, const DeckKeyword& keyword, FieldData<T>& field_data, const std::vector<T>& deck_data, const std::vector<value::status>& deck_status, const Box& box) {
+void assign_deck(const Fieldprops::keywords::keyword_info<T>& kw_info, const DeckKeyword& keyword, Fieldprops::FieldData<T>& field_data, const std::vector<T>& deck_data, const std::vector<value::status>& deck_status, const Box& box) {
     verify_deck_data(keyword, deck_data, box);
     for (const auto& cell_index : box.index_list()) {
         auto active_index = cell_index.active_index;
@@ -187,7 +191,7 @@ void assign_deck(const keywords::keyword_info<T>& kw_info, const DeckKeyword& ke
 
 
 template <typename T>
-void multiply_deck(const keywords::keyword_info<T>& kw_info, const DeckKeyword& keyword, FieldData<T>& field_data, const std::vector<T>& deck_data, const std::vector<value::status>& deck_status, const Box& box) {
+void multiply_deck(const Fieldprops::keywords::keyword_info<T>& kw_info, const DeckKeyword& keyword, Fieldprops::FieldData<T>& field_data, const std::vector<T>& deck_data, const std::vector<value::status>& deck_status, const Box& box) {
     verify_deck_data(keyword, deck_data, box);
     for (const auto& cell_index : box.index_list()) {
         auto active_index = cell_index.active_index;
@@ -271,21 +275,21 @@ std::string make_region_name(const std::string& deck_value) {
     throw std::invalid_argument("The input string: " + deck_value + " was invalid. Expected: O/F/M");
 }
 
-ScalarOperation fromString(const std::string& keyword) {
+Fieldprops::ScalarOperation fromString(const std::string& keyword) {
     if (keyword == ParserKeywords::ADD::keywordName || keyword == ParserKeywords::ADDREG::keywordName)
-        return ScalarOperation::ADD;
+        return Fieldprops::ScalarOperation::ADD;
 
     if (keyword == ParserKeywords::EQUALS::keywordName || keyword == ParserKeywords::EQUALREG::keywordName)
-        return ScalarOperation::EQUAL;
+        return Fieldprops::ScalarOperation::EQUAL;
 
     if (keyword == ParserKeywords::MULTIPLY::keywordName || keyword == ParserKeywords::MULTIREG::keywordName)
-        return ScalarOperation::MUL;
+        return Fieldprops::ScalarOperation::MUL;
 
     if (keyword == ParserKeywords::MINVALUE::keywordName)
-        return ScalarOperation::MIN;
+        return Fieldprops::ScalarOperation::MIN;
 
     if (keyword == ParserKeywords::MAXVALUE::keywordName)
-        return ScalarOperation::MAX;
+        return Fieldprops::ScalarOperation::MAX;
 
     throw std::invalid_argument("Keyword operation not recognized");
 }
@@ -330,9 +334,9 @@ FieldProps::FieldProps(const Deck& deck, const Phases& phases, const EclipseGrid
     grid_ptr(&grid),
     tables(tables_arg)
 {
-    this->tran.emplace( "TRANX", TranCalculator("TRANX") );
-    this->tran.emplace( "TRANY", TranCalculator("TRANY") );
-    this->tran.emplace( "TRANZ", TranCalculator("TRANZ") );
+    this->tran.emplace( "TRANX", Fieldprops::TranCalculator("TRANX") );
+    this->tran.emplace( "TRANY", Fieldprops::TranCalculator("TRANY") );
+    this->tran.emplace( "TRANZ", Fieldprops::TranCalculator("TRANZ") );
 
     if (deck.hasKeyword<ParserKeywords::MULTREGP>()) {
         const DeckKeyword& multregpKeyword = deck.getKeyword("MULTREGP");
@@ -405,17 +409,17 @@ void FieldProps::reset_actnum(const std::vector<int>& new_actnum) {
     for (auto& data : this->int_data)
         data.second.compress(active_map);
 
-    fieldprops_compress(this->cell_volume, active_map);
-    fieldprops_compress(this->cell_depth, active_map);
+    Fieldprops::compress(this->cell_volume, active_map);
+    Fieldprops::compress(this->cell_depth, active_map);
 
     this->m_actnum = std::move(new_actnum);
     this->active_size = new_active_size;
 }
 
 
-void FieldProps::distribute_toplayer(FieldData<double>& field_data, const std::vector<double>& deck_data, const Box& box) {
+void FieldProps::distribute_toplayer(Fieldprops::FieldData<double>& field_data, const std::vector<double>& deck_data, const Box& box) {
     const std::size_t layer_size = this->nx * this->ny;
-    FieldData<double> toplayer(field_data.kw_info, layer_size, 0);
+    Fieldprops::FieldData<double> toplayer(field_data.kw_info, layer_size, 0);
     for (const auto& cell_index : box.index_list()) {
         if (cell_index.global_index < layer_size) {
             toplayer.data[cell_index.global_index] = deck_data[cell_index.data_index];
@@ -446,19 +450,19 @@ void FieldProps::distribute_toplayer(FieldData<double>& field_data, const std::v
 
 template <>
 bool FieldProps::supported<double>(const std::string& keyword) {
-    if (keywords::GRID::double_keywords.count(keyword) != 0)
+    if (Fieldprops::keywords::GRID::double_keywords.count(keyword) != 0)
         return true;
 
-    if (keywords::EDIT::double_keywords.count(keyword) != 0)
+    if (Fieldprops::keywords::EDIT::double_keywords.count(keyword) != 0)
         return true;
 
-    if (keywords::PROPS::double_keywords.count(keyword) != 0)
+    if (Fieldprops::keywords::PROPS::double_keywords.count(keyword) != 0)
         return true;
 
-    if (keywords::PROPS::satfunc.count(keyword) != 0)
+    if (Fieldprops::keywords::PROPS::satfunc.count(keyword) != 0)
         return true;
 
-    if (keywords::SOLUTION::double_keywords.count(keyword) != 0)
+    if (Fieldprops::keywords::SOLUTION::double_keywords.count(keyword) != 0)
         return true;
 
     return false;
@@ -466,26 +470,26 @@ bool FieldProps::supported<double>(const std::string& keyword) {
 
 template <>
 bool FieldProps::supported<int>(const std::string& keyword) {
-    if (keywords::REGIONS::int_keywords.count(keyword) != 0)
+    if (Fieldprops::keywords::REGIONS::int_keywords.count(keyword) != 0)
         return true;
 
-    if (keywords::GRID::int_keywords.count(keyword) != 0)
+    if (Fieldprops::keywords::GRID::int_keywords.count(keyword) != 0)
         return true;
 
-    if (keywords::SCHEDULE::int_keywords.count(keyword) != 0)
+    if (Fieldprops::keywords::SCHEDULE::int_keywords.count(keyword) != 0)
         return true;
 
-    return keywords::isFipxxx(keyword);
+    return Fieldprops::keywords::isFipxxx(keyword);
 }
 
 
 template <>
-FieldData<double>& FieldProps::init_get(const std::string& keyword, const keywords::keyword_info<double>& kw_info) {
+Fieldprops::FieldData<double>& FieldProps::init_get(const std::string& keyword, const Fieldprops::keywords::keyword_info<double>& kw_info) {
     auto iter = this->double_data.find(keyword);
     if (iter != this->double_data.end())
         return iter->second;
 
-    this->double_data[keyword] = FieldData<double>(kw_info, this->active_size, kw_info.global ? this->global_size : 0);
+    this->double_data[keyword] = Fieldprops::FieldData<double>(kw_info, this->active_size, kw_info.global ? this->global_size : 0);
 
     if (keyword == ParserKeywords::PORV::keywordName)
         this->init_porv(this->double_data[keyword]);
@@ -493,38 +497,38 @@ FieldData<double>& FieldProps::init_get(const std::string& keyword, const keywor
     if (keyword == ParserKeywords::TEMPI::keywordName)
         this->init_tempi(this->double_data[keyword]);
 
-    if (keywords::PROPS::satfunc.count(keyword) == 1)
+    if (Fieldprops::keywords::PROPS::satfunc.count(keyword) == 1)
         this->init_satfunc(keyword, this->double_data[keyword]);
 
     return this->double_data[keyword];
 }
 
 template <>
-FieldData<double>& FieldProps::init_get(const std::string& keyword,
+Fieldprops::FieldData<double>& FieldProps::init_get(const std::string& keyword,
                                         bool allow_unsupported) {
-    keywords::keyword_info<double> kw_info = keywords::global_kw_info<double>(keyword, allow_unsupported);
+    Fieldprops::keywords::keyword_info<double> kw_info = Fieldprops::keywords::global_kw_info<double>(keyword, allow_unsupported);
     return this->init_get(keyword, kw_info);
 }
 
 
 template <>
-FieldData<int>& FieldProps::init_get(const std::string& keyword, const keywords::keyword_info<int>& kw_info) {
+Fieldprops::FieldData<int>& FieldProps::init_get(const std::string& keyword, const Fieldprops::keywords::keyword_info<int>& kw_info) {
     auto iter = this->int_data.find(keyword);
     if (iter != this->int_data.end())
         return iter->second;
 
-    this->int_data[keyword] = FieldData<int>(kw_info, this->active_size, kw_info.global ? this->global_size : 0);
+    this->int_data[keyword] = Fieldprops::FieldData<int>(kw_info, this->active_size, kw_info.global ? this->global_size : 0);
     return this->int_data[keyword];
 }
 
 template <>
-FieldData<int>& FieldProps::init_get(const std::string& keyword, bool) {
-    if (keywords::isFipxxx(keyword)) {
-        auto kw_info = keywords::keyword_info<int>{};
+Fieldprops::FieldData<int>& FieldProps::init_get(const std::string& keyword, bool) {
+    if (Fieldprops::keywords::isFipxxx(keyword)) {
+        auto kw_info = Fieldprops::keywords::keyword_info<int>{};
         kw_info.init(1);
         return this->init_get(keyword, kw_info);
     } else {
-        const keywords::keyword_info<int>& kw_info = keywords::global_kw_info<int>(keyword);
+        const Fieldprops::keywords::keyword_info<int>& kw_info = Fieldprops::keywords::global_kw_info<int>(keyword);
         return this->init_get(keyword, kw_info);
     }
 }
@@ -626,7 +630,7 @@ std::vector<double> FieldProps::extract<double>(const std::string& keyword) {
 
 
 double FieldProps::getSIValue(const std::string& keyword, double raw_value) const {
-    const auto& kw_info = keywords::global_kw_info<double>(keyword);
+    const auto& kw_info = Fieldprops::keywords::global_kw_info<double>(keyword);
     if (kw_info.unit) {
         const auto& dim = this->unit_system.parse( *kw_info.unit );
         return dim.convertRawToSi(raw_value);
@@ -638,7 +642,7 @@ double FieldProps::getSIValue(const std::string& keyword, double raw_value) cons
 
 
 
-void FieldProps::handle_int_keyword(const keywords::keyword_info<int>& kw_info, const DeckKeyword& keyword, const Box& box) {
+void FieldProps::handle_int_keyword(const Fieldprops::keywords::keyword_info<int>& kw_info, const DeckKeyword& keyword, const Box& box) {
     auto& field_data = this->init_get<int>(keyword.name());
     const auto& deck_data = keyword.getIntData();
     const auto& deck_status = keyword.getValueStatus();
@@ -646,7 +650,7 @@ void FieldProps::handle_int_keyword(const keywords::keyword_info<int>& kw_info, 
 }
 
 
-void FieldProps::handle_double_keyword(Section section, const keywords::keyword_info<double>& kw_info, const DeckKeyword& keyword, const std::string& keyword_name, const Box& box) {
+void FieldProps::handle_double_keyword(Section section, const Fieldprops::keywords::keyword_info<double>& kw_info, const DeckKeyword& keyword, const std::string& keyword_name, const Box& box) {
     auto& field_data = this->init_get<double>(keyword_name, kw_info);
     const auto& deck_data = keyword.getSIDoubleData();
     const auto& deck_status = keyword.getValueStatus();
@@ -666,27 +670,27 @@ void FieldProps::handle_double_keyword(Section section, const keywords::keyword_
     }
 }
 
-void FieldProps::handle_double_keyword(Section section, const keywords::keyword_info<double>& kw_info, const DeckKeyword& keyword, const Box& box) {
+void FieldProps::handle_double_keyword(Section section, const Fieldprops::keywords::keyword_info<double>& kw_info, const DeckKeyword& keyword, const Box& box) {
     this->handle_double_keyword(section, kw_info, keyword, keyword.name(), box );
 }
 
 
 
 template <typename T>
-void FieldProps::apply(ScalarOperation op, std::vector<T>& data, std::vector<value::status>& value_status, T scalar_value, const std::vector<Box::cell_index>& index_list) {
-    if (op == ScalarOperation::EQUAL)
+void FieldProps::apply(Fieldprops::ScalarOperation op, std::vector<T>& data, std::vector<value::status>& value_status, T scalar_value, const std::vector<Box::cell_index>& index_list) {
+    if (op == Fieldprops::ScalarOperation::EQUAL)
         assign_scalar(data, value_status, scalar_value, index_list);
 
-    else if (op == ScalarOperation::MUL)
+    else if (op == Fieldprops::ScalarOperation::MUL)
         multiply_scalar(data, value_status, scalar_value, index_list);
 
-    else if (op == ScalarOperation::ADD)
+    else if (op == Fieldprops::ScalarOperation::ADD)
         add_scalar(data, value_status, scalar_value, index_list);
 
-    else if (op == ScalarOperation::MIN)
+    else if (op == Fieldprops::ScalarOperation::MIN)
         min_value(data, value_status, scalar_value, index_list);
 
-    else if (op == ScalarOperation::MAX)
+    else if (op == Fieldprops::ScalarOperation::MAX)
         max_value(data, value_status, scalar_value, index_list);
 }
 
@@ -705,7 +709,7 @@ double FieldProps::get_beta(const std::string& func_name, const std::string& tar
 }
 
 template <typename T>
-void FieldProps::operate(const DeckRecord& record, FieldData<T>& target_data, const FieldData<T>& src_data, const std::vector<Box::cell_index>& index_list) {
+void FieldProps::operate(const DeckRecord& record, Fieldprops::FieldData<T>& target_data, const Fieldprops::FieldData<T>& src_data, const std::vector<Box::cell_index>& index_list) {
     const std::string& func_name = record.getItem("OPERATION").get< std::string >(0);
     const std::string& target_array = record.getItem("TARGET_ARRAY").get<std::string>(0);
     const double alpha           = this->get_alpha(func_name, target_array, record.getItem("PARAM1").get< double >(0));
@@ -792,14 +796,14 @@ void FieldProps::handle_operation(const DeckKeyword& keyword, Box box) {
                 std::string unique_name = target_kw;
                 auto operation = fromString(keyword.name());
                 double scalar_value = record.getItem(1).get<double>(0);
-                keywords::keyword_info<double> kw_info;
+                Fieldprops::keywords::keyword_info<double> kw_info;
                 auto tran_iter = this->tran.find(target_kw);
                 if (tran_iter != this->tran.end()) {
                     kw_info = tran_iter->second.make_kw_info(operation);
                     unique_name = tran_iter->second.next_name();
                     tran_iter->second.add_action(operation, unique_name);
                 } else
-                    kw_info = keywords::global_kw_info<double>(target_kw);
+                    kw_info = Fieldprops::keywords::global_kw_info<double>(target_kw);
 
                 auto& field_data = this->init_get<double>(unique_name, kw_info);
 
@@ -871,13 +875,13 @@ void FieldProps::handle_COPY(const DeckKeyword& keyword, Box box, bool region) {
 void FieldProps::handle_keyword(const DeckKeyword& keyword, Box& box) {
     const std::string& name = keyword.name();
 
-    if (keywords::oper_keywords.count(name) == 1)
+    if (Fieldprops::keywords::oper_keywords.count(name) == 1)
         this->handle_operation(keyword, box);
 
-    else if (keywords::region_oper_keywords.count(name) == 1)
+    else if (Fieldprops::keywords::region_oper_keywords.count(name) == 1)
         this->handle_region_operation(keyword);
 
-    else if (keywords::box_keywords.count(name) == 1)
+    else if (Fieldprops::keywords::box_keywords.count(name) == 1)
         handle_box_keyword(keyword, box);
 
     else if (name == ParserKeywords::COPY::keywordName)
@@ -890,7 +894,7 @@ void FieldProps::handle_keyword(const DeckKeyword& keyword, Box& box) {
 /**********************************************************************/
 
 
-void FieldProps::init_tempi(FieldData<double>& tempi) {
+void FieldProps::init_tempi(Fieldprops::FieldData<double>& tempi) {
     if (this->tables.hasTables("RTEMPVD")) {
         const auto& eqlnum = this->get<int>("EQLNUM");
         const auto& rtempvd = this->tables.getRtempvdTables();
@@ -907,7 +911,7 @@ void FieldProps::init_tempi(FieldData<double>& tempi) {
         tempi.default_assign(this->tables.rtemp());
 }
 
-void FieldProps::init_porv(FieldData<double>& porv) {
+void FieldProps::init_porv(Fieldprops::FieldData<double>& porv) {
     auto& porv_data = porv.data;
     auto& porv_status = porv.value_status;
 
@@ -993,13 +997,13 @@ void FieldProps::scanGRIDSection(const GRIDSection& grid_section) {
     for (const auto& keyword : grid_section) {
         const std::string& name = keyword.name();
 
-        if (keywords::GRID::double_keywords.count(name) == 1) {
-            this->handle_double_keyword(Section::GRID, keywords::GRID::double_keywords.at(name), keyword, box);
+        if (Fieldprops::keywords::GRID::double_keywords.count(name) == 1) {
+            this->handle_double_keyword(Section::GRID, Fieldprops::keywords::GRID::double_keywords.at(name), keyword, box);
             continue;
         }
 
-        if (keywords::GRID::int_keywords.count(name) == 1) {
-            this->handle_int_keyword(keywords::GRID::int_keywords.at(name), keyword, box);
+        if (Fieldprops::keywords::GRID::int_keywords.count(name) == 1) {
+            this->handle_int_keyword(Fieldprops::keywords::GRID::int_keywords.at(name), keyword, box);
             continue;
         }
 
@@ -1016,19 +1020,19 @@ void FieldProps::scanEDITSection(const EDITSection& edit_section) {
         if (tran_iter!= this->tran.end()) {
             auto& tran_calc = tran_iter->second;
             auto unique_name = tran_calc.next_name();
-            keywords::keyword_info<double> kw_info;
+            Fieldprops::keywords::keyword_info<double> kw_info;
             this->handle_double_keyword(Section::EDIT, kw_info, keyword, unique_name, box);
-            tran_calc.add_action( ScalarOperation::EQUAL, unique_name );
+            tran_calc.add_action( Fieldprops::ScalarOperation::EQUAL, unique_name );
             continue;
         }
 
-        if (keywords::EDIT::double_keywords.count(name) == 1) {
-            this->handle_double_keyword(Section::EDIT, keywords::EDIT::double_keywords.at(name), keyword, box);
+        if (Fieldprops::keywords::EDIT::double_keywords.count(name) == 1) {
+            this->handle_double_keyword(Section::EDIT, Fieldprops::keywords::EDIT::double_keywords.at(name), keyword, box);
             continue;
         }
 
-        if (keywords::EDIT::int_keywords.count(name) == 1) {
-            this->handle_int_keyword(keywords::GRID::int_keywords.at(name), keyword, box);
+        if (Fieldprops::keywords::EDIT::int_keywords.count(name) == 1) {
+            this->handle_int_keyword(Fieldprops::keywords::GRID::int_keywords.at(name), keyword, box);
             continue;
         }
 
@@ -1037,7 +1041,7 @@ void FieldProps::scanEDITSection(const EDITSection& edit_section) {
 }
 
 
-void FieldProps::init_satfunc(const std::string& keyword, FieldData<double>& satfunc) {
+void FieldProps::init_satfunc(const std::string& keyword, Fieldprops::FieldData<double>& satfunc) {
     if (this->m_rtep == nullptr)
         this->m_rtep = satfunc::getRawTableEndpoints(this->tables, this->m_phases,
                                                      this->m_satfuncctrl.minimumRelpermMobilityThreshold());
@@ -1056,19 +1060,19 @@ void FieldProps::scanPROPSSection(const PROPSSection& props_section) {
 
     for (const auto& keyword : props_section) {
         const std::string& name = keyword.name();
-        if (keywords::PROPS::satfunc.count(name) == 1) {
-            keywords::keyword_info<double> sat_info{};
+        if (Fieldprops::keywords::PROPS::satfunc.count(name) == 1) {
+            Fieldprops::keywords::keyword_info<double> sat_info{};
             this->handle_double_keyword(Section::PROPS, sat_info, keyword, box);
             continue;
         }
 
-        if (keywords::PROPS::double_keywords.count(name) == 1) {
-            this->handle_double_keyword(Section::PROPS, keywords::PROPS::double_keywords.at(name), keyword, box);
+        if (Fieldprops::keywords::PROPS::double_keywords.count(name) == 1) {
+            this->handle_double_keyword(Section::PROPS, Fieldprops::keywords::PROPS::double_keywords.at(name), keyword, box);
             continue;
         }
 
-        if (keywords::PROPS::int_keywords.count(name) == 1) {
-            this->handle_int_keyword(keywords::PROPS::int_keywords.at(name), keyword, box);
+        if (Fieldprops::keywords::PROPS::int_keywords.count(name) == 1) {
+            this->handle_int_keyword(Fieldprops::keywords::PROPS::int_keywords.at(name), keyword, box);
             continue;
         }
 
@@ -1082,13 +1086,13 @@ void FieldProps::scanREGIONSSection(const REGIONSSection& regions_section) {
 
     for (const auto& keyword : regions_section) {
         const std::string& name = keyword.name();
-        if (keywords::REGIONS::int_keywords.count(name)) {
-            this->handle_int_keyword(keywords::REGIONS::int_keywords.at(name), keyword, box);
+        if (Fieldprops::keywords::REGIONS::int_keywords.count(name)) {
+            this->handle_int_keyword(Fieldprops::keywords::REGIONS::int_keywords.at(name), keyword, box);
             continue;
         }
 
-        if (keywords::isFipxxx(name)) {
-            auto kw_info = keywords::keyword_info<int>{};
+        if (Fieldprops::keywords::isFipxxx(name)) {
+            auto kw_info = Fieldprops::keywords::keyword_info<int>{};
             kw_info.init(1);
             this->handle_int_keyword(kw_info, keyword, box);
             continue;
@@ -1103,8 +1107,8 @@ void FieldProps::scanSOLUTIONSection(const SOLUTIONSection& solution_section) {
     Box box(*this->grid_ptr);
     for (const auto& keyword : solution_section) {
         const std::string& name = keyword.name();
-        if (keywords::SOLUTION::double_keywords.count(name) == 1) {
-            this->handle_double_keyword(Section::SOLUTION, keywords::SOLUTION::double_keywords.at(name), keyword, box);
+        if (Fieldprops::keywords::SOLUTION::double_keywords.count(name) == 1) {
+            this->handle_double_keyword(Section::SOLUTION, Fieldprops::keywords::SOLUTION::double_keywords.at(name), keyword, box);
             continue;
         }
 
@@ -1116,13 +1120,13 @@ void FieldProps::scanSCHEDULESection(const SCHEDULESection& schedule_section) {
     Box box(*this->grid_ptr);
     for (const auto& keyword : schedule_section) {
         const std::string& name = keyword.name();
-        if (keywords::SCHEDULE::double_keywords.count(name) == 1) {
-            this->handle_double_keyword(Section::SCHEDULE, keywords::SCHEDULE::double_keywords.at(name), keyword, box);
+        if (Fieldprops::keywords::SCHEDULE::double_keywords.count(name) == 1) {
+            this->handle_double_keyword(Section::SCHEDULE, Fieldprops::keywords::SCHEDULE::double_keywords.at(name), keyword, box);
             continue;
         }
 
-        if (keywords::SCHEDULE::int_keywords.count(name) == 1) {
-            this->handle_int_keyword(keywords::SCHEDULE::int_keywords.at(name), keyword, box);
+        if (Fieldprops::keywords::SCHEDULE::int_keywords.count(name) == 1) {
+            this->handle_int_keyword(Fieldprops::keywords::SCHEDULE::int_keywords.at(name), keyword, box);
             continue;
         }
 

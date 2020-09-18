@@ -23,6 +23,9 @@
 namespace Opm
 {
 
+namespace Fieldprops
+{
+
 namespace keywords {
 
 template <typename T>
@@ -59,6 +62,6 @@ struct keyword_info {
     }
 };
 } // end namespace Keywords
-
+} // end namespace Fieldprops
 } //end namespace Opm
 #endif //OPM_KEYWORDS_HPP
