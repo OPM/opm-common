@@ -73,17 +73,9 @@ macro (config_hook)
     if(NOT cjson_FOUND)
       list(APPEND EXTRA_INCLUDES ${PROJECT_SOURCE_DIR}/external/cjson)
     endif()
-    if(TARGET fmt::fmt)
-      get_target_property(fmt_INCLUDES fmt::fmt INTERFACE_INCLUDE_DIRECTORIES)
-    elseif(TARGET fmt)
-      get_target_property(fmt_INCLUDES fmt INTERFACE_INCLUDE_DIRECTORIES)
-    else()
-      message(FATAL_ERROR "Cannot identify fmt target to use")
-    endif()
-    add_definitions(-DFMT_HEADER_ONLY)
 
     # For this project
-    include_directories(${EXTRA_INCLUDES} ${PROJECT_BINARY_DIR}/include ${fmt_INCLUDES})
+    include_directories(${EXTRA_INCLUDES} ${PROJECT_BINARY_DIR}/include)
 
     # For downstreams
     list(APPEND EXTRA_INCLUDES ${PROJECT_BINARY_DIR}/include)
