@@ -191,6 +191,30 @@ bool PvtoTable::operator==(const PvtoTable& data) const {
     return static_cast<const PvtxTable&>(*this) == static_cast<const PvtxTable&>(data);
 }
 
+std::vector<PvtoTable::FlippedFVF>
+PvtoTable::nonMonotonicSaturatedFVF() const
+{
+    auto nonmonoFVF = std::vector<FlippedFVF>{};
+
+    const auto& Rs = this->m_saturatedTable.getColumn("RS");
+    const auto& Bo = this->m_saturatedTable.getColumn("BO");
+
+    const auto nrec = Rs.size();
+    for (auto rec = 1 + 0*nrec; rec < nrec; ++rec) {
+        if (Bo[rec] > Bo[rec - 1]) {
+            // Normal case, Bo increases monotonically.
+            continue;
+        }
+
+        auto& flip = nonmonoFVF.emplace_back();
+
+        flip.i     = rec;
+        flip.Rs[0] = Rs[rec - 1];   flip.Rs[1] = Rs[rec];
+        flip.Bo[0] = Bo[rec - 1];   flip.Bo[1] = Bo[rec];
+    }
+
+    return nonmonoFVF;
+}
 
 SpecheatTable::SpecheatTable(const DeckItem& item)
 {
@@ -791,7 +815,7 @@ const TableColumn& WatvisctTable::getTemperatureColumn() const {
 
 const TableColumn& WatvisctTable::getWaterViscosityColumn() const {
     return SimpleTable::getColumn(1);
-} 
+}
 
 GasvisctTable::GasvisctTable( const Deck& deck, const DeckItem& deckItem ) {
     int numComponents = deck.getKeyword<ParserKeywords::COMPS>().getRecord(0).getItem(0).get< int >(0);

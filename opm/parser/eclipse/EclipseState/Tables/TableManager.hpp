@@ -491,6 +491,8 @@ namespace Opm {
                 tableVector.emplace_back( tableKeyword , tableIdx );
         }
 
+        void checkPVTOMonotonicity(const Deck& deck) const;
+
         std::map<std::string , TableContainer> m_simpleTables;
         std::vector<PvtgTable> m_pvtgTables;
         std::vector<PvtgwTable> m_pvtgwTables;

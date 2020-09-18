@@ -18,8 +18,13 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <cmath>
+#include <iomanip>
+#include <ios>
 #include <memory>
+#include <sstream>
 
+#include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/OpmLog/LogUtil.hpp>
 
 #include <opm/parser/eclipse/Parser/ParserKeywords/A.hpp>
@@ -119,6 +124,10 @@ namespace Opm {
         initFullTables(deck, "PVTGW", m_pvtgwTables);
         initFullTables(deck, "PVTGWO", m_pvtgwoTables);
         initFullTables(deck, "PVTO", m_pvtoTables);
+
+        if (deck.hasKeyword<ParserKeywords::PVTO>()) {
+            this->checkPVTOMonotonicity(deck);
+        }
 
         if( deck.hasKeyword( "PVTW" ) )
             this->m_pvtwTable = PvtwTable( deck.getKeyword( "PVTW" ) );
@@ -1192,6 +1201,48 @@ namespace Opm {
         assert(numEntries == numTables);
         for (unsigned lineIdx = 0; lineIdx < numEntries; ++lineIdx) {
             solventtables[lineIdx].init(keyword.getRecord(lineIdx));
+        }
+    }
+
+    void TableManager::checkPVTOMonotonicity(const Deck& deck) const
+    {
+        const auto& usys   = deck.getActiveUnitSystem();
+        const auto& tables = this->getPvtoTables();
+
+        using M = UnitSystem::measure;
+
+        const auto nDigit = [](const std::size_t n) {
+            return 1 + static_cast<int>(std::floor(std::log10(n)));
+        };
+
+        const auto nDigit_reg = nDigit(tables.size());
+
+        auto tableID = std::size_t{0};
+        std::ostringstream os;
+        for (const auto& pvto : tables) {
+            ++tableID; // One-based table ID
+            const auto& flipped = pvto.nonMonotonicSaturatedFVF();
+            if (flipped.empty()) { continue; }
+
+            const auto nDigit_rec = nDigit(flipped.back().i + 1);
+
+            os << "  * PVTO [PVTNUM = " << std::setw(nDigit_reg) << tableID << "]\n";
+            for (const auto& f : flipped) {
+                os << "    Record " << std::setw(nDigit_rec) << (f.i + 1)
+                   << ": FVF " << std::setprecision(3)
+                   << usys.from_si(M::oil_formation_volume_factor, f.Bo[1])
+                   << " at RS "
+                   << usys.from_si(M::gas_oil_ratio, f.Rs[1])
+                   << " is not greater than FVF "
+                   << usys.from_si(M::oil_formation_volume_factor, f.Bo[0])
+                   << " at RS "
+                   << usys.from_si(M::gas_oil_ratio, f.Rs[0]) << '\n';
+            }
+        }
+
+        if (os.tellp() != std::streampos{0}) {
+            // There were non-monotonic FVFs in saturated table
+            OpmLog::warning("Non-Monotonic Oil Formation Volume Factor Detected\n" + os.str());
         }
     }
 
