@@ -17,14 +17,18 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef OPM_PARSER_PVTX_TABLE_HPP
-#define	OPM_PARSER_PVTX_TABLE_HPP
-
-#include <vector>
+#define OPM_PARSER_PVTX_TABLE_HPP
 
 #include <opm/parser/eclipse/EclipseState/Tables/ColumnSchema.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SimpleTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableColumn.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableSchema.hpp>
+
+#include <string>
+#include <utility>
+#include <vector>
+
+#include <stddef.h>
 
 /*
   This class is a common base class for the PVTG and PVTO tables. The
@@ -47,7 +51,7 @@
                                                    |
  [ 28.19  {  70.00    1.12522     1.066 } ]        |
           {  95.00    1.12047     1.124 }          |
-          { 120.00    1.11604     1.182 }          |-- Satnum region 1
+          { 120.00    1.11604     1.182 }          |-- Pvtnum region 1
           { 145.00    1.11191     1.241 }          |
           { 170.00    1.10804     1.300 }/         |
                                                    |
@@ -59,7 +63,7 @@
 /                                                  /
   404.60    594.29    1.97527     0.21564          \
             619.29    1.96301     0.21981          |
-            644.29    1.95143     0.22393          |-- Satnum region 2
+            644.29    1.95143     0.22393          |-- Pvtnum region 2
             669.29    1.94046     0.22801          |
             694.29    1.93005     0.23204 /        |
 /                                                  /
@@ -67,7 +71,7 @@
             619.29    1.96301     0.21981          |
             644.29    1.95143     0.22393          |
             669.29    1.94046     0.22801          |
-            694.29    1.93005     0.23204 /        |-- Satnum region 3
+            694.29    1.93005     0.23204 /        |-- Pvtnum region 3
   404.60    594.29    1.97527     0.21564          |
             619.29    1.96301     0.21981          |
             644.29    1.95143     0.22393          |
@@ -76,9 +80,9 @@
 /
 
 
-In satnum region1 the saturated records are marked with [ ... ], and
+In pvtnum region1 the saturated records are marked with [ ... ], and
 the corresponding undersaturated tables are marked with { ... }. So
-for satnum region1 the table of saturated properties looks like:
+for pvtnum region1 the table of saturated properties looks like:
 
    RSO       PRESSURE    B-OIL       VISCOSITY
    20.59     50.00       1.10615     1.180
@@ -102,10 +106,9 @@ undersaturated table looks like:
 The first row actually corresponds to saturated values.
 */
 
-
  namespace Opm {
 
-     class DeckKeyword;
+    class DeckKeyword;
 
     class PvtxTable {
     public:
@@ -133,7 +136,7 @@ The first row actually corresponds to saturated values.
 
         bool operator==(const PvtxTable& data) const;
 
-        template<class Serializer>
+        template <class Serializer>
         void serializeOp(Serializer& serializer)
         {
             m_outerColumnSchema.serializeOp(serializer);
@@ -153,7 +156,6 @@ The first row actually corresponds to saturated values.
         std::vector< SimpleTable > m_underSaturatedTables;
         SimpleTable m_saturatedTable;
     };
-
 }
 
 #endif
