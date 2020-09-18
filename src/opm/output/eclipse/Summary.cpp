@@ -382,7 +382,7 @@ struct fn_args {
     const std::string fip_region;
     const Opm::SummaryState& st;
     const Opm::data::Wells& wells;
-    const Opm::data::GroupValues& groups;
+    const Opm::data::GroupAndNetworkValues& grp_nwrk;
     const Opm::out::RegionCache& regionCache;
     const Opm::EclipseGrid& grid;
     const std::vector< std::pair< std::string, double > > eff_factors;
@@ -778,8 +778,8 @@ inline quantity group_control( const fn_args& args ) {
 
     // production control
     if (Producer) {
-        auto it_g = args.groups.find(g_name);
-        if (it_g != args.groups.end()) {
+        auto it_g = args.grp_nwrk.groupData.find(g_name);
+        if (it_g != args.grp_nwrk.groupData.end()) {
             const auto& value = it_g->second.currentControl.currentProdConstraint;
             auto it_c = pCModeToPCntlMode.find(value);
             if (it_c == pCModeToPCntlMode.end()) {
@@ -792,8 +792,8 @@ inline quantity group_control( const fn_args& args ) {
     }
     // water injection control
     else if (waterInjector){
-        auto it_g = args.groups.find(g_name);
-        if (it_g != args.groups.end()) {
+        auto it_g = args.grp_nwrk.groupData.find(g_name);
+        if (it_g != args.grp_nwrk.groupData.end()) {
             const auto& value = it_g->second.currentControl.currentWaterInjectionConstraint;
             auto it_c = iCModeToICntlMode.find(value);
             if (it_c == iCModeToICntlMode.end()) {
@@ -807,8 +807,8 @@ inline quantity group_control( const fn_args& args ) {
 
     // gas injection control
     else if (gasInjector){
-        auto it_g = args.groups.find(g_name);
-        if (it_g != args.groups.end()) {
+        auto it_g = args.grp_nwrk.groupData.find(g_name);
+        if (it_g != args.grp_nwrk.groupData.end()) {
             const auto& value = it_g->second.currentControl.currentGasInjectionConstraint;
             auto it_c = iCModeToICntlMode.find(value);
             if (it_c == iCModeToICntlMode.end()) {
@@ -879,8 +879,8 @@ quantity guiderate_value(const ::Opm::data::GuideRateValue& grvalue)
 template <bool injection, Opm::data::GuideRateValue::Item i>
 quantity group_guiderate(const fn_args& args)
 {
-    auto xgPos = args.groups.find(args.group_name);
-    if (xgPos == args.groups.end()) {
+    auto xgPos = args.grp_nwrk.groupData.find(args.group_name);
+    if (xgPos == args.grp_nwrk.groupData.end()) {
         return { 0.0, rate_unit<i>() };
     }
 
@@ -1588,7 +1588,7 @@ namespace Evaluator {
     struct SimulatorResults
     {
         const Opm::data::WellRates& wellSol;
-        const Opm::data::GroupValues& groupSol;
+        const Opm::data::GroupAndNetworkValues& grpNwrkSol;
         const std::map<std::string, double>& single;
         const std::map<std::string, std::vector<double>>& region;
         const std::map<std::pair<std::string, int>, double>& block;
@@ -1642,7 +1642,7 @@ namespace Evaluator {
                 wells, group_name, stepSize, static_cast<int>(sim_step),
                 std::max(0, this->node_.number),
                 this->node_.fip_region,
-                st, simRes.wellSol, simRes.groupSol, input.reg, input.grid,
+                st, simRes.wellSol, simRes.grpNwrkSol, input.reg, input.grid,
                 std::move(efac.factors)
             };
 
@@ -2326,16 +2326,16 @@ public:
     SummaryImplementation& operator=(const SummaryImplementation& rhs) = delete;
     SummaryImplementation& operator=(SummaryImplementation&& rhs) = default;
 
-    void eval(const EclipseState&            es,
-              const Schedule&                sched,
-              const int                      sim_step,
-              const double                   duration,
-              const data::WellRates&         well_solution,
-              const data::GroupValues&       group_solution,
-              const GlobalProcessParameters& single_values,
-              const RegionParameters&        region_values,
-              const BlockValues&             block_values,
-              SummaryState&                  st) const;
+    void eval(const EclipseState&                es,
+              const Schedule&                    sched,
+              const int                          sim_step,
+              const double                       duration,
+              const data::WellRates&             well_solution,
+              const data::GroupAndNetworkValues& grp_nwrk_solution,
+              const GlobalProcessParameters&     single_values,
+              const RegionParameters&            region_values,
+              const BlockValues&                 block_values,
+              SummaryState&                      st) const;
 
     void internal_store(const SummaryState& st, const int report_step);
     void write();
@@ -2428,23 +2428,23 @@ internal_store(const SummaryState& st, const int report_step)
 
 void
 Opm::out::Summary::SummaryImplementation::
-eval(const EclipseState&            es,
-     const Schedule&                sched,
-     const int                      sim_step,
-     const double                   duration,
-     const data::WellRates&         well_solution,
-     const data::GroupValues&       group_solution,
-     const GlobalProcessParameters& single_values,
-     const RegionParameters&        region_values,
-     const BlockValues&             block_values,
-     Opm::SummaryState&             st) const
+eval(const EclipseState&                es,
+     const Schedule&                    sched,
+     const int                          sim_step,
+     const double                       duration,
+     const data::WellRates&             well_solution,
+     const data::GroupAndNetworkValues& grp_nwrk_solution,
+     const GlobalProcessParameters&     single_values,
+     const RegionParameters&            region_values,
+     const BlockValues&                 block_values,
+     Opm::SummaryState&                 st) const
 {
     const Evaluator::InputData input {
         es, sched, this->grid_, this->regCache_
     };
 
     const Evaluator::SimulatorResults simRes {
-        well_solution, group_solution, single_values, region_values, block_values
+        well_solution, grp_nwrk_solution, single_values, region_values, block_values
     };
 
     for (auto& evalPtr : this->outputParameters_.getEvaluators()) {
@@ -2728,16 +2728,16 @@ Summary::Summary(const EclipseState&  es,
     : pImpl_(new SummaryImplementation(es, sumcfg, grid, sched, basename))
 {}
 
-void Summary::eval(SummaryState&                  st,
-                   const int                      report_step,
-                   const double                   secs_elapsed,
-                   const EclipseState&            es,
-                   const Schedule&                schedule,
-                   const data::WellRates&         well_solution,
-                   const data::GroupValues&       group_solution,
-                   GlobalProcessParameters        single_values,
-                   const RegionParameters&        region_values,
-                   const BlockValues&             block_values) const
+void Summary::eval(SummaryState&                      st,
+                   const int                          report_step,
+                   const double                       secs_elapsed,
+                   const EclipseState&                es,
+                   const Schedule&                    schedule,
+                   const data::WellRates&             well_solution,
+                   const data::GroupAndNetworkValues& grp_nwrk_solution,
+                   GlobalProcessParameters            single_values,
+                   const RegionParameters&            region_values,
+                   const BlockValues&                 block_values) const
 {
     validateElapsedTime(secs_elapsed, es, st);
 
@@ -2758,7 +2758,7 @@ void Summary::eval(SummaryState&                  st,
     const auto sim_step = std::max( 0, report_step - 1 );
 
     this->pImpl_->eval(es, schedule, sim_step, duration,
-                       well_solution, group_solution, single_values,
+                       well_solution, grp_nwrk_solution, single_values,
                        region_values, block_values, st);
 
     st.update_elapsed(duration);

@@ -24,6 +24,7 @@
 #include <map>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include <opm/output/data/GuideRateValue.hpp>
@@ -105,34 +106,87 @@ namespace Opm { namespace data {
         }
     };
 
-    class GroupValues : public std::map<std::string, GroupData>  {
-    public:
+    struct NodeData {
+        double pressure { 0.0 };
+
         template <class MessageBufferType>
         void write(MessageBufferType& buffer) const
         {
-            unsigned int size = this->size();
-            buffer.write(size);
-
-            for (const auto& [gname, gdata] : *this) {
-                buffer.write(gname);
-                gdata .write(buffer);
-            }
+            buffer.write(this->pressure);
         }
 
         template <class MessageBufferType>
         void read(MessageBufferType& buffer)
         {
+            buffer.read(this->pressure);
+        }
+
+        bool operator==(const NodeData& other) const
+        {
+            return this->pressure == other.pressure;
+        }
+    };
+
+    class GroupAndNetworkValues {
+    public:
+        std::map<std::string, GroupData> groupData {};
+        std::map<std::string, NodeData>  nodeData {};
+
+        template <class MessageBufferType>
+        void write(MessageBufferType& buffer) const
+        {
+            this->writeMap(this->groupData, buffer);
+            this->writeMap(this->nodeData, buffer);
+        }
+
+        template <class MessageBufferType>
+        void read(MessageBufferType& buffer)
+        {
+            this->readMap(buffer, this->groupData);
+            this->readMap(buffer, this->nodeData);
+        }
+
+        bool operator==(const GroupAndNetworkValues& other) const
+        {
+            return (this->groupData == other.groupData)
+                && (this->nodeData  == other.nodeData);
+        }
+
+        void clear()
+        {
+            this->groupData.clear();
+            this->nodeData.clear();
+        }
+
+    private:
+        template <class MessageBufferType, class ValueType>
+        void writeMap(const std::map<std::string, ValueType>& map,
+                      MessageBufferType&                      buffer) const
+        {
+            const unsigned int size = map.size();
+            buffer.write(size);
+
+            for (const auto& [name, elm] : map) {
+                buffer.write(name);
+                elm   .write(buffer);
+            }
+        }
+
+        template <class MessageBufferType, class ValueType>
+        void readMap(MessageBufferType&                buffer,
+                     std::map<std::string, ValueType>& map)
+        {
             unsigned int size;
             buffer.read(size);
 
-            for (size_t i = 0; i < size; ++i) {
+            for (std::size_t i = 0; i < size; ++i) {
                 std::string name;
                 buffer.read(name);
 
-                auto gdata = GroupData{};
-                gdata.read(buffer);
+                auto elm = ValueType{};
+                elm.read(buffer);
 
-                this->emplace(name, gdata);
+                map.emplace(name, std::move(elm));
             }
         }
     };
