@@ -20,8 +20,10 @@
 #ifndef OPM_MESSAGEFORMATTER_HEADER_INCLUDED
 #define OPM_MESSAGEFORMATTER_HEADER_INCLUDED
 
-#include <opm/common/OpmLog/LogUtil.hpp>
 #include <string>
+#include <vector>
+
+#include <opm/common/OpmLog/LogUtil.hpp>
 
 namespace Opm
 {
@@ -37,6 +39,7 @@ namespace Opm
         /// input string, the formatting applied depending on the
         /// message_flag.
         virtual std::string format(const int64_t message_flag, const std::string& message) = 0;
+        virtual void format(const int64_t message_flag, std::vector<std::string>& message_list) = 0;
     };
 
 
@@ -83,6 +86,22 @@ namespace Opm
                 msg = Log::colorCodeMessage(message_flag, msg);
             }
             return msg;
+        }
+
+        virtual void format(const int64_t message_flag, std::vector<std::string>& message_list) override
+        {
+            for (std::size_t index = 0; index < message_list.size(); index++) {
+                auto& msg = message_list[index];
+                if (message_flag & this->prefix_flag_) {
+                    if (index == 0)
+                        msg = Log::prefixMessage(message_flag, msg);
+                    else
+                        msg = Log::prefixMessage(Log::MessageType::Continuation, msg);
+                }
+
+                if (this->use_color_coding_)
+                    msg = Log::colorCodeMessage(message_flag, msg);
+            }
         }
     private:
         bool use_color_coding_ = false;

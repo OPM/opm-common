@@ -52,6 +52,10 @@ void CounterLog::addMessageUnconditionally(int64_t messageType, const std::strin
     m_count[messageType]++;
 }
 
+void CounterLog::addMessageUnconditionally(int64_t messageType, std::vector<std::string> ) {
+    m_count[messageType]++;
+}
+
 
 void CounterLog::clear()
 {

@@ -29,6 +29,11 @@ namespace Opm {
         m_count[messageType]++;
     }
 
+    void EclipsePRTLog::addMessageUnconditionally(int64_t messageType, std::vector<std::string> message_list)
+    {
+        StreamLog::addMessageUnconditionally(messageType, message_list);
+        m_count[messageType]++;
+    }
 
     size_t EclipsePRTLog::numMessages(int64_t messageType) const 
     {

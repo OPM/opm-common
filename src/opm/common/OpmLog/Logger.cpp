@@ -40,11 +40,11 @@ namespace Opm {
     }
 
     void Logger::addTaggedMessage(int64_t messageType, const std::string& tag, const std::string& message) const {
-        if ((m_enabledTypes & messageType) == 0)
+        if ((this->m_enabledTypes & messageType) == 0)
             throw std::invalid_argument("Tried to issue message with unrecognized message ID");
 
-        if (m_globalMask & messageType) {
-            for (auto iter : m_backends) {
+        if (this->m_globalMask & messageType) {
+            for (auto iter : this->m_backends) {
                 LogBackend& backend = *(iter.second);
                 backend.addTaggedMessage( messageType, tag, message );
             }
@@ -53,6 +53,22 @@ namespace Opm {
 
     void Logger::addMessage(int64_t messageType , const std::string& message) const {
         addTaggedMessage(messageType, "", message);
+    }
+
+    void Logger::addTaggedMessage(int64_t messageType, const std::string& tag, const std::vector<std::string>& message_list) const {
+        if ((this->m_enabledTypes & messageType) == 0)
+            throw std::invalid_argument("Tried to issue message with unrecognized message ID");
+
+        if (this->m_globalMask & messageType) {
+            for (auto iter : this->m_backends) {
+                LogBackend& backend = *(iter.second);
+                backend.addTaggedMessage( messageType, tag, message_list );
+            }
+        }
+    }
+
+    void Logger::addMessage(int64_t messageType , const std::vector<std::string>& message_list) const {
+        addTaggedMessage(messageType, "", message_list);
     }
 
 
@@ -92,7 +108,7 @@ namespace Opm {
         return m_enabledTypes;
     }
 
-    //static: 
+    //static:
     bool Logger::enabledMessageType( int64_t enabledTypes , int64_t messageType) {
         if (Log::isPower2( messageType)) {
             if ((messageType & enabledTypes) == 0)

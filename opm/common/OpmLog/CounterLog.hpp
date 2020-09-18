@@ -19,9 +19,10 @@
 #ifndef OPM_COUNTERLOG_HPP
 #define OPM_COUNTERLOG_HPP
 
-#include <string>
-#include <memory>
 #include <map>
+#include <memory>
+#include <string>
+#include <vector>
 
 #include <opm/common/OpmLog/LogBackend.hpp>
 
@@ -43,6 +44,9 @@ namespace Opm {
     protected:
         void addMessageUnconditionally(int64_t messageFlag,
                                        const std::string& message) override;
+
+        void addMessageUnconditionally(int64_t messageFlag,
+                                       std::vector<std::string> message_list) override;
     private:
         std::map<int64_t , size_t> m_count;
     };

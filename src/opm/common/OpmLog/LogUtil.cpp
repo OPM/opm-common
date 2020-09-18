@@ -26,6 +26,18 @@ namespace Opm {
 
 namespace Log {
 
+namespace {
+
+static const std::string debugPrefix   = std::string{"Debug  : "};
+static const std::string notePrefix    = std::string{"Note   : "};
+static const std::string infoPrefix    = std::string{"Info   : "};
+static const std::string warningPrefix = std::string{"\nWarning: "};
+static const std::string errorPrefix   = std::string{"\nError  : "};
+static const std::string problemPrefix = std::string{"\nProblem: "};
+static const std::string bugPrefix     = std::string{"\nBug    : "};
+static const std::string blankPrefix   = std::string{"         "};
+}
+
     bool isPower2(int64_t x) {
         return ((x != 0) && !(x & (x - 1)));
     }
@@ -46,36 +58,35 @@ namespace Log {
 
 
     std::string prefixMessage(int64_t messageType, const std::string& message) {
-        std::string prefix;
         switch (messageType) {
+        case MessageType::Continuation:
+            return blankPrefix + message;
+
         case MessageType::Debug:
-            prefix = "Debug";
-            break;
+            return debugPrefix + message;
+
         case MessageType::Note:
-            prefix = "Note";
-            break;
+            return notePrefix + message;
+
         case MessageType::Info:
-            prefix = "Info";
-            break;
+            return infoPrefix + message;
+
         case MessageType::Warning:
-            prefix = "\nWarning";
-            break;
+            return warningPrefix + message;
+
         case MessageType::Error:
-            prefix = "\nError";
-            break;
+            return errorPrefix + message;
+
         case MessageType::Problem:
-            prefix = "\nProblem";
-            break;
+            return problemPrefix + message;
+
         case MessageType::Bug:
-            prefix = "\nBug";
-            break;
+            return bugPrefix + message;
+
         default:
             throw std::invalid_argument("Unhandled messagetype");
         }
-
-        return prefix + ": " + message;
     }
-
 
     std::string colorCodeMessage(int64_t messageType, const std::string& message) {
         switch (messageType) {

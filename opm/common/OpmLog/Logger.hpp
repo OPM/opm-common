@@ -25,6 +25,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <vector>
 
 namespace Opm {
 
@@ -36,6 +37,8 @@ public:
     Logger();
     void addMessage(int64_t messageType , const std::string& message) const;
     void addTaggedMessage(int64_t messageType, const std::string& tag, const std::string& message) const;
+    void addMessage(int64_t messageType , const std::vector<std::string>& message_list) const;
+    void addTaggedMessage(int64_t messageType, const std::string& tag, const std::vector<std::string>& message_list) const;
 
     static bool enabledDefaultMessageType( int64_t messageType);
     bool enabledMessageType( int64_t messageType) const;
