@@ -1456,6 +1456,7 @@ inline std::vector<Opm::Well> find_wells( const Opm::Schedule& schedule,
 
     case Opm::EclIO::SummaryNode::Category::Aquifer:       [[fallthrough]];
     case Opm::EclIO::SummaryNode::Category::Block:         [[fallthrough]];
+    case Opm::EclIO::SummaryNode::Category::Node:          [[fallthrough]];
     case Opm::EclIO::SummaryNode::Category::Miscellaneous:
         return {};
     }
@@ -1487,6 +1488,8 @@ bool need_wells(const Opm::EclIO::SummaryNode& node)
 
     case Cat::Aquifer:       [[fallthrough]];
     case Cat::Miscellaneous: [[fallthrough]];
+    case Cat::Node:          [[fallthrough]];
+        // Node values directly available in solution.
     case Cat::Block:
         return false;
     }

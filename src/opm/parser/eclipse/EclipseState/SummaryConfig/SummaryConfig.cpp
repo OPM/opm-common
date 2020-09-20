@@ -21,7 +21,11 @@
 #include <algorithm>
 #include <array>
 #include <iostream>
+#include <map>
 #include <stdexcept>
+#include <string>
+#include <unordered_set>
+#include <vector>
 
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
@@ -37,6 +41,7 @@
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridDims.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Network/ExtNetwork.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
@@ -255,8 +260,58 @@ namespace {
         return false;
     }
 
-    bool is_aquifer(const std::string& keyword) {
-        return keyword[0] == 'A';
+    bool is_aquifer(const std::string& keyword)
+    {
+        return (keyword[0] == 'A') && (keyword != "ALL");
+    }
+
+    bool is_node_keyword(const std::string& keyword)
+    {
+        static const auto nodekw = keyword_set {
+            "GPR", "GPRG", "GPRW",
+        };
+
+        return is_in_set(nodekw, keyword);
+    }
+
+    bool need_node_names(const SUMMARYSection& sect)
+    {
+        // We need the the node names if there is any node-related summary
+        // keywords in the input deck's SUMMARY section.  The reason is that
+        // we need to be able to fill out all node names in the case of a
+        // keyword that does not specify any nodes (e.g., "GPR /"), and to
+        // check for missing nodes if a keyword is erroneously specified.
+
+        return std::any_of(sect.begin(), sect.end(),
+            [](const DeckKeyword& keyword)
+        {
+            return is_node_keyword(keyword.name());
+        });
+    }
+
+    std::vector<std::string> collect_node_names(const Schedule& sched)
+    {
+        auto node_names = std::vector<std::string>{};
+        auto names = std::unordered_set<std::string>{};
+
+        const auto nstep = sched.getTimeMap().numTimesteps();
+        for (auto step = 0*nstep; step < nstep; ++step) {
+            const auto& nodes = sched.network(step).node_names();
+            names.insert(nodes.begin(), nodes.end());
+        }
+
+        node_names.assign(names.begin(), names.end());
+        std::sort(node_names.begin(), node_names.end());
+
+        return node_names;
+    }
+
+    SummaryConfigNode::Category
+    distinguish_group_from_node(const std::string& keyword)
+    {
+        return is_node_keyword(keyword)
+            ? SummaryConfigNode::Category::Node
+            : SummaryConfigNode::Category::Group;
     }
 
     SummaryConfigNode::Type parseKeywordType(const std::string& keyword) {
@@ -287,6 +342,14 @@ void handleMissingGroup( const ParseContext& parseContext , ErrorGuard& errors, 
     parseContext.handleError( ParseContext::SUMMARY_UNKNOWN_GROUP , msg, errors );
 }
 
+void handleMissingNode( const ParseContext& parseContext, ErrorGuard& errors, const std::string& keyword, const std::string& node_name )
+{
+    const auto msg = std::string("Error in keyword \"") + keyword + std::string("\": No such network node: ") + node_name;
+    if (parseContext.get( ParseContext::SUMMARY_UNKNOWN_NODE) == InputError::WARN)
+        std::cerr << "ERROR: " << msg << std::endl;
+
+    parseContext.handleError( ParseContext::SUMMARY_UNKNOWN_NODE, msg, errors );
+}
 
 inline void keywordW( SummaryConfig::keyword_list& list,
                       const std::vector<std::string>& well_names,
@@ -400,6 +463,40 @@ inline void keywordG( SummaryConfig::keyword_list& list,
             list.push_back( param.namedEntity(group) );
         else
             handleMissingGroup( parseContext, errors, keyword.name(), group );
+    }
+}
+
+void keyword_node( SummaryConfig::keyword_list& list,
+                   const std::vector<std::string>& node_names,
+                   const ParseContext& parseContext,
+                   ErrorGuard& errors,
+                   const DeckKeyword& keyword)
+{
+    auto param = SummaryConfigNode {
+        keyword.name(), SummaryConfigNode::Category::Node, keyword.location()
+    }
+    .parameterType( parseKeywordType(keyword.name()) )
+    .isUserDefined( is_udq(keyword.name()) );
+
+    if( keyword.size() == 0 ||
+        !keyword.getDataRecord().getDataItem().hasValue( 0 ) ) {
+
+        for (const auto& node_name : node_names) {
+            list.push_back( param.namedEntity(node_name) );
+        }
+
+        return;
+    }
+
+    const auto& item = keyword.getDataRecord().getDataItem();
+
+    for (const auto& node_name : item.getData<std::string>()) {
+        auto pos = std::find(node_names.begin(),
+                             node_names.end(), node_name);
+        if (pos != node_names.end())
+            list.push_back( param.namedEntity(node_name) );
+        else
+            handleMissingNode( parseContext, errors, keyword.name(), node_name );
     }
 }
 
@@ -734,6 +831,7 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
             case SummaryConfigNode::Category::Block: return "Block";
             case SummaryConfigNode::Category::Connection: return "Connection";
             case SummaryConfigNode::Category::Segment: return "Segment";
+            case SummaryConfigNode::Category::Node: return "Node";
             case SummaryConfigNode::Category::Miscellaneous: return "Miscellaneous";
         }
 
@@ -766,6 +864,7 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
     }
 
   inline void handleKW( SummaryConfig::keyword_list& list,
+                        const std::vector<std::string>& node_names,
                         const DeckKeyword& keyword,
                         const Schedule& schedule,
                         const TableManager& tables,
@@ -786,6 +885,7 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
         case Cat::Region: return keywordR( list, keyword, tables, parseContext, errors );
         case Cat::Connection: return keywordC( list, parseContext, errors, keyword, schedule, dims);
         case Cat::Segment: return keywordS( list, parseContext, errors, keyword, schedule );
+        case Cat::Node: return keyword_node( list, node_names, parseContext, errors, keyword );
         case Cat::Miscellaneous: return keywordMISC( list, keyword );
 
         default:
@@ -845,7 +945,7 @@ SummaryConfigNode::Category parseKeywordCategory(const std::string& keyword) {
     switch (keyword[0]) {
         case 'A': return Cat::Aquifer;
         case 'W': return Cat::Well;
-        case 'G': return Cat::Group;
+        case 'G': return distinguish_group_from_node(keyword);
         case 'F': return Cat::Field;
         case 'C': return Cat::Connection;
         case 'R': return Cat::Region;
@@ -912,6 +1012,7 @@ std::string SummaryConfigNode::uniqueNodeKey() const
 {
     switch (this->category()) {
     case SummaryConfigNode::Category::Well: [[fallthrough]];
+    case SummaryConfigNode::Category::Node: [[fallthrough]];
     case SummaryConfigNode::Category::Group:
         return this->keyword() + ':' + this->namedEntity();
 
@@ -948,6 +1049,7 @@ bool operator==(const SummaryConfigNode& lhs, const SummaryConfigNode& rhs)
             return true;
 
         case SummaryConfigNode::Category::Well: [[fallthrough]];
+        case SummaryConfigNode::Category::Node: [[fallthrough]];
         case SummaryConfigNode::Category::Group:
             // Equal if associated to same named entity
             return lhs.namedEntity() == rhs.namedEntity();
@@ -984,6 +1086,7 @@ bool operator<(const SummaryConfigNode& lhs, const SummaryConfigNode& rhs)
             return false;
 
         case SummaryConfigNode::Category::Well: [[fallthrough]];
+        case SummaryConfigNode::Category::Node: [[fallthrough]];
         case SummaryConfigNode::Category::Group:
             // Ordering determined by namedEntityd entity
             return lhs.namedEntity() < rhs.namedEntity();
@@ -997,10 +1100,11 @@ bool operator<(const SummaryConfigNode& lhs, const SummaryConfigNode& rhs)
         case SummaryConfigNode::Category::Connection: [[fallthrough]];
         case SummaryConfigNode::Category::Segment:
         {
-            // Ordering determined by pair of namedEntity and numeric ID.
+            // Ordering determined by pair of named entity and numeric ID.
             //
             // Would ideally implement this in terms of operator< for
-            // std::tuple<std::string,int>, with objects generated by std::tie().
+            // std::tuple<std::string,int>, with objects generated by std::tie(),
+            // but `namedEntity()` does not return an lvalue.
             const auto& lnm = lhs.namedEntity();
             const auto& rnm = rhs.namedEntity();
 
@@ -1024,11 +1128,15 @@ SummaryConfig::SummaryConfig( const Deck& deck,
                               const GridDims& dims) {
     SUMMARYSection section( deck );
 
+    const auto node_names = need_node_names(section)
+        ? collect_node_names(schedule)
+        : std::vector<std::string>{};
+
     for (const auto &kw : section) {
         if (is_processing_instruction(kw.name())) {
             handleProcessingInstruction(kw.name());
-        } else  {
-            handleKW( this->m_keywords, kw, schedule, tables, parseContext, errors, dims);
+        } else {
+            handleKW(this->m_keywords, node_names, kw, schedule, tables, parseContext, errors, dims);
         }
     }
 
