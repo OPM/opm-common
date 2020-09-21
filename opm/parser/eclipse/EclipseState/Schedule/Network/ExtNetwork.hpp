@@ -45,7 +45,7 @@ public:
     const Node& root() const;
     std::vector<Branch> downtree_branches(const std::string& node) const;
     std::optional<Branch> uptree_branch(const std::string& node) const;
-
+    std::vector<std::string> node_names() const;
 
     bool operator==(const ExtNetwork& other) const;
     static ExtNetwork serializeObject();

@@ -17,6 +17,7 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <algorithm>
+#include <iterator>
 #include <stdexcept>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Network/ExtNetwork.hpp>
@@ -146,5 +147,18 @@ void ExtNetwork::add_node(Node node)
     this->m_nodes.insert({ name, std::move(node) });
 }
 
+std::vector<std::string> ExtNetwork::node_names() const
+{
+    auto nodes = std::vector<std::string>{};
+    nodes.reserve(this->m_nodes.size());
+
+    std::transform(this->m_nodes.begin(), this->m_nodes.end(), std::back_inserter(nodes),
+        [](const auto& node_pair)
+    {
+        return node_pair.first;
+    });
+
+    return nodes;
+}
 }
 }

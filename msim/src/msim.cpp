@@ -54,14 +54,14 @@ void msim::run(Schedule& schedule, EclipseIO& io, bool report_only) {
     io.writeInitial();
     for (size_t report_step = 1; report_step < schedule.size(); report_step++) {
         data::Wells well_data;
-        data::GroupValues group_data;
+        data::GroupAndNetworkValues group_nwrk_data;
         if (report_only)
-            run_step(schedule, action_state, st, udq_state, sol, well_data, group_data, report_step, io);
+            run_step(schedule, action_state, st, udq_state, sol, well_data, group_nwrk_data, report_step, io);
         else {
             double time_step = std::min(week, 0.5*schedule.stepLength(report_step - 1));
-            run_step(schedule, action_state, st, udq_state, sol, well_data, group_data, report_step, time_step, io);
+            run_step(schedule, action_state, st, udq_state, sol, well_data, group_nwrk_data, report_step, time_step, io);
         }
-        post_step(schedule, action_state, st, sol, well_data, group_data, report_step);
+        post_step(schedule, action_state, st, sol, well_data, group_nwrk_data, report_step);
         const auto& exit_status = schedule.exitStatus();
         if (exit_status.has_value())
             return;
@@ -73,7 +73,7 @@ UDAValue msim::uda_val() {
 }
 
 
-void msim::post_step(Schedule& schedule, Action::State& action_state, SummaryState& st, data::Solution& /* sol */, data::Wells& /* well_data */, data::GroupValues& /* group_data */, size_t report_step) {
+void msim::post_step(Schedule& schedule, Action::State& action_state, SummaryState& st, data::Solution& /* sol */, data::Wells& /* well_data */, data::GroupAndNetworkValues& /* grp_nwrk_data */, size_t report_step) {
     const auto& actions = schedule.actions(report_step);
     if (actions.empty())
         return;
@@ -93,12 +93,12 @@ void msim::post_step(Schedule& schedule, Action::State& action_state, SummarySta
 
 
 
-void msim::run_step(const Schedule& schedule, Action::State& action_state, SummaryState& st, UDQState& udq_state, data::Solution& sol, data::Wells& well_data, data::GroupValues& group_data, size_t report_step, EclipseIO& io) const {
-    this->run_step(schedule, action_state, st, udq_state, sol, well_data, group_data, report_step, schedule.stepLength(report_step - 1), io);
+void msim::run_step(const Schedule& schedule, Action::State& action_state, SummaryState& st, UDQState& udq_state, data::Solution& sol, data::Wells& well_data, data::GroupAndNetworkValues& grp_nwrk_data, size_t report_step, EclipseIO& io) const {
+    this->run_step(schedule, action_state, st, udq_state, sol, well_data, grp_nwrk_data, report_step, schedule.stepLength(report_step - 1), io);
 }
 
 
-void msim::run_step(const Schedule& schedule, Action::State& action_state, SummaryState& st, UDQState& udq_state, data::Solution& sol, data::Wells& well_data, data::GroupValues& group_data, size_t report_step, double dt, EclipseIO& io) const {
+void msim::run_step(const Schedule& schedule, Action::State& action_state, SummaryState& st, UDQState& udq_state, data::Solution& sol, data::Wells& well_data, data::GroupAndNetworkValues& group_nwrk_data, size_t report_step, double dt, EclipseIO& io) const {
     double start_time = schedule.seconds(report_step - 1);
     double end_time = schedule.seconds(report_step);
     double seconds_elapsed = start_time;
@@ -108,7 +108,7 @@ void msim::run_step(const Schedule& schedule, Action::State& action_state, Summa
         if ((seconds_elapsed + time_step) > end_time)
             time_step = end_time - seconds_elapsed;
 
-        this->simulate(schedule, st, sol, well_data, group_data, report_step, seconds_elapsed, time_step);
+        this->simulate(schedule, st, sol, well_data, group_nwrk_data, report_step, seconds_elapsed, time_step);
 
         seconds_elapsed += time_step;
 
@@ -118,7 +118,7 @@ void msim::run_step(const Schedule& schedule, Action::State& action_state, Summa
                           this->state,
                           schedule,
                           well_data,
-                          group_data,
+                          group_nwrk_data,
                           {});
 
         schedule.getUDQConfig( report_step ).eval(report_step, st, udq_state);
@@ -131,15 +131,15 @@ void msim::run_step(const Schedule& schedule, Action::State& action_state, Summa
                      seconds_elapsed,
                      sol,
                      well_data,
-                     group_data,
+                     group_nwrk_data,
                      io);
     }
 }
 
 
 
-void msim::output(Action::State& action_state, SummaryState& st, const UDQState& udq_state, size_t report_step, bool substep, double seconds_elapsed, const data::Solution& sol, const data::Wells& well_data, const data::GroupValues& group_data, EclipseIO& io) const {
-    RestartValue value(sol, well_data, group_data);
+void msim::output(Action::State& action_state, SummaryState& st, const UDQState& udq_state, size_t report_step, bool substep, double seconds_elapsed, const data::Solution& sol, const data::Wells& well_data, const data::GroupAndNetworkValues& group_nwrk_data, EclipseIO& io) const {
+    RestartValue value(sol, well_data, group_nwrk_data);
     io.writeTimeStep(action_state,
                      st,
                      udq_state,
@@ -150,7 +150,7 @@ void msim::output(Action::State& action_state, SummaryState& st, const UDQState&
 }
 
 
-void msim::simulate(const Schedule& schedule, const SummaryState& st, data::Solution& sol, data::Wells& well_data, data::GroupValues& /* group_data */, size_t report_step, double seconds_elapsed, double time_step) const {
+void msim::simulate(const Schedule& schedule, const SummaryState& st, data::Solution& sol, data::Wells& well_data, data::GroupAndNetworkValues& /* group_nwrk_data */, size_t report_step, double seconds_elapsed, double time_step) const {
     for (const auto& sol_pair : this->solutions) {
         auto func = sol_pair.second;
         func(this->state, schedule, sol, report_step, seconds_elapsed + time_step);

@@ -1562,9 +1562,9 @@ namespace Opm { namespace RestartIO  {
         auto xw = rst_view->hasKeyword<double>("OPM_XWEL")
             ? restore_wells_opm(es, grid, schedule, *rst_view)
             : restore_wells_ecl(es, grid, schedule,  rst_view);
-        data::GroupValues xg;
+        data::GroupAndNetworkValues xg_nwrk;
 
-        auto rst_value = RestartValue{ std::move(xr), std::move(xw) , std::move(xg)};
+        auto rst_value = RestartValue{ std::move(xr), std::move(xw), std::move(xg_nwrk)};
 
         if (! extra_keys.empty()) {
             restoreExtra(extra_keys, es.getUnits(), *rst_view, rst_value);

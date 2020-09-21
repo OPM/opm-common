@@ -216,7 +216,7 @@ BOOST_AUTO_TEST_CASE(EclipseWriteRestartWellInfo) {
     solution.insert( "SWAT"    , Opm::UnitSystem::measure::identity , std::vector< double >( num_cells, 1 ) , Opm::data::TargetType::RESTART_SOLUTION);
     solution.insert( "SGAS"    , Opm::UnitSystem::measure::identity , std::vector< double >( num_cells, 1 ) , Opm::data::TargetType::RESTART_SOLUTION);
     Opm::data::Wells wells;
-    Opm::data::GroupValues groups;
+    Opm::data::GroupAndNetworkValues group_nwrk;
 
     for(int timestep = 0; timestep <= countTimeStep; ++timestep) {
 
@@ -226,7 +226,7 @@ BOOST_AUTO_TEST_CASE(EclipseWriteRestartWellInfo) {
                                      timestep,
                                      false,
                                      schedule.seconds(timestep),
-                                     Opm::RestartValue(solution, wells, groups));
+                                     Opm::RestartValue(solution, wells, group_nwrk));
     }
 
     for (int i=1; i <=4; i++) {

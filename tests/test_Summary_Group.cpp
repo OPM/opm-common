@@ -191,23 +191,23 @@ static data::Wells result_wells() {
 
 }
 
-static data::GroupValues result_groups() {
-    data::GroupValues groups;
+static data::GroupAndNetworkValues result_group_network() {
+    data::GroupAndNetworkValues grp_nwrk;
     data::GroupConstraints cgc_group;
 
     cgc_group.set(p_cmode::NONE, i_cmode::VREP, i_cmode::RATE);
-    groups["TEST"].currentControl = cgc_group;
+    grp_nwrk.groupData["TEST"].currentControl = cgc_group;
 
     cgc_group.set(p_cmode::ORAT, i_cmode::RESV, i_cmode::REIN);
-    groups["LOWER"].currentControl = cgc_group;
+    grp_nwrk.groupData["LOWER"].currentControl = cgc_group;
 
     cgc_group.set(p_cmode::GRAT, i_cmode::REIN, i_cmode::VREP);
-    groups["UPPER"].currentControl = cgc_group;
+    grp_nwrk.groupData["UPPER"].currentControl = cgc_group;
 
     cgc_group.set(p_cmode::NONE, i_cmode::NONE, i_cmode::NONE);
-    groups["FIELD"].currentControl = cgc_group;
+    grp_nwrk.groupData["FIELD"].currentControl = cgc_group;
 
-    return groups;
+    return grp_nwrk;
 }
 
 
@@ -219,7 +219,7 @@ struct setup {
     Schedule schedule;
     SummaryConfig config;
     data::Wells wells;
-    data::GroupValues groups;
+    data::GroupAndNetworkValues grp_nwrk;
     std::string name;
     WorkArea ta;
 
@@ -233,7 +233,7 @@ struct setup {
         schedule( deck, es, python),
         config( deck, schedule, es.getTableManager()),
         wells( result_wells() ),
-        groups( result_groups() ),
+        grp_nwrk( result_group_network() ),
         name( toupper(std::move(fname)) ),
         ta( "test_summary_group_constraints" )
     {}
@@ -258,10 +258,10 @@ BOOST_AUTO_TEST_CASE(group_keywords) {
     SummaryState st(std::chrono::system_clock::now());
 
     out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule , cfg.name );
-    writer.eval(st, 0, 0*day, cfg.es, cfg.schedule, cfg.wells, cfg.groups, {});
+    writer.eval(st, 0, 0*day, cfg.es, cfg.schedule, cfg.wells, cfg.grp_nwrk, {});
     writer.add_timestep( st, 0);
 
-    writer.eval(st, 1, 1*day, cfg.es, cfg.schedule, cfg.wells, cfg.groups, {});
+    writer.eval(st, 1, 1*day, cfg.es, cfg.schedule, cfg.wells, cfg.grp_nwrk, {});
     writer.add_timestep( st, 1);
 
     writer.write();
