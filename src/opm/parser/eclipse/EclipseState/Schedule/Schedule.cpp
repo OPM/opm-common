@@ -89,7 +89,6 @@ namespace {
         return (fnmatch(pattern.c_str(), name.c_str(), flags) == 0);
     }
 
-
     /*
       The function trim_wgname() is used to trim the leading and trailing spaces
       away from the group and well arguments given in the WELSPECS and GRUPTREE
@@ -113,14 +112,12 @@ namespace {
         return wgname;
     }
 
-
-std::pair<std::time_t, std::size_t> restart_info(const RestartIO::RstState * rst)
-{
-    if (!rst)
-        return std::make_pair(std::time_t{0}, std::size_t{0});
-    else
-        return rst->header.restart_info();
-}
+    std::pair<std::time_t, std::size_t> restart_info(const RestartIO::RstState * rst) {
+        if (!rst)
+            return std::make_pair(std::time_t{0}, std::size_t{0});
+        else
+            return rst->header.restart_info();
+    }
 }
 
     Schedule::Schedule( const Deck& deck,
@@ -170,7 +167,7 @@ std::pair<std::time_t, std::size_t> restart_info(const RestartIO::RstState * rst
                 break;
 
             if (keyword.name() == "MESSAGES")
-                handleMESSAGES(keyword, 0);
+                applyMESSAGES(keyword, 0);
         }
 
         if (DeckSection::hasSCHEDULE(deck))
@@ -303,145 +300,12 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
                                  ErrorGuard& errors,
                                  const EclipseGrid& grid,
                                  const FieldPropsManager& fp,
-                                 const UnitSystem& unit_system,
                                  std::vector<std::pair<const DeckKeyword*, size_t > >& rftProperties) {
-    /*
-      geoModifiers is a list of geo modifiers which can be found in the schedule
-      section. This is only partly supported, support is indicated by the bool
-      value. The keywords which are supported will be assembled in a per-timestep
-      'minideck', whereas ParseContext::UNSUPPORTED_SCHEDULE_GEO_MODIFIER will be
-      consulted for the others.
-    */
 
-        const std::map<std::string,bool> geoModifiers = {{"MULTFLT"  , true},
-                                                         {"MULTPV"   , false},
-                                                         {"MULTX"    , false},
-                                                         {"MULTX-"   , false},
-                                                         {"MULTY"    , false},
-                                                         {"MULTY-"   , false},
-                                                         {"MULTZ"    , false},
-                                                         {"MULTZ-"   , false},
-                                                         {"MULTREGT" , false},
-                                                         {"MULTR"    , false},
-                                                         {"MULTR-"   , false},
-                                                         {"MULTSIG"  , false},
-                                                         {"MULTSIGV" , false},
-                                                         {"MULTTHT"  , false},
-                                                         {"MULTTHT-" , false}};
+        const HandlerContext handlerContext { section, keyword, keywordIdx, currentStep, grid, fp };
 
-        if (keyword.name() == "UDQ")
-            handleUDQ(keyword, currentStep);
-
-        else if (keyword.name() == "WLIST")
-            handleWLIST( keyword, currentStep );
-
-        else if (keyword.name() == "WELSPECS")
-            handleWELSPECS( section, keywordIdx, currentStep, unit_system, parseContext, errors);
-
-        else if (keyword.name() == "WHISTCTL")
-            handleWHISTCTL(keyword, currentStep, parseContext, errors);
-
-        else if (keyword.name() == "WCONHIST")
-            handleWCONHIST(keyword, currentStep, parseContext, errors);
-
-        else if (keyword.name() == "WCONPROD")
-            handleWCONPROD(keyword, currentStep, parseContext, errors);
-
-        else if (keyword.name() == "WCONINJE")
-            handleWCONINJE(keyword, currentStep, parseContext, errors);
-
-        else if (keyword.name() == "WFOAM")
-            handleWFOAM(keyword, currentStep, parseContext, errors);
-
-        else if (keyword.name() == "WPOLYMER")
-            handleWPOLYMER(keyword, currentStep, parseContext, errors);
-
-        else if (keyword.name() == "WSALT")
-            handleWSALT(keyword, currentStep, parseContext, errors);
-
-        else if (keyword.name() == "WSOLVENT")
-            handleWSOLVENT(keyword, currentStep, parseContext, errors);
-
-        else if (keyword.name() == "WTRACER")
-            handleWTRACER(keyword, currentStep, parseContext, errors);
-
-        else if (keyword.name() == "WTEST")
-            handleWTEST(keyword, currentStep, parseContext, errors);
-
-        else if (keyword.name() == "WTEMP")
-            handleWTEMP(keyword, currentStep, parseContext, errors);
-
-        else if (keyword.name() == "WPMITAB")
-            handleWPMITAB(keyword, currentStep, parseContext, errors);
-
-        else if (keyword.name() == "WSKPTAB")
-            handleWSKPTAB(keyword, currentStep, parseContext, errors);
-
-        else if (keyword.name() == "WINJTEMP")
-            handleWINJTEMP(keyword, currentStep, parseContext, errors);
-
-        else if (keyword.name() == "WCONINJH")
-            handleWCONINJH(keyword, currentStep, parseContext, errors);
-
-        else if (keyword.name() == "WGRUPCON")
-            handleWGRUPCON(keyword, currentStep);
-
-        else if (keyword.name() == "COMPDAT")
-            handleCOMPDAT(keyword, currentStep, grid, fp, parseContext, errors);
-
-        else if (keyword.name() == "WELSEGS")
-            handleWELSEGS(keyword, currentStep);
-
-        else if (keyword.name() == "COMPSEGS")
-            handleCOMPSEGS(keyword, currentStep, grid, parseContext, errors);
-
-        else if (keyword.name() == "WSEGSICD")
-            handleWSEGSICD(keyword, currentStep);
-
-        else if (keyword.name() == "WSEGVALV")
-            handleWSEGVALV(keyword, currentStep); //, parseContext, errors);
-
-        else if (keyword.name() == "WELOPEN")
-            handleWELOPEN(keyword, currentStep, parseContext, errors);
-
-        else if (keyword.name() == "WELTARG")
-            handleWELTARG(section, keyword, currentStep, parseContext, errors);
-
-        else if (keyword.name() == "GRUPTREE")
-            handleGRUPTREE(keyword, currentStep, unit_system, parseContext, errors);
-
-        else if (keyword.name() == "GPMAINT")
-            handleGPMAINT(keyword, currentStep, parseContext, errors);
-
-        else if (keyword.name() == "GRUPNET")
-            handleGRUPNET(keyword, currentStep, unit_system);
-
-        else if (keyword.name() == "GCONINJE")
-            handleGCONINJE(keyword, currentStep, parseContext, errors);
-
-        else if (keyword.name() == "GCONPROD")
-            handleGCONPROD(keyword, currentStep, parseContext, errors);
-
-        else if (keyword.name() == "GEFAC")
-            handleGEFAC(keyword, currentStep, parseContext, errors);
-
-        else if (keyword.name() == "GCONSALE")
-            handleGCONSALE(keyword, currentStep, unit_system);
-
-        else if (keyword.name() == "GCONSUMP")
-            handleGCONSUMP(keyword, currentStep, unit_system);
-
-        else if (keyword.name() == "GUIDERAT")
-            handleGUIDERAT(keyword, currentStep);
-
-        else if (keyword.name() == "LINCOM")
-            handleLINCOM(keyword, currentStep);
-
-        else if (keyword.name() == "TUNING")
-            handleTUNING(keyword, currentStep);
-
-        else if (keyword.name() == "WSEGITER")
-            handleWSEGITER(keyword, currentStep);
+        if (handleNormalKeyword(handlerContext, parseContext, errors))
+            return;
 
         else if (keyword.name() == "WRFT")
             rftProperties.push_back( std::make_pair( &keyword , currentStep ));
@@ -449,85 +313,13 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
         else if (keyword.name() == "WRFTPLT")
             rftProperties.push_back( std::make_pair( &keyword , currentStep ));
 
-        else if (keyword.name() == "WPIMULT")
-            handleWPIMULT(keyword, currentStep);
-
-        else if (keyword.name() == "COMPORD")
-            handleCOMPORD(parseContext, errors , keyword, currentStep);
-
-        else if (keyword.name() == "COMPLUMP")
-            handleCOMPLUMP(keyword, currentStep);
-
-        else if (keyword.name() == "DRSDT")
-            handleDRSDT(keyword, currentStep);
-
-        else if (keyword.name() == "DRVDT")
-            handleDRVDT(keyword, currentStep);
-
-        else if (keyword.name() == "DRSDTR")
-            handleDRSDTR(keyword, currentStep);
-
-        else if (keyword.name() == "DRVDTR")
-            handleDRVDTR(keyword, currentStep);
-
-        else if (keyword.name() == "VAPPARS")
-            handleVAPPARS(keyword, currentStep);
-
-        else if (keyword.name() == "WECON")
-            handleWECON(keyword, currentStep, parseContext, errors);
-
-        else if (keyword.name() == "MESSAGES")
-            handleMESSAGES(keyword, currentStep);
-
-        else if (keyword.name() == "RPTSCHED")
-            handleRPTSCHED(keyword, currentStep);
-
-        else if (keyword.name() == "WEFAC")
-            handleWEFAC(keyword, currentStep, parseContext, errors);
-
-        else if (keyword.name() == "VFPINJ")
-            handleVFPINJ(keyword, unit_system, currentStep);
-
-        else if (keyword.name() == "VFPPROD")
-            handleVFPPROD(keyword, unit_system, currentStep);
-
-        else if (keyword.name() == "NUPCOL")
-            handleNUPCOL(keyword, currentStep);
-
-        else if (keyword.name() == "NODEPROP")
-            handleNODEPROP(keyword, currentStep);
-
-        else if (keyword.name() == "BRANPROP")
-            handleBRANPROP(keyword, currentStep);
-
-        else if (keyword.name() == "LIFTOPT")
-            handleLIFTOPT(keyword, currentStep);
-
-        else if (keyword.name() == "GLIFTOPT")
-            handleGLIFTOPT(keyword, currentStep, parseContext, errors);
-
-        else if (keyword.name() == "WLIFTOPT")
-            handleWLIFTOPT(keyword, currentStep, parseContext, errors);
-
         else if (keyword.name() == "PYACTION")
             handlePYACTION(python, input_path, keyword, currentStep);
-
-        else if (geoModifiers.find( keyword.name() ) != geoModifiers.end()) {
-            bool supported = geoModifiers.at( keyword.name() );
-            if (supported) {
-                this->m_modifierDeck[ currentStep ].addKeyword( keyword );
-                m_events.addEvent( ScheduleEvents::GEO_MODIFIER , currentStep);
-            } else {
-                std::string msg = "OPM does not support grid property modifier " + keyword.name() + " in the Schedule section. Error at report: " + std::to_string( currentStep );
-                parseContext.handleError( ParseContext::UNSUPPORTED_SCHEDULE_GEO_MODIFIER , msg, errors );
-            }
-        }
     }
 
 
     void Schedule::iterateScheduleSection(std::shared_ptr<const Opm::Python> python, const std::string& input_path, const ParseContext& parseContext , ErrorGuard& errors, const SCHEDULESection& section , const EclipseGrid& grid,
                                           const FieldPropsManager& fp) {
-        const auto& unit_system = section.unitSystem();
         std::vector<std::pair< const DeckKeyword* , size_t> > rftProperties;
         size_t keywordIdx = 0;
         /*
@@ -579,7 +371,7 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
 
             else {
                 if (currentStep >= this->m_timeMap.restart_offset() || skiprest_whitelist.count(keyword.name()))
-                    this->handleKeyword(python, input_path, currentStep, section, keywordIdx, keyword, parseContext, errors, grid, fp, unit_system, rftProperties);
+                    this->handleKeyword(python, input_path, currentStep, section, keywordIdx, keyword, parseContext, errors, grid, fp, rftProperties);
                 else
                     OpmLog::info("Skipping keyword: " + keyword.name() + " while loading SCHEDULE section");
             }
@@ -595,15 +387,14 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
             const DeckKeyword& keyword = *rftPair->first;
             size_t timeStep = rftPair->second;
             if (keyword.name() == "WRFT")
-                handleWRFT(keyword,  timeStep);
+                applyWRFT(keyword,  timeStep);
 
             if (keyword.name() == "WRFTPLT")
-                handleWRFTPLT(keyword, timeStep);
+                applyWRFTPLT(keyword, timeStep);
         }
 
         checkUnhandledKeywords(section);
     }
-
 
     void Schedule::addACTIONX(const Action::ActionX& action, std::size_t currentStep) {
         auto new_actions = std::make_shared<Action::Actions>( this->actions(currentStep) );
@@ -611,15 +402,11 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
         this->m_actions.update(currentStep, new_actions);
     }
 
-
-    void Schedule::checkUnhandledKeywords(const SCHEDULESection& /*section*/) const
-    {
+    void Schedule::checkUnhandledKeywords(const SCHEDULESection& /*section*/) const {
     }
 
-
-
-    void Schedule::handleWHISTCTL(const DeckKeyword& keyword, std::size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
-        const auto& record = keyword.getRecord(0);
+    void Schedule::handleWHISTCTL(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+        const auto& record = handlerContext.keyword.getRecord(0);
         const std::string& cmodeString = record.getItem("CMODE").getTrimmedString(0);
         const auto controlMode = Well::ProducerCModeFromString( cmodeString );
 
@@ -629,12 +416,12 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
                     + ", which makes WHISTCTL keyword not affect the simulation at all";
                 OpmLog::warning(msg);
             } else
-                this->global_whistctl_mode.update(currentStep, controlMode);
+                this->global_whistctl_mode.update(handlerContext.currentStep, controlMode);
         }
 
         const std::string bhp_terminate = record.getItem("BPH_TERMINATE").getTrimmedString(0);
         if (bhp_terminate == "YES") {
-            std::string msg = "The WHISTCTL keyword does not handle 'YES'. i.e. to terminate the run";
+            std::string msg = "The WHISTCTL handlerContext.keyword does not handle 'YES'. i.e. to terminate the run";
             OpmLog::error(msg);
             parseContext.handleError( ParseContext::UNSUPPORTED_TERMINATE_IF_BHP , msg, errors );
         }
@@ -642,42 +429,42 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
 
         for (auto& well_pair : this->wells_static) {
             auto& dynamic_state = well_pair.second;
-            auto well2 = std::make_shared<Well>(*dynamic_state[currentStep]);
+            auto well2 = std::make_shared<Well>(*dynamic_state[handlerContext.currentStep]);
             auto prop = std::make_shared<Well::WellProductionProperties>(well2->getProductionProperties());
 
             if (prop->whistctl_cmode != controlMode) {
                 prop->whistctl_cmode = controlMode;
                 well2->updateProduction(prop);
-                this->updateWell(std::move(well2), currentStep);
+                this->updateWell(std::move(well2), handlerContext.currentStep);
             }
         }
 
         for (auto& well_pair : this->wells_static) {
             auto& dynamic_state = well_pair.second;
-            auto well2 = std::make_shared<Well>(*dynamic_state[currentStep]);
+            auto well2 = std::make_shared<Well>(*dynamic_state[handlerContext.currentStep]);
             auto prop = std::make_shared<Well::WellProductionProperties>(well2->getProductionProperties());
 
             if (prop->whistctl_cmode != controlMode) {
                 prop->whistctl_cmode = controlMode;
                 well2->updateProduction(prop);
-                this->updateWell(std::move(well2), currentStep);
+                this->updateWell(std::move(well2), handlerContext.currentStep);
             }
         }
 
         for (auto& well_pair : this->wells_static) {
             auto& dynamic_state = well_pair.second;
-            auto well2 = std::make_shared<Well>(*dynamic_state[currentStep]);
+            auto well2 = std::make_shared<Well>(*dynamic_state[handlerContext.currentStep]);
             auto prop = std::make_shared<Well::WellProductionProperties>(well2->getProductionProperties());
 
             if (prop->whistctl_cmode != controlMode) {
                 prop->whistctl_cmode = controlMode;
                 well2->updateProduction(prop);
-                this->updateWell(std::move(well2), currentStep);
+                this->updateWell(std::move(well2), handlerContext.currentStep);
             }
         }
     }
 
-    void Schedule::handlePYACTION( std::shared_ptr<const Python> python, const std::string& input_path, const DeckKeyword& keyword, size_t currentStep) {
+    void Schedule::handlePYACTION(std::shared_ptr<const Python> python, const std::string& input_path, const DeckKeyword& keyword, std::size_t currentStep) {
         if (!python->enabled()) {
             //Must have a real Python instance here - to ensure that IMPORT works
             const auto& loc = keyword.location();
@@ -701,31 +488,29 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
         this->m_actions.update(currentStep, new_actions);
     }
 
-    void Schedule::handleNUPCOL( const DeckKeyword& keyword, size_t currentStep) {
-        int nupcol = keyword.getRecord(0).getItem("NUM_ITER").get<int>(0);
-        if (keyword.getRecord(0).getItem("NUM_ITER").defaultApplied(0)) {
+    void Schedule::handleNUPCOL(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+        int nupcol = handlerContext.keyword.getRecord(0).getItem("NUM_ITER").get<int>(0);
+        if (handlerContext.keyword.getRecord(0).getItem("NUM_ITER").defaultApplied(0)) {
             std::string msg = "OPM Flow uses 12 as default NUPCOL value";
             OpmLog::note(msg);
         }
 
-        this->m_nupcol.update(currentStep, nupcol);
+        this->m_nupcol.update(handlerContext.currentStep, nupcol);
     }
 
-
-    void Schedule::handleEXIT(const DeckKeyword& keyword, std::size_t report_step ) {
+    void Schedule::applyEXIT(const DeckKeyword& keyword, std::size_t report_step) {
         using ex = ParserKeywords::EXIT;
         int status = keyword.getRecord(0).getItem<ex::STATUS_CODE>().get<int>(0);
         OpmLog::info("Simulation exit with status: " + std::to_string(status) + " requested as part of ACTIONX at report_step: " + std::to_string(report_step));
         this->exit_status = status;
     }
 
-
     /*
       The COMPORD keyword is handled together with the WELSPECS keyword in the
       handleWELSPECS function.
     */
-    void Schedule::handleCOMPORD(const ParseContext& parseContext, ErrorGuard& errors, const DeckKeyword& compordKeyword, size_t /* currentStep */) {
-        for (const auto& record : compordKeyword) {
+    void Schedule::handleCOMPORD(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+        for (const auto& record : handlerContext.keyword) {
             const auto& methodItem = record.getItem<ParserKeywords::COMPORD::ORDER_TYPE>();
             if ((methodItem.get< std::string >(0) != "TRACK")  && (methodItem.get< std::string >(0) != "INPUT")) {
                 std::string msg = "The COMPORD keyword only handles 'TRACK' or 'INPUT' order.";
@@ -735,8 +520,8 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
         }
     }
 
-    void Schedule::handleVFPINJ(const DeckKeyword& vfpinjKeyword, const UnitSystem& unit_system, size_t currentStep) {
-        std::shared_ptr<VFPInjTable> table = std::make_shared<VFPInjTable>(vfpinjKeyword, unit_system);
+    void Schedule::handleVFPINJ(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+        std::shared_ptr<VFPInjTable> table = std::make_shared<VFPInjTable>(handlerContext.keyword, handlerContext.section.unitSystem());
         int table_id = table->getTableNum();
 
         const auto iter = vfpinj_tables.find(table_id);
@@ -745,12 +530,12 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
             vfpinj_tables.insert( pair );
         }
         auto & table_state = vfpinj_tables.at(table_id);
-        table_state.update(currentStep, table);
-        this->m_events.addEvent( ScheduleEvents::VFPINJ_UPDATE , currentStep);
+        table_state.update(handlerContext.currentStep, table);
+        this->m_events.addEvent( ScheduleEvents::VFPINJ_UPDATE , handlerContext.currentStep);
     }
 
-    void Schedule::handleVFPPROD(const DeckKeyword& vfpprodKeyword, const UnitSystem& unit_system, size_t currentStep) {
-        std::shared_ptr<VFPProdTable> table = std::make_shared<VFPProdTable>(vfpprodKeyword, unit_system);
+    void Schedule::handleVFPPROD(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+        std::shared_ptr<VFPProdTable> table = std::make_shared<VFPProdTable>(handlerContext.keyword, handlerContext.section.unitSystem());
         int table_id = table->getTableNum();
 
         const auto iter = vfpprod_tables.find(table_id);
@@ -759,19 +544,16 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
             vfpprod_tables.insert( pair );
         }
         auto & table_state = vfpprod_tables.at(table_id);
-        table_state.update(currentStep, table);
-        this->m_events.addEvent( ScheduleEvents::VFPPROD_UPDATE , currentStep);
+        table_state.update(handlerContext.currentStep, table);
+        this->m_events.addEvent( ScheduleEvents::VFPPROD_UPDATE , handlerContext.currentStep);
     }
 
 
-    void Schedule::handleWELSPECS( const SCHEDULESection& section,
-                                   size_t index,
-                                   size_t currentStep,
-                                   const UnitSystem& unit_system,
-                                   const ParseContext& parseContext,
-                                   ErrorGuard& errors) {
+    void Schedule::handleWELSPECS(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+        const auto& section = handlerContext.section;
+        const auto& unit_system = section.unitSystem();
         const auto COMPORD_in_timestep = [&]() -> const DeckKeyword* {
-            auto itr = section.begin() + index;
+            auto itr = section.begin() + handlerContext.keywordIndex;
             for( ; itr != section.end(); ++itr ) {
                 if( itr->name() == "DATES" ) return nullptr;
                 if( itr->name() == "TSTEP" ) return nullptr;
@@ -781,10 +563,10 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
             return nullptr;
         };
 
-        const auto& keyword = section.getKeyword( index );
+        const auto& keyword = section.getKeyword(handlerContext.keywordIndex);
         using WS = ParserKeywords::WELSPECS;
 
-        for (size_t recordNr = 0; recordNr < keyword.size(); recordNr++) {
+        for (std::size_t recordNr = 0; recordNr < keyword.size(); recordNr++) {
             const auto& record = keyword.getRecord(recordNr);
             const std::string& wellName = trim_wgname(keyword, record.getItem<WS::WELL>().get<std::string>(0), parseContext, errors);
             const std::string& groupName = trim_wgname(keyword, record.getItem<WS::GROUP>().get<std::string>(0), parseContext, errors);
@@ -804,7 +586,7 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
             }
 
             if (!hasGroup(groupName))
-                addGroup(groupName , currentStep, unit_system);
+                addGroup(groupName , handlerContext.currentStep, unit_system);
 
             if (!hasWell(wellName)) {
                 auto wellConnectionOrder = Connection::Order::TRACK;
@@ -812,7 +594,7 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
                 if( const auto* compordp = COMPORD_in_timestep() ) {
                      const auto& compord = *compordp;
 
-                    for (size_t compordRecordNr = 0; compordRecordNr < compord.size(); compordRecordNr++) {
+                    for (std::size_t compordRecordNr = 0; compordRecordNr < compord.size(); compordRecordNr++) {
                         const auto& compordRecord = compord.getRecord(compordRecordNr);
 
                         const std::string& wellNamePattern = compordRecord.getItem(0).getTrimmedString(0);
@@ -822,8 +604,8 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
                         }
                     }
                 }
-                this->addWell(wellName, record, currentStep, wellConnectionOrder, unit_system);
-                this->addWellToGroup(groupName, wellName, currentStep);
+                this->addWell(wellName, record, handlerContext.currentStep, wellConnectionOrder, unit_system);
+                this->addWellToGroup(groupName, wellName, handlerContext.currentStep);
             } else {
                 const auto headI = record.getItem<WS::HEAD_I>().get< int >( 0 ) - 1;
                 const auto headJ = record.getItem<WS::HEAD_J>().get< int >( 0 ) - 1;
@@ -835,102 +617,102 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
                     : -1.0;
                 {
                     bool update = false;
-                    auto well2 = std::shared_ptr<Well>(new Well( this->getWell(wellName, currentStep)));
+                    auto well2 = std::shared_ptr<Well>(new Well( this->getWell(wellName, handlerContext.currentStep)));
                     update = well2->updateHead(headI, headJ);
                     update |= well2->updateRefDepth(refDepth);
                     update |= well2->updateDrainageRadius(drainageRadius);
                     update |= well2->updatePVTTable(pvt_table);
 
                     if (update) {
-                        this->updateWell(std::move(well2), currentStep);
-                        this->addWellGroupEvent(wellName, ScheduleEvents::WELL_WELSPECS_UPDATE, currentStep);
+                        this->updateWell(std::move(well2), handlerContext.currentStep);
+                        this->addWellGroupEvent(wellName, ScheduleEvents::WELL_WELSPECS_UPDATE, handlerContext.currentStep);
                     }
                 }
             }
 
-            this->addWellToGroup(groupName, wellName, currentStep);
+            this->addWellToGroup(groupName, wellName, handlerContext.currentStep);
         }
     }
 
-    void Schedule::handleVAPPARS( const DeckKeyword& keyword, size_t currentStep){
-        for( const auto& record : keyword ) {
+    void Schedule::handleVAPPARS(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&){
+        for( const auto& record : handlerContext.keyword ) {
             double vap1 = record.getItem("OIL_VAP_PROPENSITY").get< double >(0);
             double vap2 = record.getItem("OIL_DENSITY_PROPENSITY").get< double >(0);
-            OilVaporizationProperties ovp = this->m_oilvaporizationproperties.get(currentStep);
+            OilVaporizationProperties ovp = this->m_oilvaporizationproperties.get(handlerContext.currentStep);
             OilVaporizationProperties::updateVAPPARS(ovp, vap1, vap2);
-            this->m_oilvaporizationproperties.update( currentStep, ovp );
+            this->m_oilvaporizationproperties.update( handlerContext.currentStep, ovp );
         }
     }
 
-    void Schedule::handleDRVDT( const DeckKeyword& keyword, size_t currentStep){
-        size_t numPvtRegions = m_runspec.tabdims().getNumPVTTables();
+    void Schedule::handleDRVDT(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+        std::size_t numPvtRegions = m_runspec.tabdims().getNumPVTTables();
         std::vector<double> max(numPvtRegions);
-        for( const auto& record : keyword ) {
+        for( const auto& record : handlerContext.keyword ) {
             std::fill(max.begin(), max.end(), record.getItem("DRVDT_MAX").getSIDouble(0));
-            OilVaporizationProperties ovp = this->m_oilvaporizationproperties.get(currentStep);
+            OilVaporizationProperties ovp = this->m_oilvaporizationproperties.get(handlerContext.currentStep);
             OilVaporizationProperties::updateDRVDT(ovp, max);
-            this->m_oilvaporizationproperties.update( currentStep, ovp );
+            this->m_oilvaporizationproperties.update( handlerContext.currentStep, ovp );
         }
     }
 
 
-    void Schedule::handleDRSDT( const DeckKeyword& keyword, size_t currentStep){
-        size_t numPvtRegions = m_runspec.tabdims().getNumPVTTables();
+    void Schedule::handleDRSDT(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+        std::size_t numPvtRegions = m_runspec.tabdims().getNumPVTTables();
         std::vector<double> max(numPvtRegions);
         std::vector<std::string> options(numPvtRegions);
-        for( const auto& record : keyword ) {
+        for( const auto& record : handlerContext.keyword ) {
             std::fill(max.begin(), max.end(), record.getItem("DRSDT_MAX").getSIDouble(0));
             std::fill(options.begin(), options.end(), record.getItem("Option").get< std::string >(0));
-            OilVaporizationProperties ovp = this->m_oilvaporizationproperties.get(currentStep);
+            OilVaporizationProperties ovp = this->m_oilvaporizationproperties.get(handlerContext.currentStep);
             OilVaporizationProperties::updateDRSDT(ovp, max, options);
-            this->m_oilvaporizationproperties.update( currentStep, ovp );
+            this->m_oilvaporizationproperties.update( handlerContext.currentStep, ovp );
         }
     }
 
-    void Schedule::handleDRSDTR( const DeckKeyword& keyword, size_t currentStep){
-        size_t numPvtRegions = m_runspec.tabdims().getNumPVTTables();
+    void Schedule::handleDRSDTR(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+        std::size_t numPvtRegions = m_runspec.tabdims().getNumPVTTables();
         std::vector<double> max(numPvtRegions);
         std::vector<std::string> options(numPvtRegions);
-        size_t pvtRegionIdx = 0;
-        for( const auto& record : keyword ) {
+        std::size_t pvtRegionIdx = 0;
+        for( const auto& record : handlerContext.keyword ) {
             max[pvtRegionIdx] = record.getItem("DRSDT_MAX").getSIDouble(0);
             options[pvtRegionIdx] = record.getItem("Option").get< std::string >(0);
             pvtRegionIdx++;
         }
-        OilVaporizationProperties ovp = this->m_oilvaporizationproperties.get(currentStep);
+        OilVaporizationProperties ovp = this->m_oilvaporizationproperties.get(handlerContext.currentStep);
         OilVaporizationProperties::updateDRSDT(ovp, max, options);
-        this->m_oilvaporizationproperties.update( currentStep, ovp );
+        this->m_oilvaporizationproperties.update( handlerContext.currentStep, ovp );
     }
 
-    void Schedule::handleDRVDTR( const DeckKeyword& keyword, size_t currentStep){
-        size_t numPvtRegions = m_runspec.tabdims().getNumPVTTables();
-        size_t pvtRegionIdx = 0;
+    void Schedule::handleDRVDTR(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+        std::size_t numPvtRegions = m_runspec.tabdims().getNumPVTTables();
+        std::size_t pvtRegionIdx = 0;
         std::vector<double> max(numPvtRegions);
-        for( const auto& record : keyword ) {
+        for( const auto& record : handlerContext.keyword ) {
             max[pvtRegionIdx] = record.getItem("DRVDT_MAX").getSIDouble(0);
             pvtRegionIdx++;
         }
-        OilVaporizationProperties ovp = this->m_oilvaporizationproperties.get(currentStep);
+        OilVaporizationProperties ovp = this->m_oilvaporizationproperties.get(handlerContext.currentStep);
         OilVaporizationProperties::updateDRVDT(ovp, max);
-        this->m_oilvaporizationproperties.update( currentStep, ovp );
+        this->m_oilvaporizationproperties.update( handlerContext.currentStep, ovp );
     }
 
-    void Schedule::handleWCONHIST( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
-        for( const auto& record : keyword ) {
+    void Schedule::handleWCONHIST(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+        for( const auto& record : handlerContext.keyword ) {
             const std::string& wellNamePattern =
                 record.getItem("WELL").getTrimmedString(0);
 
             const Well::Status status = Well::StatusFromString(record.getItem("STATUS").getTrimmedString(0));
 
-            auto well_names = this->wellNames(wellNamePattern, currentStep);
+            auto well_names = this->wellNames(wellNamePattern, handlerContext.currentStep);
             if (well_names.empty())
-                invalidNamePattern(wellNamePattern, currentStep, parseContext, errors, keyword);
+                invalidNamePattern(wellNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
 
             for( const auto& well_name : well_names) {
-                updateWellStatus( well_name , currentStep , status, false );
+                updateWellStatus( well_name , handlerContext.currentStep , status, false );
                 {
                     auto& dynamic_state = this->wells_static.at(well_name);
-                    auto well2 = std::make_shared<Well>(*dynamic_state[currentStep]);
+                    auto well2 = std::make_shared<Well>(*dynamic_state[handlerContext.currentStep]);
                     bool switching_from_injector = !well2->isProducer();
                     auto properties = std::make_shared<Well::WellProductionProperties>(well2->getProductionProperties());
                     bool update_well = false;
@@ -955,9 +737,9 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
                         update_well = true;
 
                     if (update_well) {
-                        m_events.addEvent( ScheduleEvents::PRODUCTION_UPDATE , currentStep);
-                        this->addWellGroupEvent( well2->name(), ScheduleEvents::PRODUCTION_UPDATE, currentStep);
-                        this->updateWell(well2, currentStep);
+                        m_events.addEvent( ScheduleEvents::PRODUCTION_UPDATE , handlerContext.currentStep);
+                        this->addWellGroupEvent( well2->name(), ScheduleEvents::PRODUCTION_UPDATE, handlerContext.currentStep);
+                        this->updateWell(well2, handlerContext.currentStep);
                     }
                     if ( !well2->getAllowCrossFlow()) {
                         // The numerical content of the rate UDAValues is accessed unconditionally;
@@ -968,9 +750,9 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
                         if (oil_rate.zero() && water_rate.zero() && gas_rate.zero()) {
                             std::string msg =
                                 "Well " + well2->name() + " is a history matched well with zero rate where crossflow is banned. " +
-                                "This well will be closed at " + std::to_string ( m_timeMap.getTimePassedUntil(currentStep) / (60*60*24) ) + " days";
+                                "This well will be closed at " + std::to_string ( m_timeMap.getTimePassedUntil(handlerContext.currentStep) / (60*60*24) ) + " days";
                             OpmLog::note(msg);
-                            updateWellStatus( well_name, currentStep, Well::Status::SHUT, false );
+                            updateWellStatus( well_name, handlerContext.currentStep, Well::Status::SHUT, false );
                         }
                     }
                 }
@@ -979,22 +761,22 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
     }
 
 
-    void Schedule::handleWCONPROD( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
-        for( const auto& record : keyword ) {
+    void Schedule::handleWCONPROD(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+        for( const auto& record : handlerContext.keyword ) {
             const std::string& wellNamePattern =
                 record.getItem("WELL").getTrimmedString(0);
 
             const Well::Status status = Well::StatusFromString(record.getItem("STATUS").getTrimmedString(0));
-            auto well_names = this->wellNames(wellNamePattern, currentStep);
+            auto well_names = this->wellNames(wellNamePattern, handlerContext.currentStep);
             if (well_names.empty())
-                invalidNamePattern(wellNamePattern, currentStep, parseContext, errors, keyword);
+                invalidNamePattern(wellNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
 
             for( const auto& well_name : well_names) {
 
-                updateWellStatus( well_name , currentStep , status, false );
+                updateWellStatus( well_name , handlerContext.currentStep , status, false );
                 {
                     auto& dynamic_state = this->wells_static.at(well_name);
-                    auto well2 = std::make_shared<Well>(*dynamic_state[currentStep]);
+                    auto well2 = std::make_shared<Well>(*dynamic_state[handlerContext.currentStep]);
                     bool switching_from_injector = !well2->isProducer();
                     auto properties = std::make_shared<Well::WellProductionProperties>(well2->getProductionProperties());
                     bool update_well = switching_from_injector;
@@ -1017,14 +799,14 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
                         update_well = true;
 
                     if (update_well) {
-                        m_events.addEvent( ScheduleEvents::PRODUCTION_UPDATE , currentStep);
-                        this->addWellGroupEvent( well2->name(), ScheduleEvents::PRODUCTION_UPDATE, currentStep);
-                        this->updateWell(std::move(well2), currentStep);
+                        m_events.addEvent( ScheduleEvents::PRODUCTION_UPDATE , handlerContext.currentStep);
+                        this->addWellGroupEvent( well2->name(), ScheduleEvents::PRODUCTION_UPDATE, handlerContext.currentStep);
+                        this->updateWell(std::move(well2), handlerContext.currentStep);
                     }
 
-                    auto udq = std::make_shared<UDQActive>(this->udqActive(currentStep));
-                    if (properties->updateUDQActive(this->getUDQConfig(currentStep), *udq))
-                        this->updateUDQActive(currentStep, udq);
+                    auto udq = std::make_shared<UDQActive>(this->udqActive(handlerContext.currentStep));
+                    if (properties->updateUDQActive(this->getUDQConfig(handlerContext.currentStep), *udq))
+                        this->updateUDQActive(handlerContext.currentStep, udq);
                 }
             }
         }
@@ -1068,40 +850,34 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
         return update;
     }
 
-
-    void Schedule::handleWPIMULT( const DeckKeyword& keyword, size_t currentStep) {
-        for( const auto& record : keyword ) {
+    void Schedule::handleWPIMULT(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+        for( const auto& record : handlerContext.keyword ) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto& well_names = this->wellNames(wellNamePattern, currentStep);
+            const auto& well_names = this->wellNames(wellNamePattern, handlerContext.currentStep);
             for (const auto& wname : well_names) {
-                {
-                    auto& dynamic_state = this->wells_static.at(wname);
-                    auto well_ptr = std::make_shared<Well>( *dynamic_state[currentStep] );
-                    if (well_ptr->handleWPIMULT(record))
-                        this->updateWell(std::move(well_ptr), currentStep);
-                }
+                auto& dynamic_state = this->wells_static.at(wname);
+                auto well_ptr = std::make_shared<Well>( *dynamic_state[handlerContext.currentStep] );
+                if (well_ptr->handleWPIMULT(record))
+                    this->updateWell(std::move(well_ptr), handlerContext.currentStep);
             }
         }
     }
 
-
-
-
-    void Schedule::handleWCONINJE( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
-        for( const auto& record : keyword ) {
+    void Schedule::handleWCONINJE(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+        for( const auto& record : handlerContext.keyword ) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
 
-            auto well_names = wellNames(wellNamePattern, currentStep);
+            auto well_names = wellNames(wellNamePattern, handlerContext.currentStep);
             if (well_names.empty())
-                invalidNamePattern(wellNamePattern, currentStep, parseContext, errors, keyword);
+                invalidNamePattern(wellNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
 
             for( const auto& well_name : well_names ) {
                 Well::Status status = Well::StatusFromString( record.getItem("STATUS").getTrimmedString(0));
-                updateWellStatus( well_name , currentStep , status, false );
+                updateWellStatus( well_name , handlerContext.currentStep , status, false );
                 {
                     bool update_well = false;
                     auto& dynamic_state = this->wells_static.at(well_name);
-                    auto well2 = std::make_shared<Well>(*dynamic_state[currentStep]);
+                    auto well2 = std::make_shared<Well>(*dynamic_state[handlerContext.currentStep]);
                     auto injection = std::make_shared<Well::WellInjectionProperties>(well2->getInjectionProperties());
                     injection->handleWCONINJE(record, well2->isAvailableForGroupControl(), well_name);
 
@@ -1112,9 +888,9 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
                         update_well = true;
 
                     if (update_well) {
-                        this->updateWell(well2, currentStep);
-                        m_events.addEvent( ScheduleEvents::INJECTION_UPDATE , currentStep );
-                        this->addWellGroupEvent( well_name, ScheduleEvents::INJECTION_UPDATE, currentStep);
+                        this->updateWell(well2, handlerContext.currentStep);
+                        m_events.addEvent( ScheduleEvents::INJECTION_UPDATE , handlerContext.currentStep );
+                        this->addWellGroupEvent( well_name, ScheduleEvents::INJECTION_UPDATE, handlerContext.currentStep);
                     }
 
                     // if the well has zero surface rate limit or reservior rate limit, while does not allow crossflow,
@@ -1122,46 +898,46 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
                     if ( ! well2->getAllowCrossFlow() ) {
                          std::string msg =
                          "Well " + well_name + " is an injector with zero rate where crossflow is banned. " +
-                         "This well will be closed at " + std::to_string ( m_timeMap.getTimePassedUntil(currentStep) / (60*60*24) ) + " days";
+                         "This well will be closed at " + std::to_string ( m_timeMap.getTimePassedUntil(handlerContext.currentStep) / (60*60*24) ) + " days";
 
                          if (injection->surfaceInjectionRate.is<double>()) {
                              if (injection->hasInjectionControl(Well::InjectorCMode::RATE) && injection->surfaceInjectionRate.zero()) {
                                  OpmLog::note(msg);
-                                 updateWellStatus( well_name, currentStep, Well::Status::SHUT, false );
+                                 updateWellStatus( well_name, handlerContext.currentStep, Well::Status::SHUT, false );
                              }
                          }
 
                          if (injection->reservoirInjectionRate.is<double>()) {
                              if (injection->hasInjectionControl(Well::InjectorCMode::RESV) && injection->reservoirInjectionRate.zero()) {
                                  OpmLog::note(msg);
-                                 updateWellStatus( well_name, currentStep, Well::Status::SHUT, false );
+                                 updateWellStatus( well_name, handlerContext.currentStep, Well::Status::SHUT, false );
                              }
                          }
                     }
 
-                    auto udq = std::make_shared<UDQActive>(this->udqActive(currentStep));
-                    if (injection->updateUDQActive(this->getUDQConfig(currentStep), *udq))
-                        this->updateUDQActive(currentStep, udq);
+                    auto udq = std::make_shared<UDQActive>(this->udqActive(handlerContext.currentStep));
+                    if (injection->updateUDQActive(this->getUDQConfig(handlerContext.currentStep), *udq))
+                        this->updateUDQActive(handlerContext.currentStep, udq);
                 }
             }
         }
     }
 
-    void Schedule::handleWCONINJH(const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
-        for( const auto& record : keyword ) {
+    void Schedule::handleWCONINJH(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+        for( const auto& record : handlerContext.keyword ) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             Well::Status status = Well::StatusFromString( record.getItem("STATUS").getTrimmedString(0));
-            const auto well_names = wellNames( wellNamePattern, currentStep );
+            const auto well_names = wellNames( wellNamePattern, handlerContext.currentStep );
 
             if (well_names.empty())
-                invalidNamePattern( wellNamePattern, currentStep, parseContext, errors, keyword);
+                invalidNamePattern( wellNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
 
             for (const auto& well_name : well_names) {
-                updateWellStatus( well_name, currentStep, status, false );
+                updateWellStatus( well_name, handlerContext.currentStep, status, false );
                 {
                     bool update_well = false;
                     auto& dynamic_state = this->wells_static.at(well_name);
-                    auto well2 = std::make_shared<Well>(*dynamic_state[currentStep]);
+                    auto well2 = std::make_shared<Well>(*dynamic_state[handlerContext.currentStep]);
                     auto injection = std::make_shared<Well::WellInjectionProperties>(well2->getInjectionProperties());
                     injection->handleWCONINJH(record, well2->isProducer(), well_name);
 
@@ -1172,186 +948,183 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
                         update_well = true;
 
                     if (update_well) {
-                        this->updateWell(well2, currentStep);
-                        m_events.addEvent( ScheduleEvents::INJECTION_UPDATE , currentStep );
-                        this->addWellGroupEvent( well_name, ScheduleEvents::INJECTION_UPDATE, currentStep);
+                        this->updateWell(well2, handlerContext.currentStep);
+                        m_events.addEvent( ScheduleEvents::INJECTION_UPDATE , handlerContext.currentStep );
+                        this->addWellGroupEvent( well_name, ScheduleEvents::INJECTION_UPDATE, handlerContext.currentStep);
                     }
 
                     if ( ! well2->getAllowCrossFlow() && (injection->surfaceInjectionRate.zero())) {
                         std::string msg =
                             "Well " + well_name + " is an injector with zero rate where crossflow is banned. " +
-                            "This well will be closed at " + std::to_string ( m_timeMap.getTimePassedUntil(currentStep) / (60*60*24) ) + " days";
+                            "This well will be closed at " + std::to_string ( m_timeMap.getTimePassedUntil(handlerContext.currentStep) / (60*60*24) ) + " days";
                         OpmLog::note(msg);
-                        updateWellStatus( well_name, currentStep, Well::Status::SHUT, false );
+                        updateWellStatus( well_name, handlerContext.currentStep, Well::Status::SHUT, false );
                     }
                 }
             }
         }
     }
 
-    void Schedule::handleWFOAM( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
-        for (const auto& record : keyword) {
+    void Schedule::handleWFOAM(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+        for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = wellNames(wellNamePattern, currentStep );
+            const auto well_names = wellNames(wellNamePattern, handlerContext.currentStep );
 
             if (well_names.empty())
-                invalidNamePattern(wellNamePattern, currentStep, parseContext, errors, keyword);
+                invalidNamePattern(wellNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
 
             for (const auto& well_name : well_names) {
                 const auto& dynamic_state = this->wells_static.at(well_name);
-                auto well2 = std::make_shared<Well>(*dynamic_state[currentStep]);
+                auto well2 = std::make_shared<Well>(*dynamic_state[handlerContext.currentStep]);
                 auto foam_properties = std::make_shared<WellFoamProperties>(well2->getFoamProperties());
                 foam_properties->handleWFOAM(record);
                 if (well2->updateFoamProperties(foam_properties))
-                    this->updateWell(std::move(well2), currentStep);
+                    this->updateWell(std::move(well2), handlerContext.currentStep);
             }
         }
     }
 
-    void Schedule::handleWPOLYMER( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
-        for( const auto& record : keyword ) {
+    void Schedule::handleWPOLYMER(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+        for( const auto& record : handlerContext.keyword ) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = wellNames( wellNamePattern, currentStep );
+            const auto well_names = wellNames( wellNamePattern, handlerContext.currentStep );
 
             if (well_names.empty())
-                invalidNamePattern(wellNamePattern, currentStep, parseContext, errors, keyword);
+                invalidNamePattern(wellNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
 
             for( const auto& well_name : well_names) {
                 {
                     const auto& dynamic_state = this->wells_static.at(well_name);
-                    auto well2 = std::make_shared<Well>(*dynamic_state[currentStep]);
+                    auto well2 = std::make_shared<Well>(*dynamic_state[handlerContext.currentStep]);
                     auto polymer_properties = std::make_shared<WellPolymerProperties>( well2->getPolymerProperties() );
                     polymer_properties->handleWPOLYMER(record);
                     if (well2->updatePolymerProperties(polymer_properties))
-                        this->updateWell(std::move(well2), currentStep);
+                        this->updateWell(std::move(well2), handlerContext.currentStep);
                 }
             }
         }
     }
 
-    void Schedule::handleWSALT( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
-        for (const auto& record : keyword) {
+    void Schedule::handleWSALT(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+        for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = wellNames(wellNamePattern, currentStep );
+            const auto well_names = wellNames(wellNamePattern, handlerContext.currentStep );
 
             if (well_names.empty())
-                invalidNamePattern(wellNamePattern, currentStep, parseContext, errors, keyword);
+                invalidNamePattern(wellNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
 
             for (const auto& well_name : well_names) {
                 const auto& dynamic_state = this->wells_static.at(well_name);
-                auto well2 = std::make_shared<Well>(*dynamic_state[currentStep]);
+                auto well2 = std::make_shared<Well>(*dynamic_state[handlerContext.currentStep]);
                 auto brine_properties = std::make_shared<WellBrineProperties>(well2->getBrineProperties());
                 brine_properties->handleWSALT(record);
                 if (well2->updateBrineProperties(brine_properties))
-                    this->updateWell(well2, currentStep);
+                    this->updateWell(well2, handlerContext.currentStep);
             }
         }
     }
 
-
-    void Schedule::handleWPMITAB( const DeckKeyword& keyword,  const size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
-
-        for (const auto& record : keyword) {
+    void Schedule::handleWPMITAB(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+        for (const auto& record : handlerContext.keyword) {
 
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = wellNames( wellNamePattern, currentStep );
+            const auto well_names = wellNames( wellNamePattern, handlerContext.currentStep );
 
             if (well_names.empty())
-                invalidNamePattern(wellNamePattern, currentStep, parseContext, errors, keyword);
+                invalidNamePattern(wellNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
 
             for (const auto& well_name : well_names) {
                 {
                     auto& dynamic_state = this->wells_static.at(well_name);
-                    auto well2 = std::make_shared<Well>(*dynamic_state[currentStep]);
+                    auto well2 = std::make_shared<Well>(*dynamic_state[handlerContext.currentStep]);
                     auto polymer_properties = std::make_shared<WellPolymerProperties>( well2->getPolymerProperties() );
                     polymer_properties->handleWPMITAB(record);
                     if (well2->updatePolymerProperties(polymer_properties))
-                        this->updateWell(std::move(well2), currentStep);
+                        this->updateWell(std::move(well2), handlerContext.currentStep);
                 }
             }
         }
     }
 
 
-    void Schedule::handleWSKPTAB( const DeckKeyword& keyword,  const size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
-
-
-        for (const auto& record : keyword) {
+    void Schedule::handleWSKPTAB(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+        for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = wellNames(wellNamePattern, currentStep);
+            const auto well_names = wellNames(wellNamePattern, handlerContext.currentStep);
 
             if (well_names.empty())
-                invalidNamePattern(wellNamePattern, currentStep, parseContext, errors, keyword);
+                invalidNamePattern(wellNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
 
             for (const auto& well_name : well_names) {
                 {
                     auto& dynamic_state = this->wells_static.at(well_name);
-                    auto well2 = std::make_shared<Well>(*dynamic_state[currentStep]);
+                    auto well2 = std::make_shared<Well>(*dynamic_state[handlerContext.currentStep]);
                     auto polymer_properties = std::make_shared<WellPolymerProperties>( well2->getPolymerProperties() );
                     polymer_properties->handleWSKPTAB(record);
                     if (well2->updatePolymerProperties(polymer_properties))
-                        this->updateWell(std::move(well2), currentStep);
+                        this->updateWell(std::move(well2), handlerContext.currentStep);
                 }
             }
         }
     }
 
 
-    void Schedule::handleWECON( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
-        for( const auto& record : keyword ) {
+    void Schedule::handleWECON(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+        for( const auto& record : handlerContext.keyword ) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = wellNames( wellNamePattern , currentStep);
+            const auto well_names = wellNames( wellNamePattern , handlerContext.currentStep);
 
             if (well_names.empty())
-                invalidNamePattern(wellNamePattern, currentStep, parseContext, errors, keyword);
+                invalidNamePattern(wellNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
 
             for(const auto& well_name : well_names) {
                 {
                     auto& dynamic_state = this->wells_static.at(well_name);
-                    auto well2 = std::make_shared<Well>(*dynamic_state[currentStep]);
+                    auto well2 = std::make_shared<Well>(*dynamic_state[handlerContext.currentStep]);
                     auto econ_limits = std::make_shared<WellEconProductionLimits>( record );
                     if (well2->updateEconLimits(econ_limits))
-                        this->updateWell(std::move(well2), currentStep);
+                        this->updateWell(std::move(well2), handlerContext.currentStep);
                 }
             }
         }
     }
 
-    void Schedule::handleWEFAC( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
-        for( const auto& record : keyword ) {
+    void Schedule::handleWEFAC(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+        for( const auto& record : handlerContext.keyword ) {
             const std::string& wellNamePattern = record.getItem("WELLNAME").getTrimmedString(0);
             const double& efficiencyFactor = record.getItem("EFFICIENCY_FACTOR").get< double >(0);
-            const auto well_names = wellNames( wellNamePattern, currentStep );
+            const auto well_names = wellNames( wellNamePattern, handlerContext.currentStep );
 
             if (well_names.empty())
-                invalidNamePattern(wellNamePattern, currentStep, parseContext, errors, keyword);
+                invalidNamePattern(wellNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
 
             for(const auto& well_name : well_names) {
                 {
                     auto& dynamic_state = this->wells_static.at(well_name);
-                    auto well2 = std::make_shared<Well>(*dynamic_state[currentStep]);
+                    auto well2 = std::make_shared<Well>(*dynamic_state[handlerContext.currentStep]);
                     if (well2->updateEfficiencyFactor(efficiencyFactor))
-                        this->updateWell(std::move(well2), currentStep);
+                        this->updateWell(std::move(well2), handlerContext.currentStep);
                 }
             }
         }
     }
 
 
-    void Schedule::handleWLIST(const DeckKeyword& keyword, size_t currentStep) {
+    void Schedule::handleWLIST(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         const std::string legal_actions = "NEW:ADD:DEL:MOV";
-        for (const auto& record : keyword) {
+        const auto& current = *this->wlist_manager.get(handlerContext.currentStep);
+        std::shared_ptr<WListManager> new_wlm(new WListManager(current));
+        for (const auto& record : handlerContext.keyword) {
             const std::string& name = record.getItem("NAME").getTrimmedString(0);
             const std::string& action = record.getItem("ACTION").getTrimmedString(0);
             const std::vector<std::string>& well_args = record.getItem("WELLS").getData<std::string>();
             std::vector<std::string> wells;
-            std::shared_ptr<WListManager> new_wlm = std::make_shared<WListManager>( *this->wlist_manager.get(currentStep) );
 
             if (legal_actions.find(action) == std::string::npos)
                 throw std::invalid_argument("The action:" + action + " is not recognized.");
 
             for (const auto& well_arg : well_args) {
-                const auto& names = this->wellNames(well_arg, currentStep);
+                const auto& names = this->wellNames(well_arg, handlerContext.currentStep);
                 if (names.empty() && well_arg.find("*") == std::string::npos)
                     throw std::invalid_argument("The well: " + well_arg + " has not been defined in the WELSPECS");
 
@@ -1381,28 +1154,28 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
                     wlist.add(well);
             }
 
-            this->wlist_manager.update(currentStep, new_wlm);
+            this->wlist_manager.update(handlerContext.currentStep, new_wlm);
         }
     }
 
-    void Schedule::handleUDQ(const DeckKeyword& keyword, size_t currentStep) {
-        const auto& current = *this->udq_config.get(currentStep);
+    void Schedule::handleUDQ(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+        const auto& current = *this->udq_config.get(handlerContext.currentStep);
         std::shared_ptr<UDQConfig> new_udq = std::make_shared<UDQConfig>(current);
-        for (const auto& record : keyword)
-            new_udq->add_record(record, currentStep);
+        for (const auto& record : handlerContext.keyword)
+            new_udq->add_record(record, handlerContext.currentStep);
 
-        this->udq_config.update(currentStep, new_udq);
+        this->udq_config.update(handlerContext.currentStep, new_udq);
     }
 
 
-    void Schedule::handleWTEST(const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
-        const auto& current = *this->wtest_config.get(currentStep);
+    void Schedule::handleWTEST(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+        const auto& current = *this->wtest_config.get(handlerContext.currentStep);
         std::shared_ptr<WellTestConfig> new_config(new WellTestConfig(current));
-        for( const auto& record : keyword ) {
+        for( const auto& record : handlerContext.keyword ) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = wellNames( wellNamePattern , currentStep);
+            const auto well_names = wellNames( wellNamePattern , handlerContext.currentStep);
             if (well_names.empty())
-                invalidNamePattern(wellNamePattern, currentStep, parseContext, errors, keyword);
+                invalidNamePattern(wellNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
 
             double test_interval = record.getItem("INTERVAL").getSIDouble(0);
             const std::string& reasons = record.getItem("REASON").get<std::string>(0);
@@ -1413,31 +1186,31 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
                 if (reasons.empty())
                     new_config->drop_well(well_name);
                 else
-                    new_config->add_well(well_name, reasons, test_interval, num_test, startup_time, currentStep);
+                    new_config->add_well(well_name, reasons, test_interval, num_test, startup_time, handlerContext.currentStep);
             }
         }
-        this->wtest_config.update(currentStep, new_config);
+        this->wtest_config.update(handlerContext.currentStep, new_config);
     }
 
-    void Schedule::handleWSOLVENT( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
+    void Schedule::handleWSOLVENT(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
 
-        for( const auto& record : keyword ) {
+        for( const auto& record : handlerContext.keyword ) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = wellNames( wellNamePattern , currentStep);
+            const auto well_names = wellNames( wellNamePattern , handlerContext.currentStep);
             double fraction = record.getItem("SOLVENT_FRACTION").get< UDAValue >(0).getSI();
 
             if (well_names.empty())
-                invalidNamePattern(wellNamePattern, currentStep, parseContext, errors, keyword);
+                invalidNamePattern(wellNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
 
             for(const auto& well_name : well_names) {
                 {
-                    const auto& well = this->getWell(well_name, currentStep);
+                    const auto& well = this->getWell(well_name, handlerContext.currentStep);
                     const auto& inj = well.getInjectionProperties();
                     if (!well.isProducer() && inj.injectorType == InjectorType::GAS) {
                         if (well.getSolventFraction() != fraction) {
                             auto new_well = std::make_shared<Well>(well);
                             new_well->updateSolventFraction(fraction);
-                            this->updateWell(std::move(new_well), currentStep);
+                            this->updateWell(std::move(new_well), handlerContext.currentStep);
                         }
                     } else
                         throw std::invalid_argument("The WSOLVENT keyword can only be applied to gas injectors");
@@ -1446,36 +1219,36 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
         }
     }
 
-    void Schedule::handleWTRACER( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
+    void Schedule::handleWTRACER(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
 
-        for( const auto& record : keyword ) {
+        for( const auto& record : handlerContext.keyword ) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = wellNames( wellNamePattern, currentStep );
+            const auto well_names = wellNames( wellNamePattern, handlerContext.currentStep );
 
             if (well_names.empty())
-                invalidNamePattern(wellNamePattern, currentStep, parseContext, errors, keyword);
+                invalidNamePattern(wellNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
 
             for(const auto& well_name : well_names) {
                 double tracerConcentration = record.getItem("CONCENTRATION").get< UDAValue >(0).getSI();
                 const std::string& tracerName = record.getItem("TRACER").getTrimmedString(0);
                 {
-                    auto well = std::make_shared<Well>( this->getWell(well_name, currentStep));
+                    auto well = std::make_shared<Well>( this->getWell(well_name, handlerContext.currentStep));
                     auto wellTracerProperties = std::make_shared<WellTracerProperties>( well->getTracerProperties() );
                     wellTracerProperties->setConcentration(tracerName, tracerConcentration);
                     if (well->updateTracer(wellTracerProperties))
-                        this->updateWell(std::move(well), currentStep);
+                        this->updateWell(std::move(well), handlerContext.currentStep);
                 }
             }
         }
     }
 
-    void Schedule::handleWTEMP( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
-        for( const auto& record : keyword ) {
+    void Schedule::handleWTEMP(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+        for( const auto& record : handlerContext.keyword ) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = wellNames( wellNamePattern, currentStep );
+            const auto well_names = wellNames( wellNamePattern, handlerContext.currentStep );
             double temp = record.getItem("TEMP").getSIDouble(0);
             if (well_names.empty())
-                invalidNamePattern( wellNamePattern, currentStep, parseContext, errors, keyword);
+                invalidNamePattern( wellNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
 
             for (const auto& well_name : well_names) {
                 // TODO: Is this the right approach? Setting the well temperature only
@@ -1485,31 +1258,31 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
                 // to a very weird segmentation fault downstream. For now, let's take the
                 // water route.
                 {
-                    const auto& well = this->getWell(well_name, currentStep);
+                    const auto& well = this->getWell(well_name, handlerContext.currentStep);
                     double current_temp = well.getInjectionProperties().temperature;
                     if (current_temp != temp && !well.isProducer()) {
                         auto& dynamic_state = this->wells_static.at(well_name);
-                        auto well_ptr = std::make_shared<Well>( *dynamic_state[currentStep] );
+                        auto well_ptr = std::make_shared<Well>( *dynamic_state[handlerContext.currentStep] );
                         auto inj = std::make_shared<Well::WellInjectionProperties>(well_ptr->getInjectionProperties());
                         inj->temperature = temp;
                         well_ptr->updateInjection(inj);
-                        this->updateWell(std::move(well_ptr), currentStep);
+                        this->updateWell(std::move(well_ptr), handlerContext.currentStep);
                     }
                 }
             }
         }
     }
 
-    void Schedule::handleWINJTEMP( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
+    void Schedule::handleWINJTEMP(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
         // we do not support the "enthalpy" field yet. how to do this is a more difficult
         // question.
-        for( const auto& record : keyword ) {
+        for( const auto& record : handlerContext.keyword ) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            auto well_names = wellNames( wellNamePattern , currentStep);
+            auto well_names = wellNames( wellNamePattern , handlerContext.currentStep);
             double temp = record.getItem("TEMPERATURE").getSIDouble(0);
 
             if (well_names.empty())
-                invalidNamePattern( wellNamePattern, currentStep, parseContext, errors, keyword);
+                invalidNamePattern( wellNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
 
             for (const auto& well_name : well_names) {
                 // TODO: Is this the right approach? Setting the well temperature only
@@ -1519,39 +1292,37 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
                 // to a very weird segmentation fault downstream. For now, let's take the
                 // water route.
                 {
-                    const auto& well = this->getWell(well_name, currentStep);
+                    const auto& well = this->getWell(well_name, handlerContext.currentStep);
                     double current_temp = well.getInjectionProperties().temperature;
                     if (current_temp != temp && !well.isProducer()) {
                         auto& dynamic_state = this->wells_static.at(well_name);
-                        auto well_ptr = std::make_shared<Well>( *dynamic_state[currentStep] );
+                        auto well_ptr = std::make_shared<Well>( *dynamic_state[handlerContext.currentStep] );
                         auto inj = std::make_shared<Well::WellInjectionProperties>(well_ptr->getInjectionProperties());
                         inj->temperature = temp;
                         well_ptr->updateInjection(inj);
-                        this->updateWell(std::move(well_ptr), currentStep);
+                        this->updateWell(std::move(well_ptr), handlerContext.currentStep);
                     }
                 }
             }
         }
     }
 
-    void Schedule::handleCOMPLUMP( const DeckKeyword& keyword,
-                                   size_t timestep ) {
-
-        for( const auto& record : keyword ) {
+    void Schedule::handleCOMPLUMP(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+        for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = this->wellNames(wellNamePattern, timestep);
+            const auto well_names = this->wellNames(wellNamePattern, handlerContext.currentStep);
+
             for (const auto& wname : well_names) {
-                {
-                    auto& dynamic_state = this->wells_static.at(wname);
-                    auto well_ptr = std::make_shared<Well>( *dynamic_state[timestep] );
-                    if (well_ptr->handleCOMPLUMP(record))
-                        this->updateWell(std::move(well_ptr), timestep);
-                }
+                auto& dynamic_state = this->wells_static.at(wname);
+                auto well_ptr = std::make_shared<Well>( *dynamic_state[handlerContext.currentStep] );
+                if (well_ptr->handleCOMPLUMP(record))
+                    this->updateWell(std::move(well_ptr), handlerContext.currentStep);
             }
         }
     }
 
-    void Schedule::handleWELOPEN( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors, const std::vector<std::string>& matching_wells) {
+
+    void Schedule::applyWELOPEN(const DeckKeyword& keyword, std::size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors, const std::vector<std::string>& matching_wells) {
 
         auto conn_defaulted = []( const DeckRecord& rec ) {
             auto defaulted = []( const DeckItem& item ) {
@@ -1633,26 +1404,22 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
         will be wrong.
     */
 
-    void Schedule::handleWELTARG( const SCHEDULESection& section ,
-                                  const DeckKeyword& keyword,
-                                  size_t currentStep,
-                                  const ParseContext& parseContext, ErrorGuard& errors) {
-        Opm::UnitSystem unitSystem = section.unitSystem();
-        const double SiFactorP = unitSystem.parse("Pressure").getSIScaling();
-        for( const auto& record : keyword ) {
+    void Schedule::handleWELTARG(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+        const double SiFactorP = handlerContext.section.unitSystem().parse("Pressure").getSIScaling();
+        for( const auto& record : handlerContext.keyword ) {
 
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto cmode = Well::WELTARGCModeFromString(record.getItem("CMODE").getTrimmedString(0));
             const auto new_arg = record.getItem("NEW_VALUE").get< UDAValue >(0);
-            const auto well_names = wellNames( wellNamePattern, currentStep );
+            const auto well_names = wellNames( wellNamePattern, handlerContext.currentStep );
 
             if( well_names.empty() )
-                invalidNamePattern( wellNamePattern, currentStep, parseContext, errors, keyword);
+                invalidNamePattern( wellNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
 
             for(const auto& well_name : well_names) {
                 {
                     auto& dynamic_state = this->wells_static.at(well_name);
-                    auto well2 = std::make_shared<Well>(*dynamic_state[currentStep]);
+                    auto well2 = std::make_shared<Well>(*dynamic_state[handlerContext.currentStep]);
                     bool update = false;
                     if (well2->isProducer()) {
                         auto prop = std::make_shared<Well::WellProductionProperties>(well2->getProductionProperties());
@@ -1661,9 +1428,9 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
                         if (cmode == Well::WELTARGCMode::GUID)
                             update |= well2->updateWellGuideRate(new_arg.get<double>());
 
-                        auto udq = std::make_shared<UDQActive>(this->udqActive(currentStep));
-                        if (prop->updateUDQActive(this->getUDQConfig(currentStep), *udq))
-                            this->updateUDQActive(currentStep, udq);
+                        auto udq = std::make_shared<UDQActive>(this->udqActive(handlerContext.currentStep));
+                        if (prop->updateUDQActive(this->getUDQConfig(handlerContext.currentStep), *udq))
+                            this->updateUDQActive(handlerContext.currentStep, udq);
                     } else {
                         auto inj = std::make_shared<Well::WellInjectionProperties>(well2->getInjectionProperties());
                         inj->handleWELTARG(cmode, new_arg, SiFactorP);
@@ -1672,21 +1439,21 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
                             update |= well2->updateWellGuideRate(new_arg.get<double>());
                     }
                     if (update)
-                        this->updateWell(std::move(well2), currentStep);
+                        this->updateWell(std::move(well2), handlerContext.currentStep);
                 }
             }
         }
     }
 
-    void Schedule::handleGCONINJE( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
-        for( const auto& record : keyword ) {
+    void Schedule::handleGCONINJE(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+        for (const auto& record : handlerContext.keyword) {
             const std::string& groupNamePattern = record.getItem("GROUP").getTrimmedString(0);
             const auto group_names = this->groupNames(groupNamePattern);
 
             if (group_names.empty())
-                invalidNamePattern(groupNamePattern, currentStep, parseContext, errors, keyword);
+                invalidNamePattern(groupNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
 
-            for (const auto& group_name : group_names){
+            for (const auto& group_name : group_names) {
                 Group::InjectionCMode controlMode = Group::InjectionCModeFromString( record.getItem("CONTROL_MODE").getTrimmedString(0) );
                 Phase phase = get_phase( record.getItem("PHASE").getTrimmedString(0));
                 auto surfaceInjectionRate = record.getItem("SURFACE_TARGET").get< UDAValue >(0);
@@ -1703,9 +1470,9 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
 
                 bool availableForGroupControl = DeckItem::to_bool(record.getItem("FREE").getTrimmedString(0))
                     && (group_name != "FIELD");
-                //surfaceInjectionRate = injection::rateToSI(surfaceInjectionRate, phase, section.unitSystem());
+                //surfaceInjectionRate = injection::rateToSI(surfaceInjectionRate, phase, handlerContext.section.unitSystem());
                 {
-                    auto group_ptr = std::make_shared<Group>(this->getGroup(group_name, currentStep));
+                    auto group_ptr = std::make_shared<Group>(this->getGroup(group_name, handlerContext.currentStep));
                     Group::GroupInjectionProperties injection;
                     injection.phase = phase;
                     injection.cmode = controlMode;
@@ -1731,9 +1498,9 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
                         injection.injection_controls += static_cast<int>(Group::InjectionCMode::VREP);
 
                     if (group_ptr->updateInjection(injection)) {
-                        this->updateGroup(std::move(group_ptr), currentStep);
-                        m_events.addEvent( ScheduleEvents::GROUP_INJECTION_UPDATE , currentStep);
-                        this->addWellGroupEvent(group_name, ScheduleEvents::GROUP_INJECTION_UPDATE, currentStep);
+                        this->updateGroup(std::move(group_ptr), handlerContext.currentStep);
+                        m_events.addEvent( ScheduleEvents::GROUP_INJECTION_UPDATE , handlerContext.currentStep);
+                        this->addWellGroupEvent(group_name, ScheduleEvents::GROUP_INJECTION_UPDATE, handlerContext.currentStep);
                     }
                 }
             }
@@ -1741,13 +1508,13 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
     }
 
 
-    void Schedule::handleGCONPROD( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
-        for( const auto& record : keyword ) {
+    void Schedule::handleGCONPROD(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+        for( const auto& record : handlerContext.keyword ) {
             const std::string& groupNamePattern = record.getItem("GROUP").getTrimmedString(0);
             const auto group_names = this->groupNames(groupNamePattern);
 
             if (group_names.empty())
-                invalidNamePattern(groupNamePattern, currentStep, parseContext, errors, keyword);
+                invalidNamePattern(groupNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
 
             for (const auto& group_name : group_names){
                 Group::ProductionCMode controlMode = Group::ProductionCModeFromString( record.getItem("CONTROL_MODE").getTrimmedString(0) );
@@ -1778,7 +1545,7 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
                 bool availableForGroupControl = DeckItem::to_bool(record.getItem("RESPOND_TO_PARENT").getTrimmedString(0)) && (group_name != "FIELD");
 
                 {
-                    auto group_ptr = std::make_shared<Group>(this->getGroup(group_name, currentStep));
+                    auto group_ptr = std::make_shared<Group>(this->getGroup(group_name, handlerContext.currentStep));
                     Group::GroupProductionProperties production(group_name);
                     auto resv_target = record.getItem("RESERVOIR_FLUID_TARGET").getSIDouble(0);
                     production.cmode = controlMode;
@@ -1817,17 +1584,17 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
                         production.production_controls += static_cast<int>(Group::ProductionCMode::RESV);
 
                     if (group_ptr->updateProduction(production)) {
-                        auto new_config = std::make_shared<GuideRateConfig>( this->guideRateConfig(currentStep) );
+                        auto new_config = std::make_shared<GuideRateConfig>( this->guideRateConfig(handlerContext.currentStep) );
                         new_config->update_group(*group_ptr);
-                        this->guide_rate_config.update( currentStep, std::move(new_config) );
+                        this->guide_rate_config.update( handlerContext.currentStep, std::move(new_config) );
 
-                        this->updateGroup(std::move(group_ptr), currentStep);
-                        m_events.addEvent( ScheduleEvents::GROUP_PRODUCTION_UPDATE , currentStep);
-                        this->addWellGroupEvent(group_name, ScheduleEvents::GROUP_PRODUCTION_UPDATE, currentStep);
+                        this->updateGroup(std::move(group_ptr), handlerContext.currentStep);
+                        m_events.addEvent(ScheduleEvents::GROUP_PRODUCTION_UPDATE, handlerContext.currentStep);
+                        this->addWellGroupEvent(group_name, ScheduleEvents::GROUP_PRODUCTION_UPDATE, handlerContext.currentStep);
 
-                        auto udq = std::make_shared<UDQActive>(this->udqActive(currentStep));
-                        if (production.updateUDQActive(this->getUDQConfig(currentStep), *udq))
-                            this->updateUDQActive(currentStep, udq);
+                        auto udq = std::make_shared<UDQActive>(this->udqActive(handlerContext.currentStep));
+                        if (production.updateUDQActive(this->getUDQConfig(handlerContext.currentStep), *udq))
+                            this->updateUDQActive(handlerContext.currentStep, udq);
                     }
                 }
             }
@@ -1835,54 +1602,57 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
     }
 
 
-    void Schedule::handleGEFAC( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
-        for( const auto& record : keyword ) {
+    void Schedule::handleGEFAC(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+        for( const auto& record : handlerContext.keyword ) {
             const std::string& groupNamePattern = record.getItem("GROUP").getTrimmedString(0);
             const auto group_names = this->groupNames(groupNamePattern);
 
             if (group_names.empty())
-                invalidNamePattern(groupNamePattern, currentStep, parseContext, errors, keyword);
+                invalidNamePattern(groupNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
 
             for (const auto& group_name : group_names){
                 bool transfer = DeckItem::to_bool(record.getItem("TRANSFER_EXT_NET").getTrimmedString(0));
                 auto gefac = record.getItem("EFFICIENCY_FACTOR").get< double >(0);
                 {
-                    auto group_ptr = std::make_shared<Group>(this->getGroup(group_name, currentStep));
+                    auto group_ptr = std::make_shared<Group>(this->getGroup(group_name, handlerContext.currentStep));
                     if (group_ptr->update_gefac(gefac, transfer))
-                        this->updateGroup(std::move(group_ptr), currentStep);
+                        this->updateGroup(std::move(group_ptr), handlerContext.currentStep);
                 }
             }
         }
     }
 
-    void Schedule::handleGCONSALE( const DeckKeyword& keyword, size_t currentStep, const UnitSystem& unit_system) {
-        const auto& current = *this->gconsale.get(currentStep);
+
+
+    void Schedule::handleGCONSALE(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+        const auto& unit_system = handlerContext.section.unitSystem();
+        const auto& current = *this->gconsale.get(handlerContext.currentStep);
         std::shared_ptr<GConSale> new_gconsale(new GConSale(current));
-        for( const auto& record : keyword ) {
+        for( const auto& record : handlerContext.keyword ) {
             const std::string& groupName = record.getItem("GROUP").getTrimmedString(0);
             auto sales_target = record.getItem("SALES_TARGET").get<UDAValue>(0);
             auto max_rate = record.getItem("MAX_SALES_RATE").get<UDAValue>(0);
             auto min_rate = record.getItem("MIN_SALES_RATE").get<UDAValue>(0);
             std::string procedure = record.getItem("MAX_PROC").getTrimmedString(0);
-            auto udqconfig = this->getUDQConfig(currentStep).params().undefinedValue();
+            auto udqconfig = this->getUDQConfig(handlerContext.currentStep).params().undefinedValue();
 
             new_gconsale->add(groupName, sales_target, max_rate, min_rate, procedure, udqconfig, unit_system);
 
-            auto group_ptr = std::make_shared<Group>(this->getGroup(groupName, currentStep));
+            auto group_ptr = std::make_shared<Group>(this->getGroup(groupName, handlerContext.currentStep));
             Group::GroupInjectionProperties injection;
             injection.phase = Phase::GAS;
             if (group_ptr->updateInjection(injection)) {
-                this->updateGroup(std::move(group_ptr), currentStep);
+                this->updateGroup(std::move(group_ptr), handlerContext.currentStep);
             }
         }
-        this->gconsale.update(currentStep, new_gconsale);
+        this->gconsale.update(handlerContext.currentStep, new_gconsale);
     }
 
-
-    void Schedule::handleGCONSUMP( const DeckKeyword& keyword, size_t currentStep, const UnitSystem& unit_system) {
-        const auto& current = *this->gconsump.get(currentStep);
+    void Schedule::handleGCONSUMP(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+        const auto& unit_system = handlerContext.section.unitSystem();
+        const auto& current = *this->gconsump.get(handlerContext.currentStep);
         std::shared_ptr<GConSump> new_gconsump(new GConSump(current));
-        for( const auto& record : keyword ) {
+        for( const auto& record : handlerContext.keyword ) {
             const std::string& groupName = record.getItem("GROUP").getTrimmedString(0);
             auto consumption_rate = record.getItem("GAS_CONSUMP_RATE").get<UDAValue>(0);
             auto import_rate = record.getItem("GAS_IMPORT_RATE").get<UDAValue>(0);
@@ -1892,16 +1662,15 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
             if (!network_node.defaultApplied(0))
                 network_node_name = network_node.getTrimmedString(0);
 
-            auto udqconfig = this->getUDQConfig(currentStep).params().undefinedValue();
+            auto udqconfig = this->getUDQConfig(handlerContext.currentStep).params().undefinedValue();
 
             new_gconsump->add(groupName, consumption_rate, import_rate, network_node_name, udqconfig, unit_system);
         }
-        this->gconsump.update(currentStep, new_gconsump);
+        this->gconsump.update(handlerContext.currentStep, new_gconsump);
     }
 
-
-    void Schedule::handleGUIDERAT( const DeckKeyword& keyword, size_t currentStep) {
-        const auto& record = keyword.getRecord(0);
+    void Schedule::handleGUIDERAT(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+        const auto& record = handlerContext.keyword.getRecord(0);
 
         double min_calc_delay = record.getItem<ParserKeywords::GUIDERAT::MIN_CALC_TIME>().getSIDouble(0);
         auto phase = GuideRateModel::TargetFromString(record.getItem<ParserKeywords::GUIDERAT::NOMINATED_PHASE>().getTrimmedString(0));
@@ -1916,48 +1685,46 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
         bool use_free_gas = DeckItem::to_bool( record.getItem<ParserKeywords::GUIDERAT::USE_FREE_GAS>().getTrimmedString(0));
 
         GuideRateModel new_model = GuideRateModel(min_calc_delay, phase, A, B, C, D, E, F, allow_increase, damping_factor, use_free_gas);
-        auto new_config = std::make_shared<GuideRateConfig>( this->guideRateConfig(currentStep) );
+        auto new_config = std::make_shared<GuideRateConfig>( this->guideRateConfig(handlerContext.currentStep) );
         if (new_config->update_model(new_model))
-            this->guide_rate_config.update( currentStep, new_config );
+            this->guide_rate_config.update( handlerContext.currentStep, new_config );
     }
 
-
-    void Schedule::handleLINCOM( const DeckKeyword& keyword, size_t currentStep) {
-        const auto& record = keyword.getRecord(0);
+    void Schedule::handleLINCOM(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+        const auto& record = handlerContext.keyword.getRecord(0);
         auto alpha = record.getItem<ParserKeywords::LINCOM::ALPHA>().get<UDAValue>(0);
         auto beta  = record.getItem<ParserKeywords::LINCOM::BETA>().get<UDAValue>(0);
         auto gamma = record.getItem<ParserKeywords::LINCOM::GAMMA>().get<UDAValue>(0);
-        auto new_config = std::make_shared<GuideRateConfig>( this->guideRateConfig(currentStep) );
+        auto new_config = std::make_shared<GuideRateConfig>( this->guideRateConfig(handlerContext.currentStep) );
         auto new_model = new_config->model();
 
         if (new_model.updateLINCOM(alpha, beta, gamma)) {
             new_config->update_model(new_model);
-            this->guide_rate_config.update( currentStep, new_config );
+            this->guide_rate_config.update( handlerContext.currentStep, new_config );
         }
     }
 
 
-    void Schedule::handleWSEGITER( const DeckKeyword& keyword, size_t currentStep) {
-        using WI = ParserKeywords::WSEGITER;
-        Tuning tuning(m_tuning.get(currentStep));
-        {
-            const auto& record = keyword.getRecord(0);
-            tuning.MXWSIT = record.getItem<WI::MAX_WELL_ITERATIONS>().get<int>(0);
-            tuning.WSEG_MAX_RESTART = record.getItem<WI::MAX_TIMES_REDUCED>().get<int>(0);
-            tuning.WSEG_REDUCTION_FACTOR = record.getItem<WI::REDUCTION_FACTOR>().get<double>(0);
-            tuning.WSEG_INCREASE_FACTOR = record.getItem<WI::INCREASING_FACTOR>().get<double>(0);
-        }
-        m_tuning.update(currentStep, tuning);
-        m_events.addEvent( ScheduleEvents::TUNING_CHANGE , currentStep);
+    void Schedule::handleWSEGITER(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+        Tuning tuning(m_tuning.get(handlerContext.currentStep));
+
+        const auto& record = handlerContext.keyword.getRecord(0);
+
+        tuning.MXWSIT = record.getItem<ParserKeywords::WSEGITER::MAX_WELL_ITERATIONS>().get<int>(0);
+        tuning.WSEG_MAX_RESTART = record.getItem<ParserKeywords::WSEGITER::MAX_TIMES_REDUCED>().get<int>(0);
+        tuning.WSEG_REDUCTION_FACTOR = record.getItem<ParserKeywords::WSEGITER::REDUCTION_FACTOR>().get<double>(0);
+        tuning.WSEG_INCREASE_FACTOR = record.getItem<ParserKeywords::WSEGITER::INCREASING_FACTOR>().get<double>(0);
+
+        m_tuning.update(handlerContext.currentStep, tuning);
+        m_events.addEvent(ScheduleEvents::TUNING_CHANGE, handlerContext.currentStep);
     }
 
+    void Schedule::handleTUNING(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+        const auto numrecords = handlerContext.keyword.size();
+        Tuning tuning(m_tuning.get(handlerContext.currentStep));
 
-    void Schedule::handleTUNING( const DeckKeyword& keyword, size_t currentStep) {
-        using TU = ParserKeywords::TUNING;
-        auto numrecords = keyword.size();
-        Tuning tuning(m_tuning.get(currentStep));
         if (numrecords > 0) {
-            const auto& record1 = keyword.getRecord(0);
+            const auto& record1 = handlerContext.keyword.getRecord(0);
 
             tuning.TSINIT = record1.getItem("TSINIT").getSIDouble(0);
             tuning.TSMAXZ = record1.getItem("TSMAXZ").getSIDouble(0);
@@ -1968,6 +1735,7 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
             tuning.TSFCNV = record1.getItem("TSFCNV").get< double >(0);
             tuning.TFDIFF = record1.getItem("TFDIFF").get< double >(0);
             tuning.THRUPT = record1.getItem("THRUPT").get< double >(0);
+
             const auto& TMAXWCdeckItem = record1.getItem("TMAXWC");
             if (TMAXWCdeckItem.hasValue(0)) {
                 tuning.TMAXWC_has_value = true;
@@ -1975,9 +1743,8 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
             }
         }
 
-
         if (numrecords > 1) {
-            const auto& record2 = keyword.getRecord(1);
+            const auto& record2 = handlerContext.keyword.getRecord(1);
 
             tuning.TRGTTE = record2.getItem("TRGTTE").get< double >(0);
             tuning.TRGCNV = record2.getItem("TRGCNV").get< double >(0);
@@ -1989,6 +1756,7 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
             tuning.XXXLCV = record2.getItem("XXXLCV").get< double >(0);
             tuning.XXXWFL = record2.getItem("XXXWFL").get< double >(0);
             tuning.TRGFIP = record2.getItem("TRGFIP").get< double >(0);
+
             const auto& TRGSFTdeckItem = record2.getItem("TRGSFT");
             if (TRGSFTdeckItem.hasValue(0)) {
                 tuning.TRGSFT_has_value = true;
@@ -1999,9 +1767,8 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
             tuning.TRWGHT = record2.getItem("TRWGHT").get< int >(0);
         }
 
-
         if (numrecords > 2) {
-            const auto& record3 = keyword.getRecord(2);
+            const auto& record3 = handlerContext.keyword.getRecord(2);
 
             tuning.NEWTMX = record3.getItem("NEWTMX").get< int >(0);
             tuning.NEWTMN = record3.getItem("NEWTMN").get< int >(0);
@@ -2012,35 +1779,37 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
             tuning.DDPLIM = record3.getItem("DDPLIM").getSIDouble(0);
             tuning.DDSLIM = record3.getItem("DDSLIM").get< double >(0);
             tuning.TRGDPR = record3.getItem("TRGDPR").getSIDouble(0);
+
             const auto& XXXDPRdeckItem = record3.getItem("XXXDPR");
             if (XXXDPRdeckItem.hasValue(0)) {
                 tuning.XXXDPR_has_value = true;
                 tuning.XXXDPR = XXXDPRdeckItem.getSIDouble(0);
             }
-        } else
-            tuning.MXWSIT = TU::MXWSIT::defaultValue;
+        } else {
+            tuning.MXWSIT = ParserKeywords::TUNING::MXWSIT::defaultValue;
+        }
 
-        m_tuning.update(currentStep, tuning);
-        m_events.addEvent( ScheduleEvents::TUNING_CHANGE , currentStep);
+        m_tuning.update(handlerContext.currentStep, tuning);
+        m_events.addEvent(ScheduleEvents::TUNING_CHANGE, handlerContext.currentStep);
     }
 
-
-    void Schedule::handleMESSAGES( const DeckKeyword& keyword, size_t currentStep) {
+    void Schedule::applyMESSAGES(const DeckKeyword& keyword, std::size_t currentStep) {
         const auto& record = keyword.getRecord(0);
         using  set_limit_fptr = decltype( std::mem_fn( &MessageLimits::setMessagePrintLimit ) );
         static const std::pair<std::string , set_limit_fptr> setters[] = {
-            {"MESSAGE_PRINT_LIMIT" , std::mem_fn( &MessageLimits::setMessagePrintLimit)},
-            {"COMMENT_PRINT_LIMIT" , std::mem_fn( &MessageLimits::setCommentPrintLimit)},
-            {"WARNING_PRINT_LIMIT" , std::mem_fn( &MessageLimits::setWarningPrintLimit)},
-            {"PROBLEM_PRINT_LIMIT" , std::mem_fn( &MessageLimits::setProblemPrintLimit)},
-            {"ERROR_PRINT_LIMIT"   , std::mem_fn( &MessageLimits::setErrorPrintLimit)},
-            {"BUG_PRINT_LIMIT"     , std::mem_fn( &MessageLimits::setBugPrintLimit)},
-            {"MESSAGE_STOP_LIMIT"  , std::mem_fn( &MessageLimits::setMessageStopLimit)},
-            {"COMMENT_STOP_LIMIT"  , std::mem_fn( &MessageLimits::setCommentStopLimit)},
-            {"WARNING_STOP_LIMIT"  , std::mem_fn( &MessageLimits::setWarningStopLimit)},
-            {"PROBLEM_STOP_LIMIT"  , std::mem_fn( &MessageLimits::setProblemStopLimit)},
-            {"ERROR_STOP_LIMIT"    , std::mem_fn( &MessageLimits::setErrorStopLimit)},
-            {"BUG_STOP_LIMIT"      , std::mem_fn( &MessageLimits::setBugStopLimit)}};
+            {"MESSAGE_PRINT_LIMIT" , std::mem_fn( &MessageLimits::setMessagePrintLimit )},
+            {"COMMENT_PRINT_LIMIT" , std::mem_fn( &MessageLimits::setCommentPrintLimit )},
+            {"WARNING_PRINT_LIMIT" , std::mem_fn( &MessageLimits::setWarningPrintLimit )},
+            {"PROBLEM_PRINT_LIMIT" , std::mem_fn( &MessageLimits::setProblemPrintLimit )},
+            {"ERROR_PRINT_LIMIT"   , std::mem_fn( &MessageLimits::setErrorPrintLimit   )},
+            {"BUG_PRINT_LIMIT"     , std::mem_fn( &MessageLimits::setBugPrintLimit     )},
+            {"MESSAGE_STOP_LIMIT"  , std::mem_fn( &MessageLimits::setMessageStopLimit  )},
+            {"COMMENT_STOP_LIMIT"  , std::mem_fn( &MessageLimits::setCommentStopLimit  )},
+            {"WARNING_STOP_LIMIT"  , std::mem_fn( &MessageLimits::setWarningStopLimit  )},
+            {"PROBLEM_STOP_LIMIT"  , std::mem_fn( &MessageLimits::setProblemStopLimit  )},
+            {"ERROR_STOP_LIMIT"    , std::mem_fn( &MessageLimits::setErrorStopLimit    )},
+            {"BUG_STOP_LIMIT"      , std::mem_fn( &MessageLimits::setBugStopLimit      )},
+        };
 
         for (const auto& pair : setters) {
             const auto& item = record.getItem( pair.first );
@@ -2052,70 +1821,63 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
         }
     }
 
-    void Schedule::handleRPTSCHED( const DeckKeyword& keyword, size_t currentStep) {
-        this->rpt_config.update(currentStep, std::make_shared<RPTConfig>(keyword));
+    void Schedule::handleRPTSCHED(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+        this->rpt_config.update(handlerContext.currentStep, std::make_shared<RPTConfig>(handlerContext.keyword));
     }
 
-    void Schedule::handleCOMPDAT( const DeckKeyword& keyword, size_t currentStep, const EclipseGrid& grid, const FieldPropsManager& fp, const ParseContext& parseContext, ErrorGuard& errors) {
-        for (const auto& record : keyword) {
+
+    void Schedule::handleCOMPDAT(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+        for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            auto wellnames = this->wellNames(wellNamePattern, currentStep);
+            auto wellnames = this->wellNames(wellNamePattern, handlerContext.currentStep);
             if (wellnames.empty())
-                invalidNamePattern(wellNamePattern, currentStep, parseContext, errors, keyword);
+                invalidNamePattern(wellNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
 
             for (const auto& name : wellnames) {
-                {
-                    auto well2 = std::shared_ptr<Well>(new Well( this->getWell(name, currentStep)));
-                    auto connections = std::shared_ptr<WellConnections>( new WellConnections( well2->getConnections()));
-                    connections->loadCOMPDAT(record, grid, fp);
-                    if (well2->updateConnections(connections, grid, fp.get_int("PVTNUM")))
-                        this->updateWell(well2, currentStep);
+                auto well2 = std::shared_ptr<Well>(new Well( this->getWell(name, handlerContext.currentStep)));
+                auto connections = std::shared_ptr<WellConnections>( new WellConnections( well2->getConnections()));
+                connections->loadCOMPDAT(record, handlerContext.grid, handlerContext.fieldPropsManager);
 
-                }
-                this->addWellGroupEvent(name, ScheduleEvents::COMPLETION_CHANGE, currentStep);
+                if (well2->updateConnections(connections, handlerContext.grid, handlerContext.fieldPropsManager.get_int("PVTNUM")))
+                    this->updateWell(well2, handlerContext.currentStep);
+
+                this->addWellGroupEvent(name, ScheduleEvents::COMPLETION_CHANGE, handlerContext.currentStep);
             }
         }
-        m_events.addEvent(ScheduleEvents::COMPLETION_CHANGE, currentStep);
+        m_events.addEvent(ScheduleEvents::COMPLETION_CHANGE, handlerContext.currentStep);
     }
 
-
-
-
-    void Schedule::handleWELSEGS( const DeckKeyword& keyword, size_t currentStep) {
-        const auto& record1 = keyword.getRecord(0);
+    void Schedule::handleWELSEGS(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+        const auto& record1 = handlerContext.keyword.getRecord(0);
         const auto& wname = record1.getItem("WELL").getTrimmedString(0);
         {
             auto& dynamic_state = this->wells_static.at(wname);
-            auto well_ptr = std::make_shared<Well>( *dynamic_state[currentStep] );
-            if (well_ptr->handleWELSEGS(keyword))
-                this->updateWell(std::move(well_ptr), currentStep);
+            auto well_ptr = std::make_shared<Well>( *dynamic_state[handlerContext.currentStep] );
+            if (well_ptr->handleWELSEGS(handlerContext.keyword))
+                this->updateWell(std::move(well_ptr), handlerContext.currentStep);
         }
     }
 
-    void Schedule::handleCOMPSEGS( const DeckKeyword& keyword, size_t currentStep, const EclipseGrid& grid,
-                                   const ParseContext& parseContext, ErrorGuard& errors) {
-        const auto& record1 = keyword.getRecord(0);
+    void Schedule::handleCOMPSEGS(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+        const auto& record1 = handlerContext.keyword.getRecord(0);
         const std::string& well_name = record1.getItem("WELL").getTrimmedString(0);
-        {
-            auto& dynamic_state = this->wells_static.at(well_name);
-            auto well_ptr = std::make_shared<Well>( *dynamic_state[currentStep] );
-            if (well_ptr->handleCOMPSEGS(keyword, grid, parseContext, errors))
-                this->updateWell(std::move(well_ptr), currentStep);
-        }
+
+        auto& dynamic_state = this->wells_static.at(well_name);
+        auto well_ptr = std::make_shared<Well>( *dynamic_state[handlerContext.currentStep] );
+        if (well_ptr->handleCOMPSEGS(handlerContext.keyword, handlerContext.grid, parseContext, errors))
+            this->updateWell(std::move(well_ptr), handlerContext.currentStep);
     }
 
-    void Schedule::handleWSEGSICD( const DeckKeyword& keyword, size_t currentStep) {
-
-        std::map<std::string, std::vector<std::pair<int, SICD> > > spiral_icds = SICD::fromWSEGSICD(keyword);
-
+    void Schedule::handleWSEGSICD(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+       std::map<std::string, std::vector<std::pair<int, SICD> > > spiral_icds = SICD::fromWSEGSICD(handlerContext.keyword);
         for (auto& map_elem : spiral_icds) {
             const std::string& well_name_pattern = map_elem.first;
-            const auto well_names = this->wellNames(well_name_pattern, currentStep);
+            const auto well_names = this->wellNames(well_name_pattern, handlerContext.currentStep);
             std::vector<std::pair<int, SICD> >& sicd_pairs = map_elem.second;
 
             for (const auto& well_name : well_names) {
                 auto& dynamic_state = this->wells_static.at(well_name);
-                auto well_ptr = std::make_shared<Well>( *dynamic_state[currentStep] );
+                auto well_ptr = std::make_shared<Well>( *dynamic_state[handlerContext.currentStep] );
 
                 const auto& connections = well_ptr->getConnections();
                 const auto& segments = well_ptr->getSegments();
@@ -2125,31 +1887,31 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
                 }
 
                 if (well_ptr -> updateWSEGSICD(sicd_pairs) )
-                    this->updateWell(std::move(well_ptr), currentStep);
+                    this->updateWell(std::move(well_ptr), handlerContext.currentStep);
             }
         }
     }
 
-    void Schedule::handleWSEGVALV( const DeckKeyword& keyword, size_t currentStep) {
-        const std::map<std::string, std::vector<std::pair<int, Valve> > > valves = Valve::fromWSEGVALV(keyword);
+    void Schedule::handleWSEGVALV(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+        const std::map<std::string, std::vector<std::pair<int, Valve> > > valves = Valve::fromWSEGVALV(handlerContext.keyword);
 
         for (const auto& map_elem : valves) {
             const std::string& well_name_pattern = map_elem.first;
-            const auto well_names = this->wellNames(well_name_pattern, currentStep);
+            const auto well_names = this->wellNames(well_name_pattern, handlerContext.currentStep);
             const std::vector<std::pair<int, Valve> >& valve_pairs = map_elem.second;
 
             for (const auto& well_name : well_names) {
                 auto& dynamic_state = this->wells_static.at(well_name);
-                auto well_ptr = std::make_shared<Well>( *dynamic_state[currentStep] );
+                auto well_ptr = std::make_shared<Well>( *dynamic_state[handlerContext.currentStep] );
                 if (well_ptr -> updateWSEGVALV(valve_pairs) )
-                    this->updateWell(std::move(well_ptr), currentStep);
+                    this->updateWell(std::move(well_ptr), handlerContext.currentStep);
             }
         }
     }
 
-    void Schedule::handleWGRUPCON( const DeckKeyword& keyword, size_t currentStep) {
-        for( const auto& record : keyword ) {
-            const auto well_names = this->wellNames(record.getItem("WELL").getTrimmedString(0), currentStep);
+    void Schedule::handleWGRUPCON(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+        for( const auto& record : handlerContext.keyword ) {
+            const auto well_names = this->wellNames(record.getItem("WELL").getTrimmedString(0), handlerContext.currentStep);
             for (const auto& well_name : well_names) {
                 bool availableForGroupControl = DeckItem::to_bool(record.getItem("GROUP_CONTROLLED").getTrimmedString(0));
                 double guide_rate = record.getItem("GUIDE_RATE").get< double >(0);
@@ -2162,46 +1924,46 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
 
                 {
                     auto& dynamic_state = this->wells_static.at(well_name);
-                    auto well_ptr = std::make_shared<Well>( *dynamic_state[currentStep] );
+                    auto well_ptr = std::make_shared<Well>( *dynamic_state[handlerContext.currentStep] );
                     if (well_ptr->updateWellGuideRate(availableForGroupControl, guide_rate, phase, scaling_factor)) {
-                        auto new_config = std::make_shared<GuideRateConfig>( this->guideRateConfig(currentStep) );
+                        auto new_config = std::make_shared<GuideRateConfig>( this->guideRateConfig(handlerContext.currentStep) );
                         new_config->update_well(*well_ptr);
-                        this->guide_rate_config.update( currentStep, std::move(new_config) );
+                        this->guide_rate_config.update( handlerContext.currentStep, std::move(new_config) );
 
-                        this->updateWell(std::move(well_ptr), currentStep);
+                        this->updateWell(std::move(well_ptr), handlerContext.currentStep);
                     }
                 }
             }
         }
     }
 
-    void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, const UnitSystem& unit_system, const ParseContext& parseContext, ErrorGuard& errors) {
-        for( const auto& record : keyword ) {
-            const std::string& childName = trim_wgname(keyword, record.getItem("CHILD_GROUP").get<std::string>(0), parseContext, errors);
-            const std::string& parentName = trim_wgname(keyword, record.getItem("PARENT_GROUP").get<std::string>(0), parseContext, errors);
+    void Schedule::handleGRUPTREE(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+        const auto& unit_system = handlerContext.section.unitSystem();
+        for (const auto& record : handlerContext.keyword) {
+            const std::string& childName = trim_wgname(handlerContext.keyword, record.getItem("CHILD_GROUP").get<std::string>(0), parseContext, errors);
+            const std::string& parentName = trim_wgname(handlerContext.keyword, record.getItem("PARENT_GROUP").get<std::string>(0), parseContext, errors);
 
             if (!hasGroup(childName))
-                addGroup( childName , currentStep, unit_system );
-            
-            if (!hasGroup(parentName))
-                addGroup( parentName , currentStep, unit_system );
+                addGroup(childName, handlerContext.currentStep, unit_system);
 
-            this->addGroupToGroup(parentName, childName, currentStep);
+            if (!hasGroup(parentName))
+                addGroup(parentName, handlerContext.currentStep, unit_system);
+
+            this->addGroupToGroup(parentName, childName, handlerContext.currentStep);
         }
     }
 
-
-    void Schedule::handleGPMAINT( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
-        for( const auto& record : keyword ) {
+    void Schedule::handleGPMAINT(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+        for( const auto& record : handlerContext.keyword ) {
             const std::string& groupNamePattern = record.getItem("GROUP").getTrimmedString(0);
             const auto group_names = this->groupNames(groupNamePattern);
 
             if (group_names.empty())
-                invalidNamePattern(groupNamePattern, currentStep, parseContext, errors, keyword);
+                invalidNamePattern(groupNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
 
             using GP = ParserKeywords::GPMAINT;
             for (const auto& group_name : group_names) {
-                auto group_ptr = std::make_shared<Group>(this->getGroup(group_name, currentStep));
+                auto group_ptr = std::make_shared<Group>(this->getGroup(group_name, handlerContext.currentStep));
                 const auto& target_string = record.getItem<GP::FLOW_TARGET>().get<std::string>(0);
                 if (target_string == "NONE")
                     group_ptr->set_gpmaint();
@@ -2209,30 +1971,29 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
                     GPMaint gpmaint(record);
                     group_ptr->set_gpmaint(std::move(gpmaint));
                 }
-                this->updateGroup(std::move(group_ptr), currentStep);
+                this->updateGroup(std::move(group_ptr), handlerContext.currentStep);
             }
         }
     }
 
-
-    void Schedule::handleGRUPNET( const DeckKeyword& keyword, size_t currentStep, const UnitSystem& unit_system) {
-        for( const auto& record : keyword ) {
+    void Schedule::handleGRUPNET(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+        const auto& unit_system = handlerContext.section.unitSystem();
+        for (const auto& record : handlerContext.keyword) {
             const auto& groupName = record.getItem("NAME").getTrimmedString(0);
 
             if (!hasGroup(groupName))
-                addGroup(groupName , currentStep, unit_system);
+                addGroup(groupName , handlerContext.currentStep, unit_system);
 
             int table = record.getItem("VFP_TABLE").get< int >(0);
             {
-                auto group_ptr = std::make_shared<Group>( this->getGroup(groupName, currentStep) );
+                auto group_ptr = std::make_shared<Group>( this->getGroup(groupName, handlerContext.currentStep) );
                 if (group_ptr->updateNetVFPTable(table))
-                    this->updateGroup(std::move(group_ptr), currentStep);
+                    this->updateGroup(std::move(group_ptr), handlerContext.currentStep);
             }
         }
     }
 
-    void Schedule::handleWRFT( const DeckKeyword& keyword, size_t currentStep) {
-
+    void Schedule::applyWRFT(const DeckKeyword& keyword, std::size_t currentStep) {
         /* Rule for handling RFT: Request current RFT data output for specified wells, plus output when
          * any well is subsequently opened
          */
@@ -2249,9 +2010,8 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
         this->rft_config.setWellOpenRFT(currentStep);
     }
 
-    void Schedule::handleWRFTPLT( const DeckKeyword& keyword,  size_t currentStep) {
+    void Schedule::applyWRFTPLT(const DeckKeyword& keyword, std::size_t currentStep) {
         for( const auto& record : keyword ) {
-
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
 
             RFTConfig::RFT RFTKey = RFTConfig::RFTFromString(record.getItem("OUTPUT_RFT").getTrimmedString(0));
@@ -2264,20 +2024,20 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
         }
     }
 
+
+
     const RFTConfig& Schedule::rftConfig() const {
         return this->rft_config;
     }
 
-void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t report_step, const ParseContext& parseContext, ErrorGuard& errors, const DeckKeyword& keyword ) const {
-    std::string msg = "Error when handling " + keyword.name() + " at step: " + std::to_string(report_step) + ". No names match " +
-                          namePattern;
+    void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t report_step, const ParseContext& parseContext, ErrorGuard& errors, const DeckKeyword& keyword ) const {
+        std::string msg = "Error when handling " + keyword.name() + " at step: " + std::to_string(report_step) + ". No names match " + namePattern;
         parseContext.handleError( ParseContext::SCHEDULE_INVALID_NAME, msg, errors );
     }
 
     const TimeMap& Schedule::getTimeMap() const {
         return this->m_timeMap;
     }
-
 
     GTNode Schedule::groupTree(const std::string& root_node, std::size_t report_step, std::size_t level, const std::optional<std::string>& parent_name) const {
         auto root_group = this->getGroup(root_node, report_step);
@@ -3014,7 +2774,6 @@ void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t 
         return *ptr;
     }
 
-
     void Schedule::applyAction(size_t reportStep, const Action::ActionX& action, const Action::Result& result) {
         ParseContext parseContext;
         ErrorGuard errors;
@@ -3024,10 +2783,10 @@ void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t 
                 throw std::invalid_argument("The keyword: " + keyword.name() + " can not be handled in the ACTION body");
 
             if (keyword.name() == "WELOPEN")
-                this->handleWELOPEN(keyword, reportStep, parseContext, errors, result.wells());
+                this->applyWELOPEN(keyword, reportStep, parseContext, errors, result.wells());
 
             if (keyword.name() == "EXIT")
-                this->handleEXIT(keyword, reportStep);
+                this->applyEXIT(keyword, reportStep);
         }
 
     }
@@ -3178,81 +2937,87 @@ const Network::ExtNetwork& Schedule::network(std::size_t report_step) const {
 }
 
 
-void Schedule::handleNODEPROP(const DeckKeyword& keyword, std::size_t report_step) {
-    using NP = ParserKeywords::NODEPROP;
-    auto ext_network = std::make_shared<Network::ExtNetwork>( this->network(report_step) );
-    for (const auto& record : keyword) {
-        const auto& name = record.getItem<NP::NAME>().get<std::string>(0);
-        const auto& pressure_item = record.getItem<NP::PRESSURE>();
-        bool as_choke = DeckItem::to_bool( record.getItem<NP::AS_CHOKE>().get<std::string>(0));
-        bool add_gas_lift_gas = DeckItem::to_bool( record.getItem<NP::ADD_GAS_LIFT_GAS>().get<std::string>(0));
-        Network::Node node{ name };
+void Schedule::handleNODEPROP(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+    auto ext_network = std::make_shared<Network::ExtNetwork>(this->network(handlerContext.currentStep));
+
+    for (const auto& record : handlerContext.keyword) {
+        const auto& name = record.getItem<ParserKeywords::NODEPROP::NAME>().get<std::string>(0);
+        const auto& pressure_item = record.getItem<ParserKeywords::NODEPROP::PRESSURE>();
+
+        const bool as_choke = DeckItem::to_bool(record.getItem<ParserKeywords::NODEPROP::AS_CHOKE>().get<std::string>(0));
+        const bool add_gas_lift_gas = DeckItem::to_bool(record.getItem<ParserKeywords::NODEPROP::ADD_GAS_LIFT_GAS>().get<std::string>(0));
+
+        Network::Node node { name };
 
         if (pressure_item.hasValue(0) && (pressure_item.get<double>(0) > 0))
-            node.terminal_pressure( pressure_item.getSIDouble(0) );
+            node.terminal_pressure(pressure_item.getSIDouble(0));
 
         if (as_choke) {
             std::string target_group = name;
-            const auto& target_item = record.getItem<NP::CHOKE_GROUP>();
+            const auto& target_item = record.getItem<ParserKeywords::NODEPROP::CHOKE_GROUP>();
+
             if (target_item.hasValue(0))
                 target_group = target_item.get<std::string>(0);
 
             if (target_group != name) {
-                if (this->hasGroup(name, report_step)) {
-                    const auto& group = this->getGroup(name, report_step);
+                if (this->hasGroup(name, handlerContext.currentStep)) {
+                    const auto& group = this->getGroup(name, handlerContext.currentStep);
                     if (group.numWells() > 0)
                         throw std::invalid_argument("A manifold group must respond to its own target");
                 }
             }
-            node.as_choke( target_group );
+
+            node.as_choke(target_group);
         }
-        node.add_gas_lift_gas( add_gas_lift_gas );
-        ext_network->add_node( node );
+
+        node.add_gas_lift_gas(add_gas_lift_gas);
+        ext_network->add_node(node);
     }
-    this->updateNetwork(ext_network, report_step);
+
+    this->updateNetwork(ext_network, handlerContext.currentStep);
 }
 
 const GasLiftOpt& Schedule::glo(std::size_t report_step) const {
     return *this->m_glo[report_step];
 }
 
-void Schedule::handleLIFTOPT(const DeckKeyword& keyword, std::size_t report_step) {
-    using LO  = ParserKeywords::LIFTOPT;
-    auto glo = std::make_shared<GasLiftOpt>( this->glo(report_step) );
-    const auto& record = keyword.getRecord(0);
-    double gaslift_increment = record.getItem<LO::INCREMENT_SIZE>().getSIDouble(0);
-    double min_eco_gradient = record.getItem<LO::MIN_ECONOMIC_GRADIENT>().getSIDouble(0);
-    double min_wait = record.getItem<LO::MIN_INTERVAL_BETWEEN_GAS_LIFT_OPTIMIZATIONS>().getSIDouble(0);
-    bool all_newton = DeckItem::to_bool( record.getItem<LO::OPTIMISE_GAS_LIFT>().get<std::string>(0) );
+void Schedule::handleLIFTOPT(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+    auto glo = std::make_shared<GasLiftOpt>(this->glo(handlerContext.currentStep));
+
+    const auto& record = handlerContext.keyword.getRecord(0);
+
+    const double gaslift_increment = record.getItem<ParserKeywords::LIFTOPT::INCREMENT_SIZE>().getSIDouble(0);
+    const double min_eco_gradient = record.getItem<ParserKeywords::LIFTOPT::MIN_ECONOMIC_GRADIENT>().getSIDouble(0);
+    const double min_wait = record.getItem<ParserKeywords::LIFTOPT::MIN_INTERVAL_BETWEEN_GAS_LIFT_OPTIMIZATIONS>().getSIDouble(0);
+    const bool all_newton = DeckItem::to_bool( record.getItem<ParserKeywords::LIFTOPT::OPTIMISE_GAS_LIFT>().get<std::string>(0) );
 
     glo->gaslift_increment(gaslift_increment);
     glo->min_eco_gradient(min_eco_gradient);
     glo->min_wait(min_wait);
     glo->all_newton(all_newton);
 
-    this->m_glo.update(report_step, std::move(glo));
+    this->m_glo.update(handlerContext.currentStep, std::move(glo));
 }
 
+void Schedule::handleGLIFTOPT(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard&errors) {
+    auto glo = std::make_shared<GasLiftOpt>( this->glo(handlerContext.currentStep) );
 
-void Schedule::handleGLIFTOPT(const DeckKeyword& keyword, std::size_t report_step, const ParseContext& parseContext, ErrorGuard& errors) {
-    using GLO  = ParserKeywords::GLIFTOPT;
-    auto glo = std::make_shared<GasLiftOpt>( this->glo(report_step) );
-    for (const auto& record : keyword) {
-        const std::string& groupNamePattern = record.getItem<GLO::GROUP_NAME>().getTrimmedString(0);
+    for (const auto& record : handlerContext.keyword) {
+        const std::string& groupNamePattern = record.getItem<ParserKeywords::GLIFTOPT::GROUP_NAME>().getTrimmedString(0);
         const auto group_names = this->groupNames(groupNamePattern);
+
         if (group_names.empty())
-            invalidNamePattern(groupNamePattern, report_step, parseContext, errors, keyword);
+            invalidNamePattern(groupNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
 
-        const auto& max_total_item = record.getItem<GLO::MAX_TOTAL_GAS_RATE>();
-        const auto& max_gas_item = record.getItem<GLO::MAX_LIFT_GAS_SUPPLY>();
-        double max_lift_gas_value = -1;
-        double max_total_gas_value = -1;
+        const auto& max_gas_item = record.getItem<ParserKeywords::GLIFTOPT::MAX_LIFT_GAS_SUPPLY>();
+        const double max_lift_gas_value = max_gas_item.hasValue(0)
+            ? max_gas_item.getSIDouble(0)
+            : -1;
 
-        if (max_gas_item.hasValue(0))
-            max_lift_gas_value = max_gas_item.getSIDouble(0);
-
-        if (max_total_item.hasValue(0))
-            max_total_gas_value = max_total_item.getSIDouble(0);
+        const auto& max_total_item = record.getItem<ParserKeywords::GLIFTOPT::MAX_TOTAL_GAS_RATE>();
+        const double max_total_gas_value = max_total_item.hasValue(0)
+            ? max_total_item.getSIDouble(0)
+            : -1;
 
         for (const auto& gname : group_names) {
             auto group = GasLiftOpt::Group(gname);
@@ -3262,25 +3027,25 @@ void Schedule::handleGLIFTOPT(const DeckKeyword& keyword, std::size_t report_ste
             glo->add_group(group);
         }
     }
-    this->m_glo.update(report_step, std::move(glo));
+
+    this->m_glo.update(handlerContext.currentStep, std::move(glo));
 }
 
-void Schedule::handleWLIFTOPT(const DeckKeyword& keyword, std::size_t report_step, const ParseContext& parseContext, ErrorGuard& errors) {
-    using WLO  = ParserKeywords::WLIFTOPT;
-    auto glo = std::make_shared<GasLiftOpt>( this->glo(report_step) );
+void Schedule::handleWLIFTOPT(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+    auto glo = std::make_shared<GasLiftOpt>(this->glo(handlerContext.currentStep));
 
-    for (const auto& record : keyword) {
-        const std::string& wellNamePattern = record.getItem<WLO::WELL>().getTrimmedString(0);
-        bool use_glo = DeckItem::to_bool( record.getItem<WLO::USE_OPTIMIZER>().get<std::string>(0));
-        bool alloc_extra_gas = DeckItem::to_bool( record.getItem<WLO::ALLOCATE_EXTRA_LIFT_GAS>().get<std::string>(0));
-        double weight_factor = record.getItem<WLO::WEIGHT_FACTOR>().get<double>(0);
-        double inc_weight_factor = record.getItem<WLO::DELTA_GAS_RATE_WEIGHT_FACTOR>().get<double>(0);
-        double min_rate = record.getItem<WLO::MIN_LIFT_GAS_RATE>().getSIDouble(0);
-        const auto& max_rate_item = record.getItem<WLO::MAX_LIFT_GAS_RATE>();
+    for (const auto& record : handlerContext.keyword) {
+        const std::string& wellNamePattern = record.getItem<ParserKeywords::WLIFTOPT::WELL>().getTrimmedString(0);
+        const bool use_glo = DeckItem::to_bool( record.getItem<ParserKeywords::WLIFTOPT::USE_OPTIMIZER>().get<std::string>(0));
+        const bool alloc_extra_gas = DeckItem::to_bool( record.getItem<ParserKeywords::WLIFTOPT::ALLOCATE_EXTRA_LIFT_GAS>().get<std::string>(0));
+        const double weight_factor = record.getItem<ParserKeywords::WLIFTOPT::WEIGHT_FACTOR>().get<double>(0);
+        const double inc_weight_factor = record.getItem<ParserKeywords::WLIFTOPT::DELTA_GAS_RATE_WEIGHT_FACTOR>().get<double>(0);
+        const double min_rate = record.getItem<ParserKeywords::WLIFTOPT::MIN_LIFT_GAS_RATE>().getSIDouble(0);
+        const auto& max_rate_item = record.getItem<ParserKeywords::WLIFTOPT::MAX_LIFT_GAS_RATE>();
 
         const auto well_names = this->wellNames(wellNamePattern);
         if (well_names.empty())
-            invalidNamePattern(wellNamePattern, report_step, parseContext, errors, keyword);
+            invalidNamePattern(wellNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
 
         for (const auto& wname : well_names) {
             auto well = GasLiftOpt::Well(wname, use_glo);
@@ -3297,28 +3062,33 @@ void Schedule::handleWLIFTOPT(const DeckKeyword& keyword, std::size_t report_ste
         }
     }
 
-    this->m_glo.update(report_step, std::move(glo));
+    this->m_glo.update(handlerContext.currentStep, std::move(glo));
 }
 
-void Schedule::handleBRANPROP(const DeckKeyword& keyword, std::size_t report_step) {
-    using BP = ParserKeywords::BRANPROP;
-    auto ext_network = std::make_shared<Network::ExtNetwork>( this->network(report_step) );
-    for (const auto& record : keyword) {
-        const auto& downtree_node = record.getItem<BP::DOWNTREE_NODE>().get<std::string>(0);
-        const auto& uptree_node = record.getItem<BP::UPTREE_NODE>().get<std::string>(0);
-        int vfp_table = record.getItem<BP::VFP_TABLE>().get<int>(0);
-        if (vfp_table == 0)
-            ext_network->drop_branch( uptree_node, downtree_node );
-        else {
-            auto alq_eq = Network::Branch::AlqEqfromString( record.getItem<BP::ALQ_SURFACE_DENSITY>().get<std::string>(0));
+void Schedule::handleBRANPROP(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+    auto ext_network = std::make_shared<Network::ExtNetwork>(this->network(handlerContext.currentStep));
+
+    for (const auto& record : handlerContext.keyword) {
+        const auto& downtree_node = record.getItem<ParserKeywords::BRANPROP::DOWNTREE_NODE>().get<std::string>(0);
+        const auto& uptree_node = record.getItem<ParserKeywords::BRANPROP::UPTREE_NODE>().get<std::string>(0);
+
+        const int vfp_table = record.getItem<ParserKeywords::BRANPROP::VFP_TABLE>().get<int>(0);
+
+        if (vfp_table == 0) {
+            ext_network->drop_branch(uptree_node, downtree_node);
+        } else {
+            const auto alq_eq = Network::Branch::AlqEqfromString(record.getItem<ParserKeywords::BRANPROP::ALQ_SURFACE_DENSITY>().get<std::string>(0));
+
             if (alq_eq == Network::Branch::AlqEQ::ALQ_INPUT) {
-                double alq_value = record.getItem<BP::ALQ>().get<double>(0);
-                ext_network->add_branch( Network::Branch(downtree_node, uptree_node, vfp_table, alq_value));
-            } else
-                ext_network->add_branch( Network::Branch(downtree_node, uptree_node, vfp_table, alq_eq));
+                double alq_value = record.getItem<ParserKeywords::BRANPROP::ALQ>().get<double>(0);
+                ext_network->add_branch(Network::Branch(downtree_node, uptree_node, vfp_table, alq_value));
+            } else {
+                ext_network->add_branch(Network::Branch(downtree_node, uptree_node, vfp_table, alq_eq));
+            }
         }
     }
-    this->updateNetwork(ext_network, report_step);
+
+    this->updateNetwork(ext_network, handlerContext.currentStep);
 }
 
 
