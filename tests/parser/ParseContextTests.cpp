@@ -18,6 +18,7 @@
  */
 
 #include <stdexcept>
+#include <memory>
 #include <stdlib.h>
 #include <iostream>
 #include <boost/filesystem.hpp>
@@ -36,8 +37,10 @@
 #include <opm/parser/eclipse/Parser/ParserKeywords/T.hpp>
 #include <opm/parser/eclipse/Parser/InputErrorAction.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
+#include <opm/common/utility/OpmInputError.hpp>
 
 
+#include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
@@ -812,3 +815,80 @@ RPTRUNSPEC
     context.update(ParseContext::PARSE_LONG_KEYWORD, InputError::THROW_EXCEPTION);
     BOOST_CHECK_THROW( parser.parseString(deck_string, context, error), std::invalid_argument);
 }
+
+
+Deck parse(bool throw_opm, bool& opm_caught, bool& std_caught) {
+    KeywordLocation location("kw", "file", 100);
+    try {
+        if (throw_opm)
+            throw OpmInputError("{}:{}:{}", location);
+        else
+            throw std::runtime_error("Runtime");
+    }
+    catch (const OpmInputError& opm_error) {
+        opm_caught = true;
+        throw;
+    }
+    catch (const std::exception& std_error) {
+        std_caught = true;
+        throw;
+    }
+}
+
+
+
+BOOST_AUTO_TEST_CASE(OPM_ERROR) {
+    KeywordLocation location("kw", "file", 100);
+    OpmInputError error1("Error", location);
+    OpmInputError error2("{2}:{1}:{0}", location);
+    OpmInputError error3("{}:{}:{}", location);
+    OpmInputError error4("{keyword}:{line}:{keyword}", location);
+
+    /*
+      Use of named placeholders like {keyword} and {file} is probabably the
+      best, but also numbered placeholders like {0} and {1} and also pure
+      positional {} works.
+    */
+
+    BOOST_CHECK_EQUAL(error1.what(), "Error");
+    BOOST_CHECK_EQUAL(error2.what(), "100:file:kw");
+    BOOST_CHECK_EQUAL(error3.what(), "kw:file:100");
+    BOOST_CHECK_EQUAL(error4.what(), "kw:100:kw");
+
+
+    /*
+      This test is meant to emulate the typical parsing process, the blocks here
+      in the main test function represent main() in the simulator and the main
+      function call the parse() function create a deck. The parse function will
+      fail with either OpmInputError or std::runtime_error, in the main scope we
+      should catch them both and test that the correct exception has been
+      thrown.
+    */
+    {
+        bool std_caught = false;
+        bool opm_caught = false;
+        std::unique_ptr<Deck> deck_ptr;
+        try {
+            deck_ptr = std::make_unique<Deck>( parse(true, opm_caught, std_caught) );
+        } catch( ... ) {
+            BOOST_CHECK(!std_caught);
+            BOOST_CHECK(opm_caught);
+        }
+
+    }
+
+    {
+        bool std_caught = false;
+        bool opm_caught = false;
+        std::unique_ptr<Deck> deck_ptr;
+        try {
+            deck_ptr = std::make_unique<Deck>( parse(false, opm_caught, std_caught) );
+        } catch( ... ) {
+            BOOST_CHECK(std_caught);
+            BOOST_CHECK(!opm_caught);
+        }
+
+    }
+}
+
+
