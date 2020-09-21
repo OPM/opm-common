@@ -401,71 +401,6 @@ namespace Opm
         void addGroupToGroup( const std::string& parent_group, const Group& child_group, size_t timeStep);
         void addGroup(const std::string& groupName , size_t timeStep, const UnitSystem& unit_system);
         void addWell(const std::string& wellName, const DeckRecord& record, size_t timeStep, Connection::Order connection_order, const UnitSystem& unit_system);
-        void handleEXIT(const DeckKeyword& keyword , size_t report_step);
-        void handleUDQ(const DeckKeyword& keyword, size_t currentStep);
-        void handleWLIST(const DeckKeyword& keyword, size_t currentStep);
-        void handleCOMPORD(const ParseContext& parseContext, ErrorGuard& errors, const DeckKeyword& compordKeyword, size_t currentStep);
-        void handleWELSPECS( const SCHEDULESection&, size_t, size_t , const UnitSystem& unit_system, const ParseContext& parseContext, ErrorGuard& errors);
-        void handleWCONHIST( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
-        void handleWCONPROD( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
-        void handleWGRUPCON( const DeckKeyword& keyword, size_t currentStep);
-        void handleCOMPDAT( const DeckKeyword& keyword,  size_t currentStep, const EclipseGrid& grid, const FieldPropsManager& fp, const ParseContext& parseContext, ErrorGuard& errors);
-        void handleCOMPLUMP( const DeckKeyword& keyword,  size_t currentStep );
-        void handleWELSEGS( const DeckKeyword& keyword, size_t currentStep);
-        void handleCOMPSEGS( const DeckKeyword& keyword, size_t currentStep, const EclipseGrid& grid, const ParseContext& parseContext, ErrorGuard& errors);
-        void handleWSEGSICD( const DeckKeyword& keyword, size_t currentStep);
-        // TODO: we should incorporate ParseContext and ErrorGuard, including the above keyword
-        void handleWSEGVALV( const DeckKeyword& keyword, size_t currentStep);
-
-        void handleWCONINJE( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
-        void handleWFOAM( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
-        void handleWPOLYMER( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
-        void handleWSALT( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
-        void handleWSOLVENT( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
-        void handleWTRACER( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
-        void handleWTEMP( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
-        void handleWPMITAB( const DeckKeyword& keyword,  const size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
-        void handleWSKPTAB( const DeckKeyword& keyword,  const size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
-        void handleWINJTEMP( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
-        void handleWCONINJH(const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
-        void handleWELOPEN( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors, const std::vector<std::string>& matching_wells = {});
-        void handleWELTARG( const SCHEDULESection&,  const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
-        void handleGCONINJE( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
-        void handleGCONPROD( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
-        void handleGEFAC( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
-        void handleGCONSALE( const DeckKeyword& keyword, size_t currentStep, const UnitSystem& unit_system);
-        void handleGCONSUMP( const DeckKeyword& keyword, size_t currentStep, const UnitSystem& unit_system);
-        void handleGUIDERAT( const DeckKeyword& keyword, size_t currentStep);
-        void handleLINCOM( const DeckKeyword& keyword, size_t currentStep);
-        void handleWEFAC( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
-
-        void handleBRANPROP( const DeckKeyword& keyword, size_t currentStep);
-        void handleNODEPROP( const DeckKeyword& keyword, size_t currentStep);
-        void handleLIFTOPT(const DeckKeyword& keyword, std::size_t currentStep);
-        void handleGLIFTOPT(const DeckKeyword& keyword, std::size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
-        void handleWLIFTOPT(const DeckKeyword& keyword, std::size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
-        void handleTUNING( const DeckKeyword& keyword, size_t currentStep);
-        void handlePYACTION( std::shared_ptr<const Python> python, const std::string& input_path, const DeckKeyword& keyword, size_t currentStep);
-        void handleNUPCOL( const DeckKeyword& keyword, size_t currentStep);
-        void handleGPMAINT( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
-        void handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, const UnitSystem& unit_system, const ParseContext& parseContext, ErrorGuard& errors);
-        void handleGRUPNET( const DeckKeyword& keyword, size_t currentStep, const UnitSystem& unit_system);
-        void handleWRFT( const DeckKeyword& keyword, size_t currentStep);
-        void handleWTEST( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
-        void handleWRFTPLT( const DeckKeyword& keyword, size_t currentStep);
-        void handleWPIMULT( const DeckKeyword& keyword, size_t currentStep);
-        void handleDRSDT( const DeckKeyword& keyword, size_t currentStep);
-        void handleDRVDT( const DeckKeyword& keyword, size_t currentStep);
-        void handleDRSDTR( const DeckKeyword& keyword, size_t currentStep);
-        void handleDRVDTR( const DeckKeyword& keyword, size_t currentStep);
-        void handleVAPPARS( const DeckKeyword& keyword, size_t currentStep);
-        void handleWECON( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
-        void handleWSEGITER( const DeckKeyword& keyword, size_t currentStep);
-        void handleWHISTCTL(const DeckKeyword& keyword, std::size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
-        void handleMESSAGES(const DeckKeyword& keyword, size_t currentStep);
-        void handleRPTSCHED(const DeckKeyword& keyword, size_t currentStep);
-        void handleVFPPROD(const DeckKeyword& vfpprodKeyword, const UnitSystem& unit_system, size_t currentStep);
-        void handleVFPINJ(const DeckKeyword& vfpprodKeyword, const UnitSystem& unit_system, size_t currentStep);
         void checkUnhandledKeywords( const SCHEDULESection& ) const;
         void checkIfAllConnectionsIsShut(size_t currentStep);
         void handleKeyword(std::shared_ptr<const Python> python,
@@ -477,7 +412,6 @@ namespace Opm
                            const ParseContext& parseContext, ErrorGuard& errors,
                            const EclipseGrid& grid,
                            const FieldPropsManager& fp,
-                           const UnitSystem& unit_system,
                            std::vector<std::pair<const DeckKeyword*, size_t > >& rftProperties);
         void addWellGroupEvent(const std::string& wellGroup, ScheduleEvents::Events event, size_t reportStep);
 
@@ -506,6 +440,92 @@ namespace Opm
                 result[it.first].reconstruct(unique, it.second);
             }
         }
+
+        void applyEXIT(const DeckKeyword&, std::size_t currentStep);
+        void applyMESSAGES(const DeckKeyword&, std::size_t currentStep);
+        void applyWELOPEN(const DeckKeyword&, std::size_t currentStep, const ParseContext&, ErrorGuard&, const std::vector<std::string>& matching_wells = {});
+        void applyWRFT(const DeckKeyword&, std::size_t currentStep);
+        void applyWRFTPLT(const DeckKeyword&, std::size_t currentStep);
+
+        struct HandlerContext {
+            const SCHEDULESection& section;
+            const DeckKeyword& keyword;
+            const std::size_t keywordIndex;
+            const std::size_t currentStep;
+            const EclipseGrid& grid;
+            const FieldPropsManager& fieldPropsManager;
+        };
+
+        /**
+         * Handles a "normal" keyword. A normal keyword is one that can be handled by a function with the standard set of arguments (the ones that are passed to this function.
+         *
+         * \return `true` if the keyword was handled
+         */
+        bool handleNormalKeyword(const HandlerContext&, const ParseContext&, ErrorGuard&);
+
+        /// Keyword Handlers
+        void handlePYACTION (std::shared_ptr<const Python> python, const std::string& input_path, const DeckKeyword&, std::size_t currentStep);
+
+        void handleBRANPROP (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleCOMPDAT  (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleCOMPLUMP (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleCOMPORD  (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleCOMPSEGS (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleDRSDT    (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleDRSDTR   (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleDRVDT    (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleDRVDTR   (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleGCONINJE (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleGCONPROD (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleGCONSALE (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleGCONSUMP (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleGEFAC    (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleGLIFTOPT (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleGPMAINT  (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleGRUPNET  (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleGRUPTREE (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleGUIDERAT (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleLIFTOPT  (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleLINCOM   (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleMESSAGES (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleMULTFLT  (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleMXUNSUPP (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleNODEPROP (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleNUPCOL   (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleRPTSCHED (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleTUNING   (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleUDQ      (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleVAPPARS  (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleVFPINJ   (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleVFPPROD  (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWCONHIST (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWCONINJE (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWCONINJH (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWCONPROD (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWECON    (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWEFAC    (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWELOPEN  (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWELSEGS  (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWELSPECS (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWELTARG  (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWFOAM    (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWGRUPCON (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWHISTCTL (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWINJTEMP (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWLIFTOPT (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWLIST    (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWPIMULT  (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWPMITAB  (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWPOLYMER (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWSALT    (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWSEGITER (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWSEGSICD (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWSEGVALV (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWSKPTAB  (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWSOLVENT (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWTEMP    (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWTEST    (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWTRACER  (const HandlerContext&, const ParseContext&, ErrorGuard&);
     };
 }
 

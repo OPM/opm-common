@@ -97,6 +97,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Schedule/Action/Condition.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Action/State.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/ArrayDimChecker.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/eval_uda.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Events.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/GasLiftOpt.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Group/GPMaint.cpp
@@ -107,7 +108,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Schedule/Group/GConSale.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Group/GConSump.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Group/GTNode.cpp
-    src/opm/parser/eclipse/EclipseState/Schedule/Well/injection.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/KeywordHandlers.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/MessageLimits.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/MSW/icd.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/MSW/Compsegs.cpp
@@ -127,7 +128,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Schedule/SummaryState.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/TimeMap.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Well/Connection.cpp
-    src/opm/parser/eclipse/EclipseState/Schedule/eval_uda.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/Well/injection.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Well/Well.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Well/WellConnections.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Well/WList.cpp
