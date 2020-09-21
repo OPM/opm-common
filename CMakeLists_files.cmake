@@ -21,7 +21,6 @@
 #	                      the library needs it.
 
 list (APPEND MAIN_SOURCE_FILES
-      src/opm/common/data/SimulationDataContainer.cpp
       src/opm/common/OpmLog/CounterLog.cpp
       src/opm/common/OpmLog/EclipsePRTLog.cpp
       src/opm/common/OpmLog/LogBackend.cpp
@@ -304,7 +303,6 @@ list (APPEND TEST_SOURCE_FILES
       tests/test_OpmLog.cpp
       tests/test_param.cpp
       tests/test_RootFinders.cpp
-      tests/test_SimulationDataContainer.cpp
       tests/test_sparsevector.cpp
       tests/test_uniformtablelinear.cpp
 )
@@ -508,7 +506,6 @@ endif()
 list( APPEND PUBLIC_HEADER_FILES
       opm/common/ErrorMacros.hpp
       opm/common/Exceptions.hpp
-      opm/common/data/SimulationDataContainer.hpp
       opm/common/OpmLog/CounterLog.hpp
       opm/common/OpmLog/EclipsePRTLog.hpp
       opm/common/OpmLog/LogBackend.hpp
