@@ -493,6 +493,10 @@ namespace Opm {
 
         void checkPVTOMonotonicity(const Deck& deck) const;
 
+        void logPVTOMonotonicityFailure(const Deck&                               deck,
+                                        const std::size_t                         tableID,
+                                        const std::vector<PvtoTable::FlippedFVF>& flipped_Bo) const;
+
         std::map<std::string , TableContainer> m_simpleTables;
         std::vector<PvtgTable> m_pvtgTables;
         std::vector<PvtgwTable> m_pvtgwTables;

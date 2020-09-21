@@ -24,8 +24,12 @@
 #include <memory>
 #include <sstream>
 
+#include <fmt/format.h>
+
+#include <opm/common/OpmLog/EclipsePRTLog.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/OpmLog/LogUtil.hpp>
+#include <opm/common/OpmLog/StreamLog.hpp>
 
 #include <opm/parser/eclipse/Parser/ParserKeywords/A.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/E.hpp>
@@ -1206,43 +1210,110 @@ namespace Opm {
 
     void TableManager::checkPVTOMonotonicity(const Deck& deck) const
     {
-        const auto& usys   = deck.getActiveUnitSystem();
-        const auto& tables = this->getPvtoTables();
+        auto tableID = std::size_t{0};
+        for (const auto& pvto : this->getPvtoTables()) {
+            ++tableID; // One-based table ID
+
+            const auto flipped_Bo = pvto.nonMonotonicSaturatedFVF();
+            if (flipped_Bo.empty()) {
+                // Normal case.  Bo strictly increasing as a function of Rs
+                // in saturated table.  Nothing to do here.
+                continue;
+            }
+
+            // Unexpected case.  Bo is *not* strictly increasing as a
+            // function of Rs.  Report condition to user.
+            this->logPVTOMonotonicityFailure(deck, tableID, flipped_Bo);
+        }
+    }
+
+    void TableManager::logPVTOMonotonicityFailure(const Deck&                               deck,
+                                                  const std::size_t                         tableID,
+                                                  const std::vector<PvtoTable::FlippedFVF>& flipped_Bo) const
+    {
+        const auto& usys    = deck.getActiveUnitSystem();
+        const auto& pvtoLoc = deck.getKeyword<ParserKeywords::PVTO>(std::size_t{0}).location();
 
         using M = UnitSystem::measure;
+        using namespace fmt::literals;
 
-        const auto nDigit = [](const std::size_t n) {
+        const auto nDigit = [](const std::size_t n)
+        {
             return 1 + static_cast<int>(std::floor(std::log10(n)));
         };
 
-        const auto nDigit_reg = nDigit(tables.size());
+        const auto formatHeader = [&pvtoLoc](const std::size_t pvtnum)
+        {
+            return fmt::format("Non-Monotonic Oil Formation Volume Factor Detected in Keyword PVTO, PVTNUM={num}\n"
+                               "In {file} line {line}",
+                               "num"_a = pvtnum,
+                               "file"_a = pvtoLoc.filename,
+                               "line"_a = pvtoLoc.lineno);
+        };
 
-        auto tableID = std::size_t{0};
-        std::ostringstream os;
-        for (const auto& pvto : tables) {
-            ++tableID; // One-based table ID
-            const auto& flipped = pvto.nonMonotonicSaturatedFVF();
-            if (flipped.empty()) { continue; }
+        const auto formatBoRecord =
+            [&usys](const std::size_t            numDigitsRecordID,
+                    const std::size_t            floatPrecision,
+                    const PvtoTable::FlippedFVF& flipped)
+        {
+            return fmt::format(
+                "Record {rec:{width}}: "
+                "FVF {BO_1:.{prec}f} at RS {RS_1:.{prec}f} "
+                "is not greater than "
+                "FVF {BO_0:.{prec}f} at RS {RS_0:.{prec}f}",
+                "rec"_a = flipped.i + 1,
+                "width"_a = numDigitsRecordID,
+                "prec"_a = floatPrecision,
+                "BO_1"_a = usys.from_si(M::oil_formation_volume_factor, flipped.Bo[1]),
+                "RS_1"_a = usys.from_si(M::gas_oil_ratio, flipped.Rs[1]),
+                "BO_0"_a = usys.from_si(M::oil_formation_volume_factor, flipped.Bo[0]),
+                "RS_0"_a = usys.from_si(M::gas_oil_ratio, flipped.Rs[0])
+            );
+        };
 
-            const auto nDigit_rec = nDigit(flipped.back().i + 1);
+        std::ostringstream prt;
+        std::ostringstream console;
 
-            os << "  * PVTO [PVTNUM = " << std::setw(nDigit_reg) << tableID << "]\n";
-            for (const auto& f : flipped) {
-                os << "    Record " << std::setw(nDigit_rec) << (f.i + 1)
-                   << ": FVF " << std::setprecision(3)
-                   << usys.from_si(M::oil_formation_volume_factor, f.Bo[1])
-                   << " at RS "
-                   << usys.from_si(M::gas_oil_ratio, f.Rs[1])
-                   << " is not greater than FVF "
-                   << usys.from_si(M::oil_formation_volume_factor, f.Bo[0])
-                   << " at RS "
-                   << usys.from_si(M::gas_oil_ratio, f.Rs[0]) << '\n';
+        {
+            const auto header = formatHeader(tableID);
+            prt     << header << '\n';
+            console << header << '\n';
+        }
+
+        // Append record to console message if either of the following conditions hold
+        //
+        //   1. Total number of flipped records does not exceed `consoleRecordLimit`.
+        //
+        //   2. Record is among `consoleRecordLimit - 1` first records.
+        //
+        // In the second case, also emit limiter message as `consoleRecordLimit`-th
+        // record.
+        //
+        // Print file gets all flipped records.
+        const std::size_t numDigitsRecordID  = nDigit(flipped_Bo.back().i + 1);
+        const std::size_t numRecords         = static_cast<std::size_t>(flipped_Bo.size());
+        const std::size_t consoleRecordLimit = 4;
+        const std::size_t floatPrecision     = 3;
+        const bool        consoleWriteAll    = numRecords <= consoleRecordLimit;
+        for (auto recordIx = 0*numRecords; recordIx < numRecords; ++recordIx) {
+            const auto record =
+                formatBoRecord(numDigitsRecordID, floatPrecision, flipped_Bo[recordIx]);
+
+            prt << record << '\n';
+
+            if (consoleWriteAll || (recordIx + 1 < consoleRecordLimit)) {
+                console << record << '\n';
+            }
+            else if (recordIx + 1 == consoleRecordLimit) {
+                console << "Report limit reached, see PRT-file for additional records.\n";
             }
         }
 
-        if (os.tellp() != std::streampos{0}) {
-            // There were non-monotonic FVFs in saturated table
-            OpmLog::warning("Non-Monotonic Oil Formation Volume Factor Detected\n" + os.str());
+        if (auto prtLog = OpmLog::getBackend<EclipsePRTLog>("ECLIPSEPRTLOG")) {
+            prtLog->addMessage(Log::MessageType::Warning, prt.str());
+        }
+        if (auto consoleLog = OpmLog::getBackend<StreamLog>("STDOUT_LOGGER")) {
+            consoleLog->addMessage(Log::MessageType::Warning, console.str());
         }
     }
 
@@ -1275,5 +1346,3 @@ namespace Opm {
         return result;
     }
 }
-
-
