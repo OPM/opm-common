@@ -96,6 +96,7 @@ namespace Opm {
 
         addKey(SUMMARY_UNKNOWN_WELL, InputError::THROW_EXCEPTION);
         addKey(SUMMARY_UNKNOWN_GROUP, InputError::THROW_EXCEPTION);
+        addKey(SUMMARY_UNKNOWN_NODE, InputError::THROW_EXCEPTION);
         addKey(SUMMARY_UNHANDLED_KEYWORD, InputError::WARN);
         addKey(SUMMARY_UNDEFINED_UDQ, InputError::WARN);
         addKey(SUMMARY_UDQ_MISSING_UNIT, InputError::WARN);
@@ -334,6 +335,7 @@ namespace Opm {
 
     const std::string ParseContext::SUMMARY_UNKNOWN_WELL  = "SUMMARY_UNKNOWN_WELL";
     const std::string ParseContext::SUMMARY_UNKNOWN_GROUP = "SUMMARY_UNKNOWN_GROUP";
+    const std::string ParseContext::SUMMARY_UNKNOWN_NODE = "SUMMARY_UNKNOWN_NODE";
     const std::string ParseContext::SUMMARY_UNHANDLED_KEYWORD = "SUMMARY_UNHANDLED_KEYWORD";
     const std::string ParseContext::SUMMARY_UNDEFINED_UDQ = "SUMMARY_UNDEFINED_UDQ";
     const std::string ParseContext::SUMMARY_UDQ_MISSING_UNIT = "SUMMARY_UDQ_MISSING_UNIT";

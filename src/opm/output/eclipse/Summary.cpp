@@ -650,6 +650,16 @@ inline quantity thp_history( const fn_args& args ) {
     return { thp_hist, measure::pressure };
 }
 
+inline quantity node_pressure(const fn_args& args)
+{
+    auto nodePos = args.grp_nwrk.nodeData.find(args.group_name);
+    if (nodePos == args.grp_nwrk.nodeData.end()) {
+        return { 0.0, measure::pressure };
+    }
+
+    return { nodePos->second.pressure, measure::pressure };
+}
+
 template< Opm::Phase phase >
 inline quantity production_history( const fn_args& args ) {
     /*
@@ -1063,6 +1073,8 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "GWPGR", group_guiderate<producer, Opm::data::GuideRateValue::Item::Water> },
     { "GVPGR", group_guiderate<producer, Opm::data::GuideRateValue::Item::ResV> },
 
+    { "GPR", node_pressure },
+
     { "GWPT", mul( rate< rt::wat, producer >, duration ) },
     { "GOPT", mul( rate< rt::oil, producer >, duration ) },
     { "GGPT", mul( rate< rt::gas, producer >, duration ) },
@@ -1456,6 +1468,7 @@ inline std::vector<Opm::Well> find_wells( const Opm::Schedule& schedule,
 
     case Opm::EclIO::SummaryNode::Category::Aquifer:       [[fallthrough]];
     case Opm::EclIO::SummaryNode::Category::Block:         [[fallthrough]];
+    case Opm::EclIO::SummaryNode::Category::Node:          [[fallthrough]];
     case Opm::EclIO::SummaryNode::Category::Miscellaneous:
         return {};
     }
@@ -1487,6 +1500,8 @@ bool need_wells(const Opm::EclIO::SummaryNode& node)
 
     case Cat::Aquifer:       [[fallthrough]];
     case Cat::Miscellaneous: [[fallthrough]];
+    case Cat::Node:          [[fallthrough]];
+        // Node values directly available in solution.
     case Cat::Block:
         return false;
     }
@@ -1620,8 +1635,7 @@ namespace Evaluator {
                     const SimulatorResults& simRes,
                     Opm::SummaryState&      st) const override
         {
-            const auto get_wells =
-                need_wells(node_);
+            const auto get_wells = need_wells(this->node_);
 
             const auto wells = get_wells
                 ? find_wells(input.sched, this->node_,
@@ -1633,13 +1647,11 @@ namespace Evaluator {
                 // wells apply at this sim_step.  Nothing to do.
                 return;
 
-            std::string group_name = this->node_.category == Opm::EclIO::SummaryNode::Category::Group ? this->node_.wgname : "";
-
             EfficiencyFactor efac{};
             efac.setFactors(this->node_, input.sched, wells, sim_step);
 
             const fn_args args {
-                wells, group_name, stepSize, static_cast<int>(sim_step),
+                wells, this->group_name(), stepSize, static_cast<int>(sim_step),
                 std::max(0, this->node_.number),
                 this->node_.fip_region,
                 st, simRes.wellSol, simRes.grpNwrkSol, input.reg, input.grid,
@@ -1654,7 +1666,19 @@ namespace Evaluator {
 
     private:
         Opm::EclIO::SummaryNode node_;
-        ofun             fcn_;
+        ofun                    fcn_;
+
+        std::string group_name() const
+        {
+            using Cat = ::Opm::EclIO::SummaryNode::Category;
+
+            const auto need_grp_name =
+                (this->node_.category == Cat::Group) ||
+                (this->node_.category == Cat::Node);
+
+            return need_grp_name
+                ? this->node_.wgname : std::string{""};
+        }
     };
 
     class BlockValue : public Base

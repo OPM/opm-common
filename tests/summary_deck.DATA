@@ -464,6 +464,10 @@ GGIGR
 GWIGR
  G_1 /
 
+-- Network reporting (extended network, node level)
+GPR
+/
+
 -- Well Data
 -- Production Rates
 WWPR
@@ -788,6 +792,19 @@ SCHEDULE
 
 UDQ
   UNITS  WUBHP  'BARSA' /
+/
+
+BRANPROP
+--  Downtree  Uptree   #VFP    ALQ
+    G_1        PLAT-A   5       1* /
+    G_2        PLAT-A   4       1* /
+/
+
+NODEPROP
+--  Node_name  Press  autoChoke?  addGasLift?  Group_name
+     PLAT-A    21.0   NO          NO           1*  /
+     G_1        1*    NO          NO           1*  /
+     G_2        1*    NO          NO           1*  /
 /
 
 -- Three wells, two producers (so that we can form a group) and one injector

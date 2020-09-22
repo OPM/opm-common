@@ -337,6 +337,10 @@ data::GroupAndNetworkValues result_group_nwrk()
     cgc_group.set(p_cmode::NONE, i_cmode::NONE, i_cmode::NONE);
     grp_nwrk.groupData["FIELD"].currentControl = cgc_group;
 
+    grp_nwrk.nodeData["G_1"].pressure = 33.44*Opm::unit::barsa;
+    grp_nwrk.nodeData["G_2"].pressure = 23.45*Opm::unit::barsa;
+    grp_nwrk.nodeData["PLAT-A"].pressure = 21.0*Opm::unit::barsa;
+
     return grp_nwrk;
 }
 
@@ -1485,7 +1489,29 @@ BOOST_AUTO_TEST_CASE(BLOCK_VARIABLES) {
     BOOST_CHECK( !ecl_sum_has_general_var( resp , "BPR:2,1,10"));
 }
 
+BOOST_AUTO_TEST_CASE(NODE_VARIABLES) {
+    setup cfg( "test_summary_node" );
 
+    out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule, cfg.name );
+    SummaryState st(std::chrono::system_clock::now());
+    writer.eval( st, 0, 0 * day, cfg.es, cfg.schedule, cfg.wells , cfg.grp_nwrk, {});
+    writer.add_timestep( st, 0);
+
+    writer.eval( st, 1, 1 * day, cfg.es, cfg.schedule, cfg.wells , cfg.grp_nwrk, {});
+    writer.add_timestep( st, 1);
+
+    writer.eval( st, 2, 2 * day, cfg.es, cfg.schedule, cfg.wells , cfg.grp_nwrk, {});
+    writer.add_timestep( st, 2);
+
+    writer.write();
+
+    auto res = readsum( cfg.name );
+    const auto* resp = res.get();
+
+    BOOST_CHECK_CLOSE( 21.0 , ecl_sum_get_group_var( resp, 1, "PLAT-A", "GPR" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 33.44, ecl_sum_get_group_var( resp, 1, "G_1", "GPR" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 23.45, ecl_sum_get_group_var( resp, 1, "G_2", "GPR" ), 1e-5 );
+}
 
 /*
   The SummaryConfig.require3DField( ) implementation is slightly ugly:

@@ -15,7 +15,7 @@
 
    You should have received a copy of the GNU General Public License
    along with OPM.  If not, see <http://www.gnu.org/licenses/>.
-   */
+*/
 
 #ifndef OPM_IO_SUMMARYNODE_HPP
 #define OPM_IO_SUMMARYNODE_HPP
@@ -29,7 +29,6 @@ namespace Opm { namespace EclIO {
 
 struct SummaryNode {
     enum class Category {
-        Aquifer,
         Well,
         Group,
         Field,
@@ -37,6 +36,8 @@ struct SummaryNode {
         Block,
         Connection,
         Segment,
+        Aquifer,
+        Node,
         Miscellaneous,
     };
 
@@ -73,6 +74,6 @@ struct SummaryNode {
     std::optional<std::string> display_number(number_renderer) const;
 };
 
- }} // namespace Opm::EclIO
+}} // namespace Opm::EclIO
 
 #endif // OPM_IO_SUMMARYNODE_HPP

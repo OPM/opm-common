@@ -1008,6 +1008,90 @@ BOOST_AUTO_TEST_CASE(Summary_Segment)
     BOOST_CHECK(!summary.hasSummaryKey("SPRDA:INJE01:16"));
 }
 
+BOOST_AUTO_TEST_CASE(Summary_Network) {
+    // Example data adapted from opm-tests/model5/1_NETWORK_MODEL5.DATA.
+    const auto deck = ::Opm::Parser{}.parseString(R"(RUNSPEC
+START
+  21 SEP 2020 12:34:56 /
+
+DIMENS
+  10 10 3 /
+
+GRID
+
+DXV
+  10*100.0
+/
+
+DYV
+  10*100.0
+/
+
+DZV
+  5 3 2
+/
+
+DEPTHZ
+  121*2000.0
+/
+
+SUMMARY
+
+GPR
+/
+
+SCHEDULE
+
+GRUPTREE
+ 'PROD'    'FIELD' /
+
+ 'M5S'    'PLAT-A'  /
+ 'M5N'    'PLAT-A'  /
+
+ 'C1'     'M5N'  /
+ 'F1'     'M5N'  /
+ 'B1'     'M5S'  /
+ 'G1'     'M5S'  /
+/
+
+BRANPROP
+--  Downtree  Uptree   #VFP    ALQ
+    B1        PLAT-A   5       1* /
+    C1        PLAT-A   4       1* /
+/
+
+NODEPROP
+--  Node_name  Press  autoChoke?  addGasLift?  Group_name
+     PLAT-A    21.0   NO          NO           1*  /
+     B1        1*     NO          NO           1*  /
+     C1        1*     NO          NO           1*  /
+/
+
+TSTEP
+  10*10 /
+END
+)");
+
+    ErrorGuard errors;
+    const auto parseContext = ParseContext{};
+    const auto state = EclipseState (deck);
+    const auto schedule = Schedule (deck, state, parseContext, errors, std::make_shared<const Python>());
+    const auto smry = SummaryConfig(deck, schedule, state.getTableManager(), parseContext, errors );
+
+    BOOST_CHECK_MESSAGE(deck.hasKeyword("GPR"), R"(Deck must have "GPR" keyword)");
+    BOOST_CHECK_MESSAGE(smry.hasKeyword("GPR"), R"(SummaryConfig must have "GPR" keyword)");
+    BOOST_CHECK_MESSAGE(smry.hasSummaryKey("GPR:PLAT-A"), R"(SummaryConfig must have "GPR:PLAT-A" key)");
+    BOOST_CHECK_MESSAGE(smry.hasSummaryKey("GPR:B1"), R"(SummaryConfig must have "GPR:B1" key)");
+    BOOST_CHECK_MESSAGE(smry.hasSummaryKey("GPR:C1"), R"(SummaryConfig must have "GPR:C1" key)");
+
+    BOOST_CHECK_MESSAGE(!smry.hasSummaryKey("GPR:PROD"), R"(SummaryConfig must NOT have "GPR:PROD" key)");
+    BOOST_CHECK_MESSAGE(!smry.hasSummaryKey("GPR:FIELD"), R"(SummaryConfig must NOT have "GPR:FIELD" key)");
+    BOOST_CHECK_MESSAGE(!smry.hasSummaryKey("GPR:M5N"), R"(SummaryConfig must NOT have "GPR:M5N" key)");
+    BOOST_CHECK_MESSAGE(!smry.hasSummaryKey("GPR:M5S"), R"(SummaryConfig must NOT have "GPR:M5S" key)");
+    BOOST_CHECK_MESSAGE(!smry.hasSummaryKey("GPR:F1"), R"(SummaryConfig must NOT have "GPR:F1" key)");
+    BOOST_CHECK_MESSAGE(!smry.hasSummaryKey("GPR:G1"), R"(SummaryConfig must NOT have "GPR:G1" key)");
+}
+
 BOOST_AUTO_TEST_CASE(ProcessingInstructions) {
     const std::string deck_string = R"(
 RPTONLY
