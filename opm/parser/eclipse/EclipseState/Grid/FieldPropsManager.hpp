@@ -21,6 +21,9 @@
 
 #include <memory>
 #include <vector>
+#include <unordered_map>
+#include <opm/parser/eclipse/EclipseState/Grid/TranCalculator.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/FieldData.hpp>
 
 namespace Opm {
 
@@ -178,6 +181,14 @@ public:
     template <typename T>
     std::vector<std::string> keys() const;
 
+    const Fieldprops::FieldData<int>&
+    get_int_field_data(const std::string& keyword) const;
+
+    /// \brief Get double field data associated with a keyword
+    /// \param allow_unsupported If true we deactivate some checks on the
+    ///        keyword and thus allow getting FieldData used by the TranCalculator.
+    const Fieldprops::FieldData<double>&
+    get_double_field_data(const std::string& keyword, bool allow_unsupported=false) const;
     virtual const std::vector<int>& get_int(const std::string& keyword) const { return this->get<int>(keyword); }
     virtual std::vector<int> get_global_int(const std::string& keyword) const { return this->get_global<int>(keyword); }
 
@@ -187,6 +198,59 @@ public:
     virtual bool has_int(const std::string& keyword) const { return this->has<int>(keyword); }
     virtual bool has_double(const std::string& keyword) const { return this->has<double>(keyword); }
 
+    /*
+      The transmissibility keywords TRANX, TRANY and TRANZ do not really fit
+      well in the FieldProps system. The opm codebase is based on a full
+      internalization in the parse phase, and then passing fully assembled
+      objects to the simulator. When it comes to the transmissibilities this
+      model breaks down because the input code in opm-common is not capable of
+      calculating the transmissibility, that is performed in the simulator.
+
+      The EDIT section can have modifiers on TRAN, these must be applied *after*
+      the initial transmissibilities are calculated. To support this all the
+      modifiers to the TRAN{XYZ} fields are assembled in "transmissibility
+      calculators", and then these modifiers can be applied to a TRAN vector
+      after it has been calculated in the simulator. Usage from the simulator
+      could look like:
+
+
+          const auto& fp = eclState.fieldProps();
+
+          // Calculate transmissibilities using grid and permeability
+          std::vector<double> tranx = ....
+
+          // Check if there are any active TRANX modifiers and apply them
+          if (fp.tran_active("TRANX"))
+               fp.apply_tran("TRANX", tranx);
+
+
+    */
+
+    /*
+      Will check if there are any TRAN{XYZ} modifiers active in the deck.
+    */
+    virtual bool tran_active(const std::string& keyword) const;
+
+
+    /*
+      Will apply all the TRAN modifiers which are present in the deck on the
+      already initialized vector tran_data. The vector tran_data should be
+      organised as the data vectors in the fieldpropsmanager - i.e. one element
+      for each active cell - in lexicographical order. The operations which are
+      supported by the transmissibility calculator are those given by the enum
+      ScalarOperation in FieldProps.hpp.
+    */
+    virtual void apply_tran(const std::string& keyword, std::vector<double>& tran_data) const;
+
+    /*
+      When using MPI the FieldPropsManager is typically only assembled on the
+      root node and then distributed to the other nodes afterwards. These
+      methods are support methods for that, the real data used by the
+      transmissibility calculators is in the form of custom 3D fields, they are
+      distributed the same way the rest of the 3D fields are distributed.
+    */
+    virtual std::vector<char> serialize_tran() const;
+    virtual void deserialize_tran(const std::vector<char>& buffer);
 private:
     /*
       Return the keyword values as a std::vector<>. All elements in the return
@@ -226,6 +290,16 @@ private:
 
     std::shared_ptr<FieldProps> fp;
 };
+
+
+void deserialize_tran(std::unordered_map<std::string, Fieldprops::TranCalculator>& tran,
+                      const std::vector<char>& buffer);
+
+template<class MapType>
+void apply_tran(const std::unordered_map<std::string, Fieldprops::TranCalculator>& tran,
+                const MapType& double_data,
+                std::size_t active_size,
+                const std::string& keyword, std::vector<double>& data);
 
 }
 

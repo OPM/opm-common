@@ -572,7 +572,10 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Util/OrderedMap.hpp
        opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp
        opm/parser/eclipse/EclipseState/Edit/EDITNNC.hpp
+       opm/parser/eclipse/EclipseState/Grid/FieldData.hpp
+       opm/parser/eclipse/EclipseState/Grid/Keywords.hpp
        opm/parser/eclipse/EclipseState/Grid/GridDims.hpp
+       opm/parser/eclipse/EclipseState/Grid/TranCalculator.hpp
        opm/parser/eclipse/EclipseState/Grid/TransMult.hpp
        opm/parser/eclipse/EclipseState/Grid/PinchMode.hpp
        opm/parser/eclipse/EclipseState/Grid/MULTREGTScanner.hpp

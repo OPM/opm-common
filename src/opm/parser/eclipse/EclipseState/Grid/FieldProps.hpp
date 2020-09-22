@@ -20,6 +20,7 @@
 #define FIELDPROPS_HPP
 
 #include <memory>
+#include <limits>
 #include <optional>
 #include <string>
 #include <unordered_set>
@@ -31,12 +32,18 @@
 #include <opm/parser/eclipse/EclipseState/Grid/Box.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/Keywords.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/TranCalculator.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/FieldData.hpp>
 
 namespace Opm {
 
 class Deck;
 class EclipseGrid;
 class TableManager;
+
+namespace Fieldprops
+{
 
 namespace keywords {
 
@@ -79,42 +86,6 @@ namespace keywords {
   The operations which are not properly implemented will be intercepted and a
   std::logic_error() exception will be thrown.
 */
-
-
-
-template <typename T>
-struct keyword_info {
-    std::optional<std::string> unit = std::nullopt;
-    std::optional<T> scalar_init = std::nullopt;
-    bool multiplier = false;
-    bool top = false;
-    bool global = false;
-
-    keyword_info<T>& init(T init_value) {
-        this->scalar_init = init_value;
-        return *this;
-    }
-
-    keyword_info<T>& unit_string(const std::string& unit_string) {
-        this->unit = unit_string;
-        return *this;
-    }
-
-    keyword_info<T>& distribute_top(bool dtop) {
-        this->top = dtop;
-        return *this;
-    }
-
-    keyword_info<T>& mult(bool m) {
-        this->multiplier = m;
-        return *this;
-    }
-
-    keyword_info<T>& global_kw(bool g) {
-        this->global = g;
-        return *this;
-    }
-};
 
 
 
@@ -162,9 +133,9 @@ static const std::unordered_map<std::string, keyword_info<int>> int_keywords = {
 namespace EDIT {
 static const std::unordered_map<std::string, keyword_info<double>> double_keywords = {{"MULTPV",  keyword_info<double>{}.init(1.0)},
                                                                                       {"PORV",    keyword_info<double>{}.unit_string("ReservoirVolume")},
-                                                                                      {"TRANX",   keyword_info<double>{}.unit_string("Transmissibility").init(1.0)},
-                                                                                      {"TRANY",   keyword_info<double>{}.unit_string("Transmissibility").init(1.0)},
-                                                                                      {"TRANZ",   keyword_info<double>{}.unit_string("Transmissibility").init(1.0)},
+                                                                                      {"TRANX",   keyword_info<double>{}.unit_string("Transmissibility")},
+                                                                                      {"TRANY",   keyword_info<double>{}.unit_string("Transmissibility")},
+                                                                                      {"TRANZ",   keyword_info<double>{}.unit_string("Transmissibility")},
                                                                                       {"MULTX",   keyword_info<double>{}.init(1.0).mult(true)},
                                                                                       {"MULTX-",  keyword_info<double>{}.init(1.0).mult(true)},
                                                                                       {"MULTY",   keyword_info<double>{}.init(1.0).mult(true)},
@@ -271,13 +242,16 @@ static const std::unordered_map<std::string, keyword_info<int>> int_keywords = {
 }
 
 template <typename T>
-keyword_info<T> global_kw_info(const std::string& name);
+keyword_info<T> global_kw_info(const std::string& name, bool allow_unsupported = false);
 
-}
+} // end namespace keywords
 
+} // end namespace FieldProps
 
 class FieldProps {
 public:
+
+    using ScalarOperation = Fieldprops::ScalarOperation;
 
     struct MultregpRecord {
         int region_value;
@@ -293,29 +267,7 @@ public:
 
     };
 
-    enum class ScalarOperation {
-         ADD = 1,
-         EQUAL = 2,
-         MUL = 3,
-         MIN = 4,
-         MAX = 5
-    };
 
-    template<typename T>
-    static void compress(std::vector<T>& data, const std::vector<bool>& active_map) {
-        std::size_t shift = 0;
-        for (std::size_t g = 0; g < active_map.size(); g++) {
-            if (active_map[g] && shift > 0) {
-                data[g - shift] = data[g];
-                continue;
-            }
-
-            if (!active_map[g])
-                shift += 1;
-        }
-
-        data.resize(data.size() - shift);
-    }
 
     enum class GetStatus {
          OK = 1,
@@ -326,106 +278,14 @@ public:
 
 
 
-
-    template<typename T>
-    struct FieldData {
-        std::vector<T> data;
-        std::vector<value::status> value_status;
-        keywords::keyword_info<T> kw_info;
-        std::optional<std::vector<T>> global_data;
-        std::optional<std::vector<value::status>> global_value_status;
-        mutable bool all_set;
-
-        FieldData() = default;
-
-        FieldData(const keywords::keyword_info<T>& info, std::size_t active_size, std::size_t global_size) :
-            data(std::vector<T>(active_size)),
-            value_status(active_size, value::status::uninitialized),
-            kw_info(info),
-            all_set(false)
-        {
-            if (global_size != 0) {
-                this->global_data = std::vector<T>(global_size);
-                this->global_value_status = std::vector<value::status>(global_size, value::status::uninitialized);
-            }
-
-            if (info.scalar_init)
-                this->default_assign( *info.scalar_init );
-        }
-
-
-        std::size_t size() const {
-            return this->data.size();
-        }
-
-        bool valid() const {
-            if (this->all_set)
-                return true;
-
-            static const std::array<value::status,2> invalid_value = {value::status::uninitialized, value::status::empty_default};
-            const auto& it = std::find_first_of(this->value_status.begin(), this->value_status.end(), invalid_value.begin(), invalid_value.end());
-            this->all_set = (it == this->value_status.end());
-
-            return this->all_set;
-        }
-
-        void compress(const std::vector<bool>& active_map) {
-            FieldProps::compress(this->data, active_map);
-            FieldProps::compress(this->value_status, active_map);
-        }
-
-        void copy(const FieldData<T>& src, const std::vector<Box::cell_index>& index_list) {
-            for (const auto& ci : index_list) {
-                this->data[ci.active_index] = src.data[ci.active_index];
-                this->value_status[ci.active_index] = src.value_status[ci.active_index];
-            }
-        }
-
-        void default_assign(T value) {
-            std::fill(this->data.begin(), this->data.end(), value);
-            std::fill(this->value_status.begin(), this->value_status.end(), value::status::valid_default);
-
-            if (this->global_data) {
-                std::fill(this->global_data->begin(), this->global_data->end(), value);
-                std::fill(this->global_value_status->begin(), this->global_value_status->end(), value::status::valid_default);
-            }
-        }
-
-        void default_assign(const std::vector<T>& src) {
-            if (src.size() != this->size())
-                throw std::invalid_argument("Size mismatch got: " + std::to_string(src.size()) + " expected: " + std::to_string(this->size()));
-
-            std::copy(src.begin(), src.end(), this->data.begin());
-            std::fill(this->value_status.begin(), this->value_status.end(), value::status::valid_default);
-        }
-
-        void default_update(const std::vector<T>& src) {
-            if (src.size() != this->size())
-                throw std::invalid_argument("Size mismatch got: " + std::to_string(src.size()) + " expected: " + std::to_string(this->size()));
-
-            for (std::size_t i = 0; i < src.size(); i++) {
-                if (!value::has_value(this->value_status[i])) {
-                    this->value_status[i] = value::status::valid_default;
-                    this->data[i] = src[i];
-                }
-            }
-        }
-
-        void update(std::size_t index, T value, value::status status) {
-            this->data[index] = value;
-            this->value_status[index] = status;
-        }
-
-    };
-
-
     template<typename T>
     struct FieldDataManager {
         const std::string& keyword;
         GetStatus status;
-        const FieldData<T> * data_ptr;
+        using Data = Fieldprops::FieldData<T>;
+        const Data * data_ptr;
 
-        FieldDataManager(const std::string& k, GetStatus s, const FieldData<T> * d) :
+        FieldDataManager(const std::string& k, GetStatus s, const Data * d) :
             keyword(k),
             status(s),
             data_ptr(d)
@@ -457,7 +317,7 @@ public:
             return this->data_ptr->data;
         }
 
-        const FieldData<T>& field_data() const {
+        const Data& field_data() const {
             this->verify_status();
             return *this->data_ptr;
         }
@@ -489,14 +349,16 @@ public:
 
 
     template <typename T>
-    FieldDataManager<T> try_get(const std::string& keyword) {
-        if (!FieldProps::supported<T>(keyword))
+    FieldDataManager<T> try_get(const std::string& keyword,
+                                bool allow_unsupported=false) {
+        if (!allow_unsupported && !FieldProps::supported<T>(keyword))
             return FieldDataManager<T>(keyword, GetStatus::NOT_SUPPPORTED_KEYWORD, nullptr);
 
-        const FieldData<T> * field_data;
+        const Fieldprops::FieldData<T> * field_data;
         bool has0 = this->has<T>(keyword);
 
-        field_data = std::addressof(this->init_get<T>(keyword));
+        field_data = std::addressof(this->init_get<T>(keyword,
+                                                      std::is_same<T,double>::value && allow_unsupported));
         if (field_data->valid())
             return FieldDataManager<T>(keyword, GetStatus::OK, field_data);
 
@@ -519,7 +381,7 @@ public:
     std::vector<T> get_global(const std::string& keyword) {
         const auto& managed_field_data = this->try_get<T>(keyword);
         const auto& field_data = managed_field_data.field_data();
-        const auto& kw_info = keywords::global_kw_info<T>(keyword);
+        const auto& kw_info = Fieldprops::keywords::global_kw_info<T>(keyword);
         if (kw_info.global)
             return *field_data.global_data;
         else
@@ -539,7 +401,7 @@ public:
                 return field_data.data;
         } else {
             if (global) {
-                const auto& kw_info = keywords::global_kw_info<T>(keyword);
+                const auto& kw_info = Fieldprops::keywords::global_kw_info<T>(keyword);
                 return this->global_copy(this->extract<T>(keyword), kw_info.scalar_init);
             } else
                 return this->extract<T>(keyword);
@@ -584,6 +446,10 @@ public:
         return this->double_data.size();
     }
 
+    bool tran_active(const std::string& keyword) const;
+    void apply_tran(const std::string& keyword, std::vector<double>& data);
+    std::vector<char> serialize_tran() const;
+    void deserialize_tran(const std::vector<char>& buffer);
 private:
     void scanGRIDSection(const GRIDSection& grid_section);
     void scanEDITSection(const EDITSection& edit_section);
@@ -599,29 +465,33 @@ private:
     std::vector<T> extract(const std::string& keyword);
 
     template <typename T>
-    void operate(const DeckRecord& record, FieldData<T>& target_data, const FieldData<T>& src_data, const std::vector<Box::cell_index>& index_list);
+    void operate(const DeckRecord& record, Fieldprops::FieldData<T>& target_data, const Fieldprops::FieldData<T>& src_data, const std::vector<Box::cell_index>& index_list);
 
     template <typename T>
     static void apply(ScalarOperation op, std::vector<T>& data, std::vector<value::status>& value_status, T scalar_value, const std::vector<Box::cell_index>& index_list);
 
     template <typename T>
-    FieldData<T>& init_get(const std::string& keyword);
+    Fieldprops::FieldData<T>& init_get(const std::string& keyword, bool allow_unsupported = false);
+
+    template <typename T>
+    Fieldprops::FieldData<T>& init_get(const std::string& keyword, const Fieldprops::keywords::keyword_info<T>& kw_info);
 
     std::string region_name(const DeckItem& region_item);
     std::vector<Box::cell_index> region_index( const std::string& region_name, int region_value );
     void handle_operation(const DeckKeyword& keyword, Box box);
     void handle_region_operation(const DeckKeyword& keyword);
     void handle_COPY(const DeckKeyword& keyword, Box box, bool region);
-    void distribute_toplayer(FieldProps::FieldData<double>& field_data, const std::vector<double>& deck_data, const Box& box);
+    void distribute_toplayer(Fieldprops::FieldData<double>& field_data, const std::vector<double>& deck_data, const Box& box);
     double get_beta(const std::string& func_name, const std::string& target_array, double raw_beta);
     double get_alpha(const std::string& func_name, const std::string& target_array, double raw_alpha);
 
     void handle_keyword(const DeckKeyword& keyword, Box& box);
-    void handle_double_keyword(Section section, const keywords::keyword_info<double>& kw_info, const DeckKeyword& keyword, const Box& box);
-    void handle_int_keyword(const keywords::keyword_info<int>& kw_info, const DeckKeyword& keyword, const Box& box);
-    void init_satfunc(const std::string& keyword, FieldData<double>& satfunc);
-    void init_porv(FieldData<double>& porv);
-    void init_tempi(FieldData<double>& tempi);
+    void handle_double_keyword(Section section, const Fieldprops::keywords::keyword_info<double>& kw_info, const DeckKeyword& keyword, const std::string& keyword_name, const Box& box);
+    void handle_double_keyword(Section section, const Fieldprops::keywords::keyword_info<double>& kw_info, const DeckKeyword& keyword, const Box& box);
+    void handle_int_keyword(const Fieldprops::keywords::keyword_info<int>& kw_info, const DeckKeyword& keyword, const Box& box);
+    void init_satfunc(const std::string& keyword, Fieldprops::FieldData<double>& satfunc);
+    void init_porv(Fieldprops::FieldData<double>& porv);
+    void init_tempi(Fieldprops::FieldData<double>& tempi);
 
     const UnitSystem unit_system;
     std::size_t nx,ny,nz;
@@ -635,8 +505,10 @@ private:
     const TableManager& tables;
     std::shared_ptr<satfunc::RawTableEndPoints> m_rtep;
     std::vector<MultregpRecord> multregp;
-    std::unordered_map<std::string, FieldData<int>> int_data;
-    std::unordered_map<std::string, FieldData<double>> double_data;
+    std::unordered_map<std::string, Fieldprops::FieldData<int>> int_data;
+    std::unordered_map<std::string, Fieldprops::FieldData<double>> double_data;
+
+    std::unordered_map<std::string, Fieldprops::TranCalculator> tran;
 };
 
 }

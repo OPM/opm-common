@@ -21,6 +21,7 @@
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
+#include <opm/common/utility/Serializer.hpp>
 
 #include "FieldProps.hpp"
 
@@ -54,6 +55,24 @@ const std::vector<T>* FieldPropsManager::try_get(const std::string& keyword) con
     return nullptr;
 }
 
+const Fieldprops::FieldData<int>&
+FieldPropsManager::get_int_field_data(const std::string& keyword) const
+{
+    const auto& data = this->fp->try_get<int>(keyword);
+    if (!data.valid())
+        throw std::out_of_range("Invalid field data requested.");
+    return data.field_data();
+}
+
+const Fieldprops::FieldData<double>&
+FieldPropsManager::get_double_field_data(const std::string& keyword,
+                                         bool allow_unsupported) const
+{
+    const auto& data = this->fp->try_get<double>(keyword, allow_unsupported);
+    if (!data.valid())
+        throw std::out_of_range("Invalid field data requested.");
+    return data.field_data();
+}
 
 template <typename T>
 std::vector<T> FieldPropsManager::get_global(const std::string& keyword) const {
@@ -108,6 +127,95 @@ std::vector<double> FieldPropsManager::porv(bool global) const {
 std::size_t FieldPropsManager::active_size() const {
     return this->fp->active_size;
 }
+
+void FieldPropsManager::apply_tran(const std::string& keyword, std::vector<double>& data) const {
+    this->fp->apply_tran(keyword, data);
+}
+
+std::vector<char> FieldPropsManager::serialize_tran() const {
+    return this->fp->serialize_tran();
+}
+
+void FieldPropsManager::deserialize_tran(const std::vector<char>& buffer) {
+    this->fp->deserialize_tran(buffer);
+}
+
+bool FieldPropsManager::tran_active(const std::string& keyword) const {
+    return this->fp->tran_active(keyword);
+}
+
+template<class MapType>
+void apply_tran(const std::unordered_map<std::string, Fieldprops::TranCalculator>& tran,
+                const MapType& double_data,
+                std::size_t active_size,
+                const std::string& keyword, std::vector<double>& data)
+{
+    const auto& calculator = tran.at(keyword);
+    for (const auto& action : calculator) {
+        const auto& action_data = double_data.at(action.field);
+
+        for (std::size_t index = 0; index < active_size; index++) {
+
+            if (action_data.value_status[index] != value::status::deck_value)
+                continue;
+
+            switch (action.op) {
+            case Fieldprops::ScalarOperation::EQUAL:
+                data[index] = action_data.data[index];
+                break;
+
+            case Fieldprops::ScalarOperation::MUL:
+                data[index] *= action_data.data[index];
+                break;
+
+            case Fieldprops::ScalarOperation::ADD:
+                data[index] += action_data.data[index];
+                break;
+
+            case Fieldprops::ScalarOperation::MAX:
+                data[index] = std::min(action_data.data[index], data[index]);
+                break;
+
+            case Fieldprops::ScalarOperation::MIN:
+                data[index] = std::max(action_data.data[index], data[index]);
+                break;
+
+            default:
+                throw std::logic_error("Unhandled value in switch");
+            }
+        }
+    }
+}
+
+void deserialize_tran(std::unordered_map<std::string, Fieldprops::TranCalculator>& tran, const std::vector<char>& buffer) {
+    tran.clear();
+
+    Serializer ser(buffer);
+    std::size_t size = ser.get<std::size_t>();
+    for (std::size_t calc_index = 0; calc_index < size; calc_index++) {
+        std::string calc_name = ser.get<std::string>();
+        Fieldprops::TranCalculator calc(calc_name);
+        std::size_t calc_size = ser.get<std::size_t>();
+        for (std::size_t action_index = 0; action_index < calc_size; action_index++) {
+            auto op = static_cast<Fieldprops::ScalarOperation>(ser.get<int>());
+            auto field = ser.get<std::string>();
+
+            calc.add_action(op, field);
+        }
+        tran.emplace(calc_name, std::move(calc));
+    }
+}
+
+
+template
+void apply_tran(const std::unordered_map<std::string, Fieldprops::TranCalculator>&,
+                const std::unordered_map<std::string, Fieldprops::FieldData<double>>&,
+                std::size_t, const std::string&, std::vector<double>&);
+
+template
+void apply_tran(const std::unordered_map<std::string, Fieldprops::TranCalculator>&,
+                const std::map<std::string, Fieldprops::FieldData<double>>&,
+                std::size_t, const std::string&, std::vector<double>&);
 
 template bool FieldPropsManager::supported<int>(const std::string&);
 template bool FieldPropsManager::supported<double>(const std::string&);
