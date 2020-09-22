@@ -20,10 +20,25 @@
 #ifndef KEYWORD_LOCATION_HPP
 #define KEYWORD_LOCATION_HPP
 
+#include <string>
+
 namespace Opm {
 
 class KeywordLocation {
 public:
+    /*
+      Observe that many error messages whcih should print out the name of the
+      problem keyword along with the location {} placeholders can be used. The
+      convention is:
+
+         {keyword} -> keyword
+         {file} -> filename
+         {line} -> lineno
+
+      This convention must be adhered to at the call site *creating the output
+      string*.
+     */
+
     std::string keyword;
     std::string filename = "<memory string>";
     std::size_t lineno = 0;
