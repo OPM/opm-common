@@ -56,6 +56,9 @@ GPMaint GPMaint::serializeObject() {
     gpm.m_flow_target = FlowTarget::SURF_GINJ;
     gpm.m_region_name = "FIPNUM";
     gpm.m_region_number = 26;
+    gpm.m_pressure_target = 100.0;
+    gpm.m_prop_constant = 200.0;
+    gpm.m_time_constant = 300.0;
     return gpm;
 }
 
