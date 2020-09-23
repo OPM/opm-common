@@ -448,6 +448,7 @@ public:
 
     bool tran_active(const std::string& keyword) const;
     void apply_tran(const std::string& keyword, std::vector<double>& data);
+    void drop_tran(const std::string& keyword);
     std::vector<char> serialize_tran() const;
     void deserialize_tran(const std::vector<char>& buffer);
 private:

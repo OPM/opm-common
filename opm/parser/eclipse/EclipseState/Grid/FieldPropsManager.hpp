@@ -242,6 +242,9 @@ public:
     */
     virtual void apply_tran(const std::string& keyword, std::vector<double>& tran_data) const;
 
+    virtual void drop_tran(const std::string& keyword);
+
+
     /*
       When using MPI the FieldPropsManager is typically only assembled on the
       root node and then distributed to the other nodes afterwards. These

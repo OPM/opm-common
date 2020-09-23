@@ -2032,4 +2032,17 @@ MINVALUE
     BOOST_CHECK(fpm.tran_active("TRANX"));
     BOOST_CHECK(fpm.tran_active("TRANY"));
     BOOST_CHECK(fpm.tran_active("TRANZ"));
+
+
+    fpm.drop_tran("TRANX");
+    BOOST_CHECK(!fpm.tran_active("TRANX"));
+    fpm.drop_tran("TRANX");
+
+    fpm.drop_tran("TRANY");
+    BOOST_CHECK(!fpm.tran_active("TRANY"));
+    fpm.drop_tran("TRANY");
+
+    fpm.drop_tran("TRANZ");
+    BOOST_CHECK(!fpm.tran_active("TRANZ"));
+    fpm.drop_tran("TRANZ");
 }

@@ -187,6 +187,10 @@ void apply_tran(const std::unordered_map<std::string, Fieldprops::TranCalculator
     }
 }
 
+void FieldPropsManager::drop_tran(const std::string& keyword) {
+    this->fp->drop_tran(keyword);
+}
+
 void deserialize_tran(std::unordered_map<std::string, Fieldprops::TranCalculator>& tran, const std::vector<char>& buffer) {
     tran.clear();
 

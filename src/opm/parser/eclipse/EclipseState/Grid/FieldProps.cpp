@@ -1142,6 +1142,12 @@ void FieldProps::apply_tran(const std::string& keyword, std::vector<double>& dat
     Opm::apply_tran(this->tran, this->double_data, this->active_size, keyword, data);
 }
 
+void FieldProps::drop_tran(const std::string& keyword) {
+    auto& tran_calc = this->tran.at(keyword);
+    for (const auto& action : tran_calc)
+        this->double_data.erase( action.field );
+    tran_calc.clear();
+}
 
 std::vector<char> FieldProps::serialize_tran() const {
     Serializer ser;

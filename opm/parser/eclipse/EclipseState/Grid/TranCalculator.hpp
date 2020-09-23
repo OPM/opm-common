@@ -76,6 +76,11 @@ public:
         return this->m_name;
     }
 
+    void clear() {
+        this->actions.clear();
+        this->actions.shrink_to_fit();
+    }
+
 
     keywords::keyword_info<double> make_kw_info(ScalarOperation op) {
         keywords::keyword_info<double> kw_info;
