@@ -35,30 +35,6 @@ class TableManager;
 
 class FieldPropsManager {
 
-struct MemInfo {
-    std::size_t global_size;
-    std::size_t active_size;
-    std::size_t int_fields;
-    std::size_t double_fields;
-    std::size_t total;
-
-    MemInfo(std::size_t gsize, std::size_t asize, std::size_t num_int, std::size_t num_double) :
-        global_size(gsize),
-        active_size(asize),
-        int_fields(num_int),
-        double_fields(num_double),
-        total(asize * sizeof(int) * num_int +                          // The integer fields like SATNUM and PVTNUM
-              asize * sizeof(double) * num_double +                    // The double fields like PORO and SWATINIT
-              asize * sizeof(double) * 2 +                             // Depth and volume of all active cells
-              asize * sizeof(unsigned char) * (num_int + num_double) + // The per cell value status flag
-              gsize * sizeof(int))                                     // The global ACTNUM mapping
-    {
-    };
-
-
-};
-
-
 
 public:
     // The default constructor should be removed when the FieldPropsManager is mandatory
@@ -69,7 +45,6 @@ public:
     const std::string& default_region() const;
     virtual std::vector<int> actnum() const;
     virtual std::vector<double> porv(bool global = false) const;
-    MemInfo meminfo( ) const;
 
     /*
      The number of cells in the fields managed by this FieldPropsManager.

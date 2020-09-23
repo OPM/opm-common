@@ -36,10 +36,6 @@ void FieldPropsManager::reset_actnum(const std::vector<int>& actnum) {
     this->fp->reset_actnum(actnum);
 }
 
-FieldPropsManager::MemInfo FieldPropsManager::meminfo( ) const {
-    return FieldPropsManager::MemInfo(this->fp->global_size, this->fp->active_size, this->fp->num_int(), this->fp->num_double());
-}
-
 template <typename T>
 const std::vector<T>& FieldPropsManager::get(const std::string& keyword) const {
     return this->fp->get<T>(keyword);
