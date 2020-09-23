@@ -76,7 +76,7 @@ macro (config_hook)
 
     # For this project
     add_definitions(-DFMT_HEADER_ONLY)
-    list(APPEND EXTRA_INCLUDES ${PROJECT_SOURCE_DIR}/external/fmtlib/include)
+    list(APPEND EXTRA_INCLUDES SYSTEM ${PROJECT_SOURCE_DIR}/external/fmtlib/include)
     include_directories(${EXTRA_INCLUDES} ${PROJECT_BINARY_DIR}/include)
 
     # For downstreams
