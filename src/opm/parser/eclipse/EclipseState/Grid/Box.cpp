@@ -117,8 +117,6 @@ namespace Opm {
             m_isGlobal = true;
         else
             m_isGlobal = false;
-
-        initIndexList();
     }
 
 
@@ -143,19 +141,27 @@ namespace Opm {
 
 
     const std::vector<Box::cell_index>& Box::index_list() const {
-        return this->m_active_index_list;
+        if (!this->m_active_index_list)
+            this->initIndexList();
+
+        return *this->m_active_index_list;
     }
 
     const std::vector<Box::cell_index>& Box::global_index_list() const {
-        return this->m_global_index_list;
+        if (!this->m_global_index_list)
+            this->initIndexList();
+
+        return *this->m_global_index_list;
     }
 
 
 
-    void Box::initIndexList() {
-        m_active_index_list.clear();
-        m_global_index_list.clear();
+    void Box::initIndexList() const {
+        this->m_global_index_list.reset();
+        this->m_active_index_list.reset();
 
+        std::vector<cell_index> active_list;
+        std::vector<cell_index> global_list;
         size_t ii,ij,ik;
         for (ik=0; ik < m_dims[2]; ik++) {
             size_t k = ik + m_offset[2];
@@ -168,13 +174,16 @@ namespace Opm {
 
                     if (this->grid.cellActive(global_index)) {
                         std::size_t active_index = this->grid.activeIndex(global_index);
-                        m_active_index_list.emplace_back(global_index, active_index, data_index);
+                        active_list.emplace_back(global_index, active_index, data_index);
                     }
 
-                    this->m_global_index_list.emplace_back( global_index, data_index );
+                    global_list.emplace_back( global_index, data_index );
                 }
             }
         }
+
+        this->m_global_index_list = std::move(global_list);
+        this->m_active_index_list = std::move(active_list);
     }
 
     bool Box::equal(const Box& other) const {
