@@ -641,3 +641,25 @@ BOOST_AUTO_TEST_CASE(ACTDIMS) {
     BOOST_CHECK_EQUAL(actdims.max_keywords(), 2);
     BOOST_CHECK_EQUAL(actdims.max_conditions(), 14);
 }
+
+BOOST_AUTO_TEST_CASE(Co2Storage) {
+    const std::string input = R"(
+    RUNSPEC
+    OIL
+    GAS
+    CO2STOR
+    )";
+
+    Parser parser;
+
+    auto deck = parser.parseString(input);
+
+    Runspec runspec( deck );
+    const auto& phases = runspec.phases();
+    BOOST_CHECK_EQUAL( 2, phases.size() );
+    BOOST_CHECK( phases.active( Phase::OIL ) );
+    BOOST_CHECK( phases.active( Phase::GAS ) );
+    BOOST_CHECK( runspec.co2Storage() );
+
+
+}

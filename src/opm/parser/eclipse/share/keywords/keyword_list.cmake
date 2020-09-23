@@ -1085,6 +1085,7 @@ set( keywords
      002_Frontsim/N/NOGRAV
 
      900_OPM/B/BC
+     900_OPM/C/CO2STOR
      900_OPM/E/EXIT
      900_OPM/G/GCOMPIDX
      900_OPM/G/GRUPRIG
