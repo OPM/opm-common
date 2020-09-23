@@ -33,8 +33,8 @@ namespace Action {
 
 
 bool ActionX::valid_keyword(const std::string& keyword) {
-    static std::unordered_set<std::string> actionx_whitelist = {"EXIT", "WELSPECS","WELOPEN"};
-    return (actionx_whitelist.find(keyword) != actionx_whitelist.end());
+    static std::unordered_set<std::string> actionx_allowed_list = {"EXIT", "WELSPECS","WELOPEN", "UDQ"};
+    return (actionx_allowed_list.find(keyword) != actionx_allowed_list.end());
 }
 
 

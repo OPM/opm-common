@@ -498,7 +498,7 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
         this->m_nupcol.update(handlerContext.currentStep, nupcol);
     }
 
-    void Schedule::applyEXIT(const DeckKeyword& keyword, std::size_t report_step) {
+    void Schedule::handleEXIT(const DeckKeyword& keyword, std::size_t report_step) {
         using ex = ParserKeywords::EXIT;
         int status = keyword.getRecord(0).getItem<ex::STATUS_CODE>().get<int>(0);
         OpmLog::info("Simulation exit with status: " + std::to_string(status) + " requested as part of ACTIONX at report_step: " + std::to_string(report_step));
@@ -1167,6 +1167,25 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
         this->udq_config.update(handlerContext.currentStep, new_udq);
     }
 
+    /*
+      This routine is called when UDQ keywords is added in an ACTIONX block.
+    */
+    void Schedule::updateUDQ(const DeckKeyword& keyword, std::size_t current_step) {
+        const auto& current = *this->udq_config.get(current_step);
+        std::shared_ptr<UDQConfig> new_udq = std::make_shared<UDQConfig>(current);
+        for (const auto& record : keyword)
+            new_udq->add_record(record, current_step);
+
+        auto next_index = this->udq_config.update_equal(current_step, new_udq);
+        if (next_index) {
+            for (const auto& [report_step, udq_ptr] : this->udq_config.unique() ) {
+                if (report_step > current_step) {
+                    for (const auto& record : keyword)
+                        udq_ptr->add_record(record, current_step);
+                }
+            }
+        }
+    }
 
     void Schedule::handleWTEST(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
         const auto& current = *this->wtest_config.get(handlerContext.currentStep);
@@ -2786,9 +2805,11 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
                 this->applyWELOPEN(keyword, reportStep, parseContext, errors, result.wells());
 
             if (keyword.name() == "EXIT")
-                this->applyEXIT(keyword, reportStep);
-        }
+                this->handleEXIT(keyword, reportStep);
 
+            if (keyword.name() == "UDQ")
+                this->updateUDQ(keyword, reportStep);
+        }
     }
 
     RestartConfig& Schedule::restart() {
