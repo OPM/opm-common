@@ -2172,7 +2172,7 @@ void reportUnsupportedKeywords(std::vector<Opm::SummaryConfigNode> keywords)
 
     for (auto node = keywords.begin(); node != uend; ++node) {
         const auto& location = node->location();
-        ::Opm::OpmLog::warning("Unhandled summary keyword '" + node->keyword() + "' at " + location.filename + ", line " + std::to_string(location.lineno));
+        ::Opm::OpmLog::warning("Unhandled summary keyword " + node->keyword() + "\n"+"In " + location.filename + " line " + std::to_string(location.lineno));
     }
 }
 
