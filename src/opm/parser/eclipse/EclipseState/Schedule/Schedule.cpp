@@ -460,14 +460,14 @@ namespace {
         const auto& current = *this->udq_config.get(current_step);
         std::shared_ptr<UDQConfig> new_udq = std::make_shared<UDQConfig>(current);
         for (const auto& record : keyword)
-            new_udq->add_record(record, current_step);
+            new_udq->add_record(record, keyword.location(), current_step);
 
         auto next_index = this->udq_config.update_equal(current_step, new_udq);
         if (next_index) {
             for (const auto& [report_step, udq_ptr] : this->udq_config.unique() ) {
                 if (report_step > current_step) {
                     for (const auto& record : keyword)
-                        udq_ptr->add_record(record, current_step);
+                        udq_ptr->add_record(record, keyword.location(), current_step);
                 }
             }
         }

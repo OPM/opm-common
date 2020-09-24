@@ -22,6 +22,8 @@
 #include <cassert>
 
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
+#include <opm/common/OpmLog/KeywordLocation.hpp>
+
 #include "UDQParser.hpp"
 
 namespace Opm {
@@ -283,7 +285,7 @@ bool static_type_check(UDQVarType lhs, UDQVarType rhs) {
 }
 
 
-UDQASTNode UDQParser::parse(const UDQParams& udq_params, UDQVarType target_type, const std::string& target_var, const std::vector<UDQToken>& tokens, const ParseContext& parseContext, ErrorGuard& errors)
+UDQASTNode UDQParser::parse(const UDQParams& udq_params, UDQVarType target_type, const std::string& target_var, const KeywordLocation& location, const std::vector<UDQToken>& tokens, const ParseContext& parseContext, ErrorGuard& errors)
 {
     UDQParser parser(udq_params, tokens);
     parser.next();

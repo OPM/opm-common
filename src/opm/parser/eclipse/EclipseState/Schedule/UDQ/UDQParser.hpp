@@ -35,6 +35,7 @@ namespace Opm {
 
 class ParseContext;
 class ErrorGuard;
+class KeywordLocation;
 
 struct UDQParseNode {
     UDQParseNode(UDQTokenType type_arg, const std::variant<std::string, double>& value_arg, const std::vector<std::string>& selector_arg) :
@@ -73,7 +74,7 @@ struct UDQParseNode {
 
 class UDQParser {
 public:
-    static UDQASTNode parse(const UDQParams& udq_params, UDQVarType target_type, const std::string& target_var, const std::vector<UDQToken>& tokens_, const ParseContext& parseContext, ErrorGuard& errors);
+    static UDQASTNode parse(const UDQParams& udq_params, UDQVarType target_type, const std::string& target_var, const KeywordLocation& location, const std::vector<UDQToken>& tokens_, const ParseContext& parseContext, ErrorGuard& errors);
 
 private:
     UDQParser(const UDQParams& udq_params1, const std::vector<UDQToken>& tokens_) :
