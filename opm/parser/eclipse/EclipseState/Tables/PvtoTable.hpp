@@ -17,9 +17,13 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef OPM_PARSER_PVTO_TABLE_HPP
-#define	OPM_PARSER_PVTO_TABLE_HPP
+#define OPM_PARSER_PVTO_TABLE_HPP
 
 #include <opm/parser/eclipse/EclipseState/Tables/PvtxTable.hpp>
+
+#include <array>
+#include <cstddef>
+#include <vector>
 
 namespace Opm {
 
@@ -27,12 +31,20 @@ namespace Opm {
 
     class PvtoTable : public PvtxTable {
     public:
+        struct FlippedFVF {
+            std::size_t i;
+            std::array<double, std::size_t{2}> Rs;
+            std::array<double, std::size_t{2}> Bo;
+        };
+
         PvtoTable() = default;
         PvtoTable(const DeckKeyword& keyword, size_t tableIdx);
 
         static PvtoTable serializeObject();
 
         bool operator==(const PvtoTable& data) const;
+
+        std::vector<FlippedFVF> nonMonotonicSaturatedFVF() const;
     };
 }
 
