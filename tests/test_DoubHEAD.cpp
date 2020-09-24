@@ -20,8 +20,11 @@
 #define BOOST_TEST_MODULE DoubHEAD_Vector
 
 #include <boost/test/unit_test.hpp>
+#include <opm/parser/eclipse/Units/Units.hpp>
+#include <opm/parser/eclipse/Python/Python.hpp>
 
 #include <opm/output/eclipse/DoubHEAD.hpp>
+#include <opm/output/eclipse/VectorItems/doubhead.hpp>
 
 #include <opm/output/eclipse/InteHEAD.hpp>
 
@@ -29,6 +32,8 @@
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
+#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 
 #include <chrono>
 #include <ctime>
@@ -36,6 +41,32 @@
 #include <numeric>              // partial_sum()
 #include <ratio>
 #include <vector>
+
+namespace {
+
+    Opm::Deck first_sim(std::string fname) {
+        return Opm::Parser{}.parseFile(fname);
+    }
+}
+
+//int main(int argc, char* argv[])
+struct SimulationCase
+{
+    explicit SimulationCase(const Opm::Deck& deck)
+        : es   { deck }
+        , grid { deck }
+        , python{ std::make_shared<Opm::Python>() }
+        , sched{ deck, es, python }
+    {}
+
+    // Order requirement: 'es' must be declared/initialised before 'sched'.
+    Opm::EclipseState es;
+    Opm::EclipseGrid  grid;
+    std::shared_ptr<Opm::Python> python;
+    Opm::Schedule     sched;
+
+};
+
 
 namespace {
     using Day = std::chrono::duration<double,
@@ -66,6 +97,28 @@ namespace {
     {
         return { start, elapsed };
     }
+
+    double getTimeConv(const ::Opm::UnitSystem& us)
+    {
+        switch (us.getType()) {
+        case ::Opm::UnitSystem::UnitType::UNIT_TYPE_METRIC:
+            return static_cast<double>(Opm::Metric::Time);
+
+        case ::Opm::UnitSystem::UnitType::UNIT_TYPE_FIELD:
+            return static_cast<double>(Opm::Field::Time);
+
+        case ::Opm::UnitSystem::UnitType::UNIT_TYPE_LAB:
+            return static_cast<double>(Opm::Lab::Time);
+
+        case ::Opm::UnitSystem::UnitType::UNIT_TYPE_PVT_M:
+            return static_cast<double>(Opm::PVT_M::Time);
+
+        case ::Opm::UnitSystem::UnitType::UNIT_TYPE_INPUT:
+            throw std::invalid_argument {
+                "Cannot Run Simulation With Non-Standard Units"
+            };
+        }
+    }
 } // Anonymous
 
 BOOST_AUTO_TEST_SUITE(Member_Functions)
@@ -90,5 +143,32 @@ BOOST_AUTO_TEST_CASE(Time_Stamp)
     // Start + elapsed (days)
     BOOST_CHECK_CLOSE(v[162 - 1], 736200.0, 1.0e-10);
 }
+
+BOOST_AUTO_TEST_CASE(Wsegiter)
+{
+    const auto simCase = SimulationCase{first_sim("0A4_GRCTRL_LRAT_LRAT_GGR_BASE_MODEL2_MSW_ALL.DATA")};
+
+    Opm::EclipseState es    = simCase.es;
+    Opm::Schedule     sched = simCase.sched;
+
+    const auto& usys  = es.getDeckUnitSystem();
+    const auto  tconv = getTimeConv(usys);
+
+    const std::size_t lookup_step = 1;
+    const auto tuning_data = sched.getTuning(lookup_step);
+
+
+    const auto dh = Opm::RestartIO::DoubHEAD{}
+        .tuningParameters(sched.getTuning(lookup_step), tconv);
+
+    const auto& v = dh.data();
+
+    namespace VI = Opm::RestartIO::Helpers::VectorItems;
+
+    BOOST_CHECK_EQUAL(v[VI::WsegRedFac], 0.3);
+    BOOST_CHECK_EQUAL(v[VI::WsegIncFac], 2.0);
+
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()

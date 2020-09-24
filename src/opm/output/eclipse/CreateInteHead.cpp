@@ -302,6 +302,7 @@ namespace {
             tuning.LITMIN,
             tuning.MXWSIT,
             tuning.MXWPIT,
+            tuning.WSEG_MAX_RESTART
         };
     }
 

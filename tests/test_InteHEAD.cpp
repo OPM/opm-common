@@ -343,10 +343,11 @@ BOOST_AUTO_TEST_CASE(Tuning_param)
     const auto litmin	= 20;
     const auto mxwsit	= 8;
     const auto mxwpit	= 6;
+    const auto wseg_max_restart   = 49;
 
     const auto ih = Opm::RestartIO::InteHEAD{}
         .tuningParam({
-            newtmx, newtmn, litmax, litmin, mxwsit, mxwpit
+            newtmx, newtmn, litmax, litmin, mxwsit, mxwpit, wseg_max_restart
         });
 
     const auto& v = ih.data();
@@ -357,6 +358,7 @@ BOOST_AUTO_TEST_CASE(Tuning_param)
     BOOST_CHECK_EQUAL(v[VI::intehead::LITMIN], litmin);
     BOOST_CHECK_EQUAL(v[VI::intehead::MXWSIT], mxwsit);
     BOOST_CHECK_EQUAL(v[VI::intehead::MXWPIT], mxwpit);
+    BOOST_CHECK_EQUAL(v[VI::intehead::WSEGITR_IT2], wseg_max_restart);
 }
 
 BOOST_AUTO_TEST_CASE(Various_Parameters)

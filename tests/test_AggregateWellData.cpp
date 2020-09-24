@@ -371,7 +371,11 @@ TSTEP            -- 8
         return Opm::Parser{}.parseString(input);
     }
 
-    Opm::SummaryState sim_state()
+    Opm::Deck msw_sim(std::string fname) {
+        return Opm::Parser{}.parseFile(fname);
+    }
+
+   Opm::SummaryState sim_state()
     {
         auto state = Opm::SummaryState{std::chrono::system_clock::now()};
 
@@ -720,6 +724,66 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data)
 
         BOOST_CHECK_EQUAL(zwell[i1 + Ix::WellName].c_str(), "OP_2    ");
     }
+}
+
+
+BOOST_AUTO_TEST_CASE (Declared_Well_Data_MSW_well_data)
+{
+    const auto simCase = SimulationCase{msw_sim("0A4_GRCTRL_LRAT_LRAT_GGR_BASE_MODEL2_MSW_ALL.DATA")};
+    Opm::EclipseState es    = simCase.es;
+    Opm::Schedule     sched = simCase.sched;
+    Opm::Action::State action_state;
+    const auto rptStep = std::size_t{1};
+
+    const auto ih = MockIH {
+        static_cast<int>(simCase.sched.getWells(rptStep).size())
+    };
+    const auto smry = sim_state();
+
+    auto awd = Opm::RestartIO::Helpers::AggregateWellData{ih.value};
+    awd.captureDeclaredWellData(simCase.sched,
+                                simCase.es.getUnits(), rptStep, action_state, smry, ih.value);
+
+    // IWEL (PROD1)
+    {
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::IWell::index;
+
+        const auto start = 0*ih.niwelz;
+
+        const auto& iwell = awd.getIWell();
+        BOOST_CHECK_EQUAL(iwell[start + Ix::MsWID] , 1); // PROD1  - first MSW well
+        BOOST_CHECK_EQUAL(iwell[start + Ix::NWseg] , 12); // PROD1 - 12 segments
+        BOOST_CHECK_EQUAL(iwell[start + Ix::MSW_PlossMod], 1); // PROD1 - HF- => 1
+        BOOST_CHECK_EQUAL(iwell[start + Ix::MSW_MulPhaseMod] , 1); // PROD1 - HO => 1
+    }
+
+    // IWEL (PROD2)
+    {
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::IWell::index;
+
+        const auto start = 1*ih.niwelz;
+
+        const auto& iwell = awd.getIWell();
+        BOOST_CHECK_EQUAL(iwell[start + Ix::MsWID] , 2); // PROD2  - second MSW well
+        BOOST_CHECK_EQUAL(iwell[start + Ix::NWseg] , 12); // PROD2 - 12 segments
+        BOOST_CHECK_EQUAL(iwell[start + Ix::MSW_PlossMod], 0); // PROD2 - HFA => 0,
+        BOOST_CHECK_EQUAL(iwell[start + Ix::MSW_MulPhaseMod] , 1); // PROD1 - HO => 0
+    }
+
+    // IWEL (PROD3)
+    {
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::IWell::index;
+
+        const auto start = 2*ih.niwelz;
+
+        const auto& iwell = awd.getIWell();
+        BOOST_CHECK_EQUAL(iwell[start + Ix::MsWID] , 3); // PROD3  - third MSW well
+        BOOST_CHECK_EQUAL(iwell[start + Ix::NWseg] , 10); // PROD3 - 10 segments
+        BOOST_CHECK_EQUAL(iwell[start + Ix::MSW_PlossMod], 2); // PROD3 - H-- => 2,
+        BOOST_CHECK_EQUAL(iwell[start + Ix::MSW_MulPhaseMod] , 1); // PROD3 - HO => 0
+    }
+
+
 }
 
 // --------------------------------------------------------------------

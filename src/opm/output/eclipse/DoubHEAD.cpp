@@ -216,8 +216,8 @@ enum Index : std::vector<double>::size_type {
     dh_142  = 142,
     dh_143  = 143,
     grpar_dmp = VI::doubhead::GRpar_damp,
-    dh_145  = 145,
-    dh_146  = 146,
+    wseg_red_fac  = VI::doubhead::WsegRedFac,
+    wseg_inc_fac  = VI::doubhead::WsegIncFac,
     dh_147  = 147,
     dh_148  = 148,
     dh_149  = 149,
@@ -426,8 +426,6 @@ Opm::RestartIO::DoubHEAD::DoubHEAD()
     this->data_[Index::dh_141] = 1.013;
     this->data_[Index::dh_142] = 0.0;
     this->data_[Index::dh_143] = 1.0;
-    this->data_[Index::dh_145] = 0.3;
-    this->data_[Index::dh_146] = 2.0;
     this->data_[Index::dh_147] = 0.0;
     this->data_[Index::dh_148] = 0.0;
     this->data_[Index::dh_149] = 0.0;
@@ -567,6 +565,10 @@ Opm::RestartIO::DoubHEAD::tuningParameters(const Tuning&     tuning,
     this->data_[Index::XxxDPR] = tuning.XXXDPR;
     this->data_[Index::DdpLim] = tuning.DDPLIM;
     this->data_[Index::DdsLim] = tuning.DDSLIM;
+
+    // WSEGITER - data
+    this->data_[Index::wseg_red_fac] = tuning.WSEG_REDUCTION_FACTOR;
+    this->data_[Index::wseg_inc_fac] = tuning.WSEG_INCREASE_FACTOR;
 
     return *this;
 }
