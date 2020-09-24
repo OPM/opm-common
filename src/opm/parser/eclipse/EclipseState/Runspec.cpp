@@ -97,19 +97,23 @@ bool Phases::operator==(const Phases& data) const {
 
 Welldims::Welldims(const Deck& deck)
 {
-    if (deck.hasKeyword("WELLDIMS")) {
-        const auto& wd = deck.getKeyword("WELLDIMS", 0).getRecord(0);
+    using WD = ParserKeywords::WELLDIMS;
+    if (deck.hasKeyword<WD>()) {
+        const auto& keyword = deck.getKeyword<WD>(0);
+        const auto& wd = keyword.getRecord(0);
 
-        this->nCWMax = wd.getItem("MAXCONN")      .get<int>(0);
-        this->nWGMax = wd.getItem("MAX_GROUPSIZE").get<int>(0);
+        this->nCWMax = wd.getItem<WD::MAXCONN>().get<int>(0);
+        this->nWGMax = wd.getItem<WD::MAX_GROUPSIZE>().get<int>(0);
 
         // This is the E100 definition.  E300 instead uses
         //
         //   Max{ "MAXGROUPS", "MAXWELLS" }
         //
         // i.e., the maximum of item 1 and item 4 here.
-        this->nGMax = wd.getItem("MAXGROUPS").get<int>(0);
-	      this->nWMax = wd.getItem("MAXWELLS").get<int>(0);
+        this->nGMax = wd.getItem<WD::MAXGROUPS>().get<int>(0);
+	      this->nWMax = wd.getItem<WD::MAXWELLS>().get<int>(0);
+
+        this->m_location = keyword.location();
     }
 }
 
@@ -120,7 +124,7 @@ Welldims Welldims::serializeObject()
     result.nCWMax = 2;
     result.nWGMax = 3;
     result.nGMax = 4;
-
+    result.m_location = KeywordLocation::serializeObject();
     return result;
 }
 

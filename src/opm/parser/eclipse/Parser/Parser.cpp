@@ -919,8 +919,7 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
                                                                       parserState.errors,
                                                                       *rawKeyword,
                                                                       parserState.deck.getActiveUnitSystem(),
-                                                                      parserState.deck.getDefaultUnitSystem(),
-                                                                      filename ) );
+                                                                      parserState.deck.getDefaultUnitSystem()));
             } catch (const std::exception& exc) {
                 /*
                   This catch-all of parsing errors is to be able to write a good

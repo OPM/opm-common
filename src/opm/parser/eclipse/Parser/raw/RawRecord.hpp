@@ -39,9 +39,9 @@ namespace Opm {
 
         inline std::string_view pop_front();
         inline std::string_view front() const;
-        void push_front( std::string_view token );
-        void prepend( size_t count, std::string_view token );
+        void push_front( std::string_view token, std::size_t count );
         inline size_t size() const;
+        std::size_t max_size() const;
 
         std::string getRecordString() const;
         inline std::string_view getItem(size_t index) const;
@@ -49,6 +49,7 @@ namespace Opm {
     private:
         std::string_view m_sanitizedRecordString;
         std::deque< std::string_view > m_recordItems;
+        std::size_t m_max_size;
     };
 
     /*

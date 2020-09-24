@@ -21,7 +21,9 @@
 
 #include <iosfwd>
 #include <string>
+#include <optional>
 
+#include <opm/common/OpmLog/KeywordLocation.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/Tabdims.hpp>
 #include <opm/parser/eclipse/EclipseState/EndpointScaling.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQParams.hpp>
@@ -106,11 +108,17 @@ public:
         return this->nWMax;
     }
 
+    const std::optional<KeywordLocation>& location() const {
+        return this->m_location;
+    }
+
+
     bool operator==(const Welldims& data) const {
         return this->maxConnPerWell() == data.maxConnPerWell() &&
                this->maxWellsPerGroup() == data.maxWellsPerGroup() &&
                this->maxGroupsInField() == data.maxGroupsInField() &&
-               this->maxWellsInField() == data.maxWellsInField();
+               this->maxWellsInField() == data.maxWellsInField() &&
+               this->location() == data.location();
     }
 
     template<class Serializer>
@@ -120,6 +128,7 @@ public:
         serializer(nCWMax);
         serializer(nWGMax);
         serializer(nGMax);
+        serializer(m_location);
     }
 
 private:
@@ -127,6 +136,7 @@ private:
     int nCWMax { 0 };
     int nWGMax { 0 };
     int nGMax  { 0 };
+    std::optional<KeywordLocation> m_location;
 };
 
 class WellSegmentDims {
