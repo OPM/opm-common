@@ -58,16 +58,18 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
                          //   Value 0 for regular wells
                          //   Value #segments for MS wells
 
-            MSW_PlossMod  = 81, // Pressure loss model for well segments
-                         //   = 0 for regular wells
-                         //   = 0 for MSW wells and HFA (WELSEGS item 6)
-                         //   = 1 for MSW wells and HF- (WELSEGS item 6)
-                         //   = 2 for MSW wells and H-- (WELSEGS item 6)
+            MSW_PlossMod  = 81, // index for Pressure loss model for well segments
+                         //   ih value for this index is:
+                         //     =  0 for regular wells
+                         //     = 0 for MSW wells and HFA (WELSEGS item 6)
+                         //     = 1 for MSW wells and HF- (WELSEGS item 6)
+                         //     = 2 for MSW wells and H-- (WELSEGS item 6)
 
-            MSW_MulPhaseMod  = 85, // Multiphase flow model for well segments - NOTE DF - model is not implemented yet!!
-                         //   = 0 for regular wells
-                         //   = 1 for MSW wells and HO (WELSEGS item 7)
-                         //   = 2 for MSW wells and DF (WELSEGS item 7)
+            MSW_MulPhaseMod  = 85, // index for Multiphase flow model for well segments - NOTE DF - model is not implemented yet!!
+                         //   ih value for this index is:
+                         //     = 0 for regular wells
+                         //     = 1 for MSW wells and HO (WELSEGS item 7)
+                         //     = 2 for MSW wells and DF (WELSEGS item 7)
 
 
             CompOrd = 98, // Well's completion ordering scheme.
