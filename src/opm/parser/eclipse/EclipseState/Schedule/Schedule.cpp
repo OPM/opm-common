@@ -485,22 +485,20 @@ namespace {
             if( conn_defaulted( record ) ) {
                 const auto well_status = Well::StatusFromString( status_str );
                 for (const auto& wname : well_names) {
-                    {
-                        const auto& well = this->getWell(wname, currentStep);
-                        if( well_status == open && !well.canOpen() ) {
-                            auto days = m_timeMap.getTimePassedUntil( currentStep ) / (60 * 60 * 24);
-                            std::string msg = "Well " + wname
-                                + " where crossflow is banned has zero total rate."
-                                + " This well is prevented from opening at "
-                                + std::to_string( days ) + " days";
-                            OpmLog::note(msg);
-                        } else {
-                            this->updateWellStatus( wname, currentStep, well_status, false );
-                            if (well_status == open)
-                                this->rft_config.addWellOpen(wname, currentStep);
+                    const auto& well = this->getWell(wname, currentStep);
+                    if( well_status == open && !well.canOpen() ) {
+                        auto days = m_timeMap.getTimePassedUntil( currentStep ) / (60 * 60 * 24);
+                        std::string msg = "Well " + wname
+                            + " where crossflow is banned has zero total rate."
+                            + " This well is prevented from opening at "
+                            + std::to_string( days ) + " days";
+                        OpmLog::note(msg);
+                    } else {
+                        this->updateWellStatus( wname, currentStep, well_status, false );
+                        if (well_status == open)
+                            this->rft_config.addWellOpen(wname, currentStep);
 
-                            OpmLog::info(Well::Status2String(well_status) + " well: " + wname + " at report step: " + std::to_string(currentStep));
-                        }
+                        OpmLog::info(Well::Status2String(well_status) + " well: " + wname + " at report step: " + std::to_string(currentStep));
                     }
                 }
 
@@ -509,16 +507,15 @@ namespace {
 
             for (const auto& wname : well_names) {
                 const auto comp_status = Connection::StateFromString( status_str );
-                {
-                    auto& dynamic_state = this->wells_static.at(wname);
-                    auto well_ptr = std::make_shared<Well>( *dynamic_state[currentStep] );
-                    if (well_ptr->handleWELOPEN(record, comp_status, action_mode)) {
-                        // The updateWell call breaks test at line 825 and 831 in ScheduleTests
-                        this->updateWell(well_ptr, currentStep);
-                        const auto well_status = Well::StatusFromString( status_str );
-                        OpmLog::info(Well::Status2String(well_status) + " well: " + wname + " at report step: " + std::to_string(currentStep));
-                    }
+                auto& dynamic_state = this->wells_static.at(wname);
+                auto well_ptr = std::make_shared<Well>( *dynamic_state[currentStep] );
+                if (well_ptr->handleWELOPEN(record, comp_status, action_mode)) {
+                    // The updateWell call breaks test at line 825 and 831 in ScheduleTests
+                    this->updateWell(well_ptr, currentStep);
+                    const auto well_status = Well::StatusFromString( status_str );
+                    OpmLog::info(Well::Status2String(well_status) + " well: " + wname + " at report step: " + std::to_string(currentStep));
                 }
+
                 m_events.addEvent( ScheduleEvents::COMPLETION_CHANGE, currentStep );
             }
         }
