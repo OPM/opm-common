@@ -458,15 +458,26 @@ namespace Opm
         };
 
         /**
-         * Handles a "normal" keyword. A normal keyword is one that can be handled by a function with the standard set of arguments (the ones that are passed to this function.
+         * Handles a "normal" keyword. A normal keyword is one that can be handled by a function with the standard set of arguments (the ones that are passed to this function).
          *
-         * \return `true` if the keyword was handled
+         * Normal keywords are found in the file KeywordHandlers.cpp; to add a new keyword handler to the file, add its signature in the list below,
+         * add the implementation to KeywordHandlers.cpp, and add a pointer to the handler in the dispatch registry in the implementation of this method, found at the bottom of
+         * KeywordHandlers.cpp.
+         *
+         * For the benefit of automatic cross-checking of the lists, all of these are in alphabetical order.
+         *
+         * @param handlerContext context object containing the environment in which the handler was invoked
+         * @param parseContext context object containing the parsing environment
+         * @param errors the error handling object for the current parsing process
+         *
+         * @return `true` if the keyword was handled
          */
-        bool handleNormalKeyword(const HandlerContext&, const ParseContext&, ErrorGuard&);
+        bool handleNormalKeyword(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors);
 
-        /// Keyword Handlers
+        // Keyword Handlers
         void handlePYACTION (std::shared_ptr<const Python> python, const std::string& input_path, const DeckKeyword&, std::size_t currentStep);
 
+        // Normal keyword handlers -- in KeywordHandlers.cpp
         void handleBRANPROP (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleCOMPDAT  (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleCOMPLUMP (const HandlerContext&, const ParseContext&, ErrorGuard&);
