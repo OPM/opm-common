@@ -464,18 +464,16 @@ namespace {
         for (const auto& record : handlerContext.keyword) {
             const std::string& groupNamePattern = record.getItem("GROUP").getTrimmedString(0);
             const auto group_names = this->groupNames(groupNamePattern);
-
             if (group_names.empty())
                 invalidNamePattern(groupNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
 
-            for (const auto& group_name : group_names){
-                bool transfer = DeckItem::to_bool(record.getItem("TRANSFER_EXT_NET").getTrimmedString(0));
-                auto gefac = record.getItem("EFFICIENCY_FACTOR").get< double >(0);
-                {
-                    auto group_ptr = std::make_shared<Group>(this->getGroup(group_name, handlerContext.currentStep));
-                    if (group_ptr->update_gefac(gefac, transfer))
-                        this->updateGroup(std::move(group_ptr), handlerContext.currentStep);
-                }
+            const bool transfer = DeckItem::to_bool(record.getItem("TRANSFER_EXT_NET").getTrimmedString(0));
+            const auto gefac = record.getItem("EFFICIENCY_FACTOR").get<double>(0);
+
+            for (const auto& group_name : group_names) {
+                auto group_ptr = std::make_shared<Group>(this->getGroup(group_name, handlerContext.currentStep));
+                if (group_ptr->update_gefac(gefac, transfer))
+                    this->updateGroup(std::move(group_ptr), handlerContext.currentStep);
             }
         }
     }
@@ -486,7 +484,6 @@ namespace {
         for (const auto& record : handlerContext.keyword) {
             const std::string& groupNamePattern = record.getItem<ParserKeywords::GLIFTOPT::GROUP_NAME>().getTrimmedString(0);
             const auto group_names = this->groupNames(groupNamePattern);
-
             if (group_names.empty())
                 invalidNamePattern(groupNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
 
@@ -516,13 +513,13 @@ namespace {
         for (const auto& record : handlerContext.keyword) {
             const std::string& groupNamePattern = record.getItem("GROUP").getTrimmedString(0);
             const auto group_names = this->groupNames(groupNamePattern);
-
             if (group_names.empty())
                 invalidNamePattern(groupNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
 
+            const auto& target_string = record.getItem<ParserKeywords::GPMAINT::FLOW_TARGET>().get<std::string>(0);
+
             for (const auto& group_name : group_names) {
                 auto group_ptr = std::make_shared<Group>(this->getGroup(group_name, handlerContext.currentStep));
-                const auto& target_string = record.getItem<ParserKeywords::GPMAINT::FLOW_TARGET>().get<std::string>(0);
                 if (target_string == "NONE")
                     group_ptr->set_gpmaint();
                 else {
