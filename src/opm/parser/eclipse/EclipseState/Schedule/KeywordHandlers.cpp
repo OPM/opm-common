@@ -604,9 +604,10 @@ namespace {
 
     void Schedule::handleLINCOM(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         const auto& record = handlerContext.keyword.getRecord(0);
-        auto alpha = record.getItem<ParserKeywords::LINCOM::ALPHA>().get<UDAValue>(0);
-        auto beta  = record.getItem<ParserKeywords::LINCOM::BETA>().get<UDAValue>(0);
-        auto gamma = record.getItem<ParserKeywords::LINCOM::GAMMA>().get<UDAValue>(0);
+        const auto alpha = record.getItem<ParserKeywords::LINCOM::ALPHA>().get<UDAValue>(0);
+        const auto beta  = record.getItem<ParserKeywords::LINCOM::BETA>().get<UDAValue>(0);
+        const auto gamma = record.getItem<ParserKeywords::LINCOM::GAMMA>().get<UDAValue>(0);
+
         auto new_config = std::make_shared<GuideRateConfig>( this->guideRateConfig(handlerContext.currentStep) );
         auto new_model = new_config->model();
 
@@ -622,7 +623,7 @@ namespace {
 
     void Schedule::handleMULTFLT (const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         this->m_modifierDeck[handlerContext.currentStep].addKeyword(handlerContext.keyword);
-        m_events.addEvent( ScheduleEvents::GEO_MODIFIER, handlerContext.currentStep);
+        m_events.addEvent(ScheduleEvents::GEO_MODIFIER, handlerContext.currentStep);
     }
 
     void Schedule::handleMXUNSUPP(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
@@ -671,7 +672,8 @@ namespace {
     }
 
     void Schedule::handleNUPCOL(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
-        int nupcol = handlerContext.keyword.getRecord(0).getItem("NUM_ITER").get<int>(0);
+        const int nupcol = handlerContext.keyword.getRecord(0).getItem("NUM_ITER").get<int>(0);
+
         if (handlerContext.keyword.getRecord(0).getItem("NUM_ITER").defaultApplied(0)) {
             std::string msg = "OPM Flow uses 12 as default NUPCOL value";
             OpmLog::note(msg);
@@ -767,7 +769,7 @@ namespace {
         this->udq_config.update(handlerContext.currentStep, new_udq);
     }
 
-    void Schedule::handleVAPPARS(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&){
+    void Schedule::handleVAPPARS(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         for (const auto& record : handlerContext.keyword) {
             double vap1 = record.getItem("OIL_VAP_PROPENSITY").get< double >(0);
             double vap2 = record.getItem("OIL_DENSITY_PROPENSITY").get< double >(0);
@@ -786,7 +788,7 @@ namespace {
             vfpinj_tables.insert( pair );
         }
 
-        auto & table_state = vfpinj_tables.at(table_id);
+        auto& table_state = vfpinj_tables.at(table_id);
         table_state.update(handlerContext.currentStep, table);
         this->m_events.addEvent( ScheduleEvents::VFPINJ_UPDATE , handlerContext.currentStep);
     }
@@ -800,7 +802,7 @@ namespace {
             vfpprod_tables.insert( pair );
         }
 
-        auto & table_state = vfpprod_tables.at(table_id);
+        auto& table_state = vfpprod_tables.at(table_id);
         table_state.update(handlerContext.currentStep, table);
         this->m_events.addEvent( ScheduleEvents::VFPPROD_UPDATE , handlerContext.currentStep);
     }
@@ -848,7 +850,7 @@ namespace {
                     this->updateWell(well2, handlerContext.currentStep);
                 }
 
-                if ( !well2->getAllowCrossFlow()) {
+                if (!well2->getAllowCrossFlow()) {
                     // The numerical content of the rate UDAValues is accessed unconditionally;
                     // since this is in history mode use of UDA values is not allowed anyway.
                     const auto& oil_rate = properties->OilRate;
@@ -857,7 +859,7 @@ namespace {
                     if (oil_rate.zero() && water_rate.zero() && gas_rate.zero()) {
                         std::string msg =
                             "Well " + well2->name() + " is a history matched well with zero rate where crossflow is banned. " +
-                            "This well will be closed at " + std::to_string ( m_timeMap.getTimePassedUntil(handlerContext.currentStep) / (60*60*24) ) + " days";
+                            "This well will be closed at " + std::to_string(m_timeMap.getTimePassedUntil(handlerContext.currentStep) / (60*60*24)) + " days";
                         OpmLog::note(msg);
                         updateWellStatus( well_name, handlerContext.currentStep, Well::Status::SHUT, false );
                     }
@@ -1058,7 +1060,7 @@ namespace {
         const auto& wname = record1.getItem("WELL").getTrimmedString(0);
 
         auto& dynamic_state = this->wells_static.at(wname);
-        auto well_ptr = std::make_shared<Well>( *dynamic_state[handlerContext.currentStep] );
+        auto well_ptr = std::make_shared<Well>(*dynamic_state[handlerContext.currentStep]);
         if (well_ptr->handleWELSEGS(handlerContext.keyword))
             this->updateWell(std::move(well_ptr), handlerContext.currentStep);
     }
@@ -1069,9 +1071,9 @@ namespace {
         const auto COMPORD_in_timestep = [&]() -> const DeckKeyword* {
             auto itr = section.begin() + handlerContext.keywordIndex;
             for( ; itr != section.end(); ++itr ) {
-                if( itr->name() == "DATES" ) return nullptr;
-                if( itr->name() == "TSTEP" ) return nullptr;
-                if( itr->name() == "COMPORD" ) return std::addressof( *itr );
+                if (itr->name() == "DATES") return nullptr;
+                if (itr->name() == "TSTEP") return nullptr;
+                if (itr->name() == "COMPORD") return std::addressof( *itr );
             }
 
             return nullptr;
@@ -1098,7 +1100,7 @@ namespace {
             }
 
             if (!hasGroup(groupName))
-                addGroup(groupName , handlerContext.currentStep, unit_system);
+                addGroup(groupName, handlerContext.currentStep, unit_system);
 
             if (!hasWell(wellName)) {
                 auto wellConnectionOrder = Connection::Order::TRACK;
@@ -1119,13 +1121,13 @@ namespace {
                 this->addWell(wellName, record, handlerContext.currentStep, wellConnectionOrder, unit_system);
                 this->addWellToGroup(groupName, wellName, handlerContext.currentStep);
             } else {
-                const auto headI = record.getItem<ParserKeywords::WELSPECS::HEAD_I>().get< int >( 0 ) - 1;
-                const auto headJ = record.getItem<ParserKeywords::WELSPECS::HEAD_J>().get< int >( 0 ) - 1;
+                const auto headI = record.getItem<ParserKeywords::WELSPECS::HEAD_I>().get<int>(0) - 1;
+                const auto headJ = record.getItem<ParserKeywords::WELSPECS::HEAD_J>().get<int>(0) - 1;
                 const auto& refDepthItem = record.getItem<ParserKeywords::WELSPECS::REF_DEPTH>();
                 int pvt_table = record.getItem<ParserKeywords::WELSPECS::P_TABLE>().get<int>(0);
                 double drainageRadius = record.getItem<ParserKeywords::WELSPECS::D_RADIUS>().getSIDouble(0);
-                double refDepth = refDepthItem.hasValue( 0 )
-                    ? refDepthItem.getSIDouble( 0 )
+                double refDepth = refDepthItem.hasValue(0)
+                    ? refDepthItem.getSIDouble(0)
                     : -1.0;
                 {
                     bool update = false;
@@ -1503,7 +1505,8 @@ namespace {
     }
 
     void Schedule::handleWSEGSICD(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
-       std::map<std::string, std::vector<std::pair<int, SICD> > > spiral_icds = SICD::fromWSEGSICD(handlerContext.keyword);
+        std::map<std::string, std::vector<std::pair<int, SICD> > > spiral_icds = SICD::fromWSEGSICD(handlerContext.keyword);
+
         for (auto& map_elem : spiral_icds) {
             const std::string& well_name_pattern = map_elem.first;
             const auto well_names = this->wellNames(well_name_pattern, handlerContext.currentStep);
@@ -1521,7 +1524,7 @@ namespace {
                     sicd.updateScalingFactor(outlet_segment_length, connections.segment_perf_length(segment_nr));
                 }
 
-                if (well_ptr -> updateWSEGSICD(sicd_pairs) )
+                if (well_ptr->updateWSEGSICD(sicd_pairs) )
                     this->updateWell(std::move(well_ptr), handlerContext.currentStep);
             }
         }
@@ -1539,7 +1542,7 @@ namespace {
             for (const auto& well_name : well_names) {
                 auto& dynamic_state = this->wells_static.at(well_name);
                 auto well_ptr = std::make_shared<Well>( *dynamic_state[handlerContext.currentStep] );
-                if (well_ptr -> updateWSEGVALV(valve_pairs) )
+                if (well_ptr->updateWSEGVALV(valve_pairs))
                     this->updateWell(std::move(well_ptr), handlerContext.currentStep);
             }
         }
