@@ -569,7 +569,7 @@ BOOST_AUTO_TEST_CASE(TestHeader) {
          .params_GRPZ({nigrpz, nsgrpz, nxgrpz, nzgrpz})
          .params_NAAQZ(ncamax, niaaqz, nsaaqz, nxaaqz, nicaqz, nscaqz, nacaqz)
          .stepParam(tstep, report_step)
-         .tuningParam({newtmx, newtmn, litmax, litmin, mxwsit, mxwpit})
+         .tuningParam({newtmx, newtmn, litmax, litmin, mxwsit, mxwpit, 0})
          .variousParam(version, iprog)
          .wellSegDimensions({nsegwl, nswlmx, nsegmx, nlbrmx, nisegz, nrsegz, nilbrz})
          .regionDimensions({ntfip, nmfipr, 0,0,0})
