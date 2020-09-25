@@ -250,28 +250,29 @@ namespace {
         for (const auto& record : handlerContext.keyword) {
             const std::string& groupNamePattern = record.getItem("GROUP").getTrimmedString(0);
             const auto group_names = this->groupNames(groupNamePattern);
-
             if (group_names.empty())
                 invalidNamePattern(groupNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
 
+            const Group::InjectionCMode controlMode = Group::InjectionCModeFromString(record.getItem("CONTROL_MODE").getTrimmedString(0));
+            const Phase phase = get_phase( record.getItem("PHASE").getTrimmedString(0));
+            const auto surfaceInjectionRate = record.getItem("SURFACE_TARGET").get<UDAValue>(0);
+            const auto reservoirInjectionRate = record.getItem("RESV_TARGET").get<UDAValue>(0);
+            const auto reinj_target = record.getItem("REINJ_TARGET").get<UDAValue>(0);
+            const auto voidage_target = record.getItem("VOIDAGE_TARGET").get<UDAValue>(0);
+            const bool is_free = DeckItem::to_bool(record.getItem("FREE").getTrimmedString(0));
+
+            const std::optional<std::string> reinj_group_name = record.getItem("REINJECT_GROUP").defaultApplied(0)
+                ? std::nullopt
+                : std::optional<std::string>(record.getItem("REINJECT_GROUP").getTrimmedString(0));
+
+            const std::optional<std::string> voidage_group_name = record.getItem("VOIDAGE_GROUP").defaultApplied(0)
+                ? std::nullopt
+                : std::optional<std::string>(record.getItem("VOIDAGE_GROUP").getTrimmedString(0));
+
             for (const auto& group_name : group_names) {
-                Group::InjectionCMode controlMode = Group::InjectionCModeFromString( record.getItem("CONTROL_MODE").getTrimmedString(0) );
-                Phase phase = get_phase( record.getItem("PHASE").getTrimmedString(0));
-                auto surfaceInjectionRate = record.getItem("SURFACE_TARGET").get< UDAValue >(0);
-                auto reservoirInjectionRate = record.getItem("RESV_TARGET").get<UDAValue>(0);
-                auto reinj_target = record.getItem("REINJ_TARGET").get<UDAValue>(0);
-                auto voidage_target = record.getItem("VOIDAGE_TARGET").get<UDAValue>(0);
-                std::string reinj_group = group_name;
-                if (!record.getItem("REINJECT_GROUP").defaultApplied(0))
-                    reinj_group = record.getItem("REINJECT_GROUP").getTrimmedString(0);
-
-                std::string voidage_group = group_name;
-                if (!record.getItem("VOIDAGE_GROUP").defaultApplied(0))
-                    voidage_group = record.getItem("VOIDAGE_GROUP").getTrimmedString(0);;
-
-                bool availableForGroupControl = DeckItem::to_bool(record.getItem("FREE").getTrimmedString(0))
-                    && (group_name != "FIELD");
-                //surfaceInjectionRate = injection::rateToSI(surfaceInjectionRate, phase, handlerContext.section.unitSystem());
+                const bool availableForGroupControl = is_free && (group_name != "FIELD");
+                const std::string reinj_group = reinj_group_name.value_or(group_name);
+                const std::string voidage_group = voidage_group_name.value_or(group_name);
 
                 auto group_ptr = std::make_shared<Group>(this->getGroup(group_name, handlerContext.currentStep));
                 Group::GroupInjectionProperties injection;
