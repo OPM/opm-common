@@ -122,6 +122,8 @@ namespace Opm {
         m_rtemp = ParserKeywords::RTEMP::TEMP::defaultValue;
         m_rtemp += Metric::TemperatureOffset; // <- default values always use METRIC as the unit system!
 
+        m_salinity = ParserKeywords::SALINITY::MOLALITY::defaultValue;
+
         initDims( deck );
         initSimpleTables( deck );
         initFullTables(deck, "PVTG", m_pvtgTables);
@@ -155,6 +157,9 @@ namespace Opm {
             m_rtemp = deck.getKeyword("RTEMP").getRecord(0).getItem("TEMP").getSIDouble( 0 );
         else if (deck.hasKeyword( "RTEMPA" ) )
             m_rtemp = deck.getKeyword("RTEMPA").getRecord(0).getItem("TEMP").getSIDouble( 0 );
+
+        if( deck.hasKeyword( "SALINITY" ) )
+            m_salinity = deck.getKeyword("SALINITY").getRecord(0).getItem("MOLALITY").get<double>( 0 ); //unit independent of unit systems
 
         if ( deck.hasKeyword( "ROCK2D") )
             initRockTables(deck, "ROCK2D", m_rock2dTables );
@@ -247,6 +252,7 @@ namespace Opm {
         if (data.jfunc)
           jfunc = std::make_shared<JFunc>(*data.jfunc);
         m_rtemp = data.m_rtemp;
+        m_salinity = data.m_salinity;
         gasDenT = data.gasDenT;
         oilDenT = data.oilDenT;
         watDenT = data.watDenT;
@@ -298,6 +304,7 @@ namespace Opm {
         result.stcond = StandardCond::serializeObject();
         result.m_gas_comp_index = 77;
         result.m_rtemp = 1.0;
+        result.m_salinity = 1.0;
         result.m_tlmixpar = TLMixpar::serializeObject();
         return result;
     }
@@ -1144,6 +1151,10 @@ namespace Opm {
         return this->m_rtemp;
     }
 
+    double TableManager::salinity() const {
+        return this->m_salinity;
+    }
+
     std::size_t TableManager::gas_comp_index() const {
         return this->m_gas_comp_index;
     }
@@ -1193,6 +1204,7 @@ namespace Opm {
                stcond == data.stcond &&
                jfuncOk &&
                m_rtemp == data.m_rtemp &&
+               m_salinity == data.m_salinity &&
                m_gas_comp_index == data.m_gas_comp_index;
     }
 

@@ -1065,6 +1065,7 @@ set( keywords
      001_Eclipse300/O/OPTIONS3
      001_Eclipse300/P/PREF
      001_Eclipse300/P/PREFS
+     001_Eclipse300/S/SALINITY
      001_Eclipse300/S/STCOND
      001_Eclipse300/T/TEMPI
      001_Eclipse300/T/TEMPVD

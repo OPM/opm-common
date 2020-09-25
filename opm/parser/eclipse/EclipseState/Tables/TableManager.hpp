@@ -189,6 +189,8 @@ namespace Opm {
 
         double rtemp() const;
 
+        double salinity() const;
+
         bool operator==(const TableManager& data) const;
 
         template<class Serializer>
@@ -239,6 +241,7 @@ namespace Opm {
             stcond.serializeOp(serializer);
             serializer(m_gas_comp_index);
             serializer(m_rtemp);
+            serializer(m_salinity);
             m_tlmixpar.serializeOp(serializer);
             if (!serializer.isSerializing()) {
                 m_simpleTables = simpleTables;
@@ -540,6 +543,7 @@ namespace Opm {
         StandardCond stcond;
         std::size_t m_gas_comp_index;
         double m_rtemp;
+        double m_salinity;
 
         struct SplitSimpleTables {
           size_t plyshMax = 0;
