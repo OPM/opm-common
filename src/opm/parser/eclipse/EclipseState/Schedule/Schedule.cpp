@@ -382,10 +382,9 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
             return;
         }
 
-        using PY = ParserKeywords::PYACTION;
-        const auto& name = keyword.getRecord(0).getItem<PY::NAME>().get<std::string>(0);
-        const auto& run_count = Action::PyAction::from_string( keyword.getRecord(0).getItem<PY::RUN_COUNT>().get<std::string>(0) );
-        const auto& module_arg = keyword.getRecord(1).getItem<PY::FILENAME>().get<std::string>(0);
+        const auto& name = keyword.getRecord(0).getItem<ParserKeywords::PYACTION::NAME>().get<std::string>(0);
+        const auto& run_count = Action::PyAction::from_string( keyword.getRecord(0).getItem<ParserKeywords::PYACTION::RUN_COUNT>().get<std::string>(0) );
+        const auto& module_arg = keyword.getRecord(1).getItem<ParserKeywords::PYACTION::FILENAME>().get<std::string>(0);
         std::string module;
         if (input_path.empty())
             module = module_arg;
@@ -399,8 +398,7 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
     }
 
     void Schedule::applyEXIT(const DeckKeyword& keyword, std::size_t report_step) {
-        using ex = ParserKeywords::EXIT;
-        int status = keyword.getRecord(0).getItem<ex::STATUS_CODE>().get<int>(0);
+        int status = keyword.getRecord(0).getItem<ParserKeywords::EXIT::STATUS_CODE>().get<int>(0);
         OpmLog::info("Simulation exit with status: " + std::to_string(status) + " requested as part of ACTIONX at report_step: " + std::to_string(report_step));
         this->exit_status = status;
     }
@@ -631,7 +629,6 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
                            Connection::Order wellConnectionOrder,
                            const UnitSystem& unit_system)
     {
-        using WS = ParserKeywords::WELSPECS;
         // We change from eclipse's 1 - n, to a 0 - n-1 solution
         int headI = record.getItem("HEAD_I").get< int >(0) - 1;
         int headJ = record.getItem("HEAD_J").get< int >(0) - 1;
@@ -667,8 +664,8 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
         }
 
         const std::string& group = record.getItem<ParserKeywords::WELSPECS::GROUP>().getTrimmedString(0);
-        auto pvt_table = record.getItem<WS::P_TABLE>().get<int>(0);
-        auto gas_inflow = Well::GasInflowEquationFromString( record.getItem<WS::INFLOW_EQ>().get<std::string>(0) );
+        auto pvt_table = record.getItem<ParserKeywords::WELSPECS::P_TABLE>().get<int>(0);
+        auto gas_inflow = Well::GasInflowEquationFromString( record.getItem<ParserKeywords::WELSPECS::INFLOW_EQ>().get<std::string>(0) );
 
         this->addWell(wellName,
                       group,

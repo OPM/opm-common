@@ -506,10 +506,9 @@ void Schedule::handleGLIFTOPT(const HandlerContext& handlerContext, const ParseC
             if (group_names.empty())
                 invalidNamePattern(groupNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
 
-            using GP = ParserKeywords::GPMAINT;
             for (const auto& group_name : group_names) {
                 auto group_ptr = std::make_shared<Group>(this->getGroup(group_name, handlerContext.currentStep));
-                const auto& target_string = record.getItem<GP::FLOW_TARGET>().get<std::string>(0);
+                const auto& target_string = record.getItem<ParserKeywords::GPMAINT::FLOW_TARGET>().get<std::string>(0);
                 if (target_string == "NONE")
                     group_ptr->set_gpmaint();
                 else {
@@ -1082,24 +1081,22 @@ void Schedule::handleNODEPROP(const HandlerContext& handlerContext, const ParseC
         };
 
         const auto& keyword = section.getKeyword(handlerContext.keywordIndex);
-        using WS = ParserKeywords::WELSPECS;
-
         for (std::size_t recordNr = 0; recordNr < keyword.size(); recordNr++) {
             const auto& record = keyword.getRecord(recordNr);
-            const std::string& wellName = trim_wgname(keyword, record.getItem<WS::WELL>().get<std::string>(0), parseContext, errors);
-            const std::string& groupName = trim_wgname(keyword, record.getItem<WS::GROUP>().get<std::string>(0), parseContext, errors);
-            auto density_calc_type = record.getItem<WS::DENSITY_CALC>().get<std::string>(0);
-            auto fip_region_number = record.getItem<WS::FIP_REGION>().get<int>(0);
+            const std::string& wellName = trim_wgname(keyword, record.getItem<ParserKeywords::WELSPECS::WELL>().get<std::string>(0), parseContext, errors);
+            const std::string& groupName = trim_wgname(keyword, record.getItem<ParserKeywords::WELSPECS::GROUP>().get<std::string>(0), parseContext, errors);
+            auto density_calc_type = record.getItem<ParserKeywords::WELSPECS::DENSITY_CALC>().get<std::string>(0);
+            auto fip_region_number = record.getItem<ParserKeywords::WELSPECS::FIP_REGION>().get<int>(0);
 
             if (fip_region_number != 0) {
                 const auto& location = keyword.location();
-                std::string msg = "The FIP_REGION item in the WELSPECS keyword in file: " + location.filename + " line: " + std::to_string(location.lineno) + " using default value: " + std::to_string(WS::FIP_REGION::defaultValue);
+                std::string msg = "The FIP_REGION item in the WELSPECS keyword in file: " + location.filename + " line: " + std::to_string(location.lineno) + " using default value: " + std::to_string(ParserKeywords::WELSPECS::FIP_REGION::defaultValue);
                 OpmLog::warning(msg);
             }
 
             if (density_calc_type != "SEG") {
                 const auto& location = keyword.location();
-                std::string msg = "The DENSITY_CALC item in the WELSPECS keyword in file: " + location.filename + " line: " + std::to_string(location.lineno) + " using default value: " + WS::DENSITY_CALC::defaultValue;
+                std::string msg = "The DENSITY_CALC item in the WELSPECS keyword in file: " + location.filename + " line: " + std::to_string(location.lineno) + " using default value: " + ParserKeywords::WELSPECS::DENSITY_CALC::defaultValue;
                 OpmLog::warning(msg);
             }
 
@@ -1125,11 +1122,11 @@ void Schedule::handleNODEPROP(const HandlerContext& handlerContext, const ParseC
                 this->addWell(wellName, record, handlerContext.currentStep, wellConnectionOrder, unit_system);
                 this->addWellToGroup(groupName, wellName, handlerContext.currentStep);
             } else {
-                const auto headI = record.getItem<WS::HEAD_I>().get< int >( 0 ) - 1;
-                const auto headJ = record.getItem<WS::HEAD_J>().get< int >( 0 ) - 1;
-                const auto& refDepthItem = record.getItem<WS::REF_DEPTH>();
-                int pvt_table = record.getItem<WS::P_TABLE>().get<int>(0);
-                double drainageRadius = record.getItem<WS::D_RADIUS>().getSIDouble(0);
+                const auto headI = record.getItem<ParserKeywords::WELSPECS::HEAD_I>().get< int >( 0 ) - 1;
+                const auto headJ = record.getItem<ParserKeywords::WELSPECS::HEAD_J>().get< int >( 0 ) - 1;
+                const auto& refDepthItem = record.getItem<ParserKeywords::WELSPECS::REF_DEPTH>();
+                int pvt_table = record.getItem<ParserKeywords::WELSPECS::P_TABLE>().get<int>(0);
+                double drainageRadius = record.getItem<ParserKeywords::WELSPECS::D_RADIUS>().getSIDouble(0);
                 double refDepth = refDepthItem.hasValue( 0 )
                     ? refDepthItem.getSIDouble( 0 )
                     : -1.0;
