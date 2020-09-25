@@ -555,7 +555,7 @@ inline void keywordR2R( SummaryConfig::keyword_list& /* list */,
 {
     const auto& location = keyword.location();
     std::string msg = "Region to region summary keyword: " + keyword.name() + " at " + location.filename + ", line " + std::to_string(location.lineno) + " is ignored";
-    parseContext.handleError(ParseContext::SUMMARY_UNHANDLED_KEYWORD, msg, errors);
+    // parseContext.handleError(ParseContext::SUMMARY_UNHANDLED_KEYWORD, msg, errors);
 }
 
 
