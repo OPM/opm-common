@@ -472,7 +472,7 @@ namespace {
         constexpr auto open = Well::Status::OPEN;
         bool action_mode = !matching_wells.empty();
 
-        for( const auto& record : keyword ) {
+        for (const auto& record : keyword) {
             const auto& wellNamePattern = record.getItem( "WELL" ).getTrimmedString(0);
             const auto& status_str = record.getItem( "STATUS" ).getTrimmedString( 0 );
             const auto well_names = this->wellNames(wellNamePattern, currentStep, matching_wells);
@@ -482,11 +482,11 @@ namespace {
             /* if all records are defaulted or just the status is set, only
              * well status is updated
              */
-            if( conn_defaulted( record ) ) {
+            if (conn_defaulted( record )) {
                 const auto well_status = Well::StatusFromString( status_str );
                 for (const auto& wname : well_names) {
                     const auto& well = this->getWell(wname, currentStep);
-                    if( well_status == open && !well.canOpen() ) {
+                    if (well_status == open && !well.canOpen()) {
                         auto days = m_timeMap.getTimePassedUntil( currentStep ) / (60 * 60 * 24);
                         std::string msg = "Well " + wname
                             + " where crossflow is banned has zero total rate."
@@ -554,11 +554,11 @@ namespace {
          * any well is subsequently opened
          */
 
-        for( const auto& record : keyword ) {
+        for (const auto& record : keyword) {
 
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = wellNames(wellNamePattern, currentStep);
-            for(const auto& well_name : well_names)
+            for (const auto& well_name : well_names)
                 this->rft_config.updateRFT(well_name, currentStep, RFTConfig::RFT::YES);
 
         }
@@ -567,13 +567,13 @@ namespace {
     }
 
     void Schedule::applyWRFTPLT(const DeckKeyword& keyword, std::size_t currentStep) {
-        for( const auto& record : keyword ) {
+        for (const auto& record : keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
 
             RFTConfig::RFT RFTKey = RFTConfig::RFTFromString(record.getItem("OUTPUT_RFT").getTrimmedString(0));
             RFTConfig::PLT PLTKey = RFTConfig::PLTFromString(record.getItem("OUTPUT_PLT").getTrimmedString(0));
             const auto well_names = wellNames(wellNamePattern, currentStep);
-            for(const auto& well_name : well_names) {
+            for (const auto& well_name : well_names) {
                 this->rft_config.updateRFT(well_name, currentStep, RFTKey);
                 this->rft_config.updatePLT(well_name, currentStep, PLTKey);
             }
@@ -1159,8 +1159,8 @@ namespace {
 
 
     bool Schedule::hasOilVaporizationProperties() const {
-        for( size_t i = 0; i < this->m_timeMap.size(); ++i )
-            if( m_oilvaporizationproperties.at( i ).defined() ) return true;
+        for (size_t i = 0; i < this->m_timeMap.size(); ++i)
+            if (m_oilvaporizationproperties.at( i ).defined()) return true;
 
         return false;
     }
