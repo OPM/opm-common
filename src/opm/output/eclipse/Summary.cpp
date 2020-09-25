@@ -628,6 +628,16 @@ inline quantity bhp( const fn_args& args ) {
     return { p->second.bhp, measure::pressure };
 }
 
+inline quantity temperature( const fn_args& args ) {
+    const quantity zero = { 0, measure::temperature };
+    if( args.schedule_wells.empty() ) return zero;
+
+    const auto p = args.wells.find( args.schedule_wells.front().name() );
+    if( p == args.wells.end() ) return zero;
+
+    return { p->second.temperature, measure::temperature };
+}
+
 inline quantity thp( const fn_args& args ) {
     const quantity zero = { 0, measure::pressure };
     if( args.schedule_wells.empty() ) return zero;
@@ -1047,6 +1057,7 @@ static const std::unordered_map< std::string, ofun > funs = {
 
     { "WBHP", bhp },
     { "WTHP", thp },
+    { "WTPCHEA", temperature },
     { "WVPRT", res_vol_production_target },
 
     { "WMCTL", well_control_mode },
