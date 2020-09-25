@@ -404,7 +404,7 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
         this->m_actions.update(currentStep, new_actions);
     }
 
-    void Schedule::handleEXIT(const DeckKeyword& keyword, std::size_t report_step) {
+    void Schedule::applyEXIT(const DeckKeyword& keyword, std::size_t report_step) {
         using ex = ParserKeywords::EXIT;
         int status = keyword.getRecord(0).getItem<ex::STATUS_CODE>().get<int>(0);
         OpmLog::info("Simulation exit with status: " + std::to_string(status) + " requested as part of ACTIONX at report_step: " + std::to_string(report_step));
@@ -1352,7 +1352,7 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
                 this->applyWELOPEN(keyword, reportStep, parseContext, errors, result.wells());
 
             if (keyword.name() == "EXIT")
-                this->handleEXIT(keyword, reportStep);
+                this->applyEXIT(keyword, reportStep);
 
             if (keyword.name() == "UDQ")
                 this->updateUDQ(keyword, reportStep);

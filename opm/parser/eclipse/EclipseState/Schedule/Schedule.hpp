@@ -442,7 +442,7 @@ namespace Opm
             }
         }
 
-        void handleEXIT(const DeckKeyword&, std::size_t currentStep);
+        void applyEXIT(const DeckKeyword&, std::size_t currentStep);
         void applyMESSAGES(const DeckKeyword&, std::size_t currentStep);
         void applyWELOPEN(const DeckKeyword&, std::size_t currentStep, const ParseContext&, ErrorGuard&, const std::vector<std::string>& matching_wells = {});
         void applyWRFT(const DeckKeyword&, std::size_t currentStep);
