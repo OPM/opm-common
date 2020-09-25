@@ -501,7 +501,7 @@ template< rt phase, bool injection = true>
 inline quantity crate( const fn_args& args ) {
     const quantity zero = { 0, rate_unit< phase >() };
     // The args.num value is the literal value which will go to the
-    // NUMS array in the eclispe SMSPEC file; the values in this array
+    // NUMS array in the eclipse SMSPEC file; the values in this array
     // are offset 1 - whereas we need to use this index here to look
     // up a completion with offset 0.
     const size_t global_index = args.num - 1;
@@ -517,13 +517,13 @@ inline quantity crate( const fn_args& args ) {
                                            [=]( const Opm::data::Connection& c ) {
                                                 return c.index == global_index;
                                            } );
-
+    if (well_data.current_control.isProducer == injection) return zero;
     if( completion == well_data.connections.end() ) return zero;
 
     double eff_fac = efac( args.eff_factors, name );
     auto v = completion->rates.get( phase, 0.0 ) * eff_fac;
-    if( ( v > 0 ) != injection ) return zero;
-    if( !injection ) v *= -1;
+    if (!injection)
+        v *= -1;
 
     if( phase == rt::polymer || phase == rt::brine ) return { v, measure::mass_rate };
     return { v, rate_unit< phase >() };
