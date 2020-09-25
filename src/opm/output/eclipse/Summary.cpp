@@ -704,7 +704,7 @@ inline quantity injection_history( const fn_args& args ) {
 inline quantity abondoned_wells( const fn_args& args ) {
     std::size_t count = 0;
 
-    for (const auto sched_well : args.schedule_wells) {
+    for (const auto& sched_well : args.schedule_wells) {
         if (sched_well.hasProduced()) {
             const auto& well_name = sched_well.name();
             auto well_iter = args.wells.find( well_name );
