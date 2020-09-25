@@ -528,11 +528,10 @@ namespace {
                 addGroup(groupName , handlerContext.currentStep, unit_system);
 
             int table = record.getItem("VFP_TABLE").get< int >(0);
-            {
-                auto group_ptr = std::make_shared<Group>( this->getGroup(groupName, handlerContext.currentStep) );
-                if (group_ptr->updateNetVFPTable(table))
-                    this->updateGroup(std::move(group_ptr), handlerContext.currentStep);
-            }
+
+            auto group_ptr = std::make_shared<Group>( this->getGroup(groupName, handlerContext.currentStep) );
+            if (group_ptr->updateNetVFPTable(table))
+                this->updateGroup(std::move(group_ptr), handlerContext.currentStep);
         }
     }
 
