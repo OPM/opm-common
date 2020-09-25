@@ -751,40 +751,42 @@ namespace {
     std::vector< const Group* > Schedule::getChildGroups2(const std::string& group_name, size_t timeStep) const {
         if (!hasGroup(group_name))
             throw std::invalid_argument("No such group: '" + group_name + "'");
-        {
-            const auto& group = getGroup( group_name, timeStep );
-            std::vector<const Group*> child_groups;
 
-            if (group.defined( timeStep )) {
-                for (const auto& child_name : group.groups())
-                    child_groups.push_back( std::addressof(this->getGroup(child_name, timeStep)));
+        const auto& group = getGroup(group_name, timeStep);
+        std::vector<const Group*> child_groups;
+
+        if (group.defined( timeStep )) {
+            for (const auto& child_name : group.groups()) {
+                child_groups.push_back( std::addressof(this->getGroup(child_name, timeStep)));
             }
-            return child_groups;
         }
+
+        return child_groups;
     }
 
     std::vector< Well > Schedule::getChildWells2(const std::string& group_name, size_t timeStep) const {
         if (!hasGroup(group_name))
             throw std::invalid_argument("No such group: '" + group_name + "'");
-        {
-            const auto& dynamic_state = this->groups.at(group_name);
-            const auto& group_ptr = dynamic_state.get(timeStep);
-            if (group_ptr) {
-                std::vector<Well> wells;
 
-                if (group_ptr->groups().size()) {
-                    for (const auto& child_name : group_ptr->groups()) {
-                        const auto& child_wells = getChildWells2( child_name, timeStep);
-                        wells.insert( wells.end() , child_wells.begin() , child_wells.end());
-                    }
-                } else {
-                    for (const auto& well_name : group_ptr->wells( ))
-                        wells.push_back( this->getWell( well_name, timeStep ));
+        const auto& dynamic_state = this->groups.at(group_name);
+        const auto& group_ptr = dynamic_state.get(timeStep);
+        if (group_ptr) {
+            std::vector<Well> wells;
+
+            if (group_ptr->groups().size()) {
+                for (const auto& child_name : group_ptr->groups()) {
+                    const auto& child_wells = getChildWells2(child_name, timeStep);
+                    wells.insert(wells.end(), child_wells.begin(), child_wells.end());
                 }
+            } else {
+                for (const auto& well_name : group_ptr->wells()) {
+                    wells.push_back( this->getWell(well_name, timeStep));
+                }
+            }
 
-                return wells;
-            } else
-                return {};
+            return wells;
+        } else {
+            return {};
         }
     }
 
