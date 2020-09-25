@@ -1057,7 +1057,8 @@ static const std::unordered_map< std::string, ofun > funs = {
 
     { "WBHP", bhp },
     { "WTHP", thp },
-    { "WTPCHEA", temperature },
+    { "WTPCHEA", temperature},
+    { "WTICHEA", temperature},
     { "WVPRT", res_vol_production_target },
 
     { "WMCTL", well_control_mode },
