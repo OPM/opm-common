@@ -23,6 +23,7 @@
 #include <boost/version.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ArrayDimChecker.hpp>
 
+#include <opm/common/utility/OpmInputError.hpp>
 #include <opm/parser/eclipse/Python/Python.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
@@ -430,7 +431,7 @@ BOOST_AUTO_TEST_CASE(WellDims)
 
     BOOST_CHECK_THROW( Opm::checkConsistentArrayDimensions(cse.es  , cse.sched,
                                                            parseContext, cse.guard),
-                       std::invalid_argument);
+                       Opm::OpmInputError);
 
     setWellDimsContext(Opm::InputError::DELAYED_EXIT1, parseContext);
     Opm::checkConsistentArrayDimensions(cse.es  , cse.sched,
@@ -467,7 +468,7 @@ BOOST_AUTO_TEST_CASE(WellDims_ManyChildGroups)
     // There *should* be errors from dimension checking
     BOOST_CHECK_THROW( Opm::checkConsistentArrayDimensions(cse.es  , cse.sched,
                                                            parseContext, cse.guard),
-                       std::invalid_argument);
+                       Opm::OpmInputError);
 
     setWellDimsContext(Opm::InputError::DELAYED_EXIT1, parseContext);
     Opm::checkConsistentArrayDimensions(cse.es  , cse.sched,

@@ -21,6 +21,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <opm/common/utility/OpmInputError.hpp>
 #include <opm/io/eclipse/SummaryNode.hpp>
 #include <opm/parser/eclipse/Python/Python.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
@@ -300,7 +301,7 @@ BOOST_AUTO_TEST_CASE(region2region) {
                                 names.begin(), names.end() );
 
   parseContext.update(ParseContext::SUMMARY_UNHANDLED_KEYWORD, InputError::THROW_EXCEPTION);
-  BOOST_CHECK_THROW( createSummary(input, parseContext), std::invalid_argument);
+  BOOST_CHECK_THROW( createSummary(input, parseContext), OpmInputError);
 }
 
 BOOST_AUTO_TEST_CASE(completions) {
@@ -449,7 +450,7 @@ BOOST_AUTO_TEST_CASE(INVALID_WELL1) {
                        "NEW-WELL /\n"
         "/\n";
     parseContext.updateKey( ParseContext::SUMMARY_UNKNOWN_WELL , InputError::THROW_EXCEPTION );
-    BOOST_CHECK_THROW( createSummary( input , parseContext ) , std::invalid_argument);
+    BOOST_CHECK_THROW( createSummary( input , parseContext ) , OpmInputError);
 
     parseContext.updateKey( ParseContext::SUMMARY_UNKNOWN_WELL , InputError::IGNORE );
     BOOST_CHECK_NO_THROW( createSummary( input , parseContext ));
@@ -461,7 +462,7 @@ BOOST_AUTO_TEST_CASE(INVALID_WELL2) {
     const auto input = "WWCT\n"
         " NEW-WELL /\n";
     parseContext.updateKey( ParseContext::SUMMARY_UNKNOWN_WELL , InputError::THROW_EXCEPTION );
-    BOOST_CHECK_THROW( createSummary( input , parseContext ) , std::invalid_argument);
+    BOOST_CHECK_THROW( createSummary( input , parseContext ) , OpmInputError);
 
     parseContext.updateKey( ParseContext::SUMMARY_UNKNOWN_WELL , InputError::IGNORE );
     BOOST_CHECK_NO_THROW( createSummary( input , parseContext ));
@@ -472,7 +473,7 @@ BOOST_AUTO_TEST_CASE(UNDEFINED_UDQ_WELL) {
     const auto input = "WUWCT\n"
         "/\n";
     parseContext.updateKey( ParseContext::SUMMARY_UNDEFINED_UDQ, InputError::THROW_EXCEPTION );
-    BOOST_CHECK_THROW( createSummary( input , parseContext ) , std::invalid_argument);
+    BOOST_CHECK_THROW( createSummary( input , parseContext ) , OpmInputError);
 
     parseContext.updateKey( ParseContext::SUMMARY_UNDEFINED_UDQ, InputError::IGNORE );
     BOOST_CHECK_NO_THROW( createSummary( input , parseContext ));
@@ -486,7 +487,7 @@ BOOST_AUTO_TEST_CASE(INVALID_GROUP) {
     const auto input = "GWCT\n"
         " NEW-GR /\n";
     parseContext.updateKey( ParseContext::SUMMARY_UNKNOWN_GROUP , InputError::THROW_EXCEPTION );
-    BOOST_CHECK_THROW( createSummary( input , parseContext ) , std::invalid_argument);
+    BOOST_CHECK_THROW( createSummary( input , parseContext ) , OpmInputError);
 
     parseContext.updateKey( ParseContext::SUMMARY_UNKNOWN_GROUP , InputError::IGNORE );
     BOOST_CHECK_NO_THROW( createSummary( input , parseContext ));
@@ -619,7 +620,7 @@ WOPRL
 
     ParseContext parseContext;
     parseContext.update(ParseContext::SUMMARY_UNHANDLED_KEYWORD, InputError::THROW_EXCEPTION);
-    BOOST_CHECK_THROW(createSummary( input, parseContext ), std::invalid_argument);
+    BOOST_CHECK_THROW(createSummary( input, parseContext ), OpmInputError);
     parseContext.update(ParseContext::SUMMARY_UNHANDLED_KEYWORD, InputError::IGNORE);
     BOOST_CHECK_NO_THROW( createSummary(input, parseContext ));
 }

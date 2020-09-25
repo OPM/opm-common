@@ -405,7 +405,7 @@ BOOST_AUTO_TEST_CASE(RPTRST_mixed_mnemonics_int_list) {
     ErrorGuard errors;
     auto deck = Parser().parseString( data, parseContext, errors );
     parseContext.update(ParseContext::RPT_MIXED_STYLE, InputError::THROW_EXCEPTION);
-    BOOST_CHECK_THROW( RestartConfig( TimeMap(deck), deck, parseContext, errors ), std::invalid_argument);
+    BOOST_CHECK_THROW( RestartConfig( TimeMap(deck), deck, parseContext, errors ), OpmInputError);
 }
 
 BOOST_AUTO_TEST_CASE(RPTRST) {
@@ -613,7 +613,7 @@ BOOST_AUTO_TEST_CASE(RPTRST_FORMAT_ERROR) {
     auto deck1 = parser.parseString( deckData1, ctx, errors );
     ctx.update(ParseContext::RPT_UNKNOWN_MNEMONIC, InputError::IGNORE);
     ctx.update(ParseContext::RPT_MIXED_STYLE, InputError::THROW_EXCEPTION);
-    BOOST_CHECK_THROW(RestartConfig(TimeMap(deck1), deck1, ctx, errors), std::invalid_argument);
+    BOOST_CHECK_THROW(RestartConfig(TimeMap(deck1), deck1, ctx, errors), OpmInputError);
 
     ctx.update(ParseContext::RPT_MIXED_STYLE, InputError::IGNORE);
     RestartConfig rstConfig1( TimeMap(deck1), deck1, ctx, errors );
@@ -644,7 +644,7 @@ BOOST_AUTO_TEST_CASE(RPTRST_FORMAT_ERROR) {
     auto deck2 = parser.parseString( deckData2, ctx, errors );
 
     ctx.update(ParseContext::RPT_UNKNOWN_MNEMONIC, InputError::THROW_EXCEPTION);
-    BOOST_CHECK_THROW(RestartConfig(TimeMap(deck2), deck2, ctx, errors), std::invalid_argument);
+    BOOST_CHECK_THROW(RestartConfig(TimeMap(deck2), deck2, ctx, errors), OpmInputError);
     ctx.update(ParseContext::RPT_UNKNOWN_MNEMONIC, InputError::IGNORE);
 
     RestartConfig rstConfig2( TimeMap(deck2), deck2, ctx, errors );

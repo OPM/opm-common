@@ -27,6 +27,7 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <opm/common/utility/TimeService.hpp>
+#include <opm/common/utility/OpmInputError.hpp>
 
 
 #include <opm/parser/eclipse/Python/Python.hpp>
@@ -1058,7 +1059,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithWeltArgException) {
             "/\n";
 
 
-    BOOST_CHECK_THROW(make_schedule(input), std::invalid_argument);
+    BOOST_CHECK_THROW(make_schedule(input), Opm::OpmInputError);
 }
 
 BOOST_AUTO_TEST_CASE(createDeckWithWeltArgException2) {
@@ -1068,7 +1069,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithWeltArgException2) {
             " OP_1     LRAT        /\n"
             " OP_1     RESV        1801.05 /\n"
             "/\n";
-    BOOST_CHECK_THROW(make_schedule(input), std::invalid_argument);
+    BOOST_CHECK_THROW(make_schedule(input), Opm::OpmInputError);
 }
 
 BOOST_AUTO_TEST_CASE(createDeckWithWPIMULT) {
@@ -1181,7 +1182,7 @@ BOOST_AUTO_TEST_CASE(WELSPECS_WGNAME_SPACE) {
         ErrorGuard errors;
 
         parseContext.update(ParseContext::PARSE_WGNAME_SPACE, InputError::THROW_EXCEPTION);
-        BOOST_CHECK_THROW( Opm::Schedule(deck,  grid, fp, runspec, parseContext, errors, python), std::invalid_argument);
+        BOOST_CHECK_THROW( Opm::Schedule(deck,  grid, fp, runspec, parseContext, errors, python), Opm::OpmInputError);
 
         parseContext.update(ParseContext::PARSE_WGNAME_SPACE, InputError::IGNORE);
         BOOST_CHECK_NO_THROW( Opm::Schedule(deck,  grid, fp, runspec, parseContext, errors, python));
@@ -1804,7 +1805,7 @@ BOOST_AUTO_TEST_CASE(unsupportedOptionWHISTCTL) {
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
     Runspec runspec (deck);
-    BOOST_CHECK_THROW(Schedule(deck, grid, fp, runspec, python), std::invalid_argument);
+    BOOST_CHECK_THROW(Schedule(deck, grid, fp, runspec, python), Opm::OpmInputError);
 }
 
 BOOST_AUTO_TEST_CASE(move_HEAD_I_location) {

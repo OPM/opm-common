@@ -17,6 +17,7 @@ Copyright 2018 Statoil ASA.
 #include <boost/test/unit_test.hpp>
 #include <limits>
 
+#include <opm/common/utility/OpmInputError.hpp>
 #include <opm/parser/eclipse/Utility/Typetools.hpp>
 #include <opm/parser/eclipse/Python/Python.hpp>
 #include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
@@ -155,12 +156,12 @@ BOOST_AUTO_TEST_CASE(TEST)
       This expression has a well set as target type, and involves group with
       wildcard that is not supported by flow.
     */
-    BOOST_CHECK_THROW( UDQDefine(udqp, "WUWI2", location, {"GOPR", "G*", "*", "2.0"}), std::logic_error);
+    BOOST_CHECK_THROW( UDQDefine(udqp, "WUWI2", location, {"GOPR", "G*", "*", "2.0"}), OpmInputError);
 
     /*
       UDQVarType == BLOCK is not yet supported.
     */
-    BOOST_CHECK_THROW( UDQDefine(udqp, "WUWI2", location, {"BPR", "1","1", "1", "*", "2.0"}), std::logic_error);
+    BOOST_CHECK_THROW( UDQDefine(udqp, "WUWI2", location, {"BPR", "1","1", "1", "*", "2.0"}), OpmInputError);
 }
 
 
@@ -1284,7 +1285,7 @@ BOOST_AUTO_TEST_CASE(UDQ_PARSE_ERROR) {
     }
 
     parseContext.update(ParseContext::UDQ_PARSE_ERROR, InputError::THROW_EXCEPTION);
-    BOOST_CHECK_THROW( UDQDefine(udqp, "WUBHP", location, tokens, parseContext, errors), std::invalid_argument);
+    BOOST_CHECK_THROW( UDQDefine(udqp, "WUBHP", location, tokens, parseContext, errors), OpmInputError);
 }
 
 BOOST_AUTO_TEST_CASE(UDQ_TYPE_ERROR) {
@@ -1318,7 +1319,7 @@ BOOST_AUTO_TEST_CASE(UDQ_TYPE_ERROR) {
     parseContext.update(ParseContext::UDQ_TYPE_ERROR, InputError::THROW_EXCEPTION);
 
     // This fails because the well expression (WBHP + 1) is assigned to the field variable FUBHP
-    BOOST_CHECK_THROW( UDQDefine(udqp, "FUBHP", location, tokens1, parseContext, errors), std::invalid_argument);
+    BOOST_CHECK_THROW( UDQDefine(udqp, "FUBHP", location, tokens1, parseContext, errors), OpmInputError);
 }
 
 

@@ -562,7 +562,7 @@ inline void keywordR2R( SummaryConfig::keyword_list& /* list */,
                         const DeckKeyword& keyword)
 {
     const auto& location = keyword.location();
-    std::string msg_fmt = "Region to region summary keyword {keyword} is ignored\n";
+    std::string msg_fmt = "Region to region summary keyword {keyword} is ignored\n"
                           "In {file} line {line}";
     parseContext.handleError(ParseContext::SUMMARY_UNHANDLED_KEYWORD, msg_fmt, location, errors);
 }
