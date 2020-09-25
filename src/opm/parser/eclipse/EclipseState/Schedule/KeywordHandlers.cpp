@@ -520,9 +520,9 @@ namespace {
 
             for (const auto& group_name : group_names) {
                 auto group_ptr = std::make_shared<Group>(this->getGroup(group_name, handlerContext.currentStep));
-                if (target_string == "NONE")
+                if (target_string == "NONE") {
                     group_ptr->set_gpmaint();
-                else {
+                } else {
                     GPMaint gpmaint(record);
                     group_ptr->set_gpmaint(std::move(gpmaint));
                 }
@@ -1585,8 +1585,9 @@ namespace {
                         new_well->updateSolventFraction(fraction);
                         this->updateWell(std::move(new_well), handlerContext.currentStep);
                     }
-                } else
+                } else {
                     throw std::invalid_argument("The WSOLVENT keyword can only be applied to gas injectors");
+                }
             }
         }
     }

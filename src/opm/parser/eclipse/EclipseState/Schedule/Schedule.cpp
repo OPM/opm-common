@@ -317,9 +317,9 @@ namespace {
                     if (action_keyword.name() == "ENDACTIO")
                         break;
 
-                    if (Action::ActionX::valid_keyword(action_keyword.name()))
+                    if (Action::ActionX::valid_keyword(action_keyword.name())) {
                         action.addKeyword(action_keyword);
-                    else {
+                    } else {
                         std::string msg = "The keyword " + action_keyword.name() + " is not supported in a ACTIONX block.";
                         parseContext.handleError( ParseContext::ACTIONX_ILLEGAL_KEYWORD, msg, errors);
                     }
@@ -637,8 +637,9 @@ namespace {
                 preferredPhase = Phase::OIL;
                 OpmLog::warning("LIQ_PREFERRED_PHASE",
                                 "LIQ preferred phase not supported for well " + wellName + ", using OIL instead");
-            } else
+            } else {
                 preferredPhase = get_phase(phaseStr);
+            }
         }
         const auto& refDepthItem = record.getItem("REF_DEPTH");
         double refDepth = refDepthItem.hasValue( 0 )
@@ -806,10 +807,12 @@ namespace {
                     if (prev) {
                         if (!well_ptr->cmp_structure( *prev ))
                             wells.push_back( well_ptr->name() );
-                    } else
+                    } else {
                         wells.push_back( well_ptr->name() );
-                } else
+                    }
+                } else {
                     wells.push_back( well_ptr->name() );
+                }
             }
         }
 
