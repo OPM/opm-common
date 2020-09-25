@@ -108,7 +108,7 @@ namespace {
 }
 
 
-    void Schedule::handleBRANPROP(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+    void Schedule::handleBRANPROP (const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         auto ext_network = std::make_shared<Network::ExtNetwork>(this->network(handlerContext.currentStep));
 
         for (const auto& record : handlerContext.keyword) {
@@ -134,7 +134,7 @@ namespace {
         this->updateNetwork(ext_network, handlerContext.currentStep);
     }
 
-    void Schedule::handleCOMPDAT(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+    void Schedule::handleCOMPDAT  (const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             auto wellnames = this->wellNames(wellNamePattern, handlerContext.currentStep);
@@ -155,7 +155,7 @@ namespace {
         m_events.addEvent(ScheduleEvents::COMPLETION_CHANGE, handlerContext.currentStep);
     }
 
-    void Schedule::handleCOMPLUMP(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+    void Schedule::handleCOMPLUMP (const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = this->wellNames(wellNamePattern, handlerContext.currentStep);
@@ -173,7 +173,7 @@ namespace {
       The COMPORD keyword is handled together with the WELSPECS keyword in the
       handleWELSPECS function.
     */
-    void Schedule::handleCOMPORD(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+    void Schedule::handleCOMPORD  (const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
         for (const auto& record : handlerContext.keyword) {
             const auto& methodItem = record.getItem<ParserKeywords::COMPORD::ORDER_TYPE>();
             if ((methodItem.get< std::string >(0) != "TRACK")  && (methodItem.get< std::string >(0) != "INPUT")) {
@@ -184,7 +184,7 @@ namespace {
         }
     }
 
-    void Schedule::handleCOMPSEGS(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+    void Schedule::handleCOMPSEGS (const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
         const auto& record1 = handlerContext.keyword.getRecord(0);
         const std::string& well_name = record1.getItem("WELL").getTrimmedString(0);
 
@@ -194,7 +194,7 @@ namespace {
             this->updateWell(std::move(well_ptr), handlerContext.currentStep);
     }
 
-    void Schedule::handleDRSDT(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+    void Schedule::handleDRSDT    (const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         std::size_t numPvtRegions = m_runspec.tabdims().getNumPVTTables();
         std::vector<double> max(numPvtRegions);
         std::vector<std::string> options(numPvtRegions);
@@ -207,7 +207,7 @@ namespace {
         }
     }
 
-    void Schedule::handleDRSDTR(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+    void Schedule::handleDRSDTR   (const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         std::size_t numPvtRegions = m_runspec.tabdims().getNumPVTTables();
         std::vector<double> max(numPvtRegions);
         std::vector<std::string> options(numPvtRegions);
@@ -222,7 +222,7 @@ namespace {
         this->m_oilvaporizationproperties.update( handlerContext.currentStep, ovp );
     }
 
-    void Schedule::handleDRVDT(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+    void Schedule::handleDRVDT    (const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         std::size_t numPvtRegions = m_runspec.tabdims().getNumPVTTables();
         std::vector<double> max(numPvtRegions);
         for (const auto& record : handlerContext.keyword) {
@@ -233,7 +233,7 @@ namespace {
         }
     }
 
-    void Schedule::handleDRVDTR(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+    void Schedule::handleDRVDTR   (const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         std::size_t numPvtRegions = m_runspec.tabdims().getNumPVTTables();
         std::size_t pvtRegionIdx = 0;
         std::vector<double> max(numPvtRegions);
@@ -246,7 +246,7 @@ namespace {
         this->m_oilvaporizationproperties.update( handlerContext.currentStep, ovp );
     }
 
-    void Schedule::handleGCONINJE(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+    void Schedule::handleGCONINJE (const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& groupNamePattern = record.getItem("GROUP").getTrimmedString(0);
             const auto group_names = this->groupNames(groupNamePattern);
@@ -307,7 +307,7 @@ namespace {
         }
     }
 
-    void Schedule::handleGCONPROD(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+    void Schedule::handleGCONPROD (const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& groupNamePattern = record.getItem("GROUP").getTrimmedString(0);
             const auto group_names = this->groupNames(groupNamePattern);
@@ -400,7 +400,7 @@ namespace {
         }
     }
 
-    void Schedule::handleGCONSALE(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+    void Schedule::handleGCONSALE (const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         const auto& unit_system = handlerContext.section.unitSystem();
         const auto& current = *this->gconsale.get(handlerContext.currentStep);
         std::shared_ptr<GConSale> new_gconsale(new GConSale(current));
@@ -424,7 +424,7 @@ namespace {
         this->gconsale.update(handlerContext.currentStep, new_gconsale);
     }
 
-    void Schedule::handleGCONSUMP(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+    void Schedule::handleGCONSUMP (const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         const auto& unit_system = handlerContext.section.unitSystem();
         const auto& current = *this->gconsump.get(handlerContext.currentStep);
         std::shared_ptr<GConSump> new_gconsump(new GConSump(current));
@@ -445,7 +445,7 @@ namespace {
         this->gconsump.update(handlerContext.currentStep, new_gconsump);
     }
 
-    void Schedule::handleGEFAC(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+    void Schedule::handleGEFAC    (const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& groupNamePattern = record.getItem("GROUP").getTrimmedString(0);
             const auto group_names = this->groupNames(groupNamePattern);
@@ -465,7 +465,7 @@ namespace {
         }
     }
 
-    void Schedule::handleGLIFTOPT(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard&errors) {
+    void Schedule::handleGLIFTOPT (const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard&errors) {
         auto glo = std::make_shared<GasLiftOpt>( this->glo(handlerContext.currentStep) );
 
         for (const auto& record : handlerContext.keyword) {
@@ -497,7 +497,7 @@ namespace {
         this->m_glo.update(handlerContext.currentStep, std::move(glo));
     }
 
-    void Schedule::handleGPMAINT(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+    void Schedule::handleGPMAINT  (const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& groupNamePattern = record.getItem("GROUP").getTrimmedString(0);
             const auto group_names = this->groupNames(groupNamePattern);
@@ -519,7 +519,7 @@ namespace {
         }
     }
 
-    void Schedule::handleGRUPNET(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+    void Schedule::handleGRUPNET  (const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         const auto& unit_system = handlerContext.section.unitSystem();
         for (const auto& record : handlerContext.keyword) {
             const auto& groupName = record.getItem("NAME").getTrimmedString(0);
@@ -536,7 +536,7 @@ namespace {
         }
     }
 
-    void Schedule::handleGRUPTREE(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+    void Schedule::handleGRUPTREE (const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
         const auto& unit_system = handlerContext.section.unitSystem();
         for (const auto& record : handlerContext.keyword) {
             const std::string& childName = trim_wgname(handlerContext.keyword, record.getItem("CHILD_GROUP").get<std::string>(0), parseContext, errors);
@@ -552,7 +552,7 @@ namespace {
         }
     }
 
-    void Schedule::handleGUIDERAT(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+    void Schedule::handleGUIDERAT (const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         const auto& record = handlerContext.keyword.getRecord(0);
 
         double min_calc_delay = record.getItem<ParserKeywords::GUIDERAT::MIN_CALC_TIME>().getSIDouble(0);
@@ -573,7 +573,7 @@ namespace {
             this->guide_rate_config.update( handlerContext.currentStep, new_config );
     }
 
-    void Schedule::handleLIFTOPT(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+    void Schedule::handleLIFTOPT  (const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         auto glo = std::make_shared<GasLiftOpt>(this->glo(handlerContext.currentStep));
 
         const auto& record = handlerContext.keyword.getRecord(0);
@@ -591,7 +591,7 @@ namespace {
         this->m_glo.update(handlerContext.currentStep, std::move(glo));
     }
 
-    void Schedule::handleLINCOM(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+    void Schedule::handleLINCOM   (const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         const auto& record = handlerContext.keyword.getRecord(0);
         auto alpha = record.getItem<ParserKeywords::LINCOM::ALPHA>().get<UDAValue>(0);
         auto beta  = record.getItem<ParserKeywords::LINCOM::BETA>().get<UDAValue>(0);
@@ -605,21 +605,21 @@ namespace {
         }
     }
 
-    void Schedule::handleMESSAGES(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+    void Schedule::handleMESSAGES (const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         return applyMESSAGES(handlerContext.keyword, handlerContext.currentStep);
     }
 
-    void Schedule::handleMULTFLT (const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+    void Schedule::handleMULTFLT  (const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         this->m_modifierDeck[handlerContext.currentStep].addKeyword(handlerContext.keyword);
         m_events.addEvent( ScheduleEvents::GEO_MODIFIER, handlerContext.currentStep);
     }
 
-    void Schedule::handleMXUNSUPP(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+    void Schedule::handleMXUNSUPP (const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
         std::string msg = "OPM does not support grid property modifier " + handlerContext.keyword.name() + " in the Schedule section. Error at report: " + std::to_string(handlerContext.currentStep);
         parseContext.handleError( ParseContext::UNSUPPORTED_SCHEDULE_GEO_MODIFIER , msg, errors );
     }
 
-    void Schedule::handleNODEPROP(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+    void Schedule::handleNODEPROP (const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         auto ext_network = std::make_shared<Network::ExtNetwork>(this->network(handlerContext.currentStep));
 
         for (const auto& record : handlerContext.keyword) {
@@ -659,7 +659,7 @@ namespace {
         this->updateNetwork(ext_network, handlerContext.currentStep);
     }
 
-    void Schedule::handleNUPCOL(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+    void Schedule::handleNUPCOL   (const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         int nupcol = handlerContext.keyword.getRecord(0).getItem("NUM_ITER").get<int>(0);
         if (handlerContext.keyword.getRecord(0).getItem("NUM_ITER").defaultApplied(0)) {
             std::string msg = "OPM Flow uses 12 as default NUPCOL value";
@@ -669,11 +669,11 @@ namespace {
         this->m_nupcol.update(handlerContext.currentStep, nupcol);
     }
 
-    void Schedule::handleRPTSCHED(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+    void Schedule::handleRPTSCHED (const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         this->rpt_config.update(handlerContext.currentStep, std::make_shared<RPTConfig>(handlerContext.keyword));
     }
 
-    void Schedule::handleTUNING(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+    void Schedule::handleTUNING   (const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         const auto numrecords = handlerContext.keyword.size();
         Tuning tuning(m_tuning.get(handlerContext.currentStep));
 
@@ -747,7 +747,7 @@ namespace {
         m_events.addEvent(ScheduleEvents::TUNING_CHANGE, handlerContext.currentStep);
     }
 
-    void Schedule::handleUDQ(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+    void Schedule::handleUDQ      (const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         const auto& current = *this->udq_config.get(handlerContext.currentStep);
         std::shared_ptr<UDQConfig> new_udq = std::make_shared<UDQConfig>(current);
         for (const auto& record : handlerContext.keyword)
@@ -756,7 +756,7 @@ namespace {
         this->udq_config.update(handlerContext.currentStep, new_udq);
     }
 
-    void Schedule::handleVAPPARS(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&){
+    void Schedule::handleVAPPARS  (const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&){
         for (const auto& record : handlerContext.keyword) {
             double vap1 = record.getItem("OIL_VAP_PROPENSITY").get< double >(0);
             double vap2 = record.getItem("OIL_DENSITY_PROPENSITY").get< double >(0);
@@ -766,7 +766,7 @@ namespace {
         }
     }
 
-    void Schedule::handleVFPINJ(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+    void Schedule::handleVFPINJ   (const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         std::shared_ptr<VFPInjTable> table = std::make_shared<VFPInjTable>(handlerContext.keyword, handlerContext.section.unitSystem());
         int table_id = table->getTableNum();
 
@@ -780,7 +780,7 @@ namespace {
         this->m_events.addEvent( ScheduleEvents::VFPINJ_UPDATE , handlerContext.currentStep);
     }
 
-    void Schedule::handleVFPPROD(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+    void Schedule::handleVFPPROD  (const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         std::shared_ptr<VFPProdTable> table = std::make_shared<VFPProdTable>(handlerContext.keyword, handlerContext.section.unitSystem());
         int table_id = table->getTableNum();
 
@@ -794,7 +794,7 @@ namespace {
         this->m_events.addEvent( ScheduleEvents::VFPPROD_UPDATE , handlerContext.currentStep);
     }
 
-    void Schedule::handleWCONHIST(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+    void Schedule::handleWCONHIST (const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern =
                 record.getItem("WELL").getTrimmedString(0);
@@ -857,7 +857,7 @@ namespace {
         }
     }
 
-    void Schedule::handleWCONPROD(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+    void Schedule::handleWCONPROD (const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern =
                 record.getItem("WELL").getTrimmedString(0);
@@ -907,7 +907,7 @@ namespace {
         }
     }
 
-    void Schedule::handleWCONINJE(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+    void Schedule::handleWCONINJE (const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
 
@@ -966,7 +966,7 @@ namespace {
         }
     }
 
-    void Schedule::handleWCONINJH(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+    void Schedule::handleWCONINJH (const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             Well::Status status = Well::StatusFromString( record.getItem("STATUS").getTrimmedString(0));
@@ -1007,7 +1007,7 @@ namespace {
         }
     }
 
-    void Schedule::handleWECON(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+    void Schedule::handleWECON    (const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = wellNames( wellNamePattern , handlerContext.currentStep);
@@ -1025,7 +1025,7 @@ namespace {
         }
     }
 
-    void Schedule::handleWEFAC(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+    void Schedule::handleWEFAC    (const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELLNAME").getTrimmedString(0);
             const double& efficiencyFactor = record.getItem("EFFICIENCY_FACTOR").get< double >(0);
@@ -1043,11 +1043,11 @@ namespace {
         }
     }
 
-    void Schedule::handleWELOPEN (const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+    void Schedule::handleWELOPEN  (const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
         return applyWELOPEN(handlerContext.keyword, handlerContext.currentStep, parseContext, errors);
     }
 
-    void Schedule::handleWELSEGS(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+    void Schedule::handleWELSEGS  (const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         const auto& record1 = handlerContext.keyword.getRecord(0);
         const auto& wname = record1.getItem("WELL").getTrimmedString(0);
 
@@ -1057,7 +1057,7 @@ namespace {
             this->updateWell(std::move(well_ptr), handlerContext.currentStep);
     }
 
-    void Schedule::handleWELSPECS(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+    void Schedule::handleWELSPECS (const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
         const auto& section = handlerContext.section;
         const auto& unit_system = section.unitSystem();
         const auto COMPORD_in_timestep = [&]() -> const DeckKeyword* {
@@ -1156,7 +1156,7 @@ namespace {
       WCONPROD / WCONHIST before WELTARG is applied, if not the units for the
       rates will be wrong.
     */
-    void Schedule::handleWELTARG(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+    void Schedule::handleWELTARG  (const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
         const double SiFactorP = handlerContext.section.unitSystem().parse("Pressure").getSIScaling();
         for (const auto& record : handlerContext.keyword) {
 
@@ -1195,7 +1195,7 @@ namespace {
         }
     }
 
-    void Schedule::handleWFOAM(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+    void Schedule::handleWFOAM    (const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = wellNames(wellNamePattern, handlerContext.currentStep );
@@ -1214,7 +1214,7 @@ namespace {
         }
     }
 
-    void Schedule::handleWGRUPCON(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+    void Schedule::handleWGRUPCON (const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         for (const auto& record : handlerContext.keyword) {
             const auto well_names = this->wellNames(record.getItem("WELL").getTrimmedString(0), handlerContext.currentStep);
             for (const auto& well_name : well_names) {
@@ -1240,7 +1240,7 @@ namespace {
         }
     }
 
-    void Schedule::handleWHISTCTL(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+    void Schedule::handleWHISTCTL (const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
         const auto& record = handlerContext.keyword.getRecord(0);
         const std::string& cmodeString = record.getItem("CMODE").getTrimmedString(0);
         const auto controlMode = Well::ProducerCModeFromString( cmodeString );
@@ -1299,7 +1299,7 @@ namespace {
         }
     }
 
-    void Schedule::handleWINJTEMP(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+    void Schedule::handleWINJTEMP (const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
         // we do not support the "enthalpy" field yet. how to do this is a more difficult
         // question.
         for (const auto& record : handlerContext.keyword) {
@@ -1331,7 +1331,7 @@ namespace {
         }
     }
 
-    void Schedule::handleWLIFTOPT(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+    void Schedule::handleWLIFTOPT (const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
         auto glo = std::make_shared<GasLiftOpt>(this->glo(handlerContext.currentStep));
 
         for (const auto& record : handlerContext.keyword) {
@@ -1365,7 +1365,7 @@ namespace {
         this->m_glo.update(handlerContext.currentStep, std::move(glo));
     }
 
-    void Schedule::handleWLIST(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+    void Schedule::handleWLIST    (const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         const std::string legal_actions = "NEW:ADD:DEL:MOV";
         const auto& current = *this->wlist_manager.get(handlerContext.currentStep);
         std::shared_ptr<WListManager> new_wlm(new WListManager(current));
@@ -1413,7 +1413,7 @@ namespace {
         }
     }
 
-    void Schedule::handleWPIMULT(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+    void Schedule::handleWPIMULT  (const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto& well_names = this->wellNames(wellNamePattern, handlerContext.currentStep);
@@ -1426,7 +1426,7 @@ namespace {
         }
     }
 
-    void Schedule::handleWPMITAB(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+    void Schedule::handleWPMITAB  (const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = wellNames( wellNamePattern, handlerContext.currentStep );
@@ -1445,7 +1445,7 @@ namespace {
         }
     }
 
-    void Schedule::handleWPOLYMER(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+    void Schedule::handleWPOLYMER (const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = wellNames( wellNamePattern, handlerContext.currentStep );
@@ -1464,7 +1464,7 @@ namespace {
         }
     }
 
-    void Schedule::handleWSALT(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+    void Schedule::handleWSALT    (const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = wellNames(wellNamePattern, handlerContext.currentStep );
@@ -1483,7 +1483,7 @@ namespace {
         }
     }
 
-    void Schedule::handleWSEGITER(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+    void Schedule::handleWSEGITER (const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         Tuning tuning(m_tuning.get(handlerContext.currentStep));
 
         const auto& record = handlerContext.keyword.getRecord(0);
@@ -1497,7 +1497,7 @@ namespace {
         m_events.addEvent(ScheduleEvents::TUNING_CHANGE, handlerContext.currentStep);
     }
 
-    void Schedule::handleWSEGSICD(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+    void Schedule::handleWSEGSICD (const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
        std::map<std::string, std::vector<std::pair<int, SICD> > > spiral_icds = SICD::fromWSEGSICD(handlerContext.keyword);
         for (auto& map_elem : spiral_icds) {
             const std::string& well_name_pattern = map_elem.first;
@@ -1521,7 +1521,7 @@ namespace {
         }
     }
 
-    void Schedule::handleWSEGVALV(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+    void Schedule::handleWSEGVALV (const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         const std::map<std::string, std::vector<std::pair<int, Valve> > > valves = Valve::fromWSEGVALV(handlerContext.keyword);
 
         for (const auto& map_elem : valves) {
@@ -1538,7 +1538,7 @@ namespace {
         }
     }
 
-    void Schedule::handleWSKPTAB(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+    void Schedule::handleWSKPTAB  (const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = wellNames(wellNamePattern, handlerContext.currentStep);
@@ -1557,7 +1557,7 @@ namespace {
         }
     }
 
-    void Schedule::handleWSOLVENT(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+    void Schedule::handleWSOLVENT (const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
 
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
@@ -1582,7 +1582,7 @@ namespace {
         }
     }
 
-    void Schedule::handleWTEMP(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+    void Schedule::handleWTEMP    (const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = wellNames( wellNamePattern, handlerContext.currentStep );
@@ -1612,7 +1612,7 @@ namespace {
         }
     }
 
-    void Schedule::handleWTEST(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+    void Schedule::handleWTEST    (const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
         const auto& current = *this->wtest_config.get(handlerContext.currentStep);
         std::shared_ptr<WellTestConfig> new_config(new WellTestConfig(current));
         for (const auto& record : handlerContext.keyword) {
@@ -1636,7 +1636,7 @@ namespace {
         this->wtest_config.update(handlerContext.currentStep, new_config);
     }
 
-    void Schedule::handleWTRACER(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+    void Schedule::handleWTRACER  (const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
 
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
