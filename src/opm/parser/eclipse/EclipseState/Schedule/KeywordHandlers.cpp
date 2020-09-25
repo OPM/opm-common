@@ -108,31 +108,31 @@ namespace {
 }
 
 
-void Schedule::handleBRANPROP(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
-    auto ext_network = std::make_shared<Network::ExtNetwork>(this->network(handlerContext.currentStep));
+    void Schedule::handleBRANPROP(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+        auto ext_network = std::make_shared<Network::ExtNetwork>(this->network(handlerContext.currentStep));
 
-    for (const auto& record : handlerContext.keyword) {
-        const auto& downtree_node = record.getItem<ParserKeywords::BRANPROP::DOWNTREE_NODE>().get<std::string>(0);
-        const auto& uptree_node = record.getItem<ParserKeywords::BRANPROP::UPTREE_NODE>().get<std::string>(0);
+        for (const auto& record : handlerContext.keyword) {
+            const auto& downtree_node = record.getItem<ParserKeywords::BRANPROP::DOWNTREE_NODE>().get<std::string>(0);
+            const auto& uptree_node = record.getItem<ParserKeywords::BRANPROP::UPTREE_NODE>().get<std::string>(0);
 
-        const int vfp_table = record.getItem<ParserKeywords::BRANPROP::VFP_TABLE>().get<int>(0);
+            const int vfp_table = record.getItem<ParserKeywords::BRANPROP::VFP_TABLE>().get<int>(0);
 
-        if (vfp_table == 0) {
-            ext_network->drop_branch(uptree_node, downtree_node);
-        } else {
-            const auto alq_eq = Network::Branch::AlqEqfromString(record.getItem<ParserKeywords::BRANPROP::ALQ_SURFACE_DENSITY>().get<std::string>(0));
-
-            if (alq_eq == Network::Branch::AlqEQ::ALQ_INPUT) {
-                double alq_value = record.getItem<ParserKeywords::BRANPROP::ALQ>().get<double>(0);
-                ext_network->add_branch(Network::Branch(downtree_node, uptree_node, vfp_table, alq_value));
+            if (vfp_table == 0) {
+                ext_network->drop_branch(uptree_node, downtree_node);
             } else {
-                ext_network->add_branch(Network::Branch(downtree_node, uptree_node, vfp_table, alq_eq));
+                const auto alq_eq = Network::Branch::AlqEqfromString(record.getItem<ParserKeywords::BRANPROP::ALQ_SURFACE_DENSITY>().get<std::string>(0));
+
+                if (alq_eq == Network::Branch::AlqEQ::ALQ_INPUT) {
+                    double alq_value = record.getItem<ParserKeywords::BRANPROP::ALQ>().get<double>(0);
+                    ext_network->add_branch(Network::Branch(downtree_node, uptree_node, vfp_table, alq_value));
+                } else {
+                    ext_network->add_branch(Network::Branch(downtree_node, uptree_node, vfp_table, alq_eq));
+                }
             }
         }
-    }
 
-    this->updateNetwork(ext_network, handlerContext.currentStep);
-}
+        this->updateNetwork(ext_network, handlerContext.currentStep);
+    }
 
     void Schedule::handleCOMPDAT(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
         for (const auto& record : handlerContext.keyword) {
@@ -466,37 +466,37 @@ void Schedule::handleBRANPROP(const HandlerContext& handlerContext, const ParseC
         }
     }
 
-void Schedule::handleGLIFTOPT(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard&errors) {
-    auto glo = std::make_shared<GasLiftOpt>( this->glo(handlerContext.currentStep) );
+    void Schedule::handleGLIFTOPT(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard&errors) {
+        auto glo = std::make_shared<GasLiftOpt>( this->glo(handlerContext.currentStep) );
 
-    for (const auto& record : handlerContext.keyword) {
-        const std::string& groupNamePattern = record.getItem<ParserKeywords::GLIFTOPT::GROUP_NAME>().getTrimmedString(0);
-        const auto group_names = this->groupNames(groupNamePattern);
+        for (const auto& record : handlerContext.keyword) {
+            const std::string& groupNamePattern = record.getItem<ParserKeywords::GLIFTOPT::GROUP_NAME>().getTrimmedString(0);
+            const auto group_names = this->groupNames(groupNamePattern);
 
-        if (group_names.empty())
-            invalidNamePattern(groupNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
+            if (group_names.empty())
+                invalidNamePattern(groupNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
 
-        const auto& max_gas_item = record.getItem<ParserKeywords::GLIFTOPT::MAX_LIFT_GAS_SUPPLY>();
-        const double max_lift_gas_value = max_gas_item.hasValue(0)
-            ? max_gas_item.getSIDouble(0)
-            : -1;
+            const auto& max_gas_item = record.getItem<ParserKeywords::GLIFTOPT::MAX_LIFT_GAS_SUPPLY>();
+            const double max_lift_gas_value = max_gas_item.hasValue(0)
+                ? max_gas_item.getSIDouble(0)
+                : -1;
 
-        const auto& max_total_item = record.getItem<ParserKeywords::GLIFTOPT::MAX_TOTAL_GAS_RATE>();
-        const double max_total_gas_value = max_total_item.hasValue(0)
-            ? max_total_item.getSIDouble(0)
-            : -1;
+            const auto& max_total_item = record.getItem<ParserKeywords::GLIFTOPT::MAX_TOTAL_GAS_RATE>();
+            const double max_total_gas_value = max_total_item.hasValue(0)
+                ? max_total_item.getSIDouble(0)
+                : -1;
 
-        for (const auto& gname : group_names) {
-            auto group = GasLiftOpt::Group(gname);
-            group.max_lift_gas(max_lift_gas_value);
-            group.max_total_gas(max_total_gas_value);
+            for (const auto& gname : group_names) {
+                auto group = GasLiftOpt::Group(gname);
+                group.max_lift_gas(max_lift_gas_value);
+                group.max_total_gas(max_total_gas_value);
 
-            glo->add_group(group);
+                glo->add_group(group);
+            }
         }
-    }
 
-    this->m_glo.update(handlerContext.currentStep, std::move(glo));
-}
+        this->m_glo.update(handlerContext.currentStep, std::move(glo));
+    }
 
     void Schedule::handleGPMAINT(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
         for( const auto& record : handlerContext.keyword ) {
@@ -574,23 +574,23 @@ void Schedule::handleGLIFTOPT(const HandlerContext& handlerContext, const ParseC
             this->guide_rate_config.update( handlerContext.currentStep, new_config );
     }
 
-void Schedule::handleLIFTOPT(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
-    auto glo = std::make_shared<GasLiftOpt>(this->glo(handlerContext.currentStep));
+    void Schedule::handleLIFTOPT(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+        auto glo = std::make_shared<GasLiftOpt>(this->glo(handlerContext.currentStep));
 
-    const auto& record = handlerContext.keyword.getRecord(0);
+        const auto& record = handlerContext.keyword.getRecord(0);
 
-    const double gaslift_increment = record.getItem<ParserKeywords::LIFTOPT::INCREMENT_SIZE>().getSIDouble(0);
-    const double min_eco_gradient = record.getItem<ParserKeywords::LIFTOPT::MIN_ECONOMIC_GRADIENT>().getSIDouble(0);
-    const double min_wait = record.getItem<ParserKeywords::LIFTOPT::MIN_INTERVAL_BETWEEN_GAS_LIFT_OPTIMIZATIONS>().getSIDouble(0);
-    const bool all_newton = DeckItem::to_bool( record.getItem<ParserKeywords::LIFTOPT::OPTIMISE_GAS_LIFT>().get<std::string>(0) );
+        const double gaslift_increment = record.getItem<ParserKeywords::LIFTOPT::INCREMENT_SIZE>().getSIDouble(0);
+        const double min_eco_gradient = record.getItem<ParserKeywords::LIFTOPT::MIN_ECONOMIC_GRADIENT>().getSIDouble(0);
+        const double min_wait = record.getItem<ParserKeywords::LIFTOPT::MIN_INTERVAL_BETWEEN_GAS_LIFT_OPTIMIZATIONS>().getSIDouble(0);
+        const bool all_newton = DeckItem::to_bool( record.getItem<ParserKeywords::LIFTOPT::OPTIMISE_GAS_LIFT>().get<std::string>(0) );
 
-    glo->gaslift_increment(gaslift_increment);
-    glo->min_eco_gradient(min_eco_gradient);
-    glo->min_wait(min_wait);
-    glo->all_newton(all_newton);
+        glo->gaslift_increment(gaslift_increment);
+        glo->min_eco_gradient(min_eco_gradient);
+        glo->min_wait(min_wait);
+        glo->all_newton(all_newton);
 
-    this->m_glo.update(handlerContext.currentStep, std::move(glo));
-}
+        this->m_glo.update(handlerContext.currentStep, std::move(glo));
+    }
 
     void Schedule::handleLINCOM(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         const auto& record = handlerContext.keyword.getRecord(0);
@@ -620,45 +620,45 @@ void Schedule::handleLIFTOPT(const HandlerContext& handlerContext, const ParseCo
         parseContext.handleError( ParseContext::UNSUPPORTED_SCHEDULE_GEO_MODIFIER , msg, errors );
     }
 
-void Schedule::handleNODEPROP(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
-    auto ext_network = std::make_shared<Network::ExtNetwork>(this->network(handlerContext.currentStep));
+    void Schedule::handleNODEPROP(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+        auto ext_network = std::make_shared<Network::ExtNetwork>(this->network(handlerContext.currentStep));
 
-    for (const auto& record : handlerContext.keyword) {
-        const auto& name = record.getItem<ParserKeywords::NODEPROP::NAME>().get<std::string>(0);
-        const auto& pressure_item = record.getItem<ParserKeywords::NODEPROP::PRESSURE>();
+        for (const auto& record : handlerContext.keyword) {
+            const auto& name = record.getItem<ParserKeywords::NODEPROP::NAME>().get<std::string>(0);
+            const auto& pressure_item = record.getItem<ParserKeywords::NODEPROP::PRESSURE>();
 
-        const bool as_choke = DeckItem::to_bool(record.getItem<ParserKeywords::NODEPROP::AS_CHOKE>().get<std::string>(0));
-        const bool add_gas_lift_gas = DeckItem::to_bool(record.getItem<ParserKeywords::NODEPROP::ADD_GAS_LIFT_GAS>().get<std::string>(0));
+            const bool as_choke = DeckItem::to_bool(record.getItem<ParserKeywords::NODEPROP::AS_CHOKE>().get<std::string>(0));
+            const bool add_gas_lift_gas = DeckItem::to_bool(record.getItem<ParserKeywords::NODEPROP::ADD_GAS_LIFT_GAS>().get<std::string>(0));
 
-        Network::Node node { name };
+            Network::Node node { name };
 
-        if (pressure_item.hasValue(0) && (pressure_item.get<double>(0) > 0))
-            node.terminal_pressure(pressure_item.getSIDouble(0));
+            if (pressure_item.hasValue(0) && (pressure_item.get<double>(0) > 0))
+                node.terminal_pressure(pressure_item.getSIDouble(0));
 
-        if (as_choke) {
-            std::string target_group = name;
-            const auto& target_item = record.getItem<ParserKeywords::NODEPROP::CHOKE_GROUP>();
+            if (as_choke) {
+                std::string target_group = name;
+                const auto& target_item = record.getItem<ParserKeywords::NODEPROP::CHOKE_GROUP>();
 
-            if (target_item.hasValue(0))
-                target_group = target_item.get<std::string>(0);
+                if (target_item.hasValue(0))
+                    target_group = target_item.get<std::string>(0);
 
-            if (target_group != name) {
-                if (this->hasGroup(name, handlerContext.currentStep)) {
-                    const auto& group = this->getGroup(name, handlerContext.currentStep);
-                    if (group.numWells() > 0)
-                        throw std::invalid_argument("A manifold group must respond to its own target");
+                if (target_group != name) {
+                    if (this->hasGroup(name, handlerContext.currentStep)) {
+                        const auto& group = this->getGroup(name, handlerContext.currentStep);
+                        if (group.numWells() > 0)
+                            throw std::invalid_argument("A manifold group must respond to its own target");
+                    }
                 }
+
+                node.as_choke(target_group);
             }
 
-            node.as_choke(target_group);
+            node.add_gas_lift_gas(add_gas_lift_gas);
+            ext_network->add_node(node);
         }
 
-        node.add_gas_lift_gas(add_gas_lift_gas);
-        ext_network->add_node(node);
+        this->updateNetwork(ext_network, handlerContext.currentStep);
     }
-
-    this->updateNetwork(ext_network, handlerContext.currentStep);
-}
 
     void Schedule::handleNUPCOL(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         int nupcol = handlerContext.keyword.getRecord(0).getItem("NUM_ITER").get<int>(0);
@@ -1346,39 +1346,39 @@ void Schedule::handleNODEPROP(const HandlerContext& handlerContext, const ParseC
         }
     }
 
-void Schedule::handleWLIFTOPT(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
-    auto glo = std::make_shared<GasLiftOpt>(this->glo(handlerContext.currentStep));
+    void Schedule::handleWLIFTOPT(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+        auto glo = std::make_shared<GasLiftOpt>(this->glo(handlerContext.currentStep));
 
-    for (const auto& record : handlerContext.keyword) {
-        const std::string& wellNamePattern = record.getItem<ParserKeywords::WLIFTOPT::WELL>().getTrimmedString(0);
-        const bool use_glo = DeckItem::to_bool( record.getItem<ParserKeywords::WLIFTOPT::USE_OPTIMIZER>().get<std::string>(0));
-        const bool alloc_extra_gas = DeckItem::to_bool( record.getItem<ParserKeywords::WLIFTOPT::ALLOCATE_EXTRA_LIFT_GAS>().get<std::string>(0));
-        const double weight_factor = record.getItem<ParserKeywords::WLIFTOPT::WEIGHT_FACTOR>().get<double>(0);
-        const double inc_weight_factor = record.getItem<ParserKeywords::WLIFTOPT::DELTA_GAS_RATE_WEIGHT_FACTOR>().get<double>(0);
-        const double min_rate = record.getItem<ParserKeywords::WLIFTOPT::MIN_LIFT_GAS_RATE>().getSIDouble(0);
-        const auto& max_rate_item = record.getItem<ParserKeywords::WLIFTOPT::MAX_LIFT_GAS_RATE>();
+        for (const auto& record : handlerContext.keyword) {
+            const std::string& wellNamePattern = record.getItem<ParserKeywords::WLIFTOPT::WELL>().getTrimmedString(0);
+            const bool use_glo = DeckItem::to_bool( record.getItem<ParserKeywords::WLIFTOPT::USE_OPTIMIZER>().get<std::string>(0));
+            const bool alloc_extra_gas = DeckItem::to_bool( record.getItem<ParserKeywords::WLIFTOPT::ALLOCATE_EXTRA_LIFT_GAS>().get<std::string>(0));
+            const double weight_factor = record.getItem<ParserKeywords::WLIFTOPT::WEIGHT_FACTOR>().get<double>(0);
+            const double inc_weight_factor = record.getItem<ParserKeywords::WLIFTOPT::DELTA_GAS_RATE_WEIGHT_FACTOR>().get<double>(0);
+            const double min_rate = record.getItem<ParserKeywords::WLIFTOPT::MIN_LIFT_GAS_RATE>().getSIDouble(0);
+            const auto& max_rate_item = record.getItem<ParserKeywords::WLIFTOPT::MAX_LIFT_GAS_RATE>();
 
-        const auto well_names = this->wellNames(wellNamePattern);
-        if (well_names.empty())
-            invalidNamePattern(wellNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
+            const auto well_names = this->wellNames(wellNamePattern);
+            if (well_names.empty())
+                invalidNamePattern(wellNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
 
-        for (const auto& wname : well_names) {
-            auto well = GasLiftOpt::Well(wname, use_glo);
+            for (const auto& wname : well_names) {
+                auto well = GasLiftOpt::Well(wname, use_glo);
 
-            if (max_rate_item.hasValue(0))
-                well.max_rate( max_rate_item.getSIDouble(0) );
+                if (max_rate_item.hasValue(0))
+                    well.max_rate( max_rate_item.getSIDouble(0) );
 
-            well.weight_factor(weight_factor);
-            well.inc_weight_factor(inc_weight_factor);
-            well.min_rate(min_rate);
-            well.alloc_extra_gas(alloc_extra_gas);
+                well.weight_factor(weight_factor);
+                well.inc_weight_factor(inc_weight_factor);
+                well.min_rate(min_rate);
+                well.alloc_extra_gas(alloc_extra_gas);
 
-            glo->add_well(well);
+                glo->add_well(well);
+            }
         }
-    }
 
-    this->m_glo.update(handlerContext.currentStep, std::move(glo));
-}
+        this->m_glo.update(handlerContext.currentStep, std::move(glo));
+    }
 
     void Schedule::handleWLIST(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         const std::string legal_actions = "NEW:ADD:DEL:MOV";

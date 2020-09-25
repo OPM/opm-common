@@ -168,7 +168,7 @@ namespace {
     {}
 
 
-Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext& parse_context, ErrorGuard& errors, std::shared_ptr<const Python> python, const RestartIO::RstState * rst) :
+    Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext& parse_context, ErrorGuard& errors, std::shared_ptr<const Python> python, const RestartIO::RstState * rst) :
         Schedule(deck,
                  es.getInputGrid(),
                  es.fieldProps(),
@@ -178,7 +178,6 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
                  python,
                  rst)
     {}
-
 
 
     template <typename T>
@@ -618,7 +617,6 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
         return this->groupTree(root_node, report_step, 0, {});
     }
 
-
     GTNode Schedule::groupTree(std::size_t report_step) const {
         return this->groupTree("FIELD", report_step);
     }
@@ -683,7 +681,6 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
                       unit_system);
     }
 
-
     void Schedule::addWell(Well well, size_t report_step) {
         const std::string wname = well.name();
 
@@ -696,7 +693,6 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
         auto& dynamic_well_state = this->wells_static.at(wname);
         dynamic_well_state.update(report_step, std::make_shared<Well>(std::move(well)));
     }
-
 
     void Schedule::addWell(const std::string& wellName,
                            const std::string& group,
@@ -770,7 +766,6 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
         }
     }
 
-
     std::vector< Well > Schedule::getChildWells2(const std::string& group_name, size_t timeStep) const {
         if (!hasGroup(group_name))
             throw std::invalid_argument("No such group: '" + group_name + "'");
@@ -839,7 +834,6 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
     std::vector<Well> Schedule::getWellsatEnd() const {
         return this->getWells(this->m_timeMap.size() - 1);
     }
-
 
     const Well& Schedule::getWellatEnd(const std::string& well_name) const {
         return this->getWell(well_name, this->m_timeMap.size() - 1);
@@ -1121,8 +1115,7 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
         group_ptr->addWell(well_name);
         this->updateGroup(group_ptr, timeStep);
         this->m_events.addEvent( ScheduleEvents::GROUP_CHANGE , timeStep);
-   }
-
+    }
 
 
     const Tuning& Schedule::getTuning(size_t timeStep) const {
@@ -1354,7 +1347,6 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
         return this->restart_config;
     }
 
-
     const RestartConfig& Schedule::restart() const {
         return this->restart_config;
     }
@@ -1363,7 +1355,7 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
         return this->m_nupcol.get(reportStep);
     }
 
-     bool Schedule::operator==(const Schedule& data) const {
+    bool Schedule::operator==(const Schedule& data) const {
         auto&& comparePtr = [](const auto& t1, const auto& t2) {
                                if ((t1 && !t2) || (!t1 && t2))
                                    return false;
@@ -1425,82 +1417,80 @@ Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext&
      }
 
 namespace {
-// Duplicated from Well.cpp
-Connection::Order order_from_int(int int_value) {
-    switch(int_value) {
-    case 0:
-        return Connection::Order::TRACK;
-    case 1:
-        return Connection::Order::DEPTH;
-    case 2:
-        return Connection::Order::INPUT;
-    default:
-        throw std::invalid_argument("Invalid integer value: " + std::to_string(int_value) + " encountered when determining connection ordering");
+
+    // Duplicated from Well.cpp
+    Connection::Order order_from_int(int int_value) {
+        switch(int_value) {
+        case 0:
+            return Connection::Order::TRACK;
+        case 1:
+            return Connection::Order::DEPTH;
+        case 2:
+            return Connection::Order::INPUT;
+        default:
+            throw std::invalid_argument("Invalid integer value: " + std::to_string(int_value) + " encountered when determining connection ordering");
+        }
     }
 }
-}
 
-void Schedule::load_rst(const RestartIO::RstState& rst_state, const EclipseGrid& grid, const FieldPropsManager& fp, const UnitSystem& unit_system)
-{
-    double udq_undefined = 0;
-    const auto report_step = rst_state.header.report_step - 1;
+    void Schedule::load_rst(const RestartIO::RstState& rst_state, const EclipseGrid& grid, const FieldPropsManager& fp, const UnitSystem& unit_system)
+    {
+        double udq_undefined = 0;
+        const auto report_step = rst_state.header.report_step - 1;
 
-    for (const auto& rst_group : rst_state.groups)
-        this->addGroup(rst_group.name, report_step, unit_system);
+        for (const auto& rst_group : rst_state.groups)
+            this->addGroup(rst_group.name, report_step, unit_system);
 
-    for (const auto& rst_well : rst_state.wells) {
-        Opm::Well well(rst_well, report_step, unit_system, udq_undefined);
-        std::vector<Opm::Connection> rst_connections;
+        for (const auto& rst_well : rst_state.wells) {
+            Opm::Well well(rst_well, report_step, unit_system, udq_undefined);
+            std::vector<Opm::Connection> rst_connections;
 
-        for (const auto& rst_conn : rst_well.connections)
-            rst_connections.emplace_back(rst_conn, grid, fp);
+            for (const auto& rst_conn : rst_well.connections)
+                rst_connections.emplace_back(rst_conn, grid, fp);
 
-        if (rst_well.segments.empty()) {
-            Opm::WellConnections connections(order_from_int(rst_well.completion_ordering),
-                                             rst_well.ij[0],
-                                             rst_well.ij[1],
-                                             rst_connections);
-            well.updateConnections( std::make_shared<WellConnections>( std::move(connections) ), grid, fp.get_int("PVTNUM"));
-        } else {
-            std::unordered_map<int, Opm::Segment> rst_segments;
-            for (const auto& rst_segment : rst_well.segments) {
-                Opm::Segment segment(rst_segment);
-                rst_segments.insert(std::make_pair(rst_segment.segment, std::move(segment)));
+            if (rst_well.segments.empty()) {
+                Opm::WellConnections connections(order_from_int(rst_well.completion_ordering),
+                                                 rst_well.ij[0],
+                                                 rst_well.ij[1],
+                                                 rst_connections);
+                well.updateConnections( std::make_shared<WellConnections>( std::move(connections) ), grid, fp.get_int("PVTNUM"));
+            } else {
+                std::unordered_map<int, Opm::Segment> rst_segments;
+                for (const auto& rst_segment : rst_well.segments) {
+                    Opm::Segment segment(rst_segment);
+                    rst_segments.insert(std::make_pair(rst_segment.segment, std::move(segment)));
+                }
+
+                auto [connections, segments] = Compsegs::rstUpdate(rst_well, rst_connections, rst_segments);
+                well.updateConnections( std::make_shared<WellConnections>(std::move(connections)), grid, fp.get_int("PVTNUM"));
+                well.updateSegments( std::make_shared<WellSegments>(std::move(segments) ));
             }
 
-            auto [connections, segments] = Compsegs::rstUpdate(rst_well, rst_connections, rst_segments);
-            well.updateConnections( std::make_shared<WellConnections>(std::move(connections)), grid, fp.get_int("PVTNUM"));
-            well.updateSegments( std::make_shared<WellSegments>(std::move(segments) ));
+            this->addWell(well, report_step);
+            this->addWellToGroup(well.groupName(), well.name(), report_step);
         }
 
-        this->addWell(well, report_step);
-        this->addWellToGroup(well.groupName(), well.name(), report_step);
+        m_tuning.update(report_step, rst_state.tuning);
+        m_events.addEvent( ScheduleEvents::TUNING_CHANGE , report_step);
     }
 
-    m_tuning.update(report_step, rst_state.tuning);
-    m_events.addEvent( ScheduleEvents::TUNING_CHANGE , report_step);
-}
-
-std::shared_ptr<const Python> Schedule::python() const
-{
-    return this->python_handle;
-}
+    std::shared_ptr<const Python> Schedule::python() const
+    {
+        return this->python_handle;
+    }
 
 
-void Schedule::updateNetwork(std::shared_ptr<Network::ExtNetwork> network, std::size_t report_step) {
-    this->m_network.update(report_step, std::move(network));
-}
+    void Schedule::updateNetwork(std::shared_ptr<Network::ExtNetwork> network, std::size_t report_step) {
+        this->m_network.update(report_step, std::move(network));
+    }
 
-const Network::ExtNetwork& Schedule::network(std::size_t report_step) const {
-    return *this->m_network[report_step];
-}
+    const Network::ExtNetwork& Schedule::network(std::size_t report_step) const {
+        return *this->m_network[report_step];
+    }
 
-
-const GasLiftOpt& Schedule::glo(std::size_t report_step) const {
-    return *this->m_glo[report_step];
-}
-
-
+    const GasLiftOpt& Schedule::glo(std::size_t report_step) const {
+        return *this->m_glo[report_step];
+    }
 
 namespace {
 /*
