@@ -115,6 +115,7 @@ namespace {
         1 / (Metric::LiquidSurfaceVolume / Metric::Time / Metric::Pressure),
         1 / (Metric::GasSurfaceVolume / Metric::Time / Metric::Pressure),
         1 / Metric::Energy,
+        1 / ( Metric::Energy / Metric::Time ),
         1 / (Metric::Pressure / Opm::unit::square(Metric::GeomVolume / Metric::Time)),
         1 / Metric::PolymerDensity,
         1 / Metric::Salinity,
@@ -154,6 +155,7 @@ namespace {
         Metric::LiquidSurfaceVolume / Metric::Time / Metric::Pressure,
         Metric::GasSurfaceVolume / Metric::Time / Metric::Pressure,
         Metric::Energy,
+        Metric::Energy / Metric::Time,
         Metric::Pressure / Opm::unit::square(Metric::GeomVolume / Metric::Time),
         Metric::PolymerDensity,
         Metric::Salinity,
@@ -193,6 +195,7 @@ namespace {
         "SM3/DAY/BARS",
         "SM3/DAY/BARS",
         "KJ", /* energy */
+        "KJ/DAY", /* energy rate*/
         "BARS/(RM3/DAY)2", /* ICD strength parameter */
         "KG / SM3", /*polymer density */
         "KG / SM3", /*salinity */
@@ -279,6 +282,7 @@ namespace {
         1 / (Field::LiquidSurfaceVolume / Field::Time / Field::Pressure),
         1 / (Field::GasSurfaceVolume / Field::Time / Field::Pressure),
         1 / Field::Energy,
+        1 / (Field::Energy / Field::Time),
         1 / (Field::Pressure / Opm::unit::square(Field::GeomVolume / Field::Time)),
         1 / Field::PolymerDensity,
         1 / Field::Salinity,
@@ -318,6 +322,7 @@ namespace {
          Field::LiquidSurfaceVolume / Field::Time / Field::Pressure,
          Field::GasSurfaceVolume / Field::Time / Field::Pressure,
          Field::Energy,
+         Field::Energy / Field::Time,
          Field::Pressure / Opm::unit::square(Field::GeomVolume / Field::Time),
          Field::PolymerDensity,
          Field::Salinity,
@@ -357,6 +362,7 @@ namespace {
         "STB/DAY/PSIA",
         "MSCF/DAY/PSIA",
         "BTU", /* energy */
+        "BTU/DAY", /* energy rate*/
         "PSI/(RFT3/DAY)2", /* ICD strength parameter */
         "LB/STB", /*polymer density */
         "LB/STB", /*salinity */
@@ -443,6 +449,7 @@ namespace {
         1 / (Lab::LiquidSurfaceVolume / Lab::Time / Lab::Pressure),
         1 / (Lab::GasSurfaceVolume / Lab::Time / Lab::Pressure),
         1 / Lab::Energy,
+        1 / ( Lab::Energy / Lab::Time ),
         1 / (Lab::Pressure / Opm::unit::square(Lab::GeomVolume / Lab::Time)),
         1 / Lab::PolymerDensity,
         1 / Lab::Salinity,
@@ -482,6 +489,7 @@ namespace {
         Lab::LiquidSurfaceVolume / Lab::Time / Lab::Pressure,
         Lab::GasSurfaceVolume / Lab::Time / Lab::Pressure,
         Lab::Energy,
+        Lab::Energy / Lab::Time,
         Lab::Pressure / Opm::unit::square(Lab::GeomVolume / Lab::Time),
         Lab::PolymerDensity,
         Lab::Salinity,
@@ -521,6 +529,7 @@ namespace {
         "SCC/HR/ATM",
         "SCC/HR/ATM",
         "J", /* energy */
+        "J/HR", /* energy */
         "ATM/(RCC/H)2", /* ICD strength parameter */
         "G/SCC", /*polymer density */
         "G/SCC", /*salinity */
@@ -607,6 +616,7 @@ namespace {
         1 / (PVT_M::LiquidSurfaceVolume / PVT_M::Time / PVT_M::Pressure),
         1 / (PVT_M::GasSurfaceVolume / PVT_M::Time / PVT_M::Pressure),
         1 / PVT_M::Energy,
+        1 / ( PVT_M::Energy/ PVT_M::Time ),
         1 / (PVT_M::Pressure / Opm::unit::square(PVT_M::GeomVolume / PVT_M::Time)),
         1 / PVT_M::PolymerDensity,
         1 / PVT_M::Salinity,
@@ -646,6 +656,7 @@ namespace {
         PVT_M::LiquidSurfaceVolume / PVT_M::Time / PVT_M::Pressure,
         PVT_M::GasSurfaceVolume / PVT_M::Time / PVT_M::Pressure,
         PVT_M::Energy,
+        PVT_M::Energy / PVT_M::Time,
         PVT_M::Pressure / Opm::unit::square(PVT_M::GeomVolume / PVT_M::Time),
         PVT_M::PolymerDensity,
         PVT_M::Salinity,
@@ -685,6 +696,7 @@ namespace {
         "SM3/DAY/ATM",
         "SM3/DAY/ATM",
         "KJ" /* energy */,
+        "KJ/DAY" /* energy */,
         "ATM/(RM3/DAY)2", /* ICD strength parameter */
         "KG/SM3", /*polymer density */
         "KG/SM3", /*salinity */
@@ -849,6 +861,7 @@ namespace {
         "SM3/DAY/BARS",
         "SM3/DAY/BARS",
         "KJ", /* energy */
+        "KJ/DAY", /* energy rate*/
         "BARS/(RM3/DAY)2", /* ICD strength parameter */
         "KG/SM3", /*polymer density */
         "KG/SM3", /*salinity */
