@@ -322,10 +322,11 @@ bool cmp(const ESmry& smry, const ERsm& rsm) {
         const auto& smry_vector = smry.get(node);
         const auto& rsm_vector = rsm.get(key);
         for (std::size_t index = 0; index < smry_vector.size(); index++) {
+            const double eps  = 5e-5;
             const double diff = static_cast<double>(smry_vector[index]) - rsm_vector[index];
             const double sum = std::fabs(static_cast<double>(smry_vector[index])) + std::fabs(rsm_vector[index]);
 
-            if (diff > 1e-5 * sum) {
+            if (diff > eps * sum) {
                 fmt::print(stderr, "time_index: {}  key: {}  summary: {}   rsm: {}", index, key, smry_vector[index], rsm_vector[index]);
                 return false;
             }
