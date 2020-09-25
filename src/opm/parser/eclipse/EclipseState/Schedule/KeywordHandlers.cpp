@@ -769,11 +769,11 @@ namespace {
         std::shared_ptr<VFPInjTable> table = std::make_shared<VFPInjTable>(handlerContext.keyword, handlerContext.section.unitSystem());
         int table_id = table->getTableNum();
 
-        const auto iter = vfpinj_tables.find(table_id);
-        if (iter == vfpinj_tables.end()) {
+        if (vfpinj_tables.find(table_id) == vfpinj_tables.end()) {
             std::pair<int, DynamicState<std::shared_ptr<VFPInjTable> > > pair = std::make_pair(table_id, DynamicState<std::shared_ptr<VFPInjTable> >(this->m_timeMap, nullptr));
             vfpinj_tables.insert( pair );
         }
+
         auto & table_state = vfpinj_tables.at(table_id);
         table_state.update(handlerContext.currentStep, table);
         this->m_events.addEvent( ScheduleEvents::VFPINJ_UPDATE , handlerContext.currentStep);
@@ -783,11 +783,11 @@ namespace {
         std::shared_ptr<VFPProdTable> table = std::make_shared<VFPProdTable>(handlerContext.keyword, handlerContext.section.unitSystem());
         int table_id = table->getTableNum();
 
-        const auto iter = vfpprod_tables.find(table_id);
-        if (iter == vfpprod_tables.end()) {
+        if (vfpprod_tables.find(table_id) == vfpprod_tables.end()) {
             std::pair<int, DynamicState<std::shared_ptr<VFPProdTable> > > pair = std::make_pair(table_id, DynamicState<std::shared_ptr<VFPProdTable> >(this->m_timeMap, nullptr));
             vfpprod_tables.insert( pair );
         }
+
         auto & table_state = vfpprod_tables.at(table_id);
         table_state.update(handlerContext.currentStep, table);
         this->m_events.addEvent( ScheduleEvents::VFPPROD_UPDATE , handlerContext.currentStep);
