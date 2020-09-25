@@ -310,6 +310,10 @@ measure div_unit( measure denom, measure div ) {
         div   == measure::liquid_surface_rate )
         return measure::polymer_density;
 
+    if( denom == measure::energy_rate &&
+        div   == measure::time )
+        return measure::energy;
+
     return measure::identity;
 }
 
@@ -330,6 +334,9 @@ measure mul_unit( measure lhs, measure rhs ) {
 
     if(  lhs == measure::mass_rate && rhs == measure::time)
         return measure::mass;
+
+    if(  lhs == measure::energy_rate && rhs == measure::time)
+        return measure::energy;
 
     return lhs;
 }
@@ -968,6 +975,7 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "WWIR", rate< rt::wat, injector > },
     { "WOIR", rate< rt::oil, injector > },
     { "WGIR", rate< rt::gas, injector > },
+    { "WEIR", rate< rt::energy, injector > },
     { "WNIR", rate< rt::solvent, injector > },
     { "WCIR", rate< rt::polymer, injector > },
     { "WSIR", rate< rt::brine, injector > },
@@ -979,6 +987,7 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "WWIT", mul( rate< rt::wat, injector >, duration ) },
     { "WOIT", mul( rate< rt::oil, injector >, duration ) },
     { "WGIT", mul( rate< rt::gas, injector >, duration ) },
+    { "WEIT", mul( rate< rt::energy, injector >, duration ) },
     { "WNIT", mul( rate< rt::solvent, injector >, duration ) },
     { "WCIT", mul( rate< rt::polymer, injector >, duration ) },
     { "WSIT", mul( rate< rt::brine, injector >, duration ) },
