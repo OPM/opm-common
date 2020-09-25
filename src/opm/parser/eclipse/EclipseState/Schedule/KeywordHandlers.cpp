@@ -569,20 +569,20 @@ namespace {
     void Schedule::handleGUIDERAT(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         const auto& record = handlerContext.keyword.getRecord(0);
 
-        double min_calc_delay = record.getItem<ParserKeywords::GUIDERAT::MIN_CALC_TIME>().getSIDouble(0);
-        auto phase = GuideRateModel::TargetFromString(record.getItem<ParserKeywords::GUIDERAT::NOMINATED_PHASE>().getTrimmedString(0));
-        double A = record.getItem<ParserKeywords::GUIDERAT::A>().get<double>(0);
-        double B = record.getItem<ParserKeywords::GUIDERAT::B>().get<double>(0);
-        double C = record.getItem<ParserKeywords::GUIDERAT::C>().get<double>(0);
-        double D = record.getItem<ParserKeywords::GUIDERAT::D>().get<double>(0);
-        double E = record.getItem<ParserKeywords::GUIDERAT::E>().get<double>(0);
-        double F = record.getItem<ParserKeywords::GUIDERAT::F>().get<double>(0);
-        bool allow_increase = DeckItem::to_bool( record.getItem<ParserKeywords::GUIDERAT::ALLOW_INCREASE>().getTrimmedString(0));
-        double damping_factor = record.getItem<ParserKeywords::GUIDERAT::DAMPING_FACTOR>().get<double>(0);
-        bool use_free_gas = DeckItem::to_bool( record.getItem<ParserKeywords::GUIDERAT::USE_FREE_GAS>().getTrimmedString(0));
+        const double min_calc_delay = record.getItem<ParserKeywords::GUIDERAT::MIN_CALC_TIME>().getSIDouble(0);
+        const auto phase = GuideRateModel::TargetFromString(record.getItem<ParserKeywords::GUIDERAT::NOMINATED_PHASE>().getTrimmedString(0));
+        const double A = record.getItem<ParserKeywords::GUIDERAT::A>().get<double>(0);
+        const double B = record.getItem<ParserKeywords::GUIDERAT::B>().get<double>(0);
+        const double C = record.getItem<ParserKeywords::GUIDERAT::C>().get<double>(0);
+        const double D = record.getItem<ParserKeywords::GUIDERAT::D>().get<double>(0);
+        const double E = record.getItem<ParserKeywords::GUIDERAT::E>().get<double>(0);
+        const double F = record.getItem<ParserKeywords::GUIDERAT::F>().get<double>(0);
+        const bool allow_increase = DeckItem::to_bool( record.getItem<ParserKeywords::GUIDERAT::ALLOW_INCREASE>().getTrimmedString(0));
+        const double damping_factor = record.getItem<ParserKeywords::GUIDERAT::DAMPING_FACTOR>().get<double>(0);
+        const bool use_free_gas = DeckItem::to_bool( record.getItem<ParserKeywords::GUIDERAT::USE_FREE_GAS>().getTrimmedString(0));
 
-        GuideRateModel new_model = GuideRateModel(min_calc_delay, phase, A, B, C, D, E, F, allow_increase, damping_factor, use_free_gas);
-        auto new_config = std::make_shared<GuideRateConfig>( this->guideRateConfig(handlerContext.currentStep) );
+        const auto new_model = GuideRateModel(min_calc_delay, phase, A, B, C, D, E, F, allow_increase, damping_factor, use_free_gas);
+        auto new_config = std::make_shared<GuideRateConfig>(this->guideRateConfig(handlerContext.currentStep));
         if (new_config->update_model(new_model))
             this->guide_rate_config.update( handlerContext.currentStep, new_config );
     }
