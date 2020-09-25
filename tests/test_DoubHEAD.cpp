@@ -118,6 +118,8 @@ namespace {
                 "Cannot Run Simulation With Non-Standard Units"
             };
         }
+
+        throw std::invalid_argument("Unknown unit type specified");
     }
 } // Anonymous
 
