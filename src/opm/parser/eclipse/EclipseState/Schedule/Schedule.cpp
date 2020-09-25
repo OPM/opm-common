@@ -131,7 +131,7 @@ namespace {
           must therefor also scan the part of the deck prior to the
           SCHEDULE section to initialize valid MessageLimits object.
         */
-        for (size_t keywordIdx = 0; keywordIdx < deck.size(); ++keywordIdx) {
+        for (std::size_t keywordIdx = 0; keywordIdx < deck.size(); ++keywordIdx) {
             const auto& keyword = deck.getKeyword(keywordIdx);
             if (keyword.name() == "SCHEDULE")
                 break;
@@ -260,15 +260,15 @@ namespace {
 
     void Schedule::handleKeyword(std::shared_ptr<const Python> python,
                                  const std::string& input_path,
-                                 size_t currentStep,
+                                 std::size_t currentStep,
                                  const SCHEDULESection& section,
-                                 size_t keywordIdx,
+                                 std::size_t keywordIdx,
                                  const DeckKeyword& keyword,
                                  const ParseContext& parseContext,
                                  ErrorGuard& errors,
                                  const EclipseGrid& grid,
                                  const FieldPropsManager& fp,
-                                 std::vector<std::pair<const DeckKeyword*, size_t > >& rftProperties) {
+                                 std::vector<std::pair<const DeckKeyword*, std::size_t > >& rftProperties) {
 
         const HandlerContext handlerContext { section, keyword, keywordIdx, currentStep, grid, fp };
 
@@ -288,8 +288,8 @@ namespace {
 
     void Schedule::iterateScheduleSection(std::shared_ptr<const Opm::Python> python, const std::string& input_path, const ParseContext& parseContext , ErrorGuard& errors, const SCHEDULESection& section , const EclipseGrid& grid,
                                           const FieldPropsManager& fp) {
-        std::vector<std::pair< const DeckKeyword* , size_t> > rftProperties;
-        size_t keywordIdx = 0;
+        std::vector<std::pair< const DeckKeyword* , std::size_t> > rftProperties;
+        std::size_t keywordIdx = 0;
         /*
           The keywords in the skiprest_whitelist set are loaded from the
           SCHEDULE section even though the SKIPREST keyword is in action. The
@@ -298,7 +298,7 @@ namespace {
         */
         std::unordered_set<std::string> skiprest_whitelist = {"VFPPROD", "VFPINJ", "RPTSCHED", "RPTRST", "TUNING", "MESSAGES"};
 
-        size_t currentStep;
+        std::size_t currentStep;
         if (this->m_timeMap.skiprest())
             currentStep = 0;
         else
@@ -353,7 +353,7 @@ namespace {
 
         for (auto rftPair = rftProperties.begin(); rftPair != rftProperties.end(); ++rftPair) {
             const DeckKeyword& keyword = *rftPair->first;
-            size_t timeStep = rftPair->second;
+            std::size_t timeStep = rftPair->second;
             if (keyword.name() == "WRFT")
                 applyWRFT(keyword,  timeStep);
 
@@ -414,7 +414,7 @@ namespace {
         this->updateWellStatus(well_name, report_step, Well::Status::STOP, true);
     }
 
-    void Schedule::updateWell(std::shared_ptr<Well> well, size_t reportStep) {
+    void Schedule::updateWell(std::shared_ptr<Well> well, std::size_t reportStep) {
         auto& dynamic_state = this->wells_static.at(well->name());
         dynamic_state.update(reportStep, std::move(well));
     }
@@ -424,7 +424,7 @@ namespace {
       Function is quite dangerous - because if this is called while holding a
       Well pointer that will go stale and needs to be refreshed.
     */
-    bool Schedule::updateWellStatus( const std::string& well_name, size_t reportStep , Well::Status status, bool update_connections) {
+    bool Schedule::updateWellStatus( const std::string& well_name, std::size_t reportStep , Well::Status status, bool update_connections) {
         bool update = false;
         auto& dynamic_state = this->wells_static.at(well_name);
         auto well2 = std::make_shared<Well>(*dynamic_state[reportStep]);
@@ -620,7 +620,7 @@ namespace {
 
     void Schedule::addWell(const std::string& wellName,
                            const DeckRecord& record,
-                           size_t timeStep,
+                           std::size_t timeStep,
                            Connection::Order wellConnectionOrder,
                            const UnitSystem& unit_system)
     {
@@ -678,7 +678,7 @@ namespace {
                       unit_system);
     }
 
-    void Schedule::addWell(Well well, size_t report_step) {
+    void Schedule::addWell(Well well, std::size_t report_step) {
         const std::string wname = well.name();
 
         m_events.addEvent( ScheduleEvents::NEW_WELL , report_step );
@@ -702,7 +702,7 @@ namespace {
                            bool automaticShutIn,
                            int pvt_table,
                            Well::GasInflowEquation gas_inflow,
-                           size_t timeStep,
+                           std::size_t timeStep,
                            Connection::Order wellConnectionOrder,
                            const UnitSystem& unit_system) {
 
@@ -727,11 +727,11 @@ namespace {
     }
 
 
-    size_t Schedule::numWells() const {
+    std::size_t Schedule::numWells() const {
         return wells_static.size();
     }
 
-    size_t Schedule::numWells(size_t timestep) const {
+    std::size_t Schedule::numWells(std::size_t timestep) const {
         auto well_names = this->wellNames(timestep);
         return well_names.size();
     }
@@ -748,7 +748,7 @@ namespace {
         return well.hasBeenDefined(timeStep);
     }
 
-    std::vector< const Group* > Schedule::getChildGroups2(const std::string& group_name, size_t timeStep) const {
+    std::vector< const Group* > Schedule::getChildGroups2(const std::string& group_name, std::size_t timeStep) const {
         if (!hasGroup(group_name))
             throw std::invalid_argument("No such group: '" + group_name + "'");
 
@@ -764,7 +764,7 @@ namespace {
         return child_groups;
     }
 
-    std::vector< Well > Schedule::getChildWells2(const std::string& group_name, size_t timeStep) const {
+    std::vector< Well > Schedule::getChildWells2(const std::string& group_name, std::size_t timeStep) const {
         if (!hasGroup(group_name))
             throw std::invalid_argument("No such group: '" + group_name + "'");
 
@@ -817,7 +817,7 @@ namespace {
     }
 
 
-    std::vector<Well> Schedule::getWells(size_t timeStep) const {
+    std::vector<Well> Schedule::getWells(std::size_t timeStep) const {
         std::vector<Well> wells;
         if (timeStep >= this->m_timeMap.size())
             throw std::invalid_argument("timeStep argument beyond the length of the simulation");
@@ -838,7 +838,7 @@ namespace {
         return this->getWell(well_name, this->m_timeMap.size() - 1);
     }
 
-    const Well& Schedule::getWell(const std::string& wellName, size_t timeStep) const {
+    const Well& Schedule::getWell(const std::string& wellName, std::size_t timeStep) const {
         if (this->wells_static.count(wellName) == 0)
             throw std::invalid_argument("No such well: " + wellName);
 
@@ -850,7 +850,7 @@ namespace {
         return *well_ptr;
     }
 
-    const Group& Schedule::getGroup(const std::string& groupName, size_t timeStep) const {
+    const Group& Schedule::getGroup(const std::string& groupName, std::size_t timeStep) const {
         if (this->groups.count(groupName) == 0)
             throw std::invalid_argument("No such group: '" + groupName + "'");
 
@@ -862,7 +862,7 @@ namespace {
         return *group_ptr;
     }
 
-    void Schedule::updateGroup(std::shared_ptr<Group> group, size_t reportStep) {
+    void Schedule::updateGroup(std::shared_ptr<Group> group, std::size_t reportStep) {
         auto& dynamic_state = this->groups.at(group->name());
         dynamic_state.update(reportStep, std::move(group));
     }
@@ -882,7 +882,7 @@ namespace {
     */
 
 
-    std::vector<std::string> Schedule::wellNames(const std::string& pattern, size_t timeStep, const std::vector<std::string>& matching_wells) const {
+    std::vector<std::string> Schedule::wellNames(const std::string& pattern, std::size_t timeStep, const std::vector<std::string>& matching_wells) const {
         if (pattern.size() == 0)
             return {};
 
@@ -943,7 +943,7 @@ namespace {
         return names;
     }
 
-    std::vector<std::string> Schedule::groupNames(const std::string& pattern, size_t timeStep) const {
+    std::vector<std::string> Schedule::groupNames(const std::string& pattern, std::size_t timeStep) const {
         if (pattern.size() == 0)
             return {};
 
@@ -972,7 +972,7 @@ namespace {
         return {};
     }
 
-    std::vector<std::string> Schedule::groupNames(size_t timeStep) const {
+    std::vector<std::string> Schedule::groupNames(std::size_t timeStep) const {
         std::vector<std::string> names;
         for (const auto& group_pair : this->groups) {
             const auto& dynamic_state = group_pair.second;
@@ -1029,8 +1029,8 @@ namespace {
     }
 
 
-    void Schedule::addGroup(const std::string& groupName, size_t timeStep, const UnitSystem& unit_system) {
-        const size_t gseqIndex = this->groups.size();
+    void Schedule::addGroup(const std::string& groupName, std::size_t timeStep, const UnitSystem& unit_system) {
+        const std::size_t gseqIndex = this->groups.size();
 
         groups.insert( std::make_pair( groupName, DynamicState<std::shared_ptr<Group>>(this->m_timeMap, nullptr)));
         auto group_ptr = std::make_shared<Group>(groupName, gseqIndex, timeStep, this->getUDQConfig(timeStep).params().undefinedValue(), unit_system);
@@ -1047,11 +1047,11 @@ namespace {
             this->addGroupToGroup("FIELD", *group_ptr, timeStep);
     }
 
-    size_t Schedule::numGroups() const {
+    std::size_t Schedule::numGroups() const {
         return groups.size();
     }
 
-    size_t Schedule::numGroups(size_t timeStep) const {
+    std::size_t Schedule::numGroups(std::size_t timeStep) const {
         const auto group_names = this->groupNames(timeStep);
         return group_names.size();
     }
@@ -1070,7 +1070,7 @@ namespace {
             && grpMap->second.at(timeStep);
     }
 
-    void Schedule::addGroupToGroup( const std::string& parent_group, const Group& child_group, size_t timeStep) {
+    void Schedule::addGroupToGroup( const std::string& parent_group, const Group& child_group, std::size_t timeStep) {
         // Add to new parent
         auto& dynamic_state = this->groups.at(parent_group);
         auto parent_ptr = std::make_shared<Group>( *dynamic_state[timeStep] );
@@ -1090,11 +1090,11 @@ namespace {
         }
     }
 
-    void Schedule::addGroupToGroup( const std::string& parent_group, const std::string& child_group, size_t timeStep) {
+    void Schedule::addGroupToGroup( const std::string& parent_group, const std::string& child_group, std::size_t timeStep) {
         this->addGroupToGroup(parent_group, this->getGroup(child_group, timeStep), timeStep);
     }
 
-    void Schedule::addWellToGroup( const std::string& group_name, const std::string& well_name , size_t timeStep) {
+    void Schedule::addWellToGroup( const std::string& group_name, const std::string& well_name , std::size_t timeStep) {
         const auto& well = this->getWell(well_name, timeStep);
         const auto old_gname = well.groupName();
         if (old_gname != group_name) {
@@ -1117,11 +1117,11 @@ namespace {
     }
 
 
-    const Tuning& Schedule::getTuning(size_t timeStep) const {
+    const Tuning& Schedule::getTuning(std::size_t timeStep) const {
         return this->m_tuning.get( timeStep );
     }
 
-    const Deck& Schedule::getModifierDeck(size_t timeStep) const {
+    const Deck& Schedule::getModifierDeck(std::size_t timeStep) const {
         return m_modifierDeck.iget( timeStep );
     }
 
@@ -1137,12 +1137,12 @@ namespace {
             throw std::invalid_argument("No such well og group " + wellGroup);
     }
 
-    void Schedule::addWellGroupEvent(const std::string& wellGroup, ScheduleEvents::Events event, size_t reportStep)  {
+    void Schedule::addWellGroupEvent(const std::string& wellGroup, ScheduleEvents::Events event, std::size_t reportStep)  {
         auto& events = this->wellgroup_events.at(wellGroup);
         events.addEvent(event, reportStep);
     }
 
-    bool Schedule::hasWellGroupEvent(const std::string& wellGroup, uint64_t event_mask, size_t reportStep) const {
+    bool Schedule::hasWellGroupEvent(const std::string& wellGroup, uint64_t event_mask, std::size_t reportStep) const {
         const auto& events = this->getWellGroupEvents(wellGroup);
         return events.hasEvent(event_mask, reportStep);
     }
@@ -1151,23 +1151,23 @@ namespace {
         return this->m_events;
     }
 
-    const OilVaporizationProperties& Schedule::getOilVaporizationProperties(size_t timestep) const {
+    const OilVaporizationProperties& Schedule::getOilVaporizationProperties(std::size_t timestep) const {
         return m_oilvaporizationproperties.get(timestep);
     }
 
-    const Well::ProducerCMode& Schedule::getGlobalWhistctlMmode(size_t timestep) const {
+    const Well::ProducerCMode& Schedule::getGlobalWhistctlMmode(std::size_t timestep) const {
         return global_whistctl_mode.get(timestep);
     }
 
 
     bool Schedule::hasOilVaporizationProperties() const {
-        for (size_t i = 0; i < this->m_timeMap.size(); ++i)
+        for (std::size_t i = 0; i < this->m_timeMap.size(); ++i)
             if (m_oilvaporizationproperties.at( i ).defined()) return true;
 
         return false;
     }
 
-    void Schedule::checkIfAllConnectionsIsShut(size_t timeStep) {
+    void Schedule::checkIfAllConnectionsIsShut(std::size_t timeStep) {
         const auto& well_names = this->wellNames(timeStep);
         for (const auto& wname : well_names) {
             const auto& well = this->getWell(wname, timeStep);
@@ -1209,7 +1209,7 @@ namespace {
         }
     }
 
-    const VFPProdTable& Schedule::getVFPProdTable(int table_id, size_t timeStep) const {
+    const VFPProdTable& Schedule::getVFPProdTable(int table_id, std::size_t timeStep) const {
         const auto pair = vfpprod_tables.find(table_id);
         if (pair == vfpprod_tables.end())
             throw std::invalid_argument("No such table id: " + std::to_string(table_id));
@@ -1221,7 +1221,7 @@ namespace {
         return *table_ptr;
     }
 
-    const VFPInjTable& Schedule::getVFPInjTable(int table_id, size_t timeStep) const {
+    const VFPInjTable& Schedule::getVFPInjTable(int table_id, std::size_t timeStep) const {
         const auto pair = vfpinj_tables.find(table_id);
         if (pair == vfpinj_tables.end())
             throw std::invalid_argument("No such table id: " + std::to_string(table_id));
@@ -1233,7 +1233,7 @@ namespace {
         return *table_ptr;
     }
 
-    std::map<int, std::shared_ptr<const VFPInjTable> > Schedule::getVFPInjTables(size_t timeStep) const {
+    std::map<int, std::shared_ptr<const VFPInjTable> > Schedule::getVFPInjTables(std::size_t timeStep) const {
         std::map<int, std::shared_ptr<const VFPInjTable> > tables;
         for (const auto& pair : this->vfpinj_tables) {
             if (pair.second.get(timeStep)) {
@@ -1243,7 +1243,7 @@ namespace {
         return tables;
     }
 
-    std::map<int, std::shared_ptr<const VFPProdTable> > Schedule::getVFPProdTables(size_t timeStep) const {
+    std::map<int, std::shared_ptr<const VFPProdTable> > Schedule::getVFPProdTables(std::size_t timeStep) const {
         std::map<int, std::shared_ptr<const VFPProdTable> > tables;
         for (const auto& pair : this->vfpprod_tables) {
             if (pair.second.get(timeStep)) {
@@ -1253,45 +1253,45 @@ namespace {
         return tables;
     }
 
-    const UDQActive& Schedule::udqActive(size_t timeStep) const {
+    const UDQActive& Schedule::udqActive(std::size_t timeStep) const {
         return *this->udq_active[timeStep];
     }
 
-    void Schedule::updateUDQActive( size_t timeStep, std::shared_ptr<UDQActive> udq ) {
+    void Schedule::updateUDQActive( std::size_t timeStep, std::shared_ptr<UDQActive> udq ) {
         this->udq_active.update(timeStep, udq);
     }
 
-    const WellTestConfig& Schedule::wtestConfig(size_t timeStep) const {
+    const WellTestConfig& Schedule::wtestConfig(std::size_t timeStep) const {
         const auto& ptr = this->wtest_config.get(timeStep);
         return *ptr;
     }
 
-    const GConSale& Schedule::gConSale(size_t timeStep) const {
+    const GConSale& Schedule::gConSale(std::size_t timeStep) const {
         const auto& ptr = this->gconsale.get(timeStep);
         return *ptr;
     }
 
-    const GConSump& Schedule::gConSump(size_t timeStep) const {
+    const GConSump& Schedule::gConSump(std::size_t timeStep) const {
         const auto& ptr = this->gconsump.get(timeStep);
         return *ptr;
     }
 
-    const WListManager& Schedule::getWListManager(size_t timeStep) const {
+    const WListManager& Schedule::getWListManager(std::size_t timeStep) const {
         const auto& ptr = this->wlist_manager.get(timeStep);
         return *ptr;
     }
 
-    const UDQConfig& Schedule::getUDQConfig(size_t timeStep) const {
+    const UDQConfig& Schedule::getUDQConfig(std::size_t timeStep) const {
         const auto& ptr = this->udq_config.get(timeStep);
         return *ptr;
     }
 
-    const GuideRateConfig& Schedule::guideRateConfig(size_t timeStep) const {
+    const GuideRateConfig& Schedule::guideRateConfig(std::size_t timeStep) const {
         const auto& ptr = this->guide_rate_config.get(timeStep);
         return *ptr;
     }
 
-    const RPTConfig& Schedule::report_config(size_t timeStep) const {
+    const RPTConfig& Schedule::report_config(std::size_t timeStep) const {
         const auto& ptr = this->rpt_config.get(timeStep);
         return *ptr;
     }
@@ -1300,20 +1300,20 @@ namespace {
         return this->exit_status;
     }
 
-    size_t Schedule::size() const {
+    std::size_t Schedule::size() const {
         return this->m_timeMap.size();
     }
 
 
-    double  Schedule::seconds(size_t timeStep) const {
+    double  Schedule::seconds(std::size_t timeStep) const {
         return this->m_timeMap.seconds(timeStep);
     }
 
-    time_t Schedule::simTime(size_t timeStep) const {
+    time_t Schedule::simTime(std::size_t timeStep) const {
         return this->m_timeMap[timeStep];
     }
 
-    double Schedule::stepLength(size_t timeStep) const {
+    double Schedule::stepLength(std::size_t timeStep) const {
         return this->m_timeMap.getTimeStepLength(timeStep);
     }
 
@@ -1323,7 +1323,7 @@ namespace {
         return *ptr;
     }
 
-    void Schedule::applyAction(size_t reportStep, const Action::ActionX& action, const Action::Result& result) {
+    void Schedule::applyAction(std::size_t reportStep, const Action::ActionX& action, const Action::Result& result) {
         ParseContext parseContext;
         ErrorGuard errors;
 
@@ -1350,7 +1350,7 @@ namespace {
         return this->restart_config;
     }
 
-    int Schedule::getNupcol(size_t reportStep) const {
+    int Schedule::getNupcol(std::size_t reportStep) const {
         return this->m_nupcol.get(reportStep);
     }
 
