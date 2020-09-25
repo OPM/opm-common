@@ -157,8 +157,6 @@ BOOST_AUTO_TEST_CASE(Wsegiter)
     const auto  tconv = getTimeConv(usys);
 
     const std::size_t lookup_step = 1;
-    const auto tuning_data = sched.getTuning(lookup_step);
-
 
     const auto dh = Opm::RestartIO::DoubHEAD{}
         .tuningParameters(sched.getTuning(lookup_step), tconv);
