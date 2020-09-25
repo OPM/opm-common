@@ -31,6 +31,7 @@
 
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/OpmLog/LogUtil.hpp>
+#include <opm/common/utility/OpmInputError.hpp>
 
 #include <opm/json/JsonObject.hpp>
 
@@ -920,15 +921,25 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
                                                                       *rawKeyword,
                                                                       parserState.deck.getActiveUnitSystem(),
                                                                       parserState.deck.getDefaultUnitSystem()));
-            } catch (const std::exception& exc) {
+            } catch (const OpmInputError& opm_error) {
+                throw;
+            }
+            catch (const std::exception& std_error) {
                 /*
                   This catch-all of parsing errors is to be able to write a good
                   error message; the parser is quite confused at this state and
                   we should not be tempted to continue the parsing.
+
+                  We log a error message with the name of the problematic
+                  keyword and the location in the input deck. We rethrow the
+                  same exception without updating the what() message of the
+                  exception.
                 */
                 const auto& location = rawKeyword->location();
-                std::string msg = Log::fileMessage(location, "Parse error: " + std::string{ exc.what() });
-                OpmLog::error(msg);
+                std::string msg_fmt = fmt::format("Problem parsing keyword {{keyword}}\n"
+                                                  "In {{file}} line {{line}}.\n"
+                                                  "Internal error message: {}" , std_error.what());
+                OpmLog::error( OpmInputError::format(msg_fmt, location) );
                 throw;
             }
         } else {
