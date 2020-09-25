@@ -312,23 +312,39 @@ namespace {
         for (const auto& record : handlerContext.keyword) {
             const std::string& groupNamePattern = record.getItem("GROUP").getTrimmedString(0);
             const auto group_names = this->groupNames(groupNamePattern);
-
             if (group_names.empty())
                 invalidNamePattern(groupNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
 
-            for (const auto& group_name : group_names){
-                Group::ProductionCMode controlMode = Group::ProductionCModeFromString( record.getItem("CONTROL_MODE").getTrimmedString(0) );
-                Group::ExceedAction exceedAction = Group::ExceedActionFromString(record.getItem("EXCEED_PROC").getTrimmedString(0) );
-                auto oil_target = record.getItem("OIL_TARGET").get<UDAValue>(0);
-                auto gas_target = record.getItem("GAS_TARGET").get<UDAValue>(0);
-                auto water_target = record.getItem("WATER_TARGET").get<UDAValue>(0);
-                auto liquid_target = record.getItem("LIQUID_TARGET").get<UDAValue>(0);
+            const Group::ProductionCMode controlMode = Group::ProductionCModeFromString(record.getItem("CONTROL_MODE").getTrimmedString(0));
+            const Group::ExceedAction exceedAction = Group::ExceedActionFromString(record.getItem("EXCEED_PROC").getTrimmedString(0));
+
+            const bool respond_to_parent = DeckItem::to_bool(record.getItem("RESPOND_TO_PARENT").getTrimmedString(0));
+
+            const auto oil_target = record.getItem("OIL_TARGET").get<UDAValue>(0);
+            const auto gas_target = record.getItem("GAS_TARGET").get<UDAValue>(0);
+            const auto water_target = record.getItem("WATER_TARGET").get<UDAValue>(0);
+            const auto liquid_target = record.getItem("LIQUID_TARGET").get<UDAValue>(0);
+            const auto resv_target = record.getItem("RESERVOIR_FLUID_TARGET").getSIDouble(0);
+
+            const bool apply_default_oil_target = record.getItem("OIL_TARGET").defaultApplied(0);
+            const bool apply_default_gas_target = record.getItem("GAS_TARGET").defaultApplied(0);
+            const bool apply_default_water_target = record.getItem("WATER_TARGET").defaultApplied(0);
+            const bool apply_default_liquid_target = record.getItem("LIQUID_TARGET").defaultApplied(0);
+            const bool apply_default_resv_target = record.getItem("RESERVOIR_FLUID_TARGET").defaultApplied(0);
+
+            const std::optional<std::string> guide_rate_str = record.getItem("GUIDE_RATE_DEF").hasValue(0)
+                ? std::optional<std::string>(record.getItem("GUIDE_RATE_DEF").getTrimmedString(0))
+                : std::nullopt;
+
+            for (const auto& group_name : group_names) {
+                const bool is_field { group_name == "FIELD" } ;
+                const bool availableForGroupControl { respond_to_parent && !is_field } ;
+
                 auto guide_rate_def = Group::GuideRateTarget::NO_GUIDE_RATE;
                 double guide_rate = 0;
-                if (group_name != "FIELD") {
-                    if (record.getItem("GUIDE_RATE_DEF").hasValue(0)) {
-                        std::string guide_rate_str = record.getItem("GUIDE_RATE_DEF").getTrimmedString(0);
-                        guide_rate_def = Group::GuideRateTargetFromString( guide_rate_str );
+                if (!is_field) {
+                    if (guide_rate_str) {
+                        guide_rate_def = Group::GuideRateTargetFromString(guide_rate_str.value());
 
                         if ((guide_rate_def == Group::GuideRateTarget::INJV ||
                              guide_rate_def == Group::GuideRateTarget::POTN ||
@@ -342,12 +358,10 @@ namespace {
                         }
                     }
                 }
-                bool availableForGroupControl = DeckItem::to_bool(record.getItem("RESPOND_TO_PARENT").getTrimmedString(0)) && (group_name != "FIELD");
 
                 {
                     auto group_ptr = std::make_shared<Group>(this->getGroup(group_name, handlerContext.currentStep));
                     Group::GroupProductionProperties production(group_name);
-                    auto resv_target = record.getItem("RESERVOIR_FLUID_TARGET").getSIDouble(0);
                     production.cmode = controlMode;
                     production.oil_target = oil_target;
                     production.gas_target = gas_target;
@@ -368,19 +382,19 @@ namespace {
 
                     production.production_controls = 0;
 
-                    if (!record.getItem("OIL_TARGET").defaultApplied(0))
+                    if (!apply_default_oil_target)
                         production.production_controls += static_cast<int>(Group::ProductionCMode::ORAT);
 
-                    if (!record.getItem("GAS_TARGET").defaultApplied(0))
+                    if (!apply_default_gas_target)
                         production.production_controls += static_cast<int>(Group::ProductionCMode::GRAT);
 
-                    if (!record.getItem("WATER_TARGET").defaultApplied(0))
+                    if (!apply_default_water_target)
                         production.production_controls += static_cast<int>(Group::ProductionCMode::WRAT);
 
-                    if (!record.getItem("LIQUID_TARGET").defaultApplied(0))
+                    if (!apply_default_liquid_target)
                         production.production_controls += static_cast<int>(Group::ProductionCMode::LRAT);
 
-                    if (!record.getItem("RESERVOIR_FLUID_TARGET").defaultApplied(0))
+                    if (!apply_default_resv_target)
                         production.production_controls += static_cast<int>(Group::ProductionCMode::RESV);
 
                     if (group_ptr->updateProduction(production)) {
