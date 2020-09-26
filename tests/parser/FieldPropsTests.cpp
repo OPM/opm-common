@@ -1948,12 +1948,12 @@ BOOST_AUTO_TEST_CASE(TRAN_Calculator) {
 GRID
 
 PORO
-   1000*0.10 /
+   300*0.10 /
 
 EDIT
 
 TRANX
-  1000*0.10 /
+  300*0.10 /
 
 BOX
   1 10 1 10 1 1 /
@@ -1982,10 +1982,10 @@ MINVALUE
 )";
     UnitSystem unit_system(UnitSystem::UnitType::UNIT_TYPE_METRIC);
     auto to_si = [&unit_system](double raw_value) { return unit_system.to_si(UnitSystem::measure::transmissibility, raw_value); };
-    std::vector<int> actnum(1000, 1);
-    for (std::size_t i=0; i< 1000; i += 2)
+    std::vector<int> actnum(300, 1);
+    for (std::size_t i=0; i< 300; i += 2)
         actnum[i] = 0;
-    EclipseGrid grid(EclipseGrid(10,10,10), actnum);
+    EclipseGrid grid(EclipseGrid(10,10,3), actnum);
     Deck deck = Parser{}.parseString(deck_string);
     FieldPropsManager fpm(deck, Phases{true, true, true}, grid, TableManager());
     std::vector<double> tranx( grid.getNumActive() );
@@ -2000,32 +2000,34 @@ MINVALUE
     fpm.apply_tran("TRANY", trany);
     fpm.apply_tran("TRANZ", tranz);
 
+    for (std::size_t k=0; k < 3; k++) {
+        for (std::size_t j=0; j < 10; j++) {
+            for (std::size_t i=0; i < 10; i++) {
+                if (grid.cellActive(i,j,k)) {
+                    auto a = grid.activeIndex(i,j,k);
 
-    for (std::size_t i=0; i < 50; i++)
-        BOOST_CHECK_EQUAL(tranx[i], to_si(0.20));
+                    if (k==0)
+                        BOOST_CHECK_EQUAL(tranx[a], to_si(0.20));
+                    else
+                        BOOST_CHECK_EQUAL(tranx[a], to_si(0.10));
 
-    for (std::size_t i=50; i < tranx.size(); i++)
-        BOOST_CHECK_EQUAL(tranx[i], to_si(0.10));
+                    if (k == 0)
+                        BOOST_CHECK_EQUAL(trany[a], to_si(2.0));
+                    else if (k == 1)
+                        BOOST_CHECK_EQUAL(trany[a], to_si(5.0));
+                    else if (k == 2)
+                        BOOST_CHECK_EQUAL(trany[a], to_si(2.0));
 
-    BOOST_CHECK_EQUAL(trany[0], to_si(2.0));
-
-    for (std::size_t i=0; i < 50; i++)
-        BOOST_CHECK_EQUAL(trany[i], to_si(2.0));
-
-    for (std::size_t i=50; i < 100; i++)
-        BOOST_CHECK_EQUAL(trany[i], to_si(5.0));
-
-    for (std::size_t i=100; i < trany.size(); i++)
-        BOOST_CHECK_EQUAL(trany[i], to_si(2.0));
-
-    for (std::size_t i=0; i < 50; i++)
-        BOOST_CHECK(tranz[i]<=to_si(0));
-
-    for (std::size_t i=50; i < 10; i++)
-        BOOST_CHECK(tranz[i]>=to_si(3));
-
-    for (std::size_t i=100; i < tranz.size(); i++)
-        BOOST_CHECK_EQUAL(tranz[i], to_si(1.0));
+                    if (k==0)
+                        BOOST_CHECK(tranz[a] <= to_si(0));
+                    else if (k == 1)
+                        BOOST_CHECK(tranz[a] >= to_si(3.0));
+                    else if (k == 2)
+                        BOOST_CHECK_EQUAL(tranz[a], to_si(1.0));
+                }
+            }
+        }
+    }
     auto buffer = fpm.serialize_tran();
     fpm.deserialize_tran(buffer);
 
