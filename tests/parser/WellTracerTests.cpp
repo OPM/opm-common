@@ -22,6 +22,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include <opm/common/utility/OpmInputError.hpp>
 #include <opm/parser/eclipse/Python/Python.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
@@ -174,5 +175,5 @@ BOOST_AUTO_TEST_CASE(TestTracerInProducerTHROW) {
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
     Runspec runspec ( deck );
 
-    BOOST_CHECK_THROW(Schedule(deck, grid, fp, runspec, python), std::invalid_argument);
+    BOOST_CHECK_THROW(Schedule(deck, grid, fp, runspec, python), OpmInputError);
 }
