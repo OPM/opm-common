@@ -16,14 +16,15 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
+#ifndef OPM_ERROR_HPP
+#define OPM_ERROR_HPP
 
 #include <stdexcept>
 #include <string>
 
 #include <fmt/format.h>
 
-#ifndef OPM_ERROR_HPP
-#define OPM_ERROR_HPP
+#include <opm/common/OpmLog/KeywordLocation.hpp>
 
 namespace Opm {
 
@@ -73,16 +74,21 @@ public:
 
 
     OpmInputError(const std::string& msg_fmt, const KeywordLocation& loc) :
-        m_what(fmt::format(msg_fmt,
-                           fmt::arg("keyword", loc.keyword),
-                           fmt::arg("file", loc.filename),
-                           fmt::arg("line", loc.lineno))),
+        m_what(OpmInputError::format(msg_fmt, loc)),
         location(loc)
     {}
 
     const char * what() const throw()
     {
         return this->m_what.c_str();
+    }
+
+
+    static std::string format(const std::string& msg_fmt, const KeywordLocation& loc) {
+        return fmt::format(msg_fmt,
+                           fmt::arg("keyword", loc.keyword),
+                           fmt::arg("file", loc.filename),
+                           fmt::arg("line", loc.lineno));
     }
 
 
