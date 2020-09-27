@@ -108,31 +108,31 @@ namespace {
 }
 
 
-void Schedule::handleBRANPROP(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
-    auto ext_network = std::make_shared<Network::ExtNetwork>(this->network(handlerContext.currentStep));
+    void Schedule::handleBRANPROP(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+        auto ext_network = std::make_shared<Network::ExtNetwork>(this->network(handlerContext.currentStep));
 
-    for (const auto& record : handlerContext.keyword) {
-        const auto& downtree_node = record.getItem<ParserKeywords::BRANPROP::DOWNTREE_NODE>().get<std::string>(0);
-        const auto& uptree_node = record.getItem<ParserKeywords::BRANPROP::UPTREE_NODE>().get<std::string>(0);
+        for (const auto& record : handlerContext.keyword) {
+            const auto& downtree_node = record.getItem<ParserKeywords::BRANPROP::DOWNTREE_NODE>().get<std::string>(0);
+            const auto& uptree_node = record.getItem<ParserKeywords::BRANPROP::UPTREE_NODE>().get<std::string>(0);
 
-        const int vfp_table = record.getItem<ParserKeywords::BRANPROP::VFP_TABLE>().get<int>(0);
+            const int vfp_table = record.getItem<ParserKeywords::BRANPROP::VFP_TABLE>().get<int>(0);
 
-        if (vfp_table == 0) {
-            ext_network->drop_branch(uptree_node, downtree_node);
-        } else {
-            const auto alq_eq = Network::Branch::AlqEqfromString(record.getItem<ParserKeywords::BRANPROP::ALQ_SURFACE_DENSITY>().get<std::string>(0));
-
-            if (alq_eq == Network::Branch::AlqEQ::ALQ_INPUT) {
-                double alq_value = record.getItem<ParserKeywords::BRANPROP::ALQ>().get<double>(0);
-                ext_network->add_branch(Network::Branch(downtree_node, uptree_node, vfp_table, alq_value));
+            if (vfp_table == 0) {
+                ext_network->drop_branch(uptree_node, downtree_node);
             } else {
-                ext_network->add_branch(Network::Branch(downtree_node, uptree_node, vfp_table, alq_eq));
+                const auto alq_eq = Network::Branch::AlqEqfromString(record.getItem<ParserKeywords::BRANPROP::ALQ_SURFACE_DENSITY>().get<std::string>(0));
+
+                if (alq_eq == Network::Branch::AlqEQ::ALQ_INPUT) {
+                    double alq_value = record.getItem<ParserKeywords::BRANPROP::ALQ>().get<double>(0);
+                    ext_network->add_branch(Network::Branch(downtree_node, uptree_node, vfp_table, alq_value));
+                } else {
+                    ext_network->add_branch(Network::Branch(downtree_node, uptree_node, vfp_table, alq_eq));
+                }
             }
         }
-    }
 
-    this->updateNetwork(ext_network, handlerContext.currentStep);
-}
+        this->updateNetwork(ext_network, handlerContext.currentStep);
+    }
 
     void Schedule::handleCOMPDAT(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
         for (const auto& record : handlerContext.keyword) {
@@ -198,7 +198,7 @@ void Schedule::handleBRANPROP(const HandlerContext& handlerContext, const ParseC
         std::size_t numPvtRegions = m_runspec.tabdims().getNumPVTTables();
         std::vector<double> max(numPvtRegions);
         std::vector<std::string> options(numPvtRegions);
-        for( const auto& record : handlerContext.keyword ) {
+        for (const auto& record : handlerContext.keyword) {
             std::fill(max.begin(), max.end(), record.getItem("DRSDT_MAX").getSIDouble(0));
             std::fill(options.begin(), options.end(), record.getItem("Option").get< std::string >(0));
             OilVaporizationProperties ovp = this->m_oilvaporizationproperties.get(handlerContext.currentStep);
@@ -212,7 +212,7 @@ void Schedule::handleBRANPROP(const HandlerContext& handlerContext, const ParseC
         std::vector<double> max(numPvtRegions);
         std::vector<std::string> options(numPvtRegions);
         std::size_t pvtRegionIdx = 0;
-        for( const auto& record : handlerContext.keyword ) {
+        for (const auto& record : handlerContext.keyword) {
             max[pvtRegionIdx] = record.getItem("DRSDT_MAX").getSIDouble(0);
             options[pvtRegionIdx] = record.getItem("Option").get< std::string >(0);
             pvtRegionIdx++;
@@ -225,7 +225,7 @@ void Schedule::handleBRANPROP(const HandlerContext& handlerContext, const ParseC
     void Schedule::handleDRVDT(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         std::size_t numPvtRegions = m_runspec.tabdims().getNumPVTTables();
         std::vector<double> max(numPvtRegions);
-        for( const auto& record : handlerContext.keyword ) {
+        for (const auto& record : handlerContext.keyword) {
             std::fill(max.begin(), max.end(), record.getItem("DRVDT_MAX").getSIDouble(0));
             OilVaporizationProperties ovp = this->m_oilvaporizationproperties.get(handlerContext.currentStep);
             OilVaporizationProperties::updateDRVDT(ovp, max);
@@ -237,7 +237,7 @@ void Schedule::handleBRANPROP(const HandlerContext& handlerContext, const ParseC
         std::size_t numPvtRegions = m_runspec.tabdims().getNumPVTTables();
         std::size_t pvtRegionIdx = 0;
         std::vector<double> max(numPvtRegions);
-        for( const auto& record : handlerContext.keyword ) {
+        for (const auto& record : handlerContext.keyword) {
             max[pvtRegionIdx] = record.getItem("DRVDT_MAX").getSIDouble(0);
             pvtRegionIdx++;
         }
@@ -250,85 +250,101 @@ void Schedule::handleBRANPROP(const HandlerContext& handlerContext, const ParseC
         for (const auto& record : handlerContext.keyword) {
             const std::string& groupNamePattern = record.getItem("GROUP").getTrimmedString(0);
             const auto group_names = this->groupNames(groupNamePattern);
-
             if (group_names.empty())
                 invalidNamePattern(groupNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
 
+            const Group::InjectionCMode controlMode = Group::InjectionCModeFromString(record.getItem("CONTROL_MODE").getTrimmedString(0));
+            const Phase phase = get_phase( record.getItem("PHASE").getTrimmedString(0));
+            const auto surfaceInjectionRate = record.getItem("SURFACE_TARGET").get<UDAValue>(0);
+            const auto reservoirInjectionRate = record.getItem("RESV_TARGET").get<UDAValue>(0);
+            const auto reinj_target = record.getItem("REINJ_TARGET").get<UDAValue>(0);
+            const auto voidage_target = record.getItem("VOIDAGE_TARGET").get<UDAValue>(0);
+            const bool is_free = DeckItem::to_bool(record.getItem("FREE").getTrimmedString(0));
+
+            const std::optional<std::string> reinj_group_name = record.getItem("REINJECT_GROUP").defaultApplied(0)
+                ? std::nullopt
+                : std::optional<std::string>(record.getItem("REINJECT_GROUP").getTrimmedString(0));
+
+            const std::optional<std::string> voidage_group_name = record.getItem("VOIDAGE_GROUP").defaultApplied(0)
+                ? std::nullopt
+                : std::optional<std::string>(record.getItem("VOIDAGE_GROUP").getTrimmedString(0));
+
             for (const auto& group_name : group_names) {
-                Group::InjectionCMode controlMode = Group::InjectionCModeFromString( record.getItem("CONTROL_MODE").getTrimmedString(0) );
-                Phase phase = get_phase( record.getItem("PHASE").getTrimmedString(0));
-                auto surfaceInjectionRate = record.getItem("SURFACE_TARGET").get< UDAValue >(0);
-                auto reservoirInjectionRate = record.getItem("RESV_TARGET").get<UDAValue>(0);
-                auto reinj_target = record.getItem("REINJ_TARGET").get<UDAValue>(0);
-                auto voidage_target = record.getItem("VOIDAGE_TARGET").get<UDAValue>(0);
-                std::string reinj_group = group_name;
-                if (!record.getItem("REINJECT_GROUP").defaultApplied(0))
-                    reinj_group = record.getItem("REINJECT_GROUP").getTrimmedString(0);
+                const bool availableForGroupControl = is_free && (group_name != "FIELD");
+                const std::string reinj_group = reinj_group_name.value_or(group_name);
+                const std::string voidage_group = voidage_group_name.value_or(group_name);
 
-                std::string voidage_group = group_name;
-                if (!record.getItem("VOIDAGE_GROUP").defaultApplied(0))
-                    voidage_group = record.getItem("VOIDAGE_GROUP").getTrimmedString(0);;
+                auto group_ptr = std::make_shared<Group>(this->getGroup(group_name, handlerContext.currentStep));
+                Group::GroupInjectionProperties injection;
+                injection.phase = phase;
+                injection.cmode = controlMode;
+                injection.surface_max_rate = surfaceInjectionRate;
+                injection.resv_max_rate = reservoirInjectionRate;
+                injection.target_reinj_fraction = reinj_target;
+                injection.target_void_fraction = voidage_target;
+                injection.injection_controls = 0;
+                injection.reinj_group = reinj_group;
+                injection.voidage_group = voidage_group;
+                injection.available_group_control = availableForGroupControl;
 
-                bool availableForGroupControl = DeckItem::to_bool(record.getItem("FREE").getTrimmedString(0))
-                    && (group_name != "FIELD");
-                //surfaceInjectionRate = injection::rateToSI(surfaceInjectionRate, phase, handlerContext.section.unitSystem());
-                {
-                    auto group_ptr = std::make_shared<Group>(this->getGroup(group_name, handlerContext.currentStep));
-                    Group::GroupInjectionProperties injection;
-                    injection.phase = phase;
-                    injection.cmode = controlMode;
-                    injection.surface_max_rate = surfaceInjectionRate;
-                    injection.resv_max_rate = reservoirInjectionRate;
-                    injection.target_reinj_fraction = reinj_target;
-                    injection.target_void_fraction = voidage_target;
-                    injection.injection_controls = 0;
-                    injection.reinj_group = reinj_group;
-                    injection.voidage_group = voidage_group;
-                    injection.available_group_control = availableForGroupControl;
+                if (!record.getItem("SURFACE_TARGET").defaultApplied(0))
+                    injection.injection_controls += static_cast<int>(Group::InjectionCMode::RATE);
 
-                    if (!record.getItem("SURFACE_TARGET").defaultApplied(0))
-                        injection.injection_controls += static_cast<int>(Group::InjectionCMode::RATE);
+                if (!record.getItem("RESV_TARGET").defaultApplied(0))
+                    injection.injection_controls += static_cast<int>(Group::InjectionCMode::RESV);
 
-                    if (!record.getItem("RESV_TARGET").defaultApplied(0))
-                        injection.injection_controls += static_cast<int>(Group::InjectionCMode::RESV);
+                if (!record.getItem("REINJ_TARGET").defaultApplied(0))
+                    injection.injection_controls += static_cast<int>(Group::InjectionCMode::REIN);
 
-                    if (!record.getItem("REINJ_TARGET").defaultApplied(0))
-                        injection.injection_controls += static_cast<int>(Group::InjectionCMode::REIN);
+                if (!record.getItem("VOIDAGE_TARGET").defaultApplied(0))
+                    injection.injection_controls += static_cast<int>(Group::InjectionCMode::VREP);
 
-                    if (!record.getItem("VOIDAGE_TARGET").defaultApplied(0))
-                        injection.injection_controls += static_cast<int>(Group::InjectionCMode::VREP);
-
-                    if (group_ptr->updateInjection(injection)) {
-                        this->updateGroup(std::move(group_ptr), handlerContext.currentStep);
-                        m_events.addEvent( ScheduleEvents::GROUP_INJECTION_UPDATE , handlerContext.currentStep);
-                        this->addWellGroupEvent(group_name, ScheduleEvents::GROUP_INJECTION_UPDATE, handlerContext.currentStep);
-                    }
+                if (group_ptr->updateInjection(injection)) {
+                    this->updateGroup(std::move(group_ptr), handlerContext.currentStep);
+                    m_events.addEvent( ScheduleEvents::GROUP_INJECTION_UPDATE , handlerContext.currentStep);
+                    this->addWellGroupEvent(group_name, ScheduleEvents::GROUP_INJECTION_UPDATE, handlerContext.currentStep);
                 }
             }
         }
     }
 
     void Schedule::handleGCONPROD(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
-        for( const auto& record : handlerContext.keyword ) {
+        for (const auto& record : handlerContext.keyword) {
             const std::string& groupNamePattern = record.getItem("GROUP").getTrimmedString(0);
             const auto group_names = this->groupNames(groupNamePattern);
-
             if (group_names.empty())
                 invalidNamePattern(groupNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
 
-            for (const auto& group_name : group_names){
-                Group::ProductionCMode controlMode = Group::ProductionCModeFromString( record.getItem("CONTROL_MODE").getTrimmedString(0) );
-                Group::ExceedAction exceedAction = Group::ExceedActionFromString(record.getItem("EXCEED_PROC").getTrimmedString(0) );
-                auto oil_target = record.getItem("OIL_TARGET").get<UDAValue>(0);
-                auto gas_target = record.getItem("GAS_TARGET").get<UDAValue>(0);
-                auto water_target = record.getItem("WATER_TARGET").get<UDAValue>(0);
-                auto liquid_target = record.getItem("LIQUID_TARGET").get<UDAValue>(0);
+            const Group::ProductionCMode controlMode = Group::ProductionCModeFromString(record.getItem("CONTROL_MODE").getTrimmedString(0));
+            const Group::ExceedAction exceedAction = Group::ExceedActionFromString(record.getItem("EXCEED_PROC").getTrimmedString(0));
+
+            const bool respond_to_parent = DeckItem::to_bool(record.getItem("RESPOND_TO_PARENT").getTrimmedString(0));
+
+            const auto oil_target = record.getItem("OIL_TARGET").get<UDAValue>(0);
+            const auto gas_target = record.getItem("GAS_TARGET").get<UDAValue>(0);
+            const auto water_target = record.getItem("WATER_TARGET").get<UDAValue>(0);
+            const auto liquid_target = record.getItem("LIQUID_TARGET").get<UDAValue>(0);
+            const auto resv_target = record.getItem("RESERVOIR_FLUID_TARGET").getSIDouble(0);
+
+            const bool apply_default_oil_target = record.getItem("OIL_TARGET").defaultApplied(0);
+            const bool apply_default_gas_target = record.getItem("GAS_TARGET").defaultApplied(0);
+            const bool apply_default_water_target = record.getItem("WATER_TARGET").defaultApplied(0);
+            const bool apply_default_liquid_target = record.getItem("LIQUID_TARGET").defaultApplied(0);
+            const bool apply_default_resv_target = record.getItem("RESERVOIR_FLUID_TARGET").defaultApplied(0);
+
+            const std::optional<std::string> guide_rate_str = record.getItem("GUIDE_RATE_DEF").hasValue(0)
+                ? std::optional<std::string>(record.getItem("GUIDE_RATE_DEF").getTrimmedString(0))
+                : std::nullopt;
+
+            for (const auto& group_name : group_names) {
+                const bool is_field { group_name == "FIELD" } ;
+                const bool availableForGroupControl { respond_to_parent && !is_field } ;
+
                 auto guide_rate_def = Group::GuideRateTarget::NO_GUIDE_RATE;
                 double guide_rate = 0;
-                if (group_name != "FIELD") {
-                    if (record.getItem("GUIDE_RATE_DEF").hasValue(0)) {
-                        std::string guide_rate_str = record.getItem("GUIDE_RATE_DEF").getTrimmedString(0);
-                        guide_rate_def = Group::GuideRateTargetFromString( guide_rate_str );
+                if (!is_field) {
+                    if (guide_rate_str) {
+                        guide_rate_def = Group::GuideRateTargetFromString(guide_rate_str.value());
 
                         if ((guide_rate_def == Group::GuideRateTarget::INJV ||
                              guide_rate_def == Group::GuideRateTarget::POTN ||
@@ -342,12 +358,10 @@ void Schedule::handleBRANPROP(const HandlerContext& handlerContext, const ParseC
                         }
                     }
                 }
-                bool availableForGroupControl = DeckItem::to_bool(record.getItem("RESPOND_TO_PARENT").getTrimmedString(0)) && (group_name != "FIELD");
 
                 {
                     auto group_ptr = std::make_shared<Group>(this->getGroup(group_name, handlerContext.currentStep));
                     Group::GroupProductionProperties production(group_name);
-                    auto resv_target = record.getItem("RESERVOIR_FLUID_TARGET").getSIDouble(0);
                     production.cmode = controlMode;
                     production.oil_target = oil_target;
                     production.gas_target = gas_target;
@@ -368,19 +382,19 @@ void Schedule::handleBRANPROP(const HandlerContext& handlerContext, const ParseC
 
                     production.production_controls = 0;
 
-                    if (!record.getItem("OIL_TARGET").defaultApplied(0))
+                    if (!apply_default_oil_target)
                         production.production_controls += static_cast<int>(Group::ProductionCMode::ORAT);
 
-                    if (!record.getItem("GAS_TARGET").defaultApplied(0))
+                    if (!apply_default_gas_target)
                         production.production_controls += static_cast<int>(Group::ProductionCMode::GRAT);
 
-                    if (!record.getItem("WATER_TARGET").defaultApplied(0))
+                    if (!apply_default_water_target)
                         production.production_controls += static_cast<int>(Group::ProductionCMode::WRAT);
 
-                    if (!record.getItem("LIQUID_TARGET").defaultApplied(0))
+                    if (!apply_default_liquid_target)
                         production.production_controls += static_cast<int>(Group::ProductionCMode::LRAT);
 
-                    if (!record.getItem("RESERVOIR_FLUID_TARGET").defaultApplied(0))
+                    if (!apply_default_resv_target)
                         production.production_controls += static_cast<int>(Group::ProductionCMode::RESV);
 
                     if (group_ptr->updateProduction(production)) {
@@ -405,7 +419,7 @@ void Schedule::handleBRANPROP(const HandlerContext& handlerContext, const ParseC
         const auto& unit_system = handlerContext.section.unitSystem();
         const auto& current = *this->gconsale.get(handlerContext.currentStep);
         std::shared_ptr<GConSale> new_gconsale(new GConSale(current));
-        for( const auto& record : handlerContext.keyword ) {
+        for (const auto& record : handlerContext.keyword) {
             const std::string& groupName = record.getItem("GROUP").getTrimmedString(0);
             auto sales_target = record.getItem("SALES_TARGET").get<UDAValue>(0);
             auto max_rate = record.getItem("MAX_SALES_RATE").get<UDAValue>(0);
@@ -429,7 +443,7 @@ void Schedule::handleBRANPROP(const HandlerContext& handlerContext, const ParseC
         const auto& unit_system = handlerContext.section.unitSystem();
         const auto& current = *this->gconsump.get(handlerContext.currentStep);
         std::shared_ptr<GConSump> new_gconsump(new GConSump(current));
-        for( const auto& record : handlerContext.keyword ) {
+        for (const auto& record : handlerContext.keyword) {
             const std::string& groupName = record.getItem("GROUP").getTrimmedString(0);
             auto consumption_rate = record.getItem("GAS_CONSUMP_RATE").get<UDAValue>(0);
             auto import_rate = record.getItem("GAS_IMPORT_RATE").get<UDAValue>(0);
@@ -447,72 +461,68 @@ void Schedule::handleBRANPROP(const HandlerContext& handlerContext, const ParseC
     }
 
     void Schedule::handleGEFAC(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
-        for( const auto& record : handlerContext.keyword ) {
+        for (const auto& record : handlerContext.keyword) {
             const std::string& groupNamePattern = record.getItem("GROUP").getTrimmedString(0);
             const auto group_names = this->groupNames(groupNamePattern);
-
             if (group_names.empty())
                 invalidNamePattern(groupNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
 
-            for (const auto& group_name : group_names){
-                bool transfer = DeckItem::to_bool(record.getItem("TRANSFER_EXT_NET").getTrimmedString(0));
-                auto gefac = record.getItem("EFFICIENCY_FACTOR").get< double >(0);
-                {
-                    auto group_ptr = std::make_shared<Group>(this->getGroup(group_name, handlerContext.currentStep));
-                    if (group_ptr->update_gefac(gefac, transfer))
-                        this->updateGroup(std::move(group_ptr), handlerContext.currentStep);
-                }
+            const bool transfer = DeckItem::to_bool(record.getItem("TRANSFER_EXT_NET").getTrimmedString(0));
+            const auto gefac = record.getItem("EFFICIENCY_FACTOR").get<double>(0);
+
+            for (const auto& group_name : group_names) {
+                auto group_ptr = std::make_shared<Group>(this->getGroup(group_name, handlerContext.currentStep));
+                if (group_ptr->update_gefac(gefac, transfer))
+                    this->updateGroup(std::move(group_ptr), handlerContext.currentStep);
             }
         }
     }
 
-void Schedule::handleGLIFTOPT(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard&errors) {
-    auto glo = std::make_shared<GasLiftOpt>( this->glo(handlerContext.currentStep) );
+    void Schedule::handleGLIFTOPT(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard&errors) {
+        auto glo = std::make_shared<GasLiftOpt>( this->glo(handlerContext.currentStep) );
 
-    for (const auto& record : handlerContext.keyword) {
-        const std::string& groupNamePattern = record.getItem<ParserKeywords::GLIFTOPT::GROUP_NAME>().getTrimmedString(0);
-        const auto group_names = this->groupNames(groupNamePattern);
-
-        if (group_names.empty())
-            invalidNamePattern(groupNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
-
-        const auto& max_gas_item = record.getItem<ParserKeywords::GLIFTOPT::MAX_LIFT_GAS_SUPPLY>();
-        const double max_lift_gas_value = max_gas_item.hasValue(0)
-            ? max_gas_item.getSIDouble(0)
-            : -1;
-
-        const auto& max_total_item = record.getItem<ParserKeywords::GLIFTOPT::MAX_TOTAL_GAS_RATE>();
-        const double max_total_gas_value = max_total_item.hasValue(0)
-            ? max_total_item.getSIDouble(0)
-            : -1;
-
-        for (const auto& gname : group_names) {
-            auto group = GasLiftOpt::Group(gname);
-            group.max_lift_gas(max_lift_gas_value);
-            group.max_total_gas(max_total_gas_value);
-
-            glo->add_group(group);
-        }
-    }
-
-    this->m_glo.update(handlerContext.currentStep, std::move(glo));
-}
-
-    void Schedule::handleGPMAINT(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
-        for( const auto& record : handlerContext.keyword ) {
-            const std::string& groupNamePattern = record.getItem("GROUP").getTrimmedString(0);
+        for (const auto& record : handlerContext.keyword) {
+            const std::string& groupNamePattern = record.getItem<ParserKeywords::GLIFTOPT::GROUP_NAME>().getTrimmedString(0);
             const auto group_names = this->groupNames(groupNamePattern);
-
             if (group_names.empty())
                 invalidNamePattern(groupNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
 
-            using GP = ParserKeywords::GPMAINT;
+            const auto& max_gas_item = record.getItem<ParserKeywords::GLIFTOPT::MAX_LIFT_GAS_SUPPLY>();
+            const double max_lift_gas_value = max_gas_item.hasValue(0)
+                ? max_gas_item.getSIDouble(0)
+                : -1;
+
+            const auto& max_total_item = record.getItem<ParserKeywords::GLIFTOPT::MAX_TOTAL_GAS_RATE>();
+            const double max_total_gas_value = max_total_item.hasValue(0)
+                ? max_total_item.getSIDouble(0)
+                : -1;
+
+            for (const auto& gname : group_names) {
+                auto group = GasLiftOpt::Group(gname);
+                group.max_lift_gas(max_lift_gas_value);
+                group.max_total_gas(max_total_gas_value);
+
+                glo->add_group(group);
+            }
+        }
+
+        this->m_glo.update(handlerContext.currentStep, std::move(glo));
+    }
+
+    void Schedule::handleGPMAINT(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+        for (const auto& record : handlerContext.keyword) {
+            const std::string& groupNamePattern = record.getItem("GROUP").getTrimmedString(0);
+            const auto group_names = this->groupNames(groupNamePattern);
+            if (group_names.empty())
+                invalidNamePattern(groupNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
+
+            const auto& target_string = record.getItem<ParserKeywords::GPMAINT::FLOW_TARGET>().get<std::string>(0);
+
             for (const auto& group_name : group_names) {
                 auto group_ptr = std::make_shared<Group>(this->getGroup(group_name, handlerContext.currentStep));
-                const auto& target_string = record.getItem<GP::FLOW_TARGET>().get<std::string>(0);
-                if (target_string == "NONE")
+                if (target_string == "NONE") {
                     group_ptr->set_gpmaint();
-                else {
+                } else {
                     GPMaint gpmaint(record);
                     group_ptr->set_gpmaint(std::move(gpmaint));
                 }
@@ -530,11 +540,10 @@ void Schedule::handleGLIFTOPT(const HandlerContext& handlerContext, const ParseC
                 addGroup(groupName , handlerContext.currentStep, unit_system);
 
             int table = record.getItem("VFP_TABLE").get< int >(0);
-            {
-                auto group_ptr = std::make_shared<Group>( this->getGroup(groupName, handlerContext.currentStep) );
-                if (group_ptr->updateNetVFPTable(table))
-                    this->updateGroup(std::move(group_ptr), handlerContext.currentStep);
-            }
+
+            auto group_ptr = std::make_shared<Group>( this->getGroup(groupName, handlerContext.currentStep) );
+            if (group_ptr->updateNetVFPTable(table))
+                this->updateGroup(std::move(group_ptr), handlerContext.currentStep);
         }
     }
 
@@ -557,47 +566,48 @@ void Schedule::handleGLIFTOPT(const HandlerContext& handlerContext, const ParseC
     void Schedule::handleGUIDERAT(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         const auto& record = handlerContext.keyword.getRecord(0);
 
-        double min_calc_delay = record.getItem<ParserKeywords::GUIDERAT::MIN_CALC_TIME>().getSIDouble(0);
-        auto phase = GuideRateModel::TargetFromString(record.getItem<ParserKeywords::GUIDERAT::NOMINATED_PHASE>().getTrimmedString(0));
-        double A = record.getItem<ParserKeywords::GUIDERAT::A>().get<double>(0);
-        double B = record.getItem<ParserKeywords::GUIDERAT::B>().get<double>(0);
-        double C = record.getItem<ParserKeywords::GUIDERAT::C>().get<double>(0);
-        double D = record.getItem<ParserKeywords::GUIDERAT::D>().get<double>(0);
-        double E = record.getItem<ParserKeywords::GUIDERAT::E>().get<double>(0);
-        double F = record.getItem<ParserKeywords::GUIDERAT::F>().get<double>(0);
-        bool allow_increase = DeckItem::to_bool( record.getItem<ParserKeywords::GUIDERAT::ALLOW_INCREASE>().getTrimmedString(0));
-        double damping_factor = record.getItem<ParserKeywords::GUIDERAT::DAMPING_FACTOR>().get<double>(0);
-        bool use_free_gas = DeckItem::to_bool( record.getItem<ParserKeywords::GUIDERAT::USE_FREE_GAS>().getTrimmedString(0));
+        const double min_calc_delay = record.getItem<ParserKeywords::GUIDERAT::MIN_CALC_TIME>().getSIDouble(0);
+        const auto phase = GuideRateModel::TargetFromString(record.getItem<ParserKeywords::GUIDERAT::NOMINATED_PHASE>().getTrimmedString(0));
+        const double A = record.getItem<ParserKeywords::GUIDERAT::A>().get<double>(0);
+        const double B = record.getItem<ParserKeywords::GUIDERAT::B>().get<double>(0);
+        const double C = record.getItem<ParserKeywords::GUIDERAT::C>().get<double>(0);
+        const double D = record.getItem<ParserKeywords::GUIDERAT::D>().get<double>(0);
+        const double E = record.getItem<ParserKeywords::GUIDERAT::E>().get<double>(0);
+        const double F = record.getItem<ParserKeywords::GUIDERAT::F>().get<double>(0);
+        const bool allow_increase = DeckItem::to_bool( record.getItem<ParserKeywords::GUIDERAT::ALLOW_INCREASE>().getTrimmedString(0));
+        const double damping_factor = record.getItem<ParserKeywords::GUIDERAT::DAMPING_FACTOR>().get<double>(0);
+        const bool use_free_gas = DeckItem::to_bool( record.getItem<ParserKeywords::GUIDERAT::USE_FREE_GAS>().getTrimmedString(0));
 
-        GuideRateModel new_model = GuideRateModel(min_calc_delay, phase, A, B, C, D, E, F, allow_increase, damping_factor, use_free_gas);
-        auto new_config = std::make_shared<GuideRateConfig>( this->guideRateConfig(handlerContext.currentStep) );
+        const auto new_model = GuideRateModel(min_calc_delay, phase, A, B, C, D, E, F, allow_increase, damping_factor, use_free_gas);
+        auto new_config = std::make_shared<GuideRateConfig>(this->guideRateConfig(handlerContext.currentStep));
         if (new_config->update_model(new_model))
             this->guide_rate_config.update( handlerContext.currentStep, new_config );
     }
 
-void Schedule::handleLIFTOPT(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
-    auto glo = std::make_shared<GasLiftOpt>(this->glo(handlerContext.currentStep));
+    void Schedule::handleLIFTOPT(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+        auto glo = std::make_shared<GasLiftOpt>(this->glo(handlerContext.currentStep));
 
-    const auto& record = handlerContext.keyword.getRecord(0);
+        const auto& record = handlerContext.keyword.getRecord(0);
 
-    const double gaslift_increment = record.getItem<ParserKeywords::LIFTOPT::INCREMENT_SIZE>().getSIDouble(0);
-    const double min_eco_gradient = record.getItem<ParserKeywords::LIFTOPT::MIN_ECONOMIC_GRADIENT>().getSIDouble(0);
-    const double min_wait = record.getItem<ParserKeywords::LIFTOPT::MIN_INTERVAL_BETWEEN_GAS_LIFT_OPTIMIZATIONS>().getSIDouble(0);
-    const bool all_newton = DeckItem::to_bool( record.getItem<ParserKeywords::LIFTOPT::OPTIMISE_GAS_LIFT>().get<std::string>(0) );
+        const double gaslift_increment = record.getItem<ParserKeywords::LIFTOPT::INCREMENT_SIZE>().getSIDouble(0);
+        const double min_eco_gradient = record.getItem<ParserKeywords::LIFTOPT::MIN_ECONOMIC_GRADIENT>().getSIDouble(0);
+        const double min_wait = record.getItem<ParserKeywords::LIFTOPT::MIN_INTERVAL_BETWEEN_GAS_LIFT_OPTIMIZATIONS>().getSIDouble(0);
+        const bool all_newton = DeckItem::to_bool( record.getItem<ParserKeywords::LIFTOPT::OPTIMISE_GAS_LIFT>().get<std::string>(0) );
 
-    glo->gaslift_increment(gaslift_increment);
-    glo->min_eco_gradient(min_eco_gradient);
-    glo->min_wait(min_wait);
-    glo->all_newton(all_newton);
+        glo->gaslift_increment(gaslift_increment);
+        glo->min_eco_gradient(min_eco_gradient);
+        glo->min_wait(min_wait);
+        glo->all_newton(all_newton);
 
-    this->m_glo.update(handlerContext.currentStep, std::move(glo));
-}
+        this->m_glo.update(handlerContext.currentStep, std::move(glo));
+    }
 
     void Schedule::handleLINCOM(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         const auto& record = handlerContext.keyword.getRecord(0);
-        auto alpha = record.getItem<ParserKeywords::LINCOM::ALPHA>().get<UDAValue>(0);
-        auto beta  = record.getItem<ParserKeywords::LINCOM::BETA>().get<UDAValue>(0);
-        auto gamma = record.getItem<ParserKeywords::LINCOM::GAMMA>().get<UDAValue>(0);
+        const auto alpha = record.getItem<ParserKeywords::LINCOM::ALPHA>().get<UDAValue>(0);
+        const auto beta  = record.getItem<ParserKeywords::LINCOM::BETA>().get<UDAValue>(0);
+        const auto gamma = record.getItem<ParserKeywords::LINCOM::GAMMA>().get<UDAValue>(0);
+
         auto new_config = std::make_shared<GuideRateConfig>( this->guideRateConfig(handlerContext.currentStep) );
         auto new_model = new_config->model();
 
@@ -613,7 +623,7 @@ void Schedule::handleLIFTOPT(const HandlerContext& handlerContext, const ParseCo
 
     void Schedule::handleMULTFLT (const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         this->m_modifierDeck[handlerContext.currentStep].addKeyword(handlerContext.keyword);
-        m_events.addEvent( ScheduleEvents::GEO_MODIFIER, handlerContext.currentStep);
+        m_events.addEvent(ScheduleEvents::GEO_MODIFIER, handlerContext.currentStep);
     }
 
     void Schedule::handleMXUNSUPP(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
@@ -621,48 +631,49 @@ void Schedule::handleLIFTOPT(const HandlerContext& handlerContext, const ParseCo
         parseContext.handleError( ParseContext::UNSUPPORTED_SCHEDULE_GEO_MODIFIER , msg, errors );
     }
 
-void Schedule::handleNODEPROP(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
-    auto ext_network = std::make_shared<Network::ExtNetwork>(this->network(handlerContext.currentStep));
+    void Schedule::handleNODEPROP(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+        auto ext_network = std::make_shared<Network::ExtNetwork>(this->network(handlerContext.currentStep));
 
-    for (const auto& record : handlerContext.keyword) {
-        const auto& name = record.getItem<ParserKeywords::NODEPROP::NAME>().get<std::string>(0);
-        const auto& pressure_item = record.getItem<ParserKeywords::NODEPROP::PRESSURE>();
+        for (const auto& record : handlerContext.keyword) {
+            const auto& name = record.getItem<ParserKeywords::NODEPROP::NAME>().get<std::string>(0);
+            const auto& pressure_item = record.getItem<ParserKeywords::NODEPROP::PRESSURE>();
 
-        const bool as_choke = DeckItem::to_bool(record.getItem<ParserKeywords::NODEPROP::AS_CHOKE>().get<std::string>(0));
-        const bool add_gas_lift_gas = DeckItem::to_bool(record.getItem<ParserKeywords::NODEPROP::ADD_GAS_LIFT_GAS>().get<std::string>(0));
+            const bool as_choke = DeckItem::to_bool(record.getItem<ParserKeywords::NODEPROP::AS_CHOKE>().get<std::string>(0));
+            const bool add_gas_lift_gas = DeckItem::to_bool(record.getItem<ParserKeywords::NODEPROP::ADD_GAS_LIFT_GAS>().get<std::string>(0));
 
-        Network::Node node { name };
+            Network::Node node { name };
 
-        if (pressure_item.hasValue(0) && (pressure_item.get<double>(0) > 0))
-            node.terminal_pressure(pressure_item.getSIDouble(0));
+            if (pressure_item.hasValue(0) && (pressure_item.get<double>(0) > 0))
+                node.terminal_pressure(pressure_item.getSIDouble(0));
 
-        if (as_choke) {
-            std::string target_group = name;
-            const auto& target_item = record.getItem<ParserKeywords::NODEPROP::CHOKE_GROUP>();
+            if (as_choke) {
+                std::string target_group = name;
+                const auto& target_item = record.getItem<ParserKeywords::NODEPROP::CHOKE_GROUP>();
 
-            if (target_item.hasValue(0))
-                target_group = target_item.get<std::string>(0);
+                if (target_item.hasValue(0))
+                    target_group = target_item.get<std::string>(0);
 
-            if (target_group != name) {
-                if (this->hasGroup(name, handlerContext.currentStep)) {
-                    const auto& group = this->getGroup(name, handlerContext.currentStep);
-                    if (group.numWells() > 0)
-                        throw std::invalid_argument("A manifold group must respond to its own target");
+                if (target_group != name) {
+                    if (this->hasGroup(name, handlerContext.currentStep)) {
+                        const auto& group = this->getGroup(name, handlerContext.currentStep);
+                        if (group.numWells() > 0)
+                            throw std::invalid_argument("A manifold group must respond to its own target");
+                    }
                 }
+
+                node.as_choke(target_group);
             }
 
-            node.as_choke(target_group);
+            node.add_gas_lift_gas(add_gas_lift_gas);
+            ext_network->add_node(node);
         }
 
-        node.add_gas_lift_gas(add_gas_lift_gas);
-        ext_network->add_node(node);
+        this->updateNetwork(ext_network, handlerContext.currentStep);
     }
 
-    this->updateNetwork(ext_network, handlerContext.currentStep);
-}
-
     void Schedule::handleNUPCOL(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
-        int nupcol = handlerContext.keyword.getRecord(0).getItem("NUM_ITER").get<int>(0);
+        const int nupcol = handlerContext.keyword.getRecord(0).getItem("NUM_ITER").get<int>(0);
+
         if (handlerContext.keyword.getRecord(0).getItem("NUM_ITER").defaultApplied(0)) {
             std::string msg = "OPM Flow uses 12 as default NUPCOL value";
             OpmLog::note(msg);
@@ -758,8 +769,8 @@ void Schedule::handleNODEPROP(const HandlerContext& handlerContext, const ParseC
         this->udq_config.update(handlerContext.currentStep, new_udq);
     }
 
-    void Schedule::handleVAPPARS(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&){
-        for( const auto& record : handlerContext.keyword ) {
+    void Schedule::handleVAPPARS(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+        for (const auto& record : handlerContext.keyword) {
             double vap1 = record.getItem("OIL_VAP_PROPENSITY").get< double >(0);
             double vap2 = record.getItem("OIL_DENSITY_PROPENSITY").get< double >(0);
             OilVaporizationProperties ovp = this->m_oilvaporizationproperties.get(handlerContext.currentStep);
@@ -772,12 +783,12 @@ void Schedule::handleNODEPROP(const HandlerContext& handlerContext, const ParseC
         std::shared_ptr<VFPInjTable> table = std::make_shared<VFPInjTable>(handlerContext.keyword, handlerContext.section.unitSystem());
         int table_id = table->getTableNum();
 
-        const auto iter = vfpinj_tables.find(table_id);
-        if (iter == vfpinj_tables.end()) {
+        if (vfpinj_tables.find(table_id) == vfpinj_tables.end()) {
             std::pair<int, DynamicState<std::shared_ptr<VFPInjTable> > > pair = std::make_pair(table_id, DynamicState<std::shared_ptr<VFPInjTable> >(this->m_timeMap, nullptr));
             vfpinj_tables.insert( pair );
         }
-        auto & table_state = vfpinj_tables.at(table_id);
+
+        auto& table_state = vfpinj_tables.at(table_id);
         table_state.update(handlerContext.currentStep, table);
         this->m_events.addEvent( ScheduleEvents::VFPINJ_UPDATE , handlerContext.currentStep);
     }
@@ -786,224 +797,69 @@ void Schedule::handleNODEPROP(const HandlerContext& handlerContext, const ParseC
         std::shared_ptr<VFPProdTable> table = std::make_shared<VFPProdTable>(handlerContext.keyword, handlerContext.section.unitSystem());
         int table_id = table->getTableNum();
 
-        const auto iter = vfpprod_tables.find(table_id);
-        if (iter == vfpprod_tables.end()) {
+        if (vfpprod_tables.find(table_id) == vfpprod_tables.end()) {
             std::pair<int, DynamicState<std::shared_ptr<VFPProdTable> > > pair = std::make_pair(table_id, DynamicState<std::shared_ptr<VFPProdTable> >(this->m_timeMap, nullptr));
             vfpprod_tables.insert( pair );
         }
-        auto & table_state = vfpprod_tables.at(table_id);
+
+        auto& table_state = vfpprod_tables.at(table_id);
         table_state.update(handlerContext.currentStep, table);
         this->m_events.addEvent( ScheduleEvents::VFPPROD_UPDATE , handlerContext.currentStep);
     }
 
     void Schedule::handleWCONHIST(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
-        for( const auto& record : handlerContext.keyword ) {
-            const std::string& wellNamePattern =
-                record.getItem("WELL").getTrimmedString(0);
+        for (const auto& record : handlerContext.keyword) {
+            const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+            const auto well_names = this->wellNames(wellNamePattern, handlerContext.currentStep);
+            if (well_names.empty())
+                invalidNamePattern(wellNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
 
             const Well::Status status = Well::StatusFromString(record.getItem("STATUS").getTrimmedString(0));
-
-            auto well_names = this->wellNames(wellNamePattern, handlerContext.currentStep);
-            if (well_names.empty())
-                invalidNamePattern(wellNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
-
-            for( const auto& well_name : well_names) {
-                updateWellStatus( well_name , handlerContext.currentStep , status, false );
-                {
-                    auto& dynamic_state = this->wells_static.at(well_name);
-                    auto well2 = std::make_shared<Well>(*dynamic_state[handlerContext.currentStep]);
-                    bool switching_from_injector = !well2->isProducer();
-                    auto properties = std::make_shared<Well::WellProductionProperties>(well2->getProductionProperties());
-                    bool update_well = false;
-                    properties->handleWCONHIST(record);
-
-                    if (switching_from_injector) {
-                        properties->resetDefaultBHPLimit();
-
-                        auto inj_props = std::make_shared<Well::WellInjectionProperties>(well2->getInjectionProperties());
-                        inj_props->resetBHPLimit();
-                        well2->updateInjection(inj_props);
-                        update_well = true;
-                    }
-
-                    if (well2->updateProduction(properties))
-                        update_well = true;
-
-                    if (well2->updatePrediction(false))
-                        update_well = true;
-
-                    if (well2->updateHasProduced())
-                        update_well = true;
-
-                    if (update_well) {
-                        m_events.addEvent( ScheduleEvents::PRODUCTION_UPDATE , handlerContext.currentStep);
-                        this->addWellGroupEvent( well2->name(), ScheduleEvents::PRODUCTION_UPDATE, handlerContext.currentStep);
-                        this->updateWell(well2, handlerContext.currentStep);
-                    }
-                    if ( !well2->getAllowCrossFlow()) {
-                        // The numerical content of the rate UDAValues is accessed unconditionally;
-                        // since this is in history mode use of UDA values is not allowed anyway.
-                        const auto& oil_rate = properties->OilRate;
-                        const auto& water_rate = properties->WaterRate;
-                        const auto& gas_rate = properties->GasRate;
-                        if (oil_rate.zero() && water_rate.zero() && gas_rate.zero()) {
-                            std::string msg =
-                                "Well " + well2->name() + " is a history matched well with zero rate where crossflow is banned. " +
-                                "This well will be closed at " + std::to_string ( m_timeMap.getTimePassedUntil(handlerContext.currentStep) / (60*60*24) ) + " days";
-                            OpmLog::note(msg);
-                            updateWellStatus( well_name, handlerContext.currentStep, Well::Status::SHUT, false );
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    void Schedule::handleWCONPROD(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
-        for( const auto& record : handlerContext.keyword ) {
-            const std::string& wellNamePattern =
-                record.getItem("WELL").getTrimmedString(0);
-
-            const Well::Status status = Well::StatusFromString(record.getItem("STATUS").getTrimmedString(0));
-            auto well_names = this->wellNames(wellNamePattern, handlerContext.currentStep);
-            if (well_names.empty())
-                invalidNamePattern(wellNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
-
-            for( const auto& well_name : well_names) {
-
-                updateWellStatus( well_name , handlerContext.currentStep , status, false );
-                {
-                    auto& dynamic_state = this->wells_static.at(well_name);
-                    auto well2 = std::make_shared<Well>(*dynamic_state[handlerContext.currentStep]);
-                    bool switching_from_injector = !well2->isProducer();
-                    auto properties = std::make_shared<Well::WellProductionProperties>(well2->getProductionProperties());
-                    bool update_well = switching_from_injector;
-                    properties->clearControls();
-                    if (well2->isAvailableForGroupControl())
-                        properties->addProductionControl(Well::ProducerCMode::GRUP);
-
-                    properties->handleWCONPROD(well_name, record);
-
-                    if (switching_from_injector)
-                        properties->resetDefaultBHPLimit();
-
-                    if (well2->updateProduction(properties))
-                        update_well = true;
-
-                    if (well2->updatePrediction(true))
-                        update_well = true;
-
-                    if (well2->updateHasProduced())
-                        update_well = true;
-
-                    if (update_well) {
-                        m_events.addEvent( ScheduleEvents::PRODUCTION_UPDATE , handlerContext.currentStep);
-                        this->addWellGroupEvent( well2->name(), ScheduleEvents::PRODUCTION_UPDATE, handlerContext.currentStep);
-                        this->updateWell(std::move(well2), handlerContext.currentStep);
-                    }
-
-                    auto udq = std::make_shared<UDQActive>(this->udqActive(handlerContext.currentStep));
-                    if (properties->updateUDQActive(this->getUDQConfig(handlerContext.currentStep), *udq))
-                        this->updateUDQActive(handlerContext.currentStep, udq);
-                }
-            }
-        }
-    }
-
-    void Schedule::handleWCONINJE(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
-        for( const auto& record : handlerContext.keyword ) {
-            const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-
-            auto well_names = wellNames(wellNamePattern, handlerContext.currentStep);
-            if (well_names.empty())
-                invalidNamePattern(wellNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
-
-            for( const auto& well_name : well_names ) {
-                Well::Status status = Well::StatusFromString( record.getItem("STATUS").getTrimmedString(0));
-                updateWellStatus( well_name , handlerContext.currentStep , status, false );
-                {
-                    bool update_well = false;
-                    auto& dynamic_state = this->wells_static.at(well_name);
-                    auto well2 = std::make_shared<Well>(*dynamic_state[handlerContext.currentStep]);
-                    auto injection = std::make_shared<Well::WellInjectionProperties>(well2->getInjectionProperties());
-                    injection->handleWCONINJE(record, well2->isAvailableForGroupControl(), well_name);
-
-                    if (well2->updateInjection(injection))
-                        update_well = true;
-
-                    if (well2->updatePrediction(true))
-                        update_well = true;
-
-                    if (update_well) {
-                        this->updateWell(well2, handlerContext.currentStep);
-                        m_events.addEvent( ScheduleEvents::INJECTION_UPDATE , handlerContext.currentStep );
-                        this->addWellGroupEvent( well_name, ScheduleEvents::INJECTION_UPDATE, handlerContext.currentStep);
-                    }
-
-                    // if the well has zero surface rate limit or reservior rate limit, while does not allow crossflow,
-                    // it should be turned off.
-                    if ( ! well2->getAllowCrossFlow() ) {
-                         std::string msg =
-                         "Well " + well_name + " is an injector with zero rate where crossflow is banned. " +
-                         "This well will be closed at " + std::to_string ( m_timeMap.getTimePassedUntil(handlerContext.currentStep) / (60*60*24) ) + " days";
-
-                         if (injection->surfaceInjectionRate.is<double>()) {
-                             if (injection->hasInjectionControl(Well::InjectorCMode::RATE) && injection->surfaceInjectionRate.zero()) {
-                                 OpmLog::note(msg);
-                                 updateWellStatus( well_name, handlerContext.currentStep, Well::Status::SHUT, false );
-                             }
-                         }
-
-                         if (injection->reservoirInjectionRate.is<double>()) {
-                             if (injection->hasInjectionControl(Well::InjectorCMode::RESV) && injection->reservoirInjectionRate.zero()) {
-                                 OpmLog::note(msg);
-                                 updateWellStatus( well_name, handlerContext.currentStep, Well::Status::SHUT, false );
-                             }
-                         }
-                    }
-
-                    auto udq = std::make_shared<UDQActive>(this->udqActive(handlerContext.currentStep));
-                    if (injection->updateUDQActive(this->getUDQConfig(handlerContext.currentStep), *udq))
-                        this->updateUDQActive(handlerContext.currentStep, udq);
-                }
-            }
-        }
-    }
-
-    void Schedule::handleWCONINJH(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
-        for( const auto& record : handlerContext.keyword ) {
-            const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            Well::Status status = Well::StatusFromString( record.getItem("STATUS").getTrimmedString(0));
-            const auto well_names = wellNames( wellNamePattern, handlerContext.currentStep );
-
-            if (well_names.empty())
-                invalidNamePattern( wellNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
 
             for (const auto& well_name : well_names) {
-                updateWellStatus( well_name, handlerContext.currentStep, status, false );
-                {
-                    bool update_well = false;
-                    auto& dynamic_state = this->wells_static.at(well_name);
-                    auto well2 = std::make_shared<Well>(*dynamic_state[handlerContext.currentStep]);
-                    auto injection = std::make_shared<Well::WellInjectionProperties>(well2->getInjectionProperties());
-                    injection->handleWCONINJH(record, well2->isProducer(), well_name);
+                updateWellStatus( well_name , handlerContext.currentStep , status, false );
 
-                    if (well2->updateInjection(injection))
-                        update_well = true;
+                auto& dynamic_state = this->wells_static.at(well_name);
+                auto well2 = std::make_shared<Well>(*dynamic_state[handlerContext.currentStep]);
+                const bool switching_from_injector = !well2->isProducer();
+                auto properties = std::make_shared<Well::WellProductionProperties>(well2->getProductionProperties());
+                bool update_well = false;
+                properties->handleWCONHIST(record);
 
-                    if (well2->updatePrediction(false))
-                        update_well = true;
+                if (switching_from_injector) {
+                    properties->resetDefaultBHPLimit();
 
-                    if (update_well) {
-                        this->updateWell(well2, handlerContext.currentStep);
-                        m_events.addEvent( ScheduleEvents::INJECTION_UPDATE , handlerContext.currentStep );
-                        this->addWellGroupEvent( well_name, ScheduleEvents::INJECTION_UPDATE, handlerContext.currentStep);
-                    }
+                    auto inj_props = std::make_shared<Well::WellInjectionProperties>(well2->getInjectionProperties());
+                    inj_props->resetBHPLimit();
+                    well2->updateInjection(inj_props);
+                    update_well = true;
+                }
 
-                    if ( ! well2->getAllowCrossFlow() && (injection->surfaceInjectionRate.zero())) {
+                if (well2->updateProduction(properties))
+                    update_well = true;
+
+                if (well2->updatePrediction(false))
+                    update_well = true;
+
+                if (well2->updateHasProduced())
+                    update_well = true;
+
+                if (update_well) {
+                    m_events.addEvent( ScheduleEvents::PRODUCTION_UPDATE , handlerContext.currentStep);
+                    this->addWellGroupEvent( well2->name(), ScheduleEvents::PRODUCTION_UPDATE, handlerContext.currentStep);
+                    this->updateWell(well2, handlerContext.currentStep);
+                }
+
+                if (!well2->getAllowCrossFlow()) {
+                    // The numerical content of the rate UDAValues is accessed unconditionally;
+                    // since this is in history mode use of UDA values is not allowed anyway.
+                    const auto& oil_rate = properties->OilRate;
+                    const auto& water_rate = properties->WaterRate;
+                    const auto& gas_rate = properties->GasRate;
+                    if (oil_rate.zero() && water_rate.zero() && gas_rate.zero()) {
                         std::string msg =
-                            "Well " + well_name + " is an injector with zero rate where crossflow is banned. " +
-                            "This well will be closed at " + std::to_string ( m_timeMap.getTimePassedUntil(handlerContext.currentStep) / (60*60*24) ) + " days";
+                            "Well " + well2->name() + " is a history matched well with zero rate where crossflow is banned. " +
+                            "This well will be closed at " + std::to_string(m_timeMap.getTimePassedUntil(handlerContext.currentStep) / (60*60*24)) + " days";
                         OpmLog::note(msg);
                         updateWellStatus( well_name, handlerContext.currentStep, Well::Status::SHUT, false );
                     }
@@ -1012,42 +868,185 @@ void Schedule::handleNODEPROP(const HandlerContext& handlerContext, const ParseC
         }
     }
 
-    void Schedule::handleWECON(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
-        for( const auto& record : handlerContext.keyword ) {
+    void Schedule::handleWCONPROD(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+        for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = wellNames( wellNamePattern , handlerContext.currentStep);
-
+            const auto well_names = this->wellNames(wellNamePattern, handlerContext.currentStep);
             if (well_names.empty())
                 invalidNamePattern(wellNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
 
-            for(const auto& well_name : well_names) {
-                {
-                    auto& dynamic_state = this->wells_static.at(well_name);
-                    auto well2 = std::make_shared<Well>(*dynamic_state[handlerContext.currentStep]);
-                    auto econ_limits = std::make_shared<WellEconProductionLimits>( record );
-                    if (well2->updateEconLimits(econ_limits))
-                        this->updateWell(std::move(well2), handlerContext.currentStep);
+            const Well::Status status = Well::StatusFromString(record.getItem("STATUS").getTrimmedString(0));
+
+            for (const auto& well_name : well_names) {
+                updateWellStatus(well_name, handlerContext.currentStep, status, false);
+
+                auto& dynamic_state = this->wells_static.at(well_name);
+                auto well2 = std::make_shared<Well>(*dynamic_state[handlerContext.currentStep]);
+                const bool switching_from_injector = !well2->isProducer();
+                auto properties = std::make_shared<Well::WellProductionProperties>(well2->getProductionProperties());
+                bool update_well = switching_from_injector;
+                properties->clearControls();
+                if (well2->isAvailableForGroupControl())
+                    properties->addProductionControl(Well::ProducerCMode::GRUP);
+
+                properties->handleWCONPROD(well_name, record);
+
+                if (switching_from_injector)
+                    properties->resetDefaultBHPLimit();
+
+                if (well2->updateProduction(properties))
+                    update_well = true;
+
+                if (well2->updatePrediction(true))
+                    update_well = true;
+
+                if (well2->updateHasProduced())
+                    update_well = true;
+
+                if (update_well) {
+                    m_events.addEvent( ScheduleEvents::PRODUCTION_UPDATE , handlerContext.currentStep);
+                    this->addWellGroupEvent( well2->name(), ScheduleEvents::PRODUCTION_UPDATE, handlerContext.currentStep);
+                    this->updateWell(std::move(well2), handlerContext.currentStep);
+                }
+
+                auto udq = std::make_shared<UDQActive>(this->udqActive(handlerContext.currentStep));
+                if (properties->updateUDQActive(this->getUDQConfig(handlerContext.currentStep), *udq))
+                    this->updateUDQActive(handlerContext.currentStep, udq);
+            }
+        }
+    }
+
+    void Schedule::handleWCONINJE(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+        for (const auto& record : handlerContext.keyword) {
+            const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+            const auto well_names = wellNames(wellNamePattern, handlerContext.currentStep);
+            if (well_names.empty())
+                invalidNamePattern(wellNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
+
+            const Well::Status status = Well::StatusFromString(record.getItem("STATUS").getTrimmedString(0));
+
+            for (const auto& well_name : well_names) {
+                updateWellStatus(well_name, handlerContext.currentStep, status, false);
+
+                bool update_well = false;
+                auto& dynamic_state = this->wells_static.at(well_name);
+                auto well2 = std::make_shared<Well>(*dynamic_state[handlerContext.currentStep]);
+                auto injection = std::make_shared<Well::WellInjectionProperties>(well2->getInjectionProperties());
+                injection->handleWCONINJE(record, well2->isAvailableForGroupControl(), well_name);
+
+                if (well2->updateInjection(injection))
+                    update_well = true;
+
+                if (well2->updatePrediction(true))
+                    update_well = true;
+
+                if (update_well) {
+                    this->updateWell(well2, handlerContext.currentStep);
+                    m_events.addEvent( ScheduleEvents::INJECTION_UPDATE , handlerContext.currentStep );
+                    this->addWellGroupEvent( well_name, ScheduleEvents::INJECTION_UPDATE, handlerContext.currentStep);
+                }
+
+                // if the well has zero surface rate limit or reservior rate limit, while does not allow crossflow,
+                // it should be turned off.
+                if ( ! well2->getAllowCrossFlow() ) {
+                    std::string msg =
+                        "Well " + well_name + " is an injector with zero rate where crossflow is banned. " +
+                        "This well will be closed at " + std::to_string ( m_timeMap.getTimePassedUntil(handlerContext.currentStep) / (60*60*24) ) + " days";
+
+                    if (injection->surfaceInjectionRate.is<double>()) {
+                        if (injection->hasInjectionControl(Well::InjectorCMode::RATE) && injection->surfaceInjectionRate.zero()) {
+                            OpmLog::note(msg);
+                            updateWellStatus( well_name, handlerContext.currentStep, Well::Status::SHUT, false );
+                        }
+                    }
+
+                    if (injection->reservoirInjectionRate.is<double>()) {
+                        if (injection->hasInjectionControl(Well::InjectorCMode::RESV) && injection->reservoirInjectionRate.zero()) {
+                            OpmLog::note(msg);
+                            updateWellStatus( well_name, handlerContext.currentStep, Well::Status::SHUT, false );
+                        }
+                    }
+                }
+
+                auto udq = std::make_shared<UDQActive>(this->udqActive(handlerContext.currentStep));
+                if (injection->updateUDQActive(this->getUDQConfig(handlerContext.currentStep), *udq))
+                    this->updateUDQActive(handlerContext.currentStep, udq);
+            }
+        }
+    }
+
+    void Schedule::handleWCONINJH(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+        for (const auto& record : handlerContext.keyword) {
+            const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+            const auto well_names = wellNames(wellNamePattern, handlerContext.currentStep);
+            if (well_names.empty())
+                invalidNamePattern( wellNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
+
+            const Well::Status status = Well::StatusFromString( record.getItem("STATUS").getTrimmedString(0));
+
+            for (const auto& well_name : well_names) {
+                updateWellStatus(well_name, handlerContext.currentStep, status, false);
+
+                bool update_well = false;
+                auto& dynamic_state = this->wells_static.at(well_name);
+                auto well2 = std::make_shared<Well>(*dynamic_state[handlerContext.currentStep]);
+                auto injection = std::make_shared<Well::WellInjectionProperties>(well2->getInjectionProperties());
+                injection->handleWCONINJH(record, well2->isProducer(), well_name);
+
+                if (well2->updateInjection(injection))
+                    update_well = true;
+
+                if (well2->updatePrediction(false))
+                    update_well = true;
+
+                if (update_well) {
+                    this->updateWell(well2, handlerContext.currentStep);
+                    m_events.addEvent( ScheduleEvents::INJECTION_UPDATE , handlerContext.currentStep );
+                    this->addWellGroupEvent( well_name, ScheduleEvents::INJECTION_UPDATE, handlerContext.currentStep);
+                }
+
+                if ( ! well2->getAllowCrossFlow() && (injection->surfaceInjectionRate.zero())) {
+                    std::string msg =
+                        "Well " + well_name + " is an injector with zero rate where crossflow is banned. " +
+                        "This well will be closed at " + std::to_string ( m_timeMap.getTimePassedUntil(handlerContext.currentStep) / (60*60*24) ) + " days";
+                    OpmLog::note(msg);
+                    updateWellStatus( well_name, handlerContext.currentStep, Well::Status::SHUT, false );
                 }
             }
         }
     }
 
-    void Schedule::handleWEFAC(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
-        for( const auto& record : handlerContext.keyword ) {
-            const std::string& wellNamePattern = record.getItem("WELLNAME").getTrimmedString(0);
-            const double& efficiencyFactor = record.getItem("EFFICIENCY_FACTOR").get< double >(0);
-            const auto well_names = wellNames( wellNamePattern, handlerContext.currentStep );
-
+    void Schedule::handleWECON(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+        for (const auto& record : handlerContext.keyword) {
+            const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+            const auto well_names = wellNames(wellNamePattern, handlerContext.currentStep);
             if (well_names.empty())
                 invalidNamePattern(wellNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
 
-            for(const auto& well_name : well_names) {
-                {
-                    auto& dynamic_state = this->wells_static.at(well_name);
-                    auto well2 = std::make_shared<Well>(*dynamic_state[handlerContext.currentStep]);
-                    if (well2->updateEfficiencyFactor(efficiencyFactor))
-                        this->updateWell(std::move(well2), handlerContext.currentStep);
-                }
+            for (const auto& well_name : well_names) {
+                auto& dynamic_state = this->wells_static.at(well_name);
+                auto well2 = std::make_shared<Well>(*dynamic_state[handlerContext.currentStep]);
+                auto econ_limits = std::make_shared<WellEconProductionLimits>( record );
+                if (well2->updateEconLimits(econ_limits))
+                    this->updateWell(std::move(well2), handlerContext.currentStep);
+            }
+        }
+    }
+
+    void Schedule::handleWEFAC(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+        for (const auto& record : handlerContext.keyword) {
+            const std::string& wellNamePattern = record.getItem("WELLNAME").getTrimmedString(0);
+            const auto well_names = wellNames(wellNamePattern, handlerContext.currentStep);
+            if (well_names.empty())
+                invalidNamePattern(wellNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
+
+            const double& efficiencyFactor = record.getItem("EFFICIENCY_FACTOR").get<double>(0);
+
+            for (const auto& well_name : well_names) {
+                auto& dynamic_state = this->wells_static.at(well_name);
+                auto well2 = std::make_shared<Well>(*dynamic_state[handlerContext.currentStep]);
+                if (well2->updateEfficiencyFactor(efficiencyFactor))
+                    this->updateWell(std::move(well2), handlerContext.currentStep);
             }
         }
     }
@@ -1059,12 +1058,11 @@ void Schedule::handleNODEPROP(const HandlerContext& handlerContext, const ParseC
     void Schedule::handleWELSEGS(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         const auto& record1 = handlerContext.keyword.getRecord(0);
         const auto& wname = record1.getItem("WELL").getTrimmedString(0);
-        {
-            auto& dynamic_state = this->wells_static.at(wname);
-            auto well_ptr = std::make_shared<Well>( *dynamic_state[handlerContext.currentStep] );
-            if (well_ptr->handleWELSEGS(handlerContext.keyword))
-                this->updateWell(std::move(well_ptr), handlerContext.currentStep);
-        }
+
+        auto& dynamic_state = this->wells_static.at(wname);
+        auto well_ptr = std::make_shared<Well>(*dynamic_state[handlerContext.currentStep]);
+        if (well_ptr->handleWELSEGS(handlerContext.keyword))
+            this->updateWell(std::move(well_ptr), handlerContext.currentStep);
     }
 
     void Schedule::handleWELSPECS(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
@@ -1073,38 +1071,36 @@ void Schedule::handleNODEPROP(const HandlerContext& handlerContext, const ParseC
         const auto COMPORD_in_timestep = [&]() -> const DeckKeyword* {
             auto itr = section.begin() + handlerContext.keywordIndex;
             for( ; itr != section.end(); ++itr ) {
-                if( itr->name() == "DATES" ) return nullptr;
-                if( itr->name() == "TSTEP" ) return nullptr;
-                if( itr->name() == "COMPORD" ) return std::addressof( *itr );
+                if (itr->name() == "DATES") return nullptr;
+                if (itr->name() == "TSTEP") return nullptr;
+                if (itr->name() == "COMPORD") return std::addressof( *itr );
             }
 
             return nullptr;
         };
 
         const auto& keyword = section.getKeyword(handlerContext.keywordIndex);
-        using WS = ParserKeywords::WELSPECS;
-
         for (std::size_t recordNr = 0; recordNr < keyword.size(); recordNr++) {
             const auto& record = keyword.getRecord(recordNr);
-            const std::string& wellName = trim_wgname(keyword, record.getItem<WS::WELL>().get<std::string>(0), parseContext, errors);
-            const std::string& groupName = trim_wgname(keyword, record.getItem<WS::GROUP>().get<std::string>(0), parseContext, errors);
-            auto density_calc_type = record.getItem<WS::DENSITY_CALC>().get<std::string>(0);
-            auto fip_region_number = record.getItem<WS::FIP_REGION>().get<int>(0);
+            const std::string& wellName = trim_wgname(keyword, record.getItem<ParserKeywords::WELSPECS::WELL>().get<std::string>(0), parseContext, errors);
+            const std::string& groupName = trim_wgname(keyword, record.getItem<ParserKeywords::WELSPECS::GROUP>().get<std::string>(0), parseContext, errors);
+            auto density_calc_type = record.getItem<ParserKeywords::WELSPECS::DENSITY_CALC>().get<std::string>(0);
+            auto fip_region_number = record.getItem<ParserKeywords::WELSPECS::FIP_REGION>().get<int>(0);
 
             if (fip_region_number != 0) {
                 const auto& location = keyword.location();
-                std::string msg = "The FIP_REGION item in the WELSPECS keyword in file: " + location.filename + " line: " + std::to_string(location.lineno) + " using default value: " + std::to_string(WS::FIP_REGION::defaultValue);
+                std::string msg = "The FIP_REGION item in the WELSPECS keyword in file: " + location.filename + " line: " + std::to_string(location.lineno) + " using default value: " + std::to_string(ParserKeywords::WELSPECS::FIP_REGION::defaultValue);
                 OpmLog::warning(msg);
             }
 
             if (density_calc_type != "SEG") {
                 const auto& location = keyword.location();
-                std::string msg = "The DENSITY_CALC item in the WELSPECS keyword in file: " + location.filename + " line: " + std::to_string(location.lineno) + " using default value: " + WS::DENSITY_CALC::defaultValue;
+                std::string msg = "The DENSITY_CALC item in the WELSPECS keyword in file: " + location.filename + " line: " + std::to_string(location.lineno) + " using default value: " + ParserKeywords::WELSPECS::DENSITY_CALC::defaultValue;
                 OpmLog::warning(msg);
             }
 
             if (!hasGroup(groupName))
-                addGroup(groupName , handlerContext.currentStep, unit_system);
+                addGroup(groupName, handlerContext.currentStep, unit_system);
 
             if (!hasWell(wellName)) {
                 auto wellConnectionOrder = Connection::Order::TRACK;
@@ -1125,13 +1121,13 @@ void Schedule::handleNODEPROP(const HandlerContext& handlerContext, const ParseC
                 this->addWell(wellName, record, handlerContext.currentStep, wellConnectionOrder, unit_system);
                 this->addWellToGroup(groupName, wellName, handlerContext.currentStep);
             } else {
-                const auto headI = record.getItem<WS::HEAD_I>().get< int >( 0 ) - 1;
-                const auto headJ = record.getItem<WS::HEAD_J>().get< int >( 0 ) - 1;
-                const auto& refDepthItem = record.getItem<WS::REF_DEPTH>();
-                int pvt_table = record.getItem<WS::P_TABLE>().get<int>(0);
-                double drainageRadius = record.getItem<WS::D_RADIUS>().getSIDouble(0);
-                double refDepth = refDepthItem.hasValue( 0 )
-                    ? refDepthItem.getSIDouble( 0 )
+                const auto headI = record.getItem<ParserKeywords::WELSPECS::HEAD_I>().get<int>(0) - 1;
+                const auto headJ = record.getItem<ParserKeywords::WELSPECS::HEAD_J>().get<int>(0) - 1;
+                const auto& refDepthItem = record.getItem<ParserKeywords::WELSPECS::REF_DEPTH>();
+                int pvt_table = record.getItem<ParserKeywords::WELSPECS::P_TABLE>().get<int>(0);
+                double drainageRadius = record.getItem<ParserKeywords::WELSPECS::D_RADIUS>().getSIDouble(0);
+                double refDepth = refDepthItem.hasValue(0)
+                    ? refDepthItem.getSIDouble(0)
                     : -1.0;
                 {
                     bool update = false;
@@ -1170,41 +1166,38 @@ void Schedule::handleNODEPROP(const HandlerContext& handlerContext, const ParseC
     */
     void Schedule::handleWELTARG(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
         const double SiFactorP = handlerContext.section.unitSystem().parse("Pressure").getSIScaling();
-        for( const auto& record : handlerContext.keyword ) {
-
+        for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto cmode = Well::WELTARGCModeFromString(record.getItem("CMODE").getTrimmedString(0));
-            const auto new_arg = record.getItem("NEW_VALUE").get< UDAValue >(0);
-            const auto well_names = wellNames( wellNamePattern, handlerContext.currentStep );
-
-            if( well_names.empty() )
+            const auto well_names = wellNames(wellNamePattern, handlerContext.currentStep);
+            if (well_names.empty())
                 invalidNamePattern( wellNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
 
-            for(const auto& well_name : well_names) {
-                {
-                    auto& dynamic_state = this->wells_static.at(well_name);
-                    auto well2 = std::make_shared<Well>(*dynamic_state[handlerContext.currentStep]);
-                    bool update = false;
-                    if (well2->isProducer()) {
-                        auto prop = std::make_shared<Well::WellProductionProperties>(well2->getProductionProperties());
-                        prop->handleWELTARG(cmode, new_arg, SiFactorP);
-                        update = well2->updateProduction(prop);
-                        if (cmode == Well::WELTARGCMode::GUID)
-                            update |= well2->updateWellGuideRate(new_arg.get<double>());
+            const auto cmode = Well::WELTARGCModeFromString(record.getItem("CMODE").getTrimmedString(0));
+            const auto new_arg = record.getItem("NEW_VALUE").get<UDAValue>(0);
 
-                        auto udq = std::make_shared<UDQActive>(this->udqActive(handlerContext.currentStep));
-                        if (prop->updateUDQActive(this->getUDQConfig(handlerContext.currentStep), *udq))
-                            this->updateUDQActive(handlerContext.currentStep, udq);
-                    } else {
-                        auto inj = std::make_shared<Well::WellInjectionProperties>(well2->getInjectionProperties());
-                        inj->handleWELTARG(cmode, new_arg, SiFactorP);
-                        update = well2->updateInjection(inj);
-                        if (cmode == Well::WELTARGCMode::GUID)
-                            update |= well2->updateWellGuideRate(new_arg.get<double>());
-                    }
-                    if (update)
-                        this->updateWell(std::move(well2), handlerContext.currentStep);
+            for (const auto& well_name : well_names) {
+                auto& dynamic_state = this->wells_static.at(well_name);
+                auto well2 = std::make_shared<Well>(*dynamic_state[handlerContext.currentStep]);
+                bool update = false;
+                if (well2->isProducer()) {
+                    auto prop = std::make_shared<Well::WellProductionProperties>(well2->getProductionProperties());
+                    prop->handleWELTARG(cmode, new_arg, SiFactorP);
+                    update = well2->updateProduction(prop);
+                    if (cmode == Well::WELTARGCMode::GUID)
+                        update |= well2->updateWellGuideRate(new_arg.get<double>());
+
+                    auto udq = std::make_shared<UDQActive>(this->udqActive(handlerContext.currentStep));
+                    if (prop->updateUDQActive(this->getUDQConfig(handlerContext.currentStep), *udq))
+                        this->updateUDQActive(handlerContext.currentStep, udq);
+                } else {
+                    auto inj = std::make_shared<Well::WellInjectionProperties>(well2->getInjectionProperties());
+                    inj->handleWELTARG(cmode, new_arg, SiFactorP);
+                    update = well2->updateInjection(inj);
+                    if (cmode == Well::WELTARGCMode::GUID)
+                        update |= well2->updateWellGuideRate(new_arg.get<double>());
                 }
+                if (update)
+                    this->updateWell(std::move(well2), handlerContext.currentStep);
             }
         }
     }
@@ -1212,8 +1205,7 @@ void Schedule::handleNODEPROP(const HandlerContext& handlerContext, const ParseC
     void Schedule::handleWFOAM(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = wellNames(wellNamePattern, handlerContext.currentStep );
-
+            const auto well_names = wellNames(wellNamePattern, handlerContext.currentStep);
             if (well_names.empty())
                 invalidNamePattern(wellNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
 
@@ -1229,28 +1221,29 @@ void Schedule::handleNODEPROP(const HandlerContext& handlerContext, const ParseC
     }
 
     void Schedule::handleWGRUPCON(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
-        for( const auto& record : handlerContext.keyword ) {
-            const auto well_names = this->wellNames(record.getItem("WELL").getTrimmedString(0), handlerContext.currentStep);
+        for (const auto& record : handlerContext.keyword) {
+            const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+            const auto well_names = this->wellNames(wellNamePattern, handlerContext.currentStep);
+
+            const bool availableForGroupControl = DeckItem::to_bool(record.getItem("GROUP_CONTROLLED").getTrimmedString(0));
+            const double guide_rate = record.getItem("GUIDE_RATE").get<double>(0);
+            const double scaling_factor = record.getItem("SCALING_FACTOR").get<double>(0);
+
             for (const auto& well_name : well_names) {
-                bool availableForGroupControl = DeckItem::to_bool(record.getItem("GROUP_CONTROLLED").getTrimmedString(0));
-                double guide_rate = record.getItem("GUIDE_RATE").get< double >(0);
-                double scaling_factor = record.getItem("SCALING_FACTOR").get< double >(0);
                 auto phase = Well::GuideRateTarget::UNDEFINED;
                 if (!record.getItem("PHASE").defaultApplied(0)) {
                     std::string guideRatePhase = record.getItem("PHASE").getTrimmedString(0);
                     phase = Well::GuideRateTargetFromString(guideRatePhase);
                 }
 
-                {
-                    auto& dynamic_state = this->wells_static.at(well_name);
-                    auto well_ptr = std::make_shared<Well>( *dynamic_state[handlerContext.currentStep] );
-                    if (well_ptr->updateWellGuideRate(availableForGroupControl, guide_rate, phase, scaling_factor)) {
-                        auto new_config = std::make_shared<GuideRateConfig>( this->guideRateConfig(handlerContext.currentStep) );
-                        new_config->update_well(*well_ptr);
-                        this->guide_rate_config.update( handlerContext.currentStep, std::move(new_config) );
+                auto& dynamic_state = this->wells_static.at(well_name);
+                auto well_ptr = std::make_shared<Well>( *dynamic_state[handlerContext.currentStep] );
+                if (well_ptr->updateWellGuideRate(availableForGroupControl, guide_rate, phase, scaling_factor)) {
+                    auto new_config = std::make_shared<GuideRateConfig>( this->guideRateConfig(handlerContext.currentStep) );
+                    new_config->update_well(*well_ptr);
+                    this->guide_rate_config.update(handlerContext.currentStep, std::move(new_config));
 
-                        this->updateWell(std::move(well_ptr), handlerContext.currentStep);
-                    }
+                    this->updateWell(std::move(well_ptr), handlerContext.currentStep);
                 }
             }
         }
@@ -1318,13 +1311,13 @@ void Schedule::handleNODEPROP(const HandlerContext& handlerContext, const ParseC
     void Schedule::handleWINJTEMP(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
         // we do not support the "enthalpy" field yet. how to do this is a more difficult
         // question.
-        for( const auto& record : handlerContext.keyword ) {
+        for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            auto well_names = wellNames( wellNamePattern , handlerContext.currentStep);
-            double temp = record.getItem("TEMPERATURE").getSIDouble(0);
-
+            auto well_names = wellNames(wellNamePattern, handlerContext.currentStep);
             if (well_names.empty())
                 invalidNamePattern( wellNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
+
+            const double temp = record.getItem("TEMPERATURE").getSIDouble(0);
 
             for (const auto& well_name : well_names) {
                 // TODO: Is this the right approach? Setting the well temperature only
@@ -1333,55 +1326,53 @@ void Schedule::handleNODEPROP(const HandlerContext& handlerContext, const ParseC
                 // modifying the injector properties for producer wells currently leads
                 // to a very weird segmentation fault downstream. For now, let's take the
                 // water route.
-                {
-                    const auto& well = this->getWell(well_name, handlerContext.currentStep);
-                    double current_temp = well.getInjectionProperties().temperature;
-                    if (current_temp != temp && !well.isProducer()) {
-                        auto& dynamic_state = this->wells_static.at(well_name);
-                        auto well_ptr = std::make_shared<Well>( *dynamic_state[handlerContext.currentStep] );
-                        auto inj = std::make_shared<Well::WellInjectionProperties>(well_ptr->getInjectionProperties());
-                        inj->temperature = temp;
-                        well_ptr->updateInjection(inj);
-                        this->updateWell(std::move(well_ptr), handlerContext.currentStep);
-                    }
+                const auto& well = this->getWell(well_name, handlerContext.currentStep);
+                const double current_temp = well.getInjectionProperties().temperature;
+                if (current_temp != temp && !well.isProducer()) {
+                    auto& dynamic_state = this->wells_static.at(well_name);
+                    auto well_ptr = std::make_shared<Well>( *dynamic_state[handlerContext.currentStep] );
+                    auto inj = std::make_shared<Well::WellInjectionProperties>(well_ptr->getInjectionProperties());
+                    inj->temperature = temp;
+                    well_ptr->updateInjection(inj);
+                    this->updateWell(std::move(well_ptr), handlerContext.currentStep);
                 }
             }
         }
     }
 
-void Schedule::handleWLIFTOPT(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
-    auto glo = std::make_shared<GasLiftOpt>(this->glo(handlerContext.currentStep));
+    void Schedule::handleWLIFTOPT(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+        auto glo = std::make_shared<GasLiftOpt>(this->glo(handlerContext.currentStep));
 
-    for (const auto& record : handlerContext.keyword) {
-        const std::string& wellNamePattern = record.getItem<ParserKeywords::WLIFTOPT::WELL>().getTrimmedString(0);
-        const bool use_glo = DeckItem::to_bool( record.getItem<ParserKeywords::WLIFTOPT::USE_OPTIMIZER>().get<std::string>(0));
-        const bool alloc_extra_gas = DeckItem::to_bool( record.getItem<ParserKeywords::WLIFTOPT::ALLOCATE_EXTRA_LIFT_GAS>().get<std::string>(0));
-        const double weight_factor = record.getItem<ParserKeywords::WLIFTOPT::WEIGHT_FACTOR>().get<double>(0);
-        const double inc_weight_factor = record.getItem<ParserKeywords::WLIFTOPT::DELTA_GAS_RATE_WEIGHT_FACTOR>().get<double>(0);
-        const double min_rate = record.getItem<ParserKeywords::WLIFTOPT::MIN_LIFT_GAS_RATE>().getSIDouble(0);
-        const auto& max_rate_item = record.getItem<ParserKeywords::WLIFTOPT::MAX_LIFT_GAS_RATE>();
+        for (const auto& record : handlerContext.keyword) {
+            const std::string& wellNamePattern = record.getItem<ParserKeywords::WLIFTOPT::WELL>().getTrimmedString(0);
+            const auto well_names = this->wellNames(wellNamePattern);
+            if (well_names.empty())
+                invalidNamePattern(wellNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
 
-        const auto well_names = this->wellNames(wellNamePattern);
-        if (well_names.empty())
-            invalidNamePattern(wellNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
+            const bool use_glo = DeckItem::to_bool(record.getItem<ParserKeywords::WLIFTOPT::USE_OPTIMIZER>().get<std::string>(0));
+            const bool alloc_extra_gas = DeckItem::to_bool( record.getItem<ParserKeywords::WLIFTOPT::ALLOCATE_EXTRA_LIFT_GAS>().get<std::string>(0));
+            const double weight_factor = record.getItem<ParserKeywords::WLIFTOPT::WEIGHT_FACTOR>().get<double>(0);
+            const double inc_weight_factor = record.getItem<ParserKeywords::WLIFTOPT::DELTA_GAS_RATE_WEIGHT_FACTOR>().get<double>(0);
+            const double min_rate = record.getItem<ParserKeywords::WLIFTOPT::MIN_LIFT_GAS_RATE>().getSIDouble(0);
+            const auto& max_rate_item = record.getItem<ParserKeywords::WLIFTOPT::MAX_LIFT_GAS_RATE>();
 
-        for (const auto& wname : well_names) {
-            auto well = GasLiftOpt::Well(wname, use_glo);
+            for (const auto& wname : well_names) {
+                auto well = GasLiftOpt::Well(wname, use_glo);
 
-            if (max_rate_item.hasValue(0))
-                well.max_rate( max_rate_item.getSIDouble(0) );
+                if (max_rate_item.hasValue(0))
+                    well.max_rate( max_rate_item.getSIDouble(0) );
 
-            well.weight_factor(weight_factor);
-            well.inc_weight_factor(inc_weight_factor);
-            well.min_rate(min_rate);
-            well.alloc_extra_gas(alloc_extra_gas);
+                well.weight_factor(weight_factor);
+                well.inc_weight_factor(inc_weight_factor);
+                well.min_rate(min_rate);
+                well.alloc_extra_gas(alloc_extra_gas);
 
-            glo->add_well(well);
+                glo->add_well(well);
+            }
         }
-    }
 
-    this->m_glo.update(handlerContext.currentStep, std::move(glo));
-}
+        this->m_glo.update(handlerContext.currentStep, std::move(glo));
+    }
 
     void Schedule::handleWLIST(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         const std::string legal_actions = "NEW:ADD:DEL:MOV";
@@ -1432,9 +1423,10 @@ void Schedule::handleWLIFTOPT(const HandlerContext& handlerContext, const ParseC
     }
 
     void Schedule::handleWPIMULT(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
-        for( const auto& record : handlerContext.keyword ) {
+        for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto& well_names = this->wellNames(wellNamePattern, handlerContext.currentStep);
+
             for (const auto& wname : well_names) {
                 auto& dynamic_state = this->wells_static.at(wname);
                 auto well_ptr = std::make_shared<Well>( *dynamic_state[handlerContext.currentStep] );
@@ -1446,43 +1438,36 @@ void Schedule::handleWLIFTOPT(const HandlerContext& handlerContext, const ParseC
 
     void Schedule::handleWPMITAB(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
         for (const auto& record : handlerContext.keyword) {
-
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = wellNames( wellNamePattern, handlerContext.currentStep );
-
+            const auto well_names = wellNames(wellNamePattern, handlerContext.currentStep);
             if (well_names.empty())
                 invalidNamePattern(wellNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
 
             for (const auto& well_name : well_names) {
-                {
-                    auto& dynamic_state = this->wells_static.at(well_name);
-                    auto well2 = std::make_shared<Well>(*dynamic_state[handlerContext.currentStep]);
-                    auto polymer_properties = std::make_shared<WellPolymerProperties>( well2->getPolymerProperties() );
-                    polymer_properties->handleWPMITAB(record);
-                    if (well2->updatePolymerProperties(polymer_properties))
-                        this->updateWell(std::move(well2), handlerContext.currentStep);
-                }
+                auto& dynamic_state = this->wells_static.at(well_name);
+                auto well2 = std::make_shared<Well>(*dynamic_state[handlerContext.currentStep]);
+                auto polymer_properties = std::make_shared<WellPolymerProperties>( well2->getPolymerProperties() );
+                polymer_properties->handleWPMITAB(record);
+                if (well2->updatePolymerProperties(polymer_properties))
+                    this->updateWell(std::move(well2), handlerContext.currentStep);
             }
         }
     }
 
     void Schedule::handleWPOLYMER(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
-        for( const auto& record : handlerContext.keyword ) {
+        for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = wellNames( wellNamePattern, handlerContext.currentStep );
-
+            const auto well_names = wellNames(wellNamePattern, handlerContext.currentStep);
             if (well_names.empty())
                 invalidNamePattern(wellNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
 
-            for( const auto& well_name : well_names) {
-                {
-                    const auto& dynamic_state = this->wells_static.at(well_name);
-                    auto well2 = std::make_shared<Well>(*dynamic_state[handlerContext.currentStep]);
-                    auto polymer_properties = std::make_shared<WellPolymerProperties>( well2->getPolymerProperties() );
-                    polymer_properties->handleWPOLYMER(record);
-                    if (well2->updatePolymerProperties(polymer_properties))
-                        this->updateWell(std::move(well2), handlerContext.currentStep);
-                }
+            for (const auto& well_name : well_names) {
+                const auto& dynamic_state = this->wells_static.at(well_name);
+                auto well2 = std::make_shared<Well>(*dynamic_state[handlerContext.currentStep]);
+                auto polymer_properties = std::make_shared<WellPolymerProperties>( well2->getPolymerProperties() );
+                polymer_properties->handleWPOLYMER(record);
+                if (well2->updatePolymerProperties(polymer_properties))
+                    this->updateWell(std::move(well2), handlerContext.currentStep);
             }
         }
     }
@@ -1490,8 +1475,7 @@ void Schedule::handleWLIFTOPT(const HandlerContext& handlerContext, const ParseC
     void Schedule::handleWSALT(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = wellNames(wellNamePattern, handlerContext.currentStep );
-
+            const auto well_names = wellNames(wellNamePattern, handlerContext.currentStep);
             if (well_names.empty())
                 invalidNamePattern(wellNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
 
@@ -1521,10 +1505,12 @@ void Schedule::handleWLIFTOPT(const HandlerContext& handlerContext, const ParseC
     }
 
     void Schedule::handleWSEGSICD(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
-       std::map<std::string, std::vector<std::pair<int, SICD> > > spiral_icds = SICD::fromWSEGSICD(handlerContext.keyword);
+        std::map<std::string, std::vector<std::pair<int, SICD> > > spiral_icds = SICD::fromWSEGSICD(handlerContext.keyword);
+
         for (auto& map_elem : spiral_icds) {
             const std::string& well_name_pattern = map_elem.first;
             const auto well_names = this->wellNames(well_name_pattern, handlerContext.currentStep);
+
             std::vector<std::pair<int, SICD> >& sicd_pairs = map_elem.second;
 
             for (const auto& well_name : well_names) {
@@ -1538,7 +1524,7 @@ void Schedule::handleWLIFTOPT(const HandlerContext& handlerContext, const ParseC
                     sicd.updateScalingFactor(outlet_segment_length, connections.segment_perf_length(segment_nr));
                 }
 
-                if (well_ptr -> updateWSEGSICD(sicd_pairs) )
+                if (well_ptr->updateWSEGSICD(sicd_pairs) )
                     this->updateWell(std::move(well_ptr), handlerContext.currentStep);
             }
         }
@@ -1550,12 +1536,13 @@ void Schedule::handleWLIFTOPT(const HandlerContext& handlerContext, const ParseC
         for (const auto& map_elem : valves) {
             const std::string& well_name_pattern = map_elem.first;
             const auto well_names = this->wellNames(well_name_pattern, handlerContext.currentStep);
+
             const std::vector<std::pair<int, Valve> >& valve_pairs = map_elem.second;
 
             for (const auto& well_name : well_names) {
                 auto& dynamic_state = this->wells_static.at(well_name);
                 auto well_ptr = std::make_shared<Well>( *dynamic_state[handlerContext.currentStep] );
-                if (well_ptr -> updateWSEGVALV(valve_pairs) )
+                if (well_ptr->updateWSEGVALV(valve_pairs))
                     this->updateWell(std::move(well_ptr), handlerContext.currentStep);
             }
         }
@@ -1565,52 +1552,48 @@ void Schedule::handleWLIFTOPT(const HandlerContext& handlerContext, const ParseC
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = wellNames(wellNamePattern, handlerContext.currentStep);
-
             if (well_names.empty())
                 invalidNamePattern(wellNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
 
             for (const auto& well_name : well_names) {
-                {
-                    auto& dynamic_state = this->wells_static.at(well_name);
-                    auto well2 = std::make_shared<Well>(*dynamic_state[handlerContext.currentStep]);
-                    auto polymer_properties = std::make_shared<WellPolymerProperties>( well2->getPolymerProperties() );
-                    polymer_properties->handleWSKPTAB(record);
-                    if (well2->updatePolymerProperties(polymer_properties))
-                        this->updateWell(std::move(well2), handlerContext.currentStep);
-                }
+                auto& dynamic_state = this->wells_static.at(well_name);
+                auto well2 = std::make_shared<Well>(*dynamic_state[handlerContext.currentStep]);
+                auto polymer_properties = std::make_shared<WellPolymerProperties>(well2->getPolymerProperties());
+                polymer_properties->handleWSKPTAB(record);
+                if (well2->updatePolymerProperties(polymer_properties))
+                    this->updateWell(std::move(well2), handlerContext.currentStep);
             }
         }
     }
 
     void Schedule::handleWSOLVENT(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
 
-        for( const auto& record : handlerContext.keyword ) {
+        for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = wellNames( wellNamePattern , handlerContext.currentStep);
-            double fraction = record.getItem("SOLVENT_FRACTION").get< UDAValue >(0).getSI();
-
             if (well_names.empty())
                 invalidNamePattern(wellNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
 
-            for(const auto& well_name : well_names) {
-                {
-                    const auto& well = this->getWell(well_name, handlerContext.currentStep);
-                    const auto& inj = well.getInjectionProperties();
-                    if (!well.isProducer() && inj.injectorType == InjectorType::GAS) {
-                        if (well.getSolventFraction() != fraction) {
-                            auto new_well = std::make_shared<Well>(well);
-                            new_well->updateSolventFraction(fraction);
-                            this->updateWell(std::move(new_well), handlerContext.currentStep);
-                        }
-                    } else
-                        throw std::invalid_argument("The WSOLVENT keyword can only be applied to gas injectors");
+            const double fraction = record.getItem("SOLVENT_FRACTION").get<UDAValue>(0).getSI();
+
+            for (const auto& well_name : well_names) {
+                const auto& well = this->getWell(well_name, handlerContext.currentStep);
+                const auto& inj = well.getInjectionProperties();
+                if (!well.isProducer() && inj.injectorType == InjectorType::GAS) {
+                    if (well.getSolventFraction() != fraction) {
+                        auto new_well = std::make_shared<Well>(well);
+                        new_well->updateSolventFraction(fraction);
+                        this->updateWell(std::move(new_well), handlerContext.currentStep);
+                    }
+                } else {
+                    throw std::invalid_argument("The WSOLVENT keyword can only be applied to gas injectors");
                 }
             }
         }
     }
 
     void Schedule::handleWTEMP(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
-        for( const auto& record : handlerContext.keyword ) {
+        for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = wellNames( wellNamePattern, handlerContext.currentStep );
             double temp = record.getItem("TEMP").getSIDouble(0);
@@ -1624,17 +1607,16 @@ void Schedule::handleWLIFTOPT(const HandlerContext& handlerContext, const ParseC
                 // modifying the injector properties for producer wells currently leads
                 // to a very weird segmentation fault downstream. For now, let's take the
                 // water route.
-                {
-                    const auto& well = this->getWell(well_name, handlerContext.currentStep);
-                    double current_temp = well.getInjectionProperties().temperature;
-                    if (current_temp != temp && !well.isProducer()) {
-                        auto& dynamic_state = this->wells_static.at(well_name);
-                        auto well_ptr = std::make_shared<Well>( *dynamic_state[handlerContext.currentStep] );
-                        auto inj = std::make_shared<Well::WellInjectionProperties>(well_ptr->getInjectionProperties());
-                        inj->temperature = temp;
-                        well_ptr->updateInjection(inj);
-                        this->updateWell(std::move(well_ptr), handlerContext.currentStep);
-                    }
+
+                const auto& well = this->getWell(well_name, handlerContext.currentStep);
+                const double current_temp = well.getInjectionProperties().temperature;
+                if (current_temp != temp && !well.isProducer()) {
+                    auto& dynamic_state = this->wells_static.at(well_name);
+                    auto well_ptr = std::make_shared<Well>( *dynamic_state[handlerContext.currentStep] );
+                    auto inj = std::make_shared<Well::WellInjectionProperties>(well_ptr->getInjectionProperties());
+                    inj->temperature = temp;
+                    well_ptr->updateInjection(inj);
+                    this->updateWell(std::move(well_ptr), handlerContext.currentStep);
                 }
             }
         }
@@ -1643,18 +1625,18 @@ void Schedule::handleWLIFTOPT(const HandlerContext& handlerContext, const ParseC
     void Schedule::handleWTEST(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
         const auto& current = *this->wtest_config.get(handlerContext.currentStep);
         std::shared_ptr<WellTestConfig> new_config(new WellTestConfig(current));
-        for( const auto& record : handlerContext.keyword ) {
+        for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = wellNames( wellNamePattern , handlerContext.currentStep);
+            const auto well_names = wellNames(wellNamePattern, handlerContext.currentStep);
             if (well_names.empty())
                 invalidNamePattern(wellNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
 
-            double test_interval = record.getItem("INTERVAL").getSIDouble(0);
+            const double test_interval = record.getItem("INTERVAL").getSIDouble(0);
             const std::string& reasons = record.getItem("REASON").get<std::string>(0);
-            int num_test = record.getItem("TEST_NUM").get<int>(0);
-            double startup_time = record.getItem("START_TIME").getSIDouble(0);
+            const int num_test = record.getItem("TEST_NUM").get<int>(0);
+            const double startup_time = record.getItem("START_TIME").getSIDouble(0);
 
-            for(const auto& well_name : well_names) {
+            for (const auto& well_name : well_names) {
                 if (reasons.empty())
                     new_config->drop_well(well_name);
                 else
@@ -1666,23 +1648,22 @@ void Schedule::handleWLIFTOPT(const HandlerContext& handlerContext, const ParseC
 
     void Schedule::handleWTRACER(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
 
-        for( const auto& record : handlerContext.keyword ) {
+        for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = wellNames( wellNamePattern, handlerContext.currentStep );
+            const auto well_names = wellNames(wellNamePattern, handlerContext.currentStep);
 
             if (well_names.empty())
                 invalidNamePattern(wellNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
 
-            for(const auto& well_name : well_names) {
-                double tracerConcentration = record.getItem("CONCENTRATION").get< UDAValue >(0).getSI();
-                const std::string& tracerName = record.getItem("TRACER").getTrimmedString(0);
-                {
-                    auto well = std::make_shared<Well>( this->getWell(well_name, handlerContext.currentStep));
-                    auto wellTracerProperties = std::make_shared<WellTracerProperties>( well->getTracerProperties() );
-                    wellTracerProperties->setConcentration(tracerName, tracerConcentration);
-                    if (well->updateTracer(wellTracerProperties))
-                        this->updateWell(std::move(well), handlerContext.currentStep);
-                }
+            const double tracerConcentration = record.getItem("CONCENTRATION").get<UDAValue>(0).getSI();
+            const std::string& tracerName = record.getItem("TRACER").getTrimmedString(0);
+
+            for (const auto& well_name : well_names) {
+                auto well = std::make_shared<Well>(this->getWell(well_name, handlerContext.currentStep));
+                auto wellTracerProperties = std::make_shared<WellTracerProperties>(well->getTracerProperties());
+                wellTracerProperties->setConcentration(tracerName, tracerConcentration);
+                if (well->updateTracer(wellTracerProperties))
+                    this->updateWell(std::move(well), handlerContext.currentStep);
             }
         }
     }

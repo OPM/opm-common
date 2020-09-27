@@ -181,25 +181,25 @@ namespace Opm
         time_t getStartTime() const;
         time_t posixStartTime() const;
         time_t posixEndTime() const;
-        time_t simTime(size_t timeStep) const;
-        double seconds(size_t timeStep) const;
-        double stepLength(size_t timeStep) const;
+        time_t simTime(std::size_t timeStep) const;
+        double seconds(std::size_t timeStep) const;
+        double stepLength(std::size_t timeStep) const;
         std::optional<int> exitStatus() const;
 
         const TimeMap& getTimeMap() const;
 
-        size_t numWells() const;
-        size_t numWells(size_t timestep) const;
+        std::size_t numWells() const;
+        std::size_t numWells(std::size_t timestep) const;
         bool hasWell(const std::string& wellName) const;
         bool hasWell(const std::string& wellName, std::size_t timeStep) const;
 
-        std::vector<std::string> wellNames(const std::string& pattern, size_t timeStep, const std::vector<std::string>& matching_wells = {}) const;
+        std::vector<std::string> wellNames(const std::string& pattern, std::size_t timeStep, const std::vector<std::string>& matching_wells = {}) const;
         std::vector<std::string> wellNames(const std::string& pattern) const;
-        std::vector<std::string> wellNames(size_t timeStep) const;
+        std::vector<std::string> wellNames(std::size_t timeStep) const;
         std::vector<std::string> wellNames() const;
 
-        std::vector<std::string> groupNames(const std::string& pattern, size_t timeStep) const;
-        std::vector<std::string> groupNames(size_t timeStep) const;
+        std::vector<std::string> groupNames(const std::string& pattern, std::size_t timeStep) const;
+        std::vector<std::string> groupNames(std::size_t timeStep) const;
         std::vector<std::string> groupNames(const std::string& pattern) const;
         std::vector<std::string> groupNames() const;
         /*
@@ -211,68 +211,68 @@ namespace Opm
             3. If there are less than WELLDIMS::MAXGROUPS nullptr is used.
             4. The very last element corresponds to the FIELD group.
         */
-        std::vector<const Group*> restart_groups(size_t timeStep) const;
+        std::vector<const Group*> restart_groups(std::size_t timeStep) const;
 
-        void updateWell(std::shared_ptr<Well> well, size_t reportStep);
-        std::vector<std::string> changed_wells(size_t reportStep) const;
-        const Well& getWell(const std::string& wellName, size_t timeStep) const;
+        void updateWell(std::shared_ptr<Well> well, std::size_t reportStep);
+        std::vector<std::string> changed_wells(std::size_t reportStep) const;
+        const Well& getWell(const std::string& wellName, std::size_t timeStep) const;
         const Well& getWellatEnd(const std::string& well_name) const;
-        std::vector<Well> getWells(size_t timeStep) const;
+        std::vector<Well> getWells(std::size_t timeStep) const;
         std::vector<Well> getWellsatEnd() const;
         void shut_well(const std::string& well_name, std::size_t report_step);
         void stop_well(const std::string& well_name, std::size_t report_step);
         void open_well(const std::string& well_name, std::size_t report_step);
 
-        std::vector<const Group*> getChildGroups2(const std::string& group_name, size_t timeStep) const;
-        std::vector<Well> getChildWells2(const std::string& group_name, size_t timeStep) const;
-        const OilVaporizationProperties& getOilVaporizationProperties(size_t timestep) const;
-        const Well::ProducerCMode& getGlobalWhistctlMmode(size_t timestep) const;
+        std::vector<const Group*> getChildGroups2(const std::string& group_name, std::size_t timeStep) const;
+        std::vector<Well> getChildWells2(const std::string& group_name, std::size_t timeStep) const;
+        const OilVaporizationProperties& getOilVaporizationProperties(std::size_t timestep) const;
+        const Well::ProducerCMode& getGlobalWhistctlMmode(std::size_t timestep) const;
 
-        const UDQActive& udqActive(size_t timeStep) const;
-        const WellTestConfig& wtestConfig(size_t timestep) const;
-        const GConSale& gConSale(size_t timestep) const;
-        const GConSump& gConSump(size_t timestep) const;
-        const WListManager& getWListManager(size_t timeStep) const;
-        const UDQConfig& getUDQConfig(size_t timeStep) const;
+        const UDQActive& udqActive(std::size_t timeStep) const;
+        const WellTestConfig& wtestConfig(std::size_t timestep) const;
+        const GConSale& gConSale(std::size_t timestep) const;
+        const GConSump& gConSump(std::size_t timestep) const;
+        const WListManager& getWListManager(std::size_t timeStep) const;
+        const UDQConfig& getUDQConfig(std::size_t timeStep) const;
         const Action::Actions& actions(std::size_t timeStep) const;
-        void evalAction(const SummaryState& summary_state, size_t timeStep);
+        void evalAction(const SummaryState& summary_state, std::size_t timeStep);
 
         const RPTConfig& report_config(std::size_t timeStep) const;
 
         GTNode groupTree(std::size_t report_step) const;
         GTNode groupTree(const std::string& root_node, std::size_t report_step) const;
-        size_t numGroups() const;
-        size_t numGroups(size_t timeStep) const;
+        std::size_t numGroups() const;
+        std::size_t numGroups(std::size_t timeStep) const;
         bool hasGroup(const std::string& groupName) const;
         bool hasGroup(const std::string& groupName, std::size_t timeStep) const;
-        const Group& getGroup(const std::string& groupName, size_t timeStep) const;
+        const Group& getGroup(const std::string& groupName, std::size_t timeStep) const;
 
-        const Tuning& getTuning(size_t timeStep) const;
+        const Tuning& getTuning(std::size_t timeStep) const;
         const MessageLimits& getMessageLimits() const;
         void invalidNamePattern (const std::string& namePattern, std::size_t report_step, const ParseContext& parseContext, ErrorGuard& errors, const DeckKeyword& keyword) const;
-        const GuideRateConfig& guideRateConfig(size_t timeStep) const;
+        const GuideRateConfig& guideRateConfig(std::size_t timeStep) const;
 
         const RFTConfig& rftConfig() const;
         const Events& getEvents() const;
         const Events& getWellGroupEvents(const std::string& wellGroup) const;
-        bool hasWellGroupEvent(const std::string& wellGroup, uint64_t event_mask, size_t reportStep) const;
-        const Deck& getModifierDeck(size_t timeStep) const;
+        bool hasWellGroupEvent(const std::string& wellGroup, uint64_t event_mask, std::size_t reportStep) const;
+        const Deck& getModifierDeck(std::size_t timeStep) const;
         bool hasOilVaporizationProperties() const;
-        const VFPProdTable& getVFPProdTable(int table_id, size_t timeStep) const;
-        const VFPInjTable& getVFPInjTable(int table_id, size_t timeStep) const;
-        std::map<int, std::shared_ptr<const VFPProdTable> > getVFPProdTables(size_t timeStep) const;
-        std::map<int, std::shared_ptr<const VFPInjTable> > getVFPInjTables(size_t timeStep) const;
+        const VFPProdTable& getVFPProdTable(int table_id, std::size_t timeStep) const;
+        const VFPInjTable& getVFPInjTable(int table_id, std::size_t timeStep) const;
+        std::map<int, std::shared_ptr<const VFPProdTable> > getVFPProdTables(std::size_t timeStep) const;
+        std::map<int, std::shared_ptr<const VFPInjTable> > getVFPInjTables(std::size_t timeStep) const;
         /*
           Will remove all completions which are connected to cell which is not
           active. Will scan through all wells and all timesteps.
         */
         void filterConnections(const ActiveGridCells& grid);
-        size_t size() const;
+        std::size_t size() const;
         const RestartConfig& restart() const;
         RestartConfig& restart();
 
-        void applyAction(size_t reportStep, const Action::ActionX& action, const Action::Result& result);
-        int getNupcol(size_t reportStep) const;
+        void applyAction(std::size_t reportStep, const Action::ActionX& action, const Action::Result& result);
+        int getNupcol(std::size_t reportStep) const;
 
 
         const Network::ExtNetwork& network(std::size_t report_step) const;
@@ -369,7 +369,7 @@ namespace Opm
                       const EclipseGrid& grid,
                       const FieldPropsManager& fp,
                       const UnitSystem& unit_system);
-        void addWell(Well well, size_t report_step);
+        void addWell(Well well, std::size_t report_step);
         void addWell(const std::string& wellName,
                      const std::string& group,
                      int headI,
@@ -381,7 +381,7 @@ namespace Opm
                      bool automaticShutIn,
                      int pvt_table,
                      Well::GasInflowEquation gas_inflow,
-                     size_t timeStep,
+                     std::size_t timeStep,
                      Connection::Order wellConnectionOrder,
                      const UnitSystem& unit_system);
 
@@ -389,40 +389,40 @@ namespace Opm
         void updateNetwork(std::shared_ptr<Network::ExtNetwork> network, std::size_t report_step);
 
         GTNode groupTree(const std::string& root_node, std::size_t report_step, std::size_t level, const std::optional<std::string>& parent_name) const;
-        void updateGroup(std::shared_ptr<Group> group, size_t reportStep);
+        void updateGroup(std::shared_ptr<Group> group, std::size_t reportStep);
         bool checkGroups(const ParseContext& parseContext, ErrorGuard& errors);
         void updateUDQActive( std::size_t timeStep, std::shared_ptr<UDQActive> udq );
-        bool updateWellStatus( const std::string& well, size_t reportStep , Well::Status status, bool update_connections);
-        void addWellToGroup( const std::string& group_name, const std::string& well_name , size_t timeStep);
+        bool updateWellStatus( const std::string& well, std::size_t reportStep , Well::Status status, bool update_connections);
+        void addWellToGroup( const std::string& group_name, const std::string& well_name , std::size_t timeStep);
         void iterateScheduleSection(std::shared_ptr<const Python> python, const std::string& input_path, const ParseContext& parseContext ,  ErrorGuard& errors, const SCHEDULESection& , const EclipseGrid& grid,
                                     const FieldPropsManager& fp);
         void addACTIONX(const Action::ActionX& action, std::size_t currentStep);
-        void addGroupToGroup( const std::string& parent_group, const std::string& child_group, size_t timeStep);
-        void addGroupToGroup( const std::string& parent_group, const Group& child_group, size_t timeStep);
-        void addGroup(const std::string& groupName , size_t timeStep, const UnitSystem& unit_system);
-        void addWell(const std::string& wellName, const DeckRecord& record, size_t timeStep, Connection::Order connection_order, const UnitSystem& unit_system);
+        void addGroupToGroup( const std::string& parent_group, const std::string& child_group, std::size_t timeStep);
+        void addGroupToGroup( const std::string& parent_group, const Group& child_group, std::size_t timeStep);
+        void addGroup(const std::string& groupName , std::size_t timeStep, const UnitSystem& unit_system);
+        void addWell(const std::string& wellName, const DeckRecord& record, std::size_t timeStep, Connection::Order connection_order, const UnitSystem& unit_system);
         void checkUnhandledKeywords( const SCHEDULESection& ) const;
-        void checkIfAllConnectionsIsShut(size_t currentStep);
+        void checkIfAllConnectionsIsShut(std::size_t currentStep);
         void updateUDQ(const DeckKeyword& keyword, std::size_t current_step);
         void handleKeyword(std::shared_ptr<const Python> python,
                            const std::string& input_path,
-                           size_t currentStep,
+                           std::size_t currentStep,
                            const SCHEDULESection& section,
-                           size_t keywordIdx,
+                           std::size_t keywordIdx,
                            const DeckKeyword& keyword,
                            const ParseContext& parseContext, ErrorGuard& errors,
                            const EclipseGrid& grid,
                            const FieldPropsManager& fp,
-                           std::vector<std::pair<const DeckKeyword*, size_t > >& rftProperties);
-        void addWellGroupEvent(const std::string& wellGroup, ScheduleEvents::Events event, size_t reportStep);
+                           std::vector<std::pair<const DeckKeyword*, std::size_t > >& rftProperties);
+        void addWellGroupEvent(const std::string& wellGroup, ScheduleEvents::Events event, std::size_t reportStep);
 
         template<template<class, class> class Map, class Type, class Key>
-        std::pair<std::vector<Type>, std::vector<std::pair<Key, std::vector<size_t>>>>
+        std::pair<std::vector<Type>, std::vector<std::pair<Key, std::vector<std::size_t>>>>
         splitDynMap(const Map<Key, Opm::DynamicState<Type>>& map)
         {
             // we have to pack the unique ptrs separately, and use an index map
             // to allow reconstructing the appropriate structures.
-            std::vector<std::pair<Key, std::vector<size_t>>> asMap;
+            std::vector<std::pair<Key, std::vector<std::size_t>>> asMap;
             std::vector<Type> unique;
             for (const auto& it : map) {
                 auto indices = it.second.split(unique);
@@ -434,7 +434,7 @@ namespace Opm
 
         template<template<class, class> class Map, class Type, class Key>
         void reconstructDynMap(const std::vector<Type>& unique,
-                               const std::vector<std::pair<Key, std::vector<size_t>>>& asMap,
+                               const std::vector<std::pair<Key, std::vector<std::size_t>>>& asMap,
                                Map<Key, Opm::DynamicState<Type>>& result)
         {
             for (const auto& it : asMap) {
@@ -458,15 +458,26 @@ namespace Opm
         };
 
         /**
-         * Handles a "normal" keyword. A normal keyword is one that can be handled by a function with the standard set of arguments (the ones that are passed to this function.
+         * Handles a "normal" keyword. A normal keyword is one that can be handled by a function with the standard set of arguments (the ones that are passed to this function).
          *
-         * \return `true` if the keyword was handled
+         * Normal keywords are found in the file KeywordHandlers.cpp; to add a new keyword handler to the file, add its signature in the list below,
+         * add the implementation to KeywordHandlers.cpp, and add a pointer to the handler in the dispatch registry in the implementation of this method, found at the bottom of
+         * KeywordHandlers.cpp.
+         *
+         * For the benefit of automatic cross-checking of the lists, all of these are in alphabetical order.
+         *
+         * @param handlerContext context object containing the environment in which the handler was invoked
+         * @param parseContext context object containing the parsing environment
+         * @param errors the error handling object for the current parsing process
+         *
+         * @return `true` if the keyword was handled
          */
-        bool handleNormalKeyword(const HandlerContext&, const ParseContext&, ErrorGuard&);
+        bool handleNormalKeyword(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors);
 
-        /// Keyword Handlers
+        // Keyword Handlers
         void handlePYACTION (std::shared_ptr<const Python> python, const std::string& input_path, const DeckKeyword&, std::size_t currentStep);
 
+        // Normal keyword handlers -- in KeywordHandlers.cpp
         void handleBRANPROP (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleCOMPDAT  (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleCOMPLUMP (const HandlerContext&, const ParseContext&, ErrorGuard&);
