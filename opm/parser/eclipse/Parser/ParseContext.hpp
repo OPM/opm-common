@@ -21,9 +21,10 @@
 #ifndef OPM_PARSE_CONTEXT_HPP
 #define OPM_PARSE_CONTEXT_HPP
 
-#include <string>
 #include <map>
+#include <optional>
 #include <set>
+#include <string>
 #include <vector>
 
 #include <opm/common/OpmLog/OpmLog.hpp>
@@ -31,6 +32,9 @@
 #include <opm/parser/eclipse/Parser/InputErrorAction.hpp>
 
 namespace Opm {
+
+
+class KeywordLocation;
 
 
     /*
@@ -87,8 +91,8 @@ namespace Opm {
         explicit ParseContext(InputError::Action default_action);
         explicit ParseContext(const std::vector<std::pair<std::string , InputError::Action>>& initial);
 
-        void handleError( const std::string& errorKey, const std::string& msg, ErrorGuard& errors ) const;
-        void handleUnknownKeyword(const std::string& keyword, ErrorGuard& errors) const;
+        void handleError( const std::string& errorKey, const std::string& msg, const std::optional<KeywordLocation>& location, ErrorGuard& errors)  const;
+        void handleUnknownKeyword(const std::string& keyword, const std::optional<KeywordLocation>& location, ErrorGuard& errors) const;
         bool hasKey(const std::string& key) const;
         ParseContext  withKey(const std::string& key, InputError::Action action = InputError::WARN) const;
         ParseContext& withKey(const std::string& key, InputError::Action action = InputError::WARN);

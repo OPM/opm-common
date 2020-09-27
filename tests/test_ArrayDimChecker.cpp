@@ -21,12 +21,6 @@
 
 #include <boost/test/unit_test.hpp>
 #include <boost/version.hpp>
-#if BOOST_VERSION / 100000 == 1 && BOOST_VERSION / 100 % 1000 < 71
-#include <boost/test/output_test_stream.hpp>
-#else
-#include <boost/test/tools/output_test_stream.hpp>
-#endif
-
 #include <opm/parser/eclipse/EclipseState/Schedule/ArrayDimChecker.hpp>
 
 #include <opm/parser/eclipse/Python/Python.hpp>
@@ -445,14 +439,18 @@ BOOST_AUTO_TEST_CASE(WellDims)
     // There *should* be errors from dimension checking
     BOOST_CHECK(cse.guard);
 
-    // Verify that we get expected output from ErrorGuard::dump()
-    boost::test_tools::output_test_stream output{"expect-wdims.err.out", true};
     {
-        RedirectCERR stream(output.rdbuf());
+        std::stringstream estream;
+        RedirectCERR stream(estream.rdbuf());
 
         cse.guard.dump();
+        const auto error_msg = estream.str();
 
-        BOOST_CHECK(output.match_pattern());
+        for (const auto& s : {"RUNSPEC_NUMWELLS_TOO_LARGE", "item 1",
+                                  "RUNSPEC_CONNS_PER_WELL_TOO_LARGE", "item 2",
+                                  "RUNSPEC_NUMGROUPS_TOO_LARGE", "item 3",
+                                  "RUNSPEC_GROUPSIZE_TOO_LARGE", "item 4"})
+            BOOST_CHECK( error_msg.find(s) != std::string::npos );
     }
 }
 
@@ -479,13 +477,15 @@ BOOST_AUTO_TEST_CASE(WellDims_ManyChildGroups)
     BOOST_CHECK(cse.guard);
 
     // Verify that we get expected output from ErrorGuard::dump()
-    boost::test_tools::output_test_stream output{"expect-wdims.chldg.err.out", true};
     {
-        RedirectCERR stream(output.rdbuf());
+        std::stringstream estream;
+        RedirectCERR stream(estream.rdbuf());
 
         cse.guard.dump();
+        const auto error_msg = estream.str();
 
-        BOOST_CHECK(output.match_pattern());
+        for (const auto& s : {"RUNSPEC_GROUPSIZE_TOO_LARGE", "item 4"})
+            BOOST_CHECK( error_msg.find(s) != std::string::npos );
     }
 }
 

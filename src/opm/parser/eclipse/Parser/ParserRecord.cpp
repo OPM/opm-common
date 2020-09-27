@@ -17,6 +17,8 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <fmt/format.h>
+
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
@@ -119,7 +121,6 @@ namespace {
         return *itr;
     }
 
-
     DeckRecord ParserRecord::parse(const ParseContext& parseContext , ErrorGuard& errors , RawRecord& rawRecord, UnitSystem& active_unitsystem, UnitSystem& default_unitsystem, const KeywordLocation& location) const {
         std::vector< DeckItem > items;
         items.reserve( this->size() + 20 );
@@ -127,10 +128,10 @@ namespace {
             items.emplace_back( parserItem.scan( rawRecord, active_unitsystem, default_unitsystem ) );
 
         if (rawRecord.size() > 0) {
-            std::string msg = "The RawRecord for keyword \""  + location.keyword + "\" in file\"" + location.filename + "\" contained " +
-                std::to_string(rawRecord.size()) +
-                " too many items according to the spec. RawRecord was: " + rawRecord.getRecordString();
-            parseContext.handleError(ParseContext::PARSE_EXTRA_DATA , msg, errors);
+            std::string msg_format = fmt::format("Record contains too many items in keyword {{0}}. Expected {} items, found {}.\n", this->size(), rawRecord.max_size()) +
+                                                 "In file {1} at line {2}.\n" +
+                                     fmt::format("Record is \"{}\".", rawRecord.getRecordString());
+            parseContext.handleError(ParseContext::PARSE_EXTRA_DATA , msg_format, location, errors);
         }
 
         return { std::move( items ) };

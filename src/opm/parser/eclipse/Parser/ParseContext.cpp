@@ -25,6 +25,7 @@
 #include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
 #include <opm/parser/eclipse/Parser/InputErrorAction.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
+#include <opm/common/OpmLog/KeywordLocation.hpp>
 #include <opm/common/utility/String.hpp>
 
 namespace Opm {
@@ -137,6 +138,7 @@ namespace Opm {
     void ParseContext::handleError(
             const std::string& errorKey,
             const std::string& msg,
+            const std::optional<KeywordLocation>& location,
             ErrorGuard& errors) const {
 
         InputError::Action action = get( errorKey );
@@ -175,10 +177,10 @@ namespace Opm {
         }
     }
 
-    void ParseContext::handleUnknownKeyword(const std::string& keyword, ErrorGuard& errors) const {
+void ParseContext::handleUnknownKeyword(const std::string& keyword, const std::optional<KeywordLocation>& location, ErrorGuard& errors) const {
         if (this->ignore_keywords.find(keyword) == this->ignore_keywords.end()) {
             std::string msg = "Unknown keyword: " + keyword;
-            this->handleError(ParseContext::PARSE_UNKNOWN_KEYWORD, msg, errors);
+            this->handleError(ParseContext::PARSE_UNKNOWN_KEYWORD, msg, location, errors);
         }
     }
 

@@ -30,6 +30,7 @@
 #include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/RestartConfig.hpp>
 #include <opm/parser/eclipse/Utility/Functional.hpp>
+#include <opm/common/utility/OpmInputError.hpp>
 
 inline std::string fst( const std::pair< std::string, int >& p ) {
     return p.first;
@@ -620,7 +621,7 @@ BOOST_AUTO_TEST_CASE(RPTRST_FORMAT_ERROR) {
 
     // The case "BASIC 1" - i.e. without '=' can not be salvaged; this should
     // give an exception whatever is the value of ParseContext::RPT_MIXED_STYLE:
-    BOOST_CHECK_THROW(RestartConfig(TimeMap(deck0), deck0, ctx, errors), std::invalid_argument);
+    BOOST_CHECK_THROW(RestartConfig(TimeMap(deck0), deck0, ctx, errors), OpmInputError);
 
 
     // Observe that this is true due to some undocumented guessing that

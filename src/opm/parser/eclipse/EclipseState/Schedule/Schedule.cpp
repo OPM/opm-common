@@ -331,11 +331,13 @@ namespace {
                     if (action_keyword.name() == "ENDACTIO")
                         break;
 
-                    if (Action::ActionX::valid_keyword(action_keyword.name())) {
+                    if (Action::ActionX::valid_keyword(action_keyword.name()))
                         action.addKeyword(action_keyword);
-                    } else {
-                        std::string msg = "The keyword " + action_keyword.name() + " is not supported in a ACTIONX block.";
-                        parseContext.handleError( ParseContext::ACTIONX_ILLEGAL_KEYWORD, msg, errors);
+                    else {
+                        std::string msg = "The keyword {0} is not supported in a ACTIONX block. file: {1}  line: {2}";
+                        std::string msg_fmt = "The keyword {keyword} is not supported in the ACTIONX block\n"
+                                              "In {file} line {line}.";
+                        parseContext.handleError( ParseContext::ACTIONX_ILLEGAL_KEYWORD, msg, action_keyword.location(), errors);
                     }
                 }
                 this->addACTIONX(action, currentStep);
@@ -599,8 +601,11 @@ namespace {
     }
 
     void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t report_step, const ParseContext& parseContext, ErrorGuard& errors, const DeckKeyword& keyword ) const {
-        std::string msg = "Error when handling " + keyword.name() + " at step: " + std::to_string(report_step) + ". No names match " + namePattern;
-        parseContext.handleError( ParseContext::SCHEDULE_INVALID_NAME, msg, errors );
+        std::string msg_fmt = fmt::format("Invalid wellname pattern in {{keyword}}\n"
+                                          "In {{file}} line {{line}}\n"
+                                          "No wells/groups match the pattern: '{}'", namePattern);
+
+        parseContext.handleError( ParseContext::SCHEDULE_INVALID_NAME, msg_fmt, keyword.location(), errors );
     }
 
     const TimeMap& Schedule::getTimeMap() const {

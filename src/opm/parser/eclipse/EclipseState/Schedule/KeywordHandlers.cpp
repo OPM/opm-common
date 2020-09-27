@@ -26,6 +26,8 @@
 #include <unordered_set>
 #include <vector>
 
+#include <fmt/format.h>
+
 #include <opm/common/OpmLog/LogUtil.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
 #include <opm/common/utility/numeric/cmp.hpp>
@@ -95,13 +97,14 @@ namespace {
       means that we do not inform the user about "our fix", but it is *not* possible
       to configure the parser to leave the spaces intact.
     */
-
     std::string trim_wgname(const DeckKeyword& keyword, const std::string& wgname_arg, const ParseContext& parseContext, ErrorGuard errors) {
         std::string wgname = trim_copy(wgname_arg);
         if (wgname != wgname_arg)  {
             const auto& location = keyword.location();
-            std::string msg = "Illegal space: \"" + wgname_arg + "\" found when defining WELL/GROUP in keyword: " + keyword.name() + " at " + location.filename + ":" + std::to_string(location.lineno);
-            parseContext.handleError(ParseContext::PARSE_WGNAME_SPACE, msg, errors);
+            std::string msg_fmt = fmt::format("Problem with keyword {{keyword}}\n"
+                                              "In {{file}} line {{line}}\n"
+                                              "Illegal space in {} when defining WELL/GROUP.", wgname_arg);
+            parseContext.handleError(ParseContext::PARSE_WGNAME_SPACE, msg_fmt, location, errors);
         }
         return wgname;
     }
@@ -178,9 +181,10 @@ namespace {
         for (const auto& record : handlerContext.keyword) {
             const auto& methodItem = record.getItem<ParserKeywords::COMPORD::ORDER_TYPE>();
             if ((methodItem.get< std::string >(0) != "TRACK")  && (methodItem.get< std::string >(0) != "INPUT")) {
-                std::string msg = "The COMPORD keyword only handles 'TRACK' or 'INPUT' order.";
-                OpmLog::error(msg);
-                parseContext.handleError( ParseContext::UNSUPPORTED_COMPORD_TYPE , msg, errors );
+                std::string msg_fmt = "Problem with {keyword}\n"
+                                      "In {file} line {line}\n"
+                                      "Only 'TRACK' and 'INPUT' order are supported";
+                parseContext.handleError( ParseContext::UNSUPPORTED_COMPORD_TYPE ,msg_fmt , handlerContext.keyword.location(), errors );
             }
         }
     }
@@ -350,8 +354,10 @@ namespace {
                         if ((guide_rate_def == Group::GuideRateTarget::INJV ||
                              guide_rate_def == Group::GuideRateTarget::POTN ||
                              guide_rate_def == Group::GuideRateTarget::FORM)) {
-                            std::string msg = "The supplied guide_rate value will be ignored";
-                            parseContext.handleError(ParseContext::SCHEDULE_IGNORED_GUIDE_RATE, msg, errors);
+                            std::string msg_fmt = "Problem with {keyword}\n"
+                                "In {file} line {line}\n"
+                                "The supplied guide rate will be ignored";
+                            parseContext.handleError(ParseContext::SCHEDULE_IGNORED_GUIDE_RATE, msg_fmt, handlerContext.keyword.location(), errors);
                         } else {
                             guide_rate = record.getItem("GUIDE_RATE").get<double>(0);
                             if (guide_rate == 0)
@@ -628,8 +634,10 @@ namespace {
     }
 
     void Schedule::handleMXUNSUPP(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
-        std::string msg = "OPM does not support grid property modifier " + handlerContext.keyword.name() + " in the Schedule section. Error at report: " + std::to_string(handlerContext.currentStep);
-        parseContext.handleError( ParseContext::UNSUPPORTED_SCHEDULE_GEO_MODIFIER , msg, errors );
+        std::string msg_fmt = fmt::format("Problem with keyword {{keyword}} at report step {}\n"
+                                          "In {{file}} line {{line}}\n"
+                                          "OPM does not support grid property modifier {} in the Schedule section", handlerContext.currentStep, handlerContext.keyword.name());
+        parseContext.handleError( ParseContext::UNSUPPORTED_SCHEDULE_GEO_MODIFIER , msg_fmt, handlerContext.keyword.location(), errors );
     }
 
     void Schedule::handleNODEPROP(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
@@ -765,7 +773,7 @@ namespace {
         const auto& current = *this->udq_config.get(handlerContext.currentStep);
         std::shared_ptr<UDQConfig> new_udq = std::make_shared<UDQConfig>(current);
         for (const auto& record : handlerContext.keyword)
-            new_udq->add_record(record, handlerContext.currentStep);
+            new_udq->add_record(record, handlerContext.keyword.location(), handlerContext.currentStep);
 
         this->udq_config.update(handlerContext.currentStep, new_udq);
     }
@@ -1267,9 +1275,10 @@ namespace {
 
         const std::string bhp_terminate = record.getItem("BPH_TERMINATE").getTrimmedString(0);
         if (bhp_terminate == "YES") {
-            std::string msg = "The WHISTCTL handlerContext.keyword does not handle 'YES'. i.e. to terminate the run";
-            OpmLog::error(msg);
-            parseContext.handleError( ParseContext::UNSUPPORTED_TERMINATE_IF_BHP , msg, errors );
+            std::string msg_fmt = "Problem with {keyword}\n"
+                                  "In {file} line {line}\n"
+                                  "Setting item 2 in {keyword} to 'YES' to stop the run is not supported";
+            parseContext.handleError( ParseContext::UNSUPPORTED_TERMINATE_IF_BHP , msg_fmt, handlerContext.keyword.location(), errors );
         }
 
         for (auto& well_pair : this->wells_static) {

@@ -24,6 +24,7 @@
 #include <iomanip>
 #include <sstream>
 
+#include <opm/common/utility/OpmInputError.hpp>
 #include <opm/parser/eclipse/Utility/Functional.hpp>
 
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
@@ -332,17 +333,16 @@ inline std::map< std::string, int > RPT( const DeckKeyword& keyword,
 
     if (ints && strs) {
         const auto& location = keyword.location();
-        std::string msg = "Mixed style input is not allowed for keyword: " + keyword.name() + " at " + location.filename + "(" + std::to_string( location.lineno ) + ")";
-        parseContext.handleError(ParseContext::RPT_MIXED_STYLE, msg, errors);
+        std::string msg = "Error in keyword {keyword}, mixing mnemonics and integers is not allowed\n"
+                          "In {file} line {line}.";
+        parseContext.handleError(ParseContext::RPT_MIXED_STYLE, msg, location, errors);
 
         std::vector<std::string> stack;
         for (size_t index=0; index < deck_items.size(); index++) {
             if (is_int(deck_items[index])) {
 
-                if (stack.size() < 2) {
-                    std::string errmsg = "Can not interpret " + keyword.name() + " at " + location.filename + "(" + std::to_string( location.lineno ) + ")";
-                    throw std::invalid_argument(errmsg);
-                }
+                if (stack.size() < 2)
+                    throw OpmInputError("Problem processing {keyword}\nIn {file} line {line}.", location);
 
                 if (stack.back() == "=") {
                     stack.pop_back();
@@ -352,10 +352,8 @@ inline std::map< std::string, int > RPT( const DeckKeyword& keyword,
                     items.insert(items.begin(), stack.begin(), stack.end());
                     stack.clear();
                     items.push_back( mnemonic + "=" + deck_items[index]);
-                } else {
-                    std::string errmsg = "Can not interpret " + keyword.name() + " at " + location.filename + "(" + std::to_string( location.lineno ) + ")";
-                    throw std::invalid_argument(errmsg);
-                }
+                } else
+                    throw OpmInputError("Problem processing {keyword}\nIn {file} line {line}.", location);
 
             } else
                 stack.push_back(deck_items[index]);
@@ -370,7 +368,8 @@ inline std::map< std::string, int > RPT( const DeckKeyword& keyword,
 
         std::string base = mnemonic.substr( 0, sep_pos );
         if( !is_mnemonic( base ) ) {
-            parseContext.handleError(ParseContext::RPT_UNKNOWN_MNEMONIC, "The mnemonic: " + base + " is not recognized.", errors);
+            std::string msg_fmt = fmt::format("Error in keyword {{keyword}}, unrecognized mnemonic {}\nIn {{file}} line {{line}}.", base);
+            parseContext.handleError(ParseContext::RPT_UNKNOWN_MNEMONIC, msg_fmt, keyword.location(), errors);
             continue;
         }
 

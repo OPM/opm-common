@@ -21,6 +21,8 @@
 #include <cstring>
 #include <cassert>
 
+#include <fmt/format.h>
+
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/common/OpmLog/KeywordLocation.hpp>
 
@@ -250,16 +252,8 @@ UDQASTNode UDQParser::parse_set() {
 namespace {
     void dump_tokens(const std::string& target_var, const std::vector<UDQToken>& tokens) {
         std::cout << target_var << " = ";
-        for (const auto& token : tokens) {
-            const auto& value = token.value();
-            if (std::holds_alternative<double>(value))
-                std::cout << std::get<double>(token.value()) << " ";
-            else {
-                std::cout << std::get<std::string>(token.value()) << " ";
-                for (const auto& s : token.selector())
-                    std::cout << s << " ";
-            }
-        }
+        for (const auto& token : tokens)
+            std::cout << token.str();
         std::cout << std::endl;
     }
 
@@ -294,20 +288,32 @@ UDQASTNode UDQParser::parse(const UDQParams& udq_params, UDQVarType target_type,
     if (!parser.empty()) {
         size_t index = parser.current_pos;
         auto current = parser.current();
-        std::string msg = "Extra unhandled data starting with token[" + std::to_string(index) + "] = '" + current.string() + "'";
-        parseContext.handleError(ParseContext::UDQ_PARSE_ERROR, msg, errors);
+        std::string msg_fmt = fmt::format("Problem parsing UDQ expression \n"
+                                          "In {{file}} line {{line}}.\n"
+                                          "Extra unhandled data starting with item {}.", current.string());
+        parseContext.handleError(ParseContext::UDQ_PARSE_ERROR, msg_fmt, location, errors);
         return UDQASTNode( udq_params.undefinedValue() );
     }
 
     if (!tree.valid()) {
-        std::string msg = "ERROR: Failed to parse UDQ expression";
-        parseContext.handleError(ParseContext::UDQ_PARSE_ERROR, msg, errors);
+        std::string token_string;
+        for (const auto& token : tokens)
+            token_string += token.str() + " ";
+
+        std::string msg_fmt = fmt::format("Failed to parse UDQ expression\n"
+                                          "In {{file}} line {{line}}.\n"
+                                          "This can be a bug in flow or a bug in the UDQ input string.\n"
+                                          "UDQ input: '{}'", token_string);
+        parseContext.handleError(ParseContext::UDQ_PARSE_ERROR, msg_fmt, location, errors);
         return UDQASTNode( udq_params.undefinedValue() );
     }
 
     if (!static_type_check(target_type, tree.var_type)) {
-        std::string msg = "Invalid compile-time type conversion detected in UDQ expression target type: " + UDQ::typeName(target_type) + " expr type: " + UDQ::typeName(tree.var_type);
-        parseContext.handleError(ParseContext::UDQ_TYPE_ERROR, msg, errors);
+        std::string msg_fmt = fmt::format("Failed to parse UDQ expression\n"
+                                          "In {{file}} line {{line}}.\n"
+                                          "Invalid type conversion detected in UDQ expression expected: {}  got: {}", UDQ::typeName(target_type), UDQ::typeName(tree.var_type));
+
+        parseContext.handleError(ParseContext::UDQ_TYPE_ERROR, msg_fmt, location, errors);
         if (parseContext.get(ParseContext::UDQ_TYPE_ERROR) != InputError::IGNORE)
             dump_tokens(target_var, tokens);
 
@@ -315,8 +321,10 @@ UDQASTNode UDQParser::parse(const UDQParams& udq_params, UDQVarType target_type,
     }
 
     if (tree.var_type == UDQVarType::NONE) {
-        std::string msg = "Parse error when evaluating UDQ define expression - could not determine expression type";
-        parseContext.handleError(ParseContext::UDQ_TYPE_ERROR, msg, errors);
+        std::string msg_fmt = fmt::format("Failed to parse UDQ expression\n"
+                                          "In {{file}} line {{line}}.\n"
+                                          "Could not determine expression type.");
+        parseContext.handleError(ParseContext::UDQ_TYPE_ERROR, msg_fmt, location, errors);
         if (parseContext.get(ParseContext::UDQ_TYPE_ERROR) != InputError::IGNORE)
             dump_tokens(target_var, tokens);
 

@@ -27,6 +27,8 @@
 #include <utility>
 #include <vector>
 
+#include <fmt/format.h>
+
 #include <opm/common/utility/FileSystem.hpp>
 
 #include <opm/common/OpmLog/OpmLog.hpp>
@@ -470,7 +472,7 @@ void ParserState::loadFile(const Opm::filesystem::path& inputFile) {
         inputFileCanonical = Opm::filesystem::canonical(inputFile);
     } catch (const Opm::filesystem::filesystem_error& fs_error) {
         std::string msg = "Could not open file: " + inputFile.string();
-        parseContext.handleError( ParseContext::PARSE_MISSING_INCLUDE , msg, errors);
+        parseContext.handleError( ParseContext::PARSE_MISSING_INCLUDE , msg, {}, errors);
         return;
     }
 
@@ -483,8 +485,7 @@ void ParserState::loadFile(const Opm::filesystem::path& inputFile) {
     // make sure the file we'd like to parse is readable
     if( !ufp ) {
         std::string msg = "Could not read from file: " + inputFile.string();
-
-        parseContext.handleError( ParseContext::PARSE_MISSING_INCLUDE , msg, errors);
+        parseContext.handleError( ParseContext::PARSE_MISSING_INCLUDE , msg, {}, errors);
         return;
     }
 
@@ -516,36 +517,27 @@ void ParserState::loadFile(const Opm::filesystem::path& inputFile) {
 
 void ParserState::handleRandomText(const std::string_view& keywordString ) const {
     std::string errorKey;
-    std::stringstream msg;
     std::string trimmedCopy = std::string( keywordString );
-
+    std::string msg;
+    KeywordLocation location{lastKeyWord, this->current_path(), this->line()};
 
     if (trimmedCopy == "/") {
         errorKey = ParseContext::PARSE_RANDOM_SLASH;
-        msg << "Extra '/' detected at: "
-            << this->current_path()
-            << ":" << this->line();
+        msg = "Extra '/' detected in {file} line {line}";
     }
     else if (lastSizeType == OTHER_KEYWORD_IN_DECK) {
       errorKey = ParseContext::PARSE_EXTRA_RECORDS;
-      msg << "String: \'"
-          << keywordString
-          << "\' invalid."
-          << "Too many records in keyword: "
-          << lastKeyWord
-          << " at: "
-          << this->line()
-          << ".\n";
+      msg = "Too many records in keyword {keyword}\n"
+            "In {} line {}";
     }
     else {
         errorKey = ParseContext::PARSE_RANDOM_TEXT;
-        msg << "String \'" << keywordString
-            << "\' not formatted/recognized as valid keyword at: "
-            << this->current_path()
-            << ":" << this->line();
+        msg = fmt::format("String {} not formatted as valid keyword\n"
+                          "In {{file}} line {{line}}.", keywordString);
     }
-    parseContext.handleError( errorKey , msg.str(), errors );
+    parseContext.handleError( errorKey , msg, location, errors );
 }
+
 
 void ParserState::openRootFile( const Opm::filesystem::path& inputFile) {
     this->loadFile( inputFile );
@@ -643,9 +635,13 @@ RawKeyword * newRawKeyword(const ParserKeyword& parserKeyword, const std::string
                                targetSize);
     }
 
-    std::string msg = "Expected the kewyord: " +keyword_size.keyword
-        + " to infer the number of records in: " + keywordString;
-    parserState.parseContext.handleError(ParseContext::PARSE_MISSING_DIMS_KEYWORD , msg, parserState.errors );
+    std::string msg_fmt = fmt::format("Problem with {{keyword}} - missing {0}\n"
+                                      "In {{file}} line {{line}}\n"
+                                      "For the keyword {{keyword}} we expect to read the number of records from keyword {0}, {0} was not found", keyword_size.keyword);
+    parserState.parseContext.handleError(ParseContext::PARSE_MISSING_DIMS_KEYWORD ,
+                                         msg_fmt,
+                                         KeywordLocation{keywordString, parserState.current_path().string(), parserState.line()},
+                                         parserState.errors );
 
     const auto& keyword = parser.getKeyword( keyword_size.keyword );
     const auto& record = keyword.getRecord(0);
@@ -665,14 +661,18 @@ RawKeyword * newRawKeyword( const std::string& deck_name, ParserState& parserSta
     if (deck_name.size() > RawConsts::maxKeywordLength) {
         const std::string keyword8 = deck_name.substr(0, RawConsts::maxKeywordLength);
         if (parser.isRecognizedKeyword(keyword8)) {
-            std::string msg = "Keyword: " + deck_name + " too long - only first eight characters recognized";
-            parserState.parseContext.handleError(ParseContext::PARSE_LONG_KEYWORD, msg, parserState.errors);
+            std::string msg = "Keyword {keyword} to long - only eight first characters recognized\n"
+                              "In {file} line {line}\n";
+            parserState.parseContext.handleError(ParseContext::PARSE_LONG_KEYWORD,
+                                                 msg,
+                                                 KeywordLocation{deck_name, parserState.current_path().string(), parserState.line()},
+                                                 parserState.errors);
 
             parserState.unknown_keyword = false;
             const auto& parserKeyword = parser.getParserKeywordFromDeckName( keyword8 );
             return newRawKeyword(parserKeyword, keyword8, parserState, parser);
         } else {
-            parserState.parseContext.handleUnknownKeyword( deck_name, parserState.errors );
+            parserState.parseContext.handleUnknownKeyword( deck_name, KeywordLocation{}, parserState.errors );
             parserState.unknown_keyword = true;
             return nullptr;
         }
@@ -685,7 +685,7 @@ RawKeyword * newRawKeyword( const std::string& deck_name, ParserState& parserSta
     }
 
     if( ParserKeyword::validDeckName(deck_name) ) {
-        parserState.parseContext.handleUnknownKeyword( deck_name, parserState.errors );
+        parserState.parseContext.handleUnknownKeyword( deck_name, KeywordLocation{}, parserState.errors );
         parserState.unknown_keyword = true;
         return nullptr;
     }
