@@ -194,7 +194,7 @@ namespace {
 
     bool is_rate(const std::string& keyword) {
         static const keyword_set ratekw {
-            "OPR", "GPR", "WPR", "WGLIR", "LPR", "NPR", "VPR",
+            "OPR", "GPR", "WPR", "GLIR", "LPR", "NPR", "VPR",
             "OPGR", "GPGR", "WPGR", "VPGR",
             "OPRH", "GPRH", "WPRH", "LPRH",
             "OVPR", "GVPR", "WVPR",
