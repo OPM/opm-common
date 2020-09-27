@@ -458,6 +458,7 @@ private:
     void scanSOLUTIONSection(const SOLUTIONSection& solution_section);
     void scanSCHEDULESection(const SCHEDULESection& schedule_section);
     double getSIValue(const std::string& keyword, double raw_value) const;
+    double getSIValue(ScalarOperation op, const std::string& keyword, double raw_value) const;
     template <typename T>
     void erase(const std::string& keyword);
 

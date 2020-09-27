@@ -640,6 +640,12 @@ double FieldProps::getSIValue(const std::string& keyword, double raw_value) cons
 
 
 
+double FieldProps::getSIValue(ScalarOperation op, const std::string& keyword, double raw_value) const {
+    if (op == ScalarOperation::MUL)
+        return raw_value;
+
+    return this->getSIValue(keyword, raw_value);
+}
 
 
 void FieldProps::handle_int_keyword(const Fieldprops::keywords::keyword_info<int>& kw_info, const DeckKeyword& keyword, const Box& box) {
