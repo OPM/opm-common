@@ -131,11 +131,16 @@ static const std::unordered_map<std::string, keyword_info<int>> int_keywords = {
 }
 
 namespace EDIT {
+
+/*
+  The TRANX, TRANY and TRANZ properties are handled very differently from the
+  other properties. It is important that these fields are not entered into the
+  double_keywords list of the EDIT section, that way we risk silent failures
+  due to the special treatment of the TRAN fields.
+*/
+
 static const std::unordered_map<std::string, keyword_info<double>> double_keywords = {{"MULTPV",  keyword_info<double>{}.init(1.0)},
                                                                                       {"PORV",    keyword_info<double>{}.unit_string("ReservoirVolume")},
-                                                                                      {"TRANX",   keyword_info<double>{}.unit_string("Transmissibility")},
-                                                                                      {"TRANY",   keyword_info<double>{}.unit_string("Transmissibility")},
-                                                                                      {"TRANZ",   keyword_info<double>{}.unit_string("Transmissibility")},
                                                                                       {"MULTX",   keyword_info<double>{}.init(1.0).mult(true)},
                                                                                       {"MULTX-",  keyword_info<double>{}.init(1.0).mult(true)},
                                                                                       {"MULTY",   keyword_info<double>{}.init(1.0).mult(true)},
@@ -479,6 +484,7 @@ private:
 
     std::string region_name(const DeckItem& region_item);
     std::vector<Box::cell_index> region_index( const std::string& region_name, int region_value );
+    void handle_OPERATE(const DeckKeyword& keyword, Box box);
     void handle_operation(const DeckKeyword& keyword, Box box);
     void handle_region_operation(const DeckKeyword& keyword);
     void handle_COPY(const DeckKeyword& keyword, Box box, bool region);

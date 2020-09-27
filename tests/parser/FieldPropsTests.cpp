@@ -2156,3 +2156,66 @@ MULTIPLY
         }
     }
 }
+
+BOOST_AUTO_TEST_CASE(TRAN_OPERATE_UNSUPPORTED) {
+    std::string deck_string = R"(
+GRID
+
+PORO
+   1000*0.10 /
+
+EDIT
+
+
+OPERATE
+    TRANX 1  3   2  2   1   1  'MAXLIM'   PORO 0.25 /
+/
+)";
+    UnitSystem unit_system(UnitSystem::UnitType::UNIT_TYPE_METRIC);
+    std::vector<int> actnum(1000, 1);
+    for (std::size_t i=0; i< 1000; i += 2)
+        actnum[i] = 0;
+    EclipseGrid grid(EclipseGrid(10,10,10), actnum);
+    Deck deck = Parser{}.parseString(deck_string);
+    BOOST_CHECK_THROW( FieldPropsManager(deck, Phases{true, true, true}, grid, TableManager()), std::logic_error );
+}
+
+BOOST_AUTO_TEST_CASE(TRAN_REGION_UNSUPPORTED) {
+    std::string deck_base = R"(
+GRID
+
+PORO
+   1000*0.10 /
+
+EDIT
+)";
+
+    std::string multireg = R"(
+MULTIREG
+    TRANX 1.0 1 /
+/
+)";
+
+    std::string equalreg = R"(
+EQUALREG
+    TRANX 1.0 1 /
+/
+)";
+
+    std::string addreg = R"(
+ADDREG
+    TRANX 1.0 1 /
+/
+)";
+
+    UnitSystem unit_system(UnitSystem::UnitType::UNIT_TYPE_METRIC);
+    std::vector<int> actnum(1000, 1);
+    for (std::size_t i=0; i< 1000; i += 2)
+        actnum[i] = 0;
+    EclipseGrid grid(EclipseGrid(10,10,10), actnum);
+
+    for (const auto& region_op : { multireg, equalreg, addreg }) {
+        Deck deck = Parser{}.parseString(deck_base + region_op);
+        BOOST_CHECK_THROW( FieldPropsManager(deck, Phases{true, true, true}, grid, TableManager()), std::logic_error );
+    }
+}
