@@ -467,6 +467,14 @@ double efac( const std::vector<std::pair<std::string,double>>& eff_factors, cons
     return (it != eff_factors.end()) ? it->second : 1;
 }
 
+inline quantity alqrate( const fn_args& args ) {
+    const auto& well = args.schedule_wells.front();
+    const auto& name = well.name();
+    if( args.wells.count( name ) == 0 ) return { 0, measure::rate };
+    const auto alq_value = args.wells.at(name).rates.get(rt::alq, 0.0);
+    return { alq_value, measure::rate };
+}
+
 template< rt phase, bool injection = true >
 inline quantity rate( const fn_args& args ) {
     double sum = 0.0;
@@ -1008,6 +1016,7 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "WOPR", rate< rt::oil, producer > },
     { "WGPR", rate< rt::gas, producer > },
     { "WEPR", rate< rt::energy, producer > },
+    { "WGLIR", alqrate },
     { "WNPR", rate< rt::solvent, producer > },
     { "WCPR", rate< rt::polymer, producer > },
     { "WSPR", rate< rt::brine, producer > },
