@@ -470,9 +470,9 @@ double efac( const std::vector<std::pair<std::string,double>>& eff_factors, cons
 inline quantity alqrate( const fn_args& args ) {
     const auto& well = args.schedule_wells.front();
     const auto& name = well.name();
-    if( args.wells.count( name ) == 0 ) return { 0, measure::rate };
+    if( args.wells.count( name ) == 0 ) return { 0, measure::gas_surface_rate };
     const auto alq_value = args.wells.at(name).rates.get(rt::alq, 0.0);
-    return { alq_value, measure::rate };
+    return { alq_value, measure::gas_surface_rate };
 }
 
 template< rt phase, bool injection = true >
