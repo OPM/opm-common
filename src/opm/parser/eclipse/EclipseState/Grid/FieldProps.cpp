@@ -1020,7 +1020,7 @@ void FieldProps::scanEDITSection(const EDITSection& edit_section) {
         if (tran_iter!= this->tran.end()) {
             auto& tran_calc = tran_iter->second;
             auto unique_name = tran_calc.next_name();
-            Fieldprops::keywords::keyword_info<double> kw_info;
+            auto kw_info = tran_calc.make_kw_info(ScalarOperation::EQUAL);
             this->handle_double_keyword(Section::EDIT, kw_info, keyword, unique_name, box);
             tran_calc.add_action( Fieldprops::ScalarOperation::EQUAL, unique_name );
             continue;
