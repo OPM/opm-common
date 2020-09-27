@@ -151,7 +151,7 @@ namespace {
         throw;
     }
     catch (const std::exception& std_error) {
-        OpmLog::error(fmt::format("An error occured while creating the reservior schedule\n",
+        OpmLog::error(fmt::format("An error occured while creating the reservoir schedule\n",
                                   "Internal error: {}", std_error.what()));
         throw;
     }
