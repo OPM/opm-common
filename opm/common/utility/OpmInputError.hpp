@@ -91,6 +91,14 @@ public:
                            fmt::arg("line", loc.lineno));
     }
 
+    static std::string formatException(const KeywordLocation& loc, const std::exception& e, const std::string& reason = "Internal error message") {
+        const std::string defaultMessage { R"(Problem parsing keyword {keyword}
+In {file} line {line}.
+{{reason}}: {{error}})" } ;
+
+        return fmt::format(format(defaultMessage, loc), fmt::arg("reason", reason), fmt::arg("error", e.what()));
+    }
+
 
 private:
     std::string m_what;
