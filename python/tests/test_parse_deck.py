@@ -70,7 +70,7 @@ FIPNUM
 
     def test_parser_fail_without_extension(self):
         error_recovery = [("PARSE_RANDOM_SLASH", opm.io.action.ignore)]
-        with self.assertRaises(ValueError):
+        with self.assertRaises(RuntimeError):
             parse_context = ParseContext(error_recovery)
             deck = Parser().parse_string(self.DECK_ADDITIONAL_KEYWORDS, parse_context)
 

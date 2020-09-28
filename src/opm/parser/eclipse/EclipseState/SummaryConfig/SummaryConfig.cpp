@@ -472,11 +472,9 @@ void keyword_node( SummaryConfig::keyword_list& list,
 {
     if (node_names.empty()) {
         const auto& location = keyword.location();
-        const std::string msg = "The network node keyword " + keyword.name()
-            + " at " + location.filename + ", line " + std::to_string(location.lineno)
-            + " is not supported in runs without networks";
-
-        parseContext.handleError( ParseContext::SUMMARY_UNHANDLED_KEYWORD, msg, errors);
+        std::string msg = "The network node keyword {keyword} is not supported in runs without networks\n"
+                          "In {file} line {line}";
+        parseContext.handleError( ParseContext::SUMMARY_UNHANDLED_KEYWORD, msg, location, errors);
         return;
     }
 
