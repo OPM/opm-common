@@ -29,6 +29,7 @@
 
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
+#include <opm/common/utility/OpmInputError.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
@@ -1126,38 +1127,44 @@ SummaryConfig::SummaryConfig( const Deck& deck,
                               const ParseContext& parseContext,
                               ErrorGuard& errors,
                               const GridDims& dims) {
-    SUMMARYSection section( deck );
+    try {
+        SUMMARYSection section( deck );
 
-    const auto node_names = need_node_names(section)
-        ? collect_node_names(schedule)
-        : std::vector<std::string>{};
+        const auto node_names = need_node_names(section) ? collect_node_names(schedule) : std::vector<std::string> {};
 
-    for (const auto &kw : section) {
-        if (is_processing_instruction(kw.name())) {
-            handleProcessingInstruction(kw.name());
-        } else {
-            handleKW(this->m_keywords, node_names, kw, schedule, tables, parseContext, errors, dims);
-        }
-    }
-
-    for (const auto& meta_pair : meta_keywords) {
-        if( section.hasKeyword( meta_pair.first ) ) {
-            const auto& deck_keyword = section.getKeyword(meta_pair.first);
-            for (const auto& kw : meta_pair.second) {
-                if (!this->hasKeyword(kw))
-                    handleKW(this->m_keywords, kw, deck_keyword.location(), schedule, parseContext, errors);
+        for (const auto& kw : section) {
+            if (is_processing_instruction(kw.name())) {
+                handleProcessingInstruction(kw.name());
+            } else {
+                handleKW(this->m_keywords, node_names, kw, schedule, tables, parseContext, errors, dims);
             }
         }
-    }
 
-    uniq( this->m_keywords );
-    for (const auto& kw: this->m_keywords) {
-        this->short_keywords.insert( kw.keyword() );
-        this->summary_keywords.insert( kw.uniqueNodeKey() );
+        for (const auto& meta_pair : meta_keywords) {
+            if (section.hasKeyword(meta_pair.first)) {
+                const auto& deck_keyword = section.getKeyword(meta_pair.first);
+                for (const auto& kw : meta_pair.second) {
+                    if (!this->hasKeyword(kw))
+                        handleKW(this->m_keywords, kw, deck_keyword.location(), schedule, parseContext, errors);
+                }
+            }
+        }
+
+        uniq(this->m_keywords);
+        for (const auto& kw : this->m_keywords) {
+            this->short_keywords.insert(kw.keyword());
+            this->summary_keywords.insert(kw.uniqueNodeKey());
+        }
+    }
+    catch (const OpmInputError& opm_error) {
+        throw;
+    }
+    catch (const std::exception& std_error) {
+        OpmLog::error(fmt::format("An error occured while configuring the summary properties\n",
+                                  "Internal error: {}", std_error.what()));
+        throw;
     }
 }
-
-
 
 
 SummaryConfig::SummaryConfig( const Deck& deck,

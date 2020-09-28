@@ -22,6 +22,7 @@
 
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/OpmLog/KeywordLocation.hpp>
+#include <opm/common/utility/OpmInputError.hpp>
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>

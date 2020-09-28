@@ -25,9 +25,12 @@
 #include <unordered_set>
 #include <vector>
 
+#include <fmt/format.h>
+
 #include <opm/common/OpmLog/LogUtil.hpp>
 #include <opm/common/utility/numeric/cmp.hpp>
 #include <opm/common/utility/String.hpp>
+#include <opm/common/utility/OpmInputError.hpp>
 
 #include <opm/parser/eclipse/Python/Python.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
@@ -97,7 +100,8 @@ namespace {
                         const ParseContext& parseContext,
                         ErrorGuard& errors,
                         [[maybe_unused]] std::shared_ptr<const Python> python,
-                        const RestartIO::RstState * rst) :
+                        const RestartIO::RstState * rst)
+    try :
         python_handle(python),
         m_timeMap( deck , restart_info( rst )),
         m_oilvaporizationproperties( this->m_timeMap, OilVaporizationProperties(runspec.tabdims().getNumPVTTables()) ),
@@ -143,6 +147,16 @@ namespace {
         if (DeckSection::hasSCHEDULE(deck))
             iterateScheduleSection( python, deck.getInputPath(), parseContext, errors, SCHEDULESection( deck ), grid, fp);
     }
+    catch (const OpmInputError& opm_error) {
+        throw;
+    }
+    catch (const std::exception& std_error) {
+        OpmLog::error(fmt::format("An error occured while creating the reservoir schedule\n",
+                                  "Internal error: {}", std_error.what()));
+        throw;
+    }
+
+
 
 
     template <typename T>

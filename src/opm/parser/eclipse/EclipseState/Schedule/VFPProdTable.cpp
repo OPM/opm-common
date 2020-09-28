@@ -22,6 +22,8 @@
 #include <cmath>
 #include <iostream>
 
+#include <fmt/format.h>
+
 #include <opm/common/OpmLog/OpmLog.hpp>
 
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
