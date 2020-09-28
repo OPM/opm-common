@@ -22,6 +22,8 @@
 #include <stddef.h>
 #include <iomanip>
 
+#include <fmt/format.h>
+
 #include <opm/common/utility/TimeService.hpp>
 
 #include <opm/parser/eclipse/Parser/ParserKeywords/S.hpp>
@@ -385,9 +387,10 @@ namespace {
         if (index >= m_timeList.size())
             throw std::invalid_argument("Index out of range");
 
-        if (index > 0 && index < this->m_restart_offset)
-            throw std::invalid_argument("Tried to get time information from the base case in restarted run");
-
+        if (index > 0 && index < this->m_restart_offset) {
+            printf("What the f... \n");
+            throw std::invalid_argument(fmt::format("Tried to get time information from the base case in restarted run index:{}  restart_offset:{}", index, this->m_restart_offset));
+        }
         return m_timeList[index];
     }
 

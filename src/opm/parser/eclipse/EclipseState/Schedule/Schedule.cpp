@@ -17,6 +17,8 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <ctime>
+
 #include <fnmatch.h>
 #include <iostream>
 #include <optional>
@@ -344,9 +346,13 @@ namespace {
                         if (deck_time == this->m_timeMap.restart_time()) {
                             restart_skip = false;
                             currentStep = this->m_timeMap.restart_offset();
-                        }
-                    } else
+                            OpmLog::info(fmt::format("Found restart date"));
+                        } else
+                            OpmLog::info(fmt::format("Skipping date"));
+                    } else {
+                        OpmLog::info(fmt::format("End of report step ... at ... Processing simulation date {} ({}, step {}).", simulationDate(currentStep), simulationDays(section.unitSystem(), currentStep), currentStep));
                         currentStep += 1;
+                    }
                 }
                 keywordIdx++;
                 continue;
@@ -355,6 +361,7 @@ namespace {
             if (keyword.name() == "TSTEP") {
                 checkIfAllConnectionsIsShut(currentStep);
                 currentStep += keyword.getRecord(0).getItem(0).data_size();
+                OpmLog::info(fmt::format("Advancing simulation by with TSTEP"));
                 keywordIdx++;
                 continue;
             }
@@ -1474,6 +1481,16 @@ namespace {
                this->restart_config == data.restart_config &&
                this->wellgroup_events == data.wellgroup_events;
      }
+
+    std::string Schedule::simulationDate(std::size_t currentStep) const {
+        const auto ts { TimeStampUTC(simTime(currentStep)) } ;
+        return fmt::format("{:04d}-{:02d}-{:02d}" , ts.year(), ts.month(), ts.day());
+    }
+
+    std::string Schedule::simulationDays(const UnitSystem& unit_system, std::size_t currentStep) const {
+        const double sim_time { unit_system.from_si(UnitSystem::measure::time, simTime(currentStep)) } ;
+        return fmt::format("{} {}", sim_time, unit_system.name(UnitSystem::measure::time));
+    }
 
 namespace {
 
