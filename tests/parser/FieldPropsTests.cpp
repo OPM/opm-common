@@ -1948,12 +1948,12 @@ BOOST_AUTO_TEST_CASE(TRAN_Calculator) {
 GRID
 
 PORO
-   1000*0.10 /
+   300*0.10 /
 
 EDIT
 
 TRANX
-  1000*0.10 /
+  300*0.10 /
 
 BOX
   1 10 1 10 1 1 /
@@ -1982,10 +1982,10 @@ MINVALUE
 )";
     UnitSystem unit_system(UnitSystem::UnitType::UNIT_TYPE_METRIC);
     auto to_si = [&unit_system](double raw_value) { return unit_system.to_si(UnitSystem::measure::transmissibility, raw_value); };
-    std::vector<int> actnum(1000, 1);
-    for (std::size_t i=0; i< 1000; i += 2)
+    std::vector<int> actnum(300, 1);
+    for (std::size_t i=0; i< 300; i += 2)
         actnum[i] = 0;
-    EclipseGrid grid(EclipseGrid(10,10,10), actnum);
+    EclipseGrid grid(EclipseGrid(10,10,3), actnum);
     Deck deck = Parser{}.parseString(deck_string);
     FieldPropsManager fpm(deck, Phases{true, true, true}, grid, TableManager());
     std::vector<double> tranx( grid.getNumActive() );
@@ -2000,36 +2000,159 @@ MINVALUE
     fpm.apply_tran("TRANY", trany);
     fpm.apply_tran("TRANZ", tranz);
 
+    for (std::size_t k=0; k < 3; k++) {
+        for (std::size_t j=0; j < 10; j++) {
+            for (std::size_t i=0; i < 10; i++) {
+                if (grid.cellActive(i,j,k)) {
+                    auto a = grid.activeIndex(i,j,k);
 
-    for (std::size_t i=0; i < 50; i++)
-        BOOST_CHECK_EQUAL(tranx[i], to_si(0.20));
+                    if (k==0)
+                        BOOST_CHECK_EQUAL(tranx[a], to_si(0.20));
+                    else
+                        BOOST_CHECK_EQUAL(tranx[a], to_si(0.10));
 
-    for (std::size_t i=50; i < tranx.size(); i++)
-        BOOST_CHECK_EQUAL(tranx[i], to_si(0.10));
+                    if (k == 0)
+                        BOOST_CHECK_EQUAL(trany[a], to_si(2.0));
+                    else if (k == 1)
+                        BOOST_CHECK_EQUAL(trany[a], to_si(5.0));
+                    else if (k == 2)
+                        BOOST_CHECK_EQUAL(trany[a], to_si(2.0));
 
-    BOOST_CHECK_EQUAL(trany[0], to_si(2.0));
-
-    for (std::size_t i=0; i < 50; i++)
-        BOOST_CHECK_EQUAL(trany[i], to_si(2.0));
-
-    for (std::size_t i=50; i < 100; i++)
-        BOOST_CHECK_EQUAL(trany[i], to_si(5.0));
-
-    for (std::size_t i=100; i < trany.size(); i++)
-        BOOST_CHECK_EQUAL(trany[i], to_si(2.0));
-
-    for (std::size_t i=0; i < 50; i++)
-        BOOST_CHECK(tranz[i]<=to_si(0));
-
-    for (std::size_t i=50; i < 10; i++)
-        BOOST_CHECK(tranz[i]>=to_si(3));
-
-    for (std::size_t i=100; i < tranz.size(); i++)
-        BOOST_CHECK_EQUAL(tranz[i], to_si(1.0));
+                    if (k==0)
+                        BOOST_CHECK(tranz[a] <= to_si(0));
+                    else if (k == 1)
+                        BOOST_CHECK(tranz[a] >= to_si(3.0));
+                    else if (k == 2)
+                        BOOST_CHECK_EQUAL(tranz[a], to_si(1.0));
+                }
+            }
+        }
+    }
     auto buffer = fpm.serialize_tran();
     fpm.deserialize_tran(buffer);
 
     BOOST_CHECK(fpm.tran_active("TRANX"));
     BOOST_CHECK(fpm.tran_active("TRANY"));
     BOOST_CHECK(fpm.tran_active("TRANZ"));
+}
+
+
+
+BOOST_AUTO_TEST_CASE(TRAN2) {
+    std::string deck_string = R"(
+GRID
+
+PORO
+   1000*0.10 /
+
+EDIT
+
+EQUALS
+  TRANX 1  1 10 1 10 1 1 /
+  TRANX 2  1 10 1 10 2 2 /
+  TRANX 3  1 10 1 10 3 3 /
+  TRANX 4  1 10 1 10 4 4 /
+  TRANX 5  1 10 1 10 5 5 /
+  TRANX 6  1 10 1 10 6 6 /
+  TRANX 7  1 10 1 10 7 7 /
+  TRANX 8  1 10 1 10 8 8 /
+  TRANX 9  1 10 1 10 9 9 /
+  TRANX 10 1 10 1 10 10 10 /
+  TRANY 1  1 10 1 10 1 1 /
+  TRANY 2  1 10 1 10 2 2 /
+  TRANY 3  1 10 1 10 3 3 /
+  TRANY 4  1 10 1 10 4 4 /
+  TRANY 5  1 10 1 10 5 5 /
+  TRANY 6  1 10 1 10 6 6 /
+  TRANY 7  1 10 1 10 7 7 /
+  TRANY 8  1 10 1 10 8 8 /
+  TRANY 9  1 10 1 10 9 9 /
+  TRANY 10 1 10 1 10 10 10 /
+  TRANZ 1  1 10 1 10 1 1 /
+  TRANZ 2  1 10 1 10 2 2 /
+  TRANZ 3  1 10 1 10 3 3 /
+  TRANZ 4  1 10 1 10 4 4 /
+  TRANZ 5  1 10 1 10 5 5 /
+  TRANZ 6  1 10 1 10 6 6 /
+  TRANZ 7  1 10 1 10 7 7 /
+  TRANZ 8  1 10 1 10 8 8 /
+  TRANZ 9  1 10 1 10 9 9 /
+  TRANZ 10 1 10 1 10 10 10 /
+/
+
+MULTIPLY
+  TRANX 1  1 10 1 10 1 1 /
+  TRANX 2  1 10 1 10 2 2 /
+  TRANX 3  1 10 1 10 3 3 /
+  TRANX 4  1 10 1 10 4 4 /
+  TRANX 5  1 10 1 10 5 5 /
+  TRANX 6  1 10 1 10 6 6 /
+  TRANX 7  1 10 1 10 7 7 /
+  TRANX 8  1 10 1 10 8 8 /
+  TRANX 9  1 10 1 10 9 9 /
+  TRANX 10 1 10 1 10 10 10 /
+  TRANZ 1  1 10 1 10 1 1 /
+  TRANZ 2  1 10 1 10 2 2 /
+  TRANZ 3  1 10 1 10 3 3 /
+  TRANZ 4  1 10 1 10 4 4 /
+  TRANZ 5  1 10 1 10 5 5 /
+  TRANZ 6  1 10 1 10 6 6 /
+  TRANZ 7  1 10 1 10 7 7 /
+  TRANZ 8  1 10 1 10 8 8 /
+  TRANZ 9  1 10 1 10 9 9 /
+  TRANZ 10 1 10 1 10 10 10 /
+  TRANZ 1  1 10 1 10 1 1 /
+  TRANZ 2  1 10 1 10 2 2 /
+  TRANZ 3  1 10 1 10 3 3 /
+  TRANZ 4  1 10 1 10 4 4 /
+  TRANZ 5  1 10 1 10 5 5 /
+  TRANZ 6  1 10 1 10 6 6 /
+  TRANZ 7  1 10 1 10 7 7 /
+  TRANZ 8  1 10 1 10 8 8 /
+  TRANZ 9  1 10 1 10 9 9 /
+  TRANZ 10 1 10 1 10 10 10 /
+/
+
+MULTIPLY
+  TRANX 1  1 10 1 10 1 1 /
+  TRANX 2  1 10 1 10 2 2 /
+  TRANX 3  1 10 1 10 3 3 /
+  TRANX 4  1 10 1 10 4 4 /
+  TRANX 5  1 10 1 10 5 5 /
+  TRANX 6  1 10 1 10 6 6 /
+  TRANX 7  1 10 1 10 7 7 /
+  TRANX 8  1 10 1 10 8 8 /
+  TRANX 9  1 10 1 10 9 9 /
+  TRANX 10 1 10 1 10 10 10/
+/
+
+)";
+    UnitSystem unit_system(UnitSystem::UnitType::UNIT_TYPE_METRIC);
+    auto to_si = [&unit_system](double raw_value) { return unit_system.to_si(UnitSystem::measure::transmissibility, raw_value); };
+    std::vector<int> actnum(1000, 1);
+    for (std::size_t i=0; i< 1000; i += 2)
+        actnum[i] = 0;
+    EclipseGrid grid(EclipseGrid(10,10,10), actnum);
+    Deck deck = Parser{}.parseString(deck_string);
+    FieldPropsManager fpm(deck, Phases{true, true, true}, grid, TableManager());
+    std::vector<double> tranx( grid.getNumActive() );
+    std::vector<double> trany( grid.getNumActive() );
+    std::vector<double> tranz( grid.getNumActive() );
+
+    fpm.apply_tran("TRANX", tranx);
+    fpm.apply_tran("TRANY", trany);
+    fpm.apply_tran("TRANZ", tranz);
+
+    for (std::size_t k=0; k < 10; k++) {
+        for (std::size_t j=0; j < 10; j++) {
+            for (std::size_t i=0; i < 10; i++) {
+                if (grid.cellActive(i,j,k)) {
+                    auto a = grid.activeIndex(i,j,k);
+                    BOOST_CHECK_CLOSE( tranx[a], to_si( (k+1)*(k+1)*(k+1)) , 1e-6);
+                    BOOST_CHECK_CLOSE( trany[a], to_si( k+1 ) , 1e-6);
+                    BOOST_CHECK_CLOSE( tranz[a], to_si( (k+1)*(k+1)*(k+1) ), 1e-6);
+                }
+            }
+        }
+    }
 }

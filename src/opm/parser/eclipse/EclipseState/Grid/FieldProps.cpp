@@ -640,6 +640,12 @@ double FieldProps::getSIValue(const std::string& keyword, double raw_value) cons
 
 
 
+double FieldProps::getSIValue(ScalarOperation op, const std::string& keyword, double raw_value) const {
+    if (op == ScalarOperation::MUL)
+        return raw_value;
+
+    return this->getSIValue(keyword, raw_value);
+}
 
 
 void FieldProps::handle_int_keyword(const Fieldprops::keywords::keyword_info<int>& kw_info, const DeckKeyword& keyword, const Box& box) {
@@ -1020,7 +1026,7 @@ void FieldProps::scanEDITSection(const EDITSection& edit_section) {
         if (tran_iter!= this->tran.end()) {
             auto& tran_calc = tran_iter->second;
             auto unique_name = tran_calc.next_name();
-            Fieldprops::keywords::keyword_info<double> kw_info;
+            auto kw_info = tran_calc.make_kw_info(ScalarOperation::EQUAL);
             this->handle_double_keyword(Section::EDIT, kw_info, keyword, unique_name, box);
             tran_calc.add_action( Fieldprops::ScalarOperation::EQUAL, unique_name );
             continue;
