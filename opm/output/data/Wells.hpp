@@ -414,6 +414,7 @@ namespace Opm {
              well_potential_oil == rate.well_potential_oil &&
              well_potential_gas == rate.well_potential_gas &&
              brine == rate.brine;
+             alq == rate.alq;
     }
 
 
@@ -575,6 +576,7 @@ namespace Opm {
             buffer.read(this->well_potential_oil);
             buffer.read(this->well_potential_gas);
             buffer.read(this->brine);
+            buffer.read(this->alq);
     }
 
   template <class MessageBufferType>
