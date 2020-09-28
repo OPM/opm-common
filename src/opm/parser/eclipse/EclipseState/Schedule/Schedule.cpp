@@ -350,7 +350,7 @@ namespace {
                     if (std::strftime(dateString, sizeof(dateString), "%F %T", std::gmtime(&date))) {
                         OpmLog::info(fmt::format("Processing simulation date {}.", dateString));
                     } else {
-                        throw std::runtime_error(fmt::format("An error was encountered when trying to print a date near {}:{}", __FILE__, __LINE__));
+                        throw std::length_error(fmt::format("An error was encountered when trying to print a date near {}:{}", __FILE__, __LINE__));
                     }
                 }
 
