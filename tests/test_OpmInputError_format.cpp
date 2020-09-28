@@ -22,6 +22,8 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <exception>
+
 #include <opm/common/utility/OpmInputError.hpp>
 
 const Opm::KeywordLocation location { "MXUNSUPP", "FILENAME.DAT", 42 } ;
@@ -82,4 +84,20 @@ Reason: Runtime Error)" };
     const std::string formatted { Opm::OpmInputError(location, std::runtime_error("Runtime Error"), "Reason").what() } ;
 
     BOOST_CHECK_EQUAL(formatted, expected);
+}
+
+BOOST_AUTO_TEST_CASE(exception_nest) {
+    const std::string expected { R"(Problem parsing keyword MXUNSUPP
+In FILENAME.DAT line 42.
+Internal error message: Runtime Error)" };
+
+    try {
+        try {
+            throw std::runtime_error("Runtime Error");
+        } catch (const std::exception& e) {
+            std::throw_with_nested(Opm::OpmInputError(location, e));
+        }
+    } catch (const Opm::OpmInputError& opm_error) {
+        BOOST_CHECK_EQUAL(opm_error.what(), expected);
+    }
 }

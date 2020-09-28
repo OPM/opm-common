@@ -60,8 +60,13 @@ public:
         {file} -> loc.filename
         {line} -> loc.lineno
 
+      additionally, the message can contain any number of named or positional
+      arguments to add further context to the message.
+
       KeywordLocation loc("KW", "file.inc", 100);
-      OpmInputError("Error at line {line} in file{file} - keyword: {keyword} ignored", location)
+      OpmInputError("Error at line {line} in file {file} - keyword: {keyword} ignored", location);
+      OpmInputError("Error at line {line} in file {file} - keyword: {keyword} has invalid argument {}", invalid_argument);
+      OpmInputError("Error at line {line} in file {file} - keyword: {keyword} has invalid argument {argument}", fmt::arg("argument", invalid_argument));
     */
 
     template<class ... Args>
@@ -70,6 +75,21 @@ public:
         location { loc }
     {}
 
+    /*
+      Allows for the initialisation of an OpmInputError from another exception.
+
+      Usage:
+
+      try {
+          .
+          .
+          .
+      } catch (const Opm::OpmInputError&) {
+          throw;
+      } catch (const std::exception& e) {
+          std::throw_with_nested(Opm::OpmInputError(location, e));
+      }
+    */
     OpmInputError(const KeywordLocation& loc, const std::exception& e, const std::string& reason = "Internal error message") :
         m_what   { OpmInputError::formatException(loc, e, reason) },
         location { loc }
