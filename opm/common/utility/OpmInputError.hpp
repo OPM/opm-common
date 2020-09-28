@@ -60,13 +60,12 @@ public:
         {file} -> loc.filename
         {line} -> loc.lineno
 
-      additionally, the message can contain any number of named or positional
+      additionally, the message can contain any number of positional
       arguments to add further context to the message.
 
       KeywordLocation loc("KW", "file.inc", 100);
       OpmInputError("Error at line {line} in file {file} - keyword: {keyword} ignored", location);
       OpmInputError("Error at line {line} in file {file} - keyword: {keyword} has invalid argument {}", invalid_argument);
-      OpmInputError("Error at line {line} in file {file} - keyword: {keyword} has invalid argument {argument}", fmt::arg("argument", invalid_argument));
     */
 
     template<class ... Args>

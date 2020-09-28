@@ -38,15 +38,6 @@ BOOST_AUTO_TEST_CASE(simple) {
     BOOST_CHECK_EQUAL(formatted, expected);
 }
 
-BOOST_AUTO_TEST_CASE(named) {
-    const std::string expected { "MXUNSUPP@FILENAME.DAT:42: Error encountered" } ;
-
-    const std::string format_string { "{keyword}@{file}:{line}: {error}" } ;
-    const std::string formatted { Opm::OpmInputError::format(format_string, location, fmt::arg("error", error_string)) } ;
-
-    BOOST_CHECK_EQUAL(formatted, expected);
-}
-
 BOOST_AUTO_TEST_CASE(positional) {
     const std::string expected { "MXUNSUPP@FILENAME.DAT:42: Error encountered" } ;
 
