@@ -73,3 +73,13 @@ Reason: Runtime Error)" };
 
     BOOST_CHECK_EQUAL(formatted, expected);
 }
+
+BOOST_AUTO_TEST_CASE(exception_init) {
+    const std::string expected { R"(Problem parsing keyword MXUNSUPP
+In FILENAME.DAT line 42.
+Reason: Runtime Error)" };
+
+    const std::string formatted { Opm::OpmInputError(location, std::runtime_error("Runtime Error"), "Reason").what() } ;
+
+    BOOST_CHECK_EQUAL(formatted, expected);
+}

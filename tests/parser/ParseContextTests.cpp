@@ -847,7 +847,6 @@ BOOST_AUTO_TEST_CASE(OPM_ERROR) {
     BOOST_CHECK_EQUAL(error4.what(), "kw:100:kw");
     BOOST_CHECK_EQUAL(error5.what(), "kw:100:file: error");
 
-
     /*
       This test is meant to emulate the typical parsing process, the blocks here
       in the main test function represent main() in the simulator and the main

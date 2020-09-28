@@ -21,6 +21,7 @@
 
 #include <stdexcept>
 #include <string>
+#include <utility>
 
 #include <fmt/format.h>
 
@@ -69,6 +70,11 @@ public:
         location { loc }
     {}
 
+    OpmInputError(const KeywordLocation& loc, const std::exception& e, const std::string& reason = "Internal error message") :
+        m_what   { OpmInputError::formatException(loc, e, reason) },
+        location { loc }
+    {}
+
     const char * what() const throw()
     {
         return this->m_what.c_str();
@@ -87,9 +93,9 @@ public:
     static std::string formatException(const KeywordLocation& loc, const std::exception& e, const std::string& reason = "Internal error message") {
         const std::string defaultMessage { R"(Problem parsing keyword {keyword}
 In {file} line {line}.
-{reason}: {error})" } ;
+{}: {})" } ;
 
-        return format(defaultMessage, loc, fmt::arg("reason", reason), fmt::arg("error", e.what()));
+        return format(defaultMessage, loc, reason, e.what());
     }
 
 
