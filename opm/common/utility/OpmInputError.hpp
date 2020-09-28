@@ -83,20 +83,22 @@ public:
         return this->m_what.c_str();
     }
 
-
-    static std::string format(const std::string& msg_fmt, const KeywordLocation& loc) {
-        return fmt::format(msg_fmt,
-                           fmt::arg("keyword", loc.keyword),
-                           fmt::arg("file", loc.filename),
-                           fmt::arg("line", loc.lineno));
+    template<class ... Args>
+    static std::string format(const std::string& msg_format, const KeywordLocation& loc, const Args ... additionalArguments) {
+        return fmt::format(msg_format,
+            std::forward<const Args>(additionalArguments)...,
+            fmt::arg("keyword", loc.keyword),
+            fmt::arg("file", loc.filename),
+            fmt::arg("line", loc.lineno)
+        );
     }
 
     static std::string formatException(const KeywordLocation& loc, const std::exception& e, const std::string& reason = "Internal error message") {
         const std::string defaultMessage { R"(Problem parsing keyword {keyword}
 In {file} line {line}.
-{{reason}}: {{error}})" } ;
+{reason}: {error})" } ;
 
-        return fmt::format(format(defaultMessage, loc), fmt::arg("reason", reason), fmt::arg("error", e.what()));
+        return format(defaultMessage, loc, fmt::arg("reason", reason), fmt::arg("error", e.what()));
     }
 
 
