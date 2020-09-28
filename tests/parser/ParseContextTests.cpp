@@ -840,20 +840,12 @@ Deck parse(bool throw_opm, bool& opm_caught, bool& std_caught) {
 BOOST_AUTO_TEST_CASE(OPM_ERROR) {
     KeywordLocation location("kw", "file", 100);
     OpmInputError error1("Error", location);
-    OpmInputError error2("{2}:{1}:{0}", location);
-    OpmInputError error3("{}:{}:{}", location);
     OpmInputError error4("{keyword}:{line}:{keyword}", location);
-
-    /*
-      Use of named placeholders like {keyword} and {file} is probabably the
-      best, but also numbered placeholders like {0} and {1} and also pure
-      positional {} works.
-    */
+    OpmInputError error5("{keyword}:{line}:{file}: {}", location, "error");
 
     BOOST_CHECK_EQUAL(error1.what(), "Error");
-    BOOST_CHECK_EQUAL(error2.what(), "100:file:kw");
-    BOOST_CHECK_EQUAL(error3.what(), "kw:file:100");
     BOOST_CHECK_EQUAL(error4.what(), "kw:100:kw");
+    BOOST_CHECK_EQUAL(error5.what(), "kw:100:file: error");
 
 
     /*

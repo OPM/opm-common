@@ -63,10 +63,10 @@ public:
       OpmInputError("Error at line {line} in file{file} - keyword: {keyword} ignored", location)
     */
 
-
-    OpmInputError(const std::string& msg_fmt, const KeywordLocation& loc) :
-        m_what(OpmInputError::format(msg_fmt, loc)),
-        location(loc)
+    template<class ... Args>
+    OpmInputError(const std::string& msg_fmt, const KeywordLocation& loc, const Args ... additionalArguments) :
+        m_what   { OpmInputError::format(msg_fmt, loc, std::forward<const Args>(additionalArguments)...) },
+        location { loc }
     {}
 
     const char * what() const throw()
