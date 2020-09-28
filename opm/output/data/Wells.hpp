@@ -413,7 +413,7 @@ namespace Opm {
              well_potential_water == rate.well_potential_water &&
              well_potential_oil == rate.well_potential_oil &&
              well_potential_gas == rate.well_potential_gas &&
-             brine == rate.brine;
+             brine == rate.brine &&
              alq == rate.alq;
     }
 
