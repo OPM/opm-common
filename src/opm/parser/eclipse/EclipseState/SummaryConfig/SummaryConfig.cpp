@@ -473,6 +473,16 @@ void keyword_node( SummaryConfig::keyword_list& list,
                    ErrorGuard& errors,
                    const DeckKeyword& keyword)
 {
+    if (node_names.empty()) {
+        const auto& location = keyword.location();
+        const std::string msg = "The network node keyword " + keyword.name()
+            + " at " + location.filename + ", line " + std::to_string(location.lineno)
+            + " is not supported in runs without networks";
+
+        parseContext.handleError( ParseContext::SUMMARY_UNHANDLED_KEYWORD, msg, errors);
+        return;
+    }
+
     auto param = SummaryConfigNode {
         keyword.name(), SummaryConfigNode::Category::Node, keyword.location()
     }
