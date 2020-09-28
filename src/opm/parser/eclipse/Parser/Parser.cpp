@@ -923,8 +923,7 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
                                                                       parserState.deck.getDefaultUnitSystem()));
             } catch (const OpmInputError& opm_error) {
                 throw;
-            }
-            catch (const std::exception& std_error) {
+            } catch (const std::exception& e) {
                 /*
                   This catch-all of parsing errors is to be able to write a good
                   error message; the parser is quite confused at this state and
@@ -935,11 +934,9 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
                   same exception without updating the what() message of the
                   exception.
                 */
-                const auto& location = rawKeyword->location();
-                std::string msg_fmt = fmt::format("Problem parsing keyword {{keyword}}\n"
-                                                  "In {{file}} line {{line}}.\n"
-                                                  "Internal error message: {}" , std_error.what());
-                OpmLog::error( OpmInputError::format(msg_fmt, location) );
+
+                OpmLog::error(OpmInputError::formatException(rawKeyword->location(), e));
+
                 throw;
             }
         } else {
