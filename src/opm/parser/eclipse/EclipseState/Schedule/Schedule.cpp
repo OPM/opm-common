@@ -17,6 +17,8 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <ctime>
+
 #include <fnmatch.h>
 #include <iostream>
 #include <optional>
@@ -342,13 +344,26 @@ namespace {
             }
 
             else if (keyword.name() == "DATES") {
+                for (const auto& record : keyword) {
+                    const std::time_t date = TimeMap::timeFromEclipse(record);
+                    char dateString[20];
+                    if (std::strftime(dateString, sizeof(dateString), "%F %T", std::gmtime(&date))) {
+                        OpmLog::info(fmt::format("Processing simulation date {}.", dateString));
+                    } else {
+                        throw std::runtime_error(fmt::format("An error was encountered when trying to print a date near {}:{}", __FILE__, __LINE__));
+                    }
+                }
+
                 checkIfAllConnectionsIsShut(currentStep);
                 currentStep += keyword.size();
             }
 
             else if (keyword.name() == "TSTEP") {
+                const auto advance = keyword.getRecord(0).getItem(0).data_size();
+                OpmLog::info(fmt::format("Advancing simulation by {} {}.", advance, advance != 1 ? "steps" : "step"));
+
                 checkIfAllConnectionsIsShut(currentStep);
-                currentStep += keyword.getRecord(0).getItem(0).data_size();
+                currentStep += advance;
             }
 
             else {
