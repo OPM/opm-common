@@ -17,18 +17,25 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
-#include <iostream>
-#include <stdexcept>
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 #include <opm/common/utility/String.hpp>
 #include <opm/parser/eclipse/Units/Dimension.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
-#include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
-#include <vector>
+#include <cstddef>
+#include <iostream>
 #include <limits>
+#include <stdexcept>
+#include <vector>
 
+namespace {
+    template <typename T, std::size_t N>
+    constexpr std::size_t numElems(const T (&)[N])
+    {
+        return N;
+    }
+}
 
 namespace Opm {
 
@@ -198,9 +205,21 @@ namespace {
         "KG / SM3", /*salinity */
     };
 
+    static_assert(numElems(from_metric_offset) == static_cast<std::size_t>(UnitSystem::measure::_count),
+                  "from_metric_offset[] size does not match expected-did you add/remove items in ::measure?");
+
+    static_assert(numElems(to_metric) == static_cast<std::size_t>(UnitSystem::measure::_count),
+                  "to_metric[] size does not match expected-did you add/remove items in ::measure?");
+
+    static_assert(numElems(from_metric) == static_cast<std::size_t>(UnitSystem::measure::_count),
+                  "from_metric[] size does not match expected-did you add/remove items in ::measure?");
+
+    static_assert(numElems(metric_names) == static_cast<std::size_t>(UnitSystem::measure::_count),
+                  "metric_names[] size does not match expected-did you add/remove items in ::measure?");
+
     static_assert(
         metric_names[static_cast<int>(UnitSystem::measure::_count) - 1] != nullptr,
-        "Name missing from ::metric_names"
+        "Name missing from ::metric_names[]"
     );
 
     // =================================================================
@@ -362,9 +381,21 @@ namespace {
         "LB/STB", /*salinity */
     };
 
+    static_assert(numElems(from_field_offset) == static_cast<std::size_t>(UnitSystem::measure::_count),
+                  "from_field_offset[] size does not match expected-did you add/remove items in ::measure?");
+
+    static_assert(numElems(to_field) == static_cast<std::size_t>(UnitSystem::measure::_count),
+                  "to_field[] size does not match expected-did you add/remove items in ::measure?");
+
+    static_assert(numElems(from_field) == static_cast<std::size_t>(UnitSystem::measure::_count),
+                  "from_field[] size does not match expected-did you add/remove items in ::measure?");
+
+    static_assert(numElems(field_names) == static_cast<std::size_t>(UnitSystem::measure::_count),
+                  "field_names[] size does not match expected-did you add/remove items in ::measure?");
+
     static_assert(
         field_names[static_cast<int>(UnitSystem::measure::_count) - 1] != nullptr,
-        "Name missing from ::field_names"
+        "Name missing from ::field_names[]"
     );
 
     // =================================================================
@@ -526,9 +557,21 @@ namespace {
         "G/SCC", /*salinity */
     };
 
+    static_assert(numElems(from_lab_offset) == static_cast<std::size_t>(UnitSystem::measure::_count),
+                  "from_lab_offset[] size does not match expected-did you add/remove items in ::measure?");
+
+    static_assert(numElems(to_lab) == static_cast<std::size_t>(UnitSystem::measure::_count),
+                  "to_lab[] size does not match expected-did you add/remove items in ::measure?");
+
+    static_assert(numElems(from_lab) == static_cast<std::size_t>(UnitSystem::measure::_count),
+                  "from_lab[] size does not match expected-did you add/remove items in ::measure?");
+
+    static_assert(numElems(lab_names) == static_cast<std::size_t>(UnitSystem::measure::_count),
+                  "lab_names[] size does not match expected-did you add/remove items in ::measure?");
+
     static_assert(
         lab_names[static_cast<int>(UnitSystem::measure::_count) - 1] != nullptr,
-        "Name missing from ::lab_names"
+        "Name missing from ::lab_names[]"
     );
 
     // =================================================================
@@ -690,9 +733,21 @@ namespace {
         "KG/SM3", /*salinity */
     };
 
+    static_assert(numElems(from_pvt_m_offset) == static_cast<std::size_t>(UnitSystem::measure::_count),
+                  "from_pvt_m_offset[] size does not match expected-did you add/remove items in ::measure?");
+
+    static_assert(numElems(to_pvt_m) == static_cast<std::size_t>(UnitSystem::measure::_count),
+                  "to_pvt_m[] size does not match expected-did you add/remove items in ::measure?");
+
+    static_assert(numElems(from_pvt_m) == static_cast<std::size_t>(UnitSystem::measure::_count),
+                  "from_pvt_m[] size does not match expected-did you add/remove items in ::measure?");
+
+    static_assert(numElems(pvt_m_names) == static_cast<std::size_t>(UnitSystem::measure::_count),
+                  "pvt_m_names[] size does not match expected-did you add/remove items in ::measure?");
+
     static_assert(
         pvt_m_names[static_cast<int>(UnitSystem::measure::_count) - 1] != nullptr,
-        "Name missing from ::pvt_m_names"
+        "Name missing from ::pvt_m_names[]"
     );
 
     // =================================================================
@@ -854,9 +909,21 @@ namespace {
         "KG/SM3", /*salinity */
     };
 
+    static_assert(numElems(from_input_offset) == static_cast<std::size_t>(UnitSystem::measure::_count),
+                  "from_input_offset[] size does not match expected-did you add/remove items in ::measure?");
+
+    static_assert(numElems(to_input) == static_cast<std::size_t>(UnitSystem::measure::_count),
+                  "to_input[] size does not match expected-did you add/remove items in ::measure?");
+
+    static_assert(numElems(from_input) == static_cast<std::size_t>(UnitSystem::measure::_count),
+                  "from_input[] size does not match expected-did you add/remove items in ::measure?");
+
+    static_assert(numElems(metric_names) == static_cast<std::size_t>(UnitSystem::measure::_count),
+                  "input_names[] size does not match expected-did you add/remove items in ::measure?");
+
     static_assert(
         input_names[static_cast<int>(UnitSystem::measure::_count) - 1] != nullptr,
-        "Name missing from ::input_names"
+        "Name missing from ::input_names[]"
     );
 
 } // namespace Anonymous
