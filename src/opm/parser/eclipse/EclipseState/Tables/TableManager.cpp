@@ -774,12 +774,22 @@ namespace Opm {
         const auto rocktabKeyword = deck.getKeyword("ROCKTAB");
 
         bool isDirectional = deck.hasKeyword<ParserKeywords::RKTRMDIR>();
+        if (isDirectional) {
+            const std::string msg = "RKTRMDIR is in the deck. Flow does not support directional rock compaction mulipliers. \n"
+                                    "Make sure that your ROCKTAB table only has 3 columns";
+            throw std::invalid_argument(msg);
+        }
+
         bool useStressOption = false;
         if (deck.hasKeyword<ParserKeywords::ROCKOPTS>()) {
             const auto rockoptsKeyword = deck.getKeyword<ParserKeywords::ROCKOPTS>();
             const auto& rockoptsRecord = rockoptsKeyword.getRecord(0);
             const auto& item = rockoptsRecord.getItem<ParserKeywords::ROCKOPTS::METHOD>();
             useStressOption = (item.getTrimmedString(0) == "STRESS");
+        }
+        if (useStressOption) {
+            const std::string msg = "STRESS option is set in ROCKOPTS. Flow does not support stress option in rock compaction mulipliers";
+            throw std::invalid_argument(msg);
         }
 
         for (size_t tableIdx = 0; tableIdx < rocktabKeyword.size(); ++tableIdx) {
