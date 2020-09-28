@@ -53,20 +53,11 @@ public:
       The message string will be used as format string in the fmt::format()
       function as, and optional {} markers can be used to inject keyword,
       filename and linenumber into the final what() message. The placeholders
-      can use named arguments
+      must use named arguments
 
         {keyword} -> loc.keyword
         {file} -> loc.filename
         {line} -> loc.lineno
-
-      or numbered arguments
-
-        {0} -> loc.keyword
-        {1} -> loc.filename
-        {2} -> loc.lineno
-
-      If just plain {} placeholders are used the order of the arguments is
-      keyword, filename, linenumber.
 
       KeywordLocation loc("KW", "file.inc", 100);
       OpmInputError("Error at line {line} in file{file} - keyword: {keyword} ignored", location)
