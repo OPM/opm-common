@@ -392,7 +392,7 @@ static const auto ALL_keywords = {
         "WBHP",  "WGIR",  "WGIT", "WGOR",  "WGPR", "WGPT",  "WOIR",
         "WOIT",  "WOPR",  "WOPT", "WPI",   "WTHP", "WVIR",  "WVIT",
         "WVPR",  "WVPT",  "WWCT", "WWGR",  "WWIR", "WWIT",  "WWPR",
-        "WWPT",
+        "WWPT",  "WGLIR",
         // ALL will not expand to these keywords yet
         "AAQR",  "AAQRG", "AAQT", "AAQTG"
 };
