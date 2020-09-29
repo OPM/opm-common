@@ -344,7 +344,7 @@ namespace {
             }
 
             else if (keyword.name() == "DATES") {
-                OpmLog::info(fmt::format("Processing simulation date {} ({}).", simulationDate(currentStep), simulationDays(section.unitSystem(), currentStep)));
+                OpmLog::info(fmt::format("Processing simulation date {} ({}, step {}).", simulationDate(currentStep), simulationDays(section.unitSystem(), currentStep), currentStep));
 
                 checkIfAllConnectionsIsShut(currentStep);
                 currentStep += keyword.size();
