@@ -344,15 +344,7 @@ namespace {
             }
 
             else if (keyword.name() == "DATES") {
-                for (const auto& record : keyword) {
-                    const std::time_t date = TimeMap::timeFromEclipse(record);
-                    char dateString[20];
-                    if (std::strftime(dateString, sizeof(dateString), "%F %T", std::gmtime(&date))) {
-                        OpmLog::info(fmt::format("Processing simulation date {}.", dateString));
-                    } else {
-                        throw std::length_error(fmt::format("An error was encountered when trying to print a date near {}:{}", __FILE__, __LINE__));
-                    }
-                }
+                OpmLog::info(fmt::format("Processing simulation date {} ({}).", simulationDate(currentStep), simulationDays(section.unitSystem(), currentStep)));
 
                 checkIfAllConnectionsIsShut(currentStep);
                 currentStep += keyword.size();
@@ -1446,6 +1438,16 @@ namespace {
                this->restart_config == data.restart_config &&
                this->wellgroup_events == data.wellgroup_events;
      }
+
+    std::string Schedule::simulationDate(std::size_t currentStep) const {
+        const auto ts { TimeStampUTC(simTime(currentStep)) } ;
+        return fmt::format("{:04d}-{:02d}-{:02d}" , ts.year(), ts.month(), ts.day());
+    }
+
+    std::string Schedule::simulationDays(const UnitSystem& unit_system, std::size_t currentStep) const {
+        const double sim_time { unit_system.from_si(UnitSystem::measure::time, simTime(currentStep)) } ;
+        return fmt::format("{} {}", sim_time, unit_system.name(UnitSystem::measure::time));
+    }
 
 namespace {
 
