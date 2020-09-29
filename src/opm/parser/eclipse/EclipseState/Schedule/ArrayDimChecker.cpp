@@ -21,6 +21,9 @@
 #include <iterator>
 #include <sstream>
 
+#include <fmt/format.h>
+
+#include <opm/common/OpmLog/KeywordLocation.hpp>
 #include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 
@@ -43,13 +46,20 @@ namespace {
 
             if (nWells > std::size_t(wdims.maxWellsInField()))
             {
-                std::ostringstream os;
-                os << "Run uses " << nWells << " wells, but allocates at "
-                   << "most " << wdims.maxWellsInField() << " in RUNSPEC "
-                   << "section.  Increase item 1 of WELLDIMS accordingly.";
+                const auto& location = wdims.location();
+                if (location) {
+                    std::string fmt_message = fmt::format("Problem with keyword {{keyword}}\n"
+                                                          "In {{file}} line {{line}}\n"
+                                                          "The case has {0} wells - but only {1} are specified in WELLDIMS.\n"
+                                                          "Please increase item 1 in WELLDIMS to at least {1}", nWells, wdims.maxWellsInField());
 
-                ctxt.handleError(Opm::ParseContext::RUNSPEC_NUMWELLS_TOO_LARGE,
-                                 os.str(), guard);
+                    ctxt.handleError(Opm::ParseContext::RUNSPEC_NUMWELLS_TOO_LARGE,
+                                     fmt_message, *location, guard);
+                } else {
+                    std::string msg = fmt::format("The case does not have a WELLDIMS keyword.\n"
+                                                  "Please add a WELLDIMS keyword in the RUNSPEC section specifying at least {} wells in item 1.", nWells);
+                    ctxt.handleError(Opm::ParseContext::RUNSPEC_NUMWELLS_TOO_LARGE, msg, {}, guard);
+                }
             }
         }
 
@@ -66,14 +76,20 @@ namespace {
 
             if (nconn > static_cast<decltype(nconn)>(wdims.maxConnPerWell()))
             {
-                std::ostringstream os;
-                os << "Run has well with " << nconn << " reservoir connections, "
-                   << "but allocates at most " << wdims.maxConnPerWell()
-                   << " connections per well in RUNSPEC section.  Increase item "
-                   << "2 of WELLDIMS accordingly.";
+                const auto& location = wdims.location();
+                if (location) {
+                    std::string fmt_message = fmt::format("Problem with keyword {{keyword}}\n"
+                                                          "In {{file}} line {{line}}\n"
+                                                          "The case has a well with {0} connections, but {1} is specified as maxmimum in WELLDIMS.\n"
+                                                          "Please increase item 2 in WELLDIMS to at least {0}", nconn, wdims.maxConnPerWell());
 
-                ctxt.handleError(Opm::ParseContext::RUNSPEC_CONNS_PER_WELL_TOO_LARGE,
-                                 os.str(), guard);
+                    ctxt.handleError(Opm::ParseContext::RUNSPEC_CONNS_PER_WELL_TOO_LARGE,
+                                     fmt_message, *location, guard);
+                } else {
+                    std::string msg = fmt::format("The case does not have a WELLDIMS keyword.\n"
+                                                  "Please add a WELLDIMS keyword in the RUNSPEC section specifying at least {} connections in item 2.", nconn);
+                    ctxt.handleError(Opm::ParseContext::RUNSPEC_CONNS_PER_WELL_TOO_LARGE, msg, {}, guard);
+                }
             }
         }
 
@@ -88,14 +104,21 @@ namespace {
             //   but excluded from WELLDIMS(3).
             if (nGroups > 1U + wdims.maxGroupsInField())
             {
-                std::ostringstream os;
-                os << "Run uses " << (nGroups - 1) << " non-FIELD groups, but "
-                   << "allocates at most " << wdims.maxGroupsInField() 
-                   << " in RUNSPEC section.  Increase item 3 of WELLDIMS "
-                   << "accordingly.";
+                const auto& location = wdims.location();
+                if (location) {
+                    std::string fmt_message = fmt::format("Problem with keyword {{keyword}}\n"
+                                                          "In {{file}} line {{line}}\n"
+                                                          "The case has {0} non-FIELD groups, the WELLDIMS keyword specifies {1}\n."
+                                                          "Please increase item 3 in WELLDIMS to at least {0}", nGroups - 1, wdims.maxGroupsInField());
 
-                ctxt.handleError(Opm::ParseContext::RUNSPEC_NUMGROUPS_TOO_LARGE,
-                                 os.str(), guard);
+                    ctxt.handleError(Opm::ParseContext::RUNSPEC_NUMGROUPS_TOO_LARGE,
+                                     fmt_message, *location, guard);
+                } else {
+                    std::string msg = fmt::format("The case does not have a WELLDIMS keyword.\n"
+                                                  "Please add a WELLDIMS keyword in the RUNSPEC section specifying at least {} groups in item 3.", nGroups - 1);
+                    ctxt.handleError(Opm::ParseContext::RUNSPEC_NUMGROUPS_TOO_LARGE,
+                                     msg , {}, guard);
+                }
             }
         }
 
@@ -115,14 +138,21 @@ namespace {
 
             if (size > static_cast<decltype(size)>(wdims.maxWellsPerGroup()))
             {
-                std::ostringstream os;
-                os << "Run uses maximum group size of " << size << ", but "
-                   << "allocates at most " << wdims.maxWellsPerGroup()
-                   << " in RUNSPEC section.  Increase item 4 of WELLDIMS "
-                   << "accordingly.";
+                const auto& location = wdims.location();
+                if (location) {
+                    std::string fmt_message = fmt::format("Problem with keyword {{keyword}}\n"
+                                                          "In {{file}} line {{line}}\n"
+                                                          "The case has a maximum group size of {0} wells, the WELLDIMS keyword specifies {1}\n."
+                                                          "Please increase item 4 in WELLDIMS to at least {0}", size, wdims.maxGroupsInField());
 
-                ctxt.handleError(Opm::ParseContext::RUNSPEC_GROUPSIZE_TOO_LARGE,
-                                 os.str(), guard);
+                    ctxt.handleError(Opm::ParseContext::RUNSPEC_GROUPSIZE_TOO_LARGE,
+                                     fmt_message, *location, guard);
+                } else {
+                    std::string msg = fmt::format("The case does not have a WELLDIMS keyword.\n"
+                                                  "Please add a WELLDIMS keyword in the RUNSPEC section specifying at least {} as max groupsize in item 4.", size);
+                    ctxt.handleError(Opm::ParseContext::RUNSPEC_GROUPSIZE_TOO_LARGE,
+                                     msg, Opm::KeywordLocation{}, guard);
+                }
             }
         }
     } // WellDims

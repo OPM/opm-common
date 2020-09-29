@@ -27,6 +27,7 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <opm/common/utility/TimeService.hpp>
+#include <opm/common/utility/OpmInputError.hpp>
 
 #include <opm/common/OpmLog/KeywordLocation.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
@@ -137,7 +138,7 @@ TSTEP
     Runspec runspec (deck1);
 
     // The ACTIONX keyword has no matching 'ENDACTIO' -> exception
-    BOOST_CHECK_THROW(Schedule(deck1, grid1, fp, runspec, python), std::invalid_argument);
+    BOOST_CHECK_THROW(Schedule(deck1, grid1, fp, runspec, python), OpmInputError);
 
     Schedule sched(deck2, grid1, fp, runspec, python);
     BOOST_CHECK( !sched.hasWell("W1") );
@@ -146,7 +147,7 @@ TSTEP
     // The deck3 contains the 'GRID' keyword in the ACTIONX block - that is not a whitelisted keyword.
     ParseContext parseContext( {{ParseContext::ACTIONX_ILLEGAL_KEYWORD, InputError::THROW_EXCEPTION}} );
     ErrorGuard errors;
-    BOOST_CHECK_THROW(Schedule(deck3, grid1, fp, runspec, parseContext, errors, python), std::invalid_argument);
+    BOOST_CHECK_THROW(Schedule(deck3, grid1, fp, runspec, parseContext, errors, python), OpmInputError);
 }
 
 

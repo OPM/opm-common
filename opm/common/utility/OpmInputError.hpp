@@ -19,6 +19,7 @@
 #ifndef OPM_ERROR_HPP
 #define OPM_ERROR_HPP
 
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -94,6 +95,10 @@ public:
         location { loc }
     {}
 
+    OpmInputError(const std::string& msg) :
+        m_what(msg)
+    {}
+
     const char * what() const throw()
     {
         return this->m_what.c_str();
@@ -124,7 +129,7 @@ private:
     // The location member is here for debugging; depending on the msg_fmt
     // passed in the constructor we might not have captured all the information
     // in the location argument passed to the constructor.
-    KeywordLocation location;
+    std::optional<KeywordLocation> location;
 };
 
 }

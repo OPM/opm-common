@@ -23,6 +23,7 @@
 
 #include <iostream>
 #include <opm/common/utility/FileSystem.hpp>
+#include <opm/common/utility/OpmInputError.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
@@ -44,7 +45,7 @@ BOOST_AUTO_TEST_CASE(ParserKeyword_includeInvalid) {
     Opm::ErrorGuard errors;
 
     parseContext.update(Opm::ParseContext::PARSE_MISSING_INCLUDE , Opm::InputError::THROW_EXCEPTION );
-    BOOST_CHECK_THROW(parser.parseFile(inputFilePath.string() , parseContext, errors) , std::invalid_argument);
+    BOOST_CHECK_THROW(parser.parseFile(inputFilePath.string() , parseContext, errors) , Opm::OpmInputError);
 
     parseContext.update(Opm::ParseContext::PARSE_MISSING_INCLUDE , Opm::InputError::IGNORE );
     BOOST_CHECK_NO_THROW(parser.parseFile(inputFilePath.string() , parseContext, errors));
@@ -123,9 +124,9 @@ BOOST_AUTO_TEST_CASE(ParserKeyword_includeWrongCase) {
     Opm::ErrorGuard errors;
     parseContext.update(Opm::ParseContext::PARSE_MISSING_INCLUDE , Opm::InputError::THROW_EXCEPTION );
 
-    BOOST_CHECK_THROW(parser.parseFile(inputFile1Path.string(), parseContext, errors), std::invalid_argument);
-    BOOST_CHECK_THROW(parser.parseFile(inputFile2Path.string(), parseContext, errors), std::invalid_argument);
-    BOOST_CHECK_THROW(parser.parseFile(inputFile3Path.string(), parseContext, errors), std::invalid_argument);
+    BOOST_CHECK_THROW(parser.parseFile(inputFile1Path.string(), parseContext, errors), Opm::OpmInputError);
+    BOOST_CHECK_THROW(parser.parseFile(inputFile2Path.string(), parseContext, errors), Opm::OpmInputError);
+    BOOST_CHECK_THROW(parser.parseFile(inputFile3Path.string(), parseContext, errors), Opm::OpmInputError);
 #else
     // for case-insensitive filesystems, the include statement will
     // always work regardless of how the capitalization of the

@@ -331,11 +331,13 @@ namespace {
                     if (action_keyword.name() == "ENDACTIO")
                         break;
 
-                    if (Action::ActionX::valid_keyword(action_keyword.name())) {
+                    if (Action::ActionX::valid_keyword(action_keyword.name()))
                         action.addKeyword(action_keyword);
-                    } else {
-                        std::string msg = "The keyword " + action_keyword.name() + " is not supported in a ACTIONX block.";
-                        parseContext.handleError( ParseContext::ACTIONX_ILLEGAL_KEYWORD, msg, errors);
+                    else {
+                        std::string msg = "The keyword {0} is not supported in a ACTIONX block. file: {1}  line: {2}";
+                        std::string msg_fmt = "The keyword {keyword} is not supported in the ACTIONX block\n"
+                                              "In {file} line {line}.";
+                        parseContext.handleError( ParseContext::ACTIONX_ILLEGAL_KEYWORD, msg, action_keyword.location(), errors);
                     }
                 }
                 this->addACTIONX(action, currentStep);
@@ -460,14 +462,14 @@ namespace {
         const auto& current = *this->udq_config.get(current_step);
         std::shared_ptr<UDQConfig> new_udq = std::make_shared<UDQConfig>(current);
         for (const auto& record : keyword)
-            new_udq->add_record(record, current_step);
+            new_udq->add_record(record, keyword.location(), current_step);
 
         auto next_index = this->udq_config.update_equal(current_step, new_udq);
         if (next_index) {
             for (const auto& [report_step, udq_ptr] : this->udq_config.unique() ) {
                 if (report_step > current_step) {
                     for (const auto& record : keyword)
-                        udq_ptr->add_record(record, current_step);
+                        udq_ptr->add_record(record, keyword.location(), current_step);
                 }
             }
         }
@@ -499,20 +501,20 @@ namespace {
             if (conn_defaulted( record )) {
                 const auto well_status = Well::StatusFromString( status_str );
                 for (const auto& wname : well_names) {
-                    const auto& well = this->getWell(wname, currentStep);
-                    if (well_status == open && !well.canOpen()) {
-                        auto days = m_timeMap.getTimePassedUntil( currentStep ) / (60 * 60 * 24);
-                        std::string msg = "Well " + wname
-                            + " where crossflow is banned has zero total rate."
-                            + " This well is prevented from opening at "
-                            + std::to_string( days ) + " days";
-                        OpmLog::note(msg);
-                    } else {
-                        this->updateWellStatus( wname, currentStep, well_status, false );
-                        if (well_status == open)
-                            this->rft_config.addWellOpen(wname, currentStep);
-
-                        OpmLog::info(Well::Status2String(well_status) + " well: " + wname + " at report step: " + std::to_string(currentStep));
+                    {
+                        const auto& well = this->getWell(wname, currentStep);
+                        if( well_status == open && !well.canOpen() ) {
+                            auto days = m_timeMap.getTimePassedUntil( currentStep ) / (60 * 60 * 24);
+                            std::string msg = "Well " + wname
+                                + " where crossflow is banned has zero total rate."
+                                + " This well is prevented from opening at "
+                                + std::to_string( days ) + " days";
+                            OpmLog::note(msg);
+                        } else {
+                            this->updateWellStatus( wname, currentStep, well_status, false );
+                            if (well_status == open)
+                                this->rft_config.addWellOpen(wname, currentStep);
+                        }
                     }
                 }
 
@@ -521,13 +523,14 @@ namespace {
 
             for (const auto& wname : well_names) {
                 const auto comp_status = Connection::StateFromString( status_str );
-                auto& dynamic_state = this->wells_static.at(wname);
-                auto well_ptr = std::make_shared<Well>( *dynamic_state[currentStep] );
-                if (well_ptr->handleWELOPEN(record, comp_status, action_mode)) {
-                    // The updateWell call breaks test at line 825 and 831 in ScheduleTests
-                    this->updateWell(well_ptr, currentStep);
-                    const auto well_status = Well::StatusFromString( status_str );
-                    OpmLog::info(Well::Status2String(well_status) + " well: " + wname + " at report step: " + std::to_string(currentStep));
+                {
+                    auto& dynamic_state = this->wells_static.at(wname);
+                    auto well_ptr = std::make_shared<Well>( *dynamic_state[currentStep] );
+                    if (well_ptr->handleWELOPEN(record, comp_status, action_mode)) {
+                        // The updateWell call breaks test at line 825 and 831 in ScheduleTests
+                        this->updateWell(well_ptr, currentStep);
+                        const auto well_status = Well::StatusFromString( status_str );
+                    }
                 }
 
                 m_events.addEvent( ScheduleEvents::COMPLETION_CHANGE, currentStep );
@@ -599,8 +602,11 @@ namespace {
     }
 
     void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t report_step, const ParseContext& parseContext, ErrorGuard& errors, const DeckKeyword& keyword ) const {
-        std::string msg = "Error when handling " + keyword.name() + " at step: " + std::to_string(report_step) + ". No names match " + namePattern;
-        parseContext.handleError( ParseContext::SCHEDULE_INVALID_NAME, msg, errors );
+        std::string msg_fmt = fmt::format("Invalid wellname pattern in {{keyword}}\n"
+                                          "In {{file}} line {{line}}\n"
+                                          "No wells/groups match the pattern: '{}'", namePattern);
+
+        parseContext.handleError( ParseContext::SCHEDULE_INVALID_NAME, msg_fmt, keyword.location(), errors );
     }
 
     const TimeMap& Schedule::getTimeMap() const {

@@ -35,6 +35,7 @@ namespace Opm {
 class UDQASTNode;
 class ParseContext;
 class ErrorGuard;
+class KeywordLocation;
 
 class UDQDefine{
 public:
@@ -42,10 +43,12 @@ public:
 
     UDQDefine(const UDQParams& udq_params,
               const std::string& keyword,
+              const KeywordLocation& location,
               const std::vector<std::string>& deck_data);
 
     UDQDefine(const UDQParams& udq_params,
               const std::string& keyword,
+              const KeywordLocation& location,
               const std::vector<std::string>& deck_data,
               const ParseContext& parseContext,
               ErrorGuard& errors);
@@ -53,6 +56,7 @@ public:
     template <typename T>
     UDQDefine(const UDQParams& udq_params,
               const std::string& keyword,
+              const KeywordLocation& location,
               const std::vector<std::string>& deck_data,
               const ParseContext& parseContext,
               T&& errors);

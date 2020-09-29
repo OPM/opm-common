@@ -17,6 +17,7 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <opm/common/OpmLog/KeywordLocation.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
@@ -86,13 +87,13 @@ namespace Opm {
     }
 
 
-    void UDQConfig::add_define(const std::string& quantity, const std::vector<std::string>& expression) {
+    void UDQConfig::add_define(const std::string& quantity, const KeywordLocation& location, const std::vector<std::string>& expression) {
         this->add_node(quantity, UDQAction::DEFINE);
         auto defined_iter = this->m_definitions.find( quantity );
         if (defined_iter != this->m_definitions.end())
             this->m_definitions.erase( defined_iter );
 
-        this->m_definitions.insert( std::make_pair(quantity, UDQDefine(this->udq_params, quantity, expression)));
+        this->m_definitions.insert( std::make_pair(quantity, UDQDefine(this->udq_params, quantity, location, expression)));
         this->define_order.insert(quantity);
     }
 
@@ -119,7 +120,7 @@ namespace Opm {
     }
 
 
-    void UDQConfig::add_record(const DeckRecord& record, std::size_t report_step) {
+    void UDQConfig::add_record(const DeckRecord& record, const KeywordLocation& location, std::size_t report_step) {
         auto action = UDQ::actionType(record.getItem("ACTION").get<RawString>(0));
         const auto& quantity = record.getItem("QUANTITY").get<std::string>(0);
         const auto& data = RawString::strings( record.getItem("DATA").getData<RawString>() );
@@ -135,7 +136,7 @@ namespace Opm {
                 double value = std::stod(data.back());
                 this->add_assign(quantity, selector, value, report_step);
             } else if (action == UDQAction::DEFINE)
-                this->add_define(quantity, data);
+                this->add_define(quantity, location, data);
             else
                 throw std::runtime_error("Internal error - should not be here");
         }

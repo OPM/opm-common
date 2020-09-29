@@ -21,6 +21,7 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/test/test_tools.hpp>
 #include <opm/common/utility/FileSystem.hpp>
+#include <opm/common/utility/OpmInputError.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
@@ -198,7 +199,24 @@ BOOST_AUTO_TEST_CASE(parse_fileWithBPRKeyword_dataiscorrect) {
 /***************** Testing non-recognized keywords ********************/
 BOOST_AUTO_TEST_CASE(parse_unknownkeyword_exceptionthrown) {
     Parser parser;
-    BOOST_CHECK_THROW( parser.parseFile(pathprefix() + "someobscureelements.data"), std::invalid_argument);
+    std::string deck = R"(
+-- Comment
+OIL
+
+GRIDUNIT
+METRES                   /
+
+GRUDINT -- A wrong, or unknown keyword
+ "text" 3 5 /
+  3 3 3 3 3 3 /
+/
+
+
+
+RADFIN4
+ 'NAME' 213 123 123 123 7 7 18 18 18 18 /
+)";
+    BOOST_CHECK_THROW( parser.parseString(deck), OpmInputError);
 }
 
 /*********************Testing truncated (default) records ***************************/
@@ -207,7 +225,18 @@ BOOST_AUTO_TEST_CASE(parse_unknownkeyword_exceptionthrown) {
 // Datafile contains 3 RADFIN4 keywords. One fully specified, one with 2 out of 11 items, and one with no items.
 BOOST_AUTO_TEST_CASE(parse_truncatedrecords_deckFilledWithDefaults) {
     Parser parser;
-    auto deck =  parser.parseFile(pathprefix() + "truncated_records.data");
+    std::string deck_string = R"(
+-- Comment
+OIL
+
+RADFIN4
+'NAME' 213 123 123 123 7 7 18 18 18 18 /
+
+RADFIN4
+'NAME' 213  123 123 123 7 7 18 18 18 /
+)";
+
+    auto deck =  parser.parseString(deck_string);
     BOOST_CHECK_EQUAL(3U, deck.size());
     const auto& radfin4_0_full= deck.getKeyword("RADFIN4", 0);
     const auto& radfin4_1_partial= deck.getKeyword("RADFIN4", 1);

@@ -21,6 +21,8 @@
 #include <iostream>
 #include <sstream>
 
+#include <fmt/format.h>
+
 #include <opm/parser/eclipse/Parser/ParserKeywords/C.hpp>
 
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
@@ -185,6 +187,7 @@ namespace {
                                                       ErrorGuard& errors) {
 
         std::vector< Record > compsegs;
+        const auto& location = compsegsKeyword.location();
 
         // The first record in the keyword only contains the well name
         // looping from the second record in the keyword
@@ -208,38 +211,38 @@ namespace {
                 // TODO: the end of the previous connection or range
                 // 'previous' should be in term of the input order
                 // since basically no specific order for the connections
-                const std::string msg = "This way to obtain DISTANCE_START in keyword COMPSEGS "
-                                        "is not implemented yet for well " + well_name;
-                parseContext.handleError(ParseContext::SCHEDULE_COMPSEGS_NOT_SUPPORTED, msg, errors);
+                const std::string msg_fmt = "Must specify start of segment in item 5 in {keyword}\nIn {file} line {line}";
+                parseContext.handleError(ParseContext::SCHEDULE_COMPSEGS_NOT_SUPPORTED, msg_fmt, location, errors);
             }
             if (record.getItem<ParserKeywords::COMPSEGS::DISTANCE_END>().hasValue(0)) {
                 distance_end = record.getItem<ParserKeywords::COMPSEGS::DISTANCE_END>().getSIDouble(0);
             } else {
                 // TODO: the distance_start plus the thickness of the grid block
-                const std::string msg = "This way to obtain DISTANCE_END in keyword COMPSEGS "
-                                        "is not implemented yet for well " + well_name;
-                parseContext.handleError(ParseContext::SCHEDULE_COMPSEGS_NOT_SUPPORTED, msg, errors);
+                const std::string msg_fmt = "Must specify end of segment in item 6 in {keyword}\nIn {file} line {line}";
+                parseContext.handleError(ParseContext::SCHEDULE_COMPSEGS_NOT_SUPPORTED, msg_fmt, location, errors);
             }
 
             if (distance_end <= distance_start) {
-                std::ostringstream sstr;
-                sstr << " The end of the perforations need be to further down than the start of the perforations\n "
-                     << " well " << well_name << " " << I + 1 << " " << J + 1 << " " << K + 1 << " in keyword COMPSEGS\n";
-                parseContext.handleError(ParseContext::SCHEDULE_COMPSEGS_INVALID, sstr.str(), errors);
+                std::string msg_fmt = fmt::format("Problems with {{keyword}}\n"
+                                                  "In {{file}} line {{line}}\n"
+                                                  "The end of the perforation must be below the start for well {} connection({},{},{})", well_name, I+1, J+1, K+1);
+                parseContext.handleError(ParseContext::SCHEDULE_COMPSEGS_INVALID, msg_fmt, location, errors);
             }
 
             if( !record.getItem< ParserKeywords::COMPSEGS::DIRECTION >().hasValue( 0 ) &&
                 !record.getItem< ParserKeywords::COMPSEGS::DISTANCE_END >().hasValue( 0 ) ) {
-                const std::string msg = "The direction has to be specified when DISTANCE_END "
-                                        "is not specified in keyword COMPSEGS for well " + well_name;
-                parseContext.handleError(ParseContext::SCHEDULE_COMPSEGS_INVALID, msg, errors);
+                std::string msg_fmt = fmt::format("Problems with {{keyword}}\n"
+                                                  "In {{file}} line {{line}}\n"
+                                                  "The direction must be specified when DISTANCE_END is defaulted. Well: {}", well_name);
+                parseContext.handleError(ParseContext::SCHEDULE_COMPSEGS_INVALID, msg_fmt, location, errors);
             }
 
             if( record.getItem< ParserKeywords::COMPSEGS::END_IJK >().hasValue( 0 ) &&
                !record.getItem< ParserKeywords::COMPSEGS::DIRECTION >().hasValue( 0 ) ) {
-                const std::string msg = "The direction has to be specified when END_IJK "
-                                        "is specified in keyword COMPSEGS for well " + well_name;
-                parseContext.handleError(ParseContext::SCHEDULE_COMPSEGS_INVALID, msg, errors);
+                std::string msg_fmt = fmt::format("Problems with {{keyword}}\n"
+                                                  "In {{file}} line {{line}}\n"
+                                                  "The direction must be specified when END_IJK is specified. Well: {}", well_name);
+                parseContext.handleError(ParseContext::SCHEDULE_COMPSEGS_INVALID, msg_fmt, location, errors);
             }
 
             /*
@@ -262,9 +265,10 @@ namespace {
 
             if (center_depth < 0.) {
                 //TODO: get the depth from COMPDAT data.
-                const std::string msg = "This way to obtain CENTER_DISTANCE in keyword COMPSEGS "
-                                        "is not implemented yet for well " + well_name;
-                parseContext.handleError(ParseContext::SCHEDULE_COMPSEGS_NOT_SUPPORTED, msg, errors);
+                std::string msg_fmt = fmt::format("Problems with {{keyword}}\n"
+                                                  "In {{file}} line {{line}}\n"
+                                                  "The use of negative center depth in item 9 is not supported. Well: {}", well_name);
+                parseContext.handleError(ParseContext::SCHEDULE_COMPSEGS_NOT_SUPPORTED, msg_fmt, location, errors);
             }
 
             int segment_number;
@@ -287,10 +291,11 @@ namespace {
                                        seqIndex);
               }
             } else { // a range is defined. genrate a range of Record
-                std::ostringstream sstr;
-                sstr << "COMPSEGS entries can only be input for single connection, not supporting COMPSEGS entries specified with a range yet.\n"
-                     << " well " << well_name << " " << I + 1 << " " << J + 1 << " " << K + 1 << " in keyword COMPSEGS\n";
-                parseContext.handleError(ParseContext::SCHEDULE_COMPSEGS_NOT_SUPPORTED, sstr.str(), errors);
+                std::string msg_fmt = fmt::format("Problems with {{keyword}}\n"
+                                                  "In {{file}} line {{line}}\n"
+                                                  "Entering COMPEGS with a range of connections is not yet supported\n"
+                                                  "Well: {} Connection: ({},{},{})", well_name, I+1, J+1 , K+1);
+                parseContext.handleError(ParseContext::SCHEDULE_COMPSEGS_NOT_SUPPORTED, msg_fmt, location, errors);
             }
         }
 

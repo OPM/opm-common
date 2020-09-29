@@ -57,12 +57,9 @@ bool checkDeck( const Deck& deck, const Parser& parser, const ParseContext& pars
         const std::string& fileUnitSystem = uppercase(keyword->getRecord(0).getItem("FILE_UNIT_SYSTEM").getTrimmedString(0));
         if (fileUnitSystem != deckUnitSystem) {
             const auto& location = keyword->location();
-            std::string msg =
-                "Unit system " + fileUnitSystem + " specified via the FILEUNIT keyword at "
-                + location.filename + ":" + std::to_string(location.lineno)
-                + " does not correspond to the unit system used by the deck ("
-                + deckUnitSystem + ")";
-            parseContext.handleError(ParseContext::UNIT_SYSTEM_MISMATCH, msg, errorGuard);
+            std::string msg_fmt = "Unit system mismatch\n"
+                                  "In {file} line {line}";
+            parseContext.handleError(ParseContext::UNIT_SYSTEM_MISMATCH, msg_fmt, location, errorGuard);
             deckValid = false;
         }
     }

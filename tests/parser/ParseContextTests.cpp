@@ -73,14 +73,14 @@ BOOST_AUTO_TEST_CASE(TestUnkownKeyword) {
 
     parser.addKeyword<ParserKeywords::DIMENS>();
     parseContext.update(ParseContext::PARSE_UNKNOWN_KEYWORD , InputError::THROW_EXCEPTION );
-    BOOST_CHECK_THROW( parser.parseString( deck1 , parseContext , errors) , std::invalid_argument);
+    BOOST_CHECK_THROW( parser.parseString( deck1 , parseContext , errors) , OpmInputError);
 
     parseContext.update(ParseContext::PARSE_UNKNOWN_KEYWORD , InputError::IGNORE );
     BOOST_CHECK_NO_THROW( parser.parseString( deck1 , parseContext , errors) );
 
     parseContext.update(ParseContext::PARSE_UNKNOWN_KEYWORD , InputError::THROW_EXCEPTION );
     parseContext.update(ParseContext::PARSE_RANDOM_TEXT , InputError::IGNORE );
-    BOOST_CHECK_THROW( parser.parseString( deck2 , parseContext , errors) , std::invalid_argument);
+    BOOST_CHECK_THROW( parser.parseString( deck2 , parseContext , errors) , OpmInputError);
 
     parseContext.update(ParseContext::PARSE_UNKNOWN_KEYWORD , InputError::IGNORE );
     parseContext.update(ParseContext::PARSE_RANDOM_TEXT , InputError::IGNORE );
@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(TestUnkownKeyword) {
 
     parseContext.update(ParseContext::PARSE_UNKNOWN_KEYWORD , InputError::IGNORE );
     parseContext.update(ParseContext::PARSE_RANDOM_TEXT , InputError::THROW_EXCEPTION );
-    BOOST_CHECK_THROW( parser.parseString( deck2 , parseContext , errors) , std::invalid_argument);
+    BOOST_CHECK_THROW( parser.parseString( deck2 , parseContext , errors) , OpmInputError);
 
     parseContext.update(ParseContext::PARSE_UNKNOWN_KEYWORD , InputError::IGNORE );
     parseContext.update(ParseContext::PARSE_RANDOM_TEXT , InputError::IGNORE );
@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE(TestUnkownKeywordII) {
 
     parser.addKeyword<ParserKeywords::DIMENS>();
     parseContext.update(ParseContext::PARSE_UNKNOWN_KEYWORD , InputError::THROW_EXCEPTION );
-    BOOST_CHECK_THROW( parser.parseString( deck1 , parseContext, errors ) , std::invalid_argument);
+    BOOST_CHECK_THROW( parser.parseString( deck1 , parseContext, errors ) , OpmInputError);
     parseContext.ignoreKeyword("RUNSPEC");
     BOOST_CHECK_NO_THROW( parser.parseString( deck1 , parseContext, errors ) );
 }
@@ -135,14 +135,14 @@ BOOST_AUTO_TEST_CASE(Handle_extra_records) {
     parser.addKeyword<ParserKeywords::EQLDIMS>();
     parser.addKeyword<ParserKeywords::EQUIL>();
     parser.addKeyword<ParserKeywords::GRID>();
-    BOOST_CHECK_THROW( parser.parseString( deck_string , parseContext, errors ) , std::invalid_argument );
+    BOOST_CHECK_THROW( parser.parseString( deck_string , parseContext, errors ) , OpmInputError );
 
     parseContext.update(ParseContext::PARSE_EXTRA_RECORDS , InputError::IGNORE );
     parser.parseString( deck_string , parseContext, errors );
     BOOST_CHECK( parser.hasKeyword( "GRID" ) );
 
     parseContext.update(ParseContext::PARSE_EXTRA_RECORDS , InputError::THROW_EXCEPTION );
-    BOOST_CHECK_THROW( parser.parseString( deck_string , parseContext, errors ) , std::invalid_argument);
+    BOOST_CHECK_THROW( parser.parseString( deck_string , parseContext, errors ) , OpmInputError);
 }
 
 
@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE(Handle_extra_records_2) {
     parser.addKeyword<ParserKeywords::DIMENS>();
 
     parseContext.update(ParseContext::PARSE_EXTRA_RECORDS , InputError::IGNORE );
-    BOOST_CHECK_THROW( parser.parseString( deck_string , parseContext, errors ), std::invalid_argument );
+    BOOST_CHECK_THROW( parser.parseString( deck_string , parseContext, errors ), OpmInputError );
 }
 
 
@@ -225,7 +225,7 @@ BOOST_AUTO_TEST_CASE(TestUnkownKeyword_DATA) {
         BOOST_CHECK( deck.hasKeyword( "RUNSPEC") );
         BOOST_CHECK( deck.hasKeyword( "DIMENS") );
     }
-    BOOST_CHECK_THROW( parser.parseString( deck_string2 , parseContext, errors ) , std::invalid_argument);
+    BOOST_CHECK_THROW( parser.parseString( deck_string2 , parseContext, errors ) , OpmInputError);
 }
 
 
@@ -247,7 +247,7 @@ BOOST_AUTO_TEST_CASE(TEST_UNKNOWN_OPERATE) {
     Parser parser(false);
 
     parseContext.update(ParseContext::PARSE_UNKNOWN_KEYWORD , InputError::THROW_EXCEPTION );
-    BOOST_CHECK_THROW( parser.parseString( deck , parseContext, errors ) , std::invalid_argument);
+    BOOST_CHECK_THROW( parser.parseString( deck , parseContext, errors ) , OpmInputError);
 
     parseContext.update(ParseContext::PARSE_RANDOM_SLASH , InputError::IGNORE );
     parseContext.update(ParseContext::PARSE_UNKNOWN_KEYWORD , InputError::IGNORE );
@@ -280,7 +280,7 @@ BOOST_AUTO_TEST_CASE( CheckMissingSizeKeyword) {
     parser.addKeyword<ParserKeywords::SOLUTION>();
 
     parseContext.update( ParseContext::PARSE_MISSING_DIMS_KEYWORD , InputError::THROW_EXCEPTION );
-    BOOST_CHECK_THROW( parser.parseString( deck , parseContext, errors ) , std::invalid_argument);
+    BOOST_CHECK_THROW( parser.parseString( deck , parseContext, errors ) , OpmInputError);
 
     parseContext.update( ParseContext::PARSE_MISSING_DIMS_KEYWORD , InputError::IGNORE );
     BOOST_CHECK_NO_THROW( parser.parseString( deck , parseContext, errors ) );
@@ -346,7 +346,7 @@ BOOST_AUTO_TEST_CASE( CheckUnsupportedInSCHEDULE ) {
     BOOST_CHECK_NO_THROW( Schedule( deckUnSupported, grid , fp, runspec, parseContext, errors, python  ));
 
     parseContext.update( ParseContext::UNSUPPORTED_SCHEDULE_GEO_MODIFIER , InputError::THROW_EXCEPTION );
-    BOOST_CHECK_THROW( Schedule( deckUnSupported , grid , fp, runspec , parseContext , errors, python), std::invalid_argument );
+    BOOST_CHECK_THROW( Schedule( deckUnSupported , grid , fp, runspec , parseContext , errors, python), OpmInputError );
     BOOST_CHECK_NO_THROW( Schedule( deckSupported , grid , fp, runspec , parseContext, errors, python));
 }
 
@@ -376,8 +376,8 @@ BOOST_AUTO_TEST_CASE(TestRandomSlash) {
 
     parseContext.update(ParseContext::PARSE_RANDOM_SLASH , InputError::THROW_EXCEPTION);
     parseContext.update(ParseContext::PARSE_RANDOM_TEXT , InputError::IGNORE);
-    BOOST_CHECK_THROW( parser.parseString( deck1 , parseContext, errors ) , std::invalid_argument);
-    BOOST_CHECK_THROW( parser.parseString( deck2 , parseContext, errors ) , std::invalid_argument);
+    BOOST_CHECK_THROW( parser.parseString( deck1 , parseContext, errors ) , OpmInputError);
+    BOOST_CHECK_THROW( parser.parseString( deck2 , parseContext, errors ) , OpmInputError);
 
 
     parseContext.update(ParseContext::PARSE_RANDOM_SLASH , InputError::IGNORE);
@@ -424,7 +424,7 @@ BOOST_AUTO_TEST_CASE(TestCOMPORD) {
     BOOST_CHECK_NO_THROW( Schedule( deck , grid , fp, runspec, parseContext, errors, python ));
 
     parseContext.update( ParseContext::UNSUPPORTED_COMPORD_TYPE , InputError::THROW_EXCEPTION);
-    BOOST_CHECK_THROW( Schedule( deck,  grid , fp, runspec , parseContext, errors, python), std::invalid_argument );
+    BOOST_CHECK_THROW( Schedule( deck,  grid , fp, runspec , parseContext, errors, python), OpmInputError );
 }
 
 
@@ -441,7 +441,7 @@ BOOST_AUTO_TEST_CASE(TestNew) {
     BOOST_CHECK_EQUAL( false , parseContext.hasKey("NO"));
     parseContext.addKey("NEW_KEY", InputError::THROW_EXCEPTION);
     BOOST_CHECK_EQUAL( true , parseContext.hasKey("NEW_KEY"));
-    BOOST_CHECK_THROW( parseContext.get("NO") , std::invalid_argument );
+    BOOST_CHECK_THROW( parseContext.get("NO") , std::invalid_argument);
     BOOST_CHECK_EQUAL( parseContext.get("NEW_KEY") , InputError::THROW_EXCEPTION );
     parseContext.addKey("KEY2", InputError::THROW_EXCEPTION);
     BOOST_CHECK_EQUAL( parseContext.get("NEW_KEY") , InputError::THROW_EXCEPTION );
@@ -498,7 +498,7 @@ BOOST_AUTO_TEST_CASE( test_too_much_data ) {
 
 
     parseContext.update(ParseContext::PARSE_EXTRA_DATA , InputError::THROW_EXCEPTION );
-    BOOST_CHECK_THROW( parser.parseString( deckString , parseContext, errors ) , std::invalid_argument);
+    BOOST_CHECK_THROW( parser.parseString( deckString , parseContext, errors ) , OpmInputError);
 
     parseContext.update(ParseContext::PARSE_EXTRA_DATA , InputError::IGNORE );
     auto deck = parser.parseString( deckString , parseContext, errors );
@@ -530,6 +530,12 @@ BOOST_AUTO_TEST_CASE( test_invalid_wtemplate_config ) {
     1000*0.25 /
     TOPS
     100*0.25 /
+    PERMX
+       1000*1 /
+    PERMY
+       1000*1 /
+    PERMZ
+       1000*1 /
     SCHEDULE
     DATES             -- 1
      10  OKT 2008 /
@@ -770,7 +776,7 @@ BOOST_AUTO_TEST_CASE( test_invalid_wtemplate_config ) {
         FieldPropsManager fp( deckUnSupported, Phases{true, true, true}, grid, table);
         Runspec runspec( deckUnSupported);
 
-        BOOST_CHECK_THROW( Schedule( deckUnSupported , grid , fp, runspec , parseContext, errors, python), std::invalid_argument );
+        BOOST_CHECK_THROW( Schedule( deckUnSupported , grid , fp, runspec , parseContext, errors, python), OpmInputError);
     }
 }
 
@@ -813,7 +819,7 @@ RPTRUNSPEC
     BOOST_CHECK( deck.hasKeyword("RPTRUNSP") );
 
     context.update(ParseContext::PARSE_LONG_KEYWORD, InputError::THROW_EXCEPTION);
-    BOOST_CHECK_THROW( parser.parseString(deck_string, context, error), std::invalid_argument);
+    BOOST_CHECK_THROW( parser.parseString(deck_string, context, error), OpmInputError);
 }
 
 
