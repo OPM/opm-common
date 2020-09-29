@@ -442,7 +442,7 @@ namespace Opm
             }
         }
 
-        std::string simulationDate(std::size_t currentStep) const;
+        static std::string formatDate(std::time_t t);
         std::string simulationDays(const UnitSystem&, std::size_t currentStep) const;
 
         void applyEXIT(const DeckKeyword&, std::size_t currentStep);
