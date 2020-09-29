@@ -86,9 +86,6 @@ public:
         case ScalarOperation::ADD:
             kw_info.init(0);
             break;
-        case ScalarOperation::EQUAL:
-            kw_info.init(0);
-            break;
         case ScalarOperation::MAX:
             kw_info.init(std::numeric_limits<double>::max());
             break;

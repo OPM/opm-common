@@ -153,7 +153,7 @@ void apply_tran(const std::unordered_map<std::string, Fieldprops::TranCalculator
 
         for (std::size_t index = 0; index < active_size; index++) {
 
-            if (action_data.value_status[index] != value::status::deck_value)
+            if (!value::has_value(action_data.value_status[index]))
                 continue;
 
             switch (action.op) {

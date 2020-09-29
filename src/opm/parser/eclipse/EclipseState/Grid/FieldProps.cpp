@@ -27,6 +27,7 @@
 #include <opm/parser/eclipse/Parser/ParserKeywords/O.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/P.hpp>
 
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/RtempvdTable.hpp>
@@ -48,8 +49,8 @@ namespace Fieldprops
 
 namespace keywords {
 
-static const std::set<std::string> oper_keywords = {"ADD", "EQUALS", "MAXVALUE", "MINVALUE", "MULTIPLY", "OPERATE"};
-static const std::set<std::string> region_oper_keywords = {"ADDREG", "EQUALREG", "OPERATER"};
+static const std::set<std::string> oper_keywords = {"ADD", "EQUALS", "MAXVALUE", "MINVALUE", "MULTIPLY"};
+static const std::set<std::string> region_oper_keywords = {"MULTIREG", "ADDREG", "EQUALREG", "OPERATER"};
 static const std::set<std::string> box_keywords = {"BOX", "ENDBOX"};
 
 template <>
@@ -630,12 +631,16 @@ std::vector<double> FieldProps::extract<double>(const std::string& keyword) {
 
 
 double FieldProps::getSIValue(const std::string& keyword, double raw_value) const {
-    const auto& kw_info = Fieldprops::keywords::global_kw_info<double>(keyword);
-    if (kw_info.unit) {
-        const auto& dim = this->unit_system.parse( *kw_info.unit );
-        return dim.convertRawToSi(raw_value);
+    if (this->tran.count(keyword))
+        return this->unit_system.to_si(UnitSystem::measure::transmissibility, raw_value);
+    else {
+        const auto& kw_info = Fieldprops::keywords::global_kw_info<double>(keyword);
+        if (kw_info.unit) {
+            const auto& dim = this->unit_system.parse( *kw_info.unit );
+            return dim.convertRawToSi(raw_value);
+        }
+        return raw_value;
     }
-    return raw_value;
 }
 
 
@@ -726,6 +731,9 @@ void FieldProps::operate(const DeckRecord& record, Fieldprops::FieldData<T>& tar
     if (target_data.global_data)
         throw std::logic_error("The OPERATE and OPERATER keywords are not supported for keywords with global storage");
 
+    if (this->tran.find(target_array) != this->tran.end())
+        throw std::logic_error("The OPERATE keyword can not be used for manipulations of TRANX, TRANY or TRANZ");
+
     for (const auto& cell_index : index_list) {
         if (value::has_value(src_data.value_status[cell_index.active_index])) {
             if ((check_target == false) || (value::has_value(target_data.value_status[cell_index.active_index]))) {
@@ -743,20 +751,10 @@ void FieldProps::handle_region_operation(const DeckKeyword& keyword) {
         const std::string& target_kw = record.getItem(0).get<std::string>(0);
         int region_value = record.getItem("REGION_NUMBER").get<int>(0);
 
-        if (FieldProps::supported<double>(target_kw)) {
-            auto& field_data = this->init_get<double>(target_kw);
-            /*
-              To support region operations on keywords with global storage we
-              would need to also have global storage for the xxxNUM region
-              keywords involved. To avoid a situation where a significant
-              fraction of the keywords have global storage the implementation
-              has stopped here - there are no principle problems with extending
-              the implementation to also support region operations on fields
-              with global storage.
-            */
-            if (field_data.global_data)
-                throw std::logic_error("Region operations on 3D fields with global storage is not implemented");
+        if (this->tran.find(target_kw) != this->tran.end())
+            throw std::logic_error("The region operations can not be used for manipulations of TRANX, TRANY or TRANZ");
 
+        if (FieldProps::supported<double>(target_kw)) {
             if (keyword.name() == ParserKeywords::OPERATER::keywordName) {
                 // For the OPERATER keyword we fetch the region name from the deck record
                 // with no extra hoops.
@@ -764,15 +762,27 @@ void FieldProps::handle_region_operation(const DeckKeyword& keyword) {
                 const auto& index_list = this->region_index(region_name, region_value);
                 const std::string& src_kw = record.getItem("ARRAY_PARAMETER").get<std::string>(0);
                 const auto& src_data = this->init_get<double>(src_kw);
+                auto& field_data = this->init_get<double>(target_kw);
                 FieldProps::operate(record, field_data, src_data, index_list);
             } else {
-                double value = record.getItem(1).get<double>(0);
+                auto operation = fromString(keyword.name());
+                const double scalar_value = this->getSIValue(operation, target_kw, record.getItem(1).get<double>(0));
                 std::string region_name = this->region_name( record.getItem("REGION_NAME") );
                 const auto& index_list = this->region_index( region_name, region_value);
-                if (keyword.name() != ParserKeywords::MULTIPLY::keywordName)
-                    value = this->getSIValue(target_kw, value);
+                auto& field_data = this->init_get<double>(target_kw);
+                /*
+                  To support region operations on keywords with global storage we
+                  would need to also have global storage for the xxxNUM region
+                  keywords involved. To avoid a situation where a significant
+                  fraction of the keywords have global storage the implementation
+                  has stopped here - there are no principle problems with extending
+                  the implementation to also support region operations on fields
+                  with global storage.
+                */
+                if (field_data.global_data)
+                    throw std::logic_error("Region operations on 3D fields with global storage is not implemented");
 
-                FieldProps::apply(fromString(keyword.name()), field_data.data, field_data.value_status, value, index_list);
+                FieldProps::apply(fromString(keyword.name()), field_data.data, field_data.value_status, scalar_value, index_list);
             }
 
             continue;
@@ -781,49 +791,62 @@ void FieldProps::handle_region_operation(const DeckKeyword& keyword) {
         if (FieldProps::supported<int>(target_kw)) {
             continue;
         }
-
-        //throw std::out_of_range("The keyword: " + keyword + " is not supported");
     }
 }
 
-/* This can just use a local box - no need for the manager */
+
+void FieldProps::handle_OPERATE(const DeckKeyword& keyword, Box box) {
+    for (const auto& record : keyword) {
+        const std::string& target_kw = record.getItem(0).get<std::string>(0);
+        box.update(record);
+
+        auto& field_data = this->init_get<double>(target_kw);
+        const std::string& src_kw = record.getItem("ARRAY").get<std::string>(0);
+        const auto& src_data = this->init_get<double>(src_kw);
+        FieldProps::operate(record, field_data, src_data, box.index_list());
+    }
+}
+
+
 void FieldProps::handle_operation(const DeckKeyword& keyword, Box box) {
+    std::unordered_map<std::string, std::string> tran_fields;
     for (const auto& record : keyword) {
         const std::string& target_kw = record.getItem(0).get<std::string>(0);
         box.update(record);
 
         if (FieldProps::supported<double>(target_kw) || this->tran.count(target_kw) > 0) {
-            if (keyword.name() == ParserKeywords::OPERATE::keywordName) {
-                auto& field_data = this->init_get<double>(target_kw);
-                const std::string& src_kw = record.getItem("ARRAY").get<std::string>(0);
-                const auto& src_data = this->init_get<double>(src_kw);
-                FieldProps::operate(record, field_data, src_data, box.index_list());
-            } else {
-                std::string unique_name = target_kw;
-                auto operation = fromString(keyword.name());
-                double scalar_value = record.getItem(1).get<double>(0);
-                Fieldprops::keywords::keyword_info<double> kw_info;
-                auto tran_iter = this->tran.find(target_kw);
-                if (tran_iter != this->tran.end()) {
-                    kw_info = tran_iter->second.make_kw_info(operation);
+            std::string unique_name = target_kw;
+            auto operation = fromString(keyword.name());
+            const double scalar_value = this->getSIValue(operation, target_kw, record.getItem(1).get<double>(0));
+            Fieldprops::keywords::keyword_info<double> kw_info;
+
+            auto tran_iter = this->tran.find(target_kw);
+            // Check if the target keyword is one of the TRANX, TRANY or TRANZ keywords.
+            if (tran_iter != this->tran.end()) {
+                auto tran_field_iter = tran_fields.find(target_kw);
+                /*
+                  The transmissibility calculations are applied to one "work" 3D
+                  field per direction and per keyword. Here we check if we have
+                  encountered this TRAN direction previously for this keyword,
+                  if not we generate a new 3D field and register a new tran
+                  calculator operation.
+                 */
+                if (tran_field_iter == tran_fields.end()) {
                     unique_name = tran_iter->second.next_name();
+                    tran_fields.emplace(target_kw, unique_name);
                     tran_iter->second.add_action(operation, unique_name);
+                    kw_info = tran_iter->second.make_kw_info(operation);
                 } else
-                    kw_info = Fieldprops::keywords::global_kw_info<double>(target_kw);
+                    unique_name = tran_field_iter->second;
 
-                auto& field_data = this->init_get<double>(unique_name, kw_info);
+            } else
+                kw_info = Fieldprops::keywords::global_kw_info<double>(target_kw);
 
-                if (keyword.name() != ParserKeywords::MULTIPLY::keywordName)
-                    scalar_value = this->getSIValue(target_kw, scalar_value);
+            auto& field_data = this->init_get<double>(unique_name, kw_info);
 
-                if (tran_iter != this->tran.end()) {
-                    assign_scalar(field_data.data, field_data.value_status, scalar_value, box.index_list());
-                } else {
-                    FieldProps::apply(operation, field_data.data, field_data.value_status, scalar_value, box.index_list());
-                    if (field_data.global_data)
-                        FieldProps::apply(operation, *field_data.global_data, *field_data.global_value_status, scalar_value, box.global_index_list());
-                }
-            }
+            FieldProps::apply(operation, field_data.data, field_data.value_status, scalar_value, box.index_list());
+            if (field_data.global_data)
+                FieldProps::apply(operation, *field_data.global_data, *field_data.global_value_status, scalar_value, box.global_index_list());
 
             continue;
         }
@@ -883,6 +906,9 @@ void FieldProps::handle_keyword(const DeckKeyword& keyword, Box& box) {
 
     if (Fieldprops::keywords::oper_keywords.count(name) == 1)
         this->handle_operation(keyword, box);
+
+    else if (name == ParserKeywords::OPERATE::keywordName)
+        this->handle_OPERATE(keyword, box);
 
     else if (Fieldprops::keywords::region_oper_keywords.count(name) == 1)
         this->handle_region_operation(keyword);
@@ -1026,8 +1052,7 @@ void FieldProps::scanEDITSection(const EDITSection& edit_section) {
         if (tran_iter!= this->tran.end()) {
             auto& tran_calc = tran_iter->second;
             auto unique_name = tran_calc.next_name();
-            auto kw_info = tran_calc.make_kw_info(ScalarOperation::EQUAL);
-            this->handle_double_keyword(Section::EDIT, kw_info, keyword, unique_name, box);
+            this->handle_double_keyword(Section::EDIT, {}, keyword, unique_name, box);
             tran_calc.add_action( Fieldprops::ScalarOperation::EQUAL, unique_name );
             continue;
         }
