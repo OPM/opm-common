@@ -177,7 +177,7 @@ BOOST_AUTO_TEST_CASE( CreateTables ) {
     auto deck = createSingleRecordDeck();
     Opm::TableManager tables(deck);
     auto& tabdims = tables.getTabdims();
-    BOOST_CHECK_EQUAL( tabdims.getNumSatTables() , 2 );
+    BOOST_CHECK_EQUAL( tabdims.getNumSatTables() , 2U );
     BOOST_CHECK( !tables.useImptvd() );
     BOOST_CHECK( !tables.useEnptvd() );
 }
@@ -186,7 +186,7 @@ BOOST_AUTO_TEST_CASE( CreateTablesWithVd ) {
     auto deck = createSingleRecordDeckWithVd();
     Opm::TableManager tables(deck);
     auto& tabdims = tables.getTabdims();
-    BOOST_CHECK_EQUAL( tabdims.getNumSatTables() , 2 );
+    BOOST_CHECK_EQUAL( tabdims.getNumSatTables() , 2U );
     BOOST_CHECK( tables.useImptvd() );
     BOOST_CHECK( tables.useEnptvd() );
 }
@@ -195,7 +195,7 @@ BOOST_AUTO_TEST_CASE( CreateTablesWithJFunc ) {
     auto deck = createSingleRecordDeckWithJFunc();
     Opm::TableManager tables(deck);
     const Opm::Tabdims& tabdims = tables.getTabdims();
-    BOOST_CHECK_EQUAL(tabdims.getNumSatTables(), 2);
+    BOOST_CHECK_EQUAL(tabdims.getNumSatTables(), 2U );
     BOOST_CHECK(tables.useImptvd());
     BOOST_CHECK(tables.useEnptvd());
 
@@ -252,11 +252,11 @@ BOOST_AUTO_TEST_CASE(SwofTable_Tests) {
     Opm::SwofTable swof1Table(deck.getKeyword("SWOF").getRecord(0).getItem(0), false);
     Opm::SwofTable swof2Table(deck.getKeyword("SWOF").getRecord(1).getItem(0), false);
 
-    BOOST_CHECK_EQUAL(swof1Table.numRows(), 2);
-    BOOST_CHECK_EQUAL(swof2Table.numRows(), 3);
+    BOOST_CHECK_EQUAL(swof1Table.numRows(), 2U);
+    BOOST_CHECK_EQUAL(swof2Table.numRows(), 3U);
 
-    BOOST_CHECK_EQUAL(swof1Table.numColumns(), 4);
-    BOOST_CHECK_EQUAL(swof2Table.numColumns(), 4);
+    BOOST_CHECK_EQUAL(swof1Table.numColumns(), 4U);
+    BOOST_CHECK_EQUAL(swof2Table.numColumns(), 4U);
 
     BOOST_CHECK_EQUAL(swof1Table.getSwColumn().front(), 1.0);
     BOOST_CHECK_EQUAL(swof1Table.getSwColumn().back(), 5.0);
@@ -293,8 +293,8 @@ BOOST_AUTO_TEST_CASE(PbvdTable_Tests) {
 
     Opm::PbvdTable pbvdTable1(deck.getKeyword("PBVD").getRecord(0).getItem(0));
 
-    BOOST_CHECK_EQUAL(pbvdTable1.numRows(), 2);
-    BOOST_CHECK_EQUAL(pbvdTable1.numColumns(), 2);
+    BOOST_CHECK_EQUAL(pbvdTable1.numRows(), 2U);
+    BOOST_CHECK_EQUAL(pbvdTable1.numColumns(), 2U);
     BOOST_CHECK_EQUAL(pbvdTable1.getDepthColumn().front(), 1);
     BOOST_CHECK_EQUAL(pbvdTable1.getDepthColumn().back(), 2);
     BOOST_CHECK_EQUAL(pbvdTable1.getPbubColumn().front(), 100000); // 1 barsa
@@ -321,8 +321,8 @@ BOOST_AUTO_TEST_CASE(PdvdTable_Tests) {
 
     Opm::PdvdTable pdvdTable1(deck.getKeyword("PDVD").getRecord(0).getItem(0));
 
-    BOOST_CHECK_EQUAL(pdvdTable1.numRows(), 2);
-    BOOST_CHECK_EQUAL(pdvdTable1.numColumns(), 2);
+    BOOST_CHECK_EQUAL(pdvdTable1.numRows(), 2U);
+    BOOST_CHECK_EQUAL(pdvdTable1.numColumns(), 2U);
     BOOST_CHECK_EQUAL(pdvdTable1.getDepthColumn().front(), 1);
     BOOST_CHECK_EQUAL(pdvdTable1.getDepthColumn().back(), 2);
     BOOST_CHECK_EQUAL(pdvdTable1.getPdewColumn().front(), 100000); // 1 barsa
@@ -350,11 +350,11 @@ BOOST_AUTO_TEST_CASE(SgwfnTable_Tests) {
     Opm::SgwfnTable sgwfn1Table(deck.getKeyword("SGWFN").getRecord(0).getItem(0));
     Opm::SgwfnTable sgwfn2Table(deck.getKeyword("SGWFN").getRecord(1).getItem(0));
 
-    BOOST_CHECK_EQUAL(sgwfn1Table.numRows(), 2);
-    BOOST_CHECK_EQUAL(sgwfn2Table.numRows(), 3);
+    BOOST_CHECK_EQUAL(sgwfn1Table.numRows(), 2U);
+    BOOST_CHECK_EQUAL(sgwfn2Table.numRows(), 3U);
 
-    BOOST_CHECK_EQUAL(sgwfn1Table.numColumns(), 4);
-    BOOST_CHECK_EQUAL(sgwfn2Table.numColumns(), 4);
+    BOOST_CHECK_EQUAL(sgwfn1Table.numColumns(), 4U);
+    BOOST_CHECK_EQUAL(sgwfn2Table.numColumns(), 4U);
 
     BOOST_CHECK_EQUAL(sgwfn1Table.getSgColumn().front(), 1.0);
     BOOST_CHECK_EQUAL(sgwfn1Table.getSgColumn().back(), 5.0);
@@ -392,11 +392,11 @@ BOOST_AUTO_TEST_CASE(SgofTable_Tests) {
     Opm::SgofTable sgof1Table(deck.getKeyword("SGOF").getRecord(0).getItem(0), false);
     Opm::SgofTable sgof2Table(deck.getKeyword("SGOF").getRecord(1).getItem(0), false);
 
-    BOOST_CHECK_EQUAL(sgof1Table.numRows(), 2);
-    BOOST_CHECK_EQUAL(sgof2Table.numRows(), 3);
+    BOOST_CHECK_EQUAL(sgof1Table.numRows(), 2U);
+    BOOST_CHECK_EQUAL(sgof2Table.numRows(), 3U);
 
-    BOOST_CHECK_EQUAL(sgof1Table.numColumns(), 4);
-    BOOST_CHECK_EQUAL(sgof2Table.numColumns(), 4);
+    BOOST_CHECK_EQUAL(sgof1Table.numColumns(), 4U);
+    BOOST_CHECK_EQUAL(sgof2Table.numColumns(), 4U);
 
     BOOST_CHECK_EQUAL(sgof1Table.getSgColumn().front(), 1.0);
     BOOST_CHECK_EQUAL(sgof1Table.getSgColumn().back(), 5.0);
@@ -671,7 +671,7 @@ VFPPROD \n\
     auto units = Opm::UnitSystem::newMETRIC();
     const auto& vfpprodKeyword = deck.getKeyword("VFPPROD");
 
-    BOOST_CHECK_EQUAL(deck.count("VFPPROD"), 1);
+    BOOST_CHECK_EQUAL(deck.count("VFPPROD"), 1U);
 
     Opm::VFPProdTable vfpprodTable(vfpprodKeyword, units);
 
@@ -686,7 +686,7 @@ VFPPROD \n\
     //Flo axis
     {
         const std::vector<double>& flo = vfpprodTable.getFloAxis();
-        BOOST_REQUIRE_EQUAL(flo.size(), 3);
+        BOOST_REQUIRE_EQUAL(flo.size(), 3U);
 
         //Unit of FLO is SM3/day, convert to SM3/second
         double conversion_factor = 1.0 / (60*60*24);
@@ -698,7 +698,7 @@ VFPPROD \n\
     //THP axis
     {
         const std::vector<double>& thp = vfpprodTable.getTHPAxis();
-        BOOST_REQUIRE_EQUAL(thp.size(), 2);
+        BOOST_REQUIRE_EQUAL(thp.size(), 2U);
 
         //Unit of THP is barsa => convert to pascal
         double conversion_factor = 100000.0;
@@ -709,7 +709,7 @@ VFPPROD \n\
     //WFR axis
     {
         const std::vector<double>& wfr = vfpprodTable.getWFRAxis();
-        BOOST_REQUIRE_EQUAL(wfr.size(), 2);
+        BOOST_REQUIRE_EQUAL(wfr.size(), 2U);
 
         //Unit of WFR is SM3/SM3
         BOOST_CHECK_EQUAL(wfr[0], 13);
@@ -719,7 +719,7 @@ VFPPROD \n\
     //GFR axis
     {
         const std::vector<double>& gfr = vfpprodTable.getGFRAxis();
-        BOOST_REQUIRE_EQUAL(gfr.size(), 2);
+        BOOST_REQUIRE_EQUAL(gfr.size(), 2U);
 
         //Unit of GFR is SM3/SM3
         BOOST_CHECK_EQUAL(gfr[0], 19);
@@ -729,7 +729,7 @@ VFPPROD \n\
     //ALQ axis
     {
         const std::vector<double>& alq = vfpprodTable.getALQAxis();
-        BOOST_REQUIRE_EQUAL(alq.size(), 2);
+        BOOST_REQUIRE_EQUAL(alq.size(), 2U);
 
         //Unit of ALQ undefined
         BOOST_CHECK_EQUAL(alq[0], 29);
@@ -741,11 +741,11 @@ VFPPROD \n\
         typedef Opm::VFPProdTable::array_type::size_type size_type;
         const auto size = vfpprodTable.shape();
 
-        BOOST_CHECK_EQUAL(size[0], 2);
-        BOOST_CHECK_EQUAL(size[1], 2);
-        BOOST_CHECK_EQUAL(size[2], 2);
-        BOOST_CHECK_EQUAL(size[3], 2);
-        BOOST_CHECK_EQUAL(size[4], 3);
+        BOOST_CHECK_EQUAL(size[0], 2U);
+        BOOST_CHECK_EQUAL(size[1], 2U);
+        BOOST_CHECK_EQUAL(size[2], 2U);
+        BOOST_CHECK_EQUAL(size[3], 2U);
+        BOOST_CHECK_EQUAL(size[4], 3U);
 
         //Table given as BHP => barsa. Convert to pascal
         double conversion_factor = 100000.0;
@@ -796,7 +796,7 @@ VFPPROD \n\
     const auto& vfpprodKeyword = deck.getKeyword("VFPPROD");
     auto units = Opm::UnitSystem::newMETRIC();
 
-    BOOST_CHECK_EQUAL(deck.count("VFPPROD"), 1);
+    BOOST_CHECK_EQUAL(deck.count("VFPPROD"), 1U);
 
     Opm::VFPProdTable vfpprodTable(vfpprodKeyword, units);
 
@@ -810,7 +810,7 @@ VFPPROD \n\
     //Flo axis
     {
         const std::vector<double>& flo = vfpprodTable.getFloAxis();
-        BOOST_REQUIRE_EQUAL(flo.size(), 1);
+        BOOST_REQUIRE_EQUAL(flo.size(), 1U);
 
         //Unit of FLO is SM3/day, convert to SM3/second
         double conversion_factor = 1.0 / (60*60*24);
@@ -820,7 +820,7 @@ VFPPROD \n\
     //THP axis
     {
         const std::vector<double>& thp = vfpprodTable.getTHPAxis();
-        BOOST_REQUIRE_EQUAL(thp.size(), 1);
+        BOOST_REQUIRE_EQUAL(thp.size(), 1U);
 
         //Unit of THP is barsa => convert to pascal
         double conversion_factor = 100000.0;
@@ -830,7 +830,7 @@ VFPPROD \n\
     //WFR axis
     {
         const std::vector<double>& wfr = vfpprodTable.getWFRAxis();
-        BOOST_REQUIRE_EQUAL(wfr.size(), 1);
+        BOOST_REQUIRE_EQUAL(wfr.size(), 1U);
 
         //Unit of WFR is SM3/SM3
         BOOST_CHECK_EQUAL(wfr[0], 13);
@@ -839,7 +839,7 @@ VFPPROD \n\
     //GFR axis
     {
         const std::vector<double>& gfr = vfpprodTable.getGFRAxis();
-        BOOST_REQUIRE_EQUAL(gfr.size(), 1);
+        BOOST_REQUIRE_EQUAL(gfr.size(), 1U);
 
         //Unit of GFR is SM3/SM3
         BOOST_CHECK_EQUAL(gfr[0], 19);
@@ -848,7 +848,7 @@ VFPPROD \n\
     //ALQ axis
     {
         const std::vector<double>& alq = vfpprodTable.getALQAxis();
-        BOOST_REQUIRE_EQUAL(alq.size(), 1);
+        BOOST_REQUIRE_EQUAL(alq.size(), 1U);
 
         //Unit of ALQ undefined
         BOOST_CHECK_EQUAL(alq[0], 29);
@@ -861,7 +861,7 @@ VFPPROD \n\
         //Table given as BHP => barsa. Convert to pascal
         double conversion_factor = 100000.0;
 
-        BOOST_CHECK_EQUAL(size[0]*size[1]*size[2]*size[3]*size[4], 1);
+        BOOST_CHECK_EQUAL(size[0]*size[1]*size[2]*size[3]*size[4], 1U);
         BOOST_CHECK_EQUAL(const_cast<const VFPProdTable&>(vfpprodTable)(0,0,0,0,0), 1.5*conversion_factor);
     }
 }
@@ -941,7 +941,7 @@ VFPPROD \n\
         auto deck = parser.parseString(missing_values);
         const auto& vfpprodKeyword = deck.getKeyword("VFPPROD");
         auto units = Opm::UnitSystem::newMETRIC();
-        BOOST_CHECK_EQUAL(deck.count("VFPPROD"), 1);
+        BOOST_CHECK_EQUAL(deck.count("VFPPROD"), 1U);
 
         BOOST_CHECK_THROW(Opm::VFPProdTable(vfpprodKeyword, units), std::invalid_argument);
     }
@@ -975,7 +975,7 @@ VFPPROD \n\
         auto deck = parser.parseString(missing_values);
         const auto& vfpprodKeyword = deck.getKeyword("VFPPROD");
         auto units = Opm::UnitSystem::newMETRIC();
-        BOOST_CHECK_EQUAL(deck.count("VFPPROD"), 1);
+        BOOST_CHECK_EQUAL(deck.count("VFPPROD"), 1U);
 
         BOOST_CHECK_THROW(Opm::VFPProdTable(vfpprodKeyword, units), std::invalid_argument);
     }
@@ -1007,7 +1007,7 @@ VFPPROD \n\
         auto deck = parser.parseString(missing_metadata);
         const auto& vfpprodKeyword = deck.getKeyword("VFPPROD");
         auto units = Opm::UnitSystem::newMETRIC();
-        BOOST_CHECK_EQUAL(deck.count("VFPPROD"), 1);
+        BOOST_CHECK_EQUAL(deck.count("VFPPROD"), 1U);
 
         BOOST_CHECK_THROW(Opm::VFPProdTable(vfpprodKeyword, units), std::invalid_argument);
     }
@@ -1040,7 +1040,7 @@ VFPPROD \n\
         auto deck = parser.parseString(wrong_metadata);
         const auto& vfpprodKeyword = deck.getKeyword("VFPPROD");
         auto units = Opm::UnitSystem::newMETRIC();
-        BOOST_CHECK_EQUAL(deck.count("VFPPROD"), 1);
+        BOOST_CHECK_EQUAL(deck.count("VFPPROD"), 1U);
 
         BOOST_CHECK_THROW(Opm::VFPProdTable(vfpprodKeyword, units), std::invalid_argument);
     }
@@ -1073,7 +1073,7 @@ VFPPROD \n\
         auto deck = parser.parseString(missing_axes);
         const auto& vfpprodKeyword = deck.getKeyword("VFPPROD");
         auto units = Opm::UnitSystem::newMETRIC();
-        BOOST_CHECK_EQUAL(deck.count("VFPPROD"), 1);
+        BOOST_CHECK_EQUAL(deck.count("VFPPROD"), 1U);
 
         BOOST_CHECK_THROW(Opm::VFPProdTable(vfpprodKeyword, units), std::invalid_argument);
     }
@@ -1105,7 +1105,7 @@ VFPINJ \n\
     const auto& vfpprodKeyword = deck.getKeyword("VFPINJ");
     auto units = Opm::UnitSystem::newMETRIC();
 
-    BOOST_CHECK_EQUAL(deck.count("VFPINJ"), 1);
+    BOOST_CHECK_EQUAL(deck.count("VFPINJ"), 1U);
 
     Opm::VFPInjTable vfpinjTable(vfpprodKeyword, units);
 
@@ -1116,7 +1116,7 @@ VFPINJ \n\
     //Flo axis
     {
         const std::vector<double>& flo = vfpinjTable.getFloAxis();
-        BOOST_REQUIRE_EQUAL(flo.size(), 3);
+        BOOST_REQUIRE_EQUAL(flo.size(), 3U);
 
         //Unit of FLO is SM3/day, convert to SM3/second
         double conversion_factor = 1.0 / (60*60*24);
@@ -1128,7 +1128,7 @@ VFPINJ \n\
     //THP axis
     {
         const std::vector<double>& thp = vfpinjTable.getTHPAxis();
-        BOOST_REQUIRE_EQUAL(thp.size(), 2);
+        BOOST_REQUIRE_EQUAL(thp.size(), 2U);
 
         //Unit of THP is barsa => convert to pascal
         double conversion_factor = 100000.0;
@@ -1141,8 +1141,8 @@ VFPINJ \n\
         typedef Opm::VFPInjTable::array_type::size_type size_type;
         const auto size = vfpinjTable.shape();
 
-        BOOST_CHECK_EQUAL(size[0], 2);
-        BOOST_CHECK_EQUAL(size[1], 3);
+        BOOST_CHECK_EQUAL(size[0], 2U);
+        BOOST_CHECK_EQUAL(size[1], 3U);
 
         //Table given as BHP => barsa. Convert to pascal
         double conversion_factor = 100000.0;
@@ -1203,7 +1203,7 @@ VFPINJ \n\
         auto deck = parser.parseString(missing_values);
         const auto& vfpinjKeyword = deck.getKeyword("VFPINJ");
         auto units = Opm::UnitSystem::newMETRIC();
-        BOOST_CHECK_EQUAL(deck.count("VFPINJ"), 1);
+        BOOST_CHECK_EQUAL(deck.count("VFPINJ"), 1U);
 
         BOOST_CHECK_THROW(Opm::VFPProdTable(vfpinjKeyword, units), std::invalid_argument);
     }
@@ -1231,7 +1231,7 @@ VFPINJ \n\
         auto deck = parser.parseString(missing_values);
         const auto& vfpinjKeyword = deck.getKeyword("VFPINJ");
         auto units = Opm::UnitSystem::newMETRIC();
-        BOOST_CHECK_EQUAL(deck.count("VFPINJ"), 1);
+        BOOST_CHECK_EQUAL(deck.count("VFPINJ"), 1U);
 
         BOOST_CHECK_THROW(Opm::VFPProdTable(vfpinjKeyword, units), std::invalid_argument);
     }
@@ -1258,7 +1258,7 @@ VFPINJ \n\
         auto deck = parser.parseString(missing_metadata);
         const auto& vfpinjKeyword = deck.getKeyword("VFPINJ");
         auto units = Opm::UnitSystem::newMETRIC();
-        BOOST_CHECK_EQUAL(deck.count("VFPINJ"), 1);
+        BOOST_CHECK_EQUAL(deck.count("VFPINJ"), 1U);
 
         BOOST_CHECK_THROW(Opm::VFPProdTable(vfpinjKeyword, units), std::invalid_argument);
     }
@@ -1286,7 +1286,7 @@ VFPINJ \n\
         auto deck = parser.parseString(wrong_metadata);
         const auto& vfpinjKeyword = deck.getKeyword("VFPINJ");
         auto units(Opm::UnitSystem::newMETRIC());
-        BOOST_CHECK_EQUAL(deck.count("VFPINJ"), 1);
+        BOOST_CHECK_EQUAL(deck.count("VFPINJ"), 1U);
 
         BOOST_CHECK_THROW(Opm::VFPProdTable(vfpinjKeyword, units), std::invalid_argument);
     }
@@ -1314,7 +1314,7 @@ VFPINJ \n\
         auto deck = parser.parseString(missing_axes);
         const auto& vfpinjKeyword = deck.getKeyword("VFPINJ");
         auto units = Opm::UnitSystem::newMETRIC();
-        BOOST_CHECK_EQUAL(deck.count("VFPINJ"), 1);
+        BOOST_CHECK_EQUAL(deck.count("VFPINJ"), 1U);
 
         BOOST_CHECK_THROW(Opm::VFPProdTable(vfpinjKeyword, units), std::invalid_argument);
     }
@@ -1348,7 +1348,7 @@ BOOST_AUTO_TEST_CASE( TestPLYMWINJ ) {
     const Opm::TableManager tables( deck );
     const auto& plymwinjtables = tables.getPlymwinjTables();
 
-    BOOST_CHECK_EQUAL( plymwinjtables.size(), 2 );
+    BOOST_CHECK_EQUAL( plymwinjtables.size(), 2U );
 
     BOOST_CHECK( plymwinjtables.find(1) == plymwinjtables.end() );
 
@@ -1360,10 +1360,10 @@ BOOST_AUTO_TEST_CASE( TestPLYMWINJ ) {
         BOOST_CHECK_EQUAL( table2.getTableNumber(), 2 );
 
         const std::vector<double>& throughputs = table2.getThroughputs();
-        BOOST_CHECK_EQUAL( throughputs.size(), 3 );
+        BOOST_CHECK_EQUAL( throughputs.size(), 3U );
         BOOST_CHECK_EQUAL( throughputs[1], 200.0 );
         const std::vector<double>& velocities = table2.getVelocities();
-        BOOST_CHECK_EQUAL( velocities.size(), 4 );
+        BOOST_CHECK_EQUAL( velocities.size(), 4U );
         constexpr double dayinseconds = 86400.;
         BOOST_CHECK_EQUAL( velocities[2], 2.0 / dayinseconds );
         const std::vector<std::vector<double>>& mwdata = table2.getMoleWeights();
@@ -1384,10 +1384,10 @@ BOOST_AUTO_TEST_CASE( TestPLYMWINJ ) {
         BOOST_CHECK_EQUAL( table3.getTableNumber(), 3 );
 
         const std::vector<double>& throughputs = table3.getThroughputs();
-        BOOST_CHECK_EQUAL( throughputs.size(), 2 );
+        BOOST_CHECK_EQUAL( throughputs.size(), 2U );
         BOOST_CHECK_EQUAL( throughputs[1], 100.0 );
         const std::vector<double>& velocities = table3.getVelocities();
-        BOOST_CHECK_EQUAL( velocities.size(), 3 );
+        BOOST_CHECK_EQUAL( velocities.size(), 3U );
         constexpr double dayinseconds = 86400.;
         BOOST_CHECK_EQUAL( velocities[2], 2.0 / dayinseconds );
         const std::vector<std::vector<double>>& mwdata = table3.getMoleWeights();
@@ -1430,7 +1430,7 @@ BOOST_AUTO_TEST_CASE( TestSKPRWAT ) {
     const Opm::TableManager tables( deck );
     const auto& skprwattables = tables.getSkprwatTables();
 
-    BOOST_CHECK_EQUAL( skprwattables.size(), 2 );
+    BOOST_CHECK_EQUAL( skprwattables.size(), 2U );
 
     BOOST_CHECK( skprwattables.find(3) == skprwattables.end() );
 
@@ -1442,10 +1442,10 @@ BOOST_AUTO_TEST_CASE( TestSKPRWAT ) {
         BOOST_CHECK_EQUAL( table1.getTableNumber(), 1 );
 
         const std::vector<double>& throughputs = table1.getThroughputs();
-        BOOST_CHECK_EQUAL( throughputs.size(), 3 );
+        BOOST_CHECK_EQUAL( throughputs.size(), 3U );
         BOOST_CHECK_EQUAL( throughputs[1], 200.0 );
         const std::vector<double>& velocities = table1.getVelocities();
-        BOOST_CHECK_EQUAL( velocities.size(), 4 );
+        BOOST_CHECK_EQUAL( velocities.size(), 4U );
         constexpr double dayinseconds = 86400.;
         BOOST_CHECK_EQUAL( velocities[2], 2.0 / dayinseconds );
         const std::vector<std::vector<double>>& skindata = table1.getSkinPressures();
@@ -1467,10 +1467,10 @@ BOOST_AUTO_TEST_CASE( TestSKPRWAT ) {
         BOOST_CHECK_EQUAL( table2.getTableNumber(), 2 );
 
         const std::vector<double>& throughputs = table2.getThroughputs();
-        BOOST_CHECK_EQUAL( throughputs.size(), 2 );
+        BOOST_CHECK_EQUAL( throughputs.size(), 2U );
         BOOST_CHECK_EQUAL( throughputs[1], 100.0 );
         const std::vector<double>& velocities = table2.getVelocities();
-        BOOST_CHECK_EQUAL( velocities.size(), 3 );
+        BOOST_CHECK_EQUAL( velocities.size(), 3U );
         constexpr double dayinseconds = 86400.;
         BOOST_CHECK_EQUAL( velocities[2], 2.0 / dayinseconds );
         const std::vector<std::vector<double>>& skindata = table2.getSkinPressures();
@@ -1512,7 +1512,7 @@ BOOST_AUTO_TEST_CASE( TestSKPRPOLY ) {
     const Opm::TableManager tables( deck );
     const auto& skprpolytables = tables.getSkprpolyTables();
 
-    BOOST_CHECK_EQUAL( skprpolytables.size(), 2 );
+    BOOST_CHECK_EQUAL( skprpolytables.size(), 2U );
 
     BOOST_CHECK( skprpolytables.find(4) == skprpolytables.end() );
 
@@ -1525,10 +1525,10 @@ BOOST_AUTO_TEST_CASE( TestSKPRPOLY ) {
 
         BOOST_CHECK_EQUAL( table1.referenceConcentration(), 2.0 );
         const std::vector<double>& throughputs = table1.getThroughputs();
-        BOOST_CHECK_EQUAL( throughputs.size(), 3 );
+        BOOST_CHECK_EQUAL( throughputs.size(), 3U );
         BOOST_CHECK_EQUAL( throughputs[1], 200.0 );
         const std::vector<double>& velocities = table1.getVelocities();
-        BOOST_CHECK_EQUAL( velocities.size(), 4 );
+        BOOST_CHECK_EQUAL( velocities.size(), 4U );
         constexpr double dayinseconds = 86400.;
         BOOST_CHECK_EQUAL( velocities[2], 2.0 / dayinseconds );
         const std::vector<std::vector<double>>& skindata = table1.getSkinPressures();
@@ -1551,10 +1551,10 @@ BOOST_AUTO_TEST_CASE( TestSKPRPOLY ) {
 
         BOOST_CHECK_EQUAL( table2.referenceConcentration(), 3.0 );
         const std::vector<double>& throughputs = table2.getThroughputs();
-        BOOST_CHECK_EQUAL( throughputs.size(), 2 );
+        BOOST_CHECK_EQUAL( throughputs.size(), 2U );
         BOOST_CHECK_EQUAL( throughputs[1], 100.0 );
         const std::vector<double>& velocities = table2.getVelocities();
-        BOOST_CHECK_EQUAL( velocities.size(), 3 );
+        BOOST_CHECK_EQUAL( velocities.size(), 3U );
         constexpr double dayinseconds = 86400.;
         BOOST_CHECK_EQUAL( velocities[2], 2.0 / dayinseconds );
         const std::vector<std::vector<double>>& skindata = table2.getSkinPressures();
@@ -1583,15 +1583,15 @@ BOOST_AUTO_TEST_CASE( TestPLYROCK ) {
     Opm::TableManager tables( deck );
     const Opm::TableContainer& plyrock = tables.getPlyrockTables();
 
-    BOOST_CHECK_EQUAL( plyrock.size() , 2 ) ;
+    BOOST_CHECK_EQUAL( plyrock.size() , 2U ) ;
     const Opm::PlyrockTable& table0 = plyrock.getTable<Opm::PlyrockTable>(0);
     const Opm::PlyrockTable& table1 = plyrock.getTable<Opm::PlyrockTable>(1);
 
-    BOOST_CHECK_EQUAL( table0.numColumns() , 5 );
+    BOOST_CHECK_EQUAL( table0.numColumns() , 5U );
     BOOST_CHECK_EQUAL( table0.getDeadPoreVolumeColumn()[0] , 1.0 );
     BOOST_CHECK_EQUAL( table0.getMaxAdsorbtionColumn()[0] , 5.0 );
 
-    BOOST_CHECK_EQUAL( table1.numColumns() , 5 );
+    BOOST_CHECK_EQUAL( table1.numColumns() , 5U );
     BOOST_CHECK_EQUAL( table1.getDeadPoreVolumeColumn()[0] , 10.0 );
     BOOST_CHECK_EQUAL( table1.getMaxAdsorbtionColumn()[0] , 50.0 );
 }
@@ -1611,15 +1611,15 @@ BOOST_AUTO_TEST_CASE( TestPLYMAX ) {
     Opm::TableManager tables( deck );
     const Opm::TableContainer& plymax = tables.getPlymaxTables();
 
-    BOOST_CHECK_EQUAL( plymax.size() , 2 ) ;
+    BOOST_CHECK_EQUAL( plymax.size() , 2U ) ;
     const Opm::PlymaxTable& table0 = plymax.getTable<Opm::PlymaxTable>(0);
     const Opm::PlymaxTable& table1 = plymax.getTable<Opm::PlymaxTable>(1);
 
-    BOOST_CHECK_EQUAL( table0.numColumns() , 2 );
+    BOOST_CHECK_EQUAL( table0.numColumns() , 2U );
     BOOST_CHECK_EQUAL( table0.getPolymerConcentrationColumn()[0] , 1.0 );
     BOOST_CHECK_EQUAL( table0.getMaxPolymerConcentrationColumn()[0] , 2.0 );
 
-    BOOST_CHECK_EQUAL( table1.numColumns() , 2 );
+    BOOST_CHECK_EQUAL( table1.numColumns() , 2U );
     BOOST_CHECK_EQUAL( table1.getPolymerConcentrationColumn()[0] , 10.0 );
     BOOST_CHECK_EQUAL( table1.getMaxPolymerConcentrationColumn()[0] , 20.0 );
 }
@@ -1663,7 +1663,7 @@ BOOST_AUTO_TEST_CASE( TestParseROCK ) {
     BOOST_CHECK_EQUAL( 2.2 * 1e-5, rock[1].compressibility );
 
     BOOST_CHECK_THROW( rock.at( 2 ), std::out_of_range );
-    BOOST_CHECK_EQUAL( 8 , tables.numFIPRegions( ));
+    BOOST_CHECK_EQUAL( 8U , tables.numFIPRegions( ));
 }
 
 BOOST_AUTO_TEST_CASE( TestParsePVCDO ) {
@@ -1690,7 +1690,7 @@ BOOST_AUTO_TEST_CASE( TestParsePVCDO ) {
     BOOST_CHECK_CLOSE( 0.0,     pvcdo[ 0 ].viscosibility * 1e5, 1e-5 );
 
     BOOST_CHECK_THROW( pvcdo.at( 1 ), std::out_of_range );
-    BOOST_CHECK_EQUAL( 25 , tables.numFIPRegions( ));
+    BOOST_CHECK_EQUAL( 25U , tables.numFIPRegions( ));
 
     const std::string malformed = R"(
       TABDIMS
@@ -1788,7 +1788,7 @@ OILDENT
     Opm::DenT od(deck.getKeyword("OILDENT"));
     const auto& wd = tables.WatDenT();
 
-    BOOST_CHECK_EQUAL(gd.size(), 3);
+    BOOST_CHECK_EQUAL(gd.size(), 3U);
     BOOST_CHECK( gd == od );
     BOOST_CHECK( wd.size() == 0);
 }
@@ -1812,7 +1812,7 @@ TLMIXPAR
     Opm::Parser parser;
     const auto& deck = parser.parseString(deck_string);
     Opm::TLMixpar tlm(deck);
-    BOOST_CHECK_EQUAL(tlm.size(), 2);
+    BOOST_CHECK_EQUAL(tlm.size(), 2U);
 
     const auto& r0 = tlm[0];
     const auto& r1 = tlm[1];

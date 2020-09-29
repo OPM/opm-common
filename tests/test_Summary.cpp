@@ -1659,7 +1659,7 @@ BOOST_AUTO_TEST_CASE(READ_WRITE_WELLDATA) {
             BOOST_CHECK_CLOSE(seg.rates.get(rt::gas), 1729.496*sm3_pr_day(), 1.0e-10);
             const auto pres_idx = Opm::data::SegmentPressures::Value::Pressure;
             BOOST_CHECK_CLOSE(seg.pressures[pres_idx], 314.159*unit::barsa, 1.0e-10);
-            BOOST_CHECK_EQUAL(seg.segNumber, 1);
+            BOOST_CHECK_EQUAL(seg.segNumber, 1U);
 
             // No data for segment 10 of well W_2 (or no such segment).
             const auto& W2 = wellRatesCopy.at("W_2");
@@ -1874,13 +1874,13 @@ BOOST_AUTO_TEST_CASE(Test_SummaryState) {
     BOOST_CHECK_EQUAL( st.get_well_var("OP1", "WWCT"), 0.75);
     BOOST_CHECK_EQUAL( st.get_well_var("OP1", "WWCT"), st.get("WWCT:OP1"));
     const auto& wopr_wells = st.wells("WOPR");
-    BOOST_CHECK_EQUAL( wopr_wells.size() , 0);
+    BOOST_CHECK_EQUAL( wopr_wells.size() , 0U);
 
     BOOST_CHECK_EQUAL( st.get_well_var("OP99", "WWCT", 0.50), 0.50);
 
 
     const auto& wwct_wells = st.wells("WWCT");
-    BOOST_CHECK_EQUAL( wwct_wells.size(), 2);
+    BOOST_CHECK_EQUAL( wwct_wells.size(), 2U);
 
     st.update_group_var("G1", "GWCT", 0.25);
     st.update_group_var("G2", "GWCT", 0.25);
@@ -1890,29 +1890,29 @@ BOOST_AUTO_TEST_CASE(Test_SummaryState) {
     BOOST_CHECK_EQUAL( st.get_group_var("G1", "GWCT"), st.get("GWCT:G1"));
     BOOST_CHECK_EQUAL( st.get_group_var("G99", "GWCT", 1.00), 1.00);
     const auto& gopr_groups = st.groups("GOPR");
-    BOOST_CHECK_EQUAL( gopr_groups.size() , 0);
+    BOOST_CHECK_EQUAL( gopr_groups.size() , 0U);
 
     const auto& gwct_groups = st.groups("GWCT");
-    BOOST_CHECK_EQUAL( gwct_groups.size(), 2);
-    BOOST_CHECK_EQUAL(std::count(gwct_groups.begin(), gwct_groups.end(), "G1"), 1);
-    BOOST_CHECK_EQUAL(std::count(gwct_groups.begin(), gwct_groups.end(), "G2"), 1);
+    BOOST_CHECK_EQUAL( gwct_groups.size(), 2U);
+    BOOST_CHECK_EQUAL(std::count(gwct_groups.begin(), gwct_groups.end(), "G1"), 1U);
+    BOOST_CHECK_EQUAL(std::count(gwct_groups.begin(), gwct_groups.end(), "G2"), 1U);
     const auto& all_groups = st.groups();
-    BOOST_CHECK_EQUAL( all_groups.size(), 3);
-    BOOST_CHECK_EQUAL(std::count(all_groups.begin(), all_groups.end(), "G1"), 1);
-    BOOST_CHECK_EQUAL(std::count(all_groups.begin(), all_groups.end(), "G2"), 1);
-    BOOST_CHECK_EQUAL(std::count(all_groups.begin(), all_groups.end(), "G3"), 1);
+    BOOST_CHECK_EQUAL( all_groups.size(), 3U);
+    BOOST_CHECK_EQUAL(std::count(all_groups.begin(), all_groups.end(), "G1"), 1U);
+    BOOST_CHECK_EQUAL(std::count(all_groups.begin(), all_groups.end(), "G2"), 1U);
+    BOOST_CHECK_EQUAL(std::count(all_groups.begin(), all_groups.end(), "G3"), 1U);
 
     const auto& all_wells = st.wells();
-    BOOST_CHECK_EQUAL( all_wells.size(), 3);
-    BOOST_CHECK_EQUAL(std::count(all_wells.begin(), all_wells.end(), "OP1"), 1);
-    BOOST_CHECK_EQUAL(std::count(all_wells.begin(), all_wells.end(), "OP2"), 1);
-    BOOST_CHECK_EQUAL(std::count(all_wells.begin(), all_wells.end(), "OP3"), 1);
+    BOOST_CHECK_EQUAL( all_wells.size(), 3U);
+    BOOST_CHECK_EQUAL(std::count(all_wells.begin(), all_wells.end(), "OP1"), 1U);
+    BOOST_CHECK_EQUAL(std::count(all_wells.begin(), all_wells.end(), "OP2"), 1U);
+    BOOST_CHECK_EQUAL(std::count(all_wells.begin(), all_wells.end(), "OP3"), 1U);
 
-    BOOST_CHECK_EQUAL(st.size(), 11); // Size = 8 + 3 - where the the three are DAY, MNTH and YEAR
+    BOOST_CHECK_EQUAL(st.size(), 11U); // Size = 8 + 3 - where the the three are DAY, MNTH and YEAR
 
     // The well 'OP_2' which was indirectly added with the
     // st.update("WWCT:OP_2", 100) call is *not* counted as a well!
-    BOOST_CHECK_EQUAL(st.num_wells(), 3);
+    BOOST_CHECK_EQUAL(st.num_wells(), 3U);
 
 
     BOOST_CHECK( st.erase("WWCT:OP2") );

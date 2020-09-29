@@ -165,32 +165,32 @@ BOOST_AUTO_TEST_CASE(TestEclFile_BINARY) {
     std::vector<int> vect1a=file1.get<int>(0);
     std::vector<int> vect1b=file1.get<int>("ICON");
 
-    BOOST_CHECK_EQUAL(vect1a.size(), 1875);
-    BOOST_CHECK_EQUAL(vect1b.size(), 1875);
+    BOOST_CHECK_EQUAL(vect1a.size(), 1875U);
+    BOOST_CHECK_EQUAL(vect1b.size(), 1875U);
 
     std::vector<bool> vect2a=file1.get<bool>(1);
     std::vector<bool> vect2b=file1.get<bool>("LOGIHEAD");
 
-    BOOST_CHECK_EQUAL(vect2a.size(), 121);
-    BOOST_CHECK_EQUAL(vect2b.size(), 121);
+    BOOST_CHECK_EQUAL(vect2a.size(), 121U);
+    BOOST_CHECK_EQUAL(vect2b.size(), 121U);
 
     std::vector<float> vect3a=file1.get<float>(2);
     std::vector<float> vect3b=file1.get<float>("PORV");
 
-    BOOST_CHECK_EQUAL(vect3a.size(), 3146);
-    BOOST_CHECK_EQUAL(vect3b.size(), 3146);
+    BOOST_CHECK_EQUAL(vect3a.size(), 3146U);
+    BOOST_CHECK_EQUAL(vect3b.size(), 3146U);
 
     std::vector<double> vect4a=file1.get<double>(3);
     std::vector<double> vect4b=file1.get<double>("XCON");
 
-    BOOST_CHECK_EQUAL(vect4a.size(), 1740);
-    BOOST_CHECK_EQUAL(vect4b.size(), 1740);
+    BOOST_CHECK_EQUAL(vect4a.size(), 1740U);
+    BOOST_CHECK_EQUAL(vect4b.size(), 1740U);
 
     std::vector<std::string> vect5a=file1.get<std::string>(4);
     std::vector<std::string> vect5b=file1.get<std::string>("KEYWORDS");
 
-    BOOST_CHECK_EQUAL(vect5a.size(), 312);
-    BOOST_CHECK_EQUAL(vect5b.size(), 312);
+    BOOST_CHECK_EQUAL(vect5a.size(), 312U);
+    BOOST_CHECK_EQUAL(vect5b.size(), 312U);
 }
 
 BOOST_AUTO_TEST_CASE(TestEclFile_FORMATTED) {
@@ -329,7 +329,7 @@ BOOST_AUTO_TEST_CASE(TestEcl_Write_formatted_not_finite) {
     BOOST_CHECK(std::isnan(f[1]));
     BOOST_CHECK(std::isnan(d[1]));
 
-    BOOST_CHECK_EQUAL(file1.size(), 2);
+    BOOST_CHECK_EQUAL(file1.size(), 2U);
 }
 
 

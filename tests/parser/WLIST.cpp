@@ -38,23 +38,23 @@ using namespace Opm;
 
 BOOST_AUTO_TEST_CASE(CreateWLIST) {
     Opm::WList wlist;
-    BOOST_CHECK_EQUAL(wlist.size(), 0);
+    BOOST_CHECK_EQUAL(wlist.size(), 0U);
     wlist.add("W1");
-    BOOST_CHECK_EQUAL(wlist.size(), 1);
+    BOOST_CHECK_EQUAL(wlist.size(), 1U);
 
 
     wlist.del("NO_SUCH_WELL");
-    BOOST_CHECK_EQUAL(wlist.size(), 1);
+    BOOST_CHECK_EQUAL(wlist.size(), 1U);
 
     wlist.del("W1");
-    BOOST_CHECK_EQUAL(wlist.size(), 0);
+    BOOST_CHECK_EQUAL(wlist.size(), 0U);
 
     wlist.add("W1");
     wlist.add("W2");
     wlist.add("W3");
 
     auto wells = wlist.wells();
-    BOOST_CHECK_EQUAL(wells.size(), 3);
+    BOOST_CHECK_EQUAL(wells.size(), 3U);
     BOOST_CHECK( std::find(wells.begin(), wells.end(), "W1") != wells.end());
     BOOST_CHECK( std::find(wells.begin(), wells.end(), "W2") != wells.end());
     BOOST_CHECK( std::find(wells.begin(), wells.end(), "W3") != wells.end());
@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(CreateWLIST) {
     for (const auto& well : wlist)
         wells2.push_back(well);
 
-    BOOST_CHECK_EQUAL(wells2.size(), 3);
+    BOOST_CHECK_EQUAL(wells2.size(), 3U);
     BOOST_CHECK( std::find(wells2.begin(), wells2.end(), "W1") != wells2.end());
     BOOST_CHECK( std::find(wells2.begin(), wells2.end(), "W2") != wells2.end());
     BOOST_CHECK( std::find(wells2.begin(), wells2.end(), "W3") != wells2.end());
@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(WLISTManager) {
     // list is dropped and a new list is created.
     {
         auto& wlist1 = wlm.newList("LIST1");
-        BOOST_CHECK_EQUAL(wlist1.size(), 0);
+        BOOST_CHECK_EQUAL(wlist1.size(), 0U);
     }
     auto& wlist1 = wlm.newList("LIST1");
     auto& wlist2 = wlm.newList("LIST2");
@@ -240,11 +240,11 @@ BOOST_AUTO_TEST_CASE(Wlist) {
       const auto& wl5 = wlm.getList("*LIST5");
       const auto& wl6 = wlm.getList("*LIST6");
 
-      BOOST_CHECK_EQUAL(wl1.wells().size(), 4 );
-      BOOST_CHECK_EQUAL(wl2.wells().size(), 2 );
-      BOOST_CHECK_EQUAL(wl4.wells().size(), 4 );
-      BOOST_CHECK_EQUAL(wl5.wells().size(), 4 );
-      BOOST_CHECK_EQUAL(wl6.wells().size(), 0 );
+      BOOST_CHECK_EQUAL(wl1.wells().size(), 4U );
+      BOOST_CHECK_EQUAL(wl2.wells().size(), 2U );
+      BOOST_CHECK_EQUAL(wl4.wells().size(), 4U );
+      BOOST_CHECK_EQUAL(wl5.wells().size(), 4U );
+      BOOST_CHECK_EQUAL(wl6.wells().size(), 0U );
   }
   {
       const auto& wlm = sched.getWListManager(2);
@@ -252,9 +252,9 @@ BOOST_AUTO_TEST_CASE(Wlist) {
       const auto& wl2 = wlm.getList("*LIST2");
       const auto& wl3 = wlm.getList("*LIST3");
 
-      BOOST_CHECK_EQUAL(wl1.wells().size(), 2 );
-      BOOST_CHECK_EQUAL(wl2.wells().size(), 0 );
-      BOOST_CHECK_EQUAL(wl3.wells().size(), 2 );
+      BOOST_CHECK_EQUAL(wl1.wells().size(), 2U );
+      BOOST_CHECK_EQUAL(wl2.wells().size(), 0U );
+      BOOST_CHECK_EQUAL(wl3.wells().size(), 2U );
 
       BOOST_CHECK( wl1.has("W2"));
       BOOST_CHECK( wl1.has("W4"));

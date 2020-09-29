@@ -2458,8 +2458,8 @@ PVDO
     {
         const auto& tabd = es.runspec().tabdims();
 
-        BOOST_CHECK_EQUAL(tabd.getNumPVTTables(),     2);
-        BOOST_CHECK_EQUAL(tabd.getNumPressureNodes(), 2);
+        BOOST_CHECK_EQUAL(tabd.getNumPVTTables(),     2U);
+        BOOST_CHECK_EQUAL(tabd.getNumPressureNodes(), 2U);
     }
 
     const auto pvdo = std::vector<double> {
@@ -2859,9 +2859,9 @@ PVTO
     {
         const auto& tabd = es.runspec().tabdims();
 
-        BOOST_CHECK_EQUAL(tabd.getNumPVTTables(),     2);
-        BOOST_CHECK_EQUAL(tabd.getNumRSNodes(),       1);
-        BOOST_CHECK_EQUAL(tabd.getNumPressureNodes(), 2);
+        BOOST_CHECK_EQUAL(tabd.getNumPVTTables(),     2U);
+        BOOST_CHECK_EQUAL(tabd.getNumRSNodes(),       1U);
+        BOOST_CHECK_EQUAL(tabd.getNumPressureNodes(), 2U);
     }
 
     // Verify active TABDIMS from dynamic sizes

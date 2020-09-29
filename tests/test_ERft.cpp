@@ -135,9 +135,9 @@ BOOST_AUTO_TEST_CASE(TestERft_1) {
     std::vector<float> vect2=rft1.getRft<float>("PRESSURE","B-2H", Date{2016,5,31});
     std::vector<std::string> vect3=rft1.getRft<std::string>("WELLETC","B-2H", Date{2016,5,31});
 
-    BOOST_CHECK_EQUAL(vect1.size(), 3);
-    BOOST_CHECK_EQUAL(vect2.size(), 3);
-    BOOST_CHECK_EQUAL(vect3.size(), 16);
+    BOOST_CHECK_EQUAL(vect1.size(), 3U);
+    BOOST_CHECK_EQUAL(vect2.size(), 3U);
+    BOOST_CHECK_EQUAL(vect3.size(), 16U);
 
    // test member function getRft(name, reportIndex)
 

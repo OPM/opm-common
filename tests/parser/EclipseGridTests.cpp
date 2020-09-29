@@ -131,15 +131,15 @@ BOOST_AUTO_TEST_CASE(CreateGridNoCells) {
     BOOST_CHECK_THROW( Opm::EclipseGrid{ deck }, std::invalid_argument);
 
     const Opm::GridDims grid( deck);
-    BOOST_CHECK_EQUAL( 10 , grid.getNX());
-    BOOST_CHECK_EQUAL( 10 , grid.getNY());
-    BOOST_CHECK_EQUAL( 10 , grid.getNZ());
+    BOOST_CHECK_EQUAL( 10U , grid.getNX());
+    BOOST_CHECK_EQUAL( 10U , grid.getNY());
+    BOOST_CHECK_EQUAL( 10U , grid.getNZ());
 
-    BOOST_CHECK_EQUAL(10, grid[0]);
-    BOOST_CHECK_EQUAL(10, grid[2]);
+    BOOST_CHECK_EQUAL(10U, grid[0]);
+    BOOST_CHECK_EQUAL(10U, grid[2]);
     BOOST_CHECK_THROW( grid[10], std::invalid_argument);
 
-    BOOST_CHECK_EQUAL( 1000 , grid.getCartesianSize());
+    BOOST_CHECK_EQUAL( 1000U , grid.getCartesianSize());
 }
 
 BOOST_AUTO_TEST_CASE(CheckGridIndex) {
@@ -159,15 +159,15 @@ BOOST_AUTO_TEST_CASE(CheckGridIndex) {
     BOOST_CHECK_EQUAL(v167[0], 14);
     BOOST_CHECK_EQUAL(v167[1], 9);
     BOOST_CHECK_EQUAL(v167[2], 0);
-    BOOST_CHECK_EQUAL(grid.getGlobalIndex(14, 9, 0), 167);
+    BOOST_CHECK_EQUAL(grid.getGlobalIndex(14, 9, 0), 167U);
 
     auto v5723 = grid.getIJK(5723);
     BOOST_CHECK_EQUAL(v5723[0], 11);
     BOOST_CHECK_EQUAL(v5723[1], 13);
     BOOST_CHECK_EQUAL(v5723[2], 17);
-    BOOST_CHECK_EQUAL(grid.getGlobalIndex(11, 13, 17), 5723);
+    BOOST_CHECK_EQUAL(grid.getGlobalIndex(11, 13, 17), 5723U);
 
-    BOOST_CHECK_EQUAL(17 * 19 * 41, grid.getCartesianSize());
+    BOOST_CHECK_EQUAL(std::size_t(17 * 19 * 41), grid.getCartesianSize());
 }
 
 static Opm::Deck createCPDeck() {
@@ -352,10 +352,10 @@ static Opm::Deck createCARTInvalidDeck() {
 BOOST_AUTO_TEST_CASE(CREATE_SIMPLE) {
     Opm::EclipseGrid grid(10,20,30);
 
-    BOOST_CHECK_EQUAL( grid.getNX() , 10 );
-    BOOST_CHECK_EQUAL( grid.getNY() , 20 );
-    BOOST_CHECK_EQUAL( grid.getNZ() , 30 );
-    BOOST_CHECK_EQUAL( grid.getCartesianSize() , 6000 );
+    BOOST_CHECK_EQUAL( grid.getNX() , 10U );
+    BOOST_CHECK_EQUAL( grid.getNY() , 20U );
+    BOOST_CHECK_EQUAL( grid.getNZ() , 30U );
+    BOOST_CHECK_EQUAL( grid.getCartesianSize() , 6000U );
 }
 
 BOOST_AUTO_TEST_CASE(DEPTHZ_EQUAL_TOPS) {
@@ -567,10 +567,10 @@ BOOST_AUTO_TEST_CASE(CreateCartesianGRIDInvalidDEPTHZ2) {
 BOOST_AUTO_TEST_CASE(CreateCartesianGRIDOnlyTopLayerDZ) {
     Opm::Deck deck = createOnlyTopDZCartGrid();
     Opm::EclipseGrid grid( deck );
-    BOOST_CHECK_EQUAL( 10 , grid.getNX( ));
-    BOOST_CHECK_EQUAL(  5 , grid.getNY( ));
-    BOOST_CHECK_EQUAL( 20 , grid.getNZ( ));
-    BOOST_CHECK_EQUAL( 1000 , grid.getNumActive());
+    BOOST_CHECK_EQUAL( 10U , grid.getNX( ));
+    BOOST_CHECK_EQUAL(  5U , grid.getNY( ));
+    BOOST_CHECK_EQUAL( 20U , grid.getNZ( ));
+    BOOST_CHECK_EQUAL( 1000U , grid.getNumActive());
 }
 
 BOOST_AUTO_TEST_CASE(AllActiveExportActnum) {
@@ -579,7 +579,7 @@ BOOST_AUTO_TEST_CASE(AllActiveExportActnum) {
 
     std::vector<int> actnum = grid.getACTNUM();
 
-    BOOST_CHECK_EQUAL( 1000 , actnum.size());
+    BOOST_CHECK_EQUAL( 1000U , actnum.size());
 }
 
 BOOST_AUTO_TEST_CASE(CornerPointSizeMismatchCOORD) {
@@ -704,12 +704,12 @@ BOOST_AUTO_TEST_CASE(ResetACTNUM) {
 
     std::vector<int> actMap = grid.getActiveMap();
 
-    BOOST_CHECK_EQUAL(actMap.size(), 993);
+    BOOST_CHECK_EQUAL(actMap.size(), 993U);
     BOOST_CHECK_THROW(grid.getGlobalIndex(993), std::out_of_range);
-    BOOST_CHECK_EQUAL(grid.getGlobalIndex(0), 3);
-    BOOST_CHECK_EQUAL(grid.getGlobalIndex(33), 38);
-    BOOST_CHECK_EQUAL(grid.getGlobalIndex(450), 457);
-    BOOST_CHECK_EQUAL(grid.getGlobalIndex(1,2,3), 321);
+    BOOST_CHECK_EQUAL(grid.getGlobalIndex(0), 3U);
+    BOOST_CHECK_EQUAL(grid.getGlobalIndex(33), 38U);
+    BOOST_CHECK_EQUAL(grid.getGlobalIndex(450), 457U);
+    BOOST_CHECK_EQUAL(grid.getGlobalIndex(1,2,3), 321U);
 }
 
 BOOST_AUTO_TEST_CASE(TestCP_example) {
@@ -981,12 +981,12 @@ BOOST_AUTO_TEST_CASE(GridActnumVia3D) {
 
     BOOST_CHECK_NO_THROW(fp.get_int("ACTNUM"));
     BOOST_CHECK_NO_THROW(grid.getNumActive());
-    BOOST_CHECK_EQUAL(grid.getNumActive(), 2 * 2 * 2 - 1);
+    BOOST_CHECK_EQUAL(grid.getNumActive(), std::size_t(2 * 2 * 2 - 1));
 
     BOOST_CHECK_NO_THROW(grid2.getNumActive());
-    BOOST_CHECK_EQUAL(grid2.getNumActive(), 2 * 2 * 2 - 1);
+    BOOST_CHECK_EQUAL(grid2.getNumActive(), std::size_t(2 * 2 * 2 - 1));
 
-    BOOST_CHECK_EQUAL(grid3.getNumActive(), 6);
+    BOOST_CHECK_EQUAL(grid3.getNumActive(), 6U);
 }
 
 
@@ -995,25 +995,25 @@ BOOST_AUTO_TEST_CASE(GridActnumViaState) {
 
     BOOST_CHECK_NO_THROW( std::unique_ptr<Opm::EclipseState>(new Opm::EclipseState( deck)));
     Opm::EclipseState es( deck);
-    BOOST_CHECK_EQUAL(es.getInputGrid().getNumActive(), 2 * 2 * 2 - 1);
+    BOOST_CHECK_EQUAL(es.getInputGrid().getNumActive(), std::size_t(2 * 2 * 2 - 1));
 }
 
 
 BOOST_AUTO_TEST_CASE(GridDimsSPECGRID) {
     auto deck =  createDeckSPECGRID();
     auto gd = Opm::GridDims( deck );
-    BOOST_CHECK_EQUAL(gd.getNX(), 13);
-    BOOST_CHECK_EQUAL(gd.getNY(), 17);
-    BOOST_CHECK_EQUAL(gd.getNZ(), 19);
+    BOOST_CHECK_EQUAL(gd.getNX(), 13U);
+    BOOST_CHECK_EQUAL(gd.getNY(), 17U);
+    BOOST_CHECK_EQUAL(gd.getNZ(), 19U);
 }
 
 
 BOOST_AUTO_TEST_CASE(GridDimsDIMENS) {
     auto deck =  createDeckDIMENS();
     auto gd = Opm::GridDims( deck );
-    BOOST_CHECK_EQUAL(gd.getNX(), 13);
-    BOOST_CHECK_EQUAL(gd.getNY(), 17);
-    BOOST_CHECK_EQUAL(gd.getNZ(), 19);
+    BOOST_CHECK_EQUAL(gd.getNX(), 13U);
+    BOOST_CHECK_EQUAL(gd.getNY(), 17U);
+    BOOST_CHECK_EQUAL(gd.getNZ(), 19U);
 }
 
 
@@ -1043,7 +1043,7 @@ BOOST_AUTO_TEST_CASE(ProcessedCopy) {
         BOOST_CHECK( gd.equal( gd2 ));
     }
 
-    actnum.assign( gd.getCartesianSize() , 1);
+    actnum.assign( gd.getCartesianSize() , 1U);
     actnum[0] = 0;
     {
         Opm::EclipseGrid gd2(gd , actnum );
@@ -1123,10 +1123,10 @@ BOOST_AUTO_TEST_CASE(ZcornMapper) {
 
     Opm::EclipseGrid grid2(grid , zcorn.data() , actnum );
     points_adjusted = grid2.getZcornFixed();
-    BOOST_CHECK_EQUAL( points_adjusted , 4 );
+    BOOST_CHECK_EQUAL( points_adjusted , 4U );
 
     points_adjusted = grid2.fixupZCORN();
-    BOOST_CHECK_EQUAL( points_adjusted , 0 );
+    BOOST_CHECK_EQUAL( points_adjusted , 0U );
 
     zcorn = grid.getZCORN();
 
@@ -1136,14 +1136,14 @@ BOOST_AUTO_TEST_CASE(ZcornMapper) {
     zcorn[ zmp.index(0,0,0,4) ] = zcorn[ zmp.index(0,0,0,0) ] - 0.1;
     BOOST_CHECK( !zmp.validZCORN( zcorn ));
     points_adjusted = zmp.fixupZCORN( zcorn );
-    BOOST_CHECK_EQUAL( points_adjusted , 1 );
+    BOOST_CHECK_EQUAL( points_adjusted , 1U );
     BOOST_CHECK( zmp.validZCORN( zcorn ));
 
     // Manually destroy it - cell 2 cell
     zcorn[ zmp.index(0,0,0,4) ] = zcorn[ zmp.index(0,0,1,0) ] + 0.1;
     BOOST_CHECK( !zmp.validZCORN( zcorn ));
     points_adjusted = zmp.fixupZCORN( zcorn );
-    BOOST_CHECK_EQUAL( points_adjusted , 1 );
+    BOOST_CHECK_EQUAL( points_adjusted , 1U );
     BOOST_CHECK( zmp.validZCORN( zcorn ));
 
     // Manually destroy it - cell 2 cell and cell internal
@@ -1151,7 +1151,7 @@ BOOST_AUTO_TEST_CASE(ZcornMapper) {
     zcorn[ zmp.index(0,0,0,0) ] = zcorn[ zmp.index(0,0,0,4) ] + 0.1;
     BOOST_CHECK( !zmp.validZCORN( zcorn ));
     points_adjusted = zmp.fixupZCORN( zcorn );
-    BOOST_CHECK_EQUAL( points_adjusted , 2 );
+    BOOST_CHECK_EQUAL( points_adjusted , 2U );
     BOOST_CHECK( zmp.validZCORN( zcorn ));
 }
 

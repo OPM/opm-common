@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(TwoPhase) {
 
     Runspec runspec( deck );
     const auto& phases = runspec.phases();
-    BOOST_CHECK_EQUAL( 2, phases.size() );
+    BOOST_CHECK_EQUAL( 2U, phases.size() );
     BOOST_CHECK(  phases.active( Phase::OIL ) );
     BOOST_CHECK( !phases.active( Phase::GAS ) );
     BOOST_CHECK(  phases.active( Phase::WATER ) );
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(ThreePhase) {
 
     Runspec runspec( deck );
     const auto& phases = runspec.phases();
-    BOOST_CHECK_EQUAL( 3, phases.size() );
+    BOOST_CHECK_EQUAL( 3U, phases.size() );
     BOOST_CHECK( phases.active( Phase::OIL ) );
     BOOST_CHECK( phases.active( Phase::GAS ) );
     BOOST_CHECK( phases.active( Phase::WATER ) );
@@ -103,12 +103,12 @@ BOOST_AUTO_TEST_CASE(TABDIMS) {
 
     Runspec runspec( deck );
     const auto& tabdims = runspec.tabdims();
-    BOOST_CHECK_EQUAL( tabdims.getNumSatTables( ) , 1 );
-    BOOST_CHECK_EQUAL( tabdims.getNumPVTTables( ) , 1 );
-    BOOST_CHECK_EQUAL( tabdims.getNumSatNodes( ) , 3 );
-    BOOST_CHECK_EQUAL( tabdims.getNumPressureNodes( ) , 20 );
-    BOOST_CHECK_EQUAL( tabdims.getNumFIPRegions( ) , 5 );
-    BOOST_CHECK_EQUAL( tabdims.getNumRSNodes( ) , 20 );
+    BOOST_CHECK_EQUAL( tabdims.getNumSatTables( ) , 1U );
+    BOOST_CHECK_EQUAL( tabdims.getNumPVTTables( ) , 1U );
+    BOOST_CHECK_EQUAL( tabdims.getNumSatNodes( ) , 3U );
+    BOOST_CHECK_EQUAL( tabdims.getNumPressureNodes( ) , 20U );
+    BOOST_CHECK_EQUAL( tabdims.getNumFIPRegions( ) , 5U );
+    BOOST_CHECK_EQUAL( tabdims.getNumRSNodes( ) , 20U );
 }
 
 BOOST_AUTO_TEST_CASE( EndpointScalingWithoutENDSCALE ) {
@@ -541,7 +541,7 @@ BOOST_AUTO_TEST_CASE(Solvent) {
 
     Runspec runspec( deck );
     const auto& phases = runspec.phases();
-    BOOST_CHECK_EQUAL( 4, phases.size() );
+    BOOST_CHECK_EQUAL( 4U, phases.size() );
     BOOST_CHECK( phases.active( Phase::OIL ) );
     BOOST_CHECK( phases.active( Phase::GAS ) );
     BOOST_CHECK( phases.active( Phase::WATER ) );
@@ -566,7 +566,7 @@ BOOST_AUTO_TEST_CASE(Polymer) {
 
     Runspec runspec( deck );
     const auto& phases = runspec.phases();
-    BOOST_CHECK_EQUAL( 4, phases.size() );
+    BOOST_CHECK_EQUAL( 4U, phases.size() );
     BOOST_CHECK( phases.active( Phase::OIL ) );
     BOOST_CHECK( phases.active( Phase::GAS ) );
     BOOST_CHECK( phases.active( Phase::WATER ) );
@@ -591,7 +591,7 @@ BOOST_AUTO_TEST_CASE(PolymerMolecularWeight) {
 
     Runspec runspec( deck );
     const auto& phases = runspec.phases();
-    BOOST_CHECK_EQUAL( 4, phases.size() );
+    BOOST_CHECK_EQUAL( 4U, phases.size() );
     BOOST_CHECK( phases.active( Phase::OIL ) );
     BOOST_CHECK( !phases.active( Phase::GAS ) );
     BOOST_CHECK( phases.active( Phase::WATER ) );
@@ -615,7 +615,7 @@ BOOST_AUTO_TEST_CASE(Foam) {
 
     Runspec runspec( deck );
     const auto& phases = runspec.phases();
-    BOOST_CHECK_EQUAL( 4, phases.size() );
+    BOOST_CHECK_EQUAL( 4U, phases.size() );
     BOOST_CHECK( phases.active( Phase::OIL ) );
     BOOST_CHECK( phases.active( Phase::GAS ) );
     BOOST_CHECK( phases.active( Phase::WATER ) );
@@ -623,7 +623,7 @@ BOOST_AUTO_TEST_CASE(Foam) {
 
     // not in deck - default constructor.
     const auto& actdims = runspec.actdims();
-    BOOST_CHECK_EQUAL(actdims.max_keywords(), 2);
+    BOOST_CHECK_EQUAL(actdims.max_keywords(), 2U);
 }
 
 BOOST_AUTO_TEST_CASE(ACTDIMS) {
@@ -638,8 +638,8 @@ BOOST_AUTO_TEST_CASE(ACTDIMS) {
 
     Runspec runspec( deck );
     const auto& actdims = runspec.actdims();
-    BOOST_CHECK_EQUAL(actdims.max_keywords(), 2);
-    BOOST_CHECK_EQUAL(actdims.max_conditions(), 14);
+    BOOST_CHECK_EQUAL(actdims.max_keywords(), 2U);
+    BOOST_CHECK_EQUAL(actdims.max_conditions(), 14U);
 }
 
 BOOST_AUTO_TEST_CASE(Co2Storage) {
@@ -656,7 +656,7 @@ BOOST_AUTO_TEST_CASE(Co2Storage) {
 
     Runspec runspec( deck );
     const auto& phases = runspec.phases();
-    BOOST_CHECK_EQUAL( 2, phases.size() );
+    BOOST_CHECK_EQUAL( 2U, phases.size() );
     BOOST_CHECK( phases.active( Phase::OIL ) );
     BOOST_CHECK( phases.active( Phase::GAS ) );
     BOOST_CHECK( runspec.co2Storage() );

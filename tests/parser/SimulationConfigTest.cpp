@@ -202,7 +202,7 @@ BOOST_AUTO_TEST_CASE(SimulationConfigCPRBoth) {
 
     const auto& cpr = summary.getKeyword<ParserKeywords::CPR>();
     const auto& record = cpr.getRecord(0);
-    BOOST_CHECK_EQUAL( 1 , cpr.size());
+    BOOST_CHECK_EQUAL( 1U , cpr.size());
     BOOST_CHECK_EQUAL( record.getItem<ParserKeywords::CPR::WELL>().get< std::string >(0) , "well1");
     BOOST_CHECK_EQUAL( record.getItem<ParserKeywords::CPR::I>().get< int >(0) , 10);
     BOOST_CHECK_EQUAL( record.getItem<ParserKeywords::CPR::J>().get< int >(0) , 20);
@@ -293,5 +293,5 @@ ROCKOPTS
     RockConfig rc(deck, fp);
     BOOST_CHECK_EQUAL(rc.rocknum_property(), "SATNUM");
     const auto& comp = rc.comp();
-    BOOST_CHECK_EQUAL(comp.size(), 3);
+    BOOST_CHECK_EQUAL(comp.size(), 3U);
 }

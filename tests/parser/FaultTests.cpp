@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(AddFaceToFaults) {
 
 BOOST_AUTO_TEST_CASE(CreateFaultCollection) {
     Opm::FaultCollection faults;
-    BOOST_CHECK_EQUAL( faults.size() , 0 );
+    BOOST_CHECK_EQUAL( faults.size() , 0U );
     BOOST_CHECK(! faults.hasFault("NO-NotThisOne"));
     BOOST_CHECK_THROW( faults.getFault("NO") , std::invalid_argument );
 }
@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE(AddFaultsToCollection) {
     Opm::FaultCollection faults;
 
     faults.addFault("FAULT");
-    BOOST_CHECK_EQUAL( faults.size() , 1 );
+    BOOST_CHECK_EQUAL( faults.size() , 1U );
     BOOST_CHECK(faults.hasFault("FAULT"));
 
     const auto& fault1 = faults.getFault("FAULT");
@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE(AddFaultsToCollection) {
 
     faults.addFault("FAULTX");
     const auto& faultx = faults.getFault("FAULTX");
-    BOOST_CHECK_EQUAL( faults.size() , 2 );
+    BOOST_CHECK_EQUAL( faults.size() , 2U );
     BOOST_CHECK(faults.hasFault("FAULTX"));
     BOOST_CHECK_EQUAL( faultx.getName() , faults.getFault(1).getName());
 }

@@ -35,9 +35,9 @@ BOOST_AUTO_TEST_CASE(CreateBox) {
     Opm::Box box(grid);
     BOOST_CHECK_EQUAL( 24U , box.size() );
     BOOST_CHECK( box.isGlobal() );
-    BOOST_CHECK_EQUAL( 4 , box.getDim(0) );
-    BOOST_CHECK_EQUAL( 3 , box.getDim(1) );
-    BOOST_CHECK_EQUAL( 2 , box.getDim(2) );
+    BOOST_CHECK_EQUAL( 4U , box.getDim(0) );
+    BOOST_CHECK_EQUAL( 3U , box.getDim(1) );
+    BOOST_CHECK_EQUAL( 2U , box.getDim(2) );
 
     BOOST_CHECK_THROW( box.getDim(5) , std::invalid_argument);
 }
@@ -164,13 +164,13 @@ BOOST_AUTO_TEST_CASE(TestKeywordBox2) {
     const auto& global_index_list = box.global_index_list();
     BOOST_CHECK_EQUAL( global_index_list.size(), grid.getCartesianSize());
     const auto& c0 = global_index_list[0];
-    BOOST_CHECK_EQUAL(c0.global_index, 0);
+    BOOST_CHECK_EQUAL(c0.global_index, 0U);
     BOOST_CHECK_EQUAL(c0.active_index, c0.global_index);
-    BOOST_CHECK_EQUAL(c0.data_index, 0);
+    BOOST_CHECK_EQUAL(c0.data_index, 0U);
 
     Opm::Box box2(grid,9,9,9,9,0,9);
     const auto& il = box2.index_list();
-    BOOST_CHECK_EQUAL(il.size(), 10);
+    BOOST_CHECK_EQUAL(il.size(), 10U);
 
     for (std::size_t i=0; i < 10; i++) {
         BOOST_CHECK_EQUAL(il[i].data_index, i);

@@ -396,13 +396,13 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsOrdered) {
     BOOST_CHECK_EQUAL( "AG", group_names[3]);
 
     auto restart_groups = schedule.restart_groups(0);
-    BOOST_REQUIRE_EQUAL(restart_groups.size(), 4);
+    BOOST_REQUIRE_EQUAL(restart_groups.size(), 4U);
     for (std::size_t group_index = 0; group_index < restart_groups.size() - 1; group_index++) {
         const auto& group_ptr = restart_groups[group_index];
         BOOST_CHECK_EQUAL(group_ptr->insert_index(), group_index + 1);
     }
     const auto& field_ptr = restart_groups.back();
-    BOOST_CHECK_EQUAL(field_ptr->insert_index(), 0);
+    BOOST_CHECK_EQUAL(field_ptr->insert_index(), 0U);
     BOOST_CHECK_EQUAL(field_ptr->name(), "FIELD");
 }
 
@@ -470,16 +470,16 @@ BOOST_AUTO_TEST_CASE(GroupTree2TEST) {
     BOOST_CHECK( cg1.hasWell("CW_1"));
 
     auto cg1_tree = schedule.groupTree("CG1", 0);
-    BOOST_CHECK_EQUAL(cg1_tree.wells().size(), 2);
+    BOOST_CHECK_EQUAL(cg1_tree.wells().size(), 2U);
 
     auto gt = schedule.groupTree(0);
-    BOOST_CHECK_EQUAL(gt.wells().size(), 0);
+    BOOST_CHECK_EQUAL(gt.wells().size(), 0U);
     BOOST_CHECK_EQUAL(gt.group().name(), "FIELD");
     BOOST_CHECK_THROW(gt.parent_name(), std::invalid_argument);
 
     auto cg = gt.groups();
     auto pg = cg[0];
-    BOOST_CHECK_EQUAL(cg.size(), 1);
+    BOOST_CHECK_EQUAL(cg.size(), 1U);
     BOOST_CHECK_EQUAL(pg.group().name(), "PLATFORM");
     BOOST_CHECK_EQUAL(pg.parent_name(), "FIELD");
 }
@@ -589,10 +589,10 @@ BOOST_AUTO_TEST_CASE(WellsIterator_HasWells_WellsReturned) {
 BOOST_AUTO_TEST_CASE(ReturnNumWellsTimestep) {
     const auto& schedule = make_schedule( createDeckWithWells() );
 
-    BOOST_CHECK_EQUAL(schedule.numWells(0), 1);
-    BOOST_CHECK_EQUAL(schedule.numWells(1), 1);
-    BOOST_CHECK_EQUAL(schedule.numWells(2), 1);
-    BOOST_CHECK_EQUAL(schedule.numWells(3), 3);
+    BOOST_CHECK_EQUAL(schedule.numWells(0), 1U);
+    BOOST_CHECK_EQUAL(schedule.numWells(1), 1U);
+    BOOST_CHECK_EQUAL(schedule.numWells(2), 1U);
+    BOOST_CHECK_EQUAL(schedule.numWells(3), 3U);
 }
 
 BOOST_AUTO_TEST_CASE(TestCrossFlowHandling) {
@@ -853,7 +853,7 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWRFT) {
     const auto& schedule = make_schedule(input);
     const auto& rft_config = schedule.rftConfig();
 
-    BOOST_CHECK_EQUAL(2 , rft_config.firstRFTOutput());
+    BOOST_CHECK_EQUAL(2U, rft_config.firstRFTOutput());
     BOOST_CHECK_EQUAL(true, rft_config.rft("OP_1", 2));
     BOOST_CHECK_EQUAL(true, rft_config.rft("OP_2", 3));
 }
@@ -2240,16 +2240,16 @@ BOOST_AUTO_TEST_CASE( complump ) {
     BOOST_CHECK( shut == sc1.getFromIJK( 2, 2, 3 ).state() );
 
     const auto& completions = schedule.getWell("W1", 1).getCompletions();
-    BOOST_CHECK_EQUAL(completions.size(), 4);
+    BOOST_CHECK_EQUAL(completions.size(), 4U);
 
     const auto& c1 = completions.at(1);
-    BOOST_CHECK_EQUAL(c1.size(), 3);
+    BOOST_CHECK_EQUAL(c1.size(), 3U);
 
     for (const auto& pair : completions) {
         if (pair.first == 1)
             BOOST_CHECK(pair.second.size() > 1);
         else
-            BOOST_CHECK_EQUAL(pair.second.size(), 1);
+            BOOST_CHECK_EQUAL(pair.second.size(), 1U);
     }
 }
 
@@ -2845,12 +2845,12 @@ BOOST_AUTO_TEST_CASE(historic_BHP_and_THP) {
 
         {
             const auto& wtest_config = schedule.wtestConfig(0);
-            BOOST_CHECK_EQUAL(wtest_config.size(), 0);
+            BOOST_CHECK_EQUAL(wtest_config.size(), 0U);
         }
 
         {
             const auto& wtest_config = schedule.wtestConfig(1);
-            BOOST_CHECK_EQUAL(wtest_config.size(), 0);
+            BOOST_CHECK_EQUAL(wtest_config.size(), 0U);
         }
     }
 }
@@ -2868,8 +2868,8 @@ BOOST_AUTO_TEST_CASE(FilterCompletions2) {
     {
         const auto& c1_1 = schedule.getWell("OP_1", 1).getConnections();
         const auto& c1_3 = schedule.getWell("OP_1", 3).getConnections();
-        BOOST_CHECK_EQUAL(2, c1_1.size());
-        BOOST_CHECK_EQUAL(9, c1_3.size());
+        BOOST_CHECK_EQUAL(2U, c1_1.size());
+        BOOST_CHECK_EQUAL(9U, c1_3.size());
     }
     actnum[grid1.getGlobalIndex(8,8,1)] = 0;
     {
@@ -2883,8 +2883,8 @@ BOOST_AUTO_TEST_CASE(FilterCompletions2) {
 
         const auto& c1_1 = schedule.getWell("OP_1", 1).getConnections();
         const auto& c1_3 = schedule.getWell("OP_1", 3).getConnections();
-        BOOST_CHECK_EQUAL(1, c1_1.size());
-        BOOST_CHECK_EQUAL(8, c1_3.size());
+        BOOST_CHECK_EQUAL(1U, c1_1.size());
+        BOOST_CHECK_EQUAL(8U, c1_3.size());
     }
 }
 
@@ -2976,14 +2976,14 @@ VFPINJ \n                                       \
     BOOST_CHECK_EQUAL(vfpinjTable.getFloType(), Opm::VFPInjTable::FLO_WAT);
 
     const auto vfp_tables0 = schedule.getVFPInjTables(0);
-    BOOST_CHECK_EQUAL( vfp_tables0.size(), 1);
+    BOOST_CHECK_EQUAL( vfp_tables0.size(), 1U);
 
     const auto vfp_tables2 = schedule.getVFPInjTables(2);
-    BOOST_CHECK_EQUAL( vfp_tables2.size(), 2);
+    BOOST_CHECK_EQUAL( vfp_tables2.size(), 2U);
     //Flo axis
     {
         const std::vector<double>& flo = vfpinjTable.getFloAxis();
-        BOOST_REQUIRE_EQUAL(flo.size(), 3);
+        BOOST_REQUIRE_EQUAL(flo.size(), 3U);
 
         //Unit of FLO is SM3/day, convert to SM3/second
         double conversion_factor = 1.0 / (60*60*24);
@@ -2995,7 +2995,7 @@ VFPINJ \n                                       \
     //THP axis
     {
         const std::vector<double>& thp = vfpinjTable.getTHPAxis();
-        BOOST_REQUIRE_EQUAL(thp.size(), 2);
+        BOOST_REQUIRE_EQUAL(thp.size(), 2U);
 
         //Unit of THP is barsa => convert to pascal
         double conversion_factor = 100000.0;
@@ -3008,8 +3008,8 @@ VFPINJ \n                                       \
         typedef Opm::VFPInjTable::array_type::size_type size_type;
         const auto size = vfpinjTable.shape();
 
-        BOOST_CHECK_EQUAL(size[0], 2);
-        BOOST_CHECK_EQUAL(size[1], 3);
+        BOOST_CHECK_EQUAL(size[0], 2U);
+        BOOST_CHECK_EQUAL(size[1], 3U);
 
         //Table given as BHP => barsa. Convert to pascal
         double conversion_factor = 100000.0;
@@ -3145,12 +3145,12 @@ BOOST_AUTO_TEST_CASE(WTEST_CONFIG) {
     const auto& schedule = make_schedule(createDeckWTEST());
 
     const auto& wtest_config1 = schedule.wtestConfig(0);
-    BOOST_CHECK_EQUAL(wtest_config1.size(), 2);
+    BOOST_CHECK_EQUAL(wtest_config1.size(), 2U);
     BOOST_CHECK(wtest_config1.has("ALLOW"));
     BOOST_CHECK(!wtest_config1.has("BAN"));
 
     const auto& wtest_config2 = schedule.wtestConfig(1);
-    BOOST_CHECK_EQUAL(wtest_config2.size(), 3);
+    BOOST_CHECK_EQUAL(wtest_config2.size(), 3U);
     BOOST_CHECK(!wtest_config2.has("ALLOW"));
     BOOST_CHECK(wtest_config2.has("BAN"));
     BOOST_CHECK(wtest_config2.has("BAN", WellTestConfig::Reason::GROUP));
@@ -3198,7 +3198,7 @@ BOOST_AUTO_TEST_CASE(WELL_STATIC) {
     BOOST_CHECK(ws.updateStatus(Well::Status::SHUT, false));
 
     const auto& connections = ws.getConnections();
-    BOOST_CHECK_EQUAL(connections.size(), 0);
+    BOOST_CHECK_EQUAL(connections.size(), 0U);
     auto c2 = std::make_shared<WellConnections>(Connection::Order::TRACK, 1,1);
     c2->addConnection(1,1,1,
                       grid1.getGlobalIndex(1,1,1),
@@ -3219,42 +3219,42 @@ BOOST_AUTO_TEST_CASE(WELL_STATIC) {
 BOOST_AUTO_TEST_CASE(WellNames) {
     const auto& schedule = make_schedule(createDeckWTEST());
     auto names = schedule.wellNames("NO_SUCH_WELL", 0);
-    BOOST_CHECK_EQUAL(names.size(), 0);
+    BOOST_CHECK_EQUAL(names.size(), 0U);
 
     auto w1names = schedule.wellNames("W1", 0);
-    BOOST_CHECK_EQUAL(w1names.size(), 1);
+    BOOST_CHECK_EQUAL(w1names.size(), 1U);
     BOOST_CHECK_EQUAL(w1names[0], "W1");
 
     auto i1names = schedule.wellNames("11", 0);
-    BOOST_CHECK_EQUAL(i1names.size(), 0);
+    BOOST_CHECK_EQUAL(i1names.size(), 0U);
 
     auto listnamese = schedule.wellNames("*NO_LIST", 0);
-    BOOST_CHECK_EQUAL( listnamese.size(), 0);
+    BOOST_CHECK_EQUAL( listnamese.size(), 0U);
 
     auto listnames0 = schedule.wellNames("*ILIST", 0);
-    BOOST_CHECK_EQUAL( listnames0.size(), 0);
+    BOOST_CHECK_EQUAL( listnames0.size(), 0U);
 
     auto listnames1 = schedule.wellNames("*ILIST", 2);
-    BOOST_CHECK_EQUAL( listnames1.size(), 2);
+    BOOST_CHECK_EQUAL( listnames1.size(), 2U);
     BOOST_CHECK( has(listnames1, "I1"));
     BOOST_CHECK( has(listnames1, "I2"));
 
     auto pnames1 = schedule.wellNames("I*", 0);
-    BOOST_CHECK_EQUAL(pnames1.size(), 0);
+    BOOST_CHECK_EQUAL(pnames1.size(), 0U);
 
     auto pnames2 = schedule.wellNames("W*", 0);
-    BOOST_CHECK_EQUAL(pnames2.size(), 3);
+    BOOST_CHECK_EQUAL(pnames2.size(), 3U);
     BOOST_CHECK( has(pnames2, "W1"));
     BOOST_CHECK( has(pnames2, "W2"));
     BOOST_CHECK( has(pnames2, "W3"));
 
     auto anames = schedule.wellNames("?", 0, {"W1", "W2"});
-    BOOST_CHECK_EQUAL(anames.size(), 2);
+    BOOST_CHECK_EQUAL(anames.size(), 2U);
     BOOST_CHECK(has(anames, "W1"));
     BOOST_CHECK(has(anames, "W2"));
 
     auto all_names0 = schedule.wellNames("*", 0);
-    BOOST_CHECK_EQUAL( all_names0.size(), 6);
+    BOOST_CHECK_EQUAL( all_names0.size(), 6U);
     BOOST_CHECK( has(all_names0, "W1"));
     BOOST_CHECK( has(all_names0, "W2"));
     BOOST_CHECK( has(all_names0, "W3"));
@@ -3262,7 +3262,7 @@ BOOST_AUTO_TEST_CASE(WellNames) {
     BOOST_CHECK( has(all_names0, "ALLOW"));
 
     auto all_names = schedule.wellNames("*", 2);
-    BOOST_CHECK_EQUAL( all_names.size(), 9);
+    BOOST_CHECK_EQUAL( all_names.size(), 9U);
     BOOST_CHECK( has(all_names, "I1"));
     BOOST_CHECK( has(all_names, "I2"));
     BOOST_CHECK( has(all_names, "I3"));
@@ -3274,7 +3274,7 @@ BOOST_AUTO_TEST_CASE(WellNames) {
     BOOST_CHECK( has(all_names, "BAN"));
 
     auto abs_all = schedule.wellNames();
-    BOOST_CHECK_EQUAL(abs_all.size(), 9);
+    BOOST_CHECK_EQUAL(abs_all.size(), 9U);
 }
 
 
@@ -3331,7 +3331,7 @@ BOOST_AUTO_TEST_CASE(RFT_CONFIG2) {
     const auto& schedule = make_schedule(createDeckRFTConfig());
     const auto& rft_config = schedule.rftConfig();
 
-    BOOST_CHECK_EQUAL(2, rft_config.firstRFTOutput());
+    BOOST_CHECK_EQUAL(2U, rft_config.firstRFTOutput());
 }
 
 
@@ -3492,7 +3492,7 @@ COMPDAT
     }
     {
         const auto& changed_wells = schedule.changed_wells(0);
-        BOOST_CHECK_EQUAL( changed_wells.size() , 3);
+        BOOST_CHECK_EQUAL( changed_wells.size() , 3U);
         for (const auto& wname : {"W1", "W2", "W2"}) {
             auto find_well = std::find(changed_wells.begin(), changed_wells.end(), wname);
             BOOST_CHECK(find_well != changed_wells.end());
@@ -3500,20 +3500,20 @@ COMPDAT
     }
     {
         const auto& changed_wells = schedule.changed_wells(2);
-        BOOST_CHECK_EQUAL( changed_wells.size(), 0);
+        BOOST_CHECK_EQUAL( changed_wells.size(), 0U);
     }
     {
         const auto& changed_wells = schedule.changed_wells(4);
-        BOOST_CHECK_EQUAL( changed_wells.size(), 0);
+        BOOST_CHECK_EQUAL( changed_wells.size(), 0U);
     }
     {
         const auto& changed_wells = schedule.changed_wells(5);
-        BOOST_CHECK_EQUAL( changed_wells.size(), 1);
+        BOOST_CHECK_EQUAL( changed_wells.size(), 1U);
         BOOST_CHECK_EQUAL( changed_wells[0], "W4");
     }
     {
         const auto& changed_wells = schedule.changed_wells(6);
-        BOOST_CHECK_EQUAL( changed_wells.size(), 1);
+        BOOST_CHECK_EQUAL( changed_wells.size(), 1U);
         BOOST_CHECK_EQUAL( changed_wells[0], "W4");
     }
 }

@@ -101,10 +101,10 @@ BOOST_AUTO_TEST_CASE(DeckKeywordConstructor) {
     std::vector< DeckValue > record = {DeckValue("WORD_A"), DeckValue(16.25), DeckValue(77), DeckValue("WORD_B")};
     DeckKeyword deck_kw(addreg, {record}, unit_active, unit_default);
 
-    BOOST_CHECK_EQUAL( deck_kw.size(), 1 );
+    BOOST_CHECK_EQUAL( deck_kw.size(), 1U );
 
     const DeckRecord& deck_record = deck_kw.getRecord(0);
-    BOOST_CHECK_EQUAL( deck_record.size(), 4 );
+    BOOST_CHECK_EQUAL( deck_record.size(), 4U );
 
     const auto& array = deck_record.getItem( 0 );
     const auto& shift = deck_record.getItem( 1 );
@@ -156,7 +156,7 @@ BOOST_AUTO_TEST_CASE(DeckKeywordVectorInt) {
    BOOST_CHECK_THROW( DeckKeyword(box, data), std::invalid_argument );
    DeckKeyword hbnum_kw(hbnum, data);
    BOOST_CHECK(hbnum_kw.isDataKeyword());
-   BOOST_CHECK_EQUAL(hbnum_kw.getDataSize(), 9);
+   BOOST_CHECK_EQUAL(hbnum_kw.getDataSize(), 9U);
    BOOST_CHECK( hbnum_kw.getIntData() == data );
 
    std::vector<double> data_double = {1.1, 2.2};
@@ -180,7 +180,7 @@ BOOST_AUTO_TEST_CASE(DeckKeywordVectorDouble) {
    BOOST_CHECK_THROW(DeckKeyword(box, data, unit_active, unit_default), std::invalid_argument);
    DeckKeyword zcorn_kw(zcorn, data, unit_active, unit_default);
    BOOST_CHECK(zcorn_kw.isDataKeyword());
-   BOOST_CHECK_EQUAL(zcorn_kw.getDataSize(), 3);
+   BOOST_CHECK_EQUAL(zcorn_kw.getDataSize(), 3U);
    BOOST_CHECK( zcorn_kw.getRawDoubleData() == data );
    std::vector<double> SI_data = zcorn_kw.getSIDoubleData();
    BOOST_CHECK( cmp::scalar_equal<double>(SI_data[0], 0.011) );
@@ -204,7 +204,7 @@ PERMX
     Deck deck = parser.parseString(deck_string);
     const auto& permx = deck.getKeyword("PERMX");
     const auto& status = permx.getValueStatus();
-    BOOST_CHECK_EQUAL(status.size(), 100);
+    BOOST_CHECK_EQUAL(status.size(), 100U);
     for (const auto& vs : status) {
         BOOST_CHECK(!value::has_value(vs));
         BOOST_CHECK(vs == value::status::empty_default);

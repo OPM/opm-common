@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE(AquiferCTTest){
             BOOST_CHECK(it.p0.first == true);
             BOOST_CHECK_CLOSE(it.p0.second, 1.5e5, 1e-6);
         }
-        BOOST_CHECK_EQUAL(aquiferct.size(), 1);
+        BOOST_CHECK_EQUAL(aquiferct.size(), 1U);
     }
 
     auto deck_default_p0 = createAquiferCTDeckDefaultP0();
@@ -308,10 +308,10 @@ BOOST_AUTO_TEST_CASE(AquanconTest_DEFAULT_INFLUX) {
       The cells I = 0..2 are connected to aquifer 1; cell I==0 is inactive and
       not counted here ==> a total of 2 cells are connected to aquifer 1.
     */
-    BOOST_CHECK_EQUAL(cells_aq1.size(), 2);
+    BOOST_CHECK_EQUAL(cells_aq1.size(), 2U);
 
     const auto& cells_aq2 = aqcon[2];
-    BOOST_CHECK_EQUAL(cells_aq2.size(), 1);
+    BOOST_CHECK_EQUAL(cells_aq2.size(), 1U);
     BOOST_CHECK(aqcon.active());
 
     auto deck2 = createAQUANCONDeck_DEFAULT_INFLUX2();
@@ -377,8 +377,8 @@ BOOST_AUTO_TEST_CASE(AquanconTest_ALLOW_AQUIFER_INSIDE_OR_NOT) {
     BOOST_CHECK(aqucon == aq2);
     auto cells1 = aqucon[1];
     auto cells2 = aqucon[2];
-    BOOST_CHECK_EQUAL(cells1.size() , 2);
-    BOOST_CHECK_EQUAL(cells2.size() , 1);
+    BOOST_CHECK_EQUAL(cells1.size() , 2U);
+    BOOST_CHECK_EQUAL(cells2.size() , 1U);
 }
 
 inline Deck createAquifetpDeck() {
@@ -509,7 +509,7 @@ BOOST_AUTO_TEST_CASE(AquifetpTest){
 
   auto aqufetp_deck_null = createNullAquifetpDeck();
   const auto& aquifetp_null = init_aquifetp(aqufetp_deck_null);
-  BOOST_CHECK_EQUAL(aquifetp_null.size(), 0);
+  BOOST_CHECK_EQUAL(aquifetp_null.size(), 0U);
 
   auto aqufetp_deck_default = createAquifetpDeck_defaultPressure();
   const auto& aquifetp_default = init_aquifetp(aqufetp_deck_default);
@@ -525,14 +525,14 @@ BOOST_AUTO_TEST_CASE(AquifetpTest){
 BOOST_AUTO_TEST_CASE(TEST_CREATE) {
       Opm::Aqudims aqudims;
 
-      BOOST_CHECK_EQUAL( aqudims.getNumAqunum() , 1 );
-      BOOST_CHECK_EQUAL( aqudims.getNumConnectionNumericalAquifer() , 1 );
-      BOOST_CHECK_EQUAL( aqudims.getNumInfluenceTablesCT() , 1 );
-      BOOST_CHECK_EQUAL( aqudims.getNumRowsInfluenceTable() , 36 );
-      BOOST_CHECK_EQUAL( aqudims.getNumAnalyticAquifers() , 1 );
-      BOOST_CHECK_EQUAL( aqudims.getNumRowsAquancon() , 1 );
-      BOOST_CHECK_EQUAL( aqudims.getNumAquiferLists() , 0 );
-      BOOST_CHECK_EQUAL( aqudims.getNumAnalyticAquifersSingleList() , 0 );
+      BOOST_CHECK_EQUAL( aqudims.getNumAqunum() , 1U );
+      BOOST_CHECK_EQUAL( aqudims.getNumConnectionNumericalAquifer() , 1U );
+      BOOST_CHECK_EQUAL( aqudims.getNumInfluenceTablesCT() , 1U );
+      BOOST_CHECK_EQUAL( aqudims.getNumRowsInfluenceTable() , 36U );
+      BOOST_CHECK_EQUAL( aqudims.getNumAnalyticAquifers() , 1U );
+      BOOST_CHECK_EQUAL( aqudims.getNumRowsAquancon() , 1U );
+      BOOST_CHECK_EQUAL( aqudims.getNumAquiferLists() , 0U );
+      BOOST_CHECK_EQUAL( aqudims.getNumAnalyticAquifersSingleList() , 0U );
 }
 
 BOOST_AUTO_TEST_CASE(Test_Aquifer_Config) {

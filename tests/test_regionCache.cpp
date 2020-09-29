@@ -49,12 +49,12 @@ BOOST_AUTO_TEST_CASE(create) {
     out::RegionCache rc({"FIPNUM"}, es.fieldProps(), grid, schedule);
     {
         const auto& empty = rc.connections( "FIPNUM", 4 );
-        BOOST_CHECK_EQUAL( empty.size() , 0 );
+        BOOST_CHECK_EQUAL( empty.size() , 0U );
     }
 
     {
         const auto& top_layer = rc.connections(  "FIPNUM", 1 );
-        BOOST_CHECK_EQUAL( top_layer.size() , 3 );
+        BOOST_CHECK_EQUAL( top_layer.size() , 3U );
         {
             auto pair = top_layer[0];
             BOOST_CHECK_EQUAL( pair.first , "W_1");
