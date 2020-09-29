@@ -27,6 +27,7 @@
 #include <vector>
 
 #include <opm/common/OpmLog/LogUtil.hpp>
+#include <opm/common/utility/OpmInputError.hpp>
 #include <opm/common/utility/numeric/cmp.hpp>
 #include <opm/common/utility/String.hpp>
 
@@ -1752,7 +1753,15 @@ namespace {
         if (function_iterator != handler_functions.end()) {
             const auto& handler = function_iterator->second;
 
-            handler(this, handlerContext, parseContext, errors);
+            try {
+                handler(this, handlerContext, parseContext, errors);
+            } catch (const OpmInputError&) {
+                throw;
+            } catch (const std::exception& e) {
+                OpmLog::error(OpmInputError::formatException(handlerContext.keyword.location(), e));
+
+                throw;
+            }
 
             return true;
         } else {
