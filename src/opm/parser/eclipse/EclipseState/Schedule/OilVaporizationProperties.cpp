@@ -91,6 +91,20 @@ namespace Opm {
         }
     }
 
+    void OilVaporizationProperties::updateDRSDTCON(OilVaporizationProperties& ovp, const std::vector<double>& maximums, const std::vector<std::string>& options){
+        ovp.m_type = OilVaporization::DRSDTCON;
+        ovp.m_maxDRSDT = maximums;
+        for (size_t pvtRegionIdx = 0; pvtRegionIdx < options.size(); ++pvtRegionIdx) {
+            if (options[pvtRegionIdx] == "ALL"){
+                ovp.m_maxDRSDT_allCells[pvtRegionIdx] = true;
+            } else if (options[pvtRegionIdx] == "FREE") {
+                ovp.m_maxDRSDT_allCells[pvtRegionIdx] = false;
+            } else {
+                throw std::invalid_argument("Only ALL or FREE is allowed as option string");
+            }
+        }
+    }
+
     void OilVaporizationProperties::updateDRVDT(OilVaporizationProperties& ovp, const std::vector<double>& maximums){
         ovp.m_type = OilVaporization::DRDT;
         ovp.m_maxDRVDT = maximums;
@@ -107,7 +121,11 @@ namespace Opm {
     }
 
     bool OilVaporizationProperties::drsdtActive() const {
-        return (m_maxDRSDT[0] >= 0 && m_type == OilVaporization::DRDT);
+        return (m_maxDRSDT[0] >= 0 && (m_type == OilVaporization::DRDT || m_type == OilVaporization::DRSDTCON));
+    }
+
+    bool OilVaporizationProperties::drsdtConvective() const {
+        return this->m_type == OilVaporization::DRSDTCON;
     }
 
     bool OilVaporizationProperties::drvdtActive() const {

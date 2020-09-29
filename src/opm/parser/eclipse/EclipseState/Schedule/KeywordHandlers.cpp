@@ -248,6 +248,18 @@ namespace {
         }
     }
 
+    void Schedule::handleDRSDTCON(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+        std::size_t numPvtRegions = this->m_static.m_runspec.tabdims().getNumPVTTables();
+        std::vector<double> max(numPvtRegions);
+        std::vector<std::string> options(numPvtRegions);
+        for (const auto& record : handlerContext.keyword) {
+            std::fill(max.begin(), max.end(), record.getItem("DRSDT_MAX").getSIDouble(0));
+            std::fill(options.begin(), options.end(), record.getItem("Option").get< std::string >(0));
+            auto& ovp = this->snapshots.back().oilvap();
+            OilVaporizationProperties::updateDRSDTCON(ovp, max, options);
+        }
+    }
+
     void Schedule::handleDRSDTR(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         std::size_t numPvtRegions = this->m_static.m_runspec.tabdims().getNumPVTTables();
         std::vector<double> max(numPvtRegions);
@@ -1833,6 +1845,7 @@ namespace {
             { "COMPORD" , &Schedule::handleCOMPORD  },
             { "COMPSEGS", &Schedule::handleCOMPSEGS },
             { "DRSDT"   , &Schedule::handleDRSDT    },
+            { "DRSDTCON", &Schedule::handleDRSDTCON },
             { "DRSDTR"  , &Schedule::handleDRSDTR   },
             { "DRVDT"   , &Schedule::handleDRVDT    },
             { "DRVDTR"  , &Schedule::handleDRVDTR   },
