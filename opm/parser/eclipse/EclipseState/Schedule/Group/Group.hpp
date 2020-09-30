@@ -168,7 +168,7 @@ struct GroupProductionProperties {
     UDAValue water_target;
     UDAValue gas_target;
     UDAValue liquid_target;
-    double guide_rate;
+    double guide_rate = 0;
     GuideRateTarget guide_rate_def = GuideRateTarget::NO_GUIDE_RATE;
     double resv_target = 0;
     bool available_group_control = true;
