@@ -529,7 +529,6 @@ namespace {
                     if (well_ptr->handleWELOPEN(record, comp_status, action_mode)) {
                         // The updateWell call breaks test at line 825 and 831 in ScheduleTests
                         this->updateWell(well_ptr, currentStep);
-                        const auto well_status = Well::StatusFromString( status_str );
                     }
                 }
 
