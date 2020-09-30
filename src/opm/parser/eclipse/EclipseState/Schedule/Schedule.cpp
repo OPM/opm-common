@@ -529,7 +529,6 @@ namespace {
                     if (well_ptr->handleWELOPEN(record, comp_status, action_mode)) {
                         // The updateWell call breaks test at line 825 and 831 in ScheduleTests
                         this->updateWell(well_ptr, currentStep);
-                        const auto well_status = Well::StatusFromString( status_str );
                     }
                 }
 
@@ -601,7 +600,7 @@ namespace {
         return this->rft_config;
     }
 
-    void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t report_step, const ParseContext& parseContext, ErrorGuard& errors, const DeckKeyword& keyword ) const {
+    void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t, const ParseContext& parseContext, ErrorGuard& errors, const DeckKeyword& keyword ) const {
         std::string msg_fmt = fmt::format("Invalid wellname pattern in {{keyword}}\n"
                                           "In {{file}} line {{line}}\n"
                                           "No wells/groups match the pattern: '{}'", namePattern);

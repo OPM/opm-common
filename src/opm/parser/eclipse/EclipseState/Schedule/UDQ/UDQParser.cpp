@@ -286,7 +286,6 @@ UDQASTNode UDQParser::parse(const UDQParams& udq_params, UDQVarType target_type,
     auto tree = parser.parse_set();
 
     if (!parser.empty()) {
-        size_t index = parser.current_pos;
         auto current = parser.current();
         std::string msg_fmt = fmt::format("Problem parsing UDQ expression \n"
                                           "In {{file}} line {{line}}.\n"
