@@ -847,11 +847,9 @@ BOOST_AUTO_TEST_CASE(OPM_ERROR) {
     KeywordLocation location("kw", "file", 100);
     OpmInputError error1("Error", location);
     OpmInputError error4("{keyword}:{line}:{keyword}", location);
-    OpmInputError error5("{keyword}:{line}:{file}: {}", location, "error");
 
     BOOST_CHECK_EQUAL(error1.what(), "Error");
     BOOST_CHECK_EQUAL(error4.what(), "kw:100:kw");
-    BOOST_CHECK_EQUAL(error5.what(), "kw:100:file: error");
 
     /*
       This test is meant to emulate the typical parsing process, the blocks here
