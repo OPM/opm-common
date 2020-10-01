@@ -24,6 +24,8 @@
 #include <iomanip>
 #include <sstream>
 
+#include <fmt/format.h>
+
 #include <opm/common/utility/OpmInputError.hpp>
 #include <opm/parser/eclipse/Utility/Functional.hpp>
 

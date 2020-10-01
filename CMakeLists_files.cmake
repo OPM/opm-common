@@ -32,6 +32,7 @@ list (APPEND MAIN_SOURCE_FILES
       src/opm/common/utility/ActiveGridCells.cpp
       src/opm/common/utility/FileSystem.cpp
       src/opm/common/utility/numeric/MonotCubicInterpolator.cpp
+      src/opm/common/utility/OpmInputError.cpp
       src/opm/common/utility/parameters/Parameter.cpp
       src/opm/common/utility/parameters/ParameterGroup.cpp
       src/opm/common/utility/parameters/ParameterTools.cpp

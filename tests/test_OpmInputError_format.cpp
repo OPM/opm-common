@@ -20,6 +20,8 @@
 
 #define BOOST_TEST_MODULE OpmInputError_format
 
+#include <fmt/format.h>
+
 #include <boost/test/unit_test.hpp>
 
 #include <exception>
@@ -41,8 +43,8 @@ BOOST_AUTO_TEST_CASE(simple) {
 BOOST_AUTO_TEST_CASE(positional) {
     const std::string expected { "MXUNSUPP@FILENAME.DAT:42: Error encountered" } ;
 
-    const std::string format_string { "{keyword}@{file}:{line}: {}" } ;
-    const std::string formatted { Opm::OpmInputError::format(format_string, location, error_string) } ;
+    const std::string format_string { fmt::format("{{keyword}}@{{file}}:{{line}}: {}", error_string) } ;
+    const std::string formatted { Opm::OpmInputError::format(format_string, location) } ;
 
     BOOST_CHECK_EQUAL(formatted, expected);
 }
@@ -50,7 +52,7 @@ BOOST_AUTO_TEST_CASE(positional) {
 BOOST_AUTO_TEST_CASE(exception) {
     const std::string expected { R"(Problem parsing keyword MXUNSUPP
 In FILENAME.DAT line 42.
-Internal error message: Runtime Error)" };
+Internal error: Runtime Error)" };
 
     const std::string formatted { Opm::OpmInputError::formatException(location, std::runtime_error("Runtime Error")) } ;
 
@@ -60,9 +62,9 @@ Internal error message: Runtime Error)" };
 BOOST_AUTO_TEST_CASE(exception_reason) {
     const std::string expected { R"(Problem parsing keyword MXUNSUPP
 In FILENAME.DAT line 42.
-Reason: Runtime Error)" };
+Internal error: Runtime Error)" };
 
-    const std::string formatted { Opm::OpmInputError::formatException(location, std::runtime_error("Runtime Error"), "Reason") } ;
+    const std::string formatted { Opm::OpmInputError::formatException(location, std::runtime_error("Runtime Error")) } ;
 
     BOOST_CHECK_EQUAL(formatted, expected);
 }
@@ -70,9 +72,9 @@ Reason: Runtime Error)" };
 BOOST_AUTO_TEST_CASE(exception_init) {
     const std::string expected { R"(Problem parsing keyword MXUNSUPP
 In FILENAME.DAT line 42.
-Reason: Runtime Error)" };
+Internal error: Runtime Error)" };
 
-    const std::string formatted { Opm::OpmInputError(location, std::runtime_error("Runtime Error"), "Reason").what() } ;
+    const std::string formatted { Opm::OpmInputError(location, std::runtime_error("Runtime Error")).what() } ;
 
     BOOST_CHECK_EQUAL(formatted, expected);
 }
@@ -80,7 +82,7 @@ Reason: Runtime Error)" };
 BOOST_AUTO_TEST_CASE(exception_nest) {
     const std::string expected { R"(Problem parsing keyword MXUNSUPP
 In FILENAME.DAT line 42.
-Internal error message: Runtime Error)" };
+Internal error: Runtime Error)" };
 
     try {
         try {

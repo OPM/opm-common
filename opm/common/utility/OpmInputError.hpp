@@ -22,9 +22,6 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
-#include <utility>
-
-#include <fmt/format.h>
 
 #include <opm/common/OpmLog/KeywordLocation.hpp>
 
@@ -70,8 +67,8 @@ public:
     */
 
     template<class ... Args>
-    OpmInputError(const std::string& msg_fmt, const KeywordLocation& loc, const Args ... additionalArguments) :
-        m_what   { OpmInputError::format(msg_fmt, loc, std::forward<const Args>(additionalArguments)...) },
+    OpmInputError(const std::string& msg_fmt, const KeywordLocation& loc) :
+        m_what   { OpmInputError::format(msg_fmt, loc) },
         location { loc }
     {}
 
@@ -90,8 +87,8 @@ public:
           std::throw_with_nested(Opm::OpmInputError(location, e));
       }
     */
-    OpmInputError(const KeywordLocation& loc, const std::exception& e, const std::string& reason = "Internal error message") :
-        m_what   { OpmInputError::formatException(loc, e, reason) },
+    OpmInputError(const KeywordLocation& loc, const std::exception& e) :
+        m_what   { OpmInputError::formatException(loc, e) },
         location { loc }
     {}
 
@@ -104,24 +101,9 @@ public:
         return this->m_what.c_str();
     }
 
-    template<class ... Args>
-    static std::string format(const std::string& msg_format, const KeywordLocation& loc, const Args ... additionalArguments) {
-        return fmt::format(msg_format,
-            std::forward<const Args>(additionalArguments)...,
-            fmt::arg("keyword", loc.keyword),
-            fmt::arg("file", loc.filename),
-            fmt::arg("line", loc.lineno)
-        );
-    }
 
-    static std::string formatException(const KeywordLocation& loc, const std::exception& e, const std::string& reason = "Internal error message") {
-        const std::string defaultMessage { R"(Problem parsing keyword {keyword}
-In {file} line {line}.
-{}: {})" } ;
-
-        return format(defaultMessage, loc, reason, e.what());
-    }
-
+    static std::string format(const std::string& msg_format, const KeywordLocation& loc);
+    static std::string formatException(const KeywordLocation& loc, const std::exception& e);
 
 private:
     std::string m_what;
