@@ -62,14 +62,14 @@ namespace Opm {
           m_gridDims(          deck ),
           field_props(         deck, m_runspec.phases(), m_inputGrid, m_tables),
           m_simulationConfig(  m_eclipseConfig.getInitConfig().restartRequested(), deck, field_props),
-          m_transMult(         GridDims(deck), deck, field_props)
+          m_transMult(         GridDims(deck), deck, field_props),
+          tracer_config(       m_deckUnitSystem, deck)
     {
         m_inputGrid.resetACTNUM(this->field_props.actnum());
         if( this->runspec().phases().size() < 3 )
             OpmLog::info(fmt::format("Only {} fluid phases are enabled",  this->runspec().phases().size() ));
 
         this->aquifer_config = AquiferConfig(this->m_tables, this->m_inputGrid, deck);
-        this->tracer_config = TracerConfig(this->m_deckUnitSystem, deck);
 
         if (deck.hasKeyword( "TITLE" )) {
             const auto& titleKeyword = deck.getKeyword( "TITLE" );
