@@ -23,6 +23,8 @@
 #include <string>
 #include <vector>
 
+#include <opm/common/utility/OpmInputError.hpp>
+#include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
@@ -47,6 +49,8 @@ namespace Opm {
 
         for (auto keyword_iter = faultKeywords.begin(); keyword_iter != faultKeywords.end(); ++keyword_iter) {
             const auto& faultsKeyword = *keyword_iter;
+            OpmLog::info(OpmInputError::format("Loading faults from {keyword} in {file} line {line}", faultsKeyword->location()));
+
             for (auto iter = faultsKeyword->begin(); iter != faultsKeyword->end(); ++iter) {
                 const auto& faultRecord = *iter;
                 const std::string& faultName = faultRecord.getItem(0).get< std::string >(0);

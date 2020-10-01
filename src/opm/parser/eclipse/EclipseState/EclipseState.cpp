@@ -231,6 +231,7 @@ namespace Opm {
     void EclipseState::setMULTFLT(const DeckSection& section) {
         for (size_t index=0; index < section.count("MULTFLT"); index++) {
             const auto& faultsKeyword = section.getKeyword("MULTFLT" , index);
+            OpmLog::info(OpmInputError::format("Applying {keyword} in {file} line {line}", faultsKeyword.location()));
             for (auto iter = faultsKeyword.begin(); iter != faultsKeyword.end(); ++iter) {
 
                 const auto& faultRecord = *iter;
@@ -238,6 +239,7 @@ namespace Opm {
                 double multFlt = faultRecord.getItem(1).get< double >(0);
 
                 m_faults.setTransMult( faultName , multFlt );
+                OpmLog::info(fmt::format("Setting fault transmissibility multiplier {} for fault {}", multFlt, faultName));
             }
         }
     }
