@@ -30,7 +30,6 @@
 #include <optional>
 
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
-#include <opm/parser/eclipse/EclipseState/Util/Value.hpp>
 
 namespace Opm {
 
