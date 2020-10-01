@@ -223,7 +223,6 @@ BOOST_AUTO_TEST_CASE(TimeStepsCorrect) {
 
     BOOST_CHECK_EQUAL(tmap.getTimeStepLength(8), 6*24*60*60);
     BOOST_CHECK_EQUAL(tmap.getTimeStepLength(9), 7*24*60*60);
-    BOOST_CHECK(!tmap.skiprest());
 }
 
 
@@ -663,7 +662,7 @@ SCHEDULE
 --/
 
 DATES
- 1  JUL 2005 /
+ 1  JAN 2005 /
 /
 
 DATES
@@ -675,25 +674,10 @@ DATES
 /
 )";
 
-    std::string deck_string3 = R"(
-START
- 1 JAN 2000 /
-
-RESTART
-  'CASE'  5 /
-
-SCHEDULE
-
--- This test does not have SKIPREST
-
-TSTEP
-   1 1 1 /
-)";
 
     Opm::Parser parser;
     const auto deck1 = parser.parseString(deck_string1);
     const auto deck2 = parser.parseString(deck_string2);
-    const auto deck3 = parser.parseString(deck_string3);
 
     // The date 2005-01-02 is not present as a DATES in the deck; invalid input.
     auto invalid_restart = std::make_pair(Opm::asTimeT(Opm::TimeStampUTC(2005, 1, 2)), 5);
@@ -706,15 +690,9 @@ TSTEP
     auto start = tm1[0];
     BOOST_CHECK_EQUAL(start , Opm::asTimeT(Opm::TimeStampUTC(2000,1,1)));
     BOOST_CHECK_EQUAL(tm1[5] , Opm::asTimeT(Opm::TimeStampUTC(2005,1,1)));
-    BOOST_CHECK(tm1.skiprest());
 
     Opm::TimeMap tm2(deck2, valid_restart);
     BOOST_CHECK_EQUAL(tm2[5], Opm::asTimeT(Opm::TimeStampUTC(2005,1,1)));
-    BOOST_CHECK_EQUAL(tm2[6], Opm::asTimeT(Opm::TimeStampUTC(2005,7,1)));
+    BOOST_CHECK_EQUAL(tm2[6], Opm::asTimeT(Opm::TimeStampUTC(2006,1,1)));
 
-    Opm::TimeMap tm3(deck3, valid_restart);
-    BOOST_CHECK_EQUAL(tm3[5], Opm::asTimeT(Opm::TimeStampUTC(2005,1,1)));
-    BOOST_CHECK_EQUAL(tm3[6], Opm::asTimeT(Opm::TimeStampUTC(2005,1,2)));
-    BOOST_CHECK_EQUAL(tm3[7], Opm::asTimeT(Opm::TimeStampUTC(2005,1,3)));
-    BOOST_CHECK_EQUAL(tm3[8], Opm::asTimeT(Opm::TimeStampUTC(2005,1,4)));
 }

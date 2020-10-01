@@ -311,15 +311,60 @@ namespace {
           all.
         */
         std::unordered_set<std::string> skiprest_whitelist = {"VFPPROD", "VFPINJ", "RPTSCHED", "RPTRST", "TUNING", "MESSAGES"};
+        std::size_t currentStep = 0;
+        const auto restart_offset = this->m_timeMap.restart_offset();
 
-        std::size_t currentStep;
-        if (this->m_timeMap.skiprest())
-            currentStep = 0;
-        else
-            currentStep = this->m_timeMap.restart_offset();
+        /*
+          The behavior of variable restart_skip is more lenient than the
+          SKIPREST keyword. If this is a restarted[1] run the loop iterating
+          over keywords will skip the all keywords[2] until DATES keyword with
+          the restart date is encountered - irrespective of whether the SKIPREST
+          keyword is present in the deck or not.
 
+          [1]: opm/flow can restart in a mode where all the keywords from the
+               historical part of the Schedule section is internalized, and only
+               the solution fields are read from the restart file. In this case
+               we will have TimeMap::restart_offset() == 0.
+
+          [2]: With the exception of the keywords in the skiprest_whitelist;
+               these keywords will be assigned to report step 0.
+        */
+
+        auto restart_skip = restart_offset > 0;
         while (true) {
+            if (keywordIdx == section.size())
+                break;
+
             const auto& keyword = section.getKeyword(keywordIdx);
+            if (keyword.name() == "DATES") {
+                checkIfAllConnectionsIsShut(currentStep);
+                for (const auto& record : keyword) {
+                    if (restart_skip) {
+                        auto deck_time = TimeMap::timeFromEclipse(record);
+                        if (deck_time == this->m_timeMap.restart_time()) {
+                            restart_skip = false;
+                            currentStep = this->m_timeMap.restart_offset();
+                        }
+                    } else
+                        currentStep += 1;
+                }
+                keywordIdx++;
+                continue;
+            }
+
+            if (keyword.name() == "TSTEP") {
+                checkIfAllConnectionsIsShut(currentStep);
+                currentStep += keyword.getRecord(0).getItem(0).data_size();
+                keywordIdx++;
+                continue;
+            }
+
+            if (restart_skip && skiprest_whitelist.count(keyword.name()) == 0) {
+                OpmLog::info("Skipping keyword: " + keyword.name() + " while loading SCHEDULE section");
+                keywordIdx++;
+                continue;
+            }
+
             if (keyword.name() == "ACTIONX") {
                 Action::ActionX action(keyword, this->m_timeMap.getStartTime(currentStep));
                 while (true) {
@@ -334,38 +379,31 @@ namespace {
                     if (Action::ActionX::valid_keyword(action_keyword.name()))
                         action.addKeyword(action_keyword);
                     else {
-                        std::string msg = "The keyword {0} is not supported in a ACTIONX block. file: {1}  line: {2}";
                         std::string msg_fmt = "The keyword {keyword} is not supported in the ACTIONX block\n"
                                               "In {file} line {line}.";
-                        parseContext.handleError( ParseContext::ACTIONX_ILLEGAL_KEYWORD, msg, action_keyword.location(), errors);
+                        parseContext.handleError( ParseContext::ACTIONX_ILLEGAL_KEYWORD, msg_fmt, action_keyword.location(), errors);
                     }
                 }
                 this->addACTIONX(action, currentStep);
+                keywordIdx++;
+                continue;
             }
 
-            else if (keyword.name() == "DATES") {
-                checkIfAllConnectionsIsShut(currentStep);
-                currentStep += keyword.size();
-            }
-
-            else if (keyword.name() == "TSTEP") {
-                checkIfAllConnectionsIsShut(currentStep);
-                currentStep += keyword.getRecord(0).getItem(0).data_size();
-            }
-
-            else {
-                if (currentStep >= this->m_timeMap.restart_offset() || skiprest_whitelist.count(keyword.name()))
-                    this->handleKeyword(python, input_path, currentStep, section, keywordIdx, keyword, parseContext, errors, grid, fp, rftProperties);
-                else
-                    OpmLog::info("Skipping keyword: " + keyword.name() + " while loading SCHEDULE section");
-            }
-
+            this->handleKeyword(python,
+                                input_path,
+                                currentStep,
+                                section,
+                                keywordIdx,
+                                keyword,
+                                parseContext,
+                                errors,
+                                grid,
+                                fp,
+                                rftProperties);
             keywordIdx++;
-            if (keywordIdx == section.size())
-                break;
         }
-
         checkIfAllConnectionsIsShut(currentStep);
+
 
         for (auto rftPair = rftProperties.begin(); rftPair != rftProperties.end(); ++rftPair) {
             const DeckKeyword& keyword = *rftPair->first;

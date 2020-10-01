@@ -51,12 +51,12 @@ namespace Opm {
         double getTotalTime() const;
         double seconds(size_t timeStep) const;
         std::size_t restart_offset() const;
+        std::time_t restart_time() const;
 
         std::time_t operator[] (size_t index) const;
         /// Return the date and time where a given time step starts.
         std::time_t getStartTime(size_t tStepIdx) const;
         std::time_t getEndTime() const;
-        bool skiprest() const;
         /// Return the period of time in seconds which passed between the start of the simulation and a given point in time.
         double getTimePassedUntil(size_t tLevelIdx) const;
         /// Return the length of a given time step in seconds.
@@ -83,7 +83,6 @@ namespace Opm {
             serializer(m_timeList);
             serializer.vector(m_first_timestep_years);
             serializer.vector(m_first_timestep_months);
-            serializer(m_skiprest);
             serializer(m_restart_offset);
         }
 
@@ -117,8 +116,8 @@ namespace Opm {
         std::vector<std::time_t> m_timeList;
         std::vector<StepData> m_first_timestep_years;   // A list of the first timestep of every year
         std::vector<StepData> m_first_timestep_months;  // A list of the first timestep of every month
-        bool m_skiprest = false;
         std::size_t m_restart_offset = 0;
+        std::time_t m_restart_time;
     };
 
 std::ostream& operator<<(std::ostream& stream, const TimeMap& tm);
