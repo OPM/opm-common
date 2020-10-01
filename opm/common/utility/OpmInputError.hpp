@@ -66,7 +66,6 @@ public:
       OpmInputError("Error at line {line} in file {file} - keyword: {keyword} has invalid argument {}", invalid_argument);
     */
 
-    template<class ... Args>
     OpmInputError(const std::string& msg_fmt, const KeywordLocation& loc) :
         m_what   { OpmInputError::format(msg_fmt, loc) },
         location { loc }
