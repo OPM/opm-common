@@ -66,8 +66,8 @@ namespace Opm {
     {
         m_inputGrid.resetACTNUM(this->field_props.actnum());
         if( this->runspec().phases().size() < 3 )
-            OpmLog::info("Only " + std::to_string( this->runspec().phases().size() )
-                                                                + " fluid phases are enabled" );
+            OpmLog::info(fmt::format("Only {} fluid phases are enabled",  this->runspec().phases().size() ));
+
         this->aquifer_config = AquiferConfig(this->m_tables, this->m_inputGrid, deck);
         this->tracer_config = TracerConfig(this->m_deckUnitSystem, deck);
 
