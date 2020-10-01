@@ -22,7 +22,6 @@
 #define OPM_PARSER_ECLIPSE_GRID_HPP
 
 
-#include <opm/parser/eclipse/EclipseState/Util/Value.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/MinpvMode.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/PinchMode.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridDims.hpp>
@@ -32,6 +31,7 @@
 
 #include <array>
 #include <memory>
+#include <optional>
 #include <vector>
 
 namespace Opm {
@@ -194,7 +194,7 @@ namespace Opm {
     private:
         std::vector<double> m_minpvVector;
         MinpvMode::ModeEnum m_minpvMode;
-        Value<double> m_pinch;
+        std::optional<double> m_pinch;
         PinchMode::ModeEnum m_pinchoutMode;
         PinchMode::ModeEnum m_multzMode;
         PinchMode::ModeEnum m_pinchGapMode;

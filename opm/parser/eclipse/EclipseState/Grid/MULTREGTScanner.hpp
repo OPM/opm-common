@@ -23,7 +23,6 @@
 
 #include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FaceDir.hpp>
-#include <opm/parser/eclipse/EclipseState/Util/Value.hpp>
 
 
 namespace Opm {

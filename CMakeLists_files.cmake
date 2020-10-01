@@ -376,7 +376,6 @@ if(ENABLE_ECL_INPUT)
     tests/parser/TuningTests.cpp
     tests/parser/UDQTests.cpp
     tests/parser/UnitTests.cpp
-    tests/parser/ValueTests.cpp
     tests/parser/WellSolventTests.cpp
     tests/parser/WellTracerTests.cpp
     tests/parser/WellTests.cpp
@@ -567,7 +566,6 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/InitConfig/InitConfig.hpp
        opm/parser/eclipse/EclipseState/InitConfig/Equil.hpp
        opm/parser/eclipse/EclipseState/InitConfig/FoamConfig.hpp
-       opm/parser/eclipse/EclipseState/Util/Value.hpp
        opm/parser/eclipse/EclipseState/Util/IOrderSet.hpp
        opm/parser/eclipse/EclipseState/Util/OrderedMap.hpp
        opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp
