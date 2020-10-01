@@ -19,6 +19,11 @@
 
 #include <stdexcept>
 
+#include <fmt/format.h>
+
+#include <opm/common/OpmLog/LogUtil.hpp>
+#include <opm/common/utility/OpmInputError.hpp>
+
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckSection.hpp>
@@ -29,6 +34,7 @@
 #include <opm/parser/eclipse/EclipseState/Grid/TransMult.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridDims.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/MULTREGTScanner.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/M.hpp>
 
 
 namespace Opm {
@@ -46,13 +52,12 @@ namespace Opm {
         m_multregtScanner( dims, &fp, deck.getKeywordList( "MULTREGT" ))
     {
         EDITSection edit_section(deck);
-        if (edit_section.hasKeyword("MULTREGT")) {
-            std::string msg =
-R"(This deck has the MULTREGT keyword located in the EDIT section. Note that:
-      1) The MULTREGT keyword from EDIT section will be applied.
-      2) It is recommended to place MULTREGT in the GRID section.)";
-
-            OpmLog::warning(msg);
+        if (edit_section.hasKeyword<ParserKeywords::MULTREGT>()) {
+            auto& keyword = edit_section.getKeyword<ParserKeywords::MULTREGT>();
+            std::string msg_fmt = "The {keyword} located in the EDIT section\n"
+                                  "In {file} line {line}\n"
+                                  "The MULTREGT keyword will be applied, but it is recommended to place MULTREGT in the GRID section.";
+            OpmLog::warning(OpmInputError::format(msg_fmt, keyword.location()));
         }
     }
 
