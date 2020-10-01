@@ -23,6 +23,8 @@
 #include <opm/parser/eclipse/EclipseState/Aquifetp.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
+#include <opm/common/utility/OpmInputError.hpp>
+#include <opm/common/OpmLog/OpmLog.hpp>
 
 namespace Opm {
 
@@ -71,6 +73,7 @@ Aquifetp::Aquifetp(const Deck& deck)
         return;
 
     const auto& aqufetpKeyword = deck.getKeyword<AQUFETP>();
+    OpmLog::info(OpmInputError::format("Initializing Fetkovich aquifers from {keyword} in {file} line {line}", aqufetpKeyword.location()));
     for (auto& record : aqufetpKeyword)
         this->m_aqufetp.emplace_back(record);
 }
