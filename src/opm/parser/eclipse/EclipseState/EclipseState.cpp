@@ -80,8 +80,8 @@ namespace Opm {
             m_title.pop_back();
         }
 
-        initTransMult();
-        initFaults(deck);
+        this->initTransMult();
+        this->initFaults(deck);
         this->field_props.reset_actnum( this->m_inputGrid.getACTNUM() );
     }
     catch (const OpmInputError& opm_error) {
