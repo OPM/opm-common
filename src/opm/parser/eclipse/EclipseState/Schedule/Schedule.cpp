@@ -17,6 +17,8 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <ctime>
+
 #include <fnmatch.h>
 #include <iostream>
 #include <optional>
@@ -303,6 +305,9 @@ namespace {
     void Schedule::iterateScheduleSection(std::shared_ptr<const Opm::Python> python, const std::string& input_path, const ParseContext& parseContext , ErrorGuard& errors, const SCHEDULESection& section , const EclipseGrid& grid,
                                           const FieldPropsManager& fp) {
         std::vector<std::pair< const DeckKeyword* , std::size_t> > rftProperties;
+        const auto& unit_system = section.unitSystem();
+        std::string time_unit = unit_system.name(UnitSystem::measure::time);
+        auto convert_time = [&unit_system](double seconds) { return unit_system.from_si(UnitSystem::measure::time, seconds); };
         std::size_t keywordIdx = 0;
         /*
           The keywords in the skiprest_whitelist set are loaded from the
@@ -312,8 +317,6 @@ namespace {
         */
         std::unordered_set<std::string> skiprest_whitelist = {"VFPPROD", "VFPINJ", "RPTSCHED", "RPTRST", "TUNING", "MESSAGES"};
         std::size_t currentStep = 0;
-        const auto restart_offset = this->m_timeMap.restart_offset();
-
         /*
           The behavior of variable restart_skip is more lenient than the
           SKIPREST keyword. If this is a restarted[1] run the loop iterating
@@ -330,13 +333,14 @@ namespace {
                these keywords will be assigned to report step 0.
         */
 
-        auto restart_skip = restart_offset > 0;
+        auto restart_skip = currentStep < this->m_timeMap.restart_offset();
         while (true) {
             if (keywordIdx == section.size())
                 break;
 
             const auto& keyword = section.getKeyword(keywordIdx);
             if (keyword.name() == "DATES") {
+                const auto& location = keyword.location();
                 checkIfAllConnectionsIsShut(currentStep);
                 for (const auto& record : keyword) {
                     if (restart_skip) {
@@ -344,9 +348,25 @@ namespace {
                         if (deck_time == this->m_timeMap.restart_time()) {
                             restart_skip = false;
                             currentStep = this->m_timeMap.restart_offset();
-                        }
-                    } else
+                            OpmLog::info(fmt::format("Found restart date {}", Schedule::formatDate(deck_time)));
+                        } else
+                            OpmLog::info(fmt::format("Skipping DATES keyword {}", Schedule::formatDate(deck_time)));
+                    } else {
                         currentStep += 1;
+                        if (currentStep < this->size()) {
+                            const auto& end_date = Schedule::formatDate(this->simTime(currentStep));
+                            const auto& start_date = Schedule::formatDate(this->simTime(currentStep - 1));
+                            const auto& days = convert_time(this->stepLength(currentStep - 1));
+                            OpmLog::info(fmt::format("Complete report step {:4}: {} - {} {:3.0f} {} {} line {}",
+                                                     currentStep,
+                                                     start_date,
+                                                     end_date,
+                                                     days,
+                                                     time_unit,
+                                                     location.filename,
+                                                     location.lineno));
+                        }
+                    }
                 }
                 keywordIdx++;
                 continue;
@@ -354,7 +374,15 @@ namespace {
 
             if (keyword.name() == "TSTEP") {
                 checkIfAllConnectionsIsShut(currentStep);
-                currentStep += keyword.getRecord(0).getItem(0).data_size();
+                if (restart_skip)
+                    OpmLog::info(OpmInputError::format("Skipping TSTEP keyword at {file} line {line}", keyword.location()));
+                else {
+                    for (const auto& tstep : keyword.getRecord(0).getItem(0).getSIDoubleData()) {
+                        currentStep += 1;
+                        const auto& end_date = Schedule::formatDate( this->simTime(currentStep) );
+                        OpmLog::info(fmt::format("TSTEP {:4} {} {} -> {}", currentStep, convert_time(tstep), time_unit, end_date));
+                    }
+                }
                 keywordIdx++;
                 continue;
             }
@@ -1474,6 +1502,17 @@ namespace {
                this->restart_config == data.restart_config &&
                this->wellgroup_events == data.wellgroup_events;
      }
+
+
+    std::string Schedule::formatDate(std::time_t t) {
+        const auto ts { TimeStampUTC(t) } ;
+        return fmt::format("{:04d}-{:02d}-{:02d}" , ts.year(), ts.month(), ts.day());
+    }
+
+    std::string Schedule::simulationDays(const UnitSystem& unit_system, std::size_t currentStep) const {
+        const double sim_time { unit_system.from_si(UnitSystem::measure::time, simTime(currentStep)) } ;
+        return fmt::format("{} {}", sim_time, unit_system.name(UnitSystem::measure::time));
+    }
 
 namespace {
 
