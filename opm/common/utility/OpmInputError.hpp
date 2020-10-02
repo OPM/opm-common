@@ -19,9 +19,9 @@
 #ifndef OPM_ERROR_HPP
 #define OPM_ERROR_HPP
 
-#include <optional>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 #include <opm/common/OpmLog/KeywordLocation.hpp>
 
@@ -67,8 +67,8 @@ public:
     */
 
     OpmInputError(const std::string& msg_fmt, const KeywordLocation& loc) :
-        m_what   { OpmInputError::format(msg_fmt, loc) },
-        location { loc }
+        m_what    { OpmInputError::format(msg_fmt, loc) },
+        locations { loc }
     {}
 
     /*
@@ -87,12 +87,13 @@ public:
       }
     */
     OpmInputError(const KeywordLocation& loc, const std::exception& e) :
-        m_what   { OpmInputError::formatException(loc, e) },
-        location { loc }
+        m_what    { OpmInputError::formatException(loc, e) },
+        locations { loc }
     {}
 
-    OpmInputError(const std::string& msg) :
-        m_what(msg)
+    OpmInputError(const std::vector<KeywordLocation>& locations, const std::string& reason)
+        : m_what    { OpmInputError::formatMultiple(reason, locations) }
+        , locations { locations }
     {}
 
     const char * what() const throw()
@@ -103,6 +104,7 @@ public:
 
     static std::string format(const std::string& msg_format, const KeywordLocation& loc);
     static std::string formatException(const KeywordLocation& loc, const std::exception& e);
+    static std::string formatMultiple(const std::string& reason, const std::vector<KeywordLocation>&);
 
 private:
     std::string m_what;
@@ -110,7 +112,7 @@ private:
     // The location member is here for debugging; depending on the msg_fmt
     // passed in the constructor we might not have captured all the information
     // in the location argument passed to the constructor.
-    std::optional<KeywordLocation> location;
+    std::vector<KeywordLocation> locations;
 };
 
 }

@@ -16,6 +16,9 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
+
+#include <algorithm>
+#include <numeric>
 #include <utility>
 
 #include <fmt/format.h>
@@ -44,6 +47,22 @@ std::string OpmInputError::format(const std::string& msg_format, const KeywordLo
                        fmt::arg("file", loc.filename),
                        fmt::arg("line", loc.lineno)
                        );
+}
+
+namespace {
+
+    std::string formatSingle(const KeywordLocation& loc) {
+        return OpmInputError::format("\n  {keyword} in {file}, line {line}", loc);
+    }
+}
+
+std::string OpmInputError::formatMultiple(const std::string& reason, const std::vector<KeywordLocation>& locations) {
+    std::vector<std::string> locationStrings;
+    std::transform(locations.begin(), locations.end(), std::back_inserter(locationStrings), &formatSingle);
+    const std::string messages { std::accumulate(locationStrings.begin(), locationStrings.end(), std::string {}) } ;
+
+    return fmt::format(R"(Problem parsing keywords {}
+Parse error: {})", messages, reason);
 }
 
 }

@@ -39,6 +39,7 @@
 #include <opm/parser/eclipse/Parser/ParserKeywords/M.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/O.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/P.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/R.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/S.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/T.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/V.hpp>
@@ -571,12 +572,20 @@ namespace Opm {
         // the TEMPVD (E300) and RTEMPVD (E300 + E100) keywords are
         // synonymous, but we want to provide only a single cannonical
         // API here, so we jump through some small hoops...
-        if (deck.hasKeyword("TEMPVD") && deck.hasKeyword("RTEMPVD"))
-            throw std::invalid_argument("The TEMPVD and RTEMPVD tables are mutually exclusive!");
-        else if (deck.hasKeyword("TEMPVD"))
-            initSimpleTableContainer<RtempvdTable>(deck, "TEMPVD", "RTEMPVD", m_eqldims.getNumEquilRegions());
-        else if (deck.hasKeyword("RTEMPVD"))
-            initSimpleTableContainer<RtempvdTable>(deck, "RTEMPVD", "RTEMPVD" , m_eqldims.getNumEquilRegions());
+        const bool
+            hasTEMPVD  { deck.hasKeyword<ParserKeywords::TEMPVD>()  } ,
+            hasRTEMPVD { deck.hasKeyword<ParserKeywords::RTEMPVD>() } ;
+
+        if (hasTEMPVD && hasRTEMPVD) {
+            throw OpmInputError({
+                    deck.getKeyword<ParserKeywords::TEMPVD>().location(),
+                    deck.getKeyword<ParserKeywords::RTEMPVD>().location(),
+                }, "The TEMPVD and RTEMPVD tables are mutually exclusive.");
+        } else if (hasTEMPVD) {
+            initSimpleTableContainer<RtempvdTable>(deck,  "TEMPVD", "RTEMPVD", m_eqldims.getNumEquilRegions());
+        } else if (hasRTEMPVD) {
+            initSimpleTableContainer<RtempvdTable>(deck, "RTEMPVD", "RTEMPVD", m_eqldims.getNumEquilRegions());
+        }
     }
 
 
