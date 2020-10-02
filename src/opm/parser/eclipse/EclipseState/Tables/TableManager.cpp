@@ -31,6 +31,8 @@
 #include <opm/common/OpmLog/LogUtil.hpp>
 #include <opm/common/OpmLog/StreamLog.hpp>
 
+#include <opm/common/utility/OpmInputError.hpp>
+
 #include <opm/parser/eclipse/Parser/ParserKeywords/A.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/E.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/G.hpp>
@@ -621,8 +623,11 @@ namespace Opm {
         const auto& tableKeyword = deck.getKeyword(keywordName);
 
         if (tableKeyword.size() > 2) {
-            std::string msg = "The Parser does currently NOT support the alternating record schema used in PLYSHLOG";
-            throw std::invalid_argument( msg );
+            const std::string msg {
+                "The Parser does currently NOT support the alternating record schema used in PLYSHLOG"
+            } ;
+
+            throw OpmInputError(msg, tableKeyword.location());
         }
 
         for (size_t tableIdx = 0; tableIdx < tableKeyword.size(); tableIdx += 2) {
@@ -655,9 +660,13 @@ namespace Opm {
             if (m_plymwinjTables.find(table_number) == m_plymwinjTables.end()) {
                 m_plymwinjTables.insert(std::make_pair(table_number, std::move(table)));
             } else {
-                throw std::invalid_argument("Duplicated table number "
-                                            + std::to_string(table_number)
-                                            + " for keyword PLYMWINJ found");
+                const std::string msg {
+                    "Duplicated table number " +
+                    std::to_string(table_number) +
+                    " for keyword PLYMWINJ found"
+                } ;
+
+                throw OpmInputError(msg, keyword.location());
             }
         }
     }
@@ -681,9 +690,13 @@ namespace Opm {
             if (m_skprwatTables.find(table_number) == m_skprwatTables.end()) {
                 m_skprwatTables.insert(std::make_pair(table_number, std::move(table)));
             } else {
-                throw std::invalid_argument("Duplicated table number "
-                                            + std::to_string(table_number)
-                                            + " for keyword SKPRWAT found");
+                const std::string msg {
+                    "Duplicated table number " +
+                    std::to_string(table_number) +
+                    " for keyword SKPRWAT found"
+                } ;
+
+                throw OpmInputError(msg, keyword.location());
             }
         }
     }
@@ -707,9 +720,13 @@ namespace Opm {
             if (m_skprpolyTables.find(table_number) == m_skprpolyTables.end()) {
                 m_skprpolyTables.insert(std::make_pair(table_number, std::move(table)));
             } else {
-                throw std::invalid_argument("Duplicated table number "
-                                            + std::to_string(table_number)
-                                            + " for keyword SKPRPOLY found");
+                const std::string msg {
+                    "Duplicated table number " +
+                    std::to_string(table_number) +
+                    " for keyword SKPRPOLY found"
+                } ;
+
+                throw OpmInputError(msg, keyword.location());
             }
         }
     }
@@ -775,9 +792,13 @@ namespace Opm {
 
         bool isDirectional = deck.hasKeyword<ParserKeywords::RKTRMDIR>();
         if (isDirectional) {
-            const std::string msg = "RKTRMDIR is in the deck. Flow does not support directional rock compaction mulipliers. \n"
-                                    "Make sure that your ROCKTAB table only has 3 columns";
-            throw std::invalid_argument(msg);
+            const auto& keyword = deck.getKeyword<ParserKeywords::RKTRMDIR>();
+            const std::string msg {
+                "RKTRMDIR is in the deck. Flow does not support directional rock compaction mulipliers.\n"
+                "Make sure that your ROCKTAB table only has 3 columns)"
+            } ;
+
+            throw OpmInputError(msg, keyword.location());
         }
 
         bool useStressOption = false;
@@ -786,10 +807,12 @@ namespace Opm {
             const auto& rockoptsRecord = rockoptsKeyword.getRecord(0);
             const auto& item = rockoptsRecord.getItem<ParserKeywords::ROCKOPTS::METHOD>();
             useStressOption = (item.getTrimmedString(0) == "STRESS");
-        }
-        if (useStressOption) {
-            const std::string msg = "STRESS option is set in ROCKOPTS. Flow does not support stress option in rock compaction mulipliers";
-            throw std::invalid_argument(msg);
+
+            if (useStressOption) {
+                const std::string msg { "STRESS option is set in ROCKOPTS. Flow does not support stress option in rock compaction mulipliers" } ;
+
+                throw OpmInputError(msg, rockoptsKeyword.location());
+            }
         }
 
         for (size_t tableIdx = 0; tableIdx < rocktabKeyword.size(); ++tableIdx) {
