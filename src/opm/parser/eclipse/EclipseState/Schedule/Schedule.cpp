@@ -1090,10 +1090,10 @@ namespace {
 
 
     void Schedule::addGroup(const std::string& groupName, std::size_t timeStep, const UnitSystem& unit_system) {
-        const std::size_t gseqIndex = this->groups.size();
+        const std::size_t insert_index = this->groups.size();
 
         groups.insert( std::make_pair( groupName, DynamicState<std::shared_ptr<Group>>(this->m_timeMap, nullptr)));
-        auto group_ptr = std::make_shared<Group>(groupName, gseqIndex, timeStep, this->getUDQConfig(timeStep).params().undefinedValue(), unit_system);
+        auto group_ptr = std::make_shared<Group>(groupName, insert_index, timeStep, this->getUDQConfig(timeStep).params().undefinedValue(), unit_system);
         auto& dynamic_state = this->groups.at(groupName);
         dynamic_state.update(timeStep, group_ptr);
 
