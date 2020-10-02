@@ -376,3 +376,8 @@ if (OPM_ENABLE_PYTHON)
     add_definitions(-DEMBEDDED_PYTHON)
   endif()
 endif()
+
+
+# This test is not yet ready to run - working on it.
+# add_test(NAME model4_rst
+#          COMMAND rst_test ${PROJECT_SOURCE_DIR}/tests/restart/model4/MOD4_GRP.DATA ${PROJECT_SOURCE_DIR}/tests/restart/model4/MOD4_GRP_RESTART.DATA)

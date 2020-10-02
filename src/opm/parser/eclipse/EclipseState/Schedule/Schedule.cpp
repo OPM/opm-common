@@ -1545,6 +1545,19 @@ namespace {
         for (const auto& rst_group : rst_state.groups)
             this->addGroup(rst_group.name, report_step, unit_system);
 
+        for (std::size_t group_index = 0; group_index < rst_state.groups.size(); group_index++) {
+            const auto& rst_group = rst_state.groups[group_index];
+
+            if (rst_group.parent_group == 0)
+                continue;
+
+            if (rst_group.parent_group == rst_state.header.max_groups_in_field)
+                continue;
+
+            const auto& parent_group = rst_state.groups[rst_group.parent_group - 1];
+            this->addGroupToGroup(parent_group.name, rst_group.name, report_step);
+        }
+
         for (const auto& rst_well : rst_state.wells) {
             Opm::Well well(rst_well, report_step, unit_system, udq_undefined);
             std::vector<Opm::Connection> rst_connections;
@@ -1657,6 +1670,9 @@ int not_equal(const UDAValue& arg1, const UDAValue& arg2, const std::string& msg
         return not_equal( arg1.get<std::string>(), arg2.get<std::string>(), msg);
 }
 
+std::string group_msg(const std::string& group, const std::string& msg) {
+    return "Group: " + group + " " + msg;
+}
 
 std::string well_msg(const std::string& well, const std::string& msg) {
     return "Well: " + well + " " + msg;
@@ -1687,7 +1703,20 @@ bool Schedule::cmp(const Schedule& sched1, const Schedule& sched2, std::size_t r
             if (not_equal(tm1[step_index], tm2[step_index], "TimePoint[" + std::to_string(step_index) + "]"))
                 count += 1;
         }
+    }
 
+
+    for (const auto& gname : sched1.groupNames(report_step)) {
+        const auto& group1 = sched1.getGroup(gname, report_step);
+        const auto& group2 = sched2.getGroup(gname, report_step);
+        int error_count = 0;
+
+        error_count += not_equal(group1.insert_index(), group2.insert_index(), group_msg(group1.name(), "Insert index"));
+        error_count += not_equal(group1.wells(), group2.wells(), group_msg(group1.name(), "Wells"));
+        error_count += not_equal(group1.groups(), group2.groups(), group_msg(group1.name(), "Groups"));
+
+        if (error_count)
+            return false;
     }
 
     for (const auto& wname : sched1.wellNames(report_step)) {
