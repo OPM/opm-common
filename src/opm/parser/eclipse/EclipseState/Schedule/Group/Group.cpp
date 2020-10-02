@@ -284,6 +284,10 @@ void Group::addType(GroupType new_gtype) {
     this->group_type = this->group_type | new_gtype;
 }
 
+const Group::GroupType& Group::getGroupType() const {
+    return this-> group_type;
+}
+
 bool Group::isProductionGroup() const {
     return this->hasType(GroupType::PRODUCTION);
 }
@@ -469,10 +473,6 @@ bool Group::hasInjectionControl(Phase phase) const {
 
 Group::ProductionCMode Group::production_cmode() const {
     return this->production_properties.cmode;
-}
-
-const Group::GroupType& Group::getGroupType() const {
-    return this-> group_type;
 }
 
 bool Group::ProductionControls::has_control(Group::ProductionCMode control) const {
