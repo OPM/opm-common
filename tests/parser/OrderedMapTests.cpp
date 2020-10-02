@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE( check_empty) {
     BOOST_CHECK_THROW( map.get( "KEY" ) , std::invalid_argument);
     BOOST_CHECK_THROW( map.at("KEY"), std::invalid_argument);
     BOOST_CHECK_THROW( map.at(0), std::invalid_argument);
-    BOOST_CHECK_EQUAL( map.count("NO_SUCH_KEY"), 0);
+    BOOST_CHECK_EQUAL( map.count("NO_SUCH_KEY"), 0U);
 }
 
 BOOST_AUTO_TEST_CASE( operator_square ) {
@@ -47,10 +47,10 @@ BOOST_AUTO_TEST_CASE( operator_square ) {
 
     const auto& value = map["CKEY1"];
     BOOST_CHECK_EQUAL( value, std::string("Value1"));
-    BOOST_CHECK_EQUAL( map.size(), 3);
+    BOOST_CHECK_EQUAL( map.size(), 3U);
 
     auto& new_value = map["NEW_KEY"];
-    BOOST_CHECK_EQUAL( map.size(), 4);
+    BOOST_CHECK_EQUAL( map.size(), 4U);
     BOOST_CHECK_EQUAL( new_value, "");
 }
 
@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE( check_order ) {
 
     BOOST_CHECK_EQUAL( "Value1" , map.get("CKEY1"));
     BOOST_CHECK_EQUAL( "Value1" , map.iget( 0 ));
-    BOOST_CHECK_EQUAL( map.count("CKEY"), 0);
+    BOOST_CHECK_EQUAL( map.count("CKEY"), 0U);
 
     BOOST_CHECK_EQUAL( "Value2" , map.get("BKEY2"));
     BOOST_CHECK_EQUAL( "Value2" , map.iget( 1 ));
@@ -104,8 +104,8 @@ BOOST_AUTO_TEST_CASE( check_order ) {
         BOOST_CHECK_EQUAL( values[2] , "Value3");
     }
 
-    BOOST_CHECK_EQUAL(map.erase("NO_SUCH_KEY"), 0);
-    BOOST_CHECK_EQUAL(map.erase("BKEY2"), 1);
+    BOOST_CHECK_EQUAL(map.erase("NO_SUCH_KEY"), 0U);
+    BOOST_CHECK_EQUAL(map.erase("BKEY2"), 1U);
     /*
     BOOST_CHECK_EQUAL( "NewValue1" , map.get("CKEY1"));
     BOOST_CHECK_EQUAL( "NewValue1" , map.iget( 0 ));
@@ -119,18 +119,18 @@ BOOST_AUTO_TEST_CASE( check_order ) {
 BOOST_AUTO_TEST_CASE(test_IOrderSet) {
     Opm::IOrderSet<std::string> iset;
     BOOST_CHECK(iset.empty());
-    BOOST_CHECK_EQUAL(iset.size(), 0);
-    BOOST_CHECK_EQUAL(iset.count("HEI"), 0);
+    BOOST_CHECK_EQUAL(iset.size(), 0U);
+    BOOST_CHECK_EQUAL(iset.count("HEI"), 0U);
     BOOST_CHECK_EQUAL(iset.contains("HEI"), false);
 
     BOOST_CHECK(iset.insert("HEI"));
-    BOOST_CHECK_EQUAL(iset.size(), 1);
-    BOOST_CHECK_EQUAL(iset.count("HEI"), 1);
+    BOOST_CHECK_EQUAL(iset.size(), 1U);
+    BOOST_CHECK_EQUAL(iset.count("HEI"), 1U);
     BOOST_CHECK_EQUAL(iset.contains("HEI"), true);
 
     BOOST_CHECK(!iset.insert("HEI"));
-    BOOST_CHECK_EQUAL(iset.size(), 1);
-    BOOST_CHECK_EQUAL(iset.count("HEI"), 1);
+    BOOST_CHECK_EQUAL(iset.size(), 1U);
+    BOOST_CHECK_EQUAL(iset.count("HEI"), 1U);
     BOOST_CHECK_EQUAL(iset.contains("HEI"), true);
 
     BOOST_CHECK_THROW(iset[10], std::out_of_range);
@@ -161,12 +161,12 @@ BOOST_AUTO_TEST_CASE(test_IOrderSet) {
     BOOST_CHECK_EQUAL(iset3[0], "AAA");
     BOOST_CHECK_EQUAL(iset3[1], "BBB");
 
-    BOOST_CHECK_EQUAL(iset3.erase("AAA"), 1);
-    BOOST_CHECK_EQUAL(iset3.size() , 1);
+    BOOST_CHECK_EQUAL(iset3.erase("AAA"), 1U);
+    BOOST_CHECK_EQUAL(iset3.size() , 1U);
     BOOST_CHECK_EQUAL(iset3[0], "BBB");
 
-    BOOST_CHECK_EQUAL(iset3.erase("AAA"), 0);
-    BOOST_CHECK_EQUAL(iset3.size() , 1);
+    BOOST_CHECK_EQUAL(iset3.erase("AAA"), 0U);
+    BOOST_CHECK_EQUAL(iset3.size() , 1U);
     BOOST_CHECK_EQUAL(iset3[0], "BBB");
 }
 

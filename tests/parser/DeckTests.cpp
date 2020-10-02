@@ -55,7 +55,7 @@ std::pair<std::vector<Dimension>, std::vector<Dimension>> make_dims() {
 BOOST_AUTO_TEST_CASE(getKeywordList_empty_list) {
     Deck deck;
     auto kw_list = deck.getKeywordList("TRULS");
-    BOOST_CHECK_EQUAL( kw_list.size() , 0 );
+    BOOST_CHECK_EQUAL( kw_list.size() , 0U );
 }
 
 BOOST_AUTO_TEST_CASE(getKeyword_singlekeyword_outRange_throws) {
@@ -164,10 +164,10 @@ BOOST_AUTO_TEST_CASE(set_and_get_data_file) {
 
 BOOST_AUTO_TEST_CASE(DummyDefaultsString) {
     DeckItem deckStringItem("TEST", std::string() );
-    BOOST_CHECK_EQUAL(deckStringItem.data_size(), 0);
+    BOOST_CHECK_EQUAL(deckStringItem.data_size(), 0U);
 
     deckStringItem.push_backDummyDefault<std::string>();
-    BOOST_CHECK_EQUAL(deckStringItem.data_size(), 1);
+    BOOST_CHECK_EQUAL(deckStringItem.data_size(), 1U);
     BOOST_CHECK_EQUAL(true, deckStringItem.defaultApplied(0));
     BOOST_CHECK_THROW(deckStringItem.get< std::string >(0), std::invalid_argument);
 }
@@ -268,10 +268,10 @@ BOOST_AUTO_TEST_CASE(SetInDeck) {
 BOOST_AUTO_TEST_CASE(DummyDefaultsDouble) {
     auto dims = make_dims();
     DeckItem deckDoubleItem( "TEST", double(), dims.first, dims.second);
-    BOOST_CHECK_EQUAL(deckDoubleItem.data_size(), 0);
+    BOOST_CHECK_EQUAL(deckDoubleItem.data_size(), 0U);
 
     deckDoubleItem.push_backDummyDefault<double>();
-    BOOST_CHECK_EQUAL(deckDoubleItem.data_size(), 1);
+    BOOST_CHECK_EQUAL(deckDoubleItem.data_size(), 1U);
     BOOST_CHECK_EQUAL(true, deckDoubleItem.defaultApplied(0));
     BOOST_CHECK_THROW(deckDoubleItem.get< double >(0), std::invalid_argument);
 }
@@ -342,10 +342,10 @@ BOOST_AUTO_TEST_CASE(HasValue) {
 
 BOOST_AUTO_TEST_CASE(DummyDefaultsInt) {
     DeckItem deckIntItem( "TEST", int() );
-    BOOST_CHECK_EQUAL(deckIntItem.data_size(), 0);
+    BOOST_CHECK_EQUAL(deckIntItem.data_size(), 0U);
 
     deckIntItem.push_backDummyDefault<int>();
-    BOOST_CHECK_EQUAL(deckIntItem.data_size(), 1);
+    BOOST_CHECK_EQUAL(deckIntItem.data_size(), 1U);
     BOOST_CHECK_EQUAL(true, deckIntItem.defaultApplied(0));
     BOOST_CHECK_EQUAL( false , deckIntItem.hasValue(0));
     BOOST_CHECK_EQUAL( false , deckIntItem.hasValue(1));
@@ -413,7 +413,7 @@ BOOST_AUTO_TEST_CASE(DefaultAppliedInt) {
     BOOST_CHECK_EQUAL( false, deckIntItem.defaultApplied(1) );
     deckIntItem.push_backDefault( 1 );
     BOOST_CHECK_EQUAL( true , deckIntItem.defaultApplied(2) );
-    BOOST_CHECK_EQUAL( 3 , deckIntItem.data_size() );
+    BOOST_CHECK_EQUAL( 3U, deckIntItem.data_size() );
 }
 
 

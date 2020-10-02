@@ -172,7 +172,7 @@ BOOST_AUTO_TEST_CASE(FoamConfigTest) {
     auto deck = createDeck();
     EclipseState state(deck);
     const FoamConfig& fc = state.getInitConfig().getFoamConfig();
-    BOOST_REQUIRE_EQUAL(fc.size(), 3);
+    BOOST_REQUIRE_EQUAL(fc.size(), 3U);
     BOOST_CHECK_EQUAL(fc.getRecord(0).referenceSurfactantConcentration(), 1.0);
     BOOST_CHECK_EQUAL(fc.getRecord(0).exponent(), 2.0);
     BOOST_CHECK_EQUAL(fc.getRecord(0).minimumSurfactantConcentration(), 0.3);

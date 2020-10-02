@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithGEFAC) {
     auto schedule = create_schedule(input);
 
     auto group_names = schedule.groupNames("PRODUC");
-    BOOST_CHECK_EQUAL(group_names.size(), 1);
+    BOOST_CHECK_EQUAL(group_names.size(), 1U);
     BOOST_CHECK_EQUAL(group_names[0], "PRODUC");
 
     const auto& group1 = schedule.getGroup("PRODUC", 0);
@@ -225,10 +225,10 @@ BOOST_AUTO_TEST_CASE(GroupCreate) {
     BOOST_CHECK( g1.hasWell("W1"));
     BOOST_CHECK( g1.hasWell("W2"));
     BOOST_CHECK( !g1.hasWell("W3"));
-    BOOST_CHECK_EQUAL( g1.numWells(), 2);
+    BOOST_CHECK_EQUAL( g1.numWells(), 2U);
     BOOST_CHECK_THROW(g1.delWell("W3"), std::invalid_argument);
     BOOST_CHECK_NO_THROW(g1.delWell("W1"));
-    BOOST_CHECK_EQUAL( g1.numWells(), 1);
+    BOOST_CHECK_EQUAL( g1.numWells(), 1U);
 
 
     BOOST_CHECK( g2.addGroup("G1") );
@@ -364,7 +364,7 @@ BOOST_AUTO_TEST_CASE(TESTGCONSALE) {
     double metric_to_si = 1.0 / (24.0 * 3600.0);  //cubic meters / day
 
     const auto& gconsale = schedule.gConSale(0);
-    BOOST_CHECK_EQUAL(gconsale.size(), 1);
+    BOOST_CHECK_EQUAL(gconsale.size(), 1U);
     BOOST_CHECK(gconsale.has("G1"));
     BOOST_CHECK(!gconsale.has("G2"));
     const GConSale::GCONSALEGroup& group = gconsale.get("G1");
@@ -377,7 +377,7 @@ BOOST_AUTO_TEST_CASE(TESTGCONSALE) {
     BOOST_CHECK(group.max_proc == GConSale::MaxProcedure::WELL);
 
     const auto& gconsump = schedule.gConSump(0);
-    BOOST_CHECK_EQUAL(gconsump.size(), 2);
+    BOOST_CHECK_EQUAL(gconsump.size(), 2U);
     BOOST_CHECK(gconsump.has("G1"));
     BOOST_CHECK(gconsump.has("G2"));
     const GConSump::GCONSUMPGroup group1 = gconsump.get("G1");
@@ -388,7 +388,7 @@ BOOST_AUTO_TEST_CASE(TESTGCONSALE) {
     BOOST_CHECK( group1.network_node == "a_node" );
 
     const GConSump::GCONSUMPGroup group2 = gconsump.get("G2");
-    BOOST_CHECK_EQUAL( group2.network_node.size(), 0 );
+    BOOST_CHECK_EQUAL( group2.network_node.size(), 0U );
 
 
 

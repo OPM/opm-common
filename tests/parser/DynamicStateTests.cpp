@@ -202,29 +202,29 @@ BOOST_AUTO_TEST_CASE( find ) {
     Opm::TimeMap timeMap = make_timemap(6);
     Opm::DynamicState<int> state(timeMap , 137);
 
-    BOOST_CHECK_EQUAL( state.find( 137 ).value() , 0 );
-    BOOST_CHECK_EQUAL( state.find_not(200).value(), 0);
+    BOOST_CHECK_EQUAL( state.find( 137 ).value() , 0U );
+    BOOST_CHECK_EQUAL( state.find_not(200).value(), 0U);
     BOOST_CHECK( !state.find( 200 ));
     BOOST_CHECK( !state.find_not(137));
 
     state.update( 0 , 200 );
     BOOST_CHECK( !state.find( 137 ) );
-    BOOST_CHECK_EQUAL( state.find( 200 ).value() ,  0 );
+    BOOST_CHECK_EQUAL( state.find( 200 ).value() ,  0U );
 
     state.update( 2 , 300 );
-    BOOST_CHECK_EQUAL( state.find( 200 ).value() ,  0 );
-    BOOST_CHECK_EQUAL( state.find( 300 ).value() ,  2 );
-    BOOST_CHECK_EQUAL( state.find_not( 200 ).value() ,  2 );
+    BOOST_CHECK_EQUAL( state.find( 200 ).value() ,  0U );
+    BOOST_CHECK_EQUAL( state.find( 300 ).value() ,  2U );
+    BOOST_CHECK_EQUAL( state.find_not( 200 ).value() ,  2U );
 
     state.update( 4 , 400 );
-    BOOST_CHECK_EQUAL( state.find( 200 ).value() ,  0 );
-    BOOST_CHECK_EQUAL( state.find( 300 ).value() ,  2 );
-    BOOST_CHECK_EQUAL( state.find( 400 ).value() ,  4 );
+    BOOST_CHECK_EQUAL( state.find( 200 ).value() ,  0U );
+    BOOST_CHECK_EQUAL( state.find( 300 ).value() ,  2U );
+    BOOST_CHECK_EQUAL( state.find( 400 ).value() ,  4U );
     BOOST_CHECK( !state.find( 500 ));
 
 
     auto pred = [] (const int& elm) { return elm == 400 ;};
-    BOOST_CHECK_EQUAL( state.find_if(pred).value(), 4);
+    BOOST_CHECK_EQUAL( state.find_if(pred).value(), 4U);
 }
 
 
@@ -270,7 +270,7 @@ BOOST_AUTO_TEST_CASE( update_equal ) {
         auto next_index = state.update_equal(4,50);
         BOOST_CHECK_EQUAL(state[4], 50);
         BOOST_CHECK_EQUAL(state[5], 100);
-        BOOST_CHECK_EQUAL(next_index.value() , 5);
+        BOOST_CHECK_EQUAL(next_index.value() , 5U);
     }
 
 
@@ -291,13 +291,13 @@ BOOST_AUTO_TEST_CASE( UNIQUE ) {
     Opm::TimeMap timeMap = make_timemap(11);
     Opm::DynamicState<int> state(timeMap , 13);
     auto unique0 = state.unique();
-    BOOST_CHECK_EQUAL(unique0.size(), 1);
+    BOOST_CHECK_EQUAL(unique0.size(), 1U);
     BOOST_CHECK(unique0[0] == std::make_pair(std::size_t{0}, 13));
 
     state.update(3,300);
     state.update(6,600);
     auto unique1 = state.unique();
-    BOOST_CHECK_EQUAL(unique1.size(), 3);
+    BOOST_CHECK_EQUAL(unique1.size(), 3U);
     BOOST_CHECK(unique1[0] == std::make_pair(std::size_t{0}, 13));
     BOOST_CHECK(unique1[1] == std::make_pair(std::size_t{3}, 300));
     BOOST_CHECK(unique1[2] == std::make_pair(std::size_t{6}, 600));

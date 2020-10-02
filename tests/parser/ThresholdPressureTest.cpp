@@ -254,15 +254,15 @@ BOOST_AUTO_TEST_CASE(ThresholdPressureTest) {
 
 BOOST_AUTO_TEST_CASE(ThresholdPressureEmptyTest) {
     Setup s(inputStrNoSolutionSection);
-    BOOST_CHECK_EQUAL(0, s.threshPres.size());
+    BOOST_CHECK_EQUAL(0U, s.threshPres.size());
 }
 
 BOOST_AUTO_TEST_CASE(ThresholdPressureNoTHPREStest) {
     Setup s(inputStrNoTHPRESinSolutionNorRUNSPEC);
     Setup s2(inputStrTHPRESinRUNSPECnotSoultion);
 
-    BOOST_CHECK_EQUAL(0, s.threshPres.size());
-    BOOST_CHECK_EQUAL(0, s.threshPres.size());
+    BOOST_CHECK_EQUAL(0U, s.threshPres.size());
+    BOOST_CHECK_EQUAL(0U, s.threshPres.size());
 }
 
 BOOST_AUTO_TEST_CASE(ThresholdPressureThrowTest) {
@@ -290,14 +290,14 @@ BOOST_AUTO_TEST_CASE(ThresholdPressureThrowTest) {
 BOOST_AUTO_TEST_CASE(Restart) {
     Setup sx(inputStr_RESTART);
     BOOST_CHECK(sx.threshPres.active());
-    BOOST_CHECK_EQUAL(sx.threshPres.size(), 0);
+    BOOST_CHECK_EQUAL(sx.threshPres.size(), 0U);
     BOOST_CHECK(sx.threshPres.restart());
 }
 
 BOOST_AUTO_TEST_CASE(Restart2) {
   Setup sx(inputStr_RESTART2);
   BOOST_CHECK(sx.threshPres.active());
-  BOOST_CHECK_EQUAL(sx.threshPres.size(), 3);
+  BOOST_CHECK_EQUAL(sx.threshPres.size(), 3U);
   BOOST_CHECK(sx.threshPres.restart());
 }
 

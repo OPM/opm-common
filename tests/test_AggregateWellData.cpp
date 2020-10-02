@@ -1188,7 +1188,7 @@ BOOST_AUTO_TEST_CASE(WELL_POD) {
     BOOST_CHECK_EQUAL(well2.ij[1], 8);
     BOOST_CHECK_EQUAL(well2.name, "OP_2");
 
-    BOOST_CHECK_EQUAL(well2.connections.size(), 1);
+    BOOST_CHECK_EQUAL(well2.connections.size(), 1U);
     const auto& conn1 = well2.connections[0];
     BOOST_CHECK_EQUAL(conn1.ijk[0], 8);
     BOOST_CHECK_EQUAL(conn1.ijk[1], 8);

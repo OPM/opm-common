@@ -90,62 +90,62 @@ BOOST_AUTO_TEST_CASE( Brine ) {
 
     Opm::TableManager tables(deck);
     const auto& PvtwsaltTables = tables.getPvtwSaltTables( );
-    BOOST_CHECK_EQUAL(1 , PvtwsaltTables.size() );
-    BOOST_CHECK_EQUAL(2, PvtwsaltTables[0].size());
+    BOOST_CHECK_EQUAL(1U, PvtwsaltTables.size() );
+    BOOST_CHECK_EQUAL(2U, PvtwsaltTables[0].size());
 
     const auto& PvtwsaltTable1 = PvtwsaltTables[0];
-    BOOST_CHECK_EQUAL (PvtwsaltTable1.getSaltConcentrationColumn().size(), 2);
+    BOOST_CHECK_EQUAL (PvtwsaltTable1.getSaltConcentrationColumn().size(), 2U);
     BOOST_CHECK_CLOSE (PvtwsaltTable1.getSaltConcentrationColumn()[1], 10, 1e-5);
 
-    BOOST_CHECK_EQUAL (PvtwsaltTable1.getFormationVolumeFactorColumn().size(), 2);
+    BOOST_CHECK_EQUAL (PvtwsaltTable1.getFormationVolumeFactorColumn().size(), 2U);
     BOOST_CHECK_CLOSE (PvtwsaltTable1.getFormationVolumeFactorColumn()[0], 1, 1e-5);
 
-    BOOST_CHECK_EQUAL (PvtwsaltTable1.getCompressibilityColumn().size(), 2);
+    BOOST_CHECK_EQUAL (PvtwsaltTable1.getCompressibilityColumn().size(), 2U);
     BOOST_CHECK_CLOSE (PvtwsaltTable1.getCompressibilityColumn()[1], 12/1e5, 1e-5);
 
-    BOOST_CHECK_EQUAL (PvtwsaltTable1.getViscosityColumn().size(), 2);
+    BOOST_CHECK_EQUAL (PvtwsaltTable1.getViscosityColumn().size(), 2U);
     BOOST_CHECK_CLOSE (PvtwsaltTable1.getViscosityColumn()[1], 13*0.001, 1e-5);
 
     BOOST_CHECK_CLOSE (PvtwsaltTable1.getReferencePressureValue(), 1000*1e5, 1e-5);
 
     const auto& RwgsaltTables = tables.getRwgSaltTables( );
-    BOOST_CHECK_EQUAL(1 , RwgsaltTables.size() );
-    BOOST_CHECK_EQUAL(2, RwgsaltTables[0].size());
+    BOOST_CHECK_EQUAL(1U, RwgsaltTables.size() );
+    BOOST_CHECK_EQUAL(2U, RwgsaltTables[0].size());
 
     const auto& RwgsaltTable1 = RwgsaltTables[0];
 
-    BOOST_CHECK_EQUAL (RwgsaltTable1.getPressureColumn().size(), 2);
+    BOOST_CHECK_EQUAL (RwgsaltTable1.getPressureColumn().size(), 2U);
     BOOST_CHECK_CLOSE (RwgsaltTable1.getPressureColumn()[1], Metric::Pressure * 600, 1e-5);
 
-    BOOST_CHECK_EQUAL (RwgsaltTable1.getSaltConcentrationColumn().size(), 2);
+    BOOST_CHECK_EQUAL (RwgsaltTable1.getSaltConcentrationColumn().size(), 2U);
     BOOST_CHECK_CLOSE (RwgsaltTable1.getSaltConcentrationColumn()[1], 0.5, 1e-5);
 
-    BOOST_CHECK_EQUAL (RwgsaltTable1.getVaporizedWaterGasRatioColumn().size(), 2);
+    BOOST_CHECK_EQUAL (RwgsaltTable1.getVaporizedWaterGasRatioColumn().size(), 2U);
     BOOST_CHECK_CLOSE (RwgsaltTable1.getVaporizedWaterGasRatioColumn()[0], 0.00013, 1e-5);
 
     const auto& BdensityTables = tables.getBrineDensityTables( );
     const auto& BdensityTable1 = BdensityTables[0];
 
-    BOOST_CHECK_EQUAL( 1 , BdensityTables.size() );
-    BOOST_CHECK_EQUAL (BdensityTable1.getBrineDensityColumn().size(), 2);
+    BOOST_CHECK_EQUAL(1U, BdensityTables.size() );
+    BOOST_CHECK_EQUAL (BdensityTable1.getBrineDensityColumn().size(), 2U);
     BOOST_CHECK_CLOSE (BdensityTable1.getBrineDensityColumn()[1], 1050, 1e-5);
 
     const Opm::TableContainer& saltvdTables = tables.getSaltvdTables();
     const auto& saltvdTable = saltvdTables.getTable<Opm::SaltvdTable>(0);
 
-    BOOST_CHECK_EQUAL(saltvdTable.getDepthColumn().size(), 2);
+    BOOST_CHECK_EQUAL(saltvdTable.getDepthColumn().size(), 2U);
     BOOST_CHECK_CLOSE (saltvdTable.getSaltColumn() [1],50, 1e-5);
 
     const Opm::TableContainer& saltpvdTables = tables.getSaltpvdTables();
     const auto& saltpvdTable = saltpvdTables.getTable<Opm::SaltpvdTable>(0);
 
-    BOOST_CHECK_EQUAL(saltpvdTable.getDepthColumn().size(), 2);
+    BOOST_CHECK_EQUAL(saltpvdTable.getDepthColumn().size(), 2U);
     BOOST_CHECK_CLOSE(saltpvdTable.getSaltpColumn() [1],0.5, 1e-5);
 
     const Opm::TableContainer& permfactTables = tables.getPermfactTables();
     const auto& permfactTable = permfactTables.getTable<Opm::PermfactTable>(0);
 
-    BOOST_CHECK_EQUAL(permfactTable.getPorosityChangeColumn().size(), 4);
+    BOOST_CHECK_EQUAL(permfactTable.getPorosityChangeColumn().size(), 4U);
     BOOST_CHECK_CLOSE(permfactTable.getPermeabilityMultiplierColumn() [3],1.5, 1e-5);
 
 

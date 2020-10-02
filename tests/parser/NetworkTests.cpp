@@ -222,7 +222,7 @@ BRANPROP
 
 
 
-        BOOST_CHECK_EQUAL(network.downtree_branches("PLAT-A").size(), 2);
+        BOOST_CHECK_EQUAL(network.downtree_branches("PLAT-A").size(), 2U);
         for (const auto& b : network.downtree_branches("PLAT-A")) {
             BOOST_CHECK_EQUAL(b.uptree_node(), "PLAT-A");
             BOOST_CHECK(b.downtree_node() == "B1" || b.downtree_node() == "C1");
@@ -247,7 +247,7 @@ BRANPROP
         BOOST_CHECK(b1.name() == b1.target_group());
         BOOST_CHECK(!b1.terminal_pressure());
 
-        BOOST_CHECK_EQUAL(network.downtree_branches("PLAT-A").size(), 1);
+        BOOST_CHECK_EQUAL(network.downtree_branches("PLAT-A").size(), 1U);
         for (const auto& b : network.downtree_branches("PLAT-A")) {
             BOOST_CHECK_EQUAL(b.uptree_node(), "PLAT-A");
             BOOST_CHECK(b.downtree_node() == "B1");

@@ -158,12 +158,12 @@ BOOST_AUTO_TEST_CASE(TestActions) {
     Opm::Action::Actions config;
     std::vector<std::string> matching_wells;
     auto python = std::make_shared<Opm::Python>();
-    BOOST_CHECK_EQUAL(config.size(), 0);
+    BOOST_CHECK_EQUAL(config.size(), 0U);
     BOOST_CHECK(config.empty());
 
     Opm::Action::ActionX action1("NAME", 10, 100, 0);
     config.add(action1);
-    BOOST_CHECK_EQUAL(config.size(), 1);
+    BOOST_CHECK_EQUAL(config.size(), 1U);
     BOOST_CHECK(!config.empty());
 
     double min_wait = 86400;
@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE(TestActions) {
     {
         Opm::Action::ActionX action("NAME", max_eval, min_wait, asTimeT(TimeStampUTC(TimeStampUTC::YMD{ 2000, 7, 1 })) );
         config.add(action);
-        BOOST_CHECK_EQUAL(config.size(), 1);
+        BOOST_CHECK_EQUAL(config.size(), 1U);
 
 
         Opm::Action::ActionX action3("NAME3", 1000000, 0, asTimeT(TimeStampUTC(TimeStampUTC::YMD{ 2000, 7, 1 })) );
@@ -191,7 +191,7 @@ BOOST_AUTO_TEST_CASE(TestActions) {
     BOOST_CHECK(!action2.eval(context));
 
     auto pending = config.pending( action_state, asTimeT(TimeStampUTC(TimeStampUTC::YMD{ 2000, 8, 7 }))  );
-    BOOST_CHECK_EQUAL( pending.size(), 2);
+    BOOST_CHECK_EQUAL( pending.size(), 2U);
     for (auto& ptr : pending) {
         BOOST_CHECK( ptr->ready( action_state, asTimeT(TimeStampUTC(TimeStampUTC::YMD{ 2000, 8, 7 }))  ));
         BOOST_CHECK( !ptr->eval( context));
@@ -200,7 +200,7 @@ BOOST_AUTO_TEST_CASE(TestActions) {
 
 
     const auto& python_actions = config.pending_python();
-    BOOST_CHECK_EQUAL(python_actions.size(), 2);
+    BOOST_CHECK_EQUAL(python_actions.size(), 2U);
 }
 
 
@@ -217,11 +217,11 @@ BOOST_AUTO_TEST_CASE(TestContext) {
     BOOST_CHECK_EQUAL(context.get("FUNC", "ARG"), 100);
 
     const auto& wopr_wells = context.wells("WOPR");
-    BOOST_CHECK_EQUAL(wopr_wells.size(), 1);
+    BOOST_CHECK_EQUAL(wopr_wells.size(), 1U);
     BOOST_CHECK_EQUAL(wopr_wells[0], "OP1");
 
     const auto& wwct_wells = context.wells("WWCT");
-    BOOST_CHECK_EQUAL(wwct_wells.size(), 0);
+    BOOST_CHECK_EQUAL(wwct_wells.size(), 0U);
 }
 
 
@@ -532,7 +532,7 @@ BOOST_AUTO_TEST_CASE(TestMatchingWells) {
     auto wells = res.wells();
     BOOST_CHECK( res);
 
-    BOOST_CHECK_EQUAL( wells.size(), 1);
+    BOOST_CHECK_EQUAL( wells.size(), 1U);
     BOOST_CHECK_EQUAL( wells[0], "OPZ" );
 }
 
@@ -557,11 +557,11 @@ BOOST_AUTO_TEST_CASE(TestMatchingWells2) {
   auto wells1 = res1.wells();
   auto wells2 = res2.wells();
   BOOST_CHECK(res1);
-  BOOST_CHECK_EQUAL( wells1.size(), 1);
+  BOOST_CHECK_EQUAL( wells1.size(), 1U);
   BOOST_CHECK_EQUAL( wells1[0], "PZ" );
 
   BOOST_CHECK(res2);
-  BOOST_CHECK_EQUAL( wells2.size(), 2);
+  BOOST_CHECK_EQUAL( wells2.size(), 2U);
   BOOST_CHECK_EQUAL( std::count(wells2.begin(), wells2.end(), "PZ") , 1);
   BOOST_CHECK_EQUAL( std::count(wells2.begin(), wells2.end(), "IZ") , 1);
 }
@@ -612,7 +612,7 @@ BOOST_AUTO_TEST_CASE(TestMatchingWells_OR) {
     // The well 'OPZ' matches the first condition and the well 'OPY' matches the
     // second condition, since the two conditions are combined with || the
     // resulting mathcing_wells variable should contain both these wells.
-    BOOST_CHECK_EQUAL( wells.size(), 2);
+    BOOST_CHECK_EQUAL( wells.size(), 2U);
     BOOST_CHECK( std::find(wells.begin(), wells.end(), "OPZ") != wells.end());
     BOOST_CHECK( std::find(wells.begin(), wells.end(), "OPY") != wells.end());
 }
@@ -637,7 +637,7 @@ BOOST_AUTO_TEST_CASE(TestWLIST) {
     auto res = ast.eval(context);
     auto wells = res.wells();
     BOOST_CHECK(res);
-    BOOST_CHECK_EQUAL( wells.size(), 3);
+    BOOST_CHECK_EQUAL( wells.size(), 3U);
     for (const auto& w : {"W1", "W3", "W5"}) {
         auto find_iter = std::find(wells.begin(), wells.end(), w);
         BOOST_CHECK( find_iter != wells.end() );
@@ -668,7 +668,7 @@ BOOST_AUTO_TEST_CASE(TestFieldAND) {
         auto res = ast.eval(context);
         auto wells = res.wells();
         BOOST_CHECK(res);
-        BOOST_CHECK_EQUAL(wells.size(), 1);
+        BOOST_CHECK_EQUAL(wells.size(), 1U);
         BOOST_CHECK_EQUAL(wells[0], "OP3");
     }
 }
@@ -687,22 +687,22 @@ BOOST_AUTO_TEST_CASE(Conditions) {
     BOOST_CHECK(cond.cmp == Action::Condition::Comparator::GREATER);
     BOOST_CHECK(cond.cmp_string == ">" );
     BOOST_CHECK_EQUAL(cond.lhs.quantity, "WWCT");
-    BOOST_CHECK_EQUAL(cond.lhs.args.size(), 1);
+    BOOST_CHECK_EQUAL(cond.lhs.args.size(), 1U);
     BOOST_CHECK_EQUAL(cond.lhs.args[0], "OPX");
 
     BOOST_CHECK_EQUAL(cond.rhs.quantity, "0.75");
-    BOOST_CHECK_EQUAL(cond.rhs.args.size(), 0);
+    BOOST_CHECK_EQUAL(cond.rhs.args.size(), 0U);
     BOOST_CHECK(cond.logic == Action::Condition::Logical::AND);
 
     Action::Condition cond2({"WWCT", "OPX", "<=", "WSOPR", "OPX", "235"}, location);
     BOOST_CHECK(cond2.cmp == Action::Condition::Comparator::LESS_EQUAL);
     BOOST_CHECK(cond2.cmp_string == "<=" );
     BOOST_CHECK_EQUAL(cond2.lhs.quantity, "WWCT");
-    BOOST_CHECK_EQUAL(cond2.lhs.args.size(), 1);
+    BOOST_CHECK_EQUAL(cond2.lhs.args.size(), 1U);
     BOOST_CHECK_EQUAL(cond2.lhs.args[0], "OPX");
 
     BOOST_CHECK_EQUAL(cond2.rhs.quantity, "WSOPR");
-    BOOST_CHECK_EQUAL(cond2.rhs.args.size(), 2);
+    BOOST_CHECK_EQUAL(cond2.rhs.args.size(), 2U);
     BOOST_CHECK_EQUAL(cond2.rhs.args[0], "OPX");
     BOOST_CHECK_EQUAL(cond2.rhs.args[1], "235");
     BOOST_CHECK(cond2.logic == Action::Condition::Logical::END);
@@ -763,15 +763,15 @@ TSTEP
     Runspec runspec (deck);
     Schedule sched(deck, grid1, fp, runspec, python);
     const auto& actions0 = sched.actions(0);
-    BOOST_CHECK_EQUAL(actions0.size(), 0);
+    BOOST_CHECK_EQUAL(actions0.size(), 0U);
 
     const auto& actions1 = sched.actions(1);
-    BOOST_CHECK_EQUAL(actions1.size(), 1);
+    BOOST_CHECK_EQUAL(actions1.size(), 1U);
 
 
     const auto& act1 = actions1.get("B");
     const auto& strings = act1.keyword_strings();
-    BOOST_CHECK_EQUAL(strings.size(), 4);
+    BOOST_CHECK_EQUAL(strings.size(), 4U);
     BOOST_CHECK_EQUAL(strings.back(), "ENDACTIO");
 
 
@@ -784,15 +784,15 @@ TSTEP
 
 
     const auto& conditions = act1.conditions();
-    BOOST_CHECK_EQUAL(conditions.size() , 2);
+    BOOST_CHECK_EQUAL(conditions.size() , 2U);
 
     const auto& cond0 = conditions[0];
     BOOST_CHECK_EQUAL(cond0.lhs.quantity, "WWCT");
     BOOST_CHECK(cond0.cmp == Action::Condition::Comparator::GREATER);
     BOOST_CHECK(cond0.logic == Action::Condition::Logical::AND);
-    BOOST_CHECK_EQUAL(cond0.lhs.args.size(), 1);
+    BOOST_CHECK_EQUAL(cond0.lhs.args.size(), 1U);
     BOOST_CHECK_EQUAL(cond0.lhs.args[0], "OPX");
-    BOOST_CHECK_EQUAL(cond0.rhs.args.size(), 0);
+    BOOST_CHECK_EQUAL(cond0.rhs.args.size(), 0U);
     BOOST_CHECK_EQUAL(cond0.rhs.quantity, "0.75");
 
     const auto& cond1 = conditions[1];
@@ -803,11 +803,11 @@ TSTEP
     /*****************************************************************/
 
     const auto& actions2 = sched.actions(2);
-    BOOST_CHECK_EQUAL(actions2.size(), 2);
+    BOOST_CHECK_EQUAL(actions2.size(), 2U);
 
     const auto& actB = actions2.get("B");
     const auto& condB = actB.conditions();
-    BOOST_CHECK_EQUAL(condB.size() , 1);
+    BOOST_CHECK_EQUAL(condB.size() , 1U);
     BOOST_CHECK_EQUAL(condB[0].lhs.quantity, "FWCT");
     BOOST_CHECK(condB[0].cmp == Action::Condition::Comparator::LESS_EQUAL);
     BOOST_CHECK(condB[0].logic == Action::Condition::Logical::END);
@@ -815,7 +815,7 @@ TSTEP
 
     const auto& actA = actions2.get("A");
     const auto& condA = actA.conditions();
-    BOOST_CHECK_EQUAL(condA.size() , 1);
+    BOOST_CHECK_EQUAL(condA.size() , 1U);
     BOOST_CHECK_EQUAL(condA[0].lhs.quantity, "WOPR");
     BOOST_CHECK(condA[0].cmp == Action::Condition::Comparator::EQUAL);
     BOOST_CHECK(condA[0].logic == Action::Condition::Logical::END);
@@ -854,26 +854,26 @@ BOOST_AUTO_TEST_CASE(ActionState) {
     Action::ActionX action1("NAME", 100, 100, 100); action1.update_id(100);
     Action::ActionX action2("NAME", 100, 100, 100); action1.update_id(200);
 
-    BOOST_CHECK_EQUAL(0, st.run_count(action1));
+    BOOST_CHECK_EQUAL(0U, st.run_count(action1));
     BOOST_CHECK_THROW( st.run_time(action1), std::out_of_range);
 
     st.add_run(action1, 100);
-    BOOST_CHECK_EQUAL(1, st.run_count(action1));
+    BOOST_CHECK_EQUAL(1U, st.run_count(action1));
     BOOST_CHECK_EQUAL(100, st.run_time(action1));
 
     st.add_run(action1, 1000);
-    BOOST_CHECK_EQUAL(2, st.run_count(action1));
+    BOOST_CHECK_EQUAL(2U, st.run_count(action1));
     BOOST_CHECK_EQUAL(1000, st.run_time(action1));
 
-    BOOST_CHECK_EQUAL(0, st.run_count(action2));
+    BOOST_CHECK_EQUAL(0U, st.run_count(action2));
     BOOST_CHECK_THROW( st.run_time(action2), std::out_of_range);
 
     st.add_run(action2, 100);
-    BOOST_CHECK_EQUAL(1, st.run_count(action2));
+    BOOST_CHECK_EQUAL(1U, st.run_count(action2));
     BOOST_CHECK_EQUAL(100, st.run_time(action2));
 
     st.add_run(action2, 1000);
-    BOOST_CHECK_EQUAL(2, st.run_count(action2));
+    BOOST_CHECK_EQUAL(2U, st.run_count(action2));
     BOOST_CHECK_EQUAL(1000, st.run_time(action2));
 }
 
@@ -925,6 +925,6 @@ ENDACTIO
 
     Action::State st;
     st.add_run(action1, 1000);
-    BOOST_CHECK_EQUAL( st.run_count(action1), 1);
-    BOOST_CHECK_EQUAL( st.run_count(action2), 0);
+    BOOST_CHECK_EQUAL( st.run_count(action1), 1U);
+    BOOST_CHECK_EQUAL( st.run_count(action2), 0U);
 }

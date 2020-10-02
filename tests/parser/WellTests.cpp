@@ -100,7 +100,7 @@ BOOST_AUTO_TEST_CASE(WellCOMPDATtestTRACK) {
 
     //Verify TRACK completion ordering
     for (size_t k = 0; k < completions.size(); ++k) {
-        BOOST_CHECK_EQUAL(completions.get( k ).getK(), k);
+        BOOST_CHECK_EQUAL(completions.get( k ).getK(), int(k));
     }
 
     // Output / input ordering
@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE(WellCOMPDATtestDefaultTRACK) {
 
     //Verify TRACK completion ordering
     for (size_t k = 0; k < completions.size(); ++k) {
-        BOOST_CHECK_EQUAL(completions.get( k ).getK(), k);
+        BOOST_CHECK_EQUAL(completions.get( k ).getK(), int(k));
     }
 }
 

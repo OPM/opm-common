@@ -33,13 +33,13 @@ BOOST_AUTO_TEST_CASE( CreateTest ) {
     TableSchema schema;
     ColumnSchema col1("Name1" , Table::INCREASING , Table::DEFAULT_NONE);
     ColumnSchema col2("Name2" , Table::INCREASING , Table::DEFAULT_NONE);
-    BOOST_CHECK_EQUAL( 0 , schema.size( ) );
+    BOOST_CHECK_EQUAL( 0U , schema.size( ) );
 
     schema.addColumn( col1 );
-    BOOST_CHECK_EQUAL( 1 , schema.size( ) );
+    BOOST_CHECK_EQUAL( 1U , schema.size( ) );
 
     schema.addColumn( col2 );
-    BOOST_CHECK_EQUAL( 2 , schema.size( ) );
+    BOOST_CHECK_EQUAL( 2U , schema.size( ) );
 
     BOOST_CHECK_THROW( schema.getColumn( "NO/NOT/THIS/COLUMN" ) , std::invalid_argument );
     BOOST_CHECK_THROW( schema.getColumn( 5 ) , std::invalid_argument );

@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(Test_Logger) {
         auto counter2 = logger.getBackend<CounterLog>("COUNTER");
         BOOST_CHECK_EQUAL( 1U , counter2->numMessages( Log::MessageType::Warning));
         BOOST_CHECK_EQUAL( 1U , counter2->numMessages( Log::MessageType::Error));
-        BOOST_CHECK_EQUAL( 0  , counter2->numMessages( Log::MessageType::Info));
+        BOOST_CHECK_EQUAL( 0U , counter2->numMessages( Log::MessageType::Info));
     }
 
     BOOST_CHECK_EQUAL( false , logger.removeBackend("NO-not-found"));
@@ -177,14 +177,14 @@ BOOST_AUTO_TEST_CASE( CounterLogTesting) {
 
     BOOST_CHECK_EQUAL(1U , counter.numMessages( Log::MessageType::Error ));
     BOOST_CHECK_EQUAL(1U , counter.numMessages( Log::MessageType::Warning ));
-    BOOST_CHECK_EQUAL(0  , counter.numMessages( Log::MessageType::Info ));
+    BOOST_CHECK_EQUAL(0U , counter.numMessages( Log::MessageType::Info ));
     BOOST_CHECK_EQUAL(1U  , counter.numMessages( Log::MessageType::Note ));
 
     {
         int64_t not_enabled = 4096;
         int64_t not_power2  = 4095;
 
-        BOOST_CHECK_EQUAL( 0 , counter.numMessages( not_enabled ));
+        BOOST_CHECK_EQUAL( 0U , counter.numMessages( not_enabled ));
         BOOST_CHECK_THROW( counter.numMessages( not_power2 ) , std::invalid_argument);
     }
 }
@@ -231,9 +231,9 @@ BOOST_AUTO_TEST_CASE(TestOpmLog) {
     {
         auto counter = OpmLog::getBackend<CounterLog>("COUNTER");
 
-        BOOST_CHECK_EQUAL( 1 , counter->numMessages(Log::MessageType::Error) );
-        BOOST_CHECK_EQUAL( 1 , counter->numMessages(Log::MessageType::Warning) );
-        BOOST_CHECK_EQUAL( 0 , counter->numMessages(Log::MessageType::Info) );
+        BOOST_CHECK_EQUAL( 1U , counter->numMessages(Log::MessageType::Error) );
+        BOOST_CHECK_EQUAL( 1U , counter->numMessages(Log::MessageType::Warning) );
+        BOOST_CHECK_EQUAL( 0U , counter->numMessages(Log::MessageType::Info) );
     }
 
     BOOST_CHECK_EQUAL( log_stream.str() , "Warning\n");
@@ -301,10 +301,10 @@ BOOST_AUTO_TEST_CASE(TestOpmLogWithColors)
     {
         auto counter = OpmLog::getBackend<CounterLog>("COUNTER");
 
-        BOOST_CHECK_EQUAL( 1 , counter->numMessages(Log::MessageType::Error) );
-        BOOST_CHECK_EQUAL( 1 , counter->numMessages(Log::MessageType::Warning) );
-        BOOST_CHECK_EQUAL( 1 , counter->numMessages(Log::MessageType::Info) );
-        BOOST_CHECK_EQUAL( 1 , counter->numMessages(Log::MessageType::Bug) );
+        BOOST_CHECK_EQUAL( 1U , counter->numMessages(Log::MessageType::Error) );
+        BOOST_CHECK_EQUAL( 1U , counter->numMessages(Log::MessageType::Warning) );
+        BOOST_CHECK_EQUAL( 1U , counter->numMessages(Log::MessageType::Info) );
+        BOOST_CHECK_EQUAL( 1U , counter->numMessages(Log::MessageType::Bug) );
     }
 
 

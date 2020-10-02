@@ -143,7 +143,7 @@ BOOST_AUTO_TEST_CASE(ActiveCompletions) {
     grid.resetACTNUM( actnum);
 
     Opm::WellConnections active_completions(completions, grid);
-    BOOST_CHECK_EQUAL( active_completions.size() , 2);
+    BOOST_CHECK_EQUAL( active_completions.size() , 2U);
     BOOST_CHECK_EQUAL( completion2, active_completions.get(0));
     BOOST_CHECK_EQUAL( completion3, active_completions.get(1));
 }

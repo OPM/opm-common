@@ -177,7 +177,7 @@ BOOST_AUTO_TEST_CASE(EMPTY) {
     EclipseState state( deck );
     Schedule schedule(deck, state, python);
     SummaryConfig conf(deck, schedule, state.getTableManager());
-    BOOST_CHECK_EQUAL( conf.size(), 0 );
+    BOOST_CHECK_EQUAL( conf.size(), 0U );
 }
 
 BOOST_AUTO_TEST_CASE(wells_missingI) {
@@ -203,7 +203,7 @@ BOOST_AUTO_TEST_CASE(wells_select) {
             wells.begin(), wells.end(),
             names.begin(), names.end() );
 
-    BOOST_CHECK_EQUAL( summary.size(), 2 );
+    BOOST_CHECK_EQUAL( summary.size(), 2U );
 }
 
 BOOST_AUTO_TEST_CASE(groups_all) {
@@ -604,7 +604,7 @@ BOOST_AUTO_TEST_CASE( summary_FMWSET ) {
 BOOST_AUTO_TEST_CASE(FMWPA) {
     const auto input = "FMWPA\n";
     const auto summary = createSummary( input );
-    BOOST_CHECK_EQUAL(1 , summary.size() );
+    BOOST_CHECK_EQUAL(1U , summary.size() );
 }
 
 
@@ -1138,7 +1138,7 @@ ROPT_REG
 /
 )";
     const auto& summary_config = createSummary(deck_string);
-    BOOST_CHECK_EQUAL(summary_config.size(), 6);
+    BOOST_CHECK_EQUAL(summary_config.size(), 6U);
     BOOST_CHECK(summary_config.hasKeyword("RPR__REG"));
     BOOST_CHECK(summary_config.hasKeyword("ROPT_REG"));
     BOOST_CHECK(!summary_config.hasKeyword("RPR"));
@@ -1150,7 +1150,7 @@ ROPT_REG
     }
 
     const auto& fip_regions = summary_config.fip_regions();
-    BOOST_CHECK_EQUAL(fip_regions.size(), 1);
+    BOOST_CHECK_EQUAL(fip_regions.size(), 1U);
 
     auto reg_iter = fip_regions.find("FIPREG");
     BOOST_CHECK( reg_iter != fip_regions.end() );
@@ -1160,5 +1160,5 @@ ROPT_REG
     BOOST_CHECK(wkeywords.empty());
 
     auto rpr = summary_config.keywords("RP*");
-    BOOST_CHECK_EQUAL(rpr.size(), 3);
+    BOOST_CHECK_EQUAL(rpr.size(), 3U);
 }
