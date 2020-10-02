@@ -73,7 +73,7 @@ namespace {
         "WWPT",
         // ALL will not expand to these keywords yet
         // Analytical aquifer keywords
-        "AAQR",  "AAQRG", "AAQT", "AAQTG", "AAQP"
+        "AAQR",  "AAQRG", "AAQT", "AAQTG"
     };
 
     const std::vector<std::string> GMWSET_keywords = {
@@ -351,6 +351,19 @@ inline void keywordW( SummaryConfig::keyword_list& list,
     for (const auto& wname : well_names)
         list.push_back( baseWellParam.namedEntity(wname) );
 }
+
+inline void keywordAquifer( SummaryConfig::keyword_list& list,
+                            const AquiferConfig& aquiferConfig,
+                            SummaryConfigNode baseAquiferParam) {
+    if ( !aquiferConfig.active() ) return;
+
+    for (const auto& aq : aquiferConfig.ct()) {
+        list.push_back(baseAquiferParam.number(aq.aquiferID));
+    }
+    for (const auto& aq : aquiferConfig.fetp()) {
+        list.push_back(baseAquiferParam.number(aq.aquiferID));
+    }
+}
 // later check whether parseContext and errors are required
 // maybe loc will be needed
 inline void keywordAquifer( SummaryConfig::keyword_list& list,
@@ -370,12 +383,7 @@ inline void keywordAquifer( SummaryConfig::keyword_list& list,
             list.push_back(param.number(id));
         }
     } else {
-       for (const auto& aq : aquiferConfig.ct()) {
-           list.push_back(param.number(aq.aquiferID));
-       }
-       for (const auto& aq : aquiferConfig.fetp()) {
-           list.push_back(param.number(aq.aquiferID));
-       }
+        keywordAquifer(list, aquiferConfig, param);
     }
 }
 
@@ -544,6 +552,7 @@ inline void keywordF( SummaryConfig::keyword_list& list,
 
 inline void keywordAquifer( SummaryConfig::keyword_list& list,
                             const std::string& keyword,
+                            const AquiferConfig& aquiferConfig,
                             KeywordLocation loc) {
     auto param = SummaryConfigNode {
             keyword, SummaryConfigNode::Category::Aquifer, std::move(loc)
@@ -551,7 +560,7 @@ inline void keywordAquifer( SummaryConfig::keyword_list& list,
             .parameterType( parseKeywordType(keyword) )
             .isUserDefined( is_udq(keyword) );
 
-    list.push_back( std::move(param) );
+    keywordAquifer(list, aquiferConfig, param);
 }
 
 inline void keywordF( SummaryConfig::keyword_list& list,
@@ -945,11 +954,11 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
     }
 }
 
-
 inline void handleKW( SummaryConfig::keyword_list& list,
                       const std::string& keyword,
                       const KeywordLocation& location,
                       const Schedule& schedule,
+                      const AquiferConfig& aquiferConfig,
                       const ParseContext& /* parseContext */,
                       ErrorGuard& /* errors */) {
 
@@ -964,7 +973,7 @@ inline void handleKW( SummaryConfig::keyword_list& list,
         case Cat::Well: return keywordW( list, keyword, location, schedule );
         case Cat::Group: return keywordG( list, keyword, location, schedule );
         case Cat::Field: return keywordF( list, keyword, location );
-        case Cat::Aquifer: return keywordAquifer( list, keyword, location );
+        case Cat::Aquifer: return keywordAquifer( list, keyword, aquiferConfig, location );
         case Cat::Miscellaneous: return keywordMISC( list, keyword, location);
 
         default:
@@ -1191,7 +1200,7 @@ SummaryConfig::SummaryConfig( const Deck& deck,
                 const auto& deck_keyword = section.getKeyword(meta_pair.first);
                 for (const auto& kw : meta_pair.second) {
                     if (!this->hasKeyword(kw))
-                        handleKW(this->m_keywords, kw, deck_keyword.location(), schedule, parseContext, errors);
+                        handleKW(this->m_keywords, kw, deck_keyword.location(), schedule, aquiferConfig, parseContext, errors);
                 }
             }
         }
