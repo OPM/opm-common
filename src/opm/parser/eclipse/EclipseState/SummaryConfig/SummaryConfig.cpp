@@ -265,11 +265,6 @@ namespace {
         return false;
     }
 
-    bool is_aquifer(const std::string& keyword)
-    {
-        return (keyword[0] == 'A') && (keyword != "ALL");
-    }
-
     bool is_node_keyword(const std::string& keyword)
     {
         static const auto nodekw = keyword_set {
@@ -360,10 +355,10 @@ inline void keywordW( SummaryConfig::keyword_list& list,
 // maybe loc will be needed
 inline void keywordAquifer( SummaryConfig::keyword_list& list,
                             const AquiferConfig& aquiferConfig,
-                            const ParseContext& parseContext,
-                            ErrorGuard& errors,
+                            const ParseContext& /* parseContext */,
+                            ErrorGuard& /* errors */,
                             const DeckKeyword& keyword,
-                            const Schedule& schedule) {
+                            const Schedule& /* schedule */) {
     auto param = SummaryConfigNode {
         keyword.name(), SummaryConfigNode::Category::Aquifer, keyword.location()
     }
@@ -955,19 +950,12 @@ inline void handleKW( SummaryConfig::keyword_list& list,
                       const std::string& keyword,
                       const KeywordLocation& location,
                       const Schedule& schedule,
-                      const ParseContext& parseContext,
-                      ErrorGuard& errors) {
+                      const ParseContext& /* parseContext */,
+                      ErrorGuard& /* errors */) {
 
 
     if (is_udq(keyword))
         throw std::logic_error("UDQ keywords not handleded when expanding alias list");
-
-/*     if (is_aquifer(keyword)) {
-        std::string msg = "Summary output keyword {keyword} of type AQUIFER is not supported\n"
-                          "In {{file}} line {{line}}";
-        parseContext.handleError(ParseContext::SUMMARY_UNHANDLED_KEYWORD, msg, location, errors);
-        return;
-    } */
 
     using Cat = SummaryConfigNode::Category;
     const auto cat = parseKeywordCategory( keyword );
