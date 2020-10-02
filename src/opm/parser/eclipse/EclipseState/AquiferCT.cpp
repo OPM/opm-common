@@ -19,6 +19,8 @@
 
 #include <opm/parser/eclipse/EclipseState/AquiferCT.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/common/utility/OpmInputError.hpp>
+#include <opm/common/OpmLog/OpmLog.hpp>
 
 namespace Opm {
 
@@ -138,6 +140,7 @@ AquiferCT::AquiferCT(const TableManager& tables, const Deck& deck)
         return;
 
     const auto& aquctKeyword = deck.getKeyword<AQUCT>();
+    OpmLog::info(OpmInputError::format("Initializing Carter Tracey aquifers from {keyword} in {file} line {line}", aquctKeyword.location()));
     for (auto& record : aquctKeyword)
         this->m_aquct.emplace_back(record, tables);
 }

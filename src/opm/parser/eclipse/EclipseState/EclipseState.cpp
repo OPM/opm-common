@@ -62,14 +62,14 @@ namespace Opm {
           m_gridDims(          deck ),
           field_props(         deck, m_runspec.phases(), m_inputGrid, m_tables),
           m_simulationConfig(  m_eclipseConfig.getInitConfig().restartRequested(), deck, field_props),
-          m_transMult(         GridDims(deck), deck, field_props)
+          m_transMult(         GridDims(deck), deck, field_props),
+          tracer_config(       m_deckUnitSystem, deck)
     {
         m_inputGrid.resetACTNUM(this->field_props.actnum());
         if( this->runspec().phases().size() < 3 )
-            OpmLog::info("Only " + std::to_string( this->runspec().phases().size() )
-                                                                + " fluid phases are enabled" );
+            OpmLog::info(fmt::format("Only {} fluid phases are enabled",  this->runspec().phases().size() ));
+
         this->aquifer_config = AquiferConfig(this->m_tables, this->m_inputGrid, deck);
-        this->tracer_config = TracerConfig(this->m_deckUnitSystem, deck);
 
         if (deck.hasKeyword( "TITLE" )) {
             const auto& titleKeyword = deck.getKeyword( "TITLE" );
@@ -80,8 +80,8 @@ namespace Opm {
             m_title.pop_back();
         }
 
-        initTransMult();
-        initFaults(deck);
+        this->initTransMult();
+        this->initFaults(deck);
         this->field_props.reset_actnum( this->m_inputGrid.getACTNUM() );
     }
     catch (const OpmInputError& opm_error) {
@@ -231,6 +231,7 @@ namespace Opm {
     void EclipseState::setMULTFLT(const DeckSection& section) {
         for (size_t index=0; index < section.count("MULTFLT"); index++) {
             const auto& faultsKeyword = section.getKeyword("MULTFLT" , index);
+            OpmLog::info(OpmInputError::format("Applying {keyword} in {file} line {line}", faultsKeyword.location()));
             for (auto iter = faultsKeyword.begin(); iter != faultsKeyword.end(); ++iter) {
 
                 const auto& faultRecord = *iter;
@@ -238,6 +239,7 @@ namespace Opm {
                 double multFlt = faultRecord.getItem(1).get< double >(0);
 
                 m_faults.setTransMult( faultName , multFlt );
+                OpmLog::info(fmt::format("Setting fault transmissibility multiplier {} for fault {}", multFlt, faultName));
             }
         }
     }

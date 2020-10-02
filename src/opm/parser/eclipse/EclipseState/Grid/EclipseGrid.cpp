@@ -209,7 +209,7 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
       m_multzMode(PinchMode::ModeEnum::TOP),
       m_pinchGapMode(PinchMode::ModeEnum::GAP)
 {
-
+    OpmLog::info("Creating grid");
     if (deck.hasKeyword("GDFILE")){
 
         if (deck.hasKeyword("COORD")){
