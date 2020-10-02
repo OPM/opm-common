@@ -94,3 +94,26 @@ Internal error: Runtime Error)" };
         BOOST_CHECK_EQUAL(opm_error.what(), expected);
     }
 }
+
+const Opm::KeywordLocation location2 { "MZUNSUPP", "FILENAME.DAT", 45 } ;
+
+BOOST_AUTO_TEST_CASE(exception_multi_1) {
+    const std::string expected { R"(Problem parsing keyword MXUNSUPP
+In FILENAME.DAT line 42
+Parse error: Runtime Error)" } ;
+
+    const std::string formatted { Opm::OpmInputError({ location }, "Runtime Error").what() } ;
+
+    BOOST_CHECK_EQUAL(formatted, expected);
+}
+
+BOOST_AUTO_TEST_CASE(exception_multi_2) {
+    const std::string expected { R"(Problem parsing keywords 
+  MXUNSUPP in FILENAME.DAT, line 42
+  MZUNSUPP in FILENAME.DAT, line 45
+Parse error: Runtime Error)" } ;
+
+    const std::string formatted { Opm::OpmInputError({ location, location2 }, "Runtime Error").what() } ;
+
+    BOOST_CHECK_EQUAL(formatted, expected);
+}

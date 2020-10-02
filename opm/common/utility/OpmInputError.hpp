@@ -91,8 +91,17 @@ public:
         locations { loc }
     {}
 
+    OpmInputError(const KeywordLocation& loc, const std::string& reason)
+        : m_what    { OpmInputError::formatSingle(reason, loc) }
+        , locations { loc }
+    {}
+
     OpmInputError(const std::vector<KeywordLocation>& locations, const std::string& reason)
-        : m_what    { OpmInputError::formatMultiple(reason, locations) }
+        : m_what {
+                locations.size() == 1
+                ? OpmInputError::formatSingle(reason, locations[0])
+                : OpmInputError::formatMultiple(reason, locations)
+            }
         , locations { locations }
     {}
 
@@ -104,7 +113,6 @@ public:
 
     static std::string format(const std::string& msg_format, const KeywordLocation& loc);
     static std::string formatException(const KeywordLocation& loc, const std::exception& e);
-    static std::string formatMultiple(const std::string& reason, const std::vector<KeywordLocation>&);
 
 private:
     std::string m_what;
@@ -113,6 +121,9 @@ private:
     // passed in the constructor we might not have captured all the information
     // in the location argument passed to the constructor.
     std::vector<KeywordLocation> locations;
+
+    static std::string formatSingle(const std::string& reason, const KeywordLocation&);
+    static std::string formatMultiple(const std::string& reason, const std::vector<KeywordLocation>&);
 };
 
 }

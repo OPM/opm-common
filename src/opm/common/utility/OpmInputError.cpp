@@ -51,14 +51,22 @@ std::string OpmInputError::format(const std::string& msg_format, const KeywordLo
 
 namespace {
 
-    std::string formatSingle(const KeywordLocation& loc) {
+    std::string locationStringLine(const KeywordLocation& loc) {
         return OpmInputError::format("\n  {keyword} in {file}, line {line}", loc);
     }
 }
 
+std::string OpmInputError::formatSingle(const std::string& reason, const KeywordLocation& location) {
+    const std::string defaultMessage { R"(Problem parsing keyword {{keyword}}
+In {{file}} line {{line}}
+Parse error: {})" } ;
+
+    return format(fmt::format(defaultMessage, reason), location);
+}
+
 std::string OpmInputError::formatMultiple(const std::string& reason, const std::vector<KeywordLocation>& locations) {
     std::vector<std::string> locationStrings;
-    std::transform(locations.begin(), locations.end(), std::back_inserter(locationStrings), &formatSingle);
+    std::transform(locations.begin(), locations.end(), std::back_inserter(locationStrings), &locationStringLine);
     const std::string messages { std::accumulate(locationStrings.begin(), locationStrings.end(), std::string {}) } ;
 
     return fmt::format(R"(Problem parsing keywords {}

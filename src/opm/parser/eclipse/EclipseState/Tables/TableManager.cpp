@@ -632,11 +632,11 @@ namespace Opm {
         const auto& tableKeyword = deck.getKeyword(keywordName);
 
         if (tableKeyword.size() > 2) {
-            const std::string msg {
+            const std::string reason {
                 "The Parser does currently NOT support the alternating record schema used in PLYSHLOG"
             } ;
 
-            throw OpmInputError(msg, tableKeyword.location());
+            throw OpmInputError(tableKeyword.location(), reason);
         }
 
         for (size_t tableIdx = 0; tableIdx < tableKeyword.size(); tableIdx += 2) {
@@ -669,13 +669,13 @@ namespace Opm {
             if (m_plymwinjTables.find(table_number) == m_plymwinjTables.end()) {
                 m_plymwinjTables.insert(std::make_pair(table_number, std::move(table)));
             } else {
-                const std::string msg {
+                const std::string reason {
                     "Duplicated table number " +
                     std::to_string(table_number) +
                     " for keyword PLYMWINJ found"
                 } ;
 
-                throw OpmInputError(msg, keyword.location());
+                throw OpmInputError(keyword.location(), reason);
             }
         }
     }
@@ -699,13 +699,13 @@ namespace Opm {
             if (m_skprwatTables.find(table_number) == m_skprwatTables.end()) {
                 m_skprwatTables.insert(std::make_pair(table_number, std::move(table)));
             } else {
-                const std::string msg {
+                const std::string reason {
                     "Duplicated table number " +
                     std::to_string(table_number) +
                     " for keyword SKPRWAT found"
                 } ;
 
-                throw OpmInputError(msg, keyword.location());
+                throw OpmInputError(keyword.location(), reason);
             }
         }
     }
@@ -729,13 +729,13 @@ namespace Opm {
             if (m_skprpolyTables.find(table_number) == m_skprpolyTables.end()) {
                 m_skprpolyTables.insert(std::make_pair(table_number, std::move(table)));
             } else {
-                const std::string msg {
+                const std::string reason {
                     "Duplicated table number " +
                     std::to_string(table_number) +
                     " for keyword SKPRPOLY found"
                 } ;
 
-                throw OpmInputError(msg, keyword.location());
+                throw OpmInputError(keyword.location(), reason);
             }
         }
     }
@@ -802,12 +802,12 @@ namespace Opm {
         bool isDirectional = deck.hasKeyword<ParserKeywords::RKTRMDIR>();
         if (isDirectional) {
             const auto& keyword = deck.getKeyword<ParserKeywords::RKTRMDIR>();
-            const std::string msg {
+            const std::string reason {
                 "RKTRMDIR is in the deck. Flow does not support directional rock compaction mulipliers.\n"
                 "Make sure that your ROCKTAB table only has 3 columns)"
             } ;
 
-            throw OpmInputError(msg, keyword.location());
+            throw OpmInputError(keyword.location(), reason);
         }
 
         bool useStressOption = false;
@@ -818,9 +818,9 @@ namespace Opm {
             useStressOption = (item.getTrimmedString(0) == "STRESS");
 
             if (useStressOption) {
-                const std::string msg { "STRESS option is set in ROCKOPTS. Flow does not support stress option in rock compaction mulipliers" } ;
+                const std::string reason { "STRESS option is set in ROCKOPTS. Flow does not support stress option in rock compaction mulipliers" } ;
 
-                throw OpmInputError(msg, rockoptsKeyword.location());
+                throw OpmInputError(rockoptsKeyword.location(), reason);
             }
         }
 
