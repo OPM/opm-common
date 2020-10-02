@@ -69,6 +69,7 @@ namespace Opm {
                 well_potential_oil     = (1 << 15),
                 well_potential_gas     = (1 << 16),
                 brine            = (1 << 17),
+                alq              = (1 << 18)
             };
 
             using enum_size = std::underlying_type< opt >::type;
@@ -121,6 +122,7 @@ namespace Opm {
             double well_potential_oil = 0.0;
             double well_potential_gas = 0.0;
             double brine = 0.0;
+            double alq = 0.0;
     };
 
     struct Connection {
@@ -411,7 +413,8 @@ namespace Opm {
              well_potential_water == rate.well_potential_water &&
              well_potential_oil == rate.well_potential_oil &&
              well_potential_gas == rate.well_potential_gas &&
-             brine == rate.brine;
+             brine == rate.brine &&
+             alq == rate.alq;
     }
 
 
@@ -444,6 +447,7 @@ namespace Opm {
             case opt::well_potential_oil: return this->well_potential_oil;
             case opt::well_potential_gas: return this->well_potential_gas;
             case opt::brine: return this->brine;
+            case opt::alq: return this->alq;
         }
 
         throw std::invalid_argument(
@@ -491,6 +495,7 @@ namespace Opm {
             buffer.write(this->well_potential_oil);
             buffer.write(this->well_potential_gas);
             buffer.write(this->brine);
+            buffer.write(this->alq);
     }
 
     template <class MessageBufferType>
@@ -571,6 +576,7 @@ namespace Opm {
             buffer.read(this->well_potential_oil);
             buffer.read(this->well_potential_gas);
             buffer.read(this->brine);
+            buffer.read(this->alq);
     }
 
   template <class MessageBufferType>

@@ -69,7 +69,7 @@ namespace {
         "WBHP",  "WGIR",  "WGIT", "WGOR",  "WGPR", "WGPT",  "WOIR",
         "WOIT",  "WOPR",  "WOPT", "WPI",   "WTHP", "WVIR",  "WVIT",
         "WVPR",  "WVPT",  "WWCT", "WWGR",  "WWIR", "WWIT",  "WWPR",
-        "WWPT",
+        "WWPT",  "WGLIR",
         // ALL will not expand to these keywords yet
         "AAQR",  "AAQRG", "AAQT", "AAQTG"
     };
@@ -196,7 +196,7 @@ namespace {
 
     bool is_rate(const std::string& keyword) {
         static const keyword_set ratekw {
-            "OPR", "GPR", "WPR", "LPR", "NPR", "VPR",
+            "OPR", "GPR", "WPR", "GLIR", "LPR", "NPR", "VPR",
             "OPGR", "GPGR", "WPGR", "VPGR",
             "OPRH", "GPRH", "WPRH", "LPRH",
             "OVPR", "GVPR", "WVPR",
