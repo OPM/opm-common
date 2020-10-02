@@ -142,7 +142,7 @@ namespace {
                 if (location) {
                     std::string fmt_message = fmt::format("Problem with keyword {{keyword}}\n"
                                                           "In {{file}} line {{line}}\n"
-                                                          "The case has a maximum group size of {0} wells, the WELLDIMS keyword specifies {1}.\n"
+                                                          "The case has a maximum group size of {0} wells/groups, the WELLDIMS keyword specifies {1}.\n"
                                                           "Please increase item 4 in WELLDIMS to at least {0}", size, wdims.maxWellsPerGroup());
 
                     ctxt.handleError(Opm::ParseContext::RUNSPEC_GROUPSIZE_TOO_LARGE,
