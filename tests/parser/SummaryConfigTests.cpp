@@ -258,6 +258,22 @@ BOOST_AUTO_TEST_CASE(blocks) {
             names.begin(), names.end() );
 }
 
+BOOST_AUTO_TEST_CASE(aquifer) {
+    const auto input = "AAQR\n"
+                       " 1 2 /\n"
+                       "AAQT\n"
+                       " 1 /\n"
+                       "AAQP\n"
+                       " 1  2 3/\n";
+    const auto summary = createSummary( input );
+    const auto keywords = { "AAQP", "AAQP", "AAQP", "AAQR", "AAQR", "AAQT" };
+    const auto names = sorted_keywords( summary );
+
+    BOOST_CHECK_EQUAL_COLLECTIONS(
+            keywords.begin(), keywords.end(),
+            names.begin(), names.end() );
+}
+
 BOOST_AUTO_TEST_CASE(regions) {
     const auto input = "ROIP\n"
                        "1 2 3 /\n"

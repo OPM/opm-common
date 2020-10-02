@@ -21,8 +21,6 @@
 #define OPM_OUTPUT_SUMMARY_HPP
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp>
-
-// TODO: following the convention here, it should be removed.
 #include <opm/output/data/Aquifer.hpp>
 
 #include <map>
