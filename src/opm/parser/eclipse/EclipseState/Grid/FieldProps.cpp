@@ -19,6 +19,8 @@
 #include <algorithm>
 #include <unordered_map>
 
+#include <opm/common/utility/OpmInputError.hpp>
+
 #include <opm/parser/eclipse/Parser/ParserKeywords/A.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/B.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/C.hpp>
@@ -859,7 +861,7 @@ void FieldProps::handle_operation(const DeckKeyword& keyword, Box box) {
             continue;
         }
 
-        //throw std::out_of_range("The keyword: " + target_kw + " is not supported");
+        throw OpmInputError("Operation keyword " + keyword.name() + " does not support the keyword " + target_kw, keyword.location());
     }
 }
 
