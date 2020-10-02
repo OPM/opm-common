@@ -892,15 +892,17 @@ void staticContrib(const Opm::Schedule&     sched,
     }
 
     //find parent group and store index of parent group in
-    //location nwgmax + 28
+    //location nwgmax + IGroup::ParentGroup
+
+    using IGroup = ::Opm::RestartIO::Helpers::VectorItems::IGroup::index;
     if (group.name() == "FIELD")
-        iGrp[nwgmax+28] = 0;
+        iGrp[nwgmax + IGroup::ParentGroup] = 0;
     else {
         const auto& parent_group = sched.getGroup(group.parent(), simStep);
         if (parent_group.name() == "FIELD")
-            iGrp[nwgmax+28] = ngmaxz;
+            iGrp[nwgmax + IGroup::ParentGroup] = ngmaxz;
         else
-            iGrp[nwgmax+28] = parent_group.insert_index();
+            iGrp[nwgmax + IGroup::ParentGroup] = parent_group.insert_index();
     }
 
 }
