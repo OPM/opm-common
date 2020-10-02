@@ -468,10 +468,17 @@ double efac( const std::vector<std::pair<std::string,double>>& eff_factors, cons
 }
 
 inline quantity alqrate( const fn_args& args ) {
+    const quantity zero = { 0.0, measure::gas_surface_rate };
+
+    if (args.schedule_wells.empty()) {
+        // No wells.  Before simulation starts?
+        return zero;
+    }
+
     const auto& well = args.schedule_wells.front();
     auto xwPos = args.wells.find(well.name());
     if (xwPos == args.wells.end()) {
-        return { 0.0, measure::gas_surface_rate };
+        return zero;
     }
 
     return { xwPos->second.rates.get(rt::alq, 0.0), measure::gas_surface_rate };
