@@ -32,6 +32,7 @@ struct RstHeader;
 
 struct RstGroup {
     RstGroup(const UnitSystem& unit_system,
+             const RstHeader& header,
              const std::string* zwel,
              const int * igrp,
              const float * sgrp,

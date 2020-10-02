@@ -33,12 +33,13 @@ namespace RestartIO {
 using M  = ::Opm::UnitSystem::measure;
 
 RstGroup::RstGroup(const ::Opm::UnitSystem& unit_system,
+                   const RstHeader& header,
                    const std::string* zwel,
                    const int * igrp,
                    const float * sgrp,
                    const double * xgrp) :
     name(trim_copy(zwel[0])),
-    parent_group(igrp[VI::IGroup::ParentGroup] ),
+    parent_group(igrp[header.nwgmax + VI::IGroup::ParentGroup] ),
     oil_rate_limit(                unit_system.to_si(M::liquid_surface_rate,   sgrp[VI::SGroup::OilRateLimit])),
     water_rate_limit(              unit_system.to_si(M::liquid_surface_rate,   sgrp[VI::SGroup::WatRateLimit])),
     gas_rate_limit(                unit_system.to_si(M::gas_surface_rate,      sgrp[VI::SGroup::GasRateLimit])),

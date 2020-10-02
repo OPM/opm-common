@@ -247,6 +247,7 @@ BOOST_AUTO_TEST_CASE(group_test) {
         std::size_t xgrp_offset = ig * header.nxgrpz;
 
         Opm::RestartIO::RstGroup group(unit_system,
+                                       header,
                                        zgrp.data() + zgrp_offset,
                                        igrp.data() + igrp_offset,
                                        sgrp.data() + sgrp_offset,

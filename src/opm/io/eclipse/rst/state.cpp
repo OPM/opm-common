@@ -181,6 +181,7 @@ void RstState::add_groups(const std::vector<std::string>& zgrp,
         std::size_t xgrp_offset = ig * this->header.nxgrpz;
 
         this->groups.emplace_back(this->unit_system,
+                                  this->header,
                                   zgrp.data() + zgrp_offset,
                                   igrp.data() + igrp_offset,
                                   sgrp.data() + sgrp_offset,
