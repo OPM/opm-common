@@ -1332,7 +1332,6 @@ void SummaryConfig::handleProcessingInstruction(const std::string& keyword) {
     } else if (keyword == "NARROW") {
         runSummaryConfig.narrow = true;
     } else if (keyword == "SEPARATE") {
-        Opm::OpmLog::info("Keyword SEPARATE has no effect (treated as always on).");
         runSummaryConfig.separate = true;
     }
 }
