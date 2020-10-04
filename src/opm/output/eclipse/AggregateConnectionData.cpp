@@ -199,6 +199,23 @@ namespace {
             sConn[Ix::item31] = -1.0e+20f;
             sConn[Ix::CFInDeck] = (conn.ctfAssignedFromInput()) ? 1 : 0;
         }
+
+        template <class SConnArray>
+        void dynamicContrib(const Opm::data::Connection& xconn,
+                            const Opm::UnitSystem&       units,
+                            SConnArray&                  sConn)
+        {
+            using M  = ::Opm::UnitSystem::measure;
+            using Ix = ::Opm::RestartIO::Helpers::VectorItems::SConn::index;
+
+            auto scprop = [&units](const M u, const double x) -> float
+            {
+                return static_cast<float>(units.from_si(u, x));
+            };
+
+            sConn[Ix::item12] = sConn[Ix::ConnTrans] =
+                scprop(M::transmissibility, xconn.trans_factor);
+        }
     } // SConn
 
     namespace XConn {
@@ -298,7 +315,11 @@ captureDeclaredConnData(const Schedule&        sched,
         SConn::staticContrib(conn, units, sc);
 
         if (dynConnRes != nullptr) {
+            // Simulator provides dynamic connection results such as flow
+            // rates and PI-adjusted transmissibility factors.
             auto xc = this->xConn_(wellID, connID);
+
+            SConn::dynamicContrib(*dynConnRes, units, sc);
             XConn::dynamicContrib(*dynConnRes, units, xc);
         }
     });

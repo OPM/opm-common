@@ -169,7 +169,7 @@ static data::Wells result_wells() {
       syncronized with the global index in the COMPDAT keyword in the
       input deck.
     */
-    data::Connection well1_comp1 { 0  , crates1, 1.9 , 123.4, 314.15, 0.35, 0.25, 2.718e2};
+    data::Connection well1_comp1 { 0  , crates1, 1.9 , 123.4, 314.15, 0.35, 0.25, 2.718e2, 0.12345};
 
     /*
       The completions
