@@ -35,6 +35,7 @@
 #include <exception>
 #include <iostream>
 #include <stdexcept>
+#include <utility>
 
 namespace VI = Opm::RestartIO::Helpers::VectorItems;
 
@@ -54,26 +55,40 @@ namespace {
     }
 
     template <class ConnOp>
-    void connectionLoop(const std::vector<Opm::Well>& wells,
-                        const Opm::EclipseGrid&       grid,
-                        const Opm::data::WellRates&   xw,
-                        ConnOp&&                      connOp)
+    void connectionLoop(const Opm::EclipseGrid& grid,
+                        const Opm::Well&        well,
+                        const std::size_t       wellID,
+                        const Opm::data::Well*  wellRes,
+                        ConnOp&&                connOp)
     {
-        for (auto nWell = wells.size(), wellID = 0*nWell;
-             wellID < nWell; ++wellID)
-        {
-            const auto& well = wells[wellID];
-            const auto well_iter = xw.find(well.name());
-            const Opm::data::Well * well_rates = (well_iter == xw.end()) ? nullptr : &well_iter->second;
-            const auto& connections = well.getConnections().output(grid);
-            std::size_t connID = 0;
-            for (const auto& conn : connections) {
-                if (well_rates)
-                    connOp(wellID, *conn, connID, well_rates->find_connection(conn->global_index()));
-                else
-                    connOp(wellID, *conn, connID, nullptr);
-                connID++;
-            }
+        std::size_t connID = 0;
+        for (const auto* connPtr : well.getConnections().output(grid)) {
+            const auto* dynConnRes = (wellRes == nullptr)
+                ? nullptr : wellRes->find_connection(connPtr->global_index());
+
+            connOp(wellID, *connPtr, connID, dynConnRes);
+
+            ++connID;
+        }
+    }
+
+    template <class ConnOp>
+    void connectionLoop(const Opm::Schedule&        sched,
+                        const std::size_t           sim_step,
+                        const Opm::EclipseGrid&     grid,
+                        const Opm::data::WellRates& xw,
+                        ConnOp&&                    connOp)
+    {
+        std::size_t wellID = 0;
+        for (const auto& wname : sched.wellNames(sim_step)) {
+            const auto  well_iter = xw.find(wname);
+            const auto* wellRes   = (well_iter == xw.end())
+                ? nullptr : &well_iter->second;
+
+            connectionLoop(grid, sched.getWell(wname, sim_step), wellID,
+                           wellRes, std::forward<ConnOp>(connOp));
+
+            ++wellID;
         }
     }
 
@@ -270,20 +285,21 @@ captureDeclaredConnData(const Schedule&        sched,
                         const data::WellRates& xw,
                         const std::size_t      sim_step)
 {
-    const auto& wells = sched.getWells(sim_step);
-    connectionLoop(wells, grid, xw, [&units, this]
-        (const std::size_t wellID,
-         const Connection& conn, const std::size_t connID,
-         const Opm::data::Connection* conn_rates) -> void
+    connectionLoop(sched, sim_step, grid, xw, [&units, this]
+        (const std::size_t       wellID,
+         const Connection&       conn,
+         const std::size_t       connID,
+         const data::Connection* dynConnRes) -> void
     {
         auto ic = this->iConn_(wellID, connID);
         auto sc = this->sConn_(wellID, connID);
 
         IConn::staticContrib(conn, connID, ic);
         SConn::staticContrib(conn, units, sc);
-        if (conn_rates) {
+
+        if (dynConnRes != nullptr) {
             auto xc = this->xConn_(wellID, connID);
-            XConn::dynamicContrib(*conn_rates, units, xc);
+            XConn::dynamicContrib(*dynConnRes, units, xc);
         }
     });
 }
