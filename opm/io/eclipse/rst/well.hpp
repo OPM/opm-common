@@ -88,6 +88,7 @@ struct RstWell {
     float datum_depth;
     float drainage_radius;
     float efficiency_factor;
+    float alq_value;
 
     double oil_rate;
     double water_rate;
