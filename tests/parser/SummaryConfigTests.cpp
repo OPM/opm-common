@@ -82,6 +82,8 @@ static Deck createDeck( const std::string& summary ) {
             " 10 10 10 /\n"
             "REGDIMS\n"
             "  3/\n"
+            "AQUDIMS\n"
+            "1* 1* 1* 1* 3 200 1* 1* /\n"
             "GRID\n"
             "DXV \n 10*400 /\n"
             "DYV \n 10*400 /\n"
@@ -100,6 +102,17 @@ static Deck createDeck( const std::string& summary ) {
             "200*1 300*2 500*3 /\n"
             "FIPREG\n"
             "200*10 300*20 500*30 /\n"
+            "SOLUTION\n"
+            "AQUCT\n"
+            "1    2040     1*    1000   .3    3.0e-5     1330     10     360.0   1   1* /\n"
+            "2    2040     1*    1000   .3    3.0e-5     1330     10     360.0   1   1* /\n"
+            "3    2040     1*    1000   .3    3.0e-5     1330     10     360.0   1   1* /\n"
+            "/\n"
+            "AQUANCON\n"
+            "1     1   10     10    2    10  10   'I-'      0.88      1  /\n"
+            "2     9   10     10    10    10  10   'I+'      0.88      1  /\n"
+            "3     9   9      8    10    9   8   'I+'      0.88      1  /\n"
+            "/\n"
             "SCHEDULE\n"
             "WELSPECS\n"
             "     \'W_1\'        \'OP\'   1   1  3.33       \'OIL\'  7* /   \n"
@@ -425,6 +438,11 @@ BOOST_AUTO_TEST_CASE(summary_ALL) {
     std::vector<std::string> all;
 
     for( std::string keyword: ALL_keywords ) {
+        if(keyword[0]=='A' && keyword !="ALL") {
+           all.push_back(keyword + ":1");
+           all.push_back(keyword + ":2");
+           all.push_back(keyword + ":3");
+        }
         if(keyword[0]=='F') {
             all.push_back(keyword);
         }

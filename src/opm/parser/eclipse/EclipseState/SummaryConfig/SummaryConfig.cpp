@@ -265,6 +265,11 @@ namespace {
         return false;
     }
 
+    bool is_aquifer(const std::string& keyword)
+    {
+        return (keyword[0] == 'A') && (keyword != "ALL");
+    }
+
     bool is_node_keyword(const std::string& keyword)
     {
         static const auto nodekw = keyword_set {
