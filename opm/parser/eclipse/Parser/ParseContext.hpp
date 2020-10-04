@@ -291,6 +291,7 @@ class KeywordLocation;
         const static std::string SUMMARY_UNKNOWN_WELL;
         const static std::string SUMMARY_UNKNOWN_GROUP;
         const static std::string SUMMARY_UNKNOWN_NODE;
+        const static std::string SUMMARY_UNKNOWN_AQUIFER;
         const static std::string SUMMARY_UNHANDLED_KEYWORD;
         const static std::string SUMMARY_UNDEFINED_UDQ;
         const static std::string SUMMARY_UDQ_MISSING_UNIT;

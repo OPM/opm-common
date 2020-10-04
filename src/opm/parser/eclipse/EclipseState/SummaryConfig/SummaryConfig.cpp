@@ -345,6 +345,12 @@ void handleMissingNode( const ParseContext& parseContext, ErrorGuard& errors, co
     parseContext.handleError( ParseContext::SUMMARY_UNKNOWN_NODE, msg_fmt, location, errors );
 }
 
+void handleMissingAquifer( const ParseContext& parseContext, ErrorGuard& errors, const KeywordLocation& location, const int id) {
+    std::string msg_fmt = fmt::format("Request for missing aquifer {} in {{keyword}}\n"
+                                      "In {{file}} line {{line}}", id);
+    parseContext.handleError(ParseContext::SUMMARY_UNKNOWN_AQUIFER, msg_fmt, location, errors);
+}
+
 inline void keywordW( SummaryConfig::keyword_list& list,
                       const std::vector<std::string>& well_names,
                       SummaryConfigNode baseWellParam) {
@@ -368,10 +374,9 @@ inline void keywordAquifer( SummaryConfig::keyword_list& list,
 // maybe loc will be needed
 inline void keywordAquifer( SummaryConfig::keyword_list& list,
                             const AquiferConfig& aquiferConfig,
-                            const ParseContext& /* parseContext */,
-                            ErrorGuard& /* errors */,
-                            const DeckKeyword& keyword,
-                            const Schedule& /* schedule */) {
+                            const ParseContext& parseContext,
+                            ErrorGuard& errors,
+                            const DeckKeyword& keyword) {
     auto param = SummaryConfigNode {
         keyword.name(), SummaryConfigNode::Category::Aquifer, keyword.location()
     }
@@ -380,7 +385,11 @@ inline void keywordAquifer( SummaryConfig::keyword_list& list,
 
     if (keyword.size() && keyword.getDataRecord().getDataItem().hasValue(0)) {
         for( const int id: keyword.getIntData()) {
-            list.push_back(param.number(id));
+            if (aquiferConfig.hasAquifer(id)) {
+                list.push_back(param.number(id));
+            } else {
+                handleMissingAquifer(parseContext, errors, keyword.location(), id);
+            }
         }
     } else {
         keywordAquifer(list, aquiferConfig, param);
@@ -943,7 +952,7 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
         case Cat::Connection: return keywordC( list, parseContext, errors, keyword, schedule, dims);
         case Cat::Segment: return keywordS( list, parseContext, errors, keyword, schedule );
         case Cat::Node: return keyword_node( list, node_names, parseContext, errors, keyword );
-        case Cat::Aquifer: return keywordAquifer(list, aquiferConfig, parseContext, errors, keyword, schedule);
+        case Cat::Aquifer: return keywordAquifer(list, aquiferConfig, parseContext, errors, keyword);
         case Cat::Miscellaneous: return keywordMISC( list, keyword );
 
         default:
@@ -997,8 +1006,7 @@ SummaryConfigNode::Category parseKeywordCategory(const std::string& keyword) {
     if (is_special(keyword)) { return Cat::Miscellaneous; }
 
     switch (keyword[0]) {
-        // TODO: maybe A and N?
-        case 'A': return Cat::Aquifer;
+        case 'A': if (is_aquifer(keyword)) return Cat::Aquifer; break;
         case 'W': return Cat::Well;
         case 'G': return distinguish_group_from_node(keyword);
         case 'F': return Cat::Field;
