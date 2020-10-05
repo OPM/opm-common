@@ -572,37 +572,38 @@ void productionGroup(const Opm::Schedule&     sched,
     Other reduction options are currently not covered in the code
     */
 
+    using IGroup = ::Opm::RestartIO::Helpers::VectorItems::IGroup::index;
     if (higher_lev_ctrl > 0 && (group.getGroupType() != Opm::Group::GroupType::NONE)) {
-        iGrp[nwgmax + 1]
+        iGrp[nwgmax + IGroup::ProdCMode]
             = (prod_guide_rate_def != Opm::Group::GuideRateTarget::NO_GUIDE_RATE) ? higher_lev_ctrl_mode : 0;
     } else {
         switch (pctl_mode) {
         case Opm::Group::ProductionCMode::NONE:
-            iGrp[nwgmax + 1] = 0;
+            iGrp[nwgmax + IGroup::ProdCMode] = 0;
             break;
         case Opm::Group::ProductionCMode::ORAT:
-            iGrp[nwgmax + 1] = 1;
+            iGrp[nwgmax + IGroup::ProdCMode] = 1;
             break;
         case Opm::Group::ProductionCMode::WRAT:
-            iGrp[nwgmax + 1] = 2;
+            iGrp[nwgmax + IGroup::ProdCMode] = 2;
             break;
         case Opm::Group::ProductionCMode::GRAT:
-            iGrp[nwgmax + 1] = 3;
+            iGrp[nwgmax + IGroup::ProdCMode] = 3;
             break;
         case Opm::Group::ProductionCMode::LRAT:
-            iGrp[nwgmax + 1] = 4;
+            iGrp[nwgmax + IGroup::ProdCMode] = 4;
             break;
         case Opm::Group::ProductionCMode::RESV:
-            iGrp[nwgmax + 1] = 5;
+            iGrp[nwgmax + IGroup::ProdCMode] = 5;
             break;
         case Opm::Group::ProductionCMode::FLD:
-            iGrp[nwgmax + 1] = 0; // need to be checked!!
+            iGrp[nwgmax + IGroup::ProdCMode] = 0; // need to be checked!!
             break;
         default:
-            iGrp[nwgmax + 1] = 0;
+            iGrp[nwgmax + IGroup::ProdCMode] = 0;
         }
     }
-    iGrp[nwgmax + 9] = iGrp[nwgmax + 1];
+    iGrp[nwgmax + 9] = iGrp[nwgmax + IGroup::ProdCMode];
 
     switch (prod_cmode) {
     case Opm::Group::ProductionCMode::NONE:
@@ -662,6 +663,7 @@ void injectionGroup(const Opm::Schedule&     sched,
 {
     const bool is_field = group.name() == "FIELD";
     auto group_parent_list = groupParentSeqIndex(sched, group, simStep);
+    using IGroup = ::Opm::RestartIO::Helpers::VectorItems::IGroup::index;
 
     // set "default value" in case a group is only injection group
     if (group.isInjectionGroup() && !group.isProductionGroup()) {

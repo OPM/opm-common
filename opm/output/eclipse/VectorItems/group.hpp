@@ -53,6 +53,7 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
 
     namespace IGroup {
     enum index : std::vector<int>::size_type {
+        ProdCMode = 1,
         ParentGroup = 28,
     };
     }
