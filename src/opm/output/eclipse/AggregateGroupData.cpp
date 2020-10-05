@@ -661,6 +661,7 @@ void injectionGroup(const Opm::Schedule&     sched,
                     const std::map<Opm::Group::InjectionCMode, int>& cmodeToNum,
                     IGrpArray&               iGrp)
 {
+    using IGroup = ::Opm::RestartIO::Helpers::VectorItems::IGroup::index;
     const bool is_field = group.name() == "FIELD";
     auto group_parent_list = groupParentSeqIndex(sched, group, simStep);
     using IGroup = ::Opm::RestartIO::Helpers::VectorItems::IGroup::index;
@@ -742,9 +743,9 @@ void injectionGroup(const Opm::Schedule&     sched,
                 : Opm::Group::InjectionCMode::NONE;
             const auto it = cmodeToNum.find(inj_mode);
             if (it != cmodeToNum.end()) {
-                iGrp[nwgmax + 16] = it->second;
-                iGrp[nwgmax + 18] = iGrp[nwgmax + 16];
-                iGrp[nwgmax + 19] = iGrp[nwgmax + 16];
+                iGrp[nwgmax + IGroup::WInjCMode] = it->second;
+                iGrp[nwgmax + 18] = iGrp[nwgmax + IGroup::WInjCMode];
+                iGrp[nwgmax + 19] = iGrp[nwgmax + IGroup::WInjCMode];
             }
         }
     }
@@ -825,9 +826,9 @@ void injectionGroup(const Opm::Schedule&     sched,
                 : Opm::Group::InjectionCMode::NONE;
             const auto it = cmodeToNum.find(inj_mode);
             if (it != cmodeToNum.end()) {
-                iGrp[nwgmax + 21] = it->second;
-                iGrp[nwgmax + 23] = iGrp[nwgmax + 21];
-                iGrp[nwgmax + 24] = iGrp[nwgmax + 21];
+                iGrp[nwgmax + IGroup::GInjCMode] = it->second;
+                iGrp[nwgmax + 23] = iGrp[nwgmax + IGroup::GInjCMode];
+                iGrp[nwgmax + 24] = iGrp[nwgmax + IGroup::GInjCMode];
             }
         }
     }
