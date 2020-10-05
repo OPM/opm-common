@@ -564,6 +564,17 @@ BOOST_AUTO_TEST_CASE( ANALYTICAL_AQUIFERS ) {
                 /
     )";
     const auto summary = createSummary( input );
+
+    const auto keywords = { "AAQP", "AAQP", "AAQPD", "AAQPD", "AAQPD",
+                            "AAQR", "AAQR", "AAQRG", "AAQRG", "AAQRG",
+                            "AAQT", "AAQT", "AAQT", "AAQTD", "AAQTD", "AAQTD",
+                            "AAQTG", "AAQTG", "AAQTG"
+                            };
+    const auto names = sorted_keywords( summary );
+
+    BOOST_CHECK_EQUAL_COLLECTIONS(
+            keywords.begin(), keywords.end(),
+            names.begin(), names.end() );
 }
 
 BOOST_AUTO_TEST_CASE( NUMERICAL_AQUIFERS ) {
