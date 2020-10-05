@@ -672,12 +672,15 @@ void injectionGroup(const Opm::Schedule&     sched,
     // use default value if group is not available for group control
     if (groupInjectionControllable(sched, sumState, group, Opm::Phase::WATER, simStep)) {
         if ((group.hasInjectionControl(Opm::Phase::WATER)) || (group.getGroupType() == Opm::Group::GroupType::NONE)) {
-            const double cur_winj_ctrl
-                = is_field ? sumState.get("FMCTW", -1) : sumState.get_group_var(group.name(), "GMCTW", -1);
-            const auto& winj_cmode = (group.hasInjectionControl(Opm::Phase::WATER))
-                ? group.injectionControls(Opm::Phase::WATER, sumState).cmode
-                : Opm::Group::InjectionCMode::NONE;
-            if (!is_field) {
+
+            if (is_field) {
+                iGrp[nwgmax + 17] = 0;
+                iGrp[nwgmax + 22] = 0;
+            } else {
+                const double cur_winj_ctrl = sumState.get_group_var(group.name(), "GMCTW", -1);
+                const auto& winj_cmode = (group.hasInjectionControl(Opm::Phase::WATER))
+                    ? group.injectionControls(Opm::Phase::WATER, sumState).cmode
+                    : Opm::Group::InjectionCMode::NONE;
                 int higher_lev_winj_ctrl = higherLevelInjControlGroupSeqIndex(sched, sumState, group, "GMCTW", simStep);
                 int higher_lev_winj_cmode
                     = higherLevelInjCMode_NotNoneFld_SeqIndex(sched, sumState, group, Opm::Phase::WATER, simStep);
@@ -727,9 +730,6 @@ void injectionGroup(const Opm::Schedule&     sched,
                 } else {
                     iGrp[nwgmax + 17] = -1;
                 }
-            } else { // group name "FIELD"
-                iGrp[nwgmax + 17] = 0;
-                iGrp[nwgmax + 22] = 0;
             }
             // item[nwgmax + 16] - mode for operation for water injection
             // 1 - RATE
@@ -752,12 +752,19 @@ void injectionGroup(const Opm::Schedule&     sched,
     // use default value if group is not available for group control
     if (groupInjectionControllable(sched, sumState, group, Opm::Phase::GAS, simStep)) {
         if ((group.hasInjectionControl(Opm::Phase::GAS)) || (group.getGroupType() == Opm::Group::GroupType::NONE)) {
-            const double cur_ginj_ctrl
-                = is_field ? sumState.get("FMCTG", -1) : sumState.get_group_var(group.name(), "GMCTG", -1);
-            const auto& ginj_cmode = (group.hasInjectionControl(Opm::Phase::GAS))
-                ? group.injectionControls(Opm::Phase::GAS, sumState).cmode
-                : Opm::Group::InjectionCMode::NONE;
-            if (!is_field) {
+            if (is_field) {
+                iGrp[nwgmax + 17] = 0;
+                iGrp[nwgmax + 22] = 0;
+                // parameters connected to oil injection - not implemented in flow yet
+                iGrp[nwgmax + 11] = 0;
+                iGrp[nwgmax + 12] = 0;
+            }
+            else {
+                const double cur_ginj_ctrl = sumState.get_group_var(group.name(), "GMCTG", -1);
+                const auto& ginj_cmode = (group.hasInjectionControl(Opm::Phase::GAS))
+                    ? group.injectionControls(Opm::Phase::GAS, sumState).cmode
+                    : Opm::Group::InjectionCMode::NONE;
+
                 int higher_lev_ginj_ctrl = higherLevelInjControlGroupSeqIndex(sched, sumState, group, "GMCTG", simStep);
                 int higher_lev_ginj_cmode
                     = higherLevelInjCMode_NotNoneFld_SeqIndex(sched, sumState, group, Opm::Phase::GAS, simStep);
@@ -805,13 +812,8 @@ void injectionGroup(const Opm::Schedule&     sched,
                 } else {
                     iGrp[nwgmax + 22] = -1;
                 }
-            } else { // group name "FIELD"
-                iGrp[nwgmax + 17] = 0;
-                iGrp[nwgmax + 22] = 0;
-                // parameters connected to oil injection - not implemented in flow yet
-                iGrp[nwgmax + 11] = 0;
-                iGrp[nwgmax + 12] = 0;
             }
+
             // item[nwgmax + 21] - mode for operation for gas injection
             // 1 - RATE
             // 2 - RESV
