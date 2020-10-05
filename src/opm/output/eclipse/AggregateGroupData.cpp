@@ -467,10 +467,8 @@ void staticContrib(const Opm::Schedule&     sched,
     const double g_act_iwells = is_field ? sumState.get("FMWIN", 0) : sumState.get_group_var(group.name(), "GMWIN", 0);
     iGrp[nwgmax + 33] = g_act_pwells + g_act_iwells;
 
-    //Treat groups that have production
-    if ((group.getGroupType() == Opm::Group::GroupType::NONE) || (group.getGroupType() == Opm::Group::GroupType::PRODUCTION)
-         || (group.getGroupType() == Opm::Group::GroupType::MIXED)) {
-
+    // Treat al groups which are *not* pure injection groups.
+    if (group.getGroupType() != Opm::Group::GroupType::INJECTION) {
         const auto& prod_cmode = group.productionControls(sumState).cmode;
         const auto& prod_guide_rate_def = group.productionControls(sumState).guide_rate_def;
         const auto& p_exceed_act = group.productionControls(sumState).exceed_action;
@@ -686,7 +684,8 @@ void staticContrib(const Opm::Schedule&     sched,
     //default value -
     iGrp[nwgmax + 17] = -1;
     iGrp[nwgmax + 22] = -1;
-    if (group.isInjectionGroup() || (group.getGroupType() == Opm::Group::GroupType::MIXED) || (group.getGroupType() == Opm::Group::GroupType::NONE)) {
+    // Treat al groups which are *not* pure production groups.
+    if (group.getGroupType() != Opm::Group::GroupType::PRODUCTION) {
         auto group_parent_list = groupParentSeqIndex(sched, group, simStep);
 
         //set "default value" in case a group is only injection group
