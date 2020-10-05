@@ -528,6 +528,22 @@ void set_dimensions( ParserItem& item,
         return m_deckNames.end();
     }
 
+    const std::vector<std::string>& ParserKeyword::requiredKeywords() const {
+        return m_requires;
+    }
+
+    const std::vector<std::string>& ParserKeyword::prohibitedKeywords() const {
+        return m_prohibits;
+    }
+
+    void ParserKeyword::setRequiredKeywords(const std::vector<std::string>& keywordNames) {
+        m_requires = keywordNames;
+    }
+
+    void ParserKeyword::setProhibitedKeywords(const std::vector<std::string>& keywordNames) {
+        m_prohibits = keywordNames;
+    }
+
     DeckKeyword ParserKeyword::parse(const ParseContext& parseContext,
                                      ErrorGuard& errors,
                                      RawKeyword& rawKeyword,

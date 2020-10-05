@@ -117,6 +117,11 @@ namespace Opm {
         DeckNameSet::const_iterator deckNamesBegin() const;
         DeckNameSet::const_iterator deckNamesEnd() const;
 
+        const std::vector<std::string>& requiredKeywords() const;
+        const std::vector<std::string>& prohibitedKeywords() const;
+        void setRequiredKeywords(const std::vector<std::string>&);
+        void setProhibitedKeywords(const std::vector<std::string>&);
+
         void clearValidSectionNames();
         void addValidSectionName(const std::string& sectionName);
         bool isValidSection(const std::string& sectionName) const;
@@ -157,6 +162,8 @@ namespace Opm {
         bool alternating_keyword = false;
         bool double_records = false;
         std::string code_end;
+        std::vector<std::string> m_requires;
+        std::vector<std::string> m_prohibits;
 
         static bool validNameStart(const std::string_view& name);
         void initDeckNames( const Json::JsonObject& jsonConfig );
