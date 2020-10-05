@@ -1117,22 +1117,28 @@ namespace {
     }
 
 
-    void Schedule::addGroup(const std::string& groupName, std::size_t timeStep, const UnitSystem& unit_system) {
-        const std::size_t insert_index = this->groups.size();
-
-        groups.insert( std::make_pair( groupName, DynamicState<std::shared_ptr<Group>>(this->m_timeMap, nullptr)));
-        auto group_ptr = std::make_shared<Group>(groupName, insert_index, timeStep, this->getUDQConfig(timeStep).params().undefinedValue(), unit_system);
-        auto& dynamic_state = this->groups.at(groupName);
+    void Schedule::addGroup(const Group& group, std::size_t timeStep) {
+        this->groups.insert( std::make_pair( group.name(), DynamicState<std::shared_ptr<Group>>(this->m_timeMap, nullptr)));
+        auto group_ptr = std::make_shared<Group>(group);
+        auto& dynamic_state = this->groups.at(group.name());
         dynamic_state.update(timeStep, group_ptr);
 
-        m_events.addEvent( ScheduleEvents::NEW_GROUP , timeStep );
-        wellgroup_events.insert( std::make_pair(groupName, Events(this->m_timeMap)));
-        this->addWellGroupEvent(groupName, ScheduleEvents::NEW_GROUP, timeStep);
+        this->m_events.addEvent( ScheduleEvents::NEW_GROUP , timeStep );
+        this->wellgroup_events.insert( std::make_pair(group.name(), Events(this->m_timeMap)));
+        this->addWellGroupEvent(group.name(), ScheduleEvents::NEW_GROUP, timeStep);
 
         // All newly created groups are attached to the field group,
         // can then be relocated with the GRUPTREE keyword.
-        if (groupName != "FIELD")
+        if (group.name() != "FIELD")
             this->addGroupToGroup("FIELD", *group_ptr, timeStep);
+    }
+
+
+    void Schedule::addGroup(const std::string& groupName, std::size_t timeStep, const UnitSystem& unit_system) {
+        const std::size_t insert_index = this->groups.size();
+        auto udq_undefined = this->getUDQConfig(timeStep).params().undefinedValue();
+        auto group = Group{ groupName, insert_index, timeStep, udq_undefined, unit_system };
+        this->addGroup(group, timeStep);
     }
 
     std::size_t Schedule::numGroups() const {
