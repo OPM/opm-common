@@ -440,13 +440,43 @@ void productionGroup(const Opm::Schedule&     sched,
                      const std::map<int, Opm::Group::ProductionCMode>& pCtrlToPCmode,
                      IGrpArray&               iGrp)
 {
-    const bool is_field = group.name() == "FIELD";
     const auto& prod_cmode = group.productionControls(sumState).cmode;
+    if (group.name() == "FIELD") {
+        iGrp[nwgmax + 6] = 0;
+        iGrp[nwgmax + 7] = 0;
+        switch (prod_cmode) {
+        case Opm::Group::ProductionCMode::NONE:
+            iGrp[nwgmax + 10] = 0;
+            break;
+        case Opm::Group::ProductionCMode::ORAT:
+            iGrp[nwgmax + 10] = 1;
+            break;
+        case Opm::Group::ProductionCMode::WRAT:
+            iGrp[nwgmax + 10] = 2;
+            break;
+        case Opm::Group::ProductionCMode::GRAT:
+            iGrp[nwgmax + 10] = 3;
+            break;
+        case Opm::Group::ProductionCMode::LRAT:
+            iGrp[nwgmax + 10] = 4;
+            break;
+        case Opm::Group::ProductionCMode::RESV:
+            iGrp[nwgmax + 10] = 5;
+            break;
+        case Opm::Group::ProductionCMode::FLD:
+            iGrp[nwgmax + 10] = 0;
+            break;
+        default:
+            iGrp[nwgmax + 10] = 0;
+        }
+        return;
+    }
+
+
     const auto& prod_guide_rate_def = group.productionControls(sumState).guide_rate_def;
     const auto& p_exceed_act = group.productionControls(sumState).exceed_action;
     // Find production control mode for group
-    const double cur_prod_ctrl
-        = is_field ? sumState.get("FMCTP", -1) : sumState.get_group_var(group.name(), "GMCTP", -1);
+    const double cur_prod_ctrl = sumState.get_group_var(group.name(), "GMCTP", -1);
     Opm::Group::ProductionCMode pctl_mode = Opm::Group::ProductionCMode::NONE;
     if (cur_prod_ctrl >= 0) {
         const auto it_ctrl = pCtrlToPCmode.find(cur_prod_ctrl);
@@ -487,170 +517,139 @@ void productionGroup(const Opm::Schedule&     sched,
              iGrp[nwgmax + 5] = -1
 
     */
-    if (!is_field) {
-        // default value
-        iGrp[nwgmax + 5] = -1;
-        int higher_lev_ctrl = higherLevelProdControlGroupSeqIndex(sched, sumState, group, simStep);
-        int higher_lev_ctrl_mode = higherLevelProdControlMode(sched, sumState, group, simStep);
-        // Start branching for determining iGrp[nwgmax + 5]
-        // use default value if group is not available for group control
-        if (groupProductionControllable(sched, sumState, group, simStep)) {
-            // this section applies if group is controllable - i.e. has wells that may be controlled
-            if (!group.productionGroupControlAvailable() && (higher_lev_ctrl <= 0)) {
-                // group can respond to higher level control
-                iGrp[nwgmax + 5] = 0;
-            } else if (((pctl_mode != Opm::Group::ProductionCMode::NONE)) && (higher_lev_ctrl < 0)) {
-                // group is constrained by its own limits or controls
-                // if (pctl_mode != Opm::Group::ProductionCMode::FLD)  -  need to use this test? - else remove
-                iGrp[nwgmax + 5] = -1; // only value that seems to work when no group at higher level has active control
-            } else if (higher_lev_ctrl > 0) {
-                if (((prod_cmode == Opm::Group::ProductionCMode::FLD)
-                     || (prod_cmode == Opm::Group::ProductionCMode::NONE))
-                    && (group.productionControls(sumState).guide_rate_def
-                        != Opm::Group::GuideRateTarget::NO_GUIDE_RATE)) {
-                    iGrp[nwgmax + 5] = higher_lev_ctrl;
-                } else {
-                    iGrp[nwgmax + 5] = 1;
-                }
-            } else if (higherLevelProdCMode_NotNoneFld(sched, sumState, group, simStep)) {
-                if (!((prod_cmode == Opm::Group::ProductionCMode::FLD)
-                      || (prod_cmode == Opm::Group::ProductionCMode::NONE))) {
-                    iGrp[nwgmax + 5] = -1;
-                } else {
-                    iGrp[nwgmax + 5] = 1;
-                }
-            } else if ((prod_cmode == Opm::Group::ProductionCMode::FLD)
-                       || (prod_cmode == Opm::Group::ProductionCMode::NONE)) {
+    // default value
+    iGrp[nwgmax + 5] = -1;
+    int higher_lev_ctrl = higherLevelProdControlGroupSeqIndex(sched, sumState, group, simStep);
+    int higher_lev_ctrl_mode = higherLevelProdControlMode(sched, sumState, group, simStep);
+    // Start branching for determining iGrp[nwgmax + 5]
+    // use default value if group is not available for group control
+    if (groupProductionControllable(sched, sumState, group, simStep)) {
+        // this section applies if group is controllable - i.e. has wells that may be controlled
+        if (!group.productionGroupControlAvailable() && (higher_lev_ctrl <= 0)) {
+            // group can respond to higher level control
+            iGrp[nwgmax + 5] = 0;
+        } else if (((pctl_mode != Opm::Group::ProductionCMode::NONE)) && (higher_lev_ctrl < 0)) {
+            // group is constrained by its own limits or controls
+            // if (pctl_mode != Opm::Group::ProductionCMode::FLD)  -  need to use this test? - else remove
+            iGrp[nwgmax + 5] = -1; // only value that seems to work when no group at higher level has active control
+        } else if (higher_lev_ctrl > 0) {
+            if (((prod_cmode == Opm::Group::ProductionCMode::FLD) || (prod_cmode == Opm::Group::ProductionCMode::NONE))
+                && (group.productionControls(sumState).guide_rate_def != Opm::Group::GuideRateTarget::NO_GUIDE_RATE)) {
+                iGrp[nwgmax + 5] = higher_lev_ctrl;
+            } else {
+                iGrp[nwgmax + 5] = 1;
+            }
+        } else if (higherLevelProdCMode_NotNoneFld(sched, sumState, group, simStep)) {
+            if (!((prod_cmode == Opm::Group::ProductionCMode::FLD)
+                  || (prod_cmode == Opm::Group::ProductionCMode::NONE))) {
                 iGrp[nwgmax + 5] = -1;
             } else {
-                iGrp[nwgmax + 5] = -1;
+                iGrp[nwgmax + 5] = 1;
             }
-        } else if (prod_cmode == Opm::Group::ProductionCMode::NONE) {
-            iGrp[nwgmax + 5] = 1;
-        }
-
-        // Set iGrp for [nwgmax + 7]
-        /*
-        For the reduction option RATE the value is generally = 4
-
-        For the reduction option NONE the values are as shown below, however, this is not a very likely case.
-
-        = 0 for group with  "FLD" or "NONE"
-        = 4 for "GRAT" FIELD
-        = -40000 for production group with "ORAT"
-        = -4000  for production group with "WRAT"
-        = -400    for production group with "GRAT"
-        = -40     for production group with "LRAT"
-
-        Other reduction options are currently not covered in the code
-        */
-
-        if (higher_lev_ctrl > 0 && (group.getGroupType() != Opm::Group::GroupType::NONE)) {
-            iGrp[nwgmax + 1]
-                = (prod_guide_rate_def != Opm::Group::GuideRateTarget::NO_GUIDE_RATE) ? higher_lev_ctrl_mode : 0;
+        } else if ((prod_cmode == Opm::Group::ProductionCMode::FLD)
+                   || (prod_cmode == Opm::Group::ProductionCMode::NONE)) {
+            iGrp[nwgmax + 5] = -1;
         } else {
-            switch (pctl_mode) {
-            case Opm::Group::ProductionCMode::NONE:
-                iGrp[nwgmax + 1] = 0;
-                break;
-            case Opm::Group::ProductionCMode::ORAT:
-                iGrp[nwgmax + 1] = 1;
-                break;
-            case Opm::Group::ProductionCMode::WRAT:
-                iGrp[nwgmax + 1] = 2;
-                break;
-            case Opm::Group::ProductionCMode::GRAT:
-                iGrp[nwgmax + 1] = 3;
-                break;
-            case Opm::Group::ProductionCMode::LRAT:
-                iGrp[nwgmax + 1] = 4;
-                break;
-            case Opm::Group::ProductionCMode::RESV:
-                iGrp[nwgmax + 1] = 5;
-                break;
-            case Opm::Group::ProductionCMode::FLD:
-                iGrp[nwgmax + 1] = 0; // need to be checked!!
-                break;
-            default:
-                iGrp[nwgmax + 1] = 0;
-            }
+            iGrp[nwgmax + 5] = -1;
         }
-        iGrp[nwgmax + 9] = iGrp[nwgmax + 1];
+    } else if (prod_cmode == Opm::Group::ProductionCMode::NONE) {
+        iGrp[nwgmax + 5] = 1;
+    }
 
-        switch (prod_cmode) {
+    // Set iGrp for [nwgmax + 7]
+    /*
+    For the reduction option RATE the value is generally = 4
+
+    For the reduction option NONE the values are as shown below, however, this is not a very likely case.
+
+    = 0 for group with  "FLD" or "NONE"
+    = 4 for "GRAT" FIELD
+    = -40000 for production group with "ORAT"
+    = -4000  for production group with "WRAT"
+    = -400    for production group with "GRAT"
+    = -40     for production group with "LRAT"
+
+    Other reduction options are currently not covered in the code
+    */
+
+    if (higher_lev_ctrl > 0 && (group.getGroupType() != Opm::Group::GroupType::NONE)) {
+        iGrp[nwgmax + 1]
+            = (prod_guide_rate_def != Opm::Group::GuideRateTarget::NO_GUIDE_RATE) ? higher_lev_ctrl_mode : 0;
+    } else {
+        switch (pctl_mode) {
         case Opm::Group::ProductionCMode::NONE:
-            iGrp[nwgmax + 6] = 0;
-            iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? 0 : 4;
-            iGrp[nwgmax + 10] = 0;
+            iGrp[nwgmax + 1] = 0;
             break;
         case Opm::Group::ProductionCMode::ORAT:
-            iGrp[nwgmax + 6] = 0;
-            iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? -40000 : 4;
-            iGrp[nwgmax + 10] = 1;
+            iGrp[nwgmax + 1] = 1;
             break;
         case Opm::Group::ProductionCMode::WRAT:
-            iGrp[nwgmax + 6] = 0;
-            iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? -4000 : 4;
-            iGrp[nwgmax + 10] = 2;
+            iGrp[nwgmax + 1] = 2;
             break;
         case Opm::Group::ProductionCMode::GRAT:
-            iGrp[nwgmax + 6] = 0;
-            iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? -400 : 4;
-            iGrp[nwgmax + 10] = 3;
+            iGrp[nwgmax + 1] = 3;
             break;
         case Opm::Group::ProductionCMode::LRAT:
-            iGrp[nwgmax + 6] = 0;
-            iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? -40 : 4;
-            iGrp[nwgmax + 10] = 4;
+            iGrp[nwgmax + 1] = 4;
             break;
         case Opm::Group::ProductionCMode::RESV:
-            iGrp[nwgmax + 6] = 0;
-            iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? -4 : 4; // need to be checked
-            iGrp[nwgmax + 10] = 5;
+            iGrp[nwgmax + 1] = 5;
             break;
         case Opm::Group::ProductionCMode::FLD:
-            iGrp[nwgmax + 6] = 0;
-            if ((higher_lev_ctrl > 0) && (prod_guide_rate_def != Opm::Group::GuideRateTarget::NO_GUIDE_RATE)) {
-                iGrp[nwgmax + 6] = 8;
-            }
-            iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? 4 : 4;
-            iGrp[nwgmax + 10] = 0; // need to be checked!!
+            iGrp[nwgmax + 1] = 0; // need to be checked!!
             break;
         default:
-            iGrp[nwgmax + 6] = 0;
-            iGrp[nwgmax + 7] = 0;
-            iGrp[nwgmax + 10] = 0; // need to be checked!!
-        }
-    } else { // group name is "FIELD"
-        iGrp[nwgmax + 6] = 0;
-        iGrp[nwgmax + 7] = 0;
-        switch (prod_cmode) {
-        case Opm::Group::ProductionCMode::NONE:
-            iGrp[nwgmax + 10] = 0;
-            break;
-        case Opm::Group::ProductionCMode::ORAT:
-            iGrp[nwgmax + 10] = 1;
-            break;
-        case Opm::Group::ProductionCMode::WRAT:
-            iGrp[nwgmax + 10] = 2;
-            break;
-        case Opm::Group::ProductionCMode::GRAT:
-            iGrp[nwgmax + 10] = 3;
-            break;
-        case Opm::Group::ProductionCMode::LRAT:
-            iGrp[nwgmax + 10] = 4;
-            break;
-        case Opm::Group::ProductionCMode::RESV:
-            iGrp[nwgmax + 10] = 5;
-            break;
-        case Opm::Group::ProductionCMode::FLD:
-            iGrp[nwgmax + 10] = 0;
-            break;
-        default:
-            iGrp[nwgmax + 10] = 0;
+            iGrp[nwgmax + 1] = 0;
         }
     }
+    iGrp[nwgmax + 9] = iGrp[nwgmax + 1];
+
+    switch (prod_cmode) {
+    case Opm::Group::ProductionCMode::NONE:
+        iGrp[nwgmax + 6] = 0;
+        iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? 0 : 4;
+        iGrp[nwgmax + 10] = 0;
+        break;
+    case Opm::Group::ProductionCMode::ORAT:
+        iGrp[nwgmax + 6] = 0;
+        iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? -40000 : 4;
+        iGrp[nwgmax + 10] = 1;
+        break;
+    case Opm::Group::ProductionCMode::WRAT:
+        iGrp[nwgmax + 6] = 0;
+        iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? -4000 : 4;
+        iGrp[nwgmax + 10] = 2;
+        break;
+    case Opm::Group::ProductionCMode::GRAT:
+        iGrp[nwgmax + 6] = 0;
+        iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? -400 : 4;
+        iGrp[nwgmax + 10] = 3;
+        break;
+    case Opm::Group::ProductionCMode::LRAT:
+        iGrp[nwgmax + 6] = 0;
+        iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? -40 : 4;
+        iGrp[nwgmax + 10] = 4;
+        break;
+    case Opm::Group::ProductionCMode::RESV:
+        iGrp[nwgmax + 6] = 0;
+        iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? -4 : 4; // need to be checked
+        iGrp[nwgmax + 10] = 5;
+        break;
+    case Opm::Group::ProductionCMode::FLD:
+        iGrp[nwgmax + 6] = 0;
+        if ((higher_lev_ctrl > 0) && (prod_guide_rate_def != Opm::Group::GuideRateTarget::NO_GUIDE_RATE)) {
+            iGrp[nwgmax + 6] = 8;
+        }
+        iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? 4 : 4;
+        iGrp[nwgmax + 10] = 0; // need to be checked!!
+        break;
+    default:
+        iGrp[nwgmax + 6] = 0;
+        iGrp[nwgmax + 7] = 0;
+        iGrp[nwgmax + 10] = 0; // need to be checked!!
+    }
 }
+
 
 template <class IGrpArray>
 void injectionGroup(const Opm::Schedule&     sched,
