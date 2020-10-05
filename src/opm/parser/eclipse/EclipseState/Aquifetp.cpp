@@ -114,10 +114,9 @@ std::vector<Aquifetp::AQUFETP_data>::const_iterator Aquifetp::end() const {
 }
 
 bool Aquifetp::hasAquifer(const int aquID) const {
-    const auto it = std::find_if(this->m_aqufetp.begin(), this->m_aqufetp.end(),
-                                 [&aquID](const auto& aqu){ return aqu.aquiferID == aquID; });
+    return std::any_of(this->m_aqufetp.begin(), this->m_aqufetp.end(),
+                       [&aquID](const auto& aqu) { return aqu.aquiferID == aquID; });
 
-    return ( it != this->m_aqufetp.end() );
 }
 
 }
