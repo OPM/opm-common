@@ -41,6 +41,7 @@
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
+#include <opm/parser/eclipse/EclipseState/AquiferConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridDims.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp>
@@ -71,6 +72,7 @@ namespace {
         "WVPR",  "WVPT",  "WWCT", "WWGR",  "WWIR", "WWIT",  "WWPR",
         "WWPT",  "WGLIR",
         // ALL will not expand to these keywords yet
+        // Analytical aquifer keywords
         "AAQR",  "AAQRG", "AAQT", "AAQTG"
     };
 
@@ -348,11 +350,55 @@ void handleMissingNode( const ParseContext& parseContext, ErrorGuard& errors, co
     parseContext.handleError( ParseContext::SUMMARY_UNKNOWN_NODE, msg_fmt, location, errors );
 }
 
+void handleMissingAquifer( const ParseContext& parseContext, ErrorGuard& errors, const KeywordLocation& location, const int id) {
+    std::string msg_fmt = fmt::format("Request for missing aquifer {} in {{keyword}}\n"
+                                      "In {{file}} line {{line}}", id);
+    parseContext.handleError(ParseContext::SUMMARY_UNKNOWN_AQUIFER, msg_fmt, location, errors);
+}
+
 inline void keywordW( SummaryConfig::keyword_list& list,
                       const std::vector<std::string>& well_names,
                       SummaryConfigNode baseWellParam) {
     for (const auto& wname : well_names)
         list.push_back( baseWellParam.namedEntity(wname) );
+}
+
+inline void keywordAquifer( SummaryConfig::keyword_list& list,
+                            const AquiferConfig& aquiferConfig,
+                            SummaryConfigNode baseAquiferParam) {
+    if ( !aquiferConfig.active() ) return;
+
+    for (const auto& aq : aquiferConfig.ct()) {
+        list.push_back(baseAquiferParam.number(aq.aquiferID));
+    }
+    for (const auto& aq : aquiferConfig.fetp()) {
+        list.push_back(baseAquiferParam.number(aq.aquiferID));
+    }
+}
+// later check whether parseContext and errors are required
+// maybe loc will be needed
+inline void keywordAquifer( SummaryConfig::keyword_list& list,
+                            const AquiferConfig& aquiferConfig,
+                            const ParseContext& parseContext,
+                            ErrorGuard& errors,
+                            const DeckKeyword& keyword) {
+    auto param = SummaryConfigNode {
+        keyword.name(), SummaryConfigNode::Category::Aquifer, keyword.location()
+    }
+    .parameterType( parseKeywordType(keyword.name()) )
+    .isUserDefined( is_udq(keyword.name()) );
+
+    if (keyword.size() && keyword.getDataRecord().getDataItem().hasValue(0)) {
+        for( const int id: keyword.getIntData()) {
+            if (aquiferConfig.hasAquifer(id)) {
+                list.push_back(param.number(id));
+            } else {
+                handleMissingAquifer(parseContext, errors, keyword.location(), id);
+            }
+        }
+    } else {
+        keywordAquifer(list, aquiferConfig, param);
+    }
 }
 
 inline void keywordW( SummaryConfig::keyword_list& list,
@@ -516,6 +562,19 @@ inline void keywordF( SummaryConfig::keyword_list& list,
     .isUserDefined( is_udq(keyword) );
 
     list.push_back( std::move(param) );
+}
+
+inline void keywordAquifer( SummaryConfig::keyword_list& list,
+                            const std::string& keyword,
+                            const AquiferConfig& aquiferConfig,
+                            KeywordLocation loc) {
+    auto param = SummaryConfigNode {
+            keyword, SummaryConfigNode::Category::Aquifer, std::move(loc)
+    }
+            .parameterType( parseKeywordType(keyword) )
+            .isUserDefined( is_udq(keyword) );
+
+    keywordAquifer(list, aquiferConfig, param);
 }
 
 inline void keywordF( SummaryConfig::keyword_list& list,
@@ -879,6 +938,7 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
                         const DeckKeyword& keyword,
                         const Schedule& schedule,
                         const TableManager& tables,
+                        const AquiferConfig& aquiferConfig,
                         const ParseContext& parseContext,
                         ErrorGuard& errors,
                         const GridDims& dims) {
@@ -897,6 +957,7 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
         case Cat::Connection: return keywordC( list, parseContext, errors, keyword, schedule, dims);
         case Cat::Segment: return keywordS( list, parseContext, errors, keyword, schedule );
         case Cat::Node: return keyword_node( list, node_names, parseContext, errors, keyword );
+        case Cat::Aquifer: return keywordAquifer(list, aquiferConfig, parseContext, errors, keyword);
         case Cat::Miscellaneous: return keywordMISC( list, keyword );
 
         default:
@@ -907,24 +968,17 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
     }
 }
 
-
 inline void handleKW( SummaryConfig::keyword_list& list,
                       const std::string& keyword,
                       const KeywordLocation& location,
                       const Schedule& schedule,
-                      const ParseContext& parseContext,
-                      ErrorGuard& errors) {
+                      const AquiferConfig& aquiferConfig,
+                      const ParseContext& /* parseContext */,
+                      ErrorGuard& /* errors */) {
 
 
     if (is_udq(keyword))
         throw std::logic_error("UDQ keywords not handleded when expanding alias list");
-
-    if (is_aquifer(keyword)) {
-        std::string msg = "Summary output keyword {keyword} of type AQUIFER is not supported\n"
-                          "In {{file}} line {{line}}";
-        parseContext.handleError(ParseContext::SUMMARY_UNHANDLED_KEYWORD, msg, location, errors);
-        return;
-    }
 
     using Cat = SummaryConfigNode::Category;
     const auto cat = parseKeywordCategory( keyword );
@@ -933,6 +987,7 @@ inline void handleKW( SummaryConfig::keyword_list& list,
         case Cat::Well: return keywordW( list, keyword, location, schedule );
         case Cat::Group: return keywordG( list, keyword, location, schedule );
         case Cat::Field: return keywordF( list, keyword, location );
+        case Cat::Aquifer: return keywordAquifer( list, keyword, aquiferConfig, location );
         case Cat::Miscellaneous: return keywordMISC( list, keyword, location);
 
         default:
@@ -956,7 +1011,7 @@ SummaryConfigNode::Category parseKeywordCategory(const std::string& keyword) {
     if (is_special(keyword)) { return Cat::Miscellaneous; }
 
     switch (keyword[0]) {
-        case 'A': return Cat::Aquifer;
+        case 'A': if (is_aquifer(keyword)) return Cat::Aquifer; break;
         case 'W': return Cat::Well;
         case 'G': return distinguish_group_from_node(keyword);
         case 'F': return Cat::Field;
@@ -1136,6 +1191,7 @@ bool operator<(const SummaryConfigNode& lhs, const SummaryConfigNode& rhs)
 SummaryConfig::SummaryConfig( const Deck& deck,
                               const Schedule& schedule,
                               const TableManager& tables,
+                              const AquiferConfig& aquiferConfig,
                               const ParseContext& parseContext,
                               ErrorGuard& errors,
                               const GridDims& dims) {
@@ -1148,7 +1204,7 @@ SummaryConfig::SummaryConfig( const Deck& deck,
             if (is_processing_instruction(kw.name())) {
                 handleProcessingInstruction(kw.name());
             } else {
-                handleKW(this->m_keywords, node_names, kw, schedule, tables, parseContext, errors, dims);
+                handleKW(this->m_keywords, node_names, kw, schedule, tables, aquiferConfig, parseContext, errors, dims);
             }
         }
 
@@ -1157,7 +1213,7 @@ SummaryConfig::SummaryConfig( const Deck& deck,
                 const auto& deck_keyword = section.getKeyword(meta_pair.first);
                 for (const auto& kw : meta_pair.second) {
                     if (!this->hasKeyword(kw))
-                        handleKW(this->m_keywords, kw, deck_keyword.location(), schedule, parseContext, errors);
+                        handleKW(this->m_keywords, kw, deck_keyword.location(), schedule, aquiferConfig, parseContext, errors);
                 }
             }
         }
@@ -1182,9 +1238,10 @@ SummaryConfig::SummaryConfig( const Deck& deck,
 SummaryConfig::SummaryConfig( const Deck& deck,
                               const Schedule& schedule,
                               const TableManager& tables,
+                              const AquiferConfig& aquiferConfig,
                               const ParseContext& parseContext,
                               ErrorGuard& errors) :
-    SummaryConfig( deck , schedule, tables, parseContext, errors, GridDims( deck ))
+    SummaryConfig( deck , schedule, tables, aquiferConfig, parseContext, errors, GridDims( deck ))
 { }
 
 
@@ -1192,16 +1249,18 @@ template <typename T>
 SummaryConfig::SummaryConfig( const Deck& deck,
                               const Schedule& schedule,
                               const TableManager& tables,
+                              const AquiferConfig& aquiferConfig,
                               const ParseContext& parseContext,
                               T&& errors) :
-    SummaryConfig(deck, schedule, tables, parseContext, errors)
+        SummaryConfig(deck, schedule, tables, aquiferConfig, parseContext, errors)
 {}
 
 
 SummaryConfig::SummaryConfig( const Deck& deck,
                const Schedule& schedule,
-               const TableManager& tables) :
-    SummaryConfig(deck, schedule, tables, ParseContext(), ErrorGuard())
+               const TableManager& tables,
+               const AquiferConfig& aquiferConfig) :
+    SummaryConfig(deck, schedule, tables, aquiferConfig, ParseContext(), ErrorGuard())
 {}
 
 

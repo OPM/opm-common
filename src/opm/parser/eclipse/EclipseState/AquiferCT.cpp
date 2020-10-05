@@ -178,4 +178,9 @@ const std::vector<AquiferCT::AQUCT_data>& AquiferCT::data() const {
     return this->m_aquct;
 }
 
+bool AquiferCT::hasAquifer(const int aquID) const {
+    return std::any_of(this->m_aquct.begin(), this->m_aquct.end(),
+                       [&aquID](const auto& aqu) { return aqu.aquiferID == aquID; });
+}
+
 }

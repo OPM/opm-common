@@ -360,7 +360,7 @@ struct Setup {
         grid( es.getInputGrid( ) ),
         python( std::make_shared<Python>() ),
         schedule( deck, es, python ),
-        summary_config( deck, schedule, es.getTableManager( ))
+        summary_config( deck, schedule, es.getTableManager( ), es.aquifer() )
     {
         auto& io_config = es.getIOConfig();
         io_config.setEclCompatibleRST(false);

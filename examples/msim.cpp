@@ -43,7 +43,8 @@ int main(int /* argc */, char** argv) {
     Opm::Deck deck = parser.parseFile(deck_file, parse_context, error_guard);
     Opm::EclipseState state(deck);
     Opm::Schedule schedule(deck, state, parse_context, error_guard, python);
-    Opm::SummaryConfig summary_config(deck, schedule, state.getTableManager(), parse_context, error_guard);
+    Opm::SummaryConfig summary_config(deck, schedule, state.getTableManager(), state.aquifer(),
+                                      parse_context, error_guard);
 
     if (error_guard) {
         error_guard.dump();

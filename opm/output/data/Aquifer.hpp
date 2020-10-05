@@ -46,13 +46,30 @@ namespace Opm { namespace data {
     struct AquiferData {
         int aquiferID;    //< One-based ID, range 1..NANAQ
         double pressure;  //< Aquifer pressure
+        double fluxRate; //< Aquifer influx rate (liquid aquifer)
+        // TODO: volume should have a better name, since meaning not clear
         double volume;    //< Produced liquid volume
         double initPressure;    //< Aquifer's initial pressure
         double datumDepth;      //< Aquifer's pressure reference depth
 
         AquiferType type;
         std::shared_ptr<FetkovichData> aquFet;
+
+        double get(const std::string& key) const
+        {
+            if ( key == "AAQR" ) {
+                return this->fluxRate;
+            } else if ( key == "AAQT" ) {
+                return this->volume;
+            } else if ( key == "AAQP" ) {
+                return this->pressure;
+            }
+            return 0.;
+        }
     };
+
+    // TODO: not sure what extension we will need
+    using Aquifers = std::map<int, AquiferData>;
 
 }} // Opm::data
 

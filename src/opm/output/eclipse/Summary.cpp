@@ -46,6 +46,7 @@
 #include <opm/output/data/Groups.hpp>
 #include <opm/output/data/GuideRateValue.hpp>
 #include <opm/output/data/Wells.hpp>
+#include <opm/output/data/Aquifer.hpp>
 
 #include <opm/output/eclipse/RegionCache.hpp>
 
@@ -1467,6 +1468,12 @@ static const std::unordered_map< std::string, Opm::UnitSystem::measure> block_un
   {"BOVIS"      , Opm::UnitSystem::measure::viscosity},
 };
 
+static const std::unordered_map< std::string, Opm::UnitSystem::measure> aquifer_units = {
+    {"AAQT", Opm::UnitSystem::measure::liquid_surface_volume},
+    {"AAQR", Opm::UnitSystem::measure::liquid_surface_rate},
+    {"AAQP", Opm::UnitSystem::measure::pressure},
+};
+
 inline std::vector<Opm::Well> find_wells( const Opm::Schedule& schedule,
                                            const Opm::EclIO::SummaryNode& node,
                                            const int sim_step,
@@ -1659,6 +1666,7 @@ namespace Evaluator {
         const std::map<std::string, double>& single;
         const std::map<std::string, std::vector<double>>& region;
         const std::map<std::pair<std::string, int>, double>& block;
+        const Opm::data::Aquifers& aquifers;
     };
 
     class Base
@@ -1765,6 +1773,35 @@ namespace Evaluator {
         {
             return { this->node_.keyword, this->node_.number };
         }
+    };
+
+
+    class AquiferValue: public Base
+    {
+    public:
+        explicit AquiferValue(Opm::EclIO::SummaryNode node,
+                              const Opm::UnitSystem::measure m)
+        : node_(std::move(node))
+        , m_   (m)
+        {}
+
+        void update(const std::size_t    /* sim_step */,
+                    const double         /* stepSize */,
+                    const InputData&        input,
+                    const SimulatorResults& simRes,
+                    Opm::SummaryState&      st) const override
+        {
+            auto xPos = simRes.aquifers.find(this->node_.number);
+            if (xPos == simRes.aquifers.end()) {
+                return;
+            }
+
+            const auto& usys = input.es.getUnits();
+            updateValue(this->node_, usys.from_si(this->m_, xPos->second.get(this->node_.keyword)), st);
+        }
+    private:
+        Opm::EclIO::SummaryNode  node_;
+        Opm::UnitSystem::measure m_;
     };
 
     class RegionValue : public Base
@@ -2003,12 +2040,14 @@ namespace Evaluator {
 
         Descriptor functionRelation();
         Descriptor blockValue();
+        Descriptor aquiferValue();
         Descriptor regionValue();
         Descriptor globalProcessValue();
         Descriptor userDefinedValue();
         Descriptor unknownParameter();
 
         bool isBlockValue();
+        bool isAquiferValue();
         bool isRegionValue();
         bool isGlobalProcessValue();
         bool isFunctionRelation();
@@ -2028,6 +2067,9 @@ namespace Evaluator {
 
         if (this->isBlockValue())
             return this->blockValue();
+
+       if (this->isAquiferValue())
+            return this->aquiferValue();
 
         if (this->isRegionValue())
             return this->regionValue();
@@ -2060,6 +2102,18 @@ namespace Evaluator {
         desc.unit = this->directUnitString();
         desc.evaluator.reset(new BlockValue {
             *this->node_, this->paramUnit_
+        });
+
+        return desc;
+    }
+
+    Factory::Descriptor Factory::aquiferValue()
+    {
+        auto desc = this->unknownParameter();
+
+        desc.unit = this->directUnitString();
+        desc.evaluator.reset(new AquiferValue {
+                *this->node_, this->paramUnit_
         });
 
         return desc;
@@ -2121,6 +2175,18 @@ namespace Evaluator {
 
         // 'node_' represents a block value in an active cell.
         // Capture unit of measure and return true.
+        this->paramUnit_ = pos->second;
+        return true;
+    }
+
+    bool Factory::isAquiferValue()
+    {
+        auto pos = aquifer_units.find(this->node_->keyword);
+        if (pos == aquifer_units.end()) return false;
+
+        // if the aquifer does not exist, should we warn?
+        if ( !this->es_.aquifer().hasAquifer(this->node_->number) ) return false;
+
         this->paramUnit_ = pos->second;
         return true;
     }
@@ -2412,6 +2478,7 @@ public:
               const GlobalProcessParameters&     single_values,
               const RegionParameters&            region_values,
               const BlockValues&                 block_values,
+              const data::Aquifers&              aquifer_values,
               SummaryState&                      st) const;
 
     void internal_store(const SummaryState& st, const int report_step);
@@ -2514,6 +2581,7 @@ eval(const EclipseState&                es,
      const GlobalProcessParameters&     single_values,
      const RegionParameters&            region_values,
      const BlockValues&                 block_values,
+     const data::Aquifers&              aquifer_values,
      Opm::SummaryState&                 st) const
 {
     const Evaluator::InputData input {
@@ -2521,7 +2589,7 @@ eval(const EclipseState&                es,
     };
 
     const Evaluator::SimulatorResults simRes {
-        well_solution, grp_nwrk_solution, single_values, region_values, block_values
+        well_solution, grp_nwrk_solution, single_values, region_values, block_values, aquifer_values
     };
 
     for (auto& evalPtr : this->outputParameters_.getEvaluators()) {
@@ -2814,7 +2882,8 @@ void Summary::eval(SummaryState&                      st,
                    const data::GroupAndNetworkValues& grp_nwrk_solution,
                    GlobalProcessParameters            single_values,
                    const RegionParameters&            region_values,
-                   const BlockValues&                 block_values) const
+                   const BlockValues&                 block_values,
+                   const Opm::data::Aquifers&         aquifer_values) const
 {
     validateElapsedTime(secs_elapsed, es, st);
 
@@ -2836,7 +2905,7 @@ void Summary::eval(SummaryState&                      st,
 
     this->pImpl_->eval(es, schedule, sim_step, duration,
                        well_solution, grp_nwrk_solution, single_values,
-                       region_values, block_values, st);
+                       region_values, block_values, aquifer_values, st);
 
     st.update_elapsed(duration);
 }

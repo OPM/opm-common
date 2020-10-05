@@ -21,6 +21,7 @@
 #define OPM_OUTPUT_SUMMARY_HPP
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp>
+#include <opm/output/data/Aquifer.hpp>
 
 #include <map>
 #include <memory>
@@ -68,7 +69,8 @@ public:
               const data::GroupAndNetworkValues& group_and_nwrk_solution,
               GlobalProcessParameters            single_values,
               const RegionParameters&            region_values = {},
-              const BlockValues&                 block_values  = {}) const;
+              const BlockValues&                 block_values  = {},
+              const data::Aquifers&              aquifers_values = {}) const;
 
     void write() const;
 

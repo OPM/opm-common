@@ -70,7 +70,8 @@ inline void loadDeck( const char * deck_file) {
     std::cout << "creating SummaryConfig .... ";  std::cout.flush();
 
     start = std::chrono::system_clock::now();
-    Opm::SummaryConfig summary( deck, schedule, state.getTableManager( ), parseContext, errors );
+    Opm::SummaryConfig summary( deck, schedule, state.getTableManager( ), state.aquifer(),
+                                parseContext, errors );
     auto summary_time = std::chrono::system_clock::now() - start;
 
     std::cout << "complete." << std::endl << std::endl;

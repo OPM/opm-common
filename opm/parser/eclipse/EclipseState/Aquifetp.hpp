@@ -76,6 +76,8 @@ class Aquifetp {
     std::vector<Aquifetp::AQUFETP_data>::const_iterator end() const;
     bool operator==(const Aquifetp& other) const;
 
+    bool hasAquifer(const int aquID) const;
+
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {

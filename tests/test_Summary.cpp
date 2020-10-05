@@ -435,7 +435,7 @@ struct setup {
         grid( es.getInputGrid() ),
         python( std::make_shared<Python>() ),
         schedule( deck, es, python),
-        config( deck, schedule, es.getTableManager()),
+        config( deck, schedule, es.getTableManager(), es.aquifer()),
         wells( result_wells(w3_injector) ),
         grp_nwrk( result_group_nwrk() ),
         name( toupper(std::move(fname)) ),
