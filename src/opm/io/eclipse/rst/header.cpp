@@ -84,6 +84,7 @@ RstHeader::RstHeader(const std::vector<int>& intehead, const std::vector<bool>& 
     ntfip(intehead[VI::intehead::NTFIP]),
     nmfipr(intehead[VI::intehead::NMFIPR]),
     ngroup(intehead[VI::intehead::NGRP]),
+    nwgmax(intehead[VI::intehead::NWGMAX]),
     //
     e300_radial(logihead[VI::logihead::E300Radial]),
     e100_radial(logihead[VI::logihead::E100Radial]),

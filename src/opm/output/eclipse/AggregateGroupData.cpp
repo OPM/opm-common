@@ -428,6 +428,408 @@ allocate(const std::vector<int>& inteHead)
     };
 }
 
+
+
+
+template <class IGrpArray>
+void productionGroup(const Opm::Schedule&     sched,
+                     const Opm::Group&        group,
+                     const int                nwgmax,
+                     const std::size_t        simStep,
+                     const Opm::SummaryState& sumState,
+                     const std::map<int, Opm::Group::ProductionCMode>& pCtrlToPCmode,
+                     IGrpArray&               iGrp)
+{
+    const auto& prod_cmode = group.productionControls(sumState).cmode;
+    if (group.name() == "FIELD") {
+        iGrp[nwgmax + 6] = 0;
+        iGrp[nwgmax + 7] = 0;
+        switch (prod_cmode) {
+        case Opm::Group::ProductionCMode::NONE:
+            iGrp[nwgmax + 10] = 0;
+            break;
+        case Opm::Group::ProductionCMode::ORAT:
+            iGrp[nwgmax + 10] = 1;
+            break;
+        case Opm::Group::ProductionCMode::WRAT:
+            iGrp[nwgmax + 10] = 2;
+            break;
+        case Opm::Group::ProductionCMode::GRAT:
+            iGrp[nwgmax + 10] = 3;
+            break;
+        case Opm::Group::ProductionCMode::LRAT:
+            iGrp[nwgmax + 10] = 4;
+            break;
+        case Opm::Group::ProductionCMode::RESV:
+            iGrp[nwgmax + 10] = 5;
+            break;
+        case Opm::Group::ProductionCMode::FLD:
+            iGrp[nwgmax + 10] = 0;
+            break;
+        default:
+            iGrp[nwgmax + 10] = 0;
+        }
+        return;
+    }
+
+
+    const auto& prod_guide_rate_def = group.productionControls(sumState).guide_rate_def;
+    const auto& p_exceed_act = group.productionControls(sumState).exceed_action;
+    // Find production control mode for group
+    const double cur_prod_ctrl = sumState.get_group_var(group.name(), "GMCTP", -1);
+    Opm::Group::ProductionCMode pctl_mode = Opm::Group::ProductionCMode::NONE;
+    if (cur_prod_ctrl >= 0) {
+        const auto it_ctrl = pCtrlToPCmode.find(cur_prod_ctrl);
+        if (it_ctrl != pCtrlToPCmode.end()) {
+            pctl_mode = it_ctrl->second;
+        }
+    }
+#if ENABLE_GCNTL_DEBUG_OUTPUT
+    else {
+        // std::stringstream str;
+        // str << "Current group production control is not defined for group: " << group.name() << " at timestep: " <<
+        // simStep;
+        std::cout << "Current group production control is not defined for group: " << group.name()
+                  << " at timestep: " << simStep << std::endl;
+        // throw std::invalid_argument(str.str());
+    }
+#endif // ENABLE_GCNTL_DEBUG_OUTPUT
+
+    /*IGRP[NWGMAX + 5]
+     - the value is determined by a relatively complex logic, a pseudo code scetch follows:
+     if (group is free to respond to higher level production rate target_reinj_fraction)
+         iGrp[nwgmax + 5] = 0
+     else if (group::control mode > 0) (controlled by own limit)
+         iGrp[nwgmax + 5] = -1
+     else if (a higher level group control is active constraint)
+         if (group control mode is NOT == ("FLD" OR "NONE"))
+             iGrp[nwgmax + 5] = group_sequence_no_of controlling group
+         else
+             iGrp[nwgmax + 5] = 1
+     else if (a higher level group has a control mode NOT == ("FLD" OR "NONE"))
+         if (group control mode is NOT == ("FLD" OR "NONE"))
+            iGrp[nwgmax + 5] = -1
+         else
+             iGrp[nwgmax + 5] = 1
+     else if (group control mode is == ("FLD" OR "NONE"))
+            iGrp[nwgmax + 5] = -1
+         else
+             iGrp[nwgmax + 5] = -1
+
+    */
+    // default value
+    iGrp[nwgmax + 5] = -1;
+    int higher_lev_ctrl = higherLevelProdControlGroupSeqIndex(sched, sumState, group, simStep);
+    int higher_lev_ctrl_mode = higherLevelProdControlMode(sched, sumState, group, simStep);
+    // Start branching for determining iGrp[nwgmax + 5]
+    // use default value if group is not available for group control
+    if (groupProductionControllable(sched, sumState, group, simStep)) {
+        // this section applies if group is controllable - i.e. has wells that may be controlled
+        if (!group.productionGroupControlAvailable() && (higher_lev_ctrl <= 0)) {
+            // group can respond to higher level control
+            iGrp[nwgmax + 5] = 0;
+        } else if (((pctl_mode != Opm::Group::ProductionCMode::NONE)) && (higher_lev_ctrl < 0)) {
+            // group is constrained by its own limits or controls
+            // if (pctl_mode != Opm::Group::ProductionCMode::FLD)  -  need to use this test? - else remove
+            iGrp[nwgmax + 5] = -1; // only value that seems to work when no group at higher level has active control
+        } else if (higher_lev_ctrl > 0) {
+            if (((prod_cmode == Opm::Group::ProductionCMode::FLD) || (prod_cmode == Opm::Group::ProductionCMode::NONE))
+                && (group.productionControls(sumState).guide_rate_def != Opm::Group::GuideRateTarget::NO_GUIDE_RATE)) {
+                iGrp[nwgmax + 5] = higher_lev_ctrl;
+            } else {
+                iGrp[nwgmax + 5] = 1;
+            }
+        } else if (higherLevelProdCMode_NotNoneFld(sched, sumState, group, simStep)) {
+            if (!((prod_cmode == Opm::Group::ProductionCMode::FLD)
+                  || (prod_cmode == Opm::Group::ProductionCMode::NONE))) {
+                iGrp[nwgmax + 5] = -1;
+            } else {
+                iGrp[nwgmax + 5] = 1;
+            }
+        } else if ((prod_cmode == Opm::Group::ProductionCMode::FLD)
+                   || (prod_cmode == Opm::Group::ProductionCMode::NONE)) {
+            iGrp[nwgmax + 5] = -1;
+        } else {
+            iGrp[nwgmax + 5] = -1;
+        }
+    } else if (prod_cmode == Opm::Group::ProductionCMode::NONE) {
+        iGrp[nwgmax + 5] = 1;
+    }
+
+    // Set iGrp for [nwgmax + 7]
+    /*
+    For the reduction option RATE the value is generally = 4
+
+    For the reduction option NONE the values are as shown below, however, this is not a very likely case.
+
+    = 0 for group with  "FLD" or "NONE"
+    = 4 for "GRAT" FIELD
+    = -40000 for production group with "ORAT"
+    = -4000  for production group with "WRAT"
+    = -400    for production group with "GRAT"
+    = -40     for production group with "LRAT"
+
+    Other reduction options are currently not covered in the code
+    */
+
+    if (higher_lev_ctrl > 0 && (group.getGroupType() != Opm::Group::GroupType::NONE)) {
+        iGrp[nwgmax + 1]
+            = (prod_guide_rate_def != Opm::Group::GuideRateTarget::NO_GUIDE_RATE) ? higher_lev_ctrl_mode : 0;
+    } else {
+        switch (pctl_mode) {
+        case Opm::Group::ProductionCMode::NONE:
+            iGrp[nwgmax + 1] = 0;
+            break;
+        case Opm::Group::ProductionCMode::ORAT:
+            iGrp[nwgmax + 1] = 1;
+            break;
+        case Opm::Group::ProductionCMode::WRAT:
+            iGrp[nwgmax + 1] = 2;
+            break;
+        case Opm::Group::ProductionCMode::GRAT:
+            iGrp[nwgmax + 1] = 3;
+            break;
+        case Opm::Group::ProductionCMode::LRAT:
+            iGrp[nwgmax + 1] = 4;
+            break;
+        case Opm::Group::ProductionCMode::RESV:
+            iGrp[nwgmax + 1] = 5;
+            break;
+        case Opm::Group::ProductionCMode::FLD:
+            iGrp[nwgmax + 1] = 0; // need to be checked!!
+            break;
+        default:
+            iGrp[nwgmax + 1] = 0;
+        }
+    }
+    iGrp[nwgmax + 9] = iGrp[nwgmax + 1];
+
+    switch (prod_cmode) {
+    case Opm::Group::ProductionCMode::NONE:
+        iGrp[nwgmax + 6] = 0;
+        iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? 0 : 4;
+        iGrp[nwgmax + 10] = 0;
+        break;
+    case Opm::Group::ProductionCMode::ORAT:
+        iGrp[nwgmax + 6] = 0;
+        iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? -40000 : 4;
+        iGrp[nwgmax + 10] = 1;
+        break;
+    case Opm::Group::ProductionCMode::WRAT:
+        iGrp[nwgmax + 6] = 0;
+        iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? -4000 : 4;
+        iGrp[nwgmax + 10] = 2;
+        break;
+    case Opm::Group::ProductionCMode::GRAT:
+        iGrp[nwgmax + 6] = 0;
+        iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? -400 : 4;
+        iGrp[nwgmax + 10] = 3;
+        break;
+    case Opm::Group::ProductionCMode::LRAT:
+        iGrp[nwgmax + 6] = 0;
+        iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? -40 : 4;
+        iGrp[nwgmax + 10] = 4;
+        break;
+    case Opm::Group::ProductionCMode::RESV:
+        iGrp[nwgmax + 6] = 0;
+        iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? -4 : 4; // need to be checked
+        iGrp[nwgmax + 10] = 5;
+        break;
+    case Opm::Group::ProductionCMode::FLD:
+        iGrp[nwgmax + 6] = 0;
+        if ((higher_lev_ctrl > 0) && (prod_guide_rate_def != Opm::Group::GuideRateTarget::NO_GUIDE_RATE)) {
+            iGrp[nwgmax + 6] = 8;
+        }
+        iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? 4 : 4;
+        iGrp[nwgmax + 10] = 0; // need to be checked!!
+        break;
+    default:
+        iGrp[nwgmax + 6] = 0;
+        iGrp[nwgmax + 7] = 0;
+        iGrp[nwgmax + 10] = 0; // need to be checked!!
+    }
+}
+
+
+template <class IGrpArray>
+void injectionGroup(const Opm::Schedule&     sched,
+                    const Opm::Group&        group,
+                    const int                nwgmax,
+                    const std::size_t        simStep,
+                    const Opm::SummaryState& sumState,
+                    const std::map<Opm::Group::InjectionCMode, int>& cmodeToNum,
+                    IGrpArray&               iGrp)
+{
+    const bool is_field = group.name() == "FIELD";
+    auto group_parent_list = groupParentSeqIndex(sched, group, simStep);
+
+    // set "default value" in case a group is only injection group
+    if (group.isInjectionGroup() && !group.isProductionGroup()) {
+        iGrp[nwgmax + 5] = 1;
+    }
+    // use default value if group is not available for group control
+    if (groupInjectionControllable(sched, sumState, group, Opm::Phase::WATER, simStep)) {
+        if ((group.hasInjectionControl(Opm::Phase::WATER)) || (group.getGroupType() == Opm::Group::GroupType::NONE)) {
+            const double cur_winj_ctrl
+                = is_field ? sumState.get("FMCTW", -1) : sumState.get_group_var(group.name(), "GMCTW", -1);
+            const auto& winj_cmode = (group.hasInjectionControl(Opm::Phase::WATER))
+                ? group.injectionControls(Opm::Phase::WATER, sumState).cmode
+                : Opm::Group::InjectionCMode::NONE;
+            if (!is_field) {
+                int higher_lev_winj_ctrl = higherLevelInjControlGroupSeqIndex(sched, sumState, group, "GMCTW", simStep);
+                int higher_lev_winj_cmode
+                    = higherLevelInjCMode_NotNoneFld_SeqIndex(sched, sumState, group, Opm::Phase::WATER, simStep);
+                std::size_t winj_control_ind = 0;
+                std::size_t inj_cmode_ind = 0;
+
+                // WATER INJECTION GROUP CONTROL
+
+                // Start branching for determining iGrp[nwgmax + 17]
+                if (cur_winj_ctrl > 0.) {
+                    iGrp[nwgmax + 17] = 0;
+                }
+                if (!group.injectionGroupControlAvailable(Opm::Phase::WATER) && (higher_lev_winj_ctrl <= 0)) {
+                    // group can respond to higher level control
+                    iGrp[nwgmax + 17] = 0;
+                } else if (higher_lev_winj_ctrl > 0 || higher_lev_winj_cmode > 0) {
+                    if (!((winj_cmode == Opm::Group::InjectionCMode::FLD)
+                          || (winj_cmode == Opm::Group::InjectionCMode::NONE))) {
+                        if (!(higher_lev_winj_ctrl == higher_lev_winj_cmode)) {
+
+                            auto result = findInVector<std::size_t>(group_parent_list, higher_lev_winj_ctrl);
+                            if (result.first) {
+                                winj_control_ind = result.second;
+                            } else {
+                                winj_control_ind = 99999;
+                            }
+
+                            result = findInVector<std::size_t>(group_parent_list, higher_lev_winj_cmode);
+                            if (result.first) {
+                                inj_cmode_ind = result.second;
+                            } else {
+                                inj_cmode_ind = 99999;
+                            }
+
+                            if (winj_control_ind < inj_cmode_ind) {
+                                iGrp[nwgmax + 17] = higher_lev_winj_ctrl;
+                            } else {
+                                iGrp[nwgmax + 17] = higher_lev_winj_cmode;
+                            }
+                            iGrp[nwgmax + 17] = higher_lev_winj_ctrl;
+                        } else {
+                            iGrp[nwgmax + 17] = higher_lev_winj_ctrl;
+                        }
+                    } else {
+                        iGrp[nwgmax + 17] = 1;
+                    }
+                } else {
+                    iGrp[nwgmax + 17] = -1;
+                }
+            } else { // group name "FIELD"
+                iGrp[nwgmax + 17] = 0;
+                iGrp[nwgmax + 22] = 0;
+            }
+            // item[nwgmax + 16] - mode for operation for water injection
+            // 1 - RATE
+            // 2 - RESV
+            // 3 - REIN
+            // 4 - VREP
+            // 0 - ellers
+            const auto& inj_mode = (group.hasInjectionControl(Opm::Phase::WATER))
+                ? group.injectionControls(Opm::Phase::WATER, sumState).cmode
+                : Opm::Group::InjectionCMode::NONE;
+            const auto it = cmodeToNum.find(inj_mode);
+            if (it != cmodeToNum.end()) {
+                iGrp[nwgmax + 16] = it->second;
+                iGrp[nwgmax + 18] = iGrp[nwgmax + 16];
+                iGrp[nwgmax + 19] = iGrp[nwgmax + 16];
+            }
+        }
+    }
+
+    // use default value if group is not available for group control
+    if (groupInjectionControllable(sched, sumState, group, Opm::Phase::GAS, simStep)) {
+        if ((group.hasInjectionControl(Opm::Phase::GAS)) || (group.getGroupType() == Opm::Group::GroupType::NONE)) {
+            const double cur_ginj_ctrl
+                = is_field ? sumState.get("FMCTG", -1) : sumState.get_group_var(group.name(), "GMCTG", -1);
+            const auto& ginj_cmode = (group.hasInjectionControl(Opm::Phase::GAS))
+                ? group.injectionControls(Opm::Phase::GAS, sumState).cmode
+                : Opm::Group::InjectionCMode::NONE;
+            if (!is_field) {
+                int higher_lev_ginj_ctrl = higherLevelInjControlGroupSeqIndex(sched, sumState, group, "GMCTG", simStep);
+                int higher_lev_ginj_cmode
+                    = higherLevelInjCMode_NotNoneFld_SeqIndex(sched, sumState, group, Opm::Phase::GAS, simStep);
+                std::size_t ginj_control_ind = 0;
+                std::size_t inj_cmode_ind = 0;
+                // GAS INJECTION GROUP CONTROL
+                // Start branching for determining iGrp[nwgmax + 22]
+                if (cur_ginj_ctrl > 0.) {
+                    iGrp[nwgmax + 22] = 0;
+                }
+                if (!group.injectionGroupControlAvailable(Opm::Phase::GAS) && (higher_lev_ginj_ctrl <= 0)) {
+                    // group can respond to higher level control
+                    iGrp[nwgmax + 22] = 0;
+                } else if (higher_lev_ginj_ctrl > 0 || higher_lev_ginj_cmode > 0) {
+                    if (!((ginj_cmode == Opm::Group::InjectionCMode::FLD)
+                          || (ginj_cmode == Opm::Group::InjectionCMode::NONE))) {
+                        if (!(higher_lev_ginj_ctrl == higher_lev_ginj_cmode)) {
+
+                            auto result = findInVector<std::size_t>(group_parent_list, higher_lev_ginj_ctrl);
+                            if (result.first) {
+                                ginj_control_ind = result.second;
+                            } else {
+                                ginj_control_ind = 99999;
+                            }
+
+                            result = findInVector<std::size_t>(group_parent_list, higher_lev_ginj_cmode);
+                            if (result.first) {
+                                inj_cmode_ind = result.second;
+                            } else {
+                                inj_cmode_ind = 99999;
+                            }
+
+                            if (ginj_control_ind < inj_cmode_ind) {
+                                iGrp[nwgmax + 22] = higher_lev_ginj_ctrl;
+                            } else {
+                                iGrp[nwgmax + 22] = higher_lev_ginj_cmode;
+                            }
+                            iGrp[nwgmax + 22] = higher_lev_ginj_ctrl;
+                        } else {
+                            iGrp[nwgmax + 22] = higher_lev_ginj_ctrl;
+                        }
+                    } else {
+                        iGrp[nwgmax + 22] = 1;
+                    }
+                } else {
+                    iGrp[nwgmax + 22] = -1;
+                }
+            } else { // group name "FIELD"
+                iGrp[nwgmax + 17] = 0;
+                iGrp[nwgmax + 22] = 0;
+                // parameters connected to oil injection - not implemented in flow yet
+                iGrp[nwgmax + 11] = 0;
+                iGrp[nwgmax + 12] = 0;
+            }
+            // item[nwgmax + 21] - mode for operation for gas injection
+            // 1 - RATE
+            // 2 - RESV
+            // 3 - REIN
+            // 4 - VREP
+            // 0 - ellers
+            const auto& inj_mode = (group.hasInjectionControl(Opm::Phase::GAS))
+                ? group.injectionControls(Opm::Phase::GAS, sumState).cmode
+                : Opm::Group::InjectionCMode::NONE;
+            const auto it = cmodeToNum.find(inj_mode);
+            if (it != cmodeToNum.end()) {
+                iGrp[nwgmax + 21] = it->second;
+                iGrp[nwgmax + 23] = iGrp[nwgmax + 21];
+                iGrp[nwgmax + 24] = iGrp[nwgmax + 21];
+            }
+        }
+    }
+}
+
+
 template <class IGrpArray>
 void staticContrib(const Opm::Schedule&     sched,
                    const Opm::Group&        group,
@@ -467,401 +869,17 @@ void staticContrib(const Opm::Schedule&     sched,
     const double g_act_iwells = is_field ? sumState.get("FMWIN", 0) : sumState.get_group_var(group.name(), "GMWIN", 0);
     iGrp[nwgmax + 33] = g_act_pwells + g_act_iwells;
 
-    //Treat groups that have production
-    if ((group.getGroupType() == Opm::Group::GroupType::NONE) || (group.getGroupType() == Opm::Group::GroupType::PRODUCTION)
-         || (group.getGroupType() == Opm::Group::GroupType::MIXED)) {
+    // Treat al groups which are *not* pure injection groups.
+    if (group.getGroupType() != Opm::Group::GroupType::INJECTION)
+        productionGroup(sched, group, nwgmax, simStep, sumState, pCtrlToPCmode, iGrp);
 
-        const auto& prod_cmode = group.productionControls(sumState).cmode;
-        const auto& prod_guide_rate_def = group.productionControls(sumState).guide_rate_def;
-        const auto& p_exceed_act = group.productionControls(sumState).exceed_action;
-        // Find production control mode for group
-        const double cur_prod_ctrl = is_field ? sumState.get("FMCTP", -1) : sumState.get_group_var(group.name(), "GMCTP", -1);
-        Opm::Group::ProductionCMode pctl_mode = Opm::Group::ProductionCMode::NONE;
-        if (cur_prod_ctrl >= 0) {
-            const auto it_ctrl = pCtrlToPCmode.find(cur_prod_ctrl);
-            if (it_ctrl != pCtrlToPCmode.end()) {
-                pctl_mode = it_ctrl->second;
-            }
-        }
-#if ENABLE_GCNTL_DEBUG_OUTPUT
-        else {
-            //std::stringstream str;
-            //str << "Current group production control is not defined for group: " << group.name() << " at timestep: " << simStep;
-            std::cout << "Current group production control is not defined for group: " << group.name() << " at timestep: " << simStep << std::endl;
-            //throw std::invalid_argument(str.str());
-        }
-#endif // ENABLE_GCNTL_DEBUG_OUTPUT
-
-        /*IGRP[NWGMAX + 5]
-         - the value is determined by a relatively complex logic, a pseudo code scetch follows:
-         if (group is free to respond to higher level production rate target_reinj_fraction)
-             iGrp[nwgmax + 5] = 0
-         else if (group::control mode > 0) (controlled by own limit)
-             iGrp[nwgmax + 5] = -1
-         else if (a higher level group control is active constraint)
-             if (group control mode is NOT == ("FLD" OR "NONE"))
-                 iGrp[nwgmax + 5] = group_sequence_no_of controlling group
-             else
-                 iGrp[nwgmax + 5] = 1
-         else if (a higher level group has a control mode NOT == ("FLD" OR "NONE"))
-             if (group control mode is NOT == ("FLD" OR "NONE"))
-                iGrp[nwgmax + 5] = -1
-             else
-                 iGrp[nwgmax + 5] = 1
-         else if (group control mode is == ("FLD" OR "NONE"))
-                iGrp[nwgmax + 5] = -1
-             else
-                 iGrp[nwgmax + 5] = -1
-
-        */
-        if (group.name() != "FIELD") {
-            //default value
-            iGrp[nwgmax + 5] = -1;
-            int higher_lev_ctrl = higherLevelProdControlGroupSeqIndex(sched, sumState, group, simStep);
-            int higher_lev_ctrl_mode = higherLevelProdControlMode(sched, sumState, group, simStep);
-            //Start branching for determining iGrp[nwgmax + 5]
-            //use default value if group is not available for group control
-            if (groupProductionControllable(sched, sumState, group, simStep)) {
-                //this section applies if group is controllable - i.e. has wells that may be controlled
-                if (!group.productionGroupControlAvailable() && (higher_lev_ctrl <= 0)) {
-                    //group can respond to higher level control
-                    iGrp[nwgmax + 5] = 0;
-                }
-                else if (((pctl_mode != Opm::Group::ProductionCMode::NONE)) && (higher_lev_ctrl < 0)) {
-                    //group is constrained by its own limits or controls
-                    // if (pctl_mode != Opm::Group::ProductionCMode::FLD)  -  need to use this test? - else remove
-                    iGrp[nwgmax + 5] = -1;  // only value that seems to work when no group at higher level has active control
-                }
-                else if (higher_lev_ctrl > 0) {
-                    if (((prod_cmode == Opm::Group::ProductionCMode::FLD) || (prod_cmode == Opm::Group::ProductionCMode::NONE))
-                        && (group.productionControls(sumState).guide_rate_def != Opm::Group::GuideRateTarget::NO_GUIDE_RATE)) {
-                        iGrp[nwgmax + 5] = higher_lev_ctrl;
-                    }
-                    else {
-                        iGrp[nwgmax + 5] = 1;
-                    }
-                }
-                else if (higherLevelProdCMode_NotNoneFld(sched, sumState, group, simStep)) {
-                    if (!((prod_cmode == Opm::Group::ProductionCMode::FLD) || (prod_cmode == Opm::Group::ProductionCMode::NONE))) {
-                        iGrp[nwgmax + 5] = -1;
-                    }
-                    else {
-                        iGrp[nwgmax + 5] = 1;
-                    }
-                }
-                else if ((prod_cmode == Opm::Group::ProductionCMode::FLD) || (prod_cmode == Opm::Group::ProductionCMode::NONE)) {
-                    iGrp[nwgmax + 5] = -1;
-                }
-                else {
-                    iGrp[nwgmax + 5] = -1;
-                }
-            }
-            else if (prod_cmode == Opm::Group::ProductionCMode::NONE){
-                iGrp[nwgmax + 5] = 1;
-            }
-
-            // Set iGrp for [nwgmax + 7]
-            /*
-            For the reduction option RATE the value is generally = 4
-
-            For the reduction option NONE the values are as shown below, however, this is not a very likely case.
-
-            = 0 for group with  "FLD" or "NONE"
-            = 4 for "GRAT" FIELD
-            = -40000 for production group with "ORAT"
-            = -4000  for production group with "WRAT"
-            = -400    for production group with "GRAT"
-            = -40     for production group with "LRAT"
-
-            Other reduction options are currently not covered in the code
-            */
-
-            if (higher_lev_ctrl > 0 && (group.getGroupType() != Opm::Group::GroupType::NONE)) {
-                iGrp[nwgmax + 1] = ( prod_guide_rate_def != Opm::Group::GuideRateTarget::NO_GUIDE_RATE ) ? higher_lev_ctrl_mode : 0;
-            }
-            else {
-                switch (pctl_mode) {
-                    case Opm::Group::ProductionCMode::NONE:
-                        iGrp[nwgmax + 1] = 0;
-                        break;
-                    case Opm::Group::ProductionCMode::ORAT:
-                        iGrp[nwgmax + 1] = 1;
-                        break;
-                    case Opm::Group::ProductionCMode::WRAT:
-                        iGrp[nwgmax + 1] = 2;
-                        break;
-                    case Opm::Group::ProductionCMode::GRAT:
-                        iGrp[nwgmax + 1] = 3;
-                        break;
-                    case Opm::Group::ProductionCMode::LRAT:
-                        iGrp[nwgmax + 1] = 4;
-                        break;
-                    case Opm::Group::ProductionCMode::RESV:
-                        iGrp[nwgmax + 1] = 5;
-                        break;
-                    case Opm::Group::ProductionCMode::FLD:
-                        iGrp[nwgmax + 1] = 0;   // need to be checked!!
-                        break;
-                    default:
-                        iGrp[nwgmax + 1] = 0;
-                }
-            }
-            iGrp[nwgmax + 9] = iGrp[nwgmax + 1];
-
-            switch (prod_cmode) {
-                case Opm::Group::ProductionCMode::NONE:
-                    iGrp[nwgmax + 6]  = 0;
-                    iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? 0 : 4;
-                    iGrp[nwgmax + 10] = 0;
-                    break;
-                case Opm::Group::ProductionCMode::ORAT:
-                    iGrp[nwgmax + 6]  = 0;
-                    iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? -40000 : 4;
-                    iGrp[nwgmax + 10] = 1;
-                    break;
-                case Opm::Group::ProductionCMode::WRAT:
-                    iGrp[nwgmax + 6]  = 0;
-                    iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? -4000 : 4;
-                    iGrp[nwgmax + 10] = 2;
-                    break;
-                case Opm::Group::ProductionCMode::GRAT:
-                    iGrp[nwgmax + 6]  = 0;
-                    iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? -400 : 4;
-                    iGrp[nwgmax + 10] = 3;
-                    break;
-                case Opm::Group::ProductionCMode::LRAT:
-                    iGrp[nwgmax + 6]  = 0;
-                    iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? -40 : 4;
-                    iGrp[nwgmax + 10] = 4;
-                    break;
-                case Opm::Group::ProductionCMode::RESV:
-                    iGrp[nwgmax + 6]  = 0;
-                    iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? -4 : 4;  // need to be checked
-                    iGrp[nwgmax + 10] = 5;
-                    break;
-                case Opm::Group::ProductionCMode::FLD:
-                    iGrp[nwgmax + 6]  = 0;
-                    if (( higher_lev_ctrl > 0 ) && ( prod_guide_rate_def != Opm::Group::GuideRateTarget::NO_GUIDE_RATE )) {
-                        iGrp[nwgmax + 6]  = 8;
-                    }
-                    iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? 4 : 4;
-                    iGrp[nwgmax + 10] = 0;   // need to be checked!!
-                    break;
-                default:
-                    iGrp[nwgmax + 6]  = 0;
-                    iGrp[nwgmax + 7]  = 0;
-                    iGrp[nwgmax + 10] = 0;   // need to be checked!!
-                }
-        }
-        else {  // group name is "FIELD"
-            iGrp[nwgmax + 6]  = 0;
-            iGrp[nwgmax + 7] = 0;
-            switch (prod_cmode) {
-                case Opm::Group::ProductionCMode::NONE:
-                    iGrp[nwgmax + 10] = 0;
-                    break;
-                case Opm::Group::ProductionCMode::ORAT:
-                    iGrp[nwgmax + 10] = 1;
-                    break;
-                case Opm::Group::ProductionCMode::WRAT:
-                    iGrp[nwgmax + 10] = 2;
-                    break;
-                case Opm::Group::ProductionCMode::GRAT:
-                    iGrp[nwgmax + 10] = 3;
-                    break;
-                case Opm::Group::ProductionCMode::LRAT:
-                    iGrp[nwgmax + 10] = 4;
-                    break;
-                case Opm::Group::ProductionCMode::RESV:
-                    iGrp[nwgmax + 10] = 5;
-                    break;
-                case Opm::Group::ProductionCMode::FLD:
-                    iGrp[nwgmax + 10] = 0;
-                    break;
-                default:
-                    iGrp[nwgmax + 10] = 0;
-            }
-        }
-    }
     //default value -
     iGrp[nwgmax + 17] = -1;
     iGrp[nwgmax + 22] = -1;
-    if (group.isInjectionGroup() || (group.getGroupType() == Opm::Group::GroupType::MIXED) || (group.getGroupType() == Opm::Group::GroupType::NONE)) {
-        auto group_parent_list = groupParentSeqIndex(sched, group, simStep);
+    // Treat al groups which are *not* pure production groups.
+    if (group.getGroupType() != Opm::Group::GroupType::PRODUCTION)
+        injectionGroup(sched, group, nwgmax, simStep, sumState, cmodeToNum, iGrp);
 
-        //set "default value" in case a group is only injection group
-        if (group.isInjectionGroup() && !group.isProductionGroup()) {
-            iGrp[nwgmax + 5] = 1;
-        }
-        //use default value if group is not available for group control
-        if (groupInjectionControllable(sched, sumState, group, Opm::Phase::WATER, simStep)) {
-            if ((group.hasInjectionControl(Opm::Phase::WATER))  || (group.getGroupType() == Opm::Group::GroupType::NONE)){
-                const double cur_winj_ctrl = is_field ? sumState.get("FMCTW", -1) : sumState.get_group_var(group.name(), "GMCTW", -1);
-                const auto& winj_cmode = (group.hasInjectionControl(Opm::Phase::WATER))?
-                group.injectionControls(Opm::Phase::WATER, sumState).cmode : Opm::Group::InjectionCMode::NONE;
-                if (!is_field) {
-                    int higher_lev_winj_ctrl = higherLevelInjControlGroupSeqIndex(sched, sumState, group, "GMCTW", simStep);
-                    int higher_lev_winj_cmode = higherLevelInjCMode_NotNoneFld_SeqIndex(sched, sumState, group, Opm::Phase::WATER, simStep);
-                    std::size_t winj_control_ind = 0;
-                    std::size_t inj_cmode_ind = 0;
-
-                    //WATER INJECTION GROUP CONTROL
-
-                    //Start branching for determining iGrp[nwgmax + 17]
-                    if (cur_winj_ctrl > 0.) {
-                            iGrp[nwgmax + 17] = 0;
-                    }
-                    if (!group.injectionGroupControlAvailable(Opm::Phase::WATER) && (higher_lev_winj_ctrl <= 0)) {
-                        //group can respond to higher level control
-                        iGrp[nwgmax + 17] = 0;
-                    }
-                    else if (higher_lev_winj_ctrl > 0 || higher_lev_winj_cmode > 0) {
-                        if (!((winj_cmode == Opm::Group::InjectionCMode::FLD) || (winj_cmode == Opm::Group::InjectionCMode::NONE))) {
-                            if (!(higher_lev_winj_ctrl == higher_lev_winj_cmode)) {
-
-                                auto result = findInVector<std::size_t>(group_parent_list, higher_lev_winj_ctrl);
-                                if (result.first) {
-                                    winj_control_ind = result.second;
-                                }
-                                else {
-                                    winj_control_ind =  99999;
-                                }
-
-                                result = findInVector<std::size_t>(group_parent_list, higher_lev_winj_cmode);
-                                if (result.first) {
-                                    inj_cmode_ind = result.second;
-                                }
-                                else {
-                                    inj_cmode_ind =  99999;
-                                }
-
-                                if (winj_control_ind < inj_cmode_ind) {
-                                    iGrp[nwgmax + 17] = higher_lev_winj_ctrl;
-                                }
-                                else {
-                                    iGrp[nwgmax + 17] = higher_lev_winj_cmode;
-                                }
-                                iGrp[nwgmax + 17] = higher_lev_winj_ctrl;
-                            }
-                            else {
-                                iGrp[nwgmax + 17] = higher_lev_winj_ctrl;
-                            }
-                        }
-                        else {
-                            iGrp[nwgmax + 17] = 1;
-                        }
-                    }
-                    else {
-                        iGrp[nwgmax + 17] = -1;
-                    }
-                }
-                else {  // group name "FIELD"
-                    iGrp[nwgmax + 17] = 0;
-                    iGrp[nwgmax + 22] = 0;
-                }
-                //item[nwgmax + 16] - mode for operation for water injection
-                // 1 - RATE
-                // 2 - RESV
-                // 3 - REIN
-                // 4 - VREP
-                // 0 - ellers
-                const auto& inj_mode = (group.hasInjectionControl(Opm::Phase::WATER)) ?
-                group.injectionControls(Opm::Phase::WATER, sumState).cmode : Opm::Group::InjectionCMode::NONE;
-                const auto it = cmodeToNum.find(inj_mode);
-                if (it != cmodeToNum.end()) {
-                    iGrp[nwgmax + 16] = it->second;
-                    iGrp[nwgmax + 18] = iGrp[nwgmax + 16];
-                    iGrp[nwgmax + 19] = iGrp[nwgmax + 16];
-                }
-            }
-        }
-
-        //use default value if group is not available for group control
-        if (groupInjectionControllable(sched, sumState, group, Opm::Phase::GAS, simStep)) {
-            if ((group.hasInjectionControl(Opm::Phase::GAS)) || (group.getGroupType() == Opm::Group::GroupType::NONE)) {
-                const double cur_ginj_ctrl = is_field ? sumState.get("FMCTG", -1) : sumState.get_group_var(group.name(), "GMCTG", -1);
-                const auto& ginj_cmode = (group.hasInjectionControl(Opm::Phase::GAS))?
-                group.injectionControls(Opm::Phase::GAS, sumState).cmode : Opm::Group::InjectionCMode::NONE;
-                if (!is_field) {
-                    int higher_lev_ginj_ctrl = higherLevelInjControlGroupSeqIndex(sched, sumState, group, "GMCTG", simStep);
-                    int higher_lev_ginj_cmode = higherLevelInjCMode_NotNoneFld_SeqIndex(sched, sumState, group, Opm::Phase::GAS, simStep);
-                    std::size_t ginj_control_ind = 0;
-                    std::size_t inj_cmode_ind = 0;
-                    //GAS INJECTION GROUP CONTROL
-                    //Start branching for determining iGrp[nwgmax + 22]
-                    if (cur_ginj_ctrl > 0.) {
-                            iGrp[nwgmax + 22] = 0;
-                    }
-                    if (!group.injectionGroupControlAvailable(Opm::Phase::GAS) && (higher_lev_ginj_ctrl <= 0)) {
-                        //group can respond to higher level control
-                        iGrp[nwgmax + 22] = 0;
-                    }
-                    else if (higher_lev_ginj_ctrl > 0 || higher_lev_ginj_cmode > 0) {
-                        if (!((ginj_cmode == Opm::Group::InjectionCMode::FLD) || (ginj_cmode == Opm::Group::InjectionCMode::NONE))) {
-                            if (!(higher_lev_ginj_ctrl == higher_lev_ginj_cmode)) {
-
-                                auto result = findInVector<std::size_t>(group_parent_list, higher_lev_ginj_ctrl);
-                                if (result.first) {
-                                    ginj_control_ind = result.second;
-                                }
-                                else {
-                                    ginj_control_ind =  99999;
-                                }
-
-                                result = findInVector<std::size_t>(group_parent_list, higher_lev_ginj_cmode);
-                                if (result.first) {
-                                    inj_cmode_ind = result.second;
-                                }
-                                else {
-                                    inj_cmode_ind =  99999;
-                                }
-
-                                if (ginj_control_ind < inj_cmode_ind) {
-                                    iGrp[nwgmax + 22] = higher_lev_ginj_ctrl;
-                                }
-                                else {
-                                    iGrp[nwgmax + 22] = higher_lev_ginj_cmode;
-                                }
-                                iGrp[nwgmax + 22] = higher_lev_ginj_ctrl;
-                            }
-                            else {
-                                iGrp[nwgmax + 22] = higher_lev_ginj_ctrl;
-                            }
-                        }
-                        else {
-                            iGrp[nwgmax + 22] = 1;
-                        }
-                    }
-                    else {
-                        iGrp[nwgmax + 22] = -1;
-                    }
-                }
-                else {  // group name "FIELD"
-                    iGrp[nwgmax + 17] = 0;
-                    iGrp[nwgmax + 22] = 0;
-                    //parameters connected to oil injection - not implemented in flow yet
-                    iGrp[nwgmax+11] = 0;
-                    iGrp[nwgmax+12] = 0;
-
-                }
-                //item[nwgmax + 21] - mode for operation for gas injection
-                // 1 - RATE
-                // 2 - RESV
-                // 3 - REIN
-                // 4 - VREP
-                // 0 - ellers
-                const auto& inj_mode =  (group.hasInjectionControl(Opm::Phase::GAS)) ?
-                group.injectionControls(Opm::Phase::GAS, sumState).cmode : Opm::Group::InjectionCMode::NONE;
-                const auto it = cmodeToNum.find(inj_mode);
-                if (it != cmodeToNum.end()) {
-                    iGrp[nwgmax + 21] = it->second;
-                    iGrp[nwgmax + 23] = iGrp[nwgmax + 21];
-                    iGrp[nwgmax + 24] = iGrp[nwgmax + 21];
-                }
-            }
-        }
-    }
-    
     iGrp[nwgmax + 26] = groupType(group);
 
     //find group level ("FIELD" is level 0) and store the level in
@@ -870,7 +888,15 @@ void staticContrib(const Opm::Schedule&     sched,
 
     // set values for group probably connected to GCONPROD settings
     //
-    if (group.name() != "FIELD")
+    if (is_field)
+    {
+        //the maximum number of groups in the model
+        iGrp[nwgmax+88] = ngmaxz;
+        iGrp[nwgmax+89] = ngmaxz;
+        iGrp[nwgmax+95] = ngmaxz;
+        iGrp[nwgmax+96] = ngmaxz;
+    }
+    else
     {
         //parameters connected to oil injection - not implemented in flow yet
         iGrp[nwgmax+11] = 0;
@@ -882,25 +908,19 @@ void staticContrib(const Opm::Schedule&     sched,
         iGrp[nwgmax+95] = group.insert_index();
         iGrp[nwgmax+96] = group.insert_index();
     }
-    else
-    {
-        //the maximum number of groups in the model
-        iGrp[nwgmax+88] = ngmaxz;
-        iGrp[nwgmax+89] = ngmaxz;
-        iGrp[nwgmax+95] = ngmaxz;
-        iGrp[nwgmax+96] = ngmaxz;
-    }
 
     //find parent group and store index of parent group in
-    //location nwgmax + 28
-    if (group.name() == "FIELD")
-        iGrp[nwgmax+28] = 0;
+    //location nwgmax + IGroup::ParentGroup
+
+    using IGroup = ::Opm::RestartIO::Helpers::VectorItems::IGroup::index;
+    if (is_field)
+        iGrp[nwgmax + IGroup::ParentGroup] = 0;
     else {
         const auto& parent_group = sched.getGroup(group.parent(), simStep);
         if (parent_group.name() == "FIELD")
-            iGrp[nwgmax+28] = ngmaxz;
+            iGrp[nwgmax + IGroup::ParentGroup] = ngmaxz;
         else
-            iGrp[nwgmax+28] = parent_group.insert_index();
+            iGrp[nwgmax + IGroup::ParentGroup] = parent_group.insert_index();
     }
 
 }

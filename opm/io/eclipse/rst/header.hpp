@@ -86,6 +86,7 @@ struct RstHeader {
     int ntfreg;
     int nplmix;
     int ngroup;
+    int nwgmax;
 
     bool e300_radial;
     bool e100_radial;

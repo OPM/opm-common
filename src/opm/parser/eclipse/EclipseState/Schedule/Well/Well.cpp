@@ -149,6 +149,8 @@ Well::Well(const RestartIO::RstWell& rst_well,
         p->LiquidRate = rst_well.lrat_target ;
         p->ResVRate = rst_well.resv_target ;
         p->VFPTableNumber = rst_well.vfp_table;
+        p->ALQValue = rst_well.alq_value;
+        p->predictionMode = this->prediction_mode;
 
         if (rst_well.orat_target != 0)
             p->addProductionControl( Well::ProducerCMode::ORAT );
@@ -216,6 +218,7 @@ Well::Well(const RestartIO::RstWell& rst_well,
     } else {
         auto i = std::make_shared<WellInjectionProperties>(this->unit_system, wname);
         i->VFPTableNumber = rst_well.vfp_table;
+        i->predictionMode = this->prediction_mode;
 
         if (this->status == Well::Status::OPEN) {
             switch (rst_well.active_control) {

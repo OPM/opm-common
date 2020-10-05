@@ -32,12 +32,16 @@ struct RstHeader;
 
 struct RstGroup {
     RstGroup(const UnitSystem& unit_system,
+             const RstHeader& header,
              const std::string* zwel,
              const int * igrp,
              const float * sgrp,
              const double * xgrp);
 
     std::string name;
+
+    int parent_group;
+
     float oil_rate_limit;
     float water_rate_limit;
     float gas_rate_limit;
