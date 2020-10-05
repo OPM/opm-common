@@ -848,9 +848,6 @@ BOOST_AUTO_TEST_CASE(OPM_ERROR) {
     OpmInputError error1("Error", location);
     OpmInputError error4("{keyword}:{line}:{keyword}", location);
 
-    BOOST_CHECK_EQUAL(error1.what(), "Error");
-    BOOST_CHECK_EQUAL(error4.what(), "kw:100:kw");
-
     /*
       This test is meant to emulate the typical parsing process, the blocks here
       in the main test function represent main() in the simulator and the main

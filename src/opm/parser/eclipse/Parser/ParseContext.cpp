@@ -162,10 +162,8 @@ namespace Opm {
             // make sure the error object does not terminate the application
             // when it goes out of scope.
             errors.clear();
-            if (location)
-                throw OpmInputError(msg_fmt, *location);
-            else
-                throw OpmInputError(msg_fmt, {});
+
+            throw OpmInputError(msg_fmt, location.value_or(KeywordLocation{}));
         }
 
         if (action == InputError::EXIT1) {

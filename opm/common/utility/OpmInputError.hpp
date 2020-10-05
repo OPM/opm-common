@@ -19,9 +19,9 @@
 #ifndef OPM_ERROR_HPP
 #define OPM_ERROR_HPP
 
-#include <optional>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 #include <opm/common/OpmLog/KeywordLocation.hpp>
 
@@ -66,10 +66,15 @@ public:
       OpmInputError("Error at line {line} in file {file} - keyword: {keyword} has invalid argument {}", invalid_argument);
     */
 
-    OpmInputError(const std::string& msg_fmt, const KeywordLocation& loc) :
-        m_what   { OpmInputError::format(msg_fmt, loc) },
-        location { loc }
-    {}
+    template<typename ... Args>
+    OpmInputError(const std::string& reason, const KeywordLocation& location, const Args& ...furtherLocations)
+        : locations { location, furtherLocations... }
+        , m_what {
+                locations.size() == 1
+                ? formatSingle(reason, locations[0])
+                : formatMultiple(reason, locations)
+            }
+    { }
 
     /*
       Allows for the initialisation of an OpmInputError from another exception.
@@ -83,17 +88,13 @@ public:
       } catch (const Opm::OpmInputError&) {
           throw;
       } catch (const std::exception& e) {
-          std::throw_with_nested(Opm::OpmInputError(location, e));
+          std::throw_with_nested(Opm::OpmInputError(e, location));
       }
     */
-    OpmInputError(const KeywordLocation& loc, const std::exception& e) :
-        m_what   { OpmInputError::formatException(loc, e) },
-        location { loc }
-    {}
-
-    OpmInputError(const std::string& msg) :
-        m_what(msg)
-    {}
+    OpmInputError(const std::exception& error, const KeywordLocation& location)
+        : locations { location }
+        , m_what { formatException(error, locations[0]) }
+    { }
 
     const char * what() const throw()
     {
@@ -102,15 +103,18 @@ public:
 
 
     static std::string format(const std::string& msg_format, const KeywordLocation& loc);
-    static std::string formatException(const KeywordLocation& loc, const std::exception& e);
 
 private:
-    std::string m_what;
-
     // The location member is here for debugging; depending on the msg_fmt
     // passed in the constructor we might not have captured all the information
     // in the location argument passed to the constructor.
-    std::optional<KeywordLocation> location;
+    std::vector<KeywordLocation> locations;
+
+    std::string m_what;
+
+    static std::string formatException(const std::exception& e, const KeywordLocation& loc);
+    static std::string formatSingle(const std::string& reason, const KeywordLocation&);
+    static std::string formatMultiple(const std::string& reason, const std::vector<KeywordLocation>&);
 };
 
 }

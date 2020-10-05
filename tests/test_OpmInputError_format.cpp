@@ -49,38 +49,18 @@ BOOST_AUTO_TEST_CASE(positional) {
     BOOST_CHECK_EQUAL(formatted, expected);
 }
 
-BOOST_AUTO_TEST_CASE(exception) {
-    const std::string expected { R"(Problem parsing keyword MXUNSUPP
-In FILENAME.DAT line 42.
-Internal error: Runtime Error)" };
-
-    const std::string formatted { Opm::OpmInputError::formatException(location, std::runtime_error("Runtime Error")) } ;
-
-    BOOST_CHECK_EQUAL(formatted, expected);
-}
-
-BOOST_AUTO_TEST_CASE(exception_reason) {
-    const std::string expected { R"(Problem parsing keyword MXUNSUPP
-In FILENAME.DAT line 42.
-Internal error: Runtime Error)" };
-
-    const std::string formatted { Opm::OpmInputError::formatException(location, std::runtime_error("Runtime Error")) } ;
-
-    BOOST_CHECK_EQUAL(formatted, expected);
-}
-
 BOOST_AUTO_TEST_CASE(exception_init) {
-    const std::string expected { R"(Problem parsing keyword MXUNSUPP
+    const std::string expected { R"(Problem with keyword MXUNSUPP
 In FILENAME.DAT line 42.
 Internal error: Runtime Error)" };
 
-    const std::string formatted { Opm::OpmInputError(location, std::runtime_error("Runtime Error")).what() } ;
+    const std::string formatted { Opm::OpmInputError(std::runtime_error("Runtime Error"), location).what() } ;
 
     BOOST_CHECK_EQUAL(formatted, expected);
 }
 
 BOOST_AUTO_TEST_CASE(exception_nest) {
-    const std::string expected { R"(Problem parsing keyword MXUNSUPP
+    const std::string expected { R"(Problem with keyword MXUNSUPP
 In FILENAME.DAT line 42.
 Internal error: Runtime Error)" };
 
@@ -88,9 +68,32 @@ Internal error: Runtime Error)" };
         try {
             throw std::runtime_error("Runtime Error");
         } catch (const std::exception& e) {
-            std::throw_with_nested(Opm::OpmInputError(location, e));
+            std::throw_with_nested(Opm::OpmInputError(e, location));
         }
     } catch (const Opm::OpmInputError& opm_error) {
         BOOST_CHECK_EQUAL(opm_error.what(), expected);
     }
+}
+
+const Opm::KeywordLocation location2 { "MZUNSUPP", "FILENAME.DAT", 45 } ;
+
+BOOST_AUTO_TEST_CASE(exception_multi_1) {
+    const std::string expected { R"(Problem with keyword MXUNSUPP
+In FILENAME.DAT line 42
+Runtime Error)" } ;
+
+    const std::string formatted { Opm::OpmInputError("Runtime Error", location).what() } ;
+
+    BOOST_CHECK_EQUAL(formatted, expected);
+}
+
+BOOST_AUTO_TEST_CASE(exception_multi_2) {
+    const std::string expected { R"(Problem with keywords 
+  MXUNSUPP in FILENAME.DAT, line 42
+  MZUNSUPP in FILENAME.DAT, line 45
+Runtime Error)" } ;
+
+    const std::string formatted { Opm::OpmInputError("Runtime Error", location, location2).what() } ;
+
+    BOOST_CHECK_EQUAL(formatted, expected);
 }

@@ -1767,9 +1767,11 @@ namespace {
             } catch (const OpmInputError&) {
                 throw;
             } catch (const std::exception& e) {
-                OpmLog::error(OpmInputError::formatException(handlerContext.keyword.location(), e));
+                const OpmInputError opm_error { e, handlerContext.keyword.location() } ;
 
-                throw;
+                OpmLog::error(opm_error.what());
+
+                std::throw_with_nested(opm_error);
             }
 
             return true;

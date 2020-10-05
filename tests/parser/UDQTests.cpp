@@ -506,7 +506,7 @@ UDQ
 /
 )";
 
-  BOOST_CHECK_THROW( make_schedule(input), std::invalid_argument);
+  BOOST_CHECK_THROW( make_schedule(input), std::exception);
 }
 
 

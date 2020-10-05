@@ -2125,7 +2125,7 @@ FIELD
       section in order to provoke the exception; if at some stage the opm parser
       treats section stricter this test might fail due to that reason instead.
     */
-    BOOST_CHECK_THROW( Parser{}.parseString(deck_string), std::invalid_argument);
+    BOOST_CHECK_THROW( Parser{}.parseString(deck_string), OpmInputError);
 }
 
 BOOST_AUTO_TEST_CASE(ParseRSConstT) {
