@@ -205,11 +205,11 @@ BOOST_AUTO_TEST_CASE(WlistInvalid) {
     "10 AUG 2007 /\n"
     "/\n";
 
-  BOOST_CHECK_THROW( createSchedule(wlist_invalid_well), std::invalid_argument);
-  BOOST_CHECK_THROW( createSchedule(wlist_invalid_well), std::invalid_argument);
-  BOOST_CHECK_THROW( createSchedule(wlist_invalid_action), std::invalid_argument);
-  BOOST_CHECK_THROW( createSchedule(wlist_invalid_list1), std::invalid_argument);
-  BOOST_CHECK_THROW( createSchedule(wlist_invalid_list2), std::invalid_argument);
+  BOOST_CHECK_THROW( createSchedule(wlist_invalid_well), std::exception);
+  BOOST_CHECK_THROW( createSchedule(wlist_invalid_well), std::exception);
+  BOOST_CHECK_THROW( createSchedule(wlist_invalid_action), std::exception);
+  BOOST_CHECK_THROW( createSchedule(wlist_invalid_list1), std::exception);
+  BOOST_CHECK_THROW( createSchedule(wlist_invalid_list2), std::exception);
 }
 
 BOOST_AUTO_TEST_CASE(Wlist) {

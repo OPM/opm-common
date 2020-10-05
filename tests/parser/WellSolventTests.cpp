@@ -223,7 +223,7 @@ BOOST_AUTO_TEST_CASE(TestOilInjector) {
     TableManager table ( deck );
     FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     Runspec runspec(deck);
-    BOOST_CHECK_THROW (Schedule(deck , grid , fp, runspec, python), std::invalid_argument);
+    BOOST_CHECK_THROW (Schedule(deck , grid , fp, runspec, python), std::exception);
 }
 
 BOOST_AUTO_TEST_CASE(TestWaterInjector) {
@@ -233,5 +233,5 @@ BOOST_AUTO_TEST_CASE(TestWaterInjector) {
     TableManager table ( deck );
     FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     Runspec runspec(deck);
-    BOOST_CHECK_THROW (Schedule(deck, grid , fp, runspec, python), std::invalid_argument);
+    BOOST_CHECK_THROW (Schedule(deck, grid , fp, runspec, python), std::exception);
 }

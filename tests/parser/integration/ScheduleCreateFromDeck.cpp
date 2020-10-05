@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE(WCONPROD_Missing_DATA) {
     FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     Runspec runspec (deck);
     auto python = std::make_shared<Python>();
-    BOOST_CHECK_THROW( Schedule(deck, grid , fp, runspec, python) , std::invalid_argument );
+    BOOST_CHECK_THROW( Schedule(deck, grid , fp, runspec, python) , std::exception );
 }
 
 
@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE(WellTestRefDepth) {
     const auto& well4 = sched.getWellatEnd("W_4");
     BOOST_CHECK_EQUAL( well1.getRefDepth() , grid.getCellDepth( 29 , 36 , 0 ));
     BOOST_CHECK_EQUAL( well2.getRefDepth() , 100 );
-    BOOST_CHECK_THROW( well4.getRefDepth() , std::invalid_argument );
+    BOOST_CHECK_THROW( well4.getRefDepth() , std::exception );
 }
 
 

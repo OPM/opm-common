@@ -1771,10 +1771,7 @@ namespace {
 
                 OpmLog::error(opm_error.what());
 
-                // Ideally, we'd be doing this, but the ramifications are not clear p.t.
-                // std::throw_with_nested(opm_error);
-                // So we're doing this instead
-                throw;
+                std::throw_with_nested(opm_error);
             }
 
             return true;

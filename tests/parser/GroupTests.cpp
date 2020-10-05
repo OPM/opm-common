@@ -305,7 +305,7 @@ BOOST_AUTO_TEST_CASE(TESTGuideRateLINCOM) {
 
 
     /* The 'COMB' target mode is not supported */
-    BOOST_CHECK_THROW(create_schedule(input), std::logic_error);
+    BOOST_CHECK_THROW(create_schedule(input), std::exception);
 }
 
 BOOST_AUTO_TEST_CASE(TESTGuideRate) {
