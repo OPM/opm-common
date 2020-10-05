@@ -4,6 +4,9 @@
     "PROPS",
     "SOLUTION"
   ],
+  "prohibits": [
+    "TEMPVD"
+  ],
   "size": {
     "keyword": "EQLDIMS",
     "item": "NTEQUL"

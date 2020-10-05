@@ -6,6 +6,9 @@
     "SOLUTION",
     "SCHEDULE"
   ],
+  "requires": [
+    "AQUDIMS"
+  ],
   "items": [
     {
       "name": "AQUIFER_ID",

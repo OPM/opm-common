@@ -3,6 +3,9 @@
   "sections": [
     "PROPS"
   ],
+  "prohibits": [
+    "RTEMPVD"
+  ],
   "items": [
     {
       "name": "DEPTH",
