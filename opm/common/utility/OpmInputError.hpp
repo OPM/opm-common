@@ -103,7 +103,6 @@ public:
 
 
     static std::string format(const std::string& msg_format, const KeywordLocation& loc);
-    static std::string formatException(const std::exception& e, const KeywordLocation& loc);
 
 private:
     // The location member is here for debugging; depending on the msg_fmt
@@ -113,6 +112,7 @@ private:
 
     std::string m_what;
 
+    static std::string formatException(const std::exception& e, const KeywordLocation& loc);
     static std::string formatSingle(const std::string& reason, const KeywordLocation&);
     static std::string formatMultiple(const std::string& reason, const std::vector<KeywordLocation>&);
 };

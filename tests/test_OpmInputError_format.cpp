@@ -49,28 +49,8 @@ BOOST_AUTO_TEST_CASE(positional) {
     BOOST_CHECK_EQUAL(formatted, expected);
 }
 
-BOOST_AUTO_TEST_CASE(exception) {
-    const std::string expected { R"(Problem parsing keyword MXUNSUPP
-In FILENAME.DAT line 42.
-Internal error: Runtime Error)" };
-
-    const std::string formatted { Opm::OpmInputError::formatException(std::runtime_error("Runtime Error"), location) } ;
-
-    BOOST_CHECK_EQUAL(formatted, expected);
-}
-
-BOOST_AUTO_TEST_CASE(exception_reason) {
-    const std::string expected { R"(Problem parsing keyword MXUNSUPP
-In FILENAME.DAT line 42.
-Internal error: Runtime Error)" };
-
-    const std::string formatted { Opm::OpmInputError::formatException(std::runtime_error("Runtime Error"), location) } ;
-
-    BOOST_CHECK_EQUAL(formatted, expected);
-}
-
 BOOST_AUTO_TEST_CASE(exception_init) {
-    const std::string expected { R"(Problem parsing keyword MXUNSUPP
+    const std::string expected { R"(Problem with keyword MXUNSUPP
 In FILENAME.DAT line 42.
 Internal error: Runtime Error)" };
 
@@ -80,7 +60,7 @@ Internal error: Runtime Error)" };
 }
 
 BOOST_AUTO_TEST_CASE(exception_nest) {
-    const std::string expected { R"(Problem parsing keyword MXUNSUPP
+    const std::string expected { R"(Problem with keyword MXUNSUPP
 In FILENAME.DAT line 42.
 Internal error: Runtime Error)" };
 
@@ -98,9 +78,9 @@ Internal error: Runtime Error)" };
 const Opm::KeywordLocation location2 { "MZUNSUPP", "FILENAME.DAT", 45 } ;
 
 BOOST_AUTO_TEST_CASE(exception_multi_1) {
-    const std::string expected { R"(Problem parsing keyword MXUNSUPP
+    const std::string expected { R"(Problem with keyword MXUNSUPP
 In FILENAME.DAT line 42
-Parse error: Runtime Error)" } ;
+Runtime Error)" } ;
 
     const std::string formatted { Opm::OpmInputError("Runtime Error", location).what() } ;
 
@@ -108,10 +88,10 @@ Parse error: Runtime Error)" } ;
 }
 
 BOOST_AUTO_TEST_CASE(exception_multi_2) {
-    const std::string expected { R"(Problem parsing keywords 
+    const std::string expected { R"(Problem with keywords 
   MXUNSUPP in FILENAME.DAT, line 42
   MZUNSUPP in FILENAME.DAT, line 45
-Parse error: Runtime Error)" } ;
+Runtime Error)" } ;
 
     const std::string formatted { Opm::OpmInputError("Runtime Error", location, location2).what() } ;
 

@@ -934,10 +934,11 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
                   same exception without updating the what() message of the
                   exception.
                 */
+                const OpmInputError opm_error { e, rawKeyword->location() } ;
 
-                OpmLog::error(OpmInputError::formatException(e, rawKeyword->location()));
+                OpmLog::error(opm_error.what());
 
-                throw;
+                std::throw_with_nested(opm_error);
             }
         } else {
             const std::string msg = "The keyword " + rawKeyword->getKeywordName() + " is not recognized - ignored";
