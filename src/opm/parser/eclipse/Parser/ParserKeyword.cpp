@@ -189,6 +189,14 @@ namespace Opm {
         initSectionNames(jsonConfig);
         initMatchRegex(jsonConfig);
 
+        if (jsonConfig.has_item("prohibits")) {
+            initProhibitedKeywords(jsonConfig.get_item("prohibits"));
+        }
+
+        if (jsonConfig.has_item("requires")) {
+            initRequiredKeywords(jsonConfig.get_item("requires"));
+        }
+
         if (jsonConfig.has_item("items") && (jsonConfig.has_item("records") || 
                                              jsonConfig.has_item("alternating_records") ||
                                              jsonConfig.has_item("records_set") ))
@@ -227,7 +235,33 @@ namespace Opm {
 
     }
 
+    void ParserKeyword::initProhibitedKeywords(const Json::JsonObject& keywordList) {
+        if (!keywordList.is_array())
+            throw std::invalid_argument("The 'prohibits' JSON item of keyword "+m_name+" needs to be a list");
 
+        for (std::size_t keywordIndex { 0 } ; keywordIndex != keywordList.size() ; ++keywordIndex) {
+            const auto keywordObject { keywordList.get_array_item(keywordIndex) } ;
+
+            if (!keywordObject.is_string())
+                throw std::invalid_argument("The sub-items of 'prohibits' of keyword "+m_name+" need to be strings");
+
+            m_prohibits.emplace_back(keywordObject.as_string());
+        }
+    }
+
+    void ParserKeyword::initRequiredKeywords(const Json::JsonObject& keywordList) {
+        if (!keywordList.is_array())
+            throw std::invalid_argument("The 'requires' JSON item of keyword "+m_name+" needs to be a list");
+
+        for (std::size_t keywordIndex { 0 } ; keywordIndex != keywordList.size() ; ++keywordIndex) {
+            const auto keywordObject { keywordList.get_array_item(keywordIndex) } ;
+
+            if (!keywordObject.is_string())
+                throw std::invalid_argument("The sub-items of 'requires' of keyword "+m_name+" need to be strings");
+
+            m_requires.emplace_back(keywordObject.as_string());
+        }
+    }
 
     void ParserKeyword::initSizeKeyword(const std::string& sizeKeyword, const std::string& sizeItem, int size_shift) {
         keyword_size = KeywordSize(sizeKeyword, sizeItem, size_shift); 
@@ -740,6 +774,23 @@ void set_dimensions( ParserItem& item,
              ++sectionNameIt)
         {
             ss << indent << "addValidSectionName(\"" << *sectionNameIt << "\");" << '\n';
+        }
+
+        // set required and prohibited keywords
+        if (!m_prohibits.empty()) {
+            ss << indent << "setProhibitedKeywords({" << '\n';
+            for (const auto& keyword : m_prohibits) {
+                ss << indent << indent << '"' << keyword << '"' << "," << '\n';
+            }
+            ss << indent << "});" << '\n';
+        }
+
+        if (!m_requires.empty()) {
+            ss << indent << "setRequiredKeywords({" << '\n';
+            for (const auto& keyword : m_requires) {
+                ss << indent << indent << '"' << keyword << '"' << "," << '\n';
+            }
+            ss << indent << "});"  << '\n';
         }
 
         // add the deck names

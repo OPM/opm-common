@@ -171,6 +171,8 @@ namespace Opm {
         void initMatchRegex( const Json::JsonObject& jsonObject );
         void initCode( const Json::JsonObject& jsonConfig );
         void initData( const Json::JsonObject& jsonConfig );
+        void initProhibitedKeywords(const Json::JsonObject& keywordList);
+        void initRequiredKeywords(const Json::JsonObject& keywordList);
         void initSize( const Json::JsonObject& jsonConfig );
         void initSizeKeyword(const Json::JsonObject& sizeObject);
         void commonInit(const std::string& name, ParserKeywordSizeEnum sizeType);

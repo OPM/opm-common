@@ -514,6 +514,38 @@ BOOST_AUTO_TEST_CASE(test_1arg_constructor) {
     }
 }
 
+BOOST_AUTO_TEST_CASE( test_invalid_keyword_combination_required ) {
+    const std::string deckString = R"(
+AQUCT
+    1 2000.0 1.5 100 .3 3.0e-5 330 10 360.0 1 2 /
+)";
+
+    ParseContext parseContext;
+    Parser parser;
+    ErrorGuard errors;
+
+    BOOST_CHECK_THROW(parser.parseString(deckString, parseContext, errors), OpmInputError);
+}
+
+BOOST_AUTO_TEST_CASE( test_invalid_keyword_combination_prohibited ) {
+    const std::string deckString = R"(
+EQLDIMS
+/
+
+TEMPVD
+   0.5 0 /
+
+RTEMPVD
+   0.5 0 /
+)";
+
+    ParseContext parseContext;
+    Parser parser;
+    ErrorGuard errors;
+
+    BOOST_CHECK_THROW(parser.parseString(deckString, parseContext, errors), OpmInputError);
+}
+
 BOOST_AUTO_TEST_CASE( test_invalid_wtemplate_config ) {
     const std::string defDeckString = R"(
     START  -- 0
