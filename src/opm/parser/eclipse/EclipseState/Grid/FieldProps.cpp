@@ -861,7 +861,7 @@ void FieldProps::handle_operation(const DeckKeyword& keyword, Box box) {
             continue;
         }
 
-        throw OpmInputError(keyword.location(), "Operation keyword " + keyword.name() + " does not support the keyword " + target_kw);
+        throw OpmInputError("Operation keyword " + keyword.name() + " does not support the keyword " + target_kw, keyword.location());
     }
 }
 

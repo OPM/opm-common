@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(exception) {
 In FILENAME.DAT line 42.
 Internal error: Runtime Error)" };
 
-    const std::string formatted { Opm::OpmInputError::formatException(location, std::runtime_error("Runtime Error")) } ;
+    const std::string formatted { Opm::OpmInputError::formatException(std::runtime_error("Runtime Error"), location) } ;
 
     BOOST_CHECK_EQUAL(formatted, expected);
 }
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(exception_reason) {
 In FILENAME.DAT line 42.
 Internal error: Runtime Error)" };
 
-    const std::string formatted { Opm::OpmInputError::formatException(location, std::runtime_error("Runtime Error")) } ;
+    const std::string formatted { Opm::OpmInputError::formatException(std::runtime_error("Runtime Error"), location) } ;
 
     BOOST_CHECK_EQUAL(formatted, expected);
 }
@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(exception_init) {
 In FILENAME.DAT line 42.
 Internal error: Runtime Error)" };
 
-    const std::string formatted { Opm::OpmInputError(location, std::runtime_error("Runtime Error")).what() } ;
+    const std::string formatted { Opm::OpmInputError(std::runtime_error("Runtime Error"), location).what() } ;
 
     BOOST_CHECK_EQUAL(formatted, expected);
 }
@@ -88,7 +88,7 @@ Internal error: Runtime Error)" };
         try {
             throw std::runtime_error("Runtime Error");
         } catch (const std::exception& e) {
-            std::throw_with_nested(Opm::OpmInputError(location, e));
+            std::throw_with_nested(Opm::OpmInputError(e, location));
         }
     } catch (const Opm::OpmInputError& opm_error) {
         BOOST_CHECK_EQUAL(opm_error.what(), expected);
@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(exception_multi_1) {
 In FILENAME.DAT line 42
 Parse error: Runtime Error)" } ;
 
-    const std::string formatted { Opm::OpmInputError({ location }, "Runtime Error").what() } ;
+    const std::string formatted { Opm::OpmInputError("Runtime Error", location).what() } ;
 
     BOOST_CHECK_EQUAL(formatted, expected);
 }
@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(exception_multi_2) {
   MZUNSUPP in FILENAME.DAT, line 45
 Parse error: Runtime Error)" } ;
 
-    const std::string formatted { Opm::OpmInputError({ location, location2 }, "Runtime Error").what() } ;
+    const std::string formatted { Opm::OpmInputError("Runtime Error", location, location2).what() } ;
 
     BOOST_CHECK_EQUAL(formatted, expected);
 }

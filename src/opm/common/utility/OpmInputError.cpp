@@ -26,12 +26,26 @@
 
 namespace Opm {
 
-std::string OpmInputError::formatException(const KeywordLocation& loc, const std::exception& e) {
-    const std::string defaultMessage { R"(Problem parsing keyword {{keyword}}
-In {{file}} line {{line}}.
+namespace {
+
+template<typename ... Args>
+std::string formatImpl(const std::string& msg_format, const KeywordLocation& loc, const Args& ...arguments) {
+    return fmt::format(msg_format,
+        arguments...,
+        fmt::arg("keyword", loc.keyword),
+        fmt::arg("file", loc.filename),
+        fmt::arg("line", loc.lineno)
+    );
+}
+
+}
+
+std::string OpmInputError::formatException(const std::exception& e, const KeywordLocation& loc) {
+    const std::string defaultMessage { R"(Problem parsing keyword {keyword}
+In {file} line {line}.
 Internal error: {})" } ;
 
-    return format(fmt::format(defaultMessage, e.what()), loc);
+    return formatImpl(defaultMessage, loc, e.what());
 }
 
 /*
@@ -42,26 +56,23 @@ Internal error: {})" } ;
   the fmtlib dependendcy will be imposed on downstream modules.
 */
 std::string OpmInputError::format(const std::string& msg_format, const KeywordLocation& loc) {
-    return fmt::format(msg_format,
-                       fmt::arg("keyword", loc.keyword),
-                       fmt::arg("file", loc.filename),
-                       fmt::arg("line", loc.lineno)
-                       );
+    return formatImpl(msg_format, loc);
+}
+
+std::string OpmInputError::formatSingle(const std::string& reason, const KeywordLocation& location) {
+    const std::string defaultMessage { R"(Problem parsing keyword {keyword}
+In {file} line {line}
+Parse error: {})" } ;
+
+    return formatImpl(defaultMessage, location, reason);
 }
 
 namespace {
 
-    std::string locationStringLine(const KeywordLocation& loc) {
-        return OpmInputError::format("\n  {keyword} in {file}, line {line}", loc);
-    }
+std::string locationStringLine(const KeywordLocation& loc) {
+    return OpmInputError::format("\n  {keyword} in {file}, line {line}", loc);
 }
 
-std::string OpmInputError::formatSingle(const std::string& reason, const KeywordLocation& location) {
-    const std::string defaultMessage { R"(Problem parsing keyword {{keyword}}
-In {{file}} line {{line}}
-Parse error: {})" } ;
-
-    return format(fmt::format(defaultMessage, reason), location);
 }
 
 std::string OpmInputError::formatMultiple(const std::string& reason, const std::vector<KeywordLocation>& locations) {

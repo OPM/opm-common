@@ -577,10 +577,7 @@ namespace Opm {
             hasRTEMPVD { deck.hasKeyword<ParserKeywords::RTEMPVD>() } ;
 
         if (hasTEMPVD && hasRTEMPVD) {
-            throw OpmInputError({
-                    deck.getKeyword<ParserKeywords::TEMPVD>().location(),
-                    deck.getKeyword<ParserKeywords::RTEMPVD>().location(),
-                }, "The TEMPVD and RTEMPVD tables are mutually exclusive.");
+            throw OpmInputError("The TEMPVD and RTEMPVD tables are mutually exclusive.", deck.getKeyword<ParserKeywords::TEMPVD>().location(), deck.getKeyword<ParserKeywords::RTEMPVD>().location());
         } else if (hasTEMPVD) {
             initSimpleTableContainer<RtempvdTable>(deck,  "TEMPVD", "RTEMPVD", m_eqldims.getNumEquilRegions());
         } else if (hasRTEMPVD) {
@@ -636,7 +633,7 @@ namespace Opm {
                 "The Parser does currently NOT support the alternating record schema used in PLYSHLOG"
             } ;
 
-            throw OpmInputError(tableKeyword.location(), reason);
+            throw OpmInputError(reason, tableKeyword.location());
         }
 
         for (size_t tableIdx = 0; tableIdx < tableKeyword.size(); tableIdx += 2) {
@@ -675,7 +672,7 @@ namespace Opm {
                     " for keyword PLYMWINJ found"
                 } ;
 
-                throw OpmInputError(keyword.location(), reason);
+                throw OpmInputError(reason, keyword.location());
             }
         }
     }
@@ -705,7 +702,7 @@ namespace Opm {
                     " for keyword SKPRWAT found"
                 } ;
 
-                throw OpmInputError(keyword.location(), reason);
+                throw OpmInputError(reason, keyword.location());
             }
         }
     }
@@ -735,7 +732,7 @@ namespace Opm {
                     " for keyword SKPRPOLY found"
                 } ;
 
-                throw OpmInputError(keyword.location(), reason);
+                throw OpmInputError(reason, keyword.location());
             }
         }
     }
@@ -807,7 +804,7 @@ namespace Opm {
                 "Make sure that your ROCKTAB table only has 3 columns)"
             } ;
 
-            throw OpmInputError(keyword.location(), reason);
+            throw OpmInputError(reason, keyword.location());
         }
 
         bool useStressOption = false;
@@ -820,7 +817,7 @@ namespace Opm {
             if (useStressOption) {
                 const std::string reason { "STRESS option is set in ROCKOPTS. Flow does not support stress option in rock compaction mulipliers" } ;
 
-                throw OpmInputError(rockoptsKeyword.location(), reason);
+                throw OpmInputError(reason, rockoptsKeyword.location());
             }
         }
 

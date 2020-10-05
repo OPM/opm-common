@@ -935,7 +935,7 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
                   exception.
                 */
 
-                OpmLog::error(OpmInputError::formatException(rawKeyword->location(), e));
+                OpmLog::error(OpmInputError::formatException(e, rawKeyword->location()));
 
                 throw;
             }

@@ -1767,7 +1767,7 @@ namespace {
             } catch (const OpmInputError&) {
                 throw;
             } catch (const std::exception& e) {
-                OpmLog::error(OpmInputError::formatException(handlerContext.keyword.location(), e));
+                OpmLog::error(OpmInputError::formatException(e, handlerContext.keyword.location()));
 
                 throw;
             }
