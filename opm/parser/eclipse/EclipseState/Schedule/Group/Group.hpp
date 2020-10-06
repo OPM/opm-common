@@ -35,7 +35,7 @@
 namespace Opm {
 
 namespace RestartIO {
-class RstGroup;
+struct RstGroup;
 }
 
 
