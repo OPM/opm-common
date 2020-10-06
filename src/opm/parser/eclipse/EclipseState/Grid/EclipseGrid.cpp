@@ -930,62 +930,14 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         return zcorn;
     }
 
-    /*
-      Limited implementaton - requires keywords: DRV, DTHETAV, DZV and TOPS.
-    */
-
     void EclipseGrid::initCylindricalGrid(const Deck& deck)
     {
         throw std::invalid_argument("Cylindrical grid not implemented yet, use SPIDER web grid keyword instead for radial flow modeling");
-
-        // The hasCyindricalKeywords( ) checks according to the
-        // eclipse specification. We currently do not support all
-        // aspects of cylindrical grids, we therefor have an
-        // additional test here, which checks if we have the keywords
-        // required by the current implementation.
-        if (!hasCylindricalKeywords(deck))
-            throw std::invalid_argument("Not all keywords required for cylindrical grids present");
-
-        if (!deck.hasKeyword<ParserKeywords::DTHETAV>())
-            throw std::logic_error("The current implementation *must* have theta values specified using the DTHETAV keyword");
-
-        if (!deck.hasKeyword<ParserKeywords::DRV>())
-            throw std::logic_error("The current implementation *must* have radial values specified using the DRV keyword");
-
-        if (!deck.hasKeyword<ParserKeywords::DZV>() || !deck.hasKeyword<ParserKeywords::TOPS>())
-            throw std::logic_error("The current implementation *must* have vertical cell size specified using the DZV and TOPS keywords");
-
-        const std::vector<double>& drv     = deck.getKeyword<ParserKeywords::DRV>().getSIDoubleData();
-        const std::vector<double>& dthetav = deck.getKeyword<ParserKeywords::DTHETAV>().getSIDoubleData();
-        const std::vector<double>& dzv     = deck.getKeyword<ParserKeywords::DZV>().getSIDoubleData();
-        const std::vector<double>& tops    = deck.getKeyword<ParserKeywords::TOPS>().getSIDoubleData();
-
-        if (drv.size() != this->getNX())
-            throw std::invalid_argument("DRV keyword should have exactly " + std::to_string( this->getNX() ) + " elements");
-
-        if (dthetav.size() != this->getNY())
-            throw std::invalid_argument("DTHETAV keyword should have exactly " + std::to_string( this->getNY() ) + " elements");
-
-        if (dzv.size() != this->getNZ())
-            throw std::invalid_argument("DZV keyword should have exactly " + std::to_string( this->getNZ() ) + " elements");
-
-        if (tops.size() != (this->getNX() * this->getNY()))
-            throw std::invalid_argument("TOPS keyword should have exactly " + std::to_string( this->getNX() * this->getNY() ) + " elements");
-
-        {
-            double total_angle = 0;
-            for (auto theta : dthetav)
-                total_angle += theta;
-
-            if (std::abs( total_angle - 360 ) < 0.01)
-                m_circle = deck.hasKeyword<ParserKeywords::CIRCLE>();
-            else {
-                if (total_angle > 360)
-                    throw std::invalid_argument("More than 360 degrees rotation - cells will be double covered");
-            }
-        }
-
     }
+
+    /*
+      Limited implementaton - requires keywords: DRV, DTHETAV, DZV and TOPS.
+    */
 
     void EclipseGrid::initSpiderwebGrid(const Deck& deck)
     {

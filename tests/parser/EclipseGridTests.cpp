@@ -1240,13 +1240,13 @@ BOOST_AUTO_TEST_CASE(RadialTest) {
     BOOST_CHECK_THROW( Opm::EclipseGrid{ deck }, std::invalid_argument);
 }
 
-BOOST_AUTO_TEST_CASE(RadialKeywordsOK) {
+BOOST_AUTO_TEST_CASE(RadialKeywordsOK, *boost::unit_test::disabled()) {
     Opm::Deck deck = radial_keywords_OK();
     Opm::EclipseGrid grid( deck );
     BOOST_CHECK(!grid.circle());
 }
 
-BOOST_AUTO_TEST_CASE(RadialKeywordsOK_CIRCLE) {
+BOOST_AUTO_TEST_CASE(RadialKeywordsOK_CIRCLE, *boost::unit_test::disabled()) {
     Opm::Deck deck = radial_keywords_OK_CIRCLE();
     Opm::EclipseGrid grid( deck );
     BOOST_CHECK(grid.circle());
@@ -1395,58 +1395,6 @@ BOOST_AUTO_TEST_CASE(RadialKeywords_SIZE_ERROR) {
     BOOST_CHECK_THROW( Opm::EclipseGrid{ radial_keywords_ANGLE_OVERFLOW() } , std::invalid_argument);
 }
 
-static Opm::Deck radial_details() {
-    const char* deckData =
-        "RUNSPEC\n"
-        "\n"
-        "DIMENS\n"
-        "1 5 2 /\n"
-        "RADIAL\n"
-        "GRID\n"
-        "INRAD\n"
-        "1 /\n"
-        "DRV\n"
-        "1 /\n"
-        "DTHETAV\n"
-        "3*90 60 30/\n"
-        "DZV\n"
-        "2*1 /\n"
-        "TOPS\n"
-        "5*1.0 /\n"
-        "PORO \n"
-        "  10*0.15 /"
-        "\n";
-
-    Opm::Parser parser;
-    return parser.parseString( deckData);
-}
-
-BOOST_AUTO_TEST_CASE(RadialDetails) {
-    Opm::Deck deck = radial_details();
-    Opm::EclipseGrid grid( deck );
-
-    BOOST_CHECK_CLOSE( grid.getCellVolume( 0 , 0 , 0 ) , 0.5*(2*2 - 1)*1, 0.0001);
-    BOOST_CHECK_CLOSE( grid.getCellVolume( 0 , 3 , 0 ) , sqrt(3.0)*0.25*( 4 - 1 ) , 0.0001);
-    auto pos0 = grid.getCellCenter(0,0,0);
-    auto pos2 = grid.getCellCenter(0,2,0);
-
-    BOOST_CHECK_CLOSE( std::get<0>(pos0) , 0.75 , 0.0001);
-    BOOST_CHECK_CLOSE( std::get<1>(pos0) , 0.75 , 0.0001);
-    BOOST_CHECK_CLOSE( std::get<2>(pos0) , 1.50 , 0.0001);
-
-    BOOST_CHECK_CLOSE( std::get<0>(pos2) , -0.75 , 0.0001);
-    BOOST_CHECK_CLOSE( std::get<1>(pos2) , -0.75 , 0.0001);
-    BOOST_CHECK_CLOSE( std::get<2>(pos2) , 1.50 , 0.0001);
-
-    {
-        const auto& p0 = grid.getCornerPos( 0,0,0 , 0 );
-        const auto& p6 = grid.getCornerPos( 0,0,0 , 6 );
-        BOOST_CHECK_CLOSE( p0[0]*p0[0] + p0[1]*p0[1] , 1.0, 0.0001);
-        BOOST_CHECK_CLOSE( p6[0]*p6[0] + p6[1]*p6[1] , 1.0, 0.0001);
-
-        BOOST_CHECK_THROW( grid.getCornerPos( 0,0,0 , 8 ) , std::invalid_argument);
-    }
-}
 
 static Opm::Deck spider_details() {
     const char* deckData =
