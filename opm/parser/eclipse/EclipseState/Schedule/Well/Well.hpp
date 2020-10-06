@@ -21,8 +21,15 @@
 #ifndef WELL2_HPP
 #define WELL2_HPP
 
+#include <cstddef>
 #include <iosfwd>
+#include <map>
+#include <memory>
 #include <string>
+#include <utility>
+#include <vector>
+
+#include <stddef.h>
 
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
@@ -45,8 +52,6 @@ namespace Opm {
 class DeckRecord;
 class EclipseGrid;
 class DeckKeyword;
-struct WellInjectionProperties;
-class WellProductionProperties;
 class UDQActive;
 class UDQConfig;
 class SICD;
@@ -638,7 +643,7 @@ private:
 };
 
 std::ostream& operator<<( std::ostream&, const Well::WellInjectionProperties& );
-std::ostream& operator<<( std::ostream&, const WellProductionProperties& );
+std::ostream& operator<<( std::ostream&, const Well::WellProductionProperties& );
 
 int eclipseControlMode(const Well::InjectorCMode imode,
                        const InjectorType        itype);

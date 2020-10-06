@@ -59,8 +59,6 @@ inline std::ostream& operator<<( std::ostream& stream, const Well& well ) {
 }
 }
 
-
-
 BOOST_AUTO_TEST_CASE(WellCOMPDATtestTRACK) {
     Opm::Parser parser;
     std::string input =

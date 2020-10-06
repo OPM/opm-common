@@ -17,6 +17,7 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <cstddef>
 #include <stdexcept>
 #include <iostream>
 #include <boost/filesystem.hpp>
@@ -28,6 +29,7 @@
 
 #include <opm/parser/eclipse/Python/Python.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
@@ -40,6 +42,22 @@
 
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+
+namespace {
+Opm::WellConnections loadCOMPDAT(const std::string& compdat_keyword) {
+    Opm::EclipseGrid grid(10,10,10);
+    Opm::TableManager tables;
+    Opm::Parser parser;
+    const auto deck = parser.parseString(compdat_keyword);
+    Opm::FieldPropsManager field_props(deck, Opm::Phases{true, true, true}, grid, Opm::TableManager());
+    const auto& keyword = deck.getKeyword("COMPDAT", 0);
+    Opm::WellConnections connections(Opm::Connection::Order::TRACK, 10,10);
+    for (const auto& rec : keyword)
+        connections.loadCOMPDAT(rec, grid, field_props);
+
+    return connections;
+}
+}
 
 namespace Opm {
 
@@ -148,20 +166,6 @@ BOOST_AUTO_TEST_CASE(ActiveCompletions) {
     BOOST_CHECK_EQUAL( active_completions.size() , 2U);
     BOOST_CHECK_EQUAL( completion2, active_completions.get(0));
     BOOST_CHECK_EQUAL( completion3, active_completions.get(1));
-}
-
-Opm::WellConnections loadCOMPDAT(const std::string& compdat_keyword) {
-    Opm::EclipseGrid grid(10,10,10);
-    Opm::TableManager tables;
-    Opm::Parser parser;
-    const auto deck = parser.parseString(compdat_keyword);
-    Opm::FieldPropsManager field_props(deck, Opm::Phases{true, true, true}, grid, Opm::TableManager());
-    const auto& keyword = deck.getKeyword("COMPDAT", 0);
-    Opm::WellConnections connections(Opm::Connection::Order::TRACK, 10,10);
-    for (const auto& rec : keyword)
-        connections.loadCOMPDAT(rec, grid, field_props);
-
-    return connections;
 }
 
 BOOST_AUTO_TEST_CASE(loadCOMPDATTEST) {

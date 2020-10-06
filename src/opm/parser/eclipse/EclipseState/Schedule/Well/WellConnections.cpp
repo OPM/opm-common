@@ -17,10 +17,15 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <algorithm>
 #include <cassert>
 #include <cmath>
-#include <limits>
+#include <cstddef>
 #include <iostream>
+#include <limits>
+#include <stdexcept>
+#include <string>
+#include <utility>
 
 #include <opm/parser/eclipse/Units/Units.hpp>
 #include <opm/io/eclipse/rst/connection.hpp>

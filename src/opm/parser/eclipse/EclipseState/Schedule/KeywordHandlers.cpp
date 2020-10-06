@@ -17,6 +17,7 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <exception>
 #include <fnmatch.h>
 #include <functional>
 #include <iostream>
@@ -1680,7 +1681,7 @@ namespace {
 
 
     bool Schedule::handleNormalKeyword(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
-        using handler_function = std::function<void(Schedule*, const HandlerContext&, const ParseContext&, ErrorGuard&)>;
+        using handler_function = void (Schedule::*)(const HandlerContext&, const ParseContext&, ErrorGuard&);
         static const std::unordered_map<std::string,handler_function> handler_functions = {
             { "BRANPROP", &Schedule::handleBRANPROP },
             { "COMPDAT" , &Schedule::handleCOMPDAT  },
@@ -1757,27 +1758,24 @@ namespace {
             { "WTRACER" , &Schedule::handleWTRACER  },
         };
 
-        const auto function_iterator = handler_functions.find(handlerContext.keyword.name());
-
-        if (function_iterator != handler_functions.end()) {
-            const auto& handler = function_iterator->second;
-
-            try {
-                handler(this, handlerContext, parseContext, errors);
-            } catch (const OpmInputError&) {
-                throw;
-            } catch (const std::exception& e) {
-                const OpmInputError opm_error { e, handlerContext.keyword.location() } ;
-
-                OpmLog::error(opm_error.what());
-
-                std::throw_with_nested(opm_error);
-            }
-
-            return true;
-        } else {
+        auto function_iterator = handler_functions.find(handlerContext.keyword.name());
+        if (function_iterator == handler_functions.end()) {
             return false;
         }
+
+        try {
+            std::invoke(function_iterator->second, this, handlerContext, parseContext, errors);
+        } catch (const OpmInputError&) {
+            throw;
+        } catch (const std::exception& e) {
+            const OpmInputError opm_error { e, handlerContext.keyword.location() } ;
+
+            OpmLog::error(opm_error.what());
+
+            std::throw_with_nested(opm_error);
+        }
+
+        return true;
     }
 
 }

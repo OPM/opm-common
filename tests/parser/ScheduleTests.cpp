@@ -17,18 +17,16 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdexcept>
+#include <algorithm>
 #include <iostream>
-#include <boost/filesystem.hpp>
+#include <stdexcept>
 
 #define BOOST_TEST_MODULE ScheduleTests
 
 #include <boost/test/unit_test.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <opm/common/utility/TimeService.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
-
 
 #include <opm/parser/eclipse/Python/Python.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
@@ -61,7 +59,7 @@
 using namespace Opm;
 
 
-Schedule make_schedule(const std::string& deck_string) {
+static Schedule make_schedule(const std::string& deck_string) {
     const auto& deck = Parser{}.parseString(deck_string);
     auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
@@ -408,7 +406,7 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsOrdered) {
 }
 
 
-bool has_well( const std::vector<Well>& wells, const std::string& well_name) {
+static bool has_well( const std::vector<Well>& wells, const std::string& well_name) {
     for (const auto& well : wells )
         if (well.name( ) == well_name)
             return true;
@@ -3159,7 +3157,7 @@ BOOST_AUTO_TEST_CASE(WTEST_CONFIG) {
 }
 
 
-bool has(const std::vector<std::string>& l, const std::string& s) {
+static bool has(const std::vector<std::string>& l, const std::string& s) {
     auto f = std::find(l.begin(), l.end(), s);
     return (f != l.end());
 }

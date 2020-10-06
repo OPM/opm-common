@@ -25,6 +25,8 @@
 
 #include <opm/common/utility/ActiveGridCells.hpp>
 
+#include <stddef.h>
+
 namespace Opm {
     class EclipseGrid;
     class FieldPropsManager;
