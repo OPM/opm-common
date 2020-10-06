@@ -400,6 +400,7 @@ namespace Opm
         void addGroupToGroup( const std::string& parent_group, const std::string& child_group, std::size_t timeStep);
         void addGroupToGroup( const std::string& parent_group, const Group& child_group, std::size_t timeStep);
         void addGroup(const std::string& groupName , std::size_t timeStep, const UnitSystem& unit_system);
+        void addGroup(const Group& group, std::size_t timeStep);
         void addWell(const std::string& wellName, const DeckRecord& record, std::size_t timeStep, Connection::Order connection_order, const UnitSystem& unit_system);
         void checkUnhandledKeywords( const SCHEDULESection& ) const;
         void checkIfAllConnectionsIsShut(std::size_t currentStep);

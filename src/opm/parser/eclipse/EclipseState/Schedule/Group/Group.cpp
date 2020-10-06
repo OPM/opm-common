@@ -22,6 +22,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQActive.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
+#include <opm/io/eclipse/rst/group.hpp>
 
 #include "../eval_uda.hpp"
 
@@ -48,6 +49,12 @@ Group::Group(const std::string& name, std::size_t insert_index_arg, std::size_t 
     if (name != "FIELD")
         this->parent_group = "FIELD";
 }
+
+Group::Group(const RestartIO::RstGroup& rst_group, std::size_t insert_index_arg, std::size_t init_step_arg, double udq_undefined_arg, const UnitSystem& unit_system_arg) :
+    Group(rst_group.name, insert_index_arg, init_step_arg, udq_undefined_arg, unit_system_arg)
+{
+}
+
 
 Group Group::serializeObject()
 {
