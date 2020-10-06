@@ -471,9 +471,7 @@ END
         return Opm::Parser{}.parseString(input);
     }
 
-
-    Opm::data::WellRates
-    wr(const Opm::Schedule& sched)
+    Opm::data::WellRates wr(const Opm::Schedule& sched)
     {
         using o = ::Opm::data::Rates::opt;
 
@@ -497,12 +495,15 @@ END
                         .set(o::gas, qg * (float(i) + 1.));
                     c.pressure = 215.;
                     c.index = connections[i].global_index();
+                    c.trans_factor = connections[i].CF();
                 }
+
                 auto seg = Opm::data::Segment {};
                 for (std::size_t i = 1; i < 5; i++) {
                     xw["PROD"].segments.insert(std::pair<std::size_t, Opm::data::Segment>(i, seg));
                 }
             }
+
             {
                 const auto& well = sched.getWell("WINJ", 0);
                 const auto& connections = well.getConnections();
@@ -519,33 +520,31 @@ END
                     c.rates.set(o::wat, qw * (float(i) + 1.)).set(o::oil, 0.).set(o::gas, 0.);
                     c.pressure = 218.;
                     c.index = connections[i].global_index();
+                    c.trans_factor = connections[i].CF();
                 }
             }
         }
+
         return xw;
     }
-    } // namespace
+} // namespace
 
-    struct SimulationCase {
-        explicit SimulationCase(const Opm::Deck& deck)
-            : es(deck)
-            , python(std::make_shared<Opm::Python>())
-            , grid(deck)
-            , sched(deck, es, python)
-        {
-        }
+struct SimulationCase {
+    explicit SimulationCase(const Opm::Deck& deck)
+        : es   (deck)
+        , grid (deck)
+        , sched(deck, es, std::make_shared<Opm::Python>())
+    {}
 
-        // Order requirement: 'es' must be declared/initialised before 'sched'.
-        Opm::EclipseState es;
-        std::shared_ptr<Opm::Python> python;
-        Opm::EclipseGrid grid;
-        Opm::Schedule sched;
-    };
+    // Order requirement: 'es' must be declared/initialised before 'sched'.
+    Opm::EclipseState es;
+    Opm::EclipseGrid grid;
+    Opm::Schedule sched;
+};
 
 // =====================================================================
 
 BOOST_AUTO_TEST_SUITE(Aggregate_ConnData)
-
 
 // test dimensions of Connection data
 BOOST_AUTO_TEST_CASE (Constructor)
@@ -558,7 +557,6 @@ BOOST_AUTO_TEST_CASE (Constructor)
     BOOST_CHECK_EQUAL(amconn.getSConn().size(), ih.nwells * ih.ncwmax * ih.nsconz);
     BOOST_CHECK_EQUAL(amconn.getXConn().size(), ih.nwells * ih.ncwmax * ih.nxconz);
 }
-
 
 BOOST_AUTO_TEST_CASE(Declared_Connection_Data)
 {
@@ -729,7 +727,6 @@ BOOST_AUTO_TEST_CASE(Declared_Connection_Data)
         BOOST_CHECK_CLOSE(xconn[i0 + Ix::ResVRate], 0., 1.0e-5); // WINJ - conn 3 : Reservoir volume rate
     }
 }
-
 
 BOOST_AUTO_TEST_CASE(InactiveCell) {
     auto simCase = SimulationCase{first_sim()};

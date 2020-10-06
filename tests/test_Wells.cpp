@@ -103,14 +103,14 @@ BOOST_AUTO_TEST_CASE(get_completions) {
      *  the completion keys (active indices) and well names correspond to the
      *  input deck. All other entries in the well structures are arbitrary.
      */
-    w1.connections.push_back( { 88, rc1, 30.45, 123.45, 543.21, 0.123, 0.5, 17.29 } );
-    w1.connections.push_back( { 288, rc2, 33.19, 67.89, 98.76, 0.5, 0.125, 355.113 } );
+    w1.connections.push_back( { 88, rc1, 30.45, 123.45, 543.21, 0.123, 0.5, 17.29, 0.1729 } );
+    w1.connections.push_back( { 288, rc2, 33.19, 67.89, 98.76, 0.5, 0.125, 355.113, 0.355113 } );
 
     w2.rates = r2;
     w2.bhp = 2.34;
     w2.temperature = 4.56;
     w2.control = 2;
-    w2.connections.push_back( { 188, rc3, 36.22, 19.28, 28.91, 0.125, 0.125, 3.141 } );
+    w2.connections.push_back( { 188, rc3, 36.22, 19.28, 28.91, 0.125, 0.125, 3.141, 0.31415 } );
 
     data::Wells wellRates;
 

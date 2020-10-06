@@ -63,6 +63,12 @@ namespace {
        return unit::cubic(unit::meter) / unit::day;
     }
 
+    double cp_rm3_per_db()
+    {
+        return prefix::centi*unit::Poise * unit::cubic(unit::meter)
+            /  (unit::day * unit::barsa);
+    }
+
     std::string toupper(std::string input)
     {
         for (auto& c : input) {
@@ -247,11 +253,12 @@ data::Wells result_wells(const bool w3_injector = true)
       syncronized with the global index in the COMPDAT keyword in the
       input deck.
     */
-    data::Connection well1_comp1 { 0  , crates1, 1.9 , 123.4, 314.15, 0.35, 0.25, 2.718e2};
-    data::Connection well2_comp1 { 1  , crates2, 1.10 , 123.4, 212.1, 0.78, 0.0, 12.34};
-    data::Connection well2_comp2 { 101, crates3, 1.11 , 123.4, 150.6, 0.001, 0.89, 100.0};
-    data::Connection well3_comp1 { 2  , crates3, 1.11 , 123.4, 456.78, 0.0, 0.15, 432.1};
-    data::Connection well6_comp1 { 5  , crates6, 6.11 , 623.4, 656.78, 0.0, 0.65, 632.1};
+    data::Connection well1_comp1 { 0  , crates1, 1.9  , 123.4, 314.15, 0.35 , 0.25,   2.718e2, 111.222*cp_rm3_per_db() };
+    data::Connection well2_comp1 { 1  , crates2, 1.10 , 123.4, 212.1 , 0.78 , 0.0 ,  12.34   , 222.333*cp_rm3_per_db() };
+    data::Connection well2_comp2 { 101, crates3, 1.11 , 123.4, 150.6 , 0.001, 0.89, 100.0    , 333.444*cp_rm3_per_db() };
+    data::Connection well3_comp1 { 2  , crates3, 1.11 , 123.4, 456.78, 0.0  , 0.15, 432.1    , 444.555*cp_rm3_per_db() };
+    data::Connection well6_comp1 { 5  , crates6, 6.11 , 623.4, 656.78, 0.0  , 0.65, 632.1    , 555.666*cp_rm3_per_db() };
+
     /*
       The completions
     */
@@ -1477,13 +1484,13 @@ BOOST_AUTO_TEST_CASE(BLOCK_VARIABLES) {
     BOOST_CHECK_CLOSE( 31.0  , units.to_si( UnitSystem::measure::viscosity , ecl_sum_get_general_var( resp, 1, "BVOIL:1,1,1")) , 1e-5);
     BOOST_CHECK_CLOSE( 33.0  , units.to_si( UnitSystem::measure::viscosity , ecl_sum_get_general_var( resp, 1, "BOVIS:1,1,1")) , 1e-5);
 
-    BOOST_CHECK_CLOSE( 100                , ecl_sum_get_well_completion_var( resp, 1, "W_1", "CTFAC", 1, 1, 1), 1e-5);
-    BOOST_CHECK_CLOSE( 2.1430730819702148 , ecl_sum_get_well_completion_var( resp, 1, "W_2", "CTFAC", 2, 1, 1), 1e-5);
-    BOOST_CHECK_CLOSE( 2.6788413524627686 , ecl_sum_get_well_completion_var( resp, 1, "W_2", "CTFAC", 2, 1, 2), 1e-5);
-    BOOST_CHECK_CLOSE( 2.7855057716369629 , ecl_sum_get_well_completion_var( resp, 1, "W_3", "CTFAC", 3, 1, 1), 1e-5);
+    BOOST_CHECK_CLOSE( 111.222 , ecl_sum_get_well_completion_var( resp, 1, "W_1", "CTFAC", 1, 1, 1), 1e-5);
+    BOOST_CHECK_CLOSE( 222.333 , ecl_sum_get_well_completion_var( resp, 1, "W_2", "CTFAC", 2, 1, 1), 1e-5);
+    BOOST_CHECK_CLOSE( 333.444 , ecl_sum_get_well_completion_var( resp, 1, "W_2", "CTFAC", 2, 1, 2), 1e-5);
+    BOOST_CHECK_CLOSE( 444.555 , ecl_sum_get_well_completion_var( resp, 1, "W_3", "CTFAC", 3, 1, 1), 1e-5);
 
-    BOOST_CHECK_CLOSE( 50                 , ecl_sum_get_well_completion_var( resp, 3, "W_1", "CTFAC", 1, 1, 1), 1e-5);
-    BOOST_CHECK_CLOSE( 25                 , ecl_sum_get_well_completion_var( resp, 4, "W_1", "CTFAC", 1, 1, 1), 1e-5);
+    BOOST_CHECK_CLOSE( 111.222 , ecl_sum_get_well_completion_var( resp, 3, "W_1", "CTFAC", 1, 1, 1), 1e-5);
+    BOOST_CHECK_CLOSE( 111.222 , ecl_sum_get_well_completion_var( resp, 4, "W_1", "CTFAC", 1, 1, 1), 1e-5);
 
     // Cell is not active
     BOOST_CHECK( !ecl_sum_has_general_var( resp , "BPR:2,1,10"));

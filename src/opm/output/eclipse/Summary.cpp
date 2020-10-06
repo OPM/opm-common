@@ -585,31 +585,32 @@ inline quantity srate( const fn_args& args ) {
 }
 
 inline quantity trans_factors ( const fn_args& args ) {
-    const quantity zero = { 0, measure::transmissibility };
+    const quantity zero = { 0.0, measure::transmissibility };
 
-    if( args.schedule_wells.empty() ) return zero;
-    // Like completion rate we need to look
-    // up a connection with offset 0.
+    if (args.schedule_wells.empty())
+        // No wells.  Before simulation starts?
+        return zero;
+
+    auto xwPos = args.wells.find(args.schedule_wells.front().name());
+    if (xwPos == args.wells.end())
+        // No dynamic results for this well.  Not open?
+        return zero;
+
+    // Like completion rate we need to look up a connection with offset 0.
     const size_t global_index = args.num - 1;
+    const auto& connections = xwPos->second.connections;
+    auto connPos = std::find_if(connections.begin(), connections.end(),
+        [global_index](const Opm::data::Connection& c)
+    {
+        return c.index == global_index;
+    });
 
-    const auto& well = args.schedule_wells.front();
-    const auto& name = well.name();
-    if( args.wells.count( name ) == 0 ) return zero;
+    if (connPos == connections.end())
+        // No dynamic results for this connection.
+        return zero;
 
-    const auto& grid = args.grid;
-    const auto& connections = well.getConnections();
-
-    const auto& connection = std::find_if(
-        connections.begin(),
-        connections.end(),
-        [=]( const Opm::Connection& c ) {
-            return grid.getGlobalIndex(c.getI(), c.getJ(), c.getK()) == global_index;
-        } );
-
-    if( connection == connections.end() ) return zero;
-
-    const auto& v = connection->CF();
-    return { v, measure::transmissibility };
+    // Dynamic connection result's "trans_factor" includes PI-adjustment.
+    return { connPos->trans_factor, measure::transmissibility };
 }
 
 template <Opm::data::SegmentPressures::Value ix>

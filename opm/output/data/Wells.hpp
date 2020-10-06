@@ -137,6 +137,7 @@ namespace Opm {
         double cell_saturation_water;
         double cell_saturation_gas;
         double effective_Kh;
+        double trans_factor;
 
         bool operator==(const Connection& conn2) const
         {
@@ -508,6 +509,7 @@ namespace Opm {
             buffer.write(this->cell_saturation_water);
             buffer.write(this->cell_saturation_gas);
             buffer.write(this->effective_Kh);
+            buffer.write(this->trans_factor);
     }
 
     template <class MessageBufferType>
@@ -589,6 +591,7 @@ namespace Opm {
             buffer.read(this->cell_saturation_water);
             buffer.read(this->cell_saturation_gas);
             buffer.read(this->effective_Kh);
+            buffer.read(this->trans_factor);
    }
 
     template <class MessageBufferType>

@@ -291,12 +291,12 @@ BOOST_AUTO_TEST_CASE(test_RFT)
 
         std::vector<Opm::data::Connection> well1_comps(9);
         for (size_t i = 0; i < 9; ++i) {
-            Opm::data::Connection well_comp { grid.getGlobalIndex(8,8,i) ,r1, 0.0 , 0.0, (double)i, 0.1*i,0.2*i, 1.2e3};
+            Opm::data::Connection well_comp { grid.getGlobalIndex(8,8,i) ,r1, 0.0 , 0.0, (double)i, 0.1*i,0.2*i, 1.2e3, 4.321};
             well1_comps[i] = std::move(well_comp);
         }
         std::vector<Opm::data::Connection> well2_comps(6);
         for (size_t i = 0; i < 6; ++i) {
-            Opm::data::Connection well_comp { grid.getGlobalIndex(3,3,i+3) ,r2, 0.0 , 0.0, (double)i, i*0.1,i*0.2, 0.15};
+            Opm::data::Connection well_comp { grid.getGlobalIndex(3,3,i+3) ,r2, 0.0 , 0.0, (double)i, i*0.1,i*0.2, 0.15, 0.54321};
             well2_comps[i] = std::move(well_comp);
         }
 
@@ -420,12 +420,12 @@ BOOST_AUTO_TEST_CASE(test_RFT2)
 
                 std::vector<Opm::data::Connection> well1_comps(9);
                 for (size_t i = 0; i < 9; ++i) {
-                    Opm::data::Connection well_comp { grid.getGlobalIndex(8,8,i) ,r1, 0.0 , 0.0, (double)i, 0.1*i,0.2*i, 3.14e5};
+                    Opm::data::Connection well_comp { grid.getGlobalIndex(8,8,i) ,r1, 0.0 , 0.0, (double)i, 0.1*i,0.2*i, 3.14e5, 0.1234};
                     well1_comps[i] = std::move(well_comp);
                 }
                 std::vector<Opm::data::Connection> well2_comps(6);
                 for (size_t i = 0; i < 6; ++i) {
-                    Opm::data::Connection well_comp { grid.getGlobalIndex(3,3,i+3) ,r2, 0.0 , 0.0, (double)i, i*0.1,i*0.2, 355.113};
+                    Opm::data::Connection well_comp { grid.getGlobalIndex(3,3,i+3) ,r2, 0.0 , 0.0, (double)i, i*0.1,i*0.2, 355.113, 0.9876};
                     well2_comps[i] = std::move(well_comp);
                 }
 
@@ -493,6 +493,7 @@ namespace {
 
             c.cell_saturation_gas   = 0.15;
             c.cell_saturation_water = 0.3 + con/20.0;
+            c.trans_factor          = 0.98765;
         }
 
         return xcon;
@@ -522,6 +523,7 @@ namespace {
 
             c.cell_saturation_gas   = 0.6 - con/20.0;
             c.cell_saturation_water = 0.25;
+            c.trans_factor          = 0.12345;
         }
 
         return xcon;
