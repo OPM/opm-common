@@ -518,12 +518,19 @@ BOOST_AUTO_TEST_CASE( test_invalid_keyword_combination_required ) {
     const std::string deckString = R"(
 AQUCT
     1 2000.0 1.5 100 .3 3.0e-5 330 10 360.0 1 2 /
+/
 )";
 
     ParseContext parseContext;
     Parser parser;
     ErrorGuard errors;
 
+    BOOST_CHECK_THROW(parser.parseString(deckString, parseContext, errors), OpmInputError);
+
+    parseContext.update(ParseContext::PARSE_INVALID_KEYWORD_COMBINATION , InputError::IGNORE );
+    BOOST_CHECK_NO_THROW(parser.parseString(deckString, parseContext, errors));
+
+    parseContext.update(ParseContext::PARSE_INVALID_KEYWORD_COMBINATION , InputError::THROW_EXCEPTION );
     BOOST_CHECK_THROW(parser.parseString(deckString, parseContext, errors), OpmInputError);
 }
 
@@ -543,6 +550,12 @@ RTEMPVD
     Parser parser;
     ErrorGuard errors;
 
+    BOOST_CHECK_THROW(parser.parseString(deckString, parseContext, errors), OpmInputError);
+
+    parseContext.update(ParseContext::PARSE_INVALID_KEYWORD_COMBINATION , InputError::IGNORE );
+    BOOST_CHECK_NO_THROW(parser.parseString(deckString, parseContext, errors));
+
+    parseContext.update(ParseContext::PARSE_INVALID_KEYWORD_COMBINATION , InputError::THROW_EXCEPTION );
     BOOST_CHECK_THROW(parser.parseString(deckString, parseContext, errors), OpmInputError);
 }
 
