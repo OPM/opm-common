@@ -28,8 +28,12 @@
 
 #include <opm/common/utility/OpmInputError.hpp>
 
+namespace {
+
 const Opm::KeywordLocation location { "MXUNSUPP", "FILENAME.DAT", 42 } ;
 const std::string error_string { "Error encountered" } ;
+
+}
 
 BOOST_AUTO_TEST_CASE(simple) {
     const std::string expected { "MXUNSUPP@FILENAME.DAT:42" } ;
