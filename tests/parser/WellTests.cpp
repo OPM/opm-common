@@ -918,179 +918,49 @@ BOOST_AUTO_TEST_CASE(WellTypeTest) {
 BOOST_AUTO_TEST_CASE(Injector_Control_Mode) {
     using IMode = ::Opm::Well::InjectorCMode;
     using IType = ::Opm::InjectorType;
-    using WStat = ::Opm::Well::Status;
 
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::GRUP, IType::GAS, WStat::OPEN), -1);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::GRUP, IType::GAS, WStat::SHUT),  0);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::GRUP, IType::GAS, WStat::STOP), -1);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::GRUP, IType::GAS, WStat::AUTO), -1);
-
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::GRUP, IType::WATER, WStat::OPEN), -1);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::GRUP, IType::WATER, WStat::SHUT),  0);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::GRUP, IType::WATER, WStat::STOP), -1);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::GRUP, IType::WATER, WStat::AUTO), -1);
-
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::GRUP, IType::MULTI, WStat::OPEN), -1);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::GRUP, IType::MULTI, WStat::SHUT),  0);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::GRUP, IType::MULTI, WStat::STOP), -1);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::GRUP, IType::MULTI, WStat::AUTO), -1);
-
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::GRUP, IType::OIL, WStat::OPEN), -1);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::GRUP, IType::OIL, WStat::SHUT),  0);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::GRUP, IType::OIL, WStat::STOP), -1);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::GRUP, IType::OIL, WStat::AUTO), -1);
-
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::RATE, IType::OIL, WStat::OPEN), 1);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::RATE, IType::OIL, WStat::SHUT), 0);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::RATE, IType::OIL, WStat::STOP), 1);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::RATE, IType::OIL, WStat::AUTO), 1);
-
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::RATE, IType::WATER, WStat::OPEN), 2);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::RATE, IType::WATER, WStat::SHUT), 0);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::RATE, IType::WATER, WStat::STOP), 2);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::RATE, IType::WATER, WStat::AUTO), 2);
-
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::RATE, IType::GAS, WStat::OPEN), 3);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::RATE, IType::GAS, WStat::SHUT), 0);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::RATE, IType::GAS, WStat::STOP), 3);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::RATE, IType::GAS, WStat::AUTO), 3);
-
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::RATE, IType::MULTI, WStat::OPEN), -10);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::RATE, IType::MULTI, WStat::SHUT),   0);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::RATE, IType::MULTI, WStat::STOP), -10);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::RATE, IType::MULTI, WStat::AUTO), -10);
-
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::RESV, IType::GAS, WStat::OPEN), 5);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::RESV, IType::GAS, WStat::SHUT), 0);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::RESV, IType::GAS, WStat::STOP), 5);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::RESV, IType::GAS, WStat::AUTO), 5);
-
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::RESV, IType::WATER, WStat::OPEN), 5);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::RESV, IType::WATER, WStat::SHUT), 0);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::RESV, IType::WATER, WStat::STOP), 5);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::RESV, IType::WATER, WStat::AUTO), 5);
-
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::RESV, IType::MULTI, WStat::OPEN), 5);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::RESV, IType::MULTI, WStat::SHUT), 0);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::RESV, IType::MULTI, WStat::STOP), 5);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::RESV, IType::MULTI, WStat::AUTO), 5);
-
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::RESV, IType::OIL, WStat::OPEN), 5);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::RESV, IType::OIL, WStat::SHUT), 0);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::RESV, IType::OIL, WStat::STOP), 5);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::RESV, IType::OIL, WStat::AUTO), 5);
-
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::THP, IType::GAS, WStat::OPEN), 6);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::THP, IType::GAS, WStat::SHUT), 0);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::THP, IType::GAS, WStat::STOP), 6);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::THP, IType::GAS, WStat::AUTO), 6);
-
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::THP, IType::WATER, WStat::OPEN), 6);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::THP, IType::WATER, WStat::SHUT), 0);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::THP, IType::WATER, WStat::STOP), 6);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::THP, IType::WATER, WStat::AUTO), 6);
-
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::THP, IType::MULTI, WStat::OPEN), 6);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::THP, IType::MULTI, WStat::SHUT), 0);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::THP, IType::MULTI, WStat::STOP), 6);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::THP, IType::MULTI, WStat::AUTO), 6);
-
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::THP, IType::OIL, WStat::OPEN), 6);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::THP, IType::OIL, WStat::SHUT), 0);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::THP, IType::OIL, WStat::STOP), 6);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::THP, IType::OIL, WStat::AUTO), 6);
-
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::BHP, IType::GAS, WStat::OPEN), 7);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::BHP, IType::GAS, WStat::SHUT), 0);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::BHP, IType::GAS, WStat::STOP), 7);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::BHP, IType::GAS, WStat::AUTO), 7);
-
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::BHP, IType::WATER, WStat::OPEN), 7);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::BHP, IType::WATER, WStat::SHUT), 0);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::BHP, IType::WATER, WStat::STOP), 7);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::BHP, IType::WATER, WStat::AUTO), 7);
-
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::BHP, IType::MULTI, WStat::OPEN), 7);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::BHP, IType::MULTI, WStat::SHUT), 0);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::BHP, IType::MULTI, WStat::STOP), 7);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::BHP, IType::MULTI, WStat::AUTO), 7);
-
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::BHP, IType::OIL, WStat::OPEN), 7);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::BHP, IType::OIL, WStat::SHUT), 0);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::BHP, IType::OIL, WStat::STOP), 7);
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::BHP, IType::OIL, WStat::AUTO), 7);
-
-    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::CMODE_UNDEFINED, IType::WATER, WStat::SHUT), 0);
-    BOOST_CHECK_EQUAL(eclipseControlMode(static_cast<IMode>(1729), IType::WATER, WStat::SHUT), 0);
-    BOOST_CHECK_EQUAL(eclipseControlMode(static_cast<IMode>(1729), IType::WATER, WStat::STOP), -10); // Unknown combination
-    BOOST_CHECK_EQUAL(eclipseControlMode(static_cast<IMode>(1729), IType::WATER, WStat::OPEN), -10); // Unknown combination
+    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::GRUP, IType::GAS), -1);
+    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::GRUP, IType::WATER), -1);
+    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::GRUP, IType::MULTI), -1);
+    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::GRUP, IType::OIL), -1);
+    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::RATE, IType::OIL), 1);
+    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::RATE, IType::WATER), 2);
+    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::RATE, IType::GAS), 3);
+    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::RATE, IType::MULTI), -10);
+    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::RESV, IType::GAS), 5);
+    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::RESV, IType::WATER), 5);
+    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::RESV, IType::MULTI), 5);
+    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::RESV, IType::OIL), 5);
+    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::THP, IType::GAS), 6);
+    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::THP, IType::WATER), 6);
+    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::THP, IType::MULTI), 6);
+    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::THP, IType::OIL), 6);
+    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::BHP, IType::GAS), 7);
+    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::BHP, IType::WATER), 7);
+    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::BHP, IType::MULTI), 7);
+    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::BHP, IType::OIL), 7);
+    BOOST_CHECK_EQUAL(eclipseControlMode(IMode::CMODE_UNDEFINED, IType::WATER), -10);
+    BOOST_CHECK_EQUAL(eclipseControlMode(static_cast<IMode>(1729), IType::WATER), -10);
+    BOOST_CHECK_EQUAL(eclipseControlMode(static_cast<IMode>(1729), IType::WATER), -10); // Unknown combination
+    BOOST_CHECK_EQUAL(eclipseControlMode(static_cast<IMode>(1729), IType::WATER), -10); // Unknown combination
 }
 
 BOOST_AUTO_TEST_CASE(Producer_Control_Mode) {
     using PMode = ::Opm::Well::ProducerCMode;
-    using WStat = ::Opm::Well::Status;
 
-    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::GRUP, WStat::OPEN), -1);
-    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::GRUP, WStat::STOP), -1);
-    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::GRUP, WStat::SHUT),  0);
-    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::GRUP, WStat::AUTO), -1);
-
-    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::ORAT, WStat::OPEN), 1);
-    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::ORAT, WStat::STOP), 1);
-    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::ORAT, WStat::SHUT), 0);
-    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::ORAT, WStat::AUTO), 1);
-
-    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::WRAT, WStat::OPEN), 2);
-    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::WRAT, WStat::STOP), 2);
-    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::WRAT, WStat::SHUT), 0);
-    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::WRAT, WStat::AUTO), 2);
-
-    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::GRAT, WStat::OPEN), 3);
-    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::GRAT, WStat::STOP), 3);
-    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::GRAT, WStat::SHUT), 0);
-    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::GRAT, WStat::AUTO), 3);
-
-    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::LRAT, WStat::OPEN), 4);
-    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::LRAT, WStat::STOP), 4);
-    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::LRAT, WStat::SHUT), 0);
-    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::LRAT, WStat::AUTO), 4);
-
-    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::RESV, WStat::OPEN), 5);
-    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::RESV, WStat::STOP), 5);
-    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::RESV, WStat::SHUT), 0);
-    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::RESV, WStat::AUTO), 5);
-
-    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::THP, WStat::OPEN), 6);
-    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::THP, WStat::STOP), 6);
-    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::THP, WStat::SHUT), 0);
-    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::THP, WStat::AUTO), 6);
-
-    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::BHP, WStat::OPEN), 7);
-    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::BHP, WStat::STOP), 7);
-    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::BHP, WStat::SHUT), 0);
-    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::BHP, WStat::AUTO), 7);
-
-    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::CRAT, WStat::OPEN), 9);
-    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::CRAT, WStat::STOP), 9);
-    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::CRAT, WStat::SHUT), 0);
-    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::CRAT, WStat::AUTO), 9);
-
-    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::NONE, WStat::OPEN), -10);
-    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::NONE, WStat::STOP), -10);
-    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::NONE, WStat::SHUT),   0);
-    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::NONE, WStat::AUTO), -10);
-
-    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::CMODE_UNDEFINED, WStat::OPEN), -10);
-    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::CMODE_UNDEFINED, WStat::STOP), -10);
-    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::CMODE_UNDEFINED, WStat::SHUT),   0);
-    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::CMODE_UNDEFINED, WStat::AUTO), -10);
-
-    BOOST_CHECK_EQUAL(eclipseControlMode(static_cast<PMode>(271828), WStat::OPEN), -10);
-    BOOST_CHECK_EQUAL(eclipseControlMode(static_cast<PMode>(271828), WStat::STOP), -10);
-    BOOST_CHECK_EQUAL(eclipseControlMode(static_cast<PMode>(271828), WStat::SHUT),   0);
-    BOOST_CHECK_EQUAL(eclipseControlMode(static_cast<PMode>(271828), WStat::AUTO), -10);
+    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::GRUP), -1);
+    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::ORAT), 1);
+    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::WRAT), 2);
+    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::GRAT), 3);
+    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::LRAT), 4);
+    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::RESV), 5);
+    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::THP ), 6);
+    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::BHP ), 7);
+    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::CRAT), 9);
+    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::NONE), -10);
+    BOOST_CHECK_EQUAL(eclipseControlMode(PMode::CMODE_UNDEFINED), -10);
+    BOOST_CHECK_EQUAL(eclipseControlMode(static_cast<PMode>(271828)), -10);
 }
-
 
 BOOST_AUTO_TEST_CASE(WPIMULT) {
     Opm::Parser parser;

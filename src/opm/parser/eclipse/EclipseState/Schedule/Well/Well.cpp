@@ -1478,16 +1478,12 @@ bool Well::operator==(const Well& data) const {
 }
 
 int Opm::eclipseControlMode(const Opm::Well::InjectorCMode imode,
-                            const Opm::InjectorType        itype,
-                            const Opm::Well::Status        wellStatus)
+                            const Opm::InjectorType        itype)
 {
     using IMode = ::Opm::Well::InjectorCMode;
     using Val   = ::Opm::RestartIO::Helpers::VectorItems::IWell::Value::WellCtrlMode;
     using IType = ::Opm::InjectorType;
 
-    if (wellStatus == ::Opm::Well::Status::SHUT) {
-        return Val::Shut;
-    }
     switch (imode) {
         case IMode::RATE: {
             switch (itype) {
@@ -1502,25 +1498,17 @@ int Opm::eclipseControlMode(const Opm::Well::InjectorCMode imode,
         case IMode::THP:  return Val::THP;
         case IMode::BHP:  return Val::BHP;
         case IMode::GRUP: return Val::Group;
-
         default:
-            if (wellStatus == ::Opm::Well::Status::SHUT) {
-                return Val::Shut;
-            }
+            return Val::WMCtlUnk;
     }
-
     return Val::WMCtlUnk;
 }
 
-int Opm::eclipseControlMode(const Opm::Well::ProducerCMode pmode,
-                            const Opm::Well::Status        wellStatus)
+int Opm::eclipseControlMode(const Opm::Well::ProducerCMode pmode)
 {
     using PMode = ::Opm::Well::ProducerCMode;
     using Val   = ::Opm::RestartIO::Helpers::VectorItems::IWell::Value::WellCtrlMode;
 
-    if (wellStatus == ::Opm::Well::Status::SHUT) {
-        return Val::Shut;
-    }
     switch (pmode) {
         case PMode::ORAT: return Val::OilRate;
         case PMode::WRAT: return Val::WatRate;
@@ -1531,13 +1519,9 @@ int Opm::eclipseControlMode(const Opm::Well::ProducerCMode pmode,
         case PMode::BHP:  return Val::BHP;
         case PMode::CRAT: return Val::CombRate;
         case PMode::GRUP: return Val::Group;
-
         default:
-            if (wellStatus == ::Opm::Well::Status::SHUT) {
-                return Val::Shut;
-            }
+            return Val::WMCtlUnk;
     }
-
     return Val::WMCtlUnk;
 }
 
@@ -1560,11 +1544,11 @@ int Opm::eclipseControlMode(const Well&         well,
     if (well.isProducer()) {
         const auto& ctrl = well.productionControls(st);
 
-        return eclipseControlMode(ctrl.cmode, well.getStatus());
+        return eclipseControlMode(ctrl.cmode);
     }
     else { // Injector
         const auto& ctrl = well.injectionControls(st);
 
-        return eclipseControlMode(ctrl.cmode, well.injectorType(), well.getStatus());
+        return eclipseControlMode(ctrl.cmode, well.injectorType());
     }
 }

@@ -641,11 +641,9 @@ std::ostream& operator<<( std::ostream&, const Well::WellInjectionProperties& );
 std::ostream& operator<<( std::ostream&, const WellProductionProperties& );
 
 int eclipseControlMode(const Well::InjectorCMode imode,
-                       const InjectorType        itype,
-                       const Well::Status        wellStatus);
+                       const InjectorType        itype);
 
-int eclipseControlMode(const Well::ProducerCMode pmode,
-                       const Well::Status        wellStatus);
+int eclipseControlMode(const Well::ProducerCMode pmode);
 
 int eclipseControlMode(const Well&         well,
                        const SummaryState& st);
