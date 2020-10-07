@@ -121,8 +121,6 @@ namespace Opm {
             serializer(headI);
             serializer(headJ);
             serializer.vector(m_connections);
-            serializer(m_hasWellPIAdjustment);
-            serializer(m_wellPIConnections);
         }
 
     private:
@@ -154,23 +152,9 @@ namespace Opm {
         void orderTRACK();
         void orderMSW();
 
-        // Exclude specific connection from WELPI CF scaling.  No action unless
-        // this connection set has been prepared for WELPI.
-        void excludeFromWellPI(const std::size_t connID);
-
         Connection::Order m_ordering = Connection::Order::TRACK;
         int headI, headJ;
         std::vector< Connection > m_connections;
-
-        // Backing data for 'WELPI'.
-        //   1. No adjustment if this set of connections has not been prepared
-        //      for WELPI (m_hasWellPIAdjustment == false, default value).
-        //
-        //   2. Otherwise, scale Connection::CF() by supplied scaling factor
-        //      for those connections that are marked in m_wellPIConnections.
-        //      Apply scaling to all connections if m_wellPIConnections.empty().
-        bool m_hasWellPIAdjustment{false};
-        std::vector<bool> m_wellPIConnections{};
     };
 }
 

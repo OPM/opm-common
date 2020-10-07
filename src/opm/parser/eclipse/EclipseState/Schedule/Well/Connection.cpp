@@ -127,6 +127,7 @@ Connection::Connection(const RestartIO::RstConnection& rst_connection, const Ecl
         result.m_sort_value = 14;
         result.m_defaultSatTabId = true;
         result.segment_number = 16;
+        result.m_subject_to_welpi = true;
 
         return result;
     }
@@ -247,7 +248,20 @@ const std::optional<std::pair<double, double>>& Connection::perf_range() const {
         this->m_CF *= wellPi;
     }
 
+    bool Connection::prepareWellPIScaling() {
+        const auto update = !this->m_subject_to_welpi;
 
+        this->m_subject_to_welpi = true;
+
+        return update;
+    }
+
+    void Connection::applyWellPIScaling(const double scaleFactor) {
+        if (! this->m_subject_to_welpi)
+            return;
+
+        this->scaleWellPi(scaleFactor);
+    }
 
     std::string Connection::str() const {
         std::stringstream ss;
@@ -283,7 +297,8 @@ const std::optional<std::pair<double, double>>& Connection::perf_range() const {
             && this->direction == rhs.direction
             && this->segment_number == rhs.segment_number
             && this->center_depth == rhs.center_depth
-            && this->m_sort_value == rhs.m_sort_value;
+            && this->m_sort_value == rhs.m_sort_value
+            && this->m_subject_to_welpi == rhs.m_subject_to_welpi;
     }
 
     bool Connection::operator!=( const Connection& rhs ) const {
