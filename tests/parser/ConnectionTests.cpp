@@ -61,6 +61,7 @@ inline std::ostream& operator<<( std::ostream& stream, const WellConnections& cs
 
 BOOST_AUTO_TEST_CASE(CreateWellConnectionsOK) {
     Opm::WellConnections completionSet(Opm::Connection::Order::TRACK, 1,1);
+    BOOST_CHECK_MESSAGE( completionSet.empty(), "Default-constructed completion set must be empty" );
     BOOST_CHECK_EQUAL( 0U , completionSet.size() );
     BOOST_CHECK(!completionSet.allConnectionsShut());
 }
@@ -75,6 +76,7 @@ BOOST_AUTO_TEST_CASE(AddCompletionSizeCorrect) {
     Opm::Connection completion2( 10,10,11, 102, 1, 0.0, Opm::Connection::State::SHUT , 99.88, 355.113, 0.25, 0.0, 0.0, 0, dir, kind, 0, true);
     completionSet.add( completion1 );
     BOOST_CHECK_EQUAL( 1U , completionSet.size() );
+    BOOST_CHECK_MESSAGE( !completionSet.empty(), "Non-empty completion set must not be empty" );
 
     completionSet.add( completion2 );
     BOOST_CHECK_EQUAL( 2U , completionSet.size() );

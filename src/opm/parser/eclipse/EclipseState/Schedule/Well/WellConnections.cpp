@@ -417,6 +417,10 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
         return m_connections.size();
     }
 
+    bool WellConnections::empty() const {
+        return this->size() == size_t{0};
+    }
+
     const Connection& WellConnections::get(size_t index) const {
         return (*this)[index];
     }
@@ -466,7 +470,7 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
     }
 
     bool WellConnections::allConnectionsShut( ) const {
-        if (this->size() == 0)
+        if (this->empty())
             return false;
 
 
