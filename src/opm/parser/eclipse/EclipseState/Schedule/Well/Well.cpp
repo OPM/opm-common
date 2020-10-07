@@ -375,6 +375,7 @@ Well Well::serializeObject()
     result.efficiency_factor = 8.0;
     result.solvent_fraction = 9.0;
     result.prediction_mode = false;
+    result.productivity_index = 10.0;
     result.econ_limits = std::make_shared<Opm::WellEconProductionLimits>(Opm::WellEconProductionLimits::serializeObject());
     result.foam_properties = std::make_shared<WellFoamProperties>(WellFoamProperties::serializeObject());
     result.polymer_properties =  std::make_shared<WellPolymerProperties>(WellPolymerProperties::serializeObject());

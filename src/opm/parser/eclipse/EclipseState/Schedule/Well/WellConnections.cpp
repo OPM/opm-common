@@ -22,6 +22,7 @@
 #include <cmath>
 #include <cstddef>
 #include <iostream>
+#include <initializer_list>
 #include <limits>
 #include <stdexcept>
 #include <string>
@@ -152,6 +153,8 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
         result.headI = 1;
         result.headJ = 2;
         result.m_connections = {Connection::serializeObject()};
+        result.m_hasWellPIAdjustment = true;
+        result.m_wellPIConnections.assign({true, true, false, true, false, false});
 
         return result;
     }
