@@ -353,7 +353,7 @@ namespace {
                 ? 0 : -1;
 
             iWell[Ix::Status] = any_flowing_conn
-                ? Value::Stop  : -1;
+                ? Value::Stop  : Value::Shut;
 
         }
 
@@ -381,7 +381,7 @@ namespace {
                 ? iWell[Ix::ActWCtrl] : -1;
 
             iWell[Ix::Status] = any_flowing_conn
-                ? Value::Open : -1;
+                ? Value::Open : Value::Shut;
         }
     } // IWell
 

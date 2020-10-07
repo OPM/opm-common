@@ -833,7 +833,7 @@ BOOST_AUTO_TEST_CASE (Dynamic_Well_Data_Step1)
         // This needs to be corrected in flow
 
         BOOST_CHECK_EQUAL(iwell[i1 + Ix::item9 ], -1); // No flowing conns.
-        BOOST_CHECK_EQUAL(iwell[i1 + Ix::Status], -1); // No flowing conns.
+        BOOST_CHECK_EQUAL(iwell[i1 + Ix::Status], Value::Shut); // No flowing conns.
     }
 
     // XWEL (OP_1)
