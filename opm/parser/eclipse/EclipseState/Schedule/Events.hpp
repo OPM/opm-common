@@ -35,22 +35,22 @@ namespace Opm
                the Schedule object the NEW_WELL event is triggered
                every time a WELSPECS keyword is encountered.
             */
-            NEW_WELL = 1,
+            NEW_WELL = (1 << 0),
 
             /*
               WHen the well data is updated with the WELSPECS keyword
               this event is triggered. Only applies to individual
               wells, and not the global Schedule object.
             */
-            WELL_WELSPECS_UPDATE = 2,
+            WELL_WELSPECS_UPDATE = (1 << 1),
 
 
-            //WELL_POLYMER_UPDATE = 4,
+            //WELL_POLYMER_UPDATE = (1 << 2),
             /*
                The NEW_GROUP event is triggered by the WELSPECS and
                GRUPTREE keywords.
             */
-            NEW_GROUP = 8,
+            NEW_GROUP = (1 << 3),
 
             /*
                The PRODUCTION_UPDATE event is triggered by the
@@ -59,48 +59,48 @@ namespace Opm
                is changed. Quite simlar for INJECTION_UPDATE and
                POLYMER_UPDATE.
             */
-            PRODUCTION_UPDATE = 16,
-            INJECTION_UPDATE = 32,
-            //POLYMER_UPDATES = 64,
+            PRODUCTION_UPDATE = (1 << 4),
+            INJECTION_UPDATE = (1 << 5),
+            //POLYMER_UPDATES = (1 << 6),
 
             /*
               This event is triggered if the well status is changed
               between {OPEN,SHUT,STOP,AUTO}. There are many keywords
               which can trigger a well status change.
             */
-            WELL_STATUS_CHANGE = 128,
+            WELL_STATUS_CHANGE = (1 << 7),
 
             /*
               COMPDAT and WELOPEN
             */
-            COMPLETION_CHANGE = 256,
+            COMPLETION_CHANGE = (1 << 8),
 
             /*
               The well group topolyg has changed.
             */
-            GROUP_CHANGE = 512,
+            GROUP_CHANGE = (1 << 9),
 
 
             /*
               Geology modifier.
             */
-            GEO_MODIFIER = 1024,
+            GEO_MODIFIER = (1 << 10),
 
             /*
               TUNING has changed
             */
-            TUNING_CHANGE = 2048,
+            TUNING_CHANGE = (1 << 11),
 
             /* The VFP tables have changed */
-            VFPINJ_UPDATE = 4096,
-            VFPPROD_UPDATE = 8192,
+            VFPINJ_UPDATE = (1 << 12),
+            VFPPROD_UPDATE = (1 << 13),
 
 
             /*
               GROUP production or injection targets has changed
             */
-            GROUP_PRODUCTION_UPDATE = 16384,
-            GROUP_INJECTION_UPDATE = 32768
+            GROUP_PRODUCTION_UPDATE = (1 << 14),
+            GROUP_INJECTION_UPDATE = (1 << 15),
         };
     }
 
