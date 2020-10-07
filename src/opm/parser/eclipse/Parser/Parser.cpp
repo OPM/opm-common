@@ -581,6 +581,32 @@ void ParserState::addPathAlias( const std::string& alias, const std::string& pat
 
 
 RawKeyword * newRawKeyword(const ParserKeyword& parserKeyword, const std::string& keywordString, ParserState& parserState, const Parser& parser) {
+    for (const auto& keyword : parserKeyword.prohibitedKeywords()) {
+        if (parserState.deck.hasKeyword(keyword)) {
+            parserState
+                .parseContext
+                .handleError(
+                    ParseContext::PARSE_INVALID_KEYWORD_COMBINATION,
+                    fmt::format("Incompatible keyword combination: {} declared when {} is already present.", keywordString, keyword),
+                    KeywordLocation { keywordString, parserState.current_path(), parserState.line() } ,
+                    parserState.errors
+                );
+        }
+    }
+
+    for (const auto& keyword : parserKeyword.requiredKeywords()) {
+        if (!parserState.deck.hasKeyword(keyword)) {
+            parserState
+                .parseContext
+                .handleError(
+                    ParseContext::PARSE_INVALID_KEYWORD_COMBINATION,
+                    fmt::format("Incompatible keyword combination: {} declared, but {} is missing.", keywordString, keyword),
+                    KeywordLocation { keywordString, parserState.current_path(), parserState.line() } ,
+                    parserState.errors
+                );
+        }
+    }
+
     bool raw_string_keyword = parserKeyword.rawStringKeyword();
 
     if( parserKeyword.getSizeType() == SLASH_TERMINATED || parserKeyword.getSizeType() == UNKNOWN || parserKeyword.getSizeType() == DOUBLE_SLASH_TERMINATED) {
