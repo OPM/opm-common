@@ -1545,6 +1545,19 @@ namespace {
         for (const auto& rst_group : rst_state.groups)
             this->addGroup(rst_group.name, report_step, unit_system);
 
+        for (std::size_t group_index = 0; group_index < rst_state.groups.size(); group_index++) {
+            const auto& rst_group = rst_state.groups[group_index];
+
+            if (rst_group.parent_group == 0)
+                continue;
+
+            if (rst_group.parent_group == rst_state.header.max_groups_in_field)
+                continue;
+
+            const auto& parent_group = rst_state.groups[rst_group.parent_group - 1];
+            this->addGroupToGroup(parent_group.name, rst_group.name, report_step);
+        }
+
         for (const auto& rst_well : rst_state.wells) {
             Opm::Well well(rst_well, report_step, unit_system, udq_undefined);
             std::vector<Opm::Connection> rst_connections;
