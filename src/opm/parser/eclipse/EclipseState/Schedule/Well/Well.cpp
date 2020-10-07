@@ -17,6 +17,8 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <fmt/format.h>
+
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/io/eclipse/rst/well.hpp>
@@ -81,9 +83,6 @@ namespace {
 
 namespace {
 
-constexpr int def_well_closed_control = 0;
-
-
 Connection::Order order_from_int(int int_value) {
     switch(int_value) {
     case 0:
@@ -93,7 +92,24 @@ Connection::Order order_from_int(int int_value) {
     case 2:
         return Connection::Order::INPUT;
     default:
-        throw std::invalid_argument("Invalid integer value: " + std::to_string(int_value) + " encountered when determining connection ordering");
+        throw std::invalid_argument(fmt::format("Invalid integer value: {} encountered when determining connection ordering", int_value));
+    }
+}
+
+Well::Status status_from_int(int int_value) {
+    using Value = RestartIO::Helpers::VectorItems::IWell::Value::Status;
+
+    switch (int_value) {
+        case Value::Shut:
+            return Well::Status::SHUT;
+        case Value::Stop:
+            return Well::Status::STOP;
+        case Value::Open:
+            return Well::Status::OPEN;
+        case Value::Auto:
+            return Well::Status::AUTO;
+    default:
+        throw std::logic_error(fmt::format("integer value: {} could not be converted to a valid state", int_value));
     }
 }
 
@@ -121,7 +137,7 @@ Well::Well(const RestartIO::RstWell& rst_well,
     pvt_table(rst_well.pvt_table),
     unit_system(unit_system_arg),
     udq_undefined(udq_undefined_arg),
-    status(rst_well.active_control == def_well_closed_control ? Well::Status::SHUT : Well::Status::OPEN),
+    status(status_from_int(rst_well.well_status)),
     wtype(rst_well.wtype),
     guide_rate(def_guide_rate),
     efficiency_factor(rst_well.efficiency_factor),
