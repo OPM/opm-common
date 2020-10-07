@@ -51,6 +51,7 @@
 #include <opm/parser/eclipse/Parser/ParserKeywords/W.hpp>
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionX.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionResult.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
@@ -1065,6 +1066,48 @@ namespace {
         return applyWELOPEN(handlerContext.keyword, handlerContext.currentStep, parseContext, errors);
     }
 
+    void Schedule::handleWELPI(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+        // Keyword structure
+        //
+        //   WELPI
+        //     W1   123.45 /
+        //     W2*  456.78 /
+        //     *P   111.222 /
+        //     **X* 333.444 /
+        //   /
+        //
+        // Interpretation of productivity index (item 2) depends on well's preferred phase.
+        using WELL_NAME = ParserKeywords::WELPI::WELL_NAME;
+        using PI        = ParserKeywords::WELPI::STEADY_STATE_PRODUCTIVITY_OR_INJECTIVITY_INDEX_VALUE;
+
+        const auto& usys  = handlerContext.section.unitSystem();
+        const auto  gasPI = UnitSystem::measure::gas_productivity_index;
+        const auto  liqPI = UnitSystem::measure::liquid_productivity_index;
+
+        for (const auto& record : handlerContext.keyword) {
+            const auto well_names = this->wellNames(record.getItem<WELL_NAME>().getTrimmedString(0),
+                                                   handlerContext.currentStep);
+
+            if (well_names.empty())
+                this->invalidNamePattern(record.getItem<WELL_NAME>().getTrimmedString(0),
+                                         handlerContext.currentStep, parseContext,
+                                         errors, handlerContext.keyword);
+
+            const auto rawProdIndex = record.getItem<PI>().get<double>(0);
+            for (const auto& well_name : well_names) {
+                // All wells in a single record *hopefully* have the same preferred phase...
+                const auto& well   = this->getWell(well_name, handlerContext.currentStep);
+                const auto  unitPI = (well.getPreferredPhase() == Phase::GAS) ? gasPI : liqPI;
+
+                auto well2 = std::make_shared<Well>(well);
+                if (well2->updateWellProductivityIndex(usys.to_si(unitPI, rawProdIndex)))
+                    this->updateWell(std::move(well2), handlerContext.currentStep);
+
+                this->addWellGroupEvent(well_name, ScheduleEvents::WELL_PRODUCTIVITY_INDEX, handlerContext.currentStep);
+            }
+        }
+    }
+
     void Schedule::handleWELSEGS(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         const auto& record1 = handlerContext.keyword.getRecord(0);
         const auto& wname = record1.getItem("WELL").getTrimmedString(0);
@@ -1735,6 +1778,7 @@ namespace {
             { "WECON"   , &Schedule::handleWECON    },
             { "WEFAC"   , &Schedule::handleWEFAC    },
             { "WELOPEN" , &Schedule::handleWELOPEN  },
+            { "WELPI"   , &Schedule::handleWELPI    },
             { "WELSEGS" , &Schedule::handleWELSEGS  },
             { "WELSPECS", &Schedule::handleWELSPECS },
             { "WELTARG" , &Schedule::handleWELTARG  },

@@ -488,6 +488,15 @@ bool Well::updateInjection(std::shared_ptr<WellInjectionProperties> injection_ar
     return false;
 }
 
+bool Well::updateWellProductivityIndex(const double prodIndex) {
+    const auto update = this->productivity_index != prodIndex;
+    if (update)
+        this->productivity_index = prodIndex;
+
+    // Note order here: We must always run prepareWellPIScaling(), but that operation
+    // *may* not lead to requiring updating the well state, so return 'update' if not.
+    return this->connections->prepareWellPIScaling() || update;
+}
 
 bool Well::updateHasProduced() {
     if (this->wtype.producer() && this->status == Status::OPEN) {
@@ -801,6 +810,21 @@ void Well::setInsertIndex(std::size_t index) {
     this->insert_index = index;
 }
 
+void Well::applyWellProdIndexScaling(const double currentEffectivePI) {
+    if (this->connections->empty())
+        // No connections for this well.  Unexpected.
+        return;
+
+    if (this->productivity_index < 0.0)
+        // WELPI not activated.  Nothing to do.
+        return;
+
+    if (this->productivity_index == currentEffectivePI)
+        // No change in scaling.
+        return;
+
+    this->connections->applyWellPIScaling(this->productivity_index / currentEffectivePI);
+}
 
 const WellConnections& Well::getConnections() const {
     return *this->connections;
@@ -1486,6 +1510,10 @@ bool Well::operator==(const Well& data) const {
            this->getFoamProperties() == data.getFoamProperties() &&
            this->getStatus() == data.getStatus() &&
            this->guide_rate == data.guide_rate &&
+           this->solvent_fraction == data.solvent_fraction &&
+           this->hasProduced() == data.hasProduced() &&
+           this->predictionMode() == data.predictionMode() &&
+           this->productivity_index == data.productivity_index &&
            this->getTracerProperties() == data.getTracerProperties() &&
            this->getProductionProperties() == data.getProductionProperties() &&
            this->getInjectionProperties() == data.getInjectionProperties();

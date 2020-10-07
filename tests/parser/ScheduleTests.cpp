@@ -58,6 +58,18 @@
 
 using namespace Opm;
 
+namespace {
+    double liquid_PI_unit()
+    {
+        return UnitSystem::newMETRIC().to_si(UnitSystem::measure::liquid_productivity_index, 1.0);
+    }
+
+    double cp_rm3_per_db()
+    {
+        return prefix::centi*unit::Poise * unit::cubic(unit::meter)
+            / (unit::day * unit::barsa);
+    }
+}
 
 static Schedule make_schedule(const std::string& deck_string) {
     const auto& deck = Parser{}.parseString(deck_string);
@@ -3702,3 +3714,82 @@ WLIFTOPT
     BOOST_CHECK(w3.alloc_extra_gas());
 }
 
+BOOST_AUTO_TEST_CASE(WellPI) {
+    const auto deck = Parser{}.parseString(R"(RUNSPEC
+START
+7 OCT 2020 /
+
+DIMENS
+  10 10 3 /
+
+GRID
+DXV
+  10*100.0 /
+DYV
+  10*100.0 /
+DZV
+  3*10.0 /
+
+DEPTHZ
+  121*2000.0 /
+
+PERMX
+  300*100.0 /
+PERMY
+  300*100.0 /
+PERMZ
+  300*10.0 /
+PORO
+  300*0.3 /
+
+SCHEDULE
+WELSPECS
+  'P' 'G' 10 10 2005 'LIQ' /
+/
+COMPDAT
+  'P' 0 0 1 3 OPEN 1 100 /
+/
+
+TSTEP
+  10
+/
+
+WELPI
+  'P'  200.0 /
+/
+
+TSTEP
+  10
+/
+
+END
+)");
+
+    const auto es    = EclipseState{ deck };
+    const auto sched = Schedule{ deck, es };
+
+    // Apply WELPI before seeing WELPI data
+    {
+        const auto expectCF = 100.0*cp_rm3_per_db();
+        auto wellP = sched.getWell("P", 0);
+
+        wellP.applyWellProdIndexScaling(2.7182818);
+        for (const auto& conn : wellP.getConnections()) {
+            BOOST_CHECK_CLOSE(conn.CF(), expectCF, 1.0e-10);
+        }
+    }
+
+    // Apply WELPI after seeing WELPI data.
+    {
+        const auto expectCF = (200.0 / 100.0) * 100.0*cp_rm3_per_db();
+        auto wellP = sched.getWell("P", 1);
+
+        wellP.applyWellProdIndexScaling(100.0*liquid_PI_unit());
+        for (const auto& conn : wellP.getConnections()) {
+            BOOST_CHECK_CLOSE(conn.CF(), expectCF, 1.0e-10);
+        }
+    }
+
+    BOOST_CHECK_MESSAGE(sched.hasWellGroupEvent("P", ScheduleEvents::WELL_PRODUCTIVITY_INDEX, 1),
+                        "Must have WELL_PRODUCTIVITY_INDEX event at report step 1");
+}

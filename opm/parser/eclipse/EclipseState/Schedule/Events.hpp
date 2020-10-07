@@ -101,6 +101,11 @@ namespace Opm
             */
             GROUP_PRODUCTION_UPDATE = (1 << 14),
             GROUP_INJECTION_UPDATE = (1 << 15),
+
+            /*
+             * New explicit well productivity/injectivity assignment.
+             */
+            WELL_PRODUCTIVITY_INDEX = (1 << 16),
         };
     }
 

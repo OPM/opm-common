@@ -25,9 +25,13 @@
 
 #include <opm/common/utility/ActiveGridCells.hpp>
 
+#include <cstddef>
+#include <vector>
+
 #include <stddef.h>
 
 namespace Opm {
+    class DeckRecord;
     class EclipseGrid;
     class FieldPropsManager;
     class WellConnections {
@@ -95,6 +99,21 @@ namespace Opm {
         Connection::Order ordering() const { return this->m_ordering; }
         std::vector<const Connection *> output(const EclipseGrid& grid) const;
 
+        /// Activate or reactivate WELPI scaling for this connection set.
+        ///
+        /// Following this call, any WELPI-based scaling will apply to all
+        /// connections whose properties are not reset in COMPDAT.
+        ///
+        /// Returns whether or not this call to prepareWellPIScaling() is
+        /// a state change (e.g., no WELPI to active WELPI or WELPI for
+        /// some connections to WELPI for all connections).
+        bool prepareWellPIScaling();
+
+        /// Scale pertinent connections' CF value by supplied value.  Scaling
+        /// factor typically derived from 'WELPI' input keyword and a dynamic
+        /// productivity index calculation.
+        void applyWellPIScaling(const double scaleFactor);
+
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
@@ -102,6 +121,8 @@ namespace Opm {
             serializer(headI);
             serializer(headJ);
             serializer.vector(m_connections);
+            serializer(m_hasWellPIAdjustment);
+            serializer(m_wellPIConnections);
         }
 
     private:
@@ -133,9 +154,23 @@ namespace Opm {
         void orderTRACK();
         void orderMSW();
 
+        // Exclude specific connection from WELPI CF scaling.  No action unless
+        // this connection set has been prepared for WELPI.
+        void excludeFromWellPI(const std::size_t connID);
+
         Connection::Order m_ordering = Connection::Order::TRACK;
         int headI, headJ;
         std::vector< Connection > m_connections;
+
+        // Backing data for 'WELPI'.
+        //   1. No adjustment if this set of connections has not been prepared
+        //      for WELPI (m_hasWellPIAdjustment == false, default value).
+        //
+        //   2. Otherwise, scale Connection::CF() by supplied scaling factor
+        //      for those connections that are marked in m_wellPIConnections.
+        //      Apply scaling to all connections if m_wellPIConnections.empty().
+        bool m_hasWellPIAdjustment{false};
+        std::vector<bool> m_wellPIConnections{};
     };
 }
 

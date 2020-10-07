@@ -186,6 +186,36 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
         return out;
     }
 
+    bool WellConnections::prepareWellPIScaling()
+    {
+        // New WELPI adjustment applies to all connections.
+        auto update = ! (this->m_hasWellPIAdjustment && this->m_wellPIConnections.empty());
+
+        this->m_hasWellPIAdjustment = true;
+        this->m_wellPIConnections.clear();
+
+        return update;
+    }
+
+    void WellConnections::applyWellPIScaling(const double scaleFactor)
+    {
+        if (! this->m_hasWellPIAdjustment)
+            return;
+
+        if (this->m_wellPIConnections.empty())
+            // Apply to all connections
+            for (auto& conn : this->m_connections)
+                conn.scaleWellPi(scaleFactor);
+        else {
+            // Apply to active subset
+            const auto nConn = std::min(this->m_wellPIConnections.size(),
+                                        this->m_connections.size());
+
+            for (auto conn = 0*nConn; conn < nConn; ++conn)
+                if (this->m_wellPIConnections[conn])
+                    this->m_connections[conn].scaleWellPi(scaleFactor);
+        }
+    }
 
     void WellConnections::addConnection(int i, int j , int k ,
                                         std::size_t global_index,
@@ -413,6 +443,8 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
                                     depth,
                                     css_ind,
                                     *perf_range);
+
+                this->excludeFromWellPI(std::distance(this->m_connections.begin(), prev));
             }
         }
     }
@@ -472,6 +504,7 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
 
     void WellConnections::add( Connection connection ) {
         m_connections.emplace_back( connection );
+        this->excludeFromWellPI(this->m_connections.size() - 1);
     }
 
     bool WellConnections::allConnectionsShut( ) const {
@@ -533,6 +566,32 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
         }
     }
 
+    void WellConnections::excludeFromWellPI(const std::size_t connID) {
+        assert (!this->m_connections.empty() &&
+                "Connection set must be non-empty before calling excludeFromWellPI");
+
+        if (!this->m_hasWellPIAdjustment)
+            // Connection set not prepared for WELPI.  Common case.  Nothing to do.
+            return;
+
+        if (connID >= this->m_connections.size())
+            throw std::invalid_argument {
+                "Cannot exclude connection ID outside known range. "
+                "Expected 0.." + std::to_string(this->m_connections.size() - 1)
+                + ", but got " + std::to_string(connID)
+            };
+
+        if (this->m_wellPIConnections.empty())
+            // WELPI applies to all connections.  Prepare to exclude 'connID'.
+            this->m_wellPIConnections.assign(this->m_connections.size(), true);
+
+        if (this->m_wellPIConnections.size() < this->m_connections.size())
+            // WELPI applies to subset of connections.  Must also exclude those
+            // that are not already in set of explicitly included connections.
+            this->m_wellPIConnections.resize(this->m_connections.size(), false);
+
+        this->m_wellPIConnections[connID] = false;
+    }
 
     size_t WellConnections::findClosestConnection(int oi, int oj, double oz, size_t start_pos)
     {
@@ -566,6 +625,8 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
     bool WellConnections::operator==( const WellConnections& rhs ) const {
         return this->size() == rhs.size() &&
             this->m_ordering == rhs.m_ordering &&
+            this->m_hasWellPIAdjustment == rhs.m_hasWellPIAdjustment &&
+            this->m_wellPIConnections == rhs.m_wellPIConnections &&
             std::equal( this->begin(), this->end(), rhs.begin() );
     }
 
@@ -573,12 +634,60 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
         return !( *this == rhs );
     }
 
+namespace {
+    template <typename S1FwdIter, typename S2FwdIter, typename Predicate>
+    std::pair<S1FwdIter, S2FwdIter>
+    remove_if(S1FwdIter s1begin, S1FwdIter s1end, S2FwdIter s2begin, Predicate&& predicate)
+    {
+        auto ret = std::make_pair(s1begin, s2begin);
+
+        for (; s1begin != s1end; ++s1begin, ++s2begin) {
+            if (predicate(*s1begin))
+                // Skip those elements that match the predicate.
+                continue;
+
+            if (ret.first != s1begin) {
+                // Do nothing if src == dest, i.e. if we've not
+                // skipped any sequence elements.  Otherwise, move
+                // down.
+                *ret.first  = std::move(*s1begin);
+                *ret.second = *s2begin;
+            }
+
+            ++ret.first;
+            ++ret.second;
+        }
+
+        return ret;
+    }
+}
 
     void WellConnections::filter(const ActiveGridCells& grid) {
-        auto new_end = std::remove_if(m_connections.begin(),
-                                      m_connections.end(),
-                                      [&grid](const Connection& c) { return !grid.cellActive(c.getI(), c.getJ(), c.getK()); });
-        m_connections.erase(new_end, m_connections.end());
+        auto isInactive = [&grid](const Connection& c) {
+            return !grid.cellActive(c.getI(), c.getJ(), c.getK());
+        };
+
+        if (!this->m_hasWellPIAdjustment || this->m_wellPIConnections.empty()) {
+            // Common case.  Either no WELPI or WELPI applies to all connections.
+            // Don't need to take WELPI scaling subset into account.
+            auto new_end = std::remove_if(m_connections.begin(), m_connections.end(), isInactive);
+            m_connections.erase(new_end, m_connections.end());
+        }
+        else {
+            // Special case.  Subset of connections subject to WELPI scaling.
+            // Preserve those too.
+            if (this->m_wellPIConnections.size() < this->m_connections.size())
+                this->m_wellPIConnections.resize(this->m_connections.size(), false);
+
+            auto new_end = remove_if(this->m_connections.begin(), this->m_connections.end(),
+                                     this->m_wellPIConnections.begin(), isInactive);
+
+            if (new_end.first != this->m_connections.end()) {
+                // Prune moved from sequence elements.
+                this->m_connections.erase(new_end.first, this->m_connections.end());
+                this->m_wellPIConnections.erase(new_end.second, this->m_wellPIConnections.end());
+            }
+        }
     }
 
 
