@@ -228,7 +228,6 @@ namespace {
             }
         }
 
->>>>>>> Updates to well control mode reported in IWEL
 
         template <typename IWellArray>
         void setCurrentControl(const Opm::Well& well,
