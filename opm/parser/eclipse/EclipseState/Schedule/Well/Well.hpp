@@ -23,9 +23,9 @@
 
 #include <cstddef>
 #include <iosfwd>
-#include <limits>
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
@@ -633,7 +633,7 @@ private:
     double solvent_fraction;
     bool has_produced = false;
     bool prediction_mode = true;
-    double productivity_index{ std::numeric_limits<double>::lowest() };
+    std::optional<double> productivity_index{ std::nullopt };
 
     std::shared_ptr<WellEconProductionLimits> econ_limits;
     std::shared_ptr<WellFoamProperties> foam_properties;

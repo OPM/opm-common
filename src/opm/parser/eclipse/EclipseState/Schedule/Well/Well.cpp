@@ -816,7 +816,7 @@ void Well::applyWellProdIndexScaling(const double currentEffectivePI) {
         // No connections for this well.  Unexpected.
         return;
 
-    if (this->productivity_index < 0.0)
+    if (!this->productivity_index)
         // WELPI not activated.  Nothing to do.
         return;
 
@@ -824,7 +824,7 @@ void Well::applyWellProdIndexScaling(const double currentEffectivePI) {
         // No change in scaling.
         return;
 
-    this->connections->applyWellPIScaling(this->productivity_index / currentEffectivePI);
+    this->connections->applyWellPIScaling(*this->productivity_index / currentEffectivePI);
 }
 
 const WellConnections& Well::getConnections() const {
