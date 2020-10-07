@@ -412,6 +412,7 @@ COMPDAT
 WCONPROD
 -- Item #:1	2      3     4	   5  9
 	'PROD' 'OPEN' 'ORAT' 20000 4* 1000 /
+	'RFT'  'SHUT' 'ORAT' 20000 4* 1000 /
 /
 -- It is stated in Odeh's paper that the maximum oil prod. rate
 -- is 20 000stb per day which explains the choice of value in item 4.

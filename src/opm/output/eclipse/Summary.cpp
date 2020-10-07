@@ -918,9 +918,9 @@ inline quantity well_control_mode( const fn_args& args ) {
     // appropriate value depending on well type (producer/injector).
     const auto& curr = xwPos->second.current_control;
     const auto wmctl = curr.isProducer
-        ? ::Opm::eclipseControlMode(curr.prod, well.getStatus())
-        : ::Opm::eclipseControlMode(curr.inj, well.injectorType(),
-                                    well.getStatus());
+        ? ::Opm::eclipseControlMode(curr.prod)
+        : ::Opm::eclipseControlMode(curr.inj, well.injectorType());
+
 
     return { static_cast<double>(wmctl), unit };
 }

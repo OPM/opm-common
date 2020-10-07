@@ -36,7 +36,7 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
             ActWCtrl =  7, // Well's active target control mode (constraint).
 
             item9    =  8, // Unknown
-            item11   = 10, // Unknown
+            Status   = 10, // Well status
             VFPTab   = 11, // ID (one-based) of well's current VFP table.
 
             PredReqWCtrl = 15, // Well's requested control mode from
@@ -80,7 +80,6 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
             enum WellCtrlMode : int {
                 WMCtlUnk = -10,  // Unknown well control mode (OPM only)
                 Group    = - 1,  // Well under group control
-                Shut     =   0,  // Well is shut
                 OilRate  =   1,  // Well controlled by oil rate
                 WatRate  =   2,  // Well controlled by water rate
                 GasRate  =   3,  // Well controlled by gas rate
@@ -127,6 +126,13 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
 
                 DF = 2, // Drift flux model
             };*/
+
+            enum Status : int {
+                Shut = -1000,
+                Stop = 0,
+                Open = 1,
+                Auto = 3,
+            };
         } // Value
     } // IWell
 
