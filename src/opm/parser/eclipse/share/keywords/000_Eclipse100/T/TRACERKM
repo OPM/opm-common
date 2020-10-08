@@ -3,6 +3,9 @@
   "sections": [
     "PROPS"
   ],
+  "requires" : [
+      "PARTTRAC"
+  ],
   "size": "UNKNOWN",
   "records": [
     [
