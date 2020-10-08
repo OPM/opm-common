@@ -1542,8 +1542,23 @@ namespace {
         double udq_undefined = 0;
         const auto report_step = rst_state.header.report_step - 1;
 
-        for (const auto& rst_group : rst_state.groups)
-            this->addGroup(rst_group.name, report_step, unit_system);
+        for (const auto& rst_group : rst_state.groups) {
+            auto group = Group{ rst_group, this->groups.size(), static_cast<std::size_t>(report_step), udq_undefined, unit_system };
+            this->addGroup(group, report_step);
+        }
+
+        for (std::size_t group_index = 0; group_index < rst_state.groups.size(); group_index++) {
+            const auto& rst_group = rst_state.groups[group_index];
+
+            if (rst_group.parent_group == 0)
+                continue;
+
+            if (rst_group.parent_group == rst_state.header.max_groups_in_field)
+                continue;
+
+            const auto& parent_group = rst_state.groups[rst_group.parent_group - 1];
+            this->addGroupToGroup(parent_group.name, rst_group.name, report_step);
+        }
 
         for (const auto& rst_well : rst_state.wells) {
             Opm::Well well(rst_well, report_step, unit_system, udq_undefined);
