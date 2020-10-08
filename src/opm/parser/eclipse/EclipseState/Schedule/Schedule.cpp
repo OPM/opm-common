@@ -1542,8 +1542,10 @@ namespace {
         double udq_undefined = 0;
         const auto report_step = rst_state.header.report_step - 1;
 
-        for (const auto& rst_group : rst_state.groups)
-            this->addGroup(rst_group.name, report_step, unit_system);
+        for (const auto& rst_group : rst_state.groups) {
+            auto group = Group{ rst_group, this->groups.size(), static_cast<std::size_t>(report_step), udq_undefined, unit_system };
+            this->addGroup(group, report_step);
+        }
 
         for (std::size_t group_index = 0; group_index < rst_state.groups.size(); group_index++) {
             const auto& rst_group = rst_state.groups[group_index];
