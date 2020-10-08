@@ -21,8 +21,16 @@
 #ifndef WELL2_HPP
 #define WELL2_HPP
 
+#include <cstddef>
 #include <iosfwd>
+#include <map>
+#include <memory>
+#include <optional>
 #include <string>
+#include <utility>
+#include <vector>
+
+#include <stddef.h>
 
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
@@ -45,8 +53,6 @@ namespace Opm {
 class DeckRecord;
 class EclipseGrid;
 class DeckKeyword;
-struct WellInjectionProperties;
-class WellProductionProperties;
 class UDQActive;
 class UDQConfig;
 class SICD;
@@ -539,6 +545,7 @@ public:
     bool updateEconLimits(std::shared_ptr<WellEconProductionLimits> econ_limits);
     bool updateProduction(std::shared_ptr<WellProductionProperties> production);
     bool updateInjection(std::shared_ptr<WellInjectionProperties> injection);
+    bool updateWellProductivityIndex(const double prodIndex);
     bool updateWSEGSICD(const std::vector<std::pair<int, SICD> >& sicd_pairs);
     bool updateWSEGVALV(const std::vector<std::pair<int, Valve> >& valve_pairs);
 
@@ -563,6 +570,7 @@ public:
     bool cmp_structure(const Well& other) const;
     bool operator==(const Well& data) const;
     void setInsertIndex(std::size_t index);
+    void applyWellProdIndexScaling(const double currentEffectivePI);
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)
@@ -588,6 +596,7 @@ public:
         serializer(solvent_fraction);
         serializer(has_produced);
         serializer(prediction_mode);
+        serializer(productivity_index);
         serializer(econ_limits);
         serializer(foam_properties);
         serializer(polymer_properties);
@@ -624,21 +633,21 @@ private:
     double solvent_fraction;
     bool has_produced = false;
     bool prediction_mode = true;
-
+    std::optional<double> productivity_index{ std::nullopt };
 
     std::shared_ptr<WellEconProductionLimits> econ_limits;
     std::shared_ptr<WellFoamProperties> foam_properties;
     std::shared_ptr<WellPolymerProperties> polymer_properties;
     std::shared_ptr<WellBrineProperties> brine_properties;
     std::shared_ptr<WellTracerProperties> tracer_properties;
-    std::shared_ptr<WellConnections> connections; // The WellConnections object can not be const because of the filterConnections method - would be beneficial to rewrite to enable const
+    std::shared_ptr<WellConnections> connections; // The WellConnections object cannot be const because of WELPI and the filterConnections method
     std::shared_ptr<WellProductionProperties> production;
     std::shared_ptr<WellInjectionProperties> injection;
     std::shared_ptr<WellSegments> segments;
 };
 
 std::ostream& operator<<( std::ostream&, const Well::WellInjectionProperties& );
-std::ostream& operator<<( std::ostream&, const WellProductionProperties& );
+std::ostream& operator<<( std::ostream&, const Well::WellProductionProperties& );
 
 int eclipseControlMode(const Well::InjectorCMode imode,
                        const InjectorType        itype);

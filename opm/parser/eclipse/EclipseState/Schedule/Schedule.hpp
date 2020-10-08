@@ -521,6 +521,7 @@ namespace Opm
         void handleWECON    (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleWEFAC    (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleWELOPEN  (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWELPI    (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleWELSEGS  (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleWELSPECS (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleWELTARG  (const HandlerContext&, const ParseContext&, ErrorGuard&);

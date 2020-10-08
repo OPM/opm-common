@@ -17,6 +17,7 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <cstddef>
 #include <stdexcept>
 #include <iostream>
 #include <boost/filesystem.hpp>
@@ -28,6 +29,7 @@
 
 #include <opm/parser/eclipse/Python/Python.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
@@ -40,6 +42,30 @@
 
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+
+#include <opm/parser/eclipse/Units/Units.hpp>
+
+namespace {
+    double cp_rm3_per_db()
+    {
+        return Opm::prefix::centi*Opm::unit::Poise * Opm::unit::cubic(Opm::unit::meter)
+            / (Opm::unit::day * Opm::unit::barsa);
+    }
+
+Opm::WellConnections loadCOMPDAT(const std::string& compdat_keyword) {
+    Opm::EclipseGrid grid(10,10,10);
+    Opm::TableManager tables;
+    Opm::Parser parser;
+    const auto deck = parser.parseString(compdat_keyword);
+    Opm::FieldPropsManager field_props(deck, Opm::Phases{true, true, true}, grid, Opm::TableManager());
+    const auto& keyword = deck.getKeyword("COMPDAT", 0);
+    Opm::WellConnections connections(Opm::Connection::Order::TRACK, 10,10);
+    for (const auto& rec : keyword)
+        connections.loadCOMPDAT(rec, grid, field_props);
+
+    return connections;
+}
+}
 
 namespace Opm {
 
@@ -148,20 +174,6 @@ BOOST_AUTO_TEST_CASE(ActiveCompletions) {
     BOOST_CHECK_EQUAL( active_completions.size() , 2U);
     BOOST_CHECK_EQUAL( completion2, active_completions.get(0));
     BOOST_CHECK_EQUAL( completion3, active_completions.get(1));
-}
-
-Opm::WellConnections loadCOMPDAT(const std::string& compdat_keyword) {
-    Opm::EclipseGrid grid(10,10,10);
-    Opm::TableManager tables;
-    Opm::Parser parser;
-    const auto deck = parser.parseString(compdat_keyword);
-    Opm::FieldPropsManager field_props(deck, Opm::Phases{true, true, true}, grid, Opm::TableManager());
-    const auto& keyword = deck.getKeyword("COMPDAT", 0);
-    Opm::WellConnections connections(Opm::Connection::Order::TRACK, 10,10);
-    for (const auto& rec : keyword)
-        connections.loadCOMPDAT(rec, grid, field_props);
-
-    return connections;
 }
 
 BOOST_AUTO_TEST_CASE(loadCOMPDATTEST) {
@@ -335,4 +347,150 @@ BOOST_AUTO_TEST_CASE(loadCOMPDATTESTSPE9) {
        BOOST_CHECK_CLOSE( conn.Kh(), units.to_si(Opm::UnitSystem::measure::effective_Kh, ec.Kh), 1e-1);
        BOOST_CHECK_MESSAGE( !conn.ctfAssignedFromInput(), "Calculated SPE9 CTF values must NOT be assigned from input");
    }
+}
+
+BOOST_AUTO_TEST_CASE(ApplyWellPI) {
+    const auto deck = Opm::Parser{}.parseString(R"(RUNSPEC
+DIMENS
+10 10 3 /
+
+START
+  5 OCT 2020 /
+
+GRID
+DXV
+  10*100 /
+DYV
+  10*100 /
+DZV
+  3*10 /
+DEPTHZ
+  121*2000 /
+
+ACTNUM
+  100*1
+  99*1 0
+  100*1
+/
+
+PERMX
+  300*100 /
+PERMY
+  300*100 /
+PERMZ
+  300*100 /
+PORO
+  300*0.3 /
+
+SCHEDULE
+WELSPECS
+  'P' 'G' 10 10 2005 'LIQ' /
+/
+
+COMPDAT
+  'P' 0 0 1 3 OPEN 1 100 /
+/
+
+TSTEP
+  10
+/
+
+END
+)");
+
+    const auto es    = Opm::EclipseState{ deck };
+    const auto sched = Opm::Schedule{ deck, es };
+
+    const auto expectCF = 100.0*cp_rm3_per_db();
+
+    auto connP = sched.getWell("P", 0).getConnections();
+    for (const auto& conn : connP) {
+        BOOST_CHECK_CLOSE(conn.CF(), expectCF, 1.0e-10);
+    }
+
+    connP.applyWellPIScaling(2.0);  // No "prepare" -> no change.
+    for (const auto& conn : connP) {
+        BOOST_CHECK_CLOSE(conn.CF(), expectCF, 1.0e-10);
+    }
+
+    // All CFs scaled by factor 2.
+    BOOST_CHECK_MESSAGE( connP.prepareWellPIScaling(), "First call to prepareWellPIScaling must be a state change");
+    BOOST_CHECK_MESSAGE(!connP.prepareWellPIScaling(), "Second call to prepareWellPIScaling must NOT be a state change");
+    connP.applyWellPIScaling(2.0);
+    for (const auto& conn : connP) {
+        BOOST_CHECK_CLOSE(conn.CF(), 2.0*expectCF, 1.0e-10);
+    }
+
+    // Reset CF -- simulating COMPDAT record (inactive cell)
+    connP.addConnection(9, 9, 1, // 10, 10, 2
+        199,
+        2015.0,
+        Opm::Connection::State::OPEN,
+        50.0*cp_rm3_per_db(),
+        0.123,
+        0.234,
+        0.157,
+        0.0,
+        1);
+
+    BOOST_REQUIRE_EQUAL(connP.size(), std::size_t{3});
+
+    BOOST_CHECK_CLOSE(connP[0].CF(),  2.0*expectCF       , 1.0e-10);
+    BOOST_CHECK_CLOSE(connP[1].CF(),  2.0*expectCF       , 1.0e-10);
+    BOOST_CHECK_CLOSE(connP[2].CF(), 50.0*cp_rm3_per_db(), 1.0e-10);
+
+    // Should not apply to connection whose CF was manually specified
+    connP.applyWellPIScaling(2.0);
+
+    BOOST_CHECK_CLOSE(connP[0].CF(),  4.0*expectCF       , 1.0e-10);
+    BOOST_CHECK_CLOSE(connP[1].CF(),  4.0*expectCF       , 1.0e-10);
+    BOOST_CHECK_CLOSE(connP[2].CF(), 50.0*cp_rm3_per_db(), 1.0e-10);
+
+    // Prepare new scaling.  Simulating new WELPI record.
+    // New scaling applies to all connections.
+    BOOST_CHECK_MESSAGE(connP.prepareWellPIScaling(), "Third call to prepareWellPIScaling must be a state change");
+    connP.applyWellPIScaling(2.0);
+
+    BOOST_CHECK_CLOSE(connP[0].CF(),   8.0*expectCF       , 1.0e-10);
+    BOOST_CHECK_CLOSE(connP[1].CF(),   8.0*expectCF       , 1.0e-10);
+    BOOST_CHECK_CLOSE(connP[2].CF(), 100.0*cp_rm3_per_db(), 1.0e-10);
+
+    // Reset CF -- simulating COMPDAT record (active cell)
+    connP.addConnection(8, 9, 1, // 10, 10, 2
+        198,
+        2015.0,
+        Opm::Connection::State::OPEN,
+        50.0*cp_rm3_per_db(),
+        0.123,
+        0.234,
+        0.157,
+        0.0,
+        1);
+
+    BOOST_REQUIRE_EQUAL(connP.size(), std::size_t{4});
+    connP.applyWellPIScaling(2.0);
+
+    BOOST_CHECK_CLOSE(connP[0].CF(),  16.0*expectCF       , 1.0e-10);
+    BOOST_CHECK_CLOSE(connP[1].CF(),  16.0*expectCF       , 1.0e-10);
+    BOOST_CHECK_CLOSE(connP[2].CF(), 200.0*cp_rm3_per_db(), 1.0e-10);
+    BOOST_CHECK_CLOSE(connP[3].CF(),  50.0*cp_rm3_per_db(), 1.0e-10);
+
+    const auto& grid = es.getInputGrid();
+    const auto actCells = Opm::ActiveGridCells {
+        std::size_t{10}, std::size_t{10}, std::size_t{3},
+        grid.getActiveMap().data(),
+        grid.getNumActive()
+    };
+
+    connP.filter(actCells);
+
+    BOOST_REQUIRE_EQUAL(connP.size(), std::size_t{3});
+    BOOST_CHECK_CLOSE(connP[0].CF(), 16.0*expectCF       , 1.0e-10);
+    BOOST_CHECK_CLOSE(connP[1].CF(), 16.0*expectCF       , 1.0e-10);
+    BOOST_CHECK_CLOSE(connP[2].CF(), 50.0*cp_rm3_per_db(), 1.0e-10);
+
+    connP.applyWellPIScaling(2.0);
+    BOOST_CHECK_CLOSE(connP[0].CF(), 32.0*expectCF       , 1.0e-10);
+    BOOST_CHECK_CLOSE(connP[1].CF(), 32.0*expectCF       , 1.0e-10);
+    BOOST_CHECK_CLOSE(connP[2].CF(), 50.0*cp_rm3_per_db(), 1.0e-10);
 }
