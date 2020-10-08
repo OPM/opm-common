@@ -664,7 +664,7 @@ bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg) {
 
 bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg, const EclipseGrid& grid, const std::vector<int>& pvtnum) {
     bool update = this->updateConnections(connections_arg);
-    if (this->pvt_table == 0 && this->connections->size() > 0) {
+    if (this->pvt_table == 0 && !this->connections->empty()) {
         const auto& lowest = this->connections->lowest();
         auto active_index = grid.activeIndex(lowest.global_index());
         this->pvt_table = pvtnum[active_index];
@@ -778,7 +778,7 @@ double Well::getRefDepth() const {
         return this->ref_depth;
 
     // ref depth was defaulted and we get the depth of the first completion
-    if( this->connections->size() == 0 ) {
+    if( this->connections->empty() ) {
         throw std::invalid_argument( "No completions defined for well: "
                                      + name()
                                      + ". Can not infer reference depth" );
