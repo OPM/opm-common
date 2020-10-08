@@ -18,11 +18,15 @@
 
 #include "EclRegressionTest.hpp"
 
+#include <fmt/format.h>
+
 #include <opm/io/eclipse/EGrid.hpp>
 #include <opm/io/eclipse/ERft.hpp>
 #include <opm/io/eclipse/ERst.hpp>
 #include <opm/io/eclipse/ESmry.hpp>
 #include <opm/io/eclipse/ERsm.hpp>
+#include <opm/output/eclipse/RestartIO.hpp>
+#include <opm/io/eclipse/rst/state.hpp>
 
 #include <opm/common/utility/FileSystem.hpp>
 #include <opm/common/ErrorMacros.hpp>
@@ -56,6 +60,52 @@ std::vector<T> sorted(std::vector<T> v) {
     return v;
 }
 
+}
+
+template <typename T>
+int compare(const std::string& name, const T& v1, const T& v2, const std::string& fmt) {
+    if (v1 == v2)
+        return 0;
+    else {
+        fmt::print(stderr, fmt + std::string{"\n"}, name, v1, v2);
+        return 1;
+    }
+}
+
+
+bool rst_cmp(const Opm::RestartIO::RstState& rst1, const Opm::RestartIO::RstState& rst2) {
+    int error_count = 0;
+    const auto& header1 = rst1.header;
+    const auto& header2 = rst2.header;
+    if (header1.num_wells != header2.num_wells) {
+        fmt::print(stderr,"Different number of wells - reference: {}  simulation: {}\n", header1.num_wells, header2.num_wells);
+        return false;
+    }
+
+    for (std::size_t iw=0; iw < static_cast<std::size_t>(header1.num_wells); iw++) {
+        const auto& well1 = rst1.wells[iw];
+        const auto& well2 = rst2.wells[iw];
+
+        fmt::print(stderr, "Comparing well: {}", well1.name);
+        error_count += compare(well1.name, well1.name,                   well2.name,                  "Different names for well: {}  case1: {}  case2: {}");
+        error_count += compare(well1.name, well1.group,                  well2.group,                 "Different groups for well: {}  case1: {}  case2: {}");
+        error_count += compare(well1.name, well1.ij[0],                  well2.ij[0],                 "Different wellhead.i for well: {}  case1: {}  case2: {}");
+        error_count += compare(well1.name, well1.ij[1],                  well2.ij[1],                 "Different wellhead.j for well: {}  case1: {}  case2: {}");
+        error_count += compare(well1.name, well1.k1k2.first,             well2.k1k2.first,            "Different k1 for well: {}  case1: {}  case2: {}");
+        error_count += compare(well1.name, well1.k1k2.second,            well2.k1k2.second,           "Different k2 for well: {}  case1: {}  case2: {}");
+        error_count += compare(well1.name, well1.wtype.ecl_wtype(),      well2.wtype.ecl_wtype(),     "Different well_type for well: {}  case1: {}  case2: {}");
+        error_count += compare(well1.name, well1.wtype.producer(),       well2.wtype.producer(),      "Different producer for well: {}  case1: {}  case2: {}");
+        error_count += compare(well1.name, well1.well_status,            well2.well_status,           "Different status for well: {}  case1: {}  case2: {}");
+        error_count += compare(well1.name, well1.active_control,         well2.active_control,        "Different active_control for well: {}  case1: {}  case2: {}");
+        error_count += compare(well1.name, well1.vfp_table,              well2.vfp_table,             "Different vfp_table for well: {}  case1: {}  case2: {}");
+        error_count += compare(well1.name, well1.pred_requested_control, well2.pred_requested_control,"Different pred_requested_control for well: {}  case1: {}  case2: {}");
+        error_count += compare(well1.name, well1.allow_xflow,            well2.allow_xflow,           "Different allow_xflow for well: {}  case1: {}  case2: {}");
+        error_count += compare(well1.name, well1.hist_requested_control, well2.hist_requested_control,"Different hist_requested_control for well: {}  case1: {}  case2: {}");
+        error_count += compare(well1.name, well1.msw_index,              well2.msw_index,             "Different msw_index for well: {}  case1: {}  case2: {}");
+        error_count += compare(well1.name, well1.completion_ordering,    well2.completion_ordering,   "Different completion_ordering for well: {}  case1: {}  case2: {}");
+        error_count += compare(well1.name, well1.pvt_table,              well2.pvt_table,             "Different pvt_table for well: {}  case1: {}  case2: {}");
+    }
+    return error_count == 0;
 }
 
 
@@ -843,6 +893,11 @@ void ECLRegressionTest::results_rst()
 
                         std::cout << " done." << std::endl;
                     }
+                }
+                if (seqn > 0) {
+                    const auto& rst_state1 = Opm::RestartIO::RstState::load(rst1, seqn);
+                    const auto& rst_state2 = Opm::RestartIO::RstState::load(rst2, seqn);
+                    rst_cmp(rst_state1, rst_state2);
                 }
             }
         }

@@ -23,6 +23,8 @@
 #include <boost/test/unit_test.hpp>
 
 #include <test_util/EclRegressionTest.hpp>
+#include <opm/output/eclipse/VectorItems/group.hpp>
+#include <opm/output/eclipse/VectorItems/intehead.hpp>
 
 #include <opm/io/eclipse/EGrid.hpp>
 #include <opm/io/eclipse/ESmry.hpp>
@@ -98,6 +100,7 @@ void makeInitFile(const std::string &fileName, std::vector<std::string> floatKey
     }
 }
 
+namespace VI = Opm::RestartIO::Helpers::VectorItems;
 
 void makeUnrstFile(const std::string &fileName, std::vector<int> seqnum,
                    const std::vector<std::tuple<int,int,int>>& dates,
@@ -133,6 +136,54 @@ void makeUnrstFile(const std::string &fileName, std::vector<int> seqnum,
         eclTest.write("DOUBHEAD", doubhead);
         eclTest.write("ZGRP", zgrp);
         eclTest.write("IWEL", iwel);
+
+
+        // The blocks added below for groups, wells and connections respectively
+        // is just adding default data of correct consistent size to be able to
+        // load restart data. The content of these vectors is never used/checked.
+        {
+            std::size_t num_groups = intehead[VI::intehead::NGRP] + 1;
+            std::size_t nigrpz = intehead[VI::intehead::NIGRPZ];
+            std::size_t nsgrpz = intehead[VI::intehead::NSGRPZ];
+            std::size_t nxgrpz = intehead[VI::intehead::NXGRPZ];
+
+            std::vector<int> igrp( num_groups * nigrpz );
+            std::vector<float> sgrp( num_groups * nsgrpz );
+            std::vector<double> xgrp( num_groups * nxgrpz );
+
+            eclTest.write("IGRP", igrp);
+            eclTest.write("SGRP", sgrp);
+            eclTest.write("XGRP", xgrp);
+        }
+        {
+            std::size_t num_wells = intehead[VI::intehead::NWELLS];
+            std::size_t nzwelz = intehead[VI::intehead::NZWELZ];
+            std::size_t nswelz = intehead[VI::intehead::NSWELZ];
+            std::size_t nxwelz = intehead[VI::intehead::NXWELZ];
+
+            std::vector<std::string> zwel( num_wells * nzwelz );
+            std::vector<float> swel( num_wells * nswelz );
+            std::vector<double> xwel( num_wells * nxwelz );
+
+            eclTest.write("ZWEL", zwel);
+            eclTest.write("SWEL", swel);
+            eclTest.write("XWEL", xwel);
+        }
+        {
+            std::size_t num_wells = intehead[VI::intehead::NWELLS];
+            std::size_t num_connections = num_wells * intehead[VI::intehead::NCWMAX];
+            std::size_t niconz = intehead[VI::intehead::NICONZ];
+            std::size_t nsconz = intehead[VI::intehead::NSCONZ];
+            std::size_t nxconz = intehead[VI::intehead::NXCONZ];
+
+            std::vector<int> icon( num_connections * niconz );
+            std::vector<float> scon( num_connections * nsconz );
+            std::vector<double> xcon( num_connections * nxconz );
+
+            eclTest.write("ICON", icon);
+            eclTest.write("SCON", scon);
+            eclTest.write("XCON", xcon);
+        }
         eclTest.write("STARTSOL", std::vector<char>());
 
         for (size_t n = 0; n < solutionNames.size(); n++) {
