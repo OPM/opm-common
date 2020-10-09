@@ -21,20 +21,21 @@
 #include <opm/parser/eclipse/Parser/ParserKeywords/A.hpp>
 
 #include <opm/parser/eclipse/EclipseState/NumericalAquifer.hpp>
+#include <opm/parser/eclipse/EclipseState/Aqucon.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 
 namespace Opm {
 
-NumericalAquifers::NumericalAquifers(const Deck& deck)
+NumericalAquifers::NumericalAquifers(const Deck& deck, const EclipseGrid& grid)
 {
     using AQUNUM=ParserKeywords::AQUNUM;
     if ( !deck.hasKeyword<AQUNUM>() ) return;
-    using CellIndices = std::array<int, 3>;
+    using CellIndex = std::array<int, 3>;
     // TODO: with a map, we might change the order of the input.
     // TODO: maybe we should use a vector here, and another variable to handle the the duplication
     std::vector<NumericalAquiferCell> aquifer_cells;
-    std::map<CellIndices, size_t> cell_index;
+    std::map<CellIndex, size_t> cell_index;
 
     // there might be multiple keywords of keyword AQUNUM, it is not totally
     // clear about the rules here. For now, we take care of all the keywords
@@ -42,7 +43,8 @@ NumericalAquifers::NumericalAquifers(const Deck& deck)
     for (const auto& keyword : aqunum_keywords) {
         for (const auto& record : *keyword) {
             const NumericalAquiferCell aqu_cell(record);
-            CellIndices cell_indices {aqu_cell.I, aqu_cell.J, aqu_cell.K};
+            CellIndex cell_indices {aqu_cell.I, aqu_cell.J, aqu_cell.K};
+            // TODO: we should check whether the grid cell is active or NOT
             // Not sure how to handle duplicated input for aquifer cells yet, throw here
             // until we
             if (cell_index.find(cell_indices) != cell_index.end()) {
@@ -55,6 +57,9 @@ NumericalAquifers::NumericalAquifers(const Deck& deck)
     for (const auto& aqu_cell : aquifer_cells) {
         this->addAquiferCell(aqu_cell);
     }
+
+    // handle connections
+    this->addAquiferConnections(deck, grid);
 }
 
 bool NumericalAquifers::hasAquifer(const int aquifer_id) const {
@@ -71,8 +76,22 @@ void NumericalAquifers::addAquiferCell(const NumericalAquiferCell& aqu_cell) {
     }
 }
 
+void NumericalAquifers::addAquiferConnections(const Deck &deck, const EclipseGrid &grid) {
+    NumericalAquiferConnections cons(deck, grid);
 
-using AQUNUM = ParserKeywords::AQUNUM;
+    for (auto& pair : this->aquifers_) {
+        const int aqu_id = pair.first;
+        const auto& aqu_cons = cons.getConnections(aqu_id);
+
+        auto& aquifer = pair.second;
+        for (const auto& con : aqu_cons) {
+            aquifer.addAquiferConnection(con.second);
+        }
+    }
+}
+
+
+    using AQUNUM = ParserKeywords::AQUNUM;
 NumericalAquiferCell::NumericalAquiferCell(const DeckRecord& record)
    : aquifer_id( record.getItem<AQUNUM::AQUIFER_ID>().get<int>(0) )
    , I ( record.getItem<AQUNUM::I>().get<int>(0) - 1 )
@@ -107,6 +126,10 @@ void SingleNumericalAquifer::addAquiferCell(const NumericalAquiferCell& aqu_cell
 SingleNumericalAquifer::SingleNumericalAquifer(const int aqu_id)
 : id_(aqu_id)
 {
+}
+
+void SingleNumericalAquifer::addAquiferConnection(const NumAquiferCon& aqu_con) {
+    this->connections_.push_back(aqu_con);
 }
 
 }

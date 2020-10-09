@@ -29,7 +29,7 @@ namespace Opm {
 AquiferConfig::AquiferConfig(const TableManager& tables, const EclipseGrid& grid, const Deck& deck):
     aquifetp(deck),
     aquiferct(tables, deck),
-    numerical_aquifers(deck),
+    numerical_aquifers(deck, grid),
     aqconn(grid,deck)
 {}
 

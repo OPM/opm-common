@@ -27,6 +27,9 @@
 namespace Opm {
     class Deck;
     class DeckRecord;
+    class NumericalAquiferConnections;
+    class NumAquiferCon;
+    class EclipseGrid;
 
     struct NumericalAquiferCell {
         explicit NumericalAquiferCell(const DeckRecord&);
@@ -52,6 +55,7 @@ namespace Opm {
     public:
         explicit SingleNumericalAquifer(const int aqu_id);
         void addAquiferCell(const NumericalAquiferCell& aqu_cell);
+        void addAquiferConnection(const NumAquiferCon& aqu_con);
     private:
         // Maybe this id_ is not necessary
         // Because if it is a map, the id will be there
@@ -59,18 +63,21 @@ namespace Opm {
         // default constructor
         int id_;
         std::vector<NumericalAquiferCell> cells_;
+        std::vector<NumAquiferCon> connections_;
     };
 
     class NumericalAquifers {
     public:
         NumericalAquifers() = default;
-        explicit NumericalAquifers(const Deck& deck);
+        explicit NumericalAquifers(const Deck& deck, const EclipseGrid& grid);
 
         bool hasAquifer(const int aquifer_id) const;
-        void addAquiferCell(const NumericalAquiferCell& aqu_cell);
     private:
         // std::un_ordered_map
         std::unordered_map<int, SingleNumericalAquifer> aquifers_;
+
+        void addAquiferCell(const NumericalAquiferCell& aqu_cell);
+        void addAquiferConnections(const Deck& deck, const EclipseGrid& grid);
     };
 }
 #endif // OPM_NUMERICAL_AQUIFER_HPP

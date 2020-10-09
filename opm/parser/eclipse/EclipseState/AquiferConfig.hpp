@@ -24,6 +24,7 @@
 #include <opm/parser/eclipse/EclipseState/Aquifetp.hpp>
 #include <opm/parser/eclipse/EclipseState/AquiferCT.hpp>
 #include <opm/parser/eclipse/EclipseState/NumericalAquifer.hpp>
+#include <opm/parser/eclipse/EclipseState/Aqucon.hpp>
 
 namespace Opm {
 
@@ -59,6 +60,9 @@ private:
     AquiferCT aquiferct;
     NumericalAquifers numerical_aquifers;
     Aquancon aqconn;
+    // TODO: not sure we will keep it as a member here or be part of the
+    // of the numerical aquifers. Putting here for now for development
+    NumericalAquiferConnections numerical_aquifer_connections;
 };
 
 }
