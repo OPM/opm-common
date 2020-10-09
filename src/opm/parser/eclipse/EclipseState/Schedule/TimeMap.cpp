@@ -16,10 +16,11 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include <stddef.h>
 
 #include <cassert>
 #include <ctime>
-#include <stddef.h>
+#include <exception>
 #include <iomanip>
 
 #include <fmt/format.h>
@@ -28,6 +29,8 @@
 
 #include <opm/parser/eclipse/Parser/ParserKeywords/S.hpp>
 
+#include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/utility/OpmInputError.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckSection.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
@@ -121,7 +124,16 @@ namespace {
             if (keyword.name() == "DATES") {
                 for (size_t recordIndex = 0; recordIndex < keyword.size(); recordIndex++) {
                     const auto &record = keyword.getRecord(recordIndex);
-                    const std::time_t nextTime = TimeMap::timeFromEclipse(record);
+                    std::time_t nextTime;
+
+                    try {
+                        nextTime = TimeMap::timeFromEclipse(record);
+                    } catch (const std::exception& e) {
+                        const OpmInputError opm_error { e, keyword.location() } ;
+                        OpmLog::error(opm_error.what());
+                        std::throw_with_nested(opm_error);
+                    }
+
                     if (nextTime == this->m_restart_time) {
                         skip = false;
                         restart_found = true;
