@@ -71,7 +71,7 @@ namespace Opm {
             m_saturatedTable = SimpleTable(m_saturatedSchema);
             for (size_t sat_index = 0; sat_index < size(); sat_index++) {
                 const auto& underSaturatedTable = getUnderSaturatedTable( sat_index );
-                std::vector<double> row(4);
+                std::vector<double> row(m_saturatedSchema.size());
                 row[0] = m_outerColumn[sat_index];
                 for (size_t col_index = 0; col_index < m_underSaturatedSchema.size(); col_index++)
                     row[col_index + 1] = underSaturatedTable.get( col_index , 0 );

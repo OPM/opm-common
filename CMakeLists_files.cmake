@@ -667,6 +667,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Tables/SgwfnTable.hpp
        opm/parser/eclipse/EclipseState/Tables/PvdsTable.hpp
        opm/parser/eclipse/EclipseState/Tables/PvtoTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/PvtsolTable.hpp
        opm/parser/eclipse/EclipseState/Tables/Rock2dTable.hpp
        opm/parser/eclipse/EclipseState/Tables/Rock2dtrTable.hpp
        opm/parser/eclipse/EclipseState/Tables/RockwnodTable.hpp
