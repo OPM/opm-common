@@ -3,6 +3,7 @@
   "sections": [
     "GRID"
   ],
+  "prohibits" : ["COORD", "ZCORN"],
   "size": 1,
   "items": [
     {

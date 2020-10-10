@@ -28,6 +28,7 @@
 #include <unistd.h>
 
 #include <opm/common/utility/FileSystem.hpp>
+#include <opm/common/utility/OpmInputError.hpp>
 
 #define BOOST_TEST_MODULE EclipseGridTests
 #include <boost/test/unit_test.hpp>
@@ -2451,44 +2452,9 @@ BOOST_AUTO_TEST_CASE(TEST_GDFILE_1) {
         "PORO\n"
         "   2*0.15 /\n";
 
-    const char* deckData2 =
-        "RUNSPEC\n"
-        "DIMENS\n"
-        "1 1 2 /\n"
-        "GRID\n"
-        "GDFILE\n"
-        " 'BAD_CP_M.EGRID' /\n"
-        "COORD\n"
-        "10.0000    10.0000  2000.0000      9.8255    10.0000  2014.9977\n"
-        "109.9848   10.0000  2001.7452    109.8102    10.0000  2016.7430\n"
-        "10.0000   110.0000  2000.0000      9.8255   110.0000  2014.9977\n"
-        "109.9848   110.0000  2001.7452    109.8102   110.0000  2016.7430 /\n"
-        "PORO\n"
-        "   2*0.15 /\n";
-
-    const char* deckData3 =
-        "RUNSPEC\n"
-        "DIMENS\n"
-        "1 1 2 /\n"
-        "GRID\n"
-        "GDFILE\n"
-        " 'BAD_CP_M.EGRID' /\n"
-        "ZCORN\n"
-        "2000.0000  2001.7452  2000.0000  2001.7452  2004.9992  2006.7445\n"
-        "2004.9992  2006.7445  2004.9992  2006.7445  2004.9992  2006.7445\n"
-        "2014.9977  2016.7430  2014.9977  2016.7430 /\n"
-        "PORO\n"
-        "   2*0.15 /\n";
-
-
     Opm::Parser parser;
     auto deck1 = parser.parseString( deckData1) ;
-    auto deck2 = parser.parseString( deckData2) ;
-    auto deck3 = parser.parseString( deckData3) ;
-
     BOOST_CHECK_NO_THROW( Opm::EclipseGrid grid1(deck1) );
-    BOOST_CHECK_THROW(Opm::EclipseGrid grid2(deck2), std::invalid_argument);
-    BOOST_CHECK_THROW(Opm::EclipseGrid grid3(deck3), std::invalid_argument);
 }
 
 
