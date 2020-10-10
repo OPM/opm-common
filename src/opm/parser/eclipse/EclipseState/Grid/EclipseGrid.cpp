@@ -212,14 +212,6 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
     OpmLog::info("Creating grid");
     if (deck.hasKeyword("GDFILE")){
 
-        if (deck.hasKeyword("COORD")){
-            throw std::invalid_argument("COORD can't be used together with GDFILE");
-        }
-
-        if (deck.hasKeyword("ZCORN")){
-            throw std::invalid_argument("ZCORN can't be used together with GDFILE");
-        }
-
         if (deck.hasKeyword("ACTNUM")){
             if (keywInputBeforeGdfile(deck, "ACTNUM"))  {
                 m_useActnumFromGdfile = true;

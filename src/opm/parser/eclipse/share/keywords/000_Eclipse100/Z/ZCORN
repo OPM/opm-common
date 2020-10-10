@@ -3,6 +3,7 @@
   "sections": [
     "GRID"
   ],
+  "prohibits" : ["GDFILE"],
   "data": {
     "value_type": "DOUBLE",
     "dimension": "Length"
