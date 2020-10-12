@@ -99,6 +99,7 @@ RstHeader::RstHeader(const std::vector<int>& intehead, const std::vector<bool>& 
     dir_eps(logihead[VI::logihead::DirEPS]),
     reversible_eps(logihead[VI::logihead::RevEPS]),
     alt_eps(logihead[VI::logihead::AltEPS]),
+    group_control_active(intehead[VI::intehead::NGRNPH] == 1),
     //
     next_timestep1(doubhead[VI::doubhead::TsInit]),
     next_timestep2(doubhead[VI::doubhead::TsMaxz]),
