@@ -106,6 +106,12 @@ namespace Opm
              * New explicit well productivity/injectivity assignment.
              */
             WELL_PRODUCTIVITY_INDEX = (1 << 16),
+
+            /*
+             * Well's internal WellConnections structure changed.
+             * Rerun WELPI scaling if applicable.
+             */
+            WELL_CONNECTIONS_UPDATED = (1 << 17),
         };
     }
 
