@@ -3790,6 +3790,12 @@ END
         }
     }
 
+    BOOST_CHECK_MESSAGE(sched.hasWellGroupEvent("P", ScheduleEvents::WELL_CONNECTIONS_UPDATED, 0),
+                        "Well P must have WELL_CONNECTIONS_UPDATED event at report step 0");
+
+    BOOST_CHECK_MESSAGE(!sched.hasWellGroupEvent("P", ScheduleEvents::WELL_CONNECTIONS_UPDATED, 1),
+                        "Well P must NOT have WELL_CONNECTIONS_UPDATED event at report step 0");
+
     BOOST_CHECK_MESSAGE(sched.hasWellGroupEvent("P", ScheduleEvents::WELL_PRODUCTIVITY_INDEX, 1),
                         "Must have WELL_PRODUCTIVITY_INDEX event at report step 1");
 }
