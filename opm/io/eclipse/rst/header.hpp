@@ -101,6 +101,7 @@ struct RstHeader {
     bool dir_eps;
     bool reversible_eps;
     bool alt_eps;
+    bool group_control_active;
 
     double next_timestep1;
     double next_timestep2;
