@@ -56,6 +56,11 @@ double prod_rft(const EclipseState&  es, const Schedule& /* sched */, const Summ
     return -units.to_si(UnitSystem::measure::rate, 0.0);
 }
 
+double inj_rft(const EclipseState&  es, const Schedule& /* sched */, const SummaryState&, const data::Solution& /* sol */, size_t /* report_step */, double /* seconds_elapsed */) {
+    const auto& units = es.getUnits();
+    return units.to_si(UnitSystem::measure::rate, 0.0);
+}
+
 void pressure(const EclipseState& es, const Schedule& /* sched */, data::Solution& sol, size_t /* report_step */, double seconds_elapsed) {
     const auto& grid = es.getInputGrid();
     const auto& units = es.getUnits();
@@ -85,6 +90,7 @@ BOOST_AUTO_TEST_CASE(RUN) {
 
     msim.well_rate("PROD", data::Rates::opt::oil, prod_opr);
     msim.well_rate("RFTP", data::Rates::opt::oil, prod_rft);
+    msim.well_rate("RFTI", data::Rates::opt::wat, inj_rft);
     msim.solution("PRESSURE", pressure);
     {
         const WorkArea work_area("test_msim");
@@ -107,6 +113,7 @@ BOOST_AUTO_TEST_CASE(RUN) {
             }
 
             const auto& fmwpa = smry.get("FMWPA");
+            const auto& fmwia = smry.get("FMWIA");
             const auto& dates = smry.dates();
             const auto& day   = smry.get("DAY");
             const auto& month = smry.get("MONTH");
@@ -120,8 +127,10 @@ BOOST_AUTO_TEST_CASE(RUN) {
             }
 
             BOOST_CHECK_EQUAL( fmwpa[0], 0.0 );
-            // The RFTP well will appear as an abondoned well.
+            BOOST_CHECK_EQUAL( fmwia[0], 0.0 );
+            // The RFTP /RFTI wells will appear as an abondoned well.
             BOOST_CHECK_EQUAL( fmwpa[dates.size() - 1], 1.0 );
+            BOOST_CHECK_EQUAL( fmwia[dates.size() - 1], 1.0 );
 
             const auto rsm = EclIO::ERsm("SPE1CASE1.RSM");
             BOOST_CHECK( EclIO::cmp( smry, rsm ));
@@ -141,8 +150,10 @@ BOOST_AUTO_TEST_CASE(RUN) {
             const int report_step = 50;
             const auto& rst_state = Opm::RestartIO::RstState::load(rst, report_step);
             Schedule sched_rst(deck, state, python, &rst_state);
-            const auto& rft_well = sched_rst.getWell("RFTP", report_step);
-            BOOST_CHECK(rft_well.getStatus() == Well::Status::SHUT);
+            const auto& rfti_well = sched_rst.getWell("RFTI", report_step);
+            const auto& rftp_well = sched_rst.getWell("RFTP", report_step);
+            BOOST_CHECK(rftp_well.getStatus() == Well::Status::SHUT);
+            BOOST_CHECK(rfti_well.getStatus() == Well::Status::SHUT);
         }
     }
 }

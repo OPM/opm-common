@@ -1528,6 +1528,7 @@ bool Well::operator==(const Well& data) const {
            this->guide_rate == data.guide_rate &&
            this->solvent_fraction == data.solvent_fraction &&
            this->hasProduced() == data.hasProduced() &&
+           this->hasInjected() == data.hasInjected() &&
            this->predictionMode() == data.predictionMode() &&
            this->productivity_index == data.productivity_index &&
            this->getTracerProperties() == data.getTracerProperties() &&
