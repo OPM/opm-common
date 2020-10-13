@@ -531,7 +531,7 @@ void VFPProdTable::convertAlqToSI(const ALQ_TYPE& type,
     double scaling_factor = 1.0;
     switch (type) {
         case ALQ_IGLR:
-            scaling_factor = unit_system.parse("GasSurfaceVolume/LiquidSurfaceVolume * Time").getSIScaling();
+            scaling_factor = unit_system.parse("GasSurfaceVolume/LiquidSurfaceVolume*Time").getSIScaling();
             break;
         case ALQ_TGLR:
             scaling_factor = unit_system.parse("GasSurfaceVolume/LiquidSurfaceVolume").getSIScaling();
