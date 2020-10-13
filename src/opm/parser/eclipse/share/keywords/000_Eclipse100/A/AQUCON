@@ -39,27 +39,27 @@
     {
       "name": "TRANS_MULT",
       "value_type": "DOUBLE",
-      "default_value": 1
+      "default": 1
     },
     {
       "name": "TRANS_OPTION",
       "value_type": "INT",
-      "default_value": 0
+      "default": 0
     },
     {
       "name": "ALLOW_INTERNAL_CELLS",
       "value_type": "STRING",
-      "default_value": "NO"
+      "default": "NO"
     },
     {
       "name": "VEFRAC",
       "value_type": "DOUBLE",
-      "default_value": 1
+      "default": 1
     },
     {
       "name": "VEFRACP",
       "value_type": "DOUBLE",
-      "default_value": 1
+      "default": 1
     }
   ]
 }
