@@ -908,7 +908,7 @@ BOOST_AUTO_TEST_CASE(WellTypeTest) {
     wtp.update( InjectorType::GAS );
     BOOST_CHECK_EQUAL(wtp.ecl_wtype(), 4);
     BOOST_CHECK_EQUAL(wtp.ecl_phase(), 2);
-    BOOST_CHECK(wtp.preferred_phase() == Phase::WATER);
+    BOOST_CHECK(wtp.preferred_phase() == Phase::GAS);
     BOOST_CHECK(wtp.injector_type() == InjectorType::GAS);
 }
 

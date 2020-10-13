@@ -477,16 +477,18 @@ void Well::switchToInjector() {
 }
 
 bool Well::updateInjection(std::shared_ptr<WellInjectionProperties> injection_arg) {
-    this->wtype.update(injection_arg->injectorType);
-    if (this->wtype.producer())
+    auto update = this->wtype.update(injection_arg->injectorType);
+    if (this->wtype.producer()) {
         this->switchToInjector();
+        update = true;
+    }
 
     if (*this->injection != *injection_arg) {
         this->injection = injection_arg;
-        return true;
+        update = true;
     }
 
-    return false;
+    return update;
 }
 
 bool Well::updateWellProductivityIndex(const double prodIndex) {
