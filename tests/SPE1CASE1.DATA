@@ -392,7 +392,7 @@ WELSPECS
 -- Item #: 1	 2	3	4	5	 6
 	'PROD'	'G1'	10	10	8400	'OIL' /
 	'INJ'	  'G1'	1	  1	  8335	'GAS' /
-  'RFT'   'G1'  10  10  8400  'OIL' /
+  'RFTP'   'G1'  10  10  8400  'OIL' /
 /
 -- Coordinates in item 3-4 are retrieved from Odeh's figure 1 and 2
 -- Note that the depth at the midpoint of the well grid blocks
@@ -401,7 +401,7 @@ WELSPECS
 COMPDAT
 -- Item #: 1	2	3	4	5	6	7	8	9
 	'PROD'	10	10	3	3	'OPEN'	1*	1*	0.5 /
-	'RFT'	  10	10	3	3	'OPEN'	1*	1*	0.5 /
+	'RFTP'  10	10	3	3	'OPEN'	1*	1*	0.5 /
 	'INJ'	1	1	1	1	'OPEN'	1*	1*	0.5 /
 /
 -- Coordinates in item 2-5 are retreived from Odeh's figure 1 and 2 
@@ -412,7 +412,7 @@ COMPDAT
 WCONPROD
 -- Item #:1	2      3     4	   5  9
 	'PROD' 'OPEN' 'ORAT' 20000 4* 1000 /
-	'RFT'  'SHUT' 'ORAT' 20000 4* 1000 /
+	'RFTP' 'SHUT' 'ORAT' 20000 4* 1000 /
 /
 -- It is stated in Odeh's paper that the maximum oil prod. rate
 -- is 20 000stb per day which explains the choice of value in item 4.
@@ -432,18 +432,18 @@ TSTEP
 31 28 31 30 31 30 31 31 30 31 30 31 /
 
 WELOPEN
-   'RFT' OPEN /
+   'RFTP' OPEN /
 /
 
 WCONHIST
-   'RFT'  'OPEN'  'RESV'  0 /
+   'RFTP'  'OPEN'  'RESV'  0 /
 /
 
 TSTEP
    31 /
 
 WELOPEN
-   'RFT' 'SHUT' /
+   'RFTP' 'SHUT' /
 /
 
 TSTEP

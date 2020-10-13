@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(RUN) {
     msim msim(state);
 
     msim.well_rate("PROD", data::Rates::opt::oil, prod_opr);
-    msim.well_rate("RFT", data::Rates::opt::oil, prod_rft);
+    msim.well_rate("RFTP", data::Rates::opt::oil, prod_rft);
     msim.solution("PRESSURE", pressure);
     {
         const WorkArea work_area("test_msim");
@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE(RUN) {
             }
 
             BOOST_CHECK_EQUAL( fmwpa[0], 0.0 );
-            // The RFT well will appear as an abondoned well.
+            // The RFTP well will appear as an abondoned well.
             BOOST_CHECK_EQUAL( fmwpa[dates.size() - 1], 1.0 );
 
             const auto rsm = EclIO::ERsm("SPE1CASE1.RSM");
@@ -141,7 +141,7 @@ BOOST_AUTO_TEST_CASE(RUN) {
             const int report_step = 50;
             const auto& rst_state = Opm::RestartIO::RstState::load(rst, report_step);
             Schedule sched_rst(deck, state, python, &rst_state);
-            const auto& rft_well = sched_rst.getWell("RFT", report_step);
+            const auto& rft_well = sched_rst.getWell("RFTP", report_step);
             BOOST_CHECK(rft_well.getStatus() == Well::Status::SHUT);
         }
     }

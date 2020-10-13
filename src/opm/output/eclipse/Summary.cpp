@@ -738,7 +738,7 @@ inline quantity injection_history( const fn_args& args ) {
     return { sum, rate_unit< phase >() };
 }
 
-inline quantity abondoned_wells( const fn_args& args ) {
+inline quantity abondoned_producers( const fn_args& args ) {
     std::size_t count = 0;
 
     for (const auto& sched_well : args.schedule_wells) {
@@ -1362,7 +1362,7 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "FMWIN", flowing< injector > },
     { "FMWPR", flowing< producer > },
     { "FVPRT", res_vol_production_target },
-    { "FMWPA", abondoned_wells },
+    { "FMWPA", abondoned_producers },
 
     //Field control mode
     { "FMCTP", group_control< false, true,  false, false >},
