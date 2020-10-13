@@ -112,6 +112,8 @@ struct RstHeader {
     double guide_rate_d;
     double guide_rate_e;
     double guide_rate_f;
+    double guide_rate_delay;
+    double guide_rate_damping;
     double udq_range;
     double udq_undefined;
     double udq_eps;

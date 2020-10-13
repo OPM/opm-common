@@ -110,6 +110,8 @@ RstHeader::RstHeader(const std::vector<int>& intehead, const std::vector<bool>& 
     guide_rate_d(doubhead[VI::doubhead::GRpar_d]),
     guide_rate_e(doubhead[VI::doubhead::GRpar_e]),
     guide_rate_f(doubhead[VI::doubhead::GRpar_f]),
+    guide_rate_delay(unit_system.to_si(M::time, doubhead[VI::doubhead::GRpar_int])),
+    guide_rate_damping(doubhead[VI::doubhead::GRpar_damp]),
     udq_range(doubhead[VI::doubhead::UdqPar_2]),
     udq_undefined(doubhead[VI::doubhead::UdqPar_3]),
     udq_eps(doubhead[VI::doubhead::UdqPar_4])
