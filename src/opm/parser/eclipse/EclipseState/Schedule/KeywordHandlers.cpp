@@ -588,9 +588,7 @@ namespace {
         const bool use_free_gas = DeckItem::to_bool( record.getItem<ParserKeywords::GUIDERAT::USE_FREE_GAS>().getTrimmedString(0));
 
         const auto new_model = GuideRateModel(min_calc_delay, phase, A, B, C, D, E, F, allow_increase, damping_factor, use_free_gas);
-        auto new_config = std::make_shared<GuideRateConfig>(this->guideRateConfig(handlerContext.currentStep));
-        if (new_config->update_model(new_model))
-            this->guide_rate_config.update( handlerContext.currentStep, new_config );
+        this->updateGuideRateModel(new_model, handlerContext.currentStep);
     }
 
     void Schedule::handleLIFTOPT(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
