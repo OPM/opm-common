@@ -557,10 +557,11 @@ BOOST_AUTO_TEST_CASE(TestHeader) {
     const auto nmfipr = 22;
     const auto ngroup  = 8;
 
+    auto unit_system = Opm::UnitSystem::newMETRIC();
     auto ih = Opm::RestartIO::InteHEAD{}
          .dimensions(nx, ny, nz)
          .numActive(nactive)
-         .unitConventions(Opm::UnitSystem::newMETRIC())
+         .unitConventions(unit_system)
          .wellTableDimensions({ numWells, maxPerf, maxWellsInGroup, maxGroupInField, maxWellsInField})
          .calendarDate({year, month, mday, hour, minute, seconds, mseconds})
          .activePhases(Ph{1,1,1})
@@ -575,7 +576,7 @@ BOOST_AUTO_TEST_CASE(TestHeader) {
          .regionDimensions({ntfip, nmfipr, 0,0,0})
          .ngroups({ngroup});
 
-    Opm::RestartIO::RstHeader header(ih.data(), std::vector<bool>(100), std::vector<double>(1000));
+    Opm::RestartIO::RstHeader header(unit_system, ih.data(), std::vector<bool>(100), std::vector<double>(1000));
     BOOST_CHECK_EQUAL(header.nx, nx);
     BOOST_CHECK_EQUAL(header.ny, ny);
     BOOST_CHECK_EQUAL(header.nactive, nactive);

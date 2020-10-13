@@ -39,7 +39,7 @@ RstState::RstState(const ::Opm::UnitSystem& unit_system_,
                    const std::vector<bool>& logihead,
                    const std::vector<double>& doubhead):
     unit_system(unit_system_),
-    header(intehead, logihead, doubhead)
+    header(unit_system_, intehead, logihead, doubhead)
 {
     this->load_tuning(intehead, doubhead);
 }
