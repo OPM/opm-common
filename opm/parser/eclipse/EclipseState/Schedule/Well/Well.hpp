@@ -565,7 +565,9 @@ public:
     bool segmented_density_calculation() const { return true; }
     double alq_value() const;
     double temperature() const;
+    bool hasInjected( ) const;
     bool hasProduced( ) const;
+    bool updateHasInjected( );
     bool updateHasProduced();
     bool cmp_structure(const Well& other) const;
     bool operator==(const Well& data) const;
@@ -595,6 +597,7 @@ public:
         serializer(efficiency_factor);
         serializer(solvent_fraction);
         serializer(has_produced);
+        serializer(has_injected);
         serializer(prediction_mode);
         serializer(productivity_index);
         serializer(econ_limits);
@@ -632,6 +635,7 @@ private:
     double efficiency_factor;
     double solvent_fraction;
     bool has_produced = false;
+    bool has_injected = false;
     bool prediction_mode = true;
     std::optional<double> productivity_index{ std::nullopt };
 

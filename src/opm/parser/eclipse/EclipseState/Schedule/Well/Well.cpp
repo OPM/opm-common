@@ -510,6 +510,17 @@ bool Well::updateHasProduced() {
     return false;
 }
 
+bool Well::updateHasInjected() {
+    if (this->wtype.injector() && this->status == Status::OPEN) {
+        if (this->has_injected)
+            return false;
+
+        this->has_injected= true;
+        return true;
+    }
+    return false;
+}
+
 bool Well::updateProduction(std::shared_ptr<WellProductionProperties> production_arg) {
     if (!this->wtype.producer())
         this->switchToProducer( );
@@ -1140,6 +1151,10 @@ bool Well::predictionMode() const {
 
 bool Well::hasProduced( ) const {
     return this->has_produced;
+}
+
+bool Well::hasInjected( ) const {
+    return this->has_injected;
 }
 
 
