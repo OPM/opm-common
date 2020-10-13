@@ -49,6 +49,7 @@ namespace Opm {
         double init_pressure = -1.e100; // by default, the grid pressure from equilibration will be used
         int pvttable = -1; // by default, the block PVTNUM
         int sattable = -1; // saturation table number, by default, the block value
+        bool sameCoordinates(const int i, const int j, const int k) const;
     };
 
     class SingleNumericalAquifer {

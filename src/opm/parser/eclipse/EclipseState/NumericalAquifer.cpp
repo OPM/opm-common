@@ -24,6 +24,7 @@
 #include <opm/parser/eclipse/EclipseState/Aqucon.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
+#include <iostream>
 
 namespace Opm {
 
@@ -83,6 +84,7 @@ void NumericalAquifers::addAquiferConnections(const Deck &deck, const EclipseGri
         const int aqu_id = pair.first;
         const auto& aqu_cons = cons.getConnections(aqu_id);
 
+        // TODO: it is possible a connection should not be connected to any aquifer cells
         auto& aquifer = pair.second;
         for (const auto& con : aqu_cons) {
             aquifer.addAquiferConnection(con.second);
@@ -119,6 +121,10 @@ NumericalAquiferCell::NumericalAquiferCell(const DeckRecord& record)
     }
 }
 
+bool NumericalAquiferCell::sameCoordinates(const int i, const int j, const int k) const {
+    return ( (this->I == i) && (this->J == j) && (this->K == k) );
+}
+
 void SingleNumericalAquifer::addAquiferCell(const NumericalAquiferCell& aqu_cell) {
     cells_.push_back(aqu_cell);
 }
@@ -129,6 +135,14 @@ SingleNumericalAquifer::SingleNumericalAquifer(const int aqu_id)
 }
 
 void SingleNumericalAquifer::addAquiferConnection(const NumAquiferCon& aqu_con) {
+    // we need to make sure the connection is not on the aquifer cells
+    for (const auto& cell : this->cells_) {
+        if (cell.sameCoordinates(aqu_con.I, aqu_con.J, aqu_con.K)) {
+            // OpmLog
+            std::cout << " I " << aqu_con.I << " J " << aqu_con.J << " K " << aqu_con.K << " is a aquifer cell " << std::endl;
+            return;
+        }
+    }
     this->connections_.push_back(aqu_con);
 }
 

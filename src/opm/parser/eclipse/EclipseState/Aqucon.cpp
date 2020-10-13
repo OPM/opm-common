@@ -96,7 +96,7 @@ namespace Opm {
             for (int j = j1; j <=j2; ++j) {
                 for (int i = i1; i <= i2; ++i) {
                     if (allow_internal_cells ||
-                        AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i, j, k, face_dir)) {
+                        !AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i, j, k, face_dir)) {
                         cons.emplace_back(NumAquiferCon{aqu_id, i, j, k, face_dir, trans_multi, trans_option,
                                                         allow_internal_cells, ve_frac_relperm, ve_frac_cappress});
                     }
