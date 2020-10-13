@@ -1029,6 +1029,13 @@ private:
         dynamic_state.update(reportStep, std::move(group));
     }
 
+
+    void Schedule::updateGuideRateModel(const GuideRateModel& new_model, std::size_t report_step) {
+        auto new_config = std::make_shared<GuideRateConfig>(this->guideRateConfig(report_step));
+        if (new_config->update_model(new_model))
+            this->guide_rate_config.update( report_step, new_config );
+    }
+
     /*
       There are many SCHEDULE keyword which take a wellname as argument. In
       addition to giving a fully qualified name like 'W1' you can also specify

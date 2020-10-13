@@ -387,6 +387,7 @@ namespace Opm
 
         DynamicState<std::shared_ptr<RPTConfig>> rpt_config;
         void updateNetwork(std::shared_ptr<Network::ExtNetwork> network, std::size_t report_step);
+        void updateGuideRateModel(const GuideRateModel& new_model, std::size_t report_step);
 
         GTNode groupTree(const std::string& root_node, std::size_t report_step, std::size_t level, const std::optional<std::string>& parent_name) const;
         void updateGroup(std::shared_ptr<Group> group, std::size_t reportStep);
