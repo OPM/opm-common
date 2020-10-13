@@ -35,6 +35,7 @@
 #include <fnmatch.h>
 #include <cmath>
 #include <ostream>
+#include <utility>
 
 namespace Opm {
 
@@ -1054,6 +1055,11 @@ bool Well::updateWSEGVALV(const std::vector<std::pair<int, Valve> >& valve_pairs
         return true;
     } else
         return false;
+}
+
+void Well::forceUpdateConnections(std::shared_ptr<WellConnections> connections_arg) {
+    connections_arg->order();
+    this->connections = std::move(connections_arg);
 }
 
 void Well::filterConnections(const ActiveGridCells& grid) {

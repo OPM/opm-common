@@ -21,10 +21,12 @@
 #include <fnmatch.h>
 #include <functional>
 #include <iostream>
+#include <memory>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 #include <fmt/format.h>
@@ -1115,7 +1117,13 @@ namespace {
                 const auto& well   = this->getWell(well_name, handlerContext.currentStep);
                 const auto  unitPI = (well.getPreferredPhase() == Phase::GAS) ? gasPI : liqPI;
 
-                auto well2 = std::make_shared<Well>(well);
+                // Note: Need to ensure we have an independent copy of
+                // well's connections because
+                // Well::updateWellProductivityIndex() implicitly mutates
+                // internal state in the WellConnections class.
+                auto well2       = std::make_shared<Well>(well);
+                auto connections = std::make_shared<WellConnections>(well2->getConnections());
+                well2->forceUpdateConnections(std::move(connections));
                 if (well2->updateWellProductivityIndex(usys.to_si(unitPI, rawProdIndex)))
                     this->updateWell(std::move(well2), handlerContext.currentStep);
 

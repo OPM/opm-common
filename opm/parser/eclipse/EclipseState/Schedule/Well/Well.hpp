@@ -557,6 +557,8 @@ public:
     bool handleCOMPLUMP(const DeckRecord& record);
     bool handleWPIMULT(const DeckRecord& record);
 
+    void forceUpdateConnections(std::shared_ptr<WellConnections> connections_arg);
+
     void filterConnections(const ActiveGridCells& grid);
     ProductionControls productionControls(const SummaryState& st) const;
     InjectionControls injectionControls(const SummaryState& st) const;
