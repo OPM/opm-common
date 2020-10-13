@@ -35,6 +35,7 @@
 #include <fnmatch.h>
 #include <cmath>
 #include <ostream>
+#include <stdexcept>
 #include <utility>
 
 namespace Opm {
@@ -376,7 +377,7 @@ Well Well::serializeObject()
     result.efficiency_factor = 8.0;
     result.solvent_fraction = 9.0;
     result.prediction_mode = false;
-    result.productivity_index = 10.0;
+    result.productivity_index = WellProductivityIndex { 10.0, Phase::GAS };
     result.econ_limits = std::make_shared<Opm::WellEconProductionLimits>(Opm::WellEconProductionLimits::serializeObject());
     result.foam_properties = std::make_shared<WellFoamProperties>(WellFoamProperties::serializeObject());
     result.polymer_properties =  std::make_shared<WellPolymerProperties>(WellPolymerProperties::serializeObject());
@@ -492,7 +493,7 @@ bool Well::updateInjection(std::shared_ptr<WellInjectionProperties> injection_ar
     return update;
 }
 
-bool Well::updateWellProductivityIndex(const double prodIndex) {
+bool Well::updateWellProductivityIndex(const WellProductivityIndex& prodIndex) {
     const auto update = this->productivity_index != prodIndex;
     if (update)
         this->productivity_index = prodIndex;
@@ -834,11 +835,11 @@ void Well::applyWellProdIndexScaling(const double currentEffectivePI) {
         // WELPI not activated.  Nothing to do.
         return;
 
-    if (this->productivity_index == currentEffectivePI)
+    if (this->productivity_index->pi_value == currentEffectivePI)
         // No change in scaling.
         return;
 
-    this->connections->applyWellPIScaling(*this->productivity_index / currentEffectivePI);
+    this->connections->applyWellPIScaling(this->productivity_index->pi_value / currentEffectivePI);
 }
 
 const WellConnections& Well::getConnections() const {
@@ -859,6 +860,16 @@ const WellBrineProperties& Well::getBrineProperties() const {
 
 const WellTracerProperties& Well::getTracerProperties() const {
     return *this->tracer_properties;
+}
+
+const Well::WellProductivityIndex& Well::getWellProductivityIndex() const
+{
+    if (this->productivity_index)
+        return *this->productivity_index;
+    else
+        throw std::logic_error {
+            "WELPI not activated in well " + this->name()
+        };
 }
 
 const WellEconProductionLimits& Well::getEconLimits() const {

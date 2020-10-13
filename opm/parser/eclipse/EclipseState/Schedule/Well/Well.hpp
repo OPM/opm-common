@@ -433,6 +433,28 @@ public:
         double getBHPLimit() const;
     };
 
+    struct WellProductivityIndex {
+        double pi_value;
+        Phase preferred_phase;
+
+        bool operator==(const WellProductivityIndex& rhs) const
+        {
+            return (this->pi_value == rhs.pi_value)
+                && (this->preferred_phase == rhs.preferred_phase);
+        }
+
+        bool operator!=(const WellProductivityIndex& rhs) const
+        {
+            return ! (*this == rhs);
+        }
+
+        template <class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(this->pi_value);
+            serializer(this->preferred_phase);
+        }
+    };
 
     Well() = default;
     Well(const std::string& wname,
@@ -497,6 +519,7 @@ public:
     const WellPolymerProperties& getPolymerProperties() const;
     const WellBrineProperties& getBrineProperties() const;
     const WellTracerProperties& getTracerProperties() const;
+    const WellProductivityIndex& getWellProductivityIndex() const;
     /* The rate of a given phase under the following assumptions:
      * * Returns zero if production is requested for an injector (and vice
      *   versa)
@@ -547,7 +570,7 @@ public:
     bool updateEconLimits(std::shared_ptr<WellEconProductionLimits> econ_limits);
     bool updateProduction(std::shared_ptr<WellProductionProperties> production);
     bool updateInjection(std::shared_ptr<WellInjectionProperties> injection);
-    bool updateWellProductivityIndex(const double prodIndex);
+    bool updateWellProductivityIndex(const WellProductivityIndex& prodIndex);
     bool updateWSEGSICD(const std::vector<std::pair<int, SICD> >& sicd_pairs);
     bool updateWSEGVALV(const std::vector<std::pair<int, Valve> >& valve_pairs);
 
@@ -603,7 +626,7 @@ public:
         serializer(has_produced);
         serializer(has_injected);
         serializer(prediction_mode);
-        serializer(productivity_index);
+        serializer.optional(productivity_index);
         serializer(econ_limits);
         serializer(foam_properties);
         serializer(polymer_properties);
@@ -641,7 +664,7 @@ private:
     bool has_produced = false;
     bool has_injected = false;
     bool prediction_mode = true;
-    std::optional<double> productivity_index{ std::nullopt };
+    std::optional<WellProductivityIndex> productivity_index{ std::nullopt };
 
     std::shared_ptr<WellEconProductionLimits> econ_limits;
     std::shared_ptr<WellFoamProperties> foam_properties;
