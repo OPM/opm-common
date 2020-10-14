@@ -148,13 +148,13 @@ namespace Opm {
         EclipseGrid m_inputGrid;
         NNC m_inputNnc;
         GridDims m_gridDims;
+        AquiferConfig aquifer_config;
         FieldPropsManager field_props;
         SimulationConfig m_simulationConfig;
         TransMult m_transMult;
 
         FaultCollection m_faults;
         std::string m_title;
-        AquiferConfig aquifer_config;
         TracerConfig tracer_config;
     };
 }

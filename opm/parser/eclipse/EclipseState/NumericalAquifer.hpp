@@ -30,9 +30,10 @@ namespace Opm {
     class NumericalAquiferConnections;
     class NumAquiferCon;
     class EclipseGrid;
+    class FieldPropsManager;
 
     struct NumericalAquiferCell {
-        explicit NumericalAquiferCell(const DeckRecord&);
+        NumericalAquiferCell(const DeckRecord&, const EclipseGrid&, const FieldPropsManager&);
         // TODO: we might not want this default constructor
         NumericalAquiferCell() = default;
         // TODO: what constructor should be?
@@ -42,13 +43,15 @@ namespace Opm {
         int I, J, K; // indices for the grid block
         double area; // cross-sectional area
         double length;
-        double porosity;
+        double porosity = -1.e100;
         double permeability;
         // TODO: what is the better way to handle defaulted input?
         double depth = -1.e100; // by default the grid block depth will be used
         double init_pressure = -1.e100; // by default, the grid pressure from equilibration will be used
         int pvttable = -1; // by default, the block PVTNUM
         int sattable = -1; // saturation table number, by default, the block value
+        double pore_volume; // pore volume
+        double transmissibility;
         bool sameCoordinates(const int i, const int j, const int k) const;
     };
 
@@ -70,9 +73,10 @@ namespace Opm {
     class NumericalAquifers {
     public:
         NumericalAquifers() = default;
-        explicit NumericalAquifers(const Deck& deck, const EclipseGrid& grid);
+        explicit NumericalAquifers(const Deck& deck, const EclipseGrid& grid, const FieldPropsManager& field_props);
 
         bool hasAquifer(const int aquifer_id) const;
+        bool empty() const;
     private:
         // std::un_ordered_map
         std::unordered_map<int, SingleNumericalAquifer> aquifers_;

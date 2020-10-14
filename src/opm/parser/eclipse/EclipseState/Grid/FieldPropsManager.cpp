@@ -141,7 +141,15 @@ bool FieldPropsManager::tran_active(const std::string& keyword) const {
     return this->fp->tran_active(keyword);
 }
 
-template<class MapType>
+void FieldPropsManager::reset_porv(const std::vector<double> &porv) {
+    return this->fp->reset_porv(porv);
+}
+
+const std::vector<double>& FieldPropsManager::cellDepth() const {
+    return this->fp->cellDepth();
+}
+
+    template<class MapType>
 void apply_tran(const std::unordered_map<std::string, Fieldprops::TranCalculator>& tran,
                 const MapType& double_data,
                 std::size_t active_size,

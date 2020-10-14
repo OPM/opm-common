@@ -69,7 +69,14 @@ namespace Opm {
         if( this->runspec().phases().size() < 3 )
             OpmLog::info(fmt::format("Only {} fluid phases are enabled",  this->runspec().phases().size() ));
 
-        this->aquifer_config = AquiferConfig(this->m_tables, this->m_inputGrid, deck);
+        this->aquifer_config = AquiferConfig(this->m_tables, this->m_inputGrid, this->field_props, deck);
+
+        if ( this->aquifer_config.hasNumericalAquifer() ) {
+            // update the pore volume here
+            // TODO: not sure whether should be true or no, will investigate later
+            const auto& poro = this->field_props.get_double_field_data("PORO");
+            const auto& porv = this->field_props.get_double_field_data("PORV");
+        }
 
         if (deck.hasKeyword( "TITLE" )) {
             const auto& titleKeyword = deck.getKeyword( "TITLE" );
@@ -81,6 +88,10 @@ namespace Opm {
         }
 
         this->initTransMult();
+        // TODO: the content we need to do, change the pore volume of the aquifer cells
+        // TODO: not sure this is the best place to do the modification, let us do this way first
+        // this->aquifer_config.updateFieldProps(this->field_props);
+
         this->initFaults(deck);
         this->field_props.reset_actnum( this->m_inputGrid.getACTNUM() );
     }

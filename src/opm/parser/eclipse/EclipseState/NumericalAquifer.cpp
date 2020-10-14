@@ -22,13 +22,15 @@
 
 #include <opm/parser/eclipse/EclipseState/NumericalAquifer.hpp>
 #include <opm/parser/eclipse/EclipseState/Aqucon.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <iostream>
 
 namespace Opm {
 
-NumericalAquifers::NumericalAquifers(const Deck& deck, const EclipseGrid& grid)
+NumericalAquifers::NumericalAquifers(const Deck& deck, const EclipseGrid& grid, const FieldPropsManager& field_props)
 {
     using AQUNUM=ParserKeywords::AQUNUM;
     if ( !deck.hasKeyword<AQUNUM>() ) return;
@@ -43,12 +45,13 @@ NumericalAquifers::NumericalAquifers(const Deck& deck, const EclipseGrid& grid)
     const auto& aqunum_keywords = deck.getKeywordList<AQUNUM>();
     for (const auto& keyword : aqunum_keywords) {
         for (const auto& record : *keyword) {
-            const NumericalAquiferCell aqu_cell(record);
+            const NumericalAquiferCell aqu_cell(record, grid, field_props);
             CellIndex cell_indices {aqu_cell.I, aqu_cell.J, aqu_cell.K};
             // TODO: we should check whether the grid cell is active or NOT
             // Not sure how to handle duplicated input for aquifer cells yet, throw here
             // until we
             if (cell_index.find(cell_indices) != cell_index.end()) {
+                // TODO: it is good to keep the original I J K for messaging
                 throw;
             }
             aquifer_cells.push_back(aqu_cell);
@@ -92,33 +95,58 @@ void NumericalAquifers::addAquiferConnections(const Deck &deck, const EclipseGri
     }
 }
 
+bool NumericalAquifers::empty() const {
+    return this->aquifers_.empty();
+}
+
 
     using AQUNUM = ParserKeywords::AQUNUM;
-NumericalAquiferCell::NumericalAquiferCell(const DeckRecord& record)
+NumericalAquiferCell::NumericalAquiferCell(const DeckRecord& record, const EclipseGrid& grid, const FieldPropsManager& field_props)
    : aquifer_id( record.getItem<AQUNUM::AQUIFER_ID>().get<int>(0) )
    , I ( record.getItem<AQUNUM::I>().get<int>(0) - 1 )
    , J ( record.getItem<AQUNUM::J>().get<int>(0) - 1 )
    , K ( record.getItem<AQUNUM::K>().get<int>(0) - 1 )
    , area (record.getItem<AQUNUM::CROSS_SECTION>().getSIDouble(0) )
    , length ( record.getItem<AQUNUM::LENGTH>().getSIDouble(0) )
-   , porosity ( record.getItem<AQUNUM::PORO>().getSIDouble(0) )
    , permeability( record.getItem<AQUNUM::PERM>().getSIDouble(0) )
 {
+    // TODO: NOT Sure how the ACTNUM plays here
+    const auto& cell_depth = field_props.cellDepth();
+    const auto& poro = field_props.get_double("PORO");
+    const auto& pvtnum = field_props.get_int("PVTNUM");
+    const auto& satnum = field_props.get_int("SATNUM");
+    const auto global_index = grid.getGlobalIndex(I, J, K);
     // TODO: test with has Value?
+    if ( !record.getItem<AQUNUM::PORO>().defaultApplied(0) ) {
+        this->porosity = record.getItem<AQUNUM::PORO>().getSIDouble(0);
+    } else {
+        this->porosity = poro[global_index];
+    }
+
     if ( !record.getItem<AQUNUM::DEPTH>().defaultApplied(0) ) {
         this->depth = record.getItem<AQUNUM::DEPTH>().getSIDouble(0);
+    } else {
+        this->depth = cell_depth[global_index];
     }
+
     if ( !record.getItem<AQUNUM::INITIAL_PRESSURE>().defaultApplied(0) ) {
         this->init_pressure = record.getItem<AQUNUM::INITIAL_PRESSURE>().getSIDouble(0);
     }
 
     if ( !record.getItem<AQUNUM::PVT_TABLE_NUM>().defaultApplied(0) ) {
         this->pvttable = record.getItem<AQUNUM::PVT_TABLE_NUM>().get<int>(0);
+    } else {
+        this->pvttable = pvtnum[global_index];
     }
 
     if ( !record.getItem<AQUNUM::SAT_TABLE_NUM>().defaultApplied(0) ) {
         this->sattable = record.getItem<AQUNUM::SAT_TABLE_NUM>().get<int>(0);
+    } else {
+        this->sattable = satnum[global_index];
     }
+
+    this->pore_volume = this->length * this->area * this->porosity;
+    this->transmissibility = 2. * this->permeability * this->area / this->length;
 }
 
 bool NumericalAquiferCell::sameCoordinates(const int i, const int j, const int k) const {

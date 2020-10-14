@@ -427,6 +427,9 @@ void FieldProps::reset_actnum(const std::vector<int>& new_actnum) {
     this->active_size = new_active_size;
 }
 
+void FieldProps::reset_porv(const std::vector<double> &porv) {
+}
+
 
 void FieldProps::distribute_toplayer(Fieldprops::FieldData<double>& field_data, const std::vector<double>& deck_data, const Box& box) {
     const std::size_t layer_size = this->nx * this->ny;

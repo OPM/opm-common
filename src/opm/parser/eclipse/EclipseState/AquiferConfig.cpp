@@ -21,15 +21,15 @@
 #include <opm/parser/eclipse/EclipseState/AquiferConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
-
-#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+// #include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 
 namespace Opm {
 
-AquiferConfig::AquiferConfig(const TableManager& tables, const EclipseGrid& grid, const Deck& deck):
+AquiferConfig::AquiferConfig(const TableManager& tables, const EclipseGrid& grid,
+                             const FieldPropsManager& field_props, const Deck& deck):
     aquifetp(deck),
     aquiferct(tables, deck),
-    numerical_aquifers(deck, grid),
+    numerical_aquifers(deck, grid, field_props),
     aqconn(grid,deck)
 {}
 
@@ -73,6 +73,10 @@ const Aquancon& AquiferConfig::connections() const {
 
 bool AquiferConfig::hasAquifer(const int aquID) const {
     return aquifetp.hasAquifer(aquID) || aquiferct.hasAquifer(aquID);
+}
+
+bool AquiferConfig::hasNumericalAquifer() const {
+    return !this->numerical_aquifers.empty();
 }
 
 }

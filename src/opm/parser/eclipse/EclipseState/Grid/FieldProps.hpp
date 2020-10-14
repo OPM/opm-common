@@ -361,6 +361,8 @@ public:
     FieldProps(const Deck& deck, const Phases& phases, const EclipseGrid& grid, const TableManager& table_arg);
     void reset_actnum(const std::vector<int>& actnum);
 
+    void reset_porv(const std::vector<double>& porv);
+
     const std::string& default_region() const;
 
     std::vector<int> actnum();
@@ -471,6 +473,11 @@ public:
 
     std::size_t num_double() const {
         return this->double_data.size();
+    }
+
+    // TODO: it might not be the best way to do this
+    const std::vector<double>& cellDepth() const {
+        return this->cell_depth;
     }
 
     bool tran_active(const std::string& keyword) const;
