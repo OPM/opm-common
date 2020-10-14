@@ -3799,3 +3799,29 @@ END
     BOOST_CHECK_MESSAGE(sched.hasWellGroupEvent("P", ScheduleEvents::WELL_PRODUCTIVITY_INDEX, 1),
                         "Must have WELL_PRODUCTIVITY_INDEX event at report step 1");
 }
+
+
+void cmp_vector(const std::vector<double>&v1, const std::vector<double>& v2) {
+    BOOST_CHECK_EQUAL(v1.size(), v2.size());
+    for (std::size_t i = 0; i < v1.size(); i++)
+        BOOST_CHECK_CLOSE(v1[i], v2[i], 1e-4);
+}
+
+BOOST_AUTO_TEST_CASE(VFPPROD_SCALING) {
+    const auto deck = Parser{}.parseFile("VFP_CASE.DATA");
+    const auto es    = EclipseState{ deck };
+    const auto sched = Schedule{ deck, es };
+    const auto& vfp_table = sched.getVFPProdTable(1, 0);
+    const std::vector<double> flo = { 0.000578704,  0.001157407,  0.002893519,  0.005787037,  0.008680556,  0.011574074,  0.017361111,  0.023148148,  0.034722222,  0.046296296};
+    const std::vector<double> thp = {1300000.000000000, 2500000.000000000, 5000000.000000000, 7500000.000000000, 10000000.000000000};
+    const std::vector<double> wfr = { 0.000000000,  0.100000000,  0.200000000,  0.300000000,  0.400000000,  0.500000000,  0.600000000,  0.700000000,  0.800000000,  0.990000000};
+    const std::vector<double> gfr = {100.000000000, 200.000000000, 300.000000000, 400.000000000, 500.000000000, 750.000000000, 1000.000000000, 2000.000000000};
+    const std::vector<double> alq = { 0.000000000,  0.000578704,  0.001157407,  0.001736111,  0.002314815};
+
+    cmp_vector(flo, vfp_table.getFloAxis());
+    cmp_vector(thp, vfp_table.getTHPAxis());
+    cmp_vector(wfr, vfp_table.getWFRAxis());
+    cmp_vector(gfr, vfp_table.getGFRAxis());
+    cmp_vector(alq, vfp_table.getALQAxis());
+}
+

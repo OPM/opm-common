@@ -460,7 +460,7 @@ if(ENABLE_ECL_OUTPUT)
           tests/msim/MSIM_PYACTION.DATA
           tests/msim/action1.py
           tests/msim/action2.py
-      )
+          tests/VFP_CASE.DATA)
 endif()
 
 list (APPEND EXAMPLE_SOURCE_FILES
