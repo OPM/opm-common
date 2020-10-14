@@ -455,7 +455,7 @@ TSTEP
 
 WELOPEN
    'RFTP' 'SHUT' /
-   'RFTI' 'SHUT' /
+   'RFTI' 'STOP' /
 /
 
 TSTEP
