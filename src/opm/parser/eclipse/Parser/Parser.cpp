@@ -809,7 +809,7 @@ std::unique_ptr<RawKeyword> tryParseKeyword( ParserState& parserState, const Par
                     std::string_view line_content = { line.begin(), end_pos};
                     record_buffer = str::update_record_buffer( record_buffer, line_content );
 
-                    RawRecord record(record_buffer, true);
+                    RawRecord record(record_buffer, rawKeyword->location(), true);
                     rawKeyword->addRecord(record);
                     return rawKeyword;
                 } else
@@ -845,11 +845,11 @@ std::unique_ptr<RawKeyword> tryParseKeyword( ParserState& parserState, const Par
             record_buffer = str::update_record_buffer(record_buffer, line);
             if (is_title) {
                 if (record_buffer.empty()) {
-                    RawRecord record("opm/flow simulation");
+                    RawRecord record("opm/flow simulation", rawKeyword->location());
                     rawKeyword->addRecord(record);
                 } else {
                     std::size_t size = std::distance(record_buffer.begin(),record_buffer.end());
-                    RawRecord record( std::string_view{ record_buffer.begin(), size });
+                    RawRecord record( std::string_view{ record_buffer.begin(), size }, rawKeyword->location());
                     rawKeyword->addRecord(record);
                 }
                 return rawKeyword;
@@ -864,7 +864,7 @@ std::unique_ptr<RawKeyword> tryParseKeyword( ParserState& parserState, const Par
 
             if (str::isTerminatedRecordString(record_buffer)) {
                 std::size_t size = std::distance(record_buffer.begin(), record_buffer.end()) - 1;
-                RawRecord record( std::string_view{ record_buffer.begin(), size });
+                RawRecord record( std::string_view{ record_buffer.begin(), size }, rawKeyword->location());
                 if (rawKeyword->addRecord(record))
                     return rawKeyword;
 
