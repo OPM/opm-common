@@ -740,11 +740,9 @@ private:
         return this->rft_config;
     }
 
-    void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t, const ParseContext& parseContext, ErrorGuard& errors, const DeckKeyword& keyword ) const {
-        std::string msg_fmt = fmt::format("Invalid wellname pattern in {{keyword}}\n"
-                                          "In {{file}} line {{line}}\n"
-                                          "No wells/groups match the pattern: '{}'", namePattern);
 
+    void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t, const ParseContext& parseContext, ErrorGuard& errors, const DeckKeyword& keyword ) const {
+        std::string msg_fmt = fmt::format("No wells/groups match the pattern: \'{}\'", namePattern);
         parseContext.handleError( ParseContext::SCHEDULE_INVALID_NAME, msg_fmt, keyword.location(), errors );
     }
 
