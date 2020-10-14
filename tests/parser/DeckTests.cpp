@@ -34,6 +34,7 @@
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParserItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
+#include <opm/common/OpmLog/KeywordLocation.hpp>
 
 #include "src/opm/parser/eclipse/Parser/raw/RawRecord.hpp"
 
@@ -481,7 +482,7 @@ BOOST_AUTO_TEST_CASE(get_byNameNonExisting_throws) {
 BOOST_AUTO_TEST_CASE(StringsWithSpaceOK) {
     ParserItem itemString("STRINGITEM1", ParserItem::itype::STRING);
     ParserRecord record1;
-    RawRecord rawRecord( " ' VALUE ' " );
+    RawRecord rawRecord( " ' VALUE ' ", KeywordLocation("KW", "file", 100) );
     ParseContext parseContext;
     ErrorGuard errors;
     UnitSystem active_unitsystem(UnitSystem::UnitType::UNIT_TYPE_LAB);

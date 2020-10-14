@@ -21,6 +21,7 @@
 #include <cstring>
 #include <stdexcept>
 #include <boost/test/unit_test.hpp>
+#include <opm/common/OpmLog/KeywordLocation.hpp>
 
 #include "src/opm/parser/eclipse/Parser/raw/RawEnums.hpp"
 #include "src/opm/parser/eclipse/Parser/raw/RawKeyword.hpp"
@@ -46,7 +47,7 @@ BOOST_AUTO_TEST_CASE(RawKeywordConstructor) {
 BOOST_AUTO_TEST_CASE(IsFinished) {
     std::string storage = "RecordString";
     std::string_view line(storage);
-    RawRecord rec(line);
+    RawRecord rec(line, KeywordLocation("KW", "file", 100 ));
 
     RawKeyword kw1("NAME", "file", 10, false, Raw::FIXED, 0);
     BOOST_CHECK(kw1.isFinished());

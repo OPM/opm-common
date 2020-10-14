@@ -27,6 +27,7 @@
 #include <list>
 
 namespace Opm {
+class KeywordLocation;
 
     /// Class representing the lowest level of the Raw datatypes, a record. A record is simply
     /// a vector containing the record elements, represented as strings. Some logic is present
@@ -34,8 +35,8 @@ namespace Opm {
 
     class RawRecord {
     public:
-        RawRecord( const std::string_view&, bool text);
-        explicit RawRecord( const std::string_view&);
+        RawRecord( const std::string_view&, const KeywordLocation&, bool text);
+        explicit RawRecord( const std::string_view&, const KeywordLocation&);
 
         inline std::string_view pop_front();
         inline std::string_view front() const;
