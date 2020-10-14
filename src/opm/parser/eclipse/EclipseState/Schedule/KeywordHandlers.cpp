@@ -951,6 +951,9 @@ namespace {
                 if (well2->updatePrediction(true))
                     update_well = true;
 
+                if (well2->updateHasInjected())
+                    update_well = true;
+
                 if (update_well) {
                     this->updateWell(well2, handlerContext.currentStep);
                     m_events.addEvent( ScheduleEvents::INJECTION_UPDATE , handlerContext.currentStep );
@@ -1008,6 +1011,9 @@ namespace {
                     update_well = true;
 
                 if (well2->updatePrediction(false))
+                    update_well = true;
+
+                if (well2->updateHasInjected())
                     update_well = true;
 
                 if (update_well) {
