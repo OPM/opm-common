@@ -228,6 +228,10 @@ namespace {
         return has_var(this->well_values, var, well);
     }
 
+    bool SummaryState::has_well_var(const std::string& var) const {
+        return this->well_values.count(var) != 0;
+    }
+
     double SummaryState::get_well_var(const std::string& well, const std::string& var) const {
         return this->well_values.at(var).at(well);
     }
@@ -241,6 +245,10 @@ namespace {
 
     bool SummaryState::has_group_var(const std::string& group, const std::string& var) const {
         return has_var(this->group_values, var, group);
+    }
+
+    bool SummaryState::has_group_var(const std::string& var) const {
+        return this->group_values.count(var) != 0;
     }
 
     double SummaryState::get_group_var(const std::string& group, const std::string& var) const {

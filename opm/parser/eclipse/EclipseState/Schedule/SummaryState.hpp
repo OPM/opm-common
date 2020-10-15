@@ -82,7 +82,9 @@ public:
 
     bool has(const std::string& key) const;
     bool has_well_var(const std::string& well, const std::string& var) const;
+    bool has_well_var(const std::string& var) const;
     bool has_group_var(const std::string& group, const std::string& var) const;
+    bool has_group_var(const std::string& var) const;
 
     void update(const std::string& key, double value);
     void update_well_var(const std::string& well, const std::string& var, double value);
