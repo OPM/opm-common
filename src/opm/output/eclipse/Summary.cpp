@@ -469,7 +469,7 @@ double efac( const std::vector<std::pair<std::string,double>>& eff_factors, cons
     return (it != eff_factors.end()) ? it->second : 1;
 }
 
-inline quantity wglir( const fn_args& args ) {
+inline quantity glir( const fn_args& args ) {
     const quantity zero = { 0.0, measure::gas_surface_rate };
 
     if (args.schedule_wells.empty())
@@ -1037,7 +1037,7 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "WOPR", rate< rt::oil, producer > },
     { "WGPR", rate< rt::gas, producer > },
     { "WEPR", rate< rt::energy, producer > },
-    { "WGLIR", wglir},
+    { "WGLIR", glir},
     { "WNPR", rate< rt::solvent, producer > },
     { "WCPR", rate< rt::polymer, producer > },
     { "WSPR", rate< rt::brine, producer > },
@@ -1119,7 +1119,7 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "GWPR", rate< rt::wat, producer > },
     { "GOPR", rate< rt::oil, producer > },
     { "GGPR", rate< rt::gas, producer > },
-    { "GGLIR", alqrate },
+    { "GGLIR", glir },
     { "GNPR", rate< rt::solvent, producer > },
     { "GCPR", rate< rt::polymer, producer > },
     { "GSPR", rate< rt::brine, producer > },
@@ -1273,7 +1273,7 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "FWPR", rate< rt::wat, producer > },
     { "FOPR", rate< rt::oil, producer > },
     { "FGPR", rate< rt::gas, producer > },
-    { "FGLIR", alqrate },
+    { "FGLIR", glir },
     { "FNPR", rate< rt::solvent, producer > },
     { "FCPR", rate< rt::polymer, producer > },
     { "FSPR", rate< rt::brine, producer > },
