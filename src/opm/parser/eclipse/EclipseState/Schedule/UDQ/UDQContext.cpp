@@ -16,6 +16,7 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include <fmt/format.h>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
@@ -89,7 +90,13 @@ bool is_udq(const std::string& key) {
 
             return std::nullopt;
         }
-        return this->summary_state.get_well_var(well, var);
+        if (this->summary_state.has_well_var(var)) {
+            if (this->summary_state.has_well_var(well, var))
+                return this->summary_state.get_well_var(well, var);
+            else
+                return std::nullopt;
+        }
+        throw std::logic_error(fmt::format("Summary well variable: {} not registered", var));
     }
 
     std::optional<double> UDQContext::get_group_var(const std::string& group, const std::string& var) const {
@@ -99,7 +106,14 @@ bool is_udq(const std::string& key) {
 
             return std::nullopt;
         }
-        return this->summary_state.get_group_var(group, var);
+
+        if (this->summary_state.has_group_var(var)) {
+            if (this->summary_state.has_group_var(group, var))
+                return this->summary_state.get_group_var(group, var);
+            else
+                return std::nullopt;
+        }
+        throw std::logic_error(fmt::format("Summary group variable: {} not registered", var));
     }
 
     std::vector<std::string> UDQContext::wells() const {
