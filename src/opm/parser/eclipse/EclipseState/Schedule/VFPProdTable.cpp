@@ -450,13 +450,17 @@ void VFPProdTable::convertFloToSI(const FLO_TYPE& type,
                                   std::vector<double>& values,
                                   const UnitSystem& unit_system) {
     double scaling_factor = 1.0;
+    const auto liquid_surface_volume = unit_system.getDimension(UnitSystem::measure::liquid_surface_volume).getSIScaling();
+    const auto gas_surface_volume    = unit_system.getDimension(UnitSystem::measure::gas_surface_volume).getSIScaling();
+    const auto time                  = unit_system.getDimension(UnitSystem::measure::time).getSIScaling();
+
     switch (type) {
         case FLO_OIL:
         case FLO_LIQ:
-            scaling_factor = unit_system.parse("LiquidSurfaceVolume/Time").getSIScaling();
+            scaling_factor = liquid_surface_volume / time;
             break;
         case FLO_GAS:
-            scaling_factor = unit_system.parse("GasSurfaceVolume/Time").getSIScaling();
+            scaling_factor = gas_surface_volume / time;
             break;
         default:
             throw std::logic_error("Invalid FLO type");
@@ -472,7 +476,7 @@ void VFPProdTable::convertFloToSI(const FLO_TYPE& type,
 
 void VFPProdTable::convertTHPToSI(std::vector<double>& values,
                                   const UnitSystem& unit_system) {
-    double scaling_factor = unit_system.parse("Pressure").getSIScaling();
+    const auto scaling_factor = unit_system.getDimension(UnitSystem::measure::pressure).getSIScaling();
     scaleValues(values, scaling_factor);
 }
 
@@ -486,13 +490,14 @@ void VFPProdTable::convertWFRToSI(const WFR_TYPE& type,
                                   std::vector<double>& values,
                                   const UnitSystem& unit_system) {
     double scaling_factor = 1.0;
+    const auto liquid_surface_volume = unit_system.getDimension(UnitSystem::measure::liquid_surface_volume).getSIScaling();
+    const auto gas_surface_volume    = unit_system.getDimension(UnitSystem::measure::gas_surface_volume).getSIScaling();
     switch (type) {
         case WFR_WOR:
         case WFR_WCT:
-            scaling_factor = unit_system.parse("LiquidSurfaceVolume/LiquidSurfaceVolume").getSIScaling();
             break;
         case WFR_WGR:
-            scaling_factor = unit_system.parse("LiquidSurfaceVolume/GasSurfaceVolume").getSIScaling();
+            scaling_factor = liquid_surface_volume / gas_surface_volume;
             break;
         default:
             throw std::logic_error("Invalid FLO type");
@@ -510,13 +515,15 @@ void VFPProdTable::convertGFRToSI(const GFR_TYPE& type,
                                   std::vector<double>& values,
                                   const UnitSystem& unit_system) {
     double scaling_factor = 1.0;
+    const auto liquid_surface_volume = unit_system.getDimension(UnitSystem::measure::liquid_surface_volume).getSIScaling();
+    const auto gas_surface_volume    = unit_system.getDimension(UnitSystem::measure::gas_surface_volume).getSIScaling();
     switch (type) {
         case GFR_GOR:
         case GFR_GLR:
-            scaling_factor = unit_system.parse("GasSurfaceVolume/LiquidSurfaceVolume").getSIScaling();
+            scaling_factor = gas_surface_volume / liquid_surface_volume;
             break;
         case GFR_OGR:
-            scaling_factor = unit_system.parse("LiquidSurfaceVolume/GasSurfaceVolume").getSIScaling();
+            scaling_factor = liquid_surface_volume / gas_surface_volume;
             break;
         default:
             throw std::logic_error("Invalid FLO type");
@@ -525,32 +532,43 @@ void VFPProdTable::convertGFRToSI(const GFR_TYPE& type,
 }
 
 
+Dimension VFPProdTable::ALQDimension(const ALQ_TYPE& alq_type, const UnitSystem& unit_system) {
+    double scaling_factor = 1.0;
+    const auto liquid_surface_volume = unit_system.getDimension(UnitSystem::measure::liquid_surface_volume).getSIScaling();
+    const auto gas_surface_volume    = unit_system.getDimension(UnitSystem::measure::gas_surface_volume).getSIScaling();
+    const auto time                  = unit_system.getDimension(UnitSystem::measure::time).getSIScaling();
+
+    switch (alq_type) {
+    case ALQ_IGLR:
+        scaling_factor = gas_surface_volume / (liquid_surface_volume * time);
+        break;
+    case ALQ_TGLR:
+        scaling_factor = gas_surface_volume / liquid_surface_volume;
+        break;
+    case ALQ_GRAT:
+        scaling_factor = gas_surface_volume / time;
+        break;
+    case ALQ_UNDEF:
+        break;
+    case ALQ_PUMP:
+    case ALQ_COMP:
+    case ALQ_INVALID:
+    case ALQ_BEAN:
+        std::logic_error("scaling of the given ALQ type, not implemented ");
+        break;
+    default:
+        throw std::logic_error("Invalid ALQ type");
+    }
+
+    return Dimension(scaling_factor);
+}
+
+
 void VFPProdTable::convertAlqToSI(const ALQ_TYPE& type,
                                   std::vector<double>& values,
                                   const UnitSystem& unit_system) {
-    double scaling_factor = 1.0;
-    switch (type) {
-        case ALQ_IGLR:
-            scaling_factor = unit_system.parse("GasSurfaceVolume/LiquidSurfaceVolume*Time").getSIScaling();
-            break;
-        case ALQ_TGLR:
-            scaling_factor = unit_system.parse("GasSurfaceVolume/LiquidSurfaceVolume").getSIScaling();
-            break;
-        case ALQ_GRAT:
-            scaling_factor = unit_system.parse("GasSurfaceVolume/Time").getSIScaling();
-            break;
-        case ALQ_UNDEF:
-            break;
-        case ALQ_PUMP:
-        case ALQ_COMP:
-        case ALQ_INVALID:
-        case ALQ_BEAN:
-            std::logic_error("scaling of the given ALQ type, not implemented ");
-            break;
-        default:
-            throw std::logic_error("Invalid ALQ type");
-    }
-    scaleValues(values, scaling_factor);
+    const auto& dim = VFPProdTable::ALQDimension(type, unit_system);
+    scaleValues(values, dim.getSIScaling());
 }
 
 

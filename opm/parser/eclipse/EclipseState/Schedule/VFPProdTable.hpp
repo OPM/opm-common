@@ -23,6 +23,7 @@
 
 #include <array>
 #include <vector>
+#include <opm/parser/eclipse/Units/Dimension.hpp>
 
 namespace Opm {
 
@@ -83,6 +84,7 @@ public:
                  const std::vector<double>& gfr_data,
                  const std::vector<double>& alq_data,
                  const array_type& data);
+    static Dimension ALQDimension(const ALQ_TYPE& alq_type, const UnitSystem& unit_system);
 
     static VFPProdTable serializeObject();
 
