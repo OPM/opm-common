@@ -955,7 +955,6 @@ BOOST_AUTO_TEST_CASE(createDeckWithWeltArg) {
             " OP_1     RESV        1801.05 /\n"
             " OP_1     BHP         1900 /\n"
             " OP_1     THP         2000 /\n"
-            " OP_1     VFP         2100.09 /\n"
             " OP_1     GUID        2300.14 /\n"
             "/\n";
 
@@ -985,7 +984,6 @@ BOOST_AUTO_TEST_CASE(createDeckWithWeltArg) {
     BOOST_CHECK_EQUAL(prod_controls.resv_rate, 1801.05 * siFactorL);
     BOOST_CHECK_EQUAL(prod_controls.bhp_limit, 1900 * siFactorP);
     BOOST_CHECK_EQUAL(prod_controls.thp_limit, 2000 * siFactorP);
-    BOOST_CHECK_EQUAL(prod_controls.vfp_table_number, 2100);
 
     BOOST_CHECK (wpp_2.hasProductionControl( Opm::Well::ProducerCMode::ORAT) );
     BOOST_CHECK (wpp_2.hasProductionControl( Opm::Well::ProducerCMode::RESV) );
