@@ -51,6 +51,8 @@ public:
     {}
 
 
+    std::string format(const std::string& msg_fmt) const;
+
     static KeywordLocation serializeObject()
     {
         KeywordLocation result;

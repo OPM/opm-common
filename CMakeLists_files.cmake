@@ -26,6 +26,7 @@ list (APPEND MAIN_SOURCE_FILES
       src/opm/common/OpmLog/LogBackend.cpp
       src/opm/common/OpmLog/Logger.cpp
       src/opm/common/OpmLog/LogUtil.cpp
+      src/opm/common/OpmLog/KeywordLocation.cpp
       src/opm/common/OpmLog/OpmLog.cpp
       src/opm/common/OpmLog/StreamLog.cpp
       src/opm/common/OpmLog/TimerLog.cpp
