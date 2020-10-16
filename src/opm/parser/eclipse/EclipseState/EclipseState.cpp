@@ -21,6 +21,7 @@
 
 #include <fmt/format.h>
 
+#include <opm/common/OpmLog/InfoLogger.hpp>
 #include <opm/common/OpmLog/LogUtil.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
 
@@ -232,14 +233,14 @@ namespace Opm {
         for (size_t index=0; index < section.count("MULTFLT"); index++) {
             const auto& faultsKeyword = section.getKeyword("MULTFLT" , index);
             OpmLog::info(OpmInputError::format("Applying {keyword} in {file} line {line}", faultsKeyword.location()));
+            InfoLogger logger("MULTFLT",3);
             for (auto iter = faultsKeyword.begin(); iter != faultsKeyword.end(); ++iter) {
-
                 const auto& faultRecord = *iter;
                 const std::string& faultName = faultRecord.getItem(0).get< std::string >(0);
                 double multFlt = faultRecord.getItem(1).get< double >(0);
-
                 m_faults.setTransMult( faultName , multFlt );
-                OpmLog::info(fmt::format("Setting fault transmissibility multiplier {} for fault {}", multFlt, faultName));
+
+                logger(fmt::format("Setting fault transmissibility multiplier {} for fault {}", multFlt, faultName));
             }
         }
     }

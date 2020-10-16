@@ -26,6 +26,8 @@ list (APPEND MAIN_SOURCE_FILES
       src/opm/common/OpmLog/LogBackend.cpp
       src/opm/common/OpmLog/Logger.cpp
       src/opm/common/OpmLog/LogUtil.cpp
+      src/opm/common/OpmLog/KeywordLocation.cpp
+      src/opm/common/OpmLog/InfoLogger.cpp
       src/opm/common/OpmLog/OpmLog.cpp
       src/opm/common/OpmLog/StreamLog.cpp
       src/opm/common/OpmLog/TimerLog.cpp
@@ -515,6 +517,7 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/common/OpmLog/MessageFormatter.hpp
       opm/common/OpmLog/MessageLimiter.hpp
       opm/common/OpmLog/KeywordLocation.hpp
+      opm/common/OpmLog/InfoLogger.hpp
       opm/common/OpmLog/OpmLog.hpp
       opm/common/OpmLog/StreamLog.hpp
       opm/common/OpmLog/TimerLog.hpp
