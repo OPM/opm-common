@@ -28,6 +28,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQActive.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellProductionProperties.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/VFPProdTable.hpp>
 
 #include "../eval_uda.hpp"
 
@@ -89,6 +90,20 @@ namespace Opm {
     }
 
 
+    void Well::WellProductionProperties::init_vfp(const std::optional<VFPProdTable::ALQ_TYPE>& alq_type, const UnitSystem& unit_system, const DeckRecord& record) {
+        if (alq_type) {
+            this->VFPTableNumber = record.getItem("VFP_TABLE").get<int>(0);
+            double alq_input = record.getItem("ALQ").get<double>(0);
+            const auto alq_dim = VFPProdTable::ALQDimension(*alq_type, unit_system);
+            this->ALQValue = alq_dim.convertRawToSi(alq_input);
+        } else {
+            const auto table_nr = record.getItem("VFP_TABLE").get< int >(0);
+            if (table_nr != 0)
+                throw std::logic_error("VFP table inconsistency - BUG");
+        }
+    }
+
+
     void Well::WellProductionProperties::init_history(const DeckRecord& record)
     {
         this->predictionMode = false;
@@ -135,25 +150,18 @@ namespace Opm {
         if (cmode == ProducerCMode::BHP)
             this->setBHPLimit(this->BHPH);
 
-        const auto vfp_table = record.getItem("VFP_TABLE").get< int >(0);
-        if (vfp_table != 0)
-            this->VFPTableNumber = vfp_table;
-
-        auto alq_value = record.getItem("LIFT").get<double>(0); //NOTE: Unit of ALQ is never touched
-        if (alq_value != 0.)
-            this->ALQValue = alq_value;
     }
 
 
 
-    void Well::WellProductionProperties::handleWCONPROD( const std::string& /* well */, const DeckRecord& record)
+void Well::WellProductionProperties::handleWCONPROD(const std::optional<VFPProdTable::ALQ_TYPE>& alq_type, const UnitSystem& unit_system, const std::string& /* well */, const DeckRecord& record)
     {
         this->predictionMode = true;
+        this->init_vfp(alq_type, unit_system, record);
+        this->init_rates(record);
 
         this->BHPTarget      = record.getItem("BHP").get<UDAValue>(0);
         this->THPTarget      = record.getItem("THP").get<UDAValue>(0);
-        this->ALQValue       = record.getItem("ALQ").get< double >(0); //NOTE: Unit of ALQ is never touched
-        this->VFPTableNumber = record.getItem("VFP_TABLE").get< int >(0);
         this->LiquidRate     = record.getItem("LRAT").get<UDAValue>(0);
         this->ResVRate       = record.getItem("RESV").get<UDAValue>(0);
 
@@ -163,8 +171,6 @@ namespace Opm {
             { "LRAT", ProducerCMode::LRAT }, { "RESV", ProducerCMode::RESV }, { "THP", ProducerCMode::THP }
         };
 
-
-        this->init_rates(record);
 
         for( const auto& cmode : modes ) {
             if( !record.getItem( cmode.first ).defaultApplied( 0 ) ) {
@@ -197,9 +203,10 @@ namespace Opm {
       originate from the WCONHIST keyword. Predictions are handled with the
       default constructor and the handleWCONPROD() method.
     */
-    void Well::WellProductionProperties::handleWCONHIST(const DeckRecord& record)
+void Well::WellProductionProperties::handleWCONHIST(const std::optional<VFPProdTable::ALQ_TYPE>& alq_type, const UnitSystem& unit_system, const DeckRecord& record)
     {
         this->init_rates(record);
+        this->init_vfp(alq_type, unit_system, record);
         this->LiquidRate = 0;
         this->ResVRate = 0;
 
@@ -250,9 +257,10 @@ namespace Opm {
             this->THPTarget.update_value( new_arg );
             this->addProductionControl( ProducerCMode::THP );
         }
-        else if (cmode == WELTARGCMode::VFP)
-            this->VFPTableNumber = static_cast<int>(new_arg.get<double>());
-        else if (cmode != WELTARGCMode::GUID)
+        else if (cmode == WELTARGCMode::VFP) {
+            OpmLog::warning("When using WELTARG to change VFP table it is assumed that ALQ type is the same for the new and old table");
+            this->VFPTableNumber = static_cast<int>( new_arg.get<double>() );
+        } else if (cmode != WELTARGCMode::GUID)
             throw std::invalid_argument("Invalid keyword (MODE) supplied");
     }
 

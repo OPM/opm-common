@@ -161,8 +161,8 @@ BOOST_AUTO_TEST_CASE(createDeckWithWGRUPCONandWCONPROD) {
              "/\n"
 
              "WCONPROD\n"
-             " 'B-37T2'    'OPEN'     'GRUP'  1000  2*   2000.000  2* 1*   10 200000.000  5* /  / \n"
-             " 'B-43A'     'OPEN'     'GRUP'  1200  2*   3000.000  2* 1*   11  0.000      5* /  / \n"
+             " 'B-37T2'    'OPEN'     'GRUP'  1000  2*   2000.000  2* 1*   0 200000.000  5* /  / \n"
+             " 'B-43A'     'OPEN'     'GRUP'  1200  2*   3000.000  2* 1*   0  0.000      5* /  / \n"
              "/\n";
 
 

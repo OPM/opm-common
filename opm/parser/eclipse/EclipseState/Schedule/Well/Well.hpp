@@ -44,6 +44,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellTracerProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellPolymerProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellEconProductionLimits.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/VFPProdTable.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
 
 #include <opm/common/utility/ActiveGridCells.hpp>
@@ -386,8 +387,8 @@ public:
 
         // this is used to check whether the specified control mode is an effective history matching production mode
         static bool effectiveHistoryProductionControl(ProducerCMode cmode);
-        void handleWCONPROD( const std::string& well, const DeckRecord& record);
-        void handleWCONHIST( const DeckRecord& record);
+        void handleWCONPROD( const std::optional<VFPProdTable::ALQ_TYPE>& alq_type, const UnitSystem& unit_system, const std::string& well, const DeckRecord& record);
+        void handleWCONHIST( const std::optional<VFPProdTable::ALQ_TYPE>& alq_type, const UnitSystem& unit_system, const DeckRecord& record);
         void handleWELTARG( WELTARGCMode cmode, const UDAValue& new_arg, double SiFactorP);
         void resetDefaultBHPLimit();
         void clearControls();
@@ -425,6 +426,7 @@ public:
         void init_rates( const DeckRecord& record );
 
         void init_history(const DeckRecord& record);
+        void init_vfp(const std::optional<VFPProdTable::ALQ_TYPE>& alq_type, const UnitSystem& unit_system, const DeckRecord& record);
 
         WellProductionProperties(const DeckRecord& record);
 
