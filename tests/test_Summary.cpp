@@ -1884,7 +1884,8 @@ BOOST_AUTO_TEST_CASE(Test_SummaryState) {
     BOOST_CHECK_EQUAL( wopr_wells.size() , 0U);
 
     BOOST_CHECK_EQUAL( st.get_well_var("OP99", "WWCT", 0.50), 0.50);
-
+    BOOST_CHECK( st.has_well_var("WWCT") );
+    BOOST_CHECK( !st.has_well_var("NO_SUCH_VARIABLE") );
 
     const auto& wwct_wells = st.wells("WWCT");
     BOOST_CHECK_EQUAL( wwct_wells.size(), 2U);
@@ -1896,6 +1897,8 @@ BOOST_AUTO_TEST_CASE(Test_SummaryState) {
     BOOST_CHECK_EQUAL( st.get_group_var("G1", "GWCT"), 0.25);
     BOOST_CHECK_EQUAL( st.get_group_var("G1", "GWCT"), st.get("GWCT:G1"));
     BOOST_CHECK_EQUAL( st.get_group_var("G99", "GWCT", 1.00), 1.00);
+    BOOST_CHECK( !st.has_group_var("NO_SUCH_VARIABLE"));
+    BOOST_CHECK( st.has_group_var("GWCT"));
     const auto& gopr_groups = st.groups("GOPR");
     BOOST_CHECK_EQUAL( gopr_groups.size() , 0U);
 
