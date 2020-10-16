@@ -91,6 +91,10 @@ BOOST_AUTO_TEST_CASE(GROUP_VARIABLES)
     auto res_group = def_group.eval(context);
     BOOST_CHECK_EQUAL( res_group["UPPER"].get(), (5000 - gopr_lower*0.13 - gopr_upper*0.15)*0.89);
     BOOST_CHECK_EQUAL( res_group["UPPER"].get(), (5000 - gopr_lower*0.13 - gopr_upper*0.15)*0.89);
+
+    BOOST_CHECK_THROW(context.get_group_var("LOWER", "GGPR"), std::exception);
+    auto empty_value = context.get_group_var("NO_SUCH_GROUP", "GOPR");
+    BOOST_CHECK(!empty_value);
 }
 
 
@@ -332,6 +336,10 @@ BOOST_AUTO_TEST_CASE(UDQ_DEFINETEST) {
         BOOST_CHECK_EQUAL( res["W1"].get(), 11 );
         BOOST_CHECK_EQUAL( res["W2"].get(), 2 );
         BOOST_CHECK_EQUAL( res["W3"].get(), 3 );
+
+        BOOST_CHECK_THROW( context.get_well_var("W3", "WWCT"), std::exception);
+        auto empty_value = context.get_well_var("NO_SUCH_WELL", "WBHP");
+        BOOST_CHECK(!empty_value);
     }
     {
         UDQDefine def(udqp, "WUBHP", location, {"WBHP" , "'P*'"});
