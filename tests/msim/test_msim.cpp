@@ -56,9 +56,14 @@ double prod_rft(const EclipseState&  es, const Schedule& /* sched */, const Summ
     return -units.to_si(UnitSystem::measure::rate, 0.0);
 }
 
-double inj_rft(const EclipseState&  es, const Schedule& /* sched */, const SummaryState&, const data::Solution& /* sol */, size_t /* report_step */, double /* seconds_elapsed */) {
+double inj_rfti(const EclipseState&  es, const Schedule& /* sched */, const SummaryState&, const data::Solution& /* sol */, size_t /* report_step */, double /* seconds_elapsed */) {
     const auto& units = es.getUnits();
     return units.to_si(UnitSystem::measure::rate, 0.0);
+}
+
+double inj_inj(const EclipseState&  es, const Schedule& /* sched */, const SummaryState&, const data::Solution& /* sol */, size_t /* report_step */, double /* seconds_elapsed */) {
+    const auto& units = es.getUnits();
+    return units.to_si(UnitSystem::measure::rate, 100);
 }
 
 void pressure(const EclipseState& es, const Schedule& /* sched */, data::Solution& sol, size_t /* report_step */, double seconds_elapsed) {
@@ -90,7 +95,8 @@ BOOST_AUTO_TEST_CASE(RUN) {
 
     msim.well_rate("PROD", data::Rates::opt::oil, prod_opr);
     msim.well_rate("RFTP", data::Rates::opt::oil, prod_rft);
-    msim.well_rate("RFTI", data::Rates::opt::wat, inj_rft);
+    msim.well_rate("RFTI", data::Rates::opt::wat, inj_rfti);
+    msim.well_rate("INJ",  data::Rates::opt::gas, inj_inj);
     msim.solution("PRESSURE", pressure);
     {
         const WorkArea work_area("test_msim");
@@ -128,6 +134,7 @@ BOOST_AUTO_TEST_CASE(RUN) {
 
             BOOST_CHECK_EQUAL( fmwpa[0], 0.0 );
             BOOST_CHECK_EQUAL( fmwia[0], 0.0 );
+
             // The RFTP /RFTI wells will appear as an abondoned well.
             BOOST_CHECK_EQUAL( fmwpa[dates.size() - 1], 1.0 );
             BOOST_CHECK_EQUAL( fmwia[dates.size() - 1], 1.0 );

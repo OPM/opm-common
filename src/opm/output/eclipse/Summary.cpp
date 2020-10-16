@@ -50,6 +50,7 @@
 
 #include <opm/output/eclipse/RegionCache.hpp>
 
+#include <fmt/format.h>
 #include <algorithm>
 #include <array>
 #include <cassert>
@@ -738,39 +739,31 @@ inline quantity injection_history( const fn_args& args ) {
     return { sum, rate_unit< phase >() };
 }
 
-inline quantity abondoned_injectors( const fn_args& args ) {
+template< bool injection >
+inline quantity abondoned_well( const fn_args& args ) {
     std::size_t count = 0;
 
     for (const auto& sched_well : args.schedule_wells) {
-        if (sched_well.hasInjected()) {
-            const auto& well_name = sched_well.name();
-            auto well_iter = args.wells.find( well_name );
-            if (well_iter == args.wells.end())
-                continue;
+        if (injection && !sched_well.hasInjected())
+            continue;
 
-            count += !well_iter->second.flowing();
+        if (!injection && !sched_well.hasProduced())
+            continue;
+
+
+        const auto& well_name = sched_well.name();
+        auto well_iter = args.wells.find( well_name );
+        if (well_iter == args.wells.end()) {
+            count += 1;
+            continue;
         }
+
+        count += !well_iter->second.flowing();
     }
 
     return { 1.0 * count, measure::identity };
 }
 
-inline quantity abondoned_producers( const fn_args& args ) {
-    std::size_t count = 0;
-
-    for (const auto& sched_well : args.schedule_wells) {
-        if (sched_well.hasProduced()) {
-            const auto& well_name = sched_well.name();
-            auto well_iter = args.wells.find( well_name );
-            if (well_iter == args.wells.end())
-                continue;
-
-            count += !well_iter->second.flowing();
-        }
-    }
-
-    return { 1.0 * count, measure::identity };
-}
 
 inline quantity res_vol_production_target( const fn_args& args ) {
 
@@ -1379,8 +1372,8 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "FMWIN", flowing< injector > },
     { "FMWPR", flowing< producer > },
     { "FVPRT", res_vol_production_target },
-    { "FMWPA", abondoned_producers },
-    { "FMWIA", abondoned_injectors },
+    { "FMWPA", abondoned_well< producer > },
+    { "FMWIA", abondoned_well< injector >},
 
     //Field control mode
     { "FMCTP", group_control< false, true,  false, false >},
