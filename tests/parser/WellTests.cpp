@@ -17,9 +17,11 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdexcept>
 #include <iostream>
+#include <memory>
 #include <optional>
+#include <stdexcept>
+#include <utility>
 
 #define BOOST_TEST_MODULE WellTest
 #include <boost/test/unit_test.hpp>
@@ -1271,4 +1273,62 @@ END
                         "Fourth call to updateWellProductivityIndex() must be a state change");
     BOOST_CHECK_MESSAGE(!wellP.updateWellProductivityIndex(WellPI{ 3.0, Phase::OIL }),
                         "Fifth call to updateWellProductivityIndex() must NOT be a state change");
+}
+
+BOOST_AUTO_TEST_CASE(Has_Same_Connections_Pointers) {
+    const auto deck = Parser{}.parseString(R"(RUNSPEC
+START
+7 OCT 2020 /
+
+DIMENS
+  10 10 3 /
+
+GRID
+DXV
+  10*100.0 /
+DYV
+  10*100.0 /
+DZV
+  3*10.0 /
+
+DEPTHZ
+  121*2000.0 /
+
+PERMX
+  300*100.0 /
+PERMY
+  300*100.0 /
+PERMZ
+  300*10.0 /
+PORO
+  300*0.3 /
+
+SCHEDULE
+WELSPECS
+  'P' 'G' 10 10 2005 'LIQ' /
+/
+COMPDAT
+  'P' 0 0 1 3 OPEN 1 100 /
+/
+
+END
+)");
+
+    const auto es    = EclipseState{ deck };
+    const auto sched = Schedule{ deck, es };
+
+    const auto wellP = sched.getWell("P", 0);
+    auto wellQ = wellP;
+
+    BOOST_CHECK_MESSAGE(wellP.hasSameConnectionsPointers(wellQ),
+                        "P and Q must have the same internal connections pointers");
+
+    auto connQ = std::make_shared<WellConnections>(wellP.getConnections());
+    wellQ.forceUpdateConnections(std::move(connQ));
+    BOOST_CHECK_MESSAGE(! wellP.hasSameConnectionsPointers(wellQ),
+                        "P and Q must NOT have the same internal connections pointers "
+                        "after forcibly updating the connections structure");
+
+    BOOST_CHECK_MESSAGE(wellP.getConnections() == wellQ.getConnections(),
+                        "P and Q must have same WellConnections VALUE");
 }

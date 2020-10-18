@@ -821,6 +821,13 @@ const std::string& Well::name() const {
     return this->wname;
 }
 
+bool Well::hasSameConnectionsPointers(const Well& other) const
+{
+    // Note: This is *supposed* to be a pointer comparison.  We need to know
+    // if the two connection structures represent the exact same object, not
+    // just if they have the same value.
+    return this->connections == other.connections;
+}
 
 void Well::setInsertIndex(std::size_t index) {
     this->insert_index = index;

@@ -598,6 +598,7 @@ public:
     bool updateHasProduced();
     bool cmp_structure(const Well& other) const;
     bool operator==(const Well& data) const;
+    bool hasSameConnectionsPointers(const Well& other) const;
     void setInsertIndex(std::size_t index);
     void applyWellProdIndexScaling(const double currentEffectivePI);
     double getWellPIScalingFactor(const double currentEffectivePI) const;
