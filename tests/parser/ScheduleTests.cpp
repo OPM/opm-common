@@ -18,6 +18,7 @@
  */
 
 #include <algorithm>
+#include <cstddef>
 #include <iostream>
 #include <stdexcept>
 
@@ -3845,6 +3846,313 @@ END
                         "Must have WELL_PRODUCTIVITY_INDEX event at report step 1");
 }
 
+BOOST_AUTO_TEST_CASE(Schedule_ApplyWellProdIndexScaling) {
+    const auto deck = Parser{}.parseString(R"(RUNSPEC
+START
+7 OCT 2020 /
+
+DIMENS
+  10 10 3 /
+
+GRID
+DXV
+  10*100.0 /
+DYV
+  10*100.0 /
+DZV
+  3*10.0 /
+
+DEPTHZ
+  121*2000.0 /
+
+PERMX
+  300*100.0 /
+PERMY
+  300*100.0 /
+PERMZ
+  300*10.0 /
+PORO
+  300*0.3 /
+
+SCHEDULE
+WELSPECS -- 0
+  'P' 'G' 10 10 2005 'LIQ' /
+/
+COMPDAT
+  'P' 0 0 1 3 OPEN 1 100 /
+/
+
+TSTEP -- 1
+  10
+/
+
+WELPI -- 1
+  'P'  200.0 /
+/
+
+TSTEP -- 2
+  10
+/
+
+COMPDAT -- 2
+  'P' 0 0 2 2 OPEN 1 50 /
+/
+
+TSTEP -- 3
+  10
+/
+
+WELPI --3
+  'P'  50.0 /
+/
+
+TSTEP -- 4
+  10
+/
+
+COMPDAT -- 4
+  'P' 10 9 2 2 OPEN 1 100 1.0 3* 'Y' /
+  'P' 10 8 2 2 OPEN 1  75 1.0 3* 'Y' /
+  'P' 10 7 2 2 OPEN 1  25 1.0 3* 'Y' /
+/
+
+TSTEP -- 5
+  10
+/
+
+END
+)");
+
+    const auto es    = EclipseState{ deck };
+    auto       sched = Schedule{ deck, es };
+
+    BOOST_REQUIRE_EQUAL(sched.getTimeMap().size(),         std::size_t{6});
+    BOOST_REQUIRE_EQUAL(sched.getTimeMap().numTimesteps(), std::size_t{5});
+    BOOST_REQUIRE_EQUAL(sched.getTimeMap().last(),         std::size_t{5});
+
+    BOOST_REQUIRE_MESSAGE(sched.hasWellGroupEvent("P", ScheduleEvents::Events::WELL_PRODUCTIVITY_INDEX, 1),
+                          "Schedule must have WELL_PRODUCTIVITY_INDEX Event at report step 1");
+
+    BOOST_REQUIRE_MESSAGE(sched.hasWellGroupEvent("P", ScheduleEvents::Events::WELL_PRODUCTIVITY_INDEX, 3),
+                          "Schedule must have WELL_PRODUCTIVITY_INDEX Event at report step 3");
+
+    auto getScalingFactor = [&sched](const std::size_t report_step, const double wellPI) -> double
+    {
+        return sched.getWell("P", report_step).getWellPIScalingFactor(wellPI);
+    };
+
+    auto applyWellPIScaling = [&sched](const std::size_t report_step, const double scalingFactor)
+    {
+        sched.applyWellProdIndexScaling("P", report_step, scalingFactor);
+    };
+
+    auto getConnections = [&sched](const std::size_t report_step)
+    {
+        return sched.getWell("P", report_step).getConnections();
+    };
+
+    // Apply WELPI scaling after end of time series => no change to CTFs
+    {
+        const auto report_step   = std::size_t{1};
+        const auto scalingFactor = getScalingFactor(report_step, 100.0*liquid_PI_unit());
+
+        BOOST_CHECK_CLOSE(scalingFactor, 2.0, 1.0e-10);
+
+        applyWellPIScaling(1729, scalingFactor);
+
+        {
+            const auto expectCF = 100.0*cp_rm3_per_db();
+
+            const auto& conns = getConnections(0);
+            BOOST_REQUIRE_EQUAL(conns.size(), 3);
+
+            BOOST_CHECK_CLOSE(conns[0].CF(), expectCF, 1.0e-10);
+            BOOST_CHECK_CLOSE(conns[1].CF(), expectCF, 1.0e-10);
+            BOOST_CHECK_CLOSE(conns[2].CF(), expectCF, 1.0e-10);
+        }
+
+        {
+            const auto expectCF = 100.0*cp_rm3_per_db();
+
+            const auto& conns = getConnections(1);
+            BOOST_REQUIRE_EQUAL(conns.size(), 3);
+
+            BOOST_CHECK_CLOSE(conns[0].CF(), expectCF, 1.0e-10);
+            BOOST_CHECK_CLOSE(conns[1].CF(), expectCF, 1.0e-10);
+            BOOST_CHECK_CLOSE(conns[2].CF(), expectCF, 1.0e-10);
+        }
+
+        {
+            const auto expectCF = 100.0*cp_rm3_per_db();
+
+            const auto& conns = getConnections(2);
+            BOOST_REQUIRE_EQUAL(conns.size(), 3);
+
+            BOOST_CHECK_CLOSE(conns[0].CF(), expectCF,             1.0e-10);
+            BOOST_CHECK_CLOSE(conns[1].CF(), 50.0*cp_rm3_per_db(), 1.0e-10);
+            BOOST_CHECK_CLOSE(conns[2].CF(), expectCF,             1.0e-10);
+        }
+
+        {
+            const auto expectCF = 100.0*cp_rm3_per_db();
+
+            const auto& conns = getConnections(3);
+            BOOST_REQUIRE_EQUAL(conns.size(), 3);
+
+            BOOST_CHECK_CLOSE(conns[0].CF(), expectCF,             1.0e-10);
+            BOOST_CHECK_CLOSE(conns[1].CF(), 50.0*cp_rm3_per_db(), 1.0e-10);
+            BOOST_CHECK_CLOSE(conns[2].CF(), expectCF,             1.0e-10);
+        }
+
+        {
+            const auto& conns = getConnections(4);
+            BOOST_REQUIRE_EQUAL(conns.size(), 6);
+
+            BOOST_CHECK_CLOSE(conns[0].CF(), 100.0*cp_rm3_per_db(), 1.0e-10);
+            BOOST_CHECK_CLOSE(conns[1].CF(),  50.0*cp_rm3_per_db(), 1.0e-10);
+            BOOST_CHECK_CLOSE(conns[2].CF(), 100.0*cp_rm3_per_db(), 1.0e-10);
+            BOOST_CHECK_CLOSE(conns[3].CF(), 100.0*cp_rm3_per_db(), 1.0e-10);
+            BOOST_CHECK_CLOSE(conns[4].CF(),  75.0*cp_rm3_per_db(), 1.0e-10);
+            BOOST_CHECK_CLOSE(conns[5].CF(),  25.0*cp_rm3_per_db(), 1.0e-10);
+        }
+    }
+
+    // Apply WELPI scaling after first WELPI specification
+    {
+        const auto report_step   = std::size_t{1};
+        const auto scalingFactor = getScalingFactor(report_step, 100.0*liquid_PI_unit());
+
+        BOOST_CHECK_CLOSE(scalingFactor, 2.0, 1.0e-10);
+
+        applyWellPIScaling(report_step, scalingFactor);
+
+        {
+            const auto expectCF = 100.0*cp_rm3_per_db();
+
+            const auto& conns = getConnections(0);
+            BOOST_REQUIRE_EQUAL(conns.size(), 3);
+
+            BOOST_CHECK_CLOSE(conns[0].CF(), expectCF, 1.0e-10);
+            BOOST_CHECK_CLOSE(conns[1].CF(), expectCF, 1.0e-10);
+            BOOST_CHECK_CLOSE(conns[2].CF(), expectCF, 1.0e-10);
+        }
+
+        {
+            const auto expectCF = 200.0*cp_rm3_per_db();
+
+            const auto& conns = getConnections(1);
+            BOOST_REQUIRE_EQUAL(conns.size(), 3);
+
+            BOOST_CHECK_CLOSE(conns[0].CF(), expectCF, 1.0e-10);
+            BOOST_CHECK_CLOSE(conns[1].CF(), expectCF, 1.0e-10);
+            BOOST_CHECK_CLOSE(conns[2].CF(), expectCF, 1.0e-10);
+        }
+
+        {
+            const auto expectCF = 200.0*cp_rm3_per_db();
+
+            const auto& conns = getConnections(2);
+            BOOST_REQUIRE_EQUAL(conns.size(), 3);
+
+            BOOST_CHECK_CLOSE(conns[0].CF(), expectCF,             1.0e-10);
+            BOOST_CHECK_CLOSE(conns[1].CF(), 50.0*cp_rm3_per_db(), 1.0e-10);
+            BOOST_CHECK_CLOSE(conns[2].CF(), expectCF,             1.0e-10);
+        }
+
+        {
+            const auto expectCF = 200.0*cp_rm3_per_db();
+
+            const auto& conns = getConnections(3);
+            BOOST_REQUIRE_EQUAL(conns.size(), 3);
+
+            BOOST_CHECK_CLOSE(conns[0].CF(), expectCF,             1.0e-10);
+            BOOST_CHECK_CLOSE(conns[1].CF(), 50.0*cp_rm3_per_db(), 1.0e-10);
+            BOOST_CHECK_CLOSE(conns[2].CF(), expectCF,             1.0e-10);
+        }
+
+        {
+            const auto expectCF = 200.0*cp_rm3_per_db();
+
+            const auto& conns = getConnections(4);
+            BOOST_REQUIRE_EQUAL(conns.size(), 6);
+
+            BOOST_CHECK_CLOSE(conns[0].CF(), expectCF,              1.0e-10);
+            BOOST_CHECK_CLOSE(conns[1].CF(),  50.0*cp_rm3_per_db(), 1.0e-10);
+            BOOST_CHECK_CLOSE(conns[2].CF(), expectCF,              1.0e-10);
+            BOOST_CHECK_CLOSE(conns[3].CF(), 100.0*cp_rm3_per_db(), 1.0e-10);
+            BOOST_CHECK_CLOSE(conns[4].CF(),  75.0*cp_rm3_per_db(), 1.0e-10);
+            BOOST_CHECK_CLOSE(conns[5].CF(),  25.0*cp_rm3_per_db(), 1.0e-10);
+        }
+    }
+
+    // Apply WELPI scaling after second WELPI specification
+    {
+        const auto report_step   = std::size_t{3};
+        const auto scalingFactor = getScalingFactor(report_step, 200.0*liquid_PI_unit());
+
+        BOOST_CHECK_CLOSE(scalingFactor, 0.25, 1.0e-10);
+
+        applyWellPIScaling(report_step, scalingFactor);
+
+        {
+            const auto expectCF = 100.0*cp_rm3_per_db();
+
+            const auto& conns = getConnections(0);
+            BOOST_REQUIRE_EQUAL(conns.size(), 3);
+
+            BOOST_CHECK_CLOSE(conns[0].CF(), expectCF, 1.0e-10);
+            BOOST_CHECK_CLOSE(conns[1].CF(), expectCF, 1.0e-10);
+            BOOST_CHECK_CLOSE(conns[2].CF(), expectCF, 1.0e-10);
+        }
+
+        {
+            const auto expectCF = 200.0*cp_rm3_per_db();
+
+            const auto& conns = getConnections(1);
+            BOOST_REQUIRE_EQUAL(conns.size(), 3);
+
+            BOOST_CHECK_CLOSE(conns[0].CF(), expectCF, 1.0e-10);
+            BOOST_CHECK_CLOSE(conns[1].CF(), expectCF, 1.0e-10);
+            BOOST_CHECK_CLOSE(conns[2].CF(), expectCF, 1.0e-10);
+        }
+
+        {
+            const auto expectCF = 200.0*cp_rm3_per_db();
+
+            const auto& conns = getConnections(2);
+            BOOST_REQUIRE_EQUAL(conns.size(), 3);
+
+            BOOST_CHECK_CLOSE(conns[0].CF(), expectCF,             1.0e-10);
+            BOOST_CHECK_CLOSE(conns[1].CF(), 50.0*cp_rm3_per_db(), 1.0e-10);
+            BOOST_CHECK_CLOSE(conns[2].CF(), expectCF,             1.0e-10);
+        }
+
+        {
+            const auto expectCF = 50.0*cp_rm3_per_db();
+
+            const auto& conns = getConnections(3);
+            BOOST_REQUIRE_EQUAL(conns.size(), 3);
+
+            BOOST_CHECK_CLOSE(conns[0].CF(), expectCF,      1.0e-10);
+            BOOST_CHECK_CLOSE(conns[1].CF(), 0.25*expectCF, 1.0e-10);
+            BOOST_CHECK_CLOSE(conns[2].CF(), expectCF,      1.0e-10);
+        }
+
+        {
+            const auto expectCF = 50.0*cp_rm3_per_db();
+
+            const auto& conns = getConnections(4);
+            BOOST_REQUIRE_EQUAL(conns.size(), 6);
+
+            BOOST_CHECK_CLOSE(conns[0].CF(), expectCF,              1.0e-10);
+            BOOST_CHECK_CLOSE(conns[1].CF(), 0.25*expectCF,         1.0e-10);
+            BOOST_CHECK_CLOSE(conns[2].CF(), expectCF,              1.0e-10);
+            BOOST_CHECK_CLOSE(conns[3].CF(), 100.0*cp_rm3_per_db(), 1.0e-10);
+            BOOST_CHECK_CLOSE(conns[4].CF(),  75.0*cp_rm3_per_db(), 1.0e-10);
+            BOOST_CHECK_CLOSE(conns[5].CF(),  25.0*cp_rm3_per_db(), 1.0e-10);
+        }
+    }
+}
 
 void cmp_vector(const std::vector<double>&v1, const std::vector<double>& v2) {
     BOOST_CHECK_EQUAL(v1.size(), v2.size());
@@ -3869,4 +4177,3 @@ BOOST_AUTO_TEST_CASE(VFPPROD_SCALING) {
     cmp_vector(gfr, vfp_table.getGFRAxis());
     cmp_vector(alq, vfp_table.getALQAxis());
 }
-

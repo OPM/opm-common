@@ -17,16 +17,17 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <algorithm>
 #include <ctime>
-
 #include <fnmatch.h>
+#include <functional>
 #include <iostream>
 #include <optional>
 #include <stdexcept>
 #include <string>
 #include <unordered_set>
+#include <utility>
 #include <vector>
-#include <functional>
 
 #include <fmt/format.h>
 
@@ -1497,6 +1498,37 @@ private:
             if (keyword.name() == "UDQ")
                 this->updateUDQ(keyword, reportStep);
         }
+    }
+
+    void Schedule::applyWellProdIndexScaling(const std::string& well_name, const std::size_t reportStep, const double scalingFactor) {
+        auto wstat = this->wells_static.find(well_name);
+        if (wstat == this->wells_static.end())
+            return;
+
+        auto uwell = wstat->second.unique();
+        auto end   = uwell.end();
+        auto start = std::lower_bound(uwell.begin(), end, reportStep,
+            [](const auto& time_well_pair, const auto lookup) -> bool
+        {
+            //     time                 < reportStep
+            return time_well_pair.first < lookup;
+        });
+
+        if (start == end)
+            // Report step after last?
+            return;
+
+        // Relies on wells_static being OrderedMap<string, DynamicState<shared_ptr<>>>
+        // which means uwell is a vector<pair<time, shared_ptr<>>>
+        std::vector<bool> scalingApplicable;
+        auto wellPtr = start->second;
+        wellPtr->applyWellProdIndexScaling(scalingFactor, scalingApplicable);
+
+        for (; start != end; ++start)
+            if (! wellPtr->hasSameConnectionsPointers(*start->second)) {
+                wellPtr = start->second;
+                wellPtr->applyWellProdIndexScaling(scalingFactor, scalingApplicable);
+            }
     }
 
     RestartConfig& Schedule::restart() {

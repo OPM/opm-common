@@ -272,6 +272,7 @@ namespace Opm
         RestartConfig& restart();
 
         void applyAction(std::size_t reportStep, const Action::ActionX& action, const Action::Result& result);
+        void applyWellProdIndexScaling(const std::string& well_name, const std::size_t reportStep, const double scalingFactor);
         int getNupcol(std::size_t reportStep) const;
 
 
