@@ -600,8 +600,9 @@ public:
     bool operator==(const Well& data) const;
     bool hasSameConnectionsPointers(const Well& other) const;
     void setInsertIndex(std::size_t index);
-    void applyWellProdIndexScaling(const double currentEffectivePI);
     double getWellPIScalingFactor(const double currentEffectivePI) const;
+    void applyWellProdIndexScaling(const double       scalingFactor,
+                                   std::vector<bool>& scalingApplicable);
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)

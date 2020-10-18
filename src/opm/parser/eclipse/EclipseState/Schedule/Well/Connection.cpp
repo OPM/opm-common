@@ -256,11 +256,12 @@ const std::optional<std::pair<double, double>>& Connection::perf_range() const {
         return update;
     }
 
-    void Connection::applyWellPIScaling(const double scaleFactor) {
+    bool Connection::applyWellPIScaling(const double scaleFactor) {
         if (! this->m_subject_to_welpi)
-            return;
+            return false;
 
         this->scaleWellPi(scaleFactor);
+        return true;
     }
 
     std::string Connection::str() const {

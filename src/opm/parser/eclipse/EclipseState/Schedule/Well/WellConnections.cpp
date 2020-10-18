@@ -195,10 +195,17 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
         return update;
     }
 
-    void WellConnections::applyWellPIScaling(const double scaleFactor)
+    void WellConnections::applyWellPIScaling(const double       scaleFactor,
+                                             std::vector<bool>& scalingApplicable)
     {
-        for (auto& conn : this->m_connections)
-            conn.applyWellPIScaling(scaleFactor);
+        scalingApplicable.resize(std::max(scalingApplicable.size(), this->m_connections.size()), true);
+
+        auto i = std::size_t{0};
+        for (auto& conn : this->m_connections) {
+            if (scalingApplicable[i])
+                scalingApplicable[i] = conn.applyWellPIScaling(scaleFactor);
+            ++i;
+        }
     }
 
     void WellConnections::addConnection(int i, int j , int k ,

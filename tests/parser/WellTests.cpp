@@ -1213,9 +1213,16 @@ END
     }
 
     // Simulate applying WELPI before WELPI keyword.  No effect.
-    wellP.applyWellProdIndexScaling(2.7182818);
-    for (const auto& conn : wellP.getConnections()) {
-        BOOST_CHECK_CLOSE(conn.CF(), expectCF, 1.0e-10);
+    {
+        std::vector<bool> scalingApplicable;
+        wellP.applyWellProdIndexScaling(2.7182818, scalingApplicable);
+        for (const auto& conn : wellP.getConnections()) {
+            BOOST_CHECK_CLOSE(conn.CF(), expectCF, 1.0e-10);
+        }
+
+        for (const bool applicable : scalingApplicable) {
+            BOOST_CHECK_MESSAGE(! applicable, "No connection must be eligible for WELPI scaling");
+        }
     }
 
     // Simulate applying WELPI after seeing
@@ -1235,9 +1242,14 @@ END
         const auto scalingFactor = wellP.getWellPIScalingFactor(1.0);
         BOOST_CHECK_CLOSE(scalingFactor, 2.0, 1.0e-10);
 
-        wellP.applyWellProdIndexScaling(scalingFactor);
+        std::vector<bool> scalingApplicable;
+        wellP.applyWellProdIndexScaling(scalingFactor, scalingApplicable);
         for (const auto& conn : wellP.getConnections()) {
             BOOST_CHECK_CLOSE(conn.CF(), 2.0*expectCF, 1.0e-10);
+        }
+
+        for (const bool applicable : scalingApplicable) {
+            BOOST_CHECK_MESSAGE(applicable, "All connections must be eligible for WELPI scaling");
         }
     }
 
@@ -1246,9 +1258,14 @@ END
         const auto scalingFactor = wellP.getWellPIScalingFactor(1.0);
         BOOST_CHECK_CLOSE(scalingFactor, 2.0, 1.0e-10);
 
-        wellP.applyWellProdIndexScaling(scalingFactor);
+        std::vector<bool> scalingApplicable;
+        wellP.applyWellProdIndexScaling(scalingFactor, scalingApplicable);
         for (const auto& conn : wellP.getConnections()) {
             BOOST_CHECK_CLOSE(conn.CF(), 4.0*expectCF, 1.0e-10);
+        }
+
+        for (const bool applicable : scalingApplicable) {
+            BOOST_CHECK_MESSAGE(applicable, "All connections must be eligible for WELPI scaling");
         }
     }
 
@@ -1263,9 +1280,14 @@ END
         const auto scalingFactor = wellP.getWellPIScalingFactor(3.0);
         BOOST_CHECK_CLOSE(scalingFactor, 1.0, 1.0e-10);
 
-        wellP.applyWellProdIndexScaling(scalingFactor);
+        std::vector<bool> scalingApplicable;
+        wellP.applyWellProdIndexScaling(scalingFactor, scalingApplicable);
         for (const auto& conn : wellP.getConnections()) {
             BOOST_CHECK_CLOSE(conn.CF(), 4.0*expectCF, 1.0e-10);
+        }
+
+        for (const bool applicable : scalingApplicable) {
+            BOOST_CHECK_MESSAGE(applicable, "All connections must be eligible for WELPI scaling");
         }
     }
 

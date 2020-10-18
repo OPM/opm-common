@@ -123,7 +123,7 @@ namespace RestartIO {
         void setComplnum(int compnum);
         void scaleWellPi(double wellPi);
         bool prepareWellPIScaling();
-        void applyWellPIScaling(const double scaleFactor);
+        bool applyWellPIScaling(const double scaleFactor);
         void updateSegmentRST(int segment_number_arg,
                               double center_depth_arg);
         void updateSegment(int segment_number_arg,

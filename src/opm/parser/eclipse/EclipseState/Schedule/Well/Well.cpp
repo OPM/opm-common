@@ -849,7 +849,7 @@ double Well::getWellPIScalingFactor(const double currentEffectivePI) const {
     return this->productivity_index->pi_value / currentEffectivePI;
 }
 
-void Well::applyWellProdIndexScaling(const double scalingFactor) {
+void Well::applyWellProdIndexScaling(const double scalingFactor, std::vector<bool>& scalingApplicable) {
     if (this->connections->empty())
         // No connections for this well.  Unexpected.
         return;
@@ -862,7 +862,7 @@ void Well::applyWellProdIndexScaling(const double scalingFactor) {
         // No change in scaling.
         return;
 
-    this->connections->applyWellPIScaling(scalingFactor);
+    this->connections->applyWellPIScaling(scalingFactor, scalingApplicable);
 }
 
 const WellConnections& Well::getConnections() const {

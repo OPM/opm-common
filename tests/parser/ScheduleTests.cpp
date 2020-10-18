@@ -3779,9 +3779,14 @@ END
         const auto expectCF = 100.0*cp_rm3_per_db();
         auto wellP = sched.getWell("P", 0);
 
-        wellP.applyWellProdIndexScaling(2.7182818);
+        std::vector<bool> scalingApplicable;
+        wellP.applyWellProdIndexScaling(2.7182818, scalingApplicable);
         for (const auto& conn : wellP.getConnections()) {
             BOOST_CHECK_CLOSE(conn.CF(), expectCF, 1.0e-10);
+        }
+
+        for (const bool applicable : scalingApplicable) {
+            BOOST_CHECK_MESSAGE(! applicable, "No connection must be eligible for WELPI scaling");
         }
     }
 
@@ -3793,9 +3798,14 @@ END
         const auto scalingFactor = wellP.getWellPIScalingFactor(100.0*liquid_PI_unit());
         BOOST_CHECK_CLOSE(scalingFactor, 2.0, 1.0e-10);
 
-        wellP.applyWellProdIndexScaling(scalingFactor);
+        std::vector<bool> scalingApplicable;
+        wellP.applyWellProdIndexScaling(scalingFactor, scalingApplicable);
         for (const auto& conn : wellP.getConnections()) {
             BOOST_CHECK_CLOSE(conn.CF(), expectCF, 1.0e-10);
+        }
+
+        for (const bool applicable : scalingApplicable) {
+            BOOST_CHECK_MESSAGE(applicable, "All connections must be eligible for WELPI scaling");
         }
     }
 
@@ -3807,11 +3817,16 @@ END
         const auto scalingFactor = wellP.getWellPIScalingFactor(100.0*liquid_PI_unit());
         BOOST_CHECK_CLOSE(scalingFactor, 2.0, 1.0e-10);
 
-        wellP.applyWellProdIndexScaling(scalingFactor);
+        std::vector<bool> scalingApplicable;
+        wellP.applyWellProdIndexScaling(scalingFactor, scalingApplicable);
         const auto& connP = wellP.getConnections();
         BOOST_CHECK_CLOSE(connP[0].CF(), expectCF          , 1.0e-10);
         BOOST_CHECK_CLOSE(connP[1].CF(), 50*cp_rm3_per_db(), 1.0e-10);
         BOOST_CHECK_CLOSE(connP[2].CF(), expectCF          , 1.0e-10);
+
+        BOOST_CHECK_MESSAGE(bool(scalingApplicable[0]), "Connection[0] must be eligible for WELPI scaling");
+        BOOST_CHECK_MESSAGE(!    scalingApplicable[1] , "Connection[1] must NOT be eligible for WELPI scaling");
+        BOOST_CHECK_MESSAGE(bool(scalingApplicable[0]), "Connection[2] must be eligible for WELPI scaling");
     }
 
     BOOST_CHECK_MESSAGE(sched.hasWellGroupEvent("P", ScheduleEvents::WELL_CONNECTIONS_UPDATED, 0),
