@@ -826,7 +826,23 @@ void Well::setInsertIndex(std::size_t index) {
     this->insert_index = index;
 }
 
-void Well::applyWellProdIndexScaling(const double currentEffectivePI) {
+double Well::getWellPIScalingFactor(const double currentEffectivePI) const {
+    if (this->connections->empty())
+        // No connections for this well.  Unexpected.
+        return 1.0;
+
+    if (!this->productivity_index)
+        // WELPI not activated.  Nothing to do.
+        return 1.0;
+
+    if (this->productivity_index->pi_value == currentEffectivePI)
+        // No change in scaling.
+        return 1.0;
+
+    return this->productivity_index->pi_value / currentEffectivePI;
+}
+
+void Well::applyWellProdIndexScaling(const double scalingFactor) {
     if (this->connections->empty())
         // No connections for this well.  Unexpected.
         return;
@@ -835,11 +851,11 @@ void Well::applyWellProdIndexScaling(const double currentEffectivePI) {
         // WELPI not activated.  Nothing to do.
         return;
 
-    if (this->productivity_index->pi_value == currentEffectivePI)
+    if (scalingFactor == 1.0)
         // No change in scaling.
         return;
 
-    this->connections->applyWellPIScaling(this->productivity_index->pi_value / currentEffectivePI);
+    this->connections->applyWellPIScaling(scalingFactor);
 }
 
 const WellConnections& Well::getConnections() const {

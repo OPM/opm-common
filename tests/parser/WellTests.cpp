@@ -1229,15 +1229,25 @@ END
                         "Second call to updateWellProductivityIndex() must NOT be a state change");
 
     // Want PI=2, but actual/effective PI=1 => scale CF by 2.0/1.0.
-    wellP.applyWellProdIndexScaling(1.0);
-    for (const auto& conn : wellP.getConnections()) {
-        BOOST_CHECK_CLOSE(conn.CF(), 2.0*expectCF, 1.0e-10);
+    {
+        const auto scalingFactor = wellP.getWellPIScalingFactor(1.0);
+        BOOST_CHECK_CLOSE(scalingFactor, 2.0, 1.0e-10);
+
+        wellP.applyWellProdIndexScaling(scalingFactor);
+        for (const auto& conn : wellP.getConnections()) {
+            BOOST_CHECK_CLOSE(conn.CF(), 2.0*expectCF, 1.0e-10);
+        }
     }
 
     // Repeated application of WELPI multiplies scaling factors.
-    wellP.applyWellProdIndexScaling(1.0);
-    for (const auto& conn : wellP.getConnections()) {
-        BOOST_CHECK_CLOSE(conn.CF(), 4.0*expectCF, 1.0e-10);
+    {
+        const auto scalingFactor = wellP.getWellPIScalingFactor(1.0);
+        BOOST_CHECK_CLOSE(scalingFactor, 2.0, 1.0e-10);
+
+        wellP.applyWellProdIndexScaling(scalingFactor);
+        for (const auto& conn : wellP.getConnections()) {
+            BOOST_CHECK_CLOSE(conn.CF(), 4.0*expectCF, 1.0e-10);
+        }
     }
 
     // New WELPI record does not reset the scaling factors
@@ -1247,9 +1257,14 @@ END
     }
 
     // Effective PI=desired PI => no scaling change
-    wellP.applyWellProdIndexScaling(3.0);
-    for (const auto& conn : wellP.getConnections()) {
-        BOOST_CHECK_CLOSE(conn.CF(), 4.0*expectCF, 1.0e-10);
+    {
+        const auto scalingFactor = wellP.getWellPIScalingFactor(3.0);
+        BOOST_CHECK_CLOSE(scalingFactor, 1.0, 1.0e-10);
+
+        wellP.applyWellProdIndexScaling(scalingFactor);
+        for (const auto& conn : wellP.getConnections()) {
+            BOOST_CHECK_CLOSE(conn.CF(), 4.0*expectCF, 1.0e-10);
+        }
     }
 
     BOOST_CHECK_MESSAGE(wellP.updateWellProductivityIndex(WellPI{ 3.0, Phase::OIL }),

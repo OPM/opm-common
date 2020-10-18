@@ -600,6 +600,7 @@ public:
     bool operator==(const Well& data) const;
     void setInsertIndex(std::size_t index);
     void applyWellProdIndexScaling(const double currentEffectivePI);
+    double getWellPIScalingFactor(const double currentEffectivePI) const;
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)

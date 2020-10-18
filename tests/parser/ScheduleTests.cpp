@@ -3790,7 +3790,10 @@ END
         const auto expectCF = (200.0 / 100.0) * 100.0*cp_rm3_per_db();
         auto wellP = sched.getWell("P", 1);
 
-        wellP.applyWellProdIndexScaling(100.0*liquid_PI_unit());
+        const auto scalingFactor = wellP.getWellPIScalingFactor(100.0*liquid_PI_unit());
+        BOOST_CHECK_CLOSE(scalingFactor, 2.0, 1.0e-10);
+
+        wellP.applyWellProdIndexScaling(scalingFactor);
         for (const auto& conn : wellP.getConnections()) {
             BOOST_CHECK_CLOSE(conn.CF(), expectCF, 1.0e-10);
         }
@@ -3801,7 +3804,10 @@ END
         const auto expectCF = (200.0 / 100.0) * 100.0*cp_rm3_per_db();
         auto wellP = sched.getWell("P", 2);
 
-        wellP.applyWellProdIndexScaling(100.0*liquid_PI_unit());
+        const auto scalingFactor = wellP.getWellPIScalingFactor(100.0*liquid_PI_unit());
+        BOOST_CHECK_CLOSE(scalingFactor, 2.0, 1.0e-10);
+
+        wellP.applyWellProdIndexScaling(scalingFactor);
         const auto& connP = wellP.getConnections();
         BOOST_CHECK_CLOSE(connP[0].CF(), expectCF          , 1.0e-10);
         BOOST_CHECK_CLOSE(connP[1].CF(), 50*cp_rm3_per_db(), 1.0e-10);
