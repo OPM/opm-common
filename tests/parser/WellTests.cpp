@@ -1199,7 +1199,7 @@ COMPDAT
 END
 )");
 
-    using WellPI = Well::WellProductivityIndex;
+    using WellPIType = Well::WellProductivityIndex;
 
     const auto es    = EclipseState{ deck };
     const auto sched = Schedule{ deck, es };
@@ -1232,9 +1232,9 @@ END
     //   /
     //
     // (ignoring units of measure)
-    BOOST_CHECK_MESSAGE(wellP.updateWellProductivityIndex(WellPI{ 2.0, Phase::GAS }),
+    BOOST_CHECK_MESSAGE(wellP.updateWellProductivityIndex(WellPIType{ 2.0, Phase::GAS }),
                         "First call to updateWellProductivityIndex() must be a state change");
-    BOOST_CHECK_MESSAGE(!wellP.updateWellProductivityIndex(WellPI{ 2.0, Phase::GAS }),
+    BOOST_CHECK_MESSAGE(!wellP.updateWellProductivityIndex(WellPIType{ 2.0, Phase::GAS }),
                         "Second call to updateWellProductivityIndex() must NOT be a state change");
 
     // Want PI=2, but actual/effective PI=1 => scale CF by 2.0/1.0.
@@ -1270,7 +1270,7 @@ END
     }
 
     // New WELPI record does not reset the scaling factors
-    wellP.updateWellProductivityIndex(WellPI{ 3.0, Phase::GAS });
+    wellP.updateWellProductivityIndex(WellPIType{ 3.0, Phase::GAS });
     for (const auto& conn : wellP.getConnections()) {
         BOOST_CHECK_CLOSE(conn.CF(), 4.0*expectCF, 1.0e-10);
     }
@@ -1291,9 +1291,9 @@ END
         }
     }
 
-    BOOST_CHECK_MESSAGE(wellP.updateWellProductivityIndex(WellPI{ 3.0, Phase::OIL }),
+    BOOST_CHECK_MESSAGE(wellP.updateWellProductivityIndex(WellPIType{ 3.0, Phase::OIL }),
                         "Fourth call to updateWellProductivityIndex() must be a state change");
-    BOOST_CHECK_MESSAGE(!wellP.updateWellProductivityIndex(WellPI{ 3.0, Phase::OIL }),
+    BOOST_CHECK_MESSAGE(!wellP.updateWellProductivityIndex(WellPIType{ 3.0, Phase::OIL }),
                         "Fifth call to updateWellProductivityIndex() must NOT be a state change");
 }
 
