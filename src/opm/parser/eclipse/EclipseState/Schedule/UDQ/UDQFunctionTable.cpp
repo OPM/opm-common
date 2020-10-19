@@ -38,8 +38,8 @@ UDQFunctionTable::UDQFunctionTable(const UDQParams& params_arg) :
     this->insert_function( std::make_shared<UDQScalarFunction>("AVEA", UDQScalarFunction::AVEA) );
     this->insert_function( std::make_shared<UDQScalarFunction>("AVEG", UDQScalarFunction::AVEG) );
     this->insert_function( std::make_shared<UDQScalarFunction>("AVEH", UDQScalarFunction::AVEH) );
-    this->insert_function( std::make_shared<UDQScalarFunction>("MAX", UDQScalarFunction::MAX) );
-    this->insert_function( std::make_shared<UDQScalarFunction>("MIN", UDQScalarFunction::MIN) );
+    this->insert_function( std::make_shared<UDQScalarFunction>("MAX", UDQScalarFunction::UDQ_MAX) );
+    this->insert_function( std::make_shared<UDQScalarFunction>("MIN", UDQScalarFunction::UDQ_MIN) );
     this->insert_function( std::make_shared<UDQScalarFunction>("NORM1", UDQScalarFunction::NORM1) );
     this->insert_function( std::make_shared<UDQScalarFunction>("NORM2", UDQScalarFunction::NORM2) );
     this->insert_function( std::make_shared<UDQScalarFunction>("NORMI", UDQScalarFunction::NORMI) );
