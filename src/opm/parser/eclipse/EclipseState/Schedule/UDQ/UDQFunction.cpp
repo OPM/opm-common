@@ -70,7 +70,7 @@ UDQSet UDQUnaryElementalFunction::eval(const UDQSet& arg) const {
 }
 
 /*****************************************************************/
-UDQSet UDQScalarFunction::MIN(const UDQSet& arg) {
+UDQSet UDQScalarFunction::UDQ_MIN(const UDQSet& arg) {
     auto defined_values = arg.defined_values();
     if (defined_values.empty())
         return UDQSet::empty("MIN");
@@ -78,7 +78,7 @@ UDQSet UDQScalarFunction::MIN(const UDQSet& arg) {
     return UDQSet::scalar("MIN", *std::min_element(defined_values.begin(), defined_values.end()));
 }
 
-UDQSet UDQScalarFunction::MAX(const UDQSet& arg) {
+UDQSet UDQScalarFunction::UDQ_MAX(const UDQSet& arg) {
     auto defined_values = arg.defined_values();
     if (defined_values.empty())
         return UDQSet::empty("MAX");

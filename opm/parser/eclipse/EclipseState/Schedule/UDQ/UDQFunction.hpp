@@ -55,8 +55,8 @@ public:
     static UDQSet AVEA(const UDQSet& arg);
     static UDQSet AVEG(const UDQSet& arg);
     static UDQSet AVEH(const UDQSet& arg);
-    static UDQSet MIN(const UDQSet& arg);
-    static UDQSet MAX(const UDQSet& arg);
+    static UDQSet UDQ_MIN(const UDQSet& arg);
+    static UDQSet UDQ_MAX(const UDQSet& arg);
     static UDQSet NORM1(const UDQSet& arg);
     static UDQSet NORM2(const UDQSet& arg);
     static UDQSet NORMI(const UDQSet& arg);
