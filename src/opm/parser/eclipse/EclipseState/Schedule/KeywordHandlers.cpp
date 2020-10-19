@@ -270,19 +270,8 @@ namespace {
             const auto voidage_target = record.getItem("VOIDAGE_TARGET").get<UDAValue>(0);
             const bool is_free = DeckItem::to_bool(record.getItem("FREE").getTrimmedString(0));
 
-            const std::optional<std::string> reinj_group_name = record.getItem("REINJECT_GROUP").defaultApplied(0)
-                ? std::nullopt
-                : std::optional<std::string>(record.getItem("REINJECT_GROUP").getTrimmedString(0));
-
-            const std::optional<std::string> voidage_group_name = record.getItem("VOIDAGE_GROUP").defaultApplied(0)
-                ? std::nullopt
-                : std::optional<std::string>(record.getItem("VOIDAGE_GROUP").getTrimmedString(0));
-
             for (const auto& group_name : group_names) {
                 const bool availableForGroupControl = is_free && (group_name != "FIELD");
-                const std::string reinj_group = reinj_group_name.value_or(group_name);
-                const std::string voidage_group = voidage_group_name.value_or(group_name);
-
                 auto group_ptr = std::make_shared<Group>(this->getGroup(group_name, handlerContext.currentStep));
                 Group::GroupInjectionProperties injection;
                 injection.phase = phase;
@@ -292,8 +281,6 @@ namespace {
                 injection.target_reinj_fraction = reinj_target;
                 injection.target_void_fraction = voidage_target;
                 injection.injection_controls = 0;
-                injection.reinj_group = reinj_group;
-                injection.voidage_group = voidage_group;
                 injection.available_group_control = availableForGroupControl;
 
                 if (!record.getItem("SURFACE_TARGET").defaultApplied(0))
@@ -307,6 +294,12 @@ namespace {
 
                 if (!record.getItem("VOIDAGE_TARGET").defaultApplied(0))
                     injection.injection_controls += static_cast<int>(Group::InjectionCMode::VREP);
+
+                if (record.getItem("REINJECT_GROUP").hasValue(0))
+                    injection.reinj_group = record.getItem("REINJECT_GROUP").getTrimmedString(0);
+
+                if (record.getItem("VOIDAGE_GROUP").hasValue(0))
+                    injection.voidage_group = record.getItem("VOIDAGE_GROUP").getTrimmedString(0);
 
                 if (group_ptr->updateInjection(injection)) {
                     this->updateGroup(std::move(group_ptr), handlerContext.currentStep);

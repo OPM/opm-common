@@ -465,8 +465,8 @@ Group::InjectionControls Group::injectionControls(Phase phase, const SummaryStat
     ic.resv_max_rate = UDA::eval_group_uda(inj.resv_max_rate, this->m_name, st, this->udq_undefined);
     ic.target_reinj_fraction = UDA::eval_group_uda(inj.target_reinj_fraction, this->m_name, st, this->udq_undefined);
     ic.target_void_fraction = UDA::eval_group_uda(inj.target_void_fraction, this->m_name, st, this->udq_undefined);
-    ic.reinj_group = inj.reinj_group;
-    ic.voidage_group = inj.voidage_group;
+    ic.reinj_group = inj.reinj_group.value_or(this->m_name);
+    ic.voidage_group = inj.voidage_group.value_or(this->m_name);
 
     return ic;
 }
