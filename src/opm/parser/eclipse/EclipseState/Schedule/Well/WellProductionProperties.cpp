@@ -90,11 +90,11 @@ namespace Opm {
     }
 
 
-    void Well::WellProductionProperties::init_vfp(const std::optional<VFPProdTable::ALQ_TYPE>& alq_type, const UnitSystem& unit_system, const DeckRecord& record) {
+    void Well::WellProductionProperties::init_vfp(const std::optional<VFPProdTable::ALQ_TYPE>& alq_type, const UnitSystem& unit_system_arg, const DeckRecord& record) {
         if (alq_type) {
             this->VFPTableNumber = record.getItem("VFP_TABLE").get<int>(0);
             double alq_input = record.getItem("ALQ").get<double>(0);
-            const auto alq_dim = VFPProdTable::ALQDimension(*alq_type, unit_system);
+            const auto alq_dim = VFPProdTable::ALQDimension(*alq_type, unit_system_arg);
             this->ALQValue = alq_dim.convertRawToSi(alq_input);
         } else {
             const auto table_nr = record.getItem("VFP_TABLE").get< int >(0);
@@ -154,10 +154,10 @@ namespace Opm {
 
 
 
-void Well::WellProductionProperties::handleWCONPROD(const std::optional<VFPProdTable::ALQ_TYPE>& alq_type, const UnitSystem& unit_system, const std::string& /* well */, const DeckRecord& record)
+void Well::WellProductionProperties::handleWCONPROD(const std::optional<VFPProdTable::ALQ_TYPE>& alq_type, const UnitSystem& unit_system_arg, const std::string& /* well */, const DeckRecord& record)
     {
         this->predictionMode = true;
-        this->init_vfp(alq_type, unit_system, record);
+        this->init_vfp(alq_type, unit_system_arg, record);
         this->init_rates(record);
 
         this->BHPTarget      = record.getItem("BHP").get<UDAValue>(0);
@@ -203,10 +203,10 @@ void Well::WellProductionProperties::handleWCONPROD(const std::optional<VFPProdT
       originate from the WCONHIST keyword. Predictions are handled with the
       default constructor and the handleWCONPROD() method.
     */
-void Well::WellProductionProperties::handleWCONHIST(const std::optional<VFPProdTable::ALQ_TYPE>& alq_type, const UnitSystem& unit_system, const DeckRecord& record)
+void Well::WellProductionProperties::handleWCONHIST(const std::optional<VFPProdTable::ALQ_TYPE>& alq_type, const UnitSystem& unit_system_arg, const DeckRecord& record)
     {
         this->init_rates(record);
-        this->init_vfp(alq_type, unit_system, record);
+        this->init_vfp(alq_type, unit_system_arg, record);
         this->LiquidRate = 0;
         this->ResVRate = 0;
 
