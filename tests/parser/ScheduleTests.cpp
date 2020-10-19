@@ -3760,6 +3760,14 @@ TSTEP
   10
 /
 
+COMPDAT
+  'P' 0 0 2 2 OPEN 1 50 /
+/
+
+TSTEP
+  10
+/
+
 END
 )");
 
@@ -3788,11 +3796,29 @@ END
         }
     }
 
+    // Apply WELPI after new COMPDAT.
+    {
+        const auto expectCF = (200.0 / 100.0) * 100.0*cp_rm3_per_db();
+        auto wellP = sched.getWell("P", 2);
+
+        wellP.applyWellProdIndexScaling(100.0*liquid_PI_unit());
+        const auto& connP = wellP.getConnections();
+        BOOST_CHECK_CLOSE(connP[0].CF(), expectCF          , 1.0e-10);
+        BOOST_CHECK_CLOSE(connP[1].CF(), 50*cp_rm3_per_db(), 1.0e-10);
+        BOOST_CHECK_CLOSE(connP[2].CF(), expectCF          , 1.0e-10);
+    }
+
     BOOST_CHECK_MESSAGE(sched.hasWellGroupEvent("P", ScheduleEvents::WELL_CONNECTIONS_UPDATED, 0),
                         "Well P must have WELL_CONNECTIONS_UPDATED event at report step 0");
 
     BOOST_CHECK_MESSAGE(!sched.hasWellGroupEvent("P", ScheduleEvents::WELL_CONNECTIONS_UPDATED, 1),
-                        "Well P must NOT have WELL_CONNECTIONS_UPDATED event at report step 0");
+                        "Well P must NOT have WELL_CONNECTIONS_UPDATED event at report step 1");
+
+    BOOST_CHECK_MESSAGE(sched.hasWellGroupEvent("P", ScheduleEvents::WELL_CONNECTIONS_UPDATED, 2),
+                        "Well P must have WELL_CONNECTIONS_UPDATED event at report step 2");
+
+    BOOST_CHECK_MESSAGE(!sched.hasWellGroupEvent("P", ScheduleEvents::WELL_CONNECTIONS_UPDATED, 3),
+                        "Well P must NOT have WELL_CONNECTIONS_UPDATED event at report step 3");
 
     BOOST_CHECK_MESSAGE(sched.hasWellGroupEvent("P", ScheduleEvents::WELL_PRODUCTIVITY_INDEX, 1),
                         "Must have WELL_PRODUCTIVITY_INDEX event at report step 1");

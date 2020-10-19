@@ -201,7 +201,7 @@ int WellType::ecl_phase() const {
 
 
 Phase WellType::preferred_phase() const {
-    return this->m_welspecs_phase;
+    return this->injector() ? this->injection_phase : this->m_welspecs_phase;
 }
 
 
