@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(construction_and_queries)
 
     // Test iteration over rows with a range-for loop.
     int row_index = 0;
-    for (const auto& row : st2) {
+    for (const auto row : st2) { // Not a reference, since row type is a created view
         BOOST_CHECK_EQUAL(row.size(), expected[row_index].size());
         ++row_index;
     }
