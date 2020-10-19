@@ -667,10 +667,9 @@ private:
                 {
                     auto& dynamic_state = this->wells_static.at(wname);
                     auto well_ptr = std::make_shared<Well>( *dynamic_state[currentStep] );
-                    if (well_ptr->handleWELOPEN(record, comp_status, action_mode)) {
+                    if (well_ptr->handleWELOPEN(record, comp_status, action_mode))
                         // The updateWell call breaks test at line 825 and 831 in ScheduleTests
-                        this->updateWell(well_ptr, currentStep);
-                    }
+                        this->updateWell(std::move(well_ptr), currentStep);
                 }
 
                 m_events.addEvent( ScheduleEvents::COMPLETION_CHANGE, currentStep );

@@ -3829,21 +3829,6 @@ END
         BOOST_CHECK_MESSAGE(!    scalingApplicable[1] , "Connection[1] must NOT be eligible for WELPI scaling");
         BOOST_CHECK_MESSAGE(bool(scalingApplicable[0]), "Connection[2] must be eligible for WELPI scaling");
     }
-
-    BOOST_CHECK_MESSAGE(sched.hasWellGroupEvent("P", ScheduleEvents::WELL_CONNECTIONS_UPDATED, 0),
-                        "Well P must have WELL_CONNECTIONS_UPDATED event at report step 0");
-
-    BOOST_CHECK_MESSAGE(!sched.hasWellGroupEvent("P", ScheduleEvents::WELL_CONNECTIONS_UPDATED, 1),
-                        "Well P must NOT have WELL_CONNECTIONS_UPDATED event at report step 1");
-
-    BOOST_CHECK_MESSAGE(sched.hasWellGroupEvent("P", ScheduleEvents::WELL_CONNECTIONS_UPDATED, 2),
-                        "Well P must have WELL_CONNECTIONS_UPDATED event at report step 2");
-
-    BOOST_CHECK_MESSAGE(!sched.hasWellGroupEvent("P", ScheduleEvents::WELL_CONNECTIONS_UPDATED, 3),
-                        "Well P must NOT have WELL_CONNECTIONS_UPDATED event at report step 3");
-
-    BOOST_CHECK_MESSAGE(sched.hasWellGroupEvent("P", ScheduleEvents::WELL_PRODUCTIVITY_INDEX, 1),
-                        "Must have WELL_PRODUCTIVITY_INDEX event at report step 1");
 }
 
 BOOST_AUTO_TEST_CASE(Schedule_ApplyWellProdIndexScaling) {
