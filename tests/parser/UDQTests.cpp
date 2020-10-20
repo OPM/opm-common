@@ -987,7 +987,7 @@ BOOST_AUTO_TEST_CASE(UDQ_POW_TEST) {
     UDQFunctionTable udqft;
     UDQParams udqp;
     UDQDefine def_pow1(udqp, "WU", location, {"WOPR", "+", "WWPR", "*", "WGOR", "^", "WWIR"});
-    UDQDefine def_pow2(udqp, "WU", location, {"(", "WOPR", "+", "WWPR", ")", "^", "(", "WOPR", "+" , "WGOR", "*", "WWIR", "-", "WOPT", ")"});
+    UDQDefine def_pow2(udqp, "WU", location, {"(", "WOPR", "+", "WWPR", ")", "^", "(", "WOPR", "+" , "WGOR", "*", "WWIR", "-", "WBHP", ")"});
     SummaryState st(std::chrono::system_clock::now());
     UDQState udq_state(udqp.undefinedValue());
     UDQContext context(udqft, st, udq_state);
@@ -996,7 +996,7 @@ BOOST_AUTO_TEST_CASE(UDQ_POW_TEST) {
     st.update_well_var("P1", "WWPR", 2);
     st.update_well_var("P1", "WGOR", 3);
     st.update_well_var("P1", "WWIR", 4);
-    st.update_well_var("P1", "WOPT", 7);
+    st.update_well_var("P1", "WBHP", 7);
 
     auto res_pow1 = def_pow1.eval(context);
     auto res_pow2 = def_pow2.eval(context);
