@@ -42,6 +42,7 @@ public:
     void add_define(const std::string& udq_key, const UDQSet& result);
     void add_assign(std::size_t report_step, const std::string& udq_key, const UDQSet& result);
     bool assign(std::size_t report_step, const std::string& udq_key) const;
+    double undefined_value() const;
 
     std::vector<char> serialize() const;
     void deserialize(const std::vector<char>& buffer);
@@ -49,7 +50,7 @@ public:
 private:
     void add(const std::string& udq_key, const UDQSet& result);
     double get_wg_var(const std::string& well, const std::string& key, UDQVarType var_type) const;
-    double undefined_value;
+    double undef_value;
     std::unordered_map<std::string, UDQSet> values;
     std::unordered_map<std::string, std::size_t> assignments;
 };
