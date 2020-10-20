@@ -154,10 +154,8 @@ namespace {
                 auto connections = std::shared_ptr<WellConnections>( new WellConnections( well2->getConnections()));
                 connections->loadCOMPDAT(record, handlerContext.grid, handlerContext.fieldPropsManager);
 
-                if (well2->updateConnections(connections, handlerContext.grid, handlerContext.fieldPropsManager.get_int("PVTNUM"))) {
-                    this->updateWell(well2, handlerContext.currentStep);
-                    this->addWellGroupEvent(name, ScheduleEvents::WELL_CONNECTIONS_UPDATED, handlerContext.currentStep);
-                }
+                if (well2->updateConnections(connections, handlerContext.grid, handlerContext.fieldPropsManager.get_int("PVTNUM")))
+                    this->updateWell(std::move(well2), handlerContext.currentStep);
 
                 this->addWellGroupEvent(name, ScheduleEvents::COMPLETION_CHANGE, handlerContext.currentStep);
             }

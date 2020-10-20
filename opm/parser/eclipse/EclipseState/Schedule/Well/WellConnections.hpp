@@ -111,8 +111,13 @@ namespace Opm {
 
         /// Scale pertinent connections' CF value by supplied value.  Scaling
         /// factor typically derived from 'WELPI' input keyword and a dynamic
-        /// productivity index calculation.
-        void applyWellPIScaling(const double scaleFactor);
+        /// productivity index calculation.  Applicability array specifies
+        /// whether or not a particular connection is exempt from scaling.
+        /// Empty array means "apply scaling to all eligible connections".
+        /// This array is updated on return (entries set to 'false' if
+        /// corresponding connection is not eligible).
+        void applyWellPIScaling(const double       scaleFactor,
+                                std::vector<bool>& scalingApplicable);
 
         template<class Serializer>
         void serializeOp(Serializer& serializer)

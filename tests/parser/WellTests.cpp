@@ -17,9 +17,11 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdexcept>
 #include <iostream>
+#include <memory>
 #include <optional>
+#include <stdexcept>
+#include <utility>
 
 #define BOOST_TEST_MODULE WellTest
 #include <boost/test/unit_test.hpp>
@@ -1197,7 +1199,7 @@ COMPDAT
 END
 )");
 
-    using WellPI = Well::WellProductivityIndex;
+    using WellPIType = Well::WellProductivityIndex;
 
     const auto es    = EclipseState{ deck };
     const auto sched = Schedule{ deck, es };
@@ -1211,9 +1213,16 @@ END
     }
 
     // Simulate applying WELPI before WELPI keyword.  No effect.
-    wellP.applyWellProdIndexScaling(2.7182818);
-    for (const auto& conn : wellP.getConnections()) {
-        BOOST_CHECK_CLOSE(conn.CF(), expectCF, 1.0e-10);
+    {
+        std::vector<bool> scalingApplicable;
+        wellP.applyWellProdIndexScaling(2.7182818, scalingApplicable);
+        for (const auto& conn : wellP.getConnections()) {
+            BOOST_CHECK_CLOSE(conn.CF(), expectCF, 1.0e-10);
+        }
+
+        for (const bool applicable : scalingApplicable) {
+            BOOST_CHECK_MESSAGE(! applicable, "No connection must be eligible for WELPI scaling");
+        }
     }
 
     // Simulate applying WELPI after seeing
@@ -1223,37 +1232,125 @@ END
     //   /
     //
     // (ignoring units of measure)
-    BOOST_CHECK_MESSAGE(wellP.updateWellProductivityIndex(WellPI{ 2.0, Phase::GAS }),
+    BOOST_CHECK_MESSAGE(wellP.updateWellProductivityIndex(WellPIType{ 2.0, Phase::GAS }),
                         "First call to updateWellProductivityIndex() must be a state change");
-    BOOST_CHECK_MESSAGE(!wellP.updateWellProductivityIndex(WellPI{ 2.0, Phase::GAS }),
+    BOOST_CHECK_MESSAGE(!wellP.updateWellProductivityIndex(WellPIType{ 2.0, Phase::GAS }),
                         "Second call to updateWellProductivityIndex() must NOT be a state change");
 
     // Want PI=2, but actual/effective PI=1 => scale CF by 2.0/1.0.
-    wellP.applyWellProdIndexScaling(1.0);
-    for (const auto& conn : wellP.getConnections()) {
-        BOOST_CHECK_CLOSE(conn.CF(), 2.0*expectCF, 1.0e-10);
+    {
+        const auto scalingFactor = wellP.getWellPIScalingFactor(1.0);
+        BOOST_CHECK_CLOSE(scalingFactor, 2.0, 1.0e-10);
+
+        std::vector<bool> scalingApplicable;
+        wellP.applyWellProdIndexScaling(scalingFactor, scalingApplicable);
+        for (const auto& conn : wellP.getConnections()) {
+            BOOST_CHECK_CLOSE(conn.CF(), 2.0*expectCF, 1.0e-10);
+        }
+
+        for (const bool applicable : scalingApplicable) {
+            BOOST_CHECK_MESSAGE(applicable, "All connections must be eligible for WELPI scaling");
+        }
     }
 
     // Repeated application of WELPI multiplies scaling factors.
-    wellP.applyWellProdIndexScaling(1.0);
-    for (const auto& conn : wellP.getConnections()) {
-        BOOST_CHECK_CLOSE(conn.CF(), 4.0*expectCF, 1.0e-10);
+    {
+        const auto scalingFactor = wellP.getWellPIScalingFactor(1.0);
+        BOOST_CHECK_CLOSE(scalingFactor, 2.0, 1.0e-10);
+
+        std::vector<bool> scalingApplicable;
+        wellP.applyWellProdIndexScaling(scalingFactor, scalingApplicable);
+        for (const auto& conn : wellP.getConnections()) {
+            BOOST_CHECK_CLOSE(conn.CF(), 4.0*expectCF, 1.0e-10);
+        }
+
+        for (const bool applicable : scalingApplicable) {
+            BOOST_CHECK_MESSAGE(applicable, "All connections must be eligible for WELPI scaling");
+        }
     }
 
     // New WELPI record does not reset the scaling factors
-    wellP.updateWellProductivityIndex(WellPI{ 3.0, Phase::GAS });
+    wellP.updateWellProductivityIndex(WellPIType{ 3.0, Phase::GAS });
     for (const auto& conn : wellP.getConnections()) {
         BOOST_CHECK_CLOSE(conn.CF(), 4.0*expectCF, 1.0e-10);
     }
 
     // Effective PI=desired PI => no scaling change
-    wellP.applyWellProdIndexScaling(3.0);
-    for (const auto& conn : wellP.getConnections()) {
-        BOOST_CHECK_CLOSE(conn.CF(), 4.0*expectCF, 1.0e-10);
+    {
+        const auto scalingFactor = wellP.getWellPIScalingFactor(3.0);
+        BOOST_CHECK_CLOSE(scalingFactor, 1.0, 1.0e-10);
+
+        std::vector<bool> scalingApplicable;
+        wellP.applyWellProdIndexScaling(scalingFactor, scalingApplicable);
+        for (const auto& conn : wellP.getConnections()) {
+            BOOST_CHECK_CLOSE(conn.CF(), 4.0*expectCF, 1.0e-10);
+        }
+
+        for (const bool applicable : scalingApplicable) {
+            BOOST_CHECK_MESSAGE(applicable, "All connections must be eligible for WELPI scaling");
+        }
     }
 
-    BOOST_CHECK_MESSAGE(wellP.updateWellProductivityIndex(WellPI{ 3.0, Phase::OIL }),
+    BOOST_CHECK_MESSAGE(wellP.updateWellProductivityIndex(WellPIType{ 3.0, Phase::OIL }),
                         "Fourth call to updateWellProductivityIndex() must be a state change");
-    BOOST_CHECK_MESSAGE(!wellP.updateWellProductivityIndex(WellPI{ 3.0, Phase::OIL }),
+    BOOST_CHECK_MESSAGE(!wellP.updateWellProductivityIndex(WellPIType{ 3.0, Phase::OIL }),
                         "Fifth call to updateWellProductivityIndex() must NOT be a state change");
+}
+
+BOOST_AUTO_TEST_CASE(Has_Same_Connections_Pointers) {
+    const auto deck = Parser{}.parseString(R"(RUNSPEC
+START
+7 OCT 2020 /
+
+DIMENS
+  10 10 3 /
+
+GRID
+DXV
+  10*100.0 /
+DYV
+  10*100.0 /
+DZV
+  3*10.0 /
+
+DEPTHZ
+  121*2000.0 /
+
+PERMX
+  300*100.0 /
+PERMY
+  300*100.0 /
+PERMZ
+  300*10.0 /
+PORO
+  300*0.3 /
+
+SCHEDULE
+WELSPECS
+  'P' 'G' 10 10 2005 'LIQ' /
+/
+COMPDAT
+  'P' 0 0 1 3 OPEN 1 100 /
+/
+
+END
+)");
+
+    const auto es    = EclipseState{ deck };
+    const auto sched = Schedule{ deck, es };
+
+    const auto wellP = sched.getWell("P", 0);
+    auto wellQ = wellP;
+
+    BOOST_CHECK_MESSAGE(wellP.hasSameConnectionsPointers(wellQ),
+                        "P and Q must have the same internal connections pointers");
+
+    auto connQ = std::make_shared<WellConnections>(wellP.getConnections());
+    wellQ.forceUpdateConnections(std::move(connQ));
+    BOOST_CHECK_MESSAGE(! wellP.hasSameConnectionsPointers(wellQ),
+                        "P and Q must NOT have the same internal connections pointers "
+                        "after forcibly updating the connections structure");
+
+    BOOST_CHECK_MESSAGE(wellP.getConnections() == wellQ.getConnections(),
+                        "P and Q must have same WellConnections VALUE");
 }

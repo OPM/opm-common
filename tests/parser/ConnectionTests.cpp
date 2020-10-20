@@ -408,17 +408,26 @@ END
         BOOST_CHECK_CLOSE(conn.CF(), expectCF, 1.0e-10);
     }
 
-    connP.applyWellPIScaling(2.0);  // No "prepare" -> no change.
-    for (const auto& conn : connP) {
-        BOOST_CHECK_CLOSE(conn.CF(), expectCF, 1.0e-10);
+    {
+        std::vector<bool> scalingApplicable;
+
+        connP.applyWellPIScaling(2.0, scalingApplicable);  // No "prepare" -> no change.
+        for (const auto& conn : connP) {
+            BOOST_CHECK_CLOSE(conn.CF(), expectCF, 1.0e-10);
+        }
     }
 
     // All CFs scaled by factor 2.
     BOOST_CHECK_MESSAGE( connP.prepareWellPIScaling(), "First call to prepareWellPIScaling must be a state change");
     BOOST_CHECK_MESSAGE(!connP.prepareWellPIScaling(), "Second call to prepareWellPIScaling must NOT be a state change");
-    connP.applyWellPIScaling(2.0);
-    for (const auto& conn : connP) {
-        BOOST_CHECK_CLOSE(conn.CF(), 2.0*expectCF, 1.0e-10);
+
+    {
+        std::vector<bool> scalingApplicable;
+
+        connP.applyWellPIScaling(2.0, scalingApplicable);  // No "prepare" -> no change.
+        for (const auto& conn : connP) {
+            BOOST_CHECK_CLOSE(conn.CF(), 2.0*expectCF, 1.0e-10);
+        }
     }
 
     // Reset CF -- simulating COMPDAT record (inactive cell)
@@ -440,20 +449,27 @@ END
     BOOST_CHECK_CLOSE(connP[2].CF(), 50.0*cp_rm3_per_db(), 1.0e-10);
 
     // Should not apply to connection whose CF was manually specified
-    connP.applyWellPIScaling(2.0);
+    {
+        std::vector<bool> scalingApplicable;
+        connP.applyWellPIScaling(2.0, scalingApplicable);
 
-    BOOST_CHECK_CLOSE(connP[0].CF(),  4.0*expectCF       , 1.0e-10);
-    BOOST_CHECK_CLOSE(connP[1].CF(),  4.0*expectCF       , 1.0e-10);
-    BOOST_CHECK_CLOSE(connP[2].CF(), 50.0*cp_rm3_per_db(), 1.0e-10);
+        BOOST_CHECK_CLOSE(connP[0].CF(),  4.0*expectCF       , 1.0e-10);
+        BOOST_CHECK_CLOSE(connP[1].CF(),  4.0*expectCF       , 1.0e-10);
+        BOOST_CHECK_CLOSE(connP[2].CF(), 50.0*cp_rm3_per_db(), 1.0e-10);
+    }
 
     // Prepare new scaling.  Simulating new WELPI record.
     // New scaling applies to all connections.
     BOOST_CHECK_MESSAGE(connP.prepareWellPIScaling(), "Third call to prepareWellPIScaling must be a state change");
-    connP.applyWellPIScaling(2.0);
 
-    BOOST_CHECK_CLOSE(connP[0].CF(),   8.0*expectCF       , 1.0e-10);
-    BOOST_CHECK_CLOSE(connP[1].CF(),   8.0*expectCF       , 1.0e-10);
-    BOOST_CHECK_CLOSE(connP[2].CF(), 100.0*cp_rm3_per_db(), 1.0e-10);
+    {
+        std::vector<bool> scalingApplicable;
+        connP.applyWellPIScaling(2.0, scalingApplicable);
+
+        BOOST_CHECK_CLOSE(connP[0].CF(),   8.0*expectCF       , 1.0e-10);
+        BOOST_CHECK_CLOSE(connP[1].CF(),   8.0*expectCF       , 1.0e-10);
+        BOOST_CHECK_CLOSE(connP[2].CF(), 100.0*cp_rm3_per_db(), 1.0e-10);
+    }
 
     // Reset CF -- simulating COMPDAT record (active cell)
     connP.addConnection(8, 9, 1, // 10, 10, 2
@@ -468,12 +484,16 @@ END
         1);
 
     BOOST_REQUIRE_EQUAL(connP.size(), std::size_t{4});
-    connP.applyWellPIScaling(2.0);
 
-    BOOST_CHECK_CLOSE(connP[0].CF(),  16.0*expectCF       , 1.0e-10);
-    BOOST_CHECK_CLOSE(connP[1].CF(),  16.0*expectCF       , 1.0e-10);
-    BOOST_CHECK_CLOSE(connP[2].CF(), 200.0*cp_rm3_per_db(), 1.0e-10);
-    BOOST_CHECK_CLOSE(connP[3].CF(),  50.0*cp_rm3_per_db(), 1.0e-10);
+    {
+        std::vector<bool> scalingApplicable;
+        connP.applyWellPIScaling(2.0, scalingApplicable);
+
+        BOOST_CHECK_CLOSE(connP[0].CF(),  16.0*expectCF       , 1.0e-10);
+        BOOST_CHECK_CLOSE(connP[1].CF(),  16.0*expectCF       , 1.0e-10);
+        BOOST_CHECK_CLOSE(connP[2].CF(), 200.0*cp_rm3_per_db(), 1.0e-10);
+        BOOST_CHECK_CLOSE(connP[3].CF(),  50.0*cp_rm3_per_db(), 1.0e-10);
+    }
 
     const auto& grid = es.getInputGrid();
     const auto actCells = Opm::ActiveGridCells {
@@ -489,8 +509,12 @@ END
     BOOST_CHECK_CLOSE(connP[1].CF(), 16.0*expectCF       , 1.0e-10);
     BOOST_CHECK_CLOSE(connP[2].CF(), 50.0*cp_rm3_per_db(), 1.0e-10);
 
-    connP.applyWellPIScaling(2.0);
-    BOOST_CHECK_CLOSE(connP[0].CF(), 32.0*expectCF       , 1.0e-10);
-    BOOST_CHECK_CLOSE(connP[1].CF(), 32.0*expectCF       , 1.0e-10);
-    BOOST_CHECK_CLOSE(connP[2].CF(), 50.0*cp_rm3_per_db(), 1.0e-10);
+    {
+        std::vector<bool> scalingApplicable;
+
+        connP.applyWellPIScaling(2.0, scalingApplicable);
+        BOOST_CHECK_CLOSE(connP[0].CF(), 32.0*expectCF       , 1.0e-10);
+        BOOST_CHECK_CLOSE(connP[1].CF(), 32.0*expectCF       , 1.0e-10);
+        BOOST_CHECK_CLOSE(connP[2].CF(), 50.0*cp_rm3_per_db(), 1.0e-10);
+    }
 }
