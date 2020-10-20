@@ -1608,6 +1608,16 @@ namespace {
         for (const auto& rst_group : rst_state.groups) {
             auto group = Group{ rst_group, this->groups.size(), static_cast<std::size_t>(report_step), udq_undefined, unit_system };
             this->addGroup(group, report_step);
+
+            if (group.isProductionGroup()) {
+                this->m_events.addEvent(ScheduleEvents::GROUP_PRODUCTION_UPDATE, report_step + 1);
+                this->addWellGroupEvent(rst_group.name, ScheduleEvents::GROUP_PRODUCTION_UPDATE, report_step + 1);
+            }
+
+            if (group.isInjectionGroup()) {
+                this->m_events.addEvent(ScheduleEvents::GROUP_INJECTION_UPDATE, report_step + 1);
+                this->addWellGroupEvent(rst_group.name, ScheduleEvents::GROUP_INJECTION_UPDATE, report_step + 1);
+            }
         }
 
         for (std::size_t group_index = 0; group_index < rst_state.groups.size(); group_index++) {
