@@ -130,9 +130,11 @@ bool is_udq(const std::string& key) {
 
     void UDQContext::update_assign(std::size_t report_step, const std::string& keyword, const UDQSet& udq_result) {
         this->udq_state.add_assign(report_step, keyword, udq_result);
+        this->summary_state.update_udq(udq_result, this->udq_state.undefined_value());
     }
 
     void UDQContext::update_define(const std::string& keyword, const UDQSet& udq_result) {
         this->udq_state.add_define(keyword, udq_result);
+        this->summary_state.update_udq(udq_result, this->udq_state.undefined_value());
     }
 }
