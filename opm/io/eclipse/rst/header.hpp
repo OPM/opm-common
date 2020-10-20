@@ -84,9 +84,6 @@ struct RstHeader {
     int nilbrz;
     int ntfip ;
     int nmfipr;
-    int nrfreg;
-    int ntfreg;
-    int nplmix;
     int ngroup;
     int nwgmax;
 
