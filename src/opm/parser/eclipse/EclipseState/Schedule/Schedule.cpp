@@ -1504,9 +1504,10 @@ private:
         if (wstat == this->wells_static.end())
             return;
 
-        auto uwell = wstat->second.unique();
-        auto end   = uwell.end();
-        auto start = std::lower_bound(uwell.begin(), end, reportStep,
+        auto unique_well_instances = wstat->second.unique();
+
+        auto end   = unique_well_instances.end();
+        auto start = std::lower_bound(unique_well_instances.begin(), end, reportStep,
             [](const auto& time_well_pair, const auto lookup) -> bool
         {
             //     time                 < reportStep
@@ -1518,7 +1519,7 @@ private:
             return;
 
         // Relies on wells_static being OrderedMap<string, DynamicState<shared_ptr<>>>
-        // which means uwell is a vector<pair<time, shared_ptr<>>>
+        // which means unique_well_instances is a vector<pair<report_step, shared_ptr<>>>
         std::vector<bool> scalingApplicable;
         auto wellPtr = start->second;
         wellPtr->applyWellProdIndexScaling(scalingFactor, scalingApplicable);
