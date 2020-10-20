@@ -253,6 +253,8 @@ bool dynamic_type_check(UDQVarType lhs, UDQVarType rhs) {
 
 UDQSet UDQDefine::eval(UDQContext& context) const {
     UDQSet res = this->ast->eval(this->m_var_type, context);
+    res.name( this->m_keyword );
+
     if (!dynamic_type_check(this->var_type(), res.var_type())) {
         std::string msg = "Invalid runtime type conversion detected when evaluating UDQ";
         throw std::invalid_argument(msg);
@@ -298,7 +300,6 @@ UDQSet UDQDefine::eval(UDQContext& context) const {
         }
     }
 
-    res.name( this->m_keyword );
     return res;
 }
 
