@@ -188,43 +188,42 @@ Well::Well(const RestartIO::RstWell& rst_well,
             p->addProductionControl( Well::ProducerCMode::THP );
         }
 
-        if (this->status == Well::Status::OPEN) {
-            switch (rst_well.active_control) {
-            case CModeVal::Group:
-                p->controlMode = Well::ProducerCMode::GRUP;
-                p->addProductionControl(Well::ProducerCMode::GRUP);
-                break;
-            case CModeVal::OilRate:
-                p->controlMode = Well::ProducerCMode::ORAT;
-                break;
-            case CModeVal::WatRate:
-                p->controlMode = Well::ProducerCMode::WRAT;
-                p->addProductionControl(Well::ProducerCMode::WRAT);
-                break;
-            case CModeVal::GasRate:
-                p->controlMode = Well::ProducerCMode::GRAT;
-                p->addProductionControl(Well::ProducerCMode::GRAT);
-                break;
-            case CModeVal::LiqRate:
-                p->controlMode = Well::ProducerCMode::LRAT;
-                p->addProductionControl(Well::ProducerCMode::LRAT);
-                break;
-            case CModeVal::ResVRate:
-                p->controlMode = Well::ProducerCMode::RESV;
-                p->addProductionControl(Well::ProducerCMode::RESV);
-                break;
-            case CModeVal::THP:
-                p->controlMode = Well::ProducerCMode::THP;
-                p->addProductionControl(Well::ProducerCMode::THP);
-                break;
-            case CModeVal::BHP:
-                p->controlMode = Well::ProducerCMode::BHP;
-                p->addProductionControl(Well::ProducerCMode::BHP);
-                break;
-            default:
-                throw std::invalid_argument("Can not convert integer value: " + std::to_string(rst_well.active_control)
-                                            + " to control type");
-            }
+        switch (rst_well.active_control) {
+        case CModeVal::Group:
+            p->controlMode = Well::ProducerCMode::GRUP;
+            p->addProductionControl(Well::ProducerCMode::GRUP);
+
+            break;
+        case CModeVal::OilRate:
+            p->controlMode = Well::ProducerCMode::ORAT;
+            p->addProductionControl(Well::ProducerCMode::ORAT);
+            break;
+        case CModeVal::WatRate:
+            p->controlMode = Well::ProducerCMode::WRAT;
+            p->addProductionControl(Well::ProducerCMode::WRAT);
+            break;
+        case CModeVal::GasRate:
+            p->controlMode = Well::ProducerCMode::GRAT;
+            p->addProductionControl(Well::ProducerCMode::GRAT);
+            break;
+        case CModeVal::LiqRate:
+            p->controlMode = Well::ProducerCMode::LRAT;
+            p->addProductionControl(Well::ProducerCMode::LRAT);
+            break;
+        case CModeVal::ResVRate:
+            p->controlMode = Well::ProducerCMode::RESV;
+            p->addProductionControl(Well::ProducerCMode::RESV);
+            break;
+        case CModeVal::THP:
+            p->controlMode = Well::ProducerCMode::THP;
+            p->addProductionControl(Well::ProducerCMode::THP);
+            break;
+        case CModeVal::BHP:
+            p->controlMode = Well::ProducerCMode::BHP;
+            p->addProductionControl(Well::ProducerCMode::BHP);
+            break;
+        default:
+            throw std::invalid_argument(fmt::format("Can not convert integer value:{}  to control type", rst_well.active_control));
         }
 
         p->addProductionControl(Well::ProducerCMode::BHP);
@@ -236,33 +235,33 @@ Well::Well(const RestartIO::RstWell& rst_well,
         i->VFPTableNumber = rst_well.vfp_table;
         i->predictionMode = this->prediction_mode;
 
-        if (this->status == Well::Status::OPEN) {
-            switch (rst_well.active_control) {
-            case CModeVal::Group:
-                i->controlMode = Well::InjectorCMode::GRUP;
-                break;
-            case CModeVal::OilRate: [[fallthrough]];
-            case CModeVal::WatRate: [[fallthrough]];
-            case CModeVal::GasRate: [[fallthrough]];
-            case CModeVal::LiqRate:
-                i->controlMode = Well::InjectorCMode::RATE;
-                i->addInjectionControl(Well::InjectorCMode::RATE);
-                break;
-            case CModeVal::ResVRate:
-                i->controlMode = Well::InjectorCMode::RESV;
-                i->addInjectionControl(Well::InjectorCMode::RESV);
-                break;
-            case CModeVal::THP:
-                i->controlMode = Well::InjectorCMode::THP;
-                i->addInjectionControl(Well::InjectorCMode::THP);
-                break;
-            case CModeVal::BHP:
-                i->controlMode = Well::InjectorCMode::BHP;
-                break;
-            default:
-                throw std::invalid_argument(
-                    "Could not convert integer value: " + std::to_string(rst_well.active_control) + " to control type");
-            }
+        switch (rst_well.active_control) {
+        case CModeVal::Group:
+            i->controlMode = Well::InjectorCMode::GRUP;
+            break;
+        case CModeVal::OilRate:
+            [[fallthrough]];
+        case CModeVal::WatRate:
+            [[fallthrough]];
+        case CModeVal::GasRate:
+            [[fallthrough]];
+        case CModeVal::LiqRate:
+            i->controlMode = Well::InjectorCMode::RATE;
+            i->addInjectionControl(Well::InjectorCMode::RATE);
+            break;
+        case CModeVal::ResVRate:
+            i->controlMode = Well::InjectorCMode::RESV;
+            i->addInjectionControl(Well::InjectorCMode::RESV);
+            break;
+        case CModeVal::THP:
+            i->controlMode = Well::InjectorCMode::THP;
+            i->addInjectionControl(Well::InjectorCMode::THP);
+            break;
+        case CModeVal::BHP:
+            i->controlMode = Well::InjectorCMode::BHP;
+            break;
+        default:
+            throw std::invalid_argument(fmt::format("Can not convert integer value:{}  to control type", rst_well.active_control));
         }
 
         i->injectorType = rst_well.wtype.injector_type();
