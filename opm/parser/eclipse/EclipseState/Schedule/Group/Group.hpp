@@ -79,6 +79,7 @@ enum class InjectionCMode  : int {
 };
 static const std::string InjectionCMode2String( InjectionCMode enumValue );
 static InjectionCMode InjectionCModeFromString( const std::string& stringValue );
+static InjectionCMode InjectionCModeFromInt(int ecl_int);
 
 
 enum class ProductionCMode : int {
@@ -94,7 +95,7 @@ enum class ProductionCMode : int {
 };
 static const std::string ProductionCMode2String( ProductionCMode enumValue );
 static ProductionCMode ProductionCModeFromString( const std::string& stringValue );
-
+static ProductionCMode ProductionCModeFromInt(int ecl_int);
 
 enum class GuideRateTarget {
     OIL = 0,
