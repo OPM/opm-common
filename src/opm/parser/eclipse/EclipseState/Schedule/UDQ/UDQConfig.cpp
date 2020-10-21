@@ -17,6 +17,8 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <unordered_set>
+
 #include <opm/common/OpmLog/KeywordLocation.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
@@ -296,44 +298,68 @@ namespace Opm {
                this->type_count == data.type_count;
     }
 
+
     void UDQConfig::eval(std::size_t report_step, SummaryState& st, UDQState& udq_state) const {
+        std::unordered_set<std::string> keywords;
         const auto& func_table = this->function_table();
-        UDQContext context(func_table, st, udq_state);
+        /*
+          The hoops with two different UDQState objects is because if one UDQ
+          is defined in terms of another UDQ as:
+
+             DEFINE  FU_VAR2 FU_VAR1 * 100 /
+
+          We should use the FU_VAR1 value from the previous timestep when
+          evaluating FU_VAR2; i.e. for the example above we will in general have
+          FU_VAR2 != FU_VAR1 * 100.
+         */
+
+        std::unique_ptr<UDQState> eval_state = std::make_unique<UDQState>(udq_state);
+        const UDQContext eval_context(func_table, st, eval_state.get());
+        UDQContext result_context(func_table, st, &udq_state);
 
         for (const auto& assign : this->assignments(UDQVarType::WELL_VAR)) {
             if (udq_state.assign(report_step, assign.keyword())) {
                 auto ws = assign.eval(st.wells());
-                context.update_assign(report_step, assign.keyword(), ws);
+                result_context.update_assign(report_step, assign.keyword(), ws);
+                keywords.insert( assign.keyword() );
             }
         }
 
         for (const auto& def : this->definitions(UDQVarType::WELL_VAR)) {
-            auto ws = def.eval(context);
-            context.update_define(def.keyword(), ws);
+            if (keywords.count(def.keyword()) == 0) {
+                auto ws = def.eval(eval_context);
+                result_context.update_define(def.keyword(), ws);
+            }
         }
 
         for (const auto& assign : this->assignments(UDQVarType::GROUP_VAR)) {
             if (udq_state.assign(report_step, assign.keyword())) {
                 auto ws = assign.eval(st.groups());
-                context.update_assign(report_step, assign.keyword(), ws);
+                result_context.update_assign(report_step, assign.keyword(), ws);
+                keywords.insert( assign.keyword() );
             }
         }
 
         for (const auto& def : this->definitions(UDQVarType::GROUP_VAR)) {
-            auto ws = def.eval(context);
-            context.update_define(def.keyword(), ws);
+            if (keywords.count(def.keyword()) == 0) {
+                auto ws = def.eval(eval_context);
+                result_context.update_define(def.keyword(), ws);
+            }
         }
 
         for (const auto& assign : this->assignments(UDQVarType::FIELD_VAR)) {
             if (udq_state.assign(assign.report_step(), assign.keyword())) {
                 auto ws = assign.eval();
-                context.update_assign(report_step, assign.keyword(), ws);
+                result_context.update_assign(report_step, assign.keyword(), ws);
+                keywords.insert( assign.keyword() );
             }
         }
 
         for (const auto& def : this->definitions(UDQVarType::FIELD_VAR)) {
-            auto field_udq = def.eval(context);
-            context.update_define(def.keyword(), field_udq);
+            if (keywords.count(def.keyword()) == 0) {
+                auto field_udq = def.eval(eval_context);
+                result_context.update_define(def.keyword(), field_udq);
+            }
         }
     }
 }

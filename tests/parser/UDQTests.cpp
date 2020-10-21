@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(GROUP_VARIABLES)
     UDQDefine def_group(udqp, "GUOPRL", location, {"(", "5000",  "-",  "GOPR",  "LOWER",  "*", "0.13",  "-",  "GOPR",  "UPPER",  "*", "0.15", ")" , "*",  "0.89"});
     SummaryState st(std::chrono::system_clock::now());
     UDQState udq_state(udqp.undefinedValue());
-    UDQContext context(udqft, st, udq_state);
+    UDQContext context(udqft, st, &udq_state);
     double gopr_lower = 1234;
     double gopr_upper = 4321;
 
@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(SUBTRACT)
 
     SummaryState st(std::chrono::system_clock::now());
     UDQState udq_state(udqp.undefinedValue());
-    UDQContext context(udqft, st, udq_state);
+    UDQContext context(udqft, st, &udq_state);
 
     st.update_well_var("P1", "WOPR", 4);
     auto res = def.eval(context);
@@ -131,7 +131,7 @@ BOOST_AUTO_TEST_CASE(TEST)
 
     SummaryState st(std::chrono::system_clock::now());
     UDQState udq_state(udqp.undefinedValue());
-    UDQContext context(udqft, st, udq_state);
+    UDQContext context(udqft, st, &udq_state);
 
     st.update_group_var("MAU", "GOPR", 4);
     st.update_group_var("XXX", "GOPR", 5);
@@ -176,7 +176,7 @@ BOOST_AUTO_TEST_CASE(MIX_SCALAR) {
     UDQDefine def_add(udqp, "WU", location, {"WOPR", "+", "1"});
     SummaryState st(std::chrono::system_clock::now());
     UDQState udq_state(udqp.undefinedValue());
-    UDQContext context(udqft, st, udq_state);
+    UDQContext context(udqft, st, &udq_state);
 
     st.update_well_var("P1", "WOPR", 1);
 
@@ -200,7 +200,7 @@ BOOST_AUTO_TEST_CASE(UDQFieldSetTest) {
     UDQFunctionTable udqft(udqp);
     SummaryState st(std::chrono::system_clock::now());
     UDQState udq_state(udqp.undefinedValue());
-    UDQContext context(udqft, st, udq_state);
+    UDQContext context(udqft, st, &udq_state);
 
     st.update_well_var("P1", "WOPR", 1.0);
     st.update_well_var("P2", "WOPR", 2.0);
@@ -303,7 +303,7 @@ BOOST_AUTO_TEST_CASE(UDQ_GROUP_TEST) {
         UDQDefine def_fopr(udqp, "FUOPR", location, {"SUM", "(", "GOPR", ")"});
         SummaryState st(std::chrono::system_clock::now());
         UDQState udq_state(udqp.undefinedValue());
-        UDQContext context(udqft, st, udq_state);
+        UDQContext context(udqft, st, &udq_state);
 
         st.update_group_var("G1", "GOPR", 1.0);
         st.update_group_var("G2", "GOPR", 2.0);
@@ -326,7 +326,7 @@ BOOST_AUTO_TEST_CASE(UDQ_DEFINETEST) {
         UDQDefine def(udqp, "WUBHP", location, {"WBHP"});
         SummaryState st(std::chrono::system_clock::now());
         UDQState udq_state(udqp.undefinedValue());
-        UDQContext context(udqft, st, udq_state);
+        UDQContext context(udqft, st, &udq_state);
 
         st.update_well_var("W1", "WBHP", 11);
         st.update_well_var("W2", "WBHP", 2);
@@ -345,7 +345,7 @@ BOOST_AUTO_TEST_CASE(UDQ_DEFINETEST) {
         UDQDefine def(udqp, "WUBHP", location, {"WBHP" , "'P*'"});
         SummaryState st(std::chrono::system_clock::now());
         UDQState udq_state(udqp.undefinedValue());
-        UDQContext context(udqft, st, udq_state);
+        UDQContext context(udqft, st, &udq_state);
 
 
         st.update_well_var("P1", "WBHP", 1);
@@ -363,7 +363,7 @@ BOOST_AUTO_TEST_CASE(UDQ_DEFINETEST) {
         UDQDefine def(udqp, "WUBHP", location, {"NINT" , "(", "WBHP", ")"});
         SummaryState st(std::chrono::system_clock::now());
         UDQState udq_state(udqp.undefinedValue());
-        UDQContext context(udqft, st, udq_state);
+        UDQContext context(udqft, st, &udq_state);
         st.update_well_var("P1", "WBHP", 4);
         st.update_well_var("P2", "WBHP", 3);
         st.update_well_var("I1", "WBHP", 2);
@@ -579,7 +579,7 @@ BOOST_AUTO_TEST_CASE(UDQ_CONTEXT) {
     UDQFunctionTable func_table;
     UDQParams udqp;
     UDQState udq_state(udqp.undefinedValue());
-    UDQContext ctx(func_table, st, udq_state);
+    UDQContext ctx(func_table, st, &udq_state);
     BOOST_CHECK_EQUAL(*ctx.get("JAN"), 1.0);
     BOOST_CHECK_THROW(ctx.get("NO_SUCH_KEY"), std::out_of_range);
 
@@ -990,7 +990,7 @@ BOOST_AUTO_TEST_CASE(UDQ_POW_TEST) {
     UDQDefine def_pow2(udqp, "WU", location, {"(", "WOPR", "+", "WWPR", ")", "^", "(", "WOPR", "+" , "WGOR", "*", "WWIR", "-", "WBHP", ")"});
     SummaryState st(std::chrono::system_clock::now());
     UDQState udq_state(udqp.undefinedValue());
-    UDQContext context(udqft, st, udq_state);
+    UDQContext context(udqft, st, &udq_state);
 
     st.update_well_var("P1", "WOPR", 1);
     st.update_well_var("P1", "WWPR", 2);
@@ -1011,7 +1011,7 @@ BOOST_AUTO_TEST_CASE(UDQ_CMP_TEST) {
     UDQDefine def_cmp(udqp, "WU", location, {"WOPR", ">", "WWPR", "+", "WGOR", "*", "WWIR"});
     SummaryState st(std::chrono::system_clock::now());
     UDQState udq_state(udqp.undefinedValue());
-    UDQContext context(udqft, st, udq_state);
+    UDQContext context(udqft, st, &udq_state);
 
     st.update_well_var("P1", "WOPR",  0);
     st.update_well_var("P1", "WWPR", 10);
@@ -1040,7 +1040,7 @@ BOOST_AUTO_TEST_CASE(UDQ_SCALAR_SET) {
     UDQFunctionTable udqft;
     SummaryState st(std::chrono::system_clock::now());
     UDQState udq_state(udqp.undefinedValue());
-    UDQContext context(udqft, st, udq_state);
+    UDQContext context(udqft, st, &udq_state);
 
     st.update_well_var("P1", "WOPR", 1);
     st.update_well_var("P2", "WOPR", 2);
@@ -1110,7 +1110,7 @@ BOOST_AUTO_TEST_CASE(UDQ_SORTD_NAN) {
     UDQDefine def_sort(udqp , "WUPR3", location, {"SORTD", "(", "WUPR1", ")" });
     SummaryState st(std::chrono::system_clock::now());
     UDQState udq_state(udqp.undefinedValue());
-    UDQContext context(udqft, st, udq_state);
+    UDQContext context(udqft, st, &udq_state);
 
     st.update_well_var("OP1", "WWIR", 1.0);
     st.update_well_var("OP2", "WWIR", 2.0);
@@ -1156,7 +1156,7 @@ BOOST_AUTO_TEST_CASE(UDQ_SORTA) {
     UDQDefine def_sort(udqp , "WUPR3", location, {"SORTA", "(", "WUPR1", ")" });
     SummaryState st(std::chrono::system_clock::now());
     UDQState udq_state(udqp.undefinedValue());
-    UDQContext context(udqft, st, udq_state);
+    UDQContext context(udqft, st, &udq_state);
 
     st.update_well_var("OPL01", "WWCT", 0.7);
     st.update_well_var("OPL02", "WWCT", 0.8);
@@ -1186,7 +1186,7 @@ BOOST_AUTO_TEST_CASE(UDQ_BASIC_MATH_TEST) {
     UDQDefine def_wuwct(udqp , "WUWCT", location, {"WWPR", "/", "(", "WOPR", "+", "WWPR", ")"});
     SummaryState st(std::chrono::system_clock::now());
     UDQState udq_state(udqp.undefinedValue());
-    UDQContext context(udqft, st, udq_state);
+    UDQContext context(udqft, st, &udq_state);
 
     st.update_well_var("P1", "WOPR", 1);
     st.update_well_var("P2", "WOPR", 2);
@@ -1248,7 +1248,7 @@ BOOST_AUTO_TEST_CASE(DECK_TEST) {
     UDQDefine def(udqp, "WUOPRL", location, {"(", "WOPR", "OP1", "-", "150", ")", "*", "0.90"});
     SummaryState st(std::chrono::system_clock::now());
     UDQState udq_state(udqp.undefinedValue());
-    UDQContext context(udqft, st, udq_state);
+    UDQContext context(udqft, st, &udq_state);
 
     st.update_well_var("OP1", "WOPR", 300);
     st.update_well_var("OP2", "WOPR", 3000);
@@ -1284,7 +1284,7 @@ BOOST_AUTO_TEST_CASE(UDQ_PARSE_ERROR) {
         SummaryState st(std::chrono::system_clock::now());
         UDQFunctionTable udqft(udqp);
         UDQState udq_state(udqp.undefinedValue());
-        UDQContext context(udqft, st, udq_state);
+        UDQContext context(udqft, st, &udq_state);
         st.update_well_var("P1", "WBHP", 1);
 
         auto res = def1.eval(context);
@@ -1310,7 +1310,7 @@ BOOST_AUTO_TEST_CASE(UDQ_TYPE_ERROR) {
         SummaryState st(std::chrono::system_clock::now());
         UDQFunctionTable udqft(udqp);
         UDQState udq_state(udqp.undefinedValue());
-        UDQContext context(udqft, st, udq_state);
+        UDQContext context(udqft, st, &udq_state);
         st.update_well_var("P1", "WBHP", 1);
         st.update_well_var("P2", "WBHP", 2);
 
@@ -1693,7 +1693,7 @@ UDQ
     SummaryState st(std::chrono::system_clock::now());
     UDQFunctionTable udqft(udqp);
     UDQState udq_state(udqp.undefinedValue());
-    UDQContext context(udqft, st, udq_state);
+    UDQContext context(udqft, st, &udq_state);
 
     auto res0 = def0.eval(context);
     BOOST_CHECK_CLOSE( res0[0].get(), -0.00125*3, 1e-6);
@@ -1719,7 +1719,7 @@ UDQ
     SummaryState st(std::chrono::system_clock::now());
     UDQFunctionTable udqft(udqp);
     UDQState udq_state(udqp.undefinedValue());
-    UDQContext context(udqft, st, udq_state);
+    UDQContext context(udqft, st, &udq_state);
     const double fwpr = 7;
     const double fopr = 4;
     const double fgpr = 7;
@@ -1761,7 +1761,7 @@ UDQ
     SummaryState st(std::chrono::system_clock::now());
     UDQFunctionTable udqft(udqp);
     UDQState udq_state(udqp.undefinedValue());
-    UDQContext context(udqft, st, udq_state);
+    UDQContext context(udqft, st, &udq_state);
     st.update_well_var("W1", "WOPR", 1);
     st.update_well_var("W2", "WOPR", 2);
     st.update_well_var("W3", "WOPR", 3);
@@ -1801,6 +1801,9 @@ UDQ
     auto undefined_value =  udq.params().undefinedValue();
     UDQState udq_state(undefined_value);
     udq.eval(0, st, udq_state);
+    // The first eval will only evaluate the ASSIGN statements; we therefor need
+    // to call eval() twice to also get the DEFINE evaluation.
+    udq.eval(0, st, udq_state);
 
     BOOST_CHECK_EQUAL( st.get("FU_UADD"), 12);   // 10 + 2
 
@@ -1829,7 +1832,8 @@ DEFINE FU_PAR2 FU_PAR3 /
     st.update("FMWPR", 100);
     udq.eval(0, st, udq_state);
 
-    BOOST_CHECK_EQUAL(st.get("FU_PAR2"), 100);
+    // The DEFINE statement does not kick in before the second eval.
+    BOOST_CHECK_EQUAL(st.get("FU_PAR2"), 0);
 }
 
 BOOST_AUTO_TEST_CASE(UDQ_UNDEFINED2) {
@@ -2191,7 +2195,7 @@ SCHEDULE
 
 UDQ
   ASSIGN FU_VAR1 5  /
-  DEFINE FU_VAR1 FU_VAR1 + 5 /
+  DEFINE FU_VAR2 FU_VAR1 + 5 /
 /
 )";
 
@@ -2202,7 +2206,8 @@ UDQ
     SummaryState st(std::chrono::system_clock::now());
 
     udq.eval(0, st, udq_state);
-    BOOST_CHECK_EQUAL(st.get("FU_VAR1"), 10);
+    udq.eval(0, st, udq_state);
+    BOOST_CHECK_EQUAL(st.get("FU_VAR2"), 10);
 }
 
 BOOST_AUTO_TEST_CASE(UDQ_ASSIGN_REASSIGN) {
@@ -2239,20 +2244,20 @@ TSTEP
     UDQState udq_state(0);
     SummaryState st(std::chrono::system_clock::now());
 
-    // Counting: 1,2,3,4,5
+    // Counting: 0,1,2,3,4
     for (std::size_t report_step = 0; report_step < 5; report_step++) {
         const auto& udq = schedule.getUDQConfig(report_step);
         udq.eval(report_step, st, udq_state);
         auto fu_var1 = st.get("FU_VAR1");
-        BOOST_CHECK_EQUAL(fu_var1, report_step + 1);
+        BOOST_CHECK_EQUAL(fu_var1, report_step);
     }
 
-    // Reset to zero and count: 1,2,3,4,5
+    // Reset to zero and count: 0,1,2,3,4
     for (std::size_t report_step = 5; report_step < 10; report_step++) {
         const auto& udq = schedule.getUDQConfig(report_step);
         udq.eval(report_step, st, udq_state);
         auto fu_var1 = st.get("FU_VAR1");
-        BOOST_CHECK_EQUAL(fu_var1, report_step - 4);
+        BOOST_CHECK_EQUAL(fu_var1, report_step - 5);
     }
 
     // Reset to zero and stay there.
@@ -2264,3 +2269,41 @@ TSTEP
     }
 }
 
+
+
+BOOST_AUTO_TEST_CASE(UDQ_ASSIGN_REASSIGN2) {
+    std::string deck_string = R"(
+-- udq #2
+SCHEDULE
+
+UDQ
+  ASSIGN FU_VAR1 0  /
+  DEFINE FU_VAR2 WBHP OP1 /
+  DEFINE FU_VAR1 FU_VAR2 /
+/
+
+
+)";
+
+    auto schedule = make_schedule(deck_string);
+    UDQState udq_state(0);
+    SummaryState st(std::chrono::system_clock::now());
+    const auto& udq = schedule.getUDQConfig(0);
+
+    // The first time we evaluate the FU_VAR1 should get the value 0 from the
+    // ASSIGN statement; the define statement copying from FU_VAR2 should not be
+    // run.
+    st.update_well_var("OP1", "WBHP", 1);
+    udq.eval(0, st, udq_state);
+    BOOST_CHECK_EQUAL(st.get("FU_VAR1"), 0);
+    BOOST_CHECK_EQUAL(st.get("FU_VAR2"), 1);
+
+    // The second time we evalutae the ASSIGN statement will not be run again,
+    // and the DEFINE statement will be run. Observe that FU_VAR1 will refer to
+    // the previous value for FU_VAR2 - i.e. we will in general have:
+    // FU_VAR1 != FU_VAR2.
+    st.update_well_var("OP1", "WBHP", 2);
+    udq.eval(0, st, udq_state);
+    BOOST_CHECK_EQUAL(st.get("FU_VAR1"), 1);
+    BOOST_CHECK_EQUAL(st.get("FU_VAR2"), 2);
+}

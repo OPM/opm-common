@@ -37,7 +37,7 @@ namespace Opm {
 
     class UDQContext{
     public:
-        UDQContext(const UDQFunctionTable& udqft, SummaryState& summary_state, UDQState& udq_state);
+        UDQContext(const UDQFunctionTable& udqft, SummaryState& summary_state, UDQState* udq_state);
         std::optional<double> get(const std::string& key) const;
         std::optional<double> get_well_var(const std::string& well, const std::string& var) const;
         std::optional<double> get_group_var(const std::string& group, const std::string& var) const;
@@ -50,7 +50,7 @@ namespace Opm {
     private:
         const UDQFunctionTable& udqft;
         SummaryState& summary_state;
-        UDQState& udq_state;
+        UDQState* udq_state;
         //std::unordered_map<std::string, UDQSet> udq_results;
         std::unordered_map<std::string, double> values;
     };

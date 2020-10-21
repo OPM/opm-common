@@ -41,7 +41,7 @@ bool is_udq(const std::string& key) {
 }
 
 
-    UDQContext::UDQContext(const UDQFunctionTable& udqft_arg, SummaryState& summary_state_arg, UDQState& udq_state_arg) :
+    UDQContext::UDQContext(const UDQFunctionTable& udqft_arg, SummaryState& summary_state_arg, UDQState* udq_state_arg) :
         udqft(udqft_arg),
         summary_state(summary_state_arg),
         udq_state(udq_state_arg)
@@ -70,8 +70,8 @@ bool is_udq(const std::string& key) {
 
     std::optional<double> UDQContext::get(const std::string& key) const {
         if (is_udq(key)) {
-            if (this->udq_state.has(key))
-                return this->udq_state.get(key);
+            if (this->udq_state->has(key))
+                return this->udq_state->get(key);
 
             return std::nullopt;
         }
@@ -85,8 +85,8 @@ bool is_udq(const std::string& key) {
 
     std::optional<double> UDQContext::get_well_var(const std::string& well, const std::string& var) const {
         if (is_udq(var)) {
-            if (this->udq_state.has_well_var(well, var))
-                return this->udq_state.get_well_var(well, var);
+            if (this->udq_state->has_well_var(well, var))
+                return this->udq_state->get_well_var(well, var);
 
             return std::nullopt;
         }
@@ -101,8 +101,8 @@ bool is_udq(const std::string& key) {
 
     std::optional<double> UDQContext::get_group_var(const std::string& group, const std::string& var) const {
         if (is_udq(var)) {
-            if (this->udq_state.has_group_var(group, var))
-                return this->udq_state.get_group_var(group, var);
+            if (this->udq_state->has_group_var(group, var))
+                return this->udq_state->get_group_var(group, var);
 
             return std::nullopt;
         }
@@ -129,12 +129,12 @@ bool is_udq(const std::string& key) {
     }
 
     void UDQContext::update_assign(std::size_t report_step, const std::string& keyword, const UDQSet& udq_result) {
-        this->udq_state.add_assign(report_step, keyword, udq_result);
-        this->summary_state.update_udq(udq_result, this->udq_state.undefined_value());
+        this->udq_state->add_assign(report_step, keyword, udq_result);
+        this->summary_state.update_udq(udq_result, this->udq_state->undefined_value());
     }
 
     void UDQContext::update_define(const std::string& keyword, const UDQSet& udq_result) {
-        this->udq_state.add_define(keyword, udq_result);
-        this->summary_state.update_udq(udq_result, this->udq_state.undefined_value());
+        this->udq_state->add_define(keyword, udq_result);
+        this->summary_state.update_udq(udq_result, this->udq_state->undefined_value());
     }
 }
