@@ -27,6 +27,7 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
 
         namespace SGroup {
         enum prod_index : std::vector<float>::size_type {
+            GuideRate     =  2,
             OilRateLimit  =  6, // Group's oil production target/limit
             WatRateLimit  =  7, // Group's water production target/limit
             GasRateLimit  =  8, // Group's gas production target/limit
@@ -52,12 +53,29 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
 
 
     namespace IGroup {
+    // Observe that these value should not be used as ordinary indices into
+    // the the IGRP vector, they should all be used as IGRP[NWGMAX + $index]
     enum index : std::vector<int>::size_type {
         ProdCMode = 1,
+        GuideRateDef = 6,
         WInjCMode = 16,
         GInjCMode = 21,
         ParentGroup = 28,
     };
+
+    namespace Value {
+    enum GuideRateMode : int {
+        None = 0,
+        Oil = 1,
+        Water = 2,
+        Gas = 3,
+        Liquid = 4,
+        Potn = 7,
+        Form = 8,
+        Comb = 9,
+    };
+    }
+
     }
 
 
