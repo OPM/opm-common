@@ -987,7 +987,7 @@ BOOST_AUTO_TEST_CASE(UDQ_POW_TEST) {
     UDQFunctionTable udqft;
     UDQParams udqp;
     UDQDefine def_pow1(udqp, "WU", location, {"WOPR", "+", "WWPR", "*", "WGOR", "^", "WWIR"});
-    UDQDefine def_pow2(udqp, "WU", location, {"(", "WOPR", "+", "WWPR", ")", "^", "(", "WOPR", "+" , "WGOR", "*", "WWIR", "-", "WOPT", ")"});
+    UDQDefine def_pow2(udqp, "WU", location, {"(", "WOPR", "+", "WWPR", ")", "^", "(", "WOPR", "+" , "WGOR", "*", "WWIR", "-", "WBHP", ")"});
     SummaryState st(std::chrono::system_clock::now());
     UDQState udq_state(udqp.undefinedValue());
     UDQContext context(udqft, st, udq_state);
@@ -996,7 +996,7 @@ BOOST_AUTO_TEST_CASE(UDQ_POW_TEST) {
     st.update_well_var("P1", "WWPR", 2);
     st.update_well_var("P1", "WGOR", 3);
     st.update_well_var("P1", "WWIR", 4);
-    st.update_well_var("P1", "WOPT", 7);
+    st.update_well_var("P1", "WBHP", 7);
 
     auto res_pow1 = def_pow1.eval(context);
     auto res_pow2 = def_pow2.eval(context);
@@ -1118,10 +1118,10 @@ BOOST_AUTO_TEST_CASE(UDQ_SORTD_NAN) {
     st.update_well_var("OP4", "WWIR", 4.0);
 
     auto res1 = def.eval(context);
-    st.update_udq( res1, 0 );
+    context.update_define(def.keyword(), res1);
 
     auto res_sort1 = def_sort.eval(context);
-    st.update_udq( res_sort1 , 0);
+    context.update_define(def_sort.keyword(), res_sort1);
     BOOST_CHECK_EQUAL(res_sort1["OP1"].get(), 1.0);
     BOOST_CHECK_EQUAL(res_sort1["OP2"].get(), 2.0);
     BOOST_CHECK_EQUAL(res_sort1["OP3"].get(), 3.0);
@@ -1132,11 +1132,13 @@ BOOST_AUTO_TEST_CASE(UDQ_SORTD_NAN) {
     st.update_well_var("OP1", "WWIR", 0);
     auto res2 = def.eval(context);
     BOOST_CHECK_EQUAL(res2.defined_size(), 3U);
-    st.update_udq( res2, 0 );
+
+    context.update_define(def.keyword(), res2);
     BOOST_CHECK( st.has_well_var("OP4", "WUPR1"));
 
     auto res_sort2 = def_sort.eval(context);
-    st.update_udq( res_sort2, 0 );
+    context.update_define(def.keyword(), res2);
+
     BOOST_CHECK_EQUAL(res_sort2.defined_size(), 3U);
     BOOST_CHECK_EQUAL(res_sort2["OP2"].get(), 1.0);
     BOOST_CHECK_EQUAL(res_sort2["OP3"].get(), 2.0);
@@ -1162,10 +1164,7 @@ BOOST_AUTO_TEST_CASE(UDQ_SORTA) {
     st.update_well_var("OPU02", "WWCT", 0.0);
 
     auto res1 = def1.eval(context);
-    st.update_well_var("OPL01", "WUPR1", res1["OPL01"].get());
-    st.update_well_var("OPL02", "WUPR1", res1["OPL02"].get());
-    st.update_well_var("OPU01", "WUPR1", res1["OPU01"].get());
-    st.update_well_var("OPU02", "WUPR1", res1["OPU02"].get());
+    context.update_define(def1.keyword(), res1);
 
     auto res_sort = def_sort.eval(context);
     BOOST_CHECK_EQUAL(res_sort["OPL02"].get(), 1.0);

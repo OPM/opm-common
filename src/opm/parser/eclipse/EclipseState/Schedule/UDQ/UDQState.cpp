@@ -40,8 +40,13 @@ bool is_udq(const std::string& key) {
 }
 
 
+double UDQState::undefined_value() const {
+    return this->undef_value;
+}
+
+
 UDQState::UDQState(double undefined) :
-    undefined_value(undefined)
+    undef_value(undefined)
 {}
 
 bool UDQState::has(const std::string& key) const {
@@ -99,7 +104,7 @@ double UDQState::get(const std::string& key) const {
     if (result.defined())
         return result.get();
     else
-        return this->undefined_value;
+        return this->undef_value;
 }
 
 double UDQState::get_wg_var(const std::string& wgname, const std::string& key, UDQVarType var_type) const {
@@ -118,7 +123,7 @@ double UDQState::get_wg_var(const std::string& wgname, const std::string& key, U
     if (result.defined())
         return result.get();
     else
-        return this->undefined_value;
+        return this->undef_value;
 }
 
 double UDQState::get_well_var(const std::string& well, const std::string& key) const {
@@ -130,7 +135,7 @@ double UDQState::get_group_var(const std::string& group, const std::string& key)
 }
 
 bool UDQState::operator==(const UDQState& other) const {
-    return this->undefined_value == other.undefined_value &&
+    return this->undef_value == other.undef_value &&
            this->values == other.values;
 }
 
@@ -146,7 +151,7 @@ bool UDQState::assign(std::size_t report_step, const std::string& udq_key) const
 
 std::vector<char> UDQState::serialize() const {
     Serializer ser;
-    ser.put(this->undefined_value);
+    ser.put(this->undef_value);
     ser.put(this->values.size());
     for (const auto& set_pair : this->values) {
         ser.put( set_pair.first );
@@ -159,7 +164,7 @@ std::vector<char> UDQState::serialize() const {
 
 void UDQState::deserialize(const std::vector<char>& buffer) {
     Serializer ser(buffer);
-    this->undefined_value = ser.get<double>();
+    this->undef_value = ser.get<double>();
     this->values.clear();
 
     {

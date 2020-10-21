@@ -298,49 +298,42 @@ namespace Opm {
 
     void UDQConfig::eval(std::size_t report_step, SummaryState& st, UDQState& udq_state) const {
         const auto& func_table = this->function_table();
-        auto undefined_value = this->params().undefinedValue();
         UDQContext context(func_table, st, udq_state);
 
         for (const auto& assign : this->assignments(UDQVarType::WELL_VAR)) {
             if (udq_state.assign(report_step, assign.keyword())) {
                 auto ws = assign.eval(st.wells());
                 context.update_assign(report_step, assign.keyword(), ws);
-                st.update_udq(ws, undefined_value);
             }
         }
 
         for (const auto& def : this->definitions(UDQVarType::WELL_VAR)) {
             auto ws = def.eval(context);
             context.update_define(def.keyword(), ws);
-            st.update_udq(ws, undefined_value);
         }
 
         for (const auto& assign : this->assignments(UDQVarType::GROUP_VAR)) {
             if (udq_state.assign(report_step, assign.keyword())) {
                 auto ws = assign.eval(st.groups());
                 context.update_assign(report_step, assign.keyword(), ws);
-                st.update_udq(ws, undefined_value);
             }
         }
 
         for (const auto& def : this->definitions(UDQVarType::GROUP_VAR)) {
             auto ws = def.eval(context);
             context.update_define(def.keyword(), ws);
-            st.update_udq(ws, undefined_value);
         }
 
         for (const auto& assign : this->assignments(UDQVarType::FIELD_VAR)) {
             if (udq_state.assign(assign.report_step(), assign.keyword())) {
                 auto ws = assign.eval();
                 context.update_assign(report_step, assign.keyword(), ws);
-                st.update_udq(ws, undefined_value);
             }
         }
 
         for (const auto& def : this->definitions(UDQVarType::FIELD_VAR)) {
             auto field_udq = def.eval(context);
             context.update_define(def.keyword(), field_udq);
-            st.update_udq(field_udq, undefined_value);
         }
     }
 }
