@@ -44,6 +44,7 @@ struct RstGroup {
     int prod_cmode;
     int winj_cmode;
     int ginj_cmode;
+    int guide_rate_def;
 
     float oil_rate_limit;
     float water_rate_limit;
