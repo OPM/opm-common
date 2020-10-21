@@ -683,7 +683,7 @@ DATES
     auto invalid_restart = std::make_pair(Opm::asTimeT(Opm::TimeStampUTC(2005, 1, 2)), 5);
     auto valid_restart = std::make_pair(Opm::asTimeT(Opm::TimeStampUTC(2005, 1, 1)), 5);
 
-    BOOST_CHECK_THROW( Opm::TimeMap(deck1, invalid_restart) , std::invalid_argument);
+    BOOST_CHECK_THROW( Opm::TimeMap(deck1, invalid_restart) , std::exception);
     Opm::TimeMap tm1(deck1, valid_restart);
     BOOST_CHECK_THROW( tm1[1], std::invalid_argument );
     BOOST_CHECK_THROW( tm1[4], std::invalid_argument );
@@ -695,4 +695,124 @@ DATES
     BOOST_CHECK_EQUAL(tm2[5], Opm::asTimeT(Opm::TimeStampUTC(2005,1,1)));
     BOOST_CHECK_EQUAL(tm2[6], Opm::asTimeT(Opm::TimeStampUTC(2006,1,1)));
 
+}
+
+BOOST_AUTO_TEST_CASE(RESTART2) {
+    std::string deck_string1 = R"(
+START
+ 1 JAN 2000 /
+
+RESTART
+  'CASE'  5 /
+
+SCHEDULE
+
+DATES
+ 1 JAN 2001 /
+ 1 JAN 2002 /
+ 1 JAN 2003 /
+ 1 JAN 2004 /  -- 4
+/
+
+DATES     -- Report step 5
+ 1  JAN 2005 /
+/
+
+DATES
+ 1 JAN 2006 / --  6
+ 1 JAN 2007 / --  7
+ 1 JAN 2008 / --  8
+ 1 JAN 2009 / --  9
+ 1 JAN 2010 / -- 10
+/
+)";
+
+    std::string deck_string2 = R"(
+START
+ 1 JAN 2000 /
+
+RESTART
+  'CASE'  5 /
+
+SCHEDULE
+
+DATES
+ 1 JAN 2001 /
+ 1 JAN 2002 /
+ 1 JAN 2004 /  -- 3
+/
+
+DATES     -- Report step 4
+ 1  JAN 2005 /
+/
+
+TSTEP
+1 /       -- <- Restart from here  5
+
+DATES
+ 1 JAN 2006 / --  6
+ 1 JAN 2007 / --  7
+ 1 JAN 2008 / --  8
+ 1 JAN 2009 / --  9
+ 1 JAN 2010 / -- 10
+/
+)";
+
+    std::string deck_string3 = R"(
+START
+ 1 JAN 2000 /
+
+RESTART
+  'CASE'  5 /
+
+SCHEDULE
+
+DATES
+ 1 JAN 2001 /
+ 1 JAN 2002 /
+ 1 JAN 2004 /  -- 3
+/
+
+DATES     -- Report step 4
+ 1  JAN 2005 /
+/
+
+TSTEP
+1 /       -- <- Restart from here  5
+
+)";
+
+    std::string deck_string4 = R"(
+START
+ 1 JAN 2000 /
+
+RESTART
+  'CASE'  5 /
+
+SCHEDULE
+
+DATES
+ 1 JAN 2001 /
+ 1 JAN 2002 /
+ 1 JAN 2004 /  -- 3
+/
+
+DATES     -- Report step 4
+ 1  JAN 2005 /
+/
+
+TSTEP
+2 /       -- <- Restart from here  5
+
+)";
+    Opm::Parser parser;
+    const auto deck1 = parser.parseString(deck_string1);
+    const auto deck2 = parser.parseString(deck_string2);
+    const auto deck3 = parser.parseString(deck_string3);
+    const auto deck4 = parser.parseString(deck_string4);
+    auto restart = std::make_pair(Opm::asTimeT(Opm::TimeStampUTC(2005, 1, 2)), 5);
+    BOOST_CHECK_THROW( Opm::TimeMap(deck1, restart) , std::exception);
+    BOOST_CHECK_NO_THROW( Opm::TimeMap(deck2, restart) );
+    BOOST_CHECK_NO_THROW( Opm::TimeMap(deck3, restart) );
+    BOOST_CHECK_THROW( Opm::TimeMap(deck4, restart) , std::exception);
 }
