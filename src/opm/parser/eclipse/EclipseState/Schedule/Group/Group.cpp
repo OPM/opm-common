@@ -17,6 +17,7 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <fmt/format.h>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp>
@@ -465,8 +466,8 @@ Group::InjectionControls Group::injectionControls(Phase phase, const SummaryStat
     ic.resv_max_rate = UDA::eval_group_uda(inj.resv_max_rate, this->m_name, st, this->udq_undefined);
     ic.target_reinj_fraction = UDA::eval_group_uda(inj.target_reinj_fraction, this->m_name, st, this->udq_undefined);
     ic.target_void_fraction = UDA::eval_group_uda(inj.target_void_fraction, this->m_name, st, this->udq_undefined);
-    ic.reinj_group = inj.reinj_group;
-    ic.voidage_group = inj.voidage_group;
+    ic.reinj_group = inj.reinj_group.value_or(this->m_name);
+    ic.voidage_group = inj.voidage_group.value_or(this->m_name);
 
     return ic;
 }
@@ -640,6 +641,48 @@ Group::ProductionCMode Group::ProductionCModeFromString( const std::string& stri
         return ProductionCMode::FLD;
     else
         throw std::invalid_argument("Unknown enum state string: " + stringValue );
+}
+
+Group::ProductionCMode Group::ProductionCModeFromInt(int ecl_int) {
+    switch (ecl_int) {
+    case 0:
+        // The inverse function in AggregateGroupData also writes 0
+        // for ProductionCMode::FLD.
+        return ProductionCMode::NONE;
+    case 1:
+        return ProductionCMode::ORAT;
+    case 2:
+        return ProductionCMode::WRAT;
+    case 3:
+        return ProductionCMode::GRAT;
+    case 4:
+        return ProductionCMode::LRAT;
+    case 5:
+        return ProductionCMode::RESV;
+    default:
+        throw std::logic_error(fmt::format("Not recognized value: {} for PRODUCTION CMODE", ecl_int));
+    }
+}
+
+Group::InjectionCMode Group::InjectionCModeFromInt(int ecl_int) {
+    switch (ecl_int) {
+    case 0:
+        // The inverse function in AggregateGroupData also writes 0
+        // for InjectionCMode::FLD and InjectionCMode::SALE
+        return InjectionCMode::NONE;
+    case 1:
+        return InjectionCMode::RATE;
+    case 2:
+        return InjectionCMode::RESV;
+    case 3:
+        return InjectionCMode::REIN;
+    case 4:
+        return InjectionCMode::VREP;
+    case 5:
+        return InjectionCMode::RESV;
+    default:
+        throw std::logic_error(fmt::format("Not recognized value: {} for INJECTION CMODE", ecl_int));
+    }
 }
 
 Group::GuideRateTarget Group::GuideRateTargetFromString( const std::string& stringValue ) {
