@@ -463,7 +463,7 @@ public:
          std::size_t insert_index,
          int headI,
          int headJ,
-         double ref_depth,
+         const std::optional<double>& ref_depth,
          const WellType& wtype_arg,
          ProducerCMode whistctl_cmode,
          Connection::Order ordering,
@@ -552,7 +552,8 @@ public:
     bool updateCrossFlow(bool allow_cross_flow);
     bool updatePVTTable(int pvt_table);
     bool updateHead(int I, int J);
-    bool updateRefDepth(double ref_dpeth);
+    void updateRefDepth();
+    bool updateRefDepth(const std::optional<double>& ref_dpeth);
     bool updateDrainageRadius(double drainage_radius);
     void updateSegments(std::shared_ptr<WellSegments> segments_arg);
     bool updateConnections(std::shared_ptr<WellConnections> connections);
@@ -651,7 +652,7 @@ private:
     std::size_t insert_index;
     int headI;
     int headJ;
-    double ref_depth;
+    std::optional<double> ref_depth;
     double drainage_radius;
     bool allow_cross_flow;
     bool automatic_shutin;

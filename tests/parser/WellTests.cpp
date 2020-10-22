@@ -1354,3 +1354,111 @@ END
     BOOST_CHECK_MESSAGE(wellP.getConnections() == wellQ.getConnections(),
                         "P and Q must have same WellConnections VALUE");
 }
+
+
+
+BOOST_AUTO_TEST_CASE(REPERF) {
+      const auto deck = Parser{}.parseString(R"(RUNSPEC
+START
+7 OCT 2020 /
+
+DIMENS
+  10 10 4 /
+
+GRID
+DXV
+  10*100.0 /
+DYV
+  10*100.0 /
+DZV
+  4*10.0 /
+
+DEPTHZ
+  121*2000.0 /
+
+PERMX
+  400*100.0 /
+PERMY
+  400*100.0 /
+PERMZ
+  400*10.0 /
+PORO
+  400*0.3 /
+
+SCHEDULE
+
+WELSPECS
+     'W1'   'G' 1  1  1*       'OIL'  2*      'STOP'  4* /
+/
+
+COMPDAT
+     'W1'   1 1 4 4      'OPEN'  1*     34.720      0.216   3095.832  2*         'Y'     12.828 /
+     'W1'   1 1 3 3      'OPEN'  1*     34.720      0.216   3095.832  2*         'Y'     12.828 /
+/
+-- W0
+
+TSTEP
+  1 /
+
+COMPDAT
+     'W1'     1    1     2    2      'OPEN'  1*     25.620      0.216   2086.842  2*         'Y'      8.486 /
+/
+
+-- W1
+TSTEP
+  1 /
+
+
+
+WELSPECS
+  'W1' 'G' 1 1 2005 'LIQ' /
+/
+
+-- W2
+
+TSTEP
+1 /
+
+WELSPECS
+  'W1' 'G' 1 1 1* 'LIQ' /
+/
+-- W3
+
+TSTEP
+1  /
+
+
+COMPDAT
+     'W1'     1    1     1    1      'OPEN'  1*     25.620      0.216   2086.842  2*         'Y'      8.486 /
+/
+-- W4
+TSTEP
+1 /
+
+WELSPECS
+  'W1' 'G' 1 1 1* 'LIQ' /
+/
+-- W5
+
+END
+)");
+
+    const auto es    = EclipseState{ deck };
+    const auto& grid = es.getInputGrid();
+    const auto sched = Schedule{ deck, es };
+
+    const auto& w0 = sched.getWell("W1", 0);
+    const auto& w1 = sched.getWell("W1", 1);
+    const auto& w2 = sched.getWell("W1", 2);
+    const auto& w3 = sched.getWell("W1", 3);
+    const auto& w4 = sched.getWell("W1", 4);
+    const auto& w5 = sched.getWell("W1", 5);
+
+
+    BOOST_CHECK_EQUAL(w0.getRefDepth(), grid.getCellDepth(0,0,2));
+    BOOST_CHECK_EQUAL(w1.getRefDepth(), w0.getRefDepth());
+    BOOST_CHECK_EQUAL(w2.getRefDepth(), 2005 );
+    BOOST_CHECK_EQUAL(w3.getRefDepth(), grid.getCellDepth(0,0,1));
+    BOOST_CHECK_EQUAL(w4.getRefDepth(), w3.getRefDepth());
+    BOOST_CHECK_EQUAL(w5.getRefDepth(), grid.getCellDepth(0,0,0));
+}
