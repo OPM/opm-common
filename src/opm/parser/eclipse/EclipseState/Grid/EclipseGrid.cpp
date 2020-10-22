@@ -921,7 +921,7 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         return zcorn;
     }
 
-    void EclipseGrid::initCylindricalGrid(const Deck& deck)
+    void EclipseGrid::initCylindricalGrid([[maybe_unused]] const Deck& deck)
     {
         throw std::invalid_argument("Cylindrical grid not implemented yet, use SPIDER web grid keyword instead for radial flow modeling");
     }
