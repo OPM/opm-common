@@ -1182,76 +1182,10 @@ static Opm::Deck radial_missing_INRAD() {
 
 
 
-static Opm::Deck radial_keywords_OK() {
-    const char* deckData =
-        "RUNSPEC\n"
-        "\n"
-        "DIMENS\n"
-        " 10 6 10 /\n"
-        "RADIAL\n"
-        "GRID\n"
-        "INRAD\n"
-        "1 /\n"
-        "DRV\n"
-        "10*1 /\n"
-        "DTHETAV\n"
-        "6*60 /\n"
-        "DZV\n"
-        "10*0.25 /\n"
-        "TOPS\n"
-        "60*0.0 /\n"
-        "PORO \n"
-        "  600*0.15 /"
-        "\n";
-
-    Opm::Parser parser;
-    return parser.parseString( deckData);
-}
-
-static Opm::Deck radial_keywords_OK_CIRCLE() {
-    const char* deckData =
-        "RUNSPEC\n"
-        "\n"
-        "DIMENS\n"
-        " 10 6 10 /\n"
-        "RADIAL\n"
-        "GRID\n"
-        "CIRCLE\n"
-        "INRAD\n"
-        "1 /\n"
-        "DRV\n"
-        "10*1 /\n"
-        "DTHETAV\n"
-        "6*60 /\n"
-        "DZV\n"
-        "10*0.25 /\n"
-        "TOPS\n"
-        "60*0.0 /\n"
-        "PORO \n"
-        "  600*0.15 /"
-        "\n";
-
-    Opm::Parser parser;
-    return parser.parseString( deckData);
-}
-
-
 
 BOOST_AUTO_TEST_CASE(RadialTest) {
     Opm::Deck deck = radial_missing_INRAD();
     BOOST_CHECK_THROW( Opm::EclipseGrid{ deck }, std::invalid_argument);
-}
-
-BOOST_AUTO_TEST_CASE(RadialKeywordsOK, *boost::unit_test::disabled()) {
-    Opm::Deck deck = radial_keywords_OK();
-    Opm::EclipseGrid grid( deck );
-    BOOST_CHECK(!grid.circle());
-}
-
-BOOST_AUTO_TEST_CASE(RadialKeywordsOK_CIRCLE, *boost::unit_test::disabled()) {
-    Opm::Deck deck = radial_keywords_OK_CIRCLE();
-    Opm::EclipseGrid grid( deck );
-    BOOST_CHECK(grid.circle());
 }
 
 static Opm::Deck radial_keywords_DRV_size_mismatch() {
