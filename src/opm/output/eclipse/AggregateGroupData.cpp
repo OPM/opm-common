@@ -573,6 +573,7 @@ void productionGroup(const Opm::Schedule&     sched,
     */
 
     using IGroup = ::Opm::RestartIO::Helpers::VectorItems::IGroup::index;
+    namespace Value = ::Opm::RestartIO::Helpers::VectorItems::IGroup::Value;
     if (higher_lev_ctrl > 0 && (group.getGroupType() != Opm::Group::GroupType::NONE)) {
         iGrp[nwgmax + IGroup::ProdCMode]
             = (prod_guide_rate_def != Opm::Group::GuideRateTarget::NO_GUIDE_RATE) ? higher_lev_ctrl_mode : 0;
@@ -605,47 +606,40 @@ void productionGroup(const Opm::Schedule&     sched,
     }
     iGrp[nwgmax + 9] = iGrp[nwgmax + IGroup::ProdCMode];
 
+    iGrp[nwgmax + IGroup::GuideRateDef] = Value::GuideRateMode::None;
     switch (prod_cmode) {
     case Opm::Group::ProductionCMode::NONE:
-        iGrp[nwgmax + 6] = 0;
         iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? 0 : 4;
         iGrp[nwgmax + 10] = 0;
         break;
     case Opm::Group::ProductionCMode::ORAT:
-        iGrp[nwgmax + 6] = 0;
         iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? -40000 : 4;
         iGrp[nwgmax + 10] = 1;
         break;
     case Opm::Group::ProductionCMode::WRAT:
-        iGrp[nwgmax + 6] = 0;
         iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? -4000 : 4;
         iGrp[nwgmax + 10] = 2;
         break;
     case Opm::Group::ProductionCMode::GRAT:
-        iGrp[nwgmax + 6] = 0;
         iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? -400 : 4;
         iGrp[nwgmax + 10] = 3;
         break;
     case Opm::Group::ProductionCMode::LRAT:
-        iGrp[nwgmax + 6] = 0;
         iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? -40 : 4;
         iGrp[nwgmax + 10] = 4;
         break;
     case Opm::Group::ProductionCMode::RESV:
-        iGrp[nwgmax + 6] = 0;
         iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? -4 : 4; // need to be checked
         iGrp[nwgmax + 10] = 5;
         break;
     case Opm::Group::ProductionCMode::FLD:
-        iGrp[nwgmax + 6] = 0;
         if ((higher_lev_ctrl > 0) && (prod_guide_rate_def != Opm::Group::GuideRateTarget::NO_GUIDE_RATE)) {
-            iGrp[nwgmax + 6] = 8;
+            iGrp[nwgmax + IGroup::GuideRateDef] = Value::GuideRateMode::Form;
         }
         iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? 4 : 4;
         iGrp[nwgmax + 10] = 0; // need to be checked!!
         break;
     default:
-        iGrp[nwgmax + 6] = 0;
         iGrp[nwgmax + 7] = 0;
         iGrp[nwgmax + 10] = 0; // need to be checked!!
     }
@@ -1026,7 +1020,7 @@ void staticContrib(const Opm::Group&        group,
     }
 
     if ((group.name() == "FIELD") && (group.getGroupType() == Opm::Group::GroupType::NONE)) {
-          sGrp[2] = 0.;
+          sGrp[Isp::GuideRate] = 0.;
           sGrp[14] = 0.;
           sGrp[19] = 0.;
           sGrp[24] = 0.;
