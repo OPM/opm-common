@@ -1242,13 +1242,13 @@ BOOST_AUTO_TEST_CASE(RadialTest) {
     BOOST_CHECK_THROW( Opm::EclipseGrid{ deck }, std::invalid_argument);
 }
 
-BOOST_AUTO_TEST_CASE(RadialKeywordsOK) {
+BOOST_AUTO_TEST_CASE(RadialKeywordsOK, *boost::unit_test::disabled()) {
     Opm::Deck deck = radial_keywords_OK();
     Opm::EclipseGrid grid( deck );
     BOOST_CHECK(!grid.circle());
 }
 
-BOOST_AUTO_TEST_CASE(RadialKeywordsOK_CIRCLE) {
+BOOST_AUTO_TEST_CASE(RadialKeywordsOK_CIRCLE, *boost::unit_test::disabled()) {
     Opm::Deck deck = radial_keywords_OK_CIRCLE();
     Opm::EclipseGrid grid( deck );
     BOOST_CHECK(grid.circle());
@@ -1397,13 +1397,14 @@ BOOST_AUTO_TEST_CASE(RadialKeywords_SIZE_ERROR) {
     BOOST_CHECK_THROW( Opm::EclipseGrid{ radial_keywords_ANGLE_OVERFLOW() } , std::invalid_argument);
 }
 
-static Opm::Deck radial_details() {
+
+static Opm::Deck spider_details() {
     const char* deckData =
         "RUNSPEC\n"
         "\n"
         "DIMENS\n"
         "1 5 2 /\n"
-        "RADIAL\n"
+        "SPIDER\n"
         "GRID\n"
         "INRAD\n"
         "1 /\n"
@@ -1423,8 +1424,8 @@ static Opm::Deck radial_details() {
     return parser.parseString( deckData);
 }
 
-BOOST_AUTO_TEST_CASE(RadialDetails) {
-    Opm::Deck deck = radial_details();
+BOOST_AUTO_TEST_CASE(SpiderDetails) {
+    Opm::Deck deck = spider_details();
     Opm::EclipseGrid grid( deck );
 
     BOOST_CHECK_CLOSE( grid.getCellVolume( 0 , 0 , 0 ) , 0.5*(2*2 - 1)*1, 0.0001);

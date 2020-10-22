@@ -280,6 +280,8 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
 
         if (deck.hasKeyword<ParserKeywords::RADIAL>()) {
             initCylindricalGrid(deck );
+        } else if (deck.hasKeyword<ParserKeywords::SPIDER>()) {
+            initSpiderwebGrid(deck );
         } else {
             if (hasCornerPointKeywords(deck)) {
                 initCornerPointGrid(deck);
@@ -919,19 +921,24 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         return zcorn;
     }
 
+    void EclipseGrid::initCylindricalGrid(const Deck& deck)
+    {
+        throw std::invalid_argument("Cylindrical grid not implemented yet, use SPIDER web grid keyword instead for radial flow modeling");
+    }
+
     /*
       Limited implementaton - requires keywords: DRV, DTHETAV, DZV and TOPS.
     */
 
-    void EclipseGrid::initCylindricalGrid(const Deck& deck)
+    void EclipseGrid::initSpiderwebGrid(const Deck& deck)
     {
-        // The hasCyindricalKeywords( ) checks according to the
-        // eclipse specification. We currently do not support all
+        // The hasSpiderKeywords( ) checks according to the
+        // eclipse specification for RADIAL grid. We currently do not support all
         // aspects of cylindrical grids, we therefor have an
         // additional test here, which checks if we have the keywords
         // required by the current implementation.
         if (!hasCylindricalKeywords(deck))
-            throw std::invalid_argument("Not all keywords required for cylindrical grids present");
+            throw std::invalid_argument("Not all keywords required for spiderweb grids present");
 
         if (!deck.hasKeyword<ParserKeywords::DTHETAV>())
             throw std::logic_error("The current implementation *must* have theta values specified using the DTHETAV keyword");
@@ -975,7 +982,7 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
 
         /*
           Now the data has been validated, now we continue to create
-          ZCORN and COORD vectors, and we are done.
+          ZCORN and COORD vectors, and we are almost done.
         */
         {
             ZcornMapper zm( this->getNX(), this->getNY(), this->getNZ());
@@ -1039,6 +1046,7 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
             initCornerPointGrid( coord, zcorn, nullptr, nullptr);
         }
     }
+
 
 
     void EclipseGrid::initCornerPointGrid(const std::vector<double>& coord ,
