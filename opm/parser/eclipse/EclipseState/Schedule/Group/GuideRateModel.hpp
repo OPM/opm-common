@@ -54,6 +54,16 @@ public:
                    bool use_free_gas_arg);
     GuideRateModel() = default;
 
+    static bool rst_valid(double time_interval,
+                          double A,
+                          double B,
+                          double C,
+                          double D,
+                          double E,
+                          double F,
+                          double damping_factor);
+
+
     static GuideRateModel serializeObject();
 
     bool updateLINCOM(const UDAValue& alpha, const UDAValue& beta, const UDAValue& gamma);

@@ -90,6 +90,29 @@ GuideRateModel GuideRateModel::serializeObject()
     return result;
 }
 
+bool GuideRateModel::rst_valid(double time_interval,
+                               double A,
+                               double B,
+                               double C,
+                               double D,
+                               double E,
+                               double F,
+                               double damping_factor) {
+    if (time_interval == 0 &&
+        A == 0 &&
+        B == 0 &&
+        C == 0 &&
+        D == 0 &&
+        E == 0 &&
+        F == 0 &&
+        damping_factor == 0)
+        return false;
+
+    return true;
+}
+
+
+
 double GuideRateModel::pot(double oil_pot, double gas_pot, double wat_pot) const {
     return pot(this->target(), oil_pot, gas_pot, wat_pot);
 }

@@ -1696,6 +1696,35 @@ namespace {
 
         m_tuning.update(report_step, rst_state.tuning);
         m_events.addEvent( ScheduleEvents::TUNING_CHANGE , report_step);
+
+        {
+            const auto& header = rst_state.header;
+            bool time_interval = 0;
+            GuideRateModel::Target target = GuideRateModel::Target::OIL;
+            bool allow_increase = true;
+            bool use_free_gas = false;
+            if (GuideRateModel::rst_valid(time_interval,
+                                          header.guide_rate_a,
+                                          header.guide_rate_b,
+                                          header.guide_rate_c,
+                                          header.guide_rate_d,
+                                          header.guide_rate_e,
+                                          header.guide_rate_f,
+                                          header.guide_rate_damping)) {
+                auto guide_rate_model = GuideRateModel(time_interval,
+                                                       target,
+                                                       header.guide_rate_a,
+                                                       header.guide_rate_b,
+                                                       header.guide_rate_c,
+                                                       header.guide_rate_d,
+                                                       header.guide_rate_e,
+                                                       header.guide_rate_f,
+                                                       allow_increase,
+                                                       header.guide_rate_damping,
+                                                       use_free_gas);
+                this->updateGuideRateModel(guide_rate_model, report_step);
+            }
+        }
     }
 
     std::shared_ptr<const Python> Schedule::python() const
