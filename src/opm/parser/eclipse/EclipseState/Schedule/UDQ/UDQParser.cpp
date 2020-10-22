@@ -140,21 +140,39 @@ UDQASTNode UDQParser::parse_pow() {
 
 
 UDQASTNode UDQParser::parse_mul() {
-    auto left = this->parse_pow();
-    auto current = this->current();
-    if (this->empty())
-        return left;
+    std::vector<UDQASTNode> nodes;
+    {
+        std::unique_ptr<UDQASTNode> current_node;
+        while (true) {
+            auto node = this->parse_pow();
+            if (current_node) {
+                current_node->set_right(node);
+                nodes.push_back(*current_node);
+            } else
+                nodes.push_back(node);
 
-    if (current.type == UDQTokenType::binary_op_mul || current.type == UDQTokenType::binary_op_div) {
-        this->next();
-        if (this->empty())
-            return UDQASTNode(UDQTokenType::error);
+            if (this->empty())
+                break;
 
-        auto right = this->parse_mul();
-        return UDQASTNode(current.type, current.value, left, right);
+            auto current_token = this->current();
+            if (current_token.type == UDQTokenType::binary_op_mul || current_token.type == UDQTokenType::binary_op_div) {
+                current_node.reset( new UDQASTNode(current_token.type, current_token.value) );
+                this->next();
+                if (this->empty())
+                    return UDQASTNode( UDQTokenType::error );
+            } else break;
+        }
     }
 
-    return left;
+    UDQASTNode top_node = nodes.back();
+    if (nodes.size() > 1) {
+        UDQASTNode * current = &top_node;
+        for (std::size_t index = nodes.size() - 1; index > 0; index--) {
+            current->set_left(nodes[index - 1]);
+            current = current->get_left();
+        }
+    }
+    return top_node;
 }
 
 

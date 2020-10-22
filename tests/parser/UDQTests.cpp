@@ -2264,3 +2264,18 @@ TSTEP
     }
 }
 
+
+BOOST_AUTO_TEST_CASE(UDQ_DIV_TEST) {
+    KeywordLocation location;
+    UDQFunctionTable udqft;
+    UDQParams udqp;
+    UDQDefine def_div(udqp, "FU", location, {"128", "/", "2", "/", "4", "/", "8"});
+    SummaryState st(std::chrono::system_clock::now());
+    UDQState udq_state(udqp.undefinedValue());
+    UDQContext context(udqft, st, udq_state);
+
+    auto res_div = def_div.eval(context);
+    BOOST_CHECK_EQUAL( res_div[0].get() , 2.0);
+}
+
+
