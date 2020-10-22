@@ -2293,3 +2293,51 @@ MAXVALUE
     // and some special casing might be required.
     BOOST_CHECK_NO_THROW( FieldPropsManager(deck3, Phases{true, true, true}, grid, TableManager()));
 }
+
+BOOST_AUTO_TEST_CASE(REGION_OPERATION) {
+    std::string deck_string1 = R"(
+GRID
+
+PORO
+   200*0.15 /
+
+PERMX
+   200*1 /
+
+REGIONS
+
+FIPNUM
+  200*1 /
+
+MULTNUM
+  50*1 50*2 100*3 /
+
+EDIT
+
+MULTIREG
+   PERMX 1 1 M/
+   PERMX 2 2 M/
+   PERMX 3 3 M/
+/
+
+COPYREG
+   PERMX  PERMY  1 M  /
+   PERMX  PERMY  2 M  /
+   PERMX  PERMY  3 M  /
+/
+
+)";
+
+    UnitSystem unit_system(UnitSystem::UnitType::UNIT_TYPE_METRIC);
+    auto to_si = [&unit_system](double raw_value) { return unit_system.to_si(UnitSystem::measure::permeability, raw_value); };
+    EclipseGrid grid(10,10, 2);
+    Deck deck1 = Parser{}.parseString(deck_string1);
+    FieldPropsManager fp(deck1, Phases{true, true, true}, grid, TableManager());
+    const auto& permx = fp.get_double("PERMX");
+    const auto& permy = fp.get_double("PERMY");
+    const auto& multn = fp.get_int("MULTNUM");
+    for (std::size_t g = 0; g < 200; g++) {
+        BOOST_CHECK_CLOSE(to_si(multn[g]), permx[g], 1e-5);
+        BOOST_CHECK_EQUAL(permx[g], permy[g]);
+    }
+}

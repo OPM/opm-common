@@ -874,7 +874,7 @@ void FieldProps::handle_COPY(const DeckKeyword& keyword, Box box, bool region) {
 
         if (region) {
             int region_value = record.getItem(2).get<int>(0);
-            const auto& region_item = record.getItem(4);
+            const auto& region_item = record.getItem(3);
             const auto& region_name = this->region_name( region_item );
             index_list = this->region_index(region_name, region_value);
         } else {
