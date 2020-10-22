@@ -52,6 +52,8 @@ namespace Opm {
         int sattable = -1; // saturation table number, by default, the block value
         double pore_volume; // pore volume
         double transmissibility;
+        // TODO: temporary approach to get the result first, later to decide what index we need
+        int global_index;
         bool sameCoordinates(const int i, const int j, const int k) const;
     };
 
@@ -60,6 +62,11 @@ namespace Opm {
         explicit SingleNumericalAquifer(const int aqu_id);
         void addAquiferCell(const NumericalAquiferCell& aqu_cell);
         void addAquiferConnection(const NumAquiferCon& aqu_con);
+        void updatePoreVolume(std::vector<double>& pore_volume) const;
+        void updateCellProps(std::vector<double>& pore_volume,
+                             std::vector<int>& satnum,
+                             std::vector<int>& pvtnum,
+                             std::vector<double>& cell_depth) const;
     private:
         // Maybe this id_ is not necessary
         // Because if it is a map, the id will be there
@@ -77,6 +84,11 @@ namespace Opm {
 
         bool hasAquifer(const int aquifer_id) const;
         bool empty() const;
+        void updatePoreVolume(std::vector<double>& pore_volume) const;
+        void updateCellProps(std::vector<double>& pore_volume,
+                             std::vector<int>& satnum,
+                             std::vector<int>& pvtnum,
+                             std::vector<double>& cell_depth) const;
     private:
         // std::un_ordered_map
         std::unordered_map<int, SingleNumericalAquifer> aquifers_;

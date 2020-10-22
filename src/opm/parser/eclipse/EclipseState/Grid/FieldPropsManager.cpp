@@ -141,12 +141,13 @@ bool FieldPropsManager::tran_active(const std::string& keyword) const {
     return this->fp->tran_active(keyword);
 }
 
-void FieldPropsManager::reset_porv(const std::vector<double> &porv) {
-    return this->fp->reset_porv(porv);
-}
 
 const std::vector<double>& FieldPropsManager::cellDepth() const {
     return this->fp->cellDepth();
+}
+
+void FieldPropsManager::applyNumericalAquifer(const AquiferConfig& aquifers) {
+    return this->fp->applyNumericalAquifer(aquifers);
 }
 
     template<class MapType>

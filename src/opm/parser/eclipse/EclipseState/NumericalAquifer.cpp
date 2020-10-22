@@ -99,6 +99,20 @@ bool NumericalAquifers::empty() const {
     return this->aquifers_.empty();
 }
 
+void NumericalAquifers::updatePoreVolume(std::vector<double>& pore_volume) const {
+    for (const auto& iter : this->aquifers_) {
+        iter.second.updatePoreVolume(pore_volume);
+    }
+}
+
+void NumericalAquifers::updateCellProps(std::vector<double>& pore_volume,
+                                        std::vector<int>& satnum,
+                                        std::vector<int>& pvtnum,
+                                        std::vector<double>& cell_depth) const {
+    for (const auto& iter : this->aquifers_) {
+        iter.second.updateCellProps(pore_volume, satnum, pvtnum, cell_depth);
+    }
+}
 
     using AQUNUM = ParserKeywords::AQUNUM;
 NumericalAquiferCell::NumericalAquiferCell(const DeckRecord& record, const EclipseGrid& grid, const FieldPropsManager& field_props)
@@ -115,7 +129,7 @@ NumericalAquiferCell::NumericalAquiferCell(const DeckRecord& record, const Eclip
     const auto& poro = field_props.get_double("PORO");
     const auto& pvtnum = field_props.get_int("PVTNUM");
     const auto& satnum = field_props.get_int("SATNUM");
-    const auto global_index = grid.getGlobalIndex(I, J, K);
+    this->global_index = grid.getGlobalIndex(I, J, K);
     // TODO: test with has Value?
     if ( !record.getItem<AQUNUM::PORO>().defaultApplied(0) ) {
         this->porosity = record.getItem<AQUNUM::PORO>().getSIDouble(0);
@@ -172,6 +186,24 @@ void SingleNumericalAquifer::addAquiferConnection(const NumAquiferCon& aqu_con) 
         }
     }
     this->connections_.push_back(aqu_con);
+}
+
+void SingleNumericalAquifer::updatePoreVolume(std::vector<double>& pore_volume) const {
+    for (const auto& cell : this->cells_) {
+        pore_volume[cell.global_index] = cell.pore_volume;
+    }
+}
+
+void SingleNumericalAquifer::updateCellProps(std::vector<double>& pore_volume,
+                                             std::vector<int>& satnum,
+                                             std::vector<int>& pvtnum,
+                                             std::vector<double>& cell_depth) const {
+    for (const auto& cell : this->cells_) {
+        pore_volume[cell.global_index] = cell.pore_volume;
+        satnum[cell.global_index] = cell.sattable;
+        pvtnum[cell.global_index] = cell.pvttable;
+        cell_depth[cell.global_index] = cell.depth;
+    }
 }
 
 }

@@ -32,6 +32,7 @@ class Deck;
 class FieldProps;
 class Phases;
 class TableManager;
+class AquiferConfig;
 
 class FieldPropsManager {
 
@@ -42,7 +43,7 @@ public:
     FieldPropsManager() = default;
     FieldPropsManager(const Deck& deck, const Phases& ph, const EclipseGrid& grid, const TableManager& tables);
     virtual void reset_actnum(const std::vector<int>& actnum);
-    virtual void reset_porv(const std::vector<double>& porv);
+    virtual void applyNumericalAquifer(const AquiferConfig&);
     const std::string& default_region() const;
     virtual std::vector<int> actnum() const;
     virtual std::vector<double> porv(bool global = false) const;

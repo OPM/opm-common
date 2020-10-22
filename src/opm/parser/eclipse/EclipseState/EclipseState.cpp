@@ -72,10 +72,7 @@ namespace Opm {
         this->aquifer_config = AquiferConfig(this->m_tables, this->m_inputGrid, this->field_props, deck);
 
         if ( this->aquifer_config.hasNumericalAquifer() ) {
-            // update the pore volume here
-            // TODO: not sure whether should be true or no, will investigate later
-            const auto& poro = this->field_props.get_double_field_data("PORO");
-            const auto& porv = this->field_props.get_double_field_data("PORV");
+            this->field_props.applyNumericalAquifer(this->aquifer_config);
         }
 
         if (deck.hasKeyword( "TITLE" )) {

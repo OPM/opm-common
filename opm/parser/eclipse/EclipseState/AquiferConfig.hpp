@@ -49,6 +49,11 @@ public:
     const Aquancon& connections() const;
     bool operator==(const AquiferConfig& other);
     bool hasAquifer(const int aquID) const;
+    void updatePoreVolume(std::vector<double>& pore_volume) const;
+    void updateCellProps(std::vector<double>&,
+                         std::vector<int>&,
+                         std::vector<int>&,
+                         std::vector<double>&) const;
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)

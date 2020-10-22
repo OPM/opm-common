@@ -35,6 +35,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/RtempvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/Box.hpp>
+#include <opm/parser/eclipse/EclipseState/AquiferConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
@@ -427,7 +428,15 @@ void FieldProps::reset_actnum(const std::vector<int>& new_actnum) {
     this->active_size = new_active_size;
 }
 
-void FieldProps::reset_porv(const std::vector<double> &porv) {
+void FieldProps::applyNumericalAquifer(const AquiferConfig& aquifers) {
+    auto& porv_data = this->double_data["PORV"].data;
+    auto& satnum_data = this->int_data["SATNUM"].data;
+    auto& pvtnum_data = this->int_data["PVTNUM"].data;
+    // TODO: totally not sure how this will affect the equilibriation
+    // TODO: not sure whether we should update the cell depth here, since
+    // we might need the equilibration pressure to the pressure initialization
+    auto& celldepth = this->cell_depth;
+    aquifers.updateCellProps(porv_data, satnum_data, pvtnum_data, celldepth);
 }
 
 

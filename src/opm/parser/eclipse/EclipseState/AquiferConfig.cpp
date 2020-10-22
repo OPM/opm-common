@@ -79,4 +79,19 @@ bool AquiferConfig::hasNumericalAquifer() const {
     return !this->numerical_aquifers.empty();
 }
 
+void AquiferConfig::updatePoreVolume(std::vector<double>& pore_volume) const {
+    if ( !this->hasNumericalAquifer() ) return;
+
+    this->numerical_aquifers.updatePoreVolume(pore_volume);
+}
+
+void AquiferConfig::updateCellProps(std::vector<double>& porv,
+                                    std::vector<int>& satnum,
+                                    std::vector<int>& pvtnum,
+                                    std::vector<double>& cell_depth) const {
+    if ( !this->hasNumericalAquifer() ) return;
+
+    this->numerical_aquifers.updateCellProps(porv, satnum, pvtnum, cell_depth);
+}
+
 }
