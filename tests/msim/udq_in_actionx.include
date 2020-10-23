@@ -330,9 +330,6 @@ WGIT
   'INJ'
 /
 
-WGPR
-/
-
 WGPT
 /
 
@@ -360,7 +357,8 @@ WUWCT
 FOPR
 
 FUOPR
-
+FUGPR
+FU_VAR2
 
 SCHEDULE
 -- -------------------------------------------------------------------------
@@ -382,6 +380,7 @@ UDQ
   UNITS  WUWCT '1' /
   DEFINE FUOPR SUM(WOPR) /
   UNITS  FUOPR 'SM3/DAY' /
+  DEFINE FUGPR FLPR /
 /
 
 
@@ -473,12 +472,22 @@ DATES            -- 3
    1 'MAR'  2015 /
 /
 
+UDQ
+  DEFINE FU_VAR2 FGLIR /
+/
+
+
+
 DATES            -- 4
    1 'APR'  2015 /
 /
 
 DATES            -- 5
    1 'MAI'  2015 /
+/
+
+UDQ
+   DEFINE FU_VAR3 WGPR P1 /
 /
 
 DATES

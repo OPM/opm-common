@@ -36,6 +36,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellProductionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
 
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
@@ -2522,6 +2523,7 @@ private:
 
     SummaryOutputParameters  outputParameters_{};
     std::vector<EvalPtr>     requiredRestartParameters_{};
+    std::vector<EvalPtr>     udq_parameters;
     std::vector<std::string> valueKeys_{};
     std::vector<MiniStep>    unwritten_{};
 
@@ -2537,6 +2539,8 @@ private:
 
     void configureRequiredRestartParameters(const SummaryConfig& sumcfg,
                                             const Schedule&      sched);
+
+    void configureUDQ(const SummaryConfig& summary_config, const Schedule& sched);
 
     MiniStep& getNextMiniStep(const int report_step);
     const MiniStep& lastUnwritten() const;
@@ -2563,6 +2567,7 @@ SummaryImplementation(const EclipseState&  es,
     this->configureTimeVectors(es, sumcfg);
     this->configureSummaryInput(es, sumcfg, grid, sched);
     this->configureRequiredRestartParameters(sumcfg, sched);
+    this->configureUDQ(sumcfg, sched);
 }
 
 void Opm::out::Summary::SummaryImplementation::
@@ -2611,6 +2616,9 @@ eval(const EclipseState&                es,
     for (auto& evalPtr : this->requiredRestartParameters_) {
         evalPtr->update(sim_step, duration, input, simRes, st);
     }
+
+    for (auto& eval_ptr : this->udq_parameters)
+        eval_ptr->update(sim_step, duration, input, simRes, st);
 }
 
 void Opm::out::Summary::SummaryImplementation::write()
@@ -2759,6 +2767,105 @@ configureSummaryInput(const EclipseState&  es,
         reportUnsupportedKeywords(std::move(unsuppkw));
 }
 
+
+/*
+   These nodes are added to the summary evaluation list because they are
+   requested by the UDQ system. In the case of well and group variables the code
+   will all nodes for all wells / groups - irrespective of what has been
+   requested in the UDQ code.
+*/
+
+std::vector<Opm::EclIO::SummaryNode> make_default_nodes(const std::string& keyword, const Opm::Schedule& sched) {
+    auto nodes = std::vector<Opm::EclIO::SummaryNode> {};
+    auto category = Opm::parseKeywordCategory(keyword);
+    auto type = Opm::parseKeywordType(keyword);
+
+    switch (category) {
+    case Opm::EclIO::SummaryNode::Category::Field:
+        {
+            Opm::EclIO::SummaryNode node;
+            node.keyword = keyword;
+            node.category = category;
+            node.type = type;
+
+            nodes.push_back(node);
+        }
+        break;
+    case Opm::EclIO::SummaryNode::Category::Miscellaneous:
+        {
+            Opm::EclIO::SummaryNode node;
+            node.keyword = keyword;
+            node.category = category;
+            node.type = type;
+
+            nodes.push_back(node);
+        }
+        break;
+    case Opm::EclIO::SummaryNode::Category::Well:
+        {
+            for (const auto& well : sched.wellNames()) {
+                Opm::EclIO::SummaryNode node;
+                node.keyword = keyword;
+                node.category = category;
+                node.type = type;
+                node.wgname = well;
+
+                nodes.push_back(node);
+            }
+        }
+        break;
+    case Opm::EclIO::SummaryNode::Category::Group:
+        {
+            for (const auto& group : sched.groupNames()) {
+                Opm::EclIO::SummaryNode node;
+                node.keyword = keyword;
+                node.category = category;
+                node.type = type;
+                node.wgname = group;
+
+                nodes.push_back(node);
+            }
+        }
+        break;
+    default:
+        throw std::logic_error(fmt::format("make_default_nodes does not yet support: {}", keyword));
+    }
+
+    return nodes;
+}
+
+
+
+void Opm::out::Summary::SummaryImplementation::configureUDQ(const SummaryConfig& summary_config, const Schedule& sched) {
+    auto nodes = std::vector<Opm::EclIO::SummaryNode> {};
+    std::unordered_set<std::string> summary_keys;
+    for (const auto& udq_ptr : sched.udqConfigList())
+        udq_ptr->required_summary(summary_keys);
+
+    for (const auto& key : summary_keys) {
+        const auto& default_nodes = make_default_nodes(key, sched);
+        for (const auto& def_node : default_nodes)
+            nodes.push_back(def_node);
+    }
+
+    for (const auto& node: nodes) {
+        if (summary_config.hasSummaryKey(node.unique_key()))
+            // Handler already exists.  Don't add second evaluation.
+            continue;
+
+        auto fun_pos = funs.find(node.keyword);
+        if (fun_pos != funs.end())
+            this->udq_parameters.push_back( std::make_unique<Evaluator::FunctionRelation>(node, fun_pos->second) );
+        else {
+            auto unit = single_values_units.find(node.keyword);
+            if (unit == single_values_units.end())
+                throw std::logic_error(fmt::format("Evaluation function for: {} not found ", node.keyword));
+
+            this->udq_parameters.push_back( std::make_unique<Evaluator::GlobalProcessValue>(node, unit->second));
+        }
+    }
+}
+
 void
 Opm::out::Summary::SummaryImplementation::
 configureRequiredRestartParameters(const SummaryConfig& sumcfg,
@@ -2771,8 +2878,8 @@ configureRequiredRestartParameters(const SummaryConfig& sumcfg,
             return;
 
         auto fcnPos = funs.find(node.keyword);
-        assert ((fcnPos != funs.end()) &&
-                "Internal error creating required restart vectors");
+        if (fcnPos == funs.end())
+            throw std::logic_error(fmt::format("Evaluation function for:{} not found", node.keyword));
 
         auto eval = std::make_unique<
             Evaluator::FunctionRelation>(node, fcnPos->second);
