@@ -24,6 +24,7 @@
 #include <string>
 #include <vector>
 #include <set>
+#include <unordered_set>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQSet.hpp>
@@ -73,6 +74,7 @@ public:
     const std::string& input_string() const;
     UDQVarType  var_type() const;
     std::set<UDQTokenType> func_tokens() const;
+    void required_summary(std::unordered_set<std::string>& summary_keys) const;
 
     bool operator==(const UDQDefine& data) const;
 
