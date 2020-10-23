@@ -376,7 +376,7 @@ namespace Opm
                      int headI,
                      int headJ,
                      Phase preferredPhase,
-                     double refDepth,
+                     const std::optional<double>& refDepth,
                      double drainageRadius,
                      bool allowCrossFlow,
                      bool automaticShutIn,

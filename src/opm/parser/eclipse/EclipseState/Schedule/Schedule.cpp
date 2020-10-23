@@ -799,9 +799,9 @@ private:
             }
         }
         const auto& refDepthItem = record.getItem("REF_DEPTH");
-        double refDepth = refDepthItem.hasValue( 0 )
-            ? refDepthItem.getSIDouble( 0 )
-            : -1.0;
+        std::optional<double> ref_depth;
+        if (refDepthItem.hasValue( 0 ))
+            ref_depth = refDepthItem.getSIDouble( 0 );
 
         double drainageRadius = record.getItem( "D_RADIUS" ).getSIDouble(0);
 
@@ -825,7 +825,7 @@ private:
                       headI,
                       headJ,
                       preferredPhase,
-                      refDepth,
+                      ref_depth,
                       drainageRadius,
                       allowCrossFlow,
                       automaticShutIn,
@@ -854,7 +854,7 @@ private:
                            int headI,
                            int headJ,
                            Phase preferredPhase,
-                           double refDepth,
+                           const std::optional<double>& ref_depth,
                            double drainageRadius,
                            bool allowCrossFlow,
                            bool automaticShutIn,
@@ -869,7 +869,7 @@ private:
                   timeStep,
                   0,
                   headI, headJ,
-                  refDepth,
+                  ref_depth,
                   WellType(preferredPhase),
                   this->global_whistctl_mode[timeStep],
                   wellConnectionOrder,

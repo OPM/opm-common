@@ -143,6 +143,7 @@ namespace {
     }
 
     void Schedule::handleCOMPDAT(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+        std::unordered_set<std::string> wells;
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             auto wellnames = this->wellNames(wellNamePattern, handlerContext.currentStep);
@@ -153,14 +154,24 @@ namespace {
                 auto well2 = std::shared_ptr<Well>(new Well( this->getWell(name, handlerContext.currentStep)));
                 auto connections = std::shared_ptr<WellConnections>( new WellConnections( well2->getConnections()));
                 connections->loadCOMPDAT(record, handlerContext.grid, handlerContext.fieldPropsManager);
-
-                if (well2->updateConnections(connections, handlerContext.grid, handlerContext.fieldPropsManager.get_int("PVTNUM")))
+                if (well2->updateConnections(connections, handlerContext.grid, handlerContext.fieldPropsManager.get_int("PVTNUM"))) {
                     this->updateWell(std::move(well2), handlerContext.currentStep);
-
+                    wells.insert( name );
+                }
                 this->addWellGroupEvent(name, ScheduleEvents::COMPLETION_CHANGE, handlerContext.currentStep);
             }
         }
         m_events.addEvent(ScheduleEvents::COMPLETION_CHANGE, handlerContext.currentStep);
+
+        // In the case the wells reference depth has been defaulted in the
+        // WELSPECS keyword we need to force a calculation of the wells
+        // reference depth exactly when the COMPDAT keyword has been completely
+        // processed.
+        for (const auto& wname : wells) {
+            const auto& dynamic_state = this->wells_static.at(wname);
+            auto& well_ptr = dynamic_state.get(handlerContext.currentStep);
+            well_ptr->updateRefDepth();
+        }
     }
 
     void Schedule::handleCOMPLUMP(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
@@ -1200,18 +1211,19 @@ namespace {
                 const auto& refDepthItem = record.getItem<ParserKeywords::WELSPECS::REF_DEPTH>();
                 int pvt_table = record.getItem<ParserKeywords::WELSPECS::P_TABLE>().get<int>(0);
                 double drainageRadius = record.getItem<ParserKeywords::WELSPECS::D_RADIUS>().getSIDouble(0);
-                double refDepth = refDepthItem.hasValue(0)
-                    ? refDepthItem.getSIDouble(0)
-                    : -1.0;
+                std::optional<double> ref_depth;
+                if (refDepthItem.hasValue(0))
+                    ref_depth = refDepthItem.getSIDouble(0);
                 {
                     bool update = false;
                     auto well2 = std::shared_ptr<Well>(new Well( this->getWell(wellName, handlerContext.currentStep)));
-                    update = well2->updateHead(headI, headJ);
-                    update |= well2->updateRefDepth(refDepth);
+                    update  = well2->updateHead(headI, headJ);
+                    update |= well2->updateRefDepth(ref_depth);
                     update |= well2->updateDrainageRadius(drainageRadius);
                     update |= well2->updatePVTTable(pvt_table);
 
                     if (update) {
+                        well2->updateRefDepth();
                         this->updateWell(std::move(well2), handlerContext.currentStep);
                         this->addWellGroupEvent(wellName, ScheduleEvents::WELL_WELSPECS_UPDATE, handlerContext.currentStep);
                     }

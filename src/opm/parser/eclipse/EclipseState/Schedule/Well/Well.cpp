@@ -309,7 +309,7 @@ Well::Well(const std::string& wname_arg,
            std::size_t insert_index_arg,
            int headI_arg,
            int headJ_arg,
-           double ref_depth_arg,
+           const std::optional<double>& ref_depth_arg,
            const WellType& wtype_arg,
            ProducerCMode whistctl_cmode,
            Connection::Order ordering_arg,
@@ -638,7 +638,7 @@ bool Well::updateStatus(Status well_state, bool update_connections) {
 }
 
 
-bool Well::updateRefDepth(double ref_depth_arg) {
+bool Well::updateRefDepth(const std::optional<double>& ref_depth_arg) {
     if (this->ref_depth != ref_depth_arg) {
         this->ref_depth = ref_depth_arg;
         return true;
@@ -798,16 +798,21 @@ bool Well::getAllowCrossFlow() const {
 }
 
 double Well::getRefDepth() const {
-    if( this->ref_depth >= 0.0 )
-        return this->ref_depth;
+    if (!this->ref_depth.has_value())
+        throw std::logic_error(fmt::format("Well: {} - tried to access not initialized well reference depth", this->name()));
+    return *this->ref_depth;
+}
 
-    // ref depth was defaulted and we get the depth of the first completion
-    if( this->connections->empty() ) {
-        throw std::invalid_argument( "No completions defined for well: "
-                                     + name()
+void Well::updateRefDepth() {
+    if( !this->ref_depth ) {
+        // ref depth was defaulted and we get the depth of the first completion
+
+        if( this->connections->empty() )
+            throw std::invalid_argument( "No completions defined for well: "
+                                         + name()
                                      + ". Can not infer reference depth" );
+        this->ref_depth = this->connections->get(0).depth();
     }
-    return this->connections->get(0).depth();
 }
 
 
