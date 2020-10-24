@@ -251,6 +251,11 @@ bool dynamic_type_check(UDQVarType lhs, UDQVarType rhs) {
 
 }
 
+
+void UDQDefine::required_summary(std::unordered_set<std::string>& summary_keys) const {
+    this->ast->required_summary(summary_keys);
+}
+
 UDQSet UDQDefine::eval(const UDQContext& context) const {
     UDQSet res = this->ast->eval(this->m_var_type, context);
     res.name( this->m_keyword );

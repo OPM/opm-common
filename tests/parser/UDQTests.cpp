@@ -1964,9 +1964,18 @@ DEFINE WUGASRA  750000 - WGLIR '*' /
     st.update_well_var("W3", "WGLIR", 3);
 
     udq.eval(0, st, udq_state);
-
-    // The current testcase has some ordering & defined / undefined issues which
-    // are not yet solved; therefor no udq.eval() here.
+    {
+        std::unordered_set<std::string> required_keys;
+        udq.required_summary(required_keys);
+        BOOST_CHECK_EQUAL( required_keys.size(), 7);
+        BOOST_CHECK_EQUAL( required_keys.count("TIMESTEP"), 1);
+        BOOST_CHECK_EQUAL( required_keys.count("FMWPR"), 1);
+        BOOST_CHECK_EQUAL( required_keys.count("WGLIR"), 1);
+        BOOST_CHECK_EQUAL( required_keys.count("FOPR"), 1);
+        BOOST_CHECK_EQUAL( required_keys.count("FMWIN"), 1);
+        BOOST_CHECK_EQUAL( required_keys.count("FMWPA"), 1);
+        BOOST_CHECK_EQUAL( required_keys.count("FMWIA"), 1);
+    }
 }
 
 
@@ -2200,6 +2209,11 @@ UDQ
     auto undefined_value =  udq.params().undefinedValue();
     UDQState udq_state(undefined_value);
     SummaryState st(std::chrono::system_clock::now());
+    {
+        std::unordered_set<std::string> required_keys;
+        udq.required_summary(required_keys);
+        BOOST_CHECK(required_keys.empty());
+    }
 
     udq.eval(0, st, udq_state);
     BOOST_CHECK_EQUAL(st.get("FU_VAR1"), 10);

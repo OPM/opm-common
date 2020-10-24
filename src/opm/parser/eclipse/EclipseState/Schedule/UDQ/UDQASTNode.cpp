@@ -311,4 +311,34 @@ bool UDQASTNode::operator==(const UDQASTNode& data) const {
            selector == data.selector;
 }
 
+namespace {
+
+bool is_udq(const std::string& key) {
+    if (key.size() < 2)
+        return false;
+
+    if (key[1] != 'U')
+        return false;
+
+    return true;
+}
+
+}
+
+void UDQASTNode::required_summary(std::unordered_set<std::string>& summary_keys) const {
+    if (this->type == UDQTokenType::ecl_expr) {
+        if (std::holds_alternative<std::string>(this->value)) {
+            const auto& keyword = std::get<std::string>(this->value);
+            if (!is_udq(keyword))
+                summary_keys.insert(keyword);
+        }
+    }
+
+    if (this->left)
+        this->left->required_summary(summary_keys);
+
+    if (this->right)
+        this->right->required_summary(summary_keys);
+}
+
 }

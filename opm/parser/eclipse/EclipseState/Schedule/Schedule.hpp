@@ -234,6 +234,7 @@ namespace Opm
         const GConSump& gConSump(std::size_t timestep) const;
         const WListManager& getWListManager(std::size_t timeStep) const;
         const UDQConfig& getUDQConfig(std::size_t timeStep) const;
+        std::vector<const UDQConfig*> udqConfigList() const;
         const Action::Actions& actions(std::size_t timeStep) const;
         void evalAction(const SummaryState& summary_state, std::size_t timeStep);
 

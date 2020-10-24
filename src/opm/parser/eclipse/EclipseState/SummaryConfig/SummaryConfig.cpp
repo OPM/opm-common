@@ -319,16 +319,6 @@ namespace {
             : SummaryConfigNode::Category::Group;
     }
 
-    SummaryConfigNode::Type parseKeywordType(const std::string& keyword) {
-        if (is_rate(keyword)) return SummaryConfigNode::Type::Rate;
-        if (is_total(keyword)) return SummaryConfigNode::Type::Total;
-        if (is_ratio(keyword)) return SummaryConfigNode::Type::Ratio;
-        if (is_pressure(keyword)) return SummaryConfigNode::Type::Pressure;
-        if (is_count(keyword)) return SummaryConfigNode::Type::Count;
-        if (is_control_mode(keyword)) return SummaryConfigNode::Type::Mode;
-
-        return SummaryConfigNode::Type::Undefined;
-    }
 
 void handleMissingWell( const ParseContext& parseContext, ErrorGuard& errors, const KeywordLocation& location, const std::string& well) {
     std::string msg_fmt = fmt::format("Request for missing well {} in {{keyword}}\n"
@@ -1004,6 +994,17 @@ inline void handleKW( SummaryConfig::keyword_list& list,
 }
 
 // =====================================================================
+
+SummaryConfigNode::Type parseKeywordType(const std::string& keyword) {
+    if (is_rate(keyword)) return SummaryConfigNode::Type::Rate;
+    if (is_total(keyword)) return SummaryConfigNode::Type::Total;
+    if (is_ratio(keyword)) return SummaryConfigNode::Type::Ratio;
+    if (is_pressure(keyword)) return SummaryConfigNode::Type::Pressure;
+    if (is_count(keyword)) return SummaryConfigNode::Type::Count;
+    if (is_control_mode(keyword)) return SummaryConfigNode::Type::Mode;
+
+    return SummaryConfigNode::Type::Undefined;
+}
 
 SummaryConfigNode::Category parseKeywordCategory(const std::string& keyword) {
     using Cat = SummaryConfigNode::Category;
