@@ -62,12 +62,6 @@ public:
               const ParseContext& parseContext,
               T&& errors);
 
-    UDQDefine(const std::string& keyword,
-              const KeywordLocation& location,
-              std::shared_ptr<UDQASTNode> astPtr,
-              UDQVarType type,
-              const std::string& string_data);
-
     static UDQDefine serializeObject();
 
     UDQSet eval(const UDQContext& context) const;

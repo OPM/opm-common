@@ -209,19 +209,6 @@ UDQDefine::UDQDefine(const UDQParams& udq_params,
 }
 
 
-UDQDefine::UDQDefine(const std::string& keyword,
-                     const KeywordLocation& location,
-                     std::shared_ptr<UDQASTNode> astPtr,
-                     UDQVarType type,
-                     const std::string& stringData)
-    : m_keyword(keyword)
-    , ast(astPtr)
-    , m_var_type(type)
-    , m_location(location)
-    , string_data(stringData)
-{}
-
-
 
 UDQDefine UDQDefine::serializeObject()
 {
