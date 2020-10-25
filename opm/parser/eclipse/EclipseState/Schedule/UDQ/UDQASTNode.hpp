@@ -40,7 +40,7 @@ public:
     UDQASTNode();
     explicit UDQASTNode(UDQTokenType type_arg);
     explicit UDQASTNode(double scalar_value);
-    UDQASTNode(UDQTokenType type_arg, const std::variant<std::string, double>& value_arg, const UDQASTNode& arg);
+    UDQASTNode(UDQTokenType type_arg, const std::variant<std::string, double>& value_arg, const UDQASTNode& left_arg);
     UDQASTNode(UDQTokenType type_arg, const std::variant<std::string, double>& value_arg, const UDQASTNode& left, const UDQASTNode& right);
     UDQASTNode(UDQTokenType type_arg, const std::variant<std::string, double>& value_arg);
     UDQASTNode(UDQTokenType type_arg, const std::variant<std::string, double>& value_arg, const std::vector<std::string>& selector);
@@ -57,6 +57,7 @@ public:
     void set_right(const UDQASTNode& arg);
     UDQASTNode* get_left() const;
     UDQASTNode* get_right() const;
+    void scale(double sign_factor);
 
     bool operator==(const UDQASTNode& data) const;
     void required_summary(std::unordered_set<std::string>& summary_keys) const;
@@ -67,6 +68,7 @@ public:
         serializer(var_type);
         serializer(type);
         serializer(value);
+        serializer(sign);
         serializer(selector);
         serializer(left);
         serializer(right);
@@ -77,10 +79,14 @@ private:
     void func_tokens(std::set<UDQTokenType>& tokens) const;
 
     std::variant<std::string, double> value;
+    double sign = 1.0;
     std::vector<std::string> selector;
     std::shared_ptr<UDQASTNode> left;
     std::shared_ptr<UDQASTNode> right;
 };
+
+UDQASTNode operator*(const UDQASTNode&lhs, double rhs);
+UDQASTNode operator*(double lhs, const UDQASTNode& rhs);
 
 }
 
