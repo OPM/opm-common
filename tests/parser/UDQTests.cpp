@@ -2293,3 +2293,37 @@ BOOST_AUTO_TEST_CASE(UDQ_DIV_TEST) {
 }
 
 
+BOOST_AUTO_TEST_CASE(UDQ_LEADING_SIGN) {
+    std::string deck_string = R"(
+SCHEDULE
+
+UDQ
+  DEFINE FU_VAR1 - 100 + 215 /
+  DEFINE FU_VAR2 (-100 + 200) / 10 /
+  DEFINE FU_VAR3 -(100 + 200) * -10 /
+  DEFINE FU_VAR4 2^-1 /
+  ASSIGN FU_VAR6 2 /
+  ASSIGN FU_VAR7 3 /
+  DEFINE FU_VAR5 (-0.00000041232 * (FU_VAR6 ^ 2)) + (0.0010395 * FU_VAR7) + 0.16504 /
+/
+
+)";
+
+    auto schedule = make_schedule(deck_string);
+    UDQState udq_state(0);
+    SummaryState st(std::chrono::system_clock::now());
+
+    const auto& udq = schedule.getUDQConfig(0);
+    udq.eval(0, st, udq_state);
+    auto fu_var1 = st.get("FU_VAR1");
+    auto fu_var2 = st.get("FU_VAR2");
+    auto fu_var3 = st.get("FU_VAR3");
+    auto fu_var4 = st.get("FU_VAR4");
+    auto fu_var5 = st.get("FU_VAR5");
+    BOOST_CHECK_EQUAL(fu_var1, 115);
+    BOOST_CHECK_EQUAL(fu_var2, 10);
+    BOOST_CHECK_EQUAL(fu_var3, 3000);
+    BOOST_CHECK_EQUAL(fu_var4, 0.5);
+    BOOST_CHECK_CLOSE(fu_var5, -0.00000041232 * 4 + 0.0010395 * 3  + 0.16504, 1e-5);
+}
+

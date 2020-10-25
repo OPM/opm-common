@@ -83,7 +83,15 @@ UDQParseNode UDQParser::current() const {
 
 
 UDQASTNode UDQParser::parse_factor() {
+    double sign = 1.0;
     auto current = this->current();
+    if (current.type == UDQTokenType::binary_op_add || current.type == UDQTokenType::binary_op_sub) {
+        if (current.type == UDQTokenType::binary_op_sub)
+            sign = -1.0;
+        this->next();
+        current = this->current();
+    }
+
 
     if (current.type == UDQTokenType::open_paren) {
         this->next();
@@ -94,7 +102,7 @@ UDQASTNode UDQParser::parse_factor() {
             return UDQASTNode(UDQTokenType::error);
 
         this->next();
-        return inner_expr;
+        return sign * inner_expr;
     }
 
     if (UDQ::scalarFunc(current.type) || UDQ::elementalUnaryFunc(current.type)) {
@@ -109,14 +117,14 @@ UDQASTNode UDQParser::parse_factor() {
                 return UDQASTNode(UDQTokenType::error);
 
             this->next();
-            return UDQASTNode(func_node.type, func_node.value, arg_expr);
+            return sign * UDQASTNode(func_node.type, func_node.value, arg_expr);
         } else
             return UDQASTNode(UDQTokenType::error);
     }
 
     UDQASTNode node(current.type, current.value, current.selector);
     this->next();
-    return node;
+    return sign * node;
 }
 
 UDQASTNode UDQParser::parse_pow() {
