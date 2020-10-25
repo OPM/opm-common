@@ -176,7 +176,7 @@ void Well::WellProductionProperties::handleWCONPROD(const std::optional<VFPProdT
             if( !record.getItem( cmode.first ).defaultApplied( 0 ) ) {
 
                 // a zero value THP limit will not be handled as a THP limit
-                if (cmode.first == "THP" && this->THPTarget.zero())
+                if (cmode.first == "THP" && this->THPTarget.is<double>() && this->THPTarget.zero())
                     continue;
 
                 this->addProductionControl( cmode.second );
