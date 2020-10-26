@@ -169,6 +169,7 @@ struct GroupProductionProperties {
 
     std::string name;
     ProductionCMode gconprod_cmode = ProductionCMode::NONE;
+    ProductionCMode active_cmode = ProductionCMode::NONE;
     ExceedAction exceed_action = ExceedAction::NONE;
     UDAValue oil_target;
     UDAValue water_target;
@@ -190,6 +191,7 @@ struct GroupProductionProperties {
     {
         serializer(name);
         serializer(gconprod_cmode);
+        serializer(active_cmode);
         serializer(exceed_action);
         oil_target.serializeOp(serializer);
         water_target.serializeOp(serializer);
