@@ -468,21 +468,21 @@ double efac( const std::vector<std::pair<std::string,double>>& eff_factors, cons
     return (it != eff_factors.end()) ? it->second : 1;
 }
 
-inline quantity alqrate( const fn_args& args ) {
-    const quantity zero = { 0.0, measure::gas_surface_rate };
+/*
+  This is bit dangerous, exactly how the ALQ value should be interpreted varies
+  between the different VFP tables. The code here assumes - without checking -
+  that it represents gas lift rate.
+*/
+inline quantity glir( const fn_args& args ) {
+    double alq_rate = 0;
 
-    if (args.schedule_wells.empty()) {
-        // No wells.  Before simulation starts?
-        return zero;
+    for (const auto& well : args.schedule_wells) {
+        auto xwPos = args.wells.find(well.name());
+        if (xwPos != args.wells.end())
+            alq_rate += xwPos->second.rates.get(rt::alq, 0.0);
     }
 
-    const auto& well = args.schedule_wells.front();
-    auto xwPos = args.wells.find(well.name());
-    if (xwPos == args.wells.end()) {
-        return zero;
-    }
-
-    return { xwPos->second.rates.get(rt::alq, 0.0), measure::gas_surface_rate };
+    return { alq_rate, measure::gas_surface_rate };
 }
 
 template< rt phase, bool injection = true >
@@ -1044,7 +1044,7 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "WOPR", rate< rt::oil, producer > },
     { "WGPR", rate< rt::gas, producer > },
     { "WEPR", rate< rt::energy, producer > },
-    { "WGLIR", alqrate },
+    { "WGLIR", glir },
     { "WNPR", rate< rt::solvent, producer > },
     { "WCPR", rate< rt::polymer, producer > },
     { "WSPR", rate< rt::brine, producer > },
@@ -1126,7 +1126,7 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "GWPR", rate< rt::wat, producer > },
     { "GOPR", rate< rt::oil, producer > },
     { "GGPR", rate< rt::gas, producer > },
-    { "GGLIR", alqrate },
+    { "GGLIR", glir },
     { "GNPR", rate< rt::solvent, producer > },
     { "GCPR", rate< rt::polymer, producer > },
     { "GSPR", rate< rt::brine, producer > },
@@ -1280,7 +1280,7 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "FWPR", rate< rt::wat, producer > },
     { "FOPR", rate< rt::oil, producer > },
     { "FGPR", rate< rt::gas, producer > },
-    { "FGLIR", alqrate },
+    { "FGLIR", glir },
     { "FNPR", rate< rt::solvent, producer > },
     { "FCPR", rate< rt::polymer, producer > },
     { "FSPR", rate< rt::brine, producer > },
