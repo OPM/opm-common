@@ -469,21 +469,21 @@ double efac( const std::vector<std::pair<std::string,double>>& eff_factors, cons
     return (it != eff_factors.end()) ? it->second : 1;
 }
 
+/*
+  This is bit dangerous, exactly how the ALQ value should be interpreted varies
+  between the different VFP tables. The code here assumes - without checking -
+  that it represents gas lift rate.
+*/
 inline quantity glir( const fn_args& args ) {
-    const quantity zero = { 0.0, measure::gas_surface_rate };
+    double alq_rate = 0;
 
-    if (args.schedule_wells.empty())
-        return zero;
+    for (const auto& well : args.schedule_wells) {
+        auto xwPos = args.wells.find(well.name());
+        if (xwPos != args.wells.end())
+            alq_rate += xwPos->second.rates.get(rt::alq, 0.0);
+    }
 
-    const auto& well = args.schedule_wells.front();
-    auto xwPos = args.wells.find(well.name());
-    if (xwPos == args.wells.end())
-        return zero;
-
-    // This is bit dangerous, exactly how the ALQ value should be interpreted
-    // varies between the different VFP tables. The code here assumes - without
-    // checking - that it represents gas lift rate.
-    return { xwPos->second.rates.get(rt::alq, 0.0), measure::gas_surface_rate };
+    return { alq_rate, measure::gas_surface_rate };
 }
 
 template< rt phase, bool injection = true >
