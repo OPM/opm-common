@@ -166,7 +166,8 @@ UDQDefine::UDQDefine(const UDQParams& udq_params,
                      const ParseContext& parseContext,
                      ErrorGuard& errors) :
     m_keyword(keyword),
-    m_var_type(UDQ::varType(keyword))
+    m_var_type(UDQ::varType(keyword)),
+    m_location(location)
 {
     std::vector<std::string> string_tokens;
     for (const std::string& deck_item : deck_data) {
@@ -198,7 +199,7 @@ UDQDefine::UDQDefine(const UDQParams& udq_params,
     std::vector<UDQToken> tokens = make_tokens(string_tokens);
 
 
-    this->ast = std::make_shared<UDQASTNode>( UDQParser::parse(udq_params, this->m_var_type, this->m_keyword, location, tokens, parseContext, errors) );
+    this->ast = std::make_shared<UDQASTNode>( UDQParser::parse(udq_params, this->m_var_type, this->m_keyword, this->m_location, tokens, parseContext, errors) );
     this->string_data = "";
     for (std::size_t index = 0; index < deck_data.size(); index++) {
         this->string_data += deck_data[index];
@@ -208,16 +209,6 @@ UDQDefine::UDQDefine(const UDQParams& udq_params,
 }
 
 
-UDQDefine::UDQDefine(const std::string& keyword,
-                     std::shared_ptr<UDQASTNode> astPtr,
-                     UDQVarType type,
-                     const std::string& stringData)
-    : m_keyword(keyword)
-    , ast(astPtr)
-    , m_var_type(type)
-    , string_data(stringData)
-{}
-
 
 UDQDefine UDQDefine::serializeObject()
 {
@@ -226,6 +217,7 @@ UDQDefine UDQDefine::serializeObject()
     result.ast = std::make_shared<UDQASTNode>(UDQASTNode::serializeObject());
     result.m_var_type = UDQVarType::SEGMENT_VAR;
     result.string_data = "test2";
+    result.m_location = KeywordLocation{"KEYWOR", "file", 100};
 
     return result;
 }
@@ -307,6 +299,9 @@ UDQSet UDQDefine::eval(const UDQContext& context) const {
     return res;
 }
 
+const KeywordLocation& UDQDefine::location() const {
+    return this->m_location;
+}
 
 UDQVarType UDQDefine::var_type() const {
     return this->m_var_type;
@@ -332,6 +327,7 @@ bool UDQDefine::operator==(const UDQDefine& data) const {
         return false;
 
     return this->keyword() == data.keyword() &&
+           this->m_location == data.location() &&
            this->var_type() == data.var_type() &&
            this->input_string() == data.input_string();
 }

@@ -30,13 +30,13 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQContext.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunctionTable.hpp>
+#include <opm/common/OpmLog/KeywordLocation.hpp>
 
 namespace Opm {
 
 class UDQASTNode;
 class ParseContext;
 class ErrorGuard;
-class KeywordLocation;
 
 class UDQDefine{
 public:
@@ -62,16 +62,12 @@ public:
               const ParseContext& parseContext,
               T&& errors);
 
-    UDQDefine(const std::string& keyword,
-              std::shared_ptr<UDQASTNode> astPtr,
-              UDQVarType type,
-              const std::string& string_data);
-
     static UDQDefine serializeObject();
 
     UDQSet eval(const UDQContext& context) const;
     const std::string& keyword() const;
     const std::string& input_string() const;
+    const KeywordLocation& location() const;
     UDQVarType  var_type() const;
     std::set<UDQTokenType> func_tokens() const;
     void required_summary(std::unordered_set<std::string>& summary_keys) const;
@@ -84,6 +80,7 @@ public:
         serializer(m_keyword);
         serializer(ast);
         serializer(m_var_type);
+        m_location.serializeOp(serializer);
         serializer(string_data);
     }
 
@@ -91,6 +88,7 @@ private:
     std::string m_keyword;
     std::shared_ptr<UDQASTNode> ast;
     UDQVarType m_var_type;
+    KeywordLocation m_location;
     std::string string_data;
 };
 }
