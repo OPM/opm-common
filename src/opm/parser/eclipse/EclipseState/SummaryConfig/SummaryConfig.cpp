@@ -922,7 +922,7 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
         if (!udq.has_unit(location.keyword)) {
             std::string msg = "Summary output requested for UDQ {keyword}\n"
                               "In {file} line {line}\n"
-                              "No unit define in the SCHEDULE section";
+                              "No unit defined in the SCHEDULE section for {keyword}";
             parseContext.handleError(ParseContext::SUMMARY_UDQ_MISSING_UNIT, msg, location, errors);
         }
     }
