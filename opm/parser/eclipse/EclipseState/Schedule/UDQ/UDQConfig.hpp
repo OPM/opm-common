@@ -33,7 +33,6 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunctionTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Util/OrderedMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Util/IOrderSet.hpp>
-#include <opm/common/OpmLog/KeywordLocation.hpp>
 
 
 namespace Opm {
@@ -80,7 +79,7 @@ namespace Opm {
         const UDQFunctionTable& function_table() const;
 
         bool operator==(const UDQConfig& config) const;
-        void required_summary(std::unordered_set<std::string>& summary_keys) const;
+        void required_summary(std::unordered_map<std::string, std::pair<std::string, KeywordLocation>>& summary_keys) const;
 
 
         template<class Serializer>

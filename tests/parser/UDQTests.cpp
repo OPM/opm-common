@@ -17,6 +17,7 @@ Copyright 2018 Statoil ASA.
 #include <boost/test/unit_test.hpp>
 #include <limits>
 
+#include <opm/common/OpmLog/KeywordLocation.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
 #include <opm/parser/eclipse/Utility/Typetools.hpp>
 #include <opm/parser/eclipse/Python/Python.hpp>
@@ -1965,7 +1966,7 @@ DEFINE WUGASRA  750000 - WGLIR '*' /
 
     udq.eval(0, st, udq_state);
     {
-        std::unordered_set<std::string> required_keys;
+        std::unordered_map<std::string, std::pair<std::string, KeywordLocation>> required_keys;
         udq.required_summary(required_keys);
         BOOST_CHECK_EQUAL( required_keys.size(), 7);
         BOOST_CHECK_EQUAL( required_keys.count("TIMESTEP"), 1);
@@ -2210,7 +2211,7 @@ UDQ
     UDQState udq_state(undefined_value);
     SummaryState st(std::chrono::system_clock::now());
     {
-        std::unordered_set<std::string> required_keys;
+        std::unordered_map<std::string, std::pair<std::string, KeywordLocation>> required_keys;
         udq.required_summary(required_keys);
         BOOST_CHECK(required_keys.empty());
     }

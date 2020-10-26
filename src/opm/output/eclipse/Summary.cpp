@@ -2828,7 +2828,7 @@ std::vector<Opm::EclIO::SummaryNode> make_default_nodes(const std::string& keywo
         }
         break;
     default:
-        throw std::logic_error(fmt::format("make_default_nodes does not yet support: {}", keyword));
+        break;
     }
 
     return nodes;
@@ -2838,14 +2838,26 @@ std::vector<Opm::EclIO::SummaryNode> make_default_nodes(const std::string& keywo
 
 void Opm::out::Summary::SummaryImplementation::configureUDQ(const SummaryConfig& summary_config, const Schedule& sched) {
     auto nodes = std::vector<Opm::EclIO::SummaryNode> {};
-    std::unordered_set<std::string> summary_keys;
+    std::unordered_map<std::string, std::pair<std::string, KeywordLocation>> summary_keys;
     for (const auto& udq_ptr : sched.udqConfigList())
         udq_ptr->required_summary(summary_keys);
 
-    for (const auto& key : summary_keys) {
+    for (const auto& [key, udq_location] : summary_keys) {
         const auto& default_nodes = make_default_nodes(key, sched);
         for (const auto& def_node : default_nodes)
             nodes.push_back(def_node);
+
+        if (default_nodes.empty()) {
+            if (!summary_config.hasKeyword(key)) {
+                std::string udq = udq_location.first;
+                const auto& location = udq_location.second;
+                auto msg = fmt::format("Problem with UDQ {}, can not evaluate {}\n"
+                                       "In {} line {}\n"
+                                       "Workaround: Request {} output in the SUMMARY section", udq, key, location.filename, location.lineno, key);
+                OpmLog::error(msg);
+                throw std::logic_error(fmt::format("Problem with UDQ: {}", udq));
+            }
+        }
     }
 
     for (const auto& node: nodes) {
@@ -2858,9 +2870,14 @@ void Opm::out::Summary::SummaryImplementation::configureUDQ(const SummaryConfig&
             this->udq_parameters.push_back( std::make_unique<Evaluator::FunctionRelation>(node, fun_pos->second) );
         else {
             auto unit = single_values_units.find(node.keyword);
-            if (unit == single_values_units.end())
-                throw std::logic_error(fmt::format("Evaluation function for: {} not found ", node.keyword));
-
+            if (unit == single_values_units.end()) {
+                const auto& [udq, location] = summary_keys.at(node.keyword);
+                auto msg = fmt::format("Problem with UDQ {}, can not evaluate {}\n"
+                                       "In {} line {}\n"
+                                       "This is a bug/limitation in OPM Flow", udq, node.keyword, location.filename, location.lineno);
+                OpmLog::error(msg);
+                throw std::logic_error(fmt::format("Problem with UDQ: {}", udq));
+            }
             this->udq_parameters.push_back( std::make_unique<Evaluator::GlobalProcessValue>(node, unit->second));
         }
     }

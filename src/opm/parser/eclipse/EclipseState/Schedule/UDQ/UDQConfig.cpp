@@ -344,10 +344,18 @@ namespace Opm {
     }
 
 
-    void UDQConfig::required_summary(std::unordered_set<std::string>& summary_keys) const {
-        for (const auto& def_pair : this->m_definitions) {
-            const auto& udq_def = def_pair.second;
-            udq_def.required_summary(summary_keys);
+    void UDQConfig::required_summary(std::unordered_map<std::string, std::pair<std::string, KeywordLocation>>& summary_keys) const {
+        for (const auto& udq_def : this->definitions()) {
+            std::unordered_set<std::string> keys;
+            udq_def.required_summary(keys);
+
+            for (const auto& key : keys) {
+                auto iter = summary_keys.find(key);
+                if (iter == summary_keys.end()) {
+                    auto location = std::make_pair(udq_def.keyword(), udq_def.location());
+                    summary_keys.insert( std::make_pair( key, std::move(location)));
+                }
+            }
         }
     }
 
