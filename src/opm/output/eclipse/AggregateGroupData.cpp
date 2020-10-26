@@ -344,7 +344,6 @@ std::vector<std::size_t> groupParentSeqIndex(const Opm::Schedule& sched,
 
 
 bool higherLevelProdCMode_NotNoneFld(const Opm::Schedule& sched,
-                       const Opm::SummaryState& sumState,
                        const Opm::Group& group,
                        const size_t simStep)
 {
@@ -353,7 +352,7 @@ bool higherLevelProdCMode_NotNoneFld(const Opm::Schedule& sched,
         auto current = group;
         while (current.name() != "FIELD" && ctrl_mode_not_none_fld == false) {
             current = sched.getGroup(current.parent(), simStep);
-            const auto& prod_cmode = current.productionControls(sumState).cmode;
+            const auto& prod_cmode = group.gconprod_cmode();
             if ((prod_cmode != Opm::Group::ProductionCMode::FLD) && (prod_cmode!= Opm::Group::ProductionCMode::NONE)) {
                 ctrl_mode_not_none_fld = true;
             }
@@ -440,7 +439,7 @@ void productionGroup(const Opm::Schedule&     sched,
                      const std::map<int, Opm::Group::ProductionCMode>& pCtrlToPCmode,
                      IGrpArray&               iGrp)
 {
-    const auto& prod_cmode = group.productionControls(sumState).cmode;
+    const auto& prod_cmode = group.gconprod_cmode();
     if (group.name() == "FIELD") {
         iGrp[nwgmax + 6] = 0;
         iGrp[nwgmax + 7] = 0;
@@ -539,7 +538,7 @@ void productionGroup(const Opm::Schedule&     sched,
             } else {
                 iGrp[nwgmax + 5] = 1;
             }
-        } else if (higherLevelProdCMode_NotNoneFld(sched, sumState, group, simStep)) {
+        } else if (higherLevelProdCMode_NotNoneFld(sched, group, simStep)) {
             if (!((prod_cmode == Opm::Group::ProductionCMode::FLD)
                   || (prod_cmode == Opm::Group::ProductionCMode::NONE))) {
                 iGrp[nwgmax + 5] = -1;
