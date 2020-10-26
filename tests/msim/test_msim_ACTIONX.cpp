@@ -83,6 +83,12 @@ double prod_opr(const EclipseState&  es, const Schedule& /* sched */, const Summ
     return -units.to_si(UnitSystem::measure::rate, oil_rate);
 }
 
+double prod_gpr(const EclipseState&  es, const Schedule& /* sched */, const SummaryState&, const data::Solution& /* sol */, size_t /* report_step */, double /* seconds_elapsed */) {
+    const auto& units = es.getUnits();
+    double gas_rate = 20.0;
+    return -units.to_si(UnitSystem::measure::rate, gas_rate);
+}
+
 double prod_opr_low(const EclipseState&  es, const Schedule& /* sched */, const SummaryState&, const data::Solution& /* sol */, size_t /* report_step */, double /* seconds_elapsed */) {
     const auto& units = es.getUnits();
     double oil_rate = 0.5;
@@ -357,6 +363,11 @@ BOOST_AUTO_TEST_CASE(UDQ_IN_ACTIONX) {
         sim.well_rate("P3", data::Rates::opt::wat, prod_wpr_P3);
         sim.well_rate("P4", data::Rates::opt::wat, prod_wpr_P4);
 
+        sim.well_rate("P1", data::Rates::opt::gas, prod_gpr);
+        sim.well_rate("P2", data::Rates::opt::gas, prod_gpr);
+        sim.well_rate("P3", data::Rates::opt::gas, prod_gpr);
+        sim.well_rate("P4", data::Rates::opt::gas, prod_gpr);
+
         {
             const auto& w1 = td.schedule.getWell("P1", 15);
             BOOST_CHECK(w1.getStatus() == Well::Status::OPEN );
@@ -381,8 +392,15 @@ BOOST_AUTO_TEST_CASE(UDQ_IN_ACTIONX) {
             BOOST_CHECK(udq2.has_keyword("FUPROD"));
             BOOST_CHECK(udq2.has_keyword("FUNEW"));
         }
-    }
 
+        const auto& base_name = td.state.getIOConfig().getBaseName();
+        const EclIO::ESmry ecl_sum(base_name + ".SMSPEC");
+        BOOST_CHECK( !ecl_sum.hasKey("FLPR") );
+        BOOST_CHECK( ecl_sum.hasKey("FUGPR") );
+
+        BOOST_CHECK( !ecl_sum.hasKey("FGLIR") );
+        BOOST_CHECK( ecl_sum.hasKey("FUGPR") );
+    }
 }
 
 BOOST_AUTO_TEST_CASE(UDA) {
