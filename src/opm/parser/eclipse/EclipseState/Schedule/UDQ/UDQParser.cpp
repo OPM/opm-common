@@ -313,9 +313,9 @@ UDQASTNode UDQParser::parse(const UDQParams& udq_params, UDQVarType target_type,
 
     if (!parser.empty()) {
         auto current = parser.current();
-        std::string msg_fmt = fmt::format("Problem parsing UDQ expression \n"
+        std::string msg_fmt = fmt::format("Problem parsing UDQ {}\n"
                                           "In {{file}} line {{line}}.\n"
-                                          "Extra unhandled data starting with item {}.", current.string());
+                                          "Extra unhandled data starting with item {}.", target_var, current.string());
         parseContext.handleError(ParseContext::UDQ_PARSE_ERROR, msg_fmt, location, errors);
         return UDQASTNode( udq_params.undefinedValue() );
     }
@@ -325,18 +325,18 @@ UDQASTNode UDQParser::parse(const UDQParams& udq_params, UDQVarType target_type,
         for (const auto& token : tokens)
             token_string += token.str() + " ";
 
-        std::string msg_fmt = fmt::format("Failed to parse UDQ expression\n"
+        std::string msg_fmt = fmt::format("Failed to parse UDQ {}\n"
                                           "In {{file}} line {{line}}.\n"
                                           "This can be a bug in flow or a bug in the UDQ input string.\n"
-                                          "UDQ input: '{}'", token_string);
+                                          "UDQ input: '{}'", target_var, token_string);
         parseContext.handleError(ParseContext::UDQ_PARSE_ERROR, msg_fmt, location, errors);
         return UDQASTNode( udq_params.undefinedValue() );
     }
 
     if (!static_type_check(target_type, tree.var_type)) {
-        std::string msg_fmt = fmt::format("Failed to parse UDQ expression\n"
+        std::string msg_fmt = fmt::format("Failed to parse UDQ {}\n"
                                           "In {{file}} line {{line}}.\n"
-                                          "Invalid type conversion detected in UDQ expression expected: {}  got: {}", UDQ::typeName(target_type), UDQ::typeName(tree.var_type));
+                                          "Invalid type conversion detected in UDQ expression expected: {}  got: {}", target_var, UDQ::typeName(target_type), UDQ::typeName(tree.var_type));
 
         parseContext.handleError(ParseContext::UDQ_TYPE_ERROR, msg_fmt, location, errors);
         if (parseContext.get(ParseContext::UDQ_TYPE_ERROR) != InputError::IGNORE)
@@ -346,9 +346,9 @@ UDQASTNode UDQParser::parse(const UDQParams& udq_params, UDQVarType target_type,
     }
 
     if (tree.var_type == UDQVarType::NONE) {
-        std::string msg_fmt = fmt::format("Failed to parse UDQ expression\n"
+        std::string msg_fmt = fmt::format("Failed to parse UDQ {}\n"
                                           "In {{file}} line {{line}}.\n"
-                                          "Could not determine expression type.");
+                                          "Could not determine expression type.", target_var);
         parseContext.handleError(ParseContext::UDQ_TYPE_ERROR, msg_fmt, location, errors);
         if (parseContext.get(ParseContext::UDQ_TYPE_ERROR) != InputError::IGNORE)
             dump_tokens(target_var, tokens);
