@@ -2189,7 +2189,7 @@ UDQ
     UDQState udq_state(undefined_value);
     SummaryState st(std::chrono::system_clock::now());
 
-    BOOST_CHECK_THROW(udq.eval(0, st, udq_state), std::out_of_range);
+    BOOST_CHECK_THROW(udq.eval(0, st, udq_state), std::exception);
 }
 
 

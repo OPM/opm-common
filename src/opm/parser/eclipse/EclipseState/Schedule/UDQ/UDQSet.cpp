@@ -19,6 +19,7 @@
 #include <fnmatch.h>
 #include <algorithm>
 #include <cmath>
+#include <fmt/format.h>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQSet.hpp>
 
@@ -485,8 +486,10 @@ UDQSet udq_cast(const UDQSet& lhs, const UDQSet& rhs)
 {
     if (lhs.size() != rhs.size()) {
         if (lhs.var_type() != UDQVarType::SCALAR) {
-            printf("s1: %ld  s2: %ld \n", lhs.size(), rhs.size());
-            throw std::logic_error("Type/size mismatch");
+            auto msg = fmt::format("Type/size mismatch when combining UDQs {}(size={}, type={}) and {}(size={}, type={})",
+                                   lhs.name(), lhs.size(), lhs.var_type(),
+                                   rhs.name(), rhs.size(), rhs.var_type());
+            throw std::logic_error(msg);
         }
 
         if (rhs.var_type() == UDQVarType::WELL_VAR)

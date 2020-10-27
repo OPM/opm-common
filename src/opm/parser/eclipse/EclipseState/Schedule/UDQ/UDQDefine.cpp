@@ -19,13 +19,15 @@
 #include <iostream>
 #include <cstring>
 #include <tuple>
-
+#include <fmt/format.h>
+#include <exception>
 
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQASTNode.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQDefine.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
+#include <opm/common/OpmLog/OpmLog.hpp>
 
 #include "../../../Parser/raw/RawConsts.hpp"
 #include "UDQToken.hpp"
@@ -240,15 +242,26 @@ void UDQDefine::required_summary(std::unordered_set<std::string>& summary_keys) 
 }
 
 UDQSet UDQDefine::eval(const UDQContext& context) const {
-    UDQSet res = this->ast->eval(this->m_var_type, context);
-    res.name( this->m_keyword );
-
-    if (!dynamic_type_check(this->var_type(), res.var_type())) {
-        std::string msg = "Invalid runtime type conversion detected when evaluating UDQ";
-        throw std::invalid_argument(msg);
+    std::optional<UDQSet> res;
+    try {
+        res = this->ast->eval(this->m_var_type, context);
+        res->name( this->m_keyword );
+        if (!dynamic_type_check(this->var_type(), res->var_type())) {
+            std::string msg = "Invalid runtime type conversion detected when evaluating UDQ";
+            throw std::invalid_argument(msg);
+        }
+    } catch (const std::exception& exc) {
+        auto msg = fmt::format("Problem evaluating UDQ {}\n"
+                               "In {} line {}\n"
+                               "Internal error: {}", this->m_keyword, this->m_location.filename, this->m_location.lineno, exc.what());
+        OpmLog::error(msg);
+        std::throw_with_nested(exc);
     }
+    if (!res)
+        throw std::logic_error("Bug in UDQDefine::eval()");
 
-    if (res.var_type() == UDQVarType::SCALAR) {
+
+    if (res->var_type() == UDQVarType::SCALAR) {
         /*
           If the right hand side evaluates to a scalar that scalar value should
           be set for all wells in the wellset:
@@ -265,7 +278,7 @@ UDQSet UDQDefine::eval(const UDQContext& context) const {
           regarding the semantics of group sets.
         */
 
-        const auto& scalar_value = res[0].value();
+        const auto& scalar_value = res->operator[](0).value();
         if (this->var_type() == UDQVarType::WELL_VAR) {
             const std::vector<std::string> wells = context.wells();
             UDQSet well_res = UDQSet::wells(this->m_keyword, wells);
@@ -287,7 +300,7 @@ UDQSet UDQDefine::eval(const UDQContext& context) const {
         }
     }
 
-    return res;
+    return *res;
 }
 
 const KeywordLocation& UDQDefine::location() const {
