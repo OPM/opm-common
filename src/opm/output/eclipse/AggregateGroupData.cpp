@@ -439,9 +439,11 @@ void productionGroup(const Opm::Schedule&     sched,
                      const std::map<int, Opm::Group::ProductionCMode>& pCtrlToPCmode,
                      IGrpArray&               iGrp)
 {
+    using IGroup = ::Opm::RestartIO::Helpers::VectorItems::IGroup::index;
+    namespace Value = ::Opm::RestartIO::Helpers::VectorItems::IGroup::Value;
     const auto& prod_cmode = group.gconprod_cmode();
     if (group.name() == "FIELD") {
-        iGrp[nwgmax + 6] = 0;
+        iGrp[nwgmax + IGroup::GuideRateDef] = Value::GuideRateMode::None;
         iGrp[nwgmax + 7] = 0;
         switch (prod_cmode) {
         case Opm::Group::ProductionCMode::NONE:
@@ -571,8 +573,6 @@ void productionGroup(const Opm::Schedule&     sched,
     Other reduction options are currently not covered in the code
     */
 
-    using IGroup = ::Opm::RestartIO::Helpers::VectorItems::IGroup::index;
-    namespace Value = ::Opm::RestartIO::Helpers::VectorItems::IGroup::Value;
     if (higher_lev_ctrl > 0 && (group.getGroupType() != Opm::Group::GroupType::NONE)) {
         iGrp[nwgmax + IGroup::ProdActiveCMode]
             = (prod_guide_rate_def != Opm::Group::GuideRateTarget::NO_GUIDE_RATE) ? higher_lev_ctrl_mode : 0;
@@ -839,6 +839,7 @@ void staticContrib(const Opm::Schedule&     sched,
                    const std::map<Opm::Group::InjectionCMode, int>& cmodeToNum,
                    IGrpArray&               iGrp)
 {
+    using IGroup = ::Opm::RestartIO::Helpers::VectorItems::IGroup::index;
     const bool is_field = group.name() == "FIELD";
     if (group.wellgroup()) {
         int igrpCount = 0;
@@ -865,7 +866,7 @@ void staticContrib(const Opm::Schedule&     sched,
     // Find number of active production wells and injection wells for group
     const double g_act_pwells = is_field ? sumState.get("FMWPR", 0) : sumState.get_group_var(group.name(), "GMWPR", 0);
     const double g_act_iwells = is_field ? sumState.get("FMWIN", 0) : sumState.get_group_var(group.name(), "GMWIN", 0);
-    iGrp[nwgmax + 33] = g_act_pwells + g_act_iwells;
+    iGrp[nwgmax + IGroup::FlowingWells] = g_act_pwells + g_act_iwells;
 
     // Treat al groups which are *not* pure injection groups.
     if (group.getGroupType() != Opm::Group::GroupType::INJECTION)

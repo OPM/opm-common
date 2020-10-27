@@ -62,6 +62,7 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
         GConProdCMode = 10,
         GInjCMode = 21,
         ParentGroup = 28,
+        FlowingWells = 33,
     };
 
     namespace Value {
