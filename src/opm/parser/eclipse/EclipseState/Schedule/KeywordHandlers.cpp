@@ -377,7 +377,8 @@ namespace {
                 {
                     auto group_ptr = std::make_shared<Group>(this->getGroup(group_name, handlerContext.currentStep));
                     Group::GroupProductionProperties production(group_name);
-                    production.cmode = controlMode;
+                    production.gconprod_cmode = controlMode;
+                    production.active_cmode = controlMode;
                     production.oil_target = oil_target;
                     production.gas_target = gas_target;
                     production.water_target = water_target;
@@ -387,10 +388,10 @@ namespace {
                     production.resv_target = resv_target;
                     production.available_group_control = availableForGroupControl;
 
-                    if ((production.cmode == Group::ProductionCMode::ORAT) ||
-                        (production.cmode == Group::ProductionCMode::WRAT) ||
-                        (production.cmode == Group::ProductionCMode::GRAT) ||
-                        (production.cmode == Group::ProductionCMode::LRAT))
+                    if ((production.gconprod_cmode == Group::ProductionCMode::ORAT) ||
+                        (production.gconprod_cmode == Group::ProductionCMode::WRAT) ||
+                        (production.gconprod_cmode == Group::ProductionCMode::GRAT) ||
+                        (production.gconprod_cmode == Group::ProductionCMode::LRAT))
                         production.exceed_action = Group::ExceedAction::RATE;
                     else
                         production.exceed_action = exceedAction;

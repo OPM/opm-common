@@ -218,7 +218,8 @@ Group::GroupProductionProperties Group::GroupProductionProperties::serializeObje
 {
     Group::GroupProductionProperties result("Group123");
     result.name = "Group123";
-    result.cmode = ProductionCMode::PRBL;
+    result.gconprod_cmode = ProductionCMode::PRBL;
+    result.active_cmode = ProductionCMode::PRBL;
     result.exceed_action = ExceedAction::WELL;
     result.oil_target = UDAValue(1.0);
     result.water_target = UDAValue(2.0);
@@ -236,7 +237,8 @@ Group::GroupProductionProperties Group::GroupProductionProperties::serializeObje
 bool Group::GroupProductionProperties::operator==(const GroupProductionProperties& other) const {
     return
         this->name                    == other.name &&
-        this->cmode                   == other.cmode &&
+        this->active_cmode            == other.active_cmode &&
+        this->gconprod_cmode          == other.gconprod_cmode &&
         this->exceed_action           == other.exceed_action &&
         this->oil_target              == other.oil_target &&
         this->water_target            == other.water_target &&
@@ -439,7 +441,7 @@ bool Group::updateParent(const std::string& parent) {
 Group::ProductionControls Group::productionControls(const SummaryState& st) const {
     Group::ProductionControls pc;
 
-    pc.cmode = this->production_properties.cmode;
+    pc.cmode = this->production_properties.active_cmode;
     pc.exceed_action = this->production_properties.exceed_action;
     pc.oil_target = UDA::eval_group_uda(this->production_properties.oil_target, this->m_name, st, this->udq_undefined);
     pc.water_target = UDA::eval_group_uda(this->production_properties.water_target, this->m_name, st, this->udq_undefined);
@@ -479,8 +481,8 @@ bool Group::hasInjectionControl(Phase phase) const {
 
 
 
-Group::ProductionCMode Group::production_cmode() const {
-    return this->production_properties.cmode;
+Group::ProductionCMode Group::gconprod_cmode() const {
+    return this->production_properties.gconprod_cmode;
 }
 
 bool Group::ProductionControls::has_control(Group::ProductionCMode control) const {
