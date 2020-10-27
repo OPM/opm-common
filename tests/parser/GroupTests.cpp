@@ -565,6 +565,15 @@ GPMAINT
   'PROD'  'NONE' /
 /
 
+TSTEP
+10 /
+
+GCONPROD
+   PROD        ORAT  0     0     1*    0     RATE  YES   1*    '   '     1*    1*    1*    1*    1*    /
+   FIELD       ORAT  71500 1*    1*    1*    RATE  YES   1*    '   '     1*    1*    1*    1*    1*    /
+/
+
+
 )";
     Opm::UnitSystem unitSystem = UnitSystem( UnitSystem::UnitType::UNIT_TYPE_METRIC );
     const auto sched = create_schedule(input);

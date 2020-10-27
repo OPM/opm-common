@@ -345,9 +345,16 @@ namespace {
             const bool apply_default_liquid_target = record.getItem("LIQUID_TARGET").defaultApplied(0);
             const bool apply_default_resv_target = record.getItem("RESERVOIR_FLUID_TARGET").defaultApplied(0);
 
-            const std::optional<std::string> guide_rate_str = record.getItem("GUIDE_RATE_DEF").hasValue(0)
-                ? std::optional<std::string>(record.getItem("GUIDE_RATE_DEF").getTrimmedString(0))
-                : std::nullopt;
+            std::optional<std::string> guide_rate_str;
+            {
+                const auto& item = record.getItem("GUIDE_RATE_DEF");
+                if (item.hasValue(0)) {
+                    const auto& string_value = record.getItem("GUIDE_RATE_DEF").getTrimmedString(0);
+                    if (string_value.size() > 0)
+                        guide_rate_str = string_value;
+                }
+
+            }
 
             for (const auto& group_name : group_names) {
                 const bool is_field { group_name == "FIELD" } ;
