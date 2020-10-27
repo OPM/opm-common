@@ -255,6 +255,10 @@ namespace {
             || is_in_set(countkw, keyword.substr(1));
     }
 
+    bool is_liquid_phase(const std::string& keyword) {
+        return keyword == "WPIL";
+    }
+
     bool is_region_to_region(const std::string& keyword) {
         using sz_t = std::string::size_type;
         if ((keyword.size() == sz_t{3}) && keyword[2] == 'F') return true;
@@ -414,14 +418,14 @@ inline void keywordW( SummaryConfig::keyword_list& list,
       Two step check for whether to discard this keyword as unsupported:
 
       1. Completion quantity keywords are currently not supported.  These are
-      well summary keywords, apart from "WMCTL", that end in 'L'.
+      well summary keywords, apart from "WMCTL" and "WPIL", that end in 'L'.
 
       2. If the keyword is a UDQ keyword there is no convention enforced to
       the last character, and in that case it is treated as a normal well
       keyword anyways.
     */
     if (keyword.name().back() == 'L') {
-        if (! (is_control_mode(keyword.name()) || is_udq(keyword.name()))) {
+        if (! (is_control_mode(keyword.name()) || is_liquid_phase(keyword.name()) || is_udq(keyword.name()))) {
             const auto& location = keyword.location();
             std::string msg = "Unsupported summary output keyword {}\n"
                               "In {file} line {line}";
