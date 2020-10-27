@@ -28,6 +28,7 @@
 #include <opm/common/utility/TimeService.hpp>
 
 #include <opm/parser/eclipse/Parser/ParserKeywords/S.hpp>
+#include <opm/common/OpmLog/KeywordLocation.hpp>
 
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
@@ -43,6 +44,8 @@
 constexpr const std::time_t invalid_time = -1;
 
 namespace Opm {
+
+
 
 namespace {
     const std::map<std::string, int> month_indices = {{"JAN", 1},
@@ -62,7 +65,20 @@ namespace {
                                                       {"DEC", 12},
                                                       {"DES", 12}};
 
+
 }
+
+struct TimeMapContext {
+    bool rst_skip;
+    std::time_t last_time;
+
+    TimeMapContext(bool skip, std::time_t t) :
+        rst_skip(skip),
+        last_time(t)
+    {}
+};
+
+
 
     void TimeMap::init_start(std::time_t start_time) {
         auto timestamp = TimeStampUTC{start_time};
@@ -77,6 +93,7 @@ namespace {
         if (time_points.empty())
             throw std::invalid_argument("Can not initialize with empty list of time points");
 
+        TimeMapContext context(false, time_points[0]);
         this->init_start(time_points[0]);
         for (std::size_t ti = 1; ti < time_points.size(); ti++) {
             if (time_points[ti] == invalid_time) {
@@ -84,7 +101,7 @@ namespace {
                 this->m_restart_offset += 1;
             }
             else
-                this->addTime( time_points[ti] );
+                this->addTime( time_points[ti], context, {} );
         }
         if (this->m_restart_offset > 0)
             this->m_restart_offset += 1;
@@ -113,8 +130,7 @@ namespace {
         for (std::size_t it = 1; it < this->m_restart_offset; it++)
             this->m_timeList.push_back(invalid_time);
 
-        bool skip = (this->m_restart_offset > 0);
-        bool restart_found = false;
+        TimeMapContext context(this->m_restart_offset > 0, start_time);
         for( const auto& keyword : SCHEDULESection(deck)) {
             // We're only interested in "TSTEP" and "DATES" keywords,
             // so we ignore everything else here...
@@ -134,32 +150,11 @@ namespace {
                         std::throw_with_nested(opm_error);
                     }
 
-                    if (nextTime == this->m_restart_time) {
-                        skip = false;
-                        restart_found = true;
-                    }
-
-                    if (!skip)
-                        this->addTime(nextTime);
+                    this->addTime(nextTime, context, keyword.location());
                 }
-
                 continue;
             }
-
-            if (skip)
-                continue;
-
-            this->addFromTSTEPKeyword(keyword);
-        }
-
-        /*
-          It is a hard requirement that the restart date is found as a DATES
-          keyword, although it is technically possible to create a valid
-          restarted case using TSTEP we do not accept that.
-        */
-        if (this->m_restart_offset != 0 && !restart_found) {
-            TimeStampUTC ts(this->m_restart_time);
-            throw std::invalid_argument("Could not find restart date " + std::to_string(ts.year()) + "-" + std::to_string(ts.month()) + "-" + std::to_string(ts.day()));
+            this->addFromTSTEPKeyword(keyword, context);
         }
     }
 
@@ -199,7 +194,22 @@ namespace {
                              this->m_timeList.front());
     }
 
-    void TimeMap::addTime(std::time_t newTime) {
+    void TimeMap::addTime(std::time_t newTime, TimeMapContext& context, const KeywordLocation& location) {
+        context.last_time = newTime;
+        if (context.rst_skip) {
+            if (newTime < this->m_restart_time)
+                return;
+
+            if (newTime == this->m_restart_time)
+                context.rst_skip = false;
+
+            if (newTime > this->m_restart_time) {
+                TimeStampUTC ts(this->m_restart_time);
+                auto reason = fmt::format("Have scanned past restart data: {:4d}-{:02d}-{:02d}", ts.year(), ts.month(), ts.day());
+                throw OpmInputError(reason, location);
+            }
+        }
+
         const std::time_t lastTime = m_timeList.back();
         const size_t step = m_timeList.size();
         if (newTime > lastTime) {
@@ -221,10 +231,6 @@ namespace {
             m_timeList.push_back(newTime);
         } else
             throw std::invalid_argument("Times added must be in strictly increasing order.");
-    }
-
-    void TimeMap::addTStep(int64_t step) {
-        this->addTime(forward(m_timeList.back(), step));
     }
 
     size_t TimeMap::size() const {
@@ -266,7 +272,7 @@ namespace {
     }
 
 
-    void TimeMap::addFromTSTEPKeyword(const DeckKeyword &TSTEPKeyword) {
+    void TimeMap::addFromTSTEPKeyword(const DeckKeyword &TSTEPKeyword, TimeMapContext& context) {
         if (TSTEPKeyword.name() != "TSTEP")
             throw std::invalid_argument("Method requires TSTEP keyword input.");
         {
@@ -274,7 +280,8 @@ namespace {
 
             for (size_t itemIndex = 0; itemIndex < item.data_size(); itemIndex++) {
                 const int64_t seconds = static_cast<int64_t>(item.getSIDouble(itemIndex));
-                this->addTStep(seconds);
+                std::time_t next_time = TimeMap::forward(context.last_time, seconds);
+                this->addTime(next_time, context, TSTEPKeyword.location());
             }
         }
     }
