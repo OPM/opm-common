@@ -16,6 +16,8 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include <fmt/format.h>
+
 #include <iostream>
 
 #include <opm/parser/eclipse/Deck/UDAValue.hpp>
@@ -71,8 +73,10 @@ UDAValue UDAValue::serializeObject()
 
 
 void UDAValue::assert_numeric() const {
-    std::string msg = "Internal error: The support for use of UDQ/UDA is not complete in opm/flow. The string: '" + this->string_value + "' must be numeric";
-    this->assert_numeric(msg);
+    if (!this->numeric_value) {
+        std::string msg = fmt::format("Internal error: The support for use of UDQ/UDA is not complete in opm/flow. The string: '{}' must be numeric", this->string_value);
+        this->assert_numeric(msg);
+    }
 }
 
 
