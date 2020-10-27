@@ -2521,9 +2521,8 @@ private:
     int prevReportStepID_{-1};
     std::vector<MiniStep>::size_type numUnwritten_{0};
 
-    SummaryOutputParameters  outputParameters_{};
-    std::vector<EvalPtr>     requiredRestartParameters_{};
-    std::vector<EvalPtr>     udq_parameters;
+    SummaryOutputParameters                  outputParameters_{};
+    std::unordered_map<std::string, EvalPtr> extra_parameters{};
     std::vector<std::string> valueKeys_{};
     std::vector<MiniStep>    unwritten_{};
 
@@ -2613,12 +2612,9 @@ eval(const EclipseState&                es,
         evalPtr->update(sim_step, duration, input, simRes, st);
     }
 
-    for (auto& evalPtr : this->requiredRestartParameters_) {
+    for (auto& [_, evalPtr] : this->extra_parameters) {
         evalPtr->update(sim_step, duration, input, simRes, st);
     }
-
-    for (auto& eval_ptr : this->udq_parameters)
-        eval_ptr->update(sim_step, duration, input, simRes, st);
 }
 
 void Opm::out::Summary::SummaryImplementation::write()
@@ -2855,13 +2851,13 @@ void Opm::out::Summary::SummaryImplementation::configureUDQ(const SummaryConfig&
 
         auto fun_pos = funs.find(node.keyword);
         if (fun_pos != funs.end())
-            this->udq_parameters.push_back( std::make_unique<Evaluator::FunctionRelation>(node, fun_pos->second) );
+            this->extra_parameters.emplace( node.unique_key(), std::make_unique<Evaluator::FunctionRelation>(node, fun_pos->second) );
         else {
             auto unit = single_values_units.find(node.keyword);
             if (unit == single_values_units.end())
                 throw std::logic_error(fmt::format("Evaluation function for: {} not found ", node.keyword));
 
-            this->udq_parameters.push_back( std::make_unique<Evaluator::GlobalProcessValue>(node, unit->second));
+            this->extra_parameters.emplace( node.unique_key(), std::make_unique<Evaluator::GlobalProcessValue>(node, unit->second));
         }
     }
 }
@@ -2884,7 +2880,7 @@ configureRequiredRestartParameters(const SummaryConfig& sumcfg,
         auto eval = std::make_unique<
             Evaluator::FunctionRelation>(node, fcnPos->second);
 
-        this->requiredRestartParameters_.push_back(std::move(eval));
+        this->extra_parameters.emplace(node.unique_key(), std::move(eval));
     };
 
     for (const auto& node : requiredRestartVectors(sched))
