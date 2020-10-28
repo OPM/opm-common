@@ -24,9 +24,12 @@
 #include <opm/parser/eclipse/EclipseState/Aqucon.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/TranCalculator.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <iostream>
+
+#include "AquiferHelpers.hpp"
 
 namespace Opm {
 
@@ -108,10 +111,22 @@ void NumericalAquifers::updatePoreVolume(std::vector<double>& pore_volume) const
 void NumericalAquifers::updateCellProps(std::vector<double>& pore_volume,
                                         std::vector<int>& satnum,
                                         std::vector<int>& pvtnum,
-                                        std::vector<double>& cell_depth) const {
+                                        std::vector<double>& cell_depth,
+                                        std::unordered_map<std::string, Fieldprops::TranCalculator>& trans) const {
     for (const auto& iter : this->aquifers_) {
-        iter.second.updateCellProps(pore_volume, satnum, pvtnum, cell_depth);
+        iter.second.updateCellProps(pore_volume, satnum, pvtnum, cell_depth, trans);
     }
+}
+
+std::array<std::set<int>, 3> NumericalAquifers::transToRemove(const EclipseGrid& grid) const {
+    std::array<std::set<int>, 3> trans;
+    for (const auto& pair : this->aquifers_) {
+        auto trans_aquifer = pair.second.transToRemove(grid);
+        for (int i = 0; i < 3; ++i) {
+            trans[i].merge(trans_aquifer[i]);
+        }
+    }
+    return trans;
 }
 
     using AQUNUM = ParserKeywords::AQUNUM;
@@ -197,13 +212,85 @@ void SingleNumericalAquifer::updatePoreVolume(std::vector<double>& pore_volume) 
 void SingleNumericalAquifer::updateCellProps(std::vector<double>& pore_volume,
                                              std::vector<int>& satnum,
                                              std::vector<int>& pvtnum,
-                                             std::vector<double>& cell_depth) const {
+                                             std::vector<double>& cell_depth,
+                                             std::unordered_map<std::string, Fieldprops::TranCalculator>& trans) const {
     for (const auto& cell : this->cells_) {
         pore_volume[cell.global_index] = cell.pore_volume;
         satnum[cell.global_index] = cell.sattable;
         pvtnum[cell.global_index] = cell.pvttable;
         cell_depth[cell.global_index] = cell.depth;
     }
+
+    // std::array<std::string, 3> tran_string {"TRANX", "TRANY", "TRANZ"};
+/*    const std::string tran_string{"TRANX"};
+    if (trans.count("TRANX") > 0) {
+        auto operation = Fieldprops::ScalarOperation::EQUAL;
+        const double value = 0.0;
+    } */
+    /* for (const auto& record : keyword) {
+         const std::string& target_kw = record.getItem(0).get<std::string>(0);
+         box.update(record);
+
+         if (FieldProps::supported<double>(target_kw) || this->tran.count(target_kw) > 0) {
+             std::string unique_name = target_kw;
+             auto operation = fromString(keyword.name());
+             const double scalar_value = this->getSIValue(operation, target_kw, record.getItem(1).get<double>(0));
+             Fieldprops::keywords::keyword_info<double> kw_info;
+
+             auto tran_iter = this->tran.find(target_kw);
+             // Check if the target keyword is one of the TRANX, TRANY or TRANZ keywords.
+             if (tran_iter != this->tran.end()) {
+                 auto tran_field_iter = tran_fields.find(target_kw); */
+    /*
+      The transmissibility calculations are applied to one "work" 3D
+      field per direction and per keyword. Here we check if we have
+      encountered this TRAN direction previously for this keyword,
+      if not we generate a new 3D field and register a new tran
+      calculator operation.
+     */
+    /* if (tran_field_iter == tran_fields.end()) {
+         unique_name = tran_iter->second.next_name();
+         tran_fields.emplace(target_kw, unique_name);
+         tran_iter->second.add_action(operation, unique_name);
+         kw_info = tran_iter->second.make_kw_info(operation);
+     } else
+         unique_name = tran_field_iter->second;
+
+ } else
+     kw_info = Fieldprops::keywords::global_kw_info<double>(target_kw);
+
+ auto& field_data = this->init_get<double>(unique_name, kw_info);
+
+ FieldProps::apply(operation, field_data.data, field_data.value_status, scalar_value, box.index_list()); */
+}
+
+std::array<std::set<int>, 3> SingleNumericalAquifer::transToRemove(const EclipseGrid& grid) const {
+    std::array<std::set<int>, 3> trans;
+    for (const auto& cell : this->cells_) {
+        const int i = cell.I;
+        const int j = cell.J;
+        const int k = cell.K;
+        // TODO: later to check whether we want to use active_index or global_index
+        if (AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i+1, j, k, FaceDir::XPlus)) {
+            trans[0].insert(cell.global_index);
+        }
+        if (AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i-1, j, k, FaceDir::XMinus)) {
+            trans[0].insert(grid.getGlobalIndex(i-1, j, k));
+        }
+        if (AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i, j+1, k, FaceDir::YPlus)) {
+            trans[1].insert(cell.global_index);
+        }
+        if (AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i, j-1, k, FaceDir::YMinus)) {
+            trans[1].insert(grid.getGlobalIndex(i, j-1, k));
+        }
+        if (AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i, j, k+1, FaceDir::ZPlus)) {
+            trans[2].insert(cell.global_index);
+        }
+        if (AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i, j, k-1, FaceDir::ZMinus)) {
+            trans[2].insert(grid.getGlobalIndex(i, j, k-1));
+        }
+    }
+    return trans;
 }
 
 }

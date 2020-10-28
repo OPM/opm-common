@@ -44,16 +44,15 @@ public:
 
     bool active() const;
     bool hasNumericalAquifer() const;
+    const NumericalAquifers& numericalAquifers() const;
     const AquiferCT& ct() const;
     const Aquifetp& fetp() const;
     const Aquancon& connections() const;
     bool operator==(const AquiferConfig& other);
     bool hasAquifer(const int aquID) const;
     void updatePoreVolume(std::vector<double>& pore_volume) const;
-    void updateCellProps(std::vector<double>&,
-                         std::vector<int>&,
-                         std::vector<int>&,
-                         std::vector<double>&) const;
+    /* void updateCellTrans(const std::array<bool,3>& is_tran,
+                         std::array<std::vector<double>,3>& trans) const; */
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)

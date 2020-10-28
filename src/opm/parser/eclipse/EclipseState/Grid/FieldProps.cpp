@@ -435,8 +435,10 @@ void FieldProps::applyNumericalAquifer(const AquiferConfig& aquifers) {
     // TODO: totally not sure how this will affect the equilibriation
     // TODO: not sure whether we should update the cell depth here, since
     // we might need the equilibration pressure to the pressure initialization
-    auto& celldepth = this->cell_depth;
-    aquifers.updateCellProps(porv_data, satnum_data, pvtnum_data, celldepth);
+    aquifers.numericalAquifers().updateCellProps(porv_data, satnum_data, pvtnum_data, this->cell_depth, this->tran);
+
+    std::array<std::set<int>, 3> trans_to_remove = aquifers.numericalAquifers().transToRemove(*this->grid_ptr);
+    trans_to_remove.size();
 }
 
 
