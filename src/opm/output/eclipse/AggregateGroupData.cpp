@@ -439,9 +439,11 @@ void productionGroup(const Opm::Schedule&     sched,
                      const std::map<int, Opm::Group::ProductionCMode>& pCtrlToPCmode,
                      IGrpArray&               iGrp)
 {
+    using IGroup = ::Opm::RestartIO::Helpers::VectorItems::IGroup::index;
+    namespace Value = ::Opm::RestartIO::Helpers::VectorItems::IGroup::Value;
     const auto& prod_cmode = group.gconprod_cmode();
     if (group.name() == "FIELD") {
-        iGrp[nwgmax + 6] = 0;
+        iGrp[nwgmax + IGroup::GuideRateDef] = Value::GuideRateMode::None;
         iGrp[nwgmax + 7] = 0;
         switch (prod_cmode) {
         case Opm::Group::ProductionCMode::NONE:
@@ -571,76 +573,74 @@ void productionGroup(const Opm::Schedule&     sched,
     Other reduction options are currently not covered in the code
     */
 
-    using IGroup = ::Opm::RestartIO::Helpers::VectorItems::IGroup::index;
-    namespace Value = ::Opm::RestartIO::Helpers::VectorItems::IGroup::Value;
     if (higher_lev_ctrl > 0 && (group.getGroupType() != Opm::Group::GroupType::NONE)) {
-        iGrp[nwgmax + IGroup::ProdCMode]
+        iGrp[nwgmax + IGroup::ProdActiveCMode]
             = (prod_guide_rate_def != Opm::Group::GuideRateTarget::NO_GUIDE_RATE) ? higher_lev_ctrl_mode : 0;
     } else {
         switch (pctl_mode) {
         case Opm::Group::ProductionCMode::NONE:
-            iGrp[nwgmax + IGroup::ProdCMode] = 0;
+            iGrp[nwgmax + IGroup::ProdActiveCMode] = 0;
             break;
         case Opm::Group::ProductionCMode::ORAT:
-            iGrp[nwgmax + IGroup::ProdCMode] = 1;
+            iGrp[nwgmax + IGroup::ProdActiveCMode] = 1;
             break;
         case Opm::Group::ProductionCMode::WRAT:
-            iGrp[nwgmax + IGroup::ProdCMode] = 2;
+            iGrp[nwgmax + IGroup::ProdActiveCMode] = 2;
             break;
         case Opm::Group::ProductionCMode::GRAT:
-            iGrp[nwgmax + IGroup::ProdCMode] = 3;
+            iGrp[nwgmax + IGroup::ProdActiveCMode] = 3;
             break;
         case Opm::Group::ProductionCMode::LRAT:
-            iGrp[nwgmax + IGroup::ProdCMode] = 4;
+            iGrp[nwgmax + IGroup::ProdActiveCMode] = 4;
             break;
         case Opm::Group::ProductionCMode::RESV:
-            iGrp[nwgmax + IGroup::ProdCMode] = 5;
+            iGrp[nwgmax + IGroup::ProdActiveCMode] = 5;
             break;
         case Opm::Group::ProductionCMode::FLD:
-            iGrp[nwgmax + IGroup::ProdCMode] = 0; // need to be checked!!
+            iGrp[nwgmax + IGroup::ProdActiveCMode] = 0; // need to be checked!!
             break;
         default:
-            iGrp[nwgmax + IGroup::ProdCMode] = 0;
+            iGrp[nwgmax + IGroup::ProdActiveCMode] = 0;
         }
     }
-    iGrp[nwgmax + 9] = iGrp[nwgmax + IGroup::ProdCMode];
+    iGrp[nwgmax + 9] = iGrp[nwgmax + IGroup::ProdActiveCMode];
 
     iGrp[nwgmax + IGroup::GuideRateDef] = Value::GuideRateMode::None;
     switch (prod_cmode) {
     case Opm::Group::ProductionCMode::NONE:
         iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? 0 : 4;
-        iGrp[nwgmax + 10] = 0;
+        iGrp[nwgmax + IGroup::GConProdCMode] = 0;
         break;
     case Opm::Group::ProductionCMode::ORAT:
         iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? -40000 : 4;
-        iGrp[nwgmax + 10] = 1;
+        iGrp[nwgmax + IGroup::GConProdCMode] = 1;
         break;
     case Opm::Group::ProductionCMode::WRAT:
         iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? -4000 : 4;
-        iGrp[nwgmax + 10] = 2;
+        iGrp[nwgmax + IGroup::GConProdCMode] = 2;
         break;
     case Opm::Group::ProductionCMode::GRAT:
         iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? -400 : 4;
-        iGrp[nwgmax + 10] = 3;
+        iGrp[nwgmax + IGroup::GConProdCMode] = 3;
         break;
     case Opm::Group::ProductionCMode::LRAT:
         iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? -40 : 4;
-        iGrp[nwgmax + 10] = 4;
+        iGrp[nwgmax + IGroup::GConProdCMode] = 4;
         break;
     case Opm::Group::ProductionCMode::RESV:
         iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? -4 : 4; // need to be checked
-        iGrp[nwgmax + 10] = 5;
+        iGrp[nwgmax + IGroup::GConProdCMode] = 5;
         break;
     case Opm::Group::ProductionCMode::FLD:
         if ((higher_lev_ctrl > 0) && (prod_guide_rate_def != Opm::Group::GuideRateTarget::NO_GUIDE_RATE)) {
             iGrp[nwgmax + IGroup::GuideRateDef] = Value::GuideRateMode::Form;
         }
         iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? 4 : 4;
-        iGrp[nwgmax + 10] = 0; // need to be checked!!
+        iGrp[nwgmax + IGroup::GConProdCMode] = 0; // need to be checked!!
         break;
     default:
         iGrp[nwgmax + 7] = 0;
-        iGrp[nwgmax + 10] = 0; // need to be checked!!
+        iGrp[nwgmax + IGroup::GConProdCMode] = 0; // need to be checked!!
     }
 }
 
@@ -839,6 +839,7 @@ void staticContrib(const Opm::Schedule&     sched,
                    const std::map<Opm::Group::InjectionCMode, int>& cmodeToNum,
                    IGrpArray&               iGrp)
 {
+    using IGroup = ::Opm::RestartIO::Helpers::VectorItems::IGroup::index;
     const bool is_field = group.name() == "FIELD";
     if (group.wellgroup()) {
         int igrpCount = 0;
@@ -865,7 +866,7 @@ void staticContrib(const Opm::Schedule&     sched,
     // Find number of active production wells and injection wells for group
     const double g_act_pwells = is_field ? sumState.get("FMWPR", 0) : sumState.get_group_var(group.name(), "GMWPR", 0);
     const double g_act_iwells = is_field ? sumState.get("FMWIN", 0) : sumState.get_group_var(group.name(), "GMWIN", 0);
-    iGrp[nwgmax + 33] = g_act_pwells + g_act_iwells;
+    iGrp[nwgmax + IGroup::FlowingWells] = g_act_pwells + g_act_iwells;
 
     // Treat al groups which are *not* pure injection groups.
     if (group.getGroupType() != Opm::Group::GroupType::INJECTION)
