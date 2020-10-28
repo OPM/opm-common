@@ -60,11 +60,6 @@
 using namespace Opm;
 
 namespace {
-    double liquid_PI_unit()
-    {
-        return UnitSystem::newMETRIC().to_si(UnitSystem::measure::liquid_productivity_index, 1.0);
-    }
-
     double cp_rm3_per_db()
     {
         return prefix::centi*unit::Poise * unit::cubic(unit::meter)
@@ -3816,7 +3811,7 @@ END
         const auto expectCF = (200.0 / 100.0) * 100.0*cp_rm3_per_db();
         auto wellP = sched.getWell("P", 1);
 
-        const auto scalingFactor = wellP.getWellPIScalingFactor(100.0*liquid_PI_unit());
+        const auto scalingFactor = wellP.getWellPIScalingFactor(100.0);
         BOOST_CHECK_CLOSE(scalingFactor, 2.0, 1.0e-10);
 
         std::vector<bool> scalingApplicable;
@@ -3835,7 +3830,7 @@ END
         const auto expectCF = (200.0 / 100.0) * 100.0*cp_rm3_per_db();
         auto wellP = sched.getWell("P", 2);
 
-        const auto scalingFactor = wellP.getWellPIScalingFactor(100.0*liquid_PI_unit());
+        const auto scalingFactor = wellP.getWellPIScalingFactor(100.0);
         BOOST_CHECK_CLOSE(scalingFactor, 2.0, 1.0e-10);
 
         std::vector<bool> scalingApplicable;
@@ -3959,7 +3954,7 @@ END
     // Apply WELPI scaling after end of time series => no change to CTFs
     {
         const auto report_step   = std::size_t{1};
-        const auto scalingFactor = getScalingFactor(report_step, 100.0*liquid_PI_unit());
+        const auto scalingFactor = getScalingFactor(report_step, 100.0);
 
         BOOST_CHECK_CLOSE(scalingFactor, 2.0, 1.0e-10);
 
@@ -4025,7 +4020,7 @@ END
     // Apply WELPI scaling after first WELPI specification
     {
         const auto report_step   = std::size_t{1};
-        const auto scalingFactor = getScalingFactor(report_step, 100.0*liquid_PI_unit());
+        const auto scalingFactor = getScalingFactor(report_step, 100.0);
 
         BOOST_CHECK_CLOSE(scalingFactor, 2.0, 1.0e-10);
 
@@ -4093,7 +4088,7 @@ END
     // Apply WELPI scaling after second WELPI specification
     {
         const auto report_step   = std::size_t{3};
-        const auto scalingFactor = getScalingFactor(report_step, 200.0*liquid_PI_unit());
+        const auto scalingFactor = getScalingFactor(report_step, 200.0);
 
         BOOST_CHECK_CLOSE(scalingFactor, 0.25, 1.0e-10);
 

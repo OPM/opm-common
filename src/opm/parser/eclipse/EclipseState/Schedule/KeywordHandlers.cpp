@@ -1108,10 +1108,6 @@ namespace {
         using WELL_NAME = ParserKeywords::WELPI::WELL_NAME;
         using PI        = ParserKeywords::WELPI::STEADY_STATE_PRODUCTIVITY_OR_INJECTIVITY_INDEX_VALUE;
 
-        const auto& usys  = handlerContext.section.unitSystem();
-        const auto  gasPI = UnitSystem::measure::gas_productivity_index;
-        const auto  liqPI = UnitSystem::measure::liquid_productivity_index;
-
         for (const auto& record : handlerContext.keyword) {
             const auto well_names = this->wellNames(record.getItem<WELL_NAME>().getTrimmedString(0),
                                                    handlerContext.currentStep);
@@ -1123,18 +1119,15 @@ namespace {
 
             const auto rawProdIndex = record.getItem<PI>().get<double>(0);
             for (const auto& well_name : well_names) {
-                // All wells in a single record *hopefully* have the same preferred phase...
-                const auto& well   = this->getWell(well_name, handlerContext.currentStep);
-                const auto  unitPI = (well.getPreferredPhase() == Phase::GAS) ? gasPI : liqPI;
+                auto well2 = std::make_shared<Well>(this->getWell(well_name, handlerContext.currentStep));
 
                 // Note: Need to ensure we have an independent copy of
                 // well's connections because
                 // Well::updateWellProductivityIndex() implicitly mutates
                 // internal state in the WellConnections class.
-                auto well2       = std::make_shared<Well>(well);
                 auto connections = std::make_shared<WellConnections>(well2->getConnections());
                 well2->forceUpdateConnections(std::move(connections));
-                if (well2->updateWellProductivityIndex(usys.to_si(unitPI, rawProdIndex)))
+                if (well2->updateWellProductivityIndex(rawProdIndex))
                     this->updateWell(std::move(well2), handlerContext.currentStep);
 
                 this->addWellGroupEvent(well_name, ScheduleEvents::WELL_PRODUCTIVITY_INDEX, handlerContext.currentStep);
