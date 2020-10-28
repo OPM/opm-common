@@ -3931,9 +3931,15 @@ END
     BOOST_REQUIRE_EQUAL(sched.getTimeMap().last(),         std::size_t{5});
 
     BOOST_REQUIRE_MESSAGE(sched.hasWellGroupEvent("P", ScheduleEvents::Events::WELL_PRODUCTIVITY_INDEX, 1),
-                          "Schedule must have WELL_PRODUCTIVITY_INDEX Event at report step 1");
+                          R"(Schedule must have WELL_PRODUCTIVITY_INDEX Event for well "P" at report step 1)");
 
     BOOST_REQUIRE_MESSAGE(sched.hasWellGroupEvent("P", ScheduleEvents::Events::WELL_PRODUCTIVITY_INDEX, 3),
+                          R"(Schedule must have WELL_PRODUCTIVITY_INDEX Event for well "P" at report step 3)");
+
+    BOOST_REQUIRE_MESSAGE(sched.getEvents().hasEvent(ScheduleEvents::Events::WELL_PRODUCTIVITY_INDEX, 1),
+                          "Schedule must have WELL_PRODUCTIVITY_INDEX Event at report step 1");
+
+    BOOST_REQUIRE_MESSAGE(sched.getEvents().hasEvent(ScheduleEvents::Events::WELL_PRODUCTIVITY_INDEX, 3),
                           "Schedule must have WELL_PRODUCTIVITY_INDEX Event at report step 3");
 
     auto getScalingFactor = [&sched](const std::size_t report_step, const double wellPI) -> double

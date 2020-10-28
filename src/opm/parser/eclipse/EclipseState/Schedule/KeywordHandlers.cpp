@@ -1133,6 +1133,8 @@ namespace {
                 this->addWellGroupEvent(well_name, ScheduleEvents::WELL_PRODUCTIVITY_INDEX, handlerContext.currentStep);
             }
         }
+
+        this->m_events.addEvent(ScheduleEvents::WELL_PRODUCTIVITY_INDEX, handlerContext.currentStep);
     }
 
     void Schedule::handleWELSEGS(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
