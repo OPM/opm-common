@@ -509,6 +509,7 @@ public:
     Status getStatus() const;
     const std::string& groupName() const;
     Phase getPreferredPhase() const;
+
     const WellConnections& getConnections() const;
     const WellSegments& getSegments() const;
 
@@ -546,6 +547,14 @@ public:
       keyword.
     */
     std::map<int, std::vector<Connection>> getCompletions() const;
+    /*
+      For hasCompletion(int completion) and getConnections(int completion) the
+      completion argument is an integer ID used to denote a collection of
+      connections. The integer ID is assigned with the COMPLUMP keyword.
+     */
+    bool hasCompletion(int completion) const;
+    const std::vector<const Connection *> getConnections(int completion) const;
+
 
     bool updatePrediction(bool prediction_mode);
     bool updateAutoShutin(bool auto_shutin);

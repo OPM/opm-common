@@ -873,6 +873,15 @@ const WellConnections& Well::getConnections() const {
     return *this->connections;
 }
 
+const std::vector<const Connection *> Well::getConnections(int completion) const {
+    std::vector<const Connection *> connvector;
+    for (const auto& conn : this->getConnections()) {
+        if (conn.complnum() == completion)
+            connvector.push_back( &conn );
+    }
+    return connvector;
+}
+
 const WellFoamProperties& Well::getFoamProperties() const {
     return *this->foam_properties;
 }
@@ -937,6 +946,16 @@ std::map<int, std::vector<Connection>> Well::getCompletions() const {
 
     return completions;
 }
+
+bool Well::hasCompletion(int completion) const {
+    for (const auto& conn : *this->connections) {
+        if (conn.complnum() == completion)
+            return true;
+    }
+    return false;
+}
+
+
 
 Phase Well::getPreferredPhase() const {
     return this->wtype.preferred_phase();
