@@ -1124,14 +1124,8 @@ namespace {
             const auto rawProdIndex = record.getItem<PI>().get<double>(0);
             for (const auto& well_name : well_names) {
                 // All wells in a single record *hopefully* have the same preferred phase...
-                const auto& well      = this->getWell(well_name, handlerContext.currentStep);
-                const auto  preferred = well.getPreferredPhase();
-                const auto  unitPI    = (preferred == Phase::GAS) ? gasPI : liqPI;
-
-                const auto wellPI = Well::WellProductivityIndex {
-                    usys.to_si(unitPI, rawProdIndex),
-                    preferred
-                };
+                const auto& well   = this->getWell(well_name, handlerContext.currentStep);
+                const auto  unitPI = (well.getPreferredPhase() == Phase::GAS) ? gasPI : liqPI;
 
                 // Note: Need to ensure we have an independent copy of
                 // well's connections because
@@ -1140,7 +1134,7 @@ namespace {
                 auto well2       = std::make_shared<Well>(well);
                 auto connections = std::make_shared<WellConnections>(well2->getConnections());
                 well2->forceUpdateConnections(std::move(connections));
-                if (well2->updateWellProductivityIndex(wellPI))
+                if (well2->updateWellProductivityIndex(usys.to_si(unitPI, rawProdIndex)))
                     this->updateWell(std::move(well2), handlerContext.currentStep);
 
                 this->addWellGroupEvent(well_name, ScheduleEvents::WELL_PRODUCTIVITY_INDEX, handlerContext.currentStep);
