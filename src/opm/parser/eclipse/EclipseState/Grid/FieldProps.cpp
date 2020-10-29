@@ -576,12 +576,23 @@ void FieldProps::applyNumericalAquifer(const AquiferConfig& aquifers) {
     // we might need the equilibration pressure to the pressure initialization
     aquifers.numericalAquifers().updateCellProps(*(this->grid_ptr), porv_data, satnum_data, pvtnum_data, this->cell_depth);
 
+    //  TODO: the following should go to a function
     const auto trans_to_remove = aquifers.numericalAquifers().transToRemove(*(this->grid_ptr));
+
+    std::array<std::vector<Box::cell_index>, 3> index_lists;
+    for (int i = 0; i < 3; ++i) {
+        size_t num = 0;
+        for (const auto& elem : trans_to_remove[i]) {
+            const size_t active_index = this->grid_ptr->activeIndex(elem);
+            index_lists[i].emplace_back(elem, active_index, num);
+            num++;
+        }
+    }
 
     const std::array<std::string, 3> trans_string {"TRANX", "TRANY", "TRANZ"};
     for (int i = 0; i < 3; ++i) {
         const std::string& target_kw = trans_string[i];
-        const std::vector<Box::cell_index>& index_list = trans_to_remove[i];
+        const std::vector<Box::cell_index>& single_index_list = index_lists[i];
         auto tran_iter = this->tran.find(target_kw);
         assert(tran_iter != this->tran.end());
         const std::string unique_name = tran_iter->second.next_name();
@@ -590,7 +601,7 @@ void FieldProps::applyNumericalAquifer(const AquiferConfig& aquifers) {
         const auto kw_info = tran_iter->second.make_kw_info(operation);
         auto& field_data = this->init_get<double>(unique_name, kw_info);
         const double scalar_value = 0.0;
-        FieldProps::apply(operation, field_data.data, field_data.value_status, scalar_value, index_list);
+        FieldProps::apply(operation, field_data.data, field_data.value_status, scalar_value, single_index_list);
         // TODO: not sure when we need the following. If we need, we also need to make a global_index_list;
         /* if (field_data.global_data)
              FieldProps::apply(operation, *field_data.global_data, *field_data.global_value_status, scalar_value, box.global_index_list()); */

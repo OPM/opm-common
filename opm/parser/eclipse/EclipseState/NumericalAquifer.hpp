@@ -25,7 +25,6 @@
 #include <unordered_map>
 #include <set>
 #include <array>
-#include <opm/parser/eclipse/EclipseState/Grid/Box.hpp>
 
 namespace Opm {
     class Deck;
@@ -96,7 +95,7 @@ namespace Opm {
                              std::vector<int>& satnum,
                              std::vector<int>& pvtnum,
                              std::vector<double>& cell_depth) const;
-        std::array<std::vector<Box::cell_index>, 3> transToRemove(const EclipseGrid& grid) const;
+        std::array<std::set<int>, 3> transToRemove(const EclipseGrid& grid) const;
     private:
         // std::un_ordered_map
         std::unordered_map<int, SingleNumericalAquifer> aquifers_;

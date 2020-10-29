@@ -112,9 +112,8 @@ void NumericalAquifers::updateCellProps(const EclipseGrid& grid,
     }
 }
 
-std::array<std::vector<Box::cell_index>, 3>
+std::array<std::set<int>, 3>
 NumericalAquifers::transToRemove(const EclipseGrid& grid) const {
-    std::array<std::vector<Box::cell_index>, 3> index_list;
     std::array<std::set<int>, 3> trans;
     for (const auto& pair : this->aquifers_) {
         auto trans_aquifer = pair.second.transToRemove(grid);
@@ -122,20 +121,10 @@ NumericalAquifers::transToRemove(const EclipseGrid& grid) const {
             trans[i].merge(trans_aquifer[i]);
         }
     }
-
-    // TODO: I think I do not need to do it here, we can do it in the FieldProps code
-    for (int i = 0; i < 3; ++i) {
-        size_t num = 0;
-        for (const auto& elem : trans[i]) {
-            const size_t active_index = grid.activeIndex(elem);
-            index_list[i].emplace_back(elem, active_index, num);
-            num++;
-        }
-    }
-    return index_list;
+    return  trans;
 }
 
-    using AQUNUM = ParserKeywords::AQUNUM;
+using AQUNUM = ParserKeywords::AQUNUM;
 NumericalAquiferCell::NumericalAquiferCell(const DeckRecord& record, const EclipseGrid& grid, const FieldPropsManager& field_props)
    : aquifer_id( record.getItem<AQUNUM::AQUIFER_ID>().get<int>(0) )
    , I ( record.getItem<AQUNUM::I>().get<int>(0) - 1 )
