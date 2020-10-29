@@ -36,6 +36,7 @@ namespace Opm {
         int aquifer_id;
         // TODO: maybe it is okay to use global_index
         int I, J, K;
+        int global_index;
         FaceDir::DirEnum face_dir;
         double trans_multipler = 1.0;
         int trans_option = 0;
@@ -49,20 +50,19 @@ namespace Opm {
 
     class NumericalAquiferConnections {
     public:
-        // TODO: maybe just easier to use a global_index here
-        using CellIndex = std::array<int, 3>;
         NumericalAquiferConnections(const Deck& deck, const EclipseGrid& grid);
         // TODO: might be removed later.
         // It is possible when without this function, unordered_map problem can be fixed
         NumericalAquiferConnections() = default;
 
-        const std::map<CellIndex, NumAquiferCon>& getConnections(const int aqu_id) const;
+        const std::map<int, NumAquiferCon>& getConnections(const int aqu_id) const;
 
     private:
         // TODO: compilation failure with_unordered_map
         // basically due to  implicitly-deleted default constructor of 'std::unordered_map
         // std::unordered_map<int, std::unordered_map<CellIndex, NumAquiferCon>> connections_;
-        std::map<int, std::map<CellIndex, NumAquiferCon>> connections_;
+        // after finished, it should be okay to just use a vector instead of std::map
+        std::map<int, std::map<int, NumAquiferCon>> connections_;
     };
 }
 #endif //OPM_AQUCON_HPP

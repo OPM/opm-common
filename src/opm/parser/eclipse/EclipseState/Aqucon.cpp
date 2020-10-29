@@ -43,12 +43,12 @@ namespace Opm {
                 auto cons_from_record = NumAquiferCon::generateConnections(grid, record);
                 for (auto con : cons_from_record) {
                     const int aqu_id = con.aquifer_id;
-                    const CellIndex cell_index {con.I, con.J, con.K};
+                    const int global_index = con.global_index;
                     auto& aqu_cons = this->connections_[aqu_id];
                     // TODO: with this way, we might ignore the situation that a cell is
                     // connected to two different aquifers
-                    if (aqu_cons.find(cell_index) == aqu_cons.end()) {
-                        aqu_cons.insert({cell_index, con});
+                    if (aqu_cons.find(global_index) == aqu_cons.end()) {
+                        aqu_cons.insert({global_index, con});
                     } else {
                         // not sure how to handle the situation that the same cell declared multiple times
                         // TODO: maybe it is okay if for different faces of the same cell?
@@ -59,7 +59,7 @@ namespace Opm {
         }
     }
 
-    const std::map<NumericalAquiferConnections::CellIndex, NumAquiferCon>&
+    const std::map<int, NumAquiferCon>&
     NumericalAquiferConnections::getConnections(const int aqu_id) const {
         const auto& cons = this->connections_.find(aqu_id);
         if (cons == this->connections_.end())  {
@@ -97,7 +97,8 @@ namespace Opm {
                 for (int i = i1; i <= i2; ++i) {
                     if (allow_internal_cells ||
                         !AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i, j, k, face_dir)) {
-                        cons.emplace_back(NumAquiferCon{aqu_id, i, j, k, face_dir, trans_multi, trans_option,
+                        const int global_index = grid.getGlobalIndex(i, j, k);
+                        cons.emplace_back(NumAquiferCon{aqu_id, i, j, k, global_index, face_dir, trans_multi, trans_option,
                                                         allow_internal_cells, ve_frac_relperm, ve_frac_cappress});
                     }
                 }

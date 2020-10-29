@@ -25,6 +25,7 @@
 #include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/TranCalculator.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <iostream>
@@ -37,11 +38,10 @@ NumericalAquifers::NumericalAquifers(const Deck& deck, const EclipseGrid& grid, 
 {
     using AQUNUM=ParserKeywords::AQUNUM;
     if ( !deck.hasKeyword<AQUNUM>() ) return;
-    using CellIndex = std::array<int, 3>;
     // TODO: with a map, we might change the order of the input.
     // TODO: maybe we should use a vector here, and another variable to handle the the duplication
     std::vector<NumericalAquiferCell> aquifer_cells;
-    std::map<CellIndex, size_t> cell_index;
+    std::set<int> cell_set;
 
     // there might be multiple keywords of keyword AQUNUM, it is not totally
     // clear about the rules here. For now, we take care of all the keywords
@@ -49,15 +49,16 @@ NumericalAquifers::NumericalAquifers(const Deck& deck, const EclipseGrid& grid, 
     for (const auto& keyword : aqunum_keywords) {
         for (const auto& record : *keyword) {
             const NumericalAquiferCell aqu_cell(record, grid, field_props);
-            CellIndex cell_indices {aqu_cell.I, aqu_cell.J, aqu_cell.K};
             // TODO: we should check whether the grid cell is active or NOT
             // Not sure how to handle duplicated input for aquifer cells yet, throw here
             // until we
-            if (cell_index.find(cell_indices) != cell_index.end()) {
+            if (cell_set.find(aqu_cell.global_index) != cell_set.end()) {
                 // TODO: it is good to keep the original I J K for messaging
                 throw;
+            } else {
+                cell_set.insert(aqu_cell.global_index);
+                aquifer_cells.push_back(aqu_cell);
             }
-            aquifer_cells.push_back(aqu_cell);
         }
     }
 
@@ -122,6 +123,12 @@ NumericalAquifers::transToRemove(const EclipseGrid& grid) const {
         }
     }
     return  trans;
+}
+
+void NumericalAquifers::appendNNC(NNC& nnc) const {
+    for (const auto& pair : this->aquifers_) {
+        pair.second.appendNNC(nnc);
+    }
 }
 
 using AQUNUM = ParserKeywords::AQUNUM;
@@ -239,6 +246,9 @@ std::array<std::set<int>, 3> SingleNumericalAquifer::transToRemove(const Eclipse
         }
     }
     return trans;
+}
+
+void SingleNumericalAquifer::appendNNC(NNC& nnc) const {
 }
 
 }

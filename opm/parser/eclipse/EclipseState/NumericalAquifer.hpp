@@ -33,6 +33,7 @@ namespace Opm {
     class NumAquiferCon;
     class EclipseGrid;
     class FieldPropsManager;
+    class NNC;
     namespace Fieldprops {
         class TranCalculator;
     };
@@ -73,6 +74,7 @@ namespace Opm {
                              std::vector<int>& pvtnum,
                              std::vector<double>& cell_depth) const;
         std::array<std::set<int>, 3> transToRemove(const EclipseGrid& grid) const;
+        void appendNNC(NNC& nnc) const;
     private:
         // Maybe this id_ is not necessary
         // Because if it is a map, the id will be there
@@ -96,6 +98,7 @@ namespace Opm {
                              std::vector<int>& pvtnum,
                              std::vector<double>& cell_depth) const;
         std::array<std::set<int>, 3> transToRemove(const EclipseGrid& grid) const;
+        void appendNNC(NNC& nnc) const;
     private:
         // std::un_ordered_map
         std::unordered_map<int, SingleNumericalAquifer> aquifers_;
