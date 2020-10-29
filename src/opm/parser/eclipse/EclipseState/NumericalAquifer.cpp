@@ -102,18 +102,13 @@ bool NumericalAquifers::empty() const {
     return this->aquifers_.empty();
 }
 
-void NumericalAquifers::updatePoreVolume(std::vector<double>& pore_volume) const {
-    for (const auto& iter : this->aquifers_) {
-        iter.second.updatePoreVolume(pore_volume);
-    }
-}
-
-void NumericalAquifers::updateCellProps(std::vector<double>& pore_volume,
+void NumericalAquifers::updateCellProps(const EclipseGrid& grid,
+                                        std::vector<double>& pore_volume,
                                         std::vector<int>& satnum,
                                         std::vector<int>& pvtnum,
                                         std::vector<double>& cell_depth) const {
     for (const auto& iter : this->aquifers_) {
-        iter.second.updateCellProps(pore_volume, satnum, pvtnum, cell_depth);
+        iter.second.updateCellProps(grid, pore_volume, satnum, pvtnum, cell_depth);
     }
 }
 
@@ -128,6 +123,7 @@ NumericalAquifers::transToRemove(const EclipseGrid& grid) const {
         }
     }
 
+    // TODO: I think I do not need to do it here, we can do it in the FieldProps code
     for (int i = 0; i < 3; ++i) {
         size_t num = 0;
         for (const auto& elem : trans[i]) {
@@ -213,21 +209,17 @@ void SingleNumericalAquifer::addAquiferConnection(const NumAquiferCon& aqu_con) 
     this->connections_.push_back(aqu_con);
 }
 
-void SingleNumericalAquifer::updatePoreVolume(std::vector<double>& pore_volume) const {
-    for (const auto& cell : this->cells_) {
-        pore_volume[cell.global_index] = cell.pore_volume;
-    }
-}
-
-void SingleNumericalAquifer::updateCellProps(std::vector<double>& pore_volume,
+void SingleNumericalAquifer::updateCellProps(const EclipseGrid& grid,
+                                             std::vector<double>& pore_volume,
                                              std::vector<int>& satnum,
                                              std::vector<int>& pvtnum,
                                              std::vector<double>& cell_depth) const {
     for (const auto& cell : this->cells_) {
-        pore_volume[cell.global_index] = cell.pore_volume;
-        satnum[cell.global_index] = cell.sattable;
-        pvtnum[cell.global_index] = cell.pvttable;
-        cell_depth[cell.global_index] = cell.depth;
+        const size_t activel_index =  grid.activeIndex(cell.global_index);
+        pore_volume[activel_index] = cell.pore_volume;
+        satnum[activel_index] = cell.sattable;
+        pvtnum[activel_index] = cell.pvttable;
+        cell_depth[activel_index] = cell.depth;
     }
 }
 

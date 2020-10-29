@@ -68,8 +68,8 @@ namespace Opm {
         explicit SingleNumericalAquifer(const int aqu_id);
         void addAquiferCell(const NumericalAquiferCell& aqu_cell);
         void addAquiferConnection(const NumAquiferCon& aqu_con);
-        void updatePoreVolume(std::vector<double>& pore_volume) const;
-        void updateCellProps(std::vector<double>& pore_volume,
+        void updateCellProps(const EclipseGrid& grid,
+                             std::vector<double>& pore_volume,
                              std::vector<int>& satnum,
                              std::vector<int>& pvtnum,
                              std::vector<double>& cell_depth) const;
@@ -91,8 +91,8 @@ namespace Opm {
 
         bool hasAquifer(const int aquifer_id) const;
         bool empty() const;
-        void updatePoreVolume(std::vector<double>& pore_volume) const;
-        void updateCellProps(std::vector<double>& pore_volume,
+        void updateCellProps(const EclipseGrid& grid,
+                             std::vector<double>& pore_volume,
                              std::vector<int>& satnum,
                              std::vector<int>& pvtnum,
                              std::vector<double>& cell_depth) const;

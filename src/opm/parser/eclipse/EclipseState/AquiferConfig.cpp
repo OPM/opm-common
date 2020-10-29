@@ -79,12 +79,6 @@ bool AquiferConfig::hasNumericalAquifer() const {
     return !this->numerical_aquifers.empty();
 }
 
-void AquiferConfig::updatePoreVolume(std::vector<double>& pore_volume) const {
-    if ( !this->hasNumericalAquifer() ) return;
-
-    this->numerical_aquifers.updatePoreVolume(pore_volume);
-}
-
 const NumericalAquifers& AquiferConfig::numericalAquifers() const {
     return this->numerical_aquifers;
 }
