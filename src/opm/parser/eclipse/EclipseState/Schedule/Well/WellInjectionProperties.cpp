@@ -181,7 +181,7 @@ namespace Opm {
 
         if (!record.getItem("RATE").defaultApplied(0)) {
             double injectionRate = record.getItem("RATE").get<double>(0);
-            this->surfaceInjectionRate = injectionRate;
+            this->surfaceInjectionRate.update(injectionRate);
         }
         if ( record.getItem( "BHP" ).hasValue(0) )
             this->BHPH = record.getItem("BHP").getSIDouble(0);

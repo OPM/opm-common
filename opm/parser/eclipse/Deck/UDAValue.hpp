@@ -38,6 +38,19 @@ public:
     UDAValue(double data, const Dimension& dim);
     UDAValue(const std::string& data, const Dimension& dim);
 
+    /*
+      The assignment operators have been explicitly deleted, that is to prevent
+      people from adding them at a later stage. It seems very tempting/natural
+      to implement these assignment operators, but the problem is that the
+      resulting UDA object will typically have the wrong dimension member, and
+      subtle dimension related bugs will arise.
+    */
+    UDAValue& operator=(double value) = delete;
+    UDAValue& operator=(const std::string& value) = delete;
+    void update(double d);
+    void update(const std::string& s);
+    void update_value(const UDAValue& other);
+
     static UDAValue serializeObject();
 
     /*
@@ -66,9 +79,6 @@ public:
 
     bool operator==(const UDAValue& other) const;
     bool operator!=(const UDAValue& other) const;
-    UDAValue& operator=(double value);
-    UDAValue& operator=(const std::string& value);
-    void update_value(const UDAValue& other);
 
     bool is_numeric() { return numeric_value; }
 

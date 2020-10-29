@@ -115,16 +115,14 @@ double UDAValue::getSI() const {
 }
 
 
-UDAValue& UDAValue::operator=(double value) {
+void UDAValue::update(double value) {
     this->double_value = value;
     this->numeric_value = true;
-    return *this;
 }
 
-UDAValue& UDAValue::operator=(const std::string& value) {
+void UDAValue::update(const std::string& value) {
     this->string_value = value;
     this->numeric_value = false;
-    return *this;
 }
 
 

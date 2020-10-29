@@ -1338,10 +1338,10 @@ BOOST_AUTO_TEST_CASE(UDA_VALUE) {
     BOOST_CHECK(!value0.is<std::string>());
     BOOST_CHECK_EQUAL( value0.get<double>(), 0);
     BOOST_CHECK_THROW( value0.get<std::string>(), std::invalid_argument);
-    value0 = 10;
+    value0.update(10);
     BOOST_CHECK_EQUAL( value0.get<double>(), 10);
     BOOST_CHECK_THROW( value0.get<std::string>(), std::invalid_argument);
-    value0 = "STRING";
+    value0.update("STRING");
     BOOST_CHECK_EQUAL( value0.get<std::string>(), std::string("STRING"));
     BOOST_CHECK_THROW( value0.get<double>(), std::invalid_argument);
 
