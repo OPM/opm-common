@@ -1217,8 +1217,12 @@ SummaryConfig::SummaryConfig( const Deck& deck,
             if (section.hasKeyword(meta_pair.first)) {
                 const auto& deck_keyword = section.getKeyword(meta_pair.first);
                 for (const auto& kw : meta_pair.second) {
-                    if (!this->hasKeyword(kw))
-                        handleKW(this->m_keywords, kw, deck_keyword.location(), schedule, aquiferConfig, parseContext, errors);
+                    if (!this->hasKeyword(kw)) {
+                        KeywordLocation location = deck_keyword.location();
+                        location.keyword = fmt::format("{}/{}", meta_pair.first, kw);
+
+                        handleKW(this->m_keywords, kw, location, schedule, aquiferConfig, parseContext, errors);
+                    }
                 }
             }
         }
