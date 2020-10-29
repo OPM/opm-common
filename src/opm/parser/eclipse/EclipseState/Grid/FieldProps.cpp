@@ -428,21 +428,9 @@ void FieldProps::reset_actnum(const std::vector<int>& new_actnum) {
     this->active_size = new_active_size;
 }
 
-void FieldProps::applyNumericalAquifer(const AquiferConfig& aquifers) {
-    auto& porv_data = this->double_data["PORV"].data;
-    auto& satnum_data = this->int_data["SATNUM"].data;
-    auto& pvtnum_data = this->int_data["PVTNUM"].data;
-    // TODO: totally not sure how this will affect the equilibriation
-    // TODO: not sure whether we should update the cell depth here, since
-    // we might need the equilibration pressure to the pressure initialization
-    aquifers.numericalAquifers().updateCellProps(porv_data, satnum_data, pvtnum_data, this->cell_depth, this->tran);
-
-    std::array<std::set<int>, 3> trans_to_remove = aquifers.numericalAquifers().transToRemove(*this->grid_ptr);
-    trans_to_remove.size();
-}
 
 
-void FieldProps::distribute_toplayer(Fieldprops::FieldData<double>& field_data, const std::vector<double>& deck_data, const Box& box) {
+    void FieldProps::distribute_toplayer(Fieldprops::FieldData<double>& field_data, const std::vector<double>& deck_data, const Box& box) {
     const std::size_t layer_size = this->nx * this->ny;
     Fieldprops::FieldData<double> toplayer(field_data.kw_info, layer_size, 0);
     for (const auto& cell_index : box.index_list()) {
@@ -579,6 +567,35 @@ std::vector<Box::cell_index> FieldProps::region_index( const std::string& region
     return index_list;
 }
 
+void FieldProps::applyNumericalAquifer(const AquiferConfig& aquifers) {
+    auto& porv_data = this->double_data["PORV"].data;
+    auto& satnum_data = this->int_data["SATNUM"].data;
+    auto& pvtnum_data = this->int_data["PVTNUM"].data;
+    // TODO: totally not sure how this will affect the equilibriation
+    // TODO: not sure whether we should update the cell depth here, since
+    // we might need the equilibration pressure to the pressure initialization
+    aquifers.numericalAquifers().updateCellProps(porv_data, satnum_data, pvtnum_data, this->cell_depth);
+
+    const auto trans_to_remove = aquifers.numericalAquifers().transToRemove(*this->grid_ptr);
+
+    const std::array<std::string, 3> trans_string {"TRANX", "TRANY", "TRANZ"};
+    for (int i = 0; i < 3; ++i) {
+        const std::string& target_kw = trans_string[i];
+        const std::vector<Box::cell_index>& index_list = trans_to_remove[i];
+        auto tran_iter = this->tran.find(target_kw);
+        assert(tran_iter != this->tran.end());
+        const std::string unique_name = tran_iter->second.next_name();
+        const auto operation = Fieldprops::ScalarOperation::EQUAL;
+        tran_iter->second.add_action(operation, unique_name);
+        const auto kw_info = tran_iter->second.make_kw_info(operation);
+        auto& field_data = this->init_get<double>(unique_name, kw_info);
+        const double scalar_value = 0.0;
+        FieldProps::apply(operation, field_data.data, field_data.value_status, scalar_value, index_list);
+        // TODO: not sure when we need the following. If we need, we also need to make a global_index_list;
+        /* if (field_data.global_data)
+             FieldProps::apply(operation, *field_data.global_data, *field_data.global_value_status, scalar_value, box.global_index_list()); */
+    }
+}
 
 
 std::string FieldProps::region_name(const DeckItem& region_item) {
