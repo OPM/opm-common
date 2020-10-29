@@ -558,6 +558,8 @@ END
 		c.rates.set(o::wat, qw*(float(i)+1.))
                    .set(o::oil, qo*(float(i)+1.))
                    .set(o::gas, qg*(float(i)+1.));
+
+		c.index = 90 + i; // zero-based global index
 	    }
 	    auto seg = Opm::data::Segment{};
 	    for (std::size_t i = 1; i < 5; i++) {
@@ -576,6 +578,7 @@ END
 		c.rates.set(o::wat, qw*(float(i)+1.))
 		       .set(o::oil, 0.)
 		       .set(o::gas, 0.);
+		c.index = 409 - i; // zero-based global index
 	    }
         }
         return xw;
