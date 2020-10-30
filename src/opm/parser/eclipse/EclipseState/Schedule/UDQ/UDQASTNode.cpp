@@ -145,28 +145,34 @@ UDQSet UDQASTNode::eval(UDQVarType target_type, const UDQContext& context) const
         const auto& string_value = std::get<std::string>( this->value );
         auto data_type = UDQ::targetType(string_value);
         if (data_type == UDQVarType::WELL_VAR) {
-            const auto& wells = context.wells();
+            const auto& all_wells = context.wells();
+            auto res = UDQSet::wells(string_value, all_wells);
 
-            if (this->selector.size() > 0) {
-                const std::string& well_pattern = this->selector[0];
-                if (well_pattern.find("*") == std::string::npos)
-                    return this->sign * UDQSet::scalar(string_value, context.get_well_var(well_pattern, string_value));
-                else {
-                    auto res = UDQSet::wells(string_value, wells);
-                    int fnmatch_flags = 0;
-                    for (const auto& well : wells) {
-                        if (fnmatch(well_pattern.c_str(), well.c_str(), fnmatch_flags) == 0)
-                            res.assign(well, context.get_well_var(well, string_value));
-                    }
-                    return this->sign * res;
-                }
-            } else {
-                auto res = UDQSet::wells(string_value, wells);
-                for (const auto& well : wells)
+            if (this->selector.empty()) {
+                for (const auto& well : all_wells)
                     res.assign(well, context.get_well_var(well, string_value));
-
-                return this->sign * res;
+            } else {
+                const std::string& well_pattern = this->selector[0];
+                if (well_pattern.find('*') == std::string::npos)
+                    /*
+                      The right hand side is a fully qualified well name without
+                      any '*', in this case the right hand side evaluates to a
+                      *scalar* - and that scalar value is distributed among all
+                      the wells in the result set.
+                    */
+                    res.assign( context.get_well_var(well_pattern, string_value));
+                else {
+                    /*
+                      The right hand side is a set of wells. The result set will
+                      be updated for all wells in the right hand set, wells
+                      missing in the right hand set will be undefined in the
+                      result set.
+                     */
+                    for (const auto& wname : context.wells(well_pattern))
+                        res.assign(wname, context.get_well_var(wname, string_value));
+                }
             }
+            return this->sign * res;
         }
 
         if (data_type == UDQVarType::GROUP_VAR) {

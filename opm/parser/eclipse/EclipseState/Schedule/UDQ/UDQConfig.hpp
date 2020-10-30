@@ -43,6 +43,7 @@ namespace Opm {
     class SummaryState;
     class UDQState;
     class KeywordLocation;
+    class WellMatcher;
 
     class UDQConfig {
     public:
@@ -61,7 +62,7 @@ namespace Opm {
         void add_assign(const std::string& quantity, const std::vector<std::string>& selector, double value, std::size_t report_step);
         void add_define(const std::string& quantity, const KeywordLocation& location, const std::vector<std::string>& expression);
 
-        void eval(std::size_t report_step, SummaryState& st, UDQState& udq_state) const;
+        void eval(std::size_t report_step, const WellMatcher& wm, SummaryState& st, UDQState& udq_state) const;
         const UDQDefine& define(const std::string& key) const;
         std::vector<UDQDefine> definitions() const;
         std::vector<UDQDefine> definitions(UDQVarType var_type) const;

@@ -41,8 +41,9 @@ bool is_udq(const std::string& key) {
 }
 
 
-    UDQContext::UDQContext(const UDQFunctionTable& udqft_arg, SummaryState& summary_state_arg, UDQState& udq_state_arg) :
+    UDQContext::UDQContext(const UDQFunctionTable& udqft_arg, const WellMatcher& wm, SummaryState& summary_state_arg, UDQState& udq_state_arg) :
         udqft(udqft_arg),
+        well_matcher(wm),
         summary_state(summary_state_arg),
         udq_state(udq_state_arg)
     {
@@ -117,7 +118,11 @@ bool is_udq(const std::string& key) {
     }
 
     std::vector<std::string> UDQContext::wells() const {
-        return this->summary_state.wells();
+        return this->well_matcher.wells();
+    }
+
+    std::vector<std::string> UDQContext::wells(const std::string& pattern) const {
+        return this->well_matcher.wells(pattern);
     }
 
     std::vector<std::string> UDQContext::groups() const {

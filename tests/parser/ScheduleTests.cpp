@@ -41,6 +41,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/GasLiftOpt.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/WellMatcher.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
@@ -3305,6 +3306,36 @@ BOOST_AUTO_TEST_CASE(WellNames) {
 
     auto abs_all = schedule.wellNames();
     BOOST_CHECK_EQUAL(abs_all.size(), 9U);
+
+
+    WellMatcher wm0( {}, WListManager{});
+    const auto& wml0 = wm0.wells();
+    BOOST_CHECK(wml0.empty());
+
+    WellMatcher wm1( {"W1", "W2", "W3", "P1", "P2", "P3"}, WListManager{});
+    const std::vector<std::string> pwells = {"P1", "P2", "P3"};
+    BOOST_CHECK( pwells == wm1.wells("P*"));
+
+    auto wm2 = schedule.wellMatcher(4);
+    const auto& all_wells = wm2.wells();
+    BOOST_CHECK_EQUAL(all_wells.size(), 9);
+    for (const auto& w : std::vector<std::string>{"W1", "W2", "W3", "I1", "I2", "I3", "DEFAULT", "ALLOW", "BAN"})
+        BOOST_CHECK(has(all_wells, w));
+
+    const std::vector<std::string> wwells = {"W1", "W2", "W3"};
+    BOOST_CHECK( wwells == wm2.wells("W*"));
+    BOOST_CHECK( wm2.wells("XYZ*").empty() );
+    BOOST_CHECK( wm2.wells("XYZ").empty() );
+
+    auto def = wm2.wells("DEFAULT");
+    BOOST_CHECK_EQUAL(def.size() , 1);
+    BOOST_CHECK_EQUAL(def[0], "DEFAULT");
+
+
+    auto l2 = wm2.wells("*ILIST");
+    BOOST_CHECK_EQUAL( l2.size(), 2U);
+    BOOST_CHECK( has(l2, "I1"));
+    BOOST_CHECK( has(l2, "I2"));
 }
 
 

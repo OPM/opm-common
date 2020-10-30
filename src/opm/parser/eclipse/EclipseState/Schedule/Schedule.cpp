@@ -1086,6 +1086,18 @@ private:
         return {};
     }
 
+
+    WellMatcher Schedule::wellMatcher(std::size_t report_step) const {
+        std::vector<std::string> wnames;
+        for (const auto& well_pair : this->wells_static) {
+            const auto& dynamic_state = well_pair.second;
+            if (dynamic_state.get(report_step))
+                wnames.push_back(well_pair.first);
+        }
+        return WellMatcher(wnames, this->getWListManager(report_step));
+    }
+
+
     std::vector<std::string> Schedule::wellNames(const std::string& pattern) const {
         return this->wellNames(pattern, this->size() - 1);
     }
