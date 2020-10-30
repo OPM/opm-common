@@ -75,6 +75,7 @@ struct RstWell {
     int msw_index;
     int completion_ordering;
     int pvt_table;
+    int msw_pressure_drop_model;
 
     float orat_target;
     float wrat_target;
