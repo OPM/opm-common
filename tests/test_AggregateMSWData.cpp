@@ -551,6 +551,7 @@ END
 	    double qo = 5.;
 	    double qw = 4.;
 	    double qg = 50.;
+	    int firstConnectedCell = 90; // zero-based linear index of (1,5,2)
             for (int i = 0; i < 5; i++) {
 		xw["PROD"].connections.emplace_back();
 		auto& c = xw["PROD"].connections.back();
@@ -559,7 +560,7 @@ END
                    .set(o::oil, qo*(float(i)+1.))
                    .set(o::gas, qg*(float(i)+1.));
 
-		c.index = 90 + i; // zero-based global index
+		c.index = firstConnectedCell + i;
 	    }
 	    auto seg = Opm::data::Segment{};
 	    for (std::size_t i = 1; i < 5; i++) {
@@ -571,6 +572,7 @@ END
 	    xw["WINJ"].rates.set(o::oil, 0.0);
 	    xw["WINJ"].rates.set(o::gas, 0.0);
 	    qw = 7.;
+	    firstConnectedCell = 409; // zero-based linear index of (10,1,9)
             for (int i = 0; i < 5; i++) {
 		xw["WINJ"].connections.emplace_back();
 		auto& c = xw["WINJ"].connections.back();
@@ -578,7 +580,8 @@ END
 		c.rates.set(o::wat, qw*(float(i)+1.))
 		       .set(o::oil, 0.)
 		       .set(o::gas, 0.);
-		c.index = 409 - i; // zero-based global index
+
+		c.index = firstConnectedCell - i;
 	    }
         }
         return xw;

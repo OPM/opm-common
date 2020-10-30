@@ -180,6 +180,7 @@ namespace {
         return segmentOrder(segSet, 0);
     }
 
+    /// Accumulate connection flow rates (surface conditions) to their connecting segment.
     Opm::RestartIO::Helpers::SegmentSetSourceSinkTerms
     getSegmentSetSSTerms(const Opm::WellSegments& segSet,
                          const std::vector<Opm::data::Connection>& rateConns,
@@ -241,7 +242,7 @@ namespace {
         std::vector<double> sgfr (segSet.size(), 0.);
         //
         //call function to calculate the individual segment source/sink terms
-        auto sSSST = getSegmentSetSSTerms(segSet, rateConns, welConns, units);
+        auto segmentSources = getSegmentSetSSTerms(segSet, rateConns, welConns, units);
 
         // find an ordered list of segments
         auto orderedSegmentInd = segmentOrder(segSet);
@@ -252,9 +253,9 @@ namespace {
             const auto& segInd = sNFOSN[indOSN];
             // the segment flow rates is the sum of the the source/sink terms for each segment plus the flow rates from the inflow segments
             // add source sink terms
-            sofr[segInd] += sSSST.qosc[segInd];
-            swfr[segInd] += sSSST.qwsc[segInd];
-            sgfr[segInd] += sSSST.qgsc[segInd];
+            sofr[segInd] += segmentSources.qosc[segInd];
+            swfr[segInd] += segmentSources.qwsc[segInd];
+            sgfr[segInd] += segmentSources.qgsc[segInd];
             // add flow from all inflow segments
             for (const auto& segNo : segSet[segInd].inletSegments()) {
                 const auto & ifSegInd = segSet.segmentNumberToIndex(segNo);
