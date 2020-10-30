@@ -2261,6 +2261,26 @@ BOOST_AUTO_TEST_CASE( complump ) {
         else
             BOOST_CHECK_EQUAL(pair.second.size(), 1U);
     }
+
+    const auto& w0 = schedule.getWell("W1", 0);
+    BOOST_CHECK(w0.hasCompletion(1));
+    BOOST_CHECK(!w0.hasCompletion(2));
+
+    const auto& conn0 = w0.getConnections(100);
+    BOOST_CHECK(conn0.empty());
+
+    const auto& conn_all = w0.getConnections();
+    const auto& conn1 = w0.getConnections(1);
+    BOOST_CHECK_EQUAL( conn1.size(), 3);
+    for (const auto& conn : conn_all) {
+        if (conn.complnum() == 1) {
+            auto conn_iter = std::find_if(conn1.begin(), conn1.end(), [&conn](const Connection * cptr)
+                                                                      {
+                                                                          return *cptr == conn;
+                                                                      });
+            BOOST_CHECK( conn_iter != conn1.end() );
+        }
+    }
 }
 
 
