@@ -1057,6 +1057,7 @@ SummaryConfigNode& SummaryConfigNode::fip_region(const std::string& fip_region)
     return *this;
 }
 
+
 SummaryConfigNode& SummaryConfigNode::parameterType(const Type type)
 {
     this->type_ = type;
@@ -1380,9 +1381,8 @@ bool SummaryConfig::require3DField( const std::string& keyword ) const {
 std::set<std::string> SummaryConfig::fip_regions() const {
     std::set<std::string> reg_set;
     for (const auto& node : this->m_keywords) {
-        const auto& fip_region = node.fip_region();
-        if (fip_region.size() > 0)
-            reg_set.insert( fip_region );
+        if (node.category() == EclIO::SummaryNode::Category::Region)
+            reg_set.insert( node.fip_region() );
     }
     return reg_set;
 }

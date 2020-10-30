@@ -22,9 +22,11 @@
 
 #include <array>
 #include <limits>
+#include <optional>
 #include <set>
 #include <string>
 #include <vector>
+
 
 #include <opm/io/eclipse/SummaryNode.hpp>
 #include <opm/common/OpmLog/KeywordLocation.hpp>
@@ -59,7 +61,7 @@ namespace Opm {
         const std::string& namedEntity() const { return this->name_; }
         int number() const { return this->number_; }
         bool isUserDefined() const { return this->userDefined_; }
-        const std::string& fip_region() const { return this->fip_region_; }
+        const std::string& fip_region() const { return *this->fip_region_ ; }
 
         std::string uniqueNodeKey() const;
         const KeywordLocation& location( ) const { return this->loc; }
@@ -88,7 +90,7 @@ namespace Opm {
         Type        type_{ Type::Undefined };
         std::string name_{};
         int         number_{std::numeric_limits<int>::min()};
-        std::string fip_region_;
+        std::optional<std::string> fip_region_;
         bool        userDefined_{false};
     };
 
