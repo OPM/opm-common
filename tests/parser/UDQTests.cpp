@@ -2345,6 +2345,7 @@ WLIST
 UDQ
   DEFINE FU_VAR1 SUM(WOPR '*ILIST') /
   DEFINE FU_VAR2 SUM(WOPR '*') /
+  DEFINE FU_VAR3 WOPR 'P4' /
 /
 
 )";
@@ -2361,7 +2362,9 @@ UDQ
     udq.eval(0, schedule.wellMatcher(0), st, udq_state);
     auto fu_var1 = st.get("FU_VAR1");
     auto fu_var2 = st.get("FU_VAR2");
+    auto fu_var3 = st.get("FU_VAR3");
     BOOST_CHECK_EQUAL(fu_var1, 6);
     BOOST_CHECK_EQUAL(fu_var2, 10);
+    BOOST_CHECK_EQUAL(fu_var3, 4);
 }
 

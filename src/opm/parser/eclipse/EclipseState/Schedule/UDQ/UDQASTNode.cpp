@@ -146,11 +146,12 @@ UDQSet UDQASTNode::eval(UDQVarType target_type, const UDQContext& context) const
         auto data_type = UDQ::targetType(string_value);
         if (data_type == UDQVarType::WELL_VAR) {
             const auto& all_wells = context.wells();
-            auto res = UDQSet::wells(string_value, all_wells);
 
             if (this->selector.empty()) {
+                auto res = UDQSet::wells(string_value, all_wells);
                 for (const auto& well : all_wells)
                     res.assign(well, context.get_well_var(well, string_value));
+                return this->sign * res;
             } else {
                 const std::string& well_pattern = this->selector[0];
                 if (well_pattern.find('*') == std::string::npos)
@@ -160,7 +161,7 @@ UDQSet UDQASTNode::eval(UDQVarType target_type, const UDQContext& context) const
                       *scalar* - and that scalar value is distributed among all
                       the wells in the result set.
                     */
-                    res.assign( context.get_well_var(well_pattern, string_value));
+                    return this->sign * UDQSet::scalar(string_value, context.get_well_var(well_pattern, string_value));
                 else {
                     /*
                       The right hand side is a set of wells. The result set will
@@ -168,11 +169,12 @@ UDQSet UDQASTNode::eval(UDQVarType target_type, const UDQContext& context) const
                       missing in the right hand set will be undefined in the
                       result set.
                      */
+                    auto res = UDQSet::wells(string_value, all_wells);
                     for (const auto& wname : context.wells(well_pattern))
                         res.assign(wname, context.get_well_var(wname, string_value));
+                    return this->sign * res;
                 }
             }
-            return this->sign * res;
         }
 
         if (data_type == UDQVarType::GROUP_VAR) {
