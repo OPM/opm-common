@@ -23,10 +23,9 @@
 #include <map>
 #include <vector>
 #include <string>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/WList.hpp>
 
 namespace Opm {
-
-class WList;
 
 class WListManager {
 public:
