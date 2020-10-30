@@ -24,6 +24,7 @@
 #include <opm/io/eclipse/rst/well.hpp>
 #include <opm/output/eclipse/VectorItems/well.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/W.hpp>
+#include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQActive.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp>
@@ -35,6 +36,7 @@
 #include <fnmatch.h>
 #include <cmath>
 #include <ostream>
+#include <stdexcept>
 #include <utility>
 
 namespace Opm {
@@ -836,6 +838,32 @@ void Well::setInsertIndex(std::size_t index) {
     this->insert_index = index;
 }
 
+namespace {
+    double convertWellPIToSI(const double rawWellPI,
+                             const Phase preferred_phase,
+                             const UnitSystem& unit_system)
+    {
+        using M = UnitSystem::measure;
+
+        // XXX: Should really have LIQUID here too, but the 'Phase' type does
+        //      not provide that enumerator.
+        switch (preferred_phase) {
+        case Phase::GAS:
+            return unit_system.to_si(M::gas_productivity_index, rawWellPI);
+
+        case Phase::OIL:
+        case Phase::WATER:
+            return unit_system.to_si(M::liquid_productivity_index, rawWellPI);
+
+        default:
+            throw std::invalid_argument {
+                "Preferred phase " + std::to_string(static_cast<int>(preferred_phase)) +
+                " is not supported. Must be one of 'OIL', 'GAS', or 'WATER'"
+            };
+        }
+    }
+}
+
 double Well::getWellPIScalingFactor(const double currentEffectivePI) const {
     if (this->connections->empty())
         // No connections for this well.  Unexpected.
@@ -845,11 +873,10 @@ double Well::getWellPIScalingFactor(const double currentEffectivePI) const {
         // WELPI not activated.  Nothing to do.
         return 1.0;
 
-    if (this->productivity_index == currentEffectivePI)
-        // No change in scaling.
-        return 1.0;
+    const double requestedWellPI_SI =
+        convertWellPIToSI(*this->productivity_index, this->getPreferredPhase(), this->unit_system);
 
-    return *this->productivity_index / currentEffectivePI;
+    return requestedWellPI_SI / currentEffectivePI;
 }
 
 void Well::applyWellProdIndexScaling(const double scalingFactor, std::vector<bool>& scalingApplicable) {

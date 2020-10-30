@@ -53,10 +53,14 @@
 using namespace Opm;
 
 namespace {
+    double liquid_PI_unit()
+    {
+        return UnitSystem::newMETRIC().to_si(UnitSystem::measure::liquid_productivity_index, 1.0);
+    }
+
     double cp_rm3_per_db()
     {
-        return prefix::centi*unit::Poise * unit::cubic(unit::meter)
-            / (unit::day * unit::barsa);
+        return UnitSystem::newMETRIC().to_si(UnitSystem::measure::transmissibility, 1.0);
     }
 }
 
@@ -1237,7 +1241,7 @@ END
 
     // Want PI=2, but actual/effective PI=1 => scale CF by 2.0/1.0.
     {
-        const auto scalingFactor = wellP.getWellPIScalingFactor(1.0);
+        const auto scalingFactor = wellP.getWellPIScalingFactor(1.0*liquid_PI_unit());
         BOOST_CHECK_CLOSE(scalingFactor, 2.0, 1.0e-10);
 
         std::vector<bool> scalingApplicable;
@@ -1253,7 +1257,7 @@ END
 
     // Repeated application of WELPI multiplies scaling factors.
     {
-        const auto scalingFactor = wellP.getWellPIScalingFactor(1.0);
+        const auto scalingFactor = wellP.getWellPIScalingFactor(1.0*liquid_PI_unit());
         BOOST_CHECK_CLOSE(scalingFactor, 2.0, 1.0e-10);
 
         std::vector<bool> scalingApplicable;
@@ -1275,7 +1279,7 @@ END
 
     // Effective PI=desired PI => no scaling change
     {
-        const auto scalingFactor = wellP.getWellPIScalingFactor(3.0);
+        const auto scalingFactor = wellP.getWellPIScalingFactor(3.0*liquid_PI_unit());
         BOOST_CHECK_CLOSE(scalingFactor, 1.0, 1.0e-10);
 
         std::vector<bool> scalingApplicable;
