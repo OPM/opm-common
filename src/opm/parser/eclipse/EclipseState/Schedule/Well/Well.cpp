@@ -24,6 +24,7 @@
 #include <opm/io/eclipse/rst/well.hpp>
 #include <opm/output/eclipse/VectorItems/well.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/W.hpp>
+#include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQActive.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp>
@@ -376,7 +377,7 @@ Well Well::serializeObject()
     result.efficiency_factor = 8.0;
     result.solvent_fraction = 9.0;
     result.prediction_mode = false;
-    result.productivity_index = WellProductivityIndex { 10.0, Phase::GAS };
+    result.productivity_index = 10.0;
     result.econ_limits = std::make_shared<Opm::WellEconProductionLimits>(Opm::WellEconProductionLimits::serializeObject());
     result.foam_properties = std::make_shared<WellFoamProperties>(WellFoamProperties::serializeObject());
     result.polymer_properties =  std::make_shared<WellPolymerProperties>(WellPolymerProperties::serializeObject());
@@ -492,7 +493,7 @@ bool Well::updateInjection(std::shared_ptr<WellInjectionProperties> injection_ar
     return update;
 }
 
-bool Well::updateWellProductivityIndex(const WellProductivityIndex& prodIndex) {
+bool Well::updateWellProductivityIndex(const double prodIndex) {
     const auto update = this->productivity_index != prodIndex;
     if (update)
         this->productivity_index = prodIndex;
@@ -837,6 +838,32 @@ void Well::setInsertIndex(std::size_t index) {
     this->insert_index = index;
 }
 
+namespace {
+    double convertWellPIToSI(const double rawWellPI,
+                             const Phase preferred_phase,
+                             const UnitSystem& unit_system)
+    {
+        using M = UnitSystem::measure;
+
+        // XXX: Should really have LIQUID here too, but the 'Phase' type does
+        //      not provide that enumerator.
+        switch (preferred_phase) {
+        case Phase::GAS:
+            return unit_system.to_si(M::gas_productivity_index, rawWellPI);
+
+        case Phase::OIL:
+        case Phase::WATER:
+            return unit_system.to_si(M::liquid_productivity_index, rawWellPI);
+
+        default:
+            throw std::invalid_argument {
+                "Preferred phase " + std::to_string(static_cast<int>(preferred_phase)) +
+                " is not supported. Must be one of 'OIL', 'GAS', or 'WATER'"
+            };
+        }
+    }
+}
+
 double Well::getWellPIScalingFactor(const double currentEffectivePI) const {
     if (this->connections->empty())
         // No connections for this well.  Unexpected.
@@ -846,11 +873,10 @@ double Well::getWellPIScalingFactor(const double currentEffectivePI) const {
         // WELPI not activated.  Nothing to do.
         return 1.0;
 
-    if (this->productivity_index->pi_value == currentEffectivePI)
-        // No change in scaling.
-        return 1.0;
+    const double requestedWellPI_SI =
+        convertWellPIToSI(*this->productivity_index, this->getPreferredPhase(), this->unit_system);
 
-    return this->productivity_index->pi_value / currentEffectivePI;
+    return requestedWellPI_SI / currentEffectivePI;
 }
 
 void Well::applyWellProdIndexScaling(const double scalingFactor, std::vector<bool>& scalingApplicable) {
@@ -896,16 +922,6 @@ const WellBrineProperties& Well::getBrineProperties() const {
 
 const WellTracerProperties& Well::getTracerProperties() const {
     return *this->tracer_properties;
-}
-
-const Well::WellProductivityIndex& Well::getWellProductivityIndex() const
-{
-    if (this->productivity_index)
-        return *this->productivity_index;
-    else
-        throw std::logic_error {
-            "WELPI not activated in well " + this->name()
-        };
 }
 
 const WellEconProductionLimits& Well::getEconLimits() const {
