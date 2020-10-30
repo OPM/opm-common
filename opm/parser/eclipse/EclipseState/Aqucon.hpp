@@ -33,13 +33,13 @@ namespace Opm {
     class DeckRecord;
 
     struct NumAquiferCon {
-        int aquifer_id;
+        size_t aquifer_id;
         // TODO: maybe it is okay to use global_index
-        int I, J, K;
-        int global_index;
+        size_t I, J, K;
+        size_t global_index;
         FaceDir::DirEnum face_dir;
         double trans_multipler = 1.0;
-        int trans_option = 0;
+        size_t trans_option = 0;
         bool connect_active_cell = false;
         // The following are
         double ve_frac_relperm = 1.0;
@@ -55,14 +55,14 @@ namespace Opm {
         // It is possible when without this function, unordered_map problem can be fixed
         NumericalAquiferConnections() = default;
 
-        const std::map<int, NumAquiferCon>& getConnections(const int aqu_id) const;
+        const std::map<size_t, NumAquiferCon>& getConnections(const size_t aqu_id) const;
 
     private:
         // TODO: compilation failure with_unordered_map
         // basically due to  implicitly-deleted default constructor of 'std::unordered_map
-        // std::unordered_map<int, std::unordered_map<CellIndex, NumAquiferCon>> connections_;
+        // std::unordered_map<size_t, std::unordered_map<CellIndex, NumAquiferCon>> connections_;
         // after finished, it should be okay to just use a vector instead of std::map
-        std::map<int, std::map<int, NumAquiferCon>> connections_;
+        std::map<size_t, std::map<size_t, NumAquiferCon>> connections_;
     };
 }
 #endif //OPM_AQUCON_HPP

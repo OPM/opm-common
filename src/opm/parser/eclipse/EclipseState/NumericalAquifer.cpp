@@ -41,7 +41,7 @@ NumericalAquifers::NumericalAquifers(const Deck& deck, const EclipseGrid& grid, 
     // TODO: with a map, we might change the order of the input.
     // TODO: maybe we should use a vector here, and another variable to handle the the duplication
     std::vector<NumericalAquiferCell> aquifer_cells;
-    std::set<int> cell_set;
+    std::set<size_t> cell_set;
 
     // there might be multiple keywords of keyword AQUNUM, it is not totally
     // clear about the rules here. For now, we take care of all the keywords
@@ -70,12 +70,12 @@ NumericalAquifers::NumericalAquifers(const Deck& deck, const EclipseGrid& grid, 
     this->addAquiferConnections(deck, grid);
 }
 
-bool NumericalAquifers::hasAquifer(const int aquifer_id) const {
+bool NumericalAquifers::hasAquifer(const size_t aquifer_id) const {
     return (this->aquifers_.find(aquifer_id) != this->aquifers_.end());
 }
 
 void NumericalAquifers::addAquiferCell(const NumericalAquiferCell& aqu_cell) {
-    const int id = aqu_cell.aquifer_id;
+    const size_t id = aqu_cell.aquifer_id;
     if (this->hasAquifer(id)) {
         this->aquifers_.at(id).addAquiferCell(aqu_cell);
     } else {
@@ -88,7 +88,7 @@ void NumericalAquifers::addAquiferConnections(const Deck &deck, const EclipseGri
     NumericalAquiferConnections cons(deck, grid);
 
     for (auto& pair : this->aquifers_) {
-        const int aqu_id = pair.first;
+        const size_t aqu_id = pair.first;
         const auto& aqu_cons = cons.getConnections(aqu_id);
 
         // TODO: it is possible a connection should not be connected to any aquifer cells
@@ -113,12 +113,12 @@ void NumericalAquifers::updateCellProps(const EclipseGrid& grid,
     }
 }
 
-std::array<std::set<int>, 3>
+std::array<std::set<size_t>, 3>
 NumericalAquifers::transToRemove(const EclipseGrid& grid) const {
-    std::array<std::set<int>, 3> trans;
+    std::array<std::set<size_t>, 3> trans;
     for (const auto& pair : this->aquifers_) {
         auto trans_aquifer = pair.second.transToRemove(grid);
-        for (int i = 0; i < 3; ++i) {
+        for (size_t i = 0; i < 3; ++i) {
             trans[i].merge(trans_aquifer[i]);
         }
     }
@@ -180,7 +180,7 @@ NumericalAquiferCell::NumericalAquiferCell(const DeckRecord& record, const Eclip
     this->transmissibility = 2. * this->permeability * this->area / this->length;
 }
 
-bool NumericalAquiferCell::sameCoordinates(const int i, const int j, const int k) const {
+bool NumericalAquiferCell::sameCoordinates(const size_t i, const size_t j, const size_t k) const {
     return ( (this->I == i) && (this->J == j) && (this->K == k) );
 }
 
@@ -188,7 +188,7 @@ void SingleNumericalAquifer::addAquiferCell(const NumericalAquiferCell& aqu_cell
     cells_.push_back(aqu_cell);
 }
 
-SingleNumericalAquifer::SingleNumericalAquifer(const int aqu_id)
+SingleNumericalAquifer::SingleNumericalAquifer(const size_t aqu_id)
 : id_(aqu_id)
 {
 }
@@ -219,12 +219,12 @@ void SingleNumericalAquifer::updateCellProps(const EclipseGrid& grid,
     }
 }
 
-std::array<std::set<int>, 3> SingleNumericalAquifer::transToRemove(const EclipseGrid& grid) const {
-    std::array<std::set<int>, 3> trans;
+std::array<std::set<size_t>, 3> SingleNumericalAquifer::transToRemove(const EclipseGrid& grid) const {
+    std::array<std::set<size_t>, 3> trans;
     for (const auto& cell : this->cells_) {
-        const int i = cell.I;
-        const int j = cell.J;
-        const int k = cell.K;
+        const size_t i = cell.I;
+        const size_t j = cell.J;
+        const size_t k = cell.K;
         // TODO: later to check whether we want to use active_index or global_index
         if (AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i+1, j, k, FaceDir::XPlus)) {
             trans[0].insert(cell.global_index);
@@ -249,6 +249,24 @@ std::array<std::set<int>, 3> SingleNumericalAquifer::transToRemove(const Eclipse
 }
 
 void SingleNumericalAquifer::appendNNC(NNC& nnc) const {
+    // adding the NNC between the numerical cells
+    for (size_t i = 0; i < this->cells_.size() - 1; ++i) {
+        const double trans1 = this->cells_[i].transmissibility;
+        const double trans2 = this->cells_[i+1].transmissibility;
+        const double tran = 1. / ( 1./trans1 + 1./trans2);
+        const size_t gc1 = this->cells_[i].global_index;
+        const size_t gc2 = this->cells_[i+1].global_index;
+        nnc.addNNC(gc1, gc2, tran);
+    }
+
+    const auto& cell1 = this->cells_[0];
+    // all the connections connect to the first numerical aquifer cell
+    const size_t gc1 = cell1.global_index;
+    const double invalid_tran = -1.e100; // which needs to be determined later
+    for (const auto& con : this->connections_) {
+        const size_t gc2 = con.global_index;
+        nnc.addNNC(gc1, gc2, invalid_tran);
+    }
 }
 
 }

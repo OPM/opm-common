@@ -42,8 +42,8 @@ namespace Opm {
             for (const auto& record : *keyword) {
                 auto cons_from_record = NumAquiferCon::generateConnections(grid, record);
                 for (auto con : cons_from_record) {
-                    const int aqu_id = con.aquifer_id;
-                    const int global_index = con.global_index;
+                    const size_t aqu_id = con.aquifer_id;
+                    const size_t global_index = con.global_index;
                     auto& aqu_cons = this->connections_[aqu_id];
                     // TODO: with this way, we might ignore the situation that a cell is
                     // connected to two different aquifers
@@ -59,8 +59,8 @@ namespace Opm {
         }
     }
 
-    const std::map<int, NumAquiferCon>&
-    NumericalAquiferConnections::getConnections(const int aqu_id) const {
+    const std::map<size_t, NumAquiferCon>&
+    NumericalAquiferConnections::getConnections(const size_t aqu_id) const {
         const auto& cons = this->connections_.find(aqu_id);
         if (cons == this->connections_.end())  {
             throw;
@@ -73,13 +73,13 @@ namespace Opm {
         std::vector<NumAquiferCon> cons;
 
         using AQUCON = ParserKeywords::AQUCON;
-        const int aqu_id = record.getItem<AQUCON::ID>().get<int>(0);
-        const int i1 = record.getItem<AQUCON::I1>().get<int>(0) - 1;
-        const int j1 = record.getItem<AQUCON::J1>().get<int>(0) -1;
-        const int k1 = record.getItem<AQUCON::K1>().get<int>(0) - 1;
-        const int i2 = record.getItem<AQUCON::I2>().get<int>(0) - 1;
-        const int j2 = record.getItem<AQUCON::J2>().get<int>(0) -1;
-        const int k2 = record.getItem<AQUCON::K2>().get<int>(0) - 1;
+        const size_t aqu_id = record.getItem<AQUCON::ID>().get<int>(0);
+        const size_t i1 = record.getItem<AQUCON::I1>().get<int>(0) - 1;
+        const size_t j1 = record.getItem<AQUCON::J1>().get<int>(0) -1;
+        const size_t k1 = record.getItem<AQUCON::K1>().get<int>(0) - 1;
+        const size_t i2 = record.getItem<AQUCON::I2>().get<int>(0) - 1;
+        const size_t j2 = record.getItem<AQUCON::J2>().get<int>(0) -1;
+        const size_t k2 = record.getItem<AQUCON::K2>().get<int>(0) - 1;
 
         const std::string str_allow_internal_cells = record.getItem<AQUCON::ALLOW_INTERNAL_CELLS>().getTrimmedString(0);
         // whether the connection face can connect to active/internal cells
@@ -88,16 +88,16 @@ namespace Opm {
         const FaceDir::DirEnum face_dir
                 = FaceDir::FromString(record.getItem<AQUCON::CONNECT_FACE>().getTrimmedString(0));
         const double trans_multi = record.getItem<AQUCON::TRANS_MULT>().get<double>(0);
-        const int trans_option = record.getItem<AQUCON::TRANS_OPTION>().get<int>(0);
+        const size_t trans_option = record.getItem<AQUCON::TRANS_OPTION>().get<int>(0);
         const double ve_frac_relperm = record.getItem<AQUCON::VEFRAC>().get<double>(0);
         const double ve_frac_cappress = record.getItem<AQUCON::VEFRACP>().get<double>(0);
 
-        for (int k = k1; k <= k2; ++k) {
-            for (int j = j1; j <=j2; ++j) {
-                for (int i = i1; i <= i2; ++i) {
+        for (size_t k = k1; k <= k2; ++k) {
+            for (size_t j = j1; j <=j2; ++j) {
+                for (size_t i = i1; i <= i2; ++i) {
                     if (allow_internal_cells ||
                         !AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i, j, k, face_dir)) {
-                        const int global_index = grid.getGlobalIndex(i, j, k);
+                        const size_t global_index = grid.getGlobalIndex(i, j, k);
                         cons.emplace_back(NumAquiferCon{aqu_id, i, j, k, global_index, face_dir, trans_multi, trans_option,
                                                         allow_internal_cells, ve_frac_relperm, ve_frac_cappress});
                     }

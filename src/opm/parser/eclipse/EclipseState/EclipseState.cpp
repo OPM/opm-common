@@ -73,6 +73,9 @@ namespace Opm {
 
         if ( this->aquifer_config.hasNumericalAquifer() ) {
             this->field_props.applyNumericalAquifer(this->aquifer_config);
+            // TODO: for the moment, we just add NNC directly without giving the correct value
+            // Later to evaluate
+            this->aquifer_config.numericalAquifers().appendNNC(this->m_inputNnc);
         }
 
         if (deck.hasKeyword( "TITLE" )) {

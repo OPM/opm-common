@@ -44,9 +44,9 @@ namespace Opm {
         NumericalAquiferCell() = default;
         // TODO: what constructor should be?
         // TODO: we might not need it
-        int aquifer_id; // aquifer id
+        size_t aquifer_id; // aquifer id
         // TODO: what is the best way to organize them, maybe a std::map from <I,J,K>
-        int I, J, K; // indices for the grid block
+        size_t I, J, K; // indices for the grid block
         double area; // cross-sectional area
         double length;
         double porosity = -1.e100;
@@ -59,13 +59,13 @@ namespace Opm {
         double pore_volume; // pore volume
         double transmissibility;
         // TODO: temporary approach to get the result first, later to decide what index we need
-        int global_index;
-        bool sameCoordinates(const int i, const int j, const int k) const;
+        size_t global_index;
+        bool sameCoordinates(const size_t i, const size_t j, const size_t k) const;
     };
 
     class SingleNumericalAquifer {
     public:
-        explicit SingleNumericalAquifer(const int aqu_id);
+        explicit SingleNumericalAquifer(const size_t aqu_id);
         void addAquiferCell(const NumericalAquiferCell& aqu_cell);
         void addAquiferConnection(const NumAquiferCon& aqu_con);
         void updateCellProps(const EclipseGrid& grid,
@@ -73,14 +73,14 @@ namespace Opm {
                              std::vector<int>& satnum,
                              std::vector<int>& pvtnum,
                              std::vector<double>& cell_depth) const;
-        std::array<std::set<int>, 3> transToRemove(const EclipseGrid& grid) const;
+        std::array<std::set<size_t>, 3> transToRemove(const EclipseGrid& grid) const;
         void appendNNC(NNC& nnc) const;
     private:
         // Maybe this id_ is not necessary
         // Because if it is a map, the id will be there
         // Then adding aquifer cells will be much easier with the
         // default constructor
-        int id_;
+        size_t id_;
         std::vector<NumericalAquiferCell> cells_;
         std::vector<NumAquiferCon> connections_;
     };
@@ -90,18 +90,18 @@ namespace Opm {
         NumericalAquifers() = default;
         explicit NumericalAquifers(const Deck& deck, const EclipseGrid& grid, const FieldPropsManager& field_props);
 
-        bool hasAquifer(const int aquifer_id) const;
+        bool hasAquifer(const size_t aquifer_id) const;
         bool empty() const;
         void updateCellProps(const EclipseGrid& grid,
                              std::vector<double>& pore_volume,
                              std::vector<int>& satnum,
                              std::vector<int>& pvtnum,
                              std::vector<double>& cell_depth) const;
-        std::array<std::set<int>, 3> transToRemove(const EclipseGrid& grid) const;
+        std::array<std::set<size_t>, 3> transToRemove(const EclipseGrid& grid) const;
         void appendNNC(NNC& nnc) const;
     private:
         // std::un_ordered_map
-        std::unordered_map<int, SingleNumericalAquifer> aquifers_;
+        std::unordered_map<size_t, SingleNumericalAquifer> aquifers_;
 
         void addAquiferCell(const NumericalAquiferCell& aqu_cell);
         void addAquiferConnections(const Deck& deck, const EclipseGrid& grid);
