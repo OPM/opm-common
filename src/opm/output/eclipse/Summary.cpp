@@ -487,6 +487,23 @@ inline quantity glir( const fn_args& args ) {
     return { alq_rate, measure::gas_surface_rate };
 }
 
+
+inline quantity wwirt( const fn_args& args ) {
+    const quantity zero = { 0, rate_unit< Opm::Phase::WATER >() };
+    const auto& well = args.schedule_wells.front();
+    const auto& wtype = well.wellType();
+
+    if (wtype.producer())
+        return zero;
+
+    if (wtype.injector_type() != Opm::InjectorType::WATER)
+        return zero;
+
+    const auto& injection = well.injectionControls(args.st);
+    return { injection.surface_rate, rate_unit< Opm::Phase::WATER >() };
+}
+
+
 template< rt phase, bool injection = true >
 inline quantity rate( const fn_args& args ) {
     double sum = 0.0;
@@ -1013,6 +1030,7 @@ using ofun = std::function< quantity( const fn_args& ) >;
 
 static const std::unordered_map< std::string, ofun > funs = {
     { "WWIR", rate< rt::wat, injector > },
+    { "WWIRT", wwirt },
     { "WOIR", rate< rt::oil, injector > },
     { "WGIR", rate< rt::gas, injector > },
     { "WEIR", rate< rt::energy, injector > },
