@@ -106,7 +106,6 @@ namespace Opm
     class SCHEDULESection;
     class SummaryState;
     class TimeMap;
-    class UnitSystem;
     class ErrorGuard;
     class WListManager;
     class UDQConfig;
@@ -334,6 +333,7 @@ namespace Opm
                 reconstructDynMap<Map2>(splitvfpprod.first, splitvfpprod.second, vfpprod_tables);
                 reconstructDynMap<Map2>(splitvfpinj.first, splitvfpinj.second, vfpinj_tables);
             }
+            unit_system.serializeOp(serializer);
         }
 
     private:
@@ -364,13 +364,13 @@ namespace Opm
         RFTConfig rft_config;
         DynamicState<int> m_nupcol;
         RestartConfig restart_config;
+        UnitSystem unit_system;
         std::optional<int> exit_status;
 
         std::map<std::string,Events> wellgroup_events;
         void load_rst(const RestartIO::RstState& rst,
                       const EclipseGrid& grid,
-                      const FieldPropsManager& fp,
-                      const UnitSystem& unit_system);
+                      const FieldPropsManager& fp);
         void addWell(Well well, std::size_t report_step);
         void addWell(const std::string& wellName,
                      const std::string& group,
@@ -384,8 +384,7 @@ namespace Opm
                      int pvt_table,
                      Well::GasInflowEquation gas_inflow,
                      std::size_t timeStep,
-                     Connection::Order wellConnectionOrder,
-                     const UnitSystem& unit_system);
+                     Connection::Order wellConnectionOrder);
 
         DynamicState<std::shared_ptr<RPTConfig>> rpt_config;
         void updateNetwork(std::shared_ptr<Network::ExtNetwork> network, std::size_t report_step);
@@ -402,9 +401,9 @@ namespace Opm
         void addACTIONX(const Action::ActionX& action, std::size_t currentStep);
         void addGroupToGroup( const std::string& parent_group, const std::string& child_group, std::size_t timeStep);
         void addGroupToGroup( const std::string& parent_group, const Group& child_group, std::size_t timeStep);
-        void addGroup(const std::string& groupName , std::size_t timeStep, const UnitSystem& unit_system);
+        void addGroup(const std::string& groupName , std::size_t timeStep);
         void addGroup(const Group& group, std::size_t timeStep);
-        void addWell(const std::string& wellName, const DeckRecord& record, std::size_t timeStep, Connection::Order connection_order, const UnitSystem& unit_system);
+        void addWell(const std::string& wellName, const DeckRecord& record, std::size_t timeStep, Connection::Order connection_order);
         void checkUnhandledKeywords( const SCHEDULESection& ) const;
         void checkIfAllConnectionsIsShut(std::size_t currentStep);
         void updateUDQ(const DeckKeyword& keyword, std::size_t current_step);
@@ -447,7 +446,7 @@ namespace Opm
         }
 
         static std::string formatDate(std::time_t t);
-        std::string simulationDays(const UnitSystem&, std::size_t currentStep) const;
+        std::string simulationDays(std::size_t currentStep) const;
 
         void applyEXIT(const DeckKeyword&, std::size_t currentStep);
         void applyMESSAGES(const DeckKeyword&, std::size_t currentStep);
@@ -456,12 +455,24 @@ namespace Opm
         void applyWRFTPLT(const DeckKeyword&, std::size_t currentStep);
 
         struct HandlerContext {
-            const SCHEDULESection& section;
             const DeckKeyword& keyword;
-            const std::size_t keywordIndex;
             const std::size_t currentStep;
             const EclipseGrid& grid;
             const FieldPropsManager& fieldPropsManager;
+            const SCHEDULESection * section = nullptr;
+            std::optional<std::size_t> keywordIndex;
+
+            HandlerContext(const DeckKeyword& keyword_,
+                           const std::size_t currentStep_,
+                           const EclipseGrid& grid_,
+                           const FieldPropsManager& fieldPropsManager_) :
+                keyword(keyword_),
+                currentStep(currentStep_),
+                grid(grid_),
+                fieldPropsManager(fieldPropsManager_)
+            {}
+
+
         };
 
         /**
