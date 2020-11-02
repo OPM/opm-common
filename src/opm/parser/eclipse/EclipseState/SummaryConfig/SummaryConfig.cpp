@@ -1327,6 +1327,10 @@ bool SummaryConfig::hasSummaryKey(const std::string& keyword ) const {
     return summary_keywords.find(keyword) != summary_keywords.end();
 }
 
+const SummaryConfigNode& SummaryConfig::operator[](std::size_t index) const {
+    return this->m_keywords[index];
+}
+
 
 bool SummaryConfig::match(const std::string& keywordPattern) const {
     int flags = 0;

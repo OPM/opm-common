@@ -212,6 +212,9 @@ namespace Opm {
                 return runSummaryConfig.create;
             }
 
+            const SummaryConfigNode& operator[](std::size_t index) const;
+
+
         private:
             SummaryConfig( const Deck& deck,
                            const Schedule& schedule,
