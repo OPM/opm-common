@@ -86,7 +86,6 @@ bool rst_cmp(const Opm::RestartIO::RstState& rst1, const Opm::RestartIO::RstStat
         const auto& well1 = rst1.wells[iw];
         const auto& well2 = rst2.wells[iw];
 
-        fmt::print(stderr, "Comparing well: {}", well1.name);
         error_count += compare(well1.name, well1.name,                   well2.name,                  "Different names for well: {}  case1: {}  case2: {}");
         error_count += compare(well1.name, well1.group,                  well2.group,                 "Different groups for well: {}  case1: {}  case2: {}");
         error_count += compare(well1.name, well1.ij[0],                  well2.ij[0],                 "Different wellhead.i for well: {}  case1: {}  case2: {}");
