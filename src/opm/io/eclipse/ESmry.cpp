@@ -158,7 +158,13 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
 
         const std::vector<std::string> restartArray = smspecList.back().get<std::string>("RESTART");
         const std::vector<std::string> keywords = smspecList.back().get<std::string>("KEYWORDS");
-        const std::vector<std::string> wgnames = smspecList.back().get<std::string>("WGNAMES");
+        std::vector<std::string> wgnames;
+
+        if (smspecList.back().hasKey("WGNAMES"))
+            wgnames = smspecList.back().get<std::string>("WGNAMES");
+        else
+            wgnames = smspecList.back().get<std::string>("NAMES");
+
         const std::vector<int> nums = smspecList.back().get<int>("NUMS");
         const std::vector<std::string> units = smspecList.back().get<std::string>("UNITS");
 
@@ -223,7 +229,13 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
         const std::vector<int> dimens = smspecList.back().get<int>("DIMENS");
         const std::vector<std::string> restartArray = smspecList.back().get<std::string>("RESTART");
         const std::vector<std::string> keywords = smspecList.back().get<std::string>("KEYWORDS");
-        const std::vector<std::string> wgnames = smspecList.back().get<std::string>("WGNAMES");
+        std::vector<std::string> wgnames;
+
+        if (smspecList.back().hasKey("WGNAMES"))
+            wgnames = smspecList.back().get<std::string>("WGNAMES");
+        else
+            wgnames = smspecList.back().get<std::string>("NAMES");
+
         const std::vector<int> nums = smspecList.back().get<int>("NUMS");
         const std::vector<std::string> units = smspecList.back().get<std::string>("UNITS");
 
@@ -285,7 +297,13 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
         nParamsSpecFile[specInd] = dimens[0];
 
         const std::vector<std::string> keywords = smspecList[specInd].get<std::string>("KEYWORDS");
-        const std::vector<std::string> wgnames = smspecList[specInd].get<std::string>("WGNAMES");
+        std::vector<std::string> wgnames;
+
+        if (smspecList.back().hasKey("WGNAMES"))
+            wgnames = smspecList.back().get<std::string>("WGNAMES");
+        else
+            wgnames = smspecList.back().get<std::string>("NAMES");
+
         const std::vector<int> nums = smspecList[specInd].get<int>("NUMS");
 
         for (size_t i=0; i < keywords.size(); i++) {
@@ -457,15 +475,16 @@ void ESmry::inspect_lodsmry()
     std::string arrName;
     int64_t arr_size;
     Opm::EclIO::eclArrType arrType;
+    int sizeOfElement;
 
     std::fstream fileH;
 
     if (formattedFiles[0]) {
         fileH.open(lodFileName, std::ios::in);
-        Opm::EclIO::readFormattedHeader(fileH, arrName, arr_size, arrType);
+        Opm::EclIO::readFormattedHeader(fileH, arrName, arr_size, arrType, sizeOfElement);
     } else {
         fileH.open(lodFileName, std::ios::in |  std::ios::binary);
-        Opm::EclIO::readBinaryHeader(fileH, arrName, arr_size, arrType);
+        Opm::EclIO::readBinaryHeader(fileH, arrName, arr_size, arrType, sizeOfElement);
     }
 
     if ((arrName != "KEYCHECK") or (arrType != Opm::EclIO::CHAR))
@@ -474,10 +493,10 @@ void ESmry::inspect_lodsmry()
     std::vector<std::string> keycheck;
 
     if (formattedFiles[0]) {
-        uint64_t size = Opm::EclIO::sizeOnDiskFormatted(arr_size, Opm::EclIO::CHAR) + 1;
+        uint64_t size = Opm::EclIO::sizeOnDiskFormatted(arr_size, Opm::EclIO::CHAR, sizeOfChar) + 1;
         std::string fileStr = read_string_from_disk(fileH, size);
 
-        keycheck = Opm::EclIO::readFormattedCharArray(fileStr, arr_size, 0);
+        keycheck = Opm::EclIO::readFormattedCharArray(fileStr, arr_size, 0, sizeOfChar);
     } else {
         keycheck = Opm::EclIO::readBinaryCharArray(fileH, arr_size);
     }
@@ -501,9 +520,9 @@ void ESmry::inspect_lodsmry()
     }
 
     if (formattedFiles[0])
-        Opm::EclIO::readFormattedHeader(fileH, arrName, arr_size, arrType);
+        Opm::EclIO::readFormattedHeader(fileH, arrName, arr_size, arrType, sizeOfElement);
     else
-        Opm::EclIO::readBinaryHeader(fileH, arrName, arr_size, arrType);
+        Opm::EclIO::readBinaryHeader(fileH, arrName, arr_size, arrType, sizeOfElement);
 
     if ((arrName != "RSTEP   ") or (arrType != Opm::EclIO::LOGI))
         OPM_THROW(std::invalid_argument, "reading rstep, invalid lod file");
@@ -511,7 +530,7 @@ void ESmry::inspect_lodsmry()
     std::vector<bool> rstep;
 
     if (formattedFiles[0]) {
-        uint64_t size = Opm::EclIO::sizeOnDiskFormatted(arr_size, Opm::EclIO::LOGI) + 1;
+        uint64_t size = Opm::EclIO::sizeOnDiskFormatted(arr_size, Opm::EclIO::LOGI, sizeOfLogi) + 1;
         std::string fileStr = read_string_from_disk(fileH, size);
 
         rstep = Opm::EclIO::readFormattedLogiArray(fileStr, arr_size, 0);
@@ -527,9 +546,9 @@ void ESmry::inspect_lodsmry()
     nTstep = rstep.size();
 
     if (formattedFiles[0])
-        lod_arr_size = sizeOnDiskFormatted(nTstep, Opm::EclIO::REAL);
+        lod_arr_size = sizeOnDiskFormatted(nTstep, Opm::EclIO::REAL, sizeOfReal);
     else
-        lod_arr_size = sizeOnDiskBinary(nTstep, Opm::EclIO::REAL);
+        lod_arr_size = sizeOnDiskBinary(nTstep, Opm::EclIO::REAL, sizeOfReal);
 
     fileH.close();
 }
@@ -558,6 +577,7 @@ void ESmry::Load_from_lodsmry(const std::vector<int>& keywIndVect) const
         std::string arrName;
         int64_t size;
         Opm::EclIO::eclArrType arrType;
+        int sizeOfElement;
 
         uint64_t pos = lod_offset + lod_arr_size*static_cast<uint64_t>(ind);
 
@@ -569,9 +589,9 @@ void ESmry::Load_from_lodsmry(const std::vector<int>& keywIndVect) const
         fileH.seekg (pos, fileH.beg);
 
         if (formattedFiles[0])
-            readFormattedHeader(fileH, arrName, size, arrType);
+            readFormattedHeader(fileH, arrName, size, arrType, sizeOfElement);
         else
-            readBinaryHeader(fileH, arrName, size, arrType);
+            readBinaryHeader(fileH, arrName, size, arrType, sizeOfElement);
 
         arrName = Opm::EclIO::trimr(arrName);
 
@@ -777,7 +797,7 @@ void ESmry::LoadData() const
             if (formattedFiles[specInd]) {
 
                 char* buffer;
-                size_t size = sizeOnDiskFormatted(nParamsSpecFile[specInd], Opm::EclIO::REAL)+1;
+                size_t size = sizeOnDiskFormatted(nParamsSpecFile[specInd], Opm::EclIO::REAL, sizeOfReal) + 1;
                 buffer = new char [size];
                 fileH.read (buffer, size);
 
@@ -932,10 +952,10 @@ ESmry::getListOfArrays(std::string filename, bool formatted)
 
         if (num > 0) {
             if (formatted) {
-                uint64_t sizeOfNextArray = sizeOnDiskFormatted(num, arrType);
+                uint64_t sizeOfNextArray = sizeOnDiskFormatted(num, arrType, 4);
                 fseek(ptr, static_cast<long int>(sizeOfNextArray), SEEK_CUR);
             } else {
-                uint64_t sizeOfNextArray = sizeOnDiskBinary(num, arrType);
+                uint64_t sizeOfNextArray = sizeOnDiskBinary(num, arrType, 4);
                 fseek(ptr, static_cast<long int>(sizeOfNextArray), SEEK_CUR);
             }
         }

@@ -33,7 +33,7 @@ def getitem_eclfile(self, arg):
     else:
         data, array_type = self.__get_data(arg)
 
-    if array_type == eclArrType.CHAR:
+    if array_type == eclArrType.CHAR or array_type == eclArrType.C0nn:
         return [ x.decode("utf-8") for x in data ]
 
     return data
@@ -63,7 +63,7 @@ def getitem_erst(self, arg):
     else:
         raise ValueError("expecting tuple argument with 2 or 3 argumens: (index, rstep), (name, rstep) or (name, rstep, occurrence) ")
 
-    if array_type == eclArrType.CHAR:
+    if array_type == eclArrType.CHAR or array_type == eclArrType.C0nn:
         return [ x.decode("utf-8") for x in data ]
 
     return data
@@ -169,7 +169,7 @@ def getitem_erft(self, arg):
   (CHAR, LOGI, INTE)
 '''
 
-def ecloutput_write(self, name, array):
+def ecloutput_write(self, name, array, C0nn=False):
 
     if isinstance(array, list):
         if all(isinstance(element, str) for element in array):
@@ -197,8 +197,11 @@ def ecloutput_write(self, name, array):
         self.__write_doub_array(name, array)
     elif array.dtype == "bool":
         self.__write_logi_array(name, array)
-    elif  array.dtype.kind in {'U', 'S'}:
+    elif  array.dtype.kind in {'U', 'S'} and not C0nn:
         self.__write_char_array(name, array)
+    elif  array.dtype.kind in {'U', 'S'} and C0nn:
+        maxStrLength = max([len(x) for x in array])
+        self.__write_c0nn_array(name, array, max([maxStrLength, 8]))
     else:
         raise ValueError("unknown array type for array {}".format(name))
 

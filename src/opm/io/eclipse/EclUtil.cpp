@@ -27,6 +27,8 @@
 #include <fstream>
 #include <cstring>
 
+//temporary
+#include <iostream>
 
 int Opm::EclIO::flipEndianInt(int num)
 {
@@ -111,6 +113,9 @@ std::tuple<int, int> Opm::EclIO::block_size_data_binary(eclArrType arrType)
     case CHAR:
         return BlockSizeTuple{sizeOfChar, MaxBlockSizeChar};
         break;
+    case C0NN:
+        return BlockSizeTuple{sizeOfChar, MaxBlockSizeChar};
+        break;
     case MESS:
         OPM_THROW(std::invalid_argument, "Type 'MESS' have no associated data");
         break;
@@ -141,6 +146,9 @@ std::tuple<int, int, int> Opm::EclIO::block_size_data_formatted(eclArrType arrTy
     case CHAR:
         return BlockSizeTuple{MaxNumBlockChar,numColumnsChar, columnWidthChar};
         break;
+    case C0NN:
+        return BlockSizeTuple{MaxNumBlockChar,numColumnsChar, columnWidthChar};
+        break;
     case MESS:
         OPM_THROW(std::invalid_argument, "Type 'MESS' have no associated data") ;
         break;
@@ -162,7 +170,7 @@ std::string Opm::EclIO::trimr(const std::string &str1)
     }
 }
 
-uint64_t Opm::EclIO::sizeOnDiskBinary(int64_t num, Opm::EclIO::eclArrType arrType)
+uint64_t Opm::EclIO::sizeOnDiskBinary(int64_t num, Opm::EclIO::eclArrType arrType, int elementSize)
 {
     uint64_t size = 0;
 
@@ -174,6 +182,11 @@ uint64_t Opm::EclIO::sizeOnDiskBinary(int64_t num, Opm::EclIO::eclArrType arrTyp
     } else {
         if (num > 0) {
             auto sizeData = Opm::EclIO::block_size_data_binary(arrType);
+
+            if (arrType == Opm::EclIO::C0NN){
+                std::get<1>(sizeData)= std::get<1>(sizeData) / std::get<0>(sizeData) * elementSize;
+                std::get<0>(sizeData) = elementSize;
+            }
 
             int sizeOfElement = std::get<0>(sizeData);
             int maxBlockSize = std::get<1>(sizeData);
@@ -197,7 +210,7 @@ uint64_t Opm::EclIO::sizeOnDiskBinary(int64_t num, Opm::EclIO::eclArrType arrTyp
     return size;
 }
 
-uint64_t Opm::EclIO::sizeOnDiskFormatted(const int64_t num, Opm::EclIO::eclArrType arrType)
+uint64_t Opm::EclIO::sizeOnDiskFormatted(const int64_t num, Opm::EclIO::eclArrType arrType, int elementSize)
 {
     uint64_t size = 0;
 
@@ -207,6 +220,11 @@ uint64_t Opm::EclIO::sizeOnDiskFormatted(const int64_t num, Opm::EclIO::eclArrTy
         }
     } else {
         auto sizeData = block_size_data_formatted(arrType);
+
+        if (arrType == Opm::EclIO::C0NN){
+            std::get<2>(sizeData) = elementSize + 3;
+            std::get<1>(sizeData) = 80 / std::get<2>(sizeData);
+        }
 
         int maxBlockSize = std::get<0>(sizeData);
         int nColumns = std::get<1>(sizeData);
@@ -272,7 +290,7 @@ void Opm::EclIO::readBinaryHeader(std::fstream& fileH, std::string& tmpStrName,
 }
 
 void Opm::EclIO::readBinaryHeader(std::fstream& fileH, std::string& arrName,
-                      int64_t& size, Opm::EclIO::eclArrType &arrType)
+                      int64_t& size, Opm::EclIO::eclArrType &arrType, int& elementSize)
 {
     std::string tmpStrName(8,' ');
     std::string tmpStrType(4,' ');
@@ -297,15 +315,25 @@ void Opm::EclIO::readBinaryHeader(std::fstream& fileH, std::string& arrName,
         size = static_cast<int64_t>(tmpSize);
     }
 
+    elementSize = 4;
+
     arrName = tmpStrName;
     if (tmpStrType == "INTE")
         arrType = Opm::EclIO::INTE;
     else if (tmpStrType == "REAL")
         arrType = Opm::EclIO::REAL;
-    else if (tmpStrType == "DOUB")
+    else if (tmpStrType == "DOUB"){
         arrType = Opm::EclIO::DOUB;
-    else if (tmpStrType == "CHAR")
+        elementSize = 8;
+    }
+    else if (tmpStrType == "CHAR"){
         arrType = Opm::EclIO::CHAR;
+        elementSize = 8;
+    }
+    else if (tmpStrType.substr(0,1)=="C"){
+        arrType = Opm::EclIO::C0NN;
+        elementSize = std::stoi(tmpStrType.substr(1,3));
+    }
     else if (tmpStrType =="LOGI")
         arrType = Opm::EclIO::LOGI;
     else if (tmpStrType == "MESS")
@@ -316,7 +344,7 @@ void Opm::EclIO::readBinaryHeader(std::fstream& fileH, std::string& arrName,
 
 
 void Opm::EclIO::readFormattedHeader(std::fstream& fileH, std::string& arrName,
-                         int64_t &num, Opm::EclIO::eclArrType &arrType)
+                         int64_t &num, Opm::EclIO::eclArrType &arrType, int& elementSize)
 {
     std::string line;
     std::getline(fileH,line);
@@ -336,14 +364,24 @@ void Opm::EclIO::readFormattedHeader(std::fstream& fileH, std::string& arrName,
 
     num = std::stol(antStr);
 
+    elementSize = 4;
+
     if (arrTypeStr == "INTE")
         arrType = Opm::EclIO::INTE;
     else if (arrTypeStr == "REAL")
         arrType = Opm::EclIO::REAL;
-    else if (arrTypeStr == "DOUB")
+    else if (arrTypeStr == "DOUB"){
         arrType = Opm::EclIO::DOUB;
-    else if (arrTypeStr == "CHAR")
+        elementSize = 8;
+    }
+    else if (arrTypeStr == "CHAR"){
         arrType = Opm::EclIO::CHAR;
+        elementSize = 8;
+    }
+    else if (arrTypeStr.substr(0,1)=="C"){
+        arrType = Opm::EclIO::C0NN;
+        elementSize = std::stoi(arrTypeStr.substr(1,3));
+    }
     else if (arrTypeStr == "LOGI")
         arrType = Opm::EclIO::LOGI;
     else if (arrTypeStr == "MESS")
@@ -358,11 +396,17 @@ void Opm::EclIO::readFormattedHeader(std::fstream& fileH, std::string& arrName,
 
 template<typename T, typename T2>
 std::vector<T> Opm::EclIO::readBinaryArray(std::fstream& fileH, const int64_t size, Opm::EclIO::eclArrType type,
-                               std::function<T(T2)>& flip)
+                               std::function<T(T2)>& flip, int elementSize)
 {
     std::vector<T> arr;
 
     auto sizeData = block_size_data_binary(type);
+
+    if (type == Opm::EclIO::C0NN){
+        std::get<1>(sizeData)= std::get<1>(sizeData) / std::get<0>(sizeData) * elementSize;
+        std::get<0>(sizeData) = elementSize;
+    }
+
     int sizeOfElement = std::get<0>(sizeData);
     int maxBlockSize = std::get<1>(sizeData);
     int maxNumberOfElements = maxBlockSize / sizeOfElement;
@@ -370,11 +414,11 @@ std::vector<T> Opm::EclIO::readBinaryArray(std::fstream& fileH, const int64_t si
     arr.reserve(size);
 
     int64_t rest = size;
+
     while (rest > 0) {
         int dhead;
         fileH.read(reinterpret_cast<char*>(&dhead), sizeof(dhead));
         dhead = Opm::EclIO::flipEndianInt(dhead);
-
         int num = dhead / sizeOfElement;
 
         if ((num > maxNumberOfElements) || (num < 0)) {
@@ -383,7 +427,13 @@ std::vector<T> Opm::EclIO::readBinaryArray(std::fstream& fileH, const int64_t si
 
         for (int i = 0; i < num; i++) {
             T2 value;
-            fileH.read(reinterpret_cast<char*>(&value), sizeOfElement);
+
+            if constexpr (std::is_same_v<T2, std::string>) {
+                value.resize(sizeOfElement) ;
+                fileH.read(&value[0], sizeOfElement);
+            } else
+                fileH.read(reinterpret_cast<char*>(&value), sizeOfElement);
+
             arr.push_back(flip(value));
         }
 
@@ -411,21 +461,21 @@ std::vector<T> Opm::EclIO::readBinaryArray(std::fstream& fileH, const int64_t si
 std::vector<int> Opm::EclIO::readBinaryInteArray(std::fstream &fileH, const int64_t size)
 {
     std::function<int(int)> f = Opm::EclIO::flipEndianInt;
-    return readBinaryArray<int,int>(fileH, size, Opm::EclIO::INTE, f);
+    return readBinaryArray<int,int>(fileH, size, Opm::EclIO::INTE, f, sizeOfInte);
 }
 
 
 std::vector<float> Opm::EclIO::readBinaryRealArray(std::fstream& fileH, const int64_t size)
 {
     std::function<float(float)> f = Opm::EclIO::flipEndianFloat;
-    return readBinaryArray<float,float>(fileH, size, Opm::EclIO::REAL, f);
+    return readBinaryArray<float,float>(fileH, size, Opm::EclIO::REAL, f, sizeOfReal);
 }
 
 
 std::vector<double> Opm::EclIO::readBinaryDoubArray(std::fstream& fileH, const int64_t size)
 {
     std::function<double(double)> f = Opm::EclIO::flipEndianDouble;
-    return readBinaryArray<double,double>(fileH, size, Opm::EclIO::DOUB, f);
+    return readBinaryArray<double,double>(fileH, size, Opm::EclIO::DOUB, f, sizeOfDoub);
 }
 
 std::vector<bool> Opm::EclIO::readBinaryLogiArray(std::fstream &fileH, const int64_t size)
@@ -433,17 +483,28 @@ std::vector<bool> Opm::EclIO::readBinaryLogiArray(std::fstream &fileH, const int
     std::function<bool(unsigned int)> f = [](unsigned int intVal)
                                           {
                                               bool value;
-                                              if (intVal == Opm::EclIO::true_value) {
+                                              if (intVal == Opm::EclIO::true_value_ecl) {
                                                   value = true;
                                               } else if (intVal == Opm::EclIO::false_value) {
                                                   value = false;
+                                              } else if (intVal == Opm::EclIO::true_value_ix) {
+                                                  value = true;
                                               } else {
                                                   OPM_THROW(std::runtime_error, "Error reading logi value");
                                               }
 
                                               return value;
                                           };
-    return readBinaryArray<bool,unsigned int>(fileH, size, Opm::EclIO::LOGI, f);
+    return readBinaryArray<bool,unsigned int>(fileH, size, Opm::EclIO::LOGI, f, sizeOfLogi);
+}
+
+std::vector<unsigned int> Opm::EclIO::readBinaryRawLogiArray(std::fstream &fileH, const int64_t size)
+{
+    std::function<unsigned int(unsigned int)> f = [](unsigned int intVal)
+                                          {
+                                              return intVal;
+                                          };
+    return readBinaryArray<unsigned int, unsigned int>(fileH, size, Opm::EclIO::LOGI, f, sizeOfLogi);
 }
 
 
@@ -455,7 +516,18 @@ std::vector<std::string> Opm::EclIO::readBinaryCharArray(std::fstream& fileH, co
                                               std::string res(val.begin(), val.end());
                                               return Opm::EclIO::trimr(res);
                                           };
-    return readBinaryArray<std::string,Char8>(fileH, size, Opm::EclIO::CHAR, f);
+    return readBinaryArray<std::string,Char8>(fileH, size, Opm::EclIO::CHAR, f, sizeOfChar);
+}
+
+
+std::vector<std::string> Opm::EclIO::readBinaryC0nnArray(std::fstream& fileH, const int64_t size, int elementSize)
+{
+    std::function<std::string(std::string)> f = [](const std::string& val)
+                                          {
+                                              return Opm::EclIO::trimr(val);
+                                          };
+
+    return readBinaryArray<std::string,std::string>(fileH, size, Opm::EclIO::C0NN, f, elementSize);
 }
 
 
@@ -479,7 +551,6 @@ std::vector<T> Opm::EclIO::readFormattedArray(const std::string& file_str, const
     }
 
     return arr;
-
 }
 
 
@@ -495,7 +566,8 @@ std::vector<int> Opm::EclIO::readFormattedInteArray(const std::string& file_str,
 }
 
 
-std::vector<std::string> Opm::EclIO::readFormattedCharArray(const std::string& file_str, const int64_t size, int64_t fromPos)
+std::vector<std::string> Opm::EclIO::readFormattedCharArray(const std::string& file_str, const int64_t size,
+                                                            int64_t fromPos, int elementSize)
 {
     std::vector<std::string> arr;
     arr.reserve(size);
@@ -504,7 +576,7 @@ std::vector<std::string> Opm::EclIO::readFormattedCharArray(const std::string& f
 
     for (int i=0; i< size; i++) {
         p1 = file_str.find_first_of('\'',p1);
-        std::string value = file_str.substr(p1 + 1, 8);
+        std::string value = file_str.substr(p1 + 1, elementSize);
 
         if (value == "        ") {
             arr.push_back("");
@@ -512,7 +584,7 @@ std::vector<std::string> Opm::EclIO::readFormattedCharArray(const std::string& f
             arr.push_back(Opm::EclIO::trimr(value));
         }
 
-        p1 = p1+10;
+        p1 = p1 + elementSize + 2;
     }
 
     return arr;
@@ -531,6 +603,18 @@ std::vector<float> Opm::EclIO::readFormattedRealArray(const std::string& file_st
                                                  };
 
     return readFormattedArray<float>(file_str, size, fromPos, f);
+}
+
+std::vector<std::string> Opm::EclIO::readFormattedRealRawStrings(const std::string& file_str, const int64_t size, int64_t fromPos)
+{
+
+
+    std::function<std::string(const std::string&)> f = [](const std::string& val)
+                                                 {
+                                                     return val;
+                                                 };
+
+    return readFormattedArray<std::string>(file_str, size, fromPos, f);
 }
 
 
@@ -559,15 +643,18 @@ std::vector<double> Opm::EclIO::readFormattedDoubArray(const std::string& file_s
                                                   {
                                                       auto p1 = val.find_first_of("D");
 
-                                                      if (p1 == std::string::npos) {
-                                                          auto p2 = val.find_first_of("-+", 1);
-                                                          if (p2 != std::string::npos) {
-                                                              val = val.insert(p2,"E");
-                                                          }
-                                                      } else {
+                                                      if (p1 != std::string::npos) {
                                                           val.replace(p1,1,"E");
                                                       }
 
+                                                      p1 = val.find_first_of("E");
+
+                                                      if (p1 == std::string::npos) {
+                                                          auto p2 = val.find_first_of("-+", 1);
+
+                                                          if (p2 != std::string::npos)
+                                                              val = val.insert(p2,"E");
+                                                      }
                                                       return std::stod(val);
                                                   };
 

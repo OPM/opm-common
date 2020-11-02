@@ -26,7 +26,6 @@
 
 #include <opm/io/eclipse/ESmry.hpp>
 
-
 static void printHelp() {
 
     std::cout << "\nsummary needs a minimum of two arguments. First is smspec filename and then list of vectors  \n"
@@ -36,26 +35,32 @@ static void printHelp() {
               << "-r extract data only for report steps. \n\n";
 }
 
-void printHeader(const std::vector<std::string>& keyList){
+void printHeader(const std::vector<std::string>& keyList, const std::vector<int>& width){
 
-    std::cout << "--" << std::setw(14) << keyList[0];
+    std::cout << std::endl;
 
-    for (size_t n= 1; n < keyList.size(); n++){
-        std::cout << std::setw(16) << keyList[n];
+    for (size_t n= 0; n < keyList.size(); n++){
+        if (width[n] < 14)
+            std::cout << std::setw(16) << keyList[n];
+        else
+            std::cout << std::setw(width[n] + 2) << keyList[n];
     }
 
     std::cout << std::endl;
 }
 
-std::string formatString(float data){
+std::string formatString(float data, int width){
 
     std::stringstream stream;
 
-    if (std::fabs(data) < 1e6){
-       stream << std::fixed << std::setw(16) << std::setprecision(6) << data;
-    } else {
+    if (std::fabs(data) < 1e6)
+        if (width < 14)
+            stream << std::fixed << std::setw(16) << std::setprecision(6) << data;
+        else
+            stream << std::fixed << std::setw(width + 2) << std::setprecision(6) << data;
+
+    else
        stream << std::scientific << std::setw(16) << std::setprecision(6)  << data;
-    }
 
     return stream.str();
 }
@@ -128,20 +133,27 @@ int main(int argc, char **argv) {
     }
 
     std::vector<std::vector<float>> smryData;
+    std::vector<int> width;
+
+    for (auto name : smryList)
+        width.push_back(name.size());
+
 
     for (auto key : smryList) {
         std::vector<float> vect = reportStepsOnly ? smryFile.get_at_rstep(key) : smryFile.get(key);
         smryData.push_back(vect);
     }
 
-    printHeader(smryList);
+    printHeader(smryList, width);
 
     for (size_t s=0; s<smryData[0].size(); s++){
         for (size_t n=0; n < smryData.size(); n++){
-            std::cout << formatString(smryData[n][s]);
+            std::cout << formatString(smryData[n][s], width[n]);
         }
         std::cout << std::endl;
     }
+
+    std::cout << std::endl;
 
     return 0;
 }
