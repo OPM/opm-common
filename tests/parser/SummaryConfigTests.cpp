@@ -128,6 +128,7 @@ COMPDAT
 'PRODUCER'   5  5  1  1 'OPEN' 1* -1  0.5  /
 'W_1'   3    7    2    2      'OPEN'  1*          *      0.311   4332.346  2*         'X'     22.123 /
 'W_1'   2    2    1    1      /
+'W_1'   2    2    2    2      /
 'WX2'   2    2    1    1      /
 /
 
@@ -364,11 +365,11 @@ BOOST_AUTO_TEST_CASE(completions) {
                        "/\n";
 
     const auto summary = createSummary( input );
-    const auto keywords = { "CGIR", "CGIR", "CGIR", "CGIR",
+    const auto keywords = { "CGIR", "CGIR", "CGIR", "CGIR", "CGIR",
                             "CGIT", "CGIT",
-                            "CPRL", "CPRL", "CPRL", "CPRL",
+                            "CPRL", "CPRL", "CPRL", "CPRL", "CPRL",
                             "CWIR", "CWIR",
-                            "CWIT", "CWIT" };
+                            "CWIT", "CWIT", "CWIT" };
     const auto names = sorted_keywords( summary );
 
     BOOST_CHECK_EQUAL_COLLECTIONS(
