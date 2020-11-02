@@ -322,11 +322,18 @@ namespace {
     }
 
     void Schedule::handleGCONPROD(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
-        for (const auto& record : handlerContext.keyword) {
+        auto current_step = handlerContext.currentStep;
+        const auto& keyword = handlerContext.keyword;
+        const auto& unit_system = handlerContext.unit_system;
+        this->handleGCONPROD(keyword, unit_system, current_step, parseContext, errors);
+    }
+
+    void Schedule::handleGCONPROD(const DeckKeyword& keyword, const UnitSystem& unit_system, std::size_t current_step, const ParseContext& parseContext, ErrorGuard& errors) {
+        for (const auto& record : keyword) {
             const std::string& groupNamePattern = record.getItem("GROUP").getTrimmedString(0);
             const auto group_names = this->groupNames(groupNamePattern);
             if (group_names.empty())
-                invalidNamePattern(groupNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
+                invalidNamePattern(groupNamePattern, current_step, parseContext, errors, keyword);
 
             const Group::ProductionCMode controlMode = Group::ProductionCModeFromString(record.getItem("CONTROL_MODE").getTrimmedString(0));
             const Group::ExceedAction exceedAction = Group::ExceedActionFromString(record.getItem("EXCEED_PROC").getTrimmedString(0));
@@ -372,7 +379,7 @@ namespace {
                             std::string msg_fmt = "Problem with {keyword}\n"
                                 "In {file} line {line}\n"
                                 "The supplied guide rate will be ignored";
-                            parseContext.handleError(ParseContext::SCHEDULE_IGNORED_GUIDE_RATE, msg_fmt, handlerContext.keyword.location(), errors);
+                            parseContext.handleError(ParseContext::SCHEDULE_IGNORED_GUIDE_RATE, msg_fmt, keyword.location(), errors);
                         } else {
                             guide_rate = record.getItem("GUIDE_RATE").get<double>(0);
                             if (guide_rate == 0)
@@ -382,7 +389,7 @@ namespace {
                 }
 
                 {
-                    auto group_ptr = std::make_shared<Group>(this->getGroup(group_name, handlerContext.currentStep));
+                    auto group_ptr = std::make_shared<Group>(this->getGroup(group_name, current_step));
                     Group::GroupProductionProperties production(this->unit_system, group_name);
                     production.gconprod_cmode = controlMode;
                     production.active_cmode = controlMode;
@@ -421,17 +428,17 @@ namespace {
                         production.production_controls += static_cast<int>(Group::ProductionCMode::RESV);
 
                     if (group_ptr->updateProduction(production)) {
-                        auto new_config = std::make_shared<GuideRateConfig>( this->guideRateConfig(handlerContext.currentStep) );
+                        auto new_config = std::make_shared<GuideRateConfig>( this->guideRateConfig(current_step) );
                         new_config->update_group(*group_ptr);
-                        this->guide_rate_config.update( handlerContext.currentStep, std::move(new_config) );
+                        this->guide_rate_config.update( current_step, std::move(new_config) );
 
-                        this->updateGroup(std::move(group_ptr), handlerContext.currentStep);
-                        m_events.addEvent(ScheduleEvents::GROUP_PRODUCTION_UPDATE, handlerContext.currentStep);
-                        this->addWellGroupEvent(group_name, ScheduleEvents::GROUP_PRODUCTION_UPDATE, handlerContext.currentStep);
+                        this->updateGroup(std::move(group_ptr), current_step);
+                        m_events.addEvent(ScheduleEvents::GROUP_PRODUCTION_UPDATE, current_step);
+                        this->addWellGroupEvent(group_name, ScheduleEvents::GROUP_PRODUCTION_UPDATE, current_step);
 
-                        auto udq = std::make_shared<UDQActive>(this->udqActive(handlerContext.currentStep));
-                        if (production.updateUDQActive(this->getUDQConfig(handlerContext.currentStep), *udq))
-                            this->updateUDQActive(handlerContext.currentStep, udq);
+                        auto udq = std::make_shared<UDQActive>(this->udqActive(current_step));
+                        if (production.updateUDQActive(this->getUDQConfig(current_step), *udq))
+                            this->updateUDQActive(current_step, udq);
                     }
                 }
             }

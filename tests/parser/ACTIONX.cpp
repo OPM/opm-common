@@ -40,6 +40,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/Actions.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/State.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionX.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionResult.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WList.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WListManager.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
@@ -927,4 +928,65 @@ ENDACTIO
     st.add_run(action1, 1000);
     BOOST_CHECK_EQUAL( st.run_count(action1), 1U);
     BOOST_CHECK_EQUAL( st.run_count(action2), 0U);
+}
+
+
+
+
+BOOST_AUTO_TEST_CASE(Action_GCONPROD) {
+    const auto deck_string = std::string{ R"(
+SCHEDULE
+
+
+WELSPECS
+    'PROD1' 'G1'  1 1 10 'OIL' /
+/
+
+GCONPROD
+'G1' 'ORAT' 100  /
+/
+
+ACTIONX
+'A' /
+WWCT 'OPX'     > 0.75    AND /
+FPR < 100 /
+/
+
+GCONPROD
+   'G1'  'ORAT' 200 /
+/
+
+ENDACTIO
+
+TSTEP
+10 /
+
+        )"};
+
+    auto unit_system =  UnitSystem::newMETRIC();
+    Opm::Parser parser;
+    auto deck = parser.parseString(deck_string);
+    EclipseGrid grid1(10,10,10);
+    TableManager table ( deck );
+    FieldPropsManager fp( deck, Phases{true, true, true}, grid1, table);
+    auto python = std::make_shared<Python>();
+    const auto st = SummaryState{ std::chrono::system_clock::now() };
+
+    Runspec runspec (deck);
+    Schedule sched(deck, grid1, fp, runspec, python);
+    const auto& action1 = sched.actions(0).get("A");
+    {
+        const auto& group = sched.getGroup("G1", 0);
+        const auto& prod = group.productionControls(st);
+        BOOST_CHECK_CLOSE( prod.oil_target , unit_system.to_si(UnitSystem::measure::liquid_surface_rate, 100), 1e-5 );
+    }
+
+    Action::Result action_result(true);
+    sched.applyAction(0, action1, action_result);
+
+    {
+        const auto& group = sched.getGroup("G1", 1);
+        const auto& prod = group.productionControls(st);
+        BOOST_CHECK_CLOSE( prod.oil_target , unit_system.to_si(UnitSystem::measure::liquid_surface_rate, 200), 1e-5 );
+    }
 }

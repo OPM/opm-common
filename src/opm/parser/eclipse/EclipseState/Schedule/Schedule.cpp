@@ -1512,8 +1512,15 @@ private:
 
             if (keyword.name() == "UDQ")
                 this->updateUDQ(keyword, reportStep);
+
+            if (keyword.name() == "GCONPROD") {
+                UnitSystem unit_system;
+                this->handleGCONPROD(keyword, unit_system, reportStep, parseContext, errors);
+            }
         }
     }
+
+
 
     void Schedule::applyWellProdIndexScaling(const std::string& well_name, const std::size_t reportStep, const double scalingFactor) {
         auto wstat = this->wells_static.find(well_name);
