@@ -73,61 +73,72 @@ static Deck createDeck_no_wells( const std::string& summary ) {
 
 static Deck createDeck( const std::string& summary ) {
     Opm::Parser parser;
-    std::string input =
-            "START             -- 0 \n"
-            "10 MAI 2007 / \n"
-            "RUNSPEC\n"
-            "\n"
-            "DIMENS\n"
-            " 10 10 10 /\n"
-            "REGDIMS\n"
-            "  3/\n"
-            "AQUDIMS\n"
-            "1* 1* 1* 1* 3 200 1* 1* /\n"
-            "GRID\n"
-            "DXV \n 10*400 /\n"
-            "DYV \n 10*400 /\n"
-            "DZV \n 10*400 /\n"
-            "TOPS \n 100*2202 / \n"
-            "PERMX\n"
-            "  1000*0.25 /\n"
-            "COPY\n"
-            "  PERMX PERMY /\n"
-            "  PERMX PERMZ /\n"
-            "/\n"
-            "PORO \n"
-            "   1000*0.15 /\n"
-            "REGIONS\n"
-            "FIPNUM\n"
-            "200*1 300*2 500*3 /\n"
-            "FIPREG\n"
-            "200*10 300*20 500*30 /\n"
-            "SOLUTION\n"
-            "AQUCT\n"
-            "1    2040     1*    1000   .3    3.0e-5     1330     10     360.0   1   1* /\n"
-            "2    2040     1*    1000   .3    3.0e-5     1330     10     360.0   1   1* /\n"
-            "3    2040     1*    1000   .3    3.0e-5     1330     10     360.0   1   1* /\n"
-            "/\n"
-            "AQUANCON\n"
-            "1     1   10     10    2    10  10   'I-'      0.88      1  /\n"
-            "2     9   10     10    10    10  10   'I+'      0.88      1  /\n"
-            "3     9   9      8    10    9   8   'I+'      0.88      1  /\n"
-            "/\n"
-            "SCHEDULE\n"
-            "WELSPECS\n"
-            "     \'W_1\'        \'OP\'   1   1  3.33       \'OIL\'  7* /   \n"
-            "     \'WX2\'        \'OP\'   2   2  3.33       \'OIL\'  7* /   \n"
-            "     \'W_3\'        \'OP\'   2   5  3.92       \'OIL\'  7* /   \n"
-            "     'PRODUCER' 'G'   5  5 2000 'GAS'     /\n"
-            "/\n"
-            "COMPDAT\n"
-            "'PRODUCER'   5  5  1  1 'OPEN' 1* -1  0.5  / \n"
-            "'W_1'   3    7    2    2      'OPEN'  1*          *      0.311   4332.346  2*         'X'     22.123 / \n"
-            "'W_1'   2    2    1    1      /\n"
-            "'WX2'   2    2    1    1      /\n"
-            "/\n"
-            "SUMMARY\n"
-            + summary;
+    std::string input = R"(
+START             -- 0
+10 MAI 2007 /
+RUNSPEC
+
+DIMENS
+ 10 10 10 /
+REGDIMS
+  3/
+AQUDIMS
+1* 1* 1* 1* 3 200 1* 1* /
+GRID
+DXV
+   10*400 /
+DYV
+   10*400 /
+DZV
+   10*400 /
+TOPS
+   100*2202 /
+PERMX
+  1000*0.25 /
+COPY
+  PERMX PERMY /
+  PERMX PERMZ /
+/
+PORO
+   1000*0.15 /
+REGIONS
+FIPNUM
+200*1 300*2 500*3 /
+FIPREG
+200*10 300*20 500*30 /
+SOLUTION
+AQUCT
+1    2040     1*    1000   .3    3.0e-5     1330     10     360.0   1   1* /
+2    2040     1*    1000   .3    3.0e-5     1330     10     360.0   1   1* /
+3    2040     1*    1000   .3    3.0e-5     1330     10     360.0   1   1* /
+/
+AQUANCON
+1     1   10     10    2    10  10   'I-'      0.88      1  /
+2     9   10     10    10    10  10   'I+'      0.88      1  /
+3     9   9      8    10    9   8   'I+'      0.88      1  /
+/
+SCHEDULE
+WELSPECS
+     'W_1'        'OP'   1   1  3.33       'OIL'  7* /
+     'WX2'        'OP'   2   2  3.33       'OIL'  7* /
+     'W_3'        'OP'   2   5  3.92       'OIL'  7* /
+     'PRODUCER' 'G'   5  5 2000 'GAS'     /
+/
+COMPDAT
+'PRODUCER'   5  5  1  1 'OPEN' 1* -1  0.5  /
+'W_1'   3    7    2    2      'OPEN'  1*          *      0.311   4332.346  2*         'X'     22.123 /
+'W_1'   2    2    1    1      /
+'WX2'   2    2    1    1      /
+/
+
+COMPLUMP
+W_1 3 7 2 2 2 /
+W_1 2 2 2 2 2 /
+W_1 2 2 1 1 4 /
+/
+
+SUMMARY
+)" + summary;
 
     return parser.parseString(input);
 }
