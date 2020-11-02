@@ -389,7 +389,7 @@ private:
             const auto& schedule_keyword = section.getKeyword<ParserKeywords::SCHEDULE>();
             const auto& location = schedule_keyword.location();
             current_file = location.filename;
-            logger.info(fmt::format("Processing dynamic information from\n{} line {}", current_file, location.lineno));
+            logger.info(fmt::format("\nProcessing dynamic information from\n{} line {}", current_file, location.lineno));
             if (restart_skip)
                 logger.info(fmt::format("This is a restarted run - skipping until report step {} at {}", time_map.restart_offset(), Schedule::formatDate(time_map.restart_time())));
 
