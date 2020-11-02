@@ -26,6 +26,7 @@
 #include <stdexcept>
 #include <string>
 #include <utility>
+#include <fmt/format.h>
 
 #include <opm/parser/eclipse/Units/Units.hpp>
 #include <opm/io/eclipse/rst/connection.hpp>
@@ -471,6 +472,13 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
     }
 
 
+    bool WellConnections::hasGlobalIndex(std::size_t global_index) const {
+        auto conn_iter = std::find_if(this->begin(), this->end(),
+                                      [global_index] (const Connection& conn) {return conn.global_index() == global_index;});
+        return (conn_iter != this->end());
+    }
+
+
     const Connection& WellConnections::getFromIJK(const int i, const int j, const int k) const {
         for (size_t ic = 0; ic < size(); ++ic) {
             if (get(ic).sameCoordinate(i, j, k)) {
@@ -478,6 +486,16 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
             }
         }
         throw std::runtime_error(" the connection is not found! \n ");
+    }
+
+
+    const Connection& WellConnections::getFromGlobalIndex(std::size_t global_index) const {
+        auto conn_iter = std::find_if(this->begin(), this->end(),
+                                      [global_index] (const Connection& conn) {return conn.global_index() == global_index;});
+
+        if (conn_iter == this->end())
+            throw std::logic_error(fmt::format("No connection with global index {}", global_index));
+        return *conn_iter;
     }
 
 

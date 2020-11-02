@@ -71,8 +71,10 @@ namespace Opm {
         const Connection& operator[](size_t index) const;
         const Connection& get(size_t index) const;
         const Connection& getFromIJK(const int i, const int j, const int k) const;
+        const Connection& getFromGlobalIndex(std::size_t global_index) const;
         const Connection& lowest() const;
         Connection& getFromIJK(const int i, const int j, const int k);
+        bool hasGlobalIndex(std::size_t global_index) const;
         double segment_perf_length(int segment) const;
 
         const_iterator begin() const { return this->m_connections.begin(); }

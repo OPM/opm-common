@@ -2199,7 +2199,7 @@ BOOST_AUTO_TEST_CASE( complump ) {
             /
 
             COMPDAT
-                'W1' 0 0 1 2 'SHUT' 1*    /
+                'W1' 0 0 1 2 'SHUT' 1*    /    Global Index = 23, 123, 223, 323, 423, 523
                 'W1' 0 0 2 3 'SHUT' 1*    /
                 'W1' 0 0 4 6 'SHUT' 1*    /
                 'W2' 0 0 3 4 'SHUT' 1*    /
@@ -2280,6 +2280,15 @@ BOOST_AUTO_TEST_CASE( complump ) {
             BOOST_CHECK( conn_iter != conn1.end() );
         }
     }
+
+    const auto& all_connections = w0.getConnections();
+    auto global_index = grid.getGlobalIndex(2,2,0);
+    BOOST_CHECK( all_connections.hasGlobalIndex(global_index));
+    const auto& conn_g = all_connections.getFromGlobalIndex(global_index);
+    const auto& conn_ijk = all_connections.getFromIJK(2,2,0);
+    BOOST_CHECK(conn_g == conn_ijk);
+
+    BOOST_CHECK_THROW( all_connections.getFromGlobalIndex(100000), std::exception );
 }
 
 
