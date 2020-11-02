@@ -161,12 +161,12 @@ Well::Well(const RestartIO::RstWell& rst_well,
         auto p = std::make_shared<WellProductionProperties>(this->unit_system, wname);
         // Reverse of function ctrlMode() in AggregateWellData.cpp
         p->whistctl_cmode = def_whistctl_cmode;
-        p->BHPTarget = rst_well.bhp_target_float;
-        p->OilRate = rst_well.orat_target ;
-        p->WaterRate = rst_well.wrat_target ;
-        p->GasRate = rst_well.grat_target ;
-        p->LiquidRate = rst_well.lrat_target ;
-        p->ResVRate = rst_well.resv_target ;
+        p->BHPTarget.update(rst_well.bhp_target_float);
+        p->OilRate.update(rst_well.orat_target);
+        p->WaterRate.update(rst_well.wrat_target);
+        p->GasRate.update(rst_well.grat_target);
+        p->LiquidRate.update(rst_well.lrat_target) ;
+        p->ResVRate.update(rst_well.resv_target);
         p->VFPTableNumber = rst_well.vfp_table;
         p->ALQValue = rst_well.alq_value;
         p->predictionMode = this->prediction_mode;
@@ -187,7 +187,7 @@ Well::Well(const RestartIO::RstWell& rst_well,
             p->addProductionControl( Well::ProducerCMode::RESV );
 
         if (rst_well.thp_target != 0) {
-            p->THPTarget = rst_well.thp_target;
+            p->THPTarget.update(rst_well.thp_target);
             p->addProductionControl( Well::ProducerCMode::THP );
         }
 
@@ -270,10 +270,10 @@ Well::Well(const RestartIO::RstWell& rst_well,
         i->injectorType = rst_well.wtype.injector_type();
         switch (i->injectorType) {
         case InjectorType::WATER:
-            i->surfaceInjectionRate = rst_well.wrat_target;
+            i->surfaceInjectionRate.update(rst_well.wrat_target);
             break;
         case InjectorType::GAS:
-            i->surfaceInjectionRate = rst_well.grat_target;
+            i->surfaceInjectionRate.update(rst_well.grat_target);
             break;
         default:
             throw std::invalid_argument("What ...");
@@ -284,17 +284,17 @@ Well::Well(const RestartIO::RstWell& rst_well,
             i->addInjectionControl(Well::InjectorCMode::RATE);
 
         if (std::abs(rst_well.resv_target) > 0.0f) {
-            i->reservoirInjectionRate = rst_well.resv_target;
+            i->reservoirInjectionRate.update(rst_well.resv_target);
             i->addInjectionControl(Well::InjectorCMode::RESV);
         }
 
         i->addInjectionControl(Well::InjectorCMode::BHP);
-        i->BHPTarget = rst_well.bhp_target_float;
+        i->BHPTarget.update(rst_well.bhp_target_float);
         if (this->isAvailableForGroupControl())
             i->addInjectionControl(Well::InjectorCMode::GRUP);
 
         if (rst_well.thp_target != 0) {
-            i->THPTarget = rst_well.thp_target;
+            i->THPTarget.update(rst_well.thp_target);
             i->addInjectionControl(Well::InjectorCMode::THP);
         }
 
@@ -463,7 +463,7 @@ bool Well::updateEconLimits(std::shared_ptr<WellEconProductionLimits> econ_limit
 void Well::switchToProducer() {
     auto p = std::make_shared<WellInjectionProperties>(this->getInjectionProperties());
 
-    p->BHPTarget = 0;
+    p->BHPTarget.update(0);
     p->dropInjectionControl( Opm::Well::InjectorCMode::BHP );
     this->updateInjection( p );
     this->wtype.update(true);

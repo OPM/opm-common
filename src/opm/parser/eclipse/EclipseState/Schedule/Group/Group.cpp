@@ -34,6 +34,10 @@ Group::Group()
 {
 }
 
+
+
+
+
 Group::Group(const std::string& name, std::size_t insert_index_arg, std::size_t init_step_arg, double udq_undefined_arg, const UnitSystem& unit_system_arg) :
     m_name(name),
     m_insert_index(insert_index_arg),
@@ -44,7 +48,7 @@ Group::Group(const std::string& name, std::size_t insert_index_arg, std::size_t 
     gefac(1),
     transfer_gefac(true),
     vfp_table(0),
-    production_properties(name)
+    production_properties(unit_system, name)
 {
     // All groups are initially created as children of the "FIELD" group.
     if (name != "FIELD")
@@ -176,6 +180,23 @@ bool Group::updateProduction(const GroupProductionProperties& production) {
     return update;
 }
 
+Group::GroupInjectionProperties::GroupInjectionProperties() :
+    GroupInjectionProperties(Phase::WATER, UnitSystem(UnitSystem::UnitType::UNIT_TYPE_METRIC))
+{}
+
+Group::GroupInjectionProperties::GroupInjectionProperties(Phase phase_arg, const UnitSystem& unit_system) :
+    phase(phase_arg),
+    target_reinj_fraction(unit_system.getDimension(UnitSystem::measure::identity)),
+    target_void_fraction(unit_system.getDimension(UnitSystem::measure::identity))
+{
+    if (phase == Phase::WATER) {
+        this->surface_max_rate = UDAValue(unit_system.getDimension(UnitSystem::measure::liquid_surface_rate));
+        this->resv_max_rate = UDAValue(unit_system.getDimension(UnitSystem::measure::rate));
+    } else {
+        this->surface_max_rate = UDAValue(unit_system.getDimension(UnitSystem::measure::gas_surface_rate));
+        this->resv_max_rate = UDAValue(unit_system.getDimension(UnitSystem::measure::rate));
+    }
+}
 
 Group::GroupInjectionProperties Group::GroupInjectionProperties::serializeObject()
 {
@@ -213,10 +234,22 @@ bool Group::GroupInjectionProperties::operator!=(const GroupInjectionProperties&
     return !(*this == other);
 }
 
+Group::GroupProductionProperties::GroupProductionProperties() :
+    GroupProductionProperties(UnitSystem(UnitSystem::UnitType::UNIT_TYPE_METRIC), "")
+{}
+
+Group::GroupProductionProperties::GroupProductionProperties(const UnitSystem& unit_system, const std::string& gname) :
+    name(gname),
+    oil_target(unit_system.getDimension(UnitSystem::measure::liquid_surface_rate)),
+    water_target(unit_system.getDimension(UnitSystem::measure::liquid_surface_rate)),
+    gas_target(unit_system.getDimension(UnitSystem::measure::gas_surface_rate)),
+    liquid_target(unit_system.getDimension(UnitSystem::measure::liquid_surface_rate))
+{
+}
 
 Group::GroupProductionProperties Group::GroupProductionProperties::serializeObject()
 {
-    Group::GroupProductionProperties result("Group123");
+    Group::GroupProductionProperties result(UnitSystem(UnitSystem::UnitType::UNIT_TYPE_METRIC), "Group123");
     result.name = "Group123";
     result.gconprod_cmode = ProductionCMode::PRBL;
     result.active_cmode = ProductionCMode::PRBL;

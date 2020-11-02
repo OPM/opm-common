@@ -383,7 +383,7 @@ namespace {
 
                 {
                     auto group_ptr = std::make_shared<Group>(this->getGroup(group_name, handlerContext.currentStep));
-                    Group::GroupProductionProperties production(group_name);
+                    Group::GroupProductionProperties production(handlerContext.section.unitSystem(), group_name);
                     production.gconprod_cmode = controlMode;
                     production.active_cmode = controlMode;
                     production.oil_target = oil_target;
