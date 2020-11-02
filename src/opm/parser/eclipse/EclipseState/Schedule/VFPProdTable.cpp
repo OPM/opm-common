@@ -413,7 +413,7 @@ void VFPProdTable::check(const DeckKeyword& keyword, const double table_scaling_
         const auto& location = keyword.location();
         OpmLog::warning(fmt::format("VFP table {0} has BHP versus THP not increasing in keyword VFPPROD.\n"
                                     "In {1} line {2}\n"
-                                    "This may cause convergence issues due to switching between BHP and THP control.",
+                                    "This may cause convergence issues due to switching between BHP and THP control.\n",
                                     m_table_num,
                                     location.filename,
                                     location.lineno));
