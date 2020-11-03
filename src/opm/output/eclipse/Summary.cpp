@@ -1488,6 +1488,8 @@ static const std::unordered_map< std::string, Opm::UnitSystem::measure> block_un
   {"BWKR"      , Opm::UnitSystem::measure::identity},
   {"BOKR"      , Opm::UnitSystem::measure::identity},
   {"BKRO"      , Opm::UnitSystem::measure::identity},
+  {"BKROG"     , Opm::UnitSystem::measure::identity},
+  {"BKROW"     , Opm::UnitSystem::measure::identity},
   {"BGKR"      , Opm::UnitSystem::measure::identity},
   {"BKRG"      , Opm::UnitSystem::measure::identity},
   {"BKRW"      , Opm::UnitSystem::measure::identity},

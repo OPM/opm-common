@@ -1428,6 +1428,8 @@ BOOST_AUTO_TEST_CASE(BLOCK_VARIABLES) {
     block_values[std::make_pair("BWKR",  2)] = 0.81;
     block_values[std::make_pair("BOKR",  2)] = 0.71;
     block_values[std::make_pair("BKRO",  2)] = 0.73;
+    block_values[std::make_pair("BKROW", 3)] = 0.68;
+    block_values[std::make_pair("BKROG", 4)] = 0.82;
     block_values[std::make_pair("BGKR",  2)] = 0.61;
     block_values[std::make_pair("BKRG",  2)] = 0.63;
     block_values[std::make_pair("BKRW",  2)] = 0.51;
@@ -1472,6 +1474,8 @@ BOOST_AUTO_TEST_CASE(BLOCK_VARIABLES) {
     BOOST_CHECK_CLOSE( 0.81  , units.to_si( UnitSystem::measure::identity  , ecl_sum_get_general_var( resp, 1, "BWKR:2,1,1"))  , 1e-5);
     BOOST_CHECK_CLOSE( 0.71  , units.to_si( UnitSystem::measure::identity  , ecl_sum_get_general_var( resp, 1, "BOKR:2,1,1"))  , 1e-5);
     BOOST_CHECK_CLOSE( 0.73  , units.to_si( UnitSystem::measure::identity  , ecl_sum_get_general_var( resp, 1, "BKRO:2,1,1"))  , 1e-5);
+    BOOST_CHECK_CLOSE( 0.82  , units.to_si( UnitSystem::measure::identity  , ecl_sum_get_general_var( resp, 1, "BKROG:4,1,1")) , 1e-5);
+    BOOST_CHECK_CLOSE( 0.68  , units.to_si( UnitSystem::measure::identity  , ecl_sum_get_general_var( resp, 1, "BKROW:3,1,1")) , 1e-5);
     BOOST_CHECK_CLOSE( 0.61  , units.to_si( UnitSystem::measure::identity  , ecl_sum_get_general_var( resp, 1, "BGKR:2,1,1"))  , 1e-5);
     BOOST_CHECK_CLOSE( 0.63  , units.to_si( UnitSystem::measure::identity  , ecl_sum_get_general_var( resp, 1, "BKRG:2,1,1"))  , 1e-5);
     BOOST_CHECK_CLOSE( 0.51  , units.to_si( UnitSystem::measure::identity  , ecl_sum_get_general_var( resp, 1, "BKRW:2,1,1"))  , 1e-5);
