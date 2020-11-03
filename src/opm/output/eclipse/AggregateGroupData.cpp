@@ -344,8 +344,8 @@ std::vector<std::size_t> groupParentSeqIndex(const Opm::Schedule& sched,
 
 
 bool higherLevelProdCMode_NotNoneFld(const Opm::Schedule& sched,
-                       const Opm::Group& group,
-                       const size_t simStep)
+                                     const Opm::Group& group,
+                                     const size_t simStep)
 {
     bool ctrl_mode_not_none_fld = false;
     if (group.defined( simStep )) {
