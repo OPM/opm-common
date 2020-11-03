@@ -497,6 +497,7 @@ namespace Opm
         // Keyword Handlers
         void handlePYACTION (std::shared_ptr<const Python> python, const std::string& input_path, const DeckKeyword&, std::size_t currentStep);
         void handleGCONPROD(const DeckKeyword& keyword, std::size_t current_step, const ParseContext& parseContext, ErrorGuard& errors);
+        void handleGLIFTOPT(const DeckKeyword& keyword, std::size_t report_step, const ParseContext& parseContext, ErrorGuard& errors);
 
         // Normal keyword handlers -- in KeywordHandlers.cpp
         void handleBRANPROP (const HandlerContext&, const ParseContext&, ErrorGuard&);
