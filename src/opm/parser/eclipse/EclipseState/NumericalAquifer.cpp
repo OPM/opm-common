@@ -38,10 +38,6 @@ NumericalAquifers::NumericalAquifers(const Deck& deck, const EclipseGrid& grid, 
 {
     using AQUNUM=ParserKeywords::AQUNUM;
     if ( !deck.hasKeyword<AQUNUM>() ) return;
-    // TODO: with a map, we might change the order of the input.
-    // TODO: maybe we should use a vector here, and another variable to handle the the duplication
-    std::vector<NumericalAquiferCell> aquifer_cells;
-    std::set<size_t> cell_set;
 
     // there might be multiple keywords of keyword AQUNUM, it is not totally
     // clear about the rules here. For now, we take care of all the keywords
@@ -52,18 +48,15 @@ NumericalAquifers::NumericalAquifers(const Deck& deck, const EclipseGrid& grid, 
             // TODO: we should check whether the grid cell is active or NOT
             // Not sure how to handle duplicated input for aquifer cells yet, throw here
             // until we
-            if (cell_set.find(aqu_cell.global_index) != cell_set.end()) {
+            if (this->hasCell(aqu_cell.global_index)) {
                 // TODO: it is good to keep the original I J K for messaging
                 throw;
             } else {
-                cell_set.insert(aqu_cell.global_index);
-                aquifer_cells.push_back(aqu_cell);
+                this->addAquiferCell(aqu_cell);
+                auto& cells = this->aquifer_cells_;
+                cells.insert(std::pair{aqu_cell.global_index, aqu_cell});
             }
         }
-    }
-
-    for (const auto& aqu_cell : aquifer_cells) {
-        this->addAquiferCell(aqu_cell);
     }
 
     // handle connections
@@ -76,25 +69,37 @@ bool NumericalAquifers::hasAquifer(const size_t aquifer_id) const {
 
 void NumericalAquifers::addAquiferCell(const NumericalAquiferCell& aqu_cell) {
     const size_t id = aqu_cell.aquifer_id;
-    if (this->hasAquifer(id)) {
-        this->aquifers_.at(id).addAquiferCell(aqu_cell);
-    } else {
+    if (!this->hasAquifer(id)) {
         this->aquifers_.insert(std::make_pair(id, SingleNumericalAquifer{id}));
-        this->aquifers_.at(id).addAquiferCell(aqu_cell);
     }
+
+    this->aquifers_.at(id).addAquiferCell(aqu_cell);
 }
 
-void NumericalAquifers::addAquiferConnections(const Deck &deck, const EclipseGrid &grid) {
+void NumericalAquifers::
+addAquiferConnections(const Deck &deck, const EclipseGrid &grid) {
     NumericalAquiferConnections cons(deck, grid);
 
+    std::set<size_t> con_set;
     for (auto& pair : this->aquifers_) {
         const size_t aqu_id = pair.first;
         const auto& aqu_cons = cons.getConnections(aqu_id);
 
-        // TODO: it is possible a connection should not be connected to any aquifer cells
+        // For now, there is no two aquifers can be connected to one cell
+        // aquifer can not connect to aquifer cells
         auto& aquifer = pair.second;
         for (const auto& con : aqu_cons) {
+            const double con_global_index = con.second.global_index;
+            if (this->hasCell(con_global_index)) {
+                // TODO: we should output some information
+                continue;
+            }
+
+            if (con_set.find(con_global_index) != con_set.end()) {
+                continue;
+            }
             aquifer.addAquiferConnection(con.second);
+            con_set.insert(con_global_index);
         }
     }
 }
@@ -125,13 +130,27 @@ NumericalAquifers::transToRemove(const EclipseGrid& grid) const {
     return  trans;
 }
 
-void NumericalAquifers::appendNNC(NNC& nnc) const {
+void NumericalAquifers::
+appendNNC(NNC& nnc, const EclipseGrid& grid,
+const FieldPropsManager& fp) const {
     for (const auto& pair : this->aquifers_) {
-        pair.second.appendNNC(nnc);
+        pair.second.appendNNC(nnc, grid, fp);
     }
+
+    std::cout << " number of NNC is " << nnc.numNNC() << std::endl;
 }
 
-using AQUNUM = ParserKeywords::AQUNUM;
+const std::unordered_map<size_t, const NumericalAquiferCell>& NumericalAquifers::
+aquiferCells() const {
+    return this->aquifer_cells_;
+}
+
+bool NumericalAquifers::hasCell(const size_t cell_global_index) const {
+    const auto& cells = this->aquifer_cells_;
+    return (cells.find(cell_global_index) != cells.end());
+}
+
+    using AQUNUM = ParserKeywords::AQUNUM;
 NumericalAquiferCell::NumericalAquiferCell(const DeckRecord& record, const EclipseGrid& grid, const FieldPropsManager& field_props)
    : aquifer_id( record.getItem<AQUNUM::AQUIFER_ID>().get<int>(0) )
    , I ( record.getItem<AQUNUM::I>().get<int>(0) - 1 )
@@ -226,29 +245,31 @@ std::array<std::set<size_t>, 3> SingleNumericalAquifer::transToRemove(const Ecli
         const size_t j = cell.J;
         const size_t k = cell.K;
         // TODO: later to check whether we want to use active_index or global_index
-        if (AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i+1, j, k, FaceDir::XPlus)) {
+        if (AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i, j, k, FaceDir::XPlus)) {
             trans[0].insert(cell.global_index);
         }
-        if (AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i-1, j, k, FaceDir::XMinus)) {
+        if (AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i, j, k, FaceDir::XMinus)) {
             trans[0].insert(grid.getGlobalIndex(i-1, j, k));
         }
-        if (AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i, j+1, k, FaceDir::YPlus)) {
+        if (AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i, j, k, FaceDir::YPlus)) {
             trans[1].insert(cell.global_index);
         }
-        if (AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i, j-1, k, FaceDir::YMinus)) {
+        if (AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i, j, k, FaceDir::YMinus)) {
             trans[1].insert(grid.getGlobalIndex(i, j-1, k));
         }
-        if (AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i, j, k+1, FaceDir::ZPlus)) {
+        if (AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i, j, k, FaceDir::ZPlus)) {
             trans[2].insert(cell.global_index);
         }
-        if (AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i, j, k-1, FaceDir::ZMinus)) {
+        if (AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i, j, k, FaceDir::ZMinus)) {
             trans[2].insert(grid.getGlobalIndex(i, j, k-1));
         }
     }
     return trans;
 }
 
-void SingleNumericalAquifer::appendNNC(NNC& nnc) const {
+void SingleNumericalAquifer::
+appendNNC(NNC& nnc, const EclipseGrid& grid,
+          const FieldPropsManager& fp) const {
     // adding the NNC between the numerical cells
     for (size_t i = 0; i < this->cells_.size() - 1; ++i) {
         const double trans1 = this->cells_[i].transmissibility;
@@ -257,16 +278,66 @@ void SingleNumericalAquifer::appendNNC(NNC& nnc) const {
         const size_t gc1 = this->cells_[i].global_index;
         const size_t gc2 = this->cells_[i+1].global_index;
         nnc.addNNC(gc1, gc2, tran);
+        // DEBUG output
+        const auto& cell1 = this->cells_[i];
+        const auto& cell2 = this->cells_[i+1];
+        const double transform_efficient = 1.e8*86400.;
+        std::cout << cell1.I + 1 << " " << cell1.J + 1 << " " << cell1.K + 1 << " "
+                  << cell2.I + 1 << " " << cell2.J + 1 << " " << cell2.K + 1 << " " << tran * transform_efficient << std::endl;
     }
 
     const auto& cell1 = this->cells_[0];
     // all the connections connect to the first numerical aquifer cell
     const size_t gc1 = cell1.global_index;
-    const double invalid_tran = -1.e100; // which needs to be determined later
+    // const double cell_trans1 = cell1.transmissibility;
     for (const auto& con : this->connections_) {
         const size_t gc2 = con.global_index;
-        nnc.addNNC(gc1, gc2, invalid_tran);
+        // TODO: get the first version, it is only for cartesian grid
+        // for testing purpose
+        const auto& cell_dims = grid.getCellDims(gc2);
+        double face_area = 0;
+        std::string perm_string;
+        double d = 0.;
+        if (con.face_dir == FaceDir::XPlus || con.face_dir == FaceDir::XMinus) {
+            face_area = cell_dims[1] * cell_dims[2];
+            perm_string = "PERMX";
+            d = cell_dims[0];
+        }
+        if (con.face_dir == FaceDir::YMinus || con.face_dir == FaceDir::YPlus) {
+            face_area = cell_dims[0] * cell_dims[2];
+            perm_string = "PERMY";
+            d = cell_dims[1];
+        }
+
+        if (con.face_dir == FaceDir::ZMinus || con.face_dir == FaceDir::ZPlus) {
+            face_area = cell_dims[0] * cell_dims[1];
+            perm_string = "PERMZ";
+            d = cell_dims[2];
+        }
+
+        const double trans_cell = (con.trans_option == 1) ?
+                                  (2 * cell1.permeability * face_area / cell1.length) : cell1.transmissibility;
+
+        const auto& cell_perm = (fp.get_double(perm_string))[gc2];
+
+        const double trans_con = 2 * cell_perm * face_area / d;
+
+        const double tran = trans_con * trans_cell / (trans_con + trans_cell) * con.trans_multipler;
+        nnc.addNNC(gc1, gc2, tran);
+
+        // debug output
+        const double transform_efficient = 1.e8*86400.;
+        std::cout << cell1.I + 1 << " " << cell1.J + 1 << " " << cell1.K + 1 << " "
+                  << con.I + 1 << " " << con.J + 1 << " " << con.K + 1 << " " << tran * transform_efficient << std::endl;
     }
+}
+
+size_t SingleNumericalAquifer::numCells() const {
+    return this->cells_.size();
+}
+
+const NumericalAquiferCell& SingleNumericalAquifer::getCell(const size_t index) const {
+    return this->cells_[index];
 }
 
 }

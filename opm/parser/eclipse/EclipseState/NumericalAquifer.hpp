@@ -74,7 +74,9 @@ namespace Opm {
                              std::vector<int>& pvtnum,
                              std::vector<double>& cell_depth) const;
         std::array<std::set<size_t>, 3> transToRemove(const EclipseGrid& grid) const;
-        void appendNNC(NNC& nnc) const;
+        void appendNNC(NNC& nnc, const EclipseGrid& grid, const FieldPropsManager& fp) const;
+        size_t numCells() const;
+        const NumericalAquiferCell& getCell(const size_t index) const;
     private:
         // Maybe this id_ is not necessary
         // Because if it is a map, the id will be there
@@ -91,6 +93,7 @@ namespace Opm {
         explicit NumericalAquifers(const Deck& deck, const EclipseGrid& grid, const FieldPropsManager& field_props);
 
         bool hasAquifer(const size_t aquifer_id) const;
+        bool hasCell(const size_t cell_global_index) const;
         bool empty() const;
         void updateCellProps(const EclipseGrid& grid,
                              std::vector<double>& pore_volume,
@@ -98,10 +101,15 @@ namespace Opm {
                              std::vector<int>& pvtnum,
                              std::vector<double>& cell_depth) const;
         std::array<std::set<size_t>, 3> transToRemove(const EclipseGrid& grid) const;
-        void appendNNC(NNC& nnc) const;
+        // TODO: maybe better wrap with other more direct functions, let us see the usage first
+        const std::unordered_map<size_t, const NumericalAquiferCell>& aquiferCells() const;
+        void appendNNC(NNC& nnc, const EclipseGrid& grid, const FieldPropsManager& fp) const;
+
     private:
         // std::un_ordered_map
         std::unordered_map<size_t, SingleNumericalAquifer> aquifers_;
+        // TODO: it is a little wasteful, just convenience for now
+        std::unordered_map<size_t, const NumericalAquiferCell> aquifer_cells_;
 
         void addAquiferCell(const NumericalAquiferCell& aqu_cell);
         void addAquiferConnections(const Deck& deck, const EclipseGrid& grid);

@@ -568,15 +568,11 @@ std::vector<Box::cell_index> FieldProps::region_index( const std::string& region
 }
 
 void FieldProps::applyNumericalAquifer(const AquiferConfig& aquifers) {
-    auto& porv_data = this->double_data["PORV"].data;
+    auto& porv_data = this->init_get<double>("PORV").data;
     auto& satnum_data = this->int_data["SATNUM"].data;
     auto& pvtnum_data = this->int_data["PVTNUM"].data;
-    // TODO: totally not sure how this will affect the equilibriation
-    // TODO: not sure whether we should update the cell depth here, since
-    // we might need the equilibration pressure to the pressure initialization
     aquifers.numericalAquifers().updateCellProps(*(this->grid_ptr), porv_data, satnum_data, pvtnum_data, this->cell_depth);
 
-    //  TODO: the following should go to a function
     const auto trans_to_remove = aquifers.numericalAquifers().transToRemove(*(this->grid_ptr));
 
     std::array<std::vector<Box::cell_index>, 3> index_lists;
