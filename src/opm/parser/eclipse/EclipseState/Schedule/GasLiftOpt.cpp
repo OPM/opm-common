@@ -63,6 +63,16 @@ const GasLiftOpt::Group& GasLiftOpt::group(const std::string& gname) const {
     return iter->second;
 }
 
+bool GasLiftOpt::has_well(const std::string& wname) const {
+    const auto iter = this->m_wells.find(wname);
+    return (iter != this->m_wells.end());
+}
+
+bool GasLiftOpt::has_group(const std::string& gname) const {
+    const auto iter = this->m_groups.find(gname);
+    return (iter != this->m_groups.end());
+}
+
 
 void GasLiftOpt::add_group(const Group& group) {
     auto iter = this->m_groups.find(group.name());

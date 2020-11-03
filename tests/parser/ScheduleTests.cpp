@@ -3722,6 +3722,8 @@ WLIFTOPT
     const auto& plat_group = glo.group("PLAT-A");
     BOOST_CHECK_EQUAL( *plat_group.max_lift_gas(), siFactorG * 200000);
     BOOST_CHECK(!plat_group.max_total_gas().has_value());
+    BOOST_CHECK(glo.has_group("PLAT-A"));
+    BOOST_CHECK(!glo.has_well("NO-GROUP"));
 
 
     const auto& w1 = glo.well("B-1H");
@@ -3739,6 +3741,8 @@ WLIFTOPT
     BOOST_CHECK_EQUAL(w3.min_rate(), -1.00 * siFactorG);
     BOOST_CHECK_EQUAL(w3.inc_weight_factor(), 1.00);
     BOOST_CHECK(w3.alloc_extra_gas());
+    BOOST_CHECK(glo.has_well("C-1H"));
+    BOOST_CHECK(!glo.has_well("NO-WELL"));
 }
 
 BOOST_AUTO_TEST_CASE(WellPI) {
