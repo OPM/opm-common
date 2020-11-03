@@ -53,6 +53,17 @@
 using namespace Opm;
 
 
+Schedule make_schedule(const std::string& deck_string, const ParseContext& parseContext = {}) {
+    ErrorGuard errors;
+    Opm::Parser parser;
+    auto deck = parser.parseString(deck_string);
+    EclipseGrid grid1(10,10,10);
+    TableManager table ( deck );
+    FieldPropsManager fp( deck, Phases{true, true, true}, grid1, table);
+    auto python = std::make_shared<Python>();
+    Runspec runspec (deck);
+    return Schedule(deck, grid1, fp, runspec, parseContext, errors, python);
+}
 
 
 BOOST_AUTO_TEST_CASE(Create) {
@@ -128,27 +139,15 @@ ENDACTIO
 TSTEP
    10 /
 )"};
-    auto python = std::make_shared<Python>();
-    Opm::Parser parser;
-    auto deck1 = parser.parseString(MISSING_END);
-    auto deck2 = parser.parseString(WITH_WELSPECS);
-    auto deck3 = parser.parseString(WITH_GRID);
-    EclipseGrid grid1(10,10,10);
-    TableManager table ( deck1 );
-    FieldPropsManager fp( deck1, Phases{true, true, true}, grid1, table);
-    Runspec runspec (deck1);
+    BOOST_CHECK_THROW(make_schedule(MISSING_END), OpmInputError);
 
-    // The ACTIONX keyword has no matching 'ENDACTIO' -> exception
-    BOOST_CHECK_THROW(Schedule(deck1, grid1, fp, runspec, python), OpmInputError);
-
-    Schedule sched(deck2, grid1, fp, runspec, python);
+    Schedule sched = make_schedule(WITH_WELSPECS);
     BOOST_CHECK( !sched.hasWell("W1") );
     BOOST_CHECK( sched.hasWell("W2"));
 
     // The deck3 contains the 'GRID' keyword in the ACTIONX block - that is not a whitelisted keyword.
     ParseContext parseContext( {{ParseContext::ACTIONX_ILLEGAL_KEYWORD, InputError::THROW_EXCEPTION}} );
-    ErrorGuard errors;
-    BOOST_CHECK_THROW(Schedule(deck3, grid1, fp, runspec, parseContext, errors, python), OpmInputError);
+    BOOST_CHECK_THROW( make_schedule(WITH_GRID, parseContext), OpmInputError );
 }
 
 
@@ -964,16 +963,8 @@ TSTEP
         )"};
 
     auto unit_system =  UnitSystem::newMETRIC();
-    Opm::Parser parser;
-    auto deck = parser.parseString(deck_string);
-    EclipseGrid grid1(10,10,10);
-    TableManager table ( deck );
-    FieldPropsManager fp( deck, Phases{true, true, true}, grid1, table);
-    auto python = std::make_shared<Python>();
     const auto st = SummaryState{ std::chrono::system_clock::now() };
-
-    Runspec runspec (deck);
-    Schedule sched(deck, grid1, fp, runspec, python);
+    Schedule sched = make_schedule(deck_string);
     const auto& action1 = sched.actions(0).get("A");
     {
         const auto& group = sched.getGroup("G1", 0);
