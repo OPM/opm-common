@@ -3,6 +3,7 @@
   "sections": [
     "SCHEDULE"
   ],
+  "requires" : ["LIFTOPT"],
   "items": [
     {
       "name": "GROUP_NAME",
