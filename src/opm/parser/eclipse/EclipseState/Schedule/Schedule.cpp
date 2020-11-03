@@ -421,7 +421,7 @@ private:
                             restart_skip = false;
                             currentStep = time_map.restart_offset();
                             logger.restart();
-                            logger(fmt::format("Found restart date {}", Schedule::formatDate(deck_time)));
+                            logger(fmt::format("Found restart date: {} report: {}", Schedule::formatDate(deck_time), time_map.restart_offset()));
                         } else
                             logger(fmt::format("Skipping DATES keyword {}", Schedule::formatDate(deck_time)));
                     } else {
