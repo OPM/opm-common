@@ -324,11 +324,10 @@ namespace {
     void Schedule::handleGCONPROD(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
         auto current_step = handlerContext.currentStep;
         const auto& keyword = handlerContext.keyword;
-        const auto& unit_system = handlerContext.unit_system;
-        this->handleGCONPROD(keyword, unit_system, current_step, parseContext, errors);
+        this->handleGCONPROD(keyword, current_step, parseContext, errors);
     }
 
-    void Schedule::handleGCONPROD(const DeckKeyword& keyword, const UnitSystem& unit_system, std::size_t current_step, const ParseContext& parseContext, ErrorGuard& errors) {
+    void Schedule::handleGCONPROD(const DeckKeyword& keyword, std::size_t current_step, const ParseContext& parseContext, ErrorGuard& errors) {
         for (const auto& record : keyword) {
             const std::string& groupNamePattern = record.getItem("GROUP").getTrimmedString(0);
             const auto group_names = this->groupNames(groupNamePattern);
@@ -517,7 +516,7 @@ namespace {
             const std::string& groupNamePattern = record.getItem<ParserKeywords::GLIFTOPT::GROUP_NAME>().getTrimmedString(0);
             const auto group_names = this->groupNames(groupNamePattern);
             if (group_names.empty())
-                invalidNamePattern(groupNamePattern, report_step, parseContext, errors, handlerContext.keyword);
+                invalidNamePattern(groupNamePattern, report_step, parseContext, errors, keyword);
 
             const auto& max_gas_item = record.getItem<ParserKeywords::GLIFTOPT::MAX_LIFT_GAS_SUPPLY>();
             const double max_lift_gas_value = max_gas_item.hasValue(0)

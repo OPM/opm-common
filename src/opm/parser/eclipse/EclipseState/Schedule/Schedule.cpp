@@ -1513,10 +1513,8 @@ private:
             if (keyword.name() == "UDQ")
                 this->updateUDQ(keyword, reportStep);
 
-            if (keyword.name() == "GCONPROD") {
-                UnitSystem unit_system;
-                this->handleGCONPROD(keyword, unit_system, reportStep, parseContext, errors);
-            }
+            if (keyword.name() == "GCONPROD")
+                this->handleGCONPROD(keyword, reportStep, parseContext, errors);
         }
     }
 
