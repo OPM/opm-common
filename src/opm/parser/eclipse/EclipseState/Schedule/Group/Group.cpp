@@ -747,6 +747,31 @@ Group::GuideRateTarget Group::GuideRateTargetFromString( const std::string& stri
         return GuideRateTarget::NO_GUIDE_RATE;
 }
 
+
+// Integer values defined vectoritems/group.hpp
+Group::GuideRateTarget Group::GuideRateTargetFromInt(int ecl_id) {
+    switch(ecl_id) {
+    case 0:
+        return GuideRateTarget::NO_GUIDE_RATE;
+    case 1:
+        return GuideRateTarget::OIL;
+    case 2:
+        return GuideRateTarget::WAT;
+    case 3:
+        return GuideRateTarget::GAS;
+    case 4:
+        return GuideRateTarget::LIQ;
+    case 7:
+        return GuideRateTarget::POTN;
+    case 8:
+        return GuideRateTarget::FORM;
+    case 9:
+        return GuideRateTarget::COMB;
+    default:
+        throw std::logic_error(fmt::format("Integer GuideRateTarget: {} not recognized", ecl_id));
+    }
+}
+
 bool Group::operator==(const Group& data) const
 {
     return this->name() == data.name() &&

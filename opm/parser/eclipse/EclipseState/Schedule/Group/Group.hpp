@@ -112,7 +112,7 @@ enum class GuideRateTarget {
     NO_GUIDE_RATE = 11
 };
 static GuideRateTarget GuideRateTargetFromString( const std::string& stringValue );
-
+static GuideRateTarget GuideRateTargetFromInt(int ecl_id);
 
 
 struct GroupInjectionProperties {
