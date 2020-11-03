@@ -520,8 +520,8 @@ void productionGroup(const Opm::Schedule&     sched,
     */
     // default value
     iGrp[nwgmax + 5] = -1;
-    int higher_lev_ctrl = higherLevelProdControlGroupSeqIndex(sched, sumState, group, simStep);
-    int higher_lev_ctrl_mode = higherLevelProdControlMode(sched, sumState, group, simStep);
+    const int higher_lev_ctrl = higherLevelProdControlGroupSeqIndex(sched, sumState, group, simStep);
+    const int higher_lev_ctrl_mode = higherLevelProdControlMode(sched, sumState, group, simStep);
     // Start branching for determining iGrp[nwgmax + 5]
     // use default value if group is not available for group control
     if (groupProductionControllable(sched, sumState, group, simStep)) {
