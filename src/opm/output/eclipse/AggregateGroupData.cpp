@@ -447,28 +447,28 @@ void productionGroup(const Opm::Schedule&     sched,
         iGrp[nwgmax + 7] = 0;
         switch (prod_cmode) {
         case Opm::Group::ProductionCMode::NONE:
-            iGrp[nwgmax + 10] = 0;
+            iGrp[nwgmax + IGroup::GConProdCMode] = 0;
             break;
         case Opm::Group::ProductionCMode::ORAT:
-            iGrp[nwgmax + 10] = 1;
+            iGrp[nwgmax + IGroup::GConProdCMode] = 1;
             break;
         case Opm::Group::ProductionCMode::WRAT:
-            iGrp[nwgmax + 10] = 2;
+            iGrp[nwgmax + IGroup::GConProdCMode] = 2;
             break;
         case Opm::Group::ProductionCMode::GRAT:
-            iGrp[nwgmax + 10] = 3;
+            iGrp[nwgmax + IGroup::GConProdCMode] = 3;
             break;
         case Opm::Group::ProductionCMode::LRAT:
-            iGrp[nwgmax + 10] = 4;
+            iGrp[nwgmax + IGroup::GConProdCMode] = 4;
             break;
         case Opm::Group::ProductionCMode::RESV:
-            iGrp[nwgmax + 10] = 5;
+            iGrp[nwgmax + IGroup::GConProdCMode] = 5;
             break;
         case Opm::Group::ProductionCMode::FLD:
-            iGrp[nwgmax + 10] = 0;
+            iGrp[nwgmax + IGroup::GConProdCMode] = 0;
             break;
         default:
-            iGrp[nwgmax + 10] = 0;
+            iGrp[nwgmax + IGroup::GConProdCMode] = 0;
         }
         return;
     }
