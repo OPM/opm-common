@@ -16,39 +16,27 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef WLISTMANAGER_HPP
-#define WLISTMANAGER_HPP
+#ifndef WELL_MATCHER_HPP
+#define WELL_MATCHER_HPP
 
-#include <cstddef>
-#include <map>
 #include <vector>
 #include <string>
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/WList.hpp>
+
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/WListManager.hpp>
 
 namespace Opm {
 
-class WListManager {
+class WellMatcher {
 public:
-    WListManager() = default;
-
-    static WListManager serializeObject();
-
-    bool hasList(const std::string&) const;
-    WList& getList(const std::string& name);
-    const WList& getList(const std::string& name) const;
-    WList& newList(const std::string& name);
-    void delWell(const std::string& well);
-
-    bool operator==(const WListManager& data) const;
-    std::vector<std::string> wells(const std::string& wlist_pattern) const;
-    template<class Serializer>
-    void serializeOp(Serializer& serializer)
-    {
-        serializer.map(wlists);
-    }
+    WellMatcher() = default;
+    explicit WellMatcher(const std::vector<std::string>& wells);
+    WellMatcher(const std::vector<std::string>& wells, const WListManager& wlm);
+    const std::vector<std::string>& wells() const;
+    std::vector<std::string> wells(const std::string& pattern) const;
 
 private:
-    std::map<std::string, WList> wlists;
+    std::vector<std::string> m_wells;
+    WListManager m_wlm;
 };
 
 }

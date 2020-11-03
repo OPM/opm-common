@@ -29,6 +29,7 @@
 
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQParams.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQSet.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/WellMatcher.hpp>
 
 namespace Opm {
     class SummaryState;
@@ -37,7 +38,7 @@ namespace Opm {
 
     class UDQContext{
     public:
-        UDQContext(const UDQFunctionTable& udqft, SummaryState& summary_state, UDQState& udq_state);
+        UDQContext(const UDQFunctionTable& udqft, const WellMatcher& wm, SummaryState& summary_state, UDQState& udq_state);
         std::optional<double> get(const std::string& key) const;
         std::optional<double> get_well_var(const std::string& well, const std::string& var) const;
         std::optional<double> get_group_var(const std::string& group, const std::string& var) const;
@@ -46,9 +47,11 @@ namespace Opm {
         void update_define(const std::string& keyword, const UDQSet& udq_result);
         const UDQFunctionTable& function_table() const;
         std::vector<std::string> wells() const;
+        std::vector<std::string> wells(const std::string& pattern) const;
         std::vector<std::string> groups() const;
     private:
         const UDQFunctionTable& udqft;
+        WellMatcher well_matcher;
         SummaryState& summary_state;
         UDQState& udq_state;
         //std::unordered_map<std::string, UDQSet> udq_results;

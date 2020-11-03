@@ -302,9 +302,9 @@ namespace Opm {
                this->type_count == data.type_count;
     }
 
-    void UDQConfig::eval(std::size_t report_step, SummaryState& st, UDQState& udq_state) const {
+    void UDQConfig::eval(std::size_t report_step, const WellMatcher& wm, SummaryState& st, UDQState& udq_state) const {
         const auto& func_table = this->function_table();
-        UDQContext context(func_table, st, udq_state);
+        UDQContext context(func_table, wm, st, udq_state);
 
         for (const auto& assign : this->assignments(UDQVarType::WELL_VAR)) {
             if (udq_state.assign(report_step, assign.keyword())) {

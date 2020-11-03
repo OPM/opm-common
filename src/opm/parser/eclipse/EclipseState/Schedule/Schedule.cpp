@@ -1050,41 +1050,25 @@ private:
 
 
     std::vector<std::string> Schedule::wellNames(const std::string& pattern, std::size_t timeStep, const std::vector<std::string>& matching_wells) const {
-        if (pattern.size() == 0)
-            return {};
-
-        // WLIST
-        if (pattern[0] == '*' && pattern.size() > 1) {
-            const auto& wlm = this->getWListManager(timeStep);
-            return wlm.wells(pattern);
-        }
-
-        // Normal pattern matching
-        auto star_pos = pattern.find('*');
-        if (star_pos != std::string::npos) {
-            std::vector<std::string> names;
-            for (const auto& well_pair : this->wells_static) {
-                if (name_match(pattern, well_pair.first)) {
-                    const auto& dynamic_state = well_pair.second;
-                    if (dynamic_state.get(timeStep))
-                        names.push_back(well_pair.first);
-                }
-            }
-            return names;
-        }
-
         // ACTIONX handler
         if (pattern == "?")
             return { matching_wells.begin(), matching_wells.end() };
 
-        // Normal well name without any special characters
-        if (this->hasWell(pattern)) {
-            const auto& dynamic_state = this->wells_static.at(pattern);
-            if (dynamic_state.get(timeStep))
-                return { pattern };
-        }
-        return {};
+        auto wm = this->wellMatcher(timeStep);
+        return wm.wells(pattern);
     }
+
+
+    WellMatcher Schedule::wellMatcher(std::size_t report_step) const {
+        std::vector<std::string> wnames;
+        for (const auto& well_pair : this->wells_static) {
+            const auto& dynamic_state = well_pair.second;
+            if (dynamic_state.get(report_step))
+                wnames.push_back(well_pair.first);
+        }
+        return WellMatcher(wnames, this->getWListManager(report_step));
+    }
+
 
     std::vector<std::string> Schedule::wellNames(const std::string& pattern) const {
         return this->wellNames(pattern, this->size() - 1);
