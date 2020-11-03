@@ -506,14 +506,18 @@ namespace {
         }
     }
 
-    void Schedule::handleGLIFTOPT(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard&errors) {
-        auto glo = std::make_shared<GasLiftOpt>( this->glo(handlerContext.currentStep) );
+    void Schedule::handleGLIFTOPT(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+        this->handleGLIFTOPT(handlerContext.keyword, handlerContext.currentStep, parseContext, errors);
+    }
 
-        for (const auto& record : handlerContext.keyword) {
+    void Schedule::handleGLIFTOPT(const DeckKeyword& keyword, std::size_t report_step, const ParseContext& parseContext, ErrorGuard&errors) {
+        auto glo = std::make_shared<GasLiftOpt>( this->glo(report_step) );
+
+        for (const auto& record : keyword) {
             const std::string& groupNamePattern = record.getItem<ParserKeywords::GLIFTOPT::GROUP_NAME>().getTrimmedString(0);
             const auto group_names = this->groupNames(groupNamePattern);
             if (group_names.empty())
-                invalidNamePattern(groupNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
+                invalidNamePattern(groupNamePattern, report_step, parseContext, errors, handlerContext.keyword);
 
             const auto& max_gas_item = record.getItem<ParserKeywords::GLIFTOPT::MAX_LIFT_GAS_SUPPLY>();
             const double max_lift_gas_value = max_gas_item.hasValue(0)
@@ -534,7 +538,7 @@ namespace {
             }
         }
 
-        this->m_glo.update(handlerContext.currentStep, std::move(glo));
+        this->m_glo.update(report_step, std::move(glo));
     }
 
     void Schedule::handleGPMAINT(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
