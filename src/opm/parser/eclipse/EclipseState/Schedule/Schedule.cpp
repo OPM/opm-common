@@ -1515,6 +1515,9 @@ private:
 
             if (keyword.name() == "GCONPROD")
                 this->handleGCONPROD(keyword, reportStep, parseContext, errors);
+
+            if (keyword.name() == "GLIFTOPT")
+                this->handleGLIFTOPT(keyword, reportStep, parseContext, errors);
         }
     }
 
