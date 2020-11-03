@@ -100,7 +100,7 @@ int main(int argc, char ** argv) {
         const auto& sched = load_schedule(python, argv[1]);
         const auto& rst_sched = load_schedule(python, argv[2], report_step);
 
-        if (Opm::Schedule::cmp(sched, rst_sched, report_step) ) {
+        if (Opm::Schedule::cmp(sched, rst_sched, static_cast<std::size_t>(report_step)) ) {
             std::cout << "Schedule objects were equal!" << std::endl;
             std::exit( EXIT_SUCCESS );
         } else {
