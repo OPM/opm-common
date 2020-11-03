@@ -27,7 +27,10 @@ namespace Opm {
 
     class PvtsolTable : public PvtxTable {
     public:
+        PvtsolTable() = default;
         PvtsolTable(const DeckKeyword& keyword, size_t tableIdx);
+        static PvtsolTable serializeObject();
+        bool operator==(const PvtsolTable& data) const;
     };
 }
 

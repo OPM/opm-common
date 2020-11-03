@@ -243,6 +243,17 @@ PvtsolTable::PvtsolTable( const DeckKeyword& keyword, size_t tableIdx) :
         PvtxTable::init(keyword , tableIdx);
     }
 
+PvtsolTable PvtsolTable::serializeObject() {
+    PvtsolTable result;
+    static_cast<PvtxTable&>(result) = PvtxTable::serializeObject();
+
+    return result;
+}
+
+bool PvtsolTable::operator==(const PvtsolTable& data) const {
+    return static_cast<const PvtxTable&>(*this) == static_cast<const PvtxTable&>(data);
+}
+
 SpecheatTable::SpecheatTable(const DeckItem& item)
 {
     m_schema.addColumn(ColumnSchema("TEMPERATURE", Table::STRICTLY_INCREASING, Table::DEFAULT_NONE));
