@@ -981,3 +981,62 @@ TSTEP
         BOOST_CHECK_CLOSE( prod.oil_target , unit_system.to_si(UnitSystem::measure::liquid_surface_rate, 200), 1e-5 );
     }
 }
+
+BOOST_AUTO_TEST_CASE(GASLIFT_OPT_DECK) {
+    const auto input = R"(-- Turns on gas lift optimization
+RUNSPEC
+LIFTOPT
+/
+
+SCHEDULE
+
+GRUPTREE
+ 'PROD'    'FIELD' /
+
+ 'M5S'    'PLAT-A'  /
+ 'M5N'    'PLAT-A'  /
+
+ 'C1'     'M5N'  /
+ 'F1'     'M5N'  /
+ 'B1'     'M5S'  /
+ 'G1'     'M5S'  /
+ /
+
+ACTIONX
+'A' /
+WWCT 'OPX'     > 0.75    AND /
+FPR < 100 /
+/
+
+GLIFTOPT
+ 'PLAT-A'  200000 /  --
+/
+
+ENDACTIO
+
+TSTEP
+10 /
+
+
+)";
+
+    Opm::UnitSystem unitSystem = UnitSystem( UnitSystem::UnitType::UNIT_TYPE_METRIC );
+    auto sched = make_schedule(input);
+    const auto& action1 = sched.actions(0).get("A");
+    {
+        const auto& glo = sched.glo(0);
+        BOOST_CHECK(!glo.has_group("PLAT-A"));
+    }
+
+    Action::Result action_result(true);
+    sched.applyAction(0, action1, action_result);
+
+    {
+        const auto& glo = sched.glo(0);
+        BOOST_CHECK(glo.has_group("PLAT-A"));
+        const auto& plat_group = glo.group("PLAT-A");
+        BOOST_CHECK_EQUAL( *plat_group.max_lift_gas(), unitSystem.to_si( UnitSystem::measure::gas_surface_rate, 200000));
+        BOOST_CHECK(!plat_group.max_total_gas().has_value());
+    }
+
+}
