@@ -156,50 +156,38 @@ bool groupProductionControllable(const Opm::Schedule& sched, const Opm::SummaryS
     }
 }
 
-bool groupInjectionControllable(const Opm::Schedule& sched, const Opm::SummaryState& sumState, const Opm::Group& group, const Opm::Phase& iPhase, const size_t simStep)
+void groupInjectionControllable(const Opm::Schedule& sched, const Opm::SummaryState& sumState, const Opm::Group& group, const Opm::Phase& iPhase, const size_t simStep, bool& controllable)
 {
     using wellCtrlMode   = ::Opm::RestartIO::Helpers::VectorItems::IWell::Value::WellCtrlMode;
-    bool controllable = false;
-    if (group.defined( simStep )) {
-        if (!group.wellgroup()) {
-            if(!group.groups().empty()) {
-                for (const auto& group_name : group.groups()) {
-                    if (groupInjectionControllable(sched, sumState, sched.getGroup(group_name, simStep), iPhase, simStep)) {
-                        controllable = true;
-                        continue;
-                    }
-                }
+    if (controllable)
+        return;
+
+    for (const auto& group_name : group.groups())
+        groupInjectionControllable(sched, sumState, sched.getGroup(group_name, simStep), iPhase, simStep, controllable);
+
+    for (const auto& well_name : group.wells()) {
+        const auto& well = sched.getWell(well_name, simStep);
+        if (well.isInjector() && iPhase == well.wellType().injection_phase()) {
+            int cur_inj_ctrl = 0;
+            // Find control mode for well
+            const std::string sum_key = "WMCTL";
+            if (sumState.has_well_var(well_name, sum_key)) {
+                cur_inj_ctrl = static_cast<int>(sumState.get_well_var(well_name, sum_key));
+            }
+
+            if (cur_inj_ctrl == wellCtrlMode::Group) {
+                controllable = true;
+                return;
             }
         }
-        else {
-            for (const auto& well_name : group.wells()) {
-                const auto& well = sched.getWell(well_name, simStep);
-                if (well.isInjector()) {
-                    if (((iPhase == Opm::Phase::WATER) && (well.injectionControls(sumState).injector_type ==  Opm::InjectorType::WATER)) ||
-                        ((iPhase == Opm::Phase::GAS) && (well.injectionControls(sumState).injector_type ==  Opm::InjectorType::GAS))
-                    ) {
-                        int cur_inj_ctrl = 0;
-                        // Find control mode for well
-                        std::string well_key_1 = "WMCTL:" + well_name;
-                        if (sumState.has(well_key_1)) {
-                            cur_inj_ctrl = static_cast<int>(sumState.get(well_key_1));
-                        }
-                        if (cur_inj_ctrl == wellCtrlMode::Group) {
-                            controllable = true;
-                            continue;
-                        }
-                    }
-                }
-            }
-        }
-        return controllable;
-    } else {
-        std::stringstream str;
-        str << "actual group has not been defined at report time: " << simStep;
-        throw std::invalid_argument(str.str());
     }
 }
 
+bool groupInjectionControllable(const Opm::Schedule& sched, const Opm::SummaryState& sumState, const Opm::Group& group, const Opm::Phase& iPhase, const size_t simStep) {
+    bool controllable = false;
+    groupInjectionControllable(sched, sumState, group, iPhase, simStep, controllable);
+    return controllable;
+}
 
 
 int higherLevelProdControlGroupSeqIndex(const Opm::Schedule& sched,
