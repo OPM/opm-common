@@ -183,79 +183,24 @@ bool groupInjectionControllable(const Opm::Schedule& sched, const Opm::SummarySt
     return controllable;
 }
 
+/*
+  Searches upwards in the group tree for the first parent group with active
+  control different from NONE and FLD. The function will return an empty
+  optional if no such group can be found.
+*/
 
-int higherLevelProdControlGroupSeqIndex(const Opm::Schedule& sched,
-                       const Opm::SummaryState& sumState,
-                       const Opm::Group& group,
-                       const size_t simStep)
-//
-// returns the sequence number of higher (highest) level group with active control different from (NONE or FLD)
-//
-{
-    int ctrl_grup_seq_no = -1;
-    if (group.defined( simStep )) {
-        auto current = group;
-        double cur_prod_ctrl = -1.;
-        while (current.name() != "FIELD" && ctrl_grup_seq_no < 0) {
-            current = sched.getGroup(current.parent(), simStep);
-            cur_prod_ctrl = -1.;
-            if (sumState.has_group_var(current.name(), "GMCTP")) {
-                cur_prod_ctrl = sumState.get_group_var(current.name(), "GMCTP");
-            }
-            else {
-#if ENABLE_GCNTL_DEBUG_OUTPUT
-                std::cout << "Current group control is not defined for group: " << current.name() << " at timestep: " << simStep  << std::endl;
-#endif // ENABLE_GCNTL_DEBUG_OUTPUT
-                cur_prod_ctrl = 0.;
-            }
-            if (cur_prod_ctrl > 0. && ctrl_grup_seq_no < 0) {
-                ctrl_grup_seq_no = current.insert_index();
-            }
-        }
-        return ctrl_grup_seq_no;
+std::optional<Opm::Group> controlGroup(const Opm::Schedule& sched,
+                                       const Opm::SummaryState& sumState,
+                                       const Opm::Group& group,
+                                       const std::size_t simStep) {
+    auto current = group;
+    while (current.name() != "FIELD") {
+        current = sched.getGroup(current.parent(), simStep);
+        auto cur_prod_ctrl = sumState.get_group_var(current.name(), "GMCTP", 0);
+        if (cur_prod_ctrl > 0)
+            return current;
     }
-    else {
-        std::stringstream str;
-        str << "actual group has not been defined at report time: " << simStep;
-        throw std::invalid_argument(str.str());
-    }
-}
-
-int higherLevelProdControlMode(const Opm::Schedule& sched,
-                       const Opm::SummaryState& sumState,
-                       const Opm::Group& group,
-                       const size_t simStep)
-//
-// returns the sequence number of higher (highest) level group with active control different from (NONE or FLD)
-//
-{
-    int ctrl_mode = -1;
-    if (group.defined( simStep )) {
-        auto current = group;
-        double  cur_prod_ctrl = -1.;
-        while (current.name() != "FIELD" && ctrl_mode < 0.) {
-            current = sched.getGroup(current.parent(), simStep);
-            cur_prod_ctrl = -1.;
-            if (sumState.has_group_var(current.name(), "GMCTP")) {
-                cur_prod_ctrl = sumState.get_group_var(current.name(), "GMCTP");
-            }
-            else {
-#if ENABLE_GCNTL_DEBUG_OUTPUT
-                std::cout << "Current group control is not defined for group: " << current.name() << " at timestep: " << simStep  << std::endl;
-#endif // ENABLE_GCNTL_DEBUG_OUTPUT
-                cur_prod_ctrl = 0.;
-            }
-            if (cur_prod_ctrl > 0. && ctrl_mode < 0) {
-                ctrl_mode = static_cast<int>(cur_prod_ctrl);
-            }
-        }
-        return ctrl_mode;
-    }
-    else {
-        std::stringstream str;
-        str << "actual group has not been defined at report time: " << simStep;
-        throw std::invalid_argument(str.str());
-    }
+    return {};
 }
 
 
@@ -494,25 +439,30 @@ void productionGroup(const Opm::Schedule&     sched,
 
     */
     // default value
+
     iGrp[nwgmax + 5] = -1;
-    const int higher_lev_ctrl = higherLevelProdControlGroupSeqIndex(sched, sumState, group, simStep);
-    const int higher_lev_ctrl_mode = higherLevelProdControlMode(sched, sumState, group, simStep);
+    const auto& cgroup = controlGroup(sched, sumState, group, simStep);
     const auto& deck_cmode = group.gconprod_cmode();
     // Start branching for determining iGrp[nwgmax + 5]
     // use default value if group is not available for group control
+
+    if (cgroup && cgroup->name() == "FIELD")
+        throw std::logic_error("Got cgroup == FIELD - uncertain logic");
+
+
     if (groupProductionControllable(sched, sumState, group, simStep)) {
         // this section applies if group is controllable - i.e. has wells that may be controlled
-        if (!group.productionGroupControlAvailable() && (higher_lev_ctrl <= 0)) {
+        if (!group.productionGroupControlAvailable() && (!cgroup)) {
             // group can respond to higher level control
             iGrp[nwgmax + 5] = 0;
-        } else if (((active_cmode != Opm::Group::ProductionCMode::NONE)) && (higher_lev_ctrl < 0)) {
+        } else if (((active_cmode != Opm::Group::ProductionCMode::NONE)) && (!cgroup)) {
             // group is constrained by its own limits or controls
             // if (active_cmode != Opm::Group::ProductionCMode::FLD)  -  need to use this test? - else remove
             iGrp[nwgmax + 5] = -1; // only value that seems to work when no group at higher level has active control
-        } else if (higher_lev_ctrl > 0) {
+        } else if (cgroup) {
             if (((deck_cmode == Opm::Group::ProductionCMode::FLD) || (deck_cmode == Opm::Group::ProductionCMode::NONE))
                 && (prod_guide_rate_def != Opm::Group::GuideRateTarget::NO_GUIDE_RATE)) {
-                iGrp[nwgmax + 5] = higher_lev_ctrl;
+                iGrp[nwgmax + 5] = cgroup->insert_index();
             } else {
                 iGrp[nwgmax + 5] = 1;
             }
@@ -549,9 +499,10 @@ void productionGroup(const Opm::Schedule&     sched,
     Other reduction options are currently not covered in the code
     */
 
-    if (higher_lev_ctrl > 0 && (group.getGroupType() != Opm::Group::GroupType::NONE)) {
+    if (cgroup && (group.getGroupType() != Opm::Group::GroupType::NONE)) {
+        auto cgroup_control = static_cast<int>(sumState.get_group_var(cgroup->name(), "GMCTP", 0));
         iGrp[nwgmax + IGroup::ProdActiveCMode]
-            = (prod_guide_rate_def != Opm::Group::GuideRateTarget::NO_GUIDE_RATE) ? higher_lev_ctrl_mode : 0;
+            = (prod_guide_rate_def != Opm::Group::GuideRateTarget::NO_GUIDE_RATE) ? cgroup_control : 0;
     } else {
         switch (active_cmode) {
         case Opm::Group::ProductionCMode::NONE:
@@ -604,7 +555,7 @@ void productionGroup(const Opm::Schedule&     sched,
         iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? -4 : 4; // need to be checked
         break;
     case Opm::Group::ProductionCMode::FLD:
-        if ((higher_lev_ctrl > 0) && (prod_guide_rate_def != Opm::Group::GuideRateTarget::NO_GUIDE_RATE)) {
+        if (cgroup && (prod_guide_rate_def != Opm::Group::GuideRateTarget::NO_GUIDE_RATE)) {
             iGrp[nwgmax + IGroup::GuideRateDef] = Value::GuideRateMode::Form;
         }
         iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? 4 : 4;
