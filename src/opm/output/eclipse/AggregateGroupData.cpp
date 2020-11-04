@@ -116,45 +116,39 @@ int currentGroupLevel(const Opm::Schedule& sched, const Opm::Group& group, const
     }
 }
 
-bool groupProductionControllable(const Opm::Schedule& sched, const Opm::SummaryState& sumState, const Opm::Group& group, const size_t simStep)
+void groupProductionControllable(const Opm::Schedule& sched, const Opm::SummaryState& sumState, const Opm::Group& group, const size_t simStep, bool& controllable)
 {
     using wellCtrlMode   = ::Opm::RestartIO::Helpers::VectorItems::IWell::Value::WellCtrlMode;
-    bool controllable = false;
-    if (group.defined( simStep )) {
-        if (!group.wellgroup()) {
-            if(!group.groups().empty()) {
-                for (const auto& group_name : group.groups()) {
-                    if (groupProductionControllable(sched, sumState, sched.getGroup(group_name, simStep), simStep)) {
-                        controllable = true;
-                        continue;
-                    }
-                }
+    if (controllable)
+        return;
+
+    for (const auto& group_name : group.groups())
+        groupProductionControllable(sched, sumState, sched.getGroup(group_name, simStep), simStep, controllable);
+
+    for (const auto& well_name : group.wells()) {
+        const auto& well = sched.getWell(well_name, simStep);
+        if (well.isProducer()) {
+            int cur_prod_ctrl = 0;
+            // Find control mode for well
+            const std::string sum_key = "WMCTL";
+            if (sumState.has_well_var(well_name, sum_key)) {
+                cur_prod_ctrl = static_cast<int>(sumState.get_well_var(well_name, sum_key));
+            }
+            if (cur_prod_ctrl == wellCtrlMode::Group) {
+                controllable = true;
+                return;
             }
         }
-        else {
-            for (const auto& well_name : group.wells()) {
-                const auto& well = sched.getWell(well_name, simStep);
-                if (well.isProducer()) {
-                    int cur_prod_ctrl = 0;
-                    // Find control mode for well
-                    std::string well_key_1 = "WMCTL:" + well_name;
-                    if (sumState.has(well_key_1)) {
-                        cur_prod_ctrl = static_cast<int>(sumState.get(well_key_1));
-                    }
-                    if (cur_prod_ctrl == wellCtrlMode::Group) {
-                        controllable = true;
-                        continue;
-                    }
-                }
-            }
-        }
-        return controllable;
-    } else {
-        std::stringstream str;
-        str << "actual group has not been defined at report time: " << simStep;
-        throw std::invalid_argument(str.str());
     }
 }
+
+
+bool groupProductionControllable(const Opm::Schedule& sched, const Opm::SummaryState& sumState, const Opm::Group& group, const size_t simStep) {
+    bool controllable = false;
+    groupProductionControllable(sched, sumState, group, simStep, controllable);
+    return controllable;
+}
+
 
 void groupInjectionControllable(const Opm::Schedule& sched, const Opm::SummaryState& sumState, const Opm::Group& group, const Opm::Phase& iPhase, const size_t simStep, bool& controllable)
 {
