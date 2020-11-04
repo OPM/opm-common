@@ -421,7 +421,7 @@ private:
                             restart_skip = false;
                             currentStep = time_map.restart_offset();
                             logger.restart();
-                            logger(fmt::format("Found restart date {}", Schedule::formatDate(deck_time)));
+                            logger(fmt::format("Found restart date: {} report: {}", Schedule::formatDate(deck_time), time_map.restart_offset()));
                         } else
                             logger(fmt::format("Skipping DATES keyword {}", Schedule::formatDate(deck_time)));
                     } else {
@@ -1684,9 +1684,9 @@ namespace {
             this->addWell(well, report_step);
             this->addWellToGroup(well.groupName(), well.name(), report_step);
         }
+        m_tuning.update(report_step + 1, rst_state.tuning);
+        m_events.addEvent( ScheduleEvents::TUNING_CHANGE , report_step + 1);
 
-        m_tuning.update(report_step, rst_state.tuning);
-        m_events.addEvent( ScheduleEvents::TUNING_CHANGE , report_step);
 
         {
             const auto& header = rst_state.header;
