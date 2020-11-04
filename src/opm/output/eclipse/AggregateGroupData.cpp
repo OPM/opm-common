@@ -453,16 +453,13 @@ void productionGroup(const Opm::Schedule&     sched,
 
     const auto& production_controls = group.productionControls(sumState);
     const auto& prod_guide_rate_def = production_controls.guide_rate_def;
-    const auto& p_exceed_act = production_controls.exceed_action;
-    // Find production control mode for group
-    const double cur_prod_ctrl = sumState.get_group_var(group.name(), "GMCTP", -1);
     Opm::Group::ProductionCMode active_cmode = Opm::Group::ProductionCMode::NONE;
-    if (cur_prod_ctrl >= 0) {
-        const auto it_ctrl = pCtrlToPCmode.find(cur_prod_ctrl);
-        if (it_ctrl != pCtrlToPCmode.end()) {
-            active_cmode = it_ctrl->second;
-        }
+    {
+        auto cur_prod_ctrl = sumState.get_group_var(group.name(), "GMCTP", -1);
+        if (cur_prod_ctrl >= 0)
+            active_cmode = pCtrlToPCmode.at(static_cast<int>(cur_prod_ctrl));
     }
+
 #if ENABLE_GCNTL_DEBUG_OUTPUT
     else {
         // std::stringstream str;
@@ -586,6 +583,7 @@ void productionGroup(const Opm::Schedule&     sched,
 
     iGrp[nwgmax + IGroup::GuideRateDef] = Value::GuideRateMode::None;
 
+    const auto& p_exceed_act = production_controls.exceed_action;
     switch (deck_cmode) {
     case Opm::Group::ProductionCMode::NONE:
         iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? 0 : 4;
