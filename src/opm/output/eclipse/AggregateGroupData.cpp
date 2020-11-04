@@ -456,11 +456,11 @@ void productionGroup(const Opm::Schedule&     sched,
     const auto& p_exceed_act = production_controls.exceed_action;
     // Find production control mode for group
     const double cur_prod_ctrl = sumState.get_group_var(group.name(), "GMCTP", -1);
-    Opm::Group::ProductionCMode pctl_mode = Opm::Group::ProductionCMode::NONE;
+    Opm::Group::ProductionCMode active_cmode = Opm::Group::ProductionCMode::NONE;
     if (cur_prod_ctrl >= 0) {
         const auto it_ctrl = pCtrlToPCmode.find(cur_prod_ctrl);
         if (it_ctrl != pCtrlToPCmode.end()) {
-            pctl_mode = it_ctrl->second;
+            active_cmode = it_ctrl->second;
         }
     }
 #if ENABLE_GCNTL_DEBUG_OUTPUT
@@ -508,9 +508,9 @@ void productionGroup(const Opm::Schedule&     sched,
         if (!group.productionGroupControlAvailable() && (higher_lev_ctrl <= 0)) {
             // group can respond to higher level control
             iGrp[nwgmax + 5] = 0;
-        } else if (((pctl_mode != Opm::Group::ProductionCMode::NONE)) && (higher_lev_ctrl < 0)) {
+        } else if (((active_cmode != Opm::Group::ProductionCMode::NONE)) && (higher_lev_ctrl < 0)) {
             // group is constrained by its own limits or controls
-            // if (pctl_mode != Opm::Group::ProductionCMode::FLD)  -  need to use this test? - else remove
+            // if (active_cmode != Opm::Group::ProductionCMode::FLD)  -  need to use this test? - else remove
             iGrp[nwgmax + 5] = -1; // only value that seems to work when no group at higher level has active control
         } else if (higher_lev_ctrl > 0) {
             if (((deck_cmode == Opm::Group::ProductionCMode::FLD) || (deck_cmode == Opm::Group::ProductionCMode::NONE))
@@ -556,7 +556,7 @@ void productionGroup(const Opm::Schedule&     sched,
         iGrp[nwgmax + IGroup::ProdActiveCMode]
             = (prod_guide_rate_def != Opm::Group::GuideRateTarget::NO_GUIDE_RATE) ? higher_lev_ctrl_mode : 0;
     } else {
-        switch (pctl_mode) {
+        switch (active_cmode) {
         case Opm::Group::ProductionCMode::NONE:
             iGrp[nwgmax + IGroup::ProdActiveCMode] = 0;
             break;
