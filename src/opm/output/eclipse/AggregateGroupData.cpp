@@ -451,9 +451,9 @@ void productionGroup(const Opm::Schedule&     sched,
         return;
     }
 
-
-    const auto& prod_guide_rate_def = group.productionControls(sumState).guide_rate_def;
-    const auto& p_exceed_act = group.productionControls(sumState).exceed_action;
+    const auto& production_controls = group.productionControls(sumState);
+    const auto& prod_guide_rate_def = production_controls.guide_rate_def;
+    const auto& p_exceed_act = production_controls.exceed_action;
     // Find production control mode for group
     const double cur_prod_ctrl = sumState.get_group_var(group.name(), "GMCTP", -1);
     Opm::Group::ProductionCMode pctl_mode = Opm::Group::ProductionCMode::NONE;
@@ -514,7 +514,7 @@ void productionGroup(const Opm::Schedule&     sched,
             iGrp[nwgmax + 5] = -1; // only value that seems to work when no group at higher level has active control
         } else if (higher_lev_ctrl > 0) {
             if (((prod_cmode == Opm::Group::ProductionCMode::FLD) || (prod_cmode == Opm::Group::ProductionCMode::NONE))
-                && (group.productionControls(sumState).guide_rate_def != Opm::Group::GuideRateTarget::NO_GUIDE_RATE)) {
+                && (prod_guide_rate_def != Opm::Group::GuideRateTarget::NO_GUIDE_RATE)) {
                 iGrp[nwgmax + 5] = higher_lev_ctrl;
             } else {
                 iGrp[nwgmax + 5] = 1;
