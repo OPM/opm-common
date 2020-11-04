@@ -395,20 +395,6 @@ int higherLevelInjCMode_NotNoneFld_SeqIndex(const Opm::Schedule& sched,
 }
 
 
-int groupType(const Opm::Group& group) {
-    if (group.wellgroup())
-        return 0;
-    else
-        return 1;
-}
-
-
-std::size_t groupSize(const Opm::Group& group) {
-    if (group.wellgroup())
-        return group.wells().size();
-    else
-        return group.groups().size();
-}
 
 namespace IGrp {
 std::size_t entriesPerGroup(const std::vector<int>& inteHead)
@@ -659,6 +645,7 @@ void injectionGroup(const Opm::Schedule&     sched,
     auto group_parent_list = groupParentSeqIndex(sched, group, simStep);
     using IGroup = ::Opm::RestartIO::Helpers::VectorItems::IGroup::index;
 
+
     // set "default value" in case a group is only injection group
     if (group.isInjectionGroup() && !group.isProductionGroup()) {
         iGrp[nwgmax + 5] = 1;
@@ -827,6 +814,67 @@ void injectionGroup(const Opm::Schedule&     sched,
     }
 }
 
+template <class IGrpArray>
+void storeGroupTree(const Opm::Schedule& sched,
+                    const Opm::Group& group,
+                    const int nwgmax,
+                    const int ngmaxz,
+                    const std::size_t simStep,
+                    IGrpArray& iGrp) {
+
+    namespace Value = ::Opm::RestartIO::Helpers::VectorItems::IGroup::Value;
+    using IGroup = ::Opm::RestartIO::Helpers::VectorItems::IGroup::index;
+    const bool is_field = group.name() == "FIELD";
+
+    // Store index of all child wells or child groups.
+    if (group.wellgroup()) {
+        int igrpCount = 0;
+        for (const auto& well_name : group.wells()) {
+            const auto& well = sched.getWell(well_name, simStep);
+            iGrp[igrpCount] = well.seqIndex() + 1;
+            igrpCount += 1;
+        }
+        iGrp[nwgmax] = group.wells().size();
+        iGrp[nwgmax + IGroup::GroupType] = Value::GroupType::WellGroup;
+    } else  {
+        int igrpCount = 0;
+        for (const auto& group_name : group.groups()) {
+            const auto& child_group = sched.getGroup(group_name, simStep);
+            iGrp[igrpCount] = child_group.insert_index();
+            igrpCount += 1;
+        }
+        iGrp[nwgmax] = group.groups().size();
+        iGrp[nwgmax + IGroup::GroupType] = Value::GroupType::TreeGroup;
+    }
+
+
+    // Store index of parent group
+    if (is_field)
+        iGrp[nwgmax + IGroup::ParentGroup] = 0;
+    else {
+        const auto& parent_group = sched.getGroup(group.parent(), simStep);
+        if (parent_group.name() == "FIELD")
+            iGrp[nwgmax + IGroup::ParentGroup] = ngmaxz;
+        else
+            iGrp[nwgmax + IGroup::ParentGroup] = parent_group.insert_index();
+    }
+
+    iGrp[nwgmax + IGroup::GroupLevel] = currentGroupLevel(sched, group, simStep);
+}
+
+
+template <class IGrpArray>
+void storeFlowingWells(const Opm::Group&        group,
+                       const int                nwgmax,
+                       const Opm::SummaryState& sumState,
+                       IGrpArray&               iGrp) {
+    using IGroup = ::Opm::RestartIO::Helpers::VectorItems::IGroup::index;
+    const bool is_field = group.name() == "FIELD";
+    const double g_act_pwells = is_field ? sumState.get("FMWPR", 0) : sumState.get_group_var(group.name(), "GMWPR", 0);
+    const double g_act_iwells = is_field ? sumState.get("FMWIN", 0) : sumState.get_group_var(group.name(), "GMWIN", 0);
+    iGrp[nwgmax + IGroup::FlowingWells] = static_cast<int>(g_act_pwells) + static_cast<int>(g_act_iwells);
+}
+
 
 template <class IGrpArray>
 void staticContrib(const Opm::Schedule&     sched,
@@ -839,54 +887,22 @@ void staticContrib(const Opm::Schedule&     sched,
                    const std::map<Opm::Group::InjectionCMode, int>& cmodeToNum,
                    IGrpArray&               iGrp)
 {
-    using IGroup = ::Opm::RestartIO::Helpers::VectorItems::IGroup::index;
     const bool is_field = group.name() == "FIELD";
-    if (group.wellgroup()) {
-        int igrpCount = 0;
-        //group has child wells
-        //store the well number (sequence index) in iGrp according to the sequence they are defined
-        for (const auto& well_name : group.wells()) {
-            const auto& well = sched.getWell(well_name, simStep);
-            iGrp[igrpCount] = well.seqIndex() + 1;
-            igrpCount += 1;
-        }
-    } else if (!group.groups().empty()) {
-        int igrpCount = 0;
-        for (const auto& group_name : group.groups()) {
-            const auto& child_group = sched.getGroup(group_name, simStep);
-            iGrp[igrpCount] = child_group.insert_index();
-            igrpCount += 1;
-        }
-    }
 
-    //assign the number of child wells or child groups to
-    // location nwgmax
-    iGrp[nwgmax] = groupSize(group);
+    storeGroupTree(sched, group, nwgmax, ngmaxz, simStep, iGrp);
+    storeFlowingWells(group, nwgmax, sumState, iGrp);
 
-    // Find number of active production wells and injection wells for group
-    const double g_act_pwells = is_field ? sumState.get("FMWPR", 0) : sumState.get_group_var(group.name(), "GMWPR", 0);
-    const double g_act_iwells = is_field ? sumState.get("FMWIN", 0) : sumState.get_group_var(group.name(), "GMWIN", 0);
-    iGrp[nwgmax + IGroup::FlowingWells] = g_act_pwells + g_act_iwells;
+    iGrp[nwgmax + 17] = -1;
+    iGrp[nwgmax + 22] = -1;
 
     // Treat al groups which are *not* pure injection groups.
     if (group.getGroupType() != Opm::Group::GroupType::INJECTION)
         productionGroup(sched, group, nwgmax, simStep, sumState, pCtrlToPCmode, iGrp);
 
-    //default value -
-    iGrp[nwgmax + 17] = -1;
-    iGrp[nwgmax + 22] = -1;
     // Treat al groups which are *not* pure production groups.
     if (group.getGroupType() != Opm::Group::GroupType::PRODUCTION)
         injectionGroup(sched, group, nwgmax, simStep, sumState, cmodeToNum, iGrp);
 
-    iGrp[nwgmax + 26] = groupType(group);
-
-    //find group level ("FIELD" is level 0) and store the level in
-    //location nwgmax + 27
-    iGrp[nwgmax+27] = currentGroupLevel(sched, group, simStep);
-
-    // set values for group probably connected to GCONPROD settings
-    //
     if (is_field)
     {
         //the maximum number of groups in the model
@@ -907,21 +923,6 @@ void staticContrib(const Opm::Schedule&     sched,
         iGrp[nwgmax+95] = group.insert_index();
         iGrp[nwgmax+96] = group.insert_index();
     }
-
-    //find parent group and store index of parent group in
-    //location nwgmax + IGroup::ParentGroup
-
-    using IGroup = ::Opm::RestartIO::Helpers::VectorItems::IGroup::index;
-    if (is_field)
-        iGrp[nwgmax + IGroup::ParentGroup] = 0;
-    else {
-        const auto& parent_group = sched.getGroup(group.parent(), simStep);
-        if (parent_group.name() == "FIELD")
-            iGrp[nwgmax + IGroup::ParentGroup] = ngmaxz;
-        else
-            iGrp[nwgmax + IGroup::ParentGroup] = parent_group.insert_index();
-    }
-
 }
 } // Igrp
 
