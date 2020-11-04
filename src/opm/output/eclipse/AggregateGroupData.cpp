@@ -415,6 +415,40 @@ allocate(const std::vector<int>& inteHead)
 
 
 
+template <class IGrpArray>
+void gconprodCMode(const Opm::Group& group,
+                   const int nwgmax,
+                   IGrpArray& iGrp) {
+    using IGroup = ::Opm::RestartIO::Helpers::VectorItems::IGroup::index;
+
+    const auto& prod_cmode = group.gconprod_cmode();
+    switch (prod_cmode) {
+    case Opm::Group::ProductionCMode::NONE:
+        iGrp[nwgmax + IGroup::GConProdCMode] = 0;
+        break;
+    case Opm::Group::ProductionCMode::ORAT:
+        iGrp[nwgmax + IGroup::GConProdCMode] = 1;
+        break;
+    case Opm::Group::ProductionCMode::WRAT:
+        iGrp[nwgmax + IGroup::GConProdCMode] = 2;
+        break;
+    case Opm::Group::ProductionCMode::GRAT:
+        iGrp[nwgmax + IGroup::GConProdCMode] = 3;
+        break;
+    case Opm::Group::ProductionCMode::LRAT:
+        iGrp[nwgmax + IGroup::GConProdCMode] = 4;
+        break;
+    case Opm::Group::ProductionCMode::RESV:
+        iGrp[nwgmax + IGroup::GConProdCMode] = 5;
+        break;
+    case Opm::Group::ProductionCMode::FLD:
+        iGrp[nwgmax + IGroup::GConProdCMode] = 0; // need to be checked!!
+        break;
+    default:
+        iGrp[nwgmax + IGroup::GConProdCMode] = 0; // need to be checked!!
+    }
+}
+
 
 template <class IGrpArray>
 void productionGroup(const Opm::Schedule&     sched,
@@ -427,35 +461,11 @@ void productionGroup(const Opm::Schedule&     sched,
 {
     using IGroup = ::Opm::RestartIO::Helpers::VectorItems::IGroup::index;
     namespace Value = ::Opm::RestartIO::Helpers::VectorItems::IGroup::Value;
-    const auto& prod_cmode = group.gconprod_cmode();
+    gconprodCMode(group, nwgmax, iGrp);
+
     if (group.name() == "FIELD") {
         iGrp[nwgmax + IGroup::GuideRateDef] = Value::GuideRateMode::None;
         iGrp[nwgmax + 7] = 0;
-        switch (prod_cmode) {
-        case Opm::Group::ProductionCMode::NONE:
-            iGrp[nwgmax + IGroup::GConProdCMode] = 0;
-            break;
-        case Opm::Group::ProductionCMode::ORAT:
-            iGrp[nwgmax + IGroup::GConProdCMode] = 1;
-            break;
-        case Opm::Group::ProductionCMode::WRAT:
-            iGrp[nwgmax + IGroup::GConProdCMode] = 2;
-            break;
-        case Opm::Group::ProductionCMode::GRAT:
-            iGrp[nwgmax + IGroup::GConProdCMode] = 3;
-            break;
-        case Opm::Group::ProductionCMode::LRAT:
-            iGrp[nwgmax + IGroup::GConProdCMode] = 4;
-            break;
-        case Opm::Group::ProductionCMode::RESV:
-            iGrp[nwgmax + IGroup::GConProdCMode] = 5;
-            break;
-        case Opm::Group::ProductionCMode::FLD:
-            iGrp[nwgmax + IGroup::GConProdCMode] = 0;
-            break;
-        default:
-            iGrp[nwgmax + IGroup::GConProdCMode] = 0;
-        }
         return;
     }
 
@@ -508,6 +518,7 @@ void productionGroup(const Opm::Schedule&     sched,
     iGrp[nwgmax + 5] = -1;
     const int higher_lev_ctrl = higherLevelProdControlGroupSeqIndex(sched, sumState, group, simStep);
     const int higher_lev_ctrl_mode = higherLevelProdControlMode(sched, sumState, group, simStep);
+    const auto& prod_cmode = group.gconprod_cmode();
     // Start branching for determining iGrp[nwgmax + 5]
     // use default value if group is not available for group control
     if (groupProductionControllable(sched, sumState, group, simStep)) {
@@ -592,41 +603,34 @@ void productionGroup(const Opm::Schedule&     sched,
     iGrp[nwgmax + 9] = iGrp[nwgmax + IGroup::ProdActiveCMode];
 
     iGrp[nwgmax + IGroup::GuideRateDef] = Value::GuideRateMode::None;
+
     switch (prod_cmode) {
     case Opm::Group::ProductionCMode::NONE:
         iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? 0 : 4;
-        iGrp[nwgmax + IGroup::GConProdCMode] = 0;
         break;
     case Opm::Group::ProductionCMode::ORAT:
         iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? -40000 : 4;
-        iGrp[nwgmax + IGroup::GConProdCMode] = 1;
         break;
     case Opm::Group::ProductionCMode::WRAT:
         iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? -4000 : 4;
-        iGrp[nwgmax + IGroup::GConProdCMode] = 2;
         break;
     case Opm::Group::ProductionCMode::GRAT:
         iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? -400 : 4;
-        iGrp[nwgmax + IGroup::GConProdCMode] = 3;
         break;
     case Opm::Group::ProductionCMode::LRAT:
         iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? -40 : 4;
-        iGrp[nwgmax + IGroup::GConProdCMode] = 4;
         break;
     case Opm::Group::ProductionCMode::RESV:
         iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? -4 : 4; // need to be checked
-        iGrp[nwgmax + IGroup::GConProdCMode] = 5;
         break;
     case Opm::Group::ProductionCMode::FLD:
         if ((higher_lev_ctrl > 0) && (prod_guide_rate_def != Opm::Group::GuideRateTarget::NO_GUIDE_RATE)) {
             iGrp[nwgmax + IGroup::GuideRateDef] = Value::GuideRateMode::Form;
         }
         iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? 4 : 4;
-        iGrp[nwgmax + IGroup::GConProdCMode] = 0; // need to be checked!!
         break;
     default:
         iGrp[nwgmax + 7] = 0;
-        iGrp[nwgmax + IGroup::GConProdCMode] = 0; // need to be checked!!
     }
 }
 
