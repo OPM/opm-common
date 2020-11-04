@@ -500,7 +500,7 @@ void productionGroup(const Opm::Schedule&     sched,
     iGrp[nwgmax + 5] = -1;
     const int higher_lev_ctrl = higherLevelProdControlGroupSeqIndex(sched, sumState, group, simStep);
     const int higher_lev_ctrl_mode = higherLevelProdControlMode(sched, sumState, group, simStep);
-    const auto& prod_cmode = group.gconprod_cmode();
+    const auto& deck_cmode = group.gconprod_cmode();
     // Start branching for determining iGrp[nwgmax + 5]
     // use default value if group is not available for group control
     if (groupProductionControllable(sched, sumState, group, simStep)) {
@@ -513,26 +513,26 @@ void productionGroup(const Opm::Schedule&     sched,
             // if (pctl_mode != Opm::Group::ProductionCMode::FLD)  -  need to use this test? - else remove
             iGrp[nwgmax + 5] = -1; // only value that seems to work when no group at higher level has active control
         } else if (higher_lev_ctrl > 0) {
-            if (((prod_cmode == Opm::Group::ProductionCMode::FLD) || (prod_cmode == Opm::Group::ProductionCMode::NONE))
+            if (((deck_cmode == Opm::Group::ProductionCMode::FLD) || (deck_cmode == Opm::Group::ProductionCMode::NONE))
                 && (prod_guide_rate_def != Opm::Group::GuideRateTarget::NO_GUIDE_RATE)) {
                 iGrp[nwgmax + 5] = higher_lev_ctrl;
             } else {
                 iGrp[nwgmax + 5] = 1;
             }
         } else if (higherLevelProdCMode_NotNoneFld(sched, group, simStep)) {
-            if (!((prod_cmode == Opm::Group::ProductionCMode::FLD)
-                  || (prod_cmode == Opm::Group::ProductionCMode::NONE))) {
+            if (!((deck_cmode == Opm::Group::ProductionCMode::FLD)
+                  || (deck_cmode == Opm::Group::ProductionCMode::NONE))) {
                 iGrp[nwgmax + 5] = -1;
             } else {
                 iGrp[nwgmax + 5] = 1;
             }
-        } else if ((prod_cmode == Opm::Group::ProductionCMode::FLD)
-                   || (prod_cmode == Opm::Group::ProductionCMode::NONE)) {
+        } else if ((deck_cmode == Opm::Group::ProductionCMode::FLD)
+                   || (deck_cmode == Opm::Group::ProductionCMode::NONE)) {
             iGrp[nwgmax + 5] = -1;
         } else {
             iGrp[nwgmax + 5] = -1;
         }
-    } else if (prod_cmode == Opm::Group::ProductionCMode::NONE) {
+    } else if (deck_cmode == Opm::Group::ProductionCMode::NONE) {
         iGrp[nwgmax + 5] = 1;
     }
 
@@ -586,7 +586,7 @@ void productionGroup(const Opm::Schedule&     sched,
 
     iGrp[nwgmax + IGroup::GuideRateDef] = Value::GuideRateMode::None;
 
-    switch (prod_cmode) {
+    switch (deck_cmode) {
     case Opm::Group::ProductionCMode::NONE:
         iGrp[nwgmax + 7] = (p_exceed_act == Opm::Group::ExceedAction::NONE) ? 0 : 4;
         break;
