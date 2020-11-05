@@ -526,6 +526,38 @@ inline quantity rate( const fn_args& args ) {
     return { sum, rate_unit< phase >() };
 }
 
+template< rt phase, bool injection = true >
+inline quantity ratel( const fn_args& args ) {
+    const quantity zero = { 0, rate_unit< phase >() };
+
+    const auto& well = args.schedule_wells.front();
+    const auto& name = well.name();
+    if( args.wells.count( name ) == 0 ) return zero;
+    const auto& well_data = args.wells.at( name );
+    if (well_data.current_control.isProducer == injection) return zero;
+
+    double sum = 0;
+    const auto& connections = well.getConnections( args.num );
+    for (const auto& conn_ptr : connections) {
+        const size_t global_index = conn_ptr->global_index();
+        const auto& conn_data = std::find_if(well_data.connections.begin(),
+                                             well_data.connections.end(),
+                                             [global_index] (const Opm::data::Connection cdata)
+                                             {
+                                                 return cdata.index == global_index;
+                                             });
+
+        if (conn_data != well_data.connections.end()) {
+            double eff_fac = efac( args.eff_factors, name );
+            sum += conn_data->rates.get( phase, 0.0 ) * eff_fac;
+        }
+    }
+    if( !injection ) sum *= -1;
+
+    if (phase == rt::polymer || phase == rt::brine) return { sum, measure::mass_rate };
+    return { sum, rate_unit< phase >() };
+}
+
 template< bool injection >
 inline quantity flowing( const fn_args& args ) {
     const auto& wells = args.wells;
@@ -1056,6 +1088,21 @@ static const std::unordered_map< std::string, ofun > funs = {
 
     { "WWPR", rate< rt::wat, producer > },
     { "WOPR", rate< rt::oil, producer > },
+    { "WWPTL",mul(ratel< rt::wat, producer >, duration) },
+    { "WGPTL",mul(ratel< rt::gas, producer >, duration) },
+    { "WOPTL",mul(ratel< rt::oil, producer >, duration) },
+    { "WWPRL",ratel< rt::wat, producer > },
+    { "WGPRL",ratel< rt::gas, producer > },
+    { "WOPRL",ratel< rt::oil, producer > },
+    { "WOFRL",ratel< rt::oil, producer > },
+    { "WWIRL",ratel< rt::wat, injector> },
+    { "WWITL",mul(ratel< rt::wat, injector>, duration) },
+    { "WGIRL",ratel< rt::gas, injector> },
+    { "WGITL",mul(ratel< rt::gas, injector>, duration) },
+    { "WLPTL",mul( sum(ratel<rt::wat, producer>, ratel<rt::oil, producer>), duration)},
+    { "WWCTL", div( ratel< rt::wat, producer >,
+                    sum( ratel< rt::wat, producer >, ratel< rt::oil, producer > ) ) },
+    { "WGORL", div( ratel< rt::gas, producer >, ratel< rt::oil, producer > ) },
     { "WGPR", rate< rt::gas, producer > },
     { "WEPR", rate< rt::energy, producer > },
     { "WTPRHEA", rate< rt::energy, producer > },
