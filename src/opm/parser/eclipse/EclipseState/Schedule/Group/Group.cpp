@@ -134,6 +134,10 @@ const std::string& Group::name() const {
     return this->m_name;
 }
 
+bool Group::is_field() const {
+    return (this->m_name == "FIELD");
+}
+
 const Group::GroupProductionProperties& Group::productionProperties() const {
     return this->production_properties;
 }
