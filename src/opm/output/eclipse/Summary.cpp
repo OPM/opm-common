@@ -2276,13 +2276,27 @@ namespace Evaluator {
     bool Factory::isFunctionRelation()
     {
         auto pos = funs.find(this->node_->keyword);
-        if (pos == funs.end())
-            return false;
+        if (pos != funs.end()) {
+            // 'node_' represents a functional relation.
+            // Capture evaluation function and return true.
+            this->paramFunction_ = pos->second;
+            return true;
+        }
 
-        // 'node_' represents a functional relation.
-        // Capture evaluation function and return true.
-        this->paramFunction_ = pos->second;
-        return true;
+        auto keyword = this->node_->keyword;
+        auto dash_pos = keyword.find("_");
+        if (dash_pos != std::string::npos)
+            keyword = keyword.substr(0, dash_pos);
+
+        pos = funs.find(keyword);
+        if (pos != funs.end()) {
+            // 'node_' represents a functional relation.
+            // Capture evaluation function and return true.
+            this->paramFunction_ = pos->second;
+            return true;
+        }
+
+        return false;
     }
 
     bool Factory::isUserDefined()
