@@ -225,6 +225,8 @@ public:
     void add_group(const Group& group);
     void add_well(const Well& well);
     bool active() const;
+    bool has_well(const std::string& well) const;
+    bool has_group(const std::string& group) const;
 
     static GasLiftOpt serializeObject();
     bool operator==(const GasLiftOpt& other) const;
