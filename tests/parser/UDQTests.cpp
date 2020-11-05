@@ -2368,3 +2368,31 @@ UDQ
     BOOST_CHECK_EQUAL(fu_var3, 4);
 }
 
+BOOST_AUTO_TEST_CASE(UDQ_MINUS_PAREN) {
+    std::string deck_string = R"(
+SCHEDULE
+
+UDQ
+  DEFINE FU_VAR1 -( -10 + 15) * 10 /
+  DEFINE FU_VAR2 -( -(10) + 15) * 10 /
+  DEFINE FU_VAR3 -(-10 + 15)*-10 /
+  DEFINE FU_VAR4 -(-(10) + 15)*-10 /
+/
+
+)";
+
+    auto schedule = make_schedule(deck_string);
+    UDQState udq_state(0);
+    SummaryState st(std::chrono::system_clock::now());
+    const auto& udq = schedule.getUDQConfig(0);
+    udq.eval(0, schedule.wellMatcher(0), st, udq_state);
+
+    auto fu_var1 = st.get("FU_VAR1");
+    auto fu_var2 = st.get("FU_VAR2");
+    auto fu_var3 = st.get("FU_VAR3");
+    auto fu_var4 = st.get("FU_VAR4");
+    BOOST_CHECK_EQUAL(fu_var1, -50);
+    BOOST_CHECK_EQUAL(fu_var2, -50);
+    BOOST_CHECK_EQUAL(fu_var3, 50);
+    BOOST_CHECK_EQUAL(fu_var4, 50);
+}
