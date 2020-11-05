@@ -440,7 +440,6 @@ void productionGroup(const Opm::Schedule&     sched,
     */
     // default value
 
-    iGrp[nwgmax + 5] = -1;
     const auto& cgroup = controlGroup(sched, sumState, group, simStep);
     const auto& deck_cmode = group.gconprod_cmode();
     // Start branching for determining iGrp[nwgmax + 5]
@@ -450,38 +449,52 @@ void productionGroup(const Opm::Schedule&     sched,
         throw std::logic_error("Got cgroup == FIELD - uncertain logic");
 
 
+    iGrp[nwgmax + 5] = -1;
     if (groupProductionControllable(sched, sumState, group, simStep)) {
         // this section applies if group is controllable - i.e. has wells that may be controlled
         if (!group.productionGroupControlAvailable() && (!cgroup)) {
             // group can respond to higher level control
             iGrp[nwgmax + 5] = 0;
-        } else if (((active_cmode != Opm::Group::ProductionCMode::NONE)) && (!cgroup)) {
+            goto CGROUP_DONE;
+        }
+
+
+        if (((active_cmode != Opm::Group::ProductionCMode::NONE)) && (!cgroup)) {
             // group is constrained by its own limits or controls
             // if (active_cmode != Opm::Group::ProductionCMode::FLD)  -  need to use this test? - else remove
             iGrp[nwgmax + 5] = -1; // only value that seems to work when no group at higher level has active control
-        } else if (cgroup) {
+            goto CGROUP_DONE;
+        }
+
+
+        if (cgroup) {
             if (((deck_cmode == Opm::Group::ProductionCMode::FLD) || (deck_cmode == Opm::Group::ProductionCMode::NONE))
                 && (prod_guide_rate_def != Opm::Group::GuideRateTarget::NO_GUIDE_RATE)) {
                 iGrp[nwgmax + 5] = cgroup->insert_index();
             } else {
                 iGrp[nwgmax + 5] = 1;
             }
-        } else if (higherLevelProdCMode_NotNoneFld(sched, group, simStep)) {
-            if (!((deck_cmode == Opm::Group::ProductionCMode::FLD)
-                  || (deck_cmode == Opm::Group::ProductionCMode::NONE))) {
-                iGrp[nwgmax + 5] = -1;
-            } else {
-                iGrp[nwgmax + 5] = 1;
-            }
-        } else if ((deck_cmode == Opm::Group::ProductionCMode::FLD)
-                   || (deck_cmode == Opm::Group::ProductionCMode::NONE)) {
-            iGrp[nwgmax + 5] = -1;
-        } else {
-            iGrp[nwgmax + 5] = -1;
+            goto CGROUP_DONE;
         }
+
+
+        if (higherLevelProdCMode_NotNoneFld(sched, group, simStep)) {
+            iGrp[nwgmax + 5] = -1;
+
+            if (deck_cmode == Opm::Group::ProductionCMode::FLD)
+                iGrp[nwgmax] = 1;
+            if (deck_cmode == Opm::Group::ProductionCMode::NONE)
+                iGrp[nwgmax] = 1;
+
+            goto CGROUP_DONE;
+        }
+
+        goto CGROUP_DONE;
     } else if (deck_cmode == Opm::Group::ProductionCMode::NONE) {
         iGrp[nwgmax + 5] = 1;
     }
+ CGROUP_DONE:
+
 
     // Set iGrp for [nwgmax + 7]
     /*
