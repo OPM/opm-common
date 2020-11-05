@@ -558,6 +558,39 @@ inline quantity ratel( const fn_args& args ) {
     return { sum, rate_unit< phase >() };
 }
 
+template< rt phase, bool injection = true >
+inline quantity cratel( const fn_args& args ) {
+    const quantity zero = { 0, rate_unit< phase >() };
+
+    const auto& well = args.schedule_wells.front();
+    const auto& name = well.name();
+    if( args.wells.count( name ) == 0 ) return zero;
+    const auto& well_data = args.wells.at( name );
+    if (well_data.current_control.isProducer == injection) return zero;
+
+    double sum = 0;
+    const auto& conn0 = well.getConnections().getFromGlobalIndex( args.num - 1);
+    const auto& connections = well.getConnections(conn0.complnum()) ;
+    for (const auto& conn_ptr : connections) {
+        const size_t global_index = conn_ptr->global_index();
+        const auto& conn_data = std::find_if(well_data.connections.begin(),
+                                             well_data.connections.end(),
+                                             [global_index] (const Opm::data::Connection cdata)
+                                             {
+                                                 return cdata.index == global_index;
+                                             });
+        if (conn_data != well_data.connections.end()) {
+            double eff_fac = efac( args.eff_factors, name );
+            sum += conn_data->rates.get( phase, 0.0 ) * eff_fac;
+        }
+    }
+    if( !injection ) sum *= -1;
+
+    if (phase == rt::polymer || phase == rt::brine) return { sum, measure::mass_rate };
+    return { sum, rate_unit< phase >() };
+}
+
+
 template< bool injection >
 inline quantity flowing( const fn_args& args ) {
     const auto& wells = args.wells;
@@ -1317,6 +1350,20 @@ static const std::unordered_map< std::string, ofun > funs = {
 
     { "GVPRT", res_vol_production_target },
 
+    { "CGIRL", cratel< rt::gas, injector> },
+    { "CGITL", mul( cratel< rt::gas, injector>, duration) },
+    { "CWIRL", cratel< rt::wat, injector> },
+    { "CWITL", mul( cratel< rt::wat, injector>, duration) },
+    { "CWPRL", cratel< rt::wat, producer > },
+    { "CWPTL", mul( cratel< rt::wat, producer >, duration) },
+    { "COPRL", cratel< rt::oil, producer > },
+    { "COPTL", mul( cratel< rt::oil, producer >, duration) },
+    { "CGPRL", cratel< rt::gas, producer > },
+    { "CGPTL", mul( cratel< rt::gas, producer >, duration) },
+    { "COFRL", cratel< rt::oil, producer > },
+    { "CGORL", div( cratel< rt::gas, producer >, cratel< rt::oil, producer > ) },
+    { "CWCTL", div( cratel< rt::wat, producer >,
+                    sum( cratel< rt::wat, producer >, cratel< rt::oil, producer > ) ) },
     { "CWIR", crate< rt::wat, injector > },
     { "CGIR", crate< rt::gas, injector > },
     { "CCIR", crate< rt::polymer, injector > },
