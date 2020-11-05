@@ -87,17 +87,9 @@ bool WellType::gas_injector(int ecl_wtype) {
     return ecl_wtype == ecl::gas_injector;
 }
 
-Phase WellType::injection_phase() const {
-    if (this->m_producer)
-        throw std::logic_error("Asked for injection phase in a producer");
-
-    return this->m_injection_phase;
-}
-
-
 
 WellType::WellType(int ecl_wtype, int ecl_phase) :
-    m_injection_phase(ecl::from_ecl_phase(ecl_phase)),
+    injection_phase(ecl::from_ecl_phase(ecl_phase)),
     m_welspecs_phase(ecl::from_ecl_phase(ecl_phase))
 {
     this->m_producer = false;
@@ -106,13 +98,13 @@ WellType::WellType(int ecl_wtype, int ecl_phase) :
         this->m_producer = true;
         break;
     case ecl::oil_injector:
-        this->m_injection_phase = Phase::OIL;
+        this->injection_phase = Phase::OIL;
         break;
     case ecl::water_injector:
-        this->m_injection_phase = Phase::WATER;
+        this->injection_phase = Phase::WATER;
         break;
     case ecl::gas_injector:
-        this->m_injection_phase = Phase::GAS;
+        this->injection_phase = Phase::GAS;
         break;
     default:
         throw std::invalid_argument("Invalid integer well type ID");
@@ -122,7 +114,7 @@ WellType::WellType(int ecl_wtype, int ecl_phase) :
 
 WellType::WellType(bool producer, Phase phase) :
     m_producer(producer),
-    m_injection_phase(phase),
+    injection_phase(phase),
     m_welspecs_phase(phase)
 {}
 
@@ -134,7 +126,7 @@ WellType WellType::serializeObject()
 {
     WellType result;
     result.m_producer = true;
-    result.m_injection_phase = Phase::OIL;
+    result.injection_phase = Phase::OIL;
     result.m_welspecs_phase = Phase::WATER;
 
     return result;
@@ -156,8 +148,8 @@ bool WellType::update(InjectorType injector_type) {
     }
 
     auto inj_phase = from_injector_type(injector_type);
-    if (this->m_injection_phase != inj_phase) {
-        this->m_injection_phase = inj_phase;
+    if (this->injection_phase != inj_phase) {
+        this->injection_phase = inj_phase;
         ret_value = true;
     }
 
@@ -176,7 +168,7 @@ int WellType::ecl_wtype() const {
     if (this->m_producer)
         return ecl::producer;
 
-    switch (this->m_injection_phase) {
+    switch (this->injection_phase) {
     case Phase::OIL:
         return ecl::oil_injector;
     case Phase::WATER:
@@ -209,13 +201,13 @@ int WellType::ecl_phase() const {
 
 
 Phase WellType::preferred_phase() const {
-    return this->injector() ? this->m_injection_phase : this->m_welspecs_phase;
+    return this->injector() ? this->injection_phase : this->m_welspecs_phase;
 }
 
 
 bool WellType::operator==(const WellType& other) const {
     return this->m_welspecs_phase == other.m_welspecs_phase &&
-           this->m_injection_phase == other.m_injection_phase &&
+           this->injection_phase == other.injection_phase &&
            this->m_producer == other.m_producer;
 }
 
@@ -224,7 +216,7 @@ InjectorType WellType::injector_type() const {
     if (this->producer())
         throw std::invalid_argument("Asked for injector type for a well which is a producer");
 
-    switch (this->m_injection_phase) {
+    switch (this->injection_phase) {
     case Phase::OIL:
         return InjectorType::OIL;
     case Phase::WATER:

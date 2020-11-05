@@ -58,14 +58,13 @@ public:
     int   ecl_phase() const;
     Phase preferred_phase() const;
     InjectorType injector_type() const;
-    Phase injection_phase() const;
     bool operator==(const WellType& other) const;
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {
         serializer(m_producer);
-        serializer(m_injection_phase);
+        serializer(injection_phase);
         serializer(m_welspecs_phase);
     }
 
@@ -84,7 +83,7 @@ private:
       used when initializing the well equations for a producer.
     */
 
-    Phase m_injection_phase;
+    Phase injection_phase;
     Phase m_welspecs_phase;
 };
 
