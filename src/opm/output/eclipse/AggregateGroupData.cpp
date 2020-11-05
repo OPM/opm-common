@@ -455,14 +455,6 @@ void productionGroup(const Opm::Schedule&     sched,
         }
 
 
-        if (((active_cmode != Opm::Group::ProductionCMode::NONE)) && (!cgroup)) {
-            // group is constrained by its own limits or controls
-            // if (active_cmode != Opm::Group::ProductionCMode::FLD)  -  need to use this test? - else remove
-            iGrp[nwgmax + 5] = -1; // only value that seems to work when no group at higher level has active control
-            goto CGROUP_DONE;
-        }
-
-
         if (cgroup) {
             if (((deck_cmode == Opm::Group::ProductionCMode::FLD) || (deck_cmode == Opm::Group::ProductionCMode::NONE))
                 && (prod_guide_rate_def != Opm::Group::GuideRateTarget::NO_GUIDE_RATE)) {
@@ -475,7 +467,6 @@ void productionGroup(const Opm::Schedule&     sched,
 
 
         if (higherLevelProdCMode_NotNoneFld(sched, group, simStep)) {
-            iGrp[nwgmax + 5] = -1;
 
             if (deck_cmode == Opm::Group::ProductionCMode::FLD)
                 iGrp[nwgmax] = 1;
