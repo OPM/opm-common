@@ -274,23 +274,19 @@ bool higherLevelProdCMode_NotNoneFld(const Opm::Schedule& sched,
                                      const Opm::Group& group,
                                      const size_t simStep)
 {
-    bool ctrl_mode_not_none_fld = false;
-    if (group.defined( simStep )) {
-        auto current = group;
-        while (current.name() != "FIELD" && ctrl_mode_not_none_fld == false) {
-            current = sched.getGroup(current.parent(), simStep);
-            const auto& prod_cmode = group.gconprod_cmode();
-            if ((prod_cmode != Opm::Group::ProductionCMode::FLD) && (prod_cmode!= Opm::Group::ProductionCMode::NONE)) {
-                ctrl_mode_not_none_fld = true;
-            }
-        }
-        return ctrl_mode_not_none_fld;
+    auto current = group;
+    while (current.name() != "FIELD") {
+        current = sched.getGroup(current.parent(), simStep);
+        const auto& prod_cmode = group.gconprod_cmode();
+
+        if (prod_cmode != Opm::Group::ProductionCMode::FLD)
+            return true;
+
+        if (prod_cmode != Opm::Group::ProductionCMode::NONE)
+            return true;
+
     }
-    else {
-        std::stringstream str;
-        str << "actual group has not been defined at report time: " << simStep;
-        throw std::invalid_argument(str.str());
-    }
+    return false;
 }
 
 int higherLevelInjCMode_NotNoneFld_SeqIndex(const Opm::Schedule& sched,
