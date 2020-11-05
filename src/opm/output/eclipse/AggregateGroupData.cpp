@@ -456,11 +456,13 @@ void productionGroup(const Opm::Schedule&     sched,
 
 
         if (cgroup) {
-            if (((deck_cmode == Opm::Group::ProductionCMode::FLD) || (deck_cmode == Opm::Group::ProductionCMode::NONE))
-                && (prod_guide_rate_def != Opm::Group::GuideRateTarget::NO_GUIDE_RATE)) {
-                iGrp[nwgmax + 5] = cgroup->insert_index();
-            } else {
-                iGrp[nwgmax + 5] = 1;
+            iGrp[nwgmax + 5] = 1;
+            if (prod_guide_rate_def != Opm::Group::GuideRateTarget::NO_GUIDE_RATE) {
+                if (deck_cmode == Opm::Group::ProductionCMode::FLD)
+                    iGrp[nwgmax + 5] = cgroup->insert_index();
+
+                if (deck_cmode == Opm::Group::ProductionCMode::NONE)
+                    iGrp[nwgmax + 5] = cgroup->insert_index();
             }
             goto CGROUP_DONE;
         }
@@ -476,7 +478,6 @@ void productionGroup(const Opm::Schedule&     sched,
             goto CGROUP_DONE;
         }
 
-        goto CGROUP_DONE;
     } else if (deck_cmode == Opm::Group::ProductionCMode::NONE) {
         iGrp[nwgmax + 5] = 1;
     }
