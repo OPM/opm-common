@@ -502,7 +502,7 @@ void productionGroup(const Opm::Schedule&     sched,
     // use default value if group is not available for group control
     if (groupProductionControllable(sched, sumState, group, simStep)) {
         // this section applies if group is controllable - i.e. has wells that may be controlled
-        if (!group.productionGroupControlAvailable() && (higher_lev_ctrl <= 0)) {
+        if (!group.productionGroupControlAvailable() && (higher_lev_ctrl < 0)) {
             // group can respond to higher level control
             iGrp[nwgmax + 5] = 0;
         } else if (((active_cmode != Opm::Group::ProductionCMode::NONE)) && (higher_lev_ctrl < 0)) {
