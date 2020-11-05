@@ -51,6 +51,7 @@ namespace Opm {
         m_useCPR(false),
         m_DISGAS(false),
         m_VAPOIL(false),
+        m_VAPWAT(false),
         m_isThermal(false)
     {
     }
@@ -64,6 +65,7 @@ namespace Opm {
         m_useCPR(false),
         m_DISGAS(false),
         m_VAPOIL(false),
+        m_VAPWAT(false),
         m_isThermal(false)
     {
         if (DeckSection::hasRUNSPEC(deck)) {
@@ -81,6 +83,9 @@ namespace Opm {
             if (runspec.hasKeyword<ParserKeywords::VAPOIL>()) {
                 m_VAPOIL = true;
             }
+            if (runspec.hasKeyword<ParserKeywords::VAPWAT>()) {
+                m_VAPWAT = true;
+            }
 
             this->m_isThermal = runspec.hasKeyword<ParserKeywords::THERMAL>()
                 || runspec.hasKeyword<ParserKeywords::TEMP>();
@@ -96,6 +101,7 @@ namespace Opm {
         result.m_useCPR = false;
         result.m_DISGAS = true;
         result.m_VAPOIL = false;
+        result.m_VAPWAT = false;
         result.m_isThermal = true;
 
         return result;
@@ -129,6 +135,10 @@ namespace Opm {
         return m_VAPOIL;
     }
 
+     bool SimulationConfig::hasVAPWAT() const {
+        return m_VAPWAT;
+    }
+
     bool SimulationConfig::isThermal() const {
         return this->m_isThermal;
     }
@@ -140,6 +150,7 @@ namespace Opm {
                this->useCPR() == data.useCPR() &&
                this->hasDISGAS() == data.hasDISGAS() &&
                this->hasVAPOIL() == data.hasVAPOIL() &&
+               this->hasVAPWAT() == data.hasVAPWAT() &&
                this->isThermal() == data.isThermal();
     }
 

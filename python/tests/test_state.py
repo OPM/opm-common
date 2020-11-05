@@ -101,6 +101,7 @@ SATNUM
         self.assertFalse(sim.useCPR())
         self.assertTrue(sim.hasDISGAS())
         self.assertTrue(sim.hasVAPOIL())
+        self.assertTrue(sim.hasVAPWAT())
 
     def test_tables(self):
         tables = self.state.tables()

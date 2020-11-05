@@ -107,6 +107,15 @@ const std::string& inputStr_vap_dis = "RUNSPEC\n"
                                       "REGIONS\n"
                                       "\n";
 
+const std::string& inputStr_watvap = "RUNSPEC\n"
+                                     "VAPWAT\n"
+                                     "DIMENS\n"
+                                     "10 3 4 /\n"
+                                     "\n"
+                                     "GRID\n"
+                                     "REGIONS\n"
+                                     "\n";
+
 namespace {
     std::string simDeckStringTEMP()
     {
@@ -231,6 +240,22 @@ BOOST_AUTO_TEST_CASE(SimulationConfig_VAPOIL_DISGAS) {
     SimulationConfig simulationConfig_vd(false, deck_vd, fp_vd);
     BOOST_CHECK_EQUAL( true , simulationConfig_vd.hasDISGAS());
     BOOST_CHECK_EQUAL( true , simulationConfig_vd.hasVAPOIL());
+}
+
+BOOST_AUTO_TEST_CASE(SimulationConfig_VAPWAT) {
+    auto deck = createDeck(inputStr);
+    TableManager tm(deck);
+    EclipseGrid eg(10, 3, 4);
+    FieldPropsManager fp(deck, Phases{true, true, true}, eg, tm);
+    SimulationConfig simulationConfig(false, deck, fp);
+    BOOST_CHECK_EQUAL( false , simulationConfig.hasVAPWAT());
+
+    auto deck_vd = createDeck(inputStr_watvap);
+    TableManager tm_vd(deck_vd);
+    EclipseGrid eg_vd(10, 3, 4);
+    FieldPropsManager fp_vd(deck_vd, Phases{true, true, true}, eg, tm);
+    SimulationConfig simulationConfig_vd(false, deck_vd, fp_vd);
+    BOOST_CHECK_EQUAL( true , simulationConfig_vd.hasVAPWAT());
 }
 
 
