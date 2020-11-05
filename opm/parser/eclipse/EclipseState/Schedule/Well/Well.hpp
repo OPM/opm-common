@@ -488,6 +488,7 @@ public:
     const std::string& groupName() const;
     Phase getPreferredPhase() const;
 
+    const std::vector<const Connection *> getConnections(int completion) const;
     const WellConnections& getConnections() const;
     const WellSegments& getSegments() const;
 
@@ -530,9 +531,6 @@ public:
       connections. The integer ID is assigned with the COMPLUMP keyword.
      */
     bool hasCompletion(int completion) const;
-    const std::vector<const Connection *> getConnections(int completion) const;
-
-
     bool updatePrediction(bool prediction_mode);
     bool updateAutoShutin(bool auto_shutin);
     bool updateCrossFlow(bool allow_cross_flow);

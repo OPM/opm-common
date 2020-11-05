@@ -395,6 +395,14 @@ inline void keywordAquifer( SummaryConfig::keyword_list& list,
     }
 }
 
+inline std::array< int, 3 > getijk( const DeckRecord& record ) {
+    return {{
+        record.getItem( "I" ).get< int >( 0 ) - 1,
+        record.getItem( "J" ).get< int >( 0 ) - 1,
+        record.getItem( "K" ).get< int >( 0 ) - 1
+    }};
+}
+
 inline void keywordW( SummaryConfig::keyword_list& list,
                       const std::string& keyword,
                       KeywordLocation loc,
@@ -577,14 +585,6 @@ inline void keywordF( SummaryConfig::keyword_list& list,
     keywordF( list, keyword.name(), keyword.location() );
 }
 
-inline std::array< int, 3 > getijk( const DeckRecord& record,
-                                    int offset = 0 ) {
-    return {{
-        record.getItem( offset + 0 ).get< int >( 0 ) - 1,
-        record.getItem( offset + 1 ).get< int >( 0 ) - 1,
-        record.getItem( offset + 2 ).get< int >( 0 ) - 1
-    }};
-}
 
 inline std::array< int, 3 > getijk( const Connection& completion ) {
     return { { completion.getI(), completion.getJ(), completion.getK() }};
@@ -711,7 +711,7 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
                 auto cijk = getijk( connection );
                 int global_index = 1 + dims.getGlobalIndex(cijk[0], cijk[1], cijk[2]);
 
-                if( ijk_defaulted || ( cijk == getijk(record, 1) ) )
+                if( ijk_defaulted || ( cijk == getijk(record) ) )
                     list.push_back( param.number(global_index) );
             }
         }
@@ -999,7 +999,7 @@ inline void handleKW( SummaryConfig::keyword_list& list,
 
 // =====================================================================
 
-SummaryConfigNode::Type parseKeywordType(const std::string& keyword) {
+SummaryConfigNode::Type parseKeywordType(std::string keyword) {
     if (is_rate(keyword)) return SummaryConfigNode::Type::Rate;
     if (is_total(keyword)) return SummaryConfigNode::Type::Total;
     if (is_ratio(keyword)) return SummaryConfigNode::Type::Ratio;
@@ -1325,6 +1325,10 @@ bool SummaryConfig::hasKeyword( const std::string& keyword ) const {
 
 bool SummaryConfig::hasSummaryKey(const std::string& keyword ) const {
     return summary_keywords.find(keyword) != summary_keywords.end();
+}
+
+const SummaryConfigNode& SummaryConfig::operator[](std::size_t index) const {
+    return this->m_keywords[index];
 }
 
 

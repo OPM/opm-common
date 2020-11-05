@@ -1036,8 +1036,8 @@ bool Well::handleWELOPEN(const DeckRecord& record, Connection::State state_arg, 
 bool Well::handleCOMPLUMP(const DeckRecord& record) {
 
     auto match = [=]( const Connection &c) -> bool {
-        if (!match_eq(c.getI(), record, "I" , -1))  return false;
-        if (!match_eq(c.getJ(), record, "J" , -1))  return false;
+        if (!match_eq(c.getI(), record, "I" , -1)) return false;
+        if (!match_eq(c.getJ(), record, "J" , -1)) return false;
         if (!match_ge(c.getK(), record, "K1", -1)) return false;
         if (!match_le(c.getK(), record, "K2", -1)) return false;
 

@@ -95,7 +95,7 @@ namespace Opm {
     };
 
     SummaryConfigNode::Category parseKeywordCategory(const std::string& keyword);
-    SummaryConfigNode::Type parseKeywordType(const std::string& keyword);
+    SummaryConfigNode::Type parseKeywordType(std::string keyword);
 
     bool operator==(const SummaryConfigNode& lhs, const SummaryConfigNode& rhs);
     bool operator<(const SummaryConfigNode& lhs, const SummaryConfigNode& rhs);
@@ -211,6 +211,9 @@ namespace Opm {
             bool createRunSummary() const {
                 return runSummaryConfig.create;
             }
+
+            const SummaryConfigNode& operator[](std::size_t index) const;
+
 
         private:
             SummaryConfig( const Deck& deck,
