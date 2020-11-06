@@ -5,8 +5,8 @@
 
 Module: opm-common
 Description: Open Porous Media Initiative shared infrastructure
-Version: 2020.10-rc4
-Label: 2020.10-rc4
+Version: 2020.10-rc5
+Label: 2020.10-rc5
 Maintainer: opm@opm-project.org
 MaintainerName: OPM community
 Url: http://opm-project.org
