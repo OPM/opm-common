@@ -23,7 +23,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/Valve.hpp>
 
 #include <cassert>
-
+#include <stdexcept>
 #include <string>
 
 namespace Opm {

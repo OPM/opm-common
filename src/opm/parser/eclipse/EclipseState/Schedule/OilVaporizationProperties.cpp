@@ -18,6 +18,8 @@
 */
 #include <opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.hpp>
 
+#include <stdexcept>
+
 namespace Opm {
 
     OilVaporizationProperties::OilVaporizationProperties()
