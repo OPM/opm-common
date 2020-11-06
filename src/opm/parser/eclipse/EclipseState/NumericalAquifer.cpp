@@ -244,7 +244,6 @@ std::array<std::set<size_t>, 3> SingleNumericalAquifer::transToRemove(const Ecli
         const size_t i = cell.I;
         const size_t j = cell.J;
         const size_t k = cell.K;
-        // TODO: later to check whether we want to use active_index or global_index
         if (AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i, j, k, FaceDir::XPlus)) {
             trans[0].insert(cell.global_index);
         }
@@ -278,22 +277,15 @@ appendNNC(NNC& nnc, const EclipseGrid& grid,
         const size_t gc1 = this->cells_[i].global_index;
         const size_t gc2 = this->cells_[i+1].global_index;
         nnc.addNNC(gc1, gc2, tran);
-        // DEBUG output
-        const auto& cell1 = this->cells_[i];
-        const auto& cell2 = this->cells_[i+1];
-        const double transform_efficient = 1.e8*86400.;
-        std::cout << cell1.I + 1 << " " << cell1.J + 1 << " " << cell1.K + 1 << " "
-                  << cell2.I + 1 << " " << cell2.J + 1 << " " << cell2.K + 1 << " " << tran * transform_efficient << std::endl;
     }
 
     const auto& cell1 = this->cells_[0];
     // all the connections connect to the first numerical aquifer cell
     const size_t gc1 = cell1.global_index;
-    // const double cell_trans1 = cell1.transmissibility;
     for (const auto& con : this->connections_) {
         const size_t gc2 = con.global_index;
-        // TODO: get the first version, it is only for cartesian grid
-        // for testing purpose
+        // TODO: the following only works for Cartesian grids, more tests need to done
+        // for more general grid
         const auto& cell_dims = grid.getCellDims(gc2);
         double face_area = 0;
         std::string perm_string;
@@ -315,8 +307,9 @@ appendNNC(NNC& nnc, const EclipseGrid& grid,
             d = cell_dims[2];
         }
 
-        const double trans_cell = (con.trans_option == 1) ?
-                                  (2 * cell1.permeability * face_area / cell1.length) : cell1.transmissibility;
+        // TODO: NTG should also apply here
+        const double trans_cell = (con.trans_option == 0) ?
+                              cell1.transmissibility : (2 * cell1.permeability * face_area / cell1.length);
 
         const auto& cell_perm = (fp.get_double(perm_string))[gc2];
 
@@ -324,11 +317,6 @@ appendNNC(NNC& nnc, const EclipseGrid& grid,
 
         const double tran = trans_con * trans_cell / (trans_con + trans_cell) * con.trans_multipler;
         nnc.addNNC(gc1, gc2, tran);
-
-        // debug output
-        const double transform_efficient = 1.e8*86400.;
-        std::cout << cell1.I + 1 << " " << cell1.J + 1 << " " << cell1.K + 1 << " "
-                  << con.I + 1 << " " << con.J + 1 << " " << con.K + 1 << " " << tran * transform_efficient << std::endl;
     }
 }
 

@@ -34,16 +34,15 @@ namespace Opm {
 
     struct NumAquiferCon {
         size_t aquifer_id;
-        // TODO: maybe it is okay to use global_index
         size_t I, J, K;
         size_t global_index;
         FaceDir::DirEnum face_dir;
-        double trans_multipler = 1.0;
-        size_t trans_option = 0;
-        bool connect_active_cell = false;
-        // The following are
-        double ve_frac_relperm = 1.0;
-        double ve_frac_cappress = 1.0;
+        double trans_multipler;
+        int trans_option;
+        bool connect_active_cell;
+        // The following are options related to VE simulation
+        double ve_frac_relperm;
+        double ve_frac_cappress;
 
         static std::vector<NumAquiferCon> generateConnections(const EclipseGrid&, const DeckRecord&);
     };
@@ -51,17 +50,9 @@ namespace Opm {
     class NumericalAquiferConnections {
     public:
         NumericalAquiferConnections(const Deck& deck, const EclipseGrid& grid);
-        // TODO: might be removed later.
-        // It is possible when without this function, unordered_map problem can be fixed
-        NumericalAquiferConnections() = default;
-
         const std::map<size_t, NumAquiferCon>& getConnections(const size_t aqu_id) const;
 
     private:
-        // TODO: compilation failure with_unordered_map
-        // basically due to  implicitly-deleted default constructor of 'std::unordered_map
-        // std::unordered_map<size_t, std::unordered_map<CellIndex, NumAquiferCon>> connections_;
-        // after finished, it should be okay to just use a vector instead of std::map
         std::map<size_t, std::map<size_t, NumAquiferCon>> connections_;
     };
 }

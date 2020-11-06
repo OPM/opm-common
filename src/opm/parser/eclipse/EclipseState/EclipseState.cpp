@@ -61,16 +61,13 @@ namespace Opm {
           m_inputNnc(          m_inputGrid, deck),
           m_gridDims(          deck ),
           field_props(         deck, m_runspec.phases(), m_inputGrid, m_tables),
+          aquifer_config( this->m_tables, this->m_inputGrid, this->field_props, deck),
           m_simulationConfig(  m_eclipseConfig.getInitConfig().restartRequested(), deck, field_props),
           m_transMult(         GridDims(deck), deck, field_props),
           tracer_config(       m_deckUnitSystem, deck)
     {
-        this->aquifer_config = AquiferConfig(this->m_tables, this->m_inputGrid, this->field_props, deck);
-
         if ( this->aquifer_config.hasNumericalAquifer() ) {
             this->field_props.applyNumericalAquifer(this->aquifer_config);
-            // TODO: for the moment, we just add NNC directly without giving the correct value
-            // Later to evaluate
             this->aquifer_config.numericalAquifers().appendNNC(this->m_inputNnc, this->m_inputGrid, this->field_props);
         }
 

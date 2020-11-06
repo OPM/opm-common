@@ -27,6 +27,8 @@
 #include <iterator>
 #include <iostream>
 
+#include "AquiferHelpers.hpp"
+
 namespace Opm {
 
     namespace{
@@ -84,7 +86,7 @@ namespace Opm {
                         for (int i = i1; i <= i2; i++) {
                             if (grid.cellActive(i, j, k)) { // the cell itself needs to be active
                                 if (allow_aquifer_inside_reservoir
-                                    || !neighborCellInsideReservoirAndActive(grid, i, j, k, faceDir)) {
+                                    || !AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i, j, k, faceDir)) {
                                     std::pair<bool, double> influx_coeff = std::make_pair(false, 0);
                                     auto global_index = grid.getGlobalIndex(i, j, k);
                                     if (aquanconRecord.getItem("INFLUX_COEFF").hasValue(0))
@@ -120,42 +122,6 @@ namespace Opm {
 
     const std::vector<Aquancon::AquancCell> Aquancon::operator[](int aquiferID) const {
         return this->cells.at( aquiferID );
-    }
-
-
-
-    bool Aquancon::cellInsideReservoirAndActive(const Opm::EclipseGrid& grid, const int i, const int j, const int k)
-    {
-        if ( i < 0 || j < 0 || k < 0
-            || size_t(i) > grid.getNX() - 1
-            || size_t(j) > grid.getNY() - 1
-            || size_t(k) > grid.getNZ() - 1 )
-        {
-            return false;
-        }
-
-        return grid.cellActive(i, j, k );
-    }
-
-    bool Aquancon::neighborCellInsideReservoirAndActive(const Opm::EclipseGrid& grid,
-           const int i, const int j, const int k, const Opm::FaceDir::DirEnum faceDir)
-    {
-        switch(faceDir) {
-        case FaceDir::XMinus:
-            return cellInsideReservoirAndActive(grid, i - 1, j, k);
-        case FaceDir::XPlus:
-            return cellInsideReservoirAndActive(grid, i + 1, j, k);
-        case FaceDir::YMinus:
-            return cellInsideReservoirAndActive(grid, i, j - 1, k);
-        case FaceDir::YPlus:
-            return cellInsideReservoirAndActive(grid, i, j + 1, k);
-        case FaceDir::ZMinus:
-            return cellInsideReservoirAndActive(grid, i, j, k - 1);
-        case FaceDir::ZPlus:
-            return cellInsideReservoirAndActive(grid, i, j, k + 1);
-        default:
-            throw std::runtime_error("Unknown FaceDir enum " + std::to_string(faceDir));
-        }
     }
 
     Aquancon::Aquancon(const std::unordered_map<int, std::vector<Aquancon::AquancCell>>& data) :

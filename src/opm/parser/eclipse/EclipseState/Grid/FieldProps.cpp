@@ -568,6 +568,8 @@ std::vector<Box::cell_index> FieldProps::region_index( const std::string& region
 }
 
 void FieldProps::applyNumericalAquifer(const AquiferConfig& aquifers) {
+    // \Note: cell_depth does not look like used anywhere
+    //  Maybe we should also update the cell volume, not sure whether it is used anywhere either
     auto& porv_data = this->init_get<double>("PORV").data;
     auto& satnum_data = this->int_data["SATNUM"].data;
     auto& pvtnum_data = this->int_data["PVTNUM"].data;

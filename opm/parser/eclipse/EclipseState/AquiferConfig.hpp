@@ -64,9 +64,6 @@ private:
     AquiferCT aquiferct;
     NumericalAquifers numerical_aquifers;
     Aquancon aqconn;
-    // TODO: not sure we will keep it as a member here or be part of the
-    // of the numerical aquifers. Putting here for now for development
-    NumericalAquiferConnections numerical_aquifer_connections;
 };
 
 }

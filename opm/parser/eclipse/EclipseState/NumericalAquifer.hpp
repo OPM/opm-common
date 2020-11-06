@@ -30,7 +30,7 @@ namespace Opm {
     class Deck;
     class DeckRecord;
     class NumericalAquiferConnections;
-    class NumAquiferCon;
+    struct NumAquiferCon;
     class EclipseGrid;
     class FieldPropsManager;
     class NNC;

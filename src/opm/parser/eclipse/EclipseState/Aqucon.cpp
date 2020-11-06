@@ -40,19 +40,20 @@ namespace Opm {
         const auto& aqucon_keywords = deck.getKeywordList<AQUCON>();
         for (const auto& keyword : aqucon_keywords) {
             for (const auto& record : *keyword) {
-                auto cons_from_record = NumAquiferCon::generateConnections(grid, record);
+                const auto cons_from_record = NumAquiferCon::generateConnections(grid, record);
                 for (auto con : cons_from_record) {
                     const size_t aqu_id = con.aquifer_id;
                     const size_t global_index = con.global_index;
                     auto& aqu_cons = this->connections_[aqu_id];
-                    // TODO: with this way, we might ignore the situation that a cell is
+                    // TODO: with the following code, we might ignore the situation that a cell is
                     // connected to two different aquifers
                     if (aqu_cons.find(global_index) == aqu_cons.end()) {
                         aqu_cons.insert({global_index, con});
                     } else {
-                        // not sure how to handle the situation that the same cell declared multiple times
-                        // TODO: maybe it is okay if for different faces of the same cell?
-                        throw;
+                        std::ostringstream ss;
+                        ss << " the cell {" << con.I + 1 << " " << con.J + 1 << " " << con.K + 1 << " } is declared more "
+                           << " than once for the Numeri Aquifer " << con.aquifer_id << " \n";
+                        throw std::logic_error( ss.str() );
                     }
                 }
             }
@@ -63,7 +64,9 @@ namespace Opm {
     NumericalAquiferConnections::getConnections(const size_t aqu_id) const {
         const auto& cons = this->connections_.find(aqu_id);
         if (cons == this->connections_.end())  {
-            throw;
+            std::ostringstream ss;
+            ss << " Numerical aquifer " << aqu_id << " does not have any connections \n";
+            throw std::logic_error( ss.str() );
         } else {
             return cons->second;
         }
@@ -88,7 +91,7 @@ namespace Opm {
         const FaceDir::DirEnum face_dir
                 = FaceDir::FromString(record.getItem<AQUCON::CONNECT_FACE>().getTrimmedString(0));
         const double trans_multi = record.getItem<AQUCON::TRANS_MULT>().get<double>(0);
-        const size_t trans_option = record.getItem<AQUCON::TRANS_OPTION>().get<int>(0);
+        const int trans_option = record.getItem<AQUCON::TRANS_OPTION>().get<int>(0);
         const double ve_frac_relperm = record.getItem<AQUCON::VEFRAC>().get<double>(0);
         const double ve_frac_cappress = record.getItem<AQUCON::VEFRACP>().get<double>(0);
 
