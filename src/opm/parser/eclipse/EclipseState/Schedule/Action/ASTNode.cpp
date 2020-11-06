@@ -18,6 +18,7 @@
 */
 
 #include <fnmatch.h>
+#include <stdexcept>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionContext.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionValue.hpp>
