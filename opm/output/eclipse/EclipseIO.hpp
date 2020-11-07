@@ -112,7 +112,7 @@ public:
   *     are not yet written to disk.
   */
 
-    void writeInitial( data::Solution simProps = data::Solution(), std::map<std::string, std::vector<int> > int_data = {}, const NNC& nnc = NNC());
+    void writeInitial( data::Solution simProps = data::Solution(), std::map<std::string, std::vector<int> > int_data = {}, const std::vector<NNCdata>& nnc = {});
 
     /**
      * \brief Overwrite the initial OIP values.

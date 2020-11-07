@@ -1686,7 +1686,7 @@ BOOST_AUTO_TEST_CASE(SAVE_FIELD_UNITS) {
 
     const auto& grid1 = es.getInputGrid();
 
-    Opm::NNC nnc( deck );
+    Opm::NNC nnc(grid1,  deck);
     bool formatted = false;
 
     time_t timer;
@@ -1702,7 +1702,7 @@ BOOST_AUTO_TEST_CASE(SAVE_FIELD_UNITS) {
     Opm::filesystem::create_directory(testDir);
 
     std::string fileName = testDir + "/" + "TMP.EGRID";
-    grid1.save(fileName, formatted, nnc, units);
+    grid1.save(fileName, formatted, nnc.input(), units);
 
     Opm::EclIO::EclFile file1(fileName);
 
@@ -1757,13 +1757,13 @@ BOOST_AUTO_TEST_CASE(SAVE_FIELD_UNITS) {
 
     Opm::EclipseState es2(deck2);
     Opm::UnitSystem units2 = es.getDeckUnitSystem();
-    Opm::NNC nnc2( deck2 );
-
     const auto& grid2 = es2.getInputGrid();
+    Opm::NNC nnc2(grid2,  deck2 );
+
 
     std::string fileName2 = testDir + "/" + "TMP2.FEGRID";
 
-    grid2.save(fileName2, true, nnc2, units);
+    grid2.save(fileName2, true, nnc2.input(), units);
 
     Opm::EclIO::EclFile file2(fileName2);
 
@@ -1783,13 +1783,13 @@ BOOST_AUTO_TEST_CASE(SAVE_FIELD_UNITS) {
 
     Opm::EclipseState es3(deck3);
     Opm::UnitSystem units3 = es.getDeckUnitSystem();
-    Opm::NNC nnc3( deck3 );
-
     const auto& grid3 = es3.getInputGrid();
+    Opm::NNC nnc3(grid3, deck3);
+
 
     std::string fileName3 = testDir + "/" + "TMP3.FEGRID";
 
-    grid3.save(fileName3, true, nnc3, units3);
+    grid3.save(fileName3, true, nnc3.input(), units3);
 
     Opm::EclIO::EclFile file3(fileName3);
 
@@ -1878,7 +1878,7 @@ BOOST_AUTO_TEST_CASE(SAVE_METRIC_UNITS) {
     const auto length = ::Opm::UnitSystem::measure::length;
 
     const auto& grid1 = es1.getInputGrid();
-    Opm::NNC nnc( deck1 );
+    Opm::NNC nnc(grid1, deck1);
 
     bool formatted = true;
 
@@ -1895,7 +1895,7 @@ BOOST_AUTO_TEST_CASE(SAVE_METRIC_UNITS) {
     Opm::filesystem::create_directory(testDir);
 
     std::string fileName = testDir + "/" + "TMP.FEGRID";
-    grid1.save(fileName, formatted, nnc, units1);
+    grid1.save(fileName, formatted, nnc.input(), units1);
 
     Opm::EclIO::EclFile file1(fileName);
 
@@ -1949,7 +1949,7 @@ BOOST_AUTO_TEST_CASE(SAVE_METRIC_UNITS) {
     BOOST_CHECK( file1.hasKey("NNCHEAD"));
     const std::vector<int> nnchead = file1.get<int>("NNCHEAD");
 
-    BOOST_CHECK( nnchead[0] == static_cast<int>(nnc.numNNC()) );
+    BOOST_CHECK( nnchead[0] == static_cast<int>(nnc.input().size()) );
 
     std::vector<int> ref_nnc1 = { 6, 7, 8 };
     std::vector<int> ref_nnc2 = { 26, 27, 28 };
@@ -1981,7 +1981,7 @@ BOOST_AUTO_TEST_CASE(SAVE_METRIC_UNITS) {
 
     std::string fileName2 = testDir + "/" + "TMP2.FEGRID";
 
-    grid2.save(fileName2, true, nnc, units2);
+    grid2.save(fileName2, true, nnc.input(), units2);
 
     Opm::EclIO::EclFile file2(fileName2);
 
@@ -2588,16 +2588,16 @@ BOOST_AUTO_TEST_CASE(TEST_GDFILE_2) {
     Opm::UnitSystem units1a = es1a.getDeckUnitSystem();
 
     const auto& grid1a = es1a.getInputGrid();
-    Opm::NNC nnc( deck1a );
+    Opm::NNC nnc(grid1a, deck1a);
 
-    grid1a.save("BAD_CP_M.EGRID", false, nnc, units1a);
+    grid1a.save("BAD_CP_M.EGRID", false, nnc.input(), units1a);
 
     auto deck1b = parser.parseString( deckData1b) ;
     Opm::EclipseState es1b( deck1b );
     Opm::UnitSystem units1b = es1b.getDeckUnitSystem();
     const auto& grid1b = es1b.getInputGrid();
 
-    grid1b.save("BAD_CP_F.EGRID", false, nnc, units1b);
+    grid1b.save("BAD_CP_F.EGRID", false, nnc.input(), units1b);
 
     auto deck1 = parser.parseString( deckData1) ;
     Opm::EclipseGrid grid1( deck1);

@@ -63,7 +63,6 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/EclipseConfig.cpp
     src/opm/parser/eclipse/EclipseState/EclipseState.cpp
     src/opm/parser/eclipse/EclipseState/EndpointScaling.cpp
-    src/opm/parser/eclipse/EclipseState/Edit/EDITNNC.cpp
     src/opm/parser/eclipse/EclipseState/Grid/FieldProps.cpp
     src/opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.cpp
     src/opm/parser/eclipse/EclipseState/Grid/Box.cpp
@@ -380,6 +379,7 @@ if(ENABLE_ECL_INPUT)
     tests/parser/TuningTests.cpp
     tests/parser/UDQTests.cpp
     tests/parser/UnitTests.cpp
+    tests/parser/integration/NNCTests.cpp
     tests/parser/WellSolventTests.cpp
     tests/parser/WellTracerTests.cpp
     tests/parser/WellTests.cpp
@@ -578,7 +578,6 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Util/IOrderSet.hpp
        opm/parser/eclipse/EclipseState/Util/OrderedMap.hpp
        opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp
-       opm/parser/eclipse/EclipseState/Edit/EDITNNC.hpp
        opm/parser/eclipse/EclipseState/Grid/FieldData.hpp
        opm/parser/eclipse/EclipseState/Grid/Keywords.hpp
        opm/parser/eclipse/EclipseState/Grid/GridDims.hpp
