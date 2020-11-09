@@ -523,6 +523,9 @@ BOOST_AUTO_TEST_CASE(GCONINJE_GCONPROD) {
         BOOST_CHECK(!g2.injectionGroupControlAvailable(Phase::WATER));
         BOOST_CHECK( g1.injectionGroupControlAvailable(Phase::GAS));
         BOOST_CHECK( g2.injectionGroupControlAvailable(Phase::GAS));
+
+        BOOST_CHECK(f.is_field());
+        BOOST_CHECK(!g1.is_field());
     }
     {
         const auto& g1 = schedule.getGroup("G1", 1);

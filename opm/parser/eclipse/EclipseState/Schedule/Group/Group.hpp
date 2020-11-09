@@ -231,6 +231,7 @@ struct ProductionControls {
     bool defined(std::size_t timeStep) const;
     std::size_t insert_index() const;
     const std::string& name() const;
+    bool is_field() const;
     int getGroupNetVFPTable() const;
 
     bool updateNetVFPTable(int vfp_arg);
