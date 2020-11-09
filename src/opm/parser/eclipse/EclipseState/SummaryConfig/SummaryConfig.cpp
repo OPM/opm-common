@@ -478,7 +478,6 @@ inline void keywordCL( SummaryConfig::keyword_list& list,
                     const auto& conn = all_connections.getFromGlobalIndex(global_index);
                     list.push_back( node.number( 1 + conn.global_index()));
                 } else {
-                    const auto& ijk = getijk(record);
                     std::string msg = fmt::format("Problem with keyword {{keyword}}\n"
                                                   "In {{file}} line {{line}}\n"
                                                   "Connnection ({},{},{}) not defined for well {} ", ijk[0], ijk[1], ijk[2], wname);
