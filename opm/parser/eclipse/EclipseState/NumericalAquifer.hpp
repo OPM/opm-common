@@ -66,7 +66,7 @@ namespace Opm {
                              std::vector<int>& pvtnum,
                              std::vector<double>& cell_depth) const;
         std::array<std::set<size_t>, 3> transToRemove(const EclipseGrid& grid) const;
-        void appendNNC(NNC& nnc, const EclipseGrid& grid, const FieldPropsManager& fp) const;
+        void appendNNC(const EclipseGrid &grid, const FieldPropsManager &fp, NNC &nnc) const;
         size_t numCells() const;
     private:
         // Maybe this id_ is not necessary
@@ -94,7 +94,7 @@ namespace Opm {
         std::array<std::set<size_t>, 3> transToRemove(const EclipseGrid& grid) const;
         // TODO: maybe better wrap with other more direct functions, let us see the usage first
         const std::unordered_map<size_t, const NumericalAquiferCell>& aquiferCells() const;
-        void appendNNC(NNC& nnc, const EclipseGrid& grid, const FieldPropsManager& fp) const;
+        void appendNNC(const EclipseGrid &grid, const FieldPropsManager &fp, NNC &nnc) const;
         const NumericalAquiferCell& getCell(const size_t cell_global_index) const;
 
     private:

@@ -68,7 +68,7 @@ namespace Opm {
     {
         if ( this->aquifer_config.hasNumericalAquifer() ) {
             this->field_props.applyNumericalAquifer(this->aquifer_config);
-            this->aquifer_config.numericalAquifers().appendNNC(this->m_inputNnc, this->m_inputGrid, this->field_props);
+            this->aquifer_config.numericalAquifers().appendNNC(this->m_inputGrid, this->field_props, this->m_inputNnc);
         }
 
         m_inputGrid.resetACTNUM(this->field_props.actnum());
@@ -85,9 +85,6 @@ namespace Opm {
         }
 
         this->initTransMult();
-        // TODO: the content we need to do, change the pore volume of the aquifer cells
-        // TODO: not sure this is the best place to do the modification, let us do this way first
-        // this->aquifer_config.updateFieldProps(this->field_props);
 
         this->initFaults(deck);
         this->field_props.reset_actnum( this->m_inputGrid.getACTNUM() );

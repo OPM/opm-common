@@ -143,13 +143,10 @@ NumericalAquifers::transToRemove(const EclipseGrid& grid) const {
 }
 
 void NumericalAquifers::
-appendNNC(NNC& nnc, const EclipseGrid& grid,
-const FieldPropsManager& fp) const {
+appendNNC(const EclipseGrid &grid, const FieldPropsManager &fp, NNC &nnc) const {
     for (const auto& pair : this->aquifers_) {
-        pair.second.appendNNC(nnc, grid, fp);
+        pair.second.appendNNC(grid, fp, nnc);
     }
-
-    std::cout << " number of NNC is " << nnc.numNNC() << std::endl;
 }
 
 const std::unordered_map<size_t, const NumericalAquiferCell>& NumericalAquifers::
@@ -272,8 +269,7 @@ std::array<std::set<size_t>, 3> SingleNumericalAquifer::transToRemove(const Ecli
 }
 
 void SingleNumericalAquifer::
-appendNNC(NNC& nnc, const EclipseGrid& grid,
-          const FieldPropsManager& fp) const {
+appendNNC(const EclipseGrid &grid, const FieldPropsManager &fp, NNC &nnc) const {
     // adding the NNC between the numerical cells
     for (size_t i = 0; i < this->cells_.size() - 1; ++i) {
         const double trans1 = this->cells_[i].transmissibility;
@@ -284,6 +280,7 @@ appendNNC(NNC& nnc, const EclipseGrid& grid,
         nnc.addNNC(gc1, gc2, tran);
     }
 
+    const std::vector<double>& ntg = fp.get_double("NTG");
     const auto& cell1 = this->cells_[0];
     // all the connections connect to the first numerical aquifer cell
     const size_t gc1 = cell1.global_index;
@@ -312,13 +309,11 @@ appendNNC(NNC& nnc, const EclipseGrid& grid,
             d = cell_dims[2];
         }
 
-        // TODO: NTG should also apply here
         const double trans_cell = (con.trans_option == 0) ?
                               cell1.transmissibility : (2 * cell1.permeability * face_area / cell1.length);
 
         const auto& cell_perm = (fp.get_double(perm_string))[gc2];
-
-        const double trans_con = 2 * cell_perm * face_area / d;
+        const double trans_con = 2 * cell_perm * face_area * ntg[con.global_index] / d;
 
         const double tran = trans_con * trans_cell / (trans_con + trans_cell) * con.trans_multipler;
         nnc.addNNC(gc1, gc2, tran);
