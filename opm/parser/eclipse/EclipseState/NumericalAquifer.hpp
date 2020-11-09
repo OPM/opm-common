@@ -40,27 +40,19 @@ namespace Opm {
 
     struct NumericalAquiferCell {
         NumericalAquiferCell(const DeckRecord&, const EclipseGrid&, const FieldPropsManager&);
-        // TODO: we might not want this default constructor
-        NumericalAquiferCell() = default;
-        // TODO: what constructor should be?
-        // TODO: we might not need it
         size_t aquifer_id; // aquifer id
-        // TODO: what is the best way to organize them, maybe a std::map from <I,J,K>
         size_t I, J, K; // indices for the grid block
         double area; // cross-sectional area
         double length;
-        double porosity = -1.e100;
+        double porosity;
         double permeability;
-        // TODO: what is the better way to handle defaulted input?
-        double depth = -1.e100; // by default the grid block depth will be used
-        double init_pressure = -1.e100; // by default, the grid pressure from equilibration will be used
-        int pvttable = -1; // by default, the block PVTNUM
-        int sattable = -1; // saturation table number, by default, the block value
+        double depth; // by default the grid block depth will be used
+        double init_pressure; // by default, the grid pressure from equilibration will be used
+        int pvttable; // by default, the block PVTNUM
+        int sattable; // saturation table number, by default, the block value
         double pore_volume; // pore volume
         double transmissibility;
-        // TODO: temporary approach to get the result first, later to decide what index we need
         size_t global_index;
-        bool sameCoordinates(const size_t i, const size_t j, const size_t k) const;
     };
 
     class SingleNumericalAquifer {
@@ -76,7 +68,6 @@ namespace Opm {
         std::array<std::set<size_t>, 3> transToRemove(const EclipseGrid& grid) const;
         void appendNNC(NNC& nnc, const EclipseGrid& grid, const FieldPropsManager& fp) const;
         size_t numCells() const;
-        const NumericalAquiferCell& getCell(const size_t index) const;
     private:
         // Maybe this id_ is not necessary
         // Because if it is a map, the id will be there
@@ -104,6 +95,7 @@ namespace Opm {
         // TODO: maybe better wrap with other more direct functions, let us see the usage first
         const std::unordered_map<size_t, const NumericalAquiferCell>& aquiferCells() const;
         void appendNNC(NNC& nnc, const EclipseGrid& grid, const FieldPropsManager& fp) const;
+        const NumericalAquiferCell& getCell(const size_t cell_global_index) const;
 
     private:
         // std::un_ordered_map

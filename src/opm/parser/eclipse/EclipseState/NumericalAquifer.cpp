@@ -28,6 +28,8 @@
 #include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
+#include <opm/common/OpmLog/OpmLog.hpp>
+
 #include <iostream>
 
 #include "AquiferHelpers.hpp"
@@ -46,11 +48,12 @@ NumericalAquifers::NumericalAquifers(const Deck& deck, const EclipseGrid& grid, 
         for (const auto& record : *keyword) {
             const NumericalAquiferCell aqu_cell(record, grid, field_props);
             // TODO: we should check whether the grid cell is active or NOT
-            // Not sure how to handle duplicated input for aquifer cells yet, throw here
-            // until we
+            // NOT sure what to do if the cell is inactive
             if (this->hasCell(aqu_cell.global_index)) {
-                // TODO: it is good to keep the original I J K for messaging
-                throw;
+                std::ostringstream ss;
+                ss << "NUMERICAL AQUIFER CELL AT GRID CELL { " << aqu_cell.I + 1
+                   << " " << aqu_cell.J + 1 << " " << aqu_cell.K + 1 << " } IS DECLARED MORE THAN ONCE";
+                throw std::logic_error(ss.str());
             } else {
                 this->addAquiferCell(aqu_cell);
                 auto& cells = this->aquifer_cells_;
@@ -89,14 +92,23 @@ addAquiferConnections(const Deck &deck, const EclipseGrid &grid) {
         // aquifer can not connect to aquifer cells
         auto& aquifer = pair.second;
         for (const auto& con : aqu_cons) {
-            const double con_global_index = con.second.global_index;
+            const auto& aqu_con = con.second;
+            const size_t con_global_index = aqu_con.global_index;
             if (this->hasCell(con_global_index)) {
-                // TODO: we should output some information
+                const size_t cell_aquifer_id = this->getCell(con_global_index).aquifer_id;
+                std::ostringstream ss;
+                ss << "AQUIFER CONNECTION DECLARD AT GRID CELL { " << aqu_con.I + 1 << " " << aqu_con.J + 1 << " "
+                    << aqu_con.K + 1 << " } IS A AQUIFER CELL OF AQUIFER " << cell_aquifer_id << ", AND WILL BE REMOVED";
+                OpmLog::warning(ss.str());
                 continue;
             }
 
             if (con_set.find(con_global_index) != con_set.end()) {
-                continue;
+                // TODO: not totally sure whether a cell can be connected two different aquifers
+                std::ostringstream ss;
+                ss << "AQUIFER CONNECTION AT GRID CELL { " << aqu_con.I + 1 << " " << aqu_con.J + 1 << " "
+                   << aqu_con.K + 1 << " } IS DECLARED MORE THAN ONCE";
+                throw std::logic_error(ss.str());
             }
             aquifer.addAquiferConnection(con.second);
             con_set.insert(con_global_index);
@@ -150,7 +162,12 @@ bool NumericalAquifers::hasCell(const size_t cell_global_index) const {
     return (cells.find(cell_global_index) != cells.end());
 }
 
-    using AQUNUM = ParserKeywords::AQUNUM;
+const NumericalAquiferCell& NumericalAquifers::getCell(const size_t cell_global_index) const {
+    assert(this->hasCell(cell_global_index));
+    return this->aquifer_cells_.at(cell_global_index);
+}
+
+using AQUNUM = ParserKeywords::AQUNUM;
 NumericalAquiferCell::NumericalAquiferCell(const DeckRecord& record, const EclipseGrid& grid, const FieldPropsManager& field_props)
    : aquifer_id( record.getItem<AQUNUM::AQUIFER_ID>().get<int>(0) )
    , I ( record.getItem<AQUNUM::I>().get<int>(0) - 1 )
@@ -160,13 +177,13 @@ NumericalAquiferCell::NumericalAquiferCell(const DeckRecord& record, const Eclip
    , length ( record.getItem<AQUNUM::LENGTH>().getSIDouble(0) )
    , permeability( record.getItem<AQUNUM::PERM>().getSIDouble(0) )
 {
-    // TODO: NOT Sure how the ACTNUM plays here
     const auto& cell_depth = field_props.cellDepth();
     const auto& poro = field_props.get_double("PORO");
     const auto& pvtnum = field_props.get_int("PVTNUM");
     const auto& satnum = field_props.get_int("SATNUM");
+
     this->global_index = grid.getGlobalIndex(I, J, K);
-    // TODO: test with has Value?
+
     if ( !record.getItem<AQUNUM::PORO>().defaultApplied(0) ) {
         this->porosity = record.getItem<AQUNUM::PORO>().getSIDouble(0);
     } else {
@@ -199,10 +216,6 @@ NumericalAquiferCell::NumericalAquiferCell(const DeckRecord& record, const Eclip
     this->transmissibility = 2. * this->permeability * this->area / this->length;
 }
 
-bool NumericalAquiferCell::sameCoordinates(const size_t i, const size_t j, const size_t k) const {
-    return ( (this->I == i) && (this->J == j) && (this->K == k) );
-}
-
 void SingleNumericalAquifer::addAquiferCell(const NumericalAquiferCell& aqu_cell) {
     cells_.push_back(aqu_cell);
 }
@@ -213,14 +226,6 @@ SingleNumericalAquifer::SingleNumericalAquifer(const size_t aqu_id)
 }
 
 void SingleNumericalAquifer::addAquiferConnection(const NumAquiferCon& aqu_con) {
-    // we need to make sure the connection is not on the aquifer cells
-    for (const auto& cell : this->cells_) {
-        if (cell.sameCoordinates(aqu_con.I, aqu_con.J, aqu_con.K)) {
-            // OpmLog
-            std::cout << " I " << aqu_con.I << " J " << aqu_con.J << " K " << aqu_con.K << " is a aquifer cell " << std::endl;
-            return;
-        }
-    }
     this->connections_.push_back(aqu_con);
 }
 
@@ -322,10 +327,6 @@ appendNNC(NNC& nnc, const EclipseGrid& grid,
 
 size_t SingleNumericalAquifer::numCells() const {
     return this->cells_.size();
-}
-
-const NumericalAquiferCell& SingleNumericalAquifer::getCell(const size_t index) const {
-    return this->cells_[index];
 }
 
 }
