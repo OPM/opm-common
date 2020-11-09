@@ -72,7 +72,7 @@ const Aquancon& AquiferConfig::connections() const {
 }
 
 bool AquiferConfig::hasAquifer(const int aquID) const {
-    return aquifetp.hasAquifer(aquID) || aquiferct.hasAquifer(aquID);
+    return aquifetp.hasAquifer(aquID) || aquiferct.hasAquifer(aquID) || numerical_aquifers.hasAquifer(aquID);
 }
 
 bool AquiferConfig::hasNumericalAquifer() const {
