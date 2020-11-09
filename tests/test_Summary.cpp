@@ -410,7 +410,7 @@ double ecl_sum_get_group_var( const EclIO::ESmry* smry,
     return smry->get(variable + ':' + groupname)[timeIdx];
 }
 
-double ecl_sum_get_well_completion_var( const EclIO::ESmry* smry,
+double ecl_sum_get_well_connection_var( const EclIO::ESmry* smry,
                                         const int           timeIdx,
                                         const std::string&  wellname,
                                         const std::string&  variable,
@@ -925,8 +925,8 @@ BOOST_AUTO_TEST_CASE(group_group) {
 
 
 
-BOOST_AUTO_TEST_CASE(completion_kewords) {
-    setup cfg( "test_summary_completion" );
+BOOST_AUTO_TEST_CASE(connection_kewords) {
+    setup cfg( "test_summary_connection" );
 
     out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule, cfg.name );
     SummaryState st(std::chrono::system_clock::now());
@@ -942,48 +942,61 @@ BOOST_AUTO_TEST_CASE(completion_kewords) {
     const auto* resp = res.get();
 
     /* Production rates */
-    BOOST_CHECK_CLOSE( 100.0,     ecl_sum_get_well_completion_var( resp, 1, "W_1", "CWPR", 1, 1, 1 ), 1e-5 );
-    BOOST_CHECK_CLOSE( 100.1,     ecl_sum_get_well_completion_var( resp, 1, "W_1", "COPR", 1, 1, 1 ), 1e-5 );
-    BOOST_CHECK_CLOSE( 100.2,     ecl_sum_get_well_completion_var( resp, 1, "W_1", "CGPR", 1, 1, 1 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 100.0,     ecl_sum_get_well_connection_var( resp, 1, "W_1", "CWPR", 1, 1, 1 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 100.1,     ecl_sum_get_well_connection_var( resp, 1, "W_1", "COPR", 1, 1, 1 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 100.2,     ecl_sum_get_well_connection_var( resp, 1, "W_1", "CGPR", 1, 1, 1 ), 1e-5 );
+
+    BOOST_CHECK_CLOSE(ecl_sum_get_well_var(resp, 1, "W_1", "WOPRL__1"), ecl_sum_get_well_connection_var(resp, 1, "W_1", "COPR", 1,1,1), 1e-5);
+    BOOST_CHECK_CLOSE(ecl_sum_get_well_var(resp, 1, "W_2", "WOPRL__2"), ecl_sum_get_well_connection_var(resp, 1, "W_2", "COPR", 2,1,1) +
+                                                                        ecl_sum_get_well_connection_var(resp, 1, "W_2", "COPR", 2,1,2), 1e-5);
+    BOOST_CHECK_CLOSE(ecl_sum_get_well_var(resp, 1, "W_3", "WOPRL__3"), ecl_sum_get_well_connection_var(resp, 1, "W_3", "COPR", 3,1,1), 1e-5);
+    BOOST_CHECK_EQUAL(ecl_sum_get_well_var(resp, 1, "W_2", "WOPRL__2"), ecl_sum_get_well_var(resp, 1, "W_2", "WOFRL__2"));
+
+    BOOST_CHECK_CLOSE(ecl_sum_get_well_var(resp, 1, "W_1", "WOPRL__1"), ecl_sum_get_well_connection_var(resp, 1, "W_1", "COPRL", 1,1,1), 1e-5);
+    BOOST_CHECK_CLOSE(ecl_sum_get_well_connection_var(resp, 1, "W_2", "COPRL", 2, 1, 1), ecl_sum_get_well_connection_var(resp, 1, "W_2", "COPR", 2,1,1) +
+                                                                                         ecl_sum_get_well_connection_var(resp, 1, "W_2", "COPR", 2,1,2), 1e-5);
+    BOOST_CHECK_CLOSE(ecl_sum_get_well_connection_var(resp, 1, "W_2", "COPRL", 2, 1, 2), ecl_sum_get_well_connection_var(resp, 1, "W_2", "COPR", 2,1,1) +
+                                                                                         ecl_sum_get_well_connection_var(resp, 1, "W_2", "COPR", 2,1,2), 1e-5);
+
 
     /* Production totals */
-    BOOST_CHECK_CLOSE( 100.0,     ecl_sum_get_well_completion_var( resp, 1, "W_1", "CWPT", 1, 1, 1 ), 1e-5 );
-    BOOST_CHECK_CLOSE( 100.1,     ecl_sum_get_well_completion_var( resp, 1, "W_1", "COPT", 1, 1, 1 ), 1e-5 );
-    BOOST_CHECK_CLOSE( 100.2,     ecl_sum_get_well_completion_var( resp, 1, "W_1", "CGPT", 1, 1, 1 ), 1e-5 );
-    BOOST_CHECK_CLOSE( 100.3,     ecl_sum_get_well_completion_var( resp, 1, "W_1", "CNPT", 1, 1, 1 ), 1e-5 );
-    BOOST_CHECK_CLOSE( 2 * 100.0, ecl_sum_get_well_completion_var( resp, 2, "W_1", "CWPT", 1, 1, 1 ), 1e-5 );
-    BOOST_CHECK_CLOSE( 2 * 100.1, ecl_sum_get_well_completion_var( resp, 2, "W_1", "COPT", 1, 1, 1 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 100.0,     ecl_sum_get_well_connection_var( resp, 1, "W_1", "CWPT", 1, 1, 1 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 100.1,     ecl_sum_get_well_connection_var( resp, 1, "W_1", "COPT", 1, 1, 1 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 100.2,     ecl_sum_get_well_connection_var( resp, 1, "W_1", "CGPT", 1, 1, 1 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 100.3,     ecl_sum_get_well_connection_var( resp, 1, "W_1", "CNPT", 1, 1, 1 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 2 * 100.0, ecl_sum_get_well_connection_var( resp, 2, "W_1", "CWPT", 1, 1, 1 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 2 * 100.1, ecl_sum_get_well_connection_var( resp, 2, "W_1", "COPT", 1, 1, 1 ), 1e-5 );
 
-    BOOST_CHECK_CLOSE( 2 * 100.2, ecl_sum_get_well_completion_var( resp, 2, "W_1", "CGPT", 1, 1, 1 ), 1e-5 );
-    BOOST_CHECK_CLOSE( 2 * 200.2, ecl_sum_get_well_completion_var( resp, 2, "W_2", "CGPT", 2, 1, 1 ), 1e-5 );
-    BOOST_CHECK_CLOSE( 0        , ecl_sum_get_well_completion_var( resp, 2, "W_3", "CGPT", 3, 1, 1 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 2 * 100.2, ecl_sum_get_well_connection_var( resp, 2, "W_1", "CGPT", 1, 1, 1 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 2 * 200.2, ecl_sum_get_well_connection_var( resp, 2, "W_2", "CGPT", 2, 1, 1 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 0        , ecl_sum_get_well_connection_var( resp, 2, "W_3", "CGPT", 3, 1, 1 ), 1e-5 );
 
-    BOOST_CHECK_CLOSE( 1 * 100.2, ecl_sum_get_well_completion_var( resp, 1, "W_1", "CGPT", 1, 1, 1 ), 1e-5 );
-    BOOST_CHECK_CLOSE( 1 * 200.2, ecl_sum_get_well_completion_var( resp, 1, "W_2", "CGPT", 2, 1, 1 ), 1e-5 );
-    BOOST_CHECK_CLOSE( 0        , ecl_sum_get_well_completion_var( resp, 1, "W_3", "CGPT", 3, 1, 1 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 1 * 100.2, ecl_sum_get_well_connection_var( resp, 1, "W_1", "CGPT", 1, 1, 1 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 1 * 200.2, ecl_sum_get_well_connection_var( resp, 1, "W_2", "CGPT", 2, 1, 1 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 0        , ecl_sum_get_well_connection_var( resp, 1, "W_3", "CGPT", 3, 1, 1 ), 1e-5 );
 
-    BOOST_CHECK_CLOSE( 2 * 100.3, ecl_sum_get_well_completion_var( resp, 2, "W_1", "CNPT", 1, 1, 1 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 2 * 100.3, ecl_sum_get_well_connection_var( resp, 2, "W_1", "CNPT", 1, 1, 1 ), 1e-5 );
 
     /* Injection rates */
-    BOOST_CHECK_CLOSE( 300.0,       ecl_sum_get_well_completion_var( resp, 1, "W_3", "CWIR", 3, 1, 1 ), 1e-5 );
-    BOOST_CHECK_CLOSE( 300.2,       ecl_sum_get_well_completion_var( resp, 1, "W_3", "CGIR", 3, 1, 1 ), 1e-5 );
-    BOOST_CHECK_CLOSE( 300.16, ecl_sum_get_well_completion_var( resp, 1, "W_3", "CCIR", 3, 1, 1 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 300.0,       ecl_sum_get_well_connection_var( resp, 1, "W_3", "CWIR", 3, 1, 1 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 300.2,       ecl_sum_get_well_connection_var( resp, 1, "W_3", "CGIR", 3, 1, 1 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 300.16, ecl_sum_get_well_connection_var( resp, 1, "W_3", "CCIR", 3, 1, 1 ), 1e-5 );
 
     /* Injection totals */
-    BOOST_CHECK_CLOSE( 300.0,       ecl_sum_get_well_completion_var( resp, 1, "W_3", "CWIT", 3, 1, 1 ), 1e-5 );
-    BOOST_CHECK_CLOSE( 300.2,       ecl_sum_get_well_completion_var( resp, 1, "W_3", "CGIT", 3, 1, 1 ), 1e-5 );
-    BOOST_CHECK_CLOSE( 300.3,       ecl_sum_get_well_completion_var( resp, 1, "W_3", "CNIT", 3, 1, 1 ), 1e-5 );
-    BOOST_CHECK_CLOSE( 300.16, ecl_sum_get_well_completion_var( resp, 1, "W_3", "CCIT", 3, 1, 1 ), 1e-5 );
-    BOOST_CHECK_CLOSE( 2 * 300.0,   ecl_sum_get_well_completion_var( resp, 2, "W_3", "CWIT", 3, 1, 1 ), 1e-5 );
-    BOOST_CHECK_CLOSE( 2 * 300.2,   ecl_sum_get_well_completion_var( resp, 2, "W_3", "CGIT", 3, 1, 1 ), 1e-5 );
-    BOOST_CHECK_CLOSE( 2 * 300.3,   ecl_sum_get_well_completion_var( resp, 2, "W_3", "CNIT", 3, 1, 1 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 300.0,       ecl_sum_get_well_connection_var( resp, 1, "W_3", "CWIT", 3, 1, 1 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 300.2,       ecl_sum_get_well_connection_var( resp, 1, "W_3", "CGIT", 3, 1, 1 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 300.3,       ecl_sum_get_well_connection_var( resp, 1, "W_3", "CNIT", 3, 1, 1 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 300.16, ecl_sum_get_well_connection_var( resp, 1, "W_3", "CCIT", 3, 1, 1 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 2 * 300.0,   ecl_sum_get_well_connection_var( resp, 2, "W_3", "CWIT", 3, 1, 1 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 2 * 300.2,   ecl_sum_get_well_connection_var( resp, 2, "W_3", "CGIT", 3, 1, 1 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 2 * 300.3,   ecl_sum_get_well_connection_var( resp, 2, "W_3", "CNIT", 3, 1, 1 ), 1e-5 );
     BOOST_CHECK_CLOSE( 2 * 300.16,
-                                    ecl_sum_get_well_completion_var( resp, 2, "W_3", "CCIT", 3, 1, 1 ), 1e-5 );
+                                    ecl_sum_get_well_connection_var( resp, 2, "W_3", "CCIT", 3, 1, 1 ), 1e-5 );
 
     /* Solvent flow rate + or - Note OPM uses negative values for producers, while CNFR outputs positive
     values for producers*/
-    BOOST_CHECK_CLOSE( -300.3,     ecl_sum_get_well_completion_var( resp, 1, "W_3", "CNFR", 3, 1, 1 ), 1e-5 );
-    BOOST_CHECK_CLOSE(  200.3,     ecl_sum_get_well_completion_var( resp, 1, "W_2", "CNFR", 2, 1, 1 ), 1e-5 );
+    BOOST_CHECK_CLOSE( -300.3,     ecl_sum_get_well_connection_var( resp, 1, "W_3", "CNFR", 3, 1, 1 ), 1e-5 );
+    BOOST_CHECK_CLOSE(  200.3,     ecl_sum_get_well_connection_var( resp, 1, "W_2", "CNFR", 2, 1, 1 ), 1e-5 );
 }
 
 BOOST_AUTO_TEST_CASE(DATE) {
@@ -1488,13 +1501,13 @@ BOOST_AUTO_TEST_CASE(BLOCK_VARIABLES) {
     BOOST_CHECK_CLOSE( 31.0  , units.to_si( UnitSystem::measure::viscosity , ecl_sum_get_general_var( resp, 1, "BVOIL:1,1,1")) , 1e-5);
     BOOST_CHECK_CLOSE( 33.0  , units.to_si( UnitSystem::measure::viscosity , ecl_sum_get_general_var( resp, 1, "BOVIS:1,1,1")) , 1e-5);
 
-    BOOST_CHECK_CLOSE( 111.222 , ecl_sum_get_well_completion_var( resp, 1, "W_1", "CTFAC", 1, 1, 1), 1e-5);
-    BOOST_CHECK_CLOSE( 222.333 , ecl_sum_get_well_completion_var( resp, 1, "W_2", "CTFAC", 2, 1, 1), 1e-5);
-    BOOST_CHECK_CLOSE( 333.444 , ecl_sum_get_well_completion_var( resp, 1, "W_2", "CTFAC", 2, 1, 2), 1e-5);
-    BOOST_CHECK_CLOSE( 444.555 , ecl_sum_get_well_completion_var( resp, 1, "W_3", "CTFAC", 3, 1, 1), 1e-5);
+    BOOST_CHECK_CLOSE( 111.222 , ecl_sum_get_well_connection_var( resp, 1, "W_1", "CTFAC", 1, 1, 1), 1e-5);
+    BOOST_CHECK_CLOSE( 222.333 , ecl_sum_get_well_connection_var( resp, 1, "W_2", "CTFAC", 2, 1, 1), 1e-5);
+    BOOST_CHECK_CLOSE( 333.444 , ecl_sum_get_well_connection_var( resp, 1, "W_2", "CTFAC", 2, 1, 2), 1e-5);
+    BOOST_CHECK_CLOSE( 444.555 , ecl_sum_get_well_connection_var( resp, 1, "W_3", "CTFAC", 3, 1, 1), 1e-5);
 
-    BOOST_CHECK_CLOSE( 111.222 , ecl_sum_get_well_completion_var( resp, 3, "W_1", "CTFAC", 1, 1, 1), 1e-5);
-    BOOST_CHECK_CLOSE( 111.222 , ecl_sum_get_well_completion_var( resp, 4, "W_1", "CTFAC", 1, 1, 1), 1e-5);
+    BOOST_CHECK_CLOSE( 111.222 , ecl_sum_get_well_connection_var( resp, 3, "W_1", "CTFAC", 1, 1, 1), 1e-5);
+    BOOST_CHECK_CLOSE( 111.222 , ecl_sum_get_well_connection_var( resp, 4, "W_1", "CTFAC", 1, 1, 1), 1e-5);
 
     // Cell is not active
     BOOST_CHECK( !ecl_sum_has_general_var( resp , "BPR:2,1,10"));
@@ -1861,8 +1874,8 @@ BOOST_AUTO_TEST_CASE(efficiency_factor) {
 
         BOOST_CHECK_CLOSE( 300 * 0.2 * 0.01, ecl_sum_get_general_var( resp , 1 , "RWIR:1" ) , 1e-5);
 
-        BOOST_CHECK_CLOSE( 200.1, ecl_sum_get_well_completion_var( resp, 1, "W_2", "COPR", 2, 1, 1 ), 1e-5 );
-        BOOST_CHECK_CLOSE( 200.1 * 0.2 * 0.01, ecl_sum_get_well_completion_var( resp, 1, "W_2", "COPT", 2, 1, 1 ), 1e-5 );
+        BOOST_CHECK_CLOSE( 200.1, ecl_sum_get_well_connection_var( resp, 1, "W_2", "COPR", 2, 1, 1 ), 1e-5 );
+        BOOST_CHECK_CLOSE( 200.1 * 0.2 * 0.01, ecl_sum_get_well_connection_var( resp, 1, "W_2", "COPT", 2, 1, 1 ), 1e-5 );
 }
 
 

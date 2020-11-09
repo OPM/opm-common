@@ -701,6 +701,24 @@ WGIGR
 WWIGR
 /
 
+WOPRL
+  W_1 1 /
+  W_2 2 /
+  W_3 3 /
+/
+
+WOFRL
+  W_1 1 /
+  W_2 2 /
+  W_3 3 /
+/
+
+COPRL
+  W_1 1 1 1 /
+  W_2 /
+/
+
+
 -- Water injection per connection
 CWIR
   * /
@@ -833,6 +851,12 @@ COMPDAT
     W_2   0 0  2  2 2*              1*        5  10 0.2 /   -- Active index: 101
     W_3   0 0  1  1 2*              1*        2*    0.7 /   -- Active index: 2
     W_6   0 0  2  2 2*              1*        2*    0.7 /   -- Active index: 2
+/
+
+COMPLUMP
+  'W_1'  *  *  *  * 1 /
+  'W_2'  *  *  *  * 2 /
+  'W_3'  *  *  *  * 3 /
 /
 
 WCONHIST

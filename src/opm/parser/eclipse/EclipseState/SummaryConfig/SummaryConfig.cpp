@@ -274,6 +274,43 @@ namespace {
         return (keyword[0] == 'A') && (keyword != "ALL");
     }
 
+    bool is_connection_completion(const std::string& keyword)
+    {
+        if (keyword[0] != 'C')
+            return false;
+
+        if (keyword.back() != 'L')
+            return false;
+
+        if (is_udq(keyword))
+            return false;
+
+        if (keyword.size() != 5)
+            return false;
+
+        return true;
+    }
+
+    bool is_well_completion(const std::string& keyword)
+    {
+        if (keyword[0] != 'W')
+            return false;
+
+        if (keyword.back() != 'L')
+            return false;
+
+        if (is_liquid_phase(keyword))
+            return false;
+
+        if (is_udq(keyword))
+            return false;
+
+        if (keyword == "WMCTL")
+            return false;
+
+        return true;
+    }
+
     bool is_node_keyword(const std::string& keyword)
     {
         static const auto nodekw = keyword_set {
@@ -395,12 +432,97 @@ inline void keywordAquifer( SummaryConfig::keyword_list& list,
     }
 }
 
+
 inline std::array< int, 3 > getijk( const DeckRecord& record ) {
     return {{
         record.getItem( "I" ).get< int >( 0 ) - 1,
         record.getItem( "J" ).get< int >( 0 ) - 1,
         record.getItem( "K" ).get< int >( 0 ) - 1
     }};
+}
+
+
+inline void keywordCL( SummaryConfig::keyword_list& list,
+                       const ParseContext& parseContext,
+                       ErrorGuard& errors,
+                       const DeckKeyword& keyword,
+                       const Schedule& schedule ,
+                       const GridDims& dims)
+{
+    auto node = SummaryConfigNode{keyword.name(), SummaryConfigNode::Category::Connection, keyword.location()};
+    node.parameterType( parseKeywordType(keyword.name()) );
+    node.isUserDefined( is_udq(keyword.name()) );
+
+    for (const auto& record : keyword) {
+        const auto& pattern = record.getItem(0).get<std::string>(0);
+        auto well_names = schedule.wellNames( pattern, schedule.size() - 1 );
+
+
+        if( well_names.empty() )
+            handleMissingWell( parseContext, errors, keyword.location(), pattern );
+
+        const auto ijk_defaulted = record.getItem( 1 ).defaultApplied( 0 );
+        for (const auto& wname : well_names) {
+            const auto& well = schedule.getWellatEnd(wname);
+            const auto& all_connections = well.getConnections();
+
+            node.namedEntity( wname );
+            if (ijk_defaulted) {
+                for (const auto& conn : all_connections)
+                    list.push_back( node.number( 1 + conn.global_index()));
+            } else {
+                const auto& ijk = getijk(record);
+                auto global_index = dims.getGlobalIndex(ijk[0], ijk[1], ijk[2]);
+
+                if (all_connections.hasGlobalIndex(global_index)) {
+                    const auto& conn = all_connections.getFromGlobalIndex(global_index);
+                    list.push_back( node.number( 1 + conn.global_index()));
+                } else {
+                    const auto& ijk = getijk(record);
+                    std::string msg = fmt::format("Problem with keyword {{keyword}}\n"
+                                                  "In {{file}} line {{line}}\n"
+                                                  "Connnection ({},{},{}) not defined for well {} ", ijk[0], ijk[1], ijk[2], wname);
+                    parseContext.handleError( ParseContext::SUMMARY_UNHANDLED_KEYWORD, msg, keyword.location(), errors);
+                }
+            }
+        }
+    }
+}
+
+inline void keywordWL( SummaryConfig::keyword_list& list,
+                      const ParseContext& parseContext,
+                      ErrorGuard& errors,
+                      const DeckKeyword& keyword,
+                      const Schedule& schedule )
+{
+    for (const auto& record : keyword) {
+        const auto& pattern = record.getItem(0).get<std::string>(0);
+        const int completion = record.getItem(1).get<int>(0);
+        auto well_names = schedule.wellNames( pattern, schedule.size() - 1 );
+
+        // We add the completion number both the extra field which contains
+        // parsed data from the keywordname - i.e. WOPRL__8 and also to the
+        // numeric member which will be written to the NUMS field.
+        auto node = SummaryConfigNode{ fmt::format("{}{:_>3}", keyword.name(), completion), SummaryConfigNode::Category::Well, keyword.location()};
+        node.parameterType( parseKeywordType(keyword.name()) );
+        node.isUserDefined( is_udq(keyword.name()) );
+        node.number(completion);
+
+        if( well_names.empty() )
+            handleMissingWell( parseContext, errors, keyword.location(), pattern );
+
+        for (const auto& wname : well_names) {
+            const auto& well = schedule.getWellatEnd(wname);
+            if (well.hasCompletion(completion))
+                list.push_back( node.namedEntity( wname ) );
+            else {
+                std::string msg = fmt::format("Problem with keyword {{keyword}}\n"
+                                              "In {{file}} line {{line}}\n"
+                                              "Completion number {} not defined for well {} ", completion, wname);
+                parseContext.handleError( ParseContext::SUMMARY_UNHANDLED_KEYWORD, msg, keyword.location(), errors);
+            }
+        }
+    }
 }
 
 inline void keywordW( SummaryConfig::keyword_list& list,
@@ -422,25 +544,8 @@ inline void keywordW( SummaryConfig::keyword_list& list,
                       ErrorGuard& errors,
                       const DeckKeyword& keyword,
                       const Schedule& schedule ) {
-    /*
-      Two step check for whether to discard this keyword as unsupported:
-
-      1. Completion quantity keywords are currently not supported.  These are
-      well summary keywords, apart from "WMCTL" and "WPIL", that end in 'L'.
-
-      2. If the keyword is a UDQ keyword there is no convention enforced to
-      the last character, and in that case it is treated as a normal well
-      keyword anyways.
-    */
-    if (keyword.name().back() == 'L') {
-        if (! (is_control_mode(keyword.name()) || is_liquid_phase(keyword.name()) || is_udq(keyword.name()))) {
-            const auto& location = keyword.location();
-            std::string msg = "Unsupported summary output keyword {}\n"
-                              "In {file} line {line}";
-            parseContext.handleError( ParseContext::SUMMARY_UNHANDLED_KEYWORD, msg, location, errors);
-            return;
-        }
-    }
+    if (is_well_completion(keyword.name()))
+        return keywordWL(list, parseContext, errors, keyword, schedule);
 
     auto param = SummaryConfigNode {
         keyword.name(), SummaryConfigNode::Category::Well, keyword.location()
@@ -681,6 +786,9 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
                         const Schedule& schedule,
                         const GridDims& dims) {
 
+    if (is_connection_completion(keyword.name()))
+        return keywordCL(list, parseContext, errors, keyword, schedule, dims);
+
     auto param = SummaryConfigNode {
         keyword.name(), SummaryConfigNode::Category::Connection, keyword.location()
     }
@@ -703,8 +811,8 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
             param.namedEntity(name);
             const auto& well = schedule.getWellatEnd(name);
             /*
-             * we don't want to add completions that don't exist, so we iterate
-             * over a well's completions regardless of the desired block is
+             * we don't want to add connections that don't exist, so we iterate
+             * over a well's connections regardless of the desired block is
              * defaulted or not
              */
             for( const auto& connection : well.getConnections() ) {
@@ -1000,6 +1108,12 @@ inline void handleKW( SummaryConfig::keyword_list& list,
 // =====================================================================
 
 SummaryConfigNode::Type parseKeywordType(std::string keyword) {
+    if (is_well_completion(keyword))
+        keyword.pop_back();
+
+    if (is_connection_completion(keyword))
+        keyword.pop_back();
+
     if (is_rate(keyword)) return SummaryConfigNode::Type::Rate;
     if (is_total(keyword)) return SummaryConfigNode::Type::Total;
     if (is_ratio(keyword)) return SummaryConfigNode::Type::Ratio;

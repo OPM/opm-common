@@ -666,21 +666,6 @@ BOOST_AUTO_TEST_CASE(FMWPA) {
 
 
 
-BOOST_AUTO_TEST_CASE( WOPRL ) {
-    const std::string input = R"(
-WOPRL
-   'W_1'  1 /
-   'WX2'  2 /
-   'W_3'  3 /
-/
-)";
-
-    ParseContext parseContext;
-    parseContext.update(ParseContext::SUMMARY_UNHANDLED_KEYWORD, InputError::THROW_EXCEPTION);
-    BOOST_CHECK_THROW(createSummary( input, parseContext ), OpmInputError);
-    parseContext.update(ParseContext::SUMMARY_UNHANDLED_KEYWORD, InputError::IGNORE);
-    BOOST_CHECK_NO_THROW( createSummary(input, parseContext ));
-}
 
 
 BOOST_AUTO_TEST_CASE( summary_require3DField ) {
@@ -1219,3 +1204,118 @@ ROPT_REG
     auto rpr = summary_config.keywords("RP*");
     BOOST_CHECK_EQUAL(rpr.size(), 3U);
 }
+
+BOOST_AUTO_TEST_CASE( WOPRL ) {
+    const std::string input1 = R"(
+WOPRL
+   'W_1'  2 /
+   'xxx'  2 /
+/
+)";
+
+
+const std::string input2 = R"(
+WOPRL
+   'W_1'  2   /
+   'W_1'  999 /
+/
+)";
+
+    ParseContext parseContext;
+    // Invalid well
+    parseContext.update(ParseContext::SUMMARY_UNKNOWN_WELL, InputError::THROW_EXCEPTION);
+    BOOST_CHECK_THROW(createSummary( input1, parseContext ), OpmInputError);
+
+    // Invalid completion
+    parseContext.update(ParseContext::SUMMARY_UNHANDLED_KEYWORD, InputError::THROW_EXCEPTION);
+    BOOST_CHECK_THROW(createSummary( input2, parseContext ), OpmInputError);
+
+
+    parseContext.update(ParseContext::SUMMARY_UNHANDLED_KEYWORD, InputError::IGNORE);
+    parseContext.update(ParseContext::SUMMARY_UNKNOWN_WELL, InputError::IGNORE);
+    const auto& summary_config1 = createSummary(input1, parseContext);
+    BOOST_CHECK(summary_config1.hasKeyword("WOPRL__2"));
+    BOOST_CHECK_EQUAL(summary_config1.size(), 1);
+
+    const auto& summary_config2 = createSummary(input2, parseContext );
+    BOOST_CHECK(summary_config2.hasKeyword("WOPRL__2"));
+    BOOST_CHECK(!summary_config2.hasKeyword("WOPRL999"));
+    const auto& node = summary_config2[0];
+    BOOST_CHECK_EQUAL( node.number(), 2 );
+    BOOST_CHECK(node.type() == EclIO::SummaryNode::Type::Rate);
+}
+
+BOOST_AUTO_TEST_CASE( COPRL ) {
+    const std::string input1 = R"(
+COPRL
+   'W_1'  3 7 2 /
+   'xxx'  3 7 2 /
+/
+)";
+
+
+const std::string input2 = R"(
+COPRL
+   'W_1'  3 7 2   /
+   'W_1'  2 6 1   /
+/
+)";
+
+const std::string input3 = R"(
+COPRL
+   'W_1'  /
+/
+)";
+
+    ParseContext parseContext;
+    // Invalid well
+    parseContext.update(ParseContext::SUMMARY_UNKNOWN_WELL, InputError::THROW_EXCEPTION);
+    BOOST_CHECK_THROW(createSummary( input1, parseContext ), OpmInputError);
+
+    // Invalid connection
+    parseContext.update(ParseContext::SUMMARY_UNHANDLED_KEYWORD, InputError::THROW_EXCEPTION);
+    BOOST_CHECK_THROW(createSummary( input2, parseContext ), OpmInputError);
+
+
+    parseContext.update(ParseContext::SUMMARY_UNHANDLED_KEYWORD, InputError::IGNORE);
+    parseContext.update(ParseContext::SUMMARY_UNKNOWN_WELL, InputError::IGNORE);
+    const auto& summary_config1 = createSummary(input1, parseContext);
+    BOOST_CHECK(summary_config1.hasKeyword("COPRL"));
+    BOOST_CHECK_EQUAL(summary_config1.size(), 1);
+
+
+    EclipseGrid grid(10,10,10);
+    const auto g1 = grid.getGlobalIndex(1,1,0) + 1;
+    const auto g2 = grid.getGlobalIndex(1,1,1) + 1;
+    const auto g3 = grid.getGlobalIndex(2,6,1) + 1;
+
+    const auto& summary_config2 = createSummary(input2, parseContext );
+    BOOST_CHECK(summary_config2.hasKeyword("COPRL"));
+    BOOST_CHECK_EQUAL( summary_config2.size(), 1);
+    {
+        const auto& node = summary_config2[0];
+        BOOST_CHECK_EQUAL( node.number(),  g3);
+        BOOST_CHECK(node.type() == EclIO::SummaryNode::Type::Rate);
+    }
+
+
+    const auto& summary_config3 = createSummary(input3, parseContext );
+    BOOST_CHECK(summary_config3.hasKeyword("COPRL"));
+    BOOST_CHECK_EQUAL( summary_config3.size(), 3);
+    {
+        const auto& node = summary_config3[0];
+        BOOST_CHECK_EQUAL( node.number(),  g1);
+    }
+    {
+        const auto& node = summary_config3[1];
+        BOOST_CHECK_EQUAL( node.number(),  g2);
+    }
+    {
+        const auto& node = summary_config3[2];
+        BOOST_CHECK_EQUAL( node.number(),  g3);
+    }
+}
+
+
+
+
