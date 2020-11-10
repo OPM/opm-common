@@ -528,7 +528,13 @@ inline quantity rate( const fn_args& args ) {
 
 template< rt phase, bool injection = true >
 inline quantity ratel( const fn_args& args ) {
-    const quantity zero = { 0, rate_unit< phase >() };
+    const auto unit = ((phase == rt::polymer) || (phase == rt::brine))
+        ? measure::mass_rate : rate_unit<phase>();
+
+    const quantity zero = { 0.0, unit };
+
+    if (args.schedule_wells.empty())
+        return zero;
 
     const auto& well = args.schedule_wells.front();
     const auto& name = well.name();
@@ -554,13 +560,18 @@ inline quantity ratel( const fn_args& args ) {
     }
     if( !injection ) sum *= -1;
 
-    if (phase == rt::polymer || phase == rt::brine) return { sum, measure::mass_rate };
-    return { sum, rate_unit< phase >() };
+    return { sum, unit };
 }
 
 template< rt phase, bool injection = true >
 inline quantity cratel( const fn_args& args ) {
-    const quantity zero = { 0, rate_unit< phase >() };
+    const auto unit = ((phase == rt::polymer) || (phase == rt::brine))
+        ? measure::mass_rate : rate_unit<phase>();
+
+    const quantity zero = { 0.0, unit };
+
+    if (args.schedule_wells.empty())
+        return zero;
 
     const auto& well = args.schedule_wells.front();
     const auto& name = well.name();
@@ -586,8 +597,7 @@ inline quantity cratel( const fn_args& args ) {
     }
     if( !injection ) sum *= -1;
 
-    if (phase == rt::polymer || phase == rt::brine) return { sum, measure::mass_rate };
-    return { sum, rate_unit< phase >() };
+    return { sum, unit };
 }
 
 
