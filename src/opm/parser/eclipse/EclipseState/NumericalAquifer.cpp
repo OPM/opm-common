@@ -180,33 +180,36 @@ NumericalAquiferCell::NumericalAquiferCell(const DeckRecord& record, const Eclip
     const auto& satnum = field_props.get_int("SATNUM");
 
     this->global_index = grid.getGlobalIndex(I, J, K);
+    const size_t active_index = grid.activeIndex(this->global_index);
 
     if ( !record.getItem<AQUNUM::PORO>().defaultApplied(0) ) {
         this->porosity = record.getItem<AQUNUM::PORO>().getSIDouble(0);
     } else {
-        this->porosity = poro[global_index];
+        this->porosity = poro[active_index];
     }
 
     if ( !record.getItem<AQUNUM::DEPTH>().defaultApplied(0) ) {
         this->depth = record.getItem<AQUNUM::DEPTH>().getSIDouble(0);
     } else {
-        this->depth = cell_depth[global_index];
+        this->depth = cell_depth[active_index];
     }
 
     if ( !record.getItem<AQUNUM::INITIAL_PRESSURE>().defaultApplied(0) ) {
         this->init_pressure = record.getItem<AQUNUM::INITIAL_PRESSURE>().getSIDouble(0);
+    } else {
+        this->init_pressure = -1.e-300;
     }
 
     if ( !record.getItem<AQUNUM::PVT_TABLE_NUM>().defaultApplied(0) ) {
         this->pvttable = record.getItem<AQUNUM::PVT_TABLE_NUM>().get<int>(0);
     } else {
-        this->pvttable = pvtnum[global_index];
+        this->pvttable = pvtnum[active_index];
     }
 
     if ( !record.getItem<AQUNUM::SAT_TABLE_NUM>().defaultApplied(0) ) {
         this->sattable = record.getItem<AQUNUM::SAT_TABLE_NUM>().get<int>(0);
     } else {
-        this->sattable = satnum[global_index];
+        this->sattable = satnum[active_index];
     }
 
     this->pore_volume = this->length * this->area * this->porosity;
