@@ -53,6 +53,17 @@
 using namespace Opm;
 
 
+Schedule make_schedule(const std::string& deck_string, const ParseContext& parseContext = {}) {
+    ErrorGuard errors;
+    Opm::Parser parser;
+    auto deck = parser.parseString(deck_string);
+    EclipseGrid grid1(10,10,10);
+    TableManager table ( deck );
+    FieldPropsManager fp( deck, Phases{true, true, true}, grid1, table);
+    auto python = std::make_shared<Python>();
+    Runspec runspec (deck);
+    return Schedule(deck, grid1, fp, runspec, parseContext, errors, python);
+}
 
 
 BOOST_AUTO_TEST_CASE(Create) {
@@ -128,27 +139,15 @@ ENDACTIO
 TSTEP
    10 /
 )"};
-    auto python = std::make_shared<Python>();
-    Opm::Parser parser;
-    auto deck1 = parser.parseString(MISSING_END);
-    auto deck2 = parser.parseString(WITH_WELSPECS);
-    auto deck3 = parser.parseString(WITH_GRID);
-    EclipseGrid grid1(10,10,10);
-    TableManager table ( deck1 );
-    FieldPropsManager fp( deck1, Phases{true, true, true}, grid1, table);
-    Runspec runspec (deck1);
+    BOOST_CHECK_THROW(make_schedule(MISSING_END), OpmInputError);
 
-    // The ACTIONX keyword has no matching 'ENDACTIO' -> exception
-    BOOST_CHECK_THROW(Schedule(deck1, grid1, fp, runspec, python), OpmInputError);
-
-    Schedule sched(deck2, grid1, fp, runspec, python);
+    Schedule sched = make_schedule(WITH_WELSPECS);
     BOOST_CHECK( !sched.hasWell("W1") );
     BOOST_CHECK( sched.hasWell("W2"));
 
     // The deck3 contains the 'GRID' keyword in the ACTIONX block - that is not a whitelisted keyword.
     ParseContext parseContext( {{ParseContext::ACTIONX_ILLEGAL_KEYWORD, InputError::THROW_EXCEPTION}} );
-    ErrorGuard errors;
-    BOOST_CHECK_THROW(Schedule(deck3, grid1, fp, runspec, parseContext, errors, python), OpmInputError);
+    BOOST_CHECK_THROW( make_schedule(WITH_GRID, parseContext), OpmInputError );
 }
 
 
@@ -964,16 +963,8 @@ TSTEP
         )"};
 
     auto unit_system =  UnitSystem::newMETRIC();
-    Opm::Parser parser;
-    auto deck = parser.parseString(deck_string);
-    EclipseGrid grid1(10,10,10);
-    TableManager table ( deck );
-    FieldPropsManager fp( deck, Phases{true, true, true}, grid1, table);
-    auto python = std::make_shared<Python>();
     const auto st = SummaryState{ std::chrono::system_clock::now() };
-
-    Runspec runspec (deck);
-    Schedule sched(deck, grid1, fp, runspec, python);
+    Schedule sched = make_schedule(deck_string);
     const auto& action1 = sched.actions(0).get("A");
     {
         const auto& group = sched.getGroup("G1", 0);
@@ -989,4 +980,63 @@ TSTEP
         const auto& prod = group.productionControls(st);
         BOOST_CHECK_CLOSE( prod.oil_target , unit_system.to_si(UnitSystem::measure::liquid_surface_rate, 200), 1e-5 );
     }
+}
+
+BOOST_AUTO_TEST_CASE(GASLIFT_OPT_DECK) {
+    const auto input = R"(-- Turns on gas lift optimization
+RUNSPEC
+LIFTOPT
+/
+
+SCHEDULE
+
+GRUPTREE
+ 'PROD'    'FIELD' /
+
+ 'M5S'    'PLAT-A'  /
+ 'M5N'    'PLAT-A'  /
+
+ 'C1'     'M5N'  /
+ 'F1'     'M5N'  /
+ 'B1'     'M5S'  /
+ 'G1'     'M5S'  /
+ /
+
+ACTIONX
+'A' /
+WWCT 'OPX'     > 0.75    AND /
+FPR < 100 /
+/
+
+GLIFTOPT
+ 'PLAT-A'  200000 /  --
+/
+
+ENDACTIO
+
+TSTEP
+10 /
+
+
+)";
+
+    Opm::UnitSystem unitSystem = UnitSystem( UnitSystem::UnitType::UNIT_TYPE_METRIC );
+    auto sched = make_schedule(input);
+    const auto& action1 = sched.actions(0).get("A");
+    {
+        const auto& glo = sched.glo(0);
+        BOOST_CHECK(!glo.has_group("PLAT-A"));
+    }
+
+    Action::Result action_result(true);
+    sched.applyAction(0, action1, action_result);
+
+    {
+        const auto& glo = sched.glo(0);
+        BOOST_CHECK(glo.has_group("PLAT-A"));
+        const auto& plat_group = glo.group("PLAT-A");
+        BOOST_CHECK_EQUAL( *plat_group.max_lift_gas(), unitSystem.to_si( UnitSystem::measure::gas_surface_rate, 200000));
+        BOOST_CHECK(!plat_group.max_total_gas().has_value());
+    }
+
 }
