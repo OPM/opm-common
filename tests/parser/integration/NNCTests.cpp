@@ -112,7 +112,7 @@ EDIT
 EDITNNC
 5 1 1 1 5 3 0.5 /   -- Inactive cell
 2 2 1 3 3 1 0.5 /   -- Valid - coupled to NNC
-4 4 1 5 5 1 1.0 /   -- Valid
+4 4 1 5 5 1 2.0 /   -- Valid
 -1 4 4 -1 7 7 1.0 / -- Very invalid
 /
 
@@ -352,7 +352,7 @@ BOOST_AUTO_TEST_CASE(ACTNUM)
     BOOST_CHECK_EQUAL(edit.size(), 1);
     BOOST_CHECK_EQUAL(input.size(), 1);
     check_nnc(input, grid.getGlobalIndex(1,1,0), grid.getGlobalIndex(2,2,0), 0.5);
-    check_edit_nnc(edit, grid.getGlobalIndex(3,3,0), grid.getGlobalIndex(4,4,0), 1.0);
+    check_edit_nnc(edit, grid.getGlobalIndex(3,3,0), grid.getGlobalIndex(4,4,0), 2.0);
     check_order(editnnc);
 }
 

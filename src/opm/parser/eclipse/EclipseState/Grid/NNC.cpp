@@ -117,6 +117,10 @@ bool is_neighbor(const EclipseGrid& grid, std::size_t g1, std::size_t g2) {
         std::vector<NNCdata> nnc_edit;
         for (const auto& keyword_ptr : deck.getKeywordList<ParserKeywords::EDITNNC>()) {
             for (const auto& record : *keyword_ptr) {
+                double tran_mult = record.getItem(6).get<double>(0);
+                if (tran_mult == 1.0)
+                    continue;
+
                 auto index_pair = make_index_pair(grid, record);
                 if (!index_pair)
                     continue;
@@ -125,7 +129,6 @@ bool is_neighbor(const EclipseGrid& grid, std::size_t g1, std::size_t g2) {
                 if (is_neighbor(grid, g1, g2))
                     continue;
 
-                double tran_mult = record.getItem(6).get<double>(0);
                 nnc_edit.emplace_back( g1, g2, tran_mult);
             }
 
