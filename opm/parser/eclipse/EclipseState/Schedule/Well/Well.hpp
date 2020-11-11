@@ -37,6 +37,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellConnections.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/WellSegments.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleTypes.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/PAvg.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/ProductionControls.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/InjectionControls.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellFoamProperties.hpp>
@@ -558,6 +559,7 @@ public:
     bool updateWellProductivityIndex(const double prodIndex);
     bool updateWSEGSICD(const std::vector<std::pair<int, SICD> >& sicd_pairs);
     bool updateWSEGVALV(const std::vector<std::pair<int, Valve> >& valve_pairs);
+    bool updateWPAVE(const PAvg& pavg);
 
     bool handleWELSEGS(const DeckKeyword& keyword);
     bool handleCOMPSEGS(const DeckKeyword& keyword, const EclipseGrid& grid, const ParseContext& parseContext, ErrorGuard& errors);
@@ -588,6 +590,7 @@ public:
     double getWellPIScalingFactor(const double currentEffectivePI) const;
     void applyWellProdIndexScaling(const double       scalingFactor,
                                    std::vector<bool>& scalingApplicable);
+    const PAvg& pavg() const;
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)
@@ -624,6 +627,7 @@ public:
         serializer(production);
         serializer(injection);
         serializer(segments);
+        m_pavg.serializeOp(serializer);
     }
 
 private:
@@ -663,6 +667,7 @@ private:
     std::shared_ptr<WellProductionProperties> production;
     std::shared_ptr<WellInjectionProperties> injection;
     std::shared_ptr<WellSegments> segments;
+    PAvg m_pavg;
 };
 
 std::ostream& operator<<( std::ostream&, const Well::WellInjectionProperties& );

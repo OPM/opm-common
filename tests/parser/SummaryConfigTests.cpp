@@ -1319,3 +1319,25 @@ COPRL
 
 
 
+BOOST_AUTO_TEST_CASE( WBP ) {
+    const std::string input = R"(
+WBP
+/
+
+WBP4
+/
+
+WBP5
+/
+
+WBP9
+/
+)";
+
+    const auto& summary_config = createSummary(input);
+
+    BOOST_CHECK(summary_config.hasKeyword("WBP"));
+    BOOST_CHECK(summary_config.hasKeyword("WBP4"));
+    BOOST_CHECK(summary_config.hasKeyword("WBP5"));
+    BOOST_CHECK(summary_config.hasKeyword("WBP9"));
+}

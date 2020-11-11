@@ -42,6 +42,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/GasLiftOpt.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellMatcher.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/PAvg.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
@@ -4230,4 +4231,123 @@ BOOST_AUTO_TEST_CASE(VFPPROD_SCALING) {
     cmp_vector(wfr, vfp_table.getWFRAxis());
     cmp_vector(gfr, vfp_table.getGFRAxis());
     cmp_vector(alq, vfp_table.getALQAxis());
+}
+
+
+BOOST_AUTO_TEST_CASE(WPAVE) {
+    const std::string deck_string = R"(
+START
+7 OCT 2020 /
+
+DIMENS
+  10 10 3 /
+
+GRID
+DXV
+  10*100.0 /
+DYV
+  10*100.0 /
+DZV
+  3*10.0 /
+
+DEPTHZ
+  121*2000.0 /
+
+PORO
+  300*0.3 /
+
+SCHEDULE
+WELSPECS -- 0
+  'P1' 'G' 10 10 2005 'LIQ' /
+  'P2' 'G' 1 10 2005 'LIQ' /
+  'P3' 'G' 2 10 2005 'LIQ' /
+  'P4' 'G' 3 10 2005 'LIQ' /
+/
+
+
+TSTEP -- 1
+  10
+/
+
+
+WPAVE   -- PAVG1
+  0.75 0.25 /
+
+
+TSTEP -- 2
+  10
+/
+
+WWPAVE
+  P1 0.30 0.60 /   -- PAVG2
+  P3 0.40 0.70 /   -- PAVG3
+/
+
+
+TSTEP -- 3
+  10
+/
+
+WPAVE   -- PAVG4
+  0.10 0.10 /
+
+
+TSTEP -- 4
+  10
+/
+
+TSTEP -- 5
+  10
+/
+
+END
+)";
+
+    const auto deck = Parser{}.parseString(deck_string);
+    const auto es    = EclipseState{ deck };
+    auto       sched = Schedule{ deck, es };
+
+    PAvg pavg0;
+    PAvg pavg1( deck.getKeyword("WPAVE", 0).getRecord(0) );
+    PAvg pavg2( deck.getKeyword("WWPAVE", 0).getRecord(0) );
+    PAvg pavg3( deck.getKeyword("WWPAVE", 0).getRecord(1) );
+    PAvg pavg4( deck.getKeyword("WPAVE", 1).getRecord(0) );
+
+    {
+        const auto& w1 = sched.getWell("P1", 0);
+        const auto& w4 = sched.getWell("P4", 0);
+
+        BOOST_CHECK(w1.pavg() == pavg0);
+        BOOST_CHECK(w4.pavg() == pavg0);
+    }
+
+    {
+        const auto& w1 = sched.getWell("P1", 1);
+        const auto& w4 = sched.getWell("P4", 1);
+
+        BOOST_CHECK(w1.pavg() == pavg1);
+        BOOST_CHECK(w4.pavg() == pavg1);
+    }
+
+    {
+        const auto& w1 = sched.getWell("P1", 2);
+        const auto& w3 = sched.getWell("P3", 2);
+        const auto& w4 = sched.getWell("P4", 2);
+
+        BOOST_CHECK(w1.pavg() == pavg2);
+        BOOST_CHECK(w3.pavg() == pavg3);
+        BOOST_CHECK(w4.pavg() == pavg1);
+    }
+
+    {
+        const auto& w1 = sched.getWell("P1", 3);
+        const auto& w2 = sched.getWell("P2", 3);
+        const auto& w3 = sched.getWell("P3", 3);
+        const auto& w4 = sched.getWell("P4", 3);
+
+        BOOST_CHECK(w1.pavg() == pavg4);
+        BOOST_CHECK(w2.pavg() == pavg4);
+        BOOST_CHECK(w3.pavg() == pavg4);
+        BOOST_CHECK(w4.pavg() == pavg4);
+    }
 }

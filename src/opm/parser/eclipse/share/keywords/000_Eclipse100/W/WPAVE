@@ -6,12 +6,12 @@
   "size": 1,
   "items": [
     {
-      "name": "WEIGTH_FACTOR1",
+      "name": "F1",
       "value_type": "DOUBLE",
       "default": 0.5
     },
     {
-      "name": "WEIGTH_FACTOR2",
+      "name": "F2",
       "value_type": "DOUBLE",
       "default": 1
     },

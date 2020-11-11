@@ -24,7 +24,7 @@
       "default": "WELL"
     },
     {
-      "name": "WELL_CONNECTION",
+      "name": "CONNECTION",
       "value_type": "STRING",
       "default": "OPEN"
     }
