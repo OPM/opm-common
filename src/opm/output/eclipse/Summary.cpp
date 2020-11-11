@@ -579,9 +579,13 @@ inline quantity cratel( const fn_args& args ) {
     const auto& well_data = args.wells.at( name );
     if (well_data.current_control.isProducer == injection) return zero;
 
+    const auto complnum = getCompletionNumberFromGlobalConnectionIndex(well.getConnections(), args.num - 1);
+    if (!complnum.has_value())
+        // Connection might not yet have come online.
+        return zero;
+
     double sum = 0;
-    const auto& conn0 = well.getConnections().getFromGlobalIndex( args.num - 1);
-    const auto& connections = well.getConnections(conn0.complnum()) ;
+    const auto& connections = well.getConnections(*complnum);
     for (const auto& conn_ptr : connections) {
         const size_t global_index = conn_ptr->global_index();
         const auto& conn_data = std::find_if(well_data.connections.begin(),

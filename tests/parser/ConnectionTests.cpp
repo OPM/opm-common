@@ -518,3 +518,87 @@ END
         BOOST_CHECK_CLOSE(connP[2].CF(), 50.0*cp_rm3_per_db(), 1.0e-10);
     }
 }
+
+BOOST_AUTO_TEST_CASE(Completion_From_Global_Connection_Index) {
+    const auto deck = Opm::Parser{}.parseString(R"(RUNSPEC
+START
+7 OCT 2020 /
+
+DIMENS
+  10 10 3 /
+
+GRID
+DXV
+  10*100.0 /
+DYV
+  10*100.0 /
+DZV
+  3*10.0 /
+
+DEPTHZ
+  121*2000.0 /
+
+PERMX
+  300*100.0 /
+PERMY
+  300*100.0 /
+PERMZ
+  300*10.0 /
+PORO
+  300*0.3 /
+
+SCHEDULE
+WELSPECS
+  'P' 'G' 10 10 2005 'LIQ' /
+/
+COMPDAT
+  'P' 0 0 1 1 OPEN 1 100 /
+/
+
+TSTEP
+  10
+/
+
+COMPDAT
+  'P' 0 0 2 2 OPEN 1 50 /
+/
+
+TSTEP
+  10
+/
+
+END
+)");
+
+    const auto es    = Opm::EclipseState{ deck };
+    const auto sched = Opm::Schedule{ deck, es };
+
+    {
+        const auto connP = sched.getWell("P", 0).getConnections();
+
+        const auto complnum_100 =
+            getCompletionNumberFromGlobalConnectionIndex(connP, 100 - 1);
+        const auto complnum_200 =
+            getCompletionNumberFromGlobalConnectionIndex(connP, 200 - 1);
+
+        BOOST_CHECK_MESSAGE(  complnum_100.has_value(), "Completion number must be defined at time 0 for connection in cell (10,10,1)");
+        BOOST_CHECK_MESSAGE(! complnum_200.has_value(), "Completion number must NOT be defined at time 0 for connection in cell (10,10,2)");
+
+        BOOST_CHECK_EQUAL(complnum_100.value(), 1);
+    }
+
+    {
+        const auto connP = sched.getWell("P", 1).getConnections();
+
+        const auto complnum_100 =
+            getCompletionNumberFromGlobalConnectionIndex(connP, 100 - 1);
+        const auto complnum_200 =
+            getCompletionNumberFromGlobalConnectionIndex(connP, 200 - 1);
+
+        BOOST_CHECK_MESSAGE(complnum_100.has_value(), "Completion number must be defined at time 0 for connection in cell (10,10,1)");
+        BOOST_CHECK_MESSAGE(complnum_200.has_value(), "Completion number must be defined at time 0 for connection in cell (10,10,2)");
+
+        BOOST_CHECK_EQUAL(complnum_100.value(), 1);
+        BOOST_CHECK_EQUAL(complnum_200.value(), 2);
+    }
+}
