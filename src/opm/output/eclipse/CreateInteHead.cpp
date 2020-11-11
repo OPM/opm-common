@@ -106,16 +106,22 @@ namespace {
         if (report_step == std::size_t{0}) {
             return gctrl;
         }
+        bool have_gconprod = false;
+        bool have_gconinje = false;
 
         for (const auto& group_name : sched.groupNames(lookup_step)) {
             const auto& group = sched.getGroup(group_name, lookup_step);
-            if (group.isProductionGroup()) { 
-                gctrl = 1;
+            if (group.isProductionGroup()) {
+                have_gconprod = true;
             }
-            if (group.isInjectionGroup()) { 
-                gctrl = 2;
+            if (group.isInjectionGroup()) {
+                have_gconinje = true;
             }
         }
+        if (have_gconinje)
+            gctrl = 2;
+        else if (have_gconprod)
+            gctrl = 1;
 
         // Index for group control
         return gctrl;
