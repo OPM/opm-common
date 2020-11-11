@@ -26,6 +26,7 @@
 #include <opm/common/utility/ActiveGridCells.hpp>
 
 #include <cstddef>
+#include <optional>
 #include <vector>
 
 #include <stddef.h>
@@ -163,6 +164,10 @@ namespace Opm {
         int headI, headJ;
         std::vector< Connection > m_connections;
     };
+
+    std::optional<int>
+    getCompletionNumberFromGlobalConnectionIndex(const WellConnections& connections,
+                                                 const std::size_t      global_index);
 }
 
 
