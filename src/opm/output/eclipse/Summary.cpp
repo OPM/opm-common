@@ -2802,6 +2802,7 @@ public:
 
     void internal_store(const SummaryState& st, const int report_step);
     void write();
+    PAvgCalculatorCollection wbp_calculators(std::size_t report_step) const;
 
 private:
     struct MiniStep
@@ -2817,6 +2818,7 @@ private:
     std::reference_wrapper<const Opm::EclipseState> es_;
     std::reference_wrapper<const Opm::Schedule> sched_;
     Opm::out::RegionCache regCache_;
+    std::unordered_set<std::string> wbp_wells;
 
     std::unique_ptr<SMSpecStreamDeferredCreation> deferredSMSpec_;
 
@@ -2877,6 +2879,9 @@ SummaryImplementation(const EclipseState&  es,
     this->configureSummaryInput(es, sumcfg, grid, sched);
     this->configureRequiredRestartParameters(sumcfg, sched);
     this->configureUDQ(sumcfg, sched);
+
+    for (const auto& config_node : sumcfg.keywords("WBP*"))
+        this->wbp_wells.insert( config_node.namedEntity() );
 }
 
 void Opm::out::Summary::SummaryImplementation::
@@ -2895,6 +2900,17 @@ internal_store(const SummaryState& st, const int report_step)
         ms.params[i] = st.get(this->valueKeys_[i]);
     }
 }
+
+Opm::PAvgCalculatorCollection Opm::out::Summary::SummaryImplementation::wbp_calculators(std::size_t report_step) const {
+    Opm::PAvgCalculatorCollection calculators;
+    for (const auto& wname : this->wbp_wells) {
+        const auto& well = this->sched_.get().getWell(wname, report_step);
+        if (well.getStatus() == Opm::Well::Status::OPEN)
+            calculators.add(well.pavg_calculator(this->grid_));
+    }
+    return calculators;
+}
+
 
 void
 Opm::out::Summary::SummaryImplementation::
@@ -3304,6 +3320,7 @@ void Summary::eval(SummaryState&                      st,
                    GlobalProcessParameters            single_values,
                    const Inplace&                     initial_inplace,
                    const Inplace&                     inplace,
+                   const PAvgCalculatorCollection&    ,
                    const RegionParameters&            region_values,
                    const BlockValues&                 block_values,
                    const Opm::data::Aquifers&         aquifer_values) const
@@ -3325,6 +3342,11 @@ void Summary::eval(SummaryState&                      st,
                        initial_inplace, inplace,
                        region_values, block_values, aquifer_values, st);
 }
+
+PAvgCalculatorCollection Summary::wbp_calculators(std::size_t report_step) const {
+    return this->pImpl_->wbp_calculators(report_step);
+}
+
 
 void Summary::add_timestep(const SummaryState& st, const int report_step)
 {

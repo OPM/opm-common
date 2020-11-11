@@ -1533,6 +1533,13 @@ bool SummaryConfig::require3DField( const std::string& keyword ) const {
 }
 
 
+std::unordered_set<std::string> SummaryConfig::wbp_wells() const {
+    std::unordered_set<std::string> wells;
+    for (const auto& node : this->keywords("WBP*"))
+        wells.insert( node.namedEntity() );
+    return wells;
+}
+
 
 std::set<std::string> SummaryConfig::fip_regions() const {
     std::set<std::string> reg_set;

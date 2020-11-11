@@ -132,6 +132,8 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Schedule/Well/Connection.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Well/injection.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Well/PAvg.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/Well/PAvgCalculator.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/Well/PAvgCalculatorCollection.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Well/Well.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Well/WellConnections.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Well/WellMatcher.cpp
@@ -712,6 +714,8 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Schedule/Well/ProductionControls.hpp
        opm/parser/eclipse/EclipseState/Schedule/Well/InjectionControls.hpp
        opm/parser/eclipse/EclipseState/Schedule/Well/PAvg.hpp
+       opm/parser/eclipse/EclipseState/Schedule/Well/PAvgCalculator.hpp
+       opm/parser/eclipse/EclipseState/Schedule/Well/PAvgCalculatorCollection.hpp
        opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp
        opm/parser/eclipse/EclipseState/Schedule/Well/WList.hpp
        opm/parser/eclipse/EclipseState/Schedule/Well/WellMatcher.hpp

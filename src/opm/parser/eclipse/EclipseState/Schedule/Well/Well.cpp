@@ -1633,6 +1633,12 @@ bool Well::operator==(const Well& data) const {
            this->getInjectionProperties() == data.getInjectionProperties();
 }
 
+
+PAvgCalculator Well::pavg_calculator(const EclipseGrid& grid) const {
+    return PAvgCalculator(this->name(), grid, this->getConnections(), this->m_pavg);
+}
+
+
 }
 
 int Opm::eclipseControlMode(const Opm::Well::InjectorCMode imode,

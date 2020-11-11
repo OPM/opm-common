@@ -22,7 +22,12 @@
 
 #include <exception>
 #include <boost/test/unit_test.hpp>
+#include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/PAvg.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/PAvgCalculatorCollection.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/common/utility/Serializer.hpp>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
@@ -94,3 +99,248 @@ WWPAVE
     BOOST_CHECK_EQUAL( pavg.conn_weight(), 0.5);
     BOOST_CHECK( pavg.use_porv() );
 }
+
+
+
+bool contains(const std::vector<std::size_t>& index_list, std::size_t global_index) {
+    auto find_iter = std::find(index_list.begin(), index_list.end(), global_index);
+    return (find_iter != index_list.end());
+}
+
+
+
+BOOST_AUTO_TEST_CASE(WPAVE_CALCULATOR) {
+    const std::string deck_string = R"(
+START
+7 OCT 2020 /
+
+DIMENS
+  10 10 3 /
+
+GRID
+DXV
+  10*100.0 /
+DYV
+  10*100.0 /
+DZV
+  3*10.0 /
+
+DEPTHZ
+  121*2000.0 /
+
+PERMX
+  300*100.0 /
+PERMY
+  300*100.0 /
+PERMZ
+  300*10.0 /
+PORO
+  300*0.3 /
+
+SCHEDULE
+WELSPECS -- 0
+  'P1' 'G' 5  5 2005 'LIQ' /
+  'P2' 'G' 2  5 2005 'LIQ' /
+  'P3' 'G' 3  5 2005 'LIQ' /
+  'P4' 'G' 4  5 2005 'LIQ' /
+  'P5' 'G' 1  1 2005 'LIQ' /    -- P5 is in the corner and will only have three neighbours
+/
+
+COMPDAT
+  'P1' 0 0 1 3 OPEN 1 100 /
+  'P5' 0 0 1 3 OPEN 1 100 /
+/
+
+TSTEP -- 1
+  10
+/
+
+
+WPAVE   -- PAVG1
+  0.75 0.25 NONE /
+
+
+TSTEP -- 2
+  10
+/
+
+WWPAVE
+  P1 0.30 0.60 NONE /   -- PAVG2
+  P3 0.40 0.70 NONE /   -- PAVG3
+/
+
+
+TSTEP -- 3
+  10
+/
+
+WPAVE   -- PAVG4
+  0.10 0.10 NONE /
+
+
+TSTEP -- 4
+  10
+/
+
+TSTEP -- 5
+  10
+/
+
+END
+)";
+
+    const auto deck = Parser{}.parseString(deck_string);
+    const auto es    = EclipseState{ deck };
+    const auto grid  = es.getInputGrid();
+    auto       sched = Schedule{ deck, es };
+    auto       summary_config = SummaryConfig{deck, sched, es.getTableManager(), es.aquifer()};
+    const auto& w1 = sched.getWell("P1", 0);
+    auto calc = w1.pavg_calculator(grid);
+
+    {
+        const auto& index_list = calc.index_list();
+        for (std::size_t k = 0; k < 3; k++) {
+            BOOST_CHECK(contains(index_list, grid.getGlobalIndex(4, 4, k)));
+
+            BOOST_CHECK(contains(index_list, grid.getGlobalIndex(5, 4, k)));
+            BOOST_CHECK(contains(index_list, grid.getGlobalIndex(3, 4, k)));
+            BOOST_CHECK(contains(index_list, grid.getGlobalIndex(4, 3, k)));
+            BOOST_CHECK(contains(index_list, grid.getGlobalIndex(4, 5, k)));
+
+            BOOST_CHECK(contains(index_list, grid.getGlobalIndex(5, 5, k)));
+            BOOST_CHECK(contains(index_list, grid.getGlobalIndex(3, 3, k)));
+            BOOST_CHECK(contains(index_list, grid.getGlobalIndex(5, 3, k)));
+            BOOST_CHECK(contains(index_list, grid.getGlobalIndex(3, 5, k)));
+        }
+    }
+    BOOST_CHECK( !calc.add_pressure(grid.getGlobalIndex(6, 7, 8), 100));
+    BOOST_CHECK_THROW(calc.wbp(), std::exception);
+
+    for (std::size_t k = 0; k < 3; k++) {
+        calc.add_pressure(grid.getGlobalIndex(4,4,k), 1);
+    }
+    BOOST_CHECK_EQUAL(calc.wbp(), 1);
+
+    BOOST_CHECK_THROW(calc.wbp4(), std::exception);
+    for (std::size_t k=0; k < 3; k++) {
+        calc.add_pressure(grid.getGlobalIndex(5,4,k), 1);
+        calc.add_pressure(grid.getGlobalIndex(3,4,k), 1);
+        calc.add_pressure(grid.getGlobalIndex(4,5,k), 1);
+        calc.add_pressure(grid.getGlobalIndex(4,3,k), 1);
+    }
+    BOOST_CHECK_EQUAL(calc.wbp4(), 1);
+    BOOST_CHECK_EQUAL(calc.wbp5(), 1);
+
+    //----------------------------------------------------
+
+    const auto& w5 = sched.getWell("P5", 0);
+    auto calc5 = w5.pavg_calculator(grid);
+
+    {
+        const auto& index_list = calc5.index_list();
+        BOOST_CHECK_EQUAL(index_list.size(), 12);
+        for (std::size_t k = 0; k < 3; k++) {
+            BOOST_CHECK(contains(index_list, grid.getGlobalIndex(0, 0, k)));
+
+            BOOST_CHECK(contains(index_list, grid.getGlobalIndex(1,0, k)));
+            BOOST_CHECK(contains(index_list, grid.getGlobalIndex(0,1, k)));
+            BOOST_CHECK(contains(index_list, grid.getGlobalIndex(1,1, k)));
+
+            calc5.add_pressure(grid.getGlobalIndex(0,0,k), 1);
+            calc5.add_pressure(grid.getGlobalIndex(1,0,k), 2.0);
+            calc5.add_pressure(grid.getGlobalIndex(0,1,k), 2.0);
+            calc5.add_pressure(grid.getGlobalIndex(1,1,k), 4.0);
+        }
+
+        BOOST_CHECK_EQUAL( calc5.wbp(), 1.0 );
+        BOOST_CHECK_EQUAL( calc5.wbp4(), 2.0 );
+        double inner_weight = 0.50;
+        BOOST_CHECK_EQUAL( calc5.wbp5(), inner_weight * 1 + (1 - inner_weight) * 2 );
+        BOOST_CHECK_EQUAL( calc5.wbp9(), inner_weight * 1 + (1 - inner_weight) * (2 * 2 + 4) / 3);
+    }
+
+
+    // We emulate MPI and calc1 and calc2 are on two different processors
+    {
+        auto calc1 = w5.pavg_calculator(grid);
+        auto calc2 = w5.pavg_calculator(grid);
+        for (std::size_t k = 0; k < 3; k++) {
+            calc1.add_pressure(grid.getGlobalIndex(0,0,k), 1);
+            calc2.add_pressure(grid.getGlobalIndex(1,0,k), 2.0);
+            calc2.add_pressure(grid.getGlobalIndex(0,1,k), 2.0);
+            calc2.add_pressure(grid.getGlobalIndex(1,1,k), 4.0);
+        }
+        BOOST_CHECK_THROW(calc1.wbp9(), std::exception);
+
+        Serializer ser1;
+        calc2.serialize(ser1);
+
+        Serializer ser2(ser1.buffer);
+
+        calc1.update(ser2);
+        double inner_weight = 0.50;
+        BOOST_CHECK_EQUAL( calc1.wbp5(), inner_weight * 1 + (1 - inner_weight) * 2 );
+        BOOST_CHECK_EQUAL( calc1.wbp9(), inner_weight * 1 + (1 - inner_weight) * (2 * 2 + 4) / 3);
+    }
+
+
+
+    auto calculators = sched.pavg_calculators(grid, summary_config.wbp_wells(), 0);
+    calculators.add(w1.pavg_calculator(grid));
+    calculators.add(w5.pavg_calculator(grid));
+
+
+    BOOST_CHECK( calculators.has("P1"));
+    BOOST_CHECK( calculators.has("P5"));
+    BOOST_CHECK( !calculators.has("P100"));
+
+    {
+        const auto& index_list = calculators.index_list();
+        for (std::size_t k = 0; k < 3; k++) {
+            BOOST_CHECK(contains(index_list, grid.getGlobalIndex(4, 4, k)));
+            BOOST_CHECK(contains(index_list, grid.getGlobalIndex(5, 4, k)));
+            BOOST_CHECK(contains(index_list, grid.getGlobalIndex(3, 4, k)));
+            BOOST_CHECK(contains(index_list, grid.getGlobalIndex(4, 3, k)));
+            BOOST_CHECK(contains(index_list, grid.getGlobalIndex(4, 5, k)));
+            BOOST_CHECK(contains(index_list, grid.getGlobalIndex(5, 5, k)));
+            BOOST_CHECK(contains(index_list, grid.getGlobalIndex(3, 3, k)));
+            BOOST_CHECK(contains(index_list, grid.getGlobalIndex(5, 3, k)));
+            BOOST_CHECK(contains(index_list, grid.getGlobalIndex(3, 5, k)));
+
+            BOOST_CHECK(contains(index_list, grid.getGlobalIndex(0, 0, k)));
+            BOOST_CHECK(contains(index_list, grid.getGlobalIndex(1,0, k)));
+            BOOST_CHECK(contains(index_list, grid.getGlobalIndex(0,1, k)));
+            BOOST_CHECK(contains(index_list, grid.getGlobalIndex(1,1, k)));
+        }
+    }
+
+    BOOST_CHECK_THROW( calculators.add_pressure(100000000, 1), std::exception );
+    for (std::size_t k = 0; k < 3; k++) {
+        calculators.add_pressure(grid.getGlobalIndex(0,0,k), 1);
+        calculators.add_pressure(grid.getGlobalIndex(1,0,k), 2.0);
+        calculators.add_pressure(grid.getGlobalIndex(0,1,k), 2.0);
+        calculators.add_pressure(grid.getGlobalIndex(1,1,k), 4.0);
+
+        calculators.add_pressure(grid.getGlobalIndex(4,4,k), 1);
+        calculators.add_pressure(grid.getGlobalIndex(5,4,k), 1);
+        calculators.add_pressure(grid.getGlobalIndex(3,4,k), 1);
+        calculators.add_pressure(grid.getGlobalIndex(4,5,k), 1);
+        calculators.add_pressure(grid.getGlobalIndex(4,3,k), 1);
+    }
+
+
+    {
+        const auto& c5 = calculators.get("P5");
+        double inner_weight = 0.50;
+        BOOST_CHECK_EQUAL( c5.wbp5(), inner_weight * 1 + (1 - inner_weight) * 2 );
+        BOOST_CHECK_EQUAL( c5.wbp9(), inner_weight * 1 + (1 - inner_weight) * (2 * 2 + 4) / 3);
+    }
+}
+
+
+BOOST_AUTO_TEST_CASE(CalcultorCollection) {
+    PAvgCalculatorCollection calc_list;
+
+    BOOST_CHECK(calc_list.empty());
+}
+

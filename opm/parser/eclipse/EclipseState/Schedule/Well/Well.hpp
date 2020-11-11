@@ -38,6 +38,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/WellSegments.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleTypes.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/PAvg.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/PAvgCalculator.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/ProductionControls.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/InjectionControls.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellFoamProperties.hpp>
@@ -589,6 +590,7 @@ public:
     void applyWellProdIndexScaling(const double       scalingFactor,
                                    std::vector<bool>& scalingApplicable);
     const PAvg& pavg() const;
+    PAvgCalculator pavg_calculator(const EclipseGrid& grid) const;
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)

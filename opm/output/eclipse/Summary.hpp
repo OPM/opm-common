@@ -20,12 +20,14 @@
 #ifndef OPM_OUTPUT_SUMMARY_HPP
 #define OPM_OUTPUT_SUMMARY_HPP
 
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/PAvgCalculatorCollection.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp>
 #include <opm/output/data/Aquifer.hpp>
 
 #include <map>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -69,12 +71,14 @@ public:
               GlobalProcessParameters            single_values,
               const Inplace&                     initial_inplace,
               const Inplace&                     inplace,
+              const PAvgCalculatorCollection&    ,
               const RegionParameters&            region_values = {},
               const BlockValues&                 block_values  = {},
               const data::Aquifers&              aquifers_values = {}) const;
 
     void write() const;
 
+    PAvgCalculatorCollection wbp_calculators(std::size_t report_step) const;
 
 private:
     class SummaryImplementation;
