@@ -43,6 +43,11 @@ public:
         m_output->flushStream();
     }
 
+    void writeC0nnArray(const std::string& name, const std::vector<std::string>& data, int element_size){
+        m_output->write(name, data, element_size);
+        m_output->flushStream();
+    }
+
     void writeMessage(const std::string& name)
     {
         m_output->message(name);
@@ -70,7 +75,7 @@ npArray get_vector_index(Opm::EclIO::EclFile * file_ptr, std::size_t array_index
     if (array_type == Opm::EclIO::LOGI)
         return std::make_tuple (convert::numpy_array( file_ptr->get<bool>(array_index)), array_type);
 
-    if (array_type == Opm::EclIO::CHAR)
+    if ((array_type == Opm::EclIO::CHAR) || (array_type == Opm::EclIO::C0NN))
         return std::make_tuple (convert::numpy_string_array( file_ptr->get<std::string>(array_index)), array_type);
 
     throw std::logic_error("Data type not supported");
@@ -305,6 +310,7 @@ void python::common::export_IO(py::module& m) {
         .value("REAL", Opm::EclIO::REAL)
         .value("DOUB", Opm::EclIO::DOUB)
         .value("CHAR", Opm::EclIO::CHAR)
+        .value("C0nn", Opm::EclIO::C0NN)
         .value("LOGI", Opm::EclIO::LOGI)
         .value("MESS", Opm::EclIO::MESS)
         .export_values();
@@ -384,6 +390,9 @@ void python::common::export_IO(py::module& m) {
         .def("write_message", &EclOutputBind::writeMessage)
         .def("__write_char_array", (void (EclOutputBind::*)(const std::string&,
                                   const std::vector<std::string>&)) &EclOutputBind::writeArray)
+
+        .def("__write_c0nn_array", &EclOutputBind::writeC0nnArray)
+
         .def("__write_logi_array", (void (EclOutputBind::*)(const std::string&,
                                   const std::vector<bool>&)) &EclOutputBind::writeArray)
         .def("__write_inte_array", (void (EclOutputBind::*)(const std::string&,

@@ -271,6 +271,137 @@ class TestEclOutput(unittest.TestCase):
             os.remove(testFile)
 
 
+    def test_write_strings_binary(self):
+
+        testFile = test_path("data/TMP1.INIT")
+
+        shortWelNames = ["PROD-1", "PROD-2", "PROD-3", "PROD-4", "PROD-5"]
+        longWelNames = ["PRODUCER-1", "PRODUCER-2", "PRODUCER-13", "PRODUCER-4"]
+
+        out1 = EclOutput(testFile)
+
+        out1.write("WGNAME", shortWelNames)
+
+        file1 = EclFile(testFile)
+        array = file1["WGNAME"]
+
+        self.assertEqual(len(array), len(shortWelNames))
+
+        for v1,v2 in zip (array, shortWelNames):
+            self.assertEqual(v1, v2)
+
+        arrayList = file1.arrays
+        name, arr_type, num = arrayList[0]
+
+        self.assertEqual(name, "WGNAME")
+        self.assertEqual(arr_type, eclArrType.CHAR)
+        self.assertEqual(num, len(shortWelNames))
+
+        out2 = EclOutput(testFile)
+        out2.write("NAMES", longWelNames)
+
+        file2 = EclFile(testFile)
+        array = file2["NAMES"]
+
+        self.assertEqual(len(array), len(longWelNames))
+
+        for v1,v2 in zip (array, longWelNames):
+            self.assertEqual(v1, v2)
+
+        arrayList = file2.arrays
+        name, arr_type, num = arrayList[0]
+
+        self.assertEqual(name, "NAMES")
+        self.assertEqual(arr_type, eclArrType.C0nn)
+        self.assertEqual(num, len(longWelNames))
+
+        out3 = EclOutput(testFile, formatted=False)
+        out3.write("NAMES", shortWelNames, C0nn=True)
+
+        file3 = EclFile(testFile)
+        array = file3["NAMES"]
+
+        self.assertEqual(len(array), len(shortWelNames))
+
+        for v1,v2 in zip (array, shortWelNames):
+            self.assertEqual(v1, v2)
+
+        arrayList = file3.arrays
+        name, arr_type, num = arrayList[0]
+
+        self.assertEqual(name, "NAMES")
+        self.assertEqual(arr_type, eclArrType.C0nn)
+        self.assertEqual(num, len(shortWelNames))
+
+        if os.path.isfile(testFile):
+            os.remove(testFile)
+
+
+    def test_write_strings_formattede(self):
+
+        testFile = test_path("data/TMP1.FINIT")
+
+        shortWelNames = ["PROD-1", "PROD-2", "PROD-3", "PROD-4", "PROD-5"]
+        longWelNames = ["PRODUCER-1", "PRODUCER-2", "PRODUCER-13", "PRODUCER-4"]
+
+        out1 = EclOutput(testFile, formatted=True)
+
+        out1.write("WGNAME", shortWelNames)
+
+        file1 = EclFile(testFile)
+        array = file1["WGNAME"]
+
+        self.assertEqual(len(array), len(shortWelNames))
+
+        for v1,v2 in zip (array, shortWelNames):
+            self.assertEqual(v1, v2)
+
+        arrayList = file1.arrays
+        name, arr_type, num = arrayList[0]
+
+        self.assertEqual(name, "WGNAME")
+        self.assertEqual(arr_type, eclArrType.CHAR)
+        self.assertEqual(num, len(shortWelNames))
+
+        out2 = EclOutput(testFile, formatted=True)
+        out2.write("NAMES", longWelNames)
+
+        file2 = EclFile(testFile)
+        array = file2["NAMES"]
+
+        self.assertEqual(len(array), len(longWelNames))
+
+        for v1,v2 in zip (array, longWelNames):
+            self.assertEqual(v1, v2)
+
+        arrayList = file2.arrays
+        name, arr_type, num = arrayList[0]
+
+        self.assertEqual(name, "NAMES")
+        self.assertEqual(arr_type, eclArrType.C0nn)
+        self.assertEqual(num, len(longWelNames))
+
+        out3 = EclOutput(testFile, formatted=True)
+        out3.write("NAMES", shortWelNames, C0nn=True)
+
+        file3 = EclFile(testFile)
+        array = file3["NAMES"]
+
+        self.assertEqual(len(array), len(shortWelNames))
+
+        for v1,v2 in zip (array, shortWelNames):
+            self.assertEqual(v1, v2)
+
+        arrayList = file3.arrays
+        name, arr_type, num = arrayList[0]
+
+        self.assertEqual(name, "NAMES")
+        self.assertEqual(arr_type, eclArrType.C0nn)
+        self.assertEqual(num, len(shortWelNames))
+
+        if os.path.isfile(testFile):
+            os.remove(testFile)
+
 
 if __name__ == "__main__":
 

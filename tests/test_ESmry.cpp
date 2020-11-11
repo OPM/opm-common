@@ -366,6 +366,35 @@ BOOST_AUTO_TEST_CASE(TestESmry_4) {
 }
 
 
+BOOST_AUTO_TEST_CASE(TestESmry_5) {
+
+    // file MODEL1_IX.SMSPEC and MODEL1_IX.UNSMRY are output from comercial simulator ix with
+    // BASE_MODEL_1.DATA in opm-tests
+
+    // array WGNAME (of type CHAR) in Eclipse and Flow smspec files, is replaced with
+    // array NAMES (of type C0NN) in IX smspec files
+
+    ESmry smry1("MODEL1_IX.SMSPEC");
+    smry1.LoadData();
+
+    std::vector<float> report_timesteps = {31.0, 60.0, 91.0, 121.0, 152.0, 182.0, 213.0, 244.0, 274.0, 305.0, 335.0, 364.0};
+
+    std::vector<float> qoil_p2 = { 1160.149902, 1199.301147, 1199.304932, 1199.147583, 1199.120239, 1199.040405, 1198.917725,
+                                   1198.765381, 1198.627930, 1198.406616, 1198.143555, 1197.853760 };
+
+
+    std::vector<float> timeVect = smry1.get_at_rstep("TIME");
+    std::vector<float> wopr_prod2 = smry1.get_at_rstep("WOPR:PROD-2");
+
+    for (size_t n = 0; n < timeVect.size() ; n ++)
+        BOOST_CHECK_CLOSE(timeVect[n], report_timesteps[n], 1e-6);
+
+    for (size_t n = 0; n < wopr_prod2.size() ; n ++)
+        BOOST_CHECK_CLOSE(wopr_prod2[n], qoil_p2[n], 1e-6);
+}
+
+
+
 namespace fs = Opm::filesystem;
 BOOST_AUTO_TEST_CASE(TestCreateRSM) {
     ESmry smry1("SPE1CASE1.SMSPEC");
