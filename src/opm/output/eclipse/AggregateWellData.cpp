@@ -234,38 +234,19 @@ namespace {
         {
             using PhaseVal = VI::IWell::Value::Preferred_Phase;
 
-            if (well.isProducer()) { // Preferred phase from WELSPECS
-                switch (well.getPreferredPhase()) {
-                case Opm::Phase::OIL:   return PhaseVal::Oil;
-                case Opm::Phase::GAS:   return PhaseVal::Gas;
-                case Opm::Phase::WATER: return PhaseVal::Water;
+            switch (well.getPreferredPhase()) {
+            case Opm::Phase::OIL:   return PhaseVal::Oil;
+            case Opm::Phase::GAS:   return PhaseVal::Gas;
+            case Opm::Phase::WATER: return PhaseVal::Water;
 
-                // Should have LIQUID here too...
+            // Should have LIQUID here too...
 
-                default:
-                    throw std::invalid_argument {
-                        "Unsupported Preferred Phase '" +
-                        std::to_string(static_cast<int>(well.getPreferredPhase()))
-                        + '\''
-                    };
-                }
-            }
-            else { // Injector.  Preferred phase reset to injected phase.
-                using IType = Opm::InjectorType;
-                const auto& iprop = well.getInjectionProperties();
-
-                switch (iprop.injectorType) {
-                case IType::OIL:   return PhaseVal::Oil;
-                case IType::GAS:   return PhaseVal::Gas;
-                case IType::WATER: return PhaseVal::Water;
-
-                default:
-                    throw std::invalid_argument {
-                        "Unsupported Injector Type '" +
-                        std::to_string(static_cast<int>(iprop.injectorType))
-                        + '\''
-                    };
-                }
+            default:
+                throw std::invalid_argument {
+                    "Unsupported Preferred Phase '" +
+                    std::to_string(static_cast<int>(well.getPreferredPhase()))
+                    + '\''
+                };
             }
         }
 
