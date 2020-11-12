@@ -999,7 +999,7 @@ void FieldProps::init_porv(Fieldprops::FieldData<double>& porv) {
 */
 std::vector<int> FieldProps::actnum() {
     auto actnum = this->m_actnum;
-    const auto& deck_actnum = this->init_get<int>("ACTNUM");
+    // const auto& deck_actnum = this->init_get<int>("ACTNUM");
 
     std::vector<int> global_map(this->active_size);
     {
@@ -1017,7 +1017,7 @@ std::vector<int> FieldProps::actnum() {
     const auto& porv_data = porv.data;
     for (std::size_t active_index = 0; active_index < this->active_size; active_index++) {
         auto global_index = global_map[active_index];
-        actnum[global_index] = deck_actnum.data[active_index];
+        // actnum[global_index] = deck_actnum.data[active_index];
         if (porv_data[active_index] == 0)
             actnum[global_index] = 0;
     }
