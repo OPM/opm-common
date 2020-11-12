@@ -223,6 +223,8 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
 
     }
 
+    updateNumericalAquiferCells(deck);
+
     initGrid(deck);
 
     if (deck.hasKeyword("MAPUNITS")){
@@ -1092,7 +1094,7 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
 
                 actnum = actnumVector.data();
                 OpmLog::info(fmt::format("\nCreating cornerpoint grid from keywords ZCORN, COORD and ACTNUM"));
-             } else
+            } else
 	      OpmLog::info(fmt::format("\nCreating cornerpoint grid from keywords ZCORN and COORD"));
 
             initCornerPointGrid( coord , zcorn, actnum, nullptr );
@@ -1700,7 +1702,11 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
 
             for (size_t n = 0; n < global_size; n++) {
                 this->m_actnum[n] = actnum[n];
-                if (actnum[n] > 0) {
+                // numerical aquifer cells need to be active
+                if (this->m_aquifer_cells.count(n) > 0) {
+                    this->m_actnum[n] = 1;
+                }
+                if (this->m_actnum[n] > 0) {
                     this->m_global_to_active.push_back(this->m_nactive);
                     this->m_active_to_global.push_back(n);
                     this->m_nactive++;
@@ -1721,6 +1727,23 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
 
     ZcornMapper EclipseGrid::zcornMapper() const {
         return ZcornMapper( getNX() , getNY(), getNZ() );
+    }
+
+    void EclipseGrid::updateNumericalAquiferCells(const Deck& deck) {
+        using AQUNUM =ParserKeywords::AQUNUM;
+        if ( !deck.hasKeyword<AQUNUM>() ) {
+            return;
+        }
+        const auto &aqunum_keywords = deck.getKeywordList<AQUNUM>();
+        for (const auto &keyword : aqunum_keywords) {
+            for (const auto &record : *keyword) {
+                const size_t i = record.getItem<AQUNUM::I>().get<int>(0) - 1;
+                const size_t j = record.getItem<AQUNUM::J>().get<int>(0) - 1;
+                const size_t k = record.getItem<AQUNUM::K>().get<int>(0) - 1;
+                const size_t global_index = this->getGlobalIndex(i, j, k);
+                this->m_aquifer_cells.insert(global_index);
+            }
+        }
     }
 
     ZcornMapper::ZcornMapper(size_t nx , size_t ny, size_t nz)

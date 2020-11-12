@@ -33,6 +33,7 @@
 #include <memory>
 #include <optional>
 #include <vector>
+#include <unordered_set>
 
 namespace Opm {
 
@@ -216,6 +217,10 @@ namespace Opm {
         int m_nactive;
         std::vector<int> m_active_to_global;
         std::vector<int> m_global_to_active;
+        // Numerical aquifer cells, needs to be active
+        std::unordered_set<size_t> m_aquifer_cells;
+
+        void updateNumericalAquiferCells(const Deck&);
 
         void initGridFromEGridFile(Opm::EclIO::EclFile& egridfile, std::string fileName);
         void resetACTNUM( const int* actnum);
