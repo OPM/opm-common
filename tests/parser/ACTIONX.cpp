@@ -1056,3 +1056,54 @@ TSTEP
     }
 
 }
+
+BOOST_AUTO_TEST_CASE(Action_WELPI) {
+    const auto deck_string = std::string{ R"(
+SCHEDULE
+
+
+WELSPECS
+    'PROD1' 'G1'  1 1 10 'OIL' /
+/
+
+COMPDAT
+ 'PROD1'  1  1   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+/
+
+ACTIONX
+'A' /
+WWCT 'OPX'     > 0.75    AND /
+FPR < 100 /
+/
+
+WELPI
+  'PROD1' 1000 /
+/
+
+ENDACTIO
+
+TSTEP
+10 /
+
+        )"};
+
+    const auto st = SummaryState{ std::chrono::system_clock::now() };
+    Schedule sched = make_schedule(deck_string);
+    const auto& action1 = sched.actions(0).get("A");
+    {
+        const auto& well = sched.getWell("PROD1", 0);
+        BOOST_CHECK_EQUAL( well.getWellPIScalingFactor(1.0), 1.0);
+    }
+
+    Action::Result action_result(true);
+    sched.applyAction(0, action1, action_result);
+    {
+        auto unit_system =  UnitSystem::newMETRIC();
+        const auto& well = sched.getWell("PROD1", 0);
+        const auto PI = unit_system.to_si(UnitSystem::measure::liquid_productivity_index, 1.0);
+        const auto scaling = well.getWellPIScalingFactor(PI);
+        BOOST_CHECK_CLOSE(scaling, 1000.0, 1.0e-10);
+    }
+}
+
+

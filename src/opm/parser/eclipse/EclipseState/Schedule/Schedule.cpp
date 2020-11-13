@@ -1506,14 +1506,8 @@ private:
             if (!Action::ActionX::valid_keyword(keyword.name()))
                 throw std::invalid_argument("The keyword: " + keyword.name() + " can not be handled in the ACTION body");
 
-            if (keyword.name() == "WELOPEN")
-                this->applyWELOPEN(keyword, reportStep, parseContext, errors, result.wells());
-
             if (keyword.name() == "EXIT")
                 this->applyEXIT(keyword, reportStep);
-
-            if (keyword.name() == "UDQ")
-                this->updateUDQ(keyword, reportStep);
 
             if (keyword.name() == "GCONINJE")
                 this->handleGCONINJE(keyword, reportStep, parseContext, errors);
@@ -1523,6 +1517,15 @@ private:
 
             if (keyword.name() == "GLIFTOPT")
                 this->handleGLIFTOPT(keyword, reportStep, parseContext, errors);
+
+            if (keyword.name() == "UDQ")
+                this->updateUDQ(keyword, reportStep);
+
+            if (keyword.name() == "WELOPEN")
+                this->applyWELOPEN(keyword, reportStep, parseContext, errors, result.wells());
+
+            if (keyword.name() == "WELPI")
+                this->handleWELPI(keyword, reportStep, parseContext, errors);
         }
     }
 

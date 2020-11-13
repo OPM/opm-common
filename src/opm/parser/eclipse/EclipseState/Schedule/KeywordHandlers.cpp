@@ -1101,10 +1101,14 @@ namespace {
     }
 
     void Schedule::handleWELOPEN (const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
-        return applyWELOPEN(handlerContext.keyword, handlerContext.currentStep, parseContext, errors);
+        this->applyWELOPEN(handlerContext.keyword, handlerContext.currentStep, parseContext, errors);
     }
 
     void Schedule::handleWELPI(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+        this->handleWELPI(handlerContext.keyword, handlerContext.currentStep, parseContext, errors);
+    }
+
+    void Schedule::handleWELPI(const DeckKeyword& keyword, std::size_t report_step, const ParseContext& parseContext, ErrorGuard& errors) {
         // Keyword structure
         //
         //   WELPI
@@ -1118,18 +1122,18 @@ namespace {
         using WELL_NAME = ParserKeywords::WELPI::WELL_NAME;
         using PI        = ParserKeywords::WELPI::STEADY_STATE_PRODUCTIVITY_OR_INJECTIVITY_INDEX_VALUE;
 
-        for (const auto& record : handlerContext.keyword) {
+        for (const auto& record : keyword) {
             const auto well_names = this->wellNames(record.getItem<WELL_NAME>().getTrimmedString(0),
-                                                   handlerContext.currentStep);
+                                                   report_step);
 
             if (well_names.empty())
                 this->invalidNamePattern(record.getItem<WELL_NAME>().getTrimmedString(0),
-                                         handlerContext.currentStep, parseContext,
-                                         errors, handlerContext.keyword);
+                                         report_step, parseContext,
+                                         errors, keyword);
 
             const auto rawProdIndex = record.getItem<PI>().get<double>(0);
             for (const auto& well_name : well_names) {
-                auto well2 = std::make_shared<Well>(this->getWell(well_name, handlerContext.currentStep));
+                auto well2 = std::make_shared<Well>(this->getWell(well_name, report_step));
 
                 // Note: Need to ensure we have an independent copy of
                 // well's connections because
@@ -1138,13 +1142,13 @@ namespace {
                 auto connections = std::make_shared<WellConnections>(well2->getConnections());
                 well2->forceUpdateConnections(std::move(connections));
                 if (well2->updateWellProductivityIndex(rawProdIndex))
-                    this->updateWell(std::move(well2), handlerContext.currentStep);
+                    this->updateWell(std::move(well2), report_step);
 
-                this->addWellGroupEvent(well_name, ScheduleEvents::WELL_PRODUCTIVITY_INDEX, handlerContext.currentStep);
+                this->addWellGroupEvent(well_name, ScheduleEvents::WELL_PRODUCTIVITY_INDEX, report_step);
             }
         }
 
-        this->m_events.addEvent(ScheduleEvents::WELL_PRODUCTIVITY_INDEX, handlerContext.currentStep);
+        this->m_events.addEvent(ScheduleEvents::WELL_PRODUCTIVITY_INDEX, report_step);
     }
 
     void Schedule::handleWELSEGS(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
