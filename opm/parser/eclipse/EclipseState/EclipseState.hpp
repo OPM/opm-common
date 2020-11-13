@@ -27,7 +27,6 @@
 #include <opm/parser/eclipse/EclipseState/AquiferConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/TracerConfig.hpp>
-#include <opm/parser/eclipse/EclipseState/Edit/EDITNNC.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FaultCollection.hpp>
@@ -78,7 +77,7 @@ namespace Opm {
 
         const InitConfig& getInitConfig() const;
         InitConfig& getInitConfig();
-        
+
         const SimulationConfig& getSimulationConfig() const;
         virtual const EclipseGrid& getInputGrid() const;
 
@@ -89,11 +88,6 @@ namespace Opm {
         /// the non-standard adjacencies as specified in input deck
         const NNC& getInputNNC() const;
         bool hasInputNNC() const;
-
-        /// editing non-neighboring connections
-        /// the non-standard adjacencies as specified in input deck
-        const EDITNNC& getInputEDITNNC() const;
-        bool hasInputEDITNNC() const;
 
         // The potentially parallelized field properties
         virtual const FieldPropsManager& fieldProps() const;
@@ -127,7 +121,6 @@ namespace Opm {
             m_eclipseConfig.serializeOp(serializer);
             m_deckUnitSystem.serializeOp(serializer);
             m_inputNnc.serializeOp(serializer);
-            m_inputEditNnc.serializeOp(serializer);
             m_gridDims.serializeOp(serializer);
             m_simulationConfig.serializeOp(serializer);
             m_transMult.serializeOp(serializer);
@@ -152,9 +145,8 @@ namespace Opm {
         Runspec m_runspec;
         EclipseConfig m_eclipseConfig;
         UnitSystem m_deckUnitSystem;
-        NNC m_inputNnc;
-        EDITNNC m_inputEditNnc;
         EclipseGrid m_inputGrid;
+        NNC m_inputNnc;
         GridDims m_gridDims;
         FieldPropsManager field_props;
         SimulationConfig m_simulationConfig;

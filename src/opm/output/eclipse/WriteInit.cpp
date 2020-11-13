@@ -544,14 +544,14 @@ namespace {
         }
     }
 
-    void writeNonNeighbourConnections(const ::Opm::NNC&                 nnc,
-                                      const ::Opm::UnitSystem&          units,
-                                      ::Opm::EclIO::OutputStream::Init& initFile)
+    void writeNonNeighbourConnections(const std::vector<::Opm::NNCdata>& nnc,
+                                      const ::Opm::UnitSystem&           units,
+                                      ::Opm::EclIO::OutputStream::Init&  initFile)
     {
         auto tran = std::vector<double>{};
-        tran.reserve(nnc.numNNC());
+        tran.reserve(nnc.size());
 
-        for (const auto& nd : nnc.data()) {
+        for (const auto& nd : nnc) {
             tran.push_back(nd.trans);
         }
 
@@ -566,7 +566,7 @@ void Opm::InitIO::write(const ::Opm::EclipseState&              es,
                         const ::Opm::Schedule&                  schedule,
                         const ::Opm::data::Solution&            simProps,
                         std::map<std::string, std::vector<int>> int_data,
-                        const ::Opm::NNC&                       nnc,
+                        const std::vector<::Opm::NNCdata>&      nnc,
                         ::Opm::EclIO::OutputStream::Init&       initFile)
 {
     const auto& units = es.getUnits();
@@ -587,7 +587,7 @@ void Opm::InitIO::write(const ::Opm::EclipseState&              es,
     writeIntegerMaps(std::move(int_data), initFile);
     writeSatFuncScaling(es, units, initFile);
 
-    if (nnc.numNNC() > std::size_t{0}) {
+    if (!nnc.empty()) {
         writeNonNeighbourConnections(nnc, units, initFile);
     }
 }

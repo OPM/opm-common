@@ -1558,7 +1558,7 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         return m_zcorn;
     }
 
-    void EclipseGrid::save(const std::string& filename, bool formatted, const Opm::NNC& nnc, const Opm::UnitSystem& units) const {
+    void EclipseGrid::save(const std::string& filename, bool formatted, const std::vector<Opm::NNCdata>& nnc, const Opm::UnitSystem& units) const {
 
         Opm::UnitSystem::UnitType unitSystemType = units.getType();
         const auto length = ::Opm::UnitSystem::measure::length;
@@ -1601,7 +1601,7 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         std::vector<int> nnc1;
         std::vector<int> nnc2;
 
-        for (const NNCdata& n : nnc.data() ) {
+        for (const NNCdata& n : nnc ) {
             nnc1.push_back(n.cell1 + 1);
             nnc2.push_back(n.cell2 + 1);
         }
