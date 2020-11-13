@@ -2775,6 +2775,7 @@ eval(const EclipseState&                es,
     }
 
     for (auto& [_, evalPtr] : this->extra_parameters) {
+        (void)_;
         evalPtr->update(sim_step, duration, input, simRes, st);
     }
 }
