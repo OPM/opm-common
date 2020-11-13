@@ -932,17 +932,22 @@ ENDACTIO
 
 
 
-BOOST_AUTO_TEST_CASE(Action_GCONPROD) {
+BOOST_AUTO_TEST_CASE(Action_GCON) {
     const auto deck_string = std::string{ R"(
 SCHEDULE
 
 
 WELSPECS
     'PROD1' 'G1'  1 1 10 'OIL' /
+    'INJ1'  'G1'  1 1 10 'WAT' /
 /
 
 GCONPROD
 'G1' 'ORAT' 100  /
+/
+
+GCONINJE
+'G1' 'WATER' 'RATE' 1000 /
 /
 
 ACTIONX
@@ -953,6 +958,10 @@ FPR < 100 /
 
 GCONPROD
    'G1'  'ORAT' 200 /
+/
+
+GCONINJE
+'G1' 'WATER' 'RATE' 5000 /
 /
 
 ENDACTIO
@@ -970,6 +979,9 @@ TSTEP
         const auto& group = sched.getGroup("G1", 0);
         const auto& prod = group.productionControls(st);
         BOOST_CHECK_CLOSE( prod.oil_target , unit_system.to_si(UnitSystem::measure::liquid_surface_rate, 100), 1e-5 );
+
+        const auto& inj = group.injectionControls(Phase::WATER, st);
+        BOOST_CHECK_CLOSE( inj.surface_max_rate, unit_system.to_si(UnitSystem::measure::liquid_surface_rate, 1000), 1e-5 );
     }
 
     Action::Result action_result(true);
@@ -979,8 +991,12 @@ TSTEP
         const auto& group = sched.getGroup("G1", 1);
         const auto& prod = group.productionControls(st);
         BOOST_CHECK_CLOSE( prod.oil_target , unit_system.to_si(UnitSystem::measure::liquid_surface_rate, 200), 1e-5 );
+
+        const auto& inj = group.injectionControls(Phase::WATER, st);
+        BOOST_CHECK_CLOSE( inj.surface_max_rate, unit_system.to_si(UnitSystem::measure::liquid_surface_rate, 5000), 1e-5 );
     }
 }
+
 
 BOOST_AUTO_TEST_CASE(GASLIFT_OPT_DECK) {
     const auto input = R"(-- Turns on gas lift optimization

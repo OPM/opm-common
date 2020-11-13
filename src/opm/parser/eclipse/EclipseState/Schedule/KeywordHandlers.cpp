@@ -267,11 +267,17 @@ namespace {
     }
 
     void Schedule::handleGCONINJE(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
-        for (const auto& record : handlerContext.keyword) {
+        auto current_step = handlerContext.currentStep;
+        const auto& keyword = handlerContext.keyword;
+        this->handleGCONINJE(keyword, current_step, parseContext, errors);
+    }
+
+    void Schedule::handleGCONINJE(const DeckKeyword& keyword, std::size_t current_step, const ParseContext& parseContext, ErrorGuard& errors) {
+        for (const auto& record : keyword) {
             const std::string& groupNamePattern = record.getItem("GROUP").getTrimmedString(0);
             const auto group_names = this->groupNames(groupNamePattern);
             if (group_names.empty())
-                invalidNamePattern(groupNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
+                invalidNamePattern(groupNamePattern, current_step, parseContext, errors, keyword);
 
             const Group::InjectionCMode controlMode = Group::InjectionCModeFromString(record.getItem("CONTROL_MODE").getTrimmedString(0));
             const Phase phase = get_phase( record.getItem("PHASE").getTrimmedString(0));
@@ -283,7 +289,7 @@ namespace {
 
             for (const auto& group_name : group_names) {
                 const bool availableForGroupControl = is_free && (group_name != "FIELD");
-                auto group_ptr = std::make_shared<Group>(this->getGroup(group_name, handlerContext.currentStep));
+                auto group_ptr = std::make_shared<Group>(this->getGroup(group_name, current_step));
                 Group::GroupInjectionProperties injection;
                 injection.phase = phase;
                 injection.cmode = controlMode;
@@ -313,9 +319,9 @@ namespace {
                     injection.voidage_group = record.getItem("VOIDAGE_GROUP").getTrimmedString(0);
 
                 if (group_ptr->updateInjection(injection)) {
-                    this->updateGroup(std::move(group_ptr), handlerContext.currentStep);
-                    m_events.addEvent( ScheduleEvents::GROUP_INJECTION_UPDATE , handlerContext.currentStep);
-                    this->addWellGroupEvent(group_name, ScheduleEvents::GROUP_INJECTION_UPDATE, handlerContext.currentStep);
+                    this->updateGroup(std::move(group_ptr), current_step);
+                    m_events.addEvent( ScheduleEvents::GROUP_INJECTION_UPDATE , current_step);
+                    this->addWellGroupEvent(group_name, ScheduleEvents::GROUP_INJECTION_UPDATE, current_step);
                 }
             }
         }

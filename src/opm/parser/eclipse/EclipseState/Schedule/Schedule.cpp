@@ -1515,6 +1515,9 @@ private:
             if (keyword.name() == "UDQ")
                 this->updateUDQ(keyword, reportStep);
 
+            if (keyword.name() == "GCONINJE")
+                this->handleGCONINJE(keyword, reportStep, parseContext, errors);
+
             if (keyword.name() == "GCONPROD")
                 this->handleGCONPROD(keyword, reportStep, parseContext, errors);
 
