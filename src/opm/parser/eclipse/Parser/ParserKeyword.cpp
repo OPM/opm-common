@@ -707,9 +707,18 @@ void set_dimensions( ParserItem& item,
         else if( m_deckNames.count( std::string(name) ) )
             return true;
 
-        else if (hasMatchRegex())
-            return std::regex_match( name.begin(), name.end(), m_matchRegex);
+        else if (hasMatchRegex()) {
+            bool match = std::regex_match( name.begin(), name.end(), m_matchRegex);
+            if (match)
+                return true;
+        }
 
+        // Last desperate attempt - go through the deckNames list and
+        // interpret the elements as a regular expression.
+        for (const auto& deck_name : this->m_deckNames) {
+            if (std::regex_match(name.begin(), name.end(), std::regex(deck_name)))
+                return true;
+        }
         return false;
     }
 
