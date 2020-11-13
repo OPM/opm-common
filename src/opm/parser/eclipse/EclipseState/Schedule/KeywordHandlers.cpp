@@ -1755,6 +1755,27 @@ namespace {
         }
     }
 
+    void Schedule::handleWPAVE(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+        auto wpave = std::make_shared<PAvg>( handlerContext.keyword.getRecord(0) );
+        for (const auto& wname : this->wellNames(handlerContext.currentStep))
+            this->updateWPAVE(wname, handlerContext.currentStep, *wpave );
+
+        this->m_pavg.update( handlerContext.currentStep, std::move(wpave) );
+    }
+
+    void Schedule::handleWWPAVE(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+        for (const auto& record : handlerContext.keyword) {
+            const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+            const auto well_names = wellNames(wellNamePattern, handlerContext.currentStep);
+
+            if (well_names.empty())
+                invalidNamePattern(wellNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
+
+            auto wpave = PAvg(record);
+            for (const auto& well_name : well_names)
+                this->updateWPAVE(well_name, handlerContext.currentStep, wpave);
+        }
+    }
 
     bool Schedule::handleNormalKeyword(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
         using handler_function = void (Schedule::*)(const HandlerContext&, const ParseContext&, ErrorGuard&);
@@ -1821,6 +1842,8 @@ namespace {
             { "WINJTEMP", &Schedule::handleWINJTEMP },
             { "WLIFTOPT", &Schedule::handleWLIFTOPT },
             { "WLIST"   , &Schedule::handleWLIST    },
+            { "WPAVE"   , &Schedule::handleWPAVE    },
+            { "WWPAVE"  , &Schedule::handleWWPAVE   },
             { "WPIMULT" , &Schedule::handleWPIMULT  },
             { "WPMITAB" , &Schedule::handleWPMITAB  },
             { "WPOLYMER", &Schedule::handleWPOLYMER },

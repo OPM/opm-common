@@ -42,6 +42,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/VFPInjTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/VFPProdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Network/ExtNetwork.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/PAvg.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellTestConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellMatcher.hpp>
@@ -325,6 +326,7 @@ namespace Opm
             m_actions.serializeOp(serializer);
             m_network.serializeOp(serializer);
             m_glo.serializeOp(serializer);
+            m_pavg.serializeOp(serializer);
             rft_config.serializeOp(serializer);
             m_nupcol.template serializeOp<Serializer, false>(serializer);
             restart_config.serializeOp(serializer);
@@ -363,6 +365,7 @@ namespace Opm
         DynamicState<std::shared_ptr<Action::Actions>> m_actions;
         DynamicState<std::shared_ptr<Network::ExtNetwork>> m_network;
         DynamicState<std::shared_ptr<GasLiftOpt>> m_glo;
+        DynamicState<std::shared_ptr<PAvg>> m_pavg;
         RFTConfig rft_config;
         DynamicState<int> m_nupcol;
         RestartConfig restart_config;
@@ -387,6 +390,7 @@ namespace Opm
                      Well::GasInflowEquation gas_inflow,
                      std::size_t timeStep,
                      Connection::Order wellConnectionOrder);
+        bool updateWPAVE(const std::string& wname, std::size_t report_step, const PAvg& pavg);
 
         DynamicState<std::shared_ptr<RPTConfig>> rpt_config;
         void updateNetwork(std::shared_ptr<Network::ExtNetwork> network, std::size_t report_step);
@@ -549,6 +553,8 @@ namespace Opm
         void handleWINJTEMP (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleWLIFTOPT (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleWLIST    (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWPAVE    (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWWPAVE   (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleWPIMULT  (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleWPMITAB  (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleWPOLYMER (const HandlerContext&, const ParseContext&, ErrorGuard&);

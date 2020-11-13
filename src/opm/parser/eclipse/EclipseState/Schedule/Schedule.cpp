@@ -127,6 +127,7 @@ namespace {
         m_actions(this->m_timeMap, std::make_shared<Action::Actions>()),
         m_network(this->m_timeMap, std::make_shared<Network::ExtNetwork>()),
         m_glo(this->m_timeMap, std::make_shared<GasLiftOpt>()),
+        m_pavg(this->m_timeMap, std::make_shared<PAvg>()),
         rft_config(this->m_timeMap),
         m_nupcol(this->m_timeMap, runspec.nupcol()),
         restart_config(m_timeMap, deck, parseContext, errors),
@@ -608,6 +609,20 @@ private:
         return update;
     }
 
+
+    bool Schedule::updateWPAVE(const std::string& wname, std::size_t report_step, const PAvg& pavg) {
+        const auto& well = this->getWell(wname, report_step);
+        if (well.pavg() != pavg) {
+            auto& dynamic_state = this->wells_static.at(wname);
+            auto new_well = std::make_shared<Well>(*dynamic_state[report_step]);
+            new_well->updateWPAVE( pavg );
+            this->updateWell(new_well, report_step);
+            return true;
+        }
+        return false;
+    }
+
+
     /*
       This routine is called when UDQ keywords is added in an ACTIONX block.
     */
@@ -891,6 +906,9 @@ private:
                   gas_inflow);
 
         this->addWell( std::move(well), timeStep );
+
+        const auto& pavg_ptr = this->m_pavg.get(timeStep);
+        this->updateWPAVE( wellName, timeStep, *pavg_ptr );
     }
 
 
