@@ -122,4 +122,8 @@ bool Aquifetp::hasAquifer(const int aquID) const {
 
 }
 
+bool Aquifetp::active() const {
+    return (!this->m_aqufetp.empty());
+}
+
 }

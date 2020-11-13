@@ -68,6 +68,8 @@ namespace Opm {
         std::array<std::set<size_t>, 3> transToRemove(const EclipseGrid& grid) const;
         void appendNNC(const EclipseGrid &grid, const FieldPropsManager &fp, NNC &nnc) const;
         size_t numCells() const;
+        size_t id() const;
+        double initPressure() const;
     private:
         // Maybe this id_ is not necessary
         // Because if it is a map, the id will be there
@@ -81,11 +83,10 @@ namespace Opm {
     class NumericalAquifers {
     public:
         NumericalAquifers() = default;
-        explicit NumericalAquifers(const Deck& deck, const EclipseGrid& grid, const FieldPropsManager& field_props);
+        NumericalAquifers(const Deck& deck, const EclipseGrid& grid, const FieldPropsManager& field_props);
 
         bool hasAquifer(const size_t aquifer_id) const;
         bool hasCell(const size_t cell_global_index) const;
-        bool empty() const;
         void updateCellProps(const EclipseGrid& grid,
                              std::vector<double>& pore_volume,
                              std::vector<int>& satnum,
@@ -96,6 +97,8 @@ namespace Opm {
         const std::unordered_map<size_t, const NumericalAquiferCell>& aquiferCells() const;
         void appendNNC(const EclipseGrid &grid, const FieldPropsManager &fp, NNC &nnc) const;
         const NumericalAquiferCell& getCell(const size_t cell_global_index) const;
+        const std::unordered_map<size_t, SingleNumericalAquifer>& aquifers() const;
+        bool active() const;
 
     private:
         // std::un_ordered_map

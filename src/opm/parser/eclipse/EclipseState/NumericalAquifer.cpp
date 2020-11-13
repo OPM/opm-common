@@ -116,10 +116,6 @@ addAquiferConnections(const Deck &deck, const EclipseGrid &grid) {
     }
 }
 
-bool NumericalAquifers::empty() const {
-    return this->aquifers_.empty();
-}
-
 void NumericalAquifers::updateCellProps(const EclipseGrid& grid,
                                         std::vector<double>& pore_volume,
                                         std::vector<int>& satnum,
@@ -162,6 +158,14 @@ bool NumericalAquifers::hasCell(const size_t cell_global_index) const {
 const NumericalAquiferCell& NumericalAquifers::getCell(const size_t cell_global_index) const {
     assert(this->hasCell(cell_global_index));
     return this->aquifer_cells_.at(cell_global_index);
+}
+
+const std::unordered_map<size_t, SingleNumericalAquifer>& NumericalAquifers::aquifers() const {
+    return this->aquifers_;
+}
+
+bool NumericalAquifers::active() const {
+    return (!this->aquifers_.empty());
 }
 
 using AQUNUM = ParserKeywords::AQUNUM;
@@ -327,4 +331,19 @@ size_t SingleNumericalAquifer::numCells() const {
     return this->cells_.size();
 }
 
+double SingleNumericalAquifer::initPressure() const {
+    double sum = 0.;
+    double sum_porv = 0.;
+    for (const auto& cell : this->cells_) {
+        const double porv = cell.pore_volume;
+        const double init_p = cell.init_pressure;
+        sum += init_p * porv;
+        sum_porv += porv;
+    }
+    return sum / sum_porv;
+}
+
+size_t SingleNumericalAquifer::id() const {
+    return this->id_;
+}
 }

@@ -183,4 +183,8 @@ bool AquiferCT::hasAquifer(const int aquID) const {
                        [&aquID](const auto& aqu) { return aqu.aquiferID == aquID; });
 }
 
+bool AquiferCT::active() const {
+    return (!this->m_aquct.empty());
+}
+
 }
