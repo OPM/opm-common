@@ -583,7 +583,7 @@ BOOST_AUTO_TEST_CASE(UDQ_CONTEXT) {
     BOOST_CHECK_EQUAL(*ctx.get("JAN"), 1.0);
     BOOST_CHECK_THROW(ctx.get("NO_SUCH_KEY"), std::out_of_range);
 
-    for (std::string& key : std::vector<std::string>({"ELAPSED", "MSUMLINS", "MSUMNEWT", "NEWTON", "TCPU", "TIME"}))
+    for (std::string& key : std::vector<std::string>({"MSUMLINS", "MSUMNEWT", "NEWTON", "TCPU"}))
         BOOST_CHECK_NO_THROW( ctx.get(key) );
 
     st.update("SX:KEY", 1.0);

@@ -56,12 +56,10 @@ bool is_udq(const std::string& key) {
           the underlying summary state object.
         */
 
-        this->add("ELAPSED", 0.0);
         this->add("MSUMLINS", 0.0);
         this->add("MSUMNEWT", 0.0);
         this->add("NEWTON", 0.0);
         this->add("TCPU", 0.0);
-        this->add("TIME", 0.0);
     }
 
 
