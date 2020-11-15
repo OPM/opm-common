@@ -64,7 +64,6 @@ public:
 
 class UDQSet {
 public:
-    UDQSet(const std::string& name);
     UDQSet(const std::string& name, UDQVarType var_type);
     UDQSet(const std::string& name, UDQVarType var_type, const std::vector<std::string>& wgnames);
     UDQSet(const std::string& name, UDQVarType var_type, std::size_t size);
