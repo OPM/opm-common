@@ -226,6 +226,21 @@ UDQAction actionType(const std::string& action_string) {
 }
 
 
+UDQUpdate updateType(const std::string& update_string) {
+    if (update_string == "ON")
+        return UDQUpdate::ON;
+
+    if (update_string == "OFF")
+        return UDQUpdate::OFF;
+
+    if (update_string == "NEXT")
+        return UDQUpdate::NEXT;
+
+    throw std::invalid_argument("Invalid status update string " + update_string);
+}
+
+
+
 bool binaryFunc(UDQTokenType token_type) {
     return (binary_func.count(token_type) > 0);
 }

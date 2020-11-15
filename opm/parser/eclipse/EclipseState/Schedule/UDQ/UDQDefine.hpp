@@ -44,11 +44,13 @@ public:
 
     UDQDefine(const UDQParams& udq_params,
               const std::string& keyword,
+              std::size_t report_step,
               const KeywordLocation& location,
               const std::vector<std::string>& deck_data);
 
     UDQDefine(const UDQParams& udq_params,
               const std::string& keyword,
+              std::size_t report_step,
               const KeywordLocation& location,
               const std::vector<std::string>& deck_data,
               const ParseContext& parseContext,
@@ -57,6 +59,7 @@ public:
     template <typename T>
     UDQDefine(const UDQParams& udq_params,
               const std::string& keyword,
+              std::size_t report_step,
               const KeywordLocation& location,
               const std::vector<std::string>& deck_data,
               const ParseContext& parseContext,
@@ -71,6 +74,8 @@ public:
     UDQVarType  var_type() const;
     std::set<UDQTokenType> func_tokens() const;
     void required_summary(std::unordered_set<std::string>& summary_keys) const;
+    void update_status(UDQUpdate update_status, std::size_t report_step);
+    std::pair<UDQUpdate, std::size_t> status() const;
 
     bool operator==(const UDQDefine& data) const;
 
@@ -82,6 +87,8 @@ public:
         serializer(m_var_type);
         m_location.serializeOp(serializer);
         serializer(string_data);
+        serializer(m_update_status);
+        serializer(m_report_step);
     }
 
 private:
@@ -89,6 +96,8 @@ private:
     std::shared_ptr<UDQASTNode> ast;
     UDQVarType m_var_type;
     KeywordLocation m_location;
+    std::size_t m_report_step;
+    UDQUpdate m_update_status;
     std::string string_data;
 };
 }

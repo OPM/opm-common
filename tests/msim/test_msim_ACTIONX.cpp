@@ -155,10 +155,12 @@ int ecl_sum_get_last_report_step(const EclIO::ESmry& smry)
     return static_cast<int>(smry.get_at_rstep("TIME").size());
 }
 
+
 int ecl_sum_iget_report_end(const EclIO::ESmry& smry, const int reportStep)
 {
     return smry.timestepIdxAtReportstepStart(reportStep + 1) - 1;
 }
+
 }
 
 
@@ -341,6 +343,23 @@ BOOST_AUTO_TEST_CASE(UDQ_WUWCT) {
             BOOST_CHECK_EQUAL( ecl_sum_get_general_var(ecl_sum, step, "FOPR"),
                                ecl_sum_get_general_var(ecl_sum, step, "FUOPR"));
             BOOST_CHECK_EQUAL( wopr_sum, ecl_sum_get_general_var(ecl_sum, step, "FOPR"));
+        }
+
+        {
+            const auto& fu_time = ecl_sum.get_at_rstep("FU_TIME");
+            BOOST_CHECK_CLOSE(fu_time[7 - 1], 212, 1e-5);
+            // UPDATE OFF
+            BOOST_CHECK_CLOSE(fu_time[8 - 1], 212, 1e-5);
+            BOOST_CHECK_CLOSE(fu_time[9 - 1] , 212, 1e-5);
+            BOOST_CHECK_CLOSE(fu_time[10 - 1], 212, 1e-5);
+            BOOST_CHECK_CLOSE(fu_time[11 - 1], 212, 1e-5);
+            // UPDATE NEXT
+            BOOST_CHECK_CLOSE(fu_time[12 - 1], 342, 1e-5);
+            BOOST_CHECK_CLOSE(fu_time[13 - 1], 342, 1e-5);
+            BOOST_CHECK_CLOSE(fu_time[14 - 1], 342, 1e-5);
+            // UPDATE ON
+            BOOST_CHECK_CLOSE(fu_time[15 - 1], 456, 1e-5);
+            BOOST_CHECK_CLOSE(fu_time[16 - 1], 487, 1e-5);
         }
     }
 }
