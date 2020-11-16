@@ -1600,7 +1600,8 @@ static const std::unordered_map< std::string, Opm::UnitSystem::measure> region_u
   {"RGIP"     , Opm::UnitSystem::measure::gas_surface_volume },
   {"RGIPL"    , Opm::UnitSystem::measure::gas_surface_volume },
   {"RGIPG"    , Opm::UnitSystem::measure::gas_surface_volume },
-  {"RWIP"     , Opm::UnitSystem::measure::liquid_surface_volume }
+  {"RWIP"     , Opm::UnitSystem::measure::liquid_surface_volume },
+  {"RRPV"     , Opm::UnitSystem::measure::geometric_volume }
 };
 
 static const std::unordered_map< std::string, Opm::UnitSystem::measure> block_units = {

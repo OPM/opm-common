@@ -5,6 +5,8 @@
   ],
   "comment": "Tracer keywords where the 2nd letter is a 'T' should be compounded with the tracer name",
   "deck_names": [
+    "RRPV_[0-9A-Z][0-9A-Z][0-9A-Z]",
+    "ROEW_[0-9A-Z][0-9A-Z][0-9A-Z]",
     "ROSAT",
     "ROIP",
     "ROIPL",
