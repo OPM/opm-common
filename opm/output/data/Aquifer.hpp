@@ -57,11 +57,11 @@ namespace Opm { namespace data {
 
         double get(const std::string& key) const
         {
-            if ( key == "AAQR" ) {
+            if ( key == "AAQR" || key == "ANQR" ) {
                 return this->fluxRate;
-            } else if ( key == "AAQT" ) {
+            } else if ( key == "AAQT" || key == "ANQT" ) {
                 return this->volume;
-            } else if ( key == "AAQP" ) {
+            } else if ( key == "AAQP" || key == "ANQP" ) {
                 return this->pressure;
             }
             return 0.;

@@ -70,6 +70,8 @@ namespace Opm {
         size_t numCells() const;
         size_t id() const;
         double initPressure() const;
+        bool hasCell(const size_t global_index) const;
+        const std::vector<NumericalAquiferCell>& cells() const;
     private:
         // Maybe this id_ is not necessary
         // Because if it is a map, the id will be there

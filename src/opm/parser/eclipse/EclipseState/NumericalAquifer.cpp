@@ -285,6 +285,13 @@ appendNNC(const EclipseGrid &grid, const FieldPropsManager &fp, NNC &nnc) const 
         const size_t gc1 = this->cells_[i].global_index;
         const size_t gc2 = this->cells_[i+1].global_index;
         nnc.addNNC(gc1, gc2, tran);
+
+        // DEBUG output
+        const auto& cell1 = this->cells_[i];
+        const auto& cell2 = this->cells_[i+1];
+        const double transform_efficient = 1.e8*86400.;
+        std::cout << cell1.I + 1 << " " << cell1.J + 1 << " " << cell1.K + 1 << " "
+                  << cell2.I + 1 << " " << cell2.J + 1 << " " << cell2.K + 1 << " " << tran * transform_efficient << std::endl;
     }
 
     const std::vector<double>& ntg = fp.get_double("NTG");
@@ -324,6 +331,10 @@ appendNNC(const EclipseGrid &grid, const FieldPropsManager &fp, NNC &nnc) const 
 
         const double tran = trans_con * trans_cell / (trans_con + trans_cell) * con.trans_multipler;
         nnc.addNNC(gc1, gc2, tran);
+        // debug output
+        const double transform_efficient = 1.e8*86400.;
+        std::cout << cell1.I + 1 << " " << cell1.J + 1 << " " << cell1.K + 1 << " "
+                  << con.I + 1 << " " << con.J + 1 << " " << con.K + 1 << " " << tran * transform_efficient << std::endl;
     }
 }
 
@@ -332,6 +343,7 @@ size_t SingleNumericalAquifer::numCells() const {
 }
 
 double SingleNumericalAquifer::initPressure() const {
+    // TODO: the problem is that init_pressure is not always there
     double sum = 0.;
     double sum_porv = 0.;
     for (const auto& cell : this->cells_) {
@@ -346,4 +358,15 @@ double SingleNumericalAquifer::initPressure() const {
 size_t SingleNumericalAquifer::id() const {
     return this->id_;
 }
+
+bool SingleNumericalAquifer::hasCell(const size_t global_idx) const {
+    return std::any_of(this->cells_.begin(), this->cells_.end(),
+           [global_idx](const auto& cell) { return cell.global_index == global_idx; });
+}
+
+const std::vector<NumericalAquiferCell>&
+SingleNumericalAquifer::cells() const {
+    return this->cells_;
+}
+
 }
