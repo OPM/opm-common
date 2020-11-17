@@ -7,6 +7,7 @@
   "deck_names": [
     "RRPV_[0-9A-Z][0-9A-Z][0-9A-Z]",
     "ROEW_[0-9A-Z][0-9A-Z][0-9A-Z]",
+    "RHPV_[0-9A-Z][0-9A-Z][0-9A-Z]",
     "ROSAT",
     "ROIP",
     "ROIPL",

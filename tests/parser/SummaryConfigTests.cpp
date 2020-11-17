@@ -1184,13 +1184,17 @@ RRPV_REG
 
 ROEW_REG
 /
+
+RHPV_REG
+/
 )";
     const auto& summary_config = createSummary(deck_string);
-    BOOST_CHECK_EQUAL(summary_config.size(), 12U);
+    BOOST_CHECK_EQUAL(summary_config.size(), 15U);
     BOOST_CHECK(summary_config.hasKeyword("RPR__REG"));
     BOOST_CHECK(summary_config.hasKeyword("ROPT_REG"));
     BOOST_CHECK(summary_config.hasKeyword("RRPV_REG"));
     BOOST_CHECK(summary_config.hasKeyword("ROEW_REG"));
+    BOOST_CHECK(summary_config.hasKeyword("RHPV_REG"));
     BOOST_CHECK(!summary_config.hasKeyword("RPR"));
     BOOST_CHECK(!summary_config.match("BPR*"));
     BOOST_CHECK(summary_config.match("RPR*"));
