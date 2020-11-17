@@ -172,8 +172,8 @@ UDQDefine::UDQDefine(const UDQParams& udq_params,
                      ErrorGuard& errors) :
     m_keyword(keyword),
     m_var_type(UDQ::varType(keyword)),
-    m_report_step(report_step),
     m_location(location),
+    m_report_step(report_step),
     m_update_status(UDQUpdate::ON)
 {
     std::vector<std::string> string_tokens;
