@@ -541,7 +541,7 @@ public:
     bool updateRefDepth(const std::optional<double>& ref_dpeth);
     bool updateDrainageRadius(double drainage_radius);
     void updateSegments(std::shared_ptr<WellSegments> segments_arg);
-    bool updateConnections(std::shared_ptr<WellConnections> connections);
+    bool updateConnections(std::shared_ptr<WellConnections> connections, bool force = false);
     bool updateConnections(std::shared_ptr<WellConnections> connections, const EclipseGrid& grid, const std::vector<int>& pvtnum);
     bool updateStatus(Status status, bool update_connections);
     bool updateGroup(const std::string& group);
@@ -566,8 +566,6 @@ public:
     bool handleWELOPEN(const DeckRecord& record, Connection::State status, bool action_mode);
     bool handleCOMPLUMP(const DeckRecord& record);
     bool handleWPIMULT(const DeckRecord& record);
-
-    void forceUpdateConnections(std::shared_ptr<WellConnections> connections_arg);
 
     void filterConnections(const ActiveGridCells& grid);
     ProductionControls productionControls(const SummaryState& st) const;

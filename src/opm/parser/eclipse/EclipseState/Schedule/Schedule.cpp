@@ -594,10 +594,21 @@ private:
       Function is quite dangerous - because if this is called while holding a
       Well pointer that will go stale and needs to be refreshed.
     */
-    bool Schedule::updateWellStatus( const std::string& well_name, std::size_t reportStep , Well::Status status, bool update_connections) {
-        bool update = false;
+    bool Schedule::updateWellStatus( const std::string& well_name, std::size_t reportStep , Well::Status status, bool update_connections, std::optional<KeywordLocation> location) {
         auto& dynamic_state = this->wells_static.at(well_name);
         auto well2 = std::make_shared<Well>(*dynamic_state[reportStep]);
+        if (well2->getConnections().empty() && status == Well::Status::OPEN) {
+            if (location) {
+                auto msg = fmt::format("Problem with{}\n",
+                                       "In {} line{}\n"
+                                       "Well {} has no connections to grid and will remain SHUT", location->keyword, location->filename, location->lineno, well_name);
+                OpmLog::warning(msg);
+            } else
+                OpmLog::warning(fmt::format("Well {} has no connections to grid and will remain SHUT", well_name));
+            return false;
+        }
+
+        bool update = false;
         if (well2->updateStatus(status, update_connections)) {
             m_events.addEvent( ScheduleEvents::WELL_STATUS_CHANGE, reportStep );
             this->addWellGroupEvent( well2->name(), ScheduleEvents::WELL_STATUS_CHANGE, reportStep);

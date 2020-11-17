@@ -21,6 +21,7 @@
 
 #include <map>
 #include <memory>
+#include <optional>
 
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/RestartConfig.hpp>
@@ -400,7 +401,7 @@ namespace Opm
         void updateGroup(std::shared_ptr<Group> group, std::size_t reportStep);
         bool checkGroups(const ParseContext& parseContext, ErrorGuard& errors);
         void updateUDQActive( std::size_t timeStep, std::shared_ptr<UDQActive> udq );
-        bool updateWellStatus( const std::string& well, std::size_t reportStep , Well::Status status, bool update_connections);
+        bool updateWellStatus( const std::string& well, std::size_t reportStep , Well::Status status, bool update_connections, std::optional<KeywordLocation> = {});
         void addWellToGroup( const std::string& group_name, const std::string& well_name , std::size_t timeStep);
         void iterateScheduleSection(std::shared_ptr<const Python> python, const std::string& input_path, const ParseContext& parseContext ,  ErrorGuard& errors, const SCHEDULESection& , const EclipseGrid& grid,
                                     const FieldPropsManager& fp);
