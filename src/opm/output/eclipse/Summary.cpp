@@ -2070,6 +2070,7 @@ namespace Evaluator {
             const auto val = st.get_elapsed() + stepSize;
 
             st.update(this->saveKey_, usys.from_si(m, val));
+            st.update("TIME", usys.from_si(m, val));
         }
 
     private:
@@ -2997,6 +2998,7 @@ std::vector<Opm::EclIO::SummaryNode> make_default_nodes(const std::string& keywo
 
 
 void Opm::out::Summary::SummaryImplementation::configureUDQ(const SummaryConfig& summary_config, const Schedule& sched) {
+    const std::unordered_set<std::string> time_vectors = {"TIME", "DAY", "MONTH", "YEAR", "YEARS"};
     auto nodes = std::vector<Opm::EclIO::SummaryNode> {};
     std::unordered_set<std::string> summary_keys;
     for (const auto& udq_ptr : sched.udqConfigList())
@@ -3009,20 +3011,31 @@ void Opm::out::Summary::SummaryImplementation::configureUDQ(const SummaryConfig&
     }
 
     for (const auto& node: nodes) {
+        // Handler already configured/requested through the normal SummaryConfig path.
         if (summary_config.hasSummaryKey(node.unique_key()))
-            // Handler already exists.  Don't add second evaluation.
+            continue;
+
+        // Time related vectors are special cased in the valueKeys_ vector and must be checked explicitly.
+        if (time_vectors.count(node.keyword) > 0)
+            continue;
+
+        // Handler already registered in the summary evaluator, in some other way.
+        if ( std::find(this->valueKeys_.begin(), this->valueKeys_.end(), node.unique_key()) != this->valueKeys_.end())
             continue;
 
         auto fun_pos = funs.find(node.keyword);
-        if (fun_pos != funs.end())
+        if (fun_pos != funs.end()) {
             this->extra_parameters.emplace( node.unique_key(), std::make_unique<Evaluator::FunctionRelation>(node, fun_pos->second) );
-        else {
-            auto unit = single_values_units.find(node.keyword);
-            if (unit == single_values_units.end())
-                throw std::logic_error(fmt::format("Evaluation function for: {} not found ", node.keyword));
-
-            this->extra_parameters.emplace( node.unique_key(), std::make_unique<Evaluator::GlobalProcessValue>(node, unit->second));
+            continue;
         }
+
+        auto unit = single_values_units.find(node.keyword);
+        if (unit != single_values_units.end()) {
+            this->extra_parameters.emplace( node.unique_key(), std::make_unique<Evaluator::GlobalProcessValue>(node, unit->second));
+            continue;
+        }
+
+        throw std::logic_error(fmt::format("Evaluation function for: {} not found ", node.keyword));
     }
 }
 

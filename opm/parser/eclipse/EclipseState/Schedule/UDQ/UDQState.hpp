@@ -39,9 +39,10 @@ public:
     double get(const std::string& key) const;
     double get_group_var(const std::string& well, const std::string& var) const;
     double get_well_var(const std::string& well, const std::string& var) const;
-    void add_define(const std::string& udq_key, const UDQSet& result);
+    void add_define(std::size_t report_step, const std::string& udq_key, const UDQSet& result);
     void add_assign(std::size_t report_step, const std::string& udq_key, const UDQSet& result);
     bool assign(std::size_t report_step, const std::string& udq_key) const;
+    bool define(const std::string& udq_key, std::pair<UDQUpdate, std::size_t> update_status) const;
     double undefined_value() const;
 
     std::vector<char> serialize() const;
@@ -53,6 +54,7 @@ private:
     double undef_value;
     std::unordered_map<std::string, UDQSet> values;
     std::unordered_map<std::string, std::size_t> assignments;
+    std::unordered_map<std::string, std::size_t> defines;
 };
 }
 

@@ -56,12 +56,10 @@ bool is_udq(const std::string& key) {
           the underlying summary state object.
         */
 
-        this->add("ELAPSED", 0.0);
         this->add("MSUMLINS", 0.0);
         this->add("MSUMNEWT", 0.0);
         this->add("NEWTON", 0.0);
         this->add("TCPU", 0.0);
-        this->add("TIME", 0.0);
     }
 
 
@@ -138,8 +136,8 @@ bool is_udq(const std::string& key) {
         this->summary_state.update_udq(udq_result, this->udq_state.undefined_value());
     }
 
-    void UDQContext::update_define(const std::string& keyword, const UDQSet& udq_result) {
-        this->udq_state.add_define(keyword, udq_result);
+    void UDQContext::update_define(std::size_t report_step, const std::string& keyword, const UDQSet& udq_result) {
+        this->udq_state.add_define(report_step, keyword, udq_result);
         this->summary_state.update_udq(udq_result, this->udq_state.undefined_value());
     }
 }
