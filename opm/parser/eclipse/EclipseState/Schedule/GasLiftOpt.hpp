@@ -204,7 +204,7 @@ public:
         std::string m_name;
         std::optional<double> m_max_rate;
         double m_min_rate = 0;
-        bool m_use_glo;
+        bool m_use_glo = false;
         double m_weight = 1;
         double m_inc_weight = 0;
         bool m_alloc_extra_gas = false;
@@ -219,6 +219,7 @@ public:
     void gaslift_increment(double gaslift_increment);
     double min_eco_gradient() const;
     void min_eco_gradient(double min_eco_gradient);
+    double min_wait() const;
     void min_wait(double min_wait);
     void all_newton(double all_newton);
     bool all_newton() const;

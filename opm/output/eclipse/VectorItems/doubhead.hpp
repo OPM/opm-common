@@ -53,6 +53,9 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
         GRpar_d = 90,     // Guiderate parameter D
         GRpar_e = 91,     // Guiderate parameter E
         GRpar_f = 92,     // Guiderate parameter F
+        LOminInt = 93,     // LIFTOP - Minimum interval between gas lift optimizations
+        LOincrsz   = 95,     // LIFTOPT - Increment size for lift gas injection rate
+        LOminEcGrad = 96,  // LIFTOPT - Minimum economic gradient
         GRpar_int = 97,     // Guiderate parameter delay interval
         ThrUPT  =  99,
         XxxDPR  = 100,

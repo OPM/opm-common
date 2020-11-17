@@ -47,6 +47,10 @@ void GasLiftOpt::min_wait(double min_wait) {
     this->m_min_wait = min_wait;
 }
 
+double GasLiftOpt::min_wait() const {
+    return this->m_min_wait;
+}
+
 void GasLiftOpt::all_newton(double all_newton) {
     this->m_all_newton = all_newton;
 }

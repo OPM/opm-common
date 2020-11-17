@@ -154,10 +154,10 @@ enum Index : std::vector<double>::size_type {
     grpar_d =  VI::doubhead::GRpar_d,
     grpar_e =  VI::doubhead::GRpar_e,
     grpar_f =  VI::doubhead::GRpar_f,
-    dh_093  =  93,
-    dh_094  =  94,
+    LOmini  =  VI::doubhead::LOminInt,
+    LOincr   =  VI::doubhead::LOincrsz,
     dh_095  =  95,
-    dh_096  =  96,
+    LOmineg  =  VI::doubhead::LOminEcGrad,
     grpar_int =  VI::doubhead::GRpar_int,
     dh_098  =  98,
     ThrUPT  =  VI::doubhead::ThrUPT,
@@ -398,8 +398,9 @@ Opm::RestartIO::DoubHEAD::DoubHEAD()
     this->data_[Index::dh_081] = 1.0e+20;
     this->data_[grpar_e] = 0.0;
     this->data_[grpar_f] = 0.0;
-    this->data_[Index::dh_093] = 0.0;
-    this->data_[Index::dh_096] = 0.0;
+    this->data_[LOmini] = 0.0;
+    this->data_[LOincr] = 0.0;
+    this->data_[LOmineg] = 0.0;
     this->data_[Index::dh_105] = 1.0;
     this->data_[Index::dh_108] = 0.0;
     this->data_[Index::dh_109] = 0.0;
@@ -640,6 +641,16 @@ Opm::RestartIO::DoubHEAD::guide_rate_param(const guideRate& guide_rp)
     this->data_[grpar_f] = guide_rp.F;
     this->data_[grpar_int] = guide_rp.delay;
     this->data_[grpar_dmp] = guide_rp.damping_fact;
+
+    return *this;
+}
+
+Opm::RestartIO::DoubHEAD&
+Opm::RestartIO::DoubHEAD::lift_opt_param(const liftOptPar& lo_par)
+{
+    this->data_[LOmini]  = lo_par.min_int;
+    this->data_[LOincr]   = lo_par.incr;
+    this->data_[LOmineg] = lo_par.min_ec_grad;
 
     return *this;
 }

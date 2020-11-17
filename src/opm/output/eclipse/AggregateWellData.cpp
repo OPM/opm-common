@@ -268,6 +268,7 @@ namespace {
 
         template <class IWellArray>
         void staticContrib(const Opm::Well&                well,
+                           const Opm::GasLiftOpt&          glo,
                            const Opm::SummaryState&        st,
                            const std::size_t               msWellID,
                            const std::map <const std::string, size_t>&  GroupMapNameInd,
@@ -315,6 +316,14 @@ namespace {
             iWell[Ix::item25] = -  1;
             iWell[Ix::item32] =    7;
             iWell[Ix::item48] = -  1;
+
+            // integer flag indicating lift gas optimisation to be calculated
+            if (glo.has_well(well.name())) {
+                const auto& w_glo = glo.well(well.name());
+                iWell[Ix::LiftOpt] = (w_glo.use_glo()) ? 1 : 0;
+            } else {
+                iWell[Ix::LiftOpt] = 0;
+            }
 
             // Deliberate misrepresentation.  Function 'eclipseControlMode'
             // returns the target control mode requested in the simulation
@@ -499,6 +508,7 @@ namespace {
         };
         template <class SWellArray>
         void staticContrib(const Opm::Well&             well,
+                           const Opm::GasLiftOpt& glo,
                            const Opm::UnitSystem&       units,
                            const std::size_t            sim_step,
                            const Opm::Schedule&         sched,
@@ -643,6 +653,19 @@ namespace {
                     : swprop(M::pressure, 1.0E05*::Opm::unit::psia);
                 sWell[Ix::HistBHPTarget] = sWell[Ix::BHPTarget];
             }
+
+            // assign gas lift data
+            if (glo.has_well(well.name())) {
+                const auto& w_glo = glo.well(well.name());
+                sWell[Ix::LOmaxRate] = swprop(M::gas_surface_rate, w_glo.max_rate().value_or(0.));
+                sWell[Ix::LOminRate] = swprop(M::gas_surface_rate, w_glo.min_rate());
+                sWell[Ix::LOweightFac] = static_cast<float>(w_glo.weight_factor());
+            } else {
+                sWell[Ix::LOmaxRate] = 0.;
+                sWell[Ix::LOminRate] = 0.;
+                sWell[Ix::LOweightFac] = 0.;
+            }
+
 
             sWell[Ix::DatumDepth] = swprop(M::length, datumDepth(well));
             sWell[Ix::DrainageRadius] = swprop(M::length, well.getDrainageRadius());
@@ -953,6 +976,7 @@ captureDeclaredWellData(const Schedule&   sched,
                         const std::vector<int>& inteHead)
 {
     const auto& wells = sched.getWells(sim_step);
+    const auto& step_glo = sched.glo(sim_step);
 
     // Static contributions to IWEL array.
     {
@@ -960,23 +984,23 @@ captureDeclaredWellData(const Schedule&   sched,
         const auto groupMapNameIndex = IWell::currentGroupMapNameIndex(sched, sim_step, inteHead);
         auto msWellID       = std::size_t{0};
 
-        wellLoop(wells, [&groupMapNameIndex, &msWellID, &smry, this]
+        wellLoop(wells, [&groupMapNameIndex, &msWellID, &step_glo, &smry, this]
             (const Well& well, const std::size_t wellID) -> void
         {
             msWellID += well.isMultiSegment();  // 1-based index.
             auto iw   = this->iWell_[wellID];
 
-            IWell::staticContrib(well, smry, msWellID, groupMapNameIndex, iw);
+            IWell::staticContrib(well, step_glo, smry, msWellID, groupMapNameIndex, iw);
         });
     }
 
     // Static contributions to SWEL array.
-    wellLoop(wells, [&units, &sim_step, &sched, &smry, this]
+    wellLoop(wells, [&units, &step_glo, &sim_step, &sched, &smry, this]
         (const Well& well, const std::size_t wellID) -> void
     {
         auto sw = this->sWell_[wellID];
 
-        SWell::staticContrib(well, units, sim_step, sched, smry, sw);
+        SWell::staticContrib(well, step_glo, units, sim_step, sched, smry, sw);
     });
 
     // Static contributions to XWEL array.

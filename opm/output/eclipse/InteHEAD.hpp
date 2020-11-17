@@ -146,6 +146,7 @@ namespace RestartIO {
         InteHEAD& variousUDQ_ACTIONXParam();
         InteHEAD& nominatedPhaseGuideRate(GuideRateNominatedPhase nphase);
         InteHEAD& whistControlMode(int mode);
+        InteHEAD& liftOptParam(int in_enc);
 
         const std::vector<int>& data() const
         {

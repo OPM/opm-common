@@ -79,7 +79,7 @@ enum index : std::vector<int>::size_type {
   ih_056       =       56       ,              //       0       0
   ih_057       =       57       ,              //       0       0
   NGRNPHASE    =       VI::intehead::NGRNPH,   //       Parameter to determine the nominated phase for the guiderate 
-  ih_059       =       59       ,              //       0       0
+  EACHNC       =       VI::intehead::EACHNCITS, //  Index indicating if lift gas distribution optimized each of the NUPCOL first iterations or not
   ih_060       =       60       ,              //       0       0
   ih_061       =       61       ,              //       0       0
   ih_062       =       62       ,              //       0       0
@@ -734,6 +734,15 @@ Opm::RestartIO::InteHEAD::
 whistControlMode(int mode)
 {
     this -> data_[NWHISTCTL]  =  mode;
+
+    return *this;
+}
+
+Opm::RestartIO::InteHEAD&
+Opm::RestartIO::InteHEAD::
+liftOptParam(int in_enc)
+{
+    this -> data_[EACHNC]  =  in_enc;
 
     return *this;
 }

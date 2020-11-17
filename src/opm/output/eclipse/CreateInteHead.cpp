@@ -447,6 +447,14 @@ namespace {
         return mode;
     }
 
+    int getLiftOptPar(const ::Opm::Schedule& sched,
+                   const std::size_t      lookup_step)
+    {
+        const auto& each_nupcol = sched.glo(lookup_step).all_newton();
+        int in_enc = (each_nupcol) ? 2 : 1;
+        return in_enc;
+    }
+
 } // Anonymous
 
 // #####################################################################
@@ -494,6 +502,7 @@ createInteHead(const EclipseState& es,
         .params_NAAQZ       (1, 18, 24, 10, 7, 2, 4)
         .stepParam          (num_solver_steps, report_step)
         .tuningParam        (getTuningPars(sched.getTuning(lookup_step)))
+        .liftOptParam       (getLiftOptPar(sched, lookup_step))
         .wellSegDimensions  (getWellSegDims(rspec, sched, report_step, lookup_step))
         .regionDimensions   (getRegDims(tdim, rdim))
         .ngroups            ({ ngmax })
