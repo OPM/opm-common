@@ -153,10 +153,18 @@ namespace {
             for (const auto& name : wellnames) {
                 auto well2 = std::shared_ptr<Well>(new Well( this->getWell(name, handlerContext.currentStep)));
                 auto connections = std::shared_ptr<WellConnections>( new WellConnections( well2->getConnections()));
-                connections->loadCOMPDAT(record, handlerContext.grid, handlerContext.fieldPropsManager);
+                connections->loadCOMPDAT(record, handlerContext.grid, handlerContext.fieldPropsManager, handlerContext.keyword.location());
                 if (well2->updateConnections(connections, handlerContext.grid, handlerContext.fieldPropsManager.get_int("PVTNUM"))) {
                     this->updateWell(std::move(well2), handlerContext.currentStep);
                     wells.insert( name );
+                }
+
+                if (connections->empty() && well2->getConnections().empty()) {
+                    const auto& location = handlerContext.keyword.location();
+                    auto msg = fmt::format("Problem with COMPDAT/{}\n"
+                                           "In {} line {}\n"
+                                           "Well {} is not connected to grid - will remain SHUT", name, location.filename, location.lineno, name);
+                    OpmLog::warning(msg);
                 }
                 this->addWellGroupEvent(name, ScheduleEvents::COMPLETION_CHANGE, handlerContext.currentStep);
             }
@@ -210,6 +218,16 @@ namespace {
 
         auto& dynamic_state = this->wells_static.at(well_name);
         auto well_ptr = std::make_shared<Well>( *dynamic_state[handlerContext.currentStep] );
+
+        if (well_ptr->getConnections().empty()) {
+            const auto& location = handlerContext.keyword.location();
+            auto msg = fmt::format("Problem with COMPSEGS/{0}\n"
+                                   "In {1} line {2}\n"
+                                   "Well {0} is not connected to grid - COMPSEGS will be ignored", well_name, location.filename, location.lineno);
+            OpmLog::warning(msg);
+            return;
+        }
+
         if (well_ptr->handleCOMPSEGS(handlerContext.keyword, handlerContext.grid, parseContext, errors))
             this->updateWell(std::move(well_ptr), handlerContext.currentStep);
     }
@@ -852,7 +870,7 @@ namespace {
             const Well::Status status = Well::StatusFromString(record.getItem("STATUS").getTrimmedString(0));
 
             for (const auto& well_name : well_names) {
-                updateWellStatus( well_name , handlerContext.currentStep , status, false );
+                this->updateWellStatus( well_name , handlerContext.currentStep , status, false, handlerContext.keyword.location() );
 
                 const auto table_nr = record.getItem("VFP_TABLE").get< int >(0);
                 std::optional<VFPProdTable::ALQ_TYPE> alq_type;
@@ -901,7 +919,7 @@ namespace {
                             "Well " + well2->name() + " is a history matched well with zero rate where crossflow is banned. " +
                             "This well will be closed at " + std::to_string(m_timeMap.getTimePassedUntil(handlerContext.currentStep) / (60*60*24)) + " days";
                         OpmLog::note(msg);
-                        updateWellStatus( well_name, handlerContext.currentStep, Well::Status::SHUT, false );
+                        this->updateWellStatus( well_name, handlerContext.currentStep, Well::Status::SHUT, false );
                     }
                 }
             }
@@ -918,7 +936,7 @@ namespace {
             const Well::Status status = Well::StatusFromString(record.getItem("STATUS").getTrimmedString(0));
 
             for (const auto& well_name : well_names) {
-                updateWellStatus(well_name, handlerContext.currentStep, status, false);
+                this->updateWellStatus(well_name, handlerContext.currentStep, status, false, handlerContext.keyword.location());
                 const auto table_nr = record.getItem("VFP_TABLE").get< int >(0);
                 std::optional<VFPProdTable::ALQ_TYPE> alq_type;
                 auto& dynamic_state = this->wells_static.at(well_name);
@@ -969,7 +987,7 @@ namespace {
             const Well::Status status = Well::StatusFromString(record.getItem("STATUS").getTrimmedString(0));
 
             for (const auto& well_name : well_names) {
-                updateWellStatus(well_name, handlerContext.currentStep, status, false);
+                this->updateWellStatus(well_name, handlerContext.currentStep, status, false, handlerContext.keyword.location());
 
                 bool update_well = false;
                 auto& dynamic_state = this->wells_static.at(well_name);
@@ -1002,14 +1020,14 @@ namespace {
                     if (injection->surfaceInjectionRate.is<double>()) {
                         if (injection->hasInjectionControl(Well::InjectorCMode::RATE) && injection->surfaceInjectionRate.zero()) {
                             OpmLog::note(msg);
-                            updateWellStatus( well_name, handlerContext.currentStep, Well::Status::SHUT, false );
+                            this->updateWellStatus( well_name, handlerContext.currentStep, Well::Status::SHUT, false );
                         }
                     }
 
                     if (injection->reservoirInjectionRate.is<double>()) {
                         if (injection->hasInjectionControl(Well::InjectorCMode::RESV) && injection->reservoirInjectionRate.zero()) {
                             OpmLog::note(msg);
-                            updateWellStatus( well_name, handlerContext.currentStep, Well::Status::SHUT, false );
+                            this->updateWellStatus( well_name, handlerContext.currentStep, Well::Status::SHUT, false );
                         }
                     }
                 }
@@ -1031,7 +1049,7 @@ namespace {
             const Well::Status status = Well::StatusFromString( record.getItem("STATUS").getTrimmedString(0));
 
             for (const auto& well_name : well_names) {
-                updateWellStatus(well_name, handlerContext.currentStep, status, false);
+                this->updateWellStatus(well_name, handlerContext.currentStep, status, false, handlerContext.keyword.location());
 
                 bool update_well = false;
                 auto& dynamic_state = this->wells_static.at(well_name);
@@ -1059,7 +1077,7 @@ namespace {
                         "Well " + well_name + " is an injector with zero rate where crossflow is banned. " +
                         "This well will be closed at " + std::to_string ( m_timeMap.getTimePassedUntil(handlerContext.currentStep) / (60*60*24) ) + " days";
                     OpmLog::note(msg);
-                    updateWellStatus( well_name, handlerContext.currentStep, Well::Status::SHUT, false );
+                    this->updateWellStatus( well_name, handlerContext.currentStep, Well::Status::SHUT, false );
                 }
             }
         }
@@ -1140,7 +1158,7 @@ namespace {
                 // Well::updateWellProductivityIndex() implicitly mutates
                 // internal state in the WellConnections class.
                 auto connections = std::make_shared<WellConnections>(well2->getConnections());
-                well2->forceUpdateConnections(std::move(connections));
+                well2->updateConnections(std::move(connections), true);
                 if (well2->updateWellProductivityIndex(rawProdIndex))
                     this->updateWell(std::move(well2), report_step);
 

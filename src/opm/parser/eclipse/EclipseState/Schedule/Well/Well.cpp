@@ -688,13 +688,15 @@ bool Well::updateAutoShutin(bool auto_shutin) {
 }
 
 
-bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg) {
+bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg, bool force) {
     connections_arg->order(  );
-    if (*this->connections != *connections_arg) {
+    if (force || *this->connections != *connections_arg) {
         this->connections = connections_arg;
+        if (this->connections->empty())
+            this->status = Status::SHUT;
+
         return true;
     }
-
     return false;
 }
 
@@ -720,7 +722,7 @@ bool Well::updateSolventFraction(double solvent_fraction_arg) {
 
 
 bool Well::handleCOMPSEGS(const DeckKeyword& keyword, const EclipseGrid& grid,
-                           const ParseContext& parseContext, ErrorGuard& errors) {
+                          const ParseContext& parseContext, ErrorGuard& errors) {
     auto [new_connections, new_segments] = Compsegs::processCOMPSEGS(keyword, *this->connections, *this->segments , grid,
                                                                      parseContext, errors);
 
@@ -1145,10 +1147,6 @@ bool Well::updateWSEGVALV(const std::vector<std::pair<int, Valve> >& valve_pairs
         return false;
 }
 
-void Well::forceUpdateConnections(std::shared_ptr<WellConnections> connections_arg) {
-    connections_arg->order();
-    this->connections = std::move(connections_arg);
-}
 
 void Well::filterConnections(const ActiveGridCells& grid) {
     this->connections->filter(grid);

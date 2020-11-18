@@ -42,6 +42,7 @@
 
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/common/OpmLog/KeywordLocation.hpp>
 
 #include <opm/parser/eclipse/Units/Units.hpp>
 
@@ -61,7 +62,7 @@ Opm::WellConnections loadCOMPDAT(const std::string& compdat_keyword) {
     const auto& keyword = deck.getKeyword("COMPDAT", 0);
     Opm::WellConnections connections(Opm::Connection::Order::TRACK, 10,10);
     for (const auto& rec : keyword)
-        connections.loadCOMPDAT(rec, grid, field_props);
+        connections.loadCOMPDAT(rec, grid, field_props, {});
 
     return connections;
 }
