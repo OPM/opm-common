@@ -36,6 +36,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/PvtgwTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvtgwoTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvtoTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/PvtsolTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/RocktabTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/Rock2dTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/Rock2dtrTable.hpp>
@@ -142,6 +143,7 @@ namespace Opm {
         const std::vector<PvtgwTable>& getPvtgwTables() const;
         const std::vector<PvtgwoTable>& getPvtgwoTables() const;
         const std::vector<PvtoTable>& getPvtoTables() const;
+        const std::vector<PvtsolTable>& getPvtsolTables() const;
         const std::vector<Rock2dTable>& getRock2dTables() const;
         const std::vector<Rock2dtrTable>& getRock2dtrTables() const;
         const TableContainer& getRockwnodTables() const;
@@ -207,6 +209,7 @@ namespace Opm {
             serializer.vector(m_pvtgwTables);
             serializer.vector(m_pvtgwoTables);
             serializer.vector(m_pvtoTables);
+            serializer.vector(m_pvtsolTables);
             serializer.vector(m_rock2dTables);
             serializer.vector(m_rock2dtrTables);
             m_pvtwTable.serializeOp(serializer);
@@ -505,6 +508,7 @@ namespace Opm {
         std::vector<PvtgwTable> m_pvtgwTables;
         std::vector<PvtgwoTable> m_pvtgwoTables;
         std::vector<PvtoTable> m_pvtoTables;
+        std::vector<PvtsolTable> m_pvtsolTables;
         std::vector<Rock2dTable> m_rock2dTables;
         std::vector<Rock2dtrTable> m_rock2dtrTables;
         PvtwTable m_pvtwTable;

@@ -1282,7 +1282,9 @@ double Well::production_rate(const SummaryState& st, Phase prod_phase) const {
         case Phase::FOAM:
             throw std::invalid_argument( "Production of 'FOAM' requested.");
         case Phase::BRINE:
-        throw std::invalid_argument( "Production of 'BRINE' requested.");
+            throw std::invalid_argument( "Production of 'BRINE' requested.");
+        case Phase::ZFRACTION:
+            throw std::invalid_argument( "Production of 'ZFRACTION' requested.");
     }
 
     throw std::logic_error( "Unreachable state. Invalid Phase value. "
