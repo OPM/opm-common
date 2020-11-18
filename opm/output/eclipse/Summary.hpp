@@ -63,8 +63,6 @@ public:
     void eval(SummaryState&                      summary_state,
               const int                          report_step,
               const double                       secs_elapsed,
-              const EclipseState&                es,
-              const Schedule&                    schedule,
               const data::WellRates&             well_solution,
               const data::GroupAndNetworkValues& group_and_nwrk_solution,
               GlobalProcessParameters            single_values,
