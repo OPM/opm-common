@@ -489,8 +489,8 @@ std::string EclOutput::make_real_string_ix(float value) const
 
 std::string EclOutput::make_doub_string_ecl(double value) const
 {
-    char buffer [21];
-    std::sprintf (buffer, "%19.13E", value);
+    char buffer [21 + 1];
+    std::snprintf (buffer, sizeof buffer, "%19.13E", value);
 
     if (value == 0.0) {
         return "0.00000000000000D+00";
@@ -507,22 +507,23 @@ std::string EclOutput::make_doub_string_ecl(double value) const
 
         std::string tmpstr(buffer);
         int exp = value < 0.0 ? std::stoi(tmpstr.substr(17, 4)) : std::stoi(tmpstr.substr(16, 4));
+        const bool use_exp_char = (exp >= -100) && (exp < 99);
 
         if (value < 0.0) {
-            if (std::abs(exp) < 100) {
+            if (use_exp_char) {
                 tmpstr = "-0." + tmpstr.substr(1, 1) + tmpstr.substr(3, 13) + "D";
             } else {
                 tmpstr = "-0." + tmpstr.substr(1, 1) + tmpstr.substr(3, 13);
             }
         } else {
-            if (std::abs(exp) < 100) {
+            if (use_exp_char) {
                 tmpstr = "0." + tmpstr.substr(0, 1) + tmpstr.substr(2, 13) + "D";
             } else {
                 tmpstr = "0." + tmpstr.substr(0, 1) + tmpstr.substr(2, 13);
             }
         }
 
-        std::sprintf(buffer, "%+03i", exp + 1);
+        std::snprintf(buffer, sizeof buffer, "%+03i", exp + 1);
         tmpstr = tmpstr + buffer;
         return tmpstr;
     }
