@@ -32,11 +32,13 @@ BOOST_AUTO_TEST_CASE(SERIALIZER) {
     double double_value = 3.14;
     std::string string_value = "String";
     std::unordered_map<std::string, int> m = {{"A", 1}, {"B", 2}, {"C", 3}};
+    std::vector<int> v = {1,2,3,4,5,6,7,8,9,10};
 
     ser.put(int_value);
     ser.put(double_value);
     ser.put(string_value);
     ser.put_map(m);
+    ser.put_vector(v);
 
     Opm::Serializer ser2(ser.buffer);
     BOOST_CHECK_EQUAL(ser2.get<int>(), int_value);
@@ -46,6 +48,9 @@ BOOST_AUTO_TEST_CASE(SERIALIZER) {
 
     std::unordered_map<std::string, int> m2 = ser2.get_map<std::string,int>();
     BOOST_CHECK(m2 == m);
+
+    std::vector<int> v2 = ser2.get_vector<int>();
+    BOOST_CHECK(v2 == v);
 }
 
 BOOST_AUTO_TEST_CASE(EMPTY_STRING) {
