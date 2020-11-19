@@ -27,18 +27,20 @@
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/VFPProdTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
-#include <opm/parser/eclipse/Units/UnitSystem.hpp>
-#include <opm/parser/eclipse/Units/Units.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionAST.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionContext.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionResult.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/Actions.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionX.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionResult.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/State.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleTypes.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/VFPProdTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
+
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
+#include <opm/parser/eclipse/Units/Units.hpp>
 
 #include <algorithm>
 #include <cassert>
@@ -228,28 +230,40 @@ namespace {
             }
         }
 
+        int preferredPhase(const Opm::Well& well)
+        {
+            using PhaseVal = VI::IWell::Value::Preferred_Phase;
+
+            switch (well.getPreferredPhase()) {
+            case Opm::Phase::OIL:   return PhaseVal::Oil;
+            case Opm::Phase::GAS:   return PhaseVal::Gas;
+            case Opm::Phase::WATER: return PhaseVal::Water;
+
+            // Should have LIQUID here too...
+
+            default:
+                throw std::invalid_argument {
+                    "Unsupported Preferred Phase '" +
+                    std::to_string(static_cast<int>(well.getPreferredPhase()))
+                    + '\''
+                };
+            }
+        }
 
         template <typename IWellArray>
-        void setCurrentControl(const Opm::Well& well,
-                               const int        curr,
-                               IWellArray&      iWell)
+        void setHistoryControlMode(const Opm::Well& well,
+                                   const int        curr,
+                                   IWellArray&      iWell)
         {
-            using Ix = VI::IWell::index;
+            iWell[VI::IWell::index::HistReqWCtrl] =
+                well.predictionMode() ? 0 : curr;
+        }
 
-            iWell[Ix::ActWCtrl] = curr;
-
-            if (well.predictionMode()) {
-                // Well in prediction mode (WCONPROD, WCONINJE).  Assign
-                // requested control mode for prediction.
-                iWell[Ix::PredReqWCtrl] = curr;
-                iWell[Ix::HistReqWCtrl] = 0;
-            }
-            else {
-                // Well controlled by observed rates/BHP (WCONHIST,
-                // WCONINJH).  Assign requested control mode for history.
-                iWell[Ix::PredReqWCtrl] = 0; // Possibly =1 instead.
-                iWell[Ix::HistReqWCtrl] = curr;
-            }
+        template <typename IWellArray>
+        void setCurrentControl(const int   curr,
+                               IWellArray& iWell)
+        {
+            iWell[VI::IWell::index::ActWCtrl] = curr;
         }
 
         template <class IWellArray>
@@ -264,6 +278,7 @@ namespace {
             iWell[Ix::IHead] = well.getHeadI() + 1;
             iWell[Ix::JHead] = well.getHeadJ() + 1;
             iWell[Ix::Status] = wellStatus(well.getStatus());
+
             // Connections
             {
                 const auto& conn = well.getConnections();
@@ -292,6 +307,8 @@ namespace {
             iWell[Ix::VFPTab] = wellVFPTab(well, st);
             iWell[Ix::XFlow]  = well.getAllowCrossFlow() ? 1 : 0;
 
+            iWell[Ix::PreferredPhase] = preferredPhase(well);
+
             // The following items aren't fully characterised yet, but
             // needed for restart of M2.  Will need further refinement.
             iWell[Ix::item18] = -100;
@@ -306,7 +323,8 @@ namespace {
             //
             // Observe that the setupCurrentContro() function is called again
             // for open wells in the dynamicContrib() function.
-            setCurrentControl(well, eclipseControlMode(well, st), iWell);
+            setCurrentControl(eclipseControlMode(well, st), iWell);
+            setHistoryControlMode(well, eclipseControlMode(well, st), iWell);
 
             // Multi-segmented well information
             iWell[Ix::MsWID] = 0;  // MS Well ID (0 or 1..#MS wells)
@@ -366,7 +384,7 @@ namespace {
             using Value = VI::IWell::Value::Status;
 
             if (wellControlDefined(xw)) {
-                setCurrentControl(well, ctrlMode(well, xw), iWell);
+                setCurrentControl(ctrlMode(well, xw), iWell);
             }
 
             const auto any_flowing_conn =
