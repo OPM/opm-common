@@ -286,6 +286,7 @@ if(ENABLE_ECL_OUTPUT)
           src/opm/output/eclipse/LoadRestart.cpp
           src/opm/output/eclipse/LogiHEAD.cpp
           src/opm/output/eclipse/RestartIO.cpp
+          src/opm/output/eclipse/Inplace.cpp
           src/opm/output/eclipse/Summary.cpp
           src/opm/output/eclipse/Tables.cpp
           src/opm/output/eclipse/RegionCache.cpp
@@ -411,6 +412,7 @@ if(ENABLE_ECL_OUTPUT)
           tests/test_rst.cpp
           tests/test_Solution.cpp
           tests/test_Serializer.cpp
+          tests/test_Inplace.cpp
           tests/test_Summary.cpp
           tests/test_Summary_Group.cpp
           tests/test_Tables.cpp
@@ -832,6 +834,7 @@ if(ENABLE_ECL_OUTPUT)
         opm/output/eclipse/RegionCache.hpp
         opm/output/eclipse/RestartIO.hpp
         opm/output/eclipse/RestartValue.hpp
+        opm/output/eclipse/Inplace.hpp
         opm/output/eclipse/Summary.hpp
         opm/output/eclipse/Tables.hpp
         opm/output/eclipse/WindowedArray.hpp
