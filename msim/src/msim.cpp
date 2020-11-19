@@ -115,8 +115,6 @@ void msim::run_step(const Schedule& schedule, Action::State& action_state, Summa
         io.summary().eval(st,
                           report_step,
                           seconds_elapsed,
-                          this->state,
-                          schedule,
                           well_data,
                           group_nwrk_data,
                           {});

@@ -2630,6 +2630,27 @@ makeResultSet(const Opm::IOConfig& iocfg, const std::string& basenm)
     return { iocfg.getOutputDir(), base };
 }
 
+void validateElapsedTime(const double             secs_elapsed,
+                         const Opm::EclipseState& es,
+                         const Opm::SummaryState& st)
+{
+    if (! (secs_elapsed < st.get_elapsed()))
+        return;
+
+    const auto& usys    = es.getUnits();
+    const auto  elapsed = usys.from_si(measure::time, secs_elapsed);
+    const auto  prev_el = usys.from_si(measure::time, st.get_elapsed());
+    const auto  unt     = '[' + std::string{ usys.name(measure::time) } + ']';
+
+    throw std::invalid_argument {
+        "Elapsed time ("
+            + std::to_string(elapsed) + ' ' + unt
+            + ") must not precede previous elapsed time ("
+            + std::to_string(prev_el) + ' ' + unt
+            + "). Incorrect restart time?"
+            };
+}
+
 } // Anonymous namespace
 
 class Opm::out::Summary::SummaryImplementation
@@ -2646,13 +2667,11 @@ public:
     SummaryImplementation& operator=(const SummaryImplementation& rhs) = delete;
     SummaryImplementation& operator=(SummaryImplementation&& rhs) = default;
 
-    void eval(const EclipseState&                es,
-              const Schedule&                    sched,
-              const int                          sim_step,
-              const double                       duration,
+    void eval(const int                          sim_step,
+              const double                       secs_elapsed,
               const data::WellRates&             well_solution,
               const data::GroupAndNetworkValues& grp_nwrk_solution,
-              const GlobalProcessParameters&     single_values,
+              GlobalProcessParameters&           single_values,
               const RegionParameters&            region_values,
               const BlockValues&                 block_values,
               const data::Aquifers&              aquifer_values,
@@ -2672,6 +2691,8 @@ private:
     using EvalPtr = SummaryOutputParameters::EvalPtr;
 
     std::reference_wrapper<const Opm::EclipseGrid> grid_;
+    std::reference_wrapper<const Opm::EclipseState> es_;
+    std::reference_wrapper<const Opm::Schedule> sched_;
     Opm::out::RegionCache regCache_;
 
     std::unique_ptr<SMSpecStreamDeferredCreation> deferredSMSpec_;
@@ -2721,6 +2742,8 @@ SummaryImplementation(const EclipseState&  es,
                       const Schedule&      sched,
                       const std::string&   basename)
     : grid_          (std::cref(grid))
+    , es_            (std::cref(es))
+    , sched_         (std::cref(sched))
     , regCache_      (sumcfg.fip_regions(), es.globalFieldProps(), grid, sched)
     , deferredSMSpec_(makeDeferredSMSpecCreation(es, grid, sched))
     , rset_          (makeResultSet(es.cfg().io(), basename))
@@ -2752,20 +2775,24 @@ internal_store(const SummaryState& st, const int report_step)
 
 void
 Opm::out::Summary::SummaryImplementation::
-eval(const EclipseState&                es,
-     const Schedule&                    sched,
-     const int                          sim_step,
-     const double                       duration,
+eval(const int                          sim_step,
+     const double                       secs_elapsed,
      const data::WellRates&             well_solution,
      const data::GroupAndNetworkValues& grp_nwrk_solution,
-     const GlobalProcessParameters&     single_values,
+     GlobalProcessParameters&           single_values,
      const RegionParameters&            region_values,
      const BlockValues&                 block_values,
      const data::Aquifers&              aquifer_values,
      Opm::SummaryState&                 st) const
 {
+    validateElapsedTime(secs_elapsed, this->es_, st);
+
+    const double duration = secs_elapsed - st.get_elapsed();
+    single_values["TIMESTEP"] = duration;
+    st.update("TIMESTEP", this->es_.get().getUnits().from_si(Opm::UnitSystem::measure::time, duration));
+
     const Evaluator::InputData input {
-        es, sched, this->grid_, this->regCache_
+        this->es_, this->sched_, this->grid_, this->regCache_
     };
 
     const Evaluator::SimulatorResults simRes {
@@ -2780,6 +2807,8 @@ eval(const EclipseState&                es,
         (void)_;
         evalPtr->update(sim_step, duration, input, simRes, st);
     }
+
+    st.update_elapsed(duration);
 }
 
 void Opm::out::Summary::SummaryImplementation::write()
@@ -3130,30 +3159,7 @@ createSmryStreamIfNecessary(const int report_step)
     }
 }
 
-namespace {
 
-void validateElapsedTime(const double             secs_elapsed,
-                         const Opm::EclipseState& es,
-                         const Opm::SummaryState& st)
-{
-    if (! (secs_elapsed < st.get_elapsed()))
-        return;
-
-    const auto& usys    = es.getUnits();
-    const auto  elapsed = usys.from_si(measure::time, secs_elapsed);
-    const auto  prev_el = usys.from_si(measure::time, st.get_elapsed());
-    const auto  unt     = '[' + std::string{ usys.name(measure::time) } + ']';
-
-    throw std::invalid_argument {
-        "Elapsed time ("
-        + std::to_string(elapsed) + ' ' + unt
-        + ") must not precede previous elapsed time ("
-        + std::to_string(prev_el) + ' ' + unt
-        + "). Incorrect restart time?"
-    };
-}
-
-} // Anonymous namespace
 
 namespace Opm { namespace out {
 
@@ -3168,8 +3174,6 @@ Summary::Summary(const EclipseState&  es,
 void Summary::eval(SummaryState&                      st,
                    const int                          report_step,
                    const double                       secs_elapsed,
-                   const EclipseState&                es,
-                   const Schedule&                    schedule,
                    const data::WellRates&             well_solution,
                    const data::GroupAndNetworkValues& grp_nwrk_solution,
                    GlobalProcessParameters            single_values,
@@ -3177,12 +3181,6 @@ void Summary::eval(SummaryState&                      st,
                    const BlockValues&                 block_values,
                    const Opm::data::Aquifers&         aquifer_values) const
 {
-    validateElapsedTime(secs_elapsed, es, st);
-
-    const double duration = secs_elapsed - st.get_elapsed();
-    single_values["TIMESTEP"] = duration;
-    st.update("TIMESTEP", es.getUnits().from_si(Opm::UnitSystem::measure::time, duration));
-
 
     /* Report_step is the one-based sequence number of the containing report.
      * Report_step = 0 for the initial condition, before simulation starts.
@@ -3195,11 +3193,9 @@ void Summary::eval(SummaryState&                      st,
      * wells, groups, connections &c in the Schedule object. */
     const auto sim_step = std::max( 0, report_step - 1 );
 
-    this->pImpl_->eval(es, schedule, sim_step, duration,
+    this->pImpl_->eval(sim_step, secs_elapsed,
                        well_solution, grp_nwrk_solution, single_values,
                        region_values, block_values, aquifer_values, st);
-
-    st.update_elapsed(duration);
 }
 
 void Summary::add_timestep(const SummaryState& st, const int report_step)
