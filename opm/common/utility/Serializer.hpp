@@ -62,7 +62,7 @@ public:
     }
 
     template<typename K, typename T>
-    void put(const std::unordered_map<K,T>& values) {
+    void put_map(const std::unordered_map<K,T>& values) {
         this->put(values.size());
         for (const auto& value_pair : values) {
             this->put(value_pair.first);
@@ -71,7 +71,7 @@ public:
     }
 
     template<typename K, typename T>
-    std::unordered_map<K,T> get() {
+    std::unordered_map<K,T> get_map() {
         std::unordered_map<K,T> values;
         auto size = this->get<std::size_t>();
         for (std::size_t index = 0; index < size; index++) {

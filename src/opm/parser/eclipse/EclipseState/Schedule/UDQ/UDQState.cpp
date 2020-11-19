@@ -174,8 +174,8 @@ std::vector<char> UDQState::serialize() const {
         ser.put( set_pair.first );
         set_pair.second.serialize( ser );
     }
-    ser.put(this->assignments);
-    ser.put(this->defines);
+    ser.put_map(this->assignments);
+    ser.put_map(this->defines);
     return ser.buffer;
 }
 
@@ -194,8 +194,8 @@ void UDQState::deserialize(const std::vector<char>& buffer) {
             this->values.insert( std::make_pair(key, udq_set) );
         }
     }
-    this->assignments = ser.get<std::string, std::size_t>();
-    this->defines = ser.get<std::string, std::size_t>();
+    this->assignments = ser.get_map<std::string, std::size_t>();
+    this->defines = ser.get_map<std::string, std::size_t>();
 }
 }
 

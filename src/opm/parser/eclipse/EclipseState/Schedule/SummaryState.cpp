@@ -310,18 +310,18 @@ namespace {
     std::vector<char> SummaryState::serialize() const {
         Serializer ser;
         ser.put(this->elapsed);
-        ser.put(values);
+        ser.put_map(values);
 
         ser.put(this->well_values.size());
         for (const auto& well_var_pair : this->well_values) {
             ser.put(well_var_pair.first);
-            ser.put(well_var_pair.second);
+            ser.put_map(well_var_pair.second);
         }
 
         ser.put(this->group_values.size());
         for (const auto& group_var_pair : this->group_values) {
             ser.put(group_var_pair.first);
-            ser.put(group_var_pair.second);
+            ser.put_map(group_var_pair.second);
         }
 
         return std::move(ser.buffer);
@@ -338,7 +338,7 @@ namespace {
 
         Serializer ser(buffer);
         this->elapsed = ser.get<double>();
-        this->values = ser.get<std::string, double>();
+        this->values = ser.get_map<std::string, double>();
 
         {
             std::size_t num_well_var = ser.get<std::size_t>();
