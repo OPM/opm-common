@@ -38,6 +38,7 @@
 #include <opm/output/data/Wells.hpp>
 #include <opm/output/data/Groups.hpp>
 #include <opm/output/eclipse/Summary.hpp>
+#include <opm/output/eclipse/Inplace.hpp>
 
 #include <opm/parser/eclipse/Python/Python.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
@@ -258,10 +259,10 @@ BOOST_AUTO_TEST_CASE(group_keywords) {
     SummaryState st(std::chrono::system_clock::now());
 
     out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule , cfg.name );
-    writer.eval(st, 0, 0*day, cfg.wells, cfg.grp_nwrk, {});
+    writer.eval(st, 0, 0*day, cfg.wells, cfg.grp_nwrk, {}, {});
     writer.add_timestep( st, 0);
 
-    writer.eval(st, 1, 1*day, cfg.wells, cfg.grp_nwrk, {});
+    writer.eval(st, 1, 1*day, cfg.wells, cfg.grp_nwrk, {}, {});
     writer.add_timestep( st, 1);
 
     writer.write();

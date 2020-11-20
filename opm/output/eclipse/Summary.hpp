@@ -35,6 +35,7 @@ namespace Opm {
     class Schedule;
     class SummaryConfig;
     class SummaryState;
+    class Inplace;
 } // namespace Opm
 
 namespace Opm { namespace data {
@@ -66,6 +67,7 @@ public:
               const data::WellRates&             well_solution,
               const data::GroupAndNetworkValues& group_and_nwrk_solution,
               GlobalProcessParameters            single_values,
+              const Inplace&                     initial_inplace,
               const RegionParameters&            region_values = {},
               const BlockValues&                 block_values  = {},
               const data::Aquifers&              aquifers_values = {}) const;

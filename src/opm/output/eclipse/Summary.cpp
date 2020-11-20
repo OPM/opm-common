@@ -3177,6 +3177,7 @@ void Summary::eval(SummaryState&                      st,
                    const data::WellRates&             well_solution,
                    const data::GroupAndNetworkValues& grp_nwrk_solution,
                    GlobalProcessParameters            single_values,
+                   const Inplace&                     ,
                    const RegionParameters&            region_values,
                    const BlockValues&                 block_values,
                    const Opm::data::Aquifers&         aquifer_values) const
