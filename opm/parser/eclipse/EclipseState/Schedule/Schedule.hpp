@@ -187,6 +187,7 @@ namespace Opm
         double seconds(std::size_t timeStep) const;
         double stepLength(std::size_t timeStep) const;
         std::optional<int> exitStatus() const;
+        const UnitSystem& getUnits() const { return this->unit_system; }
 
         const TimeMap& getTimeMap() const;
 
