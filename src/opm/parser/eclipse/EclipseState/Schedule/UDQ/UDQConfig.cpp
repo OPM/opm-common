@@ -159,6 +159,10 @@ namespace Opm {
         }
     }
 
+    const UDQAssign& UDQConfig::assign(const std::string& key) const {
+        return this->m_assignments.at(key);
+    }
+
     const UDQDefine& UDQConfig::define(const std::string& key) const {
         return this->m_definitions.at(key);
     }
