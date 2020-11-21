@@ -68,12 +68,20 @@ namespace {
         return true;
     }
 
-    bool erase_var(map2& values, const std::string& var1, const std::string var2) {
+    void erase_var(map2& values, std::set<std::string>& var2_set, const std::string& var1, const std::string var2) {
         const auto& var1_iter = values.find(var1);
         if (var1_iter == values.end())
-            return false;
+            return;
 
-        return (var1_iter->second.erase(var2) > 0);
+        var1_iter->second.erase(var2);
+        var2_set.clear();
+        for (const auto& [_, var2_map] : values) {
+            (void)_;
+            for (const auto& [v2, __] : var2_map) {
+                (void)__;
+                var2_set.insert(v2);
+            }
+        }
     }
 
     std::vector<std::string> var2_list(const map2& values, const std::string& var1) {
@@ -189,7 +197,7 @@ namespace {
         if (!this->erase(key))
             return false;
 
-        erase_var(this->well_values, var, well);
+        erase_var(this->well_values, this->m_wells, var, well);
         this->well_names.reset();
         return true;
     }
@@ -199,7 +207,7 @@ namespace {
         if (!this->erase(key))
             return false;
 
-        erase_var(this->group_values, var, group);
+        erase_var(this->group_values, this->m_groups, var, group);
         this->group_names.reset();
         return true;
     }
