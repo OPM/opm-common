@@ -317,19 +317,21 @@ namespace {
 
     std::vector<char> SummaryState::serialize() const {
         Serializer ser;
+        ser.put(this->sim_start);
         ser.put(this->elapsed);
-        ser.put_map(values);
+        ser.put_map(this->values);
+
 
         ser.put(this->well_values.size());
-        for (const auto& well_var_pair : this->well_values) {
-            ser.put(well_var_pair.first);
-            ser.put_map(well_var_pair.second);
+        for (const auto& [well, v] : this->well_values) {
+            ser.put(well);
+            ser.put_map(v);
         }
 
         ser.put(this->group_values.size());
-        for (const auto& group_var_pair : this->group_values) {
-            ser.put(group_var_pair.first);
-            ser.put_map(group_var_pair.second);
+        for (const auto& [group, v] : this->group_values) {
+            ser.put(group);
+            ser.put_map(v);
         }
 
         return std::move(ser.buffer);
@@ -337,14 +339,8 @@ namespace {
 
 
     void  SummaryState::deserialize(const std::vector<char>& buffer) {
-        this->values.clear();
-        this->m_wells.clear();
-        this->well_values.clear();
-        this->m_groups.clear();
-        this->group_values.clear();
-        this->elapsed = 0;
-
         Serializer ser(buffer);
+        this->sim_start = ser.get<std::chrono::system_clock::time_point>();
         this->elapsed = ser.get<double>();
         this->values = ser.get_map<std::string, double>();
 
@@ -352,30 +348,30 @@ namespace {
             std::size_t num_well_var = ser.get<std::size_t>();
             for (std::size_t var_index = 0; var_index < num_well_var; var_index++) {
                 std::string var = ser.get<std::string>();
-
-                std::size_t num_well = ser.get<std::size_t>();
-                for (std::size_t well_index=0; well_index < num_well; well_index++) {
-                    std::string well = ser.get<std::string>();
-                    double value = ser.get<double>();
-                    this->update_well_var(well, var, value);
+                auto v = ser.get_map<std::string, double>();
+                for (const auto& [well, _] : v) {
+                    (void)_;
+                    this->m_wells.insert(well);
                 }
+                this->well_values[var] = std::move(v);
             }
+            this->well_names.reset();
         }
 
         {
             std::size_t num_group_var = ser.get<std::size_t>();
             for (std::size_t var_index = 0; var_index < num_group_var; var_index++) {
                 std::string var = ser.get<std::string>();
-
-                std::size_t num_group = ser.get<std::size_t>();
-                for (std::size_t group_index=0; group_index < num_group; group_index++) {
-                    std::string group = ser.get<std::string>();
-                    double value = ser.get<double>();
-                    this->update_group_var(group, var, value);
+                auto v= ser.get_map<std::string, double>();
+                for (const auto& [group, _] : v) {
+                    (void)_;
+                    this->m_groups.insert(group);
                 }
+                this->group_values[var] = std::move(v);
             }
+            this->group_names.reset();
         }
-     }
+    }
 
     std::ostream& operator<<(std::ostream& stream, const SummaryState& st) {
         stream << "Simulated seconds: " << st.get_elapsed() << std::endl;

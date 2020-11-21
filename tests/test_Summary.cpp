@@ -1954,6 +1954,12 @@ BOOST_AUTO_TEST_CASE(Test_SummaryState) {
     BOOST_CHECK( st.erase_group_var("G1", "GWCT") );
     BOOST_CHECK( !st.has_group_var("G1", "GWCT"));
     BOOST_CHECK( !st.has("GWCT:G1") );
+
+    auto buffer = st.serialize();
+    Opm::SummaryState st2(std::chrono::system_clock::now());
+    st2.deserialize(buffer);
+
+    BOOST_CHECK( st == st2 );
 }
 
 BOOST_AUTO_TEST_SUITE_END()
