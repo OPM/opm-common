@@ -110,6 +110,7 @@ public:
     const_iterator end() const;
     std::size_t num_wells() const;
     std::size_t size() const;
+    bool operator==(const SummaryState& other) const;
 private:
     std::chrono::system_clock::time_point sim_start;
     double elapsed = 0;

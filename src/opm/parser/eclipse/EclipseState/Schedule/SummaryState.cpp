@@ -376,4 +376,17 @@ namespace {
 
         return stream;
     }
+
+
+    bool SummaryState::operator==(const SummaryState& other) const {
+        return this->sim_start == other.sim_start &&
+               this->elapsed == other.elapsed &&
+               this->values == other.values &&
+               this->well_values == other.well_values &&
+               this->m_wells == other.m_wells &&
+               this->wells() == other.wells();
+               this->group_values == other.group_values &&
+               this->m_groups == other.m_groups &&
+               this->groups() == other.groups();
+    }
 }
