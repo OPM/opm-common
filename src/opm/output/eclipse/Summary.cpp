@@ -958,6 +958,69 @@ inline quantity potential_rate( const fn_args& args ) {
     return { sum, rate_unit< phase >() };
 }
 
+inline quantity preferred_phase_productivty_index(const fn_args& args) {
+    if (args.schedule_wells.empty())
+        return potential_rate<rt::productivity_index_oil>(args);
+
+    switch (args.schedule_wells.front().getPreferredPhase()) {
+    case Opm::Phase::OIL:
+        return potential_rate<rt::productivity_index_oil>(args);
+
+    case Opm::Phase::GAS:
+        return potential_rate<rt::productivity_index_gas>(args);
+
+    case Opm::Phase::WATER:
+        return potential_rate<rt::productivity_index_water>(args);
+    }
+
+    throw std::invalid_argument {
+        "Unsupported \"preferred\" phase: " +
+        std::to_string(static_cast<int>(args.schedule_wells.front().getPreferredPhase()))
+    };
+}
+
+inline quantity connection_productivity_index(const fn_args& args) {
+    const quantity zero = { 0.0, rate_unit<rt::productivity_index_oil>() };
+
+    if (args.schedule_wells.empty())
+        return zero;
+
+    auto xwPos = args.wells.find(args.schedule_wells.front().name());
+    if (xwPos == args.wells.end())
+        return zero;
+
+    // The args.num value is the literal value which will go to the
+    // NUMS array in the eclipse SMSPEC file; the values in this array
+    // are offset 1 - whereas we need to use this index here to look
+    // up a completion with offset 0.
+    const auto global_index = static_cast<std::size_t>(args.num) - 1;
+
+    const auto& xcon = xwPos->second.connections;
+    const auto& completion =
+        std::find_if(xcon.begin(), xcon.end(),
+            [global_index](const Opm::data::Connection& c)
+        {
+            return c.index == global_index;
+        });
+
+    if (completion == xcon.end())
+        return zero;
+
+    switch (args.schedule_wells.front().getPreferredPhase()) {
+    case Opm::Phase::GAS:
+        return { completion->rates.get(rt::productivity_index_gas, 0.0),
+                 rate_unit<rt::productivity_index_gas>() };
+
+    case Opm::Phase::WATER:
+        return { completion->rates.get(rt::productivity_index_water, 0.0),
+                 rate_unit<rt::productivity_index_water>() };
+
+    default:
+        return { completion->rates.get(rt::productivity_index_oil, 0.0),
+                 rate_unit<rt::productivity_index_oil>() };
+    }
+}
+
 template < bool isGroup, bool Producer, bool waterInjector, bool gasInjector>
 inline quantity group_control( const fn_args& args ) {
 
@@ -1444,6 +1507,7 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "CSIT", mul( crate< rt::brine, injector >, duration ) },
     { "CSPT", mul( crate< rt::brine, producer >, duration ) },
     { "CTFAC", trans_factors },
+    { "CPI", connection_productivity_index },
 
     { "FWPR", rate< rt::wat, producer > },
     { "FOPR", rate< rt::oil, producer > },
@@ -1587,10 +1651,12 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "SPRDF", segpress<Opm::data::SegmentPressures::Value::PDropFriction> },
     { "SPRDA", segpress<Opm::data::SegmentPressures::Value::PDropAccel> },
     // Well productivity index
+    { "WPI", preferred_phase_productivty_index },
     { "WPIW", potential_rate< rt::productivity_index_water >},
     { "WPIO", potential_rate< rt::productivity_index_oil >},
     { "WPIG", potential_rate< rt::productivity_index_gas >},
-    { "WPIL", sum( potential_rate< rt::productivity_index_water >, potential_rate< rt::productivity_index_oil>)},
+    { "WPIL", sum( potential_rate< rt::productivity_index_water, true, false >,
+                   potential_rate< rt::productivity_index_oil, true, false >)},
     // Well potential
     { "WWPP", potential_rate< rt::well_potential_water , true, false>},
     { "WOPP", potential_rate< rt::well_potential_oil , true, false>},

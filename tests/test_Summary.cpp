@@ -48,6 +48,7 @@
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 
 #include <opm/parser/eclipse/Units/Units.hpp>
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 #include <opm/io/eclipse/ESmry.hpp>
 
@@ -92,6 +93,15 @@ namespace {
  */
 static const int day = 24 * 60 * 60;
 
+double liquid_PI_unit()
+{
+    return UnitSystem::newMETRIC().to_si(UnitSystem::measure::liquid_productivity_index, 1.0);
+}
+
+double gas_PI_unit()
+{
+    return UnitSystem::newMETRIC().to_si(UnitSystem::measure::gas_productivity_index, 1.0);
+}
 
 /*
   This is quite misleading, because the values prepared in the test
@@ -125,9 +135,9 @@ data::Wells result_wells(const bool w3_injector = true)
     rates1.set( rt::reservoir_water, -10.6 / day );
     rates1.set( rt::reservoir_oil, -10.7 / day );
     rates1.set( rt::reservoir_gas, -10.8 / day );
-    rates1.set( rt::productivity_index_water, -10.9 / day );
-    rates1.set( rt::productivity_index_oil, -10.11 / day );
-    rates1.set( rt::productivity_index_gas, -10.12 / day );
+    rates1.set( rt::productivity_index_water, 10.9*liquid_PI_unit());
+    rates1.set( rt::productivity_index_oil, 10.11*liquid_PI_unit());
+    rates1.set( rt::productivity_index_gas, 10.12*gas_PI_unit());
     rates1.set( rt::well_potential_water, -10.13 / day );
     rates1.set( rt::well_potential_oil, -10.14 / day );
     rates1.set( rt::well_potential_gas, -10.15 / day );
@@ -144,9 +154,9 @@ data::Wells result_wells(const bool w3_injector = true)
     rates2.set( rt::reservoir_water, -20.6 / day );
     rates2.set( rt::reservoir_oil, -20.7 / day );
     rates2.set( rt::reservoir_gas, -20.8 / day );
-    rates2.set( rt::productivity_index_water, -20.9 / day );
-    rates2.set( rt::productivity_index_oil, -20.11 / day );
-    rates2.set( rt::productivity_index_gas, -20.12 / day );
+    rates2.set( rt::productivity_index_water, 20.9*liquid_PI_unit());
+    rates2.set( rt::productivity_index_oil, 20.11*liquid_PI_unit());
+    rates2.set( rt::productivity_index_gas, 20.12*gas_PI_unit());
     rates2.set( rt::well_potential_water, -20.13 / day );
     rates2.set( rt::well_potential_oil, -20.14 / day );
     rates2.set( rt::well_potential_gas, -20.15 / day );
@@ -163,15 +173,14 @@ data::Wells result_wells(const bool w3_injector = true)
     rates3.set( rt::reservoir_water, 30.6 / day );
     rates3.set( rt::reservoir_oil, 30.7 / day );
     rates3.set( rt::reservoir_gas, 30.8 / day );
-    rates3.set( rt::productivity_index_water, -30.9 / day );
-    rates3.set( rt::productivity_index_oil, -30.11 / day );
-    rates3.set( rt::productivity_index_gas, -30.12 / day );
+    rates3.set( rt::productivity_index_water, 30.9*liquid_PI_unit());
+    rates3.set( rt::productivity_index_oil, 30.11*liquid_PI_unit());
+    rates3.set( rt::productivity_index_gas, 30.12*gas_PI_unit());
     rates3.set( rt::well_potential_water, 30.13 / day );
     rates3.set( rt::well_potential_oil, 30.14 / day );
     rates3.set( rt::well_potential_gas, 30.15 / day );
     rates3.set( rt::polymer, 30.16 / day );
     rates3.set( rt::brine, 30.17 / day );
-
 
     data::Rates rates6;
     rates6.set( rt::wat, 60.0 / day );
@@ -183,14 +192,15 @@ data::Wells result_wells(const bool w3_injector = true)
     rates6.set( rt::reservoir_water, 60.6 / day );
     rates6.set( rt::reservoir_oil, 60.7 / day );
     rates6.set( rt::reservoir_gas, 60.8 / day );
-    rates6.set( rt::productivity_index_water, -60.9 / day );
-    rates6.set( rt::productivity_index_oil, -60.11 / day );
-    rates6.set( rt::productivity_index_gas, -60.12 / day );
+    rates6.set( rt::productivity_index_water, 60.9*liquid_PI_unit());
+    rates6.set( rt::productivity_index_oil, 60.11*liquid_PI_unit());
+    rates6.set( rt::productivity_index_gas, 60.12*gas_PI_unit());
     rates6.set( rt::well_potential_water, 60.13 / day );
     rates6.set( rt::well_potential_oil, 60.14 / day );
     rates6.set( rt::well_potential_gas, 60.15 / day );
     rates6.set( rt::polymer, 60.16 / day );
     rates6.set( rt::brine, 60.17 / day );
+
     /* completion rates */
     data::Rates crates1;
     crates1.set( rt::wat, -100.0 / day );
@@ -388,12 +398,14 @@ double ecl_sum_get_general_var(const EclIO::ESmry* smry,
     return smry->get(var)[timeIdx];
 }
 
+#if 0
 bool ecl_sum_has_well_var( const EclIO::ESmry* smry,
                            const std::string&  wellname,
                            const std::string&  variable )
 {
     return smry->hasKey(variable + ':' + wellname);
 }
+#endif
 
 double ecl_sum_get_well_var( const EclIO::ESmry* smry,
                              const int           timeIdx,
@@ -525,6 +537,28 @@ BOOST_AUTO_TEST_CASE(well_keywords) {
     BOOST_CHECK_CLOSE( -20.15, ecl_sum_get_well_var( resp, 1, "W_2", "WGPP" ), 1e-5 );
     BOOST_CHECK_CLOSE(  30.13, ecl_sum_get_well_var( resp, 1, "W_3", "WWPI" ), 1e-5 );
     BOOST_CHECK_CLOSE(  60.15, ecl_sum_get_well_var( resp, 1, "W_6", "WGPI" ), 1e-5 );
+
+    BOOST_CHECK_CLOSE( 10.9 , ecl_sum_get_well_var( resp, 1, "W_1", "WPIW" ), 1.0e-5 );
+    BOOST_CHECK_CLOSE( 10.11, ecl_sum_get_well_var( resp, 1, "W_1", "WPIO" ), 1.0e-5 );
+    BOOST_CHECK_CLOSE( 10.12, ecl_sum_get_well_var( resp, 1, "W_1", "WPIG" ), 1.0e-5 );
+    BOOST_CHECK_CLOSE( 10.11, ecl_sum_get_well_var( resp, 1, "W_1", "WPI"  ), 1.0e-5 );
+    BOOST_CHECK_CLOSE( 21.01, ecl_sum_get_well_var( resp, 1, "W_1", "WPIL" ), 1.0e-5 );
+
+    BOOST_CHECK_CLOSE( 20.9 , ecl_sum_get_well_var( resp, 1, "W_2", "WPIW" ), 1.0e-5 );
+    BOOST_CHECK_CLOSE( 20.11, ecl_sum_get_well_var( resp, 1, "W_2", "WPIO" ), 1.0e-5 );
+    BOOST_CHECK_CLOSE( 20.12, ecl_sum_get_well_var( resp, 1, "W_2", "WPIG" ), 1.0e-5 );
+    BOOST_CHECK_CLOSE( 20.11, ecl_sum_get_well_var( resp, 1, "W_2", "WPI"  ), 1.0e-5 );
+    BOOST_CHECK_CLOSE( 41.01, ecl_sum_get_well_var( resp, 1, "W_2", "WPIL" ), 1.0e-5 );
+
+    BOOST_CHECK_CLOSE( 30.9 , ecl_sum_get_well_var( resp, 1, "W_3", "WPIW" ), 1.0e-5 );
+    BOOST_CHECK_CLOSE( 30.11, ecl_sum_get_well_var( resp, 1, "W_3", "WPIO" ), 1.0e-5 );
+    BOOST_CHECK_CLOSE( 30.12, ecl_sum_get_well_var( resp, 1, "W_3", "WPIG" ), 1.0e-5 );
+    BOOST_CHECK_CLOSE( 30.9 , ecl_sum_get_well_var( resp, 1, "W_3", "WPI"  ), 1.0e-5 );
+
+    BOOST_CHECK_CLOSE(  60.9 , ecl_sum_get_well_var( resp, 1, "W_6", "WPIW" ), 1.0e-5 );
+    BOOST_CHECK_CLOSE(  60.11, ecl_sum_get_well_var( resp, 1, "W_6", "WPIO" ), 1.0e-5 );
+    BOOST_CHECK_CLOSE(  60.12, ecl_sum_get_well_var( resp, 1, "W_6", "WPIG" ), 1.0e-5 );
+    BOOST_CHECK_CLOSE(  60.12, ecl_sum_get_well_var( resp, 1, "W_6", "WPI"  ), 1.0e-5 );
 
     BOOST_CHECK_CLOSE( 123.456, ecl_sum_get_well_var(resp, 1, "W_1", "WOPGR"), 1.0e-5);
     BOOST_CHECK_CLOSE(2345.67 , ecl_sum_get_well_var(resp, 1, "W_1", "WGPGR"), 1.0e-5);
@@ -1218,7 +1252,6 @@ BOOST_AUTO_TEST_CASE(skip_unknown_var) {
     const auto* resp = res.get();
 
     /* verify that some non-supported keywords aren't written to the file */
-    BOOST_CHECK( !ecl_sum_has_well_var( resp, "W_1", "WPI" ) );
     BOOST_CHECK( !ecl_sum_has_field_var( resp, "FGST" ) );
 }
 
