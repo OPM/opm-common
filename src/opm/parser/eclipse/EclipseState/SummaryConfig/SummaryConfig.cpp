@@ -255,6 +255,17 @@ namespace {
             || is_in_set(countkw, keyword.substr(1));
     }
 
+    bool is_prod_index(const std::string& keyword) {
+        static const keyword_set countkw {
+            "PI", "PI1", "PI4", "PI5", "PI9",
+            "PIO", "PIG", "PIW", "PIL",
+        };
+
+        return !keyword.empty()
+            && ((keyword[0] == 'W') || (keyword[0] == 'C'))
+            && is_in_set(countkw, keyword.substr(1));
+    }
+
     bool is_liquid_phase(const std::string& keyword) {
         return keyword == "WPIL";
     }
@@ -1125,6 +1136,7 @@ SummaryConfigNode::Type parseKeywordType(std::string keyword) {
     if (is_pressure(keyword)) return SummaryConfigNode::Type::Pressure;
     if (is_count(keyword)) return SummaryConfigNode::Type::Count;
     if (is_control_mode(keyword)) return SummaryConfigNode::Type::Mode;
+    if (is_prod_index(keyword)) return SummaryConfigNode::Type::ProdIndex;
 
     return SummaryConfigNode::Type::Undefined;
 }
