@@ -517,17 +517,17 @@ namespace {
                 const auto& pc = well.productionControls(smry);
                 const auto& predMode = well.predictionMode();
 
-                if (pc.oil_rate != 0.0) {
+                if ((pc.oil_rate != 0.0) || (!predMode)) {
                     sWell[Ix::OilRateTarget] =
                         swprop(M::liquid_surface_rate, pc.oil_rate);
                 }
 
-                if (pc.water_rate != 0.0) {
+                if ((pc.water_rate != 0.0) || (!predMode)) {
                     sWell[Ix::WatRateTarget] =
                         swprop(M::liquid_surface_rate, pc.water_rate);
                 }
 
-                if (pc.gas_rate != 0.0) {
+                if ((pc.gas_rate != 0.0) || (!predMode)) {
                     sWell[Ix::GasRateTarget] =
                         swprop(M::gas_surface_rate, pc.gas_rate);
                     sWell[Ix::HistGasRateTarget] = sWell[Ix::GasRateTarget];
@@ -578,6 +578,11 @@ namespace {
                     sWell[Ix::LiqRateTarget]   = getRateLimit(units, M::liquid_surface_rate, pc.liquid_rate);
                     sWell[Ix::ResVRateTarget]  = getRateLimit(units, M::rate, pc.resv_rate);
                     //}
+                }
+                if ((well.getStatus() == Opm::Well::Status::SHUT)) {
+                    sWell[Ix::OilRateTarget]   = 0.;
+                    sWell[Ix::WatRateTarget]   = 0.;
+                    sWell[Ix::GasRateTarget]   = 0.;
                 }
             }
             else if (well.isInjector()) {
