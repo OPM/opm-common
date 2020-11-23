@@ -1,0 +1,98 @@
+#!/usr/bin/env python3
+import subprocess
+import os
+import shutil
+import argparse
+import glob
+import sys
+import datetime
+
+# This script will build and deploy pip packages to pypi. The script consists
+# of the following main steps:
+#
+# 1. A docker container is created with "docker build" - this is the
+#    manylinux2014 image with opm build requirements added.
+#
+# 2. The pip package is built, this is done in the docker container from the
+#    previous step. The build starts with a normal build of the static library
+#    libopmcommon.a, and then afterwards the python extension is built in a
+#    loop over python versions.
+#
+# 3. The packages are published on pypi with the 'twine' utility. The script
+#    expects to find the pypi password in environment variables PYPI_PASSWORD
+#    or TESTPYPI_PASSWORD.
+#
+#    By default the script will publish a dev package on testpypi, but if you
+#    supply the commandline argument --pkg-release-version=N it will publish
+#    the package version 20XX-YY-N to the regular pypi repository.
+
+
+
+start_date = datetime.date(2020,11,1)
+build_dir = "build-pypi"
+
+def cmd(cmd_string):
+    subprocess.check_call( cmd_string.split() )
+
+
+def missing_password():
+    msg = """
+In order to publish on pypi you must supply a password/token for pypi as
+an environment variable. When publishing to the real pypi the script will
+look for a password in the environment variable \"PYPI_PASSWORD\", whereas
+test packages will be uploaded to testpypi based on the password in environment
+variable \"TESTPYPI_PASSWORD\".
+"""
+    sys.exit(msg)
+
+
+def build(pkg_release_version):
+    if os.path.isdir(build_dir):
+        shutil.rmtree(build_dir)
+    os.makedirs(build_dir)
+
+    if pkg_release_version:
+        version=pkg_release_version
+    else:
+        dt = datetime.date.today() - start_date
+        version="dev{}".format(dt.days)
+
+    cmd("docker build -t manylinux2014_opm:built . -f python/Dockerfile")
+    print("Starting build in {0}/ - output in {0}/build.out".format(build_dir))
+    cmd("docker run -e version=.{} -e build_dir={} -v {}:/src -it manylinux2014_opm:built".format(version, build_dir, os.getcwd()))
+
+
+
+
+
+
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--pkg-release-version", help="Version of package - will be appended to opm version as 2021-04-$pkg-version")
+args = parser.parse_args()
+
+build(args.pkg_release_version)
+
+if args.pkg_release_version is None:
+    release = False
+    pypi_password = os.getenv("TESTPYPI_PASSWORD")
+else:
+    release = False
+    pypi_password = os.getenv("PYPI_PASSWORD")
+
+
+if not pypi_password:
+    missing_password()
+
+if release:
+    twine_cmd = "python3 -m twine upload -u __token__ -p {} ".format(pypi_password)
+    target = "pypi"
+else:
+    twine_cmd = "python3 -m twine upload -u __token__ -p {} --repository testpypi ".format(pypi_password)
+    target = "testpypi"
+
+for wheel in glob.glob("{}/wheelhouse/*.whl".format(build_dir)):
+    print("Uploading {} to {}".format(wheel, target))
+    cmd("{} {}".format(twine_cmd, wheel))
+
