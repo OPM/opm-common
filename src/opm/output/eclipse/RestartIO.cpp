@@ -50,7 +50,6 @@
 
 #include <algorithm>
 #include <cassert>
-#include <cmath>
 #include <cstddef>
 #include <fstream>
 #include <initializer_list>
@@ -64,6 +63,7 @@
 #include <vector>
 
 #include <fmt/format.h>
+#include <fmt/chrono.h>
 
 namespace Opm { namespace RestartIO {
 
@@ -628,28 +628,32 @@ namespace {
         }
     }
 
-    int numChar(const std::size_t num_reports)
-    {
-        return static_cast<int>(
-            1 + std::floor(std::log10(static_cast<double>(num_reports))));
-    }
-
     void logRestartOutput(const int               report_step,
                           const std::size_t       num_reports,
                           const std::vector<int>& inteHD)
     {
+        using namespace fmt::literals;
         using Ix = ::Opm::RestartIO::Helpers::VectorItems::intehead;
 
-        std::ostringstream logmsg;
+        auto timepoint    = std::tm{};
+        timepoint.tm_year = inteHD[Ix::YEAR]  - 1900;
+        timepoint.tm_mon  = inteHD[Ix::MONTH] -    1;
+        timepoint.tm_mday = inteHD[Ix::DAY];
 
-        logmsg << "Restart file written for report step: "
-               << std::setw(numChar(num_reports)) << report_step << '/'
-               << std::setw(0) << num_reports << ".  Date: "
-               << std::setw(4) <<                      inteHD[Ix::YEAR]  << '/'
-               << std::setw(2) << std::setfill('0') << inteHD[Ix::MONTH] << '/'
-               << std::setw(2) << std::setfill('0') << inteHD[Ix::DAY];
+        timepoint.tm_hour = inteHD[Ix::IHOURZ];
+        timepoint.tm_min  = inteHD[Ix::IMINTS];
+        timepoint.tm_sec  = inteHD[Ix::ISECND] / (1000 * 1000);
 
-        ::Opm::OpmLog::info(logmsg.str());
+        const auto msg =
+            fmt::format("Restart file written for report step "
+                        "{report_step:>{width}}/{num_reports}, "
+                        "date = {timepoint:%d-%b-%Y %H:%M:%S}",
+                        "width"_a = fmt::formatted_size("{}", num_reports),
+                        "report_step"_a = report_step,
+                        "num_reports"_a = num_reports,
+                        "timepoint"_a = timepoint);
+
+        ::Opm::OpmLog::info(msg);
     }
 
 } // Anonymous namespace
