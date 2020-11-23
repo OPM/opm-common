@@ -57,10 +57,13 @@
 #include <iomanip>
 #include <iterator>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <unordered_set>
 #include <utility>
 #include <vector>
+
+#include <fmt/format.h>
 
 namespace Opm { namespace RestartIO {
 
@@ -190,9 +193,13 @@ namespace {
                             const RestartValue& restart_value,
                             const EclipseGrid&  grid)
     {
-        for (const auto& elm: restart_value.solution)
-            if (elm.second.data.size() != grid.getNumActive())
-                throw std::runtime_error("Wrong size on solution vector: " + elm.first);
+        for (const auto& [name, vector] : restart_value.solution)
+            if (vector.data.size() != grid.getNumActive()) {
+                const auto msg = fmt::format("Incorrectly sized solution vector {}.  "
+                                             "Expected {} elements, but got {}.", name,
+                                             grid.getNumActive(), vector.data.size());
+                throw std::runtime_error(msg);
+            }
 
         if (es.getSimulationConfig().getThresholdPressure().size() > 0) {
             // If the the THPRES option is active the restart_value should have a
