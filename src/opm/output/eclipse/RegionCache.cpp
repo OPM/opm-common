@@ -36,6 +36,9 @@ RegionCache::RegionCache(const std::set<std::string>& fip_regions, const FieldPr
         const auto& wells = schedule.getWellsatEnd();
         for (const auto& well : wells) {
             const auto& connections = well.getConnections( );
+            if (connections.empty())
+                continue;
+
             for (const auto& c : connections) {
                 if (grid.cellActive(c.getI(), c.getJ(), c.getK())) {
                     size_t active_index = grid.activeIndex(c.getI(), c.getJ(), c.getK());
@@ -45,6 +48,11 @@ RegionCache::RegionCache(const std::set<std::string>& fip_regions, const FieldPr
                     well_index_list.push_back( { well.name() , active_index } );
                 }
             }
+
+            const auto& conn0 = connections[0];
+            auto region_id = fip_region[grid.activeIndex(conn0.global_index())];
+            auto key = std::make_pair(fip_name, region_id);
+            this->well_map[ key ].push_back(well.name());
         }
     }
 }
@@ -55,6 +63,16 @@ RegionCache::RegionCache(const std::set<std::string>& fip_regions, const FieldPr
         const auto iter = this->connection_map.find( key );
         if (iter == this->connection_map.end())
             return this->connections_empty;
+        else
+            return iter->second;
+    }
+
+
+    std::vector<std::string> RegionCache::wells(const std::string& region_name, int region_id) const {
+        auto key = std::make_pair(region_name, region_id);
+        const auto iter = this->well_map.find( key );
+        if (iter == this->well_map.end())
+            return {};
         else
             return iter->second;
     }

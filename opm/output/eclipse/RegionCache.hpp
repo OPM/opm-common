@@ -36,9 +36,12 @@ namespace out {
         RegionCache(const std::set<std::string>& fip_regions, const FieldPropsManager& fp, const EclipseGrid& grid, const Schedule& schedule);
         const std::vector<std::pair<std::string,size_t>>& connections( const std::string& region_name, int region_id ) const;
 
+        // A well is assigned to the region_id where the first connection is
+        std::vector<std::string> wells(const std::string& region_name, int region_id) const;
     private:
         std::vector<std::pair<std::string,size_t>> connections_empty;
         std::map<std::pair<std::string, int> , std::vector<std::pair<std::string,size_t>>> connection_map;
+        std::map<std::pair<std::string, int>, std::vector<std::string>> well_map;
     };
 }
 }
