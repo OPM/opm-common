@@ -61,8 +61,26 @@ public:
         return value;
     }
 
+    template<typename T>
+    void put_vector(const std::vector<T>& values) {
+        this->put(values.size());
+        this->pack(values.data(), values.size() * sizeof(T));
+    }
+
+
+
+    template<typename T>
+    std::vector<T> get_vector() {
+        std::size_t size = this->get<std::size_t>();
+        std::vector<T> values(size);
+        for (std::size_t index=0; index < size; index++)
+            values[index] = this->get<T>();
+
+        return values;
+    }
+
     template<typename K, typename T>
-    void put(const std::unordered_map<K,T>& values) {
+    void put_map(const std::unordered_map<K,T>& values) {
         this->put(values.size());
         for (const auto& value_pair : values) {
             this->put(value_pair.first);
@@ -71,7 +89,7 @@ public:
     }
 
     template<typename K, typename T>
-    std::unordered_map<K,T> get() {
+    std::unordered_map<K,T> get_map() {
         std::unordered_map<K,T> values;
         auto size = this->get<std::size_t>();
         for (std::size_t index = 0; index < size; index++) {

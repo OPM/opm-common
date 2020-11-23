@@ -68,12 +68,20 @@ namespace {
         return true;
     }
 
-    bool erase_var(map2& values, const std::string& var1, const std::string var2) {
+    void erase_var(map2& values, std::set<std::string>& var2_set, const std::string& var1, const std::string var2) {
         const auto& var1_iter = values.find(var1);
         if (var1_iter == values.end())
-            return false;
+            return;
 
-        return (var1_iter->second.erase(var2) > 0);
+        var1_iter->second.erase(var2);
+        var2_set.clear();
+        for (const auto& [_, var2_map] : values) {
+            (void)_;
+            for (const auto& [v2, __] : var2_map) {
+                (void)__;
+                var2_set.insert(v2);
+            }
+        }
     }
 
     std::vector<std::string> var2_list(const map2& values, const std::string& var1) {
@@ -189,7 +197,7 @@ namespace {
         if (!this->erase(key))
             return false;
 
-        erase_var(this->well_values, var, well);
+        erase_var(this->well_values, this->m_wells, var, well);
         this->well_names.reset();
         return true;
     }
@@ -199,7 +207,7 @@ namespace {
         if (!this->erase(key))
             return false;
 
-        erase_var(this->group_values, var, group);
+        erase_var(this->group_values, this->m_groups, var, group);
         this->group_names.reset();
         return true;
     }
@@ -309,19 +317,21 @@ namespace {
 
     std::vector<char> SummaryState::serialize() const {
         Serializer ser;
+        ser.put(this->sim_start);
         ser.put(this->elapsed);
-        ser.put(values);
+        ser.put_map(this->values);
+
 
         ser.put(this->well_values.size());
-        for (const auto& well_var_pair : this->well_values) {
-            ser.put(well_var_pair.first);
-            ser.put(well_var_pair.second);
+        for (const auto& [well, v] : this->well_values) {
+            ser.put(well);
+            ser.put_map(v);
         }
 
         ser.put(this->group_values.size());
-        for (const auto& group_var_pair : this->group_values) {
-            ser.put(group_var_pair.first);
-            ser.put(group_var_pair.second);
+        for (const auto& [group, v] : this->group_values) {
+            ser.put(group);
+            ser.put_map(v);
         }
 
         return std::move(ser.buffer);
@@ -329,45 +339,39 @@ namespace {
 
 
     void  SummaryState::deserialize(const std::vector<char>& buffer) {
-        this->values.clear();
-        this->m_wells.clear();
-        this->well_values.clear();
-        this->m_groups.clear();
-        this->group_values.clear();
-        this->elapsed = 0;
-
         Serializer ser(buffer);
+        this->sim_start = ser.get<std::chrono::system_clock::time_point>();
         this->elapsed = ser.get<double>();
-        this->values = ser.get<std::string, double>();
+        this->values = ser.get_map<std::string, double>();
 
         {
             std::size_t num_well_var = ser.get<std::size_t>();
             for (std::size_t var_index = 0; var_index < num_well_var; var_index++) {
                 std::string var = ser.get<std::string>();
-
-                std::size_t num_well = ser.get<std::size_t>();
-                for (std::size_t well_index=0; well_index < num_well; well_index++) {
-                    std::string well = ser.get<std::string>();
-                    double value = ser.get<double>();
-                    this->update_well_var(well, var, value);
+                auto v = ser.get_map<std::string, double>();
+                for (const auto& [well, _] : v) {
+                    (void)_;
+                    this->m_wells.insert(well);
                 }
+                this->well_values[var] = std::move(v);
             }
+            this->well_names.reset();
         }
 
         {
             std::size_t num_group_var = ser.get<std::size_t>();
             for (std::size_t var_index = 0; var_index < num_group_var; var_index++) {
                 std::string var = ser.get<std::string>();
-
-                std::size_t num_group = ser.get<std::size_t>();
-                for (std::size_t group_index=0; group_index < num_group; group_index++) {
-                    std::string group = ser.get<std::string>();
-                    double value = ser.get<double>();
-                    this->update_group_var(group, var, value);
+                auto v= ser.get_map<std::string, double>();
+                for (const auto& [group, _] : v) {
+                    (void)_;
+                    this->m_groups.insert(group);
                 }
+                this->group_values[var] = std::move(v);
             }
+            this->group_names.reset();
         }
-     }
+    }
 
     std::ostream& operator<<(std::ostream& stream, const SummaryState& st) {
         stream << "Simulated seconds: " << st.get_elapsed() << std::endl;
@@ -375,5 +379,18 @@ namespace {
             stream << std::setw(17) << value_pair.first << ": " << value_pair.second << std::endl;
 
         return stream;
+    }
+
+
+    bool SummaryState::operator==(const SummaryState& other) const {
+        return this->sim_start == other.sim_start &&
+               this->elapsed == other.elapsed &&
+               this->values == other.values &&
+               this->well_values == other.well_values &&
+               this->m_wells == other.m_wells &&
+               this->wells() == other.wells();
+               this->group_values == other.group_values &&
+               this->m_groups == other.m_groups &&
+               this->groups() == other.groups();
     }
 }

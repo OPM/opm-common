@@ -1954,6 +1954,12 @@ BOOST_AUTO_TEST_CASE(Test_SummaryState) {
     BOOST_CHECK( st.erase_group_var("G1", "GWCT") );
     BOOST_CHECK( !st.has_group_var("G1", "GWCT"));
     BOOST_CHECK( !st.has("GWCT:G1") );
+
+    auto buffer = st.serialize();
+    Opm::SummaryState st2(std::chrono::system_clock::now());
+    st2.deserialize(buffer);
+
+    BOOST_CHECK( st == st2 );
 }
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -3523,59 +3529,18 @@ BOOST_AUTO_TEST_CASE(SummaryState_TOTAL) {
     BOOST_CHECK_EQUAL(st.get_elapsed(), 200);
 }
 
-namespace {
-bool equal(const SummaryState& st1 , const SummaryState& st2) {
-    if (st1.size() != st2.size())
-        return false;
-
-    {
-        const auto& wells2 = st2.wells();
-        if (wells2.size() != st1.wells().size())
-            return false;
-
-        for (const auto& well : st1.wells()) {
-            auto f = std::find(wells2.begin(), wells2.end(), well);
-            if (f == wells2.end())
-                return false;
-        }
-    }
-
-    {
-        const auto& groups2 = st2.groups();
-        if (groups2.size() != st1.groups().size())
-            return false;
-
-        for (const auto& group : st1.groups()) {
-            auto f = std::find(groups2.begin(), groups2.end(), group);
-            if (f == groups2.end())
-                return false;
-        }
-    }
-
-
-    for (const auto& value_pair : st1) {
-        const std::string& key = value_pair.first;
-        double value = value_pair.second;
-        if (value != st2.get(key))
-            return false;
-    }
-
-    return st1.get_elapsed() == st2.get_elapsed();
-}
-
 
 void test_serialize(const SummaryState& st) {
     SummaryState st2(std::chrono::system_clock::now());
     auto serial = st.serialize();
     st2.deserialize(serial);
-    BOOST_CHECK( equal(st, st2));
+    BOOST_CHECK( st == st2 );
 
     st2.update_elapsed(1234567.09);
     st2.update("FOPT", 200);
     st2.deserialize(serial);
-    BOOST_CHECK( equal(st, st2));
+    BOOST_CHECK(st == st2);
 }
-} // Anonymous namespace
 
 BOOST_AUTO_TEST_CASE(serialize_sumary_state) {
     SummaryState st(std::chrono::system_clock::now());
