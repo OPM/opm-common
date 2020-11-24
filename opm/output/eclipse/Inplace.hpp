@@ -38,29 +38,34 @@ public:
         OilInGasPhase = 4,
         GasInLiquidPhase = 5,
         GasInGasPhase = 6,
-        PoreVolume = 7
+        PoreVolume = 7,
+        // The Inplace class is implemented in close relation to the
+        // ecloutputblackoilmodule in opm-simulators, ane there are certainly
+        // idiosyncracies here due to that coupling. For instance the three enum
+        // values PressurePV, HydroCarbonPV and PressureHydroCarbonPV are *not*
+        // included in the return value from phases().
+        PressurePV = 8,
+        HydroCarbonPV = 9,
+        PressureHydroCarbonPV = 10
     };
 
     /*
       The purpose of this class is to transport inplace values from the
       simulator code to the summary output code. The code is written very much
-      to fit in with the current implementation in the simulator, in particular
-      that the add/get functions exist in two varieties is a result of that.
-
-      The functions which don't accept region_name & region_number arguments
-      should be called for totals, i.e. field properties.
+      to fit in with the current implementation in the simulator. The functions
+      which don't accept region_name & region_number arguments should be called
+      for totals, i.e. field properties.
     */
 
 
-    void add(const std::string& region, const std::string& tag, std::size_t region_number, double value);
     void add(const std::string& region, Phase phase, std::size_t region_number, double value);
     void add(Phase phase, double value);
-    void add(const std::string& tag, double value);
 
-    double get(const std::string& region, const std::string& tag, std::size_t region_number) const;
     double get(const std::string& region, Phase phase, std::size_t region_number) const;
     double get(Phase phase) const;
-    double get(const std::string& tag) const;
+
+    bool has(const std::string& region, Phase phase, std::size_t region_number) const;
+    bool has(Phase phase) const;
 
     std::size_t max_region() const;
     std::size_t max_region(const std::string& region_name) const;
@@ -71,13 +76,11 @@ public:
       (region_number - 1). This is an incarnation of id <-> index confusion and
       should be replaced with a std::map instead.
     */
-    std::vector<double> get_vector(const std::string& region, const std::string& tag) const;
     std::vector<double> get_vector(const std::string& region, Phase phase) const;
 
     static const std::vector<Phase>& phases();
 private:
     std::unordered_map<std::string, std::unordered_map<Phase, std::unordered_map<std::size_t, double>>> phase_values;
-    std::unordered_map<std::string, std::unordered_map<std::string, std::unordered_map<std::size_t, double>>> tag_values;
 };
 
 

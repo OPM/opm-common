@@ -31,36 +31,12 @@ static const std::string FIELD_NAME = std::string{"FIELD"};
 static const std::size_t FIELD_ID   = 0;
 }
 
-void Inplace::add(const std::string& region, const std::string& tag, std::size_t region_id, double value) {
-    this->tag_values[region][tag][region_id] = value;
-}
-
 void Inplace::add(const std::string& region, Inplace::Phase phase, std::size_t region_id, double value) {
     this->phase_values[region][phase][region_id] = value;
 }
 
 void Inplace::add(Inplace::Phase phase, double value) {
     this->add( FIELD_NAME, phase, FIELD_ID, value );
-}
-
-void Inplace::add(const std::string& tag, double value) {
-    this->add( FIELD_NAME, tag, FIELD_ID, value );
-}
-
-double Inplace::get(const std::string& region, const std::string& tag, std::size_t region_id) const {
-    auto region_iter = this->tag_values.find(region);
-    if (region_iter == this->tag_values.end())
-        throw std::logic_error(fmt::format("No such region: {}", region));
-
-    auto tag_iter = region_iter->second.find(tag);
-    if (tag_iter == region_iter->second.end())
-        throw std::logic_error(fmt::format("No such tag: {}:{}", region, tag));
-
-    auto value_iter = tag_iter->second.find(region_id);
-    if (value_iter == tag_iter->second.end())
-        throw std::logic_error(fmt::format("No such region id: {}:{}:{}", region, tag, region_id));
-
-    return value_iter->second;
 }
 
 double Inplace::get(const std::string& region, Inplace::Phase phase, std::size_t region_id) const {
@@ -83,8 +59,24 @@ double Inplace::get(Inplace::Phase phase) const {
     return this->get(FIELD_NAME, phase, FIELD_ID);
 }
 
-double Inplace::get(const std::string& tag) const {
-    return this->get(FIELD_NAME, tag, FIELD_ID);
+bool Inplace::has(const std::string& region, Phase phase, std::size_t region_id) const {
+    auto region_iter = this->phase_values.find(region);
+    if (region_iter == this->phase_values.end())
+        return false;
+
+    auto phase_iter = region_iter->second.find(phase);
+    if (phase_iter == region_iter->second.end())
+        return false;
+
+    auto value_iter = phase_iter->second.find(region_id);
+    if (value_iter == phase_iter->second.end())
+        return false;
+
+    return true;
+}
+
+bool Inplace::has(Phase phase) const {
+    return this->has(FIELD_NAME, phase, FIELD_ID);
 }
 
 namespace {
@@ -108,41 +100,20 @@ std::size_t Inplace::max_region() const {
         }
     }
 
-    for (const auto& [_, string_map] : this->tag_values) {
-        (void)_;
-        for (const auto& [__, region_map] : string_map) {
-            (void)__;
-            max_value = std::max(max_value, region_max(region_map));
-        }
-    }
     return max_value;
 }
 
 std::size_t Inplace::max_region(const std::string& region_name) const {
     std::optional<std::size_t> max_value;
-    {
-        const auto& region_iter = this->phase_values.find(region_name);
-        if (region_iter != this->phase_values.end()) {
-            max_value = 0;
-            for (const auto& [_, region_map] : region_iter->second) {
-                (void)_;
-                max_value = std::max(*max_value, region_max(region_map));
-            }
+    const auto& region_iter = this->phase_values.find(region_name);
+    if (region_iter != this->phase_values.end()) {
+        max_value = 0;
+        for (const auto& [_, region_map] : region_iter->second) {
+            (void)_;
+            max_value = std::max(*max_value, region_max(region_map));
         }
     }
 
-    {
-        const auto& region_iter = this->tag_values.find(region_name);
-        if (region_iter != this->tag_values.end()) {
-            if (!max_value.has_value())
-                max_value = 0;
-
-            for (const auto& [_, region_map] : region_iter->second) {
-                (void)_;
-                max_value = std::max(*max_value, region_max(region_map));
-            }
-        }
-    }
     if (!max_value.has_value())
         throw std::logic_error(fmt::format("No such region: {}", region_name));
 
@@ -154,15 +125,6 @@ std::size_t Inplace::max_region(const std::string& region_name) const {
 std::vector<double> Inplace::get_vector(const std::string& region, Phase phase) const {
     std::vector<double> v(this->max_region(region), 0);
     const auto& region_map = this->phase_values.at(region).at(phase);
-    for (const auto& [region_id, value] : region_map)
-        v[region_id - 1] = value;
-
-    return v;
-}
-
-std::vector<double> Inplace::get_vector(const std::string& region, const std::string& tag) const {
-    std::vector<double> v(this->max_region(region), 0);
-    const auto& region_map = this->tag_values.at(region).at(tag);
     for (const auto& [region_id, value] : region_map)
         v[region_id - 1] = value;
 
