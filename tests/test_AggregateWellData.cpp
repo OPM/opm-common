@@ -348,7 +348,8 @@ WCONPROD
 DATES             -- 6
  15  SEP 2014 /
 /
-WCONPROD      'OP_3' 'SHUT' 'ORAT' 20000  4* 1000 /
+WCONPROD
+      'OP_3' 'SHUT' 'ORAT' 20000  4* 1000 /
 /
 
 DATES             -- 7
