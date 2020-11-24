@@ -38,20 +38,14 @@ BOOST_AUTO_TEST_CASE(TESTInplace) {
 
     oip.add("FIPNUM", Inplace::Phase::OIL, 3, 100);
     oip.add("FIPNUM", Inplace::Phase::OIL, 6, 50);
-    oip.add("FIPNUM", "StringID", 5, 200);
 
 
     BOOST_CHECK_EQUAL( oip.get("FIPNUM", Inplace::Phase::OIL, 3) , 100);
     BOOST_CHECK_EQUAL( oip.get("FIPNUM", Inplace::Phase::OIL, 6) , 50);
-    BOOST_CHECK_EQUAL( oip.get("FIPNUM", "StringID", 5) , 200);
 
     BOOST_CHECK_THROW( oip.get("FIPNUM", Inplace::Phase::OIL, 4), std::exception);
     BOOST_CHECK_THROW( oip.get("FIPNUM", Inplace::Phase::GAS, 3), std::exception);
     BOOST_CHECK_THROW( oip.get("FIPX", Inplace::Phase::OIL, 3)  , std::exception);
-
-    BOOST_CHECK_THROW( oip.get("FIPNUM", "StringID", 4), std::exception);
-    BOOST_CHECK_THROW( oip.get("FIPNUM", "XXX", 3), std::exception);
-    BOOST_CHECK_THROW( oip.get("FIPX", "StringID", 3)  , std::exception);
 
 
     BOOST_CHECK_EQUAL( oip.max_region(), 6);
@@ -77,7 +71,4 @@ BOOST_AUTO_TEST_CASE(TESTInplace) {
     std::vector<double> e1 = {0,0,100,0,0,50};
     BOOST_CHECK( v1 == e1 );
 
-    auto v2 = oip.get_vector("FIPNUM", "StringID");
-    std::vector<double> e2 = {0,0,0,0,200,0};
-    BOOST_CHECK( v2 == e2 );
 }

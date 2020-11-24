@@ -49,7 +49,7 @@
 #include <opm/output/data/GuideRateValue.hpp>
 #include <opm/output/data/Wells.hpp>
 #include <opm/output/data/Aquifer.hpp>
-
+#include <opm/output/eclipse/Inplace.hpp>
 #include <opm/output/eclipse/RegionCache.hpp>
 
 #include <fmt/format.h>
@@ -407,6 +407,7 @@ struct fn_args {
     const Opm::EclipseGrid& grid;
     const std::vector< std::pair< std::string, double > > eff_factors;
     const Opm::Inplace& initial_inplace;
+    const Opm::Inplace& inplace;
     const Opm::UnitSystem& unit_system;
 };
 
@@ -925,6 +926,16 @@ quantity region_rate( const fn_args& args ) {
     else
         return { -sum, rate_unit< phase >() };
 }
+
+quantity rhpv(const fn_args& args) {
+    const auto& inplace = args.inplace;
+    const auto& region_name = std::get<std::string>(*args.extra_data);
+    if (inplace.has( region_name, Opm::Inplace::Phase::HydroCarbonPV, args.num ))
+        return { inplace.get( region_name, Opm::Inplace::Phase::HydroCarbonPV, args.num ), measure::volume };
+    else
+        return {0, measure::volume};
+}
+
 
 template < rt phase, bool outputProducer = true, bool outputInjector = true>
 inline quantity potential_rate( const fn_args& args ) {
@@ -1565,6 +1576,7 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "ROPT"  , mul( region_rate< rt::oil, producer >, duration ) },
     { "RGPT"  , mul( region_rate< rt::gas, producer >, duration ) },
     { "RWPT"  , mul( region_rate< rt::wat, producer >, duration ) },
+    { "RHPV"  , rhpv },
     //Multisegment well segment data
     { "SOFR", srate< rt::oil > },
     { "SWFR", srate< rt::wat > },
@@ -1853,6 +1865,7 @@ namespace Evaluator {
         const Opm::data::WellRates& wellSol;
         const Opm::data::GroupAndNetworkValues& grpNwrkSol;
         const std::map<std::string, double>& single;
+        const Opm::Inplace inplace;
         const std::map<std::string, std::vector<double>>& region;
         const std::map<std::pair<std::string, int>, double>& block;
         const Opm::data::Aquifers& aquifers;
@@ -1904,7 +1917,7 @@ namespace Evaluator {
                 std::max(0, this->node_.number),
                 this->node_.fip_region,
                 st, simRes.wellSol, simRes.grpNwrkSol, input.reg, input.grid,
-                std::move(efac.factors), input.initial_inplace, input.sched.getUnits()
+                std::move(efac.factors), input.initial_inplace, simRes.inplace, input.sched.getUnits()
             };
 
             const auto& usys = input.es.getUnits();
@@ -2449,7 +2462,8 @@ namespace Evaluator {
             {}, "", 0.0, 0, std::max(0, this->node_->number),
             this->node_->fip_region,
             this->st_, {}, {}, reg, this->grid_,
-            {}, {}, Opm::UnitSystem(Opm::UnitSystem::UnitType::UNIT_TYPE_METRIC)};
+            {}, {}, {}, Opm::UnitSystem(Opm::UnitSystem::UnitType::UNIT_TYPE_METRIC)
+        };
 
         const auto prm = this->paramFunction_(args);
 
@@ -2699,6 +2713,7 @@ public:
               const data::GroupAndNetworkValues& grp_nwrk_solution,
               GlobalProcessParameters&           single_values,
               const Inplace&                     initial_inplace,
+              const Opm::Inplace&                inplace,
               const RegionParameters&            region_values,
               const BlockValues&                 block_values,
               const data::Aquifers&              aquifer_values,
@@ -2808,6 +2823,7 @@ eval(const int                          sim_step,
      const data::GroupAndNetworkValues& grp_nwrk_solution,
      GlobalProcessParameters&           single_values,
      const Inplace&                     initial_inplace,
+     const Opm::Inplace&                inplace,
      const RegionParameters&            region_values,
      const BlockValues&                 block_values,
      const data::Aquifers&              aquifer_values,
@@ -2824,7 +2840,7 @@ eval(const int                          sim_step,
     };
 
     const Evaluator::SimulatorResults simRes {
-        well_solution, grp_nwrk_solution, single_values, region_values, block_values, aquifer_values
+        well_solution, grp_nwrk_solution, single_values, inplace, region_values, block_values, aquifer_values
     };
 
     for (auto& evalPtr : this->outputParameters_.getEvaluators()) {
@@ -3206,6 +3222,7 @@ void Summary::eval(SummaryState&                      st,
                    const data::GroupAndNetworkValues& grp_nwrk_solution,
                    GlobalProcessParameters            single_values,
                    const Inplace&                     initial_inplace,
+                   const Inplace&                     inplace,
                    const RegionParameters&            region_values,
                    const BlockValues&                 block_values,
                    const Opm::data::Aquifers&         aquifer_values) const
@@ -3222,8 +3239,9 @@ void Summary::eval(SummaryState&                      st,
      * wells, groups, connections &c in the Schedule object. */
     const auto sim_step = std::max( 0, report_step - 1 );
 
-    this->pImpl_->eval(sim_step, secs_elapsed, well_solution,
-                       grp_nwrk_solution, single_values, initial_inplace,
+    this->pImpl_->eval(sim_step, secs_elapsed,
+                       well_solution, grp_nwrk_solution, single_values,
+                       initial_inplace, inplace,
                        region_values, block_values, aquifer_values, st);
 }
 
