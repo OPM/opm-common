@@ -235,7 +235,7 @@ if(ENABLE_ECL_INPUT)
       ${PROJECT_BINARY_DIR}/tests
     )
 
-  foreach(test test_EclIO test_EGrid test_ERft test_ERst test_ESmry)
+  foreach(test test_EclIO test_EGrid test_ERft test_ERst test_ESmry test_EInit)
     opm_add_test(${test} CONDITION ENABLE_ECL_INPUT AND Boost_UNIT_TEST_FRAMEWORK_FOUND
                          LIBRARIES ${_libs}
                          WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/tests)

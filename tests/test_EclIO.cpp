@@ -87,6 +87,7 @@ void write_header(std::ofstream& ofileH, std::string& arrName, int size, std::st
     ofileH.write(reinterpret_cast<char*>(&bhead), sizeof(bhead));
 }
 
+
 BOOST_AUTO_TEST_CASE(TestEclFile_X231) {
 
     std::string filename = "TEST.DAT";
