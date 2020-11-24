@@ -326,8 +326,8 @@ appendNNC(const EclipseGrid &grid, const FieldPropsManager &fp, NNC &nnc) const 
         const double trans_cell = (con.trans_option == 0) ?
                               cell1.transmissibility : (2 * cell1.permeability * face_area / cell1.length);
 
-        const auto& cell_perm = (fp.get_double(perm_string))[gc2];
-        const double trans_con = 2 * cell_perm * face_area * ntg[con.global_index] / d;
+        const double cell_perm = (fp.get_double(perm_string))[grid.activeIndex(gc2)];
+        const double trans_con = 2 * cell_perm * face_area * ntg[grid.activeIndex(con.global_index)] / d;
 
         const double tran = trans_con * trans_cell / (trans_con + trans_cell) * con.trans_multipler;
         nnc.addNNC(gc1, gc2, tran);

@@ -98,6 +98,10 @@ namespace Opm {
         for (size_t k = k1; k <= k2; ++k) {
             for (size_t j = j1; j <=j2; ++j) {
                 for (size_t i = i1; i <= i2; ++i) {
+                    // TODO: we probably should give a message here
+                    if (!grid.cellActive(i, j, k)) {
+                        continue;
+                    }
                     if (allow_internal_cells ||
                         !AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i, j, k, face_dir)) {
                         const size_t global_index = grid.getGlobalIndex(i, j, k);

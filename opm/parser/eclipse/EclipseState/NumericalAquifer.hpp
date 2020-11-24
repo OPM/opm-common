@@ -36,7 +36,7 @@ namespace Opm {
     class NNC;
     namespace Fieldprops {
         class TranCalculator;
-    };
+    }
 
     struct NumericalAquiferCell {
         NumericalAquiferCell(const DeckRecord&, const EclipseGrid&, const FieldPropsManager&);
