@@ -348,8 +348,7 @@ WCONPROD
 DATES             -- 6
  15  SEP 2014 /
 /
-WCONPROD
-      'OP_3' 'SHUT' 'ORAT' 20000  4* 1000 /
+WCONPROD      'OP_3' 'SHUT' 'ORAT' 20000  4* 1000 /
 /
 
 DATES             -- 7
@@ -364,7 +363,22 @@ COMPDAT
 WCONPROD
       'OP_6' 'OPEN' 'ORAT' 20000  4* 1000 /
 /
-TSTEP            -- 8
+DATES             -- 8
+ 18  OCT 2014 /
+/
+WELSPECS
+      'OP_6'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+/
+COMPDAT
+      'OP_6'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+/
+WCONHIST
+      'OP_6' 'OPEN' 'RESV' 275. 0.  34576.  /
+/
+WELOPEN
+      'OP_5' 'SHUT'  /
+/
+TSTEP            -- 9
 10 /
 )~" };
 
@@ -723,6 +737,37 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data)
         const auto& zwell = awd.getZWell();
 
         BOOST_CHECK_EQUAL(zwell[i1 + Ix::WellName].c_str(), "OP_2    ");
+    }
+
+    // SWEL (OP_6)
+    // Report Step 8: 2014-10-18 --> 2014-10-28
+    const auto rptStep_8 = std::size_t{8};
+
+    const auto ih_8 = MockIH {
+        static_cast<int>(simCase.sched.getWells(rptStep_8).size())
+    };
+
+    BOOST_CHECK_EQUAL(ih_8.nwells, MockIH::Sz{6});
+
+    //smry = sim_state();
+    awd = Opm::RestartIO::Helpers::AggregateWellData{ih_8.value};
+    awd.captureDeclaredWellData(simCase.sched,
+                                simCase.es.getUnits(), rptStep_8, action_state, smry, ih_8.value);
+    {
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::SWell::index;
+
+        const auto i1 = 4*ih_8.nswelz;
+
+        const auto& swell = awd.getSWell();
+        BOOST_CHECK_CLOSE(swell[i1 + Ix::OilRateTarget], 0.0f, 1.0e-7f);
+        BOOST_CHECK_CLOSE(swell[i1 + Ix::WatRateTarget], 0.0f, 1.0e-7f);
+        BOOST_CHECK_CLOSE(swell[i1 + Ix::GasRateTarget], 0.0f, 1.0e-7f);
+
+
+        const auto i2 = 5*ih_8.nswelz;
+        BOOST_CHECK_CLOSE(swell[i2 + Ix::OilRateTarget], 275.f, 1.0e-7f);
+        BOOST_CHECK_CLOSE(swell[i2 + Ix::WatRateTarget], 0.0f, 1.0e-7f);
+        BOOST_CHECK_CLOSE(swell[i2 + Ix::GasRateTarget], 34576.0f, 1.0e-7f);
     }
 }
 
