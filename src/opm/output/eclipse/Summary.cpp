@@ -24,6 +24,7 @@
 #include <opm/common/OpmLog/KeywordLocation.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
 
+#include <opm/output/eclipse/Inplace.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
@@ -405,6 +406,8 @@ struct fn_args {
     const Opm::out::RegionCache& regionCache;
     const Opm::EclipseGrid& grid;
     const std::vector< std::pair< std::string, double > > eff_factors;
+    const Opm::Inplace& initial_inplace;
+    const Opm::UnitSystem& unit_system;
 };
 
 /* Since there are several enums in opm scattered about more-or-less
@@ -744,6 +747,28 @@ inline quantity bhp( const fn_args& args ) {
 
     return { p->second.bhp, measure::pressure };
 }
+
+
+
+/*
+  This function is slightly ugly - the evaluation of ROEW uses the already
+  calculated WOPT results. We do not really have any formalism for such
+  dependencies between the summary vectors. For this particualar case there is a
+  hack in SummaryConfig which should ensure that this is safe.
+*/
+
+quantity roew(const fn_args& args) {
+    double oil_prod = 0;
+    const auto& region_name = std::get<std::string>(*args.extra_data);
+    const auto& wells = args.regionCache.wells( region_name, args.num );
+    for (const auto& well : wells)
+        oil_prod += args.st.get_well_var(well, "WOPT");
+
+    //oil_prod = args.unit_system.to_si(Opm::UnitSystem::measure::volume, oil_prod);
+    return { oil_prod / args.initial_inplace.get( region_name, Opm::Inplace::Phase::OIL, args.num ) , measure::identity };
+}
+
+
 
 inline quantity temperature( const fn_args& args ) {
     const quantity zero = { 0, measure::temperature };
@@ -1563,6 +1588,7 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "WOPI", potential_rate< rt::well_potential_oil , false, true>},
     { "WGPI", potential_rate< rt::well_potential_gas , false, true>},
     { "WGIP", potential_rate< rt::well_potential_gas , false, true>}, // Alias for 'WGPI'
+    { "ROEW", roew },
 };
 
 
@@ -1819,6 +1845,7 @@ namespace Evaluator {
         const Opm::Schedule& sched;
         const Opm::EclipseGrid& grid;
         const Opm::out::RegionCache& reg;
+        const Opm::Inplace initial_inplace;
     };
 
     struct SimulatorResults
@@ -1877,7 +1904,7 @@ namespace Evaluator {
                 std::max(0, this->node_.number),
                 this->node_.fip_region,
                 st, simRes.wellSol, simRes.grpNwrkSol, input.reg, input.grid,
-                std::move(efac.factors)
+                std::move(efac.factors), input.initial_inplace, input.sched.getUnits()
             };
 
             const auto& usys = input.es.getUnits();
@@ -2422,8 +2449,7 @@ namespace Evaluator {
             {}, "", 0.0, 0, std::max(0, this->node_->number),
             this->node_->fip_region,
             this->st_, {}, {}, reg, this->grid_,
-            {}
-        };
+            {}, {}, Opm::UnitSystem(Opm::UnitSystem::UnitType::UNIT_TYPE_METRIC)};
 
         const auto prm = this->paramFunction_(args);
 
@@ -2672,6 +2698,7 @@ public:
               const data::WellRates&             well_solution,
               const data::GroupAndNetworkValues& grp_nwrk_solution,
               GlobalProcessParameters&           single_values,
+              const Inplace&                     initial_inplace,
               const RegionParameters&            region_values,
               const BlockValues&                 block_values,
               const data::Aquifers&              aquifer_values,
@@ -2780,6 +2807,7 @@ eval(const int                          sim_step,
      const data::WellRates&             well_solution,
      const data::GroupAndNetworkValues& grp_nwrk_solution,
      GlobalProcessParameters&           single_values,
+     const Inplace&                     initial_inplace,
      const RegionParameters&            region_values,
      const BlockValues&                 block_values,
      const data::Aquifers&              aquifer_values,
@@ -2792,7 +2820,7 @@ eval(const int                          sim_step,
     st.update("TIMESTEP", this->es_.get().getUnits().from_si(Opm::UnitSystem::measure::time, duration));
 
     const Evaluator::InputData input {
-        this->es_, this->sched_, this->grid_, this->regCache_
+        this->es_, this->sched_, this->grid_, this->regCache_, initial_inplace
     };
 
     const Evaluator::SimulatorResults simRes {
@@ -3177,7 +3205,7 @@ void Summary::eval(SummaryState&                      st,
                    const data::WellRates&             well_solution,
                    const data::GroupAndNetworkValues& grp_nwrk_solution,
                    GlobalProcessParameters            single_values,
-                   const Inplace&                     ,
+                   const Inplace&                     initial_inplace,
                    const RegionParameters&            region_values,
                    const BlockValues&                 block_values,
                    const Opm::data::Aquifers&         aquifer_values) const
@@ -3194,8 +3222,8 @@ void Summary::eval(SummaryState&                      st,
      * wells, groups, connections &c in the Schedule object. */
     const auto sim_step = std::max( 0, report_step - 1 );
 
-    this->pImpl_->eval(sim_step, secs_elapsed,
-                       well_solution, grp_nwrk_solution, single_values,
+    this->pImpl_->eval(sim_step, secs_elapsed, well_solution,
+                       grp_nwrk_solution, single_values, initial_inplace,
                        region_values, block_values, aquifer_values, st);
 }
 

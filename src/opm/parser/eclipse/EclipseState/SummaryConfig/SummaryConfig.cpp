@@ -725,6 +725,7 @@ inline void keywordR2R( SummaryConfig::keyword_list& /* list */,
 
 inline void keywordR( SummaryConfig::keyword_list& list,
                       const DeckKeyword& deck_keyword,
+                      const Schedule& schedule, 
                       const TableManager& tables,
                       const ParseContext& parseContext,
                       ErrorGuard& errors ) {
@@ -748,6 +749,11 @@ inline void keywordR( SummaryConfig::keyword_list& list,
         for (size_t region=1; region <= numfip; region++)
             regions.push_back( region );
     }
+
+    // See comment on function roew() in Summary.cpp for this weirdness.
+    if (keyword.rfind("ROEW", 0) == 0)
+        keywordW(list, "WOPT", {}, schedule);
+
 
     auto param = SummaryConfigNode {
         keyword, SummaryConfigNode::Category::Region, deck_keyword.location()
@@ -1054,7 +1060,7 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
         case Cat::Group: return keywordG( list, parseContext, errors, keyword, schedule );
         case Cat::Field: return keywordF( list, keyword );
         case Cat::Block: return keywordB( list, keyword, dims );
-        case Cat::Region: return keywordR( list, keyword, tables, parseContext, errors );
+        case Cat::Region: return keywordR( list, keyword, schedule, tables, parseContext, errors );
         case Cat::Connection: return keywordC( list, parseContext, errors, keyword, schedule, dims);
         case Cat::Segment: return keywordS( list, parseContext, errors, keyword, schedule );
         case Cat::Node: return keyword_node( list, node_names, parseContext, errors, keyword );

@@ -1187,9 +1187,10 @@ ROEW_REG
 
 RHPV_REG
 /
+
 )";
     const auto& summary_config = createSummary(deck_string);
-    BOOST_CHECK_EQUAL(summary_config.size(), 15U);
+    BOOST_CHECK_EQUAL(summary_config.size(), 15 + 4);
     BOOST_CHECK(summary_config.hasKeyword("RPR__REG"));
     BOOST_CHECK(summary_config.hasKeyword("ROPT_REG"));
     BOOST_CHECK(summary_config.hasKeyword("RRPV_REG"));
@@ -1210,11 +1211,11 @@ RHPV_REG
     BOOST_CHECK( reg_iter != fip_regions.end() );
 
 
-    auto wkeywords = summary_config.keywords("W*");
-    BOOST_CHECK(wkeywords.empty());
-
     auto rpr = summary_config.keywords("RP*");
     BOOST_CHECK_EQUAL(rpr.size(), 3U);
+
+    // See comment on the roew() function in Summary.cpp for this uglyness.
+    BOOST_CHECK(summary_config.hasKeyword("WOPT"));
 }
 
 BOOST_AUTO_TEST_CASE( WOPRL ) {
