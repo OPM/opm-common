@@ -2484,3 +2484,48 @@ TSTEP
         BOOST_CHECK( !udq_state.define(def.keyword(), def.status()));
     }
 }
+
+BOOST_AUTO_TEST_CASE(UDQ_TYPE_CAST) {
+
+    std::string valid = R"(
+SCHEDULE
+
+UDQ
+   ASSIGN FUBHPP1 100 /
+/
+
+TSTEP
+10 /
+
+UDQ
+   DEFINE FU_TIME TIME /
+   DEFINE WUDELTA WBHP '*' - FUBHPP1 /
+   DEFINE WU_TEST WUBHPINI '*' - (WGPR '*')/2000.0 /
+
+/
+
+)";
+
+
+
+    auto schedule = make_schedule(valid);
+    UDQState udq_state(0);
+    SummaryState st(std::chrono::system_clock::now());
+    UDQFunctionTable udqft;
+    UDQContext context(udqft, WellMatcher({"W1", "W2", "W3"}), st, udq_state);
+    st.update_well_var("W1", "WBHP", 400);
+    st.update_well_var("W2", "WBHP", 300);
+    st.update_well_var("W3", "WBHP", 200);
+
+    const auto& udq = schedule.getUDQConfig(1);
+    {
+        const auto& ass = udq.assign("FUBHPP1");
+        context.update_assign(1, "FUBHPP1", ass.eval());
+    }
+    const auto& def = udq.define("WUDELTA");
+    auto res = def.eval(context);
+
+    BOOST_CHECK_EQUAL(res["W1"].get(), 300);
+    BOOST_CHECK_EQUAL(res["W2"].get(), 200);
+    BOOST_CHECK_EQUAL(res["W3"].get(), 100);
+}

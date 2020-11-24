@@ -478,37 +478,59 @@ UDQScalar operator/(double lhs, const UDQScalar& rhs) {
 
 namespace {
 
+bool is_scalar(const UDQSet& udq_set) {
+    if (udq_set.var_type() == UDQVarType::SCALAR)
+        return true;
+
+    if (udq_set.var_type() == UDQVarType::FIELD_VAR)
+        return true;
+
+    return false;
+}
+
+
 /*
   If one result set is scalar and the other represents a set of wells/groups,
   the scalar result is promoted to a set of the right type.
-*/
-UDQSet udq_cast(const UDQSet& lhs, const UDQSet& rhs)
-{
-    if (lhs.size() != rhs.size()) {
-        if (lhs.var_type() != UDQVarType::SCALAR) {
-            auto msg = fmt::format("Type/size mismatch when combining UDQs {}(size={}, type={}) and {}(size={}, type={})",
-                                   lhs.name(), lhs.size(), lhs.var_type(),
-                                   rhs.name(), rhs.size(), rhs.var_type());
-            throw std::logic_error(msg);
-        }
 
+  This function is quite subconcious about FIELD / SCALAR.
+*/
+std::pair<UDQSet, UDQSet> udq_cast(const UDQSet& lhs, const UDQSet& rhs)
+{
+    if (lhs.var_type() == rhs.var_type())
+        return std::make_pair(lhs,rhs);
+
+    if (lhs.size() == rhs.size())
+        return std::make_pair(lhs,rhs);
+
+    if (is_scalar(lhs)) {
         if (rhs.var_type() == UDQVarType::WELL_VAR)
-            return UDQSet::wells(lhs.name(), rhs.wgnames(), lhs[0].get());
+            return std::make_pair(UDQSet::wells(lhs.name(), rhs.wgnames(), lhs[0].get()), rhs);
 
         if (rhs.var_type() == UDQVarType::GROUP_VAR)
-            return UDQSet::groups(lhs.name(), rhs.wgnames(), lhs[0].get());
+            return std::make_pair(UDQSet::groups(lhs.name(), rhs.wgnames(), lhs[0].get()), rhs);
+    }
 
-        throw std::logic_error("Don't have a clue");
-    } else
-        return lhs;
+    if (is_scalar(rhs)) {
+        if (lhs.var_type() == UDQVarType::WELL_VAR)
+            return std::make_pair(lhs, UDQSet::wells(rhs.name(), lhs.wgnames(), rhs[0].get()));
+
+        if (lhs.var_type() == UDQVarType::GROUP_VAR)
+            return std::make_pair(lhs, UDQSet::groups(rhs.name(), lhs.wgnames(), rhs[0].get()));
+    }
+
+    auto msg = fmt::format("Type/size mismatch when combining UDQs {}(size={}, type={}) and {}(size={}, type={})",
+                           lhs.name(), lhs.size(), lhs.var_type(),
+                           rhs.name(), rhs.size(), rhs.var_type());
+    throw std::logic_error(msg);
 }
 
 }
 
 UDQSet operator+(const UDQSet&lhs, const UDQSet& rhs) {
-    UDQSet sum = udq_cast(lhs, rhs);
-    sum += rhs;
-    return sum;
+    auto [left,right] = udq_cast(lhs, rhs);
+    left += right;
+    return left;
 }
 
 UDQSet operator+(const UDQSet&lhs, double rhs) {
@@ -524,9 +546,9 @@ UDQSet operator+(double lhs, const UDQSet& rhs) {
 }
 
 UDQSet operator-(const UDQSet&lhs, const UDQSet& rhs) {
-    UDQSet diff = udq_cast(lhs, rhs);
-    diff -= rhs;
-    return diff;
+    auto [left,right] = udq_cast(lhs, rhs);
+    left -= right;
+    return left;
 }
 
 UDQSet operator-(const UDQSet&lhs, double rhs) {
@@ -542,9 +564,9 @@ UDQSet operator-(double lhs, const UDQSet& rhs) {
 }
 
 UDQSet operator*(const UDQSet&lhs, const UDQSet& rhs) {
-    UDQSet prod = udq_cast(lhs, rhs);
-    prod *= rhs;
-    return prod;
+    auto [left,right] = udq_cast(lhs, rhs);
+    left *= right;
+    return left;
 }
 
 UDQSet operator*(const UDQSet&lhs, double rhs) {
@@ -560,9 +582,9 @@ UDQSet operator*(double lhs, const UDQSet& rhs) {
 }
 
 UDQSet operator/(const UDQSet&lhs, const UDQSet& rhs) {
-    UDQSet frac = udq_cast(lhs, rhs);
-    frac /= rhs;
-    return frac;
+    auto [left,right] = udq_cast(lhs, rhs);
+    left /= right;
+    return left;
 }
 
 UDQSet operator/(const UDQSet&lhs, double rhs) {

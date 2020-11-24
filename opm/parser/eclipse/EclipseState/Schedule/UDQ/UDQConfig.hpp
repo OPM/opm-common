@@ -65,6 +65,7 @@ namespace Opm {
 
         void eval(std::size_t report_step, const WellMatcher& wm, SummaryState& st, UDQState& udq_state) const;
         const UDQDefine& define(const std::string& key) const;
+        const UDQAssign& assign(const std::string& key) const;
         std::vector<UDQDefine> definitions() const;
         std::vector<UDQDefine> definitions(UDQVarType var_type) const;
         std::vector<UDQInput> input() const;
