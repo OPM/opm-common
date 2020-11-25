@@ -44,105 +44,13 @@ namespace {
     Opm::Deck first_sim(std::string fname) {
         return Opm::Parser{}.parseFile(fname);        
     }
-    /*
-     Opm::UDQActive udq_active() {
-      int update_count = 0;
-      // construct record data for udq_active
-      Opm::UDQParams params;
-      Opm::UDQConfig conf(params);
-      Opm::UDQActive udq_act;
-      Opm::UDAValue uda1("WUOPRL");
-      update_count += udq_act.update(conf, uda1, "PROD1", Opm::UDAControl::WCONPROD_ORAT);
-
-      Opm::UDAValue uda2("WULPRL");
-      update_count += udq_act.update(conf, uda2, "PROD1", Opm::UDAControl::WCONPROD_LRAT);
-      Opm::UDAValue uda3("WUOPRU");
-      update_count += udq_act.update(conf, uda3, "PROD2", Opm::UDAControl::WCONPROD_ORAT);
-      Opm::UDAValue uda4("WULPRU");
-      update_count += udq_act.update(conf, uda4, "PROD2", Opm::UDAControl::WCONPROD_LRAT);
-
-      for (std::size_t index=0; index < udq_act.IUAD_size(); index++)
-      {
-          const auto & record = udq_act[index];
-          auto ind = record.input_index;
-          auto udq_key = record.udq;
-          auto name = record.wgname;
-          auto ctrl_type = record.control;
-       }
-      return udq_act;
-    } 
-    */
 }
 
 
-Opm::UDQSet make_udq_set(const std::string& name, Opm::UDQVarType var_type, const std::vector<std::string>& wgnames, const std::vector<double>& values) {
-    Opm::UDQSet s(name, var_type, wgnames);
-    for (std::size_t i=0; i < values.size(); i++)
-        s.assign(i , values[i]);
-
-    return s;
-}
-
-    Opm::UDQState make_udq_state()
-    {
-        auto state = Opm::UDQState{0};
-
-        state.add_define(0, "WUOPRL", make_udq_set("WUOPRL",
-                                                   Opm::UDQVarType::WELL_VAR,
-                                                   {"PROD1", "PROD2", "WINJ1", "WINJ2"},
-                                                   {210, 211, 212, 213}));
-
-        state.add_define(0, "WUOPRU", make_udq_set("WUOPRU",
-                                                   Opm::UDQVarType::WELL_VAR,
-                                                   {"PROD1", "PROD2", "WINJ1", "WINJ2"},
-                                                   {220, 221, 222, 223}));
-
-        state.add_define(0, "WULPRL", make_udq_set("WULPRL",
-                                                   Opm::UDQVarType::WELL_VAR,
-                                                   {"PROD1", "PROD2", "WINJ1", "WINJ2"},
-                                                   {230, 231, 232, 233}));
-
-        state.add_define(0, "WULPRU", make_udq_set("WULPRU",
-                                                   Opm::UDQVarType::WELL_VAR,
-                                                   {"PROD1", "PROD2", "WINJ1", "WINJ2"},
-                                                   {160, 161, 162, 163}));
-
-        state.add_define(0, "GUOPRU", make_udq_set("GUOPRU",
-                                                   Opm::UDQVarType::GROUP_VAR,
-                                                   {"WGRP1", "WGRP2", "GRP1"},
-                                                   {360, 361, 362}));
-
-        state.add_define(0, "FULPR", Opm::UDQSet::scalar("FULPR", 460));
-        return state;
-    }
 
     Opm::SummaryState sum_state()
     {
         auto state = Opm::SummaryState{std::chrono::system_clock::now()};
-        state.update_well_var("PROD1", "WUOPRL", 210.);
-        state.update_well_var("PROD2", "WUOPRL", 211.);
-        state.update_well_var("WINJ1", "WUOPRL", 212.);
-        state.update_well_var("WINJ2", "WUOPRL", 213.);
-
-        state.update_well_var("PROD1", "WULPRL", 230.);
-        state.update_well_var("PROD2", "WULPRL", 231.);
-        state.update_well_var("WINJ1", "WULPRL", 232.);
-        state.update_well_var("WINJ2", "WULPRL", 233.);
-
-        state.update_well_var("PROD1", "WUOPRU", 220.);
-        state.update_well_var("PROD2", "WUOPRU", 221.);
-        state.update_well_var("WINJ1", "WUOPRU", 222.);
-        state.update_well_var("WINJ2", "WUOPRU", 223.);
-
-        state.update_group_var("WGRP1", "GUOPRU", 360.);
-        state.update_group_var("WGRP2", "GUOPRU", 361.);
-        state.update_group_var("GRP1",  "GUOPRU", 362.);
-        
-        state.update_well_var("PROD1", "WULPRU", 160.);
-        state.update_well_var("PROD2", "WULPRU", 161.);
-        state.update_well_var("WINJ1", "WULPRU", 162.);
-        state.update_well_var("WINJ2", "WULPRU", 163.);
-        
         state.update("FULPR", 460.);
 
         return state;
@@ -167,12 +75,12 @@ struct SimulationCase
 
 };
     
-BOOST_AUTO_TEST_SUITE(Aggregate_UDQ)
+BOOST_AUTO_TEST_SUITE(LiftGasOptimization)
 
 
 
-// test constructed UDQ restart data
-BOOST_AUTO_TEST_CASE (Declared_UDQ_data)
+// test lift gas optimisation data
+BOOST_AUTO_TEST_CASE (liftGasOptimzation_data)
 {
     const auto simCase = SimulationCase{first_sim("UDQ_TEST_WCONPROD_IUAD-2.DATA")};
         
