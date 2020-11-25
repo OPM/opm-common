@@ -198,7 +198,7 @@ void checkRestartFile( int timeStepIdx ) {
         const auto& knownVec = rstFile.listOfRstArrays(i);
 
         if (keywordExists(knownVec, "PRESSURE")) {
-            const auto& press = rstFile.getRst<float>("PRESSURE", i, 0);
+            const auto& press = rstFile.getRestartData<float>("PRESSURE", i, 0);
             for( auto& x : sol.data("PRESSURE") )
                 x /= Metric::Pressure;
 
@@ -206,22 +206,22 @@ void checkRestartFile( int timeStepIdx ) {
         }
 
         if (keywordExists(knownVec, "SWAT")) {
-            const auto& swat = rstFile.getRst<float>("SWAT", i, 0);
+            const auto& swat = rstFile.getRestartData<float>("SWAT", i, 0);
             compareErtData( sol.data("SWAT"), swat, 1e-4 );
         }
 
         if (keywordExists(knownVec, "SGAS")) {
-            const auto& sgas = rstFile.getRst<float>("SGAS", i, 0);
+            const auto& sgas = rstFile.getRestartData<float>("SGAS", i, 0);
             compareErtData( sol.data("SGAS"), sgas, 1e-4 );
         }
 
         if (keywordExists(knownVec, "KRO")) {
-            const auto& kro = rstFile.getRst<float>("KRO", i, 0);
+            const auto& kro = rstFile.getRestartData<float>("KRO", i, 0);
             BOOST_CHECK_CLOSE(1.0 * i * kro.size(), sum(kro), 1.0e-8);
         }
 
         if (keywordExists(knownVec, "KRG")) {
-            const auto& krg = rstFile.getRst<float>("KRG", i, 0);
+            const auto& krg = rstFile.getRestartData<float>("KRG", i, 0);
             BOOST_CHECK_CLOSE(10.0 * i * krg.size(), sum(krg), 1.0e-8);
         }
     }

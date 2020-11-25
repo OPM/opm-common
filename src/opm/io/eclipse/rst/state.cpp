@@ -209,32 +209,32 @@ const RstWell& RstState::get_well(const std::string& wname) const {
 
 RstState RstState::load(EclIO::ERst& rst_file, int report_step) {
     rst_file.loadReportStepNumber(report_step);
-    const auto& intehead = rst_file.getRst<int>("INTEHEAD", report_step, 0);
-    const auto& logihead = rst_file.getRst<bool>("LOGIHEAD", report_step, 0);
-    const auto& doubhead = rst_file.getRst<double>("DOUBHEAD", report_step, 0);
+    const auto& intehead = rst_file.getRestartData<int>("INTEHEAD", report_step, 0);
+    const auto& logihead = rst_file.getRestartData<bool>("LOGIHEAD", report_step, 0);
+    const auto& doubhead = rst_file.getRestartData<double>("DOUBHEAD", report_step, 0);
 
     auto unit_id = intehead[VI::intehead::UNIT];
     ::Opm::UnitSystem unit_system(unit_id);
 
     if (intehead[VI::intehead::NWELLS] != 0) {
-        const auto& zgrp = rst_file.getRst<std::string>("ZGRP", report_step, 0);
-        const auto& igrp = rst_file.getRst<int>("IGRP", report_step, 0);
-        const auto& sgrp = rst_file.getRst<float>("SGRP", report_step, 0);
-        const auto& xgrp = rst_file.getRst<double>("XGRP", report_step, 0);
+        const auto& zgrp = rst_file.getRestartData<std::string>("ZGRP", report_step, 0);
+        const auto& igrp = rst_file.getRestartData<int>("IGRP", report_step, 0);
+        const auto& sgrp = rst_file.getRestartData<float>("SGRP", report_step, 0);
+        const auto& xgrp = rst_file.getRestartData<double>("XGRP", report_step, 0);
 
-        const auto& zwel = rst_file.getRst<std::string>("ZWEL", report_step, 0);
-        const auto& iwel = rst_file.getRst<int>("IWEL", report_step, 0);
-        const auto& swel = rst_file.getRst<float>("SWEL", report_step, 0);
-        const auto& xwel = rst_file.getRst<double>("XWEL", report_step, 0);
+        const auto& zwel = rst_file.getRestartData<std::string>("ZWEL", report_step, 0);
+        const auto& iwel = rst_file.getRestartData<int>("IWEL", report_step, 0);
+        const auto& swel = rst_file.getRestartData<float>("SWEL", report_step, 0);
+        const auto& xwel = rst_file.getRestartData<double>("XWEL", report_step, 0);
 
-        const auto& icon = rst_file.getRst<int>("ICON", report_step, 0);
-        const auto& scon = rst_file.getRst<float>("SCON", report_step, 0);
-        const auto& xcon = rst_file.getRst<double>("XCON", report_step, 0);
+        const auto& icon = rst_file.getRestartData<int>("ICON", report_step, 0);
+        const auto& scon = rst_file.getRestartData<float>("SCON", report_step, 0);
+        const auto& xcon = rst_file.getRestartData<double>("XCON", report_step, 0);
 
 
         if (rst_file.hasKey("ISEG")) {
-            const auto& iseg = rst_file.getRst<int>("ISEG", report_step, 0);
-            const auto& rseg = rst_file.getRst<double>("RSEG", report_step, 0);
+            const auto& iseg = rst_file.getRestartData<int>("ISEG", report_step, 0);
+            const auto& rseg = rst_file.getRestartData<double>("RSEG", report_step, 0);
 
             return RstState(unit_system,
                             intehead, logihead, doubhead,

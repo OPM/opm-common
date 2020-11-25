@@ -121,7 +121,7 @@ npArray get_vector_occurrence(Opm::EclIO::EclFile * file_ptr, const std::string&
 
 bool erst_contains(Opm::EclIO::ERst * file_ptr, std::tuple<std::string, int> keyword)
 {
-    bool hasKeyAtReport = file_ptr->count(std::get<0>(keyword), std::get<1>(keyword)) > 0 ? true : false;
+    bool hasKeyAtReport = file_ptr->occurrence_count(std::get<0>(keyword), std::get<1>(keyword)) > 0 ? true : false;
     return hasKeyAtReport;
 }
 
@@ -135,19 +135,19 @@ npArray get_erst_by_index(Opm::EclIO::ERst * file_ptr, size_t index, size_t rste
     auto array_type = std::get<1>(arrList[index]);
 
     if (array_type == Opm::EclIO::INTE)
-        return std::make_tuple (convert::numpy_array( file_ptr->getRst<int>(index, rstep)), array_type);
+        return std::make_tuple (convert::numpy_array( file_ptr->getRestartData<int>(index, rstep)), array_type);
 
     if (array_type == Opm::EclIO::REAL)
-        return std::make_tuple (convert::numpy_array( file_ptr->getRst<float>(index, rstep)), array_type);
+        return std::make_tuple (convert::numpy_array( file_ptr->getRestartData<float>(index, rstep)), array_type);
 
     if (array_type == Opm::EclIO::DOUB)
-        return std::make_tuple (convert::numpy_array( file_ptr->getRst<double>(index, rstep)), array_type);
+        return std::make_tuple (convert::numpy_array( file_ptr->getRestartData<double>(index, rstep)), array_type);
 
     if (array_type == Opm::EclIO::LOGI)
-        return std::make_tuple (convert::numpy_array( file_ptr->getRst<bool>(index, rstep)), array_type);
+        return std::make_tuple (convert::numpy_array( file_ptr->getRestartData<bool>(index, rstep)), array_type);
 
     if (array_type == Opm::EclIO::CHAR)
-        return std::make_tuple (convert::numpy_string_array( file_ptr->getRst<std::string>(index, rstep)), array_type);
+        return std::make_tuple (convert::numpy_string_array( file_ptr->getRestartData<std::string>(index, rstep)), array_type);
 
     throw std::logic_error("Data type not supported");
 }
@@ -155,7 +155,7 @@ npArray get_erst_by_index(Opm::EclIO::ERst * file_ptr, size_t index, size_t rste
 
 npArray get_erst_vector(Opm::EclIO::ERst * file_ptr, const std::string& key, size_t rstep, size_t occurrence)
 {
-    if (occurrence >= static_cast<size_t>(file_ptr->count(key, rstep)))
+    if (occurrence >= static_cast<size_t>(file_ptr->occurrence_count(key, rstep)))
         throw std::out_of_range("file have less than " + std::to_string(occurrence + 1) + " arrays in selected report step");
 
     auto array_list = file_ptr->listOfRstArrays(rstep);
@@ -331,9 +331,12 @@ void python::common::export_IO(py::module& m) {
         .def("load_report_step", &Opm::EclIO::ERst::loadReportStepNumber)
         .def_property_readonly("report_steps", &Opm::EclIO::ERst::listOfReportStepNumbers)
         .def("__len__", &Opm::EclIO::ERst::numberOfReportSteps)
-        .def("count", &Opm::EclIO::ERst::count)
+        .def("count", &Opm::EclIO::ERst::occurrence_count)
         .def("__contains", &erst_contains)
-        .def("__get_list_of_arrays", &Opm::EclIO::ERst::listOfRstArrays)
+        .def("__get_list_of_arrays", (std::vector< std::tuple<std::string, Opm::EclIO::eclArrType, int64_t> >
+                                     (Opm::EclIO::ERst::*)(int) ) &Opm::EclIO::ERst::listOfRstArrays)
+        .def("__get_list_of_arrays", (std::vector< std::tuple<std::string, Opm::EclIO::eclArrType, int64_t> >
+                                     (Opm::EclIO::ERst::*)(int, const std::string&) ) &Opm::EclIO::ERst::listOfRstArrays)
         .def("__get_data", &get_erst_by_index)
         .def("__get_data", &get_erst_vector);
 
