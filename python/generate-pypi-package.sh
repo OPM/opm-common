@@ -23,7 +23,7 @@ fi
 mkdir build && cd build
 
 cmake3 -DPYTHON_EXECUTABLE=${PYTHON35} -DBOOST_INCLUDEDIR=/usr/include/boost169 -DBOOST_LIBRARYDIR=/usr/lib64/boost169 \
--DOPM_ENABLE_PYTHON=ON -DOPM_PYTHON_PACKAGE_VERSION_TAG=${VERSION_TAG} ..
+-DOPM_ENABLE_PYTHON=ON -DOPM_PYTHON_PACKAGE_VERSION_TAG=${VERSION_TAG} -DBUILD_TESTING=0 ..
 
 # make step is necessary until the generated ParserKeywords/*.hpp are generated in the Python step
 make -j4
