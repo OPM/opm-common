@@ -971,12 +971,12 @@ inline quantity preferred_phase_productivty_index(const fn_args& args) {
 
     case Opm::Phase::WATER:
         return potential_rate<rt::productivity_index_water>(args);
-    }
 
-    throw std::invalid_argument {
-        "Unsupported \"preferred\" phase: " +
-        std::to_string(static_cast<int>(args.schedule_wells.front().getPreferredPhase()))
-    };
+    default: throw std::invalid_argument {
+            "Unsupported \"preferred\" phase: " +
+                std::to_string(static_cast<int>(args.schedule_wells.front().getPreferredPhase()))
+        };
+    }
 }
 
 inline quantity connection_productivity_index(const fn_args& args) {
@@ -1018,12 +1018,12 @@ inline quantity connection_productivity_index(const fn_args& args) {
     case Opm::Phase::WATER:
         return { completion->rates.get(rt::productivity_index_water, 0.0),
                  rate_unit<rt::productivity_index_water>() };
-    }
 
-    throw std::invalid_argument {
-        "Unsupported \"preferred\" phase: " +
-        std::to_string(static_cast<int>(args.schedule_wells.front().getPreferredPhase()))
-    };
+    default: throw std::invalid_argument {
+            "Unsupported \"preferred\" phase: " +
+                std::to_string(static_cast<int>(args.schedule_wells.front().getPreferredPhase()))
+                };
+    }
 }
 
 template < bool isGroup, bool Producer, bool waterInjector, bool gasInjector>
