@@ -1536,7 +1536,7 @@ private:
                 this->applyWELOPEN(keyword, reportStep, parseContext, errors, result.wells());
 
             if (keyword.name() == "WELPI")
-                this->handleWELPI(keyword, reportStep, parseContext, errors);
+                this->handleWELPI(keyword, reportStep, parseContext, errors, result.wells());
         }
     }
 

@@ -1126,7 +1126,7 @@ namespace {
         this->handleWELPI(handlerContext.keyword, handlerContext.currentStep, parseContext, errors);
     }
 
-    void Schedule::handleWELPI(const DeckKeyword& keyword, std::size_t report_step, const ParseContext& parseContext, ErrorGuard& errors) {
+    void Schedule::handleWELPI(const DeckKeyword& keyword, std::size_t report_step, const ParseContext& parseContext, ErrorGuard& errors, const std::vector<std::string>& matching_wells) {
         // Keyword structure
         //
         //   WELPI
@@ -1142,7 +1142,8 @@ namespace {
 
         for (const auto& record : keyword) {
             const auto well_names = this->wellNames(record.getItem<WELL_NAME>().getTrimmedString(0),
-                                                   report_step);
+                                                    report_step,
+                                                    matching_wells);
 
             if (well_names.empty())
                 this->invalidNamePattern(record.getItem<WELL_NAME>().getTrimmedString(0),
