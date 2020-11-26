@@ -53,6 +53,7 @@ namespace Opm {
         double pore_volume; // pore volume
         double transmissibility;
         size_t global_index;
+        double cellVolume() const;
     };
 
     class SingleNumericalAquifer {
@@ -72,6 +73,7 @@ namespace Opm {
         double initPressure() const;
         bool hasCell(const size_t global_index) const;
         const std::vector<NumericalAquiferCell>& cells() const;
+        const std::unordered_map<size_t, double> cellVolumes() const;
     private:
         // Maybe this id_ is not necessary
         // Because if it is a map, the id will be there
@@ -101,6 +103,7 @@ namespace Opm {
         const NumericalAquiferCell& getCell(const size_t cell_global_index) const;
         const std::unordered_map<size_t, SingleNumericalAquifer>& aquifers() const;
         bool active() const;
+        const std::unordered_map<size_t, double> cellVolumes() const;
 
     private:
         // std::un_ordered_map

@@ -168,6 +168,15 @@ bool NumericalAquifers::active() const {
     return (!this->aquifers_.empty());
 }
 
+const std::unordered_map<size_t, double> NumericalAquifers::cellVolumes() const {
+    std::unordered_map<size_t, double> volumes;
+    for (const auto& aqu : this->aquifers_) {
+        const auto aqu_volumes = aqu.second.cellVolumes();
+        volumes.insert(aqu_volumes.begin(), aqu_volumes.end());
+    }
+    return volumes;
+}
+
 using AQUNUM = ParserKeywords::AQUNUM;
 NumericalAquiferCell::NumericalAquiferCell(const DeckRecord& record, const EclipseGrid& grid, const FieldPropsManager& field_props)
    : aquifer_id( record.getItem<AQUNUM::AQUIFER_ID>().get<int>(0) )
@@ -218,6 +227,10 @@ NumericalAquiferCell::NumericalAquiferCell(const DeckRecord& record, const Eclip
 
     this->pore_volume = this->length * this->area * this->porosity;
     this->transmissibility = 2. * this->permeability * this->area / this->length;
+}
+
+double NumericalAquiferCell::cellVolume() const {
+    return area * length;
 }
 
 void SingleNumericalAquifer::addAquiferCell(const NumericalAquiferCell& aqu_cell) {
@@ -367,6 +380,14 @@ bool SingleNumericalAquifer::hasCell(const size_t global_idx) const {
 const std::vector<NumericalAquiferCell>&
 SingleNumericalAquifer::cells() const {
     return this->cells_;
+}
+
+const std::unordered_map<size_t, double> SingleNumericalAquifer::cellVolumes() const {
+    std::unordered_map<size_t, double> volumes;
+    for (const auto cell : this->cells_) {
+        volumes.insert({cell.global_index, cell.cellVolume()});
+    }
+    return volumes;
 }
 
 }
