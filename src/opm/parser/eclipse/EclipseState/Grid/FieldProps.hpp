@@ -99,6 +99,26 @@ inline bool isFipxxx(const std::string& keyword) {
 }
 
 
+/*
+  The aliased_keywords map defines aliases for other keywords. The FieldProps
+  objects will translate those keywords before further processing. The aliases
+  will also be exposed by the FieldPropsManager object.
+ 
+  However, the following methods of FieldProps do not fully support aliases:
+  - FieldProps::keys() does not return the aliases.
+  - FieldProps::erase() and FieldProps::extract() do not support aliases. Using
+    them with an aliased keyword will also remove the alias.
+
+  Note that the aliases are also added to GRID::double_keywords.
+
+  The PERMR and PERMTHT keywords are aliases for PERMX and PERMY, respectively.
+*/
+namespace ALIAS {
+    static const std::unordered_map<std::string, std::string> aliased_keywords = {{"PERMR", "PERMX"},
+                                                                                  {"PERMTHT", "PERMY"}};
+}
+
+
 namespace GRID {
 static const std::unordered_map<std::string, keyword_info<double>> double_keywords = {{"MULTPV",  keyword_info<double>{}.init(1.0)},
                                                                                       {"NTG",     keyword_info<double>{}.init(1.0)},
@@ -106,6 +126,8 @@ static const std::unordered_map<std::string, keyword_info<double>> double_keywor
                                                                                       {"PERMX",   keyword_info<double>{}.unit_string("Permeability").distribute_top(true)},
                                                                                       {"PERMY",   keyword_info<double>{}.unit_string("Permeability").distribute_top(true)},
                                                                                       {"PERMZ",   keyword_info<double>{}.unit_string("Permeability").distribute_top(true)},
+                                                                                      {"PERMR",   keyword_info<double>{}.unit_string("Permeability").distribute_top(true)},
+                                                                                      {"PERMTHT",   keyword_info<double>{}.unit_string("Permeability").distribute_top(true)},
                                                                                       {"TEMPI",   keyword_info<double>{}.unit_string("Temperature")},
                                                                                       {"THCONR",  keyword_info<double>{}},
                                                                                       {"THCONSF", keyword_info<double>{}},

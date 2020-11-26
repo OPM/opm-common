@@ -55,6 +55,14 @@ static const std::set<std::string> oper_keywords = {"ADD", "EQUALS", "MAXVALUE",
 static const std::set<std::string> region_oper_keywords = {"MULTIREG", "ADDREG", "EQUALREG", "OPERATER"};
 static const std::set<std::string> box_keywords = {"BOX", "ENDBOX"};
 
+
+std::string get_keyword_from_alias(const std::string& name) {
+    if (ALIAS::aliased_keywords.count(name))
+        return ALIAS::aliased_keywords.at(name);
+    return name;
+}
+
+
 template <>
 keyword_info<double> global_kw_info(const std::string& name,
                                     bool allow_unsupported) {
@@ -487,7 +495,9 @@ bool FieldProps::supported<int>(const std::string& keyword) {
 
 
 template <>
-Fieldprops::FieldData<double>& FieldProps::init_get(const std::string& keyword, const Fieldprops::keywords::keyword_info<double>& kw_info) {
+Fieldprops::FieldData<double>& FieldProps::init_get(const std::string& keyword_name, const Fieldprops::keywords::keyword_info<double>& kw_info) {
+    const std::string& keyword = Fieldprops::keywords::get_keyword_from_alias(keyword_name);
+
     auto iter = this->double_data.find(keyword);
     if (iter != this->double_data.end())
         return iter->second;
@@ -562,7 +572,8 @@ std::string FieldProps::region_name(const DeckItem& region_item) {
 }
 
 template <>
-bool FieldProps::has<double>(const std::string& keyword) const {
+bool FieldProps::has<double>(const std::string& keyword_name) const {
+    const std::string& keyword = Fieldprops::keywords::get_keyword_from_alias(keyword_name);
     return (this->double_data.count(keyword) != 0);
 }
 
@@ -750,7 +761,7 @@ void FieldProps::operate(const DeckRecord& record, Fieldprops::FieldData<T>& tar
 
 void FieldProps::handle_region_operation(const DeckKeyword& keyword) {
     for (const auto& record : keyword) {
-        const std::string& target_kw = record.getItem(0).get<std::string>(0);
+        const std::string& target_kw = Fieldprops::keywords::get_keyword_from_alias(record.getItem(0).get<std::string>(0));
         int region_value = record.getItem("REGION_NUMBER").get<int>(0);
 
         if (this->tran.find(target_kw) != this->tran.end())
@@ -799,7 +810,7 @@ void FieldProps::handle_region_operation(const DeckKeyword& keyword) {
 
 void FieldProps::handle_OPERATE(const DeckKeyword& keyword, Box box) {
     for (const auto& record : keyword) {
-        const std::string& target_kw = record.getItem(0).get<std::string>(0);
+        const std::string& target_kw = Fieldprops::keywords::get_keyword_from_alias(record.getItem(0).get<std::string>(0));
         box.update(record);
 
         auto& field_data = this->init_get<double>(target_kw);
@@ -813,7 +824,7 @@ void FieldProps::handle_OPERATE(const DeckKeyword& keyword, Box box) {
 void FieldProps::handle_operation(const DeckKeyword& keyword, Box box) {
     std::unordered_map<std::string, std::string> tran_fields;
     for (const auto& record : keyword) {
-        const std::string& target_kw = record.getItem(0).get<std::string>(0);
+        const std::string& target_kw = Fieldprops::keywords::get_keyword_from_alias(record.getItem(0).get<std::string>(0));
         box.update(record);
 
         if (FieldProps::supported<double>(target_kw) || this->tran.count(target_kw) > 0) {
@@ -868,8 +879,8 @@ void FieldProps::handle_operation(const DeckKeyword& keyword, Box box) {
 
 void FieldProps::handle_COPY(const DeckKeyword& keyword, Box box, bool region) {
     for (const auto& record : keyword) {
-        const std::string& src_kw = record.getItem(0).get<std::string>(0);
-        const std::string& target_kw = record.getItem(1).get<std::string>(0);
+        const std::string& src_kw = Fieldprops::keywords::get_keyword_from_alias(record.getItem(0).get<std::string>(0));
+        const std::string& target_kw = Fieldprops::keywords::get_keyword_from_alias(record.getItem(1).get<std::string>(0));
         std::vector<Box::cell_index> index_list;
 
         if (region) {
