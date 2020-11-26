@@ -21,9 +21,10 @@
 #ifndef ActionAST_HPP
 #define ActionAST_HPP
 
-#include <string>
-#include <vector>
 #include <memory>
+#include <string>
+#include <unordered_set>
+#include <vector>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionResult.hpp>
 
@@ -56,6 +57,7 @@ public:
     {
         serializer(condition);
     }
+    void required_summary(std::unordered_set<std::string>& required_summary) const;
 
 private:
     /*

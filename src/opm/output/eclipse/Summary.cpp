@@ -38,6 +38,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
@@ -3152,11 +3153,14 @@ std::vector<Opm::EclIO::SummaryNode> make_default_nodes(const std::string& keywo
 
 
 void Opm::out::Summary::SummaryImplementation::configureUDQ(const SummaryConfig& summary_config, const Schedule& sched) {
-    const std::unordered_set<std::string> time_vectors = {"TIME", "DAY", "MONTH", "YEAR", "YEARS"};
+    const std::unordered_set<std::string> time_vectors = {"TIME", "DAY", "MONTH", "YEAR", "YEARS", "MNTH"};
     auto nodes = std::vector<Opm::EclIO::SummaryNode> {};
     std::unordered_set<std::string> summary_keys;
     for (const auto& udq_ptr : sched.udqConfigList())
         udq_ptr->required_summary(summary_keys);
+
+    for (const auto& action : sched.actions(sched.size() - 1))
+        action.required_summary(summary_keys);
 
     for (const auto& key : summary_keys) {
         const auto& default_nodes = make_default_nodes(key, sched);
@@ -3188,6 +3192,12 @@ void Opm::out::Summary::SummaryImplementation::configureUDQ(const SummaryConfig&
             this->extra_parameters.emplace( node.unique_key(), std::make_unique<Evaluator::GlobalProcessValue>(node, unit->second));
             continue;
         }
+
+        if (node.is_user_defined())
+            continue;
+
+        if (TimeMap::valid_month(node.keyword))
+            continue;
 
         throw std::logic_error(fmt::format("Evaluation function for: {} not found ", node.keyword));
     }

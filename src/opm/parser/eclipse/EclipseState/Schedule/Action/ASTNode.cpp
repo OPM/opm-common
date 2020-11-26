@@ -169,5 +169,13 @@ bool ASTNode::operator==(const ASTNode& data) const {
            children == data.children;
 }
 
+void ASTNode::required_summary(std::unordered_set<std::string>& required_summary) const {
+    if (this->type == TokenType::ecl_expr)
+        required_summary.insert( this->func );
+
+    for (const auto& node : this->children)
+        node.required_summary(required_summary);
+}
+
 }
 }
