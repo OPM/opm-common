@@ -48,6 +48,7 @@ struct SummaryNode {
         Pressure,
         Count,
         Mode,
+        ProdIndex,
         Undefined,
     };
 
