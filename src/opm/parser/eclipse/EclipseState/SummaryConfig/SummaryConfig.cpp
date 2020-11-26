@@ -1115,9 +1115,30 @@ inline void handleKW( SummaryConfig::keyword_list& list,
 
 
   inline void uniq( SummaryConfig::keyword_list& vec ) {
-    std::sort( vec.begin(), vec.end() );
-    auto logical_end = std::unique( vec.begin(), vec.end() );
-    vec.erase( logical_end, vec.end() );
+      std::sort( vec.begin(), vec.end());
+      auto logical_end = std::unique( vec.begin(), vec.end() );
+      vec.erase( logical_end, vec.end() );
+      if (vec.empty())
+          return;
+
+      /*
+        This is a desperate hack to ensure that the ROEW keywords come after
+        WOPT keywords, to ensure that the WOPT keywords have been fully
+        evaluated in the SummaryState when we evaluate the ROEW keywords.
+      */
+      std::size_t tail_index = vec.size() - 1;
+      std::size_t item_index = 0;
+      while (true) {
+          if (item_index >= tail_index)
+              break;
+
+          auto& node = vec[item_index];
+          if (node.keyword().rfind("ROEW", 0) == 0) {
+              std::swap( node, vec[tail_index] );
+              tail_index--;
+          }
+          item_index++;
+      }
   }
 }
 
