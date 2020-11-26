@@ -815,4 +815,8 @@ TSTEP
     BOOST_CHECK_NO_THROW( Opm::TimeMap(deck2, restart) );
     BOOST_CHECK_NO_THROW( Opm::TimeMap(deck3, restart) );
     BOOST_CHECK_THROW( Opm::TimeMap(deck4, restart) , std::exception);
+
+
+    BOOST_CHECK(Opm::TimeMap::valid_month("MAR"));
+    BOOST_CHECK(!Opm::TimeMap::valid_month("Tulleogtøys"));
 }
