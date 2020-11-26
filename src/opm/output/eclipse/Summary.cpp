@@ -971,6 +971,9 @@ inline quantity preferred_phase_productivty_index(const fn_args& args) {
 
     case Opm::Phase::WATER:
         return potential_rate<rt::productivity_index_water>(args);
+
+    default:
+        break;
     }
 
     throw std::invalid_argument {
@@ -1018,6 +1021,9 @@ inline quantity connection_productivity_index(const fn_args& args) {
     case Opm::Phase::WATER:
         return { completion->rates.get(rt::productivity_index_water, 0.0),
                  rate_unit<rt::productivity_index_water>() };
+
+    default:
+        break;
     }
 
     throw std::invalid_argument {
