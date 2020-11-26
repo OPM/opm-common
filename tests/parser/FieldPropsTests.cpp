@@ -2397,6 +2397,9 @@ OPERATE
         BOOST_CHECK_EQUAL(permz[i]  , 2*permy[i]   + to_si(1000));
         BOOST_CHECK_EQUAL(permz[i+3], 3*permx[i+3] + to_si(300));
     }
+
+    BOOST_CHECK(permx == fpm.get_double("PERMR"));
+    BOOST_CHECK(permy == fpm.get_double("PERMTHT"));
 }
 
 BOOST_AUTO_TEST_CASE(REGION_OPERATION_RADIAL_PERM) {
@@ -2445,7 +2448,9 @@ COPYREG
         BOOST_CHECK_CLOSE(to_si(multn[g]), permx[g], 1e-5);
         BOOST_CHECK_EQUAL(permx[g], permy[g]);
     }
-    
+ 
+    BOOST_CHECK(permx == fp.get_double("PERMR"));
+    BOOST_CHECK(permy == fp.get_double("PERMTHT"));
 }
 
 BOOST_AUTO_TEST_CASE(REGION_OPERATION_MIXED_PERM) {
@@ -2494,5 +2499,7 @@ COPYREG
         BOOST_CHECK_CLOSE(to_si(multn[g]), permx[g], 1e-5);
         BOOST_CHECK_EQUAL(permx[g], permy[g]);
     }
-    
+
+    BOOST_CHECK(permx == fp.get_double("PERMR"));
+    BOOST_CHECK(permy == fp.get_double("PERMTHT"));    
 }
