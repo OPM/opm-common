@@ -759,13 +759,17 @@ inline quantity bhp( const fn_args& args ) {
 */
 
 quantity roew(const fn_args& args) {
-    double oil_prod = 0;
+    const quantity zero = { 0, measure::identity };
     const auto& region_name = std::get<std::string>(*args.extra_data);
+    if (!args.initial_inplace.has( region_name, Opm::Inplace::Phase::OIL, args.num))
+        return zero;
+
+    double oil_prod = 0;
     const auto& wells = args.regionCache.wells( region_name, args.num );
     for (const auto& well : wells)
         oil_prod += args.st.get_well_var(well, "WOPT");
 
-    //oil_prod = args.unit_system.to_si(Opm::UnitSystem::measure::volume, oil_prod);
+    oil_prod = args.unit_system.to_si(Opm::UnitSystem::measure::volume, oil_prod);
     return { oil_prod / args.initial_inplace.get( region_name, Opm::Inplace::Phase::OIL, args.num ) , measure::identity };
 }
 
