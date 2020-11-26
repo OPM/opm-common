@@ -407,6 +407,7 @@ if(ENABLE_ECL_OUTPUT)
           tests/test_InteHEAD.cpp
           tests/test_LinearisedOutputTable.cpp
           tests/test_LogiHEAD.cpp
+          tests/test_LGOData.cpp
           tests/test_OutputStream.cpp
           tests/test_regionCache.cpp
           tests/test_PaddedOutputString.cpp
@@ -460,6 +461,7 @@ if(ENABLE_ECL_OUTPUT)
           tests/SPE1CASE2.X0060
           tests/PYACTION.DATA
           tests/0A4_GRCTRL_LRAT_LRAT_GGR_BASE_MODEL2_MSW_ALL.DATA
+          tests/2_WLIFT_MODEL5_NOINC.DATA
           tests/act1.py
           tests/MSW.DATA
           tests/EXIT_TEST.DATA
