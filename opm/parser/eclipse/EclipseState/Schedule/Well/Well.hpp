@@ -59,6 +59,7 @@ class DeckKeyword;
 class UDQActive;
 class UDQConfig;
 class SICD;
+class AutoICD;
 
 namespace RestartIO {
 struct RstWell;
@@ -560,6 +561,7 @@ public:
     bool updateWellProductivityIndex(const double prodIndex);
     bool updateWSEGSICD(const std::vector<std::pair<int, SICD> >& sicd_pairs);
     bool updateWSEGVALV(const std::vector<std::pair<int, Valve> >& valve_pairs);
+    bool updateWSEGAICD(const std::vector<std::pair<int, AutoICD> >& aicd_pairs);
     bool updateWPAVE(const PAvg& pavg);
 
     bool handleWELSEGS(const DeckKeyword& keyword);

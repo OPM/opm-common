@@ -1652,6 +1652,32 @@ namespace {
         }
     }
 
+    void Schedule::handleWSEGAICD(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+        std::map<std::string, std::vector<std::pair<int, AutoICD> > > auto_icds = AutoICD::fromWSEGAICD(handlerContext.keyword);
+
+        for (auto& map_elem : auto_icds) {
+            const std::string& well_name_pattern = map_elem.first;
+            const auto well_names = this->wellNames(well_name_pattern, handlerContext.currentStep);
+
+            std::vector<std::pair<int, AutoICD> >& aicd_pairs = map_elem.second;
+
+            for (const auto& well_name : well_names) {
+                auto& dynamic_state = this->wells_static.at(well_name);
+                auto well_ptr = std::make_shared<Well>( *dynamic_state[handlerContext.currentStep] );
+
+                const auto& connections = well_ptr->getConnections();
+                const auto& segments = well_ptr->getSegments();
+                for (auto& [segment_nr, aicd] : aicd_pairs) {
+                    const auto& outlet_segment_length = segments.segmentLength( segments.getFromSegmentNumber(segment_nr).outletSegment() );
+                    aicd.updateScalingFactor(outlet_segment_length, connections.segment_perf_length(segment_nr));
+                }
+
+                if (well_ptr->updateWSEGAICD(aicd_pairs) )
+                    this->updateWell(std::move(well_ptr), handlerContext.currentStep);
+            }
+        }
+    }
+
     void Schedule::handleWSEGVALV(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         const std::map<std::string, std::vector<std::pair<int, Valve> > > valves = Valve::fromWSEGVALV(handlerContext.keyword);
 
@@ -1885,6 +1911,7 @@ namespace {
             { "WSALT"   , &Schedule::handleWSALT    },
             { "WSEGITER", &Schedule::handleWSEGITER },
             { "WSEGSICD", &Schedule::handleWSEGSICD },
+            { "WSEGAICD", &Schedule::handleWSEGAICD },
             { "WSEGVALV", &Schedule::handleWSEGVALV },
             { "WSKPTAB" , &Schedule::handleWSKPTAB  },
             { "WSOLVENT", &Schedule::handleWSOLVENT },

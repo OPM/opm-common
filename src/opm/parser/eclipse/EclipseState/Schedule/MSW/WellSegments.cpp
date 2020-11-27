@@ -545,6 +545,23 @@ namespace Opm {
         return true;
     }
 
+    bool WellSegments::updateWSEGAICD(const std::vector<std::pair<int, AutoICD> >& aicd_pairs) {
+        if (m_comp_pressure_drop == CompPressureDrop::H__) {
+            const std::string msg = "to use autonomous ICD segment you have to activate the frictional pressure drop calculation";
+            throw std::runtime_error(msg);
+        }
+
+        for (const auto& pair_elem : aicd_pairs) {
+            const int segment_number = pair_elem.first;
+            const AutoICD& auto_icd = pair_elem.second;
+            Segment segment = this->getFromSegmentNumber(segment_number);
+            segment.updateAutoICD(auto_icd);
+            this->addSegment(segment);
+        }
+
+        return true;
+    }
+
 
     bool WellSegments::operator!=( const WellSegments& rhs ) const {
         return !( *this == rhs );
