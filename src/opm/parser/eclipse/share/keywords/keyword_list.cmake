@@ -965,7 +965,6 @@ set( keywords
      000_Eclipse100/W/WELPRI
      000_Eclipse100/W/WELSEGS
      000_Eclipse100/W/WELSOMIN
-     000_Eclipse100/W/WSEGSICD
      000_Eclipse100/W/WELSPECL
      000_Eclipse100/W/WELSPECS
      000_Eclipse100/W/WELTARG
