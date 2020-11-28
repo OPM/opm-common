@@ -19,7 +19,7 @@
     {
       "name": "STRENGTH",
       "value_type": "DOUBLE",
-      "dimension": "Pressure*Time*Time/GeometricVolume*GeometricVolume"
+      "dimension": "Pressure*Time*Time/GeometricVolume*GeometricVolume*Density"
     },
     {
       "name": "LENGTH",
