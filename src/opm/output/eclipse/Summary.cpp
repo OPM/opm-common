@@ -753,7 +753,7 @@ inline quantity bhp( const fn_args& args ) {
 
 /*
   This function is slightly ugly - the evaluation of ROEW uses the already
-  calculated WOPT results. We do not really have any formalism for such
+  calculated COPT results. We do not really have any formalism for such
   dependencies between the summary vectors. For this particualar case there is a
   hack in SummaryConfig which should ensure that this is safe.
 */
@@ -765,10 +765,10 @@ quantity roew(const fn_args& args) {
         return zero;
 
     double oil_prod = 0;
-    const auto& wells = args.regionCache.wells( region_name, args.num );
-    for (const auto& well : wells)
-        oil_prod += args.st.get_well_var(well, "WOPT");
-
+    for (const auto& [well, global_index] : args.regionCache.connections(region_name, args.num)) {
+        const auto copt_key = fmt::format("COPT:{}:{}" , well, global_index + 1);
+        oil_prod += args.st.get(copt_key);
+    }
     oil_prod = args.unit_system.to_si(Opm::UnitSystem::measure::volume, oil_prod);
     return { oil_prod / args.initial_inplace.get( region_name, Opm::Inplace::Phase::OIL, args.num ) , measure::identity };
 }

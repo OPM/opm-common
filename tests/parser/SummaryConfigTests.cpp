@@ -1190,7 +1190,9 @@ RHPV_REG
 
 )";
     const auto& summary_config = createSummary(deck_string);
-    BOOST_CHECK_EQUAL(summary_config.size(), 15 + 4);
+    // The +5 corresponds to five additional COPT summary config keywords which
+    // have been automatically added for the ROEW calculation.
+    BOOST_CHECK_EQUAL(summary_config.size(), 15 + 5);
     BOOST_CHECK(summary_config.hasKeyword("RPR__REG"));
     BOOST_CHECK(summary_config.hasKeyword("ROPT_REG"));
     BOOST_CHECK(summary_config.hasKeyword("RRPV_REG"));
@@ -1215,7 +1217,7 @@ RHPV_REG
     BOOST_CHECK_EQUAL(rpr.size(), 3U);
 
     // See comment on the roew() function in Summary.cpp for this uglyness.
-    BOOST_CHECK(summary_config.hasKeyword("WOPT"));
+    BOOST_CHECK(summary_config.hasKeyword("COPT"));
 }
 
 BOOST_AUTO_TEST_CASE( WOPRL ) {
