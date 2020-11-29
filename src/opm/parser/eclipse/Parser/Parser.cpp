@@ -924,13 +924,9 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
             const auto& kwname = rawKeyword->getKeywordName();
             const auto& parserKeyword = parser.getParserKeywordFromDeckName( kwname );
             {
-                std::stringstream ss;
-
                 const auto& location = rawKeyword->location();
-                ss << std::setw(5) << parserState.deck.size()
-                   << " Reading " << std::setw(8) << std::left << rawKeyword->getKeywordName()
-                   << " in " << location.filename << " line " << std::to_string(location.lineno);
-                OpmLog::info(ss.str());
+                auto msg = fmt::format("{:5} Reading {:<8} in {} line {}", parserState.deck.size(), rawKeyword->getKeywordName(), location.filename, location.lineno);
+                OpmLog::info(msg);
             }
             try {
                 if (rawKeyword->getKeywordName() ==  Opm::RawConsts::pyinput) {
