@@ -116,8 +116,15 @@ bool PAvg::open_connections() const {
 }
 
 bool PAvg::use_porv() const {
-    return this->m_conn_weight != 1.0;
+    if (this->m_conn_weight != 1)
+        return true;
+
+    if (this->m_inner_weight < 0)
+        return true;
+
+    return false;
 }
+
 
 bool PAvg::operator==(const PAvg& other) const {
     return this->m_inner_weight == other.m_inner_weight &&

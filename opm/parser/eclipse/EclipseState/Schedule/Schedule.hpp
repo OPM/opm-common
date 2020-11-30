@@ -22,6 +22,7 @@
 #include <map>
 #include <memory>
 #include <optional>
+#include <unordered_set>
 
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/RestartConfig.hpp>
@@ -44,6 +45,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/VFPProdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Network/ExtNetwork.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/PAvg.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/PAvgCalculatorCollection.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellTestConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellMatcher.hpp>
@@ -191,6 +193,7 @@ namespace Opm
 
         const TimeMap& getTimeMap() const;
 
+        PAvgCalculatorCollection pavg_calculators(const EclipseGrid& grid, const std::unordered_set<std::string>& wells, std::size_t report_step) const;
         std::size_t numWells() const;
         std::size_t numWells(std::size_t timestep) const;
         bool hasWell(const std::string& wellName) const;

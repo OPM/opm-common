@@ -4351,3 +4351,5 @@ END
         BOOST_CHECK(w4.pavg() == pavg4);
     }
 }
+
+
