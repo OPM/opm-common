@@ -483,11 +483,11 @@ inline quantity glir( const fn_args& args ) {
     double alq_rate = 0;
 
     for (const auto& well : args.schedule_wells) {
-        auto xwPos = args.wells.find(well.name());
-        if (xwPos == args.wells.end())
+        if (well.isInjector())
             continue;
 
-        if (well.isInjector())
+        auto xwPos = args.wells.find(well.name());
+        if (xwPos == args.wells.end())
             continue;
 
         double eff_fac = efac( args.eff_factors, well.name() );

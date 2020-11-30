@@ -92,7 +92,8 @@ namespace Opm {
 
     void Well::WellProductionProperties::init_vfp(const std::optional<VFPProdTable::ALQ_TYPE>& alq_type, const UnitSystem& unit_system_arg, const DeckRecord& record) {
         if (alq_type) {
-            this->VFPTableNumber = record.getItem("VFP_TABLE").get<int>(0);
+            if (!record.getItem("VFP_TABLE").defaultApplied(0))
+                this->VFPTableNumber = record.getItem("VFP_TABLE").get< int >(0);
             double alq_input = record.getItem("ALQ").get<double>(0);
             const auto alq_dim = VFPProdTable::ALQDimension(*alq_type, unit_system_arg);
             this->ALQValue = alq_dim.convertRawToSi(alq_input);
@@ -279,6 +280,7 @@ void Well::WellProductionProperties::handleWCONHIST(const std::optional<VFPProdT
             && BHPH                 == other.BHPH
             && THPH                 == other.THPH
             && VFPTableNumber       == other.VFPTableNumber
+            && ALQValue             == other.ALQValue
             && controlMode          == other.controlMode
             && m_productionControls == other.m_productionControls
             && whistctl_cmode       == other.whistctl_cmode

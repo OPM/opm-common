@@ -872,13 +872,16 @@ namespace {
             for (const auto& well_name : well_names) {
                 this->updateWellStatus( well_name , handlerContext.currentStep , status, false, handlerContext.keyword.location() );
 
-                const auto table_nr = record.getItem("VFP_TABLE").get< int >(0);
                 std::optional<VFPProdTable::ALQ_TYPE> alq_type;
                 auto& dynamic_state = this->wells_static.at(well_name);
                 auto well2 = std::make_shared<Well>(*dynamic_state[handlerContext.currentStep]);
                 const bool switching_from_injector = !well2->isProducer();
                 auto properties = std::make_shared<Well::WellProductionProperties>(well2->getProductionProperties());
                 bool update_well = false;
+
+                auto table_nr = record.getItem("VFP_TABLE").get< int >(0);
+                if(record.getItem("VFP_TABLE").defaultApplied(0))
+                    table_nr = properties->VFPTableNumber;
 
                 if (table_nr != 0)
                     alq_type = this->getVFPProdTable(table_nr, handlerContext.currentStep).getALQType();
@@ -937,7 +940,6 @@ namespace {
 
             for (const auto& well_name : well_names) {
                 this->updateWellStatus(well_name, handlerContext.currentStep, status, false, handlerContext.keyword.location());
-                const auto table_nr = record.getItem("VFP_TABLE").get< int >(0);
                 std::optional<VFPProdTable::ALQ_TYPE> alq_type;
                 auto& dynamic_state = this->wells_static.at(well_name);
                 auto well2 = std::make_shared<Well>(*dynamic_state[handlerContext.currentStep]);
@@ -947,6 +949,10 @@ namespace {
                 properties->clearControls();
                 if (well2->isAvailableForGroupControl())
                     properties->addProductionControl(Well::ProducerCMode::GRUP);
+
+                auto table_nr = record.getItem("VFP_TABLE").get< int >(0);
+                if(record.getItem("VFP_TABLE").defaultApplied(0))
+                    table_nr = properties->VFPTableNumber;
 
                 if (table_nr != 0)
                     alq_type = this->getVFPProdTable(table_nr, handlerContext.currentStep).getALQType();
