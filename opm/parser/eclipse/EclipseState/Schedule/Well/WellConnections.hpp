@@ -63,7 +63,7 @@ namespace Opm {
                            const Connection::CTFKind ctf_kind = Connection::CTFKind::DeckValue,
                            const std::size_t seqIndex = 0,
                            const bool defaultSatTabId = true);
-        void loadCOMPDAT(const DeckRecord& record, const EclipseGrid& grid, const FieldPropsManager& field_properties, const KeywordLocation& location);
+        void loadCOMPDAT(const DeckRecord& record, const EclipseGrid& grid, const FieldPropsManager& field_properties, const std::string& wname, const KeywordLocation& location);
 
         using const_iterator = std::vector< Connection >::const_iterator;
 
@@ -156,6 +156,7 @@ namespace Opm {
                          const std::vector<double>* permy,
                          const std::vector<double>* permz,
                          const std::vector<double>& ntg,
+                         const std::string& wname,
                          const KeywordLocation& location);
 
         size_t findClosestConnection(int oi, int oj, double oz, size_t start_pos);
