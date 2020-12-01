@@ -314,7 +314,7 @@ END
         }
     }
 
-    BOOST_CHECK_THROW( calculators.add_pressure(100000000, 1), std::exception );
+    BOOST_CHECK_NO_THROW( calculators.add_pressure(100000000, 1) );
     for (std::size_t k = 0; k < 3; k++) {
         calculators.add_pressure(grid.getGlobalIndex(0,0,k), 1);
         calculators.add_pressure(grid.getGlobalIndex(1,0,k), 2.0);
