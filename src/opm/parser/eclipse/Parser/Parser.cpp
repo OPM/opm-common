@@ -753,6 +753,7 @@ std::unique_ptr<RawKeyword> tryParseKeyword( ParserState& parserState, const Par
     bool is_title = false;
     std::unique_ptr<RawKeyword> rawKeyword;
     std::string_view record_buffer(str::emptystr);
+    std::optional<ParserKeyword> parserKeyword;
     while( !parserState.done() ) {
         auto line = parserState.getline();
 
@@ -782,12 +783,12 @@ std::unique_ptr<RawKeyword> tryParseKeyword( ParserState& parserState, const Par
                 auto ptr = newRawKeyword( deck_name, parserState, parser, line );
                 if (ptr) {
                     rawKeyword.reset( ptr );
-                    const auto& parserKeyword = parser.getParserKeywordFromDeckName(rawKeyword->getKeywordName());
+                    parserKeyword = parser.getParserKeywordFromDeckName(rawKeyword->getKeywordName());
                     if (deck_name == "UDT") {
                         skipUDT(parserState, parser);
                         return NULL;  
                     }
-                    parserState.lastSizeType = parserKeyword.getSizeType();
+                    parserState.lastSizeType = parserKeyword->getSizeType();
                     parserState.lastKeyWord = deck_name;
                     if (rawKeyword->isFinished())
                         return rawKeyword;
@@ -801,10 +802,8 @@ std::unique_ptr<RawKeyword> tryParseKeyword( ParserState& parserState, const Par
                     parserState.handleRandomText( line );
             }
         } else {
-            const auto& parserKeyword = parser.getParserKeywordFromDeckName(rawKeyword->getKeywordName());
-
             if (rawKeyword->getSizeType() == Raw::CODE) {
-                auto end_pos = line.find(parserKeyword.codeEnd());
+                auto end_pos = line.find(parserKeyword->codeEnd());
                 if (end_pos != std::string::npos) {
                     std::string_view line_content = { line.begin(), end_pos};
                     record_buffer = str::update_record_buffer( record_buffer, line_content );
@@ -924,13 +923,9 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
             const auto& kwname = rawKeyword->getKeywordName();
             const auto& parserKeyword = parser.getParserKeywordFromDeckName( kwname );
             {
-                std::stringstream ss;
-
                 const auto& location = rawKeyword->location();
-                ss << std::setw(5) << parserState.deck.size()
-                   << " Reading " << std::setw(8) << std::left << rawKeyword->getKeywordName()
-                   << " in " << location.filename << " line " << std::to_string(location.lineno);
-                OpmLog::info(ss.str());
+                auto msg = fmt::format("{:5} Reading {:<8} in {} line {}", parserState.deck.size(), rawKeyword->getKeywordName(), location.filename, location.lineno);
+                OpmLog::info(msg);
             }
             try {
                 if (rawKeyword->getKeywordName() ==  Opm::RawConsts::pyinput) {
