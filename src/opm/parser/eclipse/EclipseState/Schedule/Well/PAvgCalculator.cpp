@@ -59,7 +59,8 @@ PAvgCalculator::PAvgCalculator(const std::string& well, const EclipseGrid& grid,
     m_pavg(pavg)
 {
     if (pavg.use_porv())
-        throw std::logic_error("The current implementation does not yet support PORV based averaging");
+        OpmLog::warning("PORV based averaging is not yet supported in WBPx");
+        //throw std::logic_error("The current implementation does not yet support PORV based averaging");
 
     for (const auto& conn : connections) {
         if (conn.state() == ::Opm::Connection::State::OPEN || !this->m_pavg.open_connections()) {
@@ -195,6 +196,9 @@ double PAvgCalculator::wbp9() const {
 }
 
 double PAvgCalculator::wbp(PAvgCalculator::WBPMode mode) const {
+    if (this->m_pavg.use_porv())
+        throw std::logic_error("The current implementation does not yet support PORV based averaging in WBPx");
+
     double conn_pressure = 0;
     if (this->m_pavg.conn_weight() > 0) {
         std::vector<std::optional<double>> block_pressure;
