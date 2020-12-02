@@ -52,6 +52,7 @@ EGrid::EGrid(const std::string &filename, std::string grid_name) :
     actnum_array_index = -1;
     nnc1_array_index = -1;
     nnc2_array_index = -1;
+    m_radial = false;
 
     int hostnum_index = -1;
 
@@ -82,7 +83,8 @@ EGrid::EGrid(const std::string &filename, std::string grid_name) :
                 nijk[1] = gridhead[2];
                 nijk[2] = gridhead[3];
 
-                m_radial = gridhead[26] > 0 ? true: false;
+                if (gridhead.size() > 26)
+                    m_radial = gridhead[26] > 0 ? true: false;
             }
 
             if (array_name[n] == "COORD")
