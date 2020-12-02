@@ -484,11 +484,16 @@ inline quantity glir( const fn_args& args ) {
     double alq_rate = 0;
 
     for (const auto& well : args.schedule_wells) {
-        auto xwPos = args.wells.find(well.name());
-        if (xwPos != args.wells.end())
-            alq_rate += xwPos->second.rates.get(rt::alq, 0.0);
-    }
+        if (well.isInjector())
+            continue;
 
+        auto xwPos = args.wells.find(well.name());
+        if (xwPos == args.wells.end())
+            continue;
+
+        double eff_fac = efac( args.eff_factors, well.name() );
+        alq_rate += eff_fac*xwPos->second.rates.get(rt::alq, well.alq_value());
+    }
     return { alq_rate, measure::gas_surface_rate };
 }
 
