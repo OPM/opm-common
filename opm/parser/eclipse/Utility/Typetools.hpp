@@ -44,6 +44,12 @@ public:
         return std_strings;
     }
 
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+      serializer(static_cast<std::string&>(*this));
+    }
+
 };
 
 inline std::string tag_name( type_tag x ) {
