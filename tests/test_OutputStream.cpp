@@ -563,7 +563,7 @@ BOOST_AUTO_TEST_CASE(Unformatted_Unified)
         rst.loadReportStepNumber(13);
 
         {
-            const auto& I = rst.getRst<int>("I", 13, 0);
+            const auto& I = rst.getRestartData<int>("I", 13, 0);
             const auto  expect_I = std::vector<int>{ 35, 51, 13};
             BOOST_CHECK_EQUAL_COLLECTIONS(I.begin(), I.end(),
                                           expect_I.begin(),
@@ -571,7 +571,7 @@ BOOST_AUTO_TEST_CASE(Unformatted_Unified)
         }
 
         {
-            const auto& L = rst.getRst<bool>("L", 13, 0);
+            const auto& L = rst.getRestartData<bool>("L", 13, 0);
             const auto  expect_L = std::vector<bool> {
                 true, true, true, false,
             };
@@ -582,7 +582,7 @@ BOOST_AUTO_TEST_CASE(Unformatted_Unified)
         }
 
         {
-            const auto& S = rst.getRst<float>("S", 13, 0);
+            const auto& S = rst.getRestartData<float>("S", 13, 0);
             const auto  expect_S = std::vector<float>{
                 17.29e-02f, 1.4142f,
             };
@@ -591,7 +591,7 @@ BOOST_AUTO_TEST_CASE(Unformatted_Unified)
         }
 
         {
-            const auto& D = rst.getRst<double>("D", 13, 0);
+            const auto& D = rst.getRestartData<double>("D", 13, 0);
             const auto  expect_D = std::vector<double>{
                 0.6931, 1.6180, 123.45e6,
             };
@@ -600,7 +600,7 @@ BOOST_AUTO_TEST_CASE(Unformatted_Unified)
         }
 
         {
-            const auto& Z = rst.getRst<std::string>("Z", 13, 0);
+            const auto& Z = rst.getRestartData<std::string>("Z", 13, 0);
             const auto  expect_Z = std::vector<std::string>{
                 "G1", "FIELD",  // ERst trims trailing blanks
             };
@@ -662,7 +662,7 @@ BOOST_AUTO_TEST_CASE(Unformatted_Unified)
         rst.loadReportStepNumber(5);
 
         {
-            const auto& I = rst.getRst<int>("I", 5, 0);
+            const auto& I = rst.getRestartData<int>("I", 5, 0);
             const auto  expect_I = std::vector<int>{ 1, 2, 3, 4 };
             BOOST_CHECK_EQUAL_COLLECTIONS(I.begin(), I.end(),
                                           expect_I.begin(),
@@ -670,7 +670,7 @@ BOOST_AUTO_TEST_CASE(Unformatted_Unified)
         }
 
         {
-            const auto& L = rst.getRst<bool>("L", 5, 0);
+            const auto& L = rst.getRestartData<bool>("L", 5, 0);
             const auto  expect_L = std::vector<bool> {
                 false, false, false, true,
             };
@@ -681,7 +681,7 @@ BOOST_AUTO_TEST_CASE(Unformatted_Unified)
         }
 
         {
-            const auto& S = rst.getRst<float>("S", 5, 0);
+            const auto& S = rst.getRestartData<float>("S", 5, 0);
             const auto  expect_S = std::vector<float>{
                 1.23e-04f, 1.234e5f, -5.4321e-9f,
             };
@@ -690,7 +690,7 @@ BOOST_AUTO_TEST_CASE(Unformatted_Unified)
         }
 
         {
-            const auto& D = rst.getRst<double>("D", 5, 0);
+            const auto& D = rst.getRestartData<double>("D", 5, 0);
             const auto  expect_D = std::vector<double>{
                 0.6931, 1.6180,
             };
@@ -699,7 +699,7 @@ BOOST_AUTO_TEST_CASE(Unformatted_Unified)
         }
 
         {
-            const auto& Z = rst.getRst<std::string>("Z", 5, 0);
+            const auto& Z = rst.getRestartData<std::string>("Z", 5, 0);
             const auto  expect_Z = std::vector<std::string>{
                 "HELLO", ",", "WORLD",  // ERst trims trailing blanks
             };
@@ -761,7 +761,7 @@ BOOST_AUTO_TEST_CASE(Unformatted_Unified)
         rst.loadReportStepNumber(13);
 
         {
-            const auto& I = rst.getRst<int>("I", 13, 0);
+            const auto& I = rst.getRestartData<int>("I", 13, 0);
             const auto  expect_I = std::vector<int>{ 35, 51, 13};
             BOOST_CHECK_EQUAL_COLLECTIONS(I.begin(), I.end(),
                                           expect_I.begin(),
@@ -769,7 +769,7 @@ BOOST_AUTO_TEST_CASE(Unformatted_Unified)
         }
 
         {
-            const auto& L = rst.getRst<bool>("L", 13, 0);
+            const auto& L = rst.getRestartData<bool>("L", 13, 0);
             const auto  expect_L = std::vector<bool> {
                 true, true, true, false,
             };
@@ -780,7 +780,7 @@ BOOST_AUTO_TEST_CASE(Unformatted_Unified)
         }
 
         {
-            const auto& S = rst.getRst<float>("S", 13, 0);
+            const auto& S = rst.getRestartData<float>("S", 13, 0);
             const auto  expect_S = std::vector<float>{
                 17.29e-02f, 1.4142f,
             };
@@ -789,7 +789,7 @@ BOOST_AUTO_TEST_CASE(Unformatted_Unified)
         }
 
         {
-            const auto& D = rst.getRst<double>("D", 13, 0);
+            const auto& D = rst.getRestartData<double>("D", 13, 0);
             const auto  expect_D = std::vector<double>{
                 0.6931, 1.6180, 123.45e6,
             };
@@ -798,7 +798,7 @@ BOOST_AUTO_TEST_CASE(Unformatted_Unified)
         }
 
         {
-            const auto& Z = rst.getRst<std::string>("Z", 13, 0);
+            const auto& Z = rst.getRestartData<std::string>("Z", 13, 0);
             const auto  expect_Z = std::vector<std::string>{
                 "G1", "FIELD",  // ERst trims trailing blanks
             };

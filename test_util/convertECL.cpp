@@ -24,7 +24,7 @@ template<typename T>
 void write(EclOutput& outFile, ERst& file1,
            const std::string& name, int index, int reportStepNumber)
 {
-    auto vect = file1.getRst<T>(index, reportStepNumber);
+    auto vect = file1.getRestartData<T>(index, reportStepNumber);
     outFile.write(name, vect);
 }
 
@@ -177,7 +177,7 @@ int main(int argc, char **argv) {
 
             for (auto seqn : reportStepList) {
 
-                std::vector<int> inteh = rst1.getRst<int>("INTEHEAD", seqn, 0);
+                std::vector<int> inteh = rst1.getRestartData<int>("INTEHEAD", seqn, 0);
 
                 std::cout << "Report step number: "
                           << std::setfill(' ') << std::setw(4) << seqn << "   Date: " << inteh[66] << "/"

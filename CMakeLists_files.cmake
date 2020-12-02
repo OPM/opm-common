@@ -256,6 +256,7 @@ if(ENABLE_ECL_OUTPUT)
           src/opm/io/eclipse/EclOutput.cpp
           src/opm/io/eclipse/EclUtil.cpp
           src/opm/io/eclipse/EGrid.cpp
+          src/opm/io/eclipse/EInit.cpp
           src/opm/io/eclipse/ERft.cpp
           src/opm/io/eclipse/ERst.cpp
           src/opm/io/eclipse/ERsm.cpp
@@ -478,7 +479,10 @@ if(ENABLE_ECL_INPUT)
   list (APPEND TEST_DATA_FILES
     tests/ECLFILE.INIT
     tests/ECLFILE.FINIT
-    tests/ECLFILE.FINIT
+    tests/LGR_TESTMOD.EGRID
+    tests/LGR_TESTMOD.INIT
+    tests/LGR_TESTMOD.UNRST
+    tests/LGR_TESTMOD.X0002
     tests/MODEL1_IX.INIT
     tests/MODEL1_IX.SMSPEC
     tests/MODEL1_IX.UNSMRY
@@ -795,6 +799,7 @@ if(ENABLE_ECL_OUTPUT)
         opm/io/eclipse/EclOutput.hpp
         opm/io/eclipse/EclUtil.hpp
         opm/io/eclipse/EGrid.hpp
+        opm/io/eclipse/EInit.hpp
         opm/io/eclipse/ERft.hpp
         opm/io/eclipse/ERst.hpp
         opm/io/eclipse/ERsm.hpp

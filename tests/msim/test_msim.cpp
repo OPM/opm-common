@@ -147,8 +147,8 @@ BOOST_AUTO_TEST_CASE(RUN) {
             auto rst = EclIO::ERst("SPE1CASE1.UNRST");
 
             for (const auto& step : rst.listOfReportStepNumbers()) {
-                const auto& dh    = rst.getRst<double>("DOUBHEAD", step, 0);
-                const auto& press = rst.getRst<float>("PRESSURE", step, 0);
+                const auto& dh    = rst.getRestartData<double>("DOUBHEAD", step, 0);
+                const auto& press = rst.getRestartData<float>("PRESSURE", step, 0);
 
                 // DOUBHEAD[0] is elapsed time in days since start of simulation.
                 BOOST_CHECK_CLOSE( press[0], dh[0] * 86400, 1e-3 );
