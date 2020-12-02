@@ -194,5 +194,10 @@ bool ActionX::operator==(const ActionX& data) const {
            this->conditions() == data.conditions();
 }
 
+
+void ActionX::required_summary(std::unordered_set<std::string>& required_summary) const {
+    this->condition.required_summary(required_summary);
+}
+
 }
 }

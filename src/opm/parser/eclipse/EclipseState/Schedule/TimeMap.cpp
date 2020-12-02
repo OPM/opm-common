@@ -246,6 +246,11 @@ struct TimeMapContext {
     }
 
 
+    bool TimeMap::valid_month(const std::string& month_name) {
+        return (month_indices.count(month_name) != 0);
+    }
+
+
     std::time_t TimeMap::timeFromEclipse(const DeckRecord &dateRecord) {
         const auto &dayItem = dateRecord.getItem(0);
         const auto &monthItem = dateRecord.getItem(1);

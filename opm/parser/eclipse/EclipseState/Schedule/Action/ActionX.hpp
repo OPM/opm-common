@@ -21,9 +21,10 @@
 #ifndef ActionX_HPP_
 #define ActionX_HPP_
 
-#include <string>
-#include <vector>
 #include <ctime>
+#include <string>
+#include <unordered_set>
+#include <vector>
 
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionAST.hpp>
@@ -75,7 +76,7 @@ public:
     bool ready(const State& state, std::time_t sim_time) const;
     Action::Result eval(const Action::Context& context) const;
 
-
+    void required_summary(std::unordered_set<std::string>& required_summary) const;
     std::string name() const { return this->m_name; }
     size_t max_run() const { return this->m_max_run; }
     double min_wait() const { return this->m_min_wait; }

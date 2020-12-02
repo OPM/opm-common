@@ -1,6 +1,8 @@
 #ifndef ASTNODE_HPP
 #define ASTNODE_HPP
 
+#include <unordered_set>
+
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionContext.hpp>
 
 #include "ActionValue.hpp"
@@ -27,6 +29,7 @@ public:
     void add_child(const ASTNode& child);
     size_t size() const;
     std::string func;
+    void required_summary(std::unordered_set<std::string>& required_summary) const;
 
     bool operator==(const ASTNode& data) const;
 

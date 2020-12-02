@@ -62,6 +62,10 @@ bool AST::operator==(const AST& data) const {
     return !condition || (*condition == *data.condition);
 }
 
+void AST::required_summary(std::unordered_set<std::string>& required_summary) const {
+    this->condition->required_summary(required_summary);
+}
+
 
 }
 }
