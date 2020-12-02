@@ -768,7 +768,8 @@ quantity roew(const fn_args& args) {
     double oil_prod = 0;
     for (const auto& [well, global_index] : args.regionCache.connections(region_name, args.num)) {
         const auto copt_key = fmt::format("COPT:{}:{}" , well, global_index + 1);
-        oil_prod += args.st.get(copt_key);
+        if (args.st.has(copt_key))
+            oil_prod += args.st.get(copt_key);
     }
     oil_prod = args.unit_system.to_si(Opm::UnitSystem::measure::volume, oil_prod);
     return { oil_prod / args.initial_inplace.get( region_name, Opm::Inplace::Phase::OIL, args.num ) , measure::identity };
