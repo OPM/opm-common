@@ -762,8 +762,19 @@ inline void keywordR( SummaryConfig::keyword_list& list,
     }
 
     // See comment on function roew() in Summary.cpp for this weirdness.
-    if (keyword.rfind("ROEW", 0) == 0)
-        keywordW(list, "WOPT", {}, schedule);
+    if (keyword.rfind("ROEW", 0) == 0) {
+        auto copt_node = SummaryConfigNode("COPT", SummaryConfigNode::Category::Connection, {});
+        for (const auto& wname : schedule.wellNames()) {
+            copt_node.namedEntity(wname);
+
+            const auto& well = schedule.getWellatEnd(wname);
+            for( const auto& connection : well.getConnections() ) {
+                copt_node.number( connection.global_index() + 1 );
+                list.push_back( copt_node );
+            }
+        }
+
+    }
 
 
     auto param = SummaryConfigNode {
