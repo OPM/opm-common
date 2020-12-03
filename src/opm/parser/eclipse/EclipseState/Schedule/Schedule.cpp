@@ -1535,8 +1535,31 @@ private:
             if (keyword.name() == "WELOPEN")
                 this->applyWELOPEN(keyword, reportStep, parseContext, errors, result.wells());
 
+            /*
+              The WELPI functionality is implemented as a two-step process
+              involving both code here in opm-common and opm-simulator. The
+              update process goes like this:
+
+                1. The scalar factor from the WELPI keyword is internalized in
+                   the WellConnections objects. And the event
+                   WELL_PRODUCTIVITY_INDEX is emitted to signal that a PI
+                   recalculation is required.
+
+                2. In opm-simulators the run loop will detect
+                   WELL_PRODUCTIVITY_INDEX event and perform the actual PI
+                   recalculation.
+
+              In the simulator the WELL_PRODUCTIVITY_INDEX event is checked at
+              the start of a new report step. That implies that if an ACTIONX is
+              evaluated to true while processing report step N, this can only be
+              acted upon in the simulator at the start of the following step
+              N+1, this is special cased in the handleWELPI function when it is
+              called with actionx_mode == true. If the interaction between
+              opm-common and the simulator changes in the future this might
+              change.
+            */
             if (keyword.name() == "WELPI")
-                this->handleWELPI(keyword, reportStep, parseContext, errors, result.wells());
+                this->handleWELPI(keyword, reportStep, parseContext, errors, true, result.wells());
         }
     }
 
