@@ -586,7 +586,7 @@ private:
 
     void Schedule::updateWell(std::shared_ptr<Well> well, std::size_t reportStep) {
         auto& dynamic_state = this->wells_static.at(well->name());
-        dynamic_state.update(reportStep, std::move(well));
+        dynamic_state.update_equal(reportStep, std::move(well));
     }
 
 
