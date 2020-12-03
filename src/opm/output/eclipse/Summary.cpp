@@ -971,27 +971,49 @@ inline quantity potential_rate( const fn_args& args ) {
 
 inline quantity preferred_phase_productivty_index(const fn_args& args) {
     if (args.schedule_wells.empty())
-        return potential_rate<rt::productivity_index_oil>(args);
+        return {0, rate_unit<rt::productivity_index_oil>()};
 
-    switch (args.schedule_wells.front().getPreferredPhase()) {
-    case Opm::Phase::OIL:
-        return potential_rate<rt::productivity_index_oil>(args);
+    const auto& well = args.schedule_wells.front();
+    auto preferred_phase = well.getPreferredPhase();
+    if (well.getStatus() == Opm::Well::Status::OPEN) {
 
-    case Opm::Phase::GAS:
-        return potential_rate<rt::productivity_index_gas>(args);
+        switch (preferred_phase) {
+        case Opm::Phase::OIL:
+            return potential_rate<rt::productivity_index_oil>(args);
 
-    case Opm::Phase::WATER:
-        return potential_rate<rt::productivity_index_water>(args);
+        case Opm::Phase::GAS:
+            return potential_rate<rt::productivity_index_gas>(args);
 
-    default:
-        break;
+        case Opm::Phase::WATER:
+            return potential_rate<rt::productivity_index_water>(args);
+
+        default:
+            break;
+        }
+    } else {
+
+        switch (preferred_phase) {
+        case Opm::Phase::OIL:
+            return {0, rate_unit<rt::productivity_index_oil>()};
+
+        case Opm::Phase::GAS:
+            return {0, rate_unit<rt::productivity_index_gas>()};
+
+        case Opm::Phase::WATER:
+            return {0, rate_unit<rt::productivity_index_water>()};
+
+        default:
+            break;
+
+        }
     }
 
     throw std::invalid_argument {
         "Unsupported \"preferred\" phase: " +
-        std::to_string(static_cast<int>(args.schedule_wells.front().getPreferredPhase()))
-    };
+            std::to_string(static_cast<int>(args.schedule_wells.front().getPreferredPhase()))
+            };
 }
+
 
 inline quantity connection_productivity_index(const fn_args& args) {
     const quantity zero = { 0.0, rate_unit<rt::productivity_index_oil>() };
