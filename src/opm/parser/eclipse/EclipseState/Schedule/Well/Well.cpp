@@ -1138,9 +1138,9 @@ bool Well::updateWSEGSICD(const std::vector<std::pair<int, SICD> >& sicd_pairs) 
 }
 
 
-bool Well::updateWSEGAICD(const std::vector<std::pair<int, AutoICD> >& aicd_pairs) {
+bool Well::updateWSEGAICD(const std::vector<std::pair<int, AutoICD> >& aicd_pairs, const KeywordLocation& location) {
     auto new_segments = std::make_shared<WellSegments>(*this->segments);
-    if (new_segments->updateWSEGAICD(aicd_pairs)) {
+    if (new_segments->updateWSEGAICD(aicd_pairs, location)) {
         this->segments = new_segments;
         return true;
     } else

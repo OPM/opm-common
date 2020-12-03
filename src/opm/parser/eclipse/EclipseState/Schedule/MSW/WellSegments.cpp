@@ -28,6 +28,8 @@
 #include <math.h>
 #endif
 
+#include <fmt/format.h>
+
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
@@ -545,9 +547,12 @@ namespace Opm {
         return true;
     }
 
-    bool WellSegments::updateWSEGAICD(const std::vector<std::pair<int, AutoICD> >& aicd_pairs) {
+    bool WellSegments::updateWSEGAICD(const std::vector<std::pair<int, AutoICD> >& aicd_pairs, const KeywordLocation& location) {
         if (m_comp_pressure_drop == CompPressureDrop::H__) {
-            const std::string msg = "to use autonomous ICD segment you have to activate the frictional pressure drop calculation";
+            const std::string msg = fmt::format("to use Autonomous ICD segment with keyword {} "
+                                                "at line {} in file {},\n"
+                                                "you have to activate frictional pressure drop calculation in WELSEGS",
+                                                location.keyword, location.lineno, location.filename);
             throw std::runtime_error(msg);
         }
 

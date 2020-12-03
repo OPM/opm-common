@@ -1655,11 +1655,8 @@ namespace {
     void Schedule::handleWSEGAICD(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         std::map<std::string, std::vector<std::pair<int, AutoICD> > > auto_icds = AutoICD::fromWSEGAICD(handlerContext.keyword);
 
-        for (auto& map_elem : auto_icds) {
-            const std::string& well_name_pattern = map_elem.first;
+        for (auto& [well_name_pattern, aicd_pairs] : auto_icds) {
             const auto well_names = this->wellNames(well_name_pattern, handlerContext.currentStep);
-
-            std::vector<std::pair<int, AutoICD> >& aicd_pairs = map_elem.second;
 
             for (const auto& well_name : well_names) {
                 auto& dynamic_state = this->wells_static.at(well_name);
@@ -1672,7 +1669,7 @@ namespace {
                     aicd.updateScalingFactor(outlet_segment_length, connections.segment_perf_length(segment_nr));
                 }
 
-                if (well_ptr->updateWSEGAICD(aicd_pairs) )
+                if (well_ptr->updateWSEGAICD(aicd_pairs, handlerContext.keyword.location()) )
                     this->updateWell(std::move(well_ptr), handlerContext.currentStep);
             }
         }
