@@ -76,6 +76,7 @@ enum class UDQTokenType{
     number = 1,
     open_paren = 2,
     close_paren = 3,
+    comp_expr = 6,
     ecl_expr = 7,
     //
     binary_op_add = 8,

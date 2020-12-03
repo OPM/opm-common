@@ -181,6 +181,22 @@ namespace {
         return type;
     }
 
+        // function to return true if token is a binary operator: type
+    bool tokenTypeParen(const Opm::UDQTokenType& token) {
+        bool type = false;
+        std::vector <Opm::UDQTokenType> type_1 = {
+            Opm::UDQTokenType::open_paren,
+            Opm::UDQTokenType::close_paren,
+        };
+        for (const auto& tok_type : type_1) {
+            if (token == tok_type) {
+                type = true;
+                break;
+            }
+        }
+        return type;
+    }
+
     // function to return true if token is a binary operator: anytype
     bool tokenTypeBinaryOp(const Opm::UDQTokenType& token) {
         bool type = false;
@@ -211,9 +227,10 @@ namespace {
         return type;
     }
 
+#if 0
     // function to return the number of sets of () outside any function / operator or variable
     int noOutsideOpencloseParen(const std::vector<Opm::UDQToken>& tokens) {
-        bool last_paren = false;
+        //bool last_paren = false;
         int noOpenPar = 0;
         int noOCPPairs = 0;
         auto modTokens = tokens;
@@ -266,6 +283,32 @@ namespace {
         std::cout << " tok_no " << tok_no << " noOCPPairs: " << noOCPPairs << std::endl;
         return tok_no + noOCPPairs;
     }
+#endif
+
+    // function to return the precedence of the current operator/function
+    bool operatorToken(const Opm::UDQTokenType& token) {
+        bool opTok = false;
+        if (tokenTypeFunc(token)) opTok = true;
+        if (tokenTypeBinaryCmpOp(token)) opTok = true;
+        if (tokenTypeBinaryPowOp(token)) opTok = true;
+        if (tokenTypeBinaryMulDivOp(token)) opTok = true;
+        if (tokenTypeBinaryAddSubOp(token)) opTok = true;
+        if (tokenTypeBinaryUnionOp(token)) opTok = true;
+        return opTok;
+    }
+
+        // function to return index number of last binary token not inside bracket that is ending the expression
+    int noOperators(const std::vector<Opm::UDQToken>& modTokens) {
+        int noOp = 0;
+        for (std::size_t ti = 0; ti < modTokens.size(); ti++) {
+            std::cout << "noOperators - ti " << ti << " modTokens[ti].str(): " << modTokens[ti].str() << std::endl;
+            if (operatorToken(modTokens[ti].type()) || tokenTypeParen(modTokens[ti].type())) {
+                noOp +=1;
+                std::cout << " ti " << ti << " noOp " << noOp << std::endl;
+            }
+        }
+        return noOp;
+    }
 
     // function to return the precedence of the current operator/function
     int opFuncPrec(const Opm::UDQTokenType& token) {
@@ -279,56 +322,51 @@ namespace {
         return prec;
     }
 
-    // function to return
-    //      a vector of functions and operators at the highest level plus,
-    //      a map of substituted tokens
-    //      the number of leading open_paren that bracket the whole expression
-    struct simplifiedExpression {
-        std::vector<Opm::UDQToken> highestLevOperators;
-        std::map<std::size_t, std::vector<Opm::UDQToken> substitutedTokens;
-        int leadingOpenPar;
-    };
-
     struct substOuterParentheses {
         std::vector<Opm::UDQToken> highestLevOperators;
-        std::vector<std::size_t> operatorPos;
-        std::map<std::size_t, std::vector<Opm::UDQToken> substitutedTokens;
-        int leadingOpenPar;
+        std::map<std::size_t, std::vector<Opm::UDQToken>> substitutedTokens;
+        int noleadingOpenPar;
+        bool leadChangeSign;
     };
-    substOuterParentheses substitute_outer_parenthesis(const std::vector<Opm::UDQToken>& modTokens, int noLeadOpenPar) {
-        std::map <std::size_t, std::vector<Opm::UDQToken> subst_tok;
-        std::vector<Opm::UDQToken> high_lev_op;
-        std::vector<std::size_t> operatorPos;
-        std::vector<std::size_t> par_pos;
-        std::vector<std::size_t> start_paren;
-        std::vector<std::size_t> end_paren;
+
+    // function to return
+    //      a vector of functions and operators at the highest level,
+    //      a map of substituted tokens,
+    //      the number of leading open_paren that bracket the whole expression,
+    //      a logical flag indicating whether there is a leading change of sign in the expression
+
+    substOuterParentheses substitute_outer_parenthesis(const std::vector<Opm::UDQToken>& modTokens, int noLeadOpenPar, bool leadChgSgn) {
+        std::map <std::size_t, std::vector<Opm::UDQToken>> substTok;
+        std::vector<Opm::UDQToken> highLevOp;
+        std::vector<std::size_t> startParen;
+        std::vector<std::size_t> endParen;
         std::size_t level = 0;
         std::size_t search_pos = 0;
         std::size_t subS_max = 0;
-        int noOpenPar = 0;
+
         std::cout << "start handleParentheses" << std::endl;
         while (search_pos < modTokens.size()) {
             if (modTokens[search_pos].type() == Opm::UDQTokenType::open_paren  && level == 0) {
-                start_paren.emplace_back(search_pos);
+                startParen.emplace_back(search_pos);
                 level +=1;
             }
             else if (modTokens[search_pos].type() == Opm::UDQTokenType::open_paren) {
                 level +=1;
             }
             else if (modTokens[search_pos].type() == Opm::UDQTokenType::close_paren && level == +1) {
-                end_paren.emplace_back(search_pos);
+                endParen.emplace_back(search_pos);
                 level -=1;
             }
             else if (modTokens[search_pos].type() == Opm::UDQTokenType::close_paren) {
                 level -=1;
             }
             std::cout << " search_pos " << search_pos << " level " << level << std::endl;
-            if (start_paren.size() >= 1) {
-                std::cout << " start_paren " << start_paren[start_paren.end() - 1]
-                          << " size_start_paren: " << start_paren.size() << std::endl;
+            if (startParen.size() >= 1) {
+                std::cout << " startParen " << startParen[startParen.size() - 1]
+                          << " size_startParen: " << startParen.size() << std::endl;
             }
-            if (end_paren.size() >= 1) {
-                std::cout << " end_paren " << end_paren[end_paren.end() - 1] << " size_end_paren: " << end_paren.size()
+            if (endParen.size() >= 1) {
+                std::cout << " endParen " << endParen[endParen.size() - 1] << " size_endParen: " << endParen.size()
                           << std::endl;
             }
             search_pos += 1;
@@ -337,43 +375,177 @@ namespace {
         // Replace content of all parentheses at the highest level by an ecl_expr
         // and store the location of all the removed parentheses
 
-        //First store all tokens before the first start_paren
-        for (std::size_t i = 0; i < start_paren[0]; i++) {
-                high_lev_op.emplace_back(modTokens[i]);
+        if (startParen.size() >= 1) {
+            if (startParen[0] > 0) {
+                //First store all tokens before the first start_paren
+                for (std::size_t i = 0; i < startParen[0]; i++) {
+                        highLevOp.emplace_back(modTokens[i]);
+                }
             }
-        for (std::size_t ind = 0; ind < start_paren.size();  ind++) {
-            par_pos.emplace_back(start_paren[ind]);
-            std::vector<Opm::UDQToken> substringToken;
-            for (std::size_t i = start_paren[ind]; i < end_paren[ind]+1; i++) {
-                substringToken.emplace_back(modTokens[search_pos]);
-            }
-            // store the content inside the parenthesis
-            std::pair<std::size_t, std::vector<Opm::UDQToken> groupPair = std::make_pair(ind, substringToken);
-            subst_tok.insert(groupPair);
-            //
-            // make the vector of high level tokens
-            //
-            //first add ecl_expr instead of content of (...)
 
-            high_lev_op.emplace_back(Opm::UDQTokenType::ecl_expr);
             //
-            // store all tokens including excluding end_paren before and start_paren after
-            if (ind == start_paren.size()-1) {
-                subS_max = modTokens.size();
+            // store all tokens including () for all tokens inside a pair of ()
+            // also store the tokens between sets of () and at the end of an expression
+
+            std::string comp_expr = "";
+            for (std::size_t ind = 0; ind < startParen.size();  ind++) {
+                std::vector<Opm::UDQToken> substringToken;
+                std::cout << "substringToken: ind: " << ind << " startParen[ind] " << startParen[ind] << std::endl;
+                for (std::size_t i = startParen[ind]; i < endParen[ind]+1; i++) {
+                    substringToken.emplace_back(modTokens[i]);
+                    std::cout << "substringToken: i: " << i << "  modTokens[i] " << modTokens[i].str() << std::endl;
+                }
+                // store the content inside the parenthesis
+                std::pair<std::size_t, std::vector<Opm::UDQToken>> groupPair = std::make_pair(ind, substringToken);
+                substTok.insert(groupPair);
+
+                //
+                // make the vector of high level tokens
+                //
+                //first add ecl_expr instead of content of (...)
+
+                comp_expr = std::to_string(ind);
+                highLevOp.emplace_back(Opm::UDQToken(comp_expr, Opm::UDQTokenType::comp_expr));
+                std::cout << "comp_: ind " << ind << "  comp_expr " << comp_expr << std::endl;
+                //
+                // store all tokens between end_paren before and start_paren after current ()
+                subS_max = (ind == startParen.size()-1) ? modTokens.size() : startParen[ind+1];
+
+                if ((endParen[ind] + 1) < subS_max) {
+                    for (std::size_t i = endParen[ind] + 1; i < subS_max; i++) {
+                        highLevOp.emplace_back(modTokens[i]);
+                    }
+                }
             }
-            else {
-                subS_max = start_paren[ind+1];
-            }
-            for (std::size_t i = end_paren[ind] + 1; i < subS_max; i++) {
-                high_lev_op.emplace_back(modTokens[i]);
+        } else {
+            //
+            // treat the case with no ()
+            std::cout << "SubsOP - no () " << std::endl;
+            for (std::size_t i = 0; i < modTokens.size(); i++) {
+                std::cout << "loop - i: " << i << "  modTokens[i].str() " << modTokens[i].str() << std::endl;
+                highLevOp.emplace_back(modTokens[i]);
             }
         }
 
-        std::cout << " tok_no " << tok_no << " noOCPPairs: " << noOCPPairs << std::endl;
-        return tok_no + noOCPPairs;
+
+        //
+        // check for leading start_paren combined with end_paren at end of data
+        if (startParen.size() >= 1) {
+            if ((startParen[0] == 0) && (endParen[0] == modTokens.size()-1)) {
+                //
+                // remove leading and trailing ()
+                const std::vector<Opm::UDQToken> modTokens_red(modTokens.begin()+1, modTokens.end()-1);
+                noLeadOpenPar +=1;
+                //
+                // recursive call to itself to re-interpret the token-input
+
+                substOuterParentheses substOpPar = substitute_outer_parenthesis(modTokens_red, noLeadOpenPar, leadChgSgn);
+                highLevOp = substOpPar.highestLevOperators;
+                substTok = substOpPar.substitutedTokens;
+                noLeadOpenPar = substOpPar.noleadingOpenPar;
+                leadChgSgn = substOpPar.leadChangeSign;
+            //
+            // check if there is a leading minus-sign (change sign) followed by start_paren linked to end_paren before end of data
+            }
+        } else if ((modTokens[0].type() == Opm::UDQTokenType::binary_op_sub) &&
+            (startParen[0] == 1)  && (endParen[0] < modTokens.size()-1)) {
+            leadChgSgn = true;
+            // remove "change sign" from the high level operator list
+            std::vector<Opm::UDQToken> temp_high_lev_op(highLevOp.begin()+1, highLevOp.end());
+            highLevOp = temp_high_lev_op;
+        }
+
+        // interpretation of token input is completed return resulting object
+
+        return {
+            highLevOp,
+            substTok,
+            noLeadOpenPar,
+            leadChgSgn
+        };
     }
 
+// Categorize function in terms of which token-types are used in formula
+//
+// The define_type is (-) the location among a set of tokens of the "top" of the parse tree (AST - abstract syntax tree)
+// i.e. the location of the lowest precedence operator relative to the total set of operators, functions and open-/close - parenthesis
+    int new_define_type(const std::vector<Opm::UDQToken>& tokens)
+    {
+        int def_type = 0;
+        int noLeadOpenPar = 0;
+        bool leadChgSgn = false;
 
+        //
+        // analyse the expression
+
+        substOuterParentheses expr = substitute_outer_parenthesis(tokens, noLeadOpenPar, leadChgSgn);
+        std::cout << "define_type - highLevOp: " << std::endl;
+        if (expr.highestLevOperators.size() > 0) {
+            for (std::size_t ind_t = 0; ind_t < expr.highestLevOperators.size(); ind_t++) {
+                std::cout << "hlo - i: " << ind_t << " HLO: " << expr.highestLevOperators[ind_t].str() << std::endl;
+            }
+        }
+        //
+        // loop over high level operators to find operator with lowest precedence and highest index
+
+        int curPrec  = 100;
+        int tmpPrec = 100;
+        std::size_t indLowestPrecOper = 0;
+        for (std::size_t ind = 0; ind < expr.highestLevOperators.size(); ind++) {
+            if ((expr.highestLevOperators[ind].type() != Opm::UDQTokenType::ecl_expr) &&
+                (expr.highestLevOperators[ind].type() != Opm::UDQTokenType::comp_expr) &&
+                (expr.highestLevOperators[ind].type() != Opm::UDQTokenType::number)) {
+                tmpPrec = opFuncPrec(expr.highestLevOperators[ind].type());
+                std::cout << "define_type - HLO, ind: " << ind << "  tok_string " << expr.highestLevOperators[ind].str() << "  tmpPrec: " << tmpPrec << std::endl;
+                if (tmpPrec <= curPrec) {
+                    curPrec = tmpPrec;
+                    indLowestPrecOper = ind;
+                    std::cout << "update curPrec: " << curPrec  << "  ind: " << ind << std::endl;
+                }
+            }
+        }
+        //
+        //
+        // calculate position of lowest precedence operator
+        // account for leading change sign operator
+
+        if ((!expr.leadChangeSign) && (indLowestPrecOper == 0)) {
+            def_type = 1;
+        } else {
+            def_type = (expr.leadChangeSign) ?  -1 : 0;
+            def_type -= expr.noleadingOpenPar;
+            for (std::size_t ind = 0; ind <= indLowestPrecOper; ind++) {
+                //
+                //count operators, including functions and parentheses (not original ecl_experessions)
+                if (operatorToken(expr.highestLevOperators[ind].type())) {
+                    // single operator - subtract one
+                    def_type -= 1;
+                    std::cout << "define_type: single operator: define_type: " << def_type  << std::endl;
+                } else if (expr.highestLevOperators[ind].type() == Opm::UDQTokenType::comp_expr) {
+                    // expression in parentheses -  add all operators
+                    std::size_t ind_ce = static_cast<std::size_t>(std::stoi(expr.highestLevOperators[ind].str()));
+                    auto indSubstTok = expr.substitutedTokens.find(ind_ce);
+                    if (indSubstTok != expr.substitutedTokens.end()) {
+                        auto& substTokVec = indSubstTok->second;
+                        //
+                        // count the number of operators & parenthes in this sub-expression
+                        def_type -= noOperators(substTokVec);
+                        std::cout << "define_type: substitutedTokens: define_type: " << def_type  << std::endl;
+                    } else {
+                        std::cout << "comp_expr index: " << ind_ce << std::endl;
+                        throw std::invalid_argument( "Invalid comp_expr index" );
+                    }
+                } else if ((expr.highestLevOperators[ind].type() != Opm::UDQTokenType::ecl_expr) &&
+                        (expr.highestLevOperators[ind].type() != Opm::UDQTokenType::number)) {
+                    // unknown token - write warning
+                    std::cout << "define_type - unknown tokenType: " << expr.highestLevOperators[ind].str() << std::endl;
+                }
+            }
+        }
+        return def_type;
+    }
+
+#if 0
 // Categorize function in terms of which token-types are used in formula
 //
 // The define_type is (-) the location among a set of tokens of the "top" of the parse tree (AST - abstract syntax tree)
@@ -532,6 +704,7 @@ namespace {
         return def_type;
         }
     }
+#endif
 
     namespace iUdq {
 
@@ -580,8 +753,9 @@ namespace {
                     std::cout << " value_string " << val_string << " value_double: " << val << std::endl;
                 }
 #endif
+                std::cout << "UDQ-DEFINE - keyword: " << udq_define.keyword() << std::endl;
                 iUdq[0] = 2;
-                iUdq[1] = define_type(tokens);
+                iUdq[1] = new_define_type(tokens);
             } else {
                 iUdq[0] = 0;
                 iUdq[1] = 0;
