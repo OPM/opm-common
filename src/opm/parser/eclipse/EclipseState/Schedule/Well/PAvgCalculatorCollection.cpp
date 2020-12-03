@@ -55,15 +55,9 @@ const std::vector<std::size_t>& PAvgCalculatorCollection::index_list() const {
 }
 
 void PAvgCalculatorCollection::add_pressure(std::size_t index, double pressure) {
-    std::size_t count = 0;
     for (auto& [_, calculator] : this->calculators) {
         (void)_;
-        if (calculator.add_pressure(index, pressure))
-            count += 1;
-    }
-    if (count == 0) {
-        auto msg = fmt::format("Tried to update pressure in invalid cell: {}" , index);
-        throw std::logic_error(msg);
+        calculator.add_pressure(index, pressure);
     }
 }
 
