@@ -1132,7 +1132,7 @@ namespace {
         this->handleWELPI(handlerContext.keyword, handlerContext.currentStep, parseContext, errors);
     }
 
-    void Schedule::handleWELPI(const DeckKeyword& keyword, std::size_t report_step, const ParseContext& parseContext, ErrorGuard& errors, const std::vector<std::string>& matching_wells) {
+    void Schedule::handleWELPI(const DeckKeyword& keyword, std::size_t report_step, const ParseContext& parseContext, ErrorGuard& errors, bool actionx_mode, const std::vector<std::string>& matching_wells) {
         // Keyword structure
         //
         //   WELPI
@@ -1145,6 +1145,9 @@ namespace {
         // Interpretation of productivity index (item 2) depends on well's preferred phase.
         using WELL_NAME = ParserKeywords::WELPI::WELL_NAME;
         using PI        = ParserKeywords::WELPI::STEADY_STATE_PRODUCTIVITY_OR_INJECTIVITY_INDEX_VALUE;
+
+        // See comment in Schedule::applyAction() for this report_step + 1 when called in ACTIONX mode.
+        auto event_step = actionx_mode ? report_step + 1 : report_step;
 
         for (const auto& record : keyword) {
             const auto well_names = this->wellNames(record.getItem<WELL_NAME>().getTrimmedString(0),
@@ -1169,11 +1172,11 @@ namespace {
                 if (well2->updateWellProductivityIndex(rawProdIndex))
                     this->updateWell(std::move(well2), report_step);
 
-                this->addWellGroupEvent(well_name, ScheduleEvents::WELL_PRODUCTIVITY_INDEX, report_step);
+                this->addWellGroupEvent(well_name, ScheduleEvents::WELL_PRODUCTIVITY_INDEX, event_step);
             }
         }
 
-        this->m_events.addEvent(ScheduleEvents::WELL_PRODUCTIVITY_INDEX, report_step);
+        this->m_events.addEvent(ScheduleEvents::WELL_PRODUCTIVITY_INDEX, event_step);
     }
 
     void Schedule::handleWELSEGS(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
