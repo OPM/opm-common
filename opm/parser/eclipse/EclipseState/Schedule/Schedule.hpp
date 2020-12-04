@@ -568,6 +568,7 @@ namespace Opm
         void handleWSALT    (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleWSEGITER (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleWSEGSICD (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWSEGAICD (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleWSEGVALV (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleWSKPTAB  (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleWSOLVENT (const HandlerContext&, const ParseContext&, ErrorGuard&);

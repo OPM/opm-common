@@ -66,4 +66,37 @@ bool AutoICD::operator==(const AutoICD& other) const {
         this->m_gas_viscosity_exponent == other.m_gas_viscosity_exponent;
 }
 
+double AutoICD::flowRateExponent() const {
+    return this->m_flow_rate_exponent;
+}
+
+double AutoICD::viscExponent() const {
+    return this->m_visc_exponent;
+}
+
+double AutoICD::oilDensityExponent() const {
+    return this->m_oil_density_exponent;
+}
+
+double AutoICD::waterDensityExponent() const {
+    return this->m_water_density_exponent;
+}
+
+double AutoICD::gasDensityExponent() const {
+    return this->m_gas_density_exponent;
+}
+
+double AutoICD::oilViscExponent() const {
+    return this->m_oil_viscosity_exponent;
+}
+
+double AutoICD::waterViscExponent() const {
+    return this->m_water_viscosity_exponent;
+}
+
+double AutoICD::gasViscExponent() const {
+    return this->m_gas_viscosity_exponent;
+}
+
+
 }
