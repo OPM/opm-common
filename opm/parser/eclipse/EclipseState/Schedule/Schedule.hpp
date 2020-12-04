@@ -193,7 +193,6 @@ namespace Opm
 
         const TimeMap& getTimeMap() const;
 
-        PAvgCalculatorCollection pavg_calculators(const EclipseGrid& grid, const std::unordered_set<std::string>& wells, std::size_t report_step) const;
         std::size_t numWells() const;
         std::size_t numWells(std::size_t timestep) const;
         bool hasWell(const std::string& wellName) const;

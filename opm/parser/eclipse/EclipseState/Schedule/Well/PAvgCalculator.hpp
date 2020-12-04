@@ -37,7 +37,7 @@ class Serializer;
 class PAvgCalculator {
 public:
 
-    PAvgCalculator(const std::string& well, const EclipseGrid& grid, const WellConnections& connections, const PAvg& pavg);
+    PAvgCalculator(const std::string& well, const EclipseGrid& grid, const std::vector<double>& porv, const WellConnections& connections, const PAvg& pavg);
 
     enum class WBPMode {
         WBP,

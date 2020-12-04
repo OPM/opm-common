@@ -592,7 +592,7 @@ public:
     void applyWellProdIndexScaling(const double       scalingFactor,
                                    std::vector<bool>& scalingApplicable);
     const PAvg& pavg() const;
-    PAvgCalculator pavg_calculator(const EclipseGrid& grid) const;
+    PAvgCalculator pavg_calculator(const EclipseGrid& grid, const std::vector<double>& porv) const;
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)

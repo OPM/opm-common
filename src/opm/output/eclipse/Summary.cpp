@@ -2931,12 +2931,16 @@ internal_store(const SummaryState& st, const int report_step)
 }
 
 Opm::PAvgCalculatorCollection Opm::out::Summary::SummaryImplementation::wbp_calculators(std::size_t report_step) const {
+    if (this->wbp_wells.empty())
+        return {};
+
     Opm::PAvgCalculatorCollection calculators;
+    const auto& porv = this->es_.get().globalFieldProps().porv(true);
     for (const auto& wname : this->wbp_wells) {
         if (this->sched_.get().hasWell(wname, report_step)) {
             const auto& well = this->sched_.get().getWell(wname, report_step);
             if (well.getStatus() == Opm::Well::Status::OPEN)
-                calculators.add(well.pavg_calculator(this->grid_));
+                calculators.add(well.pavg_calculator(this->grid_, porv));
         }
     }
     return calculators;

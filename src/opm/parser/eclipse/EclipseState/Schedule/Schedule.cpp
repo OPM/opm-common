@@ -2049,13 +2049,4 @@ bool Schedule::cmp(const Schedule& sched1, const Schedule& sched2, std::size_t r
 }
 
 
-PAvgCalculatorCollection Schedule::pavg_calculators(const EclipseGrid& grid, const std::unordered_set<std::string>& wells, std::size_t report_step) const
-{
-    PAvgCalculatorCollection calculators;
-    for (const auto& wname : wells) {
-        const auto& well = this->getWell(wname, report_step);
-        calculators.add(well.pavg_calculator(grid));
-    }
-    return calculators;
-}
 }
