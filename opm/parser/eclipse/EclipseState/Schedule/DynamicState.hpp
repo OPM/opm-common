@@ -165,18 +165,12 @@ class DynamicState {
             throw std::out_of_range("Invalid index for update_equal()");
 
         const T prev_value = this->m_data[index];
-        //if (prev_value == value)
-        //    return {};
-        while (true) {
-            if (this->m_data[index] != prev_value)
-                return index;
+        auto update_end = std::find_if(this->m_data.begin() + index, this->m_data.end(), [&prev_value](const T& v) { return v != prev_value; });
+        std::fill(this->m_data.begin() + index, update_end, value);
+        if (update_end == this->m_data.end())
+            return {};
 
-            this->m_data[index] = value;
-
-            index++;
-            if (index == this->m_data.size())
-                return {};
-        }
+        return std::distance(this->m_data.begin(), update_end);
     }
 
     /// Will return the index of the first occurence of @value
