@@ -273,34 +273,223 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data)
         
         auto start = 0*udqDims[1];
         BOOST_CHECK_EQUAL(iUdq[start + 0] ,  2); // udq NO. 1 - ( 0 - ASSIGN, 2 - DEFINE)
-        BOOST_CHECK_EQUAL(iUdq[start + 1] , -4); // udq NO. 1 - (-4 - DEFINE / ASSIGN
+        BOOST_CHECK_EQUAL(iUdq[start + 1] , -4); // udq NO. 1
         BOOST_CHECK_EQUAL(iUdq[start + 2] ,  1); // udq NO. 1 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
         
         start = 1*udqDims[1];
         BOOST_CHECK_EQUAL(iUdq[start + 0] ,  0); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
-        BOOST_CHECK_EQUAL(iUdq[start + 1] , -4); // udq NO. 2 - (-4 - DEFINE / ASSIGN
+        BOOST_CHECK_EQUAL(iUdq[start + 1] ,  0); // udq NO. 2
         BOOST_CHECK_EQUAL(iUdq[start + 2] ,  2); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
         
         start = 2*udqDims[1];
         BOOST_CHECK_EQUAL(iUdq[start + 0] ,  2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
-        BOOST_CHECK_EQUAL(iUdq[start + 1] , -4); // udq NO. 2 - (-4 - DEFINE / ASSIGN
+        BOOST_CHECK_EQUAL(iUdq[start + 1] , -4); // udq NO. 2
         BOOST_CHECK_EQUAL(iUdq[start + 2] ,  3); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
 
         start = 3*udqDims[1];
         BOOST_CHECK_EQUAL(iUdq[start + 0] ,  2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
-        BOOST_CHECK_EQUAL(iUdq[start + 1] , -4); // udq NO. 2 - (-4 - DEFINE / ASSIGN
+        BOOST_CHECK_EQUAL(iUdq[start + 1] , -4); // udq NO. 2
         BOOST_CHECK_EQUAL(iUdq[start + 2] ,  1); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
 
         start = 4*udqDims[1];
         BOOST_CHECK_EQUAL(iUdq[start + 0] ,  2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
-        BOOST_CHECK_EQUAL(iUdq[start + 1] , -4); // udq NO. 2 - (-4 - DEFINE / ASSIGN
+        BOOST_CHECK_EQUAL(iUdq[start + 1] , -4); // udq NO. 2
         BOOST_CHECK_EQUAL(iUdq[start + 2] ,  4); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
 
         start = 5*udqDims[1];
         BOOST_CHECK_EQUAL(iUdq[start + 0] ,  2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
-        BOOST_CHECK_EQUAL(iUdq[start + 1] , -4); // udq NO. 2 - (-4 - DEFINE / ASSIGN
+        BOOST_CHECK_EQUAL(iUdq[start + 1] , -4); // udq NO. 2
         BOOST_CHECK_EQUAL(iUdq[start + 2] ,  1); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
 
+        start = 6*udqDims[1];
+        BOOST_CHECK_EQUAL(iUdq[start + 0] ,  2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
+        BOOST_CHECK_EQUAL(iUdq[start + 1] , -1); // udq NO. 2
+        BOOST_CHECK_EQUAL(iUdq[start + 2] ,  2); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+
+        start = 7*udqDims[1];
+        BOOST_CHECK_EQUAL(iUdq[start + 0] ,  2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
+        BOOST_CHECK_EQUAL(iUdq[start + 1] , -4); // udq NO. 2
+        BOOST_CHECK_EQUAL(iUdq[start + 2] ,  3); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+
+        start = 8*udqDims[1];
+        BOOST_CHECK_EQUAL(iUdq[start + 0] ,  2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
+        BOOST_CHECK_EQUAL(iUdq[start + 1] , -5); // udq NO. 2
+        BOOST_CHECK_EQUAL(iUdq[start + 2] ,  4); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+
+        start = 9*udqDims[1];
+        BOOST_CHECK_EQUAL(iUdq[start + 0] ,  2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
+        BOOST_CHECK_EQUAL(iUdq[start + 1] , -8); // udq NO. 2
+        BOOST_CHECK_EQUAL(iUdq[start + 2] ,  5); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+
+        start = 10*udqDims[1];
+        BOOST_CHECK_EQUAL(iUdq[start + 0] ,  2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
+        BOOST_CHECK_EQUAL(iUdq[start + 1] , -1); // udq NO. 2
+        BOOST_CHECK_EQUAL(iUdq[start + 2] ,  6); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+
+        start = 11*udqDims[1];
+        BOOST_CHECK_EQUAL(iUdq[start + 0] ,  2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
+        BOOST_CHECK_EQUAL(iUdq[start + 1] , -5); // udq NO. 2
+        BOOST_CHECK_EQUAL(iUdq[start + 2] ,  7); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+
+        start = 12*udqDims[1];
+        BOOST_CHECK_EQUAL(iUdq[start + 0] ,  2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
+        BOOST_CHECK_EQUAL(iUdq[start + 1] , -3); // udq NO. 2
+        BOOST_CHECK_EQUAL(iUdq[start + 2] ,  8); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+
+        start = 13*udqDims[1];
+        BOOST_CHECK_EQUAL(iUdq[start + 0] ,  2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
+        BOOST_CHECK_EQUAL(iUdq[start + 1] , -1); // udq NO. 2
+        BOOST_CHECK_EQUAL(iUdq[start + 2] ,  9); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+
+        start = 14*udqDims[1];
+        BOOST_CHECK_EQUAL(iUdq[start + 0] ,  2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
+        BOOST_CHECK_EQUAL(iUdq[start + 1] , -2); // udq NO. 2
+        BOOST_CHECK_EQUAL(iUdq[start + 2] , 10); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+
+        start = 15*udqDims[1];
+        BOOST_CHECK_EQUAL(iUdq[start + 0] ,  2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
+        BOOST_CHECK_EQUAL(iUdq[start + 1] , -3); // udq NO. 2
+        BOOST_CHECK_EQUAL(iUdq[start + 2] , 11); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+
+        start = 16*udqDims[1];
+        BOOST_CHECK_EQUAL(iUdq[start + 0] ,  2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
+        BOOST_CHECK_EQUAL(iUdq[start + 1] , -1); // udq NO. 2
+        BOOST_CHECK_EQUAL(iUdq[start + 2] , 12); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+
+        start = 17*udqDims[1];
+        BOOST_CHECK_EQUAL(iUdq[start + 0] ,  2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
+        BOOST_CHECK_EQUAL(iUdq[start + 1] , -1); // udq NO. 2
+        BOOST_CHECK_EQUAL(iUdq[start + 2] , 13); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+
+        start = 18*udqDims[1];
+        BOOST_CHECK_EQUAL(iUdq[start + 0] ,  2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
+        BOOST_CHECK_EQUAL(iUdq[start + 1] , -3); // udq NO. 2
+        BOOST_CHECK_EQUAL(iUdq[start + 2] ,  14); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+
+        start = 19*udqDims[1];
+        BOOST_CHECK_EQUAL(iUdq[start + 0] ,  2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
+        BOOST_CHECK_EQUAL(iUdq[start + 1] , -5); // udq NO. 2
+        BOOST_CHECK_EQUAL(iUdq[start + 2] ,  15); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+
+        start = 20*udqDims[1];
+        BOOST_CHECK_EQUAL(iUdq[start + 0] ,  2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
+        BOOST_CHECK_EQUAL(iUdq[start + 1] , -5); // udq NO. 2
+        BOOST_CHECK_EQUAL(iUdq[start + 2] ,  16); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+
+        start = 21*udqDims[1];
+        BOOST_CHECK_EQUAL(iUdq[start + 0] ,  2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
+        BOOST_CHECK_EQUAL(iUdq[start + 1] ,  1); // udq NO. 2
+        BOOST_CHECK_EQUAL(iUdq[start + 2] ,  17); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+
+        start = 22*udqDims[1];
+        BOOST_CHECK_EQUAL(iUdq[start + 0] ,  2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
+        BOOST_CHECK_EQUAL(iUdq[start + 1] ,  1); // udq NO. 2
+        BOOST_CHECK_EQUAL(iUdq[start + 2] ,  18); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+
+        start = 23*udqDims[1];
+        BOOST_CHECK_EQUAL(iUdq[start + 0] ,  2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
+        BOOST_CHECK_EQUAL(iUdq[start + 1] , -1); // udq NO. 2
+        BOOST_CHECK_EQUAL(iUdq[start + 2] ,  19); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+
+        start = 24*udqDims[1];
+        BOOST_CHECK_EQUAL(iUdq[start + 0] ,  2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
+        BOOST_CHECK_EQUAL(iUdq[start + 1] , -4); // udq NO. 2
+        BOOST_CHECK_EQUAL(iUdq[start + 2] ,  20); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+
+        start = 25*udqDims[1];
+        BOOST_CHECK_EQUAL(iUdq[start + 0] ,  2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
+        BOOST_CHECK_EQUAL(iUdq[start + 1] , -2); // udq NO. 2
+        BOOST_CHECK_EQUAL(iUdq[start + 2] ,  21); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+
+        start = 26*udqDims[1];
+        BOOST_CHECK_EQUAL(iUdq[start + 0] ,  2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
+        BOOST_CHECK_EQUAL(iUdq[start + 1] , -1); // udq NO. 2
+        BOOST_CHECK_EQUAL(iUdq[start + 2] ,  22); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+
+        start = 27*udqDims[1];
+        BOOST_CHECK_EQUAL(iUdq[start + 0] ,  2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
+        BOOST_CHECK_EQUAL(iUdq[start + 1] , -2); // udq NO. 2
+        BOOST_CHECK_EQUAL(iUdq[start + 2] , 23); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+
+        start = 28*udqDims[1];
+        BOOST_CHECK_EQUAL(iUdq[start + 0] ,  2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
+        BOOST_CHECK_EQUAL(iUdq[start + 1] , -2); // udq NO. 2
+        BOOST_CHECK_EQUAL(iUdq[start + 2] , 24); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+
+        start = 29*udqDims[1];
+        BOOST_CHECK_EQUAL(iUdq[start + 0] ,  2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
+        BOOST_CHECK_EQUAL(iUdq[start + 1] , -8); // udq NO. 2
+        BOOST_CHECK_EQUAL(iUdq[start + 2] , 25); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+
+        start = 30*udqDims[1];
+        BOOST_CHECK_EQUAL(iUdq[start + 0] ,  2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
+        BOOST_CHECK_EQUAL(iUdq[start + 1] , -6); // udq NO. 2
+        BOOST_CHECK_EQUAL(iUdq[start + 2] , 26); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+
+        start = 31*udqDims[1];
+        BOOST_CHECK_EQUAL(iUdq[start + 0] ,  2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
+        BOOST_CHECK_EQUAL(iUdq[start + 1] , -4); // udq NO. 2
+        BOOST_CHECK_EQUAL(iUdq[start + 2] , 27); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+
+        start = 32*udqDims[1];
+        BOOST_CHECK_EQUAL(iUdq[start + 0] ,  2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
+        BOOST_CHECK_EQUAL(iUdq[start + 1] , -5); // udq NO. 2
+        BOOST_CHECK_EQUAL(iUdq[start + 2] , 28); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+
+        start = 33*udqDims[1];
+        BOOST_CHECK_EQUAL(iUdq[start + 0] ,  2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
+        BOOST_CHECK_EQUAL(iUdq[start + 1] , -4); // udq NO. 2
+        BOOST_CHECK_EQUAL(iUdq[start + 2] , 29); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+
+        start = 34*udqDims[1];
+        BOOST_CHECK_EQUAL(iUdq[start + 0] ,  2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
+        BOOST_CHECK_EQUAL(iUdq[start + 1] , -8); // udq NO. 2
+        BOOST_CHECK_EQUAL(iUdq[start + 2] , 30); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+
+        start = 35*udqDims[1];
+        BOOST_CHECK_EQUAL(iUdq[start + 0] ,  2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
+        BOOST_CHECK_EQUAL(iUdq[start + 1] , -4); // udq NO. 2
+        BOOST_CHECK_EQUAL(iUdq[start + 2] , 31); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+
+        start = 36*udqDims[1];
+        BOOST_CHECK_EQUAL(iUdq[start + 0] ,  2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
+        BOOST_CHECK_EQUAL(iUdq[start + 1] , -5); // udq NO. 2
+        BOOST_CHECK_EQUAL(iUdq[start + 2] , 32); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+
+        start = 37*udqDims[1];
+        BOOST_CHECK_EQUAL(iUdq[start + 0] ,  2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
+        BOOST_CHECK_EQUAL(iUdq[start + 1] , -6); // udq NO. 2
+        BOOST_CHECK_EQUAL(iUdq[start + 2] , 33); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+
+        start = 38*udqDims[1];
+        BOOST_CHECK_EQUAL(iUdq[start + 0] ,  2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
+        BOOST_CHECK_EQUAL(iUdq[start + 1] , -1); // udq NO. 2
+        BOOST_CHECK_EQUAL(iUdq[start + 2] , 34); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+
+        start = 39*udqDims[1];
+        BOOST_CHECK_EQUAL(iUdq[start + 0] ,  2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
+        BOOST_CHECK_EQUAL(iUdq[start + 1] , -1); // udq NO. 2
+        BOOST_CHECK_EQUAL(iUdq[start + 2] , 35); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+
+        start = 40*udqDims[1];
+        BOOST_CHECK_EQUAL(iUdq[start + 0] ,  2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
+        BOOST_CHECK_EQUAL(iUdq[start + 1] , -6); // udq NO. 2
+        BOOST_CHECK_EQUAL(iUdq[start + 2] , 36); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+
+        start = 41*udqDims[1];
+        BOOST_CHECK_EQUAL(iUdq[start + 0] ,  2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
+        BOOST_CHECK_EQUAL(iUdq[start + 1] , -2); // udq NO. 2
+        BOOST_CHECK_EQUAL(iUdq[start + 2] , 37); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+
+        start = 42*udqDims[1];
+        BOOST_CHECK_EQUAL(iUdq[start + 0] ,  2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
+        BOOST_CHECK_EQUAL(iUdq[start + 1] , -4); // udq NO. 2
+        BOOST_CHECK_EQUAL(iUdq[start + 2] , 38); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
+
+        start = 43*udqDims[1];
+        BOOST_CHECK_EQUAL(iUdq[start + 0] ,  2); // udq NO. 2 - ( 0 - ASSIGN, 2 - DEFINE)
+        BOOST_CHECK_EQUAL(iUdq[start + 1] , -1); // udq NO. 2
+        BOOST_CHECK_EQUAL(iUdq[start + 2] , 39); // udq NO. 2 - (sequence number of UDQ pr type (CU, FU, GU, RU, , SU, WU, AU or BU etc.)
     }
 
     {
