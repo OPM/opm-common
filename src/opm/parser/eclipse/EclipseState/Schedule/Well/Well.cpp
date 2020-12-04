@@ -140,7 +140,6 @@ Well::Well(const RestartIO::RstWell& rst_well,
     pvt_table(rst_well.pvt_table),
     unit_system(unit_system_arg),
     udq_undefined(udq_undefined_arg),
-    status(status_from_int(rst_well.well_status)),
     wtype(rst_well.wtype),
     guide_rate(def_guide_rate),
     efficiency_factor(rst_well.efficiency_factor),
@@ -153,7 +152,8 @@ Well::Well(const RestartIO::RstWell& rst_well,
     tracer_properties(std::make_shared<WellTracerProperties>()),
     connections(std::make_shared<WellConnections>(order_from_int(rst_well.completion_ordering), headI, headJ)),
     production(std::make_shared<WellProductionProperties>(unit_system_arg, wname)),
-    injection(std::make_shared<WellInjectionProperties>(unit_system_arg, wname))
+    injection(std::make_shared<WellInjectionProperties>(unit_system_arg, wname)),
+    status(std::make_shared<WellStatus>(status_from_int(rst_well.well_status)))
 {
     using CModeVal = ::Opm::RestartIO::Helpers::VectorItems::IWell::Value::WellCtrlMode;
 
@@ -335,7 +335,6 @@ Well::Well(const std::string& wname_arg,
     gas_inflow(inflow_eq),
     unit_system(unit_system_arg),
     udq_undefined(udq_undefined_arg),
-    status(Status::SHUT),
     wtype(wtype_arg),
     guide_rate({true, -1, Well::GuideRateTarget::UNDEFINED,ParserKeywords::WGRUPCON::SCALING_FACTOR::defaultValue}),
     efficiency_factor(1.0),
@@ -347,7 +346,8 @@ Well::Well(const std::string& wname_arg,
     tracer_properties(std::make_shared<WellTracerProperties>()),
     connections(std::make_shared<WellConnections>(ordering_arg, headI, headJ)),
     production(std::make_shared<WellProductionProperties>(unit_system, wname)),
-    injection(std::make_shared<WellInjectionProperties>(unit_system, wname))
+    injection(std::make_shared<WellInjectionProperties>(unit_system, wname)),
+    status(std::make_shared<WellStatus>(Status::SHUT))
 {
     auto p = std::make_shared<WellProductionProperties>(this->unit_system, this->wname);
     p->whistctl_cmode = whistctl_cmode;
@@ -366,7 +366,7 @@ Well Well::serializeObject()
     result.ref_depth = 5;
     result.unit_system = UnitSystem::serializeObject();
     result.udq_undefined = 6.0;
-    result.status = Status::SHUT;
+    result.status = std::make_shared<WellStatus>(Status::SHUT);
     result.drainage_radius = 7.0;
     result.allow_cross_flow = true;
     result.automatic_shutin = false;
@@ -515,7 +515,7 @@ bool Well::updateWellProductivityIndex(const double prodIndex) {
 }
 
 bool Well::updateHasProduced() {
-    if (this->wtype.producer() && this->status == Status::OPEN) {
+    if (this->wtype.producer() && this->getStatus() == Status::OPEN) {
         if (this->has_produced)
             return false;
 
@@ -526,7 +526,7 @@ bool Well::updateHasProduced() {
 }
 
 bool Well::updateHasInjected() {
-    if (this->wtype.injector() && this->status == Status::OPEN) {
+    if (this->wtype.injector() && this->getStatus() == Status::OPEN) {
         if (this->has_injected)
             return false;
 
@@ -610,10 +610,108 @@ bool Well::updateHead(int I, int J) {
 }
 
 
-bool Well::updateStatus(Status well_state, bool update_connections) {
-    bool update = false;
+/*
+  The fileformat used by OPM/flow seems to work as an imperative programming
+  language. The simulator can be percieved as a mutable imperative programming
+  environment. The simulator program has an implicit DOM and the various
+  keywords manipulate the elements in this DOM.
+
+  In opm flow the approach to the input file is not that of an imperative
+  programming language, rather the entire input file is parsed and internalized
+  into the mainly EclipseState and Schedule instances. For the most part this
+  has worked out nicely, but some of the more advanced features of the simulator
+  (notably ACTIONX) requires an interaction between the simulator and the
+  Schedule datastructure which becomes awkward in the current implementation.
+  E.g the complexity to shut/open a well is quite immense. To understand how
+  this complexity arises it is important to understand:
+
+     1. How the DynamicState<T> class works.
+
+     2. How a new Well instance is created for each keyword which manipulates
+        the well state.
+
+     3. How the well class uses pointer semantics to manage objects which should
+        remane unchanged across several well keywords.
+
+
+   START
+       1  'JAN' 2000 /
+
+   SCHEDULE
+
+   WELSPECS
+      W1 .... /
+   /
+
+   WCONPROD
+      W1  'OPEN'  /
+   /
+
+   DATES
+      1 'FEB' 2000 /
+   /
+
+   WELPI
+      W1 1000 /
+   /
+
+   DATES
+      1 'MAR' 2000 /
+   /
+
+   WCONPROD
+      W1 'OPEN'  /
+   /
+
+   DATES
+   1 'APR' 2000 /
+   /
+
+   WELPI
+      W1 1000 /
+   /
+
+   0--------------------1--------------------2--------------------3-------------------->
+
+   [ W0 ---------------->
+     |
+     |                  [ W1 ---------------->
+     |                    |
+     |                    |                  [ W2 ---------------->
+     |                    |                    |
+     |                    |                    |                  [ W3 ---------------->
+     |                    |                    |                    |
+     |                    |                    |                    |
+    \|/                   |                   \|/                   |
+                          |                                         |
+   [ WellStatus 0 ] <-----/                  [ WellStatus 1] <------/
+
+
+This illustration shows "many things":
+
+  1. For each of the kewyords which manipulates wells a new well object are
+     created. These are illustrated as W0, W1, W2 and W3. As illustrated the
+     well objects have a validity in the time direction.
+
+  2. Each of the keywords which changes/sets the state of a well will create a
+     new WellStatus object; these are illustrated as WellStatus 0 and WellStatus
+     1. As we can see the WellStatus in general have different temporal ranges
+     of validity than the well objects.
+
+  3. The main point of this complexity is to support runtime altering of the
+     wells status - with ACTIONX or other means. If the runtime argument is true
+     when calling Well::updateStatus() we update the wells status directly, and
+     not go through creating a new WellStatus object. As a consequence the
+     updated status will apply to all well/time points which share WellStatus
+     object - this can even go backwards in time!
+*/
+
+bool Well::updateStatus(Status well_state, bool runtime, bool update_connections) {
     if (update_connections) {
         Connection::State connection_state;
+        if (runtime)
+            throw std::logic_error("runtime and update_connections can not be combined");
+
 
         switch (well_state) {
         case Status::OPEN:
@@ -638,15 +736,15 @@ bool Well::updateStatus(Status well_state, bool update_connections) {
             new_connections->add(c);
         }
 
-        update = this->updateConnections(std::move(new_connections));
+        this->updateConnections(std::move(new_connections));
     }
 
-    if (this->status != well_state) {
-        this->status = well_state;
-        update = true;
-    }
+    if (runtime)
+        this->status->status = well_state;
+    else
+        this->status = std::make_shared<WellStatus>(well_state);
 
-    return update;
+    return true;
 }
 
 
@@ -693,7 +791,7 @@ bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg, b
     if (force || *this->connections != *connections_arg) {
         this->connections = connections_arg;
         if (this->connections->empty())
-            this->status = Status::SHUT;
+            this->status = std::make_shared<WellStatus>(Well::Status::SHUT);
 
         return true;
     }
@@ -957,7 +1055,7 @@ const Well::WellInjectionProperties& Well::getInjectionProperties() const {
 }
 
 Well::Status Well::getStatus() const {
-    return this->status;
+    return this->status->status;
 }
 
 const PAvg& Well::pavg() const {
@@ -1011,14 +1109,14 @@ int Well::fip_region_number() const {
   because there is some twisted logic aggregating connection changes over a
   complete report step.
 
-  However - when the WELOPEN is called as a ACTIONX action the full
-  Schedule::iterateScheduleSection() is not run and the check if all connections
-  is closed is not done. Therefor we have a action_mode flag here which makes
-  sure to close the well in this case.
+  However - when the WELOPEN is called runtime (typically as an ACTIONX action)
+  the full Schedule::iterateScheduleSection() is not run and the check if all
+  connections is closed is not done. Therefor we have a runtime flag here
+  which makes sure to close the well in this case.
 */
 
 
-bool Well::handleWELOPEN(const DeckRecord& record, Connection::State state_arg, bool action_mode) {
+bool Well::handleWELOPEN(const DeckRecord& record, Connection::State state_arg, bool runtime) {
 
     auto match = [=]( const Connection &c) -> bool {
         if (!match_eq(c.getI(), record, "I" , -1)) return false;
@@ -1038,9 +1136,9 @@ bool Well::handleWELOPEN(const DeckRecord& record, Connection::State state_arg, 
 
         new_connections->add(c);
     }
-    if (action_mode) {
+    if (runtime) {
         if (new_connections->allConnectionsShut())
-            this->status = Status::SHUT;
+            this->updateStatus(Well::Status::SHUT, true, false);
     }
 
     return this->updateConnections(std::move(new_connections));

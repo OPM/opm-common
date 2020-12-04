@@ -79,6 +79,31 @@ public:
     static Status StatusFromString(const std::string& stringValue);
 
 
+    struct WellStatus {
+        Status status;
+
+        WellStatus() = default;
+
+        WellStatus(Status st) :
+            status(st)
+        {}
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(status);
+        }
+
+        bool operator==(const WellStatus& other) const {
+            return this->status == other.status;
+        }
+
+        static WellStatus serializeObject() {
+            WellStatus ws(Well::Status::AUTO);
+            return ws;
+        }
+    };
+
 
 
     /*
@@ -545,7 +570,7 @@ public:
     void updateSegments(std::shared_ptr<WellSegments> segments_arg);
     bool updateConnections(std::shared_ptr<WellConnections> connections, bool force = false);
     bool updateConnections(std::shared_ptr<WellConnections> connections, const EclipseGrid& grid, const std::vector<int>& pvtnum);
-    bool updateStatus(Status status, bool update_connections);
+    bool updateStatus(Status status, bool runtime, bool update_connections);
     bool updateGroup(const std::string& group);
     bool updateWellGuideRate(bool available, double guide_rate, GuideRateTarget guide_phase, double scale_factor);
     bool updateWellGuideRate(double guide_rate);
@@ -650,7 +675,6 @@ private:
     GasInflowEquation gas_inflow = GasInflowEquation::STD;  // Will NOT be loaded/assigned from restart file
     UnitSystem unit_system;
     double udq_undefined;
-    Status status;
     WellType wtype;
     WellGuideRate guide_rate;
     double efficiency_factor;
@@ -669,6 +693,7 @@ private:
     std::shared_ptr<WellProductionProperties> production;
     std::shared_ptr<WellInjectionProperties> injection;
     std::shared_ptr<WellSegments> segments;
+    std::shared_ptr<WellStatus> status;
     PAvg m_pavg;
 };
 
