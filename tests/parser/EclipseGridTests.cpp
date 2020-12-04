@@ -1241,6 +1241,32 @@ static Opm::Deck radial_keywords_DZV_size_mismatch() {
     return parser.parseString( deckData);
 }
 
+static Opm::Deck radial_keywords_DZ_size_mismatch() {
+    const char* deckData =
+        "RUNSPEC\n"
+        "\n"
+        "DIMENS\n"
+        "10 6 12 /\n"
+        "RADIAL\n"
+        "GRID\n"
+        "INRAD\n"
+        "1 /\n"
+        "DRV\n"
+        "10*1 /\n"
+        "DTHETAV\n"
+        "6*60 /\n"
+        "DZ\n"
+        "660*0.25 /\n"
+        "TOPS\n"
+        "60*0.0 /\n"
+        "PORO \n"
+        "  720*0.15 /"
+        "\n";
+
+    Opm::Parser parser;
+    return parser.parseString( deckData);
+}
+
 static Opm::Deck radial_keywords_DTHETAV_size_mismatch() {
     const char* deckData =
         "RUNSPEC\n"
@@ -1326,6 +1352,7 @@ static Opm::Deck radial_keywords_ANGLE_OVERFLOW() {
 BOOST_AUTO_TEST_CASE(RadialKeywords_SIZE_ERROR) {
     BOOST_CHECK_THROW( Opm::EclipseGrid{ radial_keywords_DRV_size_mismatch() } , std::invalid_argument);
     BOOST_CHECK_THROW( Opm::EclipseGrid{ radial_keywords_DZV_size_mismatch() } , std::invalid_argument);
+    BOOST_CHECK_THROW( Opm::EclipseGrid{ radial_keywords_DZ_size_mismatch() } , std::invalid_argument);
     BOOST_CHECK_THROW( Opm::EclipseGrid{ radial_keywords_TOPS_size_mismatch() } , std::invalid_argument);
     BOOST_CHECK_THROW( Opm::EclipseGrid{ radial_keywords_DTHETAV_size_mismatch() } , std::invalid_argument);
     BOOST_CHECK_THROW( Opm::EclipseGrid{ radial_keywords_ANGLE_OVERFLOW() } , std::invalid_argument);
@@ -1360,6 +1387,59 @@ static Opm::Deck spider_details() {
 
 BOOST_AUTO_TEST_CASE(SpiderDetails) {
     Opm::Deck deck = spider_details();
+    Opm::EclipseGrid grid( deck );
+
+    BOOST_CHECK_CLOSE( grid.getCellVolume( 0 , 0 , 0 ) , 0.5*(2*2 - 1)*1, 0.0001);
+    BOOST_CHECK_CLOSE( grid.getCellVolume( 0 , 3 , 0 ) , sqrt(3.0)*0.25*( 4 - 1 ) , 0.0001);
+    auto pos0 = grid.getCellCenter(0,0,0);
+    auto pos2 = grid.getCellCenter(0,2,0);
+
+    BOOST_CHECK_CLOSE( std::get<0>(pos0) , 0.75 , 0.0001);
+    BOOST_CHECK_CLOSE( std::get<1>(pos0) , 0.75 , 0.0001);
+    BOOST_CHECK_CLOSE( std::get<2>(pos0) , 1.50 , 0.0001);
+
+    BOOST_CHECK_CLOSE( std::get<0>(pos2) , -0.75 , 0.0001);
+    BOOST_CHECK_CLOSE( std::get<1>(pos2) , -0.75 , 0.0001);
+    BOOST_CHECK_CLOSE( std::get<2>(pos2) , 1.50 , 0.0001);
+
+    {
+        const auto& p0 = grid.getCornerPos( 0,0,0 , 0 );
+        const auto& p6 = grid.getCornerPos( 0,0,0 , 6 );
+        BOOST_CHECK_CLOSE( p0[0]*p0[0] + p0[1]*p0[1] , 1.0, 0.0001);
+        BOOST_CHECK_CLOSE( p6[0]*p6[0] + p6[1]*p6[1] , 1.0, 0.0001);
+
+        BOOST_CHECK_THROW( grid.getCornerPos( 0,0,0 , 8 ) , std::invalid_argument);
+    }
+}
+
+static Opm::Deck spider_details_dz() {
+    const char* deckData =
+        "RUNSPEC\n"
+        "\n"
+        "DIMENS\n"
+        "1 5 2 /\n"
+        "SPIDER\n"
+        "GRID\n"
+        "INRAD\n"
+        "1 /\n"
+        "DRV\n"
+        "1 /\n"
+        "DTHETAV\n"
+        "3*90 60 30/\n"
+        "DZ\n"
+        "10*1 /\n"
+        "TOPS\n"
+        "5*1.0 /\n"
+        "PORO \n"
+        "  10*0.15 /"
+        "\n";
+
+    Opm::Parser parser;
+    return parser.parseString( deckData);
+}
+
+BOOST_AUTO_TEST_CASE(SpiderDetailsDZ) {
+    Opm::Deck deck = spider_details_dz();
     Opm::EclipseGrid grid( deck );
 
     BOOST_CHECK_CLOSE( grid.getCellVolume( 0 , 0 , 0 ) , 0.5*(2*2 - 1)*1, 0.0001);

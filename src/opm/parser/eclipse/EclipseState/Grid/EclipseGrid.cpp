@@ -948,14 +948,13 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         if (!deck.hasKeyword<ParserKeywords::DRV>())
             throw std::logic_error("The current implementation *must* have radial values specified using the DRV keyword");
 
-        if (!deck.hasKeyword<ParserKeywords::DZV>() || !deck.hasKeyword<ParserKeywords::TOPS>())
-            throw std::logic_error("The current implementation *must* have vertical cell size specified using the DZV and TOPS keywords");
+        if (!(deck.hasKeyword<ParserKeywords::DZ>() || deck.hasKeyword<ParserKeywords::DZV>()) || !deck.hasKeyword<ParserKeywords::TOPS>())
+            throw std::logic_error("The vertical cell size must be specified using the DZ or DZV, and the TOPS keywords");
 
         const std::vector<double>& drv     = deck.getKeyword<ParserKeywords::DRV>().getSIDoubleData();
         const std::vector<double>& dthetav = deck.getKeyword<ParserKeywords::DTHETAV>().getSIDoubleData();
-        const std::vector<double>& dzv     = deck.getKeyword<ParserKeywords::DZV>().getSIDoubleData();
         const std::vector<double>& tops    = deck.getKeyword<ParserKeywords::TOPS>().getSIDoubleData();
-        OpmLog::info(fmt::format("\nCreating cylindrical grid from keywords DRV, DTHETAV, DZV and TOPS"));
+        OpmLog::info(fmt::format("\nCreating spiderweb grid from keywords DRV, DTHETAV, DZV and TOPS"));
 
         if (drv.size() != this->getNX())
             throw std::invalid_argument("DRV keyword should have exactly " + std::to_string( this->getNX() ) + " elements");
@@ -963,8 +962,22 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         if (dthetav.size() != this->getNY())
             throw std::invalid_argument("DTHETAV keyword should have exactly " + std::to_string( this->getNY() ) + " elements");
 
-        if (dzv.size() != this->getNZ())
-            throw std::invalid_argument("DZV keyword should have exactly " + std::to_string( this->getNZ() ) + " elements");
+        auto area = this->getNX() * this->getNY();
+        size_t volume = this->getNX() * this->getNY() * this->getNZ();
+
+        std::vector<double> dz(volume);
+        if (deck.hasKeyword<ParserKeywords::DZ>()) {
+            const std::vector<double>& dz_deck = deck.getKeyword<ParserKeywords::DZ>().getSIDoubleData();
+            if (dz_deck.size() != volume)
+                throw std::invalid_argument("DZ keyword should have exactly " + std::to_string( volume ) + " elements");
+            dz = dz_deck;
+        } else {
+            const std::vector<double>& dzv = deck.getKeyword<ParserKeywords::DZV>().getSIDoubleData();
+            if (dzv.size() != this->getNZ())
+                throw std::invalid_argument("DZV keyword should have exactly " + std::to_string( this->getNZ() ) + " elements");
+            for (std::size_t k= 0; k < this->getNZ(); k++)
+                std::fill(dz.begin() + k*area, dz.begin() + (k+1)*area, dzv[k]);
+        }
 
         if (tops.size() != (this->getNX() * this->getNY()))
             throw std::invalid_argument("TOPS keyword should have exactly " + std::to_string( this->getNX() * this->getNY() ) + " elements");
@@ -991,20 +1004,18 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
             CoordMapper cm(this->getNX(), this->getNY());
             std::vector<double> zcorn( zm.size() );
             std::vector<double> coord( cm.size() );
-            {
-                std::vector<double> zk(this->getNZ());
-                zk[0] = 0;
-                for (std::size_t k = 1; k < this->getNZ(); k++)
-                    zk[k] = zk[k - 1] + dzv[k - 1];
-
+            {                    
+                std::vector<double> depth(tops);
                 for (std::size_t k = 0; k < this->getNZ(); k++) {
                     for (std::size_t j = 0; j < this->getNY(); j++) {
                         for (std::size_t i = 0; i < this->getNX(); i++) {
-                            size_t tops_value = tops[ i + this->getNX() * j];
+                            auto current_depth = depth[j * this->getNX() + i];
+                            auto next_depth = current_depth + dz[k * area + j * this->getNX() + i];
                             for (size_t c=0; c < 4; c++) {
-                                zcorn[ zm.index(i,j,k,c) ]     = zk[k] + tops_value;
-                                zcorn[ zm.index(i,j,k,c + 4) ] = zk[k] + tops_value + dzv[k];
+                                zcorn[ zm.index(i,j,k,c) ]     = current_depth;
+                                zcorn[ zm.index(i,j,k,c + 4) ] = next_depth;
                             }
+                            depth[j * this->getNX() + i] += next_depth;
                         }
                     }
                 }
