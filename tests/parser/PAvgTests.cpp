@@ -195,7 +195,8 @@ END
     auto       sched = Schedule{ deck, es };
     auto       summary_config = SummaryConfig{deck, sched, es.getTableManager(), es.aquifer()};
     const auto& w1 = sched.getWell("P1", 0);
-    auto calc = w1.pavg_calculator(grid);
+    const auto& porv = es.globalFieldProps().porv(true);
+    auto calc = w1.pavg_calculator(grid, porv);
 
     {
         const auto& index_list = calc.index_list();
@@ -234,7 +235,7 @@ END
     //----------------------------------------------------
 
     const auto& w5 = sched.getWell("P5", 0);
-    auto calc5 = w5.pavg_calculator(grid);
+    auto calc5 = w5.pavg_calculator(grid, porv);
 
     {
         const auto& index_list = calc5.index_list();
@@ -262,8 +263,8 @@ END
 
     // We emulate MPI and calc1 and calc2 are on two different processors
     {
-        auto calc1 = w5.pavg_calculator(grid);
-        auto calc2 = w5.pavg_calculator(grid);
+        auto calc1 = w5.pavg_calculator(grid, porv);
+        auto calc2 = w5.pavg_calculator(grid, porv);
         for (std::size_t k = 0; k < 3; k++) {
             calc1.add_pressure(grid.getGlobalIndex(0,0,k), 1);
             calc2.add_pressure(grid.getGlobalIndex(1,0,k), 2.0);
@@ -285,9 +286,9 @@ END
 
 
 
-    auto calculators = sched.pavg_calculators(grid, summary_config.wbp_wells(), 0);
-    calculators.add(w1.pavg_calculator(grid));
-    calculators.add(w5.pavg_calculator(grid));
+    PAvgCalculatorCollection calculators;
+    calculators.add(w1.pavg_calculator(grid, porv));
+    calculators.add(w5.pavg_calculator(grid, porv));
 
 
     BOOST_CHECK( calculators.has("P1"));

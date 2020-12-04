@@ -54,7 +54,7 @@ const std::string& PAvgCalculator::wname() const {
 }
 
 
-PAvgCalculator::PAvgCalculator(const std::string& well, const EclipseGrid& grid, const WellConnections& connections, const PAvg& pavg) :
+PAvgCalculator::PAvgCalculator(const std::string& well, const EclipseGrid& grid, const std::vector<double>& porv, const WellConnections& connections, const PAvg& pavg) :
     well_name(well),
     m_pavg(pavg)
 {
@@ -62,10 +62,12 @@ PAvgCalculator::PAvgCalculator(const std::string& well, const EclipseGrid& grid,
         OpmLog::warning("PORV based averaging is not yet supported in WBPx");
         //throw std::logic_error("The current implementation does not yet support PORV based averaging");
 
+    if (porv.size() != grid.getCartesianSize())
+        throw std::logic_error("Should pass a GLOBAL porv vector");
+
     for (const auto& conn : connections) {
         if (conn.state() == ::Opm::Connection::State::OPEN || !this->m_pavg.open_connections()) {
-            double porv = -1;
-            Connection wp_conn(porv, conn.CF(), conn.dir(), conn.global_index());
+            Connection wp_conn(porv[conn.global_index()], conn.CF(), conn.dir(), conn.global_index());
             this->add_connection(wp_conn);
         }
     }
