@@ -87,6 +87,7 @@ namespace Opm {
         /// non-neighboring connections
         /// the non-standard adjacencies as specified in input deck
         const NNC& getInputNNC() const;
+        NNC& getInputNNC();
         bool hasInputNNC() const;
 
         // The potentially parallelized field properties
@@ -110,6 +111,7 @@ namespace Opm {
 
         const Runspec& runspec() const;
         const AquiferConfig& aquifer() const;
+        AquiferConfig& aquifer();
         const TracerConfig& tracer() const;
 
         template<class Serializer>

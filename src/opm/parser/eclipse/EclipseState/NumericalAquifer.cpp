@@ -57,13 +57,14 @@ NumericalAquifers::NumericalAquifers(const Deck& deck, const EclipseGrid& grid, 
             } else {
                 this->addAquiferCell(aqu_cell);
                 auto& cells = this->aquifer_cells_;
+                std::cout << " cell with global_index " << aqu_cell.global_index << " is added as a AQUIFER CELL " << std::endl;
                 cells.insert(std::pair{aqu_cell.global_index, aqu_cell});
             }
         }
     }
 
     // handle connections
-    this->addAquiferConnections(deck, grid);
+//    this->addAquiferConnections(deck, grid);
 }
 
 bool NumericalAquifers::hasAquifer(const size_t aquifer_id) const {
@@ -80,8 +81,8 @@ void NumericalAquifers::addAquiferCell(const NumericalAquiferCell& aqu_cell) {
 }
 
 void NumericalAquifers::
-addAquiferConnections(const Deck &deck, const EclipseGrid &grid) {
-    NumericalAquiferConnections cons(deck, grid);
+addAquiferConnections(const Deck &deck, const EclipseGrid &grid, const std::vector<int>& actnum) {
+    NumericalAquiferConnections cons(deck, grid, actnum);
 
     std::set<size_t> con_set;
     for (auto& pair : this->aquifers_) {
@@ -177,6 +178,13 @@ const std::unordered_map<size_t, double> NumericalAquifers::cellVolumes() const 
     return volumes;
 }
 
+void NumericalAquifers::appendConnectionNNC(const EclipseGrid &grid, const FieldPropsManager &fp,
+                                            const std::vector<int> &actnum, NNC &nnc) const {
+    for (const auto& pair : this->aquifers_) {
+        pair.second.appendConnectionNNC(grid, fp, actnum, nnc);
+    }
+}
+
 using AQUNUM = ParserKeywords::AQUNUM;
 NumericalAquiferCell::NumericalAquiferCell(const DeckRecord& record, const EclipseGrid& grid, const FieldPropsManager& field_props)
    : aquifer_id( record.getItem<AQUNUM::AQUIFER_ID>().get<int>(0) )
@@ -193,6 +201,7 @@ NumericalAquiferCell::NumericalAquiferCell(const DeckRecord& record, const Eclip
     const auto& satnum = field_props.get_int("SATNUM");
 
     this->global_index = grid.getGlobalIndex(I, J, K);
+    std::cout << " aquifer cell { " << I + 1 << " , " << J + 1 << " , " << K + 1 << std::endl;
     const size_t active_index = grid.activeIndex(this->global_index);
 
     if ( !record.getItem<AQUNUM::PORO>().defaultApplied(0) ) {
@@ -266,22 +275,22 @@ std::array<std::set<size_t>, 3> SingleNumericalAquifer::transToRemove(const Ecli
         const size_t i = cell.I;
         const size_t j = cell.J;
         const size_t k = cell.K;
-        if (AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i, j, k, FaceDir::XPlus)) {
+        if (AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i, j, k, FaceDir::XPlus, grid.getACTNUM())) {
             trans[0].insert(cell.global_index);
         }
-        if (AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i, j, k, FaceDir::XMinus)) {
+        if (AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i, j, k, FaceDir::XMinus, grid.getACTNUM())) {
             trans[0].insert(grid.getGlobalIndex(i-1, j, k));
         }
-        if (AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i, j, k, FaceDir::YPlus)) {
+        if (AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i, j, k, FaceDir::YPlus, grid.getACTNUM())) {
             trans[1].insert(cell.global_index);
         }
-        if (AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i, j, k, FaceDir::YMinus)) {
+        if (AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i, j, k, FaceDir::YMinus, grid.getACTNUM())) {
             trans[1].insert(grid.getGlobalIndex(i, j-1, k));
         }
-        if (AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i, j, k, FaceDir::ZPlus)) {
+        if (AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i, j, k, FaceDir::ZPlus, grid.getACTNUM())) {
             trans[2].insert(cell.global_index);
         }
-        if (AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i, j, k, FaceDir::ZMinus)) {
+        if (AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i, j, k, FaceDir::ZMinus, grid.getACTNUM())) {
             trans[2].insert(grid.getGlobalIndex(i, j, k-1));
         }
     }
@@ -293,21 +302,30 @@ appendNNC(const EclipseGrid &grid, const FieldPropsManager &fp, NNC &nnc) const 
     // adding the NNC between the numerical cells
     for (size_t i = 0; i < this->cells_.size() - 1; ++i) {
         const double trans1 = this->cells_[i].transmissibility;
-        const double trans2 = this->cells_[i+1].transmissibility;
-        const double tran = 1. / ( 1./trans1 + 1./trans2);
+        const double trans2 = this->cells_[i + 1].transmissibility;
+        const double tran = 1. / (1. / trans1 + 1. / trans2);
         const size_t gc1 = this->cells_[i].global_index;
-        const size_t gc2 = this->cells_[i+1].global_index;
+        const size_t gc2 = this->cells_[i + 1].global_index;
+/*         std::cout << " cell1 " << gc1 << " active? " << grid.cellActive(gc1) << " active_index " << grid.activeIndex(gc1) << std::endl;
+        std::cout << " cell2 " << gc2 << " active? " << grid.cellActive(gc2) << " active_index " << grid.activeIndex(gc2) << std::endl; */
         nnc.addNNC(gc1, gc2, tran);
 
         // DEBUG output
-        const auto& cell1 = this->cells_[i];
-        const auto& cell2 = this->cells_[i+1];
-        const double transform_efficient = 1.e8*86400.;
-        std::cout << cell1.I + 1 << " " << cell1.J + 1 << " " << cell1.K + 1 << " "
-                  << cell2.I + 1 << " " << cell2.J + 1 << " " << cell2.K + 1 << " " << tran * transform_efficient << std::endl;
+        const auto &cell1 = this->cells_[i];
+        const auto &cell2 = this->cells_[i + 1];
+        const double transform_efficient = 1.e8 * 86400.;
+        std::cout << cell1.I + 1 << " " << cell1.J + 1 << " " << cell1.K + 1 << " " << " global_index " << gc1 << " "
+                  << cell2.I + 1 << " " << cell2.J + 1 << " " << cell2.K + 1 << " " << " global_index " << gc2 << " "
+                  << tran * transform_efficient << std::endl;
     }
+}
 
+void SingleNumericalAquifer::appendConnectionNNC(const EclipseGrid &grid, const FieldPropsManager &fp,
+                                                 const std::vector<int> &actnum, NNC &nnc) const {
     const std::vector<double>& ntg = fp.get_double("NTG");
+    std::cout << " ntg.size() " << ntg.size() << std::endl;
+    std::cout << " fp.active_size " << fp.active_size()  << std::endl;
+    std::cout << " grid.grid.getNumActive() " << grid.getNumActive() << std::endl;
     const auto& cell1 = this->cells_[0];
     // all the connections connect to the first numerical aquifer cell
     const size_t gc1 = cell1.global_index;
@@ -339,15 +357,23 @@ appendNNC(const EclipseGrid &grid, const FieldPropsManager &fp, NNC &nnc) const 
         const double trans_cell = (con.trans_option == 0) ?
                               cell1.transmissibility : (2 * cell1.permeability * face_area / cell1.length);
 
+/*         {
+            const auto& perms = fp.get_double(perm_string);
+            std::cout << perm_string << " size is " << perms.size() << std::endl;
+        } */
         const double cell_perm = (fp.get_double(perm_string))[grid.activeIndex(gc2)];
         const double trans_con = 2 * cell_perm * face_area * ntg[grid.activeIndex(con.global_index)] / d;
+        const double transform_efficient = 1.e8*86400.;
+        std::cout << " trans_ cell " << trans_cell * transform_efficient << std::endl;
+        std::cout << " trans_con " << trans_con * transform_efficient <<  " ntg " << ntg[grid.activeIndex(con.global_index)] << " face_area " << face_area << " cell_perm " << cell_perm << std::endl;
 
         const double tran = trans_con * trans_cell / (trans_con + trans_cell) * con.trans_multipler;
         nnc.addNNC(gc1, gc2, tran);
+/*         std::cout << " cell1 " << gc1 << " active? " << grid.cellActive(gc1) << " active_index " << grid.activeIndex(gc1) << std::endl;
+        std::cout << " cell2 " << gc2 << " active? " << grid.cellActive(gc2) << " active_index " << grid.activeIndex(gc2) << std::endl; */
         // debug output
-        const double transform_efficient = 1.e8*86400.;
-        std::cout << cell1.I + 1 << " " << cell1.J + 1 << " " << cell1.K + 1 << " "
-                  << con.I + 1 << " " << con.J + 1 << " " << con.K + 1 << " " << tran * transform_efficient << std::endl;
+        std::cout << cell1.I + 1 << " " << cell1.J + 1 << " " << cell1.K + 1 << " " << " global_index " << gc1 << " "
+                  << con.I + 1 << " " << con.J + 1 << " " << con.K + 1 << " " << " global_index " << gc2 << " " << tran * transform_efficient << std::endl;
     }
 }
 

@@ -68,6 +68,7 @@ namespace Opm {
                              std::vector<double>& cell_depth) const;
         std::array<std::set<size_t>, 3> transToRemove(const EclipseGrid& grid) const;
         void appendNNC(const EclipseGrid &grid, const FieldPropsManager &fp, NNC &nnc) const;
+        void appendConnectionNNC(const EclipseGrid &grid, const FieldPropsManager &fp, const std::vector<int>& actnum, NNC &nnc) const;
         size_t numCells() const;
         size_t id() const;
         double initPressure() const;
@@ -100,10 +101,12 @@ namespace Opm {
         // TODO: maybe better wrap with other more direct functions, let us see the usage first
         const std::unordered_map<size_t, const NumericalAquiferCell>& aquiferCells() const;
         void appendNNC(const EclipseGrid &grid, const FieldPropsManager &fp, NNC &nnc) const;
+        void appendConnectionNNC(const EclipseGrid &grid, const FieldPropsManager &fp, const std::vector<int>& actnum, NNC &nnc) const;
         const NumericalAquiferCell& getCell(const size_t cell_global_index) const;
         const std::unordered_map<size_t, SingleNumericalAquifer>& aquifers() const;
         bool active() const;
         const std::unordered_map<size_t, double> cellVolumes() const;
+        void addAquiferConnections(const Deck& deck, const EclipseGrid& grid, const std::vector<int>& actnum);
 
     private:
         // std::un_ordered_map
@@ -112,7 +115,6 @@ namespace Opm {
         std::unordered_map<size_t, const NumericalAquiferCell> aquifer_cells_;
 
         void addAquiferCell(const NumericalAquiferCell& aqu_cell);
-        void addAquiferConnections(const Deck& deck, const EclipseGrid& grid);
     };
 }
 #endif // OPM_NUMERICAL_AQUIFER_HPP

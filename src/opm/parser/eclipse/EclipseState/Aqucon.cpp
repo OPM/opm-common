@@ -32,7 +32,7 @@
 
 namespace Opm {
 
-    NumericalAquiferConnections::NumericalAquiferConnections(const Deck &deck, const EclipseGrid &grid)
+    NumericalAquiferConnections::NumericalAquiferConnections(const Deck &deck, const EclipseGrid &grid, const std::vector<int>& actnum)
     {
         using AQUCON=ParserKeywords::AQUCON;
         if ( !deck.hasKeyword<AQUCON>() ) return;
@@ -40,7 +40,7 @@ namespace Opm {
         const auto& aqucon_keywords = deck.getKeywordList<AQUCON>();
         for (const auto& keyword : aqucon_keywords) {
             for (const auto& record : *keyword) {
-                const auto cons_from_record = NumAquiferCon::generateConnections(grid, record);
+                const auto cons_from_record = NumAquiferCon::generateConnections(grid, record, actnum);
                 for (auto con : cons_from_record) {
                     const size_t aqu_id = con.aquifer_id;
                     const size_t global_index = con.global_index;
@@ -72,7 +72,8 @@ namespace Opm {
         }
     }
 
-    std::vector<NumAquiferCon> NumAquiferCon::generateConnections(const EclipseGrid& grid, const DeckRecord& record) {
+    std::vector<NumAquiferCon> NumAquiferCon::generateConnections(const EclipseGrid& grid, const DeckRecord& record,
+                                                                  const std::vector<int>& actnum) {
         std::vector<NumAquiferCon> cons;
 
         using AQUCON = ParserKeywords::AQUCON;
@@ -99,11 +100,14 @@ namespace Opm {
             for (size_t j = j1; j <=j2; ++j) {
                 for (size_t i = i1; i <= i2; ++i) {
                     // TODO: we probably should give a message here
-                    if (!grid.cellActive(i, j, k)) {
+/*                    if (!grid.cellActive(i, j, k)) {
+                        continue;
+                    } */
+                    if (!actnum[grid.getGlobalIndex(i, j, k)]) {
                         continue;
                     }
                     if (allow_internal_cells ||
-                        !AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i, j, k, face_dir)) {
+                        !AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i, j, k, face_dir, actnum)) {
                         const size_t global_index = grid.getGlobalIndex(i, j, k);
                         cons.emplace_back(NumAquiferCon{aqu_id, i, j, k, global_index, face_dir, trans_multi, trans_option,
                                                         allow_internal_cells, ve_frac_relperm, ve_frac_cappress});

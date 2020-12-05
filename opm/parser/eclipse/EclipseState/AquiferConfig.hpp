@@ -45,6 +45,7 @@ public:
     bool active() const;
     bool hasNumericalAquifer() const;
     const NumericalAquifers& numericalAquifers() const;
+    NumericalAquifers& numericalAquifers();
     const AquiferCT& ct() const;
     const Aquifetp& fetp() const;
     const Aquancon& connections() const;

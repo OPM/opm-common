@@ -83,4 +83,8 @@ const NumericalAquifers& AquiferConfig::numericalAquifers() const {
     return this->numerical_aquifers;
 }
 
+NumericalAquifers &AquiferConfig::numericalAquifers() {
+    return this->numerical_aquifers;
+}
+
 }

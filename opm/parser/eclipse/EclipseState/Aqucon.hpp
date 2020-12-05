@@ -44,12 +44,12 @@ namespace Opm {
         double ve_frac_relperm;
         double ve_frac_cappress;
 
-        static std::vector<NumAquiferCon> generateConnections(const EclipseGrid&, const DeckRecord&);
+        static std::vector<NumAquiferCon> generateConnections(const EclipseGrid&, const DeckRecord&, const std::vector<int>& actnum);
     };
 
     class NumericalAquiferConnections {
     public:
-        NumericalAquiferConnections(const Deck& deck, const EclipseGrid& grid);
+        NumericalAquiferConnections(const Deck& deck, const EclipseGrid& grid, const std::vector<int>& actnum);
         const std::map<size_t, NumAquiferCon>& getConnections(const size_t aqu_id) const;
 
     private:

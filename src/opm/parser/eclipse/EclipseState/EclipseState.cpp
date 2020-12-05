@@ -18,6 +18,7 @@
  */
 
 #include <set>
+#include <iostream>
 
 #include <fmt/format.h>
 
@@ -66,11 +67,13 @@ namespace Opm {
           m_transMult(         GridDims(deck), deck, field_props),
           tracer_config(       m_deckUnitSystem, deck)
     {
+        std::cout << "1 cell 0 active? " << m_inputGrid.cellActive(0) << std::endl;
         if ( this->aquifer_config.hasNumericalAquifer() ) {
             this->field_props.applyNumericalAquifer(this->aquifer_config);
             this->aquifer_config.numericalAquifers().appendNNC(this->m_inputGrid, this->field_props, this->m_inputNnc);
         }
 
+        std::cout << "2 cell 0 active? " << m_inputGrid.cellActive(0) << std::endl;
         m_inputGrid.resetACTNUM(this->field_props.actnum());
         if( this->runspec().phases().size() < 3 )
             OpmLog::info(fmt::format("Only {} fluid phases are enabled",  this->runspec().phases().size() ));
@@ -87,7 +90,9 @@ namespace Opm {
         this->initTransMult();
 
         this->initFaults(deck);
+        std::cout << "3 cell 0 active? " << m_inputGrid.cellActive(0) << std::endl;
         this->field_props.reset_actnum( this->m_inputGrid.getACTNUM() );
+        std::cout << "4 cell 0 active? " << m_inputGrid.cellActive(0) << std::endl;
     }
     catch (const OpmInputError& opm_error) {
         throw;
@@ -180,6 +185,10 @@ namespace Opm {
         return m_inputNnc;
     }
 
+    NNC& EclipseState::getInputNNC() {
+        return m_inputNnc;
+    }
+
     bool EclipseState::hasInputNNC() const {
         return !m_inputNnc.input().empty();
     }
@@ -189,6 +198,10 @@ namespace Opm {
     }
 
     const AquiferConfig& EclipseState::aquifer() const {
+        return this->aquifer_config;
+    }
+
+    AquiferConfig& EclipseState::aquifer() {
         return this->aquifer_config;
     }
 

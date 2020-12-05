@@ -86,7 +86,7 @@ namespace Opm {
                         for (int i = i1; i <= i2; i++) {
                             if (grid.cellActive(i, j, k)) { // the cell itself needs to be active
                                 if (allow_aquifer_inside_reservoir
-                                    || !AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i, j, k, faceDir)) {
+                                    || !AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i, j, k, faceDir, std::vector<int>())) {
                                     std::pair<bool, double> influx_coeff = std::make_pair(false, 0);
                                     auto global_index = grid.getGlobalIndex(i, j, k);
                                     if (aquanconRecord.getItem("INFLUX_COEFF").hasValue(0))
