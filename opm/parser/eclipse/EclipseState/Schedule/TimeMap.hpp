@@ -37,7 +37,7 @@ namespace Opm {
     class DeckKeyword;
     class DeckRecord;
     class KeywordLocation;
-    class TimeMapContext;
+    struct TimeMapContext;
 
     class TimeMap {
     public:
