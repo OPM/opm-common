@@ -342,7 +342,7 @@ bool EclFile::is_ix() const
                 int p, first;
 
                 for (auto val : realStr) {
-                    double dtmpv = abs(std::stod(val));
+                    double dtmpv = fabs(std::stod(val));
 
                     if (dtmpv > 0.0) {
                         p = val.find_first_of(".");
