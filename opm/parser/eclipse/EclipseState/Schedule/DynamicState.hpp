@@ -173,6 +173,19 @@ class DynamicState {
         return std::distance(this->m_data.begin(), update_end);
     }
 
+
+    void update_range(std::size_t start_index, std::size_t end_index, const T& value) {
+        if (end_index < start_index)
+            throw std::invalid_argument("Must have growing index");
+
+        if (end_index > this->m_data.size())
+            throw std::invalid_argument("Invalid range");
+
+        std::fill(this->m_data.begin() + start_index, this->m_data.begin() + end_index, value);
+    }
+
+
+
     /// Will return the index of the first occurence of @value
     std::optional<std::size_t> find(const T& value) const {
         auto iter = std::find( m_data.begin() , m_data.end() , value);

@@ -284,6 +284,17 @@ BOOST_AUTO_TEST_CASE( update_equal ) {
 }
 
 
+BOOST_AUTO_TEST_CASE( update_range) {
+    Opm::TimeMap timeMap = make_timemap(11);
+    Opm::DynamicState<int> state(timeMap , 0);
+
+    BOOST_CHECK_THROW( state.update_range(5,1,99), std::exception);
+    BOOST_CHECK_THROW( state.update_range(10,200,99), std::exception);
+    state.update_range(3,5,99);
+    BOOST_CHECK_EQUAL( state[3], 99);
+    BOOST_CHECK_EQUAL( state[4], 99);
+    BOOST_CHECK_EQUAL( state[5], 0);
+}
 
 
 
