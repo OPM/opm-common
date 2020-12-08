@@ -81,25 +81,33 @@ public:
 
     struct WellStatus {
         Status status;
+        std::size_t first_step;
+        std::optional<std::size_t> last_step;
 
         WellStatus() = default;
 
-        WellStatus(Status st) :
-            status(st)
+        WellStatus(Status st, std::size_t fs) :
+            status(st),
+            first_step(fs)
         {}
 
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
             serializer(status);
+            serializer(first_step);
+            serializer(last_step);
         }
 
         bool operator==(const WellStatus& other) const {
-            return this->status == other.status;
+            return this->status == other.status &&
+                   this->first_step == other.first_step &&
+                   this->last_step == other.last_step;
         }
 
         static WellStatus serializeObject() {
-            WellStatus ws(Well::Status::AUTO);
+            WellStatus ws(Well::Status::AUTO, 77);
+            ws.last_step = 123;
             return ws;
         }
     };
@@ -513,6 +521,8 @@ public:
     double getEfficiencyFactor() const;
     double getSolventFraction() const;
     Status getStatus() const;
+    std::pair<std::size_t, std::optional<std::size_t>> statusRange() const;
+    void commitStatus(std::size_t report_step);
     const std::string& groupName() const;
     Phase getPreferredPhase() const;
 
@@ -568,9 +578,10 @@ public:
     bool updateRefDepth(const std::optional<double>& ref_dpeth);
     bool updateDrainageRadius(double drainage_radius);
     void updateSegments(std::shared_ptr<WellSegments> segments_arg);
-    bool updateConnections(std::shared_ptr<WellConnections> connections, bool force = false);
-    bool updateConnections(std::shared_ptr<WellConnections> connections, const EclipseGrid& grid, const std::vector<int>& pvtnum);
-    bool updateStatus(Status status, bool runtime, bool update_connections);
+    bool updateConnections(std::shared_ptr<WellConnections> connections, std::size_t report_step, bool runtime, bool force = false);
+    bool updateConnections(std::shared_ptr<WellConnections> connections, std::size_t report_step, const EclipseGrid& grid, const std::vector<int>& pvtnum);
+    bool updateStatus(Status status, std::size_t report_step, bool runtime);
+    bool updateConnectionStatus(Status well_state, std::size_t report_step, bool runtime);
     bool updateGroup(const std::string& group);
     bool updateWellGuideRate(bool available, double guide_rate, GuideRateTarget guide_phase, double scale_factor);
     bool updateWellGuideRate(double guide_rate);
@@ -590,10 +601,10 @@ public:
     bool updateWPAVE(const PAvg& pavg);
 
     bool handleWELSEGS(const DeckKeyword& keyword);
-    bool handleCOMPSEGS(const DeckKeyword& keyword, const EclipseGrid& grid, const ParseContext& parseContext, ErrorGuard& errors);
-    bool handleWELOPEN(const DeckRecord& record, Connection::State status, bool action_mode);
-    bool handleCOMPLUMP(const DeckRecord& record);
-    bool handleWPIMULT(const DeckRecord& record);
+    bool handleCOMPSEGS(const DeckKeyword& keyword, std::size_t report_step, const EclipseGrid& grid, const ParseContext& parseContext, ErrorGuard& errors);
+    bool handleWELOPENConnections(const DeckRecord& record, std::size_t report_step, Connection::State status, bool action_mode);
+    bool handleCOMPLUMP(const DeckRecord& record, std::size_t report_step);
+    bool handleWPIMULT(const DeckRecord& record, std::size_t report_step);
 
     void filterConnections(const ActiveGridCells& grid);
     ProductionControls productionControls(const SummaryState& st) const;

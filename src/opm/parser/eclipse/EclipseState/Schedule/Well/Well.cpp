@@ -153,7 +153,7 @@ Well::Well(const RestartIO::RstWell& rst_well,
     connections(std::make_shared<WellConnections>(order_from_int(rst_well.completion_ordering), headI, headJ)),
     production(std::make_shared<WellProductionProperties>(unit_system_arg, wname)),
     injection(std::make_shared<WellInjectionProperties>(unit_system_arg, wname)),
-    status(std::make_shared<WellStatus>(status_from_int(rst_well.well_status)))
+    status(std::make_shared<WellStatus>(status_from_int(rst_well.well_status), report_step))
 {
     using CModeVal = ::Opm::RestartIO::Helpers::VectorItems::IWell::Value::WellCtrlMode;
 
@@ -347,7 +347,7 @@ Well::Well(const std::string& wname_arg,
     connections(std::make_shared<WellConnections>(ordering_arg, headI, headJ)),
     production(std::make_shared<WellProductionProperties>(unit_system, wname)),
     injection(std::make_shared<WellInjectionProperties>(unit_system, wname)),
-    status(std::make_shared<WellStatus>(Status::SHUT))
+    status(std::make_shared<WellStatus>(Status::SHUT, init_step))
 {
     auto p = std::make_shared<WellProductionProperties>(this->unit_system, this->wname);
     p->whistctl_cmode = whistctl_cmode;
@@ -366,7 +366,7 @@ Well Well::serializeObject()
     result.ref_depth = 5;
     result.unit_system = UnitSystem::serializeObject();
     result.udq_undefined = 6.0;
-    result.status = std::make_shared<WellStatus>(Status::SHUT);
+    result.status = std::make_shared<WellStatus>(WellStatus::serializeObject());
     result.drainage_radius = 7.0;
     result.allow_cross_flow = true;
     result.automatic_shutin = false;
@@ -706,46 +706,64 @@ This illustration shows "many things":
      object - this can even go backwards in time!
 */
 
-bool Well::updateStatus(Status well_state, bool runtime, bool update_connections) {
-    if (update_connections) {
-        Connection::State connection_state;
-        if (runtime)
-            throw std::logic_error("runtime and update_connections can not be combined");
-
-
-        switch (well_state) {
-        case Status::OPEN:
-            connection_state = Connection::State::OPEN;
-            break;
-        case Status::SHUT:
-            connection_state = Connection::State::SHUT;
-            break;
-        case Status::AUTO:
-            connection_state = Connection::State::AUTO;
-            break;
-        case Status::STOP:
-            connection_state = Connection::State::SHUT;
-            break;
-        default:
-            throw std::logic_error("Bug - should not be here");
-        }
-
-        auto new_connections = std::make_shared<WellConnections>(this->connections->ordering(), this->headI, this->headJ);
-        for (auto c : *this->connections) {
-            c.setState(connection_state);
-            new_connections->add(c);
-        }
-
-        this->updateConnections(std::move(new_connections));
-    }
+bool Well::updateStatus(Status well_state, std::size_t report_step, bool runtime) {
 
     if (runtime)
         this->status->status = well_state;
-    else
-        this->status = std::make_shared<WellStatus>(well_state);
-
+    else {
+        this->status->last_step = report_step;
+        this->status = std::make_shared<WellStatus>(well_state, report_step);
+    }
     return true;
 }
+
+
+/*
+  Down this path lies the road to madness. The point is that for runtime WELOPEN
+  events, both for wells and connections the time range where the WELOPEN is
+  active, in order to clamp this to WELOPEN events also for pure connection
+  events we have this function.
+*/
+
+void Well::commitStatus(std::size_t report_step) {
+    auto well_state = this->status->status;
+    this->status->last_step = report_step;
+    this->status = std::make_shared<WellStatus>(well_state, report_step);
+}
+
+
+
+bool Well::updateConnectionStatus(Status well_state, std::size_t report_step, bool runtime) {
+    Connection::State connection_state;
+    if (runtime)
+        throw std::logic_error("runtime and update_connections can not be combined");
+
+    switch (well_state) {
+    case Status::OPEN:
+        connection_state = Connection::State::OPEN;
+        break;
+    case Status::SHUT:
+        connection_state = Connection::State::SHUT;
+        break;
+    case Status::AUTO:
+        connection_state = Connection::State::AUTO;
+        break;
+    case Status::STOP:
+        connection_state = Connection::State::SHUT;
+        break;
+    default:
+        throw std::logic_error("Bug - should not be here");
+    }
+
+    auto new_connections = std::make_shared<WellConnections>(this->connections->ordering(), this->headI, this->headJ);
+    for (auto c : *this->connections) {
+        c.setState(connection_state);
+        new_connections->add(c);
+    }
+    this->updateConnections(std::move(new_connections), report_step, runtime);
+    return true;
+}
+
 
 
 bool Well::updateRefDepth(const std::optional<double>& ref_depth_arg) {
@@ -786,20 +804,28 @@ bool Well::updateAutoShutin(bool auto_shutin) {
 }
 
 
-bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg, bool force) {
+bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg, std::size_t report_step, bool runtime, bool force) {
     connections_arg->order(  );
     if (force || *this->connections != *connections_arg) {
         this->connections = connections_arg;
-        if (this->connections->empty())
-            this->status = std::make_shared<WellStatus>(Well::Status::SHUT);
+
+        /*
+          During the parse process - i.e. runtime == false we can still have a
+          well which is open with all connections shut.
+        */
+
+        if (runtime) {
+            if (this->connections->allConnectionsShut())
+                this->updateStatus(Well::Status::SHUT, report_step, runtime);
+        }
 
         return true;
     }
     return false;
 }
 
-bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg, const EclipseGrid& grid, const std::vector<int>& pvtnum) {
-    bool update = this->updateConnections(connections_arg);
+bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg, std::size_t report_step, const EclipseGrid& grid, const std::vector<int>& pvtnum) {
+    bool update = this->updateConnections(connections_arg, report_step, false);
     if (this->pvt_table == 0 && !this->connections->empty()) {
         const auto& lowest = this->connections->lowest();
         auto active_index = grid.activeIndex(lowest.global_index());
@@ -819,12 +845,15 @@ bool Well::updateSolventFraction(double solvent_fraction_arg) {
 }
 
 
-bool Well::handleCOMPSEGS(const DeckKeyword& keyword, const EclipseGrid& grid,
-                          const ParseContext& parseContext, ErrorGuard& errors) {
+bool Well::handleCOMPSEGS(const DeckKeyword& keyword,
+                          std::size_t report_step,
+                          const EclipseGrid& grid,
+                          const ParseContext& parseContext,
+                          ErrorGuard& errors) {
     auto [new_connections, new_segments] = Compsegs::processCOMPSEGS(keyword, *this->connections, *this->segments , grid,
                                                                      parseContext, errors);
 
-    this->updateConnections( std::make_shared<WellConnections>(std::move(new_connections)) );
+    this->updateConnections( std::make_shared<WellConnections>(std::move(new_connections)), report_step, false );
     this->updateSegments( std::make_shared<WellSegments>( std::move(new_segments)) );
     return true;
 }
@@ -1054,6 +1083,11 @@ const Well::WellInjectionProperties& Well::getInjectionProperties() const {
     return *this->injection;
 }
 
+
+std::pair<std::size_t, std::optional<std::size_t>> Well::statusRange() const {
+    return std::make_pair( this->status->first_step, this->status->last_step);
+}
+
 Well::Status Well::getStatus() const {
     return this->status->status;
 }
@@ -1116,7 +1150,7 @@ int Well::fip_region_number() const {
 */
 
 
-bool Well::handleWELOPEN(const DeckRecord& record, Connection::State state_arg, bool runtime) {
+bool Well::handleWELOPENConnections(const DeckRecord& record, std::size_t report_step, Connection::State state_arg, bool runtime) {
 
     auto match = [=]( const Connection &c) -> bool {
         if (!match_eq(c.getI(), record, "I" , -1)) return false;
@@ -1136,19 +1170,14 @@ bool Well::handleWELOPEN(const DeckRecord& record, Connection::State state_arg, 
 
         new_connections->add(c);
     }
-    if (runtime) {
-        if (new_connections->allConnectionsShut())
-            this->updateStatus(Well::Status::SHUT, true, false);
-    }
-
-    return this->updateConnections(std::move(new_connections));
+    return this->updateConnections(std::move(new_connections), report_step, runtime);
 }
 
 
 
 
 
-bool Well::handleCOMPLUMP(const DeckRecord& record) {
+bool Well::handleCOMPLUMP(const DeckRecord& record, std::size_t report_step) {
 
     auto match = [=]( const Connection &c) -> bool {
         if (!match_eq(c.getI(), record, "I" , -1)) return false;
@@ -1171,12 +1200,12 @@ bool Well::handleCOMPLUMP(const DeckRecord& record) {
         new_connections->add(c);
     }
 
-    return this->updateConnections(std::move(new_connections));
+    return this->updateConnections(std::move(new_connections), report_step, false);
 }
 
 
 
-bool Well::handleWPIMULT(const DeckRecord& record) {
+bool Well::handleWPIMULT(const DeckRecord& record, std::size_t report_step) {
 
     auto match = [=]( const Connection &c) -> bool {
         if (!match_ge(c.complnum(), record, "FIRST")) return false;
@@ -1198,7 +1227,7 @@ bool Well::handleWPIMULT(const DeckRecord& record) {
         new_connections->add(c);
     }
 
-    return this->updateConnections(std::move(new_connections));
+    return this->updateConnections(std::move(new_connections), report_step, false);
 }
 
 
