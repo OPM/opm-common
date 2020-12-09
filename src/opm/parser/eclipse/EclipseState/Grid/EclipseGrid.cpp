@@ -1022,7 +1022,7 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
                                 zcorn[ zm.index(i,j,k,c) ]     = current_depth;
                                 zcorn[ zm.index(i,j,k,c + 4) ] = next_depth;
                             }
-                            depth[j * this->getNX() + i] += next_depth;
+                            depth[j * this->getNX() + i] = next_depth;
                         }
                     }
                 }
