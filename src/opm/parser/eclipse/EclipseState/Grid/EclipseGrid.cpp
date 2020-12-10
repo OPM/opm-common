@@ -923,24 +923,31 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         return zcorn;
     }
 
-    void EclipseGrid::initCylindricalGrid([[maybe_unused]] const Deck& deck)
+    void EclipseGrid::initCylindricalGrid(const Deck& deck)
     {
-        throw std::invalid_argument("Cylindrical grid not implemented yet, use SPIDER web grid keyword instead for radial flow modeling");
+        initSpiderwebOrCylindricalGrid(deck, true);
     }
-
-    /*
-      Limited implementaton - requires keywords: DRV, DTHETAV, DZV and TOPS.
-    */
 
     void EclipseGrid::initSpiderwebGrid(const Deck& deck)
     {
-        // The hasSpiderKeywords( ) checks according to the
+        initSpiderwebOrCylindricalGrid(deck, false);
+    }
+
+    /*
+      Limited implementaton - requires keywords: DRV, DTHETAV, DZV or DZ, and TOPS.
+    */
+
+    void EclipseGrid::initSpiderwebOrCylindricalGrid(const Deck& deck, const bool is_cylindrical)
+    {
+        const std::string kind = is_cylindrical ? "cylindrical" : "spiderweb";
+
+        // The hasCylindricalKeywords( ) checks according to the
         // eclipse specification for RADIAL grid. We currently do not support all
         // aspects of cylindrical grids, we therefor have an
         // additional test here, which checks if we have the keywords
         // required by the current implementation.
         if (!hasCylindricalKeywords(deck))
-            throw std::invalid_argument("Not all keywords required for spiderweb grids present");
+            throw std::invalid_argument("Not all keywords required for " + kind + " grids present");
 
         if (!deck.hasKeyword<ParserKeywords::DTHETAV>())
             throw std::logic_error("The current implementation *must* have theta values specified using the DTHETAV keyword");
@@ -954,7 +961,7 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         const std::vector<double>& drv     = deck.getKeyword<ParserKeywords::DRV>().getSIDoubleData();
         const std::vector<double>& dthetav = deck.getKeyword<ParserKeywords::DTHETAV>().getSIDoubleData();
         const std::vector<double>& tops    = deck.getKeyword<ParserKeywords::TOPS>().getSIDoubleData();
-        OpmLog::info(fmt::format("\nCreating spiderweb grid from keywords DRV, DTHETAV, DZV and TOPS"));
+        OpmLog::info(fmt::format("\nCreating {} grid from keywords DRV, DTHETAV, DZV and TOPS", kind));
 
         if (drv.size() != this->getNX())
             throw std::invalid_argument("DRV keyword should have exactly " + std::to_string( this->getNX() ) + " elements");
@@ -1015,7 +1022,7 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
                                 zcorn[ zm.index(i,j,k,c) ]     = current_depth;
                                 zcorn[ zm.index(i,j,k,c + 4) ] = next_depth;
                             }
-                            depth[j * this->getNX() + i] += next_depth;
+                            depth[j * this->getNX() + i] = next_depth;
                         }
                     }
                 }
@@ -1055,6 +1062,13 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
                         coord[ cm.index(i,j,2,1) ] = z2;
                     }
                 }
+
+                // Save angles, used by the cylindrical grid to calculate volumes.
+                if (is_cylindrical) {
+                    m_rv = ri;
+                    m_thetav = dthetav;
+                }
+
             }
             initCornerPointGrid( coord, zcorn, nullptr, nullptr);
         }
@@ -1381,7 +1395,14 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
             std::array<double,8> Z;
             auto global_index = this->m_active_to_global[active_index];
             this->getCellCorners(global_index, X, Y, Z );
-            active_volume[active_index] = calculateCellVol(X, Y, Z);
+            if (m_rv && m_thetav) {
+                const auto[i,j,k] = this->getIJK(global_index);
+                auto& r = *m_rv;
+                auto& t = *m_thetav;
+                active_volume[active_index] = calculateCylindricalCellVol(r[i], r[i+1], t[j], Z[4] - Z[4]);
+            } else {
+                active_volume[active_index] = calculateCellVol(X, Y, Z);
+            }
         }
 
         return active_volume;
@@ -1394,7 +1415,14 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         std::array<double,8> Y;
         std::array<double,8> Z;
         this->getCellCorners(globalIndex, X, Y, Z );
-        return calculateCellVol(X, Y, Z);
+        if (m_rv && m_thetav) {
+            const auto[i,j,k] = this->getIJK(globalIndex);
+            auto& r = *m_rv;
+            auto& t = *m_thetav;
+           return calculateCylindricalCellVol(r[i], r[i+1], t[j], Z[4] - Z[0]);
+        } else {
+            return calculateCellVol(X, Y, Z);
+        }
     }
 
     double EclipseGrid::getCellVolume(size_t i , size_t j , size_t k) const {
