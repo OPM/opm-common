@@ -1115,3 +1115,73 @@ TSTEP
 }
 
 
+BOOST_AUTO_TEST_CASE(COMBINED_OR) {
+    const auto deck_string = std::string{ R"(
+SCHEDULE
+
+ACTIONX
+ACT1 1 /
+FU1 < 10 AND   /
+FU2 < FU3  AND /
+( FU2 > 1 OR /
+  FU2 < -1 ) /
+/
+
+ENDACTIO
+
+        )"};
+
+    auto st = SummaryState{ std::chrono::system_clock::now() };
+    Schedule sched = make_schedule(deck_string);
+    Opm::WListManager wlm;
+    Opm::Action::Context context(st, wlm);
+
+    const auto& config = sched.actions(0);
+    const Opm::Action::ActionX& action = config.get("ACT1");
+
+    /*
+    FU1 < 10 |  FU2 < FU3 ||   FU2 > 1 |  FU2 < -1  | Result
+    ----------------------||------------------------|-------
+    T        |  T         || T         | T          | T
+    T        |  T         || T         | F          | T
+    T        |  T         || F         | T          | T
+    T        |  T         || F         | F          | F
+    ----------------------||------------------------|-------
+    T        |  F         || T         | T          | F
+    T        |  F         || T         | T          | F
+    T        |  F         || T         | T          | F
+    T        |  F         || T         | T          | F
+    ----------------------||------------------------|-------
+    F        |  T         || T         | T          | F
+    F        |  T         || T         | T          | F
+    F        |  T         || T         | T          | F
+    F        |  T         || T         | T          | F
+    ----------------------||------------------------|-------
+    F        |  F         || T         | T          | F
+    F        |  F         || T         | T          | F
+    F        |  F         || T         | T          | F
+    F        |  F         || T         | T          | F
+    */
+
+    std::vector<double> FU1_values = {1, 100};
+    std::vector<double> FU2_values = {-5,0,5};
+
+
+    for (const auto& FU1 : FU1_values) {
+        for (const auto& FU2 : FU2_values) {
+            std::vector FU3_values = { FU2 + 1, FU2 - 1 };
+            for (const auto& FU3 : FU3_values) {
+                bool expected = ((FU1 < 10) && (FU2 < FU3) && ((FU2 > 1) || (FU2 < -1)));
+
+                st.update("FU1", FU1);
+                st.update("FU2", FU2);
+                st.update("FU3", FU3);
+
+                auto result = action.eval(context);
+                BOOST_CHECK_EQUAL(bool(result), expected);
+            }
+        }
+    }
+
+
+}
