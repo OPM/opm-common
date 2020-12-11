@@ -1122,7 +1122,7 @@ SCHEDULE
 ACTIONX
 ACT1 1 /
 FU1 < 10 AND   /
-FU2 < FU3  AND /
+( FU2 < FU3 )  AND /
 ( FU2 > 1 OR /
   FU2 < -1 ) /
 /
@@ -1182,6 +1182,37 @@ ENDACTIO
             }
         }
     }
+    const auto& conditions = action.conditions();
+    BOOST_CHECK_EQUAL( conditions.size(), 4);
+    {
+        auto cond0 = conditions[0];
+        BOOST_CHECK_EQUAL(cond0.lhs.quantity, "FU1");
+        BOOST_CHECK(cond0.lhs.args.empty());
+        BOOST_CHECK(!cond0.left_paren);
+        BOOST_CHECK(!cond0.right_paren);
+    }
+    {
+        auto cond1 = conditions[1];
+        BOOST_CHECK_EQUAL(cond1.lhs.quantity, "FU2");
+        BOOST_CHECK(cond1.lhs.args.empty());
+        BOOST_CHECK(cond1.left_paren);
+        BOOST_CHECK(cond1.right_paren);
+    }
+    {
+        auto cond2 = conditions[2];
+        BOOST_CHECK_EQUAL(cond2.lhs.quantity, "FU2");
+        BOOST_CHECK(cond2.lhs.args.empty());
+        BOOST_CHECK(cond2.left_paren);
+        BOOST_CHECK(!cond2.right_paren);
+    }
+    {
+        auto cond3 = conditions[3];
+        BOOST_CHECK_EQUAL(cond3.lhs.quantity, "FU2");
+        BOOST_CHECK(cond3.lhs.args.empty());
+        BOOST_CHECK(!cond3.left_paren);
+        BOOST_CHECK(cond3.right_paren);
 
+        BOOST_CHECK(cond3.rhs.args.empty());
+    }
 
 }

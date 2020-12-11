@@ -84,6 +84,9 @@ enum class Comparator {
     Quantity rhs;
     Logical logic = Logical::END;
     Comparator cmp = Comparator::INVALID;
+    bool left_paren = false;
+    bool right_paren = false;
+
     std::string cmp_string;
 
     bool operator==(const Condition& data) const;
@@ -96,6 +99,8 @@ enum class Comparator {
         serializer(logic);
         serializer(cmp);
         serializer(cmp_string);
+        serializer(left_paren);
+        serializer(right_paren);
     }
 };
 
