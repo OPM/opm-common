@@ -85,8 +85,13 @@ void Quantity::add_arg(const std::string& arg) {
 }
 
 Condition::Condition(const std::vector<std::string>& tokens, const KeywordLocation& location) {
-    this->lhs = Quantity(tokens[0]);
-    std::size_t token_index = 1;
+    std::size_t token_index = 0;
+    if (tokens[0] == "(") {
+        this->left_paren = true;
+        token_index += 1;
+    }
+    this->lhs = Quantity(tokens[token_index]);
+    token_index += 1;
 
     while (true) {
         if (token_index >= tokens.size())
@@ -119,6 +124,8 @@ Condition::Condition(const std::vector<std::string>& tokens, const KeywordLocati
             this->logic = Condition::Logical::AND;
         else if (token_type == TokenType::op_or)
             this->logic = Condition::Logical::OR;
+        else if (token_type == TokenType::close_paren)
+            this->right_paren = true;
         else
             this->rhs.add_arg(tokens[token_index]);
 
@@ -129,6 +136,8 @@ Condition::Condition(const std::vector<std::string>& tokens, const KeywordLocati
 
 bool Condition::operator==(const Condition& data) const {
     return lhs == data.lhs &&
+           left_paren == data.left_paren &&
+           right_paren == data.right_paren &&
            rhs == data.rhs &&
            logic == data.logic &&
            cmp == data.cmp &&
