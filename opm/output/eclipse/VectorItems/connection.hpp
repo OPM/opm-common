@@ -67,6 +67,10 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
             WaterRate  =  1,  // Surface flow rate (water)
             GasRate    =  2,  // Surface Flow rate (gas)
 
+            OilRate_Copy    =  17,  // Surface flow rate (oil)
+            WaterRate_Copy  =  18,  // Surface flow rate (water)
+            GasRate_Copy    =  19,  // Surface Flow rate (gas)
+
             Pressure   = 34,  // Connection pressure value
 
             ResVRate   = 49,  // Reservoir voidage rate

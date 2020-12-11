@@ -498,10 +498,12 @@ namespace {
             return rLimit;
         };
         template <class SWellArray>
-        void staticContrib(const Opm::Well&      well,
-                           const Opm::UnitSystem& units,
-                           const ::Opm::SummaryState& smry,
-                           SWellArray&            sWell)
+        void staticContrib(const Opm::Well&             well,
+                           const Opm::UnitSystem&       units,
+                           const std::size_t            sim_step,
+                           const Opm::Schedule&         sched,
+                           const ::Opm::SummaryState&   smry,
+                           SWellArray&                  sWell)
         {
             using Ix = ::Opm::RestartIO::Helpers::VectorItems::SWell::index;
             using M = ::Opm::UnitSystem::measure;
@@ -575,9 +577,18 @@ namespace {
                     : swprop(M::pressure, 1.0*::Opm::unit::atm);
                 sWell[Ix::HistBHPTarget] = sWell[Ix::BHPTarget];
                 
-                //alq_value - has no unit conversion according to parser code
                 if (pc.alq_value != 0.0) {
-                    sWell[Ix::Alq_value] = pc.alq_value;
+                    auto vfpTable = sched.getVFPProdTable(pc.vfp_table_number,sim_step);
+                    if (vfpTable.getALQType() == Opm::VFPProdTable::ALQ_GRAT) {
+                        sWell[Ix::Alq_value] = static_cast<float>(units.from_si(M::gas_surface_rate, pc.alq_value));
+                    }
+                    else if ((vfpTable.getALQType() == Opm::VFPProdTable::ALQ_IGLR) || (vfpTable.getALQType() == Opm::VFPProdTable::ALQ_TGLR)) {
+                        sWell[Ix::Alq_value] = static_cast<float>(units.from_si(M::gas_oil_ratio, pc.alq_value));
+                    }
+                    else {
+                        // not all alq_value options have units
+                        sWell[Ix::Alq_value] = pc.alq_value;
+                    }
                 }
 
                 if (predMode) {
@@ -960,12 +971,12 @@ captureDeclaredWellData(const Schedule&   sched,
     }
 
     // Static contributions to SWEL array.
-    wellLoop(wells, [&units, &smry, this]
+    wellLoop(wells, [&units, &sim_step, &sched, &smry, this]
         (const Well& well, const std::size_t wellID) -> void
     {
         auto sw = this->sWell_[wellID];
 
-        SWell::staticContrib(well, units, smry, sw);
+        SWell::staticContrib(well, units, sim_step, sched, smry, sw);
     });
 
     // Static contributions to XWEL array.

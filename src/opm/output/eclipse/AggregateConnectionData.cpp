@@ -253,16 +253,19 @@ namespace {
             if (Q.has(R::oil)) {
                 xConn[Ix::OilRate] =
                     - units.from_si(M::liquid_surface_rate, Q.get(R::oil));
+                xConn[Ix::OilRate_Copy] = xConn[Ix::OilRate];
             }
 
             if (Q.has(R::wat)) {
                 xConn[Ix::WaterRate] =
                     - units.from_si(M::liquid_surface_rate, Q.get(R::wat));
+                xConn[Ix::WaterRate_Copy] = xConn[Ix::WaterRate];
             }
 
             if (Q.has(R::gas)) {
                 xConn[Ix::GasRate] =
                     - units.from_si(M::gas_surface_rate, Q.get(R::gas));
+                xConn[Ix::GasRate_Copy] = xConn[Ix::GasRate];
             }
 
             xConn[Ix::ResVRate] = 0.0;
