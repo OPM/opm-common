@@ -3233,9 +3233,8 @@ BOOST_AUTO_TEST_CASE(WELL_STATIC) {
     BOOST_CHECK(ws.updateRefDepth(1.0));
     BOOST_CHECK(!ws.updateRefDepth(1.0));
 
-    ws.updateStatus(Well::Status::OPEN, false);
-    BOOST_CHECK(!ws.updateStatus(Well::Status::OPEN, false));
-    BOOST_CHECK(ws.updateStatus(Well::Status::SHUT, false));
+    ws.updateStatus(Well::Status::OPEN, 0, false);
+    ws.updateStatus(Well::Status::SHUT, 0, false);
 
     const auto& connections = ws.getConnections();
     BOOST_CHECK_EQUAL(connections.size(), 0U);
@@ -3251,8 +3250,8 @@ BOOST_AUTO_TEST_CASE(WELL_STATIC) {
                       10,
                       100);
 
-    BOOST_CHECK(  ws.updateConnections(c2) );
-    BOOST_CHECK( !ws.updateConnections(c2) );
+    BOOST_CHECK(  ws.updateConnections(c2, 0, false) );
+    BOOST_CHECK( !ws.updateConnections(c2, 0, false) );
 }
 
 
@@ -4350,6 +4349,114 @@ END
         BOOST_CHECK(w3.pavg() == pavg4);
         BOOST_CHECK(w4.pavg() == pavg4);
     }
+}
+
+
+BOOST_AUTO_TEST_CASE(WELL_STATUS) {
+    const std::string deck_string = R"(
+START
+7 OCT 2020 /
+
+DIMENS
+  10 10 3 /
+
+GRID
+DXV
+  10*100.0 /
+DYV
+  10*100.0 /
+DZV
+  3*10.0 /
+
+DEPTHZ
+  121*2000.0 /
+
+PORO
+  300*0.3 /
+
+SCHEDULE
+WELSPECS -- 0
+  'P1' 'G' 10 10 2005 'LIQ' /
+/
+
+COMPDAT
+  'P1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+/
+
+WCONPROD
+  'P1' 'OPEN' 'ORAT'  123.4  4*  50.0 /
+/
+
+
+TSTEP -- 1
+  10 /
+
+WELPI
+  'P1'  200.0 /
+/
+
+TSTEP -- 2
+  10 /
+
+WELOPEN
+   'P1' SHUT /
+/
+
+TSTEP -- 3,4,5
+  10 10 10 /
+
+WELOPEN
+   'P1' OPEN /
+/
+
+TSTEP -- 6,7,8
+  10 10 10/
+
+END
+
+END
+)";
+
+    const auto deck = Parser{}.parseString(deck_string);
+    const auto es    = EclipseState{ deck };
+    auto       sched = Schedule{ deck, es };
+    {
+        const auto& well = sched.getWell("P1", 0);
+        BOOST_CHECK( well.getStatus() ==  Well::Status::OPEN);
+    }
+    {
+        const auto& well = sched.getWell("P1", 1);
+        BOOST_CHECK( well.getStatus() ==  Well::Status::OPEN);
+    }
+
+    {
+        const auto& well = sched.getWell("P1", 2);
+        BOOST_CHECK( well.getStatus() ==  Well::Status::SHUT);
+    }
+    {
+        const auto& well = sched.getWell("P1", 5);
+        BOOST_CHECK( well.getStatus() ==  Well::Status::OPEN);
+    }
+
+    sched.shut_well("P1", 0);
+    {
+        const auto& well = sched.getWell("P1", 0);
+        BOOST_CHECK( well.getStatus() ==  Well::Status::SHUT);
+    }
+    {
+        const auto& well = sched.getWell("P1", 1);
+        BOOST_CHECK( well.getStatus() ==  Well::Status::SHUT);
+    }
+    {
+        const auto& well = sched.getWell("P1", 2);
+        BOOST_CHECK( well.getStatus() ==  Well::Status::SHUT);
+    }
+    {
+        const auto& well = sched.getWell("P1", 5);
+        BOOST_CHECK( well.getStatus() ==  Well::Status::OPEN);
+    }
+
+    //sched.open_well("P1", 2);
 }
 
 

@@ -404,7 +404,7 @@ namespace Opm
         void updateGroup(std::shared_ptr<Group> group, std::size_t reportStep);
         bool checkGroups(const ParseContext& parseContext, ErrorGuard& errors);
         void updateUDQActive( std::size_t timeStep, std::shared_ptr<UDQActive> udq );
-        bool updateWellStatus( const std::string& well, std::size_t reportStep , Well::Status status, bool update_connections, std::optional<KeywordLocation> = {});
+        bool updateWellStatus( const std::string& well, std::size_t reportStep, bool runtime, Well::Status status, std::optional<KeywordLocation> = {});
         void addWellToGroup( const std::string& group_name, const std::string& well_name , std::size_t timeStep);
         void iterateScheduleSection(std::shared_ptr<const Python> python, const std::string& input_path, const ParseContext& parseContext ,  ErrorGuard& errors, const SCHEDULESection& , const EclipseGrid& grid,
                                     const FieldPropsManager& fp);
@@ -460,7 +460,7 @@ namespace Opm
 
         void applyEXIT(const DeckKeyword&, std::size_t currentStep);
         void applyMESSAGES(const DeckKeyword&, std::size_t currentStep);
-        void applyWELOPEN(const DeckKeyword&, std::size_t currentStep, const ParseContext&, ErrorGuard&, const std::vector<std::string>& matching_wells = {});
+        void applyWELOPEN(const DeckKeyword&, std::size_t currentStep, bool runtime, const ParseContext&, ErrorGuard&, const std::vector<std::string>& matching_wells = {});
         void applyWRFT(const DeckKeyword&, std::size_t currentStep);
         void applyWRFTPLT(const DeckKeyword&, std::size_t currentStep);
 
