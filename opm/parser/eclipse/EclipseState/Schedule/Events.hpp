@@ -54,7 +54,7 @@ namespace Opm
 
             /*
                The PRODUCTION_UPDATE event is triggered by the
-               WCONPROD and WCONHIST keywords. The event will be
+               WCONPROD, WCONHIST, WELTARG, WEFAC keywords. The event will be
                triggered if *any* of the elements in one of keywords
                is changed. Quite simlar for INJECTION_UPDATE and
                POLYMER_UPDATE.
