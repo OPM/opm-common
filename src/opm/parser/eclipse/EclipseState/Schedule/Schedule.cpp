@@ -1051,7 +1051,9 @@ private:
         for (const auto& dynamic_pair : this->wells_static) {
             auto& well_ptr = dynamic_pair.second.get(timeStep);
             if (well_ptr)
-                wells.push_back(*well_ptr.get());
+                wells.push_back(*well_ptr);
+            if (timeStep == 6 && well_ptr->name() == "OPL01")
+                printf("Schedule getWells: well->connections: %p \n", &well_ptr->getConnections());
         }
         return wells;
     }
@@ -1594,35 +1596,63 @@ private:
 
 
     void Schedule::applyWellProdIndexScaling(const std::string& well_name, const std::size_t reportStep, const double scalingFactor) {
+        //const auto& dynamic_state = this->wells_static.at(well_name);
+        //auto& well_ptr = dynamic_state.get(reportStep);
+        //std::vector<bool> scalingApplicable;
+        //well_ptr->applyWellProdIndexScaling(scalingFactor, scalingApplicable);
+        //printf("common: report:%ld wellPtr->connections %p \n", reportStep, &well_ptr->getConnections());
+        //printf("common: report:%ld wellPtr: %p\n",reportStep, well_ptr.get());
+
+
         auto wstat = this->wells_static.find(well_name);
         if (wstat == this->wells_static.end())
             return;
 
         auto unique_well_instances = wstat->second.unique();
+        std::size_t start_index = 0;
+        while (true) {
+            if (start_index == (unique_well_instances.size() - 1))
+                break;
 
-        auto end   = unique_well_instances.end();
-        auto start = std::lower_bound(unique_well_instances.begin(), end, reportStep,
-            [](const auto& time_well_pair, const auto lookup) -> bool
-        {
-            //     time                 < reportStep
-            return time_well_pair.first < lookup;
-        });
+            const auto& [next_step, _] = unique_well_instances[start_index + 1];
+            (void)_;
+            if (next_step > reportStep)
+                break;
 
-        if (start == end)
-            // Report step after last?
-            return;
+            start_index += 1;
+        }
+
+
+
+
+        //auto start = std::lower_bound(unique_well_instances.begin(), end, reportStep,
+        //    [](const auto& time_well_pair, const auto lookup) -> bool
+        //{
+        //    //     time                 < reportStep
+        //    return time_well_pair.first < lookup;
+        //});
+
 
         // Relies on wells_static being OrderedMap<string, DynamicState<shared_ptr<>>>
         // which means unique_well_instances is a vector<pair<report_step, shared_ptr<>>>
         std::vector<bool> scalingApplicable;
-        auto wellPtr = start->second;
-        wellPtr->applyWellProdIndexScaling(scalingFactor, scalingApplicable);
+        auto wellPtr = unique_well_instances[start_index].second;
 
-        for (; start != end; ++start)
-            if (! wellPtr->hasSameConnectionsPointers(*start->second)) {
-                wellPtr = start->second;
+        wellPtr->applyWellProdIndexScaling(scalingFactor, scalingApplicable);
+        printf("common: report:%ld wellPtr->connections %p \n", reportStep, &wellPtr->getConnections());
+        printf("common: report:%ld wellPtr: %p\n",reportStep, wellPtr.get());
+
+        for (auto unique_index = start_index + 1; unique_index < unique_well_instances.size(); unique_index++) {
+            printf("Spinning through unique wells: \n");
+            const auto& [_, next_well_ptr] = unique_well_instances[unique_index];
+            (void)_;
+            if (! wellPtr->hasSameConnectionsPointers(*next_well_ptr)) {
+                wellPtr = next_well_ptr;
                 wellPtr->applyWellProdIndexScaling(scalingFactor, scalingApplicable);
             }
+        }
+        printf("common: wellPtr->connections %p \n", &wellPtr->getConnections());
+        printf("Done \n");
     }
 
     RestartConfig& Schedule::restart() {

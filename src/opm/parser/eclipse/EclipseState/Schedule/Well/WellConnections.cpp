@@ -204,6 +204,7 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
 
         auto i = std::size_t{0};
         for (auto& conn : this->m_connections) {
+            printf("SCaling applicable[%ld] : %d \n", i, scalingApplicable[i]);
             if (scalingApplicable[i])
                 scalingApplicable[i] = conn.applyWellPIScaling(scaleFactor);
             ++i;

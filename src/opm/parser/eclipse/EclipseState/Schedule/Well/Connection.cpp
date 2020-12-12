@@ -245,7 +245,9 @@ const std::optional<std::pair<double, double>>& Connection::perf_range() const {
     }
 
     void Connection::scaleWellPi(double wellPi) {
+        printf("%lg * %lg -> ", this->m_CF, wellPi);
         this->m_CF *= wellPi;
+        printf("%lg \n", this->m_CF);
     }
 
     bool Connection::prepareWellPIScaling() {
@@ -257,8 +259,10 @@ const std::optional<std::pair<double, double>>& Connection::perf_range() const {
     }
 
     bool Connection::applyWellPIScaling(const double scaleFactor) {
+        printf("Connection subject_to_welpi: %d \n", this->m_subject_to_welpi);
         if (! this->m_subject_to_welpi)
             return false;
+        printf("ScaleFcator: %lg \n", scaleFactor);
 
         this->scaleWellPi(scaleFactor);
         return true;

@@ -693,7 +693,7 @@ private:
     bool has_produced = false;
     bool has_injected = false;
     bool prediction_mode = true;
-    std::optional<double> productivity_index{ std::nullopt };
+    std::optional<double> productivity_index;
 
     std::shared_ptr<WellEconProductionLimits> econ_limits;
     std::shared_ptr<WellFoamProperties> foam_properties;

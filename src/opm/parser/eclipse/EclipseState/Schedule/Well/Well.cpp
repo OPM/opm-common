@@ -1005,9 +1005,15 @@ namespace {
 }
 
 double Well::getWellPIScalingFactor(const double currentEffectivePI) const {
+    printf("%s:  currentEffectivePI: %lg \n", __func__, currentEffectivePI);
     if (this->connections->empty())
         // No connections for this well.  Unexpected.
         return 1.0;
+
+    if (this->productivity_index.has_value())
+        printf("has value: %lg \n", this->productivity_index.value());
+    if (!this->productivity_index)
+        printf("WELPI not active - return 1.0");
 
     if (!this->productivity_index)
         // WELPI not activated.  Nothing to do.
@@ -1016,10 +1022,12 @@ double Well::getWellPIScalingFactor(const double currentEffectivePI) const {
     const double requestedWellPI_SI =
         convertWellPIToSI(*this->productivity_index, this->getPreferredPhase(), this->unit_system);
 
+    printf("Requested:%lg  current:%lg  return: %lg \n", requestedWellPI_SI, currentEffectivePI, requestedWellPI_SI / currentEffectivePI);
     return requestedWellPI_SI / currentEffectivePI;
 }
 
 void Well::applyWellProdIndexScaling(const double scalingFactor, std::vector<bool>& scalingApplicable) {
+    printf("%s scalingFactor: %lg \n", __func__, scalingFactor);
     if (this->connections->empty())
         // No connections for this well.  Unexpected.
         return;
