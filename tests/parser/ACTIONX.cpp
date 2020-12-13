@@ -1107,7 +1107,7 @@ TSTEP
     sched.applyAction(0, action1, action_result);
     {
         auto unit_system =  UnitSystem::newMETRIC();
-        const auto& well = sched.getWell("PROD1", 0);
+        const auto& well = sched.getWell("PROD1", 1);
         const auto PI = unit_system.to_si(UnitSystem::measure::liquid_productivity_index, 1.0);
         const auto scaling = well.getWellPIScalingFactor(PI);
         BOOST_CHECK_CLOSE(scaling, 1000.0, 1.0e-10);
