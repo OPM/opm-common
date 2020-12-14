@@ -18,7 +18,7 @@
 */
 #include <numeric>
 
-#include "UDQToken.hpp"
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQToken.hpp>
 
 namespace Opm {
 

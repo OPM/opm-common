@@ -27,10 +27,10 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQASTNode.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQDefine.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQToken.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
 
 #include "../../../Parser/raw/RawConsts.hpp"
-#include "UDQToken.hpp"
 #include "UDQParser.hpp"
 
 namespace Opm {

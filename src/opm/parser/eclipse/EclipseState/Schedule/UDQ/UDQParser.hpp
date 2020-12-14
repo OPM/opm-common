@@ -28,8 +28,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunctionTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQParams.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
-
-#include "UDQToken.hpp"
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQToken.hpp>
 
 namespace Opm {
 

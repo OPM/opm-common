@@ -31,7 +31,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQContext.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunctionTable.hpp>
 #include <opm/common/OpmLog/KeywordLocation.hpp>
-#include <src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQToken.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQToken.hpp>
 
 namespace Opm {
 
