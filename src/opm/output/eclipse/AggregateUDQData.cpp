@@ -68,60 +68,10 @@ namespace {
     // function to return true if token is a function
     bool tokenTypeFunc(const Opm::UDQTokenType& token) {
         bool type = false;
-        std::vector <Opm::UDQTokenType> type_1 = {
-            Opm::UDQTokenType::elemental_func_randn,
-            Opm::UDQTokenType::elemental_func_randu,
-            Opm::UDQTokenType::elemental_func_rrandn,
-            Opm::UDQTokenType::elemental_func_rrandu,
-            Opm::UDQTokenType::elemental_func_abs,
-            Opm::UDQTokenType::elemental_func_def,
-            Opm::UDQTokenType::elemental_func_exp,
-            Opm::UDQTokenType::elemental_func_idv,
-            Opm::UDQTokenType::elemental_func_ln,
-            Opm::UDQTokenType::elemental_func_log,
-            Opm::UDQTokenType::elemental_func_nint,
-            Opm::UDQTokenType::elemental_func_sorta,
-            Opm::UDQTokenType::elemental_func_sortd,
-            Opm::UDQTokenType::elemental_func_undef,
-            //
-            Opm::UDQTokenType::scalar_func_sum,
-            Opm::UDQTokenType::scalar_func_avea,
-            Opm::UDQTokenType::scalar_func_aveg,
-            Opm::UDQTokenType::scalar_func_aveh,
-            Opm::UDQTokenType::scalar_func_max,
-            Opm::UDQTokenType::scalar_func_min,
-            Opm::UDQTokenType::scalar_func_norm1,
-            Opm::UDQTokenType::scalar_func_norm2,
-            Opm::UDQTokenType::scalar_func_normi,
-            Opm::UDQTokenType::scalar_func_prod,
-            Opm::UDQTokenType::table_lookup
-        };
-        for (const auto& tok_type : type_1) {
-            if (token == tok_type) {
-                type = true;
-                break;
-            }
-        }
-        return type;
-    }
-
-// function to return true if token is a binary operator: type compare
-    bool tokenTypeBinaryCmpOp(const Opm::UDQTokenType& token) {
-        bool type = false;
-        std::vector <Opm::UDQTokenType> type_1 = {
-            Opm::UDQTokenType::binary_cmp_eq,
-            Opm::UDQTokenType::binary_cmp_ne,
-            Opm::UDQTokenType::binary_cmp_le,
-            Opm::UDQTokenType::binary_cmp_ge,
-            Opm::UDQTokenType::binary_cmp_lt,
-            Opm::UDQTokenType::binary_cmp_gt
-
-        };
-        for (const auto& tok_type : type_1) {
-            if (token == tok_type) {
-                type = true;
-                break;
-            }
+        if (Opm::UDQ::scalarFunc(token) ||
+            Opm::UDQ::elementalUnaryFunc(token) ||
+            (token == Opm::UDQTokenType::table_lookup)) {
+            type = true;
         }
         return type;
     }
@@ -197,41 +147,11 @@ namespace {
         return type;
     }
 
-    // function to return true if token is a binary operator: anytype
-    bool tokenTypeBinaryOp(const Opm::UDQTokenType& token) {
-        bool type = false;
-        std::vector <Opm::UDQTokenType> type_1 = {
-            Opm::UDQTokenType::binary_op_add,
-            Opm::UDQTokenType::binary_op_sub,
-            Opm::UDQTokenType::binary_op_div,
-            Opm::UDQTokenType::binary_op_mul,
-            Opm::UDQTokenType::binary_op_pow,
-            Opm::UDQTokenType::binary_op_uadd,
-            Opm::UDQTokenType::binary_op_umul,
-            Opm::UDQTokenType::binary_op_umin,
-            Opm::UDQTokenType::binary_op_umax,
-            Opm::UDQTokenType::binary_cmp_eq,
-            Opm::UDQTokenType::binary_cmp_ne,
-            Opm::UDQTokenType::binary_cmp_le,
-            Opm::UDQTokenType::binary_cmp_ge,
-            Opm::UDQTokenType::binary_cmp_lt,
-            Opm::UDQTokenType::binary_cmp_gt
-
-        };
-        for (const auto& tok_type : type_1) {
-            if (token == tok_type) {
-                type = true;
-                break;
-            }
-        }
-        return type;
-    }
-
     // function to return the precedence of the current operator/function
     bool operatorToken(const Opm::UDQTokenType& token) {
         bool opTok = false;
         if (tokenTypeFunc(token)) opTok = true;
-        if (tokenTypeBinaryCmpOp(token)) opTok = true;
+        if (Opm::UDQ::cmpFunc(token)) opTok = true;
         if (tokenTypeBinaryPowOp(token)) opTok = true;
         if (tokenTypeBinaryMulDivOp(token)) opTok = true;
         if (tokenTypeBinaryAddSubOp(token)) opTok = true;
@@ -254,7 +174,7 @@ namespace {
     int opFuncPrec(const Opm::UDQTokenType& token) {
         int prec = 0;
         if (tokenTypeFunc(token)) prec = 6;
-        if (tokenTypeBinaryCmpOp(token)) prec = 5;
+        if (Opm::UDQ::cmpFunc(token)) prec = 5;
         if (tokenTypeBinaryPowOp(token)) prec = 4;
         if (tokenTypeBinaryMulDivOp(token)) prec = 3;
         if (tokenTypeBinaryAddSubOp(token)) prec = 2;
