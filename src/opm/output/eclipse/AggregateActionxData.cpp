@@ -420,6 +420,18 @@ const std::map<cmp_enum, int> cmpToIndex = {
                     throw std::invalid_argument("Actionx: " + actx.name());
                 }
 
+                /* item[15] is a parameter that indicates whether left_paren or right_paren is used in an expression
+                 * = 0  : no open_paren or left_paren, or both open_paren and right_paren
+                 * = 1  : left_paren at start of condition
+                 * = 2  : right_paren at end of condition
+                */
+
+                if ((cond_it->left_paren) && (!cond_it->right_paren)) {
+                    iAcn[ind + 15] = 1;
+                } else if ((!cond_it->left_paren) && (cond_it->right_paren)) {
+                    iAcn[ind + 15] = 2;
+                }
+
                 /*item [16] - related to the operator used in ACTIONX for defined quantities
                     >     is  1
                     <     is  2
