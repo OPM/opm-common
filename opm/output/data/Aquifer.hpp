@@ -44,13 +44,13 @@ namespace Opm { namespace data {
     };
 
     struct AquiferData {
-        int aquiferID;    //< One-based ID, range 1..NANAQ
-        double pressure;  //< Aquifer pressure
-        double fluxRate; //< Aquifer influx rate (liquid aquifer)
+        int aquiferID = 0;    //< One-based ID, range 1..NANAQ
+        double pressure = 0.0;  //< Aquifer pressure
+        double fluxRate = 0.0; //< Aquifer influx rate (liquid aquifer)
         // TODO: volume should have a better name, since meaning not clear
-        double volume;    //< Produced liquid volume
-        double initPressure;    //< Aquifer's initial pressure
-        double datumDepth;      //< Aquifer's pressure reference depth
+        double volume = 0.0;    //< Produced liquid volume
+        double initPressure = 0.0;    //< Aquifer's initial pressure
+        double datumDepth = 0.0;      //< Aquifer's pressure reference depth
 
         AquiferType type;
         std::shared_ptr<FetkovichData> aquFet;
