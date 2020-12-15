@@ -1,0 +1,346 @@
+-- This reservoir simulation deck is made available under the Open Database
+-- License: http://opendatacommons.org/licenses/odbl/1.0/. Any rights in
+-- individual contents of the database are licensed under the Database Contents
+-- License: http://opendatacommons.org/licenses/dbcl/1.0/
+
+-- Copyright (C) 2020 Equinor
+
+-- Water injection case, with 12 producers and 8 water injectors
+-- All wells are set up with multi segment well model
+-- Group controll on two levels, with water re-injection and water
+-- volume replacement controlls. 
+-- GUIDERATE are added to optimze oil production with respect to water cut. 
+
+
+-- ==========================================================================================
+RUNSPEC
+-- ==========================================================================================
+
+
+
+TITLE
+ Test model4
+
+-- Upper Reservoir :  Layer 1-6
+-- Inactive layer  :  Layer 7
+-- Lower Reservoir :  Layer 8-13
+
+DIMENS
+ 30   15   13  /
+
+START
+ 30 'JUL' 2019 /
+
+OIL
+WATER
+GAS
+DISGAS
+
+METRIC
+
+--------------------------------------------------------------
+-- Special options
+--------------------------------------------------------------
+
+
+
+--------------------------------------------------------------
+-- Dimensions
+--------------------------------------------------------------
+
+-- Table dimensions
+-- ntsfun: max SATNUM 
+-- ntpvt:  max PVTNUM
+-- nssfun: max saturation nodes in any saturation table 
+-- nppvt:  max pressure nodes in any PVT table or Rock Compaction table
+-- ntfip:  max FIPNUM, = ntfip in REGDIMS
+-- nrpvt:  max Rs nodes in a live oil PVT table
+TABDIMS
+-- ntsfun  ntpvt  nssfun  nppvt  ntfip  nrpvt 
+   1        1      50      50     1      50  /
+
+-- Dimension of equilibration tables
+-- ntequl: max EQLNUM
+-- ndprvd: max depth nodes in any table of pressure vs depth
+-- ndrxvd: max depth nodes in any RSVD, RVVD, PBVD or PDVD table
+EQLDIMS
+-- ntequl  ndprvd  ndrxvd 
+    2 /
+
+-- Regions dimension data
+-- ntfip:  max FIPNUM
+-- nmfipr: max sets of fluid-in-place regions
+-- nrfreg: max independent reservoir regions
+REGDIMS
+-- ntfip  nmfipr  nrfreg
+    1      1       1* /
+
+-- Well dimension data
+-- nwmaxz: max wells in the model
+-- ncwmax: max connections per well
+-- ngmaxz: max groups in the model
+-- nwgmax: max wells in any one group
+WELLDIMS
+-- nwmaxz  ncwmax  ngmaxz  nwgmax
+    20      10       10     7  /
+
+-- Dimensions for multi-segment wells
+-- nswlmx: max multi-segment wells in the model
+-- nsegmx: max segments per well
+-- nlbrmx: max branches per multi-segment well
+WSEGDIMS
+-- nswlmx  nsegmx  nlbrmx
+    20      10     10   /
+
+-- Production well VFP table dimensions
+-- mxmflo: max flow values per table
+-- mxmthp: max tubing head pressure values per table
+-- mxmwpr: max water fraction values per table
+-- mxmgrp: max gas friction values per table
+-- mxmalq: max artificial lift quantities per table
+-- nmmvft: max production well VFP tables
+VFPPDIMS
+-- mxmflo  mxmthp  mxmwpr  mxmgrp  mxmalq  nmmvft  
+  25      12       12       12       5       48 /
+
+SMRYDIMS
+-- maximum number of vectors written to the Summary file
+5000 /
+
+--------------------------------------------------------------
+-- Run control settings
+--------------------------------------------------------------
+
+-- No point setting nstack larger than litmax
+NSTACK
+ 25 / default value = 10
+
+NUPCOL
+ 20 / default value = 3
+
+UNIFIN
+UNIFOUT
+
+NORSSPEC
+NOINSPEC
+
+MSGFILE
+ 0 / 
+
+MESSAGES
+-- -----------print------------  -----------stop--------------------
+-- mes  com  war  prb  err  bug  mes    com    war    prb    err bug  
+   1*   1*   1*   1*   1*   1*   300000 300000 300000 100000 10  1   /
+
+
+-- ==========================================================================================
+GRID
+-- ==========================================================================================
+
+GRIDFILE
+ 0  1 /
+
+INIT
+
+NEWTRAN
+
+NOECHO
+
+-- Grid
+INCLUDE 
+ 'include/test_30x15x13.grdecl' / 
+
+
+PERMX 
+  5850*1500.0 /
+   
+PERMZ 
+  5850*150.0 /
+
+PORO
+  5850*0.27 /
+
+COPY
+ 'PERMX' 'PERMY' /
+/
+
+
+EQUALS
+ 'MULTX' 0.01 10 10  8 15 1 8 /
+ 'MULTY' 0.01 11 19  7  7 1 8 /
+/
+
+ 
+-- ==========================================================================================
+EDIT
+
+-- ==========================================================================================
+
+
+-- ==========================================================================================
+PROPS
+-- ==========================================================================================
+NOECHO
+
+-- PVT
+INCLUDE
+ 'include/test3l.pvt' /
+
+ROCK
+-- P       cf
+ 144.445  2.176E-4  /
+
+-- Rel perm
+INCLUDE
+ 'include/test3_satf.inc'  /
+
+
+-- ==========================================================================================
+REGIONS
+-- ==========================================================================================
+
+-- layer 1-7 : eqlnum=1
+-- layer 8-13: eqlnum=2
+
+EQLNUM 
+ 3150*1 2700*2 /
+ 
+
+
+-- ==========================================================================================
+SOLUTION
+-- ==========================================================================================
+
+
+RESTART
+   MOD4_GRP 38 /
+
+RSVD
+  600.  33.5 
+ 2191.  33.5  /
+ 
+  600.  33.5 
+ 2191.  33.5  /
+
+
+-- basic = 5, every month
+RPTRST
+ 'BASIC=5'  'FREQ=6'   'CONV=10' /
+
+RPTSOL
+ 'RESTART=2'  'FIP=3'  'FIPRESV'  'THPRES' /
+
+
+-- =========================================================================================
+SUMMARY
+-- =========================================================================================
+
+
+INCLUDE
+ 'include/mod4.summary' /
+ 
+
+ 
+-- =========================================================================================
+SCHEDULE
+-- =========================================================================================
+SKIPREST
+
+TUNING
+ 1* 1 /
+/
+/
+
+INCLUDE 
+ 'include/vfp_opu1.ecl' /
+
+INCLUDE 
+ 'include/vfp_opl1.ecl' /
+
+
+--                               FIELD
+--                                 |
+--                                MOD4
+--                      -----------+-----------------------+
+--                     |                 |                 |
+--                   UPPER             LOWER              AQF
+--              ------+------            +------+       +--+--+
+--             |            |                   |       |     |
+--           MAIN          SE                 CENTRAL  WID1  WID2
+--      ------+-----        +-----+-----+       |
+--     |           |        |     |     |       |
+--    NW          NE       OPU6  OPU7  WIU4     |
+--     |    +-----+-----+                       |
+--     |    |     |     |         +-----+-----+-+---+-----+-----+-----+
+--     |   OPU4  OPU5  WIU3       |     |     |     |     |     |     |
+--     |                         OPL1  OPL2  OPL3  OPL4  OPL5  WIL1  WIL2
+--  ---+--+-----+-----+-----+
+--  |     |     |     |     |
+-- OPU1  OPU2  OPU3  WIU1  WIU2
+--
+
+
+GRUPTREE
+ 'UPPER'    'MOD4'  /
+ 'LOWER'    'MOD4'  /
+ 'AQF'      'MOD4'  /
+ 'MAIN'     'UPPER'  /
+ 'NE'       'MAIN'  /
+ 'NW'       'MAIN'  /
+ 'SE'       'UPPER'  /
+ 'CENTRAL'  'LOWER'  /
+/
+
+
+INCLUDE
+ './include/mod4_all_weldef.sch' /
+
+
+GCONPROD
+'MOD4'   'LRAT' 2500.0 1* 1* 4000.0 'RATE' 'NO' 9* /
+'LOWER'  'FLD'  2500.0 1* 1* 4000.0 'RATE' 'YES' 1* 'FORM' 7* / 
+'UPPER'  'FLD'  2500.0 1* 1* 4000.0 'RATE' 'YES' 1* 'FORM' 7* / 
+/
+
+-- Well proportions
+GUIDERAT
+-- int phase A  B  C D E F incr. damp
+    0  'OIL' 1 0.5 1 1 0 0 'YES' 0.5 / equal to 1/(0.5+WWCT)
+
+
+
+GCONINJE
+ 'LOWER'   'WATER'   'REIN'  2*   1.0  /
+ 'NE'      'WATER'   'VREP'  3*   1.0  /
+ 'NW'      'WATER'   'VREP'  3*   1.0  /
+ 'SE'      'WATER'   'VREP'  3*   1.0  /
+/
+
+
+WCONPROD
+ 'OPL*' SHUT   GRUP   1*   1*   1*   1*   1*   60   18   1   58   /
+ 'OPU*' SHUT   GRUP   1*   1*   1*   1*   1*   60   18   2   58   /
+/
+
+
+WCONINJE
+ 'WI*'  'WATER'   'SHUT'  'GRUP'    2000        1*      210. /
+ 'WID*' 'WATER'   'SHUT'  'RATE'    2000        1*      210. /
+/
+
+-- Specifying economic limits for the oil producers
+WECON
+-- name   qo  qg  WCT  GOR WGR  action  end subst  ctrl  WCT action GLR ql T
+  'OP*'   1*  1*  0.98  1*  1*  'WELL'    /
+/
+
+WEFAC
+  'OP*' 0.87 /
+/
+
+
+INCLUDE
+ './include/mod4_no_action.sch' /
+
+ 
+END
