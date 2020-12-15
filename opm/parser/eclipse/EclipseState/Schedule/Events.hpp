@@ -106,6 +106,11 @@ namespace Opm
              * New explicit well productivity/injectivity assignment.
              */
             WELL_PRODUCTIVITY_INDEX = (1 << 16),
+
+            /*
+             * Well/group efficiency factor has changed
+             */
+            WELLGROUP_EFFICIENCY_UPDATE = (1 << 17),
         };
     }
 
