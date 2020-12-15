@@ -66,6 +66,44 @@ namespace Opm { namespace data {
             }
             return 0.;
         }
+
+        // MessageBufferType API should be similar to Dune::MessageBufferIF
+        template <class MessageBufferType>
+        void write(MessageBufferType& buffer) const {
+            buffer.write(aquiferID);
+            buffer.write(pressure);
+            buffer.write(fluxRate);
+            buffer.write(volume);
+            buffer.write(initPressure);
+            buffer.write(datumDepth);
+            int aqu = aquFet ? 1 : 0;
+            buffer.write(aqu);
+            if (aquFet) {
+                buffer.write(aquFet->initVolume);
+                buffer.write(aquFet->prodIndex);
+                buffer.write(aquFet->timeConstant);
+            }
+        }
+
+        // MessageBufferType API should be similar to Dune::MessageBufferIF
+        template <class MessageBufferType>
+        void read(MessageBufferType& buffer) {
+            buffer.read(aquiferID);
+            buffer.read(pressure);
+            buffer.read(fluxRate);
+            buffer.read(volume);
+            buffer.read(initPressure);
+            buffer.read(datumDepth);
+            int aqu;
+            buffer.read(aqu);
+            if (aqu == 1) {
+                if (!aquFet)
+                    aquFet = std::make_shared<FetkovichData>();
+                buffer.read(aquFet->initVolume);
+                buffer.read(aquFet->prodIndex);
+                buffer.read(aquFet->timeConstant);
+            }
+        }
     };
 
     // TODO: not sure what extension we will need
