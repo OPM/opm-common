@@ -44,13 +44,13 @@ namespace Opm { namespace data {
     };
 
     struct AquiferData {
-        int aquiferID;    //< One-based ID, range 1..NANAQ
-        double pressure;  //< Aquifer pressure
-        double fluxRate; //< Aquifer influx rate (liquid aquifer)
+        int aquiferID = 0;    //< One-based ID, range 1..NANAQ
+        double pressure = 0.0;  //< Aquifer pressure
+        double fluxRate = 0.0; //< Aquifer influx rate (liquid aquifer)
         // TODO: volume should have a better name, since meaning not clear
-        double volume;    //< Produced liquid volume
-        double initPressure;    //< Aquifer's initial pressure
-        double datumDepth;      //< Aquifer's pressure reference depth
+        double volume = 0.0;    //< Produced liquid volume
+        double initPressure = 0.0;    //< Aquifer's initial pressure
+        double datumDepth = 0.0;      //< Aquifer's pressure reference depth
 
         AquiferType type;
         std::shared_ptr<FetkovichData> aquFet;
@@ -65,6 +65,44 @@ namespace Opm { namespace data {
                 return this->pressure;
             }
             return 0.;
+        }
+
+        // MessageBufferType API should be similar to Dune::MessageBufferIF
+        template <class MessageBufferType>
+        void write(MessageBufferType& buffer) const {
+            buffer.write(aquiferID);
+            buffer.write(pressure);
+            buffer.write(fluxRate);
+            buffer.write(volume);
+            buffer.write(initPressure);
+            buffer.write(datumDepth);
+            int aqu = aquFet ? 1 : 0;
+            buffer.write(aqu);
+            if (aquFet) {
+                buffer.write(aquFet->initVolume);
+                buffer.write(aquFet->prodIndex);
+                buffer.write(aquFet->timeConstant);
+            }
+        }
+
+        // MessageBufferType API should be similar to Dune::MessageBufferIF
+        template <class MessageBufferType>
+        void read(MessageBufferType& buffer) {
+            buffer.read(aquiferID);
+            buffer.read(pressure);
+            buffer.read(fluxRate);
+            buffer.read(volume);
+            buffer.read(initPressure);
+            buffer.read(datumDepth);
+            int aqu;
+            buffer.read(aqu);
+            if (aqu == 1) {
+                if (!aquFet)
+                    aquFet = std::make_shared<FetkovichData>();
+                buffer.read(aquFet->initVolume);
+                buffer.read(aquFet->prodIndex);
+                buffer.read(aquFet->timeConstant);
+            }
         }
     };
 
