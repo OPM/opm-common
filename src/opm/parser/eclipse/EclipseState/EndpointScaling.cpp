@@ -1,6 +1,96 @@
-#include <opm/parser/eclipse/Deck/Deck.hpp>
+/*
+  Copyright 2017  Statoil ASA.
+
+  This file is part of the Open Porous Media project (OPM).
+
+  OPM is free software: you can redistribute it and/or modify it under the terms
+  of the GNU General Public License as published by the Free Software
+  Foundation, either version 3 of the License, or (at your option) any later
+  version.
+
+  OPM is distributed in the hope that it will be useful, but WITHOUT ANY
+  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+  A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License along with
+  OPM.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #include <opm/parser/eclipse/EclipseState/EndpointScaling.hpp>
+
+#include <opm/parser/eclipse/Deck/Deck.hpp>
+
+#include <opm/parser/eclipse/Parser/ParserKeywords/E.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/S.hpp>
+
 #include <opm/common/utility/String.hpp>
+
+#include <initializer_list>
+#include <stdexcept>
+#include <string>
+
+namespace {
+    bool hasScaling(const Opm::Deck&                          deck,
+                    const char*                               suffix,
+                    const std::initializer_list<std::string>& base)
+    {
+        for (const auto& kw : base) {
+            for (const auto* p : {"", "I"}) {
+                if (deck.hasKeyword(p + kw + suffix)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    bool hasScaling(const Opm::Deck&                          deck,
+                    const std::initializer_list<std::string>& base)
+    {
+        const auto direction = std::initializer_list<const char*> {
+            "", "X-", "X", "Y-", "Y", "Z-", "Z"
+        };
+
+        for (const auto* suffix : direction) {
+            if (hasScaling(deck, suffix, base)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    bool hasHorzScaling(const Opm::Deck& deck)
+    {
+        return hasScaling(deck, {
+            Opm::ParserKeywords::SGL  ::keywordName,
+            Opm::ParserKeywords::SGCR ::keywordName,
+            Opm::ParserKeywords::SGU  ::keywordName,
+            Opm::ParserKeywords::SOGCR::keywordName,
+            Opm::ParserKeywords::SOWCR::keywordName,
+            Opm::ParserKeywords::SWL  ::keywordName,
+            Opm::ParserKeywords::SWCR ::keywordName,
+            Opm::ParserKeywords::SWU  ::keywordName,
+        })
+        || hasScaling(deck, "", {
+            Opm::ParserKeywords::SGLPC::keywordName,
+            Opm::ParserKeywords::SWLPC::keywordName,
+        });
+    }
+
+    bool hasVertScaling(const Opm::Deck& deck)
+    {
+        return hasScaling(deck, {
+            std::string { "KRG"   },
+            std::string { "KRGR"  },
+            std::string { "KRORG" },
+            std::string { "KRORW" },
+            std::string { "KRW"   },
+            std::string { "KRWR"  },
+        });
+    }
+}
 
 namespace Opm {
 
@@ -49,21 +139,26 @@ bool EndpointScaling::operator==(const EndpointScaling& data) const {
 namespace {
 
 bool threepoint_scaling( const Deck& deck ) {
-    if( !deck.hasKeyword( "SCALECRS" ) ) return false;
+    using ScaleCRS = ParserKeywords::SCALECRS;
+
+    if (! deck.hasKeyword<ScaleCRS>())
+        return false;
 
     /*
-    * the manual says that Y and N are acceptable values for "YES" and "NO", so
-    * it's *VERY* likely that only the first character is checked. We preserve
-    * this behaviour
-    */
+     * the manual says that Y and N are acceptable values for "YES" and "NO", so
+     * it's *VERY* likely that only the first character is checked. We preserve
+     * this behaviour
+     */
     const auto value = std::toupper(
-                        deck.getKeyword( "SCALECRS" )
-                            .getRecord( 0 )
-                            .getItem( "VALUE" )
-                            .get< std::string >( 0 ).front() );
+        deck.getKeyword<ScaleCRS>()
+            .getRecord(0)
+            .getItem<ScaleCRS::VALUE>()
+            .get<std::string>(0).front());
 
-    if( value != 'Y' && value != 'N' )
-        throw std::invalid_argument( "SCALECRS takes 'YES' or 'NO'" );
+    if (value != 'Y' && value != 'N')
+        throw std::invalid_argument {
+            ScaleCRS::keywordName + " takes 'YES' or 'NO'"
+        };
 
     return value == 'Y';
 }
@@ -110,13 +205,19 @@ bool endscale_revers( const DeckKeyword& kw ) {
 }
 
 EndpointScaling::EndpointScaling( const Deck& deck ) {
-    if( deck.hasKeyword( "ENDSCALE" ) || deck.hasKeyword("SWATINIT")) {
+    const auto has_horz_scaling = hasHorzScaling(deck);
+    const auto has_vert_scaling = hasVertScaling(deck);
+    const auto has_endscale     = deck.hasKeyword<ParserKeywords::ENDSCALE>();
+
+    if (has_horz_scaling || has_vert_scaling || has_endscale ||
+        deck.hasKeyword<ParserKeywords::SWATINIT>())
+    {
         const bool threep_ = threepoint_scaling( deck );
         bool direct_ = false;
         bool reversible_ = true;
 
-        if (deck.hasKeyword("ENDSCALE")) {
-            const auto& endscale = deck.getKeyword( "ENDSCALE" );
+        if (has_endscale) {
+            const auto& endscale = deck.getKeyword<ParserKeywords::ENDSCALE>();
             direct_ = !endscale_nodir( endscale );
             reversible_ = endscale_revers( endscale );
         }

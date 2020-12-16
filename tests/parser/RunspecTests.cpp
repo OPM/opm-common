@@ -126,7 +126,71 @@ BOOST_AUTO_TEST_CASE( EndpointScalingWithoutENDSCALE ) {
     BOOST_CHECK( !endscale.irreversible() );
 }
 
+BOOST_AUTO_TEST_CASE ( EndpointScalingWithoutENDSCALE_WithEPSProps ) {
+    const auto deck = Parser{}.parseString(R"(RUNSPEC
+DIMENS
+10 10 3/
 
+PROPS
+SWL
+300*0.125 /
+END
+)");
+
+    const auto endscale = Runspec { deck }.endpointScaling();
+
+    BOOST_CHECK_MESSAGE( static_cast<bool>(endscale),
+                         "End-point scaling must be activated by SWL keyword");
+
+    BOOST_CHECK_MESSAGE( !endscale.directional(),
+                         "Directional end-point scaling must NOT "
+                         "be activated by SWL keyword" );
+
+    BOOST_CHECK_MESSAGE( endscale.nondirectional(),
+                         "Non-directional end-point scaling must "
+                         "be activated by SWL keyword" );
+
+    BOOST_CHECK_MESSAGE( endscale.reversible(),
+                         "Reversible nend-point scaling must "
+                         "be activated by SWL keyword" );
+
+    BOOST_CHECK_MESSAGE( !endscale.irreversible(),
+                         "Irreversible end-point scaling must NOT "
+                         "be activated by SWL keyword" );
+}
+
+BOOST_AUTO_TEST_CASE ( EndpointScalingWithoutENDSCALE_WithVertProps ) {
+    const auto deck = Parser{}.parseString(R"(RUNSPEC
+DIMENS
+10 10 3/
+
+PROPS
+KRORW
+300*0.25 /
+END
+)");
+
+    const auto endscale = Runspec { deck }.endpointScaling();
+
+    BOOST_CHECK_MESSAGE( static_cast<bool>(endscale),
+                         "End-point scaling must be activated by KRORW keyword");
+
+    BOOST_CHECK_MESSAGE( !endscale.directional(),
+                         "Directional end-point scaling must NOT "
+                         "be activated by KRORW keyword" );
+
+    BOOST_CHECK_MESSAGE( endscale.nondirectional(),
+                         "Non-directional end-point scaling must "
+                         "be activated by KRORW keyword" );
+
+    BOOST_CHECK_MESSAGE( endscale.reversible(),
+                         "Reversible nend-point scaling must "
+                         "be activated by KRORW keyword" );
+
+    BOOST_CHECK_MESSAGE( !endscale.irreversible(),
+                         "Irreversible end-point scaling must NOT "
+                         "be activated by KRORW keyword" );
+}
 
 BOOST_AUTO_TEST_CASE( EndpointScalingDefaulted ) {
     const std::string input = R"(

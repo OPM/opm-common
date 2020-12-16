@@ -46,8 +46,9 @@
 #include <opm/parser/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 
-#include "src/opm/parser/eclipse/EclipseState/Grid/FieldProps.hpp"
+#include <opm/common/utility/OpmInputError.hpp>
 
+#include "src/opm/parser/eclipse/EclipseState/Grid/FieldProps.hpp"
 
 using namespace Opm;
 
@@ -675,6 +676,60 @@ OPERATE
         BOOST_CHECK_EQUAL(permz[i]  , 2*permy[i]   + to_si(1000));
         BOOST_CHECK_EQUAL(permz[i+3], 3*permx[i+3] + to_si(300));
     }
+}
+
+BOOST_AUTO_TEST_CASE(EPS_Props_Inconsistent) {
+    BOOST_CHECK_THROW(const auto deck = Opm::Parser{}.parseString(R"(RUNSPEC
+DIMENS
+10 10 3 /
+
+-- No GAS keyword
+
+PROPS
+SGCR    -- Requires 'GAS'
+300*0.001 /
+)"), Opm::OpmInputError);
+
+    BOOST_CHECK_THROW(const auto deck = Opm::Parser{}.parseString(R"(RUNSPEC
+DIMENS
+10 10 3 /
+
+OIL
+GAS
+-- No ENDSCALE keyword
+
+PROPS
+SOGCR    -- Requires 'ENDSCALE'
+300*0.05 /
+)"), Opm::OpmInputError);
+
+    BOOST_CHECK_THROW(const auto deck = Opm::Parser{}.parseString(R"(RUNSPEC
+DIMENS
+10 10 3 /
+
+OIL
+-- GAS
+ENDSCALE
+/
+
+PROPS
+SOGCR    -- Requires 'GAS'
+300*0.05 /
+)"), Opm::OpmInputError);
+
+    BOOST_CHECK_THROW(const auto deck = Opm::Parser{}.parseString(R"(RUNSPEC
+DIMENS
+10 10 3 /
+
+-- OIL
+GAS
+ENDSCALE
+/
+
+PROPS
+SOGCR    -- Requires 'OIL'
+300*0.05 /
+)"), Opm::OpmInputError);
 }
 
 namespace {
