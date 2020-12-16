@@ -25,6 +25,15 @@ namespace Opm {
 
 AutoICD AutoICD::serializeObject() {
     AutoICD aicd;
+    static_cast<SICD&>(aicd) = SICD::serializeObject();
+    aicd.m_flow_rate_exponent = 1.0;
+    aicd.m_visc_exponent = 2.0;
+    aicd.m_oil_density_exponent = 3.0;
+    aicd.m_water_density_exponent = 4.0;
+    aicd.m_gas_density_exponent = 5.0;
+    aicd.m_oil_viscosity_exponent = 6.0;
+    aicd.m_water_viscosity_exponent = 7.0;
+    aicd.m_gas_viscosity_exponent = 8.0;
     return aicd;
 }
 
