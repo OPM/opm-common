@@ -51,7 +51,15 @@ namespace Opm {
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
-            AutoICD::serializeOp(serializer);
+            this->SICD::serializeOp(serializer);
+            serializer(m_flow_rate_exponent);
+            serializer(m_visc_exponent);
+            serializer(m_oil_density_exponent);
+            serializer(m_water_density_exponent);
+            serializer(m_gas_density_exponent);
+            serializer(m_oil_viscosity_exponent);
+            serializer(m_water_viscosity_exponent);
+            serializer(m_gas_viscosity_exponent);
         }
 
         double flowRateExponent() const;
