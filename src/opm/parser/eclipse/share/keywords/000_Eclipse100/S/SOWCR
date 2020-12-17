@@ -3,6 +3,7 @@
   "sections": [
     "PROPS"
   ],
+  "requires": ["OIL", "WATER", "ENDSCALE"],
   "data": {
     "value_type": "DOUBLE",
     "dimension": "1"
