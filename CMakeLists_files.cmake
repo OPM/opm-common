@@ -781,6 +781,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQInput.hpp
        opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQActive.hpp
        opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQSet.hpp
+       opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQToken.hpp
        opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunction.hpp
        opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunctionTable.hpp
        opm/parser/eclipse/Deck/DeckItem.hpp

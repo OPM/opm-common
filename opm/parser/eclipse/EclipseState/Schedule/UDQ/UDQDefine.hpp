@@ -31,6 +31,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQContext.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunctionTable.hpp>
 #include <opm/common/OpmLog/KeywordLocation.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQToken.hpp>
 
 namespace Opm {
 
@@ -76,6 +77,7 @@ public:
     void required_summary(std::unordered_set<std::string>& summary_keys) const;
     void update_status(UDQUpdate update_status, std::size_t report_step);
     std::pair<UDQUpdate, std::size_t> status() const;
+    const std::vector<Opm::UDQToken> tokens() const;
 
     bool operator==(const UDQDefine& data) const;
 
@@ -93,6 +95,7 @@ public:
 
 private:
     std::string m_keyword;
+    std::vector<Opm::UDQToken> m_tokens;
     std::shared_ptr<UDQASTNode> ast;
     UDQVarType m_var_type;
     KeywordLocation m_location;

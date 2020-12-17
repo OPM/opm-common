@@ -27,10 +27,10 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQASTNode.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQDefine.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQToken.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
 
 #include "../../../Parser/raw/RawConsts.hpp"
-#include "UDQToken.hpp"
 #include "UDQParser.hpp"
 
 namespace Opm {
@@ -196,8 +196,8 @@ UDQDefine::UDQDefine(const UDQParams& udq_params,
             }
         }
     }
-    std::vector<UDQToken> tokens = make_tokens(string_tokens);
-    this->ast = std::make_shared<UDQASTNode>( UDQParser::parse(udq_params, this->m_var_type, this->m_keyword, this->m_location, tokens, parseContext, errors) );
+    this->m_tokens = make_tokens(string_tokens);
+    this->ast = std::make_shared<UDQASTNode>( UDQParser::parse(udq_params, this->m_var_type, this->m_keyword, this->m_location, this->m_tokens, parseContext, errors) );
     this->string_data = "";
     for (std::size_t index = 0; index < deck_data.size(); index++) {
         this->string_data += deck_data[index];
@@ -339,7 +339,9 @@ std::pair<UDQUpdate, std::size_t> UDQDefine::status() const {
     return std::make_pair(this->m_update_status, this->m_report_step);
 }
 
-
+const std::vector<UDQToken> UDQDefine::tokens() const {
+    return this->m_tokens;
+}
 
 bool UDQDefine::operator==(const UDQDefine& data) const {
     if ((ast && !data.ast) || (!ast && data.ast))
