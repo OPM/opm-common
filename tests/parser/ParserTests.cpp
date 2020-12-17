@@ -352,6 +352,9 @@ BOOST_AUTO_TEST_CASE( handle_empty_title ) {
 
 BOOST_AUTO_TEST_CASE( deck_comma_separated_fields ) {
     const char* deck = R"(
+WATER
+OIL
+
 TABDIMS
     2*    24 2*    20    20 1*     1 7* /
 

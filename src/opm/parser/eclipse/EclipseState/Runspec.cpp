@@ -95,21 +95,6 @@ namespace {
                      (twoP && deck.hasKeyword<Opm::ParserKeywords::SOF2>()))) ||
             (wat && deck.hasKeyword<Opm::ParserKeywords::SWFN>());
 
-        if (gas &&
-            deck.hasKeyword<Opm::ParserKeywords::SGOF>() &&
-            deck.hasKeyword<Opm::ParserKeywords::SLGOF>())
-            throw std::invalid_argument {
-                "Both SGOF and SLGOF have been specified "
-                "but these tables are mutually exclusive!"
-            };
-
-        if (family1 && family2)
-            throw std::invalid_argument {
-                "Saturation families should not be mixed\n"
-                "Use either SGOF (or SLGOF) and/or SWOF "
-                "or SGFN/SWFN and SOF2/SOF3"
-            };
-
         if (family1)
             return Opm::SatFuncControls::KeywordFamily::Family_I;
 

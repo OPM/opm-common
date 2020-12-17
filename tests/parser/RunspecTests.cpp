@@ -547,26 +547,6 @@ BOOST_AUTO_TEST_CASE(SatFunc_Family)
 {
     {
         const auto deck = ::Opm::Parser{}.parseString(R"(RUNSPEC
-TABDIMS
-/
-
-PROPS
-
-SGOF
-0 0 1 0
-1 1 0 0 /
-END
-)");
-
-        const auto rspec = ::Opm::Runspec{deck};
-        const auto sfctrl = rspec.saturationFunctionControls();
-
-        BOOST_CHECK_MESSAGE(sfctrl.family() == ::Opm::SatFuncControls::KeywordFamily::Undefined,
-                            "SatFuncControl Deck-constructor must infer Undefined when Phases missing");
-    }
-
-    {
-        const auto deck = ::Opm::Parser{}.parseString(R"(RUNSPEC
 OIL
 GAS
 
@@ -680,30 +660,6 @@ END
         const auto deck = ::Opm::Parser{}.parseString(R"(RUNSPEC
 OIL
 GAS
-
-TABDIMS
-/
-
-PROPS
-
-SGOF
-0 0 1 0
-1 1 0 0 /
-
-SLGOF
-0 0 1 0
-1 1 0 0 /
-END
-)");
-
-        // Both SGOF and SLGOF in same input => invalid_argument
-        BOOST_CHECK_THROW(const auto rspec = ::Opm::Runspec{deck}, std::invalid_argument);
-    }
-
-    {
-        const auto deck = ::Opm::Parser{}.parseString(R"(RUNSPEC
-OIL
-GAS
 WATER
 
 TABDIMS
@@ -759,31 +715,6 @@ END
 
         BOOST_CHECK_MESSAGE(sfctrl.family() == ::Opm::SatFuncControls::KeywordFamily::Family_II,
                             "SatFuncControl Deck-constructor must infer Family II from SGFN/SOF2");
-    }
-
-    {
-        const auto deck = ::Opm::Parser{}.parseString(R"(RUNSPEC
-OIL
-GAS
-WATER
-
-TABDIMS
-/
-
-PROPS
-
-SWFN
-0 0 0
-1 1 0 /
-
-SLGOF
-0 0 1 0
-1 1 0 0 /
-END
-)");
-
-        // Both SWFN and SLGOF in same input => invalid_argument
-        BOOST_CHECK_THROW(const auto rspec = ::Opm::Runspec{deck}, std::invalid_argument);
     }
 }
 

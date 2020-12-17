@@ -939,6 +939,9 @@ PVTO
 
 BOOST_AUTO_TEST_CASE( SGOF ) {
 const std::string parserData = R"(
+GAS
+OIL
+
 TABDIMS
 -- NTSFUN NTPVT NSSFUN NPPVT NTFIP NRPVT
         1     1     30     1     1     1 /
@@ -977,6 +980,9 @@ SGOF
 BOOST_AUTO_TEST_CASE( SWOF ) {
 
     const std::string parserData = R"(
+OIL
+WATER
+
 TABDIMS
 -- NTSFUN NTPVT NSSFUN NPPVT NTFIP NRPVT
         1     1     30     1     1     1 /
@@ -1032,6 +1038,8 @@ SWOF
 BOOST_AUTO_TEST_CASE( SLGOF ) {
 
 const std::string parserData = R"(
+GAS
+
 TABDIMS
 -- NTSFUN NTPVT NSSFUN NPPVT NTFIP NRPVT
         1     1     30     1     1     1 /
@@ -1469,6 +1477,9 @@ BOOST_AUTO_TEST_CASE(PVTWSALT) {
     const std::string input = R"(
 RUNSPEC
 
+OIL
+GAS
+
 TABDIMS
  1 2 /
 
@@ -1493,10 +1504,9 @@ SGOF
     0.7 0.8 0.3 6.0
     0.8 0.9 0.2 7.0
     0.9 0.5 0.1 8.0
-    1.0 1.0 0.1 9.0 /;
-
-
+    1.0 1.0 0.1 9.0 /
 )";
+
     auto deck = Parser{}.parseString(input);
     const auto& pvtwsalt = deck.getKeyword("PVTWSALT");
     BOOST_CHECK_EQUAL(pvtwsalt.size(), 4);
