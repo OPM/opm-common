@@ -51,6 +51,12 @@ namespace Opm { namespace RestartIO {
             double damping_fact;
         };
 
+        struct liftOptPar {
+            double min_int;
+            double incr;
+            double min_ec_grad;
+        };
+
         DoubHEAD();
 
         ~DoubHEAD() = default;
@@ -72,6 +78,7 @@ namespace Opm { namespace RestartIO {
 
         DoubHEAD& udq_param(const UDQParams& udqPar);
         DoubHEAD& guide_rate_param(const guideRate& guide_rp);
+        DoubHEAD& lift_opt_param(const liftOptPar& lo_par);
 
         const std::vector<double>& data() const
         {

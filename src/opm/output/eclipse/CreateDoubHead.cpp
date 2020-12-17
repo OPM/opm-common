@@ -107,6 +107,19 @@ namespace {
                 damping_fact
             };
     }
+
+    Opm::RestartIO::DoubHEAD::liftOptPar
+    computeLiftOptParam(const ::Opm::Schedule& sched,
+                        const Opm::UnitSystem& units,
+                        const std::size_t    lookup_step)
+    {
+        using M = ::Opm::UnitSystem::measure;
+        const auto& glo = sched.glo(lookup_step);
+        return {
+            units.from_si(M::time, glo.min_wait()), units.from_si(M::gas_surface_rate, glo.gaslift_increment()),
+            units.from_si(M::oil_gas_ratio, glo.min_eco_gradient())
+        };
+    }
 } // Anonymous
 
 // #####################################################################
@@ -131,6 +144,7 @@ createDoubHead(const EclipseState& es,
         .drsdt           (sched, lookup_step, tconv)
         .udq_param(rspec.udqParams())
         .guide_rate_param(computeGuideRate(sched, lookup_step))
+        .lift_opt_param(computeLiftOptParam(sched, usys, lookup_step))
         ;
 
     if (nextTimeStep > 0.0) {

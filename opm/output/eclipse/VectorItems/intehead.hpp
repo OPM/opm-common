@@ -80,6 +80,8 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
         NGCTRL = 51, //  Index indicating if group control is used or not (1 - if group control, 0 if not)
 
         NGRNPH = 58, //  Index indicating if group control is used or not (1 - if group control, 0 if not)
+        EACHNCITS = 59, //  Index indicating if lift gas distribution optimized each of the NUPCOL first iterations or not
+                       // 1 - optimized only first newton iteration, 2 - optimized each of NUPCOL newton iterations
 
         DAY = 64, //  Calendar day of report step (1..31)
         MONTH = 65, //  Calendar month of report step (1..12)
