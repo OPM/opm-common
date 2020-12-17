@@ -16,18 +16,109 @@
   OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <ostream>
-#include <type_traits>
+#include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckSection.hpp>
+
+#include <opm/parser/eclipse/Parser/ParserKeywords/B.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/C.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/F.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/G.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/N.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/O.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/P.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/S.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/T.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/W.hpp>
-#include <opm/parser/eclipse/EclipseState/Runspec.hpp>
+
 #include <opm/common/OpmLog/OpmLog.hpp>
+
+#include <ostream>
+#include <stdexcept>
+#include <type_traits>
+
+namespace {
+    Opm::Phases inferActivePhases(const Opm::Deck& deck)
+    {
+        return {
+            deck.hasKeyword<Opm::ParserKeywords::OIL>(),
+            deck.hasKeyword<Opm::ParserKeywords::GAS>(),
+            deck.hasKeyword<Opm::ParserKeywords::WATER>(),
+            deck.hasKeyword<Opm::ParserKeywords::SOLVENT>(),
+            deck.hasKeyword<Opm::ParserKeywords::POLYMER>(),
+            deck.hasKeyword<Opm::ParserKeywords::THERMAL>(),
+            deck.hasKeyword<Opm::ParserKeywords::POLYMW>(),
+            deck.hasKeyword<Opm::ParserKeywords::FOAM>(),
+            deck.hasKeyword<Opm::ParserKeywords::BRINE>(),
+            deck.hasKeyword<Opm::ParserKeywords::PVTSOL>()
+        };
+    }
+
+    Opm::SatFuncControls::ThreePhaseOilKrModel
+    inferThreePhaseOilKrModel(const Opm::Deck& deck)
+    {
+        using KroModel = Opm::SatFuncControls::ThreePhaseOilKrModel;
+
+        if (deck.hasKeyword<Opm::ParserKeywords::STONE1>())
+            return KroModel::Stone1;
+
+        if (deck.hasKeyword<Opm::ParserKeywords::STONE>() ||
+            deck.hasKeyword<Opm::ParserKeywords::STONE2>())
+            return KroModel::Stone2;
+
+        return KroModel::Default;
+    }
+
+    Opm::SatFuncControls::KeywordFamily
+    inferKeywordFamily(const Opm::Deck& deck)
+    {
+        const auto phases = inferActivePhases(deck);
+        const auto wat    = phases.active(Opm::Phase::WATER);
+        const auto oil    = phases.active(Opm::Phase::OIL);
+        const auto gas    = phases.active(Opm::Phase::GAS);
+
+        const auto threeP = gas && oil && wat;
+        const auto twoP = (!gas && oil && wat) || (gas && oil && !wat);
+
+        const auto family1 =       // SGOF/SLGOF and/or SWOF
+            (gas && (deck.hasKeyword<Opm::ParserKeywords::SGOF>() ||
+                     deck.hasKeyword<Opm::ParserKeywords::SLGOF>())) ||
+            (wat && deck.hasKeyword<Opm::ParserKeywords::SWOF>());
+
+        // note: we allow for SOF2 to be part of family1 for threeP +
+        // solvent simulations.
+
+        const auto family2 =      // SGFN, SOF{2,3}, SWFN
+            (gas && deck.hasKeyword<Opm::ParserKeywords::SGFN>()) ||
+            (oil && ((threeP && deck.hasKeyword<Opm::ParserKeywords::SOF3>()) ||
+                     (twoP && deck.hasKeyword<Opm::ParserKeywords::SOF2>()))) ||
+            (wat && deck.hasKeyword<Opm::ParserKeywords::SWFN>());
+
+        if (gas &&
+            deck.hasKeyword<Opm::ParserKeywords::SGOF>() &&
+            deck.hasKeyword<Opm::ParserKeywords::SLGOF>())
+            throw std::invalid_argument {
+                "Both SGOF and SLGOF have been specified "
+                "but these tables are mutually exclusive!"
+            };
+
+        if (family1 && family2)
+            throw std::invalid_argument {
+                "Saturation families should not be mixed\n"
+                "Use either SGOF (or SLGOF) and/or SWOF "
+                "or SGFN/SWFN and SOF2/SOF3"
+            };
+
+        if (family1)
+            return Opm::SatFuncControls::KeywordFamily::Family_I;
+
+        if (family2)
+            return Opm::SatFuncControls::KeywordFamily::Family_II;
+
+        return Opm::SatFuncControls::KeywordFamily::Undefined;
+    }
+}
 
 namespace Opm {
 
@@ -43,7 +134,7 @@ Phase get_phase( const std::string& str ) {
     if( str == "FOAM" ) return Phase::FOAM;
     if( str == "BRINE" ) return Phase::BRINE;
     if( str == "ZFRACTION" ) return Phase::ZFRACTION;
- 
+
     throw std::invalid_argument( "Unknown phase '" + str + "'" );
 }
 
@@ -246,12 +337,12 @@ EclHysterConfig EclHysterConfig::serializeObject()
     return result;
 }
 
-bool EclHysterConfig::active() const 
+bool EclHysterConfig::active() const
     { return activeHyst; }
-    
+
 int EclHysterConfig::pcHysteresisModel() const
     { return pcHystMod; }
-        
+
 int EclHysterConfig::krHysteresisModel() const
     { return krHystMod; }
 
@@ -268,54 +359,43 @@ SatFuncControls::SatFuncControls()
 SatFuncControls::SatFuncControls(const Deck& deck)
     : SatFuncControls()
 {
-    using Kw = ParserKeywords::TOLCRIT;
+    using TolCrit = ParserKeywords::TOLCRIT;
 
-    if (deck.hasKeyword<Kw>()) {
+    if (deck.hasKeyword<TolCrit>()) {
         // SIDouble doesn't perform any unit conversions here since
         // TOLCRIT is a pure scalar (Dimension = 1).
-        this->tolcrit = deck.getKeyword<Kw>(0).getRecord(0)
-            .getItem<Kw::VALUE>().getSIDouble(0);
+        this->tolcrit = deck.getKeyword<TolCrit>(0).getRecord(0)
+            .getItem<TolCrit::VALUE>().getSIDouble(0);
     }
 
-    if (deck.hasKeyword<ParserKeywords::STONE1>())
-        krmodel = ThreePhaseOilKrModel::Stone1;
-    else if (deck.hasKeyword<ParserKeywords::STONE>() ||
-             deck.hasKeyword<ParserKeywords::STONE2>())
-        krmodel = ThreePhaseOilKrModel::Stone2;
+    this->krmodel = inferThreePhaseOilKrModel(deck);
+    this->satfunc_family = inferKeywordFamily(deck);
 }
 
 SatFuncControls::SatFuncControls(const double tolcritArg,
-                                 ThreePhaseOilKrModel model)
+                                 const ThreePhaseOilKrModel model,
+                                 const KeywordFamily family)
     : tolcrit(tolcritArg)
     , krmodel(model)
+    , satfunc_family(family)
 {}
 
 SatFuncControls SatFuncControls::serializeObject()
 {
-    SatFuncControls result;
-    result.tolcrit = 1.0;
-    result.krmodel = ThreePhaseOilKrModel::Stone2;
-
-    return result;
+    return SatFuncControls {
+        1.0, ThreePhaseOilKrModel::Stone2, KeywordFamily::Family_I
+    };
 }
 
 bool SatFuncControls::operator==(const SatFuncControls& rhs) const
 {
-    return this->minimumRelpermMobilityThreshold() == rhs.minimumRelpermMobilityThreshold() &&
-           this->krModel() == rhs.krModel();
+    return (this->minimumRelpermMobilityThreshold() == rhs.minimumRelpermMobilityThreshold())
+        && (this->krModel() == rhs.krModel())
+        && (this->family() == rhs.family());
 }
 
 Runspec::Runspec( const Deck& deck ) :
-    active_phases( Phases( deck.hasKeyword( "OIL" ),
-                           deck.hasKeyword( "GAS" ),
-                           deck.hasKeyword( "WATER" ),
-                           deck.hasKeyword( "SOLVENT" ),
-                           deck.hasKeyword( "POLYMER" ),
-                           deck.hasKeyword( "THERMAL" ),
-                           deck.hasKeyword( "POLYMW"  ),
-                           deck.hasKeyword( "FOAM" ),
-                           deck.hasKeyword( "BRINE" ),
-                           deck.hasKeyword( "PVTSOL" ) ) ),
+    active_phases( inferActivePhases(deck) ),
     m_tabdims( deck ),
     endscale( deck ),
     welldims( deck ),
