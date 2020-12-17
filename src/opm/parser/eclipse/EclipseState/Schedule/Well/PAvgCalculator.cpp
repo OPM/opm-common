@@ -58,10 +58,6 @@ PAvgCalculator::PAvgCalculator(const std::string& well, const EclipseGrid& grid,
     well_name(well),
     m_pavg(pavg)
 {
-    if (pavg.use_porv())
-        OpmLog::warning("PORV based averaging is not yet supported in WBPx");
-        //throw std::logic_error("The current implementation does not yet support PORV based averaging");
-
     if (porv.size() != grid.getCartesianSize())
         throw std::logic_error("Should pass a GLOBAL porv vector");
 
