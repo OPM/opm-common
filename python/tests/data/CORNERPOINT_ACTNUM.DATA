@@ -1,10 +1,13 @@
-RUNSPEC
+RUNSPEC 
+
+OIL
+WATER
 
 DIMENS
   10  10  5 /
 
 TABDIMS
- 2 /
+ 2 / 
 
 GRID
 
@@ -1197,10 +1200,10 @@ ZCORN
 /
 
 ACTNUM
-  200*0 100*1 200*0 /
+  200*0 100*1 200*0 /      
 
 PORO
-  500*0.15 /
+   500*0.15 /
 
 EDIT
 
@@ -1210,3 +1213,4 @@ SWOF
  1 2 3 4
  5 6 7 8 /
  9 10 11 12 /
+

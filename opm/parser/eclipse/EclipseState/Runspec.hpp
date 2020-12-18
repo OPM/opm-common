@@ -241,11 +241,17 @@ public:
         Stone2
     };
 
+    enum class KeywordFamily {
+        Family_I,               // SGOF, SWOF, SLGOF
+        Family_II,              // SGFN, SOF{2,3}, SWFN
+        Undefined,
+    };
+
     SatFuncControls();
     explicit SatFuncControls(const Deck& deck);
-    SatFuncControls(const double tolcritArg,
-                    ThreePhaseOilKrModel model);
-
+    explicit SatFuncControls(const double tolcritArg,
+                             const ThreePhaseOilKrModel model,
+                             const KeywordFamily family);
 
     static SatFuncControls serializeObject();
 
@@ -259,6 +265,11 @@ public:
         return this->krmodel;
     }
 
+    KeywordFamily family() const
+    {
+        return this->satfunc_family;
+    }
+
     bool operator==(const SatFuncControls& rhs) const;
 
     template<class Serializer>
@@ -266,11 +277,13 @@ public:
     {
         serializer(tolcrit);
         serializer(krmodel);
+        serializer(satfunc_family);
     }
 
 private:
     double tolcrit;
     ThreePhaseOilKrModel krmodel = ThreePhaseOilKrModel::Default;
+    KeywordFamily satfunc_family = KeywordFamily::Undefined;
 };
 
 class Runspec {

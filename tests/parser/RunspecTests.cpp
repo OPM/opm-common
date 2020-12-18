@@ -25,6 +25,8 @@ along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 
+#include <stdexcept>
+
 using namespace Opm;
 
 BOOST_AUTO_TEST_CASE(PhaseFromString) {
@@ -541,6 +543,181 @@ BOOST_AUTO_TEST_CASE( SWATINIT ) {
 
 }
 
+BOOST_AUTO_TEST_CASE(SatFunc_Family)
+{
+    {
+        const auto deck = ::Opm::Parser{}.parseString(R"(RUNSPEC
+OIL
+GAS
+
+TABDIMS
+/
+
+PROPS
+
+END
+)");
+
+        const auto rspec = ::Opm::Runspec{deck};
+        const auto sfctrl = rspec.saturationFunctionControls();
+
+        BOOST_CHECK_MESSAGE(sfctrl.family() == ::Opm::SatFuncControls::KeywordFamily::Undefined,
+                            "SatFuncControl Deck-constructor must infer Undefined when Tables missing");
+    }
+
+    {
+        const auto sfctrl = ::Opm::SatFuncControls{};
+        BOOST_CHECK_MESSAGE(sfctrl.family() == ::Opm::SatFuncControls::KeywordFamily::Undefined,
+                            "Default-constructed SatFuncControl must have Undefined keyword family");
+    }
+
+    {
+        const auto sfctrl = ::Opm::SatFuncControls{ 5.0e-7, ::Opm::SatFuncControls::ThreePhaseOilKrModel::Default, ::Opm::SatFuncControls::KeywordFamily::Family_II };
+        BOOST_CHECK_MESSAGE(sfctrl.family() == ::Opm::SatFuncControls::KeywordFamily::Family_II,
+                            "SatFuncControl constructor must assign keyword family");
+    }
+
+    {
+        const auto deck = ::Opm::Parser{}.parseString(R"(RUNSPEC
+OIL
+GAS
+WATER
+
+TABDIMS
+/
+
+PROPS
+
+SWOF
+0 0 1 0
+1 1 0 0 /
+
+SGOF
+0 0 1 0
+1 1 0 0 /
+END
+)");
+
+        const auto rspec = ::Opm::Runspec{deck};
+        const auto sfctrl = rspec.saturationFunctionControls();
+
+        BOOST_CHECK_MESSAGE(sfctrl.family() == ::Opm::SatFuncControls::KeywordFamily::Family_I,
+                            "SatFuncControl Deck-constructor must infer Family I from SWOF/SGOF");
+    }
+
+    {
+        const auto deck = ::Opm::Parser{}.parseString(R"(RUNSPEC
+OIL
+WATER
+
+TABDIMS
+/
+
+PROPS
+
+SWOF
+0 0 1 0
+1 1 0 0 /
+END
+)");
+
+        const auto rspec = ::Opm::Runspec{deck};
+        const auto sfctrl = rspec.saturationFunctionControls();
+
+        BOOST_CHECK_MESSAGE(sfctrl.family() == ::Opm::SatFuncControls::KeywordFamily::Family_I,
+                            "SatFuncControl Deck-constructor must infer Family I from SWOF");
+    }
+
+    {
+        const auto deck = ::Opm::Parser{}.parseString(R"(RUNSPEC
+OIL
+GAS
+WATER
+
+TABDIMS
+/
+
+PROPS
+
+SWOF
+0 0 1 0
+1 1 0 0 /
+
+SLGOF
+0 0 1 0
+1 1 0 0 /
+END
+)");
+
+        const auto rspec = ::Opm::Runspec{deck};
+        const auto sfctrl = rspec.saturationFunctionControls();
+
+        BOOST_CHECK_MESSAGE(sfctrl.family() == ::Opm::SatFuncControls::KeywordFamily::Family_I,
+                            "SatFuncControl Deck-constructor must infer Family I from SWOF/SLGOF");
+    }
+
+    {
+        const auto deck = ::Opm::Parser{}.parseString(R"(RUNSPEC
+OIL
+GAS
+WATER
+
+TABDIMS
+/
+
+PROPS
+
+SWFN
+0 0 0
+1 1 0 /
+
+SGFN
+0 0 0
+1 1 0 /
+
+SOF3
+0 0 0
+1 1 1 /
+
+END
+)");
+
+        const auto rspec = ::Opm::Runspec{deck};
+        const auto sfctrl = rspec.saturationFunctionControls();
+
+        BOOST_CHECK_MESSAGE(sfctrl.family() == ::Opm::SatFuncControls::KeywordFamily::Family_II,
+                            "SatFuncControl Deck-constructor must infer Family II from SWFN/SGFN/SOF3");
+    }
+
+    {
+        const auto deck = ::Opm::Parser{}.parseString(R"(RUNSPEC
+OIL
+GAS
+
+TABDIMS
+/
+
+PROPS
+
+SGFN
+0 0 0
+1 1 0 /
+
+SOF2
+0 0
+1 1 /
+
+END
+)");
+
+        const auto rspec = ::Opm::Runspec{deck};
+        const auto sfctrl = rspec.saturationFunctionControls();
+
+        BOOST_CHECK_MESSAGE(sfctrl.family() == ::Opm::SatFuncControls::KeywordFamily::Family_II,
+                            "SatFuncControl Deck-constructor must infer Family II from SGFN/SOF2");
+    }
+}
+
 BOOST_AUTO_TEST_CASE(TolCrit)
 {
     {
@@ -551,7 +728,7 @@ BOOST_AUTO_TEST_CASE(TolCrit)
     }
 
     {
-        const auto sfctrl = ::Opm::SatFuncControls{ 5.0e-7, ::Opm::SatFuncControls::ThreePhaseOilKrModel::Default };
+        const auto sfctrl = ::Opm::SatFuncControls{ 5.0e-7, ::Opm::SatFuncControls::ThreePhaseOilKrModel::Default, ::Opm::SatFuncControls::KeywordFamily::Family_II };
         BOOST_CHECK_CLOSE(sfctrl.minimumRelpermMobilityThreshold(), 5.0e-7, 1.0e-10);
         BOOST_CHECK_MESSAGE(!(sfctrl == ::Opm::SatFuncControls{}),
                             "Default-constructed SatFuncControl must NOT equal non-default");
