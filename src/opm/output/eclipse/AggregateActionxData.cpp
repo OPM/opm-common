@@ -370,6 +370,9 @@ const std::map<cmp_enum, int> cmpToIndex = {
             */
             std::size_t ind = 0;
             int noEPZacn = 26;
+            bool insideParen = false;
+            bool parenFirstCond = false;
+            bool allPrevLogicOp_AND = false;
             // write out the schedule Actionx conditions
             const auto& actx_cond = actx.conditions();
             for (auto cond_it = actx_cond.begin(); cond_it < actx_cond.end(); cond_it++) {
@@ -448,19 +451,67 @@ const std::map<cmp_enum, int> cmpToIndex = {
                     throw std::invalid_argument("Actionx: " + actx.name());
                 }
 
-                /*item [17] - relates to operator and if the right hand condition is a constant or not
+                /*item [17] - is an item that is non-zero for actions with several conditions combined using logical operators (AND / OR)
                  * First condition => [17] =  0
                  * Second+ conditions
-                    *If the previous condition has a constant rhs => [17] =  0
-                    *If rhs is {W,G, F} and
-                        *If previous condition is AND => [17] =  1
-                        *If previous condition is OR  => [17] =  0
+                    *Case - no parentheses
+                        *If all conditions before current condition has AND => [17] = 1
+                        *If one condition before current condition has OR   => [17] = 0
+                    *Case - parenthesis before first condition
+                        *If inside first parenthesis
+                            *If all conditions before current condition has AND [17] => 1
+                            *If one condition before current condition has OR  [17] => 0
+                        *If after first parenthesis end and outside parenthesis
+                            *If all conditions outside parentheses and before current condition has AND => [17] = 1
+                            *If one condition outside parentheses and before current condition has OR [17] => 0
+                        *If after first parenthesis end and inside a susequent parenthesis
+                            * [17] = 0
+                    *Case - parenthesis after first condition
+                        *If inside parentesis => [17] = 0
+                        *If outside parenthesis:
+                            *If all conditions outside parentheses and before current condition has AND => [17] = 1
+                            *If one condition outside parentheses and before current condition has OR [17] => 0
                 */
-                if (cond_it > actx_cond.begin()) {
+                if (cond_it == actx_cond.begin()) {
+                    if ((cond_it->left_paren) && (!cond_it->right_paren)) {
+                        parenFirstCond = true;
+                        insideParen = true;
+                    }
+                    if (cond_it->logic == Opm::Action::Condition::Logical::AND) {
+                        allPrevLogicOp_AND = true;
+                    }
+                } else {
+                    // update inside parenthesis or not plus whether in first parenthesis or not
+                    if ((cond_it->left_paren) && (!cond_it->right_paren)) {
+                        insideParen = true;
+                        parenFirstCond = false;
+                    } else if ((!cond_it->left_paren) && (cond_it->right_paren)) {
+                        insideParen = false;
+                        parenFirstCond = false;
+                    }
+
+                    // Assign [17] based on logic (see above)
+                    if (parenFirstCond && allPrevLogicOp_AND) {
+                        iAcn[ind + 17] = 1;
+                    }
+                    else if (!parenFirstCond && !insideParen && allPrevLogicOp_AND) {
+                        iAcn[ind + 17] = 1;
+                    } else {
+                        iAcn[ind + 17] = 0;
+                    }
+
+                    // update the previous logic-sequence
+                    if (parenFirstCond && cond_it->logic == Opm::Action::Condition::Logical::OR) {
+                        allPrevLogicOp_AND = false;
+                    } else if (!insideParen && cond_it->logic == Opm::Action::Condition::Logical::OR) {
+                        allPrevLogicOp_AND = false;
+                    }
+
+#if 0
                     const std::string prev_rhs_quant = (cond_it-1)->rhs.quantity.substr(0,1);
                     const auto it_prev_rhs = rhsQuantityToIndex.find(prev_rhs_quant);
                     if (it_prev_rhs != rhsQuantityToIndex.end()) {
-                    const auto it_logic_17 = logicalToIndex_17.find((cond_it-1)->logic);
+                        const auto it_logic_17 = logicalToIndex_17.find((cond_it-1)->logic);
                         if (it_logic_17 != logicalToIndex_17.end()) {
                             iAcn[ind + 17] = it_logic_17->second;
                         }
@@ -469,6 +520,7 @@ const std::map<cmp_enum, int> cmpToIndex = {
                             throw std::invalid_argument("Actionx: " + actx.name());
                         }
                     }
+#endif
                 }
                 //increment index according to no of items pr condition
                 ind += static_cast<std::size_t>(noEPZacn);
