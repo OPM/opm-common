@@ -524,8 +524,11 @@ namespace {
 
             for (const auto& group_name : group_names) {
                 auto group_ptr = std::make_shared<Group>(this->getGroup(group_name, handlerContext.currentStep));
-                if (group_ptr->update_gefac(gefac, transfer))
+                if (group_ptr->update_gefac(gefac, transfer)) {
+                    this->addWellGroupEvent( group_name, ScheduleEvents::WELLGROUP_EFFICIENCY_UPDATE, handlerContext.currentStep);
+                    m_events.addEvent( ScheduleEvents::WELLGROUP_EFFICIENCY_UPDATE , handlerContext.currentStep);
                     this->updateGroup(std::move(group_ptr), handlerContext.currentStep);
+                }
             }
         }
     }
@@ -1120,8 +1123,11 @@ namespace {
             for (const auto& well_name : well_names) {
                 auto& dynamic_state = this->wells_static.at(well_name);
                 auto well2 = std::make_shared<Well>(*dynamic_state[handlerContext.currentStep]);
-                if (well2->updateEfficiencyFactor(efficiencyFactor))
+                if (well2->updateEfficiencyFactor(efficiencyFactor)){
+                    this->addWellGroupEvent( well_name, ScheduleEvents::WELLGROUP_EFFICIENCY_UPDATE, handlerContext.currentStep);
+                    m_events.addEvent( ScheduleEvents::WELLGROUP_EFFICIENCY_UPDATE , handlerContext.currentStep);
                     this->updateWell(std::move(well2), handlerContext.currentStep);
+                }
             }
         }
     }
@@ -1323,7 +1329,16 @@ namespace {
                         update |= well2->updateWellGuideRate(new_arg.get<double>());
                 }
                 if (update)
+                {
+                    if (well2->isProducer()) {
+                        this->addWellGroupEvent( well_name, ScheduleEvents::PRODUCTION_UPDATE, handlerContext.currentStep);
+                        m_events.addEvent( ScheduleEvents::PRODUCTION_UPDATE , handlerContext.currentStep);
+                    } else {
+                        this->addWellGroupEvent( well_name, ScheduleEvents::INJECTION_UPDATE, handlerContext.currentStep);
+                        m_events.addEvent( ScheduleEvents::INJECTION_UPDATE , handlerContext.currentStep);
+                    }
                     this->updateWell(std::move(well2), handlerContext.currentStep);
+                }
             }
         }
     }
