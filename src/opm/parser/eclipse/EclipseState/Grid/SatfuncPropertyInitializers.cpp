@@ -87,6 +87,11 @@ namespace {
         const auto threeP = gas && oil && wat;
         const auto twoP = (!gas && oil && wat) || (gas && oil && !wat) ;
 
+        if (! (twoP || threeP)) {
+            // Single-phase run.  No family identified or needed.
+            return SatfuncFamily::none;
+        }
+
         const auto family1 =       // SGOF/SLGOF and/or SWOF
             (gas && (tm.hasTables("SGOF") || tm.hasTables("SLGOF"))) ||
             (wat && tm.hasTables("SWOF"));
@@ -107,15 +112,17 @@ namespace {
                                         "Use either SGOF (or SLGOF) and/or SWOF or SGFN/SWFN and SOF2/SOF3");
         }
 
-        if (!family1 && !family2) {
-            throw std::invalid_argument("Saturations function must be specified using either "
-                                        "family 1 or family 2 keywords\n"
-                                        "Use either SGOF (or SLGOF) and/or SWOF or SGFN/SWFN and SOF2/SOF3");
-        }
+        if (family1)
+            return SatfuncFamily::I;
 
-        if( family1 ) return SatfuncFamily::I;
-        if( family2 ) return SatfuncFamily::II;
-        return SatfuncFamily::none;
+        if (family2)
+            return SatfuncFamily::II;
+
+        throw std::invalid_argument {
+            "Saturation functions must be specified using "
+            "either family 1 or family 2 keywords\n"
+            "Use either SGOF (or SLGOF) and/or SWOF or SGFN/SWFN and SOF2/SOF3"
+        };
     }
 
     std::vector<double>
