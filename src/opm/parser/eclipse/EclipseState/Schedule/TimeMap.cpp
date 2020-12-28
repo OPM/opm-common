@@ -40,9 +40,6 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/common/utility/String.hpp>
 
-
-constexpr const std::time_t invalid_time = -1;
-
 namespace Opm {
 
 
@@ -89,22 +86,20 @@ struct TimeMapContext {
     }
 
 
-    TimeMap::TimeMap(const std::vector<std::time_t>& time_points) {
+    TimeMap::TimeMap(const std::vector<std::time_t>& time_points, std::size_t restart_offset) {
         if (time_points.empty())
             throw std::invalid_argument("Can not initialize with empty list of time points");
 
-        TimeMapContext context(false, time_points[0]);
-        this->init_start(time_points[0]);
+        auto start_time = time_points[0];
+        TimeMapContext context(restart_offset > 0, start_time);
+        this->init_start(start_time);
         for (std::size_t ti = 1; ti < time_points.size(); ti++) {
-            if (time_points[ti] == invalid_time) {
-                this->m_timeList.push_back(invalid_time);
-                this->m_restart_offset += 1;
-            }
+            if (context.rst_skip)
+                this->m_timeList.push_back(start_time);
             else
                 this->addTime( time_points[ti], context, {} );
         }
-        if (this->m_restart_offset > 0)
-            this->m_restart_offset += 1;
+        this->m_restart_offset = restart_offset;
     }
 
 
@@ -127,8 +122,11 @@ struct TimeMapContext {
         this->m_restart_time = restart.first;
         this->m_restart_offset = restart.second;
 
+        // In the case of restart we do in general not have access to the prober
+        // timepoints, and we artificially fix all the timepoints before the
+        // restart time to the start time.
         for (std::size_t it = 1; it < this->m_restart_offset; it++)
-            this->m_timeList.push_back(invalid_time);
+            this->m_timeList.push_back(start_time);
 
         TimeMapContext context(this->m_restart_offset > 0, start_time);
         for( const auto& keyword : SCHEDULESection(deck)) {

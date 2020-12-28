@@ -43,7 +43,7 @@ namespace Opm {
     public:
         TimeMap() = default;
         explicit TimeMap(const Deck& deck, const std::pair<std::time_t, std::size_t>& restart = std::make_pair(std::time_t{0}, std::size_t{0}));
-        explicit TimeMap(const std::vector<std::time_t>& time_points);
+        explicit TimeMap(const std::vector<std::time_t>& time_points, std::size_t restart_offset = 0);
 
         static TimeMap serializeObject();
 
