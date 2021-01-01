@@ -85,255 +85,257 @@ static Schedule make_schedule(const std::string& deck_string) {
 
 
 static std::string createDeck() {
-    std::string input =
-        "START\n"
-        "8 MAR 1998 /\n"
-        "\n"
-        "SCHEDULE\n"
-        "\n";
+    std::string input = R"(
+START
+8 MAR 1998 /
 
+SCHEDULE
+
+)";
     return input;
 }
 
 static std::string createDeckWithWells() {
-    std::string input =
-            "START             -- 0 \n"
-            "10 MAI 2007 / \n"
-            "SCHEDULE\n"
-            "WELSPECS\n"
-            "     \'W_1\'        \'OP\'   30   37  3.33       \'OIL\'  7* /   \n"
-            "/ \n"
-            "DATES             -- 1\n"
-            " 10  \'JUN\'  2007 / \n"
-            "/\n"
-            "DATES             -- 2,3\n"
-            "  10  JLY 2007 / \n"
-            "   10  AUG 2007 / \n"
-            "/\n"
-            "WELSPECS\n"
-            "     \'WX2\'        \'OP\'   30   37  3.33       \'OIL\'  7* /   \n"
-            "     \'W_3\'        \'OP\'   20   51  3.92       \'OIL\'  7* /  \n"
-            "/\n";
-
+    std::string input = R"(
+START             -- 0
+10 MAI 2007 /
+SCHEDULE
+WELSPECS
+     'W_1'        'OP'   30   37  3.33       'OIL'  7* /
+/
+DATES             -- 1
+ 10  'JUN'  2007 /
+/
+DATES             -- 2,3
+  10  JLY 2007 /
+  10  AUG 2007 /
+/
+WELSPECS
+     'WX2'        'OP'   30   37  3.33       'OIL'  7* /
+     'W_3'        'OP'   20   51  3.92       'OIL'  7* /
+/;
+)";
     return input;
 }
 
+
 static std::string createDeckWTEST() {
-    std::string input =
-            "START             -- 0 \n"
-            "10 MAI 2007 / \n"
-            "SCHEDULE\n"
-            "WELSPECS\n"
-            "     \'DEFAULT\'    \'OP\'   30   37  3.33       \'OIL\'  7*/   \n"
-            "     \'ALLOW\'      \'OP\'   30   37  3.33       \'OIL\'  3*  YES / \n"
-            "     \'BAN\'        \'OP\'   20   51  3.92       \'OIL\'  3*  NO /  \n"
-            "     \'W1\'         \'OP\'   20   51  3.92       \'OIL\'  3*  NO /  \n"
-            "     \'W2\'         \'OP\'   20   51  3.92       \'OIL\'  3*  NO /  \n"
-            "     \'W3\'         \'OP\'   20   51  3.92       \'OIL\'  3*  NO /  \n"
-            "/\n"
+    std::string input = R"(
+START             -- 0
+10 MAI 2007 /
+SCHEDULE
+WELSPECS
+     'DEFAULT'    'OP'   30   37  3.33       'OIL'  7*/
+     'ALLOW'      'OP'   30   37  3.33       'OIL'  3*  YES /
+     'BAN'        'OP'   20   51  3.92       'OIL'  3*  NO /
+     'W1'         'OP'   20   51  3.92       'OIL'  3*  NO /
+     'W2'         'OP'   20   51  3.92       'OIL'  3*  NO /
+     'W3'         'OP'   20   51  3.92       'OIL'  3*  NO /
+/
 
-            "COMPDAT\n"
-            " \'BAN\'  1  1   1   1 \'OPEN\' 1*    1.168   0.311   107.872 1*  1*  \'Z\'  21.925 / \n"
-            "/\n"
+COMPDAT
+ 'BAN'  1  1   1   1 'OPEN' 1*    1.168   0.311   107.872 1*  1*  'Z'  21.925 /
+/
 
-            "WCONHIST\n"
-            "     'BAN'      'OPEN'      'RESV'      0.000      0.000      0.000  5* / \n"
-            "/\n"
+WCONHIST
+     'BAN'      'OPEN'      'RESV'      0.000      0.000      0.000  5* /
+/
 
-            "WTEST\n"
-            "   'ALLOW'   1   'PE' / \n"
-            "/\n"
+WTEST
+   'ALLOW'   1   'PE' /
+/
 
-            "DATES             -- 1\n"
-            " 10  JUN 2007 / \n"
-            "/\n"
+DATES             -- 1
+ 10  JUN 2007 /
+/
 
-            "WTEST\n"
-            "   'ALLOW'  1  '' / \n"
-            "   'BAN'    1  'DGC' / \n"
-            "/\n"
+WTEST
+   'ALLOW'  1  '' /
+   'BAN'    1  'DGC' /
+/
 
-            "WCONHIST\n"
-            "     'BAN'      'OPEN'      'RESV'      1.000      0.000      0.000  5* / \n"
-            "/\n"
+WCONHIST
+     'BAN'      'OPEN'      'RESV'      1.000      0.000      0.000  5* /
+/
 
-            "DATES             -- 2\n"
-            " 10  JUL 2007 / \n"
-            "/\n"
+DATES             -- 2
+ 10  JUL 2007 /
+/
 
-            "WELSPECS\n"
-            "     \'I1\'         \'OP\'   20   51  3.92       \'OIL\'  3*  NO /  \n"
-            "     \'I2\'         \'OP\'   20   51  3.92       \'OIL\'  3*  NO /  \n"
-            "     \'I3\'         \'OP\'   20   51  3.92       \'OIL\'  3*  NO /  \n"
-            "/\n"
+WELSPECS
+     'I1'         'OP'   20   51  3.92       'OIL'  3*  NO /
+     'I2'         'OP'   20   51  3.92       'OIL'  3*  NO /
+     'I3'         'OP'   20   51  3.92       'OIL'  3*  NO /
+/
 
-            "WLIST\n"
-            "  \'*ILIST\'  \'NEW\'  I1 /\n"
-            "  \'*ILIST\'  \'ADD\'  I2 /\n"
-            "/\n"
+WLIST
+  '*ILIST'  'NEW'  I1 /
+  '*ILIST'  'ADD'  I2 /
+/
 
-            "WCONPROD\n"
-            "     'BAN'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* / \n"
-            "/\n"
+WCONPROD
+     'BAN'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
+/
 
 
-            "DATES             -- 3\n"
-            " 10  AUG 2007 / \n"
-            "/\n"
+DATES             -- 3
+ 10  AUG 2007 /
+/
 
-            "WCONINJH\n"
-            "     'BAN'      'WATER'      1*      0 / \n"
-            "/\n"
+WCONINJH
+     'BAN'      'WATER'      1*      0 /
+/
 
-            "DATES             -- 4\n"
-            " 10  SEP 2007 / \n"
-            "/\n"
+DATES             -- 4
+ 10  SEP 2007 /
+/
 
-            "WELOPEN\n"
-            " 'BAN' OPEN / \n"
-            "/\n"
+WELOPEN
+ 'BAN' OPEN /
+/
 
-            "DATES             -- 4\n"
-            " 10  NOV 2007 / \n"
-            "/\n"
+DATES             -- 4
+ 10  NOV 2007 /
+/
 
-            "WCONINJH\n"
-            "     'BAN'      'WATER'      1*      1.0 / \n"
-            "/\n";
-
+WCONINJH
+     'BAN'      'WATER'      1*      1.0 /
+/
+)";
     return input;
 }
 
 static std::string createDeckForTestingCrossFlow() {
-    std::string input =
-            "START             -- 0 \n"
-            "10 MAI 2007 / \n"
-            "SCHEDULE\n"
-            "WELSPECS\n"
-            "     \'DEFAULT\'    \'OP\'   30   37  3.33       \'OIL\'  7*/   \n"
-            "     \'ALLOW\'      \'OP\'   30   37  3.33       \'OIL\'  3*  YES / \n"
-            "     \'BAN\'        \'OP\'   20   51  3.92       \'OIL\'  3*  NO /  \n"
-            "/\n"
+    std::string input = R"(
+START             -- 0
+10 MAI 2007 /
+SCHEDULE
+WELSPECS
+     'DEFAULT'    'OP'   30   37  3.33       'OIL'  7*/
+     'ALLOW'      'OP'   30   37  3.33       'OIL'  3*  YES /
+     'BAN'        'OP'   20   51  3.92       'OIL'  3*  NO /
+/
 
-            "COMPDAT\n"
-            " \'BAN\'  1  1   1   1 \'OPEN\' 1*    1.168   0.311   107.872 1*  1*  \'Z\'  21.925 / \n"
-            "/\n"
+COMPDAT
+ 'BAN'  1  1   1   1 'OPEN' 1*    1.168   0.311   107.872 1*  1*  'Z'  21.925 /
+/
 
-            "WCONHIST\n"
-            "     'BAN'      'OPEN'      'RESV'      0.000      0.000      0.000  5* / \n"
-            "/\n"
+WCONHIST
+     'BAN'      'OPEN'      'RESV'      0.000      0.000      0.000  5* /
+/
 
-            "DATES             -- 1\n"
-            " 10  JUN 2007 / \n"
-            "/\n"
+DATES             -- 1
+ 10  JUN 2007 /
+/
 
-            "WCONHIST\n"
-            "     'BAN'      'OPEN'      'RESV'      1.000      0.000      0.000  5* / \n"
-            "/\n"
+WCONHIST
+     'BAN'      'OPEN'      'RESV'      1.000      0.000      0.000  5* /
+/
 
-            "DATES             -- 2\n"
-            " 10  JUL 2007 / \n"
-            "/\n"
+DATES             -- 2
+ 10  JUL 2007 /
+/
 
-            "WCONPROD\n"
-            "     'BAN'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* / \n"
-            "/\n"
+WCONPROD
+     'BAN'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
+/
 
 
-            "DATES             -- 3\n"
-            " 10  AUG 2007 / \n"
-            "/\n"
+DATES             -- 3
+ 10  AUG 2007 /
+/
 
-            "WCONINJH\n"
-            "     'BAN'      'WATER'      1*      0 / \n"
-            "/\n"
+WCONINJH
+     'BAN'      'WATER'      1*      0 /
+/
 
-            "DATES             -- 4\n"
-            " 10  SEP 2007 / \n"
-            "/\n"
+DATES             -- 4
+ 10  SEP 2007 /
+/
 
-            "WELOPEN\n"
-            " 'BAN' OPEN / \n"
-            "/\n"
+WELOPEN
+ 'BAN' OPEN /
+/
 
-            "DATES             -- 4\n"
-            " 10  NOV 2007 / \n"
-            "/\n"
+DATES             -- 4
+ 10  NOV 2007 /
+/
 
-            "WCONINJH\n"
-            "     'BAN'      'WATER'      1*      1.0 / \n"
-            "/\n";
-
+WCONINJH
+     'BAN'      'WATER'      1*      1.0 /
+/
+)";
     return input;
 }
 
 static std::string createDeckWithWellsOrdered() {
-    std::string input =
-            "START             -- 0 \n"
-            "10 MAI 2007 / \n"
-            "WELLDIMS\n"
-            "   *  *   3 /\n"
-            "SCHEDULE\n"
-            "WELSPECS\n"
-            "     \'CW_1\'        \'CG\'   3   3  3.33       \'OIL\'  7* /   \n"
-            "     \'BW_2\'        \'BG\'   3   3  3.33       \'OIL\'  7* /   \n"
-            "     \'AW_3\'        \'AG\'   2   5  3.92       \'OIL\'  7* /  \n"
-            "/\n";
-
+    std::string input = R"(
+START             -- 0
+10 MAI 2007 /
+WELLDIMS
+   *  *   3 /
+SCHEDULE
+WELSPECS
+     'CW_1'        'CG'   3   3  3.33       'OIL'  7* /
+     'BW_2'        'BG'   3   3  3.33       'OIL'  7* /
+     'AW_3'        'AG'   2   5  3.92       'OIL'  7* /
+/
+)";
     return input;
 }
 
 static std::string createDeckWithWellsOrderedGRUPTREE() {
-    std::string input =
-            "START             -- 0 \n"
-            "10 MAI 2007 / \n"
-            "SCHEDULE\n"
-            "GRUPTREE\n"
-            "  PG1 PLATFORM /\n"
-            "  PG2 PLATFORM /\n"
-            "  CG1  PG1 /\n"
-            "  CG2  PG2 /\n"
-            "/\n"
-            "WELSPECS\n"
-            "     \'DW_0\'        \'CG1\'   3   3  3.33       \'OIL\'  7* /   \n"
-            "     \'CW_1\'        \'CG1\'   3   3  3.33       \'OIL\'  7* /   \n"
-            "     \'BW_2\'        \'CG2\'   3   3  3.33       \'OIL\'  7* /   \n"
-            "     \'AW_3\'        \'CG2\'   2   5  3.92       \'OIL\'  7* /   \n"
-            "/\n";
+    std::string input = R"(
+START             -- 0
+10 MAI 2007 /
+SCHEDULE
+GRUPTREE
+  PG1 PLATFORM /
+  PG2 PLATFORM /
+  CG1  PG1 /
+  CG2  PG2 /
+/
+WELSPECS
+     'DW_0'        'CG1'   3   3  3.33       'OIL'  7* /
+     'CW_1'        'CG1'   3   3  3.33       'OIL'  7* /
+     'BW_2'        'CG2'   3   3  3.33       'OIL'  7* /
+     'AW_3'        'CG2'   2   5  3.92       'OIL'  7* /
+/
+)";
 
     return input;
 }
 
 static std::string createDeckWithWellsAndCompletionData() {
-    std::string input =
-      "START             -- 0 \n"
-      "1 NOV 1979 / \n"
-      "SCHEDULE\n"
-      "DATES             -- 1\n"
-      " 1 DES 1979/ \n"
-      "/\n"
-      "WELSPECS\n"
-      "    'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
-      "    'OP_2'       'OP'   8   8 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
-      "    'OP_3'       'OP'   7   7 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
-      "/\n"
-      "COMPDAT\n"
-      " 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-      " 'OP_1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / \n"
-      " 'OP_2'  8  8   1   3 'OPEN' 1*    1.168   0.311   107.872 1*  1*  'Y'  21.925 / \n"
-      " 'OP_2'  8  7   3   3 'OPEN' 1*   15.071   0.311  1391.859 1*  1*  'Y'  21.920 / \n"
-      " 'OP_2'  8  7   3   6 'OPEN' 1*    6.242   0.311   576.458 1*  1*  'Y'  21.915 / \n"
-      " 'OP_3'  7  7   1   1 'OPEN' 1*   27.412   0.311  2445.337 1*  1*  'Y'  18.521 / \n"
-      " 'OP_3'  7  7   2   2 'OPEN' 1*   55.195   0.311  4923.842 1*  1*  'Y'  18.524 / \n"
-      "/\n"
-      "DATES             -- 2,3\n"
-      " 10  JUL 2007 / \n"
-      " 10  AUG 2007 / \n"
-      "/\n"
-      "COMPDAT\n" // with defaulted I and J
-      " 'OP_1'  0  *   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-      "/\n";
-
+    std::string input = R"(
+START             -- 0
+1 NOV 1979 /
+SCHEDULE
+DATES             -- 1
+ 1 DES 1979/
+/
+WELSPECS
+    'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+    'OP_2'       'OP'   8   8 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+    'OP_3'       'OP'   7   7 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+/
+COMPDAT
+ 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+ 'OP_1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 /
+ 'OP_2'  8  8   1   3 'OPEN' 1*    1.168   0.311   107.872 1*  1*  'Y'  21.925 /
+ 'OP_2'  8  7   3   3 'OPEN' 1*   15.071   0.311  1391.859 1*  1*  'Y'  21.920 /
+ 'OP_2'  8  7   3   6 'OPEN' 1*    6.242   0.311   576.458 1*  1*  'Y'  21.915 /
+ 'OP_3'  7  7   1   1 'OPEN' 1*   27.412   0.311  2445.337 1*  1*  'Y'  18.521 /
+ 'OP_3'  7  7   2   2 'OPEN' 1*   55.195   0.311  4923.842 1*  1*  'Y'  18.524 /
+/
+DATES             -- 2,3
+ 10  JUL 2007 /
+ 10  AUG 2007 /
+/
+COMPDAT // with defaulted I and J
+ 'OP_1'  0  *   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+/
+)";
     return input;
 }
 
@@ -623,55 +625,55 @@ BOOST_AUTO_TEST_CASE(TestCrossFlowHandling) {
 }
 
 static std::string createDeckWithWellsAndConnectionDataWithWELOPEN() {
-    std::string input =
-            "START             -- 0 \n"
-                    "1 NOV 1979 / \n"
-                    "SCHEDULE\n"
-                    "DATES             -- 1\n"
-                    " 1 DES 1979/ \n"
-                    "/\n"
-                    "WELSPECS\n"
-                    "    'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
-                    "    'OP_2'       'OP'   8   8 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
-                    "    'OP_3'       'OP'   7   7 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
-                    "/\n"
-                    "COMPDAT\n"
-                    " 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-                    " 'OP_1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / \n"
-                    " 'OP_2'  8  8   1   3 'OPEN' 1*    1.168   0.311   107.872 1*  1*  'Y'  21.925 / \n"
-                    " 'OP_2'  8  7   3   3 'OPEN' 1*   15.071   0.311  1391.859 1*  1*  'Y'  21.920 / \n"
-                    " 'OP_2'  8  7   3   6 'OPEN' 1*    6.242   0.311   576.458 1*  1*  'Y'  21.915 / \n"
-                    " 'OP_3'  7  7   1   1 'OPEN' 1*   27.412   0.311  2445.337 1*  1*  'Y'  18.521 / \n"
-                    " 'OP_3'  7  7   2   2 'OPEN' 1*   55.195   0.311  4923.842 1*  1*  'Y'  18.524 / \n"
-                    "/\n"
-                    "DATES             -- 2,3\n"
-                    " 10  JUL 2007 / \n"
-                    " 10  AUG 2007 / \n"
-                    "/\n"
-                    "COMPDAT\n"
-                    " 'OP_1'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-                    "/\n"
-                    "WELOPEN\n"
-                    " 'OP_1' SHUT / \n"
-                    " '*'    OPEN 0 0 3 / \n"
-                    " 'OP_2' SHUT 0 0 0 4 6 / \n "
-                    " 'OP_3' SHUT 0 0 0 / \n"
-                    "/\n"
-                    "DATES             -- 4\n"
-                    " 10  JUL 2008 / \n"
-                    "/\n"
-                    "WELOPEN\n"
-                    " 'OP_1' OPEN / \n"
-                    " 'OP_2' OPEN 0 0 0 4 6 / \n "
-                    " 'OP_3' OPEN 0 0 0 / \n"
-                    "/\n"
-                    "DATES             -- 5\n"
-                    " 10  OKT 2008 / \n"
-                    "/\n"
-                    "WELOPEN\n"
-                    " 'OP_1' SHUT 0 0 0 0 0 / \n "
-                    "/\n";
-
+    std::string input = R"(
+START             -- 0
+1 NOV 1979 /
+SCHEDULE
+DATES             -- 1
+ 1 DES 1979/
+/
+WELSPECS
+    'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+    'OP_2'       'OP'   8   8 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+    'OP_3'       'OP'   7   7 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+/
+COMPDAT
+ 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+ 'OP_1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 /
+ 'OP_2'  8  8   1   3 'OPEN' 1*    1.168   0.311   107.872 1*  1*  'Y'  21.925 /
+ 'OP_2'  8  7   3   3 'OPEN' 1*   15.071   0.311  1391.859 1*  1*  'Y'  21.920 /
+ 'OP_2'  8  7   3   6 'OPEN' 1*    6.242   0.311   576.458 1*  1*  'Y'  21.915 /
+ 'OP_3'  7  7   1   1 'OPEN' 1*   27.412   0.311  2445.337 1*  1*  'Y'  18.521 /
+ 'OP_3'  7  7   2   2 'OPEN' 1*   55.195   0.311  4923.842 1*  1*  'Y'  18.524 /
+/
+DATES             -- 2,3
+ 10  JUL 2007 /
+ 10  AUG 2007 /
+/
+COMPDAT
+ 'OP_1'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+/
+WELOPEN
+ 'OP_1' SHUT /
+ '*'    OPEN 0 0 3 /
+ 'OP_2' SHUT 0 0 0 4 6 /
+ 'OP_3' SHUT 0 0 0 /
+/
+DATES             -- 4
+ 10  JUL 2008 /
+/
+WELOPEN
+ 'OP_1' OPEN /
+ 'OP_2' OPEN 0 0 0 4 6 /
+ 'OP_3' OPEN 0 0 0 /
+/
+DATES             -- 5
+ 10  OKT 2008 /
+/
+WELOPEN
+ 'OP_1' SHUT 0 0 0 0 0 /
+/
+)";
     return input;
 }
 
@@ -721,40 +723,40 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsAndConnectionDataWithWELOPEN) {
 
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWELOPEN_TryToOpenWellWithShutCompletionsDoNotOpenWell) {
     Opm::Parser parser;
-    std::string input =
-        "START             -- 0 \n"
-        "1 NOV 1979 / \n"
-        "SCHEDULE\n"
-        "DATES             -- 1\n"
-        " 1 DES 1979/ \n"
-        "/\n"
-        "WELSPECS\n"
-        "    'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
-        "/\n"
-        "COMPDAT\n"
-        " 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-        " 'OP_1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / \n"
-        " 'OP_1'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-        "/\n"
-        "DATES             -- 2\n"
-        " 10  JUL 2008 / \n"
-        "/\n"
-        "WELOPEN\n"
-        " 'OP_1' OPEN / \n"
-        "/\n"
-        "DATES             -- 3\n"
-        " 10  OKT 2008 / \n"
-        "/\n"
-        "WELOPEN\n"
-        " 'OP_1' SHUT 0 0 0 0 0 / \n "
-        "/\n"
-        "DATES             -- 4\n"
-        " 10  NOV 2008 / \n"
-        "/\n"
-        "WELOPEN\n"
-        " 'OP_1' OPEN / \n "
-        "/\n";
-
+    std::string input = R"(
+START             -- 0
+1 NOV 1979 /
+SCHEDULE
+DATES             -- 1
+ 1 DES 1979/
+/
+WELSPECS
+    'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+/
+COMPDAT
+ 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+ 'OP_1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 /
+ 'OP_1'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+/
+DATES             -- 2
+ 10  JUL 2008 /
+/
+WELOPEN
+ 'OP_1' OPEN /
+/
+DATES             -- 3
+ 10  OKT 2008 /
+/
+WELOPEN
+ 'OP_1' SHUT 0 0 0 0 0 /
+/
+DATES             -- 4
+ 10  NOV 2008 /
+/
+WELOPEN
+ 'OP_1' OPEN /
+/
+)";
     const auto& schedule = make_schedule(input);
     const auto& well2_3 = schedule.getWell("OP_1",3);
     const auto& well2_4 = schedule.getWell("OP_1",4);
@@ -764,51 +766,52 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWELOPEN_TryToOpenWellWithShutCompleti
 
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWELOPEN_CombineShutCompletionsAndAddNewCompletionsDoNotShutWell) {
   Opm::Parser parser;
-  std::string input =
-          "START             -- 0 \n"
-                  "1 NOV 1979 / \n"
-                  "SCHEDULE\n"
-                  "DATES             -- 1\n"
-                  " 1 DES 1979/ \n"
-                  "/\n"
-                  "WELSPECS\n"
-                  "    'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
-                  "/\n"
-                  "COMPDAT\n"
-                  " 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-                  " 'OP_1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / \n"
-                  " 'OP_1'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-                  "/\n"
-                  "DATES             -- 2\n"
-                  " 10  JUL 2008 / \n"
-                  "/\n"
-                  "WELOPEN\n"
-                  " 'OP_1' OPEN / \n"
-                  "/\n"
-                  "DATES             -- 3\n"
-                  " 10  OKT 2008 / \n"
-                  "/\n"
-                  "WELOPEN\n"
-                  " 'OP_1' SHUT 0 0 0 0 0 / \n "
-                  "/\n"
-                  "COMPDAT\n"
-                  " 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-                  "/\n"
-                  "DATES             -- 4\n"
-                  " 10  NOV 2008 / \n"
-                  "/\n"
-                  "WELOPEN\n"
-                  " 'OP_1' SHUT 0 0 0 0 0 / \n "
-                  "/\n"
-                  "DATES             -- 5\n"
-                  " 11  NOV 2008 / \n"
-                  "/\n"
-                  "COMPDAT\n"
-                  " 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-                  "/\n"
-                  "DATES             -- 6\n"
-                  " 12  NOV 2008 / \n"
-                  "/\n";
+  std::string input = R"(
+START             -- 0
+1 NOV 1979 /
+SCHEDULE
+DATES             -- 1
+ 1 DES 1979/
+/
+WELSPECS
+    'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+/
+COMPDAT
+ 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+ 'OP_1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 /
+ 'OP_1'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+/
+DATES             -- 2
+ 10  JUL 2008 /
+/
+WELOPEN
+ 'OP_1' OPEN /
+/
+DATES             -- 3
+ 10  OKT 2008 /
+/
+WELOPEN
+ 'OP_1' SHUT 0 0 0 0 0 /
+/
+COMPDAT
+ 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+/
+DATES             -- 4
+ 10  NOV 2008 /
+/
+WELOPEN
+ 'OP_1' SHUT 0 0 0 0 0 /
+/
+DATES             -- 5
+ 11  NOV 2008 /
+/
+COMPDAT
+ 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+/
+DATES             -- 6
+ 12  NOV 2008 /
+/
+)";
 
   const auto& schedule = make_schedule(input);
   const auto& well_3 = schedule.getWell("OP_1", 3);
@@ -827,41 +830,41 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWELOPEN_CombineShutCompletionsAndAddN
 
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWRFT) {
     Opm::Parser parser;
-    std::string input =
-            "START             -- 0 \n"
-                    "1 NOV 1979 / \n"
-                    "SCHEDULE\n"
-                    "DATES             -- 1\n"
-                    " 1 DES 1979/ \n"
-                    "/\n"
-                    "WELSPECS\n"
-                    "    'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
-                    "    'OP_2'       'OP'   4   4 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
-                    "/\n"
-                    "COMPDAT\n"
-                    " 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-                    " 'OP_1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / \n"
-                    " 'OP_1'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-                    " 'OP_2'  4  4   4  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-                    "/\n"
-                    "DATES             -- 2\n"
-                    " 10  OKT 2008 / \n"
-                    "/\n"
-                    "WRFT \n"
-                    "/ \n"
-                    "WELOPEN\n"
-                    " 'OP_1' OPEN / \n"
-                    "/\n"
-                    "DATES             -- 3\n"
-                    " 10  NOV 2008 / \n"
-                    "/\n"
-                    "WELOPEN\n"
-                    " 'OP_2' OPEN / \n"
-                    "/\n"
-                    "DATES             -- 4\n"
-                    " 30  NOV 2008 / \n"
-                    "/\n";
-
+    std::string input = R"(
+START             -- 0
+1 NOV 1979 /
+SCHEDULE
+DATES             -- 1
+ 1 DES 1979/
+/
+WELSPECS
+    'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+    'OP_2'       'OP'   4   4 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+/
+COMPDAT
+ 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+ 'OP_1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 /
+ 'OP_1'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+ 'OP_2'  4  4   4  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+/
+DATES             -- 2
+ 10  OKT 2008 /
+/
+WRFT
+/
+WELOPEN
+ 'OP_1' OPEN /
+/
+DATES             -- 3
+ 10  NOV 2008 /
+/
+WELOPEN
+ 'OP_2' OPEN /
+/
+DATES             -- 4
+ 30  NOV 2008 /
+/
+)";
 
     const auto& schedule = make_schedule(input);
     const auto& rft_config = schedule.rftConfig();
@@ -874,48 +877,49 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWRFT) {
 
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWRFTPLT) {
     Opm::Parser parser;
-    std::string input =
-            "START             -- 0 \n"
-                    "1 NOV 1979 / \n"
-                    "SCHEDULE\n"
-                    "DATES             -- 1\n"
-                    " 1 DES 1979/ \n"
-                    "/\n"
-                    "WELSPECS\n"
-                    "    'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
-                    "/\n"
-                    "COMPDAT\n"
-                    " 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-                    " 'OP_1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / \n"
-                    " 'OP_1'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-                    "/\n"
-                    "WELOPEN\n"
-                    " 'OP_1' SHUT / \n"
-                    "/\n"
-                    "DATES             -- 2\n"
-                    " 10  OKT 2006 / \n"
-                    "/\n"
-                    "WELOPEN\n"
-                    " 'OP_1' SHUT / \n"
-                    "/\n"
-                    "WRFTPLT \n"
-                    " 'OP_1' FOPN / \n"
-                    "/ \n"
-                    "DATES             -- 3\n"
-                    " 10  OKT 2007 / \n"
-                    "/\n"
-                    "WELOPEN\n"
-                    " 'OP_1' OPEN 0 0 0 0 0 / \n"
-                    "/\n"
-                    "DATES             -- 4\n"
-                    " 10  OKT 2008 / \n"
-                    "/\n"
-                    "WELOPEN\n"
-                    " 'OP_1' OPEN / \n"
-                    "/\n"
-                    "DATES             -- 5\n"
-                    " 10  NOV 2008 / \n"
-                    "/\n";
+    std::string input = R"(
+START             -- 0
+1 NOV 1979 /
+SCHEDULE
+DATES             -- 1
+ 1 DES 1979/
+/
+WELSPECS
+    'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+/
+COMPDAT
+ 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+ 'OP_1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 /
+ 'OP_1'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+/
+WELOPEN
+ 'OP_1' SHUT /
+/
+DATES             -- 2
+ 10  OKT 2006 /
+/
+WELOPEN
+ 'OP_1' SHUT /
+/
+WRFTPLT
+ 'OP_1' FOPN /
+/
+DATES             -- 3
+ 10  OKT 2007 /
+/
+WELOPEN
+ 'OP_1' OPEN 0 0 0 0 0 /
+/
+DATES             -- 4
+ 10  OKT 2008 /
+/
+WELOPEN
+ 'OP_1' OPEN /
+/
+DATES             -- 5
+ 10  NOV 2008 /
+/
+)";
 
     const auto& schedule = make_schedule(input);
     const auto& well = schedule.getWell("OP_1", 4);
@@ -928,37 +932,38 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWRFTPLT) {
 }
 
 BOOST_AUTO_TEST_CASE(createDeckWithWeltArg) {
-    std::string input =
-            "START             -- 0 \n"
-            "19 JUN 2007 / \n"
-            "SCHEDULE\n"
-            "DATES             -- 1\n"
-            " 10  OKT 2008 / \n"
-            "/\n"
-            "WELSPECS\n"
-            "    'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
-            "/\n"
-            "COMPDAT\n"
-            " 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-            " 'OP_1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / \n"
-            " 'OP_1'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-            "/\n"
-            "WCONPROD\n"
-            " 'OP_1'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* / \n"
-            "/\n"
-            "DATES             -- 2\n"
-            " 20  JAN 2010 / \n"
-            "/\n"
-            "WELTARG\n"
-            " OP_1     ORAT        1300 /\n"
-            " OP_1     WRAT        1400 /\n"
-            " OP_1     GRAT        1500.52 /\n"
-            " OP_1     LRAT        1600.58 /\n"
-            " OP_1     RESV        1801.05 /\n"
-            " OP_1     BHP         1900 /\n"
-            " OP_1     THP         2000 /\n"
-            " OP_1     GUID        2300.14 /\n"
-            "/\n";
+    std::string input = R"(
+START             -- 0
+19 JUN 2007 /
+SCHEDULE
+DATES             -- 1
+ 10  OKT 2008 /
+/
+WELSPECS
+    'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+/
+COMPDAT
+ 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+ 'OP_1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 /
+ 'OP_1'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+/
+WCONPROD
+ 'OP_1'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* /
+/
+DATES             -- 2
+ 20  JAN 2010 /
+/
+WELTARG
+ OP_1     ORAT        1300 /
+ OP_1     WRAT        1400 /
+ OP_1     GRAT        1500.52 /
+ OP_1     LRAT        1600.58 /
+ OP_1     RESV        1801.05 /
+ OP_1     BHP         1900 /
+ OP_1     THP         2000 /
+ OP_1     GUID        2300.14 /
+/
+)";
 
     const auto& schedule = make_schedule(input);
     Opm::UnitSystem unitSystem = UnitSystem( UnitSystem::UnitType::UNIT_TYPE_METRIC );
@@ -1060,64 +1065,68 @@ WELTARG
 
 
 BOOST_AUTO_TEST_CASE(createDeckWithWeltArgException) {
-    std::string input =
-            "SCHEDULE\n"
-            "WELTARG\n"
-            " OP_1     GRAT        1500.52 /\n"
-            " OP_1     LRAT        /\n"
-            " OP_1     RESV        1801.05 /\n"
-            "/\n";
-
+    std::string input = R"(
+SCHEDULE
+WELTARG
+ OP_1     GRAT        1500.52 /
+ OP_1     LRAT        /
+ OP_1     RESV        1801.05 /
+/;
+)";
 
     BOOST_CHECK_THROW(make_schedule(input), Opm::OpmInputError);
 }
+
 
 BOOST_AUTO_TEST_CASE(createDeckWithWeltArgException2) {
-    std::string input =
-            "SCHEDULE\n"
-            "WELTARG\n"
-            " OP_1     LRAT        /\n"
-            " OP_1     RESV        1801.05 /\n"
-            "/\n";
+    std::string input = R"(
+SCHEDULE
+WELTARG
+ OP_1     LRAT        /
+ OP_1     RESV        1801.05 /
+/
+)";
     BOOST_CHECK_THROW(make_schedule(input), Opm::OpmInputError);
 }
 
+
 BOOST_AUTO_TEST_CASE(createDeckWithWPIMULT) {
-    std::string input =
-            "START             -- 0 \n"
-                    "19 JUN 2007 / \n"
-                    "SCHEDULE\n"
-                    "DATES             -- 1\n"
-                    " 10  OKT 2008 / \n"
-                    "/\n"
-                    "WELSPECS\n"
-                    "    'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
-                    "/\n"
-                    "COMPDAT\n"
-                    " 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-                    " 'OP_1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / \n"
-                    " 'OP_1'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-                    "/\n"
-                    "DATES             -- 2\n"
-                    " 20  JAN 2010 / \n"
-                    "/\n"
-                    "WPIMULT\n"
-                    "OP_1  1.30 /\n"
-                    "/\n"
-                    "DATES             -- 3\n"
-                    " 20  JAN 2011 / \n"
-                    "/\n"
-                    "WPIMULT\n"
-                    "OP_1  1.30 /\n"
-                    "/\n"
-                    "DATES             -- 4\n"
-                    " 20  JAN 2012 / \n"
-                    "/\n"
-                    "COMPDAT\n"
-                    " 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-                    " 'OP_1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / \n"
-                    " 'OP_1'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-                    "/\n";
+    std::string input = R"(
+START             -- 0
+19 JUN 2007 /
+SCHEDULE
+DATES             -- 1
+ 10  OKT 2008 /
+/
+WELSPECS
+    'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+/
+COMPDAT
+ 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+ 'OP_1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 /
+ 'OP_1'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+/
+DATES             -- 2
+ 20  JAN 2010 /
+/
+WPIMULT
+OP_1  1.30 /
+/
+DATES             -- 3
+ 20  JAN 2011 /
+/
+WPIMULT
+OP_1  1.30 /
+/
+DATES             -- 4
+ 20  JAN 2012 /
+/
+COMPDAT
+ 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+ 'OP_1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 /
+ 'OP_1'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+/
+)";
 
     const auto& schedule = make_schedule(input);
     const auto& cs1 = schedule.getWell("OP_1", 1).getConnections();
@@ -1266,16 +1275,17 @@ BOOST_AUTO_TEST_CASE(createDeckModifyMultipleGCONPROD) {
 }
 
 BOOST_AUTO_TEST_CASE(createDeckWithDRSDT) {
-    std::string input =
-            "START             -- 0 \n"
-            "19 JUN 2007 / \n"
-            "SCHEDULE\n"
-            "DATES             -- 1\n"
-            " 10  OKT 2008 / \n"
-            "/\n"
-            "DRSDT\n"
-            "0.0003\n"
-            "/\n";
+    std::string input = R"(
+START             -- 0
+19 JUN 2007 /
+SCHEDULE
+DATES             -- 1
+ 10  OKT 2008 /
+/
+DRSDT
+0.0003
+/
+)";
 
     const auto& schedule = make_schedule(input);
     size_t currentStep = 1;
@@ -1290,20 +1300,21 @@ BOOST_AUTO_TEST_CASE(createDeckWithDRSDT) {
 }
 
 BOOST_AUTO_TEST_CASE(createDeckWithDRSDTR) {
-    std::string input =
-            "START             -- 0 \n"
-            "19 JUN 2007 / \n"
-            "TABDIMS\n"
-            " 1* 3 \n "
-            "/\n"
-            "SCHEDULE\n"
-            "DATES             -- 1\n"
-            " 10  OKT 2008 / \n"
-            "/\n"
-            "DRSDTR\n"
-            "0 /\n"
-            "1 /\n"
-            "2 /\n";
+    std::string input = R"(
+START             -- 0
+19 JUN 2007 /
+TABDIMS
+ 1* 3 /
+
+SCHEDULE
+DATES             -- 1
+ 10  OKT 2008 /
+/
+DRSDTR
+0 /
+1 /
+2 /
+)";
 
     const auto& schedule = make_schedule(input);
     size_t currentStep = 1;
@@ -1323,28 +1334,29 @@ BOOST_AUTO_TEST_CASE(createDeckWithDRSDTR) {
 
 
 BOOST_AUTO_TEST_CASE(createDeckWithDRSDTthenDRVDT) {
-    std::string input =
-            "START             -- 0 \n"
-            "19 JUN 2007 / \n"
-            "SCHEDULE\n"
-            "DATES             -- 1\n"
-            " 10  OKT 2008 / \n"
-            "/\n"
-            "DRSDT\n"
-            "0.0003\n"
-            "/\n"
-            "DATES             -- 2\n"
-            " 10  OKT 2009 / \n"
-            "/\n"
-            "DRVDT\n"
-            "0.100\n"
-            "/\n"
-            "DATES             -- 3\n"
-            " 10  OKT 2010 / \n"
-            "/\n"
-            "VAPPARS\n"
-            "2 0.100\n"
-            "/\n";
+    std::string input = R"(
+START             -- 0
+19 JUN 2007 /
+SCHEDULE
+DATES             -- 1
+ 10  OKT 2008 /
+/
+DRSDT
+0.0003
+/
+DATES             -- 2
+ 10  OKT 2009 /
+/
+DRVDT
+0.100
+/
+DATES             -- 3
+ 10  OKT 2010 /
+/
+VAPPARS
+2 0.100
+/
+)";
 
     const auto& schedule = make_schedule(input);
     BOOST_CHECK_EQUAL(schedule.hasOilVaporizationProperties(), true);
@@ -1370,16 +1382,17 @@ BOOST_AUTO_TEST_CASE(createDeckWithDRSDTthenDRVDT) {
 }
 
 BOOST_AUTO_TEST_CASE(createDeckWithVAPPARS) {
-    std::string input =
-            "START             -- 0 \n"
-            "19 JUN 2007 / \n"
-            "SCHEDULE\n"
-            "DATES             -- 1\n"
-            " 10  OKT 2008 / \n"
-            "/\n"
-            "VAPPARS\n"
-            "2 0.100\n"
-            "/\n";
+    std::string input = R"(
+START             -- 0
+19 JUN 2007 /
+SCHEDULE
+DATES             -- 1
+ 10  OKT 2008 /
+/
+VAPPARS
+2 0.100
+/
+)";
 
     const auto& schedule = make_schedule(input);
     size_t currentStep = 1;
@@ -1397,14 +1410,14 @@ BOOST_AUTO_TEST_CASE(createDeckWithVAPPARS) {
 
 
 BOOST_AUTO_TEST_CASE(createDeckWithOutOilVaporizationProperties) {
-    std::string input =
-            "START             -- 0 \n"
-            "19 JUN 2007 / \n"
-            "SCHEDULE\n"
-            "DATES             -- 1\n"
-            " 10  OKT 2008 / \n"
-            "/\n";
-
+    std::string input = R"(
+START             -- 0
+19 JUN 2007 /
+SCHEDULE
+DATES             -- 1
+ 10  OKT 2008 /
+/
+)";
 
     const auto& schedule = make_schedule(input);
     BOOST_CHECK_EQUAL(schedule.hasOilVaporizationProperties(), false);
@@ -1412,52 +1425,54 @@ BOOST_AUTO_TEST_CASE(createDeckWithOutOilVaporizationProperties) {
 
 
 BOOST_AUTO_TEST_CASE(changeBhpLimitInHistoryModeWithWeltarg) {
-    std::string input =
-            "START             -- 0 \n"
-            "19 JUN 2007 / \n"
-            "SCHEDULE\n"
-            "DATES             -- 1\n"
-            " 10  OKT 2008 / \n"
-            "/\n"
-            "WELSPECS\n"
-            "    'P'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
-            "    'I'       'OP'   1   1 1*     'WATER' 1*      1*  1*   1*  1*   1*  1*  / \n"
-            "/\n"
-            "COMPDAT\n"
-            " 'P'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-            " 'P'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / \n"
-            " 'I'  1  1   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-            "/\n"
-            "WCONHIST\n"
-            " 'P' 'OPEN' 'RESV' 6*  500 / \n"
-            "/\n"
-            "WCONINJH\n"
-            " 'I' 'WATER' 1* 100 250 / \n"
-            "/\n"
-            "WELTARG\n"
-            "   'P' 'BHP' 50 / \n"
-            "   'I' 'BHP' 600 / \n"
-            "/\n"
-            "DATES             -- 2\n"
-            " 15  OKT 2008 / \n"
-            "/\n"
-            "WCONHIST\n"
-            "   'P' 'OPEN' 'RESV' 6*  500/\n/\n"
-            "WCONINJH\n"
-            " 'I' 'WATER' 1* 100 250 / \n"
-            "/\n"
-            "DATES             -- 3\n"
-            " 18  OKT 2008 / \n"
-            "/\n"
-            "WCONHIST\n"
-            "   'I' 'OPEN' 'RESV' 6*  /\n/\n"
-            "DATES             -- 4\n"
-            " 20  OKT 2008 / \n"
-            "/\n"
-            "WCONINJH\n"
-            " 'I' 'WATER' 1* 100 250 / \n"
-            "/\n"
-            ;
+    std::string input = R"(
+START             -- 0
+19 JUN 2007 /
+SCHEDULE
+DATES             -- 1
+ 10  OKT 2008 /
+/
+WELSPECS
+    'P'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+    'I'       'OP'   1   1 1*     'WATER' 1*      1*  1*   1*  1*   1*  1*  /
+/
+COMPDAT
+ 'P'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+ 'P'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 /
+ 'I'  1  1   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+/
+WCONHIST
+ 'P' 'OPEN' 'RESV' 6*  500 /
+/
+WCONINJH
+ 'I' 'WATER' 1* 100 250 /
+/
+WELTARG
+   'P' 'BHP' 50 /
+   'I' 'BHP' 600 /
+/
+DATES             -- 2
+ 15  OKT 2008 /
+/
+WCONHIST
+   'P' 'OPEN' 'RESV' 6*  500/
+/
+WCONINJH
+ 'I' 'WATER' 1* 100 250 /
+/
+DATES             -- 3
+ 18  OKT 2008 /
+/
+WCONHIST
+   'I' 'OPEN' 'RESV' 6*  /
+/
+DATES             -- 4
+ 20  OKT 2008 /
+/
+WCONINJH
+ 'I' 'WATER' 1* 100 250 /
+/
+)";
 
     const auto& sched = make_schedule(input);
     const auto st = ::Opm::SummaryState{ std::chrono::system_clock::now() };
@@ -1491,64 +1506,64 @@ BOOST_AUTO_TEST_CASE(changeBhpLimitInHistoryModeWithWeltarg) {
 }
 
 BOOST_AUTO_TEST_CASE(changeModeWithWHISTCTL) {
-    std::string input =
-            "START             -- 0 \n"
-            "19 JUN 2007 / \n"
-            "SCHEDULE\n"
-            "DATES             -- 1\n"
-            " 10  OKT 2008 / \n"
-            "/\n"
-            "WELSPECS\n"
-            "    'P1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
-            "    'P2'       'OP'   5   5 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
-            "    'I'       'OP'   1   1 1*     'WATER' 1*      1*  1*   1*  1*   1*  1*  / \n"
-            "/\n"
-            "COMPDAT\n"
-            " 'P1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-            " 'P1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / \n"
-            " 'P2'  5  5   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-            " 'P2'  5  5   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / \n"
-            " 'I'  1  1   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-            "/\n"
-            "WCONHIST\n"
-            " 'P1' 'OPEN' 'ORAT' 5*/ \n"
-            " 'P2' 'OPEN' 'ORAT' 5*/ \n"
-            "/\n"
-            "DATES             -- 2\n"
-            " 15  OKT 2008 / \n"
-            "/\n"
-            "WHISTCTL\n"
-            " RESV / \n"
-            "WCONHIST\n"
-            " 'P1' 'OPEN' 'ORAT' 5*/ \n"
-            " 'P2' 'OPEN' 'ORAT' 5*/ \n"
-            "/\n"
-            "DATES             -- 3\n"
-            " 18  OKT 2008 / \n"
-            "/\n"
-            "WCONHIST\n"
-            " 'P1' 'OPEN' 'ORAT' 5*/ \n"
-            " 'P2' 'OPEN' 'ORAT' 5*/ \n"
-            "/\n"
-            "DATES             -- 4\n"
-            " 20  OKT 2008 / \n"
-            "/\n"
-            "WHISTCTL\n"
-            " LRAT / \n"
-            "WCONHIST\n"
-            " 'P1' 'OPEN' 'ORAT' 5*/ \n"
-            " 'P2' 'OPEN' 'ORAT' 5*/ \n"
-            "/\n"
-            "DATES             -- 5\n"
-            " 25  OKT 2008 / \n"
-            "/\n"
-            "WHISTCTL\n"
-            " NONE / \n"
-            "WCONHIST\n"
-            " 'P1' 'OPEN' 'ORAT' 5*/ \n"
-            " 'P2' 'OPEN' 'ORAT' 5*/ \n"
-            "/\n"
-            ;
+    std::string input = R"(
+START             -- 0
+19 JUN 2007 /
+SCHEDULE
+DATES             -- 1
+ 10  OKT 2008 /
+/
+WELSPECS
+    'P1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+    'P2'       'OP'   5   5 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+    'I'       'OP'   1   1 1*     'WATER' 1*      1*  1*   1*  1*   1*  1*  /
+/
+COMPDAT
+ 'P1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+ 'P1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 /
+ 'P2'  5  5   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+ 'P2'  5  5   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 /
+ 'I'  1  1   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+/
+WCONHIST
+ 'P1' 'OPEN' 'ORAT' 5*/
+ 'P2' 'OPEN' 'ORAT' 5*/
+/
+DATES             -- 2
+ 15  OKT 2008 /
+/
+WHISTCTL
+ RESV /
+WCONHIST
+ 'P1' 'OPEN' 'ORAT' 5*/
+ 'P2' 'OPEN' 'ORAT' 5*/
+/
+DATES             -- 3
+ 18  OKT 2008 /
+/
+WCONHIST
+ 'P1' 'OPEN' 'ORAT' 5*/
+ 'P2' 'OPEN' 'ORAT' 5*/
+/
+DATES             -- 4
+ 20  OKT 2008 /
+/
+WHISTCTL
+ LRAT /
+WCONHIST
+ 'P1' 'OPEN' 'ORAT' 5*/
+ 'P2' 'OPEN' 'ORAT' 5*/
+/
+DATES             -- 5
+ 25  OKT 2008 /
+/
+WHISTCTL
+ NONE /
+WCONHIST
+ 'P1' 'OPEN' 'ORAT' 5*/
+ 'P2' 'OPEN' 'ORAT' 5*/
+/
+)";
 
     const auto& schedule = make_schedule(input);
 
@@ -1615,40 +1630,40 @@ BOOST_AUTO_TEST_CASE(changeModeWithWHISTCTL) {
 }
 
 BOOST_AUTO_TEST_CASE(fromWCONHISTtoWCONPROD) {
-    std::string input =
-            "START             -- 0 \n"
-            "19 JUN 2007 / \n"
-            "SCHEDULE\n"
-            "DATES             -- 1\n"
-            " 10  OKT 2008 / \n"
-            "/\n"
-            "WELSPECS\n"
-            "    'P1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
-            "    'P2'       'OP'   5   5 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
-            "    'I'       'OP'   1   1 1*     'WATER' 1*      1*  1*   1*  1*   1*  1*  / \n"
-            "/\n"
-            "COMPDAT\n"
-            " 'P1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-            " 'P1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / \n"
-            " 'P2'  5  5   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-            " 'P2'  5  5   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / \n"
-            " 'I'  1  1   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-            "/\n"
-            "WCONHIST\n"
-            " 'P1' 'OPEN' 'ORAT' 5*/ \n"
-            " 'P2' 'OPEN' 'ORAT' 5*/ \n"
-            "/\n"
-            "DATES             -- 2\n"
-            " 15  OKT 2008 / \n"
-            "/\n"
-            "WCONPROD\n"
-            " 'P1' 'OPEN' 'GRAT' 1*    200.0 300.0 / \n"
-            " 'P2' 'OPEN' 'WRAT' 1*    100.0 300.0 / \n"
-            "/\n"
-            "DATES             -- 3\n"
-            " 18  OKT 2008 / \n"
-            "/\n"
-            ;
+    std::string input = R"(
+START             -- 0
+19 JUN 2007 /
+SCHEDULE
+DATES             -- 1
+ 10  OKT 2008 /
+/
+WELSPECS
+    'P1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+    'P2'       'OP'   5   5 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+    'I'       'OP'   1   1 1*     'WATER' 1*      1*  1*   1*  1*   1*  1*  /
+/
+COMPDAT
+ 'P1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+ 'P1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 /
+ 'P2'  5  5   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+ 'P2'  5  5   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 /
+ 'I'  1  1   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+/
+WCONHIST
+ 'P1' 'OPEN' 'ORAT' 5*/
+ 'P2' 'OPEN' 'ORAT' 5*/
+/
+DATES             -- 2
+ 15  OKT 2008 /
+/
+WCONPROD
+ 'P1' 'OPEN' 'GRAT' 1*    200.0 300.0 /
+ 'P2' 'OPEN' 'WRAT' 1*    100.0 300.0 /
+/
+DATES             -- 3
+ 18  OKT 2008 /
+/
+)";
 
     const auto& schedule = make_schedule(input);
     //Start
@@ -1671,66 +1686,66 @@ BOOST_AUTO_TEST_CASE(fromWCONHISTtoWCONPROD) {
 
 BOOST_AUTO_TEST_CASE(WHISTCTL_NEW_WELL) {
     Opm::Parser parser;
-    std::string input =
-            "START             -- 0 \n"
-            "19 JUN 2007 / \n"
-            "SCHEDULE\n"
-            "WHISTCTL\n"
-            " GRAT/ \n"
-            "DATES             -- 1\n"
-            " 10  OKT 2008 / \n"
-            "/\n"
-            "WELSPECS\n"
-            "    'P1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
-            "    'P2'       'OP'   5   5 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
-            "    'I'       'OP'   1   1 1*     'WATER' 1*      1*  1*   1*  1*   1*  1*  / \n"
-            "/\n"
-            "COMPDAT\n"
-            " 'P1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-            " 'P1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / \n"
-            " 'P2'  5  5   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-            " 'P2'  5  5   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / \n"
-            " 'I'  1  1   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-            "/\n"
-            "WCONHIST\n"
-            " 'P1' 'OPEN' 'ORAT' 5*/ \n"
-            " 'P2' 'OPEN' 'ORAT' 5*/ \n"
-            "/\n"
-            "DATES             -- 2\n"
-            " 15  OKT 2008 / \n"
-            "/\n"
-            "WHISTCTL\n"
-            " RESV / \n"
-            "WCONHIST\n"
-            " 'P1' 'OPEN' 'ORAT' 5*/ \n"
-            " 'P2' 'OPEN' 'ORAT' 5*/ \n"
-            "/\n"
-            "DATES             -- 3\n"
-            " 18  OKT 2008 / \n"
-            "/\n"
-            "WCONHIST\n"
-            " 'P1' 'OPEN' 'ORAT' 5*/ \n"
-            " 'P2' 'OPEN' 'ORAT' 5*/ \n"
-            "/\n"
-            "DATES             -- 4\n"
-            " 20  OKT 2008 / \n"
-            "/\n"
-            "WHISTCTL\n"
-            " LRAT / \n"
-            "WCONHIST\n"
-            " 'P1' 'OPEN' 'ORAT' 5*/ \n"
-            " 'P2' 'OPEN' 'ORAT' 5*/ \n"
-            "/\n"
-            "DATES             -- 5\n"
-            " 25  OKT 2008 / \n"
-            "/\n"
-            "WHISTCTL\n"
-            " NONE / \n"
-            "WCONHIST\n"
-            " 'P1' 'OPEN' 'ORAT' 5*/ \n"
-            " 'P2' 'OPEN' 'ORAT' 5*/ \n"
-            "/\n"
-            ;
+    std::string input = R"(
+START             -- 0
+19 JUN 2007 /
+SCHEDULE
+WHISTCTL
+ GRAT/
+DATES             -- 1
+ 10  OKT 2008 /
+/
+WELSPECS
+    'P1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+    'P2'       'OP'   5   5 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+    'I'       'OP'   1   1 1*     'WATER' 1*      1*  1*   1*  1*   1*  1*  /
+/
+COMPDAT
+ 'P1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+ 'P1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 /
+ 'P2'  5  5   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+ 'P2'  5  5   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 /
+ 'I'  1  1   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+/
+WCONHIST
+ 'P1' 'OPEN' 'ORAT' 5*/
+ 'P2' 'OPEN' 'ORAT' 5*/
+/
+DATES             -- 2
+ 15  OKT 2008 /
+/
+WHISTCTL
+ RESV /
+WCONHIST
+ 'P1' 'OPEN' 'ORAT' 5*/
+ 'P2' 'OPEN' 'ORAT' 5*/
+/
+DATES             -- 3
+ 18  OKT 2008 /
+/
+WCONHIST
+ 'P1' 'OPEN' 'ORAT' 5*/
+ 'P2' 'OPEN' 'ORAT' 5*/
+/
+DATES             -- 4
+ 20  OKT 2008 /
+/
+WHISTCTL
+ LRAT /
+WCONHIST
+ 'P1' 'OPEN' 'ORAT' 5*/
+ 'P2' 'OPEN' 'ORAT' 5*/
+/
+DATES             -- 5
+ 25  OKT 2008 /
+/
+WHISTCTL
+ NONE /
+WCONHIST
+ 'P1' 'OPEN' 'ORAT' 5*/
+ 'P2' 'OPEN' 'ORAT' 5*/
+/
+)";
 
     auto deck = parser.parseString(input);
     auto python = std::make_shared<Python>();
@@ -1779,35 +1794,35 @@ BOOST_AUTO_TEST_CASE(WHISTCTL_NEW_WELL) {
 
 BOOST_AUTO_TEST_CASE(unsupportedOptionWHISTCTL) {
     Opm::Parser parser;
-    std::string input =
-            "START             -- 0 \n"
-            "19 JUN 2007 / \n"
-            "SCHEDULE\n"
-            "DATES             -- 1\n"
-            " 10  OKT 2008 / \n"
-            "/\n"
-            "WELSPECS\n"
-            "    'P1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
-            "    'P2'       'OP'   5   5 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
-            "    'I'       'OP'   1   1 1*     'WATER' 1*      1*  1*   1*  1*   1*  1*  / \n"
-            "/\n"
-            "COMPDAT\n"
-            " 'P1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-            " 'P1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / \n"
-            " 'P2'  5  5   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-            " 'P2'  5  5   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / \n"
-            " 'I'  1  1   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-            "/\n"
-            "WCONHIST\n"
-            " 'P1' 'OPEN' 'ORAT' 5*/ \n"
-            " 'P2' 'OPEN' 'ORAT' 5*/ \n"
-            "/\n"
-            "DATES             -- 2\n"
-            " 15  OKT 2008 / \n"
-            "/\n"
-            "WHISTCTL\n"
-            " * YES / \n"
-            ;
+    std::string input = R"(
+START             -- 0
+19 JUN 2007 /
+SCHEDULE
+DATES             -- 1
+ 10  OKT 2008 /
+/
+WELSPECS
+    'P1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+    'P2'       'OP'   5   5 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+    'I'       'OP'   1   1 1*     'WATER' 1*      1*  1*   1*  1*   1*  1*  /
+/
+COMPDAT
+ 'P1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+ 'P1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 /
+ 'P2'  5  5   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+ 'P2'  5  5   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 /
+ 'I'  1  1   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+/
+WCONHIST
+ 'P1' 'OPEN' 'ORAT' 5*/
+ 'P2' 'OPEN' 'ORAT' 5*/
+/
+DATES             -- 2
+ 15  OKT 2008 /
+/
+WHISTCTL
+ * YES /
+)";
 
     auto deck = parser.parseString(input);
     auto python = std::make_shared<Python>();
@@ -2779,43 +2794,43 @@ BOOST_AUTO_TEST_CASE(GuideRatePhaseEnum2Loop) {
 
 BOOST_AUTO_TEST_CASE(handleWEFAC) {
     Opm::Parser parser;
-    std::string input =
-            "START             -- 0 \n"
-            "19 JUN 2007 / \n"
-            "SCHEDULE\n"
-            "DATES             -- 1\n"
-            " 10  OKT 2008 / \n"
-            "/\n"
-            "WELSPECS\n"
-            "    'P'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
-            "    'I'       'OP'   1   1 1*     'WATER' 1*      1*  1*   1*  1*   1*  1*  / \n"
-            "/\n"
-            "COMPDAT\n"
-            " 'P'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-            " 'P'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / \n"
-            " 'I'  1  1   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-            "/\n"
-            "WCONHIST\n"
-            " 'P' 'OPEN' 'RESV' 6*  500 / \n"
-            "/\n"
-            "WCONINJH\n"
-            " 'I' 'WATER' 1* 100 250 / \n"
-            "/\n"
-            "WEFAC\n"
-            "   'P' 0.5 / \n"
-            "   'I' 0.9 / \n"
-            "/\n"
-            "DATES             -- 2\n"
-            " 15  OKT 2008 / \n"
-            "/\n"
+    std::string input = R"(
+START             -- 0
+19 JUN 2007 /
+SCHEDULE
+DATES             -- 1
+ 10  OKT 2008 /
+/
+WELSPECS
+    'P'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+    'I'       'OP'   1   1 1*     'WATER' 1*      1*  1*   1*  1*   1*  1*  /
+/
+COMPDAT
+ 'P'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+ 'P'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 /
+ 'I'  1  1   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+/
+WCONHIST
+ 'P' 'OPEN' 'RESV' 6*  500 /
+/
+WCONINJH
+ 'I' 'WATER' 1* 100 250 /
+/
+WEFAC
+   'P' 0.5 /
+   'I' 0.9 /
+/
+DATES             -- 2
+ 15  OKT 2008 /
+/
 
-            "DATES             -- 3\n"
-            " 18  OKT 2008 / \n"
-            "/\n"
-            "WEFAC\n"
-            "   'P' 1.0 / \n"
-            "/\n"
-            ;
+DATES             -- 3
+ 18  OKT 2008 /
+/
+WEFAC
+   'P' 1.0 /
+/
+)";
 
     auto deck = parser.parseString(input);
     auto python = std::make_shared<Python>();
@@ -2840,28 +2855,28 @@ BOOST_AUTO_TEST_CASE(handleWEFAC) {
 
 BOOST_AUTO_TEST_CASE(historic_BHP_and_THP) {
     Opm::Parser parser;
-    std::string input =
-        "START             -- 0 \n"
-        "19 JUN 2007 / \n"
-        "SCHEDULE\n"
-        "DATES             -- 1\n"
-        " 10  OKT 2008 / \n"
-        "/\n"
-        "WELSPECS\n"
-        " 'P' 'OP' 9 9 1 'OIL' 1* / \n"
-        " 'P1' 'OP' 9 9 1 'OIL' 1* / \n"
-        " 'I' 'OP' 9 9 1 'WATER' 1* / \n"
-        "/\n"
-        "WCONHIST\n"
-        " P SHUT ORAT 6  500 0 0 0 1.2 1.1 / \n"
-        "/\n"
-        "WCONPROD\n"
-        " P1 SHUT ORAT 6  500 0 0 0 3.2 3.1 / \n"
-        "/\n"
-        "WCONINJH\n"
-        " I WATER STOP 100 2.1 2.2 / \n"
-        "/\n"
-        ;
+    std::string input = R"(
+START             -- 0
+19 JUN 2007 /
+SCHEDULE
+DATES             -- 1
+ 10  OKT 2008 /
+/
+WELSPECS
+ 'P' 'OP' 9 9 1 'OIL' 1* /
+ 'P1' 'OP' 9 9 1 'OIL' 1* /
+ 'I' 'OP' 9 9 1 'WATER' 1* /
+/
+WCONHIST
+ P SHUT ORAT 6  500 0 0 0 1.2 1.1 /
+/
+WCONPROD
+ P1 SHUT ORAT 6  500 0 0 0 3.2 3.1 /
+/
+WCONINJH
+ I WATER STOP 100 2.1 2.2 /
+/
+)";
 
     auto deck = parser.parseString(input);
     auto python = std::make_shared<Python>();
@@ -2936,56 +2951,57 @@ BOOST_AUTO_TEST_CASE(FilterCompletions2) {
 
 
 BOOST_AUTO_TEST_CASE(VFPINJ_TEST) {
-    const char *input = "\
-START\n \
-8 MAR 1998 /\n \
-\n \
-GRID \n\
-PORO\n\
-  1000*0.25 /\n\
-PERMX \n\
-  1000*0.10/ \n\
-COPY \n\
-  PERMX PERMY / \n\
-  PERMX PERMZ / \n\
-/ \n \
-SCHEDULE \n\
-VFPINJ \n                                       \
--- Table Depth  Rate   TAB  UNITS  BODY    \n\
--- ----- ----- ----- ----- ------ -----    \n\
-       5  32.9   WAT   THP METRIC   BHP /  \n\
--- Rate axis \n\
-1 3 5 /      \n\
--- THP axis  \n\
-7 11 /       \n\
--- Table data with THP# <values 1-num_rates> \n\
-1 1.5 2.5 3.5 /    \n\
-2 4.5 5.5 6.5 /    \n\
-TSTEP \n\
-10 10/\n\
-VFPINJ \n                                       \
--- Table Depth  Rate   TAB  UNITS  BODY    \n\
--- ----- ----- ----- ----- ------ -----    \n\
-       5  100   GAS   THP METRIC   BHP /  \n\
--- Rate axis \n\
-1 3 5 /      \n\
--- THP axis  \n\
-7 11 /       \n\
--- Table data with THP# <values 1-num_rates> \n\
-1 1.5 2.5 3.5 /    \n\
-2 4.5 5.5 6.5 /    \n\
---\n\
-VFPINJ \n                                       \
--- Table Depth  Rate   TAB  UNITS  BODY    \n\
--- ----- ----- ----- ----- ------ -----    \n\
-       10 200  WAT   THP METRIC   BHP /  \n\
--- Rate axis \n\
-1 3 5 /      \n\
--- THP axis  \n\
-7 11 /       \n\
--- Table data with THP# <values 1-num_rates> \n\
-1 1.5 2.5 3.5 /    \n\
-2 4.5 5.5 6.5 /    \n";
+    const std::string input = R"(
+START
+8 MAR 1998 /
+
+GRID
+PORO
+  1000*0.25 /
+PERMX
+  1000*0.10/
+COPY
+  PERMX PERMY /
+  PERMX PERMZ /
+/
+SCHEDULE
+VFPINJ
+-- Table Depth  Rate   TAB  UNITS  BODY
+-- ----- ----- ----- ----- ------ -----
+       5  32.9   WAT   THP METRIC   BHP /
+-- Rate axis
+1 3 5 /
+-- THP axis
+7 11 /
+-- Table data with THP# <values 1-num_rates>
+1 1.5 2.5 3.5 /
+2 4.5 5.5 6.5 /
+TSTEP
+10 10/
+VFPINJ
+-- Table Depth  Rate   TAB  UNITS  BODY
+-- ----- ----- ----- ----- ------ -----
+       5  100   GAS   THP METRIC   BHP /
+-- Rate axis
+1 3 5 /
+-- THP axis
+7 11 /
+-- Table data with THP# <values 1-num_rates>
+1 1.5 2.5 3.5 /
+2 4.5 5.5 6.5 /
+--
+VFPINJ
+-- Table Depth  Rate   TAB  UNITS  BODY
+-- ----- ----- ----- ----- ------ -----
+       10 200  WAT   THP METRIC   BHP /
+-- Rate axis
+1 3 5 /
+-- THP axis
+7 11 /
+-- Table data with THP# <values 1-num_rates>
+1 1.5 2.5 3.5 /
+2 4.5 5.5 6.5 /
+)";
 
     const auto& schedule = make_schedule(input);
 
@@ -3066,47 +3082,48 @@ VFPINJ \n                                       \
 
 // tests for the polymer injectivity case
 BOOST_AUTO_TEST_CASE(POLYINJ_TEST) {
-    const char *deckData =
-        "START\n"
-        "   8 MAR 2018/\n"
-        "GRID\n"
-        "PORO\n"
-        "  1000*0.25 /\n"
-        "PERMX\n"
-        "  1000*0.25 /\n"
-        "COPY\n"
-        "  PERMX  PERMY /\n"
-        "  PERMX  PERMZ /\n"
-        "/\n"
-        "PROPS\n \n"
-        "SCHEDULE\n"
-        "WELSPECS\n"
-        "'INJE01' 'I'    1  1 1 'WATER'     /\n"
-        "/\n"
-        "WCONINJE\n"
-        "'INJE01' 'WATER' 'OPEN' 'RATE' 800.00  1* 1000 /\n"
-        "/\n"
-        "TSTEP\n"
-        " 1/\n"
-        "WPOLYMER\n"
-        "    'INJE01' 1.0  0.0 /\n"
-        "/\n"
-        "WPMITAB\n"
-        "   'INJE01' 2 /\n"
-        "/\n"
-        "WSKPTAB\n"
-        "    'INJE01' 1  1 /\n"
-        "/\n"
-        "TSTEP\n"
-        " 2*1/\n"
-        "WPMITAB\n"
-        "   'INJE01' 3 /\n"
-        "/\n"
-        "WSKPTAB\n"
-        "    'INJE01' 2  2 /\n"
-        "/\n"
-        "TSTEP\n"
-        " 1 /\n";
+    const std::string deckData = R"(
+START
+   8 MAR 2018/
+GRID
+PORO
+  1000*0.25 /
+PERMX
+  1000*0.25 /
+COPY
+  PERMX  PERMY /
+  PERMX  PERMZ /
+/
+PROPS
+SCHEDULE
+WELSPECS
+'INJE01' 'I'    1  1 1 'WATER'     /
+/
+WCONINJE
+'INJE01' 'WATER' 'OPEN' 'RATE' 800.00  1* 1000 /
+/
+TSTEP
+ 1/
+WPOLYMER
+    'INJE01' 1.0  0.0 /
+/
+WPMITAB
+   'INJE01' 2 /
+/
+WSKPTAB
+    'INJE01' 1  1 /
+/
+TSTEP
+ 2*1/
+WPMITAB
+   'INJE01' 3 /
+/
+WSKPTAB
+    'INJE01' 2  2 /
+/
+TSTEP
+ 1 /
+)";
 
     Opm::Parser parser;
     auto deck = parser.parseString(deckData);
@@ -3136,38 +3153,39 @@ BOOST_AUTO_TEST_CASE(POLYINJ_TEST) {
 
 // Test for WFOAM
 BOOST_AUTO_TEST_CASE(WFOAM_TEST) {
-    const char *input =
-        "START\n"
-        "   8 MAR 2018/\n"
-        "GRID\n"
-        "PERMX\n"
-        "  1000*0.25 /\n"
-        "PORO\n"
-        "  1000*0.25 /\n"
-        "COPY\n"
-        "  PERMX  PERMY /\n"
-        "  PERMX  PERMZ /\n"
-        "/\n"
-        "PROPS\n \n"
-        "SCHEDULE\n"
-        "WELSPECS\n"
-        "'INJE01' 'I'    1  1 1 'WATER'     /\n"
-        "/\n"
-        "WCONINJE\n"
-        "'INJE01' 'GAS' 'OPEN' 'RATE' 80000.00  1* 1000 /\n"
-        "/\n"
-        "TSTEP\n"
-        " 1/\n"
-        "WFOAM\n"
-        "    'INJE01' 0.2 /\n"
-        "/\n"
-        "TSTEP\n"
-        " 2*1/\n"
-        "WFOAM\n"
-        "    'INJE01' 0.3 /\n"
-        "/\n"
-        "TSTEP\n"
-        " 1 /\n";
+    const std::string input = R"(
+START
+   8 MAR 2018/
+GRID
+PERMX
+  1000*0.25 /
+PORO
+  1000*0.25 /
+COPY
+  PERMX  PERMY /
+  PERMX  PERMZ /
+/
+PROPS
+SCHEDULE
+WELSPECS
+'INJE01' 'I'    1  1 1 'WATER'     /
+/
+WCONINJE
+'INJE01' 'GAS' 'OPEN' 'RATE' 80000.00  1* 1000 /
+/
+TSTEP
+ 1/
+WFOAM
+    'INJE01' 0.2 /
+/
+TSTEP
+ 2*1/
+WFOAM
+    'INJE01' 0.3 /
+/
+TSTEP
+ 1 /
+)";
 
     const auto& schedule = make_schedule(input);
 
@@ -3405,29 +3423,27 @@ BOOST_AUTO_TEST_CASE(RFT_CONFIG2) {
 
 
 BOOST_AUTO_TEST_CASE(nupcol) {
-    std::string input =
-        "RUNSPEC\n"
-        "START             -- 0 \n"
-        "19 JUN 2007 / \n"
-        "NUPCOL\n"
-        "  20 /\n"
-        "SCHEDULE\n"
-        "DATES\n             -- 1\n"
-        " 10  OKT 2008 / \n"
-        "/\n"
-        "NUPCOL\n"
-        "  1* /\n"
-        "DATES\n             -- 1\n"
-        " 10  OKT 2009 / \n"
-        "/\n"
-        "NUPCOL\n"
-        "  10 /\n"
-        "DATES\n             -- 1\n"
-        " 10  OKT 2010 / \n"
-        "/\n"
-
-        ;
-
+    std::string input = R"(
+RUNSPEC
+START             -- 0
+19 JUN 2007 /
+NUPCOL
+  20 /
+SCHEDULE
+DATES             -- 1
+ 10  OKT 2008 /
+/
+NUPCOL
+  1* /
+DATES             -- 1
+ 10  OKT 2009 /
+/
+NUPCOL
+  10 /
+DATES             -- 1
+ 10  OKT 2010 /
+/
+)";
     const auto& schedule = make_schedule(input);
     {
         // Flow uses 12 as default
