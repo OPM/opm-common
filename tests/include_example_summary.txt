@@ -135,12 +135,6 @@ WPI
 /
 WVPR
 /
-WBP
-/
-WBP4
-/
-WBP9
-/
 WMCTL
 /
 WLPR

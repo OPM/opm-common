@@ -71,7 +71,7 @@ public:
               GlobalProcessParameters            single_values,
               const Inplace&                     initial_inplace,
               const Inplace&                     inplace,
-              const PAvgCalculatorCollection&    ,
+              const PAvgCalculatorCollection&    wbp_calculators,
               const RegionParameters&            region_values = {},
               const BlockValues&                 block_values  = {},
               const data::Aquifers&              aquifers_values = {}) const;

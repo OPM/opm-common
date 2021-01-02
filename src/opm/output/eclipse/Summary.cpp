@@ -38,6 +38,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQContext.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/PAvgCalculator.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellProductionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
@@ -457,6 +458,7 @@ struct fn_args {
     const std::vector< std::pair< std::string, double > > eff_factors;
     const Opm::Inplace& initial_inplace;
     const Opm::Inplace& inplace;
+    const Opm::PAvgCalculatorCollection& wbp_calculators;
     const Opm::UnitSystem& unit_system;
 };
 
@@ -1100,6 +1102,20 @@ quantity rhpv(const fn_args& args) {
         return {0, measure::volume};
 }
 
+
+
+template < Opm::PAvgCalculator::WBPMode blocks>
+quantity wbp(const fn_args& args) {
+    if (args.schedule_wells.empty())
+        return {0, measure::pressure};
+
+    const auto& wname = args.schedule_wells.front().name();
+    const auto& wbp_calculators = args.wbp_calculators;
+    const auto& calculator = wbp_calculators.get(wname);
+    return { calculator.wbp( blocks ), measure::pressure };
+}
+
+
 template < rt phase, bool outputProducer = true, bool outputInjector = true>
 inline quantity potential_rate( const fn_args& args ) {
     double sum = 0.0;
@@ -1439,6 +1455,10 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "WVIT", mul( sum( sum( rate< rt::reservoir_water, injector >, rate< rt::reservoir_oil, injector > ),
                         rate< rt::reservoir_gas, injector > ), duration ) },
 
+    { "WBP",   wbp<Opm::PAvgCalculator::WBPMode::WBP> },
+    { "WBP4",  wbp<Opm::PAvgCalculator::WBPMode::WBP4> },
+    { "WBP5",  wbp<Opm::PAvgCalculator::WBPMode::WBP5> },
+    { "WBP9",  wbp<Opm::PAvgCalculator::WBPMode::WBP9> },
     { "WWPR", rate< rt::wat, producer > },
     { "WOPR", rate< rt::oil, producer > },
     { "WWPTL",mul(ratel< rt::wat, producer >, duration) },
@@ -2159,6 +2179,7 @@ namespace Evaluator {
         const Opm::data::GroupAndNetworkValues& grpNwrkSol;
         const std::map<std::string, double>& single;
         const Opm::Inplace inplace;
+        const Opm::PAvgCalculatorCollection wbp_calculators;
         const std::map<std::string, std::vector<double>>& region;
         const std::map<std::pair<std::string, int>, double>& block;
         const Opm::data::Aquifers& aquifers;
@@ -2210,7 +2231,7 @@ namespace Evaluator {
                 std::max(0, this->node_.number),
                 this->node_.fip_region,
                 st, simRes.wellSol, simRes.grpNwrkSol, input.reg, input.grid,
-                std::move(efac.factors), input.initial_inplace, simRes.inplace, input.sched.getUnits()
+                std::move(efac.factors), input.initial_inplace, simRes.inplace, simRes.wbp_calculators, input.sched.getUnits()
             };
 
             const auto& usys = input.es.getUnits();
@@ -2755,7 +2776,7 @@ namespace Evaluator {
             {}, "", 0.0, 0, std::max(0, this->node_->number),
             this->node_->fip_region,
             this->st_, {}, {}, reg, this->grid_,
-            {}, {}, {}, Opm::UnitSystem(Opm::UnitSystem::UnitType::UNIT_TYPE_METRIC)
+            {}, {}, {}, {}, Opm::UnitSystem(Opm::UnitSystem::UnitType::UNIT_TYPE_METRIC)
         };
 
         const auto prm = this->paramFunction_(args);
@@ -3007,6 +3028,7 @@ public:
               GlobalProcessParameters&           single_values,
               const Inplace&                     initial_inplace,
               const Opm::Inplace&                inplace,
+              const PAvgCalculatorCollection&    wbp_calculators,
               const RegionParameters&            region_values,
               const BlockValues&                 block_values,
               const data::Aquifers&              aquifer_values,
@@ -3150,6 +3172,7 @@ eval(const int                          sim_step,
      GlobalProcessParameters&           single_values,
      const Inplace&                     initial_inplace,
      const Opm::Inplace&                inplace,
+     const PAvgCalculatorCollection&    wbp_calculators,
      const RegionParameters&            region_values,
      const BlockValues&                 block_values,
      const data::Aquifers&              aquifer_values,
@@ -3166,7 +3189,7 @@ eval(const int                          sim_step,
     };
 
     const Evaluator::SimulatorResults simRes {
-        well_solution, grp_nwrk_solution, single_values, inplace, region_values, block_values, aquifer_values
+        well_solution, grp_nwrk_solution, single_values, inplace, wbp_calculators, region_values, block_values, aquifer_values
     };
 
     for (auto& evalPtr : this->outputParameters_.getEvaluators()) {
@@ -3581,7 +3604,7 @@ void Summary::eval(SummaryState&                      st,
                    GlobalProcessParameters            single_values,
                    const Inplace&                     initial_inplace,
                    const Inplace&                     inplace,
-                   const PAvgCalculatorCollection&    ,
+                   const PAvgCalculatorCollection&    wbp_calculators,
                    const RegionParameters&            region_values,
                    const BlockValues&                 block_values,
                    const Opm::data::Aquifers&         aquifer_values) const
@@ -3599,7 +3622,7 @@ void Summary::eval(SummaryState&                      st,
 
     this->pImpl_->eval(sim_step, secs_elapsed,
                        well_solution, grp_nwrk_solution, single_values,
-                       initial_inplace, inplace,
+                       initial_inplace, inplace, wbp_calculators,
                        region_values, block_values, aquifer_values, st);
 }
 
