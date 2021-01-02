@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(AddStepSizeCorrect) {
     Opm::TimeMap timeMap(time_points);
     BOOST_CHECK_EQUAL(3U, timeMap.size());
 
-    BOOST_CHECK_THROW(timeMap[3] , std::invalid_argument );
+    BOOST_CHECK_THROW(timeMap[3] , std::exception );
     BOOST_CHECK_EQUAL(timeMap[0] , Opm::TimeMap::mkdate(2010, 1, 1 ));
     BOOST_CHECK_EQUAL(timeMap[2] , Opm::TimeMap::mkdate(2010, 1, 3 ));
 }
@@ -685,8 +685,6 @@ DATES
 
     BOOST_CHECK_THROW( Opm::TimeMap(deck1, invalid_restart) , std::exception);
     Opm::TimeMap tm1(deck1, valid_restart);
-    BOOST_CHECK_THROW( tm1[1], std::invalid_argument );
-    BOOST_CHECK_THROW( tm1[4], std::invalid_argument );
     auto start = tm1[0];
     BOOST_CHECK_EQUAL(start , Opm::asTimeT(Opm::TimeStampUTC(2000,1,1)));
     BOOST_CHECK_EQUAL(tm1[5] , Opm::asTimeT(Opm::TimeStampUTC(2005,1,1)));
