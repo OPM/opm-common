@@ -37,7 +37,7 @@ class Serializer;
 class PAvgCalculator {
 public:
 
-    PAvgCalculator(const std::string& well, const EclipseGrid& grid, const std::vector<double>& porv, const WellConnections& connections, const PAvg& pavg);
+    PAvgCalculator(const std::string& well, double well_ref_depth, const EclipseGrid& grid, const std::vector<double>& porv, const WellConnections& connections, const PAvg& pavg);
 
     enum class WBPMode {
         WBP,
@@ -102,6 +102,7 @@ private:
     std::vector<std::size_t> m_index_list;
     std::vector<double> pressure;
     std::vector<char> valid_pressure;
+    double ref_depth;
 };
 
 }

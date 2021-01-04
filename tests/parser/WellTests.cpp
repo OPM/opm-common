@@ -1421,6 +1421,10 @@ WELSPECS
 /
 -- W3
 
+WPAVEDEP
+  'W1'  0 /
+/
+
 TSTEP
 1  /
 
@@ -1453,9 +1457,11 @@ END
 
 
     BOOST_CHECK_EQUAL(w0.getRefDepth(), grid.getCellDepth(0,0,2));
+    BOOST_CHECK_EQUAL(w0.getRefDepth(), w0.getWPaveRefDepth());
     BOOST_CHECK_EQUAL(w1.getRefDepth(), w0.getRefDepth());
     BOOST_CHECK_EQUAL(w2.getRefDepth(), 2005 );
     BOOST_CHECK_EQUAL(w3.getRefDepth(), grid.getCellDepth(0,0,1));
     BOOST_CHECK_EQUAL(w4.getRefDepth(), w3.getRefDepth());
     BOOST_CHECK_EQUAL(w5.getRefDepth(), grid.getCellDepth(0,0,0));
+    BOOST_CHECK_EQUAL(w5.getWPaveRefDepth(), 0);
 }

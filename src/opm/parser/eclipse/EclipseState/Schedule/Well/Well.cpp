@@ -944,6 +944,10 @@ double Well::getRefDepth() const {
     return *this->ref_depth;
 }
 
+double Well::getWPaveRefDepth() const {
+    return this->wpave_ref_depth.value_or( this->getRefDepth() );
+}
+
 void Well::updateRefDepth() {
     if( !this->ref_depth ) {
         // ref depth was defaulted and we get the depth of the first completion
@@ -956,6 +960,9 @@ void Well::updateRefDepth() {
     }
 }
 
+void Well::updateWPaveRefDepth(double depth) {
+    this->wpave_ref_depth = depth;
+}
 
 double Well::getDrainageRadius() const {
     return this->drainage_radius;
@@ -1772,7 +1779,7 @@ bool Well::operator==(const Well& data) const {
 
 
 PAvgCalculator Well::pavg_calculator(const EclipseGrid& grid, const std::vector<double>& porv) const {
-    return PAvgCalculator(this->name(), grid, porv, this->getConnections(), this->m_pavg);
+    return PAvgCalculator(this->name(), this->getWPaveRefDepth(), grid, porv, this->getConnections(), this->m_pavg);
 }
 
 
