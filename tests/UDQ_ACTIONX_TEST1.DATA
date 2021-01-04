@@ -72,7 +72,7 @@ WELLDIMS
 
 --Dimensions for ACTIONX data
 ACTDIMS
-4  20  80  4  /
+30  20  80  10  /
 
 --
 --
@@ -302,6 +302,9 @@ SUMMARY
 INCLUDE
  'include_example_summary.txt' /
 
+FOPR
+FWPR
+FGOR
 
 FMWIN
 
@@ -457,6 +460,23 @@ WELOPEN
 WELOPEN
  'OPL02' 'OPEN' 5* / 
 /
+ENDACTIO
+
+-- ACTIONX - test data
+-- (AOAA)
+ACTIONX
+ACT04 10 /
+WUPR3 'OP*' = 1 AND /
+ ( FOPR >= 2000  OR  /
+ FMWPR >= 3  ) AND   /
+ FWPR >= 2000  AND  /
+ FGOR >= 400    /
+/
+
+WELOPEN
+'?' SHUT 0 0 0 2* /
+/
+
 ENDACTIO
 
 WELOPEN

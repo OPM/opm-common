@@ -369,7 +369,7 @@ BOOST_AUTO_TEST_CASE (Declared_Actionx_data)
         BOOST_CHECK_EQUAL(zAcn[start + 4].c_str() ,   "        ");
     }
 
-        {
+    {
         /*
         IACN
         26*Max number of conditions pr ACTIONX
@@ -418,7 +418,7 @@ BOOST_AUTO_TEST_CASE (Declared_Actionx_data)
         BOOST_CHECK_EQUAL(iAcn[start + 14] ,  0);
         BOOST_CHECK_EQUAL(iAcn[start + 15] ,  0);
         BOOST_CHECK_EQUAL(iAcn[start + 16] ,  1);
-        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  0);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  1);
 
         start_a = 1*actDims[6];
         start = start_a + 0*26;
@@ -459,7 +459,7 @@ BOOST_AUTO_TEST_CASE (Declared_Actionx_data)
         BOOST_CHECK_EQUAL(iAcn[start + 14] ,  0);
         BOOST_CHECK_EQUAL(iAcn[start + 15] ,  0);
         BOOST_CHECK_EQUAL(iAcn[start + 16] ,  1);
-        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  0);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  1);
 
         start = start_a + 2*26;
         BOOST_CHECK_EQUAL(iAcn[start +  0] ,  0);
@@ -479,6 +479,32 @@ BOOST_AUTO_TEST_CASE (Declared_Actionx_data)
         BOOST_CHECK_EQUAL(iAcn[start + 14] ,  0);
         BOOST_CHECK_EQUAL(iAcn[start + 15] ,  0);
         BOOST_CHECK_EQUAL(iAcn[start + 16] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  1);
+
+        start_a = 3*actDims[6];
+        start = start_a + 0*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  0);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  0);
+
+        start = start_a + 1*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  2);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  0);
+
+        start = start_a + 2*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  2);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  1);
+
+        start = start_a + 3*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  0);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  1);
+
+        start = start_a + 4*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  0);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  0);
         BOOST_CHECK_EQUAL(iAcn[start + 17] ,  1);
 
     }
