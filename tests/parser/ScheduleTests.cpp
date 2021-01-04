@@ -194,7 +194,7 @@ WELOPEN
  'BAN' OPEN /
 /
 
-DATES             -- 4
+DATES             -- 5
  10  NOV 2007 /
 /
 
@@ -1142,7 +1142,6 @@ COMPDAT
     for(size_t i = 0; i < cs4.size(); i++ )
         BOOST_CHECK_EQUAL(cs4.get( i ).CF(), cs1.get(i).CF());
 
-    BOOST_CHECK_THROW(schedule.simTime(10000), std::invalid_argument);
     auto sim_time1 = TimeStampUTC{ schedule.simTime(1) };
     BOOST_CHECK_EQUAL(sim_time1.day(), 10);
     BOOST_CHECK_EQUAL(sim_time1.month(), 10);

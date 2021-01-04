@@ -406,14 +406,7 @@ struct TimeMapContext {
 
 
     std::time_t TimeMap::operator[] (size_t index) const {
-        if (index >= m_timeList.size())
-            throw std::invalid_argument("Index out of range");
-
-        if (index > 0 && index < this->m_restart_offset) {
-            printf("What the f... \n");
-            throw std::invalid_argument(fmt::format("Tried to get time information from the base case in restarted run index:{}  restart_offset:{}", index, this->m_restart_offset));
-        }
-        return m_timeList[index];
+        return m_timeList.at(index);
     }
 
     std::time_t TimeMap::mkdate(int in_year, int in_month, int in_day) {
