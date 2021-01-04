@@ -54,9 +54,10 @@ const std::string& PAvgCalculator::wname() const {
 }
 
 
-PAvgCalculator::PAvgCalculator(const std::string& well, const EclipseGrid& grid, const std::vector<double>& porv, const WellConnections& connections, const PAvg& pavg) :
+PAvgCalculator::PAvgCalculator(const std::string& well, double well_ref_depth, const EclipseGrid& grid, const std::vector<double>& porv, const WellConnections& connections, const PAvg& pavg) :
     well_name(well),
-    m_pavg(pavg)
+    m_pavg(pavg),
+    ref_depth(well_ref_depth)
 {
     if (porv.size() != grid.getCartesianSize())
         throw std::logic_error("Should pass a GLOBAL porv vector");

@@ -516,6 +516,7 @@ public:
     const std::string& name() const;
     int getHeadI() const;
     int getHeadJ() const;
+    double getWPaveRefDepth() const;
     double getRefDepth() const;
     double getDrainageRadius() const;
     double getEfficiencyFactor() const;
@@ -599,6 +600,7 @@ public:
     bool updateWSEGVALV(const std::vector<std::pair<int, Valve> >& valve_pairs);
     bool updateWSEGAICD(const std::vector<std::pair<int, AutoICD> >& aicd_pairs, const KeywordLocation& location);
     bool updateWPAVE(const PAvg& pavg);
+    void updateWPaveRefDepth(double ref_depth);
 
     bool handleWELSEGS(const DeckKeyword& keyword);
     bool handleCOMPSEGS(const DeckKeyword& keyword, std::size_t report_step, const EclipseGrid& grid, const ParseContext& parseContext, ErrorGuard& errors);
@@ -640,6 +642,7 @@ public:
         serializer(headI);
         serializer(headJ);
         serializer(ref_depth);
+        serializer(wpave_ref_depth);
         unit_system.serializeOp(serializer);
         serializer(udq_undefined);
         serializer(status);
@@ -679,6 +682,7 @@ private:
     int headI;
     int headJ;
     std::optional<double> ref_depth;
+    std::optional<double> wpave_ref_depth;
     double drainage_radius;
     bool allow_cross_flow;
     bool automatic_shutin;

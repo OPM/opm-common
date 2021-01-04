@@ -1855,6 +1855,26 @@ namespace {
         }
     }
 
+    void Schedule::handleWPAVEDEP(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+        for (const auto& record : handlerContext.keyword) {
+            const std::string& wellNamePattern = record.getItem<ParserKeywords::WPAVEDEP::WELL>().getTrimmedString(0);
+            const auto well_names = wellNames(wellNamePattern, handlerContext.currentStep);
+
+            if (well_names.empty())
+                invalidNamePattern(wellNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
+
+            const auto& item = record.getItem<ParserKeywords::WPAVEDEP::REFDEPTH>();
+            if (item.hasValue(0)) {
+                auto ref_depth = item.getSIDouble(0);
+                for (const auto& well_name : well_names) {
+                    auto well = std::shared_ptr<Well>(new Well( this->getWell(well_name, handlerContext.currentStep)));
+                    well->updateWPaveRefDepth( ref_depth );
+                    this->updateWell(std::move(well), handlerContext.currentStep);
+                }
+            }
+        }
+    }
+
     bool Schedule::handleNormalKeyword(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
         using handler_function = void (Schedule::*)(const HandlerContext&, const ParseContext&, ErrorGuard&);
         static const std::unordered_map<std::string,handler_function> handler_functions = {
@@ -1921,6 +1941,7 @@ namespace {
             { "WLIFTOPT", &Schedule::handleWLIFTOPT },
             { "WLIST"   , &Schedule::handleWLIST    },
             { "WPAVE"   , &Schedule::handleWPAVE    },
+            { "WPAVEDEP", &Schedule::handleWPAVEDEP },
             { "WWPAVE"  , &Schedule::handleWWPAVE   },
             { "WPIMULT" , &Schedule::handleWPIMULT  },
             { "WPMITAB" , &Schedule::handleWPMITAB  },

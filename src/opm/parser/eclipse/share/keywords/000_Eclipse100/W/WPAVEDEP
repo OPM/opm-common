@@ -3,16 +3,15 @@
   "sections": [
     "SCHEDULE"
   ],
-  "size": 1,
   "items": [
     {
-      "name": "WELLNAME",
+      "name": "WELL",
       "value_type": "STRING"
     },
     {
       "name": "REFDEPTH",
       "value_type": "DOUBLE",
-      "default": 0
+      "dimension" : "Length"
     }
   ]
 }

@@ -560,6 +560,7 @@ namespace Opm
         void handleWLIFTOPT (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleWLIST    (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleWPAVE    (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWPAVEDEP (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleWWPAVE   (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleWPIMULT  (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleWPMITAB  (const HandlerContext&, const ParseContext&, ErrorGuard&);
