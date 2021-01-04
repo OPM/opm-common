@@ -1198,18 +1198,6 @@ namespace {
     }
 
     void Schedule::handleWELSPECS(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
-        const auto COMPORD_in_timestep = [&]() -> const DeckKeyword* {
-            const auto& section = *handlerContext.section;
-            auto itr = section.begin() + handlerContext.keywordIndex.value();
-            for( ; itr != section.end(); ++itr ) {
-                if (itr->name() == "DATES") return nullptr;
-                if (itr->name() == "TSTEP") return nullptr;
-                if (itr->name() == "COMPORD") return std::addressof( *itr );
-            }
-            return nullptr;
-        };
-
-
         const auto& keyword = handlerContext.keyword;
         for (std::size_t recordNr = 0; recordNr < keyword.size(); recordNr++) {
             const auto& record = keyword.getRecord(recordNr);
@@ -1236,11 +1224,10 @@ namespace {
             if (!hasWell(wellName)) {
                 auto wellConnectionOrder = Connection::Order::TRACK;
 
-                if( const auto* compordp = COMPORD_in_timestep() ) {
-                     const auto& compord = *compordp;
-
-                    for (std::size_t compordRecordNr = 0; compordRecordNr < compord.size(); compordRecordNr++) {
-                        const auto& compordRecord = compord.getRecord(compordRecordNr);
+                const auto& compord = handlerContext.block.get("COMPORD");
+                if (compord.has_value()) {
+                    for (std::size_t compordRecordNr = 0; compordRecordNr < compord->size(); compordRecordNr++) {
+                        const auto& compordRecord = compord->getRecord(compordRecordNr);
 
                         const std::string& wellNamePattern = compordRecord.getItem(0).getTrimmedString(0);
                         if (Well::wellNameInWellNamePattern(wellName, wellNamePattern)) {

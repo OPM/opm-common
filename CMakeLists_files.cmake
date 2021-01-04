@@ -126,6 +126,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Schedule/RFTConfig.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/RPTConfig.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Schedule.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/ScheduleDeck.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/ScheduleTypes.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/SummaryState.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/TimeMap.cpp
@@ -741,6 +742,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Schedule/RFTConfig.hpp
        opm/parser/eclipse/EclipseState/Schedule/RPTConfig.hpp
        opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp
+       opm/parser/eclipse/EclipseState/Schedule/ScheduleDeck.hpp
        opm/parser/eclipse/EclipseState/Schedule/ScheduleTypes.hpp
        opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp
        opm/parser/eclipse/EclipseState/Schedule/Group/GPMaint.hpp
