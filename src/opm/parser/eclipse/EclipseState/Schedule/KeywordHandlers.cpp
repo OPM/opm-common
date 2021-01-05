@@ -1867,7 +1867,7 @@ namespace {
             if (item.hasValue(0)) {
                 auto ref_depth = item.getSIDouble(0);
                 for (const auto& well_name : well_names) {
-                    auto well = std::shared_ptr<Well>(new Well( this->getWell(well_name, handlerContext.currentStep)));
+                    auto well = std::make_shared<Well>( this->getWell(well_name, handlerContext.currentStep) );
                     well->updateWPaveRefDepth( ref_depth );
                     this->updateWell(std::move(well), handlerContext.currentStep);
                 }
