@@ -50,6 +50,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellTestConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellMatcher.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/Actions.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleDeck.hpp>
 
 #include <opm/common/utility/ActiveGridCells.hpp>
 #include <opm/io/eclipse/rst/state.hpp>
@@ -115,6 +116,9 @@ namespace Opm
     class WListManager;
     class UDQConfig;
     class UDQActive;
+
+
+
 
     class Schedule {
     public:
@@ -300,6 +304,7 @@ namespace Opm
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
+            m_sched_deck.serializeOp(serializer);
             m_timeMap.serializeOp(serializer);
             auto splitWells = splitDynMap(wells_static);
             serializer.vector(splitWells.first);
@@ -347,6 +352,7 @@ namespace Opm
     private:
         template<class Key, class Value> using Map2 = std::map<Key,Value>;
         std::shared_ptr<const Python> python_handle;
+        ScheduleDeck m_sched_deck;
         TimeMap m_timeMap;
         WellMap wells_static;
         GroupMap groups;
@@ -406,7 +412,7 @@ namespace Opm
         void updateUDQActive( std::size_t timeStep, std::shared_ptr<UDQActive> udq );
         bool updateWellStatus( const std::string& well, std::size_t reportStep, bool runtime, Well::Status status, std::optional<KeywordLocation> = {});
         void addWellToGroup( const std::string& group_name, const std::string& well_name , std::size_t timeStep);
-        void iterateScheduleSection(std::shared_ptr<const Python> python, const std::string& input_path, const ParseContext& parseContext ,  ErrorGuard& errors, const SCHEDULESection& , const EclipseGrid& grid,
+        void iterateScheduleSection(std::shared_ptr<const Python> python, const std::string& input_path, const ParseContext& parseContext ,  ErrorGuard& errors, const EclipseGrid& grid,
                                     const FieldPropsManager& fp);
         void addACTIONX(const Action::ActionX& action, std::size_t currentStep);
         void addGroupToGroup( const std::string& parent_group, const std::string& child_group, std::size_t timeStep);
@@ -414,14 +420,12 @@ namespace Opm
         void addGroup(const std::string& groupName , std::size_t timeStep);
         void addGroup(const Group& group, std::size_t timeStep);
         void addWell(const std::string& wellName, const DeckRecord& record, std::size_t timeStep, Connection::Order connection_order);
-        void checkUnhandledKeywords( const SCHEDULESection& ) const;
         void checkIfAllConnectionsIsShut(std::size_t currentStep);
         void updateUDQ(const DeckKeyword& keyword, std::size_t current_step);
         void handleKeyword(std::shared_ptr<const Python> python,
                            const std::string& input_path,
                            std::size_t currentStep,
-                           const SCHEDULESection& section,
-                           std::size_t keywordIdx,
+                           const ScheduleBlock& block,
                            const DeckKeyword& keyword,
                            const ParseContext& parseContext, ErrorGuard& errors,
                            const EclipseGrid& grid,
@@ -465,17 +469,18 @@ namespace Opm
         void applyWRFTPLT(const DeckKeyword&, std::size_t currentStep);
 
         struct HandlerContext {
+            const ScheduleBlock& block;
             const DeckKeyword& keyword;
             const std::size_t currentStep;
             const EclipseGrid& grid;
             const FieldPropsManager& fieldPropsManager;
-            const SCHEDULESection * section = nullptr;
-            std::optional<std::size_t> keywordIndex;
 
-            HandlerContext(const DeckKeyword& keyword_,
+            HandlerContext(const ScheduleBlock& block_,
+                           const DeckKeyword& keyword_,
                            const std::size_t currentStep_,
                            const EclipseGrid& grid_,
                            const FieldPropsManager& fieldPropsManager_) :
+                block(block_),
                 keyword(keyword_),
                 currentStep(currentStep_),
                 grid(grid_),

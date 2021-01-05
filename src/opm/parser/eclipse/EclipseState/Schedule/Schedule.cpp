@@ -109,6 +109,7 @@ namespace {
                         const RestartIO::RstState * rst)
     try :
         python_handle(python),
+        m_sched_deck(deck, restart_info(rst) ),
         m_timeMap( deck , restart_info( rst )),
         m_oilvaporizationproperties( this->m_timeMap, OilVaporizationProperties(runspec.tabdims().getNumPVTTables()) ),
         m_events( this->m_timeMap ),
@@ -152,8 +153,7 @@ namespace {
                 applyMESSAGES(keyword, 0);
         }
 
-        if (DeckSection::hasSCHEDULE(deck))
-            iterateScheduleSection( python, deck.getInputPath(), parseContext, errors, SCHEDULESection( deck ), grid, fp);
+        this->iterateScheduleSection( python, deck.getInputPath(), parseContext, errors, grid, fp);
     }
     catch (const OpmInputError& opm_error) {
         throw;
@@ -284,8 +284,7 @@ namespace {
     void Schedule::handleKeyword(std::shared_ptr<const Python> python,
                                  const std::string& input_path,
                                  std::size_t currentStep,
-                                 const SCHEDULESection& section,
-                                 std::size_t keywordIdx,
+                                 const ScheduleBlock& block,
                                  const DeckKeyword& keyword,
                                  const ParseContext& parseContext,
                                  ErrorGuard& errors,
@@ -293,18 +292,7 @@ namespace {
                                  const FieldPropsManager& fp,
                                  std::vector<std::pair<const DeckKeyword*, std::size_t > >& rftProperties) {
 
-        HandlerContext handlerContext { keyword, currentStep, grid, fp };
-
-        /*
-          The WELSPECS handler needs to look in the same report step for a
-          COMPORD keyword. This keyword-keyword interaction is quite ugly, so in
-          this case it is made very explicit - hopefully it can be refactored in
-          the future.
-         */
-        if (keyword.name() == "WELSPECS") {
-            handlerContext.section = &section;
-            handlerContext.keywordIndex = keywordIdx;
-        }
+        HandlerContext handlerContext { block, keyword, currentStep, grid, fp };
 
         if (handleNormalKeyword(handlerContext, parseContext, errors))
             return;
@@ -363,13 +351,16 @@ private:
 
 }
 
-    void Schedule::iterateScheduleSection(std::shared_ptr<const Opm::Python> python, const std::string& input_path, const ParseContext& parseContext , ErrorGuard& errors, const SCHEDULESection& section , const EclipseGrid& grid,
+    void Schedule::iterateScheduleSection(std::shared_ptr<const Opm::Python> python,
+                                          const std::string& input_path,
+                                          const ParseContext& parseContext ,
+                                          ErrorGuard& errors,
+                                          const EclipseGrid& grid,
                                           const FieldPropsManager& fp) {
 
         std::vector<std::pair< const DeckKeyword* , std::size_t> > rftProperties;
         std::string time_unit = this->unit_system.name(UnitSystem::measure::time);
         auto convert_time = [this](double seconds) { return this->unit_system.from_si(UnitSystem::measure::time, seconds); };
-        std::size_t keywordIdx = 0;
         std::string current_file;
         const auto& time_map = this->m_timeMap;
         /*
@@ -399,8 +390,7 @@ private:
         auto restart_skip = currentStep < this->m_timeMap.restart_offset();
         ScheduleLogger logger(restart_skip);
         {
-            const auto& schedule_keyword = section.getKeyword<ParserKeywords::SCHEDULE>();
-            const auto& location = schedule_keyword.location();
+            const auto& location = this->m_sched_deck.location();
             current_file = location.filename;
             logger.info(fmt::format("\nProcessing dynamic information from\n{} line {}", current_file, location.lineno));
             if (restart_skip)
@@ -414,111 +404,82 @@ private:
                                time_unit,
                                location.lineno));
         }
-        while (true) {
-            if (keywordIdx == section.size())
-                break;
 
-            const auto& keyword = section.getKeyword(keywordIdx);
-            const auto& location = keyword.location();
-            if (location.filename != current_file) {
-                logger(fmt::format("Reading from: {} line {}", location.filename, location.lineno));
-                current_file = location.filename;
+        for (const auto& block : this->m_sched_deck) {
+            std::size_t keyword_index = 0;
+            auto time_type = block.time_type();
+            if (time_type == ScheduleTimeType::DATES || time_type == ScheduleTimeType::TSTEP) {
+                const auto& start_date = Schedule::formatDate(std::chrono::system_clock::to_time_t(block.start_time()));
+                const auto& days = convert_time(this->stepLength(currentStep - 1));
+                const auto& days_total = convert_time(time_map.getTimePassedUntil(currentStep));
+                logger.complete_step(fmt::format("Complete report step {0} ({1} {2}) at {3} ({4} {2})",
+                                                 currentStep,
+                                                 days,
+                                                 time_unit,
+                                                 start_date,
+                                                 days_total));
+
+                logger(fmt::format("Initializing report step {}/{} at {} ({} {}) - line {}",
+                                   currentStep + 1,
+                                   this->size(),
+                                   start_date,
+                                   days_total,
+                                   time_unit,
+                                   block.location().lineno));
             }
 
-            if (keyword.name() == "DATES") {
-                checkIfAllConnectionsIsShut(currentStep);
-                for (const auto& record : keyword) {
-                    if (restart_skip) {
-                        auto deck_time = TimeMap::timeFromEclipse(record);
-                        if (deck_time == time_map.restart_time()) {
-                            restart_skip = false;
-                            currentStep = time_map.restart_offset();
-                            logger.restart();
-                            logger(fmt::format("Found restart date: {} report: {}", Schedule::formatDate(deck_time), time_map.restart_offset()));
-                        } else
-                            logger(fmt::format("Skipping DATES keyword {}", Schedule::formatDate(deck_time)));
-                    } else {
-                        currentStep += 1;
-                        if (currentStep < this->size()) {
-                            const auto& start_date = Schedule::formatDate(this->simTime(currentStep));
-                            const auto& days = convert_time(this->stepLength(currentStep - 1));
-                            const auto& days_total = convert_time(time_map.getTimePassedUntil(currentStep));
-                            logger.complete_step(fmt::format("Complete report step {0} ({1} {2}) at {3} ({4} {2})", currentStep,  days, time_unit, start_date, days_total));
 
-                            logger(fmt::format("Initializing report step {}/{} at {} ({} {}) - line {}",
-                                               currentStep + 1,
-                                               this->size(),
-                                               start_date,
-                                               convert_time(time_map.getTimePassedUntil(currentStep)),
-                                               time_unit,
-                                               location.lineno));
+            while (true) {
+                if (keyword_index == block.size())
+                    break;
 
+                const auto& keyword = block[keyword_index];
+                const auto& location = keyword.location();
+                if (location.filename != current_file) {
+                    logger(fmt::format("Reading from: {} line {}", location.filename, location.lineno));
+                    current_file = location.filename;
+                }
+
+                if (keyword.name() == "ACTIONX") {
+                    Action::ActionX action(keyword, this->m_timeMap.getStartTime(currentStep));
+                    while (true) {
+                        keyword_index++;
+                        if (keyword_index == block.size())
+                            throw OpmInputError("Missing keyword ENDACTIO", keyword.location());
+
+                        const auto& action_keyword = block[keyword_index];
+                        if (action_keyword.name() == "ENDACTIO")
+                            break;
+
+                        if (Action::ActionX::valid_keyword(action_keyword.name()))
+                            action.addKeyword(action_keyword);
+                        else {
+                            std::string msg_fmt = "The keyword {keyword} is not supported in the ACTIONX block\n"
+                                "In {file} line {line}.";
+                            parseContext.handleError( ParseContext::ACTIONX_ILLEGAL_KEYWORD, msg_fmt, action_keyword.location(), errors);
                         }
                     }
+                    this->addACTIONX(action, currentStep);
+                    keyword_index++;
+                    continue;
                 }
-                keywordIdx++;
-                continue;
+
+                logger(fmt::format("Processing keyword {} at line {}", location.keyword, location.lineno));
+                this->handleKeyword(python,
+                                    input_path,
+                                    currentStep,
+                                    block,
+                                    keyword,
+                                    parseContext,
+                                    errors,
+                                    grid,
+                                    fp,
+                                    rftProperties);
+                keyword_index++;
             }
-
-            if (keyword.name() == "TSTEP") {
-                checkIfAllConnectionsIsShut(currentStep);
-                if (restart_skip)
-                    logger(OpmInputError::format("Skipping TSTEP keyword at {file} line {line}", keyword.location()));
-                else {
-                    for (const auto& tstep : keyword.getRecord(0).getItem(0).getSIDoubleData()) {
-                        currentStep += 1;
-                        const auto& end_date = Schedule::formatDate( this->simTime(currentStep) );
-                        logger.complete_step(fmt::format("TSTEP {:4} {} {} -> {}", currentStep, convert_time(tstep), time_unit, end_date));
-                    }
-                }
-                keywordIdx++;
-                continue;
-            }
-
-            if (restart_skip && skiprest_whitelist.count(keyword.name()) == 0) {
-                logger(fmt::format("Skipping keyword: {} while loading SCHEDULE section", keyword.name()));
-                keywordIdx++;
-                continue;
-            }
-
-            if (keyword.name() == "ACTIONX") {
-                Action::ActionX action(keyword, this->m_timeMap.getStartTime(currentStep));
-                while (true) {
-                    keywordIdx++;
-                    if (keywordIdx == section.size())
-                        throw std::invalid_argument("Invalid ACTIONX section - missing ENDACTIO");
-
-                    const auto& action_keyword = section.getKeyword(keywordIdx);
-                    if (action_keyword.name() == "ENDACTIO")
-                        break;
-
-                    if (Action::ActionX::valid_keyword(action_keyword.name()))
-                        action.addKeyword(action_keyword);
-                    else {
-                        std::string msg_fmt = "The keyword {keyword} is not supported in the ACTIONX block\n"
-                                              "In {file} line {line}.";
-                        parseContext.handleError( ParseContext::ACTIONX_ILLEGAL_KEYWORD, msg_fmt, action_keyword.location(), errors);
-                    }
-                }
-                this->addACTIONX(action, currentStep);
-                keywordIdx++;
-                continue;
-            }
-            logger(fmt::format("Processing keyword {} at line {}", location.keyword, location.lineno));
-            this->handleKeyword(python,
-                                input_path,
-                                currentStep,
-                                section,
-                                keywordIdx,
-                                keyword,
-                                parseContext,
-                                errors,
-                                grid,
-                                fp,
-                                rftProperties);
-            keywordIdx++;
+            checkIfAllConnectionsIsShut(currentStep);
+            currentStep += 1;
         }
-        checkIfAllConnectionsIsShut(currentStep);
 
 
         for (auto rftPair = rftProperties.begin(); rftPair != rftProperties.end(); ++rftPair) {
@@ -530,17 +491,12 @@ private:
             if (keyword.name() == "WRFTPLT")
                 applyWRFTPLT(keyword, timeStep);
         }
-
-        checkUnhandledKeywords(section);
     }
 
     void Schedule::addACTIONX(const Action::ActionX& action, std::size_t currentStep) {
         auto new_actions = std::make_shared<Action::Actions>( this->actions(currentStep) );
         new_actions->add(action);
         this->m_actions.update(currentStep, new_actions);
-    }
-
-    void Schedule::checkUnhandledKeywords(const SCHEDULESection& /*section*/) const {
     }
 
     void Schedule::handlePYACTION(std::shared_ptr<const Python> python, const std::string& input_path, const DeckKeyword& keyword, std::size_t currentStep) {
