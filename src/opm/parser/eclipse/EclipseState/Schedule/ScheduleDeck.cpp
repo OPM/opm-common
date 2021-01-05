@@ -61,8 +61,8 @@ const std::chrono::system_clock::time_point& ScheduleBlock::start_time() const {
     return this->m_start_time;
 }
 
-const std::chrono::system_clock::time_point& ScheduleBlock::end_time() const {
-    return this->m_end_time.value();
+const std::optional<std::chrono::system_clock::time_point>& ScheduleBlock::end_time() const {
+    return this->m_end_time;
 }
 
 ScheduleTimeType ScheduleBlock::time_type() const {

@@ -51,6 +51,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellMatcher.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/Actions.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleDeck.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleState.hpp>
 
 #include <opm/common/utility/ActiveGridCells.hpp>
 #include <opm/io/eclipse/rst/state.hpp>
@@ -293,6 +294,13 @@ namespace Opm
         bool operator==(const Schedule& data) const;
         std::shared_ptr<const Python> python() const;
 
+
+        const ScheduleState& operator[](std::size_t index) const;
+        std::vector<ScheduleState>::const_iterator begin() const;
+        std::vector<ScheduleState>::const_iterator end() const;
+        ScheduleState& create_next(const ScheduleBlock& block);
+
+
         /*
           The cmp() function compares two schedule instances in a context aware
           manner. Floating point numbers are compared with a tolerance. The
@@ -335,7 +343,6 @@ namespace Opm
             m_actions.serializeOp(serializer);
             m_network.serializeOp(serializer);
             m_glo.serializeOp(serializer);
-            m_pavg.serializeOp(serializer);
             rft_config.serializeOp(serializer);
             m_nupcol.template serializeOp<Serializer, false>(serializer);
             restart_config.serializeOp(serializer);
@@ -347,6 +354,7 @@ namespace Opm
                 reconstructDynMap<Map2>(splitvfpinj.first, splitvfpinj.second, vfpinj_tables);
             }
             unit_system.serializeOp(serializer);
+            serializer.vector(snapshots);
         }
 
     private:
@@ -375,14 +383,16 @@ namespace Opm
         DynamicState<std::shared_ptr<Action::Actions>> m_actions;
         DynamicState<std::shared_ptr<Network::ExtNetwork>> m_network;
         DynamicState<std::shared_ptr<GasLiftOpt>> m_glo;
-        DynamicState<std::shared_ptr<PAvg>> m_pavg;
         RFTConfig rft_config;
         DynamicState<int> m_nupcol;
         RestartConfig restart_config;
         UnitSystem unit_system;
         std::optional<int> exit_status;
-
         std::map<std::string,Events> wellgroup_events;
+        DynamicState<std::shared_ptr<RPTConfig>> rpt_config;
+        std::vector<ScheduleState> snapshots;
+
+
         void load_rst(const RestartIO::RstState& rst,
                       const EclipseGrid& grid,
                       const FieldPropsManager& fp);
@@ -402,7 +412,6 @@ namespace Opm
                      Connection::Order wellConnectionOrder);
         bool updateWPAVE(const std::string& wname, std::size_t report_step, const PAvg& pavg);
 
-        DynamicState<std::shared_ptr<RPTConfig>> rpt_config;
         void updateNetwork(std::shared_ptr<Network::ExtNetwork> network, std::size_t report_step);
         void updateGuideRateModel(const GuideRateModel& new_model, std::size_t report_step);
 

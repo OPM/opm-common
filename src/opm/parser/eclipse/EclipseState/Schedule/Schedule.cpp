@@ -128,7 +128,6 @@ namespace {
         m_actions(this->m_timeMap, std::make_shared<Action::Actions>()),
         m_network(this->m_timeMap, std::make_shared<Network::ExtNetwork>()),
         m_glo(this->m_timeMap, std::make_shared<GasLiftOpt>()),
-        m_pavg(this->m_timeMap, std::make_shared<PAvg>()),
         rft_config(this->m_timeMap),
         m_nupcol(this->m_timeMap, runspec.nupcol()),
         restart_config(m_timeMap, deck, parseContext, errors),
@@ -154,6 +153,33 @@ namespace {
         }
 
         this->iterateScheduleSection( python, deck.getInputPath(), parseContext, errors, grid, fp);
+        /*
+         This is temporary "integration test" for the time arguments in the
+         Schedule class.
+        */
+        if (this->size() > 0) {
+            for (std::size_t report_step = 0; report_step < this->size() - 1; report_step++) {
+                const auto& this_block = this->m_sched_deck[report_step];
+                if (this_block.start_time() != std::chrono::system_clock::from_time_t(this->m_timeMap[report_step])) {
+                    auto msg = fmt::format("Block: Bug in start_time for report_step: {} ", report_step);
+                    throw std::logic_error(msg);
+                }
+
+                const auto& next_block = this->m_sched_deck[report_step + 1];
+                if (this_block.end_time() != next_block.start_time())
+                    throw std::logic_error("Block: Internal bug in sched_block start / end inconsistent");
+
+                const auto& this_step = this->operator[](report_step);
+                if (this_step.start_time() != std::chrono::system_clock::from_time_t(this->m_timeMap[report_step])) {
+                    auto msg = fmt::format("Bug in start_time for report_step: {} ", report_step);
+                    throw std::logic_error(msg);
+                }
+
+                const auto& next_step = this->operator[](report_step + 1);
+                if (this_step.end_time() != next_step.start_time())
+                    throw std::logic_error("Internal bug in sched_step start / end inconsistent");
+            }
+        }
     }
     catch (const OpmInputError& opm_error) {
         throw;
@@ -264,6 +290,7 @@ namespace {
         result.restart_config = RestartConfig::serializeObject();
         result.wellgroup_events = {{"test", Events::serializeObject()}};
         result.unit_system = UnitSystem::newFIELD();
+        result.snapshots = { ScheduleState::serializeObject() };
 
         return result;
     }
@@ -360,7 +387,7 @@ private:
 
         std::vector<std::pair< const DeckKeyword* , std::size_t> > rftProperties;
         std::string time_unit = this->unit_system.name(UnitSystem::measure::time);
-        auto convert_time = [this](double seconds) { return this->unit_system.from_si(UnitSystem::measure::time, seconds); };
+        auto deck_time = [this](double seconds) { return this->unit_system.from_si(UnitSystem::measure::time, seconds); };
         std::string current_file;
         const auto& time_map = this->m_timeMap;
         /*
@@ -400,7 +427,7 @@ private:
                                currentStep + 1,
                                this->size(),
                                Schedule::formatDate(this->getStartTime()),
-                               convert_time(time_map.getTimePassedUntil(currentStep)),
+                               deck_time(time_map.getTimePassedUntil(currentStep)),
                                time_unit,
                                location.lineno));
         }
@@ -410,8 +437,8 @@ private:
             auto time_type = block.time_type();
             if (time_type == ScheduleTimeType::DATES || time_type == ScheduleTimeType::TSTEP) {
                 const auto& start_date = Schedule::formatDate(std::chrono::system_clock::to_time_t(block.start_time()));
-                const auto& days = convert_time(this->stepLength(currentStep - 1));
-                const auto& days_total = convert_time(time_map.getTimePassedUntil(currentStep));
+                const auto& days = deck_time(this->stepLength(currentStep - 1));
+                const auto& days_total = deck_time(time_map.getTimePassedUntil(currentStep));
                 logger.complete_step(fmt::format("Complete report step {0} ({1} {2}) at {3} ({4} {2})",
                                                  currentStep,
                                                  days,
@@ -427,7 +454,7 @@ private:
                                    time_unit,
                                    block.location().lineno));
             }
-
+            this->create_next(block);
 
             while (true) {
                 if (keyword_index == block.size())
@@ -477,6 +504,7 @@ private:
                                     rftProperties);
                 keyword_index++;
             }
+
             checkIfAllConnectionsIsShut(currentStep);
             currentStep += 1;
         }
@@ -902,8 +930,8 @@ private:
 
         this->addWell( std::move(well), timeStep );
 
-        const auto& pavg_ptr = this->m_pavg.get(timeStep);
-        this->updateWPAVE( wellName, timeStep, *pavg_ptr );
+        const auto& ts = this->operator[](timeStep);
+        this->updateWPAVE( wellName, timeStep, ts.pavg() );
     }
 
 
@@ -2032,5 +2060,35 @@ bool Schedule::cmp(const Schedule& sched1, const Schedule& sched2, std::size_t r
     return (count == 0);
 }
 
+const ScheduleState& Schedule::operator[](std::size_t index) const {
+    return this->snapshots.at(index);
+}
+
+std::vector<ScheduleState>::const_iterator Schedule::begin() const {
+    return this->snapshots.begin();
+}
+
+std::vector<ScheduleState>::const_iterator Schedule::end() const {
+    return this->snapshots.end();
+}
+
+ScheduleState& Schedule::create_next(const ScheduleBlock& block) {
+    const auto& start_time = block.start_time();
+    const auto& end_time = block.end_time();
+
+    if (this->snapshots.empty()) {
+        if (end_time.has_value())
+            this->snapshots.emplace_back( start_time, end_time.value() );
+        else
+            this->snapshots.emplace_back(start_time);
+    } else {
+        const auto& last = this->snapshots.back();
+        if (end_time.has_value())
+            this->snapshots.emplace_back( last, start_time, end_time.value() );
+        else
+            this->snapshots.emplace_back( last, start_time );
+    }
+    return this->snapshots.back();
+}
 
 }

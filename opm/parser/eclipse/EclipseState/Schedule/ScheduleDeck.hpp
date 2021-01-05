@@ -54,7 +54,7 @@ namespace Opm {
         void push_back(const DeckKeyword& keyword);
         std::optional<DeckKeyword> get(const std::string& kw) const;
         const std::chrono::system_clock::time_point& start_time() const;
-        const std::chrono::system_clock::time_point& end_time() const;
+        const std::optional<std::chrono::system_clock::time_point>& end_time() const;
         void end_time(const std::chrono::system_clock::time_point& t);
         ScheduleTimeType time_type() const;
         const KeywordLocation& location() const;
