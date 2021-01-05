@@ -256,8 +256,8 @@ WSEGSICD
     const Opm::DeckKeyword wsegsicd = deck.getKeyword("WSEGSICD");
     BOOST_CHECK_EQUAL(1U, wsegsicd.size());
     const Opm::DeckRecord& record = wsegsicd.getRecord(0);
-    const int start_segment = record.getItem("SEG1").get< int >(0);
-    const int end_segment = record.getItem("SEG2").get< int >(0);
+    const int start_segment = record.getItem("SEGMENT1").get< int >(0);
+    const int end_segment = record.getItem("SEGMENT2").get< int >(0);
     BOOST_CHECK_EQUAL(8, start_segment);
     BOOST_CHECK_EQUAL(8, end_segment);
 

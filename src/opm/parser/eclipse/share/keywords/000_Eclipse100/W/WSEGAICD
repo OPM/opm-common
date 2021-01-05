@@ -9,11 +9,11 @@
       "value_type": "STRING"
     },
     {
-      "name": "SEG1",
+      "name": "SEGMENT1",
       "value_type": "INT"
     },
     {
-      "name": "SEG2",
+      "name": "SEGMENT2",
       "value_type": "INT"
     },
     {

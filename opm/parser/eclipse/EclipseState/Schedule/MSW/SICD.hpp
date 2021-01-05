@@ -98,8 +98,8 @@ namespace Opm {
             for (const DeckRecord &record : wseg) {
                 const std::string well_name = record.getItem("WELL").getTrimmedString(0);
 
-                const int start_segment = record.getItem("SEG1").get<int>(0);
-                const int end_segment = record.getItem("SEG2").get<int>(0);
+                const int start_segment = record.getItem("SEGMENT1").get<int>(0);
+                const int end_segment = record.getItem("SEGMENT2").get<int>(0);
 
                 if (start_segment < 2 || end_segment < 2 || end_segment < start_segment) {
                     const std::string message = "Segment numbers " + std::to_string(start_segment) + " and "
