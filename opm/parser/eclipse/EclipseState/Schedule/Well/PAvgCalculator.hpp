@@ -81,6 +81,7 @@ public:
     double wbp4() const;
     double wbp5() const;
     double wbp9() const;
+    double wbp(WBPMode mode) const;
     bool add_pressure(std::size_t global_index, double pressure);
     void update(Serializer& serializer);
     const std::vector< std::size_t >& index_list() const;
@@ -92,8 +93,9 @@ private:
     void add_connection(const PAvgCalculator::Connection& conn);
     void add_neighbour(std::size_t global_index, std::optional<PAvgCalculator::Neighbour> neighbour, bool rect_neighbour);
     double get_pressure(std::size_t global_index) const;
-    double connection_pressure(const std::vector<std::optional<double>>& block_pressure) const;
-    double wbp(WBPMode mode) const;
+    double cf_avg(const std::vector<std::optional<double>>& block_pressure) const;
+    std::pair<double,double> porv_pressure(std::size_t global_index) const;
+    std::vector<std::optional<double>> block_pressures(PAvgCalculator::WBPMode mode) const;
 
     std::string well_name;
     PAvg m_pavg;

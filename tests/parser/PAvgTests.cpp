@@ -256,8 +256,8 @@ END
         BOOST_CHECK_EQUAL( calc5.wbp(), 1.0 );
         BOOST_CHECK_EQUAL( calc5.wbp4(), 2.0 );
         double inner_weight = 0.50;
-        BOOST_CHECK_EQUAL( calc5.wbp5(), inner_weight * 1 + (1 - inner_weight) * 2 );
-        BOOST_CHECK_EQUAL( calc5.wbp9(), inner_weight * 1 + (1 - inner_weight) * (2 * 2 + 4) / 3);
+        BOOST_CHECK_EQUAL( calc5.wbp5(), inner_weight * 1 + (1 - inner_weight) * (2 + 2) / 2 );
+        BOOST_CHECK_EQUAL( calc5.wbp9(), inner_weight * 1 + (1 - inner_weight) * (2 + 2 + 4) / 3);
     }
 
 

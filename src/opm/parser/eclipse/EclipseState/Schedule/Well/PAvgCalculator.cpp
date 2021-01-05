@@ -163,7 +163,7 @@ double PAvgCalculator::get_pressure(std::size_t global_index) const {
 
 
 
-double PAvgCalculator::connection_pressure(const std::vector<std::optional<double>>& block_pressure) const {
+double PAvgCalculator::cf_avg(const std::vector<std::optional<double>>& block_pressure) const {
     double pressure_sum = 0;
     double cf_sum = 0;
 
@@ -196,53 +196,118 @@ double PAvgCalculator::wbp9() const {
     return this->wbp(PAvgCalculator::WBPMode::WBP9);
 }
 
-double PAvgCalculator::wbp(PAvgCalculator::WBPMode mode) const {
-    if (this->m_pavg.use_porv())
-        throw std::logic_error("The current implementation does not yet support PORV based averaging in WBPx");
 
-    double conn_pressure = 0;
-    if (this->m_pavg.conn_weight() > 0) {
-        std::vector<std::optional<double>> block_pressure;
-        for (const auto& conn : this->m_connections) {
-            if (this->m_pavg.inner_weight() >= 0) {
-                double neighbour_pressure = 0;
-                std::size_t neighbour_count = 0;
-                if (mode != PAvgCalculator::WBPMode::WBP) {
-                    for (const auto& neighbour : conn.rect_neighbours) {
+std::pair<double,double> PAvgCalculator::porv_pressure(std::size_t global_index) const {
+    auto storage_index = this->m_index_map.at(global_index);
+    const auto& conn = this->m_connections[storage_index];
+    return std::make_pair(conn.porv, this->get_pressure(global_index));
+}
+
+
+static double weighted_avg(const std::vector<std::pair<double, double>>& wp) {
+    if (wp.empty())
+        return 0;
+
+    double pressure_sum = 0;
+    double weight_sum = 0;
+
+    for (const auto& [weight, pressure] : wp) {
+        weight_sum += weight;
+        pressure_sum += weight * pressure;
+    }
+
+    return pressure_sum / weight_sum;
+}
+
+
+
+std::vector<std::optional<double>> PAvgCalculator::block_pressures(PAvgCalculator::WBPMode mode) const{
+    std::vector<std::optional<double>> block_pressure;
+    for (const auto& conn : this->m_connections) {
+        const double F1 = this->m_pavg.inner_weight();
+        if (F1 >= 0) {
+            std::optional<double> central_pressure;
+            double neighbour_pressure = 0;
+            std::size_t neighbour_count = 0;
+
+            if (mode != PAvgCalculator::WBPMode::WBP4)
+                central_pressure = this->get_pressure(conn.global_index);
+
+            if (mode != PAvgCalculator::WBPMode::WBP) {
+                for (const auto& neighbour : conn.rect_neighbours) {
+                    neighbour_pressure += this->get_pressure(neighbour.global_index);
+                    neighbour_count += 1;
+                }
+
+                if (mode == PAvgCalculator::WBPMode::WBP9) {
+                    for (const auto& neighbour : conn.diag_neighbours) {
                         neighbour_pressure += this->get_pressure(neighbour.global_index);
                         neighbour_count += 1;
                     }
-
-                    if (mode == PAvgCalculator::WBPMode::WBP9) {
-                        for (const auto& neighbour : conn.diag_neighbours) {
-                            neighbour_pressure += this->get_pressure(neighbour.global_index);
-                            neighbour_count += 1;
-                        }
-                    }
                 }
-                if (mode == PAvgCalculator::WBPMode::WBP)
-                    block_pressure.push_back(this->get_pressure(conn.global_index));
+            }
+            if (neighbour_count == 0) {
+                if (central_pressure)
+                    block_pressure.push_back( central_pressure.value() );
+            } else {
+                if (central_pressure)
+                    block_pressure.push_back( F1 * central_pressure.value() + (1 - F1) * neighbour_pressure / neighbour_count );
+                else
+                    block_pressure.push_back( neighbour_pressure / neighbour_count );
+            }
+        } else {
+            std::vector<std::pair<double, double>> wp;
+            if (mode != PAvgCalculator::WBPMode::WBP4)
+                wp.emplace_back(this->porv_pressure(conn.global_index));
 
-                else if (mode == PAvgCalculator::WBPMode::WBP4) {
-                    if (neighbour_count == 0)
-                        block_pressure.push_back({});
-                    else
-                        block_pressure.push_back(neighbour_pressure / neighbour_count);
+            if (mode != PAvgCalculator::WBPMode::WBP) {
+                for (const auto& neighbour : conn.rect_neighbours)
+                    wp.push_back( this->porv_pressure(neighbour.global_index));
+
+                if (mode == PAvgCalculator::WBPMode::WBP9) {
+                    for (const auto& neighbour : conn.diag_neighbours)
+                        wp.push_back( this->porv_pressure(neighbour.global_index));
                 }
+            }
+            if (!wp.empty())
+                block_pressure.push_back( weighted_avg(wp) );
+        }
+    }
+    return block_pressure;
+}
 
-                else {
-                    if (neighbour_count == 0)
-                        block_pressure.push_back(this->get_pressure(conn.global_index));
-                    else {
-                        const auto F1 = this->m_pavg.inner_weight();
-                        block_pressure.push_back(F1 * this->get_pressure(conn.global_index) + (1 - F1) * neighbour_pressure / neighbour_count);
-                    }
+
+
+double PAvgCalculator::wbp(PAvgCalculator::WBPMode mode) const {
+    const double F2 = this->m_pavg.conn_weight();
+    double conn_pressure = 0;
+    if (F2 > 0) {
+        auto block_pressure = this->block_pressures(mode);
+        conn_pressure = this->cf_avg(block_pressure);
+    }
+
+    double porv_pressure = 0;
+    if (F2 < 1) {
+        std::vector<std::pair<double, double>> wp;
+        for (const auto& conn : this->m_connections) {
+
+            if (mode != PAvgCalculator::WBPMode::WBP4)
+                wp.emplace_back(this->porv_pressure(conn.global_index));
+
+            if (mode != PAvgCalculator::WBPMode::WBP) {
+                for (const auto& neighbour : conn.rect_neighbours)
+                    wp.push_back( this->porv_pressure(neighbour.global_index));
+
+                if (mode == PAvgCalculator::WBPMode::WBP9) {
+                    for (const auto& neighbour : conn.diag_neighbours)
+                        wp.push_back( this->porv_pressure(neighbour.global_index));
                 }
             }
         }
-        conn_pressure = this->connection_pressure(block_pressure);
+        porv_pressure = weighted_avg(wp);
     }
-    return conn_pressure;
+
+    return F2 * conn_pressure + (1 - F2) * porv_pressure;
 }
 
 void PAvgCalculator::update(const std::vector<double>& p, const std::vector<char>& m) {

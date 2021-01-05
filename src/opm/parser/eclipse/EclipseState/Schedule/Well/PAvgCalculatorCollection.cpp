@@ -33,7 +33,11 @@ bool PAvgCalculatorCollection::has(const std::string& wname) const {
 }
 
 const PAvgCalculator& PAvgCalculatorCollection::get(const std::string& wname) const {
-    return this->calculators.at(wname);
+    auto iter = this->calculators.find(wname);
+    if (iter == this->calculators.end())
+        throw std::logic_error(fmt::format("No PAvgCalculator registered for well: {}", wname));
+
+    return iter->second;
 }
 
 void PAvgCalculatorCollection::add(const PAvgCalculator& calculator) {
