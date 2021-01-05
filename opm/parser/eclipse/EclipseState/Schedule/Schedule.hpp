@@ -429,6 +429,7 @@ namespace Opm
                            const std::string& input_path,
                            std::size_t currentStep,
                            const ScheduleBlock& block,
+                           ScheduleState& sched_step,
                            const DeckKeyword& keyword,
                            const ParseContext& parseContext, ErrorGuard& errors,
                            const EclipseGrid& grid,
@@ -475,17 +476,20 @@ namespace Opm
             const ScheduleBlock& block;
             const DeckKeyword& keyword;
             const std::size_t currentStep;
+            ScheduleState& sched_step;
             const EclipseGrid& grid;
             const FieldPropsManager& fieldPropsManager;
 
             HandlerContext(const ScheduleBlock& block_,
                            const DeckKeyword& keyword_,
                            const std::size_t currentStep_,
+                           ScheduleState& sched_step_,
                            const EclipseGrid& grid_,
                            const FieldPropsManager& fieldPropsManager_) :
                 block(block_),
                 keyword(keyword_),
                 currentStep(currentStep_),
+                sched_step(sched_step_),
                 grid(grid_),
                 fieldPropsManager(fieldPropsManager_)
             {}

@@ -308,6 +308,7 @@ namespace {
                                  const std::string& input_path,
                                  std::size_t currentStep,
                                  const ScheduleBlock& block,
+                                 ScheduleState& sched_step,
                                  const DeckKeyword& keyword,
                                  const ParseContext& parseContext,
                                  ErrorGuard& errors,
@@ -315,7 +316,7 @@ namespace {
                                  const FieldPropsManager& fp,
                                  std::vector<std::pair<const DeckKeyword*, std::size_t > >& rftProperties) {
 
-        HandlerContext handlerContext { block, keyword, currentStep, grid, fp };
+        HandlerContext handlerContext { block, keyword, currentStep, sched_step, grid, fp };
 
         if (handleNormalKeyword(handlerContext, parseContext, errors))
             return;
@@ -493,6 +494,7 @@ private:
                                     input_path,
                                     currentStep,
                                     block,
+                                    this->snapshots.back(),
                                     keyword,
                                     parseContext,
                                     errors,
