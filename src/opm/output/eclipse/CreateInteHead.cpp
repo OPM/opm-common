@@ -501,7 +501,7 @@ createInteHead(const EclipseState& es,
              // n{isa}caqz: number of data elements per aquifer connection in {ISA}CAQ
         .params_NAAQZ       (1, 18, 24, 10, 7, 2, 4)
         .stepParam          (num_solver_steps, report_step)
-        .tuningParam        (getTuningPars(sched.getTuning(lookup_step)))
+        .tuningParam        (getTuningPars(sched[lookup_step].tuning()))
         .liftOptParam       (getLiftOptPar(sched, lookup_step))
         .wellSegDimensions  (getWellSegDims(rspec, sched, report_step, lookup_step))
         .regionDimensions   (getRegDims(tdim, rdim))

@@ -114,7 +114,6 @@ namespace {
         m_oilvaporizationproperties( this->m_timeMap, OilVaporizationProperties(runspec.tabdims().getNumPVTTables()) ),
         m_events( this->m_timeMap ),
         m_modifierDeck( this->m_timeMap, Deck{} ),
-        m_tuning( this->m_timeMap, Tuning() ),
         m_messageLimits( this->m_timeMap ),
         m_runspec( runspec ),
         wtest_config(this->m_timeMap, std::make_shared<WellTestConfig>() ),
@@ -269,7 +268,6 @@ namespace {
         result.m_oilvaporizationproperties = {{Opm::OilVaporizationProperties::serializeObject()},1};
         result.m_events = Events::serializeObject();
         result.m_modifierDeck = DynamicVector<Deck>({Deck::serializeObject()});
-        result.m_tuning = {{Tuning::serializeObject()}, 1};
         result.m_messageLimits = MessageLimits::serializeObject();
         result.m_runspec = Runspec::serializeObject();
         result.vfpprod_tables = {{1, {{std::make_shared<VFPProdTable>(VFPProdTable::serializeObject())}, 1}}};
@@ -454,7 +452,8 @@ private:
                                    time_unit,
                                    block.location().lineno));
             }
-            this->create_next(block);
+            if (time_type != ScheduleTimeType::RESTART)
+                this->create_next(block);
 
             while (true) {
                 if (keyword_index == block.size())
@@ -1324,10 +1323,6 @@ private:
     }
 
 
-    const Tuning& Schedule::getTuning(std::size_t timeStep) const {
-        return this->m_tuning.get( timeStep );
-    }
-
     const Deck& Schedule::getModifierDeck(std::size_t timeStep) const {
         return m_modifierDeck.iget( timeStep );
     }
@@ -1659,7 +1654,6 @@ private:
                this->m_oilvaporizationproperties == data.m_oilvaporizationproperties &&
                this->m_events == data.m_events &&
                this->m_modifierDeck == data.m_modifierDeck &&
-               this->m_tuning == data.m_tuning &&
                this->m_messageLimits == data.m_messageLimits &&
                this->m_runspec == data.m_runspec &&
                compareMap(this->vfpprod_tables, data.vfpprod_tables) &&
@@ -1715,6 +1709,20 @@ namespace {
     {
         double udq_undefined = 0;
         const auto report_step = rst_state.header.report_step - 1;
+        auto start_time = std::chrono::system_clock::from_time_t( this->getStartTime() );
+        {
+            auto first_state = ScheduleState( start_time, start_time );
+            this->snapshots.push_back(first_state);
+        }
+        for (int step = 1; step < report_step; step++) {
+            auto state = ScheduleState( this->snapshots.back(), start_time, start_time );
+            this->snapshots.push_back(std::move(state));
+        }
+        {
+            auto restart_time = std::chrono::system_clock::from_time_t( rst_state.header.restart_info().first );
+            auto last_state = ScheduleState( start_time, restart_time );
+            this->snapshots.push_back(std::move(last_state));
+        }
 
         for (const auto& rst_group : rst_state.groups) {
             auto group = Group{ rst_group, this->groups.size(), static_cast<std::size_t>(report_step), udq_undefined, this->unit_system };
@@ -1772,7 +1780,7 @@ namespace {
             this->addWell(well, report_step);
             this->addWellToGroup(well.groupName(), well.name(), report_step);
         }
-        m_tuning.update(report_step + 1, rst_state.tuning);
+        this->snapshots[report_step + 1].tuning(rst_state.tuning);
         m_events.addEvent( ScheduleEvents::TUNING_CHANGE , report_step + 1);
 
 

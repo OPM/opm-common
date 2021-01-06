@@ -139,7 +139,7 @@ createDoubHead(const EclipseState& es,
     const auto  tconv = getTimeConv(usys);
 
     auto dh = DoubHEAD{}
-        .tuningParameters(sched.getTuning(lookup_step), tconv)
+        .tuningParameters(sched[lookup_step].tuning(), tconv)
         .timeStamp       (computeTimeStamp(sched, simTime))
         .drsdt           (sched, lookup_step, tconv)
         .udq_param(rspec.udqParams())

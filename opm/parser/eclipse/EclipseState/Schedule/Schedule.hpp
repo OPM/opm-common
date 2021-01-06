@@ -36,7 +36,6 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GConSale.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GConSump.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
 #include <opm/parser/eclipse/EclipseState/Util/OrderedMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MessageLimits.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
@@ -259,7 +258,6 @@ namespace Opm
         bool hasGroup(const std::string& groupName, std::size_t timeStep) const;
         const Group& getGroup(const std::string& groupName, std::size_t timeStep) const;
 
-        const Tuning& getTuning(std::size_t timeStep) const;
         const MessageLimits& getMessageLimits() const;
         void invalidNamePattern (const std::string& namePattern, std::size_t report_step, const ParseContext& parseContext, ErrorGuard& errors, const DeckKeyword& keyword) const;
         const GuideRateConfig& guideRateConfig(std::size_t timeStep) const;
@@ -323,7 +321,6 @@ namespace Opm
             m_oilvaporizationproperties.serializeOp(serializer);
             m_events.serializeOp(serializer);
             m_modifierDeck.serializeOp(serializer);
-            m_tuning.serializeOp(serializer);
             m_messageLimits.serializeOp(serializer);
             m_runspec.serializeOp(serializer);
             auto splitvfpprod = splitDynMap<Map2>(vfpprod_tables);
@@ -367,7 +364,6 @@ namespace Opm
         DynamicState< OilVaporizationProperties > m_oilvaporizationproperties;
         Events m_events;
         DynamicVector< Deck > m_modifierDeck;
-        DynamicState<Tuning> m_tuning;
         MessageLimits m_messageLimits;
         Runspec m_runspec;
         VFPProdMap vfpprod_tables;

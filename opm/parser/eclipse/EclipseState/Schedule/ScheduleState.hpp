@@ -25,6 +25,7 @@
 #include <optional>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/PAvg.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
 
 namespace Opm {
 
@@ -55,12 +56,16 @@ namespace Opm {
         void pavg(PAvg pavg);
         const PAvg& pavg() const;
 
+        void tuning(Tuning tuning);
+        const Tuning& tuning() const;
+
 
         template<class Serializer>
         void serializeOp(Serializer& serializer) {
             serializer(m_start_time);
             serializer(m_end_time);
             serializer(m_pavg);
+            m_tuning.serializeOp(serializer);
         }
 
     private:
@@ -68,6 +73,7 @@ namespace Opm {
         std::optional<std::chrono::system_clock::time_point> m_end_time;
 
         std::shared_ptr<PAvg> m_pavg;
+        Tuning m_tuning;
     };
 }
 
