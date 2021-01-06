@@ -4489,6 +4489,42 @@ std::string dates_msg(const std::chrono::system_clock::time_point& t, std::array
 }
 
 
+BOOST_AUTO_TEST_CASE(ScheduleStateDatesTest) {
+    const auto& sched = make_schedule(createDeckWTEST());
+    BOOST_CHECK_EQUAL(sched.size(), 6);
+    BOOST_CHECK( compare_dates(sched[0].start_time(), 2007, 5, 10 ));
+    BOOST_CHECK( compare_dates(sched[0].end_time(), 2007, 6, 10 ));
+
+    BOOST_CHECK( compare_dates(sched[1].start_time(), 2007, 6, 10));
+    BOOST_CHECK( compare_dates(sched[1].end_time(), 2007, 7, 10 ));
+
+    BOOST_CHECK( compare_dates(sched[2].start_time(), 2007, 7, 10));
+    BOOST_CHECK( compare_dates(sched[2].end_time(), 2007, 8, 10 ));
+
+    BOOST_CHECK( compare_dates(sched[3].start_time(), 2007, 8, 10));
+    BOOST_CHECK( compare_dates(sched[3].end_time(), 2007, 9, 10 ));
+
+    BOOST_CHECK( compare_dates(sched[4].start_time(), 2007, 9, 10));
+    BOOST_CHECK( compare_dates(sched[4].end_time(), 2007, 11, 10 ));
+
+    BOOST_CHECK( compare_dates(sched[5].start_time(), 2007, 11, 10));
+    BOOST_CHECK_THROW( sched[5].end_time(), std::exception );
+}
+
+
+BOOST_AUTO_TEST_CASE(ScheduleStateTest) {
+    auto t1 = std::chrono::system_clock::now();
+    auto t2 = t1 + std::chrono::hours(48);
+
+    ScheduleState ts1(t1);
+    BOOST_CHECK( t1 == ts1.start_time() );
+    BOOST_CHECK_THROW( ts1.end_time(), std::exception );
+
+    ScheduleState ts2(t1, t2);
+    BOOST_CHECK( t1 == ts2.start_time() );
+    BOOST_CHECK( t2 == ts2.end_time() );
+}
+
 BOOST_AUTO_TEST_CASE(ScheduleDeckTest) {
     {
         ScheduleDeck sched_deck;

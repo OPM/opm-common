@@ -1821,11 +1821,12 @@ namespace {
     }
 
     void Schedule::handleWPAVE(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
-        auto wpave = std::make_shared<PAvg>( handlerContext.keyword.getRecord(0) );
+        auto wpave = PAvg( handlerContext.keyword.getRecord(0) );
         for (const auto& wname : this->wellNames(handlerContext.currentStep))
-            this->updateWPAVE(wname, handlerContext.currentStep, *wpave );
+            this->updateWPAVE(wname, handlerContext.currentStep, wpave );
 
-        this->m_pavg.update( handlerContext.currentStep, std::move(wpave) );
+        auto& sched_state = this->snapshots.back();
+        sched_state.pavg(std::move(wpave));
     }
 
     void Schedule::handleWWPAVE(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
