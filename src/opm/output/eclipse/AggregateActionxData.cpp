@@ -42,7 +42,6 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstring>
-#include <optional>
 #include <iostream>
 #include <string>
 
@@ -506,21 +505,6 @@ const std::map<cmp_enum, int> cmpToIndex = {
                     } else if (!insideParen && cond_it->logic == Opm::Action::Condition::Logical::OR) {
                         allPrevLogicOp_AND = false;
                     }
-
-#if 0
-                    const std::string prev_rhs_quant = (cond_it-1)->rhs.quantity.substr(0,1);
-                    const auto it_prev_rhs = rhsQuantityToIndex.find(prev_rhs_quant);
-                    if (it_prev_rhs != rhsQuantityToIndex.end()) {
-                        const auto it_logic_17 = logicalToIndex_17.find((cond_it-1)->logic);
-                        if (it_logic_17 != logicalToIndex_17.end()) {
-                            iAcn[ind + 17] = it_logic_17->second;
-                        }
-                        else {
-                            std::cout << "Unknown Boolean operator type for condition: " << z_data.lhs.quantity << std::endl;
-                            throw std::invalid_argument("Actionx: " + actx.name());
-                        }
-                    }
-#endif
                 }
                 //increment index according to no of items pr condition
                 ind += static_cast<std::size_t>(noEPZacn);
