@@ -128,7 +128,6 @@ namespace {
         m_network(this->m_timeMap, std::make_shared<Network::ExtNetwork>()),
         m_glo(this->m_timeMap, std::make_shared<GasLiftOpt>()),
         rft_config(this->m_timeMap),
-        m_nupcol(this->m_timeMap, runspec.nupcol()),
         restart_config(m_timeMap, deck, parseContext, errors),
         unit_system(deck.getActiveUnitSystem()),
         rpt_config(this->m_timeMap, std::make_shared<RPTConfig>())
@@ -284,7 +283,6 @@ namespace {
         result.global_whistctl_mode = {{Well::ProducerCMode::CRAT}, 1};
         result.m_actions = {{std::make_shared<Action::Actions>(Action::Actions::serializeObject())}, 1};
         result.rft_config = RFTConfig::serializeObject();
-        result.m_nupcol = {{1}, 1};
         result.restart_config = RestartConfig::serializeObject();
         result.wellgroup_events = {{"test", Events::serializeObject()}};
         result.unit_system = UnitSystem::newFIELD();
@@ -1612,10 +1610,6 @@ private:
         return this->restart_config;
     }
 
-    int Schedule::getNupcol(std::size_t reportStep) const {
-        return this->m_nupcol.get(reportStep);
-    }
-
     bool Schedule::operator==(const Schedule& data) const {
         auto&& comparePtr = [](const auto& t1, const auto& t2) {
                                if ((t1 && !t2) || (!t1 && t2))
@@ -1671,7 +1665,6 @@ private:
                compareDynState(this->m_actions, data.m_actions) &&
                compareDynState(this->rpt_config, data.rpt_config) &&
                rft_config  == data.rft_config &&
-               this->m_nupcol == data.m_nupcol &&
                this->restart_config == data.restart_config &&
                this->unit_system == data.unit_system &&
                this->wellgroup_events == data.wellgroup_events;

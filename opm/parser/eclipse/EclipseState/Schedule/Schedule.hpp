@@ -283,7 +283,6 @@ namespace Opm
 
         void applyAction(std::size_t reportStep, const Action::ActionX& action, const Action::Result& result);
         void applyWellProdIndexScaling(const std::string& well_name, const std::size_t reportStep, const double scalingFactor);
-        int getNupcol(std::size_t reportStep) const;
 
 
         const Network::ExtNetwork& network(std::size_t report_step) const;
@@ -342,7 +341,6 @@ namespace Opm
             m_network.serializeOp(serializer);
             m_glo.serializeOp(serializer);
             rft_config.serializeOp(serializer);
-            m_nupcol.template serializeOp<Serializer, false>(serializer);
             restart_config.serializeOp(serializer);
             serializer.map(wellgroup_events);
             if (!serializer.isSerializing()) {
@@ -381,7 +379,6 @@ namespace Opm
         DynamicState<std::shared_ptr<Network::ExtNetwork>> m_network;
         DynamicState<std::shared_ptr<GasLiftOpt>> m_glo;
         RFTConfig rft_config;
-        DynamicState<int> m_nupcol;
         RestartConfig restart_config;
         UnitSystem unit_system;
         std::optional<int> exit_status;

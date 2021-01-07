@@ -3447,9 +3447,9 @@ DATES             -- 1
     const auto& schedule = make_schedule(input);
     {
         // Flow uses 12 as default
-        BOOST_CHECK_EQUAL(schedule.getNupcol(0),20);
-        BOOST_CHECK_EQUAL(schedule.getNupcol(1),12);
-        BOOST_CHECK_EQUAL(schedule.getNupcol(2),10);
+        BOOST_CHECK_EQUAL(schedule[0].nupcol(),20);
+        BOOST_CHECK_EQUAL(schedule[1].nupcol(),12);
+        BOOST_CHECK_EQUAL(schedule[2].nupcol(),10);
     }
 }
 

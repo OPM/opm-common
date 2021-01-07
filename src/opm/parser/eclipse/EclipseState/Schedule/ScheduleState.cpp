@@ -65,17 +65,26 @@ const PAvg& ScheduleState::pavg() const {
     return *this->m_pavg;
 }
 
+void ScheduleState::nupcol(int nupcol) {
+    this->m_nupcol = nupcol;
+}
+
+int ScheduleState::nupcol() const {
+    return this->m_nupcol;
+}
 
 bool ScheduleState::operator==(const ScheduleState& other) const {
     return this->m_start_time == other.m_start_time &&
            this->m_tuning == other.m_tuning &&
-           this->m_end_time   == other.m_end_time;
+           this->m_end_time   == other.m_end_time &&
+           this->m_nupcol == other.m_nupcol;
 }
 
 ScheduleState ScheduleState::serializeObject() {
     auto t1 = std::chrono::system_clock::now();
     auto t2 = t1 + std::chrono::hours(48);
     ScheduleState ts(t1, t2);
+    ts.nupcol(77);
     return ts;
 }
 
