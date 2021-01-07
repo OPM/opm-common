@@ -1710,10 +1710,7 @@ namespace {
         double udq_undefined = 0;
         const auto report_step = rst_state.header.report_step - 1;
         auto start_time = std::chrono::system_clock::from_time_t( this->getStartTime() );
-        {
-            auto first_state = ScheduleState( start_time, start_time );
-            this->snapshots.push_back(first_state);
-        }
+        this->create_first(start_time, start_time);
         for (int step = 1; step < report_step; step++) {
             auto state = ScheduleState( this->snapshots.back(), start_time, start_time );
             this->snapshots.push_back(std::move(state));
@@ -2080,23 +2077,30 @@ std::vector<ScheduleState>::const_iterator Schedule::end() const {
     return this->snapshots.end();
 }
 
-ScheduleState& Schedule::create_next(const ScheduleBlock& block) {
+void Schedule::create_first(const std::chrono::system_clock::time_point& start_time, const std::optional<std::chrono::system_clock::time_point>& end_time) {
+    if (end_time.has_value())
+        this->snapshots.emplace_back( start_time, end_time.value() );
+    else
+        this->snapshots.emplace_back(start_time);
+
+    auto& sched_state = snapshots.back();
+    sched_state.nupcol( this->m_runspec.nupcol() );
+}
+
+
+void Schedule::create_next(const ScheduleBlock& block) {
     const auto& start_time = block.start_time();
     const auto& end_time = block.end_time();
 
-    if (this->snapshots.empty()) {
-        if (end_time.has_value())
-            this->snapshots.emplace_back( start_time, end_time.value() );
-        else
-            this->snapshots.emplace_back(start_time);
-    } else {
+    if (this->snapshots.empty())
+        this->create_first(start_time, end_time);
+    else {
         const auto& last = this->snapshots.back();
         if (end_time.has_value())
             this->snapshots.emplace_back( last, start_time, end_time.value() );
         else
             this->snapshots.emplace_back( last, start_time );
     }
-    return this->snapshots.back();
 }
 
 }

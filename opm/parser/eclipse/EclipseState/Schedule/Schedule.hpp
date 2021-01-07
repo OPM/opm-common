@@ -296,7 +296,8 @@ namespace Opm
         const ScheduleState& operator[](std::size_t index) const;
         std::vector<ScheduleState>::const_iterator begin() const;
         std::vector<ScheduleState>::const_iterator end() const;
-        ScheduleState& create_next(const ScheduleBlock& block);
+        void create_next(const ScheduleBlock& block);
+        void create_first(const std::chrono::system_clock::time_point& start_time, const std::optional<std::chrono::system_clock::time_point>& end_time);
 
 
         /*
