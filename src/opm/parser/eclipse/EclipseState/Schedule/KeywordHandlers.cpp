@@ -745,7 +745,7 @@ namespace {
 
     void Schedule::handleTUNING(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         const auto numrecords = handlerContext.keyword.size();
-        Tuning tuning(m_tuning.get(handlerContext.currentStep));
+        auto tuning = this->snapshots.back().tuning();
 
         if (numrecords > 0) {
             const auto& record1 = handlerContext.keyword.getRecord(0);
@@ -813,7 +813,7 @@ namespace {
             tuning.MXWSIT = ParserKeywords::TUNING::MXWSIT::defaultValue;
         }
 
-        m_tuning.update(handlerContext.currentStep, tuning);
+        this->snapshots.back().tuning( std::move( tuning ));
         m_events.addEvent(ScheduleEvents::TUNING_CHANGE, handlerContext.currentStep);
     }
 
@@ -1620,8 +1620,7 @@ namespace {
     }
 
     void Schedule::handleWSEGITER(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
-        Tuning tuning(m_tuning.get(handlerContext.currentStep));
-
+        auto tuning = this->snapshots.back().tuning();
         const auto& record = handlerContext.keyword.getRecord(0);
 
         tuning.MXWSIT = record.getItem<ParserKeywords::WSEGITER::MAX_WELL_ITERATIONS>().get<int>(0);
@@ -1629,7 +1628,7 @@ namespace {
         tuning.WSEG_REDUCTION_FACTOR = record.getItem<ParserKeywords::WSEGITER::REDUCTION_FACTOR>().get<double>(0);
         tuning.WSEG_INCREASE_FACTOR = record.getItem<ParserKeywords::WSEGITER::INCREASING_FACTOR>().get<double>(0);
 
-        m_tuning.update(handlerContext.currentStep, tuning);
+        this->snapshots.back().tuning(tuning);
         m_events.addEvent(ScheduleEvents::TUNING_CHANGE, handlerContext.currentStep);
     }
 

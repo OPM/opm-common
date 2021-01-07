@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(TuningTest) {
       size_t timestep = 4;
       BOOST_CHECK(!event.hasEvent(ScheduleEvents::TUNING_CHANGE, timestep));
 
-      const auto& tuning = schedule.getTuning(4);
+      const auto& tuning = schedule[4].tuning();
       double TSINIT_default = tuning.TSINIT;
       BOOST_CHECK_CLOSE(TSINIT_default, 1 * Metric::Time, diff);
 
@@ -207,10 +207,10 @@ BOOST_AUTO_TEST_CASE(TuningTest) {
   /*** TIMESTEP 5***/
   /********* Record 1 ***********/
   {
-      std::size_t timestep = 5;
-      const auto& tuning = schedule.getTuning(timestep);
+      std::size_t timeStep = 5;
+      const auto& tuning = schedule[timeStep].tuning();
 
-      BOOST_CHECK(event.hasEvent(ScheduleEvents::TUNING_CHANGE, timestep));
+      BOOST_CHECK(event.hasEvent(ScheduleEvents::TUNING_CHANGE, timeStep));
       double TSINIT = tuning.TSINIT;
       BOOST_CHECK_CLOSE(TSINIT, 2 * Metric::Time, diff);
 
@@ -323,7 +323,7 @@ BOOST_AUTO_TEST_CASE(TuningTest) {
   {
       /********* Record 1 ***********/
       std::size_t timestep = 10;
-      const auto& tuning = schedule.getTuning(timestep);
+      const auto& tuning = schedule[10].tuning();
       BOOST_CHECK(event.hasEvent(ScheduleEvents::TUNING_CHANGE, timestep));
       BOOST_CHECK_EQUAL(true, tuning.TMAXWC_has_value);
       BOOST_CHECK_CLOSE(tuning.TMAXWC, 10.0 * Metric::Time, diff);

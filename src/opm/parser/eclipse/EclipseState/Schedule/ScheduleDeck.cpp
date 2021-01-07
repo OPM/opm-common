@@ -136,14 +136,19 @@ ScheduleDeck::ScheduleDeck(const Deck& deck, const std::pair<std::time_t, std::s
         // 1983...
         start_time = std::chrono::system_clock::from_time_t( TimeMap::mkdate(1983, 1, 1) );
     }
-    this->m_blocks.emplace_back(KeywordLocation{}, ScheduleTimeType::START, start_time);
+
     const auto& [restart_time, restart_offset] = restart;
     this->m_restart_time = std::chrono::system_clock::from_time_t(restart_time);
     this->m_restart_offset = restart_offset;
-    for (std::size_t it = 1; it < this->m_restart_offset; it++) {
-        this->m_blocks.back().end_time(start_time);
-        this->m_blocks.emplace_back(KeywordLocation{}, ScheduleTimeType::RESTART, start_time);
-    }
+    if (restart_offset > 0) {
+        for (std::size_t it = 0; it < this->m_restart_offset; it++) {
+            this->m_blocks.emplace_back(KeywordLocation{}, ScheduleTimeType::RESTART, start_time);
+            if (it < this->m_restart_offset - 1)
+                this->m_blocks.back().end_time(start_time);
+        }
+    } else
+        this->m_blocks.emplace_back(KeywordLocation{}, ScheduleTimeType::START, start_time);
+
 
     ScheduleDeckContext context(this->m_restart_offset > 0, start_time);
     for( const auto& keyword : SCHEDULESection(deck)) {

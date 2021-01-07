@@ -68,6 +68,7 @@ const PAvg& ScheduleState::pavg() const {
 
 bool ScheduleState::operator==(const ScheduleState& other) const {
     return this->m_start_time == other.m_start_time &&
+           this->m_tuning == other.m_tuning &&
            this->m_end_time   == other.m_end_time;
 }
 
@@ -77,4 +78,13 @@ ScheduleState ScheduleState::serializeObject() {
     ScheduleState ts(t1, t2);
     return ts;
 }
+
+void ScheduleState::tuning(Tuning tuning) {
+    this->m_tuning = std::move(tuning);
+}
+
+const Tuning& ScheduleState::tuning() const {
+    return this->m_tuning;
+}
+
 }
