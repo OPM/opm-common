@@ -736,7 +736,7 @@ namespace {
             OpmLog::note(msg);
         }
 
-        this->m_nupcol.update(handlerContext.currentStep, nupcol);
+        this->snapshots.back().nupcol(nupcol);
     }
 
     void Schedule::handleRPTSCHED(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {

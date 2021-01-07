@@ -59,6 +59,9 @@ namespace Opm {
         void tuning(Tuning tuning);
         const Tuning& tuning() const;
 
+        void nupcol(int nupcol);
+        int nupcol() const;
+
 
         template<class Serializer>
         void serializeOp(Serializer& serializer) {
@@ -66,6 +69,7 @@ namespace Opm {
             serializer(m_end_time);
             serializer(m_pavg);
             m_tuning.serializeOp(serializer);
+            serializer(m_nupcol);
         }
 
     private:
@@ -74,6 +78,7 @@ namespace Opm {
 
         std::shared_ptr<PAvg> m_pavg;
         Tuning m_tuning;
+        int m_nupcol;
     };
 }
 

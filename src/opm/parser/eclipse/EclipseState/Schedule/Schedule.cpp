@@ -128,7 +128,6 @@ namespace {
         m_network(this->m_timeMap, std::make_shared<Network::ExtNetwork>()),
         m_glo(this->m_timeMap, std::make_shared<GasLiftOpt>()),
         rft_config(this->m_timeMap),
-        m_nupcol(this->m_timeMap, runspec.nupcol()),
         restart_config(m_timeMap, deck, parseContext, errors),
         unit_system(deck.getActiveUnitSystem()),
         rpt_config(this->m_timeMap, std::make_shared<RPTConfig>())
@@ -284,7 +283,6 @@ namespace {
         result.global_whistctl_mode = {{Well::ProducerCMode::CRAT}, 1};
         result.m_actions = {{std::make_shared<Action::Actions>(Action::Actions::serializeObject())}, 1};
         result.rft_config = RFTConfig::serializeObject();
-        result.m_nupcol = {{1}, 1};
         result.restart_config = RestartConfig::serializeObject();
         result.wellgroup_events = {{"test", Events::serializeObject()}};
         result.unit_system = UnitSystem::newFIELD();
@@ -1612,10 +1610,6 @@ private:
         return this->restart_config;
     }
 
-    int Schedule::getNupcol(std::size_t reportStep) const {
-        return this->m_nupcol.get(reportStep);
-    }
-
     bool Schedule::operator==(const Schedule& data) const {
         auto&& comparePtr = [](const auto& t1, const auto& t2) {
                                if ((t1 && !t2) || (!t1 && t2))
@@ -1671,7 +1665,6 @@ private:
                compareDynState(this->m_actions, data.m_actions) &&
                compareDynState(this->rpt_config, data.rpt_config) &&
                rft_config  == data.rft_config &&
-               this->m_nupcol == data.m_nupcol &&
                this->restart_config == data.restart_config &&
                this->unit_system == data.unit_system &&
                this->wellgroup_events == data.wellgroup_events;
@@ -1710,10 +1703,7 @@ namespace {
         double udq_undefined = 0;
         const auto report_step = rst_state.header.report_step - 1;
         auto start_time = std::chrono::system_clock::from_time_t( this->getStartTime() );
-        {
-            auto first_state = ScheduleState( start_time, start_time );
-            this->snapshots.push_back(first_state);
-        }
+        this->create_first(start_time, start_time);
         for (int step = 1; step < report_step; step++) {
             auto state = ScheduleState( this->snapshots.back(), start_time, start_time );
             this->snapshots.push_back(std::move(state));
@@ -2080,23 +2070,30 @@ std::vector<ScheduleState>::const_iterator Schedule::end() const {
     return this->snapshots.end();
 }
 
-ScheduleState& Schedule::create_next(const ScheduleBlock& block) {
+void Schedule::create_first(const std::chrono::system_clock::time_point& start_time, const std::optional<std::chrono::system_clock::time_point>& end_time) {
+    if (end_time.has_value())
+        this->snapshots.emplace_back( start_time, end_time.value() );
+    else
+        this->snapshots.emplace_back(start_time);
+
+    auto& sched_state = snapshots.back();
+    sched_state.nupcol( this->m_runspec.nupcol() );
+}
+
+
+void Schedule::create_next(const ScheduleBlock& block) {
     const auto& start_time = block.start_time();
     const auto& end_time = block.end_time();
 
-    if (this->snapshots.empty()) {
-        if (end_time.has_value())
-            this->snapshots.emplace_back( start_time, end_time.value() );
-        else
-            this->snapshots.emplace_back(start_time);
-    } else {
+    if (this->snapshots.empty())
+        this->create_first(start_time, end_time);
+    else {
         const auto& last = this->snapshots.back();
         if (end_time.has_value())
             this->snapshots.emplace_back( last, start_time, end_time.value() );
         else
             this->snapshots.emplace_back( last, start_time );
     }
-    return this->snapshots.back();
 }
 
 }
