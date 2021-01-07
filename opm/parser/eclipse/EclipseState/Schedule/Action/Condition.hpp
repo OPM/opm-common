@@ -89,6 +89,8 @@ enum class Comparator {
 
     std::string cmp_string;
 
+    bool open_paren() const;
+    bool close_paren() const;
     bool operator==(const Condition& data) const;
 
     template<class Serializer>

@@ -689,6 +689,8 @@ BOOST_AUTO_TEST_CASE(Conditions) {
     BOOST_CHECK_EQUAL(cond.lhs.quantity, "WWCT");
     BOOST_CHECK_EQUAL(cond.lhs.args.size(), 1U);
     BOOST_CHECK_EQUAL(cond.lhs.args[0], "OPX");
+    BOOST_CHECK( !cond.open_paren() );
+    BOOST_CHECK( !cond.close_paren() );
 
     BOOST_CHECK_EQUAL(cond.rhs.quantity, "0.75");
     BOOST_CHECK_EQUAL(cond.rhs.args.size(), 0U);
@@ -1190,6 +1192,8 @@ ENDACTIO
         BOOST_CHECK(cond0.lhs.args.empty());
         BOOST_CHECK(!cond0.left_paren);
         BOOST_CHECK(!cond0.right_paren);
+        BOOST_CHECK(!cond0.open_paren());
+        BOOST_CHECK(!cond0.close_paren());
     }
     {
         auto cond1 = conditions[1];
@@ -1197,6 +1201,8 @@ ENDACTIO
         BOOST_CHECK(cond1.lhs.args.empty());
         BOOST_CHECK(cond1.left_paren);
         BOOST_CHECK(cond1.right_paren);
+        BOOST_CHECK(!cond1.open_paren());
+        BOOST_CHECK(!cond1.close_paren());
     }
     {
         auto cond2 = conditions[2];
@@ -1204,6 +1210,8 @@ ENDACTIO
         BOOST_CHECK(cond2.lhs.args.empty());
         BOOST_CHECK(cond2.left_paren);
         BOOST_CHECK(!cond2.right_paren);
+        BOOST_CHECK(cond2.open_paren());
+        BOOST_CHECK(!cond2.close_paren());
     }
     {
         auto cond3 = conditions[3];
@@ -1211,6 +1219,8 @@ ENDACTIO
         BOOST_CHECK(cond3.lhs.args.empty());
         BOOST_CHECK(!cond3.left_paren);
         BOOST_CHECK(cond3.right_paren);
+        BOOST_CHECK(!cond3.open_paren());
+        BOOST_CHECK(cond3.close_paren());
 
         BOOST_CHECK(cond3.rhs.args.empty());
     }

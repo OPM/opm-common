@@ -144,6 +144,14 @@ bool Condition::operator==(const Condition& data) const {
            cmp_string == data.cmp_string;
 }
 
+bool Condition::open_paren() const {
+    return this->left_paren && !this->right_paren;
+}
+
+bool Condition::close_paren() const {
+    return !this->left_paren && this->right_paren;
+}
+
 
 }
 }
