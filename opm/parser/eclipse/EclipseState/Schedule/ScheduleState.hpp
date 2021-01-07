@@ -26,6 +26,7 @@
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/PAvg.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.hpp>
 
 namespace Opm {
 
@@ -62,6 +63,9 @@ namespace Opm {
         void nupcol(int nupcol);
         int nupcol() const;
 
+        void oilvap(OilVaporizationProperties oilvap);
+        const OilVaporizationProperties& oilvap() const;
+        OilVaporizationProperties& oilvap();
 
         template<class Serializer>
         void serializeOp(Serializer& serializer) {
@@ -70,6 +74,7 @@ namespace Opm {
             serializer(m_pavg);
             m_tuning.serializeOp(serializer);
             serializer(m_nupcol);
+            m_oilvap.serializeOp(serializer);
         }
 
     private:
@@ -79,6 +84,7 @@ namespace Opm {
         std::shared_ptr<PAvg> m_pavg;
         Tuning m_tuning;
         int m_nupcol;
+        OilVaporizationProperties m_oilvap;
     };
 }
 

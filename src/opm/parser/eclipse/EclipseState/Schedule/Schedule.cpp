@@ -111,7 +111,6 @@ namespace {
         python_handle(python),
         m_sched_deck(deck, restart_info(rst) ),
         m_timeMap( deck , restart_info( rst )),
-        m_oilvaporizationproperties( this->m_timeMap, OilVaporizationProperties(runspec.tabdims().getNumPVTTables()) ),
         m_events( this->m_timeMap ),
         m_modifierDeck( this->m_timeMap, Deck{} ),
         m_messageLimits( this->m_timeMap ),
@@ -175,7 +174,7 @@ namespace {
 
                 const auto& next_step = this->operator[](report_step + 1);
                 if (this_step.end_time() != next_step.start_time())
-                    throw std::logic_error("Internal bug in sched_step start / end inconsistent");
+                    throw std::logic_error(fmt::format("Internal bug in sched_step start / end inconsistent report:{}", report_step));
             }
         }
     }
@@ -264,7 +263,6 @@ namespace {
         result.m_timeMap = TimeMap::serializeObject();
         result.wells_static.insert({"test1", {{std::make_shared<Opm::Well>(Opm::Well::serializeObject())},1}});
         result.groups.insert({"test2", {{std::make_shared<Opm::Group>(Opm::Group::serializeObject())},1}});
-        result.m_oilvaporizationproperties = {{Opm::OilVaporizationProperties::serializeObject()},1};
         result.m_events = Events::serializeObject();
         result.m_modifierDeck = DynamicVector<Deck>({Deck::serializeObject()});
         result.m_messageLimits = MessageLimits::serializeObject();
@@ -308,7 +306,6 @@ namespace {
                                  const std::string& input_path,
                                  std::size_t currentStep,
                                  const ScheduleBlock& block,
-                                 ScheduleState& sched_step,
                                  const DeckKeyword& keyword,
                                  const ParseContext& parseContext,
                                  ErrorGuard& errors,
@@ -316,7 +313,7 @@ namespace {
                                  const FieldPropsManager& fp,
                                  std::vector<std::pair<const DeckKeyword*, std::size_t > >& rftProperties) {
 
-        HandlerContext handlerContext { block, keyword, currentStep, sched_step, grid, fp };
+        HandlerContext handlerContext { block, keyword, currentStep, grid, fp };
 
         if (handleNormalKeyword(handlerContext, parseContext, errors))
             return;
@@ -494,7 +491,6 @@ private:
                                     input_path,
                                     currentStep,
                                     block,
-                                    this->snapshots.back(),
                                     keyword,
                                     parseContext,
                                     errors,
@@ -1353,21 +1349,11 @@ private:
         return this->m_events;
     }
 
-    const OilVaporizationProperties& Schedule::getOilVaporizationProperties(std::size_t timestep) const {
-        return m_oilvaporizationproperties.get(timestep);
-    }
-
     const Well::ProducerCMode& Schedule::getGlobalWhistctlMmode(std::size_t timestep) const {
         return global_whistctl_mode.get(timestep);
     }
 
 
-    bool Schedule::hasOilVaporizationProperties() const {
-        for (std::size_t i = 0; i < this->m_timeMap.size(); ++i)
-            if (m_oilvaporizationproperties.at( i ).defined()) return true;
-
-        return false;
-    }
 
     void Schedule::checkIfAllConnectionsIsShut(std::size_t timeStep) {
         const auto& well_names = this->wellNames(timeStep);
@@ -1647,7 +1633,6 @@ private:
         return this->m_timeMap == data.m_timeMap &&
                compareMap(this->wells_static, data.wells_static) &&
                compareMap(this->groups, data.groups) &&
-               this->m_oilvaporizationproperties == data.m_oilvaporizationproperties &&
                this->m_events == data.m_events &&
                this->m_modifierDeck == data.m_modifierDeck &&
                this->m_messageLimits == data.m_messageLimits &&
@@ -1705,15 +1690,11 @@ namespace {
         double udq_undefined = 0;
         const auto report_step = rst_state.header.report_step - 1;
         auto start_time = std::chrono::system_clock::from_time_t( this->getStartTime() );
-        this->create_first(start_time, start_time);
-        for (int step = 1; step < report_step; step++) {
-            auto state = ScheduleState( this->snapshots.back(), start_time, start_time );
-            this->snapshots.push_back(std::move(state));
-        }
+        for (int step = 0; step < report_step; step++)
+            this->create_next(start_time, start_time);
         {
             auto restart_time = std::chrono::system_clock::from_time_t( rst_state.header.restart_info().first );
-            auto last_state = ScheduleState( start_time, restart_time );
-            this->snapshots.push_back(std::move(last_state));
+            this->create_next(start_time, restart_time);
         }
 
         for (const auto& rst_group : rst_state.groups) {
@@ -2080,13 +2061,10 @@ void Schedule::create_first(const std::chrono::system_clock::time_point& start_t
 
     auto& sched_state = snapshots.back();
     sched_state.nupcol( this->m_runspec.nupcol() );
+    sched_state.oilvap( OilVaporizationProperties( this->m_runspec.tabdims().getNumPVTTables() ));
 }
 
-
-void Schedule::create_next(const ScheduleBlock& block) {
-    const auto& start_time = block.start_time();
-    const auto& end_time = block.end_time();
-
+void Schedule::create_next(const std::chrono::system_clock::time_point& start_time, const std::optional<std::chrono::system_clock::time_point>& end_time) {
     if (this->snapshots.empty())
         this->create_first(start_time, end_time);
     else {
@@ -2096,6 +2074,13 @@ void Schedule::create_next(const ScheduleBlock& block) {
         else
             this->snapshots.emplace_back( last, start_time );
     }
+}
+
+
+void Schedule::create_next(const ScheduleBlock& block) {
+    const auto& start_time = block.start_time();
+    const auto& end_time = block.end_time();
+    this->create_next(start_time, end_time);
 }
 
 }

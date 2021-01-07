@@ -73,10 +73,23 @@ int ScheduleState::nupcol() const {
     return this->m_nupcol;
 }
 
+void ScheduleState::oilvap(OilVaporizationProperties oilvap) {
+    this->m_oilvap = std::move(oilvap);
+}
+
+const OilVaporizationProperties& ScheduleState::oilvap() const {
+    return this->m_oilvap;
+}
+
+OilVaporizationProperties& ScheduleState::oilvap() {
+    return this->m_oilvap;
+}
+
 bool ScheduleState::operator==(const ScheduleState& other) const {
     return this->m_start_time == other.m_start_time &&
+           this->m_oilvap == other.m_oilvap &&
            this->m_tuning == other.m_tuning &&
-           this->m_end_time   == other.m_end_time &&
+           this->m_end_time == other.m_end_time &&
            this->m_nupcol == other.m_nupcol;
 }
 
@@ -85,6 +98,7 @@ ScheduleState ScheduleState::serializeObject() {
     auto t2 = t1 + std::chrono::hours(48);
     ScheduleState ts(t1, t2);
     ts.nupcol(77);
+    ts.oilvap( Opm::OilVaporizationProperties::serializeObject() );
     return ts;
 }
 

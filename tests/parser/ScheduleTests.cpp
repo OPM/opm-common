@@ -1289,8 +1289,7 @@ DRSDT
 
     const auto& schedule = make_schedule(input);
     size_t currentStep = 1;
-    BOOST_CHECK_EQUAL(schedule.hasOilVaporizationProperties(), true);
-    const auto& ovap = schedule.getOilVaporizationProperties(currentStep);
+    const auto& ovap = schedule[currentStep].oilvap();
 
     BOOST_CHECK_EQUAL(true,   ovap.getOption(0));
     BOOST_CHECK(ovap.getType() == OilVaporizationProperties::OilVaporization::DRDT);
@@ -1318,8 +1317,7 @@ DRSDTR
 
     const auto& schedule = make_schedule(input);
     size_t currentStep = 1;
-    BOOST_CHECK_EQUAL(schedule.hasOilVaporizationProperties(), true);
-    const auto& ovap = schedule.getOilVaporizationProperties(currentStep);
+    const auto& ovap = schedule[currentStep].oilvap();
     auto unitSystem =  UnitSystem::newMETRIC();
     for (int i = 0; i < 3; ++i) {
         double value = unitSystem.to_si( UnitSystem::measure::gas_surface_rate, i );
@@ -1359,21 +1357,20 @@ VAPPARS
 )";
 
     const auto& schedule = make_schedule(input);
-    BOOST_CHECK_EQUAL(schedule.hasOilVaporizationProperties(), true);
 
-    const OilVaporizationProperties& ovap1 = schedule.getOilVaporizationProperties(1);
+    const OilVaporizationProperties& ovap1 = schedule[1].oilvap();
     BOOST_CHECK(ovap1.getType() == OilVaporizationProperties::OilVaporization::DRDT);
     BOOST_CHECK_EQUAL(true,   ovap1.drsdtActive());
     BOOST_CHECK_EQUAL(false,   ovap1.drvdtActive());
 
-    const OilVaporizationProperties& ovap2 = schedule.getOilVaporizationProperties(2);
+    const OilVaporizationProperties& ovap2 = schedule[2].oilvap();
     //double value =  ovap2.getMaxDRVDT(0);
     //BOOST_CHECK_EQUAL(1.1574074074074074e-06, value);
     BOOST_CHECK(ovap2.getType() == OilVaporizationProperties::OilVaporization::DRDT);
     BOOST_CHECK_EQUAL(true,   ovap2.drvdtActive());
     BOOST_CHECK_EQUAL(true,   ovap2.drsdtActive());
 
-    const OilVaporizationProperties& ovap3 = schedule.getOilVaporizationProperties(3);
+    const OilVaporizationProperties& ovap3 = schedule[3].oilvap();
     BOOST_CHECK(ovap3.getType() == OilVaporizationProperties::OilVaporization::VAPPARS);
     BOOST_CHECK_EQUAL(false,   ovap3.drvdtActive());
     BOOST_CHECK_EQUAL(false,   ovap3.drsdtActive());
@@ -1396,8 +1393,7 @@ VAPPARS
 
     const auto& schedule = make_schedule(input);
     size_t currentStep = 1;
-    BOOST_CHECK_EQUAL(schedule.hasOilVaporizationProperties(), true);
-    const OilVaporizationProperties& ovap = schedule.getOilVaporizationProperties(currentStep);
+    const OilVaporizationProperties& ovap = schedule[currentStep].oilvap();
     BOOST_CHECK(ovap.getType() == OilVaporizationProperties::OilVaporization::VAPPARS);
     double vap1 =  ovap.vap1();
     BOOST_CHECK_EQUAL(2, vap1);
@@ -1420,7 +1416,6 @@ DATES             -- 1
 )";
 
     const auto& schedule = make_schedule(input);
-    BOOST_CHECK_EQUAL(schedule.hasOilVaporizationProperties(), false);
 }
 
 
