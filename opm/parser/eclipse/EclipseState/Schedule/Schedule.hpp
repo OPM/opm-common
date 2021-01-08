@@ -35,7 +35,6 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GuideRateConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GConSale.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GConSump.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Util/OrderedMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MessageLimits.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
@@ -235,7 +234,6 @@ namespace Opm
 
         std::vector<const Group*> getChildGroups2(const std::string& group_name, std::size_t timeStep) const;
         std::vector<Well> getChildWells2(const std::string& group_name, std::size_t timeStep) const;
-        const OilVaporizationProperties& getOilVaporizationProperties(std::size_t timestep) const;
         const Well::ProducerCMode& getGlobalWhistctlMmode(std::size_t timestep) const;
 
         const UDQActive& udqActive(std::size_t timeStep) const;
@@ -267,7 +265,6 @@ namespace Opm
         const Events& getWellGroupEvents(const std::string& wellGroup) const;
         bool hasWellGroupEvent(const std::string& wellGroup, uint64_t event_mask, std::size_t reportStep) const;
         const Deck& getModifierDeck(std::size_t timeStep) const;
-        bool hasOilVaporizationProperties() const;
         const VFPProdTable& getVFPProdTable(int table_id, std::size_t timeStep) const;
         const VFPInjTable& getVFPInjTable(int table_id, std::size_t timeStep) const;
         std::map<int, std::shared_ptr<const VFPProdTable> > getVFPProdTables(std::size_t timeStep) const;
@@ -295,6 +292,7 @@ namespace Opm
         const ScheduleState& operator[](std::size_t index) const;
         std::vector<ScheduleState>::const_iterator begin() const;
         std::vector<ScheduleState>::const_iterator end() const;
+        void create_next(const std::chrono::system_clock::time_point& start_time, const std::optional<std::chrono::system_clock::time_point>& end_time);
         void create_next(const ScheduleBlock& block);
         void create_first(const std::chrono::system_clock::time_point& start_time, const std::optional<std::chrono::system_clock::time_point>& end_time);
 
@@ -318,7 +316,6 @@ namespace Opm
             auto splitGroups = splitDynMap(groups);
             serializer.vector(splitGroups.first);
             serializer(splitGroups.second);
-            m_oilvaporizationproperties.serializeOp(serializer);
             m_events.serializeOp(serializer);
             m_modifierDeck.serializeOp(serializer);
             m_messageLimits.serializeOp(serializer);
@@ -360,7 +357,6 @@ namespace Opm
         TimeMap m_timeMap;
         WellMap wells_static;
         GroupMap groups;
-        DynamicState< OilVaporizationProperties > m_oilvaporizationproperties;
         Events m_events;
         DynamicVector< Deck > m_modifierDeck;
         MessageLimits m_messageLimits;

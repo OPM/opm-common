@@ -609,8 +609,7 @@ Opm::RestartIO::DoubHEAD::drsdt(const Schedule&   sched,
                                 const std::size_t lookup_step,
 				const double      cnvT)
 {
-    const auto& vappar =
-        sched.getOilVaporizationProperties(lookup_step);
+    const auto& vappar = sched[lookup_step].oilvap();
 
     this->data_[dRsdt] =
         (vappar.getType() == Opm::OilVaporizationProperties::OilVaporization::DRDT)

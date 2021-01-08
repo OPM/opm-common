@@ -239,9 +239,8 @@ namespace {
         for (const auto& record : handlerContext.keyword) {
             std::fill(max.begin(), max.end(), record.getItem("DRSDT_MAX").getSIDouble(0));
             std::fill(options.begin(), options.end(), record.getItem("Option").get< std::string >(0));
-            OilVaporizationProperties ovp = this->m_oilvaporizationproperties.get(handlerContext.currentStep);
+            auto& ovp = this->snapshots.back().oilvap();
             OilVaporizationProperties::updateDRSDT(ovp, max, options);
-            this->m_oilvaporizationproperties.update( handlerContext.currentStep, ovp );
         }
     }
 
@@ -255,9 +254,8 @@ namespace {
             options[pvtRegionIdx] = record.getItem("Option").get< std::string >(0);
             pvtRegionIdx++;
         }
-        OilVaporizationProperties ovp = this->m_oilvaporizationproperties.get(handlerContext.currentStep);
+        auto& ovp = this->snapshots.back().oilvap();
         OilVaporizationProperties::updateDRSDT(ovp, max, options);
-        this->m_oilvaporizationproperties.update( handlerContext.currentStep, ovp );
     }
 
     void Schedule::handleDRVDT(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
@@ -265,9 +263,8 @@ namespace {
         std::vector<double> max(numPvtRegions);
         for (const auto& record : handlerContext.keyword) {
             std::fill(max.begin(), max.end(), record.getItem("DRVDT_MAX").getSIDouble(0));
-            OilVaporizationProperties ovp = this->m_oilvaporizationproperties.get(handlerContext.currentStep);
+            auto& ovp = this->snapshots.back().oilvap();
             OilVaporizationProperties::updateDRVDT(ovp, max);
-            this->m_oilvaporizationproperties.update( handlerContext.currentStep, ovp );
         }
     }
 
@@ -279,9 +276,8 @@ namespace {
             max[pvtRegionIdx] = record.getItem("DRVDT_MAX").getSIDouble(0);
             pvtRegionIdx++;
         }
-        OilVaporizationProperties ovp = this->m_oilvaporizationproperties.get(handlerContext.currentStep);
+        auto& ovp = this->snapshots.back().oilvap();
         OilVaporizationProperties::updateDRVDT(ovp, max);
-        this->m_oilvaporizationproperties.update( handlerContext.currentStep, ovp );
     }
 
     void Schedule::handleGCONINJE(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
@@ -830,9 +826,8 @@ namespace {
         for (const auto& record : handlerContext.keyword) {
             double vap1 = record.getItem("OIL_VAP_PROPENSITY").get< double >(0);
             double vap2 = record.getItem("OIL_DENSITY_PROPENSITY").get< double >(0);
-            OilVaporizationProperties ovp = this->m_oilvaporizationproperties.get(handlerContext.currentStep);
+            auto& ovp = this->snapshots.back().oilvap();
             OilVaporizationProperties::updateVAPPARS(ovp, vap1, vap2);
-            this->m_oilvaporizationproperties.update( handlerContext.currentStep, ovp );
         }
     }
 
