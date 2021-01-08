@@ -474,19 +474,17 @@ namespace Opm
             const ScheduleBlock& block;
             const DeckKeyword& keyword;
             const std::size_t currentStep;
-            const EclipseGrid& grid;
-            const FieldPropsManager& fieldPropsManager;
+            const EclipseGrid* grid_ptr;
+            const FieldPropsManager* fp_ptr;
 
             HandlerContext(const ScheduleBlock& block_,
                            const DeckKeyword& keyword_,
-                           const std::size_t currentStep_,
-                           const EclipseGrid& grid_,
-                           const FieldPropsManager& fieldPropsManager_) :
+                           const std::size_t currentStep_):
                 block(block_),
                 keyword(keyword_),
                 currentStep(currentStep_),
-                grid(grid_),
-                fieldPropsManager(fieldPropsManager_)
+                grid_ptr(nullptr),
+                fp_ptr(nullptr)
             {}
 
 

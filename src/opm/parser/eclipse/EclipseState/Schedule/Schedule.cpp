@@ -158,7 +158,7 @@ namespace {
           refactoring. At the very latest this should be removed when the
           Schedule refactoring is complete.
         */
-        const bool integration_test = true;
+        const bool integration_test = false;
         if (integration_test) {
             if (this->size() == 0)
                 return;
@@ -329,8 +329,22 @@ namespace {
                                  const FieldPropsManager& fp,
                                  std::vector<std::pair<const DeckKeyword*, std::size_t > >& rftProperties) {
 
-        HandlerContext handlerContext { block, keyword, currentStep, grid, fp };
+        static const std::unordered_set<std::string> require_grid = {
+            "COMPDAT",
+            "COMPSEGS"
+        };
 
+
+        HandlerContext handlerContext { block, keyword, currentStep };
+
+        /*
+          The grid and fieldProps members create problems for reiterating the
+          Schedule section. We therefor single them out very clearly here.
+        */
+        if (require_grid.count(keyword.name()) > 0) {
+            handlerContext.grid_ptr = &grid;
+            handlerContext.fp_ptr = &fp;
+        }
         if (handleNormalKeyword(handlerContext, parseContext, errors))
             return;
 
