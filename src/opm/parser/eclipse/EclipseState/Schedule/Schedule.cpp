@@ -109,6 +109,7 @@ namespace {
                         const RestartIO::RstState * rst)
     try :
         python_handle(python),
+        m_input_path(deck.getInputPath()),
         m_sched_deck(deck, restart_info(rst) ),
         m_timeMap( deck , restart_info( rst )),
         m_events( this->m_timeMap ),
@@ -149,12 +150,28 @@ namespace {
                 applyMESSAGES(keyword, 0);
         }
 
-        this->iterateScheduleSection( python, deck.getInputPath(), parseContext, errors, grid, fp);
+        this->iterateScheduleSection( {}, parseContext, errors, grid, fp);
+
         /*
-         This is temporary "integration test" for the time arguments in the
-         Schedule class.
+          The code in the if (integration_test) { ... } is an enforced
+          integration test to assert the sanity of the ongoing Schedule
+          refactoring. At the very latest this should be removed when the
+          Schedule refactoring is complete.
         */
-        if (this->size() > 0) {
+        const bool integration_test = false;
+        if (integration_test) {
+            if (this->size() == 0)
+                return;
+
+            // Verify that we can safely re-iterate over the Schedule section
+            if (!rst)
+                this->iterateScheduleSection( 0,  parseContext, errors, grid, fp);
+            else {
+                auto restart_offset = this->m_sched_deck.restart_offset();
+                this->iterateScheduleSection( restart_offset, parseContext, errors, grid, fp);
+            }
+
+            // Verify that the time schedule is correct.
             for (std::size_t report_step = 0; report_step < this->size() - 1; report_step++) {
                 const auto& this_block = this->m_sched_deck[report_step];
                 if (this_block.start_time() != std::chrono::system_clock::from_time_t(this->m_timeMap[report_step])) {
@@ -285,6 +302,7 @@ namespace {
         result.wellgroup_events = {{"test", Events::serializeObject()}};
         result.unit_system = UnitSystem::newFIELD();
         result.snapshots = { ScheduleState::serializeObject() };
+        result.m_input_path = "Some/funny/path";
 
         return result;
     }
@@ -302,9 +320,7 @@ namespace {
     }
 
 
-    void Schedule::handleKeyword(std::shared_ptr<const Python> python,
-                                 const std::string& input_path,
-                                 std::size_t currentStep,
+    void Schedule::handleKeyword(std::size_t currentStep,
                                  const ScheduleBlock& block,
                                  const DeckKeyword& keyword,
                                  const ParseContext& parseContext,
@@ -313,8 +329,22 @@ namespace {
                                  const FieldPropsManager& fp,
                                  std::vector<std::pair<const DeckKeyword*, std::size_t > >& rftProperties) {
 
-        HandlerContext handlerContext { block, keyword, currentStep, grid, fp };
+        static const std::unordered_set<std::string> require_grid = {
+            "COMPDAT",
+            "COMPSEGS"
+        };
 
+
+        HandlerContext handlerContext { block, keyword, currentStep };
+
+        /*
+          The grid and fieldProps members create problems for reiterating the
+          Schedule section. We therefor single them out very clearly here.
+        */
+        if (require_grid.count(keyword.name()) > 0) {
+            handlerContext.grid_ptr = &grid;
+            handlerContext.fp_ptr = &fp;
+        }
         if (handleNormalKeyword(handlerContext, parseContext, errors))
             return;
 
@@ -325,7 +355,7 @@ namespace {
             rftProperties.push_back( std::make_pair( &keyword , currentStep ));
 
         else if (keyword.name() == "PYACTION")
-            handlePYACTION(python, input_path, keyword, currentStep);
+            handlePYACTION(keyword, currentStep);
     }
 
 namespace {
@@ -372,18 +402,89 @@ private:
 
 }
 
-    void Schedule::iterateScheduleSection(std::shared_ptr<const Opm::Python> python,
-                                          const std::string& input_path,
-                                          const ParseContext& parseContext ,
-                                          ErrorGuard& errors,
-                                          const EclipseGrid& grid,
-                                          const FieldPropsManager& fp) {
+void Schedule::iterateScheduleSection(std::optional<std::size_t> load_offset,
+                                      const ParseContext& parseContext ,
+                                      ErrorGuard& errors,
+                                      const EclipseGrid& grid,
+                                      const FieldPropsManager& fp) {
 
         std::vector<std::pair< const DeckKeyword* , std::size_t> > rftProperties;
         std::string time_unit = this->unit_system.name(UnitSystem::measure::time);
         auto deck_time = [this](double seconds) { return this->unit_system.from_si(UnitSystem::measure::time, seconds); };
         std::string current_file;
         const auto& time_map = this->m_timeMap;
+        /*
+          The process of transitioning to Schedule model based on ScheduleState
+          instances is a gradual one. For the keywords which have been converted
+          to the ScheduleState implementation the iterateScheduleSection()
+          function can be called repeatedly, whereas for the keywords which have
+          not yet been converted that is not safe. The old_style_keywords is a
+          list of keywords which should be ignored when iterateScheduleSection()
+          is called repeatedly.
+        */
+        std::unordered_set<std::string> old_style_keywords = {
+            "PYACTION",
+            "GCONPROD",
+            "GCONINJE",
+            "GLIFTOPT",
+            "WELPI",
+            "BRANPROP",
+            "COMPDAT",
+            "COMPLUMP",
+            "COMPORD",
+            "COMPSEGS",
+            "GCONINJE",
+            "GCONPROD",
+            "GCONSALE",
+            "GCONSUMP",
+            "GEFAC",
+            "GLIFTOPT",
+            "GPMAINT",
+            "GRUPNET",
+            "GRUPTREE",
+            "GUIDERAT",
+            "LIFTOPT",
+            "LINCOM",
+            "MESSAGES",
+            "MULTFLT",
+            "MXUNSUPP",
+            "NODEPROP",
+            "RPTSCHED",
+            "UDQ",
+            "VFPINJ",
+            "VFPPROD",
+            "WCONHIST",
+            "WCONINJE",
+            "WCONINJH",
+            "WCONPROD",
+            "WECON",
+            "WEFAC",
+            "WELOPEN",
+            "WELPI",
+            "WELSEGS",
+            "WELSPECS",
+            "WELTARG",
+            "WFOAM",
+            "WGRUPCON",
+            "WHISTCTL",
+            "WINJTEMP",
+            "WLIFTOPT",
+            "WLIST",
+            "WPAVEDEP",
+            "WPIMULT",
+            "WPMITAB",
+            "WPOLYMER",
+            "WSALT",
+            "WSEGSICD",
+            "WSEGAICD",
+            "WSEGVALV",
+            "WSKPTAB",
+            "WSOLVENT",
+            "WTEMP",
+            "WTEST",
+            "WTRACER"
+        };
+
         /*
           The keywords in the skiprest_whitelist set are loaded from the
           SCHEDULE section even though the SKIPREST keyword is in action. The
@@ -426,6 +527,12 @@ private:
                                location.lineno));
         }
 
+        if (load_offset.has_value()) {
+            if (load_offset.value() < this->m_sched_deck.restart_offset())
+                throw std::logic_error("BUG: Tried to replay schedule keywords from historical section in restarted run");
+            this->snapshots.resize( load_offset.value() );
+        }
+
         for (const auto& block : this->m_sched_deck) {
             std::size_t keyword_index = 0;
             auto time_type = block.time_type();
@@ -462,6 +569,11 @@ private:
                     current_file = location.filename;
                 }
 
+                if (load_offset.has_value() && old_style_keywords.count(keyword.name()) == 1) {
+                    keyword_index += 1;
+                    continue;
+                }
+
                 if (keyword.name() == "ACTIONX") {
                     Action::ActionX action(keyword, this->m_timeMap.getStartTime(currentStep));
                     while (true) {
@@ -487,9 +599,7 @@ private:
                 }
 
                 logger(fmt::format("Processing keyword {} at line {}", location.keyword, location.lineno));
-                this->handleKeyword(python,
-                                    input_path,
-                                    currentStep,
+                this->handleKeyword(currentStep,
                                     block,
                                     keyword,
                                     parseContext,
@@ -522,8 +632,8 @@ private:
         this->m_actions.update(currentStep, new_actions);
     }
 
-    void Schedule::handlePYACTION(std::shared_ptr<const Python> python, const std::string& input_path, const DeckKeyword& keyword, std::size_t currentStep) {
-        if (!python->enabled()) {
+    void Schedule::handlePYACTION(const DeckKeyword& keyword, std::size_t currentStep) {
+        if (!this->python_handle->enabled()) {
             //Must have a real Python instance here - to ensure that IMPORT works
             const auto& loc = keyword.location();
             OpmLog::warning("This version of flow is built without support for Python. Keyword PYACTION in file: " + loc.filename + " line: " + std::to_string(loc.lineno) + " is ignored.");
@@ -534,12 +644,12 @@ private:
         const auto& run_count = Action::PyAction::from_string( keyword.getRecord(0).getItem<ParserKeywords::PYACTION::RUN_COUNT>().get<std::string>(0) );
         const auto& module_arg = keyword.getRecord(1).getItem<ParserKeywords::PYACTION::FILENAME>().get<std::string>(0);
         std::string module;
-        if (input_path.empty())
+        if (this->m_input_path.empty())
             module = module_arg;
         else
-            module = input_path + "/" + module_arg;
+            module = this->m_input_path + "/" + module_arg;
 
-        Action::PyAction pyaction(python, name, run_count, module);
+        Action::PyAction pyaction(this->python_handle, name, run_count, module);
         auto new_actions = std::make_shared<Action::Actions>( this->actions(currentStep) );
         new_actions->add(pyaction);
         this->m_actions.update(currentStep, new_actions);
@@ -1631,6 +1741,7 @@ private:
         };
 
         return this->m_timeMap == data.m_timeMap &&
+               this->m_input_path == data.m_input_path &&
                compareMap(this->wells_static, data.wells_static) &&
                compareMap(this->groups, data.groups) &&
                this->m_events == data.m_events &&

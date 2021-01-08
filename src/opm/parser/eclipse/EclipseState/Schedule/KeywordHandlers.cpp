@@ -143,6 +143,9 @@ namespace {
     }
 
     void Schedule::handleCOMPDAT(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+        if (!handlerContext.grid_ptr)
+            throw std::logic_error("BUG: Schedule::handleCOMPDAT() has been called with an invalid grid pointer");
+
         std::unordered_set<std::string> wells;
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
@@ -153,8 +156,8 @@ namespace {
             for (const auto& name : wellnames) {
                 auto well2 = std::shared_ptr<Well>(new Well( this->getWell(name, handlerContext.currentStep)));
                 auto connections = std::shared_ptr<WellConnections>( new WellConnections( well2->getConnections()));
-                connections->loadCOMPDAT(record, handlerContext.grid, handlerContext.fieldPropsManager, name, handlerContext.keyword.location());
-                if (well2->updateConnections(connections, handlerContext.currentStep, handlerContext.grid, handlerContext.fieldPropsManager.get_int("PVTNUM"))) {
+                connections->loadCOMPDAT(record, *handlerContext.grid_ptr, *handlerContext.fp_ptr, name, handlerContext.keyword.location());
+                if (well2->updateConnections(connections, handlerContext.currentStep, *handlerContext.grid_ptr, handlerContext.fp_ptr->get_int("PVTNUM"))) {
                     this->updateWell(std::move(well2), handlerContext.currentStep);
                     wells.insert( name );
                 }
@@ -213,6 +216,9 @@ namespace {
     }
 
     void Schedule::handleCOMPSEGS(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+        if (!handlerContext.grid_ptr)
+            throw std::logic_error("BUG: Schedule::handleCOMPDAT() has been called with an invalid grid pointer");
+
         const auto& record1 = handlerContext.keyword.getRecord(0);
         const std::string& well_name = record1.getItem("WELL").getTrimmedString(0);
 
@@ -228,7 +234,7 @@ namespace {
             return;
         }
 
-        if (well_ptr->handleCOMPSEGS(handlerContext.keyword, handlerContext.currentStep, handlerContext.grid, parseContext, errors))
+        if (well_ptr->handleCOMPSEGS(handlerContext.keyword, handlerContext.currentStep, *handlerContext.grid_ptr, parseContext, errors))
             this->updateWell(std::move(well_ptr), handlerContext.currentStep);
     }
 
@@ -1615,15 +1621,14 @@ namespace {
     }
 
     void Schedule::handleWSEGITER(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
-        auto tuning = this->snapshots.back().tuning();
         const auto& record = handlerContext.keyword.getRecord(0);
+        auto& tuning = this->snapshots.back().tuning();
 
         tuning.MXWSIT = record.getItem<ParserKeywords::WSEGITER::MAX_WELL_ITERATIONS>().get<int>(0);
         tuning.WSEG_MAX_RESTART = record.getItem<ParserKeywords::WSEGITER::MAX_TIMES_REDUCED>().get<int>(0);
         tuning.WSEG_REDUCTION_FACTOR = record.getItem<ParserKeywords::WSEGITER::REDUCTION_FACTOR>().get<double>(0);
         tuning.WSEG_INCREASE_FACTOR = record.getItem<ParserKeywords::WSEGITER::INCREASING_FACTOR>().get<double>(0);
 
-        this->snapshots.back().tuning(tuning);
         m_events.addEvent(ScheduleEvents::TUNING_CHANGE, handlerContext.currentStep);
     }
 

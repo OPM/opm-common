@@ -101,6 +101,7 @@ namespace Opm {
         std::vector<ScheduleBlock>::const_iterator begin() const;
         std::vector<ScheduleBlock>::const_iterator end() const;
         std::size_t size() const;
+        std::size_t restart_offset() const;
         const KeywordLocation& location() const;
 
         bool operator==(const ScheduleDeck& other) const;

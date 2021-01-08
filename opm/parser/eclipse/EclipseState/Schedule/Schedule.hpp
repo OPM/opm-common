@@ -348,11 +348,13 @@ namespace Opm
             }
             unit_system.serializeOp(serializer);
             serializer.vector(snapshots);
+            serializer(this->m_input_path);
         }
 
     private:
         template<class Key, class Value> using Map2 = std::map<Key,Value>;
         std::shared_ptr<const Python> python_handle;
+        std::string m_input_path;
         ScheduleDeck m_sched_deck;
         TimeMap m_timeMap;
         WellMap wells_static;
@@ -411,7 +413,10 @@ namespace Opm
         void updateUDQActive( std::size_t timeStep, std::shared_ptr<UDQActive> udq );
         bool updateWellStatus( const std::string& well, std::size_t reportStep, bool runtime, Well::Status status, std::optional<KeywordLocation> = {});
         void addWellToGroup( const std::string& group_name, const std::string& well_name , std::size_t timeStep);
-        void iterateScheduleSection(std::shared_ptr<const Python> python, const std::string& input_path, const ParseContext& parseContext ,  ErrorGuard& errors, const EclipseGrid& grid,
+        void iterateScheduleSection(std::optional<std::size_t> load_offset,
+                                    const ParseContext& parseContext,
+                                    ErrorGuard& errors,
+                                    const EclipseGrid& grid,
                                     const FieldPropsManager& fp);
         void addACTIONX(const Action::ActionX& action, std::size_t currentStep);
         void addGroupToGroup( const std::string& parent_group, const std::string& child_group, std::size_t timeStep);
@@ -421,9 +426,7 @@ namespace Opm
         void addWell(const std::string& wellName, const DeckRecord& record, std::size_t timeStep, Connection::Order connection_order);
         void checkIfAllConnectionsIsShut(std::size_t currentStep);
         void updateUDQ(const DeckKeyword& keyword, std::size_t current_step);
-        void handleKeyword(std::shared_ptr<const Python> python,
-                           const std::string& input_path,
-                           std::size_t currentStep,
+        void handleKeyword(std::size_t currentStep,
                            const ScheduleBlock& block,
                            const DeckKeyword& keyword,
                            const ParseContext& parseContext, ErrorGuard& errors,
@@ -471,19 +474,17 @@ namespace Opm
             const ScheduleBlock& block;
             const DeckKeyword& keyword;
             const std::size_t currentStep;
-            const EclipseGrid& grid;
-            const FieldPropsManager& fieldPropsManager;
+            const EclipseGrid* grid_ptr;
+            const FieldPropsManager* fp_ptr;
 
             HandlerContext(const ScheduleBlock& block_,
                            const DeckKeyword& keyword_,
-                           const std::size_t currentStep_,
-                           const EclipseGrid& grid_,
-                           const FieldPropsManager& fieldPropsManager_) :
+                           const std::size_t currentStep_):
                 block(block_),
                 keyword(keyword_),
                 currentStep(currentStep_),
-                grid(grid_),
-                fieldPropsManager(fieldPropsManager_)
+                grid_ptr(nullptr),
+                fp_ptr(nullptr)
             {}
 
 
@@ -507,7 +508,7 @@ namespace Opm
         bool handleNormalKeyword(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors);
 
         // Keyword Handlers
-        void handlePYACTION (std::shared_ptr<const Python> python, const std::string& input_path, const DeckKeyword&, std::size_t currentStep);
+        void handlePYACTION(const DeckKeyword&, std::size_t currentStep);
         void handleGCONPROD(const DeckKeyword& keyword, std::size_t current_step, const ParseContext& parseContext, ErrorGuard& errors);
         void handleGCONINJE(const DeckKeyword& keyword, std::size_t current_step, const ParseContext& parseContext, ErrorGuard& errors);
         void handleGLIFTOPT(const DeckKeyword& keyword, std::size_t report_step, const ParseContext& parseContext, ErrorGuard& errors);

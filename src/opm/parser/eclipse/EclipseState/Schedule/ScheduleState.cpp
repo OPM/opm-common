@@ -110,4 +110,8 @@ const Tuning& ScheduleState::tuning() const {
     return this->m_tuning;
 }
 
+Tuning& ScheduleState::tuning() {
+    return this->m_tuning;
+}
+
 }
