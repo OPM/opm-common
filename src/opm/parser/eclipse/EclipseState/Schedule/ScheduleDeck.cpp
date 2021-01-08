@@ -121,6 +121,11 @@ const KeywordLocation& ScheduleDeck::location() const {
 }
 
 
+std::size_t ScheduleDeck::restart_offset() const {
+    return this->m_restart_offset;
+}
+
+
 ScheduleDeck::ScheduleDeck(const Deck& deck, const std::pair<std::time_t, std::size_t>& restart) {
     const std::unordered_set<std::string> skiprest_include = {"VFPPROD", "VFPINJ", "RPTSCHED", "RPTRST", "TUNING", "MESSAGES"};
     std::chrono::system_clock::time_point start_time;

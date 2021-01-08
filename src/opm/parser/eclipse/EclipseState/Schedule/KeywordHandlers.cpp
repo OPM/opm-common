@@ -1615,15 +1615,14 @@ namespace {
     }
 
     void Schedule::handleWSEGITER(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
-        auto tuning = this->snapshots.back().tuning();
         const auto& record = handlerContext.keyword.getRecord(0);
+        auto& tuning = this->snapshots.back().tuning();
 
         tuning.MXWSIT = record.getItem<ParserKeywords::WSEGITER::MAX_WELL_ITERATIONS>().get<int>(0);
         tuning.WSEG_MAX_RESTART = record.getItem<ParserKeywords::WSEGITER::MAX_TIMES_REDUCED>().get<int>(0);
         tuning.WSEG_REDUCTION_FACTOR = record.getItem<ParserKeywords::WSEGITER::REDUCTION_FACTOR>().get<double>(0);
         tuning.WSEG_INCREASE_FACTOR = record.getItem<ParserKeywords::WSEGITER::INCREASING_FACTOR>().get<double>(0);
 
-        this->snapshots.back().tuning(tuning);
         m_events.addEvent(ScheduleEvents::TUNING_CHANGE, handlerContext.currentStep);
     }
 

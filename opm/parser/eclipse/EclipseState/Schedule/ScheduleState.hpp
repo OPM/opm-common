@@ -58,6 +58,7 @@ namespace Opm {
         const PAvg& pavg() const;
 
         void tuning(Tuning tuning);
+        Tuning& tuning();
         const Tuning& tuning() const;
 
         void nupcol(int nupcol);
