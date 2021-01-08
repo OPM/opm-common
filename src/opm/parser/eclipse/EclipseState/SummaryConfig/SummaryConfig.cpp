@@ -41,7 +41,7 @@
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
-#include <opm/parser/eclipse/EclipseState/AquiferConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/Aquifer/AquiferConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridDims.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp>

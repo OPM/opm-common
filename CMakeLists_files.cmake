@@ -55,10 +55,10 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/Deck/UDAValue.cpp
     src/opm/parser/eclipse/Python/Python.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Action/PyAction.cpp
-    src/opm/parser/eclipse/EclipseState/AquiferConfig.cpp
-    src/opm/parser/eclipse/EclipseState/AquiferCT.cpp
-    src/opm/parser/eclipse/EclipseState/Aquifetp.cpp
-    src/opm/parser/eclipse/EclipseState/Aquancon.cpp
+    src/opm/parser/eclipse/EclipseState/Aquifer/AquiferConfig.cpp
+    src/opm/parser/eclipse/EclipseState/Aquifer/AquiferCT.cpp
+    src/opm/parser/eclipse/EclipseState/Aquifer/Aquifetp.cpp
+    src/opm/parser/eclipse/EclipseState/Aquifer/Aquancon.cpp
     src/opm/parser/eclipse/EclipseState/checkDeck.cpp
     src/opm/parser/eclipse/EclipseState/EclipseConfig.cpp
     src/opm/parser/eclipse/EclipseState/EclipseState.cpp
@@ -695,10 +695,10 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Tables/TracerVdTable.hpp
        opm/parser/eclipse/EclipseState/EclipseState.hpp
        opm/parser/eclipse/EclipseState/EclipseConfig.hpp
-       opm/parser/eclipse/EclipseState/Aquancon.hpp
-       opm/parser/eclipse/EclipseState/AquiferConfig.hpp
-       opm/parser/eclipse/EclipseState/AquiferCT.hpp
-       opm/parser/eclipse/EclipseState/Aquifetp.hpp
+       opm/parser/eclipse/EclipseState/Aquifer/Aquancon.hpp
+       opm/parser/eclipse/EclipseState/Aquifer/AquiferConfig.hpp
+       opm/parser/eclipse/EclipseState/Aquifer/AquiferCT.hpp
+       opm/parser/eclipse/EclipseState/Aquifer/Aquifetp.hpp
        opm/parser/eclipse/EclipseState/Schedule/Action/ActionAST.hpp
        opm/parser/eclipse/EclipseState/Schedule/Action/ActionContext.hpp
        opm/parser/eclipse/EclipseState/Schedule/Action/ActionResult.hpp
