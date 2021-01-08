@@ -112,6 +112,11 @@ namespace {
         m_input_path(deck.getInputPath()),
         m_sched_deck(deck, restart_info(rst) ),
         m_timeMap( deck , restart_info( rst )),
+<<<<<<< HEAD
+=======
+        m_modifierDeck( this->m_timeMap, Deck{} ),
+        m_messageLimits( this->m_timeMap ),
+>>>>>>> Use ScheduleState to manage events
         m_runspec( runspec ),
         m_deck_message_limits( MessageLimits(deck) ),
         wtest_config(this->m_timeMap, std::make_shared<WellTestConfig>() ),
@@ -804,6 +809,34 @@ void Schedule::iterateScheduleSection(std::optional<std::size_t> load_offset,
                 }
 
                 this->snapshots.back().events().addEvent( ScheduleEvents::COMPLETION_CHANGE);
+            }
+        }
+    }
+
+    void Schedule::applyMESSAGES(const DeckKeyword& keyword, std::size_t currentStep) {
+        const auto& record = keyword.getRecord(0);
+        using  set_limit_fptr = decltype( std::mem_fn( &MessageLimits::setMessagePrintLimit ) );
+        static const std::pair<std::string , set_limit_fptr> setters[] = {
+            {"MESSAGE_PRINT_LIMIT" , std::mem_fn( &MessageLimits::setMessagePrintLimit )},
+            {"COMMENT_PRINT_LIMIT" , std::mem_fn( &MessageLimits::setCommentPrintLimit )},
+            {"WARNING_PRINT_LIMIT" , std::mem_fn( &MessageLimits::setWarningPrintLimit )},
+            {"PROBLEM_PRINT_LIMIT" , std::mem_fn( &MessageLimits::setProblemPrintLimit )},
+            {"ERROR_PRINT_LIMIT"   , std::mem_fn( &MessageLimits::setErrorPrintLimit   )},
+            {"BUG_PRINT_LIMIT"     , std::mem_fn( &MessageLimits::setBugPrintLimit     )},
+            {"MESSAGE_STOP_LIMIT"  , std::mem_fn( &MessageLimits::setMessageStopLimit  )},
+            {"COMMENT_STOP_LIMIT"  , std::mem_fn( &MessageLimits::setCommentStopLimit  )},
+            {"WARNING_STOP_LIMIT"  , std::mem_fn( &MessageLimits::setWarningStopLimit  )},
+            {"PROBLEM_STOP_LIMIT"  , std::mem_fn( &MessageLimits::setProblemStopLimit  )},
+            {"ERROR_STOP_LIMIT"    , std::mem_fn( &MessageLimits::setErrorStopLimit    )},
+            {"BUG_STOP_LIMIT"      , std::mem_fn( &MessageLimits::setBugStopLimit      )},
+        };
+
+        for (const auto& pair : setters) {
+            const auto& item = record.getItem( pair.first );
+            if (!item.defaultApplied(0)) {
+                const set_limit_fptr& fptr = pair.second;
+                int value = item.get<int>(0);
+                fptr( this->m_messageLimits , currentStep , value );
             }
         }
     }
@@ -2091,7 +2124,6 @@ void Schedule::create_first(const std::chrono::system_clock::time_point& start_t
     sched_state.nupcol( this->m_runspec.nupcol() );
     sched_state.oilvap( OilVaporizationProperties( this->m_runspec.tabdims().getNumPVTTables() ));
     sched_state.message_limits( this->m_deck_message_limits );
-
     this->addGroup("FIELD", 0);
 }
 

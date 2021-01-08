@@ -91,5 +91,50 @@ namespace Opm {
         return this->m_wellgroup_events == data.m_wellgroup_events;
     }
 
+    void Events::reset() {
+        this->m_events = 0;
+    }
+
+
+    WellGroupEvents WellGroupEvents::serializeObject() {
+        WellGroupEvents wg;
+        wg.addWell("WG1");
+        wg.addGroup("GG1");
+        return wg;
+    }
+
+    void WellGroupEvents::addWell(const std::string& wname) {
+        Events events;
+        events.addEvent( ScheduleEvents::NEW_WELL );
+        this->m_wellgroup_events.insert( std::make_pair( wname, events ));
+    }
+
+    void WellGroupEvents::addGroup(const std::string& gname) {
+        Events events;
+        events.addEvent( ScheduleEvents::NEW_GROUP );
+        this->m_wellgroup_events.insert( std::make_pair( gname, events ));
+    }
+
+    bool WellGroupEvents::hasEvent(const std::string& wgname, uint64_t eventMask) const {
+        const auto& events = this->m_wellgroup_events.at(wgname);
+        return events.hasEvent(eventMask);
+    }
+
+    void WellGroupEvents::addEvent(const std::string& wgname, ScheduleEvents::Events event) {
+        auto& events = this->m_wellgroup_events.at(wgname);
+        events.addEvent(event);
+    }
+
+    void WellGroupEvents::reset() {
+        for (auto& [_, events] : this->m_wellgroup_events) {
+            (void)_;
+            events.reset();
+        }
+    }
+
+    bool WellGroupEvents::operator==(const WellGroupEvents& data) const {
+        return this->m_wellgroup_events == data.m_wellgroup_events;
+    }
+
 }
 
