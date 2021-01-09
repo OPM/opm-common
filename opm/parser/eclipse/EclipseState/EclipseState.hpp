@@ -24,7 +24,7 @@
 #include <vector>
 
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
-#include <opm/parser/eclipse/EclipseState/AquiferConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/Aquifer/AquiferConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/TracerConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>

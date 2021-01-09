@@ -20,9 +20,9 @@
 #ifndef OPM_AUQIFER_CONFIG_HPP
 #define OPM_AUQIFER_CONFIG_HPP
 
-#include <opm/parser/eclipse/EclipseState/Aquancon.hpp>
-#include <opm/parser/eclipse/EclipseState/Aquifetp.hpp>
-#include <opm/parser/eclipse/EclipseState/AquiferCT.hpp>
+#include <opm/parser/eclipse/EclipseState/Aquifer/Aquancon.hpp>
+#include <opm/parser/eclipse/EclipseState/Aquifer/Aquifetp.hpp>
+#include <opm/parser/eclipse/EclipseState/Aquifer/AquiferCT.hpp>
 
 namespace Opm {
 
