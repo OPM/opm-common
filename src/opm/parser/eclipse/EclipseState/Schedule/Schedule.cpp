@@ -153,47 +153,46 @@ namespace {
         this->iterateScheduleSection( {}, parseContext, errors, grid, fp);
 
         /*
-          The code in the if (integration_test) { ... } is an enforced
-          integration test to assert the sanity of the ongoing Schedule
-          refactoring. At the very latest this should be removed when the
-          Schedule refactoring is complete.
+          The code in the #ifdef SCHEDULE_DEBUG is an enforced integration test
+          to assert the sanity of the ongoing Schedule refactoring. This will be
+          removed when the Schedule refactoring is complete.
         */
-        const bool integration_test = false;
-        if (integration_test) {
-            if (this->size() == 0)
-                return;
+#ifdef SCHEDULE_DEBUG
+        if (this->size() == 0)
+            return;
 
-            // Verify that we can safely re-iterate over the Schedule section
-            if (!rst)
-                this->iterateScheduleSection( 0,  parseContext, errors, grid, fp);
-            else {
-                auto restart_offset = this->m_sched_deck.restart_offset();
-                this->iterateScheduleSection( restart_offset, parseContext, errors, grid, fp);
-            }
-
-            // Verify that the time schedule is correct.
-            for (std::size_t report_step = 0; report_step < this->size() - 1; report_step++) {
-                const auto& this_block = this->m_sched_deck[report_step];
-                if (this_block.start_time() != std::chrono::system_clock::from_time_t(this->m_timeMap[report_step])) {
-                    auto msg = fmt::format("Block: Bug in start_time for report_step: {} ", report_step);
-                    throw std::logic_error(msg);
-                }
-
-                const auto& next_block = this->m_sched_deck[report_step + 1];
-                if (this_block.end_time() != next_block.start_time())
-                    throw std::logic_error("Block: Internal bug in sched_block start / end inconsistent");
-
-                const auto& this_step = this->operator[](report_step);
-                if (this_step.start_time() != std::chrono::system_clock::from_time_t(this->m_timeMap[report_step])) {
-                    auto msg = fmt::format("Bug in start_time for report_step: {} ", report_step);
-                    throw std::logic_error(msg);
-                }
-
-                const auto& next_step = this->operator[](report_step + 1);
-                if (this_step.end_time() != next_step.start_time())
-                    throw std::logic_error(fmt::format("Internal bug in sched_step start / end inconsistent report:{}", report_step));
-            }
+        // Verify that we can safely re-iterate over the Schedule section
+        if (!rst)
+            this->iterateScheduleSection(0, parseContext, errors, grid, fp);
+        else {
+            auto restart_offset = this->m_sched_deck.restart_offset();
+            this->iterateScheduleSection(restart_offset, parseContext, errors, grid, fp);
         }
+
+        // Verify that the time schedule is correct.
+        for (std::size_t report_step = 0; report_step < this->size() - 1; report_step++) {
+            const auto& this_block = this->m_sched_deck[report_step];
+            if (this_block.start_time() != std::chrono::system_clock::from_time_t(this->m_timeMap[report_step])) {
+                auto msg = fmt::format("Block: Bug in start_time for report_step: {} ", report_step);
+                throw std::logic_error(msg);
+            }
+
+            const auto& next_block = this->m_sched_deck[report_step + 1];
+            if (this_block.end_time() != next_block.start_time())
+                throw std::logic_error("Block: Internal bug in sched_block start / end inconsistent");
+
+            const auto& this_step = this->operator[](report_step);
+            if (this_step.start_time() != std::chrono::system_clock::from_time_t(this->m_timeMap[report_step])) {
+                auto msg = fmt::format("Bug in start_time for report_step: {} ", report_step);
+                throw std::logic_error(msg);
+            }
+
+            const auto& next_step = this->operator[](report_step + 1);
+            if (this_step.end_time() != next_step.start_time())
+                throw std::logic_error(
+                    fmt::format("Internal bug in sched_step start / end inconsistent report:{}", report_step));
+        }
+#endif
     }
     catch (const OpmInputError& opm_error) {
         throw;
