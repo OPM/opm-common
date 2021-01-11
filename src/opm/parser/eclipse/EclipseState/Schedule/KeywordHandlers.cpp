@@ -1387,9 +1387,8 @@ namespace {
                 std::string msg = "The WHISTCTL keyword specifies an un-supported control mode " + cmodeString
                     + ", which makes WHISTCTL keyword not affect the simulation at all";
                 OpmLog::warning(msg);
-            } else {
-                this->global_whistctl_mode.update(handlerContext.currentStep, controlMode);
-            }
+            } else
+                this->snapshots.back().whistctl( controlMode );
         }
 
         const std::string bhp_terminate = record.getItem("BPH_TERMINATE").getTrimmedString(0);

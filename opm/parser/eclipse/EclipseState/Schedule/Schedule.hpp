@@ -233,7 +233,7 @@ namespace Opm
 
         std::vector<const Group*> getChildGroups2(const std::string& group_name, std::size_t timeStep) const;
         std::vector<Well> getChildWells2(const std::string& group_name, std::size_t timeStep) const;
-        const Well::ProducerCMode& getGlobalWhistctlMmode(std::size_t timestep) const;
+        Well::ProducerCMode getGlobalWhistctlMmode(std::size_t timestep) const;
 
         const UDQActive& udqActive(std::size_t timeStep) const;
         const WellTestConfig& wtestConfig(std::size_t timestep) const;
@@ -325,7 +325,6 @@ namespace Opm
             guide_rate_config.serializeOp(serializer);
             gconsale.serializeOp(serializer);
             gconsump.serializeOp(serializer);
-            global_whistctl_mode.template serializeOp<Serializer, false>(serializer);
             m_actions.serializeOp(serializer);
             m_network.serializeOp(serializer);
             m_glo.serializeOp(serializer);
@@ -361,7 +360,6 @@ namespace Opm
         DynamicState<std::shared_ptr<GuideRateConfig>> guide_rate_config;
         DynamicState<std::shared_ptr<GConSale>> gconsale;
         DynamicState<std::shared_ptr<GConSump>> gconsump;
-        DynamicState<Well::ProducerCMode> global_whistctl_mode;
         DynamicState<std::shared_ptr<Action::Actions>> m_actions;
         DynamicState<std::shared_ptr<Network::ExtNetwork>> m_network;
         DynamicState<std::shared_ptr<GasLiftOpt>> m_glo;

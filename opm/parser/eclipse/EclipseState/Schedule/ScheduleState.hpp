@@ -30,6 +30,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Events.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MessageLimits.hpp>
 
 namespace Opm {
@@ -88,6 +89,9 @@ namespace Opm {
         MessageLimits& message_limits();
         const MessageLimits& message_limits() const;
 
+        Well::ProducerCMode whistctl() const;
+        void whistctl(Well::ProducerCMode whistctl);
+
         template<class Serializer>
         void serializeOp(Serializer& serializer) {
             serializer(m_start_time);
@@ -100,6 +104,7 @@ namespace Opm {
             m_wellgroup_events.serializeOp(serializer);
             serializer.vector(m_geo_keywords);
             m_message_limits.serializeOp(serializer);
+            serializer(m_whistctl_mode);
         }
 
     private:
@@ -114,6 +119,7 @@ namespace Opm {
         WellGroupEvents m_wellgroup_events;
         std::vector<DeckKeyword> m_geo_keywords;
         MessageLimits m_message_limits;
+        Well::ProducerCMode m_whistctl_mode = Well::ProducerCMode::CMODE_UNDEFINED;
     };
 }
 

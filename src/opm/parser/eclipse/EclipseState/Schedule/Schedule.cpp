@@ -121,7 +121,6 @@ namespace {
         guide_rate_config(this->m_timeMap, std::make_shared<GuideRateConfig>()),
         gconsale(this->m_timeMap, std::make_shared<GConSale>() ),
         gconsump(this->m_timeMap, std::make_shared<GConSump>() ),
-        global_whistctl_mode(this->m_timeMap, Well::ProducerCMode::CMODE_UNDEFINED),
         m_actions(this->m_timeMap, std::make_shared<Action::Actions>()),
         m_network(this->m_timeMap, std::make_shared<Network::ExtNetwork>()),
         m_glo(this->m_timeMap, std::make_shared<GasLiftOpt>()),
@@ -275,7 +274,6 @@ namespace {
         result.guide_rate_config = {{std::make_shared<GuideRateConfig>(GuideRateConfig::serializeObject())}, 1};
         result.gconsale = {{std::make_shared<GConSale>(GConSale::serializeObject())}, 1};
         result.gconsump = {{std::make_shared<GConSump>(GConSump::serializeObject())}, 1};
-        result.global_whistctl_mode = {{Well::ProducerCMode::CRAT}, 1};
         result.m_actions = {{std::make_shared<Action::Actions>(Action::Actions::serializeObject())}, 1};
         result.rft_config = RFTConfig::serializeObject();
         result.restart_config = RestartConfig::serializeObject();
@@ -965,6 +963,7 @@ void Schedule::iterateScheduleSection(std::optional<std::size_t> load_offset,
                            std::size_t timeStep,
                            Connection::Order wellConnectionOrder) {
 
+        const auto& sched_state = this->operator[](timeStep);
         Well well(wellName,
                   group,
                   timeStep,
@@ -972,7 +971,7 @@ void Schedule::iterateScheduleSection(std::optional<std::size_t> load_offset,
                   headI, headJ,
                   ref_depth,
                   WellType(preferredPhase),
-                  this->global_whistctl_mode[timeStep],
+                  sched_state.whistctl(),
                   wellConnectionOrder,
                   this->unit_system,
                   this->getUDQConfig(timeStep).params().undefinedValue(),
@@ -1378,8 +1377,8 @@ void Schedule::iterateScheduleSection(std::optional<std::size_t> load_offset,
 
 
 
-    const Well::ProducerCMode& Schedule::getGlobalWhistctlMmode(std::size_t timestep) const {
-        return global_whistctl_mode.get(timestep);
+    Well::ProducerCMode Schedule::getGlobalWhistctlMmode(std::size_t timestep) const {
+        return this->operator[](timestep).whistctl();
     }
 
 
@@ -1676,7 +1675,6 @@ void Schedule::iterateScheduleSection(std::optional<std::size_t> load_offset,
                compareDynState(this->guide_rate_config, data.guide_rate_config) &&
                compareDynState(this->gconsale, data.gconsale) &&
                compareDynState(this->gconsump, data.gconsump) &&
-               this->global_whistctl_mode == data.global_whistctl_mode &&
                compareDynState(this->m_actions, data.m_actions) &&
                compareDynState(this->rpt_config, data.rpt_config) &&
                rft_config  == data.rft_config &&
