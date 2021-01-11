@@ -45,6 +45,10 @@ void ScheduleBlock::push_back(const DeckKeyword& keyword) {
     this->m_keywords.push_back(keyword);
 }
 
+void ScheduleBlock::append(const std::vector<DeckKeyword>& keywords) {
+    this->m_keywords.insert( this->m_keywords.end(), keywords.begin(), keywords.end());
+}
+
 std::vector<DeckKeyword>::const_iterator ScheduleBlock::begin() const {
     return this->m_keywords.begin();
 }
@@ -229,6 +233,9 @@ ScheduleDeck::ScheduleDeck() {
     this->m_blocks.emplace_back(KeywordLocation{}, ScheduleTimeType::START, start_time);
 }
 
+ScheduleBlock& ScheduleDeck::operator[](const std::size_t index) {
+    return this->m_blocks.at(index);
+}
 
 const ScheduleBlock& ScheduleDeck::operator[](const std::size_t index) const {
     return this->m_blocks.at(index);

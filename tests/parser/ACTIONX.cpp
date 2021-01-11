@@ -1101,6 +1101,10 @@ TSTEP
         const auto& well = sched.getWell("PROD1", 0);
         BOOST_CHECK_EQUAL( well.getWellPIScalingFactor(1.0), 1.0);
     }
+    BOOST_CHECK_EQUAL( action1.keywords().size(), 1);
+    BOOST_CHECK_EQUAL( action1.keywords()[0].name(), "WELPI");
+
+
     std::unordered_set<std::string> required_summary;
     action1.required_summary(required_summary);
     BOOST_CHECK_EQUAL( required_summary.count("WWCT"), 1);

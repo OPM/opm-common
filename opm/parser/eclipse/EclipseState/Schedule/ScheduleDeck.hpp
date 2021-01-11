@@ -52,6 +52,7 @@ namespace Opm {
         ScheduleBlock(const KeywordLocation& location, ScheduleTimeType time_type, const std::chrono::system_clock::time_point& start_time);
         std::size_t size() const;
         void push_back(const DeckKeyword& keyword);
+        void append(const std::vector<DeckKeyword>& keywords);
         std::optional<DeckKeyword> get(const std::string& kw) const;
         const std::chrono::system_clock::time_point& start_time() const;
         const std::optional<std::chrono::system_clock::time_point>& end_time() const;
@@ -97,6 +98,7 @@ namespace Opm {
         ScheduleDeck();
         void add_block(ScheduleTimeType time_type, const std::chrono::system_clock::time_point& t, ScheduleDeckContext& context, const KeywordLocation& location);
         void add_TSTEP(const DeckKeyword& TSTEPKeyword, ScheduleDeckContext& context);
+        ScheduleBlock& operator[](const std::size_t index);
         const ScheduleBlock& operator[](const std::size_t index) const;
         std::vector<ScheduleBlock>::const_iterator begin() const;
         std::vector<ScheduleBlock>::const_iterator end() const;

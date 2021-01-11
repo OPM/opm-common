@@ -85,6 +85,7 @@ public:
     std::time_t start_time() const { return this->m_start_time; }
     std::vector<DeckKeyword>::const_iterator begin() const;
     std::vector<DeckKeyword>::const_iterator end() const;
+    const std::vector<DeckKeyword>& keywords() const;
     static bool valid_keyword(const std::string& keyword);
 
     /*
@@ -104,7 +105,7 @@ public:
         serializer(m_min_wait);
         serializer(m_start_time);
         serializer(m_id);
-        serializer.vector(keywords);
+        serializer.vector(m_keywords);
         condition.serializeOp(serializer);
         serializer.vector(m_conditions);
     }
@@ -116,7 +117,7 @@ private:
     std::time_t m_start_time;
     std::size_t m_id = 0;
 
-    std::vector<DeckKeyword> keywords;
+    std::vector<DeckKeyword> m_keywords;
     Action::AST condition;
     std::vector<Condition> m_conditions;
 };

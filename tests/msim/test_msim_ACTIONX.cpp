@@ -201,7 +201,7 @@ BOOST_AUTO_TEST_CASE(UDQ_SORTA_EXAMPLE) {
 }
 
 
-BOOST_AUTO_TEST_CASE(WELL_CLOSE_EXAMPLE) {
+BOOST_AUTO_TEST_CASE(WELL_CLOSE_PAVG_EXAMPLE) {
 #include "actionx1.include"
 
     test_data td( actionx1 );
@@ -248,6 +248,14 @@ BOOST_AUTO_TEST_CASE(WELL_CLOSE_EXAMPLE) {
             const auto& w4_11 = td.schedule.getWell("P4", 11);
             BOOST_CHECK(w4_11.getStatus() == Well::Status::SHUT );
         }
+
+        const auto& pavg0 = td.schedule[0].pavg();
+        BOOST_CHECK_EQUAL( pavg0.inner_weight(), 0.50 );
+        BOOST_CHECK( pavg0.depth_correction() == PAvg::DepthCorrection::WELL );
+
+        const auto& pavg15 = td.schedule[15].pavg();
+        BOOST_CHECK_EQUAL( pavg15.inner_weight(), 0.33 );
+        BOOST_CHECK( pavg15.depth_correction() == PAvg::DepthCorrection::NONE );
     }
 }
 

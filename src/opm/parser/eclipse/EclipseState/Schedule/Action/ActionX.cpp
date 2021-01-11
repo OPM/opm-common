@@ -33,7 +33,17 @@ namespace Action {
 
 
 bool ActionX::valid_keyword(const std::string& keyword) {
-    static std::unordered_set<std::string> actionx_allowed_list = {"EXIT", "GCONINJE", "GCONPROD", "GLIFTOPT", "WELSPECS","WELOPEN", "WELPI", "UDQ"};
+    static std::unordered_set<std::string> actionx_allowed_list = {
+        "EXIT",
+        "GCONINJE",
+        "GCONPROD",
+        "GLIFTOPT",
+        "UDQ",
+        "WELOPEN",
+        "WELPI",
+        "WELSPECS",
+        "WPAVE"
+    };
     return (actionx_allowed_list.find(keyword) != actionx_allowed_list.end());
 }
 
@@ -85,7 +95,7 @@ ActionX ActionX::serializeObject()
     result.m_max_run = 1;
     result.m_min_wait = 2;
     result.m_start_time = 3;
-    result.keywords = {DeckKeyword::serializeObject()};
+    result.m_keywords = {DeckKeyword::serializeObject()};
     result.condition = Action::AST::serializeObject();
     Quantity quant;
     quant.quantity = "test1";
@@ -103,7 +113,7 @@ ActionX ActionX::serializeObject()
 
 
 void ActionX::addKeyword(const DeckKeyword& kw) {
-    this->keywords.push_back(kw);
+    this->m_keywords.push_back(kw);
 }
 
 
@@ -133,13 +143,17 @@ bool ActionX::ready(const State& state, std::time_t sim_time) const {
 
 
 std::vector<DeckKeyword>::const_iterator ActionX::begin() const {
-    return this->keywords.begin();
+    return this->m_keywords.begin();
 }
 
 std::vector<DeckKeyword>::const_iterator ActionX::end() const {
-    return this->keywords.end();
+    return this->m_keywords.end();
 }
 
+
+const std::vector<DeckKeyword>& ActionX::keywords() const {
+    return this->m_keywords;
+}
 
 std::vector<std::string> ActionX::keyword_strings() const {
     std::vector<std::string> keyword_strings;
@@ -147,7 +161,7 @@ std::vector<std::string> ActionX::keyword_strings() const {
     {
         std::stringstream ss;
 
-        for (const auto& kw : this->keywords)
+        for (const auto& kw : this->m_keywords)
             ss << kw;
 
         keyword_string = ss.str();
@@ -189,7 +203,7 @@ bool ActionX::operator==(const ActionX& data) const {
            this->min_wait() == data.min_wait() &&
            this->start_time() == data.start_time() &&
            this->id() == data.id() &&
-           this->keywords == data.keywords &&
+           this->m_keywords == data.m_keywords &&
            this->condition == data.condition &&
            this->conditions() == data.conditions();
 }

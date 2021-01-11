@@ -1615,6 +1615,9 @@ void Schedule::iterateScheduleSection(std::optional<std::size_t> load_offset,
             if (keyword.name() == "WELPI")
                 this->handleWELPI(keyword, reportStep, parseContext, errors, true, result.wells());
         }
+
+        auto& deck_block = this->m_sched_deck[reportStep];
+        deck_block.append( action.keywords() );
     }
 
 

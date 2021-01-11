@@ -429,6 +429,10 @@ WELOPEN
   '?' 'SHUT' 0 0 0 2* /
 /
 
+WPAVE
+  0.33  0.66  'NONE'  /
+
+
 ENDACTIO
 
 
