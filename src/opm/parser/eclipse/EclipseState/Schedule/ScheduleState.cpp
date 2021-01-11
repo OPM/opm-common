@@ -100,6 +100,18 @@ const std::vector<DeckKeyword>& ScheduleState::geo_keywords() const {
     return this->m_geo_keywords;
 }
 
+void ScheduleState::message_limits(MessageLimits message_limits) {
+    this->m_message_limits = std::move(message_limits);
+}
+
+const MessageLimits& ScheduleState::message_limits() const {
+    return this->m_message_limits;
+}
+
+MessageLimits& ScheduleState::message_limits() {
+    return this->m_message_limits;
+}
+
 
 bool ScheduleState::operator==(const ScheduleState& other) const {
     return this->m_start_time == other.m_start_time &&
@@ -109,6 +121,7 @@ bool ScheduleState::operator==(const ScheduleState& other) const {
            this->m_events == other.m_events &&
            this->m_wellgroup_events == other.m_wellgroup_events &&
            this->m_geo_keywords == other.m_geo_keywords &&
+           this->m_message_limits == other.m_message_limits &&
            this->m_nupcol == other.m_nupcol;
 }
 
@@ -116,9 +129,10 @@ ScheduleState ScheduleState::serializeObject() {
     auto t1 = std::chrono::system_clock::now();
     auto t2 = t1 + std::chrono::hours(48);
     ScheduleState ts(t1, t2);
-    ts.events( Events::serializeObject() );
+    ts.m_events = Events::serializeObject();
     ts.nupcol(77);
     ts.oilvap( Opm::OilVaporizationProperties::serializeObject() );
+    ts.m_message_limits = MessageLimits::serializeObject();
     return ts;
 }
 

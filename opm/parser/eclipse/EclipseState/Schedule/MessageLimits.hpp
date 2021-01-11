@@ -20,64 +20,49 @@
 #ifndef OPM_MESSAGES_HPP
 #define OPM_MESSAGES_HPP
 
-#include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/M.hpp>
 
 namespace Opm {
 
-    class TimeMap;
+    class Deck;
+    class DeckKeyword;
 
-    struct MLimits {
-        int message_print_limit = ParserKeywords::MESSAGES::MESSAGE_PRINT_LIMIT::defaultValue;
-        int comment_print_limit = ParserKeywords::MESSAGES::COMMENT_PRINT_LIMIT::defaultValue;
-        int warning_print_limit = ParserKeywords::MESSAGES::WARNING_PRINT_LIMIT::defaultValue;
-        int problem_print_limit = ParserKeywords::MESSAGES::PROBLEM_PRINT_LIMIT::defaultValue;
-        int error_print_limit   = ParserKeywords::MESSAGES::ERROR_PRINT_LIMIT::defaultValue;
-        int bug_print_limit     = ParserKeywords::MESSAGES::BUG_PRINT_LIMIT::defaultValue;
-        int message_stop_limit  = ParserKeywords::MESSAGES::MESSAGE_STOP_LIMIT::defaultValue;
-        int comment_stop_limit  = ParserKeywords::MESSAGES::COMMENT_STOP_LIMIT::defaultValue;
-        int warning_stop_limit  = ParserKeywords::MESSAGES::WARNING_STOP_LIMIT::defaultValue;
-        int problem_stop_limit  = ParserKeywords::MESSAGES::PROBLEM_STOP_LIMIT::defaultValue;
-        int error_stop_limit    = ParserKeywords::MESSAGES::ERROR_STOP_LIMIT::defaultValue;
-        int bug_stop_limit      = ParserKeywords::MESSAGES::BUG_STOP_LIMIT::defaultValue;
+    class MessageLimits {
+    public:
+        MessageLimits() = default;
+        explicit MessageLimits(const Deck& deck);
 
-        static MLimits serializeObject()
-        {
-            MLimits result;
-            result.message_print_limit = 1;
-            result.comment_print_limit = 2;
-            result.warning_print_limit = 3;
-            result.problem_print_limit = 4;
-            result.error_print_limit = 5;
-            result.bug_print_limit = 6;
-            result.message_stop_limit = 7;
-            result.comment_stop_limit = 8;
-            result.warning_stop_limit = 9;
-            result.problem_stop_limit = 10;
-            result.error_stop_limit = 11;
-            result.bug_stop_limit = 12;
+        static MessageLimits serializeObject();
 
-            return result;
-        }
+        ///Get all the value from MESSAGES keyword.
+        int getMessagePrintLimit() const;
+        int getCommentPrintLimit() const;
+        int getWarningPrintLimit() const;
+        int getProblemPrintLimit() const;
+        int getErrorPrintLimit() const;
+        int getBugPrintLimit() const;
+        void setMessagePrintLimit(int value);
+        void setCommentPrintLimit(int value);
+        void setWarningPrintLimit(int value);
+        void setProblemPrintLimit(int value);
+        void setErrorPrintLimit(int value);
+        void setBugPrintLimit(int value);
 
-        bool operator==(const MLimits& other) const {
-            return  ((this->message_print_limit == other.message_print_limit) &&
-                     (this->comment_print_limit == other.comment_print_limit) &&
-                     (this->warning_print_limit == other.warning_print_limit) &&
-                     (this->problem_print_limit == other.problem_print_limit) &&
-                     (this->error_print_limit   == other.error_print_limit  ) &&
-                     (this->bug_print_limit     == other.bug_print_limit    ) &&
-                     (this->message_stop_limit  == other.message_stop_limit ) &&
-                     (this->comment_stop_limit  == other.comment_stop_limit ) &&
-                     (this->warning_stop_limit  == other.warning_stop_limit ) &&
-                     (this->problem_stop_limit  == other.problem_stop_limit ) &&
-                     (this->error_stop_limit    == other.error_stop_limit   ) &&
-                     (this->bug_stop_limit      == other.bug_stop_limit     ));
-        }
+        int getMessageStopLimit() const;
+        int getCommentStopLimit() const;
+        int getWarningStopLimit() const;
+        int getProblemStopLimit() const;
+        int getErrorStopLimit() const;
+        int getBugStopLimit() const;
+        void setMessageStopLimit(int value);
+        void setCommentStopLimit(int value);
+        void setWarningStopLimit(int value);
+        void setProblemStopLimit(int value);
+        void setErrorStopLimit(int value);
+        void setBugStopLimit(int value);
 
-        bool operator!=(const MLimits& other) const {
-            return !(*this == other);
-        }
+        bool operator==(const MessageLimits& data) const;
+        void update(const DeckKeyword& keyword);
 
         template<class Serializer>
         void serializeOp(Serializer& serializer)
@@ -95,63 +80,20 @@ namespace Opm {
             serializer(error_stop_limit);
             serializer(bug_stop_limit);
         }
-    };
-
-
-    class MessageLimits {
-    public:
-
-
-        MessageLimits() = default;
-        /*
-           This constructor will create a new Messages object which is
-           a copy of the input argument, and then all items explicitly
-           set in the record are modified.
-        */
-
-        explicit MessageLimits( const TimeMap& );
-
-        static MessageLimits serializeObject();
-
-        ///Get all the value from MESSAGES keyword.
-        int getMessagePrintLimit(size_t timestep) const;
-        int getCommentPrintLimit(size_t timestep) const;
-        int getWarningPrintLimit(size_t timestep) const;
-        int getProblemPrintLimit(size_t timestep) const;
-        int getErrorPrintLimit(size_t timestep) const;
-        int getBugPrintLimit(size_t timestep) const;
-        void setMessagePrintLimit(size_t timestep, int value);
-        void setCommentPrintLimit(size_t timestep, int value);
-        void setWarningPrintLimit(size_t timestep, int value);
-        void setProblemPrintLimit(size_t timestep, int value);
-        void setErrorPrintLimit(size_t timestep, int value);
-        void setBugPrintLimit(size_t timestep, int value);
-
-        int getMessageStopLimit(size_t timestep) const;
-        int getCommentStopLimit(size_t timestep) const;
-        int getWarningStopLimit(size_t timestep) const;
-        int getProblemStopLimit(size_t timestep) const;
-        int getErrorStopLimit(size_t timestep) const;
-        int getBugStopLimit(size_t timestep) const;
-        void setMessageStopLimit(size_t timestep, int value);
-        void setCommentStopLimit(size_t timestep, int value);
-        void setWarningStopLimit(size_t timestep, int value);
-        void setProblemStopLimit(size_t timestep, int value);
-        void setErrorStopLimit(size_t timestep, int value);
-        void setBugStopLimit(size_t timestep, int value);
-
-        bool operator==(const MessageLimits& data) const;
-
-        template<class Serializer>
-        void serializeOp(Serializer& serializer)
-        {
-            limits.serializeOp(serializer);
-        }
 
     private:
-        void update(size_t timestep, const MLimits& value);
-
-        DynamicState<MLimits> limits;
+        int message_print_limit = ParserKeywords::MESSAGES::MESSAGE_PRINT_LIMIT::defaultValue;
+        int comment_print_limit = ParserKeywords::MESSAGES::COMMENT_PRINT_LIMIT::defaultValue;
+        int warning_print_limit = ParserKeywords::MESSAGES::WARNING_PRINT_LIMIT::defaultValue;
+        int problem_print_limit = ParserKeywords::MESSAGES::PROBLEM_PRINT_LIMIT::defaultValue;
+        int error_print_limit   = ParserKeywords::MESSAGES::ERROR_PRINT_LIMIT::defaultValue;
+        int bug_print_limit     = ParserKeywords::MESSAGES::BUG_PRINT_LIMIT::defaultValue;
+        int message_stop_limit  = ParserKeywords::MESSAGES::MESSAGE_STOP_LIMIT::defaultValue;
+        int comment_stop_limit  = ParserKeywords::MESSAGES::COMMENT_STOP_LIMIT::defaultValue;
+        int warning_stop_limit  = ParserKeywords::MESSAGES::WARNING_STOP_LIMIT::defaultValue;
+        int problem_stop_limit  = ParserKeywords::MESSAGES::PROBLEM_STOP_LIMIT::defaultValue;
+        int error_stop_limit    = ParserKeywords::MESSAGES::ERROR_STOP_LIMIT::defaultValue;
+        int bug_stop_limit      = ParserKeywords::MESSAGES::BUG_STOP_LIMIT::defaultValue;
     };
 }
 

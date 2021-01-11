@@ -30,6 +30,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Events.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/MessageLimits.hpp>
 
 namespace Opm {
 
@@ -83,6 +84,10 @@ namespace Opm {
         std::vector<DeckKeyword>& geo_keywords();
         const std::vector<DeckKeyword>& geo_keywords() const;
 
+        void message_limits(MessageLimits message_limits);
+        MessageLimits& message_limits();
+        const MessageLimits& message_limits() const;
+
         template<class Serializer>
         void serializeOp(Serializer& serializer) {
             serializer(m_start_time);
@@ -94,6 +99,7 @@ namespace Opm {
             m_events.serializeOp(serializer);
             m_wellgroup_events.serializeOp(serializer);
             serializer.vector(m_geo_keywords);
+            m_message_limits.serializeOp(serializer);
         }
 
     private:
@@ -107,6 +113,7 @@ namespace Opm {
         Events m_events;
         WellGroupEvents m_wellgroup_events;
         std::vector<DeckKeyword> m_geo_keywords;
+        MessageLimits m_message_limits;
     };
 }
 
