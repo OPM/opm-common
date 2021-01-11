@@ -112,8 +112,6 @@ namespace {
         m_input_path(deck.getInputPath()),
         m_sched_deck(deck, restart_info(rst) ),
         m_timeMap( deck , restart_info( rst )),
-        m_events( this->m_timeMap ),
-        m_modifierDeck( this->m_timeMap, Deck{} ),
         m_messageLimits( this->m_timeMap ),
         m_runspec( runspec ),
         wtest_config(this->m_timeMap, std::make_shared<WellTestConfig>() ),
@@ -132,7 +130,6 @@ namespace {
         unit_system(deck.getActiveUnitSystem()),
         rpt_config(this->m_timeMap, std::make_shared<RPTConfig>())
     {
-        addGroup( "FIELD", 0);
         if (rst)
             this->load_rst(*rst, grid, fp);
 
@@ -161,13 +158,13 @@ namespace {
         if (this->size() == 0)
             return;
 
-        // Verify that we can safely re-iterate over the Schedule section
-        if (!rst)
-            this->iterateScheduleSection(0, parseContext, errors, grid, fp);
-        else {
-            auto restart_offset = this->m_sched_deck.restart_offset();
-            this->iterateScheduleSection(restart_offset, parseContext, errors, grid, fp);
-        }
+        //Verify that we can safely re-iterate over the Schedule section
+        //if (!rst)
+        //    this->iterateScheduleSection(0, parseContext, errors, grid, fp);
+        //else {
+        //    auto restart_offset = this->m_sched_deck.restart_offset();
+        //    this->iterateScheduleSection(restart_offset, parseContext, errors, grid, fp);
+        //}
 
         // Verify that the time schedule is correct.
         for (std::size_t report_step = 0; report_step < this->size() - 1; report_step++) {
@@ -279,8 +276,6 @@ namespace {
         result.m_timeMap = TimeMap::serializeObject();
         result.wells_static.insert({"test1", {{std::make_shared<Opm::Well>(Opm::Well::serializeObject())},1}});
         result.groups.insert({"test2", {{std::make_shared<Opm::Group>(Opm::Group::serializeObject())},1}});
-        result.m_events = Events::serializeObject();
-        result.m_modifierDeck = DynamicVector<Deck>({Deck::serializeObject()});
         result.m_messageLimits = MessageLimits::serializeObject();
         result.m_runspec = Runspec::serializeObject();
         result.vfpprod_tables = {{1, {{std::make_shared<VFPProdTable>(VFPProdTable::serializeObject())}, 1}}};
@@ -298,7 +293,6 @@ namespace {
         result.m_actions = {{std::make_shared<Action::Actions>(Action::Actions::serializeObject())}, 1};
         result.rft_config = RFTConfig::serializeObject();
         result.restart_config = RestartConfig::serializeObject();
-        result.wellgroup_events = {{"test", Events::serializeObject()}};
         result.unit_system = UnitSystem::newFIELD();
         result.snapshots = { ScheduleState::serializeObject() };
         result.m_input_path = "Some/funny/path";
@@ -445,7 +439,6 @@ void Schedule::iterateScheduleSection(std::optional<std::size_t> load_offset,
             "LIFTOPT",
             "LINCOM",
             "MESSAGES",
-            "MULTFLT",
             "MXUNSUPP",
             "NODEPROP",
             "RPTSCHED",
@@ -711,8 +704,8 @@ void Schedule::iterateScheduleSection(std::optional<std::size_t> load_offset,
               event.
             */
             if (old_status != status) {
-                this->m_events.addEvent( ScheduleEvents::WELL_STATUS_CHANGE, reportStep );
-                this->addWellGroupEvent( well2->name(), ScheduleEvents::WELL_STATUS_CHANGE, reportStep);
+                this->snapshots.back().events().addEvent( ScheduleEvents::WELL_STATUS_CHANGE);
+                this->snapshots.back().wellgroup_events().addEvent( well2->name(), ScheduleEvents::WELL_STATUS_CHANGE);
             }
 
             update = true;
@@ -826,7 +819,7 @@ void Schedule::iterateScheduleSection(std::optional<std::size_t> load_offset,
                     }
                 }
 
-                m_events.addEvent( ScheduleEvents::COMPLETION_CHANGE, currentStep );
+                this->snapshots.back().events().addEvent( ScheduleEvents::COMPLETION_CHANGE);
             }
         }
     }
@@ -991,9 +984,8 @@ void Schedule::iterateScheduleSection(std::optional<std::size_t> load_offset,
     void Schedule::addWell(Well well, std::size_t report_step) {
         const std::string wname = well.name();
 
-        m_events.addEvent( ScheduleEvents::NEW_WELL , report_step );
-        this->wellgroup_events.insert( std::make_pair(wname, Events(this->m_timeMap)));
-        this->addWellGroupEvent(wname, ScheduleEvents::NEW_WELL, report_step);
+        this->snapshots.back().events().addEvent( ScheduleEvents::NEW_WELL );
+        this->snapshots.back().wellgroup_events().addWell( wname );
 
         well.setInsertIndex(this->wells_static.size());
         this->wells_static.insert( std::make_pair(wname, DynamicState<std::shared_ptr<Well>>(m_timeMap, nullptr)));
@@ -1340,9 +1332,8 @@ void Schedule::iterateScheduleSection(std::optional<std::size_t> load_offset,
         auto& dynamic_state = this->groups.at(group.name());
         dynamic_state.update(timeStep, group_ptr);
 
-        this->m_events.addEvent( ScheduleEvents::NEW_GROUP , timeStep );
-        this->wellgroup_events.insert( std::make_pair(group.name(), Events(this->m_timeMap)));
-        this->addWellGroupEvent(group.name(), ScheduleEvents::NEW_GROUP, timeStep);
+        this->snapshots.back().events().addEvent( ScheduleEvents::NEW_GROUP );
+        this->snapshots.back().wellgroup_events().addGroup(group.name());
 
         // All newly created groups are attached to the field group,
         // can then be relocated with the GRUPTREE keyword.
@@ -1412,7 +1403,7 @@ void Schedule::iterateScheduleSection(std::optional<std::size_t> load_offset,
             auto well_ptr = std::make_shared<Well>( well );
             well_ptr->updateGroup(group_name);
             this->updateWell(well_ptr, timeStep);
-            this->addWellGroupEvent(well_ptr->name(), ScheduleEvents::WELL_WELSPECS_UPDATE, timeStep);
+            this->snapshots.back().wellgroup_events().addEvent( well_ptr->name(), ScheduleEvents::WELL_WELSPECS_UPDATE );
 
             // Remove well child reference from previous group
             auto group = std::make_shared<Group>(this->getGroup(old_gname, timeStep));
@@ -1424,39 +1415,14 @@ void Schedule::iterateScheduleSection(std::optional<std::size_t> load_offset,
         auto group_ptr = std::make_shared<Group>(this->getGroup(group_name, timeStep));
         group_ptr->addWell(well_name);
         this->updateGroup(group_ptr, timeStep);
-        this->m_events.addEvent( ScheduleEvents::GROUP_CHANGE , timeStep);
+        this->snapshots.back().events().addEvent( ScheduleEvents::GROUP_CHANGE );
     }
 
-
-    const Deck& Schedule::getModifierDeck(std::size_t timeStep) const {
-        return m_modifierDeck.iget( timeStep );
-    }
 
     const MessageLimits& Schedule::getMessageLimits() const {
         return m_messageLimits;
     }
 
-
-    const Events& Schedule::getWellGroupEvents(const std::string& wellGroup) const {
-        if (this->wellgroup_events.count(wellGroup) > 0)
-            return this->wellgroup_events.at(wellGroup);
-        else
-            throw std::invalid_argument("No such well og group " + wellGroup);
-    }
-
-    void Schedule::addWellGroupEvent(const std::string& wellGroup, ScheduleEvents::Events event, std::size_t reportStep)  {
-        auto& events = this->wellgroup_events.at(wellGroup);
-        events.addEvent(event, reportStep);
-    }
-
-    bool Schedule::hasWellGroupEvent(const std::string& wellGroup, uint64_t event_mask, std::size_t reportStep) const {
-        const auto& events = this->getWellGroupEvents(wellGroup);
-        return events.hasEvent(event_mask, reportStep);
-    }
-
-    const Events& Schedule::getEvents() const {
-        return this->m_events;
-    }
 
     const Well::ProducerCMode& Schedule::getGlobalWhistctlMmode(std::size_t timestep) const {
         return global_whistctl_mode.get(timestep);
@@ -1743,8 +1709,6 @@ void Schedule::iterateScheduleSection(std::optional<std::size_t> load_offset,
                this->m_input_path == data.m_input_path &&
                compareMap(this->wells_static, data.wells_static) &&
                compareMap(this->groups, data.groups) &&
-               this->m_events == data.m_events &&
-               this->m_modifierDeck == data.m_modifierDeck &&
                this->m_messageLimits == data.m_messageLimits &&
                this->m_runspec == data.m_runspec &&
                compareMap(this->vfpprod_tables, data.vfpprod_tables) &&
@@ -1763,8 +1727,7 @@ void Schedule::iterateScheduleSection(std::optional<std::size_t> load_offset,
                compareDynState(this->rpt_config, data.rpt_config) &&
                rft_config  == data.rft_config &&
                this->restart_config == data.restart_config &&
-               this->unit_system == data.unit_system &&
-               this->wellgroup_events == data.wellgroup_events;
+               this->unit_system == data.unit_system;
      }
 
 
@@ -1812,13 +1775,15 @@ namespace {
             this->addGroup(group, report_step);
 
             if (group.isProductionGroup()) {
-                this->m_events.addEvent(ScheduleEvents::GROUP_PRODUCTION_UPDATE, report_step + 1);
-                this->addWellGroupEvent(rst_group.name, ScheduleEvents::GROUP_PRODUCTION_UPDATE, report_step + 1);
+                // Was originally at report_step + 1
+                this->snapshots.back().events().addEvent(ScheduleEvents::GROUP_PRODUCTION_UPDATE );
+                this->snapshots.back().wellgroup_events().addEvent(rst_group.name, ScheduleEvents::GROUP_PRODUCTION_UPDATE);
             }
 
             if (group.isInjectionGroup()) {
-                this->m_events.addEvent(ScheduleEvents::GROUP_INJECTION_UPDATE, report_step + 1);
-                this->addWellGroupEvent(rst_group.name, ScheduleEvents::GROUP_INJECTION_UPDATE, report_step + 1);
+                // Was originally at report_step + 1
+                this->snapshots.back().events().addEvent(ScheduleEvents::GROUP_INJECTION_UPDATE );
+                this->snapshots.back().wellgroup_events().addEvent(rst_group.name, ScheduleEvents::GROUP_INJECTION_UPDATE);
             }
         }
 
@@ -1864,7 +1829,8 @@ namespace {
             this->addWellToGroup(well.groupName(), well.name(), report_step);
         }
         this->snapshots[report_step + 1].tuning(rst_state.tuning);
-        m_events.addEvent( ScheduleEvents::TUNING_CHANGE , report_step + 1);
+        // Originally at report_step + 1
+        this->snapshots.back().events().addEvent( ScheduleEvents::TUNING_CHANGE );
 
 
         {
@@ -2172,6 +2138,8 @@ void Schedule::create_first(const std::chrono::system_clock::time_point& start_t
     auto& sched_state = snapshots.back();
     sched_state.nupcol( this->m_runspec.nupcol() );
     sched_state.oilvap( OilVaporizationProperties( this->m_runspec.tabdims().getNumPVTTables() ));
+
+    this->addGroup("FIELD", 0);
 }
 
 void Schedule::create_next(const std::chrono::system_clock::time_point& start_time, const std::optional<std::chrono::system_clock::time_point>& end_time) {

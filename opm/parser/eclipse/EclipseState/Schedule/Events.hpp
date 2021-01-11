@@ -20,8 +20,8 @@
 #define SCHEDULE_EVENTS_HPP
 
 #include <cstdint>
-
-#include <opm/parser/eclipse/EclipseState/Schedule/DynamicVector.hpp>
+#include <string>
+#include <unordered_map>
 
 namespace Opm
 {
@@ -131,25 +131,46 @@ namespace Opm
 
     class Events {
     public:
-        Events() = default;
-        explicit Events(const TimeMap& timeMap);
-
         static Events serializeObject();
 
-        void addEvent(ScheduleEvents::Events event, size_t reportStep);
-        bool hasEvent(uint64_t eventMask, size_t reportStep) const;
+        void addEvent(ScheduleEvents::Events event);
+        bool hasEvent(uint64_t eventMask) const;
+        void reset();
 
         bool operator==(const Events& data) const;
 
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
-            m_events.template serializeOp<Serializer,false>(serializer);
+            serializer(m_events);
         }
 
     private:
-        DynamicVector<uint64_t> m_events;
+        uint64_t m_events = 0;
     };
+
+
+    class WellGroupEvents {
+    public:
+        static WellGroupEvents serializeObject();
+
+        void addWell(const std::string& wname);
+        void addGroup(const std::string& gname);
+        void addEvent(const std::string& wgname, ScheduleEvents::Events event);
+        bool hasEvent(const std::string& wgname, uint64_t eventMask) const;
+        void reset();
+        bool operator==(const WellGroupEvents& data) const;
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer.map(m_wellgroup_events);
+        }
+    private:
+        std::unordered_map<std::string, Events> m_wellgroup_events;
+    };
+
+
 }
 
 #endif

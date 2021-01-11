@@ -80,7 +80,6 @@ BOOST_AUTO_TEST_CASE(TuningTest) {
   FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
   Runspec runspec (deck);
   Schedule schedule( deck, grid , fp, runspec, python);
-  auto event = schedule.getEvents();
 
   const double diff = 1.0e-14;
 
@@ -89,7 +88,8 @@ BOOST_AUTO_TEST_CASE(TuningTest) {
 
   {
       size_t timestep = 4;
-      BOOST_CHECK(!event.hasEvent(ScheduleEvents::TUNING_CHANGE, timestep));
+      const auto& event = schedule[timestep].events();
+      BOOST_CHECK(!event.hasEvent(ScheduleEvents::TUNING_CHANGE));
 
       const auto& tuning = schedule[4].tuning();
       double TSINIT_default = tuning.TSINIT;
@@ -208,9 +208,10 @@ BOOST_AUTO_TEST_CASE(TuningTest) {
   /********* Record 1 ***********/
   {
       std::size_t timeStep = 5;
+      const auto& event = schedule[timeStep].events();
       const auto& tuning = schedule[timeStep].tuning();
 
-      BOOST_CHECK(event.hasEvent(ScheduleEvents::TUNING_CHANGE, timeStep));
+      BOOST_CHECK(event.hasEvent(ScheduleEvents::TUNING_CHANGE));
       double TSINIT = tuning.TSINIT;
       BOOST_CHECK_CLOSE(TSINIT, 2 * Metric::Time, diff);
 
@@ -316,7 +317,8 @@ BOOST_AUTO_TEST_CASE(TuningTest) {
   /*** TIMESTEP 7 ***/
   {
       std::size_t timestep = 7;
-      BOOST_CHECK(!event.hasEvent(ScheduleEvents::TUNING_CHANGE, timestep));
+      const auto& event = schedule[timestep].events();
+      BOOST_CHECK(!event.hasEvent(ScheduleEvents::TUNING_CHANGE));
   }
 
   /*** TIMESTEP 10 ***/
@@ -324,7 +326,8 @@ BOOST_AUTO_TEST_CASE(TuningTest) {
       /********* Record 1 ***********/
       std::size_t timestep = 10;
       const auto& tuning = schedule[10].tuning();
-      BOOST_CHECK(event.hasEvent(ScheduleEvents::TUNING_CHANGE, timestep));
+      const auto& event = schedule[timestep].events();
+      BOOST_CHECK(event.hasEvent(ScheduleEvents::TUNING_CHANGE));
       BOOST_CHECK_EQUAL(true, tuning.TMAXWC_has_value);
       BOOST_CHECK_CLOSE(tuning.TMAXWC, 10.0 * Metric::Time, diff);
 

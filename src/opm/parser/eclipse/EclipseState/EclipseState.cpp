@@ -246,9 +246,9 @@ namespace Opm {
         }
     }
 
-    void EclipseState::applyModifierDeck(const Deck& deck) {
+    void EclipseState::apply_geo_keywords(const std::vector<DeckKeyword>& keywords) {
         using namespace ParserKeywords;
-        for (const auto& keyword : deck) {
+        for (const auto& keyword : keywords) {
 
             if (keyword.isKeyword<MULTFLT>()) {
                 for (const auto& record : keyword) {

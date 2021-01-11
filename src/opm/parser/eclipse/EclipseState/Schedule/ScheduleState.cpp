@@ -38,12 +38,15 @@ ScheduleState::ScheduleState(const ScheduleState& src, const std::chrono::system
 {
     this->m_start_time = start_time;
     this->m_end_time = std::nullopt;
+
+    this->m_events.reset();
+    this->m_wellgroup_events.reset();
+    this->m_geo_keywords.clear();
 }
 
 ScheduleState::ScheduleState(const ScheduleState& src, const std::chrono::system_clock::time_point& start_time, const std::chrono::system_clock::time_point& end_time) :
-    ScheduleState(src)
+    ScheduleState(src, start_time)
 {
-    this->m_start_time = start_time;
     this->m_end_time = end_time;
 }
 
@@ -85,11 +88,27 @@ OilVaporizationProperties& ScheduleState::oilvap() {
     return this->m_oilvap;
 }
 
+void ScheduleState::geo_keywords(std::vector<DeckKeyword> geo_keywords) {
+    this->m_geo_keywords = std::move(geo_keywords);
+}
+
+std::vector<DeckKeyword>& ScheduleState::geo_keywords() {
+    return this->m_geo_keywords;
+}
+
+const std::vector<DeckKeyword>& ScheduleState::geo_keywords() const {
+    return this->m_geo_keywords;
+}
+
+
 bool ScheduleState::operator==(const ScheduleState& other) const {
     return this->m_start_time == other.m_start_time &&
            this->m_oilvap == other.m_oilvap &&
            this->m_tuning == other.m_tuning &&
            this->m_end_time == other.m_end_time &&
+           this->m_events == other.m_events &&
+           this->m_wellgroup_events == other.m_wellgroup_events &&
+           this->m_geo_keywords == other.m_geo_keywords &&
            this->m_nupcol == other.m_nupcol;
 }
 
@@ -97,6 +116,7 @@ ScheduleState ScheduleState::serializeObject() {
     auto t1 = std::chrono::system_clock::now();
     auto t2 = t1 + std::chrono::hours(48);
     ScheduleState ts(t1, t2);
+    ts.events( Events::serializeObject() );
     ts.nupcol(77);
     ts.oilvap( Opm::OilVaporizationProperties::serializeObject() );
     return ts;
@@ -112,6 +132,30 @@ const Tuning& ScheduleState::tuning() const {
 
 Tuning& ScheduleState::tuning() {
     return this->m_tuning;
+}
+
+void ScheduleState::events(Events events) {
+    this->m_events = events;
+}
+
+Events& ScheduleState::events() {
+    return this->m_events;
+}
+
+const Events& ScheduleState::events() const {
+    return this->m_events;
+}
+
+void ScheduleState::wellgroup_events(WellGroupEvents wgevents) {
+    this->m_wellgroup_events = std::move(wgevents);
+}
+
+WellGroupEvents& ScheduleState::wellgroup_events() {
+    return this->m_wellgroup_events;
+}
+
+const WellGroupEvents& ScheduleState::wellgroup_events() const {
+    return this->m_wellgroup_events;
 }
 
 }
