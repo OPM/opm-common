@@ -106,7 +106,7 @@ namespace Opm {
 
         std::string getTitle() const;
 
-        void applyModifierDeck(const Deck& deck);
+        void apply_geo_keywords(const std::vector<DeckKeyword>& keywords);
 
         const Runspec& runspec() const;
         const AquiferConfig& aquifer() const;

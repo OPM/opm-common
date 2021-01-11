@@ -24,9 +24,12 @@
 #include <memory>
 #include <optional>
 
+#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
+
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/PAvg.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Events.hpp>
 
 namespace Opm {
 
@@ -68,6 +71,18 @@ namespace Opm {
         const OilVaporizationProperties& oilvap() const;
         OilVaporizationProperties& oilvap();
 
+        void events(Events events);
+        Events& events();
+        const Events& events() const;
+
+        void wellgroup_events(WellGroupEvents wgevents);
+        WellGroupEvents& wellgroup_events();
+        const WellGroupEvents& wellgroup_events() const;
+
+        void geo_keywords(std::vector<DeckKeyword> geo_keywords);
+        std::vector<DeckKeyword>& geo_keywords();
+        const std::vector<DeckKeyword>& geo_keywords() const;
+
         template<class Serializer>
         void serializeOp(Serializer& serializer) {
             serializer(m_start_time);
@@ -76,6 +91,9 @@ namespace Opm {
             m_tuning.serializeOp(serializer);
             serializer(m_nupcol);
             m_oilvap.serializeOp(serializer);
+            m_events.serializeOp(serializer);
+            m_wellgroup_events.serializeOp(serializer);
+            serializer.vector(m_geo_keywords);
         }
 
     private:
@@ -86,6 +104,9 @@ namespace Opm {
         Tuning m_tuning;
         int m_nupcol;
         OilVaporizationProperties m_oilvap;
+        Events m_events;
+        WellGroupEvents m_wellgroup_events;
+        std::vector<DeckKeyword> m_geo_keywords;
     };
 }
 

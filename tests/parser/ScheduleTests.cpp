@@ -820,11 +820,11 @@ DATES             -- 6
   const auto& well_5 = schedule.getWell("OP_1", 5);
   // timestep 3. Close all completions with WELOPEN and immediately open new completions with COMPDAT.
   BOOST_CHECK(Well::Status::OPEN == well_3.getStatus());
-  BOOST_CHECK( !schedule.hasWellGroupEvent( "OP_1", ScheduleEvents::WELL_STATUS_CHANGE , 3 ));
+  BOOST_CHECK( !schedule[3].wellgroup_events().hasEvent("OP_1", ScheduleEvents::WELL_STATUS_CHANGE));
   // timestep 4. Close all completions with WELOPEN. The well will be shut since no completions
   // are open.
   BOOST_CHECK(Well::Status::SHUT == well_4.getStatus());
-  BOOST_CHECK( schedule.hasWellGroupEvent( "OP_1", ScheduleEvents::WELL_STATUS_CHANGE , 4 ));
+  BOOST_CHECK( schedule[4].wellgroup_events().hasEvent("OP_1", ScheduleEvents::WELL_STATUS_CHANGE));
   // timestep 5. Open new completions. But keep the well shut,
   BOOST_CHECK(Well::Status::SHUT == well_5.getStatus());
 }
@@ -1269,8 +1269,8 @@ BOOST_AUTO_TEST_CASE(createDeckModifyMultipleGCONPROD) {
         auto gh = schedule.getGroup("H1", 1);
 
 
-        BOOST_CHECK(  !schedule.hasWellGroupEvent( "G2", ScheduleEvents::GROUP_PRODUCTION_UPDATE , 1 ));
-        BOOST_CHECK(  schedule.hasWellGroupEvent( "G2", ScheduleEvents::GROUP_PRODUCTION_UPDATE , 2 ));
+        BOOST_CHECK(  !schedule[1].wellgroup_events().hasEvent( "G2", ScheduleEvents::GROUP_PRODUCTION_UPDATE));
+        BOOST_CHECK(   schedule[2].wellgroup_events().hasEvent( "G2", ScheduleEvents::GROUP_PRODUCTION_UPDATE));
 
 }
 
@@ -3001,9 +3001,9 @@ VFPINJ
     const auto& schedule = make_schedule(input);
 
 
-    BOOST_CHECK( schedule.getEvents().hasEvent(ScheduleEvents::VFPINJ_UPDATE, 0));
-    BOOST_CHECK( !schedule.getEvents().hasEvent(ScheduleEvents::VFPINJ_UPDATE, 1));
-    BOOST_CHECK( schedule.getEvents().hasEvent(ScheduleEvents::VFPINJ_UPDATE, 2));
+    BOOST_CHECK( schedule[0].events().hasEvent(ScheduleEvents::VFPINJ_UPDATE));
+    BOOST_CHECK( !schedule[1].events().hasEvent(ScheduleEvents::VFPINJ_UPDATE));
+    BOOST_CHECK( schedule[2].events().hasEvent(ScheduleEvents::VFPINJ_UPDATE));
 
     // No such table id
     BOOST_CHECK_THROW(schedule.getVFPInjTable(77,0), std::invalid_argument);
@@ -3989,16 +3989,16 @@ END
     BOOST_REQUIRE_EQUAL(sched.getTimeMap().numTimesteps(), std::size_t{5});
     BOOST_REQUIRE_EQUAL(sched.getTimeMap().last(),         std::size_t{5});
 
-    BOOST_REQUIRE_MESSAGE(sched.hasWellGroupEvent("P", ScheduleEvents::Events::WELL_PRODUCTIVITY_INDEX, 1),
+    BOOST_REQUIRE_MESSAGE(sched[1].wellgroup_events().hasEvent("P", ScheduleEvents::Events::WELL_PRODUCTIVITY_INDEX),
                           R"(Schedule must have WELL_PRODUCTIVITY_INDEX Event for well "P" at report step 1)");
 
-    BOOST_REQUIRE_MESSAGE(sched.hasWellGroupEvent("P", ScheduleEvents::Events::WELL_PRODUCTIVITY_INDEX, 3),
+    BOOST_REQUIRE_MESSAGE(sched[3].wellgroup_events().hasEvent("P", ScheduleEvents::Events::WELL_PRODUCTIVITY_INDEX),
                           R"(Schedule must have WELL_PRODUCTIVITY_INDEX Event for well "P" at report step 3)");
 
-    BOOST_REQUIRE_MESSAGE(sched.getEvents().hasEvent(ScheduleEvents::Events::WELL_PRODUCTIVITY_INDEX, 1),
+    BOOST_REQUIRE_MESSAGE(sched[1].events().hasEvent(ScheduleEvents::Events::WELL_PRODUCTIVITY_INDEX),
                           "Schedule must have WELL_PRODUCTIVITY_INDEX Event at report step 1");
 
-    BOOST_REQUIRE_MESSAGE(sched.getEvents().hasEvent(ScheduleEvents::Events::WELL_PRODUCTIVITY_INDEX, 3),
+    BOOST_REQUIRE_MESSAGE(sched[3].events().hasEvent(ScheduleEvents::Events::WELL_PRODUCTIVITY_INDEX),
                           "Schedule must have WELL_PRODUCTIVITY_INDEX Event at report step 3");
 
     auto getScalingFactor = [&sched](const std::size_t report_step, const double wellPI) -> double

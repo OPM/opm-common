@@ -169,10 +169,10 @@ namespace {
                                            "Well {} is not connected to grid - will remain SHUT", name, location.filename, location.lineno, name);
                     OpmLog::warning(msg);
                 }
-                this->addWellGroupEvent(name, ScheduleEvents::COMPLETION_CHANGE, handlerContext.currentStep);
+                this->snapshots.back().wellgroup_events().addEvent( name, ScheduleEvents::COMPLETION_CHANGE);
             }
         }
-        m_events.addEvent(ScheduleEvents::COMPLETION_CHANGE, handlerContext.currentStep);
+        this->snapshots.back().events().addEvent(ScheduleEvents::COMPLETION_CHANGE);
 
         // In the case the wells reference depth has been defaulted in the
         // WELSPECS keyword we need to force a calculation of the wells
@@ -340,8 +340,8 @@ namespace {
 
                 if (group_ptr->updateInjection(injection)) {
                     this->updateGroup(std::move(group_ptr), current_step);
-                    m_events.addEvent( ScheduleEvents::GROUP_INJECTION_UPDATE , current_step);
-                    this->addWellGroupEvent(group_name, ScheduleEvents::GROUP_INJECTION_UPDATE, current_step);
+                    this->snapshots.back().events().addEvent( ScheduleEvents::GROUP_INJECTION_UPDATE );
+                    this->snapshots.back().wellgroup_events().addEvent( group_name, ScheduleEvents::GROUP_INJECTION_UPDATE);
                 }
             }
         }
@@ -458,8 +458,8 @@ namespace {
                         this->guide_rate_config.update( current_step, std::move(new_config) );
 
                         this->updateGroup(std::move(group_ptr), current_step);
-                        m_events.addEvent(ScheduleEvents::GROUP_PRODUCTION_UPDATE, current_step);
-                        this->addWellGroupEvent(group_name, ScheduleEvents::GROUP_PRODUCTION_UPDATE, current_step);
+                        this->snapshots.back().events().addEvent(ScheduleEvents::GROUP_PRODUCTION_UPDATE);
+                        this->snapshots.back().wellgroup_events().addEvent( group_name, ScheduleEvents::GROUP_PRODUCTION_UPDATE);
 
                         auto udq = std::make_shared<UDQActive>(this->udqActive(current_step));
                         if (production.updateUDQActive(this->getUDQConfig(current_step), *udq))
@@ -527,8 +527,8 @@ namespace {
             for (const auto& group_name : group_names) {
                 auto group_ptr = std::make_shared<Group>(this->getGroup(group_name, handlerContext.currentStep));
                 if (group_ptr->update_gefac(gefac, transfer)) {
-                    this->addWellGroupEvent( group_name, ScheduleEvents::WELLGROUP_EFFICIENCY_UPDATE, handlerContext.currentStep);
-                    m_events.addEvent( ScheduleEvents::WELLGROUP_EFFICIENCY_UPDATE , handlerContext.currentStep);
+                    this->snapshots.back().wellgroup_events().addEvent( group_name, ScheduleEvents::WELLGROUP_EFFICIENCY_UPDATE);
+                    this->snapshots.back().events().addEvent( ScheduleEvents::WELLGROUP_EFFICIENCY_UPDATE );
                     this->updateGroup(std::move(group_ptr), handlerContext.currentStep);
                 }
             }
@@ -679,8 +679,8 @@ namespace {
     }
 
     void Schedule::handleMULTFLT (const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
-        this->m_modifierDeck[handlerContext.currentStep].addKeyword(handlerContext.keyword);
-        m_events.addEvent(ScheduleEvents::GEO_MODIFIER, handlerContext.currentStep);
+        this->snapshots.back().geo_keywords().push_back(handlerContext.keyword);
+        this->snapshots.back().events().addEvent( ScheduleEvents::GEO_MODIFIER );
     }
 
     void Schedule::handleMXUNSUPP(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
@@ -816,7 +816,7 @@ namespace {
         }
 
         this->snapshots.back().tuning( std::move( tuning ));
-        m_events.addEvent(ScheduleEvents::TUNING_CHANGE, handlerContext.currentStep);
+        this->snapshots.back().events().addEvent(ScheduleEvents::TUNING_CHANGE);
     }
 
     void Schedule::handleUDQ(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
@@ -848,7 +848,7 @@ namespace {
 
         auto& table_state = vfpinj_tables.at(table_id);
         table_state.update(handlerContext.currentStep, table);
-        this->m_events.addEvent( ScheduleEvents::VFPINJ_UPDATE , handlerContext.currentStep);
+        this->snapshots.back().events().addEvent( ScheduleEvents::VFPINJ_UPDATE );
     }
 
     void Schedule::handleVFPPROD(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
@@ -862,7 +862,7 @@ namespace {
 
         auto& table_state = vfpprod_tables.at(table_id);
         table_state.update(handlerContext.currentStep, table);
-        this->m_events.addEvent( ScheduleEvents::VFPPROD_UPDATE , handlerContext.currentStep);
+        this->snapshots.back().events().addEvent( ScheduleEvents::VFPPROD_UPDATE );
     }
 
     void Schedule::handleWCONHIST(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
@@ -911,8 +911,8 @@ namespace {
                     update_well = true;
 
                 if (update_well) {
-                    m_events.addEvent( ScheduleEvents::PRODUCTION_UPDATE , handlerContext.currentStep);
-                    this->addWellGroupEvent( well2->name(), ScheduleEvents::PRODUCTION_UPDATE, handlerContext.currentStep);
+                    this->snapshots.back().events().addEvent( ScheduleEvents::PRODUCTION_UPDATE );
+                    this->snapshots.back().wellgroup_events().addEvent( well2->name(), ScheduleEvents::PRODUCTION_UPDATE);
                     this->updateWell(well2, handlerContext.currentStep);
                 }
 
@@ -977,8 +977,8 @@ namespace {
                     update_well = true;
 
                 if (update_well) {
-                    m_events.addEvent( ScheduleEvents::PRODUCTION_UPDATE , handlerContext.currentStep);
-                    this->addWellGroupEvent( well2->name(), ScheduleEvents::PRODUCTION_UPDATE, handlerContext.currentStep);
+                    this->snapshots.back().events().addEvent( ScheduleEvents::PRODUCTION_UPDATE );
+                    this->snapshots.back().wellgroup_events().addEvent( well2->name(), ScheduleEvents::PRODUCTION_UPDATE);
                     this->updateWell(std::move(well2), handlerContext.currentStep);
                 }
 
@@ -1018,8 +1018,8 @@ namespace {
 
                 if (update_well) {
                     this->updateWell(well2, handlerContext.currentStep);
-                    m_events.addEvent( ScheduleEvents::INJECTION_UPDATE , handlerContext.currentStep );
-                    this->addWellGroupEvent( well_name, ScheduleEvents::INJECTION_UPDATE, handlerContext.currentStep);
+                    this->snapshots.back().events().addEvent(ScheduleEvents::INJECTION_UPDATE);
+                    this->snapshots.back().wellgroup_events().addEvent( well_name, ScheduleEvents::INJECTION_UPDATE);
                 }
 
                 // if the well has zero surface rate limit or reservior rate limit, while does not allow crossflow,
@@ -1062,7 +1062,6 @@ namespace {
 
             for (const auto& well_name : well_names) {
                 this->updateWellStatus(well_name, handlerContext.currentStep, false, status, handlerContext.keyword.location());
-
                 bool update_well = false;
                 auto& dynamic_state = this->wells_static.at(well_name);
                 auto well2 = std::make_shared<Well>(*dynamic_state[handlerContext.currentStep]);
@@ -1080,8 +1079,8 @@ namespace {
 
                 if (update_well) {
                     this->updateWell(well2, handlerContext.currentStep);
-                    m_events.addEvent( ScheduleEvents::INJECTION_UPDATE , handlerContext.currentStep );
-                    this->addWellGroupEvent( well_name, ScheduleEvents::INJECTION_UPDATE, handlerContext.currentStep);
+                    this->snapshots.back().events().addEvent( ScheduleEvents::INJECTION_UPDATE );
+                    this->snapshots.back().wellgroup_events().addEvent( well_name, ScheduleEvents::INJECTION_UPDATE);
                 }
 
                 if ( ! well2->getAllowCrossFlow() && (injection->surfaceInjectionRate.zero())) {
@@ -1125,8 +1124,8 @@ namespace {
                 auto& dynamic_state = this->wells_static.at(well_name);
                 auto well2 = std::make_shared<Well>(*dynamic_state[handlerContext.currentStep]);
                 if (well2->updateEfficiencyFactor(efficiencyFactor)){
-                    this->addWellGroupEvent( well_name, ScheduleEvents::WELLGROUP_EFFICIENCY_UPDATE, handlerContext.currentStep);
-                    m_events.addEvent( ScheduleEvents::WELLGROUP_EFFICIENCY_UPDATE , handlerContext.currentStep);
+                    this->snapshots.back().wellgroup_events().addEvent( well_name, ScheduleEvents::WELLGROUP_EFFICIENCY_UPDATE);
+                    this->snapshots.back().events().addEvent(ScheduleEvents::WELLGROUP_EFFICIENCY_UPDATE);
                     this->updateWell(std::move(well2), handlerContext.currentStep);
                 }
             }
@@ -1181,11 +1180,11 @@ namespace {
                 if (well2->updateWellProductivityIndex(rawProdIndex))
                     this->updateWell(std::move(well2), event_step);
 
-                this->addWellGroupEvent(well_name, ScheduleEvents::WELL_PRODUCTIVITY_INDEX, event_step);
+                this->snapshots.back().wellgroup_events().addEvent( well_name, ScheduleEvents::WELL_PRODUCTIVITY_INDEX);
             }
         }
 
-        this->m_events.addEvent(ScheduleEvents::WELL_PRODUCTIVITY_INDEX, event_step);
+        this->snapshots.back().events().addEvent(ScheduleEvents::WELL_PRODUCTIVITY_INDEX);
     }
 
     void Schedule::handleWELSEGS(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
@@ -1259,7 +1258,7 @@ namespace {
                     if (update) {
                         well2->updateRefDepth();
                         this->updateWell(std::move(well2), handlerContext.currentStep);
-                        this->addWellGroupEvent(wellName, ScheduleEvents::WELL_WELSPECS_UPDATE, handlerContext.currentStep);
+                        this->snapshots.back().wellgroup_events().addEvent( wellName, ScheduleEvents::WELL_WELSPECS_UPDATE);
                     }
                 }
             }
@@ -1319,11 +1318,11 @@ namespace {
                 if (update)
                 {
                     if (well2->isProducer()) {
-                        this->addWellGroupEvent( well_name, ScheduleEvents::PRODUCTION_UPDATE, handlerContext.currentStep);
-                        m_events.addEvent( ScheduleEvents::PRODUCTION_UPDATE , handlerContext.currentStep);
+                        this->snapshots.back().wellgroup_events().addEvent( well_name, ScheduleEvents::PRODUCTION_UPDATE);
+                        this->snapshots.back().events().addEvent( ScheduleEvents::PRODUCTION_UPDATE );
                     } else {
-                        this->addWellGroupEvent( well_name, ScheduleEvents::INJECTION_UPDATE, handlerContext.currentStep);
-                        m_events.addEvent( ScheduleEvents::INJECTION_UPDATE , handlerContext.currentStep);
+                        this->snapshots.back().wellgroup_events().addEvent( well_name, ScheduleEvents::INJECTION_UPDATE);
+                        this->snapshots.back().events().addEvent( ScheduleEvents::INJECTION_UPDATE );
                     }
                     this->updateWell(std::move(well2), handlerContext.currentStep);
                 }
@@ -1629,7 +1628,7 @@ namespace {
         tuning.WSEG_REDUCTION_FACTOR = record.getItem<ParserKeywords::WSEGITER::REDUCTION_FACTOR>().get<double>(0);
         tuning.WSEG_INCREASE_FACTOR = record.getItem<ParserKeywords::WSEGITER::INCREASING_FACTOR>().get<double>(0);
 
-        m_events.addEvent(ScheduleEvents::TUNING_CHANGE, handlerContext.currentStep);
+        this->snapshots.back().events().addEvent(ScheduleEvents::TUNING_CHANGE);
     }
 
     void Schedule::handleWSEGSICD(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {

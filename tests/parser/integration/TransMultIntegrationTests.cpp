@@ -41,14 +41,13 @@ BOOST_AUTO_TEST_CASE(MULTFLT_IN_SCHEDULE) {
     EclipseState state(deck);
     const auto& trans = state.getTransMult();
     Schedule schedule(deck, state, python);
-    const Events& events = schedule.getEvents();
 
     BOOST_CHECK_EQUAL( 0.10 , trans.getMultiplier( 3,2,0,FaceDir::XPlus ));
     BOOST_CHECK_EQUAL( 0.10 , trans.getMultiplier( 2,2,0,FaceDir::XPlus ));
-    BOOST_CHECK( events.hasEvent( ScheduleEvents::GEO_MODIFIER , 3 ) );
+    BOOST_CHECK( schedule[3].events().hasEvent( ScheduleEvents::GEO_MODIFIER) );
     {
-        const auto& mini_deck = schedule.getModifierDeck(3);
-        state.applyModifierDeck( mini_deck );
+        const auto& keywords = schedule[3].geo_keywords();
+        state.apply_geo_keywords( keywords );
     }
     BOOST_CHECK_EQUAL( 2.00 , trans.getMultiplier( 2,2,0,FaceDir::XPlus ));
     BOOST_CHECK_EQUAL( 0.10 , trans.getMultiplier( 3,2,0,FaceDir::XPlus ));

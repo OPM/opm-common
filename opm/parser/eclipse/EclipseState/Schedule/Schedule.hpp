@@ -29,7 +29,6 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/GasLiftOpt.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicVector.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Events.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GTNode.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GuideRateConfig.hpp>
@@ -261,10 +260,6 @@ namespace Opm
         const GuideRateConfig& guideRateConfig(std::size_t timeStep) const;
 
         const RFTConfig& rftConfig() const;
-        const Events& getEvents() const;
-        const Events& getWellGroupEvents(const std::string& wellGroup) const;
-        bool hasWellGroupEvent(const std::string& wellGroup, uint64_t event_mask, std::size_t reportStep) const;
-        const Deck& getModifierDeck(std::size_t timeStep) const;
         const VFPProdTable& getVFPProdTable(int table_id, std::size_t timeStep) const;
         const VFPInjTable& getVFPInjTable(int table_id, std::size_t timeStep) const;
         std::map<int, std::shared_ptr<const VFPProdTable> > getVFPProdTables(std::size_t timeStep) const;
@@ -316,8 +311,6 @@ namespace Opm
             auto splitGroups = splitDynMap(groups);
             serializer.vector(splitGroups.first);
             serializer(splitGroups.second);
-            m_events.serializeOp(serializer);
-            m_modifierDeck.serializeOp(serializer);
             m_messageLimits.serializeOp(serializer);
             m_runspec.serializeOp(serializer);
             auto splitvfpprod = splitDynMap<Map2>(vfpprod_tables);
@@ -339,7 +332,6 @@ namespace Opm
             m_glo.serializeOp(serializer);
             rft_config.serializeOp(serializer);
             restart_config.serializeOp(serializer);
-            serializer.map(wellgroup_events);
             if (!serializer.isSerializing()) {
                 reconstructDynMap(splitWells.first, splitWells.second, wells_static);
                 reconstructDynMap(splitGroups.first, splitGroups.second, groups);
@@ -359,8 +351,6 @@ namespace Opm
         TimeMap m_timeMap;
         WellMap wells_static;
         GroupMap groups;
-        Events m_events;
-        DynamicVector< Deck > m_modifierDeck;
         MessageLimits m_messageLimits;
         Runspec m_runspec;
         VFPProdMap vfpprod_tables;
@@ -380,7 +370,6 @@ namespace Opm
         RestartConfig restart_config;
         UnitSystem unit_system;
         std::optional<int> exit_status;
-        std::map<std::string,Events> wellgroup_events;
         DynamicState<std::shared_ptr<RPTConfig>> rpt_config;
         std::vector<ScheduleState> snapshots;
 
@@ -433,7 +422,6 @@ namespace Opm
                            const EclipseGrid& grid,
                            const FieldPropsManager& fp,
                            std::vector<std::pair<const DeckKeyword*, std::size_t > >& rftProperties);
-        void addWellGroupEvent(const std::string& wellGroup, ScheduleEvents::Events event, std::size_t reportStep);
 
         template<template<class, class> class Map, class Type, class Key>
         std::pair<std::vector<Type>, std::vector<std::pair<Key, std::vector<std::size_t>>>>

@@ -367,6 +367,7 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_GRUPTREE_WITH_REPARENT_correct_tree) {
     BOOST_CHECK_EQUAL(field_group.groups().size(), 2);
     BOOST_CHECK( field_group.hasGroup("GROUP_NEW"));
     BOOST_CHECK( field_group.hasGroup("GROUP_BJARNE"));
+
     BOOST_CHECK_EQUAL( new_group.control_group().value_or("ERROR"), "FIELD");
     BOOST_CHECK_EQUAL( new_group.flow_group().value_or("ERROR"), "FIELD");
     BOOST_CHECK( new_group.hasGroup("GROUP_NILS"));
@@ -860,27 +861,26 @@ BOOST_AUTO_TEST_CASE(TestEvents) {
     Runspec runspec (deck);
     auto python = std::make_shared<Python>();
     Schedule sched(deck , grid , fp, runspec, python);
-    const Events& events = sched.getEvents();
 
-    BOOST_CHECK(  events.hasEvent(ScheduleEvents::NEW_WELL , 0 ) );
-    BOOST_CHECK( !events.hasEvent(ScheduleEvents::NEW_WELL , 1 ) );
-    BOOST_CHECK(  events.hasEvent(ScheduleEvents::NEW_WELL , 2 ) );
-    BOOST_CHECK( !events.hasEvent(ScheduleEvents::NEW_WELL , 3 ) );
+    BOOST_CHECK(  sched[0].events().hasEvent(ScheduleEvents::NEW_WELL) );
+    BOOST_CHECK( !sched[1].events().hasEvent(ScheduleEvents::NEW_WELL) );
+    BOOST_CHECK(  sched[2].events().hasEvent(ScheduleEvents::NEW_WELL) );
+    BOOST_CHECK( !sched[3].events().hasEvent(ScheduleEvents::NEW_WELL) );
 
-    BOOST_CHECK(  events.hasEvent(ScheduleEvents::COMPLETION_CHANGE , 0 ) );
-    BOOST_CHECK( !events.hasEvent(ScheduleEvents::COMPLETION_CHANGE , 1) );
-    BOOST_CHECK(  events.hasEvent(ScheduleEvents::COMPLETION_CHANGE , 5 ) );
+    BOOST_CHECK(  sched[0].events().hasEvent(ScheduleEvents::COMPLETION_CHANGE) );
+    BOOST_CHECK( !sched[1].events().hasEvent(ScheduleEvents::COMPLETION_CHANGE) );
+    BOOST_CHECK(  sched[5].events().hasEvent(ScheduleEvents::COMPLETION_CHANGE) );
 
-    BOOST_CHECK(  events.hasEvent(ScheduleEvents::WELL_STATUS_CHANGE , 1 ));
-    BOOST_CHECK( !events.hasEvent(ScheduleEvents::WELL_STATUS_CHANGE , 2 ));
-    BOOST_CHECK( events.hasEvent(ScheduleEvents::WELL_STATUS_CHANGE , 3 ));
-    BOOST_CHECK( events.hasEvent(ScheduleEvents::COMPLETION_CHANGE , 5) );
+    BOOST_CHECK(  sched[1].events().hasEvent(ScheduleEvents::WELL_STATUS_CHANGE));
+    BOOST_CHECK( !sched[2].events().hasEvent(ScheduleEvents::WELL_STATUS_CHANGE));
+    BOOST_CHECK(  sched[3].events().hasEvent(ScheduleEvents::WELL_STATUS_CHANGE));
+    BOOST_CHECK(  sched[5].events().hasEvent(ScheduleEvents::COMPLETION_CHANGE) );
 
-    BOOST_CHECK(  events.hasEvent(ScheduleEvents::GROUP_CHANGE , 0 ));
-    BOOST_CHECK( !events.hasEvent(ScheduleEvents::GROUP_CHANGE , 1 ));
-    BOOST_CHECK(  events.hasEvent(ScheduleEvents::GROUP_CHANGE , 3 ) );
-    BOOST_CHECK( !events.hasEvent(ScheduleEvents::NEW_GROUP , 2 ) );
-    BOOST_CHECK(  events.hasEvent(ScheduleEvents::NEW_GROUP , 3 ) );
+    BOOST_CHECK(  sched[0].events().hasEvent(ScheduleEvents::GROUP_CHANGE));
+    BOOST_CHECK( !sched[1].events().hasEvent(ScheduleEvents::GROUP_CHANGE));
+    BOOST_CHECK(  sched[3].events().hasEvent(ScheduleEvents::GROUP_CHANGE));
+    BOOST_CHECK( !sched[2].events().hasEvent(ScheduleEvents::NEW_GROUP));
+    BOOST_CHECK(  sched[3].events().hasEvent(ScheduleEvents::NEW_GROUP));
 }
 
 
@@ -896,17 +896,17 @@ BOOST_AUTO_TEST_CASE(TestWellEvents) {
     auto python = std::make_shared<Python>();
     Schedule sched(deck , grid , fp, runspec, python);
 
-    BOOST_CHECK(  sched.hasWellGroupEvent( "W_1", ScheduleEvents::NEW_WELL , 0 ));
-    BOOST_CHECK(  sched.hasWellGroupEvent( "W_2", ScheduleEvents::NEW_WELL , 2 ));
-    BOOST_CHECK( !sched.hasWellGroupEvent( "W_2", ScheduleEvents::NEW_WELL , 3 ));
-    BOOST_CHECK(  sched.hasWellGroupEvent( "W_2", ScheduleEvents::WELL_WELSPECS_UPDATE , 3 ));
+    BOOST_CHECK(  sched[0].wellgroup_events().hasEvent( "W_1", ScheduleEvents::NEW_WELL));
+    BOOST_CHECK(  sched[2].wellgroup_events().hasEvent( "W_2", ScheduleEvents::NEW_WELL));
+    BOOST_CHECK( !sched[3].wellgroup_events().hasEvent( "W_2", ScheduleEvents::NEW_WELL));
+    BOOST_CHECK(  sched[3].wellgroup_events().hasEvent( "W_2", ScheduleEvents::WELL_WELSPECS_UPDATE));
 
-    BOOST_CHECK( sched.hasWellGroupEvent( "W_1", ScheduleEvents::WELL_STATUS_CHANGE , 0 ));
-    BOOST_CHECK( sched.hasWellGroupEvent( "W_1", ScheduleEvents::WELL_STATUS_CHANGE , 1 ));
-    BOOST_CHECK( sched.hasWellGroupEvent( "W_1", ScheduleEvents::WELL_STATUS_CHANGE , 3 ));
-    BOOST_CHECK( sched.hasWellGroupEvent( "W_1", ScheduleEvents::WELL_STATUS_CHANGE , 4 ));
-    BOOST_CHECK( !sched.hasWellGroupEvent( "W_1", ScheduleEvents::WELL_STATUS_CHANGE , 5 ));
+    BOOST_CHECK( sched[0].wellgroup_events().hasEvent( "W_1", ScheduleEvents::WELL_STATUS_CHANGE));
+    BOOST_CHECK( sched[1].wellgroup_events().hasEvent( "W_1", ScheduleEvents::WELL_STATUS_CHANGE));
+    BOOST_CHECK( sched[3].wellgroup_events().hasEvent( "W_1", ScheduleEvents::WELL_STATUS_CHANGE));
+    BOOST_CHECK( sched[4].wellgroup_events().hasEvent( "W_1", ScheduleEvents::WELL_STATUS_CHANGE));
+    BOOST_CHECK(!sched[5].wellgroup_events().hasEvent( "W_1", ScheduleEvents::WELL_STATUS_CHANGE));
 
-    BOOST_CHECK( sched.hasWellGroupEvent( "W_1", ScheduleEvents::COMPLETION_CHANGE , 0 ));
-    BOOST_CHECK( sched.hasWellGroupEvent( "W_1", ScheduleEvents::COMPLETION_CHANGE , 5 ));
+    BOOST_CHECK( sched[0].wellgroup_events().hasEvent( "W_1", ScheduleEvents::COMPLETION_CHANGE));
+    BOOST_CHECK( sched[5].wellgroup_events().hasEvent( "W_1", ScheduleEvents::COMPLETION_CHANGE));
 }
