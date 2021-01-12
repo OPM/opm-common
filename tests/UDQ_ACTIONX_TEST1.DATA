@@ -466,17 +466,6 @@ WELOPEN
 /
 ENDACTIO
 
--- ACTIONX - test data
--- (AOAA)
---ACTIONX
---ACT04 10 /
---WUPR3 'OP*' = 1 AND /
--- ( FOPR  >= 2000  OR  /
--- FMWPR >= 3  ) AND   /
--- FWPR  >= 2000  AND  /
--- FGOR  >= 400    /
---/
-
 --start files/actionxprod.tmpl
 ACTIONX
 ACT04 10 /

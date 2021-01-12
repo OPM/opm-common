@@ -368,22 +368,20 @@ const std::map<cmp_enum, int> cmpToIndex = {
                 12 for YEAR
             */
             std::size_t ind = 0;
+            std::size_t ind_paren = 15;
+            std::size_t ind_bool_link = 17;
             int noEPZacn = 26;
-            bool insideParen = false;
-            bool parenFirstCond = false;
-            bool allPrevLogicOp_AND = false;
             // write out the schedule Actionx conditions
             const auto& actx_cond = actx.conditions();
-            for (auto cond_it = actx_cond.begin(); cond_it < actx_cond.end(); cond_it++) {
-                auto z_data = *cond_it;
+            for (const auto& cond : actx_cond) {
                 // left hand quantity
-                std::string lhsQtype = z_data.lhs.quantity.substr(0,1);
+                std::string lhsQtype = cond.lhs.quantity.substr(0,1);
                 const auto it_lhsq = lhsQuantityToIndex.find(lhsQtype);
                 if (it_lhsq != lhsQuantityToIndex.end()) {
                     iAcn[ind + 10] = it_lhsq->second;
                 }
                 else {
-                    std::cout << "Unknown condition type: " << z_data.lhs.quantity << std::endl;
+                    std::cout << "Unknown condition type: " << cond.lhs.quantity << std::endl;
                     throw std::invalid_argument("Actionx: " + actx.name());
                 }
 
@@ -394,7 +392,7 @@ const std::map<cmp_enum, int> cmpToIndex = {
                     8 - for constant values
                 */
                 iAcn[ind + 11] = 8;
-                std::string rhsQtype = z_data.rhs.quantity.substr(0,1);
+                std::string rhsQtype = cond.rhs.quantity.substr(0,1);
                 const auto it_rhsq = rhsQuantityToIndex.find(rhsQtype);
                 if (it_rhsq != rhsQuantityToIndex.end()) {
                     iAcn[ind + 11] = it_rhsq->second;
@@ -404,7 +402,7 @@ const std::map<cmp_enum, int> cmpToIndex = {
                  0 - for LHS quantity greater RHS quantity
                  1 - for LHS quantity less than or equal to RHS quantity
                 */
-                const auto it_lhs_it = cmpToIacn_12.find(z_data.cmp);
+                const auto it_lhs_it = cmpToIacn_12.find(cond.cmp);
                 if (it_lhs_it != cmpToIacn_12.end()) {
                     iAcn[ind + 12] = it_lhs_it->second;
                 }
@@ -413,12 +411,12 @@ const std::map<cmp_enum, int> cmpToIndex = {
                     OR   is 2
                     AND is 1
                 */
-                const auto it_logic_13 = logicalToIndex_13.find(z_data.logic);
+                const auto it_logic_13 = logicalToIndex_13.find(cond.logic);
                 if (it_logic_13 != logicalToIndex_13.end()) {
                     iAcn[ind + 13] = it_logic_13->second;
                 }
                 else {
-                    std::cout << "Unknown Boolean operator type for condition: " << z_data.lhs.quantity << std::endl;
+                    std::cout << "Unknown Boolean operator type for condition: " << cond.lhs.quantity << std::endl;
                     throw std::invalid_argument("Actionx: " + actx.name());
                 }
 
@@ -428,10 +426,10 @@ const std::map<cmp_enum, int> cmpToIndex = {
                  * = 2  : right_paren at end of condition
                 */
 
-                if ((cond_it->left_paren) && (!cond_it->right_paren)) {
-                    iAcn[ind + 15] = 1;
-                } else if ((!cond_it->left_paren) && (cond_it->right_paren)) {
-                    iAcn[ind + 15] = 2;
+                if (cond.open_paren()) {
+                    iAcn[ind + ind_paren] = 1;
+                } else if (cond.close_paren()) {
+                    iAcn[ind + ind_paren] = 2;
                 }
 
                 /*item [16] - related to the operator used in ACTIONX for defined quantities
@@ -441,38 +439,46 @@ const std::map<cmp_enum, int> cmpToIndex = {
                     <=    is  4
                     =     is  5
                 */
-                const auto it_cmp = cmpToIndex.find(z_data.cmp);
+                const auto it_cmp = cmpToIndex.find(cond.cmp);
                 if (it_cmp != cmpToIndex.end()) {
                     iAcn[ind + 16] = it_cmp->second;
                 }
                 else {
-                    std::cout << "Unknown operator type for condition: " << z_data.lhs.quantity << std::endl;
+                    std::cout << "Unknown operator type for condition: " << cond.lhs.quantity << std::endl;
                     throw std::invalid_argument("Actionx: " + actx.name());
                 }
-
-                /*item [17] - is an item that is non-zero for actions with several conditions combined using logical operators (AND / OR)
-                 * First condition => [17] =  0
-                 * Second+ conditions
-                    *Case - no parentheses
-                        *If all conditions before current condition has AND => [17] = 1
-                        *If one condition before current condition has OR   => [17] = 0
-                    *Case - parenthesis before first condition
-                        *If inside first parenthesis
-                            *If all conditions before current condition has AND [17] => 1
-                            *If one condition before current condition has OR  [17] => 0
-                        *If after first parenthesis end and outside parenthesis
-                            *If all conditions outside parentheses and before current condition has AND => [17] = 1
-                            *If one condition outside parentheses and before current condition has OR [17] => 0
-                        *If after first parenthesis end and inside a susequent parenthesis
-                            * [17] = 0
-                    *Case - parenthesis after first condition
-                        *If inside parentesis => [17] = 0
-                        *If outside parenthesis:
-                            *If all conditions outside parentheses and before current condition has AND => [17] = 1
-                            *If one condition outside parentheses and before current condition has OR [17] => 0
-                */
+                //increment index according to no of items pr condition
+                ind += static_cast<std::size_t>(noEPZacn);
+            }
+            /*item [17] - is an item that is non-zero for actions with several conditions combined using logical operators (AND / OR)
+                * First condition => [17] =  0
+                * Second+ conditions
+                *Case - no parentheses
+                    *If all conditions before current condition has AND => [17] = 1
+                    *If one condition before current condition has OR   => [17] = 0
+                *Case - parenthesis before first condition
+                    *If inside first parenthesis
+                        *If all conditions before current condition has AND [17] => 1
+                        *If one condition before current condition has OR  [17] => 0
+                    *If after first parenthesis end and outside parenthesis
+                        *If all conditions outside parentheses and before current condition has AND => [17] = 1
+                        *If one condition outside parentheses and before current condition has OR [17] => 0
+                    *If after first parenthesis end and inside a susequent parenthesis
+                        * [17] = 0
+                *Case - parenthesis after first condition
+                    *If inside parentesis => [17] = 0
+                    *If outside parenthesis:
+                        *If all conditions outside parentheses and before current condition has AND => [17] = 1
+                        *If one condition outside parentheses and before current condition has OR [17] => 0
+            */
+            ind = 0;
+            bool insideParen = false;
+            bool parenFirstCond = false;
+            bool allPrevLogicOp_AND = false;
+            for (auto cond_it = actx_cond.begin(); cond_it < actx_cond.end(); cond_it++) {
+            //auto z_data = *cond_it;
                 if (cond_it == actx_cond.begin()) {
-                    if ((cond_it->left_paren) && (!cond_it->right_paren)) {
+                    if (cond_it->open_paren()) {
                         parenFirstCond = true;
                         insideParen = true;
                     }
@@ -481,22 +487,22 @@ const std::map<cmp_enum, int> cmpToIndex = {
                     }
                 } else {
                     // update inside parenthesis or not plus whether in first parenthesis or not
-                    if ((cond_it->left_paren) && (!cond_it->right_paren)) {
+                    if (cond_it->open_paren()) {
                         insideParen = true;
                         parenFirstCond = false;
-                    } else if ((!cond_it->left_paren) && (cond_it->right_paren)) {
+                    } else if (cond_it->close_paren()) {
                         insideParen = false;
                         parenFirstCond = false;
                     }
 
                     // Assign [17] based on logic (see above)
                     if (parenFirstCond && allPrevLogicOp_AND) {
-                        iAcn[ind + 17] = 1;
+                        iAcn[ind + ind_bool_link] = 1;
                     }
                     else if (!parenFirstCond && !insideParen && allPrevLogicOp_AND) {
-                        iAcn[ind + 17] = 1;
+                        iAcn[ind + ind_bool_link] = 1;
                     } else {
-                        iAcn[ind + 17] = 0;
+                        iAcn[ind + ind_bool_link] = 0;
                     }
 
                     // update the previous logic-sequence
