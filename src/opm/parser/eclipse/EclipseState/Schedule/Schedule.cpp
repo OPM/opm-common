@@ -114,7 +114,6 @@ namespace {
         m_timeMap( deck , restart_info( rst )),
         m_runspec( runspec ),
         m_deck_message_limits( MessageLimits(deck) ),
-        wtest_config(this->m_timeMap, std::make_shared<WellTestConfig>() ),
         wlist_manager( this->m_timeMap, std::make_shared<WListManager>()),
         udq_config(this->m_timeMap, std::make_shared<UDQConfig>(deck)),
         udq_active(this->m_timeMap, std::make_shared<UDQActive>()),
@@ -265,7 +264,6 @@ namespace {
         result.m_runspec = Runspec::serializeObject();
         result.vfpprod_tables = {{1, {{std::make_shared<VFPProdTable>(VFPProdTable::serializeObject())}, 1}}};
         result.vfpinj_tables = {{2, {{std::make_shared<VFPInjTable>(VFPInjTable::serializeObject())}, 1}}};
-        result.wtest_config = {{std::make_shared<WellTestConfig>(WellTestConfig::serializeObject())}, 1};
         result.wlist_manager = {{std::make_shared<WListManager>(WListManager::serializeObject())}, 1};
         result.udq_config = {{std::make_shared<UDQConfig>(UDQConfig::serializeObject())}, 1};
         result.m_network  = {{std::make_shared<Network::ExtNetwork>(Network::ExtNetwork::serializeObject())}, 1};
@@ -1461,11 +1459,6 @@ void Schedule::iterateScheduleSection(std::optional<std::size_t> load_offset,
         this->udq_active.update(timeStep, udq);
     }
 
-    const WellTestConfig& Schedule::wtestConfig(std::size_t timeStep) const {
-        const auto& ptr = this->wtest_config.get(timeStep);
-        return *ptr;
-    }
-
     const GConSale& Schedule::gConSale(std::size_t timeStep) const {
         const auto& ptr = this->gconsale.get(timeStep);
         return *ptr;
@@ -1668,7 +1661,6 @@ void Schedule::iterateScheduleSection(std::optional<std::size_t> load_offset,
                compareMap(this->vfpinj_tables, data.vfpinj_tables) &&
                compareDynState(this->m_network, data.m_network) &&
                compareDynState(this->m_glo, data.m_glo) &&
-               compareDynState(this->wtest_config, data.wtest_config) &&
                compareDynState(this->wlist_manager, data.wlist_manager) &&
                compareDynState(this->udq_config, data.udq_config) &&
                compareDynState(this->udq_active, data.udq_active) &&
@@ -1679,7 +1671,8 @@ void Schedule::iterateScheduleSection(std::optional<std::size_t> load_offset,
                compareDynState(this->rpt_config, data.rpt_config) &&
                rft_config  == data.rft_config &&
                this->restart_config == data.restart_config &&
-               this->unit_system == data.unit_system;
+               this->unit_system == data.unit_system &&
+               this->snapshots == data.snapshots;
      }
 
 
@@ -2091,6 +2084,7 @@ void Schedule::create_first(const std::chrono::system_clock::time_point& start_t
     sched_state.nupcol( this->m_runspec.nupcol() );
     sched_state.oilvap( OilVaporizationProperties( this->m_runspec.tabdims().getNumPVTTables() ));
     sched_state.message_limits( this->m_deck_message_limits );
+    sched_state.wtest_config( WellTestConfig() );
 
     this->addGroup("FIELD", 0);
 }
