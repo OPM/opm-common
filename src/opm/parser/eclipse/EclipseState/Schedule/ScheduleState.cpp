@@ -18,6 +18,7 @@
 */
 
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleState.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/WellTestConfig.hpp>
 
 namespace Opm {
 
@@ -138,17 +139,17 @@ void ScheduleState::whistctl(Well::ProducerCMode whistctl) {
 }
 
 bool ScheduleState::operator==(const ScheduleState& other) const {
-    return
-        this->m_start_time == other.m_start_time &&
-        this->m_oilvap == other.m_oilvap &&
-        this->m_tuning == other.m_tuning &&
-        this->m_end_time == other.m_end_time &&
-        this->m_events == other.m_events &&
-        this->m_wellgroup_events == other.m_wellgroup_events &&
-        this->m_geo_keywords == other.m_geo_keywords &&
-        this->m_message_limits == other.m_message_limits &&
-        this->m_whistctl_mode == other.m_whistctl_mode &&
-        this->m_nupcol == other.m_nupcol;
+    return this->m_start_time == other.m_start_time &&
+           this->m_oilvap == other.m_oilvap &&
+           this->m_tuning == other.m_tuning &&
+           this->m_end_time == other.m_end_time &&
+           this->m_events == other.m_events &&
+           this->m_wellgroup_events == other.m_wellgroup_events &&
+           this->m_geo_keywords == other.m_geo_keywords &&
+           this->m_message_limits == other.m_message_limits &&
+           this->m_whistctl_mode == other.m_whistctl_mode &&
+           *this->m_wtest_config == *other.m_wtest_config &&
+           this->m_nupcol == other.m_nupcol;
 }
 
 ScheduleState ScheduleState::serializeObject() {
@@ -160,6 +161,7 @@ ScheduleState ScheduleState::serializeObject() {
     ts.oilvap( Opm::OilVaporizationProperties::serializeObject() );
     ts.m_message_limits = MessageLimits::serializeObject();
     ts.m_whistctl_mode = Well::ProducerCMode::THP;
+    ts.m_wtest_config = std::make_shared<WellTestConfig>( WellTestConfig::serializeObject() );
     return ts;
 }
 
@@ -197,6 +199,14 @@ WellGroupEvents& ScheduleState::wellgroup_events() {
 
 const WellGroupEvents& ScheduleState::wellgroup_events() const {
     return this->m_wellgroup_events;
+}
+
+const WellTestConfig& ScheduleState::wtest_config() const {
+    return *this->m_wtest_config;
+}
+
+void ScheduleState::wtest_config(WellTestConfig wtest_config) {
+    this->m_wtest_config = std::make_shared<WellTestConfig>( std::move(wtest_config) );
 }
 
 }

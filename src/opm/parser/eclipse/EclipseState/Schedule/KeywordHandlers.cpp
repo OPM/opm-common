@@ -1772,8 +1772,7 @@ namespace {
     }
 
     void Schedule::handleWTEST(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
-        const auto& current = *this->wtest_config.get(handlerContext.currentStep);
-        std::shared_ptr<WellTestConfig> new_config(new WellTestConfig(current));
+        auto new_config = this->snapshots.back().wtest_config();
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = wellNames(wellNamePattern, handlerContext.currentStep);
@@ -1787,12 +1786,12 @@ namespace {
 
             for (const auto& well_name : well_names) {
                 if (reasons.empty())
-                    new_config->drop_well(well_name);
+                    new_config.drop_well(well_name);
                 else
-                    new_config->add_well(well_name, reasons, test_interval, num_test, startup_time, handlerContext.currentStep);
+                    new_config.add_well(well_name, reasons, test_interval, num_test, startup_time, handlerContext.currentStep);
             }
         }
-        this->wtest_config.update(handlerContext.currentStep, new_config);
+        this->snapshots.back().wtest_config( std::move(new_config) );
     }
 
     void Schedule::handleWTRACER(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {

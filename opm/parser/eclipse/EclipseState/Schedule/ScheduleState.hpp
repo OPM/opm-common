@@ -42,6 +42,7 @@ namespace Opm {
       is handled by the Schedule instance owning the ScheduleState instance.
     */
 
+    class WellTestConfig;
 
     class ScheduleState {
     public:
@@ -92,6 +93,9 @@ namespace Opm {
         Well::ProducerCMode whistctl() const;
         void whistctl(Well::ProducerCMode whistctl);
 
+        const WellTestConfig& wtest_config() const;
+        void wtest_config(WellTestConfig wtest_config);
+
         template<class Serializer>
         void serializeOp(Serializer& serializer) {
             serializer(m_start_time);
@@ -105,6 +109,7 @@ namespace Opm {
             serializer.vector(m_geo_keywords);
             m_message_limits.serializeOp(serializer);
             serializer(m_whistctl_mode);
+            serializer(m_wtest_config);
         }
 
     private:
@@ -120,6 +125,7 @@ namespace Opm {
         std::vector<DeckKeyword> m_geo_keywords;
         MessageLimits m_message_limits;
         Well::ProducerCMode m_whistctl_mode = Well::ProducerCMode::CMODE_UNDEFINED;
+        std::shared_ptr<WellTestConfig> m_wtest_config;
     };
 }
 
