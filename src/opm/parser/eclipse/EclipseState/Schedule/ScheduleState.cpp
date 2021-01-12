@@ -19,6 +19,8 @@
 
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellTestConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Group/GConSump.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Group/GConSale.hpp>
 
 namespace Opm {
 
@@ -149,6 +151,8 @@ bool ScheduleState::operator==(const ScheduleState& other) const {
            this->m_message_limits == other.m_message_limits &&
            this->m_whistctl_mode == other.m_whistctl_mode &&
            *this->m_wtest_config == *other.m_wtest_config &&
+           *this->m_gconsale == *other.m_gconsale &&
+           *this->m_gconsump == *other.m_gconsump &&
            this->m_nupcol == other.m_nupcol;
 }
 
@@ -162,6 +166,8 @@ ScheduleState ScheduleState::serializeObject() {
     ts.m_message_limits = MessageLimits::serializeObject();
     ts.m_whistctl_mode = Well::ProducerCMode::THP;
     ts.m_wtest_config = std::make_shared<WellTestConfig>( WellTestConfig::serializeObject() );
+    ts.m_gconsump = std::make_shared<GConSump>( GConSump::serializeObject() );
+    ts.m_gconsale = std::make_shared<GConSale>( GConSale::serializeObject() );
     return ts;
 }
 
@@ -207,6 +213,22 @@ const WellTestConfig& ScheduleState::wtest_config() const {
 
 void ScheduleState::wtest_config(WellTestConfig wtest_config) {
     this->m_wtest_config = std::make_shared<WellTestConfig>( std::move(wtest_config) );
+}
+
+const GConSale& ScheduleState::gconsale() const {
+    return *this->m_gconsale;
+}
+
+void ScheduleState::gconsale(GConSale gconsale) {
+    this->m_gconsale = std::make_shared<GConSale>( std::move(gconsale) );
+}
+
+const GConSump& ScheduleState::gconsump() const {
+    return *this->m_gconsump;
+}
+
+void ScheduleState::gconsump(GConSump gconsump) {
+    this->m_gconsump = std::make_shared<GConSump>( std::move(gconsump) );
 }
 
 }

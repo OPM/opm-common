@@ -32,6 +32,8 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Events.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MessageLimits.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Group/GConSump.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Group/GConSale.hpp>
 
 namespace Opm {
 
@@ -96,6 +98,12 @@ namespace Opm {
         const WellTestConfig& wtest_config() const;
         void wtest_config(WellTestConfig wtest_config);
 
+        const GConSale& gconsale() const;
+        void gconsale(GConSale gconsale);
+
+        const GConSump& gconsump() const;
+        void gconsump(GConSump gconsump);
+
         template<class Serializer>
         void serializeOp(Serializer& serializer) {
             serializer(m_start_time);
@@ -110,6 +118,8 @@ namespace Opm {
             m_message_limits.serializeOp(serializer);
             serializer(m_whistctl_mode);
             serializer(m_wtest_config);
+            serializer(m_gconsale);
+            serializer(m_gconsump);
         }
 
     private:
@@ -126,6 +136,8 @@ namespace Opm {
         MessageLimits m_message_limits;
         Well::ProducerCMode m_whistctl_mode = Well::ProducerCMode::CMODE_UNDEFINED;
         std::shared_ptr<WellTestConfig> m_wtest_config;
+        std::shared_ptr<GConSale> m_gconsale;
+        std::shared_ptr<GConSump> m_gconsump;
     };
 }
 

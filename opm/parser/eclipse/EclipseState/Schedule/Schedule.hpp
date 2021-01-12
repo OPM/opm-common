@@ -32,8 +32,6 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GTNode.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GuideRateConfig.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Group/GConSale.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Group/GConSump.hpp>
 #include <opm/parser/eclipse/EclipseState/Util/OrderedMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MessageLimits.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
@@ -236,8 +234,6 @@ namespace Opm
         Well::ProducerCMode getGlobalWhistctlMmode(std::size_t timestep) const;
 
         const UDQActive& udqActive(std::size_t timeStep) const;
-        const GConSale& gConSale(std::size_t timestep) const;
-        const GConSump& gConSump(std::size_t timestep) const;
         const WListManager& getWListManager(std::size_t timeStep) const;
         const UDQConfig& getUDQConfig(std::size_t timeStep) const;
         std::vector<const UDQConfig*> udqConfigList() const;
@@ -321,8 +317,6 @@ namespace Opm
             udq_config.serializeOp(serializer);
             udq_active.serializeOp(serializer);
             guide_rate_config.serializeOp(serializer);
-            gconsale.serializeOp(serializer);
-            gconsump.serializeOp(serializer);
             m_actions.serializeOp(serializer);
             m_network.serializeOp(serializer);
             m_glo.serializeOp(serializer);
@@ -355,8 +349,6 @@ namespace Opm
         DynamicState<std::shared_ptr<UDQConfig>> udq_config;
         DynamicState<std::shared_ptr<UDQActive>> udq_active;
         DynamicState<std::shared_ptr<GuideRateConfig>> guide_rate_config;
-        DynamicState<std::shared_ptr<GConSale>> gconsale;
-        DynamicState<std::shared_ptr<GConSump>> gconsump;
         DynamicState<std::shared_ptr<Action::Actions>> m_actions;
         DynamicState<std::shared_ptr<Network::ExtNetwork>> m_network;
         DynamicState<std::shared_ptr<GasLiftOpt>> m_glo;
