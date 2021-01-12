@@ -112,6 +112,13 @@ MessageLimits& ScheduleState::message_limits() {
     return this->m_message_limits;
 }
 
+Well::ProducerCMode ScheduleState::whistctl() const {
+    return this->m_whistctl_mode;
+}
+
+void ScheduleState::whistctl(Well::ProducerCMode whistctl) {
+    this->m_whistctl_mode = whistctl;
+}
 
 bool ScheduleState::operator==(const ScheduleState& other) const {
     return this->m_start_time == other.m_start_time &&
@@ -122,6 +129,7 @@ bool ScheduleState::operator==(const ScheduleState& other) const {
            this->m_wellgroup_events == other.m_wellgroup_events &&
            this->m_geo_keywords == other.m_geo_keywords &&
            this->m_message_limits == other.m_message_limits &&
+           this->m_whistctl_mode == other.m_whistctl_mode &&
            this->m_nupcol == other.m_nupcol;
 }
 
@@ -133,6 +141,7 @@ ScheduleState ScheduleState::serializeObject() {
     ts.nupcol(77);
     ts.oilvap( Opm::OilVaporizationProperties::serializeObject() );
     ts.m_message_limits = MessageLimits::serializeObject();
+    ts.m_whistctl_mode = Well::ProducerCMode::THP;
     return ts;
 }
 
