@@ -166,14 +166,14 @@ BOOST_AUTO_TEST_CASE (Declared_Actionx_data)
         const auto rptStep_2 = std::size_t{1};
         const auto ih_2 = Opm::RestartIO::Helpers::createInteHead(es, grid, sched,
                                                 secs_elapsed, rptStep, rptStep_2 + 1, rptStep_2);
-        BOOST_CHECK_EQUAL(ih_2[156] ,       3);
+        BOOST_CHECK_EQUAL(ih_2[156] ,      13);
         BOOST_CHECK_EQUAL(ih_2[157] ,      10);
 
         const auto rptStep_3 = std::size_t{2};
         const auto ih_3 = Opm::RestartIO::Helpers::createInteHead(es, grid, sched,
                                                 secs_elapsed, rptStep, rptStep_3 + 1, rptStep_3);
 
-        BOOST_CHECK_EQUAL(ih_3[156] ,       3);
+        BOOST_CHECK_EQUAL(ih_3[156] ,      13);
         BOOST_CHECK_EQUAL(ih_3[157] ,      10);
 
     }
@@ -369,7 +369,7 @@ BOOST_AUTO_TEST_CASE (Declared_Actionx_data)
         BOOST_CHECK_EQUAL(zAcn[start + 4].c_str() ,   "        ");
     }
 
-        {
+    {
         /*
         IACN
         26*Max number of conditions pr ACTIONX
@@ -418,7 +418,7 @@ BOOST_AUTO_TEST_CASE (Declared_Actionx_data)
         BOOST_CHECK_EQUAL(iAcn[start + 14] ,  0);
         BOOST_CHECK_EQUAL(iAcn[start + 15] ,  0);
         BOOST_CHECK_EQUAL(iAcn[start + 16] ,  1);
-        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  0);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  1);
 
         start_a = 1*actDims[6];
         start = start_a + 0*26;
@@ -459,7 +459,7 @@ BOOST_AUTO_TEST_CASE (Declared_Actionx_data)
         BOOST_CHECK_EQUAL(iAcn[start + 14] ,  0);
         BOOST_CHECK_EQUAL(iAcn[start + 15] ,  0);
         BOOST_CHECK_EQUAL(iAcn[start + 16] ,  1);
-        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  0);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  1);
 
         start = start_a + 2*26;
         BOOST_CHECK_EQUAL(iAcn[start +  0] ,  0);
@@ -480,6 +480,331 @@ BOOST_AUTO_TEST_CASE (Declared_Actionx_data)
         BOOST_CHECK_EQUAL(iAcn[start + 15] ,  0);
         BOOST_CHECK_EQUAL(iAcn[start + 16] ,  1);
         BOOST_CHECK_EQUAL(iAcn[start + 17] ,  1);
+
+        start_a = 3*actDims[6];
+        start = start_a + 0*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  0);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  0);
+
+        start = start_a + 1*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  2);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  0);
+
+        start = start_a + 2*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  2);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  1);
+
+        start = start_a + 3*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  0);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  1);
+
+        start = start_a + 4*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  0);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  0);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  1);
+
+        start_a = 4*actDims[6];
+        start = start_a + 0*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  0);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  0);
+
+        start = start_a + 1*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  0);
+
+        start = start_a + 2*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  2);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  1);
+
+        start = start_a + 3*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  0);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  1);
+
+        start = start_a + 4*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  0);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  0);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  1);
+
+        start_a = 5*actDims[6];
+        start = start_a + 0*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  2);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  0);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  0);
+
+        start = start_a + 1*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  0);
+
+        start = start_a + 2*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  2);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  0);
+
+        start = start_a + 3*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  0);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  0);
+
+        start = start_a + 4*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  0);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  0);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  0);
+
+        start_a = 6*actDims[6];
+        start = start_a + 0*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  0);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  0);
+
+        start = start_a + 1*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  0);
+
+        start = start_a + 2*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  2);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  2);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  1);
+
+        start = start_a + 3*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  0);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  0);
+
+        start = start_a + 4*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  0);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  0);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  0);
+
+        start_a = 7*actDims[6];
+        start = start_a + 0*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  0);
+
+        start = start_a + 1*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  2);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  1);
+
+        start = start_a + 2*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  0);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  1);
+
+        start = start_a + 3*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  0);
+
+        start = start_a + 4*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  2);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  1);
+
+        start = start_a + 5*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  0);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  1);
+
+        start = start_a + 6*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  0);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  0);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  1);
+
+        start_a = 8*actDims[6];
+        start = start_a + 0*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  2);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  0);
+
+        start = start_a + 1*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  2);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  0);
+
+        start = start_a + 2*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  0);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  0);
+
+        start = start_a + 3*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  0);
+
+        start = start_a + 4*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  2);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  0);
+
+        start = start_a + 5*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  0);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  0);
+
+        start = start_a + 6*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  0);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  0);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  0);
+
+
+        start_a = 9*actDims[6];
+        start = start_a + 0*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  0);
+
+        start = start_a + 1*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  2);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  2);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  1);
+
+        start = start_a + 2*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  0);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  0);
+
+        start = start_a + 3*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  0);
+
+        start = start_a + 4*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  2);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  0);
+
+        start = start_a + 5*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  0);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  0);
+
+        start = start_a + 6*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  0);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  0);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  0);
+
+
+        start_a = 10*actDims[6];
+        start = start_a + 0*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  0);
+
+        start = start_a + 1*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  2);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  1);
+
+        start = start_a + 2*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  2);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  0);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  1);
+
+        start = start_a + 3*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  0);
+
+        start = start_a + 4*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  2);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  0);
+
+        start = start_a + 5*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  0);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  0);
+
+        start = start_a + 6*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  0);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  0);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  0);
+
+
+        start_a = 11*actDims[6];
+        start = start_a + 0*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  0);
+
+        start = start_a + 1*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  2);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  1);
+
+        start = start_a + 2*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  0);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  1);
+
+        start = start_a + 3*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  2);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  0);
+
+        start = start_a + 4*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  2);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  1);
+
+        start = start_a + 5*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  0);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  1);
+
+        start = start_a + 6*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  0);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  0);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  1);
+
+
+        start_a = 12*actDims[6];
+        start = start_a + 0*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  0);
+
+        start = start_a + 1*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  2);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  1);
+
+        start = start_a + 2*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  0);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  1);
+
+        start = start_a + 3*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  0);
+
+        start = start_a + 4*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  2);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  2);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  1);
+
+        start = start_a + 5*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  0);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  0);
+
+        start = start_a + 6*26;
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  0);
+        BOOST_CHECK_EQUAL(iAcn[start + 15] ,  0);
+        BOOST_CHECK_EQUAL(iAcn[start + 17] ,  0);
+
 
     }
 

@@ -72,7 +72,7 @@ WELLDIMS
 
 --Dimensions for ACTIONX data
 ACTDIMS
-4  20  80  4  /
+30  20  80  10  /
 
 --
 --
@@ -302,10 +302,17 @@ SUMMARY
 INCLUDE
  'include_example_summary.txt' /
 
+FOPR
+FWPR
+FGOR
 
 FMWIN
 
 FMWPR
+
+GOPR
+ 'LOWER' 'UPPER' /
+
 
 GMWPR 
  'UPPER' 'LOWER' /
@@ -458,6 +465,179 @@ WELOPEN
  'OPL02' 'OPEN' 5* / 
 /
 ENDACTIO
+
+--start files/actionxprod.tmpl
+ACTIONX
+ACT04 10 /
+FMWPR > 3 AND /
+( WUPR3 'OP*' > 46 OR /
+  WOPR 'OP*' > 32 ) AND /
+  WWPR 'OP*' > 57 AND /
+  MNTH > OCT  /
+/
+
+WELOPEN
+'?' SHUT 0 0 0 2* /
+/
+
+ENDACTIO
+
+--start files/actionxprod.tmpl
+ACTIONX
+ACT05 10 /
+FMWPR > 3 AND /
+( WUPR3 'OP*' > 46 AND /
+  WOPR 'OP*' > 32 ) AND /
+  WWPR 'OP*' > 57 AND /
+  MNTH > OCT  /
+/
+
+WELOPEN
+'?' SHUT 0 0 0 2* /
+/
+
+ENDACTIO
+
+--start files/actionxprod.tmpl
+ACTIONX
+ACT06 10 /
+FMWPR > 3 OR /
+( WUPR3 'OP*' > 46 AND /
+  WOPR 'OP*' > 32 ) AND /
+  WWPR 'OP*' > 57 AND /
+  MNTH > OCT  /
+/
+
+WELOPEN
+'?' SHUT 0 0 0 2* /
+/
+
+ENDACTIO
+
+--start files/actionxprod.tmpl
+ACTIONX
+ACT07 10 /
+FMWPR > 3 AND /
+( WUPR3 'OP*' > 46 AND /
+  WOPR 'OP*' > 32 ) OR /
+  WWPR 'OP*' > 57 AND /
+  MNTH > OCT  /
+/
+
+WELOPEN
+'?' SHUT 0 0 0 2* /
+/
+
+ENDACTIO
+
+--start files/actionxprod.tmpl
+ACTIONX
+ACT08 10 /
+( FMWPR > 3            AND /
+ WUPR3 'OP*' > 46 )   AND /
+  WOPR 'OP*' > 32     AND /
+( WLPR 'OP*' > 43     AND /
+  WWCT 'OP*' > 0.31 ) AND /
+  WWPR 'OP*' > 23     AND /
+  MNTH > OCT  /
+/
+
+WELOPEN
+'?' SHUT 0 0 0 2* /
+/
+
+ENDACTIO
+
+--start files/actionxprod.tmpl
+ACTIONX
+ACT09 10 /
+( FMWPR > 3           OR /
+ WUPR3 'OP*' > 46 )   AND /
+  WOPR 'OP*' > 32     AND /
+( WLPR 'OP*' > 43     AND /
+  WWCT 'OP*' > 0.31 ) AND /
+  WWPR 'OP*' > 23     AND /
+  MNTH > OCT  /
+/
+
+WELOPEN
+'?' SHUT 0 0 0 2* /
+/
+
+ENDACTIO
+
+--start files/actionxprod.tmpl
+ACTIONX
+ACT10 10 /
+( FMWPR > 3           AND /
+ WUPR3 'OP*' > 46 )   OR /
+  WOPR 'OP*' > 32     AND /
+( WLPR 'OP*' > 43     AND /
+  WWCT 'OP*' > 0.31 ) AND /
+  WWPR 'OP*' > 23     AND /
+  MNTH > OCT  /
+/
+
+WELOPEN
+'?' SHUT 0 0 0 2* /
+/
+
+ENDACTIO
+
+--start files/actionxprod.tmpl
+ACTIONX
+ACT11 10 /
+( FMWPR > 3            AND /
+ WUPR3 'OP*' > 46 )   AND /
+  WOPR 'OP*' > 32     OR /
+( WLPR 'OP*' > 43     AND /
+  WWCT 'OP*' > 0.31 ) AND /
+  WWPR 'OP*' > 23     AND /
+  MNTH > OCT  /
+/
+
+WELOPEN
+'?' SHUT 0 0 0 2* /
+/
+
+ENDACTIO
+
+--start files/actionxprod.tmpl
+ACTIONX
+ACT12 10 /
+( FMWPR > 3            AND /
+ WUPR3 'OP*' > 46 )   AND /
+  WOPR 'OP*' > 32     AND /
+( WLPR 'OP*' > 43     OR /
+  WWCT 'OP*' > 0.31 ) AND /
+  WWPR 'OP*' > 23     AND /
+  MNTH > OCT  /
+/
+
+WELOPEN
+'?' SHUT 0 0 0 2* /
+/
+
+ENDACTIO
+
+--start files/actionxprod.tmpl
+ACTIONX
+ACT13 10 /
+( FMWPR > 3            AND /
+ WUPR3 'OP*' > 46 )   AND /
+  WOPR 'OP*' > 32     AND /
+( WLPR 'OP*' > 43     AND /
+  WWCT 'OP*' > 0.31 ) OR /
+  WWPR 'OP*' > 23     AND /
+  MNTH > OCT  /
+/
+
+WELOPEN
+'?' SHUT 0 0 0 2* /
+/
+
+ENDACTIO
+
 
 WELOPEN
  'OPL01' 'OPEN' 5* / 
