@@ -116,7 +116,6 @@ namespace {
         m_timeMap( deck , restart_info( rst )),
         m_runspec( runspec ),
         m_deck_message_limits( MessageLimits(deck) ),
-        wlist_manager( this->m_timeMap, std::make_shared<WListManager>()),
         udq_config(this->m_timeMap, std::make_shared<UDQConfig>(deck)),
         udq_active(this->m_timeMap, std::make_shared<UDQActive>()),
         guide_rate_config(this->m_timeMap, std::make_shared<GuideRateConfig>()),
@@ -264,7 +263,6 @@ namespace {
         result.m_runspec = Runspec::serializeObject();
         result.vfpprod_tables = {{1, {{std::make_shared<VFPProdTable>(VFPProdTable::serializeObject())}, 1}}};
         result.vfpinj_tables = {{2, {{std::make_shared<VFPInjTable>(VFPInjTable::serializeObject())}, 1}}};
-        result.wlist_manager = {{std::make_shared<WListManager>(WListManager::serializeObject())}, 1};
         result.udq_config = {{std::make_shared<UDQConfig>(UDQConfig::serializeObject())}, 1};
         result.m_network  = {{std::make_shared<Network::ExtNetwork>(Network::ExtNetwork::serializeObject())}, 1};
         result.m_glo = {{std::make_shared<GasLiftOpt>(GasLiftOpt::serializeObject())}, 1};
@@ -438,10 +436,8 @@ void Schedule::iterateScheduleSection(std::optional<std::size_t> load_offset,
             "WELTARG",
             "WFOAM",
             "WGRUPCON",
-            "WHISTCTL",
             "WINJTEMP",
             "WLIFTOPT",
-            "WLIST",
             "WPAVEDEP",
             "WPIMULT",
             "WPMITAB",
@@ -1164,7 +1160,10 @@ void Schedule::iterateScheduleSection(std::optional<std::size_t> load_offset,
             if (dynamic_state.get(report_step))
                 wnames.push_back(well_pair.first);
         }
-        return WellMatcher(wnames, this->getWListManager(report_step));
+        if (report_step < this->snapshots.size())
+            return WellMatcher(wnames, this->operator[](report_step).wlist_manager());
+        else
+            return WellMatcher(wnames, this->snapshots.back().wlist_manager());
     }
 
 
@@ -1456,11 +1455,6 @@ void Schedule::iterateScheduleSection(std::optional<std::size_t> load_offset,
         this->udq_active.update(timeStep, udq);
     }
 
-    const WListManager& Schedule::getWListManager(std::size_t timeStep) const {
-        const auto& ptr = this->wlist_manager.get(timeStep);
-        return *ptr;
-    }
-
     const UDQConfig& Schedule::getUDQConfig(std::size_t timeStep) const {
         const auto& ptr = this->udq_config.get(timeStep);
         return *ptr;
@@ -1648,7 +1642,6 @@ void Schedule::iterateScheduleSection(std::optional<std::size_t> load_offset,
                compareMap(this->vfpinj_tables, data.vfpinj_tables) &&
                compareDynState(this->m_network, data.m_network) &&
                compareDynState(this->m_glo, data.m_glo) &&
-               compareDynState(this->wlist_manager, data.wlist_manager) &&
                compareDynState(this->udq_config, data.udq_config) &&
                compareDynState(this->udq_active, data.udq_active) &&
                compareDynState(this->guide_rate_config, data.guide_rate_config) &&
@@ -2072,6 +2065,7 @@ void Schedule::create_first(const std::chrono::system_clock::time_point& start_t
     sched_state.wtest_config( WellTestConfig() );
     sched_state.gconsale( GConSale() );
     sched_state.gconsump( GConSump() );
+    sched_state.wlist_manager( WListManager() );
 
     this->addGroup("FIELD", 0);
 }
