@@ -21,8 +21,25 @@
 
 namespace Opm {
 
+namespace {
+
+
+/*
+  This is to ensure that only time_points which can be represented with
+  std::time_t are used. The reason for clamping to std::time_t resolution is
+  that the serialization code in
+  opm-simulators:opm/simulators/utils/ParallelRestart.cpp goes via std::time_t.
+*/
+std::chrono::system_clock::time_point clamp_time(std::chrono::system_clock::time_point t) {
+    return std::chrono::system_clock::from_time_t( std::chrono::system_clock::to_time_t( t ) );
+}
+
+}
+
+
+
 ScheduleState::ScheduleState(const std::chrono::system_clock::time_point& t1):
-    m_start_time(t1),
+    m_start_time(clamp_time(t1)),
     m_pavg( std::make_shared<PAvg>())
 {
 }
@@ -30,13 +47,13 @@ ScheduleState::ScheduleState(const std::chrono::system_clock::time_point& t1):
 ScheduleState::ScheduleState(const std::chrono::system_clock::time_point& start_time, const std::chrono::system_clock::time_point& end_time) :
     ScheduleState(start_time)
 {
-    this->m_end_time = end_time;
+    this->m_end_time = clamp_time(end_time);
 }
 
 ScheduleState::ScheduleState(const ScheduleState& src, const std::chrono::system_clock::time_point& start_time) :
     ScheduleState(src)
 {
-    this->m_start_time = start_time;
+    this->m_start_time = clamp_time(start_time);
     this->m_end_time = std::nullopt;
 
     this->m_events.reset();
@@ -121,16 +138,17 @@ void ScheduleState::whistctl(Well::ProducerCMode whistctl) {
 }
 
 bool ScheduleState::operator==(const ScheduleState& other) const {
-    return this->m_start_time == other.m_start_time &&
-           this->m_oilvap == other.m_oilvap &&
-           this->m_tuning == other.m_tuning &&
-           this->m_end_time == other.m_end_time &&
-           this->m_events == other.m_events &&
-           this->m_wellgroup_events == other.m_wellgroup_events &&
-           this->m_geo_keywords == other.m_geo_keywords &&
-           this->m_message_limits == other.m_message_limits &&
-           this->m_whistctl_mode == other.m_whistctl_mode &&
-           this->m_nupcol == other.m_nupcol;
+    return
+        this->m_start_time == other.m_start_time &&
+        this->m_oilvap == other.m_oilvap &&
+        this->m_tuning == other.m_tuning &&
+        this->m_end_time == other.m_end_time &&
+        this->m_events == other.m_events &&
+        this->m_wellgroup_events == other.m_wellgroup_events &&
+        this->m_geo_keywords == other.m_geo_keywords &&
+        this->m_message_limits == other.m_message_limits &&
+        this->m_whistctl_mode == other.m_whistctl_mode &&
+        this->m_nupcol == other.m_nupcol;
 }
 
 ScheduleState ScheduleState::serializeObject() {

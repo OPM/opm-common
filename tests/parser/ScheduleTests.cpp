@@ -4508,7 +4508,7 @@ BOOST_AUTO_TEST_CASE(ScheduleStateDatesTest) {
 
 
 BOOST_AUTO_TEST_CASE(ScheduleStateTest) {
-    auto t1 = std::chrono::system_clock::now();
+    auto t1 = std::chrono::system_clock::from_time_t( std::chrono::system_clock::to_time_t( std::chrono::system_clock::now() ) );
     auto t2 = t1 + std::chrono::hours(48);
 
     ScheduleState ts1(t1);
