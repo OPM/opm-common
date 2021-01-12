@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(CreateNetwork) {
     Network::ExtNetwork network;
     BOOST_CHECK( !network.active() );
     auto schedule = make_schedule("SCHEDULE\n");
-    auto network2 = schedule.network(0);
+    auto network2 = schedule[0].network();
     BOOST_CHECK( !network2.active() );
 }
 
@@ -206,7 +206,7 @@ BRANPROP
 
     auto sched = make_schedule(deck_string);
     {
-        const auto& network = sched.network(0);
+        const auto& network = sched[0].network();
         const auto& b1 = network.node("B1");
         BOOST_CHECK(b1.as_choke());
         BOOST_CHECK(!b1.add_gas_lift_gas());
@@ -240,7 +240,7 @@ BRANPROP
         BOOST_CHECK(network.active());
     }
     {
-        const auto& network = sched.network(1);
+        const auto& network = sched[1].network();
         const auto& b1 = network.node("B1");
         BOOST_CHECK(b1.as_choke());
         BOOST_CHECK(!b1.add_gas_lift_gas());
@@ -311,7 +311,7 @@ BRANPROP
         "B1", "C1", "PLAT-A"
     };
 
-    auto nodes = sched.network(0).node_names();
+    auto nodes = sched[0].network().node_names();
     std::sort(nodes.begin(), nodes.end());
 
     BOOST_CHECK_EQUAL_COLLECTIONS(nodes.begin(), nodes.end(), expect.begin(), expect.end());

@@ -35,6 +35,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/MessageLimits.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GConSump.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GConSale.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Network/ExtNetwork.hpp>
 
 namespace Opm {
 
@@ -108,6 +109,9 @@ namespace Opm {
         const GConSump& gconsump() const;
         void gconsump(GConSump gconsump);
 
+        const Network::ExtNetwork& network() const;
+        void network(Network::ExtNetwork network);
+
         template<class Serializer>
         void serializeOp(Serializer& serializer) {
             serializer(m_start_time);
@@ -125,6 +129,7 @@ namespace Opm {
             serializer(m_gconsale);
             serializer(m_gconsump);
             serializer(m_wlist_manager);
+            serializer(m_network);
         }
 
     private:
@@ -144,6 +149,7 @@ namespace Opm {
         std::shared_ptr<GConSale> m_gconsale;
         std::shared_ptr<GConSump> m_gconsump;
         std::shared_ptr<WListManager> m_wlist_manager;
+        std::shared_ptr<Network::ExtNetwork> m_network;
     };
 }
 

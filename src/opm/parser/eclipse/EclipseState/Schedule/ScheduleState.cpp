@@ -242,4 +242,12 @@ void ScheduleState::wlist_manager(WListManager wlist_manager) {
     this->m_wlist_manager = std::make_shared<WListManager>( std::move(wlist_manager) );
 }
 
+const Network::ExtNetwork& ScheduleState::network() const {
+    return *this->m_network;
+}
+
+void ScheduleState::network(Network::ExtNetwork network) {
+    this->m_network = std::make_shared<Network::ExtNetwork>( std::move(network) );
+}
+
 }

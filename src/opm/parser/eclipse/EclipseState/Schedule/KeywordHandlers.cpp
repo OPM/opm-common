@@ -119,7 +119,7 @@ namespace {
 
 
     void Schedule::handleBRANPROP(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
-        auto ext_network = std::make_shared<Network::ExtNetwork>(this->network(handlerContext.currentStep));
+        auto ext_network = this->snapshots.back().network();
 
         for (const auto& record : handlerContext.keyword) {
             const auto& downtree_node = record.getItem<ParserKeywords::BRANPROP::DOWNTREE_NODE>().get<std::string>(0);
@@ -128,20 +128,20 @@ namespace {
             const int vfp_table = record.getItem<ParserKeywords::BRANPROP::VFP_TABLE>().get<int>(0);
 
             if (vfp_table == 0) {
-                ext_network->drop_branch(uptree_node, downtree_node);
+                ext_network.drop_branch(uptree_node, downtree_node);
             } else {
                 const auto alq_eq = Network::Branch::AlqEqfromString(record.getItem<ParserKeywords::BRANPROP::ALQ_SURFACE_DENSITY>().get<std::string>(0));
 
                 if (alq_eq == Network::Branch::AlqEQ::ALQ_INPUT) {
                     double alq_value = record.getItem<ParserKeywords::BRANPROP::ALQ>().get<double>(0);
-                    ext_network->add_branch(Network::Branch(downtree_node, uptree_node, vfp_table, alq_value));
+                    ext_network.add_branch(Network::Branch(downtree_node, uptree_node, vfp_table, alq_value));
                 } else {
-                    ext_network->add_branch(Network::Branch(downtree_node, uptree_node, vfp_table, alq_eq));
+                    ext_network.add_branch(Network::Branch(downtree_node, uptree_node, vfp_table, alq_eq));
                 }
             }
         }
 
-        this->updateNetwork(ext_network, handlerContext.currentStep);
+        this->snapshots.back().network( std::move( ext_network ));
     }
 
     void Schedule::handleCOMPDAT(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
@@ -691,7 +691,7 @@ namespace {
     }
 
     void Schedule::handleNODEPROP(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
-        auto ext_network = std::make_shared<Network::ExtNetwork>(this->network(handlerContext.currentStep));
+        auto ext_network = this->snapshots.back().network();
 
         for (const auto& record : handlerContext.keyword) {
             const auto& name = record.getItem<ParserKeywords::NODEPROP::NAME>().get<std::string>(0);
@@ -724,10 +724,10 @@ namespace {
             }
 
             node.add_gas_lift_gas(add_gas_lift_gas);
-            ext_network->add_node(node);
+            ext_network.add_node(node);
         }
 
-        this->updateNetwork(ext_network, handlerContext.currentStep);
+        this->snapshots.back().network( ext_network );
     }
 
     void Schedule::handleNUPCOL(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
