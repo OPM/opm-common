@@ -476,7 +476,6 @@ const std::map<cmp_enum, int> cmpToIndex = {
             bool parenFirstCond = false;
             bool allPrevLogicOp_AND = false;
             for (auto cond_it = actx_cond.begin(); cond_it < actx_cond.end(); cond_it++) {
-            //auto z_data = *cond_it;
                 if (cond_it == actx_cond.begin()) {
                     if (cond_it->open_paren()) {
                         parenFirstCond = true;
