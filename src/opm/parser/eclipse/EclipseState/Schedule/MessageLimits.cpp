@@ -17,205 +17,207 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <functional>
+
+#include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
+#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/M.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MessageLimits.hpp>
-#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 
 namespace Opm {
 
 
+    MessageLimits::MessageLimits(const Deck& deck ) :
+        MessageLimits()
+    {
+        for (const auto& keyword : deck) {
+            if (keyword.name() == "MESSAGES")
+                this->update(keyword);
 
-
-
-    MessageLimits::MessageLimits( const TimeMap& timemap ) :
-        limits( timemap , MLimits())
-    { }
+            if (keyword.name() == "SCHEDULE")
+                break;
+        }
+    }
 
 
     MessageLimits MessageLimits::serializeObject()
     {
        MessageLimits result;
-       result.limits = {{MLimits::serializeObject()}, 2};
-
-        return result;
+       result.message_print_limit = 12345;
+       return result;
     }
 
 
-    int MessageLimits::getMessagePrintLimit(size_t timestep) const
+    int MessageLimits::getMessagePrintLimit() const
     {
-        const auto& mlimit = limits.get( timestep );
-        return mlimit.message_print_limit;
+        return this->message_print_limit;
     }
 
-    int MessageLimits::getCommentPrintLimit(size_t timestep) const
+    int MessageLimits::getCommentPrintLimit() const
     {
-        const auto& mlimit = limits.get( timestep );
-        return mlimit.comment_print_limit;
+        return this->comment_print_limit;
     }
 
-    int MessageLimits::getWarningPrintLimit(size_t timestep) const
+    int MessageLimits::getWarningPrintLimit() const
     {
-        const auto& mlimit = limits.get( timestep );
-        return mlimit.warning_print_limit;
+        return this->warning_print_limit;
     }
 
-    int MessageLimits::getProblemPrintLimit(size_t timestep) const
+    int MessageLimits::getProblemPrintLimit() const
     {
-        const auto& mlimit = limits.get( timestep );
-        return mlimit.problem_print_limit;
+        return this->problem_print_limit;
     }
 
-    int MessageLimits::getErrorPrintLimit(size_t timestep) const
+    int MessageLimits::getErrorPrintLimit() const
     {
-        const auto& mlimit = limits.get( timestep );
-        return mlimit.error_print_limit;
+        return this->error_print_limit;
     }
 
-    int MessageLimits::getBugPrintLimit(size_t timestep) const
+    int MessageLimits::getBugPrintLimit() const
     {
-        const auto& mlimit = limits.get( timestep );
-        return mlimit.bug_print_limit;
+        return this->bug_print_limit;
     }
 
     /*-----------------------------------------------------------------*/
 
-    int MessageLimits::getMessageStopLimit(size_t timestep) const
+    int MessageLimits::getMessageStopLimit() const
     {
-        const auto& mlimit = limits.get( timestep );
-        return mlimit.message_stop_limit;
+        return this->message_stop_limit;
     }
 
-    int MessageLimits::getCommentStopLimit(size_t timestep) const
+    int MessageLimits::getCommentStopLimit() const
     {
-        const auto& mlimit = limits.get( timestep );
-        return mlimit.comment_stop_limit;
+        return this->comment_stop_limit;
     }
 
-    int MessageLimits::getWarningStopLimit(size_t timestep) const
+    int MessageLimits::getWarningStopLimit() const
     {
-        const auto& mlimit = limits.get( timestep );
-        return mlimit.warning_stop_limit;
+        return this->warning_stop_limit;
     }
 
-    int MessageLimits::getProblemStopLimit(size_t timestep) const
+    int MessageLimits::getProblemStopLimit() const
     {
-        const auto& mlimit = limits.get( timestep );
-        return mlimit.problem_stop_limit;
+        return this->problem_stop_limit;
     }
 
-    int MessageLimits::getErrorStopLimit(size_t timestep) const
+    int MessageLimits::getErrorStopLimit() const
     {
-        const auto& mlimit = limits.get( timestep );
-        return mlimit.error_stop_limit;
+        return this->error_stop_limit;
     }
 
-    int MessageLimits::getBugStopLimit(size_t timestep) const
+    int MessageLimits::getBugStopLimit() const
     {
-        const auto& mlimit = limits.get( timestep );
-        return mlimit.bug_stop_limit;
+        return this->bug_stop_limit;
     }
 
     /*-----------------------------------------------------------------*/
 
-    void MessageLimits::update(size_t timestep, const MLimits& value) {
-        if (timestep == 0)
-            limits.updateInitial( value );
-        else
-            limits.update( timestep , value );
+    void MessageLimits::setMessagePrintLimit(int value)
+    {
+        this->message_print_limit = value;
     }
 
-    void MessageLimits::setMessagePrintLimit(size_t timestep, int value)
+    void MessageLimits::setCommentPrintLimit(int value)
     {
-        auto mlimit = limits.get( timestep );
-        mlimit.message_print_limit = value;
-        this->update( timestep , mlimit );
+        this->comment_print_limit = value;
     }
 
-    void MessageLimits::setCommentPrintLimit(size_t timestep, int value)
+    void MessageLimits::setWarningPrintLimit(int value)
     {
-        auto mlimit = limits.get( timestep );
-        mlimit.comment_print_limit = value;
-        this->update( timestep , mlimit );
+        this->warning_print_limit = value;
     }
 
-    void MessageLimits::setWarningPrintLimit(size_t timestep, int value)
+    void MessageLimits::setProblemPrintLimit(int value)
     {
-        auto mlimit = limits.get( timestep );
-        mlimit.warning_print_limit = value;
-        this->update( timestep , mlimit );
+        this->problem_print_limit = value;
     }
 
-    void MessageLimits::setProblemPrintLimit(size_t timestep, int value)
+    void MessageLimits::setErrorPrintLimit(int value)
     {
-        auto mlimit = limits.get( timestep );
-        mlimit.problem_print_limit = value;
-        this->update( timestep , mlimit );
+        this->error_print_limit = value;
     }
 
-    void MessageLimits::setErrorPrintLimit(size_t timestep, int value)
+    void MessageLimits::setBugPrintLimit(int value)
     {
-        auto mlimit = limits.get( timestep );
-        mlimit.error_print_limit = value;
-        this->update( timestep , mlimit );
-    }
-
-    void MessageLimits::setBugPrintLimit(size_t timestep, int value)
-    {
-        auto mlimit = limits.get( timestep );
-        mlimit.bug_print_limit = value;
-        this->update( timestep , mlimit );
+        this->bug_print_limit = value;
     }
 
     /*-----------------------------------------------------------------*/
 
-    void MessageLimits::setMessageStopLimit(size_t timestep, int value)
+    void MessageLimits::setMessageStopLimit(int value)
     {
-        auto mlimit = limits.get( timestep );
-        mlimit.message_stop_limit = value;
-        this->update( timestep , mlimit );
+        this->message_stop_limit = value;
     }
 
-    void MessageLimits::setCommentStopLimit(size_t timestep, int value)
+    void MessageLimits::setCommentStopLimit(int value)
     {
-        auto mlimit = limits.get( timestep );
-        mlimit.comment_stop_limit = value;
-        this->update( timestep , mlimit );
+        this->comment_stop_limit = value;
     }
 
-    void MessageLimits::setWarningStopLimit(size_t timestep, int value)
+    void MessageLimits::setWarningStopLimit(int value)
     {
-        auto mlimit = limits.get( timestep );
-        mlimit.warning_stop_limit = value;
-        this->update( timestep , mlimit );
+        this->warning_stop_limit = value;
     }
 
-    void MessageLimits::setProblemStopLimit(size_t timestep, int value)
+    void MessageLimits::setProblemStopLimit(int value)
     {
-        auto mlimit = limits.get( timestep );
-        mlimit.problem_stop_limit = value;
-        this->update( timestep , mlimit );
+        this->problem_stop_limit = value;
     }
 
-    void MessageLimits::setErrorStopLimit(size_t timestep, int value)
+    void MessageLimits::setErrorStopLimit(int value)
     {
-        auto mlimit = limits.get( timestep );
-        mlimit.error_stop_limit = value;
-        this->update( timestep , mlimit );
+        this->error_stop_limit = value;
     }
 
-    void MessageLimits::setBugStopLimit(size_t timestep, int value)
+    void MessageLimits::setBugStopLimit(int value)
     {
-        auto mlimit = limits.get( timestep );
-        mlimit.bug_stop_limit = value;
-        this->update( timestep , mlimit );
+        this->bug_stop_limit = value;
     }
 
-    bool MessageLimits::operator==(const MessageLimits& data) const
+    bool MessageLimits::operator==(const MessageLimits& other) const
     {
-        return limits == data.limits;
+        return  ((this->message_print_limit == other.message_print_limit) &&
+                 (this->comment_print_limit == other.comment_print_limit) &&
+                 (this->warning_print_limit == other.warning_print_limit) &&
+                 (this->problem_print_limit == other.problem_print_limit) &&
+                 (this->error_print_limit   == other.error_print_limit  ) &&
+                 (this->bug_print_limit     == other.bug_print_limit    ) &&
+                 (this->message_stop_limit  == other.message_stop_limit ) &&
+                 (this->comment_stop_limit  == other.comment_stop_limit ) &&
+                 (this->warning_stop_limit  == other.warning_stop_limit ) &&
+                 (this->problem_stop_limit  == other.problem_stop_limit ) &&
+                 (this->error_stop_limit    == other.error_stop_limit   ) &&
+                 (this->bug_stop_limit      == other.bug_stop_limit     ));
     }
 
+    void MessageLimits::update(const DeckKeyword& keyword) {
+        const auto& record = keyword.getRecord(0);
+        using  set_limit_fptr = decltype( std::mem_fn( &MessageLimits::setMessagePrintLimit ) );
+        static const std::pair<std::string , set_limit_fptr> setters[] = {
+            {"MESSAGE_PRINT_LIMIT" , std::mem_fn( &MessageLimits::setMessagePrintLimit )},
+            {"COMMENT_PRINT_LIMIT" , std::mem_fn( &MessageLimits::setCommentPrintLimit )},
+            {"WARNING_PRINT_LIMIT" , std::mem_fn( &MessageLimits::setWarningPrintLimit )},
+            {"PROBLEM_PRINT_LIMIT" , std::mem_fn( &MessageLimits::setProblemPrintLimit )},
+            {"ERROR_PRINT_LIMIT"   , std::mem_fn( &MessageLimits::setErrorPrintLimit   )},
+            {"BUG_PRINT_LIMIT"     , std::mem_fn( &MessageLimits::setBugPrintLimit     )},
+            {"MESSAGE_STOP_LIMIT"  , std::mem_fn( &MessageLimits::setMessageStopLimit  )},
+            {"COMMENT_STOP_LIMIT"  , std::mem_fn( &MessageLimits::setCommentStopLimit  )},
+            {"WARNING_STOP_LIMIT"  , std::mem_fn( &MessageLimits::setWarningStopLimit  )},
+            {"PROBLEM_STOP_LIMIT"  , std::mem_fn( &MessageLimits::setProblemStopLimit  )},
+            {"ERROR_STOP_LIMIT"    , std::mem_fn( &MessageLimits::setErrorStopLimit    )},
+            {"BUG_STOP_LIMIT"      , std::mem_fn( &MessageLimits::setBugStopLimit      )},
+        };
+
+        for (const auto& pair : setters) {
+            const auto& item = record.getItem( pair.first );
+            if (!item.defaultApplied(0)) {
+                const set_limit_fptr& fptr = pair.second;
+                int value = item.get<int>(0);
+                fptr( *this, value );
+            }
+        }
+    }
 
 }
 

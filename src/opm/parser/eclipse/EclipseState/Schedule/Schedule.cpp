@@ -112,8 +112,8 @@ namespace {
         m_input_path(deck.getInputPath()),
         m_sched_deck(deck, restart_info(rst) ),
         m_timeMap( deck , restart_info( rst )),
-        m_messageLimits( this->m_timeMap ),
         m_runspec( runspec ),
+        m_deck_message_limits( MessageLimits(deck) ),
         wtest_config(this->m_timeMap, std::make_shared<WellTestConfig>() ),
         wlist_manager( this->m_timeMap, std::make_shared<WListManager>()),
         udq_config(this->m_timeMap, std::make_shared<UDQConfig>(deck)),
@@ -132,20 +132,6 @@ namespace {
     {
         if (rst)
             this->load_rst(*rst, grid, fp);
-
-        /*
-          We can have the MESSAGES keyword anywhere in the deck, we
-          must therefor also scan the part of the deck prior to the
-          SCHEDULE section to initialize valid MessageLimits object.
-        */
-        for (std::size_t keywordIdx = 0; keywordIdx < deck.size(); ++keywordIdx) {
-            const auto& keyword = deck.getKeyword(keywordIdx);
-            if (keyword.name() == "SCHEDULE")
-                break;
-
-            if (keyword.name() == "MESSAGES")
-                applyMESSAGES(keyword, 0);
-        }
 
         this->iterateScheduleSection( {}, parseContext, errors, grid, fp);
 
@@ -276,7 +262,7 @@ namespace {
         result.m_timeMap = TimeMap::serializeObject();
         result.wells_static.insert({"test1", {{std::make_shared<Opm::Well>(Opm::Well::serializeObject())},1}});
         result.groups.insert({"test2", {{std::make_shared<Opm::Group>(Opm::Group::serializeObject())},1}});
-        result.m_messageLimits = MessageLimits::serializeObject();
+        result.m_deck_message_limits = MessageLimits::serializeObject();
         result.m_runspec = Runspec::serializeObject();
         result.vfpprod_tables = {{1, {{std::make_shared<VFPProdTable>(VFPProdTable::serializeObject())}, 1}}};
         result.vfpinj_tables = {{2, {{std::make_shared<VFPInjTable>(VFPInjTable::serializeObject())}, 1}}};
@@ -820,34 +806,6 @@ void Schedule::iterateScheduleSection(std::optional<std::size_t> load_offset,
                 }
 
                 this->snapshots.back().events().addEvent( ScheduleEvents::COMPLETION_CHANGE);
-            }
-        }
-    }
-
-    void Schedule::applyMESSAGES(const DeckKeyword& keyword, std::size_t currentStep) {
-        const auto& record = keyword.getRecord(0);
-        using  set_limit_fptr = decltype( std::mem_fn( &MessageLimits::setMessagePrintLimit ) );
-        static const std::pair<std::string , set_limit_fptr> setters[] = {
-            {"MESSAGE_PRINT_LIMIT" , std::mem_fn( &MessageLimits::setMessagePrintLimit )},
-            {"COMMENT_PRINT_LIMIT" , std::mem_fn( &MessageLimits::setCommentPrintLimit )},
-            {"WARNING_PRINT_LIMIT" , std::mem_fn( &MessageLimits::setWarningPrintLimit )},
-            {"PROBLEM_PRINT_LIMIT" , std::mem_fn( &MessageLimits::setProblemPrintLimit )},
-            {"ERROR_PRINT_LIMIT"   , std::mem_fn( &MessageLimits::setErrorPrintLimit   )},
-            {"BUG_PRINT_LIMIT"     , std::mem_fn( &MessageLimits::setBugPrintLimit     )},
-            {"MESSAGE_STOP_LIMIT"  , std::mem_fn( &MessageLimits::setMessageStopLimit  )},
-            {"COMMENT_STOP_LIMIT"  , std::mem_fn( &MessageLimits::setCommentStopLimit  )},
-            {"WARNING_STOP_LIMIT"  , std::mem_fn( &MessageLimits::setWarningStopLimit  )},
-            {"PROBLEM_STOP_LIMIT"  , std::mem_fn( &MessageLimits::setProblemStopLimit  )},
-            {"ERROR_STOP_LIMIT"    , std::mem_fn( &MessageLimits::setErrorStopLimit    )},
-            {"BUG_STOP_LIMIT"      , std::mem_fn( &MessageLimits::setBugStopLimit      )},
-        };
-
-        for (const auto& pair : setters) {
-            const auto& item = record.getItem( pair.first );
-            if (!item.defaultApplied(0)) {
-                const set_limit_fptr& fptr = pair.second;
-                int value = item.get<int>(0);
-                fptr( this->m_messageLimits , currentStep , value );
             }
         }
     }
@@ -1419,10 +1377,6 @@ void Schedule::iterateScheduleSection(std::optional<std::size_t> load_offset,
     }
 
 
-    const MessageLimits& Schedule::getMessageLimits() const {
-        return m_messageLimits;
-    }
-
 
     const Well::ProducerCMode& Schedule::getGlobalWhistctlMmode(std::size_t timestep) const {
         return global_whistctl_mode.get(timestep);
@@ -1709,7 +1663,7 @@ void Schedule::iterateScheduleSection(std::optional<std::size_t> load_offset,
                this->m_input_path == data.m_input_path &&
                compareMap(this->wells_static, data.wells_static) &&
                compareMap(this->groups, data.groups) &&
-               this->m_messageLimits == data.m_messageLimits &&
+               this->m_deck_message_limits == data.m_deck_message_limits &&
                this->m_runspec == data.m_runspec &&
                compareMap(this->vfpprod_tables, data.vfpprod_tables) &&
                compareMap(this->vfpinj_tables, data.vfpinj_tables) &&
@@ -2138,6 +2092,7 @@ void Schedule::create_first(const std::chrono::system_clock::time_point& start_t
     auto& sched_state = snapshots.back();
     sched_state.nupcol( this->m_runspec.nupcol() );
     sched_state.oilvap( OilVaporizationProperties( this->m_runspec.tabdims().getNumPVTTables() ));
+    sched_state.message_limits( this->m_deck_message_limits );
 
     this->addGroup("FIELD", 0);
 }

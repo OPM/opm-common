@@ -255,7 +255,6 @@ namespace Opm
         bool hasGroup(const std::string& groupName, std::size_t timeStep) const;
         const Group& getGroup(const std::string& groupName, std::size_t timeStep) const;
 
-        const MessageLimits& getMessageLimits() const;
         void invalidNamePattern (const std::string& namePattern, std::size_t report_step, const ParseContext& parseContext, ErrorGuard& errors, const DeckKeyword& keyword) const;
         const GuideRateConfig& guideRateConfig(std::size_t timeStep) const;
 
@@ -305,13 +304,13 @@ namespace Opm
         {
             m_sched_deck.serializeOp(serializer);
             m_timeMap.serializeOp(serializer);
+            m_deck_message_limits.serializeOp(serializer);
             auto splitWells = splitDynMap(wells_static);
             serializer.vector(splitWells.first);
             serializer(splitWells.second);
             auto splitGroups = splitDynMap(groups);
             serializer.vector(splitGroups.first);
             serializer(splitGroups.second);
-            m_messageLimits.serializeOp(serializer);
             m_runspec.serializeOp(serializer);
             auto splitvfpprod = splitDynMap<Map2>(vfpprod_tables);
             serializer.vector(splitvfpprod.first);
@@ -351,10 +350,10 @@ namespace Opm
         TimeMap m_timeMap;
         WellMap wells_static;
         GroupMap groups;
-        MessageLimits m_messageLimits;
         Runspec m_runspec;
         VFPProdMap vfpprod_tables;
         VFPInjMap vfpinj_tables;
+        MessageLimits m_deck_message_limits;
         DynamicState<std::shared_ptr<WellTestConfig>> wtest_config;
         DynamicState<std::shared_ptr<WListManager>> wlist_manager;
         DynamicState<std::shared_ptr<UDQConfig>> udq_config;
@@ -453,7 +452,6 @@ namespace Opm
         std::string simulationDays(std::size_t currentStep) const;
 
         void applyEXIT(const DeckKeyword&, std::size_t currentStep);
-        void applyMESSAGES(const DeckKeyword&, std::size_t currentStep);
         void applyWELOPEN(const DeckKeyword&, std::size_t currentStep, bool runtime, const ParseContext&, ErrorGuard&, const std::vector<std::string>& matching_wells = {});
         void applyWRFT(const DeckKeyword&, std::size_t currentStep);
         void applyWRFTPLT(const DeckKeyword&, std::size_t currentStep);

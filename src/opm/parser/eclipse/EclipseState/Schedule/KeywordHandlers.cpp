@@ -675,7 +675,7 @@ namespace {
     }
 
     void Schedule::handleMESSAGES(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
-        return applyMESSAGES(handlerContext.keyword, handlerContext.currentStep);
+        this->snapshots.back().message_limits().update( handlerContext.keyword );
     }
 
     void Schedule::handleMULTFLT (const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
