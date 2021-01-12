@@ -62,6 +62,8 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/SICD.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/Valve.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/WellSegments.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Group/GConSump.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Group/GConSale.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
@@ -472,8 +474,7 @@ namespace {
     }
 
     void Schedule::handleGCONSALE(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
-        const auto& current = *this->gconsale.get(handlerContext.currentStep);
-        std::shared_ptr<GConSale> new_gconsale(new GConSale(current));
+        auto new_gconsale = this->snapshots.back().gconsale();
         for (const auto& record : handlerContext.keyword) {
             const std::string& groupName = record.getItem("GROUP").getTrimmedString(0);
             auto sales_target = record.getItem("SALES_TARGET").get<UDAValue>(0);
@@ -482,7 +483,7 @@ namespace {
             std::string procedure = record.getItem("MAX_PROC").getTrimmedString(0);
             auto udqconfig = this->getUDQConfig(handlerContext.currentStep).params().undefinedValue();
 
-            new_gconsale->add(groupName, sales_target, max_rate, min_rate, procedure, udqconfig, this->unit_system);
+            new_gconsale.add(groupName, sales_target, max_rate, min_rate, procedure, udqconfig, this->unit_system);
 
             auto group_ptr = std::make_shared<Group>(this->getGroup(groupName, handlerContext.currentStep));
             Group::GroupInjectionProperties injection;
@@ -491,12 +492,11 @@ namespace {
                 this->updateGroup(std::move(group_ptr), handlerContext.currentStep);
             }
         }
-        this->gconsale.update(handlerContext.currentStep, new_gconsale);
+        this->snapshots.back().gconsale( std::move(new_gconsale) );
     }
 
     void Schedule::handleGCONSUMP(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
-        const auto& current = *this->gconsump.get(handlerContext.currentStep);
-        std::shared_ptr<GConSump> new_gconsump(new GConSump(current));
+        auto new_gconsump = this->snapshots.back().gconsump();
         for (const auto& record : handlerContext.keyword) {
             const std::string& groupName = record.getItem("GROUP").getTrimmedString(0);
             auto consumption_rate = record.getItem("GAS_CONSUMP_RATE").get<UDAValue>(0);
@@ -509,9 +509,9 @@ namespace {
 
             auto udqconfig = this->getUDQConfig(handlerContext.currentStep).params().undefinedValue();
 
-            new_gconsump->add(groupName, consumption_rate, import_rate, network_node_name, udqconfig, this->unit_system);
+            new_gconsump.add(groupName, consumption_rate, import_rate, network_node_name, udqconfig, this->unit_system);
         }
-        this->gconsump.update(handlerContext.currentStep, new_gconsump);
+        this->snapshots.back().gconsump( std::move(new_gconsump) );
     }
 
     void Schedule::handleGEFAC(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {

@@ -37,6 +37,8 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GuideRateModel.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GuideRate.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Group/GConSump.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Group/GConSale.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellProductionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp>
@@ -363,7 +365,7 @@ BOOST_AUTO_TEST_CASE(TESTGCONSALE) {
     auto schedule = create_schedule(input);
     double metric_to_si = 1.0 / (24.0 * 3600.0);  //cubic meters / day
 
-    const auto& gconsale = schedule.gConSale(0);
+    const auto& gconsale = schedule[0].gconsale();
     BOOST_CHECK_EQUAL(gconsale.size(), 1U);
     BOOST_CHECK(gconsale.has("G1"));
     BOOST_CHECK(!gconsale.has("G2"));
@@ -376,7 +378,7 @@ BOOST_AUTO_TEST_CASE(TESTGCONSALE) {
     BOOST_CHECK_EQUAL(group.min_sales_rate.getSI(), 45000 * metric_to_si);
     BOOST_CHECK(group.max_proc == GConSale::MaxProcedure::WELL);
 
-    const auto& gconsump = schedule.gConSump(0);
+    const auto& gconsump = schedule[0].gconsump();
     BOOST_CHECK_EQUAL(gconsump.size(), 2U);
     BOOST_CHECK(gconsump.has("G1"));
     BOOST_CHECK(gconsump.has("G2"));

@@ -56,6 +56,8 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/SICD.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/Valve.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/WellSegments.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Group/GConSump.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Group/GConSale.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
@@ -118,8 +120,6 @@ namespace {
         udq_config(this->m_timeMap, std::make_shared<UDQConfig>(deck)),
         udq_active(this->m_timeMap, std::make_shared<UDQActive>()),
         guide_rate_config(this->m_timeMap, std::make_shared<GuideRateConfig>()),
-        gconsale(this->m_timeMap, std::make_shared<GConSale>() ),
-        gconsump(this->m_timeMap, std::make_shared<GConSump>() ),
         m_actions(this->m_timeMap, std::make_shared<Action::Actions>()),
         m_network(this->m_timeMap, std::make_shared<Network::ExtNetwork>()),
         m_glo(this->m_timeMap, std::make_shared<GasLiftOpt>()),
@@ -270,8 +270,6 @@ namespace {
         result.m_glo = {{std::make_shared<GasLiftOpt>(GasLiftOpt::serializeObject())}, 1};
         result.udq_active = {{std::make_shared<UDQActive>(UDQActive::serializeObject())}, 1};
         result.guide_rate_config = {{std::make_shared<GuideRateConfig>(GuideRateConfig::serializeObject())}, 1};
-        result.gconsale = {{std::make_shared<GConSale>(GConSale::serializeObject())}, 1};
-        result.gconsump = {{std::make_shared<GConSump>(GConSump::serializeObject())}, 1};
         result.m_actions = {{std::make_shared<Action::Actions>(Action::Actions::serializeObject())}, 1};
         result.rft_config = RFTConfig::serializeObject();
         result.restart_config = RestartConfig::serializeObject();
@@ -455,7 +453,6 @@ void Schedule::iterateScheduleSection(std::optional<std::size_t> load_offset,
             "WSKPTAB",
             "WSOLVENT",
             "WTEMP",
-            "WTEST",
             "WTRACER"
         };
 
@@ -1459,16 +1456,6 @@ void Schedule::iterateScheduleSection(std::optional<std::size_t> load_offset,
         this->udq_active.update(timeStep, udq);
     }
 
-    const GConSale& Schedule::gConSale(std::size_t timeStep) const {
-        const auto& ptr = this->gconsale.get(timeStep);
-        return *ptr;
-    }
-
-    const GConSump& Schedule::gConSump(std::size_t timeStep) const {
-        const auto& ptr = this->gconsump.get(timeStep);
-        return *ptr;
-    }
-
     const WListManager& Schedule::getWListManager(std::size_t timeStep) const {
         const auto& ptr = this->wlist_manager.get(timeStep);
         return *ptr;
@@ -1665,8 +1652,6 @@ void Schedule::iterateScheduleSection(std::optional<std::size_t> load_offset,
                compareDynState(this->udq_config, data.udq_config) &&
                compareDynState(this->udq_active, data.udq_active) &&
                compareDynState(this->guide_rate_config, data.guide_rate_config) &&
-               compareDynState(this->gconsale, data.gconsale) &&
-               compareDynState(this->gconsump, data.gconsump) &&
                compareDynState(this->m_actions, data.m_actions) &&
                compareDynState(this->rpt_config, data.rpt_config) &&
                rft_config  == data.rft_config &&
@@ -2085,6 +2070,8 @@ void Schedule::create_first(const std::chrono::system_clock::time_point& start_t
     sched_state.oilvap( OilVaporizationProperties( this->m_runspec.tabdims().getNumPVTTables() ));
     sched_state.message_limits( this->m_deck_message_limits );
     sched_state.wtest_config( WellTestConfig() );
+    sched_state.gconsale( GConSale() );
+    sched_state.gconsump( GConSump() );
 
     this->addGroup("FIELD", 0);
 }
