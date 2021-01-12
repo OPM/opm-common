@@ -976,7 +976,7 @@ captureDeclaredWellData(const Schedule&   sched,
                         const std::vector<int>& inteHead)
 {
     const auto& wells = sched.getWells(sim_step);
-    const auto& step_glo = sched.glo(sim_step);
+    const auto& step_glo = sched[sim_step].glo();
 
     // Static contributions to IWEL array.
     {

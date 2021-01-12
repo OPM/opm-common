@@ -121,7 +121,6 @@ namespace {
         guide_rate_config(this->m_timeMap, std::make_shared<GuideRateConfig>()),
         m_actions(this->m_timeMap, std::make_shared<Action::Actions>()),
         m_network(this->m_timeMap, std::make_shared<Network::ExtNetwork>()),
-        m_glo(this->m_timeMap, std::make_shared<GasLiftOpt>()),
         rft_config(this->m_timeMap),
         restart_config(m_timeMap, deck, parseContext, errors),
         unit_system(deck.getActiveUnitSystem()),
@@ -265,7 +264,6 @@ namespace {
         result.vfpinj_tables = {{2, {{std::make_shared<VFPInjTable>(VFPInjTable::serializeObject())}, 1}}};
         result.udq_config = {{std::make_shared<UDQConfig>(UDQConfig::serializeObject())}, 1};
         result.m_network  = {{std::make_shared<Network::ExtNetwork>(Network::ExtNetwork::serializeObject())}, 1};
-        result.m_glo = {{std::make_shared<GasLiftOpt>(GasLiftOpt::serializeObject())}, 1};
         result.udq_active = {{std::make_shared<UDQActive>(UDQActive::serializeObject())}, 1};
         result.guide_rate_config = {{std::make_shared<GuideRateConfig>(GuideRateConfig::serializeObject())}, 1};
         result.m_actions = {{std::make_shared<Action::Actions>(Action::Actions::serializeObject())}, 1};
@@ -1371,11 +1369,6 @@ void Schedule::iterateScheduleSection(std::optional<std::size_t> load_offset,
 
 
 
-    Well::ProducerCMode Schedule::getGlobalWhistctlMmode(std::size_t timestep) const {
-        return this->operator[](timestep).whistctl();
-    }
-
-
 
     void Schedule::checkIfAllConnectionsIsShut(std::size_t timeStep) {
         const auto& well_names = this->wellNames(timeStep);
@@ -1641,7 +1634,6 @@ void Schedule::iterateScheduleSection(std::optional<std::size_t> load_offset,
                compareMap(this->vfpprod_tables, data.vfpprod_tables) &&
                compareMap(this->vfpinj_tables, data.vfpinj_tables) &&
                compareDynState(this->m_network, data.m_network) &&
-               compareDynState(this->m_glo, data.m_glo) &&
                compareDynState(this->udq_config, data.udq_config) &&
                compareDynState(this->udq_active, data.udq_active) &&
                compareDynState(this->guide_rate_config, data.guide_rate_config) &&
@@ -1798,10 +1790,6 @@ namespace {
 
     const Network::ExtNetwork& Schedule::network(std::size_t report_step) const {
         return *this->m_network[report_step];
-    }
-
-    const GasLiftOpt& Schedule::glo(std::size_t report_step) const {
-        return *this->m_glo[report_step];
     }
 
 namespace {
@@ -2066,6 +2054,7 @@ void Schedule::create_first(const std::chrono::system_clock::time_point& start_t
     sched_state.gconsale( GConSale() );
     sched_state.gconsump( GConSump() );
     sched_state.wlist_manager( WListManager() );
+    sched_state.glo( GasLiftOpt() );
 
     this->addGroup("FIELD", 0);
 }

@@ -3760,7 +3760,7 @@ WLIFTOPT
     Opm::UnitSystem unitSystem = UnitSystem( UnitSystem::UnitType::UNIT_TYPE_METRIC );
     double siFactorG = unitSystem.parse("GasSurfaceVolume/Time").getSIScaling();
     const auto sched = make_schedule(input);
-    const auto& glo = sched.glo(0);
+    const auto& glo = sched[0].glo();
     const auto& plat_group = glo.group("PLAT-A");
     BOOST_CHECK_EQUAL( *plat_group.max_lift_gas(), siFactorG * 200000);
     BOOST_CHECK(!plat_group.max_total_gas().has_value());

@@ -438,7 +438,7 @@ namespace {
             return mode;
         }
 
-        const auto& w_hist_ctl_mode = sched.getGlobalWhistctlMmode(lookup_step);
+        const auto& w_hist_ctl_mode = sched[lookup_step].whistctl();
         const auto it_ctl = prod_cmodeToECL.find(w_hist_ctl_mode);
         if (it_ctl != prod_cmodeToECL.end()) {
             mode = it_ctl->second;
@@ -450,7 +450,7 @@ namespace {
     int getLiftOptPar(const ::Opm::Schedule& sched,
                    const std::size_t      lookup_step)
     {
-        const auto& each_nupcol = sched.glo(lookup_step).all_newton();
+        const auto& each_nupcol = sched[lookup_step].glo().all_newton();
         int in_enc = (each_nupcol) ? 2 : 1;
         return in_enc;
     }

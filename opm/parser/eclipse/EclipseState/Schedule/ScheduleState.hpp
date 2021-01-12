@@ -35,6 +35,8 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/MessageLimits.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GConSump.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GConSale.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/GasLiftOpt.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/WellTestConfig.hpp>
 
 namespace Opm {
 
@@ -108,6 +110,9 @@ namespace Opm {
         const GConSump& gconsump() const;
         void gconsump(GConSump gconsump);
 
+        const GasLiftOpt& glo() const;
+        void glo(GasLiftOpt glo);
+
         template<class Serializer>
         void serializeOp(Serializer& serializer) {
             serializer(m_start_time);
@@ -125,6 +130,7 @@ namespace Opm {
             serializer(m_gconsale);
             serializer(m_gconsump);
             serializer(m_wlist_manager);
+            serializer(m_glo);
         }
 
     private:
@@ -144,6 +150,7 @@ namespace Opm {
         std::shared_ptr<GConSale> m_gconsale;
         std::shared_ptr<GConSump> m_gconsump;
         std::shared_ptr<WListManager> m_wlist_manager;
+        std::shared_ptr<GasLiftOpt> m_glo;
     };
 }
 

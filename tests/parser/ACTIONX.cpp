@@ -1042,7 +1042,7 @@ TSTEP
     auto sched = make_schedule(input);
     const auto& action1 = sched.actions(0).get("A");
     {
-        const auto& glo = sched.glo(0);
+        const auto& glo = sched[0].glo();
         BOOST_CHECK(!glo.has_group("PLAT-A"));
     }
     std::unordered_set<std::string> required_summary;
@@ -1055,7 +1055,7 @@ TSTEP
     sched.applyAction(0, action1, action_result);
 
     {
-        const auto& glo = sched.glo(0);
+        const auto& glo = sched[0].glo();
         BOOST_CHECK(glo.has_group("PLAT-A"));
         const auto& plat_group = glo.group("PLAT-A");
         BOOST_CHECK_EQUAL( *plat_group.max_lift_gas(), unitSystem.to_si( UnitSystem::measure::gas_surface_rate, 200000));

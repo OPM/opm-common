@@ -18,9 +18,6 @@
 */
 
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleState.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/WellTestConfig.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Group/GConSump.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Group/GConSale.hpp>
 
 namespace Opm {
 
@@ -154,6 +151,7 @@ bool ScheduleState::operator==(const ScheduleState& other) const {
            *this->m_gconsale == *other.m_gconsale &&
            *this->m_gconsump == *other.m_gconsump &&
            *this->m_wlist_manager == *other.m_wlist_manager &&
+           *this->m_glo == *other.m_glo &&
            this->m_nupcol == other.m_nupcol;
 }
 
@@ -170,6 +168,7 @@ ScheduleState ScheduleState::serializeObject() {
     ts.m_gconsump = std::make_shared<GConSump>( GConSump::serializeObject() );
     ts.m_gconsale = std::make_shared<GConSale>( GConSale::serializeObject() );
     ts.m_wlist_manager = std::make_shared<WListManager>( WListManager::serializeObject() );
+    ts.m_glo = std::make_shared<GasLiftOpt>( GasLiftOpt::serializeObject() );
     return ts;
 }
 
@@ -240,6 +239,14 @@ const WListManager& ScheduleState::wlist_manager() const {
 
 void ScheduleState::wlist_manager(WListManager wlist_manager) {
     this->m_wlist_manager = std::make_shared<WListManager>( std::move(wlist_manager) );
+}
+
+const GasLiftOpt& ScheduleState::glo() const {
+    return *this->m_glo;
+}
+
+void ScheduleState::glo(GasLiftOpt glo) {
+    this->m_glo = std::make_shared<GasLiftOpt>( std::move(glo) );
 }
 
 }

@@ -114,7 +114,7 @@ namespace {
                         const std::size_t    lookup_step)
     {
         using M = ::Opm::UnitSystem::measure;
-        const auto& glo = sched.glo(lookup_step);
+        const auto& glo = sched[lookup_step].glo();
         return {
             units.from_si(M::time, glo.min_wait()), units.from_si(M::gas_surface_rate, glo.gaslift_increment()),
             units.from_si(M::oil_gas_ratio, glo.min_eco_gradient())

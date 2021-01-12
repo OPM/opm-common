@@ -540,7 +540,7 @@ namespace {
     }
 
     void Schedule::handleGLIFTOPT(const DeckKeyword& keyword, std::size_t report_step, const ParseContext& parseContext, ErrorGuard&errors) {
-        auto glo = std::make_shared<GasLiftOpt>( this->glo(report_step) );
+        auto glo = this->snapshots.back().glo();
 
         for (const auto& record : keyword) {
             const std::string& groupNamePattern = record.getItem<ParserKeywords::GLIFTOPT::GROUP_NAME>().getTrimmedString(0);
@@ -563,11 +563,11 @@ namespace {
                 group.max_lift_gas(max_lift_gas_value);
                 group.max_total_gas(max_total_gas_value);
 
-                glo->add_group(group);
+                glo.add_group(group);
             }
         }
 
-        this->m_glo.update(report_step, std::move(glo));
+        this->snapshots.back().glo( std::move(glo) );
     }
 
     void Schedule::handleGPMAINT(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
@@ -642,7 +642,7 @@ namespace {
     }
 
     void Schedule::handleLIFTOPT(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
-        auto glo = std::make_shared<GasLiftOpt>(this->glo(handlerContext.currentStep));
+        auto glo = this->snapshots.back().glo();
 
         const auto& record = handlerContext.keyword.getRecord(0);
 
@@ -651,12 +651,12 @@ namespace {
         const double min_wait = record.getItem<ParserKeywords::LIFTOPT::MIN_INTERVAL_BETWEEN_GAS_LIFT_OPTIMIZATIONS>().getSIDouble(0);
         const bool all_newton = DeckItem::to_bool( record.getItem<ParserKeywords::LIFTOPT::OPTIMISE_GAS_LIFT>().get<std::string>(0) );
 
-        glo->gaslift_increment(gaslift_increment);
-        glo->min_eco_gradient(min_eco_gradient);
-        glo->min_wait(min_wait);
-        glo->all_newton(all_newton);
+        glo.gaslift_increment(gaslift_increment);
+        glo.min_eco_gradient(min_eco_gradient);
+        glo.min_wait(min_wait);
+        glo.all_newton(all_newton);
 
-        this->m_glo.update(handlerContext.currentStep, std::move(glo));
+        this->snapshots.back().glo( std::move(glo) );
     }
 
     void Schedule::handleLINCOM(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
@@ -1469,7 +1469,7 @@ namespace {
     }
 
     void Schedule::handleWLIFTOPT(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
-        auto glo = std::make_shared<GasLiftOpt>(this->glo(handlerContext.currentStep));
+        auto glo = this->snapshots.back().glo();
 
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem<ParserKeywords::WLIFTOPT::WELL>().getTrimmedString(0);
@@ -1495,11 +1495,11 @@ namespace {
                 well.min_rate(min_rate);
                 well.alloc_extra_gas(alloc_extra_gas);
 
-                glo->add_well(well);
+                glo.add_well(well);
             }
         }
 
-        this->m_glo.update(handlerContext.currentStep, std::move(glo));
+        this->snapshots.back().glo( std::move(glo) );
     }
 
     void Schedule::handleWLIST(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {

@@ -230,7 +230,6 @@ namespace Opm
 
         std::vector<const Group*> getChildGroups2(const std::string& group_name, std::size_t timeStep) const;
         std::vector<Well> getChildWells2(const std::string& group_name, std::size_t timeStep) const;
-        Well::ProducerCMode getGlobalWhistctlMmode(std::size_t timestep) const;
 
         const UDQActive& udqActive(std::size_t timeStep) const;
         const UDQConfig& getUDQConfig(std::size_t timeStep) const;
@@ -270,7 +269,6 @@ namespace Opm
 
 
         const Network::ExtNetwork& network(std::size_t report_step) const;
-        const GasLiftOpt& glo(std::size_t report_step) const;
 
         bool operator==(const Schedule& data) const;
         std::shared_ptr<const Python> python() const;
@@ -316,7 +314,6 @@ namespace Opm
             guide_rate_config.serializeOp(serializer);
             m_actions.serializeOp(serializer);
             m_network.serializeOp(serializer);
-            m_glo.serializeOp(serializer);
             rft_config.serializeOp(serializer);
             restart_config.serializeOp(serializer);
             if (!serializer.isSerializing()) {
@@ -347,7 +344,6 @@ namespace Opm
         DynamicState<std::shared_ptr<GuideRateConfig>> guide_rate_config;
         DynamicState<std::shared_ptr<Action::Actions>> m_actions;
         DynamicState<std::shared_ptr<Network::ExtNetwork>> m_network;
-        DynamicState<std::shared_ptr<GasLiftOpt>> m_glo;
         RFTConfig rft_config;
         RestartConfig restart_config;
         UnitSystem unit_system;
