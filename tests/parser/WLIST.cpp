@@ -163,7 +163,7 @@ BOOST_AUTO_TEST_CASE(WlistFromDeck) {
 
 
     Opm::Schedule sched = createSchedule(no_wlist);
-    auto& wlm = sched.getWListManager(1);
+    auto& wlm = sched[1].wlist_manager();
     BOOST_CHECK(!wlm.hasList("LIST1"));
 }
 
@@ -233,7 +233,7 @@ BOOST_AUTO_TEST_CASE(Wlist) {
 
   auto sched = createSchedule(wlist);
   {
-      const auto& wlm = sched.getWListManager(1);
+      const auto& wlm = sched[1].wlist_manager();
       const auto& wl1 = wlm.getList("*LIST1");
       const auto& wl2 = wlm.getList("*LIST2");
       const auto& wl4 = wlm.getList("*LIST4");
@@ -247,7 +247,7 @@ BOOST_AUTO_TEST_CASE(Wlist) {
       BOOST_CHECK_EQUAL(wl6.wells().size(), 0U );
   }
   {
-      const auto& wlm = sched.getWListManager(2);
+      const auto& wlm = sched[2].wlist_manager();
       const auto& wl1 = wlm.getList("*LIST1");
       const auto& wl2 = wlm.getList("*LIST2");
       const auto& wl3 = wlm.getList("*LIST3");
@@ -292,7 +292,7 @@ BOOST_AUTO_TEST_CASE(WlistPattern) {
       "/\n";
 
   auto sched = createSchedule(wlist);
-  const auto& wlm = sched.getWListManager(1);
+  const auto& wlm = sched[1].wlist_manager();
   BOOST_CHECK( vector_equal(wlm.wells("*LIST1"), {"W1", "W2"}));
   BOOST_CHECK( vector_equal(wlm.wells("*LIST2"), {"W1", "W3"}));
   BOOST_CHECK( vector_equal(wlm.wells("*LIST*"), {"W1", "W2", "W3"}));

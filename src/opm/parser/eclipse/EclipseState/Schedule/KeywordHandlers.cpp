@@ -1504,8 +1504,7 @@ namespace {
 
     void Schedule::handleWLIST(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         const std::string legal_actions = "NEW:ADD:DEL:MOV";
-        const auto& current = *this->wlist_manager.get(handlerContext.currentStep);
-        std::shared_ptr<WListManager> new_wlm(new WListManager(current));
+        auto new_wlm = this->snapshots.back().wlist_manager();
         for (const auto& record : handlerContext.keyword) {
             const std::string& name = record.getItem("NAME").getTrimmedString(0);
             const std::string& action = record.getItem("ACTION").getTrimmedString(0);
@@ -1527,15 +1526,15 @@ namespace {
                 throw std::invalid_argument("The list name in WLIST must start with a '*'");
 
             if (action == "NEW")
-                new_wlm->newList(name);
+                new_wlm.newList(name);
 
-            if (!new_wlm->hasList(name))
+            if (!new_wlm.hasList(name))
                 throw std::invalid_argument("Invalid well list: " + name);
 
-            auto& wlist = new_wlm->getList(name);
+            auto& wlist = new_wlm.getList(name);
             if (action == "MOV") {
                 for (const auto& well : wells)
-                    new_wlm->delWell(well);
+                    new_wlm.delWell(well);
             }
 
             if (action == "DEL") {
@@ -1546,7 +1545,7 @@ namespace {
                     wlist.add(well);
             }
 
-            this->wlist_manager.update(handlerContext.currentStep, new_wlm);
+            this->snapshots.back().wlist_manager(new_wlm);
         }
     }
 

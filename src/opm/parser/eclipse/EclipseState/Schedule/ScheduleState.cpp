@@ -153,6 +153,7 @@ bool ScheduleState::operator==(const ScheduleState& other) const {
            *this->m_wtest_config == *other.m_wtest_config &&
            *this->m_gconsale == *other.m_gconsale &&
            *this->m_gconsump == *other.m_gconsump &&
+           *this->m_wlist_manager == *other.m_wlist_manager &&
            this->m_nupcol == other.m_nupcol;
 }
 
@@ -168,6 +169,7 @@ ScheduleState ScheduleState::serializeObject() {
     ts.m_wtest_config = std::make_shared<WellTestConfig>( WellTestConfig::serializeObject() );
     ts.m_gconsump = std::make_shared<GConSump>( GConSump::serializeObject() );
     ts.m_gconsale = std::make_shared<GConSale>( GConSale::serializeObject() );
+    ts.m_wlist_manager = std::make_shared<WListManager>( WListManager::serializeObject() );
     return ts;
 }
 
@@ -190,6 +192,7 @@ void ScheduleState::events(Events events) {
 Events& ScheduleState::events() {
     return this->m_events;
 }
+
 
 const Events& ScheduleState::events() const {
     return this->m_events;
@@ -229,6 +232,14 @@ const GConSump& ScheduleState::gconsump() const {
 
 void ScheduleState::gconsump(GConSump gconsump) {
     this->m_gconsump = std::make_shared<GConSump>( std::move(gconsump) );
+}
+
+const WListManager& ScheduleState::wlist_manager() const {
+    return *this->m_wlist_manager;
+}
+
+void ScheduleState::wlist_manager(WListManager wlist_manager) {
+    this->m_wlist_manager = std::make_shared<WListManager>( std::move(wlist_manager) );
 }
 
 }

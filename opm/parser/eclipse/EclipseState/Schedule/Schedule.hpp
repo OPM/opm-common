@@ -109,7 +109,6 @@ namespace Opm
     class SummaryState;
     class TimeMap;
     class ErrorGuard;
-    class WListManager;
     class UDQConfig;
     class UDQActive;
 
@@ -234,7 +233,6 @@ namespace Opm
         Well::ProducerCMode getGlobalWhistctlMmode(std::size_t timestep) const;
 
         const UDQActive& udqActive(std::size_t timeStep) const;
-        const WListManager& getWListManager(std::size_t timeStep) const;
         const UDQConfig& getUDQConfig(std::size_t timeStep) const;
         std::vector<const UDQConfig*> udqConfigList() const;
         const Action::Actions& actions(std::size_t timeStep) const;
@@ -313,7 +311,6 @@ namespace Opm
             auto splitvfpinj = splitDynMap<Map2>(vfpinj_tables);
             serializer.vector(splitvfpinj.first);
             serializer(splitvfpinj.second);
-            wlist_manager.serializeOp(serializer);
             udq_config.serializeOp(serializer);
             udq_active.serializeOp(serializer);
             guide_rate_config.serializeOp(serializer);
@@ -345,7 +342,6 @@ namespace Opm
         VFPProdMap vfpprod_tables;
         VFPInjMap vfpinj_tables;
         MessageLimits m_deck_message_limits;
-        DynamicState<std::shared_ptr<WListManager>> wlist_manager;
         DynamicState<std::shared_ptr<UDQConfig>> udq_config;
         DynamicState<std::shared_ptr<UDQActive>> udq_active;
         DynamicState<std::shared_ptr<GuideRateConfig>> guide_rate_config;

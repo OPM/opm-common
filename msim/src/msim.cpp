@@ -79,7 +79,7 @@ void msim::post_step(Schedule& schedule, Action::State& action_state, SummarySta
     if (actions.empty())
         return;
 
-    Action::Context context( st , schedule.getWListManager(report_step));
+    Action::Context context( st , schedule[report_step].wlist_manager());
 
     auto sim_time = schedule.simTime(report_step);
     for (const auto& action : actions.pending(action_state, sim_time)) {

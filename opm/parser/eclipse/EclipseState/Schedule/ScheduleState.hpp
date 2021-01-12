@@ -31,6 +31,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Events.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/WListManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MessageLimits.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GConSump.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GConSale.hpp>
@@ -98,6 +99,9 @@ namespace Opm {
         const WellTestConfig& wtest_config() const;
         void wtest_config(WellTestConfig wtest_config);
 
+        const WListManager& wlist_manager() const;
+        void wlist_manager(WListManager wlist_manager);
+
         const GConSale& gconsale() const;
         void gconsale(GConSale gconsale);
 
@@ -120,6 +124,7 @@ namespace Opm {
             serializer(m_wtest_config);
             serializer(m_gconsale);
             serializer(m_gconsump);
+            serializer(m_wlist_manager);
         }
 
     private:
@@ -138,6 +143,7 @@ namespace Opm {
         std::shared_ptr<WellTestConfig> m_wtest_config;
         std::shared_ptr<GConSale> m_gconsale;
         std::shared_ptr<GConSump> m_gconsump;
+        std::shared_ptr<WListManager> m_wlist_manager;
     };
 }
 
