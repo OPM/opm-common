@@ -83,6 +83,8 @@ namespace Opm {
     std::vector<NumericalAquiferConnection> NumericalAquiferConnection::connectionsFromSingleRecord(const EclipseGrid& grid, const DeckRecord& record) {
         std::vector<NumericalAquiferConnection> cons;
 
+        const auto& actnum = grid.getACTNUM();
+
         const size_t i1 = record.getItem<AQUCON::I1>().get<int>(0) - 1;
         const size_t j1 = record.getItem<AQUCON::J1>().get<int>(0) - 1;
         const size_t k1 = record.getItem<AQUCON::K1>().get<int>(0) - 1;
@@ -100,11 +102,11 @@ namespace Opm {
             for (size_t j = j1; j <=j2; ++j) {
                 for (size_t i = i1; i <= i2; ++i) {
                     // TODO: we probably should give a message here
-                    if (!grid.cellActive(i, j, k)) {
+                    if (!actnum[grid.getGlobalIndex(i, j, k)]) {
                         continue;
                     }
                     if (allow_internal_cells ||
-                        !AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i, j, k, face_dir)) {
+                        !AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i, j, k, face_dir, actnum) ) {
                         const size_t global_index = grid.getGlobalIndex(i, j, k);
                         cons.emplace_back(i, j, k, global_index, allow_internal_cells, record);
                     }

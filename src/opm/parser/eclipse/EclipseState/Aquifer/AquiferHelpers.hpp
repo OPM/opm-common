@@ -21,10 +21,13 @@
 
 #include <opm/parser/eclipse/EclipseState/Grid/FaceDir.hpp>
 
+#include <vector>
+
 namespace Opm {
     class EclipseGrid;
     namespace AquiferHelpers {
-        bool neighborCellInsideReservoirAndActive(const EclipseGrid &grid, int i, int j, int k, FaceDir::DirEnum faceDir);
+        bool neighborCellInsideReservoirAndActive(const EclipseGrid &grid, int i, int j, int k,
+                                                  FaceDir::DirEnum faceDir, const std::vector<int>& actnum);
     }
 }
 
