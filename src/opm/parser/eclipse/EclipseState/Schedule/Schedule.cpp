@@ -120,7 +120,6 @@ namespace {
         udq_active(this->m_timeMap, std::make_shared<UDQActive>()),
         guide_rate_config(this->m_timeMap, std::make_shared<GuideRateConfig>()),
         m_actions(this->m_timeMap, std::make_shared<Action::Actions>()),
-        m_network(this->m_timeMap, std::make_shared<Network::ExtNetwork>()),
         m_glo(this->m_timeMap, std::make_shared<GasLiftOpt>()),
         rft_config(this->m_timeMap),
         restart_config(m_timeMap, deck, parseContext, errors),
@@ -264,7 +263,6 @@ namespace {
         result.vfpprod_tables = {{1, {{std::make_shared<VFPProdTable>(VFPProdTable::serializeObject())}, 1}}};
         result.vfpinj_tables = {{2, {{std::make_shared<VFPInjTable>(VFPInjTable::serializeObject())}, 1}}};
         result.udq_config = {{std::make_shared<UDQConfig>(UDQConfig::serializeObject())}, 1};
-        result.m_network  = {{std::make_shared<Network::ExtNetwork>(Network::ExtNetwork::serializeObject())}, 1};
         result.m_glo = {{std::make_shared<GasLiftOpt>(GasLiftOpt::serializeObject())}, 1};
         result.udq_active = {{std::make_shared<UDQActive>(UDQActive::serializeObject())}, 1};
         result.guide_rate_config = {{std::make_shared<GuideRateConfig>(GuideRateConfig::serializeObject())}, 1};
@@ -1640,7 +1638,6 @@ void Schedule::iterateScheduleSection(std::optional<std::size_t> load_offset,
                this->m_runspec == data.m_runspec &&
                compareMap(this->vfpprod_tables, data.vfpprod_tables) &&
                compareMap(this->vfpinj_tables, data.vfpinj_tables) &&
-               compareDynState(this->m_network, data.m_network) &&
                compareDynState(this->m_glo, data.m_glo) &&
                compareDynState(this->udq_config, data.udq_config) &&
                compareDynState(this->udq_active, data.udq_active) &&
@@ -1791,14 +1788,6 @@ namespace {
         return this->python_handle;
     }
 
-
-    void Schedule::updateNetwork(std::shared_ptr<Network::ExtNetwork> network, std::size_t report_step) {
-        this->m_network.update(report_step, std::move(network));
-    }
-
-    const Network::ExtNetwork& Schedule::network(std::size_t report_step) const {
-        return *this->m_network[report_step];
-    }
 
     const GasLiftOpt& Schedule::glo(std::size_t report_step) const {
         return *this->m_glo[report_step];
@@ -2066,6 +2055,7 @@ void Schedule::create_first(const std::chrono::system_clock::time_point& start_t
     sched_state.gconsale( GConSale() );
     sched_state.gconsump( GConSump() );
     sched_state.wlist_manager( WListManager() );
+    sched_state.network( Network::ExtNetwork() );
 
     this->addGroup("FIELD", 0);
 }

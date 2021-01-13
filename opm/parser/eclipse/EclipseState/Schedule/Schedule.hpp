@@ -269,7 +269,6 @@ namespace Opm
         void applyWellProdIndexScaling(const std::string& well_name, const std::size_t reportStep, const double scalingFactor);
 
 
-        const Network::ExtNetwork& network(std::size_t report_step) const;
         const GasLiftOpt& glo(std::size_t report_step) const;
 
         bool operator==(const Schedule& data) const;
@@ -315,7 +314,6 @@ namespace Opm
             udq_active.serializeOp(serializer);
             guide_rate_config.serializeOp(serializer);
             m_actions.serializeOp(serializer);
-            m_network.serializeOp(serializer);
             m_glo.serializeOp(serializer);
             rft_config.serializeOp(serializer);
             restart_config.serializeOp(serializer);
@@ -346,7 +344,6 @@ namespace Opm
         DynamicState<std::shared_ptr<UDQActive>> udq_active;
         DynamicState<std::shared_ptr<GuideRateConfig>> guide_rate_config;
         DynamicState<std::shared_ptr<Action::Actions>> m_actions;
-        DynamicState<std::shared_ptr<Network::ExtNetwork>> m_network;
         DynamicState<std::shared_ptr<GasLiftOpt>> m_glo;
         RFTConfig rft_config;
         RestartConfig restart_config;
@@ -375,7 +372,6 @@ namespace Opm
                      Connection::Order wellConnectionOrder);
         bool updateWPAVE(const std::string& wname, std::size_t report_step, const PAvg& pavg);
 
-        void updateNetwork(std::shared_ptr<Network::ExtNetwork> network, std::size_t report_step);
         void updateGuideRateModel(const GuideRateModel& new_model, std::size_t report_step);
 
         GTNode groupTree(const std::string& root_node, std::size_t report_step, std::size_t level, const std::optional<std::string>& parent_name) const;
