@@ -3006,31 +3006,26 @@ VFPINJ
     BOOST_CHECK( schedule[2].events().hasEvent(ScheduleEvents::VFPINJ_UPDATE));
 
     // No such table id
-    BOOST_CHECK_THROW(schedule.getVFPInjTable(77,0), std::invalid_argument);
+    BOOST_CHECK_THROW(schedule[0].vfpinj(77), std::exception);
 
     // Table not defined at step 0
-    BOOST_CHECK_THROW(schedule.getVFPInjTable(10,0), std::invalid_argument);
+    BOOST_CHECK_THROW(schedule[0].vfpinj(10), std::exception);
 
-    const Opm::VFPInjTable& vfpinjTable2 = schedule.getVFPInjTable(5, 2);
+    const Opm::VFPInjTable& vfpinjTable2 = schedule[2].vfpinj(5);
     BOOST_CHECK_EQUAL(vfpinjTable2.getTableNum(), 5);
     BOOST_CHECK_EQUAL(vfpinjTable2.getDatumDepth(), 100);
     BOOST_CHECK_EQUAL(vfpinjTable2.getFloType(), Opm::VFPInjTable::FLO_GAS);
 
-    const Opm::VFPInjTable& vfpinjTable3 = schedule.getVFPInjTable(10, 2);
+    const Opm::VFPInjTable& vfpinjTable3 = schedule[2].vfpinj(10);
     BOOST_CHECK_EQUAL(vfpinjTable3.getTableNum(), 10);
     BOOST_CHECK_EQUAL(vfpinjTable3.getDatumDepth(), 200);
     BOOST_CHECK_EQUAL(vfpinjTable3.getFloType(), Opm::VFPInjTable::FLO_WAT);
 
-    const Opm::VFPInjTable& vfpinjTable = schedule.getVFPInjTable(5, 0);
+    const Opm::VFPInjTable& vfpinjTable = schedule[0].vfpinj(5);
     BOOST_CHECK_EQUAL(vfpinjTable.getTableNum(), 5);
     BOOST_CHECK_EQUAL(vfpinjTable.getDatumDepth(), 32.9);
     BOOST_CHECK_EQUAL(vfpinjTable.getFloType(), Opm::VFPInjTable::FLO_WAT);
 
-    const auto vfp_tables0 = schedule.getVFPInjTables(0);
-    BOOST_CHECK_EQUAL( vfp_tables0.size(), 1U);
-
-    const auto vfp_tables2 = schedule.getVFPInjTables(2);
-    BOOST_CHECK_EQUAL( vfp_tables2.size(), 2U);
     //Flo axis
     {
         const std::vector<double>& flo = vfpinjTable.getFloAxis();
@@ -3698,8 +3693,7 @@ BOOST_AUTO_TEST_CASE(SKIPREST_VFP) {
     Opm::EclIO::ERst rst_file(rst_filename);
     const auto& rst = Opm::RestartIO::RstState::load(rst_file, report_step);
     const auto sched = Schedule{ deck, es, python , &rst};
-    const auto& tables = sched.getVFPProdTables(3);
-    BOOST_CHECK( !tables.empty() );
+    BOOST_CHECK_NO_THROW( sched[3].vfpprod(5) );
 }
 
 
@@ -4229,7 +4223,7 @@ BOOST_AUTO_TEST_CASE(VFPPROD_SCALING) {
     const auto deck = Parser{}.parseFile("VFP_CASE.DATA");
     const auto es    = EclipseState{ deck };
     const auto sched = Schedule{ deck, es };
-    const auto& vfp_table = sched.getVFPProdTable(1, 0);
+    const auto& vfp_table = sched[0].vfpprod(1);
     const std::vector<double> flo = { 0.000578704,  0.001157407,  0.002893519,  0.005787037,  0.008680556,  0.011574074,  0.017361111,  0.023148148,  0.034722222,  0.046296296};
     const std::vector<double> thp = {1300000.000000000, 2500000.000000000, 5000000.000000000, 7500000.000000000, 10000000.000000000};
     const std::vector<double> wfr = { 0.000000000,  0.100000000,  0.200000000,  0.300000000,  0.400000000,  0.500000000,  0.600000000,  0.700000000,  0.800000000,  0.990000000};

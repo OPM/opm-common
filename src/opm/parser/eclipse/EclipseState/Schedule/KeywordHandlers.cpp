@@ -470,7 +470,6 @@ namespace {
                 }
             }
         }
-        printf("GCONPROD complete\n");
     }
 
     void Schedule::handleGCONSALE(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
@@ -742,6 +741,7 @@ namespace {
     }
 
     void Schedule::handleRPTSCHED(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+        printf("snapshost.size(): %ld \n", this->snapshots.size());
         this->snapshots.back().rpt_config( RPTConfig(handlerContext.keyword ));
     }
 
@@ -838,31 +838,15 @@ namespace {
     }
 
     void Schedule::handleVFPINJ(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
-        std::shared_ptr<VFPInjTable> table = std::make_shared<VFPInjTable>(handlerContext.keyword, this->m_static.m_unit_system);
-        int table_id = table->getTableNum();
-
-        if (vfpinj_tables.find(table_id) == vfpinj_tables.end()) {
-            std::pair<int, DynamicState<std::shared_ptr<VFPInjTable> > > pair = std::make_pair(table_id, DynamicState<std::shared_ptr<VFPInjTable> >(this->m_timeMap, nullptr));
-            vfpinj_tables.insert( pair );
-        }
-
-        auto& table_state = vfpinj_tables.at(table_id);
-        table_state.update(handlerContext.currentStep, table);
+        auto table = VFPInjTable(handlerContext.keyword, this->m_static.m_unit_system);
+        this->snapshots.back().vfpinj( std::move(table) );
         this->snapshots.back().events().addEvent( ScheduleEvents::VFPINJ_UPDATE );
     }
 
     void Schedule::handleVFPPROD(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
-        std::shared_ptr<VFPProdTable> table = std::make_shared<VFPProdTable>(handlerContext.keyword, this->m_static.m_unit_system);
-        int table_id = table->getTableNum();
-
-        if (vfpprod_tables.find(table_id) == vfpprod_tables.end()) {
-            std::pair<int, DynamicState<std::shared_ptr<VFPProdTable> > > pair = std::make_pair(table_id, DynamicState<std::shared_ptr<VFPProdTable> >(this->m_timeMap, nullptr));
-            vfpprod_tables.insert( pair );
-        }
-
-        auto& table_state = vfpprod_tables.at(table_id);
-        table_state.update(handlerContext.currentStep, table);
+        auto table = VFPProdTable(handlerContext.keyword, this->m_static.m_unit_system);
         this->snapshots.back().events().addEvent( ScheduleEvents::VFPPROD_UPDATE );
+        this->snapshots.back().vfpprod( std::move(table) );
     }
 
     void Schedule::handleWCONHIST(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
@@ -889,7 +873,7 @@ namespace {
                     table_nr = properties->VFPTableNumber;
 
                 if (table_nr != 0)
-                    alq_type = this->getVFPProdTable(table_nr, handlerContext.currentStep).getALQType();
+                    alq_type = this->snapshots.back().vfpprod(table_nr).getALQType();
                 properties->handleWCONHIST(alq_type, this->m_static.m_unit_system, record);
 
                 if (switching_from_injector) {
@@ -959,7 +943,7 @@ namespace {
                     table_nr = properties->VFPTableNumber;
 
                 if (table_nr != 0)
-                    alq_type = this->getVFPProdTable(table_nr, handlerContext.currentStep).getALQType();
+                    alq_type = this->snapshots.back().vfpprod(table_nr).getALQType();
                 properties->handleWCONPROD(alq_type, this->m_static.m_unit_system, well_name, record);
 
                 if (switching_from_injector) {

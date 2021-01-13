@@ -16,11 +16,15 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include <fmt/format.h>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellTestConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GConSump.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GConSale.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/VFPProdTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/VFPInjTable.hpp>
+
 
 namespace Opm {
 
@@ -141,6 +145,30 @@ void ScheduleState::whistctl(Well::ProducerCMode whistctl) {
 }
 
 bool ScheduleState::operator==(const ScheduleState& other) const {
+    auto&& map_equal = [](const auto& map1, const auto& map2) {
+        if (map1.size() != map2.size())
+            return false;
+
+        auto it2 = map2.begin();
+        for (const auto& it1 : map1) {
+            if (it1.first != it2->first)
+                return false;
+
+            if (!(*it1.second == *it2->second))
+                return false;
+
+            ++it2;
+        }
+
+        return true;
+    };
+
+    if (!map_equal(this->m_vfpprod, other.m_vfpprod))
+        return false;
+
+    if (!map_equal(this->m_vfpinj, other.m_vfpinj))
+        return false;
+
     return this->m_start_time == other.m_start_time &&
            this->m_oilvap == other.m_oilvap &&
            this->m_tuning == other.m_tuning &&
@@ -172,6 +200,11 @@ ScheduleState ScheduleState::serializeObject() {
     ts.m_gconsale = std::make_shared<GConSale>( GConSale::serializeObject() );
     ts.m_wlist_manager = std::make_shared<WListManager>( WListManager::serializeObject() );
     ts.m_rptconfig = std::make_shared<RPTConfig>( RPTConfig::serializeObject() );
+    ts.m_vfpprod.emplace( std::make_pair(77, std::make_shared<VFPProdTable>(VFPProdTable::serializeObject() )));
+    ts.m_vfpprod.emplace( std::make_pair(78, std::make_shared<VFPProdTable>(VFPProdTable::serializeObject() )));
+    ts.m_vfpinj.emplace( std::make_pair(177, std::make_shared<VFPInjTable>(VFPInjTable::serializeObject() )));
+    ts.m_vfpinj.emplace( std::make_pair(178, std::make_shared<VFPInjTable>(VFPInjTable::serializeObject() )));
+
     return ts;
 }
 
@@ -259,5 +292,49 @@ const RPTConfig& ScheduleState::rpt_config() const {
 
 void ScheduleState::rpt_config(RPTConfig rpt_config) {
     this->m_rptconfig = std::make_shared<RPTConfig>(std::move(rpt_config));
+}
+
+std::vector<const VFPProdTable*> ScheduleState::vfpprod() const {
+    std::vector<const VFPProdTable*> tables;
+    for (const auto& [_, table] : this->m_vfpprod) {
+        (void)_;
+        tables.push_back( table.get() );
+    }
+    return tables;
+}
+
+const VFPProdTable& ScheduleState::vfpprod(int table_id) const {
+    auto vfp_iter = this->m_vfpprod.find(table_id);
+    if (vfp_iter == this->m_vfpprod.end())
+        throw std::logic_error(fmt::format("No VFPPROD table with id: {} has been registered", table_id));
+
+    return *vfp_iter->second;
+}
+
+void ScheduleState::vfpprod(VFPProdTable vfpprod) {
+    int table_id = vfpprod.getTableNum();
+    this->m_vfpprod[table_id] = std::make_shared<VFPProdTable>( std::move(vfpprod) );
+}
+
+std::vector<const VFPInjTable*> ScheduleState::vfpinj() const {
+    std::vector<const VFPInjTable*> tables;
+    for (const auto& [_, table] : this->m_vfpinj) {
+        (void)_;
+        tables.push_back( table.get() );
+    }
+    return tables;
+}
+
+const VFPInjTable& ScheduleState::vfpinj(int table_id) const {
+    auto vfp_iter = this->m_vfpinj.find(table_id);
+    if (vfp_iter == this->m_vfpinj.end())
+        throw std::logic_error(fmt::format("No VFPINJ table with id: {} has been registered", table_id));
+
+    return *vfp_iter->second;
+}
+
+void ScheduleState::vfpinj(VFPInjTable vfpinj) {
+    int table_id = vfpinj.getTableNum();
+    this->m_vfpinj[table_id] = std::make_shared<VFPInjTable>( std::move(vfpinj) );
 }
 }

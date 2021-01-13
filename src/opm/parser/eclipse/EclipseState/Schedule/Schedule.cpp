@@ -121,10 +121,13 @@ namespace {
         rft_config(this->m_timeMap),
         restart_config(m_timeMap, deck, parseContext, errors)
     {
-        if (rst)
+        if (rst) {
+            auto restart_step = rst->header.restart_info().second;
+            this->iterateScheduleSection( 0, restart_step, parseContext, errors, grid, fp);
             this->load_rst(*rst, grid, fp);
-
-        this->iterateScheduleSection( {}, parseContext, errors, grid, fp);
+            this->iterateScheduleSection( restart_step, this->m_sched_deck.size(), parseContext, errors, grid, fp);
+        } else
+            this->iterateScheduleSection( 0, this->m_sched_deck.size(), parseContext, errors, grid, fp);
 
         /*
           The code in the #ifdef SCHEDULE_DEBUG is an enforced integration test
@@ -134,14 +137,6 @@ namespace {
 #ifdef SCHEDULE_DEBUG
         if (this->size() == 0)
             return;
-
-        //Verify that we can safely re-iterate over the Schedule section
-        //if (!rst)
-        //    this->iterateScheduleSection(0, parseContext, errors, grid, fp);
-        //else {
-        //    auto restart_offset = this->m_sched_deck.restart_offset();
-        //    this->iterateScheduleSection(restart_offset, parseContext, errors, grid, fp);
-        //}
 
         // Verify that the time schedule is correct.
         for (std::size_t report_step = 0; report_step < this->size() - 1; report_step++) {
@@ -257,8 +252,6 @@ namespace {
         result.m_timeMap = TimeMap::serializeObject();
         result.wells_static.insert({"test1", {{std::make_shared<Opm::Well>(Opm::Well::serializeObject())},1}});
         result.groups.insert({"test2", {{std::make_shared<Opm::Group>(Opm::Group::serializeObject())},1}});
-        result.vfpprod_tables = {{1, {{std::make_shared<VFPProdTable>(VFPProdTable::serializeObject())}, 1}}};
-        result.vfpinj_tables = {{2, {{std::make_shared<VFPInjTable>(VFPInjTable::serializeObject())}, 1}}};
         result.udq_config = {{std::make_shared<UDQConfig>(UDQConfig::serializeObject())}, 1};
         result.m_glo = {{std::make_shared<GasLiftOpt>(GasLiftOpt::serializeObject())}, 1};
         result.udq_active = {{std::make_shared<UDQActive>(UDQActive::serializeObject())}, 1};
@@ -366,7 +359,7 @@ private:
 
 }
 
-void Schedule::iterateScheduleSection(std::optional<std::size_t> load_offset,
+void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_end,
                                       const ParseContext& parseContext ,
                                       ErrorGuard& errors,
                                       const EclipseGrid& grid,
@@ -378,81 +371,12 @@ void Schedule::iterateScheduleSection(std::optional<std::size_t> load_offset,
         std::string current_file;
         const auto& time_map = this->m_timeMap;
         /*
-          The process of transitioning to Schedule model based on ScheduleState
-          instances is a gradual one. For the keywords which have been converted
-          to the ScheduleState implementation the iterateScheduleSection()
-          function can be called repeatedly, whereas for the keywords which have
-          not yet been converted that is not safe. The old_style_keywords is a
-          list of keywords which should be ignored when iterateScheduleSection()
-          is called repeatedly.
-        */
-        std::unordered_set<std::string> old_style_keywords = {
-            "PYACTION",
-            "GCONPROD",
-            "GCONINJE",
-            "GLIFTOPT",
-            "WELPI",
-            "BRANPROP",
-            "COMPDAT",
-            "COMPLUMP",
-            "COMPORD",
-            "COMPSEGS",
-            "GCONINJE",
-            "GCONPROD",
-            "GCONSALE",
-            "GCONSUMP",
-            "GEFAC",
-            "GLIFTOPT",
-            "GPMAINT",
-            "GRUPNET",
-            "GRUPTREE",
-            "GUIDERAT",
-            "LIFTOPT",
-            "LINCOM",
-            "MESSAGES",
-            "MXUNSUPP",
-            "NODEPROP",
-            "RPTSCHED",
-            "UDQ",
-            "VFPINJ",
-            "VFPPROD",
-            "WCONHIST",
-            "WCONINJE",
-            "WCONINJH",
-            "WCONPROD",
-            "WECON",
-            "WEFAC",
-            "WELOPEN",
-            "WELPI",
-            "WELSEGS",
-            "WELSPECS",
-            "WELTARG",
-            "WFOAM",
-            "WGRUPCON",
-            "WINJTEMP",
-            "WLIFTOPT",
-            "WPAVEDEP",
-            "WPIMULT",
-            "WPMITAB",
-            "WPOLYMER",
-            "WSALT",
-            "WSEGSICD",
-            "WSEGAICD",
-            "WSEGVALV",
-            "WSKPTAB",
-            "WSOLVENT",
-            "WTEMP",
-            "WTRACER"
-        };
-
-        /*
           The keywords in the skiprest_whitelist set are loaded from the
           SCHEDULE section even though the SKIPREST keyword is in action. The
           full list includes some additional keywords which we do not support at
           all.
         */
         std::unordered_set<std::string> skiprest_whitelist = {"VFPPROD", "VFPINJ", "RPTSCHED", "RPTRST", "TUNING", "MESSAGES"};
-        std::size_t currentStep = 0;
         /*
           The behavior of variable restart_skip is more lenient than the
           SKIPREST keyword. If this is a restarted[1] run the loop iterating
@@ -469,7 +393,7 @@ void Schedule::iterateScheduleSection(std::optional<std::size_t> load_offset,
                these keywords will be assigned to report step 0.
         */
 
-        auto restart_skip = currentStep < this->m_timeMap.restart_offset();
+        auto restart_skip = load_start < this->m_timeMap.restart_offset();
         ScheduleLogger logger(restart_skip);
         {
             const auto& location = this->m_sched_deck.location();
@@ -479,44 +403,38 @@ void Schedule::iterateScheduleSection(std::optional<std::size_t> load_offset,
                 logger.info(fmt::format("This is a restarted run - skipping until report step {} at {}", time_map.restart_offset(), Schedule::formatDate(time_map.restart_time())));
 
             logger(fmt::format("Initializing report step {}/{} at {} {} {} line {}",
-                               currentStep + 1,
+                               load_start + 1,
                                this->size(),
                                Schedule::formatDate(this->getStartTime()),
-                               deck_time(time_map.getTimePassedUntil(currentStep)),
+                               deck_time(time_map.getTimePassedUntil(load_start)),
                                time_unit,
                                location.lineno));
         }
 
-        if (load_offset.has_value()) {
-            if (load_offset.value() < this->m_sched_deck.restart_offset())
-                throw std::logic_error("BUG: Tried to replay schedule keywords from historical section in restarted run");
-            this->snapshots.resize( load_offset.value() );
-        }
-
-        for (const auto& block : this->m_sched_deck) {
+        for (auto report_step = load_start; report_step < load_end; report_step++) {
             std::size_t keyword_index = 0;
+            auto& block = this->m_sched_deck[report_step];
             auto time_type = block.time_type();
             if (time_type == ScheduleTimeType::DATES || time_type == ScheduleTimeType::TSTEP) {
                 const auto& start_date = Schedule::formatDate(std::chrono::system_clock::to_time_t(block.start_time()));
-                const auto& days = deck_time(this->stepLength(currentStep - 1));
-                const auto& days_total = deck_time(time_map.getTimePassedUntil(currentStep));
+                const auto& days = deck_time(this->stepLength(report_step - 1));
+                const auto& days_total = deck_time(time_map.getTimePassedUntil(report_step));
                 logger.complete_step(fmt::format("Complete report step {0} ({1} {2}) at {3} ({4} {2})",
-                                                 currentStep,
+                                                 report_step,
                                                  days,
                                                  time_unit,
                                                  start_date,
                                                  days_total));
 
                 logger(fmt::format("Initializing report step {}/{} at {} ({} {}) - line {}",
-                                   currentStep + 1,
+                                   report_step + 1,
                                    this->size(),
                                    start_date,
                                    days_total,
                                    time_unit,
                                    block.location().lineno));
             }
-            if (time_type != ScheduleTimeType::RESTART)
-                this->create_next(block);
+            this->create_next(block);
 
             while (true) {
                 if (keyword_index == block.size())
@@ -529,13 +447,8 @@ void Schedule::iterateScheduleSection(std::optional<std::size_t> load_offset,
                     current_file = location.filename;
                 }
 
-                if (load_offset.has_value() && old_style_keywords.count(keyword.name()) == 1) {
-                    keyword_index += 1;
-                    continue;
-                }
-
                 if (keyword.name() == "ACTIONX") {
-                    Action::ActionX action(keyword, this->m_timeMap.getStartTime(currentStep));
+                    Action::ActionX action(keyword, this->m_timeMap.getStartTime(report_step));
                     while (true) {
                         keyword_index++;
                         if (keyword_index == block.size())
@@ -553,13 +466,13 @@ void Schedule::iterateScheduleSection(std::optional<std::size_t> load_offset,
                             parseContext.handleError( ParseContext::ACTIONX_ILLEGAL_KEYWORD, msg_fmt, action_keyword.location(), errors);
                         }
                     }
-                    this->addACTIONX(action, currentStep);
+                    this->addACTIONX(action, report_step);
                     keyword_index++;
                     continue;
                 }
 
                 logger(fmt::format("Processing keyword {} at line {}", location.keyword, location.lineno));
-                this->handleKeyword(currentStep,
+                this->handleKeyword(report_step,
                                     block,
                                     keyword,
                                     parseContext,
@@ -570,8 +483,7 @@ void Schedule::iterateScheduleSection(std::optional<std::size_t> load_offset,
                 keyword_index++;
             }
 
-            checkIfAllConnectionsIsShut(currentStep);
-            currentStep += 1;
+            checkIfAllConnectionsIsShut(report_step);
         }
 
 
@@ -1396,49 +1308,6 @@ void Schedule::iterateScheduleSection(std::optional<std::size_t> load_offset,
         }
     }
 
-    const VFPProdTable& Schedule::getVFPProdTable(int table_id, std::size_t timeStep) const {
-        const auto pair = vfpprod_tables.find(table_id);
-        if (pair == vfpprod_tables.end())
-            throw std::invalid_argument("No such table id: " + std::to_string(table_id));
-
-        auto table_ptr = pair->second.get(timeStep);
-        if (!table_ptr)
-            throw std::invalid_argument("Table not yet defined at timeStep:" + std::to_string(timeStep));
-
-        return *table_ptr;
-    }
-
-    const VFPInjTable& Schedule::getVFPInjTable(int table_id, std::size_t timeStep) const {
-        const auto pair = vfpinj_tables.find(table_id);
-        if (pair == vfpinj_tables.end())
-            throw std::invalid_argument("No such table id: " + std::to_string(table_id));
-
-        auto table_ptr = pair->second.get(timeStep);
-        if (!table_ptr)
-            throw std::invalid_argument("Table not yet defined at timeStep:" + std::to_string(timeStep));
-
-        return *table_ptr;
-    }
-
-    std::map<int, std::shared_ptr<const VFPInjTable> > Schedule::getVFPInjTables(std::size_t timeStep) const {
-        std::map<int, std::shared_ptr<const VFPInjTable> > tables;
-        for (const auto& pair : this->vfpinj_tables) {
-            if (pair.second.get(timeStep)) {
-                tables.insert(std::make_pair(pair.first, pair.second.get(timeStep)) );
-            }
-        }
-        return tables;
-    }
-
-    std::map<int, std::shared_ptr<const VFPProdTable> > Schedule::getVFPProdTables(std::size_t timeStep) const {
-        std::map<int, std::shared_ptr<const VFPProdTable> > tables;
-        for (const auto& pair : this->vfpprod_tables) {
-            if (pair.second.get(timeStep)) {
-                tables.insert(std::make_pair(pair.first, pair.second.get(timeStep)) );
-            }
-        }
-        return tables;
-    }
 
     const UDQActive& Schedule::udqActive(std::size_t timeStep) const {
         return *this->udq_active[timeStep];
@@ -1624,8 +1493,6 @@ void Schedule::iterateScheduleSection(std::optional<std::size_t> load_offset,
                this->m_static == data.m_static &&
                compareMap(this->wells_static, data.wells_static) &&
                compareMap(this->groups, data.groups) &&
-               compareMap(this->vfpprod_tables, data.vfpprod_tables) &&
-               compareMap(this->vfpinj_tables, data.vfpinj_tables) &&
                compareDynState(this->m_glo, data.m_glo) &&
                compareDynState(this->udq_config, data.udq_config) &&
                compareDynState(this->udq_active, data.udq_active) &&
@@ -1666,16 +1533,8 @@ namespace {
 
     void Schedule::load_rst(const RestartIO::RstState& rst_state, const EclipseGrid& grid, const FieldPropsManager& fp)
     {
-        double udq_undefined = 0;
         const auto report_step = rst_state.header.report_step - 1;
-        auto start_time = std::chrono::system_clock::from_time_t( this->getStartTime() );
-        for (int step = 0; step < report_step; step++)
-            this->create_next(start_time, start_time);
-        {
-            auto restart_time = std::chrono::system_clock::from_time_t( rst_state.header.restart_info().first );
-            this->create_next(start_time, restart_time);
-        }
-
+        double udq_undefined = 0;
         for (const auto& rst_group : rst_state.groups) {
             auto group = Group{ rst_group, this->groups.size(), static_cast<std::size_t>(report_step), udq_undefined, this->m_static.m_unit_system };
             this->addGroup(group, report_step);

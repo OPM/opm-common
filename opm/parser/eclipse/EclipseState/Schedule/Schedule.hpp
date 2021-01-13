@@ -37,8 +37,6 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/MessageLimits.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/RFTConfig.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/VFPInjTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/VFPProdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Network/ExtNetwork.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/PAvg.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/PAvgCalculatorCollection.hpp>
@@ -169,8 +167,6 @@ namespace Opm
     public:
         using WellMap = OrderedMap<std::string, DynamicState<std::shared_ptr<Well>>>;
         using GroupMap = OrderedMap<std::string, DynamicState<std::shared_ptr<Group>>>;
-        using VFPProdMap = std::map<int, DynamicState<std::shared_ptr<VFPProdTable>>>;
-        using VFPInjMap = std::map<int, DynamicState<std::shared_ptr<VFPInjTable>>>;
 
         Schedule() = default;
         explicit Schedule(std::shared_ptr<const Python> python_handle);
@@ -300,10 +296,6 @@ namespace Opm
         const GuideRateConfig& guideRateConfig(std::size_t timeStep) const;
 
         const RFTConfig& rftConfig() const;
-        const VFPProdTable& getVFPProdTable(int table_id, std::size_t timeStep) const;
-        const VFPInjTable& getVFPInjTable(int table_id, std::size_t timeStep) const;
-        std::map<int, std::shared_ptr<const VFPProdTable> > getVFPProdTables(std::size_t timeStep) const;
-        std::map<int, std::shared_ptr<const VFPInjTable> > getVFPInjTables(std::size_t timeStep) const;
         /*
           Will remove all completions which are connected to cell which is not
           active. Will scan through all wells and all timesteps.
@@ -350,12 +342,6 @@ namespace Opm
             auto splitGroups = splitDynMap(groups);
             serializer.vector(splitGroups.first);
             serializer(splitGroups.second);
-            auto splitvfpprod = splitDynMap<Map2>(vfpprod_tables);
-            serializer.vector(splitvfpprod.first);
-            serializer(splitvfpprod.second);
-            auto splitvfpinj = splitDynMap<Map2>(vfpinj_tables);
-            serializer.vector(splitvfpinj.first);
-            serializer(splitvfpinj.second);
             udq_config.serializeOp(serializer);
             udq_active.serializeOp(serializer);
             guide_rate_config.serializeOp(serializer);
@@ -366,8 +352,6 @@ namespace Opm
             if (!serializer.isSerializing()) {
                 reconstructDynMap(splitWells.first, splitWells.second, wells_static);
                 reconstructDynMap(splitGroups.first, splitGroups.second, groups);
-                reconstructDynMap<Map2>(splitvfpprod.first, splitvfpprod.second, vfpprod_tables);
-                reconstructDynMap<Map2>(splitvfpinj.first, splitvfpinj.second, vfpinj_tables);
             }
             serializer.vector(snapshots);
             m_static.serializeOp(serializer);
@@ -380,8 +364,6 @@ namespace Opm
         TimeMap m_timeMap;
         WellMap wells_static;
         GroupMap groups;
-        VFPProdMap vfpprod_tables;
-        VFPInjMap vfpinj_tables;
         DynamicState<std::shared_ptr<UDQConfig>> udq_config;
         DynamicState<std::shared_ptr<UDQActive>> udq_active;
         DynamicState<std::shared_ptr<GuideRateConfig>> guide_rate_config;
@@ -420,7 +402,8 @@ namespace Opm
         void updateUDQActive( std::size_t timeStep, std::shared_ptr<UDQActive> udq );
         bool updateWellStatus( const std::string& well, std::size_t reportStep, bool runtime, Well::Status status, std::optional<KeywordLocation> = {});
         void addWellToGroup( const std::string& group_name, const std::string& well_name , std::size_t timeStep);
-        void iterateScheduleSection(std::optional<std::size_t> load_offset,
+        void iterateScheduleSection(std::size_t load_start,
+                                    std::size_t load_end,
                                     const ParseContext& parseContext,
                                     ErrorGuard& errors,
                                     const EclipseGrid& grid,
