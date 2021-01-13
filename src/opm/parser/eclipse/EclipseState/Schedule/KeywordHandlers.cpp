@@ -241,7 +241,7 @@ namespace {
     }
 
     void Schedule::handleDRSDT(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
-        std::size_t numPvtRegions = m_runspec.tabdims().getNumPVTTables();
+        std::size_t numPvtRegions = this->m_static.m_runspec.tabdims().getNumPVTTables();
         std::vector<double> max(numPvtRegions);
         std::vector<std::string> options(numPvtRegions);
         for (const auto& record : handlerContext.keyword) {
@@ -253,7 +253,7 @@ namespace {
     }
 
     void Schedule::handleDRSDTR(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
-        std::size_t numPvtRegions = m_runspec.tabdims().getNumPVTTables();
+        std::size_t numPvtRegions = this->m_static.m_runspec.tabdims().getNumPVTTables();
         std::vector<double> max(numPvtRegions);
         std::vector<std::string> options(numPvtRegions);
         std::size_t pvtRegionIdx = 0;
@@ -267,7 +267,7 @@ namespace {
     }
 
     void Schedule::handleDRVDT(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
-        std::size_t numPvtRegions = m_runspec.tabdims().getNumPVTTables();
+        std::size_t numPvtRegions = this->m_static.m_runspec.tabdims().getNumPVTTables();
         std::vector<double> max(numPvtRegions);
         for (const auto& record : handlerContext.keyword) {
             std::fill(max.begin(), max.end(), record.getItem("DRVDT_MAX").getSIDouble(0));
@@ -277,7 +277,7 @@ namespace {
     }
 
     void Schedule::handleDRVDTR(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
-        std::size_t numPvtRegions = m_runspec.tabdims().getNumPVTTables();
+        std::size_t numPvtRegions = this->m_static.m_runspec.tabdims().getNumPVTTables();
         std::size_t pvtRegionIdx = 0;
         std::vector<double> max(numPvtRegions);
         for (const auto& record : handlerContext.keyword) {
@@ -417,7 +417,7 @@ namespace {
 
                 {
                     auto group_ptr = std::make_shared<Group>(this->getGroup(group_name, current_step));
-                    Group::GroupProductionProperties production(this->unit_system, group_name);
+                    Group::GroupProductionProperties production(this->m_static.m_unit_system, group_name);
                     production.gconprod_cmode = controlMode;
                     production.active_cmode = controlMode;
                     production.oil_target = oil_target;
@@ -483,7 +483,7 @@ namespace {
             std::string procedure = record.getItem("MAX_PROC").getTrimmedString(0);
             auto udqconfig = this->getUDQConfig(handlerContext.currentStep).params().undefinedValue();
 
-            new_gconsale.add(groupName, sales_target, max_rate, min_rate, procedure, udqconfig, this->unit_system);
+            new_gconsale.add(groupName, sales_target, max_rate, min_rate, procedure, udqconfig, this->m_static.m_unit_system);
 
             auto group_ptr = std::make_shared<Group>(this->getGroup(groupName, handlerContext.currentStep));
             Group::GroupInjectionProperties injection;
@@ -509,7 +509,7 @@ namespace {
 
             auto udqconfig = this->getUDQConfig(handlerContext.currentStep).params().undefinedValue();
 
-            new_gconsump.add(groupName, consumption_rate, import_rate, network_node_name, udqconfig, this->unit_system);
+            new_gconsump.add(groupName, consumption_rate, import_rate, network_node_name, udqconfig, this->m_static.m_unit_system);
         }
         this->snapshots.back().gconsump( std::move(new_gconsump) );
     }
@@ -838,7 +838,7 @@ namespace {
     }
 
     void Schedule::handleVFPINJ(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
-        std::shared_ptr<VFPInjTable> table = std::make_shared<VFPInjTable>(handlerContext.keyword, this->unit_system);
+        std::shared_ptr<VFPInjTable> table = std::make_shared<VFPInjTable>(handlerContext.keyword, this->m_static.m_unit_system);
         int table_id = table->getTableNum();
 
         if (vfpinj_tables.find(table_id) == vfpinj_tables.end()) {
@@ -852,7 +852,7 @@ namespace {
     }
 
     void Schedule::handleVFPPROD(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
-        std::shared_ptr<VFPProdTable> table = std::make_shared<VFPProdTable>(handlerContext.keyword, this->unit_system);
+        std::shared_ptr<VFPProdTable> table = std::make_shared<VFPProdTable>(handlerContext.keyword, this->m_static.m_unit_system);
         int table_id = table->getTableNum();
 
         if (vfpprod_tables.find(table_id) == vfpprod_tables.end()) {
@@ -890,7 +890,7 @@ namespace {
 
                 if (table_nr != 0)
                     alq_type = this->getVFPProdTable(table_nr, handlerContext.currentStep).getALQType();
-                properties->handleWCONHIST(alq_type, this->unit_system, record);
+                properties->handleWCONHIST(alq_type, this->m_static.m_unit_system, record);
 
                 if (switching_from_injector) {
                     properties->resetDefaultBHPLimit();
@@ -960,7 +960,7 @@ namespace {
 
                 if (table_nr != 0)
                     alq_type = this->getVFPProdTable(table_nr, handlerContext.currentStep).getALQType();
-                properties->handleWCONPROD(alq_type, this->unit_system, well_name, record);
+                properties->handleWCONPROD(alq_type, this->m_static.m_unit_system, well_name, record);
 
                 if (switching_from_injector) {
                     properties->resetDefaultBHPLimit();
@@ -1284,7 +1284,7 @@ namespace {
       rates will be wrong.
     */
     void Schedule::handleWELTARG(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
-        const double SiFactorP = this->unit_system.parse("Pressure").getSIScaling();
+        const double SiFactorP = this->m_static.m_unit_system.parse("Pressure").getSIScaling();
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = wellNames(wellNamePattern, handlerContext.currentStep);
