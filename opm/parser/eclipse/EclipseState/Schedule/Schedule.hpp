@@ -25,6 +25,7 @@
 #include <unordered_set>
 
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
+#include <opm/parser/eclipse/Python/Python.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/RestartConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/GasLiftOpt.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
@@ -102,7 +103,6 @@ namespace Opm
     class EclipseGrid;
     class EclipseState;
     class FieldPropsManager;
-    class Python;
     class Runspec;
     class RPTConfig;
     class SCHEDULESection;
@@ -113,6 +113,56 @@ namespace Opm
     class UDQActive;
 
 
+    struct ScheduleStatic {
+        std::shared_ptr<const Python> m_python_handle;
+        std::string m_input_path;
+        MessageLimits m_deck_message_limits;
+        UnitSystem m_unit_system;
+        Runspec m_runspec;
+
+        ScheduleStatic() = default;
+
+        explicit ScheduleStatic(std::shared_ptr<const Python> python_handle) :
+            m_python_handle(python_handle)
+        {}
+
+        ScheduleStatic(std::shared_ptr<const Python> python_handle,
+                       const Deck& deck,
+                       const Runspec& runspec) :
+            m_python_handle(python_handle),
+            m_input_path(deck.getInputPath()),
+            m_deck_message_limits( deck ),
+            m_unit_system( deck.getActiveUnitSystem() ),
+            m_runspec( runspec )
+        {}
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            m_deck_message_limits.serializeOp(serializer);
+            m_runspec.serializeOp(serializer);
+            m_unit_system.serializeOp(serializer);
+            serializer(this->m_input_path);
+        }
+
+
+        static ScheduleStatic serializeObject() {
+            auto python = std::make_shared<Python>(Python::Enable::OFF);
+            ScheduleStatic st(python);
+            st.m_deck_message_limits = MessageLimits::serializeObject();
+            st.m_runspec = Runspec::serializeObject();
+            st.m_unit_system = UnitSystem::newFIELD();
+            st.m_input_path = "Some/funny/path";
+            return st;
+        }
+
+        bool operator==(const ScheduleStatic& other) const {
+            return this->m_input_path == other.m_input_path &&
+                   this->m_deck_message_limits == other.m_deck_message_limits &&
+                   this->m_unit_system == other.m_unit_system &&
+                   this->m_runspec == other.m_runspec;
+        }
+    };
 
 
     class Schedule {
@@ -123,7 +173,7 @@ namespace Opm
         using VFPInjMap = std::map<int, DynamicState<std::shared_ptr<VFPInjTable>>>;
 
         Schedule() = default;
-        explicit Schedule(std::shared_ptr<const Python>) {}
+        explicit Schedule(std::shared_ptr<const Python> python_handle);
         Schedule(const Deck& deck,
                  const EclipseGrid& grid,
                  const FieldPropsManager& fp,
@@ -188,7 +238,7 @@ namespace Opm
         double seconds(std::size_t timeStep) const;
         double stepLength(std::size_t timeStep) const;
         std::optional<int> exitStatus() const;
-        const UnitSystem& getUnits() const { return this->unit_system; }
+        const UnitSystem& getUnits() const { return this->m_static.m_unit_system; }
 
         const TimeMap& getTimeMap() const;
 
@@ -296,14 +346,12 @@ namespace Opm
         {
             m_sched_deck.serializeOp(serializer);
             m_timeMap.serializeOp(serializer);
-            m_deck_message_limits.serializeOp(serializer);
             auto splitWells = splitDynMap(wells_static);
             serializer.vector(splitWells.first);
             serializer(splitWells.second);
             auto splitGroups = splitDynMap(groups);
             serializer.vector(splitGroups.first);
             serializer(splitGroups.second);
-            m_runspec.serializeOp(serializer);
             auto splitvfpprod = splitDynMap<Map2>(vfpprod_tables);
             serializer.vector(splitvfpprod.first);
             serializer(splitvfpprod.second);
@@ -323,23 +371,19 @@ namespace Opm
                 reconstructDynMap<Map2>(splitvfpprod.first, splitvfpprod.second, vfpprod_tables);
                 reconstructDynMap<Map2>(splitvfpinj.first, splitvfpinj.second, vfpinj_tables);
             }
-            unit_system.serializeOp(serializer);
             serializer.vector(snapshots);
-            serializer(this->m_input_path);
+            m_static.serializeOp(serializer);
         }
 
     private:
         template<class Key, class Value> using Map2 = std::map<Key,Value>;
-        std::shared_ptr<const Python> python_handle;
-        std::string m_input_path;
+        ScheduleStatic m_static;
         ScheduleDeck m_sched_deck;
         TimeMap m_timeMap;
         WellMap wells_static;
         GroupMap groups;
-        Runspec m_runspec;
         VFPProdMap vfpprod_tables;
         VFPInjMap vfpinj_tables;
-        MessageLimits m_deck_message_limits;
         DynamicState<std::shared_ptr<UDQConfig>> udq_config;
         DynamicState<std::shared_ptr<UDQActive>> udq_active;
         DynamicState<std::shared_ptr<GuideRateConfig>> guide_rate_config;
@@ -347,7 +391,6 @@ namespace Opm
         DynamicState<std::shared_ptr<GasLiftOpt>> m_glo;
         RFTConfig rft_config;
         RestartConfig restart_config;
-        UnitSystem unit_system;
         std::optional<int> exit_status;
         DynamicState<std::shared_ptr<RPTConfig>> rpt_config;
         std::vector<ScheduleState> snapshots;

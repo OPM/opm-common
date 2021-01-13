@@ -110,12 +110,9 @@ namespace {
                         [[maybe_unused]] std::shared_ptr<const Python> python,
                         const RestartIO::RstState * rst)
     try :
-        python_handle(python),
-        m_input_path(deck.getInputPath()),
+        m_static( python, deck, runspec ),
         m_sched_deck(deck, restart_info(rst) ),
         m_timeMap( deck , restart_info( rst )),
-        m_runspec( runspec ),
-        m_deck_message_limits( MessageLimits(deck) ),
         udq_config(this->m_timeMap, std::make_shared<UDQConfig>(deck)),
         udq_active(this->m_timeMap, std::make_shared<UDQActive>()),
         guide_rate_config(this->m_timeMap, std::make_shared<GuideRateConfig>()),
@@ -123,7 +120,6 @@ namespace {
         m_glo(this->m_timeMap, std::make_shared<GasLiftOpt>()),
         rft_config(this->m_timeMap),
         restart_config(m_timeMap, deck, parseContext, errors),
-        unit_system(deck.getActiveUnitSystem()),
         rpt_config(this->m_timeMap, std::make_shared<RPTConfig>())
     {
         if (rst)
@@ -242,6 +238,10 @@ namespace {
         Schedule(deck, es, ParseContext(), ErrorGuard(), std::make_shared<const Python>(), rst)
     {}
 
+    Schedule::Schedule(std::shared_ptr<const Python> python_handle) :
+        m_static( python_handle )
+    {
+    }
 
     /*
       In general the serializeObject() instances are used as targets for
@@ -252,14 +252,12 @@ namespace {
     */
     Schedule Schedule::serializeObject()
     {
-        auto python = std::make_shared<Python>(Python::Enable::OFF);
-        Schedule result(python);
+        Schedule result;
 
+        result.m_static = ScheduleStatic::serializeObject();
         result.m_timeMap = TimeMap::serializeObject();
         result.wells_static.insert({"test1", {{std::make_shared<Opm::Well>(Opm::Well::serializeObject())},1}});
         result.groups.insert({"test2", {{std::make_shared<Opm::Group>(Opm::Group::serializeObject())},1}});
-        result.m_deck_message_limits = MessageLimits::serializeObject();
-        result.m_runspec = Runspec::serializeObject();
         result.vfpprod_tables = {{1, {{std::make_shared<VFPProdTable>(VFPProdTable::serializeObject())}, 1}}};
         result.vfpinj_tables = {{2, {{std::make_shared<VFPInjTable>(VFPInjTable::serializeObject())}, 1}}};
         result.udq_config = {{std::make_shared<UDQConfig>(UDQConfig::serializeObject())}, 1};
@@ -269,9 +267,7 @@ namespace {
         result.m_actions = {{std::make_shared<Action::Actions>(Action::Actions::serializeObject())}, 1};
         result.rft_config = RFTConfig::serializeObject();
         result.restart_config = RestartConfig::serializeObject();
-        result.unit_system = UnitSystem::newFIELD();
         result.snapshots = { ScheduleState::serializeObject() };
-        result.m_input_path = "Some/funny/path";
 
         return result;
     }
@@ -378,8 +374,8 @@ void Schedule::iterateScheduleSection(std::optional<std::size_t> load_offset,
                                       const FieldPropsManager& fp) {
 
         std::vector<std::pair< const DeckKeyword* , std::size_t> > rftProperties;
-        std::string time_unit = this->unit_system.name(UnitSystem::measure::time);
-        auto deck_time = [this](double seconds) { return this->unit_system.from_si(UnitSystem::measure::time, seconds); };
+        std::string time_unit = this->m_static.m_unit_system.name(UnitSystem::measure::time);
+        auto deck_time = [this](double seconds) { return this->m_static.m_unit_system.from_si(UnitSystem::measure::time, seconds); };
         std::string current_file;
         const auto& time_map = this->m_timeMap;
         /*
@@ -598,7 +594,7 @@ void Schedule::iterateScheduleSection(std::optional<std::size_t> load_offset,
     }
 
     void Schedule::handlePYACTION(const DeckKeyword& keyword, std::size_t currentStep) {
-        if (!this->python_handle->enabled()) {
+        if (!this->m_static.m_python_handle->enabled()) {
             //Must have a real Python instance here - to ensure that IMPORT works
             const auto& loc = keyword.location();
             OpmLog::warning("This version of flow is built without support for Python. Keyword PYACTION in file: " + loc.filename + " line: " + std::to_string(loc.lineno) + " is ignored.");
@@ -609,12 +605,12 @@ void Schedule::iterateScheduleSection(std::optional<std::size_t> load_offset,
         const auto& run_count = Action::PyAction::from_string( keyword.getRecord(0).getItem<ParserKeywords::PYACTION::RUN_COUNT>().get<std::string>(0) );
         const auto& module_arg = keyword.getRecord(1).getItem<ParserKeywords::PYACTION::FILENAME>().get<std::string>(0);
         std::string module;
-        if (this->m_input_path.empty())
+        if (this->m_static.m_input_path.empty())
             module = module_arg;
         else
-            module = this->m_input_path + "/" + module_arg;
+            module = this->m_static.m_input_path + "/" + module_arg;
 
-        Action::PyAction pyaction(this->python_handle, name, run_count, module);
+        Action::PyAction pyaction(this->m_static.m_python_handle, name, run_count, module);
         auto new_actions = std::make_shared<Action::Actions>( this->actions(currentStep) );
         new_actions->add(pyaction);
         this->m_actions.update(currentStep, new_actions);
@@ -962,7 +958,7 @@ void Schedule::iterateScheduleSection(std::optional<std::size_t> load_offset,
                   WellType(preferredPhase),
                   sched_state.whistctl(),
                   wellConnectionOrder,
-                  this->unit_system,
+                  this->m_static.m_unit_system,
                   this->getUDQConfig(timeStep).params().undefinedValue(),
                   drainageRadius,
                   allowCrossFlow,
@@ -1261,7 +1257,7 @@ void Schedule::iterateScheduleSection(std::optional<std::size_t> load_offset,
     }
 
     std::vector<const Group*> Schedule::restart_groups(std::size_t timeStep) const {
-        std::size_t wdmax = this->m_runspec.wellDimensions().maxGroupsInField();
+        std::size_t wdmax = this->m_static.m_runspec.wellDimensions().maxGroupsInField();
         std::vector<const Group*> rst_groups(wdmax + 1 , nullptr );
         for (const auto& group_name : this->groupNames(timeStep)) {
             const auto& group = this->getGroup(group_name, timeStep);
@@ -1294,7 +1290,7 @@ void Schedule::iterateScheduleSection(std::optional<std::size_t> load_offset,
     void Schedule::addGroup(const std::string& groupName, std::size_t timeStep) {
         const std::size_t insert_index = this->groups.size();
         auto udq_undefined = this->getUDQConfig(timeStep).params().undefinedValue();
-        auto group = Group{ groupName, insert_index, timeStep, udq_undefined, this->unit_system };
+        auto group = Group{ groupName, insert_index, timeStep, udq_undefined, this->m_static.m_unit_system };
         this->addGroup(group, timeStep);
     }
 
@@ -1631,11 +1627,9 @@ void Schedule::iterateScheduleSection(std::optional<std::size_t> load_offset,
         };
 
         return this->m_timeMap == data.m_timeMap &&
-               this->m_input_path == data.m_input_path &&
+               this->m_static == data.m_static &&
                compareMap(this->wells_static, data.wells_static) &&
                compareMap(this->groups, data.groups) &&
-               this->m_deck_message_limits == data.m_deck_message_limits &&
-               this->m_runspec == data.m_runspec &&
                compareMap(this->vfpprod_tables, data.vfpprod_tables) &&
                compareMap(this->vfpinj_tables, data.vfpinj_tables) &&
                compareDynState(this->m_glo, data.m_glo) &&
@@ -1646,7 +1640,6 @@ void Schedule::iterateScheduleSection(std::optional<std::size_t> load_offset,
                compareDynState(this->rpt_config, data.rpt_config) &&
                rft_config  == data.rft_config &&
                this->restart_config == data.restart_config &&
-               this->unit_system == data.unit_system &&
                this->snapshots == data.snapshots;
      }
 
@@ -1657,8 +1650,8 @@ void Schedule::iterateScheduleSection(std::optional<std::size_t> load_offset,
     }
 
     std::string Schedule::simulationDays(std::size_t currentStep) const {
-        const double sim_time { this->unit_system.from_si(UnitSystem::measure::time, simTime(currentStep)) } ;
-        return fmt::format("{} {}", sim_time, this->unit_system.name(UnitSystem::measure::time));
+        const double sim_time { this->m_static.m_unit_system.from_si(UnitSystem::measure::time, simTime(currentStep)) } ;
+        return fmt::format("{} {}", sim_time, this->m_static.m_unit_system.name(UnitSystem::measure::time));
     }
 
 namespace {
@@ -1691,7 +1684,7 @@ namespace {
         }
 
         for (const auto& rst_group : rst_state.groups) {
-            auto group = Group{ rst_group, this->groups.size(), static_cast<std::size_t>(report_step), udq_undefined, this->unit_system };
+            auto group = Group{ rst_group, this->groups.size(), static_cast<std::size_t>(report_step), udq_undefined, this->m_static.m_unit_system };
             this->addGroup(group, report_step);
 
             if (group.isProductionGroup()) {
@@ -1721,7 +1714,7 @@ namespace {
         }
 
         for (const auto& rst_well : rst_state.wells) {
-            Opm::Well well(rst_well, report_step, this->unit_system, udq_undefined);
+            Opm::Well well(rst_well, report_step, this->m_static.m_unit_system, udq_undefined);
             std::vector<Opm::Connection> rst_connections;
 
             for (const auto& rst_conn : rst_well.connections)
@@ -1785,7 +1778,7 @@ namespace {
 
     std::shared_ptr<const Python> Schedule::python() const
     {
-        return this->python_handle;
+        return this->m_static.m_python_handle;
     }
 
 
@@ -2048,9 +2041,9 @@ void Schedule::create_first(const std::chrono::system_clock::time_point& start_t
         this->snapshots.emplace_back(start_time);
 
     auto& sched_state = snapshots.back();
-    sched_state.nupcol( this->m_runspec.nupcol() );
-    sched_state.oilvap( OilVaporizationProperties( this->m_runspec.tabdims().getNumPVTTables() ));
-    sched_state.message_limits( this->m_deck_message_limits );
+    sched_state.nupcol( this->m_static.m_runspec.nupcol() );
+    sched_state.oilvap( OilVaporizationProperties( this->m_static.m_runspec.tabdims().getNumPVTTables() ));
+    sched_state.message_limits( this->m_static.m_deck_message_limits );
     sched_state.wtest_config( WellTestConfig() );
     sched_state.gconsale( GConSale() );
     sched_state.gconsump( GConSump() );
