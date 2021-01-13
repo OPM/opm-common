@@ -38,7 +38,7 @@ AquiferConfig::AquiferConfig(const Aquifetp& fetp, const AquiferCT& ct, const Aq
 {}
 
 void AquiferConfig::load_connections(const Deck& deck, const EclipseGrid& grid) {
-    this->aqconn = Aquancon(grid,deck);
+    this->aqconn = Aquancon(grid, deck);
 }
 
 AquiferConfig AquiferConfig::serializeObject()
