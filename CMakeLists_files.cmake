@@ -59,6 +59,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Aquifer/AquiferCT.cpp
     src/opm/parser/eclipse/EclipseState/Aquifer/Aquifetp.cpp
     src/opm/parser/eclipse/EclipseState/Aquifer/Aquancon.cpp
+    src/opm/parser/eclipse/EclipseState/Aquifer/AquiferHelpers.cpp
     src/opm/parser/eclipse/EclipseState/checkDeck.cpp
     src/opm/parser/eclipse/EclipseState/EclipseConfig.cpp
     src/opm/parser/eclipse/EclipseState/EclipseState.cpp

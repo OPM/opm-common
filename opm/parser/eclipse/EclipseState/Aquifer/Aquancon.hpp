@@ -97,10 +97,6 @@ namespace Opm {
             }
 
         private:
-            static bool cellInsideReservoirAndActive(const EclipseGrid& grid, int i, int j, int k);
-            static bool neighborCellInsideReservoirAndActive(const EclipseGrid& grid, int i, int j, int k, FaceDir::DirEnum faceDir);
-
-
             std::unordered_map<int, std::vector<Aquancon::AquancCell>> cells;
     };
 }
