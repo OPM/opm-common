@@ -39,6 +39,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Network/ExtNetwork.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/VFPProdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/VFPInjTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/Actions.hpp>
 
 namespace Opm {
 
@@ -126,6 +127,9 @@ namespace Opm {
         const VFPInjTable& vfpinj(int table_id) const;
         void vfpinj(VFPInjTable vfpinj);
 
+        const Action::Actions& actions() const;
+        void actions(Action::Actions actions);
+
         template<class Serializer>
         void serializeOp(Serializer& serializer) {
             serializer(m_start_time);
@@ -147,6 +151,7 @@ namespace Opm {
             serializer(m_rptconfig);
             serializer.map(m_vfpprod);
             serializer.map(m_vfpinj);
+            serializer(m_actions);
         }
 
 
@@ -169,6 +174,7 @@ namespace Opm {
         std::shared_ptr<WListManager> m_wlist_manager;
         std::shared_ptr<Network::ExtNetwork> m_network;
         std::shared_ptr<RPTConfig> m_rptconfig;
+        std::shared_ptr<Action::Actions> m_actions;
         std::map<int, std::shared_ptr<VFPProdTable>> m_vfpprod;
         std::map<int, std::shared_ptr<VFPInjTable>> m_vfpinj;
     };

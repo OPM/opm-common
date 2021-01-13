@@ -477,7 +477,7 @@ createInteHead(const EclipseState& es,
     const auto ngmax  = (report_step == 0)
         ? 0 : numGroupsInField(sched, lookup_step);
 
-    const auto& acts  = sched.actions(lookup_step);
+    const auto& acts  = sched[lookup_step].actions();
     const auto& rspec = es.runspec();
     const auto& tdim  = es.getTableManager();
     const auto& rdim  = tdim.getRegdims();

@@ -75,7 +75,7 @@ UDAValue msim::uda_val() {
 
 
 void msim::post_step(Schedule& schedule, Action::State& action_state, SummaryState& st, data::Solution& /* sol */, data::Wells& /* well_data */, data::GroupAndNetworkValues& /* grp_nwrk_data */, size_t report_step) {
-    const auto& actions = schedule.actions(report_step);
+    const auto& actions = schedule[report_step].actions();
     if (actions.empty())
         return;
 

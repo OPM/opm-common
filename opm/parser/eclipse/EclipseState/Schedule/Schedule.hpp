@@ -43,7 +43,6 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellTestConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellMatcher.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Action/Actions.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleDeck.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/RPTConfig.hpp>
@@ -95,7 +94,6 @@
 
 namespace Opm
 {
-    class Actions;
     class Deck;
     class DeckKeyword;
     class DeckRecord;
@@ -281,7 +279,6 @@ namespace Opm
         const UDQActive& udqActive(std::size_t timeStep) const;
         const UDQConfig& getUDQConfig(std::size_t timeStep) const;
         std::vector<const UDQConfig*> udqConfigList() const;
-        const Action::Actions& actions(std::size_t timeStep) const;
         void evalAction(const SummaryState& summary_state, std::size_t timeStep);
 
         GTNode groupTree(std::size_t report_step) const;
@@ -315,6 +312,7 @@ namespace Opm
         std::shared_ptr<const Python> python() const;
 
 
+        const ScheduleState& back() const;
         const ScheduleState& operator[](std::size_t index) const;
         std::vector<ScheduleState>::const_iterator begin() const;
         std::vector<ScheduleState>::const_iterator end() const;
@@ -345,7 +343,6 @@ namespace Opm
             udq_config.serializeOp(serializer);
             udq_active.serializeOp(serializer);
             guide_rate_config.serializeOp(serializer);
-            m_actions.serializeOp(serializer);
             m_glo.serializeOp(serializer);
             rft_config.serializeOp(serializer);
             restart_config.serializeOp(serializer);
@@ -367,7 +364,6 @@ namespace Opm
         DynamicState<std::shared_ptr<UDQConfig>> udq_config;
         DynamicState<std::shared_ptr<UDQActive>> udq_active;
         DynamicState<std::shared_ptr<GuideRateConfig>> guide_rate_config;
-        DynamicState<std::shared_ptr<Action::Actions>> m_actions;
         DynamicState<std::shared_ptr<GasLiftOpt>> m_glo;
         RFTConfig rft_config;
         RestartConfig restart_config;
@@ -408,7 +404,7 @@ namespace Opm
                                     ErrorGuard& errors,
                                     const EclipseGrid& grid,
                                     const FieldPropsManager& fp);
-        void addACTIONX(const Action::ActionX& action, std::size_t currentStep);
+        void addACTIONX(const Action::ActionX& action);
         void addGroupToGroup( const std::string& parent_group, const std::string& child_group, std::size_t timeStep);
         void addGroupToGroup( const std::string& parent_group, const Group& child_group, std::size_t timeStep);
         void addGroup(const std::string& groupName , std::size_t timeStep);
@@ -496,7 +492,7 @@ namespace Opm
         bool handleNormalKeyword(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors);
 
         // Keyword Handlers
-        void handlePYACTION(const DeckKeyword&, std::size_t currentStep);
+        void handlePYACTION(const DeckKeyword&);
         void handleGCONPROD(const DeckKeyword& keyword, std::size_t current_step, const ParseContext& parseContext, ErrorGuard& errors);
         void handleGCONINJE(const DeckKeyword& keyword, std::size_t current_step, const ParseContext& parseContext, ErrorGuard& errors);
         void handleGLIFTOPT(const DeckKeyword& keyword, std::size_t report_step, const ParseContext& parseContext, ErrorGuard& errors);
