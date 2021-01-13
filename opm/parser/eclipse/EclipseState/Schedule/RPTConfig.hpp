@@ -26,16 +26,28 @@
 
 namespace Opm {
 
-class RPTConfig: public std::unordered_map<std::string,unsigned> {
-#if __cplusplus <= 201703L
+class RPTConfig {
 public:
-    bool contains(const std::string&) const;
-#endif
-
-public:
-    using std::unordered_map<std::string,unsigned>::unordered_map;
-
+    using Map = std::unordered_map<std::string, unsigned>;
+    RPTConfig() = default;
     RPTConfig(const DeckKeyword&);
+    bool contains(const std::string& key) const;
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer) {
+        serializer.template map<Map, false>( m_mnemonics );
+    }
+
+    std::unordered_map<std::string, unsigned>::const_iterator begin() const { return this->m_mnemonics.begin(); };
+    std::unordered_map<std::string, unsigned>::const_iterator end() const { return this->m_mnemonics.end(); };
+    std::size_t size() const { return this->m_mnemonics.size(); };
+    unsigned& at(const std::string& key) { return this->m_mnemonics.at(key); };
+
+    static RPTConfig serializeObject();
+    bool operator==(const RPTConfig& other) const;
+
+private:
+    std::unordered_map<std::string, unsigned> m_mnemonics;
 };
 
 }

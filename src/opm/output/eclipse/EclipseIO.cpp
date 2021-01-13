@@ -263,7 +263,7 @@ void EclipseIO::writeTimeStep(const Action::State& action_state,
 
 
     if (!isSubstep) {
-        for (const auto& report : schedule.report_config(report_step)) {
+        for (const auto& report : schedule[report_step].rpt_config()) {
             std::stringstream ss;
             const auto& unit_system = this->impl->es.getUnits();
 

@@ -48,6 +48,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/Actions.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleDeck.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleState.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/RPTConfig.hpp>
 
 #include <opm/common/utility/ActiveGridCells.hpp>
 #include <opm/io/eclipse/rst/state.hpp>
@@ -104,7 +105,6 @@ namespace Opm
     class EclipseState;
     class FieldPropsManager;
     class Runspec;
-    class RPTConfig;
     class SCHEDULESection;
     class SummaryState;
     class TimeMap;
@@ -288,8 +288,6 @@ namespace Opm
         const Action::Actions& actions(std::size_t timeStep) const;
         void evalAction(const SummaryState& summary_state, std::size_t timeStep);
 
-        const RPTConfig& report_config(std::size_t timeStep) const;
-
         GTNode groupTree(std::size_t report_step) const;
         GTNode groupTree(const std::string& root_node, std::size_t report_step) const;
         std::size_t numGroups() const;
@@ -392,7 +390,6 @@ namespace Opm
         RFTConfig rft_config;
         RestartConfig restart_config;
         std::optional<int> exit_status;
-        DynamicState<std::shared_ptr<RPTConfig>> rpt_config;
         std::vector<ScheduleState> snapshots;
 
 

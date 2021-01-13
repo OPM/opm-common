@@ -26,6 +26,7 @@
 
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 
+#include <opm/parser/eclipse/EclipseState/Schedule/RPTConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/PAvg.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.hpp>
@@ -112,6 +113,9 @@ namespace Opm {
         const Network::ExtNetwork& network() const;
         void network(Network::ExtNetwork network);
 
+        const RPTConfig& rpt_config() const;
+        void rpt_config(RPTConfig rpt_config);
+
         template<class Serializer>
         void serializeOp(Serializer& serializer) {
             serializer(m_start_time);
@@ -130,6 +134,7 @@ namespace Opm {
             serializer(m_gconsump);
             serializer(m_wlist_manager);
             serializer(m_network);
+            serializer(m_rptconfig);
         }
 
     private:
@@ -150,6 +155,7 @@ namespace Opm {
         std::shared_ptr<GConSump> m_gconsump;
         std::shared_ptr<WListManager> m_wlist_manager;
         std::shared_ptr<Network::ExtNetwork> m_network;
+        std::shared_ptr<RPTConfig> m_rptconfig;
     };
 }
 

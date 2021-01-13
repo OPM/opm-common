@@ -742,7 +742,7 @@ namespace {
     }
 
     void Schedule::handleRPTSCHED(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
-        this->rpt_config.update(handlerContext.currentStep, std::make_shared<RPTConfig>(handlerContext.keyword));
+        this->snapshots.back().rpt_config( RPTConfig(handlerContext.keyword ));
     }
 
     void Schedule::handleTUNING(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
