@@ -154,6 +154,7 @@ bool ScheduleState::operator==(const ScheduleState& other) const {
            *this->m_gconsale == *other.m_gconsale &&
            *this->m_gconsump == *other.m_gconsump &&
            *this->m_wlist_manager == *other.m_wlist_manager &&
+           *this->m_rptconfig == *other.m_rptconfig &&
            this->m_nupcol == other.m_nupcol;
 }
 
@@ -170,6 +171,7 @@ ScheduleState ScheduleState::serializeObject() {
     ts.m_gconsump = std::make_shared<GConSump>( GConSump::serializeObject() );
     ts.m_gconsale = std::make_shared<GConSale>( GConSale::serializeObject() );
     ts.m_wlist_manager = std::make_shared<WListManager>( WListManager::serializeObject() );
+    ts.m_rptconfig = std::make_shared<RPTConfig>( RPTConfig::serializeObject() );
     return ts;
 }
 
@@ -250,4 +252,12 @@ void ScheduleState::network(Network::ExtNetwork network) {
     this->m_network = std::make_shared<Network::ExtNetwork>( std::move(network) );
 }
 
+const RPTConfig& ScheduleState::rpt_config() const {
+    return *this->m_rptconfig;
+}
+
+
+void ScheduleState::rpt_config(RPTConfig rpt_config) {
+    this->m_rptconfig = std::make_shared<RPTConfig>(std::move(rpt_config));
+}
 }

@@ -41,21 +41,32 @@ namespace {
 
 }
 
-Opm::RPTConfig::RPTConfig(const DeckKeyword& keyword) :
-    std::unordered_map<std::string,unsigned> {}
-{
+namespace Opm {
+
+RPTConfig RPTConfig::serializeObject() {
+    RPTConfig rptc;
+    rptc.m_mnemonics.emplace( "KEY", 100 );
+    return rptc;
+}
+
+
+RPTConfig::RPTConfig(const DeckKeyword& keyword) {
     const auto& mnemonics { keyword.getStringData() } ;
     for (const auto& mnemonic : mnemonics) {
-        if (mnemonic == "NOTHING") {
-            clear();
-        } else {
-            emplace(parse_mnemonic(mnemonic));
-        }
+        if (mnemonic == "NOTHING")
+            this->m_mnemonics.clear();
+        else
+            this->m_mnemonics.emplace(parse_mnemonic(mnemonic));
     }
 }
 
-#if __cplusplus <= 201703L
-bool Opm::RPTConfig::contains(const std::string& key) const {
-    return find(key) != end();
+
+bool RPTConfig::operator==(const RPTConfig& other) const {
+    return this->m_mnemonics == other.m_mnemonics;
 }
-#endif
+
+bool RPTConfig::contains(const std::string& key) const {
+    return this->m_mnemonics.find(key) != this->m_mnemonics.end();
+}
+
+}

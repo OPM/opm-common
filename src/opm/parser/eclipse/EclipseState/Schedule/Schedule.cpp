@@ -119,8 +119,7 @@ namespace {
         m_actions(this->m_timeMap, std::make_shared<Action::Actions>()),
         m_glo(this->m_timeMap, std::make_shared<GasLiftOpt>()),
         rft_config(this->m_timeMap),
-        restart_config(m_timeMap, deck, parseContext, errors),
-        rpt_config(this->m_timeMap, std::make_shared<RPTConfig>())
+        restart_config(m_timeMap, deck, parseContext, errors)
     {
         if (rst)
             this->load_rst(*rst, grid, fp);
@@ -1466,11 +1465,6 @@ void Schedule::iterateScheduleSection(std::optional<std::size_t> load_offset,
         return *ptr;
     }
 
-    const RPTConfig& Schedule::report_config(std::size_t timeStep) const {
-        const auto& ptr = this->rpt_config.get(timeStep);
-        return *ptr;
-    }
-
     std::optional<int> Schedule::exitStatus() const {
         return this->exit_status;
     }
@@ -1637,7 +1631,6 @@ void Schedule::iterateScheduleSection(std::optional<std::size_t> load_offset,
                compareDynState(this->udq_active, data.udq_active) &&
                compareDynState(this->guide_rate_config, data.guide_rate_config) &&
                compareDynState(this->m_actions, data.m_actions) &&
-               compareDynState(this->rpt_config, data.rpt_config) &&
                rft_config  == data.rft_config &&
                this->restart_config == data.restart_config &&
                this->snapshots == data.snapshots;
@@ -2049,6 +2042,7 @@ void Schedule::create_first(const std::chrono::system_clock::time_point& start_t
     sched_state.gconsump( GConSump() );
     sched_state.wlist_manager( WListManager() );
     sched_state.network( Network::ExtNetwork() );
+    sched_state.rpt_config( RPTConfig() );
 
     this->addGroup("FIELD", 0);
 }
