@@ -36,13 +36,11 @@ namespace Opm {
             , length ( record.getItem<AQUNUM::LENGTH>().getSIDouble(0) )
             , permeability( record.getItem<AQUNUM::PERM>().getSIDouble(0) )
     {
-        const auto& cell_depth = field_props.cellDepth();
         const auto& poro = field_props.get_double("PORO");
         const auto& pvtnum = field_props.get_int("PVTNUM");
         const auto& satnum = field_props.get_int("SATNUM");
 
         this->global_index = grid.getGlobalIndex(I, J, K);
-        std::cout << " aquifer cell { " << I + 1 << " , " << J + 1 << " , " << K + 1 << std::endl;
         const size_t active_index = grid.activeIndex(this->global_index);
 
         if ( !record.getItem<AQUNUM::PORO>().defaultApplied(0) ) {
@@ -54,7 +52,7 @@ namespace Opm {
         if ( !record.getItem<AQUNUM::DEPTH>().defaultApplied(0) ) {
             this->depth = record.getItem<AQUNUM::DEPTH>().getSIDouble(0);
         } else {
-            this->depth = cell_depth[active_index];
+            this->depth = grid.getCellDepth(this->global_index);
         }
 
         if ( !record.getItem<AQUNUM::INITIAL_PRESSURE>().defaultApplied(0) ) {
