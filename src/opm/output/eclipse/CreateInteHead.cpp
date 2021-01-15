@@ -168,7 +168,7 @@ namespace {
             return 0;
         }
 
-        const auto& udqAct = sched.udqActive(simStep);
+        const auto& udqAct = sched[simStep].udq_active();
         const auto& iuad = udqAct.get_iuad();
 
         return std::count_if(iuad.begin(), iuad.end(), [](const Opm::UDQActive::Record rec) {
@@ -184,7 +184,7 @@ namespace {
             return 0;
         }
 
-        const auto& udqAct = sched.udqActive(simStep);
+        const auto& udqAct = sched[simStep].udq_active();
         const auto& iuap = udqAct.get_iuap();
 
         return std::count_if(iuap.begin(), iuap.end(), [](const Opm::UDQActive::InputRecord rec) {

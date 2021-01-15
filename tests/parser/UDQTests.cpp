@@ -1515,7 +1515,7 @@ BOOST_AUTO_TEST_CASE(IntegrationTest) {
 #include "data/integration_tests/udq.data"
     auto schedule = make_schedule(deck_string);
     {
-        const auto& active = schedule.udqActive(1);
+        const auto& active = schedule[1].udq_active();
         BOOST_CHECK_EQUAL(active.IUAD_size(), 6U);
 
         BOOST_CHECK(active[0].control == UDAControl::WCONPROD_ORAT);
@@ -1595,7 +1595,7 @@ WCONPROD
 
     // First timestep
     {
-        const auto& udq_active = schedule.udqActive(0);
+        const auto& udq_active = schedule[0].udq_active();
         BOOST_CHECK(udq_active);
         BOOST_CHECK_EQUAL(udq_active.IUAD_size(), 2U);
 
@@ -1616,7 +1616,7 @@ WCONPROD
         // Second timestep
         //  - The WUOPRU and WULPRU udq are still used in the same manner for the PROD1 well.
         //  - The new UDQs WUXO and WUXL are now used for the PROD2 well.
-        const auto& udq_active = schedule.udqActive(1);
+        const auto& udq_active = schedule[1].udq_active();
         BOOST_CHECK(udq_active);
         BOOST_CHECK_EQUAL(udq_active.IUAD_size(), 4U);
 
@@ -1649,7 +1649,7 @@ WCONPROD
         // Third timestep
         //  - The new UDQs WUXO and WUXL are now used for the PROD2 well.
         //  - The PROD1 well does not use UDQ
-        const auto& udq_active = schedule.udqActive(2);
+        const auto& udq_active = schedule[2].udq_active();
         BOOST_CHECK(udq_active);
         BOOST_CHECK_EQUAL(udq_active.IUAD_size(), 2U);
 

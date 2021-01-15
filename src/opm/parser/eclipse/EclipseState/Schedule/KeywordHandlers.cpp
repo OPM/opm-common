@@ -463,9 +463,9 @@ namespace {
                         this->snapshots.back().events().addEvent(ScheduleEvents::GROUP_PRODUCTION_UPDATE);
                         this->snapshots.back().wellgroup_events().addEvent( group_name, ScheduleEvents::GROUP_PRODUCTION_UPDATE);
 
-                        auto udq = std::make_shared<UDQActive>(this->udqActive(current_step));
-                        if (production.updateUDQActive(this->getUDQConfig(current_step), *udq))
-                            this->updateUDQActive(current_step, udq);
+                        auto udq_active = UDQActive(this->snapshots.back().udq_active());
+                        if (production.updateUDQActive(this->getUDQConfig(current_step), udq_active))
+                            this->snapshots.back().udq_active( std::move(udq_active));
                     }
                 }
             }
@@ -966,9 +966,9 @@ namespace {
                     this->updateWell(std::move(well2), handlerContext.currentStep);
                 }
 
-                auto udq = std::make_shared<UDQActive>(this->udqActive(handlerContext.currentStep));
-                if (properties->updateUDQActive(this->getUDQConfig(handlerContext.currentStep), *udq))
-                    this->updateUDQActive(handlerContext.currentStep, udq);
+                auto udq_active = UDQActive( this->snapshots.back().udq_active() );
+                if (properties->updateUDQActive(this->getUDQConfig(handlerContext.currentStep), udq_active))
+                    this->snapshots.back().udq_active( std::move(udq_active));
             }
         }
     }
@@ -1028,9 +1028,9 @@ namespace {
                     }
                 }
 
-                auto udq = std::make_shared<UDQActive>(this->udqActive(handlerContext.currentStep));
-                if (injection->updateUDQActive(this->getUDQConfig(handlerContext.currentStep), *udq))
-                    this->updateUDQActive(handlerContext.currentStep, udq);
+                auto udq_active = UDQActive(this->snapshots.back().udq_active());
+                if (injection->updateUDQActive(this->getUDQConfig(handlerContext.currentStep), udq_active))
+                    this->snapshots.back().udq_active( std::move(udq_active) );
             }
         }
     }
@@ -1289,9 +1289,9 @@ namespace {
                     if (cmode == Well::WELTARGCMode::GUID)
                         update |= well2->updateWellGuideRate(new_arg.get<double>());
 
-                    auto udq = std::make_shared<UDQActive>(this->udqActive(handlerContext.currentStep));
-                    if (prop->updateUDQActive(this->getUDQConfig(handlerContext.currentStep), *udq))
-                        this->updateUDQActive(handlerContext.currentStep, udq);
+                    auto udq_active = UDQActive(this->snapshots.back().udq_active());
+                    if (prop->updateUDQActive(this->getUDQConfig(handlerContext.currentStep), udq_active))
+                        this->snapshots.back().udq_active( std::move(udq_active));
                 } else {
                     auto inj = std::make_shared<Well::WellInjectionProperties>(well2->getInjectionProperties());
                     inj->handleWELTARG(cmode, new_arg, SiFactorP);
