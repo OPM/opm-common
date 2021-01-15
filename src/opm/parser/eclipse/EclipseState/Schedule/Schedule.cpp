@@ -114,7 +114,6 @@ namespace {
         m_sched_deck(deck, restart_info(rst) ),
         m_timeMap( deck , restart_info( rst )),
         udq_config(this->m_timeMap, std::make_shared<UDQConfig>(deck)),
-        udq_active(this->m_timeMap, std::make_shared<UDQActive>()),
         guide_rate_config(this->m_timeMap, std::make_shared<GuideRateConfig>()),
         m_glo(this->m_timeMap, std::make_shared<GasLiftOpt>()),
         rft_config(this->m_timeMap),
@@ -253,7 +252,6 @@ namespace {
         result.groups.insert({"test2", {{std::make_shared<Opm::Group>(Opm::Group::serializeObject())},1}});
         result.udq_config = {{std::make_shared<UDQConfig>(UDQConfig::serializeObject())}, 1};
         result.m_glo = {{std::make_shared<GasLiftOpt>(GasLiftOpt::serializeObject())}, 1};
-        result.udq_active = {{std::make_shared<UDQActive>(UDQActive::serializeObject())}, 1};
         result.guide_rate_config = {{std::make_shared<GuideRateConfig>(GuideRateConfig::serializeObject())}, 1};
         result.rft_config = RFTConfig::serializeObject();
         result.restart_config = RestartConfig::serializeObject();
@@ -1307,14 +1305,6 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
     }
 
 
-    const UDQActive& Schedule::udqActive(std::size_t timeStep) const {
-        return *this->udq_active[timeStep];
-    }
-
-    void Schedule::updateUDQActive( std::size_t timeStep, std::shared_ptr<UDQActive> udq ) {
-        this->udq_active.update(timeStep, udq);
-    }
-
     const UDQConfig& Schedule::getUDQConfig(std::size_t timeStep) const {
         const auto& ptr = this->udq_config.get(timeStep);
         return *ptr;
@@ -1488,7 +1478,6 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                compareMap(this->groups, data.groups) &&
                compareDynState(this->m_glo, data.m_glo) &&
                compareDynState(this->udq_config, data.udq_config) &&
-               compareDynState(this->udq_active, data.udq_active) &&
                compareDynState(this->guide_rate_config, data.guide_rate_config) &&
                rft_config  == data.rft_config &&
                this->restart_config == data.restart_config &&
@@ -1899,6 +1888,7 @@ void Schedule::create_first(const std::chrono::system_clock::time_point& start_t
     sched_state.network( Network::ExtNetwork() );
     sched_state.rpt_config( RPTConfig() );
     sched_state.actions( Action::Actions() );
+    sched_state.udq_active( UDQActive() );
     this->addGroup("FIELD", 0);
 }
 

@@ -40,6 +40,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/VFPProdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/VFPInjTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/Actions.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQActive.hpp>
 
 namespace Opm {
 
@@ -130,6 +131,9 @@ namespace Opm {
         const Action::Actions& actions() const;
         void actions(Action::Actions actions);
 
+        const UDQActive& udq_active() const;
+        void udq_active(UDQActive udq_active);
+
         template<class Serializer>
         void serializeOp(Serializer& serializer) {
             serializer(m_start_time);
@@ -152,6 +156,7 @@ namespace Opm {
             serializer.map(m_vfpprod);
             serializer.map(m_vfpinj);
             serializer(m_actions);
+            serializer(m_udq_active);
         }
 
 
@@ -175,6 +180,7 @@ namespace Opm {
         std::shared_ptr<Network::ExtNetwork> m_network;
         std::shared_ptr<RPTConfig> m_rptconfig;
         std::shared_ptr<Action::Actions> m_actions;
+        std::shared_ptr<UDQActive> m_udq_active;
         std::map<int, std::shared_ptr<VFPProdTable>> m_vfpprod;
         std::map<int, std::shared_ptr<VFPInjTable>> m_vfpinj;
     };

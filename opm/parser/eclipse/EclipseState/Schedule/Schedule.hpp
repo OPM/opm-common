@@ -106,7 +106,6 @@ namespace Opm
     class TimeMap;
     class ErrorGuard;
     class UDQConfig;
-    class UDQActive;
 
 
     struct ScheduleStatic {
@@ -276,7 +275,6 @@ namespace Opm
         std::vector<Well> getChildWells2(const std::string& group_name, std::size_t timeStep) const;
         Well::ProducerCMode getGlobalWhistctlMmode(std::size_t timestep) const;
 
-        const UDQActive& udqActive(std::size_t timeStep) const;
         const UDQConfig& getUDQConfig(std::size_t timeStep) const;
         std::vector<const UDQConfig*> udqConfigList() const;
         void evalAction(const SummaryState& summary_state, std::size_t timeStep);
@@ -341,7 +339,6 @@ namespace Opm
             serializer.vector(splitGroups.first);
             serializer(splitGroups.second);
             udq_config.serializeOp(serializer);
-            udq_active.serializeOp(serializer);
             guide_rate_config.serializeOp(serializer);
             m_glo.serializeOp(serializer);
             rft_config.serializeOp(serializer);
@@ -362,7 +359,6 @@ namespace Opm
         WellMap wells_static;
         GroupMap groups;
         DynamicState<std::shared_ptr<UDQConfig>> udq_config;
-        DynamicState<std::shared_ptr<UDQActive>> udq_active;
         DynamicState<std::shared_ptr<GuideRateConfig>> guide_rate_config;
         DynamicState<std::shared_ptr<GasLiftOpt>> m_glo;
         RFTConfig rft_config;
@@ -395,7 +391,6 @@ namespace Opm
         GTNode groupTree(const std::string& root_node, std::size_t report_step, std::size_t level, const std::optional<std::string>& parent_name) const;
         void updateGroup(std::shared_ptr<Group> group, std::size_t reportStep);
         bool checkGroups(const ParseContext& parseContext, ErrorGuard& errors);
-        void updateUDQActive( std::size_t timeStep, std::shared_ptr<UDQActive> udq );
         bool updateWellStatus( const std::string& well, std::size_t reportStep, bool runtime, Well::Status status, std::optional<KeywordLocation> = {});
         void addWellToGroup( const std::string& group_name, const std::string& well_name , std::size_t timeStep);
         void iterateScheduleSection(std::size_t load_start,

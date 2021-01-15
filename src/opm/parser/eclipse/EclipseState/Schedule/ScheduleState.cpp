@@ -182,6 +182,7 @@ bool ScheduleState::operator==(const ScheduleState& other) const {
            *this->m_gconsump == *other.m_gconsump &&
            *this->m_wlist_manager == *other.m_wlist_manager &&
            *this->m_rptconfig == *other.m_rptconfig &&
+           *this->m_udq_active == *other.m_udq_active &&
            this->m_nupcol == other.m_nupcol;
 }
 
@@ -204,6 +205,7 @@ ScheduleState ScheduleState::serializeObject() {
     ts.m_vfpinj.emplace( std::make_pair(177, std::make_shared<VFPInjTable>(VFPInjTable::serializeObject() )));
     ts.m_vfpinj.emplace( std::make_pair(178, std::make_shared<VFPInjTable>(VFPInjTable::serializeObject() )));
     ts.m_actions = std::make_shared<Action::Actions>( Action::Actions::serializeObject() );
+    ts.m_udq_active = std::make_shared<UDQActive>( UDQActive::serializeObject() );
     return ts;
 }
 
@@ -343,6 +345,14 @@ const Action::Actions& ScheduleState::actions() const {
 
 void ScheduleState::actions(Action::Actions actions) {
     this->m_actions = std::make_shared<Action::Actions>( std::move(actions) );
+}
+
+const UDQActive& ScheduleState::udq_active() const {
+    return *this->m_udq_active;
+}
+
+void ScheduleState::udq_active(UDQActive udq_active) {
+    this->m_udq_active = std::make_shared<UDQActive>( std::move(udq_active) );
 }
 
 }
