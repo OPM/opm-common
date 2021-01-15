@@ -764,10 +764,10 @@ TSTEP
 
     Runspec runspec (deck);
     Schedule sched(deck, grid1, fp, runspec, python);
-    const auto& actions0 = sched.actions(0);
+    const auto& actions0 = sched[0].actions();
     BOOST_CHECK_EQUAL(actions0.size(), 0U);
 
-    const auto& actions1 = sched.actions(1);
+    const auto& actions1 = sched[1].actions();
     BOOST_CHECK_EQUAL(actions1.size(), 1U);
 
 
@@ -804,7 +804,7 @@ TSTEP
 
     /*****************************************************************/
 
-    const auto& actions2 = sched.actions(2);
+    const auto& actions2 = sched[2].actions();
     BOOST_CHECK_EQUAL(actions2.size(), 2U);
 
     const auto& actB = actions2.get("B");
@@ -920,8 +920,8 @@ ENDACTIO
 
     Runspec runspec (deck);
     Schedule sched(deck, grid1, fp, runspec, python);
-    const auto& action1 = sched.actions(1).get("A");
-    const auto& action2 = sched.actions(2).get("A");
+    const auto& action1 = sched[1].actions().get("A");
+    const auto& action2 = sched[2].actions().get("A");
 
     BOOST_CHECK(action1.id() != action2.id());
 
@@ -976,7 +976,7 @@ TSTEP
     auto unit_system =  UnitSystem::newMETRIC();
     const auto st = SummaryState{ std::chrono::system_clock::now() };
     Schedule sched = make_schedule(deck_string);
-    const auto& action1 = sched.actions(0).get("A");
+    const auto& action1 = sched[0].actions().get("A");
     {
         const auto& group = sched.getGroup("G1", 0);
         const auto& prod = group.productionControls(st);
@@ -1040,7 +1040,7 @@ TSTEP
 
     Opm::UnitSystem unitSystem = UnitSystem( UnitSystem::UnitType::UNIT_TYPE_METRIC );
     auto sched = make_schedule(input);
-    const auto& action1 = sched.actions(0).get("A");
+    const auto& action1 = sched[0].actions().get("A");
     {
         const auto& glo = sched.glo(0);
         BOOST_CHECK(!glo.has_group("PLAT-A"));
@@ -1096,7 +1096,7 @@ TSTEP
 
     const auto st = SummaryState{ std::chrono::system_clock::now() };
     Schedule sched = make_schedule(deck_string);
-    const auto& action1 = sched.actions(0).get("A");
+    const auto& action1 = sched[0].actions().get("A");
     {
         const auto& well = sched.getWell("PROD1", 0);
         BOOST_CHECK_EQUAL( well.getWellPIScalingFactor(1.0), 1.0);
@@ -1138,7 +1138,7 @@ ENDACTIO
     Opm::WListManager wlm;
     Opm::Action::Context context(st, wlm);
 
-    const auto& config = sched.actions(0);
+    const auto& config = sched[0].actions();
     const Opm::Action::ActionX& action = config.get("ACT1");
 
     /*

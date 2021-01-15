@@ -3209,7 +3209,7 @@ void Opm::out::Summary::SummaryImplementation::configureUDQ(const SummaryConfig&
     for (const auto& udq_ptr : sched.udqConfigList())
         udq_ptr->required_summary(summary_keys);
 
-    for (const auto& action : sched.actions(sched.size() - 1))
+    for (const auto& action : sched.back().actions())
         action.required_summary(summary_keys);
 
     for (const auto& key : summary_keys) {

@@ -159,7 +159,6 @@ bool ScheduleState::operator==(const ScheduleState& other) const {
 
             ++it2;
         }
-
         return true;
     };
 
@@ -204,7 +203,7 @@ ScheduleState ScheduleState::serializeObject() {
     ts.m_vfpprod.emplace( std::make_pair(78, std::make_shared<VFPProdTable>(VFPProdTable::serializeObject() )));
     ts.m_vfpinj.emplace( std::make_pair(177, std::make_shared<VFPInjTable>(VFPInjTable::serializeObject() )));
     ts.m_vfpinj.emplace( std::make_pair(178, std::make_shared<VFPInjTable>(VFPInjTable::serializeObject() )));
-
+    ts.m_actions = std::make_shared<Action::Actions>( Action::Actions::serializeObject() );
     return ts;
 }
 
@@ -337,4 +336,13 @@ void ScheduleState::vfpinj(VFPInjTable vfpinj) {
     int table_id = vfpinj.getTableNum();
     this->m_vfpinj[table_id] = std::make_shared<VFPInjTable>( std::move(vfpinj) );
 }
+
+const Action::Actions& ScheduleState::actions() const {
+    return *this->m_actions;
+}
+
+void ScheduleState::actions(Action::Actions actions) {
+    this->m_actions = std::make_shared<Action::Actions>( std::move(actions) );
+}
+
 }

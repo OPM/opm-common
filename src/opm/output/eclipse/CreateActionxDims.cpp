@@ -121,7 +121,7 @@ createActionxDims(  const Runspec& rspec,
                     const Schedule&     sched,
                     const std::size_t       simStep)
 {
-    const auto& acts = sched.actions(simStep);
+    const auto& acts = sched[simStep].actions();
     std::vector<int> actDims(9);
     
     //No of Actionx keywords

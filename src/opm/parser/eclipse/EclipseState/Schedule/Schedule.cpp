@@ -116,7 +116,6 @@ namespace {
         udq_config(this->m_timeMap, std::make_shared<UDQConfig>(deck)),
         udq_active(this->m_timeMap, std::make_shared<UDQActive>()),
         guide_rate_config(this->m_timeMap, std::make_shared<GuideRateConfig>()),
-        m_actions(this->m_timeMap, std::make_shared<Action::Actions>()),
         m_glo(this->m_timeMap, std::make_shared<GasLiftOpt>()),
         rft_config(this->m_timeMap),
         restart_config(m_timeMap, deck, parseContext, errors)
@@ -256,7 +255,6 @@ namespace {
         result.m_glo = {{std::make_shared<GasLiftOpt>(GasLiftOpt::serializeObject())}, 1};
         result.udq_active = {{std::make_shared<UDQActive>(UDQActive::serializeObject())}, 1};
         result.guide_rate_config = {{std::make_shared<GuideRateConfig>(GuideRateConfig::serializeObject())}, 1};
-        result.m_actions = {{std::make_shared<Action::Actions>(Action::Actions::serializeObject())}, 1};
         result.rft_config = RFTConfig::serializeObject();
         result.restart_config = RestartConfig::serializeObject();
         result.snapshots = { ScheduleState::serializeObject() };
@@ -312,7 +310,7 @@ namespace {
             rftProperties.push_back( std::make_pair( &keyword , currentStep ));
 
         else if (keyword.name() == "PYACTION")
-            handlePYACTION(keyword, currentStep);
+            handlePYACTION(keyword);
     }
 
 namespace {
@@ -466,7 +464,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                             parseContext.handleError( ParseContext::ACTIONX_ILLEGAL_KEYWORD, msg_fmt, action_keyword.location(), errors);
                         }
                     }
-                    this->addACTIONX(action, report_step);
+                    this->addACTIONX(action);
                     keyword_index++;
                     continue;
                 }
@@ -498,13 +496,13 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         }
     }
 
-    void Schedule::addACTIONX(const Action::ActionX& action, std::size_t currentStep) {
-        auto new_actions = std::make_shared<Action::Actions>( this->actions(currentStep) );
-        new_actions->add(action);
-        this->m_actions.update(currentStep, new_actions);
+    void Schedule::addACTIONX(const Action::ActionX& action) {
+        auto new_actions = Action::Actions( this->snapshots.back().actions() );
+        new_actions.add( action );
+        this->snapshots.back().actions( std::move(new_actions) );
     }
 
-    void Schedule::handlePYACTION(const DeckKeyword& keyword, std::size_t currentStep) {
+    void Schedule::handlePYACTION(const DeckKeyword& keyword) {
         if (!this->m_static.m_python_handle->enabled()) {
             //Must have a real Python instance here - to ensure that IMPORT works
             const auto& loc = keyword.location();
@@ -522,9 +520,9 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
             module = this->m_static.m_input_path + "/" + module_arg;
 
         Action::PyAction pyaction(this->m_static.m_python_handle, name, run_count, module);
-        auto new_actions = std::make_shared<Action::Actions>( this->actions(currentStep) );
-        new_actions->add(pyaction);
-        this->m_actions.update(currentStep, new_actions);
+        auto new_actions = Action::Actions( this->snapshots.back().actions() );
+        new_actions.add(pyaction);
+        this->snapshots.back().actions( std::move(new_actions) );
     }
 
     void Schedule::applyEXIT(const DeckKeyword& keyword, std::size_t report_step) {
@@ -1356,11 +1354,6 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
     }
 
 
-    const Action::Actions& Schedule::actions(std::size_t timeStep) const {
-        const auto& ptr = this->m_actions.get(timeStep);
-        return *ptr;
-    }
-
     void Schedule::applyAction(std::size_t reportStep, const Action::ActionX& action, const Action::Result& result) {
         ParseContext parseContext;
         ErrorGuard errors;
@@ -1497,7 +1490,6 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                compareDynState(this->udq_config, data.udq_config) &&
                compareDynState(this->udq_active, data.udq_active) &&
                compareDynState(this->guide_rate_config, data.guide_rate_config) &&
-               compareDynState(this->m_actions, data.m_actions) &&
                rft_config  == data.rft_config &&
                this->restart_config == data.restart_config &&
                this->snapshots == data.snapshots;
@@ -1874,6 +1866,10 @@ bool Schedule::cmp(const Schedule& sched1, const Schedule& sched2, std::size_t r
     return (count == 0);
 }
 
+const ScheduleState& Schedule::back() const {
+    return this->snapshots.back();
+}
+
 const ScheduleState& Schedule::operator[](std::size_t index) const {
     return this->snapshots.at(index);
 }
@@ -1902,7 +1898,7 @@ void Schedule::create_first(const std::chrono::system_clock::time_point& start_t
     sched_state.wlist_manager( WListManager() );
     sched_state.network( Network::ExtNetwork() );
     sched_state.rpt_config( RPTConfig() );
-
+    sched_state.actions( Action::Actions() );
     this->addGroup("FIELD", 0);
 }
 
