@@ -594,7 +594,7 @@ namespace {
 
         template <class DUDWArray>
         void staticContrib(const Opm::UDQState& udq_state,
-                           const std::vector<std::string>& wnames,
+                           const std::vector<Opm::Well>& wells,
                            const std::string udq,
                            const std::size_t nwmaxz,
                            DUDWArray&   dUdw)
@@ -603,9 +603,10 @@ namespace {
             for (std::size_t ind = 0; ind < nwmaxz; ind++) {
                 dUdw[ind] = Opm::UDQ::restart_default;
             }
-            for (std::size_t ind = 0; ind < wnames.size(); ind++) {
-                if (udq_state.has_well_var(wnames[ind], udq)) {
-                    dUdw[ind] = udq_state.get_well_var(wnames[ind], udq);
+            for (std::size_t ind = 0; ind < wells.size(); ind++) {
+                const auto& wname = wells[ind].name();
+                if (udq_state.has_well_var(wname, udq)) {
+                    dUdw[ind] = udq_state.get_well_var(wname, udq);
                 }
             }
         }
@@ -866,14 +867,14 @@ captureDeclaredUDQData(const Opm::Schedule&                 sched,
     }
 
     std::size_t i_wudq = 0;
-    const auto& wnames = sched.wellNames(simStep);
+    const auto& wells = sched.getWells(simStep);
     const auto nwmax = nwmaxz(inteHead);
     int cnt_dudw = 0;
     for (const auto& udq_input : udqCfg.input()) {
         if (udq_input.var_type() ==  UDQVarType::WELL_VAR) {
             const std::string& udq = udq_input.keyword();
             auto i_dudw = this->dUDW_[i_wudq];
-            dUdw::staticContrib(udq_state, wnames, udq, nwmax, i_dudw);
+            dUdw::staticContrib(udq_state, wells, udq, nwmax, i_dudw);
             i_wudq++;
             cnt_dudw += 1;
         }

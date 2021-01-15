@@ -80,12 +80,12 @@ namespace {
                             ConnOp&&                    connOp)
     {
         std::size_t wellID = 0;
-        for (const auto& wname : sched.wellNames(sim_step)) {
-            const auto  well_iter = xw.find(wname);
+        for (const auto& well : sched.getWells(sim_step)) {
+            const auto  well_iter = xw.find(well.name());
             const auto* wellRes   = (well_iter == xw.end())
                 ? nullptr : &well_iter->second;
 
-            connectionLoop(grid, sched.getWell(wname, sim_step), wellID,
+            connectionLoop(grid, well, wellID,
                            wellRes, std::forward<ConnOp>(connOp));
 
             ++wellID;
