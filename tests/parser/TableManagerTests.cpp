@@ -1667,6 +1667,30 @@ BOOST_AUTO_TEST_CASE( TestParseDENSITY ) {
     BOOST_CHECK_EQUAL( 1.3, density[0].gas );
 }
 
+BOOST_AUTO_TEST_CASE( TestParseDIFFC ) {
+    const std::string data = R"(
+      TABDIMS
+        1* 1 /
+
+      DIFFC
+        1.1 1.2 1.3 1.4 1.5 1.6 1* 1.8/
+    )";
+
+    Opm::Parser parser;
+    auto deck = parser.parseString(data);
+    Opm::TableManager tables( deck );
+    const auto& diffc = tables.getDiffusionCoefficientTable();
+    double conversion_factor = (60*60*24);
+    BOOST_CHECK_EQUAL( 1.1, diffc[0].oil_mw );
+    BOOST_CHECK_EQUAL( 1.2, diffc[0].gas_mw );
+    BOOST_CHECK_CLOSE( 1.3, diffc[0].gas_in_gas*conversion_factor, epsilon());
+    BOOST_CHECK_CLOSE( 1.4, diffc[0].oil_in_gas*conversion_factor, epsilon() );
+    BOOST_CHECK_CLOSE( 1.5, diffc[0].gas_in_oil*conversion_factor, epsilon() );
+    BOOST_CHECK_CLOSE( 1.6, diffc[0].oil_in_oil*conversion_factor, epsilon() );
+    BOOST_CHECK_CLOSE( 0.0, diffc[0].gas_in_oil_cross_phase*conversion_factor, epsilon() );
+    BOOST_CHECK_CLOSE( 1.8, diffc[0].oil_in_oil_cross_phase*conversion_factor, epsilon() );
+}
+
 BOOST_AUTO_TEST_CASE( TestParseROCK ) {
     const std::string data = R"(
       TABDIMS

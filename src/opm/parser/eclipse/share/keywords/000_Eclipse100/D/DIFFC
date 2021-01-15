@@ -10,11 +10,13 @@
   "items": [
     {
       "name": "OIL_MOL_WEIGHT",
-      "value_type": "DOUBLE"
+      "value_type": "DOUBLE",
+      "dimension": "1"
     },
     {
       "name": "GAS_MOL_WEIGHT",
-      "value_type": "DOUBLE"
+      "value_type": "DOUBLE",
+      "dimension": "1"
     },
     {
       "name": "GAS_GAS_DIFF_COEFF",
@@ -39,11 +41,13 @@
     {
       "name": "GAS_OIL_CROSS_DIFF_COEFF",
       "value_type": "DOUBLE",
+      "default": 0.0,
       "dimension": "Length*Length/Time"
     },
     {
       "name": "OIL_OIL_CROSS_DIFF_COEFF",
       "value_type": "DOUBLE",
+      "default": 0.0,
       "dimension": "Length*Length/Time"
     }
   ]
