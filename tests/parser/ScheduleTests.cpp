@@ -401,9 +401,9 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsOrdered) {
     const auto& schedule = make_schedule( createDeckWithWellsOrdered() );
     auto well_names = schedule.wellNames();
 
-    BOOST_CHECK_EQUAL( "CW_1" , well_names[0]);
-    BOOST_CHECK_EQUAL( "BW_2" , well_names[1]);
-    BOOST_CHECK_EQUAL( "AW_3" , well_names[2]);
+    BOOST_CHECK( has_name(well_names, "CW_1"));
+    BOOST_CHECK( has_name(well_names, "BW_2"));
+    BOOST_CHECK( has_name(well_names, "AW_3"));
 
     auto group_names = schedule.groupNames();
     BOOST_CHECK_EQUAL( "FIELD", group_names[0]);
@@ -3338,8 +3338,12 @@ BOOST_AUTO_TEST_CASE(WellNames) {
     for (const auto& w : std::vector<std::string>{"W1", "W2", "W3", "I1", "I2", "I3", "DEFAULT", "ALLOW", "BAN"})
         BOOST_CHECK(has(all_wells, w));
 
-    const std::vector<std::string> wwells = {"W1", "W2", "W3"};
-    BOOST_CHECK( wwells == wm2.wells("W*"));
+    const auto& wwells = wm2.wells("W*");
+    BOOST_CHECK_EQUAL( wwells.size(), 3 );
+    BOOST_CHECK( has(wwells, "W1"));
+    BOOST_CHECK( has(wwells, "W2"));
+    BOOST_CHECK( has(wwells, "W3"));
+
     BOOST_CHECK( wm2.wells("XYZ*").empty() );
     BOOST_CHECK( wm2.wells("XYZ").empty() );
 

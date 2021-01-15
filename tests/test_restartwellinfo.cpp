@@ -120,7 +120,7 @@ void verifyWellState(const std::string& rst_filename, const Opm::Schedule& sched
         icon = rstFile.get<int>("ICON");
     }
 
-    std::vector<std::string> wellList = schedule.wellNames(step);
+    const auto& wellList = schedule.getWells(step);
 
     //Verify number of active wells
     BOOST_CHECK_EQUAL( wellList.size(), static_cast<std::size_t>(intehead[16]));
@@ -129,14 +129,14 @@ void verifyWellState(const std::string& rst_filename, const Opm::Schedule& sched
 
         // Verify wellname
         BOOST_CHECK_EQUAL(zwel[i*3], ref_wellList[step][i]);
-        BOOST_CHECK_EQUAL(zwel[i*3], wellList[i]);
+        BOOST_CHECK_EQUAL(zwel[i*3], wellList[i].name());
 
         // Verify well I, J head
 
         BOOST_CHECK_EQUAL(iwel[i*niwelz], std::get<0>(ref_wellHead[step][i]));
         BOOST_CHECK_EQUAL(iwel[i*niwelz + 1], std::get<1>(ref_wellHead[step][i]));
 
-        Opm::Well sched_well2 = schedule.getWell(wellList[i], step);
+        Opm::Well sched_well2 = schedule.getWell(wellList[i].name(), step);
 
         BOOST_CHECK_EQUAL(iwel[i*niwelz], sched_well2.getHeadI() +1 );
         BOOST_CHECK_EQUAL(iwel[i*niwelz + 1], sched_well2.getHeadJ() +1 );
