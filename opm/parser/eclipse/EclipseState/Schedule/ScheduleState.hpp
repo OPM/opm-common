@@ -37,6 +37,8 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GConSump.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GConSale.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Network/ExtNetwork.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/VFPProdTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/VFPInjTable.hpp>
 
 namespace Opm {
 
@@ -116,6 +118,14 @@ namespace Opm {
         const RPTConfig& rpt_config() const;
         void rpt_config(RPTConfig rpt_config);
 
+        std::vector<const VFPProdTable*> vfpprod() const;
+        const VFPProdTable& vfpprod(int table_id) const;
+        void vfpprod(VFPProdTable vfpprod);
+
+        std::vector<const VFPInjTable*> vfpinj() const;
+        const VFPInjTable& vfpinj(int table_id) const;
+        void vfpinj(VFPInjTable vfpinj);
+
         template<class Serializer>
         void serializeOp(Serializer& serializer) {
             serializer(m_start_time);
@@ -135,7 +145,10 @@ namespace Opm {
             serializer(m_wlist_manager);
             serializer(m_network);
             serializer(m_rptconfig);
+            serializer.map(m_vfpprod);
+            serializer.map(m_vfpinj);
         }
+
 
     private:
         std::chrono::system_clock::time_point m_start_time;
@@ -156,6 +169,8 @@ namespace Opm {
         std::shared_ptr<WListManager> m_wlist_manager;
         std::shared_ptr<Network::ExtNetwork> m_network;
         std::shared_ptr<RPTConfig> m_rptconfig;
+        std::map<int, std::shared_ptr<VFPProdTable>> m_vfpprod;
+        std::map<int, std::shared_ptr<VFPInjTable>> m_vfpinj;
     };
 }
 

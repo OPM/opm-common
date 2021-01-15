@@ -588,7 +588,7 @@ namespace {
                 sWell[Ix::HistBHPTarget] = sWell[Ix::BHPTarget];
                 
                 if (pc.alq_value != 0.0) {
-                    auto vfpTable = sched.getVFPProdTable(pc.vfp_table_number,sim_step);
+                    auto vfpTable = sched[sim_step].vfpprod(pc.vfp_table_number);
                     if (vfpTable.getALQType() == Opm::VFPProdTable::ALQ_GRAT) {
                         sWell[Ix::Alq_value] = static_cast<float>(units.from_si(M::gas_surface_rate, pc.alq_value));
                     }
