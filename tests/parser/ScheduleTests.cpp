@@ -383,6 +383,11 @@ END
 )";
 }
 
+bool has_name(const std::vector<std::string>& names, const std::string& name) {
+    auto find_iter = std::find(names.begin(), names.end(), name);
+    return (find_iter != names.end());
+}
+
 
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckMissingReturnsDefaults) {
     Deck deck;
