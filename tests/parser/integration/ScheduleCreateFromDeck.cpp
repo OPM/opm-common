@@ -338,13 +338,13 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_GRUPTREE_correct) {
     auto python = std::make_shared<Python>();
     Schedule schedule(deck,  grid , fp, runspec, python);
 
-    BOOST_CHECK( schedule.hasGroup( "FIELD" ));
-    BOOST_CHECK( schedule.hasGroup( "PROD" ));
-    BOOST_CHECK( schedule.hasGroup( "INJE" ));
-    BOOST_CHECK( schedule.hasGroup( "MANI-PROD" ));
-    BOOST_CHECK( schedule.hasGroup( "MANI-INJ" ));
-    BOOST_CHECK( schedule.hasGroup( "DUMMY-PROD" ));
-    BOOST_CHECK( schedule.hasGroup( "DUMMY-INJ" ));
+    BOOST_CHECK( schedule.back().has_group( "FIELD" ));
+    BOOST_CHECK( schedule.back().has_group( "PROD" ));
+    BOOST_CHECK( schedule.back().has_group( "INJE" ));
+    BOOST_CHECK( schedule.back().has_group( "MANI-PROD" ));
+    BOOST_CHECK( schedule.back().has_group( "MANI-INJ" ));
+    BOOST_CHECK( schedule.back().has_group( "DUMMY-PROD" ));
+    BOOST_CHECK( schedule.back().has_group( "DUMMY-INJ" ));
 }
 
 
@@ -387,9 +387,9 @@ BOOST_AUTO_TEST_CASE( WellTestGroups ) {
     Schedule sched(deck,  grid , fp, runspec, python);
     SummaryState st(std::chrono::system_clock::now());
 
-    BOOST_CHECK_EQUAL( 3U , sched.numGroups() );
-    BOOST_CHECK( sched.hasGroup( "INJ" ));
-    BOOST_CHECK( sched.hasGroup( "OP" ));
+    BOOST_CHECK_EQUAL( 3U , sched.back().num_groups() );
+    BOOST_CHECK( sched.back().has_group( "INJ" ));
+    BOOST_CHECK( sched.back().has_group( "OP" ));
 
     {
         auto& group = sched.getGroup("INJ", 3);

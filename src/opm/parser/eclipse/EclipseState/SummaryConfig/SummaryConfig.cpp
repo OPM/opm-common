@@ -620,7 +620,7 @@ inline void keywordG( SummaryConfig::keyword_list& list,
     const auto& item = keyword.getDataRecord().getDataItem();
 
     for( const std::string& group : item.getData< std::string >() ) {
-        if( schedule.hasGroup( group ) )
+        if( schedule.back().has_group( group ) )
             list.push_back( param.namedEntity(group) );
         else
             handleMissingGroup( parseContext, errors, keyword.location(), group );

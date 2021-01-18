@@ -163,7 +163,6 @@ namespace Opm
     class Schedule {
     public:
         using WellMap = OrderedMap<std::string, DynamicState<std::shared_ptr<Well>>>;
-        using GroupMap = std::map<std::string, DynamicState<std::shared_ptr<Group>>>;
 
         Schedule() = default;
         explicit Schedule(std::shared_ptr<const Python> python_handle);
@@ -281,10 +280,6 @@ namespace Opm
 
         GTNode groupTree(std::size_t report_step) const;
         GTNode groupTree(const std::string& root_node, std::size_t report_step) const;
-        std::size_t numGroups() const;
-        std::size_t numGroups(std::size_t timeStep) const;
-        bool hasGroup(const std::string& groupName) const;
-        bool hasGroup(const std::string& groupName, std::size_t timeStep) const;
         const Group& getGroup(const std::string& groupName, std::size_t timeStep) const;
 
         void invalidNamePattern (const std::string& namePattern, std::size_t report_step, const ParseContext& parseContext, ErrorGuard& errors, const DeckKeyword& keyword) const;
@@ -335,9 +330,6 @@ namespace Opm
             auto splitWells = splitDynMap(wells_static);
             serializer.vector(splitWells.first);
             serializer(splitWells.second);
-            auto splitGroups = splitDynMap(groups);
-            serializer.vector(splitGroups.first);
-            serializer(splitGroups.second);
             udq_config.serializeOp(serializer);
             guide_rate_config.serializeOp(serializer);
             m_glo.serializeOp(serializer);
@@ -345,7 +337,6 @@ namespace Opm
             restart_config.serializeOp(serializer);
             if (!serializer.isSerializing()) {
                 reconstructDynMap(splitWells.first, splitWells.second, wells_static);
-                reconstructDynMap(splitGroups.first, splitGroups.second, groups);
             }
             serializer.vector(snapshots);
             m_static.serializeOp(serializer);
@@ -357,7 +348,6 @@ namespace Opm
         ScheduleDeck m_sched_deck;
         TimeMap m_timeMap;
         WellMap wells_static;
-        GroupMap groups;
         DynamicState<std::shared_ptr<UDQConfig>> udq_config;
         DynamicState<std::shared_ptr<GuideRateConfig>> guide_rate_config;
         DynamicState<std::shared_ptr<GasLiftOpt>> m_glo;
@@ -389,7 +379,6 @@ namespace Opm
         void updateGuideRateModel(const GuideRateModel& new_model, std::size_t report_step);
 
         GTNode groupTree(const std::string& root_node, std::size_t report_step, std::size_t level, const std::optional<std::string>& parent_name) const;
-        void updateGroup(std::shared_ptr<Group> group, std::size_t reportStep);
         bool checkGroups(const ParseContext& parseContext, ErrorGuard& errors);
         bool updateWellStatus( const std::string& well, std::size_t reportStep, bool runtime, Well::Status status, std::optional<KeywordLocation> = {});
         void addWellToGroup( const std::string& group_name, const std::string& well_name , std::size_t timeStep);
@@ -402,7 +391,6 @@ namespace Opm
         void addACTIONX(const Action::ActionX& action);
         void addGroupToGroup( const std::string& parent_group, const std::string& child_group, std::size_t timeStep);
         void addGroup(const std::string& groupName , std::size_t timeStep);
-        void addGroup(const Group& group, std::size_t timeStep);
         void addWell(const std::string& wellName, const DeckRecord& record, std::size_t timeStep, Connection::Order connection_order);
         void checkIfAllConnectionsIsShut(std::size_t currentStep);
         void updateUDQ(const DeckKeyword& keyword, std::size_t current_step);

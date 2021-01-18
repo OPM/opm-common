@@ -17,6 +17,7 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <fmt/format.h>
+#include <fnmatch.h>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellTestConfig.hpp>
@@ -30,6 +31,10 @@ namespace Opm {
 
 namespace {
 
+bool name_match(const std::string& pattern, const std::string& name) {
+    int flags = 0;
+    return (fnmatch(pattern.c_str(), name.c_str(), flags) == 0);
+}
 
 /*
   This is to ensure that only time_points which can be represented with
@@ -168,6 +173,9 @@ bool ScheduleState::operator==(const ScheduleState& other) const {
     if (!map_equal(this->m_vfpinj, other.m_vfpinj))
         return false;
 
+    if (!map_equal(this->m_groups, other.m_groups))
+        return false;
+
     return this->m_start_time == other.m_start_time &&
            this->m_oilvap == other.m_oilvap &&
            this->m_tuning == other.m_tuning &&
@@ -185,6 +193,8 @@ bool ScheduleState::operator==(const ScheduleState& other) const {
            *this->m_udq_active == *other.m_udq_active &&
            this->m_nupcol == other.m_nupcol;
 }
+
+
 
 ScheduleState ScheduleState::serializeObject() {
     auto t1 = std::chrono::system_clock::now();
@@ -206,6 +216,10 @@ ScheduleState ScheduleState::serializeObject() {
     ts.m_vfpinj.emplace( std::make_pair(178, std::make_shared<VFPInjTable>(VFPInjTable::serializeObject() )));
     ts.m_actions = std::make_shared<Action::Actions>( Action::Actions::serializeObject() );
     ts.m_udq_active = std::make_shared<UDQActive>( UDQActive::serializeObject() );
+    {
+        auto group = Group::serializeObject();
+        ts.m_groups.emplace( std::make_pair( group.name(), std::make_shared<Group>( group )));
+    }
     return ts;
 }
 
@@ -353,6 +367,67 @@ const UDQActive& ScheduleState::udq_active() const {
 
 void ScheduleState::udq_active(UDQActive udq_active) {
     this->m_udq_active = std::make_shared<UDQActive>( std::move(udq_active) );
+}
+
+/*****************************************************************/
+
+const Group& ScheduleState::group(const std::string& group_name) const {
+    auto iter = this->m_groups.find(group_name);
+    if (iter == this->m_groups.end())
+        throw std::out_of_range(fmt::format("No such group: {}", group_name));
+
+    return *iter->second;
+}
+
+void ScheduleState::group(Group group_arg) {
+    const auto name = group_arg.name();
+    this->m_groups[name] = std::make_shared<Group>( std::move(group_arg) );
+}
+
+void ScheduleState::group(const std::string& group_name, double udq_undefined, const UnitSystem& unit_system) {
+    auto insert_index = this->m_groups.size();
+    this->m_groups.emplace( group_name, std::make_shared<Group>( group_name, insert_index, udq_undefined, unit_system));
+}
+
+bool ScheduleState::has_group(const std::string& group_name) const {
+    return (this->m_groups.count(group_name) != 0);
+}
+
+
+std::vector<std::string> ScheduleState::group_names() const {
+    std::vector<std::string> names;
+
+    for (const auto& group_pair : this->m_groups)
+        names.push_back(group_pair.first);
+
+    return names;
+}
+
+
+std::vector<std::string> ScheduleState::group_names(const std::string& pattern) const {
+    if (pattern.size() == 0)
+        return {};
+
+    // Normal pattern matching
+    auto star_pos = pattern.find('*');
+    if (star_pos != std::string::npos) {
+        std::vector<std::string> names;
+        for (const auto& group_pair : this->m_groups) {
+            if (name_match(pattern, group_pair.first))
+                names.push_back(group_pair.first);
+        }
+        return names;
+    }
+
+    // Normal group name without any special characters
+    if (this->has_group(pattern))
+        return { pattern };
+
+    return {};
+}
+
+std::size_t ScheduleState::num_groups() const {
+    return this->m_groups.size();
 }
 
 }

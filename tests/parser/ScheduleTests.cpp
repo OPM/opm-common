@@ -445,7 +445,7 @@ static bool has_well( const std::vector<Well>& wells, const std::string& well_na
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsOrderedGRUPTREE) {
     const auto& schedule = make_schedule( createDeckWithWellsOrderedGRUPTREE() );
 
-    BOOST_CHECK_THROW( schedule.getChildWells2( "NO_SUCH_GROUP" , 1 ), std::invalid_argument);
+    BOOST_CHECK_THROW( schedule.getChildWells2( "NO_SUCH_GROUP" , 0 ), std::exception);
     {
         auto field_wells = schedule.getChildWells2("FIELD" , 0);
         BOOST_CHECK_EQUAL( field_wells.size() , 4U);
@@ -491,7 +491,7 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsOrderedGRUPTREE) {
 BOOST_AUTO_TEST_CASE(GroupTree2TEST) {
     const auto& schedule = make_schedule( createDeckWithWellsOrderedGRUPTREE() );
 
-    BOOST_CHECK_THROW( schedule.groupTree("NO_SUCH_GROUP", 0), std::invalid_argument);
+    BOOST_CHECK_THROW( schedule.groupTree("NO_SUCH_GROUP", 0), std::exception);
     auto cg1 = schedule.getGroup("CG1", 0);
     BOOST_CHECK( cg1.hasWell("DW_0"));
     BOOST_CHECK( cg1.hasWell("CW_1"));
@@ -526,7 +526,7 @@ BOOST_AUTO_TEST_CASE(EmptyScheduleHasNoWells) {
     const auto& schedule = make_schedule( createDeck() );
     BOOST_CHECK_EQUAL( 0U , schedule.numWells() );
     BOOST_CHECK_EQUAL( false , schedule.hasWell("WELL1") );
-    BOOST_CHECK_THROW( schedule.getWell("WELL2", 0) , std::invalid_argument );
+    BOOST_CHECK_THROW( schedule.getWell("WELL2", 0) , std::exception);
 }
 
 
@@ -534,10 +534,10 @@ BOOST_AUTO_TEST_CASE(EmptyScheduleHasNoWells) {
 BOOST_AUTO_TEST_CASE(EmptyScheduleHasFIELDGroup) {
     const auto& schedule = make_schedule( createDeck() );
 
-    BOOST_CHECK_EQUAL( 1U , schedule.numGroups() );
-    BOOST_CHECK_EQUAL( true , schedule.hasGroup("FIELD") );
-    BOOST_CHECK_EQUAL( false , schedule.hasGroup("GROUP") );
-    BOOST_CHECK_THROW( schedule.getGroup("GROUP", 0) , std::invalid_argument );
+    BOOST_CHECK_EQUAL( 1U , schedule.back().num_groups() );
+    BOOST_CHECK_EQUAL( true , schedule.back().has_group("FIELD") );
+    BOOST_CHECK_EQUAL( false , schedule.back().has_group("GROUP") );
+    BOOST_CHECK_THROW( schedule[0].group("GROUP") , std::exception);
 }
 
 BOOST_AUTO_TEST_CASE(HasGroup_At_Time) {
@@ -567,23 +567,17 @@ END
 
     const auto sched = make_schedule(input);
 
-    BOOST_CHECK_MESSAGE(sched.hasGroup("P"), R"(Group "P" Must Exist)");
-    BOOST_CHECK_MESSAGE(sched.hasGroup("I"), R"(Group "I" Must Exist)");
+    BOOST_CHECK_MESSAGE(sched.back().has_group("P"), R"(Group "P" Must Exist)");
+    BOOST_CHECK_MESSAGE(sched.back().has_group("I"), R"(Group "I" Must Exist)");
 
-    BOOST_CHECK_MESSAGE(  sched.hasGroup("P", 3), R"(Group "P" Must Exist at Report Step 3)");
-    BOOST_CHECK_MESSAGE(! sched.hasGroup("I", 3), R"(Group "I" Must NOT Exist at Report Step 3)");
-    BOOST_CHECK_MESSAGE(  sched.hasGroup("I", 4), R"(Group "I" Must Exist at Report Step 4)");
+    BOOST_CHECK_MESSAGE(  sched[3].has_group("P"), R"(Group "P" Must Exist at Report Step 3)");
+    BOOST_CHECK_MESSAGE(! sched[3].has_group("I"), R"(Group "I" Must NOT Exist at Report Step 3)");
+    BOOST_CHECK_MESSAGE(  sched[4].has_group("I"), R"(Group "I" Must Exist at Report Step 4)");
 
-    BOOST_CHECK_MESSAGE(sched.hasGroup("P", 6), R"(Group "P" Must Exist At Last Report Step)");
-    BOOST_CHECK_MESSAGE(sched.hasGroup("I", 6), R"(Group "I" Must Exist At Last Report Step)");
+    BOOST_CHECK_MESSAGE(sched[6].has_group("P"), R"(Group "P" Must Exist At Last Report Step)");
+    BOOST_CHECK_MESSAGE(sched[6].has_group("I"), R"(Group "I" Must Exist At Last Report Step)");
 
-    BOOST_CHECK_MESSAGE(! sched.hasGroup("P", 7), R"(Group "P" Must NOT Exist Immediately After Last Report Step)");
-    BOOST_CHECK_MESSAGE(! sched.hasGroup("I", 7), R"(Group "I" Must NOT Exist Immediately After Last Report Step)");
-
-    BOOST_CHECK_MESSAGE(! sched.hasGroup("P", 1729), R"(Group "P" Must NOT Exist Long After Last Report Step)");
-    BOOST_CHECK_MESSAGE(! sched.hasGroup("I", 1729), R"(Group "I" Must NOT Exist Long After Last Report Step)");
-
-    BOOST_CHECK_THROW(sched.getGroup("I", 3), std::invalid_argument);
+    BOOST_CHECK_THROW(sched[3].group("I"), std::exception);
 }
 
 BOOST_AUTO_TEST_CASE(WellsIterator_Empty_EmptyVectorReturned) {

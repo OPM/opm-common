@@ -31,6 +31,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Events.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WListManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MessageLimits.hpp>
@@ -134,6 +135,14 @@ namespace Opm {
         const UDQActive& udq_active() const;
         void udq_active(UDQActive udq_active);
 
+        const Group& group(const std::string& group_name) const;
+        void group(Group group);
+        void group(const std::string& group_name, double udq_undefined, const UnitSystem& unit_system);
+        bool has_group(const std::string& group_name) const;
+        std::vector<std::string> group_names(const std::string& pattern) const;
+        std::vector<std::string> group_names() const;
+        std::size_t num_groups() const;
+
         template<class Serializer>
         void serializeOp(Serializer& serializer) {
             serializer(m_start_time);
@@ -157,6 +166,7 @@ namespace Opm {
             serializer.map(m_vfpinj);
             serializer(m_actions);
             serializer(m_udq_active);
+            serializer.map(m_groups);
         }
 
 
@@ -183,6 +193,7 @@ namespace Opm {
         std::shared_ptr<UDQActive> m_udq_active;
         std::map<int, std::shared_ptr<VFPProdTable>> m_vfpprod;
         std::map<int, std::shared_ptr<VFPInjTable>> m_vfpinj;
+        std::map<std::string, std::shared_ptr<Group>> m_groups;
     };
 }
 

@@ -311,7 +311,7 @@ namespace {
 
             for (const auto& group_name : group_names) {
                 const bool availableForGroupControl = is_free && (group_name != "FIELD");
-                auto group_ptr = std::make_shared<Group>(this->getGroup(group_name, current_step));
+                auto new_group = this->snapshots.back().group(group_name);
                 Group::GroupInjectionProperties injection;
                 injection.phase = phase;
                 injection.cmode = controlMode;
@@ -340,8 +340,8 @@ namespace {
                 if (record.getItem("VOIDAGE_GROUP").hasValue(0))
                     injection.voidage_group = record.getItem("VOIDAGE_GROUP").getTrimmedString(0);
 
-                if (group_ptr->updateInjection(injection)) {
-                    this->updateGroup(std::move(group_ptr), current_step);
+                if (new_group.updateInjection(injection)) {
+                    this->snapshots.back().group( std::move(new_group));
                     this->snapshots.back().events().addEvent( ScheduleEvents::GROUP_INJECTION_UPDATE );
                     this->snapshots.back().wellgroup_events().addEvent( group_name, ScheduleEvents::GROUP_INJECTION_UPDATE);
                 }
@@ -416,7 +416,7 @@ namespace {
                 }
 
                 {
-                    auto group_ptr = std::make_shared<Group>(this->getGroup(group_name, current_step));
+                    auto new_group = this->snapshots.back().group(group_name);
                     Group::GroupProductionProperties production(this->m_static.m_unit_system, group_name);
                     production.gconprod_cmode = controlMode;
                     production.active_cmode = controlMode;
@@ -454,12 +454,12 @@ namespace {
                     if (!apply_default_resv_target)
                         production.production_controls += static_cast<int>(Group::ProductionCMode::RESV);
 
-                    if (group_ptr->updateProduction(production)) {
+                    if (new_group.updateProduction(production)) {
                         auto new_config = std::make_shared<GuideRateConfig>( this->guideRateConfig(current_step) );
-                        new_config->update_group(*group_ptr);
+                        new_config->update_group(new_group);
                         this->guide_rate_config.update( current_step, std::move(new_config) );
 
-                        this->updateGroup(std::move(group_ptr), current_step);
+                        this->snapshots.back().group( std::move(new_group));
                         this->snapshots.back().events().addEvent(ScheduleEvents::GROUP_PRODUCTION_UPDATE);
                         this->snapshots.back().wellgroup_events().addEvent( group_name, ScheduleEvents::GROUP_PRODUCTION_UPDATE);
 
@@ -484,12 +484,11 @@ namespace {
 
             new_gconsale.add(groupName, sales_target, max_rate, min_rate, procedure, udqconfig, this->m_static.m_unit_system);
 
-            auto group_ptr = std::make_shared<Group>(this->getGroup(groupName, handlerContext.currentStep));
+            auto new_group = this->snapshots.back().group( groupName );
             Group::GroupInjectionProperties injection;
             injection.phase = Phase::GAS;
-            if (group_ptr->updateInjection(injection)) {
-                this->updateGroup(std::move(group_ptr), handlerContext.currentStep);
-            }
+            if (new_group.updateInjection(injection))
+                this->snapshots.back().group(new_group);
         }
         this->snapshots.back().gconsale( std::move(new_gconsale) );
     }
@@ -524,11 +523,11 @@ namespace {
             const auto gefac = record.getItem("EFFICIENCY_FACTOR").get<double>(0);
 
             for (const auto& group_name : group_names) {
-                auto group_ptr = std::make_shared<Group>(this->getGroup(group_name, handlerContext.currentStep));
-                if (group_ptr->update_gefac(gefac, transfer)) {
+                auto new_group = this->snapshots.back().group(group_name);
+                if (new_group.update_gefac(gefac, transfer)) {
                     this->snapshots.back().wellgroup_events().addEvent( group_name, ScheduleEvents::WELLGROUP_EFFICIENCY_UPDATE);
                     this->snapshots.back().events().addEvent( ScheduleEvents::WELLGROUP_EFFICIENCY_UPDATE );
-                    this->updateGroup(std::move(group_ptr), handlerContext.currentStep);
+                    this->snapshots.back().group(std::move(new_group));
                 }
             }
         }
@@ -579,14 +578,14 @@ namespace {
             const auto& target_string = record.getItem<ParserKeywords::GPMAINT::FLOW_TARGET>().get<std::string>(0);
 
             for (const auto& group_name : group_names) {
-                auto group_ptr = std::make_shared<Group>(this->getGroup(group_name, handlerContext.currentStep));
+                auto new_group = this->snapshots.back().group(group_name);
                 if (target_string == "NONE") {
-                    group_ptr->set_gpmaint();
+                    new_group.set_gpmaint();
                 } else {
                     GPMaint gpmaint(record);
-                    group_ptr->set_gpmaint(std::move(gpmaint));
+                    new_group.set_gpmaint(std::move(gpmaint));
                 }
-                this->updateGroup(std::move(group_ptr), handlerContext.currentStep);
+                this->snapshots.back().group( std::move(new_group) );
             }
         }
     }
@@ -595,14 +594,14 @@ namespace {
         for (const auto& record : handlerContext.keyword) {
             const auto& groupName = record.getItem("NAME").getTrimmedString(0);
 
-            if (!hasGroup(groupName))
+            if (!this->snapshots.back().has_group(groupName))
                 addGroup(groupName , handlerContext.currentStep);
 
             int table = record.getItem("VFP_TABLE").get< int >(0);
 
-            auto group_ptr = std::make_shared<Group>( this->getGroup(groupName, handlerContext.currentStep) );
-            if (group_ptr->updateNetVFPTable(table))
-                this->updateGroup(std::move(group_ptr), handlerContext.currentStep);
+            auto new_group = this->snapshots.back().group( groupName );
+            if (new_group.updateNetVFPTable(table))
+                this->snapshots.back().group( new_group );
         }
     }
 
@@ -611,10 +610,10 @@ namespace {
             const std::string& childName = trim_wgname(handlerContext.keyword, record.getItem("CHILD_GROUP").get<std::string>(0), parseContext, errors);
             const std::string& parentName = trim_wgname(handlerContext.keyword, record.getItem("PARENT_GROUP").get<std::string>(0), parseContext, errors);
 
-            if (!hasGroup(childName))
+            if (!this->snapshots.back().has_group(childName))
                 addGroup(childName, handlerContext.currentStep);
 
-            if (!hasGroup(parentName))
+            if (!this->snapshots.back().has_group(parentName))
                 addGroup(parentName, handlerContext.currentStep);
 
             this->addGroupToGroup(parentName, childName, handlerContext.currentStep);
@@ -712,7 +711,7 @@ namespace {
                     target_group = target_item.get<std::string>(0);
 
                 if (target_group != name) {
-                    if (this->hasGroup(name, handlerContext.currentStep)) {
+                    if (this->snapshots.back().has_group(name)) {
                         const auto& group = this->getGroup(name, handlerContext.currentStep);
                         if (group.numWells() > 0)
                             throw std::invalid_argument("A manifold group must respond to its own target");
@@ -741,7 +740,6 @@ namespace {
     }
 
     void Schedule::handleRPTSCHED(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
-        printf("snapshost.size(): %ld \n", this->snapshots.size());
         this->snapshots.back().rpt_config( RPTConfig(handlerContext.keyword ));
     }
 
@@ -1202,7 +1200,7 @@ namespace {
                 OpmLog::warning(msg);
             }
 
-            if (!hasGroup(groupName))
+            if (!this->snapshots.back().has_group(groupName))
                 addGroup(groupName, handlerContext.currentStep);
 
             if (!hasWell(wellName)) {

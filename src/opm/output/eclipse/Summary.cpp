@@ -1806,7 +1806,7 @@ inline std::vector<Opm::Well> find_wells( const Opm::Schedule& schedule,
     case Opm::EclIO::SummaryNode::Category::Group: {
         const auto& name = node.wgname;
 
-        if( !schedule.hasGroup( name ) ) return {};
+        if( !schedule.back().has_group( name ) ) return {};
 
         return schedule.getChildWells2( name, sim_step);
     }
