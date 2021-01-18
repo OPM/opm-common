@@ -223,12 +223,11 @@ struct ProductionControls {
 
 
     Group();
-    Group(const std::string& group_name, std::size_t insert_index_arg, std::size_t init_step_arg, double udq_undefined_arg, const UnitSystem& unit_system);
-    Group(const RestartIO::RstGroup& rst_group, std::size_t insert_index_arg, std::size_t init_step_arg, double udq_undefined_arg, const UnitSystem& unit_system);
+    Group(const std::string& group_name, std::size_t insert_index_arg, double udq_undefined_arg, const UnitSystem& unit_system);
+    Group(const RestartIO::RstGroup& rst_group, std::size_t insert_index_arg, double udq_undefined_arg, const UnitSystem& unit_system);
 
     static Group serializeObject();
 
-    bool defined(std::size_t timeStep) const;
     std::size_t insert_index() const;
     const std::string& name() const;
     bool is_field() const;
@@ -289,7 +288,6 @@ struct ProductionControls {
     {
         serializer(m_name);
         serializer(m_insert_index);
-        serializer(init_step);
         serializer(udq_undefined);
         unit_system.serializeOp(serializer);
         serializer(group_type);
@@ -311,7 +309,6 @@ private:
 
     std::string m_name;
     std::size_t m_insert_index;
-    std::size_t init_step;
     double udq_undefined;
     UnitSystem unit_system;
     GroupType group_type;

@@ -59,23 +59,15 @@ Opm::Schedule create_schedule(const std::string& deck_string) {
 
 
 BOOST_AUTO_TEST_CASE(CreateGroup_CorrectNameAndDefaultValues) {
-    Opm::Group group("G1" , 1, 0, 0, UnitSystem::newMETRIC());
+    Opm::Group group("G1" , 1, 0, UnitSystem::newMETRIC());
     BOOST_CHECK_EQUAL( "G1" , group.name() );
-}
-
-
-BOOST_AUTO_TEST_CASE(CreateGroupCreateTimeOK) {
-    Opm::Group group("G1" , 1, 5, 0, UnitSystem::newMETRIC());
-    BOOST_CHECK_EQUAL( false, group.defined( 4 ));
-    BOOST_CHECK_EQUAL( true, group.defined( 5 ));
-    BOOST_CHECK_EQUAL( true, group.defined( 6 ));
 }
 
 
 
 BOOST_AUTO_TEST_CASE(CreateGroup_SetInjectorProducer_CorrectStatusSet) {
-    Opm::Group group1("IGROUP" , 1,  0, 0, UnitSystem::newMETRIC());
-    Opm::Group group2("PGROUP" , 2,  0, 0, UnitSystem::newMETRIC());
+    Opm::Group group1("IGROUP" , 1,  0, UnitSystem::newMETRIC());
+    Opm::Group group2("PGROUP" , 2,  0, UnitSystem::newMETRIC());
 
     group1.setProductionGroup();
     BOOST_CHECK(group1.isProductionGroup());
@@ -94,7 +86,7 @@ BOOST_AUTO_TEST_CASE(CreateGroup_SetInjectorProducer_CorrectStatusSet) {
 
 
 BOOST_AUTO_TEST_CASE(GroupDoesNotHaveWell) {
-    Opm::Group group("G1" , 1, 0, 0, UnitSystem::newMETRIC());
+    Opm::Group group("G1" , 1, 0, UnitSystem::newMETRIC());
 
     BOOST_CHECK_EQUAL(false , group.hasWell("NO"));
     BOOST_CHECK_EQUAL(0U , group.numWells());
@@ -218,8 +210,8 @@ BOOST_AUTO_TEST_CASE(createDeckWithGRUPNET) {
 
 
 BOOST_AUTO_TEST_CASE(GroupCreate) {
-    Opm::Group g1("NAME", 1, 1, 0, UnitSystem::newMETRIC());
-    Opm::Group g2("NAME", 1, 1, 0, UnitSystem::newMETRIC());
+    Opm::Group g1("NAME", 1, 0, UnitSystem::newMETRIC());
+    Opm::Group g2("NAME", 1, 0, UnitSystem::newMETRIC());
 
     BOOST_CHECK( g1.addWell("W1") );
     BOOST_CHECK( !g1.addWell("W1") );

@@ -30,7 +30,7 @@
 namespace Opm {
 
 Group::Group()
-    : Group("", 0, 0, 0.0, UnitSystem())
+    : Group("", 0, 0.0, UnitSystem())
 {
 }
 
@@ -38,10 +38,9 @@ Group::Group()
 
 
 
-Group::Group(const std::string& name, std::size_t insert_index_arg, std::size_t init_step_arg, double udq_undefined_arg, const UnitSystem& unit_system_arg) :
+Group::Group(const std::string& name, std::size_t insert_index_arg, double udq_undefined_arg, const UnitSystem& unit_system_arg) :
     m_name(name),
     m_insert_index(insert_index_arg),
-    init_step(init_step_arg),
     udq_undefined(udq_undefined_arg),
     unit_system(unit_system_arg),
     group_type(GroupType::NONE),
@@ -55,8 +54,8 @@ Group::Group(const std::string& name, std::size_t insert_index_arg, std::size_t 
         this->parent_group = "FIELD";
 }
 
-Group::Group(const RestartIO::RstGroup& rst_group, std::size_t insert_index_arg, std::size_t init_step_arg, double udq_undefined_arg, const UnitSystem& unit_system_arg) :
-    Group(rst_group.name, insert_index_arg, init_step_arg, udq_undefined_arg, unit_system_arg)
+Group::Group(const RestartIO::RstGroup& rst_group, std::size_t insert_index_arg, double udq_undefined_arg, const UnitSystem& unit_system_arg) :
+    Group(rst_group.name, insert_index_arg, udq_undefined_arg, unit_system_arg)
 {
     if (rst_group.prod_active_cmode != 0) {
         Group::GroupProductionProperties production(unit_system_arg, this->m_name);
@@ -104,7 +103,6 @@ Group Group::serializeObject()
     Group result;
     result.m_name = "test1";
     result.m_insert_index = 1;
-    result.init_step = 2;
     result.udq_undefined = 3.0;
     result.unit_system = UnitSystem::serializeObject();
     result.group_type = GroupType::PRODUCTION;
@@ -124,10 +122,6 @@ Group Group::serializeObject()
 
 std::size_t Group::insert_index() const {
     return this->m_insert_index;
-}
-
-bool Group::defined(size_t timeStep) const {
-    return (timeStep >= this->init_step);
 }
 
 const std::string& Group::name() const {
@@ -818,7 +812,6 @@ bool Group::operator==(const Group& data) const
 {
     return this->name() == data.name() &&
            this->insert_index() == data.insert_index() &&
-           this->init_step == data.init_step &&
            this->udq_undefined == data.udq_undefined &&
            this->unit_system == data.unit_system &&
            this->group_type == data.group_type &&

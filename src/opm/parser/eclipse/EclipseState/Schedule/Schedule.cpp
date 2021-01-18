@@ -905,13 +905,12 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         if (!hasGroup(group_name))
             throw std::invalid_argument("No such group: '" + group_name + "'");
 
-        const auto& group = getGroup(group_name, timeStep);
         std::vector<const Group*> child_groups;
-
-        if (group.defined( timeStep )) {
-            for (const auto& child_name : group.groups()) {
+        const auto& dynamic_state = this->groups.at(group_name);
+        auto& group_ptr = dynamic_state.get(timeStep);
+        if (group_ptr) {
+            for (const auto& child_name : group_ptr->groups())
                 child_groups.push_back( std::addressof(this->getGroup(child_name, timeStep)));
-            }
         }
 
         return child_groups;
@@ -1197,7 +1196,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
     void Schedule::addGroup(const std::string& groupName, std::size_t timeStep) {
         const std::size_t insert_index = this->groups.size();
         auto udq_undefined = this->getUDQConfig(timeStep).params().undefinedValue();
-        auto group = Group{ groupName, insert_index, timeStep, udq_undefined, this->m_static.m_unit_system };
+        auto group = Group{ groupName, insert_index, udq_undefined, this->m_static.m_unit_system };
         this->addGroup(group, timeStep);
     }
 
@@ -1517,7 +1516,7 @@ namespace {
         const auto report_step = rst_state.header.report_step - 1;
         double udq_undefined = 0;
         for (const auto& rst_group : rst_state.groups) {
-            auto group = Group{ rst_group, this->groups.size(), static_cast<std::size_t>(report_step), udq_undefined, this->m_static.m_unit_system };
+            auto group = Group{ rst_group, this->groups.size(), udq_undefined, this->m_static.m_unit_system };
             this->addGroup(group, report_step);
 
             if (group.isProductionGroup()) {

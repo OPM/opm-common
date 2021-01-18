@@ -100,20 +100,14 @@ std::pair<bool, int > findInVector(const std::vector<T>  & vecOfElements, const 
 
 int currentGroupLevel(const Opm::Schedule& sched, const Opm::Group& group, const size_t simStep)
 {
-    if (group.defined( simStep )) {
-        auto current = group;
-        int level = 0;
-        while (current.name() != "FIELD") {
-            level += 1;
-            current = sched.getGroup(current.parent(), simStep);
-        }
-
-        return level;
-    } else {
-        std::stringstream str;
-        str << "actual group has not been defined at report time: " << simStep;
-        throw std::invalid_argument(str.str());
+    auto current = group;
+    int level = 0;
+    while (current.name() != "FIELD") {
+        level += 1;
+        current = sched.getGroup(current.parent(), simStep);
     }
+
+    return level;
 }
 
 void groupProductionControllable(const Opm::Schedule& sched, const Opm::SummaryState& sumState, const Opm::Group& group, const size_t simStep, bool& controllable)
@@ -217,33 +211,26 @@ int higherLevelInjControlGroupSeqIndex(const Opm::Schedule& sched,
 //
 {
     int ctrl_grup_seq_no = -1;
-    if (group.defined( simStep )) {
-        auto current = group;
-        double cur_inj_ctrl = -1.;
-        while (current.name() != "FIELD" && ctrl_grup_seq_no < 0) {
-            current = sched.getGroup(current.parent(), simStep);
-            cur_inj_ctrl = -1.;
-            if (sumState.has_group_var(current.name(), curInjCtrlKey)) {
-                cur_inj_ctrl = sumState.get_group_var(current.name(), curInjCtrlKey);
-            }
-            else {
+    auto current = group;
+    double cur_inj_ctrl = -1.;
+    while (current.name() != "FIELD" && ctrl_grup_seq_no < 0) {
+        current = sched.getGroup(current.parent(), simStep);
+        cur_inj_ctrl = -1.;
+        if (sumState.has_group_var(current.name(), curInjCtrlKey)) {
+            cur_inj_ctrl = sumState.get_group_var(current.name(), curInjCtrlKey);
+        } else {
 #if ENABLE_GCNTL_DEBUG_OUTPUT
-                std::cout << "Current injection group control: " << curInjCtrlKey << " is not defined for group: " << current.name() << " at timestep: " << simStep << std::endl;
+            std::cout << "Current injection group control: " << curInjCtrlKey
+                      << " is not defined for group: " << current.name() << " at timestep: " << simStep << std::endl;
 #endif // ENABLE_GCNTL_DEBUG_OUTPUT
-                cur_inj_ctrl = 0.;
-            }
-            if (cur_inj_ctrl > 0. && ctrl_grup_seq_no < 0) {
-                ctrl_grup_seq_no = current.insert_index();
-            }
+            cur_inj_ctrl = 0.;
         }
-        return ctrl_grup_seq_no;
+        if (cur_inj_ctrl > 0. && ctrl_grup_seq_no < 0) {
+            ctrl_grup_seq_no = current.insert_index();
+        }
     }
-    else {
-        std::stringstream str;
-        str << "actual group has not been defined at report time: " << simStep;
-        throw std::invalid_argument(str.str());
-    }
-}
+    return ctrl_grup_seq_no;
+} // namespace
 
 std::vector<std::size_t> groupParentSeqIndex(const Opm::Schedule& sched,
                        const Opm::Group& group,
@@ -253,19 +240,12 @@ std::vector<std::size_t> groupParentSeqIndex(const Opm::Schedule& sched,
 //
 {
     std::vector<std::size_t> seq_numbers;
-    if (group.defined( simStep )) {
-        auto current = group;
-        while (current.name() != "FIELD") {
-            current = sched.getGroup(current.parent(), simStep);
-            seq_numbers.push_back(current.insert_index());
-        }
-        return seq_numbers;
+    auto current = group;
+    while (current.name() != "FIELD") {
+        current = sched.getGroup(current.parent(), simStep);
+        seq_numbers.push_back(current.insert_index());
     }
-    else {
-        std::stringstream str;
-        str << "actual group has not been defined at report time: " << simStep;
-        throw std::invalid_argument(str.str());
-    }
+    return seq_numbers;
 }
 
 
@@ -296,25 +276,18 @@ int higherLevelInjCMode_NotNoneFld_SeqIndex(const Opm::Schedule& sched,
                        const size_t simStep)
 {
     int ctrl_mode_not_none_fld = -1;
-    if (group.defined( simStep )) {
-        auto current = group;
-        while (current.name() != "FIELD" && ctrl_mode_not_none_fld < 0) {
-            current = sched.getGroup(current.parent(), simStep);
-            const auto& inj_cmode = (current.hasInjectionControl(phase)) ?
+    auto current = group;
+    while (current.name() != "FIELD" && ctrl_mode_not_none_fld < 0) {
+        current = sched.getGroup(current.parent(), simStep);
+        const auto& inj_cmode = (current.hasInjectionControl(phase)) ?
             current.injectionControls(phase, sumState).cmode : Opm::Group::InjectionCMode::NONE;
-            if ((inj_cmode != Opm::Group::InjectionCMode::FLD) && (inj_cmode != Opm::Group::InjectionCMode::NONE)) {
-                if (ctrl_mode_not_none_fld == -1) {
-                     ctrl_mode_not_none_fld = current.insert_index();
-                }
+        if ((inj_cmode != Opm::Group::InjectionCMode::FLD) && (inj_cmode != Opm::Group::InjectionCMode::NONE)) {
+            if (ctrl_mode_not_none_fld == -1) {
+                ctrl_mode_not_none_fld = current.insert_index();
             }
         }
-        return ctrl_mode_not_none_fld;
     }
-    else {
-        std::stringstream str;
-        str << "actual group has not been defined at report time: " << simStep;
-        throw std::invalid_argument(str.str());
-    }
+    return ctrl_mode_not_none_fld;
 }
 
 
