@@ -441,7 +441,6 @@ BOOST_AUTO_TEST_CASE( WellTestGroupAndWellRelation ) {
     {
         auto& group1 = sched.getGroup("GROUP1", 0);
 
-        BOOST_CHECK(  group1.defined(0));
         BOOST_CHECK(  group1.hasWell("W_1"));
         BOOST_CHECK(  group1.hasWell("W_2"));
     }
@@ -455,8 +454,8 @@ BOOST_AUTO_TEST_CASE( WellTestGroupAndWellRelation ) {
         BOOST_CHECK( !group2.hasWell("W_1"));
         BOOST_CHECK(  group2.hasWell("W_2"));
 
-        BOOST_CHECK( !group2.defined(0));
-        BOOST_CHECK(  group2.defined(1));
+        BOOST_CHECK_THROW( sched.getGroup("GROUP2", 0), std::exception);
+        BOOST_CHECK_NO_THROW( sched.getGroup("GROUP2", 1));
     }
 }
 
