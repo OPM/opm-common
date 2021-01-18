@@ -281,6 +281,7 @@ if(ENABLE_ECL_OUTPUT)
           src/opm/output/eclipse/AggregateActionxData.cpp
           src/opm/output/eclipse/AggregateConnectionData.cpp
           src/opm/output/eclipse/AggregateGroupData.cpp
+          src/opm/output/eclipse/AggregateNetworkData.cpp
           src/opm/output/eclipse/AggregateMSWData.cpp
           src/opm/output/eclipse/AggregateUDQData.cpp
           src/opm/output/eclipse/AggregateWellData.cpp
@@ -406,6 +407,7 @@ if(ENABLE_ECL_OUTPUT)
           tests/test_AggregateActionxData.cpp
           tests/test_AggregateWellData.cpp
           tests/test_AggregateGroupData.cpp
+          tests/test_AggregateNetworkData.cpp
           tests/test_AggregateMSWData.cpp
           tests/test_AggregateConnectionData.cpp
           tests/test_AggregateUDQData.cpp
@@ -848,6 +850,7 @@ if(ENABLE_ECL_OUTPUT)
         opm/output/eclipse/VectorItems/well.hpp
         opm/output/eclipse/AggregateActionxData.hpp
         opm/output/eclipse/AggregateGroupData.hpp
+        opm/output/eclipse/AggregateNetworkData.hpp
         opm/output/eclipse/AggregateConnectionData.hpp
         opm/output/eclipse/AggregateMSWData.hpp
         opm/output/eclipse/AggregateUDQData.hpp

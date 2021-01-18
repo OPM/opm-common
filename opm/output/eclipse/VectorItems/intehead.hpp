@@ -103,6 +103,18 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
         IPROG = 94, //  IPROG = simulation program identifier:  100 - ECLIPSE 100, 300 - ECLIPSE 300, 500 - ECLIPSE 300
                     //  (thermal option), negative - Other simulator,
         NMFIPR = 99, // REGDIMS item2
+
+        NOACTNOD     =      129       ,              //  NOACTNOD = Number of active/defined nodes in the network
+        NOACTBR      =      130       ,              //  NOACTBR = Number of active/defined branches in the network
+        NODMAX       =      131       ,              //  NODMAX = maximum number of nodes in extended network option
+        NBRMAX       =      132       ,              //  NBRMAX = maximum number of branches in extended network option
+        NIBRAN       =      133       ,              //  NIBRAN = number of entries per branch in the IBRAN array
+        NRBRAN       =      134       ,              //  NRBRAN = number of tries per branch in the RBRAN array
+        NINODE       =      135       ,              //  NINODE = number of entries per node in the INODE array
+        NRNODE       =      136       ,              //  NRNODE = number of entries per node in the RNODE array
+        NZNODE       =      137       ,              //  NZNODE = number of entries per node in the ZNODE array
+        NINOBR       =      138       ,              //  NINOBR = size of the INOBR array
+
         NOOFACTIONS = 156, //  The number of actions in the dataset
         MAXNOLINES = 157, //  Maximum number of lines of schedule data for ACTION keyword - including ENDACTIO
         MAXNOSTRPRLINE = 158, //  Maximum number of 8-chars strings pr input line of Action data (rounded up from input)

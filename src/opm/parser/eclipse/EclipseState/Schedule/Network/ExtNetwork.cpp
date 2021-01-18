@@ -30,7 +30,6 @@ ExtNetwork ExtNetwork::serializeObject() {
     return object;
 }
 
-
 bool ExtNetwork::active() const {
     return !this->m_branches.empty() && !this->m_nodes.empty();
 }
@@ -114,6 +113,18 @@ std::vector<Branch> ExtNetwork::downtree_branches(const std::string& node) const
     return branches;
 }
 
+std::vector<const Branch*> ExtNetwork::branches() const {
+    std::vector<const Branch*> branch_pointer;
+    for (const auto& br : this->m_branches) {
+        branch_pointer.emplace_back(&br);
+    }
+    return branch_pointer;
+}
+
+int ExtNetwork::NoOfBranches() const {
+    return this->m_branches.size();
+}
+
 /*
   The validation of the network structure is very weak. The current validation
   goes as follows:
@@ -147,6 +158,26 @@ void ExtNetwork::add_node(Node node)
     this->m_nodes.insert({ name, std::move(node) });
 }
 
+void ExtNetwork::add_indexed_node_name(std::string name)
+{
+    this->insert_indexed_node_names.emplace_back(name);
+}
+
+bool ExtNetwork::has_indexed_node_name(std::string name) const
+{
+    // Find given element in vector
+    auto it = std::find(this->insert_indexed_node_names.begin(), this->insert_indexed_node_names.end(), name);
+
+    if (it != this->insert_indexed_node_names.end())
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
 std::vector<std::string> ExtNetwork::node_names() const
 {
     auto nodes = std::vector<std::string>{};
@@ -159,6 +190,11 @@ std::vector<std::string> ExtNetwork::node_names() const
     });
 
     return nodes;
+}
+
+std::vector<std::string> ExtNetwork::insert_index_nd_names() const
+{
+    return this->insert_indexed_node_names;
 }
 }
 }

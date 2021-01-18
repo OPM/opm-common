@@ -174,7 +174,9 @@ namespace {
             { "GMCTW", Opm::EclIO::SummaryNode::Type::Mode },
             { "GMWPR", Opm::EclIO::SummaryNode::Type::Mode },
             { "GMWIN", Opm::EclIO::SummaryNode::Type::Mode },
+            { "GPR",   Opm::EclIO::SummaryNode::Type::Pressure },
         };
+
         const auto extra_field_vectors = std::vector<ParamCTorArgs> {
             { "FMCTG", Opm::EclIO::SummaryNode::Type::Mode },
             { "FMCTP", Opm::EclIO::SummaryNode::Type::Mode },

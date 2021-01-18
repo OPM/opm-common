@@ -241,6 +241,40 @@ bool WellSegmentDims::operator==(const WellSegmentDims& data) const
            this->maxLateralBranchesPerWell() == data.maxLateralBranchesPerWell();
 }
 
+NetworkDims::NetworkDims() :
+    nMaxNoNodes( 0 ),
+    nMaxNoBranches( 0 ),
+    nMaxNoBranchesConToNode( ParserKeywords::NETWORK::NBCMAX::defaultValue )
+{}
+
+NetworkDims::NetworkDims(const Deck& deck) : NetworkDims()
+{
+    if (deck.hasKeyword("NETWORK")) {
+        const auto& wsd = deck.getKeyword("NETWORK", 0).getRecord(0);
+
+        this->nMaxNoNodes   = wsd.getItem("NODMAX").get<int>(0);
+        this->nMaxNoBranches   = wsd.getItem("NBRMAX").get<int>(0);
+        this->nMaxNoBranchesConToNode = wsd.getItem("NBCMAX").get<int>(0);
+    }
+}
+
+NetworkDims NetworkDims::serializeObject()
+{
+    NetworkDims result;
+    result.nMaxNoNodes = 1;
+    result.nMaxNoBranches = 2;
+    result.nMaxNoBranchesConToNode = 3;
+
+    return result;
+}
+
+bool NetworkDims::operator==(const NetworkDims& data) const
+{
+    return this->maxNONodes() == data.maxNONodes() &&
+           this->maxNoBranches() == data.maxNoBranches() &&
+           this->maxNoBranchesConToNode() == data.maxNoBranchesConToNode();
+}
+
 EclHysterConfig::EclHysterConfig(const Opm::Deck& deck)
     {
 
@@ -385,6 +419,7 @@ Runspec::Runspec( const Deck& deck ) :
     endscale( deck ),
     welldims( deck ),
     wsegdims( deck ),
+    netwrkdims( deck ),
     udq_params( deck ),
     hystpar( deck ),
     m_actdims( deck ),
@@ -455,6 +490,11 @@ const Welldims& Runspec::wellDimensions() const noexcept
 const WellSegmentDims& Runspec::wellSegmentDimensions() const noexcept
 {
     return this->wsegdims;
+}
+
+const NetworkDims& Runspec::networkDimensions() const noexcept
+{
+    return this->netwrkdims;
 }
 
 const EclHysterConfig& Runspec::hysterPar() const noexcept

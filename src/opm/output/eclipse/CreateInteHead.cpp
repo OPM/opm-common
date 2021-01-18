@@ -455,6 +455,38 @@ namespace {
         return in_enc;
     }
 
+    Opm::RestartIO::InteHEAD::NetworkDims
+    getNetworkDims(const Opm::Schedule&   sched,
+                  const std::size_t      lookup_step,
+                  const ::Opm::Runspec& rspec)
+    {
+        const int noactnod = sched[lookup_step].network().node_names().size();
+        const int noactbr  = sched[lookup_step].network().NoOfBranches();
+        const int nodmax = rspec.networkDimensions().maxNONodes();
+        const int nbrmax = rspec.networkDimensions().maxNoBranches();
+
+        //the following dimensions are fixed
+        const int nibran = 14;
+        const int nrbran = 11;
+        const int ninode = 10;
+        const int nrnode = 17;
+        const int nznode = 2;
+        const int ninobr = 2*noactbr;
+
+        return {
+            noactnod,
+            noactbr,
+            nodmax,
+            nbrmax,
+            nibran,
+            nrbran,
+            ninode,
+            nrnode,
+            nznode,
+            ninobr
+        };
+    }
+
 } // Anonymous
 
 // #####################################################################
@@ -513,6 +545,7 @@ createInteHead(const EclipseState& es,
         .variousUDQ_ACTIONXParam()
         .nominatedPhaseGuideRate(setGuideRateNominatedPhase(sched, report_step, lookup_step))
         .whistControlMode   (getWhistctlMode(sched, report_step, lookup_step))
+        .networkDimensions  (getNetworkDims(sched, lookup_step, rspec))
         ;
 
     return ih.data();

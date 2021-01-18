@@ -25,6 +25,7 @@
 #include <opm/output/eclipse/RestartIO.hpp>
 
 #include <opm/output/eclipse/AggregateGroupData.hpp>
+#include <opm/output/eclipse/AggregateNetworkData.hpp>
 #include <opm/output/eclipse/AggregateWellData.hpp>
 #include <opm/output/eclipse/AggregateConnectionData.hpp>
 #include <opm/output/eclipse/AggregateMSWData.hpp>
@@ -45,6 +46,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/Eqldims.hpp>
+//#include <opm/parser/eclipse/EclipseState/Schedule/Network/ExtNetwork.hpp>
 
 #include <opm/common/OpmLog/OpmLog.hpp>
 
@@ -268,6 +270,28 @@ namespace {
         rstFile.write("ZGRP", groupData.getZGroup());
     }
 
+    void writeNetwork(int                         sim_step,
+                    const UnitSystem&             units,
+                    const Schedule&               schedule,
+                    const Opm::SummaryState&      sumState,
+                    const std::vector<int>&       ih,
+                    EclIO::OutputStream::Restart& rstFile)
+    {
+        // write network data to restart file
+        const size_t simStep = static_cast<size_t> (sim_step);
+
+        auto  networkData = Helpers::AggregateNetworkData(ih);
+
+        networkData.captureDeclaredNetworkData(schedule, units, simStep, sumState, ih);
+
+        rstFile.write("INODE", networkData.getINode());
+        rstFile.write("IBRAN", networkData.getIBran());
+        rstFile.write("INOBR", networkData.getINobr());
+        rstFile.write("RNODE", networkData.getRNode());
+        rstFile.write("RBRAN", networkData.getRBran());
+        rstFile.write("ZNODE", networkData.getZNode());
+    }
+
     void writeMSWData(int                           sim_step,
                       const UnitSystem&             units,
                       const Schedule&               schedule,
@@ -411,6 +435,9 @@ namespace {
                           EclIO::OutputStream::Restart& rstFile)
     {
         writeGroup(sim_step, units, schedule, sumState, inteHD, rstFile);
+
+        //write network data
+        writeNetwork(sim_step, units, schedule, sumState, inteHD, rstFile);
 
         // Write well and MSW data only when applicable (i.e., when present)
         const auto& wells = schedule.wellNames(sim_step);
