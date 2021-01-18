@@ -1189,7 +1189,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         // All newly created groups are attached to the field group,
         // can then be relocated with the GRUPTREE keyword.
         if (group.name() != "FIELD")
-            this->addGroupToGroup("FIELD", *group_ptr, timeStep);
+            this->addGroupToGroup("FIELD", group_ptr->name(), timeStep);
     }
 
 
@@ -1223,28 +1223,24 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
             && grpMap->second.at(timeStep);
     }
 
-    void Schedule::addGroupToGroup( const std::string& parent_group, const Group& child_group, std::size_t timeStep) {
+    void Schedule::addGroupToGroup( const std::string& parent_name, const std::string& child_name, std::size_t timeStep) {
         // Add to new parent
-        auto& dynamic_state = this->groups.at(parent_group);
+        auto& dynamic_state = this->groups.at(parent_name);
         auto parent_ptr = std::make_shared<Group>( *dynamic_state[timeStep] );
-        if (parent_ptr->addGroup(child_group.name()))
+        if (parent_ptr->addGroup(child_name))
             this->updateGroup(std::move(parent_ptr), timeStep);
 
         // Check and update backreference in child
-        if (child_group.parent() != parent_group) {
+        const auto& child_group = this->getGroup(child_name, timeStep);
+        if (child_group.parent() != parent_name) {
             auto old_parent = std::make_shared<Group>( this->getGroup(child_group.parent(), timeStep) );
             old_parent->delGroup(child_group.name());
             this->updateGroup(std::move(old_parent), timeStep);
 
-            auto child_ptr = std::make_shared<Group>( child_group );
-            child_ptr->updateParent(parent_group);
-            this->updateGroup(std::move(child_ptr), timeStep);
-
+            auto new_child_group = std::make_shared<Group>( child_group );
+            new_child_group->updateParent(parent_name);
+            this->updateGroup(std::move(new_child_group), timeStep);
         }
-    }
-
-    void Schedule::addGroupToGroup( const std::string& parent_group, const std::string& child_group, std::size_t timeStep) {
-        this->addGroupToGroup(parent_group, this->getGroup(child_group, timeStep), timeStep);
     }
 
     void Schedule::addWellToGroup( const std::string& group_name, const std::string& well_name , std::size_t timeStep) {
