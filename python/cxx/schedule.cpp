@@ -88,9 +88,24 @@ namespace {
     const RestartConfig& restart(const Schedule& sch) {
         return sch.restart();
     }
+
+    const ScheduleState& getitem(const Schedule& sch, std::size_t index) {
+        return sch[index];
+    }
+
 }
 
+
+
+
+
+
 void python::common::export_Schedule(py::module& module) {
+
+
+    py::class_<ScheduleState>(module, "ScheduleState")
+        .def_property_readonly("nupcol", py::overload_cast<>(&ScheduleState::nupcol, py::const_));
+
 
     py::class_< Schedule >( module, "Schedule")
     .def(py::init<const Deck&, const EclipseState& >())
@@ -99,6 +114,8 @@ void python::common::export_Schedule(py::module& module) {
     .def_property_readonly( "end",    &get_end_time )
     .def_property_readonly( "timesteps", &get_timesteps )
     .def_property_readonly("restart", &restart)
+    .def("__len__", &Schedule::size)
+    .def("__getitem__", &getitem)
     .def( "shut_well", &Schedule::shut_well)
     .def( "open_well", &Schedule::open_well)
     .def( "stop_well", &Schedule::stop_well)
