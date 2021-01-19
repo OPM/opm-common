@@ -402,13 +402,7 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckMissingReturnsDefaults) {
     BOOST_CHECK_EQUAL( schedule.getStartTime() , TimeMap::mkdate(1983, 1 , 1));
 }
 
-
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsOrdered) {
-    auto has_name = [](const std::vector<std::string>& names, const std::string& name) {
-        auto iter = std::find(names.begin(), names.end(), name);
-        return (iter != names.end());
-    };
-
     const auto& schedule = make_schedule( createDeckWithWellsOrdered() );
     auto well_names = schedule.wellNames();
 
@@ -417,10 +411,10 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsOrdered) {
     BOOST_CHECK( has_name(well_names, "AW_3"));
 
     auto group_names = schedule.groupNames();
-    BOOST_CHECK( has_name(group_names, "FIELD"));
-    BOOST_CHECK( has_name(group_names, "CG"));
-    BOOST_CHECK( has_name(group_names, "BG"));
-    BOOST_CHECK( has_name(group_names, "AG"));
+    BOOST_CHECK_EQUAL( "FIELD", group_names[0]);
+    BOOST_CHECK_EQUAL( "CG", group_names[1]);
+    BOOST_CHECK_EQUAL( "BG", group_names[2]);
+    BOOST_CHECK_EQUAL( "AG", group_names[3]);
 
     auto restart_groups = schedule.restart_groups(0);
     BOOST_REQUIRE_EQUAL(restart_groups.size(), 4U);
