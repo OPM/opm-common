@@ -14,4 +14,4 @@ export PYTHONPATH=@PROJECT_BINARY_DIR@/python:$PYTHONPATH
 export LD_LIBRARY_PATH=@PROJECT_BINARY_DIR@/lib:@_setup_lib_dirs@:$LD_LIBRARY_PATH
 
 
-@PYTHON_EXECUTABLE@ setup.py build_ext --dry-run
+@PYTHON_EXECUTABLE@ setup.py build_ext --dry-run --build-lib @PROJECT_BINARY_DIR@/python test
