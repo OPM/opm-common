@@ -43,7 +43,7 @@ class TestSchedule(unittest.TestCase):
 
     def testGroups(self):
 
-        G1 = self.sch.group( 'G1', 0 )
+        G1 = self.sch[0].group( 'G1')
         self.assertTrue(G1.name == 'G1')
         self.assertTrue(G1.num_wells == 2)
 
@@ -54,8 +54,8 @@ class TestSchedule(unittest.TestCase):
         self.assertTrue(self.sch.get_well('INJ', 0).isinjector())
         self.assertTrue(self.sch.get_well('PROD', 0).isproducer())
 
-        with self.assertRaises(ValueError):
-            self.sch.group('foo', 0)
+        with self.assertRaises(Exception):
+            self.sch[0].group('foo')
 
     def test_open_shut(self):
         deck  = Parser().parse(test_path('spe3/SPE3CASE1.DATA'))
