@@ -85,5 +85,16 @@ class TestSchedule(unittest.TestCase):
         self.assertEqual(len(wnames), 2)
 
 
+    def test_getitem(self):
+        deck  = Parser().parse(test_path('spe3/SPE3CASE1.DATA'))
+        state = EclipseState(deck)
+        sch = Schedule( deck, state )
+        self.assertEqual(len(sch), 176)
+        with self.assertRaises(IndexError):
+            a = sch[200]
+
+        st100 = sch[100]
+        nupcol = st100.nupcol
+
 if __name__ == "__main__":
     unittest.main()
