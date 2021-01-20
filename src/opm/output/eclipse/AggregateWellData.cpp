@@ -85,12 +85,14 @@ namespace {
     }
 
     template <typename WellOp>
-    void wellLoop(const std::vector<Opm::Well>& wells,
-                  WellOp&&                      wellOp)
+    void wellLoop(const std::vector<std::string>& wells,
+                  const Opm::Schedule&            sched,
+                  const std::size_t               simStep,
+                  WellOp&&                        wellOp)
     {
-        auto wellID = 0*wells.size();
-        for (const auto& well : wells) {
-            wellOp(well, wellID++);
+        for (const auto& wname : wells) {
+            const auto& well = sched.getWell(wname, simStep);
+            wellOp(well, well.seqIndex());
         }
     }
 
@@ -505,7 +507,8 @@ namespace {
             }
 
             return rLimit;
-        };
+        }
+
         template <class SWellArray>
         void staticContrib(const Opm::Well&             well,
                            const Opm::GasLiftOpt& glo,
@@ -975,7 +978,7 @@ captureDeclaredWellData(const Schedule&   sched,
                         const ::Opm::SummaryState&  smry,
                         const std::vector<int>& inteHead)
 {
-    const auto& wells = sched.getWells(sim_step);
+    const auto& wells = sched.wellNames(sim_step);
     const auto& step_glo = sched.glo(sim_step);
 
     // Static contributions to IWEL array.
@@ -984,7 +987,7 @@ captureDeclaredWellData(const Schedule&   sched,
         const auto groupMapNameIndex = IWell::currentGroupMapNameIndex(sched, sim_step, inteHead);
         auto msWellID       = std::size_t{0};
 
-        wellLoop(wells, [&groupMapNameIndex, &msWellID, &step_glo, &smry, this]
+        wellLoop(wells, sched, sim_step, [&groupMapNameIndex, &msWellID, &step_glo, &smry, this]
             (const Well& well, const std::size_t wellID) -> void
         {
             msWellID += well.isMultiSegment();  // 1-based index.
@@ -995,7 +998,7 @@ captureDeclaredWellData(const Schedule&   sched,
     }
 
     // Static contributions to SWEL array.
-    wellLoop(wells, [&units, &step_glo, &sim_step, &sched, &smry, this]
+    wellLoop(wells, sched, sim_step, [&units, &step_glo, &sim_step, &sched, &smry, this]
         (const Well& well, const std::size_t wellID) -> void
     {
         auto sw = this->sWell_[wellID];
@@ -1004,7 +1007,7 @@ captureDeclaredWellData(const Schedule&   sched,
     });
 
     // Static contributions to XWEL array.
-    wellLoop(wells, [&units, &smry, this]
+    wellLoop(wells, sched, sim_step, [&units, &smry, this]
         (const Well& well, const std::size_t wellID) -> void
     {
         auto xw = this->xWell_[wellID];
@@ -1014,9 +1017,10 @@ captureDeclaredWellData(const Schedule&   sched,
 
     {
         const auto actResStat = ZWell::act_res_stat(sched, action_state, smry, sim_step);
+
         // Static contributions to ZWEL array.
-        wellLoop(wells,
-            [&actResStat, this](const Well& well, const std::size_t wellID) -> void
+        wellLoop(wells, sched, sim_step, [&actResStat, this]
+            (const Well& well, const std::size_t wellID) -> void
         {
             auto zw = this->zWell_[wellID];
             ZWell::staticContrib(well, actResStat, zw);
@@ -1033,10 +1037,10 @@ captureDynamicWellData(const Opm::Schedule&        sched,
                        const Opm::data::WellRates& xw,
                        const ::Opm::SummaryState&  smry)
 {
-    const auto& wells = sched.getWells(sim_step);
+    const auto& wells = sched.wellNames(sim_step);
 
     // Dynamic contributions to IWEL array.
-    wellLoop(wells, [this, &xw]
+    wellLoop(wells, sched, sim_step, [this, &xw]
         (const Well& well, const std::size_t wellID) -> void
     {
         auto iWell = this->iWell_[wellID];
@@ -1056,7 +1060,7 @@ captureDynamicWellData(const Opm::Schedule&        sched,
     });
 
     // Dynamic contributions to XWEL array.
-    wellLoop(wells, [this, &smry]
+    wellLoop(wells, sched, sim_step, [this, &smry]
         (const Well& well, const std::size_t wellID) -> void
     {
         auto xwell = this->xWell_[wellID];
