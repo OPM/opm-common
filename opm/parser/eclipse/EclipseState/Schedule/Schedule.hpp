@@ -397,8 +397,8 @@ namespace Opm
                                     std::size_t load_end,
                                     const ParseContext& parseContext,
                                     ErrorGuard& errors,
-                                    const EclipseGrid& grid,
-                                    const FieldPropsManager& fp);
+                                    const EclipseGrid* grid,
+                                    const FieldPropsManager* fp);
         void addACTIONX(const Action::ActionX& action);
         void addGroupToGroup( const std::string& parent_group, const std::string& child_group, std::size_t timeStep);
         void addGroup(const std::string& groupName , std::size_t timeStep);
@@ -410,8 +410,8 @@ namespace Opm
                            const ScheduleBlock& block,
                            const DeckKeyword& keyword,
                            const ParseContext& parseContext, ErrorGuard& errors,
-                           const EclipseGrid& grid,
-                           const FieldPropsManager& fp,
+                           const EclipseGrid* grid,
+                           const FieldPropsManager* fp,
                            std::vector<std::pair<const DeckKeyword*, std::size_t > >& rftProperties);
 
         template<template<class, class> class Map, class Type, class Key>

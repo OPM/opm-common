@@ -121,11 +121,11 @@ namespace {
     {
         if (rst) {
             auto restart_step = rst->header.restart_info().second;
-            this->iterateScheduleSection( 0, restart_step, parseContext, errors, grid, fp);
+            this->iterateScheduleSection( 0, restart_step, parseContext, errors, &grid, &fp);
             this->load_rst(*rst, grid, fp);
-            this->iterateScheduleSection( restart_step, this->m_sched_deck.size(), parseContext, errors, grid, fp);
+            this->iterateScheduleSection( restart_step, this->m_sched_deck.size(), parseContext, errors, &grid, &fp);
         } else
-            this->iterateScheduleSection( 0, this->m_sched_deck.size(), parseContext, errors, grid, fp);
+            this->iterateScheduleSection( 0, this->m_sched_deck.size(), parseContext, errors, &grid, &fp);
 
         /*
           The code in the #ifdef SCHEDULE_DEBUG is an enforced integration test
@@ -278,8 +278,8 @@ namespace {
                                  const DeckKeyword& keyword,
                                  const ParseContext& parseContext,
                                  ErrorGuard& errors,
-                                 const EclipseGrid& grid,
-                                 const FieldPropsManager& fp,
+                                 const EclipseGrid* grid,
+                                 const FieldPropsManager* fp,
                                  std::vector<std::pair<const DeckKeyword*, std::size_t > >& rftProperties) {
 
         static const std::unordered_set<std::string> require_grid = {
@@ -295,8 +295,8 @@ namespace {
           Schedule section. We therefor single them out very clearly here.
         */
         if (require_grid.count(keyword.name()) > 0) {
-            handlerContext.grid_ptr = &grid;
-            handlerContext.fp_ptr = &fp;
+            handlerContext.grid_ptr = grid;
+            handlerContext.fp_ptr = fp;
         }
         if (handleNormalKeyword(handlerContext, parseContext, errors))
             return;
@@ -358,8 +358,8 @@ private:
 void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_end,
                                       const ParseContext& parseContext ,
                                       ErrorGuard& errors,
-                                      const EclipseGrid& grid,
-                                      const FieldPropsManager& fp) {
+                                      const EclipseGrid* grid,
+                                      const FieldPropsManager* fp) {
 
         std::vector<std::pair< const DeckKeyword* , std::size_t> > rftProperties;
         std::string time_unit = this->m_static.m_unit_system.name(UnitSystem::measure::time);
