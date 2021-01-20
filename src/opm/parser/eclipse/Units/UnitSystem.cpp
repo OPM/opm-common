@@ -56,6 +56,7 @@ namespace {
         0.0,
         0.0,
         0.0,
+        0.0,
         Metric::TemperatureOffset,
         0.0,
         0.0,
@@ -93,6 +94,7 @@ namespace {
         1,
         1 / Metric::Length,
         1 / Metric::Time,
+        1 / Metric::RunTime,
         1 / Metric::Density,
         1 / Metric::Pressure,
         1 / Metric::AbsoluteTemperature,
@@ -133,6 +135,7 @@ namespace {
         1,
         Metric::Length,
         Metric::Time,
+        Metric::RunTime,
         Metric::Density,
         Metric::Pressure,
         Metric::AbsoluteTemperature,
@@ -173,6 +176,7 @@ namespace {
         "",
         "M",
         "DAYS",
+        "SECONDS",
         "KG/M3",
         "BARSA",
         "K",
@@ -236,6 +240,7 @@ namespace {
         0.0,
         0.0,
         0.0,
+        0.0,
         Field::TemperatureOffset,
         0.0,
         0.0,
@@ -273,6 +278,7 @@ namespace {
         1,
         1 / Field::Length,
         1 / Field::Time,
+        1 / Field::RunTime,
         1 / Field::Density,
         1 / Field::Pressure,
         1 / Field::AbsoluteTemperature,
@@ -313,6 +319,7 @@ namespace {
          1,
          Field::Length,
          Field::Time,
+         Field::RunTime,
          Field::Density,
          Field::Pressure,
          Field::AbsoluteTemperature,
@@ -353,6 +360,7 @@ namespace {
         "",
         "FT",
         "DAYS",
+        "SECONDS",
         "LB/FT3",
         "PSIA",
         "R",
@@ -416,6 +424,7 @@ namespace {
         0.0,
         0.0,
         0.0,
+        0.0,
         Lab::TemperatureOffset,
         0.0,
         0.0,
@@ -453,6 +462,7 @@ namespace {
         1,
         1 / Lab::Length,
         1 / Lab::Time,
+        1 / Lab::RunTime,
         1 / Lab::Density,
         1 / Lab::Pressure,
         1 / Lab::AbsoluteTemperature,
@@ -493,6 +503,7 @@ namespace {
         1,
         Lab::Length,
         Lab::Time,
+        Lab::RunTime,
         Lab::Density,
         Lab::Pressure,
         Lab::AbsoluteTemperature,
@@ -533,6 +544,7 @@ namespace {
         "",
         "CM",
         "HOURS",
+        "SECONDS",
         "G/CC",
         "ATM",
         "K",
@@ -596,6 +608,7 @@ namespace {
         0.0,
         0.0,
         0.0,
+        0.0,
         PVT_M::TemperatureOffset,
         0.0,
         0.0,
@@ -633,6 +646,7 @@ namespace {
         1,
         1 / PVT_M::Length,
         1 / PVT_M::Time,
+        1 / PVT_M::RunTime,
         1 / PVT_M::Density,
         1 / PVT_M::Pressure,
         1 / PVT_M::AbsoluteTemperature,
@@ -673,6 +687,7 @@ namespace {
         1,
         PVT_M::Length,
         PVT_M::Time,
+        PVT_M::RunTime,
         PVT_M::Density,
         PVT_M::Pressure,
         PVT_M::AbsoluteTemperature,
@@ -713,6 +728,7 @@ namespace {
         "",
         "M",
         "DAYS",
+        "SECONDS",
         "KG/M3",
         "ATM",
         "K",
@@ -807,9 +823,11 @@ namespace {
         0.0,
         0.0,
         0.0,
+        0.0,
     };
 
     static const double to_input[] = {
+        1,
         1,
         1,
         1,
@@ -887,12 +905,14 @@ namespace {
         1,
         1,
         1,
+        1,
     };
 
     static constexpr const char* input_names[static_cast<int>(UnitSystem::measure::_count)] = {
         "",
         "M",
         "DAY",
+        "SECONDS",
         "KG/M3",
         "BARSA",
         "K",
@@ -973,6 +993,7 @@ namespace {
         this->addDimension("AbsoluteTemperature", 1.0, 0.0);
         this->addDimension("Length"    , 1.0);
         this->addDimension("Time"      , 1.0);
+        this->addDimension("RunTime"      , 1.0);
         this->addDimension("Mass"         , 1.0);
         this->addDimension("Permeability", 1.0);
         this->addDimension("Transmissibility", 1.0);
@@ -1009,6 +1030,7 @@ namespace {
         this->addDimension("AbsoluteTemperature", PVT_M::AbsoluteTemperature);
         this->addDimension("Length"    , PVT_M::Length);
         this->addDimension("Time"      , PVT_M::Time );
+        this->addDimension("RunTime"      , PVT_M::RunTime );
         this->addDimension("Mass"         , PVT_M::Mass );
         this->addDimension("Permeability", PVT_M::Permeability );
         this->addDimension("Transmissibility", PVT_M::Transmissibility );
@@ -1045,6 +1067,7 @@ namespace {
         this->addDimension("AbsoluteTemperature", Lab::AbsoluteTemperature);
         this->addDimension("Length", Lab::Length);
         this->addDimension("Time" , Lab::Time);
+        this->addDimension("RunTime" , Lab::RunTime);
         this->addDimension("Mass", Lab::Mass);
         this->addDimension("Permeability", Lab::Permeability );
         this->addDimension("Transmissibility", Lab::Transmissibility );
@@ -1082,6 +1105,7 @@ namespace {
         this->addDimension("AbsoluteTemperature", Metric::AbsoluteTemperature);
         this->addDimension("Length"    , Metric::Length);
         this->addDimension("Time"      , Metric::Time );
+        this->addDimension("RunTime"      , Metric::RunTime );
         this->addDimension("Mass"         , Metric::Mass );
         this->addDimension("Permeability", Metric::Permeability );
         this->addDimension("Transmissibility", Metric::Transmissibility );
@@ -1117,6 +1141,7 @@ namespace {
         this->addDimension("AbsoluteTemperature", Field::AbsoluteTemperature);
         this->addDimension("Length", Field::Length);
         this->addDimension("Time" , Field::Time);
+        this->addDimension("RunTime" , Field::RunTime);
         this->addDimension("Mass", Field::Mass);
         this->addDimension("Permeability", Field::Permeability );
         this->addDimension("Transmissibility", Field::Transmissibility );

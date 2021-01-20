@@ -1715,7 +1715,7 @@ static const std::unordered_map< std::string, ofun > funs = {
 
 
 static const std::unordered_map< std::string, Opm::UnitSystem::measure> single_values_units = {
-  {"TCPU"     , Opm::UnitSystem::measure::identity },
+  {"TCPU"     , Opm::UnitSystem::measure::runtime },
   {"ELAPSED"  , Opm::UnitSystem::measure::identity },
   {"NEWTON"   , Opm::UnitSystem::measure::identity },
   {"NLINERS"  , Opm::UnitSystem::measure::identity },
