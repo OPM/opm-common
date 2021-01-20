@@ -25,7 +25,7 @@
 
 #include "config.h"
 
-#if HAVE_OPENMP
+#if _OPENMP
 #include <omp.h>
 #endif
 
@@ -69,7 +69,7 @@ int main(int argc, char **argv) {
 
     int argOffset = optind;
 
-#if HAVE_OPENMP
+#ifdef _OPENMP
     int available_threads = omp_get_max_threads();
 
     if (max_threads < 0)
