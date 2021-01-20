@@ -260,6 +260,7 @@ namespace Opm {
         constexpr const double AbsoluteTemperature  = degCelsius; // actually [K], but the these two are identical
         constexpr const double Length               = meter;
         constexpr const double Time                 = day;
+        constexpr const double RunTime              = second;
         constexpr const double Mass                 = kilogram;
         constexpr const double Permeability         = milli*darcy;
         constexpr const double Transmissibility     = centi*Poise*cubic(meter)/(day*barsa);
@@ -290,6 +291,7 @@ namespace Opm {
         constexpr const double AbsoluteTemperature  = degFahrenheit; // actually [°R], but the these two are identical
         constexpr const double Length               = feet;
         constexpr const double Time                 = day;
+        constexpr const double RunTime              = second;
         constexpr const double Mass                 = pound;
         constexpr const double Permeability = milli*darcy;
         constexpr const double Transmissibility = centi*Poise*stb/(day*psia);
@@ -320,6 +322,7 @@ namespace Opm {
         constexpr const double AbsoluteTemperature  = degCelsius; // actually [K], but the these two are identical
         constexpr const double Length               = centi*meter;
         constexpr const double Time                 = hour;
+        constexpr const double RunTime              = second;
         constexpr const double Mass                 = gram;
         constexpr const double Permeability         = milli*darcy;
         constexpr const double Transmissibility     = centi*Poise*cubic(centi*meter)/(hour*atm);
@@ -350,6 +353,7 @@ namespace Opm {
         constexpr const double AbsoluteTemperature  = degCelsius; // actually [K], but the these two are identical
         constexpr const double Length               = meter;
         constexpr const double Time                 = day;
+        constexpr const double RunTime              = second;
         constexpr const double Mass                 = kilogram;
         constexpr const double Permeability         = milli*darcy;
         constexpr const double Transmissibility     = centi*Poise*cubic(meter)/(day*atm);

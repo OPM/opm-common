@@ -43,6 +43,7 @@ namespace Opm {
             identity,
             length,
             time,
+            runtime,
             density,
             pressure,
             temperature_absolute,
