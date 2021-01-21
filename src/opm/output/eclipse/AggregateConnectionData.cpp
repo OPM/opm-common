@@ -57,7 +57,6 @@ namespace {
     template <class ConnOp>
     void connectionLoop(const Opm::EclipseGrid& grid,
                         const Opm::Well&        well,
-                        const std::size_t       wellID,
                         const Opm::data::Well*  wellRes,
                         ConnOp&&                connOp)
     {
@@ -66,7 +65,7 @@ namespace {
             const auto* dynConnRes = (wellRes == nullptr)
                 ? nullptr : wellRes->find_connection(connPtr->global_index());
 
-            connOp(wellID, *connPtr, connID, dynConnRes);
+            connOp(well.seqIndex(), *connPtr, connID, dynConnRes);
 
             ++connID;
         }
@@ -79,16 +78,13 @@ namespace {
                             const Opm::data::WellRates& xw,
                             ConnOp&&                    connOp)
     {
-        std::size_t wellID = 0;
-        for (const auto& well : sched.getWells(sim_step)) {
-            const auto  well_iter = xw.find(well.name());
+        for (const auto& wname : sched.wellNames(sim_step)) {
+            const auto  well_iter = xw.find(wname);
             const auto* wellRes   = (well_iter == xw.end())
                 ? nullptr : &well_iter->second;
 
-            connectionLoop(grid, well, wellID,
+            connectionLoop(grid, sched.getWell(wname, sim_step),
                            wellRes, std::forward<ConnOp>(connOp));
-
-            ++wellID;
         }
     }
 
