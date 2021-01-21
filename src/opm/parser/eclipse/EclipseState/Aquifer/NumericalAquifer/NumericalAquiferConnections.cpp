@@ -46,8 +46,6 @@ namespace Opm {
                     const size_t aqu_id = con.aquifer_id;
                     const size_t global_index = con.global_index;
                     auto& aqu_cons = this->connections_[aqu_id];
-                    // TODO: with the following code, we might ignore the situation that a cell is
-                    // connected to two different aquifers
                     if (aqu_cons.find(global_index) == aqu_cons.end()) {
                         aqu_cons.insert({global_index, con});
                     } else {
