@@ -162,6 +162,7 @@ namespace Opm {
 
         const PvcdoTable& getPvcdoTable() const;
         const DensityTable& getDensityTable() const;
+        const DiffCoeffTable& getDiffusionCoefficientTable() const;
         const PlyvmhTable& getPlyvmhTable() const;
         const RockTable& getRockTable() const;
         const ViscrefTable& getViscrefTable() const;
@@ -215,6 +216,7 @@ namespace Opm {
             m_pvtwTable.serializeOp(serializer);
             m_pvcdoTable.serializeOp(serializer);
             m_densityTable.serializeOp(serializer);
+            m_diffCoeffTable.serializeOp(serializer);
             m_plyvmhTable.serializeOp(serializer);
             m_rockTable.serializeOp(serializer);
             m_plmixparTable.serializeOp(serializer);
@@ -514,6 +516,7 @@ namespace Opm {
         PvtwTable m_pvtwTable;
         PvcdoTable m_pvcdoTable;
         DensityTable m_densityTable;
+        DiffCoeffTable m_diffCoeffTable;
         PlyvmhTable m_plyvmhTable;
         RockTable m_rockTable;
         PlmixparTable m_plmixparTable;

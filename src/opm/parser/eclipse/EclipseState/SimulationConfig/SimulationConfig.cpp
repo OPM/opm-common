@@ -51,7 +51,8 @@ namespace Opm {
         m_useCPR(false),
         m_DISGAS(false),
         m_VAPOIL(false),
-        m_isThermal(false)
+        m_isThermal(false),
+        m_diffuse(false)
     {
     }
 
@@ -64,7 +65,8 @@ namespace Opm {
         m_useCPR(false),
         m_DISGAS(false),
         m_VAPOIL(false),
-        m_isThermal(false)
+        m_isThermal(false),
+        m_diffuse(false)
     {
         if (DeckSection::hasRUNSPEC(deck)) {
             const RUNSPECSection runspec(deck);
@@ -81,7 +83,9 @@ namespace Opm {
             if (runspec.hasKeyword<ParserKeywords::VAPOIL>()) {
                 m_VAPOIL = true;
             }
-
+            if (runspec.hasKeyword<ParserKeywords::DIFFUSE>()) {
+                m_diffuse = true;
+            }
             this->m_isThermal = runspec.hasKeyword<ParserKeywords::THERMAL>()
                 || runspec.hasKeyword<ParserKeywords::TEMP>();
         }
@@ -97,6 +101,7 @@ namespace Opm {
         result.m_DISGAS = true;
         result.m_VAPOIL = false;
         result.m_isThermal = true;
+        result.m_diffuse = true;
 
         return result;
     }
@@ -133,6 +138,10 @@ namespace Opm {
         return this->m_isThermal;
     }
 
+    bool SimulationConfig::isDiffusive() const {
+        return this->m_diffuse;
+    }
+
     bool SimulationConfig::operator==(const SimulationConfig& data) const {
         return this->getThresholdPressure() == data.getThresholdPressure() &&
                this->bcconfig() == data.bcconfig() &&
@@ -140,7 +149,8 @@ namespace Opm {
                this->useCPR() == data.useCPR() &&
                this->hasDISGAS() == data.hasDISGAS() &&
                this->hasVAPOIL() == data.hasVAPOIL() &&
-               this->isThermal() == data.isThermal();
+               this->isThermal() == data.isThermal() &&
+               this->isDiffusive() == data.isDiffusive();
     }
 
 } //namespace Opm

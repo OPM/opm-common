@@ -34,6 +34,7 @@
 #include <opm/common/utility/OpmInputError.hpp>
 
 #include <opm/parser/eclipse/Parser/ParserKeywords/A.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/D.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/E.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/G.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/M.hpp>
@@ -150,6 +151,9 @@ namespace Opm {
         if( deck.hasKeyword( "DENSITY" ) )
             this->m_densityTable = DensityTable( deck.getKeyword( "DENSITY" ) );
 
+        if( deck.hasKeyword( "DIFFC" ) )
+            this->m_diffCoeffTable = DiffCoeffTable( deck.getKeyword( "DIFFC" ) );
+
         if( deck.hasKeyword( "ROCK" ) )
             this->m_rockTable = RockTable( deck.getKeyword( "ROCK" ) );
 
@@ -235,6 +239,7 @@ namespace Opm {
         m_pvcdoTable = data.m_pvcdoTable;
         m_plyvmhTable = data.m_plyvmhTable;
         m_densityTable = data.m_densityTable;
+        m_diffCoeffTable = data.m_diffCoeffTable;
         m_plmixparTable = data.m_plmixparTable;
         m_shrateTable = data.m_shrateTable;
         m_stone1exTable = data.m_stone1exTable;
@@ -282,6 +287,7 @@ namespace Opm {
         result.m_pvtwTable = PvtwTable::serializeObject();
         result.m_pvcdoTable = PvcdoTable::serializeObject();
         result.m_densityTable = DensityTable::serializeObject();
+        result.m_diffCoeffTable = DiffCoeffTable::serializeObject();
         result.m_plyvmhTable = PlyvmhTable::serializeObject();
         result.m_rockTable = RockTable::serializeObject();
         result.m_plmixparTable = PlmixparTable::serializeObject();
@@ -1087,6 +1093,10 @@ namespace Opm {
         return this->m_densityTable;
     }
 
+    const DiffCoeffTable& TableManager::getDiffusionCoefficientTable() const {
+        return this->m_diffCoeffTable;
+    }
+
     const RockTable& TableManager::getRockTable() const {
         return this->m_rockTable;
     }
@@ -1222,6 +1232,7 @@ namespace Opm {
                m_pvtwTable == data.m_pvtwTable &&
                m_pvcdoTable == data.m_pvcdoTable &&
                m_densityTable == data.m_densityTable &&
+               m_diffCoeffTable == data.m_diffCoeffTable &&
                m_plmixparTable == data.m_plmixparTable &&
                m_plyvmhTable == data.m_plyvmhTable &&
                m_shrateTable == data.m_shrateTable &&

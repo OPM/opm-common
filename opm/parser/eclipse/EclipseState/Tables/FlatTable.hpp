@@ -51,6 +51,52 @@ struct DensityTable : public FlatTable< DENSITYRecord > {
     }
 };
 
+struct DiffCoeffRecord {
+    static constexpr std::size_t size = 8;
+
+    double oil_mw;
+    double gas_mw;
+    double gas_in_gas;
+    double oil_in_gas;
+    double gas_in_oil;
+    double oil_in_oil;
+    double gas_in_oil_cross_phase;
+    double oil_in_oil_cross_phase;
+
+    bool operator==(const DiffCoeffRecord& data) const {
+        return oil_mw == data.oil_mw &&
+               gas_mw == data.gas_mw &&
+               gas_in_gas == data.gas_in_gas &&
+               oil_in_gas == data.oil_in_gas &&
+               gas_in_oil == data.gas_in_oil &&
+               oil_in_oil == data.oil_in_oil &&
+               gas_in_oil_cross_phase == data.gas_in_oil_cross_phase &&
+               oil_in_oil_cross_phase == data.oil_in_oil_cross_phase;
+    }
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(oil_mw);
+        serializer(gas_mw);
+        serializer(gas_in_gas);
+        serializer(oil_in_gas);
+        serializer(gas_in_oil);
+        serializer(oil_in_oil);
+        serializer(gas_in_oil_cross_phase);
+        serializer(oil_in_oil_cross_phase);
+    }
+};
+
+struct DiffCoeffTable : public FlatTable< DiffCoeffRecord > {
+    using FlatTable< DiffCoeffRecord >::FlatTable;
+
+    static DiffCoeffTable serializeObject()
+    {
+        return DiffCoeffTable({{1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0}});
+    }
+};
+
 struct PVTWRecord {
     static constexpr std::size_t size = 5;
 

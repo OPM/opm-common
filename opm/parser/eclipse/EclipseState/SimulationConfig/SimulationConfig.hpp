@@ -48,6 +48,7 @@ namespace Opm {
         bool hasDISGAS() const;
         bool hasVAPOIL() const;
         bool isThermal() const;
+        bool isDiffusive() const;
 
         bool operator==(const SimulationConfig& data) const;
 
@@ -61,6 +62,7 @@ namespace Opm {
             serializer(m_DISGAS);
             serializer(m_VAPOIL);
             serializer(m_isThermal);
+            serializer(m_diffuse);
         }
 
     private:
@@ -71,6 +73,7 @@ namespace Opm {
         bool m_DISGAS;
         bool m_VAPOIL;
         bool m_isThermal;
+        bool m_diffuse;
     };
 
 } //namespace Opm
