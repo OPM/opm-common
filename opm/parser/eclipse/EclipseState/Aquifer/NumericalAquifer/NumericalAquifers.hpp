@@ -35,9 +35,11 @@ namespace Opm {
         NumericalAquifers() = default;
         NumericalAquifers(const Deck& deck, const EclipseGrid& grid, const FieldPropsManager& field_props);
 
+        size_t numAquifer() const;
         bool hasAquifer(size_t aquifer_id) const;
         bool hasCell(size_t global_index) const;
         const NumericalAquiferCell& getCell(size_t global_index) const;
+        bool operator==(const NumericalAquifers& other) const;
 
     private:
         std::unordered_map <size_t, SingleNumericalAquifer> aquifers_;

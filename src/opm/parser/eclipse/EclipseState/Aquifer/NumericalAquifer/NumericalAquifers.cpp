@@ -111,4 +111,12 @@ namespace Opm {
             }
         }
     }
+
+    bool NumericalAquifers::operator==(const NumericalAquifers& other) const {
+        return this->aquifers_ == other.aquifers_;
+    }
+
+    size_t NumericalAquifers::numAquifer() const {
+        return this->aquifers_.size();
+    }
 }

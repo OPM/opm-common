@@ -23,10 +23,9 @@
 #include <vector>
 
 #include <opm/parser/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferConnections.hpp>
+#include <opm/parser/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferCell.hpp>
 
 namespace Opm {
-    class NumericalAquiferCell;
-    class NumAquiferCon;
 
     class SingleNumericalAquifer {
     public:
@@ -39,6 +38,8 @@ namespace Opm {
         // how we use them at the end
         size_t numCells() const;
         const NumericalAquiferCell* getCellPrt(size_t index) const;
+
+        bool operator==(const SingleNumericalAquifer& other) const;
 
         /*
         void addAquiferConnection(const NumAquiferCon& aqu_con);

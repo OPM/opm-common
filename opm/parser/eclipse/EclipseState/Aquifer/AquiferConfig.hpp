@@ -23,17 +23,20 @@
 #include <opm/parser/eclipse/EclipseState/Aquifer/Aquancon.hpp>
 #include <opm/parser/eclipse/EclipseState/Aquifer/Aquifetp.hpp>
 #include <opm/parser/eclipse/EclipseState/Aquifer/AquiferCT.hpp>
+#include <opm/parser/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.hpp>
 
 namespace Opm {
 
 class TableManager;
 class EclipseGrid;
 class Deck;
+class FieldPropsManager;
 
 class AquiferConfig {
 public:
     AquiferConfig() = default;
-    AquiferConfig(const TableManager& tables, const EclipseGrid& grid, const Deck& deck);
+    AquiferConfig(const TableManager& tables, const EclipseGrid& grid,
+                  const Deck& deck, const FieldPropsManager& fiedl_props);
     AquiferConfig(const Aquifetp& fetp, const AquiferCT& ct, const Aquancon& conn);
 
     static AquiferConfig serializeObject();
@@ -51,12 +54,15 @@ public:
         aquifetp.serializeOp(serializer);
         aquiferct.serializeOp(serializer);
         aqconn.serializeOp(serializer);
+        // TODO:
+        // numerical_aquifers.serializeOp(serializer);
     }
 
 private:
     Aquifetp aquifetp;
     AquiferCT aquiferct;
     Aquancon aqconn;
+    NumericalAquifers numerical_aquifers;
 };
 
 }

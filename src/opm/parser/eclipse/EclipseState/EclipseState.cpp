@@ -69,7 +69,7 @@ namespace Opm {
         if( this->runspec().phases().size() < 3 )
             OpmLog::info(fmt::format("Only {} fluid phases are enabled",  this->runspec().phases().size() ));
 
-        this->aquifer_config = AquiferConfig(this->m_tables, this->m_inputGrid, deck);
+        this->aquifer_config = AquiferConfig(this->m_tables, this->m_inputGrid, deck, this->field_props);
 
         if (deck.hasKeyword( "TITLE" )) {
             const auto& titleKeyword = deck.getKeyword( "TITLE" );

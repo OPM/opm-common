@@ -42,4 +42,10 @@ namespace Opm {
     void SingleNumericalAquifer::addAquiferConnection(const NumAquiferCon& aqu_con) {
         this->connections_.push_back(aqu_con);
     }
+
+    bool SingleNumericalAquifer::operator==(const SingleNumericalAquifer& other) const {
+        return this->cells_ == other.cells_ &&
+                this->connections_ == other.connections_ &&
+                this->id_ == other.id_;
+    }
 }

@@ -39,11 +39,12 @@ namespace Opm {
         std::optional<double> init_pressure; // by default, the grid pressure from equilibration will be used
         int pvttable; // by default, the block PVTNUM
         int sattable; // saturation table number, by default, the block value
-        double pore_volume; // pore volume
         double transmissibility;
         size_t global_index;
 
         double cellVolume() const;
+        double poreVolume() const;
+        bool operator == (const NumericalAquiferCell& other) const;
     };
 }
 

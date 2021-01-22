@@ -59,6 +59,18 @@ namespace Opm {
         }
     }
 
+    const std::map<size_t, NumAquiferCon>&
+    NumericalAquiferConnections::getConnections(const size_t aqu_id) const {
+        const auto& cons = this->connections_.find(aqu_id);
+        if (cons == this->connections_.end())  {
+            const auto error = fmt::format("Numerical aquifer {} does not have any connections\n", aqu_id);
+            throw std::runtime_error(error);
+        } else {
+            return cons->second;
+        }
+    }
+
+
     // TODO: we should not need all following the information here
     using AQUCON = ParserKeywords::AQUCON;
     NumAquiferCon::NumAquiferCon(const size_t i, const size_t j, const size_t k,
@@ -113,6 +125,20 @@ namespace Opm {
             }
         }
         return cons;
+    }
+
+    bool NumAquiferCon::operator==(const NumAquiferCon& other) const {
+        return this->aquifer_id == other.aquifer_id &&
+               this->I == other.I &&
+               this->J == other.J &&
+               this->K == other.K &&
+               this->global_index == other.global_index &&
+               this->face_dir == other.face_dir &&
+               this->trans_multipler == other.trans_multipler &&
+               this->trans_option == other.trans_option &&
+               this->connect_active_cell == other.connect_active_cell &&
+               this->ve_frac_relperm == other.ve_frac_relperm &&
+               this->ve_frac_cappress == other.ve_frac_cappress;
     }
 
 }

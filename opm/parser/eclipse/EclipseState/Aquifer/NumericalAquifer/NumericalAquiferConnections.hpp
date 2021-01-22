@@ -46,6 +46,8 @@ namespace Opm {
 
         NumAquiferCon(size_t i, size_t j, size_t k, size_t global_index, bool allow_connect_active, const DeckRecord& record);
 
+        bool operator==(const NumAquiferCon& other) const;
+
         static std::vector<NumAquiferCon> generateConnections(const EclipseGrid&, const DeckRecord&);
     };
 
