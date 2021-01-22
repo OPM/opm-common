@@ -403,9 +403,11 @@ Runspec::Runspec( const Deck& deck ) :
                 OpmLog::note(msg);
             }
         }
-        if (runspecSection.hasKeyword<ParserKeywords::CO2STOR>()) {
+        if (runspecSection.hasKeyword<ParserKeywords::CO2STORE>() ||
+                runspecSection.hasKeyword<ParserKeywords::CO2STOR>()) {
             m_co2storage = true;
-            std::string msg = "The CO2 storage option is given. PVT properties from the Brine-CO2 system is used";
+            std::string msg = "The CO2 storage option is given. PVT properties from the Brine-CO2 system is used \n"
+                              "See the OPM manual for details on the used models.";
             OpmLog::note(msg);
         }
     }
