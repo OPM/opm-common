@@ -488,6 +488,7 @@ set( keywords
      000_Eclipse100/M/MPFNNC
      000_Eclipse100/M/MSFN
      000_Eclipse100/M/MSGFILE
+     000_Eclipse100/M/MSUM_PROBE
      000_Eclipse100/M/MULSGGD
      000_Eclipse100/M/MULSGGDV
      000_Eclipse100/M/MULTFLT

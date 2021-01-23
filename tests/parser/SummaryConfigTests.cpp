@@ -1336,6 +1336,10 @@ COPRL
 
 BOOST_AUTO_TEST_CASE( WBP ) {
     const std::string input = R"(
+MSUMERR
+
+MSUMLINP
+
 WBP
 /
 
