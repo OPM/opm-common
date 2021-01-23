@@ -65,6 +65,11 @@
       "name": "threshold_saturation",
       "value_type": "DOUBLE",
       "default": 0
+    },
+    {
+      "name": "FLAG_SOMETHING",
+      "value_type": "INT",
+      "default": 0
     }
   ]
 }
