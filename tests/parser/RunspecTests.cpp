@@ -888,7 +888,7 @@ BOOST_AUTO_TEST_CASE(Co2Storage) {
     RUNSPEC
     OIL
     GAS
-    CO2STOR
+    CO2STORE
     )";
 
     Parser parser;

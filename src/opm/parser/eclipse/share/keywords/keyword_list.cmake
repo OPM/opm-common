@@ -1046,6 +1046,7 @@ set( keywords
      001_Eclipse300/B/BLOCK_PROBE300
      001_Eclipse300/C/CIRCLE
      001_Eclipse300/C/COMPS
+     001_Eclipse300/C/CO2STORE
      001_Eclipse300/C/CREF
      001_Eclipse300/C/CREFS
      001_Eclipse300/D/DREF
