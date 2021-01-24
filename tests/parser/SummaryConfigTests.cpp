@@ -284,12 +284,16 @@ BOOST_AUTO_TEST_CASE(blocks) {
 }
 
 BOOST_AUTO_TEST_CASE(aquifer) {
-    const auto input = "AAQR\n"
-                       " 1 2 /\n"
-                       "AAQT\n"
-                       " 1 /\n"
-                       "AAQP\n"
-                       " 1  2 3/\n";
+    const auto input = R"(
+ALQR      -- This is completely ignored
+   'ALQ1' 'ALQ2' /
+AAQR
+ 1 2 /
+AAQT
+ 1 /
+AAQP
+ 1  2 3/
+)";
     const auto summary = createSummary( input );
     const auto keywords = { "AAQP", "AAQP", "AAQP", "AAQR", "AAQR", "AAQT" };
     const auto names = sorted_keywords( summary );

@@ -424,6 +424,17 @@ inline void keywordAquifer( SummaryConfig::keyword_list& list,
                             const ParseContext& parseContext,
                             ErrorGuard& errors,
                             const DeckKeyword& keyword) {
+
+    /*
+      The keywords starting with AL take as arguments a list of Aquiferlists -
+      this is not supported at all.
+    */
+    if (keyword.name().rfind("AL", 0) == 0) {
+        Opm::OpmLog::warning(Opm::OpmInputError::format("Unhandled summary keyword {keyword}\n"
+                                                        "In {file} line {line}", keyword.location()));
+        return;
+    }
+
     auto param = SummaryConfigNode {
         keyword.name(), SummaryConfigNode::Category::Aquifer, keyword.location()
     }
