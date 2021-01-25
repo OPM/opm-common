@@ -20,22 +20,24 @@
 #define WELL_MATCHER_HPP
 
 #include <vector>
+#include <unordered_map>
 #include <string>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WListManager.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/WellOrder.hpp>
 
 namespace Opm {
 
 class WellMatcher {
 public:
     WellMatcher() = default;
-    explicit WellMatcher(const std::vector<std::string>& wells);
-    WellMatcher(const std::vector<std::string>& wells, const WListManager& wlm);
-    const std::vector<std::string>& wells() const;
+    explicit WellMatcher(const WellOrder& well_order);
+    WellMatcher(const WellOrder& well_order, const WListManager& wlm);
     std::vector<std::string> wells(const std::string& pattern) const;
+    const std::vector<std::string>& wells() const;
 
 private:
-    std::vector<std::string> m_wells;
+    WellOrder m_well_order;
     WListManager m_wlm;
 };
 

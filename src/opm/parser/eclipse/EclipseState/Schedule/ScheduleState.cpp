@@ -355,4 +355,18 @@ void ScheduleState::udq_active(UDQActive udq_active) {
     this->m_udq_active = std::make_shared<UDQActive>( std::move(udq_active) );
 }
 
+const WellOrder& ScheduleState::well_order() const {
+    return *this->m_well_order;
+}
+
+void ScheduleState::well_order(WellOrder well_order) {
+    this->m_well_order = std::make_shared<WellOrder>( std::move(well_order) );
+}
+
+void ScheduleState::well_order(const std::string& well) {
+    auto well_order = *this->m_well_order;
+    well_order.add( well );
+    this->m_well_order = std::make_shared<WellOrder>( std::move(well_order) );
+}
+
 }

@@ -23,18 +23,22 @@
 
 namespace Opm {
 
-WellMatcher::WellMatcher(const std::vector<std::string>& wells) :
-    m_wells(wells)
-{}
 
-WellMatcher::WellMatcher(const std::vector<std::string>& wells, const WListManager &wlm) :
-    m_wells(wells),
+WellMatcher::WellMatcher(const WellOrder& well_order) :
+    m_well_order(well_order)
+{
+}
+
+WellMatcher::WellMatcher(const WellOrder& well_order, const WListManager &wlm) :
+    m_well_order(well_order),
     m_wlm(wlm)
-{}
+{
+}
 
 const std::vector<std::string>& WellMatcher::wells() const {
-    return this->m_wells;
+    return this->m_well_order.wells();
 }
+
 
 std::vector<std::string> WellMatcher::wells(const std::string& pattern) const {
     if (pattern.size() == 0)
@@ -42,13 +46,13 @@ std::vector<std::string> WellMatcher::wells(const std::string& pattern) const {
 
     // WLIST
     if (pattern[0] == '*' && pattern.size() > 1)
-        return this->m_wlm.wells(pattern);
+        return this->m_well_order.sort( this->m_wlm.wells(pattern) );
 
     // Normal pattern matching
     auto star_pos = pattern.find('*');
     if (star_pos != std::string::npos) {
         std::vector<std::string> names;
-        for (const auto& wname : this->m_wells) {
+        for (const auto& wname : this->m_well_order) {
             int flags = 0;
             if (fnmatch(pattern.c_str(), wname.c_str(), flags) == 0)
                 names.push_back(wname);
@@ -56,11 +60,9 @@ std::vector<std::string> WellMatcher::wells(const std::string& pattern) const {
         return names;
     }
 
-    auto name_iter = std::find(this->m_wells.begin(), this->m_wells.end(), pattern);
-    if (name_iter != this->m_wells.end())
+    if (this->m_well_order.has(pattern))
         return { pattern };
 
     return {};
 }
-
 }
