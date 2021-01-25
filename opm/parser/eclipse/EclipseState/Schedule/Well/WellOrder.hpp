@@ -35,7 +35,6 @@ namespace Opm {
 class WellOrder {
 public:
     using Map = std::unordered_map<std::string, std::size_t>;
-    using Vector = std::vector<std::string>;
     WellOrder() = default;
     explicit WellOrder(const std::vector<std::string>& wells);
     void add(const std::string& well);
@@ -43,16 +42,21 @@ public:
     const std::vector<std::string>& wells() const;
     bool has(const std::string& wname) const;
 
+    template<class Serializer>
+    void serializeOp(Serializer& serializer) {
+        serializer.template map<Map, false>(m_wells1);
+        serializer(m_wells2);
+    }
 
     static WellOrder serializeObject();
 
     bool operator==(const WellOrder& other) const;
-    Vector::const_iterator begin() const;
-    Vector::const_iterator end() const;
+    std::vector<std::string>::const_iterator begin() const;
+    std::vector<std::string>::const_iterator end() const;
 
 private:
     Map m_wells1;
-    Vector m_wells2;
+    std::vector<std::string> m_wells2;
 };
 
 }

@@ -32,6 +32,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Events.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/WellOrder.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WListManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MessageLimits.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GConSump.hpp>
@@ -134,6 +135,10 @@ namespace Opm {
         const UDQActive& udq_active() const;
         void udq_active(UDQActive udq_active);
 
+        const WellOrder& well_order() const;
+        void well_order(const std::string& well);
+        void well_order(WellOrder well_order);
+
         template<class Serializer>
         void serializeOp(Serializer& serializer) {
             serializer(m_start_time);
@@ -146,6 +151,7 @@ namespace Opm {
             m_wellgroup_events.serializeOp(serializer);
             serializer.vector(m_geo_keywords);
             m_message_limits.serializeOp(serializer);
+            serializer(m_well_order);
             serializer(m_whistctl_mode);
             serializer(m_wtest_config);
             serializer(m_gconsale);
@@ -173,6 +179,7 @@ namespace Opm {
         std::vector<DeckKeyword> m_geo_keywords;
         MessageLimits m_message_limits;
         Well::ProducerCMode m_whistctl_mode = Well::ProducerCMode::CMODE_UNDEFINED;
+        std::shared_ptr<WellOrder> m_well_order;
         std::shared_ptr<WellTestConfig> m_wtest_config;
         std::shared_ptr<GConSale> m_gconsale;
         std::shared_ptr<GConSump> m_gconsump;
