@@ -88,7 +88,7 @@ namespace Opm {
         throw;
     }
     catch (const std::exception& std_error) {
-        OpmLog::error(fmt::format("An error occured while creating the reservoir properties\n",
+        OpmLog::error(fmt::format("An error occured while creating the reservoir properties\n"
                                   "Internal error: {}", std_error.what()));
         throw;
     }
