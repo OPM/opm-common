@@ -121,11 +121,11 @@ namespace Opm {
         const RPTConfig& rpt_config() const;
         void rpt_config(RPTConfig rpt_config);
 
-        std::vector<const VFPProdTable*> vfpprod() const;
+        std::vector<std::reference_wrapper<const VFPProdTable>> vfpprod() const;
         const VFPProdTable& vfpprod(int table_id) const;
         void vfpprod(VFPProdTable vfpprod);
 
-        std::vector<const VFPInjTable*> vfpinj() const;
+        std::vector<std::reference_wrapper<const VFPInjTable>> vfpinj() const;
         const VFPInjTable& vfpinj(int table_id) const;
         void vfpinj(VFPInjTable vfpinj);
 
