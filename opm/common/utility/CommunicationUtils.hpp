@@ -24,6 +24,19 @@
 
 namespace Opm
 {
+/// \brief Gathers vectors from all processes on all processes
+///
+/// In parallel this will call MPI_Allgatherv. Has to be called on all
+/// ranks.
+///
+/// \param input The input vector to gather from the rank.
+/// \param comm The Dune::Communication object.
+/// \return A pair of a vector with all the values gathered (first
+///         the ones from rank 0, then the ones from rank 1, ...)
+///         and a vector with the offsets of the first value from each
+///         rank (values[offset[rank]] will be the first value from rank).
+///         This vector is one bigger than the number of processes and
+///         the last entry is the size of the first array.
 template<class T, class A, class C>
 std::tuple<std::vector<T, A>,
           std::vector<int>>
@@ -38,6 +51,21 @@ allGatherv(const std::vector<T,A>& input, const C& comm)
     comm.allgatherv(input.data(), input.size(), output.data(), sizes.data(), displ.data());
     return {output, displ};
 }
+/// \brief Gathers vectors from all processes on a root process.
+///
+/// In parallel this will call MPI_Gatherv. Has to be called on all
+/// ranks.
+///
+/// \param input The input vector to gather from the rank.
+/// \param comm The Dune::Communication object.
+/// \param root The rank of the processes to gather the values-
+/// \return On non-root ranks a pair of empty vectors. On the root rank
+///         a pair of a vector with all the values gathered (first
+///         the ones from rank 0, then the ones from rank 1, ...)
+///         and a vector with the offsets of the first value from each
+///         rank (values[offset[rank]] will be the first value from rank).
+///         This vector is one bigger than the number of processes and
+///         the last entry is the size of the first array.
 
 template<class T, class A, class C>
 std::tuple<std::vector<T, A>,
