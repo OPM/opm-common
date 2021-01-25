@@ -834,7 +834,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
 
         this->snapshots.back().events().addEvent( ScheduleEvents::NEW_WELL );
         this->snapshots.back().wellgroup_events().addWell( wname );
-
+        this->snapshots.back().well_order( wname );
         well.setInsertIndex(this->wells_static.size());
         this->wells_static.insert( std::make_pair(wname, DynamicState<std::shared_ptr<Well>>(m_timeMap, nullptr)));
         auto& dynamic_well_state = this->wells_static.at(wname);
@@ -1054,16 +1054,14 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
 
 
     WellMatcher Schedule::wellMatcher(std::size_t report_step) const {
-        std::vector<std::string> wnames;
-        for (const auto& well_pair : this->wells_static) {
-            const auto& dynamic_state = well_pair.second;
-            if (dynamic_state.get(report_step))
-                wnames.push_back(well_pair.first);
-        }
+        const ScheduleState * sched_state;
+
         if (report_step < this->snapshots.size())
-            return WellMatcher(wnames, this->operator[](report_step).wlist_manager());
+            sched_state = &this->snapshots[report_step];
         else
-            return WellMatcher(wnames, this->snapshots.back().wlist_manager());
+            sched_state = &this->snapshots.back();
+
+        return WellMatcher(sched_state->well_order(), sched_state->wlist_manager());
     }
 
 

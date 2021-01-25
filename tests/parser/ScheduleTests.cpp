@@ -3333,9 +3333,14 @@ BOOST_AUTO_TEST_CASE(WellNames) {
     WellMatcher wm0( {}, WListManager{});
     const auto& wml0 = wm0.wells();
     BOOST_CHECK(wml0.empty());
+    WellOrder wo({"P3", "P2", "P1"});
 
-    WellMatcher wm1( {"W1", "W2", "W3", "P1", "P2", "P3"}, WListManager{});
-    const std::vector<std::string> pwells = {"P1", "P2", "P3"};
+    wo.add("W3");
+    wo.add("W2");
+    wo.add("W1");
+
+    WellMatcher wm1( wo, WListManager{});
+    const std::vector<std::string> pwells = {"P3", "P2", "P1"};
     BOOST_CHECK( pwells == wm1.wells("P*"));
 
     auto wm2 = schedule.wellMatcher(4);
@@ -3344,12 +3349,8 @@ BOOST_AUTO_TEST_CASE(WellNames) {
     for (const auto& w : std::vector<std::string>{"W1", "W2", "W3", "I1", "I2", "I3", "DEFAULT", "ALLOW", "BAN"})
         BOOST_CHECK(has(all_wells, w));
 
-    const auto& wwells = wm2.wells("W*");
-    BOOST_CHECK_EQUAL( wwells.size(), 3 );
-    BOOST_CHECK( has(wwells, "W1"));
-    BOOST_CHECK( has(wwells, "W2"));
-    BOOST_CHECK( has(wwells, "W3"));
-
+    const std::vector<std::string> wwells = {"W1", "W2", "W3"};
+    BOOST_CHECK( wm2.wells("W*") == wwells );
     BOOST_CHECK( wm2.wells("XYZ*").empty() );
     BOOST_CHECK( wm2.wells("XYZ").empty() );
 
