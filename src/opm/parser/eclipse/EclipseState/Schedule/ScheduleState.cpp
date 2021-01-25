@@ -318,6 +318,14 @@ void ScheduleState::update_vfpprod(VFPProdTable vfpprod) {
     this->m_vfpprod[table_id] = std::make_shared<VFPProdTable>( std::move(vfpprod) );
 }
 
+std::optional<std::reference_wrapper<const VFPProdTable>> ScheduleState::try_vfpprod(int table_id) const {
+    auto vfp_iter = this->m_vfpprod.find(table_id);
+    if (vfp_iter != this->m_vfpprod.end())
+        return std::cref(*vfp_iter->second);
+    return {};
+}
+
+
 std::vector<std::reference_wrapper<const VFPInjTable>> ScheduleState::vfpinj() const {
     std::vector<std::reference_wrapper<const VFPInjTable>> tables;
     for (const auto& [_, table] : this->m_vfpinj) {
@@ -325,6 +333,13 @@ std::vector<std::reference_wrapper<const VFPInjTable>> ScheduleState::vfpinj() c
         tables.push_back( std::cref( *table ));
     }
     return tables;
+}
+
+std::optional<std::reference_wrapper<const VFPInjTable>> ScheduleState::try_vfpinj(int table_id) const {
+    auto vfp_iter = this->m_vfpinj.find(table_id);
+    if (vfp_iter != this->m_vfpinj.end())
+        return std::cref(*vfp_iter->second);
+    return {};
 }
 
 const VFPInjTable& ScheduleState::vfpinj(int table_id) const {

@@ -124,10 +124,12 @@ namespace Opm {
         std::vector<std::reference_wrapper<const VFPProdTable>> vfpprod() const;
         const VFPProdTable& vfpprod(int table_id) const;
         void update_vfpprod(VFPProdTable vfpprod);
+        std::optional<std::reference_wrapper<const VFPProdTable>> try_vfpprod(int table_id) const;
 
         std::vector<std::reference_wrapper<const VFPInjTable>> vfpinj() const;
         const VFPInjTable& vfpinj(int table_id) const;
         void update_vfpinj(VFPInjTable vfpinj);
+        std::optional<std::reference_wrapper<const VFPInjTable>> try_vfpinj(int table_id) const;
 
         const Action::Actions& actions() const;
         void update_actions(Action::Actions actions);
