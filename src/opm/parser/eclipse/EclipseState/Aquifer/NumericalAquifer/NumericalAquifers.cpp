@@ -85,16 +85,21 @@ namespace Opm {
     }
 
     void NumericalAquifers::addAquiferConnections(const Deck& deck, const EclipseGrid& grid) {
-        NumericalAquiferConnections cons(deck, grid);
+        const auto aquifer_connections = NumericalAquiferConnection::generateConnections(deck, grid);
 
         for (auto& pair : this->aquifers_) {
             const size_t aqu_id = pair.first;
-            const auto& aqu_cons = cons.getConnections(aqu_id);
+            const auto& aqu_cons = aquifer_connections.find(aqu_id);
+            if (aqu_cons == aquifer_connections.end()) {
+                const auto error = fmt::format("Numerical aquifer {} does not have any connections\n", aqu_id);
+                throw std::runtime_error(error);
+            }
             auto& aquifer = pair.second;
+            const auto& cons = aqu_cons->second;
 
             // For now, there is no two aquifers can be connected to one cell
             // aquifer can not connect to aquifer cells
-            for (const auto& con : aqu_cons) {
+            for (const auto& con : cons) {
                 const auto& aqu_con = con.second;
                 const size_t con_global_index = aqu_con.global_index;
                 if (this->hasCell(con_global_index)) {

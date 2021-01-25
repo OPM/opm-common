@@ -22,7 +22,7 @@
 
 #include <vector>
 
-#include <opm/parser/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferConnections.hpp>
+#include <opm/parser/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferConnection.hpp>
 #include <opm/parser/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferCell.hpp>
 
 namespace Opm {
@@ -32,7 +32,7 @@ namespace Opm {
         explicit SingleNumericalAquifer(const size_t aqu_id);
 
         void addAquiferCell(const NumericalAquiferCell& aqu_cell);
-        void addAquiferConnection(const NumAquiferCon& aqu_con);
+        void addAquiferConnection(const NumericalAquiferConnection& aqu_con);
 
         // TODO: the following two can be made one function. Let us see
         // how we use them at the end
@@ -42,7 +42,7 @@ namespace Opm {
         bool operator==(const SingleNumericalAquifer& other) const;
 
         /*
-        void addAquiferConnection(const NumAquiferCon& aqu_con);
+        void addAquiferConnection(const NumericalAquiferConnection& aqu_con);
         void updateCellProps(const EclipseGrid& grid,
                              std::vector<double>& pore_volume,
                              std::vector<int>& satnum,
@@ -64,7 +64,7 @@ namespace Opm {
             // default constructor
             size_t id_;
             std::vector<NumericalAquiferCell> cells_;
-            std::vector<NumAquiferCon> connections_;
+            std::vector<NumericalAquiferConnection> connections_;
         };
 }
 

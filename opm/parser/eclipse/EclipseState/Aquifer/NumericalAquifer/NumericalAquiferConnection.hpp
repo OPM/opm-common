@@ -17,8 +17,8 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef OPM_NUMERICALAQUIFERCONNECTIONS_HPP
-#define OPM_NUMERICALAQUIFERCONNECTIONS_HPP
+#ifndef OPM_NUMERICALAQUIFERCONNECTION_HPP
+#define OPM_NUMERICALAQUIFERCONNECTION_HPP
 
 #include <opm/parser/eclipse/EclipseState/Grid/FaceDir.hpp>
 #include <map>
@@ -30,7 +30,7 @@ namespace Opm {
     class Deck;
     class DeckRecord;
 
-    struct NumAquiferCon {
+    struct NumericalAquiferConnection {
         // TODO: I do not think we need all the values here
         size_t aquifer_id;
         size_t I, J, K;
@@ -44,21 +44,14 @@ namespace Opm {
         double ve_frac_relperm;
         double ve_frac_cappress;
 
-        NumAquiferCon(size_t i, size_t j, size_t k, size_t global_index, bool allow_connect_active, const DeckRecord& record);
+        NumericalAquiferConnection(size_t i, size_t j, size_t k, size_t global_index, bool allow_connect_active, const DeckRecord& record);
 
-        bool operator==(const NumAquiferCon& other) const;
+        bool operator==(const NumericalAquiferConnection& other) const;
 
-        static std::vector<NumAquiferCon> generateConnections(const EclipseGrid&, const DeckRecord&);
-    };
-
-    class NumericalAquiferConnections {
-    public:
-        NumericalAquiferConnections(const Deck& deck, const EclipseGrid& grid);
-        const std::map<size_t, NumAquiferCon>& getConnections(const size_t aqu_id) const;
-
+        static std::map<size_t, std::map<size_t, NumericalAquiferConnection>> generateConnections(const Deck& deck, const EclipseGrid& grid);
     private:
-        std::map<size_t, std::map<size_t, NumAquiferCon>> connections_;
+        static std::vector<NumericalAquiferConnection> connectionsFromSingleRecord(const EclipseGrid& grid, const DeckRecord& record);
     };
 }
 
-#endif //OPM_NUMERICALAQUIFERCONNECTIONS_HPP
+#endif //OPM_NUMERICALAQUIFERCONNECTION_HPP

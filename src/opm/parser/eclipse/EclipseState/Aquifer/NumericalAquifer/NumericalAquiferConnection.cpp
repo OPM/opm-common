@@ -17,7 +17,7 @@
 
 #include <opm/parser/eclipse/Parser/ParserKeywords/A.hpp>
 
-#include <opm/parser/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferConnections.hpp>
+#include <opm/parser/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferConnection.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
@@ -32,49 +32,40 @@
 
 namespace Opm {
 
-    NumericalAquiferConnections::NumericalAquiferConnections(const Deck &deck, const EclipseGrid &grid)
+    std::map<size_t, std::map<size_t, NumericalAquiferConnection>>
+    NumericalAquiferConnection::generateConnections(const Deck &deck, const EclipseGrid &grid)
     {
+        std::map<size_t, std::map<size_t, NumericalAquiferConnection>> connections;
         using AQUCON=ParserKeywords::AQUCON;
-        if ( !deck.hasKeyword<AQUCON>() ) return;
+        if ( !deck.hasKeyword<AQUCON>() ) return connections;
 
         const auto& aqucon_keywords = deck.getKeywordList<AQUCON>();
         for (const auto& keyword : aqucon_keywords) {
             OpmLog::info(OpmInputError::format("Initializing numerical aquifer connections from {keyword} in {file} line {line}", keyword->location()));
             for (const auto& record : *keyword) {
-                const auto cons_from_record = NumAquiferCon::generateConnections(grid, record);
+                const auto cons_from_record = NumericalAquiferConnection::connectionsFromSingleRecord(grid, record);
                 for (auto con : cons_from_record) {
                     const size_t aqu_id = con.aquifer_id;
                     const size_t global_index = con.global_index;
-                    auto& aqu_cons = this->connections_[aqu_id];
+                    auto& aqu_cons = connections[aqu_id];
                     if (aqu_cons.find(global_index) == aqu_cons.end()) {
                         aqu_cons.insert({global_index, con});
                     } else {
                         auto error = fmt::format("Numerical aquifer cell at ({}, {}, {}) is declared more than once"
-                                                 " for numerical aquifer {}",
+                                                 " as a connection for numerical aquifer {}",
                                                  con.I + 1, con.J + 1, con.K + 1, con.aquifer_id);
                         throw OpmInputError(error, keyword->location());
                     }
                 }
             }
         }
+        return connections;
     }
-
-    const std::map<size_t, NumAquiferCon>&
-    NumericalAquiferConnections::getConnections(const size_t aqu_id) const {
-        const auto& cons = this->connections_.find(aqu_id);
-        if (cons == this->connections_.end())  {
-            const auto error = fmt::format("Numerical aquifer {} does not have any connections\n", aqu_id);
-            throw std::runtime_error(error);
-        } else {
-            return cons->second;
-        }
-    }
-
 
     // TODO: we should not need all following the information here
     using AQUCON = ParserKeywords::AQUCON;
-    NumAquiferCon::NumAquiferCon(const size_t i, const size_t j, const size_t k,
-                                 const size_t global_index_in, const bool allow_connection_active, const DeckRecord& record)
+    NumericalAquiferConnection::NumericalAquiferConnection(const size_t i, const size_t j, const size_t k,
+                                                           const size_t global_index_in, const bool allow_connection_active, const DeckRecord& record)
     : aquifer_id(record.getItem<AQUCON::ID>().get<int>(0))
     , I(i)
     , J(j)
@@ -89,8 +80,8 @@ namespace Opm {
     {
     }
 
-    std::vector<NumAquiferCon> NumAquiferCon::generateConnections(const EclipseGrid& grid, const DeckRecord& record) {
-        std::vector<NumAquiferCon> cons;
+    std::vector<NumericalAquiferConnection> NumericalAquiferConnection::connectionsFromSingleRecord(const EclipseGrid& grid, const DeckRecord& record) {
+        std::vector<NumericalAquiferConnection> cons;
 
         const size_t i1 = record.getItem<AQUCON::I1>().get<int>(0) - 1;
         const size_t j1 = record.getItem<AQUCON::J1>().get<int>(0) -1;
@@ -119,7 +110,7 @@ namespace Opm {
                     if (allow_internal_cells ||
                         !AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i, j, k, face_dir)) {
                         const size_t global_index = grid.getGlobalIndex(i, j, k);
-                        cons.emplace_back(NumAquiferCon{i, j, k, global_index, allow_internal_cells, record});
+                        cons.emplace_back(NumericalAquiferConnection{i, j, k, global_index, allow_internal_cells, record});
                     }
                 }
             }
@@ -127,7 +118,7 @@ namespace Opm {
         return cons;
     }
 
-    bool NumAquiferCon::operator==(const NumAquiferCon& other) const {
+    bool NumericalAquiferConnection::operator==(const NumericalAquiferConnection& other) const {
         return this->aquifer_id == other.aquifer_id &&
                this->I == other.I &&
                this->J == other.J &&

@@ -18,7 +18,7 @@
  */
 
 #include <opm/parser/eclipse/EclipseState/Aquifer/NumericalAquifer/SingleNumericalAquifer.hpp>
-#include <opm/parser/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferConnections.hpp>
+#include <opm/parser/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferConnection.hpp>
 #include <opm/parser/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferCell.hpp>
 
 namespace Opm {
@@ -39,7 +39,7 @@ namespace Opm {
         return &this->cells_[index];
     }
 
-    void SingleNumericalAquifer::addAquiferConnection(const NumAquiferCon& aqu_con) {
+    void SingleNumericalAquifer::addAquiferConnection(const NumericalAquiferConnection& aqu_con) {
         this->connections_.push_back(aqu_con);
     }
 

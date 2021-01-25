@@ -61,7 +61,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Aquifer/Aquancon.cpp
     src/opm/parser/eclipse/EclipseState/Aquifer/AquiferHelpers.cpp
     src/opm/parser/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferCell.cpp
-    src/opm/parser/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferConnections.cpp
+    src/opm/parser/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferConnection.cpp
     src/opm/parser/eclipse/EclipseState/Aquifer/NumericalAquifer/SingleNumericalAquifer.cpp
     src/opm/parser/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.cpp
     src/opm/parser/eclipse/EclipseState/checkDeck.cpp
@@ -707,7 +707,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Aquifer/AquiferCT.hpp
        opm/parser/eclipse/EclipseState/Aquifer/Aquifetp.hpp
        opm/parser/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferCell.hpp
-       opm/parser/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferConnections.hpp
+       opm/parser/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferConnection.hpp
        opm/parser/eclipse/EclipseState/Aquifer/NumericalAquifer/SingleNumericalAquifer.hpp
        opm/parser/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.hpp
        opm/parser/eclipse/EclipseState/Schedule/Action/ActionAST.hpp
