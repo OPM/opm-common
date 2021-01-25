@@ -139,6 +139,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Schedule/Well/PAvgCalculatorCollection.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Well/Well.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Well/WellConnections.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/Well/WellOrder.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Well/WellMatcher.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Well/WList.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Well/WListManager.cpp
@@ -727,6 +728,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Schedule/Well/PAvgCalculatorCollection.hpp
        opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp
        opm/parser/eclipse/EclipseState/Schedule/Well/WList.hpp
+       opm/parser/eclipse/EclipseState/Schedule/Well/WellOrder.hpp
        opm/parser/eclipse/EclipseState/Schedule/Well/WellMatcher.hpp
        opm/parser/eclipse/EclipseState/Schedule/Well/WListManager.hpp
        opm/parser/eclipse/EclipseState/Schedule/Well/WellEconProductionLimits.hpp

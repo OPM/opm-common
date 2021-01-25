@@ -43,6 +43,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/GasLiftOpt.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellMatcher.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/WellOrder.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/PAvg.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
@@ -3361,6 +3362,23 @@ BOOST_AUTO_TEST_CASE(WellNames) {
     BOOST_CHECK_EQUAL( l2.size(), 2U);
     BOOST_CHECK( has(l2, "I1"));
     BOOST_CHECK( has(l2, "I2"));
+}
+
+
+BOOST_AUTO_TEST_CASE(WellOrderTest) {
+    WellOrder wo;
+    wo.add("W1");
+    wo.add("W2");
+    wo.add("W3");
+    wo.add("W4");
+
+    std::vector<std::string> sorted_wells = {"W1", "W2", "W3", "W4"};
+    std::vector<std::string> unsorted_wells = {"W4", "W3", "W2", "W1"};
+
+    BOOST_CHECK( wo.sort(unsorted_wells) == sorted_wells );
+    BOOST_CHECK( wo.wells() == sorted_wells );
+    BOOST_CHECK( wo.has("W1"));
+    BOOST_CHECK( !wo.has("G1"));
 }
 
 
