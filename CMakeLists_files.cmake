@@ -307,6 +307,7 @@ endif()
 
 list (APPEND TEST_SOURCE_FILES
       tests/test_ActiveGridCells.cpp
+      tests/test_CommunicationUtilities.cpp
       tests/test_calculateCellVol.cpp
       tests/test_cmp.cpp
       tests/test_cubic.cpp
@@ -543,6 +544,7 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/common/OpmLog/TimerLog.hpp
       opm/common/utility/Serializer.hpp
       opm/common/utility/ActiveGridCells.hpp
+      opm/common/utility/CommunicationUtils.hpp
       opm/common/utility/FileSystem.hpp
       opm/common/utility/OpmInputError.hpp
       opm/common/utility/numeric/cmp.hpp
