@@ -146,6 +146,9 @@ void testAllGatherv(const C& comm)
     std::tie(expectedAllVals, myVals, std::ignore, expectedDispl) = createParallelData(comm, d);
     std::tie(allVals, displ) = Opm::allGatherv(myVals, comm);
     checkGlobalData(allVals, expectedAllVals, displ, expectedDispl);
+    // test with a pair
+    std::pair<std::vector<double>, std::vector<int>> out;
+    out = Opm::allGatherv(myVals, comm);
 }
 
 template<class C>
@@ -157,7 +160,7 @@ void testGatherv(const C& comm)
     std::vector<double> expectedAllVals;
     std::vector<double> allVals;
     std::vector<double> myVals;
-    double d;
+    double d = 0;
     
     std::tie(expectedAllVals, myVals, std::ignore, expectedDispl) = createParallelData(comm, d);
     std::tie(allVals, displ) = Opm::gatherv(myVals, comm, 0);
@@ -167,6 +170,9 @@ void testGatherv(const C& comm)
         expectedAllVals.clear();
     }
     checkGlobalData(allVals, expectedAllVals, displ, expectedDispl);
+    // test with a pair
+    std::pair<std::vector<double>, std::vector<int>> out;
+    out = Opm::gatherv(myVals, comm, 0);
 }
 
 

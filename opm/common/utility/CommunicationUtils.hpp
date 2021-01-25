@@ -21,6 +21,7 @@
 
 #include<vector>
 #include<numeric>
+#include<tuple>
 
 namespace Opm
 {
@@ -38,7 +39,7 @@ namespace Opm
 ///         This vector is one bigger than the number of processes and
 ///         the last entry is the size of the first array.
 template<class T, class A, class C>
-std::tuple<std::vector<T, A>,
+std::pair<std::vector<T, A>,
           std::vector<int>>
 allGatherv(const std::vector<T,A>& input, const C& comm)
 {
@@ -68,7 +69,7 @@ allGatherv(const std::vector<T,A>& input, const C& comm)
 ///         the last entry is the size of the first array.
 
 template<class T, class A, class C>
-std::tuple<std::vector<T, A>,
+std::pair<std::vector<T, A>,
           std::vector<int>>
 gatherv(const std::vector<T,A>& input, const C& comm, int root)
 {
