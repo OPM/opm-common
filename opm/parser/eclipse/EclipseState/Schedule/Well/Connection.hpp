@@ -89,6 +89,8 @@ namespace RestartIO {
                    double Kh,
                    double rw,
                    double r0,
+                   double re,
+                   double connection_length,
                    double skin_factor,
                    const int satTableId,
                    const Direction direction,
@@ -116,6 +118,8 @@ namespace RestartIO {
         double Kh() const;
         double rw() const;
         double r0() const;
+        double re() const;
+        double connectionLength() const;
         double skinFactor() const;
         CTFKind kind() const;
 
@@ -155,6 +159,8 @@ namespace RestartIO {
             serializer(m_Kh);
             serializer(m_rw);
             serializer(m_r0);
+            serializer(m_re);
+            serializer(m_connection_length);
             serializer(m_skin_factor);
             serializer(ijk);
             serializer(m_global_index);
@@ -176,6 +182,8 @@ namespace RestartIO {
         double m_Kh;
         double m_rw;
         double m_r0;
+        double m_re;
+        double m_connection_length;
         double m_skin_factor;
 
         std::array<int,3> ijk;

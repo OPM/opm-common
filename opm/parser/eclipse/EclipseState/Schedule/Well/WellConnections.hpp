@@ -49,6 +49,7 @@ namespace Opm {
 
         // cppcheck-suppress noExplicitConstructor
         WellConnections(const WellConnections& src, const EclipseGrid& grid);
+
         void addConnection(int i, int j , int k ,
                            std::size_t global_index,
                            double depth,
@@ -57,6 +58,8 @@ namespace Opm {
                            double Kh,
                            double rw,
                            double r0,
+                           double re,
+                           double connection_length,
                            double skin_factor,
                            const int satTableId,
                            const Connection::Direction direction = Connection::Direction::Z,
@@ -142,6 +145,8 @@ namespace Opm {
                            double Kh,
                            double rw,
                            double r0,
+                           double re,
+                           double connection_length,
                            double skin_factor,
                            const int satTableId,
                            const Connection::Direction direction = Connection::Direction::Z,
