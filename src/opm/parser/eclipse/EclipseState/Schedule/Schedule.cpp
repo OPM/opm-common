@@ -497,7 +497,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
     void Schedule::addACTIONX(const Action::ActionX& action) {
         auto new_actions = Action::Actions( this->snapshots.back().actions() );
         new_actions.add( action );
-        this->snapshots.back().actions( std::move(new_actions) );
+        this->snapshots.back().update_actions( std::move(new_actions) );
     }
 
     void Schedule::handlePYACTION(const DeckKeyword& keyword) {
@@ -520,7 +520,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         Action::PyAction pyaction(this->m_static.m_python_handle, name, run_count, module);
         auto new_actions = Action::Actions( this->snapshots.back().actions() );
         new_actions.add(pyaction);
-        this->snapshots.back().actions( std::move(new_actions) );
+        this->snapshots.back().update_actions( std::move(new_actions) );
     }
 
     void Schedule::applyEXIT(const DeckKeyword& keyword, std::size_t report_step) {
@@ -1567,7 +1567,7 @@ namespace {
             this->addWell(well, report_step);
             this->addWellToGroup(well.groupName(), well.name(), report_step);
         }
-        this->snapshots[report_step + 1].tuning(rst_state.tuning);
+        this->snapshots[report_step + 1].update_tuning(rst_state.tuning);
         // Originally at report_step + 1
         this->snapshots.back().events().addEvent( ScheduleEvents::TUNING_CHANGE );
 
@@ -1871,18 +1871,18 @@ void Schedule::create_first(const std::chrono::system_clock::time_point& start_t
         this->snapshots.emplace_back(start_time);
 
     auto& sched_state = snapshots.back();
-    sched_state.nupcol( this->m_static.m_runspec.nupcol() );
-    sched_state.oilvap( OilVaporizationProperties( this->m_static.m_runspec.tabdims().getNumPVTTables() ));
-    sched_state.message_limits( this->m_static.m_deck_message_limits );
-    sched_state.wtest_config( WellTestConfig() );
-    sched_state.gconsale( GConSale() );
-    sched_state.gconsump( GConSump() );
-    sched_state.wlist_manager( WListManager() );
-    sched_state.network( Network::ExtNetwork() );
-    sched_state.rpt_config( RPTConfig() );
-    sched_state.actions( Action::Actions() );
-    sched_state.udq_active( UDQActive() );
-    sched_state.well_order( WellOrder() );
+    sched_state.update_nupcol( this->m_static.m_runspec.nupcol() );
+    sched_state.update_oilvap( OilVaporizationProperties( this->m_static.m_runspec.tabdims().getNumPVTTables() ));
+    sched_state.update_message_limits( this->m_static.m_deck_message_limits );
+    sched_state.update_wtest_config( WellTestConfig() );
+    sched_state.update_gconsale( GConSale() );
+    sched_state.update_gconsump( GConSump() );
+    sched_state.update_wlist_manager( WListManager() );
+    sched_state.update_network( Network::ExtNetwork() );
+    sched_state.update_rpt_config( RPTConfig() );
+    sched_state.update_actions( Action::Actions() );
+    sched_state.update_udq_active( UDQActive() );
+    sched_state.update_well_order( WellOrder() );
     this->addGroup("FIELD", 0);
 }
 
