@@ -52,6 +52,11 @@ public:
         return m_table_num;
     }
 
+    // The name() method is added to simplify serialization.
+    inline int name() const {
+        return m_table_num;
+    }
+
     inline double getDatumDepth() const {
         return m_datum_depth;
     }
