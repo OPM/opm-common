@@ -379,8 +379,8 @@ namespace Opm
                                                      std::mem_fn(&ScheduleState::update_actions));
 
             pack_unpack<UDQActive, Serializer>(serializer,
-                                                     std::mem_fn(&ScheduleState::udq_active),
-                                                     std::mem_fn(&ScheduleState::update_udq_active));
+                                               std::mem_fn(&ScheduleState::udq_active),
+                                               std::mem_fn(&ScheduleState::update_udq_active));
         }
 
         template <typename T, class Serializer>
@@ -435,6 +435,43 @@ namespace Opm
             }
         }
 
+
+        template <typename K, typename T>
+        void pack_state_map(std::vector<T>& value_list,
+                            std::vector<std::size_t>& index_list,
+                            std::function<std::vector<std::reference_wrapper<const T>>(const ScheduleState &)>& get_list,
+                            std::function<std::optional<std::reference_wrapper<const T>>(const ScheduleState&, const K&)>& get) {
+
+            std::vector<K> key_list;
+            {
+                auto all = get_list( this->snapshots.back() );
+                std::transform(all.begin(), all.end(), std::back_inserter( key_list ),
+                               [] (const T& value) -> const K& { return value.name(); }
+                               );
+            }
+            std::unordered_map<K, std::reference_wrapper<const T>> current;
+
+            for (std::size_t index = 0; index < this->snapshots.size(); index++) {
+                const auto& state = this->snapshots[index];
+                for (const auto& key : key_list) {
+                    const auto& maybe_value = get( this->snapshots[index] );
+                    if (maybe_value.has_value()) {
+                        if (!(maybe_value.value() == current[key])) {
+                            value_list.push_back( maybe_value.value() );
+                            index_list.push_back( index );
+                        }
+                    }
+                }
+            }
+        }
+
+
+        template <typename K, typename T>
+        void unpack_state_map(const std::vector<T>& value_list,
+                              const std::vector<std::size_t>& index_list,
+                              std::function<void(ScheduleState&, const K&, const T&)>& update) {
+
+        }
 
 
     private:
