@@ -55,6 +55,11 @@ public:
                    begin_report_step == data.begin_report_step;
         }
 
+        WTESTWell() = default;
+        WTESTWell(const std::string& name, Reason shut_reason, double test_interval, int num_test, double startup_time, int begin_report_step);
+        static WTESTWell serializeObject();
+
+
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {

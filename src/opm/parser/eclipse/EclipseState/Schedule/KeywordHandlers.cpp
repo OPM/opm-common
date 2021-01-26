@@ -141,7 +141,7 @@ namespace {
             }
         }
 
-        this->snapshots.back().network( std::move( ext_network ));
+        this->snapshots.back().update_network( std::move( ext_network ));
     }
 
     void Schedule::handleCOMPDAT(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
@@ -465,7 +465,7 @@ namespace {
 
                         auto udq_active = UDQActive(this->snapshots.back().udq_active());
                         if (production.updateUDQActive(this->getUDQConfig(current_step), udq_active))
-                            this->snapshots.back().udq_active( std::move(udq_active));
+                            this->snapshots.back().update_udq_active( std::move(udq_active));
                     }
                 }
             }
@@ -491,7 +491,7 @@ namespace {
                 this->updateGroup(std::move(group_ptr), handlerContext.currentStep);
             }
         }
-        this->snapshots.back().gconsale( std::move(new_gconsale) );
+        this->snapshots.back().update_gconsale( std::move(new_gconsale) );
     }
 
     void Schedule::handleGCONSUMP(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
@@ -510,7 +510,7 @@ namespace {
 
             new_gconsump.add(groupName, consumption_rate, import_rate, network_node_name, udqconfig, this->m_static.m_unit_system);
         }
-        this->snapshots.back().gconsump( std::move(new_gconsump) );
+        this->snapshots.back().update_gconsump( std::move(new_gconsump) );
     }
 
     void Schedule::handleGEFAC(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
@@ -726,7 +726,7 @@ namespace {
             ext_network.add_node(node);
         }
 
-        this->snapshots.back().network( ext_network );
+        this->snapshots.back().update_network( ext_network );
     }
 
     void Schedule::handleNUPCOL(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
@@ -737,12 +737,12 @@ namespace {
             OpmLog::note(msg);
         }
 
-        this->snapshots.back().nupcol(nupcol);
+        this->snapshots.back().update_nupcol(nupcol);
     }
 
     void Schedule::handleRPTSCHED(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         printf("snapshost.size(): %ld \n", this->snapshots.size());
-        this->snapshots.back().rpt_config( RPTConfig(handlerContext.keyword ));
+        this->snapshots.back().update_rpt_config( RPTConfig(handlerContext.keyword ));
     }
 
     void Schedule::handleTUNING(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
@@ -815,7 +815,7 @@ namespace {
             tuning.MXWSIT = ParserKeywords::TUNING::MXWSIT::defaultValue;
         }
 
-        this->snapshots.back().tuning( std::move( tuning ));
+        this->snapshots.back().update_tuning( std::move( tuning ));
         this->snapshots.back().events().addEvent(ScheduleEvents::TUNING_CHANGE);
     }
 
@@ -839,14 +839,14 @@ namespace {
 
     void Schedule::handleVFPINJ(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         auto table = VFPInjTable(handlerContext.keyword, this->m_static.m_unit_system);
-        this->snapshots.back().vfpinj( std::move(table) );
         this->snapshots.back().events().addEvent( ScheduleEvents::VFPINJ_UPDATE );
+        this->snapshots.back().update_vfpinj( std::move(table) );
     }
 
     void Schedule::handleVFPPROD(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         auto table = VFPProdTable(handlerContext.keyword, this->m_static.m_unit_system);
         this->snapshots.back().events().addEvent( ScheduleEvents::VFPPROD_UPDATE );
-        this->snapshots.back().vfpprod( std::move(table) );
+        this->snapshots.back().update_vfpprod( std::move(table) );
     }
 
     void Schedule::handleWCONHIST(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
@@ -968,7 +968,7 @@ namespace {
 
                 auto udq_active = UDQActive( this->snapshots.back().udq_active() );
                 if (properties->updateUDQActive(this->getUDQConfig(handlerContext.currentStep), udq_active))
-                    this->snapshots.back().udq_active( std::move(udq_active));
+                    this->snapshots.back().update_udq_active( std::move(udq_active));
             }
         }
     }
@@ -1030,7 +1030,7 @@ namespace {
 
                 auto udq_active = UDQActive(this->snapshots.back().udq_active());
                 if (injection->updateUDQActive(this->getUDQConfig(handlerContext.currentStep), udq_active))
-                    this->snapshots.back().udq_active( std::move(udq_active) );
+                    this->snapshots.back().update_udq_active( std::move(udq_active) );
             }
         }
     }
@@ -1291,7 +1291,7 @@ namespace {
 
                     auto udq_active = UDQActive(this->snapshots.back().udq_active());
                     if (prop->updateUDQActive(this->getUDQConfig(handlerContext.currentStep), udq_active))
-                        this->snapshots.back().udq_active( std::move(udq_active));
+                        this->snapshots.back().update_udq_active( std::move(udq_active));
                 } else {
                     auto inj = std::make_shared<Well::WellInjectionProperties>(well2->getInjectionProperties());
                     inj->handleWELTARG(cmode, new_arg, SiFactorP);
@@ -1372,7 +1372,7 @@ namespace {
                     + ", which makes WHISTCTL keyword not affect the simulation at all";
                 OpmLog::warning(msg);
             } else
-                this->snapshots.back().whistctl( controlMode );
+                this->snapshots.back().update_whistctl( controlMode );
         }
 
         const std::string bhp_terminate = record.getItem("BPH_TERMINATE").getTrimmedString(0);
@@ -1529,7 +1529,7 @@ namespace {
                     wlist.add(well);
             }
 
-            this->snapshots.back().wlist_manager(new_wlm);
+            this->snapshots.back().update_wlist_manager(new_wlm);
         }
     }
 
@@ -1774,7 +1774,7 @@ namespace {
                     new_config.add_well(well_name, reasons, test_interval, num_test, startup_time, handlerContext.currentStep);
             }
         }
-        this->snapshots.back().wtest_config( std::move(new_config) );
+        this->snapshots.back().update_wtest_config( std::move(new_config) );
     }
 
     void Schedule::handleWTRACER(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
@@ -1805,7 +1805,7 @@ namespace {
             this->updateWPAVE(wname, handlerContext.currentStep, wpave );
 
         auto& sched_state = this->snapshots.back();
-        sched_state.pavg(std::move(wpave));
+        sched_state.update_pavg(std::move(wpave));
     }
 
     void Schedule::handleWWPAVE(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {

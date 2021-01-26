@@ -23,6 +23,18 @@
 
 namespace Opm {
 
+WellTestConfig::WTESTWell::WTESTWell(const std::string& name_arg, Reason shut_reason_arg, double test_interval_arg, int num_test_arg, double startup_time_arg, int begin_report_step_arg) :
+    name(name_arg),
+    shut_reason(shut_reason_arg),
+    test_interval(test_interval_arg),
+    num_test(num_test_arg),
+    startup_time(startup_time_arg),
+    begin_report_step(begin_report_step_arg)
+{}
+
+WellTestConfig::WTESTWell WellTestConfig::WTESTWell::serializeObject() {
+    return WellTestConfig::WTESTWell("name", Reason::THP_DESIGN, 100, 1, 674, 56);
+}
 
 WellTestConfig::WellTestConfig() {
 
@@ -32,8 +44,7 @@ WellTestConfig::WellTestConfig() {
 WellTestConfig WellTestConfig::serializeObject()
 {
     WellTestConfig result;
-    result.wells = {{"test", ECONOMIC, 1.0, 2, 3.0, 4}};
-
+    result.wells = { WellTestConfig::WTESTWell::serializeObject() };
     return result;
 }
 
@@ -46,7 +57,7 @@ void WellTestConfig::add_well(const std::string& well, Reason shut_reason, doubl
     if (well_ptr) {
         *well_ptr = WTESTWell{well, shut_reason, test_interval, num_retries, startup_time, current_step};
     } else {
-        wells.push_back({well, shut_reason, test_interval, num_retries, startup_time, current_step});
+        wells.emplace_back(well, shut_reason, test_interval, num_retries, startup_time, current_step);
     }
 }
 

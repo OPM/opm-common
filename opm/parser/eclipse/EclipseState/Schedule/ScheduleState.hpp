@@ -70,74 +70,74 @@ namespace Opm {
         bool operator==(const ScheduleState& other) const;
         static ScheduleState serializeObject();
 
-        void pavg(PAvg pavg);
+        void update_pavg(PAvg pavg);
         const PAvg& pavg() const;
 
-        void tuning(Tuning tuning);
+        void update_tuning(Tuning tuning);
         Tuning& tuning();
         const Tuning& tuning() const;
 
-        void nupcol(int nupcol);
+        void update_nupcol(int nupcol);
         int nupcol() const;
 
-        void oilvap(OilVaporizationProperties oilvap);
+        void update_oilvap(OilVaporizationProperties oilvap);
         const OilVaporizationProperties& oilvap() const;
         OilVaporizationProperties& oilvap();
 
-        void events(Events events);
+        void update_events(Events events);
         Events& events();
         const Events& events() const;
 
-        void wellgroup_events(WellGroupEvents wgevents);
+        void update_wellgroup_events(WellGroupEvents wgevents);
         WellGroupEvents& wellgroup_events();
         const WellGroupEvents& wellgroup_events() const;
 
-        void geo_keywords(std::vector<DeckKeyword> geo_keywords);
+        void update_geo_keywords(std::vector<DeckKeyword> geo_keywords);
         std::vector<DeckKeyword>& geo_keywords();
         const std::vector<DeckKeyword>& geo_keywords() const;
 
-        void message_limits(MessageLimits message_limits);
+        void update_message_limits(MessageLimits message_limits);
         MessageLimits& message_limits();
         const MessageLimits& message_limits() const;
 
         Well::ProducerCMode whistctl() const;
-        void whistctl(Well::ProducerCMode whistctl);
+        void update_whistctl(Well::ProducerCMode whistctl);
 
         const WellTestConfig& wtest_config() const;
-        void wtest_config(WellTestConfig wtest_config);
+        void update_wtest_config(WellTestConfig wtest_config);
 
         const WListManager& wlist_manager() const;
-        void wlist_manager(WListManager wlist_manager);
+        void update_wlist_manager(WListManager wlist_manager);
 
         const GConSale& gconsale() const;
-        void gconsale(GConSale gconsale);
+        void update_gconsale(GConSale gconsale);
 
         const GConSump& gconsump() const;
-        void gconsump(GConSump gconsump);
+        void update_gconsump(GConSump gconsump);
 
         const Network::ExtNetwork& network() const;
-        void network(Network::ExtNetwork network);
+        void update_network(Network::ExtNetwork network);
 
         const RPTConfig& rpt_config() const;
-        void rpt_config(RPTConfig rpt_config);
+        void update_rpt_config(RPTConfig rpt_config);
 
         std::vector<std::reference_wrapper<const VFPProdTable>> vfpprod() const;
         const VFPProdTable& vfpprod(int table_id) const;
-        void vfpprod(VFPProdTable vfpprod);
+        void update_vfpprod(VFPProdTable vfpprod);
 
         std::vector<std::reference_wrapper<const VFPInjTable>> vfpinj() const;
         const VFPInjTable& vfpinj(int table_id) const;
-        void vfpinj(VFPInjTable vfpinj);
+        void update_vfpinj(VFPInjTable vfpinj);
 
         const Action::Actions& actions() const;
-        void actions(Action::Actions actions);
+        void update_actions(Action::Actions actions);
 
         const UDQActive& udq_active() const;
-        void udq_active(UDQActive udq_active);
+        void update_udq_active(UDQActive udq_active);
 
         const WellOrder& well_order() const;
         void well_order(const std::string& well);
-        void well_order(WellOrder well_order);
+        void update_well_order(WellOrder well_order);
 
         template<class Serializer>
         void serializeOp(Serializer& serializer) {
