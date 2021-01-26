@@ -54,8 +54,7 @@ public:
         aquifetp.serializeOp(serializer);
         aquiferct.serializeOp(serializer);
         aqconn.serializeOp(serializer);
-        // TODO:
-        // numerical_aquifers.serializeOp(serializer);
+        numerical_aquifers.serializeOp(serializer);
     }
 
 private:

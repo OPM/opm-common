@@ -1,5 +1,4 @@
 /*
-  Copyright (C) 2020 Equinor ASA
   Copyright (C) 2020 SINTEF Digital
   This file is part of the Open Porous Media project (OPM).
   OPM is free software: you can redistribute it and/or modify
@@ -131,5 +130,4 @@ namespace Opm {
                this->ve_frac_relperm == other.ve_frac_relperm &&
                this->ve_frac_cappress == other.ve_frac_cappress;
     }
-
 }

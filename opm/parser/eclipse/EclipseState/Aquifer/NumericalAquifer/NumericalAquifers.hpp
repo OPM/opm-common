@@ -42,6 +42,16 @@ namespace Opm {
         const NumericalAquiferCell& getCell(size_t global_index) const;
         bool operator==(const NumericalAquifers& other) const;
 
+        static NumericalAquifers serializeObject();
+        template <class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer.map(this->aquifers_);
+            // TODO: serialize pointers is problematic, for pointers should we regenerate the pointers?
+            // TODO: if yes, we need to write the function to generate this->aquifer_cells_
+            // serializer.map(this->aquifer_cells_);
+        }
+
     private:
         std::unordered_map <size_t, SingleNumericalAquifer> aquifers_;
         std::unordered_map<size_t, const NumericalAquiferCell*> aquifer_cells_;

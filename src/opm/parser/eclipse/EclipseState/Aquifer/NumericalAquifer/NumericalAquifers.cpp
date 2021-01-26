@@ -125,6 +125,12 @@ namespace Opm {
         return this->aquifers_.size();
     }
 
+    NumericalAquifers NumericalAquifers::serializeObject() {
+        NumericalAquifers result;
+        result.aquifers_  = {{1, SingleNumericalAquifer{1}}};
+        return result;
+    }
+
     const SingleNumericalAquifer& NumericalAquifers::getAquifer(const size_t aquifer_id) const {
         if ( !this->hasAquifer(aquifer_id)) {
            const auto msg = fmt::format(" There is no numerical aquifer {}", aquifer_id);

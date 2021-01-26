@@ -44,6 +44,7 @@ AquiferConfig AquiferConfig::serializeObject()
     result.aquifetp = Aquifetp::serializeObject();
     result.aquiferct = AquiferCT::serializeObject();
     result.aqconn = Aquancon::serializeObject();
+    result.numerical_aquifers = NumericalAquifers::serializeObject();
 
     return result;
 }

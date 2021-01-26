@@ -29,6 +29,7 @@ namespace Opm {
 
     struct NumericalAquiferCell {
         NumericalAquiferCell(const DeckRecord&, const EclipseGrid&, const FieldPropsManager&);
+        NumericalAquiferCell() = default;
         size_t aquifer_id; // aquifer id
         size_t I, J, K; // indices for the grid block
         double area; // cross-sectional area
@@ -45,6 +46,23 @@ namespace Opm {
         double cellVolume() const;
         double poreVolume() const;
         bool operator == (const NumericalAquiferCell& other) const;
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer) {
+            serializer(this->aquifer_id);
+            serializer(this->I);
+            serializer(this->J);
+            serializer(this->K);
+            serializer(this->area);
+            serializer(this->length);
+            serializer(this->porosity);
+            serializer(this->permeability);
+            serializer(this->depth);
+            serializer(this->pvttable);
+            serializer(this->sattable);
+            serializer(this->transmissibility);
+            serializer(this->global_index);
+        }
     };
 }
 

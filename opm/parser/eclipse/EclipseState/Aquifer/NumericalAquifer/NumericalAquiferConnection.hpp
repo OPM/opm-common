@@ -45,8 +45,24 @@ namespace Opm {
         double ve_frac_cappress;
 
         NumericalAquiferConnection(size_t i, size_t j, size_t k, size_t global_index, bool allow_connect_active, const DeckRecord& record);
+        NumericalAquiferConnection() = default;
 
         bool operator==(const NumericalAquiferConnection& other) const;
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer) {
+            serializer(this->aquifer_id);
+            serializer(this->I);
+            serializer(this->J);
+            serializer(this->K);
+            serializer(this->global_index);
+            serializer(this->face_dir);
+            serializer(this->trans_multipler);
+            serializer(this->trans_option);
+            serializer(this->connect_active_cell);
+            serializer(this->ve_frac_relperm);
+            serializer(this->ve_frac_cappress);
+        }
 
         static std::map<size_t, std::map<size_t, NumericalAquiferConnection>> generateConnections(const Deck& deck, const EclipseGrid& grid);
     private:
