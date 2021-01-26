@@ -219,6 +219,8 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
                                         double Kh,
                                         double rw,
                                         double r0,
+                                        double re,
+                                        double connection_length,
                                         double skin_factor,
                                         const int satTableId,
                                         const Connection::Direction direction,
@@ -228,12 +230,11 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
     {
         int conn_i = (i < 0) ? this->headI : i;
         int conn_j = (j < 0) ? this->headJ : j;
-        Connection conn(conn_i, conn_j, k, global_index, complnum, depth, state, CF, Kh, rw, r0,
+        Connection conn(conn_i, conn_j, k, global_index, complnum, depth, state, CF, Kh, rw, r0, re, connection_length,
                         skin_factor, satTableId, direction, ctf_kind,
                         seqIndex, defaultSatTabId);
         this->add(conn);
     }
-
 
 
     void WellConnections::addConnection(int i, int j , int k ,
@@ -244,6 +245,8 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
                                         double Kh,
                                         double rw,
                                         double r0,
+                                        double re,
+                                        double connection_length,
                                         double skin_factor,
                                         const int satTableId,
                                         const Connection::Direction direction,
@@ -263,6 +266,8 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
                             Kh,
                             rw,
                             r0,
+                            re,
+                            connection_length,
                             skin_factor,
                             satTableId,
                             direction,
@@ -359,21 +364,22 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
             if (CFItem.hasValue(0) && CFItem.getSIDouble(0) > 0.0)
                 CF = CFItem.getSIDouble(0);
 
+            // Angle of completion exposed to flow.  We assume centre
+            // placement so there's complete exposure (= 2\pi).
+            const double angle = 6.2831853071795864769252867665590057683943387987502116419498;
+            std::array<double,3> cell_size = grid.getCellDims(I,J,k);
+            const auto& D = effectiveExtent(direction, ntg[active_index], cell_size);
+
             /* We start with the absolute happy path; both CF and Kh are explicitly given in the deck. */
             if (CF > 0 && Kh > 0)
                 goto CF_done;
 
             /* We must calculate CF and Kh from the items in the COMPDAT record and cell properties. */
             if (permx && permy && permz) {
-                // Angle of completion exposed to flow.  We assume centre
-                // placement so there's complete exposure (= 2\pi).
-                const double angle = 6.2831853071795864769252867665590057683943387987502116419498;
                 std::array<double,3> cell_perm = {{ permx->operator[](active_index),
                                                     permy->operator[](active_index),
                                                     permz->operator[](active_index)}};
-                std::array<double,3> cell_size = grid.getCellDims(I,J,k);
                 const auto& K = permComponents(direction, cell_perm);
-                const auto& D = effectiveExtent(direction, ntg[active_index], cell_size);
 
                 if (r0 < 0)
                     r0 = effectiveRadius(K,D);
@@ -394,10 +400,13 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
             } else
                 throw std::invalid_argument("Missing PERM values to calculate connection factors");
 
-
         CF_done:
             if (r0 < 0)
                 r0 = RestartIO::RstConnection::inverse_peaceman(CF, Kh, rw, skin_factor);
+
+            // used by the PolymerMW module
+            double re = std::sqrt(D[0] * D[1] / angle * 2); // area equivalent radius of the grid block
+            double connection_length = D[2];            // the length of the well perforation
 
             auto prev = std::find_if( this->m_connections.begin(),
                                       this->m_connections.end(),
@@ -412,6 +421,8 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
                                     Kh,
                                     rw,
                                     r0,
+                                    re,
+                                    connection_length,
                                     skin_factor,
                                     satTableId,
                                     direction,
@@ -432,6 +443,8 @@ inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction 
                                    Kh,
                                    rw,
                                    r0,
+                                   re,
+                                   connection_length,
                                    skin_factor,
                                    satTableId,
                                    direction,
