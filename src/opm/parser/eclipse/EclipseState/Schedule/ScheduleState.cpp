@@ -206,6 +206,7 @@ ScheduleState ScheduleState::serializeObject() {
     ts.m_vfpinj.emplace( std::make_pair(178, std::make_shared<VFPInjTable>(VFPInjTable::serializeObject() )));
     ts.m_actions = std::make_shared<Action::Actions>( Action::Actions::serializeObject() );
     ts.m_udq_active = std::make_shared<UDQActive>( UDQActive::serializeObject() );
+    ts.m_network = std::make_shared<Network::ExtNetwork>( Network::ExtNetwork::serializeObject() );
     return ts;
 }
 
