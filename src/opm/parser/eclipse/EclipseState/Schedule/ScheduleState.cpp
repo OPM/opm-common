@@ -295,11 +295,11 @@ void ScheduleState::rpt_config(RPTConfig rpt_config) {
     this->m_rptconfig = std::make_shared<RPTConfig>(std::move(rpt_config));
 }
 
-std::vector<const VFPProdTable*> ScheduleState::vfpprod() const {
-    std::vector<const VFPProdTable*> tables;
+std::vector<std::reference_wrapper<const VFPProdTable>> ScheduleState::vfpprod() const {
+    std::vector<std::reference_wrapper<const VFPProdTable>> tables;
     for (const auto& [_, table] : this->m_vfpprod) {
         (void)_;
-        tables.push_back( table.get() );
+        tables.push_back( std::cref( *table ));
     }
     return tables;
 }
@@ -317,11 +317,11 @@ void ScheduleState::vfpprod(VFPProdTable vfpprod) {
     this->m_vfpprod[table_id] = std::make_shared<VFPProdTable>( std::move(vfpprod) );
 }
 
-std::vector<const VFPInjTable*> ScheduleState::vfpinj() const {
-    std::vector<const VFPInjTable*> tables;
+std::vector<std::reference_wrapper<const VFPInjTable>> ScheduleState::vfpinj() const {
+    std::vector<std::reference_wrapper<const VFPInjTable>> tables;
     for (const auto& [_, table] : this->m_vfpinj) {
         (void)_;
-        tables.push_back( table.get() );
+        tables.push_back( std::cref( *table ));
     }
     return tables;
 }
