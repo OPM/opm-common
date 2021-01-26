@@ -36,7 +36,7 @@ class AquiferConfig {
 public:
     AquiferConfig() = default;
     AquiferConfig(const TableManager& tables, const EclipseGrid& grid,
-                  const Deck& deck, const FieldPropsManager& fiedl_props);
+                  const Deck& deck, const FieldPropsManager& field_props);
     AquiferConfig(const Aquifetp& fetp, const AquiferCT& ct, const Aquancon& conn);
 
     static AquiferConfig serializeObject();

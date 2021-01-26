@@ -48,4 +48,8 @@ namespace Opm {
                 this->connections_ == other.connections_ &&
                 this->id_ == other.id_;
     }
+
+    size_t SingleNumericalAquifer::numConnections() const {
+        return this->connections_.size();
+    }
 }

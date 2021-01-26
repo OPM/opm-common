@@ -38,6 +38,7 @@ namespace Opm {
         size_t numAquifer() const;
         bool hasAquifer(size_t aquifer_id) const;
         bool hasCell(size_t global_index) const;
+        const SingleNumericalAquifer& getAquifer(size_t aquifer_id) const;
         const NumericalAquiferCell& getCell(size_t global_index) const;
         bool operator==(const NumericalAquifers& other) const;
 

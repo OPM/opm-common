@@ -124,4 +124,12 @@ namespace Opm {
     size_t NumericalAquifers::numAquifer() const {
         return this->aquifers_.size();
     }
+
+    const SingleNumericalAquifer& NumericalAquifers::getAquifer(const size_t aquifer_id) const {
+        if ( !this->hasAquifer(aquifer_id)) {
+           const auto msg = fmt::format(" There is no numerical aquifer {}", aquifer_id);
+           throw std::runtime_error(msg);
+        }
+        return this->aquifers_.at(aquifer_id);
+    }
 }
