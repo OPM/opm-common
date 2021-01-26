@@ -153,16 +153,8 @@ namespace Opm {
             m_message_limits.serializeOp(serializer);
             serializer(m_well_order);
             serializer(m_whistctl_mode);
-            serializer(m_wtest_config);
-            serializer(m_gconsale);
-            serializer(m_gconsump);
-            serializer(m_wlist_manager);
-            serializer(m_network);
-            serializer(m_rptconfig);
             serializer.map(m_vfpprod);
             serializer.map(m_vfpinj);
-            serializer(m_actions);
-            serializer(m_udq_active);
         }
 
 

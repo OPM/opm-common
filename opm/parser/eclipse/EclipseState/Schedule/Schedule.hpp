@@ -349,7 +349,93 @@ namespace Opm
             }
             serializer.vector(snapshots);
             m_static.serializeOp(serializer);
+
+            pack_unpack<WellTestConfig, Serializer>(serializer,
+                                                    std::mem_fn(&ScheduleState::wtest_config),
+                                                    std::mem_fn(&ScheduleState::update_wtest_config));
+
+            pack_unpack<GConSale, Serializer>(serializer,
+                                              std::mem_fn(&ScheduleState::gconsale),
+                                              std::mem_fn(&ScheduleState::update_gconsale));
+
+            pack_unpack<GConSump, Serializer>(serializer,
+                                              std::mem_fn(&ScheduleState::gconsump),
+                                              std::mem_fn(&ScheduleState::update_gconsump));
+
+            pack_unpack<WListManager, Serializer>(serializer,
+                                                  std::mem_fn(&ScheduleState::wlist_manager),
+                                                  std::mem_fn(&ScheduleState::update_wlist_manager));
+
+            pack_unpack<Network::ExtNetwork, Serializer>(serializer,
+                                                         std::mem_fn(&ScheduleState::network),
+                                                         std::mem_fn(&ScheduleState::update_network));
+
+            pack_unpack<RPTConfig, Serializer>(serializer,
+                                               std::mem_fn(&ScheduleState::rpt_config),
+                                               std::mem_fn(&ScheduleState::update_rpt_config));
+
+            pack_unpack<Action::Actions, Serializer>(serializer,
+                                                     std::mem_fn(&ScheduleState::actions),
+                                                     std::mem_fn(&ScheduleState::update_actions));
+
+            pack_unpack<UDQActive, Serializer>(serializer,
+                                                     std::mem_fn(&ScheduleState::udq_active),
+                                                     std::mem_fn(&ScheduleState::update_udq_active));
         }
+
+        template <typename T, class Serializer>
+        void pack_unpack(Serializer& serializer,
+                         const std::function<T(const ScheduleState &)>& get,
+                         const std::function<void(ScheduleState &, const T& )>& set) {
+
+            std::vector<T> value_list;
+            std::vector<std::size_t> index_list;
+
+            if (serializer.isSerializing())
+                pack_state<T>(value_list, index_list, get);
+
+            serializer.vector(value_list);
+            serializer.template vector<std::size_t, false>(index_list);
+
+            if (!serializer.isSerializing())
+                unpack_state<T>(value_list, index_list, set);
+        }
+
+
+        template <typename T>
+        void pack_state(std::vector<T>& value_list, std::vector<std::size_t>& index_list, const std::function<T(const ScheduleState &)>& get) {
+            if (this->snapshots.empty())
+                return;
+
+            value_list.push_back( get( this->snapshots[0] ));
+            index_list.push_back( 0 );
+            for (std::size_t index = 1; index < this->snapshots.size(); index++) {
+                const auto& value = get( this->snapshots[index] );
+                if (!(value == value_list.back())) {
+                    value_list.push_back( value );
+                    index_list.push_back( index );
+                }
+            }
+        }
+
+        template <typename T>
+        void unpack_state(const std::vector<T>& value_list, const std::vector<std::size_t>& index_list, const std::function<void(ScheduleState &, const T& )>& set) {
+            std::size_t unique_index = 0;
+            while (unique_index < value_list.size()) {
+                const auto& value = value_list[unique_index];
+                const auto& first_index = index_list[unique_index];
+                auto last_index = this->snapshots.size();
+                if (unique_index < (value_list.size() - 1))
+                    last_index = index_list[unique_index + 1];
+
+                for (std::size_t index=first_index; index < last_index; index++)
+                    set( this->snapshots[index], value );
+
+                unique_index++;
+            }
+        }
+
+
 
     private:
         template<class Key, class Value> using Map2 = std::map<Key,Value>;
@@ -439,6 +525,7 @@ namespace Opm
                 result[it.first].reconstruct(unique, it.second);
             }
         }
+
 
         static std::string formatDate(std::time_t t);
         std::string simulationDays(std::size_t currentStep) const;
