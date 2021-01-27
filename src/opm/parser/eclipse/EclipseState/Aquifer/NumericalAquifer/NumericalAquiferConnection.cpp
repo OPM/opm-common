@@ -34,9 +34,10 @@ namespace Opm {
     std::map<size_t, std::map<size_t, NumericalAquiferConnection>>
     NumericalAquiferConnection::generateConnections(const Deck &deck, const EclipseGrid &grid)
     {
-        std::map<size_t, std::map<size_t, NumericalAquiferConnection>> connections;
         using AQUCON=ParserKeywords::AQUCON;
-        if ( !deck.hasKeyword<AQUCON>() ) return connections;
+        if ( !deck.hasKeyword<AQUCON>() ) return {};
+
+        std::map<size_t, std::map<size_t, NumericalAquiferConnection>> connections;
 
         const auto& aqucon_keywords = deck.getKeywordList<AQUCON>();
         for (const auto& keyword : aqucon_keywords) {
@@ -83,16 +84,15 @@ namespace Opm {
         std::vector<NumericalAquiferConnection> cons;
 
         const size_t i1 = record.getItem<AQUCON::I1>().get<int>(0) - 1;
-        const size_t j1 = record.getItem<AQUCON::J1>().get<int>(0) -1;
+        const size_t j1 = record.getItem<AQUCON::J1>().get<int>(0) - 1;
         const size_t k1 = record.getItem<AQUCON::K1>().get<int>(0) - 1;
         const size_t i2 = record.getItem<AQUCON::I2>().get<int>(0) - 1;
-        const size_t j2 = record.getItem<AQUCON::J2>().get<int>(0) -1;
+        const size_t j2 = record.getItem<AQUCON::J2>().get<int>(0) - 1;
         const size_t k2 = record.getItem<AQUCON::K2>().get<int>(0) - 1;
 
-        const std::string str_allow_internal_cells = record.getItem<AQUCON::ALLOW_INTERNAL_CELLS>().getTrimmedString(0);
         // whether the connection face can connect to active/internal cells
         // by default NO, which means basically the aquifer should be outside of the reservoir
-        const bool allow_internal_cells = DeckItem::to_bool(str_allow_internal_cells);
+        const bool allow_internal_cells = DeckItem::to_bool( record.getItem<AQUCON::ALLOW_INTERNAL_CELLS>().getTrimmedString(0) );
         const FaceDir::DirEnum face_dir
                 = FaceDir::FromString(record.getItem<AQUCON::CONNECT_FACE>().getTrimmedString(0));
 
@@ -103,13 +103,10 @@ namespace Opm {
                     if (!grid.cellActive(i, j, k)) {
                         continue;
                     }
-                    /* if (!actnum[grid.getGlobalIndex(i, j, k)]) {
-                        continue;
-                    }*/
                     if (allow_internal_cells ||
                         !AquiferHelpers::neighborCellInsideReservoirAndActive(grid, i, j, k, face_dir)) {
                         const size_t global_index = grid.getGlobalIndex(i, j, k);
-                        cons.emplace_back(NumericalAquiferConnection{i, j, k, global_index, allow_internal_cells, record});
+                        cons.emplace_back(i, j, k, global_index, allow_internal_cells, record);
                     }
                 }
             }

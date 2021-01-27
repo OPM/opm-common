@@ -30,21 +30,21 @@ namespace Opm {
     struct NumericalAquiferCell {
         NumericalAquiferCell(const DeckRecord&, const EclipseGrid&, const FieldPropsManager&);
         NumericalAquiferCell() = default;
-        size_t aquifer_id; // aquifer id
-        size_t I, J, K; // indices for the grid block
-        double area; // cross-sectional area
+        size_t aquifer_id;
+        size_t I, J, K;
+        double area;
         double length;
         double porosity;
         double permeability;
-        double depth; // by default the grid block depth will be used
-        std::optional<double> init_pressure; // by default, the grid pressure from equilibration will be used
-        int pvttable; // by default, the block PVTNUM
-        int sattable; // saturation table number, by default, the block value
-        double transmissibility;
+        double depth;
+        std::optional<double> init_pressure;
+        int pvttable;
+        int sattable;
         size_t global_index;
 
         double cellVolume() const;
         double poreVolume() const;
+        double transmissiblity() const;
         bool operator == (const NumericalAquiferCell& other) const;
 
         template<class Serializer>
@@ -60,7 +60,6 @@ namespace Opm {
             serializer(this->depth);
             serializer(this->pvttable);
             serializer(this->sattable);
-            serializer(this->transmissibility);
             serializer(this->global_index);
         }
     };

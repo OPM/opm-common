@@ -70,8 +70,6 @@ namespace Opm {
         } else {
             this->sattable = satnum[active_index];
         }
-
-        this->transmissibility = 2. * this->permeability * this->area / this->length;
     }
 
     double NumericalAquiferCell::cellVolume() const {
@@ -91,12 +89,15 @@ namespace Opm {
                this->init_pressure == other.init_pressure &&
                this->pvttable == other.pvttable &&
                this->sattable == other.sattable &&
-               this->transmissibility == other.transmissibility &&
                this->global_index == other.global_index;
     }
 
     double NumericalAquiferCell::poreVolume() const {
         return this->porosity * this->cellVolume();
+    }
+
+    double NumericalAquiferCell::transmissiblity() const {
+        return 2. * this->permeability * this->area / this->length;;
     }
 }
 

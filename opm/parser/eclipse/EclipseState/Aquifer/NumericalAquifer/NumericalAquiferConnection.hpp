@@ -23,6 +23,7 @@
 #include <opm/parser/eclipse/EclipseState/Grid/FaceDir.hpp>
 #include <map>
 #include <array>
+#include <vector>
 
 namespace Opm {
 

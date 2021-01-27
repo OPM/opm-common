@@ -25,10 +25,13 @@
 #include <opm/common/OpmLog/KeywordLocation.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferCell.hpp>
 #include <opm/parser/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.hpp>
+#include <opm/parser/eclipse/EclipseState/Aquifer/NumericalAquifer/SingleNumericalAquifer.hpp>
+
+#include <set>
+
 
 namespace Opm {
 
@@ -37,18 +40,20 @@ namespace Opm {
         using AQUNUM=ParserKeywords::AQUNUM;
         if ( !deck.hasKeyword<AQUNUM>() ) return;
 
+        std::set<size_t> cells;
         // there might be multiple keywords of keyword AQUNUM, it is not totally
         // clear about the rules here. For now, we take care of all the keywords
         const auto& aqunum_keywords = deck.getKeywordList<AQUNUM>();
         for (const auto& keyword : aqunum_keywords) {
             for (const auto& record : *keyword) {
                 const NumericalAquiferCell aqu_cell(record, grid, field_props);
-                if (this->hasCell(aqu_cell.global_index)) {
+                if (cells.count(aqu_cell.global_index) > 0) {
                     auto error = fmt::format("Numerical aquifer cell at ({}, {}, {}) is declared more than once",
                                              aqu_cell.I + 1, aqu_cell.J + 1, aqu_cell.K + 1);
                     throw OpmInputError(error, keyword->location());
                 } else {
                     this->addAquiferCell(aqu_cell);
+                    cells.insert(aqu_cell.global_index);
                 }
             }
         }
@@ -60,34 +65,21 @@ namespace Opm {
     void NumericalAquifers::addAquiferCell(const NumericalAquiferCell& aqu_cell) {
         const size_t id = aqu_cell.aquifer_id;
         if (!this->hasAquifer(id)) {
-            this->aquifers_.insert(std::make_pair(id, SingleNumericalAquifer{id}));
+            this->m_aquifers.insert(std::make_pair(id, SingleNumericalAquifer{id}));
         }
 
-        auto& aquifer = this->aquifers_.at(id);
+        auto& aquifer = this->m_aquifers.at(id);
         aquifer.addAquiferCell(aqu_cell);
-
-        this->aquifer_cells_.insert(std::pair{aqu_cell.global_index, aquifer.getCellPrt(aquifer.numCells())});
     }
-
-    bool NumericalAquifers::hasCell(const size_t cell_global_index) const {
-        const auto& cells = this->aquifer_cells_;
-        return (cells.find(cell_global_index) != cells.end());
-    }
-
-    const NumericalAquiferCell& NumericalAquifers::getCell(const size_t cell_global_index) const {
-        assert(this->hasCell(cell_global_index));
-        return *(this->aquifer_cells_.at(cell_global_index));
-    }
-
 
     bool NumericalAquifers::hasAquifer(const size_t aquifer_id) const {
-        return (this->aquifers_.find(aquifer_id) != this->aquifers_.end());
+        return (this->m_aquifers.find(aquifer_id) != this->m_aquifers.end());
     }
 
     void NumericalAquifers::addAquiferConnections(const Deck& deck, const EclipseGrid& grid) {
         const auto aquifer_connections = NumericalAquiferConnection::generateConnections(deck, grid);
 
-        for (auto& pair : this->aquifers_) {
+        for (auto& pair : this->m_aquifers) {
             const size_t aqu_id = pair.first;
             const auto& aqu_cons = aquifer_connections.find(aqu_id);
             if (aqu_cons == aquifer_connections.end()) {
@@ -97,13 +89,15 @@ namespace Opm {
             auto& aquifer = pair.second;
             const auto& cons = aqu_cons->second;
 
+            const auto all_aquifer_cells = this->allAquiferCells();
             // For now, there is no two aquifers can be connected to one cell
             // aquifer can not connect to aquifer cells
             for (const auto& con : cons) {
                 const auto& aqu_con = con.second;
                 const size_t con_global_index = aqu_con.global_index;
-                if (this->hasCell(con_global_index)) {
-                    const size_t cell_aquifer_id = this->getCell(con_global_index).aquifer_id;
+                const auto cell_iter = all_aquifer_cells.find(con_global_index);
+                if (cell_iter != all_aquifer_cells.end()) {
+                    const size_t cell_aquifer_id = cell_iter->second->aquifer_id;
                     auto msg = fmt::format("Problem with keyword AQUCON \n"
                                            "Aquifer connection declared at grid cell ({}, {}, {}), is a aquifer cell "
                                            "of Aquifer {}, and will be removed",
@@ -118,24 +112,37 @@ namespace Opm {
     }
 
     bool NumericalAquifers::operator==(const NumericalAquifers& other) const {
-        return this->aquifers_ == other.aquifers_;
+        return this->m_aquifers == other.m_aquifers;
     }
 
     size_t NumericalAquifers::numAquifer() const {
-        return this->aquifers_.size();
+        return this->m_aquifers.size();
     }
 
     NumericalAquifers NumericalAquifers::serializeObject() {
         NumericalAquifers result;
-        result.aquifers_  = {{1, SingleNumericalAquifer{1}}};
+        result.m_aquifers  = {{1, SingleNumericalAquifer{1}}};
         return result;
     }
 
     const SingleNumericalAquifer& NumericalAquifers::getAquifer(const size_t aquifer_id) const {
-        if ( !this->hasAquifer(aquifer_id)) {
-           const auto msg = fmt::format(" There is no numerical aquifer {}", aquifer_id);
-           throw std::runtime_error(msg);
+        const auto iter = this->m_aquifers.find(aquifer_id);
+        if ( iter != this->m_aquifers.end() ) {
+            return iter->second;
+        } else {
+            const auto msg = fmt::format(" There is no numerical aquifer {}", aquifer_id);
+            throw std::runtime_error(msg);
         }
-        return this->aquifers_.at(aquifer_id);
+    }
+
+    std::unordered_map<size_t, const NumericalAquiferCell*> NumericalAquifers::allAquiferCells() const {
+        std::unordered_map<size_t, const NumericalAquiferCell*> cells;
+        for (const auto& [id, aquifer] : this->m_aquifers) {
+            for (size_t i = 0; i < aquifer.numCells(); ++i) {
+                const NumericalAquiferCell* cell_ptr = aquifer.getCellPrt(i);
+                cells.insert(std::make_pair(cell_ptr->global_index, cell_ptr));
+            }
+        }
+        return cells;
     }
 }

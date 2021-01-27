@@ -28,7 +28,7 @@ namespace Opm {
     class Deck;
     class EclipseGrid;
     class FieldPropsManager;
-    class SingleNumericalAquifer;
+    struct NumericalAquiferCell;
 
     class NumericalAquifers {
     public:
@@ -37,24 +37,20 @@ namespace Opm {
 
         size_t numAquifer() const;
         bool hasAquifer(size_t aquifer_id) const;
-        bool hasCell(size_t global_index) const;
         const SingleNumericalAquifer& getAquifer(size_t aquifer_id) const;
-        const NumericalAquiferCell& getCell(size_t global_index) const;
         bool operator==(const NumericalAquifers& other) const;
+
+        std::unordered_map<size_t, const NumericalAquiferCell*> allAquiferCells() const;
 
         static NumericalAquifers serializeObject();
         template <class Serializer>
         void serializeOp(Serializer& serializer)
         {
-            serializer.map(this->aquifers_);
-            // TODO: serialize pointers is problematic, for pointers should we regenerate the pointers?
-            // TODO: if yes, we need to write the function to generate this->aquifer_cells_
-            // serializer.map(this->aquifer_cells_);
+            serializer.map(this->m_aquifers);
         }
 
     private:
-        std::unordered_map <size_t, SingleNumericalAquifer> aquifers_;
-        std::unordered_map<size_t, const NumericalAquiferCell*> aquifer_cells_;
+        std::unordered_map <size_t, SingleNumericalAquifer> m_aquifers;
 
         void addAquiferCell(const NumericalAquiferCell& aqu_cell);
 
