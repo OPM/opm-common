@@ -168,7 +168,7 @@ namespace {
             return 0;
         }
 
-        const auto& udqAct = sched[simStep].udq_active();
+        const auto& udqAct = sched[simStep].udq_active.get();
         const auto& iuad = udqAct.get_iuad();
 
         return std::count_if(iuad.begin(), iuad.end(), [](const Opm::UDQActive::Record rec) {
@@ -184,7 +184,7 @@ namespace {
             return 0;
         }
 
-        const auto& udqAct = sched[simStep].udq_active();
+        const auto& udqAct = sched[simStep].udq_active.get();
         const auto& iuap = udqAct.get_iuap();
 
         return std::count_if(iuap.begin(), iuap.end(), [](const Opm::UDQActive::InputRecord rec) {
@@ -477,7 +477,7 @@ createInteHead(const EclipseState& es,
     const auto ngmax  = (report_step == 0)
         ? 0 : numGroupsInField(sched, lookup_step);
 
-    const auto& acts  = sched[lookup_step].actions();
+    const auto& acts  = sched[lookup_step].actions.get();
     const auto& rspec = es.runspec();
     const auto& tdim  = es.getTableManager();
     const auto& rdim  = tdim.getRegdims();

@@ -812,7 +812,7 @@ captureDeclaredUDQData(const Opm::Schedule&                 sched,
     }
 
 
-    auto udq_active = sched[simStep].udq_active();
+    auto udq_active = sched[simStep].udq_active.get();
     if (udq_active) {
         const auto& udq_records = udq_active.get_iuad();
         int cnt_iuad = 0;

@@ -54,8 +54,64 @@ namespace Opm {
 
     class WellTestConfig;
 
+
+
     class ScheduleState {
     public:
+        /*
+          In the SCHEDULE section typically all information is a function of
+          time, and the ScheduleState class is used to manage a snapshot of
+          state at one point in time. Typically a large part of the
+          configuration does not change between timesteps and consecutive
+          ScheduleState instances are very similar, to handle this many of the
+          ScheduleState members are implemented as std::shared_ptr<>s.
+
+          The ptr_member<T> class is a small wrapper around the
+          std::shared_ptr<T>. The ptr_member<T> class is meant to be internal to
+          the Schedule implementation and downstream should only access this
+          indirectly like e.g.
+
+             const auto& gconsum = sched_state.gconsump();
+
+          The remaining details of the ptr_member<T> class are heavily
+          influenced by the code used to serialize the Schedule information.
+         */
+
+
+
+        template <typename T>
+        class ptr_member {
+        public:
+            const T& get() const {
+                return *this->m_data;
+            }
+
+            /*
+              This will allocate new storage and assign @object to the new
+              storage.
+            */
+            void update(T object)
+            {
+                this->m_data = std::make_shared<T>( std::move(object) );
+            }
+
+            /*
+              Will reassign the pointer to point to existing shared instance
+              @other.
+            */
+            void update(const ptr_member<T>& other)
+            {
+                this->m_data = other.m_data;
+            }
+
+            const T& operator()() const {
+                return *this->m_data;
+            }
+
+        private:
+            std::shared_ptr<T> m_data;
+        };
+
         ScheduleState() = default;
         explicit ScheduleState(const std::chrono::system_clock::time_point& start_time);
         ScheduleState(const std::chrono::system_clock::time_point& start_time, const std::chrono::system_clock::time_point& end_time);
@@ -69,9 +125,6 @@ namespace Opm {
 
         bool operator==(const ScheduleState& other) const;
         static ScheduleState serializeObject();
-
-        void update_pavg(PAvg pavg);
-        const PAvg& pavg() const;
 
         void update_tuning(Tuning tuning);
         Tuning& tuning();
@@ -103,23 +156,49 @@ namespace Opm {
         Well::ProducerCMode whistctl() const;
         void update_whistctl(Well::ProducerCMode whistctl);
 
-        const WellTestConfig& wtest_config() const;
-        void update_wtest_config(WellTestConfig wtest_config);
+        /*********************************************************************/
 
-        const WListManager& wlist_manager() const;
-        void update_wlist_manager(WListManager wlist_manager);
+        ptr_member<PAvg> pavg;
+        ptr_member<WellTestConfig> wtest_config;
+        ptr_member<GConSale> gconsale;
+        ptr_member<GConSump> gconsump;
+        ptr_member<WListManager> wlist_manager;
+        ptr_member<Network::ExtNetwork> network;
+        ptr_member<RPTConfig> rpt_config;
+        ptr_member<Action::Actions> actions;
+        ptr_member<UDQActive> udq_active;
+        ptr_member<NameOrder> well_order;
 
-        const GConSale& gconsale() const;
-        void update_gconsale(GConSale gconsale);
+        template <typename T>
+        ptr_member<T>& get() {
+            if constexpr ( std::is_same_v<T, PAvg> )
+                             return this->pavg;
+            else if constexpr ( std::is_same_v<T, WellTestConfig> )
+                                  return this->wtest_config;
+            else if constexpr ( std::is_same_v<T, GConSale> )
+                                  return this->gconsale;
+            else if constexpr ( std::is_same_v<T, GConSump> )
+                                  return this->gconsump;
+            else if constexpr ( std::is_same_v<T, WListManager> )
+                                  return this->wlist_manager;
+            else if constexpr ( std::is_same_v<T, Network::ExtNetwork> )
+                                  return this->network;
+            else if constexpr ( std::is_same_v<T, RPTConfig> )
+                                  return this->rpt_config;
+            else if constexpr ( std::is_same_v<T, Action::Actions> )
+                                  return this->actions;
+            else if constexpr ( std::is_same_v<T, UDQActive> )
+                                  return this->udq_active;
+            else if constexpr ( std::is_same_v<T, NameOrder> )
+                                  return this->well_order;
+        }
 
-        const GConSump& gconsump() const;
-        void update_gconsump(GConSump gconsump);
+        template <typename T>
+        void update_ptr(ScheduleState& other) {
+            auto& member = this->get<T>();
+            member.update( other.get<T>() );
+        }
 
-        const Network::ExtNetwork& network() const;
-        void update_network(Network::ExtNetwork network);
-
-        const RPTConfig& rpt_config() const;
-        void update_rpt_config(RPTConfig rpt_config);
 
         std::vector<std::reference_wrapper<const VFPProdTable>> vfpprod() const;
         const VFPProdTable& vfpprod(int table_id) const;
@@ -131,21 +210,10 @@ namespace Opm {
         void update_vfpinj(VFPInjTable vfpinj);
         std::optional<std::reference_wrapper<const VFPInjTable>> try_vfpinj(int table_id) const;
 
-        const Action::Actions& actions() const;
-        void update_actions(Action::Actions actions);
-
-        const UDQActive& udq_active() const;
-        void update_udq_active(UDQActive udq_active);
-
-        const NameOrder& well_order() const;
-        void well_order(const std::string& well);
-        void update_well_order(NameOrder well_order);
-
         template<class Serializer>
         void serializeOp(Serializer& serializer) {
             serializer(m_start_time);
             serializer(m_end_time);
-            serializer(m_pavg);
             m_tuning.serializeOp(serializer);
             serializer(m_nupcol);
             m_oilvap.serializeOp(serializer);
@@ -153,7 +221,6 @@ namespace Opm {
             m_wellgroup_events.serializeOp(serializer);
             serializer.vector(m_geo_keywords);
             m_message_limits.serializeOp(serializer);
-            serializer(m_well_order);
             serializer(m_whistctl_mode);
             serializer.map(m_vfpprod);
             serializer.map(m_vfpinj);
@@ -164,7 +231,6 @@ namespace Opm {
         std::chrono::system_clock::time_point m_start_time;
         std::optional<std::chrono::system_clock::time_point> m_end_time;
 
-        std::shared_ptr<PAvg> m_pavg;
         Tuning m_tuning;
         int m_nupcol;
         OilVaporizationProperties m_oilvap;
@@ -173,15 +239,6 @@ namespace Opm {
         std::vector<DeckKeyword> m_geo_keywords;
         MessageLimits m_message_limits;
         Well::ProducerCMode m_whistctl_mode = Well::ProducerCMode::CMODE_UNDEFINED;
-        std::shared_ptr<NameOrder> m_well_order;
-        std::shared_ptr<WellTestConfig> m_wtest_config;
-        std::shared_ptr<GConSale> m_gconsale;
-        std::shared_ptr<GConSump> m_gconsump;
-        std::shared_ptr<WListManager> m_wlist_manager;
-        std::shared_ptr<Network::ExtNetwork> m_network;
-        std::shared_ptr<RPTConfig> m_rptconfig;
-        std::shared_ptr<Action::Actions> m_actions;
-        std::shared_ptr<UDQActive> m_udq_active;
         std::map<int, std::shared_ptr<VFPProdTable>> m_vfpprod;
         std::map<int, std::shared_ptr<VFPInjTable>> m_vfpinj;
     };

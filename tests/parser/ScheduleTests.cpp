@@ -2900,12 +2900,12 @@ WCONINJH
         BOOST_CHECK_CLOSE( 0.0 * 1e5,  pro1.THPH, 1e-5 );
 
         {
-            const auto& wtest_config = schedule[0].wtest_config();
+            const auto& wtest_config = schedule[0].wtest_config.get();
             BOOST_CHECK_EQUAL(wtest_config.size(), 0U);
         }
 
         {
-            const auto& wtest_config = schedule[1].wtest_config();
+            const auto& wtest_config = schedule[1].wtest_config.get();
             BOOST_CHECK_EQUAL(wtest_config.size(), 0U);
         }
     }
@@ -3198,12 +3198,12 @@ TSTEP
 BOOST_AUTO_TEST_CASE(WTEST_CONFIG) {
     const auto& schedule = make_schedule(createDeckWTEST());
 
-    const auto& wtest_config1 = schedule[0].wtest_config();
+    const auto& wtest_config1 = schedule[0].wtest_config.get();
     BOOST_CHECK_EQUAL(wtest_config1.size(), 2U);
     BOOST_CHECK(wtest_config1.has("ALLOW"));
     BOOST_CHECK(!wtest_config1.has("BAN"));
 
-    const auto& wtest_config2 = schedule[1].wtest_config();
+    const auto& wtest_config2 = schedule[1].wtest_config.get();
     BOOST_CHECK_EQUAL(wtest_config2.size(), 3U);
     BOOST_CHECK(!wtest_config2.has("ALLOW"));
     BOOST_CHECK(wtest_config2.has("BAN"));

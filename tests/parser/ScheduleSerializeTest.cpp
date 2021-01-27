@@ -276,10 +276,10 @@ BOOST_AUTO_TEST_CASE(SerializeWTest) {
     {
         std::vector<Opm::WellTestConfig> value_list;
         std::vector<std::size_t> index_list;
-        sched.pack_state<Opm::WellTestConfig>( value_list, index_list, std::mem_fn( &ScheduleState::wtest_config ));
+        sched.pack_state<Opm::WellTestConfig>( value_list, index_list );
         BOOST_CHECK_EQUAL( value_list.size(), 2 );
 
-        sched0.unpack_state<Opm::WellTestConfig>( value_list, index_list, std::mem_fn( &ScheduleState::update_wtest_config ));
+        sched0.unpack_state<Opm::WellTestConfig>( value_list, index_list );
     }
     BOOST_CHECK( wtest1 == sched0[0].wtest_config());
     BOOST_CHECK( wtest1 == sched0[1].wtest_config());
@@ -299,9 +299,9 @@ BOOST_AUTO_TEST_CASE(SerializeWList) {
     {
         std::vector<Opm::WListManager> value_list;
         std::vector<std::size_t> index_list;
-        sched.pack_state<Opm::WListManager>( value_list, index_list, std::mem_fn( &ScheduleState::wlist_manager ));
+        sched.pack_state<Opm::WListManager>( value_list, index_list);
         BOOST_CHECK_EQUAL( value_list.size(), 2 );
-        sched0.unpack_state<Opm::WListManager>( value_list, index_list, std::mem_fn(&ScheduleState::update_wlist_manager) );
+        sched0.unpack_state<Opm::WListManager>( value_list, index_list );
     }
     BOOST_CHECK( wlm1 == sched0[0].wlist_manager());
     BOOST_CHECK( wlm1 == sched0[1].wlist_manager());
@@ -317,15 +317,15 @@ BOOST_AUTO_TEST_CASE(SerializeWList) {
 BOOST_AUTO_TEST_CASE(SerializeGCONSALE) {
     auto sched  = make_schedule(GCONSALE_deck);
     auto sched0 = make_schedule(deck0);
-    auto gconsale1 = sched[0].gconsale();
-    auto gconsale2 = sched[3].gconsale();
+    auto gconsale1 = sched[0].gconsale.get();
+    auto gconsale2 = sched[3].gconsale.get();
 
     {
         std::vector<Opm::GConSale> value_list;
         std::vector<std::size_t> index_list;
-        sched.pack_state<Opm::GConSale>( value_list, index_list, std::mem_fn( &ScheduleState::gconsale ));
+        sched.pack_state<Opm::GConSale>( value_list, index_list );
         BOOST_CHECK_EQUAL( value_list.size(), 2 );
-        sched0.unpack_state<Opm::GConSale>( value_list, index_list, std::mem_fn( &ScheduleState::update_gconsale ));
+        sched0.unpack_state<Opm::GConSale>( value_list, index_list );
     }
 
     BOOST_CHECK( gconsale1 == sched0[0].gconsale());
@@ -340,15 +340,15 @@ BOOST_AUTO_TEST_CASE(SerializeGCONSALE) {
 BOOST_AUTO_TEST_CASE(SerializeGCONSUMP) {
     auto sched  = make_schedule(GCONSALE_deck);
     auto sched0 = make_schedule(deck0);
-    auto gconsump1 = sched[0].gconsump();
-    auto gconsump2 = sched[3].gconsump();
+    auto gconsump1 = sched[0].gconsump.get();
+    auto gconsump2 = sched[3].gconsump.get();
 
     {
         std::vector<Opm::GConSump> value_list;
         std::vector<std::size_t> index_list;
-        sched.pack_state<Opm::GConSump>( value_list, index_list, std::mem_fn( &ScheduleState::gconsump ));
+        sched.pack_state<Opm::GConSump>( value_list, index_list );
         BOOST_CHECK_EQUAL( value_list.size(), 2 );
-        sched0.unpack_state<Opm::GConSump>( value_list, index_list, std::mem_fn( &ScheduleState::update_gconsump ));
+        sched0.unpack_state<Opm::GConSump>( value_list, index_list );
     }
 
     BOOST_CHECK( gconsump1 == sched0[0].gconsump());

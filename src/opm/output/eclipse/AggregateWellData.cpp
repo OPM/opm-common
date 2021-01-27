@@ -929,8 +929,8 @@ namespace {
         std::vector<std::pair<std::string, Opm::Action::Result>>
         act_res_stat(const Opm::Schedule& sched, const Opm::Action::State& action_state, const Opm::SummaryState&  smry, const std::size_t sim_step) {
             std::vector<std::pair<std::string, Opm::Action::Result>> results;
-            const auto& acts = sched[sim_step].actions();
-            Opm::Action::Context context(smry, sched[sim_step].wlist_manager());
+            const auto& acts = sched[sim_step].actions.get();
+            Opm::Action::Context context(smry, sched[sim_step].wlist_manager.get());
             auto sim_time = sched.simTime(sim_step);
             for (const auto& action : acts.pending(action_state, sim_time)) {
                 auto result = action->eval(context);

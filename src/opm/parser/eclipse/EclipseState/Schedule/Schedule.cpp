@@ -495,9 +495,9 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
     }
 
     void Schedule::addACTIONX(const Action::ActionX& action) {
-        auto new_actions = Action::Actions( this->snapshots.back().actions() );
+        auto new_actions = this->snapshots.back().actions.get();
         new_actions.add( action );
-        this->snapshots.back().update_actions( std::move(new_actions) );
+        this->snapshots.back().actions.update( std::move(new_actions) );
     }
 
     void Schedule::handlePYACTION(const DeckKeyword& keyword) {
@@ -518,9 +518,9 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
             module = this->m_static.m_input_path + "/" + module_arg;
 
         Action::PyAction pyaction(this->m_static.m_python_handle, name, run_count, module);
-        auto new_actions = Action::Actions( this->snapshots.back().actions() );
+        auto new_actions = this->snapshots.back().actions.get();
         new_actions.add(pyaction);
-        this->snapshots.back().update_actions( std::move(new_actions) );
+        this->snapshots.back().actions.update( std::move(new_actions) );
     }
 
     void Schedule::applyEXIT(const DeckKeyword& keyword, std::size_t report_step) {
@@ -831,10 +831,15 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
 
     void Schedule::addWell(Well well, std::size_t report_step) {
         const std::string wname = well.name();
+        auto& sched_state = this->snapshots.back();
 
-        this->snapshots.back().events().addEvent( ScheduleEvents::NEW_WELL );
-        this->snapshots.back().wellgroup_events().addWell( wname );
-        this->snapshots.back().well_order( wname );
+        sched_state.events().addEvent( ScheduleEvents::NEW_WELL );
+        sched_state.wellgroup_events().addWell( wname );
+        {
+            auto wo = sched_state.well_order.get();
+            wo.add( wname );
+            sched_state.well_order.update( std::move(wo) );
+        }
         well.setInsertIndex(this->wells_static.size());
         this->wells_static.insert( std::make_pair(wname, DynamicState<std::shared_ptr<Well>>(m_timeMap, nullptr)));
         auto& dynamic_well_state = this->wells_static.at(wname);
@@ -876,7 +881,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         this->addWell( std::move(well), timeStep );
 
         const auto& ts = this->operator[](timeStep);
-        this->updateWPAVE( wellName, timeStep, ts.pavg() );
+        this->updateWPAVE( wellName, timeStep, ts.pavg.get() );
     }
 
 
@@ -1063,7 +1068,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         else
             sched_state = &this->snapshots.back();
 
-        return WellMatcher(sched_state->well_order(), sched_state->wlist_manager());
+        return WellMatcher(sched_state->well_order.get(), sched_state->wlist_manager.get());
     }
 
 
@@ -1869,15 +1874,16 @@ void Schedule::create_first(const std::chrono::system_clock::time_point& start_t
     sched_state.update_nupcol( this->m_static.m_runspec.nupcol() );
     sched_state.update_oilvap( OilVaporizationProperties( this->m_static.m_runspec.tabdims().getNumPVTTables() ));
     sched_state.update_message_limits( this->m_static.m_deck_message_limits );
-    sched_state.update_wtest_config( WellTestConfig() );
-    sched_state.update_gconsale( GConSale() );
-    sched_state.update_gconsump( GConSump() );
-    sched_state.update_wlist_manager( WListManager() );
-    sched_state.update_network( Network::ExtNetwork() );
-    sched_state.update_rpt_config( RPTConfig() );
-    sched_state.update_actions( Action::Actions() );
-    sched_state.update_udq_active( UDQActive() );
-    sched_state.update_well_order( NameOrder() );
+    sched_state.pavg.update( PAvg() );
+    sched_state.wtest_config.update( WellTestConfig() );
+    sched_state.gconsale.update( GConSale() );
+    sched_state.gconsump.update( GConSump() );
+    sched_state.wlist_manager.update( WListManager() );
+    sched_state.network.update( Network::ExtNetwork() );
+    sched_state.rpt_config.update( RPTConfig() );
+    sched_state.actions.update( Action::Actions() );
+    sched_state.udq_active.update( UDQActive() );
+    sched_state.well_order.update( NameOrder() );
     this->addGroup("FIELD", 0);
 }
 
