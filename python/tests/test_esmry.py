@@ -15,7 +15,7 @@ class TestEclFile(unittest.TestCase):
 
     def test_base_runs(self):
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(RuntimeError):
             ESmry("/file/that/does_not_exists")
 
         smry1 = ESmry(test_path("data/SPE1CASE1.SMSPEC"))

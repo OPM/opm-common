@@ -498,9 +498,18 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         const std::string& gdfile_arg = gdfile_kw.getRecord(0).getItem("filename").get<std::string>(0);
         std::string filename = deck.makeDeckPath(gdfile_arg);
 
-        Opm::EclIO::EclFile egridfile(filename);
+        std::unique_ptr<Opm::EclIO::EclFile> egridfile;
+        // Turns out some windows applications export .DATA files with relative
+        // GDFILE keywords with a windows formatted path, if open fails we give
+        // it one more try with the replacement '\'' -> '/'.
+        try {
+            egridfile = std::make_unique<Opm::EclIO::EclFile>(filename);
+        } catch (const std::runtime_error& ) {
+            std::replace(filename.begin(), filename.end(), '\\', '/');
+            egridfile = std::make_unique<Opm::EclIO::EclFile>(filename);
+        }
 
-        initGridFromEGridFile(egridfile, filename);
+        initGridFromEGridFile(*egridfile, filename);
     }
 
     void EclipseGrid::initCartesianGrid(const Deck& deck) {

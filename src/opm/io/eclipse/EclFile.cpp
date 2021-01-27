@@ -20,6 +20,7 @@
 #include <opm/io/eclipse/EclUtil.hpp>
 #include <opm/common/ErrorMacros.hpp>
 
+#include <fmt/format.h>
 #include <algorithm>
 #include <array>
 #include <cstring>
@@ -39,10 +40,8 @@ namespace Opm { namespace EclIO {
 
 EclFile::EclFile(const std::string& filename, bool preload) : inputFilename(filename)
 {
-    if (!fileExists(filename)){
-        std::string message="Could not open EclFile: " + filename;
-        OPM_THROW(std::invalid_argument, message);
-    }
+    if (!fileExists(filename))
+        throw std::runtime_error(fmt::format("Can not open EclFile: {}", filename));
 
     std::fstream fileH;
 
@@ -54,10 +53,8 @@ EclFile::EclFile(const std::string& filename, bool preload) : inputFilename(file
         fileH.open(filename, std::ios::in |  std::ios::binary);
     }
 
-    if (!fileH) {
-        std::string message="Could not open file: " + filename;
-        OPM_THROW(std::runtime_error, message);
-    }
+    if (!fileH)
+        throw std::runtime_error(fmt::format("Can not open EclFile: {}", filename));
 
     int n = 0;
     while (!isEOF(&fileH)) {

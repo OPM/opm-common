@@ -28,7 +28,7 @@ class TestEclFile(unittest.TestCase):
                  "PERMX","PERMY", "PERMZ","NTG","TRANX","TRANY","TRANZ","TABDIMS","TAB",
                  "ACTNUM","EQLNUM","FIPNUM","PVTNUM","SATNUM","TRANNNC"]
 
-        self.assertRaises(ValueError, EclFile, "/file/that/does_not_exists")
+        self.assertRaises(RuntimeError, EclFile, "/file/that/does_not_exists")
 
         file2uf = EclFile(test_path("data/SPE9.INIT"), preload=False)
         self.assertEqual(len(file2uf), 24)

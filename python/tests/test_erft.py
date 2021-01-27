@@ -22,7 +22,7 @@ class TestEclFile(unittest.TestCase):
                        ('PROD', (2017, 7, 31), 942.0) ]
 
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(RuntimeError):
             ERft("/file/that/does_not_exists")
 
         rft1 = ERft(test_path("data/SPE1CASE1.RFT"))
