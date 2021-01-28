@@ -162,8 +162,8 @@ namespace Opm
 
     class Schedule {
     public:
-        using WellMap = OrderedMap<std::string, DynamicState<std::shared_ptr<Well>>>;
         using GroupMap = OrderedMap<std::string, DynamicState<std::shared_ptr<Group>>>;
+        using WellMap = std::unordered_map<std::string, DynamicState<std::shared_ptr<Well>>>;
 
         Schedule() = default;
         explicit Schedule(std::shared_ptr<const Python> python_handle);
