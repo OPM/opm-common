@@ -21,6 +21,7 @@
 #define OPM_SINGLENUMERICALAQUIFER_HPP
 
 #include <vector>
+#include <set>
 
 #include <opm/parser/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferConnection.hpp>
 #include <opm/parser/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferCell.hpp>
@@ -40,6 +41,11 @@ namespace Opm {
         size_t numCells() const;
         size_t numConnections() const;
         const NumericalAquiferCell* getCellPrt(size_t index) const;
+
+        // we remove the connection around the aquifer cells to isolate aquifer cells
+        // from the other part of the reservoir
+        // the removing of the connection is done by make transmissiblities to be zero
+        std::array<std::set<size_t>, 3> transToRemove(const EclipseGrid& grid) const;
 
         bool operator==(const SingleNumericalAquifer& other) const;
 

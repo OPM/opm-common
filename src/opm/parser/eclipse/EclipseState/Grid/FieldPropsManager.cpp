@@ -22,6 +22,7 @@
 #include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/common/utility/Serializer.hpp>
+#include <opm/parser/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.hpp>
 
 #include "FieldProps.hpp"
 
@@ -139,6 +140,10 @@ void FieldPropsManager::deserialize_tran(const std::vector<char>& buffer) {
 
 bool FieldPropsManager::tran_active(const std::string& keyword) const {
     return this->fp->tran_active(keyword);
+}
+
+void FieldPropsManager::applyNumericalAquifer(const NumericalAquifers& aquifers) {
+    return this->fp->applyNumericalAquifers(aquifers);
 }
 
 template<class MapType>

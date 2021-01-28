@@ -18,6 +18,9 @@
 #include <functional>
 #include <algorithm>
 #include <unordered_map>
+#include <array>
+#include <vector>
+#include <set>
 
 #include <opm/common/utility/OpmInputError.hpp>
 
@@ -39,6 +42,7 @@
 #include <opm/parser/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/common/utility/Serializer.hpp>
+#include <opm/parser/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.hpp>
 
 #include "FieldProps.hpp"
 #include "Operate.hpp"
@@ -1211,6 +1215,40 @@ bool FieldProps::tran_active(const std::string& keyword) const {
     return calculator != this->tran.end() && calculator->second.size() > 0;
 }
 
+void FieldProps::applyNumericalAquifers(const NumericalAquifers& numerical_aquifers) {
+    this->updateTransWithNumericalAquifer(numerical_aquifers);
+}
+
+void FieldProps::updateTransWithNumericalAquifer(const NumericalAquifers& numerical_aquifers) {
+    const std::array<std::set<size_t>, 3> trans_to_remove = numerical_aquifers.transToRemove(*(this->grid_ptr));
+    std::array<std::vector<Box::cell_index>, 3> index_lists;
+    for (int i = 0; i < 3; ++i) {
+        size_t num = 0;
+        for (const auto& elem : trans_to_remove[i]) {
+            const size_t active_index = this->grid_ptr->activeIndex(elem);
+            index_lists[i].emplace_back(elem, active_index, num);
+            num++;
+        }
+    }
+
+    const std::array<std::string, 3> trans_string {"TRANX", "TRANY", "TRANZ"};
+    for (int i = 0; i < 3; ++i) {
+        const std::string& target_kw = trans_string[i];
+        const std::vector<Box::cell_index>& single_index_list = index_lists[i];
+        auto tran_iter = this->tran.find(target_kw);
+        assert(tran_iter != this->tran.end());
+        const std::string unique_name = tran_iter->second.next_name();
+        const auto operation = Fieldprops::ScalarOperation::EQUAL;
+        tran_iter->second.add_action(operation, unique_name);
+        const auto kw_info = tran_iter->second.make_kw_info(operation);
+        auto& field_data = this->init_get<double>(unique_name, kw_info);
+        // setting the transmissiblity to be zero to remove the connection between specific cells
+        FieldProps::apply(operation, field_data.data, field_data.value_status, 0.0, single_index_list);
+        // TODO: not sure when we need the following. If we need, we also need to make a global_index_list;
+        /* if (field_data.global_data)
+             FieldProps::apply(operation, *field_data.global_data, *field_data.global_value_status, scalar_value, box.global_index_list()); */
+    }
+}
 
 
 template std::vector<bool> FieldProps::defaulted<int>(const std::string& keyword);

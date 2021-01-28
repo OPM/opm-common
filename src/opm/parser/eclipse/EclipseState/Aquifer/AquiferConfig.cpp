@@ -80,4 +80,12 @@ bool AquiferConfig::hasAquifer(const int aquID) const {
            numerical_aquifers.hasAquifer(aquID);
 }
 
+bool AquiferConfig::hasNumericalAquifer() const {
+    return this->numerical_aquifers.numAquifer();
+}
+
+const NumericalAquifers& AquiferConfig::numericalAquifers() const {
+    return this->numerical_aquifers;
+}
+
 }

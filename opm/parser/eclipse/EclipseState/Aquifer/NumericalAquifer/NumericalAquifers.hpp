@@ -40,6 +40,8 @@ namespace Opm {
         const SingleNumericalAquifer& getAquifer(size_t aquifer_id) const;
         bool operator==(const NumericalAquifers& other) const;
 
+        std::array<std::set<size_t>, 3> transToRemove(const EclipseGrid& grid) const;
+
         std::unordered_map<size_t, const NumericalAquiferCell*> allAquiferCells() const;
 
         static NumericalAquifers serializeObject();

@@ -32,6 +32,7 @@ class Deck;
 class FieldProps;
 class Phases;
 class TableManager;
+class NumericalAquifers;
 
 class FieldPropsManager {
 
@@ -216,6 +217,9 @@ public:
       ScalarOperation in FieldProps.hpp.
     */
     virtual void apply_tran(const std::string& keyword, std::vector<double>& tran_data) const;
+
+    void applyNumericalAquifer(const NumericalAquifers& aquifers);
+
 
     /*
       When using MPI the FieldPropsManager is typically only assembled on the
