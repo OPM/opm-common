@@ -976,8 +976,10 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         if (timeStep >= this->m_timeMap.size())
             throw std::invalid_argument("timeStep argument beyond the length of the simulation");
 
-        for (const auto& dynamic_pair : this->wells_static) {
-            auto& well_ptr = dynamic_pair.second.get(timeStep);
+        const auto& well_order = this->snapshots[timeStep].well_order();
+        for (const auto& wname : well_order) {
+            const auto& dynamic_state = this->wells_static.at(wname);
+            const auto& well_ptr = dynamic_state.get(timeStep);
             if (well_ptr)
                 wells.push_back(*well_ptr.get());
         }
@@ -1070,15 +1072,8 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
     }
 
     std::vector<std::string> Schedule::wellNames(std::size_t timeStep) const {
-        std::vector<std::string> names;
-        for (const auto& well_pair : this->wells_static) {
-            const auto& well_name = well_pair.first;
-            const auto& dynamic_state = well_pair.second;
-            auto open_step = dynamic_state.find_not(nullptr);
-            if (open_step.value() <= timeStep)
-                names.push_back(well_name);
-        }
-        return names;
+        const auto& well_order = this->snapshots[timeStep].well_order();
+        return well_order.wells();
     }
 
     std::vector<std::string> Schedule::wellNames() const {
