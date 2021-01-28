@@ -3384,6 +3384,20 @@ BOOST_AUTO_TEST_CASE(WellOrderTest) {
     BOOST_CHECK( !wo.has("G1"));
 }
 
+BOOST_AUTO_TEST_CASE(GroupOrderTest) {
+    GroupOrder go;
+
+    std::vector<std::string> groups1 = {"FIELD"};
+    std::vector<std::string> groups2 = {"FIELD", "G1", "G2", "G3"};
+    std::vector<std::string> groups3 = {"G1", "G2", "G3", "FIELD"};
+
+    BOOST_CHECK( go.names() == groups1 );
+    go.add("G1");
+    go.add("G2");
+    go.add("G3");
+    BOOST_CHECK( go.names() == groups2 );
+    BOOST_CHECK( go.restart_groups() == groups3 );
+}
 
 
 BOOST_AUTO_TEST_CASE(RFT_CONFIG) {

@@ -70,4 +70,20 @@ bool NameOrder::operator==(const NameOrder& other) const {
            this->m_names2 == other.m_names2;
 }
 
+GroupOrder::GroupOrder() :
+    NameOrder()
+{
+    this->add("FIELD");
+}
+
+std::vector<std::string> GroupOrder::restart_groups() const {
+    const auto& input_groups = this->names();
+    std::vector<std::string> groups{ input_groups.size() };
+    for (std::size_t index = 1; index < input_groups.size(); index++)
+        groups[index - 1] = input_groups[index];
+    groups.back() = input_groups[0];
+    return groups;
+}
+
+
 }

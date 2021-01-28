@@ -59,5 +59,12 @@ private:
     std::vector<std::string> m_names2;
 };
 
+
+class GroupOrder : public NameOrder {
+public:
+    GroupOrder();
+    std::vector<std::string> restart_groups() const;
+};
+
 }
 #endif

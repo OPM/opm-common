@@ -1073,7 +1073,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
 
     std::vector<std::string> Schedule::wellNames(std::size_t timeStep) const {
         const auto& well_order = this->snapshots[timeStep].well_order();
-        return well_order.wells();
+        return well_order.names();
     }
 
     std::vector<std::string> Schedule::wellNames() const {
