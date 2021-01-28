@@ -1216,6 +1216,14 @@ bool FieldProps::tran_active(const std::string& keyword) const {
 }
 
 void FieldProps::applyNumericalAquifers(const NumericalAquifers& numerical_aquifers) {
+    // TODO: ideally, we should also update the cell_depth, but it is not used for later
+    // in the simulator. So we do not update it here.
+    // Maybe also cell volume? Not sure whether it is used later
+    auto& porv_data = this->init_get<double>("PORV").data;
+    auto& satnum_data = this->int_data["SATNUM"].data;
+    auto& pvtnum_data = this->int_data["PVTNUM"].data;
+    numerical_aquifers.updateCellProps(*(this->grid_ptr), porv_data, satnum_data, pvtnum_data);
+
     this->updateTransWithNumericalAquifer(numerical_aquifers);
 }
 

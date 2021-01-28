@@ -44,6 +44,11 @@ namespace Opm {
 
         std::unordered_map<size_t, const NumericalAquiferCell*> allAquiferCells() const;
 
+        void updateCellProps(const EclipseGrid& grid,
+                             std::vector<double>& pore_volume,
+                             std::vector<int>& satnum,
+                             std::vector<int>& pvtnum) const;
+
         static NumericalAquifers serializeObject();
         template <class Serializer>
         void serializeOp(Serializer& serializer)

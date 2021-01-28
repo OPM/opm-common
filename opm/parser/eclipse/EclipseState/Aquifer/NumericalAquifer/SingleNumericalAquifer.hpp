@@ -47,6 +47,14 @@ namespace Opm {
         // the removing of the connection is done by make transmissiblities to be zero
         std::array<std::set<size_t>, 3> transToRemove(const EclipseGrid& grid) const;
 
+        // aquifer cells are still cells in the grid, but AQUNUM can modify the grid properties
+        // in a relatively arbitrary way. As a result, related and field properties need to be updated
+        // with the numerical aquifer keywords
+        void updateCellProps(const EclipseGrid& grid,
+                             std::vector<double>& pore_volume,
+                             std::vector<int>& satnum,
+                             std::vector<int>& pvtnum) const;
+
         bool operator==(const SingleNumericalAquifer& other) const;
 
         template<class Serializer>

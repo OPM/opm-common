@@ -156,4 +156,14 @@ namespace Opm {
         }
         return  trans;
     }
+
+    void NumericalAquifers::updateCellProps(const EclipseGrid& grid,
+                                            std::vector<double>& pore_volume,
+                                            std::vector<int>& satnum,
+                                            std::vector<int>& pvtnum) const {
+        for (const auto& [id, aquifer]: this->m_aquifers) {
+            aquifer.updateCellProps(grid, pore_volume, satnum, pvtnum);
+        }
+
+    }
 }

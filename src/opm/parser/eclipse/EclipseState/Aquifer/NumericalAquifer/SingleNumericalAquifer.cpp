@@ -83,4 +83,16 @@ namespace Opm {
         }
         return trans;
     }
+
+    void SingleNumericalAquifer::updateCellProps(const EclipseGrid& grid,
+                                                 std::vector<double>& pore_volume,
+                                                 std::vector<int>& satnum,
+                                                 std::vector<int>& pvtnum) const {
+        for (const auto& cell : this->cells_) {
+            const size_t activel_index =  grid.activeIndex(cell.global_index);
+            pore_volume[activel_index] = cell.poreVolume();
+            satnum[activel_index] = cell.sattable;
+            pvtnum[activel_index] = cell.pvttable;
+        }
+    }
 }
