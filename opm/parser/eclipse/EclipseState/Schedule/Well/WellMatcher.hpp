@@ -24,20 +24,20 @@
 #include <string>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WListManager.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/WellOrder.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/NameOrder.hpp>
 
 namespace Opm {
 
 class WellMatcher {
 public:
     WellMatcher() = default;
-    explicit WellMatcher(const WellOrder& well_order);
-    WellMatcher(const WellOrder& well_order, const WListManager& wlm);
+    explicit WellMatcher(const NameOrder& well_order);
+    WellMatcher(const NameOrder& well_order, const WListManager& wlm);
     std::vector<std::string> wells(const std::string& pattern) const;
     const std::vector<std::string>& wells() const;
 
 private:
-    WellOrder m_well_order;
+    NameOrder m_well_order;
     WListManager m_wlm;
 };
 

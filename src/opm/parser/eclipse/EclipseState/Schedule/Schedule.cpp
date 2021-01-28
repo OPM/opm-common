@@ -1877,7 +1877,7 @@ void Schedule::create_first(const std::chrono::system_clock::time_point& start_t
     sched_state.update_rpt_config( RPTConfig() );
     sched_state.update_actions( Action::Actions() );
     sched_state.update_udq_active( UDQActive() );
-    sched_state.update_well_order( WellOrder() );
+    sched_state.update_well_order( NameOrder() );
     this->addGroup("FIELD", 0);
 }
 

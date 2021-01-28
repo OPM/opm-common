@@ -24,19 +24,19 @@
 namespace Opm {
 
 
-WellMatcher::WellMatcher(const WellOrder& well_order) :
+WellMatcher::WellMatcher(const NameOrder& well_order) :
     m_well_order(well_order)
 {
 }
 
-WellMatcher::WellMatcher(const WellOrder& well_order, const WListManager &wlm) :
+WellMatcher::WellMatcher(const NameOrder& well_order, const WListManager &wlm) :
     m_well_order(well_order),
     m_wlm(wlm)
 {
 }
 
 const std::vector<std::string>& WellMatcher::wells() const {
-    return this->m_well_order.wells();
+    return this->m_well_order.names();
 }
 
 

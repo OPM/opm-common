@@ -26,37 +26,37 @@
 namespace Opm {
 
 /*
-  The purpose of this small class is to ensure that wellnames always come in the
-  order they are defined in the deck.
+  The purpose of this small class is to ensure that well and group name always
+  come in the order they are defined in the deck.
 */
 
 
 
-class WellOrder {
+class NameOrder {
 public:
     using Map = std::unordered_map<std::string, std::size_t>;
-    WellOrder() = default;
-    explicit WellOrder(const std::vector<std::string>& wells);
-    void add(const std::string& well);
-    std::vector<std::string> sort(std::vector<std::string> wells) const;
-    const std::vector<std::string>& wells() const;
+    NameOrder() = default;
+    explicit NameOrder(const std::vector<std::string>& names);
+    void add(const std::string& name);
+    std::vector<std::string> sort(std::vector<std::string> names) const;
+    const std::vector<std::string>& names() const;
     bool has(const std::string& wname) const;
 
     template<class Serializer>
     void serializeOp(Serializer& serializer) {
-        serializer.template map<Map, false>(m_wells1);
-        serializer(m_wells2);
+        serializer.template map<Map, false>(m_names1);
+        serializer(m_names2);
     }
 
-    static WellOrder serializeObject();
+    static NameOrder serializeObject();
 
-    bool operator==(const WellOrder& other) const;
+    bool operator==(const NameOrder& other) const;
     std::vector<std::string>::const_iterator begin() const;
     std::vector<std::string>::const_iterator end() const;
 
 private:
-    Map m_wells1;
-    std::vector<std::string> m_wells2;
+    Map m_names1;
+    std::vector<std::string> m_names2;
 };
 
 }
