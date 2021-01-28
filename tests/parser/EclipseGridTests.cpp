@@ -2547,7 +2547,7 @@ BOOST_AUTO_TEST_CASE(TEST_getCellCenters) {
 }
 
 BOOST_AUTO_TEST_CASE(LoadFromBinary) {
-    BOOST_CHECK_THROW(Opm::EclipseGrid( "No/does/not/exist" ) , std::invalid_argument);
+    BOOST_CHECK_THROW(Opm::EclipseGrid( "No/does/not/exist" ) , std::runtime_error);
 }
 
 

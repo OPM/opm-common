@@ -15,7 +15,7 @@ class TestEGrid(unittest.TestCase):
 
     def test_ijk_active_and_global_indices(self):
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(RuntimeError):
             EGrid("/file/that/does_not_exists")
 
         grid1 = EGrid(test_path("data/9_EDITNNC.EGRID"))
