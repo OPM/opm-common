@@ -18,6 +18,8 @@
  */
 
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferConnection.hpp>
 #include <opm/parser/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferCell.hpp>
@@ -93,6 +95,65 @@ namespace Opm {
             pore_volume[activel_index] = cell.poreVolume();
             satnum[activel_index] = cell.sattable;
             pvtnum[activel_index] = cell.pvttable;
+        }
+    }
+
+    void SingleNumericalAquifer::appendNNC(const EclipseGrid& grid, const FieldPropsManager &fp, NNC& nnc) const {
+        this->appendCellNNC(nnc);
+        this->appendConnectionNNC(grid, fp, nnc);
+    }
+
+    void Opm::SingleNumericalAquifer::appendCellNNC(NNC& nnc) const {
+        // aquifer cells are connected to each other through NNCs to form the aquifer
+        for (size_t i = 0; i < this->cells_.size() - 1; ++i) {
+            const double trans1 = this->cells_[i].transmissiblity();
+            const double trans2 = this->cells_[i + 1].transmissiblity();
+            const double tran = 1. / (1. / trans1 + 1. / trans2);
+            const size_t gc1 = this->cells_[i].global_index;
+            const size_t gc2 = this->cells_[i + 1].global_index;
+            nnc.addNNC(gc1, gc2, tran);
+        }
+    }
+
+    void Opm::SingleNumericalAquifer::appendConnectionNNC(const EclipseGrid& grid, const FieldPropsManager &fp, NNC& nnc) const {
+        // aquifer connections are connected to aquifer cells through NNCs
+        const std::vector<double>& ntg = fp.get_double("NTG");
+        const auto& cell1 = this->cells_[0];
+        // all the connections connect to the first numerical aquifer cell
+        const size_t gc1 = cell1.global_index;
+        for (const auto& con : this->connections_) {
+            const size_t gc2 = con.global_index;
+            // TODO: the following is based on Cartesian grids, it turns out working for more general grids.
+            //  We should keep in mind this can be something causing problems for specific grids
+            const auto& cell_dims = grid.getCellDims(gc2);
+            double face_area = 0;
+            std::string perm_string;
+            double d = 0.;
+            if (con.face_dir == FaceDir::XPlus || con.face_dir == FaceDir::XMinus) {
+                face_area = cell_dims[1] * cell_dims[2];
+                perm_string = "PERMX";
+                d = cell_dims[0];
+            }
+            if (con.face_dir == FaceDir::YMinus || con.face_dir == FaceDir::YPlus) {
+                face_area = cell_dims[0] * cell_dims[2];
+                perm_string = "PERMY";
+                d = cell_dims[1];
+            }
+
+            if (con.face_dir == FaceDir::ZMinus || con.face_dir == FaceDir::ZPlus) {
+                face_area = cell_dims[0] * cell_dims[1];
+                perm_string = "PERMZ";
+                d = cell_dims[2];
+            }
+
+            const double trans_cell = (con.trans_option == 0) ?
+                                      cell1.transmissiblity() : (2 * cell1.permeability * face_area / cell1.length);
+
+            const double cell_perm = (fp.get_double(perm_string))[grid.activeIndex(gc2)];
+            const double trans_con = 2 * cell_perm * face_area * ntg[grid.activeIndex(con.global_index)] / d;
+
+            const double tran = trans_con * trans_cell / (trans_con + trans_cell) * con.trans_multipler;
+            nnc.addNNC(gc1, gc2, tran);
         }
     }
 }

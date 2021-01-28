@@ -166,4 +166,11 @@ namespace Opm {
         }
 
     }
+
+    void NumericalAquifers::appendNNC(const EclipseGrid& grid, const FieldPropsManager& fp, NNC& nnc) const {
+        for (const auto& [id, aquifer]: this->m_aquifers) {
+            aquifer.appendNNC(grid, fp, nnc);
+        }
+
+    }
 }

@@ -48,6 +48,7 @@ namespace Opm {
                              std::vector<double>& pore_volume,
                              std::vector<int>& satnum,
                              std::vector<int>& pvtnum) const;
+        void appendNNC(const EclipseGrid& grid, const FieldPropsManager& fp, NNC& nnc) const;
 
         static NumericalAquifers serializeObject();
         template <class Serializer>

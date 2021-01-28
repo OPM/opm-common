@@ -27,6 +27,8 @@
 #include <opm/parser/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferCell.hpp>
 
 namespace Opm {
+    class NNC;
+    class FieldPropsManager;
 
     class SingleNumericalAquifer {
     public:
@@ -55,6 +57,8 @@ namespace Opm {
                              std::vector<int>& satnum,
                              std::vector<int>& pvtnum) const;
 
+        void appendNNC(const EclipseGrid &grid, const FieldPropsManager &fp, NNC &nnc) const;
+
         bool operator==(const SingleNumericalAquifer& other) const;
 
         template<class Serializer>
@@ -72,6 +76,9 @@ namespace Opm {
             size_t id_;
             std::vector<NumericalAquiferCell> cells_;
             std::vector<NumericalAquiferConnection> connections_;
+
+            void appendCellNNC(NNC &nnc) const;
+            void appendConnectionNNC(const EclipseGrid &grid, const FieldPropsManager &fp, NNC &nnc) const;
         };
 }
 

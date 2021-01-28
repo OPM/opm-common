@@ -69,6 +69,7 @@ namespace Opm {
         if (this->aquifer().hasNumericalAquifer()) {
             const auto& numerical_aquifer = this->aquifer().numericalAquifers();
             this->field_props.applyNumericalAquifer(numerical_aquifer);
+            numerical_aquifer.appendNNC(this->m_inputGrid, this->field_props, this->m_inputNnc);
         }
 
         m_inputGrid.resetACTNUM(this->field_props.actnum());
