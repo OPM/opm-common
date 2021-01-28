@@ -539,12 +539,23 @@ BOOST_AUTO_TEST_CASE(Test_Aquifer_Config) {
     const std::string deck_string = R"(
 DIMENS
    3 3 3 /
+GRID
+DX
+  27*1 /
+DY
+  27*1 /
+DZ
+  27*1 /
+TOPS
+  9*1 /
+PORO
+  27*1 /
 )";
     Opm::Parser parser;
     Opm::Deck deck = parser.parseString(deck_string);
+    Opm::EclipseState ecl_state(deck);
     Opm::TableManager tables;
-    Opm::EclipseGrid grid(10,10,10);
-    Opm::AquiferConfig conf(tables, grid, deck);
+    Opm::AquiferConfig conf(tables, ecl_state.getInputGrid(), deck, ecl_state.fieldProps());
     BOOST_CHECK(!conf.active());
 
 
@@ -553,4 +564,67 @@ DIMENS
     const auto& conn  = conf.connections();
     Opm::AquiferConfig conf2(fetp, ct, conn);
     BOOST_CHECK( conf == conf2 );
+}
+
+
+inline Deck createNumericalAquiferDeck() {
+    const char *deckData = R"(
+DIMENS
+ 8 15 3 /
+AQUDIMS
+    3      2      1*       1*     1*       50      1*      1*  /
+GRID
+
+DX
+  360*10./
+DY
+   360*10./
+DZ
+   360*1./
+TOPS
+   360*100./
+
+PORO
+   360*0.25/
+PERMX
+    360*1000./
+PERMY
+    360*1000./
+PERMZ
+    360*10./
+
+AQUNUM
+--AQnr.  I  J  K     Area      Length PHI      K     Depth  Initial.Pr	PVTNUM   SATNUM
+   1     1  1  1   1000000.0   10000   0.25   400    2585.00   285.00	 1   1  /
+   1     3  1  1   1500000.0   20000   0.24   600    2585.00   285.00	 1   1  /
+   1     4  1  1   2000000.0   30000   0.23   700    2585.00   285.00	 1   1  /
+/
+AQUCON
+--  Connect numerical aquifer to the reservoir
+--  Id.nr  I1	I2     J1  J2	 K1  K2    Face    Trans.mult.  Trans.opt.
+     1     1	8      15    15	  3   3   'J+'      1.00      1  /
+/
+    )";
+
+    Parser parser;
+    return parser.parseString(deckData);
+}
+
+BOOST_AUTO_TEST_CASE(NumericalAquiferTest){
+    const Opm::Deck numaquifer_deck = createNumericalAquiferDeck();
+    const Opm::EclipseState ecl_state(numaquifer_deck);
+    const Opm::EclipseGrid& grid = ecl_state.getInputGrid();
+
+    const Opm::NumericalAquifers num_aqu{numaquifer_deck, grid, ecl_state.fieldProps()};
+    BOOST_CHECK(num_aqu.hasAquifer(1));
+    BOOST_CHECK(num_aqu.numAquifer() == 1);
+    const auto all_aquifer_cells = num_aqu.allAquiferCells();
+    BOOST_CHECK(all_aquifer_cells.count(0) > 0);
+    BOOST_CHECK(all_aquifer_cells.count(2) > 0);
+    BOOST_CHECK(all_aquifer_cells.count(3) > 0);
+    BOOST_CHECK(all_aquifer_cells.count(1) == 0);
+
+    const auto& aquifer = num_aqu.getAquifer(1);
+    BOOST_CHECK(aquifer.numCells() == 3);
+    BOOST_CHECK(aquifer.numConnections() == 8 );
 }

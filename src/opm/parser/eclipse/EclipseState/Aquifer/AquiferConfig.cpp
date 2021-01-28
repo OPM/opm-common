@@ -22,14 +22,14 @@
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
-#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
-
 namespace Opm {
 
-AquiferConfig::AquiferConfig(const TableManager& tables, const EclipseGrid& grid, const Deck& deck):
+AquiferConfig::AquiferConfig(const TableManager& tables, const EclipseGrid& grid,
+                             const Deck& deck, const FieldPropsManager& field_props):
     aquifetp(deck),
     aquiferct(tables, deck),
-    aqconn(grid,deck)
+    aqconn(grid,deck),
+    numerical_aquifers(deck, grid, field_props)
 {}
 
 AquiferConfig::AquiferConfig(const Aquifetp& fetp, const AquiferCT& ct, const Aquancon& conn) :
@@ -44,18 +44,22 @@ AquiferConfig AquiferConfig::serializeObject()
     result.aquifetp = Aquifetp::serializeObject();
     result.aquiferct = AquiferCT::serializeObject();
     result.aqconn = Aquancon::serializeObject();
+    result.numerical_aquifers = NumericalAquifers::serializeObject();
 
     return result;
 }
 
 bool AquiferConfig::active() const {
-    return this->aqconn.active();
+    return this->aquiferct.size() > 0 ||
+           this->aquifetp.size() > 0 ||
+           this->numerical_aquifers.numAquifer() > 0;
 }
 
 bool AquiferConfig::operator==(const AquiferConfig& other) {
     return this->aquifetp == other.aquifetp &&
            this->aquiferct == other.aquiferct &&
-           this->aqconn == other.aqconn;
+           this->aqconn == other.aqconn &&
+           this->numerical_aquifers == other.numerical_aquifers;
 }
 
 const AquiferCT& AquiferConfig::ct() const {
@@ -71,7 +75,9 @@ const Aquancon& AquiferConfig::connections() const {
 }
 
 bool AquiferConfig::hasAquifer(const int aquID) const {
-    return aquifetp.hasAquifer(aquID) || aquiferct.hasAquifer(aquID);
+    return aquifetp.hasAquifer(aquID) ||
+           aquiferct.hasAquifer(aquID) ||
+           numerical_aquifers.hasAquifer(aquID);
 }
 
 }
