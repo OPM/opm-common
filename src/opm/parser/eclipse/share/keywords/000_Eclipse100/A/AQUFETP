@@ -4,6 +4,10 @@
     "SOLUTION",
     "SCHEDULE"
   ],
+  "size": {
+    "keyword": "AQUDIMS",
+    "item": "NANAQU"
+  },
   "items": [
     {
       "name": "AQUIFER_ID",

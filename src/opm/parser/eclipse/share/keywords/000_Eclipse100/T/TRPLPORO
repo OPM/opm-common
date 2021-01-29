@@ -3,6 +3,7 @@
   "sections": [
     "RUNSPEC"
   ],
+  "size": 1,
   "items": [
     {
       "name": "NUM_MATRIX",

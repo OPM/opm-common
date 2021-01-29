@@ -10,7 +10,7 @@
   "items": [
     {
       "name": "CAPILLARY_NUMBER",
-      "value_type": "INT"
+      "value_type": "DOUBLE"
     },
     {
       "name": "EXP",

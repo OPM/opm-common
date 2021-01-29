@@ -16,12 +16,12 @@
       "default": "REVERS"
     },
     {
-      "name": "NUM_TABLES",
+      "name": "NTENDP",
       "value_type": "INT",
       "default": 1
     },
     {
-      "name": "NUM_NODES",
+      "name": "NSENDP",
       "value_type": "INT",
       "default": 20
     },

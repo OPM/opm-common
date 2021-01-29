@@ -2,7 +2,7 @@
   "name": "IMKRVD",
   "size": {
     "keyword": "ENDSCALE",
-    "item": "NUM_TABLES"
+    "item": "NTENDP"
   },
   "sections": [
     "PROPS"

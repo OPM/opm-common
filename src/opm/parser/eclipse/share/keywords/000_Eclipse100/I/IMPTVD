@@ -2,7 +2,7 @@
   "name": "IMPTVD",
   "size": {
     "keyword": "ENDSCALE",
-    "item": "NUM_TABLES"
+    "item": "NTENDP"
   },
   "sections": [
     "PROPS"

@@ -459,12 +459,12 @@ namespace Opm {
         }
 
         {
-            size_t numEndScaleTables = ParserKeywords::ENDSCALE::NUM_TABLES::defaultValue;
+            size_t numEndScaleTables = ParserKeywords::ENDSCALE::NTENDP::defaultValue;
 
             if (deck.hasKeyword<ParserKeywords::ENDSCALE>()) {
                 const auto& keyword = deck.getKeyword<ParserKeywords::ENDSCALE>();
                 const auto& record = keyword.getRecord(0);
-                numEndScaleTables = static_cast<size_t>(record.getItem<ParserKeywords::ENDSCALE::NUM_TABLES>().get< int >(0));
+                numEndScaleTables = static_cast<size_t>(record.getItem<ParserKeywords::ENDSCALE::NTENDP>().get< int >(0));
             }
 
             addTables( "ENKRVD", numEndScaleTables);
@@ -509,12 +509,12 @@ namespace Opm {
         initSimpleTableContainer<SaltvdTable>(deck, "PERMFACT" , m_eqldims.getNumEquilRegions());
         initSimpleTableContainer<AqutabTable>(deck, "AQUTAB" , m_aqudims.getNumInfluenceTablesCT());
         {
-            size_t numEndScaleTables = ParserKeywords::ENDSCALE::NUM_TABLES::defaultValue;
+            size_t numEndScaleTables = ParserKeywords::ENDSCALE::NTENDP::defaultValue;
 
             if (deck.hasKeyword<ParserKeywords::ENDSCALE>()) {
                 const auto& keyword = deck.getKeyword<ParserKeywords::ENDSCALE>();
                 const auto& record = keyword.getRecord(0);
-                numEndScaleTables = static_cast<size_t>(record.getItem<ParserKeywords::ENDSCALE::NUM_TABLES>().get< int >(0));
+                numEndScaleTables = static_cast<size_t>(record.getItem<ParserKeywords::ENDSCALE::NTENDP>().get< int >(0));
             }
 
             initSimpleTableContainer<EnkrvdTable>( deck , "ENKRVD", numEndScaleTables);
