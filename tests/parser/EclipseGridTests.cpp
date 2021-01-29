@@ -2366,6 +2366,12 @@ BOOST_AUTO_TEST_CASE(TESTCP_ACTNUM_AQUNUM) {
           0 0 1 1 0 1 /
          PORO
           6*0.15 /
+         PERMX
+          6*100. /
+         PERMY
+          6*100. /
+         PERMZ
+          6*10. /
          AQUNUM
             1     1  1  1   1000000.0   10000   0.25   400    2585.00   285.00    1   1  /
             1     2  1  1   1000000.0   10000   0.25   400    2585.00   285.00    1   1  /
@@ -2580,7 +2586,7 @@ BOOST_AUTO_TEST_CASE(TEST_constructFromEgrid) {
     auto deck = parser.parseString( deckData) ;
 
     Opm::EclipseGrid grid1( deck);
-    Opm::EclipseGrid grid2( "SPE1CASE1.EGRID");
+    Opm::EclipseGrid grid2( "");
 
     // compare actnum
     std::vector<int> actGrid1 = grid1.getACTNUM();
