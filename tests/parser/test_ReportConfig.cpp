@@ -125,7 +125,7 @@ RPTSCHED
 
     // Empty initial report configuration
     {
-        auto report_config = sched[0].rpt_config();
+        auto report_config = sched[0].rpt_config.get();
         BOOST_CHECK_EQUAL(report_config.size(), 0U);
 
         BOOST_CHECK(!report_config.contains("FIPFOAM"));
@@ -134,7 +134,7 @@ RPTSCHED
 
     // Configuration at step 1
     {
-        auto report_config = sched[1].rpt_config();
+        auto report_config = sched[1].rpt_config.get();
         BOOST_CHECK_EQUAL( report_config.size() , 2U);
 
         for (const auto& p : report_config) {
@@ -153,7 +153,7 @@ RPTSCHED
 
     // Configuration at step 2 - the special 'NOTHING' has cleared everything
     {
-        auto report_config = sched[2].rpt_config();
+        auto report_config = sched[2].rpt_config.get();
         BOOST_CHECK_EQUAL(report_config.size(), 0U);
 
         BOOST_CHECK(!report_config.contains("FIPFOAM"));

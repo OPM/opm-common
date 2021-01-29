@@ -119,7 +119,7 @@ namespace {
 
 
     void Schedule::handleBRANPROP(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
-        auto ext_network = this->snapshots.back().network();
+        auto ext_network = this->snapshots.back().network.get();
 
         for (const auto& record : handlerContext.keyword) {
             const auto& downtree_node = record.getItem<ParserKeywords::BRANPROP::DOWNTREE_NODE>().get<std::string>(0);
@@ -141,7 +141,7 @@ namespace {
             }
         }
 
-        this->snapshots.back().update_network( std::move( ext_network ));
+        this->snapshots.back().network.update( std::move( ext_network ));
     }
 
     void Schedule::handleCOMPDAT(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
@@ -463,9 +463,9 @@ namespace {
                         this->snapshots.back().events().addEvent(ScheduleEvents::GROUP_PRODUCTION_UPDATE);
                         this->snapshots.back().wellgroup_events().addEvent( group_name, ScheduleEvents::GROUP_PRODUCTION_UPDATE);
 
-                        auto udq_active = UDQActive(this->snapshots.back().udq_active());
+                        auto udq_active = this->snapshots.back().udq_active.get();
                         if (production.updateUDQActive(this->getUDQConfig(current_step), udq_active))
-                            this->snapshots.back().update_udq_active( std::move(udq_active));
+                            this->snapshots.back().udq_active.update( std::move(udq_active));
                     }
                 }
             }
@@ -473,7 +473,7 @@ namespace {
     }
 
     void Schedule::handleGCONSALE(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
-        auto new_gconsale = this->snapshots.back().gconsale();
+        auto new_gconsale = this->snapshots.back().gconsale.get();
         for (const auto& record : handlerContext.keyword) {
             const std::string& groupName = record.getItem("GROUP").getTrimmedString(0);
             auto sales_target = record.getItem("SALES_TARGET").get<UDAValue>(0);
@@ -491,11 +491,11 @@ namespace {
                 this->updateGroup(std::move(group_ptr), handlerContext.currentStep);
             }
         }
-        this->snapshots.back().update_gconsale( std::move(new_gconsale) );
+        this->snapshots.back().gconsale.update( std::move(new_gconsale) );
     }
 
     void Schedule::handleGCONSUMP(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
-        auto new_gconsump = this->snapshots.back().gconsump();
+        auto new_gconsump = this->snapshots.back().gconsump.get();
         for (const auto& record : handlerContext.keyword) {
             const std::string& groupName = record.getItem("GROUP").getTrimmedString(0);
             auto consumption_rate = record.getItem("GAS_CONSUMP_RATE").get<UDAValue>(0);
@@ -510,7 +510,7 @@ namespace {
 
             new_gconsump.add(groupName, consumption_rate, import_rate, network_node_name, udqconfig, this->m_static.m_unit_system);
         }
-        this->snapshots.back().update_gconsump( std::move(new_gconsump) );
+        this->snapshots.back().gconsump.update( std::move(new_gconsump) );
     }
 
     void Schedule::handleGEFAC(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
@@ -690,7 +690,7 @@ namespace {
     }
 
     void Schedule::handleNODEPROP(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
-        auto ext_network = this->snapshots.back().network();
+        auto ext_network = this->snapshots.back().network.get();
 
         for (const auto& record : handlerContext.keyword) {
             const auto& name = record.getItem<ParserKeywords::NODEPROP::NAME>().get<std::string>(0);
@@ -726,7 +726,7 @@ namespace {
             ext_network.add_node(node);
         }
 
-        this->snapshots.back().update_network( ext_network );
+        this->snapshots.back().network.update( ext_network );
     }
 
     void Schedule::handleNUPCOL(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
@@ -742,7 +742,7 @@ namespace {
 
     void Schedule::handleRPTSCHED(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         printf("snapshost.size(): %ld \n", this->snapshots.size());
-        this->snapshots.back().update_rpt_config( RPTConfig(handlerContext.keyword ));
+        this->snapshots.back().rpt_config.update( RPTConfig(handlerContext.keyword ));
     }
 
     void Schedule::handleTUNING(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
@@ -966,9 +966,9 @@ namespace {
                     this->updateWell(std::move(well2), handlerContext.currentStep);
                 }
 
-                auto udq_active = UDQActive( this->snapshots.back().udq_active() );
+                auto udq_active = this->snapshots.back().udq_active.get();
                 if (properties->updateUDQActive(this->getUDQConfig(handlerContext.currentStep), udq_active))
-                    this->snapshots.back().update_udq_active( std::move(udq_active));
+                    this->snapshots.back().udq_active.update( std::move(udq_active));
             }
         }
     }
@@ -1028,9 +1028,9 @@ namespace {
                     }
                 }
 
-                auto udq_active = UDQActive(this->snapshots.back().udq_active());
+                auto udq_active = this->snapshots.back().udq_active.get();
                 if (injection->updateUDQActive(this->getUDQConfig(handlerContext.currentStep), udq_active))
-                    this->snapshots.back().update_udq_active( std::move(udq_active) );
+                    this->snapshots.back().udq_active.update( std::move(udq_active) );
             }
         }
     }
@@ -1289,9 +1289,9 @@ namespace {
                     if (cmode == Well::WELTARGCMode::GUID)
                         update |= well2->updateWellGuideRate(new_arg.get<double>());
 
-                    auto udq_active = UDQActive(this->snapshots.back().udq_active());
+                    auto udq_active = this->snapshots.back().udq_active.get();
                     if (prop->updateUDQActive(this->getUDQConfig(handlerContext.currentStep), udq_active))
-                        this->snapshots.back().update_udq_active( std::move(udq_active));
+                        this->snapshots.back().udq_active.update( std::move(udq_active));
                 } else {
                     auto inj = std::make_shared<Well::WellInjectionProperties>(well2->getInjectionProperties());
                     inj->handleWELTARG(cmode, new_arg, SiFactorP);
@@ -1488,12 +1488,12 @@ namespace {
 
     void Schedule::handleWLIST(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         const std::string legal_actions = "NEW:ADD:DEL:MOV";
-        auto new_wlm = this->snapshots.back().wlist_manager();
         for (const auto& record : handlerContext.keyword) {
             const std::string& name = record.getItem("NAME").getTrimmedString(0);
             const std::string& action = record.getItem("ACTION").getTrimmedString(0);
             const std::vector<std::string>& well_args = record.getItem("WELLS").getData<std::string>();
             std::vector<std::string> wells;
+            auto new_wlm = this->snapshots.back().wlist_manager.get();
 
             if (legal_actions.find(action) == std::string::npos)
                 throw std::invalid_argument("The action:" + action + " is not recognized.");
@@ -1528,8 +1528,7 @@ namespace {
                 for (const auto& well : wells)
                     wlist.add(well);
             }
-
-            this->snapshots.back().update_wlist_manager(new_wlm);
+            this->snapshots.back().wlist_manager.update( std::move(new_wlm) );
         }
     }
 
@@ -1755,7 +1754,7 @@ namespace {
     }
 
     void Schedule::handleWTEST(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
-        auto new_config = this->snapshots.back().wtest_config();
+        auto new_config = this->snapshots.back().wtest_config.get();
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = wellNames(wellNamePattern, handlerContext.currentStep);
@@ -1774,7 +1773,7 @@ namespace {
                     new_config.add_well(well_name, reasons, test_interval, num_test, startup_time, handlerContext.currentStep);
             }
         }
-        this->snapshots.back().update_wtest_config( std::move(new_config) );
+        this->snapshots.back().wtest_config.update( std::move(new_config) );
     }
 
     void Schedule::handleWTRACER(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
@@ -1805,7 +1804,7 @@ namespace {
             this->updateWPAVE(wname, handlerContext.currentStep, wpave );
 
         auto& sched_state = this->snapshots.back();
-        sched_state.update_pavg(std::move(wpave));
+        sched_state.pavg.update(std::move(wpave));
     }
 
     void Schedule::handleWWPAVE(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {

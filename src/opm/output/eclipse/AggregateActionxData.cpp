@@ -536,7 +536,7 @@ const std::map<cmp_enum, int> cmpToIndex = {
         act_res(const Opm::Schedule& sched, const Opm::Action::State& action_state, const Opm::SummaryState&  smry, const std::size_t sim_step, std::vector<Opm::Action::ActionX>::const_iterator act_x) {
             auto sim_time = sched.simTime(sim_step);
             if (act_x->ready(action_state, sim_time)) {
-                Opm::Action::Context context(smry, sched[sim_step].wlist_manager());
+                Opm::Action::Context context(smry, sched[sim_step].wlist_manager.get());
                 return act_x->eval(context);
             } else
                 return Opm::Action::Result(false);
@@ -687,7 +687,7 @@ captureDeclaredActionxData( const Opm::Schedule&      sched,
                             const std::vector<int>&   actDims,
                             const std::size_t         simStep)
 {
-    const auto& acts = sched[simStep].actions();
+    const auto& acts = sched[simStep].actions.get();
     std::size_t act_ind = 0;
     for (auto actx_it = acts.begin(); actx_it < acts.end(); actx_it++) {
         {

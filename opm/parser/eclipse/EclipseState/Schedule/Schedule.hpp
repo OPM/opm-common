@@ -350,68 +350,40 @@ namespace Opm
             serializer.vector(snapshots);
             m_static.serializeOp(serializer);
 
-            pack_unpack<WellTestConfig, Serializer>(serializer,
-                                                    std::mem_fn(&ScheduleState::wtest_config),
-                                                    std::mem_fn(&ScheduleState::update_wtest_config));
-
-            pack_unpack<GConSale, Serializer>(serializer,
-                                              std::mem_fn(&ScheduleState::gconsale),
-                                              std::mem_fn(&ScheduleState::update_gconsale));
-
-            pack_unpack<GConSump, Serializer>(serializer,
-                                              std::mem_fn(&ScheduleState::gconsump),
-                                              std::mem_fn(&ScheduleState::update_gconsump));
-
-            pack_unpack<WListManager, Serializer>(serializer,
-                                                  std::mem_fn(&ScheduleState::wlist_manager),
-                                                  std::mem_fn(&ScheduleState::update_wlist_manager));
-
-            pack_unpack<Network::ExtNetwork, Serializer>(serializer,
-                                                         std::mem_fn(&ScheduleState::network),
-                                                         std::mem_fn(&ScheduleState::update_network));
-
-            pack_unpack<RPTConfig, Serializer>(serializer,
-                                               std::mem_fn(&ScheduleState::rpt_config),
-                                               std::mem_fn(&ScheduleState::update_rpt_config));
-
-            pack_unpack<Action::Actions, Serializer>(serializer,
-                                                     std::mem_fn(&ScheduleState::actions),
-                                                     std::mem_fn(&ScheduleState::update_actions));
-
-            pack_unpack<UDQActive, Serializer>(serializer,
-                                                     std::mem_fn(&ScheduleState::udq_active),
-                                                     std::mem_fn(&ScheduleState::update_udq_active));
+            pack_unpack<PAvg, Serializer>(serializer);
+            pack_unpack<WellTestConfig, Serializer>(serializer);
+            pack_unpack<GConSale, Serializer>(serializer);
+            pack_unpack<GConSump, Serializer>(serializer);
+            pack_unpack<WListManager, Serializer>(serializer);
+            pack_unpack<Network::ExtNetwork, Serializer>(serializer);
+            pack_unpack<RPTConfig, Serializer>(serializer);
+            pack_unpack<Action::Actions, Serializer>(serializer);
+            pack_unpack<UDQActive, Serializer>(serializer);
+            pack_unpack<NameOrder, Serializer>(serializer);
         }
 
         template <typename T, class Serializer>
-        void pack_unpack(Serializer& serializer,
-                         const std::function<T(const ScheduleState &)>& get,
-                         const std::function<void(ScheduleState &, const T& )>& set) {
-
+        void pack_unpack(Serializer& serializer) {
             std::vector<T> value_list;
             std::vector<std::size_t> index_list;
 
             if (serializer.isSerializing())
-                pack_state<T>(value_list, index_list, get);
+                pack_state<T>(value_list, index_list);
 
             serializer.vector(value_list);
             serializer.template vector<std::size_t, false>(index_list);
 
             if (!serializer.isSerializing())
-                unpack_state<T>(value_list, index_list, set);
+                unpack_state<T>(value_list, index_list);
         }
 
 
         template <typename T>
-        void pack_state(std::vector<T>& value_list, std::vector<std::size_t>& index_list, const std::function<T(const ScheduleState &)>& get) {
-            if (this->snapshots.empty())
-                return;
-
-            value_list.push_back( get( this->snapshots[0] ));
-            index_list.push_back( 0 );
-            for (std::size_t index = 1; index < this->snapshots.size(); index++) {
-                const auto& value = get( this->snapshots[index] );
-                if (!(value == value_list.back())) {
+        void pack_state(std::vector<T>& value_list, std::vector<std::size_t>& index_list) {
+            for (std::size_t index = 0; index < this->snapshots.size(); index++) {
+                const auto& member = this->snapshots[index].get<T>();
+                const auto& value = member.get();
+                if (value_list.empty() || !(value == value_list.back())) {
                     value_list.push_back( value );
                     index_list.push_back( index );
                 }
@@ -419,7 +391,7 @@ namespace Opm
         }
 
         template <typename T>
-        void unpack_state(const std::vector<T>& value_list, const std::vector<std::size_t>& index_list, const std::function<void(ScheduleState &, const T& )>& set) {
+        void unpack_state(const std::vector<T>& value_list, const std::vector<std::size_t>& index_list) {
             std::size_t unique_index = 0;
             while (unique_index < value_list.size()) {
                 const auto& value = value_list[unique_index];
@@ -428,8 +400,10 @@ namespace Opm
                 if (unique_index < (value_list.size() - 1))
                     last_index = index_list[unique_index + 1];
 
-                for (std::size_t index=first_index; index < last_index; index++)
-                    set( this->snapshots[index], value );
+                auto& target_state = this->snapshots[first_index];
+                target_state.get<T>().update( std::move(value) );
+                for (std::size_t index=first_index + 1; index < last_index; index++)
+                    this->snapshots[index].update_ptr<T>( target_state );
 
                 unique_index++;
             }

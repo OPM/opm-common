@@ -353,7 +353,7 @@ namespace {
 
         const auto nstep = sched.getTimeMap().numTimesteps();
         for (auto step = 0*nstep; step < nstep; ++step) {
-            const auto& nodes = sched[step].network().node_names();
+            const auto& nodes = sched[step].network.get().node_names();
             names.insert(nodes.begin(), nodes.end());
         }
 

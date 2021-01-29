@@ -46,8 +46,7 @@ std::chrono::system_clock::time_point clamp_time(std::chrono::system_clock::time
 
 
 ScheduleState::ScheduleState(const std::chrono::system_clock::time_point& t1):
-    m_start_time(clamp_time(t1)),
-    m_pavg( std::make_shared<PAvg>())
+    m_start_time(clamp_time(t1))
 {
 }
 
@@ -81,15 +80,6 @@ std::chrono::system_clock::time_point ScheduleState::start_time() const {
 
 std::chrono::system_clock::time_point ScheduleState::end_time() const {
     return this->m_end_time.value();
-}
-
-
-void ScheduleState::update_pavg(PAvg arg) {
-    this->m_pavg = std::make_shared<PAvg>( std::move(arg) );
-}
-
-const PAvg& ScheduleState::pavg() const {
-    return *this->m_pavg;
 }
 
 void ScheduleState::update_nupcol(int nupcol) {
@@ -177,36 +167,39 @@ bool ScheduleState::operator==(const ScheduleState& other) const {
            this->m_geo_keywords == other.m_geo_keywords &&
            this->m_message_limits == other.m_message_limits &&
            this->m_whistctl_mode == other.m_whistctl_mode &&
-           *this->m_wtest_config == *other.m_wtest_config &&
-           *this->m_gconsale == *other.m_gconsale &&
-           *this->m_gconsump == *other.m_gconsump &&
-           *this->m_wlist_manager == *other.m_wlist_manager &&
-           *this->m_rptconfig == *other.m_rptconfig &&
-           *this->m_udq_active == *other.m_udq_active &&
-           this->m_nupcol == other.m_nupcol;
+           this->m_nupcol == other.m_nupcol &&
+           this->wtest_config.get() == other.wtest_config.get() &&
+           this->gconsale.get() == other.gconsale.get() &&
+           this->gconsump.get() == other.gconsump.get() &&
+           this->wlist_manager.get() == other.wlist_manager.get() &&
+           this->rpt_config.get() == other.rpt_config.get() &&
+           this->udq_active.get() == other.udq_active.get();
 }
 
 ScheduleState ScheduleState::serializeObject() {
     auto t1 = std::chrono::system_clock::now();
     auto t2 = t1 + std::chrono::hours(48);
     ScheduleState ts(t1, t2);
+    ts.m_vfpprod.emplace( std::make_pair(77, std::make_shared<VFPProdTable>(VFPProdTable::serializeObject() )));
+    ts.m_vfpprod.emplace( std::make_pair(78, std::make_shared<VFPProdTable>(VFPProdTable::serializeObject() )));
+    ts.m_vfpinj.emplace( std::make_pair(177, std::make_shared<VFPInjTable>(VFPInjTable::serializeObject() )));
+    ts.m_vfpinj.emplace( std::make_pair(178, std::make_shared<VFPInjTable>(VFPInjTable::serializeObject() )));
     ts.m_events = Events::serializeObject();
     ts.update_nupcol(77);
     ts.update_oilvap( Opm::OilVaporizationProperties::serializeObject() );
     ts.m_message_limits = MessageLimits::serializeObject();
     ts.m_whistctl_mode = Well::ProducerCMode::THP;
-    ts.m_wtest_config = std::make_shared<WellTestConfig>( WellTestConfig::serializeObject() );
-    ts.m_gconsump = std::make_shared<GConSump>( GConSump::serializeObject() );
-    ts.m_gconsale = std::make_shared<GConSale>( GConSale::serializeObject() );
-    ts.m_wlist_manager = std::make_shared<WListManager>( WListManager::serializeObject() );
-    ts.m_rptconfig = std::make_shared<RPTConfig>( RPTConfig::serializeObject() );
-    ts.m_vfpprod.emplace( std::make_pair(77, std::make_shared<VFPProdTable>(VFPProdTable::serializeObject() )));
-    ts.m_vfpprod.emplace( std::make_pair(78, std::make_shared<VFPProdTable>(VFPProdTable::serializeObject() )));
-    ts.m_vfpinj.emplace( std::make_pair(177, std::make_shared<VFPInjTable>(VFPInjTable::serializeObject() )));
-    ts.m_vfpinj.emplace( std::make_pair(178, std::make_shared<VFPInjTable>(VFPInjTable::serializeObject() )));
-    ts.m_actions = std::make_shared<Action::Actions>( Action::Actions::serializeObject() );
-    ts.m_udq_active = std::make_shared<UDQActive>( UDQActive::serializeObject() );
-    ts.m_network = std::make_shared<Network::ExtNetwork>( Network::ExtNetwork::serializeObject() );
+
+    ts.pavg.update( PAvg::serializeObject() );
+    ts.wtest_config.update( WellTestConfig::serializeObject() );
+    ts.gconsump.update( GConSump::serializeObject() );
+    ts.gconsale.update( GConSale::serializeObject() );
+    ts.wlist_manager.update( WListManager::serializeObject() );
+    ts.rpt_config.update( RPTConfig::serializeObject() );
+    ts.actions.update( Action::Actions::serializeObject() );
+    ts.udq_active.update( UDQActive::serializeObject() );
+    ts.network.update( Network::ExtNetwork::serializeObject() );
+    ts.well_order.update( NameOrder::serializeObject() );
     return ts;
 }
 
@@ -245,55 +238,6 @@ WellGroupEvents& ScheduleState::wellgroup_events() {
 
 const WellGroupEvents& ScheduleState::wellgroup_events() const {
     return this->m_wellgroup_events;
-}
-
-const WellTestConfig& ScheduleState::wtest_config() const {
-    return *this->m_wtest_config;
-}
-
-void ScheduleState::update_wtest_config(WellTestConfig wtest_config) {
-    this->m_wtest_config = std::make_shared<WellTestConfig>( std::move(wtest_config) );
-}
-
-const GConSale& ScheduleState::gconsale() const {
-    return *this->m_gconsale;
-}
-
-void ScheduleState::update_gconsale(GConSale gconsale) {
-    this->m_gconsale = std::make_shared<GConSale>( std::move(gconsale) );
-}
-
-const GConSump& ScheduleState::gconsump() const {
-    return *this->m_gconsump;
-}
-
-void ScheduleState::update_gconsump(GConSump gconsump) {
-    this->m_gconsump = std::make_shared<GConSump>( std::move(gconsump) );
-}
-
-const WListManager& ScheduleState::wlist_manager() const {
-    return *this->m_wlist_manager;
-}
-
-void ScheduleState::update_wlist_manager(WListManager wlist_manager) {
-    this->m_wlist_manager = std::make_shared<WListManager>( std::move(wlist_manager) );
-}
-
-const Network::ExtNetwork& ScheduleState::network() const {
-    return *this->m_network;
-}
-
-void ScheduleState::update_network(Network::ExtNetwork network) {
-    this->m_network = std::make_shared<Network::ExtNetwork>( std::move(network) );
-}
-
-const RPTConfig& ScheduleState::rpt_config() const {
-    return *this->m_rptconfig;
-}
-
-
-void ScheduleState::update_rpt_config(RPTConfig rpt_config) {
-    this->m_rptconfig = std::make_shared<RPTConfig>(std::move(rpt_config));
 }
 
 std::vector<std::reference_wrapper<const VFPProdTable>> ScheduleState::vfpprod() const {
@@ -353,36 +297,6 @@ const VFPInjTable& ScheduleState::vfpinj(int table_id) const {
 void ScheduleState::update_vfpinj(VFPInjTable vfpinj) {
     int table_id = vfpinj.getTableNum();
     this->m_vfpinj[table_id] = std::make_shared<VFPInjTable>( std::move(vfpinj) );
-}
-
-const Action::Actions& ScheduleState::actions() const {
-    return *this->m_actions;
-}
-
-void ScheduleState::update_actions(Action::Actions actions) {
-    this->m_actions = std::make_shared<Action::Actions>( std::move(actions) );
-}
-
-const UDQActive& ScheduleState::udq_active() const {
-    return *this->m_udq_active;
-}
-
-void ScheduleState::update_udq_active(UDQActive udq_active) {
-    this->m_udq_active = std::make_shared<UDQActive>( std::move(udq_active) );
-}
-
-const NameOrder& ScheduleState::well_order() const {
-    return *this->m_well_order;
-}
-
-void ScheduleState::update_well_order(NameOrder well_order) {
-    this->m_well_order = std::make_shared<NameOrder>( std::move(well_order) );
-}
-
-void ScheduleState::well_order(const std::string& well) {
-    auto well_order = *this->m_well_order;
-    well_order.add( well );
-    this->m_well_order = std::make_shared<NameOrder>( std::move(well_order) );
 }
 
 }
