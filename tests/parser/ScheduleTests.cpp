@@ -43,7 +43,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/GasLiftOpt.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellMatcher.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/WellOrder.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/NameOrder.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/PAvg.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
@@ -3335,7 +3335,7 @@ BOOST_AUTO_TEST_CASE(WellNames) {
     WellMatcher wm0( {}, WListManager{});
     const auto& wml0 = wm0.wells();
     BOOST_CHECK(wml0.empty());
-    WellOrder wo({"P3", "P2", "P1"});
+    NameOrder wo({"P3", "P2", "P1"});
 
     wo.add("W3");
     wo.add("W2");
@@ -3369,7 +3369,7 @@ BOOST_AUTO_TEST_CASE(WellNames) {
 
 
 BOOST_AUTO_TEST_CASE(WellOrderTest) {
-    WellOrder wo;
+    NameOrder wo;
     wo.add("W1");
     wo.add("W2");
     wo.add("W3");
@@ -3379,11 +3379,25 @@ BOOST_AUTO_TEST_CASE(WellOrderTest) {
     std::vector<std::string> unsorted_wells = {"W4", "W3", "W2", "W1"};
 
     BOOST_CHECK( wo.sort(unsorted_wells) == sorted_wells );
-    BOOST_CHECK( wo.wells() == sorted_wells );
+    BOOST_CHECK( wo.names() == sorted_wells );
     BOOST_CHECK( wo.has("W1"));
     BOOST_CHECK( !wo.has("G1"));
 }
 
+BOOST_AUTO_TEST_CASE(GroupOrderTest) {
+    GroupOrder go;
+
+    std::vector<std::string> groups1 = {"FIELD"};
+    std::vector<std::string> groups2 = {"FIELD", "G1", "G2", "G3"};
+    std::vector<std::string> groups3 = {"G1", "G2", "G3", "FIELD"};
+
+    BOOST_CHECK( go.names() == groups1 );
+    go.add("G1");
+    go.add("G2");
+    go.add("G3");
+    BOOST_CHECK( go.names() == groups2 );
+    BOOST_CHECK( go.restart_groups() == groups3 );
+}
 
 
 BOOST_AUTO_TEST_CASE(RFT_CONFIG) {

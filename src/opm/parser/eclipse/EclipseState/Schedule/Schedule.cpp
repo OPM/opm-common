@@ -1073,7 +1073,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
 
     std::vector<std::string> Schedule::wellNames(std::size_t timeStep) const {
         const auto& well_order = this->snapshots[timeStep].well_order();
-        return well_order.wells();
+        return well_order.names();
     }
 
     std::vector<std::string> Schedule::wellNames() const {
@@ -1877,7 +1877,7 @@ void Schedule::create_first(const std::chrono::system_clock::time_point& start_t
     sched_state.update_rpt_config( RPTConfig() );
     sched_state.update_actions( Action::Actions() );
     sched_state.update_udq_active( UDQActive() );
-    sched_state.update_well_order( WellOrder() );
+    sched_state.update_well_order( NameOrder() );
     this->addGroup("FIELD", 0);
 }
 
