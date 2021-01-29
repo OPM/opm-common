@@ -38,6 +38,7 @@ namespace Opm {
         size_t numAquifer() const;
         bool hasAquifer(size_t aquifer_id) const;
         const SingleNumericalAquifer& getAquifer(size_t aquifer_id) const;
+        const std::unordered_map <size_t, SingleNumericalAquifer>& aquifers() const;
         bool operator==(const NumericalAquifers& other) const;
 
         std::array<std::set<size_t>, 3> transToRemove(const EclipseGrid& grid) const;

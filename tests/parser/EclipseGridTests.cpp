@@ -2586,7 +2586,7 @@ BOOST_AUTO_TEST_CASE(TEST_constructFromEgrid) {
     auto deck = parser.parseString( deckData) ;
 
     Opm::EclipseGrid grid1( deck);
-    Opm::EclipseGrid grid2( "");
+    Opm::EclipseGrid grid2( "SPE1CASE1.EGRID");
 
     // compare actnum
     std::vector<int> actGrid1 = grid1.getACTNUM();

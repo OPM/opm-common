@@ -103,7 +103,7 @@ namespace Opm {
         this->appendConnectionNNC(grid, fp, nnc);
     }
 
-    void Opm::SingleNumericalAquifer::appendCellNNC(NNC& nnc) const {
+    void SingleNumericalAquifer::appendCellNNC(NNC& nnc) const {
         // aquifer cells are connected to each other through NNCs to form the aquifer
         for (size_t i = 0; i < this->cells_.size() - 1; ++i) {
             const double trans1 = this->cells_[i].transmissiblity();
@@ -115,7 +115,7 @@ namespace Opm {
         }
     }
 
-    void Opm::SingleNumericalAquifer::appendConnectionNNC(const EclipseGrid& grid, const FieldPropsManager &fp, NNC& nnc) const {
+    void SingleNumericalAquifer::appendConnectionNNC(const EclipseGrid& grid, const FieldPropsManager &fp, NNC& nnc) const {
         // aquifer connections are connected to aquifer cells through NNCs
         const std::vector<double>& ntg = fp.get_double("NTG");
         const auto& cell1 = this->cells_[0];
@@ -155,5 +155,9 @@ namespace Opm {
             const double tran = trans_con * trans_cell / (trans_con + trans_cell) * con.trans_multipler;
             nnc.addNNC(gc1, gc2, tran);
         }
+    }
+
+    size_t SingleNumericalAquifer::id() const {
+        return this->id_;
     }
 }

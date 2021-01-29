@@ -41,6 +41,7 @@ namespace Opm {
         // TODO: the following two can be made one function. Let us see
         // how we use them at the end
         size_t numCells() const;
+        size_t id() const;
         size_t numConnections() const;
         const NumericalAquiferCell* getCellPrt(size_t index) const;
 

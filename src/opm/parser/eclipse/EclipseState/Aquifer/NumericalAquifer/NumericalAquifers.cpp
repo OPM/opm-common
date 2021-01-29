@@ -173,4 +173,8 @@ namespace Opm {
         }
 
     }
+
+    const std::unordered_map<size_t, SingleNumericalAquifer>& NumericalAquifers::aquifers() const {
+        return this->m_aquifers;
+    }
 }
