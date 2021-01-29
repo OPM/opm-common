@@ -615,7 +615,6 @@ BOOST_AUTO_TEST_CASE(testReAndConnectionLength) {
     auto python = std::make_shared<Opm::Python>();
     Opm::EclipseState state(deck);
     Opm::Schedule sched(deck, state, python);
-    const auto& units = deck.getActiveUnitSystem();
 
     const auto& prod = sched.getWell("PROD", 0);
     const auto& connections = prod.getConnections();
