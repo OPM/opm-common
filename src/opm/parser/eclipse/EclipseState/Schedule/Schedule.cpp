@@ -1884,6 +1884,7 @@ void Schedule::create_first(const std::chrono::system_clock::time_point& start_t
     sched_state.actions.update( Action::Actions() );
     sched_state.udq_active.update( UDQActive() );
     sched_state.well_order.update( NameOrder() );
+    sched_state.group_order.update( GroupOrder( this->m_static.m_runspec.wellDimensions().maxGroupsInField()) );
     this->addGroup("FIELD", 0);
 }
 

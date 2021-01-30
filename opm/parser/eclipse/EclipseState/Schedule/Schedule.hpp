@@ -360,6 +360,7 @@ namespace Opm
             pack_unpack<Action::Actions, Serializer>(serializer);
             pack_unpack<UDQActive, Serializer>(serializer);
             pack_unpack<NameOrder, Serializer>(serializer);
+            pack_unpack<GroupOrder, Serializer>(serializer);
         }
 
         template <typename T, class Serializer>

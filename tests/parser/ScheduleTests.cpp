@@ -3385,18 +3385,26 @@ BOOST_AUTO_TEST_CASE(WellOrderTest) {
 }
 
 BOOST_AUTO_TEST_CASE(GroupOrderTest) {
-    GroupOrder go;
+    const std::size_t max_groups = 9;
+    GroupOrder go(max_groups);
 
     std::vector<std::string> groups1 = {"FIELD"};
     std::vector<std::string> groups2 = {"FIELD", "G1", "G2", "G3"};
-    std::vector<std::string> groups3 = {"G1", "G2", "G3", "FIELD"};
 
     BOOST_CHECK( go.names() == groups1 );
     go.add("G1");
     go.add("G2");
     go.add("G3");
     BOOST_CHECK( go.names() == groups2 );
-    BOOST_CHECK( go.restart_groups() == groups3 );
+    const auto& restart_groups = go.restart_groups();
+    BOOST_CHECK_EQUAL(restart_groups.size(), max_groups + 1);
+    BOOST_CHECK_EQUAL( *restart_groups[0], "G1");
+    BOOST_CHECK_EQUAL( *restart_groups[1], "G2");
+    BOOST_CHECK_EQUAL( *restart_groups[2], "G3");
+    BOOST_CHECK_EQUAL( *restart_groups[max_groups], "FIELD");
+
+    for (std::size_t g=3; g < max_groups; g++)
+        BOOST_CHECK( !restart_groups[g].has_value() );
 }
 
 

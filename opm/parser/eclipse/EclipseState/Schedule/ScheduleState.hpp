@@ -168,6 +168,7 @@ namespace Opm {
         ptr_member<Action::Actions> actions;
         ptr_member<UDQActive> udq_active;
         ptr_member<NameOrder> well_order;
+        ptr_member<GroupOrder> group_order;
 
         template <typename T>
         ptr_member<T>& get() {
@@ -191,6 +192,8 @@ namespace Opm {
                                   return this->udq_active;
             else if constexpr ( std::is_same_v<T, NameOrder> )
                                   return this->well_order;
+            else if constexpr ( std::is_same_v<T, GroupOrder> )
+                                  return this->group_order;
         }
 
         template <typename T>
