@@ -112,6 +112,93 @@ namespace Opm {
             std::shared_ptr<T> m_data;
         };
 
+
+        /*
+          The map_member class is a quite specialized class used to internalize
+          the map variables managed in the ScheduleState. The actual value
+          objects will be stored as std::shared_ptr<T>, and only the unique
+          objects have dedicated storage. The class T must implement the method:
+
+              const K& T::name() const;
+
+          Which is used to get the storage key for the objects.
+         */
+
+        template <typename K, typename T>
+        class map_member {
+        public:
+            std::vector<K> keys() const {
+                std::vector<K> key_vector;
+                std::transform( this->m_data.begin(), this->m_data.end(), std::back_inserter(key_vector), [](const auto& pair) { return pair.first; });
+                return key_vector;
+            }
+
+
+            const std::shared_ptr<T> get_ptr(const K& key) const {
+                auto iter = this->m_data.find(key);
+                if (iter != this->m_data.end())
+                    return iter->second;
+
+                return {};
+            }
+
+
+            void update(T object) {
+                auto key = object.name();
+                this->m_data[key] = std::make_shared<T>( std::move(object) );
+            }
+
+            void update(const K& key, const map_member<K,T>& other) {
+                this->m_data[key] = other.get_ptr(key);
+            }
+
+            const T& operator()(const K& key) const {
+                return *this->m_data.at(key);
+            }
+
+            std::vector<std::reference_wrapper<const T>> operator()() const {
+                std::vector<std::reference_wrapper<const T>> as_vector;
+                for (const auto& [_, elm_ptr] : this->m_data) {
+                    (void)_;
+                    as_vector.push_back( std::cref(*elm_ptr));
+                }
+                return as_vector;
+            }
+
+
+            bool operator==(const map_member<K,T>& other) const {
+                if (this->m_data.size() != other.m_data.size())
+                    return false;
+
+                auto it2 = other.m_data.begin();
+                for (const auto& it1 : this->m_data) {
+                    if (it1.first != it2->first)
+                        return false;
+
+                    if (!(*it1.second == *it2->second))
+                        return false;
+
+                    ++it2;
+                }
+
+                return true;
+            }
+
+            static map_member<K,T> serializeObject() {
+                map_member<K,T> map_object;
+                T value_object = T::serializeObject();
+                K key = value_object.name();
+                map_object.m_data.emplace( key, std::make_shared<T>( std::move(value_object) ));
+                return map_object;
+            }
+
+
+        private:
+            std::unordered_map<K, std::shared_ptr<T>> m_data;
+        };
+
+
+
         ScheduleState() = default;
         explicit ScheduleState(const std::chrono::system_clock::time_point& start_time);
         ScheduleState(const std::chrono::system_clock::time_point& start_time, const std::chrono::system_clock::time_point& end_time);
@@ -197,15 +284,16 @@ namespace Opm {
         }
 
 
-        std::vector<std::reference_wrapper<const VFPProdTable>> vfpprod() const;
-        const VFPProdTable& vfpprod(int table_id) const;
-        void update_vfpprod(VFPProdTable vfpprod);
-        std::optional<std::reference_wrapper<const VFPProdTable>> try_vfpprod(int table_id) const;
+        template <typename K, typename T>
+        map_member<K,T>& get_map() {
+            if constexpr ( std::is_same_v<T, VFPProdTable> )
+                             return this->vfpprod;
+            if constexpr ( std::is_same_v<T, VFPInjTable> )
+                             return this->vfpinj;
+        }
 
-        std::vector<std::reference_wrapper<const VFPInjTable>> vfpinj() const;
-        const VFPInjTable& vfpinj(int table_id) const;
-        void update_vfpinj(VFPInjTable vfpinj);
-        std::optional<std::reference_wrapper<const VFPInjTable>> try_vfpinj(int table_id) const;
+        map_member<int, VFPProdTable> vfpprod;
+        map_member<int, VFPInjTable> vfpinj;
 
         template<class Serializer>
         void serializeOp(Serializer& serializer) {
@@ -219,8 +307,6 @@ namespace Opm {
             serializer.vector(m_geo_keywords);
             m_message_limits.serializeOp(serializer);
             serializer(m_whistctl_mode);
-            serializer.map(m_vfpprod);
-            serializer.map(m_vfpinj);
         }
 
 
@@ -236,8 +322,6 @@ namespace Opm {
         std::vector<DeckKeyword> m_geo_keywords;
         MessageLimits m_message_limits;
         Well::ProducerCMode m_whistctl_mode = Well::ProducerCMode::CMODE_UNDEFINED;
-        std::map<int, std::shared_ptr<VFPProdTable>> m_vfpprod;
-        std::map<int, std::shared_ptr<VFPInjTable>> m_vfpinj;
     };
 }
 
