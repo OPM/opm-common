@@ -30,7 +30,6 @@ namespace Opm {
 
 namespace {
 
-
 /*
   This is to ensure that only time_points which can be represented with
   std::time_t are used. The reason for clamping to std::time_t resolution is
@@ -154,9 +153,12 @@ bool ScheduleState::operator==(const ScheduleState& other) const {
            this->wlist_manager.get() == other.wlist_manager.get() &&
            this->rpt_config.get() == other.rpt_config.get() &&
            this->udq_active.get() == other.udq_active.get() &&
+           this->groups == other.groups &&
            this->vfpprod == other.vfpprod &&
            this->vfpinj == other.vfpinj;
 }
+
+
 
 ScheduleState ScheduleState::serializeObject() {
     auto t1 = std::chrono::system_clock::now();
@@ -164,6 +166,7 @@ ScheduleState ScheduleState::serializeObject() {
     ScheduleState ts(t1, t2);
     ts.vfpprod = map_member<int, VFPProdTable>::serializeObject();
     ts.vfpinj = map_member<int, VFPInjTable>::serializeObject();
+    ts.groups = map_member<std::string, Group>::serializeObject();
     ts.m_events = Events::serializeObject();
     ts.update_nupcol(77);
     ts.update_oilvap( Opm::OilVaporizationProperties::serializeObject() );
@@ -181,6 +184,7 @@ ScheduleState ScheduleState::serializeObject() {
     ts.network.update( Network::ExtNetwork::serializeObject() );
     ts.well_order.update( NameOrder::serializeObject() );
     ts.group_order.update( GroupOrder::serializeObject() );
+
     return ts;
 }
 

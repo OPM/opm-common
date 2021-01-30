@@ -226,6 +226,10 @@ DATES             -- 3
  20  JUN 2007 /
 /
 
+GRUPTREE
+   'G3'  'G2' /
+/
+
 GCONSALE
 'G1' 12345 12345 12345 WELL /
 /
@@ -434,6 +438,31 @@ BOOST_AUTO_TEST_CASE(SerializeVFP) {
     BOOST_CHECK( vfpinj2 == sched0[4].vfpinj);
     BOOST_CHECK( vfpinj2 == sched0[5].vfpinj);
 }
+
+BOOST_AUTO_TEST_CASE(SerializeGROUPS) {
+    auto sched = make_schedule(GCONSALE_deck);
+    auto sched0 = make_schedule(deck0);
+    auto groups1 = sched[0].groups;
+    auto groups2 = sched[3].groups;
+
+    {
+        std::vector<Opm::Group> value_list;
+        std::vector<std::size_t> index_list;
+        sched.pack_map<std::string, Opm::Group>( value_list, index_list );
+        BOOST_CHECK_EQUAL( value_list.size(), 5 );
+        sched0.unpack_map<std::string, Opm::Group>( value_list, index_list );
+    }
+
+    BOOST_CHECK( groups1 == sched0[0].groups);
+    BOOST_CHECK( groups1 == sched0[1].groups);
+    BOOST_CHECK( groups1 == sched0[2].groups);
+
+    BOOST_CHECK( groups2 == sched0[3].groups);
+    BOOST_CHECK( groups2 == sched0[4].groups);
+    BOOST_CHECK( groups2 == sched0[5].groups);
+}
+
+
 
 
 

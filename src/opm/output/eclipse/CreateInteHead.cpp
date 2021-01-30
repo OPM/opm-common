@@ -86,7 +86,7 @@ namespace {
     int numGroupsInField(const Opm::Schedule& sched,
                          const std::size_t    lookup_step)
     {
-        const auto ngmax = sched.numGroups(lookup_step);
+        const auto ngmax = sched[lookup_step].groups.size();
 
         if (ngmax < 1) {
             throw std::invalid_argument {

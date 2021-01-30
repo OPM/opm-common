@@ -31,6 +31,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Events.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/NameOrder.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WListManager.hpp>
@@ -43,6 +44,18 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/Actions.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQActive.hpp>
 
+
+namespace {
+
+[[maybe_unused]] std::string as_string(int value) {
+    return std::to_string(value);
+}
+
+[[maybe_unused]] std::string as_string(const std::string& value) {
+    return value;
+}
+
+}
 namespace Opm {
 
     /*
@@ -143,6 +156,12 @@ namespace Opm {
             }
 
 
+            bool has(const K& key) const {
+                auto ptr = this->get_ptr(key);
+                return (ptr != nullptr);
+            }
+
+
             void update(T object) {
                 auto key = object.name();
                 this->m_data[key] = std::make_shared<T>( std::move(object) );
@@ -153,12 +172,17 @@ namespace Opm {
                 if (other_ptr)
                     this->m_data[key] = other.get_ptr(key);
                 else
-                    throw std::logic_error(std::string{"Tried to update member: "} + std::to_string(key) + std::string{"with uninitialized object"});
+                    throw std::logic_error(std::string{"Tried to update member: "} + as_string(key) + std::string{"with uninitialized object"});
             }
 
             const T& operator()(const K& key) const {
+                return this->get(key);
+            }
+
+            const T& get(const K& key) const {
                 return *this->m_data.at(key);
             }
+
 
             std::vector<std::reference_wrapper<const T>> operator()() const {
                 std::vector<std::reference_wrapper<const T>> as_vector;
@@ -184,6 +208,12 @@ namespace Opm {
                 }
                 return true;
             }
+
+
+            std::size_t size() const {
+                return this->m_data.size();
+            }
+
 
             static map_member<K,T> serializeObject() {
                 map_member<K,T> map_object;
@@ -294,12 +324,19 @@ namespace Opm {
         map_member<K,T>& get_map() {
             if constexpr ( std::is_same_v<T, VFPProdTable> )
                              return this->vfpprod;
-            if constexpr ( std::is_same_v<T, VFPInjTable> )
+            else if constexpr ( std::is_same_v<T, VFPInjTable> )
                              return this->vfpinj;
+            else if constexpr ( std::is_same_v<T, Group> )
+                             return this->groups;
+            else
+                static_assert(always_false2<K,T>::value, "Template type <K,T> not supported in get_map()");
         }
 
         map_member<int, VFPProdTable> vfpprod;
         map_member<int, VFPInjTable> vfpinj;
+        map_member<std::string, Group> groups;
+
+
 
         template<class Serializer>
         void serializeOp(Serializer& serializer) {

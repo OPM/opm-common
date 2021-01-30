@@ -98,7 +98,7 @@ namespace {
                             const Opm::ParseContext& ctxt,
                             Opm::ErrorGuard&         guard)
         {
-            const auto nGroups = sched.numGroups();
+            const auto nGroups = sched.back().groups.size();
 
             // Note: "1 +" to account for FIELD group being in 'sched.numGroups()'
             //   but excluded from WELLDIMS(3).

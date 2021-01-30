@@ -85,6 +85,11 @@ namespace {
         return sch.hasWell( wellName );
     }
 
+    const Group& get_group(const ScheduleState& st, const std::string& group_name) {
+        return st.groups.get(group_name);
+    }
+
+
     const RestartConfig& restart(const Schedule& sch) {
         return sch.restart();
     }
@@ -104,7 +109,8 @@ void python::common::export_Schedule(py::module& module) {
 
 
     py::class_<ScheduleState>(module, "ScheduleState")
-        .def_property_readonly("nupcol", py::overload_cast<>(&ScheduleState::nupcol, py::const_));
+        .def_property_readonly("nupcol", py::overload_cast<>(&ScheduleState::nupcol, py::const_))
+        .def("group", &get_group, ref_internal);
 
 
     py::class_< Schedule >( module, "Schedule")
@@ -122,8 +128,7 @@ void python::common::export_Schedule(py::module& module) {
     .def( "get_wells", &Schedule::getWells)
     .def("well_names", py::overload_cast<const std::string&>(&Schedule::wellNames, py::const_))
     .def( "get_well", &get_well)
-    .def( "__contains__", &has_well )
-    .def( "group", &Schedule::getGroup, ref_internal);
+    .def( "__contains__", &has_well );
 
     py::class_< RestartConfig >( module, "RestartConfig")
         .def( "getKeyword",          &RestartConfig::getKeyword )
