@@ -1090,83 +1090,47 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         if (pattern.size() == 0)
             return {};
 
+        const auto& group_order = this->snapshots[timeStep].group_order();
+
         // Normal pattern matching
         auto star_pos = pattern.find('*');
         if (star_pos != std::string::npos) {
             std::vector<std::string> names;
-            for (const auto& group_pair : this->groups) {
-                if (name_match(pattern, group_pair.first)) {
-                    const auto& dynamic_state = group_pair.second;
-                    const auto& group_ptr = dynamic_state.get(timeStep);
-                    if (group_ptr)
-                        names.push_back(group_pair.first);
-                }
+            for (const auto& gname : group_order) {
+                if (name_match(pattern, gname))
+                    names.push_back(gname);
             }
             return names;
         }
 
         // Normal group name without any special characters
-        if (this->hasGroup(pattern)) {
-            const auto& dynamic_state = this->groups.at(pattern);
-            const auto& group_ptr = dynamic_state.get(timeStep);
-            if (group_ptr)
-                return { pattern };
-        }
-        return {};
-    }
-
-    std::vector<std::string> Schedule::groupNames(std::size_t timeStep) const {
-        std::vector<std::string> names;
-        for (const auto& group_pair : this->groups) {
-            const auto& dynamic_state = group_pair.second;
-            const auto& group_ptr = dynamic_state.get(timeStep);
-            if (group_ptr)
-                names.push_back(group_pair.first);
-        }
-        return names;
-    }
-
-    std::vector<std::string> Schedule::groupNames(const std::string& pattern) const {
-        if (pattern.size() == 0)
-            return {};
-
-        // Normal pattern matching
-        auto star_pos = pattern.find('*');
-        if (star_pos != std::string::npos) {
-            int flags = 0;
-            std::vector<std::string> names;
-            for (const auto& group_pair : this->groups) {
-                if (fnmatch(pattern.c_str(), group_pair.first.c_str(), flags) == 0)
-                    names.push_back(group_pair.first);
-            }
-            return names;
-        }
-
-        // Normal group name without any special characters
-        if (this->hasGroup(pattern))
+        if (group_order.has(pattern))
             return { pattern };
 
         return {};
     }
 
-    std::vector<std::string> Schedule::groupNames() const {
-        std::vector<std::string> names;
-        for (const auto& group_pair : this->groups)
-            names.push_back(group_pair.first);
+    std::vector<std::string> Schedule::groupNames(std::size_t timeStep) const {
+        const auto& group_order = this->snapshots[timeStep].group_order();
+        return group_order.names();
+    }
 
-        return names;
+    std::vector<std::string> Schedule::groupNames(const std::string& pattern) const {
+        return this->groupNames(pattern, this->snapshots.size() - 1);
+    }
+
+    std::vector<std::string> Schedule::groupNames() const {
+        const auto& group_order = this->snapshots.back().group_order();
+        return group_order.names();
     }
 
     std::vector<const Group*> Schedule::restart_groups(std::size_t timeStep) const {
-        std::size_t wdmax = this->m_static.m_runspec.wellDimensions().maxGroupsInField();
-        std::vector<const Group*> rst_groups(wdmax + 1 , nullptr );
-        for (const auto& group_name : this->groupNames(timeStep)) {
-            const auto& group = this->getGroup(group_name, timeStep);
-
-            if (group.name() == "FIELD")
-                rst_groups.back() = &group;
-            else
-                rst_groups[group.insert_index() - 1] = &group;
+        const auto& restart_groups = this->snapshots[timeStep].group_order().restart_groups();
+        std::vector<const Group*> rst_groups(restart_groups.size() , nullptr );
+        for (std::size_t restart_index = 0; restart_index < restart_groups.size(); restart_index++) {
+            const auto& group_name = restart_groups[restart_index];
+            if (group_name.has_value())
+                rst_groups[restart_index] = &this->getGroup(group_name.value(), timeStep);
         }
         return rst_groups;
     }
@@ -1178,8 +1142,14 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         auto& dynamic_state = this->groups.at(group.name());
         dynamic_state.update(timeStep, group_ptr);
 
-        this->snapshots.back().events().addEvent( ScheduleEvents::NEW_GROUP );
-        this->snapshots.back().wellgroup_events().addGroup(group.name());
+        auto& sched_state = this->snapshots.back();
+        sched_state.events().addEvent( ScheduleEvents::NEW_GROUP );
+        sched_state.wellgroup_events().addGroup(group.name());
+        {
+            auto go = sched_state.group_order.get();
+            go.add( group.name() );
+            sched_state.group_order.update( std::move(go) );
+        }
 
         // All newly created groups are attached to the field group,
         // can then be relocated with the GRUPTREE keyword.
@@ -1881,6 +1851,7 @@ void Schedule::create_first(const std::chrono::system_clock::time_point& start_t
     sched_state.actions.update( Action::Actions() );
     sched_state.udq_active.update( UDQActive() );
     sched_state.well_order.update( NameOrder() );
+    sched_state.group_order.update( GroupOrder( this->m_static.m_runspec.wellDimensions().maxGroupsInField()) );
     this->addGroup("FIELD", 0);
 }
 

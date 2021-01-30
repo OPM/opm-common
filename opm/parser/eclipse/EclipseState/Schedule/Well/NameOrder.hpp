@@ -31,10 +31,10 @@ namespace Opm {
 */
 
 
+using Map = std::unordered_map<std::string, std::size_t>;
 
 class NameOrder {
 public:
-    using Map = std::unordered_map<std::string, std::size_t>;
     NameOrder() = default;
     explicit NameOrder(const std::vector<std::string>& names);
     void add(const std::string& name);
@@ -44,8 +44,8 @@ public:
 
     template<class Serializer>
     void serializeOp(Serializer& serializer) {
-        serializer.template map<Map, false>(m_names1);
-        serializer(m_names2);
+        serializer.template map<Map, false>(m_index_map);
+        serializer(m_name_list);
     }
 
     static NameOrder serializeObject();
@@ -55,16 +55,39 @@ public:
     std::vector<std::string>::const_iterator end() const;
 
 private:
-    Map m_names1;
-    std::vector<std::string> m_names2;
+    Map m_index_map;
+    std::vector<std::string> m_name_list;
 };
 
 
-class GroupOrder : public NameOrder {
+class GroupOrder {
 public:
-    GroupOrder();
-    std::vector<std::string> restart_groups() const;
+    GroupOrder() = default;
+    explicit GroupOrder(std::size_t max_groups);
+    void add(const std::string& name);
+    const std::vector<std::string>& names() const;
+    bool has(const std::string& wname) const;
+    std::vector<std::optional<std::string>> restart_groups() const;
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer) {
+        serializer(m_name_list);
+        serializer(m_max_groups);
+    }
+    static GroupOrder serializeObject();
+
+    bool operator==(const GroupOrder& other) const;
+    std::vector<std::string>::const_iterator begin() const;
+    std::vector<std::string>::const_iterator end() const;
+
+private:
+    std::vector<std::string> m_name_list;
+    std::size_t m_max_groups;
+
 };
+
+
+
 
 }
 #endif

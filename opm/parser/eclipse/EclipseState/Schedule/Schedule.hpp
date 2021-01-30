@@ -162,7 +162,7 @@ namespace Opm
 
     class Schedule {
     public:
-        using GroupMap = OrderedMap<std::string, DynamicState<std::shared_ptr<Group>>>;
+        using GroupMap = std::map<std::string, DynamicState<std::shared_ptr<Group>>>;
         using WellMap = std::unordered_map<std::string, DynamicState<std::shared_ptr<Well>>>;
 
         Schedule() = default;
@@ -360,6 +360,7 @@ namespace Opm
             pack_unpack<Action::Actions, Serializer>(serializer);
             pack_unpack<UDQActive, Serializer>(serializer);
             pack_unpack<NameOrder, Serializer>(serializer);
+            pack_unpack<GroupOrder, Serializer>(serializer);
         }
 
         template <typename T, class Serializer>

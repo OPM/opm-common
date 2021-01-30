@@ -170,6 +170,7 @@ bool ScheduleState::operator==(const ScheduleState& other) const {
            this->m_nupcol == other.m_nupcol &&
            this->wtest_config.get() == other.wtest_config.get() &&
            this->well_order.get() == other.well_order.get() &&
+           this->group_order.get() == other.group_order.get() &&
            this->gconsale.get() == other.gconsale.get() &&
            this->gconsump.get() == other.gconsump.get() &&
            this->wlist_manager.get() == other.wlist_manager.get() &&
@@ -201,6 +202,7 @@ ScheduleState ScheduleState::serializeObject() {
     ts.udq_active.update( UDQActive::serializeObject() );
     ts.network.update( Network::ExtNetwork::serializeObject() );
     ts.well_order.update( NameOrder::serializeObject() );
+    ts.group_order.update( GroupOrder::serializeObject() );
     return ts;
 }
 
