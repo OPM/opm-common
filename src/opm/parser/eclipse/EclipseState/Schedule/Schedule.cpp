@@ -1082,11 +1082,8 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
     }
 
     std::vector<std::string> Schedule::wellNames() const {
-        std::vector<std::string> names;
-        for (const auto& well_pair : this->wells_static)
-            names.push_back(well_pair.first);
-
-        return names;
+        const auto& well_order = this->snapshots.back().well_order();
+        return well_order.names();
     }
 
     std::vector<std::string> Schedule::groupNames(const std::string& pattern, std::size_t timeStep) const {
