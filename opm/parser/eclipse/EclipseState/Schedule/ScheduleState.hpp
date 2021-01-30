@@ -193,12 +193,6 @@ namespace Opm {
                                   return this->well_order;
         }
 
-        template <typename T>
-        void update_ptr(ScheduleState& other) {
-            auto& member = this->get<T>();
-            member.update( other.get<T>() );
-        }
-
 
         std::vector<std::reference_wrapper<const VFPProdTable>> vfpprod() const;
         const VFPProdTable& vfpprod(int table_id) const;

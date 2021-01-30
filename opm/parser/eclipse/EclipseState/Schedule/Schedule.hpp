@@ -403,7 +403,7 @@ namespace Opm
                 auto& target_state = this->snapshots[first_index];
                 target_state.get<T>().update( std::move(value) );
                 for (std::size_t index=first_index + 1; index < last_index; index++)
-                    this->snapshots[index].update_ptr<T>( target_state );
+                    this->snapshots[index].get<T>().update( target_state.get<T>() );
 
                 unique_index++;
             }
