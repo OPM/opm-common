@@ -162,7 +162,7 @@ namespace Opm
 
     class Schedule {
     public:
-        using GroupMap = OrderedMap<std::string, DynamicState<std::shared_ptr<Group>>>;
+        using GroupMap = std::map<std::string, DynamicState<std::shared_ptr<Group>>>;
         using WellMap = std::unordered_map<std::string, DynamicState<std::shared_ptr<Well>>>;
 
         Schedule() = default;
