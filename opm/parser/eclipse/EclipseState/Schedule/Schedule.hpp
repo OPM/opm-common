@@ -162,8 +162,10 @@ namespace Opm
 
     class Schedule {
     public:
-        using GroupMap = std::map<std::string, DynamicState<std::shared_ptr<Group>>>;
-        using WellMap = std::unordered_map<std::string, DynamicState<std::shared_ptr<Well>>>;
+        template<class T1, class T2> using Map = std::map<T1,T2>;
+        using GroupMap = Map<std::string, DynamicState<std::shared_ptr<Group>>>;
+        template<class T1, class T2> using UnorderedMap = std::unordered_map<T1,T2>;
+        using WellMap = UnorderedMap<std::string, DynamicState<std::shared_ptr<Well>>>;
 
         Schedule() = default;
         explicit Schedule(std::shared_ptr<const Python> python_handle);
@@ -332,10 +334,10 @@ namespace Opm
         {
             m_sched_deck.serializeOp(serializer);
             m_timeMap.serializeOp(serializer);
-            auto splitWells = splitDynMap(wells_static);
+            auto splitWells = splitDynMap<UnorderedMap>(wells_static);
             serializer.vector(splitWells.first);
             serializer(splitWells.second);
-            auto splitGroups = splitDynMap(groups);
+            auto splitGroups = splitDynMap<Map>(groups);
             serializer.vector(splitGroups.first);
             serializer(splitGroups.second);
             udq_config.serializeOp(serializer);
@@ -344,8 +346,8 @@ namespace Opm
             rft_config.serializeOp(serializer);
             restart_config.serializeOp(serializer);
             if (!serializer.isSerializing()) {
-                reconstructDynMap(splitWells.first, splitWells.second, wells_static);
-                reconstructDynMap(splitGroups.first, splitGroups.second, groups);
+                reconstructDynMap<UnorderedMap>(splitWells.first, splitWells.second, wells_static);
+                reconstructDynMap<Map>(splitGroups.first, splitGroups.second, groups);
             }
             serializer.vector(snapshots);
             m_static.serializeOp(serializer);
